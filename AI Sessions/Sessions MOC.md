@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 952
-> * **Sessões do Claude**: 910
+> * **Total de Sessões Registradas**: 956
+> * **Sessões do Claude**: 914
 > * **Sessões do Gemini**: 42
 
 ---
@@ -59,6 +59,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-19 - agent-ae74e02876e726a14]]` - *2026-06-19*
+*   `[[2026-06-19 - agent-ae53f30460d8a7f17]]` - *2026-06-19*
+*   `[[2026-06-19 - agent-a4de6f4788c9fdf1b]]` - *2026-06-19*
+*   `[[2026-06-19 - agent-a46f1a0b3cb469306]]` - *2026-06-19*
 *   `[[2026-06-19 - Implement shake-hands endpoint]]` - *2026-06-19*
 *   `[[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-ad3dc4bd8492fb62f]]` - *2026-06-18*
@@ -67,11 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-18 - agent-a7aaa6dc8aad3c90d]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a77b693ec8e6f384e]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a64425ca72c83ee24]]` - *2026-06-18*
-*   `[[2026-06-18 - agent-a438ba045732cdc13]]` - *2026-06-18*
-*   `[[2026-06-18 - agent-a14dd3dd37735a84e]]` - *2026-06-18*
-*   `[[2026-06-18 - Ativar kill-switch e refatorar guard do sistema]]` - *2026-06-18*
-*   `[[2026-06-17 - agent-aff65e0ac55826d37]]` - *2026-06-17*
-*   *... e mais 916 sessões nessa categoria.*
+*   *... e mais 920 sessões nessa categoria.*
 
 ---
 
@@ -262,6 +262,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-19 - agent-ae74e02876e726a14]]` (ClaudeSessions)
+*   `[[2026-06-19 - agent-ae53f30460d8a7f17]]` (ClaudeSessions)
+*   `[[2026-06-19 - agent-a4de6f4788c9fdf1b]]` (ClaudeSessions)
+*   `[[2026-06-19 - agent-a46f1a0b3cb469306]]` (ClaudeSessions)
 *   `[[2026-06-19 - Implement shake-hands endpoint]]` (ClaudeSessions)
 *   `[[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]` (ClaudeSessions)
 *   `[[2026-06-18 - agent-ad3dc4bd8492fb62f]]` (ClaudeSessions)

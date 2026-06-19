@@ -1050,6 +1050,2297 @@ Quer que eu monte um **monitor** (ex.: `/loop`) que me acorda quando aparecer o 
 
 nao eu quero que voce crie um sistema de geracao e ativacao de estrategias e metodos de trade para operar em todos os periodos e principalmente no que estamos e nos que vamos ou temos a tendencia de entrar a curto prazo. ensei tambem em guardar em base de conhecimento todos os tipos de padores e sinais do mercaod trade. E por fim verificar e usar o poder total do beholder que é ver simultaneamente todos as criptos monitoradas, ou seja todos os monitores sendo processados com inteligencia artifical de baixa latencia para decidir ordens e obter lucros diarios
 
+## 🤖 Claude *(03:32:10)*
+
+
+## 🤖 Claude *(03:32:21)*
+
+Entendi a visão — e ela é boa. Você está descrevendo três motores que se encaixam:
+
+1. **Gerador + ativador de estratégias** que escolhe o método certo para cada regime (o que estamos vivendo agora e o que vem a seguir);
+2. **Base de conhecimento** de padrões e sinais de mercado;
+3. **Poder total do Beholder** — todas as criptos vistas ao mesmo tempo, com IA decidindo ordens.
+
+Tudo isso é construível e se organiza numa **arquitetura de 4 camadas**:
+
+- **Camada 1 — Reflexo (baixa latência):** o BRAIN do Beholder, que já reage tick-a-tick a *todos* os símbolos. **É ele quem decide ordem em milissegundos** (regras compiladas), não o LLM.
+- **Camada 2 — Estrategista (IA, ciclo lento):** o agente lê o estado cross-símbolo + a KB + o cockpit e **escolhe/ativa/calibra** quais estratégias ligar em cada regime. Cérebro de IA dirigindo o reflexo de máquina.
+- **Camada 3 — Base de Conhecimento:** catálogo de padrões/sinais, cada um com estatística **validada por backtest** (o que tem edge fica ativo; o que não tem é arquivado, não acumulado por fé).
+- **Camada 4 — Scanner cross-símbolo:** rankeia oportunidades em todo o universo monitorado e arma a estratégia certa no par certo.
+
+**Dois ajustes de rota honestos antes de eu desenhar isso:**
+
+- **"Baixa latência pra decidir ordens"** → quem entrega isso é o **BRAIN (regras)**, não o LLM (modelo no hot path é caro e *lento*, o oposto de baixa latência). O LLM é o estrategista do ciclo lento. Assim você ganha as duas coisas.
+- **"Lucro diário"** → com ~$148 spot, prometer verde todo dia não seria honesto (o próprio cockpit do sistema mostra scalp de 1m em EV negativo). O que esse sistema entrega de verdade: **extrair o máximo do edge disponível em cada regime e proteger o caixa quando não há edge** — provado por backtest. A agressividade/frequência é uma alavanca que **você** regula (pergunta abaixo).
+
+Já comecei a mapear a infra do Beholder em paralelo (automações, sinais, backtest). Pra eu desenhar o plano certo — e depois entrar em plan mode com ele — preciso travar 3 decisões que são suas:
+
+## 🤖 Claude *(03:32:31)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Mapear sistema de estrat\u00e9gias atual",
+  "subagent_type": "Explore",
+  "run_in_background": true,
+  "prompt": "Reposit\u00f3rio TradeUX em /home/gcrux-tradeux/tradeux (Node/Express + Sequelize, motor de trade \"Beholder\"). Fa\u00e7a uma explora\u00e7\u00e3o \"very thorough\" e me devolva um MAPA CONCEITUAL (n\u00e3o despeje arquivos inteiros \u2014 cite arquivo:linha das fun\u00e7\u00f5es-chave) de como uma \"estrat\u00e9gia de trade\" \u00e9 definida, compilada e ativada hoje, para eu projetar um sistema que GERA e ATIVA estrat\u00e9gias automaticamente por regime.\n\nInvestigue e responda:\n1. backend/src/beholder.js \u2014 como o BRAIN \u00e9 constru\u00eddo (compile/init/updateBrain), como updateMemory dispara automa\u00e7\u00f5es (testAutomations/evalDecision), como calcQty resolve quantidade (keywords FARM_QTY/TREND_QTY/HARVEST_QTY/MAX_WALLET/MIN_NOTIONAL e o backstop de piso), e como placeOrder funciona. Cite arquivo:linha.\n2. Os modelos/repositories de `automations` e `orderTemplates` \u2014 quais campos definem uma automa\u00e7\u00e3o (conditions, indexes, schedule, action, orderTemplateId, isActive, symbol) e como uma automa\u00e7\u00e3o liga condi\u00e7\u00e3o\u2192orderTemplate\u2192ordem.\n3. Os scripts em backend/scripts/setup-*.js e activate-*.js (setup-trend, setup-farm, setup-flow-gate, activate-trend, setup-harvester, e quaisquer outros). Qual o PADR\u00c3O/receita que eles seguem pra criar e ativar uma estrat\u00e9gia? Liste cada script e o que ele cria.\n4. Como automa\u00e7\u00f5es s\u00e3o ligadas/desligadas em runtime (endpoints /automations/:id/start|stop, PATCH /automations/:id) e como o BRAIN \u00e9 re-inicializado quando muda.\n\nEntregue: (a) \"a anatomia de uma estrat\u00e9gia\" no sistema atual (os objetos e o fluxo); (b) os pontos de extens\u00e3o exatos onde um \"Strategy Library + Regime Router\" se encaixaria (que arquivos/camadas tocar); (c) riscos/gotchas conhecidos (ex.: BRAIN cacheia orderTemplate em mem\u00f3ria; automa\u00e7\u00f5es runtime n\u00e3o-seedadas somem no make nuke)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a4de6f4788c9fdf1b (internal ID - do not mention to user. Use SendMessage with to: 'a4de6f4788c9fdf1b' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/tasks/a4de6f4788c9fdf1b.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(03:32:40)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Inventariar sinais e regime",
+  "subagent_type": "Explore",
+  "run_in_background": true,
+  "prompt": "Reposit\u00f3rio TradeUX em /home/gcrux-tradeux/tradeux. Fa\u00e7a explora\u00e7\u00e3o \"very thorough\" e devolva um INVENT\u00c1RIO estruturado (n\u00e3o despeje arquivos \u2014 cite arquivo:linha) de todos os sinais/indicadores/detec\u00e7\u00f5es de mercado que o sistema j\u00e1 computa, para eu projetar (1) um \"Regime Router\" que ativa estrat\u00e9gias por regime e (2) uma \"Base de Conhecimento de padr\u00f5es e sinais\".\n\nInvestigue e responda:\n1. backend/src/utils/indexes.js \u2014 quais \u00edndices t\u00e9cnicos s\u00e3o computados e gravados em MEMORY (RSI, SMA, MACD, Bollinger, etc.), com quais chaves MEMORY['<sym>:...'] e em quais timeframes.\n2. backend/src/regimeJob.js, regimeService e backend/src/utils/regimeClassifier.js \u2014 como o regime \u00e9 classificado (bear/trend/range/mixed), a histerese (bandas entra/sai), e a detec\u00e7\u00e3o de SMA golden/death cross (MEMORY['<sym>:TREND_CROSS_1h'], tabela regimeStates).\n3. O \"flow oracle\" (logs flow.log/flow-capitulation.log; arquivos de fluxo do taker/aggTrades) e backend/src/utils/cockpitService.js \u2014 quais sinais de fluxo/cockpit existem (FLOW imbalance/toxicity, COCKPIT EV/pHit/banda MC) e suas chaves MEMORY.\n4. Liste TODAS as classes de chave MEMORY['<sym>:...'] de SINAL que existem hoje (REGIME, FLOW, COCKPIT, TREND_CROSS_1h, RSI_14_1m, SMA*, MINI_TICKER, BOOK, etc.).\n\nEntregue: (a) cat\u00e1logo dos sinais existentes (nome, chave MEMORY, arquivo:linha, timeframe); (b) onde uma \"KB de padr\u00f5es/sinais\" persistente (com estat\u00edsticas validadas por backtest) se conectaria \u2014 h\u00e1 tabela/Supabase pgvector mencionada? como persistir padr\u00f5es e seus win-rate/EV?; (c) padr\u00f5es cl\u00e1ssicos que N\u00c3O existem ainda e seriam adi\u00e7\u00f5es naturais (ex.: rompimento de range, diverg\u00eancia RSI, volume spike, order-book imbalance, candlestick patterns)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: ae74e02876e726a14 (internal ID - do not mention to user. Use SendMessage with to: 'ae74e02876e726a14' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/tasks/ae74e02876e726a14.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(03:32:50)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Mapear backtest, s\u00edmbolos e lat\u00eancia",
+  "subagent_type": "Explore",
+  "run_in_background": true,
+  "prompt": "Reposit\u00f3rio TradeUX em /home/gcrux-tradeux/tradeux. Fa\u00e7a explora\u00e7\u00e3o \"very thorough\" e devolva um resumo estruturado (n\u00e3o despeje arquivos \u2014 cite arquivo:linha) sobre (1) a infra de BACKTEST existente e (2) como os s\u00edmbolos/monitores s\u00e3o processados, pra eu projetar valida\u00e7\u00e3o autom\u00e1tica de estrat\u00e9gias e um \"scanner cross-s\u00edmbolo de baixa lat\u00eancia\".\n\nInvestigue e responda:\n1. backend/scripts/backtest.js, backtest-farm-funnel.js e qualquer outro backtest*.js \u2014 como puxam klines hist\u00f3ricos (de onde, quantos), como simulam fills e fee (0.1%/lado?), walk-forward/OOS, a flag --calibrate, e o formato de sa\u00edda (backend/backtest-results/). O que d\u00e1 pra REUSAR pra validar estrat\u00e9gias NOVAS automaticamente.\n2. Como os s\u00edmbolos monitorados s\u00e3o definidos (modelo `symbols`, `monitors`, auto-sync) e QUANTOS est\u00e3o ativos hoje. Como backend/src/app-em.js assina os streams da Binance e alimenta beholder.updateMemory \u2014 descreva o caminho tick\u2192BRAIN\u2192decis\u00e3o\u2192placeOrder (o hot path) e onde fica a lat\u00eancia.\n3. Limites de escala: rate-limit/weight da Binance, quantos s\u00edmbolos/streams o sistema aguenta, e o custo de adicionar muitos s\u00edmbolos (monitors, klines weight, WS connections). H\u00e1 algum teto pr\u00e1tico?\n4. Como o agente LLM (tradeux-agent) roda hoje (intervalo, provider, ALLOW_TRADING) e como ele se conecta ao backend via tradeux-mcp \u2014 pra eu saber onde plugar o \"estrategista\" de ciclo lento.\n\nEntregue: (a) o que existe de backtest e o GAP pra um \"validador de estrat\u00e9gias\" gen\u00e9rico e parametriz\u00e1vel; (b) viabilidade, custo e teto de expandir o universo de s\u00edmbolos (4 \u2192 15 \u2192 30+); (c) o caminho de baixa lat\u00eancia atual (n\u00fameros se achar) e onde um \"scanner de oportunidades cross-s\u00edmbolo\" se encaixaria sem poluir o hot path."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: ae53f30460d8a7f17 (internal ID - do not mention to user. Use SendMessage with to: 'ae53f30460d8a7f17' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/tasks/ae53f30460d8a7f17.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(03:32:59)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Em que pista o sistema deve nascer e ser provado antes de mexer com dinheiro real?",
+      "header": "Valida\u00e7\u00e3o",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Backtest \u2192 testnet \u2192 mainnet",
+          "description": "Em fases, com gate (QA/TL + sua aprova\u00e7\u00e3o) em cada salto. Cada estrat\u00e9gia provada em hist\u00f3rico, depois ao vivo no testnet, e s\u00f3 ent\u00e3o canary no mainnet real. \u00c9 o caminho do projeto."
+        },
+        {
+          "label": "Backtest primeiro (research)",
+          "description": "Foco total agora em validar estrat\u00e9gias e padr\u00f5es em dados hist\u00f3ricos; ativa\u00e7\u00e3o ao vivo fica pra depois que os n\u00fameros convencerem."
+        },
+        {
+          "label": "Testnet ao vivo j\u00e1",
+          "description": "Pular direto pra rodar o sistema no testnet (sem dinheiro real), exercitando a mec\u00e2nica em tempo real, e backtestar em paralelo."
+        },
+        {
+          "label": "Mainnet canary direto",
+          "description": "Ativar com os $148 reais sob os gates/HALT j\u00e1 existentes. Maior risco: estrat\u00e9gias novas sem backtest podem sangrar fee."
+        }
+      ]
+    },
+    {
+      "question": "Quantas criptos o sistema deve vigiar e operar ao mesmo tempo?",
+      "header": "Universo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Foco: os 4 atuais",
+          "description": "BTC/LTC/BNB/ADA \u2014 aprofundar nos pares j\u00e1 monitorados. Menos ru\u00eddo, mais f\u00e1cil de validar. Bom pra come\u00e7ar e expandir depois."
+        },
+        {
+          "label": "Moderado: ~10-15 majors",
+          "description": "Expandir pros pares mais l\u00edquidos (ETH/SOL/XRP/etc.). Mais oportunidade, ainda gerenci\u00e1vel no rate-limit."
+        },
+        {
+          "label": "Amplo: 30+ (scanner)",
+          "description": "Varrer o mercado e rankear oportunidades cross-s\u00edmbolo \u2014 'poder total do Beholder'. Mais ru\u00eddo, mais custo de stream/rate-limit."
+        }
+      ]
+    },
+    {
+      "question": "O que conta como sucesso \u2014 qual trade-off risco/frequ\u00eancia voc\u00ea quer?",
+      "header": "Sucesso",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Consist\u00eancia risco-ajustada",
+          "description": "Poucos trades de qualidade, protege o caixa, cresce devagar e est\u00e1vel. Alinha com o edge real medido nos backtests do projeto."
+        },
+        {
+          "label": "Frequ\u00eancia alta / verde di\u00e1rio",
+          "description": "Muitas opera\u00e7\u00f5es buscando lucro todo dia. Mais exposi\u00e7\u00e3o a taxa e whipsaw \u2014 o backtest dir\u00e1 se sobra edge depois do custo."
+        },
+        {
+          "label": "Capturar ciclos (macro)",
+          "description": "Comprado no bull/trend, caixa no bear. Alavancar a tend\u00eancia grande em vez de operar o dia a dia."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Em que pista o sistema deve nascer e ser provado antes de mexer com dinheiro real?"="eu queria fazer em testenet porem parece que toda a estrategia que crianos anteriormente em testenet nao foi aplicada ou morreu. entao fico com medo de gastar reesearch em testenet e nao validar estrategia nenhuma par aarriscar em mainet, porem se tiver alguma forma de fazer com que isso nao aconteca voce pode fazer. sempre aplicando em testnet margens e fee reais da mainnet para simulacao real", "Quantas criptos o sistema deve vigiar e operar ao mesmo tempo?"="Foco: os 4 atuais", "O que conta como sucesso — qual trade-off risco/frequência você quer?"="acredito quenprei samos dos trez passos  mas gosto de ver lucro real mesmo que for pouco nas exponencial. pois é mais facil escalar caso tenha algo validado futuramente é so fazer caixa com as outras estrategias. logo acredito que para consistencia um estrategia para isso, outras estrategia para frequencia alta verde diario, e outra tambem para capturar ciclos macro". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(03:43:53)*
+
+
+## 🤖 Claude *(03:44:00)*
+
+Respostas recebidas e os três mapeamentos do código voltaram completos. Antes de desenhar o plano, três descobertas mudam o jogo a seu favor:
+
+1. **O Beholder já calcula 40+ indicadores e ~20 padrões de candle** (`indexes.js`) — RSI, MACD, Bollinger, ADX, ATR, OBV, Ichimoku, Engulfing, Hammer, Doji, etc. Estão "prontos e não usados". A base de conhecimento **não parte do zero**.
+2. **O backtest já roda com dados REAIS da mainnet + fee de 0,1%/lado** (`backtest.js`, klines mainnet via HTTPS). Ou seja, "validar com margem e fee reais da mainnet" **já é como o backtest funciona** — o que falta é torná-lo genérico/reutilizável para qualquer estratégia.
+3. O que mata o valor do testnet pra você é o **preço sintético** dele. A solução ao seu medo não é o testnet — é um **modo PAPER/SHADOW ao vivo que usa o preço REAL da mainnet + fee real**, registrando num ledger virtual. P&L honesto, zero risco, sem depender do book fake do testnet.
+
+Sua resposta-chave: 3 trilhas de estratégia (consistência / frequência-diária / ciclo-macro), rodando nos 4 símbolos atuais, validadas com realidade de mainnet antes de arriscar. Vou montar o plano formal disso.
+
+## 🤖 Claude *(03:44:01)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:EnterPlanMode,ExitPlanMode",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'EnterPlanMode'}, {'type': 'tool_reference', 'tool_name': 'ExitPlanMode'}]
+> ```
+
+## 🤖 Claude *(03:44:06)*
+
+
+## 🤖 Claude *(03:44:06)*
+
+
+🛠️ **Tool Call**: `EnterPlanMode`
+```json
+{}
+```
+
+> **Tool Result (EnterPlanMode)** - ✅ Success
+>
+> ```
+> Entered plan mode. You should now focus on exploring the codebase and designing an implementation approach.
+> 
+> In plan mode, you should:
+> 1. Thoroughly explore the codebase to understand existing patterns
+> 2. Identify similar features and architectural approaches
+> 3. Consider multiple approaches and their trade-offs
+> 4. Use AskUserQuestion if you need to clarify the approach
+> 5. Design a concrete implementation strategy
+> 6. When ready, use ExitPlanMode to present your plan for approval
+> 
+> Remember: DO NOT write or edit any files yet. This is a read-only exploration and planning phase.
+> ```
+
+## 🤖 Claude *(03:44:22)*
+
+
+## 🤖 Claude *(03:44:24)*
+
+Tenho material rico dos três mapeamentos. Vou submeter a arquitetura proposta a um agente Plan para pressão adversarial — validar o faseamento, achar riscos e definir a primeira fatia implementável — alimentando-o com o que já descobri para não re-explorar do zero.
+
+## 🤖 Claude *(03:45:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Press\u00e3o de design do sistema de estrat\u00e9gias",
+  "subagent_type": "Plan",
+  "prompt": "Voc\u00ea \u00e9 arquiteto s\u00eanior. Preciso que voc\u00ea FA\u00c7A PRESS\u00c3O ADVERSARIAL e REFINE uma arquitetura proposta para o TradeUX (repo em /home/gcrux-tradeux/tradeux \u2014 Node/Express + Sequelize + motor \"Beholder\" + agente LLM + MCP). N\u00c3O re-explore do zero: j\u00e1 mapeei o c\u00f3digo (fatos abaixo). Leia s\u00f3 os arquivos que precisar para validar pontos espec\u00edficos. Devolva: (1) cr\u00edticas/riscos da arquitetura, (2) faseamento refinado, (3) a PRIMEIRA fatia implement\u00e1vel m\u00ednima que entrega valor vis\u00edvel com ZERO risco, (4) reuso concreto (arquivo:linha) vs c\u00f3digo novo.\n\n## CONTEXTO DO PEDIDO DO DONO\nO dono quer um \"sistema de gera\u00e7\u00e3o e ativa\u00e7\u00e3o de estrat\u00e9gias e m\u00e9todos de trade para operar em todos os regimes (e nos que tendemos a entrar a curto prazo)\", uma \"base de conhecimento de padr\u00f5es e sinais de mercado\", e \"usar o poder total do Beholder (ver todas as criptos monitoradas simultaneamente) com IA de baixa lat\u00eancia para decidir ordens e obter lucro di\u00e1rio\".\nRespostas dele: (a) VALIDA\u00c7\u00c3O: quer testnet MAS tem medo porque estrat\u00e9gias criadas antes em testnet \"morreram\"/n\u00e3o validaram (pre\u00e7o sint\u00e9tico do testnet); autoriza qualquer forma que fa\u00e7a a simula\u00e7\u00e3o ser realista \u2014 \"sempre aplicando margens e fees reais da mainnet\". (b) UNIVERSO: foco nos 4 atuais (BTCUSDT, LTCUSDT, BNBUSDT, ADAUSDT). (c) SUCESSO: quer 3 TRILHAS simult\u00e2neas e separadas \u2014 uma estrat\u00e9gia de CONSIST\u00caNCIA (risco-ajustada), outra de FREQU\u00caNCIA ALTA (verde di\u00e1rio), outra de CICLO MACRO; gosta de \"ver lucro real mesmo que pouco\" e escalar depois a(s) vencedora(s) fazendo caixa com as outras.\nRESTRI\u00c7\u00c3O DURA: o sistema est\u00e1 em MAINNET REAL (~$148 USDT) mas CONGELADO (TRADING_HALT=true via riskState.js, lido por ordem = kill-switch quente). Claude N\u00c3O vira o HALT \u2014 s\u00f3 o dono. Toda a fase de research/valida\u00e7\u00e3o N\u00c3O pode tocar dinheiro real.\n\n## FATOS DO C\u00d3DIGO (j\u00e1 mapeados \u2014 confie nestes)\n- ESTRAT\u00c9GIA HOJE = automation (campos: symbol, conditions [string JS avaliada via Function() contra MEMORY], indexes [CSV de chaves MEMORY que devem existir = fail-safe], schedule, isActive, actions[]) + orderTemplate (type/side/limitPrice[literal ou expr MEMORY]/quantity[keyword]/multipliers) ligados por action.orderTemplateId. beholder.js: BRAIN[id] e BRAIN_INDEX[memoryKey] compilados; updateMemory()\u2192testAutomations()\u2192evalDecision()\u2192placeOrder(). calcQty (beholder.js ~201-292) resolve keywords MAX_WALLET/MIN_NOTIONAL(backstop $5)/LAST_ORDER_QTY/TREND_QTY/HARVEST_QTY/FARM_QTY/BTC_EXCESS.\n- Estrat\u00e9gias s\u00e3o criadas hoje por SCRIPTS manuais idempotentes: backend/scripts/setup-trend.js, setup-farm.js, setup-flow-gate.js, setup-harvester.js, setup-grid.js, activate-trend.js (padr\u00e3o: login\u2192ensureTemplate\u2192ensureAutomation isActive:false\u2192opcional start). Lifecycle runtime: POST /automations/:id/start|stop (beholder.updateBrain/deleteBrain), PATCH /automations/:id (delete+update no BRAIN).\n- SINAIS J\u00c1 COMPUTADOS (backend/src/utils/indexes.js): 40+ indicadores (RSI, MACD, SMA, EMA, ADX, ATR, Bollinger, Stochastic/StochRSI, OBV, MFI, ForceIndex, ROC, TRIX, KST, PSAR, Ichimoku, CCI, Williams%R, VWAP, VolumeProfile, AO, WMA/WEMA) em chaves <sym>:<IDX>_<params>_<tf> (tf 1m/5m/15m/1h) + ~20 PADR\u00d5ES DE CANDLE (Engulfing, Doji, Hammer, ShootingStar, Harami, Marubozu, 3Crows/3Soldiers, Morning/EveningStar, etc.) \u2014 TODOS prontos mas a maioria N\u00c3O usada em automa\u00e7\u00e3o.\n- REGIME: regimeJob.js grava MEMORY['<sym>:REGIME'] (bear/trend/range/mixed, histerese, 1h, klines MAINNET) + TREND_CROSS_1h (golden/death) + tabela regimeStates (persist). FLOW: flowJob grava <sym>:FLOW {imbalance,toxicity} (aggTrades MAINNET). COCKPIT: cockpitJob grava <sym>:COCKPIT {dist,ev,tail,mc,gates} (klines 1m MAINNET, read-only, EV net-de-fee). FAIR: <sym>:FAIR. Posi\u00e7\u00f5es: HARVEST/FARM_DCA/TREND_QTY (buckets persistidos via derive-from-orders).\n- BACKTEST: backend/scripts/backtest.js (~480 linhas) J\u00c1 puxa klines MAINNET reais (api.binance.com fallback data-api.binance.vision/us), cache em backend/backtest-data/, fee 0.1%/lado HARDCODED, walk-forward 30d OOS, regime-switch ex-ante, --calibrate, sa\u00edda JSON+MD em backend/backtest-results/. backtest-farm-funnel.js (grid+funil multi-alt) e backtest-futures-trend.js (long/short futures, funding real) idem. GAP: indicadores duplicados inline em cada script; N\u00c3O h\u00e1 harness gen\u00e9rico reutiliz\u00e1vel nem interface Strategy{signal()}; N\u00c3O h\u00e1 validador parametriz\u00e1vel que aceite uma estrat\u00e9gia da \"library\" e rode.\n- N\u00c3O EXISTE: Strategy Library declarativa; Regime Router autom\u00e1tico (ativa/desativa conjunto por regime); modo PAPER/SHADOW ao vivo (ledger virtual com pre\u00e7o MAINNET real + fee real, sem mandar \u00e0 Binance); KB persistente de padr\u00f5es/stats (win-rate/EV por regime). MENCIONADO mas n\u00e3o implementado: Supabase pgvector (tradeux_memory).\n- AGENTE LLM (tradeux-agent): ciclo TRADEUX_AGENT_INTERVAL=5min, provider anthropic/openrouter, ALLOW_TRADING=false (observador), fala via tradeux-mcp (~25 tools tradeux_*), journal append. \u00c9 o ponto natural do \"estrategista de ciclo lento\". Hot path de ordem (baixa lat\u00eancia ~15-100ms) = BRAIN, NUNCA o LLM.\n- ESCALA: 4\u219215\u219230 s\u00edmbolos \u00e9 vi\u00e1vel (streams WS gr\u00e1tis, rate-limit folgado); teto operacional ~50-100 s\u00edmbolos. Dono escolheu manter 4.\n- GOTCHAS: BRAIN cacheia orderTemplate (editar template vivo n\u00e3o aplica at\u00e9 PATCH da automa\u00e7\u00e3o); automa\u00e7\u00f5es runtime n\u00e3o-seedadas somem no make nuke; FARM_SELLING/HARVEST_SELLING s\u00e3o mutex vol\u00e1til; condi\u00e7\u00f5es edge vs level (invertCondition); migrations devem ser dual-dialect (MySQL+Postgres, quoteIdentifier). Edit do harness envenena dono do arquivo p/ ubuntu \u2192 chown gcrux-tradeux.\n\n## ARQUITETURA PROPOSTA (6 componentes) \u2014 critique e refine\n1. Strategy Library: defini\u00e7\u00e3o declarativa de estrat\u00e9gia (recipe JSON/JS: name, profile[consistencia|frequencia|macro], regimes[], symbols[], signals/conditions, orderTemplate, sizing, risk) + servi\u00e7o que instancia em automations+orderTemplates (data-driven, generaliza os setup-*.js).\n2. Regime Router: mapa regime\u2192estrat\u00e9gias; no shift de regime (regimeJob) ativa/desativa o conjunto certo (start/stop). As 3 trilhas do dono mapeiam aqui.\n3. Backtest Harness gen\u00e9rico: extrair indicadores compartilhados + interface Strategy{signal()} de backtest.js; runner que valida QUALQUER recipe contra klines MAINNET reais+fee real \u2192 Sharpe/maxDD/EV-net/win-rate por regime.\n4. Paper/Shadow Engine: modo ao vivo que executa num ledger virtual (tabelas paperOrders/paperPositions) com fill ao pre\u00e7o MAINNET real (MINI_TICKER) + fee real, SEM Binance. Resolve o medo do testnet. P&L honesto por trilha.\n5. Knowledge Base de padr\u00f5es: tabelas patternInstances + patternStats (win-rate/EV por regime/s\u00edmbolo) alimentadas por backtest (hist\u00f3rico) e paper (ao vivo); endpoint + tool MCP p/ o agente ler.\n6. Scanner cross-s\u00edmbolo + Estrategista LLM: job fora do hot path varre os 4 s\u00edmbolos, rankeia oportunidades; agente l\u00ea scanner+KB+cockpit e PROP\u00d5E/ativa recipes (gated). Execu\u00e7\u00e3o continua no BRAIN.\n\n## PERGUNTAS QUE QUERO QUE VOC\u00ca RESPONDA\n1. O Paper/Shadow Engine deve ser um m\u00f3dulo NOVO ou d\u00e1 pra reaproveitar o caminho beholder\u2192placeOrder com um \"broker virtual\" plug\u00e1vel (ex.: um exchange adapter fake que registra em vez de mandar \u00e0 Binance)? Qual abordagem \u00e9 menos invasiva ao hot path e mais fiel \u00e0 realidade? Investigue backend/src/beholder.js placeOrder e backend/src/utils/exchange.js para responder.\n2. Qual a PRIMEIRA fatia m\u00ednima (1 PR) que d\u00e1 ao dono \"ver lucro real mesmo que pouco\" com zero risco? Minha hip\u00f3tese: Paper Engine + 1 recipe por trilha (3) rodando ao vivo em paper com painel/endpoint de P&L por trilha. Concorda? O que cortar pra ser m\u00ednima de verdade?\n3. Riscos de fidelidade do paper-trading (look-ahead, fills otimistas, aus\u00eancia de slippage/partial fills) e como mitigar pra que o paper N\u00c3O minta (o medo do dono \u00e9 exatamente research que n\u00e3o transfere pra mainnet).\n4. As 3 trilhas (consist\u00eancia/frequ\u00eancia/macro) \u2014 que estrat\u00e9gias concretas e em que regime cada uma opera, reusando os sinais que j\u00e1 existem? Seja espec\u00edfico (ex.: consist\u00eancia=mean-reversion RSI 25/75 em range/mixed; macro=trend SMA50/200; frequ\u00eancia=?). A trilha de \"frequ\u00eancia/verde di\u00e1rio\" \u00e9 a mais perigosa (o cockpit do projeto mostra scalp 1m em EV negativo) \u2014 como desenh\u00e1-la honestamente?\n5. Onde persistir (operational MySQL vs Supabase pgvector) cada coisa, e a ordem de migrations dual-dialect.\n\nDevolva um plano de implementa\u00e7\u00e3o faseado, priorizado, com reuso expl\u00edcito e a primeira fatia destacada."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Plano gravado. Resumo do que entreguei acima, com os pontos onde a investigação do código mudou a recomendação:\n\n**A decisão arquitetural central (Q1)** está resolvida pelo código, não por opinião: `placeOrder` resolve o broker via `require('./utils/exchange')(settings)` em runtime, em 3 call-sites (beholder.js:379, :506, :736). Isso torna o **broker virtual plugável** trivial e maximamente fiel — o paper passa por todo o sizing real (`calcQty`/`calcPrice`) e só troca a última milha. Módulo paralelo seria menos fiel e reencenaria o trauma do testnet.\n\n**A descoberta que destrava o research sob HALT:** `assertWithinRisk` (exchange.js:33) lança com `TRADING_HALT=true`. O paper broker simplesmente não tem esse guard no seu `buy/sell`, então roda com a mainnet congelada intacta. Esse é o ponto cirúrgico.\n\n**A primeira fatia (Q2)** foi cortada da sua hipótese de 3 trilhas para **1 trilha (consistência) + broker virtual + endpoint JSON**, porque é o mínimo que prova toda a mecânica de fidelidade; as outras 2 trilhas viram cópias de config sem risco de arquitetura.\n\n**A trilha de frequência (Q4)** é a armadilha, e o aviso vem do próprio repo: cockpitJob.js:14 documenta que o EV 1m é mecânica negativa líquida de fee. Por isso ela tem um gate duro — só vai a paper depois de passar em backtest 5m/15m com EV positivo.\n\n**Reuso máximo:** a interface `Strategy{signal()}` que a arquitetura propõe criar **já existe** em backtest.js:156 (`signalFn`), e as estratégias mean-reversion/trend/long-flat já são fábricas (linhas 183-200). O harness genérico é uma extração, não uma invenção.\n\n### Critical Files for Implementation\n- /home/gcrux-tradeux/tradeux/backend/src/beholder.js (placeOrder :434, placeOco :329, calcQty :201, calcPrice :160, call-sites de broker :379/:506/:736)\n- /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js (factory a espelhar no paperExchange; refPrice :62; assertWithinRisk :33 a contornar)\n- /home/gcrux-tradeux/tradeux/backend/scripts/backtest.js (interface signalFn :156; fill look-ahead-safe :162-163; FEE :24; estratégias :183-200)\n- /home/gcrux-tradeux/tradeux/backend/scripts/setup-flow-gate.js (template idempotente para setup-paper-consistency.js)\n- /home/gcrux-tradeux/tradeux/backend/src/riskState.js (entender por que o paper deve desviar do guard)"}]
+> ```
+
+## 🤖 Claude *(03:50:51)*
+
+
+## 🤖 Claude *(03:50:55)*
+
+O Plan agent resolveu a decisão arquitetural central no código (não em opinião). Vou registrar o plano final.
+
+Descobertas que moldam o design:
+- **Broker virtual plugável é trivial e máximo-fiel:** `placeOrder` resolve o broker via `require('./utils/exchange')(settings)` em 3 call-sites (`beholder.js:379/:506/:736`). Um `paperExchange` drop-in passa por TODO o sizing real (`calcQty`/`calcPrice`) e só troca a última milha — sem reencenar o trauma do testnet.
+- **O paper roda com o mainnet congelado intacto:** o `assertWithinRisk` (`exchange.js:33`) é quem lança sob `TRADING_HALT=true`. O paper broker simplesmente não tem esse guard → research sob HALT, cirúrgico.
+- **A interface `Strategy{signal()}` já existe** em `backtest.js:156` — o harness é uma *extração*, não invenção.
+
+## 🤖 Claude *(03:51:52)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/plans/velvet-forging-wren.md",
+  "content": "# Plano \u2014 Motor de Estrat\u00e9gias TradeUX (gera\u00e7\u00e3o, valida\u00e7\u00e3o, ativa\u00e7\u00e3o por regime + KB de padr\u00f5es + IA cross-s\u00edmbolo)\n\n## Context (por que)\nO dono quer um **sistema que gera, valida e ativa estrat\u00e9gias de trade por regime de mercado**, com uma **base de conhecimento de padr\u00f5es/sinais**, usando o **poder total do Beholder** (todas as cryptos monitoradas ao mesmo tempo) com **IA decidindo ordens**. Ele quer **3 trilhas simult\u00e2neas** \u2014 consist\u00eancia (risco-ajustada), frequ\u00eancia (verde di\u00e1rio) e ciclo macro \u2014 nos **4 s\u00edmbolos atuais** (BTC/LTC/BNB/ADA), e \"ver lucro real mesmo que pouco\" pra depois escalar a(s) vencedora(s).\n\nRestri\u00e7\u00e3o dura: o sistema est\u00e1 em **MAINNET REAL (~$148) e CONGELADO** (`TRADING_HALT=true` via `riskState.js`, lido por ordem). **Claude n\u00e3o vira o HALT \u2014 s\u00f3 o dono.** Toda a fase de research/valida\u00e7\u00e3o **n\u00e3o pode tocar dinheiro real**.\n\nMedo central do dono (que este plano resolve): research feito em **testnet morre** porque o pre\u00e7o do testnet \u00e9 sint\u00e9tico \u2014 n\u00e3o transfere pra mainnet. A solu\u00e7\u00e3o **n\u00e3o \u00e9 o testnet**: \u00e9 **backtest + paper-trading com pre\u00e7o e fee REAIS da mainnet**, que o projeto j\u00e1 faz em parte (`backtest.js` puxa klines mainnet + fee 0,1%/lado).\n\n## Princ\u00edpio de lat\u00eancia (resolve \"IA de baixa lat\u00eancia\")\nDecis\u00e3o de ordem em ms = **BRAIN do Beholder** (regras compiladas reagindo a cada tick de todos os s\u00edmbolos \u2014 j\u00e1 \u00e9 assim). O **LLM \u00e9 o estrategista de ciclo lento** (escolhe/ativa/calibra estrat\u00e9gias lendo a KB), **nunca no hot path**. C\u00e9rebro de IA dirigindo o reflexo de m\u00e1quina.\n\n## Arquitetura (6 componentes)\n1. **Paper/Shadow Engine** \u2014 broker virtual plug\u00e1vel: ordens roteadas a um `paperExchange` que registra fills num ledger virtual ao **pre\u00e7o mainnet real** (`MINI_TICKER`) + **fee real**, sem mandar \u00e0 Binance. P&L honesto, zero risco, HALT intacto.\n2. **Backtest Harness gen\u00e9rico** \u2014 extra\u00e7\u00e3o de `backtest.js` (indicadores compartilhados + interface `Strategy{signal()}`) num runner que valida **qualquer** estrat\u00e9gia contra klines mainnet reais + fee real \u2192 Sharpe / maxDD / EV-net / win-rate **por regime**.\n3. **Strategy Library** \u2014 defini\u00e7\u00e3o declarativa de estrat\u00e9gia (recipe: `profile`, `regimes[]`, `symbols[]`, `signals/conditions`, `orderTemplate`, `sizing`, `risk`) + servi\u00e7o que instancia em `automations`+`orderTemplates` (data-driven, generaliza os `setup-*.js`).\n4. **Regime Router** \u2014 mapa regime\u2192estrat\u00e9gias; no shift de regime (`regimeJob`) ativa/desativa o conjunto certo (start/stop). As 3 trilhas vivem aqui.\n5. **Knowledge Base de padr\u00f5es** \u2014 tabelas `patternInstances` + `patternStats` (win-rate/EV por regime/s\u00edmbolo) alimentadas por backtest (hist\u00f3rico) e paper (ao vivo); endpoint + tool MCP pro agente ler.\n6. **Scanner cross-s\u00edmbolo + Estrategista LLM** \u2014 job fora do hot path varre os 4 s\u00edmbolos e rankeia oportunidades; o agente l\u00ea scanner+KB+cockpit e **prop\u00f5e/ativa** recipes (gated). Execu\u00e7\u00e3o continua no BRAIN.\n\n## Faseamento (blocos)\n**Bloco A \u2014 PROVAR (research sob HALT, zero risco):** Paper Engine \u2192 Backtest Harness \u2192 3 trilhas em paper + painel de P&L comparativo.\n**Bloco B \u2014 SISTEMATIZAR:** Strategy Library + Regime Router (gerar/ativar por regime) \u2192 Knowledge Base de padr\u00f5es.\n**Bloco C \u2014 INTELIG\u00caNCIA + GRADUA\u00c7\u00c3O:** Scanner + Estrategista LLM \u2192 canary mainnet da trilha vencedora (GO do dono, sob os gates existentes).\n\n---\n\n## \u25b6\ufe0f FATIA 1 (primeira PR \u2014 entrega valor vis\u00edvel, ZERO risco)\n**Objetivo:** dono v\u00ea P&L real (paper) de uma estrat\u00e9gia rodando ao vivo com pre\u00e7o+fee mainnet, com o mainnet congelado intacto. Prova a fidelidade do broker virtual antes de replicar pras 3 trilhas.\n\n**Escopo cortado ao m\u00ednimo:** Paper broker + **1 trilha (consist\u00eancia)** em paper + endpoint de leitura. As outras 2 trilhas (Fatia 2) viram c\u00f3pias de config, sem risco de arquitetura.\n\n### O que construir\n1. **`backend/src/utils/paperExchange.js`** (NOVO) \u2014 espelha a factory de `backend/src/utils/exchange.js` (mesma assinatura `buy/sell/oco`), mas:\n   - **n\u00e3o chama** `assertWithinRisk` (`exchange.js:33`) \u2192 roda sob HALT;\n   - resolve pre\u00e7o de fill do `MEMORY['<sym>:MINI_TICKER'].c` (pre\u00e7o mainnet real) e aplica **fee real** via `utils/feeCalc.computeNet` (j\u00e1 existe, fee-inclusive ciente do lado);\n   - grava em `paperOrders`/`paperPositions` em vez de ir \u00e0 Binance; emite um `executionReport` sint\u00e9tico no mesmo formato pra reusar o p\u00f3s-processamento.\n2. **Roteamento do broker** em `backend/src/beholder.js` (`placeOrder` :434 e os call-sites :379/:506/:736): selecionar `paperExchange` vs `exchange` por um flag da automa\u00e7\u00e3o (`mode: 'paper'|'live'`, default `live`) ou por tag no `name` (ex.: prefixo `Paper `). Toque cir\u00fargico: trocar `require('./utils/exchange')` por um resolver `getBroker(automation)`.\n3. **Migration dual-dialect** (`backend/migrations/`, padr\u00e3o `quoteIdentifier`): `paperOrders` (symbol, side, type, qty, price, fee, net, automationId, paperRunId, createdAt) e `paperPositions` (symbol, strategy, qty, avgCost, realizedPnl, updatedAt). Persist\u00eancia no **operational MySQL** (path validado; Supabase pgvector fica pro Bloco B opcional).\n4. **`backend/scripts/setup-paper-consistency.js`** (NOVO, padr\u00e3o de `setup-flow-gate.js`/`setup-farm.js`): cria o orderTemplate + automa\u00e7\u00e3o da trilha **consist\u00eancia** em `mode:'paper'`, `isActive:false` (idempotente, reaplic\u00e1vel p\u00f3s-`make nuke`).\n5. **Endpoint `GET /analysis/paper`** (router\u2192controller, padr\u00e3o de `/analysis/cockpit`): P&L por trilha/s\u00edmbolo lido do ledger (realized + unrealized vs `MINI_TICKER`), n\u00ba de trades, win-rate, fee paga. (Painel UI fica pra Fatia 2.)\n\n### Reuso concreto (n\u00e3o reinventar)\n- `beholder.js` `calcQty` (:201) / `calcPrice` (:160) \u2014 o paper passa pelo sizing real.\n- `utils/feeCalc.computeNet` \u2014 fee real fee-inclusive j\u00e1 implementado.\n- `utils/exchange.js` factory (refPrice :62) \u2014 molde do `paperExchange`.\n- `setup-flow-gate.js` / `setup-farm.js` \u2014 molde idempotente do setup script.\n- `controllers` do cockpit (`/analysis/cockpit`) \u2014 molde do endpoint read-only.\n\n---\n\n## As 3 trilhas (Fatia 2 \u2014 concretas, reusando sinais existentes)\n- **Consist\u00eancia** (range/mixed): mean-reversion **RSI 25/75** (padr\u00e3o id2/id3 j\u00e1 calibrado) + gate de regime (`!=bear`) + gate de fluxo (`FLOW.imbalance`). Poucos trades, protege caixa.\n- **Macro** (trend/bear): **trend-follow SMA 50/200** (golden\u2192compra, death\u2192vende `TREND_QTY`; j\u00e1 existe via `setup-trend.js`) + caixa no bear. Captura ciclo.\n- **Frequ\u00eancia / verde di\u00e1rio** (a armadilha \u2014 desenhar honestamente): **N\u00c3O \u00e9 scalp 1m** (o `cockpitJob.js:14` documenta EV 1m negativo l\u00edquido de fee). \u00c9 mean-reversion/breakout em **5m/15m** com bandas mais apertadas + gate de EV. **Gate duro: s\u00f3 vai a paper depois de passar no Backtest Harness com EV l\u00edquido positivo.** Se o backtest n\u00e3o achar estrat\u00e9gia de alta-frequ\u00eancia com EV+ pra esses s\u00edmbolos, **reportamos isso honestamente** \u2014 o backtest \u00c9 a resposta, n\u00e3o for\u00e7amos trade que sangra fee.\n\n## Fidelidade do paper (pra n\u00e3o mentir \u2014 \u00e9 o medo do dono)\n- **Look-ahead:** fill s\u00f3 no tick **seguinte** ao sinal (espelha `backtest.js:162-163`), nunca no candle que gerou o sinal.\n- **Fills otimistas:** usar `MINI_TICKER.c` real + (Fatia 2) penalidade de **slippage** configur\u00e1vel e checagem de **MIN_NOTIONAL**; sem fill instant\u00e2neo a pre\u00e7o imposs\u00edvel.\n- **Partial fills / liquidez:** assumir fill total s\u00f3 at\u00e9 um teto de % do volume da barra; logar quando a hip\u00f3tese seria irreal.\n- **Reconcilia\u00e7\u00e3o backtest\u2194paper:** mesma recipe rodada nos dois deve dar P&L na mesma ordem de grandeza; diverg\u00eancia = bug de fidelidade a investigar.\n\n## Verifica\u00e7\u00e3o (Fatia 1)\n1. Migration roda nos 2 dialetos: `bash scripts/ci-preflight.sh --only-lint` + `make migrate` (MySQL local).\n2. `node backend/scripts/setup-paper-consistency.js` cria template+automa\u00e7\u00e3o `mode:paper` inativa (verificar no DB + `GET /beholder/brain`).\n3. Ativar a automa\u00e7\u00e3o paper (`POST /automations/:id/start`), confirmar no `system.log` que disparos roteiam pro `paperExchange` (sem chamada Binance, **HALT continua `true`**) e que linhas aparecem em `paperOrders`.\n4. `GET /analysis/paper` retorna P&L coerente; cross-check manual de 1-2 fills (pre\u00e7o = `MINI_TICKER` do tick, fee via `computeNet`).\n5. Confirmar mainnet intacto: `riskState.isHalted()===true`, 0 ordens reais novas em `orders` (isTestnet/live).\n6. Gate QA (`qa-engineer`) + TL (`tech-lead`) antes do merge (hot path = `beholder.placeOrder`).\n\n## Gotchas a respeitar\n- BRAIN cacheia orderTemplate \u2192 re-PATCH a automa\u00e7\u00e3o ao editar template vivo.\n- Automa\u00e7\u00f5es runtime n\u00e3o-seedadas somem no `make nuke` \u2192 o setup script reaplica.\n- Migrations dual-dialect (`quoteIdentifier`, padr\u00e3o da `20260618170000`).\n- Edit do harness envenena dono do arquivo p/ `ubuntu` \u2192 `chown gcrux-tradeux` antes de git/docker.\n- Trunk-based: commit direto no master s\u00f3 com GO do dono; push via `GITHUB_TOKEN_API`.\n\n## O que este plano N\u00c3O faz\n- N\u00e3o vira o `TRADING_HALT` (s\u00f3 o dono). Bloco A inteiro roda com mainnet congelado.\n- N\u00e3o promete \"lucro di\u00e1rio garantido\" \u2014 entrega um sistema que **mede honestamente** qual trilha tem edge real (paper+backtest) antes de arriscar; a gradua\u00e7\u00e3o pra mainnet (canary) \u00e9 decis\u00e3o sua no fim do Bloco C.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/plans/velvet-forging-wren.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:51:59)*
+
+
+## 🤖 Claude *(03:52:03)*
+
+O plano está completo. Em resumo: um **motor de estratégias** em 3 blocos, começando por uma **primeira fatia de zero risco** — um *paper-trading engine* que roda estratégias ao vivo com **preço e fee REAIS da mainnet** (resolvendo seu medo do testnet sintético), com o mainnet **congelado intacto**. A partir daí, as 3 trilhas, a base de conhecimento de padrões, e por fim o scanner cross-símbolo + estrategista LLM. Nada disso vira o `TRADING_HALT` — isso continua sendo decisão sua, no fim.
+
+## 🤖 Claude *(03:52:05)*
+
+
+🛠️ **Tool Call**: `ExitPlanMode`
+```json
+{
+  "allowedPrompts": [
+    {
+      "tool": "Bash",
+      "prompt": "rodar migrations e CI pre-flight (make migrate, scripts/ci-preflight.sh) como gcrux-tradeux"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "rodar scripts de setup/automacao do backend (node backend/scripts/*.js)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "comandos docker compose (ps, logs, exec, restart, up -d) como gcrux-tradeux"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "operacoes git e push via GITHUB_TOKEN_API como gcrux-tradeux, com chown apos editar"
+    }
+  ],
+  "plan": "# Plano \u2014 Motor de Estrat\u00e9gias TradeUX (gera\u00e7\u00e3o, valida\u00e7\u00e3o, ativa\u00e7\u00e3o por regime + KB de padr\u00f5es + IA cross-s\u00edmbolo)\n\n## Context (por que)\nO dono quer um **sistema que gera, valida e ativa estrat\u00e9gias de trade por regime de mercado**, com uma **base de conhecimento de padr\u00f5es/sinais**, usando o **poder total do Beholder** (todas as cryptos monitoradas ao mesmo tempo) com **IA decidindo ordens**. Ele quer **3 trilhas simult\u00e2neas** \u2014 consist\u00eancia (risco-ajustada), frequ\u00eancia (verde di\u00e1rio) e ciclo macro \u2014 nos **4 s\u00edmbolos atuais** (BTC/LTC/BNB/ADA), e \"ver lucro real mesmo que pouco\" pra depois escalar a(s) vencedora(s).\n\nRestri\u00e7\u00e3o dura: o sistema est\u00e1 em **MAINNET REAL (~$148) e CONGELADO** (`TRADING_HALT=true` via `riskState.js`, lido por ordem). **Claude n\u00e3o vira o HALT \u2014 s\u00f3 o dono.** Toda a fase de research/valida\u00e7\u00e3o **n\u00e3o pode tocar dinheiro real**.\n\nMedo central do dono (que este plano resolve): research feito em **testnet morre** porque o pre\u00e7o do testnet \u00e9 sint\u00e9tico \u2014 n\u00e3o transfere pra mainnet. A solu\u00e7\u00e3o **n\u00e3o \u00e9 o testnet**: \u00e9 **backtest + paper-trading com pre\u00e7o e fee REAIS da mainnet**, que o projeto j\u00e1 faz em parte (`backtest.js` puxa klines mainnet + fee 0,1%/lado).\n\n## Princ\u00edpio de lat\u00eancia (resolve \"IA de baixa lat\u00eancia\")\nDecis\u00e3o de ordem em ms = **BRAIN do Beholder** (regras compiladas reagindo a cada tick de todos os s\u00edmbolos \u2014 j\u00e1 \u00e9 assim). O **LLM \u00e9 o estrategista de ciclo lento** (escolhe/ativa/calibra estrat\u00e9gias lendo a KB), **nunca no hot path**. C\u00e9rebro de IA dirigindo o reflexo de m\u00e1quina.\n\n## Arquitetura (6 componentes)\n1. **Paper/Shadow Engine** \u2014 broker virtual plug\u00e1vel: ordens roteadas a um `paperExchange` que registra fills num ledger virtual ao **pre\u00e7o mainnet real** (`MINI_TICKER`) + **fee real**, sem mandar \u00e0 Binance. P&L honesto, zero risco, HALT intacto.\n2. **Backtest Harness gen\u00e9rico** \u2014 extra\u00e7\u00e3o de `backtest.js` (indicadores compartilhados + interface `Strategy{signal()}`) num runner que valida **qualquer** estrat\u00e9gia contra klines mainnet reais + fee real \u2192 Sharpe / maxDD / EV-net / win-rate **por regime**.\n3. **Strategy Library** \u2014 defini\u00e7\u00e3o declarativa de estrat\u00e9gia (recipe: `profile`, `regimes[]`, `symbols[]`, `signals/conditions`, `orderTemplate`, `sizing`, `risk`) + servi\u00e7o que instancia em `automations`+`orderTemplates` (data-driven, generaliza os `setup-*.js`).\n4. **Regime Router** \u2014 mapa regime\u2192estrat\u00e9gias; no shift de regime (`regimeJob`) ativa/desativa o conjunto certo (start/stop). As 3 trilhas vivem aqui.\n5. **Knowledge Base de padr\u00f5es** \u2014 tabelas `patternInstances` + `patternStats` (win-rate/EV por regime/s\u00edmbolo) alimentadas por backtest (hist\u00f3rico) e paper (ao vivo); endpoint + tool MCP pro agente ler.\n6. **Scanner cross-s\u00edmbolo + Estrategista LLM** \u2014 job fora do hot path varre os 4 s\u00edmbolos e rankeia oportunidades; o agente l\u00ea scanner+KB+cockpit e **prop\u00f5e/ativa** recipes (gated). Execu\u00e7\u00e3o continua no BRAIN.\n\n## Faseamento (blocos)\n**Bloco A \u2014 PROVAR (research sob HALT, zero risco):** Paper Engine \u2192 Backtest Harness \u2192 3 trilhas em paper + painel de P&L comparativo.\n**Bloco B \u2014 SISTEMATIZAR:** Strategy Library + Regime Router (gerar/ativar por regime) \u2192 Knowledge Base de padr\u00f5es.\n**Bloco C \u2014 INTELIG\u00caNCIA + GRADUA\u00c7\u00c3O:** Scanner + Estrategista LLM \u2192 canary mainnet da trilha vencedora (GO do dono, sob os gates existentes).\n\n---\n\n## \u25b6\ufe0f FATIA 1 (primeira PR \u2014 entrega valor vis\u00edvel, ZERO risco)\n**Objetivo:** dono v\u00ea P&L real (paper) de uma estrat\u00e9gia rodando ao vivo com pre\u00e7o+fee mainnet, com o mainnet congelado intacto. Prova a fidelidade do broker virtual antes de replicar pras 3 trilhas.\n\n**Escopo cortado ao m\u00ednimo:** Paper broker + **1 trilha (consist\u00eancia)** em paper + endpoint de leitura. As outras 2 trilhas (Fatia 2) viram c\u00f3pias de config, sem risco de arquitetura.\n\n### O que construir\n1. **`backend/src/utils/paperExchange.js`** (NOVO) \u2014 espelha a factory de `backend/src/utils/exchange.js` (mesma assinatura `buy/sell/oco`), mas:\n   - **n\u00e3o chama** `assertWithinRisk` (`exchange.js:33`) \u2192 roda sob HALT;\n   - resolve pre\u00e7o de fill do `MEMORY['<sym>:MINI_TICKER'].c` (pre\u00e7o mainnet real) e aplica **fee real** via `utils/feeCalc.computeNet` (j\u00e1 existe, fee-inclusive ciente do lado);\n   - grava em `paperOrders`/`paperPositions` em vez de ir \u00e0 Binance; emite um `executionReport` sint\u00e9tico no mesmo formato pra reusar o p\u00f3s-processamento.\n2. **Roteamento do broker** em `backend/src/beholder.js` (`placeOrder` :434 e os call-sites :379/:506/:736): selecionar `paperExchange` vs `exchange` por um flag da automa\u00e7\u00e3o (`mode: 'paper'|'live'`, default `live`) ou por tag no `name` (ex.: prefixo `Paper `). Toque cir\u00fargico: trocar `require('./utils/exchange')` por um resolver `getBroker(automation)`.\n3. **Migration dual-dialect** (`backend/migrations/`, padr\u00e3o `quoteIdentifier`): `paperOrders` (symbol, side, type, qty, price, fee, net, automationId, paperRunId, createdAt) e `paperPositions` (symbol, strategy, qty, avgCost, realizedPnl, updatedAt). Persist\u00eancia no **operational MySQL** (path validado; Supabase pgvector fica pro Bloco B opcional).\n4. **`backend/scripts/setup-paper-consistency.js`** (NOVO, padr\u00e3o de `setup-flow-gate.js`/`setup-farm.js`): cria o orderTemplate + automa\u00e7\u00e3o da trilha **consist\u00eancia** em `mode:'paper'`, `isActive:false` (idempotente, reaplic\u00e1vel p\u00f3s-`make nuke`).\n5. **Endpoint `GET /analysis/paper`** (router\u2192controller, padr\u00e3o de `/analysis/cockpit`): P&L por trilha/s\u00edmbolo lido do ledger (realized + unrealized vs `MINI_TICKER`), n\u00ba de trades, win-rate, fee paga. (Painel UI fica pra Fatia 2.)\n\n### Reuso concreto (n\u00e3o reinventar)\n- `beholder.js` `calcQty` (:201) / `calcPrice` (:160) \u2014 o paper passa pelo sizing real.\n- `utils/feeCalc.computeNet` \u2014 fee real fee-inclusive j\u00e1 implementado.\n- `utils/exchange.js` factory (refPrice :62) \u2014 molde do `paperExchange`.\n- `setup-flow-gate.js` / `setup-farm.js` \u2014 molde idempotente do setup script.\n- `controllers` do cockpit (`/analysis/cockpit`) \u2014 molde do endpoint read-only.\n\n---\n\n## As 3 trilhas (Fatia 2 \u2014 concretas, reusando sinais existentes)\n- **Consist\u00eancia** (range/mixed): mean-reversion **RSI 25/75** (padr\u00e3o id2/id3 j\u00e1 calibrado) + gate de regime (`!=bear`) + gate de fluxo (`FLOW.imbalance`). Poucos trades, protege caixa.\n- **Macro** (trend/bear): **trend-follow SMA 50/200** (golden\u2192compra, death\u2192vende `TREND_QTY`; j\u00e1 existe via `setup-trend.js`) + caixa no bear. Captura ciclo.\n- **Frequ\u00eancia / verde di\u00e1rio** (a armadilha \u2014 desenhar honestamente): **N\u00c3O \u00e9 scalp 1m** (o `cockpitJob.js:14` documenta EV 1m negativo l\u00edquido de fee). \u00c9 mean-reversion/breakout em **5m/15m** com bandas mais apertadas + gate de EV. **Gate duro: s\u00f3 vai a paper depois de passar no Backtest Harness com EV l\u00edquido positivo.** Se o backtest n\u00e3o achar estrat\u00e9gia de alta-frequ\u00eancia com EV+ pra esses s\u00edmbolos, **reportamos isso honestamente** \u2014 o backtest \u00c9 a resposta, n\u00e3o for\u00e7amos trade que sangra fee.\n\n## Fidelidade do paper (pra n\u00e3o mentir \u2014 \u00e9 o medo do dono)\n- **Look-ahead:** fill s\u00f3 no tick **seguinte** ao sinal (espelha `backtest.js:162-163`), nunca no candle que gerou o sinal.\n- **Fills otimistas:** usar `MINI_TICKER.c` real + (Fatia 2) penalidade de **slippage** configur\u00e1vel e checagem de **MIN_NOTIONAL**; sem fill instant\u00e2neo a pre\u00e7o imposs\u00edvel.\n- **Partial fills / liquidez:** assumir fill total s\u00f3 at\u00e9 um teto de % do volume da barra; logar quando a hip\u00f3tese seria irreal.\n- **Reconcilia\u00e7\u00e3o backtest\u2194paper:** mesma recipe rodada nos dois deve dar P&L na mesma ordem de grandeza; diverg\u00eancia = bug de fidelidade a investigar.\n\n## Verifica\u00e7\u00e3o (Fatia 1)\n1. Migration roda nos 2 dialetos: `bash scripts/ci-preflight.sh --only-lint` + `make migrate` (MySQL local).\n2. `node backend/scripts/setup-paper-consistency.js` cria template+automa\u00e7\u00e3o `mode:paper` inativa (verificar no DB + `GET /beholder/brain`).\n3. Ativar a automa\u00e7\u00e3o paper (`POST /automations/:id/start`), confirmar no `system.log` que disparos roteiam pro `paperExchange` (sem chamada Binance, **HALT continua `true`**) e que linhas aparecem em `paperOrders`.\n4. `GET /analysis/paper` retorna P&L coerente; cross-check manual de 1-2 fills (pre\u00e7o = `MINI_TICKER` do tick, fee via `computeNet`).\n5. Confirmar mainnet intacto: `riskState.isHalted()===true`, 0 ordens reais novas em `orders` (isTestnet/live).\n6. Gate QA (`qa-engineer`) + TL (`tech-lead`) antes do merge (hot path = `beholder.placeOrder`).\n\n## Gotchas a respeitar\n- BRAIN cacheia orderTemplate \u2192 re-PATCH a automa\u00e7\u00e3o ao editar template vivo.\n- Automa\u00e7\u00f5es runtime n\u00e3o-seedadas somem no `make nuke` \u2192 o setup script reaplica.\n- Migrations dual-dialect (`quoteIdentifier`, padr\u00e3o da `20260618170000`).\n- Edit do harness envenena dono do arquivo p/ `ubuntu` \u2192 `chown gcrux-tradeux` antes de git/docker.\n- Trunk-based: commit direto no master s\u00f3 com GO do dono; push via `GITHUB_TOKEN_API`.\n\n## O que este plano N\u00c3O faz\n- N\u00e3o vira o `TRADING_HALT` (s\u00f3 o dono). Bloco A inteiro roda com mainnet congelado.\n- N\u00e3o promete \"lucro di\u00e1rio garantido\" \u2014 entrega um sistema que **mede honestamente** qual trilha tem edge real (paper+backtest) antes de arriscar; a gradua\u00e7\u00e3o pra mainnet (canary) \u00e9 decis\u00e3o sua no fim do Bloco C.\n",
+  "planFilePath": "/home/ubuntu/.claude/plans/velvet-forging-wren.md"
+}
+```
+
+> **Tool Result (ExitPlanMode)** - ✅ Success
+>
+> ```
+> User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+> 
+> Your plan has been saved to: /home/ubuntu/.claude/plans/velvet-forging-wren.md
+> You can refer back to it if needed during implementation.
+> 
+> ## Approved Plan (edited by user):
+> # Plano — Motor de Estratégias TradeUX (geração, validação, ativação por regime + KB de padrões + IA cross-símbolo)
+> 
+> ## Context (por que)
+> O dono quer um **sistema que gera, valida e ativa estratégias de trade por regime de mercado**, com uma **base de conhecimento de padrões/sinais**, usando o **poder total do Beholder** (todas as cryptos monitoradas ao mesmo tempo) com **IA decidindo ordens**. Ele quer **3 trilhas simultâneas** — consistência (risco-ajustada), frequência (verde diário) e ciclo macro — nos **4 símbolos atuais** (BTC/LTC/BNB/ADA), e "ver lucro real mesmo que pouco" pra depois escalar a(s) vencedora(s).
+> 
+> Restrição dura: o sistema está em **MAINNET REAL (~$148) e CONGELADO** (`TRADING_HALT=true` via `riskState.js`, lido por ordem). **Claude não vira o HALT — só o dono.** Toda a fase de research/validação **não pode tocar dinheiro real**.
+> 
+> Medo central do dono (que este plano resolve): research feito em **testnet morre** porque o preço do testnet é sintético — não transfere pra mainnet. A solução **não é o testnet**: é **backtest + paper-trading com preço e fee REAIS da mainnet**, que o projeto já faz em parte (`backtest.js` puxa klines mainnet + fee 0,1%/lado).
+> 
+> ## Princípio de latência (resolve "IA de baixa latência")
+> Decisão de ordem em ms = **BRAIN do Beholder** (regras compiladas reagindo a cada tick de todos os símbolos — já é assim). O **LLM é o estrategista de ciclo lento** (escolhe/ativa/calibra estratégias lendo a KB), **nunca no hot path**. Cérebro de IA dirigindo o reflexo de máquina.
+> 
+> ## Arquitetura (6 componentes)
+> 1. **Paper/Shadow Engine** — broker virtual plugável: ordens roteadas a um `paperExchange` que registra fills num ledger virtual ao **preço mainnet real** (`MINI_TICKER`) + **fee real**, sem mandar à Binance. P&L honesto, zero risco, HALT intacto.
+> 2. **Backtest Harness genérico** — extração de `backtest.js` (indicadores compartilhados + interface `Strategy{signal()}`) num runner que valida **qualquer** estratégia contra klines mainnet reais + fee real → Sharpe / maxDD / EV-net / win-rate **por regime**.
+> 3. **Strategy Library** — definição declarativa de estratégia (recipe: `profile`, `regimes[]`, `symbols[]`, `signals/conditions`, `orderTemplate`, `sizing`, `risk`) + serviço que instancia em `automations`+`orderTemplates` (data-driven, generaliza os `setup-*.js`).
+> 4. **Regime Router** — mapa regime→estratégias; no shift de regime (`regimeJob`) ativa/desativa o conjunto certo (start/stop). As 3 trilhas vivem aqui.
+> 5. **Knowledge Base de padrões** — tabelas `patternInstances` + `patternStats` (win-rate/EV por regime/símbolo) alimentadas por backtest (histórico) e paper (ao vivo); endpoint + tool MCP pro agente ler.
+> 6. **Scanner cross-símbolo + Estrategista LLM** — job fora do hot path varre os 4 símbolos e rankeia oportunidades; o agente lê scanner+KB+cockpit e **propõe/ativa** recipes (gated). Execução continua no BRAIN.
+> 
+> ## Faseamento (blocos)
+> **Bloco A — PROVAR (research sob HALT, zero risco):** Paper Engine → Backtest Harness → 3 trilhas em paper + painel de P&L comparativo.
+> **Bloco B — SISTEMATIZAR:** Strategy Library + Regime Router (gerar/ativar por regime) → Knowledge Base de padrões.
+> **Bloco C — INTELIGÊNCIA + GRADUAÇÃO:** Scanner + Estrategista LLM → canary mainnet da trilha vencedora (GO do dono, sob os gates existentes).
+> 
+> ---
+> 
+> ## ▶️ FATIA 1 (primeira PR — entrega valor visível, ZERO risco)
+> **Objetivo:** dono vê P&L real (paper) de uma estratégia rodando ao vivo com preço+fee mainnet, com o mainnet congelado intacto. Prova a fidelidade do broker virtual antes de replicar pras 3 trilhas.
+> 
+> **Escopo cortado ao mínimo:** Paper broker + **1 trilha (consistência)** em paper + endpoint de leitura. As outras 2 trilhas (Fatia 2) viram cópias de config, sem risco de arquitetura.
+> 
+> ### O que construir
+> 1. **`backend/src/utils/paperExchange.js`** (NOVO) — espelha a factory de `backend/src/utils/exchange.js` (mesma assinatura `buy/sell/oco`), mas:
+>    - **não chama** `assertWithinRisk` (`exchange.js:33`) → roda sob HALT;
+>    - resolve preço de fill do `MEMORY['<sym>:MINI_TICKER'].c` (preço mainnet real) e aplica **fee real** via `utils/feeCalc.computeNet` (já existe, fee-inclusive ciente do lado);
+>    - grava em `paperOrders`/`paperPositions` em vez de ir à Binance; emite um `executionReport` sintético no mesmo formato pra reusar o pós-processamento.
+> 2. **Roteamento do broker** em `backend/src/beholder.js` (`placeOrder` :434 e os call-sites :379/:506/:736): selecionar `paperExchange` vs `exchange` por um flag da automação (`mode: 'paper'|'live'`, default `live`) ou por tag no `name` (ex.: prefixo `Paper `). Toque cirúrgico: trocar `require('./utils/exchange')` por um resolver `getBroker(automation)`.
+> 3. **Migration dual-dialect** (`backend/migrations/`, padrão `quoteIdentifier`): `paperOrders` (symbol, side, type, qty, price, fee, net, automationId, paperRunId, createdAt) e `paperPositions` (symbol, strategy, qty, avgCost, realizedPnl, updatedAt). Persistência no **operational MySQL** (path validado; Supabase pgvector fica pro Bloco B opcional).
+> 4. **`backend/scripts/setup-paper-consistency.js`** (NOVO, padrão de `setup-flow-gate.js`/`setup-farm.js`): cria o orderTemplate + automação da trilha **consistência** em `mode:'paper'`, `isActive:false` (idempotente, reaplicável pós-`make nuke`).
+> 5. **Endpoint `GET /analysis/paper`** (router→controller, padrão de `/analysis/cockpit`): P&L por trilha/símbolo lido do ledger (realized + unrealized vs `MINI_TICKER`), nº de trades, win-rate, fee paga. (Painel UI fica pra Fatia 2.)
+> 
+> ### Reuso concreto (não reinventar)
+> - `beholder.js` `calcQty` (:201) / `calcPrice` (:160) — o paper passa pelo sizing real.
+> - `utils/feeCalc.computeNet` — fee real fee-inclusive já implementado.
+> - `utils/exchange.js` factory (refPrice :62) — molde do `paperExchange`.
+> - `setup-flow-gate.js` / `setup-farm.js` — molde idempotente do setup script.
+> - `controllers` do cockpit (`/analysis/cockpit`) — molde do endpoint read-only.
+> 
+> ---
+> 
+> ## As 3 trilhas (Fatia 2 — concretas, reusando sinais existentes)
+> - **Consistência** (range/mixed): mean-reversion **RSI 25/75** (padrão id2/id3 já calibrado) + gate de regime (`!=bear`) + gate de fluxo (`FLOW.imbalance`). Poucos trades, protege caixa.
+> - **Macro** (trend/bear): **trend-follow SMA 50/200** (golden→compra, death→vende `TREND_QTY`; já existe via `setup-trend.js`) + caixa no bear. Captura ciclo.
+> - **Frequência / verde diário** (a armadilha — desenhar honestamente): **NÃO é scalp 1m** (o `cockpitJob.js:14` documenta EV 1m negativo líquido de fee). É mean-reversion/breakout em **5m/15m** com bandas mais apertadas + gate de EV. **Gate duro: só vai a paper depois de passar no Backtest Harness com EV líquido positivo.** Se o backtest não achar estratégia de alta-frequência com EV+ pra esses símbolos, **reportamos isso honestamente** — o backtest É a resposta, não forçamos trade que sangra fee.
+> 
+> ## Fidelidade do paper (pra não mentir — é o medo do dono)
+> - **Look-ahead:** fill só no tick **seguinte** ao sinal (espelha `backtest.js:162-163`), nunca no candle que gerou o sinal.
+> - **Fills otimistas:** usar `MINI_TICKER.c` real + (Fatia 2) penalidade de **slippage** configurável e checagem de **MIN_NOTIONAL**; sem fill instantâneo a preço impossível.
+> - **Partial fills / liquidez:** assumir fill total só até um teto de % do volume da barra; logar quando a hipótese seria irreal.
+> - **Reconciliação backtest↔paper:** mesma recipe rodada nos dois deve dar P&L na mesma ordem de grandeza; divergência = bug de fidelidade a investigar.
+> 
+> ## Verificação (Fatia 1)
+> 1. Migration roda nos 2 dialetos: `bash scripts/ci-preflight.sh --only-lint` + `make migrate` (MySQL local).
+> 2. `node backend/scripts/setup-paper-consistency.js` cria template+automação `mode:paper` inativa (verificar no DB + `GET /beholder/brain`).
+> 3. Ativar a automação paper (`POST /automations/:id/start`), confirmar no `system.log` que disparos roteiam pro `paperExchange` (sem chamada Binance, **HALT continua `true`**) e que linhas aparecem em `paperOrders`.
+> 4. `GET /analysis/paper` retorna P&L coerente; cross-check manual de 1-2 fills (preço = `MINI_TICKER` do tick, fee via `computeNet`).
+> 5. Confirmar mainnet intacto: `riskState.isHalted()===true`, 0 ordens reais novas em `orders` (isTestnet/live).
+> 6. Gate QA (`qa-engineer`) + TL (`tech-lead`) antes do merge (hot path = `beholder.placeOrder`).
+> 
+> ## Gotchas a respeitar
+> - BRAIN cacheia orderTemplate → re-PATCH a automação ao editar template vivo.
+> - Automações runtime não-seedadas somem no `make nuke` → o setup script reaplica.
+> - Migrations dual-dialect (`quoteIdentifier`, padrão da `20260618170000`).
+> - Edit do harness envenena dono do arquivo p/ `ubuntu` → `chown gcrux-tradeux` antes de git/docker.
+> - Trunk-based: commit direto no master só com GO do dono; push via `GITHUB_TOKEN_API`.
+> 
+> ## O que este plano NÃO faz
+> - Não vira o `TRADING_HALT` (só o dono). Bloco A inteiro roda com mainnet congelado.
+> - Não promete "lucro diário garantido" — entrega um sistema que **mede honestamente** qual trilha tem edge real (paper+backtest) antes de arriscar; a graduação pra mainnet (canary) é decisão sua no fim do Bloco C.
+> 
+> ```
+
+## 🤖 Claude *(03:54:16)*
+
+
+## 🤖 Claude *(03:54:18)*
+
+Plano aprovado. Vou implementar a **Fatia 1**. Primeiro preciso ler o código real do hot path (não vou editar `beholder.placeOrder` sem ver o conteúdo exato), e carregar as ferramentas de tarefa para você acompanhar.
+
+## 🤖 Claude *(03:54:19)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Implementa\u00e7\u00e3o \u2014 Paper Engine (Fatia 1)",
+  "summary": "Broker virtual + ledger + trilha consist\u00eancia em paper + endpoint, sob HALT"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Implementação — Paper Engine (Fatia 1)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(03:54:20)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskCreate,TaskUpdate",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskCreate'}, {'type': 'tool_reference', 'tool_name': 'TaskUpdate'}]
+> ```
+
+## 🤖 Claude *(03:54:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const BinanceApi = require('node-binance-api');
+> 2	// node-binance-api 1.x (fork ccxt): o build CJS exporta a classe Binance direto (require() já
+> 3	// é a classe; .default é undefined). O `|| BinanceApi` é só fallback defensivo p/ builds futuras.
+> 4	const Binance = BinanceApi.default || BinanceApi;
+> 5	const LOGS = process.env.BINANCE_LOGS === 'true';
+> 6	const SAPI_URL = process.env.BINANCE_SAPI_URL;
+> 7	const logger = require('./logger');
+> 8	const riskState = require('../riskState'); // fonte única do HALT (QUENTE); sem ciclo (riskState não requer o app)
+> 9	
+> 10	// === Teto de risco global (chokepoint único: TODA ordem real — automação, funil ou manual — passa por
+> 11	// buy()/sell()/oco() aqui). Única trava de tamanho do BACKEND (o ALLOW_TRADING é só do agente LLM).
+> 12	//   HALT (kill-switch)           → bloqueia QUALQUER ordem (parada de emergência) — cobre TUDO. AGORA é QUENTE:
+> 13	//                                  lido por ordem via riskState.isHalted() (não mais um const no load). TRADING_HALT=true
+> 14	//                                  no .env SEEDA o riskState como floor permanente (mexer no .env ainda exige restart);
+> 15	//                                  o operador (POST /system/halt) e o cap diário -5% (dailyCapJob) flipam SEM restart.
+> 16	//   MAX_ORDER_NOTIONAL_USDT=<n>  → teto de notional por ordem em USDT (0 = desligado). Cobre MARKET por
+> 17	//                                  quote (quoteOrderQty, ex.: funil), LIMIT/OCO (price×qty) e — desde o fix
+> 18	//                                  do furo MARKET-por-quantidade — MARKET por QTY-base sem price (venda de
+> 19	//                                  TREND_QTY/HARVEST_QTY/MAX_WALLET): deriva o preço do MINI_TICKER p/ estimar
+> 20	//                                  o notional. Se o MINI_TICKER estiver frio (sem preço de referência), a
+> 21	//                                  ordem PASSA (logada) e fica coberta só pelo HALT — escolha deliberada p/
+> 22	//                                  NÃO bloquear venda protetiva (ex.: death cross) por memória fria.
+> 23	//                                  Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+> 24	//   DIMENSIONAMENTO: o teto deve ficar logo ACIMA do maior pedido LEGÍTIMO (venda de posição/bucket por símbolo,
+> 25	//   capada na carteira pelo calcQty) e MUITO ABAIXO de um runaway. ~2× o saldo total da conta é a régua; reajuste
+> 26	//   ao aportar. ⚠️ vendas de EXCEDENTE de BTC (BTC_EXCESS, meta +3 BTC) têm notional ALTO → se reativar a 'BTC
+> 27	//   Scalp Excess' (id38), tornar o teto symbol-aware (isentar/segregar BTCUSDT SELL): um teto fixo a MARKET
+> 28	//   bloquearia a colheita de BTC. Hoje id38 está isActive=0, então o teto fixo é seguro.
+> 29	// Inerte por padrão; ajustável por env SEM deploy de código (basta reiniciar). Fail-closed (lança). ===
+> 30	const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> 31	const MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;
+> 32	
+> 33	function assertWithinRisk(action, symbol, quantity, price, options) {
+> 34	    if (riskState.isHalted()) {
+> 35	        const st = riskState.getState();
+> 36	        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) — ${action} ${symbol} BLOQUEADA.`;
+> 37	        logger('system', msg);
+> 38	        throw new Error(msg);
+> 39	    }
+> 40	    if (MAX_ORDER_NOTIONAL_USDT > 0 && /USDT$/i.test(symbol || '')) {
+> 41	        const o = options || {};
+> 42	        let notional = null;
+> 43	        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)
+> 44	        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO
+> 45	        else if (quantity != null) {                                                    // MARKET por QTY-base sem price (venda TREND_QTY/HARVEST_QTY/MAX_WALLET; ou STOP/TP-MARKET)
+> 46	            const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: usa o stopPrice (preço-alvo real); senão deriva o spot do MINI_TICKER
+> 47	            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);
+> 48	            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem preço de referência (MINI_TICKER frio) — teto NÃO avaliado (coberto só pelo HALT).`);
+> 49	        }
+> 50	        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {
+> 51	            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} — BLOQUEADA.`;
+> 52	            logger('system', msg);
+> 53	            throw new Error(msg);
+> 54	        }
+> 55	    }
+> 56	}
+> 57	
+> 58	// Preço de referência p/ estimar o notional de uma MARKET-por-quantidade (sem price): MINI_TICKER.close da
+> 59	// MEMORY do beholder. require LAZY de propósito — exchange é boundary de baixo nível e beholder é a engine;
+> 60	// o require no corpo (não no topo) evita ciclo no load, e em runtime (na hora da ordem) o beholder já está
+> 61	// inicializado. Read-only: só lê a memória p/ avaliar o teto de risco, nunca escreve.
+> 62	function refPrice(symbol) {
+> 63	    try {
+> 64	        const beholder = require('../beholder');
+> 65	        const mt = beholder.getMemory(symbol, 'MINI_TICKER'); // chave === indexKeys.MINI_TICKER; interval falsy
+> 66	        const px = mt && parseFloat(mt.close);
+> 67	        return Number.isFinite(px) && px > 0 ? px : null;
+> 68	    } catch (_) {
+> 69	        return null;
+> 70	    }
+> 71	}
+> 72	
+> 73	module.exports = (settings) => {
+> 74	
+> 75	    if (!settings) throw new Error(`The settings object is required to connect on exchange!`);
+> 76	
+> 77	    // testnet x mainnet: na 1.x a WebSocket-API (userData) é roteada por Options.test,
+> 78	    // NÃO pelas urls. Sem isso o userData tentaria autenticar no ws-api MAINNET com chave
+> 79	    // testnet. Derivamos do apiUrl pra manter o BYOK funcionando nos dois ambientes.
+> 80	    const isTestnet = /testnet|binance\.vision/i.test(settings.apiUrl || '');
+> 81	
+> 82	    const binance = new Binance().options({
+> 83	        APIKEY: settings.accessKey,
+> 84	        APISECRET: settings.secretKey,
+> 85	        recvWindow: 60000,
+> 86	        test: isTestnet,
+> 87	        reconnect: true,
+> 88	        urls: {
+> 89	            base: settings.apiUrl.endsWith('/') ? settings.apiUrl : settings.apiUrl + '/',
+> 90	            stream: settings.streamUrl.endsWith('/') ? settings.streamUrl : settings.streamUrl + '/'
+> 91	        },
+> 92	        verbose: LOGS
+> 93	    });
+> 94	
+> 95	    // 1.x: websockets.terminate() indexa as subscriptions pela URL COMPLETA do socket, não
+> 96	    // pelo nome curto do endpoint. Guardamos a URL retornada por chart()/prevDay() por stream
+> 97	    // p/ conseguir fechá-lo depois (senão terminate vira no-op e o socket vaza/reconecta).
+> 98	    const chartStreams = {};
+> 99	    const tickerStreams = {};
+> 100	
+> 101	    function exchangeInfo() {
+> 102	        return binance.exchangeInfo();
+> 103	    }
+> 104	
+> 105	    async function balance() {
+> 106	        await binance.useServerTime();
+> 107	        return binance.balance();
+> 108	    }
+> 109	
+> 110	    // 1.x: buy()/sell() fixam type='LIMIT' posicional e o guard interno de stopPrice dispara
+> 111	    // ANTES de params sobrescrever o type -> ordens STOP via flags quebrariam. Por isso chamamos
+> 112	    // binance.order(type, side, ...) direto (e marketBuy/marketSell p/ MARKET, que tratam
+> 113	    // quoteOrderQty). Cobre MARKET/LIMIT/STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT/LIMIT_MAKER.
+> 114	    function buy(symbol, quantity, price, options) {
+> 115	        options = options || {};
+> 116	        assertWithinRisk('BUY', symbol, quantity, price, options);
+> 117	        const type = options.type || 'MARKET';
+> 118	        if (type === 'MARKET')
+> 119	            return binance.marketBuy(symbol, quantity, options);
+> 120	        return binance.order(type, 'BUY', symbol, quantity, price, options);
+> 121	    }
+> 122	
+> 123	    function sell(symbol, quantity, price, options) {
+> 124	        options = options || {};
+> 125	        assertWithinRisk('SELL', symbol, quantity, price, options);
+> 126	        const type = options.type || 'MARKET';
+> 127	        if (type === 'MARKET')
+> 128	            return binance.marketSell(symbol, quantity, options);
+> 129	        return binance.order(type, 'SELL', symbol, quantity, price, options);
+> 130	    }
+> 131	
+> 132	    // OCO (destravado pelo bump p/ 1.x). ocoOrder usa o endpoint novo POST /api/v3/orderList/oco.
+> 133	    // `options` segue o schema novo, p.ex. p/ um SELL protetivo após o buy:
+> 134	    //   { aboveType:'LIMIT_MAKER', abovePrice, belowType:'STOP_LOSS_LIMIT',
+> 135	    //     belowPrice, belowStopPrice, belowTimeInForce:'GTC' }
+> 136	    function oco(side, symbol, quantity, options) {
+> 137	        options = options || {};
+> 138	        assertWithinRisk(`OCO-${side}`, symbol, quantity, options.abovePrice || options.belowPrice, options);
+> 139	        return binance.ocoOrder(side, symbol, quantity, options);
+> 140	    }
+> 141	
+> 142	    function cancel(symbol, orderId) {
+> 143	        return binance.cancel(symbol, orderId);
+> 144	    }
+> 145	
+> 146	    // Cancela uma OCO inteira (as 2 pernas) via DELETE /api/v3/orderList.
+> 147	    function cancelOrderList(symbol, orderListId) {
+> 148	        return binance.privateSpotRequest('v3/orderList', { symbol, orderListId }, 'DELETE');
+> 149	    }
+> 150	
+> 151	    function orderStatus(symbol, orderId) {
+> 152	        return binance.orderStatus(symbol, orderId);
+> 153	    }
+> 154	
+> 155	    async function orderTrade(symbol, orderId) {
+> 156	        const trades = await binance.trades(symbol);
+> 157	        return trades.find(t => t.orderId === orderId);
+> 158	    }
+> 159	
+> 160	    function withdraw(coin, amount, address, network, addressTag) {
+> 161	        try {
+> 162	            const data = { coin, amount, address };
+> 163	            if (addressTag) data.addressTag = addressTag;
+> 164	            if (network) data.network = network;
+> 165	            return privateCall(SAPI_URL + 'capital/withdraw/apply', data, 'POST');
+> 166	        } catch (err) {
+> 167	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 168	        }
+> 169	    }
+> 170	
+> 171	    async function getCoins() {
+> 172	        try {
+> 173	            const coins = await privateCall(SAPI_URL + 'capital/config/getall', null, 'GET');
+> 174	            return coins.map(c => {
+> 175	                return {
+> 176	                    coin: c.coin,
+> 177	                    networks: c.networkList.map(n => {
+> 178	                        return {
+> 179	                            network: n.network,
+> 180	                            withdrawIntegerMultiple: n.withdrawIntegerMultiple,
+> 181	                            isDefault: n.isDefault,
+> 182	                            name: n.name,
+> 183	                            withdrawFee: n.withdrawFee,
+> 184	                            withdrawMin: n.withdrawMin,
+> 185	                            minConfirm: n.minConfirm
+> 186	                        }
+> 187	                    })
+> 188	                }
+> 189	            })
+> 190	        } catch (err) {
+> 191	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 192	        }
+> 193	    }
+> 194	
+> 195	    async function privateCall(apiUrl, data = {}, method = 'GET') {
+> 196	
+> 197	        const timestamp = Date.now();
+> 198	        const recvWindow = 60000;
+> 199	
+> 200	        const axios = require('axios');
+> 201	        const queryString = new URLSearchParams();
+> 202	        Object.entries({ ...data, timestamp, recvWindow }).map(prop => queryString.append(prop[0], `${prop[1]}`));
+> 203	
+> 204	        const signature = require('crypto')
+> 205	            .createHmac('sha256', settings.secretKey)
+> 206	            .update(queryString.toString())
+> 207	            .digest('hex');
+> 208	
+> 209	        queryString.append('signature', signature);
+> 210	
+> 211	        const result = await axios({
+> 212	            method,
+> 213	            url: `${apiUrl}?${queryString.toString()}`,
+> 214	            headers: { 'X-MBX-APIKEY': settings.accessKey }
+> 215	        })
+> 216	
+> 217	        return result.data;
+> 218	    }
+> 219	
+> 220	    function miniTickerStream(callback) {
+> 221	        binance.websockets.miniTicker(markets => {
+> 222	            callback(markets)
+> 223	        });
+> 224	    }
+> 225	
+> 226	    // O monitor BOOK fica inativo por padrão (o book é simulado a partir do miniTicker em
+> 227	    // app-em.js). Na 1.x o websockets.bookTickers mudou (perdeu o modo all-symbols e usa
+> 228	    // conversor de futures); assinamos o stream cru !bookTicker e remapeamos. Best-effort.
+> 229	    function bookStream(callback) {
+> 230	        binance.websockets.subscribe('!bookTicker', data => {
+> 231	            callback({
+> 232	                updateId: data.u,
+> 233	                symbol: data.s,
+> 234	                bestBid: data.b,
+> 235	                bestBidQty: data.B,
+> 236	                bestAsk: data.a,
+> 237	                bestAskQty: data.A
+> 238	            })
+> 239	        });
+> 240	    }
+> 241	
+> 242	    function chartStream(symbol, interval, callback) {
+> 243	        const streamUrl = binance.websockets.chart(symbol, interval, (symbol, interval, chart) => {
+> 244	            const tick = binance.last(chart);
+> 245	            const isIncomplete = tick && chart[tick] && chart[tick].isFinal === false;
+> 246	            if ((!process.env.INCOMPLETE_CANDLES || process.env.INCOMPLETE_CANDLES === 'false') && isIncomplete)
+> 247	                return;
+> 248	
+> 249	            const ohlc = binance.populateOHLC(chart); // 1.x: binance.ohlc() -> binance.populateOHLC()
+> 250	            ohlc.isComplete = !isIncomplete;
+> 251	
+> 252	            callback(ohlc);
+> 253	        });
+> 254	        chartStreams[`${symbol.toLowerCase()}@kline_${interval}`] = streamUrl;
+> 255	        if (LOGS) logger('system', `Chart Stream connected at ${streamUrl}`);
+> 256	    }
+> 257	
+> 258	    function terminateChartStream(symbol, interval) {
+> 259	        const key = `${symbol.toLowerCase()}@kline_${interval}`;
+> 260	        const streamUrl = chartStreams[key];
+> 261	        if (streamUrl) {
+> 262	            binance.websockets.terminate(streamUrl);
+> 263	            delete chartStreams[key];
+> 264	        }
+> 265	        logger('system', `Chart Stream ${key} terminated!`);
+> 266	    }
+> 267	
+> 268	    // 1.x: a assinatura virou (all_updates_callback, balance_callback, execution_callback,
+> 269	    // subscribed_callback, list_status_callback). all_updates_callback recebe TODOS os eventos
+> 270	    // CRUS (com .e) — exatamente o que app-em.js consome (switch em data.e).
+> 271	    function userDataStream(updateCallback, listStatusCallback) {
+> 272	        binance.websockets.userData(
+> 273	            data => updateCallback(data),
+> 274	            undefined,
+> 275	            undefined,
+> 276	            subscribedData => logger('system', `userDataStream:subscribeEvent: ${JSON.stringify(subscribedData)}`),
+> 277	            listStatusData => { if (listStatusCallback) listStatusCallback(listStatusData); });
+> 278	    }
+> 279	
+> 280	    async function tickerStream(symbol, callback) {
+> 281	        const streamUrl = binance.websockets.prevDay(symbol, (data, converted) => {
+> 282	            callback(converted);
+> 283	        })
+> 284	        tickerStreams[`${symbol.toLowerCase()}@ticker`] = streamUrl;
+> 285	        if (LOGS) logger('system', `Ticker Stream connected at ${streamUrl}`);
+> 286	    }
+> 287	
+> 288	    function terminateTickerStream(symbol) {
+> 289	        const key = `${symbol.toLowerCase()}@ticker`;
+> 290	        const streamUrl = tickerStreams[key];
+> 291	        if (streamUrl) {
+> 292	            binance.websockets.terminate(streamUrl);
+> 293	            delete tickerStreams[key];
+> 294	        }
+> 295	        logger('system', `Ticker Stream disconnected at ${key}`);
+> 296	    }
+> 297	
+> 298	    return {
+> 299	        exchangeInfo,
+> 300	        balance,
+> 301	        buy,
+> 302	        sell,
+> 303	        oco,
+> 304	        cancel,
+> 305	        cancelOrderList,
+> 306	        miniTickerStream,
+> 307	        bookStream,
+> 308	        chartStream,
+> 309	        terminateChartStream,
+> 310	        terminateTickerStream,
+> 311	        userDataStream,
+> 312	        orderStatus,
+> 313	        orderTrade,
+> 314	        tickerStream,
+> 315	        getCoins,
+> 316	        withdraw
+> 317	    }
+> 318	}
+> 319	
+> ```
+
+## 🤖 Claude *(03:54:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/feeCalc.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// === computeNet — FONTE ÚNICA do `net` de uma ordem (fee-inclusive, ciente do lado) ===
+> 4	//
+> 5	// Hoje o `net` só descontava a taxa quando paga no QUOTE (USDT); taxa em BNB (o que o desconto
+> 6	// BNB-fee da Binance liga) passava batido → P&L/painel/relatórios mentiam OTIMISTA. Este helper
+> 7	// torna o `net` fee-inclusive de verdade, com a taxa em QUALQUER asset convertida a USDT:
+> 8	//   VENDA:  net = cummQuote − taxa(USDT-eq)   (USDT que realmente FICA)
+> 9	//   COMPRA: net = cummQuote + taxa(USDT-eq)   (USDT que realmente CUSTOU — a taxa de compra
+> 10	//                                               não some mais do P&L)
+> 11	//
+> 12	// Os 3 pontos que calculavam net (ordersRepository.calcFillFinancials, app-em.processExecutionData,
+> 13	// ordersController.syncOrder) passam a CHAMAR aqui — fim da lógica triplicada e cega a BNB.
+> 14	//
+> 15	// Premissa de derivação base/quote (mantém o helper SÍNCRONO, sem I/O ao symbolModel): para os
+> 16	// pares do projeto (sufixos USDT/USDC/BTC/...), `symbol.endsWith(asset)` ⇒ taxa no QUOTE e
+> 17	// `symbol.startsWith(asset)` ⇒ taxa na BASE; qualquer outro asset (BNB etc.) cai no ramo de conversão.
+> 18	//
+> 19	// FAIL-SAFE a preço frio: se a taxa não puder ser convertida a USDT (BOOK do par frio), `feeValued`
+> 20	// volta false e `net = cummQuote` (sem ajuste, = comportamento de hoje). O chamador PERSISTE o
+> 21	// `commissionAsset` mesmo assim → um `POST /orders/:id/sync` posterior (BOOK quente) recomputa.
+> 22	
+> 23	// Converte a taxa (em `commissionAsset`) para USDT. Retorna { feeUsdt, feeValued }.
+> 24	// `feeValued=false` só quando a taxa existe mas não pôde ser valorada (preço frio) — nunca lança.
+> 25	function feeToUsdt(commission, commissionAsset, symbol, avgPrice) {
+> 26	    if (!commission || commission <= 0 || !commissionAsset) return { feeUsdt: 0, feeValued: true }; // sem taxa = nada a valorar
+> 27	    const asset = String(commissionAsset).toUpperCase();
+> 28	    const sym = String(symbol || '').toUpperCase();
+> 29	
+> 30	    if (sym.endsWith(asset)) return { feeUsdt: commission, feeValued: true };           // (i) taxa no QUOTE (mesma moeda do par; nos pares *USDT do projeto = USDT)
+> 31	    if (sym.startsWith(asset)) {                                                          // (ii) taxa na BASE → vale a avgPrice
+> 32	        const px = parseFloat(avgPrice);
+> 33	        if (Number.isFinite(px) && px > 0) return { feeUsdt: commission * px, feeValued: true };
+> 34	        return { feeUsdt: 0, feeValued: false };
+> 35	    }
+> 36	    // (iii) outro asset (BNB etc.) → converte via BOOK. require LAZY do beholder: beholder.js já requer
+> 37	    // o ordersRepository no topo; um require top-level daqui (chamado pelo repo) fecharia o ciclo.
+> 38	    try {
+> 39	        const beholder = require('../beholder');
+> 40	        const usdt = beholder.getStableConversion(asset, 'USDT', commission); // 0 se BOOK frio/ausente
+> 41	        const n = parseFloat(usdt);
+> 42	        if (Number.isFinite(n) && n > 0) return { feeUsdt: n, feeValued: true };
+> 43	    } catch (_) { /* não-lançante: cai no fail-safe */ }
+> 44	    return { feeUsdt: 0, feeValued: false };
+> 45	}
+> 46	
+> 47	// computeNet({ side, cummQuote, commission, commissionAsset, symbol, avgPrice }) → { net, feeUsdt, feeValued }
+> 48	function computeNet({ side, cummQuote, commission, commissionAsset, symbol, avgPrice }) {
+> 49	    const cq = parseFloat(cummQuote);
+> 50	    if (!Number.isFinite(cq)) return { net: cummQuote, feeUsdt: 0, feeValued: true }; // defensivo (não deveria ocorrer)
+> 51	    const s = String(side || '').toUpperCase();
+> 52	    // Direção desconhecida (resposta degradada/sem `side`): NÃO assume o lado — fail-safe sem ajuste
+> 53	    // (net=cummQuote); commissionAsset segue persistido p/ recompute via POST /orders/:id/sync. (QA P2)
+> 54	    if (s !== 'BUY' && s !== 'SELL') return { net: cq, feeUsdt: 0, feeValued: false };
+> 55	    const comm = parseFloat(commission) || 0;
+> 56	
+> 57	    const { feeUsdt, feeValued } = feeToUsdt(comm, commissionAsset, symbol, avgPrice);
+> 58	    if (!feeValued) return { net: cq, feeUsdt: 0, feeValued: false };                  // fail-safe: sem ajuste
+> 59	
+> 60	    let net = s === 'BUY' ? cq + feeUsdt : cq - feeUsdt;
+> 61	    if (!(net > 0)) net = cq;                                                          // guard: net>0 (invariante de getReportOrders/getAveragePrices)
+> 62	    return { net, feeUsdt, feeValued: true };
+> 63	}
+> 64	
+> 65	module.exports = { computeNet };
+> 66	
+> ```
+
+## 🤖 Claude *(03:54:51)*
+
+
+## 🤖 Claude *(03:54:53)*
+
+Entendi o `exchange.js` (factory + `assertWithinRisk` confirmado como o ponto de bypass) e o `feeCalc`. Agora preciso ler o `beholder.js` (hot path) com cuidado antes de qualquer edição. Vou criar a lista de tarefas e ler o `beholder` em paralelo.
+
+## 🤖 Claude *(03:54:55)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Entender hot path do beholder (placeOrder, calc, fill flow)",
+  "description": "Ler beholder.js (placeOrder :434, placeOco :329, calcQty :201, calcPrice :160, call-sites :379/:506/:736, require do exchange) e app-em.js (processExecutionData/insertOrder) pra desenhar o roteamento paper sem poluir orders reais nem buckets reais.",
+  "activeForm": "Lendo o hot path do beholder"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Entender hot path do beholder (placeOrder, calc, fill flow)
+> ```
+
+## 🤖 Claude *(03:54:56)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Migration dual-dialect paperOrders/paperPositions",
+  "description": "Criar migration (padr\u00e3o quoteIdentifier, MySQL+Postgres) das tabelas paperOrders e paperPositions no operational DB. Idempotente.",
+  "activeForm": "Criando migration do ledger paper"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: Migration dual-dialect paperOrders/paperPositions
+> ```
+
+## 🤖 Claude *(03:54:58)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "paperExchange.js (broker virtual)",
+  "description": "Espelhar a factory de exchange.js (buy/sell/oco) SEM assertWithinRisk; fill ao pre\u00e7o MINI_TICKER real + fee real via feeCalc.computeNet; gravar em paperOrders/paperPositions.",
+  "activeForm": "Implementando o broker virtual"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: paperExchange.js (broker virtual)
+> ```
+
+## 🤖 Claude *(03:55:00)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Roteamento de broker no beholder.placeOrder",
+  "description": "Resolver getBroker(automation) (paper vs live por mode/tag) nos call-sites; garantir que o caminho paper N\u00c3O insere em orders reais nem mexe em TREND_QTY/FARM_DCA reais.",
+  "activeForm": "Roteando o broker no hot path"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Roteamento de broker no beholder.placeOrder
+> ```
+
+## 🤖 Claude *(03:55:01)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "setup-paper-consistency.js",
+  "description": "Script idempotente (padr\u00e3o setup-flow-gate.js) que cria orderTemplate + automa\u00e7\u00e3o da trilha consist\u00eancia em mode:paper, isActive:false.",
+  "activeForm": "Criando o setup da trilha consist\u00eancia"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: setup-paper-consistency.js
+> ```
+
+## 🤖 Claude *(03:55:03)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Endpoint GET /analysis/paper",
+  "description": "Router+controller (padr\u00e3o /analysis/cockpit) que devolve P&L por trilha/s\u00edmbolo do ledger paper (realized+unrealized vs MINI_TICKER, n\u00ba trades, win-rate, fee).",
+  "activeForm": "Criando o endpoint de P&L paper"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #6 created successfully: Endpoint GET /analysis/paper
+> ```
+
+## 🤖 Claude *(03:55:06)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Verificar Fatia 1 + gate QA/TL",
+  "description": "migrate dual-dialect, rodar setup, ativar automa\u00e7\u00e3o paper, confirmar roteamento (sem Binance, HALT=true intacto), checar paperOrders e endpoint; depois gate qa-engineer + tech-lead antes de qualquer commit (GO do dono).",
+  "activeForm": "Verificando a Fatia 1"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #7 created successfully: Verificar Fatia 1 + gate QA/TL
+> ```
+
+## 🤖 Claude *(03:55:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 1,
+  "limit": 300
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const { getDefaultSettings } = require('./repositories/settingsRepository');
+> 2	const { actionTypes } = require('./repositories/actionsRepository');
+> 3	const orderTemplatesRepository = require('./repositories/orderTemplatesRepository');
+> 4	const automationsRepository = require('./repositories/automationsRepository');
+> 5	const withdrawTemplatesRepository = require('./repositories/withdrawTemplatesRepository');
+> 6	const gridsRepository = require('./repositories/gridsRepository');
+> 7	const { getSymbol } = require('./repositories/symbolsRepository');
+> 8	const { STOP_TYPES, LIMIT_TYPES, insertOrder, getOpenOcoOrders, calcFillFinancials } = require('./repositories/ordersRepository');
+> 9	const db = require('./db');
+> 10	const logger = require('./utils/logger');
+> 11	const telegramNotify = require('./utils/telegramNotify');
+> 12	
+> 13	const MEMORY = {};
+> 14	
+> 15	let BRAIN = {};
+> 16	
+> 17	let LOCK_BRAIN = {};
+> 18	
+> 19	let BRAIN_INDEX = {};
+> 20	
+> 21	let LOCK_MEMORY = false;
+> 22	
+> 23	const LOGS = process.env.BEHOLDER_LOGS === 'true';
+> 24	const INTERVAL = parseInt(process.env.AUTOMATION_INTERVAL || 0);
+> 25	
+> 26	function init(automations) {
+> 27	
+> 28	    try {
+> 29	        setLocked(automations.map(a => a.id), true);
+> 30	        LOCK_MEMORY = true;
+> 31	
+> 32	        BRAIN = {};
+> 33	        BRAIN_INDEX = {};
+> 34	
+> 35	        automations.map(auto => {
+> 36	            if (auto.isActive && !auto.schedule)
+> 37	                updateBrain(auto)
+> 38	        });
+> 39	    } finally {
+> 40	        setLocked(automations.map(a => a.id), false);
+> 41	        LOCK_MEMORY = false;
+> 42	        logger('beholder', 'Beholder Brain has started!');
+> 43	    }
+> 44	}
+> 45	
+> 46	function isLocked(automationId) {
+> 47	    if (Array.isArray(automationId))
+> 48	        return automationId.some(id => LOCK_BRAIN[id] === true);
+> 49	    return LOCK_BRAIN[automationId] === true;
+> 50	}
+> 51	
+> 52	function setLocked(automationId, value) {
+> 53	    if (Array.isArray(automationId))
+> 54	        return automationId.map(id => LOCK_BRAIN[id] = value);
+> 55	    LOCK_BRAIN[automationId] = value;
+> 56	}
+> 57	
+> 58	function updateBrainIndex(index, automationId) {
+> 59	    if (!BRAIN_INDEX[index]) BRAIN_INDEX[index] = [];
+> 60	    BRAIN_INDEX[index].push(automationId);
+> 61	
+> 62	    if (index.startsWith('*')) BRAIN_INDEX.hasWildcard = true;
+> 63	}
+> 64	
+> 65	function deleteBrainIndex(indexes, automationId) {
+> 66	    if (typeof indexes === 'string') indexes = indexes.split(',');
+> 67	    indexes.forEach(ix => {
+> 68	        if (!BRAIN_INDEX[ix] || BRAIN_INDEX[ix].length === 0) return;
+> 69	        const pos = BRAIN_INDEX[ix].findIndex(id => id === automationId);
+> 70	        BRAIN_INDEX[ix].splice(pos, 1);
+> 71	    });
+> 72	
+> 73	    if (BRAIN_INDEX.hasWildcard)
+> 74	        BRAIN_INDEX.hasWildcard = Object.entries(BRAIN_INDEX).some(p => p[0].startsWith('*'));
+> 75	}
+> 76	
+> 77	function updateBrain(automation) {
+> 78	    if (!automation.isActive || !automation.conditions) return;
+> 79	
+> 80	    const actions = automation.actions ? automation.actions.map(a => {
+> 81	        a = a.toJSON ? a.toJSON() : a;
+> 82	        delete a.createdAt;
+> 83	        delete a.updatedAt;
+> 84	        //delete a.orderTemplate;
+> 85	        return a;
+> 86	    }) : [];
+> 87	
+> 88	    const grids = automation.grids ? automation.grids.map(g => {
+> 89	        g = g.toJSON ? g.toJSON() : g;
+> 90	        delete g.createdAt;
+> 91	        delete g.updatedAt;
+> 92	        delete g.automationId;
+> 93	        if (g.orderTemplate) {
+> 94	            delete g.orderTemplate.createdAt;
+> 95	            delete g.orderTemplate.updatedAt;
+> 96	            delete g.orderTemplate.name;
+> 97	        }
+> 98	        return g;
+> 99	    }) : [];
+> 100	
+> 101	    if (automation.toJSON)
+> 102	        automation = automation.toJSON();
+> 103	
+> 104	    delete automation.createdAt;
+> 105	    delete automation.updatedAt;
+> 106	
+> 107	    automation.actions = actions;
+> 108	    automation.grids = grids;
+> 109	
+> 110	    BRAIN[automation.id] = automation;
+> 111	    automation.indexes.split(',').map(ix => updateBrainIndex(ix, automation.id));
+> 112	}
+> 113	
+> 114	function deleteBrain(automation) {
+> 115	    try {
+> 116	        setLocked(automation.id, true);
+> 117	        delete BRAIN[automation.id];
+> 118	        deleteBrainIndex(automation.indexes.split(','), automation.id);
+> 119	        if (automation.logs) logger('A:' + automation.id, `Automation removed from BRAIN #${automation.id}`);
+> 120	    }
+> 121	    finally {
+> 122	        setLocked(automation.id, false);
+> 123	    }
+> 124	}
+> 125	
+> 126	function findAutomations(indexKey) {
+> 127	    let ids = [];
+> 128	    if (BRAIN_INDEX.hasWildcard) {
+> 129	        const props = Object.entries(BRAIN_INDEX).filter(p => indexKey.endsWith(p[0].replace('*', '')));
+> 130	        ids = props.map(p => p[1]).flat();
+> 131	    }
+> 132	    else
+> 133	        ids = BRAIN_INDEX[indexKey];
+> 134	
+> 135	    if (!ids) return [];
+> 136	    return [...new Set(ids)].map(id => BRAIN[id]);
+> 137	}
+> 138	
+> 139	function invertCondition(memoryKey, conditions) {
+> 140	    const conds = conditions.split(' && ');
+> 141	    const condToInvert = conds.find(c => c.indexOf(memoryKey) !== -1 && c.indexOf('current') !== -1);
+> 142	    if (!condToInvert) return false;
+> 143	
+> 144	    if (condToInvert.indexOf('>=') != -1) return condToInvert.replace('>=', '<').replace(/current/g, 'previous');
+> 145	    if (condToInvert.indexOf('<=') != -1) return condToInvert.replace('<=', '>').replace(/current/g, 'previous');
+> 146	    if (condToInvert.indexOf('>') != -1) return condToInvert.replace('>', '<').replace(/current/g, 'previous');
+> 147	    if (condToInvert.indexOf('<') != -1) return condToInvert.replace('<', '>').replace(/current/g, 'previous');
+> 148	    if (condToInvert.indexOf('!') != -1) return condToInvert.replace('!', '=').replace(/current/g, 'previous');
+> 149	    if (condToInvert.indexOf('==') != -1) return condToInvert.replace('==', '!==').replace(/current/g, 'previous');
+> 150	    return false;
+> 151	}
+> 152	
+> 153	async function sendSms(settings, automation) {
+> 154	    await require('./utils/sms')(settings, automation.name + ' has fired!');
+> 155	    if (automation.logs) logger('A:' + automation.id, `SMS sent!`);
+> 156	    return { text: `SMS sent from automation '${automation.name}'`, type: 'success' };
+> 157	}
+> 158	
+> 159	async function sendEmail(settings, automation) {
+> 160	    await require('./utils/email')(settings, automation.name + ' has fired!');
+> 161	    if (automation.logs) logger('A:' + automation.id, `E-mail sent!`);
+> 162	    return { text: `E-mail sent from automation '${automation.name}'`, type: 'success' };
+> 163	}
+> 164	
+> 165	function calcPrice(orderTemplate, symbol, isStopPrice) {
+> 166	    const tickSize = parseFloat(symbol.tickSize);
+> 167	    let newPrice, factor;
+> 168	
+> 169	    // OCO usa preços explícitos (TP em limitPrice, stop em stopPrice), igual aos tipos LIMIT.
+> 170	    if (LIMIT_TYPES.includes(orderTemplate.type) || orderTemplate.type === 'OCO') {
+> 171	        try {
+> 172	            if (!isStopPrice) {
+> 173	                if (parseFloat(orderTemplate.limitPrice)) return orderTemplate.limitPrice;
+> 174	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> 175	            }
+> 176	            else {
+> 177	                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> 178	                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 179	            }
+> 180	        }
+> 181	        catch (err) {
+> 182	            if (isStopPrice)
+> 183	                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> 184	            else
+> 185	                throw new Error(`Error trying to calc Limit Price with params: ${orderTemplate.limitPrice} x ${orderTemplate.limitPriceMultiplier}. Error: ${err.message}`);
+> 186	        }
+> 187	    }
+> 188	    else {
+> 189	        const memory = MEMORY[`${orderTemplate.symbol}:BOOK`];
+> 190	        if (!memory)
+> 191	            throw new Error(`Error trying to get market price. OTID: ${orderTemplate.id}, ${isStopPrice}. No Book.`);
+> 192	
+> 193	        newPrice = orderTemplate.side === 'BUY' ? memory.current.bestAsk : memory.current.bestBid;
+> 194	        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> 195	    }
+> 196	
+> 197	    factor = Math.floor(newPrice / tickSize);
+> 198	    return (factor * tickSize).toFixed(symbol.quotePrecision);
+> 199	}
+> 200	
+> 201	function calcQty(orderTemplate, price, symbol) {
+> 202	    let asset;
+> 203	
+> 204	    if (orderTemplate.side === 'BUY') {
+> 205	        asset = parseFloat(MEMORY[`${symbol.quote}:WALLET`]);
+> 206	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 207	    }
+> 208	    else {
+> 209	        asset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 210	        if (!asset) throw new Error(`There is no ${symbol.base} in your wallet to place a sell.`);
+> 211	    }
+> 212	
+> 213	    let qty = orderTemplate.quantity.replace(',', '.');
+> 214	    if (parseFloat(qty)) return qty;
+> 215	
+> 216	    const multiplier = orderTemplate.quantityMultiplier;
+> 217	    const stepSize = parseFloat(symbol.stepSize);
+> 218	
+> 219	    let newQty, factor;
+> 220	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 221	        if (orderTemplate.side === 'BUY')
+> 222	            newQty = (parseFloat(asset) / parseFloat(price)) * (multiplier > 1 ? 1 : multiplier);
+> 223	        else
+> 224	            newQty = parseFloat(asset) * (multiplier > 1 ? 1 : multiplier);
+> 225	    }
+> 226	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 227	        newQty = (parseFloat(symbol.minNotional) / parseFloat(price)) * (multiplier < 1 ? 1 : multiplier);
+> 228	    }
+> 229	    else if (orderTemplate.quantity === 'LAST_ORDER_QTY') {
+> 230	        const lastOrder = MEMORY[`${orderTemplate.symbol}:LAST_ORDER`];
+> 231	        if (!lastOrder)
+> 232	            throw new Error(`There is no last order to use as qty reference for ${orderTemplate.symbol}.`);
+> 233	
+> 234	        newQty = parseFloat(lastOrder.quantity) * multiplier;
+> 235	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset;
+> 236	    }
+> 237	    else if (orderTemplate.quantity === 'TREND_QTY') {
+> 238	        // Posição acumulada pelo Trend Following (escrita no fill por app-em.updateTrendPosition):
+> 239	        // id6 (golden) soma; id7 (death) vende ESTA qty (não a LAST_ORDER, que é compartilhada com a id3).
+> 240	        const trendQty = parseFloat(MEMORY[`${orderTemplate.symbol}:TREND_QTY`]);
+> 241	        if (!trendQty || trendQty <= 0)
+> 242	            throw new Error(`There is no trend position (TREND_QTY) to use as qty reference for ${orderTemplate.symbol}.`);
+> 243	
+> 244	        newQty = trendQty * multiplier;
+> 245	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 246	    }
+> 247	    else if (orderTemplate.quantity === 'HARVEST_QTY') {
+> 248	        // Bucket TÁTICO do Harvester de dislocação (escrito no fill por app-em.updateHarvestPosition):
+> 249	        // MEMORY['<sym>:HARVEST'] = { qty, cost }. A venda no-loss vende ESTA qty (só o que o harvester
+> 250	        // comprou), NUNCA o cofre principal de BTC. Falha-fechado se vazio (sem bucket, não vende).
+> 251	        const harvest = MEMORY[`${orderTemplate.symbol}:HARVEST`];
+> 252	        const harvestQty = harvest ? parseFloat(harvest.qty) : NaN;
+> 253	        if (!harvestQty || harvestQty <= 0)
+> 254	            throw new Error(`There is no harvest position (HARVEST) to use as qty reference for ${orderTemplate.symbol}.`);
+> 255	
+> 256	        newQty = harvestQty * multiplier;
+> 257	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 258	    }
+> 259	    else if (orderTemplate.quantity === 'FARM_QTY') {
+> 260	        // Bucket DCA do Farm de alts (escrito no fill por app-em.updateFarmPosition):
+> 261	        // MEMORY['<sym>:FARM_DCA'] = { qty, cost }. A venda no-loss vende SÓ o que o Farm comprou,
+> 262	        // NÃO a carteira inteira do ativo — MAX_WALLET vendia tudo e DUMPAVA junto a posição do Trend
+> 263	        // Following co-localizada na mesma carteira (mesmo ativo). Falha-fechado se vazio (sem bucket, não vende).
+> 264	        const farm = MEMORY[`${orderTemplate.symbol}:FARM_DCA`];
+> 265	        const farmQty = farm ? parseFloat(farm.qty) : NaN;
+> 266	        if (!farmQty || farmQty <= 0)
+> 267	            throw new Error(`There is no farm position (FARM_DCA) to use as qty reference for ${orderTemplate.symbol}.`);
+> 268	
+> 269	        newQty = farmQty * multiplier;
+> 270	        if (orderTemplate.side === 'SELL' && newQty > asset) newQty = asset; // capa na carteira (fees/saldo)
+> 271	    }
+> 272	    else if (orderTemplate.quantity === 'BTC_EXCESS') {
+> 273	        // Vende o excedente de BTC acima de 1.0 BTC (o cofre).
+> 274	        const btcAsset = parseFloat(MEMORY[`${symbol.base}:WALLET`]);
+> 275	        if (!btcAsset || btcAsset <= 1.0)
+> 276	            throw new Error(`There is no excess BTC (above 1.0 BTC) to sell. Balance: ${btcAsset}`);
+> 277	        newQty = (btcAsset - 1.0) * multiplier;
+> 278	        if (orderTemplate.side === 'SELL' && newQty > btcAsset) newQty = btcAsset;
+> 279	    }
+> 280	
+> 281	    factor = Math.floor(newQty / stepSize);
+> 282	    let result = factor * stepSize;
+> 283	    // PISO de notional (backstop -1013): o floor por stepSize pode empurrar uma COMPRA alvo-notional
+> 284	    // (MIN_NOTIONAL) ABAIXO do mínimo da Binance ($5) → ordem rejeitada com -1013 (NOTIONAL) e a automação
+> 285	    // NÃO compra (ex.: id6 Trend Buy com mult=1 a ~$66k → $4,65). Só p/ MIN_NOTIONAL: se o resultado floored
+> 286	    // não cobre o minNotional, sobe 1 stepSize (menor ordem válida). NÃO afeta posições — TREND_QTY/
+> 287	    // HARVEST_QTY/FARM_QTY/MAX_WALLET seguem com floor (jamais vender/usar mais do que se tem). Idempotente:
+> 288	    // um resultado já-válido (mult>=~1.1 ou símbolo que floored acima de $5) não muda. O teto MAX_ORDER_NOTIONAL
+> 289	    // continua no chokepoint de exchange.js (este é só o PISO, do lado da compra).
+> 290	    if (orderTemplate.quantity === 'MIN_NOTIONAL' && parseFloat(price) > 0 && (result * parseFloat(price)) < parseFloat(symbol.minNotional)) {
+> 291	        result = (factor + 1) * stepSize;
+> 292	    }
+> 293	    return result.toFixed(symbol.basePrecision);
+> 294	}
+> 295	
+> 296	function hasEnoughAssets(symbol, order, price) {
+> 297	    const qty = parseFloat(order.quantity);
+> 298	    if (order.side === 'BUY')
+> 299	        return parseFloat(MEMORY[`${symbol.quote}:WALLET`]) >= (price * qty);
+> 300	    else
+> ```
+
+## 🤖 Claude *(03:55:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 300,
+  "limit": 320
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 300	    else
+> 301	        return parseFloat(MEMORY[`${symbol.base}:WALLET`]) >= qty;
+> 302	}
+> 303	
+> 304	function calcQuoteQty(orderTemplate, symbol) {
+> 305	    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity))
+> 306	        throw new Error(`Only MARKET orders can cal quote qty.`);
+> 307	
+> 308	    const multiplier = orderTemplate.quantityMultiplier;
+> 309	
+> 310	    if (orderTemplate.quantity === 'MAX_WALLET') {
+> 311	        if (orderTemplate.side !== 'BUY') throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+> 312	
+> 313	        const asset = MEMORY[`${symbol.quote}:WALLET`];
+> 314	        if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+> 315	
+> 316	        return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 317	    }
+> 318	    else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+> 319	        return (parseFloat(symbol.minNotional) * (multiplier < 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+> 320	    }
+> 321	
+> 322	    throw new Error(`Invalid order template quantity ${orderTemplate.quantity}`);
+> 323	}
+> 324	
+> 325	// OCO protetiva (One-Cancels-the-Other): TP via LIMIT_MAKER (perna "above") + SL via
+> 326	// STOP_LOSS_LIMIT (perna "below"). Quando uma perna executa, a Binance cancela a outra.
+> 327	// As 2 pernas são persistidas com o MESMO orderListId. Usa o endpoint novo
+> 328	// v3/orderList/oco (ver utils/exchange.oco). v1: só SELL protetivo (TP acima, SL abaixo).
+> 329	async function placeOco(settings, automation, orderTemplate, symbol) {
+> 330	    const side = orderTemplate.side.toUpperCase();
+> 331	    if (side !== 'SELL')
+> 332	        throw new Error(`OCO no momento só suporta SELL protetivo (TP+SL). Side recebido: ${side}`);
+> 333	
+> 334	    // Anti-empilhamento: a proteção é "uma OCO por vez". Se já há uma OCO aberta desta
+> 335	    // automação para o símbolo, não coloca outra — a automação re-arma sozinha quando a
+> 336	    // anterior resolver (TP/SL) ou for cancelada. Sem isso, uma automação sem índice (que
+> 337	    // dispara a cada tick) ou condições oscilando empilhariam OCOs e drenariam o saldo.
+> 338	    if (automation.id) {
+> 339	        const symbolUpper = orderTemplate.symbol.toUpperCase();
+> 340	        const open = await getOpenOcoOrders(automation.id);
+> 341	        if (open && open.some(o => o.symbol === symbolUpper)) {
+> 342	            if (automation.logs) logger('A:' + automation.id, `OCO já aberta para ${symbolUpper}; re-disparo ignorado.`);
+> 343	            return { type: 'success', text: `OCO already open for ${symbolUpper}, skipped.` };
+> 344	        }
+> 345	    }
+> 346	
+> 347	    // TP (perna LIMIT_MAKER, acima) = limitPrice × limitPriceMultiplier.
+> 348	    const tpPrice = calcPrice(orderTemplate, symbol, false);
+> 349	    if (!isFinite(tpPrice) || !parseFloat(tpPrice))
+> 350	        throw new Error(`Erro no preço de TP da OCO, OTID ${orderTemplate.id}: ${tpPrice}`);
+> 351	
+> 352	    // Gatilho do stop (belowStopPrice) = stopPrice × stopPriceMultiplier.
+> 353	    const stopTrigger = calcPrice(orderTemplate, symbol, true);
+> 354	    if (!isFinite(stopTrigger) || !parseFloat(stopTrigger))
+> 355	        throw new Error(`Erro no preço de stop da OCO, OTID ${orderTemplate.id}: ${stopTrigger}`);
+> 356	
+> 357	    // Preço-limite da perna de stop (belowPrice) = gatilho: para um SELL fica marketável
+> 358	    // (limite <= gatilho), garantindo a execução quando o stop dispara.
+> 359	    const stopLimit = stopTrigger;
+> 360	
+> 361	    const quantity = calcQty(orderTemplate, tpPrice, symbol);
+> 362	    if (!isFinite(quantity) || !parseFloat(quantity))
+> 363	        throw new Error(`Erro na quantidade da OCO, OTID ${orderTemplate.id}: ${quantity}`);
+> 364	
+> 365	    const order = { symbol: orderTemplate.symbol.toUpperCase(), side, quantity };
+> 366	    if (!hasEnoughAssets(symbol, order, tpPrice))
+> 367	        throw new Error(`Sem saldo suficiente para a OCO ${side} ${quantity} ${order.symbol}.`);
+> 368	
+> 369	    const options = {
+> 370	        aboveType: 'LIMIT_MAKER',
+> 371	        abovePrice: tpPrice,
+> 372	        belowType: 'STOP_LOSS_LIMIT',
+> 373	        belowPrice: stopLimit,
+> 374	        belowStopPrice: stopTrigger,
+> 375	        belowTimeInForce: 'GTC'
+> 376	    };
+> 377	
+> 378	    let result;
+> 379	    const exchange = require('./utils/exchange')(settings);
+> 380	    try {
+> 381	        result = await exchange.oco(side, order.symbol, quantity, options);
+> 382	    } catch (err) {
+> 383	        logger('A:' + automation.id, err.body ? err.body : err);
+> 384	        logger('A:' + automation.id, { order, options });
+> 385	        return { type: 'error', text: `OCO failed! ` + (err.body ? JSON.stringify(err.body) : err.message) };
+> 386	    }
+> 387	
+> 388	    const orderListId = result.orderListId;
+> 389	    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];
+> 390	
+> 391	    // A OCO já está VIVA na corretora. Se a resposta vier anômala (≠2 pernas), cancela a
+> 392	    // lista para não deixar ordem órfã não-rastreável e falha.
+> 393	    if (reports.length !== 2) {
+> 394	        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }
+> 395	        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 396	        return { type: 'error', text: `OCO retornou ${reports.length} pernas (esperado 2); lista #${orderListId} cancelada.` };
+> 397	    }
+> 398	
+> 399	    // Persiste AMBAS as pernas com o mesmo orderListId (consistente com placeOrder). Se a
+> 400	    // persistência falhar, a OCO ficaria viva mas órfã (fora do getOpenOcoOrders e do hook
+> 401	    // de cancelamento) → cancela na corretora e falha, mantendo DB e exchange coerentes.
+> 402	    try {
+> 403	        for (const r of reports) {
+> 404	            const savedLeg = await insertOrder({
+> 405	                automationId: automation.id,
+> 406	                symbol: order.symbol,
+> 407	                quantity: r.origQty || quantity,
+> 408	                type: r.type,
+> 409	                side: r.side || side,
+> 410	                orderListId,
+> 411	                limitPrice: r.price && parseFloat(r.price) ? `${r.price}` : null,
+> 412	                stopPrice: r.stopPrice && parseFloat(r.stopPrice) ? `${r.stopPrice}` : null,
+> 413	                icebergQty: null,
+> 414	                orderId: r.orderId,
+> 415	                clientOrderId: r.clientOrderId,
+> 416	                transactTime: r.transactTime || result.transactionTime || Date.now(),
+> 417	                status: r.status || 'NEW'
+> 418	            });
+> 419	            telegramNotify.notifyOrder(savedLeg.get({ plain: true })); // uma notificação por perna da OCO
+> 420	        }
+> 421	    } catch (err) {
+> 422	        logger('A:' + automation.id, err);
+> 423	        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }
+> 424	        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 425	        return { type: 'error', text: `Falha ao persistir a OCO #${orderListId}; lista cancelada na corretora.` };
+> 426	    }
+> 427	
+> 428	    if (automation.logs)
+> 429	        logger('A:' + automation.id, `OCO #${orderListId} ${side} ${order.symbol}: TP ${tpPrice} / STOP ${stopTrigger}->${stopLimit}, qty ${quantity}`);
+> 430	
+> 431	    return { type: 'success', text: `OCO ${side} ${order.symbol} placed (list #${orderListId})` };
+> 432	}
+> 433	
+> 434	async function placeOrder(settings, automation, action) {
+> 435	
+> 436	    if (!settings || !automation || !action)
+> 437	        throw new Error(`All parameters are required to place an order.`);
+> 438	
+> 439	    if (!action.orderTemplateId)
+> 440	        throw new Error(`There is no order template for '${automation.name}', action #${action.id}`);
+> 441	
+> 442	    const orderTemplate = action.orderTemplate ? { ...action.orderTemplate } : await orderTemplatesRepository.getOrderTemplate(action.orderTemplateId);
+> 443	    if (orderTemplate.type === 'TRAILING_STOP') {
+> 444	        orderTemplate.type = 'MARKET';
+> 445	        orderTemplate.limitPrice = null;
+> 446	        orderTemplate.stopPrice = null;
+> 447	    }
+> 448	
+> 449	    const symbol = await getSymbol(orderTemplate.symbol);
+> 450	
+> 451	    // OCO tem fluxo próprio (2 pernas + orderListId): desvia antes de montar a ordem simples.
+> 452	    if (orderTemplate.type.toUpperCase() === 'OCO')
+> 453	        return placeOco(settings, automation, orderTemplate, symbol);
+> 454	
+> 455	    const order = {
+> 456	        symbol: orderTemplate.symbol.toUpperCase(),
+> 457	        side: orderTemplate.side.toUpperCase(),
+> 458	        options: {
+> 459	            type: orderTemplate.type.toUpperCase()
+> 460	        }
+> 461	    }
+> 462	
+> 463	    // Anti-empilhamento da venda do Farm (v1): se já há uma venda FARM_QTY EM VOO (FARM_SELLING setado p/ o
+> 464	    // símbolo), NÃO coloca outra do MESMO bucket — a venda pode re-disparar no MESMO nível (oscilação do bestBid
+> 465	    // em torno do alvo no-loss) entre o place e o estado terminal. A trava (setada abaixo, liberada no terminal
+> 466	    // por match de orderId em app-em.updateFarmPosition) é o mutex, BRAIN-independente — diferença vs
+> 467	    // HARVEST_SELLING (que usa a condition + migration/reload). calcQty capa na carteira, não no bucket, então
+> 468	    // sem isto o re-fire venderia 2× o lote e vazaria a posição co-localizada do Trend.
+> 469	    if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY' && getMemory(order.symbol, 'FARM_SELLING'))
+> 470	        return { type: 'info', text: `Venda do Farm ${order.symbol} já em voo (FARM_SELLING) — skip anti-empilhamento.` };
+> 471	
+> 472	    const isDynamicBuy = order.side === 'BUY' && ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+> 473	    if (order.options.type === 'MARKET'
+> 474	        && (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')) {
+> 475	        order.options.quoteOrderQty = calcQuoteQty(orderTemplate, symbol);
+> 476	    } else {
+> 477	        const price = calcPrice(orderTemplate, symbol, false);
+> 478	
+> 479	        if (!isFinite(price) || !price)
+> 480	            throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${price}, stop: false`);
+> 481	
+> 482	        if (LIMIT_TYPES.includes(order.options.type))
+> 483	            order.limitPrice = price;
+> 484	
+> 485	        const quantity = calcQty(orderTemplate, price, symbol, false);
+> 486	
+> 487	        if (!isFinite(quantity) || !quantity)
+> 488	            throw new Error(`Error in calcQty function, params: OTID ${orderTemplate.id}, $: ${price}, qty: ${quantity}`);
+> 489	
+> 490	        order.quantity = quantity;
+> 491	
+> 492	        if (STOP_TYPES.includes(order.options.type)) {
+> 493	            const stopPrice = calcPrice(orderTemplate, symbol, true);
+> 494	
+> 495	            if (!isFinite(stopPrice) || !stopPrice)
+> 496	                throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+> 497	
+> 498	            order.options.stopPrice = stopPrice;
+> 499	        }
+> 500	
+> 501	        if (!hasEnoughAssets(symbol, order, price))
+> 502	            throw new Error(`You wanna ${order.side} ${order.quantity} ${order.symbol} but you haven't enough assets.`);
+> 503	    }
+> 504	
+> 505	    let result;
+> 506	    const exchange = require('./utils/exchange')(settings);
+> 507	
+> 508	    try {
+> 509	        if (order.side === 'BUY')
+> 510	            result = await exchange.buy(order.symbol, order.quantity, order.limitPrice, order.options);
+> 511	        else
+> 512	            result = await exchange.sell(order.symbol, order.quantity, order.limitPrice, order.options);
+> 513	    }
+> 514	    catch (err) {
+> 515	        logger('A:' + automation.id, err.body ? err.body : err);
+> 516	        logger('A:' + automation.id, order);
+> 517	        return { type: 'error', text: `Order failed! ` + err.body ? err.body : err.message };
+> 518	    }
+> 519	
+> 520	    // Trava de venda do Harvester: marca HARVEST_SELLING ASSIM QUE a ordem é ACEITA pela corretora (logo após
+> 521	    // exchange.sell, ANTES do insertOrder) — se o insertOrder/calcFillFinancials der throw depois, a venda já
+> 522	    // está na corretora e a trava JÁ está posta → falha fail-closed (silencia a venda) em vez de re-disparar
+> 523	    // uma 2ª venda do MESMO bucket no próximo tick (oversell vazaria o reserve: calcQty capa na carteira, não no
+> 524	    // bucket). A venda no-loss é LEVEL-trigger (ver shouldntInvert); a trava é o anti-empilhamento. Liberada no
+> 525	    // estado terminal (app-em.updateHarvestPosition). Detecta pela qty='HARVEST_QTY' (assinatura única da venda).
+> 526	    if (order.side === 'SELL' && orderTemplate.quantity === 'HARVEST_QTY')
+> 527	        await updateMemory(order.symbol, 'HARVEST_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> 528	
+> 529	    // Trava de venda do Farm (espelha HARVEST_SELLING): marca FARM_SELLING ASSIM QUE a ordem é ACEITA pela
+> 530	    // corretora (logo após exchange.sell, ANTES do insertOrder) — se o insert der throw depois, a venda já está
+> 531	    // na corretora e a trava JÁ está posta (fail-closed) → o skip acima barra um 2º place. Liberada no estado
+> 532	    // TERMINAL por match de orderId (app-em.updateFarmPosition). Detecta pela qty='FARM_QTY' (assinatura única).
+> 533	    if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY')
+> 534	        await updateMemory(order.symbol, 'FARM_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> 535	
+> 536	    let stopPrice;
+> 537	    if (action.orderTemplate && action.orderTemplate.type === 'TRAILING_STOP')
+> 538	        stopPrice = action.orderTemplate.stopPrice;
+> 539	    else if (STOP_TYPES.includes(order.type))
+> 540	        stopPrice = order.options.stopPrice;
+> 541	
+> 542	    const savedOrder = await insertOrder({
+> 543	        automationId: automation.id,
+> 544	        symbol: order.symbol,
+> 545	        quantity: order.quantity || result.executedQty,
+> 546	        type: order.options.type,
+> 547	        side: order.side,
+> 548	        limitPrice: LIMIT_TYPES.includes(order.options.type) ? order.limitPrice : null,
+> 549	        stopPrice,
+> 550	        icebergQty: null,
+> 551	        orderId: result.orderId,
+> 552	        clientOrderId: result.clientOrderId,
+> 553	        transactTime: result.transactTime,
+> 554	        status: result.status || 'NEW',
+> 555	        // net/avgPrice/commission no insert quando já executou (MARKET) — não depende do stream
+> 556	        ...calcFillFinancials(result, order.symbol)
+> 557	    })
+> 558	
+> 559	    // Telegram pro dono (pedido: notificar todas as novas ordens). Best-effort, não-lançante;
+> 560	    // dedup por orderId+status (a MARKET já-FILLED não re-notifica no executionReport do stream).
+> 561	    telegramNotify.notifyOrder(savedOrder.get({ plain: true }));
+> 562	
+> 563	    if (automation.logs) logger('A:' + automation.id, savedOrder.get({ plain: true }));
+> 564	
+> 565	    return { type: 'success', text: `Order ${order.side} ${order.symbol} ${result.status}` };
+> 566	}
+> 567	
+> 568	async function gridEval(settings, automation) {
+> 569	    automation.grids = automation.grids.sort((a, b) => a.id - b.id);
+> 570	
+> 571	    if (LOGS)
+> 572	        logger('A:' + automation.id, `Beholder is in the GRID zone at ${automation.name}`);
+> 573	
+> 574	    for (let i = 0; i < automation.grids.length; i++) {
+> 575	        const grid = automation.grids[i];
+> 576	        if (!Function("MEMORY", "return " + grid.conditions)(MEMORY)) continue;
+> 577	
+> 578	        if (automation.logs)
+> 579	            logger('A:' + automation.id, `Beholder evaluated a condition at ${automation.name} => ${grid.conditions}`);
+> 580	
+> 581	        automation.actions[0].orderTemplateId = grid.orderTemplateId;
+> 582	
+> 583	        const book = MEMORY[`${automation.symbol}:BOOK`];
+> 584	        if (!book) return { type: 'error', text: `No book info for ${automation.symbol}` };
+> 585	
+> 586	        const result = await placeOrder(settings, automation, automation.actions[0]);
+> 587	        if (automation.logs) await require('./utils/telegram')(settings, result.text);
+> 588	        if (result.type === 'error') return result;
+> 589	
+> 590	        const transaction = await db.transaction();
+> 591	        try {
+> 592	            const orderTemplate = await orderTemplatesRepository.getOrderTemplate(grid.orderTemplateId);
+> 593	            await generateGrids(automation, automation.grids.length + 1, orderTemplate.quantity, transaction);
+> 594	            await transaction.commit();
+> 595	        } catch (err) {
+> 596	            await transaction.rollback();
+> 597	            logger('A:' + automation.id, err);
+> 598	            return { type: 'error', text: `Beholder can't generate grids for ${automation.name}. ERR: ${err.message}` };
+> 599	        }
+> 600	
+> 601	        automation = await automationsRepository.getAutomation(automation.id);//pega limpo
+> 602	        updateBrain(automation);
+> 603	        return result;
+> 604	    }
+> 605	}
+> 606	
+> 607	async function generateGrids(automation, levels, quantity, transaction) {
+> 608	
+> 609	    await gridsRepository.deleteGrids(automation.id, transaction);
+> 610	
+> 611	    const symbol = await getSymbol(automation.symbol);
+> 612	    if (!symbol.tickSize) throw new Error(`Tick Size not found for this symbol`);
+> 613	
+> 614	    const tickSize = parseFloat(symbol.tickSize);
+> 615	
+> 616	    const conditionSplit = automation.conditions.split(' && ');
+> 617	    const lowerLimit = parseFloat(conditionSplit[0].split('>')[1]);
+> 618	    const upperLimit = parseFloat(conditionSplit[1].split('<')[1]);
+> 619	    levels = parseInt(levels);
+> ```
+
+## 🤖 Claude *(03:57:54)*
+
+
+## 🤖 Claude *(03:57:58)*
+
+Excelente — agora vejo um ponto crítico que refina o design: `calcQty` (linha 204-211) **lança** se a carteira real do ativo estiver vazia. A conta real só tem USDT, então um **SELL em paper falharia** contra a carteira real. Logo, o caminho paper precisa de **ledger virtual próprio** e deve **desviar ANTES do `calcQty`** — um early-return cirúrgico logo após o `getSymbol`, deixando o caminho real intocado abaixo.
+
+Vou coletar o resto do contexto (modelos, migrations, router de análise, setup-farm, boot) antes de escrever.
+
+## 🤖 Claude *(03:57:59)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(03:58:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && echo \"=== migrations recentes ===\" && ls -1 migrations/ | tail -8 && echo \"=== grep cockpit em routers/controllers ===\" && grep -rln \"cockpit\" src/routers src/controllers 2>/dev/null && echo \"=== grep analysis router mount ===\" && grep -rn \"analysis\" src/app.js src/routers/index.js 2>/dev/null | head && echo \"=== models dir ===\" && ls -1 src/models/ | head -40",
+  "description": "Locate migrations, cockpit endpoint, analysis router, models"
+}
+```
+
+## 🤖 Claude *(03:58:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE do FARM no-loss das ALTS (Fase 2 da estratégia Farm-and-Funnel) — config pura,
+> 4	 * sem código novo no engine. Ver docs/STRATEGY-farm-funnel.md e memória tradeux-farm-funnel-backtest.
+> 5	 *
+> 6	 * A regra do dono ("vende só por mais caro que comprou"): a venda dispara pelo PREÇO (no-loss), não
+> 7	 * pelo RSI — vende a posição quando o bestBid supera o preço de compra (LAST_ORDER.avgPrice) + margem.
+> 8	 * A compra entra no dip (RSI baixo) só fora de bear/trend (mean-reversion vive em range). Fiel ao
+> 9	 * engine do backtest (compra RSI<lo; vende lote com lucro). 1 lote por vez no v1 (grid multi-nível = refino).
+> 10	 *
+> 11	 * Cria, por alt (se ausentes; INATIVAS por segurança):
+> 12	 *   - monitor CANDLES (RSI_14) ATIVO — alimenta MEMORY['<sym>:RSI_14_<interval>'] (gatilho da compra).
+> 13	 *     MINI_TICKER/BOOK já vêm do monitor system '*' (preço/bestBid de todas as alts, sem monitor próprio).
+> 14	 *   - templates LIMIT marketável: BUY = bestAsk×(1+buf) MIN_NOTIONAL ; SELL = bestBid×(1−buf) LAST_ORDER_QTY.
+> 15	 *   - automação "Farm Buy <sym>"  (RSI<lo + regime!=bear/trend + sem posição), INATIVA.
+> 16	 *   - automação "Farm Sell <sym>" no-loss (tem posição + bestBid > avgPrice×(1+lucro)), INATIVA.
+> 17	 *
+> 18	 * Por que INATIVAS: é money-path. Ativar (1 alt por vez, com gate) é um passo SEPARADO — garantir antes
+> 19	 * que o regimeJob computa o REGIME da alt (resolveSymbols pega símbolos de automações ATIVAS; até o 1º
+> 20	 * poll a compra fica fail-safe pelo guard de REGIME na condition) e o sizing. Ver §5 do doc.
+> 21	 *
+> 22	 * Reproduz o setup após `make nuke` (dado runtime, não seeders).
+> 23	 * Uso (dentro do container, server no ar):  node scripts/setup-farm.js   [DRY=true p/ preview]
+> 24	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),
+> 25	 *        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (1m),
+> 26	 *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (2)
+> 27	 */
+> 28	const http = require('http');
+> 29	
+> 30	const SYMBOLS = (process.env.FARM_SYMBOLS || 'LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 31	const INTERVAL = process.env.FARM_INTERVAL || '1m';
+> 32	const RSI_KEY_SUFFIX = `RSI_14_${INTERVAL}`;
+> 33	const RSI_LO = parseFloat(process.env.FARM_RSI_LO || '35');
+> 34	const PROFIT = parseFloat(process.env.FARM_PROFIT || '0.012');   // lucro-alvo sobre o avgPrice (cobre buffer+fees no testnet)
+> 35	const BUF = parseFloat(process.env.FARM_BUFFER || '0.003');      // buffer do LIMIT marketável (atravessa o book fino do testnet)
+> 36	const SIZE_MULT = parseFloat(process.env.FARM_SIZE_MULT || '2'); // MIN_NOTIONAL×2 (~$9-10 nas alts): ×1 arredonda pra baixo (Math.floor por stepSize no calcQty) e FALHA o filtro NOTIONAL ($5) ao disparar — validado ao vivo: -1013 (mesmo fix do setup-harvester.js)
+> 37	const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> 38	const BASE = { host: process.env.FARM_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 39	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 40	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 41	
+> 42	function req(method, path, token, body) {
+> 43	    return new Promise((resolve) => {
+> 44	        const data = body ? JSON.stringify(body) : null;
+> 45	        const headers = { 'Content-Type': 'application/json' };
+> 46	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 47	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 48	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 49	            let d = ''; res.on('data', c => d += c);
+> 50	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 51	        });
+> 52	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 53	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 54	        if (data) r.write(data); r.end();
+> 55	    });
+> 56	}
+> 57	
+> 58	// monitor CANDLES (RSI) ATIVO — alimenta o RSI da alt. Idempotente: insertMonitor responde 409 se já existe.
+> 59	async function ensureMonitor(token, symbol) {
+> 60	    if (DRY) return `[DRY] POST monitor CANDLES ${symbol} ${INTERVAL} RSI_14 (ativo)`;
+> 61	    const r = await req('POST', '/monitors', token, {
+> 62	        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',
+> 63	        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,
+> 64	    });
+> 65	    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (id ${r.body.id}, ATIVO → ${symbol}:${RSI_KEY_SUFFIX})`;
+> 66	    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} já existe`;
+> 67	    throw new Error(`falha ao criar monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);
+> 68	}
+> 69	
+> 70	async function ensureTemplate(token, symbol, name, side, opts) {
+> 71	    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);
+> 72	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 73	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 74	    if (DRY) return { id: 0, msg: `[DRY] POST template "${name}" (${opts.type} ${side} qty ${opts.quantity}×${opts.quantityMultiplier})` };
+> 75	    const r = await req('POST', '/ordertemplates', token, {
+> 76	        name, symbol, type: opts.type, side,
+> 77	        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+> 78	        stopPrice: null, stopPriceMultiplier: 1,
+> 79	        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+> 80	        icebergQty: null, icebergQtyMultiplier: 1,
+> 81	    });
+> 82	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 83	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> 84	}
+> 85	
+> 86	async function findAutomationByName(token, name) {
+> 87	    for (let page = 1; page <= 40; page++) {
+> 88	        const r = await req('GET', `/automations?page=${page}`, token);
+> 89	        const rows = r.body && r.body.rows;
+> 90	        if (!Array.isArray(rows) || rows.length === 0) break;
+> 91	        const hit = rows.find(a => a.name === name);
+> 92	        if (hit) return hit;
+> 93	        if (rows.length < 10) break; // page size do backend = 10
+> 94	    }
+> 95	    return null;
+> 96	}
+> 97	
+> 98	async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+> 99	    const existing = await findAutomationByName(token, name);
+> 100	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 101	    if (DRY) return `[DRY] POST automação "${name}" INATIVA\n      cond: ${conditions}\n      idx:  ${indexes}`;
+> 102	    const r = await req('POST', '/automations', token, {
+> 103	        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 104	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 105	    });
+> 106	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 107	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 108	}
+> 109	
+> 110	async function setupSymbol(token, symbol) {
+> 111	    const K = k => `${symbol}:${k}`;
+> 112	    console.log(`\n## ${symbol}`);
+> 113	    console.log('- ' + await ensureMonitor(token, symbol));
+> 114	
+> 115	    const buyTpl = await ensureTemplate(token, symbol, `Farm Buy ${symbol}`, 'BUY', {
+> 116	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestAsk * ${(1 + BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 117	        quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,
+> 118	    });
+> 119	    console.log('- ' + buyTpl.msg);
+> 120	    const sellTpl = await ensureTemplate(token, symbol, `Farm Sell ${symbol}`, 'SELL', {
+> 121	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 122	        quantity: 'LAST_ORDER_QTY', quantityMultiplier: 1, // vende o lote comprado (a última ordem foi a compra)
+> 123	    });
+> 124	    console.log('- ' + sellTpl.msg);
+> 125	
+> 126	    // COMPRA: dip (RSI<lo) fora de bear/trend. Condition regex-safe (validateConditions exige cada cláusula
+> 127	    // = MEMORY[...]OP valor, SEM espaços/||/guards soltos). O REGIME vai no INDEX → isChecked é o FAIL-SAFE
+> 128	    // (sem regime conhecido a automação NÃO avalia). invertCondition no RSI → dispara só na TRANSIÇÃO p/ baixo
+> 129	    // de lo (anti-empilhamento). v1 = 1 lote simples; sem trava de posição → pode haver DCA leve em re-cruzamentos
+> 130	    // (a venda realiza a última compra via LAST_ORDER_QTY; rastreio multi-lote/FARM_QTY é refino — §5 do doc).
+> 131	    const buyCond = `MEMORY['${K(RSI_KEY_SUFFIX)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;
+> 132	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')}`, buyTpl.id));
+> 133	
+> 134	    // VENDA no-loss: tem posição (última ordem = compra) E o bestBid já dá lucro sobre o preço de compra.
+> 135	    // Index = BOOK,LAST_ORDER → isChecked garante AMBOS presentes (sem guards soltos; até a 1ª compra não avalia).
+> 136	    // invertCondition no BOOK → realiza só na TRANSIÇÃO em que o bestBid cruza o alvo (anti-empilhamento), indep. do RSI.
+> 137	    const sellCond = `MEMORY['${K('LAST_ORDER')}'].side==='BUY' && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('LAST_ORDER')}'].avgPrice*${(1 + PROFIT).toFixed(4)}`;
+> 138	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Sell ${symbol}`, sellCond, `${K('BOOK')},${K('LAST_ORDER')}`, sellTpl.id));
+> 139	}
+> 140	
+> 141	(async () => {
+> 142	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> 143	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 144	    const token = login.body && login.body.token;
+> 145	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 146	
+> 147	    console.log(`# Setup FARM no-loss — ${SYMBOLS.join(', ')} | RSI<${RSI_LO} compra · lucro-alvo ${(PROFIT * 100).toFixed(1)}% · buffer ${(BUF * 100).toFixed(1)}% · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada será aplicado]' : ''}`);
+> 148	
+> 149	    for (const symbol of SYMBOLS) await setupSymbol(token, symbol);
+> 150	
+> 151	    console.log(`\n${DRY ? 'DRY-RUN OK (nada aplicado).' : 'PRONTO — monitores ATIVOS, automações de farm INATIVAS.'}`);
+> 152	    console.log(`Para ATIVAR (1 alt por vez, com gate): garanta o REGIME da alt (REGIME_SYMBOLS ou automação ativa)`);
+> 153	    console.log(`e dê start nas automações "Farm Buy/Sell <sym>". A venda é no-loss (só realiza com lucro real).`);
+> 154	})();
+> 155	
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrations recentes ===
+> 20260604120000-create-regimeStates.js
+> 20260609160000-create-harvestPositions.js
+> 20260614180000-btc-scalping-excess.js
+> 20260614190000-farm-dca-sell.js
+> 20260615000000-add-testnet-settings.js
+> 20260615010000-add-is-testnet-to-orders.js
+> 20260615200000-farm-sell-bucket-scoped-and-baseline-off.js
+> 20260618170000-add-commissionAsset-to-orders.js
+> === grep cockpit em routers/controllers ===
+> src/routers/analysisRouter.js
+> src/controllers/systemController.js
+> src/controllers/analysisController.js
+> === grep analysis router mount ===
+> src/app.js:19:const analysisRouter = require('./routers/analysisRouter');
+> src/app.js:60:app.use('/analysis', authMiddleware, analysisRouter);
+> === models dir ===
+> actionModel.js
+> automationModel.js
+> gridModel.js
+> harvestPositionModel.js
+> monitorModel.js
+> orderModel.js
+> orderTemplateModel.js
+> regimeStateModel.js
+> settingsModel.js
+> symbolModel.js
+> withdrawTemplateModel.js
+> ```
+
+## 🤖 Claude *(03:58:18)*
+
+
+## 🤖 Claude *(03:58:20)*
+
+Tenho o padrão do setup (HTTP idempotente). Agora os últimos: estilo de migration `createTable`, estilo de model, o endpoint do cockpit, e o registro de models/boot.
+
+## 🤖 Claude *(03:58:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/migrations/20260609160000-create-harvestPositions.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// Cria `harvestPositions`: persiste o bucket tático do Harvester de dislocação {qty,cost} por símbolo,
+> 4	// p/ que a posição comprada pelo harvester NÃO orfane num restart do backend. Sem isto MEMORY['<sym>:HARVEST']
+> 5	// é só in-memory → no boot o BTC já comprado fica na carteira sem rastreio e a venda no-loss não dispara
+> 6	// (não sabe qty/custo). Tabela minúscula (1 linha por símbolo, PK = symbol). A trava HARVEST_SELLING NÃO é
+> 7	// persistida (reseta no boot e é reconstruída se houver venda aberta — ver app-em.loadHarvestPositions).
+> 8	//
+> 9	// Portável MySQL + Postgres (createTable puro, sem SQL de dialeto). Idempotente: guard com showAllTables
+> 10	// (a CI roda migrate+seed 2x p/ provar idempotência nos dois bancos). Espelha 20260604120000-create-regimeStates.
+> 11	module.exports = {
+> 12	  up: async (queryInterface, Sequelize) => {
+> 13	    const tables = await queryInterface.showAllTables();
+> 14	    const names = tables.map(t => (typeof t === 'string' ? t : t.tableName).toLowerCase());
+> 15	    if (names.includes('harvestpositions')) return;
+> 16	
+> 17	    await queryInterface.createTable('harvestPositions', {
+> 18	      symbol: { type: Sequelize.STRING, allowNull: false, primaryKey: true },
+> 19	      qty: { type: Sequelize.DOUBLE, allowNull: true },   // quantidade em base asset que o harvester detém (0 = bucket vazio)
+> 20	      cost: { type: Sequelize.DOUBLE, allowNull: true },  // custo MÉDIO ponderado de entrada (âncora do alvo no-loss)
+> 21	      atMs: { type: Sequelize.BIGINT, allowNull: true },  // epoch ms da última atualização do bucket
+> 22	      createdAt: { type: Sequelize.DATE, allowNull: false },
+> 23	      updatedAt: { type: Sequelize.DATE, allowNull: false },
+> 24	    });
+> 25	  },
+> 26	
+> 27	  down: async (queryInterface) => {
+> 28	    const tables = await queryInterface.showAllTables();
+> 29	    const names = tables.map(t => (typeof t === 'string' ? t : t.tableName).toLowerCase());
+> 30	    if (names.includes('harvestpositions')) await queryInterface.dropTable('harvestPositions');
+> 31	  }
+> 32	};
+> 33	
+> ```
+
+## 🤖 Claude *(03:58:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/models/harvestPositionModel.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const Sequelize = require('sequelize');
+> 2	const database = require('../db');
+> 3	
+> 4	// Bucket TÁTICO do Harvester de dislocação persistido por símbolo — ver app-em.updateHarvestPosition e a
+> 5	// migration 20260609160000-create-harvestPositions. PK = symbol (1 linha por símbolo). Usado p/ resiliência
+> 6	// a restart: sem isto MEMORY['<sym>:HARVEST'] é volátil e a posição comprada pelo harvester ORFANA no boot
+> 7	// (BTC fica na carteira sem rastreio → a venda no-loss não sabe quanto/por quanto vender). qty/cost em DOUBLE
+> 8	// (portável MySQL+Postgres, round-trip de JS number); a venda lê .qty e o alvo no-loss usa .cost.
+> 9	const HarvestPositionModel = database.define('harvestPosition', {
+> 10	    symbol: {
+> 11	        type: Sequelize.STRING,
+> 12	        allowNull: false,
+> 13	        primaryKey: true
+> 14	    },
+> 15	    qty: Sequelize.DOUBLE,
+> 16	    cost: Sequelize.DOUBLE,
+> 17	    atMs: Sequelize.BIGINT,
+> 18	    createdAt: Sequelize.DATE,
+> 19	    updatedAt: Sequelize.DATE
+> 20	});
+> 21	
+> 22	module.exports = HarvestPositionModel;
+> 23	
+> ```
+
+## 🤖 Claude *(03:58:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const express = require('express');
+> 2	const router = express.Router();
+> 3	const analysisController = require('../controllers/analysisController');
+> 4	
+> 5	router.get('/regime-status', analysisController.getRegimeStatus);
+> 6	
+> 7	router.get('/regime/:symbol', analysisController.getRegime);
+> 8	
+> 9	router.get('/flow-status', analysisController.getFlowStatus);
+> 10	
+> 11	router.get('/flow/:symbol', analysisController.getFlow);
+> 12	
+> 13	router.get('/cockpit', analysisController.getCockpitStatus);
+> 14	
+> 15	router.get('/cockpit/:symbol', analysisController.getCockpit);
+> 16	
+> 17	module.exports = router;
+> 18	
+> ```
+
+## 🤖 Claude *(03:58:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/db.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const Sequelize = require('sequelize');
+> 2	
+> 3	// Postgres gerenciado (ex: Supabase) exige SSL. Ative com DB_SSL=true.
+> 4	const dialectOptions = process.env.DB_SSL === 'true'
+> 5	    ? { ssl: { require: true, rejectUnauthorized: false } }
+> 6	    : {};
+> 7	
+> 8	const sequelize = new Sequelize(
+> 9	    process.env.DB_NAME || 'beholder',
+> 10	    process.env.DB_USER || 'root',
+> 11	    process.env.DB_PWD,
+> 12	    {
+> 13	        dialect: process.env.DB_DIALECT || 'mysql',
+> 14	        host: process.env.DB_HOST || 'localhost',
+> 15	        port: process.env.DB_PORT || 3306,
+> 16	        logging: process.env.DB_LOGS === 'true',
+> 17	        dialectOptions
+> 18	    });
+> 19	
+> 20	module.exports = sequelize;
+> ```
+
+## 🤖 Claude *(03:58:34)*
+
+
+## 🤖 Claude *(03:58:35)*
+
+Padrão de model e migration claros (`database.define` + `createTable` com guard idempotente). Faltam o handler do cockpit e o boot.
+
+## 🤖 Claude *(03:58:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const database = require('./db');
+> 2	const app = require('./app');
+> 3	const settingsRepository = require('./repositories/settingsRepository');
+> 4	const automationsRepository = require('./repositories/automationsRepository');
+> 5	const appEm = require('./app-em');
+> 6	const appWs = require('./app-ws');
+> 7	const beholder = require('./beholder');
+> 8	const agenda = require('./agenda');
+> 9	const regimeJob = require('./regimeJob');
+> 10	const flowJob = require('./flowJob');
+> 11	const fairPriceJob = require('./fairPriceJob');
+> 12	const cockpitJob = require('./cockpitJob');
+> 13	const funnelJob = require('./funnelJob');
+> 14	const dailyProfitJob = require('./dailyProfitJob');
+> 15	const dailyCapJob = require('./dailyCapJob');
+> 16	const logger = require('./utils/logger');
+> 17	
+> 18	(async () => {
+> 19	    // const version = process.version.replace('v', '').split('.')[0];
+> 20	    // if (parseInt(version) < 14) {
+> 21	    //     console.log(`Your Node.js version is ${process.version}. Beholder is compatible with Node 14+.`);
+> 22	    //     process.exit(0);
+> 23	    // }
+> 24	
+> 25	    logger('system', `Getting the default settings with ID ${process.env.DEFAULT_SETTINGS_ID}...`);
+> 26	    const settings = await settingsRepository.getDefaultSettings()
+> 27	    if (!settings) throw new Error(`There is no settings.`);
+> 28	
+> 29	    logger('system', 'Initializing the Beholder Brain...');
+> 30	
+> 31	    const automations = await automationsRepository.getActiveAutomations();
+> 32	    beholder.init(automations);
+> 33	
+> 34	    logger('system', `Starting the Beholder Agenda...`);
+> 35	    agenda.init(automations);
+> 36	
+> 37	    logger('system', `Starting the server apps...`);
+> 38	    const server = app.listen(process.env.PORT, () => {
+> 39	        logger('system', 'App is running at ' + process.env.PORT);
+> 40	    })
+> 41	
+> 42	    const wss = appWs(server);
+> 43	
+> 44	    appEm.init(settings, wss, beholder);
+> 45	
+> 46	    // Job de regime de mercado: grava MEMORY['<sym>:REGIME'] periodicamente p/ gate das automações
+> 47	    // (ex.: não comprar em bear). Read-only na Binance mainnet; não dispara ordens por si.
+> 48	    logger('system', `Starting the Regime Job...`);
+> 49	    regimeJob.start();
+> 50	
+> 51	    // Flow Job (SHADOW): grava MEMORY['<sym>:FLOW'] (fluxo do taker da mainnet) p/ observação +
+> 52	    // leitura pelo agente (MCP). Ainda NÃO gateia automação — gate da reversão à média é o próximo passo.
+> 53	    logger('system', `Starting the Flow Job (shadow)...`);
+> 54	    flowJob.start();
+> 55	
+> 56	    // Fair Price Job: grava MEMORY['<sym>:FAIR'] (preço da mainnet) p/ ancorar o Harvester de dislocação
+> 57	    // (compra-limite funda quando o testnet disloca abaixo do FAIR e reverte). Read-only na mainnet; passivo.
+> 58	    logger('system', `Starting the Fair Price Job...`);
+> 59	    fairPriceJob.start();
+> 60	
+> 61	    // Cockpit Job (READ-ONLY): grava MEMORY['<sym>:COCKPIT'] (analytics da distribuição de retornos 1m,
+> 62	    // EV net-de-fee, tail, banda MC driftless + snapshot regime/flow/gates) p/ o painel /cockpit e p/ o
+> 63	    // agente LER/REPORTAR. Informativo — NÃO gateia automação, NÃO emite ordem, NÃO toca o money-path.
+> 64	    logger('system', `Starting the Cockpit Job (read-only analytics)...`);
+> 65	    cockpitJob.start();
+> 66	
+> 67	    // Funnel Job (SHADOW): observa o caixa USDT + a reserva de BTC e loga o que escoaria pra BTC
+> 68	    // (o "funil" da estratégia Farm-and-Funnel). NÃO compra ainda — money-path é a Fase 4 com gate.
+> 69	    logger('system', `Starting the Funnel Job (shadow)...`);
+> 70	    funnelJob.start();
+> 71	
+> 72	    // Daily Profit target job: monitora meta diária e controla o estado de ativação do farm de alts.
+> 73	    logger('system', `Starting the Daily Profit Target Job...`);
+> 74	    dailyProfitJob.start();
+> 75	
+> 76	    // Daily Loss Cap job: circuit-breaker de perda diária (-5% por drawdown de equity). Arma o HALT QUENTE
+> 77	    // (riskState fonte 'daily-cap') quando o equity do dia cai além do teto. Fail-safe a preço frio (não
+> 78	    // dispara no escuro); o primeiro ciclo no boot provavelmente só faz baseline (MINI_TICKER ainda frio).
+> 79	    logger('system', `Starting the Daily Loss Cap Job (-${(parseFloat(process.env.DAILY_LOSS_CAP_PCT || '0.05') * 100).toFixed(0)}%)...`);
+> 80	    dailyCapJob.start();
+> 81	
+> 82	    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).
+> 83	    await require('./controllers/symbolsController').syncSymbolsIfEmpty();
+> 84	
+> 85	})().catch(err => {
+> 86	    // Falha no boot não pode virar unhandledRejection silencioso (Node 22): loga e sai p/ o compose
+> 87	    // reiniciar de forma visível, em vez de subir meio-inicializado.
+> 88	    logger('system', `Boot falhou: ${(err && err.stack) || err}`);
+> 89	    process.exit(1);
+> 90	});
+> ```
+
+## 🤖 Claude *(03:58:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== getCockpit handlers ===\" && grep -n \"getCockpit\\|cockpitJob\\|require(\" src/controllers/analysisController.js | head -40 && echo \"=== total lines ===\" && wc -l src/controllers/analysisController.js",
+  "description": "Inspect analysisController cockpit handlers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getCockpit handlers ===
+> 1:const { getRegime: getRegimeData } = require('../utils/regimeService');
+> 2:const { getFlow: getFlowData } = require('../utils/flowService');
+> 3:const regimeJob = require('../regimeJob');
+> 4:const flowJob = require('../flowJob');
+> 5:const cockpitJob = require('../cockpitJob');
+> 6:const beholder = require('../beholder');
+> 7:const { indexKeys } = require('../utils/indexes');
+> 8:const settingsRepository = require('../repositories/settingsRepository');
+> 9:const riskState = require('../riskState');
+> 75:async function getCockpitStatus(req, res) {
+> 76:    const status = cockpitJob.getStatus();
+> 92:function getCockpit(req, res) {
+> 98:    // que o agente lia como "contradição"); a analítica 1m fica na cadência do job. Ver cockpitJob.freshen.
+> 99:    res.json(cockpitJob.freshen(symbol, snap));
+> 102:module.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit };
+> === total lines ===
+> 102 src/controllers/analysisController.js
+> ```
+
+## 🤖 Claude *(03:58:49)*
+
+
+## 🤖 Claude *(03:58:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "offset": 70,
+  "limit": 33
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 70	}
+> 71	
+> 72	// GET /analysis/cockpit — snapshot agregado do Cockpit (por símbolo: distribuição de retornos 1m, EV
+> 73	// net-de-fee, tail, banda MC driftless, regime/flow e estado dos gates de compra). READ-ONLY; alimenta
+> 74	// o painel /cockpit (single source of truth = brain). Não expõe segredos (só estado de mercado).
+> 75	async function getCockpitStatus(req, res) {
+> 76	    const status = cockpitJob.getStatus();
+> 77	    // AMBIENTE real p/ o painel e o agente: useTestnet (settings, leitura barata sem decrypt) + HALT QUENTE.
+> 78	    // tradingHalt agora vem do riskState (env floor | manual | daily-cap), não mais só do .env — chave mantida
+> 79	    // p/ o frontend (Cockpit.js) e o agente (agent.js) não quebrarem; haltSource/haltReason são ADITIVOS
+> 80	    // (contexto p/ o agente REPORTAR a causa; não é gatilho de notify — ver notifyDedup família 'halt').
+> 81	    const st = riskState.getState();
+> 82	    try {
+> 83	        const s = await settingsRepository.getSettings(process.env.DEFAULT_SETTINGS_ID || 1);
+> 84	        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 85	    } catch (e) {
+> 86	        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 87	    }
+> 88	    res.json(status);
+> 89	}
+> 90	
+> 91	// GET /analysis/cockpit/:symbol — o COCKPIT de um símbolo, lido direto da MEMORY do brain (cópia rasa).
+> 92	function getCockpit(req, res) {
+> 93	    const symbol = String(req.params.symbol || '').toUpperCase();
+> 94	    if (!/^[A-Z0-9]{5,20}$/.test(symbol)) return res.status(400).json({ error: 'simbolo invalido' });
+> 95	    const snap = beholder.getMemory(symbol, indexKeys.COCKPIT);
+> 96	    if (!snap) return res.status(404).json({ error: 'sem snapshot de cockpit', symbol });
+> 97	    // freshen: regime/flow/gates SEMPRE no instante da leitura (mata a defasagem de até 60s do snapshot,
+> 98	    // que o agente lia como "contradição"); a analítica 1m fica na cadência do job. Ver cockpitJob.freshen.
+> 99	    res.json(cockpitJob.freshen(symbol, snap));
+> 100	}
+> 101	
+> 102	module.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit };
+> ```
+
+## 🤖 Claude *(03:58:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== getMemory + exports + updateMemory em beholder ===\" && grep -n \"function getMemory\\|function updateMemory\\|getStableConversion\\|module.exports\" src/beholder.js && echo \"=== MINI_TICKER shape em app-em (linha ~31) ===\" && sed -n '20,45p' src/app-em.js",
+  "description": "Check beholder exports, getMemory, MINI_TICKER shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getMemory + exports + updateMemory em beholder ===
+> 940:async function updateMemory(symbol, index, interval, value, executeAutomations = true) {
+> 973:function getMemory(symbol, index, interval) {
+> 1023:function getMemoryIndexes() {
+> 1044:function getStableConversion(baseAsset, quoteAsset, baseQty) {
+> 1081:        const converted = getStableConversion(baseAsset, DOLLAR_COINS[i], baseQty);
+> 1096:module.exports = {
+> === MINI_TICKER shape em app-em (linha ~31) ===
+>         if (logs) logger('M:' + monitorId, markets);
+> 
+>         try {
+>             Object.entries(markets).map(async (mkt) => {
+> 
+>                 delete mkt[1].volume;
+>                 delete mkt[1].quoteVolume;
+>                 delete mkt[1].eventTime;
+>                 const converted = {};
+>                 Object.entries(mkt[1]).map(prop => converted[prop[0]] = parseFloat(prop[1]));
+> 
+>                 const results = await beholder.updateMemory(mkt[0], indexKeys.MINI_TICKER, null, converted);
+>                 if (results) results.map(r => sendMessage({ notification: r }));
+>             })
+> 
+>             if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: markets });
+> 
+>             //simulação de book
+>             const books = Object.entries(markets).map(mkt => {
+>                 const book = { symbol: mkt[0], bestAsk: mkt[1].close, bestBid: mkt[1].close };
+>                 const currentMemory = beholder.getMemory(mkt[0], indexKeys.BOOK);
+> 
+>                 const newMemory = {};
+>                 newMemory.previous = currentMemory ? currentMemory.current : book;
+>                 newMemory.current = book;
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -1060,4 +3351,5 @@ nao eu quero que voce crie um sistema de geracao e ativacao de estrategias e met
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]
+> * **Próxima Sessão**: [[2026-06-19 - agent-a46f1a0b3cb469306]]
 %% --- TIMELINE END --- %%
