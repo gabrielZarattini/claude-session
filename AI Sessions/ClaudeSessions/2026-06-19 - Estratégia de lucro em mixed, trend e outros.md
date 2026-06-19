@@ -5804,6 +5804,525 @@ Cada linha mostra `N/M ON` (verde/amarelo/cinza). **Harvester/Grid/Scalp ficam d
 
 ⚠️ **Importante:** o feature **só funciona depois de deploy** (rebuild backend+frontend) — o container roda o código antigo (`COPY . .`). Então depois do gate passar, o passo pra te dar o botão de verdade é o **rebuild**. Aguardo o gate; te trago o veredito + a decisão de deploy.
 
+## 👤 User *(20:05:46)*
+
+<task-notification>
+<task-id>wtwnr8ida</task-id>
+<tool-use-id>toolu_01EJL1CinZCy18YjxgqdWBhU</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wtwnr8ida.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Verify adversarial + gate QA/TL do painel de Ativacao de Grupos (Settings) — money-path UI" completed</summary>
+<result>{"verify":[{"area":"backend","ok":true,"confidence":"high","issues":[{"severity":"nit","desc":"applyAutomationActive re-checa isActive (linhas 57/66) DEPOIS de start/stopAutomation ja terem feito o guard 204 (linhas 81/93). Redundante mas correto: a re-checagem e o que da idempotencia ao caminho por-grupo (skipped). Sem bug; so duplicacao logica intencional."},{"severity":"nit","desc":"setAutomationGroup nao re-valida paper/HALT no backend (o aviso vermelho extra so existe no frontend). Pelo design isso e proposital e money-safe (ativar so arma; guard por-ordem/riskState bloqueia execucao se o floor estiver up), entao nao e furo de seguranca. Vale notar que a unica protecao contra ligar trading real em lote e o window.confirm do frontend; o endpoint em si liga qualquer grupo conhecido sem checar HALT."}],"verdict":"Backend correto e equivalente. (1) applyAutomationActive reproduz EXATAMENTE o start/stop original por id: mesma ordem (start: isActive=true -&gt; addSchedule/updateBrain -&gt; save -&gt; log; stop: cancelSchedule/deleteBrain ANTES de isActive=false -&gt; save -&gt; log), OCO nao cancelada no stop (so no DELETE), 422 preservado pois addSchedule lanca e startAutomation captura -&gt; 422, guard 204 mantido nos handlers por-id. (2) Rotas: GET /groups e POST /groups/:group/:action vem ANTES de GET /:id no router; sem colisao (/:id/start tem profundidade diferente de /groups/:group/:action). (3) getAllAutomations usa findAll com include:[{all:true,nested:true}] (igual getActiveAutomations) -&gt; actions/orderTemplates carregados, entao updateBrain do start em lote registra a automacao COM acao. (4) setAutomationGroup: grupo desconhecido-&gt;404, acao!=start/stop-&gt;400, loop com try/catch por automacao (uma falha vai pra failed[] e nao derruba o lote), idempotencia via before===active-&gt;skipped. (5) Counts de getAutomationGroups corretos (filtra por def.test(name), conta active/inactive). Regex dos grupos verificada ao vivo: farm/trend/baseline/paper casam; Harvest(er)/Grid/Scalp e near-misses (Farmville/Trending/BaselineX) NAO casam (ancoras de espaco/[PAPER]+espaco). authMiddleware confirmado em app.use('/automations',...). express-async-errors cobre throws nos novos handlers. Nenhum blocker/major/minor; so 2 nits intencionais."},{"area":"frontend","ok":true,"confidence":"high","issues":[{"severity":"nit","desc":"Aviso vermelho depende do `halt` carregado no mount e NUNCA é re-buscado por loadGroups()/'Atualizar' (só os handlers do painel HALT atualizam `halt`). Se o operador liberar o floor em OUTRA aba/sessão depois desta página carregar, onSetGroup (Settings.js:117-120) e o banner (Settings.js:432) podem OMITIR o aviso de 'dinheiro real' mesmo com trading real ao vivo. Defense-in-depth apenas: o confirm sempre dispara e o guard por-ordem (riskState/assertWithinRisk) é o gate real — ativar nunca toca no HALT. Mitigação: refrescar halt junto com loadGroups."},{"severity":"nit","desc":"Subaviso conservador: se getHalt falhar no mount, `halt` fica null → `tradingLive` falsy → NENHUM aviso vermelho mesmo com trading possivelmente vivo. Sai pelo lado seguro do confirm padrão, mas em estado degradado o operador ativaria grupo de dinheiro real sem o aviso enfático. Mesma mitigação acima."},{"severity":"nit","desc":"Falha de fetch em getAutomationGroups é engolida por `.catch(() =&gt; {})` (Settings.js:34 e 113), deixando `groups=null` → texto 'Carregando grupos…' fica para sempre, indistinguível de load lento, sem toast de erro. Recuperável via 'Atualizar', mas é uma lacuna de UX silenciosa."},{"severity":"nit","desc":"`res.changed.length` (Settings.js:126) não é guardado por null-check (diferente de `res.failed &amp;&amp; res.failed.length`). Só roda no caminho 2xx onde o backend sempre retorna `changed:[]`, então não quebra na prática; robustez menor."}],"verdict":"FRONTEND APROVADO. Os 6 pontos de foco passam: (1) aviso vermelho dispara SÓ em (start &amp;&amp; key!=='paper' &amp;&amp; !halt.halted) — parar e paper nunca assustam (Settings.js:119); (2) window.confirm sempre presente em todo caminho (Settings.js:121); (3) disabled correto — Ativar disabled em total===0||active===total, Parar disabled em total===0||active===0 (Settings.js:452-453); (4) load no mount (linha 34) + loadGroups() no .then pós-ação (linha 127); (5) service bate com o router: GET /automations/groups e POST /automations/groups/:group/:action (AUTOMATIONS_URL já tem barra final → URLs corretas); (6) render à prova de groups null ('Carregando…') e vazio ('Nenhum grupo encontrado'). Contrato com backend confere: getAutomationGroups retorna {groups:[{key,label,paper,total,active,inactive,ids}]} e setAutomationGroup retorna {changed,failed,...} arrays — todos os campos lidos existem. key/g.key mapeia certo o grupo 'paper' p/ a exceção do aviso. getAllAutomations inclui {all:true,nested:true} (relações presentes p/ o BRAIN). Router tem /groups ANTES de /:id. Achados são todos nit/defense-in-depth (frescor do halt, fetch silencioso) — nenhum bloqueador de correção ou money-path; ativar só arma, e o guard por-ordem é a trava real."},{"area":"money-path security (painel Ativação de grupos)","ok":true,"confidence":"high","issues":[{"severity":"minor","desc":"Frontend Settings.js: o aviso VERMELHO de 'trading real liberado' é gated por `halt &amp;&amp; !halt.halted`. Se getHalt() falhar (.catch(()=&gt;{}) deixa halt=null), tradingLive vira falsy e o aviso vermelho é SUPRIMIDO mesmo com trading possivelmente ativo. Não é bypass de guard (o window.confirm básico ainda dispara e a trava real é o assertWithinRisk por-ordem no backend), mas a confirmação fica menos assustadora justamente quando o estado do HALT é desconhecido. Sugestão: tratar halt===null como 'incerto' e mostrar aviso de cautela (fail-safe na UX), em vez de suprimir."},{"severity":"nit","desc":"O texto do aviso/confirmação assume que !halt.halted == 'ordens reais executam'. Para o grupo paper isso nunca é real (broker virtual por prefixo [PAPER]), e o código já isenta paper do aviso vermelho — correto. Apenas reforçar em copy que o roteamento paper/real é por nome no momento da ordem, não por este endpoint."}],"verdict":"APROVADO. O botão NÃO consegue causar trade real não-intencional: (a) ativar só ARMA (updateBrain/addSchedule não colocam ordem); toda ordem passa por assertWithinRisk→riskState.isHalted() POR ORDEM (HALT quente), ortogonal à ativação; processo único, então a BRAIN armada é a mesma que executa. (b) harvester/grid/scalp classificam como EXCLUÍDOS pelos regexes (testado executando o regex real) e não estão em AUTOMATION_GROUPS (grupo inexistente→404). (c) endpoint atrás de authMiddleware (app.js:50), sem MCP write tool. (e) classificação não cria crossover paper↔real ([PAPER] casa SÓ paper; real nunca vira paper). getAllAutomations inclui {all,nested} (ações registradas). Router: /groups antes de /:id. Paridade comportamental do applyAutomationActive vs start/stop preservada (422 no schedule-throw-before-save, sem cancelar OCO no stop, idempotente). Único ponto: aviso vermelho da UI suprime em halt=null — minor/UX, não fura o guard."}],"gate":[{"role":"QA gate (senior QA engineer)","verdict":"PASS_COM_RESSALVAS","mustFix":[],"niceToHave":["DESSINCRONIA DB&lt;-&gt;BRAIN no start em grupo (BAIXA, herdado): applyAutomationActive(active=true) faz no-op se automation.isActive===true no DB, MESMO que a automacao NAO esteja registrada no BRAIN (ex.: ativada via PATCH direto/seed sem boot, ou estado divergente). O grupo entao reporta 'skipped' e a automacao fica DB-ativa porem NAO armada -- mesmo footgun do botao start por-id (que retorna 204), nao e regressao. Mitigacao opcional no painel: oferecer um 're-arm' (deleteBrain+updateBrain) ou cruzar com GET /beholder/brain. Arquivo: backend/src/controllers/automationsController.js:56-64,131-133.","Aviso VERMELHO some quando getHalt() falha (halt===null) -&gt; tradingLive falsy -&gt; sem alerta de 'dinheiro real' mesmo que o trading esteja LIVE (fail-open de UX)
+... (truncated 10688 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wtwnr8ida.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>303809</subagent_tokens><tool_uses>94</tool_uses><duration_ms>470386</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(20:06:31)*
+
+
+## 🤖 Claude *(20:06:32)*
+
+Gate voltou. Verify: **3/3 ok (high)**. Vou ler o veredito completo do TL + consolidar as ressalvas:
+
+## 🤖 Claude *(20:06:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/parse_g3.py <<'PYEOF'\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wtwnr8ida.output'))\nfor g in d[\"result\"][\"gate\"]:\n    print(\"=\"*70); print(\"ROLE:\",g[\"role\"],\"| VERDICT:\",g[\"verdict\"])\n    print(\"mustFix:\", g[\"mustFix\"] if g[\"mustFix\"] else \"(nenhum)\")\n    for n in g[\"niceToHave\"]: print(\"  \u2023\",n[:230])\n    print(\"summary:\",g[\"summary\"][:700])\nPYEOF\npython3 /tmp/parse_g3.py",
+  "description": "Parse full QA + TL gate verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ======================================================================
+> ROLE: QA gate (senior QA engineer) | VERDICT: PASS_COM_RESSALVAS
+> mustFix: (nenhum)
+>   ‣ DESSINCRONIA DB<->BRAIN no start em grupo (BAIXA, herdado): applyAutomationActive(active=true) faz no-op se automation.isActive===true no DB, MESMO que a automacao NAO esteja registrada no BRAIN (ex.: ativada via PATCH direto/seed
+>   ‣ Aviso VERMELHO some quando getHalt() falha (halt===null) -> tradingLive falsy -> sem alerta de 'dinheiro real' mesmo que o trading esteja LIVE (fail-open de UX). O window.confirm normal ainda aparece e o guard por-ordem continua s
+>   ‣ O grupo 'baseline' inclui 'Baseline RSI Sell BTCUSDT' (SELL do cofre BTC). A trava isBtcVaultSymbol vive SO no caminho MCP place_order, NAO no caminho beholder/exchange -- entao com o floor liberado este painel arma uma venda real
+>   ‣ Sem teste automatizado novo. O CI do projeto e migrate+seed+agent --check (sem unit tests), entao o regex de grupo e a paridade start/stop nao tem rede de seguranca em CI. Vale fixar o teste offline do regex (farm6/trend8/baseline
+>   ‣ Loop sequencial (await por item) no setAutomationGroup: paper=16 faz 16 save()+updateBrain() em serie sob a mesma request. Inocuo no tamanho atual, mas se os grupos crescerem pode estourar timeout/segurar a hot-path; aceitavel por
+> summary: VEREDITO GERAL: PASS COM RESSALVAS. Revisei os 5 arquivos lendo o codigo (nao so o diff) e validei as invariantes.
+> 
+> == Correcao / paridade start/stop (REFATORADO) — PASS (alta confianca) ==
+> applyAutomationActive e COMPORTAMENTALMENTE IDENTICO ao start/stop original por id (conferi vs git show HEAD): start = guard isActive->204, isActive=true, addSchedule(throw->422)/updateBrain, save, log; stop = guard !isActive->204, cancelSchedule/deleteBrain ANTES de isActive=false, save, log. A ordem isActive=true-antes-do-addSchedule e a mesma do original (se schedule lanca, nada e persistido pois save() nunca roda -> equivalente). OCO NAO e cancelada no stop (so no DELETE) — preservado. 422 do schedule
+> ======================================================================
+> ROLE: Tech Lead / Code Owner (decisão de merge) | VERDICT: APPROVE COM SUGESTÕES
+> mustFix: (nenhum)
+>   ‣ UX/segurança defensiva (Settings.js): o aviso vermelho de trading-real só aparece quando `halt && !halt.halted`. Se `getHalt` falhar (catch silencioso → `halt=null`), o aviso É SUPRIMIDO mesmo com floor liberado. Inverter para fai
+>   ‣ Robustez da classificação 'baseline': os grupos farm/trend/paper têm nomes gerados por setup-*.js (verificado: `Farm Buy …`, `Trend Buy … TAG`, `[PAPER] …`), mas NÃO há script que crie nomes 'Baseline …' — id2/id3 são RUNTIME via 
+>   ‣ Considerar `getAutomationGroups` reusar a forma compacta sem `include:{all,nested}` (o GET só precisa de id/name/isActive); o include pesado é necessário SÓ no setAutomationGroup (start em lote → updateBrain precisa das actions). 
+>   ‣ Nit: o frontend dispara `loadGroups()` após cada ação mas não revalida o estado do HALT — se o operador travar/destravar o floor noutra aba, o aviso fica stale até refresh. Baixíssima prioridade.
+> summary: VEREDITO: APPROVE COM SUGESTÕES — mergeável, sem must-fix.
+> 
+> RACIONAL (verifiquei o código real, não só os diffs/reviews repassados):
+> 
+> Design (grupos por regex vs tabela/tag): pragmático e correto para esta fatia. Reaproveitar a convenção de nome dos setup-*.js evita schema/migration num hot-path de dinheiro. Confirmei os nomes literais gerados: `Farm Buy/Sell ${symbol}`, `Trend Buy/Sell ${SYMBOL} ${TAG}`, `[PAPER] … ${symbol}` — casam exatamente os regexes; harvester/grid/scalp ficam de fora (grupo inexistente → 404). O ÚNICO grupo frágil é `baseline` (id2/id3 são runtime via PATCH, sem script que garanta o nome 'Baseline …') → nice-to-have de documentar/migrar para coluna `group` depois.
+> 
+> R
+> ```
+
+## 🤖 Claude *(20:07:35)*
+
+
+## 🤖 Claude *(20:07:38)*
+
+Gate **limpo**: Verify 3/3 ok · **QA PASS COM RESSALVAS** · **TL APPROVE COM SUGESTÕES** · **zero must-fix**.
+
+Uma ressalva apareceu em **3 revisores + os 2 gates** e é money-path, então vou corrigir antes de fechar: o **aviso de floor é fail-OPEN** — se `getHalt` falha (`halt=null`) ou o floor muda em outra aba, o aviso vermelho some mesmo com trading vivo. Inverto pra **fail-SAFE** (avisa quando o estado é desconhecido) + pego o HALT fresco na hora de ativar:
+
+## 🤖 Claude *(20:07:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "    function loadGroups() {\n        const token = localStorage.getItem(\"token\");\n        getAutomationGroups(token).then(res => setGroups(res.groups)).catch(() => { });\n    }\n\n    function onSetGroup(key, label, on) {\n        const tradingLive = halt && !halt.halted; // floor liberado \u2192 ordens reais executam\n        let msg = `${on ? 'ATIVAR' : 'PARAR'} o grupo \"${label}\"?`;\n        if (on && key !== 'paper' && tradingLive)\n            msg = `\u26a0\ufe0f TRADING REAL EST\u00c1 LIBERADO \u2014 ativar \"${label}\" vai NEGOCIAR COM DINHEIRO REAL.\\n\\n${msg}`;\n        if (!window.confirm(msg)) return;\n        const token = localStorage.getItem(\"token\");\n        setAutomationGroup(key, on ? 'start' : 'stop', token)\n            .then(res => {\n                const fail = res.failed && res.failed.length ? `, ${res.failed.length} falha(s)` : '';\n                setNotification({ type: fail ? 'error' : 'success', text: `Grupo \"${label}\" ${on ? 'ativado' : 'parado'}: ${res.changed.length} alterada(s)${fail}.` });\n                loadGroups();\n            })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }",
+  "new_string": "    function loadGroups() {\n        const token = localStorage.getItem(\"token\");\n        getAutomationGroups(token).then(res => setGroups(res.groups)).catch(() => { });\n        getHalt(token).then(setHaltState).catch(() => { }); // mant\u00e9m o aviso de floor em dia\n    }\n\n    function onSetGroup(key, label, on) {\n        const token = localStorage.getItem(\"token\");\n        const proceed = (h) => {\n            const knownHalted = !!(h && h.halted); // s\u00f3 \u00e9 \"seguro\" se SABEMOS que est\u00e1 travado (fail-safe)\n            let msg = `${on ? 'ATIVAR' : 'PARAR'} o grupo \"${label}\"?`;\n            if (on && key !== 'paper' && !knownHalted)\n                msg = `${h ? '\u26a0\ufe0f TRADING REAL EST\u00c1 LIBERADO \u2014 ativar' : '\u26a0\ufe0f Estado do HALT DESCONHECIDO \u2014 ativar'} \"${label}\" ${h ? 'vai' : 'pode'} NEGOCIAR COM DINHEIRO REAL.\\n\\n${msg}`;\n            if (!window.confirm(msg)) return;\n            setAutomationGroup(key, on ? 'start' : 'stop', token)\n                .then(res => {\n                    const fail = res.failed && res.failed.length ? `, ${res.failed.length} falha(s)` : '';\n                    setNotification({ type: fail ? 'error' : 'success', text: `Grupo \"${label}\" ${on ? 'ativado' : 'parado'}: ${(res.changed || []).length} alterada(s)${fail}.` });\n                    loadGroups();\n                })\n                .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n        };\n        // money-path: p/ ATIVAR um grupo REAL, busca o estado FRESCO do HALT antes do aviso (n\u00e3o confia no cache).\n        if (on && key !== 'paper')\n            getHalt(token).then(h => { setHaltState(h); proceed(h); }).catch(() => proceed(null));\n        else\n            proceed(halt);\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:07:59)*
+
+
+## 🤖 Claude *(20:08:00)*
+
+Rebuild do frontend pra confirmar que o fix compila:
+
+## 🤖 Claude *(20:08:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\nREACT_APP_API_URL=http://localhost:8080/api \\\nREACT_APP_WS_URL=ws://localhost:8080/ws \\\nREACT_APP_BWS_URL=wss://stream.binance.com:9443/ws \\\nnpx vite build --mode production 2>&1 | tail -6",
+  "description": "Rebuild frontend after fail-safe fix",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> rendering chunks...
+> computing gzip size...
+> build/index.html                   2.38 kB │ gzip:   0.85 kB
+> build/assets/index-spoZRgsp.css   11.51 kB │ gzip:   2.92 kB
+> build/assets/index-C-ar_U0I.js   436.22 kB │ gzip: 122.10 kB
+> ✓ built in 5.68s
+> ```
+
+## 🤖 Claude *(20:08:38)*
+
+
+## 🤖 Claude *(20:08:47)*
+
+Build OK de novo. **Feature completo, gate limpo, fix money-path aplicado.**
+
+## Status do botão de ativação
+
+✅ Construído · ✅ Gate (Verify 3/3, QA PASS, TL APPROVE, **zero must-fix**) · ✅ Fail-safe do aviso aplicado + rebuild OK.
+
+**Uma coisa que o gate levantou e você precisa saber** (não é bug, é money-path): o grupo **Baseline** inclui `Baseline RSI Sell BTCUSDT` — uma **venda de BTC do cofre**. A trava anti-venda-BTC (`isBtcVaultSymbol`) vive **só no caminho do MCP** (o agente), **não** no caminho beholder/exchange. Então, **com o floor liberado**, ativar Baseline arma uma venda real de BTC que é protegida pelo **HALT + riskGuard** (que cobrem esse caminho), mas **não** pela trava do cofre do MCP. Isso **já era assim** no botão start por-linha — meu botão não piora, só deixa mais rápido. Mas vale você saber antes de usar o Baseline ao vivo.
+
+**Deferido (nice-to-have, nenhum bloqueia):** re-arm DB↔BRAIN (footgun herdado do start por-id), teste do regex no CI, migrar `baseline` p/ coluna `group` um dia, nota de UI no Baseline-vault.
+
+---
+
+⚠️ **O botão só existe depois de deploy** (o container roda código antigo). O deploy = `docker compose up -d --build backend frontend` — **rebuilda e reinicia** o stack, mas o **freeze é preservado** (o floor está persistido no volume → boot volta `halted=true`). Decisão:
+
+## 🤖 Claude *(20:08:52)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Commitar o feature e fazer deploy agora (pra voc\u00ea ter o bot\u00e3o de verdade)?",
+      "header": "Deploy",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Commit + deploy agora",
+          "description": "Commito no master (trunk-based) e rodo docker compose up --build backend+frontend. Reinicia o stack (~1-2min de downtime), freeze preservado (floor no volume). Verifico boot halted=true + site 200 + endpoint /automations/groups ao vivo."
+        },
+        {
+          "label": "S\u00f3 commit, deploy depois",
+          "description": "Commito agora; voc\u00ea escolhe a hora do restart (ex.: rodar o deploy voc\u00ea mesmo, ou me pedir depois). O bot\u00e3o fica no c\u00f3digo mas n\u00e3o no ar at\u00e9 o rebuild."
+        },
+        {
+          "label": "Segurar tudo",
+          "description": "N\u00e3o commito nem fa\u00e7o deploy. Deixo o worktree sujo pra voc\u00ea revisar os 5 arquivos primeiro."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Commitar o feature e fazer deploy agora (pra você ter o botão de verdade)?"="Commit + deploy agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(20:13:42)*
+
+
+## 🤖 Claude *(20:13:42)*
+
+Commit + deploy aprovado. **1) Commit** (como `gcrux-tradeux`):
+
+## 🤖 Claude *(20:13:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux \\\n  backend/src/repositories/automationsRepository.js backend/src/controllers/automationsController.js \\\n  backend/src/routers/automationsRouter.js frontend/src/services/AutomationsService.js \\\n  frontend/src/private/Settings/Settings.js 2>/dev/null && echo \"\u2713 chown\"\necho \"=== git status (deve mostrar s\u00f3 os 5; build/node_modules gitignored) ===\"\ngit -c safe.directory='*' status --short\n\ncat > /tmp/commit_msg3.txt <<'MSG'\nfeat(settings): painel de Ativacao de grupos (Farm/Trend/Baseline/Paper)\n\nBotao de ligar/parar GRUPOS de automacao em lote no card de Settings (do\nlado do HALT), substituindo o SSH/automation-ctl.js. Pedido do dono.\n\n- backend: applyAutomationActive extraido de start/stop (FONTE UNICA -> o\n  grupo se comporta IDENTICO ao botao por-linha, registra no BRAIN com as\n  acoes); getAutomationGroups + setAutomationGroup; repo.getAllAutomations\n  (com relacoes p/ o BRAIN); rotas /automations/groups +\n  /groups/:group/:action ANTES de /:id. Grupos por regex de nome;\n  harvester/grid/scalp EXCLUIDOS (mortos/refutados, nao reativaveis aqui).\n- frontend: card \"Ativacao de grupos\" (N/M ON por grupo, Ativar/Parar) +\n  AutomationsService.getAutomationGroups/setAutomationGroup. Confirmacao\n  fail-SAFE ciente do floor (avisa em trading-real-liberado E em estado\n  desconhecido; busca o HALT fresco antes de ativar grupo real).\n\nSeguranca: ativar so ARMA (nao toca no HALT); o guard por-ordem (riskState)\nbloqueia execucao se o floor estiver up. Endpoint atras do authMiddleware.\nGate: verify 3/3 ok, QA PASS, TL APPROVE (zero must-fix); node --check +\nvite build + teste offline do regex de grupo OK.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nMSG\n\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux add \\\n  backend/src/repositories/automationsRepository.js backend/src/controllers/automationsController.js \\\n  backend/src/routers/automationsRouter.js frontend/src/services/AutomationsService.js \\\n  frontend/src/private/Settings/Settings.js\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux commit -F /tmp/commit_msg3.txt\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -1",
+  "description": "Commit group-activation feature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ chown
+> === git status (deve mostrar só os 5; build/node_modules gitignored) ===
+>  M backend/src/controllers/automationsController.js
+>  M backend/src/repositories/automationsRepository.js
+>  M backend/src/routers/automationsRouter.js
+>  M frontend/src/private/Settings/Settings.js
+>  M frontend/src/services/AutomationsService.js
+> [master 771ecf0] feat(settings): painel de Ativacao de grupos (Farm/Trend/Baseline/Paper)
+>  5 files changed, 177 insertions(+), 28 deletions(-)
+> 771ecf0 feat(settings): painel de Ativacao de grupos (Farm/Trend/Baseline/Paper)
+> ```
+
+## 🤖 Claude *(20:14:03)*
+
+
+## 🤖 Claude *(20:14:05)*
+
+Commitado **`771ecf0`** (worktree limpo, build/node_modules gitignored). **2) Deploy** — rebuild + restart de backend e frontend (freeze preservado pelo volume):
+
+## 🤖 Claude *(20:14:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend frontend 2>&1 | tail -25'",
+  "description": "Rebuild + restart backend and frontend",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #26 [frontend] resolving provenance for metadata file
+> #26 DONE 0.1s
+> 
+> #22 [backend] exporting to image
+> #22 exporting layers 23.9s done
+> #22 writing image sha256:53c7d5b27595fb119991f4695f09c6e023785db63a3e7ddae13a11024ee088a9 0.0s done
+> #22 naming to docker.io/library/tradeux-backend 0.0s done
+> #22 DONE 24.0s
+> 
+> #27 [backend] resolving provenance for metadata file
+> #27 DONE 0.0s
+>  Image tradeux-frontend Built 
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-frontend-1 Recreate 
+>  Container tradeux-frontend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(20:15:30)*
+
+
+## 🤖 Claude *(20:15:31)*
+
+Deploy concluído (ambas as imagens rebuildadas + recriadas). Verificação **crítica** — freeze preservado + site + endpoint novo ao vivo:
+
+## 🤖 Claude *(20:15:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== containers ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"'\necho \"=== boot riskState (FREEZE deve estar halted=true) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 3m backend 2>&1 | grep -iE \"riskState|halt|floor\" | tail -8'\necho \"=== site ===\"\ncurl -s -m8 -o /dev/null -w \"https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Verify containers + riskState freeze + site"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up 2 days
+> tradeux-backend-1    Up 14 seconds
+> tradeux-db-1         Up 4 days (healthy)
+> tradeux-frontend-1   Up 14 seconds
+> === boot riskState (FREEZE deve estar halted=true) ===
+> === site ===
+> https://tradeux.gcrux.com -> 200
+> ```
+
+## 🤖 Claude *(20:15:46)*
+
+
+## 🤖 Claude *(20:15:47)*
+
+Containers up, site 200. Mas o log do `riskState` veio vazio (backend só 14s — migrations/seed ainda rodando). **Preciso confirmar o freeze** pela fonte autoritativa (`/system/halt`) + testar o endpoint novo ao vivo:
+
+## 🤖 Claude *(20:15:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/livecheck2.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL||process.env.TRADEUX_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD||process.env.TRADEUX_PASSWORD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>{try{r(JSON.parse(b))}catch{r({})}})});rq.write(d);rq.end()});\n if(!lg.token){console.log('LOGIN ainda nao pronto');return}\n const halt=await req('GET','/system/halt',lg.token);\n console.log('HALT:', JSON.stringify({halted:halt.body.halted, source:halt.body.source, floor:halt.body.floor&&halt.body.floor.on, envHard:halt.body.envHard}));\n const g=await req('GET','/automations/groups',lg.token);\n console.log('GROUPS status', g.status);\n if(g.body&&g.body.groups) for(const x of g.body.groups) console.log(`  ${x.key}: ${x.active}/${x.total} ON  paper=${x.paper}  ids=[${x.ids.join(',')}]`);\n else console.log('  body:', String(JSON.stringify(g.body)).slice(0,200));\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/livecheck2.js' 2>&1 | tail -15",
+  "description": "Live check HALT freeze + new groups endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HALT: {"halted":true,"source":"floor","floor":true,"envHard":false}
+> GROUPS status 200
+>   farm: 6/6 ON  paper=false  ids=[13,14,11,12,9,10]
+>   trend: 8/8 ON  paper=false  ids=[19,20,17,18,6,7,15,16]
+>   baseline: 0/2 ON  paper=false  ids=[2,3]
+>   paper: 16/16 ON  paper=true  ids=[54,55,56,57,50,51,52,53,58,59,44,45,46,47,48,49]
+> ```
+
+## 🤖 Claude *(20:16:28)*
+
+
+## 🤖 Claude *(20:16:30)*
+
+**FREEZE PRESERVADO** ✓ (`halted=true, source=floor, floor=true`) — o deploy não destravou nada. E o **endpoint novo responde 200** com o agrupamento correto (farm 6/6, trend 8/8, baseline 0/2, paper 16/16).
+
+Vou provar o caminho de **escrita** ao vivo no alvo mais seguro possível — stop→start do grupo **Paper** (broker virtual + HALT on = risco zero, e restaura o estado exato):
+
+## 🤖 Claude *(20:16:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/smoke.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\nconst paper=g=>g.body.groups.find(x=>x.key==='paper');\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>r(JSON.parse(b)))});rq.write(d);rq.end()});\n const t=lg.token;\n const s=await req('POST','/automations/groups/paper/stop',t);\n console.log('STOP paper:', s.status, JSON.stringify({changed:(s.body.changed||[]).length, skipped:(s.body.skipped||[]).length, failed:(s.body.failed||[]).length}));\n console.log('  paper agora:', paper(await req('GET','/automations/groups',t)).active+'/16');\n const a=await req('POST','/automations/groups/paper/start',t);\n console.log('START paper:', a.status, JSON.stringify({changed:(a.body.changed||[]).length, skipped:(a.body.skipped||[]).length, failed:(a.body.failed||[]).length}));\n const fin=paper(await req('GET','/automations/groups',t)).active;\n console.log('  paper restaurado:', fin+'/16', fin===16?'\u2713 OK':'\u2717 ATENCAO');\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/smoke.js' 2>&1 | tail -10",
+  "description": "Reversible write-path smoke test on paper group"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> STOP paper: 200 {"changed":16,"skipped":0,"failed":0}
+>   paper agora: 0/16
+> START paper: 200 {"changed":16,"skipped":0,"failed":0}
+>   paper restaurado: 16/16 ✓ OK
+> ```
+
+## 🤖 Claude *(20:17:11)*
+
+
+## 🤖 Claude *(20:17:13)*
+
+**Caminho de escrita provado ao vivo** ✓ — STOP paper (200, 16 alteradas) → 0/16 → START paper (200, 16 alteradas) → **restaurado 16/16**. Zero falhas, estado idêntico ao de antes.
+
+🎉 **O botão está NO AR e funcionando.** Deixa eu registrar isso na memória (controle novo + a ressalva do Baseline-vault):
+
+## 🤖 Claude *(20:17:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory\necho \"=== tail do mainnet-go-live ===\"; tail -5 tradeux-mainnet-go-live.md\necho \"=== index line ===\"; grep -n \"mainnet-go-live\" MEMORY.md | head -1",
+  "description": "Read memory anchors for go-live control surface"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tail do mainnet-go-live ===
+> - ✅ **BUG P0 (Farm Sell) RESOLVIDO+DEPLOYADO** (commit `c163112`, QA PASS-c/ressalvas + TL APPROVE re-review). Era: `orderTemplates` id6/8/10 = `MAX_WALLET` → vendia a carteira INTEIRA e dumpava a posição do Trend co-localizado. Fix: (1) keyword **`FARM_QTY`** em `beholder.calcQty` (espelho do HARVEST_QTY, vende só `MEMORY['<sym>:FARM_DCA'].qty`); (2) **`getFarmPosition` escopado por automação** (`name LIKE 'Farm %'` → BUYs/lastSell filtrados por automationId; o Trend não infla/re-baseia mais o bucket); (3) **migration `20260615200000`** durável (sobrescreve a `20260614190000` que era o próprio bug): Farm Sell→FARM_QTY, Farm Buy ×200→**×2** (~$10/ordem), Baseline RSI Buy id2→**isActive=0** (era acumulador pelado, compra sem venda). Verificado no DB pós-migrate. **FOLLOW-UP `FARM_SELLING` ✅ FEITO v1 (2026-06-17, commit `baf0f4b`, QA PASS+TL APPROVE+cético money-path PASS):** trava anti-empilhamento via SKIP no place + SET por orderId + RELEASE por **match de orderId** em qualquer terminal (app-em.updateFarmPosition) — **BRAIN-independente** (superior ao HARVEST_SELLING, que perma-trava no stop/start). Sem migration/condition/reload (skip de código, não via condition). **Reconstrução-no-boot (loadFarmSellingLocks) + reconciliação partial→cancel do Farm DEFERIDAS** — gate documentado: NÃO escalar `FARM_SIZE_MULT` até implementá-las (risco bounded: só remistura alt-wallet LTC/BNB/ADA, NUNCA o cofre de BTC, nunca oversell além da carteira). ⚠️ Escopo por `name LIKE 'Farm %'` é frágil a rename — nice-to-have: tag/flag explícita.
+> - **TREND (id6/7 BTC, id15-20 alts) = ÚNICO edge real** (same-exchange, golden/death cross 1h), mas minúsculo ($5-15/perna, ~1-3 RT/símbolo/mês). BTC a $5 = no piso do minNotional (frágil). Correlação: 4 golden agora → death cross geral = drawdown único.
+> - **EXPECTATIVA REAL: $148 spot ≈ FLAT no mês** (~$0/dia mediano; melhor mês ~+5%=$0.25/dia amortizado só num bull geral). SEM rendimento diário nessa escala. **+3 BTC é impossível (1.350×).** 0 ordens mainnet → nada validado com fill/fee/slippage reais. Win = validação + compor o trend + PACIÊNCIA; maior risco = forçar trade pra ver P&L e sangrar fee. Capital travável: até ~$80/$148 num downtrend (buckets MR sem stop). Plano: P0 fixes (seguros, halted) → redesign harvester+backtest → canary 1 trade → só então descongelar.
+> 
+> **Bom (ruled out / sólido):** agente LLM NÃO coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations portáveis; `secretKey` cifrado em repouso (só `accessKey` plaintext); sem split-brain no caminho SPOT. ⚠️ Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].
+> === index line ===
+> 22:- [Mainnet go-live (Antigravity)](tradeux-mainnet-go-live.md) — sistema em MAINNET REAL (useTestnet=0) via dual-env do Antigravity; "nenhuma ordem" era ESPERADO (armed-waiting+gating+ledger frio+$148 USDT). **Must-fix de código RESOLVIDOS+DEPLOYADOS (96915e0, QA+TL): funil capado/OFF, ordersController vivo, reconcile isTestnet, teto de risco no backend.** Estado: **CONGELADO `TRADING_HALT=true`**. **Descongelamento EM CURSO (2026-06-17): (a) saque-OFF+IP FEITO+verificado; (b) harvester id22-25 OFF; (d) furo SELL-by-base do riskGuard FECHADO (`e27339a`); BLOQUEADORES `baf0f4b` (QA+TL+cético, deployado): teto MAX_ORDER_NOTIONAL 1500→300, trava FARM_SELLING v1 (BRAIN-independente; gate: não escalar size do Farm), TREND_QTY persistido via derive-from-orders. (e) cap diário −5% + kill-switch QUENTE FEITO+DEPLOYADO 2026-06-18 (`8ef1b69`+`1b639ce`, QA+TL, smoke vivo OK): `riskState` é fonte única do HALT (env floor/manual/daily-cap), guard lê por ordem (HALT agora QUENTE), `dailyCapJob` arma halt no drawdown de equity-tradeable −5% (Earn `LD*` excluído; baseline vivo $148,84/piso $141,40). **BOTÃO DE PÂNICO QUENTE NOVO: `POST /system/halt` (operator-only, JWT, sem MCP write tool) — não é mais só `docker compose stop backend`.** (c) ✅ P&L-BNB FEITO+DEPLOYADO 2026-06-18 (`854bab5`, QA+TL): `net` fee-inclusive ciente do lado (VENDA −taxa/COMPRA +taxa, taxa BNB→USDT) via helper único `utils/feeCalc.computeNet` nos 3 pontos + coluna `orders.commissionAsset` (migration rodou ao vivo); fecha o furo da taxa-em-BNB invisível no P&L. **🎯 TODOS os pré-reqs de CÓDIGO (a)-(e) FEITOS → falta só o GO DO DONO pro flip `TRADING_HALT=false` + canary de um-grupo-só; BNB-fee agora seguro de ligar na UI Binance.** HANDOFF não-selado
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(20:17:36)*
+
+
+## 🤖 Claude *(20:17:37)*
+
+Atualizo a memória (controle novo + caveat do Baseline-vault):
+
+## 🤖 Claude *(20:17:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**Bom (ruled out / s\u00f3lido):** agente LLM N\u00c3O coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations port\u00e1veis; `secretKey` cifrado em repouso (s\u00f3 `accessKey` plaintext); sem split-brain no caminho SPOT. \u26a0\ufe0f Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].",
+  "new_string": "**Bom (ruled out / s\u00f3lido):** agente LLM N\u00c3O coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations port\u00e1veis; `secretKey` cifrado em repouso (s\u00f3 `accessKey` plaintext); sem split-brain no caminho SPOT. \u26a0\ufe0f Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].\n\n## Painel \"Ativa\u00e7\u00e3o de grupos\" em Settings (2026-06-19, commit `771ecf0`, deployado+verificado ao vivo)\nBot\u00e3o **Ligar/Parar GRUPOS de automa\u00e7\u00e3o em lote** (Farm/Trend/Baseline/Paper) no card de Settings, ao lado dos bot\u00f5es de HALT \u2014 substitui SSH/`automation-ctl.js`. Backend: `GET /automations/groups` + `POST /automations/groups/:group/:action` (atr\u00e1s do authMiddleware, ANTES de `/:id` no router); grupos por **REGEX de nome**; `applyAutomationActive` extra\u00eddo de start/stop = **MESMO caminho do bot\u00e3o por-linha** (registra no BRAIN com as a\u00e7\u00f5es, via `getAllAutomations` com include). **harvester/grid/scalp EXCLU\u00cdDOS** de prop\u00f3sito (mortos/refutados, n\u00e3o reativ\u00e1veis por aqui). Frontend: confirm **fail-SAFE ciente do floor** (avisa em trading-liberado E em estado desconhecido; pega HALT fresco antes de ativar grupo real). **Ativar s\u00f3 ARMA \u2014 N\u00c3O mexe no HALT** (guard por-ordem do `riskState` segura execu\u00e7\u00e3o se o floor estiver up). Gate: verify 3/3 ok, QA PASS, TL APPROVE (zero must-fix); smoke vivo stop\u2192start paper 16\u21920\u219216 OK; **freeze preservado no deploy** (`halted=true, floor=true`). \u26a0\ufe0f **CAVEAT money-path:** o grupo `baseline` inclui `Baseline RSI Sell BTCUSDT` (venda do COFRE BTC) \u2014 a trava `isBtcVaultSymbol` vive S\u00d3 no caminho MCP, N\u00c3O no beholder/exchange; com floor liberado, ativar Baseline arma uma venda real de BTC coberta s\u00f3 por **HALT+riskGuard**, n\u00e3o pela trava do cofre (j\u00e1 era assim no start por-linha \u2014 o bot\u00e3o s\u00f3 agiliza). Ver [[tradeux-vault-guard]]. Nice-to-have deferidos: migrar grupo p/ coluna expl\u00edcita (regex fr\u00e1gil a rename), teste do regex no CI, re-arm DB\u2194BRAIN no painel."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(20:17:57)*
+
+
+## 🤖 Claude *(20:17:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "offset": 1,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-mainnet-go-live
+> 3	description: Antigravity colocou o sistema em MAINNET (dinheiro real) via feature dual-env; armado mas NÃO seguro p/ fundar — must-fix list
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 78499af7-71fd-4dbf-816c-c5996402727d
+> 8	---
+> ```
+
+## 🤖 Claude *(20:18:07)*
+
+
+## 🤖 Claude *(20:18:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**Bom (ruled out / s\u00f3lido):** agente LLM N\u00c3O coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations port\u00e1veis; `secretKey` cifrado em repouso (s\u00f3 `accessKey` plaintext); sem split-brain no caminho SPOT. \u26a0\ufe0f Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].",
+  "new_string": "**Bom (ruled out / s\u00f3lido):** agente LLM N\u00c3O coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations port\u00e1veis; `secretKey` cifrado em repouso (s\u00f3 `accessKey` plaintext); sem split-brain no caminho SPOT. \u26a0\ufe0f Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].\n\n## Painel \"Ativa\u00e7\u00e3o de grupos\" em Settings (2026-06-19, commit `771ecf0`, deployado+verificado ao vivo)\nBot\u00e3o **Ligar/Parar GRUPOS de automa\u00e7\u00e3o em lote** (Farm/Trend/Baseline/Paper) no card de Settings, ao lado dos bot\u00f5es de HALT \u2014 substitui SSH/`automation-ctl.js`. Backend: `GET /automations/groups` + `POST /automations/groups/:group/:action` (atr\u00e1s do authMiddleware, ANTES de `/:id` no router); grupos por **REGEX de nome**; `applyAutomationActive` extra\u00eddo de start/stop = **MESMO caminho do bot\u00e3o por-linha** (registra no BRAIN com as a\u00e7\u00f5es, via `getAllAutomations` com include). **harvester/grid/scalp EXCLU\u00cdDOS** de prop\u00f3sito (mortos/refutados, n\u00e3o reativ\u00e1veis por aqui). Frontend: confirm **fail-SAFE ciente do floor** (avisa em trading-liberado E em estado desconhecido; pega HALT fresco antes de ativar grupo real). **Ativar s\u00f3 ARMA \u2014 N\u00c3O mexe no HALT** (guard por-ordem do `riskState` segura execu\u00e7\u00e3o se o floor estiver up). Gate: verify 3/3 ok, QA PASS, TL APPROVE (zero must-fix); smoke vivo stop\u2192start paper 16\u21920\u219216 OK; **freeze preservado no deploy** (`halted=true, floor=true`). \u26a0\ufe0f **CAVEAT money-path:** o grupo `baseline` inclui `Baseline RSI Sell BTCUSDT` (venda do COFRE BTC) \u2014 a trava `isBtcVaultSymbol` vive S\u00d3 no caminho MCP, N\u00c3O no beholder/exchange; com floor liberado, ativar Baseline arma uma venda real de BTC coberta s\u00f3 por **HALT+riskGuard**, n\u00e3o pela trava do cofre (j\u00e1 era assim no start por-linha \u2014 o bot\u00e3o s\u00f3 agiliza). Ver [[tradeux-vault-guard]]. Nice-to-have deferidos: migrar grupo p/ coluna expl\u00edcita (regex fr\u00e1gil a rename), teste do regex no CI, re-arm DB\u2194BRAIN no painel."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:18:27)*
+
+
+## 🤖 Claude *(20:18:28)*
+
+Atualizo o índice `MEMORY.md`:
+
+## 🤖 Claude *(20:18:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "BNB-fee agora seguro de ligar na UI Binance.** HANDOFF n\u00e3o-selado",
+  "new_string": "BNB-fee agora seguro de ligar na UI Binance.** \u00b7 **NOVO painel `Ativa\u00e7\u00e3o de grupos` em Settings (`771ecf0`, deployado+smoke vivo): liga/para grupos de automa\u00e7\u00e3o em lote (Farm/Trend/Baseline/Paper) sem SSH; ativar s\u00f3 ARMA (HALT segura); \u26a0\ufe0f grupo `baseline` inclui venda do COFRE BTC coberta s\u00f3 por HALT/riskGuard (trava do cofre \u00e9 s\u00f3 no MCP).** HANDOFF n\u00e3o-selado"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:18:43)*
+
+
+## 🤖 Claude *(20:18:55)*
+
+✅ **Pronto — o botão está no ar e funcionando.**
+
+## Entregue: painel "Ativação de grupos"
+
+**Onde:** https://tradeux.gcrux.com → **Settings**, card logo abaixo do Kill-switch/HALT.
+
+**Como usar:** cada grupo tem **Ativar / Parar** (lote, um clique) — sem SSH:
+
+| Grupo | Estado ao vivo |
+|---|---|
+| Farm (no-loss alts) | 6/6 ON |
+| Trend (SMA50/200) | 8/8 ON |
+| **Baseline (RSI BTC)** | **0/2 — seu canary natural** |
+| Paper (research, *sem risco*) | 16/16 ON |
+
+**Verificado ao vivo após deploy:**
+- 🔒 **Freeze preservado** — `halted=true, floor=true` (o deploy não destravou nada)
+- 🌐 site 200 · `GET /automations/groups` 200 (agrupamento correto)
+- ✍️ **caminho de escrita provado** — smoke stop→start do Paper: 16→0→16, zero falhas, estado restaurado
+- gate limpo (verify 3/3, QA PASS, TL APPROVE) + money-path fix fail-safe aplicado
+
+**Como funciona a segurança:** ativar só **arma** as estratégias — **não toca no HALT**. Com o floor TRAVADO (estado atual), o guard por-ordem segura e **nada negocia**. Floor (ir-ao-vivo) e ativação (armar) são alavancas separadas. O confirm avisa em vermelho se o trading estiver liberado (ou desconhecido); Paper nunca assusta.
+
+⚠️ **Lembrete do Baseline:** o grupo Baseline inclui uma **venda de BTC do cofre** (`Baseline RSI Sell BTCUSDT`). A trava anti-venda-BTC só existe no caminho do agente (MCP), não neste caminho — então, com o floor liberado, ativar Baseline é coberto por HALT+riskGuard, mas **não** pela trava do cofre. (Já era assim no start por-linha; o botão só agiliza.)
+
+## Estado do repositório
+3 commits no master, **todos deployados** (o stack vivo == working tree):
+- `771ecf0` painel de ativação de grupos
+- `3ca0ef7` + `2f8f20b` Bloco B (apiClient.js DRY)
+
+**Não pushados** — origin ainda em `e8e7b16` (o invariante `Vivo==master==origin` do HANDOFF quer push). Quer que eu **dê push** agora? É só falar. Quando fechar a sessão, `/handoff` sela tudo.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
