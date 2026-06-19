@@ -7707,6 +7707,306 @@ Pra fechar a decisão de maior peso:
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Sobre virar a chave pra dinheiro real (TRADING_HALT=false) — qual caminho?"="Esperar o paper provar (recomendo)", "Quer que eu monte uma revisão diária automática do paper (pinga no Telegram quando houver novidade/veredito)?"="Sim, revisão diária automática". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:57:57)*
+
+
+## 🤖 Claude *(16:57:59)*
+
+Decisões registradas: **esperar o paper provar** (sem dinheiro real até uma trilha aprovar ✅) e **revisão diária automática** (pinga no Telegram com novidade). Vou implementar as duas coisas autorizadas: o **job de revisão diária do paper** + começar o **Bloco B Fase 1**.
+
+Recon dos pontos (mecanismo de Telegram + padrão de job + scripts a refatorar):
+
+## 🤖 Claude *(16:58:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== telegramNotify exports ===\"; grep -nE \"module.exports|function (notify|send)\" src/utils/telegramNotify.js | head\necho \"=== utils/telegram assinatura ===\"; sed -n '1,15p' src/utils/telegram.js 2>/dev/null | head -15\necho \"=== dailyCapJob: telegram + persistencia de estado ===\"; grep -nE \"telegram|require\\(|writeFile|readFile|logs/|notify\" src/dailyCapJob.js | head -20\necho \"=== /agent/notify (canonico owner-notify) ===\"; grep -rn \"agent/notify\\|notifyOwner\\|function notify\" src/routers src/controllers | head\necho \"=== setup-trend.js helpers (p/ Bloco B Fase1) ===\"; grep -nE \"function req|async function login|function findAutomationByName|const BASE|EM =|PW =\" src/../backend/scripts/setup-trend.js 2>/dev/null | head",
+  "description": "Recon telegram mechanism, job state pattern, setup-trend helpers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === telegramNotify exports ===
+> 24:async function notify(message, dedupKey) {
+> 71:function notifyOrder(order) {
+> 94:module.exports = { notify, notifyOrder };
+> === utils/telegram assinatura ===
+> module.exports = (settings, message) => {
+> 
+>     if (!settings) throw new Error(`The settings object is required to send Telegram messages!`);
+>     if (!settings.telegramBot || !settings.telegramChat)
+>         throw new Error(`The Telegram settings are not defined!`);
+> 
+>     const { Telegraf } = require('telegraf');
+> 
+>     const bot = new Telegraf(settings.telegramBot);
+>     return bot.telegram.sendMessage(settings.telegramChat, message);
+> }=== dailyCapJob: telegram + persistencia de estado ===
+> 20:const beholder = require('./beholder');
+> 21:const settingsRepository = require('./repositories/settingsRepository');
+> 22:const riskState = require('./riskState');
+> 23:const logger = require('./utils/logger');
+> 24:const fs = require('fs');
+> 25:const path = require('path');
+> 54:            const raw = JSON.parse(fs.readFileSync(SNAP_FILE, 'utf8'));
+> 67:        fs.writeFileSync(SNAP_FILE, JSON.stringify(SNAP), 'utf8');
+> 89:    const exchange = require('./utils/exchange')(settings);
+> 117:async function notify(settings, msg) {
+> 118:    try { await require('./utils/telegram')(settings, msg); } catch (e) { /* best-effort */ }
+> 136:            await notify(eq.settings, `🌅 [DAILY_CAP] Novo dia UTC. Cap de -${(CAP_PCT * 100).toFixed(0)}% re-armado para o novo dia.`);
+> 153:                await notify(eq.settings, `⚠️ [DAILY_CAP] Proteção de -${(CAP_PCT * 100).toFixed(0)}% INATIVA há ~${mins}min: não consigo avaliar o equity (${why}). Verifique monitores/preços ou isente o asset via DAILY_CAP_IGNORE_ASSETS.`);
+> 175:                await notify(eq.settings,
+> === /agent/notify (canonico owner-notify) ===
+> src/controllers/agentController.js:65:// POST /agent/notify {message} — canal ONE-WAY do agente LLM (via MCP tradeux_notify_owner) pro
+> src/controllers/agentController.js:70:async function notify(req, res) {
+> === setup-trend.js helpers (p/ Bloco B Fase1) ===
+> ```
+
+## 🤖 Claude *(16:59:01)*
+
+
+## 🤖 Claude *(16:59:03)*
+
+Achados: `telegramNotify.notify(message, dedupKey)` é o canal canônico (com dedup) — perfeito pro job. Vou ler o `telegramNotify.notify` e o `setup-trend.js` (pro refactor), depois implemento.
+
+## 🤖 Claude *(16:59:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/telegramNotify.js",
+  "offset": 1,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Notificador Telegram best-effort do TradeUX (camada acima de utils/telegram.js).
+> 2	// Por que existe (pedido do dono: notificar TODAS as novas ordens + canal de aprovação do agente):
+> 3	// (1) NUNCA propaga erro — notificação não é crítica e os chamadores estão no caminho QUENTE do
+> 4	//     stream de execução (app-em) ou no money-path (beholder.placeOrder);
+> 5	// (2) Telegraf SINGLETON — utils/telegram.js instancia um Telegraf POR CHAMADA (ok p/ eventos
+> 6	//     raros como o armador da Fase 4; ver alerta em funnelJob.js), aqui a frequência é maior;
+> 7	// (3) dedup capado por chave opcional — executionReports podem ser RE-ENTREGUES na reconexão do
+> 8	//     userData stream (mesmo racional dos sets countedTrendFills/countedHarvestFills do app-em).
+> 9	// Settings via getDefaultSettings() (cache em memória; o PATCH /settings limpa o cache e o
+> 10	// singleton se recria sozinho quando o token muda).
+> 11	
+> 12	const logger = require('./logger');
+> 13	
+> 14	let bot = null, botToken = null, warnedOnce = false;
+> 15	
+> 16	// Chaves de notificação já enviadas. Capado: ordens são raras (algumas/dia), 200 chaves cobrem
+> 17	// dias de operação; descarte FIFO via ordem de inserção do Set.
+> 18	const sentKeys = new Set();
+> 19	const SENT_KEYS_MAX = 200;
+> 20	
+> 21	// Envia `message` ao chat do dono. `dedupKey` (opcional) suprime reenvios da MESMA notificação;
+> 22	// a chave só é marcada APÓS envio bem-sucedido (falha de rede não "queima" a notificação).
+> 23	// Retorna true se enviou, false caso contrário. NUNCA lança.
+> 24	async function notify(message, dedupKey) {
+> 25	    try {
+> 26	        if (dedupKey && sentKeys.has(dedupKey)) return false;
+> 27	
+> 28	        const settings = await require('../repositories/settingsRepository').getDefaultSettings();
+> 29	        if (!settings || !settings.telegramBot || !settings.telegramChat) {
+> 30	            if (!warnedOnce) {
+> 31	                warnedOnce = true;
+> 32	                logger('system', 'telegramNotify: telegramBot/telegramChat ausentes nas settings — notificações Telegram desligadas.');
+> 33	            }
+> 34	            return false;
+> 35	        }
+> 36	
+> 37	        if (!bot || botToken !== settings.telegramBot) {
+> 38	            const { Telegraf } = require('telegraf');
+> 39	            bot = new Telegraf(settings.telegramBot);
+> 40	            botToken = settings.telegramBot;
+> 41	        }
+> 42	
+> 43	        await bot.telegram.sendMessage(settings.telegramChat, message);
+> 44	
+> 45	        if (dedupKey) {
+> 46	            sentKeys.add(dedupKey);
+> 47	            if (sentKeys.size > SENT_KEYS_MAX)
+> 48	                sentKeys.delete(sentKeys.values().next().value); // mais antiga (FIFO)
+> 49	        }
+> 50	        return true;
+> 51	    } catch (err) {
+> 52	        // Redige o token antes de logar (gate TL): erros de rede do Telegraf embutem a URL completa
+> 53	        // (https://api.telegram.org/bot<TOKEN>/...) na message — token cru não pode ir pro log.
+> 54	        const safe = botToken ? String(err.message).split(botToken).join('<token>') : err.message;
+> 55	        logger('system', `telegramNotify: ${safe}`);
+> 56	        return false;
+> 57	    }
+> 58	}
+> 59	
+> 60	// Estados de ordem que viram notificação. CANCELED fica de fora de propósito: o harvester
+> 61	// cancela/renova vendas no fluxo normal e a OCO cancela a perna irmã sozinha — seria ruído,
+> 62	// não informação. PARTIALLY_FILLED também não (o FILLED/terminal conta a história). EXPIRED
+> 63	// notifica (gate QA): MARKET pode EXPIRAR já no insert (book fino do testnet) — é uma colocação
+> 64	// falhada que o dono precisa ver, como a REJECTED; e é raro demais pra virar ruído.
+> 65	const NOTIFY_STATUSES = ['NEW', 'FILLED', 'REJECTED', 'EXPIRED'];
+> 66	
+> 67	// Notificação padrão de ordem (fire-and-forget; síncrona p/ o chamador). Dedup por
+> 68	// orderId+status: uma MARKET inserida já FILLED notifica UMA vez (o executionReport FILLED
+> 69	// posterior cai no dedup); uma LIMIT notifica no NEW e de novo no FILLED (eventos distintos).
+> 70	// `order` é o objeto plano da ordem persistida (insertOrder/updateOrderByOrderId).
+> ```
+
+## 🤖 Claude *(16:59:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "offset": 1,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE da automação de Trend Following (cruzamento SMA fast/slow) no ecossistema
+> 4	 * Beholder — config pura, sem código novo no engine.
+> 5	 *
+> 6	 * COMO O SINAL CHEGA (importante): o chart de TRADE é o testnet, que após um reset tem poucas
+> 7	 * velas 1h (ex.: 12h) — NÃO dá p/ calcular SMA_200 (precisa 200h). Por isso o sinal de cruzamento
+> 8	 * vem da MAINNET, calculado pelo `regimeJob` (que já busca 300 klines 1h mainnet p/ o regime): o
+> 9	 * job detecta a transição golden/death e escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h']
+> 10	 * (='golden'|'death'|'none'), disparando a automação UMA vez no cruzamento. Execução = testnet
+> 11	 * (igual ao regime: sinal=mercado real, ordem=testnet). >>> Este script NÃO cria monitor de chart
+> 12	 * (seria um 2º writer das mesmas keys, com dados rasos do testnet). O job é o único writer. <<<
+> 13	 *
+> 14	 * Cria, se ausentes:
+> 15	 *   - order templates BUY/SELL **LIMIT marketável** (atravessa o spread como taker p/ fill
+> 16	 *     imediato sem EXPIRE no book fino do testnet): BUY = bestAsk×1.003 MIN_NOTIONAL; SELL =
+> 17	 *     bestBid×0.997 **TREND_QTY** (vende a posição acumulada pelo trend, não LAST_ORDER). O buffer
+> 18	 *     (0.3%) vive no EVAL do limitPrice porque o limitPriceMultiplier é DECIMAL(10,2) (não expressa sub-1%).
+> 19	 *   - automações "Trend Buy/Sell" (reagem ao sinal golden/death), **INATIVAS** por segurança.
+> 20	 *
+> 21	 * Por que INATIVAS: a entrada/saída de trend compartilha carteira com a reversão (id2/id3). Antes
+> 22	 * de ativar, decidir a COORDENAÇÃO (gatear id2/id3 por REGIME!=='trend' — incluindo REGIME nos
+> 23	 * indexes de AMBAS, senão fail-open) e o SIZING (MIN_NOTIONAL é validação; trend real quer size),
+> 24	 * e observar 1 ciclo golden→death real. Ver HANDOFF.
+> 25	 *
+> 26	 * Reproduz o setup após `make nuke` (id2/id3 e este trend são DADO runtime, não seeders).
+> 27	 * Uso (dentro do container, server no ar): node scripts/setup-trend.js
+> 28	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), TREND_SYMBOL, TREND_INTERVAL
+> 29	 */
+> 30	const http = require('http');
+> 31	
+> 32	const SYMBOL = (process.env.TREND_SYMBOL || 'BTCUSDT').toUpperCase();
+> 33	const INTERVAL = process.env.TREND_INTERVAL || '1h';
+> 34	const TAG = 'SMA50/200';                            // rótulo (períodos vivem no regimeClassifier)
+> 35	const KC = `${SYMBOL}:TREND_CROSS_${INTERVAL}`;     // memoryKey do sinal de cruzamento (escrito pelo job)
+> 36	const KR = `${SYMBOL}:REGIME`;
+> 37	const BASE = { host: process.env.TREND_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 38	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 39	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 40	
+> 41	function req(method, path, token, body) {
+> 42	    return new Promise((resolve) => {
+> 43	        const data = body ? JSON.stringify(body) : null;
+> 44	        const headers = { 'Content-Type': 'application/json' };
+> 45	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 46	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 47	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 48	            let d = ''; res.on('data', c => d += c);
+> 49	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 50	        });
+> 51	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 52	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 53	        if (data) r.write(data); r.end();
+> 54	    });
+> 55	}
+> 56	
+> 57	async function ensureTemplate(token, name, side, opts) {
+> 58	    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);
+> 59	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 60	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> ```
+
+## 🤖 Claude *(16:59:40)*
+
+
+## 🤖 Claude *(16:59:43)*
+
+Tenho tudo. `telegramNotify.notify(msg, dedupKey)` é auto-contido (carrega settings, dedup, nunca lança) — ideal. Vou implementar o **job de revisão diária** agora (resposta direta ao seu "sim"); o **Bloco B Fase 1** (refatorar 3 scripts de produção) faço no próximo turno com verificação DRY cuidadosa de cada um — não misturo um refactor de scripts críticos de recovery neste turno já grande.
+
+Criando o `paperReviewJob`:
+
+## 🤖 Claude *(17:00:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperReviewJob.js",
+  "content": "'use strict';\n\n// Paper Review Job \u2014 revis\u00e3o PERI\u00d3DICA (di\u00e1ria) do ledger do Paper Engine. Quando uma trilha cruza um MARCO de\n// round-trips fechados, notifica o dono no Telegram com o veredito preliminar (candidata / fraca / amostra\n// inicial). \u00c9 a \"aprova\u00e7\u00e3o delegada\" automatizada: o Claude define o crit\u00e9rio, este job vigia e avisa quando h\u00e1\n// amostra pra decidir. PASSIVO e READ-ONLY: l\u00ea paperService.summary() (totais + por trilha), N\u00c3O toca money-path,\n// N\u00c3O emite ordem. Silencioso quando n\u00e3o h\u00e1 novidade (s\u00f3 notifica num marco NOVO, com dedup).\n//\n// Env:\n//   PAPER_REVIEW_ENABLED   (default 'true')              \u2014 kill-switch\n//   PAPER_REVIEW_MS        (default 86400000 = 24h)      \u2014 intervalo (piso 1h)\n//   PAPER_REVIEW_MIN_TRADES(default 15)                  \u2014 round-trips p/ o veredito sair de \"amostra inicial\"\n\nconst telegramNotify = require('./utils/telegramNotify');\nconst paperService = require('./utils/paperService');\nconst logger = require('./utils/logger');\nconst fs = require('fs');\nconst path = require('path');\n\nconst ENABLED = (process.env.PAPER_REVIEW_ENABLED || 'true') !== 'false';\nconst _ms = parseInt(process.env.PAPER_REVIEW_MS || String(24 * 60 * 60 * 1000), 10);\nconst REVIEW_MS = Number.isFinite(_ms) && _ms >= 60 * 60 * 1000 ? _ms : 24 * 60 * 60 * 1000; // piso 1h\nconst _min = parseInt(process.env.PAPER_REVIEW_MIN_TRADES || '15', 10);\nconst MIN_TRADES = Number.isFinite(_min) && _min > 0 ? _min : 15;\nconst TIERS = [5, 15, 30, 60, 120];                       // marcos de round-trips fechados (sells)\nconst STATE_FILE = path.join(process.cwd(), 'logs', 'paper_review_state.json');\n\nlet timer = null;\nlet running = false;\nlet lastTier = {};                                        // strategy -> maior marco j\u00e1 notificado (persistido)\ntry { lastTier = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) || {}; } catch (_) { lastTier = {}; }\nfunction persist() { try { fs.writeFileSync(STATE_FILE, JSON.stringify(lastTier), 'utf8'); } catch (_) { /* best-effort */ } }\n\nfunction tierOf(n) { let t = 0; for (const x of TIERS) if (n >= x) t = x; return t; }\nfunction fmt(n) { const v = parseFloat(n) || 0; return (v >= 0 ? '+$' : '-$') + Math.abs(v).toFixed(2); }\n\nasync function runOnce() {\n    if (running) return;\n    running = true;\n    try {\n        const sum = await paperService.summary();\n        if (!sum || !Array.isArray(sum.strategies) || !sum.strategies.length) return; // silencioso: sem trades paper\n\n        for (const s of sum.strategies) {\n            const rt = s.sells || 0;                       // round-trips FECHADOS (vendas)\n            const tier = tierOf(rt);\n            if (tier > 0 && tier > (lastTier[s.strategy] || 0)) {\n                lastTier[s.strategy] = tier;\n                persist();\n                const ready = rt >= MIN_TRADES;\n                const verdict = !ready\n                    ? 'amostra inicial (aguardando mais round-trips p/ veredito)'\n                    : s.totalPnl > 0\n                        ? 'CANDIDATA a aprova\u00e7\u00e3o (net POSITIVO ap\u00f3s fee+slippage reais)'\n                        : 'FRACA (net negativo) \u2014 candidata a descartar';\n                const win = s.winRate != null ? ` \u00b7 win ${Math.round(s.winRate * 100)}%` : '';\n                const msg = `\ud83d\udcdd [PAPER-REVIEW] trilha \"${s.strategy}\": ${rt} round-trips${win} \u00b7 net ${fmt(s.totalPnl)} (realizado ${fmt(s.realizedPnl)} + aberto ${fmt(s.unrealizedPnl)}) \u2192 ${verdict}`;\n                await telegramNotify.notify(msg, `paper-review:${s.strategy}:${tier}`);\n                logger('system', msg);\n            }\n        }\n    } catch (err) {\n        logger('system', `[paper-review] erro: ${err.message}`);\n    } finally {\n        running = false;\n    }\n}\n\nfunction start() {\n    if (!ENABLED) { logger('system', 'Paper Review job DESABILITADO (PAPER_REVIEW_ENABLED=false).'); return; }\n    if (timer) return; // idempotente\n    runOnce(); // baseline imediato no boot (silencioso se sem trades; dedup persistido evita re-notificar marcos)\n    timer = setInterval(runOnce, REVIEW_MS);\n    if (timer.unref) timer.unref();\n    logger('system', `Paper Review job iniciado (intervalo ${REVIEW_MS}ms; veredito a partir de ${MIN_TRADES} round-trips). Read-only, notifica s\u00f3 em marco novo.`);\n}\n\nfunction stop() { if (timer) { clearInterval(timer); timer = null; } running = false; }\n\nmodule.exports = { start, stop, runOnce };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/paperReviewJob.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "old_string": "const dailyCapJob = require('./dailyCapJob');\nconst logger = require('./utils/logger');",
+  "new_string": "const dailyCapJob = require('./dailyCapJob');\nconst paperReviewJob = require('./paperReviewJob');\nconst logger = require('./utils/logger');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "old_string": "    logger('system', `Starting the Daily Loss Cap Job (-${(parseFloat(process.env.DAILY_LOSS_CAP_PCT || '0.05') * 100).toFixed(0)}%)...`);\n    dailyCapJob.start();",
+  "new_string": "    logger('system', `Starting the Daily Loss Cap Job (-${(parseFloat(process.env.DAILY_LOSS_CAP_PCT || '0.05') * 100).toFixed(0)}%)...`);\n    dailyCapJob.start();\n\n    // Paper Review Job: revis\u00e3o di\u00e1ria do ledger do Paper Engine; notifica o dono no Telegram quando uma trilha\n    // cruza um marco de round-trips (veredito preliminar candidata/fraca). Passivo/read-only \u2014 n\u00e3o toca money-path.\n    logger('system', `Starting the Paper Review Job...`);\n    paperReviewJob.start();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
