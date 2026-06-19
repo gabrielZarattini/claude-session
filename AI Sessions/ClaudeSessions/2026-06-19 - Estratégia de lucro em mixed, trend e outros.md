@@ -962,6 +962,2036 @@ Ultracode está ON e isto é uma tarefa substantiva (refactor cross-script de **
 > backend/scripts/setup-trend.js
 > ```
 
+## 🤖 Claude *(18:31:40)*
+
+
+## 🤖 Claude *(18:31:44)*
+
+Permissões OK (group-writable, `test -w` passou), scripts são git-tracked, e `scripts/lib/` ainda não existe. Vou escopar a **Fase 1 = primitivas de transporte/auth/discovery** (`req`/`login`/`findAutomationByName` + resolução de env) — os `ensure*`/recipes ficam para a sub-fase "recipes declarativas", exatamente como o NEXT separa.
+
+Lanço o workflow de **inventário** (um leitor por script, em paralelo, extraindo o código verbatim dos helpers + desvios) e, em paralelo, faço as checagens de ambiente que definem a estratégia de verificação + a observação passiva do paper.
+
+## 🤖 Claude *(18:31:45)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Bloco B Fase 1 \u2014 apiClient.js",
+  "summary": "DRY de req/login/findAutomationByName nos scripts de setup/recovery via workflows (Ultracode)"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Bloco B Fase 1 — apiClient.js". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(18:31:49)*
+
+
+## 🤖 Claude *(18:32:11)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'blocoB-apiclient-understand',\n  description: 'Inventariar helpers HTTP duplicados (req/login/findAutomationByName/env) nos scripts de setup p/ desenhar scripts/lib/apiClient.js',\n  phases: [{ title: 'Inventario', detail: 'um leitor por script de setup/recovery' }],\n}\n\nconst SCRIPTS = [\n  'backend/scripts/setup-paper-trilhas.js',\n  'backend/scripts/setup-farm.js',\n  'backend/scripts/setup-trend.js',\n  'backend/scripts/setup-grid.js',\n  'backend/scripts/setup-harvester.js',\n  'backend/scripts/setup-flow-gate.js',\n  'backend/scripts/automation-ctl.js',\n  'backend/scripts/activate-trend.js',\n];\n\nconst SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['file', 'usesHttpApi', 'helpers', 'envVars', 'mainFlow', 'notes'],\n  properties: {\n    file: { type: 'string' },\n    usesHttpApi: { type: 'boolean', description: 'true se o script faz chamadas HTTP ao backend (tem req/login)' },\n    helpers: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['name', 'kind', 'startLine', 'endLine', 'exactCode', 'deviations'],\n        properties: {\n          name: { type: 'string' },\n          kind: { type: 'string', enum: ['baseEnv','req','login','findAutomationByName','otherFinder','otherHttp','none'] },\n          startLine: { type: 'number' },\n          endLine: { type: 'number' },\n          exactCode: { type: 'string', description: 'codigo-fonte EXATO do helper, verbatim com indentacao' },\n          deviations: { type: 'string', description: 'como difere da versao canonica (timeout, page cap, headers, nome do header de auth, tratamento de erro, etc.)' },\n        },\n      },\n    },\n    envVars: { type: 'array', items: { type: 'string' }, description: 'nomes de env vars que o script le (e fallbacks)' },\n    mainFlow: { type: 'string', description: 'resumo de 1-3 linhas de como o main() usa login()+req() (ordem das chamadas)' },\n    notes: { type: 'string' },\n  },\n};\n\nphase('Inventario');\nlog(`Inventariando ${SCRIPTS.length} scripts de setup/recovery em paralelo`);\nconst results = await parallel(SCRIPTS.map(f => () =>\n  agent(\n    `Leia o arquivo ${f} INTEIRO (use Read do comeco ao fim; nao pare na metade). Ele e um script Node de \"setup/recovery\" do TradeUX que fala com o backend via HTTP (cria monitors/templates/automations idempotentemente, ou liga/desliga automacoes).\n\nSua tarefa: extrair um inventario EXATO e FIEL dos helpers de infraestrutura HTTP que sao compartilhaveis entre scripts, para que o orquestrador possa desenhar um modulo DRY scripts/lib/apiClient.js.\n\nFoque APENAS nas primitivas de transporte/auth/discovery (NAO nos helpers de dominio tipo ensureTemplate/ensureAutomation/ensureMonitor, que sao \"recipes\" de uma fase posterior):\n  (1) baseEnv  -> resolucao de BASE (host/port) e das credenciais (EM/PW) com TODOS os fallbacks de nome de env;\n  (2) req      -> a funcao req()/request HTTP de baixo nivel (a que monta http.request);\n  (3) login    -> como obtem o token JWT (endpoint, shape do body, onde guarda o token, header usado);\n  (4) findAutomationByName -> o finder paginado de automacoes (ou equivalente);\n  (5) otherFinder/otherHttp -> qualquer outro helper HTTP generico reaproveitavel (ex.: getOrderTemplates, helper de paginacao).\n\nPara CADA helper devolva: name, kind, startLine, endLine, o exactCode VERBATIM (copie o codigo-fonte exatamente, com indentacao original), e deviations = como difere da versao canonica que voce esperaria (timeout diferente, cap de paginas diferente, nome do header de auth 'authorization' vs 'Authorization', tratamento de erro/timeout, resolve-vs-reject, etc.). A FIDELIDADE do exactCode e o mais importante.\n\nListe em envVars todos os nomes de env que o script le. Em mainFlow, resuma em 1-3 linhas a ordem em que o main()/IIFE usa login()+req(). Se o script NAO faz HTTP ao backend (so mexe no DB direto, ou so le candles), responda usesHttpApi=false e helpers=[].\n\nNAO proponha o design do apiClient ainda. NAO edite NADA. So inventarie.`,\n    { label: f.replace('backend/scripts/',''), phase: 'Inventario', schema: SCHEMA }\n  )\n));\nreturn results.filter(Boolean);\n",
+  "run_in_background": "true"
+}
+```
+
+> **Tool Result (Workflow)** - ❌ Error
+>
+> ```
+> <tool_use_error>InputValidationError: Workflow failed due to the following issue:
+> An unexpected parameter `run_in_background` was provided</tool_use_error>
+> ```
+
+## 🤖 Claude *(18:32:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== node host ===\"; node --version 2>&1 || echo \"node ausente no host\"\necho \"=== backend volumes (mount vs copy) ===\"; awk '/backend:/{f=1} f&&/volumes:|build:|image:/{print} f&&/^[^[:space:]]/&&!/backend:/{f=0}' docker-compose.yml 2>&1 | head -20\necho \"--- grep scripts em compose ---\"; grep -nE \"scripts|/app\" docker-compose.yml 2>&1 | head\necho \"=== Dockerfile COPY ===\"; grep -nE \"COPY|WORKDIR\" backend/Dockerfile 2>&1 | head",
+  "description": "Check host node, backend mount-vs-copy, Dockerfile"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node host ===
+> v22.22.3
+> === backend volumes (mount vs copy) ===
+>     build: ./backend
+>     volumes:
+>     build:
+>     volumes:
+>     build:
+> volumes:
+> --- grep scripts em compose ---
+> 37:      - backend_logs:/app/logs
+> === Dockerfile COPY ===
+> 4:WORKDIR /app
+> 7:COPY package*.json ./
+> 10:COPY . .
+> 12:COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> ```
+
+## 🤖 Claude *(18:32:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== paper state (via repo do backend, sem creds) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node -e \"const r=require(\\\"./src/repositories/paperRepository\\\"); Promise.all([r.getAllPositions(), r.getOrders(1000)]).then(([p,o])=>{const open=p.filter(x=>parseFloat(x.qty)>0).length; console.log(JSON.stringify({positions:p.length, openPositions:open, orders:o.length})); process.exit(0)}).catch(e=>{console.error(\\\"ERR\\\",e.message);process.exit(1)})\"' 2>&1 | tail -5\necho \"=== paperReviewJob vivo? (logs) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose logs --tail=400 backend 2>&1 | grep -iE \"paperReview|paper_review|\\[PAPER\\]|paper review\" | tail -8'",
+  "description": "Observe paper engine state + review job liveness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === paper state (via repo do backend, sem creds) ===
+> {"positions":1,"openPositions":1,"orders":1}
+> === paperReviewJob vivo? (logs) ===
+> ```
+
+## 🤖 Claude *(18:32:52)*
+
+
+## 🤖 Claude *(18:32:58)*
+
+Aprendizados das checagens:
+- **node v22.22.3 no host** ✓ — dá pra `node --check` cada arquivo.
+- **Backend usa `COPY . .`** (Dockerfile:10) → scripts são **copiados na build, não montados**. Logo: estes scripts de setup **não são carregados pelo backend em runtime** (são CLIs standalone) → o refactor tem **zero impacto no sistema congelado**; a nova lib só aparece no container num rebuild (que é exatamente quando recovery roda). Não vou cutucar o container congelado.
+- **Paper:** `positions:1, openPositions:1, orders:1` → o engine fez **1 compra, 0 round-trips** (os 4 em `trend` → consistência parada, macro esperando cross, igual o seal previu). Job de review silencioso (MIN_TRADES=15). Nada a fazer — passivo, o Telegram avisa nos marcos.
+
+O Workflow roda em background por padrão (o param que passei não existe). Relançando o inventário:
+
+## 🤖 Claude *(18:33:17)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'blocoB-apiclient-understand',\n  description: 'Inventariar helpers HTTP duplicados (req/login/findAutomationByName/env) nos scripts de setup p/ desenhar scripts/lib/apiClient.js',\n  phases: [{ title: 'Inventario', detail: 'um leitor por script de setup/recovery' }],\n}\n\nconst SCRIPTS = [\n  'backend/scripts/setup-paper-trilhas.js',\n  'backend/scripts/setup-farm.js',\n  'backend/scripts/setup-trend.js',\n  'backend/scripts/setup-grid.js',\n  'backend/scripts/setup-harvester.js',\n  'backend/scripts/setup-flow-gate.js',\n  'backend/scripts/automation-ctl.js',\n  'backend/scripts/activate-trend.js',\n];\n\nconst SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['file', 'usesHttpApi', 'helpers', 'envVars', 'mainFlow', 'notes'],\n  properties: {\n    file: { type: 'string' },\n    usesHttpApi: { type: 'boolean', description: 'true se o script faz chamadas HTTP ao backend (tem req/login)' },\n    helpers: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['name', 'kind', 'startLine', 'endLine', 'exactCode', 'deviations'],\n        properties: {\n          name: { type: 'string' },\n          kind: { type: 'string', enum: ['baseEnv','req','login','findAutomationByName','otherFinder','otherHttp','none'] },\n          startLine: { type: 'number' },\n          endLine: { type: 'number' },\n          exactCode: { type: 'string', description: 'codigo-fonte EXATO do helper, verbatim com indentacao' },\n          deviations: { type: 'string', description: 'como difere da versao canonica (timeout, page cap, headers, nome do header de auth, tratamento de erro, etc.)' },\n        },\n      },\n    },\n    envVars: { type: 'array', items: { type: 'string' }, description: 'nomes de env vars que o script le (e fallbacks)' },\n    mainFlow: { type: 'string', description: 'resumo de 1-3 linhas de como o main() usa login()+req() (ordem das chamadas)' },\n    notes: { type: 'string' },\n  },\n};\n\nphase('Inventario');\nlog(`Inventariando ${SCRIPTS.length} scripts de setup/recovery em paralelo`);\nconst results = await parallel(SCRIPTS.map(f => () =>\n  agent(\n    `Leia o arquivo ${f} INTEIRO (use Read do comeco ao fim; nao pare na metade). Ele e um script Node de \"setup/recovery\" do TradeUX que fala com o backend via HTTP (cria monitors/templates/automations idempotentemente, ou liga/desliga automacoes).\n\nSua tarefa: extrair um inventario EXATO e FIEL dos helpers de infraestrutura HTTP que sao compartilhaveis entre scripts, para que o orquestrador possa desenhar um modulo DRY scripts/lib/apiClient.js.\n\nFoque APENAS nas primitivas de transporte/auth/discovery (NAO nos helpers de dominio tipo ensureTemplate/ensureAutomation/ensureMonitor, que sao \"recipes\" de uma fase posterior):\n  (1) baseEnv  -> resolucao de BASE (host/port) e das credenciais (EM/PW) com TODOS os fallbacks de nome de env;\n  (2) req      -> a funcao req()/request HTTP de baixo nivel (a que monta http.request);\n  (3) login    -> como obtem o token JWT (endpoint, shape do body, onde guarda o token, header usado);\n  (4) findAutomationByName -> o finder paginado de automacoes (ou equivalente);\n  (5) otherFinder/otherHttp -> qualquer outro helper HTTP generico reaproveitavel (ex.: getOrderTemplates, helper de paginacao).\n\nPara CADA helper devolva: name, kind, startLine, endLine, o exactCode VERBATIM (copie o codigo-fonte exatamente, com indentacao original), e deviations = como difere da versao canonica que voce esperaria (timeout diferente, cap de paginas diferente, nome do header de auth 'authorization' vs 'Authorization', tratamento de erro/timeout, resolve-vs-reject, etc.). A FIDELIDADE do exactCode e o mais importante.\n\nListe em envVars todos os nomes de env que o script le. Em mainFlow, resuma em 1-3 linhas a ordem em que o main()/IIFE usa login()+req(). Se o script NAO faz HTTP ao backend (so mexe no DB direto, ou so le candles), responda usesHttpApi=false e helpers=[].\n\nNAO proponha o design do apiClient ainda. NAO edite NADA. So inventarie.`,\n    { label: f.replace('backend/scripts/',''), phase: 'Inventario', schema: SCHEMA }\n  )\n));\nreturn results.filter(Boolean);\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wa41e1cyr
+> Summary: Inventariar helpers HTTP duplicados (req/login/findAutomationByName/env) nos scripts de setup p/ desenhar scripts/lib/apiClient.js
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/subagents/workflows/wf_ea9c1257-aa5
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/blocob-apiclient-understand-wf_ea9c1257-aa5.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/blocob-apiclient-understand-wf_ea9c1257-aa5.js"} to iterate without resending the script.)
+> Run ID: wf_ea9c1257-aa5
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/blocob-apiclient-understand-wf_ea9c1257-aa5.js", resumeFromRunId: "wf_ea9c1257-aa5"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:33:25)*
+
+
+## 🤖 Claude *(18:33:36)*
+
+Inventário lançado em background (8 scripts em paralelo, workflow `wa41e1cyr`). Ele me devolve o código verbatim de cada helper (`req`/`login`/`findAutomationByName`/env) + os desvios entre scripts — que é o que preciso pra desenhar o `apiClient.js` como **superset fiel** (sem perder nenhuma nuance por script).
+
+**Plano dos próximos passos** (fico em loop, te aviso a cada gate):
+1. ⏳ **Inventário** (rodando) → eu sintetizo e **desenho o `apiClient.js`** (transporte/auth/discovery; `ensure*`/recipes ficam pra sub-fase 2).
+2. **Implementar** — escrevo `scripts/lib/apiClient.js` + refatoro `setup-paper-trilhas` / `setup-farm` / `setup-trend` (escopo documentado da Fase 1), cada um com **DRY-verify adversarial** (git diff = equivalência byte-a-byte do helper extraído) + `node --check`.
+3. **Gate QA + TL** (disciplina do projeto) antes de considerar pronto.
+4. Tee-up: grid/harvester/flow-gate reusam a lib provada (fast-follow), depois "recipes declarativas".
+
+**Verificação** (decidida pelas checagens): estática + `node --check` no host. Não vou cutucar o container congelado com `docker cp` — os scripts são CLIs standalone, **zero impacto em runtime**; a lib entra no próximo rebuild de recovery, sem urgência nem risco ao freeze.
+
+Aguardando o inventário terminar — te trago o design do `apiClient.js` assim que ele voltar.
+
+## 👤 User *(18:37:47)*
+
+<task-notification>
+<task-id>wa41e1cyr</task-id>
+<tool-use-id>toolu_01HcHeF2uW7PbS9nmW9rzSsL</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wa41e1cyr.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Inventariar helpers HTTP duplicados (req/login/findAutomationByName/env) nos scripts de setup p/ desenhar scripts/lib/apiClient.js" completed</summary>
+<result>[{"file":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js","usesHttpApi":true,"helpers":[{"name":"baseEnv","kind":"baseEnv","startLine":31,"endLine":33,"exactCode":"const BASE = { host: process.env.PAPER_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.DEFAULT_SETTINGS_EMAIL || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.DEFAULT_SETTINGS_PWD || process.env.TRADEUX_PASSWORD;","deviations":"Nao e funcao: e tres const de modulo (top-level), nao um helper baseEnv() encapsulado. HOST: usa PAPER_API_HOST (prefixado, diferente de API_HOST canonico) com fallback 127.0.0.1; NAO ha fallback para 'localhost'. PORT: le PORT (nao API_PORT) default '3001' via parseInt(...,10) e o resultado e numero. BASE e objeto plano {host,port} espalhado direto em http.request via {...BASE} (nao monta string de URL nem schema http/https; sempre http puro). Credenciais com TRIPLO fallback de nome: EM = EM || DEFAULT_SETTINGS_EMAIL || TRADEUX_EMAIL; PW = PW || DEFAULT_SETTINGS_PWD || TRADEUX_PASSWORD (note PWD, nao PASSWORD, no segundo fallback). Sem default hardcoded de credencial; a validacao de ausencia (!EM||!PW) acontece depois, dentro da IIFE."},{"name":"req","kind":"req","startLine":35,"endLine":49,"exactCode":"function req(method, path, token, body) {\n    return new Promise((resolve) =&gt; {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res =&gt; {\n            let d = ''; res.on('data', c =&gt; d += c);\n            res.on('end', () =&gt; { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e =&gt; resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () =&gt; { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}","deviations":"Assinatura posicional req(method, path, token, body) — token e o 3o arg explicito (nao um header/options bag). SEMPRE resolve, NUNCA rejeita: erros de rede resolvem {status:0, body:String(e.message)} e timeout resolve {status:0, body:'timeout'} (chamador inspeciona status; nao usa try/catch). Retorno padronizado {status, body}. Header de auth em MINUSCULA: 'authorization' (NAO 'Authorization', e SEM prefixo 'Bearer ' — manda o token cru). Content-Type sempre application/json. Content-Length so quando ha body, via Buffer.byteLength. timeout: 15000ms passado nas opcoes do http.request E tratado via r.on('timeout', ...) que faz r.destroy(). Body de resposta: tenta JSON.parse e cai pra string crua no catch (catch sem binding). Usa http puro (require('http')), nunca https. Espalha {...BASE} dentro das opcoes. Nao seta nenhum outro header (sem Accept, sem User-Agent)."},{"name":"login","kind":"login","startLine":130,"endLine":132,"exactCode":"    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body &amp;&amp; login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }","deviations":"NAO existe funcao login() encapsulada — o login e inline dentro da IIFE (linhas 130-132). Endpoint: POST /login. Body shape: { email, password } (chaves email/password; valores de EM/PW). Token passado como null no req do login (sem auth). Extrai token de login.body.token (acesso defensivo login.body &amp;&amp; login.body.token). NAO guarda o token em variavel de modulo/cache nem reusa via closure — fica numa const local 'token' da IIFE e e passado explicitamente como 3o arg em toda chamada req() subsequente. Sem retry/re-auth em 401. Em falha: console.error('LOGIN_FAIL '+status) e process.exit(1) (mata o processo, nao lanca erro)."},{"name":"findAutomationByName","kind":"findAutomationByName","startLine":76,"endLine":86,"exactCode":"async function findAutomationByName(token, name) {\n    for (let page = 1; page &lt;= 80; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body &amp;&amp; r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a =&gt; a.name === name);\n        if (hit) return hit;\n        if (rows.length &lt; 10) break;\n    }\n    return null;\n}","deviations":"Paginacao 1-indexada (page=1) com CAP de 80 paginas (page &lt;= 80) — cap diferente de outras variantes (algumas usam 50 ou 100). Endpoint GET /automations?page=N. Le rows de r.body.rows (acesso defensivo r.body &amp;&amp; r.body.rows). Page size assumido = 10: para o loop quando rows.length &lt; 10 (heuristica de ultima pagina) OU quando rows vazio/nao-array. Match EXATO por a.name === name (sensivel a maiusculas, sem trim/normalizacao). Retorna o objeto-linha inteiro (hit) ou null. NAO trata status HTTP (ignora r.status; so olha o shape do body) — se status=0/erro, rows nao sera array e o loop quebra retornando null silenciosamente."},{"name":"ensureTemplate-getOrderTemplates","kind":"otherHttp","startLine":63,"endLine":64,"exactCode":"    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t =&gt; t.name === name) : null;","deviations":"NAO e um helper isolado — e o trecho de discovery de order templates DENTRO de ensureTemplate (que e um helper de dominio/recipe, fora do escopo pedido). Incluido so pela primitiva de listagem reusavel: GET /ordertemplates/all/${symbol} retorna um ARRAY plano direto em all.body (NAO paginado, sem .rows — difere de /automations). Match por t.name === name (exato). Guard Array.isArray(all.body) antes do .find; cai pra null se nao for array. Nao ha um getOrderTemplates() nomeado/extraido; a chamada esta acoplada ao recipe."}],"envVars":["PAPER_SYMBOLS","PAPER_INTERVAL","PAPER_RSI_LO","PAPER_RSI_HI","PAPER_SIZE_MULT","DRY","PAPER_API_HOST","PORT","EM","DEFAULT_SETTINGS_EMAIL","TRADEUX_EMAIL","PW","DEFAULT_SETTINGS_PWD","TRADEUX_PASSWORD"],"mainFlow":"IIFE async: valida EM/PW (exit 1 se faltar) -&gt; login = req('POST','/login',null,{email,password}); extrai token=login.body.token (exit 1 se ausente) -&gt; imprime cabecalho -&gt; for de cada SYMBOL chama setupSymbol(token, s), que encadeia ensureMonitor/ensureTemplate/findAutomationByName/ensureAutomation, todos passando o token explicito para req(). Token nunca e cacheado em modulo; e repassado posicionalmente.","notes":"Inventario fiel ao arquivo de 138 linhas (lido integralmente). NENHUM helper de transporte/auth/discovery e uma funcao nomeada e exportada de forma reusavel: req() e a unica primitiva HTTP real (funcao nomeada, linhas 35-49); baseEnv sao consts top-level (31-33); login e findAutomationByName existem mas login e INLINE na IIFE (130-132, nao funcao). O script NAO usa require('https') nem monta URL string — so http puro com {...BASE} espalhado. Detalhes canonicos importantes para o apiClient DRY: (1) header de auth e 'authorization' minusculo SEM 'Bearer'; (2) req() sempre resolve {status,body} e nunca rejeita (status 0 = erro de rede/timeout); (3) timeout 15000ms duplamente tratado (opcao + on('timeout')+destroy); (4) BASE.host vem de PAPER_API_HOST (prefixo nao-padrao) e BASE.port de PORT (nao API_PORT); (5) paginacao de automacoes: cap 80 paginas, page size 10, 1-indexado; (6) /ordertemplates/all/${symbol} NAO e paginado (array plano), enquanto /automations e paginado (.rows). Helpers de dominio (ensureMonitor L51-60, ensureTemplate L62-74, ensureAutomation L88-98, setupSymbol L100-126) foram excluidos conforme pedido por serem recipes.\""},{"file":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js","usesHttpApi":true,"helpers":[{"name":"BASE / EM / PW (module
+... (truncated 54648 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wa41e1cyr.output)</result>
+<usage><agent_count>8</agent_count><subagent_tokens>335604</subagent_tokens><tool_uses>21</tool_uses><duration_ms>270092</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(18:37:50)*
+
+
+## 🤖 Claude *(18:37:51)*
+
+O inventário voltou (8 scripts, 335k tokens de subagentes). O resultado está truncado na notificação — vou ler o arquivo completo pra ter todos os desvios antes de desenhar a lib.
+
+## 🤖 Claude *(18:37:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wa41e1cyr.output | python3 -c '\nimport json,sys\ndata=json.load(sys.stdin)\nfor r in data:\n    f=r[\"file\"].split(\"/\")[-1]\n    print(\"=\"*80)\n    print(f\"FILE: {f}   usesHttpApi={r[\\\"usesHttpApi\\\"]}\")\n    print(f\"  mainFlow: {r.get(\\\"mainFlow\\\",\\\"\\\")[:300]}\")\n    print(f\"  envVars: {r.get(\\\"envVars\\\",[])}\")\n    for h in r.get(\"helpers\",[]):\n        print(f\"  --- helper: {h[\\\"name\\\"]}  [{h[\\\"kind\\\"]}]  L{h[\\\"startLine\\\"]}-{h[\\\"endLine\\\"]}\")\n        print(f\"      deviations: {h[\\\"deviations\\\"]}\")\n    nt=r.get(\"notes\",\"\")\n    if nt: print(f\"  NOTES: {nt[:500]}\")\n'",
+  "description": "Parse and summarize inventory: helpers + deviations per script"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+>   File "<string>", line 7
+>     print(f"FILE: {f}   usesHttpApi={r[\"usesHttpApi\"]}")
+>                                         ^
+> SyntaxError: unexpected character after line continuation character
+> ```
+
+## 🤖 Claude *(18:38:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/parse_inv.py <<'PYEOF'\nimport json\ndata=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wa41e1cyr.output'))\nfor r in data:\n    f=r[\"file\"].split(\"/\")[-1]\n    print(\"=\"*84)\n    print(\"FILE:\",f,\" usesHttpApi=\",r[\"usesHttpApi\"])\n    print(\"  mainFlow:\",(r.get(\"mainFlow\",\"\") or \"\")[:320])\n    print(\"  envVars:\",r.get(\"envVars\",[]))\n    for h in r.get(\"helpers\",[]):\n        print(\"  --- %s [%s] L%s-%s\"%(h[\"name\"],h[\"kind\"],h[\"startLine\"],h[\"endLine\"]))\n        print(\"      dev:\",(h[\"deviations\"] or \"\")[:600])\n    nt=r.get(\"notes\",\"\") or \"\"\n    if nt: print(\"  NOTES:\",nt[:600])\nPYEOF\npython3 /tmp/parse_inv.py",
+  "description": "Parse inventory summary via temp python file"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "/tmp/parse_inv.py", line 4, in <module>
+>     f=r["file"].split("/")[-1]
+>       ~^^^^^^^^
+> TypeError: string indices must be integers, not 'str'
+> ```
+
+## 🤖 Claude *(18:38:05)*
+
+
+## 🤖 Claude *(18:38:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/parse_inv.py <<'PYEOF'\nimport json\nraw=open('/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wa41e1cyr.output').read()\nprint(\"len:\",len(raw))\nprint(\"first 200:\",repr(raw[:200]))\ndata=json.loads(raw)\nprint(\"top type:\",type(data))\nif isinstance(data,dict):\n    print(\"keys:\",list(data.keys()))\nPYEOF\npython3 /tmp/parse_inv.py",
+  "description": "Inspect output JSON structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> len: 66881
+> first 200: '{\n  "summary": "Inventariar helpers HTTP duplicados (req/login/findAutomationByName/env) nos scripts de setup p/ desenhar scripts/lib/apiClient.js",\n  "agentCount": 8,\n  "logs": [\n    "Inventariando 8'
+> top type: <class 'dict'>
+> keys: ['summary', 'agentCount', 'logs', 'result']
+> ```
+
+## 🤖 Claude *(18:38:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/parse_inv.py <<'PYEOF'\nimport json\ndata=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wa41e1cyr.output'))\nrows=data[\"result\"]\nfor r in rows:\n    f=r[\"file\"].split(\"/\")[-1]\n    print(\"=\"*84)\n    print(\"FILE:\",f,\" usesHttpApi=\",r[\"usesHttpApi\"])\n    print(\"  mainFlow:\",(r.get(\"mainFlow\",\"\") or \"\")[:340])\n    print(\"  envVars:\",r.get(\"envVars\",[]))\n    for h in r.get(\"helpers\",[]):\n        print(\"  --- %s [%s] L%s-%s\"%(h[\"name\"],h[\"kind\"],h[\"startLine\"],h[\"endLine\"]))\n        print(\"      dev:\",(h[\"deviations\"] or \"\")[:650])\n    nt=r.get(\"notes\",\"\") or \"\"\n    if nt: print(\"  NOTES:\",nt[:550])\nPYEOF\npython3 /tmp/parse_inv.py",
+  "description": "Parse inventory result array"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (33.4KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tool-results/brvtr00il.txt
+> 
+> Preview (first 2KB):
+> ====================================================================================
+> FILE: setup-paper-trilhas.js  usesHttpApi= True
+>   mainFlow: IIFE async: valida EM/PW (exit 1 se faltar) -> login = req('POST','/login',null,{email,password}); extrai token=login.body.token (exit 1 se ausente) -> imprime cabecalho -> for de cada SYMBOL chama setupSymbol(token, s), que encadeia ensureMonitor/ensureTemplate/findAutomationByName/ensureAutomation, todos passando o token explicito para 
+>   envVars: ['PAPER_SYMBOLS', 'PAPER_INTERVAL', 'PAPER_RSI_LO', 'PAPER_RSI_HI', 'PAPER_SIZE_MULT', 'DRY', 'PAPER_API_HOST', 'PORT', 'EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL', 'PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD']
+>   --- baseEnv [baseEnv] L31-33
+>       dev: Nao e funcao: e tres const de modulo (top-level), nao um helper baseEnv() encapsulado. HOST: usa PAPER_API_HOST (prefixado, diferente de API_HOST canonico) com fallback 127.0.0.1; NAO ha fallback para 'localhost'. PORT: le PORT (nao API_PORT) default '3001' via parseInt(...,10) e o resultado e numero. BASE e objeto plano {host,port} espalhado direto em http.request via {...BASE} (nao monta string de URL nem schema http/https; sempre http puro). Credenciais com TRIPLO fallback de nome: EM = EM || DEFAULT_SETTINGS_EMAIL || TRADEUX_EMAIL; PW = PW || DEFAULT_SETTINGS_PWD || TRADEUX_PASSWORD (note PWD, nao PASSWORD, no segundo fallback). Sem defau
+>   --- req [req] L35-49
+> ...
+> </persisted-output>
+> ```
+
+## 🤖 Claude *(18:38:16)*
+
+
+## 🤖 Claude *(18:38:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tool-results/brvtr00il.txt"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	====================================================================================
+> 2	FILE: setup-paper-trilhas.js  usesHttpApi= True
+> 3	  mainFlow: IIFE async: valida EM/PW (exit 1 se faltar) -> login = req('POST','/login',null,{email,password}); extrai token=login.body.token (exit 1 se ausente) -> imprime cabecalho -> for de cada SYMBOL chama setupSymbol(token, s), que encadeia ensureMonitor/ensureTemplate/findAutomationByName/ensureAutomation, todos passando o token explicito para 
+> 4	  envVars: ['PAPER_SYMBOLS', 'PAPER_INTERVAL', 'PAPER_RSI_LO', 'PAPER_RSI_HI', 'PAPER_SIZE_MULT', 'DRY', 'PAPER_API_HOST', 'PORT', 'EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL', 'PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD']
+> 5	  --- baseEnv [baseEnv] L31-33
+> 6	      dev: Nao e funcao: e tres const de modulo (top-level), nao um helper baseEnv() encapsulado. HOST: usa PAPER_API_HOST (prefixado, diferente de API_HOST canonico) com fallback 127.0.0.1; NAO ha fallback para 'localhost'. PORT: le PORT (nao API_PORT) default '3001' via parseInt(...,10) e o resultado e numero. BASE e objeto plano {host,port} espalhado direto em http.request via {...BASE} (nao monta string de URL nem schema http/https; sempre http puro). Credenciais com TRIPLO fallback de nome: EM = EM || DEFAULT_SETTINGS_EMAIL || TRADEUX_EMAIL; PW = PW || DEFAULT_SETTINGS_PWD || TRADEUX_PASSWORD (note PWD, nao PASSWORD, no segundo fallback). Sem defau
+> 7	  --- req [req] L35-49
+> 8	      dev: Assinatura posicional req(method, path, token, body) — token e o 3o arg explicito (nao um header/options bag). SEMPRE resolve, NUNCA rejeita: erros de rede resolvem {status:0, body:String(e.message)} e timeout resolve {status:0, body:'timeout'} (chamador inspeciona status; nao usa try/catch). Retorno padronizado {status, body}. Header de auth em MINUSCULA: 'authorization' (NAO 'Authorization', e SEM prefixo 'Bearer ' — manda o token cru). Content-Type sempre application/json. Content-Length so quando ha body, via Buffer.byteLength. timeout: 15000ms passado nas opcoes do http.request E tratado via r.on('timeout', ...) que faz r.destroy(). Body
+> 9	  --- login [login] L130-132
+> 10	      dev: NAO existe funcao login() encapsulada — o login e inline dentro da IIFE (linhas 130-132). Endpoint: POST /login. Body shape: { email, password } (chaves email/password; valores de EM/PW). Token passado como null no req do login (sem auth). Extrai token de login.body.token (acesso defensivo login.body && login.body.token). NAO guarda o token em variavel de modulo/cache nem reusa via closure — fica numa const local 'token' da IIFE e e passado explicitamente como 3o arg em toda chamada req() subsequente. Sem retry/re-auth em 401. Em falha: console.error('LOGIN_FAIL '+status) e process.exit(1) (mata o processo, nao lanca erro).
+> 11	  --- findAutomationByName [findAutomationByName] L76-86
+> 12	      dev: Paginacao 1-indexada (page=1) com CAP de 80 paginas (page <= 80) — cap diferente de outras variantes (algumas usam 50 ou 100). Endpoint GET /automations?page=N. Le rows de r.body.rows (acesso defensivo r.body && r.body.rows). Page size assumido = 10: para o loop quando rows.length < 10 (heuristica de ultima pagina) OU quando rows vazio/nao-array. Match EXATO por a.name === name (sensivel a maiusculas, sem trim/normalizacao). Retorna o objeto-linha inteiro (hit) ou null. NAO trata status HTTP (ignora r.status; so olha o shape do body) — se status=0/erro, rows nao sera array e o loop quebra retornando null silenciosamente.
+> 13	  --- ensureTemplate-getOrderTemplates [otherHttp] L63-64
+> 14	      dev: NAO e um helper isolado — e o trecho de discovery de order templates DENTRO de ensureTemplate (que e um helper de dominio/recipe, fora do escopo pedido). Incluido so pela primitiva de listagem reusavel: GET /ordertemplates/all/${symbol} retorna um ARRAY plano direto em all.body (NAO paginado, sem .rows — difere de /automations). Match por t.name === name (exato). Guard Array.isArray(all.body) antes do .find; cai pra null se nao for array. Nao ha um getOrderTemplates() nomeado/extraido; a chamada esta acoplada ao recipe.
+> 15	  NOTES: Inventario fiel ao arquivo de 138 linhas (lido integralmente). NENHUM helper de transporte/auth/discovery e uma funcao nomeada e exportada de forma reusavel: req() e a unica primitiva HTTP real (funcao nomeada, linhas 35-49); baseEnv sao consts top-level (31-33); login e findAutomationByName existem mas login e INLINE na IIFE (130-132, nao funcao). O script NAO usa require('https') nem monta URL string — so http puro com {...BASE} espalhado. Detalhes canonicos importantes para o apiClient DRY: (1) header de auth e 'authorization' minusculo SEM 
+> 16	====================================================================================
+> 17	FILE: setup-farm.js  usesHttpApi= True
+> 18	  mainFlow: O IIFE async (linhas 141-154) valida EM/PW (exit 1 se faltar), faz login via req('POST','/login',null,{email,password}) e extrai token de login.body.token (exit 1 em LOGIN_FAIL). Depois itera SYMBOLS chamando setupSymbol(token, symbol), que passa o token como 3o arg em cada req() — ensureMonitor (POST /monitors), ensureTemplate (GET /orde
+> 19	  envVars: ['FARM_SYMBOLS', 'FARM_INTERVAL', 'FARM_RSI_LO', 'FARM_PROFIT', 'FARM_BUFFER', 'FARM_SIZE_MULT', 'DRY', 'FARM_API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 20	  --- BASE / EM / PW (module-level baseEnv) [baseEnv] L38-40
+> 21	      dev: Nao e uma funcao: e resolucao a nivel de modulo (constantes top-level), nao um helper baseEnv() reutilizavel. HOST: usa process.env.FARM_API_HOST (nome PREFIXADO especifico deste script) com fallback '127.0.0.1' (NAO 'localhost'). PORT: le SO process.env.PORT (sem fallback de nome alternativo tipo API_PORT/TRADEUX_PORT) com default '3001' parseado via parseInt(..., 10). Nao monta uma URL/baseUrl string nem protocolo: BASE e um objeto {host, port} consumido diretamente por http.request (sem 'protocol', assume http puro). Credenciais: EM = EM || TRADEUX_EMAIL ; PW = PW || TRADEUX_PASSWORD (dois nomes cada, prefixo curto primeiro, TRADEUX_* como
+> 22	  --- req [req] L42-56
+> 23	      dev: Construido sobre o modulo nativo `http` (require('http') na linha 28), NAO https/fetch/axios. Assinatura POSICIONAL: req(method, path, token, body) — token e o 3o argumento explicito (NAO um header montado pelo chamador nem um token de modulo global). Header de auth: minusculo 'authorization' (NAO 'Authorization') e envia o token CRU, SEM prefixo 'Bearer ' (comentario in-line confirma: 'middleware usa o token CRU (sem Bearer)'). timeout: 15000ms (15s) passado tanto nas opcoes do http.request quanto tratado via r.on('timeout'). NUNCA REJEITA: o Promise so chama resolve() — erros de rede resolvem {status:0, body:String(e.message)} e timeout res
+> 24	  --- login (inline no IIFE) [login] L143-145
+> 25	      dev: Nao e uma funcao login() nomeada/exportada — e codigo INLINE dentro do IIFE async. Endpoint: POST '/login' (sem prefixo /api; o BASE nao inclui basepath). Chamado com token=null (3o arg). Body shape: { email: EM, password: PW } (chaves 'email' e 'password'). Token extraido de login.body.token (guard `login.body && login.body.token`). Em falha imprime 'LOGIN_FAIL ' + status e faz process.exit(1) (nao throw, nao retry). O token NAO e guardado em estado de modulo nem cacheado em disco: vive numa const local `token` passada manualmente como 3o arg em toda chamada subsequente de req().
+> 26	  --- findAutomationByName [findAutomationByName] L86-96
+> 27	      dev: Paginacao 1-indexed: for page=1; page<=40 (CAP DE 40 PAGINAS — difere de outros scripts que possam usar cap diferente). Endpoint GET `/automations?page=${page}` (query param `page`, sem pageSize/limit explicito). Le rows de r.body.rows (guard `r.body && r.body.rows`). Match EXATO por nome (a.name === name, sem normalizacao/lowercase/trim). Condicoes de parada: (1) rows nao-array ou vazio -> break; (2) achou hit -> return imediato; (3) rows.length < 10 -> break, ASSUMINDO page size do backend = 10 (hardcoded no comentario e na comparacao). Retorna o objeto da automacao inteiro (hit) ou null. Nao trata r.status (confia no shape de body); um err
+> 28	  --- ensureTemplate (GET /ordertemplates/all/<symbol> — finder de templates embutido) [otherFinder] L70-73
+> 29	      dev: ATENCAO: ensureTemplate INTEIRO (linhas 70-84) e um helper de DOMINIO ('recipe') e portanto FORA de escopo; incluo aqui APENAS o sub-finder HTTP reutilizavel que ele embute (linhas 70-73). Diferente de findAutomationByName, este finder NAO e paginado: faz UM unico GET `/ordertemplates/all/${symbol}` e espera que all.body seja um ARRAY direto (Array.isArray(all.body) ? ... : null) — nao {rows}. Match exato por nome (t.name === name). Nao ha um helper getOrderTemplates() standalone — a busca esta inlined no ensureTemplate; para o apiClient DRY o pedaco reutilizavel e o par (endpoint paginado-unico + body-array-direto), distinto do shape {rows} 
+> 30	  NOTES: FIDELIDADE/PEGADINHAS para o apiClient DRY: (1) BASE e um objeto {host,port} usado com require('http') nativo + spread ...BASE, NAO uma URL string — qualquer apiClient generico que troque por baseUrl/fetch muda a forma de chamada. (2) Header de auth = 'authorization' minusculo com token CRU SEM 'Bearer ' (comentario explicito linha 46); divergir disso quebra o middleware. (3) req() NUNCA rejeita — sempre resolve {status, body}; erros viram {status:0, body:msg}, timeout vira {status:0, body:'timeout'} apos r.destroy(); chamadores checam status/s
+> 31	====================================================================================
+> 32	FILE: setup-trend.js  usesHttpApi= True
+> 33	  mainFlow: A IIFE (linhas 95-131): valida EM/PW (exit 1 se faltar) -> login inline via req('POST','/login',null,{email,password}) e extrai token (exit 1 se sem token) -> chama os helpers de dominio ensureTemplate (BUY/SELL) e ensureAutomation (Trend Buy/Sell), TODOS recebendo o token e usando req()/findAutomationByName por baixo. Tudo sequencial num
+> 34	  envVars: ['TREND_SYMBOL', 'TREND_INTERVAL', 'TREND_API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 35	  --- BASE (+ EM/PW credential resolution) [baseEnv] L37-39
+> 36	      dev: BASE e um objeto literal {host,port} (nao uma URL string nem um getBaseUrl()). host vem de TREND_API_HOST com fallback '127.0.0.1' (nome de env ESPECIFICO deste script, com prefixo TREND_; nao usa TRADEUX_API_URL nem API_HOST). port vem de PORT com fallback '3001' (parseInt base 10). Nao ha protocolo/scheme separado (sempre http via require('http') hardcoded). Credenciais: EM = process.env.EM || process.env.TRADEUX_EMAIL e PW = process.env.PW || process.env.TRADEUX_PASSWORD (EM/PW curtos como primario, TRADEUX_EMAIL/TRADEUX_PASSWORD como fallback). A validacao de EM/PW ausente NAO vive aqui: e feita no inicio da IIFE (linha 96), nao no baseEn
+> 37	  --- req [req] L41-55
+> 38	      dev: Assinatura posicional req(method, path, token, body) — token e o 3o argumento (NAO um objeto de opts). NUNCA rejeita: o executor da Promise so chama resolve (FAIL-SOFT). Erros de socket resolvem {status:0, body:String(e.message)}; timeout resolve {status:0, body:'timeout'} apos r.destroy(). timeout = 15000 ms passado dentro do objeto de options de http.request E TAMBEM tratado explicitamente via r.on('timeout'). Header de auth e 'authorization' MINUSCULO e usa o token CRU (sem prefixo 'Bearer ') — comentario confirma 'middleware usa o token CRU'. Content-Type sempre 'application/json'; Content-Length via Buffer.byteLength so quando ha body. B
+> 39	  --- login (IIFE inline, nao e funcao nomeada) [login] L97-99
+> 40	      dev: NAO existe uma funcao login() reutilizavel — o login e feito INLINE dentro da IIFE via req('POST', '/login', null, {email, password}). Endpoint = '/login'. Shape do body = { email: EM, password: PW } (chaves 'email'/'password'). token passado como null (sem auth no login). O token e extraido de login.body && login.body.token (campo 'token' no body da resposta) e guardado numa const local 'token' — NAO ha cache em modulo/variavel global nem re-auth em 401 (script one-shot). Em falha: console.error('LOGIN_FAIL ' + status) e process.exit(1) (encerra o processo, nao throw).
+> 41	  --- findAutomationByName [findAutomationByName] L72-82
+> 42	      dev: Paginacao 1-indexada via querystring ?page=N no endpoint GET /automations. Cap de paginas = 30 (for page=1; page<=30). Le rows de r.body.rows (estrutura {rows:[...]} do backend). Para a iteracao se rows nao for array OU vazio (break), ou se rows.length < 10 (assume page size do backend = 10, comentario explicito). Compara por igualdade EXATA de nome (a.name === name). Retorna o objeto da automacao (hit) inteiro, ou null se nao achar em ate 30 paginas. NAO trata r.status (assume sucesso; se status!=200 e body nao for {rows}, rows fica undefined e o break dispara). token passado como 2o arg posicional.
+> 43	  --- getOrderTemplates (chamada inline GET /ordertemplates/all/<symbol> dentro de ensureTemplate) [otherHttp] L58-59
+> 44	      dev: NAO e um helper HTTP separado/nomeado — e uma chamada inline dentro do helper de dominio ensureTemplate (linhas 57-70). Endpoint = GET /ordertemplates/all/${SYMBOL} (path-param do simbolo, NAO paginado). O body da resposta e tratado como ARRAY direto (Array.isArray(all.body) ... all.body.find), diferente de /automations que retorna {rows}. Busca por t.name === name (igualdade exata). Incluido aqui apenas como a UNICA outra primitiva de discovery/GET reaproveitavel (listar+achar-por-nome sem paginacao); fora isso nao ha getOrderTemplates() autonomo nem helper de paginacao generico alem de findAutomationByName.
+> 45	  NOTES: Script one-shot de setup idempotente; require('http') (nao https) hardcoded no topo (linha 30) — sem suporte a TLS/scheme configuravel. Ponto critico de FIDELIDADE para o apiClient.js DRY: (1) req() e FAIL-SOFT (so resolve, nunca reject; erro/timeout -> {status:0, body:...}); (2) header de auth e 'authorization' minusculo com token CRU sem 'Bearer'; (3) BASE e objeto {host,port} espalhado via {...BASE}, nao uma URL; (4) timeout=15000 (duplo: option + r.on('timeout')); (5) login NAO e funcao reutilizavel, e inline na IIFE, sem cache nem re-auth-
+> 46	====================================================================================
+> 47	FILE: setup-grid.js  usesHttpApi= True
+> 48	  mainFlow: IIFE async: valida EM/PW (exit se faltar) -> getTestnetPrice(SYMBOL) da Binance testnet pra centrar a banda -> imprime preview e, se DRY=true, retorna ANTES de qualquer chamada ao backend. Caso contrario: login = req('POST','/login',null,{email,password}) -> extrai token -> req('POST', `/automations?quantity=${QTY}&levels=${LEVELS}`, toke
+> 49	  envVars: ['GRID_SYMBOL', 'GRID_LEVELS', 'GRID_QTY', 'GRID_BAND', 'GRID_TESTNET_HOST', 'GRID_NAME', 'DRY', 'GRID_API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 50	  --- baseEnv [baseEnv] L38-40
+> 51	      dev: NAO e uma funcao — sao constantes module-level (linhas 38-40), nao um objeto/builder reutilizavel. BASE: host vem de GRID_API_HOST (fallback 127.0.0.1) — nome de env PREFIXADO/especifico do script, nao um TRADEUX_API_HOST/BASE_URL generico; porta vem de process.env.PORT (fallback 3001), tambem nao prefixada. BASE e um objeto {host,port} (estilo http.request options), NAO uma URL/string base — diverge da versao canonica que normalmente resolveria uma BASE_URL completa (sem protocolo aqui; o transporte e http puro hardcoded em req()). Credenciais: EM/PW com fallback para TRADEUX_EMAIL/TRADEUX_PASSWORD (ordem: nome curto primeiro, nome canonico 
+> 52	  --- req [req] L42-56
+> 53	      dev: Assinatura: req(method, path, token, body) — token e 3o posicional explicito (nao lido de uma var de modulo/closure). Usa http.request do modulo 'http' nativo (NAO https, NAO fetch/axios); espalha ...BASE ({host,port}) nas options. Header de auth: 'authorization' MINUSCULO, valor = token CRU sem prefixo 'Bearer ' (comentario explicito: middleware usa o token cru). Content-Type application/json sempre; Content-Length setado manualmente via Buffer.byteLength quando ha body. Timeout = 15000ms (passado tanto em options.timeout quanto tratado via r.on('timeout')). FAIL-SOFT / NUNCA REJEITA: a Promise so tem resolve (nenhum reject); erro de socket 
+> 54	  --- login (inline) [login] L85-87
+> 55	      dev: NAO existe funcao login() dedicada — o login e feito INLINE dentro da IIFE (linhas 85-87) via req(). Endpoint: POST '/login' (path nu, sem prefixo /api e sem /auth). Body shape: { email, password } usando as vars EM/PW (nao username). token passado como null nesta chamada (nao autenticada). Token e LIDO de login.body.token (campo 'token' no body) e guardado numa const local 'token' do escopo da IIFE — NAO ha cache em modulo/arquivo, NAO ha header default persistido, NAO ha re-uso entre chamadas alem de passar 'token' manualmente a cada req(). Em falha: console.error('LOGIN_FAIL '+status) e process.exit(1) (hard-exit, sem throw/retry). Note: o
+> 56	  --- getTestnetPrice [otherHttp] L58-67
+> 57	      dev: NAO fala com o backend TradeUX — chama a API publica da Binance testnet (host = TESTNET_HOST, default 'testnet.binance.vision') no endpoint /api/v3/ticker/price. Logo NAO e candidato para o apiClient.js do backend (e market-data externa, sem auth/JWT). Diverge de req() em varios eixos: usa https.get (modulo 'https') em vez de http.request; timeout = 8000ms (vs 15000 do req); FAIL-HARD via reject (Promise REJEITA em erro/timeout/parse — oposto do req() que sempre resolve); header so 'User-Agent: tradeux'; sem token; retorna um numero (parseFloat(j.price)) e nao {status,body}. Incluido no inventario por ser o unico outro helper HTTP generico do
+> 58	  NOTES: Script CURTO (99 linhas), single-shot de setup/criacao do grid nativo (marcado no header como REJEITADO/nao-ativar, mantido como reproducao de resultado negativo). Faz HTTP ao backend (usesHttpApi=true). PRIMITIVAS reaproveitaveis para o apiClient.js: req() (transporte http baixo-nivel) e o login inline. AUSENTES neste arquivo (nao tem o que extrair): findAutomationByName / qualquer finder paginado, getOrderTemplates, helper de paginacao, helpers de dominio ensureTemplate/ensureAutomation/ensureMonitor — o script cria a automacao diretamente vi
+> 59	====================================================================================
+> 60	FILE: setup-harvester.js  usesHttpApi= True
+> 61	  mainFlow: IIFE main (linhas 95-138): valida EM/PW e RUNGS (process.exit(1) se faltarem) -> login inline via req('POST','/login',null,{email,password}) e extrai login.body.token -> com o token, chama os recipes de dominio ensureTemplate (Buy/Sell, que internamente fazem GET /ordertemplates/all/SYMBOL + POST /ordertemplates) e, num loop sobre RUNGS, 
+> 62	  envVars: ['HARVEST_SYMBOL', 'HARVEST_RUNGS', 'HARVEST_PROFIT', 'HARVEST_BUFFER', 'HARVEST_SIZE_MULT', 'DRY', 'HARVEST_API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 63	  --- baseEnv [baseEnv] L28-37
+> 64	      dev: BASE e resolvido como objeto literal {host,port} montado inline a nivel de modulo (NAO ha funcao baseEnv()). host: env HARVEST_API_HOST com fallback '127.0.0.1' (nome de env especifico do harvester; outros scripts usam API_HOST/TRADEUX_API_HOST). port: env PORT (default 3001) parseado com base 10; NAO ha env PORT-com-fallback nem default canonico 8090 - usa 3001 (porta de dev do backend). Credenciais: EM com fallback TRADEUX_EMAIL; PW com fallback TRADEUX_PASSWORD (sem fallback de URL completa, sem TRADEUX_API_URL). Nao monta uma BASE URL string - so {host,port} pra http.request. SYMBOL/RUNGS/PROFIT/BUF/SIZE_MULT/DRY/K sao config de DOMINIO d
+> 65	  --- req [req] L39-53
+> 66	      dev: Usa o modulo core 'http' (NAO https) - hardcoded a HTTP plano, sem suporte a TLS (so funciona contra backend local 127.0.0.1:3001). Assinatura: req(method, path, token, body) - token e o 3o arg posicional (nao em options). Header de auth: 'authorization' MINUSCULO com o token CRU, SEM prefixo 'Bearer ' (comentario explicito: middleware usa o token cru). timeout=15000ms passado nas options do http.request E tratado via r.on('timeout'). FAIL-SOFT total: NUNCA rejeita a Promise - sempre resolve(). Erro de rede -> resolve({status:0, body:String(e.message)}); timeout -> r.destroy()+resolve({status:0, body:'timeout'}). Resposta resolve({status: res
+> 67	  --- login [login] L98-100
+> 68	      dev: NAO ha funcao login() dedicada - o login e inline dentro da IIFE main. Endpoint POST /login (caminho relativo, sem /api prefix). Body shape: { email, password } usando email=EM, password=PW. Token e lido de login.body.token. NAO ha cache em variavel global nem re-auth em 401 (diferente do tradeux-mcp api.js); o token e capturado uma vez numa const local 'token' e passado explicitamente como 3o arg em cada chamada req() subsequente. Em falha (sem token) imprime 'LOGIN_FAIL <status>' e faz process.exit(1) - aborta o processo, nao lanca excecao.
+> 69	  --- findAutomationByName [findAutomationByName] L71-81
+> 70	      dev: Cap de paginacao = 40 paginas (page 1..40 inclusivo, 1-indexed). Endpoint GET /automations?page=<n>. Espera o shape paginado { rows: [...] } (le r.body.rows). Page-size assumido = 10 (heuristica de ultima-pagina: if rows.length < 10 break) - hardcoded, nao deriva de count/total do backend. Para tambem se rows nao for array ou estiver vazio. Match EXATO por a.name === name (case-sensitive, sem trim/normalizacao). Retorna o objeto da automacao inteiro (hit) ou null. NAO trata r.status (confia que req nunca rejeita; um 401/erro vira rows=undefined -> break -> null silencioso).
+> 71	  --- getOrderTemplates [otherHttp] L56-57
+> 72	      dev: NAO e um helper extraido/nomeado - e uma chamada inline no inicio de ensureTemplate (helper de DOMINIO). Endpoint GET /ordertemplates/all/<SYMBOL> retorna um ARRAY direto (all.body e um array, NAO paginado {rows} como /automations) - guarda com Array.isArray(all.body). Lookup por t.name === name (exato, case-sensitive). E a unica primitiva de discovery alem de findAutomationByName, mas vive embutida no recipe ensureTemplate, entao reaproveita-la exige extracao manual.
+> 73	  NOTES: Script de setup/recovery idempotente que SIM fala HTTP com o backend. Pontos canonicos relevantes pro apiClient.js DRY: (1) usa modulo 'http' plano (sem TLS/https) e {host,port} em vez de BASE URL string - inadequado pra qualquer backend remoto/HTTPS; (2) header de auth = 'authorization' minusculo + token CRU sem 'Bearer' (decisao deliberada, comentada: o middleware do TradeUX espera o token cru) - divergencia critica a preservar/parametrizar; (3) req() e FAIL-SOFT (sempre resolve, status:0 em erro/timeout), entao callers checam .status manualm
+> 74	====================================================================================
+> 75	FILE: setup-flow-gate.js  usesHttpApi= True
+> 76	  mainFlow: IIFE (linhas 87-123): (1) valida EM/PW (exit 1 se faltar); (2) login = await req('POST','/login',null,{email,password}) e extrai token (exit 1 se !token); (3) findAutomationByName(token, MR_BUY) para achar a id2; (4) req('GET', `/automations/${a.id}`, token) pega a automacao completa; (5) calcula newIndexes/newConditions e, se nao for DRY
+> 77	  envVars: ['FLOW_SYMBOL', 'FLOW_GATE_MIN', 'FLOW_GATE_MAX_AGE_MS', 'DRY', 'FLOW_API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 78	  --- baseEnv [baseEnv] L38-42
+> 79	      dev: NAO e uma funcao — sao constantes de modulo no top-level (avaliadas no load), nao um helper reutilizavel encapsulado. BASE: host vem de FLOW_API_HOST (nao TRADEUX_API_HOST/API_HOST nem URL completa) com fallback '127.0.0.1'; port vem de PORT com fallback 3001 (parseInt base 10, SEM Number.isFinite guard — diferente do tratamento dado a FLOW_GATE_MIN/MAX_AGE nas linhas 34-37). BASE e um objeto {host,port} spread direto em http.request, NAO uma URL string nem usa URL/new URL(). Credenciais: EM com fallback de nome EM -> TRADEUX_EMAIL; PW com fallback PW -> TRADEUX_PASSWORD (so 2 nomes cada, sem ADMIN_EMAIL/EMAIL/USER etc.). NAO ha protocolo con
+> 80	  --- req [req] L44-58
+> 81	      dev: Assinatura posicional req(method, path, token, body) — token e o 3o arg posicional, NAO via options object nem header pre-montado. NUNCA rejeita: sempre resolve (resolve-only, never-reject) — erros viram {status:0, body:<msg>} e timeout vira {status:0, body:'timeout'}; chamadores checam r.status. Header de auth = 'authorization' minusculo (lowercase), token CRU SEM prefixo 'Bearer ' (comentario confirma: middleware usa token cru). timeout = 15000ms passado tanto no options do http.request QUANTO tratado via r.on('timeout') com r.destroy(). Content-Type sempre 'application/json'; Content-Length so setado quando ha body. Parse de resposta: tent
+> 82	  --- login [login] L89-91
+> 83	      dev: NAO e uma funcao dedicada — e login inline dentro do IIFE (nao ha helper login() reutilizavel). Endpoint = '/login' (POST), token passado como null (sem auth no login). Body shape = { email, password } (chaves 'email'/'password'; valores de EM/PW). Token extraido de login.body.token (campo 'token' no corpo da resposta). NAO guarda o token em estado/modulo/cache — fica numa const local `token` passada manualmente em cada chamada req() seguinte. Sem retry/re-auth em 401 (diferente do tradeux-mcp api.js que re-autentica). Falha => console.error('LOGIN_FAIL '+status) + process.exit(1) (nao throw). A guarda de credenciais ausentes vem ANTES (linha
+> 84	  --- findAutomationByName [findAutomationByName] L60-70
+> 85	      dev: Cap de paginas = 30 (page de 1 a 30 inclusive). Endpoint /automations?page=${page} (paginacao 1-based via query string). Le r.body.rows (campo 'rows'); para se nao for array ou estiver vazio. Match por igualdade exata de nome: a.name === name (case-sensitive, sem trim nem includes). Heuristica de fim de paginacao: assume page size 10 — para quando rows.length < 10 (page size HARDCODED em 10; se o backend mudar o page size isso quebra). Retorna o objeto da automacao inteiro (hit) ou null se nao achar. Usa req() (que nunca rejeita) entao erro HTTP => r.body sem rows => break => null silencioso.
+> 86	  NOTES: Arquivo lido INTEIRO (124 linhas). FIDELIDADE: exactCode copiado verbatim com indentacao original (4 espacos). Pontos cruciais para o apiClient.js DRY: (a) o transporte usa modulo 'http' nativo (sem https, sem fetch/axios), com BASE={host,port} spread em http.request — NAO uma URL string; um apiClient generico provavelmente vai querer aceitar URL completa/protocolo, divergindo daqui. (b) req() e resolve-only (nunca rejeita): {status:0,body:msg} em erro/timeout — chamadores dependem disso e checam r.status, NAO try/catch; mudar para reject quebr
+> 87	====================================================================================
+> 88	FILE: automation-ctl.js  usesHttpApi= True
+> 89	  mainFlow: IIFE: valida EM/PW + ACTION (start|stop) + IDS nao-vazio; faz login inline via req('POST','/login',null,{email,password}) e extrai token=login.body.token (exit 1 se falhar); depois itera IDS chamando req('POST',`/automations/${id}/${ACTION}`,token) e loga status/isActive/name por id.
+> 90	  envVars: ['ACTION', 'IDS', 'API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 91	  --- BASE / env resolution [baseEnv] L12-16
+> 92	      dev: NAO ha funcao baseEnv() encapsulada: a resolucao e feita por consts module-level inline (BASE, EM, PW). Host: usa env API_HOST (NAO o canonico API_PORT/API_HOST par) com fallback '127.0.0.1'. Porta: le de PORT (NAO API_PORT) com fallback '3001' e parseInt base 10 — note que muitos outros scripts usam API_PORT, aqui e PORT. NAO ha resolucao de BASE_URL/protocolo: BASE e um objeto {host,port} cru pra http.request, sem schema http://. Sem suporte a https. Credenciais: EM (fallback TRADEUX_EMAIL) e PW (fallback TRADEUX_PASSWORD) — nomes primarios curtos EM/PW, diferente do canonico que costuma usar TRADEUX_EMAIL/TRADEUX_PASSWORD como primarios. V
+> 93	  --- req [req] L18-32
+> 94	      dev: Transporte: usa modulo nativo `http` apenas (require('http') na linha 11), SEM https — nao da pra apontar pra endpoint TLS. Assinatura: req(method, path, token, body) — o TOKEN e o 3o parametro posicional (nao um header montado pelo chamador). Header de auth: lowercase `'authorization'` e o token e enviado CRU, sem prefixo `Bearer ` (ex.: headers['authorization'] = token). Promise SEMPRE RESOLVE, NUNCA REJEITA: tanto 'error' quanto 'timeout' resolvem com { status: 0, body: ... } (error -> body = String(e.message); timeout -> body = 'timeout'). Status 0 e o sentinela de falha de transporte. timeout=15000ms passado direto nas options do http.re
+> 95	  --- login (inline no IIFE) [login] L38-40
+> 96	      dev: NAO ha funcao login() reutilizavel: o login e feito inline dentro do IIFE chamando req() diretamente. Endpoint: POST /login (path nu, sem prefixo /api, sem /auth). Body shape: { email, password } usando as vars EM/PW. Token: extraido de login.body.token (acesso defensivo com `login.body && login.body.token`); NAO ha .data.token nem header Authorization de resposta. Armazenamento do token: variavel local `token` no escopo do IIFE — NAO ha cache module-level nem re-auth em 401. Em falha (token falsy) faz console.error('LOGIN_FAIL '+status) e process.exit(1). O token e depois passado como 3o arg (token cru) pras chamadas subsequentes de req().
+> 97	  NOTES: Arquivo tem 46 linhas, lido na integra. Helpers de DOMINIO ausentes/fora de escopo: NAO existe ensureTemplate/ensureAutomation/ensureMonitor neste script (a descricao da tarefa mencionou esses como recipes de outra fase — aqui o script so faz start/stop). FINDERS AUSENTES: NAO existe findAutomationByName nem nenhum finder paginado / getOrderTemplates / helper de paginacao — o script NUNCA lista automacoes; ele recebe os IDs por env (IDS=CSV) e age direto por POST /automations/:id/:action. Portanto kind 'findAutomationByName' e 'otherFinder'/'ot
+> 98	====================================================================================
+> 99	FILE: activate-trend.js  usesHttpApi= True
+> 100	  mainFlow: O IIFE valida EM/PW (exit 1 se faltar), entao faz login inline via req('POST','/login',null,{email,password}) e extrai token=login.body.token (exit 1 se ausente). Com o token, chama em sequencia (cada um logado com console.log): ensureTemplateShape(tfBuy/tfSell), ensureCoordination(mrBuy/mrSell), ensureStarted(tfBuy/tfSell) — todos passan
+> 101	  envVars: ['TREND_SYMBOL', 'TREND_INTERVAL', 'DRY', 'TREND_API_HOST', 'PORT', 'EM', 'TRADEUX_EMAIL', 'PW', 'TRADEUX_PASSWORD']
+> 102	  --- baseEnv [baseEnv] L30-32
+> 103	      dev: Nao e uma funcao — sao constantes de modulo no topo. (a) HOST: usa process.env.TREND_API_HOST (prefixo TREND_, especifico deste script) com fallback '127.0.0.1' — NAO usa um nome generico tipo API_HOST/TRADEUX_API_HOST. (b) PORT: process.env.PORT || '3001' (default 3001, nao 3000); o default e parseInt-ado base 10. (c) BASE e um objeto {host, port} (espalhado depois com ...BASE em http.request), NAO uma URL string/base path — nao ha protocolo nem prefixo de path (sem '/api'). (d) Credenciais: EM com fallback de DOIS nomes (EM -> TRADEUX_EMAIL) e PW (PW -> TRADEUX_PASSWORD). Sem default — validacao de ausencia acontece depois no IIFE (linha 14
+> 104	  --- req [req] L42-56
+> 105	      dev: Assinatura: req(method, path, token, body) — token e POSICIONAL (4o arg, antes do body), nao um header montado pelo chamador. Usa o modulo nativo `http` (nao https, nao fetch/axios). NEVER REJECTS: a Promise so chama resolve() — erros e timeouts viram {status:0, body:<msg>} em vez de throw/reject (o chamador inspeciona r.status). Auth header: chave em minusculas 'authorization' e valor o token CRU sem prefixo 'Bearer ' (comentario: middleware usa token cru). timeout: 15000ms passado tanto no objeto de opcoes do http.request QUANTO tratado via r.on('timeout') -> r.destroy() + resolve({status:0, body:'timeout'}). Content-Length so e setado quan
+> 106	  --- login (inline no IIFE) [login] L143-145
+> 107	      dev: NAO ha funcao login() dedicada — o login e feito INLINE dentro do IIFE via req(). Endpoint: POST '/login' (sem prefixo /api, sem /auth). Body shape: { email, password } (campos `email` e `password`; usa as consts EM/PW). Chamado com token=null (sem auth). Token extraido de login.body.token (guard `login.body && login.body.token`). NAO ha caching/persistencia do token — fica numa const local `token` passada manualmente a cada chamada subsequente de req(...). Em falha: console.error('LOGIN_FAIL ' + status) + process.exit(1) (nao throw, nao retry). O token e o JWT cru passado como header 'authorization' (sem Bearer) pelo req().
+> 108	  --- findAutomationByName [findAutomationByName] L63-73
+> 109	      dev: Paginacao 1-indexed (page comeca em 1). Cap de paginas: 30 (loop page<=30). Endpoint: GET '/automations?page=N' (querystring `page`, paginas inteiras). Le os itens de r.body.rows (com guard `r.body && r.body.rows`). Para o loop quando: rows nao e array OU vazio (break), OU rows.length < 10 (assume page size = 10, ultima pagina — break apos). Match exato por a.name === name (igualdade estrita, case-sensitive, sem trim). Retorna o objeto da automacao inteiro (hit) ou null se nao achar em ate 30 paginas. Recebe token posicional. Sem tratamento de status de erro — se req falhar (status 0), r.body nao tera rows e o loop quebra retornando null sile
+> 110	  --- findTemplate [otherFinder] L58-61
+> 111	      dev: Finder de orderTemplate (NAO paginado — single GET). Endpoint: GET '/ordertemplates/all/${SYMBOL}' onde SYMBOL e a const de modulo (TREND_SYMBOL||'BTCUSDT' uppercased) — o simbolo esta embutido no path, nao e parametro da funcao. Espera que all.body seja um ARRAY direto (nao {rows}) — guard Array.isArray(all.body), faz .find(t => t.name === name). Match exato por t.name === name. Retorna o template encontrado ou null (note: .find pode retornar undefined se array existe mas sem match, nao null). Recebe token posicional. Sem tratamento de erro de status.
+> 112	  NOTES: Inventario fiel das primitivas de transporte/auth/discovery. Pontos-chave para o apiClient.js DRY: (1) `req()` usa modulo nativo `http`, NUNCA rejeita (erros/timeout viram {status:0,body}), token POSICIONAL (4o arg), header de auth 'authorization' em minusculas com token CRU (sem 'Bearer'), timeout 15000ms (em opcoes E em handler), Content-Type sempre json. (2) BASE e objeto {host,port} (nao URL) com host de TREND_API_HOST||127.0.0.1 e port de PORT||3001. (3) Login e INLINE (sem funcao dedicada, sem cache de token, sem re-auth em 401) — endpoin
+> 113	
+> ```
+
+## 🤖 Claude *(18:40:44)*
+
+
+## 🤖 Claude *(18:40:52)*
+
+Inventário completo e claro. **Síntese:**
+
+**`req()` é funcionalmente idêntico nos 8 scripts** — `http` puro, `(method,path,token,body)` posicional, header `authorization` minúsculo com token **cru** (sem Bearer), timeout 15000ms (option + `on('timeout')`+destroy), **nunca rejeita** (`{status:0,...}` em erro/timeout). **`login`** é o mesmo bloco inline em todos (`POST /login {email,password}` → `body.token` → `exit(1)` se faltar). **`findAutomationByName`** é idêntico **exceto o cap de páginas** (paper=80, farm=40, trend=30) — tudo o mais igual (1-indexed, page size 10, match exato). `baseEnv` diverge só nos **nomes de env** (`PAPER_/FARM_/TREND_API_HOST`) e no fallback de credencial (paper tem triplo: `DEFAULT_SETTINGS_*`).
+
+**Design do `apiClient.js`** (fiel, parametriza só o que diverge):
+- `resolveEnv({hostEnv, emailEnvs, passwordEnvs})` — reproduz os fallbacks exatos (lista por prioridade).
+- `createClient({host,port})` → `{ req, login, findAutomationByName }` com `req` **byte-idêntico** e `findAutomationByName(token,name,maxPages)` com o cap **preservado por call-site** (bind a 80/40/30) → recipes (`ensure*`) ficam **intocados**.
+
+Vou ler os 3 alvos por completo (preciso do texto exato pros edits — e confirmar que não há desvio escondido além do cap):
+
+## 🤖 Claude *(18:40:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE do FARM no-loss das ALTS (Fase 2 da estratégia Farm-and-Funnel) — config pura,
+> 4	 * sem código novo no engine. Ver docs/STRATEGY-farm-funnel.md e memória tradeux-farm-funnel-backtest.
+> 5	 *
+> 6	 * A regra do dono ("vende só por mais caro que comprou"): a venda dispara pelo PREÇO (no-loss), não
+> 7	 * pelo RSI — vende a posição quando o bestBid supera o preço de compra (LAST_ORDER.avgPrice) + margem.
+> 8	 * A compra entra no dip (RSI baixo) só fora de bear/trend (mean-reversion vive em range). Fiel ao
+> 9	 * engine do backtest (compra RSI<lo; vende lote com lucro). 1 lote por vez no v1 (grid multi-nível = refino).
+> 10	 *
+> 11	 * Cria, por alt (se ausentes; INATIVAS por segurança):
+> 12	 *   - monitor CANDLES (RSI_14) ATIVO — alimenta MEMORY['<sym>:RSI_14_<interval>'] (gatilho da compra).
+> 13	 *     MINI_TICKER/BOOK já vêm do monitor system '*' (preço/bestBid de todas as alts, sem monitor próprio).
+> 14	 *   - templates LIMIT marketável: BUY = bestAsk×(1+buf) MIN_NOTIONAL ; SELL = bestBid×(1−buf) LAST_ORDER_QTY.
+> 15	 *   - automação "Farm Buy <sym>"  (RSI<lo + regime!=bear/trend + sem posição), INATIVA.
+> 16	 *   - automação "Farm Sell <sym>" no-loss (tem posição + bestBid > avgPrice×(1+lucro)), INATIVA.
+> 17	 *
+> 18	 * Por que INATIVAS: é money-path. Ativar (1 alt por vez, com gate) é um passo SEPARADO — garantir antes
+> 19	 * que o regimeJob computa o REGIME da alt (resolveSymbols pega símbolos de automações ATIVAS; até o 1º
+> 20	 * poll a compra fica fail-safe pelo guard de REGIME na condition) e o sizing. Ver §5 do doc.
+> 21	 *
+> 22	 * Reproduz o setup após `make nuke` (dado runtime, não seeders).
+> 23	 * Uso (dentro do container, server no ar):  node scripts/setup-farm.js   [DRY=true p/ preview]
+> 24	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),
+> 25	 *        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (1m),
+> 26	 *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (2)
+> 27	 */
+> 28	const http = require('http');
+> 29	
+> 30	const SYMBOLS = (process.env.FARM_SYMBOLS || 'LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 31	const INTERVAL = process.env.FARM_INTERVAL || '1m';
+> 32	const RSI_KEY_SUFFIX = `RSI_14_${INTERVAL}`;
+> 33	const RSI_LO = parseFloat(process.env.FARM_RSI_LO || '35');
+> 34	const PROFIT = parseFloat(process.env.FARM_PROFIT || '0.012');   // lucro-alvo sobre o avgPrice (cobre buffer+fees no testnet)
+> 35	const BUF = parseFloat(process.env.FARM_BUFFER || '0.003');      // buffer do LIMIT marketável (atravessa o book fino do testnet)
+> 36	const SIZE_MULT = parseFloat(process.env.FARM_SIZE_MULT || '2'); // MIN_NOTIONAL×2 (~$9-10 nas alts): ×1 arredonda pra baixo (Math.floor por stepSize no calcQty) e FALHA o filtro NOTIONAL ($5) ao disparar — validado ao vivo: -1013 (mesmo fix do setup-harvester.js)
+> 37	const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> 38	const BASE = { host: process.env.FARM_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 39	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 40	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 41	
+> 42	function req(method, path, token, body) {
+> 43	    return new Promise((resolve) => {
+> 44	        const data = body ? JSON.stringify(body) : null;
+> 45	        const headers = { 'Content-Type': 'application/json' };
+> 46	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 47	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 48	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 49	            let d = ''; res.on('data', c => d += c);
+> 50	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 51	        });
+> 52	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 53	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 54	        if (data) r.write(data); r.end();
+> 55	    });
+> 56	}
+> 57	
+> 58	// monitor CANDLES (RSI) ATIVO — alimenta o RSI da alt. Idempotente: insertMonitor responde 409 se já existe.
+> 59	async function ensureMonitor(token, symbol) {
+> 60	    if (DRY) return `[DRY] POST monitor CANDLES ${symbol} ${INTERVAL} RSI_14 (ativo)`;
+> 61	    const r = await req('POST', '/monitors', token, {
+> 62	        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',
+> 63	        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,
+> 64	    });
+> 65	    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (id ${r.body.id}, ATIVO → ${symbol}:${RSI_KEY_SUFFIX})`;
+> 66	    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} já existe`;
+> 67	    throw new Error(`falha ao criar monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);
+> 68	}
+> 69	
+> 70	async function ensureTemplate(token, symbol, name, side, opts) {
+> 71	    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);
+> 72	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 73	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 74	    if (DRY) return { id: 0, msg: `[DRY] POST template "${name}" (${opts.type} ${side} qty ${opts.quantity}×${opts.quantityMultiplier})` };
+> 75	    const r = await req('POST', '/ordertemplates', token, {
+> 76	        name, symbol, type: opts.type, side,
+> 77	        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+> 78	        stopPrice: null, stopPriceMultiplier: 1,
+> 79	        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+> 80	        icebergQty: null, icebergQtyMultiplier: 1,
+> 81	    });
+> 82	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 83	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> 84	}
+> 85	
+> 86	async function findAutomationByName(token, name) {
+> 87	    for (let page = 1; page <= 40; page++) {
+> 88	        const r = await req('GET', `/automations?page=${page}`, token);
+> 89	        const rows = r.body && r.body.rows;
+> 90	        if (!Array.isArray(rows) || rows.length === 0) break;
+> 91	        const hit = rows.find(a => a.name === name);
+> 92	        if (hit) return hit;
+> 93	        if (rows.length < 10) break; // page size do backend = 10
+> 94	    }
+> 95	    return null;
+> 96	}
+> 97	
+> 98	async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+> 99	    const existing = await findAutomationByName(token, name);
+> 100	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 101	    if (DRY) return `[DRY] POST automação "${name}" INATIVA\n      cond: ${conditions}\n      idx:  ${indexes}`;
+> 102	    const r = await req('POST', '/automations', token, {
+> 103	        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 104	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 105	    });
+> 106	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 107	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 108	}
+> 109	
+> 110	async function setupSymbol(token, symbol) {
+> 111	    const K = k => `${symbol}:${k}`;
+> 112	    console.log(`\n## ${symbol}`);
+> 113	    console.log('- ' + await ensureMonitor(token, symbol));
+> 114	
+> 115	    const buyTpl = await ensureTemplate(token, symbol, `Farm Buy ${symbol}`, 'BUY', {
+> 116	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestAsk * ${(1 + BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 117	        quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,
+> 118	    });
+> 119	    console.log('- ' + buyTpl.msg);
+> 120	    const sellTpl = await ensureTemplate(token, symbol, `Farm Sell ${symbol}`, 'SELL', {
+> 121	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 122	        quantity: 'LAST_ORDER_QTY', quantityMultiplier: 1, // vende o lote comprado (a última ordem foi a compra)
+> 123	    });
+> 124	    console.log('- ' + sellTpl.msg);
+> 125	
+> 126	    // COMPRA: dip (RSI<lo) fora de bear/trend. Condition regex-safe (validateConditions exige cada cláusula
+> 127	    // = MEMORY[...]OP valor, SEM espaços/||/guards soltos). O REGIME vai no INDEX → isChecked é o FAIL-SAFE
+> 128	    // (sem regime conhecido a automação NÃO avalia). invertCondition no RSI → dispara só na TRANSIÇÃO p/ baixo
+> 129	    // de lo (anti-empilhamento). v1 = 1 lote simples; sem trava de posição → pode haver DCA leve em re-cruzamentos
+> 130	    // (a venda realiza a última compra via LAST_ORDER_QTY; rastreio multi-lote/FARM_QTY é refino — §5 do doc).
+> 131	    const buyCond = `MEMORY['${K(RSI_KEY_SUFFIX)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;
+> 132	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')}`, buyTpl.id));
+> 133	
+> 134	    // VENDA no-loss: tem posição (última ordem = compra) E o bestBid já dá lucro sobre o preço de compra.
+> 135	    // Index = BOOK,LAST_ORDER → isChecked garante AMBOS presentes (sem guards soltos; até a 1ª compra não avalia).
+> 136	    // invertCondition no BOOK → realiza só na TRANSIÇÃO em que o bestBid cruza o alvo (anti-empilhamento), indep. do RSI.
+> 137	    const sellCond = `MEMORY['${K('LAST_ORDER')}'].side==='BUY' && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('LAST_ORDER')}'].avgPrice*${(1 + PROFIT).toFixed(4)}`;
+> 138	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Sell ${symbol}`, sellCond, `${K('BOOK')},${K('LAST_ORDER')}`, sellTpl.id));
+> 139	}
+> 140	
+> 141	(async () => {
+> 142	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> 143	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 144	    const token = login.body && login.body.token;
+> 145	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 146	
+> 147	    console.log(`# Setup FARM no-loss — ${SYMBOLS.join(', ')} | RSI<${RSI_LO} compra · lucro-alvo ${(PROFIT * 100).toFixed(1)}% · buffer ${(BUF * 100).toFixed(1)}% · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada será aplicado]' : ''}`);
+> 148	
+> 149	    for (const symbol of SYMBOLS) await setupSymbol(token, symbol);
+> 150	
+> 151	    console.log(`\n${DRY ? 'DRY-RUN OK (nada aplicado).' : 'PRONTO — monitores ATIVOS, automações de farm INATIVAS.'}`);
+> 152	    console.log(`Para ATIVAR (1 alt por vez, com gate): garanta o REGIME da alt (REGIME_SYMBOLS ou automação ativa)`);
+> 153	    console.log(`e dê start nas automações "Farm Buy/Sell <sym>". A venda é no-loss (só realiza com lucro real).`);
+> 154	})();
+> 155	
+> ```
+
+## 🤖 Claude *(18:40:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE da automação de Trend Following (cruzamento SMA fast/slow) no ecossistema
+> 4	 * Beholder — config pura, sem código novo no engine.
+> 5	 *
+> 6	 * COMO O SINAL CHEGA (importante): o chart de TRADE é o testnet, que após um reset tem poucas
+> 7	 * velas 1h (ex.: 12h) — NÃO dá p/ calcular SMA_200 (precisa 200h). Por isso o sinal de cruzamento
+> 8	 * vem da MAINNET, calculado pelo `regimeJob` (que já busca 300 klines 1h mainnet p/ o regime): o
+> 9	 * job detecta a transição golden/death e escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h']
+> 10	 * (='golden'|'death'|'none'), disparando a automação UMA vez no cruzamento. Execução = testnet
+> 11	 * (igual ao regime: sinal=mercado real, ordem=testnet). >>> Este script NÃO cria monitor de chart
+> 12	 * (seria um 2º writer das mesmas keys, com dados rasos do testnet). O job é o único writer. <<<
+> 13	 *
+> 14	 * Cria, se ausentes:
+> 15	 *   - order templates BUY/SELL **LIMIT marketável** (atravessa o spread como taker p/ fill
+> 16	 *     imediato sem EXPIRE no book fino do testnet): BUY = bestAsk×1.003 MIN_NOTIONAL; SELL =
+> 17	 *     bestBid×0.997 **TREND_QTY** (vende a posição acumulada pelo trend, não LAST_ORDER). O buffer
+> 18	 *     (0.3%) vive no EVAL do limitPrice porque o limitPriceMultiplier é DECIMAL(10,2) (não expressa sub-1%).
+> 19	 *   - automações "Trend Buy/Sell" (reagem ao sinal golden/death), **INATIVAS** por segurança.
+> 20	 *
+> 21	 * Por que INATIVAS: a entrada/saída de trend compartilha carteira com a reversão (id2/id3). Antes
+> 22	 * de ativar, decidir a COORDENAÇÃO (gatear id2/id3 por REGIME!=='trend' — incluindo REGIME nos
+> 23	 * indexes de AMBAS, senão fail-open) e o SIZING (MIN_NOTIONAL é validação; trend real quer size),
+> 24	 * e observar 1 ciclo golden→death real. Ver HANDOFF.
+> 25	 *
+> 26	 * Reproduz o setup após `make nuke` (id2/id3 e este trend são DADO runtime, não seeders).
+> 27	 * Uso (dentro do container, server no ar): node scripts/setup-trend.js
+> 28	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), TREND_SYMBOL, TREND_INTERVAL
+> 29	 */
+> 30	const http = require('http');
+> 31	
+> 32	const SYMBOL = (process.env.TREND_SYMBOL || 'BTCUSDT').toUpperCase();
+> 33	const INTERVAL = process.env.TREND_INTERVAL || '1h';
+> 34	const TAG = 'SMA50/200';                            // rótulo (períodos vivem no regimeClassifier)
+> 35	const KC = `${SYMBOL}:TREND_CROSS_${INTERVAL}`;     // memoryKey do sinal de cruzamento (escrito pelo job)
+> 36	const KR = `${SYMBOL}:REGIME`;
+> 37	const BASE = { host: process.env.TREND_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> 38	const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> 39	const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> 40	
+> 41	function req(method, path, token, body) {
+> 42	    return new Promise((resolve) => {
+> 43	        const data = body ? JSON.stringify(body) : null;
+> 44	        const headers = { 'Content-Type': 'application/json' };
+> 45	        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> 46	        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> 47	        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> 48	            let d = ''; res.on('data', c => d += c);
+> 49	            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> 50	        });
+> 51	        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> 52	        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> 53	        if (data) r.write(data); r.end();
+> 54	    });
+> 55	}
+> 56	
+> 57	async function ensureTemplate(token, name, side, opts) {
+> 58	    const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);
+> 59	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 60	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 61	    const r = await req('POST', '/ordertemplates', token, {
+> 62	        name, symbol: SYMBOL, type: opts.type, side,
+> 63	        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+> 64	        stopPrice: null, stopPriceMultiplier: 1,
+> 65	        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+> 66	        icebergQty: null, icebergQtyMultiplier: 1,
+> 67	    });
+> 68	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 69	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> 70	}
+> 71	
+> 72	async function findAutomationByName(token, name) {
+> 73	    for (let page = 1; page <= 30; page++) {
+> 74	        const r = await req('GET', `/automations?page=${page}`, token);
+> 75	        const rows = r.body && r.body.rows;
+> 76	        if (!Array.isArray(rows) || rows.length === 0) break;
+> 77	        const hit = rows.find(a => a.name === name);
+> 78	        if (hit) return hit;
+> 79	        if (rows.length < 10) break; // page size do backend = 10
+> 80	    }
+> 81	    return null;
+> 82	}
+> 83	
+> 84	async function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {
+> 85	    const existing = await findAutomationByName(token, name);
+> 86	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 87	    const r = await req('POST', '/automations', token, {
+> 88	        name, symbol: SYMBOL, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 89	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 90	    });
+> 91	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 92	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 93	}
+> 94	
+> 95	(async () => {
+> 96	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> 97	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 98	    const token = login.body && login.body.token;
+> 99	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 100	
+> 101	    console.log(`# Setup Trend Following ${TAG} — ${SYMBOL} ${INTERVAL} (sinal via regimeJob/mainnet)\n`);
+> 102	
+> 103	    // LIMIT marketável: o preço atravessa o spread (BUY paga +0.3% sobre o melhor ask; SELL aceita
+> 104	    // -0.3% sobre o melhor bid) → fill imediato como taker, com piso/teto de slippage; mata o EXPIRE
+> 105	    // de MARKET no book fino do testnet. O BOOK é sempre vivo (miniTickerStream o popula, bestAsk=bestBid=
+> 106	    // close quando não há book real). Buffer no EVAL pois limitPriceMultiplier é DECIMAL(10,2) (≥1%).
+> 107	    // SHAPE CANÔNICO (type/limitPrice/buffer/quantityMultiplier) — espelhado em activate-trend.js
+> 108	    // (ensureTemplateShape). Mudou aqui → mude lá (senão o reshape idempotente fica num PATCH eterno).
+> 109	    const buyTpl = await ensureTemplate(token, `Trend Buy ${SYMBOL} ${TAG}`, 'BUY', {
+> 110	        type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestAsk * 1.003`, limitPriceMultiplier: 1,
+> 111	        quantity: 'MIN_NOTIONAL', quantityMultiplier: 3, // size pequeno p/ observar 1 cross; calibrar depois
+> 112	    });
+> 113	    console.log('- ' + buyTpl.msg);
+> 114	    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {
+> 115	        type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestBid * 0.997`, limitPriceMultiplier: 1,
+> 116	        quantity: 'TREND_QTY', quantityMultiplier: 1, // vende a posição acumulada pelo trend (id6 soma no fill; zera no death) — NÃO LAST_ORDER
+> 117	    });
+> 118	    console.log('- ' + sellTpl.msg);
+> 119	
+> 120	    // BUY = sinal golden (cruzamento p/ cima) + trava de segurança != bear.
+> 121	    const buyCond = `MEMORY['${KC}']==='golden' && MEMORY['${KR}']!=='bear'`;
+> 122	    console.log('- ' + await ensureAutomation(token, `Trend Buy ${SYMBOL} ${TAG}`, buyCond, `${KC},${KR}`, buyTpl.id));
+> 123	
+> 124	    // SELL = sinal death (cruzamento p/ baixo) — saída p/ caixa, sem gate.
+> 125	    const sellCond = `MEMORY['${KC}']==='death'`;
+> 126	    console.log('- ' + await ensureAutomation(token, `Trend Sell ${SYMBOL} ${TAG}`, sellCond, `${KC}`, sellTpl.id));
+> 127	
+> 128	    console.log(`\nPRONTO (automações INATIVAS). Para ATIVAR rode: node scripts/activate-trend.js`);
+> 129	    console.log(`  (coordena id2/id3 por MEMORY['${KR}']!=='trend' — incl. ${KR} nos indexes de AMBAS — e dá start na id6/id7)`);
+> 130	    console.log(`  SIZING: id6 = 3× MIN_NOTIONAL (pequeno, p/ observar 1 cross); calibrar após 1 golden→death real.`);
+> 131	})();
+> 132	
+> ```
+
+## 🤖 Claude *(18:40:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js",
+  "offset": 120,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 120	    const mSell = await ensureTemplate(token, symbol, `[PAPER] Macro Sell ${symbol}`, 'SELL', 'MAX_WALLET');
+> 121	    console.log('- ' + mSell.msg);
+> 122	    const mBuyCond = `MEMORY['${K('TREND_CROSS_1h')}']==='golden' && MEMORY['${K('REGIME')}']!=='bear'`;
+> 123	    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Macro Buy ${symbol}`, mBuyCond, `${K('TREND_CROSS_1h')},${K('REGIME')}`, mBuy.id));
+> 124	    const mSellCond = `MEMORY['${K('TREND_CROSS_1h')}']==='death'`;
+> 125	    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Macro Sell ${symbol}`, mSellCond, `${K('TREND_CROSS_1h')}`, mSell.id));
+> 126	}
+> 127	
+> 128	(async () => {
+> 129	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou DEFAULT_SETTINGS_EMAIL/PWD)'); process.exit(1); }
+> 130	    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> 131	    const token = login.body && login.body.token;
+> 132	    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> 133	
+> 134	    console.log(`# Setup PAPER trilhas — ${SYMBOLS.join(', ')} | Consistencia RSI<${RSI_LO}/>${RSI_HI} (range/mixed) · Macro SMA50/200 golden/death · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN]' : ''}`);
+> 135	    for (const s of SYMBOLS) await setupSymbol(token, s);
+> 136	    console.log(`\n${DRY ? 'DRY-RUN OK.' : 'PRONTO — monitores ATIVOS, automações [PAPER] INATIVAS.'}`);
+> 137	    console.log(`Para ATIVAR: start nas automações [PAPER] (paperEngine roteia p/ o ledger virtual). P&L em GET /analysis/paper. Mainnet CONGELADO.`);
+> 138	})();
+> 139	
+> ```
+
+## 🤖 Claude *(18:42:15)*
+
+
+## 🤖 Claude *(18:42:19)*
+
+Confirmado o que o inventário previu — **um único desvio real** além de comentários: o cap de `findAutomationByName` (paper=80, farm=40, trend=30). O `req` e o bloco de login são idênticos. Os recipes (`ensure*`/`setupSymbol`) só referenciam `req`/`findAutomationByName`/`DRY` → vão ficar **intocados** se eu deixar bindings locais.
+
+Vou preservar os originais pra verificação por `diff` (evita git como ubuntu = zero risco de poison), criar o dir `lib/` como gcrux-tradeux, e então escrever a lib:
+
+## 🤖 Claude *(18:42:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nmkdir -p /tmp/blocoB-orig\ncp backend/scripts/setup-paper-trilhas.js /tmp/blocoB-orig/\ncp backend/scripts/setup-farm.js /tmp/blocoB-orig/\ncp backend/scripts/setup-trend.js /tmp/blocoB-orig/\necho \"originais salvos:\"; ls -l /tmp/blocoB-orig/\nsudo -n -u gcrux-tradeux mkdir -p backend/scripts/lib && echo \"lib/ criado (owner gcrux-tradeux)\"\nls -ld backend/scripts/lib",
+  "description": "Backup originals to /tmp and create lib dir as gcrux-tradeux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> originais salvos:
+> total 36
+> -rw-rw-r-- 1 ubuntu ubuntu 10558 Jun 19 15:42 setup-farm.js
+> -rw-rw-r-- 1 ubuntu ubuntu  8882 Jun 19 15:42 setup-paper-trilhas.js
+> -rw-rw-r-- 1 ubuntu ubuntu  8320 Jun 19 15:42 setup-trend.js
+> lib/ criado (owner gcrux-tradeux)
+> drwxrwxr-x 2 gcrux-tradeux gcrux-tradeux 4096 Jun 19 15:42 backend/scripts/lib
+> ```
+
+## 🤖 Claude *(18:42:25)*
+
+
+## 🤖 Claude *(18:42:26)*
+
+Agora escrevo a lib — `req` byte-fiel ao canônico, comentários em pt-BR (convenção do repo), `findAutomationByName` com `maxPages` parametrizado:
+
+## 🤖 Claude *(18:42:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "content": "'use strict';\n/*\n * apiClient \u2014 cliente HTTP DRY para os scripts de setup/recovery (Bloco B, Fase 1 do Motor de Estrat\u00e9gias).\n *\n * Extrai as PRIMITIVAS de transporte/auth/discovery que eram copiadas verbatim em cada `setup-*.js`\n * (`req`/login/`findAutomationByName`). Os helpers de DOM\u00cdNIO (`ensure*`/recipes) N\u00c3O vivem aqui \u2014 s\u00e3o a\n * pr\u00f3xima sub-fase (\"recipes declarativas\"). Este m\u00f3dulo \u00e9 puramente fiel ao comportamento can\u00f4nico desses\n * scripts; nada de novo, s\u00f3 DRY. N\u00e3o \u00e9 carregado pelo backend em runtime (\u00e9 util de CLI).\n *\n * Fidelidade can\u00f4nica (divergir de qualquer item abaixo quebra os scripts):\n *   - m\u00f3dulo `http` PURO (sem https/fetch/axios); BASE={host,port} espalhado em http.request (n\u00e3o \u00e9 URL string);\n *   - header de auth 'authorization' MIN\u00daSCULO com o token CRU (SEM prefixo 'Bearer ') \u2014 o middleware espera assim;\n *   - `req()` NUNCA rejeita: sempre resolve {status, body}; erro de rede \u2192 {status:0, body:String(msg)};\n *     timeout (15000ms, em option E em on('timeout')+destroy) \u2192 {status:0, body:'timeout'};\n *   - body da resposta: tenta JSON.parse, cai pra string crua no catch;\n *   - login: POST /login {email,password} \u2192 body.token; sem token \u21d2 console.error('LOGIN_FAIL '+status)+exit(1);\n *   - findAutomationByName: GET /automations?page=N (1-indexed; page size do backend = 10; match EXATO a.name===name);\n *     maxPages \u00e9 s\u00f3 um BOUND de seguran\u00e7a da pagina\u00e7\u00e3o \u2014 preservado por call-site (cada script tinha o seu: 80/40/30).\n */\nconst http = require('http');\n\n// Primeiro valor n\u00e3o-vazio dentre uma lista de nomes de env (reproduz `process.env.A || process.env.B || ...`).\nfunction firstEnv(names) {\n    return (names || []).map(n => process.env[n]).find(Boolean);\n}\n\n// Resolve {host, port, email, password} com os MESMOS fallbacks dos scripts (os nomes de env divergem por script).\n//   hostEnv:        nome da env de host (ex.: 'PAPER_API_HOST'); ausente/vazia \u21d2 '127.0.0.1'.\n//   portEnv:        nome da env de porta (default 'PORT'); ausente \u21d2 3001 (parseInt base 10).\n//   emailEnvs/passwordEnvs: listas em ORDEM de prioridade (ex.: ['EM','DEFAULT_SETTINGS_EMAIL','TRADEUX_EMAIL']).\nfunction resolveEnv({ hostEnv, portEnv = 'PORT', emailEnvs = [], passwordEnvs = [] } = {}) {\n    const host = (hostEnv && process.env[hostEnv]) || '127.0.0.1';\n    const port = parseInt(process.env[portEnv] || '3001', 10);\n    const email = firstEnv(emailEnvs);\n    const password = firstEnv(passwordEnvs);\n    return { host, port, email, password };\n}\n\n// Cria um cliente ligado a {host, port}. Retorna { req, login, findAutomationByName }.\nfunction createClient({ host = '127.0.0.1', port = 3001 } = {}) {\n    const BASE = { host, port };\n\n    // Transporte can\u00f4nico \u2014 id\u00eantico byte-a-byte ao req() que vivia em cada setup-*.js.\n    function req(method, path, token, body) {\n        return new Promise((resolve) => {\n            const data = body ? JSON.stringify(body) : null;\n            const headers = { 'Content-Type': 'application/json' };\n            if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n            if (data) headers['Content-Length'] = Buffer.byteLength(data);\n            const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n                let d = ''; res.on('data', c => d += c);\n                res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n            });\n            r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n            r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n            if (data) r.write(data); r.end();\n        });\n    }\n\n    // Login one-shot: POST /login \u2192 token cru. Aborta o processo se falhar (igual ao bloco inline das IIFEs).\n    async function login(email, password) {\n        const login = await req('POST', '/login', null, { email, password });\n        const token = login.body && login.body.token;\n        if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n        return token;\n    }\n\n    // Finder paginado de automa\u00e7\u00f5es por nome EXATO. maxPages = bound de seguran\u00e7a da pagina\u00e7\u00e3o (default 50).\n    async function findAutomationByName(token, name, maxPages = 50) {\n        for (let page = 1; page <= maxPages; page++) {\n            const r = await req('GET', `/automations?page=${page}`, token);\n            const rows = r.body && r.body.rows;\n            if (!Array.isArray(rows) || rows.length === 0) break;\n            const hit = rows.find(a => a.name === name);\n            if (hit) return hit;\n            if (rows.length < 10) break; // page size do backend = 10\n        }\n        return null;\n    }\n\n    return { req, login, findAutomationByName, BASE };\n}\n\nmodule.exports = { createClient, resolveEnv, firstEnv };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:42:51)*
+
+
+## 🤖 Claude *(18:42:51)*
+
+Lib escrita. `node --check` + ajuste de ownership:
+
+## 🤖 Claude *(18:42:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check backend/scripts/lib/apiClient.js && echo \"\u2713 apiClient.js: sintaxe OK\"\n# ownership consistente com o resto do repo\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/scripts/lib/apiClient.js 2>/dev/null && echo \"\u2713 chown gcrux-tradeux\" || echo \"(chown n\u00e3o-root; deixando ubuntu \u2014 irrelevante p/ runtime)\"\nls -l backend/scripts/lib/apiClient.js",
+  "description": "Syntax check lib + fix ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ apiClient.js: sintaxe OK
+> ✓ chown gcrux-tradeux
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 4901 Jun 19 15:42 backend/scripts/lib/apiClient.js
+> ```
+
+## 🤖 Claude *(18:44:21)*
+
+
+## 🤖 Claude *(18:44:22)*
+
+Lib OK e com ownership correto. Agora refatoro os 3 consumidores. **setup-paper-trilhas.js** (cap preservado = 80):
+
+## 🤖 Claude *(18:44:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js",
+  "old_string": "const http = require('http');",
+  "new_string": "const { createClient, resolveEnv } = require('./lib/apiClient');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:44:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js",
+  "old_string": "const BASE = { host: process.env.PAPER_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.DEFAULT_SETTINGS_EMAIL || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.DEFAULT_SETTINGS_PWD || process.env.TRADEUX_PASSWORD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}",
+  "new_string": "const { host, port, email: EM, password: PW } = resolveEnv({\n    hostEnv: 'PAPER_API_HOST',\n    emailEnvs: ['EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL'],\n    passwordEnvs: ['PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD'],\n});\nconst client = createClient({ host, port });\nconst req = client.req;\nconst findAutomationByName = (token, name) => client.findAutomationByName(token, name, 80); // cap preservado (era 80)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:44:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js",
+  "old_string": "async function findAutomationByName(token, name) {\n    for (let page = 1; page <= 80; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break;\n    }\n    return null;\n}\n\n",
+  "new_string": ""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:44:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js",
+  "old_string": "    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }",
+  "new_string": "    const token = await client.login(EM, PW);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:44:44)*
+
+
+## 🤖 Claude *(18:44:44)*
+
+**setup-farm.js** (cap 40, FARM_API_HOST, dupla credencial):
+
+## 🤖 Claude *(18:44:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js",
+  "old_string": "const http = require('http');",
+  "new_string": "const { createClient, resolveEnv } = require('./lib/apiClient');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:44:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js",
+  "old_string": "const BASE = { host: process.env.FARM_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}",
+  "new_string": "const { host, port, email: EM, password: PW } = resolveEnv({\n    hostEnv: 'FARM_API_HOST',\n    emailEnvs: ['EM', 'TRADEUX_EMAIL'],\n    passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],\n});\nconst client = createClient({ host, port });\nconst req = client.req;\nconst findAutomationByName = (token, name) => client.findAutomationByName(token, name, 40); // cap preservado (era 40)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:44:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js",
+  "old_string": "async function findAutomationByName(token, name) {\n    for (let page = 1; page <= 40; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break; // page size do backend = 10\n    }\n    return null;\n}\n\n",
+  "new_string": ""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:45:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js",
+  "old_string": "    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }",
+  "new_string": "    const token = await client.login(EM, PW);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:45:07)*
+
+**setup-trend.js** (cap 30, TREND_API_HOST, dupla credencial):
+
+## 🤖 Claude *(18:45:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "const http = require('http');",
+  "new_string": "const { createClient, resolveEnv } = require('./lib/apiClient');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:45:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "const BASE = { host: process.env.TREND_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}",
+  "new_string": "const { host, port, email: EM, password: PW } = resolveEnv({\n    hostEnv: 'TREND_API_HOST',\n    emailEnvs: ['EM', 'TRADEUX_EMAIL'],\n    passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],\n});\nconst client = createClient({ host, port });\nconst req = client.req;\nconst findAutomationByName = (token, name) => client.findAutomationByName(token, name, 30); // cap preservado (era 30)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:45:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "async function findAutomationByName(token, name) {\n    for (let page = 1; page <= 30; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break; // page size do backend = 10\n    }\n    return null;\n}\n\n",
+  "new_string": ""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:45:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js",
+  "old_string": "    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }",
+  "new_string": "    const token = await client.login(EM, PW);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:45:31)*
+
+
+## 🤖 Claude *(18:45:32)*
+
+Todos os 3 refatorados. Verificação mecânica: `node --check` nos 4 arquivos + grep por resíduos (`http`/req antigo) + `diff` contra os originais pra confirmar que só mudou o esperado:
+
+## 🤖 Claude *(18:45:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== node --check ===\"\nfor f in lib/apiClient.js setup-paper-trilhas.js setup-farm.js setup-trend.js; do\n  node --check \"backend/scripts/$f\" && echo \"\u2713 $f\" || echo \"\u2717 $f FALHOU\"\ndone\necho\necho \"=== residuos (http / require('http') / req-antigo / func findAutomationByName) ===\"\ngrep -nE \"require\\('http'\\)|http\\.request|function req\\(|async function findAutomationByName\" backend/scripts/setup-paper-trilhas.js backend/scripts/setup-farm.js backend/scripts/setup-trend.js || echo \"  (nenhum residuo \u2014 OK)\"\necho\necho \"=== linhas em branco duplas? ===\"\nfor f in setup-paper-trilhas.js setup-farm.js setup-trend.js; do\n  n=$(grep -cE '^$' backend/scripts/$f; awk 'BEGIN{c=0} /^$/{b++; if(b>=2)c++} !/^$/{b=0} END{print c}' backend/scripts/$f >/tmp/dbl_$f)\n  echo \"$f: blank-pairs consecutivos = $(cat /tmp/dbl_$f)\"\ndone",
+  "description": "Syntax check + residue grep + double-blank check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check ===
+> ✓ lib/apiClient.js
+> ✓ setup-paper-trilhas.js
+> ✓ setup-farm.js
+> ✓ setup-trend.js
+> 
+> === residuos (http / require('http') / req-antigo / func findAutomationByName) ===
+>   (nenhum residuo — OK)
+> 
+> === linhas em branco duplas? ===
+> setup-paper-trilhas.js: blank-pairs consecutivos = 0
+> setup-farm.js: blank-pairs consecutivos = 0
+> setup-trend.js: blank-pairs consecutivos = 0
+> ```
+
+## 🤖 Claude *(18:45:42)*
+
+
+## 🤖 Claude *(18:45:43)*
+
+Sintaxe OK, zero resíduos, sem linhas-duplas. Agora o `diff` contra os originais pra confirmar que a mudança é cirúrgica:
+
+## 🤖 Claude *(18:45:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor f in setup-paper-trilhas.js setup-farm.js setup-trend.js; do\n  echo \"================ diff $f ================\"\n  diff -u /tmp/blocoB-orig/$f backend/scripts/$f\ndone\necho \"================ wc (orig -> novo) ================\"\nfor f in setup-paper-trilhas.js setup-farm.js setup-trend.js; do\n  echo \"$f: $(wc -l < /tmp/blocoB-orig/$f) -> $(wc -l < backend/scripts/$f) linhas\"\ndone",
+  "description": "Unified diff of each refactored script vs original"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ================ diff setup-paper-trilhas.js ================
+> --- /tmp/blocoB-orig/setup-paper-trilhas.js	2026-06-19 15:42:21.736051456 -0300
+> +++ backend/scripts/setup-paper-trilhas.js	2026-06-19 15:44:41.223864571 -0300
+> @@ -19,7 +19,7 @@
+>   *        PAPER_SYMBOLS (CSV, default BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT), PAPER_INTERVAL (1m),
+>   *        PAPER_RSI_LO (25), PAPER_RSI_HI (75), PAPER_SIZE_MULT (4)
+>   */
+> -const http = require('http');
+> +const { createClient, resolveEnv } = require('./lib/apiClient');
+>  
+>  const SYMBOLS = (process.env.PAPER_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+>  const INTERVAL = process.env.PAPER_INTERVAL || '1m';
+> @@ -28,25 +28,14 @@
+>  const RSI_HI = parseFloat(process.env.PAPER_RSI_HI || '75');
+>  const SIZE_MULT = parseFloat(process.env.PAPER_SIZE_MULT || '4');
+>  const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> -const BASE = { host: process.env.PAPER_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> -const EM = process.env.EM || process.env.DEFAULT_SETTINGS_EMAIL || process.env.TRADEUX_EMAIL;
+> -const PW = process.env.PW || process.env.DEFAULT_SETTINGS_PWD || process.env.TRADEUX_PASSWORD;
+> -
+> -function req(method, path, token, body) {
+> -    return new Promise((resolve) => {
+> -        const data = body ? JSON.stringify(body) : null;
+> -        const headers = { 'Content-Type': 'application/json' };
+> -        if (token) headers['authorization'] = token;
+> -        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> -        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> -            let d = ''; res.on('data', c => d += c);
+> -            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> -        });
+> -        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> -        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> -        if (data) r.write(data); r.end();
+> -    });
+> -}
+> +const { host, port, email: EM, password: PW } = resolveEnv({
+> +    hostEnv: 'PAPER_API_HOST',
+> +    emailEnvs: ['EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL'],
+> +    passwordEnvs: ['PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD'],
+> +});
+> +const client = createClient({ host, port });
+> +const req = client.req;
+> +const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 80); // cap preservado (era 80)
+>  
+>  async function ensureMonitor(token, symbol) {
+>      if (DRY) return `[DRY] monitor CANDLES ${symbol} ${INTERVAL} RSI_14`;
+> @@ -73,18 +62,6 @@
+>      return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id})` };
+>  }
+>  
+> -async function findAutomationByName(token, name) {
+> -    for (let page = 1; page <= 80; page++) {
+> -        const r = await req('GET', `/automations?page=${page}`, token);
+> -        const rows = r.body && r.body.rows;
+> -        if (!Array.isArray(rows) || rows.length === 0) break;
+> -        const hit = rows.find(a => a.name === name);
+> -        if (hit) return hit;
+> -        if (rows.length < 10) break;
+> -    }
+> -    return null;
+> -}
+> -
+>  async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+>      const existing = await findAutomationByName(token, name);
+>      if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> @@ -127,9 +104,7 @@
+>  
+>  (async () => {
+>      if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou DEFAULT_SETTINGS_EMAIL/PWD)'); process.exit(1); }
+> -    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> -    const token = login.body && login.body.token;
+> -    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> +    const token = await client.login(EM, PW);
+>  
+>      console.log(`# Setup PAPER trilhas — ${SYMBOLS.join(', ')} | Consistencia RSI<${RSI_LO}/>${RSI_HI} (range/mixed) · Macro SMA50/200 golden/death · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN]' : ''}`);
+>      for (const s of SYMBOLS) await setupSymbol(token, s);
+> ================ diff setup-farm.js ================
+> --- /tmp/blocoB-orig/setup-farm.js	2026-06-19 15:42:21.737495341 -0300
+> +++ backend/scripts/setup-farm.js	2026-06-19 15:45:04.436953330 -0300
+> @@ -25,7 +25,7 @@
+>   *        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (1m),
+>   *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (2)
+>   */
+> -const http = require('http');
+> +const { createClient, resolveEnv } = require('./lib/apiClient');
+>  
+>  const SYMBOLS = (process.env.FARM_SYMBOLS || 'LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+>  const INTERVAL = process.env.FARM_INTERVAL || '1m';
+> @@ -35,25 +35,14 @@
+>  const BUF = parseFloat(process.env.FARM_BUFFER || '0.003');      // buffer do LIMIT marketável (atravessa o book fino do testnet)
+>  const SIZE_MULT = parseFloat(process.env.FARM_SIZE_MULT || '2'); // MIN_NOTIONAL×2 (~$9-10 nas alts): ×1 arredonda pra baixo (Math.floor por stepSize no calcQty) e FALHA o filtro NOTIONAL ($5) ao disparar — validado ao vivo: -1013 (mesmo fix do setup-harvester.js)
+>  const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> -const BASE = { host: process.env.FARM_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> -const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> -const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> -
+> -function req(method, path, token, body) {
+> -    return new Promise((resolve) => {
+> -        const data = body ? JSON.stringify(body) : null;
+> -        const headers = { 'Content-Type': 'application/json' };
+> -        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> -        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> -        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> -            let d = ''; res.on('data', c => d += c);
+> -            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> -        });
+> -        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> -        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> -        if (data) r.write(data); r.end();
+> -    });
+> -}
+> +const { host, port, email: EM, password: PW } = resolveEnv({
+> +    hostEnv: 'FARM_API_HOST',
+> +    emailEnvs: ['EM', 'TRADEUX_EMAIL'],
+> +    passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],
+> +});
+> +const client = createClient({ host, port });
+> +const req = client.req;
+> +const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 40); // cap preservado (era 40)
+>  
+>  // monitor CANDLES (RSI) ATIVO — alimenta o RSI da alt. Idempotente: insertMonitor responde 409 se já existe.
+>  async function ensureMonitor(token, symbol) {
+> @@ -83,18 +72,6 @@
+>      return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+>  }
+>  
+> -async function findAutomationByName(token, name) {
+> -    for (let page = 1; page <= 40; page++) {
+> -        const r = await req('GET', `/automations?page=${page}`, token);
+> -        const rows = r.body && r.body.rows;
+> -        if (!Array.isArray(rows) || rows.length === 0) break;
+> -        const hit = rows.find(a => a.name === name);
+> -        if (hit) return hit;
+> -        if (rows.length < 10) break; // page size do backend = 10
+> -    }
+> -    return null;
+> -}
+> -
+>  async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+>      const existing = await findAutomationByName(token, name);
+>      if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> @@ -140,9 +117,7 @@
+>  
+>  (async () => {
+>      if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> -    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> -    const token = login.body && login.body.token;
+> -    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> +    const token = await client.login(EM, PW);
+>  
+>      console.log(`# Setup FARM no-loss — ${SYMBOLS.join(', ')} | RSI<${RSI_LO} compra · lucro-alvo ${(PROFIT * 100).toFixed(1)}% · buffer ${(BUF * 100).toFixed(1)}% · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada será aplicado]' : ''}`);
+>  
+> ================ diff setup-trend.js ================
+> --- /tmp/blocoB-orig/setup-trend.js	2026-06-19 15:42:21.738941427 -0300
+> +++ backend/scripts/setup-trend.js	2026-06-19 15:45:26.673038354 -0300
+> @@ -27,32 +27,21 @@
+>   * Uso (dentro do container, server no ar): node scripts/setup-trend.js
+>   *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), TREND_SYMBOL, TREND_INTERVAL
+>   */
+> -const http = require('http');
+> +const { createClient, resolveEnv } = require('./lib/apiClient');
+>  
+>  const SYMBOL = (process.env.TREND_SYMBOL || 'BTCUSDT').toUpperCase();
+>  const INTERVAL = process.env.TREND_INTERVAL || '1h';
+>  const TAG = 'SMA50/200';                            // rótulo (períodos vivem no regimeClassifier)
+>  const KC = `${SYMBOL}:TREND_CROSS_${INTERVAL}`;     // memoryKey do sinal de cruzamento (escrito pelo job)
+>  const KR = `${SYMBOL}:REGIME`;
+> -const BASE = { host: process.env.TREND_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };
+> -const EM = process.env.EM || process.env.TRADEUX_EMAIL;
+> -const PW = process.env.PW || process.env.TRADEUX_PASSWORD;
+> -
+> -function req(method, path, token, body) {
+> -    return new Promise((resolve) => {
+> -        const data = body ? JSON.stringify(body) : null;
+> -        const headers = { 'Content-Type': 'application/json' };
+> -        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)
+> -        if (data) headers['Content-Length'] = Buffer.byteLength(data);
+> -        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {
+> -            let d = ''; res.on('data', c => d += c);
+> -            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });
+> -        });
+> -        r.on('error', e => resolve({ status: 0, body: String(e.message) }));
+> -        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });
+> -        if (data) r.write(data); r.end();
+> -    });
+> -}
+> +const { host, port, email: EM, password: PW } = resolveEnv({
+> +    hostEnv: 'TREND_API_HOST',
+> +    emailEnvs: ['EM', 'TRADEUX_EMAIL'],
+> +    passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],
+> +});
+> +const client = createClient({ host, port });
+> +const req = client.req;
+> +const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 30); // cap preservado (era 30)
+>  
+>  async function ensureTemplate(token, name, side, opts) {
+>      const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);
+> @@ -69,18 +58,6 @@
+>      return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+>  }
+>  
+> -async function findAutomationByName(token, name) {
+> -    for (let page = 1; page <= 30; page++) {
+> -        const r = await req('GET', `/automations?page=${page}`, token);
+> -        const rows = r.body && r.body.rows;
+> -        if (!Array.isArray(rows) || rows.length === 0) break;
+> -        const hit = rows.find(a => a.name === name);
+> -        if (hit) return hit;
+> -        if (rows.length < 10) break; // page size do backend = 10
+> -    }
+> -    return null;
+> -}
+> -
+>  async function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {
+>      const existing = await findAutomationByName(token, name);
+>      if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> @@ -94,9 +71,7 @@
+>  
+>  (async () => {
+>      if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+> -    const login = await req('POST', '/login', null, { email: EM, password: PW });
+> -    const token = login.body && login.body.token;
+> -    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }
+> +    const token = await client.login(EM, PW);
+>  
+>      console.log(`# Setup Trend Following ${TAG} — ${SYMBOL} ${INTERVAL} (sinal via regimeJob/mainnet)\n`);
+>  
+> ================ wc (orig -> novo) ================
+> setup-paper-trilhas.js: 138 -> 113 linhas
+> setup-farm.js: 154 -> 129 linhas
+> setup-trend.js: 131 -> 106 linhas
+> ```
+
+## 🤖 Claude *(18:46:12)*
+
+
+## 🤖 Claude *(18:46:15)*
+
+Os diffs são **cirúrgicos e exatamente o pretendido** em cada script: `http`→apiClient, BASE/EM/PW+`req`→`resolveEnv`+client+bindings, `findAutomationByName` removido, login inline→`client.login`. Recipes **intocados**. −25 linhas/script (75 de duplicação eliminadas).
+
+Um polimento antes do gate: na lib, dentro de `function login()` eu reusei o nome `login` na var interna (auto-shadow — funciona, mas é code-smell). Renomeio pra `resp`:
+
+## 🤖 Claude *(18:46:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "old_string": "    async function login(email, password) {\n        const login = await req('POST', '/login', null, { email, password });\n        const token = login.body && login.body.token;\n        if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n        return token;\n    }",
+  "new_string": "    async function login(email, password) {\n        const resp = await req('POST', '/login', null, { email, password });\n        const token = resp.body && resp.body.token;\n        if (!token) { console.error('LOGIN_FAIL ' + resp.status); process.exit(1); }\n        return token;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:46:26)*
+
+
+## 🤖 Claude *(18:46:27)*
+
+Lib polida. Agora um **teste de equivalência offline** pra parte mais sutil — a lógica de fallback de env do `resolveEnv` (o nuance `PWD`-vs-`PASSWORD`, triplo-vs-duplo). Comparo contra o "oráculo" (a expressão inline original) em vários combos de env:
+
+## 🤖 Claude *(18:46:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/test_resolveenv.js <<'EOF'\nconst { resolveEnv } = require('/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient');\n\nconst ALL = ['PAPER_API_HOST','FARM_API_HOST','TREND_API_HOST','PORT','EM','PW',\n  'DEFAULT_SETTINGS_EMAIL','DEFAULT_SETTINGS_PWD','TRADEUX_EMAIL','TRADEUX_PASSWORD'];\nfunction clear(){ for(const k of ALL) delete process.env[k]; }\nfunction set(env){ clear(); for(const k in env) process.env[k]=env[k]; }\n\n// Or\u00e1culos = express\u00f5es inline ORIGINAIS de cada script (copiadas verbatim)\nconst oracles = {\n  paper: () => ({\n    host: process.env.PAPER_API_HOST || '127.0.0.1',\n    port: parseInt(process.env.PORT || '3001', 10),\n    email: process.env.EM || process.env.DEFAULT_SETTINGS_EMAIL || process.env.TRADEUX_EMAIL,\n    password: process.env.PW || process.env.DEFAULT_SETTINGS_PWD || process.env.TRADEUX_PASSWORD,\n  }),\n  farm: () => ({\n    host: process.env.FARM_API_HOST || '127.0.0.1',\n    port: parseInt(process.env.PORT || '3001', 10),\n    email: process.env.EM || process.env.TRADEUX_EMAIL,\n    password: process.env.PW || process.env.TRADEUX_PASSWORD,\n  }),\n  trend: () => ({\n    host: process.env.TREND_API_HOST || '127.0.0.1',\n    port: parseInt(process.env.PORT || '3001', 10),\n    email: process.env.EM || process.env.TRADEUX_EMAIL,\n    password: process.env.PW || process.env.TRADEUX_PASSWORD,\n  }),\n};\nconst configs = {\n  paper: { hostEnv:'PAPER_API_HOST', emailEnvs:['EM','DEFAULT_SETTINGS_EMAIL','TRADEUX_EMAIL'], passwordEnvs:['PW','DEFAULT_SETTINGS_PWD','TRADEUX_PASSWORD'] },\n  farm:  { hostEnv:'FARM_API_HOST',  emailEnvs:['EM','TRADEUX_EMAIL'], passwordEnvs:['PW','TRADEUX_PASSWORD'] },\n  trend: { hostEnv:'TREND_API_HOST', emailEnvs:['EM','TRADEUX_EMAIL'], passwordEnvs:['PW','TRADEUX_PASSWORD'] },\n};\n\n// combos de env: vazio, cada fonte s\u00f3, prioridade entre fontes, string vazia (deve ser tratada como ausente), porta custom\nconst scenarios = [\n  {},\n  { EM:'a@x', PW:'p1' },\n  { DEFAULT_SETTINGS_EMAIL:'d@x', DEFAULT_SETTINGS_PWD:'dp' },\n  { TRADEUX_EMAIL:'t@x', TRADEUX_PASSWORD:'tp' },\n  { EM:'a@x', DEFAULT_SETTINGS_EMAIL:'d@x', TRADEUX_EMAIL:'t@x', PW:'p1', DEFAULT_SETTINGS_PWD:'dp', TRADEUX_PASSWORD:'tp' },\n  { DEFAULT_SETTINGS_EMAIL:'d@x', TRADEUX_EMAIL:'t@x', DEFAULT_SETTINGS_PWD:'dp', TRADEUX_PASSWORD:'tp' }, // sem EM/PW -> 2a fonte (paper) ou 2a (farm=TRADEUX)\n  { EM:'', TRADEUX_EMAIL:'t@x', PW:'', TRADEUX_PASSWORD:'tp' }, // string vazia = falsy\n  { PAPER_API_HOST:'10.0.0.1', FARM_API_HOST:'10.0.0.2', TREND_API_HOST:'10.0.0.3', PORT:'9090' },\n  { PORT:'abc' }, // parseInt('abc') = NaN nos DOIS lados -> deve bater\n];\n\nlet pass=0, fail=0;\nfor (const [name, cfg] of Object.entries(configs)) {\n  for (const sc of scenarios) {\n    set(sc);\n    const oracle = oracles[name]();\n    const got = resolveEnv({ ...cfg });\n    const eq = JSON.stringify(oracle.host)===JSON.stringify(got.host)\n      && ((Number.isNaN(oracle.port)&&Number.isNaN(got.port)) || oracle.port===got.port)\n      && JSON.stringify(oracle.email)===JSON.stringify(got.email)\n      && JSON.stringify(oracle.password)===JSON.stringify(got.password);\n    if (eq) pass++; else { fail++; console.log(`FAIL [${name}] env=${JSON.stringify(sc)}\\n  oracle=${JSON.stringify(oracle)}\\n  got   =${JSON.stringify(got)}`); }\n  }\n}\nconsole.log(`\\nresolveEnv equival\u00eancia: ${pass} PASS / ${fail} FAIL (${Object.keys(configs).length} configs \u00d7 ${scenarios.length} cen\u00e1rios)`);\nprocess.exit(fail?1:0);\nEOF\nnode /tmp/test_resolveenv.js",
+  "description": "Run offline equivalence test for resolveEnv vs original inline expressions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> resolveEnv equivalência: 27 PASS / 0 FAIL (3 configs × 9 cenários)
+> ```
+
+## 🤖 Claude *(18:47:08)*
+
+
+## 🤖 Claude *(18:47:10)*
+
+`resolveEnv` é **provadamente equivalente** (27/27, incluindo os edge-cases de string-vazia e `PORT` não-numérica → `NaN` dos dois lados). Agora `node --check` final na lib + lanço o workflow de **verificação adversarial + gate QA/TL**:
+
+## 🤖 Claude *(18:47:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "node --check backend/scripts/lib/apiClient.js && echo \"\u2713 apiClient.js (p\u00f3s-rename) sintaxe OK\"",
+  "description": "Re-check lib syntax after rename"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ apiClient.js (pós-rename) sintaxe OK
+> ```
+
+## 🤖 Claude *(18:48:03)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'blocoB-apiclient-verify-gate',\n  description: 'Verificacao adversarial de equivalencia (lib + 3 scripts) + gate QA/TL do refactor apiClient.js (Bloco B Fase 1)',\n  phases: [\n    { title: 'Verify', detail: 'refutar equivalencia byte/comportamental \u2014 1 verificador por alvo' },\n    { title: 'Gate', detail: 'qa-engineer + tech-lead sobre a mudanca inteira' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux';\nconst ORIG = '/tmp/blocoB-orig';\n\nconst CONTEXT = `MUDANCA EM REVISAO \u2014 Bloco B Fase 1 do Motor de Estrategias (TradeUX):\nExtraido um modulo DRY ${REPO}/backend/scripts/lib/apiClient.js que centraliza as PRIMITIVAS HTTP\n(req / login / findAutomationByName) + um helper resolveEnv (resolucao de host/port/credenciais com fallbacks),\nantes COPIADAS verbatim em cada script de setup. Refatorados 3 consumidores p/ usar a lib:\n  - ${REPO}/backend/scripts/setup-paper-trilhas.js\n  - ${REPO}/backend/scripts/setup-farm.js\n  - ${REPO}/backend/scripts/setup-trend.js\nOriginais (pre-refactor) salvos em ${ORIG}/ p/ comparacao via 'diff'.\n\nFATOS IMPORTANTES (verifique, nao confie cegamente):\n- Estes scripts sao CLIs de setup/recovery (rodados manualmente, ex.: 'node scripts/setup-farm.js' pos-nuke).\n  NAO sao 'require'-ados pelo backend em runtime (Dockerfile faz COPY . .) -> zero impacto no sistema vivo/congelado.\n- O UNICO desvio funcional entre os 3 era o cap de paginacao do findAutomationByName (paper=80, farm=40, trend=30).\n  No refactor isso foi preservado por CALL-SITE: cada script faz 'client.findAutomationByName(token, name, <cap>)'.\n- Comportamento canonico a PRESERVAR: req() usa modulo 'http' puro, header de auth 'authorization' MINUSCULO com\n  token CRU (sem 'Bearer'), timeout 15000ms, NUNCA rejeita (erro/timeout -> {status:0,body}); login: POST /login\n  {email,password} -> body.token, sem token -> console.error('LOGIN_FAIL '+status)+process.exit(1).\n- resolveEnv ja foi testado offline (27/27 cenarios) reproduzindo as expressoes inline originais (incl. fallback\n  triplo do paper EM||DEFAULT_SETTINGS_EMAIL||TRADEUX_EMAIL e o nuance DEFAULT_SETTINGS_PWD).`;\n\nconst VERIFY_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['target', 'equivalent', 'confidence', 'issues', 'verdict'],\n  properties: {\n    target: { type: 'string' },\n    equivalent: { type: 'boolean', description: 'true se comportamento IDENTICO ao original (scripts) / fiel ao canonico (lib). Na duvida, FALSE.' },\n    confidence: { type: 'string', enum: ['high','medium','low'] },\n    issues: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['severity','desc'],\n      properties: { severity: { type: 'string', enum: ['blocker','major','minor','nit'] }, desc: { type: 'string' } } } },\n    verdict: { type: 'string', description: 'resumo de 1-3 linhas' },\n  },\n};\n\nconst GATE_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['role', 'verdict', 'mustFix', 'niceToHave', 'summary'],\n  properties: {\n    role: { type: 'string' },\n    verdict: { type: 'string', description: 'QA: PASS | PASS_COM_RESSALVAS | FAIL. TL: APPROVE | APPROVE_COM_SUGESTOES | REQUEST_CHANGES | BLOCK.' },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    niceToHave: { type: 'array', items: { type: 'string' } },\n    summary: { type: 'string' },\n  },\n};\n\n// ---- Phase 1: Verify (adversarial, paralelo) ----\nphase('Verify');\nconst SCRIPTS = ['setup-paper-trilhas.js', 'setup-farm.js', 'setup-trend.js'];\nconst CAPS = { 'setup-paper-trilhas.js': 80, 'setup-farm.js': 40, 'setup-trend.js': 30 };\n\nconst verifyTasks = [\n  // verificador da LIB\n  () => agent(\n    `${CONTEXT}\n\nSEU ALVO: a LIB ${REPO}/backend/scripts/lib/apiClient.js. Leia-a INTEIRA. Compare o corpo de req(), login() e\nfindAutomationByName() com o codigo canonico descrito acima e com qualquer um dos originais em ${ORIG}/ (ex.:\n'diff <(sed -n ... ) ...' ou so leia e compare manualmente).\n\nSeja ADVERSARIAL: tente REFUTAR que a lib reproduz fielmente o comportamento canonico. Cheque especificamente:\n(1) req() byte-fiel (headers, timeout duplo option+on('timeout')+destroy, resolve-only nunca-reject, parse JSON com fallback string);\n(2) login() faz exatamente o mesmo (endpoint, shape do body, extracao body.token, LOGIN_FAIL+exit(1));\n(3) findAutomationByName: paginacao 1-indexed, page size 10, match exato a.name===name, maxPages default sensato;\n(4) resolveEnv: host '(hostEnv && env)||127.0.0.1', port parseInt(env||'3001',10), creds primeiro-nao-vazio;\n(5) qualquer bug de escopo/closure (ex.: BASE capturado certo), require relativo './lib/apiClient' correto,\n    e que module.exports expoe createClient/resolveEnv.\nNa MENOR duvida de equivalencia, marque equivalent=false e explique. NAO edite nada.`,\n    { label: 'verify:lib', phase: 'Verify', schema: VERIFY_SCHEMA }\n  ),\n  // verificadores dos 3 scripts\n  ...SCRIPTS.map(f => () => agent(\n    `${CONTEXT}\n\nSEU ALVO: ${REPO}/backend/scripts/${f}. Rode 'diff -u ${ORIG}/${f} ${REPO}/backend/scripts/${f}' e analise CADA hunk.\nLeia tambem a lib ${REPO}/backend/scripts/lib/apiClient.js p/ confirmar que os bindings locais reproduzem o original.\n\nSeja ADVERSARIAL: tente REFUTAR que o script refatorado se comporta IDENTICAMENTE ao original ${ORIG}/${f}. Cheque:\n(1) o cap de paginacao deste script (${CAPS[f]}) foi PRESERVADO no call-site 'client.findAutomationByName(token, name, ${CAPS[f]})';\n(2) os recipes (ensureMonitor/ensureTemplate/ensureAutomation/setupSymbol) ficaram BYTE-IDENTICOS (o diff NAO deve toca-los);\n(3) o EM/PW resolvido tem os MESMOS fallbacks do original (nomes e ORDEM), e a validacao '!EM||!PW' continua;\n(4) 'req' e 'findAutomationByName' locais apontam pra lib e sao usados igual; nenhuma referencia orf\u00e3 a 'http' ou ao req/finder antigos;\n(5) o login inline virou 'await client.login(EM, PW)' SEM mudar semantica (mesmo exit em falha);\n(6) nada alem do esperado mudou (sem linha-branca dupla, sem regressao de comportamento idempotente).\nNa MENOR duvida, equivalent=false. NAO edite nada.`,\n    { label: `verify:${f}`, phase: 'Verify', schema: VERIFY_SCHEMA }\n  )),\n];\nconst verifyResults = (await parallel(verifyTasks)).filter(Boolean);\nconst refuted = verifyResults.filter(r => r && r.equivalent === false);\nlog(`Verify: ${verifyResults.length} alvos; ${refuted.length} com equivalent=false`);\n\n// ---- Phase 2: Gate QA + TL (paralelo) ----\nphase('Gate');\nconst verifyDigest = verifyResults.map(r => `- ${r.target}: equivalent=${r.equivalent} (${r.confidence}) \u2014 ${r.verdict}`).join('\\n');\n\nconst gateTasks = [\n  () => agent(\n    `${CONTEXT}\n\nVoce e o QA gate. Revise a mudanca INTEIRA: a lib + os 3 diffs ('diff -u ${ORIG}/<f> ${REPO}/backend/scripts/<f>').\nResultado da verificacao de equivalencia independente:\n${verifyDigest}\n\nFoque em: correcao/equivalencia comportamental, idempotencia dos scripts de recovery preservada, edge-cases (env\nausente/vazia, porta nao-numerica, login falho), e se ha cobertura de teste suficiente (ja existe um teste offline\nde resolveEnv 27/27; vale sugerir mais?). De um veredito QA (PASS | PASS_COM_RESSALVAS | FAIL) com mustFix vs niceToHave.`,\n    { label: 'gate:QA', phase: 'Gate', schema: GATE_SCHEMA, agentType: 'qa-engineer' }\n  ),\n  () => agent(\n    `${CONTEXT}\n\nVoce e o tech-lead / code owner. Faca a decisao de merge sobre a mudanca INTEIRA (lib + 3 diffs).\nResultado da verificacao de equivalencia independente:\n${verifyDigest}\n\nAvalie design da API da lib (createClient/resolveEnv/findAutomationByName com maxPages), manutenibilidade,\naderencia as convencoes do repo (comentarios pt-BR, estilo), risco (sao recovery scripts; lib reusavel pelos outros\n5 setup-*.js depois), e se o escopo esta certo (Fase 1 = so transporte/auth/discovery; recipes ficam pra depois).\nDe um veredito TL (APPROVE | APPROVE_COM_SUGESTOES | REQUEST_CHANGES | BLOCK) com mustFix vs niceToHave.`,\n    { label: 'gate:TL', phase: 'Gate', schema: GATE_SCHEMA, agentType: 'tech-lead' }\n  ),\n];\nconst gateResults = (await parallel(gateTasks)).filter(Boolean);\n\nreturn { verify: verifyResults, refuted: refuted.length, gate: gateResults };\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wouy83rfi
+> Summary: Verificacao adversarial de equivalencia (lib + 3 scripts) + gate QA/TL do refactor apiClient.js (Bloco B Fase 1)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/subagents/workflows/wf_3851809f-d2b
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/blocob-apiclient-verify-gate-wf_3851809f-d2b.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/blocob-apiclient-verify-gate-wf_3851809f-d2b.js"} to iterate without resending the script.)
+> Run ID: wf_3851809f-d2b
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/blocob-apiclient-verify-gate-wf_3851809f-d2b.js", resumeFromRunId: "wf_3851809f-d2b"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:48:08)*
+
+
+## 🤖 Claude *(18:48:18)*
+
+Implementação concluída e auto-verificada. Lancei o gate adversarial em background (workflow `wouy83rfi`).
+
+## Estado da Fase 1 (apiClient.js)
+
+**Entregue:**
+- ✅ `backend/scripts/lib/apiClient.js` — `createClient({host,port}) → {req, login, findAutomationByName}` + `resolveEnv()`. `req` byte-fiel ao canônico, `findAutomationByName(token,name,maxPages)`.
+- ✅ 3 consumidores refatorados (paper/farm/trend) — diffs **cirúrgicos** (−25 linhas/script, 75 de duplicação eliminadas), recipes **intocados**, cap de paginação **preservado por call-site** (80/40/30).
+
+**Auto-verificação (minha, antes do gate):**
+- ✅ `node --check` nos 4 arquivos · zero resíduos (`http`/req antigo) · zero linha-branca dupla
+- ✅ `diff` confirma mudança = só transporte/auth/discovery
+- ✅ **`resolveEnv` 27/27** num teste offline contra a expressão inline original (incl. edge-cases string-vazia e `PORT` não-numérica)
+
+**Rodando agora (workflow `wouy83rfi`):**
+1. **Verify** — 4 verificadores adversariais em paralelo (lib + 3 scripts), instruídos a *refutar* equivalência (default FALSE na dúvida).
+2. **Gate** — `qa-engineer` + `tech-lead` sobre a mudança inteira.
+
+Aguardo o resultado pra te trazer o veredito consolidado. Se passar limpo, a lib fica pronta pra os outros 5 `setup-*.js` (fast-follow) e abre caminho pras "recipes declarativas". **Não vou commitar** sem teu OK — e o `TRADING_HALT` segue intocado (mudança é zero-runtime).
+
+## 👤 User *(18:54:59)*
+
+<task-notification>
+<task-id>wouy83rfi</task-id>
+<tool-use-id>toolu_01HLbV7tLp3RWB5CCWiNrUWi</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wouy83rfi.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Verificacao adversarial de equivalencia (lib + 3 scripts) + gate QA/TL do refactor apiClient.js (Bloco B Fase 1)" completed</summary>
+<result>{"verify":[{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js","equivalent":true,"confidence":"high","issues":[{"severity":"nit","desc":"findAutomationByName ganhou um default maxPages=50 que os originais nao tinham (era literal hardcoded no for-loop: 80/40/30). Sem impacto: os 3 consumidores SEMPRE passam o cap explicito via shim local (verificado: nenhuma chamada sem 3o arg), e mesmo se o default fosse atingido ele e apenas um bound de seguranca da paginacao (o loop quebra em rows.length&lt;10 ou rows vazio, que o backend sempre produz). Comportamento inerte."},{"severity":"nit","desc":"module.exports expoe firstEnv adicionalmente (alem de createClient/resolveEnv pedidos). Helper interno exportado a mais; nao altera comportamento de nenhum consumidor."}],"verdict":"A lib reproduz fielmente o comportamento canonico. req() e byte-identico (modulo comentarios) aos 3 originais; login() e findAutomationByName() batem em endpoint, shape, extracao de token, LOGIN_FAIL+exit(1), paginacao 1-indexed/page-size-10/match-exato; resolveEnv replica os fallbacks de host/port/creds. Validado por diff normalizado + 32 testes de runtime (resolveEnv 15/15, req+find contra mock server, timeout shape, login exit-code, require path, exports). Caps 80/40/30 preservados por call-site."},{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js","equivalent":true,"confidence":"high","issues":[{"severity":"nit","desc":"A lib define maxPages default=50, mas o original do paper era 80. Se algum dia o call-site (linha 38) for editado p/ omitir o 3o arg, o bound de paginacao cairia silenciosamente p/ 50. Hoje esta CORRETO (passa 80 explicitamente); e so um risco de regressao futura, sem impacto atual."},{"severity":"nit","desc":"O host agora e resolvido uma vez no module-load via resolveEnv e capturado no closure BASE do createClient, em vez de inline dentro do req. Comportamento identico (mesma env, mesma hora de avaliacao), mas o ponto de avaliacao mudou de dentro-do-req p/ load-time. Sem efeito observavel nestes CLIs de um disparo."}],"verdict":"Refactor fiel: req/login/findAutomationByName migrados verbatim p/ a lib (req sem 'this', transporte byte-equivalente: http puro, header 'authorization' cru, timeout 15000, nunca rejeita, JSON.parse c/ fallback). Cap 80 preservado no call-site; recipes (ensureMonitor/Template/Automation/setupSymbol) e corpo pos-login byte-identicos; EM/PW c/ mesmos fallbacks/ordem e validacao !EM||!PW intacta; login mantem exit(1). resolveEnv 17/17 em teste offline. Sem refs orfas a http/BASE/req-antigo. Comportamento IDENTICO ao original."},{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js","equivalent":true,"confidence":"high","issues":[{"severity":"nit","desc":"In the lib, req closes over the module-level 'http' and BASE is captured per-createClient closure (vs original's module-level BASE/http). Behaviorally identical with a single client instance; no functional impact."},{"severity":"nit","desc":"Lib's findAutomationByName has a default maxPages=50, which differs from this script's historical 40. Irrelevant in practice because the call-site always passes 40 explicitly (client.findAutomationByName(token, name, 40)); the default is never used here."}],"verdict":"Refactor de setup-farm.js e comportamentalmente IDENTICO ao original. diff confirma que so mudaram os hunks esperados (require http-&gt;lib, BASE/EM/PW-&gt;resolveEnv, req/finder-&gt;client, login inline-&gt;client.login, remocao do findAutomationByName inline). Cap de paginacao 40 preservado no call-site; recipes (ensure*/setupSymbol) byte-identicas; fallbacks EM/PW e guard !EM||!PW intactos; sem referencias orfas a http/req antigos; semantica de login/req/finder fiel ao canonico na lib."},{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js","equivalent":true,"confidence":"high","issues":[],"verdict":"Refactor de setup-trend.js para usar lib/apiClient e comporta-se IDENTICAMENTE ao original. Cap 30 preservado no call-site, recipes/IIFE byte-identicos, resolveEnv com 6/6 parity (incl. edge cases), login/req/finder fieis. Nenhuma ref orfa a http/BASE/inline."}],"refuted":0,"gate":[{"role":"QA","verdict":"PASS_COM_RESSALVAS","mustFix":[],"niceToHave":["COMMITAR o teste offline de equivalencia (o '27/27 resolveEnv' citado NAO existe no repo: `find` em /home/gcrux-tradeux/tradeux/backend/scripts/lib so retorna apiClient.js, nenhum *.test.js; grep por resolveEnv/createClient nao acha arquivo de teste). Coverage atual = efemera (rodada e descartada). Criar /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.test.js cobrindo: resolveEnv (fallback host/port/NaN/triple-email), req contra mock http (token CRU minusculo, timeout shape, never-reject, JSON-fallback), findAutomationByName (1-indexed, page-size-10, stop-on-partial, cap por call-site).","Wire o teste no CI/package.json: nada em /home/gcrux-tradeux/tradeux/.github/workflows/ci.yml nem em backend/package.json referencia a lib ou qualquer teste de scripts. Sem isso, uma regressao futura na lib (que agora 3 scripts compartilham) passa silenciosa. Sugestao: `node scripts/lib/apiClient.test.js` num step do job backend, ou um `npm run test:scripts`.","Alinhar o default de maxPages: a lib usa default=50, mas os 3 call-sites passam cap explicito (80/40/30), entao o 50 NUNCA e exercido. Inocuo hoje, mas e uma armadilha pra futuros consumidores que esqueçam o cap (50 pode truncar busca em base grande). Documentar no JSDoc que o cap e obrigatorio por design ou remover o default.","DRY so parcial (esperado p/ Fase 1, mas registrar): 5 scripts irmaos ainda carregam copias inline do mesmo req/findAutomationByName — /home/gcrux-tradeux/tradeux/backend/scripts/{setup-harvester.js,activate-trend.js,automation-ctl.js,setup-flow-gate.js,setup-grid.js}. Especialmente activate-trend.js, que e o par de recovery do setup-trend.js (rodados em sequencia pos-nuke) — migra-lo junto evita drift entre dois scripts acoplados.","Cosmetico (nao corrigir): firstEnv usa .find(Boolean) e retorna `undefined` quando todas as envs estao vazias, enquanto o original `A||B||C` retornava `''` (ultima string vazia). Divergencia REAL no valor mas INOBSERVAVEL: o unico caso afetado e 'todas falsy', que o guard `if(!EM||!PW)` intercepta identicamente (exit 1) em ambas as versoes — '' nunca alcanca client.login. Se quiser paridade byte-exata, usar reduce com '||' ao inves de find(Boolean)."],"summary":"VEREDITO: PASS COM RESSALVAS. Refactor DRY fiel e cirurgico de 3 CLIs de setup/recovery (NAO carregados pelo backend em runtime — Dockerfile faz COPY . ., zero impacto no sistema vivo/congelado em TRADING_HALT). Equivalencia comportamental CONFIRMADA por verificacao independente: (1) diffs limpos — exatamente os hunks esperados (require http-&gt;lib, env-&gt;resolveEnv, req/finder-&gt;client, login inline-&gt;client.login, remocao do finder inline), 4/4/3 hunks, recipes (ensure*/setupSymbol/IIFE) byte-identicas, zero edits de dominio, zero refs orfas a http/BASE/req-antigo (grep limpo); node --check OK nos 4. (2) Caps de paginacao 80/40/30 preservados POR CALL-SITE — validado contra mock server (1-indexed, page-size-10, stop-on-partial, cap respeitado, no-match-&gt;null). (3) req() canonico: `const req = client.req` funciona destacado (fecha sobre BASE, nao usa this), token CRU em 'authorization' minusculo sem Bearer, Content-Length so com body, timeout 15000 never-reject-&gt;{status:0}, JSON.parse com fallback string. (4) resolveEnv: paridade host/port (incl. NaN p/ porta nao-numerica, fallback 127.0.0.1/3001) e triple-fallback de email. (5) Guard `!EM||!PW` e exit(1) no login falho intactos -&gt; IDEMPOTENCIA dos recovery preservada (ensureMonitor 409, findAutomationByName antes de criar). [SEV-BAIXA] Unica divergencia: firstEnv retorna undefined vs '' no caso all-falsy — INOBSERVAVEL (mascarada pelo guard). [SEV-MEDIA, nao-bloqueante p/ CLI util] O teste '27/27' citado NAO esta commitado e NAO ha wiri
+... (truncated 4616 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wouy83rfi.output)</result>
+<usage><agent_count>6</agent_count><subagent_tokens>308551</subagent_tokens><tool_uses>65</tool_uses><duration_ms>415698</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(18:55:03)*
+
+
+## 🤖 Claude *(18:55:04)*
+
+Gate voltou. Verify = **4/4 equivalent=true (high), 0 refutados**. QA = **PASS_COM_RESSALVAS**. Vou ler o veredito completo do TL (truncado) + as ressalvas:
+
+## 🤖 Claude *(18:55:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/parse_gate.py <<'PYEOF'\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/wouy83rfi.output'))\nres=d[\"result\"]\nprint(\"refuted:\",res[\"refuted\"])\nfor g in res[\"gate\"]:\n    print(\"=\"*80)\n    print(\"ROLE:\",g[\"role\"],\" VERDICT:\",g[\"verdict\"])\n    print(\"-- mustFix:\")\n    for m in g[\"mustFix\"]: print(\"   \u2022\",m)\n    print(\"-- niceToHave:\")\n    for n in g[\"niceToHave\"]: print(\"   \u2023\",n[:400])\n    print(\"-- summary:\",g[\"summary\"][:1500])\nPYEOF\npython3 /tmp/parse_gate.py",
+  "description": "Parse full QA + TL gate verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> refuted: 0
+> ================================================================================
+> ROLE: QA  VERDICT: PASS_COM_RESSALVAS
+> -- mustFix:
+> -- niceToHave:
+>    ‣ COMMITAR o teste offline de equivalencia (o '27/27 resolveEnv' citado NAO existe no repo: `find` em /home/gcrux-tradeux/tradeux/backend/scripts/lib so retorna apiClient.js, nenhum *.test.js; grep por resolveEnv/createClient nao acha arquivo de teste). Coverage atual = efemera (rodada e descartada). Criar /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.test.js cobrindo: resolveEnv (fallba
+>    ‣ Wire o teste no CI/package.json: nada em /home/gcrux-tradeux/tradeux/.github/workflows/ci.yml nem em backend/package.json referencia a lib ou qualquer teste de scripts. Sem isso, uma regressao futura na lib (que agora 3 scripts compartilham) passa silenciosa. Sugestao: `node scripts/lib/apiClient.test.js` num step do job backend, ou um `npm run test:scripts`.
+>    ‣ Alinhar o default de maxPages: a lib usa default=50, mas os 3 call-sites passam cap explicito (80/40/30), entao o 50 NUNCA e exercido. Inocuo hoje, mas e uma armadilha pra futuros consumidores que esqueçam o cap (50 pode truncar busca em base grande). Documentar no JSDoc que o cap e obrigatorio por design ou remover o default.
+>    ‣ DRY so parcial (esperado p/ Fase 1, mas registrar): 5 scripts irmaos ainda carregam copias inline do mesmo req/findAutomationByName — /home/gcrux-tradeux/tradeux/backend/scripts/{setup-harvester.js,activate-trend.js,automation-ctl.js,setup-flow-gate.js,setup-grid.js}. Especialmente activate-trend.js, que e o par de recovery do setup-trend.js (rodados em sequencia pos-nuke) — migra-lo junto evita d
+>    ‣ Cosmetico (nao corrigir): firstEnv usa .find(Boolean) e retorna `undefined` quando todas as envs estao vazias, enquanto o original `A||B||C` retornava `''` (ultima string vazia). Divergencia REAL no valor mas INOBSERVAVEL: o unico caso afetado e 'todas falsy', que o guard `if(!EM||!PW)` intercepta identicamente (exit 1) em ambas as versoes — '' nunca alcanca client.login. Se quiser paridade byte-e
+> -- summary: VEREDITO: PASS COM RESSALVAS. Refactor DRY fiel e cirurgico de 3 CLIs de setup/recovery (NAO carregados pelo backend em runtime — Dockerfile faz COPY . ., zero impacto no sistema vivo/congelado em TRADING_HALT). Equivalencia comportamental CONFIRMADA por verificacao independente: (1) diffs limpos — exatamente os hunks esperados (require http->lib, env->resolveEnv, req/finder->client, login inline->client.login, remocao do finder inline), 4/4/3 hunks, recipes (ensure*/setupSymbol/IIFE) byte-identicas, zero edits de dominio, zero refs orfas a http/BASE/req-antigo (grep limpo); node --check OK nos 4. (2) Caps de paginacao 80/40/30 preservados POR CALL-SITE — validado contra mock server (1-indexed, page-size-10, stop-on-partial, cap respeitado, no-match->null). (3) req() canonico: `const req = client.req` funciona destacado (fecha sobre BASE, nao usa this), token CRU em 'authorization' minusculo sem Bearer, Content-Length so com body, timeout 15000 never-reject->{status:0}, JSON.parse com fallback string. (4) resolveEnv: paridade host/port (incl. NaN p/ porta nao-numerica, fallback 127.0.0.1/3001) e triple-fallback de email. (5) Guard `!EM||!PW` e exit(1) no login falho intactos -> IDEMPOTENCIA dos recovery preservada (ensureMonitor 409, findAutomationByName antes de criar). [SEV-BAIXA] Unica divergencia: firstEnv retorna undefined vs '' no caso all-falsy — INOBSERVAVEL (mascarada pelo guard). [SEV-MEDIA, nao-bloqueante p/ CLI util] O teste '27/27' citado NAO esta commitado e NAO
+> ================================================================================
+> ROLE: Tech Lead / Code Owner (TradeUX)  VERDICT: APPROVE_COM_SUGESTOES
+> -- mustFix:
+> -- niceToHave:
+>    ‣ Cap de paginacao por call-site e fragil de manutencao: o numero magico (80/40/30) vive no consumidor enquanto a doutrina (o que maxPages significa) vive na lib. Centralizar como constante nomeada ou documentar no call-site por que cada script tem cap diferente — hoje a divergencia 80/40/30 nao tem racional registrado e tende a virar copy-paste sem sentido. (paths: backend/scripts/setup-paper-trilh
+>    ‣ resolveEnv com port invalido: parseInt('notanumber') -> NaN passa silenciosamente (fiel ao original, por isso nao bloqueia). Como a lib agora e ponto unico reusavel pelos outros setup-*.js, vale um guard defensivo (Number.isNaN -> fallback 3001 ou throw claro) numa proxima iteracao; senao a falha so aparece como ECONNREFUSED obscuro. (path: backend/scripts/lib/apiClient.js:33)
+>    ‣ client.req e rebinded como 'const req = client.req' em cada consumidor (seguro: a lib nao usa 'this', verificado). OK, mas no proximo setup-*.js prefira 'client.req(...)' direto para nao depender desse contrato implicito de rebind-safety.
+>    ‣ BASE e exportado pelo createClient mas nenhum caller usa — superficie morta inofensiva; pode sair ou ganhar comentario de que e so para debug/introspeccao. (path: backend/scripts/lib/apiClient.js:81)
+>    ‣ Ao migrar grid/harvester/flow-gate (os 3 setup-*.js que ainda inlinam req/http.request) na proxima sub-fase, adicionar um self-test minimo da lib ao CI/preflight, ja que ela vira dependencia compartilhada de toda a familia setup-*. (paths: backend/scripts/setup-grid.js, setup-harvester.js, setup-flow-gate.js)
+> -- summary: VEREDITO: APPROVE COM SUGESTOES.
+> 
+> Racional: mudanca pequena, bem-escopada, reversivel e de baixissimo risco. Os 3 diffs sao cirurgicos — confinados exatamente aos hunks esperados (require http->lib; BASE/EM/PW->resolveEnv; req/finder->client; login inline->client.login; remocao do findAutomationByName inline). Verifiquei de forma independente, nao confiei cegamente no relatorio:
+> (1) 'node --check' passa nos 4 arquivos (lib + 3 consumidores);
+> (2) ZERO refs orfas a http/BASE/req-antigo nos consumidores;
+> (3) resolveEnv reproduz as expressoes inline originais em 9/9 cenarios, incluindo edge cases: host vazio->127.0.0.1, port vazio->3001, port NaN identico em ambos, e o fallback triplo de credenciais do paper (EM||DEFAULT_SETTINGS_EMAIL||TRADEUX_EMAIL) com EM-vazio-cai-pro-proximo;
+> (4) lib nao usa 'this' -> o rebind 'const req = client.req' e seguro;
+> (5) caps 80/40/30 preservados por call-site (confirmado no diff).
+> 
+> Blast radius = praticamente nulo: sao CLIs de setup/recovery rodados a mao (node scripts/setup-*.js pos-nuke), NAO sao require-ados pelo backend em runtime (grep em backend/src nao referencia nem os scripts nem a lib). Logo NAO tocam beholder.js nem o money-path — fora da zona de alto risco. O sistema esta CONGELADO (TRADING_HALT=true) e essa mudanca nao interage com o flip do HALT.
+> 
+> Seguranca: OK. .env segue gitignored (.gitignore:71-72); nenhum segredo literal na lib (so referencias a nomes de env e ao token cru em transito, que e o comportamento canonico exigido pel
+> ```
+
+## 🤖 Claude *(18:56:48)*
+
+
+## 🤖 Claude *(18:56:57)*
+
+Resultado do gate — **forte**:
+
+| | Veredito | must-fix |
+|---|---|---|
+| **Verify** (4 alvos adversariais) | 4/4 `equivalent=true` (high), **0 refutados** | — |
+| **QA** (`qa-engineer`) | **PASS COM RESSALVAS** | **nenhum** |
+| **TL** (`tech-lead`) | **APPROVE COM SUGESTÕES** | **nenhum** |
+
+Equivalência confirmada de forma independente (diff limpo, mock-server pro `req`/finder, `resolveEnv` paridade incl. NaN/triplo-fallback, caps preservados, recipes byte-idênticas). **Zero bloqueadores.**
+
+As ressalvas são todas *nice-to-have*. As de **alto valor** eu vou endereçar agora (Ultracode + a lib virou dependência compartilhada):
+1. **Commitar o teste** (hoje é efêmero em `/tmp`) + **wire no CI** — top item do QA; sem isso uma regressão futura na lib passa silenciosa.
+2. **Footgun do `maxPages` default** — ambos flagaram; subo pra um runaway-guard amplo + doc.
+3. **Enxugar superfície morta** — tirar `BASE` do retorno e `firstEnv` dos exports.
+
+Deferidas (próximo passo): migrar os 5 scripts irmãos (`activate-trend` primeiro — par de recovery do trend) e guard de `port` NaN.
+
+Vou ver onde encaixar o teste no CI:
+
+## 🤖 Claude *(18:56:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== ci.yml ===\"; sed -n '1,200p' .github/workflows/ci.yml\necho; echo \"=== backend/package.json (scripts) ===\"; sed -n '1,40p' backend/package.json | grep -A20 '\"scripts\"'",
+  "description": "Read CI workflow and backend package.json scripts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ci.yml ===
+> name: CI
+> 
+> on:
+>   push:
+>     branches: [master, main]
+>   pull_request:
+> 
+> jobs:
+>   # Build do frontend (Vite) — valida que o bundle de produção compila.
+>   frontend:
+>     name: frontend (vite build)
+>     runs-on: ubuntu-latest
+>     defaults:
+>       run:
+>         working-directory: frontend
+>     steps:
+>       - uses: actions/checkout@v4
+>       - uses: actions/setup-node@v4
+>         with:
+>           node-version: 22
+>           cache: npm
+>           cache-dependency-path: frontend/package-lock.json
+>       - run: npm ci
+>       - name: Build
+>         run: npm run build
+>         env:
+>           REACT_APP_API_URL: http://localhost:8080/api
+>           REACT_APP_WS_URL: ws://localhost:8080/ws
+>           REACT_APP_BWS_URL: wss://stream.binance.com:9443/ws
+> 
+>   # Migrations + seeds nos dois bancos suportados (MySQL padrão e Postgres/Supabase).
+>   backend:
+>     name: backend (migrate+seed)
+>     runs-on: ubuntu-latest
+>     strategy:
+>       fail-fast: false
+>       matrix:
+>         dialect: [mysql, postgres]
+>     services:
+>       mysql:
+>         image: mysql:8.0
+>         env:
+>           MYSQL_ROOT_PASSWORD: rootpw
+>           MYSQL_DATABASE: tradeux
+>           MYSQL_USER: tradeux
+>           MYSQL_PASSWORD: tradeuxpw
+>         ports:
+>           - 3306:3306
+>         options: >-
+>           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpw"
+>           --health-interval=10s --health-timeout=5s --health-retries=15
+>       postgres:
+>         image: postgres:16
+>         env:
+>           POSTGRES_DB: tradeux
+>           POSTGRES_USER: tradeux
+>           POSTGRES_PASSWORD: tradeuxpw
+>         ports:
+>           - 5432:5432
+>         options: >-
+>           --health-cmd="pg_isready -U tradeux"
+>           --health-interval=10s --health-timeout=5s --health-retries=15
+>     defaults:
+>       run:
+>         working-directory: backend
+>     env:
+>       DB_DIALECT: ${{ matrix.dialect }}
+>       DB_NAME: tradeux
+>       DB_USER: tradeux
+>       DB_PWD: tradeuxpw
+>       DB_HOST: 127.0.0.1
+>       DB_PORT: ${{ matrix.dialect == 'postgres' && '5432' || '3306' }}
+>       DB_SSL: 'false'
+>       DB_LOGS: 'false'
+>       NODE_ENV: development
+>       AES_KEY: '01234567890123456789012345678901'
+>       JWT_SECRET: ci-secret
+>       JWT_EXPIRES: '1800'
+>       DEFAULT_SETTINGS_EMAIL: ci@example.com
+>       DEFAULT_SETTINGS_PWD: cipass
+>       DEFAULT_SETTINGS_ACCESS_KEY: ci-access-key
+>       DEFAULT_SETTINGS_SECRET_KEY: ci-secret-key
+>     steps:
+>       - uses: actions/checkout@v4
+>       - uses: actions/setup-node@v4
+>         with:
+>           node-version: 22
+>           cache: npm
+>           cache-dependency-path: backend/package-lock.json
+>       - run: npm ci
+>       - name: Migrations (${{ matrix.dialect }})
+>         run: npx sequelize-cli db:migrate
+>       - name: Seeds (${{ matrix.dialect }})
+>         run: npx sequelize-cli db:seed:all
+>       - name: Re-run migrate+seed (idempotência)
+>         run: npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all
+> 
+>   # Integração MCP + agente: o agente sobe o tradeux-mcp e lista as ferramentas
+>   # (sem chave de modelo nem backend — valida o bridge ponta a ponta).
+>   integration:
+>     name: mcp + agent (--check)
+>     runs-on: ubuntu-latest
+>     steps:
+>       - uses: actions/checkout@v4
+>       - uses: actions/setup-node@v4
+>         with:
+>           node-version: 22
+>       - name: Install tradeux-mcp
+>         working-directory: tradeux-mcp
+>         run: npm ci
+>       - name: Install tradeux-agent
+>         working-directory: tradeux-agent
+>         run: npm ci
+>       - name: Agent --check (sobe o MCP e lista as ferramentas)
+>         working-directory: tradeux-agent
+>         env:
+>           TRADEUX_EMAIL: ci@example.com
+>           TRADEUX_PASSWORD: ci-pass
+>         run: node src/index.js --check
+>       - name: Dedup de notificacoes por assunto (self-test)
+>         working-directory: tradeux-agent
+>         run: npm test
+>       - name: Trava do cofre (SELL-BTC bloqueado em tradeux_place_order)
+>         working-directory: tradeux-mcp
+>         run: npm test
+> 
+>   # Auditoria de dependências (informativo — não bloqueia; ver SECURITY.md).
+>   audit:
+>     name: npm audit (informativo)
+>     runs-on: ubuntu-latest
+>     continue-on-error: true
+>     steps:
+>       - uses: actions/checkout@v4
+>       - uses: actions/setup-node@v4
+>         with:
+>           node-version: 22
+>       - name: Backend (prod)
+>         working-directory: backend
+>         run: npm audit --omit=dev || true
+>       - name: Frontend
+>         working-directory: frontend
+>         run: npm audit || true
+> 
+> === backend/package.json (scripts) ===
+>   "scripts": {
+>     "start": "node -r dotenv/config ./src/server",
+>     "dev": "npx nodemon --trace-warnings -r dotenv/config ./src/server",
+>     "createdb": "npx sequelize-cli db:create",
+>     "migratedb": "npx sequelize-cli db:migrate",
+>     "seeddb": "npx sequelize-cli db:seed:all",
+>     "build": "npm i && npm run migratedb && npm run seeddb"
+>   },
+>   "keywords": [],
+>   "author": "",
+>   "license": "ISC",
+>   "dependencies": {
+>     "@sendgrid/mail": "^8.1.6",
+>     "aes-js": "^3.1.2",
+>     "axios": "^1.16.1",
+>     "bcryptjs": "^2.4.3",
+>     "cors": "^2.8.5",
+>     "dotenv": "^10.0.0",
+>     "express": "^4.17.1",
+>     "express-async-errors": "^3.1.1",
+>     "helmet": "^4.6.0",
+> ```
+
+## 🤖 Claude *(18:57:17)*
+
+
+## 🤖 Claude *(18:57:19)*
+
+CI claro: testes vivem como `npm test` por pacote (agent/mcp), backend ainda não tem teste. O teste da lib é **puro node (sem deps, sem DB)** → encaixa num job isolado e leve + no preflight local. Vou ver o preflight pra wirar consistente:
+
+## 🤖 Claude *(18:57:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== ci-preflight.sh (estrutura) ===\"; grep -nE '^\\s*(echo|node|npm|bash|run_|step|##|#=|function|RUN|--only|--skip)' scripts/ci-preflight.sh | head -60\necho; echo \"=== total linhas ===\"; wc -l scripts/ci-preflight.sh",
+  "description": "Inspect ci-preflight.sh structure for wiring point"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ci-preflight.sh (estrutura) ===
+> 36:    --skip-frontend) SKIP_FRONTEND=true ;;
+> 37:    --skip-postgres) SKIP_POSTGRES=true ;;
+> 38:    --skip-mysql)    SKIP_MYSQL=true ;;
+> 39:    --skip-agent)    SKIP_AGENT=true ;;
+> 40:    --skip-lint)     SKIP_LINT=true ;;
+> 41:    --only-lint)     ONLY_LINT=true ;;
+> 54:  echo ""
+> 55:  echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+> 56:  echo -e "${CYAN}  TradeUX CI Pre-flight — Validação Local                 ${NC}"
+> 57:  echo -e "${CYAN}  $(date '+%Y-%m-%d %H:%M:%S %Z')                        ${NC}"
+> 58:  echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+> 59:  echo ""
+> 62:step_pass() { echo -e "  ${GREEN}✓ PASS${NC} $1"; ((PASS++)); }
+> 63:step_fail() { echo -e "  ${RED}✗ FAIL${NC} $1"; ((FAIL++)); }
+> 64:step_skip() { echo -e "  ${YELLOW}○ SKIP${NC} $1"; ((SKIP++)); }
+> 70:  echo -e "${BOLD}[0/5] Análise estática de migrations${NC}"
+> 72:    step_skip "lint (--skip-lint)"
+> 77:    step_pass "lint — migrations compatíveis com ambos dialetos"
+> 79:    step_fail "lint — problemas de compatibilidade detectados (veja acima)"
+> 81:  echo ""
+> 88:  echo -e "${BOLD}[1/5] Frontend build (Vite)${NC}"
+> 90:    step_skip "frontend build"
+> 99:    step_pass "frontend — bundle compilou sem erros"
+> 101:    step_fail "frontend — build falhou"
+> 104:  echo ""
+> 111:  echo -e "${BOLD}[2/5] Backend migrate+seed (MySQL)${NC}"
+> 113:    step_skip "mysql migrate+seed"
+> 119:    step_skip "mysql — container tradeux-db-1 não está rodando"
+> 126:      step_pass "mysql — migrate+seed idempotente OK"
+> 128:      step_fail "mysql — seed falhou"
+> 131:    step_fail "mysql — migrate falhou"
+> 133:  echo ""
+> 146:  echo -e "${BOLD}[3/5] Backend migrate+seed (Postgres — container efêmero)${NC}"
+> 148:    step_skip "postgres migrate+seed"
+> 155:  echo "  Subindo Postgres 16 efêmero..."
+> 174:    step_fail "postgres — container não ficou pronto em 30s"
+> 179:  echo "  Postgres pronto. Rodando migrations..."
+> 200:      echo "  Re-run (idempotência)..."
+> 217:        step_pass "postgres — migrate+seed+idempotência OK"
+> 219:        step_fail "postgres — falhou na re-run de idempotência"
+> 222:      step_fail "postgres — seed falhou"
+> 225:    step_fail "postgres — migrate falhou"
+> 231:  echo ""
+> 238:  echo -e "${BOLD}[4/5] MCP + Agent --check (integração)${NC}"
+> 240:    step_skip "agent --check"
+> 246:     node src/index.js --check 2>&1 | tail -5; then
+> 247:    step_pass "agent — MCP bridge e ferramentas OK"
+> 249:    step_fail "agent — --check falhou"
+> 252:  echo ""
+> 259:  echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+> 260:  echo -e "  ${GREEN}PASS: ${PASS}${NC}  ${RED}FAIL: ${FAIL}${NC}  ${YELLOW}SKIP: ${SKIP}${NC}"
+> 262:    echo -e "  ${GREEN}${BOLD}✓ Pronto para push — CI vai passar${NC}"
+> 264:    echo -e "  ${RED}${BOLD}✗ Corrija os ${FAIL} erro(s) antes do push${NC}"
+> 266:  echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
+> 
+> === total linhas ===
+> 280 scripts/ci-preflight.sh
+> ```
+
+## 🤖 Claude *(18:57:32)*
+
+
+## 🤖 Claude *(18:57:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/scripts/ci-preflight.sh",
+  "offset": 66,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 66	# ──────────────────────────────────────────────────────────
+> 67	# STEP 0: Análise estática de migrations (rápida, sem IO)
+> 68	# ──────────────────────────────────────────────────────────
+> 69	lint_migrations() {
+> 70	  echo -e "${BOLD}[0/5] Análise estática de migrations${NC}"
+> 71	  if $SKIP_LINT; then
+> 72	    step_skip "lint (--skip-lint)"
+> 73	    return
+> 74	  fi
+> 75	
+> 76	  if bash scripts/ci-lint-migrations.sh 2>&1; then
+> 77	    step_pass "lint — migrations compatíveis com ambos dialetos"
+> 78	  else
+> 79	    step_fail "lint — problemas de compatibilidade detectados (veja acima)"
+> 80	  fi
+> 81	  echo ""
+> 82	}
+> 83	
+> 84	# ──────────────────────────────────────────────────────────
+> 85	# STEP 1: Frontend build (Vite)
+> 86	# ──────────────────────────────────────────────────────────
+> 87	build_frontend() {
+> 88	  echo -e "${BOLD}[1/5] Frontend build (Vite)${NC}"
+> 89	  if $SKIP_FRONTEND || $ONLY_LINT; then
+> 90	    step_skip "frontend build"
+> 91	    return
+> 92	  fi
+> 93	
+> 94	  cd "$ROOT/frontend"
+> 95	  if REACT_APP_API_URL=http://localhost:8080/api \
+> 96	     REACT_APP_WS_URL=ws://localhost:8080/ws \
+> 97	     REACT_APP_BWS_URL=wss://stream.binance.com:9443/ws \
+> 98	     npx vite build --mode production 2>&1 | tail -5; then
+> 99	    step_pass "frontend — bundle compilou sem erros"
+> 100	  else
+> 101	    step_fail "frontend — build falhou"
+> 102	  fi
+> 103	  cd "$ROOT"
+> 104	  echo ""
+> 105	}
+> 106	
+> 107	# ──────────────────────────────────────────────────────────
+> 108	# STEP 2: Backend migrate+seed MySQL (container existente)
+> 109	# ──────────────────────────────────────────────────────────
+> 110	test_mysql() {
+> ```
+
+## 🤖 Claude *(18:57:38)*
+
+
+## 🤖 Claude *(18:57:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== onde as fun\u00e7\u00f5es s\u00e3o chamadas (main flow) ===\"; grep -nE 'lint_migrations|build_frontend|test_mysql|test_postgres|test_agent|^print_header|^summary|ONLY_LINT' scripts/ci-preflight.sh | tail -25",
+  "description": "Find main call sequence in preflight"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde as funções são chamadas (main flow) ===
+> 32:ONLY_LINT=false
+> 41:    --only-lint)     ONLY_LINT=true ;;
+> 69:lint_migrations() {
+> 87:build_frontend() {
+> 89:  if $SKIP_FRONTEND || $ONLY_LINT; then
+> 110:test_mysql() {
+> 112:  if $SKIP_MYSQL || $ONLY_LINT; then
+> 145:test_postgres() {
+> 147:  if $SKIP_POSTGRES || $ONLY_LINT; then
+> 237:test_agent() {
+> 239:  if $SKIP_AGENT || $ONLY_LINT; then
+> 258:summary() {
+> 275:lint_migrations
+> 276:build_frontend
+> 277:test_mysql
+> 278:test_postgres
+> 279:test_agent
+> 280:summary
+> ```
+
+## 🤖 Claude *(18:59:15)*
+
+
+## 🤖 Claude *(18:59:17)*
+
+Tenho a estrutura do preflight (funções → chamadas no fim, linhas 275-280). Plano: lib cleanups → escrever o teste → rodar → wirar `package.json`/`ci.yml`/`preflight`. Começando pelos 3 ajustes na lib:
+
+## 🤖 Claude *(18:59:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "old_string": "    // Finder paginado de automa\u00e7\u00f5es por nome EXATO. maxPages = bound de seguran\u00e7a da pagina\u00e7\u00e3o (default 50).\n    async function findAutomationByName(token, name, maxPages = 50) {",
+  "new_string": "    // Finder paginado de automa\u00e7\u00f5es por nome EXATO. maxPages = runaway-guard da pagina\u00e7\u00e3o (o loop normalmente\n    // para antes, em rows.length<10); default AMPLO (1000 \u2192 10k automa\u00e7\u00f5es) p/ nunca truncar um futuro consumidor.\n    // Os 3 consumidores atuais passam o seu cap hist\u00f3rico por call-site (80/40/30) \u2014 ver coment\u00e1rio em cada um.\n    async function findAutomationByName(token, name, maxPages = 1000) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:59:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "old_string": "    return { req, login, findAutomationByName, BASE };",
+  "new_string": "    return { req, login, findAutomationByName };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:59:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "old_string": "module.exports = { createClient, resolveEnv, firstEnv };",
+  "new_string": "module.exports = { createClient, resolveEnv };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
