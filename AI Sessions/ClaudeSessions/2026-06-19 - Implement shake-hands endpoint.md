@@ -3341,6 +3341,664 @@ Padrão de model e migration claros (`database.define` + `createTable` com guard
 >                 newMemory.current = book;
 > ```
 
+## 🤖 Claude *(04:02:23)*
+
+
+## 🤖 Claude *(04:02:26)*
+
+Tenho todo o contexto do hot path, models, migration, endpoint e boot. O design está fechado:
+
+- **Roteamento cirúrgico**: um early-return em `placeOrder` logo após `getSymbol` (antes do `calcQty`/OCO), detectando automações com prefixo `[PAPER]` no nome → desvia pro `paperEngine`. Caminho real intocado abaixo.
+- **Ledger virtual próprio** (`paperOrders`/`paperPositions`): fill ao `MINI_TICKER.close` (preço mainnet real) + fee real via `computeNet`, sem Binance, sem `assertWithinRisk` → roda sob HALT.
+
+Vou escrever os 6 arquivos novos.
+
+## 🤖 Claude *(04:02:27)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(04:02:27)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(04:02:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/migrations/20260619000000-create-paper-tables.js",
+  "content": "'use strict';\n\n// Cria `paperOrders` + `paperPositions`: o ledger VIRTUAL do Paper/Shadow Engine (Fatia 1 do Motor de\n// Estrat\u00e9gias). Research SOB HALT, ZERO risco: automa\u00e7\u00f5es com prefixo \"[PAPER]\" executam num broker virtual\n// ao PRE\u00c7O MAINNET real (MINI_TICKER) + FEE real, sem tocar a Binance, sem inserir na tabela `orders` real e\n// sem mexer nos buckets reais (TREND_QTY/FARM_DCA) \u2014 o mainnet CONGELADO (TRADING_HALT=true) fica intacto.\n// P&L honesto pra medir qual trilha (consistencia/frequencia/macro) tem edge ANTES de arriscar dinheiro real;\n// resolve o medo do testnet sint\u00e9tico (aqui o pre\u00e7o \u00e9 o da mainnet de verdade).\n//\n// Port\u00e1vel MySQL+Postgres (createTable puro, sem SQL de dialeto). Idempotente: guard com showAllTables (a CI\n// roda migrate+seed 2x p/ provar idempot\u00eancia nos dois bancos). Espelha 20260609160000-create-harvestPositions.\nmodule.exports = {\n  up: async (queryInterface, Sequelize) => {\n    const tables = await queryInterface.showAllTables();\n    const names = tables.map(t => (typeof t === 'string' ? t : t.tableName).toLowerCase());\n\n    if (!names.includes('paperorders')) {\n      await queryInterface.createTable('paperOrders', {\n        id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true, allowNull: false },\n        automationId: { type: Sequelize.INTEGER, allowNull: true },          // automa\u00e7\u00e3o [PAPER] que disparou\n        strategy: { type: Sequelize.STRING, allowNull: false },              // trilha: consistencia | frequencia | macro\n        symbol: { type: Sequelize.STRING, allowNull: false },\n        side: { type: Sequelize.STRING, allowNull: false },                  // BUY | SELL\n        type: { type: Sequelize.STRING, allowNull: true },                   // tipo do template (informativo)\n        qty: { type: Sequelize.DOUBLE, allowNull: false },                   // base asset preenchido\n        price: { type: Sequelize.DOUBLE, allowNull: false },                 // pre\u00e7o de fill (MINI_TICKER mainnet real)\n        fee: { type: Sequelize.DOUBLE, allowNull: true },                    // taxa em USDT (fee real)\n        net: { type: Sequelize.DOUBLE, allowNull: true },                    // USDT: COMPRA=custo (cq+fee), VENDA=recebido (cq\u2212fee)\n        realizedPnl: { type: Sequelize.DOUBLE, allowNull: true },            // s\u00f3 na VENDA: P&L do round-trip\n        createdAt: { type: Sequelize.DATE, allowNull: false },\n        updatedAt: { type: Sequelize.DATE, allowNull: false },\n      });\n    }\n\n    if (!names.includes('paperpositions')) {\n      await queryInterface.createTable('paperPositions', {\n        strategy: { type: Sequelize.STRING, allowNull: false, primaryKey: true }, // PK composta (trilha, s\u00edmbolo)\n        symbol: { type: Sequelize.STRING, allowNull: false, primaryKey: true },\n        qty: { type: Sequelize.DOUBLE, allowNull: true },                    // base detido pela trilha (0 = flat)\n        avgCost: { type: Sequelize.DOUBLE, allowNull: true },                // custo m\u00e9dio por base (inclui fee de compra)\n        realizedPnl: { type: Sequelize.DOUBLE, allowNull: true },            // P&L realizado acumulado (USDT)\n        createdAt: { type: Sequelize.DATE, allowNull: false },\n        updatedAt: { type: Sequelize.DATE, allowNull: false },\n      });\n    }\n  },\n\n  down: async (queryInterface) => {\n    const tables = await queryInterface.showAllTables();\n    const names = tables.map(t => (typeof t === 'string' ? t : t.tableName).toLowerCase());\n    if (names.includes('paperorders')) await queryInterface.dropTable('paperOrders');\n    if (names.includes('paperpositions')) await queryInterface.dropTable('paperPositions');\n  }\n};\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/migrations/20260619000000-create-paper-tables.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:02:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/models/paperOrderModel.js",
+  "content": "const Sequelize = require('sequelize');\nconst database = require('../db');\n\n// Ledger VIRTUAL do Paper/Shadow Engine \u2014 uma linha por fill SIMULADO. Ver paperEngine.placePaperOrder e a\n// migration 20260619000000-create-paper-tables. Pre\u00e7o = MINI_TICKER mainnet real; fee real; sem Binance.\n// `net`: COMPRA = custo (cummQuote+fee), VENDA = recebido (cummQuote\u2212fee). `realizedPnl` s\u00f3 na VENDA.\nconst PaperOrderModel = database.define('paperOrder', {\n    id: {\n        type: Sequelize.INTEGER,\n        autoIncrement: true,\n        primaryKey: true\n    },\n    automationId: Sequelize.INTEGER,\n    strategy: Sequelize.STRING,\n    symbol: Sequelize.STRING,\n    side: Sequelize.STRING,\n    type: Sequelize.STRING,\n    qty: Sequelize.DOUBLE,\n    price: Sequelize.DOUBLE,\n    fee: Sequelize.DOUBLE,\n    net: Sequelize.DOUBLE,\n    realizedPnl: Sequelize.DOUBLE,\n    createdAt: Sequelize.DATE,\n    updatedAt: Sequelize.DATE\n});\n\nmodule.exports = PaperOrderModel;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/models/paperOrderModel.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:02:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/models/paperPositionModel.js",
+  "content": "const Sequelize = require('sequelize');\nconst database = require('../db');\n\n// Posi\u00e7\u00e3o VIRTUAL por trilha+s\u00edmbolo do Paper Engine (write-through \u2192 sobrevive a restart NATIVAMENTE, \u2260\n// FARM_DCA/TREND_QTY que derivam de orders). PK composta (strategy, symbol). qty = base detido (0 = flat),\n// avgCost = custo m\u00e9dio por base (inclui a fee de compra), realizedPnl = P&L realizado acumulado (USDT).\nconst PaperPositionModel = database.define('paperPosition', {\n    strategy: {\n        type: Sequelize.STRING,\n        allowNull: false,\n        primaryKey: true\n    },\n    symbol: {\n        type: Sequelize.STRING,\n        allowNull: false,\n        primaryKey: true\n    },\n    qty: Sequelize.DOUBLE,\n    avgCost: Sequelize.DOUBLE,\n    realizedPnl: Sequelize.DOUBLE,\n    createdAt: Sequelize.DATE,\n    updatedAt: Sequelize.DATE\n});\n\nmodule.exports = PaperPositionModel;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/models/paperPositionModel.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:02:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/paperRepository.js",
+  "content": "const PaperOrder = require('../models/paperOrderModel');\nconst PaperPosition = require('../models/paperPositionModel');\n\n// Reposit\u00f3rio do ledger VIRTUAL do Paper Engine (paperOrders/paperPositions). Camada fina sobre os models,\n// no padr\u00e3o repositories/ do projeto. Sem efeito no money-path real \u2014 s\u00f3 o ledger paper.\n\nfunction insertPaperOrder(data) {\n    return PaperOrder.create(data);\n}\n\nfunction getPaperPosition(strategy, symbol) {\n    return PaperPosition.findOne({ where: { strategy, symbol } });\n}\n\n// Upsert da posi\u00e7\u00e3o (PK composta strategy+symbol). Cria com zeros se ausente, sen\u00e3o aplica os campos.\nasync function upsertPaperPosition(strategy, symbol, fields) {\n    const [row, created] = await PaperPosition.findOrCreate({\n        where: { strategy, symbol },\n        defaults: { strategy, symbol, qty: 0, avgCost: 0, realizedPnl: 0, ...fields }\n    });\n    if (!created) {\n        Object.assign(row, fields);\n        await row.save();\n    }\n    return row;\n}\n\nfunction getAllPositions() {\n    return PaperPosition.findAll();\n}\n\nfunction getOrders(limit = 1000) {\n    return PaperOrder.findAll({ order: [['id', 'DESC']], limit });\n}\n\nmodule.exports = { insertPaperOrder, getPaperPosition, upsertPaperPosition, getAllPositions, getOrders };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/repositories/paperRepository.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:03:30)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "content": "'use strict';\n\n// === Paper/Shadow Engine (Fatia 1 do Motor de Estrat\u00e9gias) ===\n// Executa automa\u00e7\u00f5es com prefixo \"[PAPER]\" num broker VIRTUAL: fill ao PRE\u00c7O MAINNET real (MINI_TICKER) +\n// FEE real, gravando num ledger pr\u00f3prio (paperOrders/paperPositions). NUNCA chama a Binance, NUNCA insere em\n// `orders`, NUNCA toca os buckets reais (TREND_QTY/FARM_DCA) nem a carteira real \u2192 roda com o mainnet\n// CONGELADO (TRADING_HALT=true) intacto (n\u00e3o passa pelo assertWithinRisk de utils/exchange). Resolve o medo\n// do testnet sint\u00e9tico: research com a realidade da mainnet, sem risco. \u00c9 roteado por beholder.placeOrder\n// ANTES do calcQty (que leria a carteira REAL \u2014 s\u00f3 USDT \u2014 e LAN\u00c7ARIA no SELL).\n//\n// v1 (Fatia 1): 1 lote por trilha+s\u00edmbolo (compra s\u00f3 FLAT, vende a posi\u00e7\u00e3o inteira). Sem slippage/partial\n// fills (Fatia 2). P&L = realizado (round-trips fechados, em paperPositions.realizedPnl) + n\u00e3o-realizado\n// (posi\u00e7\u00e3o aberta vs MINI_TICKER, computado no endpoint /analysis/paper). Anti-empilhamento por lock em\n// mem\u00f3ria + checagem de posi\u00e7\u00e3o (compra ignorada se j\u00e1 posicionado; venda ignorada se flat).\n\nconst logger = require('./utils/logger');\nconst paperRepository = require('./repositories/paperRepository');\nconst { computeNet } = require('./utils/feeCalc');\n\nconst PAPER_PREFIX = '[PAPER]';\n\n// fee real (0,1%/lado = taker mainnet sem desconto BNB; ajust\u00e1vel por env). Mesma r\u00e9gua do backtest.js.\nconst FEE_RATE = (() => { const r = parseFloat(process.env.PAPER_FEE_RATE || '0.001'); return Number.isFinite(r) && r >= 0 ? r : 0.001; })();\n// notional default de compra quando o template n\u00e3o usa MIN_NOTIONAL (USDT).\nconst DEFAULT_BUY_USDT = (() => { const n = parseFloat(process.env.PAPER_BUY_USDT || '20'); return Number.isFinite(n) && n > 0 ? n : 20; })();\n\nconst _inflight = new Set(); // serializa por trilha+s\u00edmbolo (evita 2 fills no mesmo tick \u2014 paper, n\u00e3o-cr\u00edtico)\n\n// O roteador: o prefixo \"[PAPER]\" no NAME da automa\u00e7\u00e3o manda pro ledger virtual (em vez do exchange real).\nfunction isPaperAutomation(automation) {\n    return !!(automation && typeof automation.name === 'string' && automation.name.startsWith(PAPER_PREFIX));\n}\n\n// 2\u00aa palavra do name = TRILHA. Ex.: '[PAPER] Consistencia Buy BTCUSDT' -> 'consistencia'.\nfunction strategyOf(automation) {\n    const parts = String(automation && automation.name || '').replace(PAPER_PREFIX, '').trim().split(/\\s+/);\n    return (parts[0] || 'paper').toLowerCase();\n}\n\n// pre\u00e7o de fill = MINI_TICKER.close (pre\u00e7o MAINNET real). require lazy do beholder evita ciclo no load\n// (beholder requer o paperEngine s\u00f3 dentro de placeOrder, em runtime, quando o brain j\u00e1 est\u00e1 pronto).\nfunction fillPrice(symbolStr) {\n    const beholder = require('./beholder');\n    const mt = beholder.getMemory(symbolStr, 'MINI_TICKER');\n    const px = mt && parseFloat(mt.close);\n    return Number.isFinite(px) && px > 0 ? px : null;\n}\n\nfunction floorToStep(qty, stepSize) {\n    const s = parseFloat(stepSize) || 0;\n    if (s <= 0) return qty;\n    return Math.floor(qty / s) * s;\n}\n\n// Chamado por beholder.placeOrder quando isPaperAutomation(automation). Recebe o orderTemplate (side/type/\n// quantity) e o symbol (model: stepSize/minNotional/basePrecision). Retorna o MESMO shape do placeOrder real.\nasync function placePaperOrder({ automation, orderTemplate, symbol }) {\n    const symbolStr = String(orderTemplate.symbol).toUpperCase();\n    const side = String(orderTemplate.side).toUpperCase();\n    const type = String(orderTemplate.type || 'MARKET').toUpperCase();\n    const strategy = strategyOf(automation);\n    const tag = 'A:' + automation.id;\n\n    if (type === 'OCO')\n        return { type: 'info', text: `[PAPER] OCO ainda n\u00e3o suportado (Fatia 1) \u2014 ${symbolStr}.` };\n\n    const price = fillPrice(symbolStr);\n    if (!price)\n        return { type: 'error', text: `[PAPER] sem pre\u00e7o (MINI_TICKER frio) p/ ${symbolStr}.` };\n\n    const key = `${strategy}:${symbolStr}`;\n    if (_inflight.has(key))\n        return { type: 'info', text: `[PAPER] ${key} j\u00e1 em processamento \u2014 skip.` };\n    _inflight.add(key);\n    try {\n        const pos = await paperRepository.getPaperPosition(strategy, symbolStr);\n        const heldQty = pos ? parseFloat(pos.qty) || 0 : 0;\n        const prevRealized = pos ? parseFloat(pos.realizedPnl) || 0 : 0;\n        const stepSize = symbol && symbol.stepSize;\n        const basePrec = symbol && Number.isFinite(symbol.basePrecision) ? symbol.basePrecision : 8;\n        const minNotional = symbol && parseFloat(symbol.minNotional);\n\n        if (side === 'BUY') {\n            if (heldQty > 0)\n                return { type: 'info', text: `[PAPER] ${key} j\u00e1 posicionado (qty ${heldQty}) \u2014 compra ignorada (1 lote/v1).` };\n\n            // notional alvo: MIN_NOTIONAL\u00d7mult do template (espelha o sizing real) sen\u00e3o o default em USDT.\n            let notional = DEFAULT_BUY_USDT;\n            if (orderTemplate.quantity === 'MIN_NOTIONAL' && Number.isFinite(minNotional) && minNotional > 0) {\n                const mult = parseFloat(orderTemplate.quantityMultiplier) || 1;\n                notional = minNotional * (mult < 1 ? 1 : mult);\n            }\n            let qty = floorToStep(notional / price, stepSize);\n            // backstop de piso (espelha calcQty): se o floor por stepSize ficar abaixo do minNotional, sobe 1 step.\n            if (Number.isFinite(minNotional) && minNotional > 0 && qty * price < minNotional)\n                qty += (parseFloat(stepSize) || 0);\n            qty = parseFloat(qty.toFixed(basePrec));\n            if (!(qty > 0))\n                return { type: 'error', text: `[PAPER] qty inv\u00e1lida p/ ${key} (notional ${notional}@${price}).` };\n\n            const cummQuote = qty * price;\n            const commission = cummQuote * FEE_RATE;\n            const { net } = computeNet({ side: 'BUY', cummQuote, commission, commissionAsset: 'USDT', symbol: symbolStr, avgPrice: price });\n            const avgCost = net / qty; // custo por base, fee-inclusive (net da COMPRA = cummQuote+fee)\n\n            await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty, avgCost, realizedPnl: prevRealized });\n            await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: null });\n            if (automation.logs) logger(tag, `[PAPER] BUY ${qty} ${symbolStr} @ ${price} (custo ${net.toFixed(2)} USDT, fee ${commission.toFixed(4)})`);\n            return { type: 'success', text: `[PAPER] BUY ${symbolStr} qty ${qty} @ ${price}` };\n        }\n\n        // SELL \u2014 fecha a posi\u00e7\u00e3o inteira da trilha (round-trip).\n        if (heldQty <= 0)\n            return { type: 'info', text: `[PAPER] ${key} sem posi\u00e7\u00e3o \u2014 venda ignorada.` };\n\n        const qty = heldQty;\n        const cummQuote = qty * price;\n        const commission = cummQuote * FEE_RATE;\n        const { net } = computeNet({ side: 'SELL', cummQuote, commission, commissionAsset: 'USDT', symbol: symbolStr, avgPrice: price });\n        const costBasis = qty * (pos ? parseFloat(pos.avgCost) || 0 : 0);\n        const realized = net - costBasis; // recebido (cq\u2212fee) \u2212 custo (inclu\u00eda fee de compra) = P&L l\u00edquido dos 2 lados\n        const realizedAcc = prevRealized + realized;\n\n        await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty: 0, avgCost: 0, realizedPnl: realizedAcc });\n        await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: realized });\n        if (automation.logs) logger(tag, `[PAPER] SELL ${qty} ${symbolStr} @ ${price} (recebido ${net.toFixed(2)} USDT, P&L ${realized.toFixed(2)})`);\n        return { type: 'success', text: `[PAPER] SELL ${symbolStr} qty ${qty} @ ${price} P&L ${realized.toFixed(2)}` };\n    } catch (err) {\n        logger(tag, `[PAPER] erro ${symbolStr}: ${err.message}`);\n        return { type: 'error', text: `[PAPER] erro ${symbolStr}: ${err.message}` };\n    } finally {\n        _inflight.delete(key);\n    }\n}\n\nmodule.exports = { isPaperAutomation, placePaperOrder, strategyOf, PAPER_PREFIX };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/paperEngine.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:04:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-consistency.js",
+  "content": "'use strict';\n/*\n * Setup IDEMPOTENTE da trilha CONSIST\u00caNCIA em modo PAPER (Fatia 1 do Motor de Estrat\u00e9gias).\n *\n * Cria (INATIVAS, prefixo \"[PAPER]\"): uma automa\u00e7\u00e3o de COMPRA (mean-reversion RSI<lo, fora de bear) e uma de\n * VENDA (RSI>hi). O prefixo \"[PAPER]\" no NAME \u00e9 o ROTEADOR (beholder.placeOrder \u2192 paperEngine.isPaperAutomation):\n * elas executam num broker VIRTUAL \u2014 pre\u00e7o+fee MAINNET reais \u2014 SEM tocar dinheiro real (mainnet CONGELADO\n * intacto). Prova a fidelidade do broker virtual antes de replicar pras 3 trilhas (Fatia 2). A 2\u00aa palavra do\n * name \u00e9 a TRILHA (strategyOf): \"[PAPER] Consistencia Buy <sym>\" -> trilha \"consistencia\".\n *\n * Reproduz ap\u00f3s `make nuke` (dado runtime, n\u00e3o seeders). \u00c9 PAPER: usar BTCUSDT aqui N\u00c3O tem rela\u00e7\u00e3o com o\n * cofre real \u2014 nenhum BTC real \u00e9 vendido (a venda s\u00f3 mexe no ledger virtual).\n *\n * Uso (dentro do container, server no ar):  node scripts/setup-paper-consistency.js   [DRY=true p/ preview]\n *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),\n *        PAPER_SYMBOL (BTCUSDT), PAPER_INTERVAL (1m), PAPER_RSI_LO (25), PAPER_RSI_HI (75),\n *        PAPER_SIZE_MULT (4)  // MIN_NOTIONAL\u00d74 (~$20-40) \u2014 o paper usa isso como notional alvo da compra\n */\nconst http = require('http');\n\nconst SYMBOL = (process.env.PAPER_SYMBOL || 'BTCUSDT').toUpperCase();\nconst INTERVAL = process.env.PAPER_INTERVAL || '1m';\nconst RSI_KEY = `RSI_14_${INTERVAL}`;\nconst RSI_LO = parseFloat(process.env.PAPER_RSI_LO || '25');\nconst RSI_HI = parseFloat(process.env.PAPER_RSI_HI || '75');\nconst SIZE_MULT = parseFloat(process.env.PAPER_SIZE_MULT || '4');\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst BASE = { host: process.env.PAPER_API_HOST || '127.0.0.1', port: parseInt(process.env.PORT || '3001', 10) };\nconst EM = process.env.EM || process.env.TRADEUX_EMAIL;\nconst PW = process.env.PW || process.env.TRADEUX_PASSWORD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token; // middleware usa o token CRU (sem Bearer)\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ ...BASE, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\n// monitor CANDLES (RSI) ATIVO \u2014 alimenta MEMORY['<sym>:RSI_14_<interval>']. Idempotente (409 se j\u00e1 existe).\nasync function ensureMonitor(token, symbol) {\n    if (DRY) return `[DRY] POST monitor CANDLES ${symbol} ${INTERVAL} RSI_14 (ativo)`;\n    const r = await req('POST', '/monitors', token, {\n        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',\n        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,\n    });\n    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (id ${r.body.id}, ATIVO \u2192 ${symbol}:${RSI_KEY})`;\n    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} j\u00e1 existe`;\n    throw new Error(`falha ao criar monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);\n}\n\nasync function ensureTemplate(token, symbol, name, side, opts) {\n    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n    if (found) return { id: found.id, msg: `template \"${name}\" j\u00e1 existe (id ${found.id})` };\n    if (DRY) return { id: 0, msg: `[DRY] POST template \"${name}\" (${opts.type} ${side} qty ${opts.quantity}\u00d7${opts.quantityMultiplier})` };\n    const r = await req('POST', '/ordertemplates', token, {\n        name, symbol, type: opts.type, side,\n        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,\n        stopPrice: null, stopPriceMultiplier: 1,\n        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,\n        icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return { id: r.body.id, msg: `template \"${name}\" criado (id ${r.body.id}, ${opts.type})` };\n}\n\nasync function findAutomationByName(token, name) {\n    for (let page = 1; page <= 60; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        const hit = rows.find(a => a.name === name);\n        if (hit) return hit;\n        if (rows.length < 10) break; // page size do backend = 10\n    }\n    return null;\n}\n\nasync function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {\n    const existing = await findAutomationByName(token, name);\n    if (existing) return `automa\u00e7\u00e3o \"${name}\" j\u00e1 existe (id ${existing.id}, isActive=${existing.isActive})`;\n    if (DRY) return `[DRY] POST automa\u00e7\u00e3o \"${name}\" INATIVA\\n      cond: ${conditions}\\n      idx:  ${indexes}`;\n    const r = await req('POST', '/automations', token, {\n        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,\n        actions: [{ type: 'ORDER', orderTemplateId }],\n    });\n    if (r.status !== 201) throw new Error(`falha ao criar automa\u00e7\u00e3o ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `automa\u00e7\u00e3o \"${name}\" criada (id ${r.body.id}, INATIVA)`;\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.error('LOGIN_FAIL ' + login.status); process.exit(1); }\n\n    const K = k => `${SYMBOL}:${k}`;\n    console.log(`# Setup PAPER trilha CONSIST\u00caNCIA \u2014 ${SYMBOL} | compra RSI<${RSI_LO} (fora de bear) \u00b7 vende RSI>${RSI_HI} \u00b7 size ${SIZE_MULT}\u00d7MIN_NOTIONAL${DRY ? '   [DRY-RUN: nada ser\u00e1 aplicado]' : ''}`);\n    console.log('- ' + await ensureMonitor(token, SYMBOL));\n\n    // type MARKET: o paper preenche ao MINI_TICKER real (ignora pre\u00e7o/tipo do template); MARKET evita exigir limitPrice.\n    const buyTpl = await ensureTemplate(token, SYMBOL, `[PAPER] Consistencia Buy ${SYMBOL}`, 'BUY', {\n        type: 'MARKET', quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,\n    });\n    console.log('- ' + buyTpl.msg);\n    // quantity da venda \u00e9 IGNORADA no paper (vende a posi\u00e7\u00e3o virtual inteira) \u2014 MAX_WALLET \u00e9 s\u00f3 placeholder v\u00e1lido.\n    const sellTpl = await ensureTemplate(token, SYMBOL, `[PAPER] Consistencia Sell ${SYMBOL}`, 'SELL', {\n        type: 'MARKET', quantity: 'MAX_WALLET', quantityMultiplier: 1,\n    });\n    console.log('- ' + sellTpl.msg);\n\n    // COMPRA: dip (RSI<lo) fora de bear. REGIME vai no INDEX \u2192 isChecked \u00e9 o FAIL-SAFE (sem regime conhecido n\u00e3o\n    // avalia). invertCondition no RSI \u2192 dispara s\u00f3 na TRANSI\u00c7\u00c3O p/ baixo de lo (anti-empilhamento); o paperEngine\n    // ainda barra recompra enquanto posicionado (1 lote/v1).\n    const buyCond = `MEMORY['${K(RSI_KEY)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear'`;\n    console.log('- ' + await ensureAutomation(token, SYMBOL, `[PAPER] Consistencia Buy ${SYMBOL}`, buyCond, `${K(RSI_KEY)},${K('REGIME')}`, buyTpl.id));\n\n    // VENDA: sobrecompra (RSI>hi). invertCondition no RSI \u2192 realiza s\u00f3 na TRANSI\u00c7\u00c3O p/ cima de hi; o paperEngine\n    // ignora se estiver flat.\n    const sellCond = `MEMORY['${K(RSI_KEY)}'].current>${RSI_HI}`;\n    console.log('- ' + await ensureAutomation(token, SYMBOL, `[PAPER] Consistencia Sell ${SYMBOL}`, sellCond, `${K(RSI_KEY)}`, sellTpl.id));\n\n    console.log(`\\n${DRY ? 'DRY-RUN OK (nada aplicado).' : 'PRONTO \u2014 monitor ATIVO, automa\u00e7\u00f5es [PAPER] INATIVAS.'}`);\n    console.log(`Para ATIVAR: garanta o REGIME de ${SYMBOL} (BTCUSDT j\u00e1 \u00e9 computado) e d\u00ea start nas automa\u00e7\u00f5es`);\n    console.log(`\"[PAPER] Consistencia Buy/Sell ${SYMBOL}\". Acompanhe o P&L em GET /analysis/paper. Mainnet segue CONGELADO.`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-consistency.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:04:24)*
+
+
+## 🤖 Claude *(04:04:24)*
+
+Os 6 arquivos novos estão criados. Agora os 3 edits: o roteamento no hot path (`beholder.js`), a rota e o handler do endpoint.
+
+## 🤖 Claude *(04:04:25)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(04:04:26)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(04:04:26)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(04:04:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    const symbol = await getSymbol(orderTemplate.symbol);\n\n    // OCO tem fluxo pr\u00f3prio (2 pernas + orderListId): desvia antes de montar a ordem simples.\n    if (orderTemplate.type.toUpperCase() === 'OCO')\n        return placeOco(settings, automation, orderTemplate, symbol);",
+  "new_string": "    const symbol = await getSymbol(orderTemplate.symbol);\n\n    // === PAPER (Fatia 1 \u2014 Motor de Estrat\u00e9gias): automa\u00e7\u00f5es com prefixo \"[PAPER]\" no name roteiam p/ o ledger\n    // VIRTUAL ANTES de qualquer efeito real (exchange/insertOrder/locks/OCO). O desvio \u00e9 AQUI \u2014 antes do calcQty\n    // \u2014 porque o calcQty/hasEnoughAssets do caminho real leem a carteira REAL (s\u00f3 USDT) e um SELL paper LAN\u00c7ARIA\n    // (\"no base in wallet\"). O paper preenche ao MINI_TICKER real + fee real, sem tocar a Binance \u2192 roda com o\n    // mainnet CONGELADO intacto. Caminho real abaixo fica BYTE-id\u00eantico. require lazy evita ciclo no load. ===\n    if (require('./paperEngine').isPaperAutomation(automation))\n        return require('./paperEngine').placePaperOrder({ settings, automation, orderTemplate, symbol, action });\n\n    // OCO tem fluxo pr\u00f3prio (2 pernas + orderListId): desvia antes de montar a ordem simples.\n    if (orderTemplate.type.toUpperCase() === 'OCO')\n        return placeOco(settings, automation, orderTemplate, symbol);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:04:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js",
+  "old_string": "router.get('/cockpit/:symbol', analysisController.getCockpit);\n\nmodule.exports = router;",
+  "new_string": "router.get('/cockpit/:symbol', analysisController.getCockpit);\n\nrouter.get('/paper', analysisController.getPaper);\n\nmodule.exports = router;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:04:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "old_string": "const riskState = require('../riskState');",
+  "new_string": "const riskState = require('../riskState');\nconst paperRepository = require('../repositories/paperRepository');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:04:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "old_string": "module.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit };",
+  "new_string": "// GET /analysis/paper \u2014 P&L do Paper/Shadow Engine (ledger VIRTUAL, pre\u00e7o+fee MAINNET reais). Por trilha:\n// realizado (round-trips fechados) + n\u00e3o-realizado (posi\u00e7\u00e3o aberta vs MINI_TICKER) + n\u00ba de trades, win-rate e\n// fee paga. READ-ONLY; prova que estrat\u00e9gias [PAPER] rodam com o mainnet CONGELADO. N\u00e3o exp\u00f5e segredos.\nasync function getPaper(req, res) {\n    try {\n        const [positions, orders] = await Promise.all([\n            paperRepository.getAllPositions(),\n            paperRepository.getOrders(1000),\n        ]);\n\n        const byStrategy = {};\n        const ensure = s => (byStrategy[s] = byStrategy[s] || { strategy: s, realizedPnl: 0, unrealizedPnl: 0, openPositions: 0, fees: 0, buys: 0, sells: 0, wins: 0, symbols: {} });\n\n        for (const p of positions) {\n            const s = ensure(p.strategy);\n            const qty = parseFloat(p.qty) || 0;\n            const realized = parseFloat(p.realizedPnl) || 0;\n            s.realizedPnl += realized;\n            let unrealized = 0;\n            if (qty > 0) {\n                const mt = beholder.getMemory(p.symbol, indexKeys.MINI_TICKER);\n                const px = mt && parseFloat(mt.close);\n                if (Number.isFinite(px) && px > 0) unrealized = qty * px - qty * (parseFloat(p.avgCost) || 0);\n                s.openPositions += 1;\n            }\n            s.unrealizedPnl += unrealized;\n            s.symbols[p.symbol] = { qty, avgCost: parseFloat(p.avgCost) || 0, realizedPnl: realized, unrealizedPnl: unrealized };\n        }\n\n        for (const o of orders) {\n            const s = ensure(o.strategy);\n            s.fees += parseFloat(o.fee) || 0;\n            if (o.side === 'BUY') s.buys += 1;\n            else if (o.side === 'SELL') { s.sells += 1; if ((parseFloat(o.realizedPnl) || 0) > 0) s.wins += 1; }\n        }\n\n        const strategies = Object.values(byStrategy).map(s => ({\n            ...s,\n            totalPnl: s.realizedPnl + s.unrealizedPnl,\n            winRate: s.sells > 0 ? s.wins / s.sells : null,\n        }));\n\n        const totals = strategies.reduce((a, s) => ({\n            realizedPnl: a.realizedPnl + s.realizedPnl,\n            unrealizedPnl: a.unrealizedPnl + s.unrealizedPnl,\n            totalPnl: a.totalPnl + s.totalPnl,\n            fees: a.fees + s.fees,\n        }), { realizedPnl: 0, unrealizedPnl: 0, totalPnl: 0, fees: 0 });\n\n        res.json({\n            generatedAt: new Date().toISOString(),\n            note: 'Paper/Shadow: pre\u00e7o MINI_TICKER mainnet real + fee real; sem Binance; mainnet congelado.',\n            feeRate: parseFloat(process.env.PAPER_FEE_RATE || '0.001'),\n            totals,\n            strategies,\n            recentOrders: orders.slice(0, 50),\n        });\n    } catch (err) {\n        res.status(500).json({ error: err.message });\n    }\n}\n\nmodule.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit, getPaper };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:05:30)*
+
+
+## 🤖 Claude *(04:05:31)*
+
+Roteamento e endpoint prontos. Agora verificação estática (sem tocar a prod): syntax-check dos arquivos novos/editados e lint da migration.
+
+## 🤖 Claude *(04:05:31)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(04:05:32)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(04:05:32)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(04:05:33)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(04:05:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"=== host node? ===\" && (which node && node --version) 2>&1 | head -3\necho \"=== lint de migrations (se existir o script) ===\" && ls scripts/ci-lint-migrations.sh 2>/dev/null && bash scripts/ci-lint-migrations.sh 2>&1 | tail -20 || echo \"(script de lint ausente ou falhou)\"",
+  "description": "Check host node and run migration lint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === host node? ===
+> /home/ubuntu/.local/bin/node
+> v22.22.3
+> === lint de migrations (se existir o script) ===
+> scripts/ci-lint-migrations.sh
+> [0;36m═══════════════════════════════════════════════════════════[0m
+> [0;36m  TradeUX CI Lint — Migrations Postgres Compatibility     [0m
+> [0;36m═══════════════════════════════════════════════════════════[0m
+> 
+> [0;36m───────────────────────────────────────────────────────────[0m
+>   Migrations analisadas: 28
+>   [0;32m✓ Todas as migrations OK — compatíveis com MySQL + Postgres[0m
+> [0;36m───────────────────────────────────────────────────────────[0m
+> ```
+
+## 🤖 Claude *(04:05:42)*
+
+
+## 🤖 Claude *(04:05:43)*
+
+Host tem node 22 e o lint das 28 migrations passou (incluindo a minha). Agora syntax-check de todos os arquivos novos/editados.
+
+## 🤖 Claude *(04:05:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && for f in \\\n  migrations/20260619000000-create-paper-tables.js \\\n  src/models/paperOrderModel.js \\\n  src/models/paperPositionModel.js \\\n  src/repositories/paperRepository.js \\\n  src/paperEngine.js \\\n  scripts/setup-paper-consistency.js \\\n  src/beholder.js \\\n  src/controllers/analysisController.js \\\n  src/routers/analysisRouter.js ; do\n  if node --check \"$f\" 2>/tmp/nc.err; then echo \"OK   $f\"; else echo \"FAIL $f\"; cat /tmp/nc.err; fi\ndone",
+  "description": "Syntax-check all new and edited backend files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK   migrations/20260619000000-create-paper-tables.js
+> OK   src/models/paperOrderModel.js
+> OK   src/models/paperPositionModel.js
+> OK   src/repositories/paperRepository.js
+> OK   src/paperEngine.js
+> OK   scripts/setup-paper-consistency.js
+> OK   src/beholder.js
+> OK   src/controllers/analysisController.js
+> OK   src/routers/analysisRouter.js
+> ```
+
+## 🤖 Claude *(04:06:01)*
+
+
+## 🤖 Claude *(04:06:03)*
+
+Tudo OK na verificação estática (9/9 syntax + lint dual-dialect). Antes de qualquer deploy (toca o hot path + migration → exige gate), vou submeter o diff ao **QA** e ao **Tech-Lead** em paralelo.
+
+## 🤖 Claude *(04:06:27)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Gate QA da Fatia 1 (Paper Engine)",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise como QA gate (PASS / PASS COM RESSALVAS / FAIL) a **Fatia 1 do Motor de Estrat\u00e9gias** do TradeUX: um Paper/Shadow Engine (broker virtual) que roda estrat\u00e9gias com PRE\u00c7O MAINNET real + FEE real, SEM tocar dinheiro real, com o mainnet CONGELADO (TRADING_HALT=true) intacto.\n\nRepo: /home/gcrux-tradeux/tradeux/backend. Leia os arquivos voc\u00ea mesmo.\n\nDIFF (arquivos):\n- NOVOS: migrations/20260619000000-create-paper-tables.js; src/models/paperOrderModel.js; src/models/paperPositionModel.js; src/repositories/paperRepository.js; src/paperEngine.js; scripts/setup-paper-consistency.js\n- EDITADOS: src/beholder.js (branch PAPER em placeOrder, logo ap\u00f3s `const symbol = await getSymbol(...)`, ANTES do calcQty/OCO); src/routers/analysisRouter.js (rota GET /paper); src/controllers/analysisController.js (require paperRepository + fun\u00e7\u00e3o getPaper + export)\n\nCONTEXTO/DESENHO:\n- O roteamento \u00e9 por prefixo \"[PAPER]\" no NAME da automa\u00e7\u00e3o (paperEngine.isPaperAutomation). beholder.placeOrder desvia p/ paperEngine.placePaperOrder ANTES do calcQty (porque calcQty/hasEnoughAssets leem a carteira REAL \u2014 a conta s\u00f3 tem USDT \u2014 e um SELL paper lan\u00e7aria \"no base in wallet\").\n- paperEngine: fill ao MINI_TICKER.close (beholder.getMemory, pre\u00e7o mainnet real) + fee real (FEE_RATE 0.001) via utils/feeCalc.computeNet; grava em paperOrders/paperPositions. v1: 1 lote por trilha+s\u00edmbolo (compra s\u00f3 se FLAT, vende posi\u00e7\u00e3o inteira). avgCost fee-inclusive (net da COMPRA = cummQuote+fee); realized = net_venda \u2212 costBasis. Lock _inflight por trilha+s\u00edmbolo.\n- Migration: createTable paperOrders + paperPositions (PK composta strategy+symbol), idempotente (showAllTables), dual-dialect (espelha 20260609160000-create-harvestPositions).\n- Endpoint GET /analysis/paper: read-only, agrega P&L realizado+n\u00e3o-realizado por trilha.\n\nINVARIANTES CR\u00cdTICAS A VERIFICAR (foco do gate):\n1. O caminho PAPER NUNCA chama utils/exchange (Binance), NUNCA insere em `orders` real, NUNCA mexe em MEMORY de buckets reais (TREND_QTY/FARM_DCA/HARVEST/FARM_SELLING/HARVEST_SELLING) nem na carteira real. Isolamento total.\n2. O HALT/mainnet congelado segue intacto: nada no diff liga trading real, baixa o TRADING_HALT, nem cria caminho que chegue a exchange.buy/sell/oco fora do guard. O caminho real de placeOrder (abaixo do branch) ficou byte-id\u00eantico?\n3. O branch PAPER est\u00e1 no lugar certo (antes do calcQty) e n\u00e3o vaza pro caminho real quando N\u00c3O \u00e9 paper (isPaperAutomation falso \u2192 segue normal).\n4. Corre\u00e7\u00e3o da matem\u00e1tica de fee/P&L: uso do computeNet (side BUY/SELL), avgCost fee-inclusive, realized = recebido \u2212 custo; sinais corretos; guard net>0 do computeNet n\u00e3o corrompe o P&L paper.\n5. Migration: idempot\u00eancia (CI roda 2x), portabilidade MySQL+Postgres, PK composta v\u00e1lida nos 2 dialetos, sem SQL raw camelCase.\n6. Edge cases: MINI_TICKER frio; venda sem posi\u00e7\u00e3o; compra j\u00e1 posicionado; stepSize/minNotional/basePrecision ausentes; quantityMultiplier inv\u00e1lido; concorr\u00eancia (2 ticks no mesmo s\u00edmbolo \u2014 o _inflight basta? race entre getPaperPosition e upsert?).\n7. Template da venda usa quantity 'MAX_WALLET' (placeholder, ignorado no paper) \u2014 confirme que NUNCA pode atingir o caminho real (prefixo [PAPER] garante o desvio). Se a automa\u00e7\u00e3o for renomeada (tirar o prefixo) \u2192 vira real: risco? severidade?\n8. Endpoint read-only n\u00e3o vaza segredo; tolera tabelas vazias.\n\nEntregue verdict + achados por severidade (CR\u00cdTICO/ALTO/M\u00c9DIO/BAIXO) + os testes concretos a rodar antes do deploy."
+}
+```
+
+## 🤖 Claude *(04:06:44)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Gate Tech-Lead da Fatia 1",
+  "subagent_type": "tech-lead",
+  "prompt": "Fa\u00e7a a decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) como tech-lead/code-owner da **Fatia 1 do Motor de Estrat\u00e9gias** do TradeUX.\n\nRepo: /home/gcrux-tradeux/tradeux/backend. Leia os arquivos voc\u00ea mesmo.\n\nO QUE \u00c9: primeira fatia de um sistema maior (aprovado em plano) de gera\u00e7\u00e3o/valida\u00e7\u00e3o/ativa\u00e7\u00e3o de estrat\u00e9gias. Esta fatia entrega um **Paper/Shadow Engine** (broker virtual) que roda estrat\u00e9gias com PRE\u00c7O MAINNET real + FEE real, SEM tocar dinheiro real, com o mainnet CONGELADO (TRADING_HALT=true) intacto. Objetivo: o dono ver P&L honesto (paper) de uma trilha (consist\u00eancia mean-reversion RSI) antes de replicar pras 3 trilhas e graduar pra mainnet.\n\nDIFF:\n- NOVOS: migrations/20260619000000-create-paper-tables.js; src/models/paperOrderModel.js; src/models/paperPositionModel.js; src/repositories/paperRepository.js; src/paperEngine.js; scripts/setup-paper-consistency.js\n- EDITADOS: src/beholder.js (branch PAPER no placeOrder, logo ap\u00f3s getSymbol, ANTES do calcQty/OCO \u2014 require lazy de ./paperEngine); src/routers/analysisRouter.js (GET /paper); src/controllers/analysisController.js (getPaper read-only)\n\nDESENHO-CHAVE: roteamento por prefixo \"[PAPER]\" no NAME da automa\u00e7\u00e3o. Branch cir\u00fargico (early-return) no hot path \u2014 caminho real abaixo intocado. Ledger pr\u00f3prio (paperOrders/paperPositions) isolado de orders/buckets reais. paperEngine reusa utils/feeCalc.computeNet (fee real) e beholder.getMemory (MINI_TICKER mainnet). Conven\u00e7\u00e3o segue setup-farm.js/harvestPositions/regimeStates.\n\nAVALIE (foco de code-owner):\n1. RISCO no money-path/hot path: o branch \u00e9 seguro e m\u00ednimo? require lazy (ciclo)? o caminho real continua \u00edntegro? alguma chance de o paper habilitar trade real ou furar o HALT?\n2. DESIGN: roteamento por prefixo de nome (string m\u00e1gica) vs uma coluna `mode` na automa\u00e7\u00e3o \u2014 trade-off de manutenibilidade/robustez aceit\u00e1vel p/ uma Fatia 1? a centraliza\u00e7\u00e3o em isPaperAutomation/PAPER_PREFIX mitiga? recomendaria coluna agora ou depois?\n3. FIDELIDADE (\u00e9 o ponto do dono \u2014 research que TRANSFERE pra mainnet): fill ao MINI_TICKER sem slippage/spread/partial \u00e9 honesto p/ v1? o que \u00e9 must-fix vs Fatia 2 (slippage/partial j\u00e1 est\u00e3o diferidos no plano)?\n4. CONVEN\u00c7\u00d5ES: ader\u00eancia ao padr\u00e3o repositories/models/migrations/setup-scripts do projeto; pt-BR nos coment\u00e1rios; idempot\u00eancia do setup; durabilidade p\u00f3s-make nuke.\n5. MANUTENIBILIDADE: d\u00edvidas que devem virar follow-up (ex.: load-on-boot n\u00e3o \u00e9 necess\u00e1rio pois paperPositions \u00e9 write-through \u2014 concorda? reconcilia\u00e7\u00e3o? multi-lote/cash accounting na Fatia 2).\n\nDiga must-fix (bloqueiam) vs nice-to-have, e o veredito. Seja pragm\u00e1tico: \u00e9 Fatia 1 de research sob HALT, zero risco real por desenho."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The paper\'s MIN_NOTIONAL sizing (`minNotional * (mult < 1 ? 1 : mult)`) is byte-for-byte the same formula as the real `calcQuoteQty` for MIN_NOTIONAL. Fidelity claim confirmed. I have a complete picture.\n\n---\n\n# REVIEW — Fatia 1 do Motor de Estratégias (Paper/Shadow Engine)\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nFatia bem-escopada, cirúrgica e — por desenho — de **zero risco real**. O hot path/money-path fica intacto, o desvio é mínimo e reversível, e a fidelidade é honesta para uma v1. Mergeável. Os pontos abaixo são quase todos nice-to-have/follow-up; só listei dois must-fix pequenos.\n\n---\n\n## 1. RISCO no hot path / money-path — SEGURO\n\nO branch em `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:451-457` está posicionado exatamente como anunciado: logo após `getSymbol`, **antes** de `calcQty`, `calcQuoteQty`, `hasEnoughAssets`, OCO, `exchange.buy/sell`, `insertOrder` e dos locks `FARM_SELLING`/`HARVEST_SELLING`. É um `early-return` puro — o caminho real abaixo é byte-idêntico.\n\n- **Não há como o paper habilitar trade real nem furar o HALT:** ele nunca instancia `require(\'./utils/exchange\')(settings)` (que é onde mora o `TRADING_HALT`/`assertWithinRisk`), nunca insere em `orders`, nunca toca `TREND_QTY`/`FARM_DCA`/buckets. Ledger 100% isolado (`paperOrders`/`paperPositions`).\n- **require lazy:** correto e necessário — `paperEngine` requer `./beholder` (em `fillPrice`) e o `beholder` requer `./paperEngine` só em runtime dentro de `placeOrder`. Ciclo evitado, mesma técnica já usada em `feeCalc.js`.\n- **Shape de retorno compatível:** o executor (`evalDecision`, linha ~879-882) só lê `result.type`/`result.text` e dá `break` em `error`; nada a jusante assume `orderId`/insert. O `{type:\'success\'|\'info\'|\'error\', text}` do paper encaixa perfeitamente. O telegram em `gridEval` (linha ~595) também só usa `result.text` — mas o setup usa ações `ORDER`, não `GRID`, então nem cruza esse caminho.\n- **Concorrência:** `_inflight` Set + checagem de posição cobrem o duplo-fill no mesmo tick. É paper, não-crítico — aceitável.\n\n## 2. DESIGN — roteamento por prefixo `[PAPER]` no name\n\nTrade-off **aceitável para Fatia 1**. A string mágica está centralizada em `PAPER_PREFIX`/`isPaperAutomation`/`strategyOf` (um único módulo), o que mitiga o espalhamento. Para um experimento de research reversível, evitar uma migration na tabela `automations` (e o churn em controller/validação/UI) é a decisão pragmática certa.\n\n**Recomendação:** coluna `mode` **depois**, não agora — vira follow-up quando graduar pra "3 trilhas" (Fatia 2/3). O risco da string mágica é renomear a automação na UI e silenciosamente "despaperizar" (ou pior, deixar de rotear e cair no caminho real — embora sob HALT isso só viraria erro, não trade). Documentar essa armadilha no follow-up basta por ora.\n\n## 3. FIDELIDADE — honesta para v1\n\n- **Fee real:** reusa `utils/feeCalc.computeNet` com o mesmo `FEE_RATE` 0,1%/lado do `backtest.js`, ciente do lado (BUY soma, SELL subtrai). Custo médio fee-inclusive e P&L realizado = `net_venda − costBasis` estão corretos contabilmente.\n- **Sizing espelha o real:** o ramo MIN_NOTIONAL (`minNotional * (mult<1?1:mult)`) é **idêntico** ao `calcQuoteQty` real, e o backstop de piso espelha o `calcQty`. Bom.\n- **Fill ao `MINI_TICKER.close` sem slippage/spread/partial:** já está **diferido no plano** e o código documenta isso. Para v1 é honesto **desde que o relatório não seja vendido como "executável"**. O `MINI_TICKER.close` é mid-ish, não o lado executável (BUY deveria bater no ask, SELL no bid) — então o P&L paper é **otimista por ~1 spread/round-trip**. Aceitável para comparar trilhas entre si (viés constante), mas é exatamente o gap que a Fatia 2 precisa fechar antes de "graduar pra mainnet". Sem must-fix aqui.\n\n## 4. CONVENÇÕES — aderente\n\n- Camadas `models/` → `repositories/` → controller, migration idempotente espelhando `harvestPositions` (guard `showAllTables().toLowerCase()`, `createTable` puro portável). **Lint de migrations passou (28 OK, MySQL+Postgres)**; os 6 arquivos passam `node --check`.\n- Comentários em pt-BR, densos e corretos.\n- Setup idempotente (409/find-by-name), durável pós-`make nuke` (é runtime, documentado), `DRY` preview. Coerente com `setup-farm.js`/`setup-trend.js`.\n- `GET /analysis/paper` é read-only, atrás de `authMiddleware` (app.js:60), não expõe segredos.\n\n## 5. MANUTENIBILIDADE / dívidas\n\n- **Concordo: não precisa load-on-boot.** `paperPositions` é write-through (PK composta `strategy+symbol`, `upsertPaperPosition` no fill) → sobrevive a restart nativamente, sem o problema de orfanização do `TREND_QTY`. Decisão de design certa e bem comentada.\n- Follow-ups legítimos (Fatia 2): slippage/spread/partial, multi-lote/cash-accounting (hoje é 1 lote, compra só FLAT), reconciliação, e a coluna `mode`.\n\n---\n\n## MUST-FIX (pequenos — bloqueiam só por correção, não por risco)\n\n1. **`paperEngine` passa `commissionAsset: \'USDT\'` para `computeNet` mas o `fee` que persiste é `cummQuote * FEE_RATE` (já em USDT).** Está correto **para pares *USDT**, mas o setup default é `BTCUSDT` e o engine aceita qualquer símbolo. Se alguém rodar `[PAPER]` num par não-*USDT (ex. ETHBTC), o `fee`/`net` ficam na moeda errada silenciosamente. Mínimo: **guard/aviso** que a Fatia 1 só suporta pares de quote USDT (ou derivar o quote do `symbol` como o `computeNet` já faz). Barato e evita um P&L mentiroso fora do happy-path.\n\n2. **`getPaper` agrega `recentOrders` e `byStrategy` sem cap por trilha além do `limit=1000`** — inócuo hoje, mas o `winRate`/`fees` varrem **todas** as ordens enquanto `realizedPnl` vem das positions. Não é bug agora; só confirme que `getOrders(1000)` não trunca silenciosamente as métricas quando o ledger crescer (a `wins/sells` deriva de orders, o realizado das positions — fontes diferentes podem divergir num ledger grande). Sugestão: derivar tudo de uma fonte só ou documentar o cap.\n\n(Se quiser, ambos podem virar follow-up imediato pós-merge em vez de bloquear — são de baixíssimo impacto sob HALT.)\n\n## NICE-TO-HAVE\n\n- Coluna `mode` na `automations` quando replicar pras 3 trilhas (substituir a string mágica).\n- Slippage/spread (BUY@ask/SELL@bid via BOOK) na Fatia 2 — fechar o viés otimista antes de "graduar".\n- `winRate` considerar só round-trips fechados explicitamente.\n\n---\n\n## DECISÃO DE MERGE\n\n**APPROVE COM SUGESTÕES → mergeável agora.** Zero risco real por desenho (HALT intacto, ledger isolado, hot path byte-idêntico), convenções e CI-lint OK. Condição única: tratar o **must-fix #1** (guard de quote não-USDT) antes ou logo após o merge — preferencialmente um commit de follow-up, já que sob HALT e com o default `BTCUSDT` não há exposição. Os demais itens são Fatia 2.\n\n**Arquivos relevantes:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (branch PAPER: linhas 451-457)\n- `/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/paperRepository.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/models/paperOrderModel.js`, `paperPositionModel.js`\n- `/home/gcrux-tradeux/tradeux/backend/migrations/20260619000000-create-paper-tables.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-consistency.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` (getPaper: 103-163)\n- `/home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js` (linha 17)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/feeCalc.js` (reuso, sem alteração)'}, {'type': 'text', 'text': "agentId: aa366d362d45e721f (use SendMessage with to: 'aa366d362d45e721f' to continue this agent)\n<usage>subagent_tokens: 63656\ntool_uses: 23\nduration_ms: 161864</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'No naming collision. `findOrCreate` is new to this repo (no precedent), but it\'s a standard Sequelize method and works on both dialects. One subtle concern with `findOrCreate` + composite PK on Postgres: the `where` clause uses both PK columns, which is fine. The race window in `upsertPaperPosition` (between `getPaperPosition` read in the engine and the `findOrCreate`/`save`) is fully serialized by the `_inflight` lock per `strategy:symbol` key AND by the upstream `LOCK_BRAIN` per automation-id, so within a single process there\'s no concurrent write to the same position row. Multi-process would be a problem, but the backend is single-process. I have enough to write the verdict.\n\n---\n\n# QA GATE — Fatia 1 do Motor de Estratégias (Paper/Shadow Engine)\n\n## VEREDITO GLOBAL: **PASS COM RESSALVAS**\n\nEngenharia sólida e cirúrgica. Isolamento do money-path REAL é total, o HALT segue intacto (e com defesa-em-profundidade), a matemática de fee/P&L está correta e fee-simétrica, e a migration é idempotente e portável (lint passou, 28 migrations OK). As ressalvas são de robustez/operacional, nenhuma é bloqueante para um recurso de pesquisa sob HALT.\n\n---\n\n## INVARIANTES CRÍTICAS — verificação\n\n| # | Invariante | Status |\n|---|---|---|\n| 1 | PAPER nunca toca exchange/`orders`/buckets/carteira real | **OK** — branch retorna antes de tudo; `app-em.js` tem zero refs a paper e só reage a orderId real |\n| 2 | HALT/mainnet congelado intacto; caminho real byte-idêntico | **OK** — diff só INSERE o branch; nada abaixo mudou; `assertWithinRisk(isHalted)` segue em `exchange.buy/sell/oco` |\n| 3 | Branch no lugar certo (antes do calcQty) e não vaza quando não-paper | **OK** — `isPaperAutomation` false → segue normal |\n| 4 | Matemática fee/P&L (computeNet, avgCost fee-inclusive, sinais, guard net>0) | **OK** — simulado: round-trip +1% = +0,4794 (gross 0,6 − fees 0,1206); perda capturada como negativa; guard `net>0` não corrompe (net é fluxo de caixa do lado, P&L é `net−costBasis` downstream) |\n| 5 | Migration idempotente / dual-dialect / PK composta / sem SQL raw camelCase | **OK** — `createTable` puro, guard por-tabela com `showAllTables`, lint verde |\n| 6 | Edge cases | **PARCIAL** — ver achados MÉDIO/BAIXO |\n| 7 | `MAX_WALLET` da venda nunca atinge caminho real | **OK** sob HALT — prefixo desvia; e mesmo renomeado, HALT bloqueia na exchange (ver ALTO-1) |\n| 8 | Endpoint read-only não vaza segredo, tolera tabelas vazias | **OK** — atrás de `authMiddleware`; agrega só ledger paper; `reduce` com seed funciona vazio |\n\n---\n\n## ACHADOS POR SEVERIDADE\n\n**CRÍTICO:** nenhum.\n\n**ALTO:**\n- **(ALTO-1) Gate de roteamento é puramente nominal (prefixo `[PAPER]` no `name`).** Renomear uma automação paper viva (tirar o prefixo) a converte em REAL no próximo tick — `calcQty` passaria a ler carteira/buckets reais. Mitigação atual É suficiente HOJE porque `TRADING_HALT=true` bloqueia na fronteira da exchange (defesa-em-profundidade real, confirmada). **Ressalva forte:** quando o dono virar o HALT para o canary, esse gate vira a ÚNICA proteção. Recomendo, antes do descongelamento: (a) persistir um flag `isPaper` na automação OU (b) reforço no `calcQty`/`placeOrder` que recusa qualquer template `[PAPER]` no caminho real. Não bloqueia a Fatia 1, mas registrar como pré-req do flip.\n\n**MÉDIO:**\n- **(MÉDIO-1) OCO em PAPER é silenciosamente "info", não suportado.** `placePaperOrder` retorna `{type:\'info\'}` para OCO. Como `evalDecision` trata só `type===\'error\'` como break, uma trilha paper que use OCO nunca executa e nunca alerta o operador de que está inerte. Aceitável para v1 (o setup-script só cria MARKET), mas documente/avise no endpoint que trilhas OCO ficam mudas.\n- **(MÉDIO-2) `_inflight` só protege intra-tick no MESMO processo.** A serialização real vem do `LOCK_BRAIN` (per-automation-id, liberado após `INTERVAL`) + `_inflight` (per `strategy:symbol`). Há um detalhe: o `_inflight` é por `strategy:symbol`, mas o `LOCK_BRAIN` é por `automationId`. Duas automações `[PAPER]` distintas da MESMA trilha+símbolo (ex.: um Buy e um Sell, ou dois Buy) compartilham o `_inflight` key — isso é desejado (evita 2 fills no mesmo lote). Mas a leitura `getPaperPosition` → cálculo → `upsert` NÃO é transacional; só está a salvo porque é mono-processo. Se algum dia rodar 2 réplicas do backend, há TOCTOU. Registrar como premissa (mono-processo) no comentário.\n- **(MÉDIO-3) `realizedPnl` da posição persiste após nuke da automação, mas a posição aberta vira órfã se a trilha for renomeada.** `strategyOf` deriva a trilha da 2ª palavra do name. Renomear o name (mantendo `[PAPER]`) muda a trilha → a posição antiga (qty>0) fica órfã no ledger e o endpoint conta P&L não-realizado de uma trilha "fantasma". Baixo impacto (é paper), mas o avgCost/posição não migram.\n\n**BAIXO:**\n- **(BAIXO-1) `winRate` conta como "win" só `realizedPnl>0`.** Break-even exato (`==0`) não é win nem é contabilizado como loss separado — `winRate = wins/sells` está correto, mas trades zerados diluem. Cosmético.\n- **(BAIXO-2) `DEFAULT_BUY_USDT=20` quando símbolo não sincronizado.** Com `getSymbol` retornando `null` (símbolo não synced), `minNotional` vira NaN e a compra usa o default $20 sem checar minNotional real. Em paper é inócuo, mas o `floorToStep` com `stepSize` ausente não arredonda → qty pode ter precisão > basePrecision real (mitigado pelo `toFixed(basePrec=8)`).\n- **(BAIXO-3) `note`/`feeRate` no endpoint expõem só metadados inócuos.** Sem segredo. OK.\n- **(BAIXO-4) Migration usa guard por-tabela (melhor que o precedente harvest, que faz early-return cobrindo as duas).** Não é defeito — é uma MELHORIA de idempotência parcial. Só sinalizo a divergência de padrão.\n\n---\n\n## TESTES QUE EU RODARIA (antes do deploy)\n\n1. **CI local completo (espelha GitHub Actions):** `bash /home/gcrux-tradeux/tradeux/scripts/ci-preflight.sh` — prova migrate+seed 2× em MySQL E Postgres (idempotência da nova migration nos dois dialetos) + agent `--check`. **Já validei o lint isolado: 28 migrations OK.**\n2. **Migration round-trip:** `npx sequelize-cli db:migrate` → conferir `paperOrders`/`paperPositions` criadas (PK composta em `paperPositions`); `db:migrate:undo` → `down` dropa as duas; `db:migrate` 2× seguido → sem erro (guard `showAllTables`).\n3. **Round-trip de P&L vivo:** com server no ar + MINI_TICKER quente de BTCUSDT, rodar `node scripts/setup-paper-consistency.js`, ativar as automações, forçar BUY (RSI<25) e SELL (RSI>75); conferir em `GET /analysis/paper` que `realizedPnl` bate com `(preço_venda − preço_compra)×qty − fees` e que `unrealizedPnl` some ao fechar.\n4. **Isolamento (o teste mais importante):** com `TRADING_HALT=true`, disparar uma trilha `[PAPER]` e provar: (a) zero linhas novas em `orders` real; (b) `MEMORY` dos buckets (`TREND_QTY`/`FARM_DCA`/`HARVEST`/`FARM_SELLING`) inalterado; (c) carteira Binance intocada; (d) nenhuma chamada a `utils/exchange`.\n5. **Anti-empilhamento:** dois ticks no mesmo `strategy:symbol` no mesmo INTERVAL → só 1 fill (lock `_inflight` + `LOCK_BRAIN`). BUY com posição já aberta → "compra ignorada". SELL sem posição → "venda ignorada".\n6. **Edge MINI_TICKER frio:** disparar PAPER num símbolo sem MINI_TICKER → retorna `{type:\'error\', \'[PAPER] sem preço\'}` e NÃO grava nada (verificar `paperOrders` vazio).\n7. **Símbolo não sincronizado:** PAPER num símbolo sem linha em `symbols` (`getSymbol`→null) → confirmar que NÃO lança e cai no default $20 (BAIXO-2).\n8. **Defesa-em-profundidade (ALTO-1):** renomear uma automação `[PAPER]` tirando o prefixo, disparar, e confirmar que a ordem REAL é BLOQUEADA pelo `[riskGuard] HALT` (não chega à Binance) — provando que o flip do gate nominal está coberto sob HALT.\n9. **Endpoint vazio:** `GET /analysis/paper` com tabelas vazias → 200, `strategies:[]`, `totals` zerados (sem 500).\n10. **Auth:** `GET /analysis/paper` sem JWT → 401 (montado sob `authMiddleware`).\n\n---\n\n## RECOMENDAÇÃO DE MERGE\n\n**Aprovar e mergear** após rodar os testes 1–6 e 8–10 (especialmente 1, 4 e 8). É um recurso de pesquisa estritamente aditivo, sob HALT, com isolamento comprovado do money-path e math correta. As ressalvas ALTO-1 e MÉDIO-1/2/3 são de hardening/operação — **não bloqueiam a Fatia 1**, mas o **ALTO-1 (gate nominal) deve virar pré-requisito explícito antes do flip `TRADING_HALT=false`/canary**, quando o prefixo deixaria de ter o HALT como rede de segurança.\n\nArquivos revisados (todos absolutos):\n- `/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/paperRepository.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/models/paperOrderModel.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/models/paperPositionModel.js`\n- `/home/gcrux-tradeux/tradeux/backend/migrations/20260619000000-create-paper-tables.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-consistency.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (branch linhas 451-457)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` (`getPaper`)\n- `/home/gcrux-tradeux/tradeux/backend/src/routers/analysisRouter.js`\n- Referências de invariante: `/home/gcrux-tradeux/tradeux/backend/src/utils/feeCalc.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`, `/home/gcrux-tradeux/tradeux/backend/src/riskState.js`, `/home/gcrux-tradeux/tradeux/backend/src/app-em.js`, `/home/gcrux-tradeux/tradeux/backend/src/app.js`'}, {'type': 'text', 'text': "agentId: ae0d76a79a3fca705 (use SendMessage with to: 'ae0d76a79a3fca705' to continue this agent)\n<usage>subagent_tokens: 62262\ntool_uses: 31\nduration_ms: 262658</usage>"}]
+> ```
+
+## 🤖 Claude *(04:11:46)*
+
+
+## 🤖 Claude *(04:11:50)*
+
+Ambos os gates passaram:
+- **QA: PASS COM RESSALVAS** — zero CRÍTICO; isolamento do money-path e math confirmados. ALTO-1: o gate por prefixo `[PAPER]` é nominal — hoje coberto pelo HALT, mas **vira pré-requisito do flip** (registrar).
+- **TL: APPROVE COM SUGESTÕES** — 2 must-fix pequenos (preferência: follow-up). 
+
+Vou aplicar agora o **must-fix #1 do TL** (guard de quote não-USDT — barato, evita P&L em moeda errada fora do happy-path) e checar como o backend é servido (build vs mount).
+
+## 🤖 Claude *(04:11:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "old_string": "    if (type === 'OCO')\n        return { type: 'info', text: `[PAPER] OCO ainda n\u00e3o suportado (Fatia 1) \u2014 ${symbolStr}.` };\n\n    const price = fillPrice(symbolStr);",
+  "new_string": "    if (type === 'OCO')\n        return { type: 'info', text: `[PAPER] OCO ainda n\u00e3o suportado (Fatia 1) \u2014 ${symbolStr}.` };\n\n    // Fatia 1 s\u00f3 suporta pares com quote USDT: computeNet/fee aqui assumem a taxa em USDT (commissionAsset).\n    // Num par n\u00e3o-USDT (ex.: ETHBTC) o net/fee ficariam denominados na moeda errada SILENCIOSAMENTE \u2192 P&L\n    // mentiroso. Recusa expl\u00edcita (os 4 alvos do projeto s\u00e3o *USDT). Quote do symbol model, com fallback no sufixo.\n    const quote = (symbol && symbol.quote) ? String(symbol.quote).toUpperCase() : (symbolStr.endsWith('USDT') ? 'USDT' : null);\n    if (quote !== 'USDT')\n        return { type: 'info', text: `[PAPER] Fatia 1 s\u00f3 suporta quote USDT \u2014 ${symbolStr} ignorado.` };\n\n    const price = fillPrice(symbolStr);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/paperEngine.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:11:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && echo \"=== node --check paperEngine ===\" && node --check backend/src/paperEngine.js && echo OK\necho \"=== backend service: build ou mount? ===\" && sed -n '/backend:/,/^  [a-z]/p' docker-compose.yml | head -40",
+  "description": "Re-check paperEngine syntax and inspect backend compose service"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check paperEngine ===
+> OK
+> === backend service: build ou mount? ===
+>   backend:
+>     build: ./backend
+>     restart: unless-stopped
+>     env_file: .env
+>     volumes:
+>       - ./tradeux-agent/journal:/journal:ro
+>     depends_on:
+>       db:
+>         condition: service_healthy
+>     deploy:
+>       resources:
+>         limits:
+>           memory: 384M
+>     networks: [tradeux]
+> 
+>   agent:
+> ```
+
+## 🤖 Claude *(04:12:50)*
+
+
+## 🤖 Claude *(04:12:52)*
+
+O backend é **`build: ./backend`** (imagem buildada, fonte NÃO montada) — então aplicar as mudanças exige **rebuild + restart** do backend da prod. Antes de propor isso, vou rodar um **require-smoke** seguro: carrego o código novo dentro da imagem atual (com a fonte do host montada read-only), sem tocar o container rodando nem o DB — pega erro de load/require/export.
+
+## 🤖 Claude *(04:12:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ndocker run --rm --entrypoint node \\\n  -v \"/home/gcrux-tradeux/tradeux/backend/src:/app/src:ro\" \\\n  -v \"/home/gcrux-tradeux/tradeux/backend/migrations:/app/migrations:ro\" \\\n  tradeux-backend -e \"\n    require(\\\"/app/migrations/20260619000000-create-paper-tables\\\");\n    require(\\\"/app/src/models/paperOrderModel\\\");\n    require(\\\"/app/src/models/paperPositionModel\\\");\n    require(\\\"/app/src/repositories/paperRepository\\\");\n    const pe = require(\\\"/app/src/paperEngine\\\");\n    require(\\\"/app/src/controllers/analysisController\\\");\n    require(\\\"/app/src/routers/analysisRouter\\\");\n    console.log(\\\"REQUIRE OK \u2014 isPaper([PAPER] x)=\\\", pe.isPaperAutomation({name:\\\"[PAPER] Consistencia Buy BTCUSDT\\\"}), \\\"| strategy=\\\", pe.strategyOf({name:\\\"[PAPER] Consistencia Buy BTCUSDT\\\"}), \\\"| isPaper(real)=\\\", pe.isPaperAutomation({name:\\\"Trend Buy BTCUSDT\\\"}));\n  \"\n' 2>&1 | tail -20",
+  "description": "Require-smoke new code inside backend image with host source mounted"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /app/src/utils/crypto.js:4
+> if (key.length !== 32) throw new Error('Invalid key size for AES. Must be 256-bit / 32 bytes.');
+>                        ^
+> 
+> Error: Invalid key size for AES. Must be 256-bit / 32 bytes.
+>     at Object.<anonymous> (/app/src/utils/crypto.js:4:30)
+>     at Module._compile (node:internal/modules/cjs/loader:1781:14)
+>     at Object..js (node:internal/modules/cjs/loader:1913:10)
+>     at Module.load (node:internal/modules/cjs/loader:1505:32)
+>     at Function._load (node:internal/modules/cjs/loader:1309:12)
+>     at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+>     at Module.require (node:internal/modules/cjs/loader:1527:12)
+>     at require (node:internal/modules/helpers:147:16)
+>     at Object.<anonymous> (/app/src/repositories/settingsRepository.js:3:16)
+>     at Module._compile (node:internal/modules/cjs/loader:1781:14)
+> 
+> Node.js v22.22.3
+> ```
+
+## 🤖 Claude *(04:13:14)*
+
+
+## 🤖 Claude *(04:13:16)*
+
+O erro **não é do meu código** — é o `crypto.js` (pré-existente) exigindo `AES_KEY` no load, porque rodei o container sem o `.env`. Repare: migration, models, paperRepository e paperEngine **carregaram sem erro**; a falha veio só quando `analysisController` puxou `settingsRepository → crypto`. Vou repetir com o `.env` para validar a cadeia completa.
+
+## 🤖 Claude *(04:13:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ndocker run --rm --entrypoint node --env-file /home/gcrux-tradeux/tradeux/.env \\\n  -v \"/home/gcrux-tradeux/tradeux/backend/src:/app/src:ro\" \\\n  -v \"/home/gcrux-tradeux/tradeux/backend/migrations:/app/migrations:ro\" \\\n  tradeux-backend -e \"\n    require(\\\"/app/migrations/20260619000000-create-paper-tables\\\");\n    require(\\\"/app/src/models/paperOrderModel\\\");\n    require(\\\"/app/src/models/paperPositionModel\\\");\n    require(\\\"/app/src/repositories/paperRepository\\\");\n    const pe = require(\\\"/app/src/paperEngine\\\");\n    require(\\\"/app/src/controllers/analysisController\\\");\n    require(\\\"/app/src/routers/analysisRouter\\\");\n    console.log(\\\"REQUIRE OK \u2014 isPaper([PAPER])=\\\"+pe.isPaperAutomation({name:\\\"[PAPER] Consistencia Buy BTCUSDT\\\"})+\\\" strategy=\\\"+pe.strategyOf({name:\\\"[PAPER] Consistencia Buy BTCUSDT\\\"})+\\\" isPaper(real)=\\\"+pe.isPaperAutomation({name:\\\"Trend Buy BTCUSDT\\\"}));\n  \"\n' 2>&1 | tail -20",
+  "description": "Re-run require-smoke with env file to validate full wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> REQUIRE OK — isPaper([PAPER])=true strategy=consistencia isPaper(real)=false
+> ```
+
+## 🤖 Claude *(04:14:14)*
+
+
+## 🤖 Claude *(04:14:23)*
+
+Require-smoke passou com o `.env`: a cadeia inteira carrega, o roteamento por prefixo funciona (`[PAPER]`→paper, automação real→não-paper). 
+
+## Status da Fatia 1 — código pronto e gated ✅
+
+**Construído** (6 arquivos novos + 3 edits cirúrgicos):
+- `paperEngine.js` (broker virtual), `paperRepository.js`, models `paperOrder`/`paperPosition`, migration dual-dialect, `setup-paper-consistency.js`, endpoint `GET /analysis/paper`.
+- Roteamento: 1 branch em `placeOrder` (antes do `calcQty`) — caminho real **byte-idêntico** abaixo.
+
+**Verificação estática** (sem tocar a prod): 9/9 `node --check` · lint de migration (28 OK, MySQL+Postgres) · require-smoke da cadeia completa OK.
+
+**Gates:**
+- **QA: PASS COM RESSALVAS** — zero crítico; isolamento do money-path e matemática de P&L confirmados. *Ressalva ALTO-1:* o gate por prefixo `[PAPER]` é nominal — hoje coberto pelo HALT, mas **vira pré-requisito antes de virar o HALT** (vou registrar no HANDOFF).
+- **TL: APPROVE COM SUGESTÕES** — must-fix #1 (guard quote≠USDT) **já apliquei**; resto é Fatia 2.
+
+**Falta** só o passo que mexe na prod: **rebuild do backend** (a fonte é buildada na imagem, não montada) + migration + setup. O mainnet segue **CONGELADO** em qualquer cenário — isto é 100% paper.
+
+Como o rebuild reinicia o backend do sistema real (mesmo congelado), deixo a decisão do "ir" com você:
+
+## 🤖 Claude *(04:14:30)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como prosseguir com o deploy da Fatia 1? (rebuild do backend da prod + migration + setup \u2014 mainnet segue CONGELADO em qualquer caso, \u00e9 100% paper)",
+      "header": "Deploy",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Deploy + ativar paper agora",
+          "description": "Rebuild do backend, roda a migration, cria e D\u00c1 START nas automa\u00e7\u00f5es [PAPER] de consist\u00eancia (BTCUSDT 1m, RSI 25/75) \u2192 come\u00e7a a coletar P&L paper com pre\u00e7o+fee mainnet reais. Acompanho em GET /analysis/paper."
+        },
+        {
+          "label": "Deploy, manter paper inativo",
+          "description": "Crio tudo (migration + setup), mas deixo as automa\u00e7\u00f5es [PAPER] PARADAS. Voc\u00ea d\u00e1 o start quando quiser (e escolhe o s\u00edmbolo)."
+        },
+        {
+          "label": "Segurar \u2014 revisar antes",
+          "description": "N\u00e3o toco a prod ainda. Te mostro o diff/arquivos completos pra voc\u00ea revisar primeiro."
+        }
+      ]
+    },
+    {
+      "question": "Quer que eu j\u00e1 comite e suba pro master (trunk-based) ap\u00f3s o deploy, ou s\u00f3 depois que o paper rodar um tempo?",
+      "header": "Commit/push",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Commit + push ap\u00f3s deploy OK",
+          "description": "Selo a Fatia 1 no master (commit por camada + push via GITHUB_TOKEN_API) assim que o deploy passar, junto com a atualiza\u00e7\u00e3o do HANDOFF/mem\u00f3ria."
+        },
+        {
+          "label": "Esperar o paper rodar primeiro",
+          "description": "Deixo no working tree, sem commitar; selo depois que vermos as primeiras ordens paper coerentes."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 956
-> * **Sessões do Claude**: 914
+> * **Total de Sessões Registradas**: 958
+> * **Sessões do Claude**: 916
 > * **Sessões do Gemini**: 42
 
 ---
@@ -61,6 +61,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-06-19 - agent-ae74e02876e726a14]]` - *2026-06-19*
 *   `[[2026-06-19 - agent-ae53f30460d8a7f17]]` - *2026-06-19*
+*   `[[2026-06-19 - agent-ae0d76a79a3fca705]]` - *2026-06-19*
+*   `[[2026-06-19 - agent-aa366d362d45e721f]]` - *2026-06-19*
 *   `[[2026-06-19 - agent-a4de6f4788c9fdf1b]]` - *2026-06-19*
 *   `[[2026-06-19 - agent-a46f1a0b3cb469306]]` - *2026-06-19*
 *   `[[2026-06-19 - Implement shake-hands endpoint]]` - *2026-06-19*
@@ -69,9 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-18 - agent-acee5c00b91d1a2e0]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-aba655fc71fe7b1e5]]` - *2026-06-18*
 *   `[[2026-06-18 - agent-a7aaa6dc8aad3c90d]]` - *2026-06-18*
-*   `[[2026-06-18 - agent-a77b693ec8e6f384e]]` - *2026-06-18*
-*   `[[2026-06-18 - agent-a64425ca72c83ee24]]` - *2026-06-18*
-*   *... e mais 920 sessões nessa categoria.*
+*   *... e mais 922 sessões nessa categoria.*
 
 ---
 
@@ -264,6 +264,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-19 - agent-ae74e02876e726a14]]` (ClaudeSessions)
 *   `[[2026-06-19 - agent-ae53f30460d8a7f17]]` (ClaudeSessions)
+*   `[[2026-06-19 - agent-ae0d76a79a3fca705]]` (ClaudeSessions)
+*   `[[2026-06-19 - agent-aa366d362d45e721f]]` (ClaudeSessions)
 *   `[[2026-06-19 - agent-a4de6f4788c9fdf1b]]` (ClaudeSessions)
 *   `[[2026-06-19 - agent-a46f1a0b3cb469306]]` (ClaudeSessions)
 *   `[[2026-06-19 - Implement shake-hands endpoint]]` (ClaudeSessions)
