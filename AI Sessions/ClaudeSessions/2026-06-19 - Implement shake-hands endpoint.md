@@ -4997,6 +4997,1247 @@ Syntax OK. Gate da Fatia 2a (QA + TL) em paralelo sobre o diff (slippage + trilh
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmado: `parseMemoryKey(symbol, index, interval)` monta a chave, e o uso real em `flowJob.js` é `RSI_14_1m`. A `RSI_KEY = RSI_14_${INTERVAL}` do script produz exatamente isso. Tenho tudo que preciso para o veredito.\n\n---\n\n# Review — Fatia 2a (Paper/Shadow Engine: slippage + trilhas)\n\nLi `/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js`, o roteador em `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:456-457`, `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js` e o script da Fatia 1.\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nMudança pequena, bem-escoposta, reversível e **risco real = zero**. Nada bloqueia o merge. Há porém um furo operacional que, se não tratado, faz as trilhas das alts **nunca dispararem** — é o ponto mais importante abaixo (operação, não código).\n\n---\n\n## 1. RISCO — zero risco real mantido? Slippage correto?\n\n**Sim, confirmado.** O gate `[PAPER]` em `beholder.js:456-457` precede tudo que tem efeito real (exchange/insertOrder/locks/OCO/calcQty); o caminho real fica byte-idêntico. O diff toca só `paperEngine.js` (broker virtual) e um script standalone. HALT/`riskState`/`TRADING_HALT` intactos — o paper nem passa pelo `assertWithinRisk`.\n\nSlippage **correto e na direção certa**: `BUY = mid*(1+s)`, `SELL = mid*(1-s)` — paper levemente pessimista, fecha o viés otimista do mid. O `price` (= fill) propaga corretamente para `cummQuote`, `commission`, `net`, `avgCost`, `realized` e `costBasis`; nenhum ponto a jusante ainda usa o `mid` cru. Parse defensivo (`Number.isFinite && >= 0`, fallback 0.0005) consistente com `FEE_RATE`/`DEFAULT_BUY_USDT`. Aprovado sem ressalvas.\n\n## 2. DESIGN das trilhas + mapeamento via 2ª palavra\n\nConsistência (mean-reversion, range/mixed) + Macro (golden/death) cobrem 2 dos 3 perfis; deixar Frequência fora até ter EV positivo no backtest é a decisão certa (não construir -EV especulativo). O Macro casa com `regimeJob.js` que escreve `TREND_CROSS_1h` como sinal discreto edge-trigger sem invertCondition (`regimeJob.js:130-146`) — dispara 1× por cross, fiel ao trend real.\n\n**Mapeamento condição→trilha pela 2ª palavra do name (`strategyOf`):** escala de forma aceitável para o conjunto atual, mas é frágil — depende de naming-by-convention sem validação. `"[PAPER] Consistencia Buy X"` → `consistencia`. Um typo no name (ex.: "Consistência" com acento, ou "Macro" vs "MACRO") cria uma trilha-fantasma silenciosa no ledger. Aceitável para Fatia 2 (a coluna `mode` já é follow-up conhecido), mas é dívida que deve fechar antes de a Fatia escalar de research para algo que o dono leia como verdade.\n\n**Inconsistência do gate BTC (id39 `!=bear`) vs alts (`!=bear && !=trend`):** o script novo é internamente consistente — gera `!=bear && !=trend` para **todos** os 4 símbolos, BTC incluso (`setup-paper-trilhas.js:111`). A divergência é só com o **id39 legado** da Fatia 1 (`setup-paper-consistency.js:124`, que gera só `!=bear`). Ou seja: rodar o script novo **não cria** um id39 inconsistente — ele encontra o `"[PAPER] Consistencia Buy BTCUSDT"` já existente (idempotência por name) e **pula**, deixando o id39 com o gate ANTIGO. Resultado: BTC consistência fica com semântica diferente das alts por puro acidente de idempotência. **Deve unificar** — PATCH no id39 para `!=bear && !=trend` (mean-reversion em regime trend é justamente o que não se quer). Nice-to-have de research, mas é a correção mais limpa para não comparar maçãs com laranjas no P&L entre símbolos.\n\n## 3. FIDELIDADE — 5 bps/lado é honesto/suficiente?\n\nPara a fase de research sob HALT, **sim**. 5 bps/lado = 10 bps round-trip de spread sintético, somado a fee 0,1%/lado, dá ~30 bps de fricção por round-trip — conservador e honesto para BTC/líquidos. A direção pessimista é a escolha eticamente certa (não promete demais).\n\n**Não é suficiente para "transferir pra mainnet" como verdade final**, e o código admite isso. Limitações reais: (a) fill ao `MINI_TICKER.close` (mid), não ao book real — sem topo de book/depth; (b) sem partial fills; (c) slippage **fixo** independente de tamanho/liquidez (ADA/LTC em size maior teria slippage maior que BTC); (d) MARKET assume preenchimento instantâneo. Para o gate de "ir pra mainnet" será preciso book real ou ao menos slippage proporcional ao notional. **Follow-up, não bloqueador** — é exatamente o que a Fatia 2b/3 deve endereçar.\n\n## 4. MANUTENIBILIDADE — deprecar o script da Fatia 1?\n\n**Sim, deprecar/remover `setup-paper-consistency.js`.** O novo `setup-paper-trilhas.js` é superнабор estrito: mesmo helper HTTP, mesma idempotência, faz consistência (multi-símbolo) + macro. Manter os dois é a fonte direta da inconsistência id39 do item 2 — quem rodar o antigo recria a divergência. Sugestão pragmática: **remover** o antigo no mesmo PR (ou logo após o merge) para não deixar duas verdades de setup. Diferença menor a notar: o antigo aceita `TRADEUX_EMAIL/PASSWORD`; o novo só `DEFAULT_SETTINGS_EMAIL/PWD` ou `TRADEUX_EMAIL/PASSWORD` (cobre ambos) — sem regressão de credenciais.\n\nString mágica do prefixo/trilha: aceitável, `mode` é follow-up reconhecido. OK.\n\n## Observação de OPERAÇÃO (mais importante que o código)\n\n`regimeJob.resolveSymbols()` (`regimeJob.js:58-67`) só resolve símbolos de **automações ATIVAS** (`getActiveAutomations()`). As trilhas [PAPER] nascem **INATIVAS** e gateiam por `REGIME`/`TREND_CROSS_1h`. Cadeia:\n- **REGIME/TREND_CROSS só existem na MEMORY se o símbolo estiver na lista do regimeJob.**\n- Sem ativar a automação, o símbolo não entra via `getActiveAutomations`.\n- Com a condição usando `MEMORY[\'LTCUSDT:REGIME\']` que está fria, a automação fica fail-safe (não compra) — correto e seguro, mas significa que **ativar a automação não basta**: para LTC/BNB/ADA o operador precisa setar `REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT` no env (hoje só BTC tem regime computado garantido, conforme MEMORY do projeto). Sem isso, as 3 alts ficam sempre gateadas em fail-safe e a Fatia 2 não produz dado nenhum nas alts — research silenciosamente vazio.\n\nNão é defeito do diff; é um passo de runbook que precisa estar no HANDOFF/comando de ativação. O script já documenta "garanta o REGIME", mas para 4 símbolos isso vira `REGIME_SYMBOLS` no compose.\n\n---\n\n## Must-fix (antes de considerar a fatia "pronta", não bloqueia o merge sob HALT)\n- Nenhum bloqueador de merge. (Risco real zero; HALT intacto.)\n\n## Nice-to-have / follow-up\n1. **PATCH id39** para `!=bear && !=trend` — unifica o gate de consistência BTC com as alts (senão P&L entre símbolos compara semânticas diferentes). Fonte: `setup-paper-consistency.js:124` vs `setup-paper-trilhas.js:111`.\n2. **Remover `setup-paper-consistency.js`** (superado pelo novo; mantê-lo recria a divergência id39).\n3. **Runbook de ativação:** documentar `REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT` no HANDOFF — sem isso as trilhas das 3 alts nunca disparam (`regimeJob.js:58-67`).\n4. **Fidelidade Fatia 2b/3:** slippage proporcional ao notional + book real/partial antes de qualquer "transferir pra mainnet".\n5. **Dívida do naming:** coluna `mode` para substituir a 2ª-palavra-do-name (já reconhecida).\n\n---\n\n## Decisão de merge\n**MERGE APROVADO.** Condições antes do push (ordem):\n1. Mergear o diff como está (paperEngine slippage + setup-paper-trilhas.js).\n2. No mesmo PR ou imediatamente após: PATCH id39 + remover `setup-paper-consistency.js` (fecham a divergência de uma vez).\n3. Atualizar HANDOFF com `REGIME_SYMBOLS` dos 4 símbolos como pré-requisito de ativação.\n4. Os `backend/backtest-results/*.json|.md` aparecem como untracked — confirmar se entram no commit ou ficam fora (provavelmente artefatos de research; não misturar no PR de código a menos que sejam o output do workflow de frequência que justifica deixar Frequência fora).\n\nPush/merge como root com a chave do `ubuntu` + chown de volta para `gcrux-tradeux`, via PR (não direto ao master), conforme topologia.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-consistency.js` (candidato a remoção)\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (roteador, linhas 456-457)\n- `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js` (resolveSymbols, linhas 58-67)'}, {'type': 'text', 'text': "agentId: a9d108916071e2f91 (use SendMessage with to: 'a9d108916071e2f91' to continue this agent)\n<usage>subagent_tokens: 43045\ntool_uses: 16\nduration_ms: 114161</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '`getMemory` returns a clone of the MINI_TICKER object; `fillPrice` reads `.close`. The cold-check (`if (!mid)`) is intact and unchanged in semantics — `fillPrice` returns `null` when MINI_TICKER is absent or close is non-finite/≤0, and `!mid` catches `null`/`0`/`NaN`. Note: `mid` is now the raw mid; the cold-check correctly guards before computing `price`. Good.\n\nI have everything I need. Final assessment.\n\n---\n\n# QA Gate — Fatia 2a do Motor de Estratégias (Paper/Shadow Engine)\n\n## VEREDITO: PASS COM RESSALVAS\n\nDiff limpo e cirúrgico (`backend/src/paperEngine.js`: +8/−2; novo `backend/scripts/setup-paper-trilhas.js`). É research em PAPER sob `TRADING_HALT=true`, roteado antes do `calcQty`/exchange — **zero exposição ao caminho real de dinheiro**. As ressalvas são todas BAIXA e nenhuma toca o money-path real. Aprovado para deploy.\n\n## Achados por severidade\n\n### [BAIXA] Gate divergente do BTC vs alts na trilha CONSISTÊNCIA (a inconsistência que você apontou — confirmada)\nA Fatia 1 (`setup-paper-consistency.js`, commit `22ba96b`) já criou `[PAPER] Consistencia Buy BTCUSDT` com gate **só** `!==\'bear\'` (linha 124). O novo script gera o MESMO name com gate `!==\'bear\' && !==\'trend\'` (linha 111), mas `ensureAutomation` faz find-by-name e **PULA** o BTC → o BTC fica com gate diferente das alts (LTC/BNB/ADA mean-revertem fora de bear E trend; o BTC mean-reverte também em trend).\n- **Severidade real: BAIXA.** É paper (zero risco) e a divergência só vira ruído no estudo: o BTC pode disparar 1 lote de mean-reversion durante um trend, o que **suja a comparabilidade entre símbolos** (você não estará comparando a MESMA regra em 4 símbolos). Para um experimento de consistência cross-símbolo isso importa para a leitura, não para a segurança.\n- **Recomendação:** alinhar o BTC antes de ativar — `PATCH` na conditions/indexes da id da Consistencia Buy BTCUSDT acrescentando `&& MEMORY[\'BTCUSDT:REGIME\']!==\'trend\'` (e `BTCUSDT:REGIME` já está no index). Ou aceitar a divergência conscientemente e anotá-la na análise. O script **não** corrige sozinho — find-by-name é cego ao conteúdo.\n\n### [BAIXA] `ensureAutomation` trata 409 do servidor como erro fatal (não como idempotência)\n`findAutomationByName` pagina até 80 páginas e quebra cedo em `rows.length < 10`. No caminho normal isso pré-empta o POST. Mas SE a paginação errar (página exatamente cheia + alvo adiante, ou >800 automações), o servidor responde 409 (`automationExists`, linha 128) e `ensureAutomation` faz `throw` (linha 96) em vez de tratar como "já existe". Diferente do `ensureTemplate`, que tolera duplicata via find-first. Hoje há ~40 automações → folga enorme; risco teórico.\n- **Recomendação (opcional):** tratar `r.status === 409` como skip idempotente em `ensureAutomation`, igualando ao comportamento de templates/monitores.\n\n### [INFO] P&L não-realizado valoriza a posição aberta ao mid cru, não ao SELL-com-slippage\nNo `analysisController.getPaper` (linha 125): `unrealized = qty*mid − qty*avgCost`. O `avgCost` **já inclui** slippage+fee de COMPRA (correto), mas a marcação a mercado usa o MINI_TICKER cru (mid), sem descontar a slippage de venda. Resultado: o não-realizado é levemente **otimista** (não cobra o custo de saída até a venda virar realizada). Isto NÃO é regressão da Fatia 2a (o endpoint não mudou) e é a convenção padrão de mark-to-market (slippage de saída só ao executar). Só registro para você não interpretar o não-realizado como líquido-de-saída. O **realizado** é fiel (slippage dos dois lados — verifiquei numericamente).\n\n### [INFO] Resíduo no working tree não relacionado\n6 arquivos `backend/backtest-results/backtest-15m-*.{json,md}` untracked junto com a fatia. Não fazem parte desta entrega; decidir se entram no commit ou ficam gitignored.\n\n## Verificações que rodei (resultado)\n\n1. **Slippage — direção e conservadorismo:** CORRETO. `price = BUY ? mid*(1+SLIP) : mid*(1-SLIP)` (BUY paga acima, SELL recebe abaixo). Round-trip a mid flat realiza ≈ −0,30% (2× fee 0,1% + 2× slip 0,05%) — pessimista de propósito, não infla P&L. avgCost e realizedPnl incluem slippage dos dois lados (verificação numérica: realized = −0,059970 ≈ esperado −0,060000 em notional 20).\n2. **`mid` não vaza a jusante:** CONFIRMADO via grep — `mid` aparece só nas linhas 78-82 (cold-check + derivação de `price`). qty-sizing, cummQuote, `computeNet(avgPrice:price)`, insert e log usam `price`. Cold-check (`if (!mid)`) intacto.\n3. **MACRO edge-trigger:** CONFIRMADO. `invertCondition` retorna `false` p/ `===\'golden\'`/`===\'death\'` (sem token `current`) — testado para a chave TREND_CROSS E REGIME. Como o `regimeJob` escreve \'golden\'/\'death\' só na borda com `executeAutomations=true` e \'none\' passivo, dispara exatamente 1× por cross, sem fire repetido nem no-op. golden→BUY (skip se posicionado), death→SELL (skip se flat) casam com o paperEngine v1.\n4. **CONSISTÊNCIA edge-trigger:** CONFIRMADO. Disparada pela chave RSI (driver do tick), `invertCondition` anexa `previous>25`/`<75` → só na transição. As cl+ `!==\'trend\'` não interferem (invertCondition isola o clause com `current`). REGIME entra como gate passivo (write com executeAutomations=false; index é fail-safe via `isChecked`).\n5. **Validação backend:** `validateConditions` (regex) PASSA nas 4 conditions geradas (testado). Templates MARKET + MIN_NOTIONAL/MAX_WALLET passam (`orderTemplatesController` só valida limitPrice/stopPrice via `validatePrice`; quantity não é validada; limit/stop = null OK em MARKET). `insertAutomation` exige ≥1 condition + ≥1 action — ambos satisfeitos.\n6. **resolveSymbols pega as alts:** CONFIRMADO. `regimeJob.resolveSymbols` deriva de `getActiveAutomations()` (retorna `symbol`, non-wildcard) → após ativar as paper das alts, LTC/BNB/ADA entram no job e ganham REGIME + TREND_CROSS. **Pré-requisito operacional:** ativar as automações ANTES de esperar sinal (senão REGIME/TREND_CROSS não são computados p/ a alt; com index fail-safe a compra simplesmente não avalia até o regime existir).\n7. **Regressão no caminho real:** NENHUMA. Único toque em `paperEngine.js` (ramo já isolado por `isPaperAutomation` em `beholder.placeOrder` ANTES de calcQty/OCO/exchange); o caminho real fica byte-idêntico. `node --check` OK nos 2 arquivos.\n\n## Testes que eu rodaria antes do deploy\n\n1. **DRY-run do setup** dentro do container com server no ar: `DRY=true node scripts/setup-paper-trilhas.js` — conferir as 4 conditions×4 símbolos e que BTC reporta "já existe" (Consistencia) provando o skip.\n2. **Idempotência:** rodar o setup 2× real → segunda rodada deve reportar tudo "já existe", 0 duplicatas (validar `GET /automations` contagem antes/depois).\n3. **Round-trip de slippage ao vivo:** ativar UMA trilha (ex.: `[PAPER] Consistencia BTCUSDT`), forçar/aguardar BUY+SELL, e em `GET /analysis/paper` conferir: fill BUY > mid, fill SELL < mid, realizedPnl negativo num round-trip de preço estável (= 2 fee + 2 slip). Comparar com o cálculo manual.\n4. **MACRO 1 cross real (ou simulado):** com a Macro de uma alt ativa, observar no `logs/regime.log` o `golden cross` → 1 entrada `[PAPER] BUY` em `logs/A:<id>.log`, e que o próximo poll (\'none\') NÃO re-dispara. Idem death→SELL. Testar death sem posição (skip) e golden já posicionado (skip).\n5. **Isolamento sob HALT:** confirmar `orders`/buckets reais inalterados (`SELECT count(*) FROM orders` antes/depois) e `halted=true` durante todo o experimento — paper não deve produzir nenhuma chamada à Binance.\n6. **resolveSymbols:** após ativar uma alt paper, conferir `GET /analysis/regime-status` (ou `logs/regime.log`) mostrando LTC/BNB/ADA com REGIME computado em ≤5min.\n7. **CI preflight** (espelha o gate): `bash scripts/ci-preflight.sh` — a fatia não toca migrations, mas confirma que nada quebrou em migrate+seed dual-dialect + agent `--check`.\n\n## Recomendação de merge\n\n**MERGE OK.** Risco efetivo ~nulo (paper, sob HALT, caminho real intacto). Antes de ATIVAR as trilhas, faça uma decisão explícita sobre a ressalva BAIXA do gate-divergente do BTC (alinhar via PATCH para comparabilidade cross-símbolo, ou documentar a divergência na análise). As demais ressalvas são opcionais/cosméticas.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js` (slippage, linhas 78-82)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js` (novo; gate alts linha 111, find-by-name linhas 76-86, 409-throw linha 96)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-consistency.js` (Fatia 1; gate BTC só `!=bear` linha 124 — origem da divergência)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` (P&L paper; não-realizado ao mid, linha 125)\n- `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js` (TREND_CROSS edge-trigger linhas 134-153; resolveSymbols linhas 58-72)\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (roteamento paper linhas 456-457; invertCondition/shouldntInvert linhas 139-151/833-845)'}, {'type': 'text', 'text': "agentId: a1cb6fe4b703cf505 (use SendMessage with to: 'a1cb6fe4b703cf505' to continue this agent)\n<usage>subagent_tokens: 80196\ntool_uses: 33\nduration_ms: 258377</usage>"}]
+> ```
+
+## 🤖 Claude *(14:34:29)*
+
+
+## 🤖 Claude *(14:34:33)*
+
+Gates Fatia 2a: **QA PASS COM RESSALVAS + TL APPROVE COM SUGESTÕES** — zero bloqueador, zero risco real, HALT intacto. Ações dos achados (todos BAIXA/nice-to-have, vou aplicar):
+1. **PATCH id39** (consistência BTC) p/ `!=bear && !=trend` — unifica com as alts (comparabilidade).
+2. **Remover** `setup-paper-consistency.js` (superado pelo geral).
+3. **`REGIME_SYMBOLS`** dos 4 símbolos — garante REGIME/TREND_CROSS computados.
+4. Não commitar `backtest-results/*` (artefato de research).
+
+Primeiro inspeciono git + `.env` + os artefatos.
+
+## 🤖 Claude *(14:34:33)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(14:34:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git status (untracked/modified) ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' status --short\necho \"=== backtest-results untracked? ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' status --short backend/backtest-results/ 2>/dev/null | head\necho \"=== .env tem REGIME_SYMBOLS? (nome s\u00f3) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -c \"^REGIME_SYMBOLS=\" .env || true'\necho \"=== .gitignore cobre backtest-results? ===\"\ngrep -n \"backtest-results\\|backtest-data\" .gitignore backend/.gitignore 2>/dev/null || echo \"(nao ignorado)\"",
+  "description": "Inspect git status, backtest artifacts, REGIME_SYMBOLS, gitignore"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (untracked/modified) ===
+>  M backend/src/paperEngine.js
+> ?? backend/backtest-results/backtest-15m-180d.json
+> ?? backend/backtest-results/backtest-15m-180d.md
+> ?? backend/backtest-results/backtest-15m-90d-end2026-03-15.json
+> ?? backend/backtest-results/backtest-15m-90d-end2026-03-15.md
+> ?? backend/backtest-results/backtest-15m-90d.json
+> ?? backend/backtest-results/backtest-15m-90d.md
+> ?? backend/backtest-results/backtest-5m-90d.json
+> ?? backend/backtest-results/backtest-5m-90d.md
+> ?? backend/scripts/setup-paper-trilhas.js
+> === backtest-results untracked? ===
+> ?? backend/backtest-results/backtest-15m-180d.json
+> ?? backend/backtest-results/backtest-15m-180d.md
+> ?? backend/backtest-results/backtest-15m-90d-end2026-03-15.json
+> ?? backend/backtest-results/backtest-15m-90d-end2026-03-15.md
+> ?? backend/backtest-results/backtest-15m-90d.json
+> ?? backend/backtest-results/backtest-15m-90d.md
+> ?? backend/backtest-results/backtest-5m-90d.json
+> ?? backend/backtest-results/backtest-5m-90d.md
+> === .env tem REGIME_SYMBOLS? (nome só) ===
+> 0
+> === .gitignore cobre backtest-results? ===
+> .gitignore:105:backend/backtest-data/
+> ```
+
+## 🤖 Claude *(14:35:05)*
+
+
+## 🤖 Claude *(14:35:07)*
+
+Achados: os `backtest-results/*` (8 arquivos) são artefatos do workflow de research — **não vou commitar** (deixo untracked). `REGIME_SYMBOLS` ausente do `.env` → adiciono. Aplicando: append do `REGIME_SYMBOLS` (como gcrux, sem envenenar o `.env`) + remoção do script superado.
+
+## 🤖 Claude *(14:35:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== append REGIME_SYMBOLS no .env (como gcrux, preserva posse) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'printf \"\\nREGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT\\n\" >> .env && echo \"appended\"'\nsudo -n -u gcrux-tradeux bash -lc 'grep \"^REGIME_SYMBOLS=\" .env'\nls -l .env | awk \"{print \\$1, \\$3, \\$4}\"\necho \"=== git rm setup-paper-consistency.js (superado por setup-paper-trilhas.js) ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' rm backend/scripts/setup-paper-consistency.js",
+  "description": "Append REGIME_SYMBOLS to .env and git rm superseded script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === append REGIME_SYMBOLS no .env (como gcrux, preserva posse) ===
+> appended
+> REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT
+> -rw------- gcrux-tradeux gcrux-tradeux
+> === git rm setup-paper-consistency.js (superado por setup-paper-trilhas.js) ===
+> rm 'backend/scripts/setup-paper-consistency.js'
+> ```
+
+## 🤖 Claude *(14:35:23)*
+
+
+## 🤖 Claude *(14:35:24)*
+
+`.env` atualizado (600, gcrux) e script superado removido. Rebuild do backend (pega o slippage + novo script + `REGIME_SYMBOLS`).
+
+## 🤖 Claude *(14:35:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend' 2>&1 | tail -8",
+  "description": "Rebuild and restart backend for Fatia 2a",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(14:36:01)*
+
+
+## 🤖 Claude *(14:36:02)*
+
+Rebuild OK. Aguardo o boot e rodo o setup das trilhas (consistência 4 + macro 4).
+
+## 🤖 Claude *(14:36:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\n# espera o server responder (login) ate ~30s\nfor i in $(seq 1 15); do\n  if docker compose exec -T backend sh -lc \"grep -q \\\"App is running\\\" logs/system.log\" 2>/dev/null; then break; fi\n  sleep 2\ndone\necho \"=== boot / halt / regime symbols ===\"\ndocker compose exec -T backend sh -lc \"grep -iE \\\"App is running|riskState|Regime job iniciado\\\" logs/system.log | tail -3\"\necho \"=== setup-paper-trilhas ===\"\ndocker compose exec -T backend sh -lc \"node scripts/setup-paper-trilhas.js\"\n'",
+  "description": "Wait for boot, run setup-paper-trilhas",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot / halt / regime symbols ===
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T14:35:53.584Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T14:35:53.807Z - App is running at 3001
+> === setup-paper-trilhas ===
+> # Setup PAPER trilhas — BTCUSDT, LTCUSDT, BNBUSDT, ADAUSDT | Consistencia RSI<25/>75 (range/mixed) · Macro SMA50/200 golden/death · size 4×MIN_NOTIONAL
+> 
+> ## BTCUSDT
+> - monitor CANDLES BTCUSDT 1m já existe
+> - template "[PAPER] Consistencia Buy BTCUSDT" já existe (id 25)
+> - template "[PAPER] Consistencia Sell BTCUSDT" já existe (id 26)
+> - automação "[PAPER] Consistencia Buy BTCUSDT" já existe (id 39, isActive=true)
+> - automação "[PAPER] Consistencia Sell BTCUSDT" já existe (id 40, isActive=true)
+> - template "[PAPER] Macro Buy BTCUSDT" criado (id 30)
+> - template "[PAPER] Macro Sell BTCUSDT" criado (id 31)
+> - automação "[PAPER] Macro Buy BTCUSDT" criada (id 44, INATIVA)
+> - automação "[PAPER] Macro Sell BTCUSDT" criada (id 45, INATIVA)
+> 
+> ## LTCUSDT
+> - monitor CANDLES LTCUSDT 1m já existe
+> - template "[PAPER] Consistencia Buy LTCUSDT" criado (id 32)
+> - template "[PAPER] Consistencia Sell LTCUSDT" criado (id 33)
+> - automação "[PAPER] Consistencia Buy LTCUSDT" criada (id 46, INATIVA)
+> - automação "[PAPER] Consistencia Sell LTCUSDT" criada (id 47, INATIVA)
+> - template "[PAPER] Macro Buy LTCUSDT" criado (id 34)
+> - template "[PAPER] Macro Sell LTCUSDT" criado (id 35)
+> - automação "[PAPER] Macro Buy LTCUSDT" criada (id 48, INATIVA)
+> - automação "[PAPER] Macro Sell LTCUSDT" criada (id 49, INATIVA)
+> 
+> ## BNBUSDT
+> - monitor CANDLES BNBUSDT 1m já existe
+> - template "[PAPER] Consistencia Buy BNBUSDT" criado (id 36)
+> - template "[PAPER] Consistencia Sell BNBUSDT" criado (id 37)
+> - automação "[PAPER] Consistencia Buy BNBUSDT" criada (id 50, INATIVA)
+> - automação "[PAPER] Consistencia Sell BNBUSDT" criada (id 51, INATIVA)
+> - template "[PAPER] Macro Buy BNBUSDT" criado (id 38)
+> - template "[PAPER] Macro Sell BNBUSDT" criado (id 39)
+> - automação "[PAPER] Macro Buy BNBUSDT" criada (id 52, INATIVA)
+> - automação "[PAPER] Macro Sell BNBUSDT" criada (id 53, INATIVA)
+> 
+> ## ADAUSDT
+> - monitor CANDLES ADAUSDT 1m já existe
+> - template "[PAPER] Consistencia Buy ADAUSDT" criado (id 40)
+> - template "[PAPER] Consistencia Sell ADAUSDT" criado (id 41)
+> - automação "[PAPER] Consistencia Buy ADAUSDT" criada (id 54, INATIVA)
+> - automação "[PAPER] Consistencia Sell ADAUSDT" criada (id 55, INATIVA)
+> - template "[PAPER] Macro Buy ADAUSDT" criado (id 42)
+> - template "[PAPER] Macro Sell ADAUSDT" criado (id 43)
+> - automação "[PAPER] Macro Buy ADAUSDT" criada (id 56, INATIVA)
+> - automação "[PAPER] Macro Sell ADAUSDT" criada (id 57, INATIVA)
+> 
+> PRONTO — monitores ATIVOS, automações [PAPER] INATIVAS.
+> Para ATIVAR: start nas automações [PAPER] (paperEngine roteia p/ o ledger virtual). P&L em GET /analysis/paper. Mainnet CONGELADO.
+> ```
+
+## 🤖 Claude *(14:36:54)*
+
+
+## 🤖 Claude *(14:36:55)*
+
+Todas as trilhas criadas (consistência + macro, 4 símbolos). Agora: unifico o gate da consistência BTC (deleto id39/40 e recrio com `!=bear && !=trend` igual às alts) e **ativo todas as `[PAPER]`**.
+
+## 🤖 Claude *(14:37:13)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/paper-fatia2-activate.js",
+  "content": "'use strict';\n// Fatia 2a: (1) unifica o gate da consist\u00eancia BTC (recria id39/40 com !=bear && !=trend, igual \u00e0s alts);\n// (2) ativa TODAS as automa\u00e7\u00f5es [PAPER]. Roda dentro do container (l\u00ea DEFAULT_SETTINGS_*; fala 127.0.0.1:3001).\nconst http = require('http');\nconst EM = process.env.DEFAULT_SETTINGS_EMAIL, PW = process.env.DEFAULT_SETTINGS_PWD;\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\nasync function listPaper(token) {\n    const out = [];\n    for (let p = 1; p <= 80; p++) {\n        const r = await req('GET', `/automations?page=${p}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        rows.forEach(a => { if (typeof a.name === 'string' && a.name.startsWith('[PAPER]')) out.push(a); });\n        if (rows.length < 10) break;\n    }\n    return out;\n}\n(async () => {\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.log('LOGIN_FAIL', login.status); process.exit(1); }\n\n    // (1) unificar gate BTC consist\u00eancia: deletar id39/40 e recriar com !=bear && !=trend\n    let pre = await listPaper(token);\n    const btcBuy = pre.find(a => a.name === '[PAPER] Consistencia Buy BTCUSDT');\n    const btcSell = pre.find(a => a.name === '[PAPER] Consistencia Sell BTCUSDT');\n    const needsUnify = btcBuy && !/!==.?'trend'/.test(btcBuy.conditions || '');\n    if (needsUnify) {\n        for (const a of [btcBuy, btcSell]) { if (a) { await req('POST', `/automations/${a.id}/stop`, token); const d = await req('DELETE', `/automations/${a.id}`, token); console.log('del', a.id, a.name, '->', d.status); } }\n        const buyTplId = (btcBuy.actions && btcBuy.actions[0] && btcBuy.actions[0].orderTemplateId) || 25;\n        const sellTplId = (btcSell && btcSell.actions && btcSell.actions[0] && btcSell.actions[0].orderTemplateId) || 26;\n        const cb = await req('POST', '/automations', token, {\n            name: '[PAPER] Consistencia Buy BTCUSDT', symbol: 'BTCUSDT',\n            indexes: 'BTCUSDT:RSI_14_1m,BTCUSDT:REGIME',\n            conditions: \"MEMORY['BTCUSDT:RSI_14_1m'].current<25 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'\",\n            isActive: false, logs: true, schedule: null, actions: [{ type: 'ORDER', orderTemplateId: buyTplId }],\n        });\n        const cs = await req('POST', '/automations', token, {\n            name: '[PAPER] Consistencia Sell BTCUSDT', symbol: 'BTCUSDT',\n            indexes: 'BTCUSDT:RSI_14_1m', conditions: \"MEMORY['BTCUSDT:RSI_14_1m'].current>75\",\n            isActive: false, logs: true, schedule: null, actions: [{ type: 'ORDER', orderTemplateId: sellTplId }],\n        });\n        console.log('recriadas BTC consistencia (unificado !=bear&!=trend):', cb.status, cs.status, 'ids', cb.body && cb.body.id, cs.body && cs.body.id);\n    } else {\n        console.log('BTC consistencia ja unificada (ou ausente) \u2014 sem recriar');\n    }\n\n    // (2) ativar TODAS as [PAPER]\n    const all = await listPaper(token);\n    let started = 0;\n    for (const a of all) {\n        if (a.isActive) continue;\n        const r = await req('POST', `/automations/${a.id}/start`, token);\n        if (r.status === 200) started++; else console.log('start FAIL', a.id, a.name, r.status);\n    }\n    const final = await listPaper(token);\n    console.log(`\\n[PAPER] total=${final.length} ativas=${final.filter(a => a.isActive).length} (started agora=${started})`);\n    const paper = await req('GET', '/analysis/paper', token);\n    console.log('\\nGET /analysis/paper ->', paper.status);\n    console.log(JSON.stringify(paper.body && paper.body.totals), '| strategies:', (paper.body && paper.body.strategies || []).map(s => s.strategy).join(','));\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/paper-fatia2-activate.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:37:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose cp /tmp/paper-fatia2-activate.js backend:/tmp/paper-fatia2-activate.js >/dev/null\ndocker compose exec -T backend node /tmp/paper-fatia2-activate.js\n'",
+  "description": "Unify BTC consistency gate and activate all PAPER trilhas",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying /tmp/paper-fatia2-activate.js to tradeux-backend-1:/tmp/paper-fatia2-activate.js
+>  tradeux-backend-1 Copied /tmp/paper-fatia2-activate.js to tradeux-backend-1:/tmp/paper-fatia2-activate.js
+> del 39 [PAPER] Consistencia Buy BTCUSDT -> 204
+> del 40 [PAPER] Consistencia Sell BTCUSDT -> 204
+> recriadas BTC consistencia (unificado !=bear&!=trend): 201 201 ids 58 59
+> 
+> [PAPER] total=16 ativas=16 (started agora=16)
+> 
+> GET /analysis/paper -> 200
+> {"realizedPnl":0,"unrealizedPnl":0,"totalPnl":0,"fees":0} | strategies:
+> ```
+
+## 🤖 Claude *(14:37:37)*
+
+
+## 🤖 Claude *(14:37:38)*
+
+16 trilhas `[PAPER]` ativas (consistência + macro × 4 símbolos), gate BTC unificado (recriado id58/59). Ledger limpo. Verifico isolamento, HALT e regime das alts.
+
+## 🤖 Claude *(14:37:39)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 status
+> ```
+
+## 🤖 Claude *(14:37:40)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "11",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #11 status
+> ```
+
+## 🤖 Claude *(14:37:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== ISOLAMENTO: ordens reais (deve seguir 259) ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select count(*) from orders;\\\"\" 2>/dev/null\necho \"=== ledger paper (deve estar limpo: 0,0) ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select (select count(*) from paperOrders),(select count(*) from paperPositions);\\\"\" 2>/dev/null\necho \"=== HALT ===\"\ndocker compose exec -T backend sh -lc \"grep -iE riskState logs/system.log | tail -1\"\necho \"=== regime computado p/ as 4 (REGIME_SYMBOLS) ===\"\ndocker compose exec -T backend sh -lc \"grep -E \\\"REGIME =>\\\" logs/regime.log | tail -8\"\n'",
+  "description": "Verify isolation, HALT, regime for 4 symbols"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ISOLAMENTO: ordens reais (deve seguir 259) ===
+> 259
+> === ledger paper (deve estar limpo: 0,0) ===
+> 0	0
+> === HALT ===
+> info: 2026-06-19T14:35:53.584Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> === regime computado p/ as 4 (REGIME_SYMBOLS) ===
+> info: 2026-06-19T14:35:54.192Z - BTCUSDT:REGIME => trend (ADX 29.5 >= 25 (tendência forte))
+> info: 2026-06-19T14:35:54.483Z - LTCUSDT:REGIME => trend (ADX 34.5 >= 25 (tendência forte))
+> info: 2026-06-19T14:35:54.761Z - BNBUSDT:REGIME => trend (ADX 40.0 >= 25 (tendência forte))
+> info: 2026-06-19T14:35:55.037Z - ADAUSDT:REGIME => trend (ADX 42.3 >= 25 (tendência forte))
+> ```
+
+## 🤖 Claude *(14:38:04)*
+
+
+## 🤖 Claude *(14:38:05)*
+
+Tudo verificado: **isolamento OK** (259→259), ledger limpo, **HALT intacto**, **REGIME computado p/ os 4** (todos em `trend` agora → consistência corretamente parada, macro aguardando golden cross — armadas e observando). Commit + push da Fatia 2a.
+
+## 🤖 Claude *(14:38:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/paperEngine.js backend/scripts/setup-paper-trilhas.js && echo \"chown OK\"\necho \"=== secret-scan ===\"\ngrep -nE 'sk-[A-Za-z0-9]{20}|eyJ[A-Za-z0-9_-]{20}|SECRET_KEY|ACCESS_KEY|APISECRET' backend/src/paperEngine.js backend/scripts/setup-paper-trilhas.js || echo \"limpo\"\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add backend/src/paperEngine.js backend/scripts/setup-paper-trilhas.js\ngit -c safe.directory=\"*\" commit -F - <<\"EOF\"\nfeat(backend): Paper Engine Fatia 2a \u2014 slippage + trilhas consistencia/macro (4 simbolos)\n\n- paperEngine: slippage ciente do lado (PAPER_SLIPPAGE_BPS=5; BUY acima, SELL abaixo)\n  fecha o vies otimista do mid (MINI_TICKER); tudo a jusante usa o fill real.\n- setup-paper-trilhas.js: trilhas CONSISTENCIA (mean-reversion RSI 25/75, gate\n  !=bear && !=trend) e MACRO (trend SMA50/200 golden/death) nos 4 simbolos, em paper.\n- remove setup-paper-consistency.js (superado pelo geral; fecha a divergencia de gate do BTC).\n\nGate QA PASS-c/ressalvas + TL APPROVE-c/sugestoes. Deployado: 16 automacoes [PAPER]\nativas (consistencia+macro x4), gate BTC unificado, REGIME_SYMBOLS dos 4 no .env (runtime).\nVerificado: isolamento (ordens reais 259->259), HALT intacto, regime computado p/ os 4.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit -c safe.directory=\"*\" log --oneline -1\nTOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\r\\n\")\ngit -c safe.directory=\"*\" push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed \"s|${TOKEN}|***|g\"\ngit -c safe.directory=\"*\" rev-parse HEAD'",
+  "description": "Chown, secret-scan, commit and push Fatia 2a"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chown OK
+> === secret-scan ===
+> limpo
+> [master 660641f] feat(backend): Paper Engine Fatia 2a — slippage + trilhas consistencia/macro (4 simbolos)
+>  3 files changed, 146 insertions(+), 137 deletions(-)
+>  delete mode 100644 backend/scripts/setup-paper-consistency.js
+>  create mode 100644 backend/scripts/setup-paper-trilhas.js
+> 660641f feat(backend): Paper Engine Fatia 2a — slippage + trilhas consistencia/macro (4 simbolos)
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    22ba96b..660641f  HEAD -> master
+> 660641f7844dfbd0e050a96a3512f5eeb909fad9
+> ```
+
+## 🤖 Claude *(14:39:09)*
+
+
+## 🤖 Claude *(14:39:12)*
+
+O workflow de frequência terminou — e o veredito é decisivo. Deixa eu registrar tudo (Fatia 2a + frequência) antes de te reportar.
+
+**Frequência (verde diário): REFUTADA pela evidência.** 9 agentes, 8 combos (4 símbolos × 5m/15m), dados reais da mainnet + fee 0,1%/lado: **8/8 com EV/trade líquido NEGATIVO**. Win rate alto (52-68%) mas EV negativo — ganha pouco, perde muito, e a fee de 0,2% round-trip come o edge fino. As únicas células verdes são gate-de-regime com pouquíssimos trades (= caixa no bear, o *oposto* de "verde diário"). **Decisão: não construir a trilha frequência** — ela só sangraria fee.
+
+Atualizando HANDOFF + memória:
+
+## 🤖 Claude *(14:39:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-19** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS (falta GO do dono pro flip) \u00b7 NOVO: Motor de Estrat\u00e9gias Fatia 1 (Paper/Shadow Engine) NO AR \u2014 research sob HALT, ZERO risco** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`22ba96b`**",
+  "new_string": "> Updated: **2026-06-19** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS (falta GO do dono pro flip) \u00b7 NOVO: Motor de Estrat\u00e9gias Fatias 1+2a (Paper Engine: 16 trilhas `[PAPER]` consist\u00eancia+macro em 4 s\u00edmbolos) NO AR \u2014 research sob HALT, ZERO risco; FREQU\u00caNCIA refutada por backtest** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`660641f`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:39:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "Plano completo em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`. Mem\u00f3ria nova `tradeux-strategy-engine`.",
+  "new_string": "Plano completo em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`. Mem\u00f3ria nova `tradeux-strategy-engine`.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-19 (cont. \u2014 Fatia 2a: trilhas consist\u00eancia+macro em paper + slippage; FREQU\u00caNCIA refutada por backtest)\n**`Vivo==master==origin==660641f` (2 commits: `22ba96b` Fatia 1 + `660641f` Fatia 2a). 4 containers up, `TRADING_HALT=true` intacto, 0 ordens mainnet (reais seguem 259\u2192259).**\n- **Fatia 2a (gate QA PASS-c/ressalvas + TL APPROVE-c/sugest\u00f5es; deployado+verificado):** `paperEngine` ganhou **slippage** ciente do lado (`PAPER_SLIPPAGE_BPS=5`; BUY acima/SELL abaixo \u2192 fecha o vi\u00e9s otimista do mid). `scripts/setup-paper-trilhas.js` cria **CONSIST\u00caNCIA** (mean-reversion RSI 25/75, gate `!=bear && !=trend`) e **MACRO** (trend SMA50/200 golden/death) nos 4 s\u00edmbolos. Removido `setup-paper-consistency.js` (superado). **16 automa\u00e7\u00f5es `[PAPER]` ATIVAS** (consist\u00eancia+macro \u00d74); gate BTC consist\u00eancia unificado (recriado id58/59 com `!=trend`). **`REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT` no `.env`** (runtime) \u2192 REGIME/TREND_CROSS computados p/ os 4 (sem isso as alts ficavam fail-safe sem dado \u2014 achado do TL). Hoje os 4 em `trend` \u2192 consist\u00eancia **parada** (correto: mean-reversion n\u00e3o opera em trend), macro **aguardando** golden cross.\n- **FREQU\u00caNCIA (verde di\u00e1rio) REFUTADA** (workflow `paper-frequencia-research`, 9 agentes, 8 combos 4sym\u00d75m/15m, dados mainnet + fee 0,1%/lado, fill no candle seguinte): **8/8 com EV/trade L\u00cdQUIDO NEGATIVO**. Win rate 52-68% mas EV negativo (ganha pouco/perde muito; fee de 0,2% round-trip come o edge); v\u00e1rios negativos at\u00e9 BRUTO de fee; mais frequ\u00eancia = pior. \u00danicas verdes = gate-de-regime com 1-23 trades/90d (CAIXA-no-bear, **n\u00e3o** frequ\u00eancia). **DECIS\u00c3O: N\u00c3O construir a trilha frequ\u00eancia** (mesma classe do scalp 1m refutado). Reavaliar s\u00f3 com ciclo de alta expl\u00edcito + maker-rebate/slippage modelado.\n- **Telegram (4 msgs do dia):** regime BTC oscilando mixed\u2194trend (normal/coerente); daily-cap re-armado (rotina); \u26a0\ufe0f agente sugeriu **reativar harvester id22-25** \u2192 **IGNORAR** (morto no mainnet, OFF de prop\u00f3sito; doutrina do agente desatualizada \u2014 candidato a fix p/ parar o ru\u00eddo).\n- **Pr\u00e9-req de flip (f) SEGUE aberto:** gate `[PAPER]` \u00e9 NOMINAL \u2192 coluna `mode`/guard no `calcQty`/`placeOrder` ANTES de virar o `TRADING_HALT`.\n**\u26a1 NEXT:** observar o paper via `GET /analysis/paper` (consist\u00eancia dispara ao sair de trend\u2192range/mixed; macro no pr\u00f3ximo golden cross). **Fatia 2b** = slippage proporcional ao notional + book/partial (fechar o vi\u00e9s antes de \"graduar\") + **painel frontend `/paper`**. Depois **Bloco B** (Strategy Library + Regime Router + KB de padr\u00f5es) e **Bloco C** (scanner cross-s\u00edmbolo + estrategista LLM + gradua\u00e7\u00e3o canary, GO do dono). D\u00edvidas: fix da doutrina do agente (harvester morto); coluna `mode` (vs string m\u00e1gica). **Claude N\u00c3O vira o `TRADING_HALT`.**"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: Plano completo em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`. Memória nova `tradeux-strategy-engine`.
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:39:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md",
+  "old_string": "## NEXT",
+  "new_string": "## Fatia 2a (commit `660641f`, 2026-06-19) \u2014 trilhas + slippage; FREQU\u00caNCIA refutada\n- `paperEngine` ganhou **slippage** ciente do lado (`PAPER_SLIPPAGE_BPS` default 5 bps; BUY acima/SELL abaixo \u2192 fecha o vi\u00e9s otimista do mid). `scripts/setup-paper-trilhas.js` (substitui o `setup-paper-consistency.js`, removido) cria 2 trilhas nos 4 s\u00edmbolos, em paper: **CONSIST\u00caNCIA** (mean-reversion RSI 25/75, gate `!=bear && !=trend`) e **MACRO** (trend SMA50/200 golden/death cross). **16 automa\u00e7\u00f5es `[PAPER]` ATIVAS** (consist\u00eancia+macro \u00d74). Gate BTC consist\u00eancia unificado (recriado).\n- **GOTCHA operacional (TL):** `regimeJob.resolveSymbols` s\u00f3 computa REGIME/TREND_CROSS p/ s\u00edmbolos de automa\u00e7\u00f5es ATIVAS \u2192 adicionei **`REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT` no `.env`** (runtime) p/ garantir o dado das alts; sem isso as trilhas das alts ficam fail-safe (n\u00e3o disparam). Reaplicar ap\u00f3s reset do `.env`.\n- **FREQU\u00caNCIA (verde di\u00e1rio) REFUTADA por backtest** (workflow `paper-frequencia-research`, 8 combos 4sym\u00d75m/15m, dados mainnet + fee 0,1%/lado): 8/8 EV/trade l\u00edquido NEGATIVO (win 52-68% mas EV<0; fee come o edge; mais frequ\u00eancia = pior; verdes s\u00f3 em gate-regime esparso = caixa-no-bear, n\u00e3o frequ\u00eancia). **N\u00c3O construir a trilha frequ\u00eancia** \u2014 mesma classe do scalp 1m. \u00c9 o 3\u00ba perfil pedido pelo dono que o mercado nega; honestidade > for\u00e7ar trade.\n\n## NEXT"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:39:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "trilha consist\u00eancia id39/id40 ativa; **pr\u00e9-req de flip novo (f): gate `[PAPER]` \u00e9 nominal \u2192 coluna `mode`/guard antes de descongelar**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`",
+  "new_string": "**Fatia 2a (`660641f`): 16 trilhas `[PAPER]` ATIVAS** (consist\u00eancia RSI 25/75 + macro SMA50/200 \u00d74 s\u00edmbolos) + slippage (`PAPER_SLIPPAGE_BPS`) + `REGIME_SYMBOLS` dos 4 no `.env`; **FREQU\u00caNCIA/verde-di\u00e1rio REFUTADA por backtest (8/8 EV<0 l\u00edquido) \u2192 n\u00e3o construir**; **pr\u00e9-req de flip novo (f): gate `[PAPER]` \u00e9 nominal \u2192 coluna `mode`/guard antes de descongelar**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:39:49)*
+
+
+## 🤖 Claude *(14:39:50)*
+
+O anchor do seal não bateu (texto ligeiramente diferente). Vou reler o fim do HANDOFF e reaplicar.
+
+## 🤖 Claude *(14:39:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'tail -5 /home/gcrux-tradeux/HANDOFF.md'",
+  "description": "Read tail of HANDOFF to get exact anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - **Verificado AO VIVO** (smoke controlado removido depois): round-trip BUY→SELL registrou com fee real (round-trip flat = **−2×fee**, honesto = modela fee-drag); **ISOLAMENTO confirmado (ordens reais 259→259, zero vazamento)**; HALT `halted=true` intacto.
+> 
+> **⚠️ PRÉ-REQ DE FLIP NOVO (QA ALTO-1) — registrar p/ o descongelamento:** o gate de roteamento é **NOMINAL** (prefixo `[PAPER]`). Hoje renomear uma automação paper (tirar o prefixo) a tornaria REAL — mas o HALT bloqueia na fronteira (defesa-em-profundidade). **Antes de virar `TRADING_HALT=false`**, o prefixo vira a ÚNICA proteção → adicionar coluna `mode`/`isPaper` na automação OU guard no `calcQty`/`placeOrder` recusando template `[PAPER]` no caminho real. **Vira (f) na lista de pré-reqs do flip.**
+> 
+> **⚡ NEXT (resto do Bloco A do plano):** Fatia 2 = as 3 trilhas (consistência ✅; **macro** = trend SMA50/200; **frequência** = mean-reversion/breakout 5m/15m **GATED por backtest EV+** — 1m é −EV refutado) + **painel de P&L comparativo** + **slippage/spread** no paper (fechar o viés otimista do `MINI_TICKER` mid antes de "graduar"). Depois **Bloco B** (Strategy Library + Regime Router + KB de padrões) e **Bloco C** (scanner cross-símbolo + estrategista LLM + graduação canary com GO do dono). Dívidas (TL/QA, não-bloqueantes): coluna `mode` (vs string mágica); reconciliação backtest↔paper; multi-lote/cash-accounting; `_inflight` é mono-processo. Memória nova `tradeux-strategy-engine`.
+> ```
+
+## 🤖 Claude *(14:39:59)*
+
+
+## 🤖 Claude *(14:40:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "`_inflight` \u00e9 mono-processo. Mem\u00f3ria nova `tradeux-strategy-engine`.",
+  "new_string": "`_inflight` \u00e9 mono-processo. Mem\u00f3ria nova `tradeux-strategy-engine`.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-19 (cont. \u2014 Fatia 2a: trilhas consist\u00eancia+macro em paper + slippage; FREQU\u00caNCIA refutada por backtest)\n**`Vivo==master==origin==660641f` (2 commits: `22ba96b` Fatia 1 + `660641f` Fatia 2a). 4 containers up, `TRADING_HALT=true` intacto, 0 ordens mainnet (reais seguem 259\u2192259).**\n- **Fatia 2a (gate QA PASS-c/ressalvas + TL APPROVE-c/sugest\u00f5es; deployado+verificado):** `paperEngine` ganhou **slippage** ciente do lado (`PAPER_SLIPPAGE_BPS=5`; BUY acima/SELL abaixo \u2192 fecha o vi\u00e9s otimista do mid). `scripts/setup-paper-trilhas.js` cria **CONSIST\u00caNCIA** (mean-reversion RSI 25/75, gate `!=bear && !=trend`) e **MACRO** (trend SMA50/200 golden/death) nos 4 s\u00edmbolos; removido `setup-paper-consistency.js` (superado). **16 automa\u00e7\u00f5es `[PAPER]` ATIVAS** (consist\u00eancia+macro \u00d74); gate BTC consist\u00eancia unificado (recriado id58/59 com `!=trend`). **`REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT` no `.env`** (runtime) \u2192 REGIME/TREND_CROSS p/ os 4 (sem isso as alts ficavam fail-safe sem dado \u2014 achado do TL). Hoje os 4 em `trend` \u2192 consist\u00eancia **parada** (correto), macro **aguardando** golden cross.\n- **FREQU\u00caNCIA (verde di\u00e1rio) REFUTADA** (workflow `paper-frequencia-research`, 9 agentes, 8 combos 4sym\u00d75m/15m, dados mainnet + fee 0,1%/lado, fill no candle seguinte): **8/8 EV/trade L\u00cdQUIDO NEGATIVO**. Win 52-68% mas EV<0 (ganha pouco/perde muito; fee de 0,2% round-trip come o edge); v\u00e1rios negativos at\u00e9 BRUTO de fee; mais frequ\u00eancia = pior. Verdes s\u00f3 em gate-regime com 1-23 trades/90d (CAIXA-no-bear, **n\u00e3o** frequ\u00eancia). **DECIS\u00c3O: N\u00c3O construir a trilha frequ\u00eancia** (mesma classe do scalp 1m refutado).\n- **Telegram (4 msgs):** regime BTC oscilando mixed\u2194trend (normal); daily-cap re-armado (rotina); \u26a0\ufe0f agente sugeriu **reativar harvester id22-25** \u2192 **IGNORAR** (morto no mainnet, OFF de prop\u00f3sito; doutrina do agente desatualizada \u2014 candidato a fix).\n- **Pr\u00e9-req de flip (f) SEGUE aberto:** gate `[PAPER]` nominal \u2192 coluna `mode`/guard antes de virar o HALT.\n**\u26a1 NEXT:** observar o paper via `GET /analysis/paper` (consist\u00eancia dispara ao sair de trend\u2192range/mixed; macro no pr\u00f3ximo golden cross). **Fatia 2b** = slippage proporcional ao notional + book/partial + **painel frontend `/paper`**. Depois **Bloco B** (Strategy Library + Regime Router + KB de padr\u00f5es) e **Bloco C** (scanner + estrategista LLM + gradua\u00e7\u00e3o canary, GO do dono). D\u00edvidas: fix doutrina do agente (harvester morto); coluna `mode`. **Claude N\u00c3O vira o `TRADING_HALT`.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:40:22)*
+
+
+## 🤖 Claude *(14:40:22)*
+
+Selo completo. Corrijo posse do HANDOFF e fecho as tarefas.
+
+## 🤖 Claude *(14:40:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/HANDOFF.md && echo \"HANDOFF chown OK\"\nrm -f /tmp/paper-fatia2-activate.js 2>/dev/null; echo \"tmp limpo\"\necho \"=== git tree limpo (so backtest-results untracked esperado) ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short | grep -v \"backtest-results\" || echo \"(arvore limpa fora dos artefatos de research)\"",
+  "description": "Chown HANDOFF, clean tmp, confirm clean tree"
+}
+```
+
+## 🤖 Claude *(14:40:26)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "completed"
+}
+```
+
+## 🤖 Claude *(14:40:26)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "11",
+  "status": "completed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF chown OK
+> tmp limpo
+> === git tree limpo (so backtest-results untracked esperado) ===
+> (arvore limpa fora dos artefatos de research)
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 status
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #11 status
+> ```
+
+## 🤖 Claude *(14:40:37)*
+
+
+## 🤖 Claude *(14:40:58)*
+
+Pronto. Fatia 2 **rodando junto com a observação**, como você pediu — e a pergunta da frequência foi respondida pela evidência.
+
+## ✅ O que está no ar agora (master `660641f`, mainnet CONGELADO intacto)
+
+**16 trilhas `[PAPER]` ativas** — 2 perfis × 4 moedas (BTC/LTC/BNB/ADA), todas com **preço e fee REAIS da mainnet**, zero risco:
+- **Consistência** (mean-reversion RSI 25/75) — opera em range/mixed.
+- **Macro** (trend SMA50/200, golden/death cross) — captura ciclo.
+- **+ slippage** (5 bps/lado) pra o P&L não ser otimista.
+
+Verificado: **isolamento total** (ordens reais 259→259), **HALT intacto**, REGIME computado p/ os 4. Você acompanha tudo em `GET /analysis/paper` (P&L por trilha).
+
+⏳ **Heads-up honesto:** agora os 4 estão em `trend` → a consistência fica **parada de propósito** (mean-reversion não opera em tendência) e a macro **aguarda um golden cross**. Ou seja, pode haver pouca atividade até o mercado virar pra range/mixed ou surgir um cross. Está armado e observando — é o comportamento correto, não inércia.
+
+## 📉 Frequência / "verde diário": REFUTADA (e isso é uma resposta, não um fracasso)
+Backtest com **dados reais + fee real**, 8 cenários (4 moedas × 5m/15m): **8 de 8 com EV negativo por trade**. Acerta muito (52-68%) mas perde no líquido — a taxa come o edge fino. **Não vou construir essa trilha** porque ela só queimaria fee confirmando a matemática. Dos 3 perfis que você queria, **2 são reais** (consistência + macro); o "verde diário de alta frequência" o mercado nega aqui — mesma conclusão do scalp 1m. A máquina **mediu** isso pra você, sem arriscar 1 centavo.
+
+## 📲 Telegram + posso virar a chave?
+- **Mensagens 1-3:** normais/coerentes (regime oscilando, daily-cap re-armado).
+- **Mensagem 4 (⚠️ reativar harvester id22-25):** **NÃO reative.** O agente está errado — o harvester está **morto no mainnet** (edge era artefato testnet) e foi desligado de propósito. A doutrina dele está desatualizada; posso corrigir pra parar esse alarme falso.
+
+**Virar pra ordens de verdade agora? Ainda não — e você não precisa.** Motivos:
+1. O paper já te dá a validação com a realidade da mainnet, **sem risco**. A jogada certa: deixar as trilhas provarem quem tem edge → virar só a vencedora (canary).
+2. Falta 1 bloqueador de código (**item f**): o roteamento `[PAPER]` é por nome; antes de virar o HALT isso vira a única proteção e precisa de um guard de verdade.
+3. Em `trend`, virar agora provavelmente não geraria ordens (igual ao contrafactual de antes).
+
+## ⏭️ Próximos passos (sem perder tempo)
+- **Agora:** o paper coleta dado sozinho (consistência quando sair de trend; macro no próximo cross).
+- **Fatia 2b:** slippage proporcional ao tamanho + book/partial + **painel visual `/paper`** (pra você ver o comparativo num gráfico, não só JSON).
+- **Bloco B:** Strategy Library + Regime Router (gerar/ativar por regime automático) + **base de conhecimento de padrões**.
+- **Bloco C:** scanner cross-símbolo + estrategista LLM + graduação canary (com seu GO).
+- **Rápido:** corrigir a doutrina do agente (parar de sugerir o harvester morto).
+
+Quer que eu emende já o **item (f)** + o **fix da doutrina do agente** (dois itens curtos), ou prefere seguir direto pra **Fatia 2b / Bloco B**?
+
+## 👤 User *(14:51:42)*
+
+coloque isso GET /analysis/paper no cockpit ou no brain para analise. Verifique se realmente ele esta errado (telegram) sobre o harvest morto no mainnet e se não é possivel aproveita-lo com alguns ajustes.
+
+Ok vamos fazer o 2. item F + fix doutrina do agente.
+
+Como eu disse anteriormente, precisamos de estratégias para operar todos os cenários como tambem trend.
+
+Faça isso.: Agora: o paper coleta dado sozinho (consistência quando sair de trend; macro no próximo cross).
+Fatia 2b: slippage proporcional ao tamanho + book/partial + painel visual /paper (pra você ver o comparativo num gráfico, não só JSON).
+Bloco B: Strategy Library + Regime Router (gerar/ativar por regime automático) + base de conhecimento de padrões.
+Bloco C: scanner cross-símbolo + estrategista LLM + graduação canary (com seu GO).
+Rápido: corrigir a doutrina do agente (parar de sugerir o harvester morto).
+
+## 🤖 Claude *(14:54:22)*
+
+
+## 🤖 Claude *(14:54:26)*
+
+Entendi tudo. É bastante coisa — vou atacar com qualidade e em paralelo: **lanço já duas investigações em background** (1) verificar adversarialmente se o harvester está mesmo morto no mainnet **e se dá pra salvar com ajustes**, e (2) desenhar a arquitetura do **Bloco B**. Enquanto rodam, implemento o lote gated: **item (f)**, **fix da doutrina do agente**, **paper no cockpit (para análise)** e **slippage proporcional**.
+
+Primeiro: lanço as investigações e faço o recon dos pontos de código.
+
+## 🤖 Claude *(14:54:52)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'harvester-salvage-research',\n  description: 'Verificar adversarialmente se o Harvester de dislocacao esta MORTO no mainnet e se da p/ salvar com ajustes (re-ancorar FAIR a high rolante + backtest em dados reais)',\n  phases: [\n    { title: 'Verify', detail: 'codigo + dados: o gatilho dispara no mainnet?' },\n    { title: 'Salvage', detail: 'backtest do redesign re-ancorado em high rolante' },\n    { title: 'Synthesize', detail: 'kill definitivo vs re-design (e ir pra paper)' },\n  ],\n}\nconst VERIFY_SCHEMA = { type: 'object', properties: { dead: { type: 'boolean' }, evidence: { type: 'string' }, fireScenario: { type: 'string' } }, required: ['dead', 'evidence'], additionalProperties: true }\nconst SALVAGE_SCHEMA = { type: 'object', properties: { salvageable: { type: 'boolean' }, evPositiveNetFee: { type: 'boolean' }, params: { type: 'string' }, metrics: { type: 'string' }, summary: { type: 'string' } }, required: ['salvageable', 'summary'], additionalProperties: true }\nconst SYNTH_SCHEMA = { type: 'object', properties: { verdict: { type: 'string', enum: ['KILL', 'REDESIGN_TO_PAPER', 'INCONCLUSIVE'] }, recommendation: { type: 'string' }, params: { type: ['string', 'null'] } }, required: ['verdict', 'recommendation'], additionalProperties: true }\n\nphase('Verify')\nconst verify = await parallel([\n  () => agent(\n`Verifique a AFIRMACAO de que o Harvester de dislocacao do TradeUX esta MORTO no mainnet (repo /home/gcrux-tradeux/tradeux). Tese a checar: getFairPrice usa o lastPrice MAINNET; o \"book\" do bot e simulado do miniTicker (= close); logo no mainnet book \u2248 FAIR (mesma venue, spread ~0) \u2192 o gatilho de compra (bestAsk < FAIR \u00d7 0.97, isto e, -3%) NUNCA dispara. Leia backend/src/utils/fairPriceService.js, backend/src/fairPriceJob.js, backend/scripts/setup-harvester.js e a logica do harvester em beholder/app-em. Confirme ou REFUTE com arquivo:linha. Existe ALGUM cenario no mainnet em que o gatilho dispararia? Retorne dead (bool), evidence (arquivo:linha), fireScenario.`,\n    { label: 'verify:code', phase: 'Verify', schema: VERIFY_SCHEMA }\n  ),\n  () => agent(\n`Cheque os DADOS reais: houve algum fill do Harvester no MAINNET? Rode como gcrux (NAO toque o backend vivo p/ escrita): \n  sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T db sh -lc \"mysql -u root -p\\\\$MYSQL_ROOT_PASSWORD \\\\${MYSQL_DATABASE:-beholder} -e \\\\\"<SQL>\\\\\"\"'\nInvestigue: automacoes id22-25 (nome/condicao), e ordens ligadas a elas com isTestnet=0 (mainnet) vs 1 (testnet). Os \"10/10 ciclos lucrativos\" historicos eram testnet? Confirme que no MAINNET ha 0 fills do harvester (tabela orders + harvestPositions). Retorne dead (bool) + evidence (numeros do DB).`,\n    { label: 'verify:data', phase: 'Verify', schema: VERIFY_SCHEMA }\n  ),\n])\n\nphase('Salvage')\nconst salvage = await agent(\n`Projete e BACKTESTE um Harvester RE-ANCORADO. Problema atual: o alvo de compra ancora no preco ATUAL (mainnet lastPrice) \u2192 no mainnet nunca ha dislocacao vs o proprio preco. Redesign: ancore o alvo a um HIGH ROLANTE (ex.: maxima das ultimas 24-48h via klines) e compre quando o preco cair X% (ex.: 3-8%) abaixo desse high rolante; venda no retorno acima do custo (no-loss). \nBackteste essa regra em dados REAIS da mainnet (BTCUSDT + 1-2 alts) NET de fee 0.1%/lado, em container EFEMERO (NAO no backend vivo):\n  sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker run --rm --entrypoint node tradeux-backend <script.js>'\nVoce pode adaptar backend/scripts/backtest.js OU escrever um backtest standalone em /tmp (e copiar pro container via docker run -v, ou docker cp num container temporario). Compare com \"comprar todo dip de X%\" simples (baseline). Tem EV LIQUIDO positivo? Em que regime (funciona em range/bear-bounce, morre em trend forte)? Varie X (drawdown-from-high) e a janela do high. Retorne salvageable, evPositiveNetFee, params (melhores), metrics (numeros), summary honesto. Seja cetico: pode ser so mais uma fantasia de edge.`,\n  { phase: 'Salvage', schema: SALVAGE_SCHEMA }\n)\n\nphase('Synthesize')\nconst verdict = await agent(\n`Consolide a investigacao do Harvester. VERIFY: ${JSON.stringify(verify.filter(Boolean))}. SALVAGE: ${JSON.stringify(salvage)}.\nDecida (pro dono, pt-BR honesto): (a) o Harvester esta mesmo MORTO no mainnet como esta hoje? (b) da p/ salvar com re-ancoragem ao high rolante (e VALE a pena)? \nVeredito: KILL (definitivo, nao reativar), REDESIGN_TO_PAPER (re-desenhar com params X e testar PRIMEIRO no Paper Engine \u2014 temos paper agora \u2014 antes de qualquer ordem real), ou INCONCLUSIVE. Inclua params se redesign. Lembre: o agente do Telegram sugeriu reativar id22-25 as-is \u2014 diga claramente se isso seria erro.`,\n  { schema: SYNTH_SCHEMA }\n)\nreturn verdict\n"
+}
+```
+
+> **Tool Result (Workflow)** - ❌ Error
+>
+> ```
+> <tool_use_error>Invalid workflow script: Script parse error: Unexpected token (22:162). Workflow scripts must be plain JavaScript — TypeScript syntax (type annotations like `: string[]`, interfaces, generics) fails to parse.</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:55:14)*
+
+
+## 🤖 Claude *(14:55:15)*
+
+Erro de parse: `${...}` do bash dentro do template literal foi interpretado como interpolação JS. Corrijo a descrição do acesso ao DB (sem sintaxe de shell var) e relanço.
+
+## 🤖 Claude *(14:55:40)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'harvester-salvage-research',\n  description: 'Verificar adversarialmente se o Harvester de dislocacao esta MORTO no mainnet e se da p/ salvar com ajustes (re-ancorar FAIR a high rolante + backtest em dados reais)',\n  phases: [\n    { title: 'Verify', detail: 'codigo + dados: o gatilho dispara no mainnet?' },\n    { title: 'Salvage', detail: 'backtest do redesign re-ancorado em high rolante' },\n    { title: 'Synthesize', detail: 'kill definitivo vs re-design (e ir pra paper)' },\n  ],\n}\nconst VERIFY_SCHEMA = { type: 'object', properties: { dead: { type: 'boolean' }, evidence: { type: 'string' }, fireScenario: { type: 'string' } }, required: ['dead', 'evidence'], additionalProperties: true }\nconst SALVAGE_SCHEMA = { type: 'object', properties: { salvageable: { type: 'boolean' }, evPositiveNetFee: { type: 'boolean' }, params: { type: 'string' }, metrics: { type: 'string' }, summary: { type: 'string' } }, required: ['salvageable', 'summary'], additionalProperties: true }\nconst SYNTH_SCHEMA = { type: 'object', properties: { verdict: { type: 'string', enum: ['KILL', 'REDESIGN_TO_PAPER', 'INCONCLUSIVE'] }, recommendation: { type: 'string' }, params: { type: ['string', 'null'] } }, required: ['verdict', 'recommendation'], additionalProperties: true }\n\nphase('Verify')\nconst verify = await parallel([\n  () => agent(\n`Verifique a AFIRMACAO de que o Harvester de dislocacao do TradeUX esta MORTO no mainnet (repo /home/gcrux-tradeux/tradeux). Tese a checar: getFairPrice usa o lastPrice MAINNET; o \"book\" do bot e simulado do miniTicker (= close); logo no mainnet book aproxima FAIR (mesma venue, spread ~0) e o gatilho de compra (bestAsk < FAIR x 0.97, ou seja -3%) NUNCA dispara. Leia backend/src/utils/fairPriceService.js, backend/src/fairPriceJob.js, backend/scripts/setup-harvester.js e a logica do harvester em beholder/app-em. Confirme ou REFUTE com arquivo:linha. Existe ALGUM cenario no mainnet em que o gatilho dispararia? Retorne dead (bool), evidence (arquivo:linha), fireScenario.`,\n    { label: 'verify:code', phase: 'Verify', schema: VERIFY_SCHEMA }\n  ),\n  () => agent(\n`Cheque os DADOS reais: houve algum fill do Harvester no MAINNET? Consulte o DB MySQL (container \"db\" do docker compose, usuario root, a senha esta na variavel de ambiente MYSQL_ROOT_PASSWORD DENTRO do container db, database normalmente \"beholder\"). Rode como gcrux, ex.: sudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux && docker compose exec -T db sh -lc 'mysql -u root -p\\\"$MYSQL_ROOT_PASSWORD\\\" beholder -e \\\"SHOW TABLES;\\\"'\" (ajuste as queries; o shell interno do container resolve a senha). Investigue: automacoes id22-25 (nome/condicao via tabela automations), e ordens ligadas a elas com isTestnet=0 (mainnet) vs 1 (testnet) na tabela orders, e a tabela harvestPositions. Os ciclos lucrativos historicos eram testnet? Confirme se no MAINNET ha 0 fills do harvester. Retorne dead (bool) + evidence (numeros do DB). NAO escreva no DB (so SELECT).`,\n    { label: 'verify:data', phase: 'Verify', schema: VERIFY_SCHEMA }\n  ),\n])\n\nphase('Salvage')\nconst salvage = await agent(\n`Projete e BACKTESTE um Harvester RE-ANCORADO. Problema atual: o alvo de compra ancora no preco ATUAL (mainnet lastPrice), entao no mainnet nunca ha dislocacao vs o proprio preco. Redesign: ancore o alvo a um HIGH ROLANTE (ex.: maxima das ultimas 24-48h via klines) e compre quando o preco cair X% (ex.: 3-8%) abaixo desse high rolante; venda no retorno acima do custo (no-loss). \nBackteste essa regra em dados REAIS da mainnet (BTCUSDT + 1-2 alts) NET de fee 0.1%/lado, em container EFEMERO (NAO no backend vivo, que tem mem limit e esta congelado):\n  sudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux && docker run --rm --entrypoint node tradeux-backend <script>\"\nVoce pode adaptar backend/scripts/backtest.js OU escrever um backtest standalone em /tmp e roda-lo dentro de um container efemero da imagem tradeux-backend (monte o script com docker run -v, ou docker cp num container temporario). Compare com \"comprar todo dip de X%\" simples (baseline). Tem EV LIQUIDO positivo? Em que regime (funciona em range/bear-bounce, morre em trend forte)? Varie X (drawdown-from-high) e a janela do high. Retorne salvageable, evPositiveNetFee, params (melhores), metrics (numeros), summary honesto. Seja cetico: pode ser so mais uma fantasia de edge.`,\n  { phase: 'Salvage', schema: SALVAGE_SCHEMA }\n)\n\nphase('Synthesize')\nconst verdict = await agent(\n`Consolide a investigacao do Harvester. VERIFY: ${JSON.stringify(verify.filter(Boolean))}. SALVAGE: ${JSON.stringify(salvage)}.\nDecida (pro dono, pt-BR honesto): (a) o Harvester esta mesmo MORTO no mainnet como esta hoje? (b) da p/ salvar com re-ancoragem ao high rolante (e VALE a pena)? \nVeredito: KILL (definitivo, nao reativar), REDESIGN_TO_PAPER (re-desenhar com params e testar PRIMEIRO no Paper Engine, que ja existe, antes de qualquer ordem real), ou INCONCLUSIVE. Inclua params se redesign. Lembre: o agente do Telegram sugeriu reativar id22-25 como esta \u2014 diga claramente se isso seria erro.`,\n  { schema: SYNTH_SCHEMA }\n)\nreturn verdict\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wwmqg79oh
+> Summary: Verificar adversarialmente se o Harvester de dislocacao esta MORTO no mainnet e se da p/ salvar com ajustes (re-ancorar FAIR a high rolante + backtest em dados reais)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/subagents/workflows/wf_9b63e3e6-8b5
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/workflows/scripts/harvester-salvage-research-wf_9b63e3e6-8b5.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/workflows/scripts/harvester-salvage-research-wf_9b63e3e6-8b5.js"} to iterate without resending the script.)
+> Run ID: wf_9b63e3e6-8b5
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/workflows/scripts/harvester-salvage-research-wf_9b63e3e6-8b5.js", resumeFromRunId: "wf_9b63e3e6-8b5"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(14:55:52)*
+
+
+## 🤖 Claude *(14:55:52)*
+
+Harvester research no ar. Lanço o design do **Bloco B** (também background) e faço o recon dos pontos de implementação.
+
+## 🤖 Claude *(14:56:16)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'blocoB-design',\n  description: 'Desenhar a arquitetura do Bloco B do Motor de Estrategias: Strategy Library + Regime Router + Knowledge Base de padroes (reusando o que ja existe no TradeUX)',\n  phases: [\n    { title: 'Design', detail: '3 componentes em paralelo' },\n    { title: 'Synthesize', detail: 'plano faseado de implementacao' },\n  ],\n}\nconst D_SCHEMA = { type: 'object', properties: { component: { type: 'string' }, design: { type: 'string' }, filesToTouch: { type: 'array', items: { type: 'string' } }, reuse: { type: 'string' }, risks: { type: 'string' } }, required: ['component', 'design'], additionalProperties: true }\nconst PLAN_SCHEMA = { type: 'object', properties: { plan: { type: 'string' }, phases: { type: 'array', items: { type: 'object', additionalProperties: true } }, firstSlice: { type: 'string' } }, required: ['plan', 'firstSlice'], additionalProperties: true }\n\nphase('Design')\nconst designs = await parallel([\n  () => agent(\n`Repo TradeUX em /home/gcrux-tradeux/tradeux. Desenhe a STRATEGY LIBRARY: uma definicao DECLARATIVA de estrategia (recipe JSON/JS: name, profile [consistencia|macro|...], regimes[], symbols[], signals/conditions, orderTemplate, sizing, mode [paper|live]) + um servico que INSTANCIA a recipe em automations+orderTemplates (data-driven, generalizando os scripts backend/scripts/setup-*.js que hoje sao imperativos). Leia setup-farm.js, setup-trend.js, setup-paper-trilhas.js, controllers/automationsController.js, repositories. Diga onde encaixa (arquivos), como reusa os ensureTemplate/ensureAutomation, e como o \"mode\" (paper|live) entra (alinhado ao roteamento [PAPER] do paperEngine e ao pre-req de coluna 'mode'). Retorne component, design, filesToTouch, reuse, risks.`,\n    { label: 'design:library', phase: 'Design', schema: D_SCHEMA }\n  ),\n  () => agent(\n`Repo TradeUX em /home/gcrux-tradeux/tradeux. Desenhe o REGIME ROUTER: mapa regime->conjunto de estrategias ativas; no shift de regime (regimeJob escreve MEMORY['<sym>:REGIME']) ativa/desativa o conjunto certo (start/stop de automacoes). Hoje o gating ja e PASSIVO (conditions com REGIME!=bear etc.) \u2014 explique o trade-off entre (a) manter gating passivo na condition vs (b) router ATIVO que liga/desliga automacoes; quando cada um e melhor; risco de flapping no shift de regime (histerese ja existe). Leia regimeJob.js, beholder.js (updateBrain/start/stop), automationsController. Retorne component, design, filesToTouch, reuse, risks.`,\n    { label: 'design:router', phase: 'Design', schema: D_SCHEMA }\n  ),\n  () => agent(\n`Repo TradeUX em /home/gcrux-tradeux/tradeux. Desenhe a KNOWLEDGE BASE de padroes/sinais: tabelas patternInstances + patternStats (win-rate/EV por regime/simbolo), alimentadas por backtest (historico) e pelo Paper Engine (ao vivo, paperOrders), com endpoint /analysis/patterns + tool MCP p/ o estrategista LLM ler. REUSE: backend/src/utils/indexes.js JA computa 40+ indicadores e ~20 padroes de candle (Engulfing/Doji/Hammer/etc.) \u2014 a KB cataloga ocorrencia->desfecho (look-ahead) e estatistica. Leia indexes.js, a migration de paperOrders (20260619000000), backtest.js. Proponha schema (dual-dialect), o pipeline de ingestao, e como o agente consulta. Retorne component, design, filesToTouch, reuse, risks.`,\n    { label: 'design:kb', phase: 'Design', schema: D_SCHEMA }\n  ),\n])\n\nphase('Synthesize')\nconst clean = designs.filter(Boolean)\nconst plan = await agent(\n`Consolide os 3 designs do Bloco B em UM plano de implementacao faseado, pragmatico e de baixo risco (o sistema esta em mainnet CONGELADO; tudo novo deve nascer em PAPER/observacao). Designs: ${JSON.stringify(clean)}. \nEntregue: plan (texto), phases (lista ordenada com titulo+escopo+risco), firstSlice (a primeira fatia minima de 1 PR que entrega valor com zero risco). Priorize reuso (Strategy Library generalizando os setup-*.js; KB reusando indexes.js; Router so se valer vs o gating passivo atual). Seja honesto sobre o que e overkill.`,\n  { schema: PLAN_SCHEMA }\n)\nreturn plan\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wpv93t3tt
+> Summary: Desenhar a arquitetura do Bloco B do Motor de Estrategias: Strategy Library + Regime Router + Knowledge Base de padroes (reusando o que ja existe no TradeUX)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/subagents/workflows/wf_9fa639bb-557
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/workflows/scripts/blocob-design-wf_9fa639bb-557.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/workflows/scripts/blocob-design-wf_9fa639bb-557.js"} to iterate without resending the script.)
+> Run ID: wf_9fa639bb-557
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/2b2f6508-34d7-4007-b556-91b1cc19927e/workflows/scripts/blocob-design-wf_9fa639bb-557.js", resumeFromRunId: "wf_9fa639bb-557"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(14:56:25)*
+
+
+## 🤖 Claude *(14:56:29)*
+
+Bloco B design no ar. Recon dos pontos de implementação do lote gated.
+
+## 🤖 Claude *(14:56:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== agent.js: doutrina harvester + tamanho ===\"\ngrep -niE \"harvest|id22|id 22|22-25|SYSTEM_PROMPT\" tradeux-agent/src/agent.js | head -20\nwc -l tradeux-agent/src/agent.js\necho \"=== frontend: pagina cockpit ===\"\nls frontend/src/pages/ 2>/dev/null | grep -iE \"cockpit|intellig\" || find frontend/src -iname \"*cockpit*\" 2>/dev/null\necho \"=== como o front consome /analysis/cockpit ===\"\ngrep -rn \"analysis/cockpit\\|/cockpit\" frontend/src 2>/dev/null | head",
+  "description": "Recon agent.js doctrine, frontend cockpit page"
+}
+```
+
+## 🤖 Claude *(14:56:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/cockpitJob.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Cockpit Job — grava MEMORY['<sym>:COCKPIT'] (analytics READ-ONLY que o brain segura e o agente LÊ/REPORTA).
+> 4	 *
+> 5	 * Clona o padrão do fairPriceJob/flowJob/regimeJob: sinal/dado da MAINNET → MEMORY (passivo). Compõe:
+> 6	 *   - bloco de MERCADO (distribuição de retornos 1m, EV net-de-fee, tail, banda MC driftless) do cockpitService
+> 7	 *   - SNAPSHOT de regime/flow LIDO da MEMORY (já populada por regimeJob/flowJob)
+> 8	 *   - estado DERIVADO dos gates de COMPRA (view do cockpit; limiares transparentes no payload)
+> 9	 *
+> 10	 * PASSIVO e READ-ONLY: updateMemory(...,executeAutomations=FALSE) — NUNCA dispara automação, NUNCA chama
+> 11	 * buy/sell/oco. COCKPIT é informativo (o agente lê via MCP/MEMORY); diferente de REGIME/FAIR, NÃO gateia nada,
+> 12	 * então desligar o job (kill-switch) não tem efeito colateral no money-path.
+> 13	 *
+> 14	 * ⚠️ honestidade: EV/distribuição/MC são MECÂNICA da distribuição de 1m do mercado REAL (mainnet), NÃO previsão;
+> 15	 * a banda MC é DRIFTLESS (p50 ≡ preço). `gates.buyAllowed` é a VIEW do cockpit (limiar COCKPIT_FLOW_BUY_MIN
+> 16	 * exposto no payload) — NÃO é o gate exato da id2 ao vivo (esse vive na condition da automação no banco); por
+> 17	 * isso o payload carrega `flowBuyMin` p/ ser transparente. A defasagem de SNAPSHOT (flow/regime/gates velhos no
+> 18	 * tick de 60s) foi RESOLVIDA pelo `freshen` (read-path recomputa do MEMORY vivo + expõe `flow.ageMs`); FOLLOW-UP
+> 19	 * remanescente = reconciliar SÓ os limiares (`flowBuyMin`/`FLOW_STALE_MS`) com a condition viva da id2.
+> 20	 *
+> 21	 * Env:
+> 22	 *   COCKPIT_JOB_ENABLED  (default 'true')   — kill-switch
+> 23	 *   COCKPIT_REFRESH_MS   (default 60000)    — intervalo do poll (60s; piso 5s)
+> 24	 *   COCKPIT_SYMBOLS      (CSV, opcional)    — força a lista; senão automações ativas; BTCUSDT sempre incluído
+> 25	 *   COCKPIT_LOOKBACK     (default 500)      — nº de velas 1m p/ a distribuição
+> 26	 *   COCKPIT_BREAKEVEN_PCT(default 0.20)     — round-trip de fee (%) p/ pHit/EV (0.15 com BNB)
+> 27	 *   COCKPIT_TAIL_K       (default 3)        — k de |r| >= k·σ p/ tail mass
+> 28	 *   COCKPIT_MC_HORIZON   (default 60)       — horizonte (min) da banda MC driftless
+> 29	 *   COCKPIT_FLOW_BUY_MIN (default -0.4)     — imbalance mínimo p/ a VIEW "fluxo não-capitulação" do gate
+> 30	 */
+> 31	const beholder = require('./beholder');
+> 32	const automationsRepository = require('./repositories/automationsRepository');
+> 33	const { getCockpit } = require('./utils/cockpitService');
+> 34	const { indexKeys } = require('./utils/indexes');
+> 35	const logger = require('./utils/logger');
+> 36	
+> 37	const ENABLED = (process.env.COCKPIT_JOB_ENABLED || 'true') !== 'false';
+> 38	const _refresh = parseInt(process.env.COCKPIT_REFRESH_MS || '60000', 10);
+> 39	const REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 5000 ? _refresh : 60000;
+> 40	const _lookback = parseInt(process.env.COCKPIT_LOOKBACK || '500', 10);
+> 41	const LOOKBACK = Number.isFinite(_lookback) && _lookback >= 30 ? _lookback : 500;
+> 42	const _be = parseFloat(process.env.COCKPIT_BREAKEVEN_PCT || '0.20');
+> 43	const BREAKEVEN_PCT = Number.isFinite(_be) && _be > 0 ? _be : 0.20;
+> 44	const _tk = parseFloat(process.env.COCKPIT_TAIL_K || '3');
+> 45	const TAIL_K = Number.isFinite(_tk) && _tk > 0 ? _tk : 3;
+> 46	const _mc = parseInt(process.env.COCKPIT_MC_HORIZON || '60', 10);
+> 47	const MC_HORIZON = Number.isFinite(_mc) && _mc > 0 ? _mc : 60;
+> 48	const _fbm = parseFloat(process.env.COCKPIT_FLOW_BUY_MIN || '-0.4');
+> 49	const FLOW_BUY_MIN = Number.isFinite(_fbm) ? _fbm : -0.4;
+> 50	const FLOW_STALE_MS = 5 * 60 * 1000; // fluxo mais velho que isto não conta p/ a view do gate (fail-safe)
+> 51	
+> 52	let timer = null;
+> 53	let running = false;       // trava de re-entrância
+> 54	const LAST = {};           // último COCKPIT por símbolo (observabilidade/endpoint)
+> 55	const AT = {};             // timestamp (ms) da última gravação
+> 56	const UNAVAIL = new Set();  // símbolos indisponíveis já logados (1x por episódio)
+> 57	
+> 58	async function resolveSymbols() {
+> 59	    const fromEnv = (process.env.COCKPIT_SYMBOLS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 60	    let syms = [];
+> 61	    if (fromEnv.length) syms = fromEnv;
+> 62	    else {
+> 63	        try {
+> 64	            const autos = await automationsRepository.getActiveAutomations();
+> 65	            syms = (autos || [])
+> 66	                .map(a => String((a.get ? a.get('symbol') : a.symbol) || '').toUpperCase())
+> 67	                .filter(s => s && !s.startsWith('*'));
+> 68	        } catch (err) {
+> 69	            logger('cockpit', `Falha ao resolver símbolos: ${err.message}`);
+> 70	            syms = [];
+> 71	        }
+> 72	    }
+> 73	    syms.push('BTCUSDT'); // BTC sempre presente (âncora do painel), mesmo sem automação ativa
+> 74	    return [...new Set(syms)];
+> 75	}
+> 76	
+> 77	// Estado DERIVADO dos gates de compra POR MÓDULO (view do cockpit, limiares transparentes). NÃO emite ordem.
+> 78	// Espelha a doutrina das automações (ver SYSTEM_PROMPT do agente):
+> 79	//   - FARM (alts LTC/BNB/ADA): RSI+regime (mean-reversion, range OU mixed: != bear && != trend), SEM filtro de
+> 80	//     fluxo (condition VIVA = MEMORY[REGIME]!=='bear' && !=='trend', setup-farm.js:131). 'mixed' é mean-reversion
+> 81	//     no classifier → liberar em mixed é CORRETO, não bug.
+> 82	//   - BASELINE (BTC id2): farm + filtro de FLUXO não-capitulação (setup-flow-gate.js) — É O ÚNICO módulo de
+> 83	//     acumulação flow-gated. Aplicar o filtro de fluxo às ALTS MENTE (vetaria entrada que a farm viva FARIA).
+> 84	//   - TREND compra no golden cross: gated só por != bear; HARVESTER é DESGATEADO (opera em qualquer regime).
+> 85	// `buyAllowed` = gate de ACUMULAÇÃO do SÍMBOLO: FARM (alts, sem fluxo) ou BASELINE (BTC, com fluxo), conforme FLOW_GATED.
+> 86	
+> 87	// Símbolos cujo módulo de acumulação gateia por FLUXO: SÓ a baseline BTC (id2). Default BTCUSDT; env sobrescreve.
+> 88	const FLOW_GATED = new Set((process.env.COCKPIT_FLOW_GATED_SYMBOLS || 'BTCUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));
+> 89	
+> 90	function deriveGates(regime, flow, symbol) {
+> 91	    const regimeOk = !!regime && regime !== 'bear' && regime !== 'unknown';
+> 92	    const flowFresh = flow && Number.isFinite(flow.imbalance) && flow.atMs && (Date.now() - flow.atMs) < FLOW_STALE_MS;
+> 93	    // fail-CLOSED como a id2 (auditoria): fluxo stale/ausente NÃO libera (conservador). Antes era fail-OPEN
+> 94	    // (mostrava GO sem fluxo fresco) — direção PERIGOSA/enganosa vs a automação real, que BLOQUEIA o dip.
+> 95	    const flowOk = !!flowFresh && flow.imbalance >= FLOW_BUY_MIN;
+> 96	    const farm = regimeOk && regime !== 'trend';        // farm: RSI+regime (mean-reversion range/mixed), SEM fluxo
+> 97	    const trend = regimeOk;                             // trend compra no golden cross (!= bear)
+> 98	    const flowGated = !!symbol && FLOW_GATED.has(String(symbol).toUpperCase());
+> 99	    const baselineRaw = farm && flowOk;                 // módulo baseline (BTC id2): farm + filtro de fluxo (fail-closed)
+> 100	    // baseline SÓ existe p/ símbolo flow-gated (BTC). Pra ALT não há módulo baseline (o gate de acumulação é o FARM):
+> 101	    // expor baseline=true p/ alt é um gate-FANTASMA que o agente lê como "incoerência" (baseline aberto c/ RSI>25).
+> 102	    // → baseline=null (n/a) p/ não-flow-gated; buyAllowed e farm ficam INTACTOS (buyAllowed usa baselineRaw p/ BTC).
+> 103	    const baseline = flowGated ? baselineRaw : null;
+> 104	    const buyAllowed = flowGated ? baselineRaw : farm;  // alt: farm (sem fluxo); símbolo flow-gated (BTC): baseline
+> 105	    const accLabel = flowGated ? 'farm/baseline' : 'farm';  // rótulo de acumulação: alt NÃO tem módulo baseline
+> 106	    let reason;
+> 107	    if (!regimeOk) reason = `regime=${regime || 'unknown'}: acumulação em CAIXA (${accLabel} e trend parados)`;
+> 108	    else if (regime === 'trend') reason = `regime=trend: ${accLabel} em CAIXA (correto); trend compra no golden cross`;
+> 109	    else if (!flowGated) {
+> 110	        const cap = (flowFresh && !flowOk) ? ` — fluxo em capitulação (imbalance ${flow.imbalance}) é INFORMATIVO, NÃO gateia o farm` : '';
+> 111	        reason = `regime=${regime} (mean-reversion: range/mixed) + RSI: FARM liberado, SEM filtro de fluxo${cap}`;
+> 112	    }
+> 113	    else if (!flowFresh) reason = 'fluxo stale/ausente → conservador (fail-closed, como a id2): baseline BTC NÃO liberada';
+> 114	    else if (!flowOk) reason = `fluxo em capitulação (imbalance ${flow.imbalance} < ${FLOW_BUY_MIN}): baseline BTC veta o dip`;
+> 115	    else reason = `regime=${regime} (mean-reversion: range/mixed) + fluxo ok: baseline BTC liberada`;
+> 116	    // doctrine=true (auditoria): estes gates são a DOUTRINA por regime (o que a estratégia FARIA), NÃO confirmam
+> 117	    // que a automação correspondente (ex.: baseline id2, hoje isActive=0) está ATIVA — o gate VIVO mora na
+> 118	    // condition da automação no banco. O agente/painel deve reportar como doutrina, não como estado vivo.
+> 119	    return { regime, regimeOk, flowOk, flowFresh: !!flowFresh, flowBuyMin: FLOW_BUY_MIN, flowGated, farm, baseline, trend, harvesterUngated: true, buyAllowed, reason, doctrine: true };
+> 120	}
+> 121	
+> 122	// Reaplica regime/flow/gates FRESCOS (leituras baratas da MEMORY) sobre um snapshot, preservando a
+> 123	// analítica CARA de 1m (price/dist/ev/tail/mc) na cadência do job. Motivo: o snapshot CONGELA regime/flow
+> 124	// no tick de REFRESH_MS (60s); como o FLOW oscila em segundos (janela ~1000 aggTrades) e o REGIME é
+> 125	// histerético, o agente lia o número VELHO do snapshot e o reportava como "contradição" vs o oráculo vivo.
+> 126	// Aqui flow/regime/gates do payload SEMPRE refletem a MEMORY no instante da LEITURA, e expõe a idade do
+> 127	// fluxo (flowAgeMs / flow.ageMs) p/ transparência. NÃO recomputa a analítica (custa klines; 60s de cache
+> 128	// nela é aceitável e desejado). Usado pelos read-paths (endpoint agregado e por-símbolo) — read-only.
+> 129	function freshen(symbol, snap) {
+> 130	    if (!snap) return snap;
+> 131	    const regime = beholder.getMemory(symbol, indexKeys.REGIME) || null;
+> 132	    const flowRaw = beholder.getMemory(symbol, indexKeys.FLOW) || null;
+> 133	    const flowAgeMs = flowRaw && Number.isFinite(flowRaw.atMs) ? Date.now() - flowRaw.atMs : null;
+> 134	    const flow = flowRaw
+> 135	        ? { imbalance: flowRaw.imbalance, toxicity: flowRaw.toxicity, atMs: Number.isFinite(flowRaw.atMs) ? flowRaw.atMs : null, ageMs: flowAgeMs }
+> 136	        : null;
+> 137	    const gates = deriveGates(regime, flowRaw, symbol);
+> 138	    return { ...snap, regime, flow, gates, flowAgeMs };
+> 139	}
+> 140	
+> 141	async function runOnce() {
+> 142	    if (running) return;
+> 143	    running = true;
+> 144	    try {
+> 145	        const symbols = await resolveSymbols();
+> 146	        if (!symbols.length) return;
+> 147	
+> 148	        for (const symbol of symbols) {
+> 149	            try {
+> 150	                const m = await getCockpit(symbol, { lookback: LOOKBACK, breakevenPct: BREAKEVEN_PCT, tailK: TAIL_K, mcHorizonMin: MC_HORIZON });
+> 151	                if (!m || m.unavailable) {
+> 152	                    if (!UNAVAIL.has(symbol)) { UNAVAIL.add(symbol); logger('cockpit', `${symbol}: klines indisponíveis (${m ? m.reason : 'sem resposta'}); MEMORY preservada.`); }
+> 153	                    continue;
+> 154	                }
+> 155	                if (UNAVAIL.delete(symbol)) logger('cockpit', `${symbol}: klines recuperadas.`);
+> 156	
+> 157	                // snapshot de regime/flow lido da MEMORY (já populada pelos outros jobs) — mesma leitura do flowJob
+> 158	                const regime = beholder.getMemory(symbol, indexKeys.REGIME) || null;
+> 159	                const flow = beholder.getMemory(symbol, indexKeys.FLOW) || null;
+> 160	                const gates = deriveGates(regime, flow, symbol);
+> 161	
+> 162	                const snapshot = {
+> 163	                    symbol, source: m.source, interval: m.interval,
+> 164	                    price: m.price, samples: m.samples,
+> 165	                    dist: m.dist, ev: m.ev, tail: m.tail, mc: m.mc,
+> 166	                    regime,
+> 167	                    flow: flow ? { imbalance: flow.imbalance, toxicity: flow.toxicity, atMs: flow.atMs || null } : null,
+> 168	                    gates,
+> 169	                    at: m.at, atMs: Date.now(),
+> 170	                };
+> 171	
+> 172	                // PASSIVO/READ-ONLY: executeAutomations=FALSE — escreve a MEMORY, NUNCA dispara ordem.
+> 173	                await beholder.updateMemory(symbol, indexKeys.COCKPIT, null, snapshot, false);
+> 174	                LAST[symbol] = snapshot; AT[symbol] = Date.now();
+> 175	            } catch (err) {
+> 176	                logger('cockpit', `${symbol}: erro ao atualizar COCKPIT: ${err.message}`);
+> 177	            }
+> 178	        }
+> 179	    } finally {
+> 180	        running = false;
+> 181	    }
+> 182	}
+> 183	
+> 184	function start() {
+> 185	    if (!ENABLED) { logger('cockpit', 'Cockpit job DESABILITADO (COCKPIT_JOB_ENABLED=false).'); return; }
+> 186	    if (timer) return; // idempotente
+> 187	    runOnce(); // primeira passada imediata no boot
+> 188	    timer = setInterval(runOnce, REFRESH_MS);
+> 189	    if (timer.unref) timer.unref(); // não segura o processo no shutdown
+> 190	    logger('cockpit', `Cockpit job iniciado READ-ONLY (intervalo ${REFRESH_MS}ms; lookback ${LOOKBACK}; break-even ${BREAKEVEN_PCT}%). Informativo — não gateia automação.`);
+> 191	}
+> 192	
+> 193	function stop() {
+> 194	    if (timer) { clearInterval(timer); timer = null; }
+> 195	    running = false;
+> 196	}
+> 197	
+> 198	// Status/snapshot agregado p/ o endpoint e observabilidade (por símbolo o último COCKPIT + idade).
+> 199	function getStatus() {
+> 200	    const now = Date.now();
+> 201	    const symbols = {};
+> 202	    for (const s of Object.keys(LAST)) {
+> 203	        // freshen: regime/flow/gates no instante da leitura (mata a defasagem de até REFRESH_MS do snapshot);
+> 204	        // ageMs aqui é a idade da ANALÍTICA (snapshot), distinta de flow.ageMs (idade do fluxo) que o freshen anexa.
+> 205	        symbols[s] = { ...freshen(s, LAST[s]), ageMs: AT[s] ? now - AT[s] : null, stale: AT[s] ? (now - AT[s]) > REFRESH_MS * 3 : true, unavailable: UNAVAIL.has(s) };
+> 206	    }
+> 207	    return { enabled: ENABLED, refreshMs: REFRESH_MS, lookback: LOOKBACK, breakevenPct: BREAKEVEN_PCT, flowBuyMin: FLOW_BUY_MIN, running, symbols };
+> 208	}
+> 209	
+> 210	module.exports = { start, stop, runOnce, getStatus, freshen };
+> 211	
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agent.js: doutrina harvester + tamanho ===
+> 14:const SYSTEM_PROMPT = `Você é o COPILOTO DE OBSERVAÇÃO do TradeUX — um bot spot na Binance cujas decisões de execução são tomadas por AUTOMAÇÕES DETERMINÍSTICAS (o motor Beholder), NÃO por você. Você NÃO é um trader avulso: você observa o sistema, confere se ele está coerente com a estratégia abaixo e reporta. As automações já operam sozinhas — ordens suas competiriam com elas e quebrariam a estratégia.
+> 17:- META: ACUMULAR +3 BTC — mas não por acúmulo cego: TRADE BASEADO EM LUCRO é parte do jogo. A REGRA DE OURO do BTC: (a) o COFRE/RESERVA acumulado nunca é vendido — não pra "reduzir risco", "proteger em bear" nem "realizar o cofre"; (b) toda venda de BTC é de um MÓDULO TÁTICO realizando a posição que ELE MESMO comprou, e a garantia de lucro é POR MÓDULO: o harvester (bucket HARVEST) é NO-LOSS — só vende com lucro, fill abaixo do custo = bug; o trend (TREND_QTY) zera no death cross INDEPENDENTE do P&L — corte de perda é DESENHADO (whipsaw pode fechar no prejuízo e isso é correto, não alarme). Nada disso é venda do cofre.
+> 21:- HARVESTER de dislocação (BTCUSDT, automações id22-24 'Harvest Buy -3/-5/-7pct' + id25 'Harvest Sell'): MÓDULO SANCIONADO e vault-safe que opera EM QUALQUER REGIME — é DESGATEADO do regime DE PROPÓSITO, o único que trabalha em bear. Compra wicks fundos abaixo do preço justo da mainnet (FAIR) e a venda no-loss da id25 vende SÓ o bucket tático MEMORY['BTCUSDT:HARVEST'] (o que ele próprio comprou), com lucro-alvo +1,2% sobre o custo médio (o fill LIMIT pode sair levemente abaixo do alvo, nunca abaixo do custo). Venda da id25 em bear é comportamento CORRETO E DESEJADO — NÃO é incoerência, NÃO alarme. Só sinalize o harvester se uma venda dele realizar NO PREJUÍZO (preço < custo médio do bucket — aí sim é bug) ou se vender MAIS que o bucket.
+> 22:- REGIME-GATING é o coração: em BEAR, as COMPRAS de farm/trend/baseline ficam em CAIXA (protegido); o HARVESTER é a exceção desenhada (acima). O edge validado é DRAWDOWN MENOR por não pescar faca caindo — NÃO é alpha. Farm/trend parados em bear é o comportamento CORRETO e desejado, não uma oportunidade perdida.
+> 35:- Avaliar COERÊNCIA com a tese: o regime está sendo respeitado? alguma automação deveria ter disparado e não disparou (ou o contrário)? há venda de BTC INDEVIDA — isto é, FORA dos módulos táticos (trend id7 / harvester id25), vendendo MAIS que a posição tática (TREND_QTY/HARVEST), ou um fill do HARVESTER abaixo do custo médio (o no-loss é garantia SÓ do harvester; o trend corta perda por desenho)? Ordens manuais (sem automationId) costumam ser do dono/operador (testes, ajustes) — registre no diário; só alarme se drenarem o cofre de forma recorrente. NUNCA compare o RSI ou preço atual da memória com o momento de execução de uma ordem passada para alegar incoerência, pois o mercado se moveu e o Beholder não guarda histórico de RSI no momento do preenchimento. A memória do Beholder reflete apenas o estado real-time atual (no segundo da sua leitura). Para divergências cockpit×oráculo (regime/fluxo/gates), consulte DIVERGÊNCIAS ESPERADAS (abaixo) ANTES de chamar de incoerência.
+> 50:1. VOCÊ nunca envia nem recomenda ordem de venda de BTC, e nunca sugere "reduzir"/"realizar"/"proteger" o COFRE por qualquer via. As vendas de BTC legítimas são das AUTOMAÇÕES TÁTICAS: trend id7 (zera TREND_QTY no death cross, independente do P&L — corte de perda é desenhado) e harvester id25 (realiza o bucket HARVEST sempre com lucro — no-loss). Ao mencioná-las, rotule como posição tática ("TREND_QTY id7", "bucket HARVEST id25"), nunca como "venda do cofre" — e NÃO as trate como incoerência nem peça pra desativá-las.
+> 62:  "verifique se o sistema (farm/trend/baseline/harvester + regime-gating) está coerente com a " +
+> 65:  "nunca vende o cofre (vendas táticas COM LUCRO são das automações trend/harvester e são " +
+> 70:// sem isto (cada ciclo nasce zerado). O SYSTEM_PROMPT fica estável (prefixo cacheável no Anthropic);
+> 88:// O cap acima limita o VOLUME por ciclo; a doutrina do SYSTEM_PROMPT pede "não repita o assunto" mas
+> 100:  const messages = provider.start(SYSTEM_PROMPT, buildKickoff());
+> 116:      SYSTEM_PROMPT,
+> 182 tradeux-agent/src/agent.js
+> === frontend: pagina cockpit ===
+> frontend/src/private/Cockpit
+> frontend/src/private/Cockpit/CockpitSims.js
+> frontend/src/private/Cockpit/cockpit.css
+> frontend/src/private/Cockpit/Cockpit.js
+> === como o front consome /analysis/cockpit ===
+> frontend/src/routes.js:43:            <PrivateRoute path="/cockpit">
+> frontend/src/private/Cockpit/Cockpit.js:9:import './cockpit.css';
+> frontend/src/private/Cockpit/Cockpit.js:298:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Tail · retornos 1m vs fee</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'klines → distribuição'}</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:334:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Probability lattice (Galton)</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'velas 1m reais'}</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:340:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Monte Carlo · median fair</span><span className="cx-src">{mcBand ? '/analysis/cockpit (brain)' : 'σ realizada'}</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:419:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Edge vs fee · agente</span><span className="cx-src">/analysis/cockpit · /agent/runs</span></div>
+> frontend/src/components/Menu/SideBar.js:47:                    <SideBarItem to="/cockpit" text="Cockpit">
+> frontend/src/services/IntelligenceService.js:44:// tradingHalt). Single source of truth do painel /cockpit — alimenta as métricas vindas do brain.
+> frontend/src/services/IntelligenceService.js:47:    const url = `${ANALYSIS_URL}/cockpit`;
+> ```
+
+## 🤖 Claude *(14:58:16)*
+
+
+## 🤖 Claude *(14:58:18)*
+
+Recon done. O cockpit (`getStatus` no controller, já async) é o lugar certo pra anexar o paper "para análise" (o agente lê `/analysis/cockpit`). Vou implementar o lote. Criando tarefas e lendo os pontos exatos (doutrina do agente + frontend do cockpit).
+
+## 🤖 Claude *(14:58:20)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "item (f): guard [PAPER] no caminho real",
+  "description": "beholder.placeOrder: ap\u00f3s o branch paper, recusar (fail-closed) qualquer orderTemplate/automation com prefixo [PAPER] que chegue ao caminho REAL (rename-safe). Pr\u00e9-req do flip.",
+  "activeForm": "Implementando o guard item (f)"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #12 created successfully: item (f): guard [PAPER] no caminho real
+> ```
+
+## 🤖 Claude *(14:58:22)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fix doutrina do agente (harvester OFF + paper)",
+  "description": "agent.js SYSTEM_PROMPT: harvester id22-25 DESATIVADO de prop\u00f3sito (morto no mainnet) \u2192 n\u00e3o sugerir reativar; + doutrina [PAPER]=research (broker virtual, n\u00e3o real).",
+  "activeForm": "Corrigindo a doutrina do agente"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #13 created successfully: Fix doutrina do agente (harvester OFF + paper)
+> ```
+
+## 🤖 Claude *(14:58:24)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Paper no cockpit (para an\u00e1lise)",
+  "description": "paperService.summary() (totais+trilhas) reusado por getPaper e anexado a getCockpitStatus \u2192 agente l\u00ea paper via /analysis/cockpit.",
+  "activeForm": "Integrando paper ao cockpit"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #14 created successfully: Paper no cockpit (para análise)
+> ```
+
+## 🤖 Claude *(14:58:25)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Painel visual paper no Cockpit (frontend)",
+  "description": "Card \"Paper / Estrat\u00e9gias\" no Cockpit.js consumindo status.paper (P&L por trilha). Rebuild frontend.",
+  "activeForm": "Adicionando o painel visual do paper"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #15 created successfully: Painel visual paper no Cockpit (frontend)
+> ```
+
+## 🤖 Claude *(14:58:27)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Gate + deploy lote (item f, agente, paper-cockpit, painel)",
+  "description": "QA/TL no diff; rebuild backend+frontend; verificar; commit+push; HANDOFF/mem\u00f3ria.",
+  "activeForm": "Gate + deploy do lote"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #16 created successfully: Gate + deploy lote (item f, agente, paper-cockpit, painel)
+> ```
+
+## 🤖 Claude *(14:58:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "offset": 14,
+  "limit": 42
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 14	const SYSTEM_PROMPT = `Você é o COPILOTO DE OBSERVAÇÃO do TradeUX — um bot spot na Binance cujas decisões de execução são tomadas por AUTOMAÇÕES DETERMINÍSTICAS (o motor Beholder), NÃO por você. Você NÃO é um trader avulso: você observa o sistema, confere se ele está coerente com a estratégia abaixo e reporta. As automações já operam sozinhas — ordens suas competiriam com elas e quebrariam a estratégia.
+> 15	
+> 16	A ESTRATÉGIA (Farm-and-Funnel) — entenda ANTES de opinar
+> 17	- META: ACUMULAR +3 BTC — mas não por acúmulo cego: TRADE BASEADO EM LUCRO é parte do jogo. A REGRA DE OURO do BTC: (a) o COFRE/RESERVA acumulado nunca é vendido — não pra "reduzir risco", "proteger em bear" nem "realizar o cofre"; (b) toda venda de BTC é de um MÓDULO TÁTICO realizando a posição que ELE MESMO comprou, e a garantia de lucro é POR MÓDULO: o harvester (bucket HARVEST) é NO-LOSS — só vende com lucro, fill abaixo do custo = bug; o trend (TREND_QTY) zera no death cross INDEPENDENTE do P&L — corte de perda é DESENHADO (whipsaw pode fechar no prejuízo e isso é correto, não alarme). Nada disso é venda do cofre.
+> 18	- FARM (grid no-loss) nas ALTS (LTC/BNB/ADA): compra em fraqueza (RSI_1m < 35) quando o regime NÃO é bear nem trend (tipicamente range) e vende SÓ no lucro (preço > preço médio × 1.012), nunca no prejuízo. Gateado por regime != bear E != trend.
+> 19	- TREND (SMA 50/200) no BTC e nas alts: compra no golden cross e zera ESSA posição no death cross. Essa posição de trend é TÁTICA e SEPARADA do cofre de BTC (a venda no death é da automação fechando o trade de trend, não do cofre). É o motor de captura de bull. Gateado por != bear.
+> 20	- BASELINE (BTC): reversão à média (RSI<25 compra / RSI>75 vende), gateada por != bear, != trend e por um filtro de fluxo do taker (não compra dip sob capitulação vendedora). A venda da baseline é a automação id3 — HOJE PAUSADA; se um dia reativada, é venda tática legítima (RSI>75), não venda do cofre.
+> 21	- HARVESTER de dislocação (BTCUSDT, automações id22-24 'Harvest Buy -3/-5/-7pct' + id25 'Harvest Sell'): MÓDULO SANCIONADO e vault-safe que opera EM QUALQUER REGIME — é DESGATEADO do regime DE PROPÓSITO, o único que trabalha em bear. Compra wicks fundos abaixo do preço justo da mainnet (FAIR) e a venda no-loss da id25 vende SÓ o bucket tático MEMORY['BTCUSDT:HARVEST'] (o que ele próprio comprou), com lucro-alvo +1,2% sobre o custo médio (o fill LIMIT pode sair levemente abaixo do alvo, nunca abaixo do custo). Venda da id25 em bear é comportamento CORRETO E DESEJADO — NÃO é incoerência, NÃO alarme. Só sinalize o harvester se uma venda dele realizar NO PREJUÍZO (preço < custo médio do bucket — aí sim é bug) ou se vender MAIS que o bucket.
+> 22	- REGIME-GATING é o coração: em BEAR, as COMPRAS de farm/trend/baseline ficam em CAIXA (protegido); o HARVESTER é a exceção desenhada (acima). O edge validado é DRAWDOWN MENOR por não pescar faca caindo — NÃO é alpha. Farm/trend parados em bear é o comportamento CORRETO e desejado, não uma oportunidade perdida.
+> 23	- Os símbolos e parâmetros acima (alts LTC/BNB/ADA, RSI 35/25/75, × 1.012) são a config ATUAL, como referência — a FONTE DE VERDADE é o estado real que você lê via tradeux_get_*. Se algo divergir, confie no que leu e SINALIZE a divergência.
+> 24	
+> 25	AMBIENTE (crucial — confirme a cada ciclo com tradeux_get_cockpit; NÃO assuma)
+> 26	- O ambiente REAL e o estado de trading vêm de tradeux_get_cockpit: env.useTestnet (mainnet vs testnet) e env.tradingHalt (kill-switch). É a FONTE DE VERDADE — confie nela, não no que este prompt assume.
+> 27	- Se env.useTestnet=TRUE: a carteira é do faucet (~445 moedas + ~10k de cada stable) e o "valor total" (centenas de milhares de USDT) é RUÍDO sintético, não capital real; NÃO raciocine sobre "valor total"/"exposição em USDT"/"reduzir X mil"; o preço também é sintético.
+> 28	- Se env.useTestnet=FALSE (MAINNET REAL): o capital é REAL (e pequeno); jamais sugira aumentar risco. Em AMBOS os casos o que importa é a MECÂNICA (regime, sinais, gates, coerência das automações), NÃO maximizar "valor total".
+> 29	- Se env.tradingHalt=TRUE: o sistema está CONGELADO (kill-switch) — nenhuma ordem real sai; trate tudo como observação, não aja. HALT é estado CONHECIDO do operador — ver DIVERGÊNCIAS ESPERADAS (não reportar a cada ciclo).
+> 30	
+> 31	SEU PAPEL a cada ciclo
+> 32	- Ler o estado de forma ECONÔMICA (orçamento de ~12 tool calls por ciclo — NÃO o estoure; CONCLUA com folga): por símbolo (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT) faça 1× tradeux_get_regime(symbol) — já traz o regime instantâneo (.regime) + o regime do GATE (.gate.regime, histerético, valor OPERATIVO) + RSI/ADX 1h — e 1× tradeux_get_oracle_state(symbol) para o fluxo; mais 1× tradeux_get_last_orders. Isso basta para o panorama (~9 leituras). Só busque um índice extra com tradeux_get_memory(symbol, index=CHAVE_EXATA — ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW'; passe a chave completa em index, sem o campo interval) se for investigar algo pontual.
+> 33	- 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+> 34	- NUNCA chame tradeux_get_memory_indexes, nem tradeux_get_memory/tradeux_get_wallet SEM symbol, nem tradeux_get_wallet_full: retornam centenas de símbolos do faucet (~200k tokens) e ESTOURAM o contexto do modelo, abortando o ciclo. Consulte sempre por símbolo + chave específica.
+> 35	- Avaliar COERÊNCIA com a tese: o regime está sendo respeitado? alguma automação deveria ter disparado e não disparou (ou o contrário)? há venda de BTC INDEVIDA — isto é, FORA dos módulos táticos (trend id7 / harvester id25), vendendo MAIS que a posição tática (TREND_QTY/HARVEST), ou um fill do HARVESTER abaixo do custo médio (o no-loss é garantia SÓ do harvester; o trend corta perda por desenho)? Ordens manuais (sem automationId) costumam ser do dono/operador (testes, ajustes) — registre no diário; só alarme se drenarem o cofre de forma recorrente. NUNCA compare o RSI ou preço atual da memória com o momento de execução de uma ordem passada para alegar incoerência, pois o mercado se moveu e o Beholder não guarda histórico de RSI no momento do preenchimento. A memória do Beholder reflete apenas o estado real-time atual (no segundo da sua leitura). Para divergências cockpit×oráculo (regime/fluxo/gates), consulte DIVERGÊNCIAS ESPERADAS (abaixo) ANTES de chamar de incoerência.
+> 36	- DIVERGÊNCIAS ESPERADAS (NÃO são incoerência/anomalia — NÃO reporte como achado NEM notifique o dono): o cockpit lê as MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oráculos vivos; tradeux_get_regime/tradeux_get_oracle_state são leituras VIVAS separadas → delta pequeno cockpit×vivo é TIMING, não fonte paralela. Itens:
+> 37	  (1) REGIME: instantâneo (tradeux_get_regime.regime) ≠ gate (.gate.regime) na fronteira do ADX = HISTERESE — use .gate.regime (valor operativo); diferir por 1 nível é esperado.
+> 38	  (2) FLUXO eixo IDADE: compare pela IDADE (cockpit flow.ageSec) — imbalance velho mais negativo que o vivo é o MESMO sinal em instantes diferentes.
+> 39	  (3) FLUXO eixo MAGNITUDE — fraco (|imbalance| ~< 0,2): o sinal comprador/vendedor pode INVERTER entre leituras — RUÍDO, não divergência de fonte.
+> 40	  (4) EV/trade ≤ 0 a 1m: ESPERADO (scalp de 1m sangra fee), não alarme.
+> 41	  (5) HALT inalterado (tradingHalt=TRUE estável): estado conhecido do operador — reporte 1× ou só quando MUDAR.
+> 42	  (6) buyGate de acumulação liberado com regime=mixed: CORRETO (range E mixed são mean-reversion; condition viva = regime != bear E != trend) — não sugira "respeitar só range".
+> 43	  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> 44	  Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> 45	- Sinalizar EVENTOS úteis ao operador: regime SAIU do bear (gatilho p/ ligar o funil / próximas fases); golden/death cross real; farm comprou e/ou lucrou; alt com comportamento ruim no farm; algo travado/stale.
+> 46	- NOTIFICAR O DONO via tradeux_notify_owner (Telegram, one-way) quando: precisar de APROVAÇÃO p/ algo sensível, estiver BLOQUEADO e precisar de ajuda, ou um EVENTO importante acontecer (ex.: saída do bear, cross real, anomalia/incoerência NOVA). É one-way: NÃO espere resposta no ciclo — após notificar, siga o caminho conservador (não agir). No MÁXIMO 1-2 notificações por ciclo. ANTI-SPAM (regra dura): o kickoff de cada ciclo traz a lista de NOTIFICAÇÕES JÁ ENVIADAS recentemente — confira ANTES de notificar; se o ASSUNTO já está na lista (mesmo que com outras palavras), NÃO reenvie. Notificação repetida ensina o dono a ignorar o canal. Rotina sem novidade NÃO notifica. NADA da lista DIVERGÊNCIAS ESPERADAS é notificável (já são esperados). Há também um dedup em CÓDIGO: se a chamada voltar com "notificação SUPRIMIDA — assunto duplicado", o assunto JÁ foi enviado — NÃO reformule pra burlar; consolide no diário (só reformule se for evento REALMENTE novo, destacando o que MUDOU). TODA notificação em português brasileiro (pt-BR).
+> 47	- Sugerir CALIBRAÇÕES (parâmetros), nunca ordens que concorram com as automações.
+> 48	
+> 49	GUARDRAILS (inquebráveis)
+> 50	1. VOCÊ nunca envia nem recomenda ordem de venda de BTC, e nunca sugere "reduzir"/"realizar"/"proteger" o COFRE por qualquer via. As vendas de BTC legítimas são das AUTOMAÇÕES TÁTICAS: trend id7 (zera TREND_QTY no death cross, independente do P&L — corte de perda é desenhado) e harvester id25 (realiza o bucket HARVEST sempre com lucro — no-loss). Ao mencioná-las, rotule como posição tática ("TREND_QTY id7", "bucket HARVEST id25"), nunca como "venda do cofre" — e NÃO as trate como incoerência nem peça pra desativá-las.
+> 51	2. NUNCA coloque ordens que dupliquem/concorram com as automações (farm, trend, baseline). Seu produto é OBSERVAÇÃO e CONSELHO, não execução paralela.
+> 52	3. SEMPRE leia o estado antes de concluir (regime, fluxo, memória, ordens). Na dúvida, não recomende ação.
+> 53	4. Escrita pode estar travada (TRADEUX_ALLOW_TRADING). Se for recusada, NÃO insista — apenas relate.
+> 54	5. Nunca saque (withdraw). NÃO use o "valor total"/equity como métrica de sucesso — em testnet é ruído sintético; em mainnet o foco é a MECÂNICA, não maximizar o total.
+> 55	6. IDIOMA: TUDO que você escreve — diário E notificações ao dono — é em PORTUGUÊS BRASILEIRO (pt-BR); somente termos técnicos podem ficar em inglês (FILLED, golden cross, spread, bid/ask...). Nunca escreva uma notificação inteira em inglês.
+> ```
+
+## 🤖 Claude *(14:58:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import axios from './BaseService';
+> 2	
+> 3	const ANALYSIS_URL = `${process.env.REACT_APP_API_URL}/analysis`;
+> 4	const AGENT_URL = `${process.env.REACT_APP_API_URL}/agent`;
+> 5	
+> 6	// Regime de mercado REAL (mainnet) do símbolo: bear/trend/range/mixed/unknown + strategy + signals.
+> 7	export async function getRegime(symbol, interval, token) {
+> 8	    const headers = { 'authorization': token };
+> 9	    const url = `${ANALYSIS_URL}/regime/${symbol}?interval=${interval || '1h'}`;
+> 10	    const response = await axios.get(url, { headers });
+> 11	    return response.data;
+> 12	}
+> 13	
+> 14	// Status do job de regime: por símbolo o regime do GATE (valor na MEMORY, histerético), idade da
+> 15	// última atualização e flag de stale; + config do job. Torna visível o halt silencioso e a
+> 16	// divergência entre o regime instantâneo (card acima) e a decisão do gate.
+> 17	export async function getRegimeStatus(token) {
+> 18	    const headers = { 'authorization': token };
+> 19	    const url = `${ANALYSIS_URL}/regime-status`;
+> 20	    const response = await axios.get(url, { headers });
+> 21	    return response.data;
+> 22	}
+> 23	
+> 24	// Status do flow job (Oráculo v1, SHADOW): por símbolo o desequilíbrio de agressão do TAKER dos
+> 25	// aggTrades recentes da mainnet — imbalance ∈ [-1,1] (<0 = taker vendendo) e toxicity (|imbalance|).
+> 26	// SHADOW: o sinal é exposto mas ainda NÃO gateia automação (observando p/ calibrar o threshold).
+> 27	export async function getFlowStatus(token) {
+> 28	    const headers = { 'authorization': token };
+> 29	    const url = `${ANALYSIS_URL}/flow-status`;
+> 30	    const response = await axios.get(url, { headers });
+> 31	    return response.data;
+> 32	}
+> 33	
+> 34	// KPIs do agente LLM (a partir do journal): ciclos, tokens, custo, top tools, ciclos recentes.
+> 35	export async function getAgentRuns(limit, token) {
+> 36	    const headers = { 'authorization': token };
+> 37	    const url = `${AGENT_URL}/runs?limit=${limit || 50}`;
+> 38	    const response = await axios.get(url, { headers });
+> 39	    return response.data;
+> 40	}
+> 41	
+> 42	// Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por símbolo (distribuição de retornos 1m,
+> 43	// EV net-de-fee, tail, banda MC driftless, regime/flow + gates de compra) + ambiente real (env.useTestnet/
+> 44	// tradingHalt). Single source of truth do painel /cockpit — alimenta as métricas vindas do brain.
+> 45	export async function getCockpit(token) {
+> 46	    const headers = { 'authorization': token };
+> 47	    const url = `${ANALYSIS_URL}/cockpit`;
+> 48	    const response = await axios.get(url, { headers });
+> 49	    return response.data;
+> 50	}
+> 51	
+> ```
+
+## 🤖 Claude *(14:59:52)*
+
+
+## 🤖 Claude *(14:59:54)*
+
+Tenho os pontos exatos. Implemento o lote backend: `paperService` (resumo reusável) + paper no cockpit + item (f) guard + doutrina do agente.
+
+## 🤖 Claude *(15:00:04)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/paperService.js",
+  "content": "'use strict';\n\n// Resumo do ledger do Paper Engine \u2014 FONTE \u00daNICA usada pelo endpoint GET /analysis/paper E pelo cockpit\n// (status.paper, p/ o agente LER via tradeux_get_cockpit). Por trilha: realizado (round-trips) + n\u00e3o-realizado\n// (posi\u00e7\u00e3o aberta marcada ao MINI_TICKER mainnet) + fee paga + win-rate; mais os totais agregados. READ-ONLY.\nconst paperRepository = require('../repositories/paperRepository');\n\nasync function summary() {\n    const beholder = require('../beholder');        // lazy: evita ciclo no load\n    const { indexKeys } = require('./indexes');\n    const [positions, orders] = await Promise.all([\n        paperRepository.getAllPositions(),\n        paperRepository.getOrders(1000),\n    ]);\n\n    const byStrategy = {};\n    const ensure = s => (byStrategy[s] = byStrategy[s] || { strategy: s, realizedPnl: 0, unrealizedPnl: 0, openPositions: 0, fees: 0, buys: 0, sells: 0, wins: 0, symbols: {} });\n\n    for (const p of positions) {\n        const s = ensure(p.strategy);\n        const qty = parseFloat(p.qty) || 0;\n        const realized = parseFloat(p.realizedPnl) || 0;\n        s.realizedPnl += realized;\n        let unrealized = 0;\n        if (qty > 0) {\n            const mt = beholder.getMemory(p.symbol, indexKeys.MINI_TICKER);\n            const px = mt && parseFloat(mt.close);\n            if (Number.isFinite(px) && px > 0) unrealized = qty * px - qty * (parseFloat(p.avgCost) || 0);\n            s.openPositions += 1;\n        }\n        s.unrealizedPnl += unrealized;\n        s.symbols[p.symbol] = { qty, avgCost: parseFloat(p.avgCost) || 0, realizedPnl: realized, unrealizedPnl: unrealized };\n    }\n\n    for (const o of orders) {\n        const s = ensure(o.strategy);\n        s.fees += parseFloat(o.fee) || 0;\n        if (o.side === 'BUY') s.buys += 1;\n        else if (o.side === 'SELL') { s.sells += 1; if ((parseFloat(o.realizedPnl) || 0) > 0) s.wins += 1; }\n    }\n\n    const strategies = Object.values(byStrategy).map(s => ({\n        ...s,\n        totalPnl: s.realizedPnl + s.unrealizedPnl,\n        winRate: s.sells > 0 ? s.wins / s.sells : null,\n    }));\n\n    const totals = strategies.reduce((a, s) => ({\n        realizedPnl: a.realizedPnl + s.realizedPnl,\n        unrealizedPnl: a.unrealizedPnl + s.unrealizedPnl,\n        totalPnl: a.totalPnl + s.totalPnl,\n        fees: a.fees + s.fees,\n    }), { realizedPnl: 0, unrealizedPnl: 0, totalPnl: 0, fees: 0 });\n\n    return { totals, strategies, feeRate: parseFloat(process.env.PAPER_FEE_RATE || '0.001') };\n}\n\nmodule.exports = { summary };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/utils/paperService.js (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5007,5 +6248,5 @@ Syntax OK. Gate da Fatia 2a (QA + TL) em paralelo sobre o diff (slippage + trilh
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]
-> * **Próxima Sessão**: [[2026-06-19 - agent-a1cb6fe4b703cf505]]
+> * **Próxima Sessão**: [[2026-06-19 - agent-a009438569d3ec97d]]
 %% --- TIMELINE END --- %%
