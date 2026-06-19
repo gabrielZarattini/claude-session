@@ -3787,6 +3787,2023 @@ Ou seja: o fluxo **se recuperou** desde a mensagem (de -0.67 pra -0.20, cruzou o
 
 Migração dos 5 irmãos rodando em background (`w9skld7jm`). Te trago o veredito do gate quando voltar.
 
+## 👤 User *(19:32:37)*
+
+<task-notification>
+<task-id>w9skld7jm</task-id>
+<tool-use-id>toolu_0197zRxpDmTe3uPfucUKdU19</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/w9skld7jm.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Migrar os 5 setup-*.js irmaos p/ usar lib/apiClient (DRY completo) + verify adversarial + gate QA/TL" completed</summary>
+<result>{"refactor":5,"verify":[{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/automation-ctl.js (Bloco B — DRY p/ lib/apiClient)","equivalent":true,"confidence":"high","issues":[],"verdict":"Refatoração comportamentalmente IDÊNTICA ao original. Verificado adversarialmente; nenhuma divergência encontrada.\n\n(1) `node --check` PASSA no script refatorado.\n\n(2) NÃO ganhou `findAutomationByName`: grep retorna 0 ocorrências tanto no original quanto no refatorado. O lib exporta `findAutomationByName` via `createClient`, mas o script NUNCA o importa nem o usa.\n\n(3) CAVEAT preservado: o script usa SÓ `req`+`login`. Bind único `const req = client.req` (linha 20). NÃO há binding de `findAutomationByName`. Sem recipes/ensure* (grep `recipes|ensure` = 0).\n\n(4) Recipes/domínio byte-idênticos: o diff só tocou o cabeçalho (require/transporte/login). O loop de ação (linhas 27-31) é byte-a-byte igual às linhas 41-45 do original. EM/PW com mesmos fallbacks e MESMA ORDEM: original `EM||TRADEUX_EMAIL` / `PW||TRADEUX_PASSWORD` → `firstEnv(['EM','TRADEUX_EMAIL'])` / `firstEnv(['PW','TRADEUX_PASSWORD'])` via `.map().find(Boolean)` (mesma semântica \"primeiro truthy\", `undefined` se nenhum). Host/porta: `API_HOST||'127.0.0.1'` e `parseInt(PORT||'3001',10)` reproduzidos fielmente em `resolveEnv`. Guard `if(!EM||!PW)` intacto (linha 23, mesma mensagem). Login virou `client.login(EM,PW)` com semântica idêntica de exit: mesmo POST /login {email,password}, mesmo `body&amp;&amp;body.token`, mesmo `console.error('LOGIN_FAIL '+status)`, mesmo `process.exit(1)`.\n\n(5) ZERO referências órfãs: grep por `require('http')`, `http.request`, `BASE`, `function req` no refatorado = 0. Sem linha-branca dupla (grep PCRE de 3 newlines = vazio). `req` interno do lib é byte-idêntico ao original (única diferença é um comentário inline na linha do header 'authorization', sem efeito).\n\nConfiança ALTA: a única diferença funcional é onde o código mora; o caminho executado é o mesmo."},{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-grid.js (migração Bloco B — DRY p/ lib/apiClient)","equivalent":true,"confidence":"high","issues":[],"verdict":"EQUIVALENTE. Tentei refutar a equivalência por múltiplos vetores adversariais e todos confirmaram comportamento idêntico ao original.\n\n(1) node --check PASSA tanto em setup-grid.js quanto em lib/apiClient.js.\n\n(2) NENHUM findAutomationByName no script refatorado (grep vazio). O original não tinha — o script não chama o finder da lib. Correto.\n\n(3) CAVEAT preservado:\n- getTestnetPrice INTACTA e BYTE-IDÊNTICA (diff do bloco função = vazio); continua usando require('https') para a API pública da Binance testnet, NÃO o apiClient.\n- require('https') PRESERVADO (linha 29). require('http') REMOVIDO (era usado só pelo req antigo); agora vem via require('./lib/apiClient') na linha 28.\n- DRY-return (linha 71 `if (DRY) ... return;`) acontece ANTES do login (linha 73). Ordem do main idêntica ao original: guard !EM||!PW -&gt; getTestnetPrice -&gt; if(DRY)return -&gt; login -&gt; POST /automations. Preservada.\n- Bind apenas `const req = client.req` (linha 44). client.login chamado direto (linha 73); findAutomationByName nunca referenciado. Sem over-binding.\n\n(4) recipes/domínio byte-idênticos: o diff só toca o cabeçalho de transporte/auth/env e a chamada de login no main. Todo o bloco de domínio (cálculo lower/upper/spacing/conditions, console.logs, POST /automations com payload GRID, tratamento 201/409/else, mensagem final) NÃO foi tocado pelo diff. EM/PW com MESMOS fallbacks e ORDEM: resolveEnv emailEnvs:['EM','TRADEUX_EMAIL'] / passwordEnvs:['PW','TRADEUX_PASSWORD'] reproduz `process.env.EM||process.env.TRADEUX_EMAIL` via firstEnv (find(Boolean)). Edge-cases testados em runtime: EM='' cai pra TRADEUX_EMAIL (igual ao ||); ambos ausentes -&gt; undefined -&gt; guard !EM||!PW dispara true. host = process.env['GRID_API_HOST']||'127.0.0.1' (igual). port: portEnv default 'PORT' -&gt; parseInt(process.env.PORT||'3001',10); testado 3001 (unset) e 3005 (set). login virou client.login com semântica IDÊNTICA de exit: token=resp.body&amp;&amp;resp.body.token; sem token -&gt; console.error('LOGIN_FAIL '+status)+process.exit(1).\n\n(5) ZERO referências órfãs: grep por require('http')/BASE/req-antigo = vazio. require('https') presente (necessário p/ getTestnetPrice). Sem linha-branca dupla (grep \\n\\n\\n vazio). Transporte req() na lib é byte-a-byte igual ao inline original (mesmo header 'authorization' cru, timeout 15000, {status:0} em erro/timeout, JSON.parse com fallback p/ string)."},{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-harvester.js (Bloco B — DRY p/ lib/apiClient)","equivalent":true,"confidence":"high","issues":[{"severity":"nit","desc":"O CAVEAT esperado pelo check (3) ('Igual ao setup-farm.js (req + findAutomationByName cap 40 + recipes ensure*)') NAO existe — nem no original /tmp/blocoB-orig2/setup-harvester.js nem no refatorado. Logo nao ha caveat a 'preservar' ou 'perder': sua ausencia e vacuamente preservada e NAO quebra equivalencia. O harvester carrega seu proprio marcador local na linha 41: '// cap preservado (era 40)'. Gap entre a expectativa da tarefa e o estado real do arquivo, sem impacto comportamental."},{"severity":"nit","desc":"Mudanca cosmetica sem efeito: o lib findAutomationByName ganhou o comentario '// page size do backend = 10' que nao existia no inline original. Logica identica."}],"verdict":"Refatoracao comportamentalmente IDENTICA ao original. node --check PASSA. (1) Cap de paginacao 40 preservado: call-site 'client.findAutomationByName(token, name, 40)' presente (setup-harvester.js:41) + binding 'const req = client.req' (linha 40); o loop da lib 'page &lt;= maxPages' com maxPages=40 reproduz o 'page &lt;= 40' hardcoded do original, mesmo early-break (rows.length&lt;10) e mesmo 'return null'. (2) req() movido para a lib e BYTE-IDENTICO (12 linhas de transporte conferidas linha a linha): header 'authorization' cru, timeout 15000 em option+on('timeout')+destroy, nunca rejeita (resolve {status,body}; erro-&gt;{status:0,body:String(msg)}; timeout-&gt;{status:0,body:'timeout'}), JSON.parse com fallback pra string crua. Provado que req desacoplado de client (closure sobre BASE, nao method 'this') funciona: ECONNREFUSED -&gt; {status:0}. (3) login: lib usa 'resp.status'/'resp.body&amp;&amp;resp.body.token' = mesma forma de retorno do req; preserva console.error('LOGIN_FAIL '+status)+process.exit(1); nova chamada 'await client.login(EM, PW)' equivalente. (4) EM/PW: resolveEnv reproduz EXATAMENTE 'EM||TRADEUX_EMAIL' e 'PW||TRADEUX_PASSWORD' — 11 cenarios diferenciais TODOS MATCH (incl. string-vazia caindo no fallback, prioridade EM&gt;TRADEUX_EMAIL, host vazio-&gt;127.0.0.1, PORT vazio-&gt;3001, PORT 'abc'-&gt;NaN/null identico ao original); guard '!EM||!PW' com mesma mensagem+exit(1) intacto (linha 73); regiao de dominio (ensureTemplate/ensureAutomation/IIFE/recipes/conditions/templates) BYTE-IDENTICA exceto as 2 mudancas esperadas (remocao do findAutomationByName inline + bloco de login -&gt; client.login). (5) ZERO orfaos: nenhum require('http'), const BASE, process.env.EM/PW/PORT/HARVEST_API_HOST residual; unica require e ./lib/apiClient; ZERO linhas-branca duplas. UNICA ressalva e o CAVEAT do check (3) que nao existe em NENHUMA das versoes (nit, sem impacto comportamental)."},{"target":"/home/gcrux-tradeux/tradeux/backend/scripts/activate-trend.js (Bloco B — DRY p/ lib/apiClient)","equivalent":true,"confidence":"high","issues":[{"severity":"nit","desc":"Comentario divergente (nao-funcional): o loop de paginacao no lib usa '// page size do backend = 10' enquanto o original tinha '// page size = 10'. Sem efeito comportamental."}],"verdict":"EQUIVALENTE. A migracao para lib/apiClient e fiel byte-a-byte no transporte e na logica. (1) node --check passa em ambos os arquivos. (2) Cap 30 preservado no call-site (linha 37: client.findAutomationByName(token,name,30)); o loop do lib com maxPages=30 e logicamente
+... (truncated 12582 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/w9skld7jm.output)</result>
+<usage><agent_count>12</agent_count><subagent_tokens>607553</subagent_tokens><tool_uses>129</tool_uses><duration_ms>662449</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(19:32:41)*
+
+
+## 🤖 Claude *(19:32:42)*
+
+Migração voltou — os 4 visíveis estão `equivalent=true (high)`. Vou ler o resultado completo (flow-gate + gate QA/TL):
+
+## 🤖 Claude *(19:32:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/parse_mig.py <<'PYEOF'\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/tasks/w9skld7jm.output'))\nr=d[\"result\"]\nprint(\"refactor:\",r[\"refactor\"],\" refuted:\",r[\"refuted\"])\nprint(\"=\"*70,\"VERIFY\")\nfor v in r[\"verify\"]:\n    t=v[\"target\"].split(\"/\")[-1].split(\" \")[0]\n    print(f\"- {t}: equivalent={v['equivalent']} ({v['confidence']}) issues={len(v['issues'])}\")\n    for i in v[\"issues\"]:\n        print(f\"     [{i['severity']}] {i['desc'][:160]}\")\nprint(\"=\"*70,\"GATE\")\nfor g in r[\"gate\"]:\n    print(f\"ROLE={g['role']}  VERDICT={g['verdict']}\")\n    print(\"  mustFix:\", g[\"mustFix\"] if g[\"mustFix\"] else \"(nenhum)\")\n    for n in g[\"niceToHave\"]: print(\"   \u2023\",n[:200])\n    print(\"  summary:\",g[\"summary\"][:900])\n    print(\"-\"*60)\nPYEOF\npython3 /tmp/parse_mig.py",
+  "description": "Parse migration verify + gate verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> refactor: 5  refuted: 0
+> ====================================================================== VERIFY
+> - apiClient): equivalent=True (high) issues=0
+> - apiClient): equivalent=True (high) issues=0
+> - apiClient): equivalent=True (high) issues=2
+>      [nit] O CAVEAT esperado pelo check (3) ('Igual ao setup-farm.js (req + findAutomationByName cap 40 + recipes ensure*)') NAO existe — nem no original /tmp/blocoB-orig2
+>      [nit] Mudanca cosmetica sem efeito: o lib findAutomationByName ganhou o comentario '// page size do backend = 10' que nao existia no inline original. Logica identica.
+> - apiClient): equivalent=True (high) issues=1
+>      [nit] Comentario divergente (nao-funcional): o loop de paginacao no lib usa '// page size do backend = 10' enquanto o original tinha '// page size = 10'. Sem efeito c
+> - apiClient: equivalent=True (high) issues=0
+> ====================================================================== GATE
+> ROLE=QA gate (senior, money-path skeptic)  VERDICT=PASS_COM_RESSALVAS
+>   mustFix: (nenhum)
+>    ‣ Comentario STALE na lib (/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js linhas 18 e 70): diz que os 3 consumidores passam caps historicos '80/40/30', mas os call-sites reais passam 30/40
+>    ‣ Os comentarios 'cap preservado (era 40)' / '(era 30)' nos wrappers estao corretos; apenas alinhar a doc central da lib com eles.
+>    ‣ Opcional: deduplicar tambem o bloco de dominio (ensureTemplate/ensureAutomation/findTemplate) numa proxima sub-fase de 'recipes declarativas' — fora de escopo deste lote, mas e onde mora a proxima cop
+>   summary: VEREDITO GLOBAL: PASS COM RESSALVAS (so 1 nit de comentario; merge liberado).
+> 
+> Revisei os 5 diffs + a lib (apiClient.js) de forma adversarial. As verificacoes independentes batem: a migracao DRY e comportamentalmente equivalente aos originais em /tmp/blocoB-orig2/. node --check PASSA nos 5 scripts e na lib.
+> 
+> EQUIVALENCIA (confirmada por execucao, nao por leitura):
+> - resolveEnv vs as expressoes inline originais: 16/16 casos diferenciais MATCH, incluindo edges (PORT='' -> 3001, PORT='abc' -> NaN identico, host='' -> 127.0.0.1, credencial vazia caindo no fallback, prioridade EM>TRADEUX_EMAIL). firstEnv (.find(Boolean)) e semanticamente identico ao encadeamento `||` (string vazia e falsy nos dois).
+> - Transporte req(): a lib usa closure sobre BASE com ZERO ocorrencias de `this.` (grep_count=0). Logo `const req = client.req` (alias usado em todos os scripts) e SEGURO. Smoke ao vivo: aliased re
+> ------------------------------------------------------------
+> ROLE=tech-lead / code owner (TradeUX)  VERDICT=APPROVE
+>   mustFix: (nenhum)
+>    ‣ Empacotar como branch+PR em vez de working-tree solto no master: os 5 arquivos estao como 'M' (modified) em /home/gcrux-tradeux/tradeux no branch master. A regra de ops e shipar via PR. Criar branch, 
+>    ‣ Mensagem de commit pt-BR que enumere o caveat por script (grid=https/getTestnetPrice intacto; activate-trend=findTemplate mantido; flow-gate=GET/PATCH diretos sobrevivem; caps 40/30 restaurados por ca
+>    ‣ Sugestao de proxima sub-fase (NAO neste PR): a duplicacao de findTemplate (GET /ordertemplates/all/<SYMBOL>) entre activate-trend.js e setup-harvester.js e candidata a migrar pra lib quando vierem as 
+>   summary: VEREDITO: APPROVE (os 5 diffs, merge em lote)
+> 
+> Racional: migracao DRY faithful dos 5 CLIs de setup/recovery (automation-ctl, setup-grid, setup-harvester, activate-trend, setup-flow-gate) para /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js. Verifiquei de forma independente (nao confiei so nos relatorios):
+> 
+> 1) Diffs cirurgicos: cada diff toca SO o cabecalho (require http->lib, BASE/EM/PW inline -> resolveEnv), o bloco de login (-> client.login) e, onde existia, o findAutomationByName inline. Toda a regiao de DOMINIO (recipes/ensure*/conditions/console output/payloads) e byte-identica ao original em /tmp/blocoB-orig2/.
+> 
+> 2) node --check PASSA nos 5 + na lib. Self-test apiClient.test.js: 37/37 (rodei ao vivo). Job de CI dedicado existe (.github/workflows/ci.yml: 'backend scripts (apiClient self-test)', puro Node, sem DB).
+> 
+> 3) Caveats todos preservados (conferidos por grep): setu
+> ------------------------------------------------------------
+> ```
+
+## 🤖 Claude *(19:33:27)*
+
+
+## 🤖 Claude *(19:33:29)*
+
+Gate da migração — **forte de novo**:
+
+| | Veredito | must-fix |
+|---|---|---|
+| **Verify** (5 adversariais) | **5/5 equivalent (high), 0 refutados** | — |
+| **QA** | **PASS COM RESSALVAS** | **nenhum** |
+| **TL** | **APPROVE** | **nenhum** |
+
+Só 1 nit acionável (QA): o comentário central da lib (`apiClient.js` L18/L70) virou **stale** — diz "3 consumidores / 80/40/30", mas agora são 6. Corrijo antes de commitar:
+
+## 🤖 Claude *(19:33:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "old_string": " *     maxPages \u00e9 s\u00f3 um BOUND de seguran\u00e7a da pagina\u00e7\u00e3o \u2014 preservado por call-site (cada script tinha o seu: 80/40/30).",
+  "new_string": " *     maxPages \u00e9 s\u00f3 um BOUND de seguran\u00e7a da pagina\u00e7\u00e3o \u2014 cada consumidor preserva o seu cap hist\u00f3rico por call-site."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:33:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js",
+  "old_string": "    // Os 3 consumidores atuais passam o seu cap hist\u00f3rico por call-site (80/40/30) \u2014 ver coment\u00e1rio em cada um.",
+  "new_string": "    // Cada consumidor passa o seu cap hist\u00f3rico por call-site (ver o coment\u00e1rio \"cap preservado\" em cada um)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/lib/apiClient.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:33:43)*
+
+
+## 🤖 Claude *(19:33:43)*
+
+Agora a verificação consolidada do lote (5 scripts + lib) antes do commit:
+
+## 🤖 Claude *(19:33:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== node --check (lib + 5 irm\u00e3os) ===\"\nfor f in backend/scripts/lib/apiClient.js backend/scripts/automation-ctl.js backend/scripts/setup-grid.js backend/scripts/setup-harvester.js backend/scripts/activate-trend.js backend/scripts/setup-flow-gate.js; do\n  node --check \"$f\" && echo \"\u2713 $(basename $f)\" || echo \"\u2717 $(basename $f)\"\ndone\necho \"=== self-test da lib (deve seguir 37/37) ===\"\nnode backend/scripts/lib/apiClient.test.js | tail -1\necho \"=== res\u00edduos \u00f3rf\u00e3os nos 5 (http/req-antigo/finder-antigo) ===\"\ngrep -nE \"require\\('http'\\)|http\\.request|^function req\\(|^async function findAutomationByName\" backend/scripts/automation-ctl.js backend/scripts/setup-grid.js backend/scripts/setup-harvester.js backend/scripts/activate-trend.js backend/scripts/setup-flow-gate.js || echo \"  (nenhum \u2014 OK)\"\necho \"=== grid mant\u00e9m https/getTestnetPrice? ===\"\ngrep -nE \"require\\('https'\\)|getTestnetPrice\" backend/scripts/setup-grid.js\necho \"=== linhas-branca duplas nos 5? ===\"\nfor f in automation-ctl setup-grid setup-harvester activate-trend setup-flow-gate; do\n  c=$(awk 'BEGIN{b=0;c=0}/^$/{b++;if(b>=2)c++}!/^$/{b=0}END{print c}' backend/scripts/$f.js); echo \"$f.js: $c\"\ndone",
+  "description": "Consolidated verification of migration batch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check (lib + 5 irmãos) ===
+> ✓ apiClient.js
+> ✓ automation-ctl.js
+> ✓ setup-grid.js
+> ✓ setup-harvester.js
+> ✓ activate-trend.js
+> ✓ setup-flow-gate.js
+> === self-test da lib (deve seguir 37/37) ===
+> apiClient.test.js: 37 passed, 0 failed
+> === resíduos órfãos nos 5 (http/req-antigo/finder-antigo) ===
+>   (nenhum — OK)
+> === grid mantém https/getTestnetPrice? ===
+> 29:const https = require('https');
+> 46:function getTestnetPrice(symbol) {
+> 60:    const price = await getTestnetPrice(SYMBOL).catch(e => { console.error('falha ao buscar preço testnet: ' + e.message); process.exit(1); });
+> === linhas-branca duplas nos 5? ===
+> automation-ctl.js: 0
+> setup-grid.js: 0
+> setup-harvester.js: 0
+> activate-trend.js: 0
+> setup-flow-gate.js: 0
+> ```
+
+## 🤖 Claude *(19:34:06)*
+
+
+## 🤖 Claude *(19:34:07)*
+
+Tudo verde: node --check 6/6, self-test 37/37, zero órfãos, grid mantém https/getTestnetPrice, zero linha-dupla. Diffstat + commit do lote (trunk-based, como você definiu):
+
+## 🤖 Claude *(19:34:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== diffstat ===\"\ngit -c safe.directory='*' diff --stat\necho \"=== chown ===\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux \\\n  backend/scripts/lib/apiClient.js backend/scripts/automation-ctl.js backend/scripts/setup-grid.js \\\n  backend/scripts/setup-harvester.js backend/scripts/activate-trend.js backend/scripts/setup-flow-gate.js 2>/dev/null && echo \"\u2713 chown\"\n\ncat > /tmp/commit_msg2.txt <<'MSG'\nfeat(scripts): migra os 5 setup-*.js irmaos p/ lib/apiClient (DRY completo)\n\nCompleta o Bloco B Fase 1: automation-ctl, setup-grid, setup-harvester,\nactivate-trend e setup-flow-gate agora usam backend/scripts/lib/apiClient.js\n(req/login/findAutomationByName/resolveEnv), eliminando as copias inline.\n\nComportamento byte-fiel (verify 5/5 equivalent, QA PASS, TL APPROVE):\n- caps de paginacao preservados por call-site (harvester 40; activate-trend\n  e flow-gate 30); automation-ctl e setup-grid nao tem finder.\n- setup-grid: getTestnetPrice (https p/ Binance testnet) e o DRY-return\n  antes do login PRESERVADOS intactos.\n- activate-trend: findTemplate (GET /ordertemplates/all) mantido (recipe-level).\n- setup-flow-gate: req diretos (GET /automations/:id + PATCH) mantidos.\n- recipes/ensure*/dominio byte-identicos; guard !EM||!PW + exit(1) intactos.\n\nTambem alinha o comentario stale de maxPages na lib (era \"3 consumidores 80/40/30\").\nZero impacto em runtime (CLIs de setup/recovery; TRADING_HALT intocado).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nMSG\n\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux add \\\n  backend/scripts/lib/apiClient.js backend/scripts/automation-ctl.js backend/scripts/setup-grid.js \\\n  backend/scripts/setup-harvester.js backend/scripts/activate-trend.js backend/scripts/setup-flow-gate.js\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux commit -F /tmp/commit_msg2.txt\necho \"=== log + status ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -3\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short",
+  "description": "Commit migration batch as gcrux-tradeux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === diffstat ===
+>  backend/scripts/activate-trend.js  | 45 +++++++++-----------------------------
+>  backend/scripts/automation-ctl.js  | 32 ++++++++-------------------
+>  backend/scripts/lib/apiClient.js   |  4 ++--
+>  backend/scripts/setup-flow-gate.js | 45 +++++++++-----------------------------
+>  backend/scripts/setup-grid.js      | 32 ++++++++-------------------
+>  backend/scripts/setup-harvester.js | 45 +++++++++-----------------------------
+>  6 files changed, 50 insertions(+), 153 deletions(-)
+> === chown ===
+> ✓ chown
+> [master 3ca0ef7] feat(scripts): migra os 5 setup-*.js irmaos p/ lib/apiClient (DRY completo)
+>  6 files changed, 50 insertions(+), 153 deletions(-)
+> === log + status ===
+> 3ca0ef7 feat(scripts): migra os 5 setup-*.js irmaos p/ lib/apiClient (DRY completo)
+> 2f8f20b feat(scripts): apiClient.js DRY (Bloco B Fase 1) + self-test no CI
+> e8e7b16 feat: botao go-live (floor persistido) no Settings + persistencia do kill-switch
+> ```
+
+## 🤖 Claude *(19:34:44)*
+
+
+## 🤖 Claude *(19:34:47)*
+
+✅ Ambos os commits no master, worktree limpo:
+- **`2f8f20b`** — Fase 1 (lib + 3 scripts + test + CI)
+- **`3ca0ef7`** — 5 irmãos migrados (−153 linhas neste lote)
+
+**Bloco B Fase 1 está COMPLETO** — todos os 8 `setup-*.js` agora usam a lib compartilhada. Vou atualizar a memória do Motor de Estratégias pra refletir o status (evita re-planejar Fase 1 numa próxima sessão):
+
+## 🤖 Claude *(19:34:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-strategy-engine
+> 3	description: Motor de Estratégias (gerar/validar/ativar por regime) — Fatia 1 Paper/Shadow Engine NO AR (research sob HALT)
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 2b2f6508-34d7-4007-b556-91b1cc19927e
+> 8	---
+> 9	
+> 10	Épico pedido pelo dono (2026-06-19): sistema que **gera, valida e ativa estratégias por regime** + **base de conhecimento de padrões/sinais** + **poder total do Beholder** (todas as cryptos monitoradas) com **IA decidindo ordens**. Quer **3 trilhas simultâneas** — consistência (risco-ajustada), frequência (verde diário), ciclo macro — nos 4 símbolos atuais (BTC/LTC/BNB/ADA), e "ver lucro real mesmo que pouco" pra escalar a(s) vencedora(s).
+> 11	
+> 12	**Plano aprovado** (arquivo `/home/ubuntu/.claude/plans/velvet-forging-wren.md`): 4 camadas / 6 componentes (Paper Engine · Backtest Harness genérico · Strategy Library · Regime Router · KB de padrões · Scanner cross-símbolo + estrategista LLM), em 3 blocos: **A PROVAR** (paper+backtest+3 trilhas+painel), **B SISTEMATIZAR** (library+router+KB), **C INTELIGÊNCIA+GRADUAÇÃO** (scanner+LLM+canary).
+> 13	
+> 14	**Princípio de latência (corrige "IA de baixa latência"):** quem decide ordem em ms é o **BRAIN do Beholder** (regras compiladas reagindo a cada tick de TODOS os símbolos — já é assim). O **LLM é o estrategista do ciclo lento** (escolhe/ativa/calibra estratégias lendo a KB), NUNCA no hot path. "Lucro diário garantido" NÃO é honesto com ~$150 spot — o sistema MEDE qual trilha tem edge real (paper+backtest) antes de arriscar.
+> 15	
+> 16	**Medo do dono que isto resolve:** research em testnet morre (preço sintético não transfere). Solução = **backtest (já usa klines mainnet+fee 0,1% em `backtest.js`) + PAPER com preço/fee MAINNET reais**. O testnet de execução fica só p/ wiring (opcional).
+> 17	
+> 18	## Fatia 1 ENTREGUE+DEPLOYADA+VERIFICADA (commit `22ba96b`, gate QA PASS-c/ressalvas + TL APPROVE-c/sugestões)
+> 19	**Paper/Shadow Engine** — broker VIRTUAL, ZERO risco, roda com o mainnet CONGELADO (`TRADING_HALT=true`) intacto:
+> 20	- `backend/src/paperEngine.js`: roteado por **prefixo `[PAPER]` no NAME** da automação (`isPaperAutomation`). `beholder.placeOrder` desvia p/ `placePaperOrder` num **branch cirúrgico ANTES do `calcQty`** (calcQty/hasEnoughAssets leem a carteira REAL — só USDT — e um SELL paper lançaria). Fill ao `MINI_TICKER.close` (preço mainnet real) + fee real via `utils/feeCalc.computeNet`; grava em `paperOrders`/`paperPositions`. NUNCA toca Binance/`orders`/buckets/carteira reais. v1: 1-lote por trilha+símbolo (compra só FLAT, vende posição inteira), lock `_inflight`, guard quote=USDT. A 2ª palavra do name = TRILHA (`strategyOf`: `[PAPER] Consistencia Buy BTCUSDT`→`consistencia`).
+> 21	- migration `20260619000000-create-paper-tables` (paperOrders + paperPositions PK composta strategy+symbol, dual-dialect idempotente); `GET /analysis/paper` (read-only, P&L por trilha); `scripts/setup-paper-consistency.js` (trilha consistência mean-reversion RSI 25/75, BTCUSDT 1m).
+> 22	- **Como rodar:** `docker compose exec backend sh -lc 'EM=$DEFAULT_SETTINGS_EMAIL PW=$DEFAULT_SETTINGS_PWD node scripts/setup-paper-consistency.js'` → start das automações `[PAPER]` → `GET /analysis/paper`. **NO AR:** id39 (Buy) / id40 (Sell) ativas em paper.
+> 23	- **Verificado ao vivo:** round-trip BUY→SELL com fee real (flat = −2×fee, honesto); isolamento (ordens reais 259→259); HALT intacto.
+> 24	
+> 25	## ⚠️ Pré-req de FLIP (QA ALTO-1) — NÃO esquecer
+> 26	O gate de roteamento é NOMINAL (prefixo `[PAPER]`). Hoje coberto pelo HALT (defesa-em-profundidade). **Antes de virar `TRADING_HALT=false`** o prefixo vira a única proteção → adicionar coluna `mode`/`isPaper` na automação OU guard no `calcQty`/`placeOrder` recusando `[PAPER]` no caminho real. É item (f) dos pré-reqs do flip em [[tradeux-mainnet-go-live]].
+> 27	
+> 28	## Fatia 2a (commit `660641f`, 2026-06-19) — trilhas + slippage; FREQUÊNCIA refutada
+> 29	- `paperEngine` ganhou **slippage** ciente do lado (`PAPER_SLIPPAGE_BPS` default 5 bps; BUY acima/SELL abaixo → fecha o viés otimista do mid). `scripts/setup-paper-trilhas.js` (substitui o `setup-paper-consistency.js`, removido) cria 2 trilhas nos 4 símbolos, em paper: **CONSISTÊNCIA** (mean-reversion RSI 25/75, gate `!=bear && !=trend`) e **MACRO** (trend SMA50/200 golden/death cross). **16 automações `[PAPER]` ATIVAS** (consistência+macro ×4). Gate BTC consistência unificado (recriado).
+> 30	- **GOTCHA operacional (TL):** `regimeJob.resolveSymbols` só computa REGIME/TREND_CROSS p/ símbolos de automações ATIVAS → adicionei **`REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT` no `.env`** (runtime) p/ garantir o dado das alts; sem isso as trilhas das alts ficam fail-safe (não disparam). Reaplicar após reset do `.env`.
+> 31	- **FREQUÊNCIA (verde diário) REFUTADA por backtest** (workflow `paper-frequencia-research`, 8 combos 4sym×5m/15m, dados mainnet + fee 0,1%/lado): 8/8 EV/trade líquido NEGATIVO (win 52-68% mas EV<0; fee come o edge; mais frequência = pior; verdes só em gate-regime esparso = caixa-no-bear, não frequência). **NÃO construir a trilha frequência** — mesma classe do scalp 1m. É o 3º perfil pedido pelo dono que o mercado nega; honestidade > forçar trade.
+> 32	
+> 33	## Lote hardening 2026-06-19 (commit `faed249`)
+> 34	- **item (f)** guard FAIL-CLOSED em `beholder.placeOrder` (template/automação `[PAPER]` no caminho REAL = recusado; cobre rename) → **pré-req de CÓDIGO do flip FEITO** (a coluna `mode` é o fix definitivo, Bloco B; NÃO bloqueia o GO). **paper no cockpit**: `utils/paperService.summary()` (fonte única getPaper+cockpit) → `status.paper` no `/analysis/cockpit` (agente lê via `tradeux_get_cockpit`) + **painel `Paper · Estratégias`** no Cockpit frontend. **doutrina do agente** reconciliada (harvester morto/não-reativar; [PAPER]=research; frequência refutada).
+> 35	
+> 36	## Bloco B — plano (workflow design 2026-06-19)
+> 37	- **Strategy Library** = alto valor/baixo risco (refactor data-driven dos `setup-*.js`). **1ª fatia: `backend/scripts/lib/apiClient.js`** (DRY de req/login/findAutomationByName, duplicados em ~8 scripts; ZERO risco, out-of-process). Depois recipes declarativas + `strategyService.instantiate` (nasce inativo/paper). A coluna `mode` é Layer B (desacoplamento, não feature) — só se doer.
+> 38	- **KB de padrões** = médio valor: reusa os ~20 padrões de `indexes.js` + LOOK-AHEAD + agregação por regime; começar pelo **backfill histórico offline** (zero hot-path), depois feed ao-vivo via paperEngine, depois roll-up. Tabelas `patternInstances`/`patternStats` dual-dialect (template = migration paper-tables).
+> 39	- **Regime Router** = **OVERKILL por ora**: o gate PASSIVO (REGIME nas conditions + fail-safe do engine) já cobre 90%, stateless/fail-closed/anti-flapping por construção. NÃO construir router ATIVO agora (estado mutável fora do banco + mexe em start/stop no hot path sob HALT). Só a parte declarativa (mapa regime→conjunto, read-only) se um dia houver muitas recipes coordenadas — e mantendo o gate passivo como cinto.
+> 40	- Invariantes (todas as fases): nasce `isActive:false`/`mode:paper`; indexes derivado das keys; condition passa por `validateConditions`; migrations dual-dialect; jobs passivos; NÃO mexer no `TRADING_HALT`.
+> 41	
+> 42	## NEXT
+> 43	Fatia 2b = slippage proporcional + book/partial (baixo valor a ~$20/trade). Bloco B Fase 1 = `apiClient.js` DRY → recipes → KB backfill. Bloco C (scanner + LLM + canary) depois. Reuso-chave: `backtest.js:156` já tem `signalFn`; 40+ indicadores + ~20 padrões de candle em `indexes.js`. Harvester = REDESIGN_TO_PAPER (se explorar, vai pro Paper Engine — ver [[tradeux-harvester-experiment]]). Relacionados: [[tradeux-farm-funnel-backtest]] [[tradeux-regime-gate]] [[tradeux-trend-following]] [[tradeux-1m-scalping-and-cockpit]] [[tradeux-mainnet-go-live]].
+> 44	
+> 45	## Aprovação dos papers + flip (decisões do dono 2026-06-19, commit `258c385`)
+> 46	- **Aprovação DELEGADA ao Claude.** Critério: trilha = CANDIDATA quando net+ (após fee+slippage reais) sobre ~15-30 round-trips fechados OU ~1-2 semanas, consistente entre símbolos.
+> 47	- **`paperReviewJob.js`** (passivo, 24h): lê `paperService.summary()` e notifica o dono no Telegram (telegramNotify.notify+dedup; estado em `logs/paper_review_state.json`) nos marcos 5/15/30/60/120 round-trips (CANDIDATA/FRACA/amostra-inicial). Env `PAPER_REVIEW_*`. Silencioso sem novidade.
+> 48	- **Flip = ESPERAR o paper provar** (decisão do dono). Mecanismo documentado: `.env TRADING_HALT=false`+restart derruba o env floor (flip real); `POST /system/halt {on:false}` só solta o manual; canary = 1 grupo, desativar o resto. Claude executa só com GO explícito; **não vira sozinho**.
+> 49	- Timing: em `trend` (estado atual) a consistência fica parada e a macro espera cross → poucos trades; leitura ~3-5 dias se virar range/mixed, veredito ~2 semanas.
+> 50	
+> ```
+
+## 🤖 Claude *(19:35:14)*
+
+
+## 🤖 Claude *(19:35:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md",
+  "old_string": "## Bloco B \u2014 plano (workflow design 2026-06-19)\n- **Strategy Library** = alto valor/baixo risco (refactor data-driven dos `setup-*.js`). **1\u00aa fatia: `backend/scripts/lib/apiClient.js`** (DRY de req/login/findAutomationByName, duplicados em ~8 scripts; ZERO risco, out-of-process). Depois recipes declarativas + `strategyService.instantiate` (nasce inativo/paper). A coluna `mode` \u00e9 Layer B (desacoplamento, n\u00e3o feature) \u2014 s\u00f3 se doer.",
+  "new_string": "## Bloco B Fase 1 \u2705 FEITA+MERGED (2026-06-19, commits `2f8f20b` + `3ca0ef7`)\n**`backend/scripts/lib/apiClient.js`** (`createClient({host,port})\u2192{req,login,findAutomationByName}` + `resolveEnv({hostEnv,emailEnvs,passwordEnvs})`) extraiu as primitivas HTTP duplicadas. **TODOS os 8 `setup-*.js` migrados** (paper/farm/trend/harvester/grid/flow-gate/automation-ctl/activate-trend) \u2014 byte-fiel: `req` id\u00eantico, **cap de pagina\u00e7\u00e3o preservado por call-site** (paper 80, farm/harvester 40, trend/activate/flow-gate 30), recipes (`ensure*`) intocados; caveats preservados (grid mant\u00e9m `getTestnetPrice`/https; activate-trend mant\u00e9m `findTemplate`; flow-gate mant\u00e9m `req` diretos GET/:id+PATCH). **`apiClient.test.js`** (37 casos, puro Node/mock server) committado + **job CI `scripts`** + step `[0b/5]` no `ci-preflight.sh` + `npm run test:scripts`. Gate: verify 4/4 e 5/5 `equivalent`, QA PASS, TL APPROVE (zero must-fix). **Zero runtime** (CLIs de recovery; `TRADING_HALT` intocado). `maxPages` default 1000 (runaway-guard). N\u00c3O pushado (commits locais no master).\n\n## Bloco B \u2014 plano (workflow design 2026-06-19)\n- **Strategy Library** = alto valor/baixo risco (refactor data-driven dos `setup-*.js`). **1\u00aa fatia `apiClient.js` \u2705 DONE (acima).** Depois **recipes declarativas** (dedupe dos `ensure*`; **`findTemplate` GET /ordertemplates/all duplicado em activate-trend+harvester = 1\u00ba candidato**) + `strategyService.instantiate` (nasce inativo/paper). A coluna `mode` \u00e9 Layer B (desacoplamento, n\u00e3o feature) \u2014 s\u00f3 se doer."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:35:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md",
+  "old_string": "## NEXT\nFatia 2b = slippage proporcional + book/partial (baixo valor a ~$20/trade). Bloco B Fase 1 = `apiClient.js` DRY \u2192 recipes \u2192 KB backfill. Bloco C (scanner + LLM + canary) depois.",
+  "new_string": "## NEXT\nFatia 2b = slippage proporcional + book/partial (baixo valor a ~$20/trade). **Bloco B Fase 1 (apiClient.js DRY) \u2705 DONE** \u2192 pr\u00f3ximo = **recipes declarativas** (1\u00ba: `findTemplate` duplicado activate-trend+harvester) \u2192 KB backfill. Bloco C (scanner + LLM + canary) depois."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:35:34)*
+
+
+## 🤖 Claude *(19:35:35)*
+
+Agora o índice `MEMORY.md`:
+
+## 🤖 Claude *(19:35:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 25,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>Warning: the file exists but is shorter than the provided offset (25). The file has 25 lines.</system-reminder>
+> ```
+
+## 🤖 Claude *(19:35:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 24,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 24	- [Strategy Engine / Paper](tradeux-strategy-engine.md) — Motor de Estratégias (gerar/validar/ativar por regime + KB de padrões + scanner cross-símbolo); **Fatia 1 = Paper/Shadow Engine NO AR** (`22ba96b`): broker VIRTUAL roteado por prefixo `[PAPER]` no name → fill ao MINI_TICKER+fee MAINNET reais em `paperOrders`/`paperPositions`, SEM tocar Binance/orders/buckets → research SOB HALT, zero risco; `GET /analysis/paper`; **Fatia 2a (`660641f`): 16 trilhas `[PAPER]` ATIVAS** (consistência RSI 25/75 + macro SMA50/200 ×4 símbolos) + slippage (`PAPER_SLIPPAGE_BPS`) + `REGIME_SYMBOLS` dos 4 no `.env`; **FREQUÊNCIA/verde-diário REFUTADA por backtest (8/8 EV<0 líquido) → não construir**; **lote `faed249`: item(f) guard [PAPER]-no-caminho-real FEITO (pré-req de CÓDIGO do flip; coluna `mode` é o fix definitivo no Bloco B, NÃO bloqueia o GO) + paper no cockpit (`status.paper` p/ o agente) + painel `Paper · Estratégias`**; **Bloco B desenhado (Strategy Library 1ª via `scripts/lib/apiClient.js` DRY; KB backfill; Regime Router = OVERKILL/manter gate passivo)**; **`258c385`: aprovação dos papers DELEGADA ao Claude + `paperReviewJob` (24h, notifica Telegram nos marcos de round-trips); dono decidiu ESPERAR o paper provar antes do flip (mecanismo do flip documentado: `.env TRADING_HALT=false`+restart)**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`
+> 25	
+> ```
+
+## 🤖 Claude *(19:35:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "**Bloco B desenhado (Strategy Library 1\u00aa via `scripts/lib/apiClient.js` DRY; KB backfill; Regime Router = OVERKILL/manter gate passivo)**;",
+  "new_string": "**Bloco B Fase 1 \u2705 MERGED (`2f8f20b`+`3ca0ef7`): `scripts/lib/apiClient.js` (req/login/find/resolveEnv) + os 8 setup-*.js migrados byte-fiel + self-test 37/37 no CI; pr\u00f3ximo = recipes declarativas (findTemplate dup). Regime Router = OVERKILL/manter gate passivo**;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:36:03)*
+
+
+## 🤖 Claude *(19:36:17)*
+
+Memória atualizada (índice + arquivo do Motor de Estratégias). 
+
+## ✅ Sessão — resumo
+
+**1. Pergunta da estratégia "mixed"** — esclarecida: mapeei os 4 regimes vs cobertura atual, sinalizei que "todos" esbarra na pesquisa de bear (refutada, exige futuros), e escopei para **tornar mixed lucrativo**. Pausado quando você redirecionou (mas veja o ponto 3 — ficou ainda mais relevante).
+
+**2. Bloco B Fase 1 (apiClient.js DRY) — COMPLETO e commitado:**
+- `2f8f20b` — lib `apiClient.js` + 3 scripts (paper/farm/trend) + `apiClient.test.js` (37 casos) + job CI `scripts` + preflight `[0b/5]`
+- `3ca0ef7` — os **5 irmãos** migrados (automation-ctl, grid, harvester, activate-trend, flow-gate)
+- **Todos os 8 `setup-*.js` agora usam a lib.** Gate: verify 9/9 `equivalent`, QA PASS, TL APPROVE (zero must-fix). Byte-fiel, caps preservados, caveats intactos (grid https, activate-trend findTemplate, flow-gate req diretos). **Zero runtime · `TRADING_HALT` intocado.** Net: ~−260 linhas de duplicação.
+
+**3. Mensagem do Telegram** — analisada com check ao vivo: o raciocínio do agente está **correto estruturalmente**, mas o snapshot de fluxo já **envelheceu** — a brain ao vivo mostra BTC em **`mixed` com fluxo recuperado** (imbalance −0.20 > piso −0.4) → **baseline BTC `buyAllowed:true`** (a mensagem dizia capitulação/fechado). Impacto operacional **zero** (HALT segura). E conecta de volta ao ponto 1: **BTC está vivo em mixed agora** → a trilha `[PAPER] Consistência BTC` pode começar a gerar dado de mixed sozinha.
+
+---
+
+**Duas coisas pra você decidir:**
+- **Push?** Os 2 commits estão **locais no master** (origin ainda em `e8e7b16`) — o invariante `Vivo==master==origin` do HANDOFF quer push, mas é outward-facing, então é teu OK. (Lembrando: scripts são CLIs, não precisam de rebuild pra nada rodar.)
+- **Próximo passo:** **recipes declarativas** (Bloco B Fase 2 — começar pelo `findTemplate` duplicado em activate-trend+harvester), ou voltar à **pesquisa de mixed** (agora com dado de paper chegando), ou pausar e observar o paper?
+
+Quando quiser selar a sessão, é só `/handoff`.
+
+## 👤 User *(19:40:54)*
+
+Ok agora precisamos de um trigger automatico, assim como temos os botões para destravar o HALT tambem temos que ter um botão para ativar para ser mais rapido do que ir no ssh ou em outro lugar para isso
+
+## 🤖 Claude *(19:41:45)*
+
+
+## 🤖 Claude *(19:41:47)*
+
+Entendi a ideia: um **botão de ativação** no painel (espelhando os botões de destrave do HALT), pra não precisar de SSH. Antes de desenhar, deixa eu aterrissar no que já existe e no que exatamente seria "ativar" — porque já temos o botão go-live (floor) e o start/stop de automação por API, então preciso saber qual é o gap real. Explorando:
+
+## 🤖 Claude *(19:41:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== card de sistema/HALT no Settings (frontend) ===\"\ngrep -nE \"system|halt|floor|daily-cap|LIGAR|TRAVAR|Kill-switch|Re-armar\" frontend/src/pages/Settings/*.js frontend/src/**/Settings*.js 2>/dev/null | head -30\necho\necho \"=== SystemService (endpoints /system/*) ===\"\nfind frontend/src -iname \"SystemService*\"; grep -nE \"halt|floor|daily|post|get\" frontend/src/services/SystemService.js 2>/dev/null | head\necho\necho \"=== pagina de automa\u00e7\u00f5es no frontend (start/stop?) ===\"\nfind frontend/src -ipath \"*utomation*\" -name \"*.js\" | head\necho\necho \"=== controller system + rota ===\"\nfind backend/src -iname \"system*\"; grep -rn \"router\\.\\(get\\|post\\)\" backend/src/routers/systemRouter.js 2>/dev/null",
+  "description": "Explore existing system controls + automations UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === card de sistema/HALT no Settings (frontend) ===
+> 
+> === SystemService (endpoints /system/*) ===
+> frontend/src/services/SystemService.js
+> 7:// Estado do HALT: { halted, envHard, floor:{on,reason,since}, manual:{on,...}, dailyCap:{on,active,...}, sources, source, reason }.
+> 8:export async function getHalt(token) {
+> 9:    const response = await axios.get(`${SYSTEM_URL}/halt`, { headers: { authorization: token } });
+> 13:// Liga/desliga a fonte MANUAL (quente, sem restart). NÃO derruba o env floor (se TRADING_HALT=true no .env,
+> 14:// `halted` segue true mesmo com on=false). Retorna o estado completo pós-mudança.
+> 16:    const response = await axios.post(`${SYSTEM_URL}/halt`, { on, reason }, { headers: { authorization: token } });
+> 21:// confirm===frase e é recusado se TRADING_HALT_HARD ativo no .env). Retorna { changed, ...getState() }.
+> 23:    const response = await axios.post(`${SYSTEM_URL}/floor`, { on, reason, confirm }, { headers: { authorization: token } });
+> 27:// Limpa a fonte daily-cap e re-baseline o equity do dia (re-arma a proteção). Retorna { reset, reSnapshotOk, state }.
+> 29:    const response = await axios.post(`${SYSTEM_URL}/daily-cap/reset`, {}, { headers: { authorization: token } });
+> 
+> === pagina de automações no frontend (start/stop?) ===
+> frontend/src/services/AutomationsService.js
+> frontend/src/private/Reports/AutomationReport.js
+> frontend/src/private/Automations/NewAutomationButton.js
+> frontend/src/private/Automations/Automations.js
+> frontend/src/private/Automations/AutomationRow.js
+> frontend/src/private/Automations/AutomationModal/AutomationModal.js
+> frontend/src/private/Automations/GriModal/GridButton.js
+> frontend/src/private/Automations/GriModal/GridTable.js
+> frontend/src/private/Automations/GriModal/GridModal.js
+> frontend/src/private/Automations/AutomationModal/ScheduleArea/DateTime.js
+> 
+> === controller system + rota ===
+> backend/src/routers/systemRouter.js
+> backend/src/controllers/systemController.js
+> backend/src/routers/systemRouter.js:8:router.get('/halt', systemController.getHalt);
+> backend/src/routers/systemRouter.js:10:router.post('/halt', systemController.setHalt);
+> backend/src/routers/systemRouter.js:12:router.post('/floor', systemController.setFloor);
+> backend/src/routers/systemRouter.js:14:router.get('/daily-cap', systemController.getDailyCap);
+> backend/src/routers/systemRouter.js:16:router.post('/daily-cap/reset', systemController.resetDailyCap);
+> ```
+
+## 🤖 Claude *(19:41:58)*
+
+
+## 🤖 Claude *(19:42:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== quem usa SystemService (onde mora o card HALT) ===\"\ngrep -rln \"SystemService\\|getHalt\\|setFloor\\|LIGAR\\|TRAVAR\\|Kill-switch\" frontend/src --include=*.js | grep -v SystemService.js\necho\necho \"=== AutomationsService: tem start/stop? ===\"\ngrep -nE \"start|stop|switch|isActive|toggle\" frontend/src/services/AutomationsService.js | head\necho\necho \"=== AutomationRow: bot\u00e3o de ativar/desativar? ===\"\ngrep -nE \"start|stop|switch|isActive|Switch|toggle|onChange\" frontend/src/private/Automations/AutomationRow.js | head\necho\necho \"=== automations start/stop no backend ===\"\ngrep -rn \"router\\.\\(get\\|post\\)\\|/start\\|/stop\\|:id\" backend/src/routers/automationsRouter.js 2>/dev/null | head",
+  "description": "Find HALT card location + automation start/stop UI/API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quem usa SystemService (onde mora o card HALT) ===
+> frontend/src/private/Settings/Settings.js
+> 
+> === AutomationsService: tem start/stop? ===
+> 45:export async function startAutomation(id, token) {
+> 47:    const response = await axios.post(`${AUTOMATIONS_URL}${id}/start`, {}, { headers });
+> 51:export async function stopAutomation(id, token) {
+> 53:    const response = await axios.post(`${AUTOMATIONS_URL}${id}/stop`, {}, { headers });
+> 
+> === AutomationRow: botão de ativar/desativar? ===
+> 13:        if (automation.schedule) return automation.isActive ? "text-info" : "text-danger";
+> 14:        return automation.isActive ? "text-success" : "text-danger";
+> 19:            return automation.isActive ? "SCHEDULED" : "STOPPED";
+> 21:            return automation.isActive ? "RUNNING" : "STOPPED";
+> 40:                <button id={"edit" + props.data.id} type="button" className="btn btn-secondary btn-xs ms-2" title="Edit this Monitor" data-bs-toggle="modal" data-bs-target={getEditModal()} onClick={props.onEditClick}>
+> 46:                    props.data.isActive
+> 47:                        ? <button id={"stop" + props.data.id} type="button" className="btn btn-danger btn-xs ms-2" title="Stop this Monitor" onClick={props.onStopClick}>
+> 55:                    !props.data.isActive
+> 56:                        ? <button id={"start" + props.data.id} type="button" className="btn btn-success btn-xs ms-2" title="Start this Monitor" onClick={props.onStartClick}>
+> 64:                    !props.data.isActive
+> 
+> === automations start/stop no backend ===
+> backend/src/routers/automationsRouter.js:5:router.get('/:id', automationsController.getAutomation);
+> backend/src/routers/automationsRouter.js:7:router.delete('/:id', automationsController.deleteAutomation);
+> backend/src/routers/automationsRouter.js:9:router.get('/', automationsController.getAutomations);
+> backend/src/routers/automationsRouter.js:11:router.patch('/:id', automationsController.updateAutomation);
+> backend/src/routers/automationsRouter.js:13:router.post('/', automationsController.insertAutomation);
+> backend/src/routers/automationsRouter.js:15:router.post('/:id/start', automationsController.startAutomation);
+> backend/src/routers/automationsRouter.js:17:router.post('/:id/stop', automationsController.stopAutomation);
+> ```
+
+## 🤖 Claude *(19:43:19)*
+
+
+## 🤖 Claude *(19:43:24)*
+
+Aterrissado. O que **já existe** hoje:
+
+- **Settings → card de HALT** (`Settings.js` + `SystemService.js`): botão **LIGAR trading real / TRAVAR** (floor, com frase `LIGAR REAL`), halt manual, re-armar daily-cap. → *o go-live (destravar o freeze) já é botão.*
+- **Página Automações** (`AutomationRow.js`): já tem **start/stop por automação** (botão verde/vermelho) via `POST /automations/:id/start|stop`. → *dá pra ligar uma a uma.*
+
+Então o **gap real** é: ligar um **grupo inteiro de uma vez** (ex.: todo o Farm, ou todo o Trend, ou um grupo canary) — que hoje você faz por SSH rodando o `automation-ctl.js` (o script que acabamos de migrar). É isso: um botão de **ativação em lote por grupo**, no card de Settings, do lado do HALT.
+
+Duas coisas que mudam o desenho (é money-path, quero acertar):
+
+## 🤖 Claude *(19:43:34)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O bot\u00e3o de ativa\u00e7\u00e3o (card de Settings, do lado do HALT) deve ligar o qu\u00ea?",
+      "header": "Escopo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Grupos l\u00f3gicos, 1 bot\u00e3o cada",
+          "description": "Farm / Trend / Baseline / Paper \u2014 cada grupo (derivado do nome da automa\u00e7\u00e3o) vira um toggle Ligar/Parar em lote. Canary-friendly: liga 1, deixa o resto. Recomendado."
+        },
+        {
+          "label": "Seletor + ativar (canary estrito)",
+          "description": "Um dropdown: escolho o grupo, clico Ativar, e opcionalmente PARA todos os outros (garante 'um grupo s\u00f3' no ar)."
+        },
+        {
+          "label": "Tudo de uma vez",
+          "description": "Um bot\u00e3o global Ligar-todas / Parar-todas. Mais simples, menos seguro (liga o sistema inteiro num clique)."
+        }
+      ]
+    },
+    {
+      "question": "Trava contra clique acidental (ativar = arma estrat\u00e9gias; se o floor estiver liberado, negocia de verdade):",
+      "header": "Seguran\u00e7a",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Confirma\u00e7\u00e3o + aviso ciente do floor",
+          "description": "window.confirm simples, MAS com aviso vermelho extra se o floor estiver LIBERADO ('trading real ON \u2014 este grupo vai negociar'). Recomendado: leve quando congelado, gritante quando ao vivo."
+        },
+        {
+          "label": "Frase de confirma\u00e7\u00e3o sempre",
+          "description": "Exige digitar uma frase (tipo 'ATIVAR') em toda ativa\u00e7\u00e3o, igual ao bot\u00e3o go-live do floor. Mais seguro, mais lento."
+        },
+        {
+          "label": "Sem confirma\u00e7\u00e3o",
+          "description": "Clique direto. Mais r\u00e1pido; conta s\u00f3 com o floor/HALT como rede de seguran\u00e7a."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O botão de ativação (card de Settings, do lado do HALT) deve ligar o quê?"="Grupos lógicos, 1 botão cada", "Trava contra clique acidental (ativar = arma estratégias; se o floor estiver liberado, negocia de verdade):"="Confirmação + aviso ciente do floor". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:48:06)*
+
+
+## 🤖 Claude *(19:48:09)*
+
+Perfeito: **grupos lógicos (1 botão cada)** + **confirm com aviso ciente do floor**. 
+
+Vou desenhar isso reusando o caminho de start/stop que já existe (não dá pra só setar `isActive` no banco — tem que passar pelo BRAIN). Preciso ver: a lógica do `startAutomation`, o estilo do `systemController` pra estender, os nomes reais das automações vivas (pra definir os grupos), e o card do HALT pra espelhar. Coletando:
+
+## 🤖 Claude *(19:48:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/listautos.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL||process.env.TRADEUX_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD||process.env.TRADEUX_PASSWORD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>r(JSON.parse(b)))});rq.write(d);rq.end()});\n const tok=lg.token; const rows=[];\n for(let p=1;p<=40;p++){const r=await req('GET',`/automations?page=${p}`,tok);const rr=r.body&&r.body.rows;if(!Array.isArray(rr)||!rr.length)break;rows.push(...rr);if(rr.length<10)break;}\n console.log('TOTAL',rows.length);\n for(const a of rows) console.log(`${a.id}\\t${a.isActive?'ON ':'off'}\\t${a.symbol}\\t${a.name}`);\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/listautos.js' 2>&1 | head -60",
+  "description": "List live automations (id/isActive/name) to define groups"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TOTAL 38
+> 54	ON 	ADAUSDT	[PAPER] Consistencia Buy ADAUSDT
+> 55	ON 	ADAUSDT	[PAPER] Consistencia Sell ADAUSDT
+> 56	ON 	ADAUSDT	[PAPER] Macro Buy ADAUSDT
+> 57	ON 	ADAUSDT	[PAPER] Macro Sell ADAUSDT
+> 13	ON 	ADAUSDT	Farm Buy ADAUSDT
+> 14	ON 	ADAUSDT	Farm Sell ADAUSDT
+> 19	ON 	ADAUSDT	Trend Buy ADAUSDT SMA50/200
+> 20	ON 	ADAUSDT	Trend Sell ADAUSDT SMA50/200
+> 50	ON 	BNBUSDT	[PAPER] Consistencia Buy BNBUSDT
+> 51	ON 	BNBUSDT	[PAPER] Consistencia Sell BNBUSDT
+> 52	ON 	BNBUSDT	[PAPER] Macro Buy BNBUSDT
+> 53	ON 	BNBUSDT	[PAPER] Macro Sell BNBUSDT
+> 11	ON 	BNBUSDT	Farm Buy BNBUSDT
+> 12	ON 	BNBUSDT	Farm Sell BNBUSDT
+> 17	ON 	BNBUSDT	Trend Buy BNBUSDT SMA50/200
+> 18	ON 	BNBUSDT	Trend Sell BNBUSDT SMA50/200
+> 58	ON 	BTCUSDT	[PAPER] Consistencia Buy BTCUSDT
+> 59	ON 	BTCUSDT	[PAPER] Consistencia Sell BTCUSDT
+> 44	ON 	BTCUSDT	[PAPER] Macro Buy BTCUSDT
+> 45	ON 	BTCUSDT	[PAPER] Macro Sell BTCUSDT
+> 6	ON 	BTCUSDT	Trend Buy BTCUSDT SMA50/200
+> 7	ON 	BTCUSDT	Trend Sell BTCUSDT SMA50/200
+> 46	ON 	LTCUSDT	[PAPER] Consistencia Buy LTCUSDT
+> 47	ON 	LTCUSDT	[PAPER] Consistencia Sell LTCUSDT
+> 48	ON 	LTCUSDT	[PAPER] Macro Buy LTCUSDT
+> 49	ON 	LTCUSDT	[PAPER] Macro Sell LTCUSDT
+> 9	ON 	LTCUSDT	Farm Buy LTCUSDT
+> 10	ON 	LTCUSDT	Farm Sell LTCUSDT
+> 15	ON 	LTCUSDT	Trend Buy LTCUSDT SMA50/200
+> 16	ON 	LTCUSDT	Trend Sell LTCUSDT SMA50/200
+> 2	off	BTCUSDT	Baseline RSI Buy BTCUSDT
+> 3	off	BTCUSDT	Baseline RSI Sell BTCUSDT
+> 38	off	BTCUSDT	BTC Scalp Excess
+> 21	off	BTCUSDT	Grid BTCUSDT
+> 22	off	BTCUSDT	Harvest Buy BTCUSDT -3pct
+> 23	off	BTCUSDT	Harvest Buy BTCUSDT -5pct
+> 24	off	BTCUSDT	Harvest Buy BTCUSDT -7pct
+> 25	off	BTCUSDT	Harvest Sell BTCUSDT
+> ```
+
+## 🤖 Claude *(19:48:40)*
+
+
+## 🤖 Claude *(19:48:44)*
+
+Grupos definidos pelos nomes (convenção dos setup scripts):
+
+| Grupo | Padrão | IDs hoje | Estado |
+|---|---|---|---|
+| **Farm** | `Farm Buy/Sell <sym>` | 9-14 (LTC/BNB/ADA) | ON |
+| **Trend** | `Trend Buy/Sell <sym> SMA50/200` | 6,7,15-20 | ON |
+| **Baseline** | `Baseline RSI Buy/Sell BTCUSDT` | 2,3 | **off** |
+| **Paper** | `[PAPER] *` | 44-59 | ON |
+| ~~Harvester/Grid/Scalp~~ | — | 21-25,38 | off → **excluídos** (mortos/refutados, não expor pra não reativar) |
+
+Agora a lógica de start/stop a reusar + o estilo pra estender + o card a espelhar:
+
+## 🤖 Claude *(19:48:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== automationsController: start/stop ===\"; sed -n '/startAutomation/,/^}/p;/stopAutomation/,/^}/p' backend/src/controllers/automationsController.js | head -60\necho \"=== quem faz o BRAIN update no start (grep) ===\"; grep -rn \"updateBrain\\|deleteBrain\\|startAutomation\\|stopAutomation\\|beholder\" backend/src/controllers/automationsController.js | head",
+  "description": "Read automation start/stop controller logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === automationsController: start/stop ===
+> async function startAutomation(req, res, next) {
+>     const id = req.params.id;
+>     const automation = await automationsRepository.getAutomation(id);
+>     if (automation.isActive) return res.sendStatus(204);
+> 
+>     automation.isActive = true;
+> 
+>     if (automation.schedule) {
+>         try {
+>             agenda.addSchedule(automation.get({ plain: true }));
+>         } catch (err) {
+>             return res.status(422).json(err.message);
+>         }
+>     }
+>     else
+>         beholder.updateBrain(automation.get({ plain: true }));
+> 
+>     await automation.save();
+> 
+>     if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has started!`);
+> 
+>     res.json(automation);
+> }
+> async function stopAutomation(req, res, next) {
+>     const id = req.params.id;
+>     const automation = await automationsRepository.getAutomation(id);
+>     if (!automation.isActive) return res.sendStatus(204);
+> 
+>     if (automation.schedule)
+>         agenda.cancelSchedule(automation.id);
+>     else
+>         beholder.deleteBrain(automation.get({ plain: true }));
+> 
+>     automation.isActive = false;
+>     await automation.save();
+> 
+>     // NÃO cancelamos a OCO ao apenas PARAR (pausar) a automação: a OCO é protetiva e a
+>     // posição segue aberta — tirar o stop-loss numa pausa seria perigoso. A limpeza das
+>     // OCO só ocorre no DELETE (a automação deixa de existir). A OCO resolve-se sozinha na
+>     // corretora (uma perna executa, a Binance cancela a outra).
+>     if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);
+> 
+>     res.json(automation);
+> }
+>     startAutomation,
+>     stopAutomation,
+>     stopAutomation,
+>     getAutomation,
+>     getAutomation,
+>     getAutomations,
+>     getAutomations,
+>     insertAutomation,
+>     insertAutomation,
+>     updateAutomation,
+>     updateAutomation,
+>     deleteAutomation
+>     deleteAutomation
+> }
+> }
+> === quem faz o BRAIN update no start (grep) ===
+> backend/src/controllers/automationsController.js:7:const beholder = require('../beholder');
+> backend/src/controllers/automationsController.js:50:async function startAutomation(req, res, next) {
+> backend/src/controllers/automationsController.js:65:        beholder.updateBrain(automation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:74:async function stopAutomation(req, res, next) {
+> backend/src/controllers/automationsController.js:82:        beholder.deleteBrain(automation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:147:            grids = await beholder.generateGrids(savedAutomation, levels, quantity, transaction);
+> backend/src/controllers/automationsController.js:167:            beholder.updateBrain(savedAutomation.get({ plain: true }));
+> backend/src/controllers/automationsController.js:203:            await beholder.generateGrids(updatedAutomation, levels, quantity, transaction);
+> backend/src/controllers/automationsController.js:227:            beholder.deleteBrain(currentAutomation);
+> backend/src/controllers/automationsController.js:228:            beholder.updateBrain(updatedAutomation.get({ plain: true }));
+> ```
+
+## 🤖 Claude *(19:49:49)*
+
+
+## 🤖 Claude *(19:49:51)*
+
+Start/stop entendido (set `isActive` + `beholder.updateBrain`/`deleteBrain` + save + log). Vou extrair um helper reusável e adicionar endpoints de grupo. Falta ver o card do HALT pra espelhar + os serviços do frontend:
+
+## 🤖 Claude *(19:49:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/SystemService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import axios from './BaseService';
+> 2	
+> 3	// Superfície OPERATOR-ONLY do kill-switch quente + cap diário (backend /system, atrás do authMiddleware).
+> 4	// O agente LLM NÃO tem write tool p/ isto — só o operador (este painel) flipa as fontes QUENTES do HALT.
+> 5	const SYSTEM_URL = `${process.env.REACT_APP_API_URL}/system`;
+> 6	
+> 7	// Estado do HALT: { halted, envHard, floor:{on,reason,since}, manual:{on,...}, dailyCap:{on,active,...}, sources, source, reason }.
+> 8	export async function getHalt(token) {
+> 9	    const response = await axios.get(`${SYSTEM_URL}/halt`, { headers: { authorization: token } });
+> 10	    return response.data;
+> 11	}
+> 12	
+> 13	// Liga/desliga a fonte MANUAL (quente, sem restart). NÃO derruba o env floor (se TRADING_HALT=true no .env,
+> 14	// `halted` segue true mesmo com on=false). Retorna o estado completo pós-mudança.
+> 15	export async function setHalt(on, reason, token) {
+> 16	    const response = await axios.post(`${SYSTEM_URL}/halt`, { on, reason }, { headers: { authorization: token } });
+> 17	    return response.data;
+> 18	}
+> 19	
+> 20	// Liga/desliga o PISO OPERACIONAL (quente, persistido). on=true TRAVA; on=false LIBERA dinheiro real (exige
+> 21	// confirm===frase e é recusado se TRADING_HALT_HARD ativo no .env). Retorna { changed, ...getState() }.
+> 22	export async function setFloor(on, reason, confirm, token) {
+> 23	    const response = await axios.post(`${SYSTEM_URL}/floor`, { on, reason, confirm }, { headers: { authorization: token } });
+> 24	    return response.data;
+> 25	}
+> 26	
+> 27	// Limpa a fonte daily-cap e re-baseline o equity do dia (re-arma a proteção). Retorna { reset, reSnapshotOk, state }.
+> 28	export async function resetDailyCap(token) {
+> 29	    const response = await axios.post(`${SYSTEM_URL}/daily-cap/reset`, {}, { headers: { authorization: token } });
+> 30	    return response.data;
+> 31	}
+> 32	
+> ```
+
+## 🤖 Claude *(19:49:56)*
+
+
+## 🤖 Claude *(19:49:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== Settings.js: tamanho + ancoras do card HALT ===\"\nwc -l frontend/src/private/Settings/Settings.js\ngrep -nE \"SystemService|getHalt|setFloor|setHalt|resetDailyCap|Kill-switch|HALT|floor|LIGAR|TRAVAR|card|useState|halt\" frontend/src/private/Settings/Settings.js | head -50",
+  "description": "Locate HALT card region in Settings.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Settings.js: tamanho + ancoras do card HALT ===
+> 409 frontend/src/private/Settings/Settings.js
+> 1:import React, { useState, useEffect, useRef } from 'react';
+> 8:import { getHalt, setHalt, setFloor, resetDailyCap } from '../../services/SystemService';
+> 13:    const [settings, setSettings] = useState({});
+> 14:    const [notification, setNotification] = useState({});
+> 15:    const [activeTab, setActiveTab] = useState('mainnet');
+> 16:    const [halt, setHaltState] = useState(null);
+> 31:        getHalt(token).then(setHaltState).catch(() => { });
+> 71:        getHalt(token).then(setHaltState).catch(() => { });
+> 75:        const verb = on ? 'TRAVAR agora (pânico)' : 'SOLTAR a trava manual';
+> 78:        setHalt(on, on ? 'pânico via painel' : 'destrave via painel', token)
+> 79:            .then(res => { setHaltState(res); setNotification({ type: 'success', text: `Trava manual ${on ? 'LIGADA' : 'desligada'}.` }); })
+> 84:        if (!window.confirm('Re-armar o cap diário? (limpa o HALT por cap e re-baseline o equity do dia)')) return;
+> 86:        resetDailyCap(token)
+> 87:            .then(res => { if (res && res.state) setHaltState(res.state); setNotification({ type: 'success', text: `Cap diário re-armado.${res && res.reSnapshotOk === false ? ' (re-baseline pendente: preço frio)' : ''}` }); })
+> 92:        const phrase = window.prompt('⚠️ Isto LIBERA TRADING COM DINHEIRO REAL (desliga o floor). Digite LIGAR REAL para confirmar:');
+> 95:        setFloor(false, 'LIGAR trading real via painel', phrase, token)
+> 96:            .then(res => { setHaltState(res); setNotification(res.halted ? { type: 'error', text: `Floor liberado, mas o sistema SEGUE TRAVADO por: ${res.source}.` } : { type: 'success', text: 'TRADING REAL LIGADO (floor liberado).' }); })
+> 101:        if (!window.confirm('TRAVAR o floor operacional? (congela o trading; quente, sobrevive a restart)')) return;
+> 103:        setFloor(true, 'TRAVAR via painel', null, token)
+> 104:            .then(res => { setHaltState(res); setNotification({ type: 'success', text: 'Floor TRAVADO (trading congelado).' }); })
+> 126:                        <div className="card card-body border-0 shadow mb-4">
+> 168:                        <div className="card card-body border-0 shadow mb-4">
+> 226:                        <div className="card card-body border-0 shadow mb-4">
+> 333:                        <div className="card card-body border-0 shadow mb-4">
+> 335:                                <h2 className="h5 mb-0">Kill-switch / HALT — 3 fontes</h2>
+> 338:                            {!halt ? (
+> 339:                                <p className="text-muted mb-0">Carregando estado do HALT…</p>
+> 342:                                    <div className={`alert ${halt.halted ? 'alert-danger' : 'alert-success'}`} role="alert">
+> 343:                                        Estado geral: <b>{halt.halted ? 'TRAVADO — nada negocia' : 'LIBERADO — trading permitido'}</b>
+> 344:                                        {halt.source ? ` · fonte dominante: ${halt.source}${halt.reason ? ` (${halt.reason})` : ''}` : ''}
+> 351:                                            <span className={`badge ${halt.floor && halt.floor.on ? 'bg-danger' : 'bg-success'}`}>{halt.floor && halt.floor.on ? 'TRAVADO' : 'LIBERADO'}</span>
+> 352:                                            <div className="text-muted small mt-1">Piso persistido (quente, sobrevive a restart). <b>LIGAR</b> libera dinheiro real; <b>TRAVAR</b> congela. {halt.envHard ? <span className="text-danger">Override absoluto <code>TRADING_HALT_HARD</code> ativo no .env → liberar pela UI está bloqueado.</span> : 'Semente do 1º boot vem de TRADING_HALT no .env; depois o operador é a autoridade.'}</div>
+> 354:                                        {halt.floor && halt.floor.on
+> 355:                                            ? <button className="btn btn-sm btn-danger" type="button" onClick={onGoLive} disabled={halt.envHard}>LIGAR trading real</button>
+> 356:                                            : <button className="btn btn-sm btn-outline-danger" type="button" onClick={onTravarFloor}>TRAVAR (floor)</button>}
+> 358:                                    {halt.envHard && (
+> 363:                                                <div className="text-muted small mt-1"><code>TRADING_HALT_HARD=true</code> no <code>.env</code> — trava à prova de clique. Só sai editando o <code>.env</code> + restart.</div>
+> 373:                                            <span className={`badge ${halt.manual && halt.manual.on ? 'bg-danger' : 'bg-success'}`}>{halt.manual && halt.manual.on ? 'TRAVADO' : 'livre'}</span>
+> 374:                                            <div className="text-muted small mt-1">Kill-switch quente (sem restart). {halt.manual && halt.manual.on && halt.manual.reason ? `Motivo: ${halt.manual.reason}.` : 'Botão de pânico — trava tudo na hora.'}</div>
+> 376:                                        {halt.manual && halt.manual.on
+> 385:                                            <span className={`badge ${halt.dailyCap && halt.dailyCap.active ? 'bg-danger' : 'bg-success'}`}>{halt.dailyCap && halt.dailyCap.active ? 'DISPAROU' : 'armado / livre'}</span>
+> 386:                                            <div className="text-muted small mt-1">Trava automática no drawdown de −5% do equity no dia. {halt.dailyCap && halt.dailyCap.active ? `Disparou${halt.dailyCap.reason ? `: ${halt.dailyCap.reason}` : ''}.` : 'Re-arma sozinho na virada do dia UTC.'}</div>
+> 388:                                        <button className="btn btn-sm btn-outline-warning" type="button" onClick={onResetCap} disabled={!(halt.dailyCap && halt.dailyCap.active)}>Re-armar cap</button>
+> 391:                                    {((halt.floor && halt.floor.on) || halt.envHard) && (
+> 393:                                            ⚠️ Travado pelo <b>{halt.envHard ? 'override absoluto (env-hard)' : 'floor operacional'}</b> → soltar a trava manual ou re-armar o cap <b>NÃO libera o trading</b>. {halt.envHard ? 'Pra liberar: remova TRADING_HALT_HARD do .env + restart.' : 'Pra liberar: botão LIGAR trading real acima (canary de 1 grupo, decisão do dono).'}
+> ```
+
+## 🤖 Claude *(19:50:04)*
+
+
+## 🤖 Claude *(19:50:05)*
+
+Vou ler os handlers + o card HALT por inteiro (pra espelhar o estilo) e o `AutomationsService`:
+
+## 🤖 Claude *(19:50:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "offset": 60,
+  "limit": 66
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	                else
+> 61	                    setNotification({ type: 'error', text: result });
+> 62	            })
+> 63	            .catch(err => {
+> 64	                console.error(err.response ? err.response.data : err.message);
+> 65	                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });
+> 66	            })
+> 67	    }
+> 68	
+> 69	    function loadHalt() {
+> 70	        const token = localStorage.getItem("token");
+> 71	        getHalt(token).then(setHaltState).catch(() => { });
+> 72	    }
+> 73	
+> 74	    function onSetManual(on) {
+> 75	        const verb = on ? 'TRAVAR agora (pânico)' : 'SOLTAR a trava manual';
+> 76	        if (!window.confirm(`Confirmar: ${verb} o kill-switch manual?`)) return;
+> 77	        const token = localStorage.getItem("token");
+> 78	        setHalt(on, on ? 'pânico via painel' : 'destrave via painel', token)
+> 79	            .then(res => { setHaltState(res); setNotification({ type: 'success', text: `Trava manual ${on ? 'LIGADA' : 'desligada'}.` }); })
+> 80	            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));
+> 81	    }
+> 82	
+> 83	    function onResetCap() {
+> 84	        if (!window.confirm('Re-armar o cap diário? (limpa o HALT por cap e re-baseline o equity do dia)')) return;
+> 85	        const token = localStorage.getItem("token");
+> 86	        resetDailyCap(token)
+> 87	            .then(res => { if (res && res.state) setHaltState(res.state); setNotification({ type: 'success', text: `Cap diário re-armado.${res && res.reSnapshotOk === false ? ' (re-baseline pendente: preço frio)' : ''}` }); })
+> 88	            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));
+> 89	    }
+> 90	
+> 91	    function onGoLive() {
+> 92	        const phrase = window.prompt('⚠️ Isto LIBERA TRADING COM DINHEIRO REAL (desliga o floor). Digite LIGAR REAL para confirmar:');
+> 93	        if (phrase === null) return;
+> 94	        const token = localStorage.getItem("token");
+> 95	        setFloor(false, 'LIGAR trading real via painel', phrase, token)
+> 96	            .then(res => { setHaltState(res); setNotification(res.halted ? { type: 'error', text: `Floor liberado, mas o sistema SEGUE TRAVADO por: ${res.source}.` } : { type: 'success', text: 'TRADING REAL LIGADO (floor liberado).' }); })
+> 97	            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));
+> 98	    }
+> 99	
+> 100	    function onTravarFloor() {
+> 101	        if (!window.confirm('TRAVAR o floor operacional? (congela o trading; quente, sobrevive a restart)')) return;
+> 102	        const token = localStorage.getItem("token");
+> 103	        setFloor(true, 'TRAVAR via painel', null, token)
+> 104	            .then(res => { setHaltState(res); setNotification({ type: 'success', text: 'Floor TRAVADO (trading congelado).' }); })
+> 105	            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));
+> 106	    }
+> 107	
+> 108	    return (
+> 109	        <React.Fragment>
+> 110	            <Menu />
+> 111	            <main className="content">
+> 112	                <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+> 113	                    <div className="d-block mb-4 mb-md-0">
+> 114	                        <h1 className="h4">Settings</h1>
+> 115	                    </div>
+> 116	                    <div className="btn-toolbar mb-2 mb-md-0">
+> 117	                        <div className="d-inline-flex align-items-center">
+> 118	                            <button id="btnLogs" className="btn btn-primary animate-up-2 me-2" data-bs-toggle="modal" data-bs-target="#modalLogs">
+> 119	                                <svg className="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2h-1.528A6 6 0 004 9.528V4z" /><path fillRule="evenodd" d="M8 10a4 4 0 00-3.446 6.032l-1.261 1.26a1 1 0 101.414 1.415l1.261-1.261A4 4 0 108 10zm-2 4a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" /></svg>
+> 120	                            </button>
+> 121	                        </div>
+> 122	                    </div>
+> 123	                </div>
+> 124	                <div className="row">
+> 125	                    <div className="col-12">
+> ```
+
+## 🤖 Claude *(19:50:10)*
+
+
+## 🤖 Claude *(19:50:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "offset": 331,
+  "limit": 79
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 331	                <div className="row">
+> 332	                    <div className="col-12">
+> 333	                        <div className="card card-body border-0 shadow mb-4">
+> 334	                            <div className="d-flex justify-content-between align-items-center my-4">
+> 335	                                <h2 className="h5 mb-0">Kill-switch / HALT — 3 fontes</h2>
+> 336	                                <button className="btn btn-sm btn-gray-800 animate-up-2" type="button" onClick={loadHalt}>Atualizar</button>
+> 337	                            </div>
+> 338	                            {!halt ? (
+> 339	                                <p className="text-muted mb-0">Carregando estado do HALT…</p>
+> 340	                            ) : (
+> 341	                                <React.Fragment>
+> 342	                                    <div className={`alert ${halt.halted ? 'alert-danger' : 'alert-success'}`} role="alert">
+> 343	                                        Estado geral: <b>{halt.halted ? 'TRAVADO — nada negocia' : 'LIBERADO — trading permitido'}</b>
+> 344	                                        {halt.source ? ` · fonte dominante: ${halt.source}${halt.reason ? ` (${halt.reason})` : ''}` : ''}
+> 345	                                    </div>
+> 346	
+> 347	                                    {/* 1. Floor operacional — piso persistido de ir-ao-vivo, controlável a quente */}
+> 348	                                    <div className="d-flex justify-content-between align-items-center border-bottom py-3">
+> 349	                                        <div className="pe-3">
+> 350	                                            <b>1. Floor operacional (ir-ao-vivo)</b>{' '}
+> 351	                                            <span className={`badge ${halt.floor && halt.floor.on ? 'bg-danger' : 'bg-success'}`}>{halt.floor && halt.floor.on ? 'TRAVADO' : 'LIBERADO'}</span>
+> 352	                                            <div className="text-muted small mt-1">Piso persistido (quente, sobrevive a restart). <b>LIGAR</b> libera dinheiro real; <b>TRAVAR</b> congela. {halt.envHard ? <span className="text-danger">Override absoluto <code>TRADING_HALT_HARD</code> ativo no .env → liberar pela UI está bloqueado.</span> : 'Semente do 1º boot vem de TRADING_HALT no .env; depois o operador é a autoridade.'}</div>
+> 353	                                        </div>
+> 354	                                        {halt.floor && halt.floor.on
+> 355	                                            ? <button className="btn btn-sm btn-danger" type="button" onClick={onGoLive} disabled={halt.envHard}>LIGAR trading real</button>
+> 356	                                            : <button className="btn btn-sm btn-outline-danger" type="button" onClick={onTravarFloor}>TRAVAR (floor)</button>}
+> 357	                                    </div>
+> 358	                                    {halt.envHard && (
+> 359	                                        <div className="d-flex justify-content-between align-items-center border-bottom py-3">
+> 360	                                            <div className="pe-3">
+> 361	                                                <b>Override absoluto (env-hard)</b>{' '}
+> 362	                                                <span className="badge bg-danger">ATIVO</span>
+> 363	                                                <div className="text-muted small mt-1"><code>TRADING_HALT_HARD=true</code> no <code>.env</code> — trava à prova de clique. Só sai editando o <code>.env</code> + restart.</div>
+> 364	                                            </div>
+> 365	                                            <span className="badge bg-secondary">só via .env + restart</span>
+> 366	                                        </div>
+> 367	                                    )}
+> 368	
+> 369	                                    {/* 2. manual — kill-switch quente */}
+> 370	                                    <div className="d-flex justify-content-between align-items-center border-bottom py-3">
+> 371	                                        <div className="pe-3">
+> 372	                                            <b>2. Manual (operador)</b>{' '}
+> 373	                                            <span className={`badge ${halt.manual && halt.manual.on ? 'bg-danger' : 'bg-success'}`}>{halt.manual && halt.manual.on ? 'TRAVADO' : 'livre'}</span>
+> 374	                                            <div className="text-muted small mt-1">Kill-switch quente (sem restart). {halt.manual && halt.manual.on && halt.manual.reason ? `Motivo: ${halt.manual.reason}.` : 'Botão de pânico — trava tudo na hora.'}</div>
+> 375	                                        </div>
+> 376	                                        {halt.manual && halt.manual.on
+> 377	                                            ? <button className="btn btn-sm btn-outline-success" type="button" onClick={() => onSetManual(false)}>Soltar trava manual</button>
+> 378	                                            : <button className="btn btn-sm btn-danger" type="button" onClick={() => onSetManual(true)}>Travar agora (pânico)</button>}
+> 379	                                    </div>
+> 380	
+> 381	                                    {/* 3. daily-cap — automática */}
+> 382	                                    <div className="d-flex justify-content-between align-items-center py-3">
+> 383	                                        <div className="pe-3">
+> 384	                                            <b>3. Cap diário (−5%)</b>{' '}
+> 385	                                            <span className={`badge ${halt.dailyCap && halt.dailyCap.active ? 'bg-danger' : 'bg-success'}`}>{halt.dailyCap && halt.dailyCap.active ? 'DISPAROU' : 'armado / livre'}</span>
+> 386	                                            <div className="text-muted small mt-1">Trava automática no drawdown de −5% do equity no dia. {halt.dailyCap && halt.dailyCap.active ? `Disparou${halt.dailyCap.reason ? `: ${halt.dailyCap.reason}` : ''}.` : 'Re-arma sozinho na virada do dia UTC.'}</div>
+> 387	                                        </div>
+> 388	                                        <button className="btn btn-sm btn-outline-warning" type="button" onClick={onResetCap} disabled={!(halt.dailyCap && halt.dailyCap.active)}>Re-armar cap</button>
+> 389	                                    </div>
+> 390	
+> 391	                                    {((halt.floor && halt.floor.on) || halt.envHard) && (
+> 392	                                        <div className="alert alert-warning mt-3 mb-0 small" role="alert">
+> 393	                                            ⚠️ Travado pelo <b>{halt.envHard ? 'override absoluto (env-hard)' : 'floor operacional'}</b> → soltar a trava manual ou re-armar o cap <b>NÃO libera o trading</b>. {halt.envHard ? 'Pra liberar: remova TRADING_HALT_HARD do .env + restart.' : 'Pra liberar: botão LIGAR trading real acima (canary de 1 grupo, decisão do dono).'}
+> 394	                                        </div>
+> 395	                                    )}
+> 396	                                </React.Fragment>
+> 397	                            )}
+> 398	                        </div>
+> 399	                    </div>
+> 400	                </div>
+> 401	                <Footer />
+> 402	            </main>
+> 403	            <Toast text={notification.text} type={notification.type} />
+> 404	            <LogModal file="system" />
+> 405	        </React.Fragment >
+> 406	    );
+> 407	}
+> 408	
+> 409	export default Settings;
+> ```
+
+## 🤖 Claude *(19:50:18)*
+
+
+## 🤖 Claude *(19:50:18)*
+
+Tenho tudo do frontend. Agora os imports/exports do `automationsController` e o `AutomationsService` pra encaixar os endpoints:
+
+## 🤖 Claude *(19:50:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 1,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const automationsRepository = require('../repositories/automationsRepository');
+> 2	const actionsRepository = require('../repositories/actionsRepository');
+> 3	const gridsRepository = require('../repositories/gridsRepository');
+> 4	const orderTemplatesRepository = require('../repositories/orderTemplatesRepository');
+> 5	const ordersRepository = require('../repositories/ordersRepository');
+> 6	const settingsRepository = require('../repositories/settingsRepository');
+> 7	const beholder = require('../beholder');
+> 8	const agenda = require('../agenda');
+> 9	const db = require('../db');
+> 10	const logger = require('../utils/logger');
+> 11	
+> 12	function validateConditions(conditions) {
+> ```
+
+## 🤖 Claude *(19:50:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/AutomationsService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import axios from './BaseService';
+> 2	
+> 3	const AUTOMATIONS_URL = `${process.env.REACT_APP_API_URL}/automations/`;
+> 4	
+> 5	export async function getAutomations(page, token) {
+> 6	    const automationsUrl = `${AUTOMATIONS_URL}?page=${page}`;
+> 7	
+> 8	    const headers = { 'authorization': token };
+> 9	    const response = await axios.get(automationsUrl, { headers });
+> 10	    return response.data;//{count, rows}
+> 11	}
+> 12	
+> 13	export async function getAutomation(id, token) {
+> 14	    const headers = { 'authorization': token };
+> 15	    const response = await axios.get(`${AUTOMATIONS_URL}${id}`, { headers });
+> 16	    return response.data;
+> 17	}
+> 18	
+> 19	export async function saveAutomation(id, newAutomation, token) {
+> 20	    const headers = { 'authorization': token };
+> 21	    let response;
+> 22	    if (id)
+> 23	        response = await axios.patch(`${AUTOMATIONS_URL}${id}`, newAutomation, { headers });
+> 24	    else
+> 25	        response = await axios.post(AUTOMATIONS_URL, newAutomation, { headers });
+> 26	    return response.data;
+> 27	}
+> 28	
+> 29	export async function saveGrid(id, newAutomation, levels, quantity, token) {
+> 30	    const headers = { 'authorization': token };
+> 31	    let response;
+> 32	    if (id)
+> 33	        response = await axios.patch(`${AUTOMATIONS_URL}${id}?levels=${levels}&quantity=${quantity}`, newAutomation, { headers });
+> 34	    else
+> 35	        response = await axios.post(`${AUTOMATIONS_URL}?levels=${levels}&quantity=${quantity}`, newAutomation, { headers });
+> 36	    return response.data;
+> 37	}
+> 38	
+> 39	export async function deleteAutomation(id, token) {
+> 40	    const headers = { 'authorization': token };
+> 41	    const response = await axios.delete(`${AUTOMATIONS_URL}${id}`, { headers });
+> 42	    return response.data;
+> 43	}
+> 44	
+> 45	export async function startAutomation(id, token) {
+> 46	    const headers = { 'authorization': token };
+> 47	    const response = await axios.post(`${AUTOMATIONS_URL}${id}/start`, {}, { headers });
+> 48	    return response.data;
+> 49	}
+> 50	
+> 51	export async function stopAutomation(id, token) {
+> 52	    const headers = { 'authorization': token };
+> 53	    const response = await axios.post(`${AUTOMATIONS_URL}${id}/stop`, {}, { headers });
+> 54	    return response.data;
+> 55	}
+> ```
+
+## 🤖 Claude *(19:50:28)*
+
+
+## 🤖 Claude *(19:50:29)*
+
+Falta ver os métodos do `automationsRepository` (preciso listar todas as automações sem paginação pro grupo):
+
+## 🤖 Claude *(19:50:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== automationsRepository m\u00e9todos ===\"\ngrep -nE \"^(async )?function|module.exports|findAll|getAutomations|getAutomation\\b|where|Op\\.\" backend/src/repositories/automationsRepository.js | head -40",
+  "description": "Inspect automationsRepository methods"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === automationsRepository métodos ===
+> 4:async function getActiveAutomations() {
+> 5:    return automationModel.findAll({
+> 6:        where: { isActive: true },
+> 12:async function updateAutomation(id, newAutomation) {
+> 13:    const currentAutomation = await getAutomation(id);
+> 42:function getAutomation(id) {
+> 46:async function automationExists(name) {
+> 47:    const count = await automationModel.count({ where: { name } });
+> 51:function getAutomations(page = 1) {
+> 53:        where: {},
+> 62:function insertAutomation(newAutomation, transaction) {
+> 66:function deleteAutomation(id, transaction) {
+> 68:        where: { id },
+> 73:async function gridExists(name) {
+> 75:    const count = await automationModel.count({ where: { name: { [Sequelize.Op.like]: `${gridName}#%` }  } });
+> 79:module.exports = {
+> 80:    getAutomations,
+> 83:    getAutomation,
+> ```
+
+## 🤖 Claude *(19:51:37)*
+
+
+## 🤖 Claude *(19:51:38)*
+
+Tenho todo o material. Vou ler o router e o repository por completo (preciso do texto exato pros edits + um método pra listar todas as automações):
+
+## 🤖 Claude *(19:51:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/automationsRouter.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const express = require('express');
+> 2	const router = express.Router();
+> 3	const automationsController = require('../controllers/automationsController');
+> 4	
+> 5	router.get('/:id', automationsController.getAutomation);
+> 6	
+> 7	router.delete('/:id', automationsController.deleteAutomation);
+> 8	
+> 9	router.get('/', automationsController.getAutomations);
+> 10	
+> 11	router.patch('/:id', automationsController.updateAutomation);
+> 12	
+> 13	router.post('/', automationsController.insertAutomation);
+> 14	
+> 15	router.post('/:id/start', automationsController.startAutomation);
+> 16	
+> 17	router.post('/:id/stop', automationsController.stopAutomation);
+> 18	
+> 19	module.exports = router;
+> ```
+
+## 🤖 Claude *(19:51:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const automationModel = require('../models/automationModel');
+> 2	const Sequelize = require('sequelize');
+> 3	
+> 4	async function getActiveAutomations() {
+> 5	    return automationModel.findAll({
+> 6	        where: { isActive: true },
+> 7	        distinct: true,
+> 8	        include: [{ all: true, nested: true }]//já inclui todas tabelas relacionadas
+> 9	    });
+> 10	}
+> 11	
+> 12	async function updateAutomation(id, newAutomation) {
+> 13	    const currentAutomation = await getAutomation(id);
+> 14	
+> 15	    if (newAutomation.symbol && newAutomation.symbol !== currentAutomation.symbol)
+> 16	        currentAutomation.symbol = newAutomation.symbol;
+> 17	
+> 18	    if (newAutomation.name && newAutomation.name !== currentAutomation.name)
+> 19	        currentAutomation.name = newAutomation.name;
+> 20	
+> 21	    if (newAutomation.indexes && newAutomation.indexes !== currentAutomation.indexes)
+> 22	        currentAutomation.indexes = newAutomation.indexes;
+> 23	
+> 24	    if (newAutomation.conditions && newAutomation.conditions !== currentAutomation.conditions)
+> 25	        currentAutomation.conditions = newAutomation.conditions;
+> 26	
+> 27	    if (newAutomation.schedule !== currentAutomation.schedule)
+> 28	        currentAutomation.schedule = newAutomation.schedule;
+> 29	
+> 30	    if (newAutomation.isActive !== null && newAutomation.isActive !== undefined
+> 31	        && newAutomation.isActive !== currentAutomation.isActive)
+> 32	        currentAutomation.isActive = newAutomation.isActive;
+> 33	
+> 34	    if (newAutomation.logs !== null && newAutomation.logs !== undefined
+> 35	        && newAutomation.logs !== currentAutomation.logs)
+> 36	        currentAutomation.logs = newAutomation.logs;
+> 37	
+> 38	    await currentAutomation.save();
+> 39	    return currentAutomation;
+> 40	}
+> 41	
+> 42	function getAutomation(id) {
+> 43	    return automationModel.findByPk(id, { include: [{ all: true, nested: true }] });
+> 44	}
+> 45	
+> 46	async function automationExists(name) {
+> 47	    const count = await automationModel.count({ where: { name } });
+> 48	    return count > 0;
+> 49	}
+> 50	
+> 51	function getAutomations(page = 1) {
+> 52	    return automationModel.findAndCountAll({
+> 53	        where: {},
+> 54	        order: [['isActive', 'DESC'], ['symbol', 'ASC'], ['name', 'ASC']],
+> 55	        limit: 10,
+> 56	        offset: 10 * (page - 1),
+> 57	        distinct: true,
+> 58	        include: [{ all: true, nested: true }]//inclui todas tabelas relacionadas
+> 59	    });
+> 60	}
+> 61	
+> 62	function insertAutomation(newAutomation, transaction) {
+> 63	    return automationModel.create(newAutomation, { transaction });
+> 64	}
+> 65	
+> 66	function deleteAutomation(id, transaction) {
+> 67	    return automationModel.destroy({
+> 68	        where: { id },
+> 69	        transaction
+> 70	    })
+> 71	}
+> 72	
+> 73	async function gridExists(name) {
+> 74	    const gridName = name.split('#')[0];
+> 75	    const count = await automationModel.count({ where: { name: { [Sequelize.Op.like]: `${gridName}#%` }  } });
+> 76	    return count > 0;
+> 77	}
+> 78	
+> 79	module.exports = {
+> 80	    getAutomations,
+> 81	    insertAutomation,
+> 82	    deleteAutomation,
+> 83	    getAutomation,
+> 84	    updateAutomation,
+> 85	    getActiveAutomations,
+> 86	    automationExists,
+> 87	    gridExists
+> 88	}
+> 89	
+> ```
+
+## 🤖 Claude *(19:52:20)*
+
+
+## 🤖 Claude *(19:52:21)*
+
+Tenho tudo. Vou ler o trecho exato de `startAutomation`/`stopAutomation` (pro edit byte-exato) e então construir o feature:
+
+## 🤖 Claude *(19:52:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 50,
+  "limit": 110
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 50	async function startAutomation(req, res, next) {
+> 51	    const id = req.params.id;
+> 52	    const automation = await automationsRepository.getAutomation(id);
+> 53	    if (automation.isActive) return res.sendStatus(204);
+> 54	
+> 55	    automation.isActive = true;
+> 56	
+> 57	    if (automation.schedule) {
+> 58	        try {
+> 59	            agenda.addSchedule(automation.get({ plain: true }));
+> 60	        } catch (err) {
+> 61	            return res.status(422).json(err.message);
+> 62	        }
+> 63	    }
+> 64	    else
+> 65	        beholder.updateBrain(automation.get({ plain: true }));
+> 66	
+> 67	    await automation.save();
+> 68	
+> 69	    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has started!`);
+> 70	
+> 71	    res.json(automation);
+> 72	}
+> 73	
+> 74	async function stopAutomation(req, res, next) {
+> 75	    const id = req.params.id;
+> 76	    const automation = await automationsRepository.getAutomation(id);
+> 77	    if (!automation.isActive) return res.sendStatus(204);
+> 78	
+> 79	    if (automation.schedule)
+> 80	        agenda.cancelSchedule(automation.id);
+> 81	    else
+> 82	        beholder.deleteBrain(automation.get({ plain: true }));
+> 83	
+> 84	    automation.isActive = false;
+> 85	    await automation.save();
+> 86	
+> 87	    // NÃO cancelamos a OCO ao apenas PARAR (pausar) a automação: a OCO é protetiva e a
+> 88	    // posição segue aberta — tirar o stop-loss numa pausa seria perigoso. A limpeza das
+> 89	    // OCO só ocorre no DELETE (a automação deixa de existir). A OCO resolve-se sozinha na
+> 90	    // corretora (uma perna executa, a Binance cancela a outra).
+> 91	    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);
+> 92	
+> 93	    res.json(automation);
+> 94	}
+> 95	
+> 96	async function getAutomation(req, res, next) {
+> 97	    const id = req.params.id;
+> 98	    const automation = await automationsRepository.getAutomation(id);
+> 99	    res.json(automation);
+> 100	}
+> 101	
+> 102	async function getAutomations(req, res, next) {
+> 103	    const page = req.query.page;
+> 104	    const result = await automationsRepository.getAutomations(page);
+> 105	    res.json(result);
+> 106	}
+> 107	
+> 108	async function insertAutomation(req, res, next) {
+> 109	    const newAutomation = req.body;
+> 110	    const { quantity, levels } = req.query;
+> 111	
+> 112	    if (!validateConditions(newAutomation.conditions) && !newAutomation.schedule)
+> 113	        return res.status(400).json('You need to have at least one condition per automation!');
+> 114	
+> 115	    if (!newAutomation.actions || newAutomation.actions.length < 1)
+> 116	        return res.status(400).json('You need to have at least one action per automation!');
+> 117	
+> 118	    const isGrid = newAutomation.actions[0].type === actionsRepository.actionTypes.GRID;
+> 119	    if (isGrid) {
+> 120	        if (!quantity || !levels)
+> 121	            return res.status(400).json('Invalid grid params!');
+> 122	
+> 123	        const exists = await automationsRepository.gridExists(newAutomation.name);
+> 124	        if (exists) return res.status(409).json(`A grid for ${newAutomation.symbol} already exists!`);
+> 125	    }
+> 126	    else {
+> 127	        const exists = await automationsRepository.automationExists(newAutomation.name);
+> 128	        if (exists) return res.status(409).json(`The automation ${newAutomation.name} already exists!`);
+> 129	    }
+> 130	
+> 131	    const transaction = await db.transaction();
+> 132	    let savedAutomation, actions = [], grids = [];
+> 133	
+> 134	    try {
+> 135	        savedAutomation = await automationsRepository.insertAutomation(newAutomation, transaction);
+> 136	
+> 137	        //inserting actions
+> 138	        actions = newAutomation.actions.map(a => {
+> 139	            a.automationId = savedAutomation.id;
+> 140	            delete a.id;
+> 141	            return a;
+> 142	        })
+> 143	        actions = await actionsRepository.insertActions(actions, transaction);
+> 144	
+> 145	        //inserting grids
+> 146	        if (isGrid)
+> 147	            grids = await beholder.generateGrids(savedAutomation, levels, quantity, transaction);
+> 148	
+> 149	        await transaction.commit();
+> 150	    } catch (err) {
+> 151	        await transaction.rollback();
+> 152	        logger('system', err);
+> 153	        return res.status(500).json(err.message);
+> 154	    }
+> 155	
+> 156	    savedAutomation = await automationsRepository.getAutomation(savedAutomation.id);
+> 157	
+> 158	    if (savedAutomation.isActive) {
+> 159	        if (savedAutomation.schedule) {
+> ```
+
+## 🤖 Claude *(19:52:26)*
+
+
+## 🤖 Claude *(19:52:27)*
+
+Agora construo. **Backend — repository** (método pra listar todas, com relações pro BRAIN):
+
+## 🤖 Claude *(19:52:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js",
+  "old_string": "async function getActiveAutomations() {\n    return automationModel.findAll({\n        where: { isActive: true },\n        distinct: true,\n        include: [{ all: true, nested: true }]//j\u00e1 inclui todas tabelas relacionadas\n    });\n}",
+  "new_string": "async function getActiveAutomations() {\n    return automationModel.findAll({\n        where: { isActive: true },\n        distinct: true,\n        include: [{ all: true, nested: true }]//j\u00e1 inclui todas tabelas relacionadas\n    });\n}\n\n// TODAS as automa\u00e7\u00f5es (ativas e inativas), COM as rela\u00e7\u00f5es (actions/orderTemplates) \u2014 necess\u00e1rio p/ o\n// BRAIN no start em lote por grupo. Mesma forma do getActiveAutomations, sem o filtro isActive.\nasync function getAllAutomations() {\n    return automationModel.findAll({\n        order: [['symbol', 'ASC'], ['name', 'ASC']],\n        distinct: true,\n        include: [{ all: true, nested: true }]\n    });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js",
+  "old_string": "    getActiveAutomations,\n    automationExists,\n    gridExists\n}",
+  "new_string": "    getActiveAutomations,\n    getAllAutomations,\n    automationExists,\n    gridExists\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:49)*
+
+
+## 🤖 Claude *(19:52:51)*
+
+**Backend — controller**: extrai o helper `applyAutomationActive` (fonte única de start/stop, garante que o grupo se comporta igual ao botão por-linha) e refatora start/stop:
+
+## 🤖 Claude *(19:53:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "old_string": "async function startAutomation(req, res, next) {\n    const id = req.params.id;\n    const automation = await automationsRepository.getAutomation(id);\n    if (automation.isActive) return res.sendStatus(204);\n\n    automation.isActive = true;\n\n    if (automation.schedule) {\n        try {\n            agenda.addSchedule(automation.get({ plain: true }));\n        } catch (err) {\n            return res.status(422).json(err.message);\n        }\n    }\n    else\n        beholder.updateBrain(automation.get({ plain: true }));\n\n    await automation.save();\n\n    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has started!`);\n\n    res.json(automation);\n}\n\nasync function stopAutomation(req, res, next) {\n    const id = req.params.id;\n    const automation = await automationsRepository.getAutomation(id);\n    if (!automation.isActive) return res.sendStatus(204);\n\n    if (automation.schedule)\n        agenda.cancelSchedule(automation.id);\n    else\n        beholder.deleteBrain(automation.get({ plain: true }));\n\n    automation.isActive = false;\n    await automation.save();\n\n    // N\u00c3O cancelamos a OCO ao apenas PARAR (pausar) a automa\u00e7\u00e3o: a OCO \u00e9 protetiva e a\n    // posi\u00e7\u00e3o segue aberta \u2014 tirar o stop-loss numa pausa seria perigoso. A limpeza das\n    // OCO s\u00f3 ocorre no DELETE (a automa\u00e7\u00e3o deixa de existir). A OCO resolve-se sozinha na\n    // corretora (uma perna executa, a Binance cancela a outra).\n    if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);\n\n    res.json(automation);\n}",
+  "new_string": "// FONTE \u00daNICA de (des)ativa\u00e7\u00e3o: aplica isActive + (des)registra no BRAIN/agenda + persiste + loga.\n// Reusado pelo start/stop POR ID (bot\u00e3o por-linha) E pelo start/stop POR GRUPO (painel de Settings) \u2192\n// garante comportamento ID\u00caNTICO entre os dois. Idempotente (no-op se j\u00e1 no estado). Lan\u00e7a em erro de\n// schedule (o chamador decide o status); N\u00c3O mexe no HALT (ativar arma a estrat\u00e9gia; o guard por-ordem\n// ainda bloqueia execu\u00e7\u00e3o se o floor estiver up). N\u00c3O cancela OCO ao parar (a OCO \u00e9 protetiva; s\u00f3 sai no DELETE).\nasync function applyAutomationActive(automation, active) {\n    if (active) {\n        if (automation.isActive) return automation;\n        automation.isActive = true;\n        if (automation.schedule)\n            agenda.addSchedule(automation.get({ plain: true }));\n        else\n            beholder.updateBrain(automation.get({ plain: true }));\n        await automation.save();\n        if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has started!`);\n    } else {\n        if (!automation.isActive) return automation;\n        if (automation.schedule)\n            agenda.cancelSchedule(automation.id);\n        else\n            beholder.deleteBrain(automation.get({ plain: true }));\n        automation.isActive = false;\n        await automation.save();\n        if (automation.logs) logger('A:' + automation.id, `Automation ${automation.name} has stopped!`);\n    }\n    return automation;\n}\n\nasync function startAutomation(req, res, next) {\n    const id = req.params.id;\n    const automation = await automationsRepository.getAutomation(id);\n    if (automation.isActive) return res.sendStatus(204);\n    try {\n        await applyAutomationActive(automation, true);\n    } catch (err) {\n        return res.status(422).json(err.message); // falha de schedule (agenda.addSchedule)\n    }\n    res.json(automation);\n}\n\nasync function stopAutomation(req, res, next) {\n    const id = req.params.id;\n    const automation = await automationsRepository.getAutomation(id);\n    if (!automation.isActive) return res.sendStatus(204);\n    await applyAutomationActive(automation, false);\n    res.json(automation);\n}\n\n// === Ativa\u00e7\u00e3o em LOTE por GRUPO (painel de Settings) ===\n// Grupos L\u00d3GICOS derivados do NOME (conven\u00e7\u00e3o dos setup-*.js). EXCLUI de prop\u00f3sito harvester (morto),\n// grid (rejeitado) e scalp (refutado) \u2192 n\u00e3o h\u00e1 como reativ\u00e1-los por este painel.\nconst AUTOMATION_GROUPS = {\n    farm: { label: 'Farm (no-loss alts)', test: n => /^Farm (Buy|Sell) /.test(n) },\n    trend: { label: 'Trend (SMA50/200)', test: n => /^Trend (Buy|Sell) /.test(n) },\n    baseline: { label: 'Baseline (RSI BTC)', test: n => /^Baseline /.test(n) },\n    paper: { label: 'Paper (research, sem risco)', test: n => n.startsWith('[PAPER] '), paper: true },\n};\n\nasync function getAutomationGroups(req, res, next) {\n    const all = await automationsRepository.getAllAutomations();\n    const groups = Object.entries(AUTOMATION_GROUPS).map(([key, def]) => {\n        const items = all.filter(a => def.test(a.name));\n        const active = items.filter(a => a.isActive).length;\n        return { key, label: def.label, paper: !!def.paper, total: items.length, active, inactive: items.length - active, ids: items.map(a => a.id) };\n    });\n    res.json({ groups });\n}\n\nasync function setAutomationGroup(req, res, next) {\n    const { group, action } = req.params;\n    const def = AUTOMATION_GROUPS[group];\n    if (!def) return res.status(404).json({ error: `grupo desconhecido: ${group}` });\n    if (action !== 'start' && action !== 'stop') return res.status(400).json({ error: `a\u00e7\u00e3o inv\u00e1lida: ${action} (use start|stop)` });\n\n    const active = action === 'start';\n    const all = await automationsRepository.getAllAutomations();\n    const items = all.filter(a => def.test(a.name));\n\n    const changed = [], skipped = [], failed = [];\n    for (const a of items) {\n        try {\n            const before = a.isActive;\n            await applyAutomationActive(a, active);\n            (before === active ? skipped : changed).push(a.id);\n        } catch (err) {\n            failed.push({ id: a.id, error: err.message });\n            logger('system', `[grupo] ${group} ${action} id ${a.id} FALHOU: ${err.message}`);\n        }\n    }\n    logger('system', `[grupo] ${group} ${action}: ${changed.length} alterada(s), ${skipped.length} j\u00e1-no-estado, ${failed.length} falha(s)`);\n    res.json({ group, label: def.label, action, total: items.length, changed, skipped, failed });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:53:18)*
+
+
+## 🤖 Claude *(19:53:19)*
+
+Atualizo os exports do controller:
+
+## 🤖 Claude *(19:53:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngrep -n \"module.exports\" backend/src/controllers/automationsController.js\nsed -n '/module.exports = {/,/^}/p' backend/src/controllers/automationsController.js",
+  "description": "Read controller exports block"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 325:module.exports = {
+> module.exports = {
+>     startAutomation,
+>     stopAutomation,
+>     getAutomation,
+>     getAutomations,
+>     insertAutomation,
+>     updateAutomation,
+>     deleteAutomation
+> }
+> ```
+
+## 🤖 Claude *(19:53:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "old_string": "module.exports = {\n    startAutomation,\n    stopAutomation,\n    getAutomation,\n    getAutomations,\n    insertAutomation,\n    updateAutomation,\n    deleteAutomation\n}",
+  "new_string": "module.exports = {\n    startAutomation,\n    stopAutomation,\n    getAutomationGroups,\n    setAutomationGroup,\n    getAutomation,\n    getAutomations,\n    insertAutomation,\n    updateAutomation,\n    deleteAutomation\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:53:33)*
+
+
+## 🤖 Claude *(19:53:34)*
+
+**Backend — router** (rotas de grupo ANTES de `/:id` pra não colidir com o param):
+
+## 🤖 Claude *(19:53:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/routers/automationsRouter.js",
+  "old_string": "const automationsController = require('../controllers/automationsController');\n\nrouter.get('/:id', automationsController.getAutomation);",
+  "new_string": "const automationsController = require('../controllers/automationsController');\n\n// Ativa\u00e7\u00e3o em LOTE por grupo (painel de Settings). ANTES de '/:id' sen\u00e3o 'groups' casa com o param :id.\nrouter.get('/groups', automationsController.getAutomationGroups);\nrouter.post('/groups/:group/:action', automationsController.setAutomationGroup);\n\nrouter.get('/:id', automationsController.getAutomation);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/routers/automationsRouter.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:53:41)*
+
+
+## 🤖 Claude *(19:53:42)*
+
+**Frontend — service** (2 funções):
+
+## 🤖 Claude *(19:53:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/AutomationsService.js",
+  "old_string": "export async function stopAutomation(id, token) {\n    const headers = { 'authorization': token };\n    const response = await axios.post(`${AUTOMATIONS_URL}${id}/stop`, {}, { headers });\n    return response.data;\n}",
+  "new_string": "export async function stopAutomation(id, token) {\n    const headers = { 'authorization': token };\n    const response = await axios.post(`${AUTOMATIONS_URL}${id}/stop`, {}, { headers });\n    return response.data;\n}\n\n// Grupos l\u00f3gicos (Farm/Trend/Baseline/Paper) p/ ativa\u00e7\u00e3o em lote no painel de Settings.\nexport async function getAutomationGroups(token) {\n    const headers = { 'authorization': token };\n    const response = await axios.get(`${AUTOMATIONS_URL}groups`, { headers });\n    return response.data; // { groups: [{key,label,paper,total,active,inactive,ids}] }\n}\n\nexport async function setAutomationGroup(group, action, token) {\n    const headers = { 'authorization': token };\n    const response = await axios.post(`${AUTOMATIONS_URL}groups/${group}/${action}`, {}, { headers });\n    return response.data; // { group, label, action, total, changed, skipped, failed }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/services/AutomationsService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:53:58)*
+
+
+## 🤖 Claude *(19:53:59)*
+
+**Frontend — Settings.js**: leio o topo (imports + useEffect) pra encaixar state/load:
+
+## 🤖 Claude *(19:54:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "offset": 1,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState, useEffect, useRef } from 'react';
+> 2	import Menu from '../../components/Menu/Menu';
+> 3	import Footer from '../../components/Footer/Footer';
+> 4	import Toast from '../../components/Toast/Toast';
+> 5	import LogModal from '../../components/Logs/LogModal';
+> 6	
+> 7	import { getSettings, updateSettings } from '../../services/SettingsService';
+> 8	import { getHalt, setHalt, setFloor, resetDailyCap } from '../../services/SystemService';
+> 9	
+> 10	function Settings() {
+> 11	
+> 12	    const confirmPassword = useRef('');
+> 13	    const [settings, setSettings] = useState({});
+> 14	    const [notification, setNotification] = useState({});
+> 15	    const [activeTab, setActiveTab] = useState('mainnet');
+> 16	    const [halt, setHaltState] = useState(null);
+> 17	
+> 18	    useEffect(() => {
+> 19	        const token = localStorage.getItem("token");
+> 20	
+> 21	        getSettings(token)
+> 22	            .then(result => {
+> 23	                setSettings(result);
+> 24	                if (result.useTestnet) setActiveTab('testnet');
+> 25	            })
+> 26	            .catch(err => {
+> 27	                console.error(err.response ? err.response.data : err.message);
+> 28	                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });
+> 29	            })
+> 30	
+> 31	        getHalt(token).then(setHaltState).catch(() => { });
+> 32	    }, []);
+> 33	
+> 34	    function onInputChange(event) {
+> 35	        setSettings(prevState => ({ ...prevState, [event.target.id]: event.target.value }));
+> ```
+
+## 🤖 Claude *(19:54:28)*
+
+
+## 🤖 Claude *(19:54:28)*
+
+**Frontend — Settings.js**: import + state + handlers + card. Cinco edits:
+
+## 🤖 Claude *(19:54:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "import { getHalt, setHalt, setFloor, resetDailyCap } from '../../services/SystemService';",
+  "new_string": "import { getHalt, setHalt, setFloor, resetDailyCap } from '../../services/SystemService';\nimport { getAutomationGroups, setAutomationGroup } from '../../services/AutomationsService';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:54:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "    const [halt, setHaltState] = useState(null);\n\n    useEffect(() => {",
+  "new_string": "    const [halt, setHaltState] = useState(null);\n    const [groups, setGroups] = useState(null);\n\n    useEffect(() => {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:54:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "        getHalt(token).then(setHaltState).catch(() => { });\n    }, []);",
+  "new_string": "        getHalt(token).then(setHaltState).catch(() => { });\n        getAutomationGroups(token).then(res => setGroups(res.groups)).catch(() => { });\n    }, []);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:54:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "    function onTravarFloor() {\n        if (!window.confirm('TRAVAR o floor operacional? (congela o trading; quente, sobrevive a restart)')) return;\n        const token = localStorage.getItem(\"token\");\n        setFloor(true, 'TRAVAR via painel', null, token)\n            .then(res => { setHaltState(res); setNotification({ type: 'success', text: 'Floor TRAVADO (trading congelado).' }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }",
+  "new_string": "    function onTravarFloor() {\n        if (!window.confirm('TRAVAR o floor operacional? (congela o trading; quente, sobrevive a restart)')) return;\n        const token = localStorage.getItem(\"token\");\n        setFloor(true, 'TRAVAR via painel', null, token)\n            .then(res => { setHaltState(res); setNotification({ type: 'success', text: 'Floor TRAVADO (trading congelado).' }); })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }\n\n    function loadGroups() {\n        const token = localStorage.getItem(\"token\");\n        getAutomationGroups(token).then(res => setGroups(res.groups)).catch(() => { });\n    }\n\n    function onSetGroup(key, label, on) {\n        const tradingLive = halt && !halt.halted; // floor liberado \u2192 ordens reais executam\n        let msg = `${on ? 'ATIVAR' : 'PARAR'} o grupo \"${label}\"?`;\n        if (on && key !== 'paper' && tradingLive)\n            msg = `\u26a0\ufe0f TRADING REAL EST\u00c1 LIBERADO \u2014 ativar \"${label}\" vai NEGOCIAR COM DINHEIRO REAL.\\n\\n${msg}`;\n        if (!window.confirm(msg)) return;\n        const token = localStorage.getItem(\"token\");\n        setAutomationGroup(key, on ? 'start' : 'stop', token)\n            .then(res => {\n                const fail = res.failed && res.failed.length ? `, ${res.failed.length} falha(s)` : '';\n                setNotification({ type: fail ? 'error' : 'success', text: `Grupo \"${label}\" ${on ? 'ativado' : 'parado'}: ${res.changed.length} alterada(s)${fail}.` });\n                loadGroups();\n            })\n            .catch(err => setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message }));\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:54:57)*
+
+
+## 🤖 Claude *(19:54:58)*
+
+Por fim, o card de grupos (espelha o card do HALT), inserido antes do `<Footer />`:
+
+## 🤖 Claude *(19:55:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "old_string": "                    </div>\n                </div>\n                <Footer />",
+  "new_string": "                    </div>\n                </div>\n                <div className=\"row\">\n                    <div className=\"col-12\">\n                        <div className=\"card card-body border-0 shadow mb-4\">\n                            <div className=\"d-flex justify-content-between align-items-center my-4\">\n                                <h2 className=\"h5 mb-0\">Ativa\u00e7\u00e3o de grupos</h2>\n                                <button className=\"btn btn-sm btn-gray-800 animate-up-2\" type=\"button\" onClick={loadGroups}>Atualizar</button>\n                            </div>\n                            {halt && !halt.halted && (\n                                <div className=\"alert alert-danger small\" role=\"alert\">\n                                    \u26a0\ufe0f <b>Trading real LIBERADO</b> \u2014 ativar um grupo que n\u00e3o seja <b>Paper</b> vai negociar com dinheiro real.\n                                </div>\n                            )}\n                            {!groups ? (\n                                <p className=\"text-muted mb-0\">Carregando grupos\u2026</p>\n                            ) : groups.length === 0 ? (\n                                <p className=\"text-muted mb-0\">Nenhum grupo encontrado.</p>\n                            ) : (\n                                <React.Fragment>\n                                    {groups.map((g, i) => (\n                                        <div key={g.key} className={`d-flex justify-content-between align-items-center py-3${i < groups.length - 1 ? ' border-bottom' : ''}`}>\n                                            <div className=\"pe-3\">\n                                                <b>{g.label}</b>{' '}\n                                                <span className={`badge ${g.total === 0 ? 'bg-secondary' : g.active === g.total ? 'bg-success' : g.active > 0 ? 'bg-warning' : 'bg-secondary'}`}>{g.active}/{g.total} ON</span>\n                                                {g.paper && <span className=\"badge bg-info ms-1\">sem risco</span>}\n                                                <div className=\"text-muted small mt-1\">{g.total === 0 ? 'Nenhuma automa\u00e7\u00e3o neste grupo.' : `Liga/para as ${g.total} automa\u00e7\u00f5es do grupo de uma vez (ids ${g.ids.join(', ')}).`}</div>\n                                            </div>\n                                            <div className=\"text-nowrap\">\n                                                <button className=\"btn btn-sm btn-success me-2\" type=\"button\" disabled={g.total === 0 || g.active === g.total} onClick={() => onSetGroup(g.key, g.label, true)}>Ativar</button>\n                                                <button className=\"btn btn-sm btn-outline-danger\" type=\"button\" disabled={g.total === 0 || g.active === 0} onClick={() => onSetGroup(g.key, g.label, false)}>Parar</button>\n                                            </div>\n                                        </div>\n                                    ))}\n                                    <div className=\"alert alert-secondary mt-3 mb-0 small\" role=\"alert\">\n                                        Ativar s\u00f3 <b>arma</b> as estrat\u00e9gias do grupo. Se o <b>floor</b> (acima) estiver TRAVADO, nada negocia \u2014 o guard por-ordem segura. Harvester/Grid/Scalp ficam de fora deste painel de prop\u00f3sito (mortos/refutados).\n                                    </div>\n                                </React.Fragment>\n                            )}\n                        </div>\n                    </div>\n                </div>\n                <Footer />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:55:25)*
+
+
+## 🤖 Claude *(19:55:26)*
+
+Feature construído (backend: repo+controller+router; frontend: service+Settings card). Verificação — `node --check` no backend + teste offline do agrupamento (regex contra os 38 nomes reais):
+
+## 🤖 Claude *(19:55:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== node --check backend ===\"\nfor f in backend/src/repositories/automationsRepository.js backend/src/controllers/automationsController.js backend/src/routers/automationsRouter.js; do\n  node --check \"$f\" && echo \"\u2713 $(basename $f)\" || echo \"\u2717 $(basename $f)\"\ndone\necho \"=== teste offline do agrupamento (regex vs nomes reais) ===\"\ncat > /tmp/grouptest.js <<'EOF'\nconst GROUPS = {\n  farm: n => /^Farm (Buy|Sell) /.test(n),\n  trend: n => /^Trend (Buy|Sell) /.test(n),\n  baseline: n => /^Baseline /.test(n),\n  paper: n => n.startsWith('[PAPER] '),\n};\nconst names = [\n '[PAPER] Consistencia Buy ADAUSDT','[PAPER] Consistencia Sell ADAUSDT','[PAPER] Macro Buy ADAUSDT','[PAPER] Macro Sell ADAUSDT',\n '[PAPER] Consistencia Buy BNBUSDT','[PAPER] Consistencia Sell BNBUSDT','[PAPER] Macro Buy BNBUSDT','[PAPER] Macro Sell BNBUSDT',\n '[PAPER] Consistencia Buy BTCUSDT','[PAPER] Consistencia Sell BTCUSDT','[PAPER] Macro Buy BTCUSDT','[PAPER] Macro Sell BTCUSDT',\n '[PAPER] Consistencia Buy LTCUSDT','[PAPER] Consistencia Sell LTCUSDT','[PAPER] Macro Buy LTCUSDT','[PAPER] Macro Sell LTCUSDT',\n 'Farm Buy ADAUSDT','Farm Sell ADAUSDT','Farm Buy BNBUSDT','Farm Sell BNBUSDT','Farm Buy LTCUSDT','Farm Sell LTCUSDT',\n 'Trend Buy ADAUSDT SMA50/200','Trend Sell ADAUSDT SMA50/200','Trend Buy BNBUSDT SMA50/200','Trend Sell BNBUSDT SMA50/200',\n 'Trend Buy BTCUSDT SMA50/200','Trend Sell BTCUSDT SMA50/200','Trend Buy LTCUSDT SMA50/200','Trend Sell LTCUSDT SMA50/200',\n 'Baseline RSI Buy BTCUSDT','Baseline RSI Sell BTCUSDT',\n 'BTC Scalp Excess','Grid BTCUSDT','Harvest Buy BTCUSDT -3pct','Harvest Buy BTCUSDT -5pct','Harvest Buy BTCUSDT -7pct','Harvest Sell BTCUSDT',\n];\nconst counts = {}; const matched = new Set();\nfor (const k in GROUPS) { counts[k] = names.filter(n => { const m = GROUPS[k](n); if (m) matched.add(n); return m; }).length; }\nconst excluded = names.filter(n => !matched.has(n));\nconsole.log('counts:', JSON.stringify(counts));\nconsole.log('excluidos ('+excluded.length+'):', excluded.join(' | '));\nconst exp = {farm:6,trend:8,baseline:2,paper:16};\nconst ok = JSON.stringify(counts)===JSON.stringify(exp) && excluded.length===6 && !excluded.some(n=>/Harvest|Grid|Scalp/.test(n)===false);\nconsole.log(ok ? 'PASS \u2014 agrupamento correto, harvester/grid/scalp excluidos' : 'FAIL');\nprocess.exit(ok?0:1);\nEOF\nnode /tmp/grouptest.js",
+  "description": "node --check backend + offline group-matching test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check backend ===
+> ✓ automationsRepository.js
+> ✓ automationsController.js
+> ✓ automationsRouter.js
+> === teste offline do agrupamento (regex vs nomes reais) ===
+> counts: {"farm":6,"trend":8,"baseline":2,"paper":16}
+> excluidos (6): BTC Scalp Excess | Grid BTCUSDT | Harvest Buy BTCUSDT -3pct | Harvest Buy BTCUSDT -5pct | Harvest Buy BTCUSDT -7pct | Harvest Sell BTCUSDT
+> PASS — agrupamento correto, harvester/grid/scalp excluidos
+> ```
+
+## 🤖 Claude *(19:55:50)*
+
+
+## 🤖 Claude *(19:55:51)*
+
+Backend OK + agrupamento correto (farm 6 / trend 8 / baseline 2 / paper 16; harvester/grid/scalp fora). Agora o **build do frontend** pra confirmar que o JSX do card compila:
+
+## 🤖 Claude *(19:55:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\ntest -d node_modules && echo \"node_modules OK\" || echo \"SEM node_modules (precisa npm ci)\"\nREACT_APP_API_URL=http://localhost:8080/api \\\nREACT_APP_WS_URL=ws://localhost:8080/ws \\\nREACT_APP_BWS_URL=wss://stream.binance.com:9443/ws \\\nnpx vite build --mode production 2>&1 | tail -15",
+  "description": "Build frontend to verify JSX compiles",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SEM node_modules (precisa npm ci)
+> [38;5;246m───╯[0m
+> 
+> failed to load config from /home/gcrux-tradeux/tradeux/frontend/vite.config.js
+> error during build:
+> Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /home/gcrux-tradeux/tradeux/frontend/vite.config.js.timestamp-1781898962347-cfbc95355551c.mjs
+>     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:314:9)
+>     at packageResolve (node:internal/modules/esm/resolve:768:81)
+>     at moduleResolve (node:internal/modules/esm/resolve:855:18)
+>     at defaultResolve (node:internal/modules/esm/resolve:985:11)
+>     at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)
+>     at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)
+>     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)
+>     at ModuleJob._link (node:internal/modules/esm/module_job:182:49) {
+>   code: 'ERR_MODULE_NOT_FOUND'
+> }
+> ```
+
+## 🤖 Claude *(19:56:21)*
+
+
+## 🤖 Claude *(19:56:22)*
+
+Frontend sem `node_modules` — preciso instalar pra buildar. Rodo `npm ci` + build (verifica o JSX de verdade; é o que o deploy faz):
+
+## 🤖 Claude *(19:56:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\nnpm ci 2>&1 | tail -4\necho \"=== build ===\"\nREACT_APP_API_URL=http://localhost:8080/api \\\nREACT_APP_WS_URL=ws://localhost:8080/ws \\\nREACT_APP_BWS_URL=wss://stream.binance.com:9443/ws \\\nnpx vite build --mode production 2>&1 | tail -12",
+  "description": "npm ci + vite build to verify frontend compiles",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To address all issues (including breaking changes), run:
+>   npm audit fix --force
+> 
+> Run `npm audit` for details.
+> === build ===
+> vite v5.4.21 building for production...
+> transforming...
+> ✓ 256 modules transformed.
+> rendering chunks...
+> computing gzip size...
+> build/index.html                   2.38 kB │ gzip:   0.85 kB
+> build/assets/index-spoZRgsp.css   11.51 kB │ gzip:   2.92 kB
+> build/assets/index-blsMLOo0.js   436.06 kB │ gzip: 122.03 kB
+> ✓ built in 5.82s
+> ```
+
+## 🤖 Claude *(19:57:12)*
+
+
+## 🤖 Claude *(19:57:14)*
+
+Frontend **builda limpo** (256 módulos, build OK) — o JSX do card compila. Resumo da verificação própria: backend `node --check` ✓, agrupamento ✓, build ✓.
+
+Agora o gate (é money-path → verify adversarial + QA + TL + lente de segurança):
+
+## 🤖 Claude *(19:57:56)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'group-activation-gate',\n  description: 'Verify adversarial + gate QA/TL do painel de Ativacao de Grupos (Settings) \u2014 money-path UI',\n  phases: [\n    { title: 'Verify', detail: 'backend/routing/equivalencia \u00b7 frontend/seguranca \u00b7 money-path' },\n    { title: 'Gate', detail: 'qa-engineer + tech-lead' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux';\nconst DIFF = `git -C ${REPO} -c safe.directory='*' diff`;\n\nconst CTX = `FEATURE EM REVISAO: painel \"Ativacao de grupos\" em Settings \u2014 botao de ligar/parar GRUPOS de automacao em lote (canary), pra nao precisar de SSH/automation-ctl.js. Pedido do dono, espelha os botoes de destrave do HALT.\n\nARQUIVOS MUDADOS (use '${DIFF} <arquivo>' p/ ver o diff vs HEAD; nao confie cegamente, leia o codigo):\n  BACKEND:\n  - ${REPO}/backend/src/repositories/automationsRepository.js  (novo getAllAutomations: findAll TODAS, com include all+nested p/ o BRAIN)\n  - ${REPO}/backend/src/controllers/automationsController.js    (extraiu applyAutomationActive de start/stop; refatorou start/stop p/ usa-lo; novos getAutomationGroups + setAutomationGroup + const AUTOMATION_GROUPS)\n  - ${REPO}/backend/src/routers/automationsRouter.js           (GET /groups + POST /groups/:group/:action ANTES de /:id)\n  FRONTEND:\n  - ${REPO}/frontend/src/services/AutomationsService.js        (getAutomationGroups + setAutomationGroup)\n  - ${REPO}/frontend/src/private/Settings/Settings.js          (card novo + handler onSetGroup + state groups)\n\nDESIGN/INVARIANTES (verifique que batem):\n  - Grupos LOGICOS por regex de nome: farm=/^Farm (Buy|Sell) /, trend=/^Trend (Buy|Sell) /, baseline=/^Baseline /, paper=startsWith('[PAPER] '). EXCLUI de proposito harvester (morto), grid (rejeitado), scalp (refutado) \u2014 NAO devem ser ativaveis por este painel. (live: farm 6, trend 8, baseline 2, paper 16, excluidos 6).\n  - applyAutomationActive deve ser COMPORTAMENTALMENTE IDENTICO ao start/stop original por id (mesma logica de schedule/agenda vs beholder.updateBrain/deleteBrain, save, log, idempotencia no-op se ja no estado). O start por id mantem o 422 em erro de schedule.\n  - SEGURANCA money-path: ativar so ARMA as automacoes; NAO mexe no HALT/floor. Se o floor estiver TRAVADO, o guard POR-ORDEM (riskState/assertWithinRisk no exchange) ainda bloqueia execucao \u2192 nada negocia. O endpoint esta atras do authMiddleware (app.js: app.use('/automations', authMiddleware, ...)).\n  - Frontend: window.confirm sempre; aviso VERMELHO extra SO quando (start && grupo!=paper && !halt.halted) [trading real liberado]. Botoes 'Ativar' disabled se total==0 ou ja-tudo-ativo; 'Parar' disabled se nada ativo.\n  - getAllAutomations INCLUI relacoes (actions/orderTemplates) \u2014 necessario senao o updateBrain do start em grupo registra automacao SEM acao (quebra a ordem). CONFIRME que o include esta la.\n  - Roteamento: '/groups' (GET) precisa vir ANTES de '/:id' (GET) senao 'groups' casa com :id='groups'. CONFIRME a ordem no router.\n\nJA VERIFICADO (pelo autor): node --check nos 3 backend OK; build do frontend (vite) OK; teste offline do regex de grupo PASS (farm6/trend8/baseline2/paper16, harvester/grid/scalp excluidos). NAO foi testado ao vivo (container roda codigo antigo ate rebuild).`;\n\nconst VSCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['area', 'ok', 'confidence', 'issues', 'verdict'],\n  properties: {\n    area: { type: 'string' },\n    ok: { type: 'boolean', description: 'true se correto/seguro. Na duvida, false.' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    issues: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['severity', 'desc'], properties: { severity: { type: 'string', enum: ['blocker', 'major', 'minor', 'nit'] }, desc: { type: 'string' } } } },\n    verdict: { type: 'string' },\n  },\n};\nconst GSCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['role', 'verdict', 'mustFix', 'niceToHave', 'summary'],\n  properties: { role: { type: 'string' }, verdict: { type: 'string' }, mustFix: { type: 'array', items: { type: 'string' } }, niceToHave: { type: 'array', items: { type: 'string' } }, summary: { type: 'string' } },\n};\n\nphase('Verify');\nconst verify = (await parallel([\n  () => agent(`${CTX}\\n\\nSEU FOCO: BACKEND \u2014 correcao e equivalencia. (1) Confirme que applyAutomationActive reproduz EXATAMENTE o start/stop original (compare via ${DIFF} backend/src/controllers/automationsController.js); (2) ordem das rotas (/groups antes de /:id); (3) getAllAutomations inclui relacoes p/ o BRAIN; (4) setAutomationGroup: grupo desconhecido\u2192404, acao invalida\u2192400, loop com try/catch por automacao (uma falha nao derruba o lote), idempotencia; (5) getAutomationGroups counts. Tente REFUTAR. Na duvida ok=false.`, { label: 'verify:backend', phase: 'Verify', schema: VSCHEMA }),\n  () => agent(`${CTX}\\n\\nSEU FOCO: FRONTEND \u2014 wiring e UX de seguranca. (1) onSetGroup: o aviso vermelho dispara SO em (start && key!=='paper' && !halt.halted)? parar e paper nunca assustam? (2) confirm sempre presente; (3) estados disabled corretos; (4) load no mount + refresh pos-acao; (5) service chama /automations/groups e /automations/groups/:group/:action corretamente; (6) nenhuma quebra de render se groups vazio/null. Leia ${DIFF} frontend/src/private/Settings/Settings.js. Tente REFUTAR. Na duvida ok=false.`, { label: 'verify:frontend', phase: 'Verify', schema: VSCHEMA }),\n  () => agent(`${CTX}\\n\\nSEU FOCO: SEGURANCA money-path (lente adversarial de atacante/erro-humano). Pergunte: este botao consegue causar trade real NAO-intencional? (a) ativar um grupo real bypassa o HALT/floor de algum jeito? (deveria NAO \u2014 o guard e por-ordem; confirme lendo como o HALT e aplicado); (b) da pra ativar harvester/grid/scalp (mortos) por este endpoint? (NAO deveria); (c) o endpoint exige auth? (d) o aviso de floor-liberado pode enganar (ex.: halted vem de outra fonte)? (e) algum caminho em que 'paper' vira real ou vice-versa? Liste qualquer furo. Na duvida ok=false.`, { label: 'verify:security', phase: 'Verify', schema: VSCHEMA }),\n])).filter(Boolean);\n\nconst digest = verify.map(v => `- ${v.area}: ok=${v.ok} (${v.confidence}) \u2014 ${v.verdict}`).join('\\n');\nphase('Gate');\nconst gate = (await parallel([\n  () => agent(`${CTX}\\n\\nVerificacao independente:\\n${digest}\\n\\nVoce e o QA gate. Revise a mudanca inteira (5 arquivos). Foque em correcao, edge-cases, regressao no start/stop por id (que foi refatorado!), idempotencia, cobertura de teste. Veredito QA (PASS | PASS_COM_RESSALVAS | FAIL) com mustFix vs niceToHave.`, { label: 'gate:QA', phase: 'Gate', schema: GSCHEMA, agentType: 'qa-engineer' }),\n  () => agent(`${CTX}\\n\\nVerificacao independente:\\n${digest}\\n\\nVoce e o tech-lead/code owner. Decisao de merge. Avalie design (grupos por regex vs tabela/tag; reuso do applyAutomationActive), manutenibilidade, seguranca money-path, aderencia as convencoes. Veredito TL (APPROVE | APPROVE_COM_SUGESTOES | REQUEST_CHANGES | BLOCK) com mustFix vs niceToHave.`, { label: 'gate:TL', phase: 'Gate', schema: GSCHEMA, agentType: 'tech-lead' }),\n])).filter(Boolean);\n\nreturn { verify, gate };\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wtwnr8ida
+> Summary: Verify adversarial + gate QA/TL do painel de Ativacao de Grupos (Settings) — money-path UI
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/subagents/workflows/wf_51b9834f-834
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-frontend/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/group-activation-gate-wf_51b9834f-834.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-frontend/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/group-activation-gate-wf_51b9834f-834.js"} to iterate without resending the script.)
+> Run ID: wf_51b9834f-834
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-frontend/11673fbd-e65c-488e-b58e-4db5a1cb8dc5/workflows/scripts/group-activation-gate-wf_51b9834f-834.js", resumeFromRunId: "wf_51b9834f-834"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(19:58:17)*
+
+
+## 🤖 Claude *(19:58:30)*
+
+Feature pronto e auto-verificado; gate em background (`wtwnr8ida`).
+
+## Painel "Ativação de grupos" — construído
+
+**Onde:** Settings, card novo logo abaixo do card de HALT (como você pediu).
+
+**O que faz:** um par de botões **Ativar / Parar** por grupo lógico, em lote (substitui o SSH/`automation-ctl.js`):
+
+| Grupo | Automações | Hoje |
+|---|---|---|
+| **Farm** (no-loss alts) | 6 | ON |
+| **Trend** (SMA50/200) | 8 | ON |
+| **Baseline** (RSI BTC) | 2 | **off** ← seu canary natural |
+| **Paper** (research) | 16 · `sem risco` | ON |
+
+Cada linha mostra `N/M ON` (verde/amarelo/cinza). **Harvester/Grid/Scalp ficam de fora de propósito** (mortos/refutados — pra você não reativar sem querer).
+
+**Segurança (como você escolheu):** `window.confirm` sempre; **se o trading real estiver LIBERADO** (floor down), aparece aviso vermelho gritante ("vai NEGOCIAR COM DINHEIRO REAL") — exceto Paper, que nunca assusta. E o fundamental: **ativar só *arma* o grupo** — se o floor estiver TRAVADO, o guard por-ordem segura e **nada negocia**. Defesa em profundidade: floor (ir-ao-vivo) e ativação (armar) são alavancas separadas.
+
+**Arquitetura:** extraí `applyAutomationActive` como fonte única — o botão de grupo usa **exatamente** o mesmo caminho do start/stop por-linha (registra no BRAIN com as ações), então comporta-se idêntico. Endpoint atrás do `authMiddleware`.
+
+**Verificado:** `node --check` backend ✓ · agrupamento (regex vs 38 nomes reais) ✓ · **build do frontend ✓**.
+
+---
+
+⚠️ **Importante:** o feature **só funciona depois de deploy** (rebuild backend+frontend) — o container roda o código antigo (`COPY . .`). Então depois do gate passar, o passo pra te dar o botão de verdade é o **rebuild**. Aguardo o gate; te trago o veredito + a decisão de deploy.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
