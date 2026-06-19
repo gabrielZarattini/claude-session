@@ -3999,6 +3999,656 @@ Como o rebuild reinicia o backend do sistema real (mesmo congelado), deixo a dec
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como prosseguir com o deploy da Fatia 1? (rebuild do backend da prod + migration + setup — mainnet segue CONGELADO em qualquer caso, é 100% paper)"="Deploy + ativar paper agora", "Quer que eu já comite e suba pro master (trunk-based) após o deploy, ou só depois que o paper rodar um tempo?"="Commit + push após deploy OK". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(13:48:54)*
+
+
+## 🤖 Claude *(13:48:56)*
+
+Deploy autorizado (deploy + ativar + commit/push). Vou começar pelo **rebuild do backend** (a fonte é buildada na imagem) e, em paralelo, levantar os nomes das vars de credencial no `.env` (sem expor valores) para rodar o setup depois.
+
+## 🤖 Claude *(13:48:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend' 2>&1 | tail -25",
+  "description": "Rebuild and restart the backend service",
+  "timeout": 600000
+}
+```
+
+## 🤖 Claude *(13:48:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -oE '^[A-Z_]+=' .env | sort | grep -iE 'EMAIL|PASS|PWD|^EM=|^PW=|LOGIN|USER|TRADEUX' || echo \"(nenhuma var de credencial \u00f3bvia)\"",
+  "description": "List credential-related env var names from .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #10 DONE 0.7s
+> 
+> #11 [6/7] COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> #11 DONE 0.1s
+> 
+> #12 [7/7] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> #12 DONE 0.3s
+> 
+> #13 exporting to image
+> #13 exporting layers
+> #13 exporting layers 0.4s done
+> #13 writing image sha256:46c3ac5498dcdd7491acd39c9d2dcddb7e022c5b11b8ef6b34a1a2f7a99e22f6 done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 1.0s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ugrep: warning: cannot read .env: Permission denied
+> (nenhuma var de credencial óbvia)
+> ```
+
+## 🤖 Claude *(13:49:22)*
+
+
+## 🤖 Claude *(13:49:23)*
+
+Backend rebuildado e reiniciado (imagem `tradeux-backend` nova). Vou confirmar boot limpo, migration aplicada (tabelas criadas), HALT intacto e site 200 — e pegar os nomes das vars de credencial como gcrux.
+
+## 🤖 Claude *(13:49:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\necho \"=== boot/migrate/halt no log ===\"\ndocker compose logs backend --since 3m 2>&1 | grep -iE \"migrat|paper|riskState|App is running|Beholder Brain|Boot falhou|error|unhandled\" | tail -25\necho \"=== tabelas paper no DB ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"show tables like '\"'\"'paper%'\"'\"';\\\"\" 2>/dev/null || echo \"(nao consegui consultar tabelas)\"\necho \"=== creds var names no .env ===\"\ngrep -oE \"^[A-Z_]+=\" .env | grep -iE \"EMAIL|PASS|PWD|^EM=|^PW=|LOGIN|USER|TRADEUX\" || echo \"(nenhuma)\"\n'\necho \"=== site ===\"\ncurl -s -m6 -o /dev/null -w \"%{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Verify boot, migration tables, HALT, creds names, site"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot/migrate/halt no log ===
+> backend-1  | [TradeUX] Applying database migrations...
+> backend-1  | == 20260619000000-create-paper-tables: migrating =======
+> backend-1  | == 20260619000000-create-paper-tables: migrated (0.086s)
+> === tabelas paper no DB ===
+> paperOrders
+> paperPositions
+> === creds var names no .env ===
+> DB_USER=
+> DB_PWD=
+> DB_ROOT_PWD=
+> DEFAULT_SETTINGS_EMAIL=
+> DEFAULT_SETTINGS_PWD=
+> === site ===
+> 200
+> ```
+
+## 🤖 Claude *(13:49:54)*
+
+
+## 🤖 Claude *(13:49:55)*
+
+Migration aplicada limpa (`paperOrders` + `paperPositions` criadas), site 200, creds = `DEFAULT_SETTINGS_EMAIL`/`DEFAULT_SETTINGS_PWD`. Vou confirmar que o backend subiu por completo e o HALT segue intacto antes de rodar o setup.
+
+## 🤖 Claude *(13:49:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\necho \"=== ps ===\"; docker compose ps backend\necho \"=== boot completo + halt + erros ===\"\ndocker compose logs backend 2>&1 | grep -iE \"App is running|Beholder Brain has started|riskState.*inicializado|Boot falhou|Unhandled|Error:\" | tail -15\n'",
+  "description": "Confirm backend fully booted and HALT state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ps ===
+> NAME                IMAGE             COMMAND                  SERVICE   CREATED          STATUS          PORTS
+> tradeux-backend-1   tradeux-backend   "docker-entrypoint.s…"   backend   51 seconds ago   Up 50 seconds   3001/tcp
+> === boot completo + halt + erros ===
+> ```
+
+## 🤖 Claude *(13:50:11)*
+
+
+## 🤖 Claude *(13:50:13)*
+
+O backend está Up (logger escreve em `logs/system.log`, não no stdout — por isso o grep do docker logs veio vazio). Vou rodar o **setup** (que também prova que o login/servidor responde) e confirmar o HALT pelo `system.log`.
+
+## 🤖 Claude *(13:50:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\necho \"=== HALT / boot no system.log do container ===\"\ndocker compose exec -T backend sh -lc \"grep -iE \\\"riskState|App is running|Beholder Brain has started\\\" logs/system.log | tail -6\"\necho\necho \"=== setup-paper-consistency (cria INATIVAS) ===\"\ndocker compose exec -T backend sh -lc \"EM=\\\"\\$DEFAULT_SETTINGS_EMAIL\\\" PW=\\\"\\$DEFAULT_SETTINGS_PWD\\\" node scripts/setup-paper-consistency.js\"\n'",
+  "description": "Confirm HALT and run paper consistency setup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HALT / boot no system.log do container ===
+> info: 2026-06-18T13:47:05.779Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:02.136Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:11.142Z - [riskState] inicializado — env floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T13:49:15.095Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T13:49:15.367Z - App is running at 3001
+> 
+> === setup-paper-consistency (cria INATIVAS) ===
+> # Setup PAPER trilha CONSISTÊNCIA — BTCUSDT | compra RSI<25 (fora de bear) · vende RSI>75 · size 4×MIN_NOTIONAL
+> - monitor CANDLES BTCUSDT 1m já existe
+> - template "[PAPER] Consistencia Buy BTCUSDT" criado (id 25, MARKET)
+> - template "[PAPER] Consistencia Sell BTCUSDT" criado (id 26, MARKET)
+> - automação "[PAPER] Consistencia Buy BTCUSDT" criada (id 39, INATIVA)
+> - automação "[PAPER] Consistencia Sell BTCUSDT" criada (id 40, INATIVA)
+> 
+> PRONTO — monitor ATIVO, automações [PAPER] INATIVAS.
+> Para ATIVAR: garanta o REGIME de BTCUSDT (BTCUSDT já é computado) e dê start nas automações
+> "[PAPER] Consistencia Buy/Sell BTCUSDT". Acompanhe o P&L em GET /analysis/paper. Mainnet segue CONGELADO.
+> ```
+
+## 🤖 Claude *(13:51:09)*
+
+
+## 🤖 Claude *(13:51:12)*
+
+Setup criou as automações **id 39 (Buy)** e **id 40 (Sell)**, inativas; HALT confirmado `halted=true` no boot de hoje (13:49). Agora ativo as duas e leio o endpoint. Vou usar um script de ativação copiado pro container (evita inferno de aspas no `exec`).
+
+## 🤖 Claude *(13:51:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/paper-activate.js",
+  "content": "'use strict';\n// One-off: ativa as automa\u00e7\u00f5es [PAPER] de consist\u00eancia e l\u00ea o estado do ledger paper. Roda DENTRO do\n// container backend (l\u00ea DEFAULT_SETTINGS_EMAIL/PWD do env do container; fala com 127.0.0.1:3001).\nconst http = require('http');\nconst EM = process.env.DEFAULT_SETTINGS_EMAIL;\nconst PW = process.env.DEFAULT_SETTINGS_PWD;\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\n\n(async () => {\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.log('LOGIN_FAIL', login.status, JSON.stringify(login.body).slice(0, 120)); process.exit(1); }\n\n    // descobre os IDs por nome (robusto a re-run), com fallback nos IDs conhecidos\n    let ids = [];\n    for (let page = 1; page <= 60; page++) {\n        const r = await req('GET', `/automations?page=${page}`, token);\n        const rows = r.body && r.body.rows;\n        if (!Array.isArray(rows) || rows.length === 0) break;\n        rows.forEach(a => { if (typeof a.name === 'string' && a.name.startsWith('[PAPER]')) ids.push({ id: a.id, name: a.name, isActive: a.isActive }); });\n        if (rows.length < 10) break;\n    }\n    if (!ids.length) ids = [{ id: 39 }, { id: 40 }];\n\n    for (const a of ids) {\n        const r = await req('POST', `/automations/${a.id}/start`, token);\n        console.log(`start ${a.id} ${a.name || ''} -> ${r.status} ${JSON.stringify(r.body).slice(0, 100)}`);\n    }\n\n    const paper = await req('GET', '/analysis/paper', token);\n    console.log('\\nGET /analysis/paper ->', paper.status);\n    console.log(JSON.stringify(paper.body, null, 2).slice(0, 1200));\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/paper-activate.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:51:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose cp /tmp/paper-activate.js backend:/tmp/paper-activate.js\ndocker compose exec -T backend node /tmp/paper-activate.js\n'",
+  "description": "Copy activation script into container and run it"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying /tmp/paper-activate.js to tradeux-backend-1:/tmp/paper-activate.js
+>  tradeux-backend-1 Copied /tmp/paper-activate.js to tradeux-backend-1:/tmp/paper-activate.js
+> start 39 [PAPER] Consistencia Buy BTCUSDT -> 200 {"id":39,"name":"[PAPER] Consistencia Buy BTCUSDT","symbol":"BTCUSDT","indexes":"BTCUSDT:RSI_14_1m,B
+> start 40 [PAPER] Consistencia Sell BTCUSDT -> 200 {"id":40,"name":"[PAPER] Consistencia Sell BTCUSDT","symbol":"BTCUSDT","indexes":"BTCUSDT:RSI_14_1m"
+> 
+> GET /analysis/paper -> 200
+> {
+>   "generatedAt": "2026-06-19T13:51:29.871Z",
+>   "note": "Paper/Shadow: preço MINI_TICKER mainnet real + fee real; sem Binance; mainnet congelado.",
+>   "feeRate": 0.001,
+>   "totals": {
+>     "realizedPnl": 0,
+>     "unrealizedPnl": 0,
+>     "totalPnl": 0,
+>     "fees": 0
+>   },
+>   "strategies": [],
+>   "recentOrders": []
+> }
+> ```
+
+## 🤖 Claude *(13:52:31)*
+
+
+## 🤖 Claude *(13:52:34)*
+
+Tudo no ar e isolado: automações **39/40 ativas**, endpoint `GET /analysis/paper` respondendo 200 (ledger vazio — RSI ainda não cruzou 25/75), HALT intacto, mainnet congelado.
+
+Para **provar empiricamente** o round-trip (e não esperar horas por um extremo de RSI orgânico), vou rodar um smoke controlado: uma automação `[PAPER] Smoke` always-true que compra e vende uma vez no broker virtual, confirmo que registra no ledger **sem** tocar ordens reais/buckets, e **removo** tudo do smoke depois.
+
+## 🤖 Claude *(13:52:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/paper-smoke.js",
+  "content": "'use strict';\n// Smoke controlado do Paper Engine: cria automa\u00e7\u00f5es [PAPER] Smoke always-true (trilha \"smoke\") que compram e\n// vendem 1\u00d7 no broker virtual, prova o round-trip no ledger e LIMPA tudo (stop+delete autos+templates) no fim.\n// As linhas em paperOrders/paperPositions da trilha \"smoke\" s\u00e3o removidas depois via SQL (fora deste script).\nconst http = require('http');\nconst EM = process.env.DEFAULT_SETTINGS_EMAIL, PW = process.env.DEFAULT_SETTINGS_PWD;\nconst sleep = ms => new Promise(r => setTimeout(r, ms));\n\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\nconst smoke = arr => (arr || []).find(s => s.strategy === 'smoke');\n\n(async () => {\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.log('LOGIN_FAIL', login.status); process.exit(1); }\n\n    const mkTpl = (name, side, quantity) => req('POST', '/ordertemplates', token, {\n        name, symbol: 'BTCUSDT', type: 'MARKET', side, limitPrice: null, limitPriceMultiplier: 1,\n        stopPrice: null, stopPriceMultiplier: 1, quantity, quantityMultiplier: 4, icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    const buyTpl = await mkTpl('[PAPER] Smoke Buy BTCUSDT', 'BUY', 'MIN_NOTIONAL');\n    const sellTpl = await mkTpl('[PAPER] Smoke Sell BTCUSDT', 'SELL', 'MAX_WALLET');\n    console.log('templates:', buyTpl.status, sellTpl.status);\n\n    const mkAuto = (name, otid) => req('POST', '/automations', token, {\n        name, symbol: 'BTCUSDT', indexes: 'BTCUSDT:MINI_TICKER',\n        conditions: \"MEMORY['BTCUSDT:MINI_TICKER'].close>0\", isActive: true, logs: true, schedule: null,\n        actions: [{ type: 'ORDER', orderTemplateId: otid }],\n    });\n\n    // 1) COMPRA\n    const buyAuto = await mkAuto('[PAPER] Smoke Buy BTCUSDT', buyTpl.body.id);\n    console.log('buy auto:', buyAuto.status, 'id', buyAuto.body && buyAuto.body.id);\n    let bought = null;\n    for (let i = 0; i < 12 && !bought; i++) { await sleep(1500); const p = await req('GET', '/analysis/paper', token); bought = smoke(p.body.strategies); }\n    console.log('apos COMPRA -> smoke:', JSON.stringify(bought));\n\n    // 2) VENDA (fecha o round-trip)\n    const sellAuto = await mkAuto('[PAPER] Smoke Sell BTCUSDT', sellTpl.body.id);\n    console.log('sell auto:', sellAuto.status, 'id', sellAuto.body && sellAuto.body.id);\n    let sold = null;\n    for (let i = 0; i < 12; i++) { await sleep(1500); const p = await req('GET', '/analysis/paper', token); const s = smoke(p.body.strategies); if (s && s.realizedPnl !== 0 && s.openPositions === 0) { sold = s; break; } sold = s; }\n    console.log('apos VENDA  -> smoke:', JSON.stringify(sold));\n\n    // 3) LIMPEZA: stop+delete automa\u00e7\u00f5es e templates do smoke\n    for (const id of [buyAuto.body.id, sellAuto.body.id]) {\n        await req('POST', `/automations/${id}/stop`, token);\n        const d = await req('DELETE', `/automations/${id}`, token);\n        console.log('del auto', id, '->', d.status);\n    }\n    for (const id of [buyTpl.body.id, sellTpl.body.id]) {\n        const d = await req('DELETE', `/ordertemplates/${id}`, token);\n        console.log('del tpl', id, '->', d.status);\n    }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/paper-smoke.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:12)*
+
+
+## 🤖 Claude *(13:53:13)*
+
+Antes de rodar, capturo a contagem de ordens reais (pra provar isolamento), depois rodo o smoke.
+
+## 🤖 Claude *(13:53:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== baseline: ordens REAIS (count, maxid) antes do smoke ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select count(*), ifnull(max(id),0) from orders;\\\"\"\necho \"=== rodando smoke ===\"\ndocker compose cp /tmp/paper-smoke.js backend:/tmp/paper-smoke.js >/dev/null\ndocker compose exec -T backend node /tmp/paper-smoke.js\n'",
+  "description": "Capture real orders baseline and run paper smoke round-trip",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === baseline: ordens REAIS (count, maxid) antes do smoke ===
+> mysql: [Warning] Using a password on the command line interface can be insecure.
+> 259	259
+> === rodando smoke ===
+>  tradeux-backend-1 Copying /tmp/paper-smoke.js to tradeux-backend-1:/tmp/paper-smoke.js
+>  tradeux-backend-1 Copied /tmp/paper-smoke.js to tradeux-backend-1:/tmp/paper-smoke.js
+> templates: 201 201
+> buy auto: 201 id 41
+> apos COMPRA -> smoke: {"strategy":"smoke","realizedPnl":0,"unrealizedPnl":-0.01959075999999982,"openPositions":1,"fees":0.01959076,"buys":1,"sells":0,"wins":0,"symbols":{"BTCUSDT":{"qty":0.00031,"avgCost":63259.195999999996,"realizedPnl":0,"unrealizedPnl":-0.01959075999999982}},"totalPnl":-0.01959075999999982,"winRate":null}
+> sell auto: 201 id 42
+> apos VENDA  -> smoke: {"strategy":"smoke","realizedPnl":0,"unrealizedPnl":-0.01611566000000053,"openPositions":1,"fees":0.01959076,"buys":1,"sells":0,"wins":0,"symbols":{"BTCUSDT":{"qty":0.00031,"avgCost":63259.195999999996,"realizedPnl":0,"unrealizedPnl":-0.01611566000000053}},"totalPnl":-0.01611566000000053,"winRate":null}
+> del auto 41 -> 204
+> del auto 42 -> 204
+> del tpl 27 -> 204
+> del tpl 28 -> 204
+> ```
+
+## 🤖 Claude *(13:54:21)*
+
+
+## 🤖 Claude *(13:54:24)*
+
+O **BUY funcionou perfeitamente** (qty 0,00031 BTC @ 63259, fee real $0,0196, registrado no ledger). Mas o **SELL não disparou** — porque criei buy+sell *ambos always-true ao mesmo tempo*, e eles colidem no lock `_inflight` (mesma chave `smoke:BTCUSDT`): o buy ganha o lock todo tick e starva o sell. **Não é bug do caso real** (no trilho real, RSI<25 e RSI>75 são mutuamente exclusivos, nunca no mesmo tick) — é artefato do meu smoke.
+
+Vou provar o SELL isolado (só a venda, sem o buy competindo) e depois limpar a posição smoke.
+
+## 🤖 Claude *(13:54:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/paper-sell-proof.js",
+  "content": "'use strict';\n// Prova o SELL do Paper Engine SEM colis\u00e3o: a posi\u00e7\u00e3o smoke:BTCUSDT j\u00e1 existe (qty>0 da etapa anterior).\n// Cria s\u00f3 UMA automa\u00e7\u00e3o [PAPER] Smoke Sell always-true \u2192 fecha o round-trip \u2192 realizedPnl. Depois limpa.\nconst http = require('http');\nconst EM = process.env.DEFAULT_SETTINGS_EMAIL, PW = process.env.DEFAULT_SETTINGS_PWD;\nconst sleep = ms => new Promise(r => setTimeout(r, ms));\nfunction req(method, path, token, body) {\n    return new Promise((resolve) => {\n        const data = body ? JSON.stringify(body) : null;\n        const headers = { 'Content-Type': 'application/json' };\n        if (token) headers['authorization'] = token;\n        if (data) headers['Content-Length'] = Buffer.byteLength(data);\n        const r = http.request({ host: '127.0.0.1', port: 3001, method, path, headers, timeout: 15000 }, res => {\n            let d = ''; res.on('data', c => d += c);\n            res.on('end', () => { let j; try { j = JSON.parse(d); } catch { j = d; } resolve({ status: res.statusCode, body: j }); });\n        });\n        r.on('error', e => resolve({ status: 0, body: String(e.message) }));\n        r.on('timeout', () => { r.destroy(); resolve({ status: 0, body: 'timeout' }); });\n        if (data) r.write(data); r.end();\n    });\n}\nconst smoke = arr => (arr || []).find(s => s.strategy === 'smoke');\n(async () => {\n    const login = await req('POST', '/login', null, { email: EM, password: PW });\n    const token = login.body && login.body.token;\n    if (!token) { console.log('LOGIN_FAIL', login.status); process.exit(1); }\n\n    const before = smoke((await req('GET', '/analysis/paper', token)).body.strategies);\n    console.log('antes da venda -> smoke:', JSON.stringify(before));\n\n    const tpl = await req('POST', '/ordertemplates', token, {\n        name: '[PAPER] Smoke Sell BTCUSDT', symbol: 'BTCUSDT', type: 'MARKET', side: 'SELL',\n        limitPrice: null, limitPriceMultiplier: 1, stopPrice: null, stopPriceMultiplier: 1,\n        quantity: 'MAX_WALLET', quantityMultiplier: 1, icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    const auto = await req('POST', '/automations', token, {\n        name: '[PAPER] Smoke Sell BTCUSDT', symbol: 'BTCUSDT', indexes: 'BTCUSDT:MINI_TICKER',\n        conditions: \"MEMORY['BTCUSDT:MINI_TICKER'].close>0\", isActive: true, logs: true, schedule: null,\n        actions: [{ type: 'ORDER', orderTemplateId: tpl.body.id }],\n    });\n    console.log('sell tpl/auto:', tpl.status, auto.status, 'autoId', auto.body && auto.body.id);\n\n    let sold = null;\n    for (let i = 0; i < 12; i++) { await sleep(1500); const s = smoke((await req('GET', '/analysis/paper', token)).body.strategies); if (s && s.openPositions === 0) { sold = s; break; } sold = s; }\n    console.log('apos VENDA -> smoke:', JSON.stringify(sold));\n\n    await req('POST', `/automations/${auto.body.id}/stop`, token);\n    console.log('del auto', auto.body.id, '->', (await req('DELETE', `/automations/${auto.body.id}`, token)).status);\n    console.log('del tpl', tpl.body.id, '->', (await req('DELETE', `/ordertemplates/${tpl.body.id}`, token)).status);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/paper-sell-proof.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:54:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose cp /tmp/paper-sell-proof.js backend:/tmp/paper-sell-proof.js >/dev/null\ndocker compose exec -T backend node /tmp/paper-sell-proof.js\n'",
+  "description": "Run isolated SELL proof to close the smoke round-trip",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying /tmp/paper-sell-proof.js to tradeux-backend-1:/tmp/paper-sell-proof.js
+>  tradeux-backend-1 Copied /tmp/paper-sell-proof.js to tradeux-backend-1:/tmp/paper-sell-proof.js
+> antes da venda -> smoke: {"strategy":"smoke","realizedPnl":0,"unrealizedPnl":-0.004413159999998584,"openPositions":1,"fees":0.01959076,"buys":1,"sells":0,"wins":0,"symbols":{"BTCUSDT":{"qty":0.00031,"avgCost":63259.195999999996,"realizedPnl":0,"unrealizedPnl":-0.004413159999998584}},"totalPnl":-0.004413159999998584,"winRate":null}
+> sell tpl/auto: 201 201 autoId 43
+> apos VENDA -> smoke: {"strategy":"smoke","realizedPnl":-0.024313303099997796,"unrealizedPnl":0,"openPositions":0,"fees":0.0391964031,"buys":1,"sells":1,"wins":0,"symbols":{"BTCUSDT":{"qty":0,"avgCost":0,"realizedPnl":-0.024313303099997796,"unrealizedPnl":0}},"totalPnl":-0.024313303099997796,"winRate":0}
+> del auto 43 -> 204
+> del tpl 29 -> 204
+> ```
+
+## 🤖 Claude *(13:55:11)*
+
+
+## 🤖 Claude *(13:55:14)*
+
+**Round-trip provado** ✅ — SELL fechou a posição: `realizedPnl -0,0243 USDT`, `qty→0`, `sells:1`, fee total `$0,039` (compra+venda). Um round-trip *flat* perde ~2× a fee — **exatamente o comportamento honesto** (modela o fee-drag real). BUY e SELL ambos registram com preço+fee reais.
+
+Agora: verificar isolamento (zero ordem real criada), HALT intacto, limpar as linhas do smoke e confirmar o trilho real ativo.
+
+## 🤖 Claude *(13:55:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== ISOLAMENTO: ordens REAIS (deve seguir 259,259) ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select count(*), ifnull(max(id),0) from orders;\\\"\" 2>/dev/null\necho \"=== paperOrders por trilha (antes da limpeza) ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select strategy,count(*) from paperOrders group by strategy;\\\"\" 2>/dev/null\necho \"=== limpando smoke do ledger ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -e \\\"delete from paperOrders where strategy='\"'\"'smoke'\"'\"'; delete from paperPositions where strategy='\"'\"'smoke'\"'\"';\\\"\" 2>/dev/null\necho \"=== ledger paper apos limpeza (deve ser vazio) ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select (select count(*) from paperOrders) as orders, (select count(*) from paperPositions) as positions;\\\"\" 2>/dev/null\necho \"=== trilho REAL [PAPER] ativo? ===\"\ndocker compose exec -T db sh -lc \"mysql -u root -p\\\"\\$MYSQL_ROOT_PASSWORD\\\" \\\"\\${MYSQL_DATABASE:-beholder}\\\" -N -e \\\"select id,name,isActive from automations where name like '\"'\"'[PAPER]%'\"'\"';\\\"\" 2>/dev/null\necho \"=== HALT atual (system.log) ===\"\ndocker compose exec -T backend sh -lc \"grep -iE \\\"riskState\\\" logs/system.log | tail -1\"\n'",
+  "description": "Verify isolation, clean smoke rows, confirm real trilha active and HALT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ISOLAMENTO: ordens REAIS (deve seguir 259,259) ===
+> 259	259
+> === paperOrders por trilha (antes da limpeza) ===
+> smoke	2
+> === limpando smoke do ledger ===
+> === ledger paper apos limpeza (deve ser vazio) ===
+> 0	0
+> === trilho REAL [PAPER] ativo? ===
+> 39	[PAPER] Consistencia Buy BTCUSDT	1
+> 40	[PAPER] Consistencia Sell BTCUSDT	1
+> === HALT atual (system.log) ===
+> info: 2026-06-19T13:49:15.095Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> ```
+
+## 🤖 Claude *(13:56:01)*
+
+
+## 🤖 Claude *(13:56:05)*
+
+**Verificação completa** ✅
+- **Isolamento total:** ordens reais seguem em `259,259` — **zero ordem real** criada pelo paper.
+- Ledger smoke limpo → `0 orders, 0 positions` (pristine).
+- Trilho real `[PAPER] Consistencia Buy/Sell` (id 39/40) **ativo**.
+- **HALT intacto:** `halted=true`. Mainnet congelado.
+
+Task de verificação concluída. Agora o commit/push (você autorizou). Primeiro corrijo a posse dos arquivos (Edit do harness vira `ubuntu`), confiro o git e faço secret-scan.
+
+## 🤖 Claude *(13:56:05)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(13:56:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nFILES=\"backend/migrations/20260619000000-create-paper-tables.js backend/src/models/paperOrderModel.js backend/src/models/paperPositionModel.js backend/src/repositories/paperRepository.js backend/src/paperEngine.js backend/scripts/setup-paper-consistency.js backend/src/beholder.js backend/src/controllers/analysisController.js backend/src/routers/analysisRouter.js\"\necho \"=== chown dos arquivos tocados p/ gcrux (Edit do harness envenena p/ ubuntu) ===\"\nsudo -n chown gcrux-tradeux:gcrux-tradeux $FILES && echo \"chown OK\"\necho \"=== branch + status ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' rev-parse --abbrev-ref HEAD\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short\necho \"=== secret-scan dos arquivos (deve vir vazio) ===\"\ngrep -nE 'sk-[A-Za-z0-9]{20}|eyJ[A-Za-z0-9_-]{20}|SECRET_KEY|ACCESS_KEY|APISECRET|-----BEGIN' $FILES || echo \"limpo (nenhum segredo)\"",
+  "description": "Chown touched files, check git branch/status, secret-scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === chown dos arquivos tocados p/ gcrux (Edit do harness envenena p/ ubuntu) ===
+> chown OK
+> === branch + status ===
+> master
+>  M backend/src/beholder.js
+>  M backend/src/controllers/analysisController.js
+>  M backend/src/routers/analysisRouter.js
+> ?? backend/migrations/20260619000000-create-paper-tables.js
+> ?? backend/scripts/setup-paper-consistency.js
+> ?? backend/src/models/paperOrderModel.js
+> ?? backend/src/models/paperPositionModel.js
+> ?? backend/src/paperEngine.js
+> ?? backend/src/repositories/paperRepository.js
+> === secret-scan dos arquivos (deve vir vazio) ===
+> limpo (nenhum segredo)
+> ```
+
+## 🤖 Claude *(13:56:46)*
+
+
+## 🤖 Claude *(13:56:47)*
+
+Branch `master`, 9 arquivos backend, secret-scan limpo. Vou commitar (camada backend única) e conferir o remote.
+
+## 🤖 Claude *(13:56:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add \\\n  backend/migrations/20260619000000-create-paper-tables.js \\\n  backend/src/models/paperOrderModel.js \\\n  backend/src/models/paperPositionModel.js \\\n  backend/src/repositories/paperRepository.js \\\n  backend/src/paperEngine.js \\\n  backend/scripts/setup-paper-consistency.js \\\n  backend/src/beholder.js \\\n  backend/src/controllers/analysisController.js \\\n  backend/src/routers/analysisRouter.js\ngit -c safe.directory=\"*\" commit -F - <<\"EOF\"\nfeat(backend): Paper/Shadow Engine \u2014 Fatia 1 do Motor de Estrategias\n\nBroker virtual que roda automacoes [PAPER] ao preco MAINNET real (MINI_TICKER) +\nfee real (utils/feeCalc.computeNet), gravando num ledger proprio (paperOrders/\npaperPositions), SEM tocar a Binance, a tabela orders real, os buckets reais nem\na carteira real => research SOB HALT, zero risco (mainnet congelado intacto).\nResolve o medo do testnet sintetico: simulacao com a realidade da mainnet.\n\n- paperEngine.js: roteado por beholder.placeOrder (prefixo [PAPER]) ANTES do\n  calcQty (que leria a carteira real e lancaria no SELL); v1 1-lote por\n  trilha+simbolo; P&L realizado + nao-realizado.\n- migration dual-dialect paperOrders/paperPositions (idempotente, createTable puro).\n- GET /analysis/paper (read-only): P&L por trilha (realizado+nao-realizado, fee, win-rate).\n- setup-paper-consistency.js: trilha consistencia (mean-reversion RSI 25/75) em paper.\n- guard quote=USDT (must-fix do TL).\n\nGate: QA PASS c/ ressalvas + TL APPROVE c/ sugestoes. Verificado ao vivo: round-trip\nBUY/SELL registra com fee real; isolamento confirmado (0 ordens reais, orders=259);\nHALT intacto (halted=true).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\necho \"=== remote ===\"\ngit -c safe.directory=\"*\" remote -v | head -2\necho \"=== log -2 ===\"\ngit -c safe.directory=\"*\" log --oneline -2'",
+  "description": "Commit the Paper Engine slice and show remote/log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 22ba96b] feat(backend): Paper/Shadow Engine — Fatia 1 do Motor de Estrategias
+>  9 files changed, 494 insertions(+), 1 deletion(-)
+>  create mode 100644 backend/migrations/20260619000000-create-paper-tables.js
+>  create mode 100644 backend/scripts/setup-paper-consistency.js
+>  create mode 100644 backend/src/models/paperOrderModel.js
+>  create mode 100644 backend/src/models/paperPositionModel.js
+>  create mode 100644 backend/src/paperEngine.js
+>  create mode 100644 backend/src/repositories/paperRepository.js
+> === remote ===
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> === log -2 ===
+> 22ba96b feat(backend): Paper/Shadow Engine — Fatia 1 do Motor de Estrategias
+> 854bab5 feat(pnl): net fee-inclusive ciente do lado — taxa em BNB/qualquer asset -> USDT (item (c))
+> ```
+
+## 🤖 Claude *(13:57:03)*
+
+
+## 🤖 Claude *(13:57:05)*
+
+Commit `22ba96b` criado. Remote é SSH, mas gcrux não tem chave SSH — push via **token HTTPS** (`GITHUB_TOKEN_API` do `.env`), mascarando o token na saída.
+
+## 🤖 Claude *(13:57:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nTOKEN=$(grep \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\r\\n\")\nif [ -z \"$TOKEN\" ]; then echo \"TOKEN_VAZIO\"; exit 1; fi\ngit -c safe.directory=\"*\" push \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed \"s|${TOKEN}|***|g\"\necho \"=== confirm: local vs origin/master ===\"\ngit -c safe.directory=\"*\" ls-remote \"https://x-access-token:${TOKEN}@github.com/gabrielZarattini/tradeux.git\" refs/heads/master 2>&1 | sed \"s|${TOKEN}|***|g\"\ngit -c safe.directory=\"*\" rev-parse HEAD'",
+  "description": "Push commit to origin master via token, verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    854bab5..22ba96b  HEAD -> master
+> === confirm: local vs origin/master ===
+> 22ba96baa3b9be87a768a4ca6cd81bf6b26c858d	refs/heads/master
+> 22ba96baa3b9be87a768a4ca6cd81bf6b26c858d
+> ```
+
+## 🤖 Claude *(13:59:07)*
+
+
+## 🤖 Claude *(13:59:09)*
+
+Push confirmado: **origin/master = `22ba96b`** (854bab5..22ba96b). (Os 17 alertas do Dependabot são pré-existentes, não deste diff.)
+
+Agora selo o estado durável: HANDOFF + memória. Leio o MEMORY.md fresco pro anchor e aplico os edits.
+
+## 🤖 Claude *(13:59:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [TradeUX deploy topology](tradeux-deploy-topology.md) — app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)
+> 5	- [GitHub SSH key on ubuntu](github-ssh-key-on-ubuntu.md) — only ubuntu's key can pull the private repo; gcrux-tradeux has none; shell runs as ubuntu
+> 6	- [Testnet strategy validation goal](tradeux-agent-500k-validation.md) — GOAL PIVOT: meta agora é +3 BTC no testnet (era 500k); OCO + fix de P&L entregues; how to run the agent
+> 7	- [ShakeHands protocol](shakehands-protocol.md) — session continuity: /handson loads HANDOFF.md state, /handoff seals it; HANDOFF.md at ~/HANDOFF.md is the source of truth
+> 8	- [TradeUX orchestration model](tradeux-orchestration-model.md) — trunk-based direct-to-master; Claude orchestrates agents + owns approve-or-send-back (no user PR review); token in .env as GITHUB_TOKEN_API
+> 9	- [Git ownership gotcha](git-ownership-gotcha.md) — run ALL git/docker repo ops as gcrux-tradeux; git-as-ubuntu poisons .git ownership → chown .git to fix
+> 10	- [Agent token economics](tradeux-agent-token-economics.md) — journal at tradeux-agent/journal/*.jsonl; GET /api/agent/runs KPI endpoint; get_wallet bloat RESOLVIDO; agente agora é SERVIÇO supervisionado no compose (e97a85a, user:1011:1013) + card com badge STALE
+> 11	- [Logger per-category files](tradeux-logger-per-category-files.md) — logger(cat,…) grava logs/<cat>.log; monitor→M<id>.log, automação→A<id>.log; NÃO só system.log
+> 12	- [Regime gate](tradeux-regime-gate.md) — regimeJob grava MEMORY['<sym>:REGIME']; id2 (BUY) gateada por !=bear; gate é RUNTIME (não seedado) → reaplicar pós-reset
+> 13	- [Trend Following](tradeux-trend-following.md) — automação SMA 50/200; sinal TREND_CROSS da MAINNET via regimeJob; id6/id7 ATIVAS (453c7d6) + coordenação id2/id3 !=trend + id7 vende TREND_QTY (e5ef595); **TREND_QTY agora PERSISTIDO via derive-from-orders (`baf0f4b`, 2026-06-17: getTrendPosition espelha getFarmPosition, recompute idempotente, loadTrendPosition no boot) → posição do golden não orfana num restart; sem tabela/migration**
+> 14	- [Flow oracle](tradeux-flow-oracle.md) — fluxo do taker v1 (f833032): aggTrades mainnet → MEMORY['<sym>:FLOW']{imbalance,toxicity}; imbalance GATEIA a id2 (timing, 72b1a19); toxicity rebaixada p/ NOWCASTING não-forecast (c67d6bc — VPIN-forecast refutado em pesquisa); épico HFT DEVOLVIDO
+> 15	- [Farm-and-Funnel backtest](tradeux-farm-funnel-backtest.md) — grid no-loss+funil pra BTC backtestado: farm=baixo risco/alpha marginal, trend=motor de bull (+22%), +3 BTC só capturando ciclos; **Fases 2-3 ATIVAS (15 autos) + ARMADOR DA FASE 4 no ar (af22e7a): regimeJob na saída do bear → funnelJob.armFase4Observation (notify+pré-arma shadow+janela 4h de dados); Fase 4 live-buy AINDA não existe (gated por dado+QA/TL)**; funil em SHADOW
+> 16	- [Vault guard (SELL-BTC)](tradeux-vault-guard.md) — MCP place_order tem trava FAIL-CLOSED de SELL-BTC (9898bdf, pré-req (a) do flip ALLOW_TRADING FEITO); automationId descartado; (b) get_memory_indexes enxugado (2d01002, leanMemoryIndexes); agente NÃO é BTCUSDT-only (farma alts)
+> 17	- [Bear-capture research](tradeux-bear-capture-research.md) — deep research + backtest próprio (239cdc5): lucrar na QUEDA exige FUTURES e é FALSO POSITIVO no ciclo (+88% vs +338% do regime-gating atual); NÃO construir módulo de short; relatório ~/RESEARCH-bear-capture.md
+> 18	- [Harvester experiment](tradeux-harvester-experiment.md) — harvester de dislocação vault-safe (id22-25, bucket {qty,cost}, 7aebc26) vs grid nativo REJEITADO; canary +$2,1 ×4 no testnet; **DESATIVADO 2026-06-17 (id22-25 isActive=0, pré-req (b) do descongelamento) — MORTO no mainnet (edge era artefato testnet); NÃO reativar sem re-design (FAIR ancorado a high rolante + backtest)**
+> 19	- [Telegram notifications](tradeux-telegram-notifications.md) — Telegram FUNCIONA (causa raiz era chatId=username do bot → fix via PATCH /settings, cache!); telegramNotify util (c3463ac): TODAS as ordens notificam (NEW/FILLED/REJECTED/EXPIRED; CANCELED silencioso) + POST /agent/notify + tool MCP tradeux_notify_owner (one-way, não-gated); **agente recalibrado (12ceabe): doutrina por módulo (id7 corta perda POR DESENHO!), pt-BR obrigatório, kickoff injeta histórico anti-spam + cap 2/ciclo**; **dedup por ASSUNTO em CÓDIGO (`64752f0`, notifyDedup.js, Jaccard+guards, self-test no CI) + doutrina anti-ruído consolidada no bloco `DIVERGÊNCIAS ESPERADAS` do prompt (`37ed4b1`/`0b1554d`) — É AQUI que mora "o que NÃO reportar/notificar"**
+> 20	- [orderTemplate BRAIN cache](tradeux-ordertemplate-brain-cache.md) — editar template vivo no banco NÃO afeta automação rodando (BRAIN cacheia action.orderTemplate; placeOrder usa o cache); stop/start da automação pra aplicar; inspecionar via GET /beholder/brain
+> 21	- [Settings password incident](tradeux-settings-password-incident.md) — salvar Settings na UI zerava settings.password (autofill→re-hash) → travava login E agente em 401; CORRIGIDO+DEPLOYADO+verificado ao vivo (dc01c4d, 2 camadas; salvar Settings agora é seguro); resetar via db.query bcrypt parametrizado se precisar
+> 22	- [Mainnet go-live (Antigravity)](tradeux-mainnet-go-live.md) — sistema em MAINNET REAL (useTestnet=0) via dual-env do Antigravity; "nenhuma ordem" era ESPERADO (armed-waiting+gating+ledger frio+$148 USDT). **Must-fix de código RESOLVIDOS+DEPLOYADOS (96915e0, QA+TL): funil capado/OFF, ordersController vivo, reconcile isTestnet, teto de risco no backend.** Estado: **CONGELADO `TRADING_HALT=true`**. **Descongelamento EM CURSO (2026-06-17): (a) saque-OFF+IP FEITO+verificado; (b) harvester id22-25 OFF; (d) furo SELL-by-base do riskGuard FECHADO (`e27339a`); BLOQUEADORES `baf0f4b` (QA+TL+cético, deployado): teto MAX_ORDER_NOTIONAL 1500→300, trava FARM_SELLING v1 (BRAIN-independente; gate: não escalar size do Farm), TREND_QTY persistido via derive-from-orders. (e) cap diário −5% + kill-switch QUENTE FEITO+DEPLOYADO 2026-06-18 (`8ef1b69`+`1b639ce`, QA+TL, smoke vivo OK): `riskState` é fonte única do HALT (env floor/manual/daily-cap), guard lê por ordem (HALT agora QUENTE), `dailyCapJob` arma halt no drawdown de equity-tradeable −5% (Earn `LD*` excluído; baseline vivo $148,84/piso $141,40). **BOTÃO DE PÂNICO QUENTE NOVO: `POST /system/halt` (operator-only, JWT, sem MCP write tool) — não é mais só `docker compose stop backend`.** (c) ✅ P&L-BNB FEITO+DEPLOYADO 2026-06-18 (`854bab5`, QA+TL): `net` fee-inclusive ciente do lado (VENDA −taxa/COMPRA +taxa, taxa BNB→USDT) via helper único `utils/feeCalc.computeNet` nos 3 pontos + coluna `orders.commissionAsset` (migration rodou ao vivo); fecha o furo da taxa-em-BNB invisível no P&L. **🎯 TODOS os pré-reqs de CÓDIGO (a)-(e) FEITOS → falta só o GO DO DONO pro flip `TRADING_HALT=false` + canary de um-grupo-só; BNB-fee agora seguro de ligar na UI Binance.** HANDOFF não-selado
+> 23	- [1m scalping + Cockpit](tradeux-1m-scalping-and-cockpit.md) — 1m scalping REFUTADO (backtest −0,14% a −0,23%/trade); **Cockpit Intelligence DEPLOYADO** (brain computa analytics 1m read-only → agente lê/reporta; `/cockpit` + tool MCP; commit `1660871`); **fix −1013 calcQty backstop + Trend ×3** (`2528a5d`); auditoria adversarial → 7 pré-reqs p/ descongelar (Claude NÃO vira o HALT); GOLPE "Fable 5/Polymarket 205x" = referral scam, NÃO engajar; **COERÊNCIA DO COCKPIT iterada+DONE (`0b1554d`): freshen read-path, gate SYMBOL-AWARE (`8884bd3`: só BTC baseline é flow-gated, alt FARM não), reason interpola regime, painel bridges alinhado, doutrina GATE≠TRIGGER — fase de enumeração reativa ENCERRADA (TL verdict)**; **gate-FANTASMA baseline das alts ELIMINADO na fonte (`7ec6e75`, 2026-06-17: `baseline=null` p/ não-flow-gated, buyAllowed intacto, deployado+verificado) — agente parou de flagar "baseline BNB c/ RSI>25"**
+> 24	
+> ```
+
+## 🤖 Claude *(13:59:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-18** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 \ud83c\udfaf TODOS pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS \u2192 falta s\u00f3 GO do dono pro flip + canary de um-grupo-s\u00f3** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`854bab5`**",
+  "new_string": "> Updated: **2026-06-19** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS (falta GO do dono pro flip) \u00b7 NOVO: Motor de Estrat\u00e9gias Fatia 1 (Paper/Shadow Engine) NO AR \u2014 research sob HALT, ZERO risco** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`22ba96b`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:59:19)*
+
+
+## 🤖 Claude *(13:59:20)*
+
+HANDOFF header atualizado. Agora o seal, a memória nova e o índice.
+
+## 🤖 Claude *(13:59:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**Claude N\u00c3O vira o `TRADING_HALT`.** Mem\u00f3rias atualizadas: `tradeux-mainnet-go-live` (itens 9-10 + readiness) + \u00edndice `MEMORY.md`.",
+  "new_string": "**Claude N\u00c3O vira o `TRADING_HALT`.** Mem\u00f3rias atualizadas: `tradeux-mainnet-go-live` (itens 9-10 + readiness) + \u00edndice `MEMORY.md`.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-19 (Motor de Estrat\u00e9gias \u2014 Fatia 1: Paper/Shadow Engine no ar, research SOB HALT, zero risco)\n**Pedido do dono:** sistema que GERA/VALIDA/ATIVA estrat\u00e9gias por regime + base de conhecimento de padr\u00f5es/sinais + poder total do Beholder (todas as cryptos) com IA decidindo ordens. Plano aprovado (em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`): 4 camadas / 6 componentes / **3 trilhas** (consist\u00eancia risco-ajustada, frequ\u00eancia/verde-di\u00e1rio, ciclo macro) nos 4 s\u00edmbolos atuais. **Princ\u00edpio de lat\u00eancia:** quem decide ordem em ms \u00e9 o BRAIN (regras); o LLM \u00e9 o estrategista do ciclo lento \u2014 nunca no hot path. **Medo do dono:** research em testnet morre (pre\u00e7o sint\u00e9tico) \u2192 solu\u00e7\u00e3o = backtest + PAPER com pre\u00e7o+fee MAINNET reais. `Vivo==master==origin==22ba96b`. 4 containers up, `TRADING_HALT=true` intacto, 0 ordens mainnet. PRs: 0 (trunk-based; GO do dono em cada pouso).\n\n**Fatia 1 ENTREGUE+DEPLOYADA+VERIFICADA \u2014 Paper/Shadow Engine (commit `22ba96b`, 9 arquivos, gate QA+TL):**\n- `backend/src/paperEngine.js`: automa\u00e7\u00f5es com prefixo **`[PAPER]`** no name roteiam (em `beholder.placeOrder`, branch cir\u00fargico ANTES do `calcQty`) p/ um **broker VIRTUAL** \u2014 fill ao `MINI_TICKER.close` (pre\u00e7o MAINNET real) + **fee real** (`utils/feeCalc.computeNet`), gravando em `paperOrders`/`paperPositions`. NUNCA chama Binance/`assertWithinRisk`, NUNCA insere em `orders` real, NUNCA toca buckets (TREND_QTY/FARM_DCA) nem a carteira real \u2192 roda com o **mainnet CONGELADO intacto**. v1: 1-lote por trilha+s\u00edmbolo (compra s\u00f3 FLAT, vende posi\u00e7\u00e3o inteira), anti-stack por lock `_inflight`, guard quote=USDT.\n- migration `20260619000000-create-paper-tables` (dual-dialect, PK composta strategy+symbol, idempotente); endpoint **`GET /analysis/paper`** (read-only: P&L realizado+n\u00e3o-realizado, fee, win-rate por trilha); `scripts/setup-paper-consistency.js` (trilha **consist\u00eancia** = mean-reversion RSI 25/75, BTCUSDT 1m, em paper; idempotente, reaplic\u00e1vel p\u00f3s-`make nuke`).\n- **NO AR AGORA:** automa\u00e7\u00f5es `[PAPER] Consistencia Buy/Sell BTCUSDT` (**id39/id40**) ATIVAS em paper; ledger limpo. Acompanhar: `GET /analysis/paper`. (S\u00edmbolo via `PAPER_SYMBOL`; RSI via `PAPER_RSI_LO/HI`.)\n- **Verificado AO VIVO** (smoke controlado removido depois): round-trip BUY\u2192SELL registrou com fee real (round-trip flat = **\u22122\u00d7fee**, honesto = modela fee-drag); **ISOLAMENTO confirmado (ordens reais 259\u2192259, zero vazamento)**; HALT `halted=true` intacto.\n\n**\u26a0\ufe0f PR\u00c9-REQ DE FLIP NOVO (QA ALTO-1) \u2014 registrar p/ o descongelamento:** o gate de roteamento \u00e9 **NOMINAL** (prefixo `[PAPER]`). Hoje renomear uma automa\u00e7\u00e3o paper (tirar o prefixo) a tornaria REAL \u2014 mas o HALT bloqueia na fronteira (defesa-em-profundidade). **Antes de virar `TRADING_HALT=false`**, o prefixo vira a \u00daNICA prote\u00e7\u00e3o \u2192 adicionar coluna `mode`/`isPaper` na automa\u00e7\u00e3o OU guard no `calcQty`/`placeOrder` recusando template `[PAPER]` no caminho real. **Vira (f) na lista de pr\u00e9-reqs do flip.**\n\n**\u26a1 NEXT (resto do Bloco A do plano):** Fatia 2 = as 3 trilhas (consist\u00eancia \u2705; **macro** = trend SMA50/200; **frequ\u00eancia** = mean-reversion/breakout 5m/15m **GATED por backtest EV+** \u2014 1m \u00e9 \u2212EV refutado) + **painel de P&L comparativo** + **slippage/spread** no paper (fechar o vi\u00e9s otimista do `MINI_TICKER` mid antes de \"graduar\"). Depois **Bloco B** (Strategy Library + Regime Router + KB de padr\u00f5es) e **Bloco C** (scanner cross-s\u00edmbolo + estrategista LLM + gradua\u00e7\u00e3o canary com GO do dono). D\u00edvidas (TL/QA, n\u00e3o-bloqueantes): coluna `mode` (vs string m\u00e1gica); reconcilia\u00e7\u00e3o backtest\u2194paper; multi-lote/cash-accounting; `_inflight` \u00e9 mono-processo. Mem\u00f3ria nova `tradeux-strategy-engine`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:00:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md",
+  "content": "---\nname: tradeux-strategy-engine\ndescription: Motor de Estrat\u00e9gias (gerar/validar/ativar por regime) \u2014 Fatia 1 Paper/Shadow Engine NO AR (research sob HALT)\nmetadata:\n  type: project\n---\n\n\u00c9pico pedido pelo dono (2026-06-19): sistema que **gera, valida e ativa estrat\u00e9gias por regime** + **base de conhecimento de padr\u00f5es/sinais** + **poder total do Beholder** (todas as cryptos monitoradas) com **IA decidindo ordens**. Quer **3 trilhas simult\u00e2neas** \u2014 consist\u00eancia (risco-ajustada), frequ\u00eancia (verde di\u00e1rio), ciclo macro \u2014 nos 4 s\u00edmbolos atuais (BTC/LTC/BNB/ADA), e \"ver lucro real mesmo que pouco\" pra escalar a(s) vencedora(s).\n\n**Plano aprovado** (arquivo `/home/ubuntu/.claude/plans/velvet-forging-wren.md`): 4 camadas / 6 componentes (Paper Engine \u00b7 Backtest Harness gen\u00e9rico \u00b7 Strategy Library \u00b7 Regime Router \u00b7 KB de padr\u00f5es \u00b7 Scanner cross-s\u00edmbolo + estrategista LLM), em 3 blocos: **A PROVAR** (paper+backtest+3 trilhas+painel), **B SISTEMATIZAR** (library+router+KB), **C INTELIG\u00caNCIA+GRADUA\u00c7\u00c3O** (scanner+LLM+canary).\n\n**Princ\u00edpio de lat\u00eancia (corrige \"IA de baixa lat\u00eancia\"):** quem decide ordem em ms \u00e9 o **BRAIN do Beholder** (regras compiladas reagindo a cada tick de TODOS os s\u00edmbolos \u2014 j\u00e1 \u00e9 assim). O **LLM \u00e9 o estrategista do ciclo lento** (escolhe/ativa/calibra estrat\u00e9gias lendo a KB), NUNCA no hot path. \"Lucro di\u00e1rio garantido\" N\u00c3O \u00e9 honesto com ~$150 spot \u2014 o sistema MEDE qual trilha tem edge real (paper+backtest) antes de arriscar.\n\n**Medo do dono que isto resolve:** research em testnet morre (pre\u00e7o sint\u00e9tico n\u00e3o transfere). Solu\u00e7\u00e3o = **backtest (j\u00e1 usa klines mainnet+fee 0,1% em `backtest.js`) + PAPER com pre\u00e7o/fee MAINNET reais**. O testnet de execu\u00e7\u00e3o fica s\u00f3 p/ wiring (opcional).\n\n## Fatia 1 ENTREGUE+DEPLOYADA+VERIFICADA (commit `22ba96b`, gate QA PASS-c/ressalvas + TL APPROVE-c/sugest\u00f5es)\n**Paper/Shadow Engine** \u2014 broker VIRTUAL, ZERO risco, roda com o mainnet CONGELADO (`TRADING_HALT=true`) intacto:\n- `backend/src/paperEngine.js`: roteado por **prefixo `[PAPER]` no NAME** da automa\u00e7\u00e3o (`isPaperAutomation`). `beholder.placeOrder` desvia p/ `placePaperOrder` num **branch cir\u00fargico ANTES do `calcQty`** (calcQty/hasEnoughAssets leem a carteira REAL \u2014 s\u00f3 USDT \u2014 e um SELL paper lan\u00e7aria). Fill ao `MINI_TICKER.close` (pre\u00e7o mainnet real) + fee real via `utils/feeCalc.computeNet`; grava em `paperOrders`/`paperPositions`. NUNCA toca Binance/`orders`/buckets/carteira reais. v1: 1-lote por trilha+s\u00edmbolo (compra s\u00f3 FLAT, vende posi\u00e7\u00e3o inteira), lock `_inflight`, guard quote=USDT. A 2\u00aa palavra do name = TRILHA (`strategyOf`: `[PAPER] Consistencia Buy BTCUSDT`\u2192`consistencia`).\n- migration `20260619000000-create-paper-tables` (paperOrders + paperPositions PK composta strategy+symbol, dual-dialect idempotente); `GET /analysis/paper` (read-only, P&L por trilha); `scripts/setup-paper-consistency.js` (trilha consist\u00eancia mean-reversion RSI 25/75, BTCUSDT 1m).\n- **Como rodar:** `docker compose exec backend sh -lc 'EM=$DEFAULT_SETTINGS_EMAIL PW=$DEFAULT_SETTINGS_PWD node scripts/setup-paper-consistency.js'` \u2192 start das automa\u00e7\u00f5es `[PAPER]` \u2192 `GET /analysis/paper`. **NO AR:** id39 (Buy) / id40 (Sell) ativas em paper.\n- **Verificado ao vivo:** round-trip BUY\u2192SELL com fee real (flat = \u22122\u00d7fee, honesto); isolamento (ordens reais 259\u2192259); HALT intacto.\n\n## \u26a0\ufe0f Pr\u00e9-req de FLIP (QA ALTO-1) \u2014 N\u00c3O esquecer\nO gate de roteamento \u00e9 NOMINAL (prefixo `[PAPER]`). Hoje coberto pelo HALT (defesa-em-profundidade). **Antes de virar `TRADING_HALT=false`** o prefixo vira a \u00fanica prote\u00e7\u00e3o \u2192 adicionar coluna `mode`/`isPaper` na automa\u00e7\u00e3o OU guard no `calcQty`/`placeOrder` recusando `[PAPER]` no caminho real. \u00c9 item (f) dos pr\u00e9-reqs do flip em [[tradeux-mainnet-go-live]].\n\n## NEXT\nFatia 2 = 3 trilhas completas (macro = trend SMA50/200; frequ\u00eancia = 5m/15m GATED por backtest EV+, N\u00c3O 1m que \u00e9 \u2212EV) + painel comparativo + slippage/spread no paper (fechar vi\u00e9s do MINI_TICKER mid). Depois Bloco B (Strategy Library data-driven generalizando os `setup-*.js` + Regime Router + KB `patternInstances`/`patternStats` alimentada por backtest+paper) e Bloco C (scanner + LLM + canary). Reuso-chave: `backtest.js:156` j\u00e1 tem interface `signalFn` (harness \u00e9 extra\u00e7\u00e3o); 40+ indicadores + ~20 padr\u00f5es de candle j\u00e1 existem em `indexes.js`. Relacionados: [[tradeux-farm-funnel-backtest]] [[tradeux-regime-gate]] [[tradeux-trend-following]] [[tradeux-flow-oracle]] [[tradeux-1m-scalping-and-cockpit]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:00:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": " agente parou de flagar \"baseline BNB c/ RSI>25\"**",
+  "new_string": " agente parou de flagar \"baseline BNB c/ RSI>25\"**\n- [Strategy Engine / Paper](tradeux-strategy-engine.md) \u2014 Motor de Estrat\u00e9gias (gerar/validar/ativar por regime + KB de padr\u00f5es + scanner cross-s\u00edmbolo); **Fatia 1 = Paper/Shadow Engine NO AR** (`22ba96b`): broker VIRTUAL roteado por prefixo `[PAPER]` no name \u2192 fill ao MINI_TICKER+fee MAINNET reais em `paperOrders`/`paperPositions`, SEM tocar Binance/orders/buckets \u2192 research SOB HALT, zero risco; `GET /analysis/paper`; trilha consist\u00eancia id39/id40 ativa; **pr\u00e9-req de flip novo (f): gate `[PAPER]` \u00e9 nominal \u2192 coluna `mode`/guard antes de descongelar**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
