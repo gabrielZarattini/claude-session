@@ -8493,6 +8493,439 @@ Commit `a21dbae`, gate QA PASS + TL APPROVE, deploy sem tocar no money-path.
 
 Agora aproveita o jogo — e se quiser que eu **marque o gol** (1×0) no Telegram + cheque o 1m do BTC na hora do gol, é só falar. 🇧🇷🍿
 
+## 👤 User *(01:47:05)*
+
+Olha aqui a analise.:
+
+**✅ Análise completa do Tradeux (gabrielZarattini/tradeux).** 🔥
+
+É um **trading system completo e maduro** focado em crypto (principalmente Binance Spot/Futures), com automação pesada, estratégias avançadas, backtesting robusto e monitoramento em tempo real. Tem cara de produto profissional que você roda 24/7.
+
+### O que tá bom (pontos fortes)
+- **Estratégias sólidas**: Farm-funnel, DCA, grids, trend following, regime detection (bull/bear/sideways), harvester, scalping. Backtests extensos com resultados documentados (muitos JSON/MD em `backtest-results/`) mostram performance realista.
+- **Beholder (core de monitoramento)**: Arquivo gigante (`backend/src/beholder.js` ~48k linhas) — é o cérebro que gerencia tudo em tempo real: orders, positions, regimes, alerts via Telegram/Push/Email/SMS. Muito poderoso.
+- **Infra production-ready**: Node/Express + Sequelize (migrations/seeders completos), Docker + docker-compose (com Supabase?), Agenda.js para jobs, PM2, CI/CD no GitHub, scripts de setup/backtest.
+- **Frontend funcional**: React/Vite com shadcn-like (volt.css, charts, modais para orders/grids/automations). Tabelas de orders, monitors, wallet, cockpit visual.
+- **MCP + Agents**: Integração com `tradeux-mcp` e `tradeux-agent` — agentic trading com LLMs (Anthropic/OpenRouter), tools customizados. Isso é ouro pra automação inteligente.
+- **Segurança & Vault**: Foco em credentials, testnet, dedup de notificações.
+
+### O que pode explodir ou tá matando (riscos/dívidas técnicas)
+- **Backend monolítico**: Beholder.js é enorme — risco alto de complexidade, bugs em state management e performance em alta frequência.
+- **Dependência Binance pesada**: Muitos calls diretos via `utils/exchange.js`. Precisa de rate-limit agressivo, fallbacks e multi-exchange.
+- **DB**: Muitas migrations recentes (2026!) pra regimes, harvest, testnet — bom que tá evoluindo, mas precisa de atenção em schema (RLS?).
+- **Frontend legacy-ish**: Mistura de vanilla + libs antigas (Chartist, noUiSlider, SweetAlert). Pode modernizar pra React Flow ou Recharts + Tanstack Table.
+- **Custos & Riscos reais**: Trading ao vivo = dinheiro de verdade. Sem circuit breakers fortes, trailing stops robustos e position sizing dinâmico, uma black swan fode a conta.
+
+### Ouro prático (sugestões que movem o jogo)
+1. **Core Orchestration (prioridade)**:
+   - Extraia lógica do Beholder pra módulos menores (regimeService, funnelJob, flowJob já existem — refine).
+   - Adote event-driven forte com Redis queues ou Supabase Realtime pra escalar agents.
+   - Implemente **risk engine central** (max drawdown, correlation, volatility filters).
+
+2. **Melhorias Estratégicas**:
+   - **Regime Detection + Adaptive**: Já tem classifier — use pra switch automático entre farm-funnel (bull), scalping (high vol), defensive (bear).
+   - **Multi-timeframe + Ensemble**: Combine sinais de 15m/1h/4h com ML leve (não precisa de LLM pra tudo).
+   - **Harvest + Compounding**: Automatize reinvest de profits com buckets (tem migration recente — expanda).
+
+3. **Tech Debt Quick Wins**:
+   - Centralize exchange logic + add Bybit/OKX.
+   - Testes: Adicione mais unit/integration pros jobs críticos.
+   - Observabilidade: Prometheus/Grafana pros metrics (PnL, winrate, latency).
+   - Secrets: Tudo pro Vault + rotation automática.
+
+4. **Features Matadoras (próximos passos)**:
+   - **Paper Trading + Simulation Mode** avançado com slippage real.
+   - **Agent Swarm**: Vários agents competindo (um pra trend, um pra mean-reversion) com voting.
+   - **Dashboard 2.0**: Live P&L heatmap, equity curve, correlation matrix.
+   - **Export/Backtest UI**: Rode backtests direto no frontend com parâmetros.
+   - **MCP Full**: Use o agent pra otimizar params dinamicamente via prompts.
+
+5. **Monetização & Deploy**:
+   - SaaS: Versão cloud com copy-trading ou signals pagos.
+   - Affiliates: Compartilhamento de estratégias performáticas.
+   - Self-hosted + Docker one-click (já tem base boa).
+
+**Resumo sincero**: Tradeux é **muito mais maduro** que a maioria dos bots open-source. Tem alma de quant shop particular. O maior risco é complexidade + emotional trading ao vivo. Foque em **simplificar o core + hardening de risk management** nos próximos 15-30 dias.
+
+### Sinergia com Constellation
+- **Perfeita**: Use o canvas/orquestrador do Constellation pra visualizar pipelines do Tradeux (nodes = strategies, edges = regimes).
+- Agents do Constellation podem orquestrar múltiplas instâncias do Tradeux.
+- Vision-MCP pra análise de charts + news em tempo real alimentando decisions.
+- Monetização compartilhada (MCO coins pra access a estratégias premium).
+
+Manda agora:
+- Qual a **maior dor** atual (custos, performance, bug específico, deploy, nova estratégia)?
+- Ou foco em refatoração (ex: Beholder, risk engine, frontend).
+
+Tô pronto pra entregar código, plano de 30 dias ou arquitetura unificada dos dois projetos. Vamos transformar isso num império de trading agentic. 🚀 Qual o próximo passo?
+
+## 🤖 Claude *(01:48:13)*
+
+
+## 🤖 Claude *(01:48:14)*
+
+Vou reagir a isso com os pés no chão — porque essa análise é lisonjeira e em parte certa, mas tem **erros factuais e bastante hype** que, se você decidir em cima, te levam pro lado errado. Deixa eu cravar os números antes (line count do Beholder, futures, PM2, multi-exchange):
+
+## 🤖 Claude *(01:48:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== beholder.js linhas (an\u00e1lise alega ~48k) ===\"; wc -l backend/src/beholder.js\necho \"=== futuros? (an\u00e1lise alega Spot/Futures) ===\"; grep -rilE \"futures|fapi|usdm|coinm\" backend/src --include=*.js | head; grep -ric \"futures\" backend/src/utils/exchange.js\necho \"=== PM2? ===\"; grep -rl \"pm2\" . --include=*.js --include=*.json -i 2>/dev/null | grep -v node_modules | head\necho \"=== multi-exchange? (s\u00f3 binance?) ===\"; grep -rilE \"bybit|okx|kucoin|kraken\" backend/src 2>/dev/null | head || echo \"  (nenhum \u2014 s\u00f3 Binance)\"\necho \"=== risk engine / circuit breakers (an\u00e1lise alega 'sem') ===\"; ls backend/src/utils/riskState.js backend/src/dailyCapJob.js 2>/dev/null; grep -rl \"MAX_ORDER_NOTIONAL\\|assertWithinRisk\\|isHalted\" backend/src --include=*.js | head\necho \"=== testes ===\"; find . -name \"*.test.js\" -not -path \"*/node_modules/*\" 2>/dev/null\necho \"=== tamanho do maior arquivo backend ===\"; find backend/src -name \"*.js\" | xargs wc -l 2>/dev/null | sort -rn | head -4",
+  "description": "Fact-check claims: beholder size, futures, pm2, multi-exchange, risk infra, tests"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === beholder.js linhas (análise alega ~48k) ===
+> 1131 backend/src/beholder.js
+> === futuros? (análise alega Spot/Futures) ===
+> backend/src/utils/exchange.js
+> backend/src/utils/flowService.js
+> backend/src/utils/exchange.js:1
+> === PM2? ===
+> === multi-exchange? (só binance?) ===
+> === risk engine / circuit breakers (análise alega 'sem') ===
+> backend/src/dailyCapJob.js
+> backend/src/paperEngine.js
+> backend/src/riskState.js
+> backend/src/beholder.js
+> backend/src/utils/exchange.js
+> === testes ===
+> ./backend/scripts/lib/apiClient.test.js
+> === tamanho do maior arquivo backend ===
+>   9679 total
+>   1131 backend/src/beholder.js
+>    862 backend/src/utils/indexes.js
+>    839 backend/src/app-em.js
+> ```
+
+## 🤖 Claude *(01:48:59)*
+
+
+## 🤖 Claude *(01:49:19)*
+
+Cravado. A análise é **lisonjeira e acerta a vibe geral** (infra production-ready, MCP+agente é ouro, foco em risco é o caminho), mas os **dois "riscos" de manchete dela estão factualmente ERRADOS**, e metade das "features matadoras" ou já existe ou está morta. Não decida em cima dela. Os números:
+
+## ❌ Erros factuais (cravados agora no repo)
+
+| Alegação da análise | Realidade |
+|---|---|
+| "beholder.js **~48k linhas**, monólito" | **1.131 linhas.** O backend inteiro tem ~9,7k. Maior arquivo = o próprio beholder com 1,1k. **Não é monólito** — "extrair do monólito de 48k" é premissa falsa (errou 42×). |
+| "**Sem circuit breakers fortes**" | **Tem risk engine:** `riskState.js` + `dailyCapJob.js` (cap −5%) + `MAX_ORDER_NOTIONAL` ($300/ordem) + `assertWithinRisk` por-ordem + HALT/kill-switch + botão de pânico. Foi o foco desta semana. |
+| "crypto Spot/**Futures**" | É **Spot**. "Futures" só aparece no oráculo de fluxo (lê dados); **não há trade de futuros** — foi REFUTADO de propósito (shortar exige futuros e deu EV− no ciclo). |
+| "**PM2**", "Supabase?" | Sem PM2 (Docker compose). Supabase é override **opcional**; o vivo é MySQL. |
+
+## 🔁 "Features matadoras" que ela sugere — mas JÁ EXISTEM
+- **"Paper Trading + Simulation com slippage real"** → **já temos** (Paper Engine, 16 trilhas, fill+fee+slippage mainnet). Construído esta semana.
+- **"Regime Detection + Adaptive switch"** → **já temos** (`regimeClassifier` + gates por regime).
+- **"Risk engine central"** → **já feito**.
+- **"Dashboard 2.0 (equity/P&L)"** → **em curso** (modernização do cockpit, hoje).
+
+## 💀 "Estratégias sólidas" que na real estão MORTAS
+Ela lista harvester/grid/scalping como pontos fortes. Reality-check desta sessão:
+- **Harvester** → morto (edge era artefato de testnet).
+- **Grid** → rejeitado. **Scalp 1m** → refutado (−EV; o cockpit literalmente mostra `EV −0,17% / pHit 0,40`).
+- **Único edge real = Trend** (pequeno, mensal). "Performance realista" = **≈ flat com ~$148**, não "império".
+
+## 🚩 O hype pra NÃO engajar
+Multi-exchange (Bybit/OKX), SaaS, copy-trading, signals pagos, **"MCO coins", "monetização compartilhada", "império de trading agentic"** — com ~$148 e edge fino, isso é fantasia prematura. O **ML ensemble** vai contra a lição central da sessão (e do próprio cockpit): **repetição/complexidade NÃO cria edge quando o EV/trade é negativo**. E a parte "Constellation / MCO coins" tem o mesmo cheiro do hype de referral que a gente já marcou pra ignorar.
+
+## ✅ O que ela acerta e ainda não temos (justo dar crédito)
+- **Mais testes** — real: só existe 1 arquivo de teste (`apiClient.test.js`, que eu adicionei hoje). Cobertura é fraca.
+- **Observabilidade leve** (PnL/winrate/latency) — não temos; válido, embora prematuro nessa escala.
+
+---
+
+**A "maior dor" honesta** (resposta à pergunta dela): **não é dívida técnica nem refatorar o Beholder** (o código é pequeno e limpo). É **edge fino / não-comprovado** — o sistema *mede* que não tem alpha robusto nessa escala. A prioridade certa é **provar ou refutar o edge com o paper/canary ANTES de adicionar feature ou risco** — exatamente o que estamos fazendo agora (canary Farm + Paper Engine acumulando round-trips). Hardening de risco: já feito. Simplificar o core: já é simples.
+
+Resumo de uma linha: **a análise te vende um foguete; você tem um carro bem-feito de ~$148 que ainda precisa provar que anda.** Seguir o plano sóbrio (paper prova → escala o que tiver edge) vale mais que qualquer item daquela lista. Quer que eu continue no que está no ar, ou pegue um dos pontos *justos* (mais testes / observabilidade leve)?
+
+## 👤 User *(01:51:03)*
+
+Opa tivemos um ordem em 
+Order #7322952853 was updated as FILLED
+
+## 🤖 Claude *(01:51:22)*
+
+
+## 🤖 Claude *(01:51:24)*
+
+🎯 **Primeira ordem real do canary!** Esse é o momento de validação da plumbing com dinheiro de verdade. Deixa eu puxar o detalhe na hora — qual símbolo/lado/tamanho, qual automação, e se está dentro do esperado:
+
+## 🤖 Claude *(01:51:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/orderlook.js <<'EOF'\nconst ORDERID='7322952853';\n(async()=>{\n const om=require('./src/models/orderModel');\n const am=require('./src/models/automationModel');\n const o=await om.findOne({where:{orderId:ORDERID}});\n if(!o){console.log('ordem',ORDERID,'NAO encontrada por orderId; ultimas 6:');}\n else{const v=o.get({plain:true});\n   console.log('=== ORDEM',ORDERID,'===');\n   console.log(JSON.stringify({id:v.id,symbol:v.symbol,side:v.side,type:v.type,status:v.status,qty:v.quantity,avgPrice:v.avgPrice,limitPrice:v.limitPrice,net:v.net,commission:v.commission,commissionAsset:v.commissionAsset,automationId:v.automationId,isMaker:v.isMaker,createdAt:v.createdAt},null,1));\n   const notional = (parseFloat(v.avgPrice||v.limitPrice||0)*parseFloat(v.quantity||0));\n   console.log('notional ~$'+notional.toFixed(2));\n   if(v.automationId){const a=await am.findByPk(v.automationId);console.log('automa\u00e7\u00e3o:',a?`#${a.id} \"${a.name}\" (isActive=${a.isActive})`:'(n\u00e3o encontrada)');}\n   else console.log('automa\u00e7\u00e3o: SEM automationId (manual/agente?)');\n }\n console.log('=== ultimas 6 ordens ===');\n const recent=await om.findAll({order:[['id','DESC']],limit:6});\n for(const r of recent){const v=r.get({plain:true});console.log(`  id=${v.id} oid=${v.orderId} ${v.createdAt} ${v.symbol} ${v.side} ${v.type} ${v.status} qty=${v.quantity} @${v.avgPrice||v.limitPrice} net=${v.net} autoId=${v.automationId}`);}\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/orderlook.js' 2>&1 | head -40",
+  "description": "Look up the filled order details + automation + recent orders"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ORDEM 7322952853 ===
+> {
+>  "id": 260,
+>  "symbol": "LTCUSDT",
+>  "side": "BUY",
+>  "type": "LIMIT",
+>  "status": "FILLED",
+>  "qty": "0.22700000",
+>  "avgPrice": "43.89000000",
+>  "limitPrice": "44.02000000",
+>  "net": "9.97299303",
+>  "commission": "0.00022700",
+>  "commissionAsset": "LTC",
+>  "automationId": 9,
+>  "isMaker": false,
+>  "createdAt": "2026-06-20T01:46:00.000Z"
+> }
+> notional ~$9.96
+> automação: #9 "Farm Buy LTCUSDT" (isActive=true)
+> === ultimas 6 ordens ===
+>   id=260 oid=7322952853 Sat Jun 20 2026 01:46:00 GMT+0000 (Coordinated Universal Time) LTCUSDT BUY LIMIT FILLED qty=0.22700000 @43.89000000 net=9.97299303 autoId=9
+>   id=259 oid=205940 Mon Jun 15 2026 03:30:42 GMT+0000 (Coordinated Universal Time) ADAUSDT SELL MARKET FILLED qty=2461.10000000 @0.18040000 net=443.98244000 autoId=null
+>   id=258 oid=4944277 Mon Jun 15 2026 03:24:54 GMT+0000 (Coordinated Universal Time) BTCUSDT BUY MARKET FILLED qty=0.02013000 @65457.77000000 net=1317.66491010 autoId=null
+>   id=257 oid=4929845 Mon Jun 15 2026 03:24:54 GMT+0000 (Coordinated Universal Time) BTCUSDT BUY MARKET FILLED qty=0.02003000 @65474.00000000 net=1311.44422000 autoId=null
+>   id=256 oid=4948346 Mon Jun 15 2026 03:14:01 GMT+0000 (Coordinated Universal Time) BTCUSDT SELL MARKET CANCELED qty=0.02014000 @65692.84000000 net=1323.05379760 autoId=38
+>   id=255 oid=4934247 Mon Jun 15 2026 02:17:00 GMT+0000 (Coordinated Universal Time) BTCUSDT SELL MARKET CANCELED qty=0.02004000 @65752.00000000 net=1317.67008000 autoId=38
+> ```
+
+## 🤖 Claude *(01:52:15)*
+
+
+## 🤖 Claude *(01:52:26)*
+
+✅ **Verificado — é o canary funcionando exatamente como desenhado.** Detalhe da ordem `#7322952853`:
+
+| | |
+|---|---|
+| **Automação** | `#9 "Farm Buy LTCUSDT"` (isActive=true) — **o canary** ✓ |
+| **Trade** | LTCUSDT **BUY** LIMIT · 0,227 LTC @ **43,89** |
+| **Notional** | **$9,96** (= MIN_NOTIONAL×2, o tamanho do Farm) |
+| **Fill** | filled @43,89 vs limite 44,02 → **slippage POSITIVO na entrada** (entrou mais barato); taker, como desenhado |
+| **Fee** | 0,000227 LTC (~$0,01) — paga em LTC, registrada certinha (`commissionAsset=LTC`) |
+
+**Checagem de segurança — tudo dentro do esperado:**
+- ✅ **Alt (LTC), NÃO o cofre BTC** — o Farm nunca toca o cofre.
+- ✅ **$9,96 ≪ teto $300/ordem.**
+- ✅ É uma **COMPRA** (entrou em posição), pela automação certa do grupo armado.
+
+**Isso é a validação que você queria:** fill, fee e slippage **reais** confirmados, gravados corretamente, pela automação certa, no ativo certo, dentro dos limites. A plumbing passou no teste com dinheiro de verdade. 🎯
+
+**O que acontece agora:** o Farm segura **0,227 LTC** (custo ~$9,96+fee). A venda no-loss (`id10 "Farm Sell LTCUSDT"`) dispara quando o **bestBid do LTC cruzar ~$44,42** (avgPrice 43,89 + alvo 1,2%) → realiza um lucrinho. Se não subir, **segura sem perda realizada** (por desenho). Ou seja: o downside desse trade é capital preso em LTC, não perda.
+
+(Nota lateral: você recebeu a notificação genérica em inglês — a `telegramNotify` também deveria ter mandado a versão pt-BR `✅ Ordem executada: LTCUSDT BUY...`; se não chegou, tem um gap de notificação que vale checar depois.)
+
+Quer que eu **fique de olho na saída** (a venda no-loss da id10) e te avise quando o round-trip fechar — pra você ver o **primeiro P&L real** do canary, líquido de fee?
+
+## 👤 User *(01:54:22)*
+
+chegou sim... tem como prever esse comportamento de velas? parece que teve linha de suporte e resistencia estamos fazendo isso?
+
+## 🤖 Claude *(01:55:02)*
+
+
+## 🤖 Claude *(01:55:03)*
+
+Boa — **"chegou sim"** confirma que a notificação pt-BR funcionou (meu alerta de gap era falso, ótimo). Agora a pergunta boa: dá pra prever esse comportamento, e estamos fazendo suporte/resistência? Deixa eu confirmar no código quais indicadores a gente realmente calcula antes de responder:
+
+## 🤖 Claude *(01:55:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== indicadores em indexes.js (S/R? Bollinger? pivot?) ===\"\ngrep -niE \"bollinger|\\bBB\\b|support|resist|pivot|fibonacci|fractal|swing|donchian|keltner|VWAP|stoch|RSI|SMA|EMA|ADX|MACD|ATR\" backend/src/utils/indexes.js | head -30\necho \"=== alguma automa\u00e7\u00e3o/condition usa n\u00edvel de pre\u00e7o fixo (S/R)? ===\"\ngrep -rniE \"support|resist|pivot|breakout|nivel|level\" backend/src --include=*.js | grep -viE \"//|levels=|grid\" | head",
+  "description": "Check which indicators exist; any S/R or Bollinger"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === indicadores em indexes.js (S/R? Bollinger? pivot?) ===
+> 42:    RSI: 'RSI',
+> 43:    MACD: 'MACD',
+> 44:    SMA: 'SMA',
+> 45:    EMA: 'EMA',
+> 46:    STOCH_RSI: 'S-RSI',
+> 47:    BOLLINGER_BANDS: 'BB',
+> 49:    ADX: 'ADX',
+> 50:    ATR: 'ATR',
+> 59:    STOCH: 'STOCH',
+> 62:    VWAP: 'VWAP',
+> 65:    WEMA: 'WEMA',
+> 81:    HARVEST: 'HARVEST', // bucket TÁTICO do Harvester {qty,cost} (base asset + custo médio; app-em.updateHarvestPosition) — venda no-loss usa quantity='HARVEST_QTY' (lê .qty); SEPARADO do cofre de BTC. PERSISTIDO (tabela harvestPositions, recarregado no boot por app-em.loadHarvestPositions)
+> 82:    HARVEST_SELLING: 'HARVEST_SELLING', // trava da venda no-loss do Harvester: setada no place (beholder.placeOrder), liberada no estado TERMINAL da venda (app-em.updateHarvestPosition). Troca o edge-trigger por LEVEL-trigger sem oversell. Ausência = destravado (vende quando há lucro). NÃO persistida (reseta no boot; reconstruída se houver venda aberta)
+> 84:    FARM_SELLING: 'FARM_SELLING', // trava da venda no-loss do Farm de alts {orderId,at}: setada no place (beholder.placeOrder, qty='FARM_QTY'), liberada no estado TERMINAL por MATCH DE ORDERID (app-em.updateFarmPosition) — BRAIN-independente. Anti-empilhamento = SKIP no place se já em voo (NÃO via condition, sem migration/reload). Ausência = destravado. NÃO persistida (v1: sem reconstrução-no-boot → não escalar o size do Farm até adicionar loadFarmSellingLocks)
+> 90:        [indexKeys.RSI]: { params: 'period', name: 'RSI' },
+> 91:        [indexKeys.MACD]: { params: 'fast,slow,signal', name: 'MACD' },
+> 92:        [indexKeys.SMA]: { params: 'period', name: 'SMA' },
+> 93:        [indexKeys.EMA]: { params: 'period', name: 'EMA' },
+> 94:        [indexKeys.STOCH_RSI]: { params: 'd,k,rsi,stoch', name: 'Stochastic RSI' },
+> 95:        [indexKeys.BOLLINGER_BANDS]: { params: 'period,stdDev', name: 'Bollinger Bands (BB)' },
+> 97:        [indexKeys.ADX]: { params: 'period', name: 'ADX' },
+> 98:        [indexKeys.ATR]: { params: 'period', name: 'ATR' },
+> 102:        [indexKeys.KST]: { params: 'roc1,roc2,roc3,roc4,smaroc1,smaroc2,smaroc3,smaroc4,signal', name: 'KST' },
+> 107:        [indexKeys.STOCH]: { params: 'period,signal', name: 'Stochastic' },
+> 110:        [indexKeys.VWAP]: { params: 'none', name: 'VWAP' },
+> 113:        [indexKeys.WEMA]: { params: 'period', name: 'WEMA' },
+> 115:        [indexKeys.ICHIMOKU]: { params: 'conversion,base,span,displacement', name: 'Ichimoku' },
+> 160:        case indexKeys.ADX: return ADX(ohlc, ...params);
+> 161:        case indexKeys.ATR: return ATR(ohlc, ...params);
+> 191:        case indexKeys.BOLLINGER_BANDS: return bollingerBands(ohlc.close, ...params);
+> === alguma automação/condition usa nível de preço fixo (S/R)? ===
+> backend/src/beholder.js:635:    levels = parseInt(levels);
+> backend/src/beholder.js:637:    const priceLevel = (upperLimit - lowerLimit) / levels;
+> backend/src/beholder.js:695:    for (let i = 1; i <= levels; i++) {
+> backend/src/beholder.js:696:        const priceFactor = Math.floor((lowerLimit + (priceLevel * i)) / tickSize);
+> backend/src/beholder.js:702:            const previousLevel = targetPrice - priceLevel;
+> backend/src/beholder.js:703:            const previousLevelStr = previousLevel.toFixed(symbol.quotePrecision);
+> backend/src/beholder.js:706:                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestAsk<${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestAsk>=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestAsk>${previousLevelStr}`,
+> backend/src/beholder.js:711:            const nextLevel = targetPrice + priceLevel;
+> backend/src/beholder.js:712:            const nextLevelStr = nextLevel.toFixed(symbol.quotePrecision);
+> backend/src/beholder.js:715:                conditions: `MEMORY['${automation.symbol}:BOOK'].current.bestBid>${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].previous.bestBid<=${targetPriceStr} && MEMORY['${automation.symbol}:BOOK'].current.bestBid<${nextLevelStr}`,
+> ```
+
+## 🤖 Claude *(01:55:43)*
+
+
+## 🤖 Claude *(01:55:59)*
+
+Confirmado no código, então posso responder com precisão (não no achismo):
+
+**Prever o comportamento das velas 1m? Honestamente, não — e o próprio cockpit prova isso.** O painel Monte Carlo mostra a **mediana ≈ preço atual** (random-walk sem drift): no 1m, o próximo movimento é majoritariamente **ruído**. O que parece "linha de suporte/resistência clara" no teu print é em boa parte **viés de retrospectiva** — aquele fundo só vira "suporte" *porque* quicou; se tivesse rompido pra baixo, você chamaria o mesmo nível de "suporte que falhou". Em tempo real, antes do quique, era indistinguível de continuar caindo.
+
+**Estamos fazendo S/R? Não com linhas desenhadas** — confirmei: não calculamos suporte/resistência, pivôs nem Fibonacci. **MAS** o que a gente faz é o **primo espiritual** disso:
+- **RSI mean-reversion** (Farm compra dip `RSI<35`, Baseline `RSI<25`; vende topo `RSI>75`) = "comprar perto do fundo / vender perto do topo", só que definido por **momentum (RSI)**, não por nível de preço.
+- O **LTC que você acabou de comprar** foi literalmente isso: *comprar o dip*. É o mais perto de "comprar no suporte" que o sistema faz.
+- Temos **Bollinger Bands** disponível (o S/R *dinâmico* clássico — preço tende a reverter das bandas), mas as estratégias ativas hoje **não usam** — só RSI/SMA/regime/fluxo.
+
+**O pulo do gato honesto:** *ver* o repique ≠ *lucrar* com ele. Dois furos: (1) no 1m o RSI raramente chega ao extremo (no teu print o fundo provavelmente nem bateu RSI<35), então o gatilho nem dispara; (2) mesmo disparando, a **taxa come o repique** (lembra do paper: +$0,0143 em 4h, taxa levou 73%). O fundo é real; capturá-lo líquido de fee é que é difícil — é exatamente o que o paper/canary está medindo.
+
+**Se você quer explorar S/R de verdade**, o jeito certo (igual fizemos com frequência/harvester) é **backtestar/paper antes de arriscar**, não adicionar ao vivo na fé. Posso fazer dois caminhos — você escolhe:
+- 👁️ **Ver:** sobrepor **Bollinger + sinais RSI** no gráfico 1m ao vivo, pra você enxergar onde fica o nosso "S/R dinâmico" vs. onde você viu o suporte (te mostro na hora).
+- 🧪 **Testar:** backtestar uma estratégia tipo **Bollinger-reversion** ou **comprar-perto-da-mínima-rolante** nos dados reais + fee, e ver se tem EV+ (aposto que fino, mas a gente mede em vez de chutar).
+
+Qual prefere? E sigo de olho na saída no-loss do teu LTC.
+
+## 👤 User *(01:56:01)*
+
+Sim chegou no telegarm ✅ Ordem executada: LTCUSDT BUY qty=0.22700000 @ 43.89 (automação #9)
+
+## 🤖 Claude *(01:56:18)*
+
+
+## 🤖 Claude *(01:56:25)*
+
+Perfeito — então o pipeline de notificação está **confirmado ponta a ponta**: a `telegramNotify.notifyOrder` mandou a versão pt-BR certinha (a inglesa era de outro canal genérico). Meu alerta de "gap" foi falso alarme. ✅
+
+Na prática isso significa: **toda ordem real te avisa no Telegram** (NEW/FILLED/REJECTED/EXPIRED) — então você vai saber **na hora** quando a saída no-loss do LTC disparar (quando o bestBid cruzar ~$44,42 e fechar o primeiro round-trip real do canary, com o P&L líquido de fee).
+
+Estado atual, redondo:
+- 🟢 Canary Farm vivo, segurando **0,227 LTC** (custo ~$9,96), esperando o repique pra realizar — ou segura sem perda.
+- 🔔 Telegram cobrindo as ordens.
+- 🛡️ Proteções no ar (cap −5%, teto $300, pânico).
+
+Não precisa fazer nada agora — é esperar o mercado. Quando quiser, retomo o que ficou em aberto: o **overlay Bollinger+RSI** no gráfico (pra você ver nosso "S/R dinâmico") ou o **backtest de uma estratégia S/R**. Aproveita o jogo que eu fico de prontidão. 🇧🇷🍿
+
+## 👤 User *(01:57:27)*
+
+300 se eu só tenho 150 ?  isso ta muito errado
+
+## 🤖 Claude *(01:57:54)*
+
+
+## 🤖 Claude *(01:57:55)*
+
+Você está **certo em desconfiar** — boa pegada. Deixa eu confirmar o valor vivo e onde ele é setado antes de afirmar:
+
+## 🤖 Claude *(01:57:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== onde MAX_ORDER_NOTIONAL \u00e9 lido + default ===\"\ngrep -rnE \"MAX_ORDER_NOTIONAL\" backend/src --include=*.js\necho \"=== valor no .env (vivo) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -E \"MAX_ORDER_NOTIONAL|DAILY_CAP|TRADING_HALT\" /home/gcrux-tradeux/tradeux/.env' 2>/dev/null || echo \"(.env n\u00e3o leg\u00edvel direto)\"\necho \"=== valor que o backend REALMENTE usa (container env) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend printenv | grep -iE \"MAX_ORDER_NOTIONAL|DAILY_CAP\"' 2>/dev/null || echo \"(sem env expl\u00edcito \u2192 usa default do c\u00f3digo)\"",
+  "description": "Find MAX_ORDER_NOTIONAL value + where set"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde MAX_ORDER_NOTIONAL é lido + default ===
+> backend/src/utils/exchange.js:16://   MAX_ORDER_NOTIONAL_USDT=<n>  → teto de notional por ordem em USDT (0 = desligado). Cobre MARKET por
+> backend/src/utils/exchange.js:30:const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> backend/src/utils/exchange.js:31:const MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;
+> backend/src/utils/exchange.js:40:    if (MAX_ORDER_NOTIONAL_USDT > 0 && /USDT$/i.test(symbol || '')) {
+> backend/src/utils/exchange.js:50:        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {
+> backend/src/utils/exchange.js:51:            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} — BLOQUEADA.`;
+> backend/src/beholder.js:288:    // um resultado já-válido (mult>=~1.1 ou símbolo que floored acima de $5) não muda. O teto MAX_ORDER_NOTIONAL
+> === valor no .env (vivo) ===
+> MAX_ORDER_NOTIONAL_USDT=300
+> TRADING_HALT=true
+> === valor que o backend REALMENTE usa (container env) ===
+> MAX_ORDER_NOTIONAL_USDT=300
+> ```
+
+## 🤖 Claude *(01:58:38)*
+
+
+## 🤖 Claude *(01:58:50)*
+
+Confirmei: **`MAX_ORDER_NOTIONAL_USDT=300`** no `.env` (o backend usa esse valor). É o teto por-ordem do `riskGuard` no `exchange.js` — bloqueia qualquer ordem com notional > $300.
+
+**Você está certo de que faz pouco sentido — MAS calma, não é perigo, é só inútil.** A diferença importa:
+
+- 🛑 **Não dá pra perder $300 com $150.** Você fisicamente **não consegue** colocar uma ordem maior que seu saldo — a Binance rejeita por saldo insuficiente. Então esse teto de $300 **nunca dispara**; ele não está deixando passar nada perigoso. Nada de ruim aconteceu nem pode acontecer por causa dele.
+- ⚠️ **O problema é que, a $300, ele não protege NADA.** Um teto por-ordem só serve se for *menor* que o saldo — pra pegar um fat-finger / bug que tente mandar uma ordem absurda. A $300 num saldo de $150, ele é decorativo. Foi setado sem olhar pro tamanho real da conta (veio de 1500→300 no descongelamento, ainda alto demais).
+
+**As proteções que realmente trabalham hoje** são outras e estão certas: cap diário **−5% (~$7)**, tamanho do Farm **~$10/ordem**, o riskGuard por-ordem (que É esse teto, só mal-calibrado), e o HALT/pânico.
+
+**O conserto:** baixar o teto pra um valor *proporcional* — acima da maior ordem real (Farm ~$10, Trend ~$15) e bem abaixo do saldo. Eu recomendo **$25** (deixa o canary operar, mas barra qualquer ordem >$25 = ~17% da conta). 
+
+⚙️ É `.env` → precisa de **restart rápido do backend** (lido no boot). O canary volta em ~30s, **posição LTC e estado preservados** (persistem no banco/volume; o floor segue liberado).
+
+Quer que eu baixe pra **$25** e reinicie? Ou prefere outro número (ex.: $20 mais conservador, $30 com folga)?
+
+## 👤 User *(01:58:50)*
+
+ainda está  Shadow 1m — P(cont. ≥ custo) medindo.... fase 3
+
+## 🤖 Claude *(01:59:59)*
+
+
+## 🤖 Claude *(02:00:10)*
+
+Boa observação — e você pegou de novo o mesmo padrão: **um placeholder mostrando um estado que não é real.** Igual ao falso alarme do agente.
+
+**O que é "Shadow 1m — P(cont. ≥ custo)":** seria a probabilidade de um movimento de 1m **continuar** (no mesmo sentido) o suficiente pra **pagar a taxa** — ou seja, mede se existe edge de **momentum/continuação** (diferente da reversão que a gente já mede com EV/pHit). 
+
+**Por que está "medindo…" pra sempre:** ela nunca foi construída. O selo é ⚪ (`cx-seal todo` = "a construir / Fase 3"), e o texto `medindo… (Fase 3)` é **hardcoded** — não calcula nada. Sua irritação é justa: dá a entender que está medindo quando não está.
+
+**Duas saídas honestas (sua escolha):**
+1. 🔨 **Construir de verdade agora** — e o melhor: dá pra fazer **só no frontend**, das **120 velas 1m que o cockpit já busca** (zero backend, zero money-path). Definição: *de todas as velas 1m, em quantas a vela seguinte continuou no mesmo sentido por ≥ a taxa round-trip (0,20%)?* Vira um número real no lugar do "medindo…".
+2. 🗑️ **Remover o placeholder** — se não agrega, tiro a linha falsa e pronto.
+
+**Recomendo construir** (é barato e deixa o cockpit honesto), **mas com expectativa calibrada:** vai dar **baixo** — continuação de 1m raramente paga a taxa (bate com tudo que medimos: EV −0,17%, pHit 0,40, scalp 1m refutado). O valor da Fase 3 não é "achar edge"; é **mais um número honesto provando que o 1m não paga** — fecha o quadro.
+
+Quer que eu **construa agora** (frontend-only) ou **remova**?
+
+⏳ E lembrando que ficou pendente: baixar o **teto por-ordem de $300 → $25** (+ restart rápido). Posso fazer os dois juntos se topar.
+
+## 👤 User *(02:00:12)*
+
+refatore tudo para não ter mais coisas assim
+
 ---
 
 %% --- PROJECT METADATA START --- %%
