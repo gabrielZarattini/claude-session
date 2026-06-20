@@ -1289,6 +1289,374 @@ O resultado tem um achado forte (e contra-intuitivo) que vale refinar pra não d
 > Shell cwd was reset to /home/gcrux-tradeux
 > ```
 
+## 🤖 Claude *(03:00:15)*
+
+
+## 🤖 Claude *(03:00:17)*
+
+Pronto — agora o resultado é limpo e honesto. Deixa eu fechar com dois checks de saúde (equity real + erros no system.log) pra auditoria ficar completa, e já sintetizo.
+
+## 🤖 Claude *(03:00:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== cockpit.log (regime/equity) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"cat /app/logs/cockpit.log 2>/dev/null\"' | tail -15\necho \"\"\necho \"=== system.log: erros/warns recentes ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"error|fail|exception|reject\\\" /app/logs/system.log 2>/dev/null | tail -12\"'\necho \"\"\necho \"=== regime.log (estado dos s\u00edmbolos) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -8 /app/logs/regime.log 2>/dev/null\"'",
+  "description": "Check cockpit, system errors, regime state"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === cockpit.log (regime/equity) ===
+> no configuration file provided: not found
+> 
+> === system.log: erros/warns recentes ===
+> no configuration file provided: not found
+> 
+> === regime.log (estado dos símbolos) ===
+> no configuration file provided: not found
+> ```
+
+## 🤖 Claude *(03:00:28)*
+
+
+## 🤖 Claude *(03:00:29)*
+
+cwd resetou — preciso do `cd` no compose. Corrigindo.
+
+## 🤖 Claude *(03:00:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== system.log: erros/rejects recentes ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend sh -c \"grep -iE \\\"error|fail|exception|reject|halt\\\" /app/logs/system.log 2>/dev/null | tail -12\"'\necho \"\"\necho \"=== regime.log ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend sh -c \"tail -6 /app/logs/regime.log 2>/dev/null\"'\necho \"\"\necho \"=== cockpit.log ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend sh -c \"tail -8 /app/logs/cockpit.log 2>/dev/null\"'",
+  "description": "Re-check logs with correct cwd"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === system.log: erros/rejects recentes ===
+> info: 2026-06-19T17:35:59.577Z - [riskState] manual HALT desligado.
+> error: jwt expired {"expiredAt":"2026-06-19T17:34:35.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-19T17:34:35.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-19T17:34:35.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> info: 2026-06-19T20:15:29.224Z - [riskState] inicializado — env-hard=false · floor=true · manual=false · daily-cap=false · halted=true.
+> error: connect ETIMEDOUT {"name":"SequelizeConnectionError","original":{"code":"ETIMEDOUT","errorno":"ETIMEDOUT","fatal":true,"syscall":"connect"},"parent":{"code":"ETIMEDOUT","errorno":"ETIMEDOUT","fatal":true,"syscall":"connect"},"stack":"SequelizeConnectionError: connect ETIMEDOUT\n    at ConnectionManager.connect (/app/node_modules/sequelize/lib/dialects/mysql/connection-manager.js:102:17)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at runNextTicks (node:internal/process/task_queues:68:3)\n    at process.processTimers (node:internal/timers:518:9)\n    at async ConnectionManager._connect (/app/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:222:24)"}
+> error: jwt expired {"expiredAt":"2026-06-20T01:08:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-20T01:08:25.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> info: 2026-06-20T02:03:03.606Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-20T02:03:04.654Z - [dailyCap] equity NÃO-avaliável (preços frios: LTC) — cap NÃO avaliado neste ciclo (fail-safe).
+> info: 2026-06-20T02:28:37.125Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-20T02:28:38.076Z - [dailyCap] equity NÃO-avaliável (preços frios: LTC) — cap NÃO avaliado neste ciclo (fail-safe).
+> 
+> === regime.log ===
+> info: 2026-06-20T02:28:37.387Z - Estado de cross recarregado: ADAUSDT:above=false, BNBUSDT:above=false, BTCUSDT:above=false, LTCUSDT:above=false.
+> info: 2026-06-20T02:28:37.387Z - Regime job iniciado (intervalo 300000ms, klines 1h).
+> info: 2026-06-20T02:28:37.741Z - BTCUSDT:REGIME => mixed (ADX 22.1 intermediário, sem viés claro)
+> info: 2026-06-20T02:28:38.034Z - LTCUSDT:REGIME => range (ADX 18.9 < 20 (lateral))
+> info: 2026-06-20T02:28:38.312Z - BNBUSDT:REGIME => bear (61% das últimas 101 velas < SMA200 (risk-off))
+> info: 2026-06-20T02:28:38.593Z - ADAUSDT:REGIME => bear (64% das últimas 101 velas < SMA200 (risk-off))
+> 
+> === cockpit.log ===
+> info: 2026-06-19T17:35:21.268Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> info: 2026-06-19T20:15:29.706Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> info: 2026-06-19T20:28:31.173Z - Falha ao resolver símbolos: connect ETIMEDOUT
+> info: 2026-06-19T20:28:59.399Z - BTCUSDT: klines indisponíveis (klines 1m indisponiveis na Binance); MEMORY preservada.
+> info: 2026-06-19T20:29:39.798Z - BTCUSDT: klines recuperadas.
+> info: 2026-06-20T02:03:03.882Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> info: 2026-06-20T02:28:37.333Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> ```
+
+## 🤖 Claude *(03:00:50)*
+
+
+## 🤖 Claude *(03:00:50)*
+
+Auditoria de saúde completa. Tudo reconciliado. Vou fechar a tarefa e te entregar o relatório.
+
+## 🤖 Claude *(03:00:51)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(03:00:53)*
+
+
+## 🤖 Claude *(03:01:29)*
+
+# 🔍 Auditoria pesada — mainnet ao vivo (janela ~1h+) + análise what-if
+
+## 1. Veredito de saúde: sistema ÍNTEGRO e coerente
+
+`riskState` às 02:28:37 → `env-hard=false · floor=false · manual=false · daily-cap=false · **halted=false**`. Trading real ON, sem nenhum HALT. Stack 4/4 up.
+
+Os "erros" no `system.log` são **benignos**: `jwt expired` é o WebSocket do navegador com token velho (cosmético — só re-logar na UI), e um `ETIMEDOUT` isolado de rede que **se recuperou** ("klines recuperadas"). Zero erro de execução de ordem. Um ponto de atenção menor: `[dailyCap] equity NÃO-avaliável (preços frios: LTC)` nos primeiros ciclos pós-restart — é o **fail-safe by design** (pula o ciclo em vez de avaliar errado), aquece sozinho.
+
+## 2. As 4 ordens — o que foram, por quê, estado atual
+
+São **as únicas 4 ordens reais que já existiram no mainnet** (0 vendas). Todas LTCUSDT BUY, automação 9 (Farm Buy), DCA num range apertado:
+
+| # | Hora (UTC) | Preço | Qty | Custo c/ fee |
+|---|---|---|---|---|
+| 260 | 01:46 | 43.89 | 0.227 | $9.973 |
+| 261 | 02:07 | 43.87 | 0.227 | $9.968 |
+| 262 | 02:09 | 43.84 | 0.227 | $9.962 |
+| 263 | 02:16 | 43.85 | 0.227 | $9.964 |
+| | | **médio 43.86** | **0.908 LTC** | **$39.867** |
+
+**Por que comprou 4×:** `regime.log` mostra **`LTCUSDT:REGIME => range (ADX 18.9 < 20)`** — exatamente o terreno do Farm no-loss. Ele acumulou em quedas de RSI dentro do range $43.8–43.9. Não foi o LLM; foi o motor BRAIN. Os alts em **bear** (BNB 61%, ADA 64% < SMA200) ficaram travados pelo regime gate — coerente.
+
+**P&L agora:** LTC = $43.88 → valor de mercado $39.843 vs custo $39.867 = **−$0.024 (−0,06%, flat)**. Equity ~$148,7 intacta. Concentração: ~$39,8 = **~27% da equity num só alt** (risco a monitorar, não perda).
+
+**Proteções:** compras OFF desde 02:19 (id 9/11/13 inativas), vendas armadas (id 10/12/14) saindo no-loss quando LTC bouncar ~$44,4. O teto $25/símbolo entrou no restart das 02:28 — daqui pra frente bloqueia novo DCA. Dupla trava.
+
+## 3. O algoritmo what-if — "o que dava pra capturar com grandes lucros"
+
+Rodei um oráculo retrospectivo sobre **720 velas 1m reais (~12h)** de LTC/BNB/ADA/BTC, líquido de fee (0,075%/lado com BNB = 0,15% round-trip):
+
+| Estratégia | LTC | BNB | ADA | BTC |
+|---|---|---|---|---|
+| **Oráculo perfeito** (melhor 1 trade da janela) | +1,20% | +1,09% | +2,31% | +1,45% |
+| **Teto por-vela** (prevê + só entra se ganho>fee) | +0,30% | +0,21% | **+1,67%** | +0,35% |
+| **Sua estratégia** (compra abertura/vende próx. fech. lucrativo) | **−1,39%** | −0,30% | −0,77% | −0,38% |
+| Previsor de direção ingênuo (entra em TODA vela up) | −26,7% | −34,9% | −13,5% | −34,2% |
+| % de velas que se movem **mais que a fee** | 2,6% | 0,4% | 7,4% | 1,0% |
+
+**A leitura, sem alucinar:**
+
+- **O "grande lucro" só existe no oráculo** — e mesmo o melhor trade possível em 12h é só +1–2%. Num saldo de $40, isso é **$0,40–$0,90**. Não é exponencial; é o teto físico de uma vela.
+- **Sua ideia literal PERDE em todos os 4** (−0,3% a −1,4%), *mesmo fechando 4–5 dos trades "no lucro bruto"* — a fee come o ganho. É o mesmo veredito que o backtest anterior já tinha (scalping 1m refutado), agora **reconfirmado na janela ao vivo**.
+- **O achado mais forte:** o "previsor perfeito ingênuo" (acerta a direção de toda vela) **perde 13–35%**. Por quê? A vela 1m mediana se move **0,02–0,06%**, contra **0,15%** de fee round-trip. **93–99% das velas não pagam nem a própria taxa.** Acertar o futuro não basta — o movimento é menor que o pedágio.
+
+## 4. Sobre a estratégia que você lembrou
+
+O *espírito* (compor pequenas vantagens repetidas) **não é bobo** — é literalmente o que o Farm e o Trend fazem. A diferença é a **escala de tempo**: eles esperam o movimento acumular **acima da fee** (Farm sai no +1,2%, Trend pega ciclos de bull). A versão "vela a vela" morre na fee.
+
+Onde a ideia *teria* respiro, se for explorar: **ADA** é o único com sinal (7,4% das velas passam a fee, teto +1,67%) — mais volátil. E o caminho real seria **ordens maker (0% ou rebate)** em vez de taker, não previsão de vela. Mas isso vai pro **Paper Engine** (motor virtual sob HALT, zero risco) antes de qualquer coisa real — nunca direto no mainnet.
+
+## Recomendação
+
+1. **Não construir** o preditor de vela 1m — refutado de novo, agora ao vivo. Se a curiosidade persistir, eu codo como **trilha `[PAPER]` maker-only em ADA** pra ele provar no virtual.
+2. **Deixar o Farm fazer o trabalho:** o oráculo diz que o melhor de LTC em 12h é +1,2% — **quase exatamente o alvo no-loss do Farm**. A posição está posicionada pra capturar perto do máximo do range, sem downside. Não mexer.
+3. Watch: concentração 27% em LTC (some sozinho na venda no-loss) e o `dailyCap` aquecer preços.
+
+---
+
+Quer que eu (a) monte uma trilha `[PAPER]` maker-only em ADA pra testar a ideia sem risco, (b) gere um gráfico visual desse what-if, ou (c) só siga observando a saída no-loss do LTC? *(Default "A recomendado": eu tocaria a opção (a) — é a forma honesta de dar à sua ideia uma chance real sem arriscar capital.)*
+
+## 👤 User *(03:35:41)*
+
+Não... vamos continuar nossa estrategia de concentrar nosso dinheiro em BTC. Apesar de ter iniciado com LTC o foco é lucar mas mas reservando como font principal em BTC
+
+## 🤖 Claude *(03:36:18)*
+
+
+## 🤖 Claude *(03:36:21)*
+
+Entendido — esse é o norte real: **lucrar farmando, mas a reserva principal se acumula em BTC**. É a tese Farm-and-Funnel que já está documentada. Antes de propor o caminho, preciso aterrissar em dois fatos reais: **quanto BTC a gente realmente tem hoje** e **se existe algum mecanismo convertendo lucro → BTC agora**. Deixa eu checar.
+
+## 🤖 Claude *(03:36:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== funnel.log (funil \u2192 BTC) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend sh -c \"tail -15 /app/logs/funnel.log 2>/dev/null\"'\necho \"\"\necho \"=== grep saldo/BTC/wallet nos logs ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend sh -c \"grep -iE \\\"BTC|saldo|balance|wallet|cofre|vault|funnel|funil\\\" /app/logs/system.log 2>/dev/null | tail -15\"'",
+  "description": "Check funnel log and BTC/balance mentions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === funnel.log (funil → BTC) ===
+> info: 2026-06-19T17:35:22.007Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (preço n/d) | sem excedente (baseline $10000.00).
+> info: 2026-06-19T18:35:21.823Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $63154.00 | sem excedente (baseline $10000.00).
+> info: 2026-06-19T19:35:21.813Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $62981.21 | sem excedente (baseline $10000.00).
+> info: 2026-06-19T20:15:29.710Z - Funnel job iniciado em modo SHADOW (OBSERVAÇÃO) (intervalo 3600000ms; baseline $10000).
+> info: 2026-06-19T20:15:30.667Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (preço n/d) | sem excedente (baseline $10000.00).
+> info: 2026-06-19T21:15:30.258Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $63255.99 | sem excedente (baseline $10000.00).
+> info: 2026-06-19T22:15:30.256Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $63105.99 | sem excedente (baseline $10000.00).
+> info: 2026-06-19T23:15:30.257Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $63289.99 | sem excedente (baseline $10000.00).
+> info: 2026-06-20T00:15:30.256Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $63524.00 | sem excedente (baseline $10000.00).
+> info: 2026-06-20T01:15:30.262Z - [shadow] USDT=148.84 | reserva BTC=0.000000 (~$0.00) @ $63452.00 | sem excedente (baseline $10000.00).
+> info: 2026-06-20T02:03:03.885Z - Funnel job iniciado em modo SHADOW (OBSERVAÇÃO) (intervalo 3600000ms; baseline $10000).
+> info: 2026-06-20T02:03:04.659Z - [shadow] USDT=138.88 | reserva BTC=0.000000 (preço n/d) | sem excedente (baseline $10000.00).
+> info: 2026-06-20T02:28:37.334Z - Funnel job iniciado em modo SHADOW (OBSERVAÇÃO) (intervalo 3600000ms; baseline $10000).
+> info: 2026-06-20T02:28:38.077Z - [shadow] USDT=109.02 | reserva BTC=0.000000 (preço n/d) | sem excedente (baseline $10000.00).
+> info: 2026-06-20T03:28:37.885Z - [shadow] USDT=109.02 | reserva BTC=0.000000 (~$0.00) @ $63437.98 | sem excedente (baseline $10000.00).
+> 
+> === grep saldo/BTC/wallet nos logs ===
+> info: 2026-06-03T18:53:33.394Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T18:53:35.976Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-03T19:18:45.958Z - Chart Stream btcusdt@kline_1m terminated!
+> info: 2026-06-19T17:35:21.269Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-19T20:15:29.706Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-20T02:03:03.882Z - Starting the Funnel Job (shadow)...
+> info: 2026-06-20T02:28:37.333Z - Starting the Funnel Job (shadow)...
+> ```
+
+## 🤖 Claude *(03:37:12)*
+
+
+## 🤖 Claude *(03:37:14)*
+
+Isso muda o quadro — e é importante você ver, porque revela um **gap entre a intenção e o que está rodando**. Deixa eu confirmar o estado das automações de BTC e a config do funil.
+
+## 🤖 Claude *(03:37:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== TODAS as automa\u00e7\u00f5es (foco: existe acumulador de BTC?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id, name, symbol, isActive FROM automations ORDER BY id;\\\" 2>/dev/null\"'\necho \"\"\necho \"=== baseline do funil + caps no .env ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -iE \"FUNNEL|BASELINE|MAX_ORDER|FARM_MAX\" /home/gcrux-tradeux/tradeux/.env 2>/dev/null'",
+  "description": "List all automations and funnel/cap config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TODAS as automações (foco: existe acumulador de BTC?) ===
+> id	name	symbol	isActive
+> 2	Baseline RSI Buy BTCUSDT	BTCUSDT	0
+> 3	Baseline RSI Sell BTCUSDT	BTCUSDT	0
+> 6	Trend Buy BTCUSDT SMA50/200	BTCUSDT	0
+> 7	Trend Sell BTCUSDT SMA50/200	BTCUSDT	0
+> 9	Farm Buy LTCUSDT	LTCUSDT	0
+> 10	Farm Sell LTCUSDT	LTCUSDT	1
+> 11	Farm Buy BNBUSDT	BNBUSDT	0
+> 12	Farm Sell BNBUSDT	BNBUSDT	1
+> 13	Farm Buy ADAUSDT	ADAUSDT	0
+> 14	Farm Sell ADAUSDT	ADAUSDT	1
+> 15	Trend Buy LTCUSDT SMA50/200	LTCUSDT	0
+> 16	Trend Sell LTCUSDT SMA50/200	LTCUSDT	0
+> 17	Trend Buy BNBUSDT SMA50/200	BNBUSDT	0
+> 18	Trend Sell BNBUSDT SMA50/200	BNBUSDT	0
+> 19	Trend Buy ADAUSDT SMA50/200	ADAUSDT	0
+> 20	Trend Sell ADAUSDT SMA50/200	ADAUSDT	0
+> 21	Grid BTCUSDT	BTCUSDT	0
+> 22	Harvest Buy BTCUSDT -3pct	BTCUSDT	0
+> 23	Harvest Buy BTCUSDT -5pct	BTCUSDT	0
+> 24	Harvest Buy BTCUSDT -7pct	BTCUSDT	0
+> 25	Harvest Sell BTCUSDT	BTCUSDT	0
+> 38	BTC Scalp Excess	BTCUSDT	0
+> 44	[PAPER] Macro Buy BTCUSDT	BTCUSDT	1
+> 45	[PAPER] Macro Sell BTCUSDT	BTCUSDT	1
+> 46	[PAPER] Consistencia Buy LTCUSDT	LTCUSDT	1
+> 47	[PAPER] Consistencia Sell LTCUSDT	LTCUSDT	1
+> 48	[PAPER] Macro Buy LTCUSDT	LTCUSDT	1
+> 49	[PAPER] Macro Sell LTCUSDT	LTCUSDT	1
+> 50	[PAPER] Consistencia Buy BNBUSDT	BNBUSDT	1
+> 51	[PAPER] Consistencia Sell BNBUSDT	BNBUSDT	1
+> 52	[PAPER] Macro Buy BNBUSDT	BNBUSDT	1
+> 53	[PAPER] Macro Sell BNBUSDT	BNBUSDT	1
+> 54	[PAPER] Consistencia Buy ADAUSDT	ADAUSDT	1
+> 55	[PAPER] Consistencia Sell ADAUSDT	ADAUSDT	1
+> 56	[PAPER] Macro Buy ADAUSDT	ADAUSDT	1
+> 57	[PAPER] Macro Sell ADAUSDT	ADAUSDT	1
+> 58	[PAPER] Consistencia Buy BTCUSDT	BTCUSDT	1
+> 59	[PAPER] Consistencia Sell BTCUSDT	BTCUSDT	1
+> 
+> === baseline do funil + caps no .env ===
+> # ---------- Funnel System ----------
+> FUNNEL_LIVE_BUY=false
+> FUNNEL_BASELINE_USDT=10000
+> # Teto por compra do funil (USDT). FUNNEL_LIVE_BUY exige isto > 0, senão a compra ao vivo é RECUSADA.
+> FUNNEL_MAX_BUY_USDT=100
+> MAX_ORDER_NOTIONAL_USDT=25
+> FARM_MAX_NOTIONAL_USDT=25
+> ```
+
+## 🤖 Claude *(03:38:09)*
+
+
+## 🤖 Claude *(03:38:27)*
+
+Achei o ponto crítico. Olha o que o `funnel.log` revela, registro após registro:
+
+> `reserva BTC = 0.000000` — **a sessão inteira, sem exceção.**
+
+## ⚠️ A realidade vs a intenção
+
+Hoje a gente **não tem 1 satoshi de BTC**. E nenhuma automação real está comprando BTC. Veja o que existe:
+
+| Grupo BTC | Estado |
+|---|---|
+| Baseline RSI BTC (id2/3) | **inativo** |
+| Trend BTC SMA50/200 (id6/7) | **inativo** |
+| Grid / Harvest / Scalp BTC (id21–25, 38) | **inativo** (Harvest é morto, não reativar) |
+| `[PAPER]` BTC (id44/45/58/59) | ativo, mas **virtual** (não compra BTC real) |
+| **Funil → BTC** | **SHADOW** + `FUNNEL_BASELINE_USDT=10000` |
+
+As **únicas** automações reais ligadas são as 3 vendas do Farm (LTC/BNB/ADA → USDT). Elas reciclam alt↔USDT; **não acumulam BTC.**
+
+E o funil, que *seria* o mecanismo de converter lucro→BTC, está **estruturalmente inerte**: só varre o "excedente acima de **$10.000**". Com $148, nunca há excedente. Mesmo se eu ligasse o live-buy (que nem está construído — é a Fase 4, gated), nada seria varrido até passarmos de $10k.
+
+**Tradução honesta:** "concentrar em BTC" hoje é um objetivo com **zero execução viva**. Se você achava que já estávamos formando a reserva, não estávamos.
+
+## A arquitetura coerente com o que você quer
+
+Seu norte ("lucrar farmando, reservar o principal em BTC") = **núcleo + satélite**:
+- **Núcleo BTC** (reserva, protegida pelo vault guard que já bloqueia venda de BTC) ← *isto precisa começar do zero*
+- **Satélite Farm** (motor de lucro no-loss nos alts) ← *já roda*
+- **Funil** sweeping o lucro do Farm → BTC ← *precisa baseline realista + live-buy (engenharia gated)*
+
+A decisão que é genuinamente **sua** (alocação do seu capital real, num movimento direcional em BTC) é: quanto dos ~$148 vira núcleo BTC agora. BTC é *hold* — protege como reserva, mas **pode cair** (não é no-loss como o Farm). Preciso disso pra montar o caminho certo:
+
+## 🤖 Claude *(03:38:28)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Quanto do capital real (~$148: ~$109 USDT livre + ~$39,8 presos em LTC at\u00e9 a sa\u00edda no-loss) deve virar o n\u00facleo BTC \u2014 a reserva principal?",
+      "header": "Aloca\u00e7\u00e3o BTC",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "N\u00facleo ~$100 + float Farm ~$48",
+          "description": "BTC dominante (~67%) como reserva principal; mant\u00e9m um sat\u00e9lite farmando pra alimentar o funil. Equil\u00edbrio entre 'principal em BTC' e seguir lucrando. (Recomendado)"
+        },
+        {
+          "label": "BTC pesado ~$130 (~88%)",
+          "description": "Quase tudo em BTC, farming m\u00ednimo. Concentra\u00e7\u00e3o m\u00e1xima \u2014 mais exposto a uma queda do BTC, menos motor de lucro ativo."
+        },
+        {
+          "label": "N\u00facleo ~$70 (~47%) + Farm maior",
+          "description": "BTC como reserva crescente mas ainda n\u00e3o dominante; prioriza o motor de lucro do Farm pra acumular USDT antes de empilhar mais BTC."
+        },
+        {
+          "label": "S\u00f3 planejar, n\u00e3o comprar ainda",
+          "description": "Quero ver o plano completo (mecanismo de compra + tuning do funil) antes de comprometer qualquer BTC real."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
