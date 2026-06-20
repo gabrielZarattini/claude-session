@@ -4270,6 +4270,1350 @@ Your final reply must contain the markdown report and nothing else.
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I now have everything needed. Let me trace the critical computations precisely.\n\nI have full visibility into all four files plus the calibration references. Let me verify the one subtle point — whether a non-service caller could reach the `prepaid` path — by tracing the exact boolean chain, and confirm the `getUser()` path can\'t be tricked into `isService`.\n\nThe key computations:\n- `orchestrate-content:52` — `isService = authHeader === \\`Bearer ${serviceKey}\\`` (exact string equality against the env secret)\n- `orchestrate-content:54` — `isCron = isService && !!autopilotUserId`\n- `orchestrate-content:100` — `isPrepaid = isCron && prepaid === true`\n- `orchestrate-content:123` — `if (!isPrepaid)` gates the entire balance-check + deduct block\n\nSo `isPrepaid` can only be true if `isService` is true, which requires the caller to present `Bearer ${serviceKey}` verbatim. A normal authenticated user presents their ES256 session JWT, which never equals the service key string, so `isService` is false → `isCron` false → `isPrepaid` false → they go through the paid path. This is airtight.\n\nLet me also confirm there\'s no aliasing concern with the `getUser` path and verify the cron header validation order in autopilot-run.\n\nThe chain is sound on every file. Here is my report.\n\n---\n\n# Security Review — Viral Autopilot Cadence (orchestrate-content cron path + autopilot-run + autopilot-cadence-cron)\n\n## Verdict: NO high-confidence vulnerabilities found.\n\nI traced all six threat classes against the four files and the established secure patterns (`nurture-cron`, `orchestrate-step`, the two identity SOPs). The new "cron/prepaid" path is correctly fail-closed: every identity-bearing value (`x-autopilot-user-id`, `prepaid`, `cycle_id`) is only honored *after* the caller proves possession of `SB_SECRET_KEY` via exact string equality. Below I close each threat class with the specific load-bearing lines.\n\n---\n\n## Threat Class 1 — Billing bypass (free content via `prepaid`): DISPROVEN\n\nThe `prepaid` skip is gated behind a three-link boolean chain, each link requiring the previous, rooted in service-key proof:\n\n- `orchestrate-content/index.ts:52` — `const isService = authHeader === \\`Bearer ${serviceKey}\\`;` — exact-match against the env secret (`SB_SECRET_KEY`). Not a prefix/`includes` check; a forged or session JWT cannot satisfy it.\n- `index.ts:54` — `const isCron = isService && !!autopilotUserId;` — requires `isService` first.\n- `index.ts:100` — `const isPrepaid = isCron && prepaid === true;` — requires `isCron`, hence `isService`. The inline comment ("honored ONLY on the proven cron path") matches the code.\n- `index.ts:123` — `if (!isPrepaid) { ...balance check + deduct_mco_coins... }` — the deduct block is skipped *only* when `isPrepaid`.\n\nA normal authenticated user sends their ES256 session token; `authHeader !== \\`Bearer ${serviceKey}\\`` → `isService=false` → `isCron=false` → `isPrepaid=false` regardless of what they put in the body. They are routed through `getUser()` (`index.ts:63-74`) and then the paid path. **An untrusted client cannot set `isPrepaid`.** Confidence the path is closed: **9/10**.\n\nNote also `index.ts:84-85`: when `isCron` is true and the body sets `prepaid` but the boolean still requires `isService` — there is no body field that can flip `isService`. Body parsing (`index.ts:98`) happens *after* identity resolution, and `prepaid` is only consulted at line 100 conjoined with `isCron`.\n\n---\n\n## Threat Class 2 — Cross-tenant / impersonation via `x-autopilot-user-id`: DISPROVEN\n\n`x-autopilot-user-id` is read at `index.ts:53` but only *used* as identity inside the `if (isCron)` branch (`index.ts:56-62`), and `isCron` requires `isService` (line 54). The value is format-validated (`index.ts:57`, UUID regex) but, critically, it is never trusted as identity unless `isService` already proved the service key. The non-service branch (`index.ts:63-74`) ignores the header entirely and derives `userId` from `getUser()`.\n\nThe cross-tenant key-theft vector you flagged — `decrypted_user_api_keys` lookup by `userId` at `index.ts:79` — is only reachable with an attacker-controlled `userId` if the attacker is on the cron branch, which requires the service key. An anon/authenticated caller\'s `userId` is pinned to their own `getUser().id` (`index.ts:73`). The sentinel-block log (`index.ts:115`) and all downstream inserts (`pipeline_runs` at `:188`, all `content_library`/`creative_metrics` in orchestrate-step) key off this resolved `userId`/`run.user_id`, so no resource read/write can cross tenants without the key. Confidence: **9/10**.\n\n---\n\n## Threat Class 3 — autopilot-run IDOR / spoofed `x-autopilot-user-id`: DISPROVEN\n\nTwo independent guards, both present:\n\n1. **Identity** (`autopilot-run/index.ts:46-57`): `isService = authHeader === \\`Bearer ${serviceKey}\\`` (line 46). Service branch requires the header *and* a valid UUID (`:49-51`); the user branch uses `getUser()` (`:53-56`) and pins `userId = user.id`. A spoofed `x-autopilot-user-id` without the service key never reaches line 49 — it falls to the user branch where the header is ignored.\n2. **Tenant-scoped plan load** (`:60-64`): `.eq("id", planId).eq("user_id", userId).maybeSingle()` → `if (!plan) return 404`. Even on the service path, the plan must belong to the resolved `userId`; on the user path, `userId` is the JWT subject, so user A cannot run user B\'s plan — the double `.eq` returns no row → 404. This is the canonical IDOR-safe load and matches SOP §Identity layer-3 ("assert user.id === plan.user_id"). All subsequent state writes (`:89`, `:141`, `:143`) repeat `.eq id .eq user_id`. The pre-debit (`begin_autopilot_cycle`, `:81-83`) passes `p_user_id: userId` (the verified id), not a body value. Confidence: **9/10**.\n\n---\n\n## Threat Class 4 — Sufficiency of in-function checks under `verify_jwt=false`: SUFFICIENT\n\nconfig.toml confirms `verify_jwt = false` for `autopilot-run` and `autopilot-cadence-cron` (lines 24-27), so in-function checks are the sole guard. No path trusts a header/body value for identity without first proving `SB_SECRET_KEY`:\n\n- `autopilot-cadence-cron/index.ts:26` — `if (req.headers.get("Authorization") !== \\`Bearer ${serviceKey}\\`) return json({ error: "Forbidden" }, 403);` — hard 403 self-check at the top, before any DB access. The fan-out user_id comes from the **plan row** (`:42` select `user_id`, `:52` `"x-autopilot-user-id": p.user_id`), never a request body — exactly the `nurture-cron` pattern (`nurture-cron:29` / `:55`).\n- `autopilot-run` and `orchestrate-content` both gate identity-bearing values behind the `=== \\`Bearer ${serviceKey}\\`` equality as shown above.\n\nThe pattern is identical to the calibrated-secure `nurture-cron` (self-check 403 → fan-out with per-row user_id) and honors the SOP\'s "golden rule": trust a `user_id` on the cron path only after (a) proven `SB_SECRET_KEY` possession AND (b) the id came from a DB row. Confidence: **9/10**.\n\n---\n\n## Threat Class 5 — Secret logging / hardcoding: DISPROVEN\n\n`SB_SECRET_KEY` is read from env in all four functions (`orchestrate-content:45`, `autopilot-run:30`, `autopilot-cadence-cron:24`) and used only in `Authorization: Bearer` comparisons/headers and as the Supabase admin-client key. No hardcoded secret. Searched the log/warn/console lines: failures log HTTP status, plan/product ids, and error messages only (e.g. `autopilot-run:117` logs `productId/platform → HTTP ${r.status}`; `autopilot-cadence-cron:65` logs the cap constant) — never the key. `infra_health_logs` inserts (`autopilot-run:34`, `cadence-cron:29`) write only `service`/`status` strings. Confidence: **9/10**.\n\n---\n\n## Threat Class 6 — Sentinel bypass on the cron/prepaid path: DISPROVEN (sentinel still runs)\n\nThe Cyber-Sentinel runs on the prepaid path because it is positioned *after identity resolution but before the billing branch*, unconditional of `isPrepaid`:\n\n- **Topic**: `orchestrate-content/index.ts:113` — `inspectPrompt(...topic..., userId, { rateLimit: false })`, then `:114` `if (!sentinelVerdict.allow)` → `logSentinelBlock` + `verdictResponse` (reject). This sits at lines 108-117, *above* the `if (!isPrepaid)` block at 123 — so it executes on every path, cron included. `rateLimit:false` only disables the burst limiter; the comment (`:111-112`) confirms L1+L2 injection/control checks stay active.\n- **Product names**: `:172` — inside the product-resolution loop (reached on the cron path, since autopilot-run sends `product_ids`), each catalog name is run through `inspectPrompt(nm, userId, { rateLimit: false })` and dropped fail-closed if blocked (`:173`). Names come from `vm_affiliate_products` (`:164-168`, authoritative catalog), not client input.\n\nThe prepaid path did not bypass the sentinel — the skip at line 123 is *only* the balance/deduct block, which is below both sentinel calls. Confidence: **9/10**.\n\n---\n\n## Files reviewed (absolute paths)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts` (modified — identity 47-74, prepaid 99-100/123-149, sentinel 113/172)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts` (new — identity 45-57, tenant-scoped load 60-64, fan-out 104-115)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-cadence-cron/index.ts` (new — 403 self-check 26, per-row user_id 42/52)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml` (verify_jwt=false lines 24-27)\n- Calibration: `nurture-cron/index.ts`, `orchestrate-step/index.ts`, `docs/processes/edge-jwt-identity-verification.md`, `docs/processes/autopilot-cron-identity.md`\n\n## Minor observations (NOT vulnerabilities, no action required)\n- `orchestrate-content:57` UUID regex `^[0-9a-fA-F-]{36}$` is loose (would accept 36 chars of any mix of hex/dashes, e.g. all-dashes). It is a *format* gate, not a *trust* gate — the value is already service-key-gated and is used as a tenant key against real tables (a malformed/nonexistent UUID simply finds no rows). `autopilot-run:22` uses the same loose `UUID_RE`. No exploit: reaching this code already requires the service key, so it is the trusted backend choosing the tenant. Not reportable under the rules (service_role is trusted).\n- The two-link `isService` proof is exact-equality (`===`), which is the correct constant-string comparison; no `startsWith`/`includes` weakness that could let a longer attacker-chosen token match.\n\n**Bottom line:** the cron/prepaid additions follow the established `nurture-cron` + service-role-gate patterns faithfully. `prepaid`, `x-autopilot-user-id`, and `cycle_id` are inert for any caller who has not proven possession of `SB_SECRET_KEY`, and the sentinel still fires on the prepaid path. No HIGH or MEDIUM findings.'}, {'type': 'text', 'text': "agentId: a11ab0992f1e6056b (use SendMessage with to: 'a11ab0992f1e6056b' to continue this agent)\n<usage>subagent_tokens: 110609\ntool_uses: 8\nduration_ms: 70272</usage>"}]
+> ```
+
+## 🤖 Claude *(19:01:22)*
+
+
+## 🤖 Claude *(19:01:29)*
+
+## ✅ `/security-review` (edge functions) — SAFE
+
+Os 6 vetores do caminho de dinheiro provados fechados, linha a linha:
+
+| Vetor | Veredito | Prova |
+|---|---|---|
+| **Billing bypass (free content)** | fechado | `isPrepaid ← isCron ← isService` (`=== Bearer serviceKey` exato) — cliente não-confiável não seta `prepaid` |
+| **Cross-tenant via header** | fechado | `x-autopilot-user-id` só confiado após `isService`; user-path ignora o header |
+| **IDOR autopilot-run** | fechado | load tenant-scoped `.eq(id).eq(user_id)` → 404 |
+| **verify_jwt=false suficiente** | sim | 403 self-check + gate service-key |
+| **Vazamento de segredo** | nenhum | `SB_SECRET_KEY` só em comparação Bearer |
+| **Sentinel no prepaid** | ativo | inspectPrompt no topic+produtos roda ACIMA do branch de billing |
+
+Gate de segurança verde nas 3 funções. Deployando (G3 materialidade) — orchestrate-content (modificada, user-path intacto) + as 2 novas (inertes até o pg_cron).
+
+## 🤖 Claude *(19:01:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor fn in orchestrate-content autopilot-run autopilot-cadence-cron; do\n  echo \"=== deploy $fn ===\"\n  npx supabase functions deploy \"$fn\" 2>&1 | grep -iE 'Deploy|Bundl|Uploading|size|Deployed|error|Function' | tail -6\n  echo \"exit=$?\"\ndone",
+  "description": "Deploy the 3 edge functions",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy orchestrate-content ===
+> Bundling Function: orchestrate-content
+> Deploying Function: orchestrate-content (script size: 114.8kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-content
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> exit=0
+> === deploy autopilot-run ===
+> Bundling Function: autopilot-run
+> Deploying Function: autopilot-run (script size: 62.26kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-run
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> exit=0
+> === deploy autopilot-cadence-cron ===
+> Bundling Function: autopilot-cadence-cron
+> Deploying Function: autopilot-cadence-cron (script size: 59.52kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-cadence-cron
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> exit=0
+> ```
+
+## 🤖 Claude *(19:02:21)*
+
+
+## 🤖 Claude *(19:02:23)*
+
+Deploy material **exit 0**: orchestrate-content **114.8kB** · autopilot-run **62.26kB** · autopilot-cadence-cron **59.52kB** (G3 verde). Agora a prova comportamental zero-cost da camada de execução — identity gates + `dry_run` (projeção de custo sem gastar) + cross-tenant header → 404. Smoke nomeado no FRD (`smoke-autopilot-run.ts`).
+
+## 🤖 Claude *(19:02:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-run.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke \u2014 autopilot-run + autopilot-cadence-cron edge fns (FR-VA-002/005/016), ZERO-COST.\n *\n * Proves the IDENTITY GATES and the dry_run COST PROJECTION against the DEPLOYED functions without spending any\n * mcoCoins (dry_run short-circuits BEFORE begin_autopilot_cycle \u2014 no cycle, no deduct, no fan-out). The real\n * paid cycle is intentionally NOT exercised (gated on Sovereign GO). Throwaway @example.com user + plan, cleaned up.\n *\n * Gates:\n *   I1 cadence-cron anon \u2192 403 (service-role self-check)            I2 cadence-cron service \u2192 200 ok\n *   I3 run anon \u2192 401                                              I4 run service w/o x-autopilot-user-id \u2192 400\n *   I5 run service + header + no plan_id \u2192 422\n *   D1 run service + header + plan + dry_run \u2192 ok, n_runs=3, projected=32 (3\u00d710+2), ZERO balance delta\n *   X1 run service + WRONG x-autopilot-user-id + real plan \u2192 404 (tenant-scoped load blocks cross-tenant)\n *\n * Usage: bun run scripts/qa/smoke-autopilot-run.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst ZERO = '00000000-0000-0000-0000-000000000000';\nlet uid: string | null = null;\nlet pass = true;\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\ninterface Resp { status: number; body: Record<string, unknown> }\nasync function callRun(headers: Record<string, string>, body: unknown): Promise<Resp> {\n  const r = await fetch(`${URL}/functions/v1/autopilot-run`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body),\n  });\n  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }\n  return { status: r.status, body: b };\n}\nasync function callCron(bearer: string): Promise<Resp> {\n  const r = await fetch(`${URL}/functions/v1/autopilot-cadence-cron`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: bearer, Authorization: `Bearer ${bearer}` }, body: '{}',\n  });\n  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }\n  return { status: r.status, body: b };\n}\nasync function getBalance(): Promise<number> {\n  const { data } = await admin.from('profiles').select('mco_balance').eq('id', uid!).single();\n  return Number(data?.mco_balance ?? 0);\n}\n\nconst svcHdr = { apikey: SVC, Authorization: `Bearer ${SVC}` };\ntry {\n  // \u2500\u2500 Identity gates (no user/plan needed) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  check('I1 cadence-cron anon \u2192 403', (await callCron(PUB)).status === 403);\n  const c2 = await callCron(SVC);\n  check('I2 cadence-cron service \u2192 200 ok', c2.status === 200 && c2.body.status === 'ok', `due=${c2.body.due}`);\n  check('I3 run anon \u2192 401', (await callRun({ apikey: PUB, Authorization: `Bearer ${PUB}` }, { plan_id: ZERO })).status === 401);\n  check('I4 run service w/o x-autopilot-user-id \u2192 400', (await callRun(svcHdr, { plan_id: crypto.randomUUID() })).status === 400);\n  check('I5 run service + header + no plan_id \u2192 422', (await callRun({ ...svcHdr, 'x-autopilot-user-id': ZERO }, {})).status === 422);\n\n  // \u2500\u2500 dry_run cost projection (throwaway user + plan; 3 products \u00d7 1 platform \u00d7 1 variant = 3 runs) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const email = `ap-run-${Date.now()}@example.com`;\n  const { data: u, error: ue } = await admin.auth.admin.createUser({ email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (ue || !u?.user) throw new Error(`createUser: ${ue?.message}`);\n  uid = u.user.id;\n  const { data: planRow, error: pe } = await admin.from('autopilot_plans').insert({\n    user_id: uid, name: 'smoke-run-plan', mode: 'every_n_days', interval_days: 3,\n    target_product_ids: ['MLB-A', 'MLB-B', 'MLB-C'], platforms: ['linkedin'],\n    budget_cap_mco: 200, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1, is_active: true,\n  }).select('id').single();\n  if (pe || !planRow) throw new Error(`insert plan: ${pe?.message}`);\n  const planId = planRow.id as string;\n\n  const b0 = await getBalance();\n  const d1 = await callRun({ ...svcHdr, 'x-autopilot-user-id': uid }, { plan_id: planId, dry_run: true });\n  const b1 = await getBalance();\n  check('D1 dry_run \u2192 ok \u00b7 n_runs=3 \u00b7 projected=32',\n    d1.status === 200 && d1.body.ok === true && d1.body.n_runs === 3 && d1.body.projected_mco === 32, JSON.stringify(d1.body));\n  check('D1 dry_run did NOT spend (delta 0)', b1 === b0, `delta=${b1 - b0}`);\n\n  // \u2500\u2500 Cross-tenant: service key + WRONG x-autopilot-user-id + the real plan \u2192 404 (tenant-scoped load blocks it) \u2500\n  const x1 = await callRun({ ...svcHdr, 'x-autopilot-user-id': ZERO }, { plan_id: planId, dry_run: true });\n  check('X1 cross-tenant header \u2192 404 plan_not_found', x1.status === 404, JSON.stringify(x1.body));\n} catch (e) {\n  check(`FATAL: ${(e as Error).message}`, false);\n} finally {\n  if (uid) {\n    const { error } = await admin.auth.admin.deleteUser(uid);\n    check('cleanup: throwaway user deleted', !error);\n  }\n  console.log(pass ? '\\n\ud83d\udfe2 SMOKE PASS' : '\\n\ud83d\udd34 SMOKE FAIL');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-run.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:47)*
+
+
+## 🤖 Claude *(19:02:48)*
+
+Rodando contra as funções deployadas.
+
+## 🤖 Claude *(19:02:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/qa/smoke-autopilot-run.ts 2>&1\necho \"EXIT=$?\"",
+  "description": "Run autopilot-run identity + dry_run smoke",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ I1 cadence-cron anon → 403
+> ✅ I2 cadence-cron service → 200 ok  → due=0
+> ✅ I3 run anon → 401
+> ✅ I4 run service w/o x-autopilot-user-id → 400
+> ✅ I5 run service + header + no plan_id → 422
+> ✅ D1 dry_run → ok · n_runs=3 · projected=32  → {"ok":true,"dry_run":true,"n_runs":3,"projected_mco":32,"breakdown":{"products":3,"platforms":1,"ab_variants":1}}
+> ✅ D1 dry_run did NOT spend (delta 0)  → delta=0
+> ✅ X1 cross-tenant header → 404 plan_not_found  → {"error":"plan_not_found"}
+> ✅ cleanup: throwaway user deleted
+> 
+> 🟢 SMOKE PASS
+> EXIT=0
+> ```
+
+## 🤖 Claude *(19:03:30)*
+
+
+## 🤖 Claude *(19:03:34)*
+
+## 🟢 SMOKE PASS — 9/9 contra as funções deployadas, exit 0
+
+A camada de execução está viva e provada **zero-cost**:
+
+| Gate | Prova |
+|---|---|
+| I1 cadence-cron anon | **403** (self-check service-role) |
+| I2 cadence-cron service | **200** `due=0` (sem planos ativos) |
+| I3 run anon | **401** |
+| I4 run service s/ header | **400** |
+| I5 run service s/ plan_id | **422** |
+| **D1 dry_run** | **ok · n_runs=3 · projected=32** (3×10+2) · **delta saldo 0** |
+| **X1 cross-tenant header** | **404 plan_not_found** (load tenant-scoped barra mesmo com a service-key) |
+
+O único caminho NÃO exercido é o ciclo **pago real** (begin→fan-out→finalize com LLM real) — gated no seu GO. Commitando o slice das edge functions.
+
+## 🤖 Claude *(19:03:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/smoke-autopilot-run.ts\ngit commit -q -F - <<'MSG'\nfeat: Viral Autopilot Fatia 2 \u2014 edge functions do cron (executor + driver + caminho prepaid)\n\nConstr\u00f3i a camada que executa a cad\u00eancia aut\u00f4noma \u2014 deployada e provada zero-cost.\nA ATIVA\u00c7\u00c3O do pg_cron + o 1\u00ba ciclo PAGO real seguem gated no GO do Sovereign.\n\n- autopilot-run: executor por plano. Identidade dois-caminhos (service-role + header\n  server-trusted OU user-JWT + load tenant-scoped IDOR-safe). N_runs=produtos\u00d7redes\u00d7variants;\n  begin_autopilot_cycle (cap+pr\u00e9-d\u00e9bito at\u00f4mico) \u2192 fan-out orchestrate-content prepaid \u2192\n  finalize_autopilot_cycle (refund do n\u00e3o-usado) \u2192 re-arma next_run_at. dry_run projeta custo\n  sem abrir ciclo nem debitar.\n- autopilot-cadence-cron: driver pg_cron (espelha nurture-cron), 403 sem Bearer SB_SECRET_KEY,\n  varre planos vencidos (\u00edndice parcial), fan-out com user_id da linha (nunca do body).\n- orchestrate-content (FR-VA-016): aceita o caminho cron (service-role + x-autopilot-user-id +\n  prepaid) que pula o d\u00e9bito SEM tocar sentinel/produtos/kick; user-path 100% intacto.\n- config.toml: verify_jwt=false nas 2 novas fun\u00e7\u00f5es.\n\n/security-review SAFE (6 vetores de dinheiro fechados linha-a-linha). Deploy exit 0\n(114.8 / 62.26 / 59.52 kB). Smoke deployado 9/9: identity gates + dry_run projected=32 sem\ngastar + cross-tenant header \u2192 404.\nMSG\ngit log --oneline -4",
+  "description": "Commit the edge functions slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:03PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:03PM[0m [32mINF[0m scan completed in 15.5ms
+> [90m4:03PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 54ac2a9 feat: Viral Autopilot Fatia 2 — edge functions do cron (executor + driver + caminho prepaid)
+> 0c59e4d test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+> 686bae3 feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+> 44e5887 chore(sprint): registra v6.43.0 — Viral Autopilot Fatias 1 + 1b + diagnóstico saída visível
+> ```
+
+## 🤖 Claude *(19:04:51)*
+
+
+## 🤖 Claude *(19:04:59)*
+
+Commit **`54ac2a9`** — gates limpos. 
+
+---
+
+## 📍 Fatia 2 — camada de execução COMPLETA e provada
+
+3 commits esta sessão, tudo zero-cost e materialmente provado:
+
+| Camada | Estado |
+|---|---|
+| SOP Lei 2 (OTD-VA-008) | ✅ `686bae3` |
+| 2 tabelas + 2 RPCs de dinheiro | ✅ aplicadas · `/security-review` SAFE · smoke 11/11 · `686bae3`+`0c59e4d` |
+| **autopilot-run** (executor) | ✅ deployado 62.26kB |
+| **autopilot-cadence-cron** (driver) | ✅ deployado 59.52kB |
+| **orchestrate-content** (FR-VA-016 prepaid) | ✅ deployado 114.8kB · user-path intacto |
+| `/security-review` edge fns | ✅ SAFE (6 vetores fechados) |
+| Smoke deployado | ✅ 9/9 (identity + dry_run + cross-tenant 404) · `54ac2a9` |
+
+O motor da cadência autônoma (R1+R2+R4) está de pé, blindado e provado **sem gastar 1 centavo**. Falta só acionar — e aí bifurca. Contexto honesto pra você decidir: um **ciclo pago real** hoje provaria a mecânica de dinheiro E2E (débito→fan-out→refund→monetização→creative_metrics), mas a **publicação visível continua travada** pelas 2 ações suas pendentes (Cloudflare WAF skip no `/wp-json` + acesso a modelo de imagem no OpenAI) — gastaria mco real validando o motor, não a saída publicada.
+
+## 🤖 Claude *(19:05:08)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Camada de execu\u00e7\u00e3o da Fatia 2 completa + provada zero-cost. O motor aut\u00f4nomo est\u00e1 pronto pra acionar. Qual o pr\u00f3ximo?",
+      "header": "Pr\u00f3ximo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "R3 \u2014 loop auto-melhor\u00e1vel",
+          "description": "Construir autopilot-analyze (FR-VA-010: l\u00ea creative_metrics do ciclo anterior \u2192 optimization_policy) + autopilot-collect (FR-VA-008: coleta engajamento/cliques) + inje\u00e7\u00e3o de feedback (FR-VA-011: o gerador l\u00ea a policy do pr\u00f3ximo ciclo). Aut\u00f4nomo, zero-cost de provar. Fecha o CORA\u00c7\u00c3O da diretiva \u2014 o conte\u00fado que melhora sozinho a cada ciclo. \u00c9 o diferencial que falta pra vis\u00e3o R1-R4 ficar completa."
+        },
+        {
+          "label": "UI (FR-VA-014)",
+          "description": "useAutopilot hook + AutopilotPage + componentes: criar/pausar/listar planos, ver ciclos e ROI por criativo pela interface (hoje planos s\u00f3 existem via SQL). Aut\u00f4nomo. Torna a feature us\u00e1vel por voc\u00ea sem tocar no banco."
+        },
+        {
+          "label": "1\u00ba ciclo PAGO real agora",
+          "description": "Invocar autopilot-run num plano real com dinheiro de verdade: prova a mec\u00e2nica E2E (d\u00e9bito projetado \u2192 fan-out N runs \u2192 finalize/refund \u2192 links monetizados \u2192 creative_metrics \u2192 delta saldo material). \u26a0\ufe0f Custa mco real (~30/ciclo) e a publica\u00e7\u00e3o vis\u00edvel segue bloqueada pelos 2 pendentes seus (CF /wp-json + OpenAI image) \u2014 valida o motor, n\u00e3o a sa\u00edda publicada."
+        },
+        {
+          "label": "Selar a Fatia 2 aqui",
+          "description": "/handoff agora registrando o executor da cad\u00eancia como milestone (SOP + migrations + RPCs + 3 edge fns + 2 smokes). Retomo R3/UI/ciclo-pago noutra sess\u00e3o."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Camada de execução da Fatia 2 completa + provada zero-cost. O motor autônomo está pronto pra acionar. Qual o próximo?"="R3 — loop auto-melhorável". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:21:20)*
+
+
+## 🤖 Claude *(19:21:22)*
+
+**GO — R3, o coração da diretiva.** O loop auto-melhorável é o diferencial. Antes de codar, mapeio os contratos que ele toca: a tabela `optimization_policy` (existe? schema?), `affiliate_links` (o sinal de cliques real já populado), e onde a `orchestrate-step` monta o prompt + escreve `creative_metrics` (pra injetar feedback + taggear o ciclo).
+
+## 🤖 Claude *(19:21:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== optimization_policy migration + schema ===\"\nf=$(grep -rlE 'CREATE TABLE.*optimization_policy' supabase/migrations/ 2>/dev/null | head -1); echo \"file: $f\"\n[ -n \"$f\" ] && grep -nE -A18 'CREATE TABLE.*optimization_policy' \"$f\" | head -24\necho \"\"\necho \"=== affiliate_links columns (clicks/content_id/revenue_cents) ===\"\naf=$(grep -rlE 'CREATE TABLE.*affiliate_links' supabase/migrations/ 2>/dev/null | head -1); echo \"file: $af\"\n[ -n \"$af\" ] && grep -nE -A22 'CREATE TABLE.*affiliate_links' \"$af\" | grep -iE 'clicks|content_id|revenue|content_variant|campaign|user_id|short_url|id ' | head -16\necho \"\"\necho \"=== orchestrate-step anchors (metadata/creative_metrics/policy/prompt/cycle) ===\"\ngrep -nE 'creative_metrics|optimization_policy|\\.metadata|run\\.|products|cycle_id|systemContent|messages|article_generation|content_library' supabase/functions/orchestrate-step/index.ts | head -40",
+  "description": "Map optimization_policy, affiliate_links, orchestrate-step for R3"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === optimization_policy migration + schema ===
+> file: supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql
+> 179:CREATE TABLE public.optimization_policy (
+> 180-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> 181-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 182-  campaign_id UUID REFERENCES public.campaigns(id) ON DELETE SET NULL,
+> 183-  action_type TEXT NOT NULL,
+> 184-  action_details JSONB NOT NULL DEFAULT '{}',
+> 185-  reward NUMERIC(8,4) DEFAULT 0,
+> 186-  context JSONB DEFAULT '{}',
+> 187-  applied BOOLEAN DEFAULT FALSE,
+> 188-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+> 189-);
+> 190-ALTER TABLE public.optimization_policy ENABLE ROW LEVEL SECURITY;
+> 191-
+> 192--- 13. HEALING ACTIONS
+> 193-CREATE TABLE public.healing_actions (
+> 194-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> 195-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 196-  issue_type TEXT NOT NULL,
+> 197-  issue_details TEXT,
+> 
+> === affiliate_links columns (clicks/content_id/revenue_cents) ===
+> file: supabase/migrations/20260514040300_viralmind_affiliate_radar.sql
+> 34-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> 35-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 36-  product_id UUID NOT NULL REFERENCES public.vm_affiliate_products(id) ON DELETE RESTRICT,
+> 42-  utm_campaign TEXT,
+> 44-  custom_subid TEXT,
+> 46-  total_clicks BIGINT NOT NULL DEFAULT 0,
+> 48-  total_revenue NUMERIC(12,2) NOT NULL DEFAULT 0,
+> 
+> === orchestrate-step anchors (metadata/creative_metrics/policy/prompt/cycle) ===
+> 28:  const stepsOrder = ["article_generation", "wordpress_publish", "linkedin_post", "twitter_thread", "knowledge_mesh"];
+> 33:    if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 47:// When the run carries chosen products, the 3 B2B prompts are replaced by a consumer viral-hook framework
+> 48:// (HOOK → VALUE → CTA) that features the chosen product. With NO products, the legacy B2B prompts are used
+> 51:function productBrief(products: ChosenProduct[]): string {
+> 52:  const p = products[0];
+> 58:  const others = products.slice(1).map((x) => x.name).filter(Boolean);
+> 63:function articleMessages(topic: string, siteUrl: string, products: ChosenProduct[]) {
+> 64:  if (products.length > 0) {
+> 65:    const p = products[0];
+> 68:      { role: "user", content: `Escreva um artigo/review viral sobre o tema "${topic}". ${productBrief(products)} Foque em por que o ${p?.name ?? "produto"} resolve o problema do leitor: gancho forte na abertura, prova de valor no meio e CTA de compra no fim. Use o nome exato do produto em destaque pelo menos uma vez. Site: https://${siteUrl}` },
+> 77:function linkedinMessages(topic: string, articleLink: string, products: ChosenProduct[]) {
+> 78:  if (products.length > 0) {
+> 79:    const p = products[0];
+> 82:      { role: "user", content: `Crie um post de LinkedIn viral sobre "${topic}". ${productBrief(products)} Link de referência: ${articleLink}. Gancho na 1ª linha, valor no meio, CTA de compra no fim. Cite o ${p?.name ?? "produto"} pelo nome.` },
+> 91:function twitterMessages(topic: string, xLink: string, products: ChosenProduct[]) {
+> 92:  if (products.length > 0) {
+> 93:    const p = products[0];
+> 96:      { role: "user", content: `Crie uma thread de 5 tweets viral sobre "${topic}". ${productBrief(products)} Link de referência (último tweet): ${xLink}. Gancho no tweet 1, valor nos tweets 2-4, CTA de compra no tweet 5. Cite o ${p?.name ?? "produto"} pelo nome.` },
+> 140:    const steps = run.steps || [];
+> 158:    const metadata = run.metadata || {};
+> 161:    // ── Viral Autopilot Fatia 1 — chosen products carried from orchestrate-content (sanitized, ordered).
+> 162:    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 163:    const hasProducts = products.length > 0;
+> 171:          .select("affiliate_tag, matt_tool").eq("user_id", run.user_id).eq("platform", "mercadolivre").eq("is_active", true).maybeSingle();
+> 176:    // Monetize `body` for every chosen product (primary = products[0] gets a guaranteed CTA; secondaries link only
+> 177:    // if mentioned), keyed to this creative's content_library id, then write a creative_metrics baseline row
+> 178:    // (fail-soft). Returns the rewritten body + how many products were linked. FR-VA-004 / FR-VA-009.
+> 185:        for (let i = 0; i < products.length; i++) {
+> 186:          const r = await monetizeForProduct(admin as any, supabaseUrl, out, run.user_id, aff.tag, products[i], {
+> 192:      await admin.from("creative_metrics").insert({
+> 193:        user_id: run.user_id,
+> 195:        product_id: products[0]?.external_id ?? null,
+> 199:      }).then(() => {}, (e: any) => console.warn("[orchestrate-step] creative_metrics baseline skipped:", e?.message));
+> 207:      .eq("user_id", run.user_id)
+> 223:    if (step === "article_generation") {
+> 224:      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 237:            messages: articleMessages(topic, site_url, products),
+> 271:          await addStep("article_generation", "error", { topic }, { error: `content_validation_failed:${articleValidation.reason}` });
+> 275:          //    to its content_library id (affiliate_links.content_id) + a creative_metrics baseline row.
+> ```
+
+## 🤖 Claude *(19:22:31)*
+
+
+## 🤖 Claude *(19:22:34)*
+
+Achados-chave: **`optimization_policy` EXISTE** (sem coluna `scope` — uso `action_type` + `context` JSONB) e **`orchestrate-step` já escreve `creative_metrics` baseline** (linha 192, mas `cycle_id` NULL) e monta os prompts product-aware (63-96). Antes de codar, confirmo o schema VIVO das 3 tabelas (evita arqueologia de migration — várias tocaram `affiliate_links`) e leio o trecho exato da orchestrate-step pra injetar feedback + taggear o ciclo.
+
+## 🤖 Claude *(19:22:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nREF=$(grep -oE '^VITE_SUPABASE_PROJECT_ID=.*' .env | cut -d= -f2 | tr -d '\"' | tr -d ' ')\nTOKEN=$(cat ~/.supabase/access-token 2>/dev/null | tr -d '\\n ')\nread -r -d '' Q <<'SQL'\nselect jsonb_object_agg(t, cols) as result from (\n  select table_name t, jsonb_agg(column_name order by ordinal_position) cols\n  from information_schema.columns\n  where table_schema='public' and table_name in ('affiliate_links','creative_metrics','optimization_policy')\n  group by table_name\n) x;\nSQL\nJSON=$(python3 -c \"import json,sys; print(json.dumps({'query': sys.stdin.read()}))\" <<<\"$Q\")\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"$JSON\" | python3 -m json.tool",
+  "description": "Live columns of affiliate_links, creative_metrics, optimization_policy"
+}
+```
+
+## 🤖 Claude *(19:22:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 140,
+  "limit": 95
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [
+>     {
+>         "result": {
+>             "affiliate_links": [
+>                 "id",
+>                 "user_id",
+>                 "original_url",
+>                 "short_url",
+>                 "product_id",
+>                 "platform",
+>                 "clicks",
+>                 "conversions",
+>                 "revenue_cents",
+>                 "campaign_id",
+>                 "content_id",
+>                 "metadata",
+>                 "created_at",
+>                 "updated_at"
+>             ],
+>             "creative_metrics": [
+>                 "id",
+>                 "user_id",
+>                 "cycle_id",
+>                 "content_variant_id",
+>                 "product_id",
+>                 "platform",
+>                 "source",
+>                 "impressions",
+>                 "engagements",
+>                 "affiliate_clicks",
+>                 "revenue_cents",
+>                 "collected_at",
+>                 "created_at"
+>             ],
+>             "optimization_policy": [
+>                 "id",
+>                 "user_id",
+>                 "campaign_id",
+>                 "action_type",
+>                 "action_details",
+>                 "reward",
+>                 "context",
+>                 "applied",
+>                 "created_at"
+>             ]
+>         }
+>     }
+> ]
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 140	    const steps = run.steps || [];
+> 141	    const addStep = async (name: string, status: string, input?: any, output?: any) => {
+> 142	      const stepObj = {
+> 143	        name,
+> 144	        status,
+> 145	        input: input ?? null,
+> 146	        output: output ?? null,
+> 147	        timestamp: new Date().toISOString(),
+> 148	      };
+> 149	      const idx = steps.findIndex((s: any) => s.name === name);
+> 150	      if (idx !== -1) {
+> 151	        steps[idx] = stepObj;
+> 152	      } else {
+> 153	        steps.push(stepObj);
+> 154	      }
+> 155	      await admin.from("pipeline_runs").update({ steps }).eq("id", run_id);
+> 156	    };
+> 157	
+> 158	    const metadata = run.metadata || {};
+> 159	    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> 160	
+> 161	    // ── Viral Autopilot Fatia 1 — chosen products carried from orchestrate-content (sanitized, ordered).
+> 162	    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 163	    const hasProducts = products.length > 0;
+> 164	    const autoMonetizeOn = (Deno.env.get("AUTO_MONETIZE_ENABLED") ?? "true").toLowerCase() !== "false";
+> 165	
+> 166	    // Resolve the tenant's ML affiliate credentials (per-user; each step is its own invocation). Kill-switch aware.
+> 167	    const resolveAffiliate = async (): Promise<{ tag: string | null; mattTool: string | null }> => {
+> 168	      if (!autoMonetizeOn) return { tag: null, mattTool: null };
+> 169	      try {
+> 170	        const { data: aff } = await admin.from("affiliate_config")
+> 171	          .select("affiliate_tag, matt_tool").eq("user_id", run.user_id).eq("platform", "mercadolivre").eq("is_active", true).maybeSingle();
+> 172	        return { tag: aff?.affiliate_tag ?? null, mattTool: aff?.matt_tool ?? null };
+> 173	      } catch { return { tag: null, mattTool: null }; }
+> 174	    };
+> 175	
+> 176	    // Monetize `body` for every chosen product (primary = products[0] gets a guaranteed CTA; secondaries link only
+> 177	    // if mentioned), keyed to this creative's content_library id, then write a creative_metrics baseline row
+> 178	    // (fail-soft). Returns the rewritten body + how many products were linked. FR-VA-004 / FR-VA-009.
+> 179	    const monetizeSurface = async (
+> 180	      body: string, contentId: string, platform: string, format: "html" | "text", aff: { tag: string | null; mattTool: string | null },
+> 181	    ): Promise<{ body: string; linked: number }> => {
+> 182	      let out = body;
+> 183	      let linked = 0;
+> 184	      if (aff.tag) {
+> 185	        for (let i = 0; i < products.length; i++) {
+> 186	          const r = await monetizeForProduct(admin as any, supabaseUrl, out, run.user_id, aff.tag, products[i], {
+> 187	            campaignId: campaign_id || null, mattTool: aff.mattTool, contentVariantId: contentId, platform, format, guaranteeCta: i === 0,
+> 188	          });
+> 189	          out = r.content; linked += r.linked;
+> 190	        }
+> 191	      }
+> 192	      await admin.from("creative_metrics").insert({
+> 193	        user_id: run.user_id,
+> 194	        content_variant_id: contentId,
+> 195	        product_id: products[0]?.external_id ?? null,
+> 196	        platform,
+> 197	        source: "organic",
+> 198	        impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,
+> 199	      }).then(() => {}, (e: any) => console.warn("[orchestrate-step] creative_metrics baseline skipped:", e?.message));
+> 200	      return { body: out, linked };
+> 201	    };
+> 202	
+> 203	    // Load user API keys to resolve correct preferred AI models and keys
+> 204	    const { data: userKeys } = await admin
+> 205	      .from("decrypted_user_api_keys")
+> 206	      .select("*")
+> 207	      .eq("user_id", run.user_id)
+> 208	      .maybeSingle();
+> 209	
+> 210	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 211	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 212	    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 213	    const prefModel = userKeys?.pref_ai_model ?? null;
+> 214	    const prefRequiresOR = prefModel && (prefModel.includes("/") || prefModel.startsWith("gemini-"));
+> 215	    const aiKey = prefRequiresOR ? (openRouterKey || groqKey) : (groqKey || openRouterKey);
+> 216	    const isGroq = !prefRequiresOR && !!groqKey && aiKey === groqKey;
+> 217	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 218	    const orPrefModel = prefModel?.startsWith("gemini-") ? `google/${prefModel}` : prefModel;
+> 219	    const selectedModel = orPrefModel ?? (isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct");
+> 220	
+> 221	    console.log(`[orchestrate-step] Executing step "${step}" for run ${run_id}`);
+> 222	
+> 223	    if (step === "article_generation") {
+> 224	      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 225	      try {
+> 226	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 227	        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 228	          method: "POST",
+> 229	          headers: { 
+> 230	            Authorization: `Bearer ${aiKey}`, 
+> 231	            "Content-Type": "application/json",
+> 232	            "HTTP-Referer": "https://mcorch.com",
+> 233	            "X-Title": "GCRUX Constellation"
+> 234	          },
+> ```
+
+## 🤖 Claude *(19:23:58)*
+
+
+## 🤖 Claude *(19:24:01)*
+
+Schema vivo confirmado: `affiliate_links` tem `clicks`/`revenue_cents`/`content_id` (o sinal real já populado pelo click-ledger); `optimization_policy` usa `action_type`+`context`/`action_details` jsonb (sem coluna scope). `orchestrate-step` lê `metadata` (158) e escreve `creative_metrics` baseline (192) — vou taggear `cycle_id` ali + injetar a policy nos 3 builders. Localizando os call-sites das mensagens (linkedin/twitter) pra threading do feedback.
+
+## 🤖 Claude *(19:24:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== message builder call-sites + step handlers in orchestrate-step ===\"\ngrep -nE 'articleMessages\\(|linkedinMessages\\(|twitterMessages\\(|step === \"|messages:' supabase/functions/orchestrate-step/index.ts\necho \"\"\necho \"=== content_library.id capture (= content_variant_id) \u2014 how contentId is obtained per creative ===\"\ngrep -nE 'content_library|contentId|\\.insert\\(|monetizeSurface\\(' supabase/functions/orchestrate-step/index.ts | head -20",
+  "description": "Find message call-sites + contentId capture in orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === message builder call-sites + step handlers in orchestrate-step ===
+> 63:function articleMessages(topic: string, siteUrl: string, products: ChosenProduct[]) {
+> 77:function linkedinMessages(topic: string, articleLink: string, products: ChosenProduct[]) {
+> 91:function twitterMessages(topic: string, xLink: string, products: ChosenProduct[]) {
+> 223:    if (step === "article_generation") {
+> 237:            messages: articleMessages(topic, site_url, products),
+> 373:    } else if (step === "wordpress_publish") {
+> 423:    } else if (step === "linkedin_post") {
+> 440:            messages: linkedinMessages(topic, articleLink, products),
+> 503:    } else if (step === "twitter_thread") {
+> 519:            messages: twitterMessages(topic, xLink, products),
+> 589:    } else if (step === "knowledge_mesh") {
+> 
+> === content_library.id capture (= content_variant_id) — how contentId is obtained per creative ===
+> 177:    // if mentioned), keyed to this creative's content_library id, then write a creative_metrics baseline row
+> 180:      body: string, contentId: string, platform: string, format: "html" | "text", aff: { tag: string | null; mattTool: string | null },
+> 187:            campaignId: campaign_id || null, mattTool: aff.mattTool, contentVariantId: contentId, platform, format, guaranteeCta: i === 0,
+> 192:      await admin.from("creative_metrics").insert({
+> 194:        content_variant_id: contentId,
+> 275:          //    to its content_library id (affiliate_links.content_id) + a creative_metrics baseline row.
+> 282:            const { data: inserted } = await admin.from("content_library").insert({
+> 287:            const contentId = inserted?.id ?? null;
+> 288:            if (contentId) {
+> 290:              const m = await monetizeSurface(articleContent, contentId, "wordpress", "html", aff);
+> 294:                await admin.from("content_library").update({
+> 297:                }).eq("id", contentId);
+> 312:            await admin.from("content_library").insert({
+> 339:          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 353:                const { data: imgRow } = await admin.from("content_library").insert({
+> 466:          const { data: liContent } = await admin.from("content_library").insert({
+> 474:            const m = await monetizeSurface(liText, liContent.id, "linkedin", "text", aff);
+> 477:              await admin.from("content_library").update({
+> 485:            await admin.from("scheduled_posts").insert({
+> 552:          const { data: xContent } = await admin.from("content_library").insert({
+> ```
+
+## 🤖 Claude *(19:25:19)*
+
+
+## 🤖 Claude *(19:25:21)*
+
+Mapa completo da orchestrate-step: 3 call-sites de mensagens (237/440/519), `monetizeSurface` escreve o baseline (192), `contentId` = content_library.id. Tenho tudo. Construindo o R3 — começo pelas 2 funções novas (analyze lê o sinal real de `affiliate_links` direto + ranqueia → policy; collect sincroniza o ledger → creative_metrics).
+
+## 🤖 Claude *(19:25:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "content": "// autopilot-analyze \u2014 Viral Autopilot cycle analyzer (FR-VA-010 \u2192 feeds FR-VA-011). verify_jwt=false.\n// SOP: docs/processes/autopilot-cron-identity.md.\n//\n// Reads the PREVIOUS cycle's creatives and their REAL performance (the live affiliate click ledger\n// affiliate_links.clicks/revenue_cents, joined by content_id = content_variant_id), ranks the winning\n// product + platform, and writes an optimization_policy that the generator injects next cycle (FR-VA-011).\n//\n// Identity: service-role-only (403 otherwise). The tenant is DERIVED FROM previous_cycle_id (autopilot_cycles\n// row), NEVER from the body (anti-IDOR; same principle as finalize_vision_job). Billing: ANALYZE_COST(2) is\n// charged ONLY when has_real_data AND NOT prepaid (the cycle pre-reserved the 2 \u2014 FR-VA-007). No real data \u2192\n// 0 mco + 'analyze_empty' telemetry, and NO policy is invented.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\nconst ANALYZE_COST = 2;\nconst UUID_RE = /^[0-9a-fA-F-]{36}$/;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  if (req.headers.get(\"Authorization\") !== `Bearer ${serviceKey}`) return json({ error: \"Forbidden\" }, 403);\n  const admin = createClient(url, serviceKey);\n  const logEvent = (event: string) =>\n    admin.from(\"infra_health_logs\").insert({ service: \"autopilot-analyze\", status: \"healthy\", event }).then(() => {}, () => {});\n\n  try {\n    const body = await req.json().catch(() => ({}));\n    const prevCycleId = typeof body?.previous_cycle_id === \"string\" ? body.previous_cycle_id : null;\n    const prepaid = body?.prepaid === true;\n    if (!prevCycleId || !UUID_RE.test(prevCycleId)) return json({ error: \"previous_cycle_id (uuid) required\" }, 422);\n\n    // Tenant + plan DERIVED from the trusted cycle row (never the body).\n    const { data: cyc } = await admin.from(\"autopilot_cycles\").select(\"user_id, plan_id\").eq(\"id\", prevCycleId).maybeSingle();\n    if (!cyc) return json({ error: \"cycle_not_found\" }, 404);\n    const userId = cyc.user_id as string;\n    const planId = cyc.plan_id as string;\n\n    // The cycle's creatives (content_variant_id \u2194 product/platform), tagged by orchestrate-step at generation.\n    const { data: metrics } = await admin.from(\"creative_metrics\")\n      .select(\"content_variant_id, product_id, platform\")\n      .eq(\"cycle_id\", prevCycleId).eq(\"user_id\", userId);\n    const creatives = (metrics ?? []) as Array<{ content_variant_id: string; product_id: string | null; platform: string | null }>;\n\n    // Live click ledger (authoritative real signal) keyed by content_id = content_variant_id.\n    const variantIds = [...new Set(creatives.map((c) => c.content_variant_id).filter(Boolean))];\n    const linkByVariant = new Map<string, { clicks: number; rev: number }>();\n    if (variantIds.length) {\n      const { data: links } = await admin.from(\"affiliate_links\")\n        .select(\"content_id, clicks, revenue_cents\")\n        .eq(\"user_id\", userId).in(\"content_id\", variantIds);\n      for (const l of (links ?? []) as Array<{ content_id: string; clicks: number | null; revenue_cents: number | null }>) {\n        const e = linkByVariant.get(l.content_id) ?? { clicks: 0, rev: 0 };\n        e.clicks += Number(l.clicks ?? 0); e.rev += Number(l.revenue_cents ?? 0);\n        linkByVariant.set(l.content_id, e);\n      }\n    }\n\n    // Aggregate clicks/revenue by product (external_id) and platform, using the live ledger as the click source.\n    const byProduct = new Map<string, { clicks: number; rev: number }>();\n    const byPlatform = new Map<string, { clicks: number; rev: number }>();\n    const bump = (m: Map<string, { clicks: number; rev: number }>, k: string | null, clicks: number, rev: number) => {\n      if (!k) return; const e = m.get(k) ?? { clicks: 0, rev: 0 }; e.clicks += clicks; e.rev += rev; m.set(k, e);\n    };\n    let totalClicks = 0, totalRev = 0;\n    for (const c of creatives) {\n      const live = linkByVariant.get(c.content_variant_id) ?? { clicks: 0, rev: 0 };\n      bump(byProduct, c.product_id, live.clicks, live.rev);\n      bump(byPlatform, c.platform, live.clicks, live.rev);\n      totalClicks += live.clicks; totalRev += live.rev;\n    }\n\n    const hasRealData = totalClicks > 0 || totalRev > 0;\n    if (!hasRealData) {\n      logEvent(\"autopilot_analyze_empty\");\n      return json({ ok: true, has_real_data: false, charged: 0 });\n    }\n\n    // Pick the winner: most clicks, revenue as tiebreak.\n    const pick = (m: Map<string, { clicks: number; rev: number }>) =>\n      [...m.entries()].sort((a, b) => (b[1].clicks - a[1].clicks) || (b[1].rev - a[1].rev))[0]?.[0] ?? null;\n    const topProductId = pick(byProduct);\n    const topPlatform = pick(byPlatform);\n    let topProductName: string | null = null;\n    if (topProductId) {\n      const { data: p } = await admin.from(\"vm_affiliate_products\").select(\"name\").eq(\"external_id\", topProductId).maybeSingle();\n      topProductName = (p as { name?: string } | null)?.name ?? null;\n    }\n\n    const actionDetails = {\n      top_product_id: topProductId, top_product_name: topProductName, top_platform: topPlatform,\n      signal: \"affiliate_clicks\", clicks_total: totalClicks, revenue_cents_total: totalRev,\n    };\n    const { data: pol } = await admin.from(\"optimization_policy\").insert({\n      user_id: userId, action_type: \"viral_autopilot\", action_details: actionDetails,\n      reward: totalClicks, context: { scope: `viral_autopilot:${planId}`, plan_id: planId, cycle_id: prevCycleId }, applied: false,\n    }).select(\"id\").single();\n\n    // Self-bill ONLY on the standalone path; the inline (prepaid) path was pre-reserved by the cycle.\n    let charged = 0;\n    if (!prepaid) {\n      const { error: dErr } = await admin.rpc(\"deduct_mco_coins\", {\n        p_user_id: userId, p_amount: ANALYZE_COST, p_action: \"autopilot_analyze\", p_context: { cycle_id: prevCycleId },\n      });\n      if (dErr) return json({ error: \"insufficient_balance\", detail: dErr.message }, 402);\n      charged = ANALYZE_COST;\n    }\n\n    logEvent(\"autopilot_analyze_done\");\n    return json({ ok: true, has_real_data: true, charged, policy_id: pol?.id ?? null, policy: actionDetails });\n  } catch (e) {\n    return json({ error: e instanceof Error ? e.message : \"unknown\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:26:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts",
+  "content": "// autopilot-collect \u2014 Viral Autopilot engagement collector (FR-VA-008). verify_jwt=false. service-role-only.\n// SOP: docs/processes/autopilot-cron-identity.md.\n//\n// For a cycle, syncs the LIVE affiliate click ledger (affiliate_links.clicks/revenue_cents) into creative_metrics\n// (source='affiliate_click', UNIQUE(content_variant_id,source) \u2192 upsert) so the metrics table reflects real\n// performance for the analyzer + the UI/ROI. Organic platform insights (impressions/engagements via LinkedIn/Meta\n// APIs) are best-effort and DELIBERATELY fail-soft / skipped when the tenant has no insights tier (FR-VA-008\n// \"best-effort por API tier\") \u2014 never fabricated. Identity: service-role-only; tenant derived from the cycle row.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\nconst UUID_RE = /^[0-9a-fA-F-]{36}$/;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  if (req.headers.get(\"Authorization\") !== `Bearer ${serviceKey}`) return json({ error: \"Forbidden\" }, 403);\n  const admin = createClient(url, serviceKey);\n\n  try {\n    const body = await req.json().catch(() => ({}));\n    const cycleId = typeof body?.cycle_id === \"string\" ? body.cycle_id : null;\n    if (!cycleId || !UUID_RE.test(cycleId)) return json({ error: \"cycle_id (uuid) required\" }, 422);\n\n    // Tenant DERIVED from the trusted cycle row (never the body).\n    const { data: cyc } = await admin.from(\"autopilot_cycles\").select(\"user_id\").eq(\"id\", cycleId).maybeSingle();\n    if (!cyc) return json({ error: \"cycle_not_found\" }, 404);\n    const userId = cyc.user_id as string;\n\n    // The cycle's creatives (the baseline rows orchestrate-step tagged with this cycle_id).\n    const { data: metrics } = await admin.from(\"creative_metrics\")\n      .select(\"content_variant_id, product_id, platform\")\n      .eq(\"cycle_id\", cycleId).eq(\"user_id\", userId).eq(\"source\", \"organic\");\n    const creatives = (metrics ?? []) as Array<{ content_variant_id: string; product_id: string | null; platform: string | null }>;\n\n    let updated = 0;\n    for (const c of creatives) {\n      // Live click ledger for this creative (affiliate_links.content_id = content_variant_id).\n      const { data: links } = await admin.from(\"affiliate_links\")\n        .select(\"clicks, revenue_cents\").eq(\"user_id\", userId).eq(\"content_id\", c.content_variant_id);\n      let clicks = 0, rev = 0;\n      for (const l of (links ?? []) as Array<{ clicks: number | null; revenue_cents: number | null }>) {\n        clicks += Number(l.clicks ?? 0); rev += Number(l.revenue_cents ?? 0);\n      }\n      if (clicks <= 0 && rev <= 0) continue; // nothing real yet for this creative\n\n      // Upsert the 'affiliate_click' signal row (separate from the 'organic' baseline; UNIQUE content_variant_id,source).\n      const { error } = await admin.from(\"creative_metrics\").upsert({\n        user_id: userId, cycle_id: cycleId, content_variant_id: c.content_variant_id,\n        product_id: c.product_id, platform: c.platform, source: \"affiliate_click\",\n        affiliate_clicks: clicks, revenue_cents: rev, collected_at: new Date().toISOString(),\n      }, { onConflict: \"content_variant_id,source\" });\n      if (!error) updated++;\n      else console.warn(`[autopilot-collect] upsert skipped ${c.content_variant_id}: ${error.message}`);\n    }\n\n    // Organic engagement insights (impressions/likes/shares) \u2014 best-effort, tier-gated; not implemented for the\n    // MVP networks here. Left as a fail-soft no-op rather than fabricated data (Lei 1). FR-VA-008 enhancement slice.\n    admin.from(\"infra_health_logs\").insert({ service: \"autopilot-collect\", status: \"healthy\" }).then(() => {}, () => {});\n    return json({ ok: true, creatives: creatives.length, updated, organic: \"skipped_no_tier\" });\n  } catch (e) {\n    return json({ error: e instanceof Error ? e.message : \"unknown\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:26:28)*
+
+
+## 🤖 Claude *(19:26:29)*
+
+As 2 funções R3 escritas. Agora as edições na `orchestrate-step` (tag `cycle_id` + injeção de feedback FR-VA-011). Leio o trecho entre os builders e o handler pra inserir os helpers no lugar certo.
+
+## 🤖 Claude *(19:26:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 97,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 97	    ];
+> 98	  }
+> 99	  return [
+> 100	    { role: "system", content: "Você é um especialista em X/Twitter. Crie threads virais de 5 tweets. Cada tweet deve ter max 280 chars. Formato: retorne JSON com 'tweets' (array de strings)." },
+> 101	    { role: "user", content: `Crie uma thread de 5 tweets sobre: "${topic}". Link do artigo (último tweet): ${xLink}. Foco em marketing com IA e ROI.` },
+> 102	  ];
+> 103	}
+> 104	
+> 105	Deno.serve(async (req) => {
+> 106	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 107	
+> 108	  try {
+> 109	    const authHeader = req.headers.get("Authorization");
+> 110	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 111	    if (authHeader !== `Bearer ${serviceKey}`) {
+> 112	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 113	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 114	      });
+> 115	    }
+> 116	
+> 117	    const { run_id, step } = await req.json();
+> 118	    if (!run_id || !step) {
+> 119	      return new Response(JSON.stringify({ error: "run_id and step are required" }), {
+> 120	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 121	      });
+> 122	    }
+> 123	
+> 124	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 125	    const admin = createClient(supabaseUrl, serviceKey);
+> 126	
+> 127	    // Fetch the run row
+> 128	    const { data: run, error: runErr } = await admin
+> 129	      .from("pipeline_runs")
+> 130	      .select("*")
+> 131	      .eq("id", run_id)
+> 132	      .single();
+> 133	
+> 134	    if (runErr || !run) {
+> 135	      return new Response(JSON.stringify({ error: "Pipeline run not found" }), {
+> 136	        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> ```
+
+## 🤖 Claude *(19:26:55)*
+
+
+## 🤖 Claude *(19:26:56)*
+
+twitterMessages fecha em 103, Deno.serve em 105. Inserindo os helpers de injeção ali + as 5 edições (cycleId, feedbackHint, tag no creative_metrics, 3 wraps de mensagem). 6 edits:
+
+## 🤖 Claude *(19:27:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "  ];\n}\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });",
+  "new_string": "  ];\n}\n\n// FR-VA-011 \u2014 feedback injection. The generator reads the tenant's latest viral_autopilot optimization policy\n// (written by autopilot-analyze from the previous cycle's real performance) and steers the next cycle's creatives\n// toward the winning product/platform. Empty hint \u2192 messages unchanged (backward-compatible).\ntype ChatMsg = { role: string; content: string };\nfunction buildPolicyHint(details: Record<string, unknown> | null | undefined): string {\n  if (!details) return \"\";\n  const parts: string[] = [];\n  if (details.top_product_name) parts.push(`produto vencedor do \u00faltimo ciclo: ${details.top_product_name}`);\n  if (details.top_platform) parts.push(`rede com melhor desempenho: ${details.top_platform}`);\n  return parts.length ? parts.join(\"; \") + \".\" : \"\";\n}\nfunction injectFeedback(messages: ChatMsg[], hint: string): ChatMsg[] {\n  if (!hint) return messages;\n  return [...messages, { role: \"system\", content: `Diretriz de otimiza\u00e7\u00e3o (desempenho real do ciclo anterior): ${hint} D\u00ea prefer\u00eancia a esse \u00e2ngulo ao escrever.` }];\n}\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "    const { topic, platforms, campaign_id, wp_status = \"draft\", site_url = \"mcorch.com\", utmCampaign } = metadata;",
+  "new_string": "    const { topic, platforms, campaign_id, wp_status = \"draft\", site_url = \"mcorch.com\", utmCampaign } = metadata;\n    const cycleId: string | null = (metadata.cycle_id as string) ?? null;   // Viral Autopilot Fatia 2 \u2014 cron cycle link"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "    const autoMonetizeOn = (Deno.env.get(\"AUTO_MONETIZE_ENABLED\") ?? \"true\").toLowerCase() !== \"false\";",
+  "new_string": "    const autoMonetizeOn = (Deno.env.get(\"AUTO_MONETIZE_ENABLED\") ?? \"true\").toLowerCase() !== \"false\";\n\n    // FR-VA-011 \u2014 feedback injection: the tenant's latest viral_autopilot policy steers this cycle's prompts.\n    let feedbackHint = \"\";\n    if (hasProducts) {\n      try {\n        const { data: pol } = await admin.from(\"optimization_policy\")\n          .select(\"action_details\").eq(\"user_id\", run.user_id).eq(\"action_type\", \"viral_autopilot\")\n          .order(\"created_at\", { ascending: false }).limit(1).maybeSingle();\n        feedbackHint = buildPolicyHint((pol as { action_details?: Record<string, unknown> } | null)?.action_details);\n      } catch { /* policy read is best-effort \u2014 never block generation */ }\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "      await admin.from(\"creative_metrics\").insert({\n        user_id: run.user_id,\n        content_variant_id: contentId,",
+  "new_string": "      await admin.from(\"creative_metrics\").insert({\n        user_id: run.user_id,\n        cycle_id: cycleId,\n        content_variant_id: contentId,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "            messages: articleMessages(topic, site_url, products),",
+  "new_string": "            messages: injectFeedback(articleMessages(topic, site_url, products), feedbackHint),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "            messages: linkedinMessages(topic, articleLink, products),",
+  "new_string": "            messages: injectFeedback(linkedinMessages(topic, articleLink, products), feedbackHint),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "            messages: twitterMessages(topic, xLink, products),",
+  "new_string": "            messages: injectFeedback(twitterMessages(topic, xLink, products), feedbackHint),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:35)*
+
+
+## 🤖 Claude *(19:27:37)*
+
+orchestrate-step fiada (tag `cycle_id` + injeção de feedback nos 3 builders). Agora a fiação no `autopilot-run` (lookup do ciclo anterior → collect+analyze antes do fan-out, com `actual` consumindo a reserva de 2) + os 2 entries no config.toml.
+
+## 🤖 Claude *(19:27:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "    const cycleId = begun.cycle_id as string;\n\n    // \u2500\u2500 Fan-out: product \u00d7 platform \u00d7 variant \u2192 orchestrate-content (prepaid \u2192 NO self-bill). \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    let succeeded = 0;",
+  "new_string": "    const cycleId = begun.cycle_id as string;\n\n    // \u2500\u2500 R3 loop (FR-VA-010/011): analyze the PREVIOUS completed cycle to steer THIS cycle's generation. \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // collect (sync the live click ledger \u2192 creative_metrics) then analyze (\u2192 optimization_policy). Both inline and\n    // PREPAID \u2014 the cycle reserved ANALYZE_COST(2); analyzeCharged consumes it only when real data produced a policy\n    // (else finalize refunds the 2). Best-effort \u2014 a missing/empty previous cycle just means no steering this round.\n    let analyzeCharged = 0;\n    const svcCall = (fn: string, payload: unknown) => fetch(`${url}/functions/v1/${fn}`, {\n      method: \"POST\",\n      headers: { Authorization: `Bearer ${serviceKey}`, \"Content-Type\": \"application/json\" },\n      body: JSON.stringify(payload),\n    });\n    try {\n      const { data: prev } = await admin.from(\"autopilot_cycles\")\n        .select(\"id\").eq(\"plan_id\", planId).eq(\"user_id\", userId).eq(\"status\", \"completed\")\n        .neq(\"id\", cycleId).order(\"cycle_number\", { ascending: false }).limit(1).maybeSingle();\n      if (prev?.id) {\n        await svcCall(\"autopilot-collect\", { cycle_id: prev.id }).catch(() => {});\n        const ar = await svcCall(\"autopilot-analyze\", { previous_cycle_id: prev.id, prepaid: true })\n          .then((r) => r.json()).catch(() => null);\n        if (ar?.has_real_data) analyzeCharged = ANALYZE_COST;\n      }\n    } catch (e) { console.warn(`[autopilot-run] R3 analyze skipped: ${e}`); }\n\n    // \u2500\u2500 Fan-out: product \u00d7 platform \u00d7 variant \u2192 orchestrate-content (prepaid \u2192 NO self-bill). \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    let succeeded = 0;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "    // actual = successful runs \u00d7 10. The ANALYZE_COST(2) reservation is REFUNDED here because autopilot-analyze\n    // (R3 / FR-VA-010) is not yet wired \u2014 when it lands it will own that 2. Zero successes \u2192 actual 0 \u2192 full refund.\n    const actual = succeeded * ORCH_COST;",
+  "new_string": "    // actual = successful runs \u00d7 10 + analyzeCharged (the reserved 2 is consumed only when the R3 analyze produced\n    // a policy from real data; otherwise finalize refunds it). Zero successes \u2192 actual = analyzeCharged.\n    const actual = succeeded * ORCH_COST + analyzeCharged;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:27:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.autopilot-cadence-cron]\nverify_jwt = false\n[functions.intent-orchestrate]",
+  "new_string": "[functions.autopilot-cadence-cron]\nverify_jwt = false\n[functions.autopilot-analyze]\nverify_jwt = false\n[functions.autopilot-collect]\nverify_jwt = false\n[functions.intent-orchestrate]"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:28:20)*
+
+
+## 🤖 Claude *(19:28:22)*
+
+R3 fiado. Antes do typecheck, endureço o `buildPolicyHint` — o `top_product_name` vem do catálogo (dado externo/Apify) e flui pro prompt via policy; sanitizo (strip newline/backtick + cap) pra manter a disciplina de sentinel da Fatia 1 (defesa em profundidade, mesmo o /security-review excluindo prompt-injection).
+
+## 🤖 Claude *(19:28:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "function buildPolicyHint(details: Record<string, unknown> | null | undefined): string {\n  if (!details) return \"\";\n  const parts: string[] = [];\n  if (details.top_product_name) parts.push(`produto vencedor do \u00faltimo ciclo: ${details.top_product_name}`);\n  if (details.top_platform) parts.push(`rede com melhor desempenho: ${details.top_platform}`);\n  return parts.length ? parts.join(\"; \") + \".\" : \"\";\n}",
+  "new_string": "function buildPolicyHint(details: Record<string, unknown> | null | undefined): string {\n  if (!details) return \"\";\n  // Defense-in-depth: top_product_name originates from external (Apify) catalog data \u2192 strip control chars /\n  // backticks and cap length before it re-enters an LLM prompt (mirrors the Fatia 1 sentinel discipline).\n  const clean = (v: unknown) => String(v ?? \"\").replace(/[\\r\\n`]+/g, \" \").trim().slice(0, 80);\n  const parts: string[] = [];\n  const prod = clean(details.top_product_name); if (prod) parts.push(`produto vencedor do \u00faltimo ciclo: ${prod}`);\n  const plat = clean(details.top_platform); if (plat) parts.push(`rede com melhor desempenho: ${plat}`);\n  return parts.length ? parts.join(\"; \") + \".\" : \"\";\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:28:32)*
+
+
+## 🤖 Claude *(19:28:33)*
+
+Typecheck das 4 funções tocadas pelo R3.
+
+## 🤖 Claude *(19:28:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nif [ -x \"$HOME/.deno/bin/deno\" ]; then\n  \"$HOME/.deno/bin/deno\" check \\\n    supabase/functions/autopilot-analyze/index.ts \\\n    supabase/functions/autopilot-collect/index.ts \\\n    supabase/functions/autopilot-run/index.ts \\\n    supabase/functions/orchestrate-step/index.ts 2>&1 | tail -20\n  echo \"deno-exit=$?\"\nelse echo \"no deno\"; fi",
+  "description": "deno check R3 functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.68.0/dist/module/lib/errors.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.68.0/dist/module/lib/locks.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/PostgrestClient.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/PostgrestQueryBuilder.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/PostgrestFilterBuilder.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/PostgrestTransformBuilder.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/PostgrestBuilder.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/PostgrestError.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/types.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/select-query-parser/result.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.68.0/dist/module/lib/fetch.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.68.0/dist/module/lib/helpers.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.68.0/dist/module/lib/error-codes.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/select-query-parser/utils.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/select-query-parser/types.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/postgrest-js@1.19.2/dist/cjs/select-query-parser/parser.d.ts
+> [0m[32mCheck[0m supabase/functions/autopilot-analyze/index.ts
+> [0m[32mCheck[0m supabase/functions/autopilot-collect/index.ts
+> [0m[32mCheck[0m supabase/functions/autopilot-run/index.ts
+> [0m[32mCheck[0m supabase/functions/orchestrate-step/index.ts
+> deno-exit=0
+> ```
+
+## 🤖 Claude *(19:28:55)*
+
+
+## 🤖 Claude *(19:28:57)*
+
+`deno check` exit 0 nas 4 funções (incl. orchestrate-step). Stage + `/security-review` — o R3 adiciona `analyze` que mexe em dinheiro (`deduct_mco_coins`) + chamadas cross-function + injeção de policy no prompt, então passa pelo gate.
+
+## 🤖 Claude *(19:28:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/autopilot-analyze/index.ts \\\n        supabase/functions/autopilot-collect/index.ts \\\n        supabase/functions/autopilot-run/index.ts \\\n        supabase/functions/orchestrate-step/index.ts \\\n        supabase/config.toml\ngit status --short",
+  "description": "Stage R3 changes for review"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> M  supabase/config.toml
+> A  supabase/functions/autopilot-analyze/index.ts
+> A  supabase/functions/autopilot-collect/index.ts
+> M  supabase/functions/autopilot-run/index.ts
+> M  supabase/functions/orchestrate-step/index.ts
+> ?? deno.lock
+> ```
+
+## 🤖 Claude *(19:29:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "rm -f deno.lock && echo \"cleaned\"",
+  "description": "Remove stray deno.lock"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> cleaned
+> ```
+
+## 🤖 Claude *(19:29:07)*
+
+
+## 🤖 Claude *(19:29:07)*
+
+Staged limpo. Rodando `/security-review` sobre o R3.
+
+## 🤖 Claude *(19:29:07)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(19:29:07)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 3 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   supabase/config.toml
+	new file:   supabase/functions/autopilot-analyze/index.ts
+	new file:   supabase/functions/autopilot-collect/index.ts
+	modified:   supabase/functions/autopilot-run/index.ts
+	modified:   supabase/functions/orchestrate-step/index.ts
+```
+
+FILES MODIFIED:
+
+```
+CLAUDE.md
+docs/processes/autopilot-cron-identity.md
+scripts/qa/smoke-autopilot-budget.ts
+scripts/qa/smoke-autopilot-run.ts
+supabase/config.toml
+supabase/functions/autopilot-cadence-cron/index.ts
+supabase/functions/autopilot-run/index.ts
+supabase/functions/orchestrate-content/index.ts
+supabase/migrations/20260620120000_viral_autopilot_plans.sql
+supabase/migrations/20260620120100_viral_autopilot_cycles.sql
+supabase/migrations/20260620120200_begin_autopilot_cycle.sql
+supabase/migrations/20260620120300_finalize_autopilot_cycle.sql
+```
+
+COMMITS:
+
+```
+commit 54ac2a9c78ca869a73b73b87d3148e487190d5e2
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sat Jun 20 16:03:40 2026 -0300
+
+    feat: Viral Autopilot Fatia 2 — edge functions do cron (executor + driver + caminho prepaid)
+    
+    Constrói a camada que executa a cadência autônoma — deployada e provada zero-cost.
+    A ATIVAÇÃO do pg_cron + o 1º ciclo PAGO real seguem gated no GO do Sovereign.
+    
+    - autopilot-run: executor por plano. Identidade dois-caminhos (service-role + header
+      server-trusted OU user-JWT + load tenant-scoped IDOR-safe). N_runs=produtos×redes×variants;
+      begin_autopilot_cycle (cap+pré-débito atômico) → fan-out orchestrate-content prepaid →
+      finalize_autopilot_cycle (refund do não-usado) → re-arma next_run_at. dry_run projeta custo
+      sem abrir ciclo nem debitar.
+    - autopilot-cadence-cron: driver pg_cron (espelha nurture-cron), 403 sem Bearer SB_SECRET_KEY,
+      varre planos vencidos (índice parcial), fan-out com user_id da linha (nunca do body).
+    - orchestrate-content (FR-VA-016): aceita o caminho cron (service-role + x-autopilot-user-id +
+      prepaid) que pula o débito SEM tocar sentinel/produtos/kick; user-path 100% intacto.
+    - config.toml: verify_jwt=false nas 2 novas funções.
+    
+    /security-review SAFE (6 vetores de dinheiro fechados linha-a-linha). Deploy exit 0
+    (114.8 / 62.26 / 59.52 kB). Smoke deployado 9/9: identity gates + dry_run projected=32 sem
+    gastar + cross-tenant header → 404.
+
+commit 0c59e4d9ed13254290bcfed10e0eb9b7974bf5df
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sat Jun 20 15:02:31 2026 -0300
+
+    test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+    
+    Prova begin_autopilot_cycle / finalize_autopilot_cycle contra o DB vivo com
+    usuário descartável (zero saldo do Sovereign, sem edge fn, sem LLM):
+    pré-débito exato · cap diário/por-ciclo/saldo abortam sem deduzir · refund
+    crédito-positivo · idempotência · clamp anti-mint · FK CASCADE na limpeza.
+    11/11 verde — fecha os gates G3/G4/G5 do SOP autopilot-cron-identity.md.
+
+commit 686bae358396999f2546f3abddacf079337296b3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sat Jun 20 14:59:17 2026 -0300
+
+    feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+    
+    Abre o gate OTD-VA-008 com o SOP antecipado e assenta a fundação financeira da
+    cadência autônoma (R2), sem ainda mover dinheiro — as edge functions do cron são
+    a fatia seguinte. Nenhum centavo se gasta até o runner existir.
+    
+    SOP (Lei 2 — escrito antes do código): docs/processes/autopilot-cron-identity.md
+      Cron prova `Bearer SB_SECRET_KEY` in-function e deriva user_id da linha do banco
+      (autopilot_plans.user_id), nunca do body; pré-débito/refund atômico; 10 gates.
+    
+    Migrations (aplicadas + verificadas materialmente):
+      - autopilot_plans / autopilot_cycles: FK composta tenant-escopada, RESTRICTIVE
+        no-delete, write default-deny; fecha a FK composta pendente de creative_metrics.
+      - begin_autopilot_cycle: cap diário + cap por ciclo + saldo + pré-débito ÚNICO sob
+        pg_advisory_xact_lock (anti-TOCTOU), service-role-only.
+      - finalize_autopilot_cycle: refund crédito-positivo idempotente (claim-once),
+        espelha finalize_vision_job; jamais deduct negativo (anti-mint).
+    
+    /security-review SAFE (0 findings). Prova viva: anon -> 401 permission denied;
+    service-role projected=0 -> 22023 guard antes de qualquer lookup/débito.
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (77.1KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/034e4fdb-b4b4-4ef6-bae7-10d32bd4551c/tool-results/bwf9cqgwm.txt
+
+Preview (first 2KB):
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9aa375d..d768c82 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -420,6 +420,8 @@ Edge Function secrets (configured in Lovable Cloud vault, not in `.env`): `STRIP
+ | **Schema drift audit SOP + tool** | `docs/processes/schema-drift-audit.md` + `scripts/qa/audit-schema-drift.sh` (deployed↔migration drift: ledger · out-of-band fns/triggers · RPC caller-contract · edge `verify_jwt` · RLS/search_path advisory; exit 1=drift. Born do P0 do hotfix-sem-migration. **Regra: todo hotfix de prod vira migration na MESMA sessão**) |
+ | **Drift audit report + remediation (2026-06-03)** | `.claude/context/drift-audit-2026-06-03.md` (1 drift real benigno `rls_auto_enable` capturado · 7 SECURITY DEFINER search_path travados · trigger pg_net morto kong:8000 dropado — migrations `20260603210000`/`210500`/`211000`, /security-review SAFE, re-audit exit 0) |
+ | **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4×-floor model `mco=ceil(usd/$0.018×4)`; OTD-MCOIN-CALIBRATION closed) |
++| **Viral Autopilot cron-identity SOP (Lei 2)** | `docs/processes/autopilot-cron-identity.md` (OTD-VA-008 gate — cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha [nunca body]; pré-débito/refund atômico FR-VA-007/021; 10 gates) |
++| **Viral Autopilot cadence schema + money RPCs (Fatia 2)** | `supabase/migrations/20260620120000_viral_autopilot_plans.sql` · `…120100_viral_autopilot_cycles.sql` (FK composta tenant-escopada + RESTRICTIVE no-delete + fecha FK composta de `creative_metrics`) · `…120200_begin_autopilot_cycle.sql` (cap+pré-débito atômico advisory-lock, service-role-only) · `…120300_finalize_autopilot_cycle.sql` (refund crédito-positivo idempotente, espelha `finalize_vision_job`) |
+ | **QA user-JWT minter** | `scripts/qa/gen-user-jwt.ts` (admin generateLink→verifyOtp→access_token for authenticated edge-fn QA) |
+ | **Build & Deploy skill** | `.claude/skills/build-deploy-guardian/SKILL.md` |
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(19:29:12)*
+
+
+## 🤖 Claude *(19:29:36)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review R3 loop functions",
+  "subagent_type": "general-purpose",
+  "prompt": "Senior security engineer \u2014 focused review of the Viral Autopilot R3 (self-improving loop) edge-function changes. READ THE FILES DIRECTLY.\n\nNEW files:\n1. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts\n2. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts\nMODIFIED:\n3. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts  (added an \"R3 block\" before the fan-out that calls collect+analyze on the previous cycle)\n4. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts  (added buildPolicyHint + injectFeedback helpers, a cycleId tag, a feedbackHint loaded from optimization_policy, and wrapped 3 message-builder call sites)\n5. /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml  (verify_jwt=false for autopilot-analyze, autopilot-collect)\n\nCONTEXT \u2014 Supabase Deno edge functions, multi-tenant, mcoCoins = real money (deduct_mco_coins RPC). The R3 loop: after a cadence cycle, autopilot-analyze reads the PREVIOUS cycle's real performance (creative_metrics joined to the live affiliate_links click ledger) \u2192 writes an optimization_policy; orchestrate-step reads the tenant's latest policy and injects a hint into the LLM prompt; autopilot-collect syncs affiliate_links clicks into creative_metrics. These functions run verify_jwt=false.\n\nCompare to the established patterns (read to calibrate): supabase/functions/nurture-cron/index.ts (service-role 403 self-check), supabase/functions/autopilot-run/index.ts and autopilot-cadence-cron (already-reviewed-SAFE service-role gate), docs/processes/autopilot-cron-identity.md, supabase/migrations/20260603220000_secure_ledger_rpcs.sql (deduct_mco_coins guards).\n\nTHREAT CLASSES (be concrete, line numbers):\n1. **Authorization:** can an UNTRUSTED client (anon / normal authenticated user with their own JWT) invoke autopilot-analyze or autopilot-collect? Both should 403 unless Authorization === `Bearer ${SB_SECRET_KEY}`. Check the self-check line in each.\n2. **Cross-tenant:** autopilot-analyze/collect take previous_cycle_id / cycle_id from the body. Do they DERIVE the tenant (user_id) from the cycle ROW (autopilot_cycles) rather than trusting a body-supplied user_id? Trace: can a caller make analyze/collect read or write another tenant's creative_metrics / optimization_policy / affiliate_links, or charge another tenant? (Remember: only service-role reaches these due to #1 \u2014 so the question is whether the SERVICE caller could be tricked, and whether the tenant derivation is row-based.)\n3. **Money:** autopilot-analyze calls deduct_mco_coins (2 mco) when !prepaid && has_real_data. Could this be abused to drain a victim's balance? Note it's service-role-only (403 gate) and the user_id comes from the cycle row. Is there any path where an untrusted caller controls who gets charged?\n4. **optimization_policy write:** analyze inserts into optimization_policy with user_id from the cycle row. Any cross-tenant write? The orchestrate-step feedback read: it selects optimization_policy WHERE user_id = run.user_id \u2014 confirm it's scoped to the run's own tenant (no cross-tenant policy leakage into another tenant's prompt).\n5. **Prompt injection via the policy hint:** orchestrate-step's buildPolicyHint takes top_product_name (external Apify catalog data) from optimization_policy and injects it into the LLM prompt. NOTE: per the review rules, \"including user-controlled content in AI system prompts is not a vulnerability\" \u2014 so do NOT report prompt-injection-into-LLM. Only flag if the hint string flows into something OTHER than an LLM prompt (e.g., SQL, HTML sink, a shell). Confirm buildPolicyHint output only goes into the chat messages array.\n6. **Secrets:** SB_SECRET_KEY logged/leaked? Hardcoded secrets?\n7. **SQL injection:** any dynamic SQL / string-built queries? (Expect none \u2014 all .from().select().eq() builder calls.)\n\nRULES: >80% confidence. service_role / SB_SECRET_KEY is the TRUSTED backend \u2014 \"the backend can move money / read any tenant\" is NOT a vuln; the question is whether an UNTRUSTED client (anon / a normal authenticated user) can, OR whether a body value can trick the service path into cross-tenant action. Skip DOS/rate-limit/log-spoofing/prompt-injection-into-LLM (rule 14)/lack-of-hardening. No findings in markdown/doc files.\n\nOUTPUT: markdown. Each finding: file:line, Severity, Category, Description, concrete Exploit Scenario, Fix, Confidence 1-10. If NO high-confidence vulns, say so explicitly and justify each threat class with the specific lines (the 403 self-check in analyze + collect, the tenant-derivation-from-cycle-row lines, the orchestrate-step user_id-scoped policy read, and where buildPolicyHint output lands). Be precise."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
