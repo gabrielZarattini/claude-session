@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1075
-> * **Sessões do Claude**: 1033
+> * **Total de Sessões Registradas**: 1076
+> * **Sessões do Claude**: 1034
 > * **Sessões do Gemini**: 42
 
 ---
@@ -71,7 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-20 - agent-ad4e0b0cce422b3a2]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-ad4a9819e324a2c74]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-acc2c69e7abf823f4]]` - *2026-06-20*
-*   *... e mais 1039 sessões nessa categoria.*
+*   *... e mais 1040 sessões nessa categoria.*
 
 ---
 
@@ -298,6 +298,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-20 - agent-a661ea1c36f457903]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a645fff5ecf523157]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a5f2c268051a5ff96]]` (ClaudeSessions)
+*   `[[2026-06-20 - agent-a5ba13b5dbf2e0915]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a512017b7858f271d]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a4a94e813d8fb64c6]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a48d6a1fec6d06106]]` (ClaudeSessions)

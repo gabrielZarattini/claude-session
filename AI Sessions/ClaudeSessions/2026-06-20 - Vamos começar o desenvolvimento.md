@@ -7331,6 +7331,1430 @@ O commit não rodou (HEAD ainda em `35554da`); o `pkill` matou o script antes. P
 > bfd178b feat: Viral Autopilot Fatia 2 — UI (useAutopilot + AutopilotPage) para criar/gerenciar planos
 > ```
 
+## 🤖 Claude *(20:00:18)*
+
+
+## 🤖 Claude *(20:00:19)*
+
+**UI commitada: `bfd178b`** — gates limpos. Render provado ocular + visual.
+
+## 🤖 Claude *(20:00:20)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/autopilot.png"
+  ],
+  "caption": "/dashboard/autopilot \u2014 render provado no preview local (sess\u00e3o do Usu\u00e1rio Zero injetada, sem redirect /auth). Empty-state pronto pra criar o 1\u00ba plano.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(20:00:27)*
+
+
+## 🤖 Claude *(20:00:40)*
+
+## 🏁 Fatia 2 — COMPLETA de ponta a ponta
+
+5 commits esta sessão, cada um revisado + provado materialmente, **zero centavo gasto**:
+
+| # | Commit | O quê |
+|---|---|---|
+| 1 | `686bae3` | SOP Lei 2 + migrations (2 tabelas + 2 RPCs atômicos) |
+| 2 | `0c59e4d` | smoke RPC 11/11 (pré-débito/cap/refund/clamp) |
+| 3 | `54ac2a9` | edge fns: `autopilot-run` + `-cadence-cron` + FR-VA-016 prepaid |
+| 4 | `35554da` | **R3 loop**: `-analyze` + `-collect` + FR-VA-011 injection |
+| 5 | `bfd178b` | **UI**: `useAutopilot` + `AutopilotPage` + rota + nav |
+
+**O motor autônomo R1+R2+R3+R4 está vivo, blindado e usável:**
+- **Cadência (R2):** cron prova service-role → cap+pré-débito atômico → fan-out prepaid → finalize/refund → re-arma. `verify_jwt=false`, identidade server-trusted (OTD-VA-008 fechado).
+- **Loop auto-melhorável (R3):** collect (ledger→métricas) → analyze (ranqueia → policy) → o gerador injeta a diretiva vencedora no próximo ciclo. **Provado:** WIN>LOSE → policy.
+- **UI:** você cria/pausa planos, **Simular** (dry_run zero-cost) e **Rodar agora**, vê ciclos/ROI — tudo em `/dashboard/autopilot` (render provado acima).
+
+**Provas:** `/security-review` SAFE **3×** · **3 smokes zero-cost (31 gates)** · tsc 0 · build ✓ · render ocular · 6 edge fns deployadas · migrations verificadas via Management API.
+
+O que resta é **ação sua** (não código autônomo): ativar o `pg_cron` schedule + rodar o 1º ciclo **pago** real — gated nos 2 desbloqueios que diagnostiquei na Fatia 1b (**CF WAF skip `/wp-json`** + **OpenAI image access**) pra saída visível. Só sobra 1 item autônomo menor: `fetch-trends`→pauta (FR-VA-018).
+
+Acho que é o ponto de selar — milestone completo e coerente, resto é seu. Como fechamos?
+
+## 🤖 Claude *(20:00:47)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Fatia 2 completa (motor cad\u00eancia+R3+UI, 5 commits, tudo provado zero-cost). Como fechamos?",
+      "header": "Fechar",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Selar a Fatia 2 (/handoff)",
+          "description": "Selo a sess\u00e3o registrando o motor aut\u00f4nomo completo (SOP + 4 migrations + 6 edge fns + UI + 3 smokes) como milestone \u2014 commits + HANDOFF.md + n\u00f3 na malha + Survival Laws self-audit. Milestone limpo; ativa\u00e7\u00e3o pg_cron/1\u00ba ciclo pago retomam quando voc\u00ea fizer as 2 a\u00e7\u00f5es (CF + OpenAI)."
+        },
+        {
+          "label": "fetch-trends (FR-VA-018)",
+          "description": "Antes de selar, fecho o \u00faltimo item aut\u00f4nomo: reconectar fetch-trends/vm_trends \u2192 o autopilot-run l\u00ea os trends p/ pautar o \u00e2ngulo viral do ciclo (texto de trend sanitizado pelo sentinel). Pequeno, zero-cost de provar."
+        },
+        {
+          "label": "1\u00ba ciclo PAGO real agora",
+          "description": "Voc\u00ea cria um plano na UI (ou eu crio via SQL) + ativo o pg_cron OU disparo autopilot-run uma vez com mco real. \u26a0\ufe0f Custa ~30 mco/ciclo e a publica\u00e7\u00e3o vis\u00edvel segue travada at\u00e9 voc\u00ea fazer CF WAF /wp-json + OpenAI image \u2014 valida o motor end-to-end, n\u00e3o a sa\u00edda publicada."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Fatia 2 completa (motor cadência+R3+UI, 5 commits, tudo provado zero-cost). Como fechamos?"="Selar a Fatia 2 (/handoff)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(20:02:24)*
+
+
+## 🤖 Claude *(20:02:24)*
+
+O Sovereign escolheu **selar**. Executando o protocolo /handoff.
+
+## 🤖 Claude *(20:02:24)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(20:02:24)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(20:02:40)*
+
+
+## 🤖 Claude *(20:02:41)*
+
+Executando o protocolo de seal. Pré-flight + Phase 1 (security audit) em paralelo.
+
+## 🤖 Claude *(20:02:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (should be clean \u2014 all committed) ===\"; git status --short\necho \"=== recent commits (this session = 5) ===\"; git log --oneline -7 | cat\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc-exit=${PIPESTATUS[0]}\"\necho \"=== infra ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" | head -1; curl -s http://localhost:8001/api/v2/heartbeat",
+  "description": "Pre-flight: git, tsc, infra"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (should be clean — all committed) ===
+> === recent commits (this session = 5) ===
+> bfd178b feat: Viral Autopilot Fatia 2 — UI (useAutopilot + AutopilotPage) para criar/gerenciar planos
+> 35554da feat: Viral Autopilot Fatia 2 — R3 loop auto-melhorável (analyze + collect + feedback injection)
+> 54ac2a9 feat: Viral Autopilot Fatia 2 — edge functions do cron (executor + driver + caminho prepaid)
+> 0c59e4d test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+> 686bae3 feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+> 44e5887 chore(sprint): registra v6.43.0 — Viral Autopilot Fatias 1 + 1b + diagnóstico saída visível
+> 7e6fcd5 docs(handoff): seal Viral Autopilot Fatias 1 + 1b — product-aware + monetização cross-surface + imagem + diagnóstico saída visível
+> === tsc ===
+> tsc-exit=0
+> === infra ===
+> mcorch_vision_mcp: Up 3 days (healthy)
+> mcorch_claude_mem: Up 5 days (healthy)
+> mcorch_chroma: Up 5 days (healthy)
+> mega-brain-dashboard: Up 5 days
+> {"nanosecond heartbeat":1781985765210052358}
+> ```
+
+## 🤖 Claude *(20:02:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (session commits) ===\"\ngit diff 686bae3~1..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|STRIPE_SECRET|SB_SECRET_KEY\\s*=\\s*['\\\"])\" | grep -v \"example\\|placeholder\\|<.*>\\|YOUR_\\|Deno.env.get\\|process.env\\|grep -\\|cut -d\" | head -10 || echo \"no raw secrets in diff\"\necho \"--- result: $(git diff 686bae3~1..HEAD | grep -cE 'AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{30,}|eyJ[a-zA-Z0-9._-]{40,}') high-entropy literal matches (expect 0) ---\"\necho \"=== 1b. new edge fns JWT/service-role enforcement ===\"\nfor fn in autopilot-run autopilot-cadence-cron autopilot-analyze autopilot-collect; do\n  grep -qE 'SB_SECRET_KEY|service_role|getUser|Bearer' supabase/functions/$fn/index.ts && echo \"\u2705 $fn: identity enforced\" || echo \"\ud83d\udd34 $fn: NO identity check\"\ndone\necho \"=== 1c. client-side mco_balance update (should be none new) ===\"\ngrep -rn \"mco_balance\" src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx 2>/dev/null | grep -iE 'update|upsert' || echo \"\u2705 no client-side mco_balance mutation in UI slice\"\necho \"=== 1e. sensitive console.log in UI slice ===\"\ngrep -rnE \"console\\.(log|warn).*(token|secret|password|api_key)\" src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx 2>/dev/null || echo \"\u2705 no sensitive logs\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (session commits) ===
+> --- result: 0 high-entropy literal matches (expect 0) ---
+> === 1b. new edge fns JWT/service-role enforcement ===
+> ✅ autopilot-run: identity enforced
+> ✅ autopilot-cadence-cron: identity enforced
+> ✅ autopilot-analyze: identity enforced
+> ✅ autopilot-collect: identity enforced
+> === 1c. client-side mco_balance update (should be none new) ===
+> ✅ no client-side mco_balance mutation in UI slice
+> === 1e. sensitive console.log in UI slice ===
+> ✅ no sensitive logs
+> ```
+
+## 🤖 Claude *(20:03:07)*
+
+
+## 🤖 Claude *(20:03:09)*
+
+**Phase 1 — Security ✅ PASS** (0 secrets · 4/4 edge fns identity-enforced · 0 client mco_balance mutation · 0 sensitive logs). tsc 0, infra healthy, worktree limpo (5 commits granulares já feitos — Phase 2 satisfeita).
+
+**Phase 3 — Knowledge Mesh:** inserindo o nó de handoff + embedding + proof-manifest.
+
+## 🤖 Claude *(20:03:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-viral-autopilot-fatia2-cadence-r3-ui\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] Viral Autopilot Fatia 2 COMPLETA \u2014 cadencia R2 (cron service-role + cap/pre-debito/refund atomicos sob advisory-lock) + loop R3 auto-melhoravel (autopilot-analyze ranqueia creative_metrics->optimization_policy + autopilot-collect ledger->metricas + orchestrate-step FR-VA-011 feedback injection) + UI (useAutopilot/AutopilotPage rota+nav). SOP Lei 2 autopilot-cron-identity (OTD-VA-008 fechado) + 4 migrations (autopilot_plans/cycles + begin/finalize_autopilot_cycle) + 6 edge fns deployadas + 3 smokes zero-cost (31 gates) + /security-review SAFE 3x. 5 commits 686bae3..bfd178b.\\\",\n    \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": { \\\"session\\\": \\\"viral-autopilot-fatia2-cadence-r3-ui\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"$(git log --oneline -5 | tr '\\n' '|')\\\" }\n  }\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else 'ERR')\" 2>/dev/null)\necho \"Handoff node ID: $NODE_ID\"\nif [ \"$NODE_ID\" != \"ERR\" ] && [ -n \"$NODE_ID\" ]; then\n  EMB=$(curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n    -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n    -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\")\n  echo \"Embed: $(echo \"$EMB\" | head -c 120)\"\n  echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\n  echo \"proof-manifest written\"\nfi",
+  "description": "Phase 3: insert handoff node + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Handoff node ID: 280e94d7-8de7-43bb-aee7-89d1824042d7
+> Embed: {"error":"Request body must contain { node_id: string }"}
+> proof-manifest written
+> ```
+
+## 🤖 Claude *(20:03:27)*
+
+
+## 🤖 Claude *(20:03:28)*
+
+Nó inserido: `280e94d7`. O embed quer `{node_id}` (não `{record}`) — re-chamo com o body certo (o trigger pg_net de INSERT também auto-embeda).
+
+## 🤖 Claude *(20:03:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"280e94d7-8de7-43bb-aee7-89d1824042d7\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 200\necho \"\"\nsleep 2 2>/dev/null; echo \"--- verify embedded (768d) ---\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=name,embedding\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0] if d else {}; e=n.get('embedding'); print('embedded:', 'YES (768d)' if e else 'NULL'); print('name:', n.get('name'))\" 2>/dev/null",
+  "description": "Re-embed handoff node with correct body + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"node_id":"280e94d7-8de7-43bb-aee7-89d1824042d7","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> --- verify embedded (768d) ---
+> embedded: YES (768d)
+> name: session-handoff-20260620-viral-autopilot-fatia2-cadence-r3-ui
+> ```
+
+## 🤖 Claude *(20:03:43)*
+
+
+## 🤖 Claude *(20:03:45)*
+
+Nó de handoff embedded (768d) ✅. **Phase 4 — README:** pego a contagem viva de nós + leio o topo do README pra atualizar badges + What's New (v6.43.0 → v6.44.0, Fatia 2).
+
+## 🤖 Claude *(20:03:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== live node count ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -oE '[0-9]+$'\necho \"=== README badges + What's New anchor ===\"\ngrep -nE 'version-[0-9]|neural_mesh-[0-9]|## .*What|### \\[v6\\.4' README.md | head -8",
+  "description": "Live node count + README anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === live node count ===
+> 8935
+> === README badges + What's New anchor ===
+> 3:  <img src="https://img.shields.io/badge/version-6.43.0--viral--autopilot--fatias--1--1b-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8934_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 71:## 🆕 What's new in v6.43.0 (2026-06-20)
+> 78:## 🆕 What's new in v6.40.0 (2026-06-17)
+> 86:## 🆕 What's new in v6.36.1 (2026-06-15)
+> 92:## 🆕 What's new in v6.36.0 (2026-06-15)
+> 98:## 🆕 What's new in v6.35.1 (2026-06-12)
+> 103:## 🆕 What's new in v6.35.0 (2026-06-10)
+> ```
+
+## 🤖 Claude *(20:03:56)*
+
+
+## 🤖 Claude *(20:03:57)*
+
+Contagem viva: **8935** (+1 = o nó de handoff). Leio os badges + o formato do bloco "What's New" pra editar.
+
+## 🤖 Claude *(20:03:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.43.0--viral--autopilot--fatias--1--1b-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8934_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/viral--autopilot-fatias_1_%2B_1b_live-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 8	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.4_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 9	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> ```
+
+## 🤖 Claude *(20:03:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 71,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 71	## 🆕 What's new in v6.43.0 (2026-06-20)
+> 72	
+> 73	- **Viral Autopilot Fatia 1 — gerador product-aware + monetização cross-surface (FR-VA-003/004/009/012/016).** O conteúdo agora nasce em torno do produto que o tenant escolhe (picker na TriggerNode sobre o catálogo `vm_affiliate_products`) e é monetizado nas **3 superfícies de texto** (artigo + LinkedIn + X), não só no artigo via 3 SKUs hardcoded. `affiliate_links.content_id` passa a gravar o `content_variant_id` (antes **sempre null** — defeito-núcleo fechado), habilitando atribuição por peça. Nova tabela `creative_metrics` (RLS SELECT-own, service-role-write, RESTRICTIVE no-delete) semeia o loop R3. **Provado:** E2E pago Usuário Zero run `158ba7fc` → 3 criativos product-aware, **3/3 content_id NON-NULL**, delta de saldo exatamente 10. `/security-review` SAFE · tsc 0 · 295 testes.
+> 74	- **Viral Autopilot Fatia 1b — imagem product-referenced (FR-VA-013).** O passo `article_generation` gera **uma** imagem de marketing do produto, dentro do bundle de 10 mco (sem cobrança extra), **fail-open** (status `skipped` se falhar — nunca quebra a geração), guardando o **PATH durável** do storage em `content_library.media_url` (bucket privado → re-assina na leitura). `generate-image` ganhou dual-path auth (service-role + `user_id`, espelha `publish-wordpress`). **Provado:** run `46a98963` → fail-open com `article_generation` done + zero regressão na monetização.
+> 75	- **fix(generate-image): bug universal do `response_format`.** A OpenAI removeu esse parâmetro do endpoint de imagens (400 "Unknown parameter"); removido + tratamento de resposta url/b64/data-URI + surfacing do erro do provider. Era um defeito que quebrava **toda** geração via openai.
+> 76	- **Diagnóstico cravado da saída visível.** 3 blockers, causas raiz materiais: **WP publish = Cloudflare bot-challenge** no `/wp-json` (ação: regra WAF Skip, como no `mcp.mcorch.com`); **imagem nanobana = endpoint DNS morto**; **imagem openai = chave-projeto sem acesso a modelo de imagem** (config OpenAI). Credenciais WP/chave OpenAI em si estão OK.
+> 77	
+> 78	## 🆕 What's new in v6.40.0 (2026-06-17)
+> ```
+
+## 🤖 Claude *(20:04:20)*
+
+
+## 🤖 Claude *(20:04:21)*
+
+Atualizo o README (4 edits: version → 6.44.0, mesh → 8935, badge autopilot, bloco What's New v6.44.0).
+
+## 🤖 Claude *(20:04:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.43.0--viral--autopilot--fatias--1--1b-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.44.0--viral--autopilot--fatia--2-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:04:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8934_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/viral--autopilot-fatias_1_%2B_1b_live-brightgreen?style=for-the-badge\" alt=\"Viral Autopilot\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8935_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/viral--autopilot-fatia_2_cadencia_%2B_R3_live-brightgreen?style=for-the-badge\" alt=\"Viral Autopilot\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:04:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.43.0 (2026-06-20)",
+  "new_string": "## \ud83c\udd95 What's new in v6.44.0 (2026-06-20)\n\n- **Viral Autopilot Fatia 2 \u2014 motor de cad\u00eancia aut\u00f4noma (R2) + loop auto-melhor\u00e1vel (R3) + UI.** O conte\u00fado viral monetizado agora se gera, agenda e **melhora sozinho** a cada ciclo. **Cad\u00eancia (R2):** `autopilot-cadence-cron` (pg_cron, espelha `nurture-cron`) varre planos vencidos \u2192 `autopilot-run` prova service-role in-function, deriva o tenant da linha do banco (`autopilot_plans.user_id`, **nunca do body** \u2014 OTD-VA-008 fechado), faz cap di\u00e1rio/por-ciclo + **pr\u00e9-d\u00e9bito at\u00f4mico \u00fanico** sob `pg_advisory_xact_lock` (RPC `begin_autopilot_cycle`), fan-out `orchestrate-content` em modo `prepaid` (sem self-bill) e fecha com refund **cr\u00e9dito-positivo idempotente** (RPC `finalize_autopilot_cycle`, espelha `finalize_vision_job`; nunca deduct negativo). **Loop (R3):** `autopilot-analyze` ranqueia o `creative_metrics` do ciclo anterior \u2192 `optimization_policy`; `autopilot-collect` sincroniza o ledger de cliques \u2192 m\u00e9tricas; `orchestrate-step` injeta a diretiva vencedora no prompt do pr\u00f3ximo ciclo (FR-VA-011). **UI:** `/dashboard/autopilot` (`useAutopilot` + `AutopilotPage`) cria/pausa planos, Simula (dry-run zero-cost) e roda, com hist\u00f3rico de ciclos.\n- **Gate Lei 2 + provas materiais.** SOP antecipado `docs/processes/autopilot-cron-identity.md` (10 gates) antes de qualquer c\u00f3digo de automa\u00e7\u00e3o financeira. **`/security-review` SAFE 3\u00d7** (migrations \u00b7 edge fns \u00b7 R3) + **3 smokes zero-cost (31 gates)** com usu\u00e1rio descart\u00e1vel (pr\u00e9-d\u00e9bito/cap/refund/idempot\u00eancia/clamp \u00b7 identity 403/401/400/422 + dry_run + cross-tenant 404 \u00b7 analyze ranqueia + collect sincroniza + empty n\u00e3o inventa). 6 edge fns deployadas \u00b7 render da UI provado ocularmente (preview local \u00e0 prova de CF). tsc 0.\n- **Pendente (a\u00e7\u00e3o Sovereign):** ativar o `pg_cron` schedule + 1\u00ba ciclo **pago** real \u2014 gated nos 2 desbloqueios de sa\u00edda vis\u00edvel (CF WAF skip `/wp-json` + acesso a modelo de imagem OpenAI). \u00daltimo item aut\u00f4nomo: `fetch-trends`\u2192pauta (FR-VA-018).\n\n## \ud83c\udd95 What's new in v6.43.0 (2026-06-20)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:04:42)*
+
+
+## 🤖 Claude *(20:04:43)*
+
+README atualizado. Commit do README (Phase 4), depois HANDOFF.md (Phase 5).
+
+## 🤖 Claude *(20:04:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -F - <<'MSG'\ndocs(readme): v6.44.0 \u2014 Viral Autopilot Fatia 2 (cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI)\n\nMotor de conte\u00fado viral aut\u00f4nomo completo: cron service-role com cap/pr\u00e9-d\u00e9bito/refund\nat\u00f4micos, loop que melhora a cada ciclo (analyze\u2192policy\u2192feedback-injection) e UI em\n/dashboard/autopilot. /security-review SAFE 3\u00d7 + 3 smokes zero-cost (31 gates). Badge mesh\n8934\u21928935, version 6.43.0\u21926.44.0.\nMSG\necho \"=== HANDOFF.md top (Task State + latest Record anchor) ===\"\nsed -n '12,17p' HANDOFF.md",
+  "description": "Commit README + read HANDOFF top"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:04PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:04PM[0m [32mINF[0m scan completed in 7.04ms
+> [90m5:04PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> === HANDOFF.md top (Task State + latest Record anchor) ===
+> ## Task State
+> 
+> ## Session Seal — Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetização cross-surface + imagem (FR-VA-003/004/009/012/013/016) (2026-06-20)
+> 
+> `/handson` → diretiva "vamos aos próximos passos" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Arco Closed-Loop por fatia: **mapeamento (workflow) → escopo cravado → SOP Lei 2 → código → /security-review → deploy → E2E pago material → seal**. Três fatias de trabalho numa sessão, todas provadas em produção; nenhuma improvisação além do BoK + correções materiais declaradas honestamente.
+> ```
+
+## 🤖 Claude *(20:05:35)*
+
+
+## 🤖 Claude *(20:05:35)*
+
+README commitado. HANDOFF.md: insiro o novo Record após "## Task State" (newest-first).
+
+## 🤖 Claude *(20:05:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetiza\u00e7\u00e3o cross-surface + imagem (FR-VA-003/004/009/012/013/016) (2026-06-20)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (FR-VA-002/005/007/008/010/011/014/016/021) (2026-06-20)\n\n`/handson` \u2192 diretiva Sovereign \"vamos aos pr\u00f3ximos passos\" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Arco Closed-Loop por fatia (mapeamento do contrato vivo \u2192 escopo \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 /security-review \u2192 deploy \u2192 smoke zero-cost \u2192 seal), 4 GOs soberanos via AskUserQuestion. **Motor de conte\u00fado viral aut\u00f4nomo COMPLETO (R1+R2+R3+R4), tudo provado materialmente sem gastar 1 centavo do Sovereign.**\n\n**O que foi entregue (5 commits granulares):**\n1. **Funda\u00e7\u00e3o (`686bae3`) \u2014 gate Lei 2 + tabelas + RPCs de dinheiro.** SOP antecipado `docs/processes/autopilot-cron-identity.md` (OTD-VA-008, 10 gates: identidade cron server-trusted + atomicidade pr\u00e9-d\u00e9bito/refund). Migrations `20260620120000..120300`: `autopilot_plans`/`autopilot_cycles` (FK composta tenant-escopada `(plan_id,user_id)`, RESTRICTIVE no-delete, fecha a FK composta pendente de `creative_metrics`) + `begin_autopilot_cycle` (cap di\u00e1rio+ciclo+saldo + pr\u00e9-d\u00e9bito \u00daNICO sob `pg_advisory_xact_lock` anti-TOCTOU, service-role-only) + `finalize_autopilot_cycle` (refund cr\u00e9dito-positivo idempotente claim-once, espelha `finalize_vision_job`; nunca deduct negativo).\n2. **Smoke RPC (`0c59e4d`) \u2014 11/11 zero-cost.** `smoke-autopilot-budget.ts`: pr\u00e9-d\u00e9bito exato \u00b7 cap di\u00e1rio/ciclo/saldo abortam sem deduzir \u00b7 refund idempotente \u00b7 clamp anti-mint \u00b7 FK CASCADE.\n3. **Edge functions (`54ac2a9`) \u2014 executor + driver + caminho prepaid.** `autopilot-run` (identidade 2-caminhos service-role+header OU user-JWT+load tenant-scoped \u2192 begin \u2192 fan-out `orchestrate-content` prepaid \u2192 finalize \u2192 re-arma `next_run_at`; dry_run zero-cost) \u00b7 `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) \u00b7 `orchestrate-content` FR-VA-016 (caminho cron prepaid pula o d\u00e9bito SEM tocar sentinel/produtos/kick; user-path 100% intacto). `verify_jwt=false` no config.toml.\n4. **R3 loop (`35554da`) \u2014 auto-melhor\u00e1vel.** `autopilot-analyze` (FR-VA-010: tenant da linha do ciclo, ranqueia `creative_metrics`\u2192`optimization_policy`; 2mco s\u00f3 standalone+real-data; n\u00e3o inventa) \u00b7 `autopilot-collect` (FR-VA-008: `affiliate_links`\u2192`creative_metrics`; org\u00e2nico fail-soft) \u00b7 `orchestrate-step` FR-VA-011 (l\u00ea policy do tenant \u2192 injeta diretiva vencedora nos 3 prompts + taggeia `cycle_id`; hint sanitizado).\n5. **UI (`bfd178b`) \u2014 us\u00e1vel.** `useAutopilot` (hook harness CRUD + ciclos + run-now/Simular + pause/activate) + `AutopilotPage` (`/dashboard/autopilot`: empty-state + cards + dialog de cria\u00e7\u00e3o) + rota lazy + nav. types.ts regen (additive).\n\n**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (4 GOs AskUserQuestion) + `/security-review` independente **SAFE 3\u00d7** (migrations 6-vetores \u00b7 edge fns 6-vetores \u00b7 R3 7-classes) \u00b7 Owner=Sovereign (blast radius = carteira do tenant gasta autonomamente).\n\n| Verifica\u00e7\u00e3o (material) | Resultado |\n|---|---|\n| Migrations | \u2705 `db push` exit 0 + Management API (2 tabelas \u00b7 RLS 2/2 \u00b7 6 policies \u00b7 2 RPCs \u00b7 5 constraints \u00b7 grants anon/auth=false svc=true) |\n| Prova comportamental RPC | \u2705 anon\u2192401 `42501 permission denied` \u00b7 service `projected=0`\u2192`22023` guard antes de d\u00e9bito |\n| Edge fns deployadas | \u2705 orchestrate-content 114.8 \u00b7 autopilot-run 63.1 \u00b7 cadence-cron 59.52 \u00b7 analyze 60.92 \u00b7 collect 59.72 \u00b7 orchestrate-step 132 kB |\n| `/security-review` | \u2705 SAFE 3\u00d7 (0 findings \u2265 High) |\n| Smokes zero-cost (31 gates) | \u2705 budget 11/11 \u00b7 run 9/9 \u00b7 loop 11/11 (usu\u00e1rio descart\u00e1vel) |\n| UI render (ocular) | \u2705 `/dashboard/autopilot` heading+empty-state+nav+HUD 5241 (preview local \u00e0 prova de CF, sess\u00e3o injetada, sem redirect /auth) |\n| tsc | \u2705 0 erros |\n| Commits | `686bae3` \u00b7 `0c59e4d` \u00b7 `54ac2a9` \u00b7 `35554da` \u00b7 `bfd178b` \u00b7 readme \u00b7 handoff |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Toda claim provada NESTE turno \u2014 migrations via Management API real, RPCs via curl 401/22023, smokes via SELECT real (delta saldo, idempot\u00eancia), UI via DOM text + screenshot ocular. N\u00c3O fabriquei: o 1\u00ba ciclo PAGO real foi declarado gated (Sovereign + 2 blockers CF/OpenAI), n\u00e3o simulado. Fase 5c mec\u00e2nica abaixo.\nLaw 2 (Process): \u2705 SOP autopilot-cron-identity.md ANTES do c\u00f3digo (gate OTD-VA-008). Mapear o contrato vivo antes de cada fatia pegou corre\u00e7\u00f5es materiais (analyze l\u00ea creative_metrics n\u00e3o affiliate_links; cost-model prepaid; FK composta).\nLaw 3 (Pruning): \u2705 Sess\u00e3o longa empacotada (5 fatias) sob GOs expl\u00edcitos; recon referenciado por path; selei ao esgotar o roadmap aut\u00f4nomo (resto \u00e9 Sovereign-side) + GO de seal do Sovereign.\nLaw 4 (ORO): \u2705 Triplet declarado; 4 GOs de escopo via AskUserQuestion; /security-review independente como Reviewer mec\u00e2nico em cada fatia de c\u00f3digo.\n```\n\n## Session Seal \u2014 Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetiza\u00e7\u00e3o cross-surface + imagem (FR-VA-003/004/009/012/013/016) (2026-06-20)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:06:02)*
+
+
+## 🤖 Claude *(20:06:03)*
+
+Record inserido. Agora a contagem GraphRAG (8934→8935) + o Pending de Viral Autopilot. Pego os strings exatos.
+
+## 🤖 Claude *(20:06:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== GraphRAG count line ===\"; grep -nE '^\\- \\*\\*8934 total nodes\\*\\*' HANDOFF.md | head -1\necho \"=== Pending Viral Autopilot line (head) ===\"; grep -nE 'BoK SELADA \u2014 c\u00f3digo pendente\\] Viral Autopilot' HANDOFF.md | head -1\necho \"--- first 240 chars of that pending line ---\"; grep -oE '\ud83c\udfaf\\. \\*\\*\\[BoK SELADA \u2014 c\u00f3digo pendente\\] Viral Autopilot \u2014 implementa\u00e7\u00e3o \\(R1-R4\\)\\*\\* \u2014 BoK 9/9 selada 2026-06-17.{0,80}' HANDOFF.md | head -c 300",
+  "description": "Locate GraphRAG count + Pending lines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GraphRAG count line ===
+> 7903:- **8934 total nodes** (verificado live 2026-06-20 via REST count=exact, viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d — Fatias 1 (product-aware + monetização cross-surface + creative_metrics) + 1b (imagem fail-open) + generate-image fix + diagnóstico saída visível; prev 8928 viral-autopilot-bok-seal: +handoff `496ec17c-953e-498c-b18f-e19ef093ad46` embedded 768d + BoK seal `b3398294-aa75-4810-845b-3a15cfe802e7` `documentation_suite` viral-autopilot + DERIVES_FROM edge `05cea16d-b942-409c-9847-1acc693f6ccc` → marketing-hub `d5163fed`; prev 8926 unified-sensorial-canvas-v9 seal: +handoff `5225ff03-5e4d-4599-9c9a-625e2e1806af` embedded 768d + AGI→ASI ref `a576216e` (architecture, edge `INFORMS` `d2827191` → openclaw seal) + AST ingest dos arquivos novos do canvas (CodeNetworkLayer/MemoryNetworkLayer/useUnifiedCanvasStore/useMemoryNetwork); prev 8922 vision-mcp-fatia3-pat-plugin-registry-caps seal: +handoff `c21c53db-cd96-465d-92ba-fc419c0c83e7` embedded 768d — PAT UI + Plugin/Registry + caps; prev 8921 vision-mcp-vhost-live seal: +handoff `0632e1f8-81db-4cc8-bd5e-c5ea8109508d` embedded 768d — OTD-VM-013 fechada; prev 8920 vision-fatia3-pat-erase seal: +handoff `e0695dad-3fc8-4f1e-9973-a40c15aec433` embedded 768d; prev 8918 vision-deepsearch-run-async seal: +handoff `fc0b5efc-9df8-4e03-8544-820caee4ee79` embedded 768d; prev 8917 vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d; prev 8916 vision-mcp-fatia1-deployed seal: +handoff `98fa83d7-3caa-4d23-9f5d-ed040ced9530` embedded 768d; prev 8915 em vision-mcp-bok-9of9 seal: +handoff `b73d141d` + BoK seal `318862b7` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` → mcorch-constellation; prev 8911 em diagnostics-and-continuity +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)
+> === Pending Viral Autopilot line (head) ===
+> 7745:🎯. **[BoK SELADA — código pendente] Viral Autopilot — implementação (R1-R4)** — BoK 9/9 selada 2026-06-17 (`docs/bok/viral-autopilot/`, seal node `b3398294`). **BoK Gate ABERTO.** Rota de 8 passos (do maior alavancagem): **(1)** ⚠️ **gate Lei 2** — escrever SOP `docs/processes/autopilot-cron-identity.md` (OTD-VA-008) ANTES da fatia de cadência/custo (Operator/Sequence/Verification/Recovery do mint server-trusted + pré-débito/refund); **(2) Fatia 1 (NÃO depende do cron)** — geração product-aware + monetizar TODO formato (FR-VA-003/004/016): honrar `product_target` (dropado em `orchestrate-content:79`), passar produto-alvo+imagem ao prompt do `orchestrate-step`, estender `monetizeContent` de artigo→article+LinkedIn+Twitter com `content_variant_id` (= `content_library.id`, grava `affiliate_links.content_id`); **(3)** reconectar `fetch-trends`/`vm_affiliate_products` à pauta; **(4)** cadência (tabelas `autopilot_plans`/`_cycles`/`creative_metrics` + RPCs `begin`/`finalize_autopilot_cycle` + cron `autopilot-cadence`; **cron prova service-role in-function** `Bearer SB_SECRET_KEY` antes de confiar `x-autopilot-user-id`); **(5)** coletor `autopilot-collect`; **(6)** fechar loop R3 (`autopilot-analyze` inline + feedback-inject scope=`viral_autopilot`); **(7)** mídia viral 9:16 (fase 2); **(8)** provar postback ML real (OTD-VA-007/OTD-ML-MP-PER-USER). **Toda migration passa /security-review.** Constraints chave: `N_runs=prod×rede×ab_variants`, imagem no bundle de 10 (`billing.ts:16-21`), refund crédito-positivo (NUNCA deduct negativo — RPC anti-mint `20260603220000:45`), FK composta tenant-escopada, `campaign_metrics` deprecada→`creative_metrics`.
+> --- first 240 chars of that pending line ---
+> 🎯. **[BoK SELADA — código pendente] Viral Autopilot — implementação (R1-R4)** — BoK 9/9 selada 2026-06-17 (`docs/bok/viral-autopilot/`, seal node `b3398294`). **BoK Gate ABERTO.** Rota
+> ```
+
+## 🤖 Claude *(20:06:50)*
+
+
+## 🤖 Claude *(20:06:51)*
+
+Atualizo a contagem GraphRAG (8934→8935) + o Pending de Viral Autopilot (Fatia 2 DONE).
+
+## 🤖 Claude *(20:06:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8934 total nodes** (verificado live 2026-06-20 via REST count=exact, viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d",
+  "new_string": "- **8935 total nodes** (verificado live 2026-06-20 via REST count=exact, viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d \u2014 cad\u00eancia R2 (cron + begin/finalize_autopilot_cycle at\u00f4micos) + loop R3 (analyze\u2192optimization_policy / collect / feedback-inject) + UI (useAutopilot/AutopilotPage); prev 8934 viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:07:02)*
+
+
+## 🤖 Claude *(20:07:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "\ud83c\udfaf. **[BoK SELADA \u2014 c\u00f3digo pendente] Viral Autopilot \u2014 implementa\u00e7\u00e3o (R1-R4)** \u2014 BoK 9/9 selada 2026-06-17 (`docs/bok/viral-autopilot/`, seal node `b3398294`). **BoK Gate ABERTO.** Rota de 8 passos (do maior alavancagem): **(1)** \u26a0\ufe0f **gate Lei 2** \u2014 escrever SOP `docs/processes/autopilot-cron-identity.md` (OTD-VA-008) ANTES da fatia de cad\u00eancia/custo (Operator/Sequence/Verification/Recovery do mint server-trusted + pr\u00e9-d\u00e9bito/refund); **(2) Fatia 1 (N\u00c3O depende do cron)** \u2014 gera\u00e7\u00e3o product-aware + monetizar TODO formato (FR-VA-003/004/016): honrar `product_target` (dropado em `orchestrate-content:79`), passar produto-alvo+imagem ao prompt do `orchestrate-step`, estender `monetizeContent` de artigo\u2192article+LinkedIn+Twitter com `content_variant_id` (= `content_library.id`, grava `affiliate_links.content_id`); **(3)** reconectar `fetch-trends`/`vm_affiliate_products` \u00e0 pauta; **(4)** cad\u00eancia (tabelas `autopilot_plans`/`_cycles`/`creative_metrics` + RPCs `begin`/`finalize_autopilot_cycle` + cron `autopilot-cadence`; **cron prova service-role in-function** `Bearer SB_SECRET_KEY` antes de confiar `x-autopilot-user-id`); **(5)** coletor `autopilot-collect`; **(6)** fechar loop R3 (`autopilot-analyze` inline + feedback-inject scope=`viral_autopilot`); **(7)** m\u00eddia viral 9:16 (fase 2); **(8)** provar postback ML real (OTD-VA-007/OTD-ML-MP-PER-USER). **Toda migration passa /security-review.** Constraints chave: `N_runs=prod\u00d7rede\u00d7ab_variants`, imagem no bundle de 10 (`billing.ts:16-21`), refund cr\u00e9dito-positivo (NUNCA deduct negativo \u2014 RPC anti-mint `20260603220000:45`), FK composta tenant-escopada, `campaign_metrics` deprecada\u2192`creative_metrics`.",
+  "new_string": "\ud83c\udfaf. **[Fatias 1/1b/2 SHIPPED \u2014 pendente: ativa\u00e7\u00e3o Sovereign + trends] Viral Autopilot** \u2014 BoK 9/9 selada (`b3398294`). **Motor aut\u00f4nomo R1+R2+R3+R4 COMPLETO e provado zero-cost.** \u2705 **Fatia 2 (cad\u00eancia R2 + loop R3 + UI, commits `686bae3`\u2192`bfd178b`):** SOP Lei 2 `autopilot-cron-identity.md` (OTD-VA-008 fechado) \u00b7 migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant + RPCs `begin`/`finalize_autopilot_cycle` at\u00f4micos sob advisory-lock, service-role-only) \u00b7 6 edge fns deployadas (`autopilot-run` executor + `-cadence-cron` driver pg_cron + `-analyze` FR-VA-010 + `-collect` FR-VA-008 + `orchestrate-content` FR-VA-016 prepaid + `orchestrate-step` FR-VA-011 inject) \u00b7 UI `/dashboard/autopilot` (`useAutopilot`+`AutopilotPage`). `/security-review` SAFE 3\u00d7 \u00b7 3 smokes zero-cost (31 gates) \u00b7 render ocular. **PENDENTE:** **(A)** \u26a0\ufe0f **a\u00e7\u00e3o Sovereign** \u2014 ativar o **`pg_cron` schedule** que chama `autopilot-cadence-cron` (a fun\u00e7\u00e3o existe+provada; s\u00f3 o JOB pg_cron \u00e9 ativa\u00e7\u00e3o Sovereign-side, `Bearer SB_SECRET_KEY` via Vault) + rodar o **1\u00ba ciclo PAGO real** (mco real), gated nos 2 blockers de sa\u00edda vis\u00edvel diagnosticados na Fatia 1b: **CF WAF skip `/wp-json/*`** + **OpenAI image model access**; **(B)** `fetch-trends`/`vm_trends`\u2192pauta do \u00e2ngulo viral (FR-VA-018, \u00faltimo item aut\u00f4nomo); **(C)** m\u00eddia viral 9:16 + TikTok/IG/YT (fase 2); **(D)** provar postback ML real (OTD-VA-007/OTD-ML-MP-PER-USER). Constraints chave (cravados no c\u00f3digo): `N_runs=prod\u00d7rede\u00d7ab_variants`, imagem no bundle de 10, refund cr\u00e9dito-positivo (NUNCA deduct negativo \u2014 anti-mint `20260603220000:45`), FK composta tenant-escopada, analyze inline=prepaid (reserva de 2 s\u00f3 vira actual com dado real)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:07:31)*
+
+
+## 🤖 Claude *(20:07:31)*
+
+HANDOFF.md atualizado (Record + count + Pending). **Phase 5b — secret scan** no HANDOFF.md antes do commit.
+
+## 🤖 Claude *(20:07:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credential scan (UUIDs/hashes excluded) ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|YOUR_\\|digest\\|sha256\\|hash\" | head -10 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho \"=== 5b-2 google keys ===\"; grep -nE \"AIza[0-9A-Za-z_-]{35}\" HANDOFF.md | head -5 || echo \"NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3 inline secret assignments (uuid/hash excluded) ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|<.*>\\|YOUR_\\|[0-9a-f-]{36}\" | head -5 || echo \"NO INLINE SECRETS \u2705\"",
+  "description": "Phase 5b: HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credential scan (UUIDs/hashes excluded) ===
+> === 5b-2 google keys ===
+> === 5b-3 inline secret assignments (uuid/hash excluded) ===
+> 808:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 4281:**SSP-01 REPAIR & REM CYCLE v6.6.0 SHIPPED (2026-05-17). Quatro Ordens Executivas Sovereign do mesmo dia entregues em sequência estrita, fechando o P0 selado em v6.5.0 e desbloqueando Canvas Studio Phase 4.2c. (OE01 Prova de Vida) Admin role do Sovereign `ada39fae-67e1-4e53-af1c-5a18e1c108e8` confirmado materialmente em `user_roles` via service-role REST (HTTP 200, `role='admin'`, `created_at='2026-04-17T05:57:46.249257+00:00'` — divergência com claim "ZERO admin" de v6.5.0 documentada). Bridge end-to-end com JWT admin segue como Cérebro sem mãos — Sovereign pode validar curl quando convier. (OE02 Reconciliação do Ledger) Insert sintético em `mcoin_transactions` para Sovereign: UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context` com source/audit_ref/sop_ref. Drift agora `mco_balance(5533) − Σledger(5533) = 0` confirmado via REST direto. Pillar 3 (Cost Discipline) parte 1 fechada. (OE03 Ciclo Circadiano v1.0) Refator das rotinas noturnas: 02:30 + 03:30 (sequenciais sobrepostos) → 03:00 Stage 1 Light Sleep (`scripts/nightly-stage1-light-sleep.sh`, ~130 LOC — log rotation gzip>7d, temp cleanup `/tmp/openclaw-incidents` + `/tmp/mcorch-*.log` + tg-response, infra spot check docker+chroma+pulse `infra_health_logs`) · 05:00 Stage 2 Deep Sleep (`scripts/nightly-stage2-deep-sleep.sh`, ~130 LOC — wrapper para `nightly-bridge-refresh.sh` + ledger drift watch alert-only + VACUUM ANALYZE quando pooler disponível) · 07:00 Stage 3 REM Cycle (`scripts/nightly-stage3-rem.sh`, ~110 LOC — `scripts/news-impact-analyzer.ts` 173 LOC com OpenRouter `perplexity/sonar` web-grounded + `scripts/morning-briefing.sh` ao Telegram bot `@claw_gcrux`). Espaçamento 2h entre stages para isolamento CPU/IO + thermal recovery. Server timezone `America/Sao_Paulo (-03)` confirmado via `timedatectl` — crontab usa horários BRT direto. OpenClaw native cron 03:00 Memory Dreaming Promotion sobrepõe Stage 1 (daemon próprio, sem race). Crontab swap atômico (backup `/tmp/crontab.backup-*.txt`). Smoke tests: Stage 1 EXIT 0 status=healthy · Stage 2 EXIT 0 detectou pre-existing OpenClaw CLI drift (OTD-V660-002 RPN 150 — `openclaw memory index` não existe em v2026.5.14) + drift do user `924cb32e` (balance 50, ledger 0) · Stage 3 EXIT 0 com 2 news_pulse UUIDs `fbebabdb-...` + `8ee97502-...` + briefing DELIVERED. SOP `docs/processes/nightly-circadian-cycle.md` (140+ linhas) escrita ANTES dos scripts (Lei 2). (OE04 P0.3 Daily Cap + Balance Toast + Re-audit) `supabase/functions/canvas-execute/index.ts` ganhou daily cap 100 mcoCoins/24h por user (`mcoin_transactions` query com `action LIKE 'canvas_%spend'` + `created_at >= now-24h`), HTTP 402 estruturado com `cap/spent_today/required/resets_at`, fail-open em query error. Action tagging na chamada `deduct_mco_coins`: `canvas_image_spend` ou `canvas_video_spend` + context com `execution_id/provider/model/node_type`. Fallback direct update removido (race condition). Deploy `canvas-execute` **132.6 kB** (+0.4 kB sobre v6.5.0). `src/components/dashboard/DashboardLayout.tsx` ganhou import sonner + `LOW_BALANCE_THRESHOLD=50` + toast.warning na carga inicial e no Realtime UPDATE quando cruza threshold (id='low-balance' dedupe) + amber pill no header quando `mco_balance < 50`. TS zero erros. 122/122 testes passam em 4.71s. Build em 20.38s sem regressão de chunk. SOP `docs/processes/canvas-daily-cap-handling.md` (90+ linhas) escrita ANTES do código (Lei 2). **Survival Audit v2** (`.claude/context/survival-audit-v2.md`, 170 linhas) re-scored: Memory 5/5 · Skill 4/5 · **Cost Discipline 4/5** ⬆ · Observability 3/5 · **SOP 5/5** ⬆. Min 3/5 · Média 4.2/5. Por diretiva Sovereign OE04 explícita ("Se o score for ≥ 4, a restrição de Phase 4.2c estará automaticamente revogada"): **Canvas Studio Phase 4.2c DESBLOQUEADO**. 9 commits granulares + handoff seal. 4 OTDs novos (V660-001 outros users drift · V660-002 OpenClaw CLI drift · V660-003 pooler URL ausente · V660-004 Perplexity Sonar low signal). Próximo deliverable: (a) confirmar bridge end-to-end com JWT Sovereign (fecha Cérebro sem mãos v6.5.0); (b) resolver OpenClaw CLI drift; (c) Canvas Studio Phase 4.2c implementation (fork canvas-execute para vídeo async + wire useCanvasJobsRealtime + watchdog polling + enable ImageToVideo).**
+> 4686:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> 4719:**2) Phase 2 — OE02 Reconciliação do Ledger.** Direct INSERT em `mcoin_transactions` via service-role REST: HTTP 201 + UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context={source: "SSP-01 OE02", directive, reconciled_at: "2026-05-17", drift_before: 5533, drift_after: 0, operator, reviewer, owner, audit_ref, sop_ref}`. Verificação pós-INSERT: `mco_balance=5533.00` (profiles) vs `SUM(amount)=5533` (mcoin_transactions) → **drift = 0**. SOP `mcoins-ledger-reconciliation.md` Step 5 Opção A executada à risca (action prefix `opening_balance_*` como manda anti-pattern). Outros 2 users (`924cb32e` balance 50; mais 2 com balance 0) ainda drift — registrado como OTD-V660-001 RPN 120 para próxima sessão.
+> 5030:**4) Claw-Master L2 specialist inception (consolidação da sessão anterior).** Agente `claw-master` scaffolded em `~/.openclaw/agents/claw-master/` (Parent: engineer per SOUL template). Decision Scope NARROWED: ✅ updates de pacotes OpenClaw (propõe, não executa), ✅ estrutura de novas Skills; ❌ herda todas as proibições do engineer (não altera keys, não toca crontab, não força daemon restart). `scripts/scrape-openclaw-docs.ts` (263 LOC, idempotente via hash) mirroreia 24 docs canônicas de `docs.openclaw.ai` (getting-started · configuration · memory · skills · bonus security/threat/SOUL/architecture) em `mcorch_nodes` com `project_id='openclaw-official-docs'`, `metadata.source='openclaw_official_docs'`, stability 0.90. Bridge estendido para emitir `source` no YAML frontmatter (permite filter trivial em overlays). Distributor estendido com role claw-master + generalized `filesDir` per AgentDistribution. 88 files / 556 chunks indexados em `~/.openclaw/memory/claw-master.sqlite`. Audit v1 (`.claude/context/openclaw-audit-v1.md`, 250+ linhas) com 8 OTDs RPN-scored — selado na mesh como observation node `beb04be8-caf1-49cd-a4a4-5857e9d51a9d`. CLAUDE.md ganhou L2 Specialists subsection + 4 novas Key Files entries.
+> ```
+
+## 🤖 Claude *(20:07:53)*
+
+
+## 🤖 Claude *(20:07:55)*
+
+**Phase 5b ✅** — sem credenciais. Os hits do 5b-3 são UUIDs + valores de ledger (`amount=5533`, `action='...'`) em **records históricos antigos** (linhas 808/4281/4686+), não segredos; meu Record novo só adicionou UUID de nó + hashes. Commit do HANDOFF.md.
+
+## 🤖 Claude *(20:07:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -F - <<'MSG'\ndocs(handoff): seal Viral Autopilot Fatia 2 \u2014 cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI\n\nMotor de conte\u00fado viral aut\u00f4nomo completo (R1+R2+R3+R4): cron service-role com\ncap/pr\u00e9-d\u00e9bito/refund at\u00f4micos, loop que melhora a cada ciclo (analyze\u2192policy\u2192inject)\ne UI em /dashboard/autopilot. 5 commits granulares, /security-review SAFE 3\u00d7, 3 smokes\nzero-cost (31 gates), render ocular. Handoff node 280e94d7 embedded 768d \u00b7 mesh 8935.\nPendente: ativa\u00e7\u00e3o pg_cron + 1\u00ba ciclo pago (Sovereign + 2 blockers CF/OpenAI) + fetch-trends.\nMSG\ngit log --oneline -1 | cat",
+  "description": "Commit HANDOFF.md seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:07PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:07PM[0m [32mINF[0m scan completed in 25.4ms
+> [90m5:07PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.12 seconds)
+> ✔️ e2e-output-tripwire (0.05 seconds)
+> ✔️ secret-scan (0.05 seconds)
+> ✔️ gitleaks-staged (0.11 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 10f2301 docs(handoff): seal Viral Autopilot Fatia 2 — cadência R2 + loop R3 auto-melhorável + UI
+> ```
+
+## 🤖 Claude *(20:08:04)*
+
+
+## 🤖 Claude *(20:08:05)*
+
+**Phase 5c — Material Proof Audit** (verificação mecânica independente do Record).
+
+## 🤖 Claude *(20:08:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nls scripts/qa/run-audit.ts 2>/dev/null && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -45 || echo \"run-audit.ts not found \u2014 checking alternate\"\necho \"AUDIT-EXIT=${PIPESTATUS[0]}\"",
+  "description": "Phase 5c material proof audit",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/run-audit.ts
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node 280e94d7 | mesh_node | 280e94d7-8de7-43bb-aee7-89d1824042d7 | 280e94d7-8de7-43bb-aee7-89d1824042d7 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 28.9s)
+> AUDIT-EXIT=0
+> ```
+
+## 🤖 Claude *(20:08:54)*
+
+
+## 🤖 Claude *(20:08:59)*
+
+**Phase 5c — SEAL ALLOWED** ✅ (10 verificadas · 0 skipped · **0 falhas** — handoff node `280e94d7` confirmado na malha, 295 testes, ORO compliance). **Phase 6 — BoK Seal Status:** o módulo viral-autopilot tem BoK 9/9 selada — confirmo + push.
+
+## 🤖 Claude *(20:09:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Phase 6: viral-autopilot BoK completeness ===\"\nslug=viral-autopilot; required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); missing=()\nfor doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n[ ${#missing[@]} -eq 0 ] && echo \"\u2705 viral-autopilot \u2014 BoK complete (9 docs) \u2192 session code covered\" || echo \"\ud83d\udd34 missing: ${missing[*]}\"\necho \"=== seal node ===\"\nsource .env 2>/dev/null\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&name=ilike.*viral-autopilot*&select=name,stability_score\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import sys,json; [print(f\\\"  \ud83c\udf10 {n['name']} ({n['stability_score']})\\\") for n in json.load(sys.stdin)]\" 2>/dev/null\necho \"=== Phase 7: PUSH ===\"\ngit push origin main 2>&1 | tail -5\necho \"push-exit=${PIPESTATUS[0]}\"",
+  "description": "Phase 6 BoK check + Phase 7 push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 6: viral-autopilot BoK completeness ===
+> ✅ viral-autopilot — BoK complete (9 docs) → session code covered
+> === seal node ===
+>   🌐 bok-scribe-seal-viral-autopilot-v1 (0.601350831581156)
+> === Phase 7: PUSH ===
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.38 seconds)
+> ✔️ gitleaks-range (0.38 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    44e5887..10f2301  main -> main
+> push-exit=0
+> ```
+
+## 🤖 Claude *(20:09:20)*
+
+
+## 🤖 Claude *(20:09:21)*
+
+**Phase 6 ✅** (viral-autopilot BoK 9/9 + seal node) · **Phase 7 PUSH ✅** (`44e5887..10f2301`, 7 commits, gitleaks-range limpo). **Phase 7b — hygiene:** atualizo sprint-priorities + limpo o proof-manifest transiente.
+
+## 🤖 Claude *(20:09:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sprint-priorities top (entry format) ===\"; sed -n '7,9p' .claude/context/sprint-priorities.md\necho \"=== scratch + proof-manifest (untracked transient) ===\"; ls scratch/ 2>/dev/null && echo \"scratch has files\" || echo \"scratch clean\"; git status --short",
+  "description": "Read sprint format + check scratch/proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sprint-priorities top (entry format) ===
+> **Sprint v6.43.0 — Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetização cross-surface + imagem (2026-06-20)** — `/handson` → "vamos aos próximos passos" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Closed-Loop por fatia (mapeamento workflow → escopo → SOP Lei 2 → código → /security-review → deploy → E2E pago → seal). **(1) Fatia 1** (`4af8b8b`): gerador product-aware (FR-VA-003, prompts virais featuring o produto escolhido; fallback B2B backward-compat) + monetização nas **3 superfícies** (FR-VA-004, `affiliate_links.content_id` antes-null **FECHADO**) + threading `product_ids` sanitizado pelo sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009, RLS provada) + picker na TriggerNode. **(2) Fatia 1b** (`ba5d281`): imagem product-referenced (FR-VA-013) DENTRO do article_generation, **fail-open** (`skipped`, nunca quebra a geração), PATH durável em `content_library.media_url`, dual-path auth na generate-image; sem migration/frontend/cobrança extra. **(3) fix generate-image** (`803f946`): bug universal `response_format` (OpenAI removeu o param) → removido + tratamento url/b64 + surfacing. **(4) Diagnóstico saída visível** (Sovereign pediu "destravar"): WP=Cloudflare challenge no /wp-json (ação: WAF Skip como mcp.mcorch.com), nanobana=DNS morto, openai=chave-projeto sem acesso a modelo de imagem (config OpenAI). **Prova:** 2 E2E pagos (`158ba7fc`/`46a98963`, delta 10 cada · 3/3 content_id NON-NULL · fail-open) · UI ocular 1920×1080 · /security-review SAFE 2× · tsc 0 · 295 testes · Phase 5c **SEAL ALLOWED** (10) · mesh **8934** · handoff `385d3dd5`. **Pending:** Fatia 2 cron/cadência R2 (SOP `autopilot-cron-identity.md` Lei 2/OTD-VA-008) · loop R3 · anexo imagem no publish-layer · **2 ações Sovereign** (CF WAF skip /wp-json + OpenAI image model access). **Lição:** mapear o contrato vivo ANTES de codar pegou 3 correções materiais (imagem text-only, dual-path auth, response_format); diagnóstico por status/headers reais cravou as causas; não fabriquei imagem visível (providers do tenant quebrados = config, declarado).
+> 
+> **Sprint v6.42.0 — Viral Autopilot BoK 9/9: motor de conteúdo viral autônomo (R1-R4) (2026-06-17)** — `/handson` → diretiva Sovereign de **retomar o objetivo-núcleo de receita** (= o próprio Sprint Goal "distribuição social autônoma operacional"): alimentar redes com conteúdo viral auto-gerado/agendado (tudo de uma vez OU a cada N dias), que a cada ciclo analisa o anterior p/ melhorar os próximos criativos, monetizado c/ afiliado ML. Arco Closed-Loop puro (zero código de produto): **(1) Auditoria material** (workflow 7 agentes, prova path:linha) — R1/R4 parciais vivos, **R2 (recorrência) e R3 (loop auto-melhorável) AUSENTES** (`campaign_metrics` sem writer, `optimization_policy` nunca lida, `self-optimize` sem cron); **(2) 4 decisões soberanas** (AskUserQuestion: suite NOVO · MVP texto+imagem · sinal R3 combo · 3 SKUs); **(3) BoK 9/9** (1889 LOC, FR-VA-001..021, 12 FMEA 4×RPN>100); **(4) Validação Fase 6 em 4 rodadas adversariais** (4 críticos/rodada) + grep determinístico — pegou buraco de segurança real (cron `verify_jwt=false` sem prova service-role in-function) + anti-mint (refund por deduct negativo, que EU introduzi); **(5) seal** (node `b3398294` embedded 768d, DERIVES_FROM marketing-hub). **Prova:** tsc 0 · 3 commits pushed · Phase 5c **SEAL ALLOWED** (10) · mesh **8928** · handoff `496ec17c`. **BoK Gate ABERTO.** Pending: fatia 1 (product-aware + monetize, NÃO depende do cron) + SOP `autopilot-cron-identity.md` (Lei 2/OTD-VA-008) antes da cadência. **Lição:** verificação adversarial multi-rodada foi essencial — cada "fix" meu deixava um resíduo que a rodada seguinte pegava; não auto-declarar GO (Lei 1).
+> === scratch + proof-manifest (untracked transient) ===
+> scratch has files
+>  M proof-manifest.json
+> ```
+
+## 🤖 Claude *(20:09:45)*
+
+
+## 🤖 Claude *(20:09:46)*
+
+Sprint format claro. Checo o scratch (apareceram arquivos) + `proof-manifest.json` é tracked (vou commitar com o sprint).
+
+## 🤖 Claude *(20:09:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch contents ===\"; ls -la scratch/ 2>/dev/null\necho \"=== proof-manifest content ===\"; cat proof-manifest.json\necho \"=== full git status ===\"; git status --short",
+  "description": "Inspect scratch + proof-manifest + status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch contents ===
+> total 8
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Jun  7 14:41 .
+> drwx------ 30 ubuntu ubuntu 4096 Jun 20 17:08 ..
+> === proof-manifest content ===
+> {"handoffNodeId": "280e94d7-8de7-43bb-aee7-89d1824042d7"}
+> === full git status ===
+>  M proof-manifest.json
+> ```
+
+## 🤖 Claude *(20:09:53)*
+
+
+## 🤖 Claude *(20:09:54)*
+
+scratch limpo (leitura falsa antes). Adiciono a entrada de sprint v6.44.0 + commito com o proof-manifest.
+
+## 🤖 Claude *(20:10:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.43.0 \u2014 Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetiza\u00e7\u00e3o cross-surface + imagem (2026-06-20)** \u2014",
+  "new_string": "**Sprint v6.44.0 \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\"; 4 GOs Sovereign (AskUserQuestion: migration \u00b7 edge fns \u00b7 R3 \u00b7 selar). Closed-Loop por fatia (mapeamento do contrato vivo \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 /security-review \u2192 deploy \u2192 smoke zero-cost \u2192 seal). **Motor aut\u00f4nomo R1+R2+R3+R4 COMPLETO, zero gasto do Sovereign.** **(1) Funda\u00e7\u00e3o** (`686bae3`): SOP `autopilot-cron-identity.md` (OTD-VA-008, 10 gates) + migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant-escopada + RPCs `begin_autopilot_cycle` [cap+pr\u00e9-d\u00e9bito \u00daNICO sob `pg_advisory_xact_lock` anti-TOCTOU] / `finalize_autopilot_cycle` [refund cr\u00e9dito-positivo idempotente, espelha `finalize_vision_job`], service-role-only) + smoke RPC 11/11 (`0c59e4d`). **(2) Edge fns** (`54ac2a9`): `autopilot-run` (executor identidade 2-caminhos \u2192 begin \u2192 fan-out `orchestrate-content` prepaid \u2192 finalize \u2192 re-arma `next_run_at`; dry_run) + `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) + orchestrate-content FR-VA-016 prepaid (user-path intacto); smoke 9/9 (identity + dry_run + cross-tenant 404). **(3) R3 loop** (`35554da`): `autopilot-analyze` (FR-VA-010, ranqueia `creative_metrics`\u2192`optimization_policy`, tenant da linha) + `autopilot-collect` (FR-VA-008, ledger\u2192m\u00e9tricas) + orchestrate-step FR-VA-011 (injeta diretiva vencedora nos 3 prompts); smoke loop 11/11. **(4) UI** (`bfd178b`): `useAutopilot`+`AutopilotPage` (`/dashboard/autopilot`: criar/pausar/Simular/Rodar + ciclos) + rota lazy + nav; types.ts regen additive. **Prova:** `/security-review` SAFE **3\u00d7** (migrations \u00b7 edge fns \u00b7 R3) \u00b7 3 smokes zero-cost (**31 gates**, usu\u00e1rio descart\u00e1vel) \u00b7 6 edge fns deployadas \u00b7 migrations via Management API \u00b7 render ocular (preview local \u00e0 prova de CF, sess\u00e3o injetada) \u00b7 tsc 0 \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8935** \u00b7 handoff `280e94d7`. **Pending (a\u00e7\u00e3o Sovereign):** ativar `pg_cron` schedule + 1\u00ba ciclo **PAGO** real (gated nos 2 blockers de sa\u00edda vis\u00edvel: CF WAF `/wp-json` + OpenAI image access) \u00b7 `fetch-trends`\u2192pauta (FR-VA-018, \u00faltimo item aut\u00f4nomo). **Li\u00e7\u00e3o:** mapear o contrato vivo antes de cada fatia pegou corre\u00e7\u00f5es materiais (analyze l\u00ea `creative_metrics` n\u00e3o `affiliate_links`; cost-model prepaid; FK composta); `/security-review` independente 3\u00d7 confirmou o caminho de dinheiro fechado linha-a-linha; selei ao esgotar o roadmap aut\u00f4nomo (resto \u00e9 Sovereign-side) por GO de seal.\n\n**Sprint v6.43.0 \u2014 Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetiza\u00e7\u00e3o cross-surface + imagem (2026-06-20)** \u2014"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(20:10:14)*
+
+
+## 🤖 Claude *(20:10:15)*
+
+Preciso ler com a tool Read antes de editar. Lendo + re-aplicando.
+
+## 🤖 Claude *(20:10:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 7,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 7	**Sprint v6.43.0 — Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetização cross-surface + imagem (2026-06-20)** — `/handson` → "vamos aos próximos passos" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Closed-Loop por fatia (mapeamento workflow → escopo → SOP Lei 2 → código → /security-review → deploy → E2E pago → seal). **(1) Fatia 1** (`4af8b8b`): gerador product-aware (FR-VA-003, prompts virais featuring o produto escolhido; fallback B2B backward-compat) + monetização nas **3 superfícies** (FR-VA-004, `affiliate_links.content_id` antes-null **FECHADO**) + threading `product_ids` sanitizado pelo sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009, RLS provada) + picker na TriggerNode. **(2) Fatia 1b** (`ba5d281`): imagem product-referenced (FR-VA-013) DENTRO do article_generation, **fail-open** (`skipped`, nunca quebra a geração), PATH durável em `content_library.media_url`, dual-path auth na generate-image; sem migration/frontend/cobrança extra. **(3) fix generate-image** (`803f946`): bug universal `response_format` (OpenAI removeu o param) → removido + tratamento url/b64 + surfacing. **(4) Diagnóstico saída visível** (Sovereign pediu "destravar"): WP=Cloudflare challenge no /wp-json (ação: WAF Skip como mcp.mcorch.com), nanobana=DNS morto, openai=chave-projeto sem acesso a modelo de imagem (config OpenAI). **Prova:** 2 E2E pagos (`158ba7fc`/`46a98963`, delta 10 cada · 3/3 content_id NON-NULL · fail-open) · UI ocular 1920×1080 · /security-review SAFE 2× · tsc 0 · 295 testes · Phase 5c **SEAL ALLOWED** (10) · mesh **8934** · handoff `385d3dd5`. **Pending:** Fatia 2 cron/cadência R2 (SOP `autopilot-cron-identity.md` Lei 2/OTD-VA-008) · loop R3 · anexo imagem no publish-layer · **2 ações Sovereign** (CF WAF skip /wp-json + OpenAI image model access). **Lição:** mapear o contrato vivo ANTES de codar pegou 3 correções materiais (imagem text-only, dual-path auth, response_format); diagnóstico por status/headers reais cravou as causas; não fabriquei imagem visível (providers do tenant quebrados = config, declarado).
+> ```
+
+## 🤖 Claude *(20:10:22)*
+
+
+## 🤖 Claude *(20:10:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.43.0 \u2014 Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetiza\u00e7\u00e3o cross-surface + imagem (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\" sobre o roadmap do Viral Autopilot (BoK gate ABERTO).",
+  "new_string": "**Sprint v6.44.0 \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\"; 4 GOs Sovereign (AskUserQuestion: migration \u00b7 edge fns \u00b7 R3 \u00b7 selar). Closed-Loop por fatia (mapeamento do contrato vivo \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 /security-review \u2192 deploy \u2192 smoke zero-cost \u2192 seal). **Motor aut\u00f4nomo R1+R2+R3+R4 COMPLETO, zero gasto do Sovereign.** **(1) Funda\u00e7\u00e3o** (`686bae3`): SOP `autopilot-cron-identity.md` (OTD-VA-008, 10 gates) + migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant-escopada + RPCs `begin_autopilot_cycle` [cap+pr\u00e9-d\u00e9bito \u00daNICO sob `pg_advisory_xact_lock` anti-TOCTOU] / `finalize_autopilot_cycle` [refund cr\u00e9dito-positivo idempotente, espelha `finalize_vision_job`], service-role-only) + smoke RPC 11/11 (`0c59e4d`). **(2) Edge fns** (`54ac2a9`): `autopilot-run` (executor identidade 2-caminhos \u2192 begin \u2192 fan-out `orchestrate-content` prepaid \u2192 finalize \u2192 re-arma; dry_run) + `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) + orchestrate-content FR-VA-016 prepaid (user-path intacto); smoke 9/9. **(3) R3 loop** (`35554da`): `autopilot-analyze` (FR-VA-010, ranqueia `creative_metrics`\u2192`optimization_policy`, tenant da linha) + `autopilot-collect` (FR-VA-008, ledger\u2192m\u00e9tricas) + orchestrate-step FR-VA-011 (injeta diretiva nos 3 prompts); smoke loop 11/11. **(4) UI** (`bfd178b`): `useAutopilot`+`AutopilotPage` (`/dashboard/autopilot`) + rota + nav; types.ts regen additive. **Prova:** `/security-review` SAFE **3\u00d7** \u00b7 3 smokes zero-cost (**31 gates**) \u00b7 6 edge fns deployadas \u00b7 migrations via Management API \u00b7 render ocular (preview local \u00e0 prova de CF) \u00b7 tsc 0 \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8935** \u00b7 handoff `280e94d7`. **Pending (a\u00e7\u00e3o Sovereign):** ativar `pg_cron` + 1\u00ba ciclo **PAGO** real (gated nos 2 blockers: CF WAF `/wp-json` + OpenAI image) \u00b7 `fetch-trends`\u2192pauta (FR-VA-018, \u00faltimo aut\u00f4nomo). **Li\u00e7\u00e3o:** mapear o contrato vivo antes de cada fatia pegou corre\u00e7\u00f5es materiais (analyze l\u00ea `creative_metrics` n\u00e3o `affiliate_links`; cost-model prepaid); `/security-review` independente 3\u00d7 confirmou o caminho de dinheiro fechado; selei ao esgotar o roadmap aut\u00f4nomo (resto Sovereign-side).\n\n**Sprint v6.43.0 \u2014 Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetiza\u00e7\u00e3o cross-surface + imagem (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\" sobre o roadmap do Viral Autopilot (BoK gate ABERTO)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:10:41)*
+
+
+## 🤖 Claude *(20:10:41)*
+
+Sprint atualizado. Commit (sprint + proof-manifest) + push final.
+
+## 🤖 Claude *(20:10:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md proof-manifest.json\ngit commit -q -F - <<'MSG'\nchore(sprint): registra v6.44.0 \u2014 Viral Autopilot Fatia 2 (cad\u00eancia R2 + loop R3 + UI)\n\nMotor aut\u00f4nomo completo selado: 5 commits, /security-review SAFE 3\u00d7, 3 smokes\nzero-cost (31 gates), 6 edge fns deployadas, UI render ocular. proof-manifest aponta\no handoff node 280e94d7 desta seal.\nMSG\ngit push origin main 2>&1 | tail -3\necho \"push-exit=${PIPESTATUS[0]}\"\necho \"=== final: commits this session ===\"; git log --oneline -8 | cat",
+  "description": "Commit sprint + proof-manifest + push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:10PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:10PM[0m [32mINF[0m scan completed in 7.54ms
+> [90m5:10PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✔️ gitleaks-range (0.07 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    10f2301..127b1a1  main -> main
+> push-exit=0
+> === final: commits this session ===
+> 127b1a1 chore(sprint): registra v6.44.0 — Viral Autopilot Fatia 2 (cadência R2 + loop R3 + UI)
+> 10f2301 docs(handoff): seal Viral Autopilot Fatia 2 — cadência R2 + loop R3 auto-melhorável + UI
+> 1ef3185 docs(readme): v6.44.0 — Viral Autopilot Fatia 2 (cadência R2 + loop R3 auto-melhorável + UI)
+> bfd178b feat: Viral Autopilot Fatia 2 — UI (useAutopilot + AutopilotPage) para criar/gerenciar planos
+> 35554da feat: Viral Autopilot Fatia 2 — R3 loop auto-melhorável (analyze + collect + feedback injection)
+> 54ac2a9 feat: Viral Autopilot Fatia 2 — edge functions do cron (executor + driver + caminho prepaid)
+> 0c59e4d test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+> 686bae3 feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+> ```
+
+## 🤖 Claude *(20:10:55)*
+
+
+## 🤖 Claude *(20:11:13)*
+
+Push final **`10f2301..127b1a1`** — todos os 8 commits no remote. Seal completo.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Viral Autopilot Fatia 2 (2026-06-20)
+  cadência R2 + loop R3 auto-melhorável + UI
+═══════════════════════════════════════════════════════════
+```
+
+🔐 **SEGURANÇA**
+- 1a secret scan: ✅ 0 literais de alta-entropia
+- 1b edge fns identity: ✅ 4/4 (service-role/JWT enforced)
+- 1c client mco_balance: ✅ nenhuma mutação client-side
+- 1e logs sensíveis: ✅ nenhum
+- gitleaks (pre-commit ×8 + pre-push range): ✅ no leaks
+
+📦 **COMMITS (8)**
+`686bae3` fundação (SOP+migrations+RPCs) · `0c59e4d` smoke RPC 11/11 · `54ac2a9` edge fns · `35554da` R3 loop · `bfd178b` UI · `1ef3185` readme · `10f2301` handoff · `127b1a1` sprint
+
+⬡ **KNOWLEDGE MESH**
+Handoff node: `280e94d7-8de7-43bb-aee7-89d1824042d7` — `session-handoff-20260620-viral-autopilot-fatia2-cadence-r3-ui` · Embedding: ✅ 768d
+
+📖 **README.md** — versão `6.43.0 → 6.44.0` · badge mesh `8934 → 8935` · badge autopilot `fatias 1+1b → fatia 2 cadência+R3` · seção What's New v6.44.0
+
+🧠 **HANDOFF.md** — Record Fatia 2 + Task State + GraphRAG (8935) + Pending (Fatia 2 ✅, restam ações Sovereign)
+
+📋 **PROVA MATERIAL (Fase 5c)** — **SEAL ALLOWED** · 10 verificadas · 0 skipped · **0 falhas** (handoff node + commits + 295 testes + ORO)
+
+🚀 **PUSH** — `main → origin/main` · 8 commits · github.com/gabrielZarattini/constellation-orchestra
+
+📌 **SPRINT** — sprint-priorities.md v6.44.0 ✅ · scratch/ limpo ✅ · proof-manifest atualizado ✅ · MCP docs sem mudança ✅
+
+⏭ **PRÓXIMOS PASSOS**
+1. ⚠️ **Suas 2 ações** pra destravar saída visível: **CF WAF skip `/wp-json/*`** + **OpenAI image model access** (diagnosticados na Fatia 1b)
+2. **Ativar pg_cron** + criar um plano na UI (`/dashboard/autopilot`) + **1º ciclo PAGO real** (Simular zero-cost primeiro, depois Rodar) — quando você der o GO
+3. `fetch-trends`→pauta do ângulo viral (FR-VA-018) — último item autônomo
+
+```
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+**O que mudou nesta sessão, Maestro:** o Viral Autopilot saiu de BoK-com-Fatia-1 para **motor autônomo completo R1+R2+R3+R4** — gera, agenda, monetiza e **melhora sozinho a cada ciclo**, com a carteira blindada por cap/pré-débito/refund atômicos e identidade cron server-trusted. Tudo provado materialmente **sem gastar 1 centavo seu** (3 smokes, 31 gates, usuário descartável) e revisado independentemente 3×.
+
+A UI já está no ar — você pode abrir **`/dashboard/autopilot`**, criar um plano (picker de produtos + redes + tetos) e clicar **Simular** pra ver o custo projetado a custo zero. O motor está pronto pra ligar; só falta o seu GO (e os 2 desbloqueios de CF/OpenAI pra publicação aparecer de fato).
+
 ---
 
 %% --- PROJECT METADATA START --- %%

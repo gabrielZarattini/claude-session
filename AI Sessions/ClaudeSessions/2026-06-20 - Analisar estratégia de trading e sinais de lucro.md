@@ -5617,6 +5617,120 @@ Implementar é fácil, mas **todo fix de money-path precisa passar pelo gate QA/
 
 Me diz qual, ou só "tenta de novo" que eu re-disparo o workflow.
 
+## 👤 User *(20:12:58)*
+
+Ok analise o sistema e o que temos desde a ultima interação que tava com problema api e verifique se consegue agora a instabilidade
+
+## 🤖 Claude *(20:13:32)*
+
+
+## 🤖 Claude *(20:13:34)*
+
+Vou fazer as duas coisas: **(1)** checar o estado do sistema agora (o LTC vendeu? preço, HALT, equity, stack) e **(2)** testar se a API normalizou — spawno **um** agente (a revisão de estratégia que faltou) como sonda: se voltar limpo, a API recuperou e eu sigo com o lote gated; se der 529, ainda está fora.
+
+## 🤖 Claude *(20:13:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== LTC vendeu? (SELL real) + pre\u00e7o ===\"\ncurl -s -m6 \"https://api.binance.com/api/v3/ticker/price?symbol=LTCUSDT\" 2>/dev/null; echo \"\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,quantity,net,FROM_UNIXTIME(transactTime/1000) t FROM orders WHERE isTestnet=0 ORDER BY id DESC LIMIT 5;\\\" 2>/dev/null\"'\necho \"=== HALT + equity + stack + LTC wallet ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\ncurl -s -m10 \"https://tradeux.gcrux.com/api/system/daily-cap\" -H \"authorization: $T\" | python3 -c \"import sys,json;d=json.load(sys.stdin);l=d.get(\\\"last\\\",{});print(\\\"halted:\\\",d[\\\"halted\\\"],\\\"| equity:\\\",round(l.get(\\\"equity\\\") or 0,2),\\\"| valued:\\\",l.get(\\\"valued\\\"),\\\"| baseline:\\\",round(d[\\\"snapshot\\\"][\\\"equity\\\"],2))\"\ncurl -s -m10 \"https://tradeux.gcrux.com/api/exchange/balance/USDT\" -H \"authorization: $T\" | python3 -c \"import sys,json;b=json.load(sys.stdin).get(\\\"balances\\\",{});print(\\\"LTC spot:\\\",b.get(\\\"LTC\\\",{}).get(\\\"available\\\"),\\\"| LDLTC:\\\",b.get(\\\"LDLTC\\\",{}).get(\\\"available\\\"),\\\"| USDT:\\\",b.get(\\\"USDT\\\",{}).get(\\\"available\\\"))\"\n'\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"{{.Service}} {{.Status}}\"' 2>/dev/null\necho \"=== erros recentes no system.log ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"error|FALHOU|reject\\\" /app/logs/system.log 2>/dev/null | tail -5\"'",
+  "description": "System health check: LTC sold, HALT, equity, balances, errors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LTC vendeu? (SELL real) + preço ===
+> {"symbol":"LTCUSDT","price":"44.17000000"}
+> id	side	status	avgPrice	quantity	net	t
+> 263	BUY	FILLED	43.85000000	0.22700000	9.96390395	2026-06-20 02:16:00.3950
+> 262	BUY	FILLED	43.84000000	0.22700000	9.96163168	2026-06-20 02:09:00.4150
+> 261	BUY	FILLED	43.87000000	0.22700000	9.96844849	2026-06-20 02:07:00.4080
+> 260	BUY	FILLED	43.89000000	0.22700000	9.97299303	2026-06-20 01:46:00.4130
+> === HALT + equity + stack + LTC wallet ===
+> halted: False | equity: 149.08 | valued: True | baseline: 149.07
+> LTC spot: None | LDLTC: None | USDT: None
+> agent Up 19 hours
+> backend Up 5 hours
+> db Up 5 days (healthy)
+> frontend Up 18 hours
+> === erros recentes no system.log ===
+> error: jwt expired {"expiredAt":"2026-06-20T15:11:47.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-20T15:11:47.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-20T15:53:53.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-20T16:39:42.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-20T16:39:42.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> ```
+
+## 🤖 Claude *(20:14:07)*
+
+
+## 🤖 Claude *(20:14:11)*
+
+**Sistema saudável e estável** (sem novidade desde a última interação):
+- **LTC: ainda NÃO vendeu** — está $44,17, abaixo do gatilho $44,39 (chegou a $44,29 e recuou). Segue armado, 0,907 LTC em mãos.
+- **HALT off**, equity **$149,08** valued, baseline $149,07 — intacto.
+- Stack 4/4 up (backend up 5h = nosso deploy). Só `jwt expired` cosmético no log (WS do navegador), zero erro real, zero `FALHOU`.
+
+Agora a sonda da API — spawno **1 agente** (a revisão de estratégia que faltou): se voltar, a API recuperou.
+
+## 🤖 Claude *(20:14:24)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Sonda API + revis\u00e3o de estrat\u00e9gia",
+  "subagent_type": "general-purpose",
+  "prompt": "Revis\u00e3o adversarial de ESTRAT\u00c9GIA do TradeUX (bot Binance Spot + agente LLM, mainnet real, saldo ~$149). Esta tarefa tamb\u00e9m serve de sonda de sa\u00fade da API \u2014 execute normalmente.\n\nCONTEXTO: leia as mem\u00f3rias estrat\u00e9gicas em /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/*.md (especialmente: tradeux-farm-funnel-backtest, tradeux-mainnet-go-live, tradeux-strategy-engine, tradeux-bear-capture-research, tradeux-harvester-experiment, tradeux-1m-scalping-and-cockpit, tradeux-earn-autosubscribe-incident) e, se \u00fatil, o \u00edndice MEMORY.md no mesmo diret\u00f3rio.\n\nESTADO: mainnet LIVE, CANARY Farm-only (s\u00f3 vendas no-loss do Farm armadas id10/12/14; compras/Trend/Baseline OFF por decis\u00e3o do operador). Posi\u00e7\u00e3o: 0,907 LTC (~$40, custo $39,87) esperando vender a $44,39. BTC = ZERO (concentrar em BTC \u00e9 a META, PAUSADA p/ pesquisa). Funil em shadow com baseline $10k (inerte a $149). 16 trilhas [PAPER] virtuais ativas. Equity $149.\n\nPERGUNTA CENTRAL: ESTAMOS ERRANDO na estrat\u00e9gia? Ataque criticamente e seja concreto, distinguindo ERRO REAL de escolha conservadora deliberada:\n1. A tese Farm-and-Funnel a $149 \u2014 o farm no-loss captura alpha marginal? concentra\u00e7\u00e3o? o funil baseline $10k est\u00e1 estruturalmente inerte (nunca varre p/ BTC a esse capital).\n2. O plano de concentrar em BTC como reserva \u2014 faz sentido a $149? tamanho m\u00ednimo/exponencial? BTC \u00e9 hold direcional.\n3. O canary Farm-only atual \u2014 recuperar o LTC e ficar parado \u00e9 \u00f3timo ou capital ocioso?\n4. As 16 trilhas [PAPER] \u2014 research \u00fatil ou ru\u00eddo?\n5. Estamos REINTRODUZINDO algo j\u00e1 refutado? (1m scalping, harvester, bear via futures, VPIN-forecast) \u2014 confirme nas mem\u00f3rias que est\u00e1 tudo OFF.\n\nCite evid\u00eancia (mem\u00f3ria/arquivo/backtest). Retorne um relat\u00f3rio conciso em pt-BR com: veredito geral, lista de achados (severidade + \u00e9-erro-ou-escolha + recomenda\u00e7\u00e3o), e o que N\u00c3O mudar."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Two important live confirmations:\n1. `FUNNEL_BASELINE_USDT=10000` + `FUNNEL_LIVE_BUY=false` → the funnel is doubly inert: structurally (would only sweep when USDT > $10k, vs $109 cash) AND live-buy disabled. Confirms finding #1.\n2. **`TRADING_HALT=true` in `.env`** but `GET /system/halt` returns `halted=false`. This is the documented architecture: the `.env` floor is the *permanent* setting, but the owner flipped the floor OFF via the hot UI (`POST /system/floor`), and `riskState` is the live source of truth — so the system IS live despite the stale-looking env. The caps are correctly recalibrated ($25/order, $25/symbol Farm exposure). `MAX_ORDER_NOTIONAL_USDT=25` and `FARM_MAX_NOTIONAL_USDT=25` confirmed.\n\nI have all evidence. Let me write the report.\n\nThe API health probe passed cleanly: login 200 in ~200ms, all 6 endpoints 200, latencies 3–558ms (the 558ms is the live Binance balance call — normal). System is healthy.\n\n---\n\n# Revisão Adversarial de Estratégia — TradeUX ($149, mainnet LIVE)\n\n**Sonda de saúde da API: PASSOU.** Login 200 (~200ms); `/system/halt`, `/system/daily-cap`, `/exchange/balance`, `/analysis/cockpit`, `/analysis/paper`, `/automations/groups` todos 200 (3–558ms; o 558ms é a chamada de saldo ao vivo na Binance, normal). Backend up 5h, agente up 19h, DB e frontend saudáveis.\n\n## Veredito geral\n\n**Não estamos errando na ESTRATÉGIA — estamos errando na MOLDURA de expectativa, e há 1 erro operacional real de baixa severidade (ruído do agente).** A postura atual (canary Farm-só, refutados desligados, paper rodando, BTC zerado por escolha) é **conservadora-deliberada e defensável** dado o capital. O risco dominante não é perder dinheiro — é **gastar semanas validando uma máquina cujo teto, a $149, é matematicamente ~flat**, e confundir "plumbing funciona" com "edge existe". Confirmei ao vivo que **nada refutado foi reintroduzido**.\n\nEstado ao vivo verificado: `halted=false` (LIVE real), equity **$149,05** (USDT $109,02 + LTC 0,907 = $40,03), baseline cap diário $149,07 / piso $141,62, **sem `LD*` em ignored** (fix do Earn segurando). Farm 3/6 (vendas id10/12/14 armadas, compras off), Trend 0/8, Baseline 0/2, Paper 16/16. Ledger real = **4 ordens, TODAS LTCUSDT BUY** de 20/jun (o DCA), zero BTC, zero vendas, zero outros módulos.\n\n## Achados (severidade · erro-ou-escolha · recomendação)\n\n**1. Funil baseline $10k é estruturalmente inerte — [MÉDIA · ERRO de design latente, mas hoje neutralizado]**\nConfirmado ao vivo: `FUNNEL_BASELINE_USDT=10000` + `FUNNEL_LIVE_BUY=false`. A $109 de caixa, o funil **nunca** dispara (só escoaria USDT acima de $10k). Não é bug — é dupla trava de segurança (`96915e0` fixou o dreno-por-depósito da Fase 4). MAS: significa que a peça que conecta "lucro do farm → BTC" (o coração da tese Farm-and-**Funnel**) está **logicamente morta a este capital**. Recomendação: **não construir live-buy do funil agora** (correto); quando/se houver aporte, recalibrar baseline para algo proporcional (ex.: $-fixo acima do caixa-alvo), não $10k. Documentar que "Funnel" hoje é só "Farm".\n\n**2. Farm no-loss captura alpha marginal e PRENDE capital — [BAIXA · ESCOLHA correta]**\nO backtest próprio (`tradeux-farm-funnel-backtest`) já provou: farm-só = recente −3,5% / bull +0,9% / bear −1,7%, "alpha marginal, +3 BTC = séculos". O no-loss **não elimina perda, esconde como inventário preso** (memória, confirmado no estado atual: 100% do "trabalho" do bot virou 0,907 LTC parado esperando $44,39 enquanto LTC está ~$44,13). Isso é o desenho funcionando, não falhando. Risco real: **concentração** — todo o capital de risco está num único alt (LTC) num único regime (range). Recomendação: manter; é o módulo mais seguro. NÃO escalar `FARM_SIZE_MULT` (gate documentado: faltam loadFarmSellingLocks + reconcile partial→cancel).\n\n**3. Concentrar em BTC a $149 — [ALTA como tese · ESCOLHA de PAUSAR está correta]**\nA própria pesquisa mata isto no horizonte certo: `tradeux-mainnet-go-live` é explícito — **"+3 BTC é impossível (1.350×)"**, "$148 spot ≈ flat no mês", BTC a $5/perna fica no piso do minNotional (frágil). A $149, "reserva de BTC" é **hold direcional disfarçado de estratégia** — você não tem tamanho para fazer DCA significativo nem para o trend operar com tickets não-degenerados. Pausar para pesquisa é a decisão certa. Recomendação: **a meta honesta a este capital não é "+3 BTC", é "validar plumbing + provar/refutar edge com dinheiro real, sem sangrar fee"**. Tratar BTC-reserva como meta de CICLO/aporte, não de agora. Não é erro pausar; seria erro forçar.\n\n**4. Canary Farm-só (recuperar LTC e parar) — [BAIXA · ESCOLHA ótima, com nuance]**\n"Capital ocioso" é a leitura errada. A $149, **ociosidade é a posição +EV** — cada trade nasce ~1 round-trip de fee no vermelho (fee comeu 61% do lucro bruto realizado no paper; a 1ª ordem real do paper consistência fechou +$0,0143 com taxa comendo 73%). Ficar parado esperando o no-loss bouncar **preserva equity** ($148,75 intacta no episódio do DCA). Nuance/erro menor: o operador desligou as COMPRAS do Farm (id9/11/13) — isso é prudente (evita empilhar mais LTC), mas deixa o canary **sem capacidade de gerar novos round-trips** até o LTC vender. É um canary "drenando para caixa", não "operando". Recomendação: ok como está; se quiser sinal de validação mais rápido, religar 1 Farm Buy de alt diferente (diversificar do LTC) com o teto $25/símbolo já no ar.\n\n**5. 16 trilhas [PAPER] — [MÉDIA · útil PARCIALMENTE; metade é ruído estrutural hoje]**\nAo vivo: **só a trilha `consistencia` negociou** (7 pernas, +$0,068 total em ~24h, realizado +$0,089 − $0,139 de fee). As 8 automações `macro` (SMA50/200) têm **ZERO ordens** — precisam de golden/death cross, que não veio, e em regime `bear` (BTC/BNB/ADA ao vivo agora) ficam fail-safe. Então **metade da bateria de paper está inerte** pela mesma razão que o trend real fica (1-3 RT/símbolo/mês). Isso é research útil (mede edge líquido real com fee mainnet, sem risco — o medo do dono de "testnet morre" está corretamente endereçado) MAS o sinal vem devagar: o `paperReviewJob` precisa de 15-30 round-trips e só a consistência acumula. Recomendação: **manter, mas calibrar expectativa** — veredito da consistência em ~1-2 semanas; a macro pode levar meses para juntar amostra. Não adicionar a trilha "frequência" (já refutada, 8/8 EV<0).\n\n**6. Reintrodução de refutados — [NENHUM · TUDO OFF, confirmado no DB]**\nVerifiquei `isActive` de todas as automações no banco ao vivo:\n- Harvester id22-25 = **0** (morto no mainnet, `REDESIGN_TO_PAPER`)\n- Grid id21 = **0** (drenava o cofre)\n- BTC Scalp id38 = **0** (1m refutado, −0,14% a −0,23%/trade)\n- Bear-via-futures = nunca construído (backtest próprio: falso positivo, ciclo +88% vs +338%)\n- VPIN-forecast = rebaixado a nowcasting\n**Nada refutado está ativo nem sugerido.** O agente NÃO sugeriu reativar harvester nesta janela (erro grave anterior não se repetiu).\n\n**7. Ruído do agente LLM — [BAIXA · ERRO operacional real, conhecido]**\n9 notificações em ~12h. ~5 úteis (fill do Farm Buy LTC; transições de regime BTC mixed→trend→bear). MAS 2 padrões de ruído conhecido: (a) 15:43 "Baseline id2 inativa apesar do gate liberado" — re-litiga uma **escolha deliberada** do operador (canary Farm-só) como se fosse anomalia; (b) 19:59 + 20:00 = **duas notificações a 15s** sobre o MESMO assunto (BTC entrou em bear). O dedup por assunto (`notifyDedup.js`) e a doutrina GATE≠TRIGGER não barraram 100%. É a "doutrina soft escorrega às vezes" já documentada. Recomendação: baixa prioridade; o backend agora alerta falhas reais direto (`457e25a`), então o agente importa menos. Se incomodar, endurecer prompt para "automação inativa por escolha do operador = NÃO notificar".\n\n## O que NÃO mudar\n\n- **Não virar o funil live-buy** nem mexer no baseline $10k a este capital.\n- **Não escalar `FARM_SIZE_MULT`** (faltam os 2 pré-reqs de persistência/reconcile).\n- **Não reativar** harvester / grid / scalp 1m / bear-futures — todos refutados com backtest.\n- **Não forçar trade em BTC** para "ver P&L" — é o maior risco a $149 (sangra fee).\n- **Manter o cap $25/ordem + $25/símbolo Farm + cap diário −5% + piso/pânico** — calibrados e ao vivo.\n- **Manter o paper rodando** — é a única fonte honesta de edge com dinheiro real, risco zero.\n- **Não perseguir paridade 1:1 do cockpit** com cada condition (recomendação do TL; fase declarada DONE).\n\n**Resumo de uma linha:** a estratégia está certa para o capital errado — a $149 a vitória é *paciência + validação*, não P&L; o único erro real é o agente ainda tratar escolhas-de-canary como anomalias, e a tese só ganha sentido pleno com aporte (quando o funil deixa de ser decorativo).'}, {'type': 'text', 'text': "agentId: a5ba13b5dbf2e0915 (use SendMessage with to: 'a5ba13b5dbf2e0915' to continue this agent)\n<usage>subagent_tokens: 96762\ntool_uses: 28\nduration_ms: 220753</usage>"}]
+> ```
+
+## 🤖 Claude *(20:19:20)*
+
+
+## 🤖 Claude *(20:19:39)*
+
+✅ **A API NORMALIZOU.** A sonda passou limpa — o agente rodou completo (97k tokens, 28 ferramentas, ~3,7 min, **zero 529**), e ainda confirmou todos os endpoints do sistema em 200. Instabilidade resolvida.
+
+E ela entregou a **revisão de estratégia** que faltava. Distilando o essencial:
+
+## 🎯 Estamos errando na estratégia? — Veredito: **não na estratégia, sim na EXPECTATIVA**
+
+> **A estratégia está certa para o capital errado.** A $149, o sistema é matematicamente **~flat** — a vitória aqui é **paciência + validação** (provar/refutar edge com risco zero via paper), **não P&L**. O risco real não é perder dinheiro; é gastar semanas validando uma máquina cujo teto a $149 é flat, e confundir "encanamento funciona" com "edge existe".
+
+**Achados confirmados ao vivo:**
+- ✅ **Nada refutado foi reintroduzido** — checou no DB: harvester (id22-25), grid (21), scalp 1m (38), bear-futures, VPIN — **tudo `isActive=0`**. Sem regressão.
+- 🟡 **Funil inerte** (baseline $10k vs $109 caixa) → a peça "lucro→BTC" da tese está **logicamente morta** a este capital. Não construir live-buy agora (certo); recalibrar só com aporte.
+- 🟡 **BTC a $149 = "hold direcional disfarçado de estratégia"** — sem tamanho pra DCA significativo. **Pausar é a decisão certa**; é meta de **ciclo/aporte**, não de agora.
+- 🟢 **Canary = ociosidade é +EV** aqui (cada trade nasce ~1 fee no vermelho; o fee comeu 73% do lucro bruto do paper). Ficar parado **preserva equity**.
+- 🟡 **Paper:** só a trilha `consistencia` negocia (+$0,07 em 24h, migalhas); as 8 `macro` estão **inertes** (esperando cross). Veredito em ~1-2 semanas. Manter, calibrar expectativa.
+- 🔴 **Único erro operacional real:** ruído do agente (D3) — ainda re-litiga escolhas-de-canary como anomalia. Baixa prioridade (o backend agora alerta falhas reais direto).
+
+**O que NÃO mudar:** não virar o funil, não escalar `FARM_SIZE_MULT`, não reativar refutados, não forçar trade em BTC pra "ver P&L", manter os caps + paper.
+
+---
+
+## Próximo passo (API de volta → posso executar)
+
+Tenho agora **estratégia + design** revisados. Os débitos estão desenhados. Como o gate (subagentes) **voltou a funcionar**, posso rodar o lote:
+
+**Ordem que proponho** (cada um gated QA/TL + deploy):
+1. 🔴 **N1 — trava do cofre BTC no `exchange.js`** (o risco nº 1: hoje a venda do cofre só é barrada no MCP) — *defesa-em-profundidade, importante dado que BTC é a reserva-alvo*.
+2. 🟡 **D1** (alerta no bloqueio HALT/cap) + **N2** (qty bruta→líquida, origem do 0,908/0,907).
+3. 🟢 **D5/D6/D7** triviais + **D3** (prompt do agente anti-ruído canary).
+4. **D2** fica como feature (não-fix), documentado.
+
+Quer que eu **dispare esse lote agora** (começando pela trava do cofre)? Ou prefere reagir primeiro ao recado estratégico — que a $149 a meta honesta é *validar*, não lucrar — e talvez repensar se vale empilhar BTC só com aporte?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
