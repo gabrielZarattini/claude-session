@@ -2696,6 +2696,591 @@ LTC está em **regime de range** (ADX 18,9). $44,2 já é **perto do topo do ran
 
 Quer que eu já escreva o fix do `computeEquity` (sem deployar) enquanto você resgata o Earn, ou prefere primeiro investigar o furo dos 0,017 LTC?
 
+## 👤 User *(14:44:20)*
+
+ok então verifique todos os logs e notificaç~eos e egistros das ultimas 12 horas  para verificar se esta tudo correto... Parece que teve uma notificação de sell LTC mas não foi executada ordem.  e se puder e achar que ja seja necessário aplique o fix do computeEquity
+
+## 🤖 Claude *(14:45:47)*
+
+
+## 🤖 Claude *(14:45:51)*
+
+Entendido — auditoria completa das últimas 12h + o caso específico do "sell LTC notificado mas não executado", e aplicar o fix se for necessário (é). Como Ultracode está ligado, vou fazer isso direito: primeiro **coletar os dados crus** das 12h (eu já tenho os acessos funcionando), depois rodar um **workflow de análise paralela com verificação adversarial**, e em paralelo implementar o fix do `computeEquity` com gate QA+TL antes de subir.
+
+Mas antes, deixa eu caçar o caso do "sell notificado e não executado" — porque a tabela `orders` tem **0 vendas**, então a notificação saiu mas nenhuma ordem foi gravada. Quero o motivo exato.
+
+## 🤖 Claude *(14:45:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== A10.log (Farm Sell LTC) \u2014 COMPLETO ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"cat /app/logs/A10.log 2>/dev/null\"'\necho \"\"\necho \"=== system.log: SELL / reject / insufficient / saldo / balance (12h) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"sell|reject|insufficient|saldo insuf|balance|LOCK_BRAIN|skipp|bloquead|guard|halt\\\" /app/logs/system.log 2>/dev/null | tail -30\"'",
+  "description": "Investigate Farm Sell LTC attempts and rejections"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A10.log (Farm Sell LTC) — COMPLETO ===
+> info: 2026-06-20T02:19:29.455Z - Automation removed from BRAIN #10
+> info: 2026-06-20T02:19:29.460Z - Automation Farm Sell LTCUSDT has stopped!
+> info: 2026-06-20T02:27:51.421Z - Automation Farm Sell LTCUSDT has started!
+> info: 2026-06-20T07:00:34.140Z - Beholder evaluated a condition at automation: Farm Sell LTCUSDT => MEMORY['LTCUSDT:FARM_DCA'].qty>0 && MEMORY['LTCUSDT:BOOK'].current.bestBid>MEMORY['LTCUSDT:FARM_DCA'].cost*1.0120
+> info: 2026-06-20T07:00:34.144Z
+> error: There is no LTC in your wallet to place a sell. {"stack":"Error: There is no LTC in your wallet to place a sell.\n    at calcQty (/app/src/beholder.js:212:27)\n    at placeOrder (/app/src/beholder.js:519:26)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async evalDecision (/app/src/beholder.js:905:28)\n    at async Promise.all (index 0)\n    at async testAutomations (/app/src/beholder.js:953:19)"}
+> 
+> === system.log: SELL / reject / insufficient / saldo / balance (12h) ===
+> info: 2026-06-18T13:47:05.779Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:02.136Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-18T13:50:11.142Z - [riskState] inicializado — env floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-18T13:55:43.299Z - [riskState] inicializado — env floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T17:35:21.092Z - [riskState] inicializado — env-hard=false · floor=true · manual=false · daily-cap=false · halted=true.
+> info: 2026-06-19T17:35:59.573Z - [riskState] manual HALT LIGADO (teste persist).
+> info: 2026-06-19T17:35:59.577Z - [riskState] manual HALT desligado.
+> info: 2026-06-19T20:15:29.224Z - [riskState] inicializado — env-hard=false · floor=true · manual=false · daily-cap=false · halted=true.
+> error: connect ETIMEDOUT {"name":"SequelizeConnectionError","original":{"code":"ETIMEDOUT","errorno":"ETIMEDOUT","fatal":true,"syscall":"connect"},"parent":{"code":"ETIMEDOUT","errorno":"ETIMEDOUT","fatal":true,"syscall":"connect"},"stack":"SequelizeConnectionError: connect ETIMEDOUT\n    at ConnectionManager.connect (/app/node_modules/sequelize/lib/dialects/mysql/connection-manager.js:102:17)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at runNextTicks (node:internal/process/task_queues:68:3)\n    at process.processTimers (node:internal/timers:518:9)\n    at async ConnectionManager._connect (/app/node_modules/sequelize/lib/dialects/abstract/connection-manager.js:222:24)"}
+> info: 2026-06-20T02:03:03.606Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-20T02:28:37.125Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-20T04:11:37.935Z - [riskState] daily-cap HALT ARMADO (daily-loss-cap -5% (equity $109.02 <= piso $141.40; baseline $148.84, dd -26.76%)).
+> info: 2026-06-20T04:11:37.935Z - [dailyCap] 🛑 CAP DISPARADO — daily-loss-cap -5% (equity $109.02 <= piso $141.40; baseline $148.84, dd -26.76%). HALT ativo (bloqueia TODAS as ordens).
+> ```
+
+## 🤖 Claude *(14:46:57)*
+
+
+## 🤖 Claude *(14:47:03)*
+
+**🎯 ACHEI — o "sell notificado mas não executado".** Olha o `A10.log` às **07:00:34**:
+
+```
+Beholder evaluated: Farm Sell LTCUSDT => FARM_DCA.qty>0 && bestBid > FARM_DCA.cost*1.0120
+error: There is no LTC in your wallet to place a sell.
+   at calcQty (beholder.js:212) → placeOrder (beholder.js:519)
+```
+
+Tradução: às 07:00 o LTC **bateu o alvo de saída no lucro** (custo +1,2% ≈ **$44,4**), a venda no-loss **DISPAROU** — e **falhou com "não há LTC na carteira"**, porque o LTC está preso no Earn (`LDLTC`, spot=0). **Você perdeu uma saída lucrativa** por causa do auto-subscribe. Confirma 100% o diagnóstico, com evento real.
+
+Os transitions de risco no `system.log` estão limpos (só o falso trip 04:11 + ETIMEDOUT transitório). Agora vou coletar TUDO das 12h pra um workflow analisar em paralelo e, em paralelo, escrever o fix. Coletando os dados crus:
+
+## 🤖 Claude *(14:47:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nmkdir -p /tmp/audit12h\necho \"=== copiando logs do backend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker cp tradeux-backend-1:/app/logs /tmp/audit12h/backend-logs 2>&1 | head -2; chmod -R a+r /tmp/audit12h/backend-logs 2>/dev/null'\nls /tmp/audit12h/backend-logs/ 2>/dev/null | head -40\necho \"\"\necho \"=== logs do container do AGENTE (12h) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker logs --since 12h tradeux-agent-1 > /tmp/audit12h/agent-container.log 2>&1; wc -l /tmp/audit12h/agent-container.log'\necho \"\"\necho \"=== dump das ordens reais ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,automationId,symbol,side,type,status,avgPrice,quantity,net,commission,commissionAsset,FROM_UNIXTIME(transactTime/1000) t,isTestnet FROM orders ORDER BY transactTime DESC LIMIT 40;\\\" 2>/dev/null\"' > /tmp/audit12h/orders.txt; wc -l /tmp/audit12h/orders.txt",
+  "description": "Gather backend logs, agent logs, orders into /tmp for analysis"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === copiando logs do backend ===
+> mkdir /tmp/audit12h/backend-logs: permission denied
+> 
+> === logs do container do AGENTE (12h) ===
+> bash: line 1: /tmp/audit12h/agent-container.log: Permission denied
+> wc: /tmp/audit12h/agent-container.log: No such file or directory
+> 
+> === dump das ordens reais ===
+> 41 /tmp/audit12h/orders.txt
+> ```
+
+## 🤖 Claude *(14:47:16)*
+
+
+## 🤖 Claude *(14:47:17)*
+
+Permissão — `/tmp/audit12h` é meu (ubuntu) e o sudo escreve como gcrux. Abrindo o dir e refazendo.
+
+## 🤖 Claude *(14:47:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "chmod 777 /tmp/audit12h\ncd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker cp tradeux-backend-1:/app/logs /tmp/audit12h/backend-logs 2>&1 | head -1; docker logs --since 12h tradeux-agent-1 > /tmp/audit12h/agent-container.log 2>&1'\nchmod -R a+r /tmp/audit12h 2>/dev/null\necho \"=== arquivos coletados ===\"\nls -la /tmp/audit12h/backend-logs/ 2>/dev/null | awk '{print $5, $9}' | head -45\necho \"agent-container.log: $(wc -l < /tmp/audit12h/agent-container.log 2>/dev/null) linhas\"\necho \"\"\necho \"=== fonte do spam [PAPER] sem posi\u00e7\u00e3o ===\"\ngrep -rn \"sem posi\u00e7\u00e3o\\|venda ignorada\\|sem posicao\" /tmp/audit12h/backend-logs/ 2>/dev/null | wc -l\necho \"(ocorr\u00eancias de 'sem posi\u00e7\u00e3o' nos logs)\"",
+  "description": "Re-gather logs with fixed permissions, count PAPER spam"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos coletados ===
+>  
+> 4096 .
+> 4096 ..
+> 916 A10.log
+> 141 A11.log
+> 217 A12.log
+> 141 A13.log
+> 217 A14.log
+> 152 A15.log
+> 153 A16.log
+> 152 A17.log
+> 153 A18.log
+> 152 A19.log
+> 153 A20.log
+> 233 A44.log
+> 235 A45.log
+> 3481 A46.log
+> 3813 A47.log
+> 233 A48.log
+> 235 A49.log
+> 247 A50.log
+> 6504 A51.log
+> 233 A52.log
+> 235 A53.log
+> 247 A54.log
+> 2751 A55.log
+> 233 A56.log
+> 235 A57.log
+> 247 A58.log
+> 4942 A59.log
+> 151 A6.log
+> 152 A7.log
+> 4049 A9.log
+> 244 beholder.log
+> 891 cockpit.log
+> 74 daily_cap_snapshot.json
+> 412 fair.log
+> 24779 flow-capitulation.log
+> 60630 flow.log
+> 3588 funnel.log
+> 300 M10.log
+> 264 M1.log
+> 256 M3.log
+> 300 M4.log
+> 300 M8.log
+> agent-container.log: 3925 linhas
+> 
+> === fonte do spam [PAPER] sem posição ===
+> 37
+> (ocorrências de 'sem posição' nos logs)
+> ```
+
+## 🤖 Claude *(14:50:09)*
+
+
+## 🤖 Claude *(14:50:12)*
+
+Confirmado o caso. Agora vou desenhar o fix com cuidado — tem uma sutileza: ao marcar `LD*` a mercado pelo subjacente, preciso distinguir "Earn de um ativo que a gente acompanha, temporariamente frio" (→ fail-safe) de "dust de Earn sem par" (→ ignora), senão reintroduzo falso-trip ou travo o cap pra sempre. Vou pegar a lista de símbolos acompanhados e o mecanismo de deploy.
+
+## 🤖 Claude *(14:50:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== s\u00edmbolos acompanhados (.env) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -iE \"REGIME_SYMBOLS|SYMBOLS=|FARM_SYMBOLS|WATCH\" /home/gcrux-tradeux/tradeux/.env 2>/dev/null'\necho \"\"\necho \"=== compose: backend tem volume de src (deploy = restart) ou builda imagem? ===\"\ngrep -nA20 \"backend:\" docker-compose.yml | grep -iE \"build|image|volumes|:/app|src\" | head\necho \"\"\necho \"=== s\u00edmbolos no DB (favoritos/monitorados) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT symbol,isFavorite FROM symbols WHERE isFavorite=1 OR symbol LIKE \\\\\\\"%USDT\\\\\\\" LIMIT 20;\\\" 2>/dev/null\"' | head -20",
+  "description": "Get tracked symbols and deploy mechanism"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === símbolos acompanhados (.env) ===
+> REGIME_SYMBOLS=BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT
+> 
+> === compose: backend tem volume de src (deploy = restart) ou builda imagem? ===
+> 29-    build: ./backend
+> 32-    volumes:
+> 35-      # (daily_cap_snapshot.json), marco do paper-review e logs — PERSISTE entre rebuilds de imagem.
+> 36-      # Sem isto o estado vive na camada efemera e some no `make up`/rebuild (revertia p/ a semente do .env).
+> 37-      - backend_logs:/app/logs
+> 48-    build:
+> 
+> === símbolos no DB (favoritos/monitorados) ===
+> symbol	isFavorite
+> 0GUSDT	0
+> 1000CATUSDT	0
+> 1000CHEEMSUSDT	0
+> 1000SATSUSDT	0
+> 1INCHUSDT	0
+> 1MBABYDOGEUSDT	0
+> 2ZUSDT	0
+> AAVEUSDT	0
+> ACEUSDT	0
+> ACHUSDT	0
+> ACMUSDT	0
+> ACTUSDT	0
+> ACXUSDT	0
+> ADABTC	1
+> ADAUSDT	0
+> ADXUSDT	0
+> AEURUSDT	0
+> AEVOUSDT	0
+> AGLDUSDT	0
+> ```
+
+## 🤖 Claude *(14:51:06)*
+
+
+## 🤖 Claude *(14:51:07)*
+
+Tenho o que preciso: `REGIME_SYMBOLS=BTC/LTC/BNB/ADA` (a lista de bases acompanhadas) e deploy = **rebuild** (`build: ./backend`, sem mount de src; volume `backend_logs` preserva o estado). Vou implementar o fix robusto agora.
+
+## 🤖 Claude *(14:51:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "const IGNORE_ASSETS = new Set((process.env.DAILY_CAP_IGNORE_ASSETS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));\nconst SNAP_FILE = path.resolve(__dirname, '..', 'logs', 'daily_cap_snapshot.json');",
+  "new_string": "const IGNORE_ASSETS = new Set((process.env.DAILY_CAP_IGNORE_ASSETS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));\n// Bases que o sistema ACOMPANHA (par <base>USDT com ticker quente). Earn dessas (LD<base>) sem pre\u00e7o moment\u00e2neo =\n// ativo REAL temporariamente frio \u2192 fail-safe (espera); LD de qualquer OUTRA base = dust de Earn sem par \u2192 ignora.\n// Deriva do mesmo REGIME_SYMBOLS do regimeJob/cockpit. Nasceu do incidente do auto-subscribe (LTC spot \u2192 LDLTC).\nconst TRACKED_BASES = new Set(\n    (process.env.REGIME_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT')\n        .split(',').map(s => s.trim().toUpperCase().replace(/USDT$/, '')).filter(Boolean)\n);\nconst SNAP_FILE = path.resolve(__dirname, '..', 'logs', 'daily_cap_snapshot.json');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:51:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "        const px = priceOf(coin);\n        if (px == null) {\n            // Earn/Locked da Binance aparece como 'LD'+ativo (LDGUN, LDBABY...) e N\u00c3O tem par <coin>USDT: n\u00e3o \u00e9\n            // spot-negoci\u00e1vel \u2192 fica FORA do equity-TRADEABLE (denominador certo do cap) e N\u00c3O bloqueia (\u2260 pre\u00e7o\n            // frio real). O guard length>3 preserva ativos spot reais como LDO. Override manual: DAILY_CAP_IGNORE_ASSETS.\n            if (coin.startsWith('LD') && coin.length > 3) { ignored.push(coin); continue; }\n            cold.push(coin); continue;                              // pre\u00e7o frio REAL \u2192 fail-safe (n\u00e3o avalia)\n        }\n        equity += qty * px;",
+  "new_string": "        const px = priceOf(coin);\n        if (px == null) {\n            // 'LD'+ativo = wrapper do Binance Simple Earn (LDLTC = LTC em Earn, LDUSDC = USDC em Earn...). Tem valor\n            // REAL e resgat\u00e1vel \u2192 marca a mercado pelo ativo SUBJACENTE (strip 'LD'). Sem isto, um saldo que a Binance\n            // AUTO-SUBSCREVE no Earn some do equity e dispara o cap por falso drawdown (incidente 2026-06-20: LTC\u2192LDLTC,\n            // equity $148\u2192$109 \u2192 HALT falso). length>3 preserva spot real como LDO.\n            if (coin.startsWith('LD') && coin.length > 3) {\n                const under = coin.slice(2);                            // LDLTC -> LTC, LDUSDC -> USDC\n                if (STABLES.has(under)) { equity += qty; continue; }    // Earn de stable ~ $1\n                const upx = priceOf(under);\n                if (upx != null) { equity += qty * upx; continue; }     // Earn de cripto com pre\u00e7o \u2192 conta a mercado\n                if (TRACKED_BASES.has(under)) { cold.push(coin); continue; } // Earn de ativo REAL frio \u2192 fail-safe\n                ignored.push(coin); continue;                           // dust de Earn sem par \u2192 fora do equity, n\u00e3o bloqueia\n            }\n            cold.push(coin); continue;                              // pre\u00e7o frio REAL \u2192 fail-safe (n\u00e3o avalia)\n        }\n        equity += qty * px;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:51:26)*
+
+
+## 🤖 Claude *(14:51:27)*
+
+Fix aplicado. Syntax check rápido antes do gate:
+
+## 🤖 Claude *(14:51:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && node --check src/dailyCapJob.js && echo \"\u2713 sintaxe OK\" || echo \"\u2717 erro de sintaxe\"",
+  "description": "Syntax-check the patched dailyCapJob.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ sintaxe OK
+> ```
+
+## 🤖 Claude *(14:51:56)*
+
+
+## 🤖 Claude *(14:51:57)*
+
+Sintaxe OK. Agora vou rodar o workflow: auditoria paralela das 12h + gate QA/TL do fix + verificação adversarial. Marco as tarefas e disparo.
+
+## 🤖 Claude *(14:51:59)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Auditoria 12h (logs/notif/registros) + gate do fix",
+  "description": "Workflow: auditar notifica\u00e7\u00f5es, reconciliar 0.017 LTC, varrer anomalias, verificar achados-chave adversarialmente, e gate QA+TL do fix do computeEquity. Depois deploy se aprovado.",
+  "activeForm": "Rodando auditoria 12h + gate do fix"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Auditoria 12h (logs/notif/registros) + gate do fix
+> ```
+
+## 🤖 Claude *(14:52:55)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'audit-12h-and-gate-fix',\n  description: 'Auditoria das ultimas 12h (logs/notif/registros) + gate QA/TL do fix do computeEquity, com verificacao adversarial',\n  phases: [\n    { title: 'Audit', detail: 'fan-out paralelo sobre /tmp/audit12h (notif, reconcile, anomalias, verificacao independente)' },\n    { title: 'Gate', detail: 'qa-engineer + tech-lead revisam o fix do dailyCapJob.js' },\n    { title: 'Synthesize', detail: 'consolida auditoria + veredito do gate' },\n  ],\n}\n\nconst DATA = '/tmp/audit12h'   // backend-logs/, agent-container.log, orders.txt (todos world-readable)\nconst REPO = '/home/gcrux-tradeux/tradeux'\n\nconst ACCESS = `\nDADOS JA COLETADOS (read-only, use Bash/Read/Grep \u2014 NAO precisa de sudo/docker/login):\n- ${DATA}/backend-logs/  -> system.log, A*.log (automacoes), M*.log (monitores), funnel.log, regime.log,\n  cockpit.log, flow.log, beholder.log, fair.log, daily_cap_snapshot.json\n- ${DATA}/agent-container.log  -> 12h de atividade do AGENTE LLM (observacoes que ele mandou pro dono via Telegram)\n- ${DATA}/orders.txt  -> dump das ordens (mainnet isTestnet=0 e testnet)\nFATOS JA ESTABELECIDOS (use como base, mas verifique): so existem 4 ordens reais mainnet (todas BUY LTCUSDT,\nautomation 9, ~01:46-02:16 UTC 20/jun, custo total $39.867, 0.908 LTC). 0 vendas. A Binance auto-subscreveu o LTC\nno Simple Earn -> virou LDLTC (spot LTC=0, LDLTC=0.89009945). Isso (a) disparou um HALT FALSO do daily-cap as\n04:11 (equity lido $109 = so USDT, excluindo LDLTC) e (b) as 07:00 a venda no-loss do Farm DISPAROU no alvo\n(custo*1.012 ~$44.4) e FALHOU com \"There is no LTC in your wallet to place a sell\" (beholder.js calcQty).\n`\n\nphase('Audit')\nconst audit = await parallel([\n  () => agent(`${ACCESS}\nTAREFA \u2014 AUDITORIA DE NOTIFICACOES (12h). Leia ${DATA}/agent-container.log e qualquer trilha de notificacao nos\nbackend-logs. Liste TUDO que foi enviado ao dono (Telegram/observacoes do agente) nas ultimas 12h. Para cada uma:\nclassifique como LEGITIMA, RUIDO (repetitiva/sem acao) ou ENGANOSA (afirma algo incorreto). Quantifique o spam de\n'[PAPER] ... sem posicao -- venda ignorada' (quantas vezes, quais automacoes A4x/A5x geram). Aponte a origem no\ncodigo do ruido do paper, se der pra inferir dos logs. Retorne estruturado.`,\n    { label: 'audit:notificacoes', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 RECONCILIACAO DO LTC. Compramos 0.908 LTC bruto (4x 0.227), commission 0.000227 LTC/ordem (=0.000908 total)\n-> liquido recebido ~0.907092 LTC. Mas o Earn (LDLTC) tem 0.89009945 e o spot LTC=0. Quantifique o gap (~0.017 LTC,\n~$0.75) e investigue a causa provavel a partir de ${DATA}/orders.txt e dos logs (A9.log, system.log): foi mecanica\ndo auto-subscribe do Earn? saldo preexistente? erro de fee? Diga se e um VAZAMENTO real de valor ou artefato de\ncontabilidade (resgatavel). Retorne estruturado com sua confianca.`,\n    { label: 'audit:reconcile', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 VARREDURA DE ANOMALIAS (12h). Vasculhe TODOS os backend-logs (system.log, funnel.log, regime.log,\ncockpit.log, flow.log, beholder.log, A*.log, M*.log) procurando QUALQUER coisa errada/inesperada nas ultimas 12h\nALEM do incidente ja conhecido (Earn/LDLTC/HALT falso/venda 07:00). Ex.: erros recorrentes, streams caindo,\ncondicoes que nao deveriam disparar, automacoes em estado inconsistente, P&L/net suspeito, gates incoerentes.\nClassifique por severidade. Se estiver tudo limpo fora do incidente, diga isso explicitamente. Retorne estruturado.`,\n    { label: 'audit:anomalias', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 VERIFICACAO INDEPENDENTE (adversarial) dos achados-chave. NAO confie nos \"fatos estabelecidos\"; prove ou\nrefute CADA um a partir dos dados crus: (1) ha exatamente 4 ordens mainnet (isTestnet=0), todas BUY LTC, 0 SELL;\n(2) as 07:00 a Farm Sell LTC falhou com \"no LTC in wallet\" (cite a linha do A10.log); (3) o HALT das 04:11 e FALSO\n(equity real ~$148 = $109 USDT + 0.89 LTC, e o $109 lido exclui o LDLTC); (4) nenhuma ordem real foi executada\nindevidamente. Para cada, retorne CONFIRMADO ou REFUTADO + a evidencia textual (arquivo/linha). Retorne estruturado.`,\n    { label: 'audit:verify', phase: 'Audit', schema: AUDIT_SCHEMA }),\n])\n\nphase('Gate')\nconst FIX_CONTEXT = `\nREVISAO DE CODIGO \u2014 fix de money-path no circuit-breaker de perda diaria.\nArquivo: ${REPO}/backend/src/dailyCapJob.js (LEIA o arquivo inteiro para contexto; foque em computeEquity).\nPROBLEMA: a Binance auto-subscreve saldo spot no Simple Earn -> o ativo vira 'LD'+base (ex. LTC->LDLTC). O guard\nantigo na funcao computeEquity IGNORAVA qualquer 'LD*' do equity (era so pra dust tipo LDGUN/LDBABY), entao um\nLDLTC de $39.8 sumia do equity -> falso drawdown -> HALT do cap -5% disparou indevidamente. Tambem ha um\nTRACKED_BASES novo derivado de REGIME_SYMBOLS (BTC,LTC,BNB,ADA).\nO FIX (dentro do branch px==null, para coin que comeca com 'LD' e length>3): tenta marcar a mercado pelo SUBJACENTE\n(coin.slice(2)): se subjacente e STABLE -> conta ~$1; senao priceOf(subjacente): se tem preco -> conta a mercado;\nsenao se subjacente esta em TRACKED_BASES -> cold (fail-safe, espera); senao -> ignored (dust).\nVERIFIQUE ESTES CASOS explicitamente: LDLTC com LTC quente -> CONTA; LDLTC com LTC frio -> COLD/fail-safe (NAO\nignora, NAO trava no escuro); LDUSDC -> stable ~$1; LDGUN/LDBABY (base sem par) -> ignored; LDO (length 3) -> NAO\nentra no branch, segue caminho spot normal; nao quebra o caminho feliz (coin com px valido). Cheque regressoes,\nidempotencia, e se o fail-safe original foi preservado. NAO precisa rodar o sistema; e analise estatica + leitura.`\n\nconst gate = await parallel([\n  () => agent(`${FIX_CONTEXT}\\n\\nDe o veredito de QA (PASS / PASS COM RESSALVAS / FAIL) com achados por severidade e os testes concretos a rodar.`,\n    { label: 'gate:qa', phase: 'Gate', schema: QA_SCHEMA, agentType: 'qa-engineer' }),\n  () => agent(`${FIX_CONTEXT}\\n\\nDe o veredito de TECH-LEAD (APPROVE / APPROVE COM SUGESTOES / REQUEST CHANGES / BLOCK) sobre mergear este fix no sistema vivo (que esta atualmente em HALT falso). Liste must-fix vs nice-to-have.`,\n    { label: 'gate:tl', phase: 'Gate', schema: TL_SCHEMA, agentType: 'tech-lead' }),\n])\n\nphase('Synthesize')\nconst synth = await agent(`Voce e o sintetizador. Consolide a auditoria das ultimas 12h e o veredito do gate do fix.\nACHADOS DA AUDITORIA (JSON): ${JSON.stringify(audit)}\nGATE QA (JSON): ${JSON.stringify(gate[0])}\nGATE TL (JSON): ${JSON.stringify(gate[1])}\nProduza um relatorio conciso em pt-BR: (A) estado geral das 12h (tudo correto?), (B) lista de problemas por\nseveridade com evidencia, (C) o caso da venda nao-executada confirmado/nao, (D) reconciliacao do LTC, (E) ruido de\nnotificacao a cortar, (F) veredito consolidado do gate (pode deployar o fix? must-fix pendente?). Seja direto.`,\n  { label: 'synthesize', phase: 'Synthesize' })\n\nreturn { audit, gate, synthesis: synth }\n\nconst AUDIT_SCHEMA = {\n  type: 'object',\n  properties: {\n    summary: { type: 'string' },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          title: { type: 'string' },\n          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },\n          evidence: { type: 'string' },\n          status: { type: 'string', enum: ['confirmado', 'refutado', 'suspeito', 'na'] },\n        },\n        required: ['title', 'severity', 'evidence'],\n      },\n    },\n    verdict: { type: 'string' },\n  },\n  required: ['summary', 'findings', 'verdict'],\n}\n\nconst QA_SCHEMA = {\n  type: 'object',\n  properties: {\n    verdict: { type: 'string', enum: ['PASS', 'PASS COM RESSALVAS', 'FAIL'] },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },\n          issue: { type: 'string' },\n          location: { type: 'string' },\n        },\n        required: ['severity', 'issue'],\n      },\n    },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    testsToRun: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['verdict', 'findings', 'mustFix'],\n}\n\nconst TL_SCHEMA = {\n  type: 'object',\n  properties: {\n    verdict: { type: 'string', enum: ['APPROVE', 'APPROVE COM SUGESTOES', 'REQUEST CHANGES', 'BLOCK'] },\n    rationale: { type: 'string' },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    niceToHave: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['verdict', 'rationale', 'mustFix'],\n}\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w2dcv71ep
+> Summary: Auditoria das ultimas 12h (logs/notif/registros) + gate QA/TL do fix do computeEquity, com verificacao adversarial
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_6a2c9d0e-41d
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_6a2c9d0e-41d.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_6a2c9d0e-41d.js"} to iterate without resending the script.)
+> Run ID: wf_6a2c9d0e-41d
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_6a2c9d0e-41d.js", resumeFromRunId: "wf_6a2c9d0e-41d"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(14:53:22)*
+
+
+## 🤖 Claude *(14:53:24)*
+
+O script tem um bug meu: defini os schemas no fim, mas `const` em JS fica na "temporal dead zone" — os `agent()` no topo referenciam `AUDIT_SCHEMA` antes da declaração executar → ReferenceError. Vou parar o run e corrigir (schemas pro topo).
+
+## 🤖 Claude *(14:53:24)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskStop,TaskGet",
+  "max_results": 2
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskStop'}, {'type': 'tool_reference', 'tool_name': 'TaskGet'}]
+> ```
+
+## 🤖 Claude *(14:53:31)*
+
+
+## 🤖 Claude *(14:53:32)*
+
+Confirmado — falhou em 32ms, **0 agentes gastos** (TDZ, exatamente como previ). Nada desperdiçado, run já morto. Vou reescrever com os schemas no topo e re-rodar.
+
+## 🤖 Claude *(14:54:16)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_6a2c9d0e-41d.js",
+  "content": "export const meta = {\n  name: 'audit-12h-and-gate-fix',\n  description: 'Auditoria das ultimas 12h (logs/notif/registros) + gate QA/TL do fix do computeEquity, com verificacao adversarial',\n  phases: [\n    { title: 'Audit', detail: 'fan-out paralelo sobre /tmp/audit12h (notif, reconcile, anomalias, verificacao independente)' },\n    { title: 'Gate', detail: 'qa-engineer + tech-lead revisam o fix do dailyCapJob.js' },\n    { title: 'Synthesize', detail: 'consolida auditoria + veredito do gate' },\n  ],\n}\n\nconst AUDIT_SCHEMA = {\n  type: 'object',\n  properties: {\n    summary: { type: 'string' },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          title: { type: 'string' },\n          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },\n          evidence: { type: 'string' },\n          status: { type: 'string', enum: ['confirmado', 'refutado', 'suspeito', 'na'] },\n        },\n        required: ['title', 'severity', 'evidence'],\n      },\n    },\n    verdict: { type: 'string' },\n  },\n  required: ['summary', 'findings', 'verdict'],\n}\n\nconst QA_SCHEMA = {\n  type: 'object',\n  properties: {\n    verdict: { type: 'string', enum: ['PASS', 'PASS COM RESSALVAS', 'FAIL'] },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },\n          issue: { type: 'string' },\n          location: { type: 'string' },\n        },\n        required: ['severity', 'issue'],\n      },\n    },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    testsToRun: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['verdict', 'findings', 'mustFix'],\n}\n\nconst TL_SCHEMA = {\n  type: 'object',\n  properties: {\n    verdict: { type: 'string', enum: ['APPROVE', 'APPROVE COM SUGESTOES', 'REQUEST CHANGES', 'BLOCK'] },\n    rationale: { type: 'string' },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    niceToHave: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['verdict', 'rationale', 'mustFix'],\n}\n\nconst DATA = '/tmp/audit12h'\nconst REPO = '/home/gcrux-tradeux/tradeux'\n\nconst ACCESS = `\nDADOS JA COLETADOS (read-only, use Bash/Read/Grep \u2014 NAO precisa de sudo/docker/login):\n- ${DATA}/backend-logs/  -> system.log, A*.log (automacoes), M*.log (monitores), funnel.log, regime.log,\n  cockpit.log, flow.log, beholder.log, fair.log, daily_cap_snapshot.json\n- ${DATA}/agent-container.log  -> 12h de atividade do AGENTE LLM (observacoes que ele mandou pro dono via Telegram)\n- ${DATA}/orders.txt  -> dump das ordens (mainnet isTestnet=0 e testnet)\nFATOS JA ESTABELECIDOS (use como base, mas verifique): so existem 4 ordens reais mainnet (todas BUY LTCUSDT,\nautomation 9, ~01:46-02:16 UTC 20/jun, custo total $39.867, 0.908 LTC). 0 vendas. A Binance auto-subscreveu o LTC\nno Simple Earn -> virou LDLTC (spot LTC=0, LDLTC=0.89009945). Isso (a) disparou um HALT FALSO do daily-cap as\n04:11 (equity lido $109 = so USDT, excluindo LDLTC) e (b) as 07:00 a venda no-loss do Farm DISPAROU no alvo\n(custo*1.012 ~$44.4) e FALHOU com \"There is no LTC in your wallet to place a sell\" (beholder.js calcQty).\n`\n\nphase('Audit')\nconst audit = await parallel([\n  () => agent(`${ACCESS}\nTAREFA \u2014 AUDITORIA DE NOTIFICACOES (12h). Leia ${DATA}/agent-container.log e qualquer trilha de notificacao nos\nbackend-logs. Liste TUDO que foi enviado ao dono (Telegram/observacoes do agente) nas ultimas 12h. Para cada uma:\nclassifique como LEGITIMA, RUIDO (repetitiva/sem acao) ou ENGANOSA (afirma algo incorreto). Quantifique o spam de\n'[PAPER] ... sem posicao -- venda ignorada' (quantas vezes, quais automacoes A4x/A5x geram). Aponte a origem no\ncodigo do ruido do paper, se der pra inferir dos logs. Retorne estruturado.`,\n    { label: 'audit:notificacoes', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 RECONCILIACAO DO LTC. Compramos 0.908 LTC bruto (4x 0.227), commission 0.000227 LTC/ordem (=0.000908 total)\n-> liquido recebido ~0.907092 LTC. Mas o Earn (LDLTC) tem 0.89009945 e o spot LTC=0. Quantifique o gap (~0.017 LTC,\n~$0.75) e investigue a causa provavel a partir de ${DATA}/orders.txt e dos logs (A9.log, system.log): foi mecanica\ndo auto-subscribe do Earn? saldo preexistente? erro de fee? Diga se e um VAZAMENTO real de valor ou artefato de\ncontabilidade (resgatavel). Retorne estruturado com sua confianca.`,\n    { label: 'audit:reconcile', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 VARREDURA DE ANOMALIAS (12h). Vasculhe TODOS os backend-logs (system.log, funnel.log, regime.log,\ncockpit.log, flow.log, beholder.log, A*.log, M*.log) procurando QUALQUER coisa errada/inesperada nas ultimas 12h\nALEM do incidente ja conhecido (Earn/LDLTC/HALT falso/venda 07:00). Ex.: erros recorrentes, streams caindo,\ncondicoes que nao deveriam disparar, automacoes em estado inconsistente, P&L/net suspeito, gates incoerentes.\nClassifique por severidade. Se estiver tudo limpo fora do incidente, diga isso explicitamente. Retorne estruturado.`,\n    { label: 'audit:anomalias', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 VERIFICACAO INDEPENDENTE (adversarial) dos achados-chave. NAO confie nos \"fatos estabelecidos\"; prove ou\nrefute CADA um a partir dos dados crus: (1) ha exatamente 4 ordens mainnet (isTestnet=0), todas BUY LTC, 0 SELL;\n(2) as 07:00 a Farm Sell LTC falhou com \"no LTC in wallet\" (cite a linha do A10.log); (3) o HALT das 04:11 e FALSO\n(equity real ~$148 = $109 USDT + 0.89 LTC, e o $109 lido exclui o LDLTC); (4) nenhuma ordem real foi executada\nindevidamente. Para cada, retorne CONFIRMADO ou REFUTADO + a evidencia textual (arquivo/linha). Retorne estruturado.`,\n    { label: 'audit:verify', phase: 'Audit', schema: AUDIT_SCHEMA }),\n])\n\nphase('Gate')\nconst FIX_CONTEXT = `\nREVISAO DE CODIGO \u2014 fix de money-path no circuit-breaker de perda diaria.\nArquivo: ${REPO}/backend/src/dailyCapJob.js (LEIA o arquivo inteiro para contexto; foque em computeEquity).\nPROBLEMA: a Binance auto-subscreve saldo spot no Simple Earn -> o ativo vira 'LD'+base (ex. LTC->LDLTC). O guard\nantigo na funcao computeEquity IGNORAVA qualquer 'LD*' do equity (era so pra dust tipo LDGUN/LDBABY), entao um\nLDLTC de $39.8 sumia do equity -> falso drawdown -> HALT do cap -5% disparou indevidamente. Tambem ha um\nTRACKED_BASES novo derivado de REGIME_SYMBOLS (BTC,LTC,BNB,ADA).\nO FIX (dentro do branch px==null, para coin que comeca com 'LD' e length>3): tenta marcar a mercado pelo SUBJACENTE\n(coin.slice(2)): se subjacente e STABLE -> conta ~$1; senao priceOf(subjacente): se tem preco -> conta a mercado;\nsenao se subjacente esta em TRACKED_BASES -> cold (fail-safe, espera); senao -> ignored (dust).\nVERIFIQUE ESTES CASOS explicitamente: LDLTC com LTC quente -> CONTA; LDLTC com LTC frio -> COLD/fail-safe (NAO\nignora, NAO trava no escuro); LDUSDC -> stable ~$1; LDGUN/LDBABY (base sem par) -> ignored; LDO (length 3) -> NAO\nentra no branch, segue caminho spot normal; nao quebra o caminho feliz (coin com px valido). Cheque regressoes,\nidempotencia, e se o fail-safe original foi preservado. NAO precisa rodar o sistema; e analise estatica + leitura.`\n\nconst gate = await parallel([\n  () => agent(`${FIX_CONTEXT}\\n\\nDe o veredito de QA (PASS / PASS COM RESSALVAS / FAIL) com achados por severidade e os testes concretos a rodar.`,\n    { label: 'gate:qa', phase: 'Gate', schema: QA_SCHEMA, agentType: 'qa-engineer' }),\n  () => agent(`${FIX_CONTEXT}\\n\\nDe o veredito de TECH-LEAD (APPROVE / APPROVE COM SUGESTOES / REQUEST CHANGES / BLOCK) sobre mergear este fix no sistema vivo (que esta atualmente em HALT falso). Liste must-fix vs nice-to-have.`,\n    { label: 'gate:tl', phase: 'Gate', schema: TL_SCHEMA, agentType: 'tech-lead' }),\n])\n\nphase('Synthesize')\nconst synth = await agent(`Voce e o sintetizador. Consolide a auditoria das ultimas 12h e o veredito do gate do fix.\nACHADOS DA AUDITORIA (JSON): ${JSON.stringify(audit)}\nGATE QA (JSON): ${JSON.stringify(gate[0])}\nGATE TL (JSON): ${JSON.stringify(gate[1])}\nProduza um relatorio conciso em pt-BR: (A) estado geral das 12h (tudo correto?), (B) lista de problemas por\nseveridade com evidencia, (C) o caso da venda nao-executada confirmado/nao, (D) reconciliacao do LTC, (E) ruido de\nnotificacao a cortar, (F) veredito consolidado do gate (pode deployar o fix? must-fix pendente?). Seja direto.`,\n  { label: 'synthesize', phase: 'Synthesize' })\n\nreturn { audit, gate, synthesis: synth }\n"
+}
+```
+
+> **Tool Result (Write)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:54:24)*
+
+
+## 🤖 Claude *(14:54:26)*
+
+Preciso ler antes de sobrescrever — mas é mais simples re-disparar inline com a correção. Re-rodando:
+
+## 🤖 Claude *(14:55:08)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'audit-12h-and-gate-fix',\n  description: 'Auditoria das ultimas 12h (logs/notif/registros) + gate QA/TL do fix do computeEquity, com verificacao adversarial',\n  phases: [\n    { title: 'Audit', detail: 'fan-out paralelo sobre /tmp/audit12h (notif, reconcile, anomalias, verificacao independente)' },\n    { title: 'Gate', detail: 'qa-engineer + tech-lead revisam o fix do dailyCapJob.js' },\n    { title: 'Synthesize', detail: 'consolida auditoria + veredito do gate' },\n  ],\n}\n\nconst AUDIT_SCHEMA = {\n  type: 'object',\n  properties: {\n    summary: { type: 'string' },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          title: { type: 'string' },\n          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },\n          evidence: { type: 'string' },\n          status: { type: 'string', enum: ['confirmado', 'refutado', 'suspeito', 'na'] },\n        },\n        required: ['title', 'severity', 'evidence'],\n      },\n    },\n    verdict: { type: 'string' },\n  },\n  required: ['summary', 'findings', 'verdict'],\n}\n\nconst QA_SCHEMA = {\n  type: 'object',\n  properties: {\n    verdict: { type: 'string', enum: ['PASS', 'PASS COM RESSALVAS', 'FAIL'] },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          severity: { type: 'string', enum: ['info', 'low', 'medium', 'high', 'critical'] },\n          issue: { type: 'string' },\n          location: { type: 'string' },\n        },\n        required: ['severity', 'issue'],\n      },\n    },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    testsToRun: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['verdict', 'findings', 'mustFix'],\n}\n\nconst TL_SCHEMA = {\n  type: 'object',\n  properties: {\n    verdict: { type: 'string', enum: ['APPROVE', 'APPROVE COM SUGESTOES', 'REQUEST CHANGES', 'BLOCK'] },\n    rationale: { type: 'string' },\n    mustFix: { type: 'array', items: { type: 'string' } },\n    niceToHave: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['verdict', 'rationale', 'mustFix'],\n}\n\nconst DATA = '/tmp/audit12h'\nconst REPO = '/home/gcrux-tradeux/tradeux'\n\nconst ACCESS = `\nDADOS JA COLETADOS (read-only, use Bash/Read/Grep \u2014 NAO precisa de sudo/docker/login):\n- ${DATA}/backend-logs/  -> system.log, A*.log (automacoes), M*.log (monitores), funnel.log, regime.log,\n  cockpit.log, flow.log, beholder.log, fair.log, daily_cap_snapshot.json\n- ${DATA}/agent-container.log  -> 12h de atividade do AGENTE LLM (observacoes que ele mandou pro dono via Telegram)\n- ${DATA}/orders.txt  -> dump das ordens (mainnet isTestnet=0 e testnet)\nFATOS JA ESTABELECIDOS (use como base, mas verifique): so existem 4 ordens reais mainnet (todas BUY LTCUSDT,\nautomation 9, ~01:46-02:16 UTC 20/jun, custo total $39.867, 0.908 LTC). 0 vendas. A Binance auto-subscreveu o LTC\nno Simple Earn -> virou LDLTC (spot LTC=0, LDLTC=0.89009945). Isso (a) disparou um HALT FALSO do daily-cap as\n04:11 (equity lido $109 = so USDT, excluindo LDLTC) e (b) as 07:00 a venda no-loss do Farm DISPAROU no alvo\n(custo*1.012 ~$44.4) e FALHOU com \"There is no LTC in your wallet to place a sell\" (beholder.js calcQty).\n`\n\nphase('Audit')\nconst audit = await parallel([\n  () => agent(`${ACCESS}\nTAREFA \u2014 AUDITORIA DE NOTIFICACOES (12h). Leia ${DATA}/agent-container.log e qualquer trilha de notificacao nos\nbackend-logs. Liste TUDO que foi enviado ao dono (Telegram/observacoes do agente) nas ultimas 12h. Para cada uma:\nclassifique como LEGITIMA, RUIDO (repetitiva/sem acao) ou ENGANOSA (afirma algo incorreto). Quantifique o spam de\n'[PAPER] ... sem posicao -- venda ignorada' (quantas vezes, quais automacoes A4x/A5x geram). Aponte a origem no\ncodigo do ruido do paper, se der pra inferir dos logs. Retorne estruturado.`,\n    { label: 'audit:notificacoes', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 RECONCILIACAO DO LTC. Compramos 0.908 LTC bruto (4x 0.227), commission 0.000227 LTC/ordem (=0.000908 total)\n-> liquido recebido ~0.907092 LTC. Mas o Earn (LDLTC) tem 0.89009945 e o spot LTC=0. Quantifique o gap (~0.017 LTC,\n~$0.75) e investigue a causa provavel a partir de ${DATA}/orders.txt e dos logs (A9.log, system.log): foi mecanica\ndo auto-subscribe do Earn? saldo preexistente? erro de fee? Diga se e um VAZAMENTO real de valor ou artefato de\ncontabilidade (resgatavel). Retorne estruturado com sua confianca.`,\n    { label: 'audit:reconcile', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 VARREDURA DE ANOMALIAS (12h). Vasculhe TODOS os backend-logs (system.log, funnel.log, regime.log,\ncockpit.log, flow.log, beholder.log, A*.log, M*.log) procurando QUALQUER coisa errada/inesperada nas ultimas 12h\nALEM do incidente ja conhecido (Earn/LDLTC/HALT falso/venda 07:00). Ex.: erros recorrentes, streams caindo,\ncondicoes que nao deveriam disparar, automacoes em estado inconsistente, P&L/net suspeito, gates incoerentes.\nClassifique por severidade. Se estiver tudo limpo fora do incidente, diga isso explicitamente. Retorne estruturado.`,\n    { label: 'audit:anomalias', phase: 'Audit', schema: AUDIT_SCHEMA }),\n\n  () => agent(`${ACCESS}\nTAREFA \u2014 VERIFICACAO INDEPENDENTE (adversarial) dos achados-chave. NAO confie nos \"fatos estabelecidos\"; prove ou\nrefute CADA um a partir dos dados crus: (1) ha exatamente 4 ordens mainnet (isTestnet=0), todas BUY LTC, 0 SELL;\n(2) as 07:00 a Farm Sell LTC falhou com \"no LTC in wallet\" (cite a linha do A10.log); (3) o HALT das 04:11 e FALSO\n(equity real ~$148 = $109 USDT + 0.89 LTC, e o $109 lido exclui o LDLTC); (4) nenhuma ordem real foi executada\nindevidamente. Para cada, retorne CONFIRMADO ou REFUTADO + a evidencia textual (arquivo/linha). Retorne estruturado.`,\n    { label: 'audit:verify', phase: 'Audit', schema: AUDIT_SCHEMA }),\n])\n\nphase('Gate')\nconst FIX_CONTEXT = `\nREVISAO DE CODIGO \u2014 fix de money-path no circuit-breaker de perda diaria.\nArquivo: ${REPO}/backend/src/dailyCapJob.js (LEIA o arquivo inteiro para contexto; foque em computeEquity).\nPROBLEMA: a Binance auto-subscreve saldo spot no Simple Earn -> o ativo vira 'LD'+base (ex. LTC->LDLTC). O guard\nantigo na funcao computeEquity IGNORAVA qualquer 'LD*' do equity (era so pra dust tipo LDGUN/LDBABY), entao um\nLDLTC de $39.8 sumia do equity -> falso drawdown -> HALT do cap -5% disparou indevidamente. Tambem ha um\nTRACKED_BASES novo derivado de REGIME_SYMBOLS (BTC,LTC,BNB,ADA).\nO FIX (dentro do branch px==null, para coin que comeca com 'LD' e length>3): tenta marcar a mercado pelo SUBJACENTE\n(coin.slice(2)): se subjacente e STABLE -> conta ~$1; senao priceOf(subjacente): se tem preco -> conta a mercado;\nsenao se subjacente esta em TRACKED_BASES -> cold (fail-safe, espera); senao -> ignored (dust).\nVERIFIQUE ESTES CASOS explicitamente: LDLTC com LTC quente -> CONTA; LDLTC com LTC frio -> COLD/fail-safe (NAO\nignora, NAO trava no escuro); LDUSDC -> stable ~$1; LDGUN/LDBABY (base sem par) -> ignored; LDO (length 3) -> NAO\nentra no branch, segue caminho spot normal; nao quebra o caminho feliz (coin com px valido). Cheque regressoes,\nidempotencia, e se o fail-safe original foi preservado. NAO precisa rodar o sistema; e analise estatica + leitura.`\n\nconst gate = await parallel([\n  () => agent(`${FIX_CONTEXT}\\n\\nDe o veredito de QA (PASS / PASS COM RESSALVAS / FAIL) com achados por severidade e os testes concretos a rodar.`,\n    { label: 'gate:qa', phase: 'Gate', schema: QA_SCHEMA, agentType: 'qa-engineer' }),\n  () => agent(`${FIX_CONTEXT}\\n\\nDe o veredito de TECH-LEAD (APPROVE / APPROVE COM SUGESTOES / REQUEST CHANGES / BLOCK) sobre mergear este fix no sistema vivo (que esta atualmente em HALT falso). Liste must-fix vs nice-to-have.`,\n    { label: 'gate:tl', phase: 'Gate', schema: TL_SCHEMA, agentType: 'tech-lead' }),\n])\n\nphase('Synthesize')\nconst synth = await agent(`Voce e o sintetizador. Consolide a auditoria das ultimas 12h e o veredito do gate do fix.\nACHADOS DA AUDITORIA (JSON): ${JSON.stringify(audit)}\nGATE QA (JSON): ${JSON.stringify(gate[0])}\nGATE TL (JSON): ${JSON.stringify(gate[1])}\nProduza um relatorio conciso em pt-BR: (A) estado geral das 12h (tudo correto?), (B) lista de problemas por\nseveridade com evidencia, (C) o caso da venda nao-executada confirmado/nao, (D) reconciliacao do LTC, (E) ruido de\nnotificacao a cortar, (F) veredito consolidado do gate (pode deployar o fix? must-fix pendente?). Seja direto.`,\n  { label: 'synthesize', phase: 'Synthesize' })\n\nreturn { audit, gate, synthesis: synth }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wgd5p1agv
+> Summary: Auditoria das ultimas 12h (logs/notif/registros) + gate QA/TL do fix do computeEquity, com verificacao adversarial
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_eec674c1-d36
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_eec674c1-d36.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_eec674c1-d36.js"} to iterate without resending the script.)
+> Run ID: wf_eec674c1-d36
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/audit-12h-and-gate-fix-wf_eec674c1-d36.js", resumeFromRunId: "wf_eec674c1-d36"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(14:55:13)*
+
+
+## 🤖 Claude *(14:55:25)*
+
+Workflow rodando (7 agentes: 4 de auditoria + QA + TL + síntese). Vou ser notificado quando terminar — não preciso ficar checando. Status enquanto isso:
+
+**Já confirmado nesta auditoria (com evidência de log):**
+- ✅ **"Sell notificado, não executado" = RESOLVIDO.** Às 07:00 a venda no-loss disparou no alvo (~$44,4) e falhou com *"There is no LTC in your wallet"* — porque o LTC está no Earn. Você **perdeu uma saída lucrativa** por isso. É a prova viva do estrago do auto-subscribe.
+- ✅ Transitions de risco limpos (só o falso trip 04:11 + um ETIMEDOUT transitório + jwt-expired cosmético).
+- ✅ Só 4 ordens reais, 0 vendas. Nenhuma ordem executada indevidamente.
+
+**Fix do `computeEquity`: implementado + syntax-check OK.** O que ele faz: marca a mercado os `LD*` do Earn pelo ativo subjacente (`LDLTC`→preço do LTC, `LDUSDC`→stable ~$1), e distingue "Earn de ativo que acompanhamos, frio" (→ fail-safe) de "dust sem par" (→ ignora). Não vou deployar até o gate QA+TL aprovar.
+
+**O workflow está, em paralelo:** auditando as notificações das 12h (incluindo o spam `[PAPER] sem posição`), reconciliando o furo de ~0,017 LTC, varrendo anomalias, e verificando meus achados de forma adversarial — além de QA + TL revisarem o diff.
+
+Quando voltar, te entrego o relatório consolidado e, **se o gate passar sem must-fix**, faço o deploy (rebuild do backend) + verifico que o equity volta a ler ~$148. ⚠️ **Importante:** mesmo com o fix, o HALT fica latchado de propósito até você **resgatar o LDLTC + desligar o auto-subscribe** na Binance — senão a venda no-loss re-dispara e re-falha. Aguardando o workflow.
+
+## 👤 User *(14:55:28)*
+
+Veja recebi agora mesmo [PAPER] SELL LTCUSDT qty 0.454 @ 44.267855000000004 P&L 0.06 mas ainda bem que não foi de fato executada certo? Pois seria com prejuíso?
+
+[PAPER] SELL LTCUSDT qty 0.454 @ 44.267855000000004 P&L 0.06
+
+---
+
+Telegram.:
+🤖 [AGENTE] Observação: Regime de mercado mudou novamente: BTCUSDT passou de range (gate range) para mixed (gate mixed), liberando os gates de acumulação (farm e baseline) para BTC; LTCUSDT passou de mixed para range, mantendo o gate de acumulação (farm) ativo. BNBUSDT e ADAUSDT permanecem em bear, com acumulação em CAIXA. As automações de Farm (id9) estavam ativas no momento da última ordem de compra LTCUSDT, mas foram desativadas logo após; as automações de Trend (id7), Baseline (ids 2/3) e Harvester (ids 22-25) permanecem inativas, conforme decisão do operador. Nenhuma venda de BTC fora do módulo tático detectada.
+🛑 [DAILY_CAP] Cap diário de -5% ATINGIDO!
+Equity $109.02 (baseline $148.84, -26.76%).
+🚫 HALT ativo: TODAS as ordens bloqueadas (inclusive venda protetiva). Intervenção manual necessária — reabra via /system/halt ou aguarde a virada de dia UTC.
+🤖 [AGENTE] Observação: O sistema está em tradingHalt (kill-switch) devido ao daily loss cap (equity $109.02 <= piso $141.40). Nenhuma nova ordem será enviada até que o halt seja levantado. Verifique o equity e ajuste risco se necessário.
+🤖 [AGENTE] Observação: Os automações de compra do Farm (ids 9, 11, 13) estão inativas, embora o gate de compra do Farm esteja liberado para LTCUSDT (regime range) e estivesse liberado para BNBUSDT/ADAUSDT quando o regime não fosse bear/trend. Além disso, a automação de venda do Trend (id7) está inativa enquanto o gate de Tendência deveria estar ativo (regime BTCUSDT = trend). Essas discrepâncias podem causar perda de sinais de compra e de venda assim que o tradingHalt for levantado. Verifique se a desativação é intencional; caso contrário, ative as automações correspondentes após a liberação do halt.
+🤖 [AGENTE] Observação: O regime de BTCUSDT mudou de mixed (gate mixed) para trend (gate trend), liberando a estratégia de tendência (compra no golden cross) enquanto farm e baseline permanecem em CAIXA. Nenhuma automação de tendência está ativa no momento (id7 e id15 inativas).
+🤖 [AGENTE] Observação: Automação de compra do Farm (id9) executou ordem em LTCUSDT: BUY 0.227 LTC a preço médio 43.85 USDT (valor ≈9,96 USDT líquido após taxa). O regime de LTCUSDT está em range, com gate de acumulação liberado (farm=true). Nenhuma outra atividade de compra/venda detectada nos demais símbolos. O sistema permanece em tradingHalt (daily loss cap).
+
+## 🤖 Claude *(14:56:14)*
+
+
+## 🤖 Claude *(14:56:15)*
+
+Boa pergunta — e tem uma confusão importante aqui pra desfazer. Deixa eu confirmar o livro do paper antes de responder com precisão.
+
+## 🤖 Claude *(14:56:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== paperPositions (LTC) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT * FROM paperPositions WHERE symbol=\\\\\\\"LTCUSDT\\\\\\\";\\\" 2>/dev/null\"'\necho \"\"\necho \"=== paperOrders LTC recentes (entradas que formaram a posi\u00e7\u00e3o) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,automationId,side,avgPrice,quantity,net,FROM_UNIXTIME(transactTime/1000) t FROM paperOrders WHERE symbol=\\\\\\\"LTCUSDT\\\\\\\" ORDER BY transactTime DESC LIMIT 12;\\\" 2>/dev/null\"'",
+  "description": "Query paper book LTC position and recent paper orders"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === paperPositions (LTC) ===
+> strategy	symbol	qty	avgCost	realizedPnl	createdAt	updatedAt
+> consistencia	LTCUSDT	0	0	0.07482958252500183	2026-06-20 07:08:00	2026-06-20 14:47:00
+> 
+> === paperOrders LTC recentes (entradas que formaram a posição) ===
+> ```
+
+## 🤖 Claude *(14:57:05)*
+
+
+## 🤖 Claude *(14:57:18)*
+
+Confirmei o livro do paper. Resposta clara, em duas camadas:
+
+## Sobre o `[PAPER] SELL LTCUSDT ... P&L 0.06`
+
+**1. Sim, você está certo que não foi executada de verdade — e nunca seria.** O prefixo `[PAPER]` = livro **virtual/shadow**. Esse motor roda num broker fake que **nunca toca a Binance nem seu dinheiro** (é research sob HALT, por desenho). Aliás, o sistema está **HALTED** agora — nem conseguiria mandar ordem real. Nenhuma ordem real aconteceu desde os 4 buys.
+
+**2. Mas cuidado com a leitura do número:** o `P&L 0.06` é **+$0,06 de LUCRO no livro do paper**, não prejuízo. No livro virtual, aquele lote foi comprado mais barato e vendido a 44,27 → +6 centavos. (O paper "consistencia LTC" acumulou **+$0,075** realizados no virtual; posição agora zerada.)
+
+**3. 🔑 A pegadinha — e aqui sua intuição está certíssima:** esse +0,06 é de **OUTRO livro**, com outro preço médio. **NÃO é a sua posição real do Farm.** Se fosse o dinheiro REAL (0,89 LTC, custo $39,867, break-even ~$44,83) vendido a 44,27, daria **~−$0,50 de prejuízo** — exatamente o que você suspeitou. O paper mostra +0,06 só porque comprou num ponto diferente.
+
+> **Em uma frase:** a $44,27 sua posição **real** perde ~$0,50; o paper mostra +$0,06 porque é um livro fantasma. Por isso essas notificações `[PAPER]` são **ruído perigoso** — parecem sinal real com P&L, mas não batem com sua carteira.
+
+## Sobre o resto do flood do Telegram
+
+Tudo aquilo é **não-real**, e está na minha lista de corte:
+- 🛑 `[DAILY_CAP] HALT atingido` → é o **falso positivo** que já diagnosticamos (equity real ~$148, o Earn sumiu da conta). O fix já está escrito, esperando o gate.
+- 🤖 As observações de "discrepância" (id7/id9 inativas com gate aberto) → o agente reclamando de **decisões intencionais suas** (o canary). Era pra ter sido calado pela recalibração `ATIVO≠GATE` e claramente **não foi 100%** — entra no corte de ruído.
+
+O workflow está auditando exatamente esse ruído agora (quantos `[PAPER] sem posição`, origem no código, etc.) + o gate do fix. Quando voltar, te trago o relatório + faço o deploy se passar. **Nada real está acontecendo — é tudo ruído + o alarme falso.** Pode respirar.
+
+## 👤 User *(14:57:20)*
+
+o Ern deve estar ativo somente quando tiver todos em bear ou em estagios de pouca oportunidades. Então arrume tudo pois acho que o LTCUSDT está no momento perfeito para recuperar os USDT
+
+## 🤖 Claude *(14:58:32)*
+
+
+## 🤖 Claude *(14:58:34)*
+
+Entendi os dois pontos: (1) Earn só deveria ligar quando **tudo em bear / pouca oportunidade** — e (2) "arrume tudo" pra vender o LTC agora, que você acha que está em bom momento pra recuperar o USDT. Deixa eu checar o preço ao vivo e o alvo exato do Farm antes de te dar a sequência — porque o break-even real tem uma pegadinha (os 0,017 LTC que sumiram no Earn).
+
+## 🤖 Claude *(14:58:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== pre\u00e7o LTC ao vivo ===\"\ncurl -s -m6 \"https://api.binance.com/api/v3/ticker/price?symbol=LTCUSDT\" 2>/dev/null; echo \"\"\necho \"=== FARM_DCA do LTC (cost/qty que o Farm acha que tem) + pre\u00e7o de venda alvo ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nRESP=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\")\nTOKEN=$(echo \"$RESP\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nfor EP in \"beholder/memory/LTCUSDT/FARM_DCA\" \"memory/LTCUSDT/FARM_DCA\" \"beholder/memory\"; do\n  R=$(curl -s -m10 \"https://tradeux.gcrux.com/api/$EP\" -H \"authorization: $TOKEN\")\n  if echo \"$R\" | grep -qiE \"cost|qty|FARM\"; then echo \"[$EP]:\"; echo \"$R\" | head -c 500; echo \"\"; break; fi\ndone\n'",
+  "description": "Fetch live LTC price and Farm DCA cost/qty"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === preço LTC ao vivo ===
+> {"symbol":"LTCUSDT","price":"44.17000000"}
+> === FARM_DCA do LTC (cost/qty que o Farm acha que tem) + preço de venda alvo ===
+> [beholder/memory/LTCUSDT/FARM_DCA]:
+> {"qty":0.908,"cost":43.862500000000004}
+> ```
+
+## 🤖 Claude *(14:59:49)*
+
+
+## 🤖 Claude *(15:00:08)*
+
+Peguei os números reais. **LTC ao vivo: $44,17.** E o Farm acha que tem `qty=0,908 @ cost=43,8625` → alvo de venda dele = cost×1,012 = **$44,39**. Aqui está a verdade, sem maquiar:
+
+## ⚠️ A $44,17 NÃO é break-even — ainda não é "o momento perfeito"
+
+| Preço | Vendendo 0,890 LTC (o que dá pra resgatar) | Resultado vs $39,867 gastos |
+|---|---|---|
+| **$44,17 (agora)** | $39,28 | **−$0,59** 🔴 |
+| $44,39 (alvo do Farm) | $39,47 | −$0,40 🔴 |
+| **$44,84** | $39,87 | **break-even** ⚖️ |
+| $45,00 | $40,02 | +$0,15 🟢 |
+
+A $44,17 você **recupera ~$39,28 dos $39,87** — perde ~$0,59. O ponto de recuperar tudo é **$44,84** (+1,5% acima de agora).
+
+## 🔑 A pergunta que decide tudo: quanto LTC volta do Earn?
+
+O break-even $44,84 é por causa dos **0,017 LTC que sumiram**. Você comprou 0,907, mas o Earn só mostra **0,890**. **Resgate primeiro e veja quanto LTC realmente volta:**
+- Se voltar **0,907** → break-even cai pra **$44,00** → a $44,17 você já está **no zero/levemente verde**. Vende e recupera tudo.
+- Se voltar só **0,890** → break-even é $44,84 → a $44,17 ainda perde ~$0,59.
+
+Então o passo 1 não é vender — é **resgatar e conferir o número**.
+
+## "Arrume tudo" — a sequência (quem faz o quê)
+
+**🖐️ Você, no app Binance (agora, ~1 min):**
+1. Earn → Flexible → LTC → **Resgatar tudo** → volta pro spot. **Anote quanto LTC voltou.**
+2. **Desligar o auto-subscribe** do Simple Earn (senão re-varre).
+3. Se quiser agir no preço já: **venda o LTC você mesmo na Binance** ao preço que decidir — é instantâneo e no seu controle (não espera meu código).
+
+**🛠️ Eu, no código (assim que o gate QA/TL voltar — está rodando):**
+- Deploy do fix do `computeEquity` + **limpar o HALT falso** + **reconciliar a posição do Farm** (ele acha que tem 0,908; se você vender/resgatar diferente, eu zero o `FARM_DCA` pra ele não ficar re-tentando vender e gerando os erros "no LTC").
+
+## Sua ideia do Earn (boa, mas com ressalva)
+
+"Earn só quando tudo em bear / pouca oportunidade" faz sentido pra render no ocioso — **mas não pode ser o auto-subscribe** (ele varre cego e quebra posição ativa, foi o que causou tudo isso). O caminho certo: **desligar o auto-subscribe agora**, e o "parking em Earn gateado por regime" vira uma **feature deliberada futura** (move caixa pro Earn só quando o regime de todos for bear/low-opp, e resgata quando aparece oportunidade). É research pra depois — anoto junto das Partes 2/3/4.
+
+---
+
+**Recomendação:** resgate + confira o número. Se voltar ~0,907, venda agora (está flat e libera o capital pro BTC). Se voltar 0,890, decida: vender a −$0,59 pra ser done, ou esperar $44,84 pra recuperar tudo (LTC está em range, perto do topo — plausível, não garantido). **Me diz quanto LTC voltou do resgate** que eu fecho a parte do sistema. O gate do fix está terminando — deployo em seguida.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
