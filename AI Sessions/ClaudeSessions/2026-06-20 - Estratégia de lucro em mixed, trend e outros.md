@@ -1,5 +1,5 @@
-# [[2026-06-20 - Estratégia de lucro em mixed, trend e outros|Estratégia de lucro em mixed, trend e outros]]
-**Date:** 2026-06-19 | **Session ID:** `11673fbd-e65c-488e-b58e-4db5a1cb8dc5`
+# [[2026-06-19 - Estratégia de lucro em mixed, trend e outros|Estratégia de lucro em mixed, trend e outros]]
+**Date:** 2026-06-20 | **Session ID:** `11673fbd-e65c-488e-b58e-4db5a1cb8dc5`
 
 ---
 
@@ -6323,6 +6323,775 @@ Atualizo o índice `MEMORY.md`:
 
 **Não pushados** — origin ainda em `e8e7b16` (o invariante `Vivo==master==origin` do HANDOFF quer push). Quer que eu **dê push** agora? É só falar. Quando fechar a sessão, `/handoff` sela tudo.
 
+## 👤 User *(00:06:13)*
+
+Em  Trade bridges (gates de compra) BTCUSDT está GO novamente já pela segunda vez que eu vi hoje. Consegue reunir dados de logs para verificar se tivesse com liberação de ordens ativada teria gerado lucros? Em Paper consistencia vi lucro 1 vez mas era baixo de +0,01 e agora esta -0,01... mas pouco tmpo depois que escrevi mudou para WAIT e gerou a notificação no painel> [PAPER] consistencia:BNBUSDT sem posição — venda ignorada. Parece ok verifique opr gentileza, Mas enquanto tava digitando isso novamente mudou para GO kkkk e o pape consistencia $0.01 consistencia 1c/0v · 1 aberta(s)
+
+Em Edge vs Fee Agente.:  Shadow 1m — P(cont. ≥ custo) esta medindo… (Fase 3) ainda.
+
+## 🤖 Claude *(00:07:42)*
+
+
+## 🤖 Claude *(00:07:44)*
+
+Boas observações — e a pergunta central (se tivesse com ordens liberadas, teria dado lucro?) é exatamente o que dá pra responder com o Paper Engine + os logs. Deixa eu reunir os dados ao vivo: estado do paper (round-trips reais com fill+fee), histórico do gate BTC (GO/WAIT via flow/regime), e a tal notificação do BNB.
+
+## 🤖 Claude *(00:07:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/paperdata.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>r(JSON.parse(b)))});rq.write(d);rq.end()});\n const t=lg.token;\n const pp=await req('GET','/analysis/paper',t);\n console.log('=== /analysis/paper TOTALS ==='); console.log(JSON.stringify(pp.body.totals));\n console.log('=== por trilha ==='); for(const s of (pp.body.strategies||[])) console.log(`  ${s.strategy}: realized=${s.realizedPnl?.toFixed?.(4)} unreal=${s.unrealizedPnl?.toFixed?.(4)} total=${s.totalPnl?.toFixed?.(4)} buys=${s.buys} sells=${s.sells} wins=${s.wins} winRate=${s.winRate} fees=${s.fees?.toFixed?.(4)} open=${s.openPositions}`);\n const ck=await req('GET','/analysis/cockpit/BTCUSDT',t);\n const b=ck.body; const g=b.gates||{};\n console.log('=== BTC cockpit AGORA ===');\n console.log(`  price=${b.price} regime=${b.regime} flow.imbalance=${b.flow?.imbalance} flowBuyMin=${g.flowBuyMin} buyAllowed=${g.buyAllowed} reason=\"${g.reason}\"`);\n console.log(`  EV netPct=${b.ev?.netPct} grossPct=${b.ev?.grossPct} breakeven=${b.ev?.breakevenPct} pHit=${b.dist?.pHitBreakevenPct}`);\n // paperOrders detalhado\n const r=require('./src/repositories/paperRepository');\n const [pos,ords]=await Promise.all([r.getAllPositions(), r.getOrders(1000)]);\n console.log('=== paperPositions ('+pos.length+') ===');\n for(const x of pos) console.log(`  ${x.strategy}:${x.symbol} qty=${x.qty} avgCost=${x.avgCost} realizedPnl=${x.realizedPnl}`);\n console.log('=== paperOrders ('+ords.length+') [mais recentes] ===');\n for(const o of ords.slice(0,25)) console.log(`  ${o.createdAt||o.created_at||'?'} ${o.strategy}:${o.symbol} ${o.side} qty=${o.qty} px=${o.price} fee=${(+o.fee).toFixed(4)} realized=${o.realizedPnl}`);\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/paperdata.js' 2>&1 | head -60",
+  "description": "Gather paper P&L, BTC cockpit gate/EV, paper orders detail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /analysis/paper TOTALS ===
+> {"realizedPnl":0.014334053650955525,"unrealizedPnl":0,"totalPnl":0.014334053650955525,"fees":0.03911188539905}
+> === por trilha ===
+>   consistencia: realized=0.0143 unreal=0.0000 total=0.0143 buys=1 sells=1 wins=1 winRate=1 fees=0.0391 open=0
+> === BTC cockpit AGORA ===
+>   price=63584 regime=range flow.imbalance=0.2062 flowBuyMin=-0.4 buyAllowed=true reason="regime=range (mean-reversion: range/mixed) + fluxo ok: baseline BTC liberada"
+>   EV netPct=-0.171 grossPct=0.029 breakeven=0.2 pHit=0.4
+> === paperPositions (1) ===
+>   consistencia:BTCUSDT qty=0 avgCost=0 realizedPnl=0.014334053650955525
+> === paperOrders (2) [mais recentes] ===
+>   Fri Jun 19 2026 20:48:00 GMT+0000 (Coordinated Universal Time) consistencia:BTCUSDT SELL qty=0.00031 px=63169.889255 fee=0.0196 realized=0.014334053650955525
+>   Fri Jun 19 2026 17:01:00 GMT+0000 (Coordinated Universal Time) consistencia:BTCUSDT BUY qty=0.00031 px=62997.48299999999 fee=0.0195 realized=null
+> ```
+
+## 🤖 Claude *(00:08:41)*
+
+
+## 🤖 Claude *(00:08:42)*
+
+Dado-chave já apareceu. Agora os logs: histórico do gate (flow/regime) + a notificação do BNB.
+
+## 🤖 Claude *(00:08:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== arquivos de log ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"ls -la logs/ 2>/dev/null | head -40\"'\necho; echo \"=== regime BTC (transi\u00e7\u00f5es hoje) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"grep -iE \\\"BTCUSDT\\\" logs/regime.log 2>/dev/null | tail -15\"'\necho; echo \"=== flow BTC (imbalance/gate ao longo do tempo) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"grep -iE \\\"BTCUSDT\\\" logs/flow.log 2>/dev/null | tail -20\"'",
+  "description": "List logs + regime/flow history for BTC gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos de log ===
+> total 180
+> drwxrwxr-x    2 root     root          4096 Jun 19 20:16 .
+> drwxr-xr-x    1 root     root          4096 Jun 19 20:14 ..
+> -rw-r--r--    1 root     root           233 Jun 19 20:16 A44.log
+> -rw-r--r--    1 root     root           235 Jun 19 20:16 A45.log
+> -rw-r--r--    1 root     root           247 Jun 19 20:16 A46.log
+> -rw-r--r--    1 root     root          1500 Jun 19 23:57 A47.log
+> -rw-r--r--    1 root     root           233 Jun 19 20:16 A48.log
+> -rw-r--r--    1 root     root           235 Jun 19 20:16 A49.log
+> -rw-r--r--    1 root     root           247 Jun 19 20:16 A50.log
+> -rw-r--r--    1 root     root          2751 Jun 19 23:57 A51.log
+> -rw-r--r--    1 root     root           233 Jun 19 20:16 A52.log
+> -rw-r--r--    1 root     root           235 Jun 19 20:16 A53.log
+> -rw-r--r--    1 root     root           247 Jun 19 20:16 A54.log
+> -rw-r--r--    1 root     root          1083 Jun 19 20:55 A55.log
+> -rw-r--r--    1 root     root           233 Jun 19 20:16 A56.log
+> -rw-r--r--    1 root     root           235 Jun 19 20:16 A57.log
+> -rw-r--r--    1 root     root           247 Jun 19 20:16 A58.log
+> -rw-r--r--    1 root     root          2023 Jun 19 23:57 A59.log
+> -rw-r--r--    1 root     root           132 Jun 19 20:15 M1.log
+> -rw-r--r--    1 root     root           150 Jun 19 20:15 M10.log
+> -rw-r--r--    1 root     root           128 Jun 19 20:15 M3.log
+> -rw-r--r--    1 root     root           150 Jun 19 20:15 M4.log
+> -rw-r--r--    1 root     root           150 Jun 19 20:15 M8.log
+> -rw-r--r--    1 root     root           150 Jun 19 20:15 M9.log
+> -rw-r--r--    1 root     root           122 Jun 19 20:15 beholder.log
+> -rw-r--r--    1 root     root           577 Jun 19 20:29 cockpit.log
+> -rw-r--r--    1 root     root            74 Jun 20 00:00 daily_cap_snapshot.json
+> -rw-r--r--    1 root     root           206 Jun 19 20:15 fair.log
+> -rw-r--r--    1 root     root          1848 Jun 19 21:42 flow-capitulation.log
+> -rw-r--r--    1 root     root         22726 Jun 19 23:58 flow.log
+> -rw-r--r--    1 root     root          1182 Jun 19 23:15 funnel.log
+> -rw-r--r--    1 root     root          1830 Jun 19 23:38 regime.log
+> -rw-r--r--    1 root     root           160 Jun 20 00:07 risk_state.json
+> -rw-rw-r--    1 root     root         18921 Jun 20 00:08 system.log
+> 
+> === regime BTC (transições hoje) ===
+> info: 2026-06-19T17:35:21.308Z - Estado de cross recarregado: ADAUSDT:above=false, BNBUSDT:above=false, BTCUSDT:above=false, LTCUSDT:above=false.
+> info: 2026-06-19T17:35:21.673Z - BTCUSDT:REGIME => mixed (ADX 24.7 intermediário, sem viés claro)
+> info: 2026-06-19T20:15:29.809Z - Estado de cross recarregado: ADAUSDT:above=false, BNBUSDT:above=false, BTCUSDT:above=false, LTCUSDT:above=false.
+> info: 2026-06-19T20:15:30.181Z - BTCUSDT:REGIME => mixed (ADX 20.4 intermediário, sem viés claro)
+> info: 2026-06-19T20:29:06.976Z - BTCUSDT: regime STALE — Binance indisponível/poucos dados (klines indisponiveis na Binance); gate operando sobre o último conhecido 'mixed'.
+> info: 2026-06-19T20:33:44.572Z - BTCUSDT: regime recuperado => mixed.
+> info: 2026-06-19T22:03:44.579Z - BTCUSDT:REGIME => range (ADX 19.3 < 20 (lateral) [histerese: prev=mixed])
+> 
+> === flow BTC (imbalance/gate ao longo do tempo) ===
+> info: 2026-06-19T21:24:37.330Z - BTCUSDT: imbalance=-0.6082 toxicity=0.6082 (buyVol=1.87282 sellVol=7.68751; 1000 trades/362s)
+> info: 2026-06-19T21:25:07.332Z - BTCUSDT: imbalance=-0.6086 toxicity=0.6086 (buyVol=1.70987 sellVol=7.02767; 1000 trades/330s)
+> info: 2026-06-19T22:08:07.410Z - BTCUSDT: imbalance=-0.6585 toxicity=0.6585 (buyVol=7.4156 sellVol=36.01531; 1000 trades/192s)
+> info: 2026-06-19T22:08:37.414Z - BTCUSDT: imbalance=-0.6771 toxicity=0.6771 (buyVol=6.69366 sellVol=34.76161; 1000 trades/222s)
+> info: 2026-06-19T22:09:07.423Z - BTCUSDT: imbalance=-0.6887 toxicity=0.6887 (buyVol=6.30426 sellVol=34.20328; 1000 trades/244s)
+> info: 2026-06-19T22:09:37.411Z - BTCUSDT: imbalance=-0.6495 toxicity=0.6495 (buyVol=7.07484 sellVol=33.2937; 1000 trades/271s)
+> info: 2026-06-19T22:20:07.425Z - BTCUSDT: imbalance=0.6093 toxicity=0.6093 (buyVol=4.74156 sellVol=1.15114; 1000 trades/185s)
+> info: 2026-06-19T22:20:37.686Z - BTCUSDT: imbalance=0.6999 toxicity=0.6999 (buyVol=5.19516 sellVol=0.91714; 1000 trades/155s)
+> info: 2026-06-19T22:21:07.432Z - BTCUSDT: imbalance=0.6077 toxicity=0.6077 (buyVol=5.15196 sellVol=1.25699; 1000 trades/174s)
+> info: 2026-06-19T22:22:37.430Z - BTCUSDT: imbalance=0.713 toxicity=0.713 (buyVol=15.72505 sellVol=2.6342; 1000 trades/155s)
+> info: 2026-06-19T22:40:38.204Z - BTCUSDT: imbalance=-0.748 toxicity=0.748 (buyVol=16.48097 sellVol=114.34102; 1000 trades/35s)
+> info: 2026-06-19T23:20:07.444Z - BTCUSDT: imbalance=0.7 toxicity=0.7 (buyVol=34.04392 sellVol=6.00766; 1000 trades/293s)
+> info: 2026-06-19T23:26:37.453Z - BTCUSDT: imbalance=0.6957 toxicity=0.6957 (buyVol=5.79499 sellVol=1.04003; 1000 trades/349s)
+> info: 2026-06-19T23:27:07.707Z - BTCUSDT: imbalance=0.7057 toxicity=0.7057 (buyVol=5.89379 sellVol=1.01687; 1000 trades/366s)
+> info: 2026-06-19T23:38:37.458Z - BTCUSDT: imbalance=-0.6826 toxicity=0.6826 (buyVol=2.48177 sellVol=13.15625; 1000 trades/270s)
+> info: 2026-06-19T23:51:37.969Z - BTCUSDT: imbalance=-0.6015 toxicity=0.6015 (buyVol=23.23039 sellVol=93.35457; 1000 trades/106s)
+> info: 2026-06-19T23:52:07.961Z - BTCUSDT: imbalance=-0.8249 toxicity=0.8249 (buyVol=8.95186 sellVol=93.30517; 1000 trades/129s)
+> info: 2026-06-19T23:52:37.462Z - BTCUSDT: imbalance=-0.7966 toxicity=0.7966 (buyVol=9.03322 sellVol=79.77276; 1000 trades/159s)
+> info: 2026-06-19T23:53:07.965Z - BTCUSDT: imbalance=-0.7333 toxicity=0.7333 (buyVol=9.48229 sellVol=61.61836; 1000 trades/189s)
+> info: 2026-06-19T23:53:37.462Z - BTCUSDT: imbalance=-0.6187 toxicity=0.6187 (buyVol=9.89593 sellVol=42.00442; 1000 trades/218s)
+> ```
+
+## 🤖 Claude *(00:09:27)*
+
+
+## 🤖 Claude *(00:09:27)*
+
+O quadro está claro. Uma última verificação dos logs do paper (a notificação do BNB + contagem de round-trips):
+
+## 🤖 Claude *(00:09:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== 'venda ignorada' (sem posi\u00e7\u00e3o) \u2014 quantas e quais ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"grep -h \\\"ignorada\\\" logs/A*.log 2>/dev/null | tail -12\"'\necho; echo \"=== BUY/SELL reais do paper (round-trips) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"grep -hE \\\"\\\\[PAPER\\\\] (BUY|SELL)\\\" logs/A*.log 2>/dev/null\"'\necho; echo \"=== contagem por tipo nos A-logs ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"cat logs/A*.log 2>/dev/null | grep -oE \\\"(BUY|SELL|ignorada|j\u00e1 posicionado|venda ignorada)\\\" | sort | uniq -c\"'\necho; echo \"=== cockpit.log ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -lc \"tail -6 logs/cockpit.log 2>/dev/null\"'",
+  "description": "Confirm BNB ignored-sell benign + count paper round-trips"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 'venda ignorada' (sem posição) — quantas e quais ===
+> Results: [{"type":"info","text":"[PAPER] consistencia:LTCUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BNBUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BNBUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BNBUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BNBUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BNBUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BNBUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:ADAUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:ADAUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BTCUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BTCUSDT sem posição — venda ignorada."}]
+> Results: [{"type":"info","text":"[PAPER] consistencia:BTCUSDT sem posição — venda ignorada."}]
+> 
+> === BUY/SELL reais do paper (round-trips) ===
+> info: 2026-06-19T20:48:00.220Z - [PAPER] SELL 0.00031 BTCUSDT @ 63169.889255 (recebido 19.56 USDT, P&L 0.01)
+> Results: [{"type":"success","text":"[PAPER] SELL BTCUSDT qty 0.00031 @ 63169.889255 P&L 0.01"}]
+> 
+> === contagem por tipo nos A-logs ===
+>       2 SELL
+>      14 venda ignorada
+> 
+> === cockpit.log ===
+> info: 2026-06-19T17:35:21.268Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> info: 2026-06-19T20:15:29.706Z - Cockpit job iniciado READ-ONLY (intervalo 60000ms; lookback 500; break-even 0.2%). Informativo — não gateia automação.
+> info: 2026-06-19T20:28:31.173Z - Falha ao resolver símbolos: connect ETIMEDOUT
+> info: 2026-06-19T20:28:59.399Z - BTCUSDT: klines indisponíveis (klines 1m indisponiveis na Binance); MEMORY preservada.
+> info: 2026-06-19T20:29:39.798Z - BTCUSDT: klines recuperadas.
+> ```
+
+## 🤖 Claude *(00:10:09)*
+
+
+## 🤖 Claude *(00:10:30)*
+
+Reuni tudo. Aqui está a resposta com os dados, direto ao ponto.
+
+## 1) "Se tivesse com ordens liberadas, teria dado lucro?"
+
+**Resposta honesta: marginalmente, e por sorte — não por edge.**
+
+O proxy ao vivo exato dessa pergunta é a trilha `[PAPER] Consistência BTC` (RSI mean-reversion, mesmo preço/fee da mainnet, **com slippage**). Ela fechou **1 round-trip completo hoje**:
+
+| | |
+|---|---|
+| COMPRA 17:01 UTC | 0,00031 BTC @ **62.997** |
+| VENDA 20:48 UTC (~4h depois) | @ **63.170** (recebido $19,56) |
+| Movimento do BTC | +0,27% |
+| Bruto | +$0,053 |
+| **Taxas (2 lados)** | **−$0,039** |
+| **Líquido realizado** | **+$0,0143** ✅ |
+
+Esse é o `+0,01` que você viu — agora **realizado** (a posição fechou às 20:48; antes ele oscilava ±$0,01 *não-realizado*, que era o "1c/0v · 1 aberta" que você viu).
+
+**O problema está no detalhe:** a **taxa comeu 73% do bruto**. Ganhou +1,4 centavo em ~$19,5 (= +0,07%) porque o BTC *por acaso* subiu durante as 4h de hold. Não é sinal — é cara-ou-coroa favorável. A própria brain concorda: **EV líquido do BTC = −0,17%, pHit = 0,40** (<0,5). Ou seja, **esperança matemática NEGATIVA** — ao longo de muitos trades, isso sangra.
+
+## 2) Sobre o gate "GO/WAIT" piscando
+
+Os logs explicam o "kkk": o `imbalance` do fluxo **vira de +0,7 pra −0,8 em poucos minutos** (ruído de taker de alta frequência). O piso é −0,4 → fica **GO quase sempre**, vira WAIT só nos picos de capitulação. Ver isso piscar várias vezes/dia é **normal**. O GO **não é sinal de lucro** — é um filtro de *timing* transitório. 1 trade não valida nada.
+
+**Conclusão:** com dinheiro real nessa janela, você ficaria ~empatado a +1,4¢, dominado por taxa e ruído. **Isso confirma a decisão do dono de esperar o paper provar:** 1 vitória em 1 é estatisticamente nada — o `paperReviewJob` só dá veredito em 15-30 round-trips (estamos em **1**). O EV diz que não passa da taxa nessa escala.
+
+## 3) A notificação do BNB — ✅ benigna (seu instinto tava certo)
+
+`[PAPER] consistencia:BNBUSDT sem posição — venda ignorada` = a perna de VENDA (RSI>75) disparou mas não havia posição comprada → **corretamente ignorada** (mean-reversion: só vende o que comprou). Aconteceram **14** dessas hoje (BNB 6, BTC 3, ADA 2, LTC 1+) — todas no-op, **zero erro**.
+
+⚠️ Mas 14 notificações de no-op é **ruído** — é exatamente o tipo de coisa que a doutrina anti-spam quer calar. Se quiser, eu **silencio** o "sem posição — venda ignorada" (não surfar no painel; é um no-op esperado). Edit pequeno no `paperEngine`.
+
+## 4) "Edge vs Fee — Shadow 1m P(cont. ≥ custo) medindo… (Fase 3)"
+
+É o nowcasting 1m read-only ainda acumulando amostra. O que já tem dá a mesma história: **EV −0,17% / pHit 0,40 → scalp 1m é −EV** (bate com o 1m scalping já refutado). "Medindo" = juntando dados; não gateia nada, é informativo. Sem ação.
+
+---
+
+**Resumindo:** sistema coerente, freeze intacto, paper funcionando — e o dado de hoje **reforça esperar**, não destravar. Quer que eu **silencie as notificações de "venda ignorada"** (o único ruído real aqui)? E sigo de olho — o review job avisa nos marcos.
+
+## 👤 User *(00:10:34)*
+
+Acabei de ativar Estado geral: LIBERADO — trading permitido
+
+## 🤖 Claude *(00:11:15)*
+
+
+## 🤖 Claude *(00:11:17)*
+
+⚠️ Entendido — você **destravou o floor**: o sistema agora está **LIBERADO, trading real ON**. Deixa eu verificar o estado ao vivo na hora e ver **exatamente o que está armado e exposto** (e se algo já disparou):
+
+## 🤖 Claude *(00:11:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/golive_check.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>r(JSON.parse(b)))});rq.write(d);rq.end()});\n const t=lg.token;\n const h=(await req('GET','/system/halt',t)).body;\n console.log('=== HALT/RISK AO VIVO ===');\n console.log(JSON.stringify({halted:h.halted, source:h.source, reason:h.reason, floor:h.floor&&h.floor.on, manual:h.manual&&h.manual.on, dailyCap:h.dailyCap&&h.dailyCap.active, envHard:h.envHard}));\n const g=(await req('GET','/automations/groups',t)).body;\n console.log('=== GRUPOS ARMADOS (estes vao NEGOCIAR DE VERDADE agora) ===');\n for(const x of g.groups) console.log(`  ${x.key}: ${x.active}/${x.total} ON ${x.paper?'(paper=virtual, sem risco)':'<<< REAL'}`);\n // ordens reais recentes (algo disparou pos-flip?)\n try{\n   const om=require('./src/models/orderModel');\n   const ords=await om.findAll({order:[['id','DESC']],limit:8});\n   console.log('=== ULTIMAS 8 ORDENS REAIS (orders) ===');\n   for(const o of ords){const v=o.get?o.get({plain:true}):o; console.log(`  id=${v.id} ${v.createdAt||v.updatedAt} ${v.symbol} ${v.side} ${v.type} status=${v.status} qty=${v.quantity} net=${v.net!==undefined?v.net:''} automationId=${v.automationId}`);}\n }catch(e){console.log('orders query err:',e.message);}\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/golive_check.js' 2>&1 | head -40",
+  "description": "Verify live HALT state, armed groups, and any orders fired post-flip"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HALT/RISK AO VIVO ===
+> {"halted":false,"source":null,"reason":null,"floor":false,"manual":false,"dailyCap":false,"envHard":false}
+> === GRUPOS ARMADOS (estes vao NEGOCIAR DE VERDADE agora) ===
+>   farm: 6/6 ON <<< REAL
+>   trend: 8/8 ON <<< REAL
+>   baseline: 0/2 ON <<< REAL
+>   paper: 16/16 ON (paper=virtual, sem risco)
+> === ULTIMAS 8 ORDENS REAIS (orders) ===
+>   id=259 Mon Jun 15 2026 03:30:42 GMT+0000 (Coordinated Universal Time) ADAUSDT SELL MARKET status=FILLED qty=2461.10000000 net=443.98244000 automationId=null
+>   id=258 Mon Jun 15 2026 03:24:54 GMT+0000 (Coordinated Universal Time) BTCUSDT BUY MARKET status=FILLED qty=0.02013000 net=1317.66491010 automationId=null
+>   id=257 Mon Jun 15 2026 03:24:54 GMT+0000 (Coordinated Universal Time) BTCUSDT BUY MARKET status=FILLED qty=0.02003000 net=1311.44422000 automationId=null
+>   id=256 Mon Jun 15 2026 03:14:01 GMT+0000 (Coordinated Universal Time) BTCUSDT SELL MARKET status=CANCELED qty=0.02014000 net=1323.05379760 automationId=38
+>   id=255 Mon Jun 15 2026 02:17:00 GMT+0000 (Coordinated Universal Time) BTCUSDT SELL MARKET status=CANCELED qty=0.02004000 net=1317.67008000 automationId=38
+>   id=254 Mon Jun 15 2026 01:55:56 GMT+0000 (Coordinated Universal Time) BTCUSDT SELL LIMIT status=FILLED qty=0.00030000 net=19.65420000 automationId=25
+>   id=253 Mon Jun 15 2026 01:54:54 GMT+0000 (Coordinated Universal Time) BTCUSDT BUY LIMIT status=FILLED qty=0.00031000 net=19.58858690 automationId=22
+>   id=252 Mon Jun 15 2026 01:40:01 GMT+0000 (Coordinated Universal Time) BTCUSDT SELL MARKET status=CANCELED qty=0.01985000 net=1303.74780150 automationId=38
+> ```
+
+## 🤖 Claude *(00:12:41)*
+
+
+## 🤖 Claude *(00:12:52)*
+
+✅ **Confirmado: o sistema está LIVE** — `halted=false, floor=false`, nenhuma proteção de HALT engatada. E o mais importante: **nenhuma ordem real disparou ainda** (as últimas 8 ordens são todas de 15/jun, era testnet). Você está numa janela limpa.
+
+## ⚠️ O que está armado e vai negociar de verdade AGORA
+
+| Grupo | Estado | Risco |
+|---|---|---|
+| **Farm** | **6/6 ON** `<<< REAL` | Baixo — *no-loss* (só vende acima do custo), alts LTC/BNB/ADA, **nunca toca o cofre BTC** |
+| **Trend** | **8/8 ON** `<<< REAL` | Médio — golden/death cross; `TREND_CROSS=none` agora → não dispara até um cross |
+| Baseline | 0/2 off | ✓ desligado (é o que tinha a venda do cofre BTC) |
+| Paper | 16/16 | virtual, sem risco |
+
+**Atenção:** você está live com **14 automações reais (Farm + Trend)** — isso é **mais amplo que o "canary de 1 grupo"** do seu próprio plano. Não é errado, mas é mais exposição do que o roteiro previa.
+
+**Proteções que continuam ativas mesmo live:** cap diário **−5%** (baseline novo de hoje, arma HALT sozinho no drawdown) · teto **$300/ordem** · riskGuard por-ordem · botão de pânico (UI: *Travar agora* / *TRAVAR floor*, ou eu re-travo na hora).
+
+**Expectativa honesta** (do que medimos há pouco): EV fino/negativo, taxa come o edge — isso é **validação da plumbing com dinheiro real**, não rota de lucro. Com ~$148, o downside está limitado (cap −5% ≈ −$7,40 no pior dia; Farm não realiza perda por desenho).
+
+Como você quer seguir? (posso executar na hora pelo painel novo)
+
+## 🤖 Claude *(00:12:57)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Voc\u00ea est\u00e1 LIVE com Farm(6)+Trend(8)=14 autom\u00e7\u00f5es reais. Como seguir? (nada disparou ainda)",
+      "header": "Canary",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Canary s\u00f3 Farm (recomendado)",
+          "description": "Paro o Trend; fica s\u00f3 o Farm (no-loss, alts LTC/BNB/ADA, nunca o cofre BTC). Menor downside real, valida 1 grupo \u2014 fiel ao seu plano de canary."
+        },
+        {
+          "label": "Canary s\u00f3 Trend",
+          "description": "Paro o Farm; fica s\u00f3 o Trend (\u00fanico edge real; nada dispara at\u00e9 um golden/death cross). Mais espera, testa o motor de ciclo."
+        },
+        {
+          "label": "Manter Farm + Trend (os 14)",
+          "description": "Deixo como est\u00e1. Mais exposi\u00e7\u00e3o, fora do plano de 1-grupo. Cap \u22125% e teto $300/ordem seguem ativos."
+        },
+        {
+          "label": "Re-travar agora (p\u00e2nico)",
+          "description": "Volto pro freeze (TRAVAR floor) \u2014 nada negocia. Caso tenha sido sem querer ou queira reavaliar antes."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Você está LIVE com Farm(6)+Trend(8)=14 automções reais. Como seguir? (nada disparou ainda)"="Canary só Farm (recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(00:13:23)*
+
+
+## 🤖 Claude *(00:13:23)*
+
+Canary Farm confirmado — **paro o Trend** (fica só o Farm: no-loss, alts, nunca o cofre BTC). Executando pelo painel novo + verificando o estado resultante:
+
+## 🤖 Claude *(00:13:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/canary.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>r(JSON.parse(b)))});rq.write(d);rq.end()});\n const t=lg.token;\n const s=await req('POST','/automations/groups/trend/stop',t);\n console.log('STOP trend:', s.status, JSON.stringify({changed:(s.body.changed||[]).length, skipped:(s.body.skipped||[]).length, failed:(s.body.failed||[]).length}));\n const g=(await req('GET','/automations/groups',t)).body;\n console.log('=== ESTADO RESULTANTE ===');\n for(const x of g.groups) console.log(`  ${x.key}: ${x.active}/${x.total} ON ${x.paper?'(virtual)':(x.active>0?'<<< REAL/LIVE':'(off)')}`);\n const h=(await req('GET','/system/halt',t)).body;\n console.log('HALT:', JSON.stringify({halted:h.halted, floor:h.floor&&h.floor.on}));\n}) ();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/canary.js' 2>&1 | head -20",
+  "description": "Stop Trend group to narrow to Farm-only canary, verify state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> STOP trend: 200 {"changed":8,"skipped":0,"failed":0}
+> === ESTADO RESULTANTE ===
+>   farm: 6/6 ON <<< REAL/LIVE
+>   trend: 0/8 ON (off)
+>   baseline: 0/2 ON (off)
+>   paper: 16/16 ON (virtual)
+> HALT: {"halted":false,"floor":false}
+> ```
+
+## 🤖 Claude *(00:14:21)*
+
+
+## 🤖 Claude *(00:14:24)*
+
+✅ **Canary armado e confirmado.** Trend parado (8 automações, 0 falhas — o painel novo funcionou ao vivo). Estado agora:
+
+| Grupo | Estado |
+|---|---|
+| **Farm** | **6/6 ON `<<< REAL/LIVE`** ← seu canary |
+| Trend | 0/8 (parado) |
+| Baseline | 0/2 (off) |
+| Paper | 16/16 (virtual) |
+| HALT | `halted=false` (LIVE) |
+
+Vou registrar essa mudança crítica de estado na memória (o sistema deixou de estar congelado — uma sessão futura precisa saber):
+
+## 🤖 Claude *(00:14:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "**\ud83c\udfaf TODOS os pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS \u2192 falta s\u00f3 o GO DO DONO pro flip `TRADING_HALT=false` + canary de um-grupo-s\u00f3; BNB-fee agora seguro de ligar na UI Binance.**",
+  "new_string": "**\ud83d\udd34 LIVE desde 2026-06-19: o DONO flipou o floor pela UI (`halted=false`, trading REAL ON \u2014 N\u00c3O est\u00e1 mais congelado!). Canary FARM-ONLY no ar (6 autos no-loss alts LTC/BNB/ADA; Trend e Baseline PARADOS via painel de grupos). Prote\u00e7\u00f5es ativas: cap di\u00e1rio \u22125%, teto $300/ordem, riskGuard por-ordem, bot\u00e3o de p\u00e2nico (UI/`POST /system/halt`). SEMPRE confira `GET /system/halt` no in\u00edcio da sess\u00e3o. BNB-fee seguro de ligar.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:14:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "Ver [[tradeux-vault-guard]]. Nice-to-have deferidos: migrar grupo p/ coluna expl\u00edcita (regex fr\u00e1gil a rename), teste do regex no CI, re-arm DB\u2194BRAIN no painel.",
+  "new_string": "Ver [[tradeux-vault-guard]]. Nice-to-have deferidos: migrar grupo p/ coluna expl\u00edcita (regex fr\u00e1gil a rename), teste do regex no CI, re-arm DB\u2194BRAIN no painel.\n\n## \ud83d\udd34 GO-LIVE REAL \u2014 dono flipou o floor (2026-06-19) \u2014 N\u00c3O EST\u00c1 MAIS CONGELADO\nO dono **destravou o floor pela UI** (bot\u00e3o LIGAR trading real). Estado verificado ao vivo: `GET /system/halt` \u2192 **`halted=false, floor=false, manual=false, dailyCap=false, envHard=false`** = trading REAL permitido. **Decis\u00e3o do dono, deliberada** (a UI exige digitar `LIGAR REAL`); Claude N\u00c3O virou \u2014 s\u00f3 verificou e orientou. **Nenhuma ordem real disparou no flip** (orders 252-259 eram testnet de 15/jun; ledger real ainda frio).\n- **Canary escolhido pelo dono (via AskUserQuestion) = FARM-ONLY.** Claude executou `POST /automations/groups/trend/stop` (8 paradas) pelo painel novo \u2192 estado: **Farm 6/6 ON (REAL/LIVE)**, Trend 0/8 OFF, Baseline 0/2 OFF, Paper 16/16 (virtual). Farm \u00e9 **no-loss** (s\u00f3 vende acima do custo), alts LTC/BNB/ADA, **nunca o cofre BTC** \u2192 downside limitado (capital pode ficar preso em alts num downtrend, sem perda realizada por desenho).\n- **Prote\u00e7\u00f5es vivas mesmo LIVE:** cap di\u00e1rio \u22125% (baseline novo de hoje UTC; arma HALT no drawdown \u2248 \u2212$7,40/$148), teto $300/ordem, riskGuard por-ordem, **p\u00e2nico** = UI \"TRAVAR floor\"/\"Travar agora\" ou `POST /system/halt {on:true}` / `POST /system/floor {on:true}`. Telegram notifica TODA ordem (NEW/FILLED\u2026) \u2192 a 1\u00aa ordem real do Farm avisa.\n- **Expectativa honesta (dado do dia):** EV fino/negativo \u2014 o \u00fanico round-trip do paper consist\u00eancia BTC fechou **+$0,0143 l\u00edquido** (taxa comeu 73% do bruto), por sorte (BTC subiu no hold), n\u00e3o por edge; EV BTC \u22120,17%, pHit 0,40. \u00c9 **valida\u00e7\u00e3o da plumbing com dinheiro real**, n\u00e3o rota de lucro. Veredito precisa de 15-30 round-trips (paperReviewJob).\n- \u26a0\ufe0f Pra re-congelar: `POST /system/floor {on:true}` (ou UI TRAVAR floor). Pra re-armar \u00e0 prova de clique: `TRADING_HALT_HARD=true` no `.env`+restart."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:14:59)*
+
+
+## 🤖 Claude *(00:15:08)*
+
+🟢 **Pronto — você está LIVE em modo canary Farm-only.** Estado registrado na memória (uma sessão futura agora sabe que não está mais congelado).
+
+## O que esperar a partir de agora
+
+**O Farm (6 autos, alts LTC/BNB/ADA) vai:**
+- **Comprar** num dip de RSI<35 (fora de bear/trend), ~$10/ordem — ordem real.
+- **Vender no-loss** — só realiza acima do custo de compra. Pior caso = capital preso numa alt num downtrend, **sem perda realizada por desenho** (mas pode segurar inventário; ~até $80/$148 travável num downtrend forte).
+
+**Como você vai saber:** o Telegram notifica **toda ordem real** (NEW/FILLED) — a primeira compra do Farm te avisa na hora.
+
+**Botões de parada (tudo à mão):**
+- 🟡 **Parar só o canary:** botão *Parar* no grupo Farm (ou eu paro).
+- 🔴 **Pânico total:** *TRAVAR floor* na UI → re-congela tudo na hora (ou eu re-travo).
+- 🤖 **Automático:** o cap diário −5% (≈ −$7,40 hoje) arma o HALT sozinho se afundar.
+
+**Lembrete honesto:** o dado de hoje diz EV fino/negativo — encare isso como **validação da plumbing com dinheiro real** (a primeira ordem real vai te mostrar fill/fee/slippage de verdade), não como rota de lucro. O veredito de verdade vem em 15-30 round-trips.
+
+---
+
+Quer que eu **fique de olho e te avise quando a 1ª ordem real do Farm disparar** (acompanho os logs/ordens), ou prefere deixar o Telegram cuidar disso e me chama se precisar? E sigo de prontidão pra parar/re-travar a qualquer momento.
+
+## 👤 User *(00:16:47)*
+
+manda ums notificações interessantes no telegram algo que pode ser relevante para manter um histó´rico... por exemplo agora ta para aconteer o jogo do Brasil, notei no ultimo jogo que as ações estavam muito legais para fazer pequenas lihas de compras e vendas em topo e fundo com 1m
+
+## 🤖 Claude *(00:17:24)*
+
+
+## 🤖 Claude *(00:17:26)*
+
+Boa ideia — marcar eventos externos (jogo do Brasil = pico de atenção/volatilidade do varejo BR) no Telegram pra construir um histórico e depois cruzar com o comportamento 1m. Deixa eu achar o canal de notificação certo + montar uma marca útil (com snapshot de mercado ao vivo, não só "começou o jogo"):
+
+## 🤖 Claude *(00:17:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rota /agent/notify + util de telegram ===\"\ngrep -rn \"agent/notify\\|notifyOwner\\|telegramNotify\\|/notify\" backend/src/routers/*.js backend/src/controllers/*.js 2>/dev/null | head\necho \"=== shape do controller notify ===\"\ngrep -rln \"notify\" backend/src/controllers/*.js | head\necho \"=== telegramNotify util ===\"\nsed -n '1,40p' backend/src/utils/telegramNotify.js 2>/dev/null | grep -nE \"function|exports|notify|chatId|sendTelegram|module\" | head\necho \"=== data/hora agora (UTC + BRT) ===\"\ndate -u \"+%Y-%m-%d %H:%M UTC\"; TZ=America/Sao_Paulo date \"+%Y-%m-%d %H:%M BRT\"",
+  "description": "Find the Telegram notify endpoint/util + current time"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rota /agent/notify + util de telegram ===
+> backend/src/routers/agentRouter.js:7:router.post('/notify', agentController.notify);
+> backend/src/controllers/agentController.js:2:const telegramNotify = require('../utils/telegramNotify');
+> backend/src/controllers/agentController.js:65:// POST /agent/notify {message} — canal ONE-WAY do agente LLM (via MCP tradeux_notify_owner) pro
+> backend/src/controllers/agentController.js:74:    const sent = await telegramNotify.notify(`🤖 [AGENTE] ${message.trim().slice(0, MAX_NOTIFY_LEN)}`);
+> backend/src/controllers/ordersController.js:8:const telegramNotify = require('../utils/telegramNotify');
+> backend/src/controllers/ordersController.js:151:    telegramNotify.notifyOrder(order.get({ plain: true }));
+> === shape do controller notify ===
+> backend/src/controllers/analysisController.js
+> backend/src/controllers/ordersController.js
+> backend/src/controllers/agentController.js
+> === telegramNotify util ===
+> 24:async function notify(message, dedupKey) {
+> === data/hora agora (UTC + BRT) ===
+> 2026-06-20 00:17 UTC
+> 2026-06-19 21:17 BRT
+> ```
+
+## 🤖 Claude *(00:18:09)*
+
+
+## 🤖 Claude *(00:18:11)*
+
+Achei os canais: `POST /agent/notify` (prefixa "🤖 [AGENTE]") e o util `telegramNotify.notify(msg, dedupKey)`. Hora: **21:17 BRT / 00:17 UTC**. Vou ver como o util pega a config do Telegram (pra escolher o caminho que me deixa rotular como MARCO/EVENTO, não confundir com o agente):
+
+## 🤖 Claude *(00:18:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/telegramNotify.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Notificador Telegram best-effort do TradeUX (camada acima de utils/telegram.js).
+> 2	// Por que existe (pedido do dono: notificar TODAS as novas ordens + canal de aprovação do agente):
+> 3	// (1) NUNCA propaga erro — notificação não é crítica e os chamadores estão no caminho QUENTE do
+> 4	//     stream de execução (app-em) ou no money-path (beholder.placeOrder);
+> 5	// (2) Telegraf SINGLETON — utils/telegram.js instancia um Telegraf POR CHAMADA (ok p/ eventos
+> 6	//     raros como o armador da Fase 4; ver alerta em funnelJob.js), aqui a frequência é maior;
+> 7	// (3) dedup capado por chave opcional — executionReports podem ser RE-ENTREGUES na reconexão do
+> 8	//     userData stream (mesmo racional dos sets countedTrendFills/countedHarvestFills do app-em).
+> 9	// Settings via getDefaultSettings() (cache em memória; o PATCH /settings limpa o cache e o
+> 10	// singleton se recria sozinho quando o token muda).
+> 11	
+> 12	const logger = require('./logger');
+> 13	
+> 14	let bot = null, botToken = null, warnedOnce = false;
+> 15	
+> 16	// Chaves de notificação já enviadas. Capado: ordens são raras (algumas/dia), 200 chaves cobrem
+> 17	// dias de operação; descarte FIFO via ordem de inserção do Set.
+> 18	const sentKeys = new Set();
+> 19	const SENT_KEYS_MAX = 200;
+> 20	
+> 21	// Envia `message` ao chat do dono. `dedupKey` (opcional) suprime reenvios da MESMA notificação;
+> 22	// a chave só é marcada APÓS envio bem-sucedido (falha de rede não "queima" a notificação).
+> 23	// Retorna true se enviou, false caso contrário. NUNCA lança.
+> 24	async function notify(message, dedupKey) {
+> 25	    try {
+> 26	        if (dedupKey && sentKeys.has(dedupKey)) return false;
+> 27	
+> 28	        const settings = await require('../repositories/settingsRepository').getDefaultSettings();
+> 29	        if (!settings || !settings.telegramBot || !settings.telegramChat) {
+> 30	            if (!warnedOnce) {
+> 31	                warnedOnce = true;
+> 32	                logger('system', 'telegramNotify: telegramBot/telegramChat ausentes nas settings — notificações Telegram desligadas.');
+> 33	            }
+> 34	            return false;
+> 35	        }
+> 36	
+> 37	        if (!bot || botToken !== settings.telegramBot) {
+> 38	            const { Telegraf } = require('telegraf');
+> 39	            bot = new Telegraf(settings.telegramBot);
+> 40	            botToken = settings.telegramBot;
+> 41	        }
+> 42	
+> 43	        await bot.telegram.sendMessage(settings.telegramChat, message);
+> 44	
+> 45	        if (dedupKey) {
+> 46	            sentKeys.add(dedupKey);
+> 47	            if (sentKeys.size > SENT_KEYS_MAX)
+> 48	                sentKeys.delete(sentKeys.values().next().value); // mais antiga (FIFO)
+> 49	        }
+> 50	        return true;
+> 51	    } catch (err) {
+> 52	        // Redige o token antes de logar (gate TL): erros de rede do Telegraf embutem a URL completa
+> 53	        // (https://api.telegram.org/bot<TOKEN>/...) na message — token cru não pode ir pro log.
+> 54	        const safe = botToken ? String(err.message).split(botToken).join('<token>') : err.message;
+> 55	        logger('system', `telegramNotify: ${safe}`);
+> 56	        return false;
+> 57	    }
+> 58	}
+> 59	
+> 60	// Estados de ordem que viram notificação. CANCELED fica de fora de propósito: o harvester
+> 61	// cancela/renova vendas no fluxo normal e a OCO cancela a perna irmã sozinha — seria ruído,
+> 62	// não informação. PARTIALLY_FILLED também não (o FILLED/terminal conta a história). EXPIRED
+> 63	// notifica (gate QA): MARKET pode EXPIRAR já no insert (book fino do testnet) — é uma colocação
+> 64	// falhada que o dono precisa ver, como a REJECTED; e é raro demais pra virar ruído.
+> 65	const NOTIFY_STATUSES = ['NEW', 'FILLED', 'REJECTED', 'EXPIRED'];
+> 66	
+> 67	// Notificação padrão de ordem (fire-and-forget; síncrona p/ o chamador). Dedup por
+> 68	// orderId+status: uma MARKET inserida já FILLED notifica UMA vez (o executionReport FILLED
+> 69	// posterior cai no dedup); uma LIMIT notifica no NEW e de novo no FILLED (eventos distintos).
+> 70	// `order` é o objeto plano da ordem persistida (insertOrder/updateOrderByOrderId).
+> 71	function notifyOrder(order) {
+> 72	    try {
+> 73	        if (!order || !order.orderId || !NOTIFY_STATUSES.includes(order.status)) return;
+> 74	        const origem = order.automationId ? `automação #${order.automationId}` : 'manual/agente';
+> 75	        const qty = order.quantity || '?';
+> 76	        let msg;
+> 77	        if (order.status === 'FILLED') {
+> 78	            const px = order.avgPrice ? Number(order.avgPrice) : (order.limitPrice || 'MARKET');
+> 79	            msg = `✅ Ordem executada: ${order.symbol} ${order.side} qty=${qty} @ ${px} (${origem})`;
+> 80	        } else if (order.status === 'REJECTED') {
+> 81	            msg = `🛑 Ordem rejeitada: ${order.symbol} ${order.side} qty=${qty}${order.obs ? ` — ${order.obs}` : ''} (${origem})`;
+> 82	        } else if (order.status === 'EXPIRED') {
+> 83	            msg = `⚠️ Ordem expirada (não executou): ${order.symbol} ${order.side} qty=${qty} (${origem})`;
+> 84	        } else { // NEW
+> 85	            const px = order.limitPrice ? `@ ${order.limitPrice}` : '@ MARKET';
+> 86	            msg = `📝 Nova ordem: ${order.symbol} ${order.side} ${order.type || ''} qty=${qty} ${px} (${origem})`;
+> 87	        }
+> 88	        notify(msg, `order:${order.orderId}:${order.status}`).catch(() => { }); // cinto extra; notify já não lança
+> 89	    } catch (err) {
+> 90	        logger('system', `telegramNotify.notifyOrder: ${err.message}`);
+> 91	    }
+> 92	}
+> 93	
+> 94	module.exports = { notify, notifyOrder };
+> 95	
+> ```
+
+## 🤖 Claude *(00:18:53)*
+
+
+## 🤖 Claude *(00:18:55)*
+
+Entendi o util: `notify(msg, dedupKey)` lê a config do Telegram do DB — então posso mandar **direto com meu próprio rótulo** (`📌 [MARCO/EVENTO]`, distinto do `[AGENTE]`), que é o que você quer pra histórico. Vou enriquecer com snapshot de mercado ao vivo e mandar **uma** marca caprichada (qualidade > spam):
+
+## 🤖 Claude *(00:19:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nNOW_BRT=$(TZ=America/Sao_Paulo date \"+%d/%b %H:%M\")\nNOW_UTC=$(date -u \"+%H:%M UTC\")\ncat > /tmp/marker.js <<'EOF'\nconst http=require('http');\nfunction req(m,p,t){return new Promise(r=>{const h={'Content-Type':'application/json'};if(t)h.authorization=t;const rq=http.request({host:'127.0.0.1',port:3001,method:m,path:p,headers:h,timeout:10000},res=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{let j;try{j=JSON.parse(d)}catch{j=d}r({status:res.statusCode,body:j})})});rq.on('error',e=>r({status:0,body:String(e.message)}));rq.on('timeout',()=>{rq.destroy();r({status:0,body:'timeout'})});rq.end()})}\n(async()=>{\n const EM=process.env.DEFAULT_SETTINGS_EMAIL,PW=process.env.DEFAULT_SETTINGS_PWD;\n const lg=await new Promise(r=>{const d=JSON.stringify({email:EM,password:PW});const rq=http.request({host:'127.0.0.1',port:3001,method:'POST',path:'/login',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(d)}},res=>{let b='';res.on('data',c=>b+=c);res.on('end',()=>r(JSON.parse(b)))});rq.write(d);rq.end()});\n const t=lg.token;\n const c=(await req('GET','/analysis/cockpit/BTCUSDT',t)).body;\n const ev=c.ev?(c.ev.netPct).toFixed(2):'?', pHit=c.dist?c.dist.pHitBreakevenPct:'?', imb=c.flow?c.flow.imbalance:'?';\n const msg = [\n   '\ud83d\udccc [MARCO/EVENTO] Jogo do Brasil \u2014 janela de observa\u00e7\u00e3o',\n   `\ud83d\udd50 ${process.env.MARK_BRT} BRT (${process.env.MARK_UTC})`,\n   '\ud83d\udca1 Hip\u00f3tese (operador): durante jogos do BR o 1m fica bom p/ scalp topo\u2194fundo (vol de varejo).',\n   `\ud83d\udcca BTC $${Math.round(c.price)} \u00b7 regime=${c.regime} \u00b7 fluxo imbalance ${imb} \u00b7 1m EV ${ev}% pHit ${pHit}`,\n   '\ud83d\udfe2 Canary FARM-only LIVE (alts no-loss; Trend/Baseline OFF).',\n   '\ud83d\udc40 Observar nesta janela: Edge-vs-Fee 1m (EV/pHit) melhora? Mais round-trips no paper consist\u00eancia? Anotar p/ cruzar depois.',\n ].join('\\n');\n const telegramNotify=require('./src/utils/telegramNotify');\n const sent=await telegramNotify.notify(msg, `marco:jogo-brasil:${process.env.MARK_UTC}`);\n console.log('TELEGRAM enviado:', sent);\n console.log('--- mensagem ---\\n'+msg);\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc \"docker compose exec -T -e MARK_BRT='$NOW_BRT' -e MARK_UTC='$NOW_UTC' backend node - < /tmp/marker.js\" 2>&1 | tail -15",
+  "description": "Send enriched Brazil-game event marker to Telegram"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TELEGRAM enviado: true
+> --- mensagem ---
+> 📌 [MARCO/EVENTO] Jogo do Brasil — janela de observação
+> 🕐 19/Jun 21:19 BRT (00:19 UTC)
+> 💡 Hipótese (operador): durante jogos do BR o 1m fica bom p/ scalp topo↔fundo (vol de varejo).
+> 📊 BTC $63492 · regime=range · fluxo imbalance 0.4376 · 1m EV -0.17% pHit 0.4
+> 🟢 Canary FARM-only LIVE (alts no-loss; Trend/Baseline OFF).
+> 👀 Observar nesta janela: Edge-vs-Fee 1m (EV/pHit) melhora? Mais round-trips no paper consistência? Anotar p/ cruzar depois.
+> ```
+
+## 🤖 Claude *(00:19:48)*
+
+
+## 🤖 Claude *(00:20:02)*
+
+✅ **Marca enviada pro Telegram** (`enviado: true`). Ela ficou assim — um data-point timestamped, não só "começou o jogo":
+
+> 📌 **[MARCO/EVENTO] Jogo do Brasil — janela de observação**
+> 🕐 19/Jun 21:19 BRT (00:19 UTC)
+> 💡 Hipótese (operador): durante jogos do BR o 1m fica bom p/ scalp topo↔fundo (vol de varejo).
+> 📊 BTC $63.492 · regime=range · fluxo imbalance 0.44 · 1m EV −0,17% pHit 0,40
+> 🟢 Canary FARM-only LIVE (alts no-loss; Trend/Baseline OFF).
+> 👀 Observar: Edge-vs-Fee 1m melhora? Mais round-trips no paper? Anotar p/ cruzar.
+
+Usei um rótulo `[MARCO/EVENTO]` (distinto do `[AGENTE]`) justamente pra ficar fácil de filtrar no histórico depois.
+
+**O que torna a tua ideia testável** (e não só anedótica): sua hipótese é que o jogo cria uma janela de **alta vol + reversão 1m** diferente da média. A média já sabemos que é ruim (1m EV **−0,17%**, pHit **0,40** = scalp 1m é −EV). Então o experimento natural é: **o EV/pHit 1m MELHORA durante o jogo?** Se durante a janela o pHit subir acima de ~0,5 e o EV líquido virar positivo, aí sim tem sinal — e a gente já tem o instrumento medindo isso (o painel Edge-vs-Fee / cockpit 1m). O snapshot acima é o **baseline a bater**.
+
+Pra virar histórico de verdade, posso fazer (você escolhe):
+- **Fechar a janela:** mando um marco **"fim de jogo"** com EV/pHit + nº de round-trips do paper na janela → bracket completo pra comparar com o baseline.
+- **Amostrar durante:** registro o EV/pHit 1m a cada ~15min **nos logs** (não no Telegram, pra não spammar) e mando **um resumo só no fim** — assim o dado fica e o Telegram não vira ruído.
+- **Virar hábito:** marco eventos relevantes daqui pra frente (1ª ordem real do Farm, viradas de regime, picos de fluxo, marcos do paper, jogos) — sempre **1 marca boa**, nunca enxurrada.
+
+Quer que eu já agende a amostragem da janela do jogo (opção 2 + o "fim de jogo" da 1), ou prefere mandar marcas pontuais sob demanda? E sigo de olho no canary Farm.
+
+## 👤 User *(00:25:41)*
+
+Queria poder ver o grafico aplicando os sinais observados com delay de 3 minnutos do aovivo é possivel?
+
+## 🤖 Claude *(00:27:15)*
+
+
+## 🤖 Claude *(00:27:17)*
+
+Sim, dá — e o melhor é te mostrar **agora**. Vou puxar os candles 1m reais (até ~3 min atrás, pra cravar o delay e usar só vela fechada = sem repaint), calcular o RSI e marcar onde os sinais de **fundo (RSI<25 compra)** e **topo (RSI>75 venda)** — a estratégia consistência que está sendo medida — disparariam. Buscando os dados:
+
+## 🤖 Claude *(00:27:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncat > /tmp/klines.js <<'EOF'\nconst https=require('https');\nfunction get(url){return new Promise((res,rej)=>{https.get(url,{timeout:10000},r=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{try{res(JSON.parse(d))}catch(e){rej(e)}})}).on('error',rej).on('timeout',function(){this.destroy();rej(new Error('timeout'))})})}\nfunction rsi(closes,p=14){const r=new Array(closes.length).fill(null);let g=0,l=0;for(let i=1;i<=p;i++){const d=closes[i]-closes[i-1];if(d>=0)g+=d;else l-=d;}g/=p;l/=p;r[p]=l===0?100:100-100/(1+g/l);for(let i=p+1;i<closes.length;i++){const d=closes[i]-closes[i-1];const gg=d>0?d:0,ll=d<0?-d:0;g=(g*(p-1)+gg)/p;l=(l*(p-1)+ll)/p;r[i]=l===0?100:100-100/(1+g/l);}return r;}\n(async()=>{\n const SYM=process.env.SYM||'BTCUSDT';\n const k=await get(`https://api.binance.com/api/v3/klines?symbol=${SYM}&interval=1m&limit=140`);\n // dropa as 3 ultimas (delay ~3min + vela formando) -> so vela fechada\n const rows=k.slice(0,-3).map(c=>({t:c[0],o:+c[1],h:+c[2],l:+c[3],c:+c[4]}));\n const closes=rows.map(x=>x.c);\n const R=rsi(closes,14);\n const out=rows.map((x,i)=>({t:x.t,o:x.o,h:x.h,l:x.l,c:x.c,rsi:R[i]==null?null:+R[i].toFixed(1)}));\n const plot=out.slice(-80); // ~80 min\n // sinais: RSI<25 (fundo/compra) e RSI>75 (topo/venda)\n const sig=plot.filter(x=>x.rsi!=null&&(x.rsi<25||x.rsi>75)).map(x=>({t:x.t,rsi:x.rsi,side:x.rsi<25?'buy':'sell',c:x.c}));\n console.log(JSON.stringify({sym:SYM, n:plot.length, firstT:plot[0].t, lastT:plot[plot.length-1].t, lastClose:plot[plot.length-1].c, lastRsi:plot[plot.length-1].rsi, nbuy:sig.filter(s=>s.side==='buy').length, nsell:sig.filter(s=>s.side==='sell').length, rsiMin:Math.min(...plot.filter(x=>x.rsi!=null).map(x=>x.rsi)), rsiMax:Math.max(...plot.filter(x=>x.rsi!=null).map(x=>x.rsi))}));\n require('fs').writeFileSync('/tmp/chartdata.json', JSON.stringify(plot));\n console.log('candles salvos em /tmp/chartdata.json');\n})();\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/klines.js' > /tmp/klines_out.txt 2>&1\ncat /tmp/klines_out.txt\n# copia o chartdata do container pro host\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend cat /tmp/chartdata.json' > /tmp/chartdata.json 2>/dev/null\necho \"host chartdata bytes:\"; wc -c /tmp/chartdata.json",
+  "description": "Fetch 1m klines, compute RSI, mark signals, save chart data"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"sym":"BTCUSDT","n":80,"firstT":1781910300000,"lastT":1781915040000,"lastClose":63523.99,"lastRsi":55,"nbuy":0,"nsell":2,"rsiMin":43.2,"rsiMax":86.4}
+> candles salvos em /tmp/chartdata.json
+> host chartdata bytes:
+> 6324 /tmp/chartdata.json
+> ```
+
+## 🤖 Claude *(00:28:07)*
+
+
+## 🤖 Claude *(00:28:11)*
+
+Dados prontos: 80 velas de 1m (BTC), até ~3min atrás. Achado já interessante — no último ~1h20: **0 sinais de fundo** (RSI nunca <25) e **2 de topo** (RSI>75, chegou a 86,4). Ou seja, o BTC vinha subindo → a estratégia só acharia "topo pra vender", sem "fundo pra comprar". Vou montar o gráfico com isso marcado. Lendo os dados + preparando:
+
+## 🤖 Claude *(00:28:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/chartdata.json"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	[{"t":1781910300000,"o":63294,"h":63310,"l":63294,"c":63304.01,"rsi":50.6},{"t":1781910360000,"o":63304,"h":63304,"l":63286,"c":63286.96,"rsi":45.8},{"t":1781910420000,"o":63286.97,"h":63293.72,"l":63286.97,"c":63289.82,"rsi":46.7},{"t":1781910480000,"o":63289.82,"h":63300.58,"l":63289.81,"c":63300.57,"rsi":50.1},{"t":1781910540000,"o":63300.57,"h":63300.58,"l":63289.82,"c":63289.83,"rsi":46.9},{"t":1781910600000,"o":63289.83,"h":63289.83,"l":63276.41,"c":63276.41,"rsi":43.2},{"t":1781910660000,"o":63276.42,"h":63276.42,"l":63276.41,"c":63276.41,"rsi":43.2},{"t":1781910720000,"o":63276.41,"h":63282,"l":63276.41,"c":63282,"rsi":45.3},{"t":1781910780000,"o":63282,"h":63282,"l":63276,"c":63276.01,"rsi":43.4},{"t":1781910840000,"o":63276.01,"h":63295.5,"l":63276,"c":63295.49,"rsi":50.5},{"t":1781910900000,"o":63295.49,"h":63296,"l":63280.49,"c":63296,"rsi":50.7},{"t":1781910960000,"o":63296,"h":63296,"l":63284,"c":63284.01,"rsi":46.5},{"t":1781911020000,"o":63284.01,"h":63284.01,"l":63284,"c":63284.01,"rsi":46.5},{"t":1781911080000,"o":63284.01,"h":63300,"l":63284,"c":63299.99,"rsi":52.5},{"t":1781911140000,"o":63299.99,"h":63307.99,"l":63282.12,"c":63307.99,"rsi":55.2},{"t":1781911200000,"o":63307.98,"h":63307.99,"l":63287.81,"c":63292.01,"rsi":49.2},{"t":1781911260000,"o":63292,"h":63292,"l":63290,"c":63290.01,"rsi":48.5},{"t":1781911320000,"o":63290.01,"h":63290.01,"l":63290,"c":63290.01,"rsi":48.5},{"t":1781911380000,"o":63290.01,"h":63291,"l":63290,"c":63291,"rsi":48.9},{"t":1781911440000,"o":63291,"h":63309.99,"l":63290.99,"c":63309.99,"rsi":56.4},{"t":1781911500000,"o":63309.98,"h":63309.99,"l":63309.98,"c":63309.99,"rsi":56.4},{"t":1781911560000,"o":63309.99,"h":63333,"l":63309.98,"c":63332.99,"rsi":63.8},{"t":1781911620000,"o":63333,"h":63333,"l":63296,"c":63296,"rsi":49.3},{"t":1781911680000,"o":63296,"h":63296.01,"l":63296,"c":63296,"rsi":49.3},{"t":1781911740000,"o":63296,"h":63322.65,"l":63296,"c":63322.64,"rsi":57.4},{"t":1781911800000,"o":63322.65,"h":63322.65,"l":63308.31,"c":63312,"rsi":53.7},{"t":1781911860000,"o":63311.99,"h":63311.99,"l":63302.21,"c":63302.22,"rsi":50.5},{"t":1781911920000,"o":63302.21,"h":63329.98,"l":63302.21,"c":63321.47,"rsi":56},{"t":1781911980000,"o":63321.48,"h":63364.25,"l":63321.47,"c":63364.25,"rsi":65.4},{"t":1781912040000,"o":63364.25,"h":63371.53,"l":63328.66,"c":63328.67,"rsi":54.9},{"t":1781912100000,"o":63328.66,"h":63348,"l":63314,"c":63347.99,"rsi":58.8},{"t":1781912160000,"o":63347.99,"h":63348,"l":63344.74,"c":63344.74,"rsi":57.9},{"t":1781912220000,"o":63344.75,"h":63344.75,"l":63344.74,"c":63344.75,"rsi":57.9},{"t":1781912280000,"o":63344.75,"h":63344.75,"l":63344.74,"c":63344.75,"rsi":57.9},{"t":1781912340000,"o":63344.74,"h":63344.74,"l":63334,"c":63334,"rsi":54.5},{"t":1781912400000,"o":63334,"h":63334,"l":63323.9,"c":63329.99,"rsi":53.2},{"t":1781912460000,"o":63329.99,"h":63334,"l":63313.98,"c":63313.98,"rsi":48.4},{"t":1781912520000,"o":63313.98,"h":63319.73,"l":63313.98,"c":63319.73,"rsi":50.1},{"t":1781912580000,"o":63319.72,"h":63319.73,"l":63317.57,"c":63317.58,"rsi":49.4},{"t":1781912640000,"o":63317.58,"h":63337.14,"l":63310,"c":63337.13,"rsi":55.3},{"t":1781912700000,"o":63337.13,"h":63337.13,"l":63311.08,"c":63311.08,"rsi":47.4},{"t":1781912760000,"o":63311.09,"h":63311.09,"l":63300,"c":63300.01,"rsi":44.5},{"t":1781912820000,"o":63300.01,"h":63300.01,"l":63300,"c":63300,"rsi":44.5},{"t":1781912880000,"o":63300,"h":63312,"l":63300,"c":63312,"rsi":48.5},{"t":1781912940000,"o":63311.99,"h":63342.01,"l":63311.99,"c":63326.14,"rsi":52.8},{"t":1781913000000,"o":63326.13,"h":63326.13,"l":63310,"c":63310,"rsi":47.9},{"t":1781913060000,"o":63310,"h":63310.01,"l":63306,"c":63306.01,"rsi":46.7},{"t":1781913120000,"o":63306.01,"h":63319.09,"l":63306.01,"c":63319.08,"rsi":50.9},{"t":1781913180000,"o":63319.08,"h":63352,"l":63319.08,"c":63342.01,"rsi":57.2},{"t":1781913240000,"o":63342.01,"h":63349.92,"l":63314.54,"c":63343.41,"rsi":57.6},{"t":1781913300000,"o":63343.42,"h":63389.28,"l":63343.41,"c":63389.27,"rsi":67.3},{"t":1781913360000,"o":63389.27,"h":63654,"l":63389.27,"c":63650.28,"rsi":86.4},{"t":1781913420000,"o":63650.28,"h":63666,"l":63544,"c":63605.99,"rsi":78.1},{"t":1781913480000,"o":63605.99,"h":63645.8,"l":63570,"c":63573.78,"rsi":72.6},{"t":1781913540000,"o":63573.78,"h":63573.79,"l":63538.66,"c":63543.91,"rsi":67.8},{"t":1781913600000,"o":63543.9,"h":63606,"l":63526,"c":63604.14,"rsi":71.8},{"t":1781913660000,"o":63604.13,"h":63604.13,"l":63546,"c":63582,"rsi":68.5},{"t":1781913720000,"o":63582.01,"h":63582.01,"l":63546,"c":63571.99,"rsi":66.9},{"t":1781913780000,"o":63572,"h":63590,"l":63571.99,"c":63576.37,"rsi":67.3},{"t":1781913840000,"o":63576.36,"h":63576.37,"l":63512,"c":63512,"rsi":57.7},{"t":1781913900000,"o":63512,"h":63521.99,"l":63478.24,"c":63521.99,"rsi":58.7},{"t":1781913960000,"o":63522,"h":63529.61,"l":63510.01,"c":63510.36,"rsi":57.1},{"t":1781914020000,"o":63510.36,"h":63587.46,"l":63510.36,"c":63579.37,"rsi":63.6},{"t":1781914080000,"o":63579.37,"h":63593.67,"l":63543.44,"c":63560,"rsi":60.8},{"t":1781914140000,"o":63560.01,"h":63564,"l":63516,"c":63516,"rsi":54.9},{"t":1781914200000,"o":63516,"h":63516,"l":63482,"c":63482,"rsi":50.8},{"t":1781914260000,"o":63482.01,"h":63484.93,"l":63470,"c":63470,"rsi":49.4},{"t":1781914320000,"o":63470,"h":63481.85,"l":63470,"c":63481.84,"rsi":50.8},{"t":1781914380000,"o":63481.84,"h":63481.85,"l":63470,"c":63476,"rsi":50.1},{"t":1781914440000,"o":63475.99,"h":63524,"l":63475.99,"c":63523.99,"rsi":55.9},{"t":1781914500000,"o":63523.99,"h":63531.69,"l":63523.99,"c":63531.69,"rsi":56.8},{"t":1781914560000,"o":63531.68,"h":63544.71,"l":63531.68,"c":63544.71,"rsi":58.3},{"t":1781914620000,"o":63544.71,"h":63544.71,"l":63523.99,"c":63524,"rsi":55},{"t":1781914680000,"o":63523.99,"h":63524,"l":63489.73,"c":63498,"rsi":51.1},{"t":1781914740000,"o":63497.99,"h":63498,"l":63497.99,"c":63498,"rsi":51.1},{"t":1781914800000,"o":63498,"h":63518.44,"l":63497.99,"c":63509.47,"rsi":52.8},{"t":1781914860000,"o":63509.46,"h":63509.46,"l":63482.96,"c":63485.93,"rsi":49},{"t":1781914920000,"o":63485.93,"h":63493.57,"l":63472,"c":63493.57,"rsi":50.3},{"t":1781914980000,"o":63493.57,"h":63498,"l":63480,"c":63480.01,"rsi":48},{"t":1781915040000,"o":63480.01,"h":63524,"l":63472,"c":63523.99,"rsi":55}]
+> ```
+
+## 🤖 Claude *(00:28:41)*
+
+
+## 🤖 Claude *(00:28:43)*
+
+O dado conta uma história clara: às ~21:22 BRT teve um **pico de +0,4% numa vela** (63.389→63.650, RSI 86,4) — provável a volatilidade da janela do jogo que você intuiu. Vou renderizar o gráfico com os candles + os 2 sinais de topo + uma linha no início do jogo. Preparando o estilo do widget:
+
+## 🤖 Claude *(00:28:43)*
+
+
+🛠️ **Tool Call**: `mcp__visualize__read_me`
+```json
+{
+  "modules": [
+    "chart"
+  ],
+  "platform": "desktop"
+}
+```
+
+> **Tool Result (mcp__visualize__read_me)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '# Imagine — Visual Creation Suite\n\n## Modules\nCall read_me again with the modules parameter to load detailed guidance:\n- `diagram` — SVG flowcharts, structural diagrams, illustrative diagrams\n- `mockup` — UI mockups, forms, cards, dashboards\n- `interactive` — interactive explainers with controls\n- `chart` — charts, data analysis, geographic maps (Chart.js, D3 choropleth)\n- `art` — illustration and generative art\nPick the closest fit. The module includes all relevant design guidance.\n\n**Complexity budget — hard limits:**\n- Box subtitles: ≤5 words. Detail goes in click-through (`sendPrompt`) or the prose below — not the box.\n- Colors: ≤2 ramps per diagram. If colors encode meaning (states, tiers), add a 1-line legend. Otherwise use one neutral ramp.\n- Horizontal tier: ≤4 boxes at full width (~140px each). 5+ boxes → shrink to ≤110px OR wrap to 2 rows OR split into overview + detail diagrams.\n\nIf you catch yourself writing "click to learn more" in prose, the diagram itself must ACTUALLY be sparse. Don\'t promise brevity then front-load everything.\n\n**Accessibility:** For HTML widgets, begin with a visually-hidden `<h2 class="sr-only">` containing a one-sentence summary of the visualization for screen-reader users. (SVG widgets use `role="img"` with `<title>` and `<desc>` instead — see SVG setup.)\n\nYou create rich visual content — SVG diagrams/illustrations and HTML interactive widgets — that renders inline in conversation. The best output feels like a natural extension of the chat.\n\n## Core Design System\n\nThese rules apply to ALL use cases.\n\n### Philosophy\n- **Seamless**: Users shouldn\'t notice where claude.ai ends and your widget begins.\n- **Flat**: No gradients, mesh backgrounds, noise textures, or decorative effects. Clean flat surfaces.\n- **Compact**: Show the essential inline. Explain the rest in text.\n- **Text goes in your response, visuals go in the tool** — All explanatory text, descriptions, introductions, and summaries must be written as normal response text OUTSIDE the tool call. The tool output should contain ONLY the visual element (diagram, chart, interactive widget). Never put paragraphs of explanation, section headings, or descriptive prose inside the HTML/SVG. If the user asks "explain X", write the explanation in your response and use the tool only for the visual that accompanies it. The user\'s font settings only apply to your response text, not to text inside the widget.\n\n### Streaming\nOutput streams token-by-token. Structure code so useful content appears early.\n- **HTML**: `<style>` (short) → content HTML → `<script>` last.\n- **SVG**: `<defs>` (markers) → visual elements immediately.\n- Prefer inline `style="..."` over `<style>` blocks — inputs/controls must look correct mid-stream.\n- Keep `<style>` under ~15 lines. Interactive widgets with inputs and sliders need more style rules — that\'s fine, but don\'t bloat with decorative CSS.\n- Gradients, shadows, and blur flash during streaming DOM diffs. Use solid flat fills instead.\n\n### Rules\n- No `<!-- comments -->` or `/* comments */` (waste tokens, break streaming)\n- No font-size below 11px\n- No emoji. Icons = Tabler **outline** webfont (5800+, already loaded): `<i class="ti ti-home"></i>`. Outline only — never use `-filled` suffixes (`ti-heart-filled` etc. are not loaded and will render blank). Inherits color + font-size from parent. Decorative icons get `aria-hidden="true"`; icon-only buttons get `aria-label`. Common: ti-home ti-settings ti-user ti-search ti-x ti-check ti-plus ti-trash ti-edit ti-download ti-upload ti-file ti-folder ti-chart-bar ti-calendar ti-clock ti-arrow-right ti-arrow-left ti-chevron-down ti-external-link ti-copy ti-refresh ti-player-play ti-player-pause ti-heart ti-star ti-bell ti-mail ti-lock ti-eye ti-menu-2. Don\'t hand-draw icon SVG paths.\n- No gradients, drop shadows, blur, glow, or neon effects\n- No dark/colored backgrounds on outer containers (transparent only — host provides the bg)\n- **Typography**: The default font is Anthropic Sans. For the rare editorial/blockquote moment, use `font-family: var(--font-serif)`.\n- **Headings**: h1 = 22px, h2 = 18px, h3 = 16px — all `font-weight: 500`. Heading color is pre-set to `var(--color-text-primary)` — don\'t override it. Body text = 16px, weight 400, `line-height: 1.7`. **Two weights only: 400 regular, 500 bold.** Never use 600 or 700 — they look heavy against the host UI.\n- **Sentence case** always. Never Title Case, never ALL CAPS. This applies everywhere including SVG text labels and diagram headings.\n- **No mid-sentence bolding**, including in your response text around the tool call. Entity names, class names, function names go in `code style` not **bold**. Bold is for headings and labels only.\n- The widget container is `display: block; width: 100%`. Your HTML fills it naturally — no wrapper div needed. Just start with your content directly. If you want vertical breathing room, add `padding: 1rem 0` on your first element.\n- Never use `position: fixed` — the iframe viewport sizes itself to your in-flow content height, so fixed-positioned elements (modals, overlays, tooltips) collapse it to `min-height: 100px`. For modal/overlay mockups: wrap everything in a normal-flow `<div style="min-height: 400px; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">` and put the modal inside — it\'s a faux viewport that actually contributes layout height.\n- No DOCTYPE, `<html>`, `<head>`, or `<body>` — just content fragments.\n- When placing text on a colored background (badges, pills, cards, tags), use the darkest shade from that same color family for the text — never plain black or generic gray.\n- **Corners**: use `border-radius: var(--border-radius-md)` (or `-lg` for cards) in HTML. In SVG, `rx="4"` is the default — larger values make pills, use only when you mean a pill.\n- **No rounded corners on single-sided borders** — if using `border-left` or `border-top` accents, set `border-radius: 0`. Rounded corners only work with full borders on all sides.\n- **No titles or prose inside the tool output** — see Philosophy above.\n- **Icon sizing**: Tabler `<i class="ti …">` sizes with `font-size` — 16–20px inline, 24px max decorative. For one-off inline SVG icons, set `width`/`height` explicitly (same limits).\n- No tabs, carousels, or `display: none` sections during streaming — hidden content streams invisibly. Show all content stacked vertically. (Post-streaming JS-driven steppers are fine — see Illustrative/Interactive sections.)\n- No nested scrolling — auto-fit height.\n- Scripts execute after streaming — load libraries via `<script src="https://cdnjs.cloudflare.com/ajax/libs/...">` (UMD globals), then use the global in a plain `<script>` that follows.\n- **CDN allowlist (CSP-enforced)**: external resources may ONLY load from `cdnjs.cloudflare.com`, `esm.sh`, `cdn.jsdelivr.net`, `unpkg.com`, `fonts.googleapis.com`, `fonts.gstatic.com`. All other origins are blocked by the sandbox — the request silently fails.\n\n### CSS Variables\n**Backgrounds**: `--color-background-primary` (white), `-secondary` (surfaces), `-tertiary` (page bg), `-info`, `-danger`, `-success`, `-warning`\n**Text**: `--color-text-primary` (black), `-secondary` (muted), `-tertiary` (hints), `-info`, `-danger`, `-success`, `-warning`\n**Borders**: `--color-border-tertiary` (0.15α, default), `-secondary` (0.3α, hover), `-primary` (0.4α), semantic `-info/-danger/-success/-warning`\n**Typography**: `--font-sans`, `--font-serif`, `--font-mono`\n**Layout**: `--border-radius-md` (8px), `--border-radius-lg` (12px — preferred for most components), `--border-radius-xl` (16px)\nAll auto-adapt to light/dark mode. For custom colors in HTML, use CSS variables.\n\n**Dark mode is mandatory** — every color must work in both modes:\n- In SVG: use the pre-built color classes (`c-blue`, `c-teal`, `c-amber`, etc.) for colored nodes — they handle light/dark mode automatically. Never write `<style>` blocks for colors.\n- In SVG: every `<text>` element needs a class (`t`, `ts`, `th`) — never omit fill or use `fill="inherit"`. Inside a `c-{color}` parent, text classes auto-adjust to the ramp.\n- In HTML: always use CSS variables (--color-text-primary, --color-text-secondary) for text. Never hardcode colors like color: #333 — invisible in dark mode.\n- Mental test: if the background were near-black, would every text element still be readable?\n\n### sendPrompt(text)\nA global function that sends a message to chat as if the user typed it. Use it when the user\'s next step benefits from Claude thinking. Handle filtering, sorting, toggling, and calculations in JS instead.\n\n### Links\n`<a href="https://...">` just works — clicks are intercepted and open the host\'s link-confirmation dialog. Or call `openLink(url)` directly.\n\n## When nothing fits\nPick the closest use case below and adapt. When nothing fits cleanly:\n- Default to editorial layout if the content is explanatory\n- Default to card layout if the content is a bounded object\n- All core design system rules still apply\n- Use `sendPrompt()` for any action that benefits from Claude thinking\n\n\n## UI components\n\n### Layout width\nThe widget container is 680px wide. Use `repeat(auto-fit, minmax(160px, 1fr))` for responsive columns — auto-fit lets the grid pick column count by available width.\n\n### Aesthetic\nFlat, clean, white surfaces. Minimal 0.5px borders. Generous whitespace. No gradients, no shadows (except functional focus rings). Everything should feel native to claude.ai — like it belongs on the page, not embedded from somewhere else.\n\n### Tokens\n- Borders: always `0.5px solid var(--color-border-tertiary)` (or `-secondary` for emphasis)\n- Corner radius: `var(--border-radius-md)` for most elements, `var(--border-radius-lg)` for cards\n- Cards: white bg (`var(--color-background-primary)`), 0.5px border, radius-lg, padding 1rem 1.25rem\n- Form elements (input, select, textarea, button, range slider) are pre-styled — write bare tags. Text inputs are 36px with hover/focus built in; range sliders have 4px track + 18px thumb; buttons have outline style with hover/active. Only add inline styles to override (e.g., different width).\n- Buttons: pre-styled with transparent bg, 0.5px border-secondary, hover bg-secondary, active scale(0.98). If it triggers sendPrompt, append a ↗ arrow.\n- **Round every displayed number.** JS float math leaks artifacts — `0.1 + 0.2` gives `0.30000000000000004`, `7 * 1.1` gives `7.700000000000001`. Any number that reaches the screen (slider readouts, stat card values, axis labels, data-point labels, tooltips, computed totals) must go through `Math.round()`, `.toFixed(n)`, or `Intl.NumberFormat`. Pick the precision that makes sense for the context — integers for counts, 1–2 decimals for percentages, `toLocaleString()` for currency. For range sliders, also set `step="1"` (or step="0.1" etc.) so the input itself emits round values.\n- Spacing: use rem for vertical rhythm (1rem, 1.5rem, 2rem), px for component-internal gaps (8px, 12px, 16px)\n- Box-shadows: none, except `box-shadow: 0 0 0 Npx` focus rings on inputs\n\n### Metric cards\nFor summary numbers (revenue, count, percentage) — surface card with muted 13px label above, 24px/500 number below. `background: var(--color-background-secondary)`, no border, `border-radius: var(--border-radius-md)`, padding 1rem. Use in grids of 2-4 with `gap: 12px`. Distinct from raised cards (which have white bg + border).\n\n### Layout\n- Editorial (explanatory content): no card wrapper, prose flows naturally\n- Card (bounded objects like a contact record, receipt): single raised card wraps the whole thing\n- Don\'t put tables here — output them as markdown in your response text\n\n**Grid overflow:** `grid-template-columns: 1fr` has `min-width: auto` by default — children with large min-content push the column past the container. Use `minmax(0, 1fr)` to clamp.\n\n**Table overflow:** Tables with many columns auto-expand past `width: 100%` if cell contents exceed it. In constrained layouts (≤700px), use `table-layout: fixed` and set explicit column widths, or reduce columns, or allow horizontal scroll on a wrapper.\n\n### Mockup presentation\nContained mockups — mobile screens, chat threads, single cards, modals, small UI components — should sit on a background surface (`var(--color-background-secondary)` container with `border-radius: var(--border-radius-lg)` and padding, or a device frame) so they don\'t float naked on the widget canvas. Full-width mockups like dashboards, settings pages, or data tables that naturally fill the viewport do not need an extra wrapper.\n\n### 1. Interactive explainer — learn how something works\n*"Explain how compound interest works" / "Teach me about sorting algorithms"*\n\nUse HTML for the interactive controls — sliders, buttons, live state displays, charts. Keep prose explanations in your normal response text (outside the tool call), not embedded in the HTML. No card wrapper. Whitespace is the container.\n\n```html\n<div style="display: flex; align-items: center; gap: 12px; margin: 0 0 1.5rem;">\n  <label style="font-size: 14px; color: var(--color-text-secondary);">Years</label>\n  <input type="range" min="1" max="40" value="20" id="years" style="flex: 1;" />\n  <span style="font-size: 14px; font-weight: 500; min-width: 24px;" id="years-out">20</span>\n</div>\n\n<div style="display: flex; align-items: baseline; gap: 8px; margin: 0 0 1.5rem;">\n  <span style="font-size: 14px; color: var(--color-text-secondary);">£1,000 →</span>\n  <span style="font-size: 24px; font-weight: 500;" id="result">£3,870</span>\n</div>\n\n<div style="margin: 2rem 0; position: relative; height: 240px;">\n  <canvas id="chart"></canvas>\n</div>\n```\n\nUse `sendPrompt()` to let users ask follow-ups: `sendPrompt(\'What if I increase the rate to 10%?\')`\n\n### 2. Compare options — decision making\n*"Compare pricing and features of these products" / "Help me choose between React and Vue"*\n\nUse HTML. Side-by-side card grid for options. Highlight differences with semantic colors. Interactive elements for filtering or weighting.\n\n- Each option in a card. Use badges for key differentiators. A leading Tabler icon (`<i class="ti ti-NAME">` at 20px, `aria-hidden`) anchors each option visually — pick the most apt name per option.\n- Add `sendPrompt()` buttons: `sendPrompt(\'Tell me more about the Pro plan\')`\n- Don\'t put comparison tables inside this tool — output them as regular markdown tables in your response text instead. The tool is for the visual card grid only.\n- When one option is recommended or "most popular", accent its card with `border: 2px solid var(--color-border-info)` only (2px is deliberate — the only exception to the 0.5px rule, used to accent featured items) — keep the same background and border as the other cards. Add a small badge (e.g. "Most popular") above or inside the card header using `background: var(--color-background-info); color: var(--color-text-info); font-size: 12px; padding: 4px 12px; border-radius: var(--border-radius-md)`.\n\n### 3. Data record — bounded UI object\n*"Show me a Salesforce contact card" / "Create a receipt for this order"*\n\nUse HTML. Wrap the entire thing in a single raised card. All content is sans-serif since it\'s pure UI. Use an avatar/initials circle for people (see example below).\n\n```html\n<div style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1rem 1.25rem;">\n  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">\n    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-background-info); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 14px; color: var(--color-text-info);">MR</div>\n    <div>\n      <p style="font-weight: 500; font-size: 15px; margin: 0;">Maya Rodriguez</p>\n      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0;">VP of Engineering</p>\n    </div>\n  </div>\n  <div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 12px;">\n    <table style="width: 100%; font-size: 13px;">\n      <tr><td style="color: var(--color-text-secondary); padding: 4px 0;"><i class="ti ti-mail" style="font-size:16px; vertical-align:-2px; margin-right:6px" aria-hidden="true"></i>Email</td><td style="text-align: right; padding: 4px 0; color: var(--color-text-info);">m.rodriguez@acme.com</td></tr>\n      <tr><td style="color: var(--color-text-secondary); padding: 4px 0;"><i class="ti ti-phone" style="font-size:16px; vertical-align:-2px; margin-right:6px" aria-hidden="true"></i>Phone</td><td style="text-align: right; padding: 4px 0;">+1 (415) 555-0172</td></tr>\n    </table>\n  </div>\n</div>\n```\n\n\n## Color palette\n\n9 color ramps, each with 7 stops from lightest to darkest. 50 = lightest fill, 100-200 = light fills, 400 = mid tones, 600 = strong/border, 800-900 = text on light fills.\n\n| Class | Ramp | 50 (lightest) | 100 | 200 | 400 | 600 | 800 | 900 (darkest) |\n|-------|------|------|-----|-----|-----|-----|-----|------|\n| `c-purple` | Purple | #EEEDFE | #CECBF6 | #AFA9EC | #7F77DD | #534AB7 | #3C3489 | #26215C |\n| `c-teal` | Teal | #E1F5EE | #9FE1CB | #5DCAA5 | #1D9E75 | #0F6E56 | #085041 | #04342C |\n| `c-coral` | Coral | #FAECE7 | #F5C4B3 | #F0997B | #D85A30 | #993C1D | #712B13 | #4A1B0C |\n| `c-pink` | Pink | #FBEAF0 | #F4C0D1 | #ED93B1 | #D4537E | #993556 | #72243E | #4B1528 |\n| `c-gray` | Gray | #F1EFE8 | #D3D1C7 | #B4B2A9 | #888780 | #5F5E5A | #444441 | #2C2C2A |\n| `c-blue` | Blue | #E6F1FB | #B5D4F4 | #85B7EB | #378ADD | #185FA5 | #0C447C | #042C53 |\n| `c-green` | Green | #EAF3DE | #C0DD97 | #97C459 | #639922 | #3B6D11 | #27500A | #173404 |\n| `c-amber` | Amber | #FAEEDA | #FAC775 | #EF9F27 | #BA7517 | #854F0B | #633806 | #412402 |\n| `c-red` | Red | #FCEBEB | #F7C1C1 | #F09595 | #E24B4A | #A32D2D | #791F1F | #501313 |\n\n**How to assign colors**: Color should encode meaning, not sequence. Don\'t cycle through colors like a rainbow (step 1 = blue, step 2 = amber, step 3 = red...). Instead:\n- Group nodes by **category** — all nodes of the same type share one color. E.g. in a vaccine diagram: all immune cells = purple, all pathogens = coral, all outcomes = teal.\n- For illustrative diagrams, map colors to **physical properties** — warm ramps for heat/energy, cool for cold/calm, green for organic, gray for structural/inert.\n- Use **gray for neutral/structural** nodes (start, end, generic steps).\n- Use **2-3 colors per diagram**, not 6+. More colors = more visual noise. A diagram with gray + purple + teal is cleaner than one using every ramp.\n- **Prefer purple, teal, coral, pink** for general diagram categories. Reserve blue, green, amber, and red for cases where the node genuinely represents an informational, success, warning, or error concept — those colors carry strong semantic connotations from UI conventions. (Exception: illustrative diagrams may use blue/amber/red freely when they map to physical properties like temperature or pressure.)\n\n**Text on colored backgrounds:** Always use the 800 or 900 stop from the same ramp as the fill. Never use black, gray, or --color-text-primary on colored fills. **When a box has both a title and a subtitle, they must be two different stops** — title darker (800 in light mode, 100 in dark), subtitle lighter (600 in light, 200 in dark). Same stop for both reads flat; the weight difference alone isn\'t enough. For example, text on Blue 50 (#E6F1FB) must use Blue 800 (#0C447C) or 900 (#042C53), not black. This applies to SVG text elements inside colored rects, and to HTML badges, pills, and labels with colored backgrounds.\n\n**Light/dark mode quick pick** — use only stops from the table, never off-table hex values:\n- **Light mode**: 50 fill + 600 stroke + **800 title / 600 subtitle**\n- **Dark mode**: 800 fill + 200 stroke + **100 title / 200 subtitle**\n- Apply `c-{ramp}` to a `<g>` wrapping shape+text, or directly to a `<rect>`/`<circle>`/`<ellipse>`. Never to `<path>` — paths don\'t get ramp fill. For colored connector strokes use inline `stroke="#..."` (any mid-ramp hex works in both modes). Dark mode is automatic for ramp classes. Available: c-gray, c-blue, c-red, c-amber, c-green, c-teal, c-purple, c-coral, c-pink.\n\nFor status/semantic meaning in UI (success, warning, danger) use CSS variables. For categorical coloring in both diagrams and UI, use these ramps.\n\n\n\n## Charts (Chart.js)\n```html\n<div style="position: relative; width: 100%; height: 300px;">\n  <canvas id="myChart" role="img" aria-label="Bar chart of quarterly revenue, Q1 through Q4">Quarterly revenue: Q1 12, Q2 19, Q3 8, Q4 15.</canvas>\n</div>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>\n<script>\n  new Chart(document.getElementById(\'myChart\'), {\n    type: \'bar\',\n    data: { labels: [\'Q1\',\'Q2\',\'Q3\',\'Q4\'], datasets: [{ label: \'Revenue\', data: [12,19,8,15] }] },\n    options: { responsive: true, maintainAspectRatio: false }\n  });\n</script>\n```\n\n**Chart.js rules**:\n- Every `<canvas>` MUST have `role="img"` and a descriptive `aria-label` summarizing what the chart shows, plus fallback text between the tags. Without these the chart is invisible to screen readers.\n- Never rely on color alone to distinguish data series. Pair each color with a secondary visual cue — dash pattern for lines, marker shape for scatter, fill pattern/hatching for bars and pie slices — and show both color and cue in the legend.\n- Canvas cannot resolve CSS variables. Use hardcoded hex or Chart.js defaults.\n- Wrap `<canvas>` in `<div>` with explicit `height` and `position: relative`.\n- **Canvas sizing**: set height ONLY on the wrapper div, never on the canvas element itself. Use position: relative on the wrapper and responsive: true, maintainAspectRatio: false in Chart.js options. Never set CSS height directly on canvas — this causes wrong dimensions, especially for horizontal bar charts.\n- For horizontal bar charts: wrapper div height should be at least (number_of_bars * 40) + 80 pixels.\n- Load UMD build via `<script src="https://cdnjs.cloudflare.com/ajax/libs/...">` — sets `window.Chart` global. Follow with plain `<script>` (no `type="module"`).\n- Multiple charts: use unique IDs (`myChart1`, `myChart2`). Each gets its own canvas+div pair.\n- For bubble and scatter charts: bubble radii extend past their center points, so points near axis boundaries get clipped. Pad the scale range — set `scales.y.min` and `scales.y.max` ~10% beyond your data range (same for x). Or use `layout: { padding: 20 }` as a blunt fallback.\n- Chart.js auto-skips x-axis labels when they\'d overlap. If you have ≤12 categories and need all labels visible (waterfall, monthly series), set `scales.x.ticks: { autoSkip: false, maxRotation: 45 }` — missing labels make bars unidentifiable.\n\n**Number formatting**: negative values are `-$5M` not `$-5M` — sign before currency symbol. Use a formatter: `(v) => (v < 0 ? \'-\' : \'\') + \'$\' + Math.abs(v) + \'M\'`.\n\n**Legends** — always disable Chart.js default and build custom HTML. The default uses round dots and no values; custom HTML gives small squares, tight spacing, and percentages:\n\n```js\nplugins: { legend: { display: false } }\n```\n\n```html\n<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; font-size: 12px; color: var(--color-text-secondary);">\n  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #3266ad;"></span>Chrome 65%</span>\n  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #73726c;"></span>Safari 18%</span>\n</div>\n```\n\nInclude the value/percentage in each label when the data is categorical (pie, donut, single-series bar). Position the legend above the chart (`margin-bottom`) or below (`margin-top`) — not inside the canvas.\n\n**Dashboard layout** — wrap summary numbers in metric cards (see UI fragment) above the chart. Chart canvas flows below without a card wrapper. Use `sendPrompt()` for drill-down: `sendPrompt(\'Break down Q4 by region\')`.\n\n## Geographic maps (D3 choropleth)\n\n**Never invent coordinates** — no hand-drawn SVG paths, no inline GeoJSON. Fetch real topology or don\'t draw a map.\n\nThree topology sources on jsdelivr. Topology JSON may only be fetched from `cdnjs.cloudflare.com`, `esm.sh`, `cdn.jsdelivr.net`, `unpkg.com` (the fetch allowlist — the Google Fonts hosts are stylesheet/font-only, not fetch targets) — do NOT try `raw.githubusercontent.com` or other hosts, the fetch will silently fail. Other package names like `uk-atlas` don\'t exist (404).\n- US states: `https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json` → `d3.geoAlbersUsa()`, object key `.states`\n- World countries: `https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json` → `d3.geoNaturalEarth1()`, object key `.countries`\n- Per-country subdivisions: `https://cdn.jsdelivr.net/npm/datamaps@0.5.10/src/js/data/{iso3}.topo.json` (lowercase alpha-3: `deu`, `jpn`, `gbr`...), object key `.{iso3}`\n\n**Before writing the widget, web_fetch the topology URL you\'ll use.** The first ~1KB shows the real feature `id` and `properties.name` values — key your data on those, don\'t guess. Granularity varies (a file might have 16 features or 232) and there\'s no rollup column; if what\'s there doesn\'t match what the user asked for, say so.\n\n```html\n<div id="map" style="width: 100%;"></div>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>\n<script>\nconst values = { \'California\': 39, \'Texas\': 30, \'New York\': 19 /* ...keyed on what you saw in web_fetch */ };\nconst isDark = matchMedia(\'(prefers-color-scheme: dark)\').matches;\nconst color = d3.scaleQuantize([0, 40], isDark ? d3.schemeBlues[5].slice().reverse() : d3.schemeBlues[5]);\nconst svg = d3.select(\'#map\').append(\'svg\').attr(\'viewBox\', \'0 0 900 560\').attr(\'width\', \'100%\');\nconst path = d3.geoPath(d3.geoAlbersUsa().scale(1100).translate([450, 280]));\nd3.json(\'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json\').then(us => {\n  svg.selectAll(\'path\').data(topojson.feature(us, us.objects.states).features).join(\'path\')\n    .attr(\'d\', path).attr(\'stroke\', isDark ? \'rgba(255,255,255,.15)\' : \'#fff\')\n    .attr(\'fill\', d => color(values[d.properties.name] ?? 0));\n});\n</script>\n```\n'}]
+> ```
+
+## 🤖 Claude *(00:29:24)*
+
+
+## 🤖 Claude *(00:29:24)*
+
+Antes de desenhar, vou confirmar os horários exatos (pra não atribuir o pico ao jogo erroneamente):
+
+## 🤖 Claude *(00:29:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for ms in 1781910300000 1781913360000 1781915040000; do\n  s=$((ms/1000))\n  printf \"%s -> UTC %s | BRT %s\\n\" \"$ms\" \"$(date -u -d @$s '+%H:%M')\" \"$(TZ=America/Sao_Paulo date -d @$s '+%H:%M')\"\ndone\necho \"game marker 00:19 UTC -> epoch ms: $(date -u -d '2026-06-20 00:19:00' '+%s')000\"",
+  "description": "Convert key candle timestamps + game-start to UTC/BRT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1781910300000 -> UTC 23:05 | BRT 20:05
+> 1781913360000 -> UTC 23:56 | BRT 20:56
+> 1781915040000 -> UTC 00:24 | BRT 21:24
+> game marker 00:19 UTC -> epoch ms: 1781914740000
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -6332,6 +7101,5 @@ Atualizo o índice `MEMORY.md`:
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-18 - d7c8c9da-f4e1-4286-b1f5-5d9a47531010]]
-> * **Próxima Sessão**: [[2026-06-19 - Implement shake-hands endpoint]]
+> * **Sessão Anterior**: [[2026-06-19 - agent-af6d93040e18b75ff]]
 %% --- TIMELINE END --- %%
