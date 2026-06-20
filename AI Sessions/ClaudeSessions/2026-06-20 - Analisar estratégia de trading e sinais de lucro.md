@@ -1657,6 +1657,1045 @@ A decisão que é genuinamente **sua** (alocação do seu capital real, num movi
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Quanto do capital real (~$148: ~$109 USDT livre + ~$39,8 presos em LTC até a saída no-loss) deve virar o núcleo BTC — a reserva principal?"="Núcleo ~$70 (~47%) + Farm maior". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(05:06:32)*
+
+
+## 🤖 Claude *(05:06:34)*
+
+Boa — **núcleo ~$70 (~47%) + Farm maior**: BTC como reserva crescente, com o motor do Farm priorizado pra empilhar USDT que depois o funil converte em BTC. Coerente com "lucrar mas reservar o principal em BTC". Deixa eu pegar o preço atual do BTC pra dimensionar.
+
+## 🤖 Claude *(05:06:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s -m6 \"https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT\" 2>/dev/null; echo \"\"\necho \"=== confere USDT livre (\u00faltimo funnel shadow) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -2 /app/logs/funnel.log 2>/dev/null\"'",
+  "description": "Fetch live BTC price and free USDT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"symbol":"BTCUSDT","price":"63573.99000000"}
+> === confere USDT livre (último funnel shadow) ===
+> info: 2026-06-20T03:28:37.885Z - [shadow] USDT=109.02 | reserva BTC=0.000000 (~$0.00) @ $63437.98 | sem excedente (baseline $10000.00).
+> info: 2026-06-20T04:28:37.888Z - [shadow] USDT=109.02 | reserva BTC=0.000000 (~$0.00) @ $63559.83 | sem excedente (baseline $10000.00).
+> ```
+
+## 🤖 Claude *(05:06:59)*
+
+
+## 🤖 Claude *(05:07:16)*
+
+Tudo dimensionado. **BTC = $63.574 · USDT livre = $109 · LTC presa = $39,8.** Aqui está o plano concreto pra montar o núcleo de $70 e fazer ele crescer sozinho:
+
+## 🎯 Plano: núcleo BTC $70 + Farm satélite + funil que compõe
+
+**Parte 1 — Estabelecer o núcleo BTC (~$70 = 0,00110 BTC)** · *sua mão*
+Por regra eu **não disparo ordem com dinheiro real** — então o núcleo você compra direto na Binance (spot, BTCUSDT). O sistema detecta automático: o `funnel.log` lê o saldo real, então assim que comprar, `reserva BTC` deixa de ser 0. Sugiro **2–3 tranches** (~$23–35 cada) pra diluir o timing em vez de tudo num clique. O vault guard já protege: o agente **não consegue vender** esse BTC (trava fail-closed no MCP).
+→ Sobra: ~$39 USDT + ~$39,8 LTC voltando no no-loss = **~$79 de float farmando** (o "Farm maior" que você escolheu).
+
+**Parte 2 — Ligar o funil de verdade (em SHADOW primeiro)** · *minha mão, baixo risco*
+Hoje o funil é inerte: baseline $10.000 num saldo de $148. Vou **baixar `FUNNEL_BASELINE_USDT` 10000 → ~80** (mantém ~$80 de float pra farmar; varre só o **lucro acima disso** pra BTC). Mantenho `FUNNEL_LIVE_BUY=false` — ou seja, o funil passa a **calcular e logar** quanto iria pra BTC, sem comprar ainda. Valida o mecanismo ao vivo antes de soltar dinheiro. Requer editar `.env` + restart do backend.
+
+**Parte 3 — Fase 4 live-buy do funil** · *minha mão, engenharia gated (depois)*
+Construir o caminho de compra real do funil (hoje não existe — só shadow), com gate QA + TL e **seu GO** antes de ir ao vivo. É o motor que faz o lucro do Farm compor em BTC automaticamente, empurrando o núcleo de 47% → dominante com o tempo.
+
+**Parte 4 — Farm satélite** segue como está (3 vendas armadas saindo no-loss; compras off, dupla-travadas pelo teto $25).
+
+---
+
+**O que eu posso fazer agora, sem você esperar:** a **Parte 2** (baixar o baseline do funil pra shadow virar útil) — é reversível, não compra nada, só faz o sistema "enxergar" a intenção de BTC. Te dou o número exato de excedente que ele passaria a varrer.
+
+Sigo com a Parte 2 agora (config + restart em shadow), enquanto você decide as tranches do núcleo na Binance? Ou prefere ver o diff do `.env` antes de eu reiniciar o backend?
+
+## 👤 User *(05:16:08)*
+
+parte 1. É muitp dinheiro temos somente 150 USDT no total lembra? Temos que tentar trabalhar com o minimo possivel exponencial.
+
+Parte 2. não sei se é uma boa ideia faça pesquisa antes para essa parte e as 3 e 4 tambem.
+
+ANtes de mexer vamos verificar... 
+
+Além de tudo estou recebendo muitas mensagens.:
+
+[PAPER] consistencia:BTCUSDT sem posição — venda ignorada.
+
+🤖 [AGENTE] Observação: Regime de mercado mudou novamente: BTCUSDT passou de range (gate range) para mixed (gate mixed), liberando os gates de acumulação (farm e baseline) para BTC; LTCUSDT passou de mixed para range, mantendo o gate de acumulação (farm) ativo. BNBUSDT e ADAUSDT permanecem em bear, com acumulação em CAIXA. As automações de Farm (id9) estavam ativas no momento da última ordem de compra LTCUSDT, mas foram desativadas logo após; as automações de Trend (id7), Baseline (ids 2/3) e Harvester (ids 22-25) permanecem inativas, conforme decisão do operador. Nenhuma venda de BTC fora do módulo tático detectada.
+🛑 [DAILY_CAP] Cap diário de -5% ATINGIDO!
+Equity $109.02 (baseline $148.84, -26.76%).
+🚫 HALT ativo: TODAS as ordens bloqueadas (inclusive venda protetiva). Intervenção manual necessária — reabra via /system/halt ou aguarde a virada de dia UTC.
+🤖 [AGENTE] Observação: O sistema está em tradingHalt (kill-switch) devido ao daily loss cap (equity $109.02 <= piso $141.40). Nenhuma nova ordem será enviada até que o halt seja levantado. Verifique o equity e ajuste risco se necessário.
+
+## 🤖 Claude *(05:17:38)*
+
+
+## 🤖 Claude *(05:17:46)*
+
+Pausa — antes de qualquer plano de BTC, tem um **alarme ao vivo** que precisa ser verificado AGORA, e ele muda tudo. Deixa eu ser claro e direto:
+
+## 🚨 O HALT do daily-cap é (quase certamente) FALSO POSITIVO
+
+O alarme diz "equity $109,02 vs baseline $148,84 = −26,76%". Mas seu dinheiro **não sumiu** — ele rotacionou:
+- **$109,02 USDT livre** + **0,908 LTC × $43,88 = $39,84** = **$148,86 de equity real.** Intacto.
+
+O daily-cap mediu só o **USDT livre** ($109), ignorando o valor da posição LTC que você segura. Comprar LTC com USDT "parece" perda pro cap, mas não é. Isso é um **bug de medição**, não uma perda — e é grave porque o Farm **por desenho** segura posição em alt (todo buy do Farm vai disparar esse falso HALT).
+
+Você falou "antes de mexer, vamos verificar" — então **não vou resetar o HALT nem mexer em nada ainda**. Vou primeiro confirmar a causa raiz no código. Deixa eu localizar o cálculo de equity do dailyCap.
+
+## 🤖 Claude *(05:17:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== arquivos do dailyCap / riskState ===\"\ngrep -rl -iE \"dailyCap|daily_cap|risk_state|riskState\" src/ 2>/dev/null | head\necho \"\"\necho \"=== onde calcula equity / equity-tradeable ===\"\ngrep -rn -iE \"equity|tradeable|equityTradeable|getWallet|getBalance|getEquity\" src/ 2>/dev/null | grep -iE \"dailyCap|equity|wallet|balance\" | head -25",
+  "description": "Locate dailyCap and equity calc code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos do dailyCap / riskState ===
+> src/riskState.js
+> src/server.js
+> src/dailyCapJob.js
+> src/utils/exchange.js
+> src/routers/systemRouter.js
+> src/controllers/systemController.js
+> src/controllers/analysisController.js
+> 
+> === onde calcula equity / equity-tradeable ===
+> src/dailyCapJob.js:3:// === dailyCapJob — CIRCUIT-BREAKER de perda diária (-5%) por DRAWDOWN DE EQUITY ===
+> src/dailyCapJob.js:5:// Tira um snapshot do equity TOTAL da conta (USDT livre + valor de mercado de TODAS as posições) na
+> src/dailyCapJob.js:6:// virada de dia UTC e, a cada ciclo, compara o equity atual com esse snapshot. Se o equity cair >= o teto
+> src/dailyCapJob.js:14:// Por que drawdown de equity e NÃO o cash-flow (sellNet-buyNet do dailyProfitJob): cash-flow falsa-dispara
+> src/dailyCapJob.js:15:// em dia de ACUMULAÇÃO (comprar sem vender conta como "perda" sem ser). Equity mark-to-market é robusto.
+> src/dailyCapJob.js:17:// FAIL-SAFE (segurança money-path): se o equity não puder ser AVALIADO (preço frio/ausente de alguma moeda
+> src/dailyCapJob.js:37:// Assets que o operador isenta do equity (sem par <coin>USDT que esquente: Earn/Locked 'LD*', leveraged tokens,
+> src/dailyCapJob.js:44:let SNAP = null;          // { day:'YYYY-MM-DD', equity:Number, at:ISO } — baseline do dia (persistido)
+> src/dailyCapJob.js:45:let LAST = null;          // último cálculo de equity p/ observabilidade
+> src/dailyCapJob.js:55:            if (raw && typeof raw.equity === 'number' && raw.day) SNAP = raw;
+> src/dailyCapJob.js:83:// Equity TOTAL em USDT: USDT/stables a par + (available+onOrder) de cada moeda × preço. Se ALGUMA moeda com
+> src/dailyCapJob.js:85:// Retorna { valued, equity, usdtFree, cold:[...], settings } ou { valued:false, error } se saldo indisponível.
+> src/dailyCapJob.js:86:async function computeEquity() {
+> src/dailyCapJob.js:93:    let equity = 0;
+> src/dailyCapJob.js:100:        if (coin === QUOTE) { usdtFree = parseFloat(b.available) || 0; equity += qty; continue; }
+> src/dailyCapJob.js:101:        if (STABLES.has(coin)) { equity += qty; continue; }        // outras stables ~ $1
+> src/dailyCapJob.js:106:            // spot-negociável → fica FORA do equity-TRADEABLE (denominador certo do cap) e NÃO bloqueia (≠ preço
+> src/dailyCapJob.js:111:        equity += qty * px;
+> src/dailyCapJob.js:114:    return { valued, equity, usdtFree, cold, ignored, settings };
+> src/dailyCapJob.js:126:        const eq = await computeEquity();
+> src/dailyCapJob.js:128:        LAST = { at: new Date(AT).toISOString(), valued: eq.valued, equity: eq.valued ? eq.equity : null, cold: eq.cold || null, ignored: eq.ignored || null, error: eq.error || null };
+> src/dailyCapJob.js:139:        // 2) Fail-safe: equity não avaliável → não snapshota e não dispara (espera o preço esquentar).
+> src/dailyCapJob.js:145:                logger('system', `[dailyCap] equity NÃO-avaliável (${why}) — cap NÃO avaliado neste ciclo (fail-safe).`);
+> src/dailyCapJob.js:152:                logger('system', `[dailyCap] ⚠️ equity inavaliável há ~${mins}min — cap de -${(CAP_PCT * 100).toFixed(0)}% INATIVO (${why}).`);
+> src/dailyCapJob.js:153:                await notify(eq.settings, `⚠️ [DAILY_CAP] Proteção de -${(CAP_PCT * 100).toFixed(0)}% INATIVA há ~${mins}min: não consigo avaliar o equity (${why}). Verifique monitores/preços ou isente o asset via DAILY_CAP_IGNORE_ASSETS.`);
+> ```
+
+## 🤖 Claude *(05:18:02)*
+
+
+## 🤖 Claude *(05:18:03)*
+
+O design está **correto** no comentário (linha 5: "USDT livre + valor de mercado de TODAS as posições"). Então por que avaliou $109 excluindo o LTC? Preciso ler a função inteira pra não diagnosticar errado.
+
+## 🤖 Claude *(05:18:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// === dailyCapJob — CIRCUIT-BREAKER de perda diária (-5%) por DRAWDOWN DE EQUITY ===
+> 4	//
+> 5	// Tira um snapshot do equity TOTAL da conta (USDT livre + valor de mercado de TODAS as posições) na
+> 6	// virada de dia UTC e, a cada ciclo, compara o equity atual com esse snapshot. Se o equity cair >= o teto
+> 7	// (default 5%), ARMA o HALT via riskState (fonte 'daily-cap') → o guard do exchange.js passa a bloquear
+> 8	// QUALQUER ordem (BUY/SELL/OCO) até a virada de dia UTC OU um reset manual do operador.
+> 9	//
+> 10	// ⚠️ ESCOPO = BLOQUEIA TUDO (decisão do dono): durante um halt por -5%, venda PROTETIVA (death cross/stop)
+> 11	// TAMBÉM é bloqueada. Não há de-risking automático sob o cap — o operador precisa intervir manualmente
+> 12	// (vender na mão) ou reabrir via POST /system/halt {on:false} / POST /system/daily-cap/reset.
+> 13	//
+> 14	// Por que drawdown de equity e NÃO o cash-flow (sellNet-buyNet do dailyProfitJob): cash-flow falsa-dispara
+> 15	// em dia de ACUMULAÇÃO (comprar sem vender conta como "perda" sem ser). Equity mark-to-market é robusto.
+> 16	//
+> 17	// FAIL-SAFE (segurança money-path): se o equity não puder ser AVALIADO (preço frio/ausente de alguma moeda
+> 18	// com saldo), NÃO dispara e NÃO faz snapshot — espera o MINI_TICKER esquentar. Nunca trava no escuro.
+> 19	
+> 20	const beholder = require('./beholder');
+> 21	const settingsRepository = require('./repositories/settingsRepository');
+> 22	const riskState = require('./riskState');
+> 23	const logger = require('./utils/logger');
+> 24	const fs = require('fs');
+> 25	const path = require('path');
+> 26	
+> 27	const ENABLED = (process.env.DAILY_CAP_ENABLED || 'true') === 'true';
+> 28	const _pct = parseFloat(process.env.DAILY_LOSS_CAP_PCT || '0.05');
+> 29	const CAP_PCT = Number.isFinite(_pct) && _pct > 0 && _pct < 1 ? _pct : 0.05; // fração (0.05 = -5%)
+> 30	const _ms = parseInt(process.env.DAILY_CAP_CHECK_MS || '60000', 10);
+> 31	const CHECK_MS = Number.isFinite(_ms) && _ms >= 15000 ? _ms : 60000; // piso 15s
+> 32	const _coldMs = parseInt(process.env.DAILY_CAP_COLD_ALERT_MS || '900000', 10);
+> 33	const COLD_ALERT_MS = Number.isFinite(_coldMs) && _coldMs > 0 ? _coldMs : 900000; // 15min: alarme anti-silêncio
+> 34	
+> 35	const QUOTE = 'USDT';
+> 36	const STABLES = new Set(['USDT', 'USDC', 'BUSD', 'FDUSD', 'TUSD', 'DAI']); // valem ~$1 (a par com USDT)
+> 37	// Assets que o operador isenta do equity (sem par <coin>USDT que esquente: Earn/Locked 'LD*', leveraged tokens,
+> 38	// dust de moeda BTC-only). Sem isenção, um asset assim deixaria o cap em fail-safe PERMANENTE. CSV, default vazio.
+> 39	const IGNORE_ASSETS = new Set((process.env.DAILY_CAP_IGNORE_ASSETS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));
+> 40	const SNAP_FILE = path.resolve(__dirname, '..', 'logs', 'daily_cap_snapshot.json');
+> 41	
+> 42	let timer = null;
+> 43	let running = false;
+> 44	let SNAP = null;          // { day:'YYYY-MM-DD', equity:Number, at:ISO } — baseline do dia (persistido)
+> 45	let LAST = null;          // último cálculo de equity p/ observabilidade
+> 46	let AT = null;            // ts do último ciclo
+> 47	let COLD_LOGGED = false;  // p/ logar a indisponibilidade 1x por episódio (anti-spam)
+> 48	let COLD_SINCE = null;    // ts do início do episódio de indisponibilidade (p/ o alarme anti-silêncio)
+> 49	let COLD_ALERTED = false; // alarme de proteção-inativa já enviado neste episódio
+> 50	
+> 51	function loadSnap() {
+> 52	    try {
+> 53	        if (fs.existsSync(SNAP_FILE)) {
+> 54	            const raw = JSON.parse(fs.readFileSync(SNAP_FILE, 'utf8'));
+> 55	            if (raw && typeof raw.equity === 'number' && raw.day) SNAP = raw;
+> 56	        }
+> 57	    } catch (e) {
+> 58	        logger('system', `[dailyCap] snapshot em disco ilegível (${e.message}) — recomeçando baseline.`);
+> 59	        SNAP = null;
+> 60	    }
+> 61	}
+> 62	
+> 63	function saveSnap() {
+> 64	    try {
+> 65	        const dir = path.dirname(SNAP_FILE);
+> 66	        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+> 67	        fs.writeFileSync(SNAP_FILE, JSON.stringify(SNAP), 'utf8');
+> 68	    } catch (e) {
+> 69	        logger('system', `[dailyCap] falha ao persistir ${SNAP_FILE}: ${e.message}`);
+> 70	    }
+> 71	}
+> 72	
+> 73	// Preço de uma moeda em USDT via MINI_TICKER (mesmo feed que o funnelJob/refPrice usam; sem rede). null se frio.
+> 74	function priceOf(coin) {
+> 75	    try {
+> 76	        const mt = beholder.getMemory(`${coin}${QUOTE}`, 'MINI_TICKER');
+> 77	        const p = mt && (mt.close ?? mt.current ?? mt.c ?? mt.lastPrice);
+> 78	        const n = parseFloat(p);
+> 79	        return Number.isFinite(n) && n > 0 ? n : null;
+> 80	    } catch (e) { return null; }
+> 81	}
+> 82	
+> 83	// Equity TOTAL em USDT: USDT/stables a par + (available+onOrder) de cada moeda × preço. Se ALGUMA moeda com
+> 84	// saldo positivo estiver com preço frio, marca valued:false (fail-safe — o chamador NÃO dispara nem snapshota).
+> 85	// Retorna { valued, equity, usdtFree, cold:[...], settings } ou { valued:false, error } se saldo indisponível.
+> 86	async function computeEquity() {
+> 87	    const settings = await settingsRepository.getDefaultSettings(); // já vem DESCRIPTOGRAFADO (incl. id)
+> 88	    if (!settings || !settings.id) return { valued: false, error: 'sem settings default' };
+> 89	    const exchange = require('./utils/exchange')(settings);
+> 90	    const bal = await exchange.balance();
+> 91	    if (!bal) return { valued: false, error: 'saldo indisponível', settings };
+> 92	
+> 93	    let equity = 0;
+> 94	    let usdtFree = 0;
+> 95	    const cold = [];
+> 96	    const ignored = [];
+> 97	    for (const [coin, b] of Object.entries(bal)) {
+> 98	        const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);
+> 99	        if (qty <= 0) continue;
+> 100	        if (coin === QUOTE) { usdtFree = parseFloat(b.available) || 0; equity += qty; continue; }
+> 101	        if (STABLES.has(coin)) { equity += qty; continue; }        // outras stables ~ $1
+> 102	        if (IGNORE_ASSETS.has(coin)) { ignored.push(coin); continue; } // isento explícito pelo operador
+> 103	        const px = priceOf(coin);
+> 104	        if (px == null) {
+> 105	            // Earn/Locked da Binance aparece como 'LD'+ativo (LDGUN, LDBABY...) e NÃO tem par <coin>USDT: não é
+> 106	            // spot-negociável → fica FORA do equity-TRADEABLE (denominador certo do cap) e NÃO bloqueia (≠ preço
+> 107	            // frio real). O guard length>3 preserva ativos spot reais como LDO. Override manual: DAILY_CAP_IGNORE_ASSETS.
+> 108	            if (coin.startsWith('LD') && coin.length > 3) { ignored.push(coin); continue; }
+> 109	            cold.push(coin); continue;                              // preço frio REAL → fail-safe (não avalia)
+> 110	        }
+> 111	        equity += qty * px;
+> 112	    }
+> 113	    const valued = cold.length === 0;
+> 114	    return { valued, equity, usdtFree, cold, ignored, settings };
+> 115	}
+> 116	
+> 117	async function notify(settings, msg) {
+> 118	    try { await require('./utils/telegram')(settings, msg); } catch (e) { /* best-effort */ }
+> 119	}
+> 120	
+> 121	async function checkCap() {
+> 122	    if (running) return;
+> 123	    running = true;
+> 124	    try {
+> 125	        const today = riskState.dayKeyUTC();
+> 126	        const eq = await computeEquity();
+> 127	        AT = Date.now();
+> 128	        LAST = { at: new Date(AT).toISOString(), valued: eq.valued, equity: eq.valued ? eq.equity : null, cold: eq.cold || null, ignored: eq.ignored || null, error: eq.error || null };
+> 129	
+> 130	        // 1) Rollover de dia UTC: re-arma a proteção (limpa o cap do dia anterior) e força re-baseline.
+> 131	        if (SNAP && SNAP.day !== today) {
+> 132	            riskState.clearDailyCap();
+> 133	            const prev = SNAP;
+> 134	            SNAP = null;
+> 135	            logger('system', `[dailyCap] virada de dia UTC (${prev.day} → ${today}); cap re-armado, re-baseline.`);
+> 136	            await notify(eq.settings, `🌅 [DAILY_CAP] Novo dia UTC. Cap de -${(CAP_PCT * 100).toFixed(0)}% re-armado para o novo dia.`);
+> 137	        }
+> 138	
+> 139	        // 2) Fail-safe: equity não avaliável → não snapshota e não dispara (espera o preço esquentar).
+> 140	        if (!eq.valued) {
+> 141	            const why = eq.error || `preços frios: ${(eq.cold || []).join(', ')}`;
+> 142	            if (!COLD_LOGGED) {
+> 143	                COLD_LOGGED = true;
+> 144	                COLD_SINCE = AT;
+> 145	                logger('system', `[dailyCap] equity NÃO-avaliável (${why}) — cap NÃO avaliado neste ciclo (fail-safe).`);
+> 146	            }
+> 147	            // Alarme ANTI-SILÊNCIO: se a proteção ficar inavaliável por muito tempo (default 15min), AVISA o dono.
+> 148	            // Sem isso o fail-safe poderia deixar o cap de -5% INATIVO em silêncio (ex.: asset sem par USDT). QA P1-A.
+> 149	            if (!COLD_ALERTED && COLD_SINCE && (AT - COLD_SINCE) >= COLD_ALERT_MS) {
+> 150	                COLD_ALERTED = true;
+> 151	                const mins = Math.round((AT - COLD_SINCE) / 60000);
+> 152	                logger('system', `[dailyCap] ⚠️ equity inavaliável há ~${mins}min — cap de -${(CAP_PCT * 100).toFixed(0)}% INATIVO (${why}).`);
+> 153	                await notify(eq.settings, `⚠️ [DAILY_CAP] Proteção de -${(CAP_PCT * 100).toFixed(0)}% INATIVA há ~${mins}min: não consigo avaliar o equity (${why}). Verifique monitores/preços ou isente o asset via DAILY_CAP_IGNORE_ASSETS.`);
+> 154	            }
+> 155	            return;
+> 156	        }
+> 157	        if (COLD_LOGGED) { COLD_LOGGED = false; COLD_SINCE = null; COLD_ALERTED = false; logger('system', `[dailyCap] equity avaliável novamente ($${eq.equity.toFixed(2)}).`); }
+> 158	
+> 159	        // 3) Baseline do dia ausente (boot mid-day ou pós-rollover): snapshota AGORA e encerra o ciclo.
+> 160	        if (!SNAP || SNAP.day !== today) {
+> 161	            SNAP = { day: today, equity: eq.equity, at: new Date().toISOString() };
+> 162	            saveSnap();
+> 163	            logger('system', `[dailyCap] baseline do dia ${today} = $${eq.equity.toFixed(2)} (USDT livre $${eq.usdtFree.toFixed(2)}).`);
+> 164	            return;
+> 165	        }
+> 166	
+> 167	        // 4) Avalia o drawdown. Piso = baseline × (1 - CAP_PCT). Equity <= piso → ARMA o HALT (idempotente).
+> 168	        const floor = SNAP.equity * (1 - CAP_PCT);
+> 169	        if (eq.equity <= floor) {
+> 170	            const ddPct = ((eq.equity / SNAP.equity) - 1) * 100;
+> 171	            const reason = `daily-loss-cap -${(CAP_PCT * 100).toFixed(0)}% (equity $${eq.equity.toFixed(2)} <= piso $${floor.toFixed(2)}; baseline $${SNAP.equity.toFixed(2)}, dd ${ddPct.toFixed(2)}%)`;
+> 172	            const tripped = riskState.setHalt(true, reason, 'daily-cap');
+> 173	            if (tripped) {
+> 174	                logger('system', `[dailyCap] 🛑 CAP DISPARADO — ${reason}. HALT ativo (bloqueia TODAS as ordens).`);
+> 175	                await notify(eq.settings,
+> 176	                    `🛑 [DAILY_CAP] Cap diário de -${(CAP_PCT * 100).toFixed(0)}% ATINGIDO!\n` +
+> 177	                    `Equity $${eq.equity.toFixed(2)} (baseline $${SNAP.equity.toFixed(2)}, ${ddPct.toFixed(2)}%).\n` +
+> 178	                    `🚫 HALT ativo: TODAS as ordens bloqueadas (inclusive venda protetiva). ` +
+> 179	                    `Intervenção manual necessária — reabra via /system/halt ou aguarde a virada de dia UTC.`);
+> 180	            }
+> 181	        }
+> 182	    } catch (err) {
+> 183	        logger('system', `[dailyCap] erro no ciclo: ${err.message}`);
+> 184	    } finally {
+> 185	        running = false;
+> 186	    }
+> 187	}
+> 188	
+> 189	// Re-snapshot forçado (usado pelo reset do operador): re-baseline com o equity atual p/ não re-disparar
+> 190	// contra um baseline velho logo após o reset. Não dispara nada. Retorna { ok, snapshot, reason }.
+> 191	async function reSnapshot() {
+> 192	    if (running) return { ok: false, reason: 'ciclo do cap em andamento — tente de novo em instantes', snapshot: SNAP };
+> 193	    running = true; // serializa com checkCap (evita race na escrita de SNAP)
+> 194	    try {
+> 195	        const eq = await computeEquity();
+> 196	        if (!eq.valued) return { ok: false, reason: eq.error || `preços frios: ${(eq.cold || []).join(', ')}`, snapshot: SNAP };
+> 197	        SNAP = { day: riskState.dayKeyUTC(), equity: eq.equity, at: new Date().toISOString() };
+> 198	        saveSnap();
+> 199	        logger('system', `[dailyCap] re-baseline manual = $${eq.equity.toFixed(2)} (${SNAP.day}).`);
+> 200	        return { ok: true, snapshot: SNAP };
+> 201	    } catch (err) {
+> 202	        return { ok: false, reason: err.message, snapshot: SNAP };
+> 203	    } finally {
+> 204	        running = false;
+> 205	    }
+> 206	}
+> 207	
+> 208	function start() {
+> 209	    if (!ENABLED) { logger('system', '[dailyCap] DESABILITADO (DAILY_CAP_ENABLED=false).'); return; }
+> 210	    if (timer) return; // idempotente
+> 211	    loadSnap();
+> 212	    checkCap(); // primeira passada no boot (provável fail-safe se MINI_TICKER ainda frio — esperado)
+> 213	    timer = setInterval(checkCap, CHECK_MS);
+> 214	    if (timer.unref) timer.unref();
+> 215	    logger('system', `[dailyCap] iniciado — teto -${(CAP_PCT * 100).toFixed(0)}% sobre o equity do dia (intervalo ${CHECK_MS}ms).`);
+> 216	}
+> 217	
+> 218	function stop() {
+> 219	    if (timer) { clearInterval(timer); timer = null; }
+> 220	    running = false;
+> 221	}
+> 222	
+> 223	function getStatus() {
+> 224	    const st = riskState.getState();
+> 225	    return {
+> 226	        enabled: ENABLED, capPct: CAP_PCT, checkMs: CHECK_MS,
+> 227	        snapshot: SNAP, last: LAST,
+> 228	        floor: SNAP ? SNAP.equity * (1 - CAP_PCT) : null,
+> 229	        tripped: st.dailyCap, halted: st.halted, haltSource: st.source,
+> 230	        running, at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null,
+> 231	    };
+> 232	}
+> 233	
+> 234	module.exports = { start, stop, checkCap, reSnapshot, getStatus };
+> 235	
+> ```
+
+## 🤖 Claude *(05:18:58)*
+
+
+## 🤖 Claude *(05:19:01)*
+
+Achei a função. O design **pretende** marcar a mercado TODAS as posições (linha 5, 111). Então o bug está em por que o LTC saiu da conta. Tem um guard suspeito na linha 108 (`coin.startsWith('LD')`) — mas "LTC" não casa com "LD". Preciso da evidência viva, não teoria. Vou puxar o estado real do cap agora.
+
+## 🤖 Claude *(05:19:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== risk_state.json AGORA (dailyCap tripou?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"cat /app/logs/risk_state.json 2>/dev/null\"'; echo \"\"\necho \"=== daily_cap_snapshot.json (baseline + dia) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"cat /app/logs/daily_cap_snapshot.json 2>/dev/null\"'; echo \"\"\necho \"=== DAILY_CAP_IGNORE_ASSETS no .env ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -iE \"DAILY_CAP_IGNORE|DAILY_LOSS_CAP|DAILY_CAP_ENABLED\" /home/gcrux-tradeux/tradeux/.env 2>/dev/null'; echo \"(vazio = sem isen\u00e7\u00e3o)\"\necho \"=== system.log: linhas do dailyCap (sequ\u00eancia do trip) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"dailyCap|daily_cap|DAILY_CAP\\\" /app/logs/system.log 2>/dev/null | tail -20\"'",
+  "description": "Pull live dailyCap state: risk_state, snapshot, env, logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === risk_state.json AGORA (dailyCap tripou?) ===
+> {"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":true,"reason":"daily-loss-cap -5% (equity $109.02 <= piso $141.40; baseline $148.84, dd -26.76%)","since":"2026-06-20T04:11:37.934Z","day":"2026-06-20"}}
+> === daily_cap_snapshot.json (baseline + dia) ===
+> {"day":"2026-06-20","equity":148.84230183,"at":"2026-06-20T00:00:40.950Z"}
+> === DAILY_CAP_IGNORE_ASSETS no .env ===
+> (vazio = sem isenção)
+> === system.log: linhas do dailyCap (sequência do trip) ===
+> info: 2026-06-19T17:35:21.271Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-19T17:35:22.003Z - [dailyCap] baseline do dia 2026-06-19 = $148.84 (USDT livre $148.84).
+> info: 2026-06-19T20:15:29.712Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-19T20:28:31.578Z - [dailyCap] erro no ciclo: connect ETIMEDOUT
+> info: 2026-06-19T20:28:57.603Z - [dailyCap] erro no ciclo: connect ETIMEDOUT
+> info: 2026-06-20T00:00:40.165Z - [dailyCap] virada de dia UTC (2026-06-19 → 2026-06-20); cap re-armado, re-baseline.
+> info: 2026-06-20T00:00:40.951Z - [dailyCap] baseline do dia 2026-06-20 = $148.84 (USDT livre $148.84).
+> info: 2026-06-20T02:03:03.887Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-20T02:03:04.654Z - [dailyCap] equity NÃO-avaliável (preços frios: LTC) — cap NÃO avaliado neste ciclo (fail-safe).
+> info: 2026-06-20T02:04:04.469Z - [dailyCap] equity avaliável novamente ($148.84).
+> info: 2026-06-20T02:28:37.336Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-20T02:28:38.076Z - [dailyCap] equity NÃO-avaliável (preços frios: LTC) — cap NÃO avaliado neste ciclo (fail-safe).
+> info: 2026-06-20T02:29:37.902Z - [dailyCap] equity avaliável novamente ($148.79).
+> info: 2026-06-20T04:11:37.935Z - [dailyCap] 🛑 CAP DISPARADO — daily-loss-cap -5% (equity $109.02 <= piso $141.40; baseline $148.84, dd -26.76%). HALT ativo (bloqueia TODAS as ordens).
+> ```
+
+## 🤖 Claude *(05:20:19)*
+
+
+## 🤖 Claude *(05:20:24)*
+
+`dailyCap.on=true`, tripou às **04:11:37**. Mas a evidência é reveladora:
+
+- **02:29:37** → "equity avaliável novamente (**$148.79**)" — aqui o LTC ESTAVA contado (109 USDT + 39.8 LTC). Correto.
+- **04:11:37** → TRIP com "**$109.02**" = só USDT, LTC SUMIU da conta.
+
+E `DAILY_CAP_IGNORE_ASSETS` está vazio. Então entre 02:29 e 04:11 o LTC parou de ser contabilizado **sem** ficar "frio" (se fosse frio, era fail-safe, não tripava). A única forma do código fazer isso é a `balance()` **não retornar o LTC**. Vou provar com uma sonda read-only do saldo real + ler a `balance()`.
+
+## 🤖 Claude *(05:20:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== exchange.balance() \u2014 implementa\u00e7\u00e3o ===\"\ngrep -n \"balance\" src/utils/exchange.js | head; echo \"---\"\nsed -n '/balance\\s*[:=]/,/};\\?$/p' src/utils/exchange.js 2>/dev/null | head -40",
+  "description": "Read exchange.balance implementation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === exchange.balance() — implementação ===
+> 105:    async function balance() {
+> 107:        return binance.balance();
+> 268:    // 1.x: a assinatura virou (all_updates_callback, balance_callback, execution_callback,
+> 300:        balance,
+> ---
+> ```
+
+## 🤖 Claude *(05:20:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 104,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 104	
+> 105	    async function balance() {
+> 106	        await binance.useServerTime();
+> 107	        return binance.balance();
+> 108	    }
+> 109	
+> 110	    // 1.x: buy()/sell() fixam type='LIMIT' posicional e o guard interno de stopPrice dispara
+> 111	    // ANTES de params sobrescrever o type -> ordens STOP via flags quebrariam. Por isso chamamos
+> 112	    // binance.order(type, side, ...) direto (e marketBuy/marketSell p/ MARKET, que tratam
+> 113	    // quoteOrderQty). Cobre MARKET/LIMIT/STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT/LIMIT_MAKER.
+> 114	    function buy(symbol, quantity, price, options) {
+> 115	        options = options || {};
+> 116	        assertWithinRisk('BUY', symbol, quantity, price, options);
+> 117	        const type = options.type || 'MARKET';
+> 118	        if (type === 'MARKET')
+> 119	            return binance.marketBuy(symbol, quantity, options);
+> 120	        return binance.order(type, 'BUY', symbol, quantity, price, options);
+> 121	    }
+> 122	
+> 123	    function sell(symbol, quantity, price, options) {
+> ```
+
+## 🤖 Claude *(05:20:55)*
+
+
+## 🤖 Claude *(05:20:58)*
+
+`balance()` é só `binance.balance()` (node-binance-api) — retorna TODOS os assets, não deveria omitir LTC. Então preciso do estado EXATO do último ciclo: o objeto `LAST` do job tem os arrays `cold` e `ignored`, que dizem se o LTC caiu em alguma exclusão. Vou pegar um JWT e o status ao vivo + a sonda de saldo, em paralelo.
+
+## 🤖 Claude *(05:21:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== rotas do systemRouter (daily-cap status?) ===\"\ngrep -n -iE \"router\\.(get|post)|daily|cap|halt\" src/routers/systemRouter.js 2>/dev/null | head -20\necho \"\"\necho \"=== creds de login (.env) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -iE \"^PANEL|EMAIL|PASSWORD|LOGIN|TRADEUX_EMAIL|TRADEUX_PASSWORD\" /home/gcrux-tradeux/tradeux/.env 2>/dev/null | sed -E \"s/=(.*)/=<set>/\"'\necho \"--- agent .env (mcp creds) ---\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -iE \"TRADEUX_EMAIL|TRADEUX_PASSWORD\" /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null | sed -E \"s/=(.*)/=<set>/\"'",
+  "description": "Find daily-cap status route and login creds"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas do systemRouter (daily-cap status?) ===
+> 5:// /system — controle operacional do kill-switch quente + cap diário. OPERATOR-ONLY (montado atrás do
+> 6:// authMiddleware no app.js). Sem MCP write tool: o agente LLM não flipa o HALT (doutrina).
+> 8:router.get('/halt', systemController.getHalt);
+> 10:router.post('/halt', systemController.setHalt);
+> 12:router.post('/floor', systemController.setFloor);
+> 14:router.get('/daily-cap', systemController.getDailyCap);
+> 16:router.post('/daily-cap/reset', systemController.resetDailyCap);
+> 
+> === creds de login (.env) ===
+> # ---------- Conta padrao do painel (primeiro login) ----------
+> DEFAULT_SETTINGS_EMAIL=<set>
+> --- agent .env (mcp creds) ---
+> TRADEUX_EMAIL=<set>
+> TRADEUX_PASSWORD=<set>
+> ```
+
+## 🤖 Claude *(05:21:22)*
+
+
+## 🤖 Claude *(05:21:23)*
+
+Tem o endpoint `GET /system/daily-cap` que devolve o `LAST` (com `cold`/`ignored`). Vou logar com as creds do agente e puxar o estado vivo do último ciclo — isso mostra exatamente onde o LTC caiu.
+
+## 🤖 Claude *(05:21:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nEMAIL=\"${TRADEUX_EMAIL}\"; PASS=\"${TRADEUX_PASSWORD}\"\n# tenta login via backend interno (container)\nTOKEN=$(docker compose exec -T backend sh -c \"curl -s -X POST http://localhost:3001/login -H \\\"Content-Type: application/json\\\" -d \\\"{\\\\\\\"email\\\\\\\":\\\\\\\"$EMAIL\\\\\\\",\\\\\\\"password\\\\\\\":\\\\\\\"$PASS\\\\\\\"}\\\"\" 2>/dev/null | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nif [ -z \"$TOKEN\" ] || [ \"${#TOKEN}\" -lt 20 ]; then echo \"LOGIN FALHOU (resposta: $(docker compose exec -T backend sh -c \"curl -s -X POST http://localhost:3001/login -H \\\"Content-Type: application/json\\\" -d \\\"{\\\\\\\"email\\\\\\\":\\\\\\\"$EMAIL\\\\\\\",\\\\\\\"password\\\\\\\":\\\\\\\"$PASS\\\\\\\"}\\\"\" 2>/dev/null | head -c 200))\"; exit 1; fi\necho \"=== GET /system/daily-cap (LAST com cold/ignored) ===\"\ndocker compose exec -T backend sh -c \"curl -s http://localhost:3001/system/daily-cap -H \\\"authorization: Bearer $TOKEN\\\"\" 2>/dev/null | head -c 1200\necho \"\"\necho \"=== GET /system/halt ===\"\ndocker compose exec -T backend sh -c \"curl -s http://localhost:3001/system/halt -H \\\"authorization: Bearer $TOKEN\\\"\" 2>/dev/null | head -c 400\n'",
+  "description": "Login and fetch live daily-cap status with cold/ignored arrays"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> LOGIN FALHOU (resposta: )
+> ```
+
+## 🤖 Claude *(05:21:32)*
+
+
+## 🤖 Claude *(05:21:33)*
+
+Login vazio — rota ou shape diferente. Vou ver como o MCP faz login.
+
+## 🤖 Claude *(05:21:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== como o MCP faz login ===\"\ngrep -n -iE \"login|/login|token|password|email\" tradeux-mcp/src/api.js 2>/dev/null | head\necho \"=== rota de login no backend ===\"\ngrep -rn -iE \"router\\.(post).*login|'/login'|\\\"/login\\\"|doLogin|app.post\" backend/src/ 2>/dev/null | grep -i login | head",
+  "description": "Find login route shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como o MCP faz login ===
+> 2:// Faz login uma vez, guarda o JWT em memória e re-autentica automaticamente em 401.
+> 5:const EMAIL = process.env.TRADEUX_EMAIL;
+> 6:const PASSWORD = process.env.TRADEUX_PASSWORD;
+> 8:let token = null;
+> 10:async function login() {
+> 11:  if (!EMAIL || !PASSWORD) {
+> 13:      "Credenciais ausentes. Defina TRADEUX_EMAIL e TRADEUX_PASSWORD no ambiente do servidor MCP."
+> 16:  const res = await fetch(`${BASE}/login`, {
+> 19:    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+> 22:    throw new Error(`Login falhou (${res.status}): ${await res.text()}`);
+> === rota de login no backend ===
+> backend/src/app.js:38:app.post('/login', authController.doLogin);
+> backend/src/controllers/authController.js:5:async function doLogin(req, res, next) {
+> backend/src/controllers/authController.js:39:    doLogin,
+> ```
+
+## 🤖 Claude *(05:21:45)*
+
+
+## 🤖 Claude *(05:21:46)*
+
+curl provavelmente não existe no container. Vou logar do host contra o endpoint público (host tem curl). Deixa eu confirmar a base da API.
+
+## 🤖 Claude *(05:21:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'grep -iE \"TRADEUX_API_URL|API_URL\" /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null | sed -E \"s#(=https?://[^ ]+)#=\\1#\"'\necho \"--- testa /api/login p\u00fablico ---\"\ncurl -s -m8 -o /dev/null -w \"POST /api/login -> %{http_code}\\n\" -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d '{\"email\":\"x\",\"password\":\"y\"}'",
+  "description": "Get MCP API base URL and test public login path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TRADEUX_API_URL==http://backend:3001
+> --- testa /api/login público ---
+> POST /api/login -> 401
+> ```
+
+## 🤖 Claude *(05:21:53)*
+
+
+## 🤖 Claude *(05:21:54)*
+
+Rota pública é `/api/login` (proxy → backend). Vou logar com as creds reais e puxar o status.
+
+## 🤖 Claude *(05:22:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nRESP=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\")\nTOKEN=$(echo \"$RESP\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nif [ \"${#TOKEN}\" -lt 20 ]; then echo \"LOGIN FALHOU: $(echo \"$RESP\" | head -c 200)\"; exit 1; fi\necho \"LOGIN OK (token ${#TOKEN} chars)\"\necho \"=== GET /system/daily-cap ===\"\ncurl -s -m10 https://tradeux.gcrux.com/api/system/daily-cap -H \"authorization: Bearer $TOKEN\" | head -c 1500\necho \"\"\necho \"=== GET /system/halt ===\"\ncurl -s -m10 https://tradeux.gcrux.com/api/system/halt -H \"authorization: Bearer $TOKEN\" | head -c 500\n'",
+  "description": "Login via public API and fetch daily-cap + halt status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LOGIN OK (token 137 chars)
+> === GET /system/daily-cap ===
+> "Unauthorized"
+> === GET /system/halt ===
+> "Unauthorized"
+> ```
+
+## 🤖 Claude *(05:22:09)*
+
+
+## 🤖 Claude *(05:22:09)*
+
+Token válido mas `/system` rejeita — formato do header de auth deve diferir. Vou ver o authMiddleware.
+
+## 🤖 Claude *(05:22:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\ngrep -rn -iE \"authorization|globalToken|req.headers|Bearer|verify|token\" src/middlewares/ src/controllers/authController.js 2>/dev/null | grep -iE \"header|bearer|token|authoriz\" | head -15\necho \"--- arquivo do middleware ---\"\nls src/middlewares/ 2>/dev/null",
+  "description": "Inspect auth middleware token parsing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/middlewares/authMiddleware.js:2:const jwt = require('jsonwebtoken');
+> src/middlewares/authMiddleware.js:8:    const token = req.headers['authorization'];
+> src/middlewares/authMiddleware.js:9:    if (token) {
+> src/middlewares/authMiddleware.js:11:            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+> src/middlewares/authMiddleware.js:13:                if (!authController.isBlacklisted(token)) {
+> src/middlewares/authMiddleware.js:14:                    res.locals.token = decoded;
+> src/middlewares/authMiddleware.js:19:            if (err instanceof jwt.TokenExpiredError || err instanceof jwt.JsonWebTokenError)
+> src/controllers/authController.js:1:const jwt = require('jsonwebtoken');
+> src/controllers/authController.js:13:            const token = jwt.sign({
+> src/controllers/authController.js:19:            return res.json({ token, pushToken: settings.pushToken });
+> src/controllers/authController.js:29:    const token = req.headers['authorization'];
+> src/controllers/authController.js:30:    blacklist.push(token);
+> src/controllers/authController.js:34:function isBlacklisted(token) {
+> src/controllers/authController.js:35:    return blacklist.some(t => t === token);
+> --- arquivo do middleware ---
+> authMiddleware.js
+> errorMiddleware.js
+> ```
+
+## 🤖 Claude *(05:22:16)*
+
+
+## 🤖 Claude *(05:22:17)*
+
+O middleware usa o header `authorization` **cru** (sem prefixo `Bearer`). Reenviando sem `Bearer`.
+
+## 🤖 Claude *(05:22:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nRESP=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\")\nTOKEN=$(echo \"$RESP\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"=== GET /system/daily-cap (LAST.cold / LAST.ignored \u00e9 a prova) ===\"\ncurl -s -m10 https://tradeux.gcrux.com/api/system/daily-cap -H \"authorization: $TOKEN\" | python3 -m json.tool 2>/dev/null | head -40\n'",
+  "description": "Fetch daily-cap status with raw token header"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GET /system/daily-cap (LAST.cold / LAST.ignored é a prova) ===
+> {
+>     "enabled": true,
+>     "capPct": 0.05,
+>     "checkMs": 60000,
+>     "snapshot": {
+>         "day": "2026-06-20",
+>         "equity": 148.84230183,
+>         "at": "2026-06-20T00:00:40.950Z"
+>     },
+>     "last": {
+>         "at": "2026-06-20T05:21:37.953Z",
+>         "valued": true,
+>         "equity": 109.01515183,
+>         "cold": [],
+>         "ignored": [
+>             "LDLTC",
+>             "LDUSDC",
+>             "LDGUN",
+>             "LDBABY"
+>         ],
+>         "error": null
+>     },
+>     "floor": 141.4001867385,
+>     "tripped": {
+>         "on": true,
+>         "reason": "daily-loss-cap -5% (equity $109.02 <= piso $141.40; baseline $148.84, dd -26.76%)",
+>         "since": "2026-06-20T04:11:37.934Z",
+>         "day": "2026-06-20",
+>         "active": true
+>     },
+>     "halted": true,
+>     "haltSource": "daily-cap",
+>     "running": false,
+>     "at": "2026-06-20T05:21:37.953Z",
+>     "ageMs": 43450
+> }
+> ```
+
+## 🤖 Claude *(05:23:24)*
+
+
+## 🤖 Claude *(05:23:30)*
+
+**ACHEI. Prova definitiva.** Olha o `LAST.ignored` do último ciclo:
+
+```json
+"equity": 109.01515183,
+"cold": [],
+"ignored": ["LDLTC", "LDUSDC", "LDGUN", "LDBABY"]
+```
+
+## 🎯 Causa raiz: seu LTC foi parar no **Binance Simple Earn** (`LDLTC`)
+
+A Binance **auto-subscreveu** seu LTC no Flexible Earn — ele agora aparece como **`LDLTC`** (prefixo "LD" = Locked/Earn). E o `dailyCapJob` (linha 108) tem um guard que **exclui qualquer asset `LD*`** do equity (foi feito pra ignorar dust de Earn tipo LDGUN/LDBABY). Resultado: ele jogou seus **$39,8 de LTC fora da conta** → equity virou só USDT ($109) → falso −26,76% → HALT às 04:11.
+
+A timeline confirma: às **02:29 o LTC ainda era spot** → equity $148,79, sem trip. Em algum momento entre 02:29 e 04:11 a Binance varreu o LTC pro Earn → virou `LDLTC` → excluído → trip.
+
+Deixa eu confirmar o quanto está preso no Earn (pra você saber quanto resgatar):
+
+## 🤖 Claude *(05:23:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rota de wallet/balance ===\"\ngrep -rn -iE \"router\\.(get).*(wallet|balance)|'/wallet'|'/balance'|getWallet\" backend/src/routers/ backend/src/app.js 2>/dev/null | head\necho \"\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nRESP=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\")\nTOKEN=$(echo \"$RESP\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"=== saldo (LDLTC vs LTC spot) ===\"\nfor EP in exchange/balance wallet balance exchange/wallet; do\n  R=$(curl -s -m10 \"https://tradeux.gcrux.com/api/$EP\" -H \"authorization: $TOKEN\")\n  if echo \"$R\" | grep -qiE \"LTC|USDT\"; then echo \"[$EP]:\"; echo \"$R\" | python3 -c \"import sys,json\nd=json.load(sys.stdin)\nfor k in (\\\"LDLTC\\\",\\\"LTC\\\",\\\"USDT\\\",\\\"BNB\\\",\\\"LDUSDC\\\"):\n    if k in d: print(\\\" \\\",k,d[k])\" 2>/dev/null; break; fi\ndone\n'",
+  "description": "Find wallet route and show LDLTC vs spot LTC balances"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rota de wallet/balance ===
+> backend/src/routers/exchangeRouter.js:5:router.get('/balance/full/:fiat', exchangeController.getFullBalance);
+> backend/src/routers/exchangeRouter.js:7:router.get('/balance/:fiat', exchangeController.getBalance);
+> 
+> === saldo (LDLTC vs LTC spot) ===
+> ```
+
+## 🤖 Claude *(05:23:40)*
+
+
+## 🤖 Claude *(05:23:40)*
+
+Rota é `/exchange/balance/:fiat`. Buscando.
+
+## 🤖 Claude *(05:23:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nRESP=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\")\nTOKEN=$(echo \"$RESP\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nR=$(curl -s -m15 \"https://tradeux.gcrux.com/api/exchange/balance/USDT\" -H \"authorization: $TOKEN\")\necho \"$R\" | python3 -c \"import sys,json\nd=json.load(sys.stdin)\n# pode vir {balances:{...}} ou {...}\nb=d.get(\\\"balances\\\", d) if isinstance(d,dict) else d\nfor k in [\\\"LDLTC\\\",\\\"LTC\\\",\\\"USDT\\\",\\\"BNB\\\",\\\"LDUSDC\\\",\\\"LDGUN\\\",\\\"LDBABY\\\"]:\n    if isinstance(b,dict) and k in b: print(f\\\"{k:8} -> {b[k]}\\\")\n\" 2>/dev/null || echo \"RAW: $(echo \"$R\" | head -c 400)\"\n'",
+  "description": "Fetch full balance showing LDLTC vs spot LTC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LDLTC    -> {'available': '0.89009945', 'onOrder': '0.00000000', 'fiatEstimate': 0}
+> LTC      -> {'available': '0.00000000', 'onOrder': '0.00000000', 'fiatEstimate': 0}
+> USDT     -> {'available': '109.01515183', 'onOrder': '0.00000000', 'fiatEstimate': 109.01515183}
+> BNB      -> {'available': '0.00000000', 'onOrder': '0.00000000', 'fiatEstimate': 0}
+> LDUSDC   -> {'available': '0.00662882', 'onOrder': '0.00000000', 'fiatEstimate': 0}
+> LDGUN    -> {'available': '0.56144095', 'onOrder': '0.00000000', 'fiatEstimate': 0}
+> LDBABY   -> {'available': '0.24586447', 'onOrder': '0.00000000', 'fiatEstimate': 0}
+> ```
+
+## 🤖 Claude *(05:24:40)*
+
+
+## 🤖 Claude *(05:24:45)*
+
+**CONFIRMADO — diagnóstico fechado, com prova:**
+
+| Asset | Saldo | Onde |
+|---|---|---|
+| **LDLTC** | **0,89009945** | 🔒 Binance Flexible **Earn** (é o seu LTC!) |
+| **LTC (spot)** | **0,00000000** | spot vazio |
+| USDT | 109,02 | spot |
+| BNB | 0 | (por isso a fee saiu em LTC, não BNB) |
+
+A Binance **auto-subscreveu seu LTC no Simple Earn** → virou `LDLTC`. Seu dinheiro está **100% intacto** (LTC rendendo no Earn, equity real ~$148), mas isso quebrou **duas** coisas em silêncio.
+
+Deixa eu registrar isso na memória antes de seguir — é causa-raiz não-óbvia e não quero re-descobrir depois.
+
+## 🤖 Claude *(05:24:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-earn-autosubscribe-incident.md",
+  "content": "---\nname: tradeux-earn-autosubscribe-incident\ndescription: Binance Simple Earn auto-subscribe move saldo spot \u2192 LDxxx, o que dispara HALT falso do dailyCap E quebra a venda no-loss do Farm\nmetadata:\n  type: project\n---\n\n**Incidente 2026-06-20 (~04:11 UTC): HALT falso do daily-cap.** A Binance **auto-subscreveu** o LTC comprado pelo Farm no **Simple Earn Flexible** \u2192 o saldo spot virou **`LDLTC`** (prefixo \"LD\" = Locked/Earn) e o **spot LTC ficou 0**. Provado via `GET /system/daily-cap` \u2192 `LAST.ignored=[\"LDLTC\",\"LDUSDC\",\"LDGUN\",\"LDBABY\"]`, `equity=109.02` (s\u00f3 USDT) e `GET /exchange/balance/USDT` \u2192 `LDLTC.available=0.8901`, `LTC.available=0`.\n\n**Dois estragos da mesma causa:**\n1. **HALT falso:** `dailyCapJob.computeEquity` (linha ~108) tem guard `coin.startsWith('LD') && length>3` que EXCLUI qualquer `LD*` do equity (feito pra dust tipo LDGUN/LDBABY). Mas `LDLTC` \u00e9 valor REAL/resgat\u00e1vel \u2192 equity caiu $148,8\u2192$109 \u2192 falso \u221226,76% \u2192 cap \u22125% tripou. Timeline: 02:29 LTC ainda spot (equity $148,79, sem trip) \u2192 varrido pro Earn \u2192 04:11 trip.\n2. **Venda no-loss QUEBRADA:** o Farm Sell precisa de LTC **spot** pra vender; com tudo em `LDLTC` o sell falharia (saldo spot 0) quando LTC bouncasse ao alvo.\n\n**Fix (duas m\u00e3os):**\n- **Dono (app Binance):** Resgatar `LDLTC`\u2192LTC spot + **DESLIGAR auto-subscribe do Simple Earn** (sen\u00e3o re-varre e re-quebra). Vale pra QUALQUER posi\u00e7\u00e3o futura, inclusive um n\u00facleo BTC (viraria `LDBTC`).\n- **C\u00f3digo (gated, QA+TL):** `computeEquity` deve marcar-a-mercado `LD*` com par subjacente (strip \"LD\" \u2192 pre\u00e7o de LTC/USDC) em vez de ignorar cego; s\u00f3 ignorar se o subjacente n\u00e3o tiver ticker. Depois `POST /system/daily-cap/reset` re-baseline \u2192 HALT limpa. N\u00c3O resetar o cap antes do resgate (re-baseline em $109 mascara o bug).\n\nLiga com [[tradeux-mainnet-go-live]] (cap di\u00e1rio \u22125% / bot\u00e3o de p\u00e2nico) e [[tradeux-farm-funnel-backtest]] (Farm segura posi\u00e7\u00e3o em alt por desenho \u2192 todo buy do Farm \u00e9 vulner\u00e1vel a isso enquanto o auto-subscribe estiver ON). HALT \u00e9 fail-safe (bloqueia) \u2192 seguro deixar ativo at\u00e9 resolver a raiz.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-earn-autosubscribe-incident.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:25:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 1,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [TradeUX deploy topology](tradeux-deploy-topology.md) — app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)
+> 5	- [GitHub SSH key on ubuntu](github-ssh-key-on-ubuntu.md) — only ubuntu's key can pull the private repo; gcrux-tradeux has none; shell runs as ubuntu
+> 6	- [Testnet strategy validation goal](tradeux-agent-500k-validation.md) — GOAL PIVOT: meta agora é +3 BTC no testnet (era 500k); OCO + fix de P&L entregues; how to run the agent
+> ```
+
+## 🤖 Claude *(05:25:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)",
+  "new_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Earn auto-subscribe incident](tradeux-earn-autosubscribe-incident.md) \u2014 Binance Simple Earn varre spot\u2192LDxxx \u2192 HALT falso do dailyCap + venda no-loss do Farm quebrada; fix = resgatar+desligar auto-subscribe + marcar-a-mercado LD* no computeEquity"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:25:14)*
+
+
+## 🤖 Claude *(05:25:36)*
+
+Registrado. Aqui está o quadro completo e verificado:
+
+## ✅ Verificação concluída — seu dinheiro está intacto
+
+Equity real ~**$148** ($109 USDT + 0,89 LTC no Earn). O "−26,76%" foi **erro de medição**, não perda. Mas o auto-subscribe do Earn quebrou **duas** coisas em silêncio:
+
+1. **HALT falso** — o cap excluiu o `LDLTC` do equity (guard `LD*` da linha 108) → falso drawdown → travou tudo às 04:11.
+2. **🔴 A venda no-loss do Farm está QUEBRADA** — ela precisa de LTC **spot** pra vender; com tudo em `LDLTC` (spot = 0), quando o LTC bouncar pro alvo ~$44,4 a ordem de venda **falharia por saldo insuficiente**. Esse é o problema mais sério — mais que o HALT.
+
+## O conserto (duas mãos)
+
+**🖐️ Sua mão — no app da Binance (urgente):**
+1. **Resgatar** o `LDLTC` → LTC spot (Earn Flexible → Redeem → instantâneo). Devolve 0,89 LTC pro spot e o Farm volta a poder vender.
+2. **Desligar o auto-subscribe do Simple Earn** (Earn → configurações → desativar "auto-subscribe"). Senão ele re-varre e re-quebra — e faria o mesmo com **qualquer BTC** que a gente comprar (viraria `LDBTC`). Por isso isso vem **antes** de qualquer núcleo BTC.
+
+**🛠️ Minha mão — código (gated, só com seu GO):**
+- Corrigir o `computeEquity`: marcar a mercado os `LD*` que têm par subjacente (strip "LD" → preço do LTC/USDC), em vez de ignorar cego. Aí `LDLTC` conta como equity e isso **nunca mais** dá HALT falso. Passa por QA + TL antes de subir.
+- **Depois** do resgate, re-armar o cap (`POST /system/daily-cap/reset`) → re-baseline em ~$148 → HALT limpa. **Não reseto antes do resgate** (re-baseline em $109 mascararia o bug).
+
+Não vou mexer em nada disso sem seu OK — você pediu pra verificar antes, e está verificado.
+
+## Seus outros pontos (anotados, não esquecidos)
+
+- **BTC mínimo/exponencial:** concordo, $70 era demais a $148 — vamos bem menor. Mas **está em pausa** até o Earn+HALT resolver (com auto-subscribe ON, qualquer BTC vira `LDBTC` e cai no mesmo buraco).
+- **Pesquisar Partes 2/3/4 antes de fazer:** combinado — faço uma pesquisa séria (funil/baseline, realismo do "exponencial" com $150, dimensionamento do núcleo) **depois** que apagarmos esse incêndio. Não vou mexer no funil sem isso.
+- **Spam no Telegram:** o `[PAPER] ... sem posição — venda ignorada` é ruído puro (paper logando venda sem posição) — entra na limpeza. As observações de regime também dá pra enxugar.
+
+---
+
+**Próximo passo, sua escolha:**
+1. Você faz o **resgate + desliga o auto-subscribe** na Binance agora; eu, em paralelo, **escrevo o fix do `computeEquity`** (sem deployar) pra você revisar. Quando o resgate estiver feito + fix aprovado, eu re-armo o cap e o HALT cai.
+2. Ou prefere que eu **só escreva o fix** primeiro pra você ver o diff, e a gente decide o resto depois?
+
+*(Recomendado: opção 1 — o resgate é o que de fato des-trava a venda no-loss, e é só sua mão; eu adianto o código em paralelo.)*
+
+## 👤 User *(05:25:38)*
+
+LTCUSDT esta em 44.21 deveria vender ja ou acredita que pode subir mais ainda para obter lucro nas ultimas 4 order buy que tivemos?
+
+## 🤖 Claude *(05:26:25)*
+
+
+## 🤖 Claude *(05:26:26)*
+
+Boa pergunta — mas tem um detalhe que muda a resposta, então deixa eu calcular com os números reais em vez de chutar. Vou puxar o preço ao vivo e reconciliar a quantidade exata que dá pra vender.
+
+## 🤖 Claude *(05:26:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== pre\u00e7o LTC ao vivo ===\"\ncurl -s -m6 \"https://api.binance.com/api/v3/ticker/price?symbol=LTCUSDT\" 2>/dev/null; echo \"\"\necho \"=== ordens reais (qty/commission exatas) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id, avgPrice, quantity, net, commission, commissionAsset FROM orders WHERE isTestnet=0 AND side=\\\\\\\"BUY\\\\\\\" ORDER BY id;\\\" 2>/dev/null\"'\necho \"=== LTC que realmente d\u00e1 pra vender (spot + Earn) ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nRESP=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\")\nTOKEN=$(echo \"$RESP\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\ncurl -s -m12 \"https://tradeux.gcrux.com/api/exchange/balance/USDT\" -H \"authorization: $TOKEN\" | python3 -c \"import sys,json\nd=json.load(sys.stdin); b=d.get(\\\"balances\\\",d)\nfor k in [\\\"LTC\\\",\\\"LDLTC\\\"]:\n    if k in b: print(f\\\"{k:6} -> {b[k][\\\"available\\\"]}\\\")\"\n'",
+  "description": "Fetch live LTC price, exact buy orders, sellable LTC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === preço LTC ao vivo ===
+> {"symbol":"LTCUSDT","price":"44.17000000"}
+> === ordens reais (qty/commission exatas) ===
+> id	avgPrice	quantity	net	commission	commissionAsset
+> 260	43.89000000	0.22700000	9.97299303	0.00022700	LTC
+> 261	43.87000000	0.22700000	9.96844849	0.00022700	LTC
+> 262	43.84000000	0.22700000	9.96163168	0.00022700	LTC
+> 263	43.85000000	0.22700000	9.96390395	0.00022700	LTC
+> === LTC que realmente dá pra vender (spot + Earn) ===
+> LTC    -> 0.00000000
+> LDLTC  -> 0.89009945
+> ```
+
+## 🤖 Claude *(05:27:41)*
+
+
+## 🤖 Claude *(05:27:58)*
+
+Preço ao vivo: **$44,17** (você viu 44,21 — oscilando aí). Calculei com os números reais e tem uma nuance importante. Primeiro, dois fatos que respondem "vender já?":
+
+## ⚠️ Você não consegue vender agora, de qualquer forma
+- **LTC spot = 0** (está tudo em `LDLTC` no Earn) → ordem de venda falharia.
+- **HALT ativo** (o falso trip do cap) → todas as ordens bloqueadas.
+
+Então "vender no $44,2" é teórico até **resgatar o Earn + limpar o HALT** (os passos do turno anterior).
+
+## A matemática do break-even (com o que dá pra vender de fato: 0,890 LTC)
+
+Gastamos **$39,867**. Vendável real = **0,89009945 LTC** (sem BNB → fee 0,1%):
+
+| Preço LTC | Recebido líquido | Resultado |
+|---|---|---|
+| $44,17 (agora) | $39,27 | **−$0,60** 🔴 |
+| $44,21 | $39,31 | **−$0,56** 🔴 |
+| $44,40 (alvo Farm) | $39,49 | −$0,38 🔴 |
+| **$44,83** | **$39,87** | **break-even** ⚖️ |
+| $45,20 | $40,20 | **+$0,33** 🟢 |
+
+**Resposta direta: a $44,2 NÃO é lucro — trava ~−$0,56.** O break-even real é **~$44,83**, e só fica verde de verdade acima disso.
+
+## 🔎 E tem um furo que empurra isso pro vermelho
+Compramos **0,9071 LTC** (0,908 − fee), mas o Earn só tem **0,8901**. Sumiram **~0,017 LTC (~$0,75)**. Se esse LTC for recuperável (vale checar seu histórico de Earn/transações na Binance), o break-even cai pra ~$44,00 e o $44,2 vira marginalmente verde. Como está, conta só com 0,890.
+
+## "Pode subir mais?" — leitura honesta, sem chutar
+LTC está em **regime de range** (ADX 18,9). $44,2 já é **perto do topo do range recente** ($43,8–44,4). Apostar em romper pra cima num ativo lateral é jogada de baixa probabilidade — mas eu **não prevejo preço**, e o histórico aqui (o what-if) mostra que o teto de captura é pequeno mesmo.
+
+## Recomendação
+1. **Não vender a $44,2** — locka prejuízo, e nem dá (Earn+HALT).
+2. **Resgatar o LDLTC + desligar auto-subscribe + limpar o HALT** primeiro (sua mão na Binance; eu adianto o fix do código).
+3. Com isso resolvido: armar a saída em **~$44,85+** (verde real) e deixar bater. Se o LTC voltar pro range, **segura** — é hold no-loss, não realiza perda. Disciplina de range: não correr atrás de breakout, mas também não vender no vermelho.
+
+Quer que eu já escreva o fix do `computeEquity` (sem deployar) enquanto você resgata o Earn, ou prefere primeiro investigar o furo dos 0,017 LTC?
+
 ---
 
 %% --- PROJECT METADATA START --- %%

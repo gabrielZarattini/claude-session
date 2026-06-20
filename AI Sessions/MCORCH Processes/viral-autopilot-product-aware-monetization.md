@@ -79,6 +79,33 @@ com **delta de carteira = 10 mcoCoins**.
 
 ---
 
+## Addendum — Fatia 1b: imagem product-referenced (FR-VA-013)
+
+**O que entrega:** quando o operador escolhe produtos, o passo `article_generation` gera **uma**
+imagem de marketing referenciada ao produto em destaque, **dentro do mesmo bundle de 10 mcoCoins**
+(sem cobrança extra — `ORCHESTRATION_RUN` já inclui 1 imagem, `billing.ts`), e a persiste como linha
+`type='image'` em `content_library` com o **PATH durável** do storage em `media_url`.
+
+**Correções materiais ao contrato (declaradas):** (a) `generate-image` só aceita prompt de TEXTO
+(DALL·E 3, sem image-to-image) → "product-referenced" = prompt descritivo do produto (nome+categoria),
+não o `image_url` como referência visual (deferido); (b) `generate-image` é estendida pro padrão
+service-role + `user_id` no body (espelha `publish-wordpress`) pq orchestrate-step roda com service-key.
+
+**Sequence (imagem):**
+| # | Step | Sucesso material |
+|---|------|------------------|
+| 1 | orchestrate-step (article, `hasProducts`) chama `generate-image` (service bearer + `user_id: run.user_id`) com prompt do produto | `generate-image` resolve a chave de imagem per-user e retorna `{ image_url, base64, path }` |
+| 2 | persiste linha `type='image'` em `content_library` com `media_url = path` (`<user_id>/<uuid>.png`) | `SELECT type,media_url FROM content_library` mostra a linha image com path |
+| 3 | `addStep('image_generation', done)` em `pipeline_runs.steps` | run.steps contém entry `image_generation` |
+
+**Verification:** `pipeline_runs.steps` tem `image_generation` `done`; a linha `type='image'` existe com
+`media_url` = path; re-assinar o path (`createSignedUrl`) → HTTP 200 image/png; o objeto existe no bucket.
+
+**Recovery (fail-open, obrigatório):** falha de `generate-image` (sem chave / provider mock / 5xx) →
+`image_generation` vira `error`/`skipped`, **`article_generation` permanece `done`** e o run completa.
+A imagem NUNCA quebra a geração. Bucket é privado → guardar PATH, nunca o signed URL de 1h (morre antes
+do publish). Anexo no publish-social (LinkedIn/X/Meta) e featured-image WP = **deferidos** (fatias seguintes).
+
 ## ORO
 
 - **Operator:** MCORCH Master Execution Agent (código) · Tenant (dispara o run).
