@@ -1882,6 +1882,1302 @@ O próprio SOP (e a nota do gate na SDD `05-sdd.md:427`) manda: **"escrito e rev
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "SOP do gate Lei 2 está pronto e ancorado. O BoK manda revisar antes de qualquer código de automação financeira. Como seguimos?"="Bora a migration". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(17:45:21)*
+
+
+## 🤖 Claude *(17:45:23)*
+
+**GO recebido — bora a migration.** Mando ler o contrato selado antes de escrever DDL (Lei 2: a migration segue o `06-data-model.md`, não improvisa). Leio em paralelo: o data-model selado, o sibling `creative_metrics` (template de estilo desta suíte) e o corpo do `add_mco_coins` (o RPC de crédito que o `finalize` vai chamar).
+
+## 🤖 Claude *(17:45:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Data & Knowledge Model
+> 2	
+> 3	**Project:** viral-autopilot  
+> 4	**Version:** v0.1 | **Date:** 2026-06-17  
+> 5	**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Conceptual Data Model
+> 11	
+> 12	```
+> 13	[autopilot_plans] ──(1:N)──▶ [autopilot_cycles] ──(1:N)──▶ [creative_metrics]
+> 14	       │                            │                              │
+> 15	       │ (references)               │ (cycle_id on)                │ (content_variant_id)
+> 16	       ▼                            ▼                              ▼
+> 17	[vm_affiliate_products]      [scheduled_posts] ──(N:1)──▶ [content_library]
+> 18	       │                            │                              │
+> 19	       └──(promotes)──▶ [affiliate_links] ◀──(revenue)── [handle-ml-postback]
+> 20	                                    │
+> 21	                                    └──(1:1 observation)──▶ [mcorch_nodes] ──OPTIMIZES_FROM──▶ [mcorch_nodes]
+> 22	```
+> 23	
+> 24	**Entities:**
+> 25	- **autopilot_plans:** configuração de cadência per-user (modo, intervalo, produtos-alvo, redes, teto de custo). Fonte da verdade do "o quê e quando".
+> 26	- **autopilot_cycles:** instância de execução de um plano (ledger: status, spend, planned_units, ponteiro p/ análise). Idempotente por (plan_id, cycle_number).
+> 27	- **creative_metrics:** desempenho por criativo (`content_variant_id`), unificando cliques de afiliado + engajamento orgânico + receita de postback (Decisão 3).
+> 28	- **vm_affiliate_products (reuse):** catálogo ML com `commission_value`/`trend_score`/`profitability_score`/`image_url` — fonte do produto-alvo.
+> 29	- **scheduled_posts (reuse + `cycle_id`):** fila de publicação; agora rastreável ao ciclo.
+> 30	- **affiliate_links / optimization_policy / content_library / mcorch_nodes (reuse):** receita, política de melhoria, conteúdo, memória.
+> 31	
+> 32	---
+> 33	
+> 34	## 2. Logical Data Model
+> 35	
+> 36	### Table: `autopilot_plans`
+> 37	
+> 38	| Column | Type | Nullable | Default | FK | Description |
+> 39	|--------|------|----------|---------|-----|------------|
+> 40	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | PK |
+> 41	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` | Tenant isolation |
+> 42	| `project_id` | `uuid` | NULL | — | — | Project scope opcional |
+> 43	| `name` | `text` | NOT NULL | — | — | Nome do plano |
+> 44	| `mode` | `text` | NOT NULL | — | — | `all_at_once` \| `every_n_days` |
+> 45	| `interval_days` | `int` | NULL | `3` | — | Req. se `every_n_days`; 1–30 |
+> 46	| `target_product_ids` | `text[]` | NOT NULL | — | → `vm_affiliate_products.external_id` | ≥ 1 produto (chave canônica `external_id`) |
+> 47	| `platforms` | `text[]` | NOT NULL | — | — | ⊆ {wordpress,linkedin,twitter} (MVP) |
+> 48	| `budget_cap_mco` | `int` | NOT NULL | — | — | Teto de custo por ciclo (gate FR-VA-007) |
+> 49	| `daily_cap_mco` | `int` | NOT NULL | `200` | — | Cap diário global por tenant (FR-VA-021); safety vision-mcp |
+> 50	| `min_balance_mco` | `int` | NOT NULL | `10` | — | Piso de saldo p/ disparar |
+> 51	| `hitl_required` | `boolean` | NOT NULL | `false` | — | Gate HITL opcional (FR-VA-020); default off = autônomo |
+> 52	| `ab_variants` | `int` | NOT NULL | `1` | — | Nº de variantes A/B por criativo (FR-VA-019); 1 = sem A/B |
+> 53	| `is_active` | `boolean` | NOT NULL | `false` | — | Cadência ligada |
+> 54	| `next_run_at` | `timestamptz` | NULL | — | — | Próximo disparo (cron) |
+> 55	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 56	| `updated_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 57	
+> 58	### Table: `autopilot_cycles`
+> 59	
+> 60	| Column | Type | Nullable | Default | FK | Description |
+> 61	|--------|------|----------|---------|-----|------------|
+> 62	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | PK |
+> 63	| `plan_id` | `uuid` | NOT NULL | — | `autopilot_plans(id,user_id)` | Plano pai (FK COMPOSTA tenant-escopada com `user_id`) |
+> 64	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` | Tenant (FK real + parte da FK composta) |
+> 65	| `cycle_number` | `int` | NOT NULL | — | — | Sequencial por plano |
+> 66	| `status` | `text` | NOT NULL | `running` | — | running\|completed\|aborted_budget\|aborted_daily_cap\|failed |
+> 67	| `spend_mco` | `int` | NOT NULL | `0` | — | projetado pré-debitado |
+> 68	| `refunded_mco` | `int` | NOT NULL | `0` | — | creditado de volta no finalize |
+> 69	| `planned_units` | `int` | NOT NULL | `0` | — | nº criativos planejados |
+> 70	| `analysis_node_id` | `uuid` | NULL | — | `mcorch_nodes.id` | Nó de observação do ciclo |
+> 71	| `debited_at` | `timestamptz` | NULL | — | — | estado do pré-débito (idempotência) |
+> 72	| `refunded_at` | `timestamptz` | NULL | — | — | estado do refund (finalize roda 1×) |
+> 73	| `started_at` | `timestamptz` | NOT NULL | `now()` | — | — |
+> 74	| `completed_at` | `timestamptz` | NULL | — | — | — |
+> 75	| — | — | — | — | — | **UNIQUE (plan_id, cycle_number)** |
+> 76	
+> 77	### Table: `creative_metrics`
+> 78	
+> 79	| Column | Type | Nullable | Default | FK | Description |
+> 80	|--------|------|----------|---------|-----|------------|
+> 81	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | PK |
+> 82	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` | Tenant (FK real + parte da FK composta) |
+> 83	| `cycle_id` | `uuid` | NULL | — | `autopilot_cycles(id,user_id)` | Ciclo de origem (FK COMPOSTA tenant-escopada com `user_id`) |
+> 84	| `content_variant_id` | `uuid` | NOT NULL | — | ref. lógica → `content_library.id` (sem FK física) | Criativo medido (= a linha de `content_library`; sem FK p/ retenção independente §7; propagado a `affiliate_links.content_id`) |
+> 85	| `product_id` | `text` | NULL | — | → `vm_affiliate_products.external_id` | Produto promovido (chave canônica `external_id`) |
+> 86	| `platform` | `text` | NULL | — | — | Rede |
+> 87	| `source` | `text` | NOT NULL | — | — | affiliate_click\|organic\|postback |
+> 88	| `impressions` | `int` | NOT NULL | `0` | — | — |
+> 89	| `engagements` | `int` | NOT NULL | `0` | — | likes/shares/comments |
+> 90	| `affiliate_clicks` | `int` | NOT NULL | `0` | — | do click ledger |
+> 91	| `revenue_cents` | `int` | NOT NULL | `0` | — | do postback |
+> 92	| `collected_at` | `timestamptz` | NOT NULL | `now()` | — | — |
+> 93	| — | — | — | — | — | **UNIQUE (content_variant_id, source)** |
+> 94	
+> 95	> Nenhuma das 3 tabelas carrega `embedding`/`stability_score` — não são nós de conhecimento diretos. A memória semântica entra via `mcorch_nodes` (§4).
+> 96	
+> 97	---
+> 98	
+> 99	## 3. Supabase Physical Schema Stubs
+> 100	
+> 101	```sql
+> 102	-- ============================================================
+> 103	-- MIGRATION: <ts>_viral_autopilot_schema.sql  (split em 4 arquivos — ver 05-sdd §7)
+> 104	-- ============================================================
+> 105	-- autopilot_plans / autopilot_cycles / creative_metrics + ALTER scheduled_posts
+> 106	-- (stubs CREATE TABLE completos em 05-sdd.md §7)
+> 107	
+> 108	-- RLS (default-deny → own-row)
+> 109	ALTER TABLE public.autopilot_plans     ENABLE ROW LEVEL SECURITY;
+> 110	ALTER TABLE public.autopilot_cycles    ENABLE ROW LEVEL SECURITY;
+> 111	ALTER TABLE public.creative_metrics    ENABLE ROW LEVEL SECURITY;
+> 112	
+> 113	CREATE POLICY "autopilot_plans: users read own"    ON public.autopilot_plans  FOR SELECT USING (user_id = auth.uid());
+> 114	CREATE POLICY "autopilot_plans: users write own"   ON public.autopilot_plans  FOR INSERT WITH CHECK (user_id = auth.uid());
+> 115	CREATE POLICY "autopilot_plans: users update own"  ON public.autopilot_plans  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+> 116	-- DELETE bloqueado p/ authenticated via RESTRICTIVE (espelha 20260413183335); só service-role remove (LGPD cascade):
+> 117	CREATE POLICY "autopilot_plans: no client delete" ON public.autopilot_plans AS RESTRICTIVE FOR DELETE USING (false);
+> 118	
+> 119	CREATE POLICY "autopilot_cycles: users read own"   ON public.autopilot_cycles FOR SELECT USING (user_id = auth.uid());
+> 120	CREATE POLICY "creative_metrics: users read own"   ON public.creative_metrics FOR SELECT USING (user_id = auth.uid());
+> 121	-- Tabelas FINANCEIRAS: só SELECT own + RESTRICTIVE no-delete explícito (CLAUDE.md exige RESTRICTIVE
+> 122	-- em tabelas financeiras). INSERT/UPDATE não têm policy permissiva → default-deny p/ authenticated;
+> 123	-- só service-role (runner/coletor, que bypassa RLS) escreve. Default-deny INTENCIONAL e explícito.
+> 124	CREATE POLICY "autopilot_cycles: no client delete"  ON public.autopilot_cycles  AS RESTRICTIVE FOR DELETE USING (false);
+> 125	CREATE POLICY "creative_metrics: no client delete"  ON public.creative_metrics  AS RESTRICTIVE FOR DELETE USING (false);
+> 126	-- Integridade de tenant: user_id é FK real → auth.users; cycles e creative_metrics usam FK COMPOSTA
+> 127	-- tenant-escopada ((plan_id,user_id)→plans; (cycle_id,user_id)→cycles) — ver 05-sdd §7.
+> 128	-- ⚠️ Toda esta migration passa /security-review antes do commit (FMEA-011 cross-tenant).
+> 129	
+> 130	-- Índices
+> 131	CREATE INDEX autopilot_plans_due_idx     ON public.autopilot_plans (next_run_at) WHERE is_active;
+> 132	CREATE INDEX autopilot_cycles_plan_idx   ON public.autopilot_cycles (plan_id);
+> 133	CREATE INDEX creative_metrics_cycle_idx  ON public.creative_metrics (cycle_id);
+> 134	CREATE INDEX creative_metrics_variant_idx ON public.creative_metrics (content_variant_id);
+> 135	
+> 136	-- Updated-at trigger (reusa update_updated_at_column existente)
+> 137	CREATE TRIGGER set_autopilot_plans_updated_at
+> 138	  BEFORE UPDATE ON public.autopilot_plans
+> 139	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 140	```
+> 141	
+> 142	---
+> 143	
+> 144	## 4. GraphRAG Knowledge Nodes
+> 145	
+> 146	### Node Types Introduced
+> 147	
+> 148	| node_type | Title Pattern | Content Fields | Embedding Source |
+> 149	|-----------|--------------|----------------|-----------------|
+> 150	| `observation` (reuse) | `autopilot-cycle-<plan>-<n>-<date>` | resumo do ciclo: produto, redes, desempenho agregado, política aplicada | `${title} ${content}` via `embed-mcorch-node` |
+> 151	
+> 152	> Não introduz `node_type` novo — reusa `observation`. A novidade é o **edge** que liga ciclos para a memória de aprendizado ser navegável.
+> 153	
+> 154	### Edge Types Introduced
+> 155	
+> 156	| Edge relationship | Source node_type | Target node_type | Metadata |
+> 157	|-------------------|-----------------|-----------------|----------|
+> 158	| `OPTIMIZES_FROM` (new) | `observation` (ciclo N+1) | `observation` (ciclo N) | `{ lift, applied_features }` — o ciclo N+1 derivou aprendizado do ciclo N |
+> 159	| `ATTRIBUTES_REVENUE_TO` (reuse) | `revenue` event | `content_mesh_asset`/criativo | `{ revenue_cents, order_id }` — atribuição por criativo |
+> 160	| `PROMOTES` (new, optional) | `observation` (ciclo) | product node | `{ product_id, commission_value }` |
+> 161	
+> 162	### Embedding Trigger
+> 163	
+> 164	```typescript
+> 165	// Após fechar o ciclo (autopilot-run / autopilot-analyze), insere observation node:
+> 166	await supabase.functions.invoke('embed-mcorch-node', {
+> 167	  body: { node_id: cycleNode.id, content: `${title} ${cycleSummary}` }
+> 168	})
+> 169	// O trigger trg_mcorch_embed_on_insert (pg_net) também dispara automaticamente.
+> 170	```
+> 171	
+> 172	### FSRS-6 Parameters
+> 173	
+> 174	| Field | Initial Value | Decay Rule |
+> 175	|-------|--------------|------------|
+> 176	| `stability_score` (no `mcorch_nodes` do ciclo) | `0.7` (observação operacional relevante) | Decai por `decay_mcorch_stability()` (migration `20260425190000`) |
+> 177	| `revenue_impact` (no nó do ciclo) | `SUM(creative_metrics.revenue_cents)/100` do ciclo | Atualizado quando postback credita receita atribuída ao ciclo |
+> 178	
+> 179	---
+> 180	
+> 181	## 5. Tenant Isolation Map
+> 182	
+> 183	| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |
+> 184	|-------|----------------|-------------------|-------------------------------|
+> 185	| `autopilot_plans` | ✅ Required | Optional | No |
+> 186	| `autopilot_cycles` | ✅ Required (denorm) | via plano | No |
+> 187	| `creative_metrics` | ✅ Required | via ciclo | No |
+> 188	| `scheduled_posts` (reuse) | ✅ Required (existente) | — | No |
+> 189	| `vm_affiliate_products` (reuse) | catálogo compartilhado (read `USING(true)`) | — | Sim (shared) |
+> 190	| `mcorch_nodes` (reuse) | Optional | Optional | Sim (system nodes) |
+> 191	
+> 192	---
+> 193	
+> 194	## 6. Data Quality Rules
+> 195	
+> 196	| Table | Column | Rule | Violation Message (PT-BR) |
+> 197	|-------|--------|------|--------------------------|
+> 198	| `autopilot_plans` | `mode` | ∈ {all_at_once, every_n_days} | "Modo de cadência inválido." |
+> 199	| `autopilot_plans` | `interval_days` | 1–30; obrigatório se `every_n_days` | "Intervalo deve ser entre 1 e 30 dias." |
+> 200	| `autopilot_plans` | `target_product_ids` | cardinalidade ≥ 1; ids existem no catálogo | "Selecione ao menos um produto-alvo válido." |
+> 201	| `autopilot_plans` | `platforms` | ⊆ redes suportadas (MVP); ≥ 1 | "Selecione ao menos uma rede suportada." |
+> 202	| `autopilot_plans` | `budget_cap_mco` | ≥ custo mínimo de 1 ciclo | "Teto de custo abaixo do mínimo de um ciclo." |
+> 203	| `autopilot_cycles` | `(plan_id, cycle_number)` | UNIQUE (idempotência) | "Ciclo já existente para este plano." |
+> 204	| `creative_metrics` | `(content_variant_id, source)` | UNIQUE (upsert por fonte) | — |
+> 205	| `creative_metrics` | `revenue_cents`/`affiliate_clicks` | ≥ 0 | "Métrica não pode ser negativa." |
+> 206	
+> 207	---
+> 208	
+> 209	## 7. Retention & Archival Policy
+> 210	
+> 211	| Data | Retention Period | Archival Strategy | Deletion Trigger |
+> 212	|------|-----------------|-------------------|-----------------|
+> 213	| `autopilot_plans` | enquanto ativo + 1 ano | nenhum | CASCADE no delete do user (LGPD) |
+> 214	| `autopilot_cycles` | 18 meses | sumário agregado em `mcorch_nodes` (observation) | CASCADE no delete do plano |
+> 215	| `creative_metrics` | 18 meses | agregado por ciclo preservado no nó | CASCADE no delete do ciclo |
+> 216	| `mcorch_nodes` (observation de ciclo) | Indefinido (memória) | FSRS-6 decay de stability | LGPD erase por tenant |
+> 217	| `infra_health_logs` (eventos autopilot) | 90 dias | sem archival | Cron purge |
+> 218	
+> 219	> **LGPD:** o delete do tenant (`auth.users`) cascateia plans→cycles→creative_metrics. Métricas guardam só agregados (sem PII de terceiros que engajaram).
+> 220	
+> 221	---
+> 222	
+> 223	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 224	
+> ```
+
+## 🤖 Claude *(17:45:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: viral-autopilot creative_metrics — canonical per-creative performance ledger (FR-VA-009).
+> 2	-- BoK SSOT: docs/bok/viral-autopilot/06-data-model.md (creative_metrics) + 04-frd.md (FR-VA-009 unified
+> 3	--           3-signal metrics: affiliate_clicks + organic engagement + revenue — Decisão 3 "combo").
+> 4	-- SOP: docs/processes/[[viral-autopilot-product-aware-monetization|viral-autopilot-product-aware-monetization]].md (Lei 2 — written before this code).
+> 5	--
+> 6	-- WHY a NEW table (not campaign_metrics): public.campaign_metrics ALREADY EXISTS (per-platform telemetry,
+> 7	-- consumed by self-optimize / ROIWidget / AnalyticsPage) and is keyed by campaign, NOT by creative. The
+> 8	-- viral loop needs metrics keyed by the INDIVIDUAL creative (content_variant_id = content_library.id) so the
+> 9	-- future R3 analyzer (FR-VA-010) can rank creative-by-creative and the per-creative attribution (FR-VA-017)
+> 10	-- has a home. campaign_metrics is left UNTOUCHED (deprecation is a later concern; no consumer is broken here).
+> 11	--
+> 12	-- Fatia 1 role: the generator (orchestrate-step, service-role) writes ONE baseline row per creative
+> 13	-- (source='organic', zeros) at generation time — this seeds the content_variant_id↔product↔platform key that
+> 14	-- the future collector (FR-VA-008) and analyzer (FR-VA-010) build on. The cron/cadence layer is NOT part of
+> 15	-- this migration: cycle_id is reserved NULL-able (NO physical FK yet — autopilot_cycles does not exist) so
+> 16	-- the cadence Fatia can add the composite tenant-scoped FK later with zero churn here.
+> 17	--
+> 18	-- Tenancy (mirrors vision_jobs 20260615160000 + lead_core 20260603000000): SELECT-own only; NO write policy
+> 19	-- for authenticated → default-deny (the generator writes via the service key, which bypasses RLS). A tenant
+> 20	-- can never forge a metric for another tenant nor fabricate revenue. Financial table → RESTRICTIVE no-delete
+> 21	-- (clients cannot erase the ledger). Passes /security-review (FMEA-011 / FMEA-VA-001 cross-tenant family).
+> 22	
+> 23	CREATE TABLE IF NOT EXISTS public.creative_metrics (
+> 24	  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+> 25	  user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 26	  cycle_id           uuid,                          -- reserved for the cadence Fatia (autopilot_cycles); NO FK yet
+> 27	  content_variant_id uuid        NOT NULL,          -- logical ref to content_library.id; NO physical FK (independent
+> 28	                                                    -- 18-month retention per Data Model §7 — content can be pruned
+> 29	                                                    -- while its performance history is retained for the loop)
+> 30	  product_id         text,                          -- = vm_affiliate_products.external_id (the featured product)
+> 31	  platform           text,                          -- wordpress | linkedin | twitter
+> 32	  source             text        NOT NULL DEFAULT 'organic'
+> 33	                       CHECK (source IN ('affiliate_click','organic','postback')),
+> 34	  impressions        int         NOT NULL DEFAULT 0 CHECK (impressions      >= 0),
+> 35	  engagements        int         NOT NULL DEFAULT 0 CHECK (engagements      >= 0),
+> 36	  affiliate_clicks   int         NOT NULL DEFAULT 0 CHECK (affiliate_clicks >= 0),
+> 37	  revenue_cents      int         NOT NULL DEFAULT 0 CHECK (revenue_cents    >= 0),
+> 38	  collected_at       timestamptz NOT NULL DEFAULT now(),
+> 39	  created_at         timestamptz NOT NULL DEFAULT now(),
+> 40	  -- One row per (creative, signal source): the baseline 'organic' row at generation, later upserted by the
+> 41	  -- collector; 'affiliate_click' and 'postback' rows are written by their own writers (click ledger / postback).
+> 42	  CONSTRAINT creative_metrics_variant_source_uniq UNIQUE (content_variant_id, source)
+> 43	);
+> 44	
+> 45	ALTER TABLE public.creative_metrics ENABLE ROW LEVEL SECURITY;
+> 46	
+> 47	-- SELECT own only. No INSERT/UPDATE policy → authenticated default-deny; the generator/collector write via the
+> 48	-- service key. A tenant reads its own creative performance (future dashboard FR-VA-015) and nothing else.
+> 49	CREATE POLICY "creative_metrics_select_own" ON public.creative_metrics
+> 50	  FOR SELECT USING (auth.uid() = user_id);
+> 51	
+> 52	-- Financial ledger → clients can NEVER delete a metric row (RESTRICTIVE forbids it even if a future permissive
+> 53	-- policy is added). Mirrors the RESTRICTIVE pattern on financial/affiliate tables.
+> 54	CREATE POLICY "creative_metrics_no_client_delete" ON public.creative_metrics
+> 55	  AS RESTRICTIVE FOR DELETE USING (false);
+> 56	
+> 57	CREATE INDEX IF NOT EXISTS creative_metrics_variant_idx  ON public.creative_metrics (content_variant_id);
+> 58	CREATE INDEX IF NOT EXISTS creative_metrics_user_idx     ON public.creative_metrics (user_id, collected_at DESC);
+> 59	CREATE INDEX IF NOT EXISTS creative_metrics_cycle_idx    ON public.creative_metrics (cycle_id);
+> 60	CREATE INDEX IF NOT EXISTS creative_metrics_product_idx  ON public.creative_metrics (product_id);
+> 61	
+> 62	COMMENT ON TABLE public.creative_metrics IS
+> 63	  'Viral Autopilot canonical per-creative metrics ledger (FR-VA-009), keyed by content_variant_id '
+> 64	  '(= content_library.id). Unifies 3 signals (affiliate_click/organic/postback — Decisão 3). SELECT-own RLS, '
+> 65	  'service-role write (default-deny), RESTRICTIVE no client delete. Generator writes a baseline row at '
+> 66	  'generation; collector/analyzer (R3) build on it. SOP [[viral-autopilot-product-aware-monetization|viral-autopilot-product-aware-monetization]].md.';
+> 67	
+> ```
+
+## 🤖 Claude *(17:45:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== add_mco_coins body (does it ledger?) ===\"\nsed -n '/CREATE OR REPLACE FUNCTION public.add_mco_coins/,/\\$\\$;/p' supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql 2>/dev/null | head -40\necho \"\"\necho \"=== SDD: begin/finalize_autopilot_cycle signatures + table DDL hints ===\"\ngrep -nE -A4 'begin_autopilot_cycle|finalize_autopilot_cycle|autopilot_plans|autopilot_cycles' docs/bok/viral-autopilot/05-sdd.md 2>/dev/null | head -70",
+  "description": "add_mco_coins body + SDD RPC signatures"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === add_mco_coins body (does it ledger?) ===
+> CREATE OR REPLACE FUNCTION public.add_mco_coins(
+>   p_user_id UUID,
+>   p_amount   INTEGER
+> )
+> RETURNS INTEGER
+> LANGUAGE plpgsql
+> SECURITY DEFINER
+> SET search_path = public
+> AS $$
+> DECLARE
+>   v_new_balance INTEGER;
+> BEGIN
+>   IF p_amount <= 0 THEN
+>     RAISE EXCEPTION 'Amount must be positive';
+>   END IF;
+> 
+>   UPDATE public.profiles
+>     SET mco_balance = mco_balance + p_amount
+>   WHERE id = p_user_id
+>   RETURNING mco_balance INTO v_new_balance;
+> 
+>   IF v_new_balance IS NULL THEN
+>     RAISE EXCEPTION 'User profile not found';
+>   END IF;
+> 
+>   RETURN v_new_balance;
+> END;
+> $$;
+> 
+> === SDD: begin/finalize_autopilot_cycle signatures + table DDL hints ===
+> 41:│  autopilot_plans (new)     │  │  OpenRouter/Groq (LLM, BYOK)    │
+> 42:│  autopilot_cycles (new)    │  │  DALL·E/Nano Banana (image)     │
+> 43-│  creative_metrics (new)    │  │  LinkedIn/X/WordPress (publish) │
+> 44-│  scheduled_posts (reuse)   │  │  Mercado Livre/Pago (postback)  │
+> 45-│  affiliate_links (reuse)   │  │  Apify (fetch-trends, v1.0)     │
+> 46-│  optimization_policy(reuse)│  └─────────────────────────────────┘
+> --
+> 60:| `useAutopilot` | `useAutopilot.ts` | **FR-VA-014** | CRUD de `autopilot_plans`; lista ciclos; ROI por criativo; activate/pause | `['autopilot-plans']`, `['autopilot-cycles', planId]`, `['creative-metrics', cycleId]` |
+> 61-
+> 62-### 2.2 New Display Components (`src/components/autopilot/`)
+> 63-
+> 64-| Component | File | FR | Props | Hook consumed |
+> --
+> 103:| `autopilot_plans` | Table | Config de cadência per-user (FR-VA-001) | `<ts>_viral_autopilot_plans.sql` |
+> 104:| `autopilot_cycles` | Table | Ledger de ciclo + spend + status (FR-VA-006) | `<ts>_viral_autopilot_cycles.sql` |
+> 105-| `creative_metrics` | Table | Métricas unificadas por criativo (FR-VA-009) | `<ts>_viral_autopilot_creative_metrics.sql` |
+> 106-| `scheduled_posts.cycle_id` | Column | Liga post ao ciclo (NFR-VA-007 auditabilidade) | `<ts>_scheduled_posts_cycle_id.sql` |
+> 107-| `autopilot-cadence` | pg_cron | Disparo recorrente */15 (FR-VA-005) | dentro da migration de cron |
+> 108-| `autopilot-collect` | pg_cron | Coleta de métricas (FR-VA-008) | dentro da migration de cron |
+> 109:| `begin_autopilot_cycle(uuid, uuid, int)` | RPC (SECURITY DEFINER, service-role-only) | Atômico (advisory lock por user_id): checa cap diário + cap por ciclo + saldo, faz pré-débito (`deduct_mco_coins`) e abre `autopilot_cycles` running numa txn — anti-TOCTOU do cap diário (FR-VA-007/021) | `<ts>_begin_autopilot_cycle.sql` |
+> 110:| `finalize_autopilot_cycle(uuid, int)` | RPC (SECURITY DEFINER, service-role-only) | Fecha ciclo + **credita** refund `(projected − actual)` via `add_mco_coins` (ledgered) na mesma txn; idempotente por `refunded_at IS NULL` (FR-VA-007); espelha `finalize_vision_job` | `<ts>_finalize_autopilot_cycle.sql` |
+> 111-
+> 112----
+> 113-
+> 114-## 3. Data Flow Diagrams
+> --
+> 129: │                 │                    │──[open cycle]─────────────────────────▶│ autopilot_cycles (running, spend_mco=projected)
+> 130- │                 │                    │──[fan-out/produto×rede: service-role + x-autopilot-user-id + prepaid=true]─▶│
+> 131- │                 │                    │                    │──[gen product-aware + feedback inject]─▶ LLM (BYOK por user_id)
+> 132- │                 │                    │                    │  (prepaid → NÃO self-bill)
+> 133- │                 │                    │                    │──[monetize all formats: content_id=content_variant_id]─▶ affiliate_links
+> --
+> 135: │                 │                    │──[finalize_autopilot_cycle(cycle_id, actual)]─▶│ RPC: terminal + CRÉDITO positivo do não-usado no mco_balance (1 txn; idempotente refunded_at; NUNCA deduct negativo)
+> 136- │                 │                    │──[analyze INLINE pós-ciclo]───────────▶│ autopilot-analyze: creative_metrics(N) → optimization_policy(N) [feeds N+1]
+> 137- │                 │◀──[re-arm next_run_at = now + interval]──────────────────────│
+> 138- │                 │                    │   (auto-publish cron drains scheduled_posts → publish-*)
+> 139- │                 │ (later, 6/6h) autopilot-collect: post_id → insights + cliques + receita → creative_metrics
+> --
+> 168://   ANTES de confiar no header x-autopilot-user-id (= autopilot_plans.user_id, server-trusted, NUNCA do body);
+> 169-//   caminho "gerar agora" = JWT do user (getUser), asserir user.id === plan.user_id.
+> 170-// Cost gate (FR-VA-007 + FR-VA-021) — atômico, ANTES do fan-out:
+> 171-// → N_runs = |target_product_ids| × |platforms| × ab_variants        (fórmula canônica única)
+> 172-// → projected = N_runs * ORCHESTRATION_RUN(10) + ANALYZE_COST(2)      // imagem JÁ no bundle de 10 (billing.ts:16-21)
+> 173:// → CAP DIÁRIO (FR-VA-021): daily_spent = SELECT COALESCE(SUM(spend_mco),0) FROM autopilot_cycles
+> 174-//     WHERE user_id = plan.user_id AND started_at::date = (now() AT TIME ZONE 'UTC')::date
+> 175-//     AND status <> 'aborted_daily_cap';  if daily_spent + projected > plan.daily_cap_mco → 409 aborted_daily_cap (sem deduct)
+> 176-// → if projected > plan.budget_cap_mco → 409 aborted_budget + pause plan (sem deduct)
+> 177-// → balance check; if mco_balance < projected OR < min_balance → 402 insufficient_balance
+> --
+> 179://   'running' (spend_mco=projected, debited_at) acontecem DENTRO de UM RPC begin_autopilot_cycle
+> 180-//   (SECURITY DEFINER service-role-only) com pg_advisory_xact_lock(hashtext(user_id::text)) — serializa
+> 181-//   ciclos concorrentes do MESMO tenant, senão dois ciclos paralelos passariam o cap diário juntos
+> 182-//   (read-then-act). O deduct_mco_coins (guarda mco_balance>=amount) protege o SALDO; o advisory lock
+> 183-//   + o INSERT-antes-do-re-SELECT protege o AGREGADO diário. Retorna cycle_id OU motivo de abort.
+> --
+> 185:// → ao fechar: finalize_autopilot_cycle(cycle_id, actual) — RPC SECURITY DEFINER service-role-only,
+> 186-//   idempotente (guarda refunded_at IS NULL), CREDITA o não-usado (projected - actual) no mco_balance
+> 187-//   na MESMA transação (espelha finalize_vision_job). REFUND É CRÉDITO POSITIVO — deduct_mco_coins
+> 188-//   rejeita p_amount<=0 (migration 20260603220000:45, anti-mint), então NÃO usar deduct negativo.
+> 189-```
+> --
+> 203://   const { user_id, plan_id } = SELECT user_id, plan_id FROM autopilot_cycles WHERE id = previous_cycle_id
+> 204-//   → usar ESSE user_id como p_user_id no deduct e como filtro de creative_metrics (RLS).
+> 205-// Deduct ANALYZE_COST(2 mco) via deduct_mco_coins(user_id, 2) SOMENTE quando has_real_data === true;
+> 206-//   has_real_data === false → 0 mco + log infra_health_logs event 'viral_autopilot_analyze_empty'.
+> 207-```
+> --
+> 220:| `autopilot-analyze` | `tenant_id` forjado no body → deduct + leitura cross-tenant (IDOR) | Spoofing/Tampering | Critical | **NÃO aceitar `tenant_id`/`plan_id` no body**; derivar de `previous_cycle_id` (`SELECT user_id, plan_id FROM autopilot_cycles`, sob service-role) — identidade vem de **linha confiável**, não do body (mesmo princípio do `finalize_vision_job`; ≠ `lead-score`/`campaign-run` que derivam de user-JWT) |
+> 221:| `autopilot_plans`/`_cycles`/`creative_metrics` | Leitura/escrita cross-tenant | Information Disclosure | Critical | RLS `user_id = auth.uid()`; crons usam service-role com filtro explícito por tenant derivado da linha |
+> 222-| Cost gate (FR-VA-007) | Bypass do teto / saldo negativo entre check e deduct (TOCTOU) | Tampering | Critical | **Pré-débito atômico ÚNICO** de `N_runs×10+2` em `autopilot-run` ANTES do fan-out (não distribuído nos sub-runs) + refund do não-usado; `spend_mco` no ciclo; idempotência (plan_id, cycle_number) |
+> ```
+
+## 🤖 Claude *(17:47:54)*
+
+
+## 🤖 Claude *(17:47:57)*
+
+Contrato selado totalmente lido. A migration vai honrar o `06-data-model.md` exatamente — `autopilot_plans`/`autopilot_cycles` com as colunas/defaults selados, FK composta `(plan_id,user_id)`, RESTRICTIVE no-delete, e os 2 RPCs `begin/finalize_autopilot_cycle` espelhando o `finalize_vision_job`. Confirmando o timestamp livre antes de escrever (evita colisão de ordenação).
+
+## 🤖 Claude *(17:48:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== latest 5 migration timestamps (pick next > max) ===\"\nls supabase/migrations/ | sort | tail -5\necho \"\"\necho \"=== confirm add_mco_coins is service-role-only NOW (for finalize to call) ===\"\ngrep -rnE 'add_mco_coins\\(uuid, integer\\)' supabase/migrations/20260520150000_admin_user_lifecycle.sql\necho \"\"\necho \"=== does update_updated_at_column() exist (trigger reuse)? ===\"\ngrep -rlE 'FUNCTION public\\.update_updated_at_column' supabase/migrations/ | head -1\necho \"\"\necho \"=== mcoin_transactions columns (for refund ledger row) ===\"\ngrep -rnE -A8 'CREATE TABLE.*mcoin_transactions' supabase/migrations/ | head -20",
+  "description": "Verify timestamp, RPC grants, trigger fn, ledger columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === latest 5 migration timestamps (pick next > max) ===
+> 20260615170000_infra_health_logs_metadata.sql
+> 20260615180000_vision_mcp_access_tokens.sql
+> 20260615190000_vision_mcp_artifacts.sql
+> 20260615200000_vision_mcp_erase_rpc.sql
+> 20260619140000_viral_autopilot_creative_metrics.sql
+> 
+> === confirm add_mco_coins is service-role-only NOW (for finalize to call) ===
+> supabase/migrations/20260520150000_admin_user_lifecycle.sql:17:REVOKE EXECUTE ON FUNCTION public.add_mco_coins(uuid, integer) FROM authenticated;
+> supabase/migrations/20260520150000_admin_user_lifecycle.sql:18:GRANT  EXECUTE ON FUNCTION public.add_mco_coins(uuid, integer) TO service_role;
+> 
+> === does update_updated_at_column() exist (trigger reuse)? ===
+> supabase/migrations/20260531210000_meta_ads_metrics.sql
+> 
+> === mcoin_transactions columns (for refund ledger row) ===
+> supabase/migrations/20260508100000_mcoin_transactions.sql:5:CREATE TABLE IF NOT EXISTS mcoin_transactions (
+> supabase/migrations/20260508100000_mcoin_transactions.sql-6-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> supabase/migrations/20260508100000_mcoin_transactions.sql-7-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> supabase/migrations/20260508100000_mcoin_transactions.sql-8-  action TEXT NOT NULL,
+> supabase/migrations/20260508100000_mcoin_transactions.sql-9-  amount INTEGER NOT NULL,
+> supabase/migrations/20260508100000_mcoin_transactions.sql-10-  created_at TIMESTAMPTZ DEFAULT NOW(),
+> supabase/migrations/20260508100000_mcoin_transactions.sql-11-  context JSONB DEFAULT '{}',
+> supabase/migrations/20260508100000_mcoin_transactions.sql-12-  project_id UUID REFERENCES projects(id)
+> supabase/migrations/20260508100000_mcoin_transactions.sql-13-);
+> ```
+
+## 🤖 Claude *(17:50:26)*
+
+
+## 🤖 Claude *(17:50:28)*
+
+Timestamp livre confirmado (max = `20260619140000` → uso `20260620120000+`), `add_mco_coins` service-role-only, `update_updated_at_column()` e colunas de `mcoin_transactions` confirmadas. Escrevendo as 4 migrations da fatia — cada uma honrando o schema selado do `06-data-model.md` e documentando no header qualquer escolha de engenharia (Lei 1).
+
+## 🤖 Claude *(17:50:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120000_viral_autopilot_plans.sql",
+  "content": "-- Migration: viral-autopilot autopilot_plans \u2014 per-user cadence config (FR-VA-001 / FR-VA-005).\n-- BoK SSOT: docs/bok/viral-autopilot/06-data-model.md \u00a72 (autopilot_plans) + 05-sdd.md \u00a77.\n-- SOP (Lei 2 \u2014 written BEFORE this code): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.\n--\n-- The \"what & when\" source of truth for the autonomous viral loop: which products, which networks, how often,\n-- and the MANDATORY safety caps (budget_cap_mco per cycle, daily_cap_mco per tenant, min_balance_mco floor).\n-- Caps are NOT NULL by design \u2014 the cron NEVER runs without a kill-switch (FMEA-VA-001 RPN 128 / BR-RISK-001).\n--\n-- Tenancy: RLS user_id = auth.uid() (own CRUD); RESTRICTIVE no-delete for authenticated (only service-role\n-- removes, e.g. LGPD cascade). UNIQUE(id,user_id) is the target of the tenant-scoped composite FK from\n-- autopilot_cycles (next migration). Passes /security-review (FMEA-011 / FMEA-VA-001 cross-tenant family).\n--\n-- Engineering notes (deviations from sealed stub, declared per Lei 1):\n--   * CHECKs added beyond the data-model stub (mode enum, interval 1-30, platforms subset, caps >= 12 = 1-cycle\n--     floor [1 run 10 + analyze 2], ab_variants 1-5) materialize the \u00a76 Data Quality rules at the DB layer.\n--   * project_id has NO FK (matches data-model \u00a72 \"FK \u2014\"); kept as a plain scoping uuid.\n\nCREATE TABLE IF NOT EXISTS public.autopilot_plans (\n  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  project_id         uuid,\n  name               text        NOT NULL,\n  mode               text        NOT NULL CHECK (mode IN ('all_at_once','every_n_days')),\n  interval_days      int         DEFAULT 3 CHECK (interval_days IS NULL OR (interval_days BETWEEN 1 AND 30)),\n  target_product_ids text[]      NOT NULL CHECK (array_length(target_product_ids, 1) >= 1),\n  platforms          text[]      NOT NULL CHECK (array_length(platforms, 1) >= 1\n                                   AND platforms <@ ARRAY['wordpress','linkedin','twitter']),\n  budget_cap_mco     int         NOT NULL CHECK (budget_cap_mco  >= 12),  -- >= 1 cycle (1 run 10 + analyze 2)\n  daily_cap_mco      int         NOT NULL DEFAULT 200 CHECK (daily_cap_mco >= 12),\n  min_balance_mco    int         NOT NULL DEFAULT 10  CHECK (min_balance_mco >= 0),\n  hitl_required      boolean     NOT NULL DEFAULT false,\n  ab_variants        int         NOT NULL DEFAULT 1   CHECK (ab_variants BETWEEN 1 AND 5),\n  is_active          boolean     NOT NULL DEFAULT false,\n  next_run_at        timestamptz,\n  created_at         timestamptz NOT NULL DEFAULT now(),\n  updated_at         timestamptz NOT NULL DEFAULT now(),\n  -- mode every_n_days REQUIRES interval_days (Data Quality \u00a76).\n  CONSTRAINT autopilot_plans_interval_req CHECK (mode <> 'every_n_days' OR interval_days IS NOT NULL),\n  -- anchor for the tenant-scoped composite FK from autopilot_cycles (id,user_id).\n  CONSTRAINT autopilot_plans_id_user_uniq UNIQUE (id, user_id)\n);\n\nALTER TABLE public.autopilot_plans ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"autopilot_plans_select_own\" ON public.autopilot_plans\n  FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"autopilot_plans_insert_own\" ON public.autopilot_plans\n  FOR INSERT WITH CHECK (auth.uid() = user_id);\nCREATE POLICY \"autopilot_plans_update_own\" ON public.autopilot_plans\n  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\n-- Clients can NEVER delete a plan (RESTRICTIVE forbids it even if a permissive policy is later added);\n-- only service-role (LGPD cascade) removes.\nCREATE POLICY \"autopilot_plans_no_client_delete\" ON public.autopilot_plans\n  AS RESTRICTIVE FOR DELETE USING (false);\n\n-- Due-plan scan index (cron): active plans whose next_run_at has passed.\nCREATE INDEX IF NOT EXISTS autopilot_plans_due_idx  ON public.autopilot_plans (next_run_at) WHERE is_active;\nCREATE INDEX IF NOT EXISTS autopilot_plans_user_idx ON public.autopilot_plans (user_id, created_at DESC);\n\nCREATE TRIGGER set_autopilot_plans_updated_at\n  BEFORE UPDATE ON public.autopilot_plans\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\nCOMMENT ON TABLE public.autopilot_plans IS\n  'Viral Autopilot cadence config per user (FR-VA-001/005). Mandatory safety caps (budget/daily/min_balance) \u2014 '\n  'the cron never runs without a kill-switch. SELECT/INSERT/UPDATE own, RESTRICTIVE no client delete. '\n  'UNIQUE(id,user_id) anchors the tenant-scoped composite FK from autopilot_cycles. SOP [[autopilot-cron-identity|autopilot-cron-identity]].md.';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120000_viral_autopilot_plans.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120100_viral_autopilot_cycles.sql",
+  "content": "-- Migration: viral-autopilot autopilot_cycles \u2014 per-cycle execution ledger (FR-VA-006 / FR-VA-007).\n-- BoK SSOT: docs/bok/viral-autopilot/06-data-model.md \u00a72 (autopilot_cycles) + 05-sdd.md \u00a77.\n-- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.\n--\n-- One row per cadence cycle: the FINANCIAL ledger of a run (status, spend_mco pre-debited, refunded_mco credited\n-- on finalize, planned_units, debited_at/refunded_at idempotency stamps). Idempotent by (plan_id, cycle_number).\n-- The pre-debit/refund LOGIC lives in begin_/finalize_autopilot_cycle (next 2 migrations) \u2014 this is the schema.\n--\n-- Tenancy: user_id is a REAL FK to auth.users AND part of the tenant-scoped COMPOSITE FK\n-- (plan_id,user_id) -> autopilot_plans(id,user_id) \u2014 a cycle can never point at another tenant's plan (mirrors\n-- Marketing Hub campaign_steps composite FK). SELECT-own RLS; INSERT/UPDATE have NO permissive policy \u2192\n-- authenticated default-deny (only the service-role runner/RPCs write). Financial table \u2192 RESTRICTIVE no-delete.\n-- UNIQUE(id,user_id) anchors the composite FK from creative_metrics (closed at the end of this file).\n\nCREATE TABLE IF NOT EXISTS public.autopilot_cycles (\n  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id          uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  plan_id          uuid        NOT NULL,\n  cycle_number     int         NOT NULL,\n  status           text        NOT NULL DEFAULT 'running'\n                     CHECK (status IN ('running','completed','aborted_budget','aborted_daily_cap','failed')),\n  spend_mco        int         NOT NULL DEFAULT 0 CHECK (spend_mco     >= 0),\n  refunded_mco     int         NOT NULL DEFAULT 0 CHECK (refunded_mco  >= 0),\n  planned_units    int         NOT NULL DEFAULT 0 CHECK (planned_units >= 0),\n  analysis_node_id uuid,\n  debited_at       timestamptz,\n  refunded_at      timestamptz,\n  started_at       timestamptz NOT NULL DEFAULT now(),\n  completed_at     timestamptz,\n  -- refund can NEVER exceed what was committed (defense-in-depth vs a negative-refund mint).\n  CONSTRAINT autopilot_cycles_refund_le_spend CHECK (refunded_mco <= spend_mco),\n  CONSTRAINT autopilot_cycles_plan_cycle_uniq UNIQUE (plan_id, cycle_number),\n  CONSTRAINT autopilot_cycles_id_user_uniq    UNIQUE (id, user_id),\n  -- tenant-scoped composite FK: the cycle's (plan_id,user_id) must match a plan owned by the SAME tenant.\n  CONSTRAINT autopilot_cycles_plan_fk FOREIGN KEY (plan_id, user_id)\n    REFERENCES public.autopilot_plans (id, user_id) ON DELETE CASCADE\n);\n\nALTER TABLE public.autopilot_cycles ENABLE ROW LEVEL SECURITY;\n\n-- SELECT own only; INSERT/UPDATE default-deny (the service-role RPCs write). Financial \u2192 RESTRICTIVE no-delete.\nCREATE POLICY \"autopilot_cycles_select_own\" ON public.autopilot_cycles\n  FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"autopilot_cycles_no_client_delete\" ON public.autopilot_cycles\n  AS RESTRICTIVE FOR DELETE USING (false);\n\nCREATE INDEX IF NOT EXISTS autopilot_cycles_plan_idx     ON public.autopilot_cycles (plan_id, cycle_number DESC);\nCREATE INDEX IF NOT EXISTS autopilot_cycles_user_day_idx ON public.autopilot_cycles (user_id, started_at);\n\nCOMMENT ON TABLE public.autopilot_cycles IS\n  'Viral Autopilot per-cycle financial ledger (FR-VA-006/007). spend_mco pre-debited by begin_autopilot_cycle, '\n  'refunded_mco credited by finalize_autopilot_cycle (idempotent). Tenant-scoped composite FK to autopilot_plans. '\n  'SELECT-own, service-role write (default-deny), RESTRICTIVE no client delete. SOP autopilot-cron-identity.md.';\n\n-- \u2500\u2500 Close the deferred composite FK from creative_metrics (Fatia 1 left cycle_id NULL-able, NO FK) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Now that autopilot_cycles exists, wire the tenant-scoped composite FK (cycle_id,user_id) -> cycles(id,user_id).\n-- MATCH SIMPLE (default): rows with cycle_id NULL (Fatia 1 baseline rows) stay valid (FK skipped when any col NULL).\n-- ON DELETE CASCADE: erasing a cycle erases its metrics (Data Model \u00a77 retention). Idempotent guard so a re-run\n-- of this migration does not error on the already-present constraint.\nDO $$\nBEGIN\n  IF NOT EXISTS (\n    SELECT 1 FROM pg_constraint WHERE conname = 'creative_metrics_cycle_fk'\n  ) THEN\n    ALTER TABLE public.creative_metrics\n      ADD CONSTRAINT creative_metrics_cycle_fk FOREIGN KEY (cycle_id, user_id)\n        REFERENCES public.autopilot_cycles (id, user_id) ON DELETE CASCADE;\n  END IF;\nEND $$;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120100_viral_autopilot_cycles.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120200_begin_autopilot_cycle.sql",
+  "content": "-- Migration: begin_autopilot_cycle RPC \u2014 atomic cap-check + single pre-debit + open cycle (FR-VA-007 / FR-VA-021).\n-- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md \u00a72 (RPC table line 109 + cost-gate notes lines ~170-183).\n-- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.\n--\n-- THE anti-TOCTOU heart of the cost guardrail. Under pg_advisory_xact_lock(hashtext(user_id)) \u2014 which serializes\n-- concurrent begins for the SAME tenant so two parallel cycles cannot both slip under the daily cap \u2014 it:\n--   1. loads the plan's caps TENANT-SCOPED (plan must belong to p_user_id \u2014 cross-tenant attempt \u2192 not found),\n--   2. checks budget cap (per cycle), balance + min_balance floor, daily cap (sum of today's committed spend),\n--   3. on ANY breach \u2192 RETURNS an abort reason WITHOUT debiting (caller pauses plan / returns 409/402),\n--   4. on OK \u2192 INSERTs the cycle (status running, spend_mco=projected, debited_at) and PERFORMs the SINGLE\n--      deduct_mco_coins(projected) in the SAME transaction (sub-runs are prepaid \u2192 never self-bill).\n-- Refund is NEVER here \u2014 it is the positive credit in finalize_autopilot_cycle. deduct_mco_coins rejects\n-- p_amount<=0 (anti-mint, 20260603220000:45), so there is no negative-deduct path anywhere.\n--\n-- Identity (OTD-VA-008): service-role-only (REVOKE authenticated/anon). The caller (autopilot-run) has already\n-- proven service-role in-function and resolved p_user_id from the SERVER-TRUSTED plan row, never the request body.\n--\n-- Engineering notes (declared per Lei 1): the sealed stub hints (uuid,uuid,int); a 4th p_planned_units (DEFAULT 0)\n-- is added \u2014 backward-compatible with a 3-arg call \u2014 so the cycle row records N_runs without a follow-up UPDATE.\n-- Aborts are NOT persisted as cycle rows (the status enum has no 'insufficient_balance'); the caller logs the\n-- abort to infra_health_logs (telemetry) \u2014 every FR requirement (\"aborta sem deduzir\", pause plan, 409/402) holds.\n\nCREATE OR REPLACE FUNCTION public.begin_autopilot_cycle(\n  p_plan_id       uuid,\n  p_user_id       uuid,\n  p_projected_mco int,\n  p_planned_units int DEFAULT 0\n)\nRETURNS jsonb\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_budget_cap   int;\n  v_daily_cap    int;\n  v_min_balance  int;\n  v_balance      int;\n  v_daily_spent  int;\n  v_cycle_number int;\n  v_cycle_id     uuid;\nBEGIN\n  IF p_projected_mco IS NULL OR p_projected_mco <= 0 THEN\n    RAISE EXCEPTION 'begin_autopilot_cycle: projected must be positive, got %', p_projected_mco\n      USING errcode = '22023';\n  END IF;\n\n  -- Serialize concurrent cycles for THIS tenant (anti-TOCTOU on the daily-cap aggregate). Transaction-scoped.\n  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));\n\n  -- Tenant-scoped plan load: the plan MUST belong to p_user_id (cross-tenant attempt \u2192 not found \u2192 abort).\n  SELECT budget_cap_mco, daily_cap_mco, min_balance_mco\n    INTO v_budget_cap, v_daily_cap, v_min_balance\n    FROM public.autopilot_plans\n   WHERE id = p_plan_id AND user_id = p_user_id;\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'begin_autopilot_cycle: plan % not found for tenant', p_plan_id USING errcode = 'P0002';\n  END IF;\n\n  -- Budget cap (per cycle) \u2014 FR-VA-007 (no deduct).\n  IF p_projected_mco > v_budget_cap THEN\n    RETURN jsonb_build_object('ok', false, 'reason', 'aborted_budget',\n                              'projected', p_projected_mco, 'budget_cap', v_budget_cap);\n  END IF;\n\n  -- Balance + min-balance floor \u2014 FR-VA-007 (no deduct).\n  SELECT mco_balance INTO v_balance FROM public.profiles WHERE id = p_user_id;\n  IF v_balance IS NULL THEN\n    RAISE EXCEPTION 'begin_autopilot_cycle: profile not found for tenant' USING errcode = 'P0002';\n  END IF;\n  IF v_balance < p_projected_mco OR v_balance < v_min_balance THEN\n    RETURN jsonb_build_object('ok', false, 'reason', 'insufficient_balance',\n                              'projected', p_projected_mco, 'balance', v_balance, 'min_balance', v_min_balance);\n  END IF;\n\n  -- Daily cap (per tenant, UTC day) \u2014 FR-VA-021. Sum COMMITTED spend of today's non-aborted cycles.\n  SELECT COALESCE(SUM(spend_mco), 0) INTO v_daily_spent\n    FROM public.autopilot_cycles\n   WHERE user_id = p_user_id\n     AND (started_at AT TIME ZONE 'UTC')::date = (now() AT TIME ZONE 'UTC')::date\n     AND status NOT IN ('aborted_budget','aborted_daily_cap');\n  IF v_daily_spent + p_projected_mco > v_daily_cap THEN\n    RETURN jsonb_build_object('ok', false, 'reason', 'aborted_daily_cap',\n                              'projected', p_projected_mco, 'daily_spent', v_daily_spent, 'daily_cap', v_daily_cap);\n  END IF;\n\n  -- All caps passed \u2192 open the cycle and pre-debit atomically (advisory lock still held \u2192 serialized).\n  SELECT COALESCE(MAX(cycle_number), 0) + 1 INTO v_cycle_number\n    FROM public.autopilot_cycles WHERE plan_id = p_plan_id;\n\n  INSERT INTO public.autopilot_cycles (user_id, plan_id, cycle_number, status, spend_mco, planned_units, debited_at)\n  VALUES (p_user_id, p_plan_id, v_cycle_number, 'running', p_projected_mco, GREATEST(p_planned_units, 0), now())\n  RETURNING id INTO v_cycle_id;\n\n  -- SINGLE pre-debit. service-role caller \u2192 deduct's service_role exemption applies. If a concurrent non-autopilot\n  -- spend dropped the balance below projected, deduct RAISEs (mco_balance >= amount under FOR UPDATE) and the whole\n  -- transaction rolls back (the INSERT is undone) \u2014 atomic, no orphan debited cycle.\n  PERFORM public.deduct_mco_coins(p_user_id, p_projected_mco::numeric, 'autopilot_cycle',\n            jsonb_build_object('plan_id', p_plan_id, 'cycle_id', v_cycle_id, 'cycle_number', v_cycle_number));\n\n  RETURN jsonb_build_object('ok', true, 'cycle_id', v_cycle_id, 'cycle_number', v_cycle_number,\n                            'projected', p_projected_mco);\nEND;\n$$;\n\n-- Service-role-only: only the autopilot runner (which proved service-role in-function) may open a paid cycle.\nREVOKE ALL ON FUNCTION public.begin_autopilot_cycle(uuid, uuid, int, int) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.begin_autopilot_cycle(uuid, uuid, int, int) TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120200_begin_autopilot_cycle.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:47)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120300_finalize_autopilot_cycle.sql",
+  "content": "-- Migration: finalize_autopilot_cycle RPC \u2014 terminal close + idempotent POSITIVE-credit refund (FR-VA-007).\n-- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md \u00a72 (RPC table line 110, \"espelha finalize_vision_job\").\n-- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.\n--\n-- Mirrors public.finalize_vision_job (20260615160000): claim a RUNNING cycle EXACTLY ONCE, then credit the unused\n-- (spend_mco \u2212 actual) via add_mco_coins (POSITIVE \u2014 never a negative deduct) in the SAME transaction, plus a\n-- symmetric +amount ledger row in mcoin_transactions (the spend row was -projected). Idempotent: a second call\n-- finds no running cycle (guard status='running') \u2192 no-op, no double refund.\n--\n-- Identity: service-role-only (REVOKE authenticated/anon) \u2014 the runner / reconcile-sweep (both service-role) finalize.\n--\n-- Engineering note (declared per Lei 1): the sealed stub hints (uuid,int); a 3rd p_status (DEFAULT 'completed',\n-- CHECK in {completed,failed}) is added \u2014 backward-compatible with a 2-arg call \u2014 so a fully-failed cycle closes\n-- as 'failed' (with full refund when actual=0) instead of masquerading as 'completed'. Mirrors finalize_vision_job's\n-- terminal-state parameter. The refund math is identical regardless of terminal status.\n\nCREATE OR REPLACE FUNCTION public.finalize_autopilot_cycle(\n  p_cycle_id   uuid,\n  p_actual_mco int,\n  p_status     text DEFAULT 'completed'\n)\nRETURNS jsonb\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_uid    uuid;\n  v_spend  int;\n  v_refund int;\nBEGIN\n  IF p_actual_mco IS NULL OR p_actual_mco < 0 THEN\n    RAISE EXCEPTION 'finalize_autopilot_cycle: actual must be >= 0, got %', p_actual_mco USING errcode = '22023';\n  END IF;\n  IF p_status NOT IN ('completed','failed') THEN\n    RAISE EXCEPTION 'finalize_autopilot_cycle: terminal status must be completed|failed, got %', p_status\n      USING errcode = '22023';\n  END IF;\n\n  -- Claim + close a RUNNING cycle exactly once. refund = unused, clamped >= 0 (actual may overshoot spend \u2192 0).\n  UPDATE public.autopilot_cycles\n     SET status       = p_status,\n         completed_at = now(),\n         refunded_mco = GREATEST(0, spend_mco - p_actual_mco),\n         refunded_at  = now()\n   WHERE id = p_cycle_id\n     AND status = 'running'\n   RETURNING user_id, spend_mco INTO v_uid, v_spend;\n\n  IF v_uid IS NULL THEN\n    RETURN jsonb_build_object('finalized', false);   -- already terminal \u2192 no-op (no double refund)\n  END IF;\n\n  v_refund := GREATEST(0, v_spend - p_actual_mco);\n\n  IF v_refund > 0 THEN\n    -- Positive credit (add_mco_coins rejects <=0) + symmetric ledger row (spend was the -projected row).\n    PERFORM public.add_mco_coins(v_uid, v_refund);\n    INSERT INTO public.mcoin_transactions (user_id, action, amount, context)\n    VALUES (v_uid, 'autopilot_refund', v_refund,\n            jsonb_build_object('cycle_id', p_cycle_id, 'actual', p_actual_mco, 'status', p_status));\n    RETURN jsonb_build_object('finalized', true, 'status', p_status, 'refunded', v_refund);\n  END IF;\n\n  RETURN jsonb_build_object('finalized', true, 'status', p_status, 'refunded', 0);\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.finalize_autopilot_cycle(uuid, int, text) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.finalize_autopilot_cycle(uuid, int, text) TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120300_finalize_autopilot_cycle.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:51:59)*
+
+
+## 🤖 Claude *(17:52:01)*
+
+4 migrations escritas. Agora o gate obrigatório (CLAUDE.md + SOP G9): **`/security-review` antes de qualquer commit**. Stage dos arquivos novos pra entrarem no diff revisado.
+
+## 🤖 Claude *(17:52:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260620120000_viral_autopilot_plans.sql \\\n        supabase/migrations/20260620120100_viral_autopilot_cycles.sql \\\n        supabase/migrations/20260620120200_begin_autopilot_cycle.sql \\\n        supabase/migrations/20260620120300_finalize_autopilot_cycle.sql \\\n        docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md\ngit status --short",
+  "description": "Stage new migrations + SOP for review"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A  docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md
+> A  supabase/migrations/20260620120000_viral_autopilot_plans.sql
+> A  supabase/migrations/20260620120100_viral_autopilot_cycles.sql
+> A  supabase/migrations/20260620120200_begin_autopilot_cycle.sql
+> A  supabase/migrations/20260620120300_finalize_autopilot_cycle.sql
+> ```
+
+## 🤖 Claude *(17:52:06)*
+
+
+## 🤖 Claude *(17:52:06)*
+
+Staged. Rodando o `/security-review` independente sobre as 4 migrations (o Reviewer mecânico — Lei 1).
+
+## 🤖 Claude *(17:52:07)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(17:52:07)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md
+	new file:   supabase/migrations/20260620120000_viral_autopilot_plans.sql
+	new file:   supabase/migrations/20260620120100_viral_autopilot_cycles.sql
+	new file:   supabase/migrations/20260620120200_begin_autopilot_cycle.sql
+	new file:   supabase/migrations/20260620120300_finalize_autopilot_cycle.sql
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(17:52:13)*
+
+
+## 🤖 Claude *(17:52:39)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review of autopilot migrations",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer conducting a focused security review of NEW database migration files on this branch. The automated diff capture returned empty, so READ THE FILES DIRECTLY from disk.\n\nFILES TO REVIEW (read all four):\n- /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120000_viral_autopilot_plans.sql\n- /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120100_viral_autopilot_cycles.sql\n- /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120200_begin_autopilot_cycle.sql\n- /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120300_finalize_autopilot_cycle.sql\n\n(Ignore docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md \u2014 it is a markdown doc, excluded from findings.)\n\nCONTEXT \u2014 this is a Supabase/Postgres multi-tenant app (RLS on every table, user_id = auth.uid() isolation). These migrations add the Viral Autopilot cadence layer: two tables (autopilot_plans, autopilot_cycles) and two SECURITY DEFINER RPCs (begin_autopilot_cycle = atomic cap-check + pre-debit of mcoCoins; finalize_autopilot_cycle = idempotent positive-credit refund). The mcoCoins ledger is money. Existing security model to compare against:\n- Existing ledger RPCs in supabase/migrations/20260603220000_secure_ledger_rpcs.sql (deduct_mco_coins: guards p_amount>0 + own-tenant; award/add_user_score service-role-only).\n- add_mco_coins(uuid,integer) is service-role-only (20260520150000); it bumps profiles.mco_balance, positive-only.\n- The mirror pattern finalize_vision_job in supabase/migrations/20260615160000_vision_mcp_jobs.sql (claim-once terminal + refund).\n- SECURITY DEFINER hardening (search_path) in 20260603210500_harden_definer_search_path.sql.\nRead those existing files to understand the established secure patterns before judging the new code.\n\nOBJECTIVE: Identify HIGH-CONFIDENCE security vulnerabilities NEWLY INTRODUCED by these 4 files, with real exploitation potential. This is security-only, not general review.\n\nFocus especially on these threat classes relevant to money-moving DB code:\n- Privilege/authorization: can a non-service-role (anon/authenticated) caller invoke begin_autopilot_cycle / finalize_autopilot_cycle (mint or drain mcoCoins)? Check the REVOKE/GRANT lines.\n- Cross-tenant: can a caller cause a debit/credit/refund against ANOTHER tenant's balance or read/write another tenant's plan/cycle? Check the tenant-scoping in the RPC bodies and the composite FK / RLS policies.\n- Mint/drain via the RPCs: negative-amount tricks, refund > spend (double-spend / mint), refund replay (idempotency), TOCTOU on the daily cap.\n- SQL injection (dynamic SQL) \u2014 there is none expected (no EXECUTE), confirm.\n- RLS gaps: default-deny correctness, RESTRICTIVE no-delete, missing policies that expose data, search_path on SECURITY DEFINER.\n- The composite FK ALTER on creative_metrics \u2014 any integrity bypass.\n\nRULES:\n1. MINIMIZE FALSE POSITIVES: only flag issues where you are >80% confident of real exploitability.\n2. Skip theoretical/style/defense-in-depth-only issues, DOS, rate-limiting, resource exhaustion.\n3. Do NOT report anything in markdown/documentation files.\n4. Remember: SECURITY DEFINER functions run with the function owner's privileges and BYPASS RLS \u2014 so the in-body tenant checks are the ONLY guard. Judge them carefully. But also remember auth.role()/auth.uid() inside a SECURITY DEFINER reflect the ORIGINAL caller (GUC-based), they are not elevated.\n5. service_role is trusted (it is the backend). A finding that \"service_role can do X\" is NOT a vulnerability \u2014 service_role is the backend and is allowed to move money. The question is whether anon/authenticated (untrusted clients) can.\n\nMETHODOLOGY: (1) read the 4 new files + the existing pattern files; (2) trace data flow from an untrusted client (anon/authenticated via PostgREST) to any money movement or cross-tenant read/write; (3) for each candidate, determine the concrete attack path.\n\nOUTPUT: A markdown report. For each finding: title with file:line, Severity (HIGH/MEDIUM), Category, Description, concrete Exploit Scenario (who calls what with what to achieve what), Fix Recommendation, and a Confidence score 1-10. If you find NO high-confidence vulnerabilities, say so explicitly and explain why the design is sound (cite the specific REVOKE/GRANT and tenant-scoping lines). Be precise with line numbers."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'No blanket `GRANT EXECUTE ON ALL FUNCTIONS`, no `ALTER DEFAULT PRIVILEGES`, and no other migration re-grants the two RPCs. The REVOKE/GRANT lines stand as the only authorization on the money-moving functions.\n\nOne last verification: confirm that `update_updated_at_column` (the trigger function used) exists and that the `creative_metrics` table has the `UNIQUE(content_variant_id, source)` but the composite FK in `...120100` targets `autopilot_cycles(id, user_id)` which IS anchored by `CONSTRAINT autopilot_cycles_id_user_uniq UNIQUE (id, user_id)` (line 33 of `...120100`) — that\'s present. And the `creative_metrics` side has `cycle_id` + `user_id` columns (both exist, lines 25-26). Let me also sanity-check whether a tenant could exploit the `creative_metrics` composite FK to *read* cross-tenant — but FK is integrity-only, not a read vector, and `creative_metrics` writes are default-deny for authenticated. \n\nLet me do a final focused check on one TOCTOU subtlety: the daily-cap sum in `begin_autopilot_cycle` filters `status NOT IN (\'aborted_budget\',\'aborted_daily_cap\')` — but aborts are never inserted as rows (per the header comment, line 20-21 of `...120200`). So the only rows summed are real `running`/`completed`/`failed` cycles. A `failed` cycle that was refunded still counts its full `spend_mco` toward the daily cap, which is conservative (in the tenant\'s favor for safety, not exploitable). This is correct.\n\nI have everything needed. Let me also confirm there\'s no issue with the advisory-lock-after-validation ordering — the lock is taken at line 49 BEFORE the plan load and all cap checks (lines 52-99), so the entire read-check-debit sequence is serialized per tenant. Correct.\n\nThe design is sound. Here is my report.\n\n---\n\n# Security Review — Viral Autopilot Cadence Migrations (4 files)\n\n**Verdict: NO high-confidence security vulnerabilities found.** All four migrations correctly follow the established secure patterns (`secure_ledger_rpcs`, `finalize_vision_job`, `harden_definer_search_path`). The money-moving RPCs are service-role-only, every table is tenant-scoped with default-deny writes, and the refund/cap logic is mint-safe and idempotent. Detailed justification below, with the specific load-bearing lines.\n\n---\n\n## Threat-class-by-threat-class analysis\n\n### 1. Privilege / authorization on the money-moving RPCs — SOUND\n\nBoth RPCs are SECURITY DEFINER (bypass RLS), so their EXECUTE grants are the entire perimeter against untrusted clients. Both are correctly locked:\n\n- **`begin_autopilot_cycle`** (`20260620120200_begin_autopilot_cycle.sql:107-108`):\n  ```\n  REVOKE ALL ON FUNCTION public.begin_autopilot_cycle(uuid, uuid, int, int) FROM PUBLIC, anon, authenticated;\n  GRANT EXECUTE ON FUNCTION public.begin_autopilot_cycle(uuid, uuid, int, int) TO service_role;\n  ```\n- **`finalize_autopilot_cycle`** (`20260620120300_finalize_autopilot_cycle.sql:69-70`): identical pattern, `(uuid, int, text)` signature.\n\nAn authenticated/anon PostgREST client cannot invoke either. The signature in the REVOKE/GRANT matches the `CREATE OR REPLACE` signature exactly (including the new defaulted args `p_planned_units` / `p_status`), so the grant lands on the right overload — no accidentally-ungated variant. I confirmed there is no blanket `GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public`, no `ALTER DEFAULT PRIVILEGES`, and no later migration re-granting these two functions — the REVOKE/GRANT pair is the only authority. This is the exact lockdown the team applied to `award_mco_coins` / `add_user_score` / `finalize_vision_job`.\n\n### 2. Cross-tenant debit / credit / read — SOUND\n\n- **`begin_autopilot_cycle` plan load is tenant-scoped** (`...120200:52-58`): `WHERE id = p_plan_id AND user_id = p_user_id` + `IF NOT FOUND THEN RAISE`. A cross-tenant `p_plan_id` cannot leak another tenant\'s caps; it aborts. Because the function is service-role-only and the caller (autopilot-run) resolves `p_user_id` from the server-trusted plan row (not the request body, per header lines 15-16), there is no untrusted path to forge a mismatched `(p_plan_id, p_user_id)` pair anyway.\n- **Balance read, daily-cap sum, cycle INSERT, and the `deduct_mco_coins` call all key on the same `p_user_id`** (`...120200:67, 79, 91-92, 98`). No path debits or reads a different tenant.\n- **`finalize_autopilot_cycle`** derives `v_uid` from the claimed row (`...120300:48`) and credits that same `v_uid` (`:58`). It takes no `p_user_id`, so there is no caller-supplied tenant to spoof; and since it\'s service-role-only, a tenant can\'t reach it to finalize someone else\'s cycle.\n- **Tenant-scoped composite FKs** enforce integrity at the schema layer: `autopilot_cycles(plan_id, user_id) → autopilot_plans(id, user_id)` (`...120100:35-36`) and `creative_metrics(cycle_id, user_id) → autopilot_cycles(id, user_id)` (`...120100:65-67`), each anchored by the matching `UNIQUE(id, user_id)` (`...120000:40`, `...120100:33`). A cycle can never point at another tenant\'s plan. FKs are integrity-only (not a read vector), and reads on all three tables are gated by `FOR SELECT USING (auth.uid() = user_id)`.\n\n### 3. Mint / drain via the RPCs — SOUND\n\n- **Negative-amount mint is blocked at three layers.** `begin_autopilot_cycle` rejects `p_projected_mco <= 0` (`...120200:43-46`); `finalize_autopilot_cycle` rejects `p_actual_mco < 0` (`...120300:32-34`); and both ultimately route money through `deduct_mco_coins` (positive-only, `secure_ledger_rpcs.sql:45`) and `add_mco_coins` (positive-only, `...:58` "Amount must be positive"). There is no negative-deduct path.\n- **Refund cannot exceed spend (no refund-mint / double-spend).** Refund is `GREATEST(0, spend_mco - p_actual_mco)` (`...120300:44, 54`), additionally enforced by table CHECK `refunded_mco <= spend_mco` (`...120100:31`). If `p_actual_mco` overshoots `spend_mco`, refund clamps to 0. The credited `v_refund` can never exceed what `begin` pre-debited.\n- **Refund replay / idempotency.** The claim is `UPDATE ... WHERE id = p_cycle_id AND status = \'running\' RETURNING user_id` (`...120300:46-48`). A second call finds no `running` row → `v_uid IS NULL` → `RETURN {finalized:false}` no-op (`:50-51`), exactly mirroring `finalize_vision_job`\'s claim-once guard. The status transition out of `\'running\'` and the `add_mco_coins` credit commit in one transaction, so there is no money-without-guard window.\n- **TOCTOU on the daily cap.** `pg_advisory_xact_lock(hashtext(p_user_id::text))` is taken at `...120200:49` — *before* the plan load, balance read, daily-cap sum, cycle INSERT, and pre-debit (lines 52-99). Concurrent `begin` calls for the same tenant serialize, so two parallel cycles cannot both slip under the daily cap. The pre-debit additionally re-checks `mco_balance >= amount` under `FOR UPDATE` inside `deduct_mco_coins`, and a failure rolls back the cycle INSERT in the same transaction (no orphan debited cycle).\n\n### 4. SQL injection — NONE (confirmed)\n\nNo dynamic SQL. There is no `EXECUTE`/`format()`/string-concatenation anywhere in the four files. All values flow as bound plpgsql variables. The jsonb context built in `begin`/`finalize` (`...120200:99`, `...120300:60-61`) uses `jsonb_build_object` with parameterized values.\n\n### 5. RLS / search_path hardening — SOUND\n\n- Both tables `ENABLE ROW LEVEL SECURITY` (`...120000:43`, `...120100:39`).\n- `autopilot_plans`: SELECT/INSERT/UPDATE all gated `auth.uid() = user_id` (`...120000:45-50`), plus `RESTRICTIVE FOR DELETE USING (false)` (`:53-54`) — clients can never delete, even if a future permissive policy is added.\n- `autopilot_cycles`: SELECT-own only; **no INSERT/UPDATE policy → authenticated default-deny** (only the service-role RPCs, which bypass RLS, write); `RESTRICTIVE FOR DELETE USING (false)` (`...120100:42-45`). This is the correct posture for a financial ledger a tenant must never forge or mutate.\n- Both SECURITY DEFINER functions set `SET search_path = \'\'` (`...120200:32`, `...120300:25`) and fully schema-qualify every object (`public.autopilot_plans`, `public.profiles`, `public.deduct_mco_coins`, `public.add_mco_coins`, `public.mcoin_transactions`, `pg_advisory_xact_lock` is a built-in resolved via empty path) — closing the CWE-426 search-path-injection surface the `harden_definer_search_path` migration targeted.\n\n### 6. The composite FK ALTER on `creative_metrics` — no integrity bypass\n\n`...120100:60-69` adds `creative_metrics_cycle_fk (cycle_id, user_id) → autopilot_cycles(id, user_id) ON DELETE CASCADE`, wrapped in an idempotent `IF NOT EXISTS (... pg_constraint WHERE conname=...)` guard. With default `MATCH SIMPLE`, the Fatia-1 baseline rows that have `cycle_id IS NULL` remain valid (FK skipped when any referencing column is NULL) — that is the documented, intended behavior, not a bypass: those rows still carry a `NOT NULL user_id` with its own RLS, and a non-NULL `cycle_id` is forced to match a same-tenant cycle. No way for a tenant to point a metric at another tenant\'s cycle.\n\n---\n\n## Minor, non-exploitable observations (explicitly NOT findings)\n\nThese do not meet the >80%-exploitability bar and are noted only for completeness:\n\n- **`finalize_autopilot_cycle` takes no `p_user_id` and trusts the row\'s `user_id`.** This is *correct* given the service-role-only contract (the trusted backend supplies the cycle_id). It is the same shape as `finalize_vision_job`. Not a vuln.\n- **Daily-cap sum counts `failed`/`completed` cycles\' full `spend_mco` even after a refund** (`...120200:77-81` excludes only the two `aborted_*` statuses, which are never persisted as rows). This is conservative — it can only make the cap *stricter* (tenant-favorable for safety), never permit overspend. Not a security issue.\n- `add_mco_coins` and `deduct_mco_coins` (the credit/debit primitives invoked here) were already hardened in prior migrations (`secure_ledger_rpcs.sql`, `admin_user_lifecycle.sql:17-18`); these new files consume them correctly under the service-role exemption.\n\n---\n\n**Files reviewed (all absolute):**\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120000_viral_autopilot_plans.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120100_viral_autopilot_cycles.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120200_begin_autopilot_cycle.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120300_finalize_autopilot_cycle.sql`\n\n**Pattern files cross-referenced:** `20260603220000_secure_ledger_rpcs.sql`, `20260615160000_vision_mcp_jobs.sql`, `20260603210500_harden_definer_search_path.sql`, `20260520150000_admin_user_lifecycle.sql` (+`20260505100000` for `add_mco_coins`), `20260619140000_viral_autopilot_creative_metrics.sql`.\n\nThe migrations are safe to commit from a security standpoint.'}, {'type': 'text', 'text': "agentId: a33229f768cfc869d (use SendMessage with to: 'a33229f768cfc869d' to continue this agent)\n<usage>subagent_tokens: 90599\ntool_uses: 14\nduration_ms: 99518</usage>"}]
+> ```
+
+## 🤖 Claude *(17:55:22)*
+
+
+## 🤖 Claude *(17:55:30)*
+
+## ✅ `/security-review` — SAFE (zero findings ≥ High)
+
+O Reviewer mecânico independente traçou cada classe de ameaça contra os padrões estabelecidos e confirmou o design sólido:
+
+| Classe | Veredito | Linha-prova |
+|---|---|---|
+| **Autorização** | RPCs service-role-only; anon/authenticated não alcançam | `begin:107-108` · `finalize:69-70` REVOKE/GRANT |
+| **Cross-tenant** | `begin` escopado `WHERE id AND user_id`; `finalize` deriva uid da linha | `begin:52-58` · FK composta `cycles:35-36` |
+| **Mint/drain** | positivo-only 3 camadas; refund ≤ spend (`GREATEST`+CHECK); claim-once idempotente | `finalize:44,54` + CHECK `cycles:31` |
+| **SQL injection** | nenhum SQL dinâmico (sem EXECUTE/format) | — |
+| **RLS/search_path** | default-deny + RESTRICTIVE no-delete + `search_path=''` qualificado | `cycles:42-45` · `begin:32` |
+| **TOCTOU cap diário** | `pg_advisory_xact_lock` antes de todo check+débito | `begin:49` |
+
+Migrations seguras pra aplicar. **Gate G9 verde.** Aplicando em produção — additivo e inerte (nenhum centavo se move até as edge functions do cron existirem, que é fatia separada). Confirmo conectividade + o que está pendente antes do push.
+
+## 🤖 Claude *(17:55:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== supabase CLI version ===\"; npx supabase --version 2>&1 | head -3\necho \"=== migration list (local vs remote \u2014 confirms pending = my 4) ===\"; npx supabase migration list 2>&1 | tail -15\necho \"=== env key NAMES present (no values) for apply/verify auth ===\"; grep -oE '^(SUPABASE_[A-Z_]*|SB_[A-Z_]*|VITE_SUPABASE_PROJECT_ID)=' .env 2>/dev/null | sed 's/=$//' | sort -u",
+  "description": "Check CLI, pending migrations, available auth keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === supabase CLI version ===
+> 2.92.1
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === migration list (local vs remote — confirms pending = my 4) ===
+>    20260612022953 | 20260612022953 | 2026-06-12 02:29:53 
+>    20260615140000 | 20260615140000 | 2026-06-15 14:00:00 
+>    20260615160000 | 20260615160000 | 2026-06-15 16:00:00 
+>    20260615170000 | 20260615170000 | 2026-06-15 17:00:00 
+>    20260615180000 | 20260615180000 | 2026-06-15 18:00:00 
+>    20260615190000 | 20260615190000 | 2026-06-15 19:00:00 
+>    20260615200000 | 20260615200000 | 2026-06-15 20:00:00 
+>    20260619140000 | 20260619140000 | 2026-06-19 14:00:00 
+>    20260620120000 |                | 2026-06-20 12:00:00 
+>    20260620120100 |                | 2026-06-20 12:01:00 
+>    20260620120200 |                | 2026-06-20 12:02:00 
+>    20260620120300 |                | 2026-06-20 12:03:00 
+> 
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === env key NAMES present (no values) for apply/verify auth ===
+> SB_SECRET_KEY
+> SUPABASE_PUBLISHABLE_KEY
+> SUPABASE_SECRET_KEY
+> SUPABASE_SERVICE_ROLE_KEY
+> SUPABASE_URL
+> VITE_SUPABASE_PROJECT_ID
+> ```
+
+## 🤖 Claude *(17:55:46)*
+
+
+## 🤖 Claude *(17:55:47)*
+
+Confirmado: exatamente minhas 4 migrations pendentes (todas as anteriores sincronizadas até `20260619140000`), CLI linkado (lê o histórico remoto). Aplicando com auto-confirm.
+
+## 🤖 Claude *(17:55:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nprintf 'y\\n' | npx supabase db push 2>&1 | tail -40\necho \"EXIT=${PIPESTATUS[1]}\"",
+  "description": "Apply the 4 pending migrations to remote",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260620120000_viral_autopilot_plans.sql
+>  • 20260620120100_viral_autopilot_cycles.sql
+>  • 20260620120200_begin_autopilot_cycle.sql
+>  • 20260620120300_finalize_autopilot_cycle.sql
+> 
+>  [Y/n] y
+> Applying migration 20260620120000_viral_autopilot_plans.sql...
+> Applying migration 20260620120100_viral_autopilot_cycles.sql...
+> Applying migration 20260620120200_begin_autopilot_cycle.sql...
+> Applying migration 20260620120300_finalize_autopilot_cycle.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> EXIT=0
+> ```
+
+## 🤖 Claude *(17:56:30)*
+
+
+## 🤖 Claude *(17:56:32)*
+
+Aplicado, **exit 0**. Agora prova material (Lei 1 — não declaro pelo "Finished"). Verifico via Management API: tabelas + RLS on + policies + RPCs + constraints + **os grants dos 2 RPCs de dinheiro** (anon/authenticated devem ser `false`, service_role `true` — o perímetro G8).
+
+## 🤖 Claude *(17:56:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nREF=$(grep -oE '^VITE_SUPABASE_PROJECT_ID=.*' .env | cut -d= -f2 | tr -d '\"' | tr -d ' ')\nTOKEN=$(cat ~/.supabase/access-token 2>/dev/null | tr -d '\\n ')\n[ -z \"$REF\" ] && echo \"NO_REF\" && exit 1\n[ -z \"$TOKEN\" ] && echo \"NO_TOKEN\" && exit 1\necho \"ref=$REF (token present: ${#TOKEN} chars)\"\nread -r -d '' Q <<'SQL'\nselect jsonb_build_object(\n  'tables',(select count(*) from pg_tables where schemaname='public' and tablename in ('autopilot_plans','autopilot_cycles')),\n  'rls_on',(select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('autopilot_plans','autopilot_cycles') and c.relrowsecurity),\n  'policies',(select count(*) from pg_policies where schemaname='public' and tablename in ('autopilot_plans','autopilot_cycles')),\n  'rpcs',(select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('begin_autopilot_cycle','finalize_autopilot_cycle')),\n  'key_constraints',(select jsonb_agg(conname order by conname) from pg_constraint where conname in ('autopilot_cycles_plan_fk','creative_metrics_cycle_fk','autopilot_cycles_id_user_uniq','autopilot_plans_id_user_uniq','autopilot_cycles_refund_le_spend')),\n  'rpc_grants',(select jsonb_agg(jsonb_build_object('fn',proname,'anon',has_function_privilege('anon',oid,'EXECUTE'),'auth',has_function_privilege('authenticated',oid,'EXECUTE'),'svc',has_function_privilege('service_role',oid,'EXECUTE')) order by proname) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('begin_autopilot_cycle','finalize_autopilot_cycle'))\n) as result;\nSQL\nJSON=$(python3 -c \"import json,sys; print(json.dumps({'query': sys.stdin.read()}))\" <<<\"$Q\")\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"$JSON\" | python3 -m json.tool",
+  "description": "Verify applied objects + RPC grants via Management API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ref=bcyvddsykvehvpwstlfa (token present: 44 chars)
+> {
+>     "message": "Failed to run sql query: ERROR:  42702: column reference \"oid\" is ambiguous\nLINE 7:   'rpc_grants',(select jsonb_agg(jsonb_build_object('fn',proname,'anon',has_function_privilege('anon',oid,'EXECUTE'),'auth',has_function_privilege('authenticated',oid,'EXECUTE'),'svc',has_function_privilege('service_role',oid,'EXECUTE')) order by proname) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('begin_autopilot_cycle','finalize_autopilot_cycle'))\n                                                                                                              ^\n"
+> }
+> ```
+
+## 🤖 Claude *(17:56:49)*
+
+
+## 🤖 Claude *(17:56:50)*
+
+Management API conecta (token válido) — só meu `oid` ficou ambíguo. Qualificando `p.oid` e re-rodando.
+
+## 🤖 Claude *(17:56:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nREF=$(grep -oE '^VITE_SUPABASE_PROJECT_ID=.*' .env | cut -d= -f2 | tr -d '\"' | tr -d ' ')\nTOKEN=$(cat ~/.supabase/access-token 2>/dev/null | tr -d '\\n ')\nread -r -d '' Q <<'SQL'\nselect jsonb_build_object(\n  'tables',(select count(*) from pg_tables where schemaname='public' and tablename in ('autopilot_plans','autopilot_cycles')),\n  'rls_on',(select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('autopilot_plans','autopilot_cycles') and c.relrowsecurity),\n  'policies',(select count(*) from pg_policies where schemaname='public' and tablename in ('autopilot_plans','autopilot_cycles')),\n  'rpcs',(select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('begin_autopilot_cycle','finalize_autopilot_cycle')),\n  'key_constraints',(select jsonb_agg(conname order by conname) from pg_constraint where conname in ('autopilot_cycles_plan_fk','creative_metrics_cycle_fk','autopilot_cycles_id_user_uniq','autopilot_plans_id_user_uniq','autopilot_cycles_refund_le_spend')),\n  'rpc_grants',(select jsonb_agg(jsonb_build_object('fn',proname,'anon',has_function_privilege('anon',p.oid,'EXECUTE'),'auth',has_function_privilege('authenticated',p.oid,'EXECUTE'),'svc',has_function_privilege('service_role',p.oid,'EXECUTE')) order by proname) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('begin_autopilot_cycle','finalize_autopilot_cycle'))\n) as result;\nSQL\nJSON=$(python3 -c \"import json,sys; print(json.dumps({'query': sys.stdin.read()}))\" <<<\"$Q\")\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"$JSON\" | python3 -m json.tool",
+  "description": "Re-run verification with qualified p.oid"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [
+>     {
+>         "result": {
+>             "rpcs": 2,
+>             "rls_on": 2,
+>             "tables": 2,
+>             "policies": 6,
+>             "rpc_grants": [
+>                 {
+>                     "fn": "begin_autopilot_cycle",
+>                     "svc": true,
+>                     "anon": false,
+>                     "auth": false
+>                 },
+>                 {
+>                     "fn": "finalize_autopilot_cycle",
+>                     "svc": true,
+>                     "anon": false,
+>                     "auth": false
+>                 }
+>             ],
+>             "key_constraints": [
+>                 "autopilot_cycles_id_user_uniq",
+>                 "autopilot_cycles_plan_fk",
+>                 "autopilot_cycles_refund_le_spend",
+>                 "autopilot_plans_id_user_uniq",
+>                 "creative_metrics_cycle_fk"
+>             ]
+>         }
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(17:57:17)*
+
+
+## 🤖 Claude *(17:57:20)*
+
+**Verificação material PASSA** — cada fato provado contra o DB vivo:
+
+| Prova | Resultado |
+|---|---|
+| Tabelas | **2** (`autopilot_plans`, `autopilot_cycles`) |
+| RLS habilitada | **2/2** |
+| Policies | **6** (plans 4: select/insert/update/no-delete · cycles 2: select/no-delete) |
+| RPCs | **2** |
+| **Grants dos RPCs de dinheiro** | `anon=false · auth=false · svc=true` em **ambos** ✅ |
+| Constraints-chave | **5/5** (2 FK compostas · 2 UNIQUE · CHECK refund≤spend) |
+
+Falta a prova **comportamental** (o guard dispara vivo, não só no catálogo) — zero-cost: anon rejeitado no boundary + service-role com `projected=0` deve bater o RAISE `22023` antes de mover qualquer centavo.
+
+## 🤖 Claude *(17:57:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"$SUPABASE_URL/rest/v1/rpc/begin_autopilot_cycle\"\nANON=\"${SUPABASE_PUBLISHABLE_KEY}\"\nSVC=\"${SB_SECRET_KEY}\"\nZERO_UUID=\"00000000-0000-0000-0000-000000000000\"\n\necho \"=== [G-anon] begin_autopilot_cycle as ANON (publishable) \u2192 expect NON-200 (REVOKE live at API) ===\"\ncurl -s -o /tmp/anon.out -w \"HTTP %{http_code}\\n\" -X POST \"$URL\" \\\n  -H \"apikey: $ANON\" -H \"Authorization: Bearer $ANON\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"p_plan_id\\\":\\\"$ZERO_UUID\\\",\\\"p_user_id\\\":\\\"$ZERO_UUID\\\",\\\"p_projected_mco\\\":92}\"\nhead -c 300 /tmp/anon.out; echo\n\necho \"\"\necho \"=== [G-guard] begin as SERVICE_ROLE with projected=0 \u2192 expect 22023 guard BEFORE any money/plan lookup ===\"\ncurl -s -o /tmp/svc.out -w \"HTTP %{http_code}\\n\" -X POST \"$URL\" \\\n  -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"p_plan_id\\\":\\\"$ZERO_UUID\\\",\\\"p_user_id\\\":\\\"$ZERO_UUID\\\",\\\"p_projected_mco\\\":0}\"\nhead -c 400 /tmp/svc.out; echo",
+  "description": "Behavioral proof: anon rejected + service-role guard fires zero-cost"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === [G-anon] begin_autopilot_cycle as ANON (publishable) → expect NON-200 (REVOKE live at API) ===
+> HTTP 401
+> {"code":"42501","details":null,"hint":null,"message":"permission denied for function begin_autopilot_cycle"}
+> 
+> === [G-guard] begin as SERVICE_ROLE with projected=0 → expect 22023 guard BEFORE any money/plan lookup ===
+> HTTP 400
+> {"code":"22023","details":null,"hint":null,"message":"begin_autopilot_cycle: projected must be positive, got 0"}
+> ```
+
+## 🤖 Claude *(17:58:36)*
+
+
+## 🤖 Claude *(17:58:40)*
+
+**Prova comportamental PASSA** — o perímetro de dinheiro está vivo:
+
+- **G-anon:** anon → `HTTP 401 · 42501 permission denied for function begin_autopilot_cycle`. O REVOKE é real no boundary da API — cliente não-confiável **não invoca** o RPC de dinheiro. ✅
+- **G-guard:** service_role com `projected=0` → `HTTP 400 · 22023 "projected must be positive, got 0"`. Função existe, executa como service_role, e o guard dispara **antes de qualquer lookup de plano ou movimento de saldo** (zero-cost). ✅
+
+Slice da migration **completa e provada materialmente** (catálogo + comportamento). Landando o commit. Localizo a âncora no Key Files do CLAUDE.md primeiro.
+
+## 🤖 Claude *(17:58:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== CLAUDE.md anchors (autopilot/viral/creative/mcoin SOP rows) ===\"\ngrep -nE 'autopilot|viral-autopilot|creative_metrics|[[mcoin-cost-calibration|mcoin-cost-calibration]]|Affiliate credential resolution SOP' CLAUDE.md | head -20",
+  "description": "Find CLAUDE.md Key Files insertion anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CLAUDE.md anchors (autopilot/viral/creative/mcoin SOP rows) ===
+> 422:| **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4×-floor model `mco=ceil(usd/$0.018×4)`; OTD-MCOIN-CALIBRATION closed) |
+> 429:| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |
+> ```
+
+## 🤖 Claude *(17:58:47)*
+
+
+## 🤖 Claude *(17:58:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 422,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 422	| **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4×-floor model `mco=ceil(usd/$0.018×4)`; OTD-MCOIN-CALIBRATION closed) |
+> 423	| **QA user-JWT minter** | `scripts/qa/gen-user-jwt.ts` (admin generateLink→verifyOtp→access_token for authenticated edge-fn QA) |
+> ```
+
+## 🤖 Claude *(17:58:51)*
+
+
+## 🤖 Claude *(17:58:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4\u00d7-floor model `mco=ceil(usd/$0.018\u00d74)`; OTD-MCOIN-CALIBRATION closed) |\n| **QA user-JWT minter** | `scripts/qa/gen-user-jwt.ts` (admin generateLink\u2192verifyOtp\u2192access_token for authenticated edge-fn QA) |",
+  "new_string": "| **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4\u00d7-floor model `mco=ceil(usd/$0.018\u00d74)`; OTD-MCOIN-CALIBRATION closed) |\n| **Viral Autopilot cron-identity SOP (Lei 2)** | `docs/processes/autopilot-cron-identity.md` (OTD-VA-008 gate \u2014 cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha [nunca body]; pr\u00e9-d\u00e9bito/refund at\u00f4mico FR-VA-007/021; 10 gates) |\n| **Viral Autopilot cadence schema + money RPCs (Fatia 2)** | `supabase/migrations/20260620120000_viral_autopilot_plans.sql` \u00b7 `\u2026120100_viral_autopilot_cycles.sql` (FK composta tenant-escopada + RESTRICTIVE no-delete + fecha FK composta de `creative_metrics`) \u00b7 `\u2026120200_begin_autopilot_cycle.sql` (cap+pr\u00e9-d\u00e9bito at\u00f4mico advisory-lock, service-role-only) \u00b7 `\u2026120300_finalize_autopilot_cycle.sql` (refund cr\u00e9dito-positivo idempotente, espelha `finalize_vision_job`) |\n| **QA user-JWT minter** | `scripts/qa/gen-user-jwt.ts` (admin generateLink\u2192verifyOtp\u2192access_token for authenticated edge-fn QA) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:59:09)*
+
+
+## 🤖 Claude *(17:59:10)*
+
+Commit do slice (convenção do projeto: sem `Co-Authored-By`, corpo orientado a milestone — memória `feedback_commits`; o git log confirma).
+
+## 🤖 Claude *(17:59:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add CLAUDE.md\ngit commit -q -F - <<'MSG'\nfeat: Viral Autopilot Fatia 2 \u2014 funda\u00e7\u00e3o de cad\u00eancia (tabelas + RPCs de dinheiro) + gate Lei 2\n\nAbre o gate OTD-VA-008 com o SOP antecipado e assenta a funda\u00e7\u00e3o financeira da\ncad\u00eancia aut\u00f4noma (R2), sem ainda mover dinheiro \u2014 as edge functions do cron s\u00e3o\na fatia seguinte. Nenhum centavo se gasta at\u00e9 o runner existir.\n\nSOP (Lei 2 \u2014 escrito antes do c\u00f3digo): docs/processes/autopilot-cron-identity.md\n  Cron prova `Bearer SB_SECRET_KEY` in-function e deriva user_id da linha do banco\n  (autopilot_plans.user_id), nunca do body; pr\u00e9-d\u00e9bito/refund at\u00f4mico; 10 gates.\n\nMigrations (aplicadas + verificadas materialmente):\n  - autopilot_plans / autopilot_cycles: FK composta tenant-escopada, RESTRICTIVE\n    no-delete, write default-deny; fecha a FK composta pendente de creative_metrics.\n  - begin_autopilot_cycle: cap di\u00e1rio + cap por ciclo + saldo + pr\u00e9-d\u00e9bito \u00daNICO sob\n    pg_advisory_xact_lock (anti-TOCTOU), service-role-only.\n  - finalize_autopilot_cycle: refund cr\u00e9dito-positivo idempotente (claim-once),\n    espelha finalize_vision_job; jamais deduct negativo (anti-mint).\n\n/security-review SAFE (0 findings). Prova viva: anon -> 401 permission denied;\nservice-role projected=0 -> 22023 guard antes de qualquer lookup/d\u00e9bito.\nMSG\ngit log --oneline -1",
+  "description": "Commit Fatia 2 migration slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m2:59PM[0m [32mINF[0m 1 commits scanned.
+> [90m2:59PM[0m [32mINF[0m scan completed in 28.2ms
+> [90m2:59PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 686bae3 feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+> ```
+
+## 🤖 Claude *(17:59:53)*
+
+
+## 🤖 Claude *(17:59:56)*
+
+Commit **`686bae3`** — gates de pre-commit (tripwire/secret-scan/gitleaks) limpos, mesh-reingest disparado.
+
+Slice da migration: escrita → `/security-review` SAFE → aplicada → verificada (catálogo + comportamento) → commitada. Agora fecho a metade de verificação que o SOP exige (G3/G4/G5) com o smoke **zero-cost** nomeado no FRD (`smoke-autopilot-budget.ts`) — prova cap-abort/pré-débito/refund-idempotente contra os RPCs vivos, com **usuário descartável** (zero centavo do Sovereign). Modelo no estilo de um smoke existente primeiro.
+
+## 🤖 Claude *(17:59:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== existing smoke style: env load + admin client + throwaway user + cleanup ===\"\nsed -n '1,70p' scripts/qa/smoke-campaign-run.ts 2>/dev/null || ls scripts/qa/ | grep -iE 'smoke' | head",
+  "description": "Read existing smoke for house conventions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === existing smoke style: env load + admin client + throwaway user + cleanup ===
+> #!/usr/bin/env bun
+> /**
+>  * Smoke test — campaign-run edge fn (marketing-hub FR-MH-004), USER PATH (real JWT).
+>  *
+>  * Proves the function's full skeleton at ZERO LLM cost: every guard path (401/422/404/no-steps/402) runs
+>  * BEFORE the mcoCoins deduct and BEFORE any orchestrate-content dispatch, and an `email`-channel step is
+>  * BLOCKED (never dispatched), so the happy structural path costs only the 10-coin fee on a THROWAWAY balance
+>  * and fans out to NOTHING. The real paid cascade (a `social`/`content` step → real orchestrate-content spend)
+>  * is intentionally NOT exercised here — it is gated on Sovereign GO.
+>  *
+>  * Creates two throwaway @example.com users, signs in user1 for a real access_token, asserts the gates, and
+>  * CLEANS UP (deletes users → cascade removes profiles/campaigns/steps; mesh observation nodes deleted explicitly).
+>  * No production data, no Sovereign balance, no LLM provider $ touched.
+>  *
+>  * Usage: bun run scripts/qa/smoke-campaign-run.ts
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const stamp = Date.now();
+> let uid1: string | null = null;
+> let uid2: string | null = null;
+> let pass = true;
+> const createdNodeNames: string[] = [];
+> 
+> function check(label: string, ok: boolean, detail = '') {
+>   console.log(`${ok ? '✅' : '❌'} ${label}${detail ? `  → ${detail}` : ''}`);
+>   if (!ok) pass = false;
+> }
+> 
+> interface CrBody {
+>   status?: string; error?: string; campaign_id?: string;
+>   run_id?: string; steps_dispatched?: number; steps_queued?: number; async?: boolean; new_balance?: number;
+> }
+> async function call(token: string | null, body: unknown): Promise<{ status: number; body: CrBody }> {
+>   const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: PUB };
+>   if (token) headers.Authorization = `Bearer ${token}`;
+>   const r = await fetch(`${URL}/functions/v1/campaign-run`, { method: 'POST', headers, body: JSON.stringify(body) });
+>   let j: CrBody; const t = await r.text();
+>   try { j = JSON.parse(t) as CrBody; } catch { j = { error: t }; }
+>   return { status: r.status, body: j };
+> }
+> 
+> async function mkUser(tag: string) {
+>   const email = `cr-smoke-${tag}-${stamp}@example.com`;
+>   const password = `Aa1!${crypto.randomUUID()}`;
+>   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+>   if (error || !data?.user) throw new Error(`createUser(${tag}): ${error?.message}`);
+>   return { id: data.user.id, email, password };
+> }
+> 
+> async function mkCampaign(userId: string, name: string) {
+>   const { data, error } = await admin.from('campaigns')
+>     .insert({ user_id: userId, name, status: 'draft', channels: [] }).select('id').single();
+>   if (error || !data) throw new Error(`insert campaign "${name}": ${error?.message}`);
+>   return data.id as string;
+> }
+> 
+> async function addStep(campaignId: string, userId: string, channel: string) {
+>   const { error } = await admin.from('campaign_steps')
+>     .insert({ campaign_id: campaignId, user_id: userId, position: 0, channel, action: 'generate_content' });
+>   if (error) throw new Error(`insert step (${channel}): ${error.message}`);
+> }
+> 
+> try {
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

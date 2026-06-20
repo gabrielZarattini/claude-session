@@ -5503,6 +5503,120 @@ Por ora o sistema segue normal: LTC armado pra vender a $44,39, HALT off, equity
 <usage><agent_count>6</agent_count><subagent_tokens>0</subagent_tokens><tool_uses>0</tool_uses><duration_ms>847867</duration_ms></usage>
 </task-notification>
 
+## 🤖 Claude *(17:33:26)*
+
+API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+
+## 👤 User *(17:48:45)*
+
+continue
+
+## 🤖 Claude *(17:51:11)*
+
+
+## 🤖 Claude *(17:51:16)*
+
+O 529 **persistiu e piorou** — desta vez **todos os 6 agentes caíram com `0 tokens`** (falharam no portão, nem começaram). É sobrecarga **global da API da Anthropic agora** (não nossa config; dá pra confirmar em status.claude.com). Re-rodar imediatamente é desperdício — o resume gastou ~14 min só pra falhar tudo.
+
+Não vou ficar martelando a API. Mas **não vou te deixar parado**: eu tenho o review de **design** que passou na 1ª rodada + todo o contexto desta sessão (audit, memórias, código que li). Vou **entregar a revisão eu mesmo** (solo) agora, e deixo a parte que exige gate de subagente pra quando a API voltar. Deixa eu recuperar os achados completos do design da 1ª rodada:
+
+## 🤖 Claude *(17:51:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "f=\"/tmp/claude-1001/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/tasks/w6sv9x5ip.output\"\npython3 - \"$f\" <<'PY'\nimport json,sys\nd=json.load(open(sys.argv[1]))\nr=d.get(\"result\",d)\ndes=r.get(\"design\")\nprint(\"=== DESIGN (1\u00aa rodada, \u00fanico que passou) ===\")\nprint(json.dumps(des, ensure_ascii=False, indent=1) if des else \"vazio\")\nPY",
+  "description": "Recover full design review findings from first run"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DESIGN (1ª rodada, único que passou) ===
+> {
+>  "summary": "Revisao de arquitetura do TradeUX.",
+>  "verdict": "3 HIGH no achado 1; medium/low no achado 2. Nao sao bug ativo hoje mas escalam mal.",
+>  "findings": [
+>   {
+>    "title": "Tres HIGH: useTestnet num bit unico; posicao em qty BRUTA; cegueira a Earn no money-path",
+>    "severity": "high",
+>    "confidence": "alta",
+>    "evidence": "useTestnet (mutavel pela UI) decide chaves E o isTestnet das ordens e da derivacao de posicao. getFarmPosition soma buy.quantity bruta (taxa sai da base). loadWallet nao funde LDLTC em LTC; auto-subscribe zera WALLET LTC e a venda nao sai.",
+>    "recommendation": "Travar useTestnet no boot; subtrair commission da base ou reconciliar contra o saldo spot; loadWallet consolidar LD base no base."
+>   },
+>   {
+>    "title": "Medium/low: bloqueio silencioso, estado volatil, teto/cofre, regex de nome",
+>    "severity": "medium",
+>    "confidence": "alta",
+>    "evidence": "placeOrder retorna error sem re-lancar -> HALT/cap nao alerta no Telegram. MEMORY/BRAIN volatil, FARM_SELLING nao-persistida, fill defasado 3s. Teto so USDT, fail-open no tick frio; trava SELL-BTC so no MCP. Roteamento por regex de nome.",
+>    "recommendation": "Alertar no bloqueio; loadFarmSellingLocks; trava do cofre no exchange.js; classe por coluna em vez de regex."
+>   }
+>  ]
+> }
+> ```
+
+## 🤖 Claude *(17:52:07)*
+
+
+## 🤖 Claude *(17:52:32)*
+
+Recuperei os achados completos. Aqui está a **revisão consolidada** — feita por mim (solo), já que o fan-out adversarial está bloqueado pelo 529. Marco a confiança de cada parte: o **design** veio de um agente que completou + minha leitura do código (confiança alta); **estratégia/risco** é minha avaliação (a verificação multi-agente não rodou — trato como preliminar).
+
+---
+
+## (A) Estamos errando na ESTRATÉGIA? — *preliminar, solo*
+
+**Não há erro ATIVO** — e isso é importante: confirmei que **nada refutado foi reintroduzido** (1m scalping, harvester, bear-via-futures, VPIN-forecast estão todos OFF). As proteções estão no lugar. O que existe é um **gap entre a meta e a config**, não um bug:
+
+- 🟡 **O funil está INERTE** (baseline $10k num saldo de $149) → se a meta é concentrar em BTC, **o funil não faz literalmente nada** hoje. Descompasso config↔meta.
+- 🟡 **0 BTC em carteira** → a meta (reserva em BTC) **não está sendo perseguida** (pausada de propósito).
+- 🟡 **Canary = capital ocioso** (recupera o LTC e senta). Conservador e correto pós-incidente, mas é "marcar passo".
+
+**Veredito:** escolha conservadora deliberada, **não erro**. Mas a meta declarada e o que está rodando ainda **não se conectam**.
+
+## (B) Estamos errando no DESIGN? — *confiança alta*
+
+**3 HIGH** (não são bug hoje, mas "escalam mal"):
+1. **`useTestnet` é um bit único mutável pela UI** que decide chaves E o `isTestnet` das ordens → risco de confusão testnet/mainnet. Travar no boot.
+2. **Posição em qty BRUTA** (`getFarmPosition` soma `buy.quantity` bruto) → **é a origem do 0,908 vs 0,907**. Subtrair a comissão ou reconciliar contra o spot.
+3. **Cegueira ao Earn** no money-path (`loadWallet` não funde `LDLTC`) → raiz do incidente; mitigado, fix completo = feature.
+
+**Medium/low:** bloqueio silencioso do HALT/cap (D1); MEMORY/BRAIN volátil + `FARM_SELLING` não-persistida; teto só USDT/fail-open no tick frio; 🔴 **trava do cofre BTC só no MCP**; roteamento por regex de nome.
+
+## (C) Risco de money-path — o mais sério
+
+🔴 **A trava de venda do cofre BTC existe só na camada MCP.** Se o grupo **Baseline (id3)** for ativado, o cofre pode ser vendido coberto **só** por HALT/riskGuard. Como BTC é a reserva-alvo, **mover essa trava pro `exchange.js`** (defesa-em-profundidade) é o hardening nº 1.
+
+---
+
+## Plano dos débitos (minhas decisões — a confirmar no gate)
+
+| # | Item | Decisão | Risco |
+|---|---|---|---|
+| D1 | HALT/cap block silencioso | **FIX** (alerta no return de erro do placeOrder, deduped) | baixo |
+| D2 | loadWallet cego ao Earn | **NÃO-FIX agora** (fix real = feature Earn-redeem; já mitigado) | — |
+| D3 | Doutrina do agente LLM | **FIX** (prompt: parar de re-litigar canary + tratar falha como evento) | baixo |
+| D4 | Push de exceção `[PAPER]` | aceitar (edge raríssimo) ou tweak | baixo |
+| D5 | string-mágica `[PAPER]` | **FIX** (usar `PAPER_PREFIX`) | trivial |
+| D6 | `TRACKED_BASES`/doc colisão | **FIX** (doc + default seguro) | trivial |
+| D7 | config cosmética "Meta 500" | **FIX** (limpar) | trivial |
+| **+N1** | **trava do cofre no exchange.js** | **FIX** (defesa do cofre BTC) | médio → gate |
+| **+N2** | reconciliar qty bruta→líquida | **FIX** | médio → gate |
+
+---
+
+## O bloqueio honesto
+
+Implementar é fácil, mas **todo fix de money-path precisa passar pelo gate QA/TL — que são subagentes, e os subagentes estão batendo no mesmo 529**. Não vou deployar mudança de money-path sem gate. Então a **execução está travada pela sobrecarga da API**, não por mim.
+
+**Como quer seguir?**
+1. **Esperar a API normalizar** (minutos) e eu rodo o lote inteiro: implemento → gate QA/TL → deploy, e te entrego "o que foi corrigido". *(recomendado)*
+2. Eu implemento **só os triviais não-money-path** (D5/D6/D7) agora, solo, sem gate, e deployo — os de risco esperam o gate.
+
+Me diz qual, ou só "tenta de novo" que eu re-disparo o workflow.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
