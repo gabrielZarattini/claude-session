@@ -3178,6 +3178,1098 @@ Slice da migration: escrita → `/security-review` SAFE → aplicada → verific
 > try {
 > ```
 
+## 🤖 Claude *(18:00:49)*
+
+
+## 🤖 Claude *(18:00:52)*
+
+Estilo da casa capturado (shebang bun, admin client, `check()`, throwaway `@example.com`, cleanup por cascade). Escrevendo o smoke com **asserções por delta de saldo** (robusto a estado) cobrindo G3 pré-débito · G4 cap diário · cap por ciclo · saldo insuficiente · G5 refund+idempotência · clamp do refund.
+
+## 🤖 Claude *(18:01:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-budget.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 Viral Autopilot cost guardrail RPCs (FR-VA-007 / FR-VA-021), ZERO-COST.\n *\n * Proves begin_autopilot_cycle + finalize_autopilot_cycle against the LIVE DB using a THROWAWAY @example.com\n * user with an injected balance \u2014 no Sovereign mcoCoins, no LLM/provider $, no edge functions involved (the RPCs\n * are the unit under test). Every assertion is a balance DELTA (robust to absolute state). Gates:\n *   G3  pre-debit ........ begin debits EXACTLY projected once, opens a running cycle (spend_mco, debited_at).\n *   G4  daily cap ........ second cycle over daily_cap \u2192 aborted_daily_cap, ZERO deduct.\n *   G-budget ............. projected > budget_cap \u2192 aborted_budget, ZERO deduct.\n *   G-insufficient ....... balance < projected \u2192 insufficient_balance, ZERO deduct (fires BEFORE daily check).\n *   G5  refund ........... finalize credits unused (projected\u2212actual) as a POSITIVE delta; cycle completed.\n *   G5  idempotent ....... a second finalize of the same cycle is a no-op (finalized:false), ZERO delta.\n *   G-clamp .............. finalize with actual > spend \u2192 refund clamps to 0 (never a negative-refund mint).\n *\n * Cleans up: deletes the throwaway user \u2192 FK CASCADE removes plans + cycles. No production data touched.\n *\n * Usage: bun run scripts/qa/smoke-autopilot-budget.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!URL || !SVC) { console.error('Missing env (SUPABASE_URL / SB_SECRET_KEY)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid: string | null = null;\nlet pass = true;\n\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\n\nasync function getBalance(): Promise<number> {\n  const { data, error } = await admin.from('profiles').select('mco_balance').eq('id', uid!).single();\n  if (error || !data) throw new Error(`getBalance: ${error?.message}`);\n  return Number(data.mco_balance);\n}\nasync function setBalance(v: number) {\n  const { error } = await admin.from('profiles').update({ mco_balance: v }).eq('id', uid!);\n  if (error) throw new Error(`setBalance: ${error.message}`);\n}\nasync function mkPlan(name: string, budget: number, daily: number): Promise<string> {\n  const { data, error } = await admin.from('autopilot_plans').insert({\n    user_id: uid, name, mode: 'every_n_days', interval_days: 3,\n    target_product_ids: ['MLB-SMOKE'], platforms: ['linkedin'],\n    budget_cap_mco: budget, daily_cap_mco: daily, min_balance_mco: 10, is_active: true,\n  }).select('id').single();\n  if (error || !data) throw new Error(`mkPlan(${name}): ${error?.message}`);\n  return data.id as string;\n}\ninterface BeginRes { ok?: boolean; reason?: string; cycle_id?: string; cycle_number?: number; projected?: number }\nasync function begin(planId: string, projected: number, planned = 0): Promise<BeginRes> {\n  const { data, error } = await admin.rpc('begin_autopilot_cycle', {\n    p_plan_id: planId, p_user_id: uid, p_projected_mco: projected, p_planned_units: planned,\n  });\n  if (error) throw new Error(`begin(${projected}): ${error.message}`);\n  return data as BeginRes;\n}\ninterface FinalRes { finalized?: boolean; status?: string; refunded?: number }\nasync function finalize(cycleId: string, actual: number, status = 'completed'): Promise<FinalRes> {\n  const { data, error } = await admin.rpc('finalize_autopilot_cycle', {\n    p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,\n  });\n  if (error) throw new Error(`finalize(${actual}): ${error.message}`);\n  return data as FinalRes;\n}\nasync function cycleRow(id: string) {\n  const { data } = await admin.from('autopilot_cycles')\n    .select('status, spend_mco, refunded_mco, debited_at, refunded_at').eq('id', id).single();\n  return data;\n}\n\ntry {\n  // \u2500\u2500 setup: throwaway user + injected balance \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const email = `ap-budget-${stamp}@example.com`;\n  const { data: u, error: ue } = await admin.auth.admin.createUser({\n    email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true,\n  });\n  if (ue || !u?.user) throw new Error(`createUser: ${ue?.message}`);\n  uid = u.user.id;\n  // profile is created by the handle_new_user trigger; inject a known balance.\n  await setBalance(500);\n  check('setup: throwaway user + balance=500', (await getBalance()) === 500, `uid=${uid.slice(0, 8)}`);\n\n  const plan1 = await mkPlan('smoke-plan-1', 200, 100);   // budget 200 / daily 100\n  const plan2 = await mkPlan('smoke-plan-2', 500, 500);   // headroom for the clamp test\n\n  // \u2500\u2500 G3 \u2014 pre-debit (open cycle, debit EXACTLY projected once) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  let b0 = await getBalance();\n  const r1 = await begin(plan1, 92, 9);\n  let b1 = await getBalance();\n  const c1 = await cycleRow(r1.cycle_id!);\n  check('G3 pre-debit: begin ok + delta \u221292', r1.ok === true && (b1 - b0) === -92, `delta=${b1 - b0}`);\n  check('G3 cycle row: running \u00b7 spend_mco=92 \u00b7 debited_at set',\n    c1?.status === 'running' && c1?.spend_mco === 92 && !!c1?.debited_at, JSON.stringify(c1));\n\n  // \u2500\u2500 G4 \u2014 daily cap (92 committed + 92 > 100) \u2192 aborted, no deduct \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  b0 = await getBalance();\n  const r2 = await begin(plan1, 92);\n  b1 = await getBalance();\n  check('G4 daily cap: aborted_daily_cap + ZERO deduct',\n    r2.ok === false && r2.reason === 'aborted_daily_cap' && b1 === b0, `reason=${r2.reason} delta=${b1 - b0}`);\n\n  // \u2500\u2500 G-budget \u2014 projected > budget_cap(200) \u2192 aborted, no deduct \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  b0 = await getBalance();\n  const r3 = await begin(plan1, 300);\n  b1 = await getBalance();\n  check('G-budget: aborted_budget + ZERO deduct',\n    r3.ok === false && r3.reason === 'aborted_budget' && b1 === b0, `reason=${r3.reason} delta=${b1 - b0}`);\n\n  // \u2500\u2500 G-insufficient \u2014 balance(40) < projected(92) \u2192 insufficient, no deduct (fires before daily check) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  await setBalance(40);\n  b0 = await getBalance();\n  const r4 = await begin(plan1, 92);\n  b1 = await getBalance();\n  check('G-insufficient: insufficient_balance + ZERO deduct',\n    r4.ok === false && r4.reason === 'insufficient_balance' && b1 === b0, `reason=${r4.reason} delta=${b1 - b0}`);\n  await setBalance(500); // restore for finalize/clamp\n\n  // \u2500\u2500 G5 \u2014 finalize refunds unused (POSITIVE credit) + cycle completed \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  b0 = await getBalance();\n  const f1 = await finalize(r1.cycle_id!, 30);          // actual 30 of 92 \u2192 refund 62\n  b1 = await getBalance();\n  const c1b = await cycleRow(r1.cycle_id!);\n  check('G5 refund: finalized + refunded 62 + delta +62',\n    f1.finalized === true && f1.refunded === 62 && (b1 - b0) === 62, `refunded=${f1.refunded} delta=${b1 - b0}`);\n  check('G5 cycle row: completed \u00b7 refunded_mco=62 \u00b7 refunded_at set',\n    c1b?.status === 'completed' && c1b?.refunded_mco === 62 && !!c1b?.refunded_at, JSON.stringify(c1b));\n\n  // \u2500\u2500 G5 \u2014 idempotent finalize (no double refund) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  b0 = await getBalance();\n  const f2 = await finalize(r1.cycle_id!, 30);\n  b1 = await getBalance();\n  check('G5 idempotent: finalized:false + ZERO delta', f2.finalized === false && b1 === b0, `delta=${b1 - b0}`);\n\n  // \u2500\u2500 G-clamp \u2014 finalize with actual > spend \u2192 refund clamps to 0 (no negative-refund mint) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const r5 = await begin(plan2, 50);                    // fresh running cycle, debit 50\n  b0 = await getBalance();\n  const f3 = await finalize(r5.cycle_id!, 999);         // actual 999 >> spend 50 \u2192 refund 0\n  b1 = await getBalance();\n  check('G-clamp: refunded 0 + ZERO finalize delta',\n    f3.finalized === true && f3.refunded === 0 && b1 === b0, `refunded=${f3.refunded} delta=${b1 - b0}`);\n} catch (e) {\n  check(`FATAL: ${(e as Error).message}`, false);\n} finally {\n  if (uid) {\n    const { error } = await admin.auth.admin.deleteUser(uid);\n    const { count } = await admin.from('autopilot_cycles')\n      .select('id', { count: 'exact', head: true }).eq('user_id', uid);\n    check('cleanup: user deleted + cycles cascade-removed', !error && (count ?? 0) === 0, `remaining=${count}`);\n  }\n  console.log(pass ? '\\n\ud83d\udfe2 SMOKE PASS' : '\\n\ud83d\udd34 SMOKE FAIL');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-budget.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:01:33)*
+
+
+## 🤖 Claude *(18:01:34)*
+
+Smoke escrito. Rodando contra o DB vivo (usuário descartável, zero centavo do Sovereign).
+
+## 🤖 Claude *(18:01:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/qa/smoke-autopilot-budget.ts 2>&1\necho \"EXIT=$?\"",
+  "description": "Run zero-cost autopilot budget smoke",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ setup: throwaway user + balance=500  → uid=9ad5589c
+> ✅ G3 pre-debit: begin ok + delta −92  → delta=-92
+> ✅ G3 cycle row: running · spend_mco=92 · debited_at set  → {"status":"running","spend_mco":92,"refunded_mco":0,"debited_at":"2026-06-20T18:01:36.809249+00:00","refunded_at":null}
+> ✅ G4 daily cap: aborted_daily_cap + ZERO deduct  → reason=aborted_daily_cap delta=0
+> ✅ G-budget: aborted_budget + ZERO deduct  → reason=aborted_budget delta=0
+> ✅ G-insufficient: insufficient_balance + ZERO deduct  → reason=insufficient_balance delta=0
+> ✅ G5 refund: finalized + refunded 62 + delta +62  → refunded=62 delta=62
+> ✅ G5 cycle row: completed · refunded_mco=62 · refunded_at set  → {"status":"completed","spend_mco":92,"refunded_mco":62,"debited_at":"2026-06-20T18:01:36.809249+00:00","refunded_at":"2026-06-20T18:01:37.140273+00:00"}
+> ✅ G5 idempotent: finalized:false + ZERO delta  → delta=0
+> ✅ G-clamp: refunded 0 + ZERO finalize delta  → refunded=0 delta=0
+> ✅ cleanup: user deleted + cycles cascade-removed  → remaining=0
+> 
+> 🟢 SMOKE PASS
+> EXIT=0
+> ```
+
+## 🤖 Claude *(18:02:22)*
+
+
+## 🤖 Claude *(18:02:27)*
+
+## 🟢 SMOKE PASS — 11/11 gates, exit 0
+
+Cada invariante do guardrail de custo provado **contra o DB vivo** com usuário descartável (zero centavo do Sovereign):
+
+| Gate | Prova material |
+|---|---|
+| **G3 pré-débito** | begin → delta **−92**, cycle `running`/`spend_mco=92`/`debited_at` set |
+| **G4 cap diário** | 2º ciclo 92+92>100 → `aborted_daily_cap`, **delta 0** |
+| **cap por ciclo** | 300>200 → `aborted_budget`, **delta 0** |
+| **saldo insuficiente** | 40<92 → `insufficient_balance`, **delta 0** (dispara antes do cap diário) |
+| **G5 refund** | finalize(actual=30) → **+62**, cycle `completed`/`refunded_mco=62`/`refunded_at` |
+| **G5 idempotente** | 2ª finalize → `finalized:false`, **delta 0** (sem refund duplo) |
+| **clamp do refund** | actual=999 > spend=50 → `refunded:0`, **delta 0** (sem mint negativo) |
+| **cascade** | deleteUser → `remaining=0` cycles (FK CASCADE viva) |
+
+Commitando o smoke.
+
+## 🤖 Claude *(18:02:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/smoke-autopilot-budget.ts\ngit commit -q -F - <<'MSG'\ntest: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)\n\nProva begin_autopilot_cycle / finalize_autopilot_cycle contra o DB vivo com\nusu\u00e1rio descart\u00e1vel (zero saldo do Sovereign, sem edge fn, sem LLM):\npr\u00e9-d\u00e9bito exato \u00b7 cap di\u00e1rio/por-ciclo/saldo abortam sem deduzir \u00b7 refund\ncr\u00e9dito-positivo \u00b7 idempot\u00eancia \u00b7 clamp anti-mint \u00b7 FK CASCADE na limpeza.\n11/11 verde \u2014 fecha os gates G3/G4/G5 do SOP [[autopilot-cron-identity|autopilot-cron-identity]].md.\nMSG\ngit log --oneline -3",
+  "description": "Commit the zero-cost smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m3:02PM[0m [32mINF[0m 1 commits scanned.
+> [90m3:02PM[0m [32mINF[0m scan completed in 13.3ms
+> [90m3:02PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 0c59e4d test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+> 686bae3 feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+> 44e5887 chore(sprint): registra v6.43.0 — Viral Autopilot Fatias 1 + 1b + diagnóstico saída visível
+> ```
+
+## 🤖 Claude *(18:03:03)*
+
+
+## 🤖 Claude *(18:03:09)*
+
+Ambos commits no main: **`686bae3`** (fundação) + **`0c59e4d`** (smoke). Gates limpos.
+
+---
+
+## 📍 Fatia 2 — fundação SELADA e provada
+
+| Etapa | Estado |
+|---|---|
+| SOP Lei 2 (gate OTD-VA-008) | ✅ `autopilot-cron-identity.md` |
+| Migrations (2 tabelas + 2 RPCs) | ✅ aplicadas (`db push` exit 0) |
+| Verificação de catálogo | ✅ 2 tabelas · RLS 2/2 · 6 policies · 2 RPCs · 5 constraints · **grants anon/auth=false, svc=true** |
+| Prova comportamental | ✅ anon→401 · service projected=0→22023 guard |
+| `/security-review` | ✅ SAFE (0 findings) |
+| Smoke zero-cost | ✅ 11/11 (G3/G4/G5 + cap/insuficiente/clamp/idempotência) |
+| Commits | ✅ `686bae3` · `0c59e4d` |
+
+A fundação financeira está de pé e blindada — mas **inerte**: nenhum centavo se move até existirem as edge functions do cron. Esse é o próximo (e maior) passo: a camada que **gasta sozinha**. É o ponto certo pra você cravar o escopo antes de eu codar autonomia que mexe na carteira.
+
+## 🤖 Claude *(18:03:15)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Funda\u00e7\u00e3o da Fatia 2 selada + provada (migrations + 2 RPCs + smoke 11/11). O pr\u00f3ximo \u00e9 a camada que de fato gasta sozinha \u2014 as edge functions do cron. Como seguimos?",
+      "header": "Pr\u00f3xima fatia",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Bora as edge functions",
+          "description": "Construir o executor completo: autopilot-run (prova service-role in-function \u2192 begin_autopilot_cycle \u2192 fan-out orchestrate-content em modo prepaid \u2192 finalize_autopilot_cycle) + autopilot-cadence-cron (driver pg_cron, espelha nurture-cron) + a modifica\u00e7\u00e3o FR-VA-016 na orchestrate-content (aceita o caminho cron service-role + x-autopilot-user-id + prepaid, sem self-bill). Deploy + smokes zero-cost (dry_run). A ATIVA\u00c7\u00c3O do pg_cron + o 1\u00ba ciclo PAGO real ficam gated no seu GO expl\u00edcito."
+        },
+        {
+          "label": "Pausa/checkpoint aqui",
+          "description": "A funda\u00e7\u00e3o shipada+provada \u00e9 um ponto de parada limpo. Sigo as edge functions noutra sess\u00e3o, OU selo agora (/handoff) registrando a Fatia 2 funda\u00e7\u00e3o como milestone."
+        },
+        {
+          "label": "Ajustar escopo antes",
+          "description": "Cravar antes de codar: frequ\u00eancia do tick do cron (ex: a cada 15min varre planos vencidos), qu\u00e3o agressiva a autonomia no MVP, defaults de teto, ou quais functions construir primeiro (ex: s\u00f3 autopilot-run sem o cron driver ainda)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Fundação da Fatia 2 selada + provada (migrations + 2 RPCs + smoke 11/11). O próximo é a camada que de fato gasta sozinha — as edge functions do cron. Como seguimos?"="Bora as edge functions". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(18:51:29)*
+
+
+## 🤖 Claude *(18:51:32)*
+
+**GO — bora as edge functions.** Antes de codar, mapeio os contratos vivos que o executor toca (a disciplina que pegou correções materiais nas fatias 1/1b). Preciso ver: como a `orchestrate-content` resolve identidade + onde debita + como resolve produtos + como dá kick no step (pra plugar o caminho cron `prepaid` da FR-VA-016), e o bloco de identidade da `orchestrate-step`.
+
+## 🤖 Claude *(18:51:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sizes ===\"; wc -l supabase/functions/orchestrate-content/index.ts supabase/functions/orchestrate-step/index.ts supabase/functions/nurture-cron/index.ts\necho \"\"\necho \"=== orchestrate-content anchors ===\"\ngrep -nE 'serve\\(|Deno\\.serve|deduct_mco_coins|getUser|verifyJwt|SB_SECRET_KEY|x-autopilot|prepaid|product_ids|async_orchestrate_step|pipeline_runs|orchestrate-step|EdgeRuntime|req\\.json|user_id' supabase/functions/orchestrate-content/index.ts | head -50",
+  "description": "Map orchestrate-content identity/billing/product/kick anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sizes ===
+>   259 supabase/functions/orchestrate-content/index.ts
+>   713 supabase/functions/orchestrate-step/index.ts
+>    81 supabase/functions/nurture-cron/index.ts
+>  1053 total
+> 
+> === orchestrate-content anchors ===
+> 26:Deno.serve(async (req) => {
+> 45:    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 50:    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 60:    const { data: userKeys } = await admin.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 79:    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids } = await req.json();
+> 112:    const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 113:      p_user_id: user.id,
+> 136:    if (Array.isArray(product_ids) && product_ids.length > 0) {
+> 137:      const ids = product_ids.filter((x: unknown): x is string => typeof x === "string").slice(0, 5);
+> 163:      .from("pipeline_runs")
+> 165:        user_id: user.id,
+> 181:          products: resolvedProducts,   // Viral Autopilot Fatia 1 — channel to orchestrate-step (product-aware)
+> 211:      const { error: kickErr } = await admin.rpc("async_orchestrate_step", {
+> 246:          (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 250:        if (runId) await refundAdmin.from("pipeline_runs").update({ status: "error" }).eq("id", runId).then(() => {}, () => {});
+> ```
+
+## 🤖 Claude *(18:51:39)*
+
+
+## 🤖 Claude *(18:51:40)*
+
+orchestrate-content é compacta (259 linhas). Lendo o handler inteiro pra plugar o caminho cron/`prepaid` cirurgicamente sem quebrar o caminho user-facing.
+
+## 🤖 Claude *(18:51:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 26,
+  "limit": 234
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 26	Deno.serve(async (req) => {
+> 27	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 28	
+> 29	  // Charge-without-value guard (OTD-INTENT-DISPATCH-REFUND): the catch refunds the entry debit on any
+> 30	  // post-charge failure. runId is hoisted so a half-created run can be marked errored after the refund.
+> 31	  let charged = false;
+> 32	  let chargedUser = "";
+> 33	  let runId: string | null = null;
+> 34	
+> 35	  try {
+> 36	    const authHeader = req.headers.get("Authorization");
+> 37	    if (!authHeader?.startsWith("Bearer ")) {
+> 38	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 39	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 40	      });
+> 41	    }
+> 42	
+> 43	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 44	    const supabaseKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 45	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 46	    
+> 47	    const userClient = createClient(supabaseUrl, supabaseKey, {
+> 48	      global: { headers: { Authorization: authHeader } },
+> 49	    });
+> 50	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 51	    if (userErr || !user) {
+> 52	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 53	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 54	      });
+> 55	    }
+> 56	
+> 57	    const admin = createClient(supabaseUrl, serviceKey);
+> 58	
+> 59	    // pre-flight: check AI keys before charging user
+> 60	    const { data: userKeys } = await admin.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 61	    const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 62	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 63	
+> 64	    const prefModel = userKeys?.pref_ai_model ?? null;
+> 65	    const prefRequiresOR = prefModel && (prefModel.includes("/") || prefModel.startsWith("gemini-"));
+> 66	    const aiKey = prefRequiresOR ? (openRouterKey || groqKey) : (groqKey || openRouterKey);
+> 67	
+> 68	    if (!aiKey) {
+> 69	      return new Response(JSON.stringify({ error: "GROQ_API_KEY or OPENROUTER_API_KEY not configured" }), {
+> 70	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 71	      });
+> 72	    }
+> 73	
+> 74	    const isGroq = !prefRequiresOR && !!groqKey && aiKey === groqKey;
+> 75	    const aiEndpoint = isGroq ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+> 76	    const orPrefModel = prefModel?.startsWith("gemini-") ? `google/${prefModel}` : prefModel;
+> 77	    const selectedModel = orPrefModel ?? (isGroq ? "llama-3.3-70b-versatile" : "meta-llama/llama-3.3-70b-instruct");
+> 78	
+> 79	    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids } = await req.json();
+> 80	
+> 81	    if (!topic) {
+> 82	      return new Response(JSON.stringify({ error: "topic is required" }), {
+> 83	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 84	      });
+> 85	    }
+> 86	
+> 87	    // Cyber-Sentinel (FR-SEC-002): inspect the user-controlled topic AFTER identity, BEFORE any charge.
+> 88	    // Fail-closed — a hostile prompt (injection / billing-bypass / ANSI smuggling) is rejected pre-billing,
+> 89	    // pre-LLM: zero mcoCoins debited, zero provider call. SSOT docs/bok/security/02-srs-secure-spec.md.
+> 90	    // rateLimit:false — this is a fan-out TARGET (campaign-run / intent-execute dispatch N in parallel with
+> 91	    // one shared JWT); the economic gate below is the burst limiter. L1+L2 (injection/control) stay active.
+> 92	    const sentinelVerdict = inspectPrompt(typeof topic === "string" ? topic : String(topic ?? ""), user.id, { rateLimit: false });
+> 93	    if (!sentinelVerdict.allow) {
+> 94	      await logSentinelBlock(admin, "orchestrate-content", sentinelVerdict, user.id);
+> 95	      return verdictResponse(sentinelVerdict, corsHeaders);
+> 96	    }
+> 97	
+> 98	    // mcoCoins gatekeeper (ORCHESTRATION_COST is module-scoped for the refund-on-failure guard).
+> 99	    const { data: profileBalance } = await admin
+> 100	      .from("profiles")
+> 101	      .select("mco_balance")
+> 102	      .eq("id", user.id)
+> 103	      .maybeSingle();
+> 104	
+> 105	    if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {
+> 106	      return new Response(
+> 107	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 108	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 109	      );
+> 110	    }
+> 111	
+> 112	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", {
+> 113	      p_user_id: user.id,
+> 114	      p_amount: ORCHESTRATION_COST,
+> 115	    });
+> 116	    if (deductErr) {
+> 117	      return new Response(
+> 118	        JSON.stringify({ error: "Saldo insuficiente de mcoCoins para executar a orquestração" }),
+> 119	        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 120	      );
+> 121	    }
+> 122	    charged = true;
+> 123	    chargedUser = user.id;
+> 124	
+> 125	    // utm_campaign uses the campaign_id for per-campaign attribution; fallback to slug for unnamed runs
+> 126	    const utmCampaign = campaign_id
+> 127	      ? encodeURIComponent(campaign_id)
+> 128	      : `mcorch_${topic.slice(0, 24).replace(/\s+/g, "_").toLowerCase()}`;
+> 129	
+> 130	    // ── Viral Autopilot Fatia 1 (FR-VA-016 product-half / FR-VA-012): resolve the chosen products from the
+> 131	    // catalog (authoritative — never trust client-sent name/price) and SANITIZE each product name through the
+> 132	    // same Cyber-Sentinel gate (product names are external/Apify-enriched data → prompt-injection vector). A
+> 133	    // product whose name fails the gate is dropped (fail-closed per product, not per run). Order preserved so
+> 134	    // products[0] = the featured product. Empty/absent → legacy topic-only generation (backward compat).
+> 135	    const resolvedProducts: Array<{ external_id: string; name: string; price: number | null; category: string | null; image_url: string | null; url: string | null }> = [];
+> 136	    if (Array.isArray(product_ids) && product_ids.length > 0) {
+> 137	      const ids = product_ids.filter((x: unknown): x is string => typeof x === "string").slice(0, 5);
+> 138	      const { data: prows } = await admin
+> 139	        .from("vm_affiliate_products")
+> 140	        .select("external_id, name, price, category, image_url, product_url")
+> 141	        .in("external_id", ids)
+> 142	        .eq("is_active", true);
+> 143	      const order = new Map(ids.map((id, i) => [id, i] as const));
+> 144	      for (const pr of (prows ?? [])) {
+> 145	        const nm = String((pr as { name?: string }).name ?? "");
+> 146	        const v = inspectPrompt(nm, user.id, { rateLimit: false });
+> 147	        if (!v.allow) { console.warn(`[orchestrate-content] product name blocked by sentinel, skipped: ${(pr as { external_id?: string }).external_id}`); continue; }
+> 148	        resolvedProducts.push({
+> 149	          external_id: (pr as { external_id: string }).external_id,
+> 150	          name: nm,
+> 151	          price: (pr as { price?: number | null }).price ?? null,
+> 152	          category: (pr as { category?: string | null }).category ?? null,
+> 153	          image_url: (pr as { image_url?: string | null }).image_url ?? null,
+> 154	          url: (pr as { product_url?: string | null }).product_url ?? null,
+> 155	        });
+> 156	      }
+> 157	      resolvedProducts.sort((a, b) => (order.get(a.external_id) ?? 99) - (order.get(b.external_id) ?? 99));
+> 158	    }
+> 159	
+> 160	    // --- Create pipeline_run record ---
+> 161	    const runStarted = new Date().toISOString();
+> 162	    const { data: runRow } = await admin
+> 163	      .from("pipeline_runs")
+> 164	      .insert({
+> 165	        user_id: user.id,
+> 166	        topic,
+> 167	        platforms,
+> 168	        status: "running",
+> 169	        steps: [],
+> 170	        started_at: runStarted,
+> 171	        metadata: {
+> 172	          topic,
+> 173	          platforms,
+> 174	          campaign_id: campaign_id || null,
+> 175	          wp_status,
+> 176	          site_url,
+> 177	          selectedModel,
+> 178	          isGroq,
+> 179	          aiEndpoint,
+> 180	          utmCampaign,
+> 181	          products: resolvedProducts,   // Viral Autopilot Fatia 1 — channel to orchestrate-step (product-aware)
+> 182	        }
+> 183	      })
+> 184	      .select("id")
+> 185	      .single();
+> 186	
+> 187	    runId = runRow?.id ?? null;
+> 188	
+> 189	    if (!runId) {
+> 190	      throw new Error("Failed to create pipeline run row");
+> 191	    }
+> 192	
+> 193	    // Determine first step in queue
+> 194	    const stepsOrder = ["article_generation", "wordpress_publish", "linkedin_post", "twitter_thread", "knowledge_mesh"];
+> 195	    let firstStep: string | null = null;
+> 196	    for (const candidate of stepsOrder) {
+> 197	      if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 198	        if (platforms.includes("wordpress")) { firstStep = candidate; break; }
+> 199	      } else if (candidate === "linkedin_post") {
+> 200	        if (platforms.includes("linkedin")) { firstStep = candidate; break; }
+> 201	      } else if (candidate === "twitter_thread") {
+> 202	        if (platforms.includes("twitter")) { firstStep = candidate; break; }
+> 203	      } else if (candidate === "knowledge_mesh") {
+> 204	        firstStep = candidate; // Final fallback always runs
+> 205	        break;
+> 206	      }
+> 207	    }
+> 208	
+> 209	    if (firstStep) {
+> 210	      console.log(`[orchestrate-content] Invoking first step "${firstStep}" for run ${runId}`);
+> 211	      const { error: kickErr } = await admin.rpc("async_orchestrate_step", {
+> 212	        p_supabase_url: supabaseUrl,
+> 213	        p_service_key: serviceKey,
+> 214	        p_run_id: runId,
+> 215	        p_step: firstStep,
+> 216	      });
+> 217	      if (kickErr) {
+> 218	        // Charge-without-value: run row exists but no step queued → throw so the catch refunds + marks it errored.
+> 219	        throw new Error(`Failed to queue first step "${firstStep}": ${kickErr.message}`);
+> 220	      }
+> 221	    }
+> 222	
+> 223	    return new Response(JSON.stringify({
+> 224	      success: true,
+> 225	      run_id: runId,
+> 226	      steps: [],
+> 227	      summary: {
+> 228	        topic,
+> 229	        platforms_processed: platforms,
+> 230	        wordpress_url: null,
+> 231	        campaign_id: campaign_id || null,
+> 232	        run_id: runId,
+> 233	      }
+> 234	    }), {
+> 235	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 236	    });
+> 237	
+> 238	  } catch (e) {
+> 239	    console.error("orchestrate-content error:", e);
+> 240	    // Refund the entry debit on any post-charge failure (charge-without-value guard — OTD-INTENT-DISPATCH-REFUND).
+> 241	    let refunded = false;
+> 242	    if (charged && chargedUser) {
+> 243	      try {
+> 244	        const refundAdmin = createClient(
+> 245	          Deno.env.get("SUPABASE_URL")!,
+> 246	          (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 247	        );
+> 248	        refunded = await refundMco(refundAdmin, chargedUser, ORCHESTRATION_COST, "orchestrate-content");
+> 249	        // mark a half-created run as errored so it isn't left dangling in "running" after the money was returned.
+> 250	        if (runId) await refundAdmin.from("pipeline_runs").update({ status: "error" }).eq("id", runId).then(() => {}, () => {});
+> 251	      } catch { /* refund is best-effort — never mask the original error */ }
+> 252	    }
+> 253	    return new Response(
+> 254	      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error", refunded }),
+> 255	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> 256	    );
+> 257	  }
+> 258	});
+> 259	
+> ```
+
+## 🤖 Claude *(18:55:50)*
+
+
+## 🤖 Claude *(18:55:53)*
+
+orchestrate-content mapeada por inteiro: identidade só via `getUser()` (linha 50), débito de 10 na 112-115, produtos resolvidos do catálogo+sentinel (136-158), kick via `async_orchestrate_step` (211). Plugo a FR-VA-016 cirurgicamente — caminho cron (service-role + `x-autopilot-user-id` server-trusted) + `prepaid` que pula o débito, preservando sentinel/produtos/kick. Edits sequenciais:
+
+## 🤖 Claude *(18:56:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "    const userClient = createClient(supabaseUrl, supabaseKey, {\n      global: { headers: { Authorization: authHeader } },\n    });\n    const { data: { user }, error: userErr } = await userClient.auth.getUser();\n    if (userErr || !user) {\n      return new Response(JSON.stringify({ error: \"Unauthorized\" }), {\n        status: 401, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }",
+  "new_string": "    // \u2500\u2500 Identity (FR-VA-016): two paths. \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    //  (1) Cron/autopilot \u2014 caller PROVES service-role in-function (Bearer SB_SECRET_KEY) and supplies the\n    //      SERVER-TRUSTED x-autopilot-user-id (autopilot-run already derived it from autopilot_plans.user_id,\n    //      never a client body). prepaid sub-runs were pre-debited by begin_autopilot_cycle \u2192 the deduct is skipped.\n    //  (2) User \u2014 normal getUser() (ES256 session; gateway runs verify_jwt=false, getUser validates server-side).\n    const isService = authHeader === `Bearer ${serviceKey}`;\n    const autopilotUserId = req.headers.get(\"x-autopilot-user-id\");\n    const isCron = isService && !!autopilotUserId;\n    let userId: string;\n    if (isCron) {\n      if (!/^[0-9a-fA-F-]{36}$/.test(autopilotUserId!)) {\n        return new Response(JSON.stringify({ error: \"invalid x-autopilot-user-id\" }), {\n          status: 400, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      userId = autopilotUserId!;\n    } else {\n      const userClient = createClient(supabaseUrl, supabaseKey, {\n        global: { headers: { Authorization: authHeader } },\n      });\n      const { data: { user: authedUser }, error: userErr } = await userClient.auth.getUser();\n      if (userErr || !authedUser) {\n        return new Response(JSON.stringify({ error: \"Unauthorized\" }), {\n          status: 401, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      userId = authedUser.id;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:56:05)*
+
+
+## 🤖 Claude *(18:56:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "user.id",
+  "new_string": "userId"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:56:15)*
+
+
+## 🤖 Claude *(18:56:17)*
+
+Identidade dois-caminhos + `userId` propagado. Agora o body (`prepaid`/`cycle_id` + `isPrepaid`), o wrap do billing (`if (!isPrepaid)`) e a metadata do run.
+
+## 🤖 Claude *(18:56:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids } = await req.json();",
+  "new_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id } = await req.json();\n    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).\n    const isPrepaid = isCron && prepaid === true;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:56:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "    const { data: profileBalance } = await admin\n      .from(\"profiles\")\n      .select(\"mco_balance\")\n      .eq(\"id\", userId)\n      .maybeSingle();\n\n    if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {\n      return new Response(\n        JSON.stringify({ error: \"Saldo insuficiente de mcoCoins para executar a orquestra\u00e7\u00e3o\" }),\n        { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n      );\n    }\n\n    const { error: deductErr } = await admin.rpc(\"deduct_mco_coins\", {\n      p_user_id: userId,\n      p_amount: ORCHESTRATION_COST,\n    });\n    if (deductErr) {\n      return new Response(\n        JSON.stringify({ error: \"Saldo insuficiente de mcoCoins para executar a orquestra\u00e7\u00e3o\" }),\n        { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n      );\n    }\n    charged = true;\n    chargedUser = userId;",
+  "new_string": "    // mcoCoins gatekeeper. Prepaid cron sub-runs were already debited at the cycle level by\n    // begin_autopilot_cycle (FR-VA-016) \u2192 skip the per-run balance check + deduct (no self-bill; the cycle's\n    // finalize_autopilot_cycle handles the refund of the unused projection).\n    if (!isPrepaid) {\n      const { data: profileBalance } = await admin\n        .from(\"profiles\")\n        .select(\"mco_balance\")\n        .eq(\"id\", userId)\n        .maybeSingle();\n\n      if ((profileBalance?.mco_balance ?? 0) < ORCHESTRATION_COST) {\n        return new Response(\n          JSON.stringify({ error: \"Saldo insuficiente de mcoCoins para executar a orquestra\u00e7\u00e3o\" }),\n          { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n        );\n      }\n\n      const { error: deductErr } = await admin.rpc(\"deduct_mco_coins\", {\n        p_user_id: userId,\n        p_amount: ORCHESTRATION_COST,\n      });\n      if (deductErr) {\n        return new Response(\n          JSON.stringify({ error: \"Saldo insuficiente de mcoCoins para executar a orquestra\u00e7\u00e3o\" }),\n          { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n        );\n      }\n      charged = true;\n      chargedUser = userId;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:56:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "          products: resolvedProducts,   // Viral Autopilot Fatia 1 \u2014 channel to orchestrate-step (product-aware)\n        }",
+  "new_string": "          products: resolvedProducts,   // Viral Autopilot Fatia 1 \u2014 channel to orchestrate-step (product-aware)\n          prepaid: isPrepaid,           // Fatia 2 \u2014 cron sub-run (no self-bill; cycle pre-debited)\n          cycle_id: cycle_id ?? null,   // Fatia 2 \u2014 link the run to its autopilot_cycle\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:57:21)*
+
+
+## 🤖 Claude *(18:57:23)*
+
+FR-VA-016 plugada na orchestrate-content. Agora escrevo as 2 funções novas (`autopilot-run` executor + `autopilot-cadence-cron` driver, espelhando nurture-cron) e leio o `config.toml` pra registrar `verify_jwt=false`.
+
+## 🤖 Claude *(18:57:52)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "content": "// autopilot-run \u2014 Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.\n// SOP: docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.\n//\n// Identity (two paths):\n//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron\n//     derived it from autopilot_plans.user_id). The header is re-validated by the TENANT-SCOPED plan load below.\n//   - user \"gerar agora\": user JWT \u2192 getUser \u2192 the plan load is scoped to that user (IDOR-safe).\n// Flow: load plan (tenant-scoped) \u2192 N_runs = products\u00d7platforms\u00d7ab_variants \u2192 projected = N_runs*10 + 2 \u2192\n//   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) \u2192 fan-out orchestrate-content (prepaid, no\n//   self-bill) \u2192 finalize_autopilot_cycle(actual) \u2192 re-arm next_run_at. dry_run short-circuits after the cost\n//   projection (no cycle, no deduct) \u2014 the zero-cost proof path.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type, x-autopilot-user-id\",\n};\nconst ORCH_COST = 10;     // orchestrate-content flat bundle (image already included \u2014 billing.ts:16-21)\nconst ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)\nconst CONCURRENCY = 6;    // wall-clock bound on the fan-out (mirrors nurture-cron / campaign-run)\nconst UUID_RE = /^[0-9a-fA-F-]{36}$/;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  const pubKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n  const admin = createClient(url, serviceKey);\n  const logHealth = (status: string) =>\n    admin.from(\"infra_health_logs\").insert({ service: \"autopilot-run\", status }).then(() => {}, () => {});\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader?.startsWith(\"Bearer \")) return json({ error: \"Unauthorized\" }, 401);\n\n    const body = await req.json().catch(() => ({}));\n    const planId = typeof body?.plan_id === \"string\" ? body.plan_id : null;\n    const dryRun = body?.dry_run === true;\n    if (!planId || !UUID_RE.test(planId)) return json({ error: \"plan_id (uuid) required\" }, 422);\n\n    // \u2500\u2500 Identity: service path (proven key + server-trusted header) OR user JWT path. \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const isService = authHeader === `Bearer ${serviceKey}`;\n    let userId: string;\n    if (isService) {\n      const hdr = req.headers.get(\"x-autopilot-user-id\");\n      if (!hdr || !UUID_RE.test(hdr)) return json({ error: \"x-autopilot-user-id (uuid) required for service path\" }, 400);\n      userId = hdr;\n    } else {\n      const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });\n      const { data: { user }, error } = await userClient.auth.getUser();\n      if (error || !user) return json({ error: \"Unauthorized\" }, 401);\n      userId = user.id;\n    }\n\n    // \u2500\u2500 Load plan TENANT-SCOPED (plan MUST belong to userId \u2014 cross-tenant/missing \u2192 404). \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const { data: plan } = await admin\n      .from(\"autopilot_plans\")\n      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants\")\n      .eq(\"id\", planId).eq(\"user_id\", userId).maybeSingle();\n    if (!plan) return json({ error: \"plan_not_found\" }, 404);\n\n    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === \"string\" && x.length > 0);\n    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === \"string\" && x.length > 0);\n    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));\n    const nRuns = products.length * platforms.length * abVariants;\n    if (nRuns < 1) return json({ error: \"plan_has_no_targets\", detail: \"plano sem produtos/redes v\u00e1lidos\" }, 422);\n\n    const projected = nRuns * ORCH_COST + ANALYZE_COST;\n\n    // dry_run: return the cost projection WITHOUT opening a cycle or deducting (zero-cost proof path).\n    if (dryRun) {\n      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,\n        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });\n    }\n\n    // \u2500\u2500 begin_autopilot_cycle: ATOMIC cap-check + single pre-debit (or abort reason, no deduct). \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const { data: begun, error: beginErr } = await admin.rpc(\"begin_autopilot_cycle\", {\n      p_plan_id: planId, p_user_id: userId, p_projected_mco: projected, p_planned_units: nRuns,\n    });\n    if (beginErr) { logHealth(\"error\"); return json({ error: \"begin_failed\", detail: beginErr.message }, 500); }\n    if (!begun?.ok) {\n      const reason = begun?.reason ?? \"aborted\";\n      // Hard stop (budget too low / insufficient balance) \u2192 pause the plan so it stops re-firing every tick.\n      if (reason === \"aborted_budget\" || reason === \"insufficient_balance\") {\n        await admin.from(\"autopilot_plans\").update({ is_active: false }).eq(\"id\", planId).eq(\"user_id\", userId);\n      }\n      logHealth(\"degraded\");\n      return json({ ok: false, reason, projected_mco: projected }, reason === \"insufficient_balance\" ? 402 : 409);\n    }\n    const cycleId = begun.cycle_id as string;\n\n    // \u2500\u2500 Fan-out: product \u00d7 platform \u00d7 variant \u2192 orchestrate-content (prepaid \u2192 NO self-bill). \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    let succeeded = 0;\n    const tasks: Array<() => Promise<void>> = [];\n    for (const productId of products) {\n      for (const platform of platforms) {\n        for (let v = 0; v < abVariants; v++) {\n          tasks.push(async () => {\n            try {\n              const r = await fetch(`${url}/functions/v1/orchestrate-content`, {\n                method: \"POST\",\n                headers: {\n                  Authorization: `Bearer ${serviceKey}`,\n                  \"x-autopilot-user-id\": userId,\n                  \"Content-Type\": \"application/json\",\n                },\n                body: JSON.stringify({\n                  topic: plan.name, platforms: [platform], product_ids: [productId],\n                  prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                }),\n              });\n              if (r.ok) succeeded++;\n              else console.warn(`[autopilot-run] sub-run ${productId}/${platform} \u2192 HTTP ${r.status}`);\n            } catch (e) {\n              console.warn(`[autopilot-run] sub-run ${productId}/${platform} error: ${e}`);\n            }\n          });\n        }\n      }\n    }\n    for (let i = 0; i < tasks.length; i += CONCURRENCY) {\n      await Promise.all(tasks.slice(i, i + CONCURRENCY).map((t) => t()));\n    }\n\n    // actual = successful runs \u00d7 10. The ANALYZE_COST(2) reservation is REFUNDED here because autopilot-analyze\n    // (R3 / FR-VA-010) is not yet wired \u2014 when it lands it will own that 2. Zero successes \u2192 actual 0 \u2192 full refund.\n    const actual = succeeded * ORCH_COST;\n    const status = succeeded > 0 ? \"completed\" : \"failed\";\n    const { data: fin } = await admin.rpc(\"finalize_autopilot_cycle\", {\n      p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,\n    });\n\n    // \u2500\u2500 Re-arm cadence (every_n_days) or deactivate after a single all_at_once run. \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    if (plan.mode === \"every_n_days\") {\n      const days = Math.min(30, Math.max(1, Number(plan.interval_days ?? 3)));\n      const next = new Date(Date.now() + days * 86_400_000).toISOString();\n      await admin.from(\"autopilot_plans\").update({ next_run_at: next }).eq(\"id\", planId).eq(\"user_id\", userId);\n    } else {\n      await admin.from(\"autopilot_plans\").update({ is_active: false }).eq(\"id\", planId).eq(\"user_id\", userId);\n    }\n\n    logHealth(\"healthy\");\n    return json({\n      ok: true, cycle_id: cycleId, n_runs: nRuns, succeeded,\n      projected_mco: projected, actual_mco: actual, refunded_mco: fin?.refunded ?? 0, status,\n    });\n  } catch (e) {\n    logHealth(\"error\");\n    return json({ error: e instanceof Error ? e.message : \"unknown\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:58:05)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-cadence-cron/index.ts",
+  "content": "// autopilot-cadence-cron \u2014 Viral Autopilot pg_cron driver (FR-VA-005). verify_jwt=false.\n// SOP: docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.\n//\n// Service-role driver (mirrors nurture-cron): self-checks Authorization === Bearer SB_SECRET_KEY, scans ACTIVE\n// plans whose next_run_at has passed, and fans out to autopilot-run with the SERVER-TRUSTED user_id taken from\n// the plan row (NEVER a request body). Each plan's spend is gated by begin_autopilot_cycle's caps inside\n// autopilot-run. The pg_cron SCHEDULE that invokes this function is wired at activation time (Sovereign action).\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\nconst MAX_PER_RUN = 50;   // cap per tick \u2014 no silent unbounded fan-out (logged if hit)\nconst CONCURRENCY = 6;    // wall-clock bound (mirrors nurture-cron)\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  // Only the service-role holder (pg_cron presenting the Vault key) may run the cron.\n  if (req.headers.get(\"Authorization\") !== `Bearer ${serviceKey}`) return json({ error: \"Forbidden\" }, 403);\n  const admin = createClient(url, serviceKey);\n  const log = (status: string) =>\n    admin.from(\"infra_health_logs\").insert({ service: \"autopilot-cadence-cron\", status }).then(() => {}, () => {});\n\n  try {\n    // due = active plans whose next_run_at has passed (served by the autopilot_plans_due_idx partial index).\n    const { data: due, error } = await admin\n      .from(\"autopilot_plans\")\n      .select(\"id, user_id\")\n      .eq(\"is_active\", true)\n      .not(\"next_run_at\", \"is\", null)\n      .lte(\"next_run_at\", new Date().toISOString())\n      .order(\"next_run_at\", { ascending: true })\n      .limit(MAX_PER_RUN);\n    if (error) throw error;\n    const list = (due ?? []) as Array<{ id: string; user_id: string }>;\n    if (list.length === 0) { log(\"healthy\"); return json({ status: \"ok\", due: 0, dispatched: 0, aborted: 0, errors: 0 }); }\n\n    const tally = { dispatched: 0, aborted: 0, errors: 0 };\n    const one = async (p: { id: string; user_id: string }) => {\n      try {\n        const r = await fetch(`${url}/functions/v1/autopilot-run`, {\n          method: \"POST\",\n          headers: {\n            Authorization: `Bearer ${serviceKey}`,\n            \"x-autopilot-user-id\": p.user_id,   // server-trusted (from the plan row)\n            \"Content-Type\": \"application/json\",\n          },\n          body: JSON.stringify({ plan_id: p.id }),\n        });\n        const d = await r.json().catch(() => ({}));\n        if (d?.ok) tally.dispatched++;\n        else if (d?.reason) tally.aborted++;   // cap/balance abort \u2014 expected, not an error\n        else tally.errors++;\n      } catch { tally.errors++; }\n    };\n    for (let i = 0; i < list.length; i += CONCURRENCY) await Promise.all(list.slice(i, i + CONCURRENCY).map(one));\n\n    if (list.length >= MAX_PER_RUN) console.warn(`[autopilot-cadence-cron] hit MAX_PER_RUN=${MAX_PER_RUN} \u2014 more plans may be due`);\n    log(\"healthy\");\n    return json({ status: \"ok\", due: list.length, ...tally });\n  } catch (e) {\n    log(\"error\");\n    return json({ error: e instanceof Error ? e.message : \"unknown\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-cadence-cron/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:58:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "offset": 16,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 16	[functions.orchestrate-content]
+> 17	verify_jwt = false
+> 18	[functions.orchestrate-step]
+> 19	verify_jwt = false
+> 20	[functions.nurture-dispatch]
+> 21	verify_jwt = false
+> 22	[functions.nurture-cron]
+> 23	verify_jwt = false
+> 24	[functions.intent-orchestrate]
+> 25	verify_jwt = false
+> 26	[functions.intent-execute]
+> 27	verify_jwt = false
+> 28	[functions.[[aeo-audit|aeo-audit]]]
+> 29	verify_jwt = false
+> 30	[functions.generate-content]
+> 31	verify_jwt = false
+> 32	[functions.generate-audio-script]
+> 33	verify_jwt = false
+> 34	[functions.generate-video-script]
+> 35	verify_jwt = false
+> 36	[functions.list-provider-models]
+> 37	verify_jwt = false
+> 38	[functions.generate-video]
+> 39	verify_jwt = false
+> 40	[functions.check-video-status]
+> 41	verify_jwt = false
+> 42	[functions.generate-image]
+> 43	verify_jwt = false
+> 44	[functions.analyze-seo]
+> 45	verify_jwt = false
+> ```
+
+## 🤖 Claude *(18:58:13)*
+
+
+## 🤖 Claude *(18:58:17)*
+
+Adicionando os 2 entries `verify_jwt=false` no config.toml (junto dos crons irmãos).
+
+## 🤖 Claude *(18:58:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.nurture-cron]\nverify_jwt = false\n[functions.intent-orchestrate]",
+  "new_string": "[functions.nurture-cron]\nverify_jwt = false\n[functions.autopilot-run]\nverify_jwt = false\n[functions.autopilot-cadence-cron]\nverify_jwt = false\n[functions.intent-orchestrate]"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:58:41)*
+
+
+## 🤖 Claude *(18:58:42)*
+
+Config registrado. Antes do gate de segurança, um typecheck rápido das funções Deno (pega erro bobo antes do review/deploy) + stage das mudanças.
+
+## 🤖 Claude *(18:58:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deno check (if available) ===\"\nif [ -x \"$HOME/.deno/bin/deno\" ]; then\n  \"$HOME/.deno/bin/deno\" check supabase/functions/autopilot-run/index.ts supabase/functions/autopilot-cadence-cron/index.ts 2>&1 | tail -15\n  echo \"deno-exit=$?\"\nelse\n  echo \"deno not at ~/.deno/bin; relying on deploy-time bundle check\"\nfi\necho \"\"\necho \"=== stage function changes for /security-review ===\"\ngit add supabase/functions/orchestrate-content/index.ts \\\n        supabase/functions/autopilot-run/index.ts \\\n        supabase/functions/autopilot-cadence-cron/index.ts \\\n        supabase/config.toml \\\n        scripts/qa/smoke-autopilot-budget.ts \\\n        CLAUDE.md\ngit status --short",
+  "description": "deno check new functions + stage changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check (if available) ===
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.108.2/dist/module/lib/webauthn.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.108.2/dist/module/lib/webauthn.dom.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.108.2/dist/module/lib/error-codes.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/types.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/channel.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/longpoll.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/presence.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/push.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/serializer.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/socket.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/timer.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/auth-js@2.108.2/dist/module/lib/webauthn.errors.d.ts
+> [0m[32mDownload[0m https://esm.sh/@supabase/phoenix@0.4.2/priv/static/types/constants.d.ts
+> [0m[32mCheck[0m supabase/functions/autopilot-run/index.ts
+> [0m[32mCheck[0m supabase/functions/autopilot-cadence-cron/index.ts
+> deno-exit=0
+> 
+> === stage function changes for /security-review ===
+> M  supabase/config.toml
+> A  supabase/functions/autopilot-cadence-cron/index.ts
+> A  supabase/functions/autopilot-run/index.ts
+> M  supabase/functions/orchestrate-content/index.ts
+> ?? deno.lock
+> ```
+
+## 🤖 Claude *(18:59:16)*
+
+
+## 🤖 Claude *(18:59:19)*
+
+`deno check` exit 0 nas 2 funções novas. Stage correto (orchestrate-content M, 2 funções A, config M — o smoke/CLAUDE.md já estavam commitados). Limpo o `deno.lock` espúrio e rodo o `/security-review` sobre o caminho de dinheiro modificado (o bypass `prepaid` + a confiança no `x-autopilot-user-id` são exatamente o que o gate checa).
+
+## 🤖 Claude *(18:59:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f deno.lock\necho \"removed stray deno.lock\"\ngit status --short",
+  "description": "Remove stray deno.lock"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> removed stray deno.lock
+> M  supabase/config.toml
+> A  supabase/functions/autopilot-cadence-cron/index.ts
+> A  supabase/functions/autopilot-run/index.ts
+> M  supabase/functions/orchestrate-content/index.ts
+> ```
+
+## 🤖 Claude *(18:59:23)*
+
+
+## 🤖 Claude *(18:59:23)*
+
+Tree limpo. Rodando `/security-review` sobre as edge functions do caminho de dinheiro.
+
+## 🤖 Claude *(18:59:23)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(18:59:24)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   supabase/config.toml
+	new file:   supabase/functions/autopilot-cadence-cron/index.ts
+	new file:   supabase/functions/autopilot-run/index.ts
+	modified:   supabase/functions/orchestrate-content/index.ts
+```
+
+FILES MODIFIED:
+
+```
+CLAUDE.md
+docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md
+scripts/qa/smoke-autopilot-budget.ts
+supabase/migrations/20260620120000_viral_autopilot_plans.sql
+supabase/migrations/20260620120100_viral_autopilot_cycles.sql
+supabase/migrations/20260620120200_begin_autopilot_cycle.sql
+supabase/migrations/20260620120300_finalize_autopilot_cycle.sql
+```
+
+COMMITS:
+
+```
+commit 0c59e4d9ed13254290bcfed10e0eb9b7974bf5df
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sat Jun 20 15:02:31 2026 -0300
+
+    test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+    
+    Prova begin_autopilot_cycle / finalize_autopilot_cycle contra o DB vivo com
+    usuário descartável (zero saldo do Sovereign, sem edge fn, sem LLM):
+    pré-débito exato · cap diário/por-ciclo/saldo abortam sem deduzir · refund
+    crédito-positivo · idempotência · clamp anti-mint · FK CASCADE na limpeza.
+    11/11 verde — fecha os gates G3/G4/G5 do SOP [[autopilot-cron-identity|autopilot-cron-identity]].md.
+
+commit 686bae358396999f2546f3abddacf079337296b3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sat Jun 20 14:59:17 2026 -0300
+
+    feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+    
+    Abre o gate OTD-VA-008 com o SOP antecipado e assenta a fundação financeira da
+    cadência autônoma (R2), sem ainda mover dinheiro — as edge functions do cron são
+    a fatia seguinte. Nenhum centavo se gasta até o runner existir.
+    
+    SOP (Lei 2 — escrito antes do código): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md
+      Cron prova `Bearer SB_SECRET_KEY` in-function e deriva user_id da linha do banco
+      (autopilot_plans.user_id), nunca do body; pré-débito/refund atômico; 10 gates.
+    
+    Migrations (aplicadas + verificadas materialmente):
+      - autopilot_plans / autopilot_cycles: FK composta tenant-escopada, RESTRICTIVE
+        no-delete, write default-deny; fecha a FK composta pendente de creative_metrics.
+      - begin_autopilot_cycle: cap diário + cap por ciclo + saldo + pré-débito ÚNICO sob
+        pg_advisory_xact_lock (anti-TOCTOU), service-role-only.
+      - finalize_autopilot_cycle: refund crédito-positivo idempotente (claim-once),
+        espelha finalize_vision_job; jamais deduct negativo (anti-mint).
+    
+    /security-review SAFE (0 findings). Prova viva: anon -> 401 permission denied;
+    service-role projected=0 -> 22023 guard antes de qualquer lookup/débito.
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (49.4KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/034e4fdb-b4b4-4ef6-bae7-10d32bd4551c/tool-results/bvb11172a.txt
+
+Preview (first 2KB):
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9aa375d..d768c82 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -420,6 +420,8 @@ Edge Function secrets (configured in Lovable Cloud vault, not in `.env`): `STRIP
+ | **Schema drift audit SOP + tool** | `docs/processes/schema-drift-audit.md` + `scripts/qa/audit-schema-drift.sh` (deployed↔migration drift: ledger · out-of-band fns/triggers · RPC caller-contract · edge `verify_jwt` · RLS/search_path advisory; exit 1=drift. Born do P0 do hotfix-sem-migration. **Regra: todo hotfix de prod vira migration na MESMA sessão**) |
+ | **Drift audit report + remediation (2026-06-03)** | `.claude/context/drift-audit-2026-06-03.md` (1 drift real benigno `rls_auto_enable` capturado · 7 SECURITY DEFINER search_path travados · trigger pg_net morto kong:8000 dropado — migrations `20260603210000`/`210500`/`211000`, /security-review SAFE, re-audit exit 0) |
+ | **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4×-floor model `mco=ceil(usd/$0.018×4)`; OTD-MCOIN-CALIBRATION closed) |
++| **Viral Autopilot cron-identity SOP (Lei 2)** | `docs/processes/autopilot-cron-identity.md` (OTD-VA-008 gate — cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha [nunca body]; pré-débito/refund atômico FR-VA-007/021; 10 gates) |
++| **Viral Autopilot cadence schema + money RPCs (Fatia 2)** | `supabase/migrations/20260620120000_viral_autopilot_plans.sql` · `…120100_viral_autopilot_cycles.sql` (FK composta tenant-escopada + RESTRICTIVE no-delete + fecha FK composta de `creative_metrics`) · `…120200_begin_autopilot_cycle.sql` (cap+pré-débito atômico advisory-lock, service-role-only) · `…120300_finalize_autopilot_cycle.sql` (refund crédito-positivo idempotente, espelha `finalize_vision_job`) |
+ | **QA user-JWT minter** | `scripts/qa/gen-user-jwt.ts` (admin generateLink→verifyOtp→access_token for authenticated edge-fn QA) |
+ | **Build & Deploy skill** | `.claude/skills/build-deploy-guardian/SKILL.md` |
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(18:59:28)*
+
+
+## 🤖 Claude *(18:59:55)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review autopilot edge functions",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a focused security review of edge-function changes on this branch. READ THE FILES DIRECTLY from disk.\n\nFILES TO REVIEW (the staged changes):\n1. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts  (MODIFIED \u2014 added a \"cron/prepaid\" path; review the WHOLE file, focus on the identity + billing changes)\n2. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts          (NEW)\n3. /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-cadence-cron/index.ts (NEW)\n4. /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml                                (added verify_jwt=false for the two new functions)\n\nCONTEXT \u2014 Supabase Deno edge functions, multi-tenant, mcoCoins is real money (profiles.mco_balance, deduct_mco_coins RPC). These functions implement the Viral Autopilot cadence:\n- orchestrate-content: the paid content pipeline (normally deducts ORCHESTRATION_COST=10 from the JWT user). It was modified (FR-VA-016) to ALSO accept a \"cron path\": Authorization === `Bearer ${SB_SECRET_KEY}` (service-role proof) + an `x-autopilot-user-id` header (server-trusted) + `prepaid:true` in the body \u2192 which SKIPS the balance check + deduct (because the spend was already pre-debited at the cycle level).\n- autopilot-run: per-plan executor. Identity = service path (Bearer SB_SECRET_KEY + x-autopilot-user-id) OR user JWT (getUser). Loads the plan tenant-scoped, calls begin_autopilot_cycle (pre-debit), fans out to orchestrate-content with prepaid, calls finalize_autopilot_cycle (refund).\n- autopilot-cadence-cron: pg_cron driver; 403 unless Bearer SB_SECRET_KEY; scans due plans; fans out to autopilot-run with x-autopilot-user-id from the plan row.\n\nCompare against the ESTABLISHED secure patterns in the same repo (read these to calibrate):\n- supabase/functions/nurture-cron/index.ts  (the canonical cron: self-check Bearer SB_SECRET_KEY \u2192 403; fan-out with per-row user_id)\n- supabase/functions/orchestrate-step/index.ts  (service-role proof pattern around the SB_SECRET_KEY usage)\n- docs/processes/edge-jwt-identity-verification.md  (the identity SOP \u2014 getUser/JWKS/service-role layers; \"never trust a sub without proof\")\n- docs/processes/autopilot-cron-identity.md  (the SOP this code implements)\n\nTHREAT CLASSES TO PROVE OR DISPROVE (be concrete with line numbers):\n1. **Billing bypass:** can an UNTRUSTED client (a normal authenticated user with their own JWT, or anon) reach the `prepaid` path in orchestrate-content to get FREE content generation (skip the 10-coin deduct)? Trace exactly how `isPrepaid` / `isCron` / `isService` are computed and whether a non-service caller can set them. The key question: is `prepaid` only honored when the caller proved possession of SB_SECRET_KEY?\n2. **Cross-tenant / impersonation:** in the cron path, `x-autopilot-user-id` is trusted. Is it ONLY trusted after the SB_SECRET_KEY proof? Can a user cause content to be generated/charged as another tenant, or read/spend another tenant's resources (API keys via decrypted_user_api_keys, balance)? Note orchestrate-content looks up decrypted_user_api_keys by the resolved userId \u2014 if userId could be attacker-controlled without the service key, that's a cross-tenant key-theft vector.\n3. **autopilot-run identity:** can an untrusted caller invoke autopilot-run for a plan they don't own (IDOR), or spoof x-autopilot-user-id without the service key, to trigger a paid cycle on a victim? Check the tenant-scoped plan load (.eq id + .eq user_id).\n4. **Privilege:** these functions run with verify_jwt=false (no gateway JWT check) \u2014 so the in-function checks are the ONLY guard. Are they sufficient? Does any path trust a header/body value for identity WITHOUT first proving SB_SECRET_KEY?\n5. **Secrets:** is SB_SECRET_KEY ever logged or leaked? Any hardcoded secret?\n6. **Injection:** the topic/product flow into a Cyber-Sentinel (inspectPrompt) before use \u2014 confirm the cron path still runs the sentinel on the topic and product names (i.e., the prepaid path didn't accidentally bypass the sentinel).\n\nRULES:\n- >80% confidence bar. Skip DOS, rate-limiting, resource exhaustion, theoretical races, lack-of-hardening, log-spoofing.\n- service_role / SB_SECRET_KEY is the TRUSTED backend \u2014 \"the backend can move money\" is NOT a vuln. The question is whether an UNTRUSTED client (anon / a normal authenticated user) can.\n- Env vars (SB_SECRET_KEY) are trusted; attacks requiring control of an env var are invalid.\n- Do not report findings in markdown/doc files.\n\nOUTPUT: markdown report. For each finding: title with file:line, Severity (HIGH/MEDIUM), Category, Description, concrete Exploit Scenario (who calls what, with what headers/body, to achieve what), Fix Recommendation, Confidence 1-10. If NO high-confidence vulns, say so explicitly and justify with the specific lines that close each threat class (e.g., the isService/isCron/isPrepaid computation lines, the tenant-scoped plan load, the 403 self-check). Be precise."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
