@@ -5389,6 +5389,120 @@ Workflow de revisão disparado (6 agentes: estratégia + design + risco + desenh
 
 Enquanto isso o sistema segue normal — LTC armado pra vender a $44,39 ($44,19 agora), HALT off, equity $149. Te aviso assim que a revisão fechar.
 
+## 👤 User *(17:11:18)*
+
+Verifique sse esta tudo vem, vejo erros no review strategy em questão de tarefa
+
+## 🤖 Claude *(17:14:42)*
+
+Deixa eu checar o estado do workflow e o agente de estratégia especificamente — ver se é erro real ou retry transitório.
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== status da task do workflow ===\"\nf=\"/tmp/claude-1001/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/tasks/w6sv9x5ip.output\"\nif [ -f \"$f\" ]; then echo \"output existe ($(wc -c < \"$f\") bytes) \u2014 pode ter terminado\"; else echo \"output ainda n\u00e3o criado \u2014 provavelmente rodando\"; fi\necho \"\"\necho \"=== transcripts dos agentes do workflow ===\"\nd=\"/home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff\"\nls -la \"$d\" 2>/dev/null | tail -20\necho \"\"\necho \"=== procurar erros nos transcripts (estrategia especialmente) ===\"\ngrep -rliE \"error|exception|fail|ENOENT|denied|cannot|InputValidation\" \"$d\" 2>/dev/null | head",
+  "description": "Check workflow status and strategy agent for errors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status da task do workflow ===
+> output existe (2608 bytes) — pode ter terminado
+> 
+> === transcripts dos agentes do workflow ===
+> total 1360
+> drwxrwxr-x 2 ubuntu ubuntu   4096 Jun 20 14:11 .
+> drwxrwxr-x 4 ubuntu ubuntu   4096 Jun 20 13:42 ..
+> -rw------- 1 ubuntu ubuntu  98200 Jun 20 14:03 agent-a0cf0981edfbfb6da.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 20 14:00 agent-a0cf0981edfbfb6da.meta.json
+> -rw------- 1 ubuntu ubuntu  51980 Jun 20 14:07 agent-a2b4a3d3ac83f1df2.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 20 14:03 agent-a2b4a3d3ac83f1df2.meta.json
+> -rw------- 1 ubuntu ubuntu  50470 Jun 20 14:14 agent-a78193cfe5d0f4c49.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 20 14:11 agent-a78193cfe5d0f4c49.meta.json
+> -rw------- 1 ubuntu ubuntu  52078 Jun 20 14:11 agent-ac40ca62293b69d2d.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 20 14:07 agent-ac40ca62293b69d2d.meta.json
+> -rw------- 1 ubuntu ubuntu 583598 Jun 20 14:00 agent-ad5bb8493e0ae698e.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 20 13:42 agent-ad5bb8493e0ae698e.meta.json
+> -rw------- 1 ubuntu ubuntu 503214 Jun 20 14:04 agent-ae2aaa48dfabca341.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     33 Jun 20 13:42 agent-ae2aaa48dfabca341.meta.json
+> -rw-rw-r-- 1 ubuntu ubuntu   2088 Jun 20 14:11 journal.jsonl
+> 
+> === procurar erros nos transcripts (estrategia especialmente) ===
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/journal.jsonl
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/agent-ac40ca62293b69d2d.jsonl
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/agent-a78193cfe5d0f4c49.jsonl
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/agent-a2b4a3d3ac83f1df2.jsonl
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/agent-a0cf0981edfbfb6da.jsonl
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/agent-ad5bb8493e0ae698e.jsonl
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff/agent-ae2aaa48dfabca341.jsonl
+> ```
+
+## 🤖 Claude *(17:15:47)*
+
+
+## 🤖 Claude *(17:15:54)*
+
+Você está certo — e **não é erro de tarefa nossa**. Foram **5 dos 6 agentes que falharam com `API Error: 529 Overloaded`** — sobrecarga temporária do servidor da Anthropic, não bug do workflow nem da config. Só o agente de **design** sobreviveu.
+
+**O que o design (que passou) já achou de valioso:**
+- 🔴 **3 HIGH:** (1) `useTestnet` é um bit único mutável pela UI que decide chaves E o `isTestnet` das ordens — risco de confusão testnet/mainnet; (2) **posição em qty BRUTA** (`getFarmPosition` soma `buy.quantity` bruto, a taxa sai da base) — **é exatamente a origem do 0,908 vs 0,907**; (3) cegueira ao Earn no money-path (`loadWallet` não funde `LDLTC` em LTC).
+- 🟡 Medium/low: bloqueio silencioso do HALT/cap (= nosso D1), MEMORY/BRAIN volátil + `FARM_SELLING` não-persistida, teto só em USDT/fail-open no tick frio, trava do cofre só no MCP, roteamento por regex de nome.
+
+Vou **re-rodar as partes que falharam** (resume — o design fica em cache, re-roda só estratégia/risco/débitos/verify/síntese):
+
+## 🤖 Claude *(17:15:55)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/review-strategy-design-and-debitos-wf_95415aaf-6ff.js",
+  "resumeFromRunId": "wf_95415aaf-6ff"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wj7qlidf2
+> Summary: Revisao adversarial de estrategia + design + risco do TradeUX e desenho dos fixes de TODOS os debitos abertos
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/subagents/workflows/wf_95415aaf-6ff
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/review-strategy-design-and-debitos-wf_95415aaf-6ff.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/review-strategy-design-and-debitos-wf_95415aaf-6ff.js"} to iterate without resending the script.)
+> Run ID: wf_95415aaf-6ff
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/workflows/scripts/review-strategy-design-and-debitos-wf_95415aaf-6ff.js", resumeFromRunId: "wf_95415aaf-6ff"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(17:16:29)*
+
+Resume disparado (`design` vem do cache, re-roda só os 5 que caíram). Sou notificado quando fechar.
+
+Se o 529 voltar (sobrecarga ainda ativa), eu dou um tempo e re-tento — mas em geral é questão de minutos e já passou. Quando completar, te entrego o relatório consolidado: **(A) onde estamos errando** (estratégia + design, só o que sobrevive à verificação adversarial), **(B) riscos de money-path**, e **(C) o plano dos 7 débitos** com decisão FIX/NÃO-FIX e ordem segura — aí implemento os aprovados com gate QA/TL e deploy.
+
+Por ora o sistema segue normal: LTC armado pra vender a $44,39, HALT off, equity ~$149. Te aviso assim que a revisão fechar.
+
+## 👤 User *(17:30:03)*
+
+<task-notification>
+<task-id>wj7qlidf2</task-id>
+<tool-use-id>toolu_0125E4rKvV7hR3EZEFrkZEM5</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/tasks/wj7qlidf2.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Revisao adversarial de estrategia + design + risco do TradeUX e desenho dos fixes de TODOS os debitos abertos" completed</summary>
+<result>{"strategy":null,"design":null,"risk":null,"debitos":null,"verify":null,"synthesis":null}</result>
+<failures>[review:design] failed: API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+[review:estrategia] failed: API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+[review:risco] failed: API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+[review:debitos] failed: API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+[verify:adversarial] failed: API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+[synthesize] failed: API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.</failures>
+<usage><agent_count>6</agent_count><subagent_tokens>0</subagent_tokens><tool_uses>0</tool_uses><duration_ms>847867</duration_ms></usage>
+</task-notification>
+
 ---
 
 %% --- PROJECT METADATA START --- %%

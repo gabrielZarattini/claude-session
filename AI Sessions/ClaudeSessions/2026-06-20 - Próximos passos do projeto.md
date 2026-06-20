@@ -714,7 +714,7 @@ Workflow concluído (12 agentes, 127 tool-uses). Vou ler a síntese do escopo �
 >     "FR-VA-002 — autopilot-run dispatcher: cron fan-out + pre-debit",
 >     "FR-VA-005 — autopilot-cadence pg_cron: pure cadence",
 >     "FR-VA-006 — autopilot_cycles ledger: cycle/cadence",
->     "FR-VA-007 (full) — atomic pre-debit + finalize_autopilot_cycle refund RPCs: gated by Lei 2 OTD-VA-008 SOP (autopilot-cron-identity.md), needs cycle layer",
+>     "FR-VA-007 (full) — atomic pre-debit + finalize_autopilot_cycle refund RPCs: gated by Lei 2 OTD-VA-008 SOP ([[autopilot-cron-identity|autopilot-cron-identity]].md), needs cycle layer",
 >     "FR-VA-008 (full) — autopilot-collect cron: real insight collection, post-publication, cron",
 >     "FR-VA-010 — autopilot-analyze: produces optimization_policy, needs prior-cycle creative_metrics",
 >     "FR-VA-011 — feedback injection: READS optimization_policy at generation, explicitly R3",
@@ -5831,7 +5831,7 @@ Tenho janela de sobra. Qual frente puxo agora?
       "options": [
         {
           "label": "Fatia 2 \u2014 Cad\u00eancia/cron (R2)",
-          "description": "O cora\u00e7\u00e3o do 'autopilot': recorr\u00eancia a cada N dias + 'tudo de uma vez', com teto de custo. Come\u00e7a pela SOP Lei 2 obrigat\u00f3ria (autopilot-cron-identity.md \u2014 prova service-role in-function, OTD-VA-008) e a funda\u00e7\u00e3o (autopilot_plans/cycles + begin/finalize RPCs + autopilot-run + pg_cron). Maior alavancagem rumo ao aut\u00f4nomo; security-sensitive."
+          "description": "O cora\u00e7\u00e3o do 'autopilot': recorr\u00eancia a cada N dias + 'tudo de uma vez', com teto de custo. Come\u00e7a pela SOP Lei 2 obrigat\u00f3ria ([[autopilot-cron-identity|autopilot-cron-identity]].md \u2014 prova service-role in-function, OTD-VA-008) e a funda\u00e7\u00e3o (autopilot_plans/cycles + begin/finalize RPCs + autopilot-run + pg_cron). Maior alavancagem rumo ao aut\u00f4nomo; security-sensitive."
         },
         {
           "label": "Fatia 1b \u2014 Imagem product-referenced",
@@ -6987,7 +6987,7 @@ Tenho janela de sobra. Como prefere seguir?
         },
         {
           "label": "Fatia 2 \u2014 Cron/cad\u00eancia (R2)",
-          "description": "O cora\u00e7\u00e3o aut\u00f4nomo: recorr\u00eancia a cada N dias + teto de custo. Come\u00e7a pela SOP Lei 2 (autopilot-cron-identity.md \u2014 prova service-role in-function) + funda\u00e7\u00e3o (autopilot_plans/cycles + begin/finalize RPCs + autopilot-run + pg_cron). Maior, security-sensitive. Constr\u00f3i sobre conte\u00fado que ainda n\u00e3o publica (ver blockers)."
+          "description": "O cora\u00e7\u00e3o aut\u00f4nomo: recorr\u00eancia a cada N dias + teto de custo. Come\u00e7a pela SOP Lei 2 ([[autopilot-cron-identity|autopilot-cron-identity]].md \u2014 prova service-role in-function) + funda\u00e7\u00e3o (autopilot_plans/cycles + begin/finalize RPCs + autopilot-run + pg_cron). Maior, security-sensitive. Constr\u00f3i sobre conte\u00fado que ainda n\u00e3o publica (ver blockers)."
         },
         {
           "label": "Selar a sess\u00e3o (/handoff)",
@@ -7873,7 +7873,7 @@ Como seguir?
         },
         {
           "label": "Fatia 2 \u2014 Cron/cad\u00eancia (R2)",
-          "description": "Seguir construindo o cora\u00e7\u00e3o aut\u00f4nomo: SOP Lei 2 autopilot-cron-identity.md + funda\u00e7\u00e3o (autopilot_plans/cycles + begin/finalize RPCs + autopilot-run + pg_cron). Maior e security-sensitive; constr\u00f3i sobre conte\u00fado cuja publica\u00e7\u00e3o ainda depende do CF skip."
+          "description": "Seguir construindo o cora\u00e7\u00e3o aut\u00f4nomo: SOP Lei 2 [[autopilot-cron-identity|autopilot-cron-identity]].md + funda\u00e7\u00e3o (autopilot_plans/cycles + begin/finalize RPCs + autopilot-run + pg_cron). Maior e security-sensitive; constr\u00f3i sobre conte\u00fado cuja publica\u00e7\u00e3o ainda depende do CF skip."
         },
         {
           "label": "Endurecer nanobana no c\u00f3digo",
@@ -9152,5 +9152,5 @@ Sessão densa e completa, Maestro. Em uma sessão: **2 fatias do Viral Autopilot
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-20 - Estratégia de lucro em mixed, trend e outros]]
-> * **Próxima Sessão**: [[2026-06-20 - agent-a0ce568b77a1d7483]]
+> * **Próxima Sessão**: [[2026-06-20 - Vamos começar o desenvolvimento]]
 %% --- TIMELINE END --- %%
