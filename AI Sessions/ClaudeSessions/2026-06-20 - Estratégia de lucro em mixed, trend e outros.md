@@ -1,5 +1,5 @@
 # [[2026-06-19 - Estratégia de lucro em mixed, trend e outros|Estratégia de lucro em mixed, trend e outros]]
-**Date:** 2026-06-20 | **Session ID:** `11673fbd-e65c-488e-b58e-4db5a1cb8dc5`
+**Date:** 2026-06-20 | **Session ID:** `58ca616a-c0a8-4399-abc7-178bed734314`
 
 ---
 
@@ -7143,15 +7143,1355 @@ Aí está o gráfico — BTCUSDT 1m, delay de 3 min (só vela fechada, sem repai
 
 Qual você quer? E posso trocar/adicionar: **símbolo** (BTC, ou as alts do Farm LTC/BNB/ADA), **thresholds** (25/75 da consistência vs 35/65 do Farm), e overlays de **regime/fluxo**. Diz o que prefere que eu sigo — e continuo de olho no canary Farm em paralelo.
 
-## 👤 User *(00:51:30)*
+## 👤 User *(00:52:38)*
 
 Então vamos melhorar nosso https://tradeux.gcrux.com/dashboard deixe o mais moderno possivel... veja as analises q recebi...
 
 🤖 [AGENTE] Observação: As automações de Baseline (ids 2 e 3) e de Tendência (ex.: id7 de venda e id15 de compra) estão inativas, embora os gates de regime indiquem que deveriam estar ativas (farm/baseline/trend liberados conforme estratégia Farm-and-Funnel). Verificar se a desativação é intencional ou se devem ser reativadas para continuar a acumulação de BTC conforme a estratégia. Não re-notificar o harvester, já comunicado anteriormente.
 
-## 👤 User *(00:51:56)*
+ou melhor colocar essas infos no cockpit ?
 
-[Request interrupted by user]
+## 🤖 Claude *(00:53:26)*
+
+
+## 🤖 Claude *(00:53:33)*
+
+Duas coisas aqui, e a primeira é importante esclarecer na hora porque é money-path:
+
+**A observação do agente é um FALSO ALARME** — doutrina desatualizada. Trend e Baseline estão inativos **de propósito**:
+- **Trend** — *você* acabou de parar (há minutos), quando escolheu o **canary só Farm** ao ir ao vivo. 
+- **Baseline (id2/id3)** — está off por design (é o grupo com a venda do cofre BTC).
+- O agente confunde **gate ≠ ativo**: "regime liberado" significa que o regime *permite* a estratégia, **não** que a automação deva estar armada. Ativar/parar é decisão do operador (o canary). Então **não, não reativar** — é o canary funcionando como você mandou. (E o agente precisa de recalibração — ele não sabe do canary nem do painel de grupos.)
+
+E **sim, sua intuição está certa**: a cura definitiva pra esse tipo de confusão é **mostrar gate vs ativo lado a lado no cockpit**. Deixa eu olhar o dashboard e o cockpit atuais pra propor a modernização aterrissada no que existe:
+
+## 🤖 Claude *(00:53:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\necho \"=== rotas (dashboard/cockpit) ===\"\ngrep -rnE \"dashboard|cockpit|Dashboard|Cockpit|path=\" src/App.js src/routes* src/**/Routes* 2>/dev/null | head -20\necho \"=== componentes Dashboard/Cockpit ===\"\nfind src -iname \"*dashboard*\" -o -iname \"*cockpit*\" 2>/dev/null\necho \"=== o que o Dashboard renderiza (imports/se\u00e7\u00f5es) ===\"\nDASH=$(find src -ipath \"*ashboard*\" -name \"*.js\" | grep -iE \"Dashboard\\.js$\" | head -1); echo \"arquivo: $DASH\"; wc -l \"$DASH\" 2>/dev/null\ngrep -nE \"import|<[A-Z][a-zA-Z]+|useState|Service\" \"$DASH\" 2>/dev/null | head -40",
+  "description": "Map dashboard + cockpit components and routing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas (dashboard/cockpit) ===
+> src/routes.js:5:import Dashboard from './private/Dashboard/Dashboard';
+> src/routes.js:13:import Cockpit from './private/Cockpit/Cockpit';
+> src/routes.js:31:            <Route path="/" exact>
+> src/routes.js:34:            <PrivateRoute path="/settings">
+> src/routes.js:37:            <PrivateRoute path="/orders/:symbol?">
+> src/routes.js:40:            <PrivateRoute path="/dashboard">
+> src/routes.js:41:                <Dashboard />
+> src/routes.js:43:            <PrivateRoute path="/cockpit">
+> src/routes.js:44:                <Cockpit />
+> src/routes.js:46:            <PrivateRoute path="/monitors">
+> src/routes.js:49:            <PrivateRoute path="/automations">
+> src/routes.js:52:            <PrivateRoute path="/reports">
+> src/routes.js:55:            <PrivateRoute path="/intelligence">
+> src/routes.js:58:            <PrivateRoute path="/symbols">
+> src/routes.js:61:            <PrivateRoute path="/orderTemplates/:symbol?">
+> src/routes.js:64:            <PrivateRoute path="/withdrawTemplates/:coin?">
+> src/routes.js:67:            <PrivateRoute path="/wallet">
+> === componentes Dashboard/Cockpit ===
+> src/private/Cockpit
+> src/private/Dashboard
+> src/private/Cockpit/CockpitSims.js
+> src/private/Cockpit/cockpit.css
+> src/private/Cockpit/Cockpit.js
+> src/private/Dashboard/Dashboard.js
+> src/private/Dashboard/Dashboard.css
+> === o que o Dashboard renderiza (imports/seções) ===
+> arquivo: src/private/Dashboard/Dashboard.js
+> 103 src/private/Dashboard/Dashboard.js
+> 1:import React, { useState } from 'react';
+> 2:import { useHistory } from 'react-router-dom';
+> 3:import Menu from '../../components/Menu/Menu';
+> 4:import MiniTicker from './MiniTicker/MiniTicker';
+> 5:import BookTicker from './BookTicker/BookTicker';
+> 6:import useWebSocket from 'react-use-websocket';
+> 7:import Wallet from '../../components/Wallet/Wallet';
+> 8:import NewOrderButton from '../../components/NewOrder/NewOrderButton';
+> 9:import NewOrderModal from '../../components/NewOrder/NewOrderModal';
+> 10:import CandleChart from './CandleChart';
+> 11:import SelectSymbol from '../../components/SelectSymbol/SelectSymbol';
+> 12:import Footer from '../../components/Footer/Footer';
+> 13:import Toast from '../../components/Toast/Toast';
+> 19:  const [tickerState, setTickerState] = useState({});
+> 21:  const [balanceState, setBalanceState] = useState({});
+> 23:  const [bookState, setBookState] = useState({});
+> 25:  const [wallet, setWallet] = useState({});
+> 27:  const [chartSymbol, setChartSymbol] = useState('BTCUSDT');
+> 29:  const [notification, setNotification] = useState({ type: '', text: '' });
+> 69:    <React.Fragment>
+> 70:      <Menu />
+> 78:              <SelectSymbol onChange={onChangeSymbol} symbol={chartSymbol} />
+> 81:              <NewOrderButton />
+> 85:        <CandleChart symbol={chartSymbol} />
+> 88:            <MiniTicker data={tickerState} />
+> 92:          <BookTicker data={bookState} />
+> 93:          <Wallet data={balanceState} onUpdate={onWalletUpdate} />
+> 95:        <Footer />
+> 97:      <NewOrderModal wallet={wallet} onSubmit={onSubmitOrder} />
+> 98:      <Toast type={notification.type} text={notification.text} />
+> ```
+
+## 🤖 Claude *(00:54:01)*
+
+
+## 🤖 Claude *(00:54:02)*
+
+Mapeado: `/dashboard` é a tela de trading (chart + book + wallet + mini-tickers, via WebSocket); `/cockpit` é a inteligência (EV/regime/fluxo/gates). Deixa eu ler os dois pra propor algo aterrissado e moderno:
+
+## 🤖 Claude *(00:54:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Dashboard/Dashboard.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState } from 'react';
+> 2	import { useHistory } from 'react-router-dom';
+> 3	import Menu from '../../components/Menu/Menu';
+> 4	import MiniTicker from './MiniTicker/MiniTicker';
+> 5	import BookTicker from './BookTicker/BookTicker';
+> 6	import useWebSocket from 'react-use-websocket';
+> 7	import Wallet from '../../components/Wallet/Wallet';
+> 8	import NewOrderButton from '../../components/NewOrder/NewOrderButton';
+> 9	import NewOrderModal from '../../components/NewOrder/NewOrderModal';
+> 10	import CandleChart from './CandleChart';
+> 11	import SelectSymbol from '../../components/SelectSymbol/SelectSymbol';
+> 12	import Footer from '../../components/Footer/Footer';
+> 13	import Toast from '../../components/Toast/Toast';
+> 14	
+> 15	function Dashboard() {
+> 16	
+> 17	  const history = useHistory();
+> 18	
+> 19	  const [tickerState, setTickerState] = useState({});
+> 20	
+> 21	  const [balanceState, setBalanceState] = useState({});
+> 22	
+> 23	  const [bookState, setBookState] = useState({});
+> 24	
+> 25	  const [wallet, setWallet] = useState({});
+> 26	
+> 27	  const [chartSymbol, setChartSymbol] = useState('BTCUSDT');
+> 28	
+> 29	  const [notification, setNotification] = useState({ type: '', text: '' });
+> 30	
+> 31	  const { lastJsonMessage } = useWebSocket(process.env.REACT_APP_WS_URL, {
+> 32	    onOpen: () => {
+> 33	      console.log(`Connected to App WS`);
+> 34	    },
+> 35	    onMessage: () => {
+> 36	      if (lastJsonMessage) {
+> 37	        if (lastJsonMessage.miniTicker) setTickerState(lastJsonMessage.miniTicker);
+> 38	        else if (lastJsonMessage.balance) {
+> 39	          setBalanceState(lastJsonMessage.balance);
+> 40	        }
+> 41	        else if (lastJsonMessage.book) {
+> 42	          lastJsonMessage.book.forEach(b => bookState[b.symbol] = b);
+> 43	          setBookState(bookState);
+> 44	        }
+> 45	      }
+> 46	    },
+> 47	    queryParams: { 'token': localStorage.getItem("token") },
+> 48	    onError: (event) => {
+> 49	      console.error(event);
+> 50	      setNotification({ type: 'error', text: event });
+> 51	    },
+> 52	    shouldReconnect: (closeEvent) => true,
+> 53	    reconnectInterval: 3000
+> 54	  });
+> 55	
+> 56	  function onWalletUpdate(walletObj) {
+> 57	    setWallet(walletObj);
+> 58	  }
+> 59	
+> 60	  function onSubmitOrder(order) {
+> 61	    history.push('/orders/' + order.symbol);
+> 62	  }
+> 63	
+> 64	  function onChangeSymbol(event) {
+> 65	    setChartSymbol(event.target.value);
+> 66	  }
+> 67	
+> 68	  return (
+> 69	    <React.Fragment>
+> 70	      <Menu />
+> 71	      <main className="content">
+> 72	        <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+> 73	          <div className="d-block mb-4 mb-md-0">
+> 74	            <h1 className="h4">Dashboard</h1>
+> 75	          </div>
+> 76	          <div className="btn-toolbar mb-md-0">
+> 77	            <div className="d-inline-flex align-items-center">
+> 78	              <SelectSymbol onChange={onChangeSymbol} symbol={chartSymbol} />
+> 79	            </div>
+> 80	            <div className="ms-2 ms-lg-3">
+> 81	              <NewOrderButton />
+> 82	            </div>
+> 83	          </div>
+> 84	        </div>
+> 85	        <CandleChart symbol={chartSymbol} />
+> 86	        <div className="row">
+> 87	          <div className="col-12">
+> 88	            <MiniTicker data={tickerState} />
+> 89	          </div>
+> 90	        </div>
+> 91	        <div className="row">
+> 92	          <BookTicker data={bookState} />
+> 93	          <Wallet data={balanceState} onUpdate={onWalletUpdate} />
+> 94	        </div>
+> 95	        <Footer />
+> 96	      </main>
+> 97	      <NewOrderModal wallet={wallet} onSubmit={onSubmitOrder} />
+> 98	      <Toast type={notification.type} text={notification.text} />
+> 99	    </React.Fragment>
+> 100	  );
+> 101	}
+> 102	
+> 103	export default Dashboard;
+> 104	
+> ```
+
+## 🤖 Claude *(00:54:38)*
+
+
+## 🤖 Claude *(00:54:41)*
+
+O Dashboard é a tela de trading clássica (Beholder); o Cockpit é a inteligência. Minha recomendação sobre a pergunta: **gate vs ativo vai pro Cockpit** (é a casa de analytics, e já tem os gates) — e dá pra cruzar com o endpoint `/automations/groups` que acabei de construir. A confusão do agente morre quando você VÊ "gate GO, mas PARADO pelo operador (canary)".
+
+Em vez de rebuildar às cegas (é subjetivo "moderno" + sistema ao vivo), vou te mostrar um **mockup** da direção primeiro. Deixa eu ver o cockpit atual + carregar o estilo do mockup:
+
+## 🤖 Claude *(00:54:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\necho \"=== Cockpit.js: tamanho + se\u00e7\u00f5es/render ===\"; wc -l src/private/Cockpit/Cockpit.js\ngrep -nE \"useState|className=\\\"(card|row|col|badge)|<h[1-5]|GO|WAIT|gate|regime|flow|EV|ev\\.|reason|Service|fetch|getCockpit|status\\.\" src/private/Cockpit/Cockpit.js | head -45",
+  "description": "Inspect current Cockpit structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Cockpit.js: tamanho + seções/render ===
+> 502 src/private/Cockpit/Cockpit.js
+> 1:import React, { useState, useEffect } from 'react';
+> 5:import { getBalance } from '../../services/ExchangeService';
+> 6:import { getOrdersReport } from '../../services/OrdersService';
+> 7:import { getRegimeStatus, getFlowStatus, getAgentRuns, getCockpit } from '../../services/IntelligenceService';
+> 13: * READ-ONLY: só LÊ dados reais (saldo, relatório, regime/flow, KPIs do agente, klines públicas
+> 110:  const [balance, setBalance] = useState({});
+> 111:  const [report, setReport] = useState({});
+> 112:  const [gate, setGate] = useState({ symbols: {} });
+> 113:  const [flow, setFlow] = useState({ symbols: {} });
+> 114:  const [agent, setAgent] = useState({ kpis: {}, runs: [] });
+> 115:  const [prices, setPrices] = useState({});
+> 116:  const [klines, setKlines] = useState(null);
+> 117:  const [klErr, setKlErr] = useState(false);
+> 118:  const [cockpit, setCockpit] = useState({ symbols: {} });
+> 119:  const [notification, setNotification] = useState({});
+> 152:    getCockpit(token).then(setCockpit).catch(() => {});
+> 158:        const r = await fetch(`${host}/api/v3/klines?symbol=${KL_SYMBOL}&interval=1m&limit=120`);
+> 204:  const evNet = (cpBtc && cpBtc.ev && cpBtc.ev.netPct != null) ? cpBtc.ev.netPct : null;
+> 214:  Object.keys(gate.symbols || {}).forEach(s => symset[s] = true);
+> 215:  Object.keys(flow.symbols || {}).forEach(s => symset[s] = true);
+> 232:              <span className={`cx-pill ${gate.enabled === false ? 'warn' : ''}`}><span className="cx-dot" />regime {gate.enabled === false ? 'off' : 'on'}</span>
+> 233:              <span className={`cx-pill ${flow.enabled === false ? 'warn' : ''}`}><span className="cx-dot" />flow {flow.enabled === false ? 'off' : (flow.mode || 'on')}</span>
+> 337:                <div className="cx-note">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha É a distribuição real. <b>≥ break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A "lei dos grandes números" mostra o contrário do golpe: repetição NÃO cria edge quando o EV/trade já é negativo.</div>
+> 349:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Regime × Flow lattice</span><span className="cx-src">/analysis/regime-status · flow-status</span></div>
+> 352:                    ? <div className="cx-empty">sem regime/fluxo ainda (jobs no ar, aguardando a Binance)</div>
+> 354:                        const g = (gate.symbols || {})[s] || {};
+> 355:                        const f = (flow.symbols || {})[s] || {};
+> 356:                        const imb = f.imbalance, tox = f.toxicity, reg = g.regime || 'unknown';
+> 362:                            <span className="cx-flowbar"><span className="mid" />{imb != null && <span className={`fill ${imb >= 0 ? 'buy' : 'sell'}`} style={{ width: w + '%' }} />}</span>
+> 369:                <div className="cx-note">Colunas: regime do gate · barra de <b>imbalance</b> do taker (verde compra/vermelho vende) · valor · <b>toxicity</b> (|imbalance|). Nowcasting de timing — não previsão.</div>
+> 373:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Trade bridges (gates de compra)</span></div>
+> 378:                        // Fonte de verdade = gate SYMBOL-AWARE do cockpit (cp.symbols[s].gates, commit 8884bd3):
+> 379:                        // só a baseline BTC (flowGated=true) é bloqueada por fluxo; o FARM das alts NÃO gateia por
+> 380:                        // fluxo → p/ alts a ponte de fluxo é INFORMATIVA, não bloqueante. Fallback regime/flow-status.
+> 382:                        const cpg = cps.gates || {};
+> 383:                        const g = (gate.symbols || {})[s] || {};
+> 384:                        const f = (flow.symbols || {})[s] || {};
+> 385:                        // nó "regime" = gate de regime da ACUMULAÇÃO (farm) → exclui bear/unknown E trend (em
+> 387:                        const regOpen = cpg.farm != null ? cpg.farm : !!(g.regime && g.regime !== 'bear' && g.regime !== 'unknown' && g.regime !== 'trend');
+> 388:                        const flowGated = !!cpg.flowGated;
+> 389:                        const imb = (cps.flow && cps.flow.imbalance != null) ? cps.flow.imbalance : f.imbalance;
+> 390:                        const flowMin = cpg.flowBuyMin != null ? cpg.flowBuyMin : -0.4;
+> 391:                        const flowOk = imb != null && imb >= flowMin; // não-capitulação (>= piso, igual ao backend)
+> 392:                        const ready = cpg.buyAllowed != null ? cpg.buyAllowed : (regOpen && (!flowGated || flowOk));
+> 393:                        const flowDot = flowGated ? (flowOk ? 'on' : 'off') : 'info'; // alt: informativo (não gateia)
+> ```
+
+## 🤖 Claude *(00:55:22)*
+
+
+## 🤖 Claude *(00:55:25)*
+
+O Cockpit já é **moderno** (design próprio `cx-*`, 502 linhas: pills de status, histograma de EV, lattice regime×fluxo, painel "Trade bridges"). Ótima notícia: a info do agente **encaixa direto** no painel "Trade bridges" existente — é só adicionar **ativo** ao lado do **gate** (add cirúrgico, não rebuild). E o Dashboard é a tela velha (Bootstrap) — esse sim pede facelift.
+
+Vou te mostrar um **mockup** com **dados reais de agora** (a reconciliação gate×ativo que mata a confusão do agente + um overview moderno). Carregando o estilo:
+
+## 🤖 Claude *(00:55:26)*
+
+
+🛠️ **Tool Call**: `mcp__visualize__read_me`
+```json
+{
+  "modules": [
+    "mockup"
+  ],
+  "platform": "desktop"
+}
+```
+
+> **Tool Result (mcp__visualize__read_me)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '# Imagine — Visual Creation Suite\n\n## Modules\nCall read_me again with the modules parameter to load detailed guidance:\n- `diagram` — SVG flowcharts, structural diagrams, illustrative diagrams\n- `mockup` — UI mockups, forms, cards, dashboards\n- `interactive` — interactive explainers with controls\n- `chart` — charts, data analysis, geographic maps (Chart.js, D3 choropleth)\n- `art` — illustration and generative art\nPick the closest fit. The module includes all relevant design guidance.\n\n**Complexity budget — hard limits:**\n- Box subtitles: ≤5 words. Detail goes in click-through (`sendPrompt`) or the prose below — not the box.\n- Colors: ≤2 ramps per diagram. If colors encode meaning (states, tiers), add a 1-line legend. Otherwise use one neutral ramp.\n- Horizontal tier: ≤4 boxes at full width (~140px each). 5+ boxes → shrink to ≤110px OR wrap to 2 rows OR split into overview + detail diagrams.\n\nIf you catch yourself writing "click to learn more" in prose, the diagram itself must ACTUALLY be sparse. Don\'t promise brevity then front-load everything.\n\n**Accessibility:** For HTML widgets, begin with a visually-hidden `<h2 class="sr-only">` containing a one-sentence summary of the visualization for screen-reader users. (SVG widgets use `role="img"` with `<title>` and `<desc>` instead — see SVG setup.)\n\nYou create rich visual content — SVG diagrams/illustrations and HTML interactive widgets — that renders inline in conversation. The best output feels like a natural extension of the chat.\n\n## Core Design System\n\nThese rules apply to ALL use cases.\n\n### Philosophy\n- **Seamless**: Users shouldn\'t notice where claude.ai ends and your widget begins.\n- **Flat**: No gradients, mesh backgrounds, noise textures, or decorative effects. Clean flat surfaces.\n- **Compact**: Show the essential inline. Explain the rest in text.\n- **Text goes in your response, visuals go in the tool** — All explanatory text, descriptions, introductions, and summaries must be written as normal response text OUTSIDE the tool call. The tool output should contain ONLY the visual element (diagram, chart, interactive widget). Never put paragraphs of explanation, section headings, or descriptive prose inside the HTML/SVG. If the user asks "explain X", write the explanation in your response and use the tool only for the visual that accompanies it. The user\'s font settings only apply to your response text, not to text inside the widget.\n\n### Streaming\nOutput streams token-by-token. Structure code so useful content appears early.\n- **HTML**: `<style>` (short) → content HTML → `<script>` last.\n- **SVG**: `<defs>` (markers) → visual elements immediately.\n- Prefer inline `style="..."` over `<style>` blocks — inputs/controls must look correct mid-stream.\n- Keep `<style>` under ~15 lines. Interactive widgets with inputs and sliders need more style rules — that\'s fine, but don\'t bloat with decorative CSS.\n- Gradients, shadows, and blur flash during streaming DOM diffs. Use solid flat fills instead.\n\n### Rules\n- No `<!-- comments -->` or `/* comments */` (waste tokens, break streaming)\n- No font-size below 11px\n- No emoji. Icons = Tabler **outline** webfont (5800+, already loaded): `<i class="ti ti-home"></i>`. Outline only — never use `-filled` suffixes (`ti-heart-filled` etc. are not loaded and will render blank). Inherits color + font-size from parent. Decorative icons get `aria-hidden="true"`; icon-only buttons get `aria-label`. Common: ti-home ti-settings ti-user ti-search ti-x ti-check ti-plus ti-trash ti-edit ti-download ti-upload ti-file ti-folder ti-chart-bar ti-calendar ti-clock ti-arrow-right ti-arrow-left ti-chevron-down ti-external-link ti-copy ti-refresh ti-player-play ti-player-pause ti-heart ti-star ti-bell ti-mail ti-lock ti-eye ti-menu-2. Don\'t hand-draw icon SVG paths.\n- No gradients, drop shadows, blur, glow, or neon effects\n- No dark/colored backgrounds on outer containers (transparent only — host provides the bg)\n- **Typography**: The default font is Anthropic Sans. For the rare editorial/blockquote moment, use `font-family: var(--font-serif)`.\n- **Headings**: h1 = 22px, h2 = 18px, h3 = 16px — all `font-weight: 500`. Heading color is pre-set to `var(--color-text-primary)` — don\'t override it. Body text = 16px, weight 400, `line-height: 1.7`. **Two weights only: 400 regular, 500 bold.** Never use 600 or 700 — they look heavy against the host UI.\n- **Sentence case** always. Never Title Case, never ALL CAPS. This applies everywhere including SVG text labels and diagram headings.\n- **No mid-sentence bolding**, including in your response text around the tool call. Entity names, class names, function names go in `code style` not **bold**. Bold is for headings and labels only.\n- The widget container is `display: block; width: 100%`. Your HTML fills it naturally — no wrapper div needed. Just start with your content directly. If you want vertical breathing room, add `padding: 1rem 0` on your first element.\n- Never use `position: fixed` — the iframe viewport sizes itself to your in-flow content height, so fixed-positioned elements (modals, overlays, tooltips) collapse it to `min-height: 100px`. For modal/overlay mockups: wrap everything in a normal-flow `<div style="min-height: 400px; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">` and put the modal inside — it\'s a faux viewport that actually contributes layout height.\n- No DOCTYPE, `<html>`, `<head>`, or `<body>` — just content fragments.\n- When placing text on a colored background (badges, pills, cards, tags), use the darkest shade from that same color family for the text — never plain black or generic gray.\n- **Corners**: use `border-radius: var(--border-radius-md)` (or `-lg` for cards) in HTML. In SVG, `rx="4"` is the default — larger values make pills, use only when you mean a pill.\n- **No rounded corners on single-sided borders** — if using `border-left` or `border-top` accents, set `border-radius: 0`. Rounded corners only work with full borders on all sides.\n- **No titles or prose inside the tool output** — see Philosophy above.\n- **Icon sizing**: Tabler `<i class="ti …">` sizes with `font-size` — 16–20px inline, 24px max decorative. For one-off inline SVG icons, set `width`/`height` explicitly (same limits).\n- No tabs, carousels, or `display: none` sections during streaming — hidden content streams invisibly. Show all content stacked vertically. (Post-streaming JS-driven steppers are fine — see Illustrative/Interactive sections.)\n- No nested scrolling — auto-fit height.\n- Scripts execute after streaming — load libraries via `<script src="https://cdnjs.cloudflare.com/ajax/libs/...">` (UMD globals), then use the global in a plain `<script>` that follows.\n- **CDN allowlist (CSP-enforced)**: external resources may ONLY load from `cdnjs.cloudflare.com`, `esm.sh`, `cdn.jsdelivr.net`, `unpkg.com`, `fonts.googleapis.com`, `fonts.gstatic.com`. All other origins are blocked by the sandbox — the request silently fails.\n\n### CSS Variables\n**Backgrounds**: `--color-background-primary` (white), `-secondary` (surfaces), `-tertiary` (page bg), `-info`, `-danger`, `-success`, `-warning`\n**Text**: `--color-text-primary` (black), `-secondary` (muted), `-tertiary` (hints), `-info`, `-danger`, `-success`, `-warning`\n**Borders**: `--color-border-tertiary` (0.15α, default), `-secondary` (0.3α, hover), `-primary` (0.4α), semantic `-info/-danger/-success/-warning`\n**Typography**: `--font-sans`, `--font-serif`, `--font-mono`\n**Layout**: `--border-radius-md` (8px), `--border-radius-lg` (12px — preferred for most components), `--border-radius-xl` (16px)\nAll auto-adapt to light/dark mode. For custom colors in HTML, use CSS variables.\n\n**Dark mode is mandatory** — every color must work in both modes:\n- In SVG: use the pre-built color classes (`c-blue`, `c-teal`, `c-amber`, etc.) for colored nodes — they handle light/dark mode automatically. Never write `<style>` blocks for colors.\n- In SVG: every `<text>` element needs a class (`t`, `ts`, `th`) — never omit fill or use `fill="inherit"`. Inside a `c-{color}` parent, text classes auto-adjust to the ramp.\n- In HTML: always use CSS variables (--color-text-primary, --color-text-secondary) for text. Never hardcode colors like color: #333 — invisible in dark mode.\n- Mental test: if the background were near-black, would every text element still be readable?\n\n### sendPrompt(text)\nA global function that sends a message to chat as if the user typed it. Use it when the user\'s next step benefits from Claude thinking. Handle filtering, sorting, toggling, and calculations in JS instead.\n\n### Links\n`<a href="https://...">` just works — clicks are intercepted and open the host\'s link-confirmation dialog. Or call `openLink(url)` directly.\n\n## When nothing fits\nPick the closest use case below and adapt. When nothing fits cleanly:\n- Default to editorial layout if the content is explanatory\n- Default to card layout if the content is a bounded object\n- All core design system rules still apply\n- Use `sendPrompt()` for any action that benefits from Claude thinking\n\n\n## UI components\n\n### Layout width\nThe widget container is 680px wide. Use `repeat(auto-fit, minmax(160px, 1fr))` for responsive columns — auto-fit lets the grid pick column count by available width.\n\n### Aesthetic\nFlat, clean, white surfaces. Minimal 0.5px borders. Generous whitespace. No gradients, no shadows (except functional focus rings). Everything should feel native to claude.ai — like it belongs on the page, not embedded from somewhere else.\n\n### Tokens\n- Borders: always `0.5px solid var(--color-border-tertiary)` (or `-secondary` for emphasis)\n- Corner radius: `var(--border-radius-md)` for most elements, `var(--border-radius-lg)` for cards\n- Cards: white bg (`var(--color-background-primary)`), 0.5px border, radius-lg, padding 1rem 1.25rem\n- Form elements (input, select, textarea, button, range slider) are pre-styled — write bare tags. Text inputs are 36px with hover/focus built in; range sliders have 4px track + 18px thumb; buttons have outline style with hover/active. Only add inline styles to override (e.g., different width).\n- Buttons: pre-styled with transparent bg, 0.5px border-secondary, hover bg-secondary, active scale(0.98). If it triggers sendPrompt, append a ↗ arrow.\n- **Round every displayed number.** JS float math leaks artifacts — `0.1 + 0.2` gives `0.30000000000000004`, `7 * 1.1` gives `7.700000000000001`. Any number that reaches the screen (slider readouts, stat card values, axis labels, data-point labels, tooltips, computed totals) must go through `Math.round()`, `.toFixed(n)`, or `Intl.NumberFormat`. Pick the precision that makes sense for the context — integers for counts, 1–2 decimals for percentages, `toLocaleString()` for currency. For range sliders, also set `step="1"` (or step="0.1" etc.) so the input itself emits round values.\n- Spacing: use rem for vertical rhythm (1rem, 1.5rem, 2rem), px for component-internal gaps (8px, 12px, 16px)\n- Box-shadows: none, except `box-shadow: 0 0 0 Npx` focus rings on inputs\n\n### Metric cards\nFor summary numbers (revenue, count, percentage) — surface card with muted 13px label above, 24px/500 number below. `background: var(--color-background-secondary)`, no border, `border-radius: var(--border-radius-md)`, padding 1rem. Use in grids of 2-4 with `gap: 12px`. Distinct from raised cards (which have white bg + border).\n\n### Layout\n- Editorial (explanatory content): no card wrapper, prose flows naturally\n- Card (bounded objects like a contact record, receipt): single raised card wraps the whole thing\n- Don\'t put tables here — output them as markdown in your response text\n\n**Grid overflow:** `grid-template-columns: 1fr` has `min-width: auto` by default — children with large min-content push the column past the container. Use `minmax(0, 1fr)` to clamp.\n\n**Table overflow:** Tables with many columns auto-expand past `width: 100%` if cell contents exceed it. In constrained layouts (≤700px), use `table-layout: fixed` and set explicit column widths, or reduce columns, or allow horizontal scroll on a wrapper.\n\n### Mockup presentation\nContained mockups — mobile screens, chat threads, single cards, modals, small UI components — should sit on a background surface (`var(--color-background-secondary)` container with `border-radius: var(--border-radius-lg)` and padding, or a device frame) so they don\'t float naked on the widget canvas. Full-width mockups like dashboards, settings pages, or data tables that naturally fill the viewport do not need an extra wrapper.\n\n### 1. Interactive explainer — learn how something works\n*"Explain how compound interest works" / "Teach me about sorting algorithms"*\n\nUse HTML for the interactive controls — sliders, buttons, live state displays, charts. Keep prose explanations in your normal response text (outside the tool call), not embedded in the HTML. No card wrapper. Whitespace is the container.\n\n```html\n<div style="display: flex; align-items: center; gap: 12px; margin: 0 0 1.5rem;">\n  <label style="font-size: 14px; color: var(--color-text-secondary);">Years</label>\n  <input type="range" min="1" max="40" value="20" id="years" style="flex: 1;" />\n  <span style="font-size: 14px; font-weight: 500; min-width: 24px;" id="years-out">20</span>\n</div>\n\n<div style="display: flex; align-items: baseline; gap: 8px; margin: 0 0 1.5rem;">\n  <span style="font-size: 14px; color: var(--color-text-secondary);">£1,000 →</span>\n  <span style="font-size: 24px; font-weight: 500;" id="result">£3,870</span>\n</div>\n\n<div style="margin: 2rem 0; position: relative; height: 240px;">\n  <canvas id="chart"></canvas>\n</div>\n```\n\nUse `sendPrompt()` to let users ask follow-ups: `sendPrompt(\'What if I increase the rate to 10%?\')`\n\n### 2. Compare options — decision making\n*"Compare pricing and features of these products" / "Help me choose between React and Vue"*\n\nUse HTML. Side-by-side card grid for options. Highlight differences with semantic colors. Interactive elements for filtering or weighting.\n\n- Each option in a card. Use badges for key differentiators. A leading Tabler icon (`<i class="ti ti-NAME">` at 20px, `aria-hidden`) anchors each option visually — pick the most apt name per option.\n- Add `sendPrompt()` buttons: `sendPrompt(\'Tell me more about the Pro plan\')`\n- Don\'t put comparison tables inside this tool — output them as regular markdown tables in your response text instead. The tool is for the visual card grid only.\n- When one option is recommended or "most popular", accent its card with `border: 2px solid var(--color-border-info)` only (2px is deliberate — the only exception to the 0.5px rule, used to accent featured items) — keep the same background and border as the other cards. Add a small badge (e.g. "Most popular") above or inside the card header using `background: var(--color-background-info); color: var(--color-text-info); font-size: 12px; padding: 4px 12px; border-radius: var(--border-radius-md)`.\n\n### 3. Data record — bounded UI object\n*"Show me a Salesforce contact card" / "Create a receipt for this order"*\n\nUse HTML. Wrap the entire thing in a single raised card. All content is sans-serif since it\'s pure UI. Use an avatar/initials circle for people (see example below).\n\n```html\n<div style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1rem 1.25rem;">\n  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">\n    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-background-info); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 14px; color: var(--color-text-info);">MR</div>\n    <div>\n      <p style="font-weight: 500; font-size: 15px; margin: 0;">Maya Rodriguez</p>\n      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0;">VP of Engineering</p>\n    </div>\n  </div>\n  <div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 12px;">\n    <table style="width: 100%; font-size: 13px;">\n      <tr><td style="color: var(--color-text-secondary); padding: 4px 0;"><i class="ti ti-mail" style="font-size:16px; vertical-align:-2px; margin-right:6px" aria-hidden="true"></i>Email</td><td style="text-align: right; padding: 4px 0; color: var(--color-text-info);">m.rodriguez@acme.com</td></tr>\n      <tr><td style="color: var(--color-text-secondary); padding: 4px 0;"><i class="ti ti-phone" style="font-size:16px; vertical-align:-2px; margin-right:6px" aria-hidden="true"></i>Phone</td><td style="text-align: right; padding: 4px 0;">+1 (415) 555-0172</td></tr>\n    </table>\n  </div>\n</div>\n```\n\n\n## Color palette\n\n9 color ramps, each with 7 stops from lightest to darkest. 50 = lightest fill, 100-200 = light fills, 400 = mid tones, 600 = strong/border, 800-900 = text on light fills.\n\n| Class | Ramp | 50 (lightest) | 100 | 200 | 400 | 600 | 800 | 900 (darkest) |\n|-------|------|------|-----|-----|-----|-----|-----|------|\n| `c-purple` | Purple | #EEEDFE | #CECBF6 | #AFA9EC | #7F77DD | #534AB7 | #3C3489 | #26215C |\n| `c-teal` | Teal | #E1F5EE | #9FE1CB | #5DCAA5 | #1D9E75 | #0F6E56 | #085041 | #04342C |\n| `c-coral` | Coral | #FAECE7 | #F5C4B3 | #F0997B | #D85A30 | #993C1D | #712B13 | #4A1B0C |\n| `c-pink` | Pink | #FBEAF0 | #F4C0D1 | #ED93B1 | #D4537E | #993556 | #72243E | #4B1528 |\n| `c-gray` | Gray | #F1EFE8 | #D3D1C7 | #B4B2A9 | #888780 | #5F5E5A | #444441 | #2C2C2A |\n| `c-blue` | Blue | #E6F1FB | #B5D4F4 | #85B7EB | #378ADD | #185FA5 | #0C447C | #042C53 |\n| `c-green` | Green | #EAF3DE | #C0DD97 | #97C459 | #639922 | #3B6D11 | #27500A | #173404 |\n| `c-amber` | Amber | #FAEEDA | #FAC775 | #EF9F27 | #BA7517 | #854F0B | #633806 | #412402 |\n| `c-red` | Red | #FCEBEB | #F7C1C1 | #F09595 | #E24B4A | #A32D2D | #791F1F | #501313 |\n\n**How to assign colors**: Color should encode meaning, not sequence. Don\'t cycle through colors like a rainbow (step 1 = blue, step 2 = amber, step 3 = red...). Instead:\n- Group nodes by **category** — all nodes of the same type share one color. E.g. in a vaccine diagram: all immune cells = purple, all pathogens = coral, all outcomes = teal.\n- For illustrative diagrams, map colors to **physical properties** — warm ramps for heat/energy, cool for cold/calm, green for organic, gray for structural/inert.\n- Use **gray for neutral/structural** nodes (start, end, generic steps).\n- Use **2-3 colors per diagram**, not 6+. More colors = more visual noise. A diagram with gray + purple + teal is cleaner than one using every ramp.\n- **Prefer purple, teal, coral, pink** for general diagram categories. Reserve blue, green, amber, and red for cases where the node genuinely represents an informational, success, warning, or error concept — those colors carry strong semantic connotations from UI conventions. (Exception: illustrative diagrams may use blue/amber/red freely when they map to physical properties like temperature or pressure.)\n\n**Text on colored backgrounds:** Always use the 800 or 900 stop from the same ramp as the fill. Never use black, gray, or --color-text-primary on colored fills. **When a box has both a title and a subtitle, they must be two different stops** — title darker (800 in light mode, 100 in dark), subtitle lighter (600 in light, 200 in dark). Same stop for both reads flat; the weight difference alone isn\'t enough. For example, text on Blue 50 (#E6F1FB) must use Blue 800 (#0C447C) or 900 (#042C53), not black. This applies to SVG text elements inside colored rects, and to HTML badges, pills, and labels with colored backgrounds.\n\n**Light/dark mode quick pick** — use only stops from the table, never off-table hex values:\n- **Light mode**: 50 fill + 600 stroke + **800 title / 600 subtitle**\n- **Dark mode**: 800 fill + 200 stroke + **100 title / 200 subtitle**\n- Apply `c-{ramp}` to a `<g>` wrapping shape+text, or directly to a `<rect>`/`<circle>`/`<ellipse>`. Never to `<path>` — paths don\'t get ramp fill. For colored connector strokes use inline `stroke="#..."` (any mid-ramp hex works in both modes). Dark mode is automatic for ramp classes. Available: c-gray, c-blue, c-red, c-amber, c-green, c-teal, c-purple, c-coral, c-pink.\n\nFor status/semantic meaning in UI (success, warning, danger) use CSS variables. For categorical coloring in both diagrams and UI, use these ramps.\n'}]
+> ```
+
+## 🤖 Claude *(00:56:09)*
+
+
+## 🤖 Claude *(00:56:10)*
+
+Tenho o design system. Aqui está o **mockup com dados reais de agora** — como ficaria a reconciliação que mata a confusão do agente, num visual moderno de "central de comando":
+
+## 🤖 Claude *(00:56:36)*
+
+
+🛠️ **Tool Call**: `mcp__visualize__show_widget`
+```json
+{
+  "title": "tradeux_cockpit_moderno_gate_vs_ativo",
+  "loading_messages": [
+    "Montando a central de comando",
+    "Cruzando gate com ativo",
+    "Puxando o estado do canary"
+  ],
+  "widget_code": "<h2 class=\"sr-only\" style=\"position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)\">Mockup do cockpit moderno do TradeUX mostrando o estado ao vivo: trading liberado, canary s\u00f3 Farm, equity 148 d\u00f3lares, P&L do paper mais um centavo; um painel reconciliando gate versus ativo por grupo (Farm coerente, Trend e Baseline parados de prop\u00f3sito, Paper virtual); e uma grade de mercado dos quatro s\u00edmbolos.</h2>\n<div style=\"padding:0.5rem 0;\">\n  <div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin-bottom:1.25rem;\">\n    <div style=\"background:var(--color-background-danger);border-radius:var(--border-radius-md);padding:0.75rem 0.9rem;\">\n      <div style=\"font-size:12px;color:var(--color-text-danger);\">trading</div>\n      <div style=\"font-size:18px;font-weight:500;color:var(--color-text-danger);\">liberado</div>\n    </div>\n    <div style=\"background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.75rem 0.9rem;\">\n      <div style=\"font-size:12px;color:var(--color-text-secondary);\">canary</div>\n      <div style=\"font-size:18px;font-weight:500;\">s\u00f3 Farm</div>\n    </div>\n    <div style=\"background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.75rem 0.9rem;\">\n      <div style=\"font-size:12px;color:var(--color-text-secondary);\">equity</div>\n      <div style=\"font-size:18px;font-weight:500;\">$148</div>\n    </div>\n    <div style=\"background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.75rem 0.9rem;\">\n      <div style=\"font-size:12px;color:var(--color-text-secondary);\">paper P&L</div>\n      <div style=\"font-size:18px;font-weight:500;color:var(--color-text-success);\">+$0,01</div>\n    </div>\n    <div style=\"background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.75rem 0.9rem;\">\n      <div style=\"font-size:12px;color:var(--color-text-secondary);\">cap di\u00e1rio</div>\n      <div style=\"font-size:18px;font-weight:500;\">\u22125% armado</div>\n    </div>\n  </div>\n\n  <div style=\"background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;\">\n    <div style=\"display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;\">\n      <span style=\"font-size:16px;font-weight:500;\">Estrat\u00e9gia \u2014 gate \u00d7 ativo</span>\n      <span style=\"font-size:12px;color:var(--color-text-tertiary);\">/analysis/cockpit + /automations/groups</span>\n    </div>\n    <div id=\"rows\"></div>\n    <div style=\"margin-top:10px;font-size:12px;color:var(--color-text-secondary);line-height:1.6;\">\n      <span style=\"font-weight:500;\">gate</span> = o regime/fluxo <span style=\"font-weight:500;\">permite</span> \u00b7 <span style=\"font-weight:500;\">ativo</span> = o operador <span style=\"font-weight:500;\">armou</span>. gate GO + parado = intencional (canary), <span style=\"color:var(--color-text-success);\">n\u00e3o \u00e9 erro</span> \u2014 \u00e9 o que confunde o agente hoje.\n    </div>\n  </div>\n\n  <div style=\"background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;\">\n    <div style=\"display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;\">\n      <span style=\"font-size:16px;font-weight:500;\">Mercado</span>\n      <span style=\"font-size:12px;color:var(--color-text-tertiary);\">1m \u00b7 delay 3 min</span>\n    </div>\n    <div id=\"mkt\"></div>\n  </div>\n</div>\n<script>\nfunction pill(txt,kind){const m={go:['success','success'],wait:['warning','warning'],off:['','tertiary'],on:['success','success'],virt:['info','info'],idle:['','tertiary']}[kind]||['','secondary'];const bg=m[0]?`background:var(--color-background-${m[0]});`:'background:var(--color-background-secondary);';return `<span style=\"${bg}color:var(--color-text-${m[1]});font-size:12px;font-weight:500;padding:3px 9px;border-radius:var(--border-radius-md);white-space:nowrap;\">${txt}</span>`;}\nconst GROUPS=[\n {ic:'ti-plant-2',name:'Farm',gate:['gate GO','go'],ativo:['6/6 on','on'],note:'coerente \u2014 comprando dips de alt no canary'},\n {ic:'ti-trending-up',name:'Trend',gate:['sem sinal','off'],ativo:['parado 0/8','idle'],note:'parado por voc\u00ea (canary) \u00b7 TREND_CROSS none'},\n {ic:'ti-building-bank',name:'Baseline',gate:['gate GO','go'],ativo:['off 0/2','idle'],note:'off por design \u2014 inclui venda do cofre BTC'},\n {ic:'ti-flask',name:'Paper',gate:['virtual','virt'],ativo:['16/16 on','virt'],note:'research virtual \u2014 sem risco real'},\n];\ndocument.getElementById('rows').innerHTML=GROUPS.map((g,i)=>`<div style=\"display:flex;align-items:center;gap:10px;padding:11px 0;${i<GROUPS.length-1?'border-bottom:0.5px solid var(--color-border-tertiary);':''}\">\n  <span style=\"flex:0 0 92px;display:flex;align-items:center;gap:8px;\"><i class=\"ti ${g.ic}\" aria-hidden=\"true\" style=\"font-size:18px;color:var(--color-text-secondary);\"></i><span style=\"font-weight:500;\">${g.name}</span></span>\n  ${pill(g.gate[0],g.gate[1])}${pill(g.ativo[0],g.ativo[1])}\n  <span style=\"flex:1;min-width:0;color:var(--color-text-secondary);font-size:13px;\">${g.note}</span>\n</div>`).join('');\nconst MKT=[\n {s:'BTC',px:'63.524',reg:'range',imb:'+0,44',ev:'\u22120,17'},\n {s:'LTC',px:'44,04',reg:'trend',imb:'+0,00',ev:'\u22120,15'},\n {s:'BNB',px:'578,1',reg:'trend',imb:'\u22120,12',ev:'\u22120,16'},\n {s:'ADA',px:'0,38',reg:'range',imb:'+0,21',ev:'\u22120,14'},\n];\ndocument.getElementById('mkt').innerHTML=MKT.map((m,i)=>`<div style=\"display:flex;align-items:center;gap:10px;padding:9px 0;${i<MKT.length-1?'border-bottom:0.5px solid var(--color-border-tertiary);':''}font-size:13px;\">\n  <span style=\"flex:0 0 52px;font-weight:500;\">${m.s}</span>\n  <span style=\"flex:0 0 78px;font-family:var(--font-mono);\">${m.px}</span>\n  ${pill(m.reg,m.reg==='trend'?'virt':'idle')}\n  <span style=\"flex:0 0 64px;color:var(--color-text-secondary);\">imb ${m.imb}</span>\n  <span style=\"flex:1;text-align:right;color:var(--color-text-secondary);\">EV ${m.ev}%</span>\n</div>`).join('');\n</script>"
+}
+```
+
+> **Tool Result (mcp__visualize__show_widget)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Content rendered and shown to the user. Please do not duplicate the shown content in text because it's already visually represented."}]
+> ```
+
+## 🤖 Claude *(00:57:03)*
+
+
+## 🤖 Claude *(00:57:12)*
+
+Esse é o mockup da direção — central de comando moderna, com **dados reais de agora**. Os três blocos mapeiam pra builds de tamanhos bem diferentes:
+
+**① Gate × ativo (o painel do meio)** — é a cura da confusão do agente. Encaixa **cirurgicamente** no painel "Trade bridges" que o Cockpit já tem: só adiciono a coluna `ativo` (do `/automations/groups`, endpoint que já existe) + a frase de reconciliação. Cada linha mostra "gate GO + parado = intencional (canary)", em cinza calmo — sem vermelho, sem alarme. Baixo risco, alto valor.
+
+**② Status strip (a faixa de cima)** — trading/canary/equity/paper P&L/cap, ao vivo. Junta `/system/halt` + `/automations/groups` + `/analysis/paper` + saldo no topo do Cockpit. Esforço médio.
+
+**③ Facelift do Dashboard** — o `/dashboard` hoje é a tela velha (Bootstrap: chart+book+wallet). Trazer pra essa linguagem moderna (`cx-*` do Cockpit) é o maior dos três e o mais subjetivo.
+
+**Mas tem um furo que o cockpit sozinho não fecha:** mesmo com o painel bonito, o **agente continua notificando** o falso alarme — porque a *doutrina dele* não sabe do canary nem do gate≠ativo. O conserto na fonte é editar a doutrina do agente (o bloco "DIVERGÊNCIAS ESPERADAS" do prompt) pra ensinar: "gate liberado + automação parada = decisão do operador, NÃO reportar". Isso mata o ruído de verdade.
+
+Minha recomendação é fasear (é sistema ao vivo):
+
+## 🤖 Claude *(00:57:20)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Esse \u00e9 o rumo do \"moderno\". O que eu construo (sistema ao vivo, ent\u00e3o vale fasear)?",
+      "header": "Build",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Fase 1: gate\u00d7ativo + recalibrar agente (recomendado)",
+          "description": "Adiciono a coluna 'ativo' + reconcilia\u00e7\u00e3o no painel Trade bridges do Cockpit E edito a doutrina do agente (para de notificar gate\u2260ativo). Mata a confus\u00e3o na tela E na fonte. Baixo risco, deploy r\u00e1pido."
+        },
+        {
+          "label": "Fase 1 + status strip no Cockpit",
+          "description": "O acima + a faixa de status ao vivo (trading/canary/equity/paper P&L/cap) no topo do Cockpit. Cockpit vira central de comando completa."
+        },
+        {
+          "label": "Tudo, incluindo facelift do Dashboard",
+          "description": "Fase 1 + status strip + modernizar o /dashboard inteiro pra essa linguagem. Maior build + deploy; gate QA/TL antes."
+        },
+        {
+          "label": "S\u00f3 quero ajustar o mockup primeiro",
+          "description": "Antes de construir, eu itero no visual (cores, o que mostrar, layout) at\u00e9 ficar do seu gosto."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Esse é o rumo do "moderno". O que eu construo (sistema ao vivo, então vale fasear)?"="Fase 1: gate×ativo + recalibrar agente (recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(00:58:11)*
+
+
+## 🤖 Claude *(00:58:13)*
+
+Fase 1 confirmada: **gate×ativo no Cockpit + recalibrar o agente**. Vou ler o necessário pra construir fiel ao estilo existente — o painel "Trade bridges", o serviço de fetch, o css `cx-*`, e a doutrina do agente:
+
+## 🤖 Claude *(00:58:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"########## Cockpit.js imports+state+effect (1-60) ##########\"\nsed -n '1,60p' frontend/src/private/Cockpit/Cockpit.js\necho \"########## Cockpit.js Trade bridges panel (370-440) ##########\"\nsed -n '370,440p' frontend/src/private/Cockpit/Cockpit.js",
+  "description": "Read Cockpit imports/state + Trade bridges panel"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ########## Cockpit.js imports+state+effect (1-60) ##########
+> import React, { useState, useEffect } from 'react';
+> import useWebSocket from 'react-use-websocket';
+> import Menu from '../../components/Menu/Menu';
+> import Toast from '../../components/Toast/Toast';
+> import { getBalance } from '../../services/ExchangeService';
+> import { getOrdersReport } from '../../services/OrdersService';
+> import { getRegimeStatus, getFlowStatus, getAgentRuns, getCockpit } from '../../services/IntelligenceService';
+> import { AnimatedNumber, GaltonBoard, PathFan } from './CockpitSims';
+> import './cockpit.css';
+> 
+> /*
+>  * Cockpit — terminal "FABLE" (dark/neon), inspirado na referência viral.
+>  * READ-ONLY: só LÊ dados reais (saldo, relatório, regime/flow, KPIs do agente, klines públicas
+>  * da Binance, WS de preço). NÃO emite ordem, NÃO toca o TRADING_HALT.
+>  * A estética é dos painéis da referência; os DADOS são os reais nossos (sem número fabricado).
+>  * Selos: 🟢 dado real · 🟡 real mas falta endpoint · ⚪ a construir (Fase 3).
+>  */
+> 
+> const REPORT_QUOTE = 'USDT';
+> const AGENT_STALE_MS = 15 * 60 * 1000;
+> const FEE_RT = 0.20;        // round-trip taker spot (%)
+> const FEE_RT_BNB = 0.15;    // round-trip com BNB (%)
+> const KL_SYMBOL = 'BTCUSDT';
+> const KL_HOSTS = ['https://api.binance.com', 'https://data-api.binance.vision'];
+> 
+> function num(v) {
+>   if (v === null || v === undefined) return NaN;
+>   if (typeof v === 'number') return v;
+>   const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+>   return isNaN(n) ? NaN : n;
+> }
+> function fmtUsd(v, dec = 2) {
+>   const n = num(v);
+>   if (isNaN(n)) return '—';
+>   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+> }
+> function fmtPct(v) {
+>   const n = num(v);
+>   if (isNaN(n)) return '—';
+>   return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+> }
+> function dirClass(v) {
+>   const n = num(v);
+>   if (isNaN(n) || n === 0) return 'cx-flat';
+>   return n > 0 ? 'cx-up' : 'cx-down';
+> }
+> function fmtAge(ms) {
+>   if (ms == null) return '—';
+>   const s = Math.round(ms / 1000);
+>   if (s < 90) return `${s}s`;
+>   const m = Math.round(s / 60);
+>   if (m < 90) return `${m}min`;
+>   return `${Math.round(m / 60)}h`;
+> }
+> 
+> function buildSpark(series) {
+>   const pts = (series || []).map(num).filter(n => !isNaN(n));
+>   if (pts.length < 2) return null;
+>   const W = 600, H = 70, pad = 5;
+>   const min = Math.min(...pts), max = Math.max(...pts);
+> ########## Cockpit.js Trade bridges panel (370-440) ##########
+>               </div>
+> 
+>               <div className="cx-panel">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Trade bridges (gates de compra)</span></div>
+>                 <div className="cx-bridges">
+>                   {symbols.length === 0
+>                     ? <div className="cx-empty">sem sinais ainda</div>
+>                     : symbols.map(s => {
+>                         // Fonte de verdade = gate SYMBOL-AWARE do cockpit (cp.symbols[s].gates, commit 8884bd3):
+>                         // só a baseline BTC (flowGated=true) é bloqueada por fluxo; o FARM das alts NÃO gateia por
+>                         // fluxo → p/ alts a ponte de fluxo é INFORMATIVA, não bloqueante. Fallback regime/flow-status.
+>                         const cps = (cp.symbols || {})[s] || {};
+>                         const cpg = cps.gates || {};
+>                         const g = (gate.symbols || {})[s] || {};
+>                         const f = (flow.symbols || {})[s] || {};
+>                         // nó "regime" = gate de regime da ACUMULAÇÃO (farm) → exclui bear/unknown E trend (em
+>                         // trend o farm/baseline ficam em CAIXA). Usa cpg.farm (backend); fallback exclui os 3.
+>                         const regOpen = cpg.farm != null ? cpg.farm : !!(g.regime && g.regime !== 'bear' && g.regime !== 'unknown' && g.regime !== 'trend');
+>                         const flowGated = !!cpg.flowGated;
+>                         const imb = (cps.flow && cps.flow.imbalance != null) ? cps.flow.imbalance : f.imbalance;
+>                         const flowMin = cpg.flowBuyMin != null ? cpg.flowBuyMin : -0.4;
+>                         const flowOk = imb != null && imb >= flowMin; // não-capitulação (>= piso, igual ao backend)
+>                         const ready = cpg.buyAllowed != null ? cpg.buyAllowed : (regOpen && (!flowGated || flowOk));
+>                         const flowDot = flowGated ? (flowOk ? 'on' : 'off') : 'info'; // alt: informativo (não gateia)
+>                         const flowTitle = flowGated
+>                           ? `fluxo ${flowOk ? 'ok' : 'capitulação'} (imbalance ${imb != null ? imb.toFixed(2) : '—'}) — gateia a baseline BTC`
+>                           : `fluxo INFORMATIVO (imbalance ${imb != null ? imb.toFixed(2) : '—'}) — o FARM desta alt NÃO gateia por fluxo`;
+>                         return (
+>                           <div className="cx-bridge" key={s}>
+>                             <span className="bsym cx-mono">{s}</span>
+>                             <span className="cx-chain">
+>                               <span className="cx-node"><span className={`dot ${regOpen ? 'on' : 'off'}`} /><span className="nl">regime</span></span>
+>                               <span className={`cx-link ${regOpen ? 'on' : ''}`} />
+>                               <span className="cx-node" title={flowTitle}><span className={`dot ${flowDot}`} /><span className="nl">fluxo{flowGated ? '' : '·i'}</span></span>
+>                               <span className={`cx-link ${ready ? 'on' : ''}`} />
+>                               <span className="cx-node"><span className={`dot ${ready ? 'on' : 'off'}`} /><span className="nl">pronto</span></span>
+>                             </span>
+>                             <span className={`cx-ready ${ready ? 'go' : 'no'}`}>{ready ? 'go' : 'wait'}</span>
+>                           </div>
+>                         );
+>                       })}
+>                 </div>
+>                 <div className="cx-note">Cada ponte acende quando o gate de COMPRA do símbolo abre: <b>BTC (baseline)</b> = regime ≠ bear/trend <b>E</b> fluxo não-capitulação; <b>alts (farm)</b> = só regime ≠ bear/trend (o fluxo é <b>informativo·i</b>, não gateia). "go" = condições prontas; a ordem em si segue gateada e sob HALT.</div>
+>               </div>
+>             </div>
+> 
+>             {/* ROW 4 — edge/agent + positions */}
+>             <div className="cx-row-3">
+>               <div className="cx-panel">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Edge vs fee · agente</span><span className="cx-src">/analysis/cockpit · /agent/runs</span></div>
+>                 <div className="cx-edge">
+>                   <div className="e"><div className="el">EV/trade net (1m)</div><div className={`ev cx-mono ${cpBtc && evNet != null ? dirClass(evNet) : ''}`}>{cpBtc && evNet != null ? (evNet > 0 ? '+' : '') + Number(evNet).toFixed(3) + '%' : '—'}</div></div>
+>                   <div className="e"><div className="el">Break-even fee</div><div className="ev cx-mono">{FEE_RT.toFixed(2)}% <span className="cx-flat" style={{ fontSize: '0.7rem' }}>· {FEE_RT_BNB.toFixed(2)}% BNB</span></div></div>
+>                 </div>
+>                 <div className="cx-line" style={{ marginTop: 10 }}><span className="l"><span className="cx-seal real" /> Moves ≥ break-even (BTC)</span><span className="v cx-mono">{cpBtc && cpBtc.dist ? Number(cpBtc.dist.pHitBreakevenPct).toFixed(0) + '%' : '—'}</span></div>
+>                 <div className="cx-line"><span className="l"><span className="cx-seal real" /> Gate acumulação BTC <span className="cx-flat" style={{ fontSize: '0.66rem' }}>(farm/baseline)</span></span><span className={`v cx-mono ${cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'cx-up' : 'cx-down') : ''}`} title={cpBtc && cpBtc.gates ? cpBtc.gates.reason : ''}>{cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'GO' : 'CAIXA') : '—'}</span></div>
+>                 <div className="cx-line"><span className="l"><span className="cx-seal todo" /> Shadow 1m — P(cont. ≥ custo)</span><span className="v cx-flat">medindo… (Fase 3)</span></div>
+>                 {agent.available === false
+>                   ? <div className="cx-empty">agente ainda não rodou (journal ausente)</div>
+>                   : <React.Fragment>
+>                       <div className="cx-line"><span className="l"><span className="cx-seal real" /> Ciclos do agente</span><span className="v cx-mono">{agent.kpis.cycles != null ? agent.kpis.cycles : '—'}{agentLastMs != null ? `  ·  ${fmtAge(agentLastMs)}${agentStale ? ' STALE' : ''}` : ''}</span></div>
+>                       <div className="cx-line"><span className="l"><span className="cx-seal real" /> Tokens (total)</span><span className="v cx-mono">{agent.kpis.tokens && agent.kpis.tokens.total != null ? num(agent.kpis.tokens.total).toLocaleString() : '—'}</span></div>
+>                       <div className="cx-line"><span className="l"><span className="cx-seal real" /> Custo estimado</span><span className="v cx-mono">{agent.kpis.estCostUSD != null ? '$' + agent.kpis.estCostUSD : '—'}</span></div>
+>                     </React.Fragment>}
+>               </div>
+> 
+>               <div className="cx-panel">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Posições &amp; automações</span><span className="cx-src">/orders/reports</span></div>
+>                 {automations.length === 0
+>                   ? <div className="cx-empty">nenhuma posição/automação no período — feed ao vivo liga ao descongelar (<code>TRADING_HALT=false</code>)</div>
+>                   : automations.slice(0, 12).map((a, i) => {
+> ```
+
+## 🤖 Claude *(00:58:42)*
+
+
+## 🤖 Claude *(00:58:43)*
+
+Entendi o padrão `cx-*` e os gates (`cp.symbols[s].gates` tem `farm`/`baseline`/`trend`/`buyAllowed`). Vou pegar o bloco de fetch (useEffect), as classes css que vou reusar, e localizar a doutrina do agente:
+
+## 🤖 Claude *(00:58:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"########## Cockpit.js state+effect (108-175) ##########\"\nsed -n '108,175p' frontend/src/private/Cockpit/Cockpit.js\necho \"########## cockpit.css \u2014 classes a reusar ##########\"\ngrep -nE \"\\.cx-ready|\\.cx-bridge|\\.cx-node|\\.cx-link|\\.dot|\\.cx-panel\\b|\\.cx-mono|\\.cx-note|\\.bsym|\\.cx-chain|\\.go|\\.no\\b\" frontend/src/private/Cockpit/cockpit.css | head -40\necho \"########## doutrina do agente (DIVERG\u00caNCIAS / gate) ##########\"\ngrep -rnE \"DIVERG|gate|gateada|gateia|N\u00c3O reportar|nao reportar|inativ|canary|parad\" tradeux-agent/src/*.js | head -25",
+  "description": "Read Cockpit fetch block + css classes + locate agent doctrine"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ########## Cockpit.js state+effect (108-175) ##########
+> 
+> function Cockpit() {
+>   const [balance, setBalance] = useState({});
+>   const [report, setReport] = useState({});
+>   const [gate, setGate] = useState({ symbols: {} });
+>   const [flow, setFlow] = useState({ symbols: {} });
+>   const [agent, setAgent] = useState({ kpis: {}, runs: [] });
+>   const [prices, setPrices] = useState({});
+>   const [klines, setKlines] = useState(null);
+>   const [klErr, setKlErr] = useState(false);
+>   const [cockpit, setCockpit] = useState({ symbols: {} });
+>   const [notification, setNotification] = useState({});
+> 
+>   const { readyState } = useWebSocket(process.env.REACT_APP_WS_URL, {
+>     queryParams: { token: localStorage.getItem('token') },
+>     onMessage: (event) => {
+>       try {
+>         const msg = JSON.parse(event.data);
+>         if (msg && msg.miniTicker) {
+>           const mt = msg.miniTicker;
+>           setPrices(prev => {
+>             const next = { ...prev };
+>             const put = (sym, c) => { if (sym && c != null && !isNaN(num(c))) next[sym] = num(c); };
+>             if (Array.isArray(mt)) mt.forEach(t => put(t && t.symbol, t && (t.close ?? t.c)));
+>             else if (mt.symbol) put(mt.symbol, mt.close ?? mt.c);
+>             else Object.keys(mt).forEach(k => put(k, mt[k] && (mt[k].close ?? mt[k].c)));
+>             return next;
+>           });
+>         }
+>       } catch (e) { /* ignora */ }
+>     },
+>     shouldReconnect: () => true,
+>     reconnectInterval: 3000,
+>   });
+> 
+>   function loadAll() {
+>     const token = localStorage.getItem('token');
+>     getBalance(token).then(setBalance).catch(() => {});
+>     getOrdersReport(REPORT_QUOTE, null, null, token, '').then(setReport).catch(err => {
+>       setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message });
+>     });
+>     getRegimeStatus(token).then(setGate).catch(() => {});
+>     getFlowStatus(token).then(setFlow).catch(() => {});
+>     getAgentRuns(50, token).then(setAgent).catch(() => {});
+>     getCockpit(token).then(setCockpit).catch(() => {});
+>   }
+> 
+>   async function loadKlines() {
+>     for (const host of KL_HOSTS) {
+>       try {
+>         const r = await fetch(`${host}/api/v3/klines?symbol=${KL_SYMBOL}&interval=1m&limit=120`);
+>         if (!r.ok) continue;
+>         const raw = await r.json();
+>         const parsed = raw.map(k => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4] }));
+>         setKlines(parsed); setKlErr(false); return;
+>       } catch (e) { /* tenta próximo host */ }
+>     }
+>     setKlErr(true);
+>   }
+> 
+>   useEffect(() => {
+>     loadAll(); loadKlines();
+>     const id = setInterval(() => { loadAll(); loadKlines(); }, 60000);
+>     return () => clearInterval(id);
+>   }, []);
+> 
+>   const wsLive = readyState === 1;
+>   const hist = buildHist(klines);
+> ########## cockpit.css — classes a reusar ##########
+> 39:.cockpit .cx-mono {
+> 77:.cockpit .cx-panel {
+> 86:.cockpit .cx-panel::before {
+> 90:.cockpit .cx-panel-title {
+> 95:.cockpit .cx-panel-title .cx-src { font-size: 0.62rem; letter-spacing: 0.04em; color: var(--cx-dim); text-transform: none; }
+> 179:.cockpit .cx-bridges { display: flex; flex-direction: column; gap: 9px; }
+> 180:.cockpit .cx-bridge {
+> 184:.cockpit .cx-bridge .bsym { font-weight: 600; font-size: 0.8rem; }
+> 185:.cockpit .cx-chain { display: flex; align-items: center; gap: 0; }
+> 186:.cockpit .cx-node {
+> 189:.cockpit .cx-node .dot {
+> 193:.cockpit .cx-node .dot.on { background: var(--cx-green); border-color: var(--cx-green); box-shadow: 0 0 9px var(--cx-green); }
+> 194:.cockpit .cx-node .dot.off { background: var(--cx-red); border-color: var(--cx-red); box-shadow: 0 0 9px var(--cx-red-dim); }
+> 195:.cockpit .cx-node .dot.info { background: var(--cx-cyan); border-color: var(--cx-cyan); box-shadow: 0 0 7px var(--cx-cyan); opacity: 0.65; } /* fluxo informativo (alt: não gateia) */
+> 196:.cockpit .cx-node .nl { font-size: 0.56rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--cx-muted); }
+> 197:.cockpit .cx-link { flex: 1 1 auto; height: 2px; min-width: 14px; background: rgba(255,255,255,0.1); }
+> 198:.cockpit .cx-link.on { background: linear-gradient(90deg, var(--cx-green), var(--cx-cyan)); box-shadow: 0 0 6px var(--cx-green-dim); }
+> 199:.cockpit .cx-ready { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; text-align: center; padding: 4px 0; border-radius: 6px; }
+> 200:.cockpit .cx-ready.go { color: var(--cx-green); background: var(--cx-green-dim); }
+> 201:.cockpit .cx-ready.no { color: var(--cx-red); background: var(--cx-red-dim); }
+> 218:.cockpit .cx-panel.glow::before { animation: cx-glow 3.4s ease-in-out infinite; }
+> 223:.cockpit .cx-node .dot.on { animation: cx-pulse 2.6s ease-out infinite; }
+> 231:.cockpit .cx-note { font-size: 0.7rem; color: var(--cx-dim); margin-top: 8px; line-height: 1.5; }
+> ########## doutrina do agente (DIVERGÊNCIAS / gate) ##########
+> tradeux-agent/src/journal.js:32:    // janela de dedupe p/ ~4h sem economizar nada — gate QA). ~60ms num journal de 5 MB.
+> tradeux-agent/src/agent.js:20:- BASELINE (BTC): reversão à média (RSI<25 compra / RSI>75 vende), gateada por != bear, != trend e por um filtro de fluxo do taker (não compra dip sob capitulação vendedora). A venda da baseline é a automação id3 — HOJE PAUSADA; se um dia reativada, é venda tática legítima (RSI>75), não venda do cofre.
+> tradeux-agent/src/agent.js:21:- HARVESTER de dislocação (BTCUSDT, automações id22-25): **DESATIVADO DE PROPÓSITO (isActive=0)** desde 2026-06-17. Descoberta validada: o edge era ARTEFATO de TESTNET — o gatilho ancorava no lastPrice da MAINNET, que no mainnet É o próprio preço atual → a dislocação de -3% NUNCA ocorre; está MORTO no mainnet como está. **NÃO sugira reativar id22-25** — a inatividade é CORRETA e intencional. (Um re-design re-ancorado a HIGH ROLANTE está em pesquisa; se validar, vai PRIMEIRO pro Paper Engine, NÃO reativando as antigas.) Se a doutrina histórica disser "harvester desgateado opera em bear", ignore — o módulo NÃO está operando hoje.
+> tradeux-agent/src/agent.js:23:- REGIME-GATING é o coração: em BEAR, as COMPRAS de farm/trend/baseline ficam em CAIXA (protegido) — e o harvester está DESATIVADO (acima), então HOJE nada compra em bear. O edge validado é DRAWDOWN MENOR por não pescar faca caindo — NÃO é alpha. Farm/trend parados em bear é o comportamento CORRETO e desejado, não uma oportunidade perdida.
+> tradeux-agent/src/agent.js:29:- Se env.useTestnet=FALSE (MAINNET REAL): o capital é REAL (e pequeno); jamais sugira aumentar risco. Em AMBOS os casos o que importa é a MECÂNICA (regime, sinais, gates, coerência das automações), NÃO maximizar "valor total".
+> tradeux-agent/src/agent.js:30:- Se env.tradingHalt=TRUE: o sistema está CONGELADO (kill-switch) — nenhuma ordem real sai; trate tudo como observação, não aja. HALT é estado CONHECIDO do operador — ver DIVERGÊNCIAS ESPERADAS (não reportar a cada ciclo).
+> tradeux-agent/src/agent.js:33:- Ler o estado de forma ECONÔMICA (orçamento de ~12 tool calls por ciclo — NÃO o estoure; CONCLUA com folga): por símbolo (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT) faça 1× tradeux_get_regime(symbol) — já traz o regime instantâneo (.regime) + o regime do GATE (.gate.regime, histerético, valor OPERATIVO) + RSI/ADX 1h — e 1× tradeux_get_oracle_state(symbol) para o fluxo; mais 1× tradeux_get_last_orders. Isso basta para o panorama (~9 leituras). Só busque um índice extra com tradeux_get_memory(symbol, index=CHAVE_EXATA — ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW'; passe a chave completa em index, sem o campo interval) se for investigar algo pontual.
+> tradeux-agent/src/agent.js:34:- 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+> tradeux-agent/src/agent.js:36:- Avaliar COERÊNCIA com a tese: o regime está sendo respeitado? alguma automação deveria ter disparado e não disparou (ou o contrário)? há venda de BTC INDEVIDA — isto é, FORA do módulo tático VIVO (trend id7), vendendo MAIS que a posição tática (TREND_QTY)? (o harvester id22-25 está DESATIVADO — uma venda id25 HOJE seria anomalia a sinalizar, não rotina; o trend corta perda por desenho.) Ordens manuais (sem automationId) costumam ser do dono/operador (testes, ajustes) — registre no diário; só alarme se drenarem o cofre de forma recorrente. NUNCA compare o RSI ou preço atual da memória com o momento de execução de uma ordem passada para alegar incoerência, pois o mercado se moveu e o Beholder não guarda histórico de RSI no momento do preenchimento. A memória do Beholder reflete apenas o estado real-time atual (no segundo da sua leitura). Para divergências cockpit×oráculo (regime/fluxo/gates), consulte DIVERGÊNCIAS ESPERADAS (abaixo) ANTES de chamar de incoerência.
+> tradeux-agent/src/agent.js:37:- DIVERGÊNCIAS ESPERADAS (NÃO são incoerência/anomalia — NÃO reporte como achado NEM notifique o dono): o cockpit lê as MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oráculos vivos; tradeux_get_regime/tradeux_get_oracle_state são leituras VIVAS separadas → delta pequeno cockpit×vivo é TIMING, não fonte paralela. Itens:
+> tradeux-agent/src/agent.js:38:  (1) REGIME: instantâneo (tradeux_get_regime.regime) ≠ gate (.gate.regime) na fronteira do ADX = HISTERESE — use .gate.regime (valor operativo); diferir por 1 nível é esperado.
+> tradeux-agent/src/agent.js:44:  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> tradeux-agent/src/agent.js:45:  Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> tradeux-agent/src/agent.js:47:- NOTIFICAR O DONO via tradeux_notify_owner (Telegram, one-way) quando: precisar de APROVAÇÃO p/ algo sensível, estiver BLOQUEADO e precisar de ajuda, ou um EVENTO importante acontecer (ex.: saída do bear, cross real, anomalia/incoerência NOVA). É one-way: NÃO espere resposta no ciclo — após notificar, siga o caminho conservador (não agir). No MÁXIMO 1-2 notificações por ciclo. ANTI-SPAM (regra dura): o kickoff de cada ciclo traz a lista de NOTIFICAÇÕES JÁ ENVIADAS recentemente — confira ANTES de notificar; se o ASSUNTO já está na lista (mesmo que com outras palavras), NÃO reenvie. Notificação repetida ensina o dono a ignorar o canal. Rotina sem novidade NÃO notifica. NADA da lista DIVERGÊNCIAS ESPERADAS é notificável (já são esperados). Há também um dedup em CÓDIGO: se a chamada voltar com "notificação SUPRIMIDA — assunto duplicado", o assunto JÁ foi enviado — NÃO reformule pra burlar; consolide no diário (só reformule se for evento REALMENTE novo, destacando o que MUDOU). TODA notificação em português brasileiro (pt-BR).
+> tradeux-agent/src/agent.js:83:// Cap mecânico de notificações por ciclo (defesa em profundidade do gate TL): a regra do prompt
+> tradeux-agent/src/notifyDedup.js:14://   2. SÍMBOLOS (tickers) são separados: assuntos de símbolos diferentes => DISTINTOS (não compara).
+> tradeux-agent/src/notifyDedup.js:38:  'regime', 'trend', 'range', 'bear', 'bull', 'mixed', 'histerese', 'histeretico', 'gate', 'gates', 'buygate', 'instantaneo',
+> tradeux-agent/src/notifyDedup.js:57:  frozen: 'halt', halted: 'halt', killswitch: 'halt', parado: 'halt', pausado: 'halt', pausa: 'halt',
+> tradeux-agent/src/notifyDedup.js:59:  ordens: 'ordem', orders: 'ordem', order: 'ordem', gates: 'gate',
+> ```
+
+## 🤖 Claude *(00:59:23)*
+
+
+## 🤖 Claude *(00:59:26)*
+
+Tenho os gates, o css `cx-*`, e a doutrina. A doutrina do agente (`agent.js` linhas 37-45, bloco "DIVERGÊNCIAS ESPERADAS") tem o item (7) GATE≠TRIGGER, mas **falta** o item ATIVO≠GATE (automação parada + gate aberto = decisão do operador). Vou pegar a estrutura de linhas/colunas do cockpit pra encaixar o painel + o texto exato pra editar a doutrina:
+
+## 🤖 Claude *(00:59:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"########## Cockpit.js \u2014 estrutura de rows ao redor do bridges (330-373) ##########\"\nsed -n '330,373p' frontend/src/private/Cockpit/Cockpit.js\necho \"########## cockpit.css cx-row* ##########\"\ngrep -nE \"\\.cx-row\" frontend/src/private/Cockpit/cockpit.css | head\necho \"########## agent.js item (7) exato (p/ ancorar o insert) ##########\"\nsed -n '44,46p' tradeux-agent/src/agent.js",
+  "description": "Read cockpit row structure + css rows + agent doctrine anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ########## Cockpit.js — estrutura de rows ao redor do bridges (330-373) ##########
+> 
+>             {/* ROW 2b — probability lattice (Galton) + monte carlo median fair */}
+>             <div className="cx-row-3">
+>               <div className="cx-panel glow">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Probability lattice (Galton)</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'velas 1m reais'}</span></div>
+>                 {histB ? <GaltonBoard counts={histB.counts} step={histB.step} lim={histB.LIM} fee={FEE_RT} />
+>                       : <div className="cx-empty">{klErr ? 'klines indisponíveis 🟡' : 'carregando…'}</div>}
+>                 <div className="cx-note">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha É a distribuição real. <b>≥ break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A "lei dos grandes números" mostra o contrário do golpe: repetição NÃO cria edge quando o EV/trade já é negativo.</div>
+>               </div>
+>               <div className="cx-panel glow">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Monte Carlo · median fair</span><span className="cx-src">{mcBand ? '/analysis/cockpit (brain)' : 'σ realizada'}</span></div>
+>                 <PathFan sigmaPct={sigmaB} spot={btc} band={mcBand} />
+>                 <div className="cx-note"><b>NÃO é previsão.</b> Random-walk SEM drift a partir da vol realizada de 1m. Sem edge, a <b>mediana ≈ preço atual</b> — o oposto exato da promessa "Fable prevê o mercado". A faixa p10–p90 é só a incerteza da volatilidade{mcBand ? ` (do brain, horizonte ${mcBand.horizonMin}min)` : ''}.</div>
+>               </div>
+>             </div>
+> 
+>             {/* ROW 3 — lattice + trade bridges */}
+>             <div className="cx-row-3">
+>               <div className="cx-panel">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Regime × Flow lattice</span><span className="cx-src">/analysis/regime-status · flow-status</span></div>
+>                 <div className="cx-lat">
+>                   {symbols.length === 0
+>                     ? <div className="cx-empty">sem regime/fluxo ainda (jobs no ar, aguardando a Binance)</div>
+>                     : symbols.map(s => {
+>                         const g = (gate.symbols || {})[s] || {};
+>                         const f = (flow.symbols || {})[s] || {};
+>                         const imb = f.imbalance, tox = f.toxicity, reg = g.regime || 'unknown';
+>                         const w = imb != null ? Math.min(50, Math.abs(imb) * 50) : 0;
+>                         return (
+>                           <div className="cx-lat-row wide" key={s}>
+>                             <span className="cx-sym cx-mono">{s}</span>
+>                             <span className={`cx-reg ${reg}`}>{reg}{g.stale ? '·s' : ''}</span>
+>                             <span className="cx-flowbar"><span className="mid" />{imb != null && <span className={`fill ${imb >= 0 ? 'buy' : 'sell'}`} style={{ width: w + '%' }} />}</span>
+>                             <span className={`cx-imb cx-mono ${imb == null ? 'cx-flat' : imb < -0.05 ? 'cx-down' : imb > 0.05 ? 'cx-up' : 'cx-flat'}`}>{imb != null ? imb.toFixed(2) : '—'}</span>
+>                             <span className={`cx-tox cx-mono ${tox != null && tox >= 0.6 ? 'hot' : ''}`}>{tox != null ? tox.toFixed(2) : '—'}</span>
+>                           </div>
+>                         );
+>                       })}
+>                 </div>
+>                 <div className="cx-note">Colunas: regime do gate · barra de <b>imbalance</b> do taker (verde compra/vermelho vende) · valor · <b>toxicity</b> (|imbalance|). Nowcasting de timing — não previsão.</div>
+>               </div>
+> 
+>               <div className="cx-panel">
+>                 <div className="cx-panel-title"><span><span className="cx-seal real" /> Trade bridges (gates de compra)</span></div>
+> ########## cockpit.css cx-row* ##########
+> 73:.cockpit .cx-row { display: grid; gap: 14px; grid-template-columns: 1.6fr 1fr; }
+> 74:.cockpit .cx-row-3 { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }
+> 75:@media (max-width: 1100px) { .cockpit .cx-row, .cockpit .cx-row-3 { grid-template-columns: 1fr; } }
+> ########## agent.js item (7) exato (p/ ancorar o insert) ##########
+>   (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+>   Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> - Sinalizar EVENTOS úteis ao operador: regime SAIU do bear (gatilho p/ ligar o funil / próximas fases); golden/death cross real; farm comprou e/ou lucrou; alt com comportamento ruim no farm; algo travado/stale.
+> ```
+
+## 🤖 Claude *(01:01:23)*
+
+
+## 🤖 Claude *(01:01:25)*
+
+Tenho tudo: layout (`cx-row-3`, grid 2-col), classes `cx-ready/cx-act`, e a doutrina (falta o item ATIVO≠GATE). Vou ler as regiões exatas que vou editar (a Edit exige Read prévio), começando pelo ponto de inserção do painel:
+
+## 🤖 Claude *(01:01:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "offset": 412,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 412	                <div className="cx-note">Cada ponte acende quando o gate de COMPRA do símbolo abre: <b>BTC (baseline)</b> = regime ≠ bear/trend <b>E</b> fluxo não-capitulação; <b>alts (farm)</b> = só regime ≠ bear/trend (o fluxo é <b>informativo·i</b>, não gateia). "go" = condições prontas; a ordem em si segue gateada e sob HALT.</div>
+> 413	              </div>
+> 414	            </div>
+> 415	
+> 416	            {/* ROW 4 — edge/agent + positions */}
+> 417	            <div className="cx-row-3">
+> 418	              <div className="cx-panel">
+> 419	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Edge vs fee · agente</span><span className="cx-src">/analysis/cockpit · /agent/runs</span></div>
+> 420	                <div className="cx-edge">
+> ```
+
+## 🤖 Claude *(01:01:30)*
+
+
+## 🤖 Claude *(01:01:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css",
+  "offset": 199,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 199	.cockpit .cx-ready { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; text-align: center; padding: 4px 0; border-radius: 6px; }
+> 200	.cockpit .cx-ready.go { color: var(--cx-green); background: var(--cx-green-dim); }
+> 201	.cockpit .cx-ready.no { color: var(--cx-red); background: var(--cx-red-dim); }
+> 202	
+> ```
+
+## 🤖 Claude *(01:01:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "offset": 44,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 44	  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> 45	  Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> ```
+
+## 🤖 Claude *(01:01:37)*
+
+
+## 🤖 Claude *(01:01:38)*
+
+Tudo lido. Agora os edits. **Cockpit.js** — import, state, fetch:
+
+## 🤖 Claude *(01:01:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "import { getRegimeStatus, getFlowStatus, getAgentRuns, getCockpit } from '../../services/IntelligenceService';\nimport { AnimatedNumber, GaltonBoard, PathFan } from './CockpitSims';",
+  "new_string": "import { getRegimeStatus, getFlowStatus, getAgentRuns, getCockpit } from '../../services/IntelligenceService';\nimport { getAutomationGroups } from '../../services/AutomationsService';\nimport { AnimatedNumber, GaltonBoard, PathFan } from './CockpitSims';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:01:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "  const [cockpit, setCockpit] = useState({ symbols: {} });\n  const [notification, setNotification] = useState({});",
+  "new_string": "  const [cockpit, setCockpit] = useState({ symbols: {} });\n  const [groups, setGroups] = useState({ groups: [] });\n  const [notification, setNotification] = useState({});"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:01:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "    getCockpit(token).then(setCockpit).catch(() => {});\n  }",
+  "new_string": "    getCockpit(token).then(setCockpit).catch(() => {});\n    getAutomationGroups(token).then(setGroups).catch(() => {});\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:01:52)*
+
+
+## 🤖 Claude *(01:01:53)*
+
+**Cockpit.js** — o painel gate×ativo (inserido entre a row de bridges e a ROW 4):
+
+## 🤖 Claude *(01:02:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "                <div className=\"cx-note\">Cada ponte acende quando o gate de COMPRA do s\u00edmbolo abre: <b>BTC (baseline)</b> = regime \u2260 bear/trend <b>E</b> fluxo n\u00e3o-capitula\u00e7\u00e3o; <b>alts (farm)</b> = s\u00f3 regime \u2260 bear/trend (o fluxo \u00e9 <b>informativo\u00b7i</b>, n\u00e3o gateia). \"go\" = condi\u00e7\u00f5es prontas; a ordem em si segue gateada e sob HALT.</div>\n              </div>\n            </div>\n\n            {/* ROW 4 \u2014 edge/agent + positions */}",
+  "new_string": "                <div className=\"cx-note\">Cada ponte acende quando o gate de COMPRA do s\u00edmbolo abre: <b>BTC (baseline)</b> = regime \u2260 bear/trend <b>E</b> fluxo n\u00e3o-capitula\u00e7\u00e3o; <b>alts (farm)</b> = s\u00f3 regime \u2260 bear/trend (o fluxo \u00e9 <b>informativo\u00b7i</b>, n\u00e3o gateia). \"go\" = condi\u00e7\u00f5es prontas; a ordem em si segue gateada e sob HALT.</div>\n              </div>\n            </div>\n\n            {/* ROW 3b \u2014 Estrat\u00e9gia: gate \u00d7 ativo (reconcilia\u00e7\u00e3o canary) */}\n            <div className=\"cx-row-3\" style={{ gridTemplateColumns: '1fr' }}>\n              <div className=\"cx-panel\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Estrat\u00e9gia \u2014 gate \u00d7 ativo</span><span className=\"cx-src\">/analysis/cockpit \u00b7 /automations/groups</span></div>\n                <div className=\"cx-strat\">\n                  {(groups.groups || []).length === 0\n                    ? <div className=\"cx-empty\">carregando grupos\u2026</div>\n                    : (groups.groups || []).map(gr => {\n                        const cpsyms = cp.symbols || {};\n                        const anyGate = test => Object.keys(cpsyms).some(s => test((cpsyms[s].gates) || {}));\n                        let gate, note;\n                        if (gr.key === 'paper') { gate = 'idle'; note = 'research virtual \u2014 sem risco real'; }\n                        else {\n                          let open;\n                          if (gr.key === 'farm') open = anyGate(ga => ga.farm === true);\n                          else if (gr.key === 'baseline') { const bg = (cpsyms['BTCUSDT'] || {}).gates || {}; open = bg.baseline != null ? !!bg.baseline : !!bg.buyAllowed; }\n                          else open = anyGate(ga => ga.trend === true); // trend\n                          gate = open ? 'go' : 'no';\n                          const ctx = gr.key === 'baseline' ? 'cofre BTC' : gr.key === 'trend' ? 'espera cross' : 'dips de alt';\n                          if (gr.active === 0) note = open ? `parado pelo operador (canary) \u2014 gate liberado \u2260 obrigat\u00f3rio \u00b7 ${ctx}` : `parado \u00b7 gate fechado tamb\u00e9m \u00b7 ${ctx}`;\n                          else if (gr.active === gr.total) note = `ativo \u2014 ${ctx} (canary)`;\n                          else note = `parcial ${gr.active}/${gr.total} \u00b7 ${ctx}`;\n                        }\n                        const actCls = gr.paper ? 'virt' : (gr.active > 0 ? 'on' : 'off');\n                        const gateLbl = gate === 'go' ? 'go' : gate === 'no' ? 'wait' : '\u2014';\n                        return (\n                          <div className=\"cx-strat-row\" key={gr.key}>\n                            <span className=\"gname\">{gr.label ? gr.label.split(' ')[0] : gr.key}</span>\n                            <span className={`cx-ready ${gate}`}>{gateLbl}</span>\n                            <span className={`cx-act ${actCls}`}>{gr.active}/{gr.total}</span>\n                            <span className=\"rnote\">{note}</span>\n                          </div>\n                        );\n                      })}\n                </div>\n                <div className=\"cx-note\"><b>gate</b> = o regime/fluxo PERMITE \u00b7 <b>ativo</b> = o operador ARMOU. <b>gate go + parado = intencional</b> (ligar/parar grupos \u00e9 decis\u00e3o do operador \u2014 canary, n\u00e3o erro). A trava real \u00e9 o HALT por-ordem.</div>\n              </div>\n            </div>\n\n            {/* ROW 4 \u2014 edge/agent + positions */}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:02:10)*
+
+
+## 🤖 Claude *(01:02:10)*
+
+**cockpit.css** — classes do painel (estilo neon `cx-*`):
+
+## 🤖 Claude *(01:02:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css",
+  "old_string": ".cockpit .cx-ready.go { color: var(--cx-green); background: var(--cx-green-dim); }\n.cockpit .cx-ready.no { color: var(--cx-red); background: var(--cx-red-dim); }",
+  "new_string": ".cockpit .cx-ready.go { color: var(--cx-green); background: var(--cx-green-dim); }\n.cockpit .cx-ready.no { color: var(--cx-red); background: var(--cx-red-dim); }\n.cockpit .cx-ready.idle { color: var(--cx-muted); background: rgba(255,255,255,0.06); }\n.cockpit .cx-strat { display: flex; flex-direction: column; gap: 9px; }\n.cockpit .cx-strat-row { display: grid; grid-template-columns: 84px 52px 56px 1fr; align-items: center; gap: 10px; }\n.cockpit .cx-strat-row .gname { font-weight: 600; font-size: 0.8rem; }\n.cockpit .cx-strat-row .rnote { font-size: 0.66rem; color: var(--cx-dim); line-height: 1.4; }\n.cockpit .cx-act { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; text-align: center; padding: 4px 0; border-radius: 6px; }\n.cockpit .cx-act.on { color: var(--cx-green); background: var(--cx-green-dim); }\n.cockpit .cx-act.off { color: var(--cx-muted); background: rgba(255,255,255,0.06); }\n.cockpit .cx-act.virt { color: var(--cx-cyan); background: rgba(0,200,255,0.10); }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:02:20)*
+
+
+## 🤖 Claude *(01:02:20)*
+
+**agent.js** — item (8) ATIVO≠GATE na doutrina (o conserto na fonte):
+
+## 🤖 Claude *(01:02:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": " Gate ABERTO (farm=true) com RSI ACIMA do gatilho \u00e9 ESPERADO (o gate permite, aguardando o dip) \u2014 N\u00c3O \u00e9 incoer\u00eancia nem \"RSI errado/threshold diferente\".\n  S\u00f3 sinalize fluxo/regime se a fonte VIVA por si s\u00f3 (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo an\u00f4malo.",
+  "new_string": " Gate ABERTO (farm=true) com RSI ACIMA do gatilho \u00e9 ESPERADO (o gate permite, aguardando o dip) \u2014 N\u00c3O \u00e9 incoer\u00eancia nem \"RSI errado/threshold diferente\".\n  (8) ATIVO \u2260 GATE: uma automa\u00e7\u00e3o/grupo INATIVO (parado) com o gate ABERTO N\u00c3O \u00e9 anomalia \u2014 LIGAR/PARAR \u00e9 decis\u00e3o do OPERADOR pelo painel de grupos (ex.: CANARY = s\u00f3 um grupo ativo por vez; hoje pode ser s\u00f3 o Farm, com Trend e Baseline PARADOS de prop\u00f3sito). Gate liberado = o regime PERMITE a estrat\u00e9gia; N\u00c3O significa que a automa\u00e7\u00e3o DEVA estar armada. N\u00c3O reporte \"a automa\u00e7\u00e3o X deveria estar ativa / deveria ter disparado\" baseado no gate, NEM notifique o dono \u2014 ele controla a ativa\u00e7\u00e3o. S\u00f3 sinalize se o ESTADO de ativa\u00e7\u00e3o mudar SOZINHO, sem a\u00e7\u00e3o do operador (ex.: automa\u00e7\u00e3o que estava ON sumiu do BRAIN).\n  S\u00f3 sinalize fluxo/regime se a fonte VIVA por si s\u00f3 (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo an\u00f4malo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:02:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "alguma automa\u00e7\u00e3o deveria ter disparado e n\u00e3o disparou (ou o contr\u00e1rio)?",
+  "new_string": "alguma automa\u00e7\u00e3o deveria ter disparado e n\u00e3o disparou (ou o contr\u00e1rio \u2014 MAS veja (8): grupo INATIVO/parado pelo operador, ex. canary, N\u00c3O \u00e9 anomalia)?"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:02:40)*
+
+
+## 🤖 Claude *(01:02:40)*
+
+Edits feitos. Verificação — `node --check` no agent + build do frontend (confirma Cockpit.js + css):
+
+## 🤖 Claude *(01:02:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== node --check agent.js ===\"\nnode --check tradeux-agent/src/agent.js && echo \"\u2713 agent.js OK\"\necho \"=== build frontend ===\"\ncd frontend\nREACT_APP_API_URL=http://localhost:8080/api \\\nREACT_APP_WS_URL=ws://localhost:8080/ws \\\nREACT_APP_BWS_URL=wss://stream.binance.com:9443/ws \\\nnpx vite build --mode production 2>&1 | tail -8",
+  "description": "Syntax check agent + build frontend",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check agent.js ===
+> ✓ agent.js OK
+> === build frontend ===
+> transforming...
+> ✓ 256 modules transformed.
+> rendering chunks...
+> computing gzip size...
+> build/index.html                   2.38 kB │ gzip:   0.85 kB
+> build/assets/index-Ln9vsrXu.css   12.21 kB │ gzip:   3.01 kB
+> build/assets/index-CKLD5p4Y.js   438.22 kB │ gzip: 122.73 kB
+> ✓ built in 4.15s
+> ```
+
+## 🤖 Claude *(01:03:18)*
+
+
+## 🤖 Claude *(01:03:20)*
+
+Ambos verdes: agent `node --check` OK, frontend **builda limpo** (CSS 11.5→12.2KB = as classes novas). É mudança **read-only** (cockpit display + prompt do agente, que nem negocia) → risco baixo. Mas o ajuste de doutrina merece um olhar independente (item 8 não pode *silenciar anomalias reais*). Gate enxuto QA+TL:
+
+## 🤖 Claude *(01:03:41)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'cockpit-gate-ativo-review',\n  description: 'Gate enxuto QA/TL do painel gate-x-ativo no Cockpit + item (8) ATIVO!=GATE na doutrina do agente',\n  phases: [{ title: 'Gate', detail: 'qa-engineer + tech-lead sobre as 3 mudancas' }],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux';\nconst DIFF = `git -C ${REPO} -c safe.directory='*' diff`;\n\nconst CTX = `MUDANCA (Fase 1 da modernizacao do cockpit; pedido do dono) \u2014 3 arquivos:\n1) ${REPO}/frontend/src/private/Cockpit/Cockpit.js \u2014 novo painel \"Estrategia \u2014 gate x ativo\": importa getAutomationGroups, novo state groups, fetch em loadAll, e um painel que reconcilia o GATE (de cp.symbols[s].gates: farm/baseline/trend/buyAllowed) com o ATIVO (de /automations/groups: active/total por grupo farm/trend/baseline/paper) + uma frase de reconciliacao. READ-ONLY (so exibe).\n2) ${REPO}/frontend/src/private/Cockpit/cockpit.css \u2014 classes cx-strat/cx-act/cx-ready.idle (estilo neon existente).\n3) ${REPO}/tradeux-agent/src/agent.js \u2014 item (8) ATIVO != GATE no bloco DIVERGENCIAS ESPERADAS + emenda na linha que pergunta \"alguma automacao deveria ter disparado\". OBJETIVO: o agente parou de FALSO-ALARMAR que Trend/Baseline (inativos pelo canary) \"deveriam estar ativos\" so porque o gate esta aberto.\n\nCONTEXTO: o sistema esta LIVE (dono flipou o floor), canary = so o grupo Farm ativo (Trend/Baseline PARADOS de proposito). O agente nao negocia (ALLOW_TRADING=false); a doutrina so afeta o que ele NOTIFICA/reporta. Use '${DIFF} <arquivo>' p/ ver as 3 mudancas. Frontend ja buildou (vite OK); agent.js node --check OK.\n\nRISCO A CACAR: (a) bug de logica no painel (cp indefinido, derivacao de gate errada, crash com dados vazios/groups vazio); (b) doutrina: o item (8) pode estar AMPLO DEMAIS e silenciar uma anomalia REAL (ex.: automacao que SUMIU do BRAIN sozinha, venda indevida do cofre)? Confirme que ele so suprime \"inativo+gate-aberto = decisao do operador\" e MANTEM o alarme p/ mudanca de estado sem acao do operador. (c) consistencia do item (8) com o resto do prompt (itens 1-7, anti-spam, GATE!=TRIGGER).`;\n\nconst GSCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['role', 'verdict', 'mustFix', 'niceToHave', 'summary'],\n  properties: { role: { type: 'string' }, verdict: { type: 'string' }, mustFix: { type: 'array', items: { type: 'string' } }, niceToHave: { type: 'array', items: { type: 'string' } }, summary: { type: 'string' } },\n};\n\nphase('Gate');\nconst gate = (await parallel([\n  () => agent(`${CTX}\\n\\nVoce e o QA gate. Foco: correcao do painel (logica de gate x ativo, robustez com dados vazios) E se a doutrina (8) NAO silencia anomalia real. Veredito QA (PASS | PASS_COM_RESSALVAS | FAIL) com mustFix vs niceToHave.`, { label: 'gate:QA', phase: 'Gate', schema: GSCHEMA, agentType: 'qa-engineer' }),\n  () => agent(`${CTX}\\n\\nVoce e o tech-lead/code owner. Decisao de merge das 3 mudancas. Avalie correcao, aderencia ao estilo cx-* do cockpit, e principalmente se o item (8) da doutrina esta BEM CALIBRADO (suprime o falso-alarme do canary sem cegar o agente p/ anomalia genuina). Veredito TL (APPROVE | APPROVE_COM_SUGESTOES | REQUEST_CHANGES | BLOCK) com mustFix vs niceToHave.`, { label: 'gate:TL', phase: 'Gate', schema: GSCHEMA, agentType: 'tech-lead' }),\n])).filter(Boolean);\nreturn { gate };\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wvet76mk1
+> Summary: Gate enxuto QA/TL do painel gate-x-ativo no Cockpit + item (8) ATIVO!=GATE na doutrina do agente
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/58ca616a-c0a8-4399-abc7-178bed734314/subagents/workflows/wf_8cafe608-018
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-frontend/58ca616a-c0a8-4399-abc7-178bed734314/workflows/scripts/cockpit-gate-ativo-review-wf_8cafe608-018.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-frontend/58ca616a-c0a8-4399-abc7-178bed734314/workflows/scripts/cockpit-gate-ativo-review-wf_8cafe608-018.js"} to iterate without resending the script.)
+> Run ID: wf_8cafe608-018
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-frontend/58ca616a-c0a8-4399-abc7-178bed734314/workflows/scripts/cockpit-gate-ativo-review-wf_8cafe608-018.js", resumeFromRunId: "wf_8cafe608-018"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:03:47)*
+
+
+## 🤖 Claude *(01:03:56)*
+
+Fase 1 construída e auto-verificada. Gate enxuto rodando em background (`wvet76mk1`).
+
+## O que foi feito (Fase 1)
+
+**① Cockpit — painel "Estratégia · gate × ativo"** (`Cockpit.js` + `cockpit.css`):
+- Reconcilia, por grupo, o **gate** (de `cp.symbols[].gates`) com o **ativo** (do `/automations/groups`).
+- Cada linha mostra `gate` / `N/M ativo` / frase: ex. **"Trend · wait · 0/8 · parado pelo operador (canary) — gate liberado ≠ obrigatório"**, **"Farm · go · 6/6 · ativo (canary)"**.
+- Nota fixa ensinando: **"gate go + parado = intencional, não erro"**. No estilo neon `cx-*` existente, read-only.
+
+**② Agente — item (8) ATIVO≠GATE na doutrina** (`agent.js`):
+- Adicionei ao bloco "DIVERGÊNCIAS ESPERADAS" o princípio: *automação parada + gate aberto = decisão do operador (canary), NÃO reportar nem notificar*. Calibrado pra **ainda alarmar** se o estado mudar sozinho (ex.: automação some do BRAIN). Emendei também a pergunta que pegou a isca ("alguma automação deveria ter disparado").
+
+**Auto-verificado:** frontend builda limpo (vite ✓), `agent.js` node --check ✓. Mudança é **read-only/zero money-path** (cockpit exibe; agente nem negocia).
+
+Quando o gate voltar, o passo final é **deploy** (rebuild frontend + restart do agente) — aí o painel aparece no `/cockpit` e o agente para de te mandar esse falso alarme. Te trago o veredito.
+
+## 👤 User *(01:03:59)*
+
+1 x 0 brasil
+
+## 🤖 Claude *(01:04:19)*
+
+
+## 🤖 Claude *(01:04:24)*
+
+⚽ **1 a 0!** 🇧🇷 Vamo Brasil.
+
+E olha que oportuno pro teu experimento: **gol = pico de atenção do varejo** — é exatamente o tipo de evento que sua hipótese diz mexer no 1m. Se quiser, eu:
+- **marco o minuto do gol** no Telegram (vira ponto no histórico), e
+- **dou uma olhada no 1m do BTC** logo depois do gol pra ver se teve spike de volatilidade/fluxo (o teste natural da tua tese).
+
+É só falar "marca o gol" que eu capturo.
+
+Em paralelo: o **gate da Fase 1** (painel gate×ativo + recalibração do agente) ainda tá cozinhando — quando voltar eu te trago o veredito e faço o deploy (aí o painel aparece no `/cockpit` e o agente para com o falso alarme). Aproveita o jogo. 🍿
+
+## 👤 User *(01:06:37)*
+
+<task-notification>
+<task-id>wvet76mk1</task-id>
+<tool-use-id>toolu_01Crk92dqpXVgpgmCVLNydnw</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/58ca616a-c0a8-4399-abc7-178bed734314/tasks/wvet76mk1.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Gate enxuto QA/TL do painel gate-x-ativo no Cockpit + item (8) ATIVO!=GATE na doutrina do agente" completed</summary>
+<result>{"gate":[{"role":"QA Engineer (senior) — money/order-handling code review gate","verdict":"PASS_COM_RESSALVAS","mustFix":[],"niceToHave":["[BAIXA · painel] O branch baseline hardcoda cpsyms['BTCUSDT'] em /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js:434. Funciona porque BTCUSDT e' SEMPRE injetado no cockpit (cockpitJob.js:73) e e' o default flow-gated (cockpitJob.js:88). Se COCKPIT_FLOW_GATED_SYMBOLS for sobrescrito via .env para outro par, o painel mostraria a linha 'Baseline' contra um BTC nao-flow-gated (baseline=null -&gt; fallback !!buyAllowed=farm). Degrada graciosamente (sem crash), mas o rotulo fica enganoso. Idealmente derivar o simbolo flow-gated de cpsyms[s].gates.flowGated===true em vez de assumir BTCUSDT.","[BAIXA · painel] 'parcial X/Y' nao distingue ON-mas-incompleto de uma ativacao parcial intencional; com o canary atual (Farm 6/6, demais 0/N) nao ocorre, mas se um grupo ficar 3/6 a nota nao orienta o operador. Cosmetico.","[INFO · doutrina] Item (8) cita 'sumiu do BRAIN' como o caso que AINDA deve alarmar — o agente consegue observar isso (tem tradeux_get_brain e tradeux_list_automations). Mas a deteccao de 'mudou SOZINHO' depende de comparar com o ciclo anterior, e o prompt nao injeta o estado de ativacao previo no kickoff (so injeta notificacoes enviadas). Sem baseline historica de isActive, a deteccao de mudanca-sem-acao-do-operador e' best-effort. Nao bloqueia (estado atual e' canary estavel), mas e' o limite real da clausula de excecao.","[INFO] gname usa gr.label.split(' ')[0] (Farm/Trend/Baseline/Paper) — fragil a renomear labels no backend, mas hoje correto para os 4 grupos."],"summary":"VEREDITO QA: PASS COM RESSALVAS (so niceToHave; zero mustFix). Stack revisado: frontend/src/private/Cockpit/Cockpit.js, frontend/src/private/Cockpit/cockpit.css, tradeux-agent/src/agent.js. vite build OK (256 modulos, limpo); agent.js node --check OK.\n\n== (a) RISCO: bug de logica / robustez do painel == LIMPO.\n- 'cp' NAO fica indefinido: definido em Cockpit.js:188 (const cp = cockpit || {}), em escopo no return inteiro; o painel novo (linha ~427) usa cp.symbols igual ao painel de bridges ja existente (linha 384). Consistente.\n- Shape do gate confirmado na FONTE (backend/src/cockpitJob.js:119 deriveGates -&gt; {regime,regimeOk,flowOk,flowGated,farm,baseline,trend,buyAllowed,...}). farm/trend sao boolean; baseline e' null para alts (nao-flow-gated) e boolean para BTC (linha 103). O painel trata isso CORRETAMENTE: bg.baseline != null ? !!bg.baseline : !!bg.buyAllowed (Cockpit.js:434).\n- Endpoint certo: getCockpit() do frontend bate em /cockpit -&gt; getCockpitStatus (agregado com .symbols, cockpitJob.js:207), NAO em /cockpit/:symbol (snapshot flat). cp.symbols e' o shape real.\n- Sem crash com dados vazios: groups vazio -&gt; 'carregando grupos...' (guard (groups.groups||[]).length===0). cpsyms vazio -&gt; anyGate roda Object.keys de {} (false, sem throw). cpsyms[s] NUNCA e' null (cockpitJob.js:205 sempre atribui objeto) e .gates SEMPRE existe (freshen retorna {...,gates}); o '|| {}' e' defensivo-redundante, nao necessario. BTCUSDT ausente -&gt; (cpsyms['BTCUSDT']||{}).gates||{} -&gt; {} -&gt; gate 'wait', sem throw.\n- Shape de /automations/groups confirmado (automationsController.js:113 = {key,label,paper,total,active,inactive,ids}) e bate com AutomationsService.js:61. actCls/gateLbl/gname coerentes; CSS (cx-ready.idle, cx-strat, cx-act.on/off/virt) e vars (--cx-muted/cyan/dim/green-dim/red-dim) todas existem; inline gridTemplateColumns:'1fr' sobrepoe o default 1.4fr/1fr corretamente.\n\n== (b) RISCO: doutrina (8) AMPLA DEMAIS / silencia anomalia real == NAO silencia. Item (8) e' ESCOPADO a 'estado de ATIVACAO' (active != gate) e MANTEM explicitamente o alarme para mudanca de estado SEM acao do operador ('So sinalize se o ESTADO de ativacao mudar SOZINHO... ex.: automacao que estava ON sumiu do BRAIN' — caso observavel via tradeux_get_brain/list_automations). NAO toca em: venda indevida do cofre BTC (agent.js:36 e guardrail #1 linha 52 INTACTOS), venda do harvester id25 (linhas 36/52 ainda flagam), nem ordem manual drenando o cofre de forma recorrente (linha 36 intacta). Suprime EXATAMENTE 'inativo + gate-aberto = decisao do operador (canary)' e nada alem disso.\n\n== (c) Consistencia com 1-7, anti-spam, GATE!=TRIGGER == COERENTE. Item (8) ATIVO!=GATE e' o irmao natural do (7) GATE!=TRIGGER (gate=doutrina do regime; nem gatilho nem ativacao). Anti-spam (linha 48) ja diz 'NADA da lista DIVERGENCIAS ESPERADAS e' notificavel' -&gt; (8) entra na lista e roteia para nao-notificar, sem contradicao. A descricao da tool MCP tradeux_get_brain/get_cockpit (index.js:215) ja carrega 'gate doctrine=true NAO confirma que a automacao esta ATIVA (baseline id2 isActive=0)' — o prompt agora espelha isso. Emenda na linha 36 ('MAS veja (8)...') casa com o novo item.\n\nCONCLUSAO/RECOMENDACAO DE MERGE: APROVAR. Mudanca READ-ONLY (painel so exibe; doutrina so afeta o que o agente NOTIFICA, com ALLOW_TRADING=false). Zero toque em beholder.js, money/order-path ou DB. As 3 ressalvas sao BAIXA/INFO e nao bloqueiam o canary atual (Farm-only, BTCUSDT flow-gated, estavel).\n\n== Testes que eu rodaria == 1) Browser /cockpit com canary vivo: confirmar Farm=go/6/6, Trend e Baseline=wait-ou-go/0/N com nota 'parado pelo operador'; 2) Mock groups=[] -&gt; 'carregando grupos...'; mock cp.symbols={} -&gt; painel renderiza sem crash (todas linhas 'wait'/'—'); 3) Forcar regime=bear na MEMORY -&gt; farm/trend gate 'wait' nas alts; regime!=bear -&gt; 'go' parado = nota canary; 4) Parar o grupo Farm pelo painel de grupos -&gt; linha vira 0/N 'parado pelo operador' (active=0) e o agente, num ciclo, NAO deve notificar 'Farm deveria estar ativo'; 5) Simular automacao Farm sumindo do BRAIN (stop fora do painel) entre ciclos -&gt; confirmar que (8) AINDA permite o alarme; 6) Override COCKPIT_FLOW_GATED_SYMBOLS p/ par != BTCUSDT -&gt; verificar que a linha Baseline cai no fallback buyAllowed sem crash (ressalva #1)."},{"role":"tech-lead / code owner (TradeUX)","verdict":"APPROVE_COM_SUGESTOES","mustFix":[],"niceToHave":["Cockpit.js (linha ~434, derivacao baseline): ancora 'BTCUSDT' hard-coded. Esta CORRETO hoje (so a baseline BTC e flow-gated; cockpitJob.js:103 forca baseline=null nas alts), mas acopla o painel ao simbolo. Sugestao: derivar o simbolo flow-gated do proprio cockpit (achar o symbol cujo gates.baseline != null) em vez de cravar 'BTCUSDT', pra acompanhar mudanca de REGIME_SYMBOLS/flow-gated. Nao bloqueia.","Cockpit.js (linha ~446, gname): 'gr.label.split(\" \")[0]' renderiza so a 1a palavra do label. Funciona pros 4 grupos atuais (Farm/Trend/Baseline/Paper), mas e fragil se um label novo comecar com artigo/numero. Considere um campo curto explicito no payload (gr.short) ou usar gr.key como rotulo — micro-robustez.","agent.js item (8): para reforcar a clareza, poderia citar explicitamente '/automations/groups' (ou o painel de grupos em Settings) como FONTE do estado de ATIVACAO — paralelo ao item (7) que cita o cockpit — ajudando o modelo a separar 'gate aberto' de 'grupo armado' sem inferir."],"summary":"VEREDITO GERAL: APPROVE COM SUGESTOES. As 3 mudancas sao read-only (painel) / so-prompt (doutrina), bem escopadas, reversiveis e NAO tocam beholder.js nem o money-path. Blast radius operacional ~zero: o painel so EXIBE; o agente nao negocia (ALLOW_TRADING=false), a doutrina so afeta o que ele NOTIFICA/reporta. Mergeavel.\n\n--- MUDANCA 1: Cockpit.js (painel 'Estrategia - gate x ativo') | APPROVE ---\nCorrecao: 'cp' esta em escopo (Cockpit.js:188, const cp = cockpit || {}); sem risco de cp indefinido. State inicial {groups:[]} + '.catch(()=&gt;{})' preserva o default; '(groups.groups||[]).length===0' mostra 'carregando grupos...' -&gt; robusto a groups vazio, sem crash. 'anyGate' itera Object.keys(cpsyms) (so chaves existentes) e blinda gates com '|| {}'. A derivacao do gate BATE com o backend (cockpitJob.js:96-104): farm/trend boolean por simbolo; ba
+... (truncated 2441 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/58ca616a-c0a8-4399-abc7-178bed734314/tasks/wvet76mk1.output)</result>
+<usage><agent_count>2</agent_count><subagent_tokens>111916</subagent_tokens><tool_uses>36</tool_uses><duration_ms>175866</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:07:04)*
+
+
+## 🤖 Claude *(01:07:07)*
+
+Gate **aprovado**: QA **PASS** · TL **APPROVE** · **zero must-fix**. As ressalvas são todas BAIXA/INFO. Notavelmente, o QA confirmou que o item (8) está **bem escopado** (não cega o agente pra anomalia real — cofre/harvester/dreno manual seguem flagados).
+
+Vou aplicar as 2 melhorias baratas que ambos apontaram (robustez), depois deploy:
+1. baseline não hardcoda BTCUSDT — deriva o símbolo flow-gated.
+2. item (8) cita `/automations/groups` como fonte do estado de ativação.
+
+## 🤖 Claude *(01:07:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "                          if (gr.key === 'farm') open = anyGate(ga => ga.farm === true);\n                          else if (gr.key === 'baseline') { const bg = (cpsyms['BTCUSDT'] || {}).gates || {}; open = bg.baseline != null ? !!bg.baseline : !!bg.buyAllowed; }\n                          else open = anyGate(ga => ga.trend === true); // trend",
+  "new_string": "                          if (gr.key === 'farm') open = anyGate(ga => ga.farm === true);\n                          else if (gr.key === 'baseline') {\n                            // baseline \u00e9 o s\u00edmbolo FLOW-GATED (gates.baseline != null); deriva do cockpit (fallback BTCUSDT)\n                            const bsym = Object.keys(cpsyms).find(s => ((cpsyms[s].gates) || {}).baseline != null) || 'BTCUSDT';\n                            const bg = (cpsyms[bsym] || {}).gates || {};\n                            open = bg.baseline != null ? !!bg.baseline : !!bg.buyAllowed;\n                          }\n                          else open = anyGate(ga => ga.trend === true); // trend"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:07:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "Gate liberado = o regime PERMITE a estrat\u00e9gia; N\u00c3O significa que a automa\u00e7\u00e3o DEVA estar armada.",
+  "new_string": "Gate liberado = o regime PERMITE a estrat\u00e9gia; N\u00c3O significa que a automa\u00e7\u00e3o DEVA estar armada (o estado de ATIVA\u00c7\u00c3O vive em /automations/groups e no painel de grupos de Settings \u2014 separe \"gate aberto\" de \"grupo armado\")."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:07:20)*
+
+
+## 🤖 Claude *(01:07:21)*
+
+Re-verificação (agent + build) antes do deploy:
+
+## 🤖 Claude *(01:07:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check tradeux-agent/src/agent.js && echo \"\u2713 agent.js OK\"\ncd frontend\nREACT_APP_API_URL=http://localhost:8080/api REACT_APP_WS_URL=ws://localhost:8080/ws REACT_APP_BWS_URL=wss://stream.binance.com:9443/ws \\\nnpx vite build --mode production 2>&1 | tail -4",
+  "description": "Re-check agent + frontend build after polish",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ agent.js OK
+> build/index.html                   2.38 kB │ gzip:   0.85 kB
+> build/assets/index-Ln9vsrXu.css   12.21 kB │ gzip:   3.01 kB
+> build/assets/index-Ls6xabwj.js   438.29 kB │ gzip: 122.76 kB
+> ✓ built in 2.43s
+> ```
+
+## 🤖 Claude *(01:07:42)*
+
+
+## 🤖 Claude *(01:07:43)*
+
+Ambos verdes. **Commit + deploy** (rebuild só frontend + agent — backend/beholder NÃO reinicia, então o canary Farm segue rodando sem interrupção):
+
+## 🤖 Claude *(01:07:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux \\\n  frontend/src/private/Cockpit/Cockpit.js frontend/src/private/Cockpit/cockpit.css tradeux-agent/src/agent.js 2>/dev/null && echo \"\u2713 chown\"\ngit -c safe.directory='*' status --short\ncat > /tmp/commit_msg4.txt <<'MSG'\nfeat(cockpit): painel gate x ativo + recalibra doutrina do agente (ATIVO != GATE)\n\nFase 1 da modernizacao do cockpit. Mata o falso-alarme do agente\n(\"Trend/Baseline deveriam estar ativos\") mostrando que ativar/parar e\ndecisao do OPERADOR (canary), nao funcao do gate.\n\n- frontend/Cockpit: painel \"Estrategia - gate x ativo\" reconcilia o gate\n  (cp.symbols[].gates) com o ativo (/automations/groups) por grupo, com a\n  nota \"gate go + parado = intencional\". Read-only. baseline deriva o\n  simbolo flow-gated do cockpit (nao hardcoda BTCUSDT).\n- agent.js: item (8) ATIVO != GATE no bloco DIVERGENCIAS ESPERADAS\n  (escopado: nao notifica inativo+gate-aberto; MANTEM alarme p/ mudanca de\n  estado SEM acao do operador). Emenda na linha 36 + cita /automations/groups.\n\nGate: QA PASS, TL APPROVE (zero must-fix). Read-only/so-prompt \u2014 zero\nmoney-path (agente nao negocia, ALLOW_TRADING=false). vite + node --check OK.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nMSG\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux add \\\n  frontend/src/private/Cockpit/Cockpit.js frontend/src/private/Cockpit/cockpit.css tradeux-agent/src/agent.js\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux commit -F /tmp/commit_msg4.txt\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -1",
+  "description": "Commit cockpit gate-vs-active + agent doctrine"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ chown
+>  M frontend/src/private/Cockpit/Cockpit.js
+>  M frontend/src/private/Cockpit/cockpit.css
+>  M tradeux-agent/src/agent.js
+> [master a21dbae] feat(cockpit): painel gate x ativo + recalibra doutrina do agente (ATIVO != GATE)
+>  3 files changed, 58 insertions(+), 1 deletion(-)
+> a21dbae feat(cockpit): painel gate x ativo + recalibra doutrina do agente (ATIVO != GATE)
+> ```
+
+## 🤖 Claude *(01:07:54)*
+
+
+## 🤖 Claude *(01:07:54)*
+
+Committed `a21dbae`. Deploy — rebuild **frontend + agent** apenas (backend/canary intocados):
+
+## 🤖 Claude *(01:07:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build frontend agent 2>&1 | tail -18'",
+  "description": "Rebuild + restart frontend and agent",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #39 [frontend] resolving provenance for metadata file
+> #39 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Image tradeux-frontend Built 
+>  Image tradeux-agent Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Running 
+>  Container tradeux-frontend-1 Recreate 
+>  Container tradeux-agent-1 Recreate 
+>  Container tradeux-agent-1 Recreated 
+>  Container tradeux-frontend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-agent-1 Started 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(01:08:25)*
+
+
+## 🤖 Claude *(01:08:26)*
+
+Deploy OK — frontend + agent recriados, **backend/db seguem "Running"** (canary Farm intocado). Verificação final:
+
+## 🤖 Claude *(01:08:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== containers ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"'\necho \"=== site ===\"\ncurl -s -m8 -o /dev/null -w \"https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/\necho \"=== canary intacto? (HALT + grupos) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node - < /tmp/canary.js' 2>&1 | grep -vE \"STOP|trend\" | head -8\necho \"=== agente subiu? (log) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 2m agent 2>&1 | tail -4'",
+  "description": "Verify site, canary intact, agent restarted"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up 13 seconds
+> tradeux-backend-1    Up 5 hours
+> tradeux-db-1         Up 4 days (healthy)
+> tradeux-frontend-1   Up 13 seconds
+> === site ===
+> https://tradeux.gcrux.com -> 200
+> === canary intacto? (HALT + grupos) ===
+> === ESTADO RESULTANTE ===
+>   farm: 6/6 ON <<< REAL/LIVE
+>   baseline: 0/2 ON (off)
+>   paper: 16/16 ON (virtual)
+> HALT: {"halted":false,"floor":false}
+> === agente subiu? (log) ===
+> agent-1  | tradeux-mcp pronto (API=http://backend:3001, trading=OFF)
+> agent-1  | [tradeux-agent] Conectado. 30 ferramentas disponíveis.
+> agent-1  | [tradeux-agent] Provedor: openrouter | Trading: OFF | Diário: /journal/tradeux-agent.jsonl
+> agent-1  | [tradeux-agent] Ciclo 1 iniciando (1781917697451-1)...
+> ```
+
+## 🤖 Claude *(01:09:16)*
+
+
+## 🤖 Claude *(01:09:26)*
+
+🟢 **Fase 1 no ar e verificada:**
+
+| Check | Resultado |
+|---|---|
+| Site | **200** |
+| Backend/canary | **intocado** (backend Up 5h) — Farm **6/6 LIVE**, `halted=false` |
+| Agente | **reiniciou limpo** — "30 ferramentas · Trading: OFF · Ciclo 1 iniciando" (com a doutrina nova) |
+| Frontend | recriado, build verde |
+
+**O que mudou pra você:**
+- **`/cockpit`** agora tem o painel **"Estratégia — gate × ativo"**: o Trend aparece como `wait · 0/8 · parado pelo operador (canary)` e o Baseline como `0/2 · off por design (cofre BTC)`. A confusão fica visível e explicada — sem alarme.
+- **O agente parou de te mandar o falso alarme** na fonte: a doutrina agora ensina `ATIVO ≠ GATE` (gate aberto + automação parada = decisão sua, não erro). Ele segue alarmando anomalia *de verdade* (cofre, dreno, automação sumindo do BRAIN sozinha).
+
+Commit `a21dbae`, gate QA PASS + TL APPROVE, deploy sem tocar no money-path.
+
+---
+
+**Estado do repo:** 4 commits desta sessão no master (Bloco B ×2, painel de grupos, cockpit gate×ativo), **todos deployados**, **nenhum pushado** (origin em `e8e7b16`). Quando quiser, eu dou push e/ou você roda `/handoff` pra selar a sessão.
+
+Agora aproveita o jogo — e se quiser que eu **marque o gol** (1×0) no Telegram + cheque o 1m do BTC na hora do gol, é só falar. 🇧🇷🍿
 
 ---
 
@@ -7163,4 +8503,5 @@ Então vamos melhorar nosso https://tradeux.gcrux.com/dashboard deixe o mais mod
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-19 - agent-af6d93040e18b75ff]]
+> * **Próxima Sessão**: [[2026-06-20 - agent-a661ea1c36f457903]]
 %% --- TIMELINE END --- %%
