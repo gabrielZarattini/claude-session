@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1057
-> * **Sessões do Claude**: 1015
+> * **Total de Sessões Registradas**: 1059
+> * **Sessões do Claude**: 1017
 > * **Sessões do Gemini**: 42
 
 ---
@@ -68,10 +68,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-20 - agent-acc2c69e7abf823f4]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-ac60cff37941a5c30]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-ac39a61c714230f48]]` - *2026-06-20*
+*   `[[2026-06-20 - agent-ac37a5e293c034dfe]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-abbde3e3ca7003151]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-aba91025696bd0556]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-aba5de66d680317fe]]` - *2026-06-20*
-*   *... e mais 1021 sessões nessa categoria.*
+*   *... e mais 1023 sessões nessa categoria.*
 
 ---
 
@@ -271,6 +271,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-20 - agent-acc2c69e7abf823f4]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-ac60cff37941a5c30]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-ac39a61c714230f48]]` (ClaudeSessions)
+*   `[[2026-06-20 - agent-ac37a5e293c034dfe]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-abbde3e3ca7003151]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-aba91025696bd0556]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-aba5de66d680317fe]]` (ClaudeSessions)
@@ -297,6 +298,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-20 - agent-a3b6d4bd5e6d72502]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a39c7bbfd403cca2a]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a320afb58121c62f7]]` (ClaudeSessions)
+*   `[[2026-06-20 - agent-a31e41524f02c629a]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a268f61229d113652]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a1fbddd092865c328]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-a14f2aab56c8204d1]]` (ClaudeSessions)
