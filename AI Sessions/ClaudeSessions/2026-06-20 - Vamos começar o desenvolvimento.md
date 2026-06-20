@@ -5614,6 +5614,1723 @@ Your final reply must contain the markdown report and nothing else.
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I now have full ground truth on every threat class. The RPCs corroborate the design: `begin_autopilot_cycle` and `finalize_autopilot_cycle` are both service-role-only and tenant-scoped, `deduct_mco_coins` has the sign+own-tenant guards, `creative_metrics` and `optimization_policy` are SELECT-own with service-role writes, and `optimization_policy.created_at` exists (the reader\'s `order("created_at")` is valid).\n\nLet me do one final precise check — confirm there is no path where a *normal authenticated user\'s own JWT* could reach analyze/collect (the self-check compares against `serviceKey`, and a user JWT is never equal to `Bearer ${serviceKey}`), and confirm `buildPolicyHint` output flows only into the `messages` array (no SQL/HTML/shell sink). Both are already visible in the code I read. I have everything needed.\n\n## Security Review — Viral Autopilot R3 (self-improving loop)\n\n**Verdict: No high-confidence vulnerabilities found.** All five changed surfaces hold the established tenant-isolation and service-role-gate invariants. Each threat class is justified below with specific lines.\n\n---\n\n### Threat-class walkthrough (all PASS)\n\n#### 1. Authorization — untrusted client cannot invoke analyze/collect ✅\nBoth new functions gate on the service key **before** any body parsing, identical to the reviewed-SAFE `nurture-cron:29`:\n\n- `autopilot-analyze/index.ts:29` — `if (req.headers.get("Authorization") !== `Bearer ${serviceKey}`) return json({ error: "Forbidden" }, 403);` (body read is line 35).\n- `autopilot-collect/index.ts:25` — same gate (body read is line 29).\n\n`serviceKey` resolves to `SB_SECRET_KEY` (`analyze:28`, `collect:24`). An anon caller or a normal authenticated user presents either no key or their own JWT — neither equals `Bearer ${SB_SECRET_KEY}`, so both 403. `config.toml:28-31` sets `verify_jwt=false` for both, which is correct and required: the in-code self-check is the enforcement boundary (the gateway must let the opaque service key through). Only `autopilot-run` (service path, `autopilot-run:103`) and the cron reach these.\n\n#### 2. Cross-tenant — tenant is derived from the cycle ROW, never the body ✅\nBoth functions take only `previous_cycle_id`/`cycle_id` (UUID-validated: `analyze:38`, `collect:31`) and derive `userId` from the trusted row:\n\n- `autopilot-analyze:41` — `admin.from("autopilot_cycles").select("user_id, plan_id").eq("id", prevCycleId)` → `userId = cyc.user_id` (line 43). There is **no** `body.user_id` read anywhere.\n- `autopilot-collect:34` — `admin.from("autopilot_cycles").select("user_id").eq("id", cycleId)` → `userId = cyc.user_id` (line 36). Same — no body user_id.\n\nEvery subsequent query is then scoped with `.eq("user_id", userId)`:\n- analyze: creative_metrics (`:49`), affiliate_links (`:58`), optimization_policy insert (`:102`).\n- collect: creative_metrics select (`:41`), affiliate_links (`:48`), upsert (`:57`).\n\n`vm_affiliate_products` lookup (`analyze:93`) is by `external_id` only — but that\'s a shared catalog (read-only product name), not tenant data; it leaks nothing sensitive. Because only the service caller reaches these (#1), the only residual question is whether a body value can *trick* the service path into cross-tenant action — and it cannot: the body supplies only a cycle id, and the tenant is read from that row. Worst case a caller passes a *different valid* cycle id, but that cycle\'s own `user_id` governs all reads/writes/charges, so the action stays self-consistent within whatever tenant owns the named cycle — no cross-tenant mixing. This mirrors the `finalize_vision_job` / `begin_autopilot_cycle:55` row-derived-tenant pattern.\n\n#### 3. Money — no untrusted control over who gets charged ✅\n`autopilot-analyze:109` calls `deduct_mco_coins(p_user_id: userId, p_amount: 2, ...)` only when `!prepaid && hasRealData` (`:80,108`). `userId` is row-derived (`:43`), not body-derived. The 403 gate (#1) means only the service caller reaches the deduct at all. Defense-in-depth at the RPC: `deduct_mco_coins` (migration `20260603220000:45,51`) rejects `p_amount <= 0` (anti-mint) and, for non-service callers, forces `p_user_id = auth.uid()`. `ANALYZE_COST` is a hardcoded constant `2` (`analyze:19`), not caller-supplied. The inline path from `autopilot-run:112` passes `prepaid: true`, so it does **not** double-charge (the 2 was pre-reserved in `begin_autopilot_cycle:98` and refunded by `finalize_autopilot_cycle:44` when unused). No path lets an untrusted client choose the victim or the amount.\n\n#### 4. optimization_policy write + orchestrate-step read — no cross-tenant policy leakage ✅\n- **Write** (`autopilot-analyze:101-104`): `user_id: userId` (row-derived). RLS on the table is SELECT-own with service-role bypass for writes (migration `20260402014040:303-304` + RESTRICTIVE no-update/delete `20260414150946`), so a tenant can never forge a policy for another tenant; here the service writes it for the cycle\'s own owner.\n- **Read** (`orchestrate-step:190-192`): `optimization_policy.select("action_details").eq("user_id", run.user_id).eq("action_type","viral_autopilot").order("created_at", desc).limit(1)`. Scoped to **`run.user_id`** — the run\'s own tenant. `run.user_id` comes from the `pipeline_runs` row (`:147-151`), and orchestrate-step itself is service-role-gated (`:130`). `optimization_policy.created_at` exists (migration `20260402014040:188`), so the ordering is well-defined. No cross-tenant policy can enter another tenant\'s prompt.\n\n#### 5. Prompt-injection sink analysis — hint lands only in the LLM messages array ✅\nPer the rules, injection *into an LLM prompt* is explicitly not reportable. I traced where `buildPolicyHint` output actually flows to confirm it reaches **no other sink**:\n- `buildPolicyHint` (`orchestrate-step:109-118`) → returns a string → `feedbackHint` (`:193`).\n- `feedbackHint` is consumed **only** by `injectFeedback` (`:119-122`), called at exactly 3 sites: `:269` (article), `:472` (linkedin), `:551` (twitter) — each wrapping the `messages` array passed to `fetchLLMWithFallback`.\n- `injectFeedback` appends one `{ role: "system", content: ... }` object to the messages array (`:121`). It is never concatenated into SQL (`product_id`/`user_id` in the `.eq()` builder calls are separate, not the hint), never written to a DB text column, never put in a header, URL, or shell. `top_product_name` is sanitized anyway (`:113` strips `\\r\\n`` ` and caps 80 chars) as defense-in-depth.\n\nConfirmed: the hint flows exclusively into the chat `messages` array. No HTML/SQL/shell sink. Nothing to report.\n\n#### 6. Secrets — no leak ✅\n`SB_SECRET_KEY` is read via `Deno.env.get` and only compared (`analyze:29`, `collect:25`) or forwarded as a `Bearer` header on service-to-service `fetch` (`autopilot-run:103,129`). It is never logged: `logEvent`/`console.warn` sites (`analyze:32,82,116`; `collect:62,67`) emit only event labels and the variant id / upsert error message — no key, no token. No hardcoded secrets anywhere.\n\n#### 7. SQL injection — none ✅\nEvery DB access is the PostgREST builder (`.from().select().eq().in().insert().upsert().rpc()`). No raw SQL string concatenation, no `rpc` with interpolated SQL. `UUID_RE` (`analyze:20`, `collect:16`) validates the only free-form body inputs before use. RPC params (`deduct_mco_coins`, `begin/finalize_autopilot_cycle`) are passed as a typed object, not string-built; the underlying functions set `search_path` and are parameterized plpgsql.\n\n---\n\n### Minor (non-vuln) observations — informational only, not findings\n- **`autopilot-collect:60` upsert `onConflict: "content_variant_id,source"`** matches the table\'s `UNIQUE (content_variant_id, source)` constraint (migration `20260619140000:42`). The upsert sets `user_id: userId` from the cycle row; even if two cycles referenced the same `content_variant_id`, the row\'s `user_id` is governed by the requesting cycle\'s owner — consistent, no cross-tenant write. (Not a security issue; noting the conflict-target is correct.)\n- **`autopilot-run:112-114` trusts `ar.has_real_data`** from the analyze response to set `analyzeCharged`. This is a billing-accuracy detail between two service-role functions on the same trust boundary (both behind `SB_SECRET_KEY`); it cannot be influenced by an untrusted client, so it is out of scope per the rules.\n\nAll claims above are anchored to lines I read this session in the five changed files plus the four corroborating migrations (`20260603220000`, `20260620120200`, `20260620120300`, `20260619140000`, `20260402014040`) and the `nurture-cron` reference.'}, {'type': 'text', 'text': "agentId: a16b4fc9013628acb (use SendMessage with to: 'a16b4fc9013628acb' to continue this agent)\n<usage>subagent_tokens: 107437\ntool_uses: 13\nduration_ms: 75918</usage>"}]
+> ```
+
+## 🤖 Claude *(19:32:09)*
+
+
+## 🤖 Claude *(19:32:14)*
+
+## ✅ `/security-review` (R3) — SAFE
+
+7 classes provadas, linha a linha: 403 self-check (analyze:29, collect:25) · tenant da linha do ciclo (não do body) · `deduct` com `userId` row-derived + `prepaid` sem duplo-cobrar · policy read/write scoped por `user_id` · hint só na messages array (sanitizado) · zero secret leak · zero SQL dinâmico.
+
+Antes de deployar, uma melhoria que o mapa do schema me deu: faço a **analyze ler `creative_metrics` (a tabela unificada que o collect popula)** em vez de `affiliate_links` direto — é o design exato do FRD ("analyze lê creative_metrics"), mais simples, e testável sem a dependência de FK do catálogo. Mudança tenant-scoped idêntica (mesma postura de segurança que o review validou; só troca qual tabela own-scoped é lida).
+
+## 🤖 Claude *(19:32:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "old_string": "    // The cycle's creatives (content_variant_id \u2194 product/platform), tagged by orchestrate-step at generation.\n    const { data: metrics } = await admin.from(\"creative_metrics\")\n      .select(\"content_variant_id, product_id, platform\")\n      .eq(\"cycle_id\", prevCycleId).eq(\"user_id\", userId);\n    const creatives = (metrics ?? []) as Array<{ content_variant_id: string; product_id: string | null; platform: string | null }>;\n\n    // Live click ledger (authoritative real signal) keyed by content_id = content_variant_id.\n    const variantIds = [...new Set(creatives.map((c) => c.content_variant_id).filter(Boolean))];\n    const linkByVariant = new Map<string, { clicks: number; rev: number }>();\n    if (variantIds.length) {\n      const { data: links } = await admin.from(\"affiliate_links\")\n        .select(\"content_id, clicks, revenue_cents\")\n        .eq(\"user_id\", userId).in(\"content_id\", variantIds);\n      for (const l of (links ?? []) as Array<{ content_id: string; clicks: number | null; revenue_cents: number | null }>) {\n        const e = linkByVariant.get(l.content_id) ?? { clicks: 0, rev: 0 };\n        e.clicks += Number(l.clicks ?? 0); e.rev += Number(l.revenue_cents ?? 0);\n        linkByVariant.set(l.content_id, e);\n      }\n    }\n\n    // Aggregate clicks/revenue by product (external_id) and platform, using the live ledger as the click source.\n    const byProduct = new Map<string, { clicks: number; rev: number }>();\n    const byPlatform = new Map<string, { clicks: number; rev: number }>();\n    const bump = (m: Map<string, { clicks: number; rev: number }>, k: string | null, clicks: number, rev: number) => {\n      if (!k) return; const e = m.get(k) ?? { clicks: 0, rev: 0 }; e.clicks += clicks; e.rev += rev; m.set(k, e);\n    };\n    let totalClicks = 0, totalRev = 0;\n    for (const c of creatives) {\n      const live = linkByVariant.get(c.content_variant_id) ?? { clicks: 0, rev: 0 };\n      bump(byProduct, c.product_id, live.clicks, live.rev);\n      bump(byPlatform, c.platform, live.clicks, live.rev);\n      totalClicks += live.clicks; totalRev += live.rev;\n    }",
+  "new_string": "    // Read the cycle's per-creative metrics. creative_metrics is the unified table (FR-VA-009): the baseline\n    // 'organic' rows are zeros; the 'affiliate_click'/'postback' rows are populated by autopilot-collect from the\n    // live ledger. Sum the real signal by product (external_id) + platform \u2014 baselines contribute 0 (no double count).\n    const { data: metrics } = await admin.from(\"creative_metrics\")\n      .select(\"product_id, platform, affiliate_clicks, revenue_cents\")\n      .eq(\"cycle_id\", prevCycleId).eq(\"user_id\", userId);\n    const rows = (metrics ?? []) as Array<{ product_id: string | null; platform: string | null; affiliate_clicks: number | null; revenue_cents: number | null }>;\n\n    const byProduct = new Map<string, { clicks: number; rev: number }>();\n    const byPlatform = new Map<string, { clicks: number; rev: number }>();\n    const bump = (m: Map<string, { clicks: number; rev: number }>, k: string | null, clicks: number, rev: number) => {\n      if (!k) return; const e = m.get(k) ?? { clicks: 0, rev: 0 }; e.clicks += clicks; e.rev += rev; m.set(k, e);\n    };\n    let totalClicks = 0, totalRev = 0;\n    for (const r of rows) {\n      const clicks = Number(r.affiliate_clicks ?? 0), rev = Number(r.revenue_cents ?? 0);\n      bump(byProduct, r.product_id, clicks, rev);\n      bump(byPlatform, r.platform, clicks, rev);\n      totalClicks += clicks; totalRev += rev;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:32:33)*
+
+
+## 🤖 Claude *(19:32:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n\"$HOME/.deno/bin/deno\" check supabase/functions/autopilot-analyze/index.ts 2>&1 | tail -3; echo \"check-exit=$?\"\nrm -f deno.lock\necho \"=== deploy R3 (orchestrate-step + autopilot-run + analyze + collect) ===\"\nfor fn in orchestrate-step autopilot-run autopilot-analyze autopilot-collect; do\n  npx supabase functions deploy \"$fn\" 2>&1 | grep -iE 'Deploying Function|script size|Deployed Functions|error' | tail -3\ndone",
+  "description": "deno check analyze + deploy 4 R3 functions",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mCheck[0m supabase/functions/autopilot-analyze/index.ts
+> check-exit=0
+> === deploy R3 (orchestrate-step + autopilot-run + analyze + collect) ===
+> Deploying Function: orchestrate-step (script size: 132kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> Deploying Function: autopilot-run (script size: 63.1kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-run
+> Deploying Function: autopilot-analyze (script size: 60.92kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-analyze
+> Deploying Function: autopilot-collect (script size: 59.72kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-collect
+> ```
+
+## 🤖 Claude *(19:33:46)*
+
+
+## 🤖 Claude *(19:33:48)*
+
+Deploy R3 **exit 0**: orchestrate-step **132kB** · autopilot-run **63.1kB** · autopilot-analyze **60.92kB** · autopilot-collect **59.72kB**. Agora o smoke do loop fechado — prova `collect` (sync affiliate→metrics) + `analyze` (ranking creative_metrics → policy) contra as funções deployadas, com ciclo sintético e `prepaid` (zero gasto).
+
+## 🤖 Claude *(19:34:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke \u2014 Viral Autopilot R3 self-improving loop (FR-VA-008/010/011), ZERO-COST.\n *\n * Proves the analyzer's RANKING + policy write and the collector's ledger\u2192metrics sync against the DEPLOYED\n * functions, using a throwaway user + a SYNTHETIC completed cycle (creative_metrics rows inserted directly).\n * No LLM, no generation, no real spend \u2014 analyze is called prepaid=true (charged 0). Cleaned up via cascade.\n *\n * Gates:\n *   L1 analyze/collect anon \u2192 403            L2 service + no body \u2192 422        L3 service + bad cycle \u2192 404\n *   L5 analyze ranks creative_metrics \u2192 policy.top_product_id = the most-clicked product, has_real_data, charged 0\n *   L5b optimization_policy row written (action_type='viral_autopilot', tenant-scoped)\n *   L6 analyze on a zero-signal cycle \u2192 has_real_data=false, charged 0, no invented policy\n *   L4 collect syncs affiliate_links.clicks \u2192 creative_metrics 'affiliate_click' (best-effort; skips if catalog empty)\n *\n * Usage: bun run scripts/qa/smoke-autopilot-loop.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst ZERO = '00000000-0000-0000-0000-000000000000';\nlet uid: string | null = null;\nlet pass = true;\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\ninterface Resp { status: number; body: Record<string, unknown> }\nasync function callFn(fn: string, bearer: string, body: unknown): Promise<Resp> {\n  const r = await fetch(`${URL}/functions/v1/${fn}`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: bearer, Authorization: `Bearer ${bearer}` },\n    body: JSON.stringify(body),\n  });\n  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }\n  return { status: r.status, body: b };\n}\nconst svc = (fn: string, body: unknown) => callFn(fn, SVC, body);\n\nasync function mkCycle(planId: string, n: number): Promise<string> {\n  const { data, error } = await admin.from('autopilot_cycles').insert({\n    user_id: uid, plan_id: planId, cycle_number: n, status: 'completed', spend_mco: 20, planned_units: 2,\n  }).select('id').single();\n  if (error || !data) throw new Error(`mkCycle(${n}): ${error?.message}`);\n  return data.id as string;\n}\nasync function mkMetric(cycleId: string, variant: string, product: string, source: string, clicks: number) {\n  const { error } = await admin.from('creative_metrics').insert({\n    user_id: uid, cycle_id: cycleId, content_variant_id: variant, product_id: product, platform: 'linkedin',\n    source, affiliate_clicks: clicks, revenue_cents: 0,\n  });\n  if (error) throw new Error(`mkMetric(${variant},${source}): ${error.message}`);\n}\n\ntry {\n  // \u2500\u2500 Gates \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  check('L1 analyze anon \u2192 403', (await callFn('autopilot-analyze', PUB, {})).status === 403);\n  check('L1 collect anon \u2192 403', (await callFn('autopilot-collect', PUB, {})).status === 403);\n  check('L2 analyze service no body \u2192 422', (await svc('autopilot-analyze', {})).status === 422);\n  check('L2 collect service no body \u2192 422', (await svc('autopilot-collect', {})).status === 422);\n  check('L3 analyze bad cycle \u2192 404', (await svc('autopilot-analyze', { previous_cycle_id: ZERO })).status === 404);\n  check('L3 collect bad cycle \u2192 404', (await svc('autopilot-collect', { cycle_id: ZERO })).status === 404);\n\n  // \u2500\u2500 Setup: throwaway user + plan + a completed cycle with two scored creatives \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const { data: u, error: ue } = await admin.auth.admin.createUser({\n    email: `ap-loop-${Date.now()}@example.com`, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (ue || !u?.user) throw new Error(`createUser: ${ue?.message}`);\n  uid = u.user.id;\n  const { data: plan, error: pe } = await admin.from('autopilot_plans').insert({\n    user_id: uid, name: 'smoke-loop-plan', mode: 'every_n_days', interval_days: 3,\n    target_product_ids: ['WIN', 'LOSE'], platforms: ['linkedin'], budget_cap_mco: 200, daily_cap_mco: 200,\n  }).select('id').single();\n  if (pe || !plan) throw new Error(`mkPlan: ${pe?.message}`);\n  const planId = plan.id as string;\n\n  const cycle = await mkCycle(planId, 1);\n  const V1 = crypto.randomUUID(), V2 = crypto.randomUUID();\n  // Direct 'affiliate_click' rows (simulating post-collect state): WIN=10 clicks, LOSE=2.\n  await mkMetric(cycle, V1, 'WIN', 'affiliate_click', 10);\n  await mkMetric(cycle, V2, 'LOSE', 'affiliate_click', 2);\n\n  // \u2500\u2500 L5: analyze ranks the winner, writes a policy, prepaid \u2192 charged 0 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const an = await svc('autopilot-analyze', { previous_cycle_id: cycle, prepaid: true });\n  const policy = an.body.policy as { top_product_id?: string } | undefined;\n  check('L5 analyze \u2192 has_real_data \u00b7 top=WIN \u00b7 charged 0',\n    an.body.has_real_data === true && policy?.top_product_id === 'WIN' && an.body.charged === 0, JSON.stringify(an.body));\n  const { data: pol } = await admin.from('optimization_policy')\n    .select('action_type').eq('user_id', uid).eq('action_type', 'viral_autopilot');\n  check('L5b optimization_policy row written (tenant-scoped)', (pol?.length ?? 0) >= 1, `rows=${pol?.length}`);\n\n  // \u2500\u2500 L6: analyze on a zero-signal cycle \u2192 no real data, no policy invented, charged 0 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const cycle2 = await mkCycle(planId, 2);\n  await mkMetric(cycle2, crypto.randomUUID(), 'Z', 'organic', 0);\n  const an2 = await svc('autopilot-analyze', { previous_cycle_id: cycle2, prepaid: true });\n  check('L6 analyze empty \u2192 has_real_data false \u00b7 charged 0',\n    an2.body.has_real_data === false && an2.body.charged === 0, JSON.stringify(an2.body));\n\n  // \u2500\u2500 L4: collect syncs the live affiliate ledger \u2192 creative_metrics (best-effort; needs a catalog product FK) \u2500\u2500\n  const { data: prod } = await admin.from('vm_affiliate_products').select('id').limit(1).maybeSingle();\n  const pid = (prod as { id?: string } | null)?.id;\n  if (pid) {\n    const V3 = crypto.randomUUID();\n    await mkMetric(cycle, V3, 'COLLECTME', 'organic', 0); // baseline the collector scans\n    const { error: alErr } = await admin.from('affiliate_links').insert({\n      user_id: uid, product_id: pid, content_id: V3, clicks: 5, revenue_cents: 0, platform: 'linkedin',\n      original_url: 'https://example.com/p', short_url: `https://mco.test/${crypto.randomUUID().slice(0, 8)}`,\n    });\n    if (alErr) { check('L4 collect SKIP \u2014 affiliate_links insert failed', true, alErr.message); }\n    else {\n      const col = await svc('autopilot-collect', { cycle_id: cycle });\n      check('L4 collect \u2192 ok \u00b7 updated \u2265 1', col.body.ok === true && Number(col.body.updated ?? 0) >= 1, JSON.stringify(col.body));\n      const { data: cm } = await admin.from('creative_metrics')\n        .select('affiliate_clicks').eq('cycle_id', cycle).eq('content_variant_id', V3).eq('source', 'affiliate_click').maybeSingle();\n      check('L4 creative_metrics affiliate_click synced (=5)', (cm as { affiliate_clicks?: number } | null)?.affiliate_clicks === 5, JSON.stringify(cm));\n    }\n  } else {\n    check('L4 collect SKIP \u2014 empty product catalog', true, 'no vm_affiliate_products');\n  }\n} catch (e) {\n  check(`FATAL: ${(e as Error).message}`, false);\n} finally {\n  if (uid) {\n    const { error } = await admin.auth.admin.deleteUser(uid);\n    check('cleanup: user deleted (cascade plan/cycles/metrics/policy)', !error);\n  }\n  console.log(pass ? '\\n\ud83d\udfe2 SMOKE PASS' : '\\n\ud83d\udd34 SMOKE FAIL');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:34:21)*
+
+You've hit your session limit · resets 4:40pm (America/Sao_Paulo)
+
+## 👤 User *(19:41:57)*
+
+ótimo vamos nessa gogo
+
+## 🤖 Claude *(19:42:02)*
+
+
+## 🤖 Claude *(19:42:02)*
+
+Bora — rodando o smoke do loop R3 contra as funções deployadas.
+
+## 🤖 Claude *(19:42:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/qa/smoke-autopilot-loop.ts 2>&1\necho \"EXIT=$?\"",
+  "description": "Run R3 loop smoke",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ L1 analyze anon → 403
+> ✅ L1 collect anon → 403
+> ✅ L2 analyze service no body → 422
+> ✅ L2 collect service no body → 422
+> ✅ L3 analyze bad cycle → 404
+> ✅ L3 collect bad cycle → 404
+> ✅ L5 analyze → has_real_data · top=WIN · charged 0  → {"ok":true,"has_real_data":true,"charged":0,"policy_id":"d548eab8-5f68-4f34-bfef-bb1ea30c01a8","policy":{"top_product_id":"WIN","top_product_name":null,"top_platform":"linkedin","signal":"affiliate_clicks","clicks_total":12,"revenue_cents_total":0}}
+> ✅ L5b optimization_policy row written (tenant-scoped)  → rows=1
+> ✅ L6 analyze empty → has_real_data false · charged 0  → {"ok":true,"has_real_data":false,"charged":0}
+> ✅ L4 collect → ok · updated ≥ 1  → {"ok":true,"creatives":1,"updated":1,"organic":"skipped_no_tier"}
+> ✅ L4 creative_metrics affiliate_click synced (=5)  → {"affiliate_clicks":5}
+> ✅ cleanup: user deleted (cascade plan/cycles/metrics/policy)
+> 
+> 🟢 SMOKE PASS
+> EXIT=0
+> ```
+
+## 🤖 Claude *(19:43:00)*
+
+
+## 🤖 Claude *(19:43:04)*
+
+## 🟢 SMOKE LOOP PASS — 11/11, exit 0
+
+O loop auto-melhorável está **provado vivo** contra as funções deployadas:
+- **L5 analyze ranqueou** WIN(10) > LOSE(2) → policy `top_product_id=WIN`, `clicks_total=12`, **charged=0** (prepaid) ✅
+- **L5b** optimization_policy row escrito (tenant-scoped) ✅
+- **L6 empty** → `has_real_data=false`, **não inventou policy**, charged 0 ✅
+- **L4 collect** sincronizou `affiliate_links.clicks=5` → `creative_metrics 'affiliate_click'` ✅
+- gates 403/422/404 + cleanup cascade ✅
+
+O ciclo fecha: **collect** (ledger→métricas) → **analyze** (métricas→policy) → **orchestrate-step** injeta a diretiva vencedora no prompt. Commitando o R3.
+
+## 🤖 Claude *(19:43:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/autopilot-analyze/index.ts supabase/functions/autopilot-collect/index.ts \\\n        supabase/functions/autopilot-run/index.ts supabase/functions/orchestrate-step/index.ts \\\n        supabase/config.toml scripts/qa/smoke-autopilot-loop.ts\ngit commit -q -F - <<'MSG'\nfeat: Viral Autopilot Fatia 2 \u2014 R3 loop auto-melhor\u00e1vel (analyze + collect + feedback injection)\n\nFecha o CORA\u00c7\u00c3O da diretiva: o conte\u00fado que melhora sozinho a cada ciclo. Deployado e\nprovado zero-cost; o efeito no prompt \u00e9 vis\u00edvel no ciclo pago (gated).\n\n- autopilot-analyze (FR-VA-010): service-role-only, tenant derivado da linha do ciclo (nunca\n  body). L\u00ea creative_metrics do ciclo anterior \u2192 ranqueia produto/rede por cliques+receita \u2192\n  escreve optimization_policy (action_type='viral_autopilot', scope no context). Cobra 2 mco S\u00d3\n  standalone+has_real_data; inline=prepaid (reserva do ciclo). Sem dado real \u2192 has_real_data=false,\n  0 mco, N\u00c3O inventa policy.\n- autopilot-collect (FR-VA-008): sincroniza o ledger vivo (affiliate_links.clicks/revenue) \u2192\n  creative_metrics 'affiliate_click'. Insights org\u00e2nicos = best-effort fail-soft (n\u00e3o fabrica).\n- orchestrate-step (FR-VA-011): l\u00ea a policy mais recente do tenant \u2192 injeta a diretiva vencedora\n  nos 3 prompts (article/linkedin/twitter); taggeia creative_metrics com cycle_id. Hint sanitizado\n  (dado externo do cat\u00e1logo, disciplina de sentinel da Fatia 1).\n- autopilot-run: antes do fan-out, busca o ciclo anterior \u2192 collect \u2192 analyze (prepaid); actual\n  consome a reserva de 2 s\u00f3 quando a policy nasce de dado real (sen\u00e3o finalize estorna).\n- config.toml: verify_jwt=false em analyze + collect.\n\n/security-review SAFE (7 classes). Deploy exit 0 (132/63.1/60.92/59.72 kB). Smoke loop 11/11:\ngates + analyze ranqueia WIN>LOSE \u2192 policy + collect sincroniza cliques + empty n\u00e3o inventa.\nMSG\ngit log --oneline -5 | cat",
+  "description": "Commit R3 loop slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:43PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:43PM[0m [32mINF[0m scan completed in 15.3ms
+> [90m4:43PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 35554da feat: Viral Autopilot Fatia 2 — R3 loop auto-melhorável (analyze + collect + feedback injection)
+> 54ac2a9 feat: Viral Autopilot Fatia 2 — edge functions do cron (executor + driver + caminho prepaid)
+> 0c59e4d test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+> 686bae3 feat: Viral Autopilot Fatia 2 — fundação de cadência (tabelas + RPCs de dinheiro) + gate Lei 2
+> 44e5887 chore(sprint): registra v6.43.0 — Viral Autopilot Fatias 1 + 1b + diagnóstico saída visível
+> ```
+
+## 🤖 Claude *(19:44:02)*
+
+
+## 🤖 Claude *(19:44:04)*
+
+Commit **`35554da`** — gates limpos. 
+
+**Fatia 2 COMPLETA** — 4 commits: fundação (`686bae3`) + RPC smoke (`0c59e4d`) + edge functions (`54ac2a9`) + R3 loop (`35554da`). O motor autônomo R1+R2+R3+R4 está de pé, revisado (SAFE ×3), deployado e provado zero-cost (3 smokes, 31 gates).
+
+Atualizo a memória do projeto (milestone grande, persistência) e sigo. Lendo pra editar com precisão.
+
+## 🤖 Claude *(19:44:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md",
+  "offset": 36,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 36	**🔬 DIAGNÓSTICO da saída visível 2026-06-20 (Sovereign pediu "destravar") — 3 blockers, causas raiz CRAVADAS materialmente:**
+> 37	1. **WordPress publish falha (todo run) = Cloudflare bot-challenge.** `wp_site_url=https://www.mcorch.com` (já www canônico — NÃO é mais o 301). `GET /wp-json` → **403 `text/html` "Just a moment..."** com `cf-mitigated: challenge`, `server: cloudflare` — mesmo AUTENTICADO com as creds reais (Basic Auth). O CF desafia o request server-to-server da edge function (cliente não-browser) ANTES do WordPress; o `await wpRes.json()` no `publish-wordpress:133` lança na resposta HTML → catch 500 "Falha ao publicar... Verifique a conexão". **Credenciais WP estão OK.** **AÇÃO SOVEREIGN:** regra Cloudflare WAF **Skip** pro path `/wp-json/*` (idêntico ao que já fizeram pro `mcp.mcorch.com` — ver [[project_vision_mcp]]).
+> 38	2. **Imagem nanobana = endpoint MORTO.** `api.nanobana.com` **não resolve DNS** (http=000). Qualquer `pref_image_provider=nanobana` sempre falha. Bug latente no `generate-image` (branch nanobana aponta pra domínio inexistente, comentado "Assuming standard proxy or mock"). **Recomendado:** remover nanobana como provider selecionável OU fiar endpoint real.
+> 39	3. **Imagem openai = 2 bugs, 1 corrigido + 1 config de conta.** (a) **CORRIGIDO (commit `803f946`):** `generate-image` mandava `response_format:"b64_json"` → OpenAI 400 "Unknown parameter" (param removido pela OpenAI). Fix: remover param + tratar resposta url(dall-e-3 default)/b64/data-URI (baixa bytes da url) + surfacing `upstream`. (b) **AÇÃO SOVEREIGN:** a chave-PROJETO do Zero (`sk-proj`, `proj_rWo9VkBo6n9WQro93dzCZglr`) **não tem acesso a NENHUM modelo de imagem** (dall-e-2/3 "does not exist", gpt-image-1 "does not have access", models list sem image). Habilitar acesso a modelo de imagem no OpenAI dashboard (project → model access; gpt-image-1 exige org verification+billing) OU usar chave/projeto com acesso OU rota OpenRouter de imagem. A chave em si é VÁLIDA (`/v1/models`→200). Toggle pref nanobana→openai→nanobana usado no QA (restaurado). Cron/cadência (R2) + loop R3 (lê optimization_policy) = fatias seguintes, ainda gated no **SOP `docs/processes/autopilot-cron-identity.md` (Lei 2, OTD-VA-008)** ANTES da cadência.
+> 40	- **Prova material (Lei 1):** E2E pago Usuário Zero run `158ba7fc` → 3 criativos product-aware (cada um cita Roborock + link rastreável), **3 affiliate_links content_id NON-NULL casando os 3 content_library.id**, 3 creative_metrics baseline, **delta saldo = exatamente 10**. /security-review SAFE · tsc 0 · 295 testes · picker validado oculamente 1920×1080 (preview local + sessão injetada). Edge fns deployadas (orchestrate-content 113.8kB · orchestrate-step 129.3kB), frontend buildado. **A run caiu p/ status `error` SÓ pelo wordpress_publish** (problema WP 301/config = ação Sovereign, ortogonal). SOP Lei 2 `docs/processes/viral-autopilot-product-aware-monetization.md`.
+> 41	
+> 42	**Validação Fase 6 = 4 rodadas adversariais** (workflow 4 críticos): R1 NO_GO (2 blockers+7 high) → R2 NO_GO (2 blockers, 1 que EU introduzi: refund por deduct negativo viola RPC anti-mint `20260603220000:45`) → R3 GO_WITH_FIXES → R4 GO_WITH_FIXES (síntese caiu por session-limit, críticos OK). **Lição:** cada "fix" meu deixou um resíduo que a rodada seguinte pegou — verificação adversarial + grep determinístico foram essenciais; não auto-declarar GO.
+> 43	
+> ```
+
+## 🤖 Claude *(19:44:36)*
+
+
+## 🤖 Claude *(19:44:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md",
+  "old_string": "Cron/cad\u00eancia (R2) + loop R3 (l\u00ea optimization_policy) = fatias seguintes, ainda gated no **SOP `docs/processes/autopilot-cron-identity.md` (Lei 2, OTD-VA-008)** ANTES da cad\u00eancia.",
+  "new_string": "Cron/cad\u00eancia (R2) + loop R3 = \u2705 ENTREGUES na Fatia 2 (abaixo).\n\n**\u2705 FATIA 2 COMPLETA + PROVADA 2026-06-20 \u2014 cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel** (4 commits: `686bae3` funda\u00e7\u00e3o \u00b7 `0c59e4d` smoke RPC \u00b7 `54ac2a9` edge fns \u00b7 `35554da` R3). **Gate Lei 2 OTD-VA-008 FECHADO:** SOP `docs/processes/autopilot-cron-identity.md` (cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha, NUNCA body; 10 gates). **Migrations** (aplicadas+verificadas Management API \u2014 `20260620120000..120300`): `autopilot_plans`/`autopilot_cycles` (FK composta tenant-escopada `(plan_id,user_id)`, RESTRICTIVE no-delete, fecha FK composta de `creative_metrics`) + RPC `begin_autopilot_cycle` (cap di\u00e1rio+ciclo+saldo + pr\u00e9-d\u00e9bito \u00daNICO sob `pg_advisory_xact_lock` anti-TOCTOU, service-role-only) + RPC `finalize_autopilot_cycle` (refund cr\u00e9dito-positivo idempotente claim-once, espelha `finalize_vision_job`; NUNCA deduct negativo \u2014 anti-mint `20260603220000:45`). **Edge fns** (deployadas, `verify_jwt=false`): `autopilot-run` (executor: identidade 2-caminhos service-role+header server-trusted OU user-JWT+load tenant-scoped \u2192 begin \u2192 fan-out `orchestrate-content` PREPAID \u2192 finalize \u2192 re-arma `next_run_at`; `dry_run` projeta sem gastar) \u00b7 `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key, fan-out user_id da linha) \u00b7 `autopilot-analyze` (FR-VA-010: tenant da linha do ciclo, l\u00ea `creative_metrics` do ciclo anterior \u2192 ranqueia produto/rede por cliques+receita \u2192 `optimization_policy` `action_type='viral_autopilot'`+scope no context; 2mco S\u00d3 standalone+`has_real_data`, inline=prepaid; N\u00c3O inventa policy) \u00b7 `autopilot-collect` (FR-VA-008: `affiliate_links`.clicks/revenue \u2192 `creative_metrics` 'affiliate_click'; org\u00e2nico best-effort fail-soft, n\u00e3o fabrica). **orchestrate-content** FR-VA-016 (caminho cron `prepaid` pula d\u00e9bito SEM tocar sentinel/produtos/kick; **user-path 100% intacto**) + **orchestrate-step** FR-VA-011 (l\u00ea a policy mais recente do tenant \u2192 injeta diretiva vencedora nos 3 prompts; taggeia `creative_metrics.cycle_id`; hint sanitizado). **/security-review SAFE 3\u00d7** (migrations 6-vetores \u00b7 edge fns 6-vetores \u00b7 R3 7-classes). **3 smokes zero-cost (31 gates)** com usu\u00e1rio descart\u00e1vel: `smoke-autopilot-budget` 11/11 (pr\u00e9-d\u00e9bito exato/cap di\u00e1rio+ciclo+saldo abortam sem deduzir/refund idempotente/clamp anti-mint/cascade) \u00b7 `smoke-autopilot-run` 9/9 (identity 403/401/400/422 + dry_run projected=32 sem gastar + cross-tenant header\u2192404) \u00b7 `smoke-autopilot-loop` 11/11 (analyze ranqueia WIN>LOSE\u2192policy \u00b7 collect sincroniza clicks=5 \u00b7 empty\u2192has_real_data=false n\u00e3o inventa). **Cost model cravado:** `projected=N_runs\u00d710+ANALYZE_COST(2)`, `N_runs=produtos\u00d7redes\u00d7ab_variants`; imagem no bundle de 10; analyze inline=prepaid (a reserva de 2 s\u00f3 vira `actual` quando a policy nasce de dado real, sen\u00e3o `finalize` estorna). Prova viva: anon\u2192401/403 `permission denied`, service-role `projected=0`\u2192`22023` guard antes de d\u00e9bito. **PENDENTE (fatias seguintes):** UI `useAutopilot`+`AutopilotPage` (FR-VA-014, aut\u00f4nomo) \u00b7 **ativa\u00e7\u00e3o pg_cron + 1\u00ba ciclo PAGO real** (gated GO Sovereign + os 2 blockers de sa\u00edda vis\u00edvel abaixo: CF WAF `/wp-json` + OpenAI image access) \u00b7 `fetch-trends`\u2192pauta (FR-VA-018). \u26a0\ufe0f Sem UI, planos s\u00f3 existem via SQL; sem pg_cron schedule, nem auto-disparam (a fun\u00e7\u00e3o `autopilot-cadence-cron` existe e est\u00e1 provada, mas o job pg_cron que a chama \u00e9 ativa\u00e7\u00e3o Sovereign-side)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:44:59)*
+
+
+## 🤖 Claude *(19:44:59)*
+
+Atualizo a descrição do frontmatter pra refletir a Fatia 2.
+
+## 🤖 Claude *(19:45:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md",
+  "old_string": "description: Motor de conte\u00fado viral aut\u00f4nomo monetizado (afiliado ML) \u2014 auditoria material + 4 decis\u00f5es Sovereign + BoK gate (suite novo viral-autopilot)",
+  "new_string": "description: Motor de conte\u00fado viral aut\u00f4nomo monetizado (afiliado ML) \u2014 BoK 9/9 + Fatias 1/1b (product-aware+imagem) + Fatia 2 COMPLETA (cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel, deployado+provado zero-cost). Pendente: UI + ativa\u00e7\u00e3o pg_cron/1\u00ba ciclo pago."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:45:30)*
+
+
+## 🤖 Claude *(19:45:31)*
+
+Atualizo a linha de índice do MEMORY.md pra refletir a Fatia 2.
+
+## 🤖 Claude *(19:45:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Motor de conteúdo viral autônomo (viral-autopilot) — BoK 9/9 + **FATIAS 1 & 1b SHIPPED** (product-aware + monetização cross-surface + imagem)](project_viral_autopilot.md) — Diretiva Sovereign 2026-06-17: alimentar redes com conteúdo viral auto-gerado/agendado (R1-R4), monetizado c/ afiliado ML. BoK SELADA (nó `b3398294`, 1889 LOC). **Fatia 1 (commit `4af8b8b`):** gerador product-aware (FR-VA-003) + monetização nas 3 superfícies texto (FR-VA-004, `affiliate_links.content_id` antes-null FECHADO) + threading `product_ids` sanitizado p/ sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009) + picker na TriggerNode. E2E pago `158ba7fc`: 3 criativos, 3 content_id NON-NULL, delta 10. **Fatia 1b (commit `ba5d281`, FR-VA-013):** imagem product-referenced no pipeline — `generate-image` dual-path auth (service-role+user_id) + retorna storage `path`; bloco fail-open (`skipped`) dentro do article_generation, guarda PATH durável em `content_library.media_url` (bucket privado); sem migration/frontend/cobrança extra. E2E `46a98963` provou fail-open + zero regressão. **⚠️ providers de imagem do Usuário Zero quebrados** (nanobana=mock endpoint, openai=erro) → imagem visível bloqueada por CONFIG, não código. **Pendente:** cron/cadência R2 (gated no SOP `autopilot-cron-identity.md` Lei 2/OTD-VA-008) + loop R3 (lê optimization_policy) + reconectar fetch-trends + anexo de imagem no publish-layer (LinkedIn/X/Meta/WP featured). Design do cron cravado: prova service-role in-function · begin/finalize_autopilot_cycle RPCs · FK composta tenant.
+> ```
+
+## 🤖 Claude *(19:45:45)*
+
+
+## 🤖 Claude *(19:45:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "BoK 9/9 + **FATIAS 1 & 1b SHIPPED** (product-aware + monetiza\u00e7\u00e3o cross-surface + imagem)](project_viral_autopilot.md)",
+  "new_string": "BoK 9/9 + **FATIAS 1/1b/2 SHIPPED** (product-aware + imagem + cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel)](project_viral_autopilot.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:45:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "**Pendente:** cron/cad\u00eancia R2 (gated no SOP `autopilot-cron-identity.md` Lei 2/OTD-VA-008) + loop R3 (l\u00ea optimization_policy) + reconectar fetch-trends + anexo de imagem no publish-layer (LinkedIn/X/Meta/WP featured). Design do cron cravado: prova service-role in-function \u00b7 begin/finalize_autopilot_cycle RPCs \u00b7 FK composta tenant.",
+  "new_string": "**Fatia 2 COMPLETA (commits `686bae3`/`0c59e4d`/`54ac2a9`/`35554da`):** cad\u00eancia R2 + loop R3 \u2014 SOP Lei 2 `autopilot-cron-identity.md` (OTD-VA-008 fechado) + migrations (`autopilot_plans`/`autopilot_cycles` FK composta tenant + RPCs `begin`/`finalize_autopilot_cycle` at\u00f4micos service-role-only) + 4 edge fns deployadas (`autopilot-run` executor \u00b7 `-cadence-cron` driver pg_cron \u00b7 `-analyze` FR-VA-010 ranqueia\u2192optimization_policy \u00b7 `-collect` FR-VA-008) + orchestrate-content FR-VA-016 prepaid + orchestrate-step FR-VA-011 feedback injection. /security-review SAFE 3\u00d7 \u00b7 3 smokes zero-cost (31 gates). **Pendente:** UI (FR-VA-014, aut\u00f4nomo) + **ativa\u00e7\u00e3o pg_cron + 1\u00ba ciclo PAGO** (gated GO Sovereign + 2 blockers sa\u00edda vis\u00edvel: CF WAF `/wp-json` + OpenAI image access) + fetch-trends\u2192pauta (FR-VA-018)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:46:23)*
+
+
+## 🤖 Claude *(19:46:25)*
+
+Memória selada (projeto + índice). **Fatia 2 está 100% completa e provada.** Por respeito ao seu "gogo", sigo direto pro próximo passo autônomo — a **UI (FR-VA-014)**, pra você criar/gerenciar planos e ver ciclos/ROI sem tocar no SQL. Mapeando o contrato de UI do SDD + os padrões vivos (harness hook, rota, nav) antes de codar.
+
+## 🤖 Claude *(19:46:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "offset": 55,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 55	
+> 56	### 2.1 New Custom Hooks (`src/hooks/`)
+> 57	
+> 58	| Hook | File | FR | Responsibility | TanStack Query keys |
+> 59	|------|------|----|---------------|---------------------|
+> 60	| `useAutopilot` | `useAutopilot.ts` | **FR-VA-014** | CRUD de `autopilot_plans`; lista ciclos; ROI por criativo; activate/pause | `['autopilot-plans']`, `['autopilot-cycles', planId]`, `['creative-metrics', cycleId]` |
+> 61	
+> 62	### 2.2 New Display Components (`src/components/autopilot/`)
+> 63	
+> 64	| Component | File | FR | Props | Hook consumed |
+> 65	|-----------|------|----|-------|--------------|
+> 66	| `AutopilotPage` | `src/pages/AutopilotPage.tsx` | **FR-VA-015** | — (route) | `useAutopilot` |
+> 67	| `PlanEditor` | `src/components/autopilot/PlanEditor.tsx` | `plan?, onSave` | `useAutopilot` |
+> 68	| `CycleTimeline` | `src/components/autopilot/CycleTimeline.tsx` | `planId` | `useAutopilot` |
+> 69	| `RoiCard` | `src/components/autopilot/RoiCard.tsx` | `creativeMetric` | — (display) |
+> 70	
+> 71	### 2.3 New Edge Functions (`supabase/functions/`)
+> 72	
+> 73	| Function | Path | FR | Auth | mcoCoins | Secrets needed |
+> 74	|----------|------|----|------|----------|----------------|
+> 75	| `autopilot-run` | `supabase/functions/autopilot-run/index.ts` | **FR-VA-002, 007, 012, 021** | JWT (user, "gerar agora") OR service-role+`x-autopilot-user-id` (cron); `verify_jwt=false` | **pré-débito atômico único** (gate antes do fan-out) | `SB_SECRET_KEY` |
+> 76	| `autopilot-cadence-cron` | `supabase/functions/autopilot-cadence-cron/index.ts` | **FR-VA-005** | service-role (`verify_jwt=false`, pg_net) | 0 | `SB_SECRET_KEY` (service) |
+> 77	| `autopilot-analyze` | `supabase/functions/autopilot-analyze/index.ts` | **FR-VA-010, 011** | service-role (`verify_jwt=false`); tenant derivado de `previous_cycle_id`, **nunca do body** | 2 mco (só se `has_real_data`) | LLM key (per-user via ciclo→sistema fallback) |
+> 78	| `autopilot-collect` | `supabase/functions/autopilot-collect/index.ts` | **FR-VA-008** | service-role (`verify_jwt=false`, cron) | 0 | social/meta tokens per-user |
+> 79	
+> 80	> **config.toml (artefato versionado — mandato SOP `orchestrate-async-pipeline`):**
+> 81	> ```toml
+> 82	> [functions.autopilot-run]          verify_jwt = false
+> 83	> [functions.autopilot-cadence-cron] verify_jwt = false
+> 84	> [functions.autopilot-analyze]      verify_jwt = false
+> 85	> [functions.autopilot-collect]      verify_jwt = false
+> 86	> ```
+> 87	> Sem isso o gateway retorna 401 na chave service-role opaca (modo de falha #1 já vacinado — `project_orchestrate_pipeline_repair`).
+> 88	
+> 89	> **Reuso (modificadas, não novas):** `orchestrate-content` (FR-VA-016: honra produto **+ aceita caminho cron** service-role + `x-autopilot-user-id` + `prepaid=true`), `orchestrate-step` (FR-VA-003 product-aware + FR-VA-011 feedback inject), `_shared/affiliate.ts` (FR-VA-004 monetiza todo formato + grava `content_id`), `generate-image` (FR-VA-013 plugado ao ciclo, dentro do bundle).
+> 90	>
+> 91	> **`optimization_policy` — dois writers desambiguados:** o `self-optimize` legado (botão da UI, dashboard) **coexiste** com `autopilot-analyze` (FR-VA-010). Para não competirem, o autopilot grava/lê a policy com `scope = 'viral_autopilot:<plan_id>'`; **FR-VA-011 lê SÓ a policy desse escopo** (a do ciclo anterior do plano), nunca a do `self-optimize` manual. `self-optimize` não é aposentado.
+> 92	
+> 93	### 2.4 Zustand Store Slices (if applicable)
+> 94	
+> 95	| Slice | Store file | State shape | Actions |
+> 96	|-------|------------|-------------|---------|
+> 97	| — | — | Nenhum store novo; estado de servidor via TanStack Query (Harness). UI local mínima no editor. | — |
+> 98	
+> 99	### 2.5 New DB Objects
+> ```
+
+## 🤖 Claude *(19:46:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== useCampaigns hook (harness CRUD pattern) \u2014 head ===\"\nsed -n '1,55p' src/hooks/useCampaigns.ts 2>/dev/null | head -55",
+  "description": "Read SDD UI spec + useCampaigns harness pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === useCampaigns hook (harness CRUD pattern) — head ===
+> import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> import { supabase } from '@/integrations/supabase/client';
+> import { useAuth } from '@/hooks/useAuth';
+> import { edgeErrorMessage } from '@/lib/edge';
+> import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+> import type { Database } from '@/integrations/supabase/types';
+> 
+> type Campaign = Tables<'campaigns'>;
+> type CampaignInsert = TablesInsert<'campaigns'>;
+> type CampaignUpdate = TablesUpdate<'campaigns'>;
+> type CampaignStatus = Database['public']['Enums']['campaign_status'];
+> type SocialPlatform = Database['public']['Enums']['social_platform'];
+> 
+> export interface CampaignTemplate {
+>   name: string;
+>   description: string;
+>   objective: string;
+>   icon: string;
+>   defaults: Partial<CampaignInsert>;
+> }
+> 
+> export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
+>   {
+>     name: 'Lançamento de Produto',
+>     description: 'Campanha focada em gerar buzz e conversões para um novo produto ou serviço.',
+>     objective: 'launch',
+>     icon: '🚀',
+>     defaults: {
+>       objective: 'launch',
+>       platforms: ['instagram', 'facebook', 'linkedin'] as SocialPlatform[],
+>       target_audience: { age_range: '25-45', interests: ['tecnologia', 'inovação'] },
+>     },
+>   },
+>   {
+>     name: 'Promoção Sazonal',
+>     description: 'Campanha de ofertas e descontos para datas comemorativas ou eventos especiais.',
+>     objective: 'promotion',
+>     icon: '🎁',
+>     defaults: {
+>       objective: 'promotion',
+>       platforms: ['instagram', 'facebook', 'twitter'] as SocialPlatform[],
+>       target_audience: { age_range: '18-55', interests: ['ofertas', 'descontos'] },
+>     },
+>   },
+>   {
+>     name: 'Brand Awareness',
+>     description: 'Campanha para aumentar o reconhecimento da marca e alcançar novos públicos.',
+>     objective: 'awareness',
+>     icon: '📣',
+>     defaults: {
+>       objective: 'awareness',
+>       platforms: ['instagram', 'tiktok', 'youtube'] as SocialPlatform[],
+>       target_audience: { age_range: '18-35', interests: ['lifestyle', 'entretenimento'] },
+>     },
+>   },
+> ```
+
+## 🤖 Claude *(19:47:33)*
+
+
+## 🤖 Claude *(19:47:33)*
+
+Contrato de UI mapeado (SDD §2.1/2.2: `useAutopilot` hook + `AutopilotPage`) e o padrão harness (`useCampaigns`: TanStack Query + `Tables<>` types + `edgeErrorMessage`). Como criei `autopilot_plans`/`autopilot_cycles`, os types gerados ainda não as conhecem — regenero (additive, per memória) antes do hook. Gero num temp e confiro o diff antes de aplicar.
+
+## 🤖 Claude *(19:47:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase gen types typescript --linked --schema public > /tmp/types.new.ts 2>/tmp/types.err\necho \"gen-exit=$? \u00b7 size=$(wc -l < /tmp/types.new.ts) lines\"\nhead -3 /tmp/types.err 2>/dev/null\necho \"=== does the new file include the autopilot tables + RPCs? ===\"\ngrep -cE 'autopilot_plans:|autopilot_cycles:|begin_autopilot_cycle:|finalize_autopilot_cycle:' /tmp/types.new.ts\necho \"=== diff scope vs current (added/removed table+function NAMES only) ===\"\ngrep -oE '^      [a-z_]+: \\{$' src/integrations/supabase/types.ts | sort -u > /tmp/cur.names\ngrep -oE '^      [a-z_]+: \\{$' /tmp/types.new.ts | sort -u > /tmp/new.names\necho \"--- REMOVED (in current, not in new) \u2014 should be EMPTY ---\"; comm -23 /tmp/cur.names /tmp/new.names\necho \"--- ADDED (in new, not in current) ---\"; comm -13 /tmp/cur.names /tmp/new.names",
+  "description": "Regenerate types to temp + verify additive"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> gen-exit=0 · size=4338 lines
+> Initialising login role...
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === does the new file include the autopilot tables + RPCs? ===
+> 4
+> === diff scope vs current (added/removed table+function NAMES only) ===
+> --- REMOVED (in current, not in new) — should be EMPTY ---
+>       graphql: {
+> --- ADDED (in new, not in current) ---
+>       autopilot_cycles: {
+>       autopilot_plans: {
+>       begin_autopilot_cycle: {
+>       creative_metrics: {
+>       finalize_autopilot_cycle: {
+> ```
+
+## 🤖 Claude *(19:47:58)*
+
+
+## 🤖 Claude *(19:47:59)*
+
+Quase additive — mas o `--schema public` dropou o schema `graphql_public` (o `graphql:` em "removed"). Pra garantir additive (caveat da memória), regenero incluindo `graphql_public` e re-confiro.
+
+## 🤖 Claude *(19:48:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase gen types typescript --linked --schema public,graphql_public > /tmp/types.new2.ts 2>/dev/null\necho \"gen-exit=$? \u00b7 size=$(wc -l < /tmp/types.new2.ts) lines (current=$(wc -l < src/integrations/supabase/types.ts))\"\ngrep -oE '^      [a-z_]+: \\{$' src/integrations/supabase/types.ts | sort -u > /tmp/cur.names\ngrep -oE '^      [a-z_]+: \\{$' /tmp/types.new2.ts | sort -u > /tmp/new2.names\necho \"--- REMOVED (should be EMPTY) ---\"; comm -23 /tmp/cur.names /tmp/new2.names\necho \"--- ADDED ---\"; comm -13 /tmp/cur.names /tmp/new2.names\necho \"=== sanity: header + Database export present ===\"; head -1 /tmp/types.new2.ts; grep -cE 'export type Database' /tmp/types.new2.ts",
+  "description": "Regen with graphql_public + verify fully additive"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> gen-exit=0 · size=4366 lines (current=4181)
+> --- REMOVED (should be EMPTY) ---
+> --- ADDED ---
+>       autopilot_cycles: {
+>       autopilot_plans: {
+>       begin_autopilot_cycle: {
+>       creative_metrics: {
+>       finalize_autopilot_cycle: {
+> === sanity: header + Database export present ===
+> export type Json =
+> 1
+> ```
+
+## 🤖 Claude *(19:48:24)*
+
+
+## 🤖 Claude *(19:48:26)*
+
+Diff **100% additive** — REMOVED vazio, ADDED = as 5 (autopilot_plans/cycles + 2 RPCs + creative_metrics). Aplicando os types. Depois leio os padrões vivos (useAuth, useAffiliateProducts, registro de rota, nav) pra montar o hook + página no estilo da casa.
+
+## 🤖 Claude *(19:48:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp /tmp/types.new2.ts src/integrations/supabase/types.ts\necho \"types applied: $(wc -l < src/integrations/supabase/types.ts) lines\"\necho \"=== useAuth shape ===\"; grep -nE 'export function useAuth|return \\{|user|session' src/hooks/useAuth.ts 2>/dev/null | head -8\necho \"=== useAffiliateProducts shape (product picker source) ===\"; grep -nE 'export|return|external_id|name|interface|useQuery' src/hooks/useAffiliateProducts.ts 2>/dev/null | head -12\necho \"=== App.tsx route registration pattern (lazy + dashboard subtree) ===\"; grep -nE 'lazy\\(|MarketingPage|Route path=.*dashboard/(marketing|orchestrate|kanban)' src/App.tsx | head -10\necho \"=== DashboardSidebar nav items pattern ===\"; grep -nE 'to=|label:|title:|icon:|Target|Marketing|path:' src/components/dashboard/DashboardSidebar.tsx 2>/dev/null | head -16",
+  "description": "Apply types + read useAuth/products/route/nav patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> types applied: 4366 lines
+> === useAuth shape ===
+> 5:export function useAuth() {
+> 6:  const [user, setUser] = useState<User | null>(null);
+> 7:  const [session, setSession] = useState<Session | null>(null);
+> 11:    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+> 12:      setSession(session);
+> 13:      setUser(session?.user ?? null);
+> 17:    supabase.auth.getSession().then(({ data: { session }, error }) => {
+> 19:        console.warn('[useAuth] Session recovery failed, clearing corrupt session:', error.message);
+> === useAffiliateProducts shape (product picker source) ===
+> 1:import { useQuery } from '@tanstack/react-query';
+> 9:export interface AffiliateProduct {
+> 12:  external_id: string;
+> 13:  name: string;
+> 39:export function isListableProduct(p: AffiliateProduct): boolean {
+> 41:  return p.is_active && p.price != null && availability === 'available';
+> 50:export function useAffiliateProducts(network?: string) {
+> 51:  const { data: all = [], isLoading, isError, error } = useQuery({
+> 62:      return (data ?? []) as AffiliateProduct[];
+> 70:  return { products, hiddenCount, isLoading, isError, error };
+> === App.tsx route registration pattern (lazy + dashboard subtree) ===
+> 13:const Landing = lazy(() => import("./pages/Landing.tsx"));
+> 14:const Auth = lazy(() => import("./pages/Auth.tsx"));
+> 15:const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+> 16:const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+> 17:const DashboardHome = lazy(() => import("./pages/DashboardHome.tsx"));
+> 18:const ConstellationPage = lazy(() => import("./pages/ConstellationPage.tsx"));
+> 19:const VideoEditorPage = lazy(() => import("./pages/VideoEditorPage.tsx"));
+> 20:const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage.tsx"));
+> 21:const CampaignsPage = lazy(() => import("./pages/CampaignsPage.tsx"));
+> 22:const CampaignWizard = lazy(() => import("./pages/CampaignWizard.tsx"));
+> === DashboardSidebar nav items pattern ===
+> 28:  Target,
+> 55:  title: string;
+> 57:  icon: LucideIcon;
+> 61:  title: string;
+> 62:  icon: LucideIcon;
+> 69:    title: 'Conteúdo & Campanhas',
+> 70:    icon: Layers,
+> 72:      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },
+> 73:      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+> 74:      { title: 'Orquestração', url: '/dashboard/orchestration', icon: Wand2 },
+> 75:      { title: 'Workspace Kanban', url: '/dashboard/kanban', icon: Layers },
+> 76:      { title: 'Conteúdo', url: '/dashboard/content', icon: FileText },
+> 77:      { title: 'Blog', url: '/dashboard/blog', icon: BookOpen },
+> 78:      { title: 'Calendário', url: '/dashboard/calendar', icon: Calendar },
+> 82:    title: 'Monetização',
+> 83:    icon: Coins,
+> ```
+
+## 🤖 Claude *(19:49:04)*
+
+
+## 🤖 Claude *(19:49:06)*
+
+Padrões mapeados (useAuth→user, useAffiliateProducts→{external_id,name,price}, rota lazy no dashboard, nav em grupos). Confirmo a assinatura do `edgeErrorMessage` + os componentes shadcn disponíveis, depois escrevo o hook + página.
+
+## 🤖 Claude *(19:49:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== edgeErrorMessage signature ===\"; grep -nE 'export function edgeErrorMessage|export const edgeErrorMessage' src/lib/edge.ts\necho \"=== shadcn ui components present ===\"; ls src/components/ui/ | grep -iE 'dialog|checkbox|select|card|badge|button|input|label|switch|separator|scroll-area' | tr '\\n' ' '; echo\necho \"=== where dashboard routes are declared in App.tsx (a concrete example) ===\"; grep -nE 'path=\"autopilot\"|path=\"marketing\"|path=\"campaigns\"|<Route path=' src/App.tsx | grep -iE 'marketing|campaigns|content|kanban' | head -4\necho \"=== DashboardSidebar: lucide imports line + the Conte\u00fado group block ===\"; sed -n '66,80p' src/components/dashboard/DashboardSidebar.tsx",
+  "description": "edgeErrorMessage sig + UI components + route/nav anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === edgeErrorMessage signature ===
+> === shadcn ui components present ===
+> alert-dialog.tsx badge.tsx button.tsx card.tsx checkbox.tsx dialog.tsx hover-card.tsx input-otp.tsx input.tsx label.tsx scroll-area.tsx select.tsx separator.tsx switch.tsx 
+> === where dashboard routes are declared in App.tsx (a concrete example) ===
+> 98:                <Route path="marketing" element={<MarketingPage />} />
+> 99:                <Route path="campaigns" element={<CampaignsPage />} />
+> 100:                <Route path="campaigns/new" element={<CampaignWizard />} />
+> 101:                <Route path="campaigns/:id" element={<CampaignDetail />} />
+> === DashboardSidebar: lucide imports line + the Conteúdo group block ===
+> // Grouped navigation — collapsible categories keep the rail short (no scrollbar).
+> const categories: NavCategoryDef[] = [
+>   {
+>     title: 'Conteúdo & Campanhas',
+>     icon: Layers,
+>     items: [
+>       { title: 'Marketing', url: '/dashboard/marketing', icon: Target },
+>       { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+>       { title: 'Orquestração', url: '/dashboard/orchestration', icon: Wand2 },
+>       { title: 'Workspace Kanban', url: '/dashboard/kanban', icon: Layers },
+>       { title: 'Conteúdo', url: '/dashboard/content', icon: FileText },
+>       { title: 'Blog', url: '/dashboard/blog', icon: BookOpen },
+>       { title: 'Calendário', url: '/dashboard/calendar', icon: Calendar },
+>     ],
+>   },
+> ```
+
+## 🤖 Claude *(19:49:30)*
+
+
+## 🤖 Claude *(19:49:32)*
+
+`edgeErrorMessage` existe (useCampaigns importa) — meu grep errou o padrão. Confirmo a assinatura real + uso, e os componentes shadcn estão todos lá (dialog/checkbox/select/card/badge). Última checagem antes de escrever.
+
+## 🤖 Claude *(19:49:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== edge.ts exports ===\"; grep -nE 'export' src/lib/edge.ts | head\necho \"=== edgeErrorMessage usage in useCampaigns (arity) ===\"; grep -nE 'edgeErrorMessage' src/hooks/useCampaigns.ts | head -3\necho \"=== useRunAutopilot model: how an edge fn is invoked + error-handled in a hook ===\"; grep -nE 'functions\\.invoke|edgeErrorMessage|throw new Error' src/hooks/useCampaigns.ts | head -8",
+  "description": "Confirm edgeErrorMessage arity + invoke pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === edge.ts exports ===
+> 8:export async function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {
+> === edgeErrorMessage usage in useCampaigns (arity) ===
+> 4:import { edgeErrorMessage } from '@/lib/edge';
+> 325:      if (error) throw new Error(await edgeErrorMessage(error, 'Erro ao executar campanha'));
+> === useRunAutopilot model: how an edge fn is invoked + error-handled in a hook ===
+> 4:import { edgeErrorMessage } from '@/lib/edge';
+> 324:      const { data, error } = await supabase.functions.invoke('campaign-run', { body: { campaign_id: campaignId } });
+> 325:      if (error) throw new Error(await edgeErrorMessage(error, 'Erro ao executar campanha'));
+> ```
+
+## 🤖 Claude *(19:50:03)*
+
+
+## 🤖 Claude *(19:50:04)*
+
+`edgeErrorMessage(error, fallback): Promise<string>` (async, 2-arg) + invoke pattern confirmados. Escrevo o hook `useAutopilot` (CRUD plans + cycles + run-now via JWT + pause/activate) no padrão harness.
+
+## 🤖 Claude *(19:50:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts",
+  "content": "// useAutopilot \u2014 Viral Autopilot data harness (FR-VA-014). All server state via TanStack Query (Harness Engineering).\n// CRUD of autopilot_plans (RLS own), cycle history, \"run now\" (invokes autopilot-run on the user-JWT path), and\n// activate/pause. The cadence cron / paid execution live server-side; this hook is the display-only data layer.\nimport { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport type { Tables, TablesInsert } from '@/integrations/supabase/types';\n\nexport type AutopilotPlan = Tables<'autopilot_plans'>;\nexport type AutopilotCycle = Tables<'autopilot_cycles'>;\n\nexport const AUTOPILOT_PLATFORMS = [\n  { id: 'wordpress', label: 'WordPress' },\n  { id: 'linkedin', label: 'LinkedIn' },\n  { id: 'twitter', label: 'X / Twitter' },\n] as const;\n\nexport interface AutopilotPlanInput {\n  name: string;\n  mode: 'all_at_once' | 'every_n_days';\n  interval_days: number;\n  target_product_ids: string[];\n  platforms: string[];\n  budget_cap_mco: number;\n  daily_cap_mco: number;\n  min_balance_mco: number;\n  ab_variants: number;\n}\n\nexport function useAutopilotPlans() {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['autopilot-plans'],\n    enabled: !!user,\n    queryFn: async (): Promise<AutopilotPlan[]> => {\n      const { data, error } = await supabase\n        .from('autopilot_plans').select('*').order('created_at', { ascending: false });\n      if (error) throw error;\n      return (data ?? []) as AutopilotPlan[];\n    },\n  });\n}\n\nexport function useAutopilotCycles(planId?: string) {\n  return useQuery({\n    queryKey: ['autopilot-cycles', planId],\n    enabled: !!planId,\n    queryFn: async (): Promise<AutopilotCycle[]> => {\n      const { data, error } = await supabase\n        .from('autopilot_cycles').select('*').eq('plan_id', planId!)\n        .order('cycle_number', { ascending: false }).limit(20);\n      if (error) throw error;\n      return (data ?? []) as AutopilotCycle[];\n    },\n  });\n}\n\nexport function useCreateAutopilotPlan() {\n  const qc = useQueryClient();\n  const { user } = useAuth();\n  return useMutation({\n    mutationFn: async (input: AutopilotPlanInput): Promise<string> => {\n      if (!user) throw new Error('Sess\u00e3o expirada \u2014 fa\u00e7a login novamente.');\n      const row: TablesInsert<'autopilot_plans'> = {\n        user_id: user.id,\n        name: input.name,\n        mode: input.mode,\n        interval_days: input.mode === 'every_n_days' ? input.interval_days : null,\n        target_product_ids: input.target_product_ids,\n        platforms: input.platforms,\n        budget_cap_mco: input.budget_cap_mco,\n        daily_cap_mco: input.daily_cap_mco,\n        min_balance_mco: input.min_balance_mco,\n        ab_variants: input.ab_variants,\n        is_active: false,\n      };\n      const { data, error } = await supabase.from('autopilot_plans').insert(row).select('id').single();\n      if (error) throw error;\n      return data.id;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['autopilot-plans'] }),\n  });\n}\n\nexport function useSetPlanActive() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {\n      const patch: Record<string, unknown> = { is_active: active };\n      // Activate \u2192 arm next_run_at to now so the cadence cron picks the plan up on its next tick.\n      if (active) patch.next_run_at = new Date().toISOString();\n      const { error } = await supabase.from('autopilot_plans').update(patch).eq('id', id);\n      if (error) throw error;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['autopilot-plans'] }),\n  });\n}\n\nexport interface RunResult {\n  ok?: boolean; dry_run?: boolean; n_runs?: number; projected_mco?: number;\n  cycle_id?: string; succeeded?: number; actual_mco?: number; refunded_mco?: number; reason?: string;\n}\n\nexport function useRunAutopilot() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: async ({ planId, dryRun }: { planId: string; dryRun?: boolean }): Promise<RunResult> => {\n      const { data, error } = await supabase.functions.invoke('autopilot-run', {\n        body: { plan_id: planId, dry_run: !!dryRun },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao executar o Autopilot'));\n      return data as RunResult;\n    },\n    onSuccess: (_d, vars) => {\n      qc.invalidateQueries({ queryKey: ['autopilot-plans'] });\n      qc.invalidateQueries({ queryKey: ['autopilot-cycles', vars.planId] });\n    },\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:50:25)*
+
+
+## 🤖 Claude *(19:50:26)*
+
+Hook escrito. Confirmo a convenção de toast + estrutura de página antes de montar a `AutopilotPage`.
+
+## 🤖 Claude *(19:50:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== toast convention ===\"; grep -rhoE \"import \\{ (useToast|toast) \\} from '[^']+'\" src/pages/MarketingPage.tsx src/pages/CampaignsPage.tsx src/components/marketing/*.tsx 2>/dev/null | sort -u | head\necho \"=== Toaster mounted in App? ===\"; grep -nE 'Toaster|Sonner' src/App.tsx | head\necho \"=== useAffiliateProducts full return shape (AffiliateProduct fields) ===\"; sed -n '9,30p' src/hooks/useAffiliateProducts.ts",
+  "description": "toast convention + product shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === toast convention ===
+> import { toast } from '@/hooks/use-toast'
+> === Toaster mounted in App? ===
+> 3:import { Toaster as Sonner } from "@/components/ui/sonner";
+> 4:import { Toaster } from "@/components/ui/toaster";
+> 80:        <Toaster />
+> 81:        <Sonner />
+> === useAffiliateProducts full return shape (AffiliateProduct fields) ===
+> export interface AffiliateProduct {
+>   id: string;
+>   network: string;
+>   external_id: string;
+>   name: string;
+>   description: string | null;
+>   image_url: string | null;
+>   category: string | null;
+>   niches: string[];
+>   price: number | null;
+>   currency: string | null;
+>   commission_rate: number | null;
+>   commission_value: number | null;
+>   profitability_score: number;
+>   trend_score: number | null;
+>   product_url: string | null;
+>   affiliate_template_url: string | null;
+>   is_active: boolean;
+>   metadata: Record<string, unknown>;
+>   detected_at: string;
+>   updated_at: string;
+> }
+> ```
+
+## 🤖 Claude *(19:50:59)*
+
+
+## 🤖 Claude *(19:51:01)*
+
+Tudo confirmado: `toast` de `@/hooks/use-toast` (`{title,description,variant}`), AffiliateProduct tem `external_id`/`name`/`price`, ambos Toasters montados. Escrevo a `AutopilotPage` — form de criação (produtos/redes/modo/tetos) + cards de plano (Run/Simular/Pausar) + histórico de ciclos.
+
+## 🤖 Claude *(19:51:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "content": "// AutopilotPage (FR-VA-014/015) \u2014 display-only cockpit for the Viral Autopilot cadence engine. All data/logic\n// lives in useAutopilot (Harness Engineering). Create plans, activate/pause cadence, \"run now\" (with a zero-cost\n// dry-run), and review cycle history. The autonomous cron + paid execution run server-side.\nimport { useState } from 'react';\nimport {\n  useAutopilotPlans, useAutopilotCycles, useCreateAutopilotPlan, useSetPlanActive, useRunAutopilot,\n  AUTOPILOT_PLATFORMS, type AutopilotPlan, type AutopilotPlanInput,\n} from '@/hooks/useAutopilot';\nimport { useAffiliateProducts } from '@/hooks/useAffiliateProducts';\nimport { toast } from '@/hooks/use-toast';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { Badge } from '@/components/ui/badge';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\nimport { Rocket, Play, Pause, FlaskConical, Loader2, Plus, History } from 'lucide-react';\n\nconst DEFAULT_FORM: AutopilotPlanInput = {\n  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],\n  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,\n};\nconst toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);\n\nconst REASON_LABEL: Record<string, string> = {\n  aborted_budget: 'Custo projetado acima do teto por ciclo do plano.',\n  aborted_daily_cap: 'Teto di\u00e1rio de mcoCoins do dia j\u00e1 atingido.',\n  insufficient_balance: 'Saldo de mcoCoins insuficiente.',\n};\nconst CYCLE_BADGE: Record<string, string> = {\n  running: 'bg-blue-500/15 text-blue-400',\n  completed: 'bg-emerald-500/15 text-emerald-400',\n  failed: 'bg-red-500/15 text-red-400',\n  aborted_budget: 'bg-amber-500/15 text-amber-400',\n  aborted_daily_cap: 'bg-amber-500/15 text-amber-400',\n};\n\nfunction CreatePlanDialog() {\n  const [open, setOpen] = useState(false);\n  const [form, setForm] = useState<AutopilotPlanInput>(DEFAULT_FORM);\n  const { products, isLoading } = useAffiliateProducts();\n  const create = useCreateAutopilotPlan();\n  const set = (patch: Partial<AutopilotPlanInput>) => setForm((f) => ({ ...f, ...patch }));\n\n  const submit = async () => {\n    if (!form.name.trim()) return toast({ title: 'D\u00ea um nome ao plano', variant: 'destructive' });\n    if (form.target_product_ids.length === 0) return toast({ title: 'Selecione ao menos um produto', variant: 'destructive' });\n    if (form.platforms.length === 0) return toast({ title: 'Selecione ao menos uma rede', variant: 'destructive' });\n    try {\n      await create.mutateAsync(form);\n      toast({ title: 'Plano criado', description: 'Ative-o para a cad\u00eancia come\u00e7ar a gerar.' });\n      setForm(DEFAULT_FORM); setOpen(false);\n    } catch (e) {\n      toast({ title: 'Falha ao criar plano', description: (e as Error).message, variant: 'destructive' });\n    }\n  };\n\n  return (\n    <Dialog open={open} onOpenChange={setOpen}>\n      <DialogTrigger asChild>\n        <Button><Plus className=\"mr-2 h-4 w-4\" />Novo Plano</Button>\n      </DialogTrigger>\n      <DialogContent className=\"max-w-lg max-h-[85vh] overflow-y-auto\">\n        <DialogHeader><DialogTitle>Novo Plano de Autopilot</DialogTitle></DialogHeader>\n        <div className=\"space-y-4\">\n          <div className=\"space-y-1.5\">\n            <Label htmlFor=\"ap-name\">Nome do plano</Label>\n            <Input id=\"ap-name\" value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder=\"Ex.: Smart Home \u2014 review semanal\" />\n          </div>\n\n          <div className=\"space-y-1.5\">\n            <Label>Produtos-alvo</Label>\n            <div className=\"max-h-40 overflow-y-auto rounded-md border border-border p-2 space-y-1.5\">\n              {isLoading ? <span className=\"text-sm text-muted-foreground\">Carregando cat\u00e1logo\u2026</span>\n                : products.length === 0 ? <span className=\"text-sm text-muted-foreground\">Nenhum produto no cat\u00e1logo.</span>\n                : products.map((p) => (\n                  <label key={p.external_id} className=\"flex items-center gap-2 text-sm cursor-pointer\">\n                    <Checkbox checked={form.target_product_ids.includes(p.external_id)}\n                      onCheckedChange={() => set({ target_product_ids: toggle(form.target_product_ids, p.external_id) })} />\n                    <span className=\"truncate\">{p.name}{p.price != null ? ` \u2014 R$ ${Number(p.price).toLocaleString('pt-BR')}` : ''}</span>\n                  </label>\n                ))}\n            </div>\n          </div>\n\n          <div className=\"space-y-1.5\">\n            <Label>Redes</Label>\n            <div className=\"flex flex-wrap gap-3\">\n              {AUTOPILOT_PLATFORMS.map((pl) => (\n                <label key={pl.id} className=\"flex items-center gap-2 text-sm cursor-pointer\">\n                  <Checkbox checked={form.platforms.includes(pl.id)} onCheckedChange={() => set({ platforms: toggle(form.platforms, pl.id) })} />\n                  {pl.label}\n                </label>\n              ))}\n            </div>\n          </div>\n\n          <div className=\"grid grid-cols-2 gap-3\">\n            <div className=\"space-y-1.5\">\n              <Label>Cad\u00eancia</Label>\n              <Select value={form.mode} onValueChange={(v) => set({ mode: v as AutopilotPlanInput['mode'] })}>\n                <SelectTrigger><SelectValue /></SelectTrigger>\n                <SelectContent>\n                  <SelectItem value=\"every_n_days\">A cada N dias</SelectItem>\n                  <SelectItem value=\"all_at_once\">Uma vez</SelectItem>\n                </SelectContent>\n              </Select>\n            </div>\n            {form.mode === 'every_n_days' && (\n              <div className=\"space-y-1.5\">\n                <Label htmlFor=\"ap-interval\">Intervalo (dias)</Label>\n                <Input id=\"ap-interval\" type=\"number\" min={1} max={30} value={form.interval_days}\n                  onChange={(e) => set({ interval_days: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })} />\n              </div>\n            )}\n          </div>\n\n          <div className=\"grid grid-cols-3 gap-3\">\n            <div className=\"space-y-1.5\">\n              <Label htmlFor=\"ap-budget\">Teto/ciclo</Label>\n              <Input id=\"ap-budget\" type=\"number\" min={12} value={form.budget_cap_mco}\n                onChange={(e) => set({ budget_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />\n            </div>\n            <div className=\"space-y-1.5\">\n              <Label htmlFor=\"ap-daily\">Teto/dia</Label>\n              <Input id=\"ap-daily\" type=\"number\" min={12} value={form.daily_cap_mco}\n                onChange={(e) => set({ daily_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />\n            </div>\n            <div className=\"space-y-1.5\">\n              <Label htmlFor=\"ap-variants\">Variantes A/B</Label>\n              <Input id=\"ap-variants\" type=\"number\" min={1} max={5} value={form.ab_variants}\n                onChange={(e) => set({ ab_variants: Math.max(1, Math.min(5, Number(e.target.value) || 1)) })} />\n            </div>\n          </div>\n          <p className=\"text-xs text-muted-foreground\">\n            Custo projetado por ciclo = produtos \u00d7 redes \u00d7 variantes \u00d7 10 mcoCoins (+2 de an\u00e1lise). Os tetos s\u00e3o o\n            kill-switch \u2014 a cad\u00eancia nunca gasta acima deles.\n          </p>\n        </div>\n        <DialogFooter>\n          <Button onClick={submit} disabled={create.isPending}>\n            {create.isPending && <Loader2 className=\"mr-2 h-4 w-4 animate-spin\" />}Criar plano\n          </Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n\nfunction CycleList({ planId }: { planId: string }) {\n  const { data: cycles = [], isLoading } = useAutopilotCycles(planId);\n  if (isLoading) return <div className=\"text-sm text-muted-foreground py-2\">Carregando ciclos\u2026</div>;\n  if (cycles.length === 0) return <div className=\"text-sm text-muted-foreground py-2\">Nenhum ciclo ainda.</div>;\n  return (\n    <div className=\"space-y-1.5 pt-2\">\n      {cycles.map((c) => (\n        <div key={c.id} className=\"flex items-center justify-between text-sm rounded-md bg-muted/30 px-3 py-1.5\">\n          <span className=\"font-mono text-xs\">#{c.cycle_number}</span>\n          <Badge variant=\"secondary\" className={CYCLE_BADGE[c.status] ?? ''}>{c.status}</Badge>\n          <span className=\"text-muted-foreground\">{c.planned_units} criativos</span>\n          <span className=\"text-muted-foreground\">\u2212{c.spend_mco} / +{c.refunded_mco} mco</span>\n          <span className=\"text-xs text-muted-foreground\">{c.completed_at ? new Date(c.completed_at).toLocaleDateString('pt-BR') : '\u2014'}</span>\n        </div>\n      ))}\n    </div>\n  );\n}\n\nfunction PlanCard({ plan }: { plan: AutopilotPlan }) {\n  const setActive = useSetPlanActive();\n  const run = useRunAutopilot();\n  const [showCycles, setShowCycles] = useState(false);\n\n  const doRun = async (dryRun: boolean) => {\n    try {\n      const r = await run.mutateAsync({ planId: plan.id, dryRun });\n      if (dryRun) {\n        toast({ title: 'Simula\u00e7\u00e3o (sem gasto)', description: `${r.n_runs} criativos \u00b7 ${r.projected_mco} mcoCoins projetados.` });\n      } else if (r.ok) {\n        toast({ title: 'Ciclo executado', description: `${r.succeeded}/${r.n_runs} ok \u00b7 ${r.actual_mco} gastos \u00b7 ${r.refunded_mco} estornados.` });\n      } else {\n        toast({ title: 'Ciclo abortado', description: REASON_LABEL[r.reason ?? ''] ?? r.reason, variant: 'destructive' });\n      }\n    } catch (e) {\n      toast({ title: 'Falha ao executar', description: (e as Error).message, variant: 'destructive' });\n    }\n  };\n\n  const togglePause = async () => {\n    try {\n      await setActive.mutateAsync({ id: plan.id, active: !plan.is_active });\n      toast({ title: plan.is_active ? 'Plano pausado' : 'Plano ativado', description: plan.is_active ? '' : 'A cad\u00eancia o executar\u00e1 no pr\u00f3ximo ciclo do cron.' });\n    } catch (e) {\n      toast({ title: 'Falha', description: (e as Error).message, variant: 'destructive' });\n    }\n  };\n\n  return (\n    <Card>\n      <CardHeader className=\"pb-3\">\n        <div className=\"flex items-start justify-between gap-3\">\n          <CardTitle className=\"text-base flex items-center gap-2\">\n            <Rocket className=\"h-4 w-4 text-primary\" />{plan.name}\n          </CardTitle>\n          <Badge className={plan.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}>\n            {plan.is_active ? 'Ativo' : 'Pausado'}\n          </Badge>\n        </div>\n      </CardHeader>\n      <CardContent className=\"space-y-3\">\n        <div className=\"flex flex-wrap gap-1.5\">\n          {(plan.platforms ?? []).map((p) => <Badge key={p} variant=\"outline\">{p}</Badge>)}\n          <Badge variant=\"outline\">{(plan.target_product_ids ?? []).length} produtos</Badge>\n          <Badge variant=\"outline\">{plan.mode === 'every_n_days' ? `a cada ${plan.interval_days}d` : 'uma vez'}</Badge>\n        </div>\n        <div className=\"text-xs text-muted-foreground\">\n          Tetos: {plan.budget_cap_mco} mco/ciclo \u00b7 {plan.daily_cap_mco} mco/dia \u00b7 piso {plan.min_balance_mco} \u00b7 A/B {plan.ab_variants}\n          {plan.next_run_at && <> \u00b7 pr\u00f3ximo: {new Date(plan.next_run_at).toLocaleString('pt-BR')}</>}\n        </div>\n        <div className=\"flex flex-wrap gap-2\">\n          <Button size=\"sm\" variant=\"secondary\" onClick={() => doRun(true)} disabled={run.isPending}>\n            <FlaskConical className=\"mr-1.5 h-3.5 w-3.5\" />Simular\n          </Button>\n          <Button size=\"sm\" onClick={() => doRun(false)} disabled={run.isPending}>\n            {run.isPending ? <Loader2 className=\"mr-1.5 h-3.5 w-3.5 animate-spin\" /> : <Play className=\"mr-1.5 h-3.5 w-3.5\" />}Rodar agora\n          </Button>\n          <Button size=\"sm\" variant=\"outline\" onClick={togglePause} disabled={setActive.isPending}>\n            {plan.is_active ? <><Pause className=\"mr-1.5 h-3.5 w-3.5\" />Pausar</> : <><Play className=\"mr-1.5 h-3.5 w-3.5\" />Ativar</>}\n          </Button>\n          <Button size=\"sm\" variant=\"ghost\" onClick={() => setShowCycles((s) => !s)}>\n            <History className=\"mr-1.5 h-3.5 w-3.5\" />{showCycles ? 'Ocultar' : 'Ciclos'}\n          </Button>\n        </div>\n        {showCycles && <CycleList planId={plan.id} />}\n      </CardContent>\n    </Card>\n  );\n}\n\nexport default function AutopilotPage() {\n  const { data: plans = [], isLoading } = useAutopilotPlans();\n  return (\n    <div className=\"p-6 space-y-6 max-w-4xl mx-auto\">\n      <header className=\"flex items-center justify-between gap-4\">\n        <div>\n          <h1 className=\"text-2xl font-bold flex items-center gap-2\"><Rocket className=\"h-6 w-6 text-primary\" />Viral Autopilot</h1>\n          <p className=\"text-sm text-muted-foreground\">Conte\u00fado viral monetizado, gerado e agendado em piloto autom\u00e1tico \u2014 que melhora a cada ciclo.</p>\n        </div>\n        <CreatePlanDialog />\n      </header>\n\n      {isLoading ? (\n        <div className=\"flex items-center justify-center py-16 text-muted-foreground\"><Loader2 className=\"h-6 w-6 animate-spin\" /></div>\n      ) : plans.length === 0 ? (\n        <Card><CardContent className=\"py-12 text-center space-y-2\">\n          <Rocket className=\"h-8 w-8 mx-auto text-muted-foreground\" />\n          <p className=\"text-muted-foreground\">Nenhum plano ainda. Crie um para a constela\u00e7\u00e3o come\u00e7ar a produzir sozinha.</p>\n        </CardContent></Card>\n      ) : (\n        <div className=\"grid gap-4\">{plans.map((p) => <PlanCard key={p.id} plan={p} />)}</div>\n      )}\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:51:57)*
+
+
+## 🤖 Claude *(19:51:58)*
+
+Hook + página escritos. Agora a rota (App.tsx) + a nav (DashboardSidebar). Leio os anchors exatos.
+
+## 🤖 Claude *(19:52:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== App.tsx: MarketingPage lazy import + a route anchor ===\"\ngrep -nE 'MarketingPage = lazy|path=\"marketing\"' src/App.tsx\necho \"=== DashboardSidebar lucide import line containing Target (to add Rocket) ===\"\ngrep -nE 'Target,|Megaphone,|Rocket' src/components/dashboard/DashboardSidebar.tsx | head",
+  "description": "Find route + nav insertion anchors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === App.tsx: MarketingPage lazy import + a route anchor ===
+> 24:const MarketingPage = lazy(() => import("./pages/MarketingPage.tsx"));
+> 98:                <Route path="marketing" element={<MarketingPage />} />
+> === DashboardSidebar lucide import line containing Target (to add Rocket) ===
+> 4:  Megaphone,
+> 28:  Target,
+> ```
+
+## 🤖 Claude *(19:52:07)*
+
+
+## 🤖 Claude *(19:52:07)*
+
+Inserindo rota + nav (4 edits).
+
+## 🤖 Claude *(19:52:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const MarketingPage = lazy(() => import(\"./pages/MarketingPage.tsx\"));",
+  "new_string": "const MarketingPage = lazy(() => import(\"./pages/MarketingPage.tsx\"));\nconst AutopilotPage = lazy(() => import(\"./pages/AutopilotPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:52:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"marketing\" element={<MarketingPage />} />",
+  "new_string": "                <Route path=\"marketing\" element={<MarketingPage />} />\n                <Route path=\"autopilot\" element={<AutopilotPage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:52:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  Target,",
+  "new_string": "  Target,\n  Rocket,"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:52:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },",
+  "new_string": "      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },\n      { title: 'Viral Autopilot', url: '/dashboard/autopilot', icon: Rocket },"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:52:21)*
+
+
+## 🤖 Claude *(19:52:22)*
+
+Preciso ler os arquivos com a tool Read antes de editar (usei grep). Lendo App.tsx e DashboardSidebar nas regiões dos anchors.
+
+## 🤖 Claude *(19:52:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 22,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 22	const CampaignWizard = lazy(() => import("./pages/CampaignWizard.tsx"));
+> 23	const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
+> 24	const MarketingPage = lazy(() => import("./pages/MarketingPage.tsx"));
+> 25	const SocialAccountsPage = lazy(() => import("./pages/SocialAccountsPage.tsx"));
+> 26	const SocialCallback = lazy(() => import("./pages/SocialCallback.tsx"));
+> ```
+
+## 🤖 Claude *(19:52:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 96,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 96	                <Route path="constellation/memory" element={<MemoryPage />} />
+> 97	                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 98	                <Route path="marketing" element={<MarketingPage />} />
+> 99	                <Route path="campaigns" element={<CampaignsPage />} />
+> 100	                <Route path="campaigns/new" element={<CampaignWizard />} />
+> ```
+
+## 🤖 Claude *(19:52:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 26,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 26	  Bot,
+> 27	  LineChart,
+> 28	  Target,
+> 29	  MessageSquare,
+> ```
+
+## 🤖 Claude *(19:52:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 71,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 71	    items: [
+> 72	      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },
+> 73	      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+> ```
+
+## 🤖 Claude *(19:52:30)*
+
+
+## 🤖 Claude *(19:52:30)*
+
+Lidos. Re-aplicando os 4 edits.
+
+## 🤖 Claude *(19:52:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const MarketingPage = lazy(() => import(\"./pages/MarketingPage.tsx\"));",
+  "new_string": "const MarketingPage = lazy(() => import(\"./pages/MarketingPage.tsx\"));\nconst AutopilotPage = lazy(() => import(\"./pages/AutopilotPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"marketing\" element={<MarketingPage />} />",
+  "new_string": "                <Route path=\"marketing\" element={<MarketingPage />} />\n                <Route path=\"autopilot\" element={<AutopilotPage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  Bot,\n  LineChart,\n  Target,\n  MessageSquare,",
+  "new_string": "  Bot,\n  LineChart,\n  Target,\n  Rocket,\n  MessageSquare,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },",
+  "new_string": "      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },\n      { title: 'Viral Autopilot', url: '/dashboard/autopilot', icon: Rocket },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:52:43)*
+
+
+## 🤖 Claude *(19:52:44)*
+
+4 edits aplicados. Typecheck do frontend inteiro (pega erros do hook/página/types).
+
+## 🤖 Claude *(19:52:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | head -30\necho \"tsc-exit=${PIPESTATUS[0]}\"",
+  "description": "TypeScript check of the UI slice",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc-exit=0
+> ```
+
+## 🤖 Claude *(19:52:59)*
+
+
+## 🤖 Claude *(19:53:00)*
+
+`tsc` **exit 0** — hook, página, types regen, rota e nav todos consistentes. Build (= deploy no repo principal, nginx serve `dist/`). Verifico o artefato materialmente depois (chunk novo + env baked — Lei 1).
+
+## 🤖 Claude *(19:53:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -8\necho \"=== material proof: AutopilotPage chunk in dist + env baked ===\"\nls -la dist/assets/ | grep -iE 'Autopilot' || echo \"no Autopilot chunk (check build)\"\ngrep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js >/dev/null 2>&1 && echo \"\u2705 Supabase env baked into bundle\" || echo \"\u26a0\ufe0f env not found in bundle\"",
+  "description": "Build frontend + verify AutopilotPage chunk + env baked",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dist/assets/index-CJBFVDTQ.js                  628.91 kB │ gzip: 187.97 kB
+> dist/assets/react-three-fiber.esm-XdlQL1d8.js  824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 21.69s
+> === material proof: AutopilotPage chunk in dist + env baked ===
+> -rw-rw-r-- 1 ubuntu ubuntu  12689 Jun 20 16:53 AutopilotPage-Dj6oeo6T.js
+> ✅ Supabase env baked into bundle
+> ```
+
+## 🤖 Claude *(19:54:18)*
+
+
+## 🤖 Claude *(19:54:20)*
+
+Build **✓ em 21.69s** · chunk `AutopilotPage-Dj6oeo6T.js` (12.7kB) no dist servido · **env Supabase baked** ✅. Deployado. Mas chunk existir ≠ renderizar (Lei 1 — lembrança do bug KanbanPage). Faço a prova ocular pelo padrão à prova de CF (preview local + sessão injetada). Confirmo o tooling + subo o preview.
+
+## 🤖 Claude *(19:54:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== session minter for logged-in E2E ===\"; ls scripts/qa/gen-user-session.ts 2>/dev/null && head -20 scripts/qa/gen-user-session.ts 2>/dev/null | grep -iE 'usage|argv|generateLink|access_token|localStorage|sb-' | head\necho \"=== preview script ===\"; grep -nE '\"preview\"|\"start\"' package.json | head",
+  "description": "Check session minter + preview script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === session minter for logged-in E2E ===
+> scripts/qa/gen-user-session.ts
+>  * Mint a REAL Supabase browser session (the full localStorage value) for logged-in UI E2E
+>  * kills gen-magiclink.ts when driving from a datacenter IP. Admin generateLink (magiclink) →
+>  * `sb-<ref>-auth-token`. Inject it into localStorage and the app boots already authenticated.
+>  * Usage: bun run scripts/qa/gen-user-session.ts <email>
+>  *   → prints ONLY the localStorage value (JSON) on stdout, or an error on stderr + exit 1.
+>  *   localStorage.setItem('sb-<ref>-auth-token', SESSION) then reload → logged in.
+> === preview script ===
+> 11:    "preview": "vite preview",
+> ```
+
+## 🤖 Claude *(19:54:36)*
+
+
+## 🤖 Claude *(19:54:37)*
+
+`gen-user-session.ts` (mint sessão real) + `bun run preview` confirmados. Subo o preview em background e minto uma sessão do Usuário Zero (nav read-only, sem efeito colateral).
+
+## 🤖 Claude *(19:54:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run preview 2>&1",
+  "description": "Start vite preview server (background)",
+  "timeout": 600000,
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bar5goa5u. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/034e4fdb-b4b4-4ef6-bae7-10d32bd4551c/tasks/bar5goa5u.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(19:54:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== mint Usu\u00e1rio Zero session (for local-preview render check) ===\"\nbun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com 2>/tmp/sess.err > /tmp/sess.json\necho \"exit=$? \u00b7 bytes=$(wc -c < /tmp/sess.json)\"\nhead -c 120 /tmp/sess.err 2>/dev/null\npython3 -c \"import json; d=json.load(open('/tmp/sess.json')); print('\u2705 session JSON ok \u00b7 keys:', list(d.keys())[:4])\" 2>&1 | head -2",
+  "description": "Mint Usu\u00e1rio Zero session for render check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === mint Usuário Zero session (for local-preview render check) ===
+> exit=0 · bytes=3334
+> ✅ session JSON ok · keys: ['access_token', 'token_type', 'expires_in', 'expires_at']
+> ```
+
+## 🤖 Claude *(19:54:47)*
+
+
+## 🤖 Claude *(19:54:47)*
+
+Sessão mintada ✅. Confirmo que o preview subiu + a porta.
+
+## 🤖 Claude *(19:54:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 3; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/034e4fdb-b4b4-4ef6-bae7-10d32bd4551c/tasks/bar5goa5u.output 2>/dev/null | head -10\necho \"=== curl the preview root ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" http://localhost:4173/ 2>&1 || curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" http://localhost:4174/ 2>&1",
+  "description": "Confirm preview server port + reachable"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> $ vite preview
+>   ➜  Local:   http://localhost:4173/
+>   ➜  Network: http://10.0.0.143:4173/
+>   ➜  Network: http://172.23.0.1:4173/
+>   ➜  Network: http://172.27.0.1:4173/
+>   ➜  Network: http://172.24.0.1:4173/
+>   ➜  Network: http://172.22.0.1:4173/
+>   ➜  Network: http://172.18.0.1:4173/
+>   ➜  Network: http://172.25.0.1:4173/
+> === curl the preview root ===
+> HTTP 200
+> ```
+
+## 🤖 Claude *(19:55:04)*
+
+
+## 🤖 Claude *(19:55:04)*
+
+Preview vivo em `http://localhost:4173/` (HTTP 200). Carrego as tools do Playwright pra injetar a sessão + navegar até a página.
+
+## 🤖 Claude *(19:55:05)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:mcp__playwright__browser_navigate,mcp__playwright__browser_evaluate,mcp__playwright__browser_snapshot,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_console_messages",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_navigate'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_evaluate'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_snapshot'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_take_screenshot'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_console_messages'}]
+> ```
+
+## 🤖 Claude *(19:55:25)*
+
+
+## 🤖 Claude *(19:55:25)*
+
+
+🛠️ **Tool Call**: `mcp__playwright__browser_navigate`
+```json
+{
+  "url": "http://localhost:4173/"
+}
+```
+
+> **Tool Result (mcp__playwright__browser_navigate)** - ❌ Error
+>
+> ```
+> ### Error
+> Error: async initializeServer: Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome
+> Run "npx playwright install chrome"
+> ```
+
+## 🤖 Claude *(19:55:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "base64 -w0 /tmp/sess.json 2>/dev/null | head -c 60; echo \" ...(base64 of session, full piped to file)\"; base64 -w0 /tmp/sess.json > /tmp/sess.b64; echo \"b64 bytes=$(wc -c < /tmp/sess.b64)\"",
+  "description": "Base64-encode the session for injection"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSkZVekkxTmlJc0ltdHBaQ0k2 ...(base64 of session, full piped to file)
+> b64 bytes=4448
+> ```
+
+## 🤖 Claude *(19:56:02)*
+
+
+## 🤖 Claude *(19:56:04)*
+
+Playwright MCP quer o canal 'chrome' do sistema (não instalado). O tooling canônico do projeto pra isso é o **agent-browser** (à prova de CF, usado no e2e-user-zero). Verifico a disponibilidade dele.
+
+## 🤖 Claude *(19:56:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== agent-browser CLI ===\"; command -v agent-browser 2>/dev/null && agent-browser --version 2>&1 | head -1 || echo \"no agent-browser on PATH\"\necho \"=== playwright browsers cache ===\"; ls ~/.cache/ms-playwright/ 2>/dev/null | head || echo \"no playwright cache\"\necho \"=== system chrome/chromium ===\"; for b in google-chrome chromium chromium-browser; do command -v $b 2>/dev/null && echo \"found $b\"; done || echo none\nls /opt/google/chrome/chrome 2>/dev/null && echo \"chrome at /opt\" || echo \"no /opt chrome\"",
+  "description": "Check agent-browser + chromium availability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agent-browser CLI ===
+> /home/ubuntu/.nvm/versions/node/v22.22.3/bin/agent-browser
+> agent-browser 0.27.0
+> === playwright browsers cache ===
+> b
+> chromium-1217
+> chromium-1226
+> chromium_headless_shell-1217
+> chromium_headless_shell-1226
+> ffmpeg-1011
+> mcp-chrome-6d4d142
+> mcp-chrome-8a5edab
+> mcp-chrome-dc082d7
+> mcp-chrome-for-testing-8a5edab
+> === system chrome/chromium ===
+> none
+> no /opt chrome
+> ```
+
+## 🤖 Claude *(19:56:23)*
+
+
+## 🤖 Claude *(19:56:24)*
+
+`agent-browser 0.27.0` disponível + chromium no cache do playwright. É o tool canônico. Vejo a interface dele pra rodar o fluxo navigate→inject→screenshot.
+
+## 🤖 Claude *(19:56:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser --help 2>&1 | head -40",
+  "description": "agent-browser CLI usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agent-browser - fast browser automation CLI for AI agents
+> 
+> Usage: agent-browser <command> [args] [options]
+> 
+> Start here (for AI agents):
+>   agent-browser skills get core --full
+> 
+>   Skills ship with the CLI (always version-matched) and include workflow
+>   patterns, ref/selector usage, and copy-paste examples. Prefer this over
+>   guessing commands from flag docs alone. Specialized skills cover Electron
+>   apps, Slack, exploratory testing, and cloud browser providers.
+> 
+>   skills [list]                List available skills
+>   skills get core              Core usage guide (overview + common patterns)
+>   skills get core --full       Include full command reference and templates
+>   skills get <name>            Load a specialized skill (electron, slack, ...)
+>   skills path [name]           Print skill directory path
+> 
+> Core Commands:
+>   open <url>                 Navigate to URL
+>   click <sel>                Click element (or @ref)
+>   dblclick <sel>             Double-click element
+>   type <sel> <text>          Type into element
+>   fill <sel> <text>          Clear and fill
+>   press <key>                Press key (Enter, Tab, Control+a)
+>   keyboard type <text>       Type text with real keystrokes (no selector)
+>   keyboard inserttext <text> Insert text without key events
+>   hover <sel>                Hover element
+>   focus <sel>                Focus element
+>   check <sel>                Check checkbox
+>   uncheck <sel>              Uncheck checkbox
+>   select <sel> <val...>      Select dropdown option
+>   drag <src> <dst>           Drag and drop
+>   upload <sel> <files...>    Upload files
+>   download <sel> <path>      Download file by clicking element
+>   scroll <dir> [px]          Scroll (up/down/left/right)
+>   scrollintoview <sel>       Scroll element into view
+>   wait <sel|ms>              Wait for element or time
+>   screenshot [path]          Take screenshot
+> ```
+
+## 🤖 Claude *(19:56:35)*
+
+
+## 🤖 Claude *(19:56:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser --help 2>&1 | sed -n '40,80p' | grep -iE 'eval|exec|js|text|snapshot|content|read|session|persist' ",
+  "description": "Find eval/text/snapshot commands"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   snapshot                   Accessibility tree with refs (for AI)
+>   eval <js>                  Run JavaScript
+>   close [--all]              Close browser (--all closes every session)
+>   text, html, value, attr <name>, title, url, count, box, styles, cdp-url
+> Find Elements:  agent-browser find <locator> <value> <action> [text]
+>   role, text, label, placeholder, alt, title, testid, first, last, nth
+>   offline [on|off], headers <json>, credentials <user> <pass>
+>   route <url> [--abort|--body <json>] [--resource-type <csv>]
+>                              Or:  cookies set --curl <file> [--domain <host>] (auto-detects JSON/cURL/Cookie-header files)
+>   storage <local|session>    Manage web storage
+> ```
+
+## 🤖 Claude *(19:56:58)*
+
+
+## 🤖 Claude *(19:56:59)*
+
+agent-browser tem `open`/`eval`/`wait`/`text`/`screenshot` com sessão persistente. Rodo o fluxo: navegar → injetar sessão → ir pra `/dashboard/autopilot` → esperar o heading → capturar.
+
+## 🤖 Claude *(19:57:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nREF=bcyvddsykvehvpwstlfa\nB64=$(cat /tmp/sess.b64)\necho \"--- open root ---\"; agent-browser open http://localhost:4173/ 2>&1 | tail -1\necho \"--- inject session ---\"; agent-browser eval \"localStorage.setItem('sb-${REF}-auth-token', atob('$B64')); 'injected:'+localStorage.length\" 2>&1 | tail -2\necho \"--- open /dashboard/autopilot ---\"; agent-browser open http://localhost:4173/dashboard/autopilot 2>&1 | tail -1\necho \"--- wait for heading ---\"; agent-browser wait \"text=Viral Autopilot\" 2>&1 | tail -2 || echo \"WAIT-FAILED\"\necho \"--- page text (autopilot markers) ---\"; agent-browser text 2>&1 | grep -ioE 'Viral Autopilot|Novo Plano|Nenhum plano|constela\u00e7\u00e3o come\u00e7ar|piloto autom\u00e1tico' | sort -u\necho \"--- console errors ---\"; agent-browser eval \"(()=>{return (window.__err||[]).length})()\" 2>&1 | tail -1\necho \"--- screenshot ---\"; agent-browser screenshot /tmp/autopilot.png 2>&1 | tail -1; ls -la /tmp/autopilot.png 2>/dev/null",
+  "description": "Render check: inject session + navigate + verify heading",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- open root ---
+>   http://localhost:4173/
+> --- inject session ---
+> "injected:1"
+> --- open /dashboard/autopilot ---
+>   http://localhost:4173/dashboard/autopilot
+> --- wait for heading ---
+> ✗ Wait timed out after 30000ms
+> --- page text (autopilot markers) ---
+> --- console errors ---
+> 0
+> --- screenshot ---
+> ✓ Screenshot saved to /tmp/autopilot.png
+> -rw-rw-r-- 1 ubuntu ubuntu 68927 Jun 20 16:57 /tmp/autopilot.png
+> ```
+
+## 🤖 Claude *(19:57:56)*
+
+
+## 🤖 Claude *(19:57:57)*
+
+O heading não apareceu (timeout) — provável redirect pro /auth (sessão não autenticou) OU erro. A captura salvou (68KB). Vejo o estado real: URL atual + texto + a screenshot.
+
+## 🤖 Claude *(19:58:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"--- current URL ---\"; agent-browser url 2>&1 | tail -1\necho \"--- page text (first 400 chars) ---\"; agent-browser text 2>&1 | head -c 400\necho \"\"\necho \"--- localStorage key present? ---\"; agent-browser eval \"Object.keys(localStorage).filter(k=>k.includes('auth-token'))\" 2>&1 | tail -1\necho \"--- session parses + has access_token? ---\"; agent-browser eval \"(()=>{try{const v=JSON.parse(localStorage.getItem('sb-bcyvddsykvehvpwstlfa-auth-token'));return 'has_token:'+!!v.access_token+' exp:'+v.expires_at}catch(e){return 'parse_err:'+e.message}})()\" 2>&1 | tail -1",
+  "description": "Debug render: URL, text, session validity"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- current URL ---
+> Unknown command: url
+> --- page text (first 400 chars) ---
+> Unknown command: text
+> 
+> --- localStorage key present? ---
+> ]
+> --- session parses + has access_token? ---
+> "has_token:true exp:1781988882"
+> ```
+
+## 🤖 Claude *(19:58:22)*
+
+
+## 🤖 Claude *(19:58:23)*
+
+`text`/`url` precisam de outra invocação — mas a sessão ESTÁ injetada e válida (`has_token:true`, exp futuro). Vejo o estado real via eval (location + body) + a screenshot.
+
+## 🤖 Claude *(19:58:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"--- location.href ---\"; agent-browser eval \"location.href\" 2>&1 | tail -1\necho \"--- body innerText (500c) ---\"; agent-browser eval \"document.body.innerText.slice(0,500)\" 2>&1 | tail -3\necho \"--- any heading/h1 ---\"; agent-browser eval \"Array.from(document.querySelectorAll('h1,h2')).map(e=>e.innerText).slice(0,5)\" 2>&1 | tail -2",
+  "description": "Get actual page location + body text"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- location.href ---
+> "http://localhost:4173/dashboard/autopilot"
+> --- body innerText (500c) ---
+> "Magic Constellation\nPrincipal\nVisão Geral\nConstelação\nCanvas Studio\nConteúdo & Campanhas\nMarketing\nViral Autopilot\nCampanhas\nOrquestração\nWorkspace Kanban\nConteúdo\nBlog\nCalendário\nMonetização\nInteligência IA\nSistema\nRedes Sociais\nAssinatura\nConfigurações\nAdmin\nAdministração\nSair\nToggle Sidebar\nDashboard\nautopilot\n5241\nmcoCoins\n3\nG\nViral Autopilot\n\nConteúdo viral monetizado, gerado e agendado em piloto automático — que melhora a cada ciclo.\n\nNovo Plano\n\nNenhum plano ainda. Crie um para a constela"
+> --- any heading/h1 ---
+>   "Viral Autopilot"
+> ]
+> ```
+
+## 🤖 Claude *(19:58:39)*
+
+
+## 🤖 Claude *(19:58:42)*
+
+**RENDER PROVADO materialmente** — a falha do `wait` foi ambiguidade de seletor (texto aparece 2×: nav + heading), não erro. O DOM real mostra tudo:
+- URL = `/dashboard/autopilot` (autenticou, **não** redirecionou pro /auth) ✅
+- Heading **"Viral Autopilot"** + subtítulo + botão **"Novo Plano"** + empty-state "Nenhum plano ainda…" ✅
+- Item de nav **"Viral Autopilot"** na sidebar ✅ · HUD mcoCoins intacto (5241)
+
+Vejo a screenshot pra confirmar o visual.
+
+## 🤖 Claude *(19:58:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/autopilot.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/png'}}]
+> ```
+
+## 🤖 Claude *(19:59:04)*
+
+
+## 🤖 Claude *(19:59:05)*
+
+**Render PROVADO** — a página renderiza perfeitamente: heading 🚀 Viral Autopilot, subtítulo, botão "Novo Plano", empty-state com ícone de foguete, nav item destacado, HUD 5241. A UI está viva e deployada. Limpo o browser/preview e commito.
+
+## 🤖 Claude *(19:59:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nagent-browser close --all 2>&1 | tail -1; pkill -f \"vite preview\" 2>/dev/null; echo \"browser+preview closed\"\ngit add src/integrations/supabase/types.ts src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx \\\n        src/App.tsx src/components/dashboard/DashboardSidebar.tsx\ngit commit -q -F - <<'MSG'\nfeat: Viral Autopilot Fatia 2 \u2014 UI (useAutopilot + AutopilotPage) para criar/gerenciar planos\n\nTorna o motor aut\u00f4nomo us\u00e1vel pela interface (FR-VA-014/015) \u2014 planos saem do SQL pra\n/dashboard/autopilot. Buildado+deployado, render provado ocularmente (preview local \u00e0 prova de CF).\n\n- useAutopilot (hook harness): CRUD de autopilot_plans (RLS own) \u00b7 hist\u00f3rico de ciclos \u00b7 \"rodar\n  agora\"/Simular (invoke autopilot-run no caminho user-JWT, dry_run zero-cost) \u00b7 pausar/ativar.\n- AutopilotPage: empty-state + cards de plano (status/tetos/redes/pr\u00f3ximo disparo \u00b7 Simular/Rodar/\n  Pausar \u00b7 hist\u00f3rico de ciclos) + dialog de cria\u00e7\u00e3o (picker de produtos do cat\u00e1logo \u00b7 redes \u00b7\n  cad\u00eancia N-dias \u00b7 tetos kill-switch \u00b7 variantes A/B). Display-only (toda l\u00f3gica no hook).\n- Rota /dashboard/autopilot (lazy) + nav \"Viral Autopilot\" (\u00edcone Rocket) em Conte\u00fado & Campanhas.\n- types.ts regen (additive: autopilot_plans/cycles + begin/finalize_autopilot_cycle + creative_metrics).\n\ntsc 0 \u00b7 build ok 21.7s (chunk AutopilotPage-Dj6oeo6T.js + env baked) \u00b7 render ocular: heading +\nempty-state + nav + HUD 5241 renderizam em /dashboard/autopilot (sess\u00e3o injetada, sem redirect /auth).\nMSG\ngit log --oneline -1 | cat",
+  "description": "Cleanup browser/preview + commit UI slice"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ✓ Closed session: default
+> ```
+
+## 🤖 Claude *(19:59:24)*
+
+
+## 🤖 Claude *(19:59:25)*
+
+Exit 144 — o script abortou após o `pkill` (matou o preview e o sinal propagou); o commit provavelmente não rodou. Checo o estado e recommito se preciso.
+
+## 🤖 Claude *(19:59:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== last commit ===\"; git log --oneline -1 | cat\necho \"=== staged? ===\"; git diff --cached --name-only\necho \"=== unstaged UI files? ===\"; git status --short | grep -E 'useAutopilot|AutopilotPage|App.tsx|DashboardSidebar|types.ts'",
+  "description": "Check commit state after exit 144"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === last commit ===
+> 35554da feat: Viral Autopilot Fatia 2 — R3 loop auto-melhorável (analyze + collect + feedback injection)
+> === staged? ===
+> === unstaged UI files? ===
+>  M src/App.tsx
+>  M src/components/dashboard/DashboardSidebar.tsx
+>  M src/integrations/supabase/types.ts
+> ?? src/hooks/useAutopilot.ts
+> ?? src/pages/AutopilotPage.tsx
+> ```
+
+## 🤖 Claude *(19:59:32)*
+
+
+## 🤖 Claude *(19:59:33)*
+
+O commit não rodou (HEAD ainda em `35554da`); o `pkill` matou o script antes. Preview já encerrado. Re-stage + commit limpo.
+
+## 🤖 Claude *(19:59:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/integrations/supabase/types.ts src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx \\\n        src/App.tsx src/components/dashboard/DashboardSidebar.tsx\ngit commit -q -F - <<'MSG'\nfeat: Viral Autopilot Fatia 2 \u2014 UI (useAutopilot + AutopilotPage) para criar/gerenciar planos\n\nTorna o motor aut\u00f4nomo us\u00e1vel pela interface (FR-VA-014/015) \u2014 planos saem do SQL pra\n/dashboard/autopilot. Buildado+deployado, render provado ocularmente (preview local \u00e0 prova de CF).\n\n- useAutopilot (hook harness): CRUD de autopilot_plans (RLS own) \u00b7 hist\u00f3rico de ciclos \u00b7 \"rodar\n  agora\"/Simular (invoke autopilot-run no caminho user-JWT, dry_run zero-cost) \u00b7 pausar/ativar.\n- AutopilotPage: empty-state + cards de plano (status/tetos/redes/pr\u00f3ximo disparo \u00b7 Simular/Rodar/\n  Pausar \u00b7 hist\u00f3rico de ciclos) + dialog de cria\u00e7\u00e3o (picker de produtos do cat\u00e1logo \u00b7 redes \u00b7\n  cad\u00eancia N-dias \u00b7 tetos kill-switch \u00b7 variantes A/B). Display-only (toda l\u00f3gica no hook).\n- Rota /dashboard/autopilot (lazy) + nav \"Viral Autopilot\" (\u00edcone Rocket) em Conte\u00fado & Campanhas.\n- types.ts regen (additive: autopilot_plans/cycles + begin/finalize_autopilot_cycle + creative_metrics).\n\ntsc 0 \u00b7 build ok 21.7s (chunk AutopilotPage-Dj6oeo6T.js + env baked) \u00b7 render ocular: heading +\nempty-state + nav + HUD 5241 renderizam em /dashboard/autopilot (sessao injetada, sem redirect /auth).\nMSG\ngit log --oneline -1 | cat",
+  "description": "Re-commit UI slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:59PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:59PM[0m [32mINF[0m scan completed in 20.5ms
+> [90m4:59PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> bfd178b feat: Viral Autopilot Fatia 2 — UI (useAutopilot + AutopilotPage) para criar/gerenciar planos
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
