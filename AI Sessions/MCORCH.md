@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 40
-> * **Total de Sessões**: 1031
+> * **Total de Processos**: 41
+> * **Total de Sessões**: 1039
 
 ---
 
@@ -51,6 +51,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
+*   `[[viral-autopilot-product-aware-monetization]]` - *Processo*
 *   `[[vision-mcp-billing-credential-resolution]]` - *Processo*
 *   `[[vision-mcp-connector-install]]` - *Processo*
 *   `[[vision-mcp-cost-calibration]]` - *Processo*
@@ -64,10 +65,14 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-06-20 - agent-af831631ec7f7aefd]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-af26b791934f74423]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-af0f530be048a5cbf]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-ad74371076ff08639]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-acc2c69e7abf823f4]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-ac60cff37941a5c30]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-aba91025696bd0556]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-aba5de66d680317fe]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-ab4993065c0aac7fe]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-ab06f09c1bd09d0fc]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-aa1a8599f76d7a7d2]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a9ac3df0aec56b988]]` (ClaudeSessions) - *2026-06-20*
@@ -75,15 +80,19 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-20 - agent-a733efac671534afe]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a661ea1c36f457903]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a645fff5ecf523157]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-a5f2c268051a5ff96]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a4a94e813d8fb64c6]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a41f9824e2301acd7]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-a41921e09df75fcec]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a3b6d4bd5e6d72502]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a39c7bbfd403cca2a]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a268f61229d113652]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a1fbddd092865c328]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - agent-a14f2aab56c8204d1]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - agent-a0ce568b77a1d7483]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - Próximos passos do projeto]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-20 - Estratégia de lucro em mixed, trend e outros]]` (ClaudeSessions) - *2026-06-20*
+*   `[[2026-06-20 - Analisar estratégia de trading e sinais de lucro]]` (ClaudeSessions) - *2026-06-20*
 *   `[[2026-06-19 - agent-af6d93040e18b75ff]]` (ClaudeSessions) - *2026-06-19*
 *   `[[2026-06-19 - agent-af3473f628b87109c]]` (ClaudeSessions) - *2026-06-19*
 *   `[[2026-06-19 - agent-aeb8a724ea6824c26]]` (ClaudeSessions) - *2026-06-19*

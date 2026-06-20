@@ -10200,6 +10200,409 @@ Push        : <✅ origin sincronizado / N/A sem código novo>
 ═══════════════════════════════════════════════════
 ```
 
+
+## 🤖 Claude *(02:30:13)*
+
+
+## 🤖 Claude *(02:30:15)*
+
+Vou executar o ritual. Nota importante de reconciliação: o projeto é **trunk-based direct-to-master** (memória `tradeux-orchestration-model` + suas escolhas explícitas nesta sessão), então os 5 commits **já estão no master** — a fase "branch + PR" da skill genérica não se aplica; o que falta é o **secret scan + HANDOFF.md + memória + push do master**.
+
+**Pré-flight + secret scan** (sobre os 5 commits da sessão):
+
+## 🤖 Claude *(02:30:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== status (deve estar limpo, 5 commits \u00e0 frente de origin) ===\"\ngit -c safe.directory='*' status --short\necho \"=== commits da sess\u00e3o (e8e7b16..HEAD) ===\"\ngit -c safe.directory='*' log --oneline e8e7b16..HEAD\necho \"=== diffstat da sess\u00e3o ===\"\ngit -c safe.directory='*' diff e8e7b16 HEAD --stat | tail -20\necho \"=== SECRET SCAN (bloqueia o seal se achar) ===\"\ngit -c safe.directory='*' diff e8e7b16 HEAD \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head || echo \"  \u2705 nenhum segredo no diff\"\necho \"=== stack ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"'",
+  "description": "Handoff pre-flight + secret scan + stack status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status (deve estar limpo, 5 commits à frente de origin) ===
+> === commits da sessão (e8e7b16..HEAD) ===
+> 235484c feat: teto de exposicao do Farm por simbolo (notional real) + limpeza de estados falsos do cockpit
+> a21dbae feat(cockpit): painel gate x ativo + recalibra doutrina do agente (ATIVO != GATE)
+> 771ecf0 feat(settings): painel de Ativacao de grupos (Farm/Trend/Baseline/Paper)
+> 3ca0ef7 feat(scripts): migra os 5 setup-*.js irmaos p/ lib/apiClient (DRY completo)
+> 2f8f20b feat(scripts): apiClient.js DRY (Bloco B Fase 1) + self-test no CI
+> === diffstat da sessão ===
+>  backend/scripts/lib/apiClient.test.js             | 167 ++++++++++++++++++++++
+>  backend/scripts/setup-farm.js                     |  45 ++----
+>  backend/scripts/setup-flow-gate.js                |  45 ++----
+>  backend/scripts/setup-grid.js                     |  32 ++---
+>  backend/scripts/setup-harvester.js                |  45 ++----
+>  backend/scripts/setup-paper-trilhas.js            |  45 ++----
+>  backend/scripts/setup-trend.js                    |  45 ++----
+>  backend/src/beholder.js                           |  18 +++
+>  backend/src/controllers/automationsController.js  | 105 ++++++++++----
+>  backend/src/repositories/automationsRepository.js |  11 ++
+>  backend/src/routers/automationsRouter.js          |   4 +
+>  frontend/src/private/Automations/AutomationRow.js |   8 +-
+>  frontend/src/private/Cockpit/Cockpit.js           |  58 ++++++--
+>  frontend/src/private/Cockpit/cockpit.css          |   9 ++
+>  frontend/src/private/Reports/AutomationReport.js  |   3 +-
+>  frontend/src/private/Settings/Settings.js         |  85 ++++++++++-
+>  frontend/src/services/AutomationsService.js       |  13 ++
+>  scripts/ci-preflight.sh                           |  17 +++
+>  tradeux-agent/src/agent.js                        |   3 +-
+>  25 files changed, 637 insertions(+), 303 deletions(-)
+> === SECRET SCAN (bloqueia o seal se achar) ===
+> === stack ===
+> NAME                 STATUS
+> tradeux-agent-1      Up About an hour
+> tradeux-backend-1    Up About a minute
+> tradeux-db-1         Up 4 days (healthy)
+> tradeux-frontend-1   Up About a minute
+> ```
+
+## 🤖 Claude *(02:30:44)*
+
+
+## 🤖 Claude *(02:30:46)*
+
+Pré-flight **limpo**: worktree limpo, 5 commits à frente de origin, **secret scan zerado** (só `backend/.env.example` com placeholders; `.env` gitignored), stack 4/4 up.
+
+**Phase 3 — HANDOFF.md.** Vou ler o header (precisa virar CONGELADO→LIVE) + checar permissão de escrita:
+
+## 🤖 Claude *(02:30:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-19** · Phase: **GO-LIVE MAINNET — CONGELADO (`TRADING_HALT=true`) · pré-reqs de CÓDIGO (a)-(e) FEITOS (falta GO do dono pro flip) · NOVO: Motor de Estratégias Fatias 1+2a+lote (Paper Engine: 16 trilhas `[PAPER]` em 4 símbolos, P&L no cockpit+painel) NO AR + item(f) guard — research sob HALT, ZERO risco; FREQUÊNCIA e HARVESTER refutados por backtest; **revisão diária do paper notifica no Telegram** · DONO decidiu: ESPERAR o paper provar antes do flip (sem dinheiro real); **painel de destrave do HALT + **botão go-live (env floor → FLOOR PERSISTIDO controlável pela UI)** em Settings**** · Meta: **realista ≈ flat com ~$150** (o +3 BTC era do testnet) · Vivo==master==origin==**`e8e7b16`**
+> 6	
+> 7	> 🛑 **LEIA ANTES DE TUDO (2026-06-15):** o sistema está em **MAINNET REAL** (`settings.useTestnet=0`, ~$150 USDT) e **CONGELADO** (`TRADING_HALT=true` no `.env` → nada negocia; é o kill-switch novo no `exchange.js`). Money-path foi blindado (`96915e0`) e o bug P0 do Farm Sell foi corrigido (`c163112`). **DESCOBERTA CRÍTICA: o harvester está MORTO no mainnet** (o edge de −3% era arbitragem testnet-vs-mainnet; no mainnet o book do bot É o FAIR). O ÚNICO edge real é o **Trend** (pequeno, mensal). **Antes de descongelar:** (1) trava `FARM_SELLING` (follow-up); (2) dono confere saque-OFF+IP da chave Binance; (3) decidir re-design do harvester. Detalhes nos SEALs de 2026-06-15 (fim do doc) + memória `tradeux-mainnet-go-live`. **2026-06-16:** Cockpit Intelligence read-only NO AR (brain computa analytics 1m + agente lê/reporta; commit `1660871`) — a brain reporta **EV −0,16% / pHit 0,6%** (scalp 1m é −EV, dado real). Fix do **−1013** no `calcQty` + template Trend ×3 (commit `2528a5d`). **Auditoria adversarial independente** confirmou 7 achados p/ o descongelamento → ver SEAL 2026-06-16. ⚠️ O "vídeo viral Fable 5/Polymarket 205x" do X é **golpe de referral** — NÃO clicar/depositar.
+> 8	
+> 9	## ⚡ FIRST ACTION FOR NEXT AGENT
+> ```
+
+## 🤖 Claude *(02:31:16)*
+
+
+## 🤖 Claude *(02:31:17)*
+
+Header está stale (diz CONGELADO; agora é LIVE). Vou checar permissão de escrita antes de editar:
+
+## 🤖 Claude *(02:31:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -l /home/gcrux-tradeux/HANDOFF.md\ntest -w /home/gcrux-tradeux/HANDOFF.md && echo \"WRITABLE por ubuntu\" || echo \"N\u00c3O-writable (uso sudo -u gcrux-tradeux)\"\necho \"=== total de linhas ===\"; wc -l /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Check HANDOFF.md writability + size"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 140352 Jun 19 14:40 /home/gcrux-tradeux/HANDOFF.md
+> WRITABLE por ubuntu
+> === total de linhas ===
+> 817 /home/gcrux-tradeux/HANDOFF.md
+> ```
+
+## 🤖 Claude *(02:31:23)*
+
+
+## 🤖 Claude *(02:31:24)*
+
+Writable. **Atualizando o header (CONGELADO→LIVE):**
+
+## 🤖 Claude *(02:31:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-19** \u00b7 Phase: **GO-LIVE MAINNET \u2014 CONGELADO (`TRADING_HALT=true`) \u00b7 pr\u00e9-reqs de C\u00d3DIGO (a)-(e) FEITOS (falta GO do dono pro flip) \u00b7 NOVO: Motor de Estrat\u00e9gias Fatias 1+2a+lote (Paper Engine: 16 trilhas `[PAPER]` em 4 s\u00edmbolos, P&L no cockpit+painel) NO AR + item(f) guard \u2014 research sob HALT, ZERO risco; FREQU\u00caNCIA e HARVESTER refutados por backtest; **revis\u00e3o di\u00e1ria do paper notifica no Telegram** \u00b7 DONO decidiu: ESPERAR o paper provar antes do flip (sem dinheiro real); **painel de destrave do HALT + **bot\u00e3o go-live (env floor \u2192 FLOOR PERSISTIDO control\u00e1vel pela UI)** em Settings**** \u00b7 Meta: **realista \u2248 flat com ~$150** (o +3 BTC era do testnet) \u00b7 Vivo==master==origin==**`e8e7b16`**",
+  "new_string": "> Updated: **2026-06-20** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (o DONO flipou o floor pela UI; `halted=false`, N\u00c3O est\u00e1 mais congelado!)** \u00b7 **Canary FARM-ONLY** (s\u00f3 as VENDAS armadas id10/12/14; COMPRAS off ap\u00f3s DCA 3\u00d7 em LTC ~$30, equity intacta ~$148,75) \u00b7 prote\u00e7\u00f5es: cap di\u00e1rio \u22125%, teto **$25/ordem** (era 300), **teto de exposi\u00e7\u00e3o do Farm $25/s\u00edmbolo (notional qty\u00d7pre\u00e7o-m\u00e9dio, `FARM_MAX_NOTIONAL_USDT`)**, riskGuard por-ordem, bot\u00e3o de p\u00e2nico + painel de grupos em Settings \u00b7 **Bloco B Fase 1 (`apiClient.js` DRY, 8 setup-*.js) + painel Ativa\u00e7\u00e3o de grupos + cockpit gate\u00d7ativo + agente recalibrado (ATIVO\u2260GATE) + cockpit LIMPO (placeholders/estados falsos removidos)** \u00b7 Meta: **realista \u2248 flat com ~$148** \u00b7 Vivo==master==**`235484c`** (push pendente \u2192 ==origin ap\u00f3s o push deste seal)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:52)*
+
+
+## 🤖 Claude *(02:31:53)*
+
+**Aviso 🔴 LIVE no topo do bloco "LEIA ANTES DE TUDO"** (o 🛑 de 15/jun virou histórico):
+
+## 🤖 Claude *(02:31:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> \ud83d\uded1 **LEIA ANTES DE TUDO (2026-06-15):**",
+  "new_string": "> \ud83d\udd34 **ATUALIZA\u00c7\u00c3O 2026-06-20 \u2014 N\u00c3O EST\u00c1 MAIS CONGELADO:** o dono LIBEROU o floor pela UI \u2192 trading REAL ON (`halted=false`). Canary **FARM-ONLY** (s\u00f3 as VENDAS do Farm armadas \u2014 sa\u00edda no-loss dos lotes; COMPRAS off). Equity intacta ~$148,75 (USDT\u2194LTC, sem perda). SEMPRE confira `GET /system/halt` no in\u00edcio da sess\u00e3o. **O bloco \ud83d\uded1 abaixo (2026-06-15) \u00e9 HIST\u00d3RICO** \u2014 descreve o estado CONGELADO, j\u00e1 SUPERADO.\n\n> \ud83d\uded1 **LEIA ANTES DE TUDO (2026-06-15):**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:32:01)*
+
+
+## 🤖 Claude *(02:32:02)*
+
+**Append do Session Record** no fim. Lendo o rodapé pra ancorar:
+
+## 🤖 Claude *(02:32:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -4 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Read HANDOFF.md tail to anchor the session record append"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - **Named volume `backend_logs:/app/logs`** (`docker-compose.yml`): o estado QUENTE (floor/manual), o baseline do cap diário (`daily_cap_snapshot.json`) e o `paper_review_state.json` agora **PERSISTEM entre rebuilds** (antes efêmero → revertia p/ a semente; fix do P1 do QA). `.gitignore backend/logs/`.
+> - **⚠️ MUDANÇA DE SEMÂNTICA (gotcha DURÁVEL):** depois do 1º LIBERAR, `TRADING_HALT=true` no `.env` vira **NO-OP** (só semente do 1º boot — o floor persistido vence). Pra travar à prova de clique: **`TRADING_HALT_HARD=true`** no `.env`+restart, OU o botão **TRAVAR** (quente). Fonte única = `riskState`; estado vivo = `GET /system/halt`. O log de boot `[riskState] inicializado — env-hard=.. floor=.. halted=..` é a prova viva do freeze (se `halted=false` num deploy, ABORTAR).
+> - **Estado atual:** `floor=true` (frozen), `envHard=false` → o botão **LIGAR está habilitado** mas **o dono decidiu ESPERAR o paper provar** (ter o botão ≠ ir ao vivo). **Claude NÃO clica LIGAR** — é GO do dono + canary de um grupo só.
+> **⚡ NEXT inalterado:** observar o paper (revisão diária notifica no Telegram); **Bloco B Fase 1** (`scripts/lib/apiClient.js` DRY).
+> ```
+
+## 🤖 Claude *(02:32:48)*
+
+
+## 🤖 Claude *(02:32:48)*
+
+**Append do Session Record** (sessão grande — Bloco B + GO-LIVE + canary + caps + cockpit limpo):
+
+## 🤖 Claude *(02:33:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**\u26a1 NEXT inalterado:** observar o paper (revis\u00e3o di\u00e1ria notifica no Telegram); **Bloco B Fase 1** (`scripts/lib/apiClient.js` DRY).",
+  "new_string": "**\u26a1 NEXT inalterado:** observar o paper (revis\u00e3o di\u00e1ria notifica no Telegram); **Bloco B Fase 1** (`scripts/lib/apiClient.js` DRY).\n\n### \ud83e\udd1d SEAL \u2014 2026-06-20 (SESS\u00c3O GRANDE: Bloco B Fase 1 + \ud83d\udd34 GO-LIVE + canary Farm + caps + cockpit limpo)\n**`Vivo==master==235484c` (5 commits da sess\u00e3o; push pendente). Stack 4/4 up, \ud83d\udd34 LIVE (`halted=false, floor=false`), canary FARM-ONLY (3/6: vendas armadas id10/12/14, compras off), equity ~$148,75 intacta.**\n- **Bloco B Fase 1 \u2014 `apiClient.js` DRY (`2f8f20b`+`3ca0ef7`, gate QA+TL):** `backend/scripts/lib/apiClient.js` (createClient/resolveEnv: req/login/findAutomationByName) + **TODOS os 8 `setup-*.js` migrados** byte-fiel (cap de pagina\u00e7\u00e3o por call-site; recipes intocados; grid mant\u00e9m https/getTestnetPrice). `apiClient.test.js` (37 casos) + job CI `scripts` + `[0b/5]` no ci-preflight. Pr\u00f3ximo do Bloco B = recipes declarativas (findTemplate dup activate-trend+harvester).\n- **Painel \"Ativa\u00e7\u00e3o de grupos\" em Settings (`771ecf0`, gate QA+TL):** Ligar/Parar GRUPOS em lote, substitui SSH/automation-ctl. `GET/POST /automations/groups[/:group/:action]` (authMiddleware, ANTES de `/:id`); `applyAutomationActive` extra\u00eddo = MESMO caminho do start/stop por-linha; grupos por REGEX de nome; harvester/grid/scalp EXCLU\u00cdDOS. Confirm fail-safe ciente do floor. \u26a0\ufe0f grupo `baseline` inclui venda do cofre BTC (coberta s\u00f3 por HALT/riskGuard, n\u00e3o pela trava MCP).\n- **Cockpit gate\u00d7ativo + agente recalibrado (`a21dbae`, gate QA+TL):** painel \"Estrat\u00e9gia \u2014 gate \u00d7 ativo\" (reconcilia gate vs ativo por grupo \u2192 mata o falso-alarme do agente). `agent.js` item (8) **ATIVO\u2260GATE** no bloco DIVERG\u00caNCIAS ESPERADAS: automa\u00e7\u00e3o parada + gate aberto = decis\u00e3o do operador (canary), N\u00c3O reportar; mant\u00e9m alarme p/ mudan\u00e7a de estado SEM a\u00e7\u00e3o do operador.\n- **\ud83d\udd34 GO-LIVE REAL:** o DONO flipou o floor pela UI \u2192 `halted=false`. Claude N\u00c3O virou (verificou+orientou). Canary escolhido (AskUserQuestion) = FARM-ONLY; Claude parou Trend via painel. Nenhuma ordem real no flip (orders 252-259 = testnet).\n- **Caps:** (1) **$25/ordem** (era 300 \u2014 in\u00fatil num saldo de $150; `.env` `MAX_ORDER_NOTIONAL_USDT=25`+restart). (2) **Teto de EXPOSI\u00c7\u00c3O do Farm $25/s\u00edmbolo** (`FARM_MAX_NOTIONAL_USDT`, `235484c`, `beholder.placeOrder`, BUY-only name-gated 'Farm Buy %', soft-cap, BRAIN-independente). **\u26a0\ufe0f BUG PEGO NO GATE:** `FARM_DCA.cost` \u00e9 PRE\u00c7O-M\u00c9DIO/un, N\u00c3O investido \u2192 notional real = `qty\u00d7cost`; CORRIGIDO + unit test 5/5 (ADA $100 barra, BNB $6 libera). `.env.example` documentado.\n- **Cockpit LIMPO de estados falsos (`235484c`, auditoria+fix por workflows, gate B APPROVE):** removidos Shadow 1m \"medindo Fase 3\", 3 KPIs mortos (Win rate/Profit factor/Sharpe), legendas \u00f3rf\u00e3s; relabel nota P&L-BNB (j\u00e1 fee-inclusive); error-state nos loadings do Settings; null-guard `item.net` no Report; tooltip Monitor\u2192Automation. (DEFERIDO out-of-scope: remover UI do Grid = feature REAL, n\u00e3o fake; split do flag `loadErr` do Settings.)\n- **1\u00aa ORDEM REAL + concentra\u00e7\u00e3o:** o Farm fez **DCA 3\u00d7 em LTC** (~$30, avg $43,91) \u2014 esperado (LTC virou range, RSI<35). PAREI o Farm (concentra\u00e7\u00e3o, n\u00e3o perda), depois **religuei s\u00f3 as VENDAS** \u2192 lotes saem no-loss quando LTC bouncar ~$44,4; compras off. **Gotcha de query:** `orders` mistura testnet+mainnet \u2192 SEMPRE filtrar `isTestnet=false` (os $997/22LTC de 15/jun eram testnet, fantasma).\n- **Telegram/UX/an\u00e1lise:** marcador de evento no Telegram (`telegramNotify.notify`, r\u00f3tulo `[MARCO]`); notifyOrder pt-BR confirmado OK; gr\u00e1fico 1m com sinais RSI no chat; rebatida da \"an\u00e1lise externa\" hypada (beholder = **1.131 linhas**, N\u00c3O 48k; risk engine EXISTE; futures REFUTADO; multi-exchange/SaaS = prematuro a $148).\n**\u26a1 NEXT:** (1) observar a sa\u00edda no-loss do LTC (Telegram avisa). (2) Se religar as COMPRAS do Farm, o teto $25/s\u00edmbolo protege. (3) Bloco B Fase 2 = recipes declarativas. (4) d\u00e9bitos: remover UI do Grid (decis\u00e3o do dono), split `loadErr` do Settings, reconstru\u00e7\u00e3o-no-boot do `FARM_SELLING` (gate p/ escalar Farm). **Decis\u00e3o do dono: \"A recomendado sempre\" \u2014 default p/ a op\u00e7\u00e3o recomendada.** Claude N\u00c3O vira o HALT/clica LIGAR sozinho."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:33:31)*
+
+
+## 🤖 Claude *(02:33:33)*
+
+HANDOFF.md ✅ (header LIVE + aviso 🔴 + Session Record).
+
+**Phase 4 — Memória.** Já atualizei strategy-engine + go-live + índice na sessão. Faltam 2 gotchas **duráveis e não-óbvios** (que queimariam a próxima sessão): o bug do `FARM_DCA.cost` e o fantasma testnet. Lendo a seção GO-LIVE da memória pra anexar:
+
+## 🤖 Claude *(02:33:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -3 /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "description": "Read go-live memory tail to anchor append"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - **Proteções vivas mesmo LIVE:** cap diário −5% (baseline novo de hoje UTC; arma HALT no drawdown ≈ −$7,40/$148), teto $300/ordem, riskGuard por-ordem, **pânico** = UI "TRAVAR floor"/"Travar agora" ou `POST /system/halt {on:true}` / `POST /system/floor {on:true}`. Telegram notifica TODA ordem (NEW/FILLED…) → a 1ª ordem real do Farm avisa.
+> - **Expectativa honesta (dado do dia):** EV fino/negativo — o único round-trip do paper consistência BTC fechou **+$0,0143 líquido** (taxa comeu 73% do bruto), por sorte (BTC subiu no hold), não por edge; EV BTC −0,17%, pHit 0,40. É **validação da plumbing com dinheiro real**, não rota de lucro. Veredito precisa de 15-30 round-trips (paperReviewJob).
+> - ⚠️ Pra re-congelar: `POST /system/floor {on:true}` (ou UI TRAVAR floor). Pra re-armar à prova de clique: `TRADING_HALT_HARD=true` no `.env`+restart.
+> ```
+
+## 🤖 Claude *(02:33:40)*
+
+
+## 🤖 Claude *(02:33:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "- \u26a0\ufe0f Pra re-congelar: `POST /system/floor {on:true}` (ou UI TRAVAR floor). Pra re-armar \u00e0 prova de clique: `TRADING_HALT_HARD=true` no `.env`+restart.",
+  "new_string": "- \u26a0\ufe0f Pra re-congelar: `POST /system/floor {on:true}` (ou UI TRAVAR floor). Pra re-armar \u00e0 prova de clique: `TRADING_HALT_HARD=true` no `.env`+restart.\n\n## Caps recalibrados + 1\u00aa ordem real + 2 GOTCHAS dur\u00e1veis (2026-06-20, commit `235484c`)\n- **Teto por-ordem $300\u2192$25** (`.env MAX_ORDER_NOTIONAL_USDT=25`+restart): $300 num saldo de ~$148 era DECORATIVO (n\u00e3o d\u00e1 pra colocar ordem > saldo; Binance recusa). $25 \u00e9 proporcional (\u224817%/ordem).\n- **Teto de EXPOSI\u00c7\u00c3O do Farm por s\u00edmbolo (`FARM_MAX_NOTIONAL_USDT=25`):** guard novo em `beholder.placeOrder` (hot path, antes do calcQty) \u2014 Farm Buy (BUY + `automation.name` ~ `/^Farm Buy /`) \u00e9 SKIPado se o notional investido no s\u00edmbolo \u2265 teto. Soft-cap, BRAIN-independente (espelha `FARM_SELLING`), `0`=off. Doc em `backend/.env.example`.\n- **\ud83d\udd34 GOTCHA 1 (pego no gate QA/TL \u2014 money-path):** `MEMORY['<sym>:FARM_DCA'].cost` \u00e9 o **PRE\u00c7O M\u00c9DIO PONDERADO por unidade** (DCA), **N\u00c3O o USDT investido** (`ordersRepository`: `cost = totalCost/totalQty`; a condition do Farm Sell faz `bestBid > cost*1.012` = pre\u00e7o\u00d7pre\u00e7o). O **notional investido = `qty \u00d7 cost`**. O 1\u00ba guard comparava `cost` cru com $25 \u2192 bloquearia BNB (~$600/un) j\u00e1 no 1\u00ba fill e NUNCA bloquearia ADA (~$0,40/un). FIX = `qty \u00d7 cost`; unit test 5/5. **Qualquer c\u00e1lculo de exposi\u00e7\u00e3o/investido do Farm: use `qty \u00d7 cost`, nunca `cost` sozinho.**\n- **\ud83d\udd34 GOTCHA 2 (queima f\u00e1cil):** a tabela `orders` MISTURA testnet + mainnet. Pra posi\u00e7\u00e3o/P&L REAL **SEMPRE filtre `isTestnet=false`** \u2014 sen\u00e3o soma fantasmas (ex.: ordens LTC de 22 LTC/$997 de 15/jun eram TESTNET; davam um falso \"$3030 investido\").\n- **1\u00aa ordem real + canary refinado:** Farm fez **DCA 3\u00d7 em LTC** (~$30, avg $43,91; esperado \u2014 LTC virou range, RSI<35). Operador parou o Farm (concentra\u00e7\u00e3o, N\u00c3O perda \u2014 equity ~$148,75 intacta, USDT\u2194LTC). Depois **religou S\u00d3 as VENDAS do Farm** (id10/12/14) \u2192 lotes saem no-loss quando LTC bouncar ~$44,4; **compras off** (id9/11/13). Estado canary atual: Farm **3/6** (vendas armadas), Trend/Baseline off."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:34:22)*
+
+
+## 🤖 Claude *(02:34:23)*
+
+Atualizo o índice `MEMORY.md` (o "$300/ordem" virou stale):
+
+## 🤖 Claude *(02:34:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "Prote\u00e7\u00f5es ativas: cap di\u00e1rio \u22125%, teto $300/ordem, riskGuard por-ordem, bot\u00e3o de p\u00e2nico (UI/`POST /system/halt`). SEMPRE confira `GET /system/halt` no in\u00edcio da sess\u00e3o. BNB-fee seguro de ligar.**",
+  "new_string": "Prote\u00e7\u00f5es ativas: cap di\u00e1rio \u22125%, **teto $25/ordem (era 300) + teto de EXPOSI\u00c7\u00c3O do Farm $25/s\u00edmbolo** (`FARM_MAX_NOTIONAL_USDT`; \u26a0\ufe0fgotcha: `FARM_DCA.cost`=pre\u00e7o-m\u00e9dio/un, investido=`qty\u00d7cost`; e `orders` mistura testnet\u2192filtre `isTestnet=false`), riskGuard, bot\u00e3o de p\u00e2nico (UI/`POST /system/halt`). **P\u00f3s-1\u00aa ordem real: Farm DCA 3\u00d7 em LTC \u2192 COMPRAS off, s\u00f3 VENDAS armadas (Farm 3/6); equity ~$148,75 intacta.** SEMPRE confira `GET /system/halt` no in\u00edcio da sess\u00e3o.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:34:49)*
+
+
+## 🤖 Claude *(02:34:50)*
+
+HANDOFF.md ✅ + memória ✅ (go-live com os 2 gotchas + canary; índice atualizado).
+
+**Phase 5 — Push.** Antes, confiro a URL do remote (SSH vs https decide a credencial):
+
+## 🤖 Claude *(02:34:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== remote ===\"; git -c safe.directory='*' remote -v\necho \"=== branch atual ===\"; git -c safe.directory='*' branch --show-current\necho \"=== chave ubuntu existe? ===\"; ls -l /home/ubuntu/.ssh/id_ed25519 2>/dev/null && echo \"OK\" || echo \"sem chave ed25519\"\necho \"=== ahead/behind vs origin ===\"; git -c safe.directory='*' rev-list --left-right --count origin/master...HEAD 2>/dev/null || echo \"(sem ref origin/master local)\"",
+  "description": "Inspect remote URL + branch + ssh key + ahead/behind before push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === remote ===
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> === branch atual ===
+> master
+> === chave ubuntu existe? ===
+> -rw------- 1 ubuntu gcrUX 411 Apr 16 22:24 /home/ubuntu/.ssh/id_ed25519
+> OK
+> === ahead/behind vs origin ===
+> 0	17
+> ```
+
+## 🤖 Claude *(02:35:25)*
+
+
+## 🤖 Claude *(02:35:27)*
+
+Remote é **SSH** (`git@github.com:gabrielZarattini/tradeux.git` — é o MESMO repo daquela "análise externa", aliás), chave ubuntu OK, **17 commits à frente** (os 5 da sessão + 12 antigos nunca pushados). Fast-forward. **Push** (chave do ubuntu, depois chown de volta pra gcrux-tradeux):
+
+## 🤖 Claude *(02:35:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo env GIT_SSH_COMMAND=\"ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new\" \\\n  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -12\necho \"=== chown de volta (corrige poison de .git) ===\"\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux && echo \"\u2713 chown -R gcrux-tradeux OK\"\necho \"=== confirma sync ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' fetch origin 2>/dev/null\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' rev-list --left-right --count origin/master...HEAD",
+  "description": "Push master to origin via ubuntu SSH key + chown back + verify sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    e8e7b16..235484c  master -> master
+> === chown de volta (corrige poison de .git) ===
+> ✓ chown -R gcrux-tradeux OK
+> === confirma sync ===
+> 0	0
+> ```
+
+## 🤖 Claude *(02:35:51)*
+
+
+## 🤖 Claude *(02:36:00)*
+
+🤝 **Sessão selada e sincronizada.**
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-20
+───────────────────────────────────────────────────
+Commits     : 5 (scripts·settings·cockpit·backend)  |  Branch: master (trunk-based)
+Secret scan : ✅ limpo (.env gitignored; só .env.example c/ placeholders)
+HANDOFF.md  : ✅ CONGELADO→🔴 LIVE + aviso no topo + Session Record
+Memory      : ✅ 2 arquivos (go-live, strategy-engine) + índice MEMORY.md
+PRs abertos : nenhum (trunk-based direct-to-master)
+Push        : ✅ origin SINCRONIZADO — Vivo==master==origin==235484c (0/0)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**O que ficou registrado pra próxima sessão:**
+- 🔴 Sistema **LIVE** (não congelado) · canary **Farm 3/6** (vendas armadas, compras off) · equity ~$148,75 intacta.
+- Caps: $25/ordem + teto exposição Farm $25/símbolo · **2 gotchas duráveis** gravados (`FARM_DCA.cost`=preço-médio → usar `qty×cost`; `orders` mistura testnet → filtrar `isTestnet=false`).
+- Bloco B Fase 1 (apiClient DRY) · painel de grupos · cockpit gate×ativo + agente recalibrado · cockpit limpo de placeholders.
+- Decisão do dono anotada: **"A recomendado sempre"**.
+
+**⚠️ Heads-up do push:** o GitHub reportou **17 vulnerabilidades de dependência** (5 high, 12 moderate) no Dependabot — não bloqueia nada, mas vale uma passada quando der (ver `SECURITY.md`). Posso tratar numa próxima.
+
+Tá tudo selado — pode fechar tranquilo. O Telegram te avisa quando o LTC sair no lucro. 🇧🇷⚽
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -10209,6 +10612,6 @@ Push        : <✅ origin sincronizado / N/A sem código novo>
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-19 - agent-af6d93040e18b75ff]]
+> * **Sessão Anterior**: [[2026-06-20 - Analisar estratégia de trading e sinais de lucro]]
 > * **Próxima Sessão**: [[2026-06-20 - Próximos passos do projeto]]
 %% --- TIMELINE END --- %%
