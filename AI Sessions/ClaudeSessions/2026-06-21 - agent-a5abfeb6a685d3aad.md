@@ -738,5 +738,5 @@ Arquivos-chave consultados (caminhos absolutos):
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-21 - agent-a56292f2932d4f90d]]
-> * **Próxima Sessão**: [[2026-06-21 - agent-a88866b510d06f02d]]
+> * **Próxima Sessão**: [[2026-06-21 - agent-a7ce4b3211ddf877b]]
 %% --- TIMELINE END --- %%

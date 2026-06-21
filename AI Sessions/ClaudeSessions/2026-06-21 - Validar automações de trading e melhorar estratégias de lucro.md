@@ -4664,6 +4664,781 @@ Então, sequência que recomendo:
 
 **Libero o commit + push da base verificada?** (é a recomendação — base limpa antes da Fase 3). Se preferir commitar **só a minha parte** e eu reconstruir a da MCORCH do zero, também faço — mas dado que está tudo additivo/verde/revisado, acho que não compensa.
 
+## 👤 User *(17:38:56)*
+
+ok libera e continue
+
+## 🤖 Claude *(17:39:38)*
+
+
+## 🤖 Claude *(17:39:39)*
+
+GO recebido. Commitando a base verificada como `gcrux` (escopo explícito, scratch de backtest fora), depois sigo pra Fase 3. Primeiro stage + conferência de escopo:
+
+## 🤖 Claude *(17:39:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/beholder.js backend/src/utils/exchange.js backend/scripts/sim backend/package.json .github/workflows/ci.yml scripts/ci-preflight.sh\necho \"=== STAGED (deve conter S\u00d3 os arquivos da su\u00edte + 2 fixes + wiring) ===\"\ngit diff --cached --name-status\necho \"\"\necho \"=== N\u00c3O-staged (scratch de backtest deve ficar de fora) ===\"\ngit status --short | grep -vE \"^[AM] \"\necho \"\"\necho \"=== branch atual ===\"\ngit rev-parse --abbrev-ref HEAD\n'",
+  "description": "Stage suite files and verify commit scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STAGED (deve conter SÓ os arquivos da suíte + 2 fixes + wiring) ===
+> M	.github/workflows/ci.yml
+> M	backend/package.json
+> A	backend/scripts/sim/calcQty.test.js
+> A	backend/scripts/sim/dailyCap.test.js
+> A	backend/scripts/sim/farmTriggers.test.js
+> A	backend/scripts/sim/feeCalc.test.js
+> A	backend/scripts/sim/riskGuard.test.js
+> A	backend/scripts/sim/run.js
+> M	backend/src/beholder.js
+> M	backend/src/utils/exchange.js
+> M	scripts/ci-preflight.sh
+> 
+> === NÃO-staged (scratch de backtest deve ficar de fora) ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> 
+> === branch atual ===
+> master
+> ```
+
+## 🤖 Claude *(17:40:16)*
+
+
+## 🤖 Claude *(17:40:17)*
+
+Escopo correto — só os 10 arquivos da suíte + 2 fixes + wiring; scratch de backtest fora; branch `master` (trunk-based). Commitando:
+
+## 🤖 Claude *(17:40:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nMSG=$(mktemp)\ncat > \"$MSG\" <<\"EOF\"\ntest(sim): suite de simulacao do money-path (Fatia 1+2) + fix P&L taxa-em-BNB\n\nSuite deterministica em backend/scripts/sim/ (puro Node, sem Binance/DB, roda no CI):\n- calcQty (23): keywords de qty (MIN_NOTIONAL/backstop -1013, MAX_WALLET,\n  FARM/TREND/HARVEST_QTY com cap-na-carteira+fail-closed, BTC_EXCESS, LAST_ORDER_QTY)\n- riskGuard (14): chokepoint assertWithinRisk (HALT bloqueia tudo, teto de notional\n  em todas as formas, MINI_TICKER frio, par nao-USDT, teto=0)\n- feeCalc (11): computeNet USDT/base/BNB/fail-safe/guard net>0/side-ausente\n- farmTriggers (9): trava o fix fb932a1 (Farm Sell=LEVEL-trigger, Trend=EDGE)\n- dailyCap (9): trava o fix c6d0853 (limiar -5%, unwrap LD* do Earn, fail-safe preco frio)\n\nFIX (P&L): exporta beholder.getStableConversion. feeCalc.js a chamava cross-modulo\ne recebia undefined -> taxa em BNB nao descontava do net (P&L otimista assim que o\ndesconto BNB-fee fosse ligado). Latente hoje (taxas em USDT). Provado RED->GREEN.\n\nSeams additivos p/ testabilidade (sem mudanca de comportamento): beholder exporta\ncalcQty/calcQuoteQty/hasEnoughAssets/shouldntInvert/invertCondition; exchange exporta\nassertWithinRisk/refPrice. Wiring: npm run test:sim, job CI scripts, ci-preflight 0c.\n\nGate QA PASS + TL APPROVE.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit commit -F \"$MSG\" >/dev/null 2>&1 && echo \"commit OK\" || echo \"commit FALHOU\"\nrm -f \"$MSG\"\necho \"=== HEAD ===\"\ngit log --oneline -1\n'",
+  "description": "Commit the verified sim suite base"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit OK
+> === HEAD ===
+> fa26949 test(sim): suite de simulacao do money-path (Fatia 1+2) + fix P&L taxa-em-BNB
+> ```
+
+## 🤖 Claude *(17:40:29)*
+
+
+## 🤖 Claude *(17:40:30)*
+
+Commit `fa26949` OK. Push pra `origin/master` via token (sem expor o segredo):
+
+## 🤖 Claude *(17:40:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\nTOK=\"${GITHUB_TOKEN_API:-}\"\nif [ -z \"$TOK\" ]; then echo \"SEM TOKEN no .env\"; exit 1; fi\ngit push \"https://x-access-token:${TOK}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]*@#x-access-token:***@#g\"\necho \"--- origin/master agora ---\"\ngit log --oneline -1 origin/master 2>/dev/null || git ls-remote \"https://x-access-token:${TOK}@github.com/gabrielZarattini/tradeux.git\" master 2>&1 | sed -E \"s#[0-9a-f]{40}#&#\" | head -1\n'",
+  "description": "Push commit to origin/master via token"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To https://github.com/gabrielZarattini/tradeux.git
+>    fb932a1..fa26949  HEAD -> master
+> --- origin/master agora ---
+> 235484c feat: teto de exposicao do Farm por simbolo (notional real) + limpeza de estados falsos do cockpit
+> ```
+
+## 🤖 Claude *(17:42:44)*
+
+
+## 🤖 Claude *(17:42:47)*
+
+Push confirmado: **`fb932a1..fa26949 → master`** ✅ (CI vai rodar; o aviso de 17 vulnerabilidades é o backlog Dependabot pré-existente, não veio da minha mudança — sem deps novas).
+
+Agora **Fase 3 (integrado)**. É a camada mais profunda: gatilho→execução com Binance/DB mockados. Vou construir o harness eu mesmo (pra ficar coerente) e depois verificar adversarialmente via workflow. Primeiro preciso das constantes reais que o `placeOrder` usa (tipos de ordem, `actionTypes`) pra os fakes ficarem fiéis:
+
+## 🤖 Claude *(17:42:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== STOP_TYPES / LIMIT_TYPES (ordersRepository) ===\"\ngrep -nE \"STOP_TYPES|LIMIT_TYPES\" src/repositories/ordersRepository.js | head\necho \"\"\necho \"=== module.exports do ordersRepository ===\"\nsed -n '/module.exports = {/,/}/p' src/repositories/ordersRepository.js | head -30\necho \"\"\necho \"=== actionTypes (actionsRepository) ===\"\ngrep -nE \"actionTypes|ORDER|ALERT_|TRAILING|WITHDRAW|GRID\" src/repositories/actionsRepository.js | head -20\necho \"\"\necho \"=== assinatura insertOrder / calcFillFinancials ===\"\ngrep -nE \"function insertOrder|insertOrder =|function calcFillFinancials|calcFillFinancials =|getOpenOcoOrders\" src/repositories/ordersRepository.js | head",
+  "description": "Extract order-type constants and actionTypes for faithful mocks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STOP_TYPES / LIMIT_TYPES (ordersRepository) ===
+> 370:const STOP_TYPES = [orderTypes.STOP_LOSS, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 372:const LIMIT_TYPES = [orderTypes.LIMIT, orderTypes.STOP_LOSS_LIMIT, orderTypes.TAKE_PROFIT_LIMIT];
+> 376:    STOP_TYPES,
+> 377:    LIMIT_TYPES,
+> 
+> === module.exports do ordersRepository ===
+> module.exports = {
+>     orderStatus,
+>     STOP_TYPES,
+>     LIMIT_TYPES,
+>     orderTypes,
+>     insertOrder,
+>     getOrders,
+>     getOrder,
+>     getOrderById,
+>     updateOrderById,
+>     getLastFilledOrders,
+>     updateOrderByOrderId,
+>     getReportOrders,
+>     removeAutomationFromOrders,
+>     getOpenOcoOrders,
+>     getOpenOrdersByAutomation,
+>     calcFillFinancials,
+>     getAveragePrices,
+>     getFarmPosition,
+>     getTrendPosition
+> }
+> 
+> === actionTypes (actionsRepository) ===
+> 3:const actionTypes = {
+> 4:    ALERT_EMAIL: 'ALERT_EMAIL',
+> 5:    ALERT_SMS: 'ALERT_SMS',
+> 6:    ALERT_TELEGRAM: 'ALERT_TELEGRAM',
+> 7:    ORDER: 'ORDER',
+> 8:    GRID: 'GRID',
+> 9:    WITHDRAW: 'WITHDRAW',
+> 10:    TRAILING: 'TRAILING'
+> 39:    actionTypes
+> 
+> === assinatura insertOrder / calcFillFinancials ===
+> 26:async function insertOrder(newOrder) {
+> 173:async function getOpenOcoOrders(automationId) {
+> 231:function calcFillFinancials(result, symbol) {
+> 388:    getOpenOcoOrders,
+> ```
+
+## 🤖 Claude *(17:44:57)*
+
+
+## 🤖 Claude *(17:45:03)*
+
+Tenho as constantes (STOP/LIMIT_TYPES, actionTypes, assinaturas). Construindo o harness integrado: injeto fakes de exchange/repos/telegram/paperEngine no `require.cache` **antes** de carregar o beholder, e dirijo o `placeOrder` real pra provar cada situação de execução (roteamento paper, fail-closed, teto do Farm, anti-empilhamento, sizing por bucket + trava). Depois verifico adversarialmente via workflow.
+
+## 🤖 Claude *(17:45:40)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 INTEGRADO (Fase 3): o caminho de EXECU\u00c7\u00c3O real beholder.placeOrder, ponta a ponta, com\n * Binance + DB + Telegram MOCKADOS (injetados no require.cache ANTES de carregar o beholder). Cada caso \u00e9 uma\n * SITUA\u00c7\u00c3O money-path: a automa\u00e7\u00e3o dispara \u2192 que ORDEM sai (ou \u00e9 BARRADA), e os efeitos colaterais (trava\n * anti-empilhamento, roteamento paper, persist\u00eancia). NUNCA toca a Binance/DB reais.\n *\n * Cobre os branches de placeOrder (beholder.js:436-600):\n *   - roteamento [PAPER] \u2192 paperEngine (research nunca vira ordem real)\n *   - guarda [PAPER]-no-caminho-real (fail-closed)\n *   - teto de EXPOSI\u00c7\u00c3O do Farm por s\u00edmbolo (FARM_MAX_NOTIONAL_USDT, soft-cap, qty\u00d7cost)\n *   - anti-empilhamento da venda do Farm (FARM_SELLING: skip + set-ap\u00f3s-sell por orderId)\n *   - sizing por bucket (FARM_QTY) + persist\u00eancia (insertOrder) + caminho MARKET-por-quote (quoteOrderQty)\n *\n * O teto/HALT global (assertWithinRisk) \u00e9 coberto isolado em riskGuard.test.js \u2014 aqui o exchange \u00e9 fake.\n */\nprocess.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';\nprocess.env.FARM_MAX_NOTIONAL_USDT = '25'; // lido no LOAD do beholder \u2192 fixa o teto do Farm p/ os casos\n\nconst path = require('path');\nconst SRC = path.resolve(__dirname, '../../src');\nfunction inject(rel, exports) {\n    const p = require.resolve(path.join(SRC, rel));\n    require.cache[p] = { id: p, filename: p, loaded: true, exports };\n}\n\n// --- captura de efeitos (reset\u00e1vel por caso) ---\nlet buyCalls = [], sellCalls = [], ocoCalls = [], paperCalls = [], inserted = [];\nfunction reset() { buyCalls = []; sellCalls = []; ocoCalls = []; paperCalls = []; inserted = []; }\n\nconst fakeExchange = (settings) => ({\n    buy: async (sym, qty, price, opts) => { buyCalls.push({ sym, qty, price, opts }); return { orderId: 1001, status: 'FILLED', executedQty: qty, transactTime: 1, clientOrderId: 'cb' }; },\n    sell: async (sym, qty, price, opts) => { sellCalls.push({ sym, qty, price, opts }); return { orderId: 2002, status: 'FILLED', executedQty: qty, transactTime: 1, clientOrderId: 'cs' }; },\n    oco: async (...a) => { ocoCalls.push(a); return { orderListId: 7, orderReports: [], listStatusType: 'EXEC_STARTED' }; },\n});\nconst fakePaper = {\n    isPaperAutomation: (a) => !!(a && a.name && a.name.startsWith('[PAPER]')),\n    placePaperOrder: async (args) => { paperCalls.push(args); return { type: 'success', text: '[PAPER] fake' }; },\n    PAPER_PREFIX: '[PAPER]',\n};\nconst STOP_TYPES = ['STOP_LOSS', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT', 'TAKE_PROFIT_LIMIT'];\nconst LIMIT_TYPES = ['LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT'];\nconst fakeOrders = {\n    STOP_TYPES, LIMIT_TYPES,\n    orderTypes: { MARKET: 'MARKET', LIMIT: 'LIMIT', OCO: 'OCO', STOP_LOSS_LIMIT: 'STOP_LOSS_LIMIT' },\n    insertOrder: async (o) => { inserted.push(o); return { get: () => o, ...o }; },\n    getOpenOcoOrders: async () => [],\n    calcFillFinancials: () => ({}),\n};\nconst SYMBOLS = { LTCUSDT: { symbol: 'LTCUSDT', base: 'LTC', quote: 'USDT', stepSize: '0.001', tickSize: '0.01', minNotional: '5', basePrecision: 3, quotePrecision: 2 } };\nconst noop = () => { };\n\ninject('repositories/settingsRepository.js', { getDefaultSettings: async () => ({ id: 1 }) });\ninject('repositories/actionsRepository.js', { actionTypes: { ALERT_EMAIL: 'ALERT_EMAIL', ALERT_SMS: 'ALERT_SMS', ALERT_TELEGRAM: 'ALERT_TELEGRAM', ORDER: 'ORDER', GRID: 'GRID', WITHDRAW: 'WITHDRAW', TRAILING: 'TRAILING' } });\ninject('repositories/orderTemplatesRepository.js', { getOrderTemplate: async () => { throw new Error('n\u00e3o deveria buscar (action.orderTemplate \u00e9 passado)'); } });\ninject('repositories/automationsRepository.js', {});\ninject('repositories/withdrawTemplatesRepository.js', {});\ninject('repositories/gridsRepository.js', {});\ninject('repositories/symbolsRepository.js', { getSymbol: async (s) => SYMBOLS[s] });\ninject('repositories/ordersRepository.js', fakeOrders);\ninject('db.js', {});\ninject('utils/logger.js', noop);\ninject('utils/telegramNotify.js', { notifyOrder: () => { }, notify: async () => { } });\ninject('paperEngine.js', fakePaper);\ninject('utils/exchange.js', fakeExchange);\n\nconst beholder = require('../../src/beholder');\nconst { updateMemory, deleteMemory, getMemory, placeOrder } = beholder;\n\nlet passed = 0, failed = 0;\nfunction checkTrue(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\n\nconst SET = { id: 1 };\nfunction action(ot) { return { id: 1, orderTemplateId: 1, orderTemplate: ot }; }\nconst LIMIT_BUY = { id: 1, symbol: 'LTCUSDT', side: 'BUY', type: 'LIMIT', quantity: 'MIN_NOTIONAL', quantityMultiplier: 2, limitPrice: '44', limitPriceMultiplier: 1 };\nconst LIMIT_SELL_FARM = { id: 2, symbol: 'LTCUSDT', side: 'SELL', type: 'LIMIT', quantity: 'FARM_QTY', quantityMultiplier: 1, limitPrice: '44', limitPriceMultiplier: 1 };\n\n(async () => {\n    updateMemory('USDT', 'WALLET', null, 1000, false);\n    updateMemory('LTC', 'WALLET', null, 10, false);\n\n    // (1) Farm Buy SOB o teto \u2192 coloca a ordem + persiste.\n    reset();\n    updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 0, cost: 0 }, false); // investido 0 < 25\n    let r = await placeOrder(SET, { id: 9, name: 'Farm Buy LTCUSDT' }, action(LIMIT_BUY));\n    checkTrue('Farm Buy sob o teto \u2192 exchange.buy chamado 1\u00d7', buyCalls.length === 1 && sellCalls.length === 0);\n    checkTrue('Farm Buy \u2192 ordem persistida (insertOrder, side BUY)', inserted.length === 1 && inserted[0].side === 'BUY');\n\n    // (2) Farm Buy ACIMA do teto de exposi\u00e7\u00e3o \u2192 soft-cap, N\u00c3O compra.\n    reset();\n    updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 1, cost: 30 }, false); // investido 30 >= 25\n    r = await placeOrder(SET, { id: 9, name: 'Farm Buy LTCUSDT' }, action(LIMIT_BUY));\n    checkTrue('Farm Buy acima do teto \u2192 N\u00c3O compra (soft-cap)', buyCalls.length === 0 && r.type === 'info');\n\n    // (3) Farm Sell (FARM_QTY) \u2192 vende S\u00d3 o bucket + trava FARM_SELLING com o orderId do fill.\n    reset();\n    updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 5, cost: 43 }, false);\n    deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n    r = await placeOrder(SET, { id: 10, name: 'Farm Sell LTCUSDT' }, action(LIMIT_SELL_FARM));\n    checkTrue('Farm Sell \u2192 exchange.sell com a qty do bucket (5)', sellCalls.length === 1 && parseFloat(sellCalls[0].qty) === 5);\n    const lock = getMemory('LTCUSDT', 'FARM_SELLING');\n    checkTrue('Farm Sell \u2192 FARM_SELLING travado com o orderId do fill', lock && lock.orderId === 2002);\n\n    // (4) Farm Sell com FARM_SELLING j\u00e1 ativo \u2192 SKIP anti-empilhamento (n\u00e3o re-vende o bucket).\n    reset();\n    r = await placeOrder(SET, { id: 10, name: 'Farm Sell LTCUSDT' }, action(LIMIT_SELL_FARM));\n    checkTrue('Farm Sell com lock ativo \u2192 SKIP (sem oversell)', sellCalls.length === 0 && r.type === 'info');\n    deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n\n    // (5) [PAPER] automa\u00e7\u00e3o \u2192 roteia p/ paperEngine, NUNCA toca o exchange real.\n    reset();\n    r = await placeOrder(SET, { id: 39, name: '[PAPER] Consistencia Buy LTCUSDT' }, action({ id: 3, symbol: 'LTCUSDT', side: 'BUY', type: 'MARKET', quantity: 'MIN_NOTIONAL', quantityMultiplier: 4 }));\n    checkTrue('[PAPER] automa\u00e7\u00e3o \u2192 paperEngine, exchange intocado', paperCalls.length === 1 && buyCalls.length === 0 && sellCalls.length === 0);\n\n    // (6) [PAPER] no NOME DO TEMPLATE chegando ao caminho real \u2192 fail-closed (research nunca vira ordem real).\n    reset();\n    r = await placeOrder(SET, { id: 50, name: 'Farm Buy LTCUSDT' }, action({ id: 4, name: '[PAPER] template', symbol: 'LTCUSDT', side: 'BUY', type: 'LIMIT', quantity: 'MIN_NOTIONAL', quantityMultiplier: 2, limitPrice: '44', limitPriceMultiplier: 1 }));\n    checkTrue('[PAPER] template no caminho real \u2192 BLOQUEADO (fail-closed)', r.type === 'error' && buyCalls.length === 0 && paperCalls.length === 0);\n\n    // (7) MARKET buy din\u00e2mico \u2192 usa quoteOrderQty (calcQuoteQty = MIN_NOTIONAL\u00d7mult), n\u00e3o qty-base.\n    reset();\n    updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 0, cost: 0 }, false);\n    r = await placeOrder(SET, { id: 2, name: 'Baseline Buy LTCUSDT' }, action({ id: 5, symbol: 'LTCUSDT', side: 'BUY', type: 'MARKET', quantity: 'MIN_NOTIONAL', quantityMultiplier: 1 }));\n    checkTrue('MARKET buy \u2192 quoteOrderQty setado (=$5), sem qty-base', buyCalls.length === 1 && buyCalls[0].opts && parseFloat(buyCalls[0].opts.quoteOrderQty) === 5);\n\n    console.log(`\\nintegration.test.js: ${passed} passed, ${failed} failed`);\n    process.exit(failed ? 1 : 0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:45:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/scripts/sim/integration.test.js\nsudo -n -u gcrux-tradeux bash -lc 'node scripts/sim/integration.test.js' 2>&1 | grep -vE \"Sequelize|deprecated|ExperimentalWarning|node:internal|^\\(node:\"\necho \"exit=${PIPESTATUS[0]}\"",
+  "description": "Run integration test and check result"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   throw err;
+>   ^
+> 
+> Error: Cannot find module '/home/gcrux-tradeux/tradeux/scripts/sim/integration.test.js'
+>   code: 'MODULE_NOT_FOUND',
+>   requireStack: []
+> }
+> 
+> Node.js v18.19.1
+> exit=1
+> ```
+
+## 🤖 Claude *(17:45:55)*
+
+
+## 🤖 Claude *(17:45:56)*
+
+Caminho errado — esqueci o `cd backend`. Corrigindo:
+
+## 🤖 Claude *(17:45:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/integration.test.js' 2>&1 | grep -vE \"Sequelize|deprecated|ExperimentalWarning|node:internal|^\\(node:\"\necho \"exit=${PIPESTATUS[0]}\"",
+  "description": "Run integration test from backend dir"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> integration.test.js: 9 passed, 0 failed
+> exit=0
+> ```
+
+## 🤖 Claude *(17:46:35)*
+
+
+## 🤖 Claude *(17:46:37)*
+
+**`integration.test.js`: 9/9 GREEN.** Fase 3 roda o caminho de execução real (`placeOrder`) com tudo mockado. Confirmo a suíte inteira e, em paralelo, lanço um **workflow de verificação adversarial** da Fase 3 (cobertura de branches, fidelidade dos mocks, tautologias, cenários money-path faltando) — antes de gate/commit:
+
+## 🤖 Claude *(17:46:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM\"",
+  "description": "Run full sim suite (6 files)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 9 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 9 passed, 0 failed
+> riskGuard.test.js: 14 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(17:47:07)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'sim-fase3-verify',\n  description: 'Verificacao adversarial da Fase 3 da suite de simulacao (integration.test.js do placeOrder)',\n  phases: [\n    { title: 'Lentes', detail: '4 lentes adversariais: cobertura de branch, fidelidade do mock, tautologia, cenarios money-path faltando' },\n    { title: 'Sintese', detail: 'consolida em lista priorizada de gaps + veredito' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux'\nconst T = REPO + '/backend/scripts/sim/integration.test.js'\nconst BEH = REPO + '/backend/src/beholder.js'\n\nconst FIND_SCHEMA = {\n  type: 'object', additionalProperties: false, required: ['findings'],\n  properties: {\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        required: ['severity', 'title', 'detail', 'suggested_test'],\n        properties: {\n          severity: { type: 'string', enum: ['P0', 'P1', 'P2'] },\n          title: { type: 'string' },\n          detail: { type: 'string', description: 'o problema concreto, com file:line quando der' },\n          suggested_test: { type: 'string', description: 'o caso de teste que fecharia o gap (ou \"n/a\")' },\n        },\n      },\n    },\n  },\n}\n\nconst COMMON = `Repo ${REPO}. A suite de simulacao do TradeUX (bot Binance Spot, MAINNET dinheiro real) tem uma Fase 3 INTEGRADA em ${T} que dirige o beholder.placeOrder REAL com Binance/DB/Telegram mockados (injetados no require.cache). O placeOrder esta em ${BEH}:436-600; o placeOco logo acima (~380-433). Leia o teste E o codigo real. Seja adversarial e CONCRETO (file:line).`\n\nconst LENSES = [\n  { key: 'branch-coverage', prompt: `LENTE COBERTURA DE BRANCH: enumere TODOS os branches/guardas de placeOrder (e placeOco) em ${BEH}:436-600 \u2014 roteamento paper, guard [PAPER] fail-closed, OCO, FARM_SELLING skip, FARM_MAX_NOTIONAL cap, MARKET-quote vs LIMIT/STOP, hasEnoughAssets, set de HARVEST_SELLING/FARM_SELLING apos sell, TRAILING_STOP normalizado, catch de erro do exchange, insertOrder, notify. Para CADA branch: o integration.test.js cobre? Liste os NAO cobertos como findings (severity pela criticidade money-path).` },\n  { key: 'mock-fidelity', prompt: `LENTE FIDELIDADE DO MOCK: os fakes de exchange (buy/sell/oco), ordersRepository (insertOrder/calcFillFinancials/STOP_TYPES/LIMIT_TYPES), symbolsRepository, paperEngine e telegramNotify em ${T} batem com as ASSINATURAS/retornos REAIS (leia backend/src/utils/exchange.js, backend/src/repositories/ordersRepository.js, backend/src/paperEngine.js)? Algum mock diverge da realidade de um jeito que daria FALSO VERDE (o teste passa mas o real quebraria)? Ex.: shape do fill, STOP_TYPES/LIMIT_TYPES errados, retorno do insertOrder, etc.` },\n  { key: 'tautology', prompt: `LENTE TAUTOLOGIA / FALSO-VERDE: leia cada assert de ${T}. Algum passaria MESMO se o codigo real estivesse quebrado (ex.: nao captura o efeito de verdade, compara coisa trivial, nao reseta estado entre casos, depende de ordem)? O estado de MEMORY/FARM_SELLING vaza entre casos? Os casos provam o que afirmam no nome?` },\n  { key: 'missed-scenarios', prompt: `LENTE CENARIOS MONEY-PATH FALTANDO: que SITUACOES PERIGOSAS de execucao NAO sao testadas e deveriam (o dono pediu \"uma simulacao por situacao que dispara qualquer ordem\")? Ex.: HALT/teto bloqueando via placeOrder (hoje o exchange e fake e nao chama assertWithinRisk), saldo insuficiente (hasEnoughAssets=false), calcQty lancando (bucket vazio) propagando, OCO de verdade, exchange retornando erro/REJECTED, STOP order, set de HARVEST_SELLING. Priorize.` },\n]\n\nphase('Lentes')\nconst perLens = await parallel(LENSES.map(l => () =>\n  agent(`${COMMON}\\n\\n${l.prompt}\\n\\nRetorne findings (P0/P1/P2) com detail file:line e o suggested_test. Se nao achar nada numa categoria, retorne findings vazio.`,\n    { schema: FIND_SCHEMA, phase: 'Lentes', label: l.key })\n))\nconst all = perLens.filter(Boolean).flatMap((r, i) => (r.findings || []).map(f => ({ ...f, lens: LENSES[i].key })))\n\nphase('Sintese')\nconst report = await agent(\n  `${COMMON}\\n\\nFindings das 4 lentes (com possiveis duplicatas):\\n${JSON.stringify(all)}\\n\\nConsolide (dedup) numa lista PRIORIZADA p/ endurecer ${T}. Para cada item: severity, o gap em 1 linha, e o caso de teste concreto que o fecha. No fim, um veredito: a Fase 3 esta SOLIDA o suficiente p/ commitar como esta (com os gaps virando follow-up), ou ha algum P0/P1 que DEVE entrar antes do commit? Markdown pt-BR, conciso.`,\n  { phase: 'Sintese' }\n)\nreturn { report, findings: all }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wby2zut0g
+> Summary: Verificacao adversarial da Fase 3 da suite de simulacao (integration.test.js do placeOrder)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/subagents/workflows/wf_488aebec-bbf
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/workflows/scripts/sim-fase3-verify-wf_488aebec-bbf.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/workflows/scripts/sim-fase3-verify-wf_488aebec-bbf.js"} to iterate without resending the script.)
+> Run ID: wf_488aebec-bbf
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/workflows/scripts/sim-fase3-verify-wf_488aebec-bbf.js", resumeFromRunId: "wf_488aebec-bbf"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(17:47:16)*
+
+
+## 🤖 Claude *(17:47:26)*
+
+**Suíte completa: 6/6 verde (75 asserções).** Estado atual:
+
+## ✅ Commitado e no ar
+- **`fa26949` → `origin/master`** (Fatia 1+2: fix do P&L-BNB + 5 testes money-path + wiring). CI rodando.
+
+## 🔨 Fase 3 construída (ainda não commitada)
+- **`integration.test.js` (9 casos, verde)** — dirige o `placeOrder` REAL com Binance/DB/Telegram mockados, provando o caminho de execução ponta a ponta:
+  - roteamento `[PAPER]` → paperEngine (research não vira ordem real)
+  - `[PAPER]` no template chegando ao caminho real → **fail-closed**
+  - teto de exposição do Farm (`FARM_MAX_NOTIONAL`) → soft-cap não compra
+  - venda do Farm: sizing por bucket (`FARM_QTY`) + **trava `FARM_SELLING` com o orderId** + **anti-empilhamento** (skip se já em voo)
+  - MARKET buy → `quoteOrderQty` (não qty-base)
+
+## ⏳ Em andamento
+- **Workflow de verificação adversarial** (`wby2zut0g`) rodando agora sobre a Fase 3 — 4 lentes (cobertura de branch, fidelidade dos mocks, tautologia, cenários money-path faltando). Eu **já sei** que faltam alguns (OCO real, HALT/teto via `placeOrder`, saldo insuficiente, `calcQty` lançando) — o workflow vai confirmar/priorizar e pegar os sutis.
+
+**Próximo (quando o workflow voltar):** expando o `integration.test.js` com os gaps P0/P1, rodo o gate QA+TL, e commito a Fase 3. Te aviso assim que tiver o veredito da verificação. Não commito a Fase 3 sem isso.
+
+## 👤 User *(17:54:08)*
+
+<task-notification>
+<task-id>wby2zut0g</task-id>
+<tool-use-id>toolu_01BVjH55HstnFuk2rJutLQy7</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/tasks/wby2zut0g.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Verificacao adversarial da Fase 3 da suite de simulacao (integration.test.js do placeOrder)" completed</summary>
+<result>{"report":"Confirmei todos os pontos críticos. Os 3 bugs latentes são reais:\n\n1. **Linha 551** — `` `Order failed! ` + err.body ? err.body : err.message `` → precedência faz `+` ligar antes do `?:`. Confirmado.\n2. **Linha 573** — `STOP_TYPES.includes(order.type)` mas `order` (montado em 473-479) só tem `order.options.type`, nunca `order.type`. Sempre falso → `stopPrice` undefined no insert de STOP não-trailing. Confirmado.\n3. **assertWithinRisk** mora dentro de `exchange.buy/sell/oco` (linhas 116/125/138), que o `fakeExchange` substitui inteiro → HALT/teto nunca exercitado pelo integrado. Confirmado.\n\nTambém confirmei: `calcFillFinancials: () =&gt; ({})` (linha 48) stuba o caminho financeiro inteiro; nenhum caso assere `r.type==='success'`; placeOco zero-coberto e `fakeExchange` nem define `cancelOrderList`. Aqui está a consolidação.\n\n---\n\n# Endurecimento da Fase 3 (`integration.test.js`) — lista priorizada\n\nValidei o teste e o código real (`beholder.js`, `utils/exchange.js`). Os findings se consolidam em **11 itens** (dedupliquei ~24 → muitas lentes apontaram o mesmo gap por ângulos diferentes). Os 3 bugs de produção latentes são **reais e confirmados na leitura**, não só lacunas de teste.\n\n## P0 — bloqueadores\n\n### P0-1 · HALT/teto (`assertWithinRisk`) nunca roda via `placeOrder`\n**Gap:** o `fakeExchange` (test:31-35) substitui `buy/sell/oco` inteiros, e `assertWithinRisk` mora *dentro* deles (`exchange.js:116,125,138`) → a Fase 3 nunca prova que o sistema **CONGELADO** (estado atual no MEMORY) barra uma automação que dispara. É exatamente o cenário mais perigoso do dono (mainnet, congelado).\n**Caso:** fazer o fake delegar ao `assertWithinRisk` real no topo de cada buy/sell, com um `riskState` fake flipável. (a) `HALTED=true` → `placeOrder(Farm Buy)` retorna `{type:'error'}` e `buyCalls.length===0`; (b) notional &gt; teto → bloqueado; (c) `HALTED=false` sob o teto → passa.\n\n### P0-2 · Bug de precedência no catch de ordem rejeitada (`beholder.js:551`) — confirmado\n**Gap (bug real):** `text: \\`Order failed! \\` + err.body ? err.body : err.message`. O `+` liga antes do `?:` → expressão é `('Order failed! ' + err.body) ? err.body : err.message`, **sempre truthy**. Para `new Error(msg)` sem `.body` (é o caso do throw do HALT/teto, `exchange.js:38/53`) → retorna `err.message`? Não: `err.body` é `undefined`, `'Order failed! undefined'` é truthy → retorna **`err.body` = `undefined`**. O texto reportado ao dono/Telegram vira `undefined`, perdendo prefixo E mensagem. O catch (548-551) tem cobertura zero (os mocks nunca lançam).\n**Caso:** `fakeExchange.sell` lança `new Error('HALT ativo')` → `r.type==='error'` e `r.text` contém `'HALT'` (hoje vira `undefined` — pega o bug). 2º caso com `{ body: {code:-2010} }` → texto contém o body.\n**Fix:** `\\`Order failed! \\` + (err.body ? JSON.stringify(err.body) : err.message)`.\n\n### P0-3 · `placeOco` inteiro (331-433) 100% sem cobertura — saída protetiva TP+SL, dinheiro real\n**Gap:** nenhum caso usa `type='OCO'`. Pior, o mock `oco` retorna `orderReports:[]` (test:34) → cairia no branch ≠2-pernas (395) e chamaria `exchange.cancelOrderList`, **método que o `fakeExchange` nem define** → `TypeError`. O caminho que coloca STOP+TP, persiste 2 pernas com mesmo `orderListId` e faz rollback de OCO órfã é scaffolding morto.\n**Caso:** adicionar `cancelOrderList` ao fake e: (a) feliz — `oco()` devolve 2 pernas → `ocoCalls.length===1` e `inserted.length===2` com mesmo `orderListId`; (b) ≠2 pernas → `r.type==='error'` E `cancelOrderList` chamado; (c) `insertOrder` lança no meio → rollback via `cancelOrderList`; (d) `getOpenOcoOrders` devolve OCO aberta → skip, `oco()` não chamado.\n\n## P1 — devem entrar (regressões silenciosas / bug latente)\n\n### P1-1 · `order.type` vs `order.options.type` (`beholder.js:573`) — bug latente confirmado\n**Gap (bug real):** `STOP_TYPES.includes(order.type)` mas `order` é `{symbol,side,options:{type}}` (473-479) — `order.type` é **sempre undefined**. Para uma `STOP_LOSS_LIMIT` não-trailing, o `stopPrice` calculado em 532 (`order.options.stopPrice`) **nunca persiste** (grava `undefined`). Nenhum caso de STOP existe → regressão escondida.\n**Caso:** template `STOP_LOSS_LIMIT` SELL com stopPrice válido → asserir `opts.stopPrice` setado E `inserted[0].stopPrice` igual ao calculado. **Vai falhar hoje** (undefined), provando o bug. Fix: `order.options.type`.\n\n### P1-2 · Nenhum caso positivo assere `r.type==='success'` — regressão success→error invisível\n**Gap:** casos (1)(3)(7) só checam efeitos colaterais. Confirmado por mutação no finding: trocar o `return {type:'success'}` (599) por `{type:'error'}` mantém 9/9 verdes. O chamador real decide log/Telegram/re-arme pelo `r.type`.\n**Caso:** adicionar `checkTrue(..., r.type === 'success')` em (1)(3)(7).\n\n### P1-3 · `calcFillFinancials: () =&gt; ({})` (test:48) esconde todo o caminho financeiro do insert\n**Gap:** o real (`ordersRepository.js:231-251`) lê `cummulativeQuoteQty`/`fills[]`/`side` e devolve `{avgPrice,net,commission,commissionAsset}` espalhado no insert (590). O stub retorna `{}`, e os fakes buy/sell nem têm esses campos → a conversão de fee BNB→USDT e o guard de `net` nunca são exercitados.\n**Caso:** fake buy com fill MARKET realista (`cummulativeQuoteQty`, `fills:[{commission,commissionAsset:'BNB',isMaker}]`), usar `calcFillFinancials` **real** → asserir `inserted[0].net/avgPrice/commissionAsset` persistidos.\n\n### P1-4 · Persistência do lado SELL nunca asserida — venda órfã passa batida\n**Gap:** só (1) BUY checa `inserted`. (3) Farm Sell checa `sell`+`FARM_SELLING` mas não que persistiu. Confirmado por mutação: `insertOrder` no-op no SELL mantém 9/9 verdes. Venda na Binance sem linha no DB é a ordem órfã que `placeOrder` existe pra evitar.\n**Caso:** em (3) asserir `inserted.length===1 &amp;&amp; inserted[0].side==='SELL' &amp;&amp; inserted[0].orderId===2002`.\n\n### P1-5 · Caminho `TRAILING_STOP` (445-449 + 571-572) não coberto — assimetria clone vs original\n**Gap:** normalização para MARKET (446-448 muta a CÓPIA) mas a persistência lê `action.orderTemplate.stopPrice` (571, objeto ORIGINAL não-clonado) — assimetria proposital e não testada.\n**Caso:** `orderTemplate.type='TRAILING_STOP'`, `stopPrice='40'` → `opts.type==='MARKET'` (sem stopPrice nas opts) E `inserted[0].stopPrice==='40'`.\n\n### P1-6 · `hasEnoughAssets=false` e `calcQty` lançando não propagam via `placeOrder` (integrado)\n**Gap:** wallet fixada folgada (1000/10) → o throw de saldo (535-536) e os throws fail-closed do `calcQty` (bucket vazio, 268-269) nunca disparam no integrado. Cenário real: venda no-loss do Farm num símbolo com `FARM_DCA` zerado por restart → tem que abortar sem vender e **sem setar FARM_SELLING**.\n**Caso:** `FARM_DCA={qty:0,cost:0}`, deletar `FARM_SELLING`, SELL LIMIT `FARM_QTY` → `placeOrder` lança/erro, `sellCalls.length===0`, `FARM_SELLING` NÃO setado.\n\n### P1-7 · Trava `HARVEST_SELLING` (560-561) não coberta — gêmeo do `FARM_SELLING` (que é testado)\n**Gap:** o set após `sell` de `HARVEST_QTY` espelha `FARM_SELLING` mas, diferente do Farm, o Harvester **não tem skip anti-empilhamento no topo** → a trava é a única proteção contra oversell do bucket. Código vivo no hot-path (módulo desativado no mainnet, daí P1).\n**Caso:** `MEMORY['LTCUSDT:HARVEST']={qty:5,cost:43}`, SELL `HARVEST_QTY` → `getMemory(sym,'HARVEST_SELLING').orderId===result.orderId` (2002).\n\n## P2 — follow-up (baixa criticidade ou cobertos isoladamente)\n\n### P2-1 · Caso (7) tem setup morto/enganoso (`FARM_DCA` reset inerte)\nA automação `'Baseline Buy'` não casa `/^Farm Buy /` → o cap nunca lê `FARM_DCA`; o reset (test:122) é inerte. **Caso:** `'Baseline Buy LTCUSDT'` com `FARM_DCA` acima do teto → asserir que a compra **acontece** (prova cap Farm-only por desenho) e remover o reset inerte.\n\n### P2-2 · Guards de pré-condição + fetch de template (438-442, 444) não cobertos\n`placeOrder(null,...)`, action sem `orderTemplateId` → throw; e o ramo
+... (truncated 28767 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/tasks/wby2zut0g.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>348962</subagent_tokens><tool_uses>71</tool_uses><duration_ms>420432</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(17:54:58)*
+
+
+## 🤖 Claude *(17:55:00)*
+
+O workflow achou ouro — **2 bugs REAIS de produção** (não só lacunas de teste) + um gap crítico. Deixa eu pegar o relatório completo (o veredito + os P2 truncaram) antes de implementar:
+
+## 🤖 Claude *(17:55:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/extract_verify.py",
+  "content": "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\nimport json\nf = '/tmp/claude-1001/-home-gcrux-tradeux/d0a2c6d9-6db0-4dc2-95ec-e39cad6dbba0/tasks/wby2zut0g.output'\nd = json.load(open(f, encoding='utf-8'))\nres = d.get('result', {})\nreport = res.get('report', '')\nfindings = res.get('findings', []) or []\n# print only from the verdict / P2 tail onward to avoid re-dumping what I have\nprint('=== report length:', len(report))\n# show from 'P2' onward (the truncated tail)\ni = report.find('## P2')\nprint(report[i:] if i > 0 else report[-4000:])\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/extract_verify.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:55:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 /tmp/extract_verify.py",
+  "description": "Show the P2 tail and verdict of the verification report"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === report length: 10171
+> ## P2 — follow-up (baixa criticidade ou cobertos isoladamente)
+> 
+> ### P2-1 · Caso (7) tem setup morto/enganoso (`FARM_DCA` reset inerte)
+> A automação `'Baseline Buy'` não casa `/^Farm Buy /` → o cap nunca lê `FARM_DCA`; o reset (test:122) é inerte. **Caso:** `'Baseline Buy LTCUSDT'` com `FARM_DCA` acima do teto → asserir que a compra **acontece** (prova cap Farm-only por desenho) e remover o reset inerte.
+> 
+> ### P2-2 · Guards de pré-condição + fetch de template (438-442, 444) não cobertos
+> `placeOrder(null,...)`, action sem `orderTemplateId` → throw; e o ramo de fetch via `getOrderTemplate` (caminho de produção do BRAIN cacheado vs DB) é não-testado por construção (mock é throw). **Caso:** os 2 throws + um caso com `action` sem `orderTemplate` e `getOrderTemplate` retornando válido.
+> 
+> ### P2-3 · Fidelidade de shape: fill omite `cummulativeQuoteQty`/`executedQty` real; `insertOrder` POJO não-Sequelize
+> No fluxo MARKET-por-quote (7) `order.quantity` fica undefined e o insert grava `quantity: undefined||executedQty` (que no fake é `qty=undefined`) — o `create` real rejeitaria por NOT NULL, o fake POJO `{get:()=>o,...o}` deixa passar. **Caso:** fake retornar `executedQty` real e asserir `inserted[0].quantity` finito; opcionalmente o fake `insertOrder` lançar se `quantity` for null.
+> 
+> ---
+> 
+> ## Veredito
+> 
+> **NÃO commitar como está.** Há **3 P0** que devem entrar antes do commit — e a justificativa não é cobertura cosmética, é que a Fase 3 hoje dá **falso verde sobre o caminho de risco mais crítico do sistema**, num bot de dinheiro real atualmente CONGELADO:
+> 
+> - **P0-1** é o motivo de existir desta suíte ("a automação dispara → que ordem sai ou é BARRADA"). Mockar o exchange inteiro apaga `assertWithinRisk`, o único chokepoint de HALT/teto. A suíte afirma cobrir o money-path mas não prova que o congelamento barra uma ordem.
+> - **P0-2** e **P1-1** são **bugs de produção reais** já presentes no código (precedência na 551 e `order.type` na 573), que um teste mínimo expõe imediatamente. Commitar a suíte sem eles é selar verde por cima de dois bugs vivos.
+> - **P0-3** deixa toda a saída protetiva (OCO TP+SL + rollback de órfã) sem cobertura, com o mock quebrado (`cancelOrderList` ausente) — não é nem happy-path-capaz.
+> 
+> Mínimo para o commit: **P0-1, P0-2, P0-3** (fechando os 2 bugs de código que P0-2/P1-1 revelam). **P1-2 e P1-4** são baratos e matam regressões silenciosas confirmadas por mutação — recomendo incluí-los no mesmo lote. O restante dos P1 e todos os P2 podem virar follow-up.
+> 
+> Arquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js`, `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (placeOrder 436-600, placeOco 331-433, bugs em :551 e :573), `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (assertWithinRisk :33-56, dentro de buy/sell/oco :116/125/138).
+> ```
+
+## 🤖 Claude *(17:56:25)*
+
+
+## 🤖 Claude *(17:56:31)*
+
+O veredito é claro: **NÃO commitar como está — 3 P0**, incluindo **2 bugs de produção reais** que eu confirmo na minha leitura:
+
+- **Bug 1 (`beholder.js:551`):** `` `Order failed! ` + err.body ? err.body : err.message `` — precedência: `+` liga antes do `?:` → sempre retorna `err.body`, que é `undefined` pra throw de HALT/teto → **a mensagem de erro pro dono/Telegram vira `undefined`**.
+- **Bug 2 (`beholder.js:573`):** `STOP_TYPES.includes(order.type)` — `order` só tem `order.options.type`; `order.type` é sempre `undefined` → **`stopPrice` não persiste** numa ordem STOP não-trailing.
+
+Vou: (a) escrever os casos que **expõem** os 2 bugs (RED), (b) corrigir os bugs (GREEN), (c) fechar P0-1 (HALT/teto via `placeOrder`, fiando o `assertWithinRisk` REAL no fake) + P0-3 (OCO) + P1-2/P1-4. Primeiro leio o `placeOco` e as assinaturas reais de `buy/sell/oco` pra os fakes ficarem fiéis:
+
+## 🤖 Claude *(17:56:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 331,
+  "limit": 105
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 331	async function placeOco(settings, automation, orderTemplate, symbol) {
+> 332	    const side = orderTemplate.side.toUpperCase();
+> 333	    if (side !== 'SELL')
+> 334	        throw new Error(`OCO no momento só suporta SELL protetivo (TP+SL). Side recebido: ${side}`);
+> 335	
+> 336	    // Anti-empilhamento: a proteção é "uma OCO por vez". Se já há uma OCO aberta desta
+> 337	    // automação para o símbolo, não coloca outra — a automação re-arma sozinha quando a
+> 338	    // anterior resolver (TP/SL) ou for cancelada. Sem isso, uma automação sem índice (que
+> 339	    // dispara a cada tick) ou condições oscilando empilhariam OCOs e drenariam o saldo.
+> 340	    if (automation.id) {
+> 341	        const symbolUpper = orderTemplate.symbol.toUpperCase();
+> 342	        const open = await getOpenOcoOrders(automation.id);
+> 343	        if (open && open.some(o => o.symbol === symbolUpper)) {
+> 344	            if (automation.logs) logger('A:' + automation.id, `OCO já aberta para ${symbolUpper}; re-disparo ignorado.`);
+> 345	            return { type: 'success', text: `OCO already open for ${symbolUpper}, skipped.` };
+> 346	        }
+> 347	    }
+> 348	
+> 349	    // TP (perna LIMIT_MAKER, acima) = limitPrice × limitPriceMultiplier.
+> 350	    const tpPrice = calcPrice(orderTemplate, symbol, false);
+> 351	    if (!isFinite(tpPrice) || !parseFloat(tpPrice))
+> 352	        throw new Error(`Erro no preço de TP da OCO, OTID ${orderTemplate.id}: ${tpPrice}`);
+> 353	
+> 354	    // Gatilho do stop (belowStopPrice) = stopPrice × stopPriceMultiplier.
+> 355	    const stopTrigger = calcPrice(orderTemplate, symbol, true);
+> 356	    if (!isFinite(stopTrigger) || !parseFloat(stopTrigger))
+> 357	        throw new Error(`Erro no preço de stop da OCO, OTID ${orderTemplate.id}: ${stopTrigger}`);
+> 358	
+> 359	    // Preço-limite da perna de stop (belowPrice) = gatilho: para um SELL fica marketável
+> 360	    // (limite <= gatilho), garantindo a execução quando o stop dispara.
+> 361	    const stopLimit = stopTrigger;
+> 362	
+> 363	    const quantity = calcQty(orderTemplate, tpPrice, symbol);
+> 364	    if (!isFinite(quantity) || !parseFloat(quantity))
+> 365	        throw new Error(`Erro na quantidade da OCO, OTID ${orderTemplate.id}: ${quantity}`);
+> 366	
+> 367	    const order = { symbol: orderTemplate.symbol.toUpperCase(), side, quantity };
+> 368	    if (!hasEnoughAssets(symbol, order, tpPrice))
+> 369	        throw new Error(`Sem saldo suficiente para a OCO ${side} ${quantity} ${order.symbol}.`);
+> 370	
+> 371	    const options = {
+> 372	        aboveType: 'LIMIT_MAKER',
+> 373	        abovePrice: tpPrice,
+> 374	        belowType: 'STOP_LOSS_LIMIT',
+> 375	        belowPrice: stopLimit,
+> 376	        belowStopPrice: stopTrigger,
+> 377	        belowTimeInForce: 'GTC'
+> 378	    };
+> 379	
+> 380	    let result;
+> 381	    const exchange = require('./utils/exchange')(settings);
+> 382	    try {
+> 383	        result = await exchange.oco(side, order.symbol, quantity, options);
+> 384	    } catch (err) {
+> 385	        logger('A:' + automation.id, err.body ? err.body : err);
+> 386	        logger('A:' + automation.id, { order, options });
+> 387	        return { type: 'error', text: `OCO failed! ` + (err.body ? JSON.stringify(err.body) : err.message) };
+> 388	    }
+> 389	
+> 390	    const orderListId = result.orderListId;
+> 391	    const reports = Array.isArray(result.orderReports) ? result.orderReports : [];
+> 392	
+> 393	    // A OCO já está VIVA na corretora. Se a resposta vier anômala (≠2 pernas), cancela a
+> 394	    // lista para não deixar ordem órfã não-rastreável e falha.
+> 395	    if (reports.length !== 2) {
+> 396	        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }
+> 397	        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 398	        return { type: 'error', text: `OCO retornou ${reports.length} pernas (esperado 2); lista #${orderListId} cancelada.` };
+> 399	    }
+> 400	
+> 401	    // Persiste AMBAS as pernas com o mesmo orderListId (consistente com placeOrder). Se a
+> 402	    // persistência falhar, a OCO ficaria viva mas órfã (fora do getOpenOcoOrders e do hook
+> 403	    // de cancelamento) → cancela na corretora e falha, mantendo DB e exchange coerentes.
+> 404	    try {
+> 405	        for (const r of reports) {
+> 406	            const savedLeg = await insertOrder({
+> 407	                automationId: automation.id,
+> 408	                symbol: order.symbol,
+> 409	                quantity: r.origQty || quantity,
+> 410	                type: r.type,
+> 411	                side: r.side || side,
+> 412	                orderListId,
+> 413	                limitPrice: r.price && parseFloat(r.price) ? `${r.price}` : null,
+> 414	                stopPrice: r.stopPrice && parseFloat(r.stopPrice) ? `${r.stopPrice}` : null,
+> 415	                icebergQty: null,
+> 416	                orderId: r.orderId,
+> 417	                clientOrderId: r.clientOrderId,
+> 418	                transactTime: r.transactTime || result.transactionTime || Date.now(),
+> 419	                status: r.status || 'NEW'
+> 420	            });
+> 421	            telegramNotify.notifyOrder(savedLeg.get({ plain: true })); // uma notificação por perna da OCO
+> 422	        }
+> 423	    } catch (err) {
+> 424	        logger('A:' + automation.id, err);
+> 425	        try { if (orderListId) await exchange.cancelOrderList(order.symbol, orderListId); }
+> 426	        catch (e) { logger('A:' + automation.id, e.body ? e.body : e); }
+> 427	        return { type: 'error', text: `Falha ao persistir a OCO #${orderListId}; lista cancelada na corretora.` };
+> 428	    }
+> 429	
+> 430	    if (automation.logs)
+> 431	        logger('A:' + automation.id, `OCO #${orderListId} ${side} ${order.symbol}: TP ${tpPrice} / STOP ${stopTrigger}->${stopLimit}, qty ${quantity}`);
+> 432	
+> 433	    return { type: 'success', text: `OCO ${side} ${order.symbol} placed (list #${orderListId})` };
+> 434	}
+> 435	
+> ```
+
+## 🤖 Claude *(17:56:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 95,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	    // 1.x: websockets.terminate() indexa as subscriptions pela URL COMPLETA do socket, não
+> 96	    // pelo nome curto do endpoint. Guardamos a URL retornada por chart()/prevDay() por stream
+> 97	    // p/ conseguir fechá-lo depois (senão terminate vira no-op e o socket vaza/reconecta).
+> 98	    const chartStreams = {};
+> 99	    const tickerStreams = {};
+> 100	
+> 101	    function exchangeInfo() {
+> 102	        return binance.exchangeInfo();
+> 103	    }
+> 104	
+> 105	    async function balance() {
+> 106	        await binance.useServerTime();
+> 107	        return binance.balance();
+> 108	    }
+> 109	
+> 110	    // 1.x: buy()/sell() fixam type='LIMIT' posicional e o guard interno de stopPrice dispara
+> 111	    // ANTES de params sobrescrever o type -> ordens STOP via flags quebrariam. Por isso chamamos
+> 112	    // binance.order(type, side, ...) direto (e marketBuy/marketSell p/ MARKET, que tratam
+> 113	    // quoteOrderQty). Cobre MARKET/LIMIT/STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT/LIMIT_MAKER.
+> 114	    function buy(symbol, quantity, price, options) {
+> 115	        options = options || {};
+> 116	        assertWithinRisk('BUY', symbol, quantity, price, options);
+> 117	        const type = options.type || 'MARKET';
+> 118	        if (type === 'MARKET')
+> 119	            return binance.marketBuy(symbol, quantity, options);
+> 120	        return binance.order(type, 'BUY', symbol, quantity, price, options);
+> 121	    }
+> 122	
+> 123	    function sell(symbol, quantity, price, options) {
+> 124	        options = options || {};
+> 125	        assertWithinRisk('SELL', symbol, quantity, price, options);
+> 126	        const type = options.type || 'MARKET';
+> 127	        if (type === 'MARKET')
+> 128	            return binance.marketSell(symbol, quantity, options);
+> 129	        return binance.order(type, 'SELL', symbol, quantity, price, options);
+> 130	    }
+> 131	
+> 132	    // OCO (destravado pelo bump p/ 1.x). ocoOrder usa o endpoint novo POST /api/v3/orderList/oco.
+> 133	    // `options` segue o schema novo, p.ex. p/ um SELL protetivo após o buy:
+> 134	    //   { aboveType:'LIMIT_MAKER', abovePrice, belowType:'STOP_LOSS_LIMIT',
+> 135	    //     belowPrice, belowStopPrice, belowTimeInForce:'GTC' }
+> 136	    function oco(side, symbol, quantity, options) {
+> 137	        options = options || {};
+> 138	        assertWithinRisk(`OCO-${side}`, symbol, quantity, options.abovePrice || options.belowPrice, options);
+> 139	        return binance.ocoOrder(side, symbol, quantity, options);
+> 140	    }
+> 141	
+> 142	    function cancel(symbol, orderId) {
+> 143	        return binance.cancel(symbol, orderId);
+> 144	    }
+> 145	
+> 146	    // Cancela uma OCO inteira (as 2 pernas) via DELETE /api/v3/orderList.
+> 147	    function cancelOrderList(symbol, orderListId) {
+> 148	        return binance.privateSpotRequest('v3/orderList', { symbol, orderListId }, 'DELETE');
+> 149	    }
+> 150	
+> 151	    function orderStatus(symbol, orderId) {
+> 152	        return binance.orderStatus(symbol, orderId);
+> 153	    }
+> 154	
+> 155	    async function orderTrade(symbol, orderId) {
+> 156	        const trades = await binance.trades(symbol);
+> 157	        return trades.find(t => t.orderId === orderId);
+> 158	    }
+> 159	
+> 160	    function withdraw(coin, amount, address, network, addressTag) {
+> 161	        try {
+> 162	            const data = { coin, amount, address };
+> 163	            if (addressTag) data.addressTag = addressTag;
+> 164	            if (network) data.network = network;
+> 165	            return privateCall(SAPI_URL + 'capital/withdraw/apply', data, 'POST');
+> 166	        } catch (err) {
+> 167	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 168	        }
+> 169	    }
+> 170	
+> 171	    async function getCoins() {
+> 172	        try {
+> 173	            const coins = await privateCall(SAPI_URL + 'capital/config/getall', null, 'GET');
+> 174	            return coins.map(c => {
+> 175	                return {
+> 176	                    coin: c.coin,
+> 177	                    networks: c.networkList.map(n => {
+> 178	                        return {
+> 179	                            network: n.network,
+> 180	                            withdrawIntegerMultiple: n.withdrawIntegerMultiple,
+> 181	                            isDefault: n.isDefault,
+> 182	                            name: n.name,
+> 183	                            withdrawFee: n.withdrawFee,
+> 184	                            withdrawMin: n.withdrawMin,
+> 185	                            minConfirm: n.minConfirm
+> 186	                        }
+> 187	                    })
+> 188	                }
+> 189	            })
+> ```
+
+## 🤖 Claude *(17:58:26)*
+
+
+## 🤖 Claude *(17:58:30)*
+
+Agora tenho as assinaturas (`buy/sell/oco`, `placeOco`, `cancelOrderList`) e os 2 bugs confirmados. Reescrevo o `integration.test.js` com 14 casos — incluindo os 2 **expositores de bug** (RED), HALT via `placeOrder` (com o `assertWithinRisk` REAL fiado no fake), OCO (happy/anômalo/anti-stack), asserts de `success`, persistência do SELL, fail-closed de bucket vazio e trava HARVEST_SELLING:
+
+## 🤖 Claude *(17:59:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 INTEGRADO (Fase 3): o caminho de EXECU\u00c7\u00c3O real beholder.placeOrder/placeOco, ponta a\n * ponta, com Binance + DB + Telegram MOCKADOS (injetados no require.cache ANTES de carregar o beholder). Cada\n * caso \u00e9 uma SITUA\u00c7\u00c3O money-path: a automa\u00e7\u00e3o dispara \u2192 que ORDEM sai (ou \u00e9 BARRADA), e os efeitos colaterais.\n *\n * O guard de risco (assertWithinRisk) \u00e9 o REAL (capturado do exchange via o seam) e \u00e9 CHAMADO pelos fakes de\n * buy/sell/oco \u2014 ent\u00e3o o HALT \u00e9 exercitado de verdade atrav\u00e9s do placeOrder. O TETO por notional fica\n * DESLIGADO aqui (MAX_ORDER_NOTIONAL_USDT=0) porque j\u00e1 \u00e9 coberto isolado, com v\u00e1rios valores, em riskGuard.test.js.\n *\n * Cobre os branches de placeOrder/placeOco (beholder.js:331-600): roteamento [PAPER], guard [PAPER] fail-closed,\n * OCO (happy/\u22602-pernas/anti-stack), teto de exposi\u00e7\u00e3o do Farm, anti-empilhamento FARM_SELLING + set por orderId,\n * trava HARVEST_SELLING, sizing por bucket, MARKET-por-quote, HALT bloqueando, persist\u00eancia (BUY/SELL/2 pernas),\n * fail-closed de bucket vazio, e o texto de erro de uma ordem rejeitada (regress\u00e3o dos bugs :551 e :573).\n */\nprocess.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';\nprocess.env.FARM_MAX_NOTIONAL_USDT = '25'; // teto de EXPOSI\u00c7\u00c3O do Farm (lido no load do beholder)\nprocess.env.MAX_ORDER_NOTIONAL_USDT = '0'; // teto por ordem DESLIGADO aqui (coberto em riskGuard.test.js)\n\nconst path = require('path');\nconst SRC = path.resolve(__dirname, '../../src');\nfunction inject(rel, exports) {\n    const p = require.resolve(path.join(SRC, rel));\n    require.cache[p] = { id: p, filename: p, loaded: true, exports };\n}\n\n// --- captura de efeitos (reset\u00e1vel por caso) ---\nlet buyCalls = [], sellCalls = [], ocoCalls = [], cancelCalls = [], paperCalls = [], inserted = [];\nfunction reset() { buyCalls = []; sellCalls = []; ocoCalls = []; cancelCalls = []; paperCalls = []; inserted = []; }\n\n// --- estado control\u00e1vel ---\nlet HALTED = false;                 // kill-switch (flip\u00e1vel)\nlet OCO_LEGS = 2;                   // n\u00ba de pernas que a corretora \"devolve\" na OCO (2=happy)\nlet OPEN_OCO = [];                  // OCOs j\u00e1 abertas (anti-stacking)\n\n// guard REAL: injeta fake riskState/logger ANTES de requerer o exchange REAL, captura o assertWithinRisk (seam).\ninject('riskState.js', { isHalted: () => HALTED, getState: () => ({ halted: HALTED, source: 'manual', reason: 'sim' }) });\ninject('utils/logger.js', () => { });\nconst realAssert = require('../../src/utils/exchange').assertWithinRisk;\n\nconst fakeExchange = (settings) => ({\n    buy: async (symbol, quantity, price, options) => { realAssert('BUY', symbol, quantity, price, options); buyCalls.push({ symbol, quantity, price, options }); return { orderId: 1001, status: 'FILLED', executedQty: quantity, transactTime: 1, clientOrderId: 'cb' }; },\n    sell: async (symbol, quantity, price, options) => { realAssert('SELL', symbol, quantity, price, options); sellCalls.push({ symbol, quantity, price, options }); return { orderId: 2002, status: 'FILLED', executedQty: quantity, transactTime: 1, clientOrderId: 'cs' }; },\n    oco: async (side, symbol, quantity, options) => {\n        realAssert('OCO-' + side, symbol, quantity, options.abovePrice || options.belowPrice, options);\n        ocoCalls.push({ side, symbol, quantity, options });\n        const legs = [\n            { orderId: 11, type: 'LIMIT_MAKER', side, price: options.abovePrice, origQty: quantity, status: 'NEW', clientOrderId: 'tp', transactTime: 1 },\n            { orderId: 12, type: 'STOP_LOSS_LIMIT', side, price: options.belowPrice, stopPrice: options.belowStopPrice, origQty: quantity, status: 'NEW', clientOrderId: 'sl', transactTime: 1 },\n        ].slice(0, OCO_LEGS);\n        return { orderListId: 7, orderReports: legs, transactionTime: 1 };\n    },\n    cancelOrderList: async (symbol, orderListId) => { cancelCalls.push({ symbol, orderListId }); return {}; },\n});\nconst fakePaper = {\n    isPaperAutomation: (a) => !!(a && a.name && a.name.startsWith('[PAPER]')),\n    placePaperOrder: async (args) => { paperCalls.push(args); return { type: 'success', text: '[PAPER] fake' }; },\n    PAPER_PREFIX: '[PAPER]',\n};\nconst STOP_TYPES = ['STOP_LOSS', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT', 'TAKE_PROFIT_LIMIT'];\nconst LIMIT_TYPES = ['LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT'];\nconst fakeOrders = {\n    STOP_TYPES, LIMIT_TYPES,\n    orderTypes: { MARKET: 'MARKET', LIMIT: 'LIMIT', OCO: 'OCO', STOP_LOSS_LIMIT: 'STOP_LOSS_LIMIT' },\n    insertOrder: async (o) => { inserted.push(o); return { get: () => o, ...o }; },\n    getOpenOcoOrders: async () => OPEN_OCO,\n    calcFillFinancials: () => ({}),\n};\nconst SYMBOLS = { LTCUSDT: { symbol: 'LTCUSDT', base: 'LTC', quote: 'USDT', stepSize: '0.001', tickSize: '0.01', minNotional: '5', basePrecision: 3, quotePrecision: 2 } };\n\ninject('repositories/settingsRepository.js', { getDefaultSettings: async () => ({ id: 1 }) });\ninject('repositories/actionsRepository.js', { actionTypes: { ALERT_EMAIL: 'ALERT_EMAIL', ALERT_SMS: 'ALERT_SMS', ALERT_TELEGRAM: 'ALERT_TELEGRAM', ORDER: 'ORDER', GRID: 'GRID', WITHDRAW: 'WITHDRAW', TRAILING: 'TRAILING' } });\ninject('repositories/orderTemplatesRepository.js', { getOrderTemplate: async () => { throw new Error('n\u00e3o deveria buscar (action.orderTemplate \u00e9 passado)'); } });\ninject('repositories/automationsRepository.js', {});\ninject('repositories/withdrawTemplatesRepository.js', {});\ninject('repositories/gridsRepository.js', {});\ninject('repositories/symbolsRepository.js', { getSymbol: async (s) => SYMBOLS[s] });\ninject('repositories/ordersRepository.js', fakeOrders);\ninject('db.js', {});\ninject('utils/telegramNotify.js', { notifyOrder: () => { }, notify: async () => { } });\ninject('paperEngine.js', fakePaper);\ninject('utils/exchange.js', fakeExchange); // sobrescreve o real no cache (j\u00e1 capturamos o assertWithinRisk)\n\nconst beholder = require('../../src/beholder');\nconst { updateMemory, deleteMemory, getMemory, placeOrder } = beholder;\n\nlet passed = 0, failed = 0;\nfunction checkTrue(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\nasync function checkRejects(name, fn) { let t = false; try { await fn(); } catch (_) { t = true; } if (t) passed++; else { failed++; console.error(`  \u2717 ${name}: N\u00c3O rejeitou (esperava fail-closed)`); } }\n\nconst SET = { id: 1 };\nfunction action(ot) { return { id: 1, orderTemplateId: 1, orderTemplate: ot }; }\nconst LIMIT_BUY = { id: 1, symbol: 'LTCUSDT', side: 'BUY', type: 'LIMIT', quantity: 'MIN_NOTIONAL', quantityMultiplier: 2, limitPrice: '44', limitPriceMultiplier: 1 };\nconst FARM_SELL = { id: 2, symbol: 'LTCUSDT', side: 'SELL', type: 'LIMIT', quantity: 'FARM_QTY', quantityMultiplier: 1, limitPrice: '44', limitPriceMultiplier: 1 };\n\n(async () => {\n    updateMemory('USDT', 'WALLET', null, 1000, false);\n    updateMemory('LTC', 'WALLET', null, 10, false);\n\n    // (1) Farm Buy SOB o teto \u2192 coloca a ordem, persiste, success.\n    reset(); updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 0, cost: 0 }, false);\n    let r = await placeOrder(SET, { id: 9, name: 'Farm Buy LTCUSDT' }, action(LIMIT_BUY));\n    checkTrue('Farm Buy sob o teto \u2192 exchange.buy 1\u00d7', buyCalls.length === 1 && sellCalls.length === 0);\n    checkTrue('Farm Buy \u2192 persiste (insertOrder BUY)', inserted.length === 1 && inserted[0].side === 'BUY');\n    checkTrue('Farm Buy \u2192 r.type=success', r.type === 'success');\n\n    // (2) Farm Buy ACIMA do teto de exposi\u00e7\u00e3o \u2192 soft-cap, n\u00e3o compra.\n    reset(); updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 1, cost: 30 }, false);\n    r = await placeOrder(SET, { id: 9, name: 'Farm Buy LTCUSDT' }, action(LIMIT_BUY));\n    checkTrue('Farm Buy acima do teto \u2192 N\u00c3O compra (soft-cap, info)', buyCalls.length === 0 && r.type === 'info');\n\n    // (3) Farm Sell (FARM_QTY) \u2192 vende o bucket, trava FARM_SELLING (orderId), persiste SELL, success.\n    reset(); updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 5, cost: 43 }, false); deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n    r = await placeOrder(SET, { id: 10, name: 'Farm Sell LTCUSDT' }, action(FARM_SELL));\n    checkTrue('Farm Sell \u2192 exchange.sell qty do bucket (5)', sellCalls.length === 1 && parseFloat(sellCalls[0].quantity) === 5);\n    checkTrue('Farm Sell \u2192 FARM_SELLING travado com o orderId do fill', (getMemory('LTCUSDT', 'FARM_SELLING') || {}).orderId === 2002);\n    checkTrue('Farm Sell \u2192 persiste (insertOrder SELL orderId 2002)', inserted.length === 1 && inserted[0].side === 'SELL' && inserted[0].orderId === 2002);\n    checkTrue('Farm Sell \u2192 r.type=success', r.type === 'success');\n\n    // (4) Farm Sell com FARM_SELLING ativo \u2192 SKIP anti-empilhamento.\n    reset();\n    r = await placeOrder(SET, { id: 10, name: 'Farm Sell LTCUSDT' }, action(FARM_SELL));\n    checkTrue('Farm Sell com lock ativo \u2192 SKIP (sem oversell)', sellCalls.length === 0 && r.type === 'info');\n    deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n\n    // (5) [PAPER] automa\u00e7\u00e3o \u2192 paperEngine, exchange intocado.\n    reset();\n    r = await placeOrder(SET, { id: 39, name: '[PAPER] Consistencia Buy LTCUSDT' }, action({ id: 3, symbol: 'LTCUSDT', side: 'BUY', type: 'MARKET', quantity: 'MIN_NOTIONAL', quantityMultiplier: 4 }));\n    checkTrue('[PAPER] automa\u00e7\u00e3o \u2192 paperEngine, exchange intocado', paperCalls.length === 1 && buyCalls.length === 0 && sellCalls.length === 0);\n\n    // (6) [PAPER] no template chegando ao caminho real \u2192 fail-closed.\n    reset();\n    r = await placeOrder(SET, { id: 50, name: 'Farm Buy LTCUSDT' }, action({ id: 4, name: '[PAPER] template', symbol: 'LTCUSDT', side: 'BUY', type: 'LIMIT', quantity: 'MIN_NOTIONAL', quantityMultiplier: 2, limitPrice: '44', limitPriceMultiplier: 1 }));\n    checkTrue('[PAPER] template no caminho real \u2192 BLOQUEADO (fail-closed)', r.type === 'error' && buyCalls.length === 0 && paperCalls.length === 0);\n\n    // (7) MARKET buy din\u00e2mico \u2192 quoteOrderQty (=$5), success. (Baseline N\u00c3O casa o teto Farm.)\n    reset();\n    r = await placeOrder(SET, { id: 2, name: 'Baseline Buy LTCUSDT' }, action({ id: 5, symbol: 'LTCUSDT', side: 'BUY', type: 'MARKET', quantity: 'MIN_NOTIONAL', quantityMultiplier: 1 }));\n    checkTrue('MARKET buy \u2192 quoteOrderQty=$5 + success', buyCalls.length === 1 && parseFloat(buyCalls[0].options.quoteOrderQty) === 5 && r.type === 'success');\n\n    // (8) HALT ativo \u2192 a ordem \u00e9 BARRADA via placeOrder; nada compra/persiste; texto do erro \u00e9 informativo (bug :551).\n    reset(); HALTED = true; updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 0, cost: 0 }, false);\n    r = await placeOrder(SET, { id: 9, name: 'Farm Buy LTCUSDT' }, action(LIMIT_BUY));\n    HALTED = false;\n    checkTrue('HALT \u2192 ordem barrada (sem buy, sem insert, r.type=error)', buyCalls.length === 0 && inserted.length === 0 && r.type === 'error');\n    checkTrue('HALT \u2192 texto do erro carrega a causa (regress\u00e3o bug :551)', !!(r.text && /HALT|riskGuard|BLOQUEADA/.test(r.text)));\n\n    // (9) STOP_LOSS_LIMIT \u2192 persiste o stopPrice calculado (regress\u00e3o bug :573 order.type vs order.options.type).\n    reset();\n    r = await placeOrder(SET, { id: 70, name: 'Stop Protect LTCUSDT' }, action({ id: 6, symbol: 'LTCUSDT', side: 'SELL', type: 'STOP_LOSS_LIMIT', quantity: '5', limitPrice: '42', limitPriceMultiplier: 1, stopPrice: '43', stopPriceMultiplier: 1 }));\n    checkTrue('STOP \u2192 exchange.sell com stopPrice nas options', sellCalls.length === 1 && sellCalls[0].options.stopPrice === '43');\n    checkTrue('STOP \u2192 stopPrice PERSISTIDO no insert (regress\u00e3o bug :573)', inserted.length === 1 && inserted[0].stopPrice === '43');\n\n    // (10) OCO happy \u2192 2 pernas persistidas com o mesmo orderListId, success.\n    reset(); OCO_LEGS = 2; OPEN_OCO = [];\n    r = await placeOrder(SET, { id: 80, name: 'OCO Protect LTCUSDT' }, action({ id: 7, symbol: 'LTCUSDT', side: 'SELL', type: 'OCO', quantity: '5', limitPrice: '46', limitPriceMultiplier: 1, stopPrice: '42', stopPriceMultiplier: 1 }));\n    checkTrue('OCO happy \u2192 oco 1\u00d7, 2 pernas persistidas mesmo orderListId, success', ocoCalls.length === 1 && inserted.length === 2 && inserted[0].orderListId === 7 && inserted[1].orderListId === 7 && r.type === 'success');\n\n    // (11) OCO an\u00f4mala (\u22602 pernas) \u2192 cancela a lista \u00f3rf\u00e3 e falha; nada persiste.\n    reset(); OCO_LEGS = 1; OPEN_OCO = [];\n    r = await placeOrder(SET, { id: 80, name: 'OCO Protect LTCUSDT' }, action({ id: 8, symbol: 'LTCUSDT', side: 'SELL', type: 'OCO', quantity: '5', limitPrice: '46', limitPriceMultiplier: 1, stopPrice: '42', stopPriceMultiplier: 1 }));\n    checkTrue('OCO \u22602 pernas \u2192 cancelOrderList chamado, error, sem persistir', cancelCalls.length === 1 && r.type === 'error' && inserted.length === 0);\n    OCO_LEGS = 2;\n\n    // (12) OCO anti-stack (j\u00e1 h\u00e1 OCO aberta) \u2192 n\u00e3o coloca outra.\n    reset(); OPEN_OCO = [{ symbol: 'LTCUSDT' }];\n    r = await placeOrder(SET, { id: 80, name: 'OCO Protect LTCUSDT' }, action({ id: 9, symbol: 'LTCUSDT', side: 'SELL', type: 'OCO', quantity: '5', limitPrice: '46', limitPriceMultiplier: 1, stopPrice: '42', stopPriceMultiplier: 1 }));\n    checkTrue('OCO j\u00e1 aberta \u2192 re-disparo ignorado (oco N\u00c3O chamado)', ocoCalls.length === 0 && r.type === 'success');\n    OPEN_OCO = [];\n\n    // (13) Farm Sell com bucket VAZIO (FARM_DCA qty 0) \u2192 fail-closed: calcQty lan\u00e7a, n\u00e3o vende, N\u00c3O trava.\n    reset(); updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 0, cost: 0 }, false); deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n    await checkRejects('Farm Sell bucket vazio \u2192 fail-closed (lan\u00e7a)', () => placeOrder(SET, { id: 10, name: 'Farm Sell LTCUSDT' }, action(FARM_SELL)));\n    checkTrue('Farm Sell bucket vazio \u2192 n\u00e3o vendeu nem travou', sellCalls.length === 0 && getMemory('LTCUSDT', 'FARM_SELLING') === undefined);\n\n    // (14) Harvest Sell (HARVEST_QTY) \u2192 vende o bucket e seta a trava HARVEST_SELLING com o orderId.\n    reset(); updateMemory('LTCUSDT', 'HARVEST', null, { qty: 3, cost: 40 }, false); deleteMemory('LTCUSDT', 'HARVEST_SELLING', null);\n    r = await placeOrder(SET, { id: 22, name: 'Harvest Sell LTCUSDT' }, action({ id: 10, symbol: 'LTCUSDT', side: 'SELL', type: 'LIMIT', quantity: 'HARVEST_QTY', quantityMultiplier: 1, limitPrice: '44', limitPriceMultiplier: 1 }));\n    checkTrue('Harvest Sell \u2192 exchange.sell qty do bucket (3)', sellCalls.length === 1 && parseFloat(sellCalls[0].quantity) === 3);\n    checkTrue('Harvest Sell \u2192 HARVEST_SELLING travado com o orderId', (getMemory('LTCUSDT', 'HARVEST_SELLING') || {}).orderId === 2002);\n\n    console.log(`\\nintegration.test.js: ${passed} passed, ${failed} failed`);\n    process.exit(failed ? 1 : 0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:59:53)*
+
+
+## 🤖 Claude *(17:59:54)*
+
+Chown + rodo contra o código atual (espero **RED** nos 2 casos que expõem os bugs: 8-texto e 9-stopPrice):
+
+## 🤖 Claude *(17:59:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/scripts/sim/integration.test.js\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/integration.test.js' 2>&1 | grep -vE \"Sequelize|deprecated|ExperimentalWarning|node:internal|^\\(node:\"\necho \"exit=${PIPESTATUS[0]}\"",
+  "description": "Run expanded integration test against buggy code (expect RED on bug cases)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   ✗ HALT → texto do erro carrega a causa (regressão bug :551)
+>   ✗ STOP → stopPrice PERSISTIDO no insert (regressão bug :573)
+> 
+> integration.test.js: 21 passed, 2 failed
+> exit=1
+> ```
+
+## 🤖 Claude *(18:00:14)*
+
+
+## 🤖 Claude *(18:00:14)*
+
+**RED confirmado: 21 passam, 2 falham — exatamente os 2 expositores de bug** (e os outros 21 asserts provam que a cobertura integrada funciona). Agora corrijo os 2 bugs de produção no `beholder.js`:
+
+## 🤖 Claude *(18:00:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "        return { type: 'error', text: `Order failed! ` + err.body ? err.body : err.message };",
+  "new_string": "        // preced\u00eancia: `+` liga antes do `?:` \u2192 sem os par\u00eanteses a express\u00e3o era ('Order failed! '+err.body) ? ...,\n        // sempre truthy, retornando err.body (undefined p/ um Error sem .body \u2014 ex.: throw do riskGuard/HALT) \u2192 o texto\n        // reportado ao dono/Telegram virava 'undefined'. Coberto por sim/integration.test.js (caso HALT).\n        return { type: 'error', text: `Order failed! ` + (err.body ? JSON.stringify(err.body) : err.message) };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:00:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "    else if (STOP_TYPES.includes(order.type))\n        stopPrice = order.options.stopPrice;",
+  "new_string": "    else if (STOP_TYPES.includes(order.options.type)) // era order.type (sempre undefined \u2014 order s\u00f3 tem .options.type)\n        stopPrice = order.options.stopPrice;           // \u2192 stopPrice n\u00e3o persistia num STOP n\u00e3o-trailing. Coberto por sim/integration.test.js (caso STOP)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:00:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/beholder.js\necho \"=== integra\u00e7\u00e3o (espero GREEN agora) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/integration.test.js' 2>&1 | grep -E \"passed|\u2717\"\necho \"=== su\u00edte completa ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM\"\necho \"exit=${PIPESTATUS[0]}\"",
+  "description": "Apply fixes, re-run integration and full suite (expect all GREEN)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === integração (espero GREEN agora) ===
+> integration.test.js: 23 passed, 0 failed
+> === suíte completa ===
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 9 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 23 passed, 0 failed
+> riskGuard.test.js: 14 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> exit=0
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
