@@ -4432,6 +4432,2158 @@ Antes de queimar 125 mco reais, isso é decisão sua — três caminhos:
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Portão de consistência: identidade macro do produto consistente, mas o mostrador derivou (Gemini = referência suave, sem seed-lock). E o DoP do canvas-execute anima UM frame só (não interpola A→B). Como uso seus créditos Higgsfield reais agora?"="DoP anima o frame-inicial agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:11:12)*
+
+
+## 🤖 Claude *(23:11:14)*
+
+GO confirmado: **DoP anima o frame-inicial agora.** Disparando o vídeo (path async → `higgsfield-webhook` finaliza com débito atômico pós-upload). Higgsfield resolve via vault (key no env).
+
+## 🤖 Claude *(23:11:25)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(23:11:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nPROJ=$(cat /tmp/qa_proj.txt)\nFRAME_A=\"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/e871ceee-6e57-49dd-8ecc-60a5b8d54ed9.png\"\n\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\n[ -z \"$TOKEN\" ] && { echo \"mint falhou: $(cat /tmp/jwterr)\"; exit 1; }\n\necho \"=== DoP image_to_video (async) sobre o frame-inicial ===\"\ncurl -s \"${BASE}/functions/v1/canvas-execute\" \\\n  -H \"Authorization: Bearer ${TOKEN}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"project_id\\\":\\\"${PROJ}\\\",\\\"node_id\\\":\\\"n_video_dop\\\",\\\"node_type\\\":\\\"image_to_video\\\",\\\"provider\\\":\\\"higgsfield\\\",\\\"model\\\":\\\"dop-standard\\\",\\\"input_asset_url\\\":\\\"${FRAME_A}\\\",\\\"prompt\\\":\\\"Smooth cinematic camera orbit around the smartwatch, subtle parallax, the vivid orange strap catching the light, premium product reveal.\\\",\\\"parameters\\\":{\\\"duration\\\":5,\\\"motion_strength\\\":0.5}}\" \\\n  | tee /tmp/qa_video_resp.json | python3 -m json.tool",
+  "description": "Fire DoP image-to-video on frame-inicial (async)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DoP image_to_video (async) sobre o frame-inicial ===
+> {
+>     "execution_id": "594f56fb-0395-4aa3-af88-70233ba0925f",
+>     "status": "queued",
+>     "webhook_token": "5707b8d0914d4868a48ac501d8dd2b3fe6c3d49598d14383974236bc78c1c7e6",
+>     "operation_id": "4ad55c63-8c2a-4849-9962-4a616a5e2bff",
+>     "credits_charged": 125,
+>     "higgsfield_status": "queued"
+> }
+> ```
+
+## 🤖 Claude *(23:11:45)*
+
+
+## 🤖 Claude *(23:11:47)*
+
+Vídeo **enfileirado no Higgsfield** — `operation_id: 4ad55c63`, `credits_charged: 125` (intenção; o webhook só debita após upload-OK). DoP standard 5s leva ~1-3 min. Vou pollar a execução em background até o webhook finalizar (status → success + asset vídeo no bucket).
+
+## 🤖 Claude *(23:11:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nEXEC=\"594f56fb-0395-4aa3-af88-70233ba0925f\"\nfor i in $(seq 1 40); do\n  ROW=$(curl -s \"${BASE}/rest/v1/vm_canvas_executions?select=status,output_url,output_asset_id,error_message,credits_charged&id=eq.${EXEC}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\")\n  ST=$(echo \"$ROW\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['status'] if d else 'none')\" 2>/dev/null)\n  echo \"[$i] status=$ST\"\n  if [ \"$ST\" = \"success\" ] || [ \"$ST\" = \"failed\" ]; then\n    echo \"$ROW\" | python3 -m json.tool\n    break\n  fi\n  sleep 10\ndone",
+  "description": "Poll DoP video execution until terminal",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bs5eh0qvp. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tasks/bs5eh0qvp.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(23:11:59)*
+
+
+## 🤖 Claude *(23:12:00)*
+
+Poll rodando em background. Enquanto o vídeo processa, avanço a **Task #3 (reparo do `generate-image`)** — código puro, sem gasto, o desbloqueio do autopilot. Vou ler a função inteira para portar o path provado do `canvas-execute`.
+
+## 🤖 Claude *(23:12:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 9	};
+> 10	
+> 11	// Encode bytes → base64 in 32KB chunks (a single String.fromCharCode(...bytes) spread blows the call stack on a
+> 12	// ~1MB image). Used to return the data-URI preview in the response body for UI callers.
+> 13	function bytesToBase64(b: Uint8Array): string {
+> 14	  let bin = "";
+> 15	  const chunk = 0x8000;
+> 16	  for (let i = 0; i < b.length; i += chunk) {
+> 17	    bin += String.fromCharCode(...b.subarray(i, i + chunk));
+> 18	  }
+> 19	  return btoa(bin);
+> 20	}
+> 21	
+> 22	serve(async (req) => {
+> 23	  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 24	
+> 25	  try {
+> 26	    const authHeader = req.headers.get("Authorization");
+> 27	    if (!authHeader) {
+> 28	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 29	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 30	      });
+> 31	    }
+> 32	
+> 33	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 34	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 35	    // Dual-path auth (mirrors publish-wordpress): a SERVICE-role bearer (e.g. orchestrate-step) passes the acting
+> 36	    // tenant as `user_id` in the body — it is NOT a user JWT, so getUser() would 401. A user-JWT caller resolves
+> 37	    // the tenant via getUser() exactly as before. The byte-equal bearer check is the entire auth boundary for the
+> 38	    // body-trusted user_id path; only the service key (never reachable by a tenant) can take it.
+> 39	    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 40	
+> 41	    const { prompt, style, user_id: bodyUserId } = await req.json();
+> 42	    if (!prompt) {
+> 43	      return new Response(JSON.stringify({ error: "Prompt is required" }), {
+> 44	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 45	      });
+> 46	    }
+> 47	
+> 48	    let userId: string;
+> 49	    if (isServiceRole) {
+> 50	      if (!bodyUserId || typeof bodyUserId !== "string") {
+> 51	        return new Response(JSON.stringify({ error: "user_id is required for service_role calls" }), {
+> 52	          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 53	        });
+> 54	      }
+> 55	      userId = bodyUserId;
+> 56	    } else {
+> 57	      const supabaseAnonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 58	      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+> 59	        global: { headers: { Authorization: authHeader } },
+> 60	      });
+> 61	      const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 62	      if (authError || !user) {
+> 63	        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 64	          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 65	        });
+> 66	      }
+> 67	      userId = user.id;
+> 68	    }
+> 69	
+> 70	    const adminClient = createClient(supabaseUrl, serviceKey);
+> 71	    const { data: userKeys } = await adminClient.from("decrypted_user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> 72	
+> 73	    const openaiKey = userKeys?.openai_api_key || Deno.env.get("OPENAI_API_KEY");
+> 74	    const nanobanaKey = userKeys?.nanobana_api_key || Deno.env.get("NANOBANA_API_KEY");
+> 75	    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> 76	    
+> 77	    const prefImage = userKeys?.pref_image_provider || "openai";
+> 78	    
+> 79	    let activeKey = "";
+> 80	    let endpoint = "";
+> 81	    let isNanoBana = false;
+> 82	
+> 83	    if (prefImage === "nanobana" && nanobanaKey) {
+> 84	      activeKey = nanobanaKey;
+> 85	      endpoint = "https://api.nanobana.com/v1/images/generations"; // Assuming standard proxy or mock
+> 86	      isNanoBana = true;
+> 87	    } else {
+> 88	      activeKey = openaiKey || openRouterKey || "";
+> 89	      endpoint = openaiKey ? "https://api.openai.com/v1/images/generations" : "https://openrouter.ai/api/v1/images/generations";
+> 90	    }
+> 91	
+> 92	    if (!activeKey) {
+> 93	      return new Response(JSON.stringify({ error: "API Key not configured for selected provider" }), {
+> 94	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 95	      });
+> 96	    }
+> 97	
+> 98	    const stylePrompt = style ? ` Style: ${style}.` : "";
+> 99	    const fullPrompt = `Generate a high-quality marketing image: ${prompt}.${stylePrompt} The image should be professional, visually appealing, and suitable for social media marketing.`;
+> 100	
+> 101	    const aiResponse = await fetch(endpoint, {
+> 102	      method: "POST",
+> 103	      headers: {
+> 104	        Authorization: `Bearer ${activeKey}`,
+> 105	        "Content-Type": "application/json",
+> 106	        "HTTP-Referer": "https://mcorch.com", // For OpenRouter
+> 107	        "X-Title": "GCRUX Constellation" // For OpenRouter
+> 108	      },
+> 109	      body: JSON.stringify({
+> 110	        model: "dall-e-3",
+> 111	        prompt: fullPrompt,
+> 112	        n: 1,
+> 113	        size: "1024x1024",
+> 114	        // NOTE: `response_format` is NO LONGER accepted by the OpenAI images endpoint (returns
+> 115	        // 400 "Unknown parameter: 'response_format'"). dall-e-3 returns a temporary `url` by default;
+> 116	        // we download the bytes below. Do NOT re-add response_format.
+> 117	      }),
+> 118	    });
+> 119	
+> 120	    if (!aiResponse.ok) {
+> 121	      const status = aiResponse.status;
+> 122	      if (status === 429) {
+> 123	        return new Response(JSON.stringify({ error: "Limite de requisições excedido, tente novamente em instantes." }), {
+> 124	          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 125	        });
+> 126	      }
+> 127	      if (status === 402) {
+> 128	        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos na sua conta." }), {
+> 129	          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 130	        });
+> 131	      }
+> 132	      const t = await aiResponse.text();
+> 133	      console.error("AI error:", status, t);
+> 134	      // Surface the provider's error message (not sensitive — no key) so failures are diagnosable instead of
+> 135	      // collapsing every cause into a single opaque string. Bounded to 200 chars.
+> 136	      let upstream = "";
+> 137	      try { upstream = JSON.parse(t)?.error?.message ?? ""; } catch { upstream = t.slice(0, 200); }
+> 138	      return new Response(JSON.stringify({ error: "Erro na geração de imagem", upstream_status: status, upstream }), {
+> 139	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 140	      });
+> 141	    }
+> 142	
+> 143	    const data = await aiResponse.json();
+> 144	    // Expected response format for b64_json from standard OpenAI API
+> 145	    const imageB64 = data.data?.[0]?.b64_json;
+> 146	    const imageUrl = data.data?.[0]?.url;
+> 147	
+> 148	    if (!imageB64 && !imageUrl) {
+> 149	      return new Response(JSON.stringify({ error: "Nenhuma imagem foi gerada" }), {
+> 150	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 151	      });
+> 152	    }
+> 153	
+> 154	    // Acquire the PNG bytes from whichever form the provider returned: b64_json, a data-URI, or (dall-e-3's
+> 155	    // default now that response_format is gone) a temporary https URL that must be downloaded.
+> 156	    let bytes: Uint8Array;
+> 157	    if (imageB64) {
+> 158	      bytes = Uint8Array.from(atob(imageB64), (c) => c.charCodeAt(0));
+> 159	    } else if (typeof imageUrl === "string" && imageUrl.startsWith("data:")) {
+> 160	      bytes = Uint8Array.from(atob(imageUrl.replace(/^data:image\/\w+;base64,/, "")), (c) => c.charCodeAt(0));
+> 161	    } else {
+> 162	      const imgResp = await fetch(imageUrl);
+> 163	      if (!imgResp.ok) {
+> 164	        console.error("image download failed:", imgResp.status);
+> 165	        return new Response(JSON.stringify({ error: "Falha ao baixar a imagem gerada", upstream_status: imgResp.status }), {
+> 166	          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 167	        });
+> 168	      }
+> 169	      bytes = new Uint8Array(await imgResp.arrayBuffer());
+> 170	    }
+> 171	    const fileName = `${userId}/${crypto.randomUUID()}.png`;
+> 172	
+> 173	    const { error: uploadError } = await adminClient.storage
+> 174	      .from("generated-images")
+> 175	      .upload(fileName, bytes, { contentType: "image/png" });
+> 176	
+> 177	    if (uploadError) {
+> 178	      console.error("Upload error:", uploadError);
+> 179	      return new Response(JSON.stringify({ error: "Erro ao salvar imagem" }), {
+> 180	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 181	      });
+> 182	    }
+> 183	
+> 184	    const { data: signedUrlData, error: signedUrlError } = await adminClient.storage
+> 185	      .from("generated-images")
+> 186	      .createSignedUrl(fileName, 3600); // 1 hour expiry
+> 187	
+> 188	    if (signedUrlError) {
+> 189	      console.error("Signed URL error:", signedUrlError);
+> 190	      return new Response(JSON.stringify({ error: "Erro ao gerar URL da imagem" }), {
+> 191	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 192	      });
+> 193	    }
+> 194	
+> 195	    return new Response(JSON.stringify({
+> 196	      image_url: signedUrlData.signedUrl,
+> 197	      base64: `data:image/png;base64,${bytesToBase64(bytes)}`,
+> 198	      path: fileName,   // durable storage path (`<user_id>/<uuid>.png`) for re-signing past the 1h signed-URL TTL
+> 199	    }), {
+> 200	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 201	    });
+> 202	  } catch (e) {
+> 203	    console.error("generate-image error:", e);
+> 204	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+> 205	      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 206	    });
+> 207	  }
+> 208	});
+> 209	
+> ```
+
+## 🤖 Claude *(23:13:06)*
+
+
+## 🤖 Claude *(23:13:08)*
+
+Tenho o `generate-image` inteiro. A causa-raiz confirmada (linhas 83-90): rotas todas mortas — `api.nanobana.com` (DNS), `openrouter.ai/v1/images/generations` (deprecado→404), `api.openai.com/v1/images` (chave-projeto sem acesso→400). O reparo: portar o path **provado agora** do `canvas-execute` (OpenRouter chat-completions multimodal Gemini + Replicate FLUX), preservando auth dual-path, upload e formato de resposta (`path`+`image_url`) intactos para o `orchestrate-step` não quebrar.
+
+## 🤖 Claude *(23:13:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts",
+  "old_string": "    const openaiKey = userKeys?.openai_api_key || Deno.env.get(\"OPENAI_API_KEY\");\n    const nanobanaKey = userKeys?.nanobana_api_key || Deno.env.get(\"NANOBANA_API_KEY\");\n    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\");\n    \n    const prefImage = userKeys?.pref_image_provider || \"openai\";\n    \n    let activeKey = \"\";\n    let endpoint = \"\";\n    let isNanoBana = false;\n\n    if (prefImage === \"nanobana\" && nanobanaKey) {\n      activeKey = nanobanaKey;\n      endpoint = \"https://api.nanobana.com/v1/images/generations\"; // Assuming standard proxy or mock\n      isNanoBana = true;\n    } else {\n      activeKey = openaiKey || openRouterKey || \"\";\n      endpoint = openaiKey ? \"https://api.openai.com/v1/images/generations\" : \"https://openrouter.ai/api/v1/images/generations\";\n    }\n\n    if (!activeKey) {\n      return new Response(JSON.stringify({ error: \"API Key not configured for selected provider\" }), {\n        status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n\n    const stylePrompt = style ? ` Style: ${style}.` : \"\";\n    const fullPrompt = `Generate a high-quality marketing image: ${prompt}.${stylePrompt} The image should be professional, visually appealing, and suitable for social media marketing.`;\n\n    const aiResponse = await fetch(endpoint, {\n      method: \"POST\",\n      headers: {\n        Authorization: `Bearer ${activeKey}`,\n        \"Content-Type\": \"application/json\",\n        \"HTTP-Referer\": \"https://mcorch.com\", // For OpenRouter\n        \"X-Title\": \"GCRUX Constellation\" // For OpenRouter\n      },\n      body: JSON.stringify({\n        model: \"dall-e-3\",\n        prompt: fullPrompt,\n        n: 1,\n        size: \"1024x1024\",\n        // NOTE: `response_format` is NO LONGER accepted by the OpenAI images endpoint (returns\n        // 400 \"Unknown parameter: 'response_format'\"). dall-e-3 returns a temporary `url` by default;\n        // we download the bytes below. Do NOT re-add response_format.\n      }),\n    });\n\n    if (!aiResponse.ok) {\n      const status = aiResponse.status;\n      if (status === 429) {\n        return new Response(JSON.stringify({ error: \"Limite de requisi\u00e7\u00f5es excedido, tente novamente em instantes.\" }), {\n          status: 429, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      if (status === 402) {\n        return new Response(JSON.stringify({ error: \"Cr\u00e9ditos insuficientes. Adicione cr\u00e9ditos na sua conta.\" }), {\n          status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      const t = await aiResponse.text();\n      console.error(\"AI error:\", status, t);\n      // Surface the provider's error message (not sensitive \u2014 no key) so failures are diagnosable instead of\n      // collapsing every cause into a single opaque string. Bounded to 200 chars.\n      let upstream = \"\";\n      try { upstream = JSON.parse(t)?.error?.message ?? \"\"; } catch { upstream = t.slice(0, 200); }\n      return new Response(JSON.stringify({ error: \"Erro na gera\u00e7\u00e3o de imagem\", upstream_status: status, upstream }), {\n        status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n\n    const data = await aiResponse.json();\n    // Expected response format for b64_json from standard OpenAI API\n    const imageB64 = data.data?.[0]?.b64_json;\n    const imageUrl = data.data?.[0]?.url;\n\n    if (!imageB64 && !imageUrl) {\n      return new Response(JSON.stringify({ error: \"Nenhuma imagem foi gerada\" }), {\n        status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n\n    // Acquire the PNG bytes from whichever form the provider returned: b64_json, a data-URI, or (dall-e-3's\n    // default now that response_format is gone) a temporary https URL that must be downloaded.\n    let bytes: Uint8Array;\n    if (imageB64) {\n      bytes = Uint8Array.from(atob(imageB64), (c) => c.charCodeAt(0));\n    } else if (typeof imageUrl === \"string\" && imageUrl.startsWith(\"data:\")) {\n      bytes = Uint8Array.from(atob(imageUrl.replace(/^data:image\\/\\w+;base64,/, \"\")), (c) => c.charCodeAt(0));\n    } else {\n      const imgResp = await fetch(imageUrl);\n      if (!imgResp.ok) {\n        console.error(\"image download failed:\", imgResp.status);\n        return new Response(JSON.stringify({ error: \"Falha ao baixar a imagem gerada\", upstream_status: imgResp.status }), {\n          status: 502, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      bytes = new Uint8Array(await imgResp.arrayBuffer());\n    }",
+  "new_string": "    const openaiKey = userKeys?.openai_api_key || Deno.env.get(\"OPENAI_API_KEY\") || \"\";\n    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\") || \"\";\n    const replicateKey = userKeys?.replicate_api_key || Deno.env.get(\"REPLICATE_API_KEY\") || \"\";\n    const prefImage = userKeys?.pref_image_provider || \"\";\n\n    const stylePrompt = style ? ` Style: ${style}.` : \"\";\n    const fullPrompt = `Generate a high-quality marketing image: ${prompt}.${stylePrompt} The image should be professional, visually appealing, and suitable for social media marketing.`;\n\n    // \u2500\u2500 Provider routing (working endpoints only) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // HIST\u00d3RICO (reparo 2026-06-21): todas as rotas antigas estavam mortas \u2192\n    //   \u2022 api.nanobana.com            \u2192 DNS n\u00e3o resolve (endpoint morto)\n    //   \u2022 openrouter.ai/v1/images/... \u2192 deprecado (404 HTML)\n    //   \u2022 api.openai.com/v1/images    \u2192 chave-projeto do tenant sem acesso a modelo de imagem (400)\n    // Sintoma: \"s\u00f3 texto funciona\" no autopilot/orchestrate. Reparo: espelhar o path PROVADO do\n    // canvas-execute. Ordem (BYOK per-user > vault): Replicate FLUX (se pref/\u00fanico) \u2192 OpenRouter\n    // chat-completions multimodal (Gemini \"Nano Banana\") \u2192 OpenAI DALL-E (chaves com acesso a imagem).\n    let imgB64 = \"\";\n    let imgUrl = \"\";\n    try {\n      if (prefImage === \"replicate\" && replicateKey) {\n        imgUrl = await generateViaReplicate(replicateKey, fullPrompt);\n      } else if (openRouterKey) {\n        const r = await generateViaOpenRouter(openRouterKey, fullPrompt);\n        imgB64 = r.b64; imgUrl = r.url;\n      } else if (replicateKey) {\n        imgUrl = await generateViaReplicate(replicateKey, fullPrompt);\n      } else if (openaiKey) {\n        const r = await generateViaOpenAI(openaiKey, fullPrompt);\n        imgB64 = r.b64; imgUrl = r.url;\n      } else {\n        return new Response(JSON.stringify({\n          error: \"image_provider_not_configured\",\n          action: \"Configure uma chave OpenRouter, Replicate ou OpenAI em /dashboard/settings\",\n        }), { status: 501, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n      }\n    } catch (provErr) {\n      const msg = provErr instanceof Error ? provErr.message : \"provider error\";\n      console.error(\"[generate-image] provider error:\", msg);\n      // 402/429 are surfaced by the provider helpers via the message prefix so callers can react.\n      const status = msg.startsWith(\"402:\") ? 402 : msg.startsWith(\"429:\") ? 429 : 502;\n      return new Response(JSON.stringify({ error: \"Erro na gera\u00e7\u00e3o de imagem\", upstream: msg.slice(0, 300) }), {\n        status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n\n    if (!imgB64 && !imgUrl) {\n      return new Response(JSON.stringify({ error: \"Nenhuma imagem foi gerada\" }), {\n        status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n\n    // Acquire the PNG bytes from whichever form the provider returned: b64, a data-URI, or an https URL.\n    let bytes: Uint8Array;\n    if (imgB64) {\n      bytes = Uint8Array.from(atob(imgB64), (c) => c.charCodeAt(0));\n    } else if (imgUrl.startsWith(\"data:\")) {\n      bytes = Uint8Array.from(atob(imgUrl.replace(/^data:image\\/\\w+;base64,/, \"\")), (c) => c.charCodeAt(0));\n    } else {\n      const imgResp = await fetch(imgUrl);\n      if (!imgResp.ok) {\n        console.error(\"image download failed:\", imgResp.status);\n        return new Response(JSON.stringify({ error: \"Falha ao baixar a imagem gerada\", upstream_status: imgResp.status }), {\n          status: 502, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      bytes = new Uint8Array(await imgResp.arrayBuffer());\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:14:03)*
+
+
+## 🤖 Claude *(23:14:04)*
+
+Agora os helpers de provider no fim do arquivo (espelho do `canvas-execute`):
+
+## 🤖 Claude *(23:14:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts",
+  "old_string": "  } catch (e) {\n    console.error(\"generate-image error:\", e);\n    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : \"Unknown error\" }), {\n      status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n  }\n});",
+  "new_string": "  } catch (e) {\n    console.error(\"generate-image error:\", e);\n    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : \"Unknown error\" }), {\n      status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n  }\n});\n\n// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n// PROVIDER IMPLEMENTATIONS \u2014 mirror canvas-execute (the proven, working paths)\n// 402/429 are re-thrown with a \"<status>:\" message prefix so the caller maps the HTTP status.\n// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n// OpenRouter via chat-completions multimodal \u2014 the /v1/images endpoint is DEPRECATED (404). Models like\n// google/gemini-2.5-flash-image (\"Nano Banana\") return the image as a multimodal content part (image_url\n// with https or data: URI) or a separate message.images array.\nasync function generateViaOpenRouter(apiKey: string, prompt: string): Promise<{ b64: string; url: string }> {\n  const resp = await fetch(\"https://openrouter.ai/api/v1/chat/completions\", {\n    method: \"POST\",\n    headers: {\n      Authorization: `Bearer ${apiKey}`,\n      \"Content-Type\": \"application/json\",\n      \"HTTP-Referer\": \"https://mcorch.com\",\n      \"X-Title\": \"GCRUX Constellation\",\n    },\n    body: JSON.stringify({\n      model: \"google/gemini-2.5-flash-image\",\n      modalities: [\"image\", \"text\"],\n      messages: [{ role: \"user\", content: prompt }],\n    }),\n  });\n  if (!resp.ok) {\n    const t = await resp.text();\n    if (resp.status === 402) throw new Error(`402:${t.slice(0, 160)}`);\n    if (resp.status === 429) throw new Error(`429:${t.slice(0, 160)}`);\n    throw new Error(`openrouter ${resp.status}: ${t.slice(0, 200)}`);\n  }\n  const data = await resp.json();\n  const message = data?.choices?.[0]?.message;\n  if (!message) throw new Error(\"openrouter: resposta sem message\");\n  let url = \"\";\n  let b64 = \"\";\n  if (Array.isArray(message.content)) {\n    for (const part of message.content) {\n      if (part?.type === \"image_url\" && part?.image_url?.url) {\n        const u = String(part.image_url.url);\n        if (u.startsWith(\"data:image/\")) b64 = u.split(\",\", 2)[1] ?? \"\"; else url = u;\n        break;\n      }\n    }\n  }\n  if (!url && !b64 && Array.isArray(message?.images) && message.images.length > 0) {\n    const first = message.images[0];\n    const u = typeof first === \"string\" ? first : (first?.url || first?.image_url?.url || \"\");\n    if (u) { if (String(u).startsWith(\"data:image/\")) b64 = String(u).split(\",\", 2)[1] ?? \"\"; else url = String(u); }\n  }\n  if (!url && !b64) {\n    const preview = typeof message.content === \"string\" ? message.content.slice(0, 150) : JSON.stringify(data).slice(0, 200);\n    throw new Error(`openrouter: resposta sem imagem (modelo devolveu texto?). Pr\u00e9via: ${preview}`);\n  }\n  return { b64, url };\n}\n\n// Replicate FLUX 1.1 Pro \u2014 create prediction + poll (max 120s). Returns the output image URL.\nasync function generateViaReplicate(apiKey: string, prompt: string): Promise<string> {\n  const createResp = await fetch(\"https://api.replicate.com/v1/predictions\", {\n    method: \"POST\",\n    headers: { Authorization: `Bearer ${apiKey}`, \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({ model: \"black-forest-labs/flux-1.1-pro\", input: { prompt } }),\n  });\n  if (!createResp.ok) {\n    const t = await createResp.text();\n    if (createResp.status === 402) throw new Error(`402:${t.slice(0, 160)}`);\n    throw new Error(`replicate ${createResp.status}: ${t.slice(0, 200)}`);\n  }\n  let prediction = await createResp.json();\n  const maxWait = 120_000;\n  const start = Date.now();\n  while (prediction.status !== \"succeeded\" && prediction.status !== \"failed\" && Date.now() - start < maxWait) {\n    await new Promise((r) => setTimeout(r, 2000));\n    const pollResp = await fetch(prediction.urls.get, { headers: { Authorization: `Bearer ${apiKey}` } });\n    prediction = await pollResp.json();\n  }\n  if (prediction.status === \"failed\") throw new Error(`replicate failed: ${prediction.error}`);\n  const output = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;\n  if (!output) throw new Error(\"replicate: sem output\");\n  return output;\n}\n\n// OpenAI DALL-E images \u2014 works for keys WITH image-model access (the Usu\u00e1rio Zero's project key does NOT,\n// so this is the LAST fallback). No response_format (OpenAI removed it \u2192 400). Returns url or b64.\nasync function generateViaOpenAI(apiKey: string, prompt: string): Promise<{ b64: string; url: string }> {\n  const resp = await fetch(\"https://api.openai.com/v1/images/generations\", {\n    method: \"POST\",\n    headers: { Authorization: `Bearer ${apiKey}`, \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({ model: \"dall-e-3\", prompt, n: 1, size: \"1024x1024\" }),\n  });\n  if (!resp.ok) {\n    const t = await resp.text();\n    if (resp.status === 402) throw new Error(`402:${t.slice(0, 160)}`);\n    if (resp.status === 429) throw new Error(`429:${t.slice(0, 160)}`);\n    throw new Error(`openai ${resp.status}: ${t.slice(0, 200)}`);\n  }\n  const data = await resp.json();\n  return { b64: data.data?.[0]?.b64_json || \"\", url: data.data?.[0]?.url || \"\" };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-image/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:14:27)*
+
+
+## 🤖 Claude *(23:14:27)*
+
+`generate-image` reparado. Deixa eu checar o poll do vídeo enquanto isso:
+
+## 🤖 Claude *(23:14:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tasks/bs5eh0qvp.output 2>/dev/null | tail -20",
+  "description": "Check video poll background output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [1] status=queued
+> [2] status=queued
+> [3] status=queued
+> [4] status=queued
+> [5] status=queued
+> [6] status=queued
+> [7] status=queued
+> [8] status=queued
+> [9] status=queued
+> [10] status=queued
+> [11] status=queued
+> [12] status=queued
+> [13] status=queued
+> [14] status=queued
+> [15] status=queued
+> [16] status=queued
+> ```
+
+## 🤖 Claude *(23:14:44)*
+
+
+## 🤖 Claude *(23:14:46)*
+
+16 polls, ainda `queued` (~160s) — DoP standard leva alguns minutos; o poll continua em background (até ~6min). Uso o tempo para **deployar e validar o reparo do `generate-image`** (Task #3). Essa função não debita mco própria (quem cobra é o orchestrate), então testá-la direto é efetivamente grátis no ledger.
+
+## 🤖 Claude *(23:14:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy generate-image 2>&1 | tail -15",
+  "description": "Deploy repaired generate-image edge function"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: generate-image
+> Deploying Function: generate-image (script size: 129.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-image
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(23:14:57)*
+
+
+## 🤖 Claude *(23:14:58)*
+
+Deployado (129.4 kB). Agora a prova material do reparo — chamada service-role dual-path (a mesma que o `orchestrate-step` faz):
+
+## 🤖 Claude *(23:15:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\necho \"=== generate-image reparado (service-role + user_id, igual orchestrate-step) ===\"\ncurl -s \"${BASE}/functions/v1/generate-image\" \\\n  -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"prompt\":\"A premium wireless earbud charging case, matte white, on a marble surface, soft studio lighting, product photography\",\"style\":\"photorealistic\"}' \\\n  | python3 -c \"import json,sys; d=json.load(sys.stdin); print('keys:', list(d.keys())); print('image_url:', d.get('image_url','')[:90]); print('path:', d.get('path','')); print('error:', d.get('error','')); print('upstream:', d.get('upstream',''))\"",
+  "description": "Test repaired generate-image via service-role path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === generate-image reparado (service-role + user_id, igual orchestrate-step) ===
+> keys: ['image_url', 'base64', 'path']
+> image_url: https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/generated-images/ada39fae-
+> path: ada39fae-67e1-4e53-af1c-5a18e1c108e8/69421d21-9827-4625-9e09-553965873312.png
+> error: 
+> upstream:
+> ```
+
+## 🤖 Claude *(23:15:32)*
+
+
+## 🤖 Claude *(23:15:34)*
+
+**Reparo PROVADO** — `generate-image` retornou `image_url` + `base64` + `path` (contrato exato que o `orchestrate-step` consome), **sem erro**. A imagem do autopilot está **desbloqueada**. Vou fechar o loop: re-assinar o path (bucket privado) e passar pelo olho criativo — isso também valida QA sobre asset de bucket privado (relevante pro SOP).
+
+## 🤖 Claude *(23:15:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nPATHIMG=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8/69421d21-9827-4625-9e09-553965873312.png\"\necho \"=== re-assina signed URL (60min) ===\"\nSIGNED=$(curl -s \"${BASE}/storage/v1/object/sign/generated-images/${PATHIMG}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d '{\"expiresIn\":3600}' | python3 -c \"import json,sys;d=json.load(sys.stdin);print('${BASE}/storage/v1'+d['signedURL'])\")\necho \"$SIGNED\" | head -c 120; echo \"\u2026\"\necho \"=== tamanho do objeto (Lei 1: PNG real, n\u00e3o stub) ===\"\ncurl -sI \"$SIGNED\" | grep -iE \"content-length|content-type\"\necho \"=== olho criativo sobre o asset gerado ===\"\nbun run scripts/qa/vision-qa.ts image \"$SIGNED\" \"Que produto \u00e9? Descreva cor e superf\u00edcie.\" 2>&1",
+  "description": "Re-sign + verify size + creative eye on repaired generate-image output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-assina signed URL (60min) ===
+> https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/generated-images/ada39fae-67e1-4e53-af1c-5a18e1c108e8/69…
+> === tamanho do objeto (Lei 1: PNG real, não stub) ===
+> content-type: image/png
+> content-length: 963547
+> === olho criativo sobre o asset gerado ===
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    É um estojo de fones de ouvido sem fio, branco e fosco. Há um fone de ouvido branco do lado esquerdo parcialmente inserido no estojo. A letra 'N' está gravada na frente do estojo, na cor cinza, com um pequeno ponto azul claro acima dela. A superfície do estojo parece ser de plástico, com um acabamento suave ao toque.
+> ```
+
+## 🤖 Claude *(23:15:54)*
+
+
+## 🤖 Claude *(23:15:54)*
+
+**Task #3 ✅ — reparo provado materialmente:**
+- Objeto: **963.547 bytes**, `content-type: image/png` (PNG real, não stub de erro — Lei 1)
+- Olho criativo: "estojo de fones brancos fosco…" `confidence: high`, custo 0 — exatamente o prompt
+- Confirma também que o QA funciona em bucket privado via re-assinatura (anotado no SOP)
+
+O pipeline de imagem do autopilot/orchestrate está **desbloqueado**. Checando o vídeo:
+
+## 🤖 Claude *(23:15:54)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(23:15:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tasks/bs5eh0qvp.output 2>/dev/null | tail -8; echo \"--- bg job status ---\"; ls -la /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tasks/bs5eh0qvp.* 2>/dev/null | tail -3",
+  "description": "Re-check video poll output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [18] status=queued
+> [19] status=queued
+> [20] status=queued
+> [21] status=queued
+> [22] status=queued
+> [23] status=queued
+> [24] status=queued
+> [25] status=queued
+> --- bg job status ---
+> -rw-rw-r-- 1 ubuntu ubuntu 466 Jun 21 20:15 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tasks/bs5eh0qvp.output
+> ```
+
+## 🤖 Claude *(23:16:14)*
+
+
+## 🤖 Claude *(23:16:26)*
+
+250s e ainda `queued`. DoP standard costuma terminar em 1-3 min — isso sugere ou Higgsfield lento, ou o webhook não disparou (a execução só muda quando o `higgsfield-webhook` é chamado). Vou consultar o Higgsfield **diretamente** pelo `operation_id` para desacoplar do webhook e saber se a geração de fato terminou:
+
+## 🤖 Claude *(23:16:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nOP=\"4ad55c63-8c2a-4849-9962-4a616a5e2bff\"\necho \"=== Higgsfield request status (direto, via API) ===\"\ncurl -s \"https://platform.higgsfield.ai/requests/${OP}/status\" \\\n  -H \"Authorization: Key ${HIGGSFIELD_API_KEY}:${HIGGSFIELD_API_KEY_SECRET}\" \\\n  -H \"Accept: application/json\" -w \"\\n[HTTP %{http_code}]\\n\" | head -c 900",
+  "description": "Query Higgsfield operation status directly"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Higgsfield request status (direto, via API) ===
+> {"status":"in_progress","request_id":"4ad55c63-8c2a-4849-9962-4a616a5e2bff","status_url":"https://platform.higgsfield.ai/requests/4ad55c63-8c2a-4849-9962-4a616a5e2bff/status","cancel_url":"https://platform.higgsfield.ai/requests/4ad55c63-8c2a-4849-9962-4a616a5e2bff/cancel"}
+> [HTTP 200]
+> ```
+
+## 🤖 Claude *(23:16:35)*
+
+
+## 🤖 Claude *(23:16:37)*
+
+Higgsfield confirma: **`in_progress`** (HTTP 200) — a geração está mesmo processando, não é falha de webhook. É só esperar (o poll em background pega quando o webhook finalizar). Enquanto isso, **Task #7 — áudio TTS**. Vou ler o `tts-speak` inteiro para o contrato exato:
+
+## 🤖 Claude *(23:16:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tts-speak/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 6	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 7	};
+> 8	
+> 9	// Gemini 2.5 Flash TTS — neural voices, same API key as chat
+> 10	const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+> 11	const TTS_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
+> 12	
+> 13	const VALID_VOICES = new Set([
+> 14	  "Kore", "Puck", "Charon", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr",
+> 15	]);
+> 16	
+> 17	// Wrap raw PCM (16-bit signed LE, mono, 24kHz) in a WAV container
+> 18	function pcmToWav(pcm: Uint8Array, sampleRate = 24000): Uint8Array {
+> 19	  const numChannels = 1;
+> 20	  const bitsPerSample = 16;
+> 21	  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+> 22	  const blockAlign = (numChannels * bitsPerSample) / 8;
+> 23	  const dataSize = pcm.byteLength;
+> 24	  const header = new DataView(new ArrayBuffer(44));
+> 25	
+> 26	  const w = (off: number, val: number, len: 4 | 2 = 4) =>
+> 27	    len === 4 ? header.setUint32(off, val, true) : header.setUint16(off, val, true);
+> 28	
+> 29	  // RIFF chunk
+> 30	  [82, 73, 70, 70].forEach((b, i) => header.setUint8(i, b));         // "RIFF"
+> 31	  w(4, 36 + dataSize);
+> 32	  [87, 65, 86, 69].forEach((b, i) => header.setUint8(8 + i, b));     // "WAVE"
+> 33	  [102, 109, 116, 32].forEach((b, i) => header.setUint8(12 + i, b)); // "fmt "
+> 34	  w(16, 16); w(20, 1, 2); w(22, numChannels, 2);
+> 35	  w(24, sampleRate); w(28, byteRate); w(32, blockAlign, 2); w(34, bitsPerSample, 2);
+> 36	  [100, 97, 116, 97].forEach((b, i) => header.setUint8(36 + i, b)); // "data"
+> 37	  w(40, dataSize);
+> 38	
+> 39	  const wav = new Uint8Array(44 + dataSize);
+> 40	  wav.set(new Uint8Array(header.buffer), 0);
+> 41	  wav.set(pcm, 44);
+> 42	  return wav;
+> 43	}
+> 44	
+> 45	Deno.serve(async (req) => {
+> 46	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 47	
+> 48	  const respond = (body: unknown, status = 200) =>
+> 49	    new Response(JSON.stringify(body), {
+> 50	      status,
+> 51	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 52	    });
+> 53	
+> 54	  const authHeader = req.headers.get("Authorization");
+> 55	  if (!authHeader?.startsWith("Bearer ")) return respond({ error: "Unauthorized" }, 401);
+> 56	
+> 57	  const supabase = createClient(
+> 58	    Deno.env.get("SUPABASE_URL")!,
+> 59	    (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 60	    { global: { headers: { Authorization: authHeader } } },
+> 61	  );
+> 62	  const { data: { user }, error: userError } = await supabase.auth.getUser();
+> 63	  if (userError || !user) return respond({ error: "Unauthorized" }, 401);
+> 64	
+> 65	  // User key override: user's google_api_key > vault GEMINI_API_KEY
+> 66	  const admin = createClient(
+> 67	    Deno.env.get("SUPABASE_URL")!,
+> 68	    (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 69	  );
+> 70	  const { data: userKeys } = await admin
+> 71	    .from("decrypted_user_api_keys")
+> 72	    .select("google_api_key")
+> 73	    .eq("user_id", user.id)
+> 74	    .maybeSingle();
+> 75	
+> 76	  const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 77	  if (!geminiKey) return respond({ error: "GEMINI_API_KEY not configured" }, 500);
+> 78	
+> 79	  let text: string;
+> 80	  let voiceName: string;
+> 81	
+> 82	  try {
+> 83	    const body = await req.json();
+> 84	    text = String(body.text ?? "").trim();
+> 85	    voiceName = VALID_VOICES.has(body.voice) ? body.voice : "Kore";
+> 86	    if (!text) return respond({ error: "text is required" }, 400);
+> 87	    if (text.length > 4000) text = text.slice(0, 4000);
+> 88	  } catch {
+> 89	    return respond({ error: "Invalid JSON" }, 400);
+> 90	  }
+> 91	
+> 92	  const payload = {
+> 93	    contents: [{ parts: [{ text }] }],
+> 94	    generationConfig: {
+> 95	      responseModalities: ["AUDIO"],
+> 96	      speechConfig: {
+> 97	        voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+> 98	      },
+> 99	    },
+> 100	  };
+> 101	
+> 102	  const geminiRes = await fetch(`${TTS_URL}?key=${geminiKey}`, {
+> 103	    method: "POST",
+> 104	    headers: { "Content-Type": "application/json" },
+> 105	    body: JSON.stringify(payload),
+> 106	  });
+> 107	
+> 108	  if (!geminiRes.ok) {
+> 109	    const detail = await geminiRes.text();
+> 110	    return respond({ error: `Gemini TTS error: ${geminiRes.status}`, detail }, geminiRes.status);
+> 111	  }
+> 112	
+> 113	  const json = await geminiRes.json();
+> 114	  const b64 = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+> 115	
+> 116	  if (!b64) return respond({ error: "No audio in response" }, 502);
+> 117	
+> 118	  // base64 → PCM → WAV
+> 119	  const binaryStr = atob(b64);
+> 120	  const pcm = new Uint8Array(binaryStr.length);
+> 121	  for (let i = 0; i < binaryStr.length; i++) pcm[i] = binaryStr.charCodeAt(i);
+> 122	  const wav = pcmToWav(pcm);
+> 123	
+> 124	  return new Response(wav.buffer, {
+> 125	    status: 200,
+> 126	    headers: {
+> 127	      ...corsHeaders,
+> 128	      "Content-Type": "audio/wav",
+> 129	      "Content-Length": String(wav.byteLength),
+> 130	    },
+> 131	  });
+> 132	});
+> 133	
+> ```
+
+## 🤖 Claude *(23:16:45)*
+
+
+## 🤖 Claude *(23:16:48)*
+
+`tts-speak` retorna **WAV bruto inline** (Gemini 2.5 TTS, `google_api_key` do user) — não persiste em storage (é TTS de chat ao vivo). Vou gerar áudio real, salvar o arquivo e validar o header WAV (prova material; o olho criativo é visão, não áudio):
+
+## 🤖 Claude *(23:16:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\n[ -z \"$TOKEN\" ] && { echo \"mint falhou: $(cat /tmp/jwterr)\"; exit 1; }\nOUT=/tmp/qa_tts.wav\necho \"=== tts-speak (Gemini TTS, voz Aoede) \u2192 WAV ===\"\ncurl -s \"${BASE}/functions/v1/tts-speak\" \\\n  -H \"Authorization: Bearer ${TOKEN}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"text\":\"Ol\u00e1! Este \u00e9 o teste do narrador da Constela\u00e7\u00e3o MCORCH. Conte\u00fado viral, gerado e validado de ponta a ponta.\",\"voice\":\"Aoede\"}' \\\n  -o \"$OUT\" -w \"[HTTP %{http_code}] content-type=%{content_type} bytes=%{size_download}\\n\"\necho \"=== verifica\u00e7\u00e3o material do WAV ===\"\nfile \"$OUT\" 2>/dev/null\npython3 -c \"\nimport struct,sys\nd=open('$OUT','rb').read()\nif d[:4]==b'RIFF' and d[8:12]==b'WAVE':\n    sr=struct.unpack('<I',d[24:28])[0]; data=struct.unpack('<I',d[40:44])[0]\n    print(f'RIFF/WAVE OK \u00b7 sampleRate={sr} \u00b7 dataBytes={data} \u00b7 dur\u2248{data/(sr*2):.1f}s')\nelse:\n    print('N\u00c3O \u00e9 WAV v\u00e1lido \u2014 prefixo:', d[:32])\n\"",
+  "description": "Validate tts-speak audio E2E"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tts-speak (Gemini TTS, voz Aoede) → WAV ===
+> [HTTP 200] content-type=audio/wav bytes=403770
+> === verificação material do WAV ===
+> /tmp/qa_tts.wav: RIFF (little-endian) data, WAVE audio, Microsoft PCM, 16 bit, mono 24000 Hz
+> RIFF/WAVE OK · sampleRate=24000 · dataBytes=403726 · dur≈8.4s
+> ```
+
+## 🤖 Claude *(23:17:15)*
+
+
+## 🤖 Claude *(23:17:18)*
+
+**Task #7 ✅ — áudio TTS validado:** HTTP 200, `audio/wav` 403.770 bytes, RIFF/WAVE 16-bit mono 24kHz, **~8.4s**. Gemini TTS funciona com a chave do tenant. (Nota: `tts-speak` devolve WAV inline e **não** persiste em storage — é TTS de chat por design; quando houver áudio no autopilot, o "sempre salvar asset" exigirá um path que persista. Registrado.)
+
+Checando o vídeo:
+
+## 🤖 Claude *(23:17:19)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(23:17:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tasks/bs5eh0qvp.output 2>/dev/null | tail -6",
+  "description": "Check video poll output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [28] status=queued
+> [29] status=queued
+> [30] status=queued
+> [31] status=queued
+> [32] status=queued
+> [33] status=queued
+> ```
+
+## 🤖 Claude *(23:17:29)*
+
+
+## 🤖 Claude *(23:17:31)*
+
+33 polls (~330s), ainda `queued`. Enquanto o Higgsfield termina, vou te entregar os criativos já validados (os 2 frames + o áudio) e re-checar o Higgsfield direto:
+
+## 🤖 Claude *(23:17:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\ncurl -s \"$B/e871ceee-6e57-49dd-8ecc-60a5b8d54ed9.png\" -o /tmp/qa_frame_inicial.png\ncurl -s \"$B/ef0c0ba1-f900-45bd-b71e-d0e07b39834e.png\" -o /tmp/qa_frame_final.png\necho \"frames baixados:\"; ls -la /tmp/qa_frame_inicial.png /tmp/qa_frame_final.png | awk '{print $5, $9}'\necho \"=== Higgsfield status agora ===\"\ncurl -s \"https://platform.higgsfield.ai/requests/4ad55c63-8c2a-4849-9962-4a616a5e2bff/status\" \\\n  -H \"Authorization: Key ${HIGGSFIELD_API_KEY}:${HIGGSFIELD_API_KEY_SECRET}\" -H \"Accept: application/json\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('status:',d.get('status'));print('keys:',list(d.keys()))\"",
+  "description": "Download frames + recheck Higgsfield status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> frames baixados:
+> 1135832 /tmp/qa_frame_final.png
+> 995388 /tmp/qa_frame_inicial.png
+> === Higgsfield status agora ===
+> status: completed
+> keys: ['status', 'request_id', 'status_url', 'cancel_url', 'video']
+> ```
+
+## 🤖 Claude *(23:17:47)*
+
+
+## 🤖 Claude *(23:17:48)*
+
+Higgsfield **`completed`** com `video` na resposta. A geração terminou — agora é ver se o `higgsfield-webhook` finalizou a linha (download→upload→débito→success). Vou checar a execução + pegar a URL do vídeo direto do Higgsfield (garantia caso o webhook tenha atrasado):
+
+## 🤖 Claude *(23:17:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nEXEC=\"594f56fb-0395-4aa3-af88-70233ba0925f\"\necho \"=== execu\u00e7\u00e3o no banco (webhook finalizou?) ===\"\ncurl -s \"${BASE}/rest/v1/vm_canvas_executions?select=status,output_url,output_asset_id,error_message,completed_at&id=eq.${EXEC}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool\necho \"=== Higgsfield video payload (direto) ===\"\ncurl -s \"https://platform.higgsfield.ai/requests/4ad55c63-8c2a-4849-9962-4a616a5e2bff/status\" \\\n  -H \"Authorization: Key ${HIGGSFIELD_API_KEY}:${HIGGSFIELD_API_KEY_SECRET}\" -H \"Accept: application/json\" \\\n  | python3 -c \"import json,sys;d=json.load(sys.stdin);print(json.dumps(d.get('video'),indent=2)[:500])\"",
+  "description": "Check execution row finalization + Higgsfield video payload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === execução no banco (webhook finalizou?) ===
+> [
+>     {
+>         "status": "success",
+>         "output_url": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/63d406fe-8357-4b90-b1ac-9ef2c0c2a975/594f56fb-0395-4aa3-af88-70233ba0925f.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNzFjZTA4Yy0xYWFjLTQ1MDUtOGEyZC04Y2Y5ZTU5MzI5MzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJjYW52YXMtYXNzZXRzLzYzZDQwNmZlLTgzNTctNGI5MC1iMWFjLTllZjJjMGMyYTk3NS81OTRmNTZmYi0wMzk1LTRhYTMtYWY4OC03MDIzM2JhMDkyNWYubXA0Iiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4MjA4Mzg1NywiZXhwIjoxNzgyNjg4NjU3fQ.W1XKNdl8sIjMtU2GWryVmN7fzhkzELRu3kF198IKmdc",
+>         "output_asset_id": null,
+>         "error_message": null,
+>         "completed_at": "2026-06-21T23:17:35.71+00:00"
+>     }
+> ]
+> === Higgsfield video payload (direto) ===
+> {
+>   "url": "https://cloud-cdn.higgsfield.ai/b6a03390-b560-43af-b1d8-8a76e5dedbd6/e8e06371-147c-413c-ac8c-2395cfb05c1f.mp4"
+> }
+> ```
+
+## 🤖 Claude *(23:18:06)*
+
+
+## 🤖 Claude *(23:18:07)*
+
+**Webhook finalizou — vídeo DoP E2E completo!** Execução `status: success`, `output_url` aponta pro `.mp4` persistido no bucket canvas-assets (Lei 1 ✅), `completed_at` 23:17. Agora a verificação material (tamanho + débito 125 mco) e o QA do olho criativo de vídeo:
+
+## 🤖 Claude *(23:18:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nEXEC=\"594f56fb-0395-4aa3-af88-70233ba0925f\"\n# re-sign a fresh URL for the mp4 (durable path)\nVURL=$(curl -s \"${BASE}/storage/v1/object/sign/canvas-assets/63d406fe-8357-4b90-b1ac-9ef2c0c2a975/594f56fb-0395-4aa3-af88-70233ba0925f.mp4\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d '{\"expiresIn\":3600}' | python3 -c \"import json,sys;d=json.load(sys.stdin);print('${BASE}/storage/v1'+d['signedURL'])\")\necho \"=== v\u00eddeo persistido (tamanho + tipo) ===\"\ncurl -sI \"$VURL\" | grep -iE \"content-length|content-type\"\ncurl -s \"$VURL\" -o /tmp/qa_video.mp4\nls -la /tmp/qa_video.mp4 | awk '{print \"local:\",$5,\"bytes\"}'\necho \"=== d\u00e9bito 125 mco no ledger ===\"\ncurl -s \"${BASE}/rest/v1/mcoin_transactions?select=amount,action,created_at&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&action=eq.canvas_video_spend&order=created_at.desc&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool\necho \"=== saldo atual ===\"\ncurl -s \"${BASE}/rest/v1/profiles?select=mco_balance&id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;print('mco_balance:',json.load(sys.stdin)[0]['mco_balance'])\"\necho \"$VURL\" > /tmp/qa_vurl.txt",
+  "description": "Verify video asset size + ledger debit + balance"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vídeo persistido (tamanho + tipo) ===
+> content-type: video/mp4
+> content-length: 6466887
+> local: 6466887 bytes
+> === débito 125 mco no ledger ===
+> [
+>     {
+>         "amount": -125,
+>         "action": "canvas_video_spend",
+>         "created_at": "2026-06-21T23:17:38.774308+00:00"
+>     }
+> ]
+> === saldo atual ===
+> mco_balance: 5096.0
+> ```
+
+## 🤖 Claude *(23:18:24)*
+
+
+## 🤖 Claude *(23:18:27)*
+
+**Tudo verde materialmente:**
+- Vídeo: **6.466.887 bytes** (6.4 MB), `video/mp4` — real, muito acima dos 100KB
+- Ledger: **−125** `canvas_video_spend` @ 23:17:38
+- Saldo: **5096** = 5241 − 10 − 10 − 125 (matemática exata, débito atômico único)
+
+O último gate (G6) — o olho criativo de **vídeo** confirma coerência:
+
+## 🤖 Claude *(23:18:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nVURL=$(cat /tmp/qa_vurl.txt)\nbun run scripts/qa/vision-qa.ts video \"$VURL\" \"Descreva o v\u00eddeo: qual produto aparece, que movimento de c\u00e2mera, e se h\u00e1 artefatos visuais ou inconsist\u00eancias.\" 1 2>&1",
+  "description": "QA the DoP video via vision_analyze_video"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision_analyze_video
+>    confidence: high  cost_mco: 0  min: 1
+>    O vídeo exibe um smartwatch com mostrador preto e detalhes gráficos em laranja, acompanhado por uma pulseira de silicone na cor laranja vibrante. A câmera realiza um movimento de rotação suave em torno do produto, revelando seus diferentes ângulos, incluindo a parte lateral e a traseira onde os sensores são visíveis. Não há artefatos visuais ou inconsistências perceptíveis, o vídeo apresenta alta qualidade e iluminação uniforme, sugerindo uma produção profissional ou renderização 3D de alta fidelidade.
+> ```
+
+## 🤖 Claude *(23:18:49)*
+
+
+## 🤖 Claude *(23:18:51)*
+
+**Task #6 ✅ — vídeo DoP validado E2E com crédito real, e o olho criativo de vídeo aprovou (G6):** "smartwatch mostrador preto + detalhes laranja, pulseira laranja vibrante, rotação suave de câmera revelando ângulos, **sem artefatos ou inconsistências, alta qualidade, produção profissional**" — `confidence: high`, custo 0.
+
+Te entrego os criativos validados para você ver/ouvir com seus próprios olhos:
+
+## 🤖 Claude *(23:18:51)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(23:18:54)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/qa_frame_inicial.png",
+    "/tmp/qa_frame_final.png",
+    "/tmp/qa_video.mp4",
+    "/tmp/qa_tts.wav"
+  ],
+  "caption": "Cadeia criativa validada E2E: frame-inicial (hero) \u2192 frame-final (consistente, no pulso) \u2192 v\u00eddeo DoP Higgsfield (6.4MB, cr\u00e9dito real, olho criativo aprovou sem artefatos) + \u00e1udio TTS narrador (8.4s). Todos persistidos como assets reais.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 4 files delivered to user.
+> ```
+
+## 🤖 Claude *(23:19:00)*
+
+
+## 🤖 Claude *(23:19:01)*
+
+4 criativos entregues. Última frente — **Task #8: Canvas Design (open-design) E2E**. Vou sondar: iframe da página, worker `design-bridge` rodando, porta do container, e a fila `design_jobs`.
+
+## 🤖 Claude *(23:19:02)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(23:19:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasDesignPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { Helmet } from "react-helmet-async";
+> 2	
+> 3	export default function CanvasDesignPage() {
+> 4	  return (
+> 5	    <>
+> 6	      <Helmet>
+> 7	        <title>Canvas Design — MCORCH</title>
+> 8	        <meta name="description" content="Soberano Módulo de Design Omnichannel baseado em open-design" />
+> 9	      </Helmet>
+> 10	
+> 11	      <div className="w-full h-full bg-background overflow-hidden relative">
+> 12	        <iframe
+> 13	          src="http://127.0.0.1:7456"
+> 14	          className="w-full h-full bg-black border-none"
+> 15	          title="OpenDesign Workspace"
+> 16	        />
+> 17	      </div>
+> 18	    </>
+> 19	  );
+> 20	}
+> 21	
+> ```
+
+## 🤖 Claude *(23:19:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== design-bridge worker rodando? ===\"\nps aux | grep -iE \"design-bridge\" | grep -v grep || echo \"(NENHUM processo design-bridge)\"\necho \"\"\necho \"=== container open-design: portas + health ===\"\ndocker ps --filter \"name=open-design\" --format \"{{.Names}} | {{.Status}} | {{.Ports}}\"\necho \"\"\necho \"=== design_jobs: existe + linhas ===\"\nset -a; source .env; set +a\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=id,status,created_at&order=created_at.desc&limit=5\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | head -c 600\necho \"\"\necho \"=== cron/systemd p/ design-bridge? ===\"\ncrontab -l 2>/dev/null | grep -i design || echo \"(sem cron design no user atual)\"\nsystemctl --user list-units 2>/dev/null | grep -i design || echo \"(sem unit systemd --user design)\"",
+  "description": "Probe Canvas Design E2E wiring: worker, container ports, jobs queue"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === design-bridge worker rodando? ===
+> (NENHUM processo design-bridge)
+> 
+> === container open-design: portas + health ===
+> open-design | Up 6 days (healthy) | 127.0.0.1:7456->7456/tcp
+> 
+> === design_jobs: existe + linhas ===
+> [{"id":"28b706b4-1f73-432a-8a87-dae2900aa210","status":"queued","created_at":"2026-05-24T18:36:21.712739+00:00"}]
+> === cron/systemd p/ design-bridge? ===
+> (sem cron design no user atual)
+> (sem unit systemd --user design)
+> ```
+
+## 🤖 Claude *(23:19:30)*
+
+
+## 🤖 Claude *(23:19:35)*
+
+Diagnóstico do Canvas Design — **não está funcional E2E**, e os motivos são concretos:
+
+1. **iframe aponta para `http://127.0.0.1:7456`** ([CanvasDesignPage.tsx:13](src/pages/CanvasDesignPage.tsx)) — isso é o *loopback do navegador do usuário*, não do servidor. No browser do Sovereign (em `login.mcorch.com`) isso não resolve + é **mixed-content** (`http://` dentro de `https://` → bloqueado). Só funciona do localhost do próprio servidor.
+2. **Worker `design-bridge` MORTO** — nenhum processo, sem cron, sem systemd. A fila não é drenada.
+3. **1 `design_job` preso em `queued` desde 2026-05-24** (~28 dias) — prova material de que o worker está morto.
+4. Container `open-design` saudável mas **só loopback** (`127.0.0.1:7456`), sem vhost público (≠ `mcp.mcorch.com`).
+
+Vou ler o worker para entender o job preso e o que ele dispara, antes de decidir se subo o worker para provar o pipeline:
+
+## 🤖 Claude *(23:19:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/design-bridge.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/design-bridge.ts
+> 4	 *
+> 5	 * Bridge worker running on the host that polls `design_jobs` and executes
+> 6	 * open-design commands inside the Docker container.
+> 7	 *
+> 8	 * Usage: bun run scripts/design-bridge.ts
+> 9	 */
+> 10	
+> 11	import { existsSync, readFileSync, mkdirSync } from 'fs';
+> 12	import { join, dirname } from 'path';
+> 13	import { fileURLToPath } from 'url';
+> 14	import { spawn } from 'child_process';
+> 15	import { createClient } from '@supabase/supabase-js';
+> 16	
+> 17	// ── Load Environment Variables ──
+> 18	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 19	const envPath = join(__dirname, '../.env');
+> 20	if (existsSync(envPath)) {
+> 21	  const raw = readFileSync(envPath, 'utf-8');
+> 22	  for (const line of raw.split('\n')) {
+> 23	    const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
+> 24	    if (m) {
+> 25	      process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+> 26	    }
+> 27	  }
+> 28	}
+> 29	
+> 30	const SUPABASE_URL = process.env.SUPABASE_URL;
+> 31	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 32	
+> 33	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 34	  console.error('❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+> 35	  process.exit(1);
+> 36	}
+> 37	
+> 38	// Create Supabase client using Service Role to bypass RLS for status updates
+> 39	const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+> 40	  auth: {
+> 41	    persistSession: false,
+> 42	    autoRefreshToken: false,
+> 43	  },
+> 44	});
+> 45	
+> 46	// Ensure local assets directory exists
+> 47	const LOCAL_ASSETS_DIR = join(__dirname, '../public/canvas-design');
+> 48	mkdirSync(LOCAL_ASSETS_DIR, { recursive: true });
+> 49	
+> 50	/**
+> 51	 * Execute command inside container or locally.
+> 52	 */
+> 53	function runCommand(bin: string, args: string[], env: Record<string, string> = {}): Promise<{ code: number; stdout: string; stderr: string }> {
+> 54	  return new Promise((resolve) => {
+> 55	    const p = spawn(bin, args, { env: { ...process.env, ...env } });
+> 56	    let stdout = '';
+> 57	    let stderr = '';
+> 58	    p.stdout.on('data', (data) => { stdout += data.toString(); });
+> 59	    p.stderr.on('data', (data) => { stderr += data.toString(); });
+> 60	    p.on('close', (code) => {
+> 61	      resolve({ code: code ?? 0, stdout, stderr });
+> 62	    });
+> 63	  });
+> 64	}
+> 65	
+> 66	/**
+> 67	 * Copy file from container to local host.
+> 68	 */
+> 69	async function copyFromContainer(containerPath: string, localPath: string): Promise<boolean> {
+> 70	  const { code, stderr } = await runCommand('docker', ['cp', `open-design:${containerPath}`, localPath]);
+> 71	  if (code !== 0) {
+> 72	    console.error(`❌ Docker copy failed from open-design:${containerPath} to ${localPath}. Error: ${stderr}`);
+> 73	    return false;
+> 74	  }
+> 75	  return true;
+> 76	}
+> 77	
+> 78	/**
+> 79	 * Main polling cycle.
+> 80	 */
+> 81	async function pollJobs() {
+> 82	  console.log(`🤖 design-bridge is running and polling design_jobs...`);
+> 83	
+> 84	  while (true) {
+> 85	    try {
+> 86	      const { data: jobs, error } = await supabase
+> 87	        .from('design_jobs')
+> 88	        .select('*')
+> 89	        .eq('status', 'queued')
+> 90	        .order('created_at', { ascending: true })
+> 91	        .limit(5);
+> 92	
+> 93	      if (error) {
+> 94	        console.error('Error fetching queued jobs:', error);
+> 95	        await new Promise((r) => setTimeout(r, 5000));
+> 96	        continue;
+> 97	      }
+> 98	
+> 99	      if (!jobs || jobs.length === 0) {
+> 100	        await new Promise((r) => setTimeout(r, 2000));
+> 101	        continue;
+> 102	      }
+> 103	
+> 104	      for (const job of jobs) {
+> 105	        console.log(`\n📦 Processing job ${job.id} (kind: ${job.kind})`);
+> 106	
+> 107	        // Atomic claim check
+> 108	        const { data: claimed, error: claimError } = await supabase
+> 109	          .from('design_jobs')
+> 110	          .update({ status: 'running', updated_at: new Date().toISOString() })
+> 111	          .eq('id', job.id)
+> 112	          .eq('status', 'queued')
+> 113	          .select();
+> 114	
+> 115	        if (claimError || !claimed || claimed.length === 0) {
+> 116	          console.log(`⚠️ Job ${job.id} already claimed by another worker. Skipping.`);
+> 117	          continue;
+> 118	        }
+> 119	
+> 120	        const projectId = job.od_project_id || 'test_project';
+> 121	
+> 122	        try {
+> 123	          if (job.kind === 'export') {
+> 124	            // Export job copies existing artifact to local directory
+> 125	            if (!job.od_artifact_id) {
+> 126	              throw new Error('Missing od_artifact_id for export job');
+> 127	            }
+> 128	
+> 129	            const containerFilePath = `/app/.od/projects/${projectId}/${job.od_artifact_id}`;
+> 130	            const hostFilePath = join(LOCAL_ASSETS_DIR, job.od_artifact_id);
+> 131	            const copySuccess = await copyFromContainer(containerFilePath, hostFilePath);
+> 132	
+> 133	            if (!copySuccess) {
+> 134	              throw new Error(`Failed to copy artifact ${job.od_artifact_id} from container.`);
+> 135	            }
+> 136	
+> 137	            // Update DB status
+> 138	            await supabase
+> 139	              .from('design_jobs')
+> 140	              .update({
+> 141	                status: 'complete',
+> 142	                render_url: `/canvas-design/${job.od_artifact_id}`,
+> 143	                updated_at: new Date().toISOString(),
+> 144	              })
+> 145	              .eq('id', job.id);
+> 146	
+> 147	            console.log(`✅ Export completed for job ${job.id}. Render URL: /canvas-design/${job.od_artifact_id}`);
+> 148	          } else {
+> 149	            // Generate, refine, or asset job -> executes "media generate" command
+> 150	            const surface = job.params?.surface || 'image';
+> 151	            const model = job.params?.model || 'dall-e-3';
+> 152	
+> 153	            const dockerArgs = [
+> 154	              'exec',
+> 155	              '-e', `OD_PROJECT_ID=${projectId}`,
+> 156	              '-e', `OD_MEDIA_CONFIG_DIR=/app/.od/users/${job.user_id}`,
+> 157	              'open-design',
+> 158	              'node', 'apps/daemon/dist/cli.js',
+> 159	              'media', 'generate',
+> 160	              '--surface', surface,
+> 161	              '--model', model,
+> 162	              '--prompt', job.prompt || '',
+> 163	            ];
+> 164	
+> 165	            if (job.params?.aspect) {
+> 166	              dockerArgs.push('--aspect', job.params.aspect);
+> 167	            }
+> 168	
+> 169	            if ((job.kind === 'refine' || job.kind === 'asset') && job.od_artifact_id) {
+> 170	              dockerArgs.push('--image', job.od_artifact_id);
+> 171	            }
+> 172	
+> 173	            console.log(`🚀 Executing open-design command: docker ${dockerArgs.join(' ')}`);
+> 174	            const { code, stdout, stderr } = await runCommand('docker', dockerArgs);
+> 175	
+> 176	            // Parse result from stdout JSON line
+> 177	            let fileData: any = null;
+> 178	            const lines = stdout.split('\n');
+> 179	            for (const line of lines) {
+> 180	              try {
+> 181	                const parsed = JSON.parse(line.trim());
+> 182	                if (parsed && parsed.file) {
+> 183	                  fileData = parsed.file;
+> 184	                  break;
+> 185	                }
+> 186	              } catch (e) {
+> 187	                // Ignore parsing errors for log/warn lines
+> 188	              }
+> 189	            }
+> 190	
+> 191	            if (!fileData) {
+> 192	              throw new Error(`Failed to generate media. CLI exit code: ${code}. Stderr: ${stderr}. Stdout: ${stdout}`);
+> 193	            }
+> 194	
+> 195	            console.log(`📁 Generated media: ${fileData.name} (${fileData.size} bytes)`);
+> 196	
+> 197	            // Copy generated file out of container to host
+> 198	            const containerFilePath = `/app/.od/projects/${projectId}/${fileData.name}`;
+> 199	            const hostFilePath = join(LOCAL_ASSETS_DIR, fileData.name);
+> 200	            const copySuccess = await copyFromContainer(containerFilePath, hostFilePath);
+> 201	
+> 202	            if (!copySuccess) {
+> 203	              throw new Error(`Failed to copy generated file ${fileData.name} from container.`);
+> 204	            }
+> 205	
+> 206	            // Upsert design_artifact_refs mirror
+> 207	            const title = job.prompt ? (job.prompt.length > 100 ? job.prompt.slice(0, 97) + '...' : job.prompt) : 'Untitled Design';
+> 208	            const { data: ref, error: refErr } = await supabase
+> 209	              .from('design_artifact_refs')
+> 210	              .upsert({
+> 211	                user_id: job.user_id,
+> 212	                od_project_id: projectId,
+> 213	                od_artifact_id: fileData.name,
+> 214	                kind: job.kind === 'asset' ? 'asset' : 'hyperframe',
+> 215	                title,
+> 216	                summary: fileData.providerNote || 'Created via open-design sidecar',
+> 217	                render_url: `/canvas-design/${fileData.name}`,
+> 218	                source_job_id: job.id,
+> 219	                updated_at: new Date().toISOString(),
+> 220	              }, { onConflict: 'user_id,od_project_id,od_artifact_id' })
+> 221	              .select()
+> 222	              .single();
+> 223	
+> 224	            if (refErr) {
+> 225	              console.error('❌ Failed to upsert design_artifact_refs:', refErr);
+> 226	            }
+> 227	
+> 228	            // Insert node into Knowledge Mesh (mcorch_nodes)
+> 229	            const { data: node, error: nodeErr } = await supabase
+> 230	              .from('mcorch_nodes')
+> 231	              .insert({
+> 232	                node_type: 'design_artifact',
+> 233	                name: title,
+> 234	                content: `Design artifact generated by open-design sidecar.\nPrompt: ${job.prompt || ''}\nProvider: ${fileData.providerId || ''}\nModel: ${fileData.model || ''}\nFile: ${fileData.name}`,
+> 235	                user_id: job.user_id,
+> 236	                metadata: {
+> 237	                  file: fileData.name,
+> 238	                  od_project_id: projectId,
+> 239	                  od_artifact_id: fileData.name,
+> 240	                  kind: job.kind,
+> 241	                  mime: fileData.mime,
+> 242	                  size: fileData.size,
+> 243	                },
+> 244	                stability_score: 1.0,
+> 245	                revenue_impact: 0.0,
+> 246	              })
+> 247	              .select()
+> 248	              .single();
+> 249	
+> 250	            if (nodeErr) {
+> 251	              console.error('❌ Failed to insert into mcorch_nodes:', nodeErr);
+> 252	            } else if (node && ref) {
+> 253	              // Update design_artifact_refs to link to the inserted mesh node
+> 254	              await supabase
+> 255	                .from('design_artifact_refs')
+> 256	                .update({ mesh_node_id: node.id })
+> 257	                .eq('id', ref.id);
+> 258	            }
+> 259	
+> 260	            // Update job status to complete
+> 261	            await supabase
+> 262	              .from('design_jobs')
+> 263	              .update({
+> 264	                status: 'complete',
+> 265	                result: fileData,
+> 266	                render_url: `/canvas-design/${fileData.name}`,
+> 267	                updated_at: new Date().toISOString(),
+> 268	              })
+> 269	              .eq('id', job.id);
+> 270	
+> 271	            console.log(`✅ Job ${job.id} marked as complete.`);
+> 272	          }
+> 273	        } catch (jobErr: any) {
+> 274	          console.error(`❌ Job ${job.id} failed:`, jobErr.message || jobErr);
+> 275	
+> 276	          // Update job status to failed
+> 277	          await supabase
+> 278	            .from('design_jobs')
+> 279	            .update({
+> 280	              status: 'failed',
+> 281	              error_message: jobErr.message || String(jobErr),
+> 282	              updated_at: new Date().toISOString(),
+> 283	            })
+> 284	            .eq('id', job.id);
+> 285	
+> 286	          // Log failure pulse to infra_health_logs
+> 287	          await supabase
+> 288	            .from('infra_health_logs')
+> 289	            .insert({
+> 290	              service: 'design-bridge',
+> 291	              status: 'degraded',
+> 292	              message: `Job ${job.id} failed: ${jobErr.message || String(jobErr)}`,
+> 293	            })
+> 294	            .then(() => {}, (e) => console.error('[design-bridge] health log failed:', e));
+> 295	        }
+> 296	      }
+> 297	    } catch (loopErr) {
+> 298	      console.error('Fatal error in design-bridge loop:', loopErr);
+> 299	      await new Promise((r) => setTimeout(r, 5000));
+> 300	    }
+> 301	  }
+> 302	}
+> 303	
+> 304	pollJobs();
+> 305	
+> ```
+
+## 🤖 Claude *(23:20:11)*
+
+
+## 🤖 Claude *(23:20:13)*
+
+O worker é claro: poll `design_jobs` → claim atômico → `docker exec open-design … media generate` → copia o arquivo, espelha `design_artifact_refs` + insere nó `design_artifact` na malha. Deixa eu caracterizar o job preso e ver se o open-design tem provider configurado, antes de decidir se subo o worker:
+
+## 🤖 Claude *(23:20:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\necho \"=== job preso (conte\u00fado) ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=*&id=eq.28b706b4-1f73-432a-8a87-dae2900aa210\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool\necho \"=== open-design tem media config / provider? (dentro do container) ===\"\ndocker exec open-design sh -lc 'ls -la /app/.od/users 2>/dev/null; echo \"---\"; ls -la /app/.od/projects 2>/dev/null | head; echo \"--- cli existe? ---\"; ls -la apps/daemon/dist/cli.js 2>/dev/null || ls -la /app/apps/daemon/dist/cli.js 2>/dev/null || echo \"(cli.js n\u00e3o encontrado no path esperado)\"' 2>&1 | head -30",
+  "description": "Inspect stuck design job + open-design provider config + CLI presence"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === job preso (conteúdo) ===
+> [
+>     {
+>         "id": "28b706b4-1f73-432a-8a87-dae2900aa210",
+>         "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>         "kind": "generate",
+>         "od_project_id": "test_project",
+>         "od_artifact_id": null,
+>         "prompt": "Tartaruga voando em um paraiso das tartarugas",
+>         "format": null,
+>         "params": {
+>             "model": "seedance-2",
+>             "aspect": "1:1",
+>             "surface": "video"
+>         },
+>         "status": "queued",
+>         "coins_charged": 6,
+>         "result": null,
+>         "render_url": null,
+>         "error_message": null,
+>         "created_at": "2026-05-24T18:36:21.712739+00:00",
+>         "updated_at": "2026-05-24T18:36:21.712739+00:00"
+>     }
+> ]
+> === open-design tem media config / provider? (dentro do container) ===
+> ---
+> total 12
+> drwxr-xr-x    3 open-design open-design      4096 Jun 15 02:29 .
+> drwxr-xr-x   11 open-design open-design      4096 Jun 15 04:49 ..
+> drwxr-xr-x    2 open-design open-design      4096 Jun 15 02:29 d1f19b7f-63ac-4791-bea1-1c3caa63e340
+> --- cli existe? ---
+> -rw-rw-r--    1 open-design open-design    343398 Jun 15 02:39 apps/daemon/dist/cli.js
+> ```
+
+## 🤖 Claude *(23:21:07)*
+
+
+## 🤖 Claude *(23:21:13)*
+
+**Task #8 — Canvas Design diagnosticado (validação completa, veredito negativo).** O job preso confirma tudo: `kind=generate`, `surface=video`, `model=seedance-2`, prompt "Tartaruga voando…", **parado em `queued` há 28 dias**. E há um 3º gap: `/app/.od/users/` está **vazio** → o open-design não tem config de provider (BYOK) para o usuário. Então mesmo subindo o worker, o `media generate` falharia no provider.
+
+**Canvas Design = scaffolded, NÃO funcional E2E.** Três gaps concretos, todos cobertos pela BoK selada (canvas-design 9/9):
+1. iframe `http://127.0.0.1:7456` → inacessível + mixed-content do browser do usuário (falta **vhost público https**, tipo `mcp.mcorch.com`).
+2. Worker `design-bridge` morto (falta **supervisor** systemd).
+3. open-design sem **config de provider per-user** (`OD_MEDIA_CONFIG_DIR` vazio).
+
+Não vou forçar o worker agora (falharia no provider — ruído sem valor; é sub-projeto de infra próprio).
+
+## 🤖 Claude *(23:21:14)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(23:21:20)*
+
+
+## 🤖 Claude *(23:21:34)*
+
+## 📊 Validação da camada criativa — resultado material
+
+Frente "Validar+reparar o existente" **concluída**. Gasto total: **145 mco** (10+10+125; todo o resto — QA Vision, áudio, teste do reparo — foi grátis/BYOK). Saldo 5241 → **5096**.
+
+| # | Frente | Veredito | Prova material |
+|---|--------|----------|----------------|
+| 1 | **Olho criativo (Vision MCP)** | ✅ VIVO | `vision_describe_image` público c/ PAT, `confidence high`, **custo 0** (BYOK) |
+| 2 | **SOP Lei 2** | ✅ | `creative-qa-vision-gate.md` (6 gates, portão de consistência antes do crédito) |
+| 3 | **Reparo `generate-image`** | ✅ desbloqueado | deploy 129.4kB + img real 963KB PNG + olho criativo `high` (autopilot/orchestrate agora geram imagem) |
+| 4 | **Imagem Canvas Studio** | ✅ | frame gerado, asset público, 10 mco, QA `high` |
+| 5 | **Portão de consistência** | ✅ funciona | identidade macro consistente; mostrador derivou (Gemini=ref suave) — gate pegou |
+| 6 | **Vídeo DoP (crédito real)** | ✅ | mp4 6.4MB, −125 mco atômico, `analyze_video`: "sem artefatos, produção profissional" |
+| 7 | **Áudio TTS** | ✅ | WAV 403KB, RIFF/WAVE 24kHz, 8.4s |
+| 8 | **Canvas Design** | ⚠️ **NÃO funcional** | 3 gaps: vhost/iframe + worker morto + provider config — sub-projeto de infra |
+
+**Ganho colateral importante:** o reparo do `generate-image` corrige o blocker de imagem do **Viral Autopilot** (Fatia 1b) — a imagem do conteúdo viral agora gera via OpenRouter/Replicate (BYOK), sem depender da chave OpenAI sem acesso.
+
+**Ferramentas novas reutilizáveis:** `scripts/qa/vision-qa.ts` (olho criativo: image/video/compare) + o SOP.
+
+Os próximos itens da diretiva ("imagens, vídeos, áudios e **músicas, landing pages** etc") esbarram em decisões suas — música e landing **não existem** (BoK Gate exige `/bok-scribe` antes de código), e Canvas Design precisa de infra. Por onde seguimos?
+
+## 🤖 Claude *(23:21:44)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Camada criativa existente validada+reparada (imagem/v\u00eddeo/\u00e1udio OK; pipeline desbloqueado). O que existe agora tem GO. Qual a pr\u00f3xima frente?",
+      "header": "Pr\u00f3xima frente",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "M\u00fasica (novo m\u00f3dulo, BoK)",
+          "description": "Gera\u00e7\u00e3o de m\u00fasica/trilha (ex: Suno/ElevenLabs Music/Replicate MusicGen). N\u00e3o existe \u2014 exige /bok-scribe primeiro (BoK Gate): MRD\u2192SDD antes de c\u00f3digo. Sess\u00e3o de documenta\u00e7\u00e3o + depois implementa\u00e7\u00e3o."
+        },
+        {
+          "label": "Landing pages (novo m\u00f3dulo, BoK)",
+          "description": "Gera\u00e7\u00e3o de landing pages para campanhas de afiliado. N\u00e3o existe \u2014 exige /bok-scribe primeiro. Alta alavanca pra convers\u00e3o (link afiliado numa LP pr\u00f3pria)."
+        },
+        {
+          "label": "Consertar Canvas Design E2E",
+          "description": "Tornar o open-design funcional: vhost p\u00fablico https (sua a\u00e7\u00e3o DNS/cert, tipo mcp.mcorch.com) + supervisor systemd do worker + config de provider per-user. Coberto pela BoK selada. Infra-pesado."
+        },
+        {
+          "label": "Interpola\u00e7\u00e3o frame-inicial\u2192final",
+          "description": "Fiar o tail-frame do Kling 2.1 no canvas-execute para v\u00eddeo que REALMENTE vai do frame-A ao frame-B (n\u00e3o s\u00f3 anima 1 frame). Verificar suporte da API + c\u00f3digo. Dentro da BoK viralmind/canvas."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Camada criativa existente validada+reparada (imagem/vídeo/áudio OK; pipeline desbloqueado). O que existe agora tem GO. Qual a próxima frente?"="Consertar Canvas Design E2E". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:23:56)*
+
+
+## 🤖 Claude *(23:23:58)*
+
+GO: **consertar Canvas Design E2E.** BoK canvas-design selada (9/9) → código liberado. São 3 gaps (vhost/iframe + supervisor + provider config). Antes de construir, preciso entender o open-design de verdade: como o container roda, como o `media generate` resolve providers, e o que a SDD prevê pro deploy. Probe-first.
+
+## 🤖 Claude *(23:23:59)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Consertar Canvas Design E2E",
+  "summary": "open-design: supervisor do worker + provider config per-user + acesso p\u00fablico (vhost/proxy) + E2E job"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Consertar Canvas Design E2E". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(23:24:01)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Probe open-design: deploy + provider mechanism",
+  "description": "Entender antes de construir: como o container open-design roda (compose/env), o que serve em :7456 (Next.js?), como `media generate` resolve provider/BYOK (OD_MEDIA_CONFIG_DIR shape), e o que a canvas-design SDD prev\u00ea pra vhost/worker/provider. Determina o plano dos 3 gaps.",
+  "activeForm": "Sondando open-design deploy + providers"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #9 created successfully: Probe open-design: deploy + provider mechanism
+> ```
+
+## 🤖 Claude *(23:24:04)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(23:24:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== como o container open-design roda (compose + env + cmd) ===\"\ndocker inspect open-design --format '{{.Config.Cmd}} | {{.Config.WorkingDir}}' 2>/dev/null\ndocker inspect open-design --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep -iE \"OD_|PORT|NODE|PROVIDER|API|MEDIA|HOST\" | head -25\necho \"\"\necho \"=== compose file do open-design ===\"\nfind . canvas-design -maxdepth 3 -iname \"docker-compose*.y*ml\" 2>/dev/null | head; find canvas-design -maxdepth 2 -iname \"Dockerfile*\" 2>/dev/null | head\necho \"\"\necho \"=== o que serve em :7456 (Next.js?) ===\"\ncurl -s -I http://127.0.0.1:7456 2>/dev/null | head -8\necho \"\"\necho \"=== canvas-design SDD: vhost / worker / provider / proxy / OD_MEDIA ===\"\ngrep -niE \"vhost|nginx|proxy|systemd|supervisor|OD_MEDIA|provider|byok|7456|basePath|design\\.mcorch|iframe\" docs/bok/canvas-design/05-sdd.md 2>/dev/null | head -30",
+  "description": "Probe open-design container runtime, compose, port, SDD deploy intent"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como o container open-design roda (compose + env + cmd) ===
+> [node apps/daemon/dist/cli.js --no-open] | /app
+> OD_WEB_PORT=7456
+> OD_API_TOKEN=development_token
+> OD_CODEX_SANDBOX=
+> OD_PORT=7456
+> NODE_ENV=production
+> OD_MEDIA_ALLOW_STUBS=1
+> OD_BIND_HOST=0.0.0.0
+> NODE_OPTIONS=--max-old-space-size=192
+> OD_CONNECTION_TEST_PROVIDER_TIMEOUT_MS=300000
+> OD_ALLOWED_ORIGINS=
+> OD_OLLAMA_URL=http://ollama-proxy:80
+> NODE_VERSION=24.16.0
+> 
+> === compose file do open-design ===
+> ./docker-compose.yml
+> canvas-design/open-design/deploy/docker-compose.yml
+> 
+> === o que serve em :7456 (Next.js?) ===
+> HTTP/1.1 200 OK
+> X-Powered-By: Express
+> Accept-Ranges: bytes
+> Cache-Control: public, max-age=0
+> Last-Modified: Mon, 15 Jun 2026 02:39:52 GMT
+> ETag: W/"2687-19ec926523f"
+> Content-Type: text/html; charset=utf-8
+> Content-Length: 9863
+> 
+> === canvas-design SDD: vhost / worker / provider / proxy / OD_MEDIA ===
+> 76:| `OpenDesignFrame` | `canvas-design/OpenDesignFrame.tsx` | `odProjectId` | — (iframe to open-design) |
+> 95:| `design-bridge` | Node 24 worker (Docker or systemd) on the Sovereign host | Subscribes to `design_jobs`; runs `od` subcommands; writes results + mesh reference nodes back via the service role |
+> 191:| Per-user AI credentials | One tenant's key used for another's job | Information Disclosure / Tampering | Critical | Bridge runs `od` with a per-user `OD_MEDIA_CONFIG_DIR`; credentials never shared across jobs |
+> 234:| (per-user AI credentials) | `design-bridge` → `od` via `OD_MEDIA_CONFIG_DIR` | `user_api_keys` table (RLS) → provisioned per-user config dir | User-managed |
+> 238:> ⚠️ This feature introduces **no new vault secret**. AI generation is BYOK (per-user
+> 253:| nginx | Internal route reverse-proxying open-design's `apps/web` for the `OpenDesignFrame` iframe | One added server block (internal/sovereign scope) |
+> 294:| OTD-002 | Should mcoCoins be charged when generation is BYOK? | Charge as platform-usage metering | Free for BYOK | **A** — coins meter platform usage (bridge, daemon, storage, embedding); consistent with the hybrid model | Sovereign |
+> 295:| OTD-003 | Per-user credential isolation into `od` | One shared `media-config.json` | Per-user `OD_MEDIA_CONFIG_DIR` mounted per job | **B** — honors the API Tenancy Model; confirm `od` respects per-invocation `OD_MEDIA_CONFIG_DIR` | Engineering |
+> 297:| OTD-005 | Surfacing open-design's editor in MCORCH | New browser tab | nginx-reverse-proxied iframe (`OpenDesignFrame`) | **B** — internal nginx route + iframe keeps the user inside `/dashboard/canvas-design` | Engineering |
+> 300:| OTD-008 | **[Launch blocker]** LGPD/GDPR erasure does not purge the per-user open-design `OD_DATA_DIR` — `delete-account` is unaware of open-design (FMEA-007, RPN 240) | Ship without it — design data survives erasure (non-compliant) | Extend `delete-account` to purge the user's `OD_DATA_DIR` + `OD_MEDIA_CONFIG_DIR`; add an erasure-verification test | **B** — mandatory; canvas-design GA is gated on an erasure-verification test passing | OpenClaw build squad |
+> ```
+
+## 🤖 Claude *(23:24:40)*
+
+
+## 🤖 Claude *(23:24:44)*
+
+SDD-aligned: o intento é **nginx reverse-proxy same-origin** (não subdomínio) + worker via **systemd** + provider per-user via `OD_MEDIA_CONFIG_DIR` (BYOK do `user_api_keys`). Detalhe crítico: o container roda com **`OD_MEDIA_ALLOW_STUBS=1`** (gera mock!) e `OD_API_TOKEN=development_token`. Preciso de 3 coisas pra cravar o plano: paths de asset do web (proxy same-origin quebra com path absoluto?), como o `media generate` resolve provider, e onde está o nginx do login.mcorch.com.
+
+## 🤖 Claude *(23:24:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== HTML do :7456 \u2014 paths de asset root-relative? (decide proxy same-origin) ===\"\ncurl -s http://127.0.0.1:7456 2>/dev/null | grep -oiE \"(src|href)=\\\"[^\\\"]*\\\"\" | head -12\necho \"\"\necho \"=== open-design: como media generate resolve provider/config ===\"\ngrep -rniE \"OD_MEDIA_CONFIG_DIR|media-config|ALLOW_STUBS|providerId|resolveProvider\" canvas-design/open-design/apps/daemon/src 2>/dev/null | grep -iE \"config_dir|media-config|allow_stubs|resolveprovider\" | head -15\necho \"\"\necho \"=== nginx vhost do login.mcorch.com (localiza\u00e7\u00e3o + posso editar/reload?) ===\"\nls -la /etc/nginx/sites-enabled/ 2>/dev/null | grep -iE \"mcorch|login|design\" || sudo -n ls /etc/nginx/sites-enabled/ 2>/dev/null | grep -iE \"mcorch|login\" || echo \"(sem acesso direto a /etc/nginx)\"\ngrep -rliE \"login.mcorch.com|constellation-orchestra/dist\" /etc/nginx/ 2>/dev/null | head -3 || echo \"(n\u00e3o consigo ler /etc/nginx sem sudo)\"",
+  "description": "Probe web asset paths + provider resolution + nginx config access"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HTML do :7456 — paths de asset root-relative? (decide proxy same-origin) ===
+> href="/_next/static/chunks/0epvgk6mzhxi7.css"
+> href="/_next/static/chunks/0jykm9.-ma2lc.css"
+> href="/_next/static/chunks/0ovz1kz3yt45_.js"
+> src="/_next/static/chunks/0b01y5u4juao6.js"
+> src="/_next/static/chunks/0~saitcv01ulm.js"
+> src="/_next/static/chunks/turbopack-03x76w86tlfp-.js"
+> src="/_next/static/chunks/11adhas37nsjw.js"
+> src="/_next/static/chunks/0xmbmw3~.d49r.js"
+> src="/_next/static/chunks/0bnhnqs10zvm0.js"
+> src="/_next/static/chunks/052br4_jmzogc.js"
+> href="/app-icon.png"
+> href="/app-icon.png"
+> 
+> === open-design: como media generate resolve provider/config ===
+> canvas-design/open-design/apps/daemon/src/legacy-data-migrator.ts:6: * saved renders under `artifacts/`, credentials at `media-config.json`).
+> canvas-design/open-design/apps/daemon/src/legacy-data-migrator.ts:100:  'media-config.json',
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:19:import { resolveProviderConfig } from './media-config.js';
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:404:  /** Daemon project root — used to look up media-config when the chat
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:419:   *  the media-config indirection so the same key the user just pasted
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:625:  // Fall back to media-config (env var > stored) so a user who set
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:631:    const resolved = await resolveProviderConfig(ctx.projectRoot, 'senseaudio');
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:815:    const resolved = await resolveProviderConfig(ctx.projectRoot, 'senseaudio');
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts:982:    const resolved = await resolveProviderConfig(ctx.projectRoot, 'aihubmix');
+> canvas-design/open-design/apps/daemon/src/media.ts:42:// The fallback stub handlers are gated behind OD_MEDIA_ALLOW_STUBS=1; in
+> canvas-design/open-design/apps/daemon/src/media.ts:68:import { resolveModelAlias, resolveProviderConfig } from './media-config.js';
+> canvas-design/open-design/apps/daemon/src/media.ts:112:   * `media-config.json` otherwise. Renderers must use this field
+> canvas-design/open-design/apps/daemon/src/media.ts:171:// behind OD_MEDIA_ALLOW_STUBS=1 and otherwise return a 503 (mapped from
+> canvas-design/open-design/apps/daemon/src/media.ts:185:  const v = process.env.OD_MEDIA_ALLOW_STUBS;
+> canvas-design/open-design/apps/daemon/src/media.ts:497:  const credentials = await resolveProviderConfig(projectRoot, def.provider);
+> 
+> === nginx vhost do login.mcorch.com (localização + posso editar/reload?) ===
+> mcp.mcorch.com.conf
+> www.mcorch.com.conf
+> www.mcorch.com.conf.bak-20260608
+> ```
+
+## 🤖 Claude *(23:25:23)*
+
+
+## 🤖 Claude *(23:25:27)*
+
+Achados decisivos:
+- O web é **Next.js** (assets `/_next/static/...` root-relative) → proxy em sub-path quebra; precisa de **subdomínio dedicado** `design.mcorch.com` (padrão do `mcp.mcorch.com` que já existe). DNS+CF+cert = ação sua; eu escrevo o vhost+runbook+iframe.
+- Provider: `resolveProviderConfig(projectRoot, provider)` em `media-config.js` (env > stored); stubs gated por `OD_MEDIA_ALLOW_STUBS=1` (hoje ON → mock). Preciso do formato do `media-config` pra provisionar BYOK do `user_api_keys`.
+- nginx `sites-enabled`: tem `mcp.mcorch.com.conf` (template!), `www.mcorch.com.conf` — **não há `login.mcorch.com.conf`** (login deve estar no www). 
+
+Vou ler o `media-config` (formato/local do provider) + o template do vhost mcp + checar escrita no nginx:
+
+## 🤖 Claude *(23:25:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== media-config.ts: resolveProviderConfig (formato + onde l\u00ea) ===\"\nsed -n '1,120p' canvas-design/open-design/apps/daemon/src/media-config.ts 2>/dev/null | grep -nE \"OD_MEDIA_CONFIG_DIR|media-config|function resolveProviderConfig|readFile|join|env\\[|process.env|apiKey|baseUrl|providers|interface|JSON.parse\" | head -40\necho \"\"\necho \"=== nginx: posso escrever em sites-enabled/ e recarregar? ===\"\n[ -w /etc/nginx/sites-enabled/ ] && echo \"sites-enabled: GRAV\u00c1VEL\" || echo \"sites-enabled: somente leitura (precisa sudo p/ adicionar vhost)\"\nsudo -n true 2>/dev/null && echo \"sudo -n: DISPON\u00cdVEL (sem senha)\" || echo \"sudo -n: indispon\u00edvel (a\u00e7\u00e3o Sovereign p/ reload nginx)\"\necho \"\"\necho \"=== template mcp.mcorch.com.conf (estrutura do proxy SSE) ===\"\nsudo -n cat /etc/nginx/sites-enabled/mcp.mcorch.com.conf 2>/dev/null | grep -nE \"server_name|listen|proxy_pass|ssl_certificate|location|proxy_buffering|proxy_set_header Host\" | head -20 || cat nginx/mcp.mcorch.com.conf 2>/dev/null | grep -nE \"server_name|listen|proxy_pass|ssl_certificate|location|proxy_buffering\" | head -20",
+  "description": "Read media-config provider resolution + nginx writability + mcp vhost template"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === media-config.ts: resolveProviderConfig (formato + onde lê) ===
+> 4:// /api/media/config; the daemon persists them to .od/media-config.json
+> 10://   1. OD_MEDIA_CONFIG_DIR=DIR   → <DIR>/media-config.json
+> 11://   2. OD_DATA_DIR=DIR           → <DIR>/media-config.json
+> 12://   3. (default)                 → <projectRoot>/.od/media-config.json
+> 18:// the Home Manager / NixOS modules) get media-config there too without
+> 27:// AND has a pre-existing `<projectRoot>/.od/media-config.json` will
+> 28:// start reading from `<OD_DATA_DIR>/media-config.json` instead. Move
+> 29:// the file once or set OD_MEDIA_CONFIG_DIR=<projectRoot>/.od to keep
+> 38:import { mkdir, readFile, writeFile } from 'node:fs/promises';
+> 47:type ProviderEntry = { apiKey?: string; baseUrl?: string; model?: string };
+> 51:type OAuthCredential = { apiKey: string; source: string };
+> 
+> === nginx: posso escrever em sites-enabled/ e recarregar? ===
+> sites-enabled: somente leitura (precisa sudo p/ adicionar vhost)
+> sudo -n: DISPONÍVEL (sem senha)
+> 
+> === template mcp.mcorch.com.conf (estrutura do proxy SSE) ===
+> 3:# OTD-VM-013 (SDD §6 / NFR-VM-003). The container (mcorch_vision_mcp) listens only on
+> 7:# proxy_buffering MUST be off, timeouts long, and the container emits a heartbeat ≤25s to stay under
+> 12:  listen 80;
+> 13:  listen [::]:80;
+> 14:  listen 443 quic;
+> 15:  listen 443 ssl;
+> 16:  listen [::]:443 quic;
+> 17:  listen [::]:443 ssl;
+> 23:  ssl_certificate_key /etc/nginx/ssl-certificates/mcp.mcorch.com.key;
+> 24:  ssl_certificate     /etc/nginx/ssl-certificates/mcp.mcorch.com.crt;
+> 26:  server_name mcp.mcorch.com;
+> 37:  location / {
+> 38:    proxy_pass http://127.0.0.1:3200;
+> 42:    proxy_set_header Host              $host;
+> 51:    proxy_buffering        off;
+> ```
+
+## 🤖 Claude *(23:26:25)*
+
+
+## 🤖 Claude *(23:26:30)*
+
+Tudo mapeado para o plano:
+- **Provider config:** `media-config.json` `{providers:{<p>:{apiKey,baseUrl,model}}}` em `OD_MEDIA_CONFIG_DIR/media-config.json` — o worker já passa `OD_MEDIA_CONFIG_DIR=/app/.od/users/<user_id>`. Provisiono BYOK do `user_api_keys`.
+- **nginx:** `sudo -n` disponível (posso escrever vhost + reload), template `mcp.mcorch.com.conf` existe. Falta cert+DNS (subdomínio = ação sua).
+
+Vou pela maior alavanca **100% nas minhas mãos**: tornar o **worker (bridge headless) funcional E2E** — é o path de geração de verdade, independente do iframe. Primeiro a prova rápida do bridge: subir o worker e ver o job preso andar (stubs ON hoje → prova claim→generate→copy→mesh node→complete).
+
+## 🤖 Claude *(23:26:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sobe o worker design-bridge em background (observa 1 ciclo) ===\"\nnohup bun run scripts/design-bridge.ts > /tmp/design-bridge.log 2>&1 &\necho \"worker PID $!\"\nsleep 12\necho \"=== log do worker ===\"\ncat /tmp/design-bridge.log | head -40",
+  "description": "Start design-bridge worker, observe it process the stuck job"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sobe o worker design-bridge em background (observa 1 ciclo) ===
+> worker PID 2638954
+> === log do worker ===
+> 🤖 design-bridge is running and polling design_jobs...
+> 
+> 📦 Processing job 28b706b4-1f73-432a-8a87-dae2900aa210 (kind: generate)
+> 🚀 Executing open-design command: docker exec -e OD_PROJECT_ID=test_project -e OD_MEDIA_CONFIG_DIR=/app/.od/users/ada39fae-67e1-4e53-af1c-5a18e1c108e8 open-design node apps/daemon/dist/cli.js media generate --surface video --model seedance-2 --prompt Tartaruga voando em um paraiso das tartarugas --aspect 1:1
+> ❌ Job 28b706b4-1f73-432a-8a87-dae2900aa210 failed: Failed to generate media. CLI exit code: 4. Stderr: daemon 404: {"error":"project not found"}
+> . Stdout:
+> ```
+
+## 🤖 Claude *(23:27:02)*
+
+
+## 🤖 Claude *(23:27:05)*
+
+**O worker FUNCIONA** — claimou o job, rodou o `docker exec`, e falhou corretamente com `daemon 404: project not found` (o job tinha `od_project_id="test_project"`, inexistente; o real é `d1f19b7f…`). O bridge está OK; a falha era **dado ruim**, não o worker. Job marcado `failed` (fila drenada).
+
+Agora a prova de SUCESSO E2E: insiro um job fresco com o `project_id` válido + surface image, e o worker (ainda rodando) pega em ~2s:
+
+## 🤖 Claude *(23:27:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\necho \"=== insere job v\u00e1lido (project existente + surface image) ===\"\nJOB=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"kind\":\"generate\",\"od_project_id\":\"d1f19b7f-63ac-4791-bea1-1c3caa63e340\",\"prompt\":\"A minimalist hero shot of orange running shoes on grey concrete, studio lighting\",\"params\":{\"surface\":\"image\",\"model\":\"dall-e-3\",\"aspect\":\"1:1\"},\"status\":\"queued\",\"coins_charged\":0}' \\\n  | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'])\")\necho \"job_id: $JOB\"; echo \"$JOB\" > /tmp/qa_design_job.txt\nsleep 14\necho \"=== log do worker (novo job) ===\"\ntail -20 /tmp/design-bridge.log\necho \"=== status do job no banco ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=status,render_url,error_message,result&id=eq.${JOB}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool",
+  "description": "Insert valid design job + watch worker process it E2E"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === insere job válido (project existente + surface image) ===
+> job_id: a83a260f-6ee3-4cbf-8852-a75142948c3f
+> === log do worker (novo job) ===
+> 🤖 design-bridge is running and polling design_jobs...
+> 
+> 📦 Processing job 28b706b4-1f73-432a-8a87-dae2900aa210 (kind: generate)
+> 🚀 Executing open-design command: docker exec -e OD_PROJECT_ID=test_project -e OD_MEDIA_CONFIG_DIR=/app/.od/users/ada39fae-67e1-4e53-af1c-5a18e1c108e8 open-design node apps/daemon/dist/cli.js media generate --surface video --model seedance-2 --prompt Tartaruga voando em um paraiso das tartarugas --aspect 1:1
+> ❌ Job 28b706b4-1f73-432a-8a87-dae2900aa210 failed: Failed to generate media. CLI exit code: 4. Stderr: daemon 404: {"error":"project not found"}
+> . Stdout: 
+> 
+> 📦 Processing job a83a260f-6ee3-4cbf-8852-a75142948c3f (kind: generate)
+> 🚀 Executing open-design command: docker exec -e OD_PROJECT_ID=d1f19b7f-63ac-4791-bea1-1c3caa63e340 -e OD_MEDIA_CONFIG_DIR=/app/.od/users/ada39fae-67e1-4e53-af1c-5a18e1c108e8 open-design node apps/daemon/dist/cli.js media generate --surface image --model dall-e-3 --prompt A minimalist hero shot of orange running shoes on grey concrete, studio lighting --aspect 1:1
+> 📁 Generated media: image-dall-e-3-mqof25a9.png (67 bytes)
+> ✅ Job a83a260f-6ee3-4cbf-8852-a75142948c3f marked as complete.
+> === status do job no banco ===
+> [
+>     {
+>         "status": "complete",
+>         "render_url": "/canvas-design/image-dall-e-3-mqof25a9.png",
+>         "error_message": null,
+>         "result": {
+>             "kind": "image",
+>             "mime": "image/png",
+>             "name": "image-dall-e-3-mqof25a9.png",
+>             "size": 67,
+>             "model": "dall-e-3",
+>             "mtime": 1782084433486.6475,
+>             "surface": "image",
+>             "warnings": [],
+>             "providerId": "openai",
+>             "providerNote": "[stub] [openai error \u2192 stub] no OpenAI credential \u2014 configure an API key in Settings or set OPENAI_API_KEY",
+>             "providerError": "no OpenAI credential \u2014 configure an API key in Settings or set OPENAI_API_KEY",
+>             "intentionalStub": false,
+>             "usedStubFallback": true
+>         }
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(23:27:46)*
+
+
+## 🤖 Claude *(23:27:49)*
+
+**Bridge Canvas Design FUNCIONA E2E!** O job válido foi: claim → CLI gerou `image-dall-e-3-mqof25a9.png` → copiado → `status: complete` + `render_url`. A imagem saiu **stub de 67 bytes** só porque o provider não está configurado (`providerNote: "no OpenAI credential → stub"`). Ou seja: **a plumbing toda funciona**; falta só provisionar uma chave real. O usuário tem Replicate/OpenRouter — vou ver quais providers de imagem o open-design suporta para casar com as chaves dele:
+
+## 🤖 Claude *(23:27:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== providers de imagem suportados pelo open-design + model aliases ===\"\ngrep -rniE \"replicate|openrouter|stability|fal\\.|provider:|providerId\" canvas-design/open-design/apps/daemon/src/media-config.ts 2>/dev/null | head -20\necho \"--- registry de modelos/providers (media.ts) ---\"\ngrep -rniE \"provider: ['\\\"]|'replicate'|'openai'|'openrouter'|'fal'|'stability'|model:|alias\" canvas-design/open-design/apps/daemon/src/media.ts 2>/dev/null | grep -iE \"provider|alias|replicate|openrouter|fal|stability\" | head -25\necho \"--- procura tabela de modelos conhecidos ---\"\ngrep -rliE \"flux|sdxl|seedance|dall-e|gemini-2.5-flash-image\" canvas-design/open-design/apps/daemon/src 2>/dev/null | head",
+  "description": "Find open-design supported image providers/models to match user keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === providers de imagem suportados pelo open-design + model aliases ===
+> canvas-design/open-design/apps/daemon/src/media-config.ts:91:  openrouter: ['OD_OPENROUTER_API_KEY', 'OPENROUTER_API_KEY'],
+> canvas-design/open-design/apps/daemon/src/media-config.ts:95:  replicate: ['OD_REPLICATE_API_TOKEN', 'REPLICATE_API_TOKEN'],
+> canvas-design/open-design/apps/daemon/src/media-config.ts:116:// resolveDataDir does on startup is intentionally NOT replicated here:
+> canvas-design/open-design/apps/daemon/src/media-config.ts:260:function readEnvKey(providerId: string): string | null {
+> canvas-design/open-design/apps/daemon/src/media-config.ts:261:  const keys = ENV_KEYS[providerId];
+> canvas-design/open-design/apps/daemon/src/media-config.ts:356:export async function resolveProviderConfig(projectRoot: string, providerId: string): Promise<ProviderEntry> {
+> canvas-design/open-design/apps/daemon/src/media-config.ts:358:  const entry = stored[providerId] || {};
+> canvas-design/open-design/apps/daemon/src/media-config.ts:359:  const envKey = readEnvKey(providerId);
+> canvas-design/open-design/apps/daemon/src/media-config.ts:362:    ? providerId === 'openai'
+> canvas-design/open-design/apps/daemon/src/media-config.ts:364:      : providerId === 'grok'
+> canvas-design/open-design/apps/daemon/src/media-config.ts:426: * Write the supplied {providerId: {apiKey, baseUrl}} map. Empty
+> canvas-design/open-design/apps/daemon/src/media-config.ts:500: *   * No-op when an apiKey is ALREADY stored for `providerId` (the user
+> canvas-design/open-design/apps/daemon/src/media-config.ts:502: *   * No-op when an env-var key resolves for `providerId` (env wins
+> canvas-design/open-design/apps/daemon/src/media-config.ts:506: *   * Otherwise merge `{ [providerId]: entry }` into the existing
+> canvas-design/open-design/apps/daemon/src/media-config.ts:516:  providerId: string,
+> canvas-design/open-design/apps/daemon/src/media-config.ts:519:  if (!PROVIDER_IDS.includes(providerId)) return false;
+> canvas-design/open-design/apps/daemon/src/media-config.ts:524:  if (readEnvKey(providerId)) return false;
+> canvas-design/open-design/apps/daemon/src/media-config.ts:528:    typeof prior[providerId]?.apiKey === 'string' && prior[providerId].apiKey.trim()
+> canvas-design/open-design/apps/daemon/src/media-config.ts:529:      ? prior[providerId].apiKey.trim()
+> canvas-design/open-design/apps/daemon/src/media-config.ts:536:  next[providerId] = {
+> --- registry de modelos/providers (media.ts) ---
+> canvas-design/open-design/apps/daemon/src/media.ts:19://   * provider 'openai'     → OpenAI Images API (gpt-image-* / dall-e-*),
+> canvas-design/open-design/apps/daemon/src/media.ts:33://   * provider 'openrouter' → OpenRouter unified gateway: synchronous
+> canvas-design/open-design/apps/daemon/src/media.ts:68:import { resolveModelAlias, resolveProviderConfig } from './media-config.js';
+> canvas-design/open-design/apps/daemon/src/media.ts:100:   * the user has aliased the catalog id to a custom wire-name via
+> canvas-design/open-design/apps/daemon/src/media.ts:101:   * issue #1277's alias layer. lefarcen + codex P2 review on PR
+> canvas-design/open-design/apps/daemon/src/media.ts:104:   * branches under aliasing.
+> canvas-design/open-design/apps/daemon/src/media.ts:110:   * routing). Equal to `model` when no alias is configured; equal
+> canvas-design/open-design/apps/daemon/src/media.ts:111:   * to the user-supplied alias from `OD_MEDIA_MODEL_ALIASES` /
+> canvas-design/open-design/apps/daemon/src/media.ts:306: * @returns {Promise<{ name: string, size: number, mtime: number, kind: string, mime: string, model: string, surface: string, providerNote: string, providerId: string }>}
+> canvas-design/open-design/apps/daemon/src/media.ts:365:        provider: 'fal',
+> canvas-design/open-design/apps/daemon/src/media.ts:379:        provider: 'aihubmix',
+> canvas-design/open-design/apps/daemon/src/media.ts:459:  // Resolve any user-configured model alias BEFORE we hand the id to a
+> canvas-design/open-design/apps/daemon/src/media.ts:462:  // catalog; the alias only changes what the provider receives on the
+> canvas-design/open-design/apps/daemon/src/media.ts:466:  // catalog id while the provider's request body carries the alias.
+> canvas-design/open-design/apps/daemon/src/media.ts:467:  const wireModel = await resolveModelAlias(projectRoot, model);
+> canvas-design/open-design/apps/daemon/src/media.ts:499:    surface === 'image' && def.provider === 'openai'
+> canvas-design/open-design/apps/daemon/src/media.ts:520:      def.provider === 'openai'
+> canvas-design/open-design/apps/daemon/src/media.ts:529:    } else if (def.provider === 'openai' && surface === 'image') {
+> canvas-design/open-design/apps/daemon/src/media.ts:540:      def.provider === 'openai'
+> canvas-design/open-design/apps/daemon/src/media.ts:616:    } else if (def.provider === 'openrouter' && surface === 'image') {
+> canvas-design/open-design/apps/daemon/src/media.ts:621:    } else if (def.provider === 'openrouter' && surface === 'video') {
+> canvas-design/open-design/apps/daemon/src/media.ts:685:    } else if (def.provider === 'fal' && surface === 'image') {
+> canvas-design/open-design/apps/daemon/src/media.ts:690:    } else if (def.provider === 'fal' && surface === 'video') {
+> canvas-design/open-design/apps/daemon/src/media.ts:849:  // compatible across both flavors. The wire-name (post-alias) goes
+> canvas-design/open-design/apps/daemon/src/media.ts:850:  // on the body so the user's alias from issue #1277 reaches the API.
+> --- procura tabela de modelos conhecidos ---
+> canvas-design/open-design/apps/daemon/src/media-models.ts
+> canvas-design/open-design/apps/daemon/src/cli.ts
+> canvas-design/open-design/apps/daemon/src/byok-tools.ts
+> canvas-design/open-design/apps/daemon/src/media.ts
+> canvas-design/open-design/apps/daemon/src/mcp-config.ts
+> canvas-design/open-design/apps/daemon/src/aihubmix.ts
+> canvas-design/open-design/apps/daemon/src/connectionTest.ts
+> canvas-design/open-design/apps/daemon/src/media-adapters/types.ts
+> canvas-design/open-design/apps/daemon/src/media-adapters/seed.ts
+> canvas-design/open-design/apps/daemon/src/media-adapters/video.ts
+> ```
+
+## 🤖 Claude *(23:28:09)*
+
+
+## 🤖 Claude *(23:28:11)*
+
+open-design **suporta OpenRouter para imagem** (`media.ts:616` + ENV_KEYS `openrouter`/`replicate`) — e o usuário tem chave OpenRouter. Então dá para geração REAL. Vou: pegar a chave OpenRouter descriptografada (service role), achar um model id OpenRouter de imagem no catálogo, provisionar o `media-config.json` per-user no container e rodar um job real:
+
+## 🤖 Claude *(23:28:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== modelos OpenRouter de imagem no cat\u00e1logo open-design ===\"\ngrep -nE \"id:|provider:|surface:|openrouter|gemini.*image|flux\" canvas-design/open-design/apps/daemon/src/media-models.ts 2>/dev/null | grep -iE \"openrouter|gemini-2.5-flash-image|flux|surface: 'image'|id: '\" | head -40",
+  "description": "Find OpenRouter image model id in open-design catalog"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === modelos OpenRouter de imagem no catálogo open-design ===
+> 34:  { id: 'openai', label: 'OpenAI', hint: 'gpt-image-2 / dall-e-3', integrated: true, defaultBaseUrl: 'https://api.openai.com/v1' },
+> 35:  { id: 'codex', label: 'Codex Subscription', hint: 'gpt-image-2 via local Codex CLI login', integrated: true, credentialsRequired: false, docsUrl: 'https://developers.openai.com/codex' },
+> 36:  { id: 'volcengine', label: 'Volcengine Ark (Doubao)', hint: 'Seedance 2.0 / Seedream', integrated: true, defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3' },
+> 37:  { id: 'grok', label: 'xAI Grok Imagine', hint: 'grok-imagine — image + video with native audio', integrated: true, defaultBaseUrl: 'https://api.x.ai/v1' },
+> 38:  { id: 'hyperframes', label: 'HyperFrames', hint: 'Local HTML -> MP4 renderer', integrated: true, credentialsRequired: false, settingsVisible: false },
+> 39:  { id: 'nanobanana', label: 'Nano Banana', hint: 'Google official by default; custom gateway configurable', integrated: true, defaultBaseUrl: 'https://generativelanguage.googleapis.com', supportsCustomModel: true },
+> 40:  { id: 'imagerouter', label: 'ImageRouter', hint: 'OpenAI-compatible image + video routing', integrated: true, defaultBaseUrl: 'https://api.imagerouter.io/v1/openai', docsUrl: 'https://docs.imagerouter.io/api-reference/image-generation/', supportsCustomModel: true, customModelPlaceholder: 'openai/gpt-image-2 or xAI/grok-imagine-video' },
+> 41:  { id: 'openrouter', label: 'OpenRouter', hint: 'Unified gateway for image + video models', integrated: true, credentialsRequired: true, settingsVisible: true, defaultBaseUrl: 'https://openrouter.ai/api/v1', docsUrl: 'https://openrouter.ai/settings/keys' },
+> 42:  { id: 'custom-image', label: 'Custom Image API', hint: 'OpenAI-compatible images/generations + images/edits (local or cloud)', integrated: true, docsUrl: 'https://platform.openai.com/docs/api-reference/images', supportsCustomModel: true, customModelPlaceholder: 'my-image-model' },
+> 43:  { id: 'comfyui', label: 'ComfyUI', hint: 'Local JSON workflow server (planned adapter)', integrated: false, defaultBaseUrl: 'http://127.0.0.1:8188', docsUrl: 'https://docs.comfy.org/development/core-concepts/workflow' },
+> 44:  { id: 'bfl', label: 'Black Forest Labs', hint: 'FLUX 1.1 Pro / FLUX Pro / Dev', integrated: false, defaultBaseUrl: 'https://api.bfl.ai' },
+> 45:  { id: 'fal', label: 'Fal.ai', hint: 'FLUX / Sora / Veo / Wan / Ideogram / Recraft and any fal-ai/* model', integrated: true, defaultBaseUrl: 'https://fal.run', supportsCustomModel: true },
+> 46:  { id: 'leonardo', label: 'Leonardo.ai', hint: 'Phoenix / Kino XL / FLUX', integrated: true, credentialsRequired: true, settingsVisible: true, defaultBaseUrl: 'https://cloud.leonardo.ai/api/rest/v1' },
+> 47:  { id: 'replicate', label: 'Replicate', hint: 'FLUX / SDXL / Ideogram', integrated: false, defaultBaseUrl: 'https://api.replicate.com' },
+> 48:  { id: 'google', label: 'Google AI / Vertex', hint: 'Imagen 4 / Veo 3 / Lyria', integrated: false },
+> 49:  { id: 'kling', label: 'Kuaishou Kling', hint: 'Kling 1.6 / 2.0 video', integrated: false },
+> 50:  { id: 'midjourney', label: 'Midjourney (proxy)', hint: 'midjourney-v7', integrated: false },
+> 51:  { id: 'minimax', label: 'MiniMax', hint: 'TTS / video-01', integrated: true, defaultBaseUrl: 'https://api.minimaxi.chat/v1' },
+> 52:  { id: 'suno', label: 'Suno', hint: 'Music generation', integrated: false },
+> 53:  { id: 'udio', label: 'Udio', hint: 'Music generation', integrated: false },
+> 55:    id: 'elevenlabs',
+> 62:  { id: 'fishaudio', label: 'FishAudio', hint: 'Speech / voice clone', integrated: true, defaultBaseUrl: 'https://api.fish.audio' },
+> 64:    id: 'senseaudio',
+> 72:    id: 'aihubmix',
+> 83:  { id: 'tavily', label: 'Tavily Search', hint: 'Agent-callable web research', integrated: true, defaultBaseUrl: 'https://api.tavily.com' },
+> 84:  { id: 'stub', label: 'Stub (placeholder)', hint: 'Deterministic local placeholder bytes', integrated: true },
+> 88:  { id: 'gpt-image-2', label: 'gpt-image-2', hint: 'OpenAI · 4K, native multimodal', provider: 'openai', caps: ['t2i', 'i2i', 'inpaint'], default: true },
+> 89:  { id: 'gpt-image-1.5', label: 'gpt-image-1.5', hint: 'OpenAI · 4× faster than gpt-image-1', provider: 'openai', caps: ['t2i', 'i2i', 'inpaint'] },
+> 90:  { id: 'gpt-image-1', label: 'gpt-image-1', hint: 'OpenAI · ChatGPT native', provider: 'openai', caps: ['t2i', 'i2i', 'inpaint'] },
+> 91:  { id: 'gpt-image-1-mini', label: 'gpt-image-1-mini', hint: 'OpenAI · low-cost variant', provider: 'openai', caps: ['t2i', 'i2i'] },
+> 92:  { id: 'dall-e-3', label: 'dall-e-3', hint: 'OpenAI · classic', provider: 'openai', caps: ['t2i'] },
+> 93:  { id: 'dall-e-2', label: 'dall-e-2', hint: 'OpenAI · legacy', provider: 'openai', caps: ['t2i'] },
+> 94:  { id: 'codex-gpt-image-2', label: 'gpt-image-2 (Codex)', hint: 'Codex Subscription · local CLI imagegen', provider: 'codex', caps: ['t2i', 'i2i'] },
+> 96:  { id: 'doubao-seedream-3-0-t2i-250415', label: 'seedream-3.0', hint: 'ByteDance · Doubao image', provider: 'volcengine', caps: ['t2i'] },
+> 97:  { id: 'doubao-seededit-3-0-i2i-250628', label: 'seededit-3.0', hint: 'ByteDance · image edit', provider: 'volcengine', caps: ['i2i'] },
+> 99:  { id: 'senseaudio-image-2.0-260319', label: 'senseaudio-image-2.0', hint: 'SenseAudio · multi-aspect, latest', provider: 'senseaudio', caps: ['t2i', 'i2i'] },
+> 100:  { id: 'senseaudio-image-1.0-260319', label: 'senseaudio-image-1.0', hint: 'SenseAudio · standard', provider: 'senseaudio', caps: ['t2i', 'i2i'] },
+> 101:  { id: 'doubao-seedream-5-0-260128', label: 'seedream-5.0', hint: 'SenseAudio · ByteDance Seedream 5.0 hi-res', provider: 'senseaudio', caps: ['t2i', 'i2i'] },
+> 106:  { id: 'aihubmix-gpt-image-1', label: 'gpt-image-1 (AIHubMix)', hint: 'AIHubMix · OpenAI gpt-image-1', provider: 'aihubmix', caps: ['t2i', 'i2i'] },
+> 107:  { id: 'aihubmix-dall-e-3', label: 'dall-e-3 (AIHubMix)', hint: 'AIHubMix · OpenAI DALL·E 3', provider: 'aihubmix', caps: ['t2i'] },
+> ```
+
+## 🤖 Claude *(23:28:22)*
+
+
+## 🤖 Claude *(23:28:23)*
+
+Preciso do model id OpenRouter de imagem no catálogo:
+
+## 🤖 Claude *(23:28:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== modelos com provider openrouter ou nanobanana (imagem) ===\"\ngrep -nE \"provider: '(openrouter|nanobanana)'\" canvas-design/open-design/apps/daemon/src/media-models.ts 2>/dev/null | head -20",
+  "description": "Find exact openrouter/nanobanana image model ids"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === modelos com provider openrouter ou nanobanana (imagem) ===
+> 111:  { id: 'gemini-3.1-flash-image-preview', label: 'nano-banana-2', hint: 'Nano Banana · text-to-image', provider: 'nanobanana', caps: ['t2i'] },
+> 117:  { id: 'openrouter/google/gemini-2.5-flash-image', label: 'gemini-flash-image (OR)', hint: 'OpenRouter · Gemini', provider: 'openrouter', caps: ['t2i'] },
+> 118:  { id: 'openrouter/black-forest-labs/flux-1.1-pro', label: 'flux-1.1-pro (OR)', hint: 'OpenRouter · BFL', provider: 'openrouter', caps: ['t2i'] },
+> 119:  { id: 'openrouter/recraft/recraft-v3', label: 'recraft-v3 (OR)', hint: 'OpenRouter · Recraft', provider: 'openrouter', caps: ['t2i'] },
+> 162:  { id: 'openrouter/bytedance/seedance-2.0:1080p', label: 'seedance-2.0 1080p (OR)', hint: 'OpenRouter · ByteDance · 1080p', provider: 'openrouter', caps: ['t2v', 'i2v'], default: true },
+> 163:  { id: 'openrouter/bytedance/seedance-2.0', label: 'seedance-2.0 720p (OR)', hint: 'OpenRouter · ByteDance · 720p', provider: 'openrouter', caps: ['t2v', 'i2v'] },
+> 164:  { id: 'openrouter/bytedance/seedance-2.0:480p', label: 'seedance-2.0 480p (OR)', hint: 'OpenRouter · ByteDance · 480p', provider: 'openrouter', caps: ['t2v', 'i2v'] },
+> 165:  { id: 'openrouter/google/veo-3.1', label: 'veo-3.1 (OR)', hint: 'OpenRouter · Google', provider: 'openrouter', caps: ['t2v', 'i2v', 'audio'] },
+> 166:  { id: 'openrouter/alibaba/wan-2.7', label: 'wan-2.7 (OR)', hint: 'OpenRouter · Alibaba', provider: 'openrouter', caps: ['t2v', 'i2v'] },
+> 167:  { id: 'openrouter/kwaivgi/kling-v3.0-pro', label: 'kling-v3.0-pro (OR)', hint: 'OpenRouter · Kuaishou', provider: 'openrouter', caps: ['t2v', 'i2v'] },
+> ```
+
+## 🤖 Claude *(23:28:41)*
+
+
+## 🤖 Claude *(23:28:42)*
+
+Model id achado: **`openrouter/google/gemini-2.5-flash-image`** (provider openrouter, t2i). Vou pegar a chave OpenRouter descriptografada (sem imprimir), provisionar o `media-config.json` per-user no container, inserir um job real e ver o worker processar:
+
+## 🤖 Claude *(23:28:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nUID2=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n# fetch decrypted OpenRouter key into a var (never echoed)\nKEY=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/decrypted_user_api_keys?select=openrouter_api_key&user_id=eq.${UID2}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['openrouter_api_key'])\")\n[ -z \"$KEY\" ] && { echo \"sem chave\"; exit 1; }\necho \"chave OpenRouter resolvida (len ${#KEY}, prefixo ${KEY:0:8}\u2026)\"\n# provision per-user media-config.json INSIDE the container (key via env, not in args)\ndocker exec -e ODKEY=\"$KEY\" open-design sh -c \"mkdir -p /app/.od/users/${UID2} && printf '{\\\"openrouter\\\":{\\\"apiKey\\\":\\\"%s\\\"}}' \\\"\\$ODKEY\\\" > /app/.od/users/${UID2}/media-config.json && echo provisioned $(wc -c < /app/.od/users/${UID2}/media-config.json) bytes\"\necho \"=== insere job REAL (openrouter gemini image) ===\"\nJOB=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"kind\":\"generate\",\"od_project_id\":\"d1f19b7f-63ac-4791-bea1-1c3caa63e340\",\"prompt\":\"A premium matte-black wireless speaker on a wooden table, soft morning light, product photography\",\"params\":{\"surface\":\"image\",\"model\":\"openrouter/google/gemini-2.5-flash-image\",\"aspect\":\"1:1\"},\"status\":\"queued\",\"coins_charged\":0}' \\\n  | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'])\")\necho \"job_id: $JOB\"; echo \"$JOB\" > /tmp/qa_design_job2.txt\nsleep 18\necho \"=== status do job + log ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=status,render_url,result,error_message&id=eq.${JOB}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];r=d.get('result') or {};print('status:',d['status']);print('render_url:',d.get('render_url'));print('size:',r.get('size'),'providerId:',r.get('providerId'),'stubFallback:',r.get('usedStubFallback'));print('providerNote:',r.get('providerNote'));print('error:',d.get('error_message'))\"\ntail -4 /tmp/design-bridge.log",
+  "description": "Provision OpenRouter BYOK + run real Canvas Design image job"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chave OpenRouter resolvida (len 73, prefixo sk-or-v1…)
+> /bin/bash: line 26: /app/.od/users/ada39fae-67e1-4e53-af1c-5a18e1c108e8/media-config.json: No such file or directory
+> provisioned bytes
+> === insere job REAL (openrouter gemini image) ===
+> job_id: c6bd411d-9add-4a8c-9154-d6a902eb3bf9
+> === status do job + log ===
+> status: complete
+> render_url: /canvas-design/image-openrouter-google-gemini-2-5-fla-mqof4ds2.png
+> size: 67 providerId: openrouter stubFallback: True
+> providerNote: [stub] [openrouter error → stub] no OpenRouter API key — configure it in Settings or set OPENROUTER_API_KEY
+> error: None
+> 📦 Processing job c6bd411d-9add-4a8c-9154-d6a902eb3bf9 (kind: generate)
+> 🚀 Executing open-design command: docker exec -e OD_PROJECT_ID=d1f19b7f-63ac-4791-bea1-1c3caa63e340 -e OD_MEDIA_CONFIG_DIR=/app/.od/users/ada39fae-67e1-4e53-af1c-5a18e1c108e8 open-design node apps/daemon/dist/cli.js media generate --surface image --model openrouter/google/gemini-2.5-flash-image --prompt A premium matte-black wireless speaker on a wooden table, soft morning light, product photography --aspect 1:1
+> 📁 Generated media: image-openrouter-google-gemini-2-5-fla-mqof4ds2.png (67 bytes)
+> ✅ Job c6bd411d-9add-4a8c-9154-d6a902eb3bf9 marked as complete.
+> ```
+
+## 🤖 Claude *(23:29:30)*
+
+
+## 🤖 Claude *(23:29:32)*
+
+O provisionamento falhou por **expansão no shell do host** — o `$(wc -c < …)` e o redirect foram avaliados na máquina host (path do container não existe lá), então o `media-config.json` não foi escrito (job stubou com "no OpenRouter API key", mas note: o provider **openrouter** foi selecionado corretamente). Refazendo com aspas simples + vars via `-e`:
+
+## 🤖 Claude *(23:29:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nUID2=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nKEY=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/decrypted_user_api_keys?select=openrouter_api_key&user_id=eq.${UID2}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['openrouter_api_key'])\")\n# write config with SINGLE-quoted body (host does not expand); vars via -e\ndocker exec -e ODKEY=\"$KEY\" -e ODUID=\"$UID2\" open-design sh -c 'mkdir -p \"/app/.od/users/$ODUID\" && printf \"{\\\"openrouter\\\":{\\\"apiKey\\\":\\\"%s\\\"}}\" \"$ODKEY\" > \"/app/.od/users/$ODUID/media-config.json\"'\n# verify (separate exec, path-safe)\ndocker exec -e ODUID=\"$UID2\" open-design sh -c 'echo \"config bytes: $(wc -c < /app/.od/users/$ODUID/media-config.json)\"; echo \"has openrouter key: $(grep -c openrouter /app/.od/users/$ODUID/media-config.json)\"'",
+  "description": "Provision media-config.json correctly (single-quoted body)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> config bytes: 101
+> has openrouter key: 1
+> ```
+
+## 🤖 Claude *(23:29:41)*
+
+
+## 🤖 Claude *(23:29:42)*
+
+Config provisionado (101 bytes, chave OpenRouter presente). Agora o job real — deve sair imagem de verdade (>> 67 bytes):
+
+## 🤖 Claude *(23:29:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nJOB=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"kind\":\"generate\",\"od_project_id\":\"d1f19b7f-63ac-4791-bea1-1c3caa63e340\",\"prompt\":\"A premium matte-black wireless speaker on a wooden table, soft morning light, product photography\",\"params\":{\"surface\":\"image\",\"model\":\"openrouter/google/gemini-2.5-flash-image\",\"aspect\":\"1:1\"},\"status\":\"queued\",\"coins_charged\":0}' \\\n  | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'])\")\necho \"job_id: $JOB\"; echo \"$JOB\" > /tmp/qa_design_job3.txt\nsleep 22\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=status,render_url,result,error_message&id=eq.${JOB}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];r=d.get('result') or {};print('status:',d['status']);print('render_url:',d.get('render_url'));print('size:',r.get('size'),'bytes  providerId:',r.get('providerId'),'stubFallback:',r.get('usedStubFallback'));print('providerNote:',r.get('providerNote'));print('error:',d.get('error_message'))\"\ntail -4 /tmp/design-bridge.log",
+  "description": "Run real Canvas Design image job with provisioned key"
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

@@ -6742,6 +6742,1446 @@ Changeset D3: backend (helper + `groups` no cockpit, read-only) + agent (doutrin
 }
 ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmado todos os pontos. Não há ciclo de require real (automationsController não importa analysisController), o require lazy espelha o padrão já existente (paperService), e a extração de `computeAutomationGroups` é byte-fiel à lógica do endpoint. Veredito abaixo.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\n### Racional\n\nO diagnóstico está correto e a correção ataca a raiz, não o sintoma. O bug do LTC ("aguardando golden cross para comprar" com Trend 0/8) era **inexequível de corrigir só por doutrina** — o item 8 mandava o agente não alarmar sobre grupo inativo, mas o payload do cockpit nunca trouxe o estado de ativação. Pedir ao modelo que respeite um dado que ele não tem é o anti-padrão clássico de prompt. **Adicionar o backend read-only é a parte que de fato fecha o furo.**\n\nAs escolhas de design estão certas, ponto a ponto:\n\n- **Surfacing no cockpit vs. MCP tool novo:** correto. O agente já lê `tradeux_get_cockpit` 1×/ciclo; anexar `groups` ali custa **zero** do orçamento de ~12 calls. Um `tradeux_get_groups` novo seria uma chamada a mais por ciclo num budget já apertado (o próprio prompt insiste em "CONCLUA com folga"), além de mais superfície MCP. Decisão de OWNER acertada.\n- **Extração de `computeAutomationGroups()` PURO:** byte-fiel à lógica do endpoint, que agora a reusa — sem duplicação, sem drift entre o que a UI vê e o que o agente vê. É exatamente o padrão que `status.paper`/`paperService.summary()` já estabeleceu. Coerência com a convenção.\n- **Require lazy entre controllers:** verifiquei — `automationsController` **não** importa `analysisController` (`grep` retornou vazio), então **não há ciclo real**. O lazy require é defensável como hábito defensivo barato e best-effort com `try/catch → null`, espelhando o `status.paper`. Aceitável.\n- **Desvio do escopo ("só doutrina"):** justificado e bem documentado nos comentários (`"gate aberto" ≠ "grupo armado"`). A doutrina sozinha era inexequível; o desvio é o que torna a tarefa executável. Concordo integralmente.\n- **1 commit:** sim. Backend-dado + agent-doutrina são acoplados por contrato (a regra de fraseado referencia `cockpit.groups`); separar criaria um estado intermediário onde a doutrina referencia um campo inexistente. Atomicidade correta.\n\n### Blast radius / risco\n\n**Baixo, e essa é a parte tranquilizadora num sistema LIVE de dinheiro real.** Nada toca `beholder.js`, money-path, ordens, OCO, riskGuard ou o HALT. É puramente:\n- backend: 1 leitura a mais no payload de um endpoint read-only, `try/catch` best-effort que cai pra `null` (degradação graciosa — se `groups` falhar, o cockpit continua servindo, o agente só perde o campo);\n- agent: texto de prompt.\n\nA percepção do operador é tocada, mas na direção **mais segura** (o agente passa a poder afirmar menos, não mais). O agente é `ALLOW_TRADING=false` (one-way notify), então o pior caso de regressão é o que já temos hoje: uma frase imprecisa no Telegram — nunca uma ordem.\n\n### Must-fix\nNenhum.\n\n### Nice-to-have\n1. **Custo da chamada extra ao DB por ciclo do cockpit:** `computeAutomationGroups()` faz `getAllAutomations()` a cada `getCockpitStatus`. O cockpit é lido pelo agente 1×/ciclo, então o volume é desprezível hoje — mas se o cockpit virar endpoint quente (UI polling), vale um cache curto espelhando o que `regimeService`/`cockpitJob` já fazem. Não bloqueia.\n2. **Asserção semântica leve no self-test/CI:** já que a doutrina nova depende do contrato `cockpit.groups[].active`, um teste mínimo garantindo que `getCockpitStatus` expõe `groups` com a forma `{key,active,inactive,total}` evita drift silencioso se alguém mexer em `AUTOMATION_GROUPS`. Opcional.\n3. **Verbosidade do prompt:** o item 8 já era denso; o bloco **FRASEADO** em negrito é eficaz mas longo. Funciona — só sinalizo que o SYSTEM_PROMPT está crescendo e em algum momento vai competir por atenção do modelo. Não agir agora.\n\n### Deploy — decisão e condições\n\n**Seguro de deployar com o canary rodando, sem janela especial — desde que na ordem certa.** O restart do backend de trading num sistema LIVE não é trivial em si, mas aqui o estado de risco real está fora do processo:\n- O HALT é `riskState` (env floor / manual / daily-cap) e lido **por ordem** — não se perde em restart.\n- `TREND_QTY`/`FARM_DCA` são derive-from-orders no boot (persistidos via reconcile), não voláteis.\n- O canary é FARM-ONLY com vendas no-loss LEVEL-trigger; um restart de poucos segundos do backend não cria risco de ordem (não há posição alavancada nem stop server-side dependente de processo vivo além do que reconcilia no boot).\n\n**Ordem de deploy (condição):**\n1. `docker compose up -d --build backend` primeiro → confirmar `GET /analysis/cockpit` traz `status.groups` populado (não `null`).\n2. **Só então** restart do agent (`docker compose up -d --build agent`) → ele já encontra o campo que a nova doutrina referencia. Inverter a ordem deixa uma janela onde o prompt manda checar `cockpit.groups` e o campo ainda não existe (cai no `null` → agente perde o sinal, volta ao bug por uma janela).\n3. Sanity pós-deploy: `GET /system/halt` (confirmar `halted=false` intacto, conforme rotina) + um ciclo do agent no journal mostrando que leu `groups`.\n\n**Decisão final:** APPROVE COM SUGESTÕES — mergear como **1 commit único** direto no fluxo trunk-based, deploy **backend antes do agent**, sem necessidade de janela de manutenção (canary Farm pode seguir rodando). Sugestões 1–3 ficam de backlog, nenhuma bloqueia.\n\nArquivos revisados:\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js`\n- `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js`'}, {'type': 'text', 'text': "agentId: a93d8634c03f9e8b6 (use SendMessage with to: 'a93d8634c03f9e8b6' to continue this agent)\n<usage>subagent_tokens: 33921\ntool_uses: 7\nduration_ms: 66279</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Smoke test confirma: contagem correta por grupo (Farm 2at/1in, Trend 0/2, Baseline 0/1, Paper 1/1), o "Harvester" não-grupo é corretamente EXCLUÍDO, e o payload completo é ~443 bytes (4 objetos, trivial para o contexto do agente — mesmo em produção com ~16 paper + 15 farm/trend/baseline o teto fica em ~1-2 KB). Tenho tudo para o veredito.\n\n---\n\n# QA Gate — Fix "D3 / ATIVO≠GATE" (surfacing de `groups` no cockpit)\n\n## VEREDITO: PASS\n\nMudança read-only, fora do money-path, fecha a causa-raiz com precisão cirúrgica (o agente agora vê o estado de ativação no MESMO read que já faz) e não introduz regressão de doutrina. Verificações abaixo todas passaram.\n\n## Análise por arquivo\n\n### 1. `backend/src/controllers/automationsController.js:108-122` — extração do helper puro\n- **Read-only confirmado** [BAIXA/INFO]: `computeAutomationGroups()` chama só `automationsRepository.getAllAutomations()` (`automationsRepository.js:14`, um `findAll` ordenado com `include:{all,nested}`) + filtro/contagem in-memory por regex de nome. Zero escrita, zero toque em BRAIN/agenda/exchange/HALT. É extração **literal** da lógica que estava inline no endpoint — `getAutomationGroups` agora é um wrapper de 1 linha (`automationsController.js:120-122`) e `computeAutomationGroups` está exportado (`module.exports`, linha 335 do diff). Sem mudança de comportamento do endpoint `/automations/groups`.\n- **Smoke test (repo mockado):** Farm 2at/1in, Trend 0/2, Baseline 0/1, Paper 1/1; uma automação "Harvester" foi corretamente EXCLUÍDA (nenhum grupo a casa — esperado: harvester/grid/scalp estão fora de propósito, `automationsController.js:99-106`). Confere com o estado live que você verificou (farm 3/6, trend 0/8).\n\n### 2. `analysisController.js:96` — append de `status.groups` no cockpit\n- **Sem ciclo de require** [verificado]: `automationsController` NÃO faz `require(\'./analysisController\')` em lugar nenhum (grep vazio), então o `require(\'./automationsController\')` lazy dentro de `getCockpitStatus` não pode formar ciclo. O lazy ainda é a escolha certa por higiene (controllers tendem a se cruzar) — sem objeção.\n- **Best-effort à prova de queda** [verificado]: `try { ... } catch (_) { status.groups = null; }` — espelha byte-a-byte o append de `status.paper` logo acima (linha 92). Se `getAllAutomations` lançar (DB down), o cockpit responde com `groups:null`, não 500. Bom.\n- **Payload trivial** [INFO]: 4 grupos × 7 campos = **~443 bytes** no smoke. Em produção (16 paper + farm/trend/baseline) fica em ~1-2 KB — irrelevante para o budget de contexto do agente. Não estoura nada.\n- **Sem colisão com o frontend** [verificado]: o Cockpit.js (`Cockpit.js:120,155,420-422`) busca `groups` por um fetch SEPARADO (`getAutomationGroups`→`/automations/groups`) num `useState` próprio; consome `status` (cockpit) só para a analítica. O novo `status.groups` é lido SÓ pelo agente. Sem dupla-fonte no UI.\n\n### 3. `tradeux-agent/src/agent.js` — SYSTEM_PROMPT\n- **Template literal VÁLIDO** [verificado, era a sua preocupação principal]: `SYSTEM_PROMPT` abre em `agent.js:14` (crase) e fecha em `agent.js:60` (`` `; ``). Varri o corpo (linhas 15-59) — **zero** backtick e **zero** `${}` órfão. As ocorrências de crase/`${}` que o grep acha (linhas 72+, 80, 148, 158) estão TODAS fora do template (comentários e outros template literals legítimos no código). `node -c agent.js` passa. O bug que você pegou (backticks dentro do prompt) está de fato corrigido — confirmei que o texto novo usa aspas simples (`\'cockpit.groups\'`, `"o grupo X está parado..."`).\n- **Doutrina de fraseado clara e acionável** [verificado]: o item 8 (`agent.js:45`) ganhou a regra dura `**FRASEADO...**`: checar `\'cockpit.groups\'` ANTES de implicar execução; se `active=0` dizer "grupo X parado → NENHUMA ordem ocorre" e NUNCA "aguardando golden cross/dip para comprar". Cita o incidente concreto (LTC/Trend 0/8) como âncora. O bullet do cockpit (`agent.js:34`) agora anuncia o campo `\'groups\'` e aponta pro item 8 — o dado e a doutrina estão amarrados.\n\n## Sem regressão da doutrina anti-ruído [verificado contra as 2 memórias]\n- O fix **NÃO reabre** a enumeração reativa que o TL declarou DONE em `tradeux-1m-scalping-and-cockpit` (cont.4). Pelo contrário: a causa-raiz que você diagnosticou é exatamente o item 8 ser **inexequível sem o dado** — agora ele é executável. É a fonte certa (DADO no payload), não mais um 4º/5º "perseguir paridade de view".\n- **Sem risco de over-report de groups**: o item 8 continua dizendo explicitamente "NÃO reporte \'a automação X deveria estar ativa\', NEM notifique o dono" e "só sinalize se o estado de ativação mudar SOZINHO". A regra nova é de **FRASEADO** (como narrar), não um novo gatilho de notify. Coerente com o dedup-por-assunto (`notifyDedup.js`) e o cap 2/ciclo de `tradeux-telegram-notifications`.\n- **Sem re-litígio de canary**: o item 8 já trata canary (Farm-only) como decisão do operador = não-anomalia. Reforçado.\n\n## Ressalvas (não-bloqueantes)\n- [BAIXA] `getAllAutomations` faz `include:{all,nested:true}` (`automationsRepository.js:15-19`) — puxa actions/grids/templates de TODAS as automações a cada chamada de cockpit, mas `computeAutomationGroups` só usa `name`/`isActive`/`id`. É 1 query extra por hit no `/analysis/cockpit` (que o agente chama 1×/ciclo, 5min). Custo desprezível agora; se o `/cockpit` ficar quente, um `getAllAutomations` enxuto (só `attributes:[\'id\',\'name\',\'isActive\']`, sem include) seria mais magro. Não muda o veredito.\n- [INFO] O `paper:boolean` no payload é redundante com a `key===\'paper\'`, mas é herança fiel do endpoint existente — manter a paridade é correto.\n\n## Testes que eu rodaria\n1. **Live, pós-deploy:** `GET /analysis/cockpit` (com JWT, `Authorization: <token>` CRU, sem "Bearer") e conferir que `status.groups` casa com `GET /automations/groups` (mesma fonte → devem ser idênticos) e reflete trend `active:0` / farm `active:3` do estado atual.\n2. **Falha-fechada do best-effort:** parar o DB / forçar throw em `getAllAutomations` e confirmar que `/analysis/cockpit` responde 200 com `groups:null` (não 500) — espelhando o comportamento do `paper`.\n3. **Agente `--once`:** `docker compose exec -T agent node src/index.js --once` num ciclo com regime=trend em LTC e Trend 0/8 → verificar no journal que ele escreve "Trend parado → nenhuma ordem" e NÃO "aguardando golden cross", e que NÃO notifica (dedup + item 8). Esse é o teste que prova o fix da causa-raiz.\n4. **Regex de grupo:** confirmar que os nomes reais no DB casam (`/^Farm (Buy|Sell) /`, `/^Trend (Buy|Sell) /`, `/^Baseline /`, `[PAPER] `) — se algum setup-*.js renomear, a contagem zera silenciosamente. Vale um olhar nos nomes vivos.\n5. **CI:** `bash scripts/ci-preflight.sh` (migrate+seed dual-dialect + agent `--check`) — a mudança é JS puro, mas o `--check` valida que o agent.js carrega (template literal OK já confirmado por `node -c`).\n\n## Recomendação de merge\n**APROVAR / MERGE.** As 3 mudanças são read-only, fora do money-path, idempotentes, sem ciclo de require, sem queda do endpoint (best-effort), sem inflar contexto (~443 bytes) e sem colidir com o frontend. O fix ataca a causa-raiz correta (DADO ausente, não doutrina ausente) e não regride o anti-ruído. Único follow-up opcional: enxugar `getAllAutomations` (sem `include`) se o cockpit virar hot-path. Rode os testes 1-3 ao vivo pós-deploy para fechar com confiança.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (linhas 108-122, 335)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` (linha 96)\n- `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js` (linhas 14-60 template; 34 e 45 doutrina)\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/automationsRepository.js` (linha 14, `getAllAutomations`)\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js` (linhas 120/155/420 — fetch de groups separado, sem colisão)'}, {'type': 'text', 'text': "agentId: a27ce5130c147efd3 (use SendMessage with to: 'a27ce5130c147efd3' to continue this agent)\n<usage>subagent_tokens: 71746\ntool_uses: 19\nduration_ms: 133937</usage>"}]
+> ```
+
+## 🤖 Claude *(22:32:55)*
+
+
+## 🤖 Claude *(22:32:59)*
+
+Ambos os gates passaram:
+- **QA: PASS** — read-only, fora do money-path, fecha a causa-raiz (o agente agora vê o estado-ativo no mesmo read), template válido, payload ~443 bytes, sem regressão anti-ruído.
+- **TL: APPROVE COM SUGESTÕES** — diagnóstico certo (ataca a raiz, não o sintoma); desvio do "só prompt" justificado (doutrina sem o dado é inexequível); 1 commit; blast radius baixo (agente é `ALLOW_TRADING=false` → pior caso é uma frase, nunca uma ordem). **Deploy seguro com o canary rodando, mas na ordem: backend ANTES do agent** (pro campo `cockpit.groups` existir quando o prompt o referencia).
+
+Commitando o D3 (1 commit, 3 arquivos):
+
+## 🤖 Claude *(22:33:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/controllers/automationsController.js backend/src/controllers/analysisController.js tradeux-agent/src/agent.js\nSTAGED=$(git diff --cached --name-only | sort | tr \"\\n\" \",\")\necho \"staged: $STAGED\"\nif [ \"$STAGED\" != \"backend/src/controllers/analysisController.js,backend/src/controllers/automationsController.js,tradeux-agent/src/agent.js,\" ]; then echo \"ESCOPO ERRADO \u2014 abortando\"; exit 1; fi\nMSG=$(mktemp)\ncat > \"$MSG\" <<\"EOF\"\nfix(agent): D3 GATE!=ATIVO -- cockpit traz estado ATIVO por grupo + doutrina de fraseado\n\nO agente dizia \"abre o gate de tendencia, aguardando golden cross para comprar\" (LTC) com o grupo\nTrend PARADO (0/8) -- afirmando execucao que nao ocorre. Causa-raiz: o payload do tradeux_get_cockpit\nnao trazia o estado de ATIVACAO dos grupos (so os gates de regime), entao o item 8 do prompt era\ninexequivel (o agente nao via o que estava parado).\n\n- automationsController: extrai computeAutomationGroups() PURO (mesma logica do endpoint /automations/groups,\n  que agora o reusa) + exporta.\n- analysisController.getCockpitStatus: anexa status.groups (read-only, best-effort, espelha status.paper; require lazy).\n- agent.js SYSTEM_PROMPT: cockpit documenta groups; item 8 ganha regra de FRASEADO -- checar groups ANTES\n  de implicar execucao; grupo parado (active=0) -> \"nenhuma ordem ocorre\", nunca \"aguardando ... para comprar\".\n\nRead-only, fora do money-path (nada toca beholder/ordens/HALT; agente e ALLOW_TRADING=false).\nGate QA PASS + TL APPROVE. Deploy: backend ANTES do agent (p/ o campo existir quando o prompt o referencia).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit commit -F \"$MSG\" >/dev/null 2>&1 && echo \"commit OK\" || echo \"commit FALHOU\"\nrm -f \"$MSG\"\ngit log --oneline -1\nset -a; source .env 2>/dev/null; set +a\ngit push \"https://x-access-token:${GITHUB_TOKEN_API}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]*@#x-access-token:***@#g\" | grep -vE \"vulnerab|security|dependabot|^remote: $\"\n'",
+  "description": "Commit and push the D3 fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> staged: backend/src/controllers/analysisController.js,backend/src/controllers/automationsController.js,tradeux-agent/src/agent.js,
+> commit OK
+> 5c83c31 fix(agent): D3 GATE!=ATIVO -- cockpit traz estado ATIVO por grupo + doutrina de fraseado
+> To https://github.com/gabrielZarattini/tradeux.git
+>    f152b99..5c83c31  HEAD -> master
+> ```
+
+## 🤖 Claude *(22:33:32)*
+
+
+## 🤖 Claude *(22:33:33)*
+
+Push: **`f152b99..5c83c31 → master`** ✅. O D3 que eu tinha registrado como tarefa foi feito agora — dismisso o chip (não está mais pendente):
+
+## 🤖 Claude *(22:33:34)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__dismiss_task`
+```json
+{
+  "task_id": "task_f9721201",
+  "reason": "feito nesta sess\u00e3o (commit 5c83c31): cockpit traz status.groups + doutrina de fraseado no item 8"
+}
+```
+
+> **Tool Result (mcp__ccd_session__dismiss_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Task task_f9721201 was already started by the user — it's no longer pending and can't be withdrawn. Nothing was changed."}]
+> ```
+
+## 🤖 Claude *(22:33:53)*
+
+
+## 🤖 Claude *(22:34:06)*
+
+⚠️ O chip do D3 aparece como **"já iniciado pelo dono"** — não consegui retirá-lo. Se você abriu uma **sessão separada** pra ele, **mate-a**: eu já fiz o D3 aqui (commit `5c83c31`), e duas sessões no mesmo arquivo = a contaminação cross-session que registramos na memória. Se foi só o ato de me mandar o texto, ignore.
+
+## ✅ D3 entregue
+**Commit `5c83c31` → master** (CI rodando). Causa-raiz era **falta de dado**, não doutrina: o agente não enxergava o estado-ativo dos grupos. Fix em 2 camadas:
+- **Dado (backend, read-only):** `tradeux_get_cockpit` agora traz `status.groups` (Farm/Trend/Baseline/Paper com active/inactive/total) — o que está REALMENTE armado, no mesmo read que o agente já faz (zero custo de budget).
+- **Doutrina (prompt):** item 8 ganhou regra de fraseado — checar `groups` antes de implicar execução; grupo parado → "nenhuma ordem ocorre", nunca "aguardando golden cross para comprar".
+
+Verificado: sintaxe OK (peguei e corrigi um backtick que quebrava o template do prompt), `computeAutomationGroups` retorna contagens corretas, gate **QA PASS + TL APPROVE**. Nada toca money-path (agente é `ALLOW_TRADING=false` → pior caso é uma frase, nunca uma ordem).
+
+## ⚠️ Importante: o fix está INERTE até o deploy
+Os containers rodando têm o código antigo — o agente vai seguir com o fraseado errado até um deploy. O TL deu o plano seguro (com o canary rodando, **sem janela**):
+1. `docker compose up -d --build backend` → confirmo `GET /analysis/cockpit` traz `status.groups` populado.
+2. **Depois** `docker compose up -d --build agent` → ele já encontra o campo que o prompt referencia (ordem importa).
+3. Sanity: `GET /system/halt` (confirmar `halted=false` intacto) + 1 ciclo do agente no journal lendo `groups`.
+
+**Posso fazer o deploy** nessa ordem (backend→agent) e validar? É a recomendação — é o que torna o fix efetivo, e o TL confirmou que é seguro com o canary Farm rodando (HALT é `riskState` lido por-ordem, sobrevive a restart; `TREND_QTY`/`FARM_DCA` reconciliam no boot). Como é restart do backend de trading ao vivo, prefiro seu GO explícito.
+
+## 👤 User *(22:34:09)*
+
+vamos então cok paper-validar as alavancas da pesquisa (Farm 15m + Trend slope-gate, pra responder "tem edge?") ou pegar a tarefa do D3 (doutrina do agente)
+
+## 🤖 Claude *(22:35:09)*
+
+
+## 🤖 Claude *(22:35:12)*
+
+Antes de seguir, um esclarecimento: **o D3 já está feito e commitado** (`5c83c31`) — gate QA+TL passou. A única coisa pendente dele é o **deploy ao vivo** (que eu te pedi o GO e ficou em aberto). Então "pegar a tarefa do D3" virou só "deployar".
+
+Como a mensagem ficou ambígua e tem duas coisas em jogo (o deploy ao vivo do D3 + qual build começar), deixa eu travar o caminho:
+
+## 🤖 Claude *(22:35:17)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O D3 j\u00e1 est\u00e1 commitado (5c83c31), s\u00f3 falta o deploy ao vivo. Como sigo agora?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Deploy do D3 + paper-validar",
+          "description": "Eu deployo o D3 (backend\u2192agent, ordem segura, com o canary Farm rodando + valido cockpit.groups e GET /system/halt), e em seguida come\u00e7o a construir as trilhas de paper (Farm 15m + Trend slope-gate) \u2014 zero risco, roda no broker virtual."
+        },
+        {
+          "label": "S\u00f3 paper-validar agora",
+          "description": "Come\u00e7o as trilhas de paper (Farm 15m + Trend slope-gate) j\u00e1. O deploy do D3 fica pendente \u2014 voc\u00ea me d\u00e1 o GO depois (at\u00e9 l\u00e1 o agente segue com o fraseado antigo no Telegram)."
+        },
+        {
+          "label": "S\u00f3 deploy do D3",
+          "description": "Deployo e valido o D3 ao vivo (backend\u2192agent) e paro a\u00ed; o paper-validate fica pra depois."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O D3 já está commitado (5c83c31), só falta o deploy ao vivo. Como sigo agora?"="Deploy do D3 + paper-validar". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:36:55)*
+
+
+## 🤖 Claude *(22:36:56)*
+
+Deploy do D3 + depois paper-validar. Começando o **deploy na ordem segura — backend primeiro** (rebuild + restart; o canary Farm segue, HALT é `riskState` lido por-ordem). Isso leva 1-2 min:
+
+## 🤖 Claude *(22:36:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build backend 2>&1 | tail -25'",
+  "description": "Rebuild and restart backend container",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #10 DONE 1.0s
+> 
+> #11 [6/7] COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+> #11 DONE 0.1s
+> 
+> #12 [7/7] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+> #12 DONE 0.2s
+> 
+> #13 exporting to image
+> #13 exporting layers
+> #13 exporting layers 1.4s done
+> #13 writing image sha256:a109ae2f0e8d0f030165db26b8b95a0d92152a4c34cb66cefc2dc7c59d7af04c done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 1.4s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(22:37:23)*
+
+
+## 🤖 Claude *(22:37:24)*
+
+Backend rebuildado e recriado. Aguardo o boot (migrate+seed+brain) e valido: `status.groups` no cockpit + HALT intacto. Uso `curl --retry` (sem sleep) pra esperar o boot:
+
+## 🤖 Claude *(22:37:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-mcp/.env 2>/dev/null; set +a\n# espera o backend responder (retry sem sleep)\nTOK=$(curl -s -m6 --retry 20 --retry-delay 2 --retry-all-errors -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nH=\"authorization: $TOK\"\necho \"== HALT (deve seguir halted=false) ==\"\ncurl -s -m8 https://tradeux.gcrux.com/api/system/halt -H \"$H\"\necho \"\"\necho \"== cockpit.groups (o campo NOVO que o agente vai ler) ==\"\ncurl -s -m8 https://tradeux.gcrux.com/api/analysis/cockpit -H \"$H\" | python3 -c \"import sys,json; d=json.load(sys.stdin); g=d.get(\\\"groups\\\"); print(\\\"groups presente?\\\", g is not None); print(json.dumps(g, ensure_ascii=False) if g else \\\"(ausente/null)\\\")\"\n'",
+  "description": "Verify backend boot: cockpit.groups present and HALT intact"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == HALT (deve seguir halted=false) ==
+> {"halted":false,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":null,"active":false},"sources":[],"source":null,"reason":null,"since":null}
+> == cockpit.groups (o campo NOVO que o agente vai ler) ==
+> groups presente? True
+> [{"key": "farm", "label": "Farm (no-loss alts)", "paper": false, "total": 6, "active": 3, "inactive": 3, "ids": [13, 14, 11, 12, 9, 10]}, {"key": "trend", "label": "Trend (SMA50/200)", "paper": false, "total": 8, "active": 0, "inactive": 8, "ids": [19, 20, 17, 18, 6, 7, 15, 16]}, {"key": "baseline", "label": "Baseline (RSI BTC)", "paper": false, "total": 2, "active": 0, "inactive": 2, "ids": [2, 3]}, {"key": "paper", "label": "Paper (research, sem risco)", "paper": true, "total": 16, "active": 16, "inactive": 0, "ids": [54, 55, 56, 57, 50, 51, 52, 53, 58, 59, 44, 45, 46, 47, 48, 49]}]
+> ```
+
+## 🤖 Claude *(22:37:44)*
+
+
+## 🤖 Claude *(22:37:45)*
+
+**Backend OK:** `cockpit.groups` presente e correto (farm 3/6, trend 0/8, baseline 0/2, paper 16/16) + **HALT intacto** (`halted=false`). Agora **passo 2 — o agent** (rebuild + restart, pra usar o prompt novo já com o campo existindo):
+
+## 🤖 Claude *(22:37:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose up -d --build agent 2>&1 | tail -12'",
+  "description": "Rebuild and restart agent container",
+  "timeout": 360000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #26 [agent] resolving provenance for metadata file
+> #26 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Image tradeux-agent Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Running 
+>  Container tradeux-agent-1 Recreate 
+>  Container tradeux-agent-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started
+> ```
+
+## 🤖 Claude *(22:37:54)*
+
+
+## 🤖 Claude *(22:37:54)*
+
+Agent recriado. Confirmo os 4 containers up + um boot limpo do agent (sem crash-loop):
+
+## 🤖 Claude *(22:37:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux\necho \"== compose ps ==\"\ndocker compose ps --format \"table {{.Name}}\\t{{.Status}}\"\necho \"\"\necho \"== agent log (tail, boot) ==\"\ndocker compose logs agent --tail 15 --no-log-prefix 2>&1 | tail -15'",
+  "description": "Verify all containers up and agent boot is clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == compose ps ==
+> NAME                 STATUS
+> tradeux-agent-1      Up 8 seconds
+> tradeux-backend-1    Up 47 seconds
+> tradeux-db-1         Up 6 days (healthy)
+> tradeux-frontend-1   Up 44 hours
+> 
+> == agent log (tail, boot) ==
+> [tradeux-agent] Conectando ao tradeux-mcp...
+> tradeux-mcp pronto (API=http://backend:3001, trading=OFF)
+> [tradeux-agent] Conectado. 30 ferramentas disponíveis.
+> [tradeux-agent] Provedor: openrouter | Trading: OFF | Diário: /journal/tradeux-agent.jsonl
+> [tradeux-agent] Ciclo 1 iniciando (1782081469693-1)...
+> [tradeux-agent] Ciclo 1 falhou: OpenRouter 429: {"error":{"message":"Rate limit exceeded: free-models-per-day-high-balance. ","code":429,"metadata":{"headers":{"X-RateLimit-Limit":"2000","X-RateLimit-Remaining":"0","X-RateLimit-Reset":"1782086400000"},"provider_name":null}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> [tradeux-agent] Entrando em loop a cada 300000ms. Ctrl+C para sair.
+> ```
+
+## 🤖 Claude *(22:38:53)*
+
+
+## 🤖 Claude *(22:38:58)*
+
+**Deploy do D3 concluído e verificado:**
+- Backend serve `cockpit.groups` ✅ · HALT intacto (`halted=false`) ✅ · 4 containers up · agent conectado (30 tools, prompt novo live) ✅.
+- ⚠️ **Validação comportamental do D3 pendente:** o Ciclo 1 do agent falhou com **OpenRouter 429** (`free-models-per-day` esgotado, `Remaining: 0`) — é a limitação conhecida do modelo `:free` (não é crash; re-tenta a cada 5min). Quando a cota resetar, o agente roda um ciclo com o prompt novo + `cockpit.groups` e aí dá pra confirmar que ele para de dizer "aguardando golden cross para comprar". O **código está deployado**; só a observação ao vivo depende da cota.
+
+Agora **paper-validar**. Antes de construir, preciso scopar: as alavancas (Farm 15m, Trend slope-gate) podem exigir **sinais novos** (RSI 15m, slope da SMA) que talvez não existam na MEMORY. Investigando o padrão das trilhas paper + os sinais disponíveis:
+
+## 🤖 Claude *(22:39:00)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Paper-validar alavancas (Farm 15m + Trend slope-gate)",
+  "summary": "Construir trilhas [PAPER] pra validar edge das alavancas da pesquisa; scopar sinais necess\u00e1rios (RSI 15m, slope da SMA) antes"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Paper-validar alavancas (Farm 15m + Trend slope-gate)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:39:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-trilhas.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Setup IDEMPOTENTE das TRILHAS do Motor de Estratégias em modo PAPER (Fatia 2). Cria, por símbolo, automações
+> 4	 * com prefixo "[PAPER]" (roteador → paperEngine, broker virtual, preço+fee MAINNET reais, SEM risco, sob HALT):
+> 5	 *
+> 6	 *   - CONSISTÊNCIA (mean-reversion): compra RSI_1m<lo (fora de bear E trend = mean-reversion vive em range/mixed),
+> 7	 *     vende RSI_1m>hi. Poucos trades, protege caixa.
+> 8	 *   - MACRO (trend SMA50/200): compra no golden cross (TREND_CROSS_1h==='golden', fora de bear), vende no death
+> 9	 *     cross. Captura ciclo; dispara raramente (evento de cross), igual ao trend real.
+> 10	 *
+> 11	 * A FREQUÊNCIA (verde diário) NÃO entra aqui: é gated por backtest (workflow paper-frequencia-research). Só vira
+> 12	 * trilha viva se houver EV/trade líquido de fee positivo — senão fica de fora (1m/5m mean-reversion costuma ser -EV).
+> 13	 *
+> 14	 * A 2ª palavra do name é a TRILHA (paperEngine.strategyOf): "[PAPER] Consistencia Buy LTCUSDT" -> "consistencia".
+> 15	 * Idempotente (find-by-name/409); reaplicável pós-`make nuke`. É PAPER: BTCUSDT aqui NÃO mexe no cofre real.
+> 16	 *
+> 17	 * Uso (dentro do container, server no ar):  node scripts/setup-paper-trilhas.js   [DRY=true]
+> 18	 *   env: EM/PW (ou DEFAULT_SETTINGS_EMAIL/PWD ou TRADEUX_EMAIL/PASSWORD), PORT (3001),
+> 19	 *        PAPER_SYMBOLS (CSV, default BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT), PAPER_INTERVAL (1m),
+> 20	 *        PAPER_RSI_LO (25), PAPER_RSI_HI (75), PAPER_SIZE_MULT (4)
+> 21	 */
+> 22	const { createClient, resolveEnv } = require('./lib/apiClient');
+> 23	
+> 24	const SYMBOLS = (process.env.PAPER_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 25	const INTERVAL = process.env.PAPER_INTERVAL || '1m';
+> 26	const RSI_KEY = `RSI_14_${INTERVAL}`;
+> 27	const RSI_LO = parseFloat(process.env.PAPER_RSI_LO || '25');
+> 28	const RSI_HI = parseFloat(process.env.PAPER_RSI_HI || '75');
+> 29	const SIZE_MULT = parseFloat(process.env.PAPER_SIZE_MULT || '4');
+> 30	const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> 31	const { host, port, email: EM, password: PW } = resolveEnv({
+> 32	    hostEnv: 'PAPER_API_HOST',
+> 33	    emailEnvs: ['EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL'],
+> 34	    passwordEnvs: ['PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD'],
+> 35	});
+> 36	const client = createClient({ host, port });
+> 37	const req = client.req;
+> 38	const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 80); // cap preservado (era 80)
+> 39	
+> 40	async function ensureMonitor(token, symbol) {
+> 41	    if (DRY) return `[DRY] monitor CANDLES ${symbol} ${INTERVAL} RSI_14`;
+> 42	    const r = await req('POST', '/monitors', token, {
+> 43	        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',
+> 44	        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,
+> 45	    });
+> 46	    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (ATIVO → ${symbol}:${RSI_KEY})`;
+> 47	    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} já existe`;
+> 48	    throw new Error(`falha monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);
+> 49	}
+> 50	
+> 51	async function ensureTemplate(token, symbol, name, side, quantity) {
+> 52	    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);
+> 53	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 54	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 55	    if (DRY) return { id: 0, msg: `[DRY] template "${name}" (MARKET ${side} ${quantity})` };
+> 56	    const r = await req('POST', '/ordertemplates', token, {
+> 57	        name, symbol, type: 'MARKET', side, limitPrice: null, limitPriceMultiplier: 1,
+> 58	        stopPrice: null, stopPriceMultiplier: 1, quantity, quantityMultiplier: SIZE_MULT,
+> 59	        icebergQty: null, icebergQtyMultiplier: 1,
+> 60	    });
+> 61	    if (r.status !== 201) throw new Error(`falha template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 62	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id})` };
+> 63	}
+> 64	
+> 65	async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+> 66	    const existing = await findAutomationByName(token, name);
+> 67	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 68	    if (DRY) return `[DRY] automação "${name}" INATIVA | cond: ${conditions}`;
+> 69	    const r = await req('POST', '/automations', token, {
+> 70	        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 71	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 72	    });
+> 73	    if (r.status !== 201) throw new Error(`falha automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 74	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 75	}
+> 76	
+> 77	async function setupSymbol(token, symbol) {
+> 78	    const K = k => `${symbol}:${k}`;
+> 79	    console.log(`\n## ${symbol}`);
+> 80	    console.log('- ' + await ensureMonitor(token, symbol));
+> 81	
+> 82	    // CONSISTÊNCIA (mean-reversion): compra no dip RSI<lo fora de bear E trend; vende RSI>hi. SELL qty é ignorada
+> 83	    // no paper (vende a posição inteira) — MAX_WALLET é placeholder válido. Compra MIN_NOTIONAL×SIZE_MULT.
+> 84	    const cBuy = await ensureTemplate(token, symbol, `[PAPER] Consistencia Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');
+> 85	    console.log('- ' + cBuy.msg);
+> 86	    const cSell = await ensureTemplate(token, symbol, `[PAPER] Consistencia Sell ${symbol}`, 'SELL', 'MAX_WALLET');
+> 87	    console.log('- ' + cSell.msg);
+> 88	    const cBuyCond = `MEMORY['${K(RSI_KEY)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;
+> 89	    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Consistencia Buy ${symbol}`, cBuyCond, `${K(RSI_KEY)},${K('REGIME')}`, cBuy.id));
+> 90	    const cSellCond = `MEMORY['${K(RSI_KEY)}'].current>${RSI_HI}`;
+> 91	    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Consistencia Sell ${symbol}`, cSellCond, `${K(RSI_KEY)}`, cSell.id));
+> 92	
+> 93	    // MACRO (trend SMA50/200): compra no golden cross fora de bear; vende no death cross. TREND_CROSS_1h é
+> 94	    // edge-trigger (regimeJob escreve só na transição) → dispara 1× por cross (raro), igual ao trend real.
+> 95	    const mBuy = await ensureTemplate(token, symbol, `[PAPER] Macro Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');
+> 96	    console.log('- ' + mBuy.msg);
+> 97	    const mSell = await ensureTemplate(token, symbol, `[PAPER] Macro Sell ${symbol}`, 'SELL', 'MAX_WALLET');
+> 98	    console.log('- ' + mSell.msg);
+> 99	    const mBuyCond = `MEMORY['${K('TREND_CROSS_1h')}']==='golden' && MEMORY['${K('REGIME')}']!=='bear'`;
+> 100	    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Macro Buy ${symbol}`, mBuyCond, `${K('TREND_CROSS_1h')},${K('REGIME')}`, mBuy.id));
+> 101	    const mSellCond = `MEMORY['${K('TREND_CROSS_1h')}']==='death'`;
+> 102	    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Macro Sell ${symbol}`, mSellCond, `${K('TREND_CROSS_1h')}`, mSell.id));
+> 103	}
+> 104	
+> 105	(async () => {
+> 106	    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou DEFAULT_SETTINGS_EMAIL/PWD)'); process.exit(1); }
+> 107	    const token = await client.login(EM, PW);
+> 108	
+> 109	    console.log(`# Setup PAPER trilhas — ${SYMBOLS.join(', ')} | Consistencia RSI<${RSI_LO}/>${RSI_HI} (range/mixed) · Macro SMA50/200 golden/death · size ${SIZE_MULT}×MIN_NOTIONAL${DRY ? '   [DRY-RUN]' : ''}`);
+> 110	    for (const s of SYMBOLS) await setupSymbol(token, s);
+> 111	    console.log(`\n${DRY ? 'DRY-RUN OK.' : 'PRONTO — monitores ATIVOS, automações [PAPER] INATIVAS.'}`);
+> 112	    console.log(`Para ATIVAR: start nas automações [PAPER] (paperEngine roteia p/ o ledger virtual). P&L em GET /analysis/paper. Mainnet CONGELADO.`);
+> 113	})();
+> 114	
+> ```
+
+## 🤖 Claude *(22:39:39)*
+
+
+## 🤖 Claude *(22:39:44)*
+
+Entendi o padrão das trilhas paper. Pontos-chave: o setup cria um **monitor CANDLES** por símbolo+intervalo (gera `RSI_14_<interval>`), e as trilhas usam **condições de MEMORY** (RSI, TREND_CROSS, REGIME). Isso define a viabilidade:
+- **Farm 15m**: o monitor 15m dá `RSI_14_15m` fácil — mas a venda *no-loss* do Farm (custo×1.012) é **baseada em posição**, e o paperEngine vende por condição de MEMORY (não tem o avgCost na MEMORY). Então ou aproximo (mean-reversion 15m, perde o "no-loss") ou estendo o paperEngine.
+- **Trend slope-gate**: viável **se** a SMA (com current/previous) estiver na MEMORY pra expressar o slope.
+
+Vou checar os sinais disponíveis (SMA na MEMORY, como o TREND_CROSS é computado) pra scopar certo:
+
+## 🤖 Claude *(22:39:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"===== regimeJob: como computa TREND_CROSS + guarda SMA? =====\"\ngrep -nE \"SMA|TREND_CROSS|slope|updateMemory|sma\" src/regimeJob.js | head -30\necho \"\"\necho \"===== SMA como \u00edndice de MEMORY em qualquer lugar (monitor/indexes) =====\"\ngrep -rnE \"SMA_|'SMA'|\\\"SMA\\\"|sma\" src/utils/indexes.js src/regimeService.js 2>/dev/null | head -20\necho \"\"\necho \"===== algum monitor/\u00edndice 15m hoje? REGIME_SYMBOLS/interval =====\"\ngrep -rnE \"15m|REGIME_INTERVAL|TREND_INTERVAL|SMA_PERIODS|50|200\" src/regimeJob.js 2>/dev/null | head -15",
+  "description": "Investigate SMA/slope signal availability and TREND_CROSS computation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== regimeJob: como computa TREND_CROSS + guarda SMA? =====
+> 51:const ABOVE = {};          // último estado SMA_fast>SMA_slow por símbolo (detecta a transição do cross)
+> 52:const SMAVAL = {};         // últimos valores SMA fast/slow por símbolo (observabilidade)
+> 100:                await beholder.updateMemory(symbol, indexKeys.REGIME, null, r.regime, false);
+> 125:                // ---- Trend Following: sinal de cruzamento SMA 50/200 da MAINNET (golden/death) ----
+> 127:                // gateia por REGIME!=='bear' no MESMO tick do TREND_CROSS, então o regime precisa já
+> 130:                // escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h'] = 'golden'|'death'|'none'.
+> 134:                if (r.sma) {
+> 135:                    const above = r.sma.above;
+> 136:                    SMAVAL[symbol] = { fast: r.sma.fast.current, slow: r.sma.slow.current, above };
+> 141:                        logger('regime', `${symbol}: SMA ${dir.toUpperCase()} cross (50/200) — disparando automação de trend`);
+> 142:                        const results = await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, dir, true);
+> 146:                        await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, 'none', false);
+> 149:                    // persiste o estado de cross (resiliência a restart). smaAbove sempre; dir/at vêm de
+> 151:                    // um crash entre o updateMemory e o upsert pode re-disparar no boot — preferível a
+> 164:// Carrega o estado de cross persistido (smaAbove/lastCross) ANTES do 1º poll → um cross ocorrido
+> 171:            if (r.smaAbove !== null && r.smaAbove !== undefined) ABOVE[r.symbol] = !!r.smaAbove;
+> 174:        if (rows.length) logger('regime', `Estado de cross recarregado: ${rows.map(x => `${x.symbol}:above=${x.smaAbove}`).join(', ')}.`);
+> 186:            smaAbove: ABOVE[symbol] === undefined ? null : ABOVE[symbol],
+> 232:            smaAbove: ABOVE[s] !== undefined ? ABOVE[s] : null, // SMA50>SMA200 (estado de trend up)
+> 233:            sma: SMAVAL[s] || null,                              // {fast, slow, above} (display)
+> 
+> ===== SMA como índice de MEMORY em qualquer lugar (monitor/indexes) =====
+> src/utils/indexes.js:44:    SMA: 'SMA',
+> src/utils/indexes.js:92:        [indexKeys.SMA]: { params: 'period', name: 'SMA' },
+> src/utils/indexes.js:102:        [indexKeys.KST]: { params: 'roc1,roc2,roc3,roc4,smaroc1,smaroc2,smaroc3,smaroc4,signal', name: 'KST' },
+> src/utils/indexes.js:834:    const smaResult = technicalindicators.sma({
+> src/utils/indexes.js:839:        current: smaResult[smaResult.length - 1],
+> src/utils/indexes.js:840:        previous: smaResult[smaResult.length - 2],
+> 
+> ===== algum monitor/índice 15m hoje? REGIME_SYMBOLS/interval =====
+> src/regimeJob.js:24: *  REGIME_INTERVAL     (default '1h')     — timeframe das velas usadas na classificação
+> src/regimeJob.js:41:const INTERVAL = process.env.REGIME_INTERVAL || '1h';
+> src/regimeJob.js:125:                // ---- Trend Following: sinal de cruzamento SMA 50/200 da MAINNET (golden/death) ----
+> src/regimeJob.js:141:                        logger('regime', `${symbol}: SMA ${dir.toUpperCase()} cross (50/200) — disparando automação de trend`);
+> src/regimeJob.js:232:            smaAbove: ABOVE[s] !== undefined ? ABOVE[s] : null, // SMA50>SMA200 (estado de trend up)
+> ```
+
+## 🤖 Claude *(22:41:05)*
+
+
+## 🤖 Claude *(22:41:13)*
+
+Scoping concluído — e **as alavancas não são "só setup script"** como eu esperava. Os sinais que faltam:
+
+- **`regimeJob` computa a SMA 50/200 mas só escreve na MEMORY o `TREND_CROSS` (golden/death) e o `REGIME`** — os valores da SMA (e o slope) ficam num cache local (`SMAVAL`), **não na MEMORY**. Então uma trilha não consegue referenciar o slope da SMA hoje.
+- **O paperEngine vende por condição de MEMORY + posição inteira** — não tem o `avgCost` da posição na MEMORY, então a venda **no-loss do Farm (custo×1.012)** não é expressável como está.
+- **RSI 15m é fácil** (basta um monitor CANDLES 15m → `RSI_14_15m`).
+
+Ou seja, cada alavanca tem um custo diferente:
+
+| Alavanca | O que precisa | Risco/custo |
+|---|---|---|
+| **Trend slope-gate** (#5) | sinal novo no `regimeJob`: escrever o slope da SMA200 na MEMORY (additivo) + trilha `[PAPER]` | pequeno backend (additivo) + gate + deploy |
+| **Mean-reversion 15m** (aproxima #3) | só setup script (monitor 15m + trilha RSI<35) | **zero backend, zero risco** — mas sai por RSI, **não** é o no-loss real |
+| **Farm no-loss de verdade** (#1/#3) | estender o paperEngine p/ vender por `avgCost×1.012` da posição paper | maior build (paperEngine) |
+
+Tudo roda no broker virtual (zero dinheiro real). Por onde começo?
+
+## 🤖 Claude *(22:41:18)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Paper-validar precisa de mais que setup scripts (escopei acima). Qual alavanca construo primeiro?",
+      "header": "Slice paper",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Trend slope-gate (#5)",
+          "description": "Adiciono o slope da SMA200 na MEMORY (regimeJob, additivo) + trilha [PAPER] que s\u00f3 entra no golden cross se o slope n\u00e3o estiver caindo. Testa direto a alavanca de cortar whipsaw. Pequeno backend (gate+deploy), roda em paper."
+        },
+        {
+          "label": "Mean-reversion 15m",
+          "description": "S\u00f3 setup script (zero backend, zero deploy, zero risco): monitor 15m + trilha [PAPER] RSI<35/>65. Resposta mais r\u00e1pida sobre 'frequ\u00eancia 15m tem edge?'. Caveat honesto: sai por RSI, N\u00c3O \u00e9 o no-loss real do Farm."
+        },
+        {
+          "label": "Farm no-loss de verdade",
+          "description": "Estendo o paperEngine p/ vender por custo\u00d71.012 da posi\u00e7\u00e3o paper (o no-loss fiel). Maior build, mas \u00e9 a alavanca mais fiel \u00e0 pesquisa. Roda em paper, zero risco."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Paper-validar precisa de mais que setup scripts (escopei acima). Qual alavanca construo primeiro?"="Ultimas mensagens do telegarm acho que precisamos de atenção urgente nisso.: 🤖 [AGENTE] Observação: LTCUSDT entrou em regime de tendência (gate trend). Isso fecha o gate de acumulação do farm (correto) e abre o gate de tendência, aguardando golden cross para comprar.
+> 📝 [PAPER-REVIEW] trilha "consistencia": 5 round-trips · win 100% · net +$0.10 (realizado +$0.10 + aberto +$0.00) → amostra inicial (aguardando mais round-trips p/ veredito)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:44:01)*
+
+
+## 🤖 Claude *(22:44:04)*
+
+O dono sinalizou urgência nas 2 mensagens. Deixa eu **verificar ao vivo antes de afirmar** qualquer coisa — a chave é: a 1ª mensagem (D3) é **pré ou pós** o meu deploy? Se o agent só deu 429 desde o restart, ela é a mensagem ANTIGA (o fix está live mas ainda não foi exercitado). Checando o log do agent, o HALT e se o `groups` segue servido:
+
+## 🤖 Claude *(22:44:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== agent: ciclos desde o restart (algum SUCESSO ou s\u00f3 429?) =====\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose logs agent --since 20m --no-log-prefix 2>&1 | grep -E \"Ciclo|429|FILLED|notif|SUPRIMIDA|aguardando|golden|trend|parado\" | tail -25'\necho \"\"\necho \"===== \u00faltima entrada do journal (timestamp do \u00faltimo ciclo do agente) =====\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T agent sh -lc \"tail -2 /journal/tradeux-agent.jsonl 2>/dev/null | head -c 1200\" 2>/dev/null || echo \"(sem acesso ao journal via exec)\"'\necho \"\"\necho \"===== HALT + cockpit.groups (deploy intacto?) =====\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source tradeux-mcp/.env 2>/dev/null; set +a\nTOK=$(curl -s -m6 --retry 5 --retry-all-errors -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"halt: $(curl -s -m8 https://tradeux.gcrux.com/api/system/halt -H \"authorization: $TOK\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\"halted=\\\"+str(d[\\\"halted\\\"]),\\\"sources=\\\"+str(d[\\\"sources\\\"]))\")\"\necho \"groups servido? $(curl -s -m8 https://tradeux.gcrux.com/api/analysis/cockpit -H \"authorization: $TOK\" | python3 -c \"import sys,json;d=json.load(sys.stdin);g=d.get(\\\"groups\\\");print(\\\"sim\\\" if g else \\\"NAO\\\", \\\"(trend active=\\\"+str([x[\\\"active\\\"] for x in g if x[\\\"key\\\"]==\\\"trend\\\"][0])+\\\")\\\" if g else \\\"\\\")\")\"\n'",
+  "description": "Check if agent ran a successful cycle post-deploy, plus halt and groups"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== agent: ciclos desde o restart (algum SUCESSO ou só 429?) =====
+> [tradeux-agent] Ciclo 1 iniciando (1782081469693-1)...
+> [tradeux-agent] Ciclo 1 falhou: OpenRouter 429: {"error":{"message":"Rate limit exceeded: free-models-per-day-high-balance. ","code":429,"metadata":{"headers":{"X-RateLimit-Limit":"2000","X-RateLimit-Remaining":"0","X-RateLimit-Reset":"1782086400000"},"provider_name":null}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> [tradeux-agent] Ciclo 2 iniciando (1782081770782-2)...
+> [tradeux-agent] Ciclo 2 falhou: OpenRouter 429: {"error":{"message":"Rate limit exceeded: free-models-per-day-high-balance. ","code":429,"metadata":{"headers":{"X-RateLimit-Limit":"2000","X-RateLimit-Remaining":"0","X-RateLimit-Reset":"1782086400000"},"provider_name":null}},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"}
+> 
+> ===== última entrada do journal (timestamp do último ciclo do agente) =====
+> {"ts":"2026-06-21T20:21:29.296Z","cycleId":"1782073207546-332","provider":"openrouter","type":"tool_call","name":"tradeux_get_regime","input":{"symbol":"LTCUSDT"},"isError":false,"resultPreview":"{\n  \"symbol\": \"LTCUSDT\",\n  \"interval\": \"1h\",\n  \"candles\": 300,\n  \"source\": \"api.binance.com\",\n  \"cached\": true,\n  \"sma\": {\n    \"fast\": {\n      \"current\": 44.471,\n      \"previous\": 44.448199999999986\n    },\n    \"slow\": {\n      \"current\": 44.67640000000008,\n      \"previous\": 44.66890000000008\n    },\n    \"above\": false\n  },\n  \"regime\": \"trend\",\n  \"strategy\": \"trend-follow\",\n  \"reason\": \"ADX 40.5 >= 25 (tendência forte)\",\n  \"signals\": {\n    \"adx\": 40.47,\n    \"rsi\": 56.98,\n    \"lastClose\": 45.18,\n   "}
+> {"ts":"2026-06-21T20:21:31.480Z","cycleId":"1782073207546-332","provider":"openrouter","type":"tool_call","name":"tradeux_get_regime","input":{"symbol":"BNBUSDT"},"isError":false,"resultPreview":"{\n  \"symbol\": \"BNBUSDT\",\n  \"interval\": \"1h\",\n  \"candles\": 300,\n  \"source\": \"api.binance.com\",\n  \"cached\": true,\n  \"sma\": {\n    \"fast\": {\n      \"current\": 586.4418,\n      \"previous\": 586.203199999
+> ===== HALT + cockpit.groups (deploy intacto?) =====
+> halt: halted=False sources=[]
+> groups servido? sim (trend active=0)
+> ```
+
+## 🤖 Claude *(22:45:15)*
+
+
+## 🤖 Claude *(22:45:33)*
+
+Verifiquei ao vivo. **Boas notícias: nenhuma das duas é urgente** — e tenho a evidência.
+
+## 1️⃣ Mensagem do agente ("aguardando golden cross para comprar")
+**É a mensagem PRÉ-FIX, não uma nova.** Confirmado no log+journal:
+- O último ciclo **bem-sucedido** do agente foi o `cycleId 332` às **20:21Z — ANTES do meu deploy do D3**. Foi ele que emitiu essa frase.
+- Desde o restart (deploy), o agente só deu **429** (Ciclo 1 e 2): `free-models-per-day` esgotado (`Remaining: 0/2000`). **Ele não rodou nenhum ciclo com o prompt novo ainda** — logo, não teve como emitir mensagem nova.
+- A cota do modelo `:free` reseta em `00:00 UTC` (≈**21:00 BRT**, ~3-4h depois daquele ciclo). Quando rodar de novo, será com o prompt corrigido + `cockpit.groups` → não vai mais dizer "aguardando ... para comprar" pra grupo parado.
+
+Verificado agora: **HALT intacto** (`halted=false`, sem fontes) · **`cockpit.groups` servido** (trend active=0). O fix está live; só falta o agente "acordar". **Nada a fazer — se autocorrige no próximo ciclo.**
+
+## 2️⃣ Mensagem `[PAPER-REVIEW]` (consistencia: 5 RT, +$0.10, win 100%)
+**Não é problema — é o mecanismo funcionando** (e é literalmente o paper-validate já rodando). O `paperReviewJob` disparou o marco de 5 round-trips e foi corretamente **cauteloso**: "amostra inicial — aguardando mais round-trips p/ veredito". 5 trades é pouquíssimo pra dizer "tem edge"; o critério de graduação é ~15-30 RT net+ pós-fee/slippage. **Tudo certo.**
+
+## ⚠️ O que de fato merece atenção (não urgente, mas real)
+A causa de você ter recebido a frase velha é o **429 do modelo `:free`** (0/2000 — limite diário batido). Enquanto não reseta, **o agente não roda** (nem reporta nem valida o D3). Não é crítico (ele é observador, `ALLOW_TRADING=false`; o trading real são as automações do Beholder + riskGuard, que rodam independente), mas é a dívida conhecida que vale resolver um dia (modelo pago de fallback / backoff). Não mexo nisso agora sem você pedir.
+
+## Voltando ao paper-validate
+Você acabou puxado pras mensagens e a escolha do slice ficou em aberto. Dado que **a consistencia 1m já está gerando dado** (os 5 RT acima), minha recomendação é começar pela **Mean-reversion 15m** — é **só setup script (zero backend, zero deploy, zero risco)**, dá o sinal mais rápido sobre "15m tem mais/melhor round-trip que 1m?" (alavanca #3) e é **comparável direto** com a consistencia 1m que já roda. Slope-gate e Farm-no-loss-de-verdade ficam como slices 2 e 3.
+
+Quer que eu **construa a trilha Mean-reversion 15m** (e te mostro antes de ativar)? Ou prefere o slope-gate / o Farm no-loss fiel?
+
+## 👤 User *(23:12:57)*
+
+Prefiro todos mas qual você acha melhor um é melhor que o outro ou a escolhe é de prioridade? Faça todos se a escolhe for de prioridade decidindo qual melhor ordem de executação ou paralelo
+
+## 🤖 Claude *(23:14:19)*
+
+
+## 🤖 Claude *(23:14:29)*
+
+Ótima pergunta — e a resposta importa pro plano: **as três NÃO são "uma melhor que a outra"**; são **experimentos diferentes** (testam alavancas distintas da pesquisa). Logo é **prioridade/ordem**, não escolha excludente. A ordem ótima é ditada por **risco/custo + dependências**:
+
+## Plano de execução (ordem ótima)
+| Slice | Toca backend? | Deploy? | Risco | Quando |
+|---|---|---|---|---|
+| **1 · MR 15m** | não (só setup) | não | zero | **JÁ** — dado flui na hora |
+| **2 · Trend slope-gate** | sim (`regimeJob`: slope na MEMORY, additivo) | sim | baixo | bundle |
+| **3 · Farm no-loss real** | sim (`paperEngine`: venda por custo×1.012) | sim | baixo | bundle |
+
+**Lógica:**
+- **Slice 1 vai primeiro e sozinho** — é setup-only (zero backend/deploy/risco), então não há motivo pra esperar; começa a gerar round-trips já, comparável direto com a consistencia 1m que já roda.
+- **Slices 2 e 3 viram UM bundle** — ambas são mudanças de backend em **arquivos diferentes** (`regimeJob` vs `paperEngine`), então construo as duas juntas, **um gate QA+TL, UM deploy** (cada deploy reinicia o backend de trading ao vivo — quero minimizar isso). Depois rodo as 2 trilhas.
+- **Paralelo:** 1 roda agora; 2+3 são construídas em paralelo (arquivos distintos, sem conflito) e pousam juntas.
+
+Começando o **Slice 1** — escrevo a trilha MR15 (setup-only):
+
+## 🤖 Claude *(23:14:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-mr15.js",
+  "content": "'use strict';\n/*\n * Setup IDEMPOTENTE da trilha PAPER \"MR15\" (mean-reversion 15m) \u2014 Slice 1 do paper-validate das alavancas da pesquisa.\n * Aproxima a alavanca \"Farm 15m\" (mais round-trips no 15m vs 1m), mas com SA\u00cdDA POR RSI (n\u00e3o o no-loss custo\u00d71.012\n * do Farm real \u2014 esse vem no Slice 3, via extens\u00e3o do paperEngine). Compar\u00e1vel direto com \"[PAPER] Consistencia\" (1m).\n *\n *   - MR15 Buy:  RSI_14_15m < lo, fora de bear E trend (mean-reversion vive em range/mixed).\n *   - MR15 Sell: RSI_14_15m > hi (paperEngine vende a posi\u00e7\u00e3o inteira; SELL qty \u00e9 placeholder).\n *\n * Tudo [PAPER] \u2192 roteado p/ o broker VIRTUAL (pre\u00e7o+fee MAINNET reais, SEM Binance, SEM cofre, sob HALT). 2\u00aa palavra\n * do name = TRILHA (paperEngine.strategyOf): \"[PAPER] Mr15 Buy LTCUSDT\" -> \"mr15\". Idempotente (find-by-name/409).\n *\n * Uso (dentro do container, server no ar):  node scripts/setup-paper-mr15.js   [DRY=true]\n *   env: EM/PW (ou DEFAULT_SETTINGS_EMAIL/PWD ou TRADEUX_EMAIL/PASSWORD), PORT (3001),\n *        MR15_SYMBOLS (CSV, default BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT), MR15_INTERVAL (15m),\n *        MR15_RSI_LO (35), MR15_RSI_HI (65), MR15_SIZE_MULT (4)\n */\nconst { createClient, resolveEnv } = require('./lib/apiClient');\n\nconst SYMBOLS = (process.env.MR15_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);\nconst INTERVAL = process.env.MR15_INTERVAL || '15m';\nconst RSI_KEY = `RSI_14_${INTERVAL}`;\nconst RSI_LO = parseFloat(process.env.MR15_RSI_LO || '35');\nconst RSI_HI = parseFloat(process.env.MR15_RSI_HI || '65');\nconst SIZE_MULT = parseFloat(process.env.MR15_SIZE_MULT || '4');\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst { host, port, email: EM, password: PW } = resolveEnv({\n    hostEnv: 'PAPER_API_HOST',\n    emailEnvs: ['EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL'],\n    passwordEnvs: ['PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD'],\n});\nconst client = createClient({ host, port });\nconst req = client.req;\nconst findAutomationByName = (token, name) => client.findAutomationByName(token, name, 80);\n\nasync function ensureMonitor(token, symbol) {\n    if (DRY) return `[DRY] monitor CANDLES ${symbol} ${INTERVAL} RSI_14`;\n    const r = await req('POST', '/monitors', token, {\n        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',\n        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,\n    });\n    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (ATIVO \u2192 ${symbol}:${RSI_KEY})`;\n    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} j\u00e1 existe`;\n    throw new Error(`falha monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);\n}\n\nasync function ensureTemplate(token, symbol, name, side, quantity) {\n    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n    if (found) return { id: found.id, msg: `template \"${name}\" j\u00e1 existe (id ${found.id})` };\n    if (DRY) return { id: 0, msg: `[DRY] template \"${name}\" (MARKET ${side} ${quantity})` };\n    const r = await req('POST', '/ordertemplates', token, {\n        name, symbol, type: 'MARKET', side, limitPrice: null, limitPriceMultiplier: 1,\n        stopPrice: null, stopPriceMultiplier: 1, quantity, quantityMultiplier: SIZE_MULT,\n        icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    if (r.status !== 201) throw new Error(`falha template ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return { id: r.body.id, msg: `template \"${name}\" criado (id ${r.body.id})` };\n}\n\nasync function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {\n    const existing = await findAutomationByName(token, name);\n    if (existing) return `automa\u00e7\u00e3o \"${name}\" j\u00e1 existe (id ${existing.id}, isActive=${existing.isActive})`;\n    if (DRY) return `[DRY] automa\u00e7\u00e3o \"${name}\" INATIVA | cond: ${conditions}`;\n    const r = await req('POST', '/automations', token, {\n        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,\n        actions: [{ type: 'ORDER', orderTemplateId }],\n    });\n    if (r.status !== 201) throw new Error(`falha automa\u00e7\u00e3o ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `automa\u00e7\u00e3o \"${name}\" criada (id ${r.body.id}, INATIVA)`;\n}\n\nasync function setupSymbol(token, symbol) {\n    const K = k => `${symbol}:${k}`;\n    console.log(`\\n## ${symbol}`);\n    console.log('- ' + await ensureMonitor(token, symbol));\n\n    const buy = await ensureTemplate(token, symbol, `[PAPER] Mr15 Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');\n    console.log('- ' + buy.msg);\n    const sell = await ensureTemplate(token, symbol, `[PAPER] Mr15 Sell ${symbol}`, 'SELL', 'MAX_WALLET');\n    console.log('- ' + sell.msg);\n\n    const buyCond = `MEMORY['${K(RSI_KEY)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;\n    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Mr15 Buy ${symbol}`, buyCond, `${K(RSI_KEY)},${K('REGIME')}`, buy.id));\n    const sellCond = `MEMORY['${K(RSI_KEY)}'].current>${RSI_HI}`;\n    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Mr15 Sell ${symbol}`, sellCond, `${K(RSI_KEY)}`, sell.id));\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou DEFAULT_SETTINGS_EMAIL/PWD)'); process.exit(1); }\n    const token = await client.login(EM, PW);\n\n    console.log(`# Setup PAPER MR15 \u2014 ${SYMBOLS.join(', ')} | mean-reversion RSI<${RSI_LO}/>${RSI_HI} @ ${INTERVAL} (range/mixed) \u00b7 size ${SIZE_MULT}\u00d7MIN_NOTIONAL${DRY ? '   [DRY-RUN]' : ''}`);\n    for (const s of SYMBOLS) await setupSymbol(token, s);\n    console.log(`\\n${DRY ? 'DRY-RUN OK.' : 'PRONTO \u2014 monitores 15m ATIVOS, automa\u00e7\u00f5es [PAPER] Mr15 INATIVAS.'}`);\n    console.log(`Para ATIVAR: start nas automa\u00e7\u00f5es [PAPER] Mr15 (paperEngine roteia p/ o ledger virtual). P&L em GET /analysis/paper. Mainnet CONGELADO.`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-mr15.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:15:45)*
+
+
+## 🤖 Claude *(23:15:48)*
+
+Slice 1 escrito. Pra rodá-lo preciso de dentro do container (ele bate na API interna `backend:3001`), mas o arquivo é novo (não está na imagem atual). Vou copiá-lo pro container e rodar (as automações criadas persistem no DB; o script é baked no próximo deploy). Confirmo o workdir + a lib no container e faço chown do arquivo:
+
+## 🤖 Claude *(23:15:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/scripts/setup-paper-mr15.js\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend sh -lc \"pwd; echo ---; ls scripts/lib/apiClient.js scripts/setup-paper-trilhas.js 2>&1; echo ---; printenv DEFAULT_SETTINGS_EMAIL >/dev/null && echo EMAIL_env=set || echo EMAIL_env=unset\"'",
+  "description": "Check backend container workdir, lib presence, and credentials env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /app
+> ---
+> scripts/lib/apiClient.js
+> scripts/setup-paper-trilhas.js
+> ---
+> EMAIL_env=set
+> ```
+
+## 🤖 Claude *(23:16:02)*
+
+
+## 🤖 Claude *(23:16:03)*
+
+Container OK (`/app`, lib presente, credenciais no env). Copio o script pro container e faço **DRY-run** (preview, sem criar nada):
+
+## 🤖 Claude *(23:16:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose cp backend/scripts/setup-paper-mr15.js backend:/app/scripts/setup-paper-mr15.js && docker compose exec -T -e DRY=true backend node scripts/setup-paper-mr15.js 2>&1 | tail -30'",
+  "description": "Copy mr15 script into container and DRY-run it"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  tradeux-backend-1 Copying backend/scripts/setup-paper-mr15.js to tradeux-backend-1:/app/scripts/setup-paper-mr15.js
+>  tradeux-backend-1 Copied backend/scripts/setup-paper-mr15.js to tradeux-backend-1:/app/scripts/setup-paper-mr15.js
+> ## BTCUSDT
+> - [DRY] monitor CANDLES BTCUSDT 15m RSI_14
+> - [DRY] template "[PAPER] Mr15 Buy BTCUSDT" (MARKET BUY MIN_NOTIONAL)
+> - [DRY] template "[PAPER] Mr15 Sell BTCUSDT" (MARKET SELL MAX_WALLET)
+> - [DRY] automação "[PAPER] Mr15 Buy BTCUSDT" INATIVA | cond: MEMORY['BTCUSDT:RSI_14_15m'].current<35 && MEMORY['BTCUSDT:REGIME']!=='bear' && MEMORY['BTCUSDT:REGIME']!=='trend'
+> - [DRY] automação "[PAPER] Mr15 Sell BTCUSDT" INATIVA | cond: MEMORY['BTCUSDT:RSI_14_15m'].current>65
+> 
+> ## LTCUSDT
+> - [DRY] monitor CANDLES LTCUSDT 15m RSI_14
+> - [DRY] template "[PAPER] Mr15 Buy LTCUSDT" (MARKET BUY MIN_NOTIONAL)
+> - [DRY] template "[PAPER] Mr15 Sell LTCUSDT" (MARKET SELL MAX_WALLET)
+> - [DRY] automação "[PAPER] Mr15 Buy LTCUSDT" INATIVA | cond: MEMORY['LTCUSDT:RSI_14_15m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend'
+> - [DRY] automação "[PAPER] Mr15 Sell LTCUSDT" INATIVA | cond: MEMORY['LTCUSDT:RSI_14_15m'].current>65
+> 
+> ## BNBUSDT
+> - [DRY] monitor CANDLES BNBUSDT 15m RSI_14
+> - [DRY] template "[PAPER] Mr15 Buy BNBUSDT" (MARKET BUY MIN_NOTIONAL)
+> - [DRY] template "[PAPER] Mr15 Sell BNBUSDT" (MARKET SELL MAX_WALLET)
+> - [DRY] automação "[PAPER] Mr15 Buy BNBUSDT" INATIVA | cond: MEMORY['BNBUSDT:RSI_14_15m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend'
+> - [DRY] automação "[PAPER] Mr15 Sell BNBUSDT" INATIVA | cond: MEMORY['BNBUSDT:RSI_14_15m'].current>65
+> 
+> ## ADAUSDT
+> - [DRY] monitor CANDLES ADAUSDT 15m RSI_14
+> - [DRY] template "[PAPER] Mr15 Buy ADAUSDT" (MARKET BUY MIN_NOTIONAL)
+> - [DRY] template "[PAPER] Mr15 Sell ADAUSDT" (MARKET SELL MAX_WALLET)
+> - [DRY] automação "[PAPER] Mr15 Buy ADAUSDT" INATIVA | cond: MEMORY['ADAUSDT:RSI_14_15m'].current<35 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend'
+> - [DRY] automação "[PAPER] Mr15 Sell ADAUSDT" INATIVA | cond: MEMORY['ADAUSDT:RSI_14_15m'].current>65
+> 
+> DRY-RUN OK.
+> Para ATIVAR: start nas automações [PAPER] Mr15 (paperEngine roteia p/ o ledger virtual). P&L em GET /analysis/paper. Mainnet CONGELADO.
+> ```
+
+## 🤖 Claude *(23:16:32)*
+
+
+## 🤖 Claude *(23:16:34)*
+
+DRY perfeito — 4 símbolos, monitor 15m + templates + automações com as condições certas (`RSI_14_15m<35 && !bear && !trend` / `>65`), tudo `[PAPER]` inativo. Rodando **de verdade** (cria) + ativando o grupo paper (zero risco; hoje os 4 estão em `trend` → o buy fica gated, sem fill imediato):
+
+## 🤖 Claude *(23:16:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== REAL RUN (cria monitores 15m + templates + automa\u00e7\u00f5es Mr15) =====\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node scripts/setup-paper-mr15.js 2>&1 | grep -E \"criad|j\u00e1 existe|##|PRONTO\"'\necho \"\"\necho \"===== ATIVA o grupo paper (inclui as Mr15 novas) =====\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source tradeux-mcp/.env 2>/dev/null; set +a\nTOK=$(curl -s -m6 --retry 5 --retry-all-errors -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\ncurl -s -m10 -X POST https://tradeux.gcrux.com/api/automations/groups/paper/start -H \"authorization: $TOK\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\"paper start \u2192\\\", \\\"total=\\\"+str(d.get(\\\"total\\\")), \\\"changed=\\\"+str(len(d.get(\\\"changed\\\",[]))), \\\"skipped=\\\"+str(len(d.get(\\\"skipped\\\",[]))), \\\"failed=\\\"+str(len(d.get(\\\"failed\\\",[]))))\"\necho \"grupo paper agora: $(curl -s -m8 https://tradeux.gcrux.com/api/automations/groups -H \"authorization: $TOK\" | python3 -c \"import sys,json;d=json.load(sys.stdin);p=[g for g in d[\\\"groups\\\"] if g[\\\"key\\\"]==\\\"paper\\\"][0];print(\\\"total=\\\"+str(p[\\\"total\\\"]),\\\"active=\\\"+str(p[\\\"active\\\"]))\")\"\n'",
+  "description": "Run mr15 setup for real and activate the paper group"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== REAL RUN (cria monitores 15m + templates + automações Mr15) =====
+> ## BTCUSDT
+> - monitor CANDLES BTCUSDT 15m criado (ATIVO → BTCUSDT:RSI_14_15m)
+> - template "[PAPER] Mr15 Buy BTCUSDT" criado (id 44)
+> - template "[PAPER] Mr15 Sell BTCUSDT" criado (id 45)
+> - automação "[PAPER] Mr15 Buy BTCUSDT" criada (id 60, INATIVA)
+> - automação "[PAPER] Mr15 Sell BTCUSDT" criada (id 61, INATIVA)
+> ## LTCUSDT
+> - monitor CANDLES LTCUSDT 15m criado (ATIVO → LTCUSDT:RSI_14_15m)
+> - template "[PAPER] Mr15 Buy LTCUSDT" criado (id 46)
+> - template "[PAPER] Mr15 Sell LTCUSDT" criado (id 47)
+> - automação "[PAPER] Mr15 Buy LTCUSDT" criada (id 62, INATIVA)
+> - automação "[PAPER] Mr15 Sell LTCUSDT" criada (id 63, INATIVA)
+> ## BNBUSDT
+> - monitor CANDLES BNBUSDT 15m criado (ATIVO → BNBUSDT:RSI_14_15m)
+> - template "[PAPER] Mr15 Buy BNBUSDT" criado (id 48)
+> - template "[PAPER] Mr15 Sell BNBUSDT" criado (id 49)
+> - automação "[PAPER] Mr15 Buy BNBUSDT" criada (id 64, INATIVA)
+> - automação "[PAPER] Mr15 Sell BNBUSDT" criada (id 65, INATIVA)
+> ## ADAUSDT
+> - monitor CANDLES ADAUSDT 15m criado (ATIVO → ADAUSDT:RSI_14_15m)
+> - template "[PAPER] Mr15 Buy ADAUSDT" criado (id 50)
+> - template "[PAPER] Mr15 Sell ADAUSDT" criado (id 51)
+> - automação "[PAPER] Mr15 Buy ADAUSDT" criada (id 66, INATIVA)
+> - automação "[PAPER] Mr15 Sell ADAUSDT" criada (id 67, INATIVA)
+> PRONTO — monitores 15m ATIVOS, automações [PAPER] Mr15 INATIVAS.
+> 
+> ===== ATIVA o grupo paper (inclui as Mr15 novas) =====
+> paper start → total=24 changed=8 skipped=16 failed=0
+> grupo paper agora: total=24 active=24
+> ```
+
+## 🤖 Claude *(23:17:16)*
+
+
+## 🤖 Claude *(23:17:19)*
+
+✅ **Slice 1 (MR15) LIVE.** Criados 4 monitores 15m (→ `RSI_14_15m`) + 8 automações `[PAPER] Mr15` (ids 60-67) + ativadas (**grupo paper 24/24**, 8 changed / 16 já-ativas / 0 falhas). Rodando no broker virtual — vai gerar round-trips quando os símbolos saírem de `trend` pra range/mixed e o RSI 15m cair <35. Zero risco, HALT intacto.
+
+Commitando o script da Slice 1 (reproduz as automações runtime pós-`make nuke`):
+
+## 🤖 Claude *(23:17:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/scripts/setup-paper-mr15.js\nSTAGED=$(git diff --cached --name-only | tr \"\\n\" \",\")\necho \"staged: $STAGED\"\nif [ \"$STAGED\" != \"backend/scripts/setup-paper-mr15.js,\" ]; then echo \"ESCOPO ERRADO \u2014 abortando\"; exit 1; fi\nMSG=$(mktemp)\ncat > \"$MSG\" <<\"EOF\"\nfeat(paper): trilha MR15 (mean-reversion 15m) p/ paper-validate da alavanca de frequencia\n\nsetup-paper-mr15.js (idempotente, espelha setup-paper-trilhas): monitor CANDLES 15m + automacoes\n[PAPER] Mr15 Buy/Sell (RSI_14_15m<35 / >65, gate !bear && !trend) nos 4 simbolos. Roteia p/ o broker\nvirtual (zero risco, sob HALT). Aproxima \"Farm 15m\" (mais round-trips no 15m) com saida por RSI;\no no-loss custo*1.012 fiel vem na extensao do paperEngine (slice 3).\n\nRodado ao vivo: monitores 15m ativos, automacoes id 60-67 ativas em paper (grupo paper 24/24).\nRuntime/DB (nao seedado) -- reaplicavel via este script pos make-nuke.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit commit -F \"$MSG\" >/dev/null 2>&1 && echo \"commit OK\" || echo \"commit FALHOU\"\nrm -f \"$MSG\"\ngit log --oneline -1\nset -a; source .env 2>/dev/null; set +a\ngit push \"https://x-access-token:${GITHUB_TOKEN_API}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]*@#x-access-token:***@#g\" | grep -vE \"vulnerab|security|dependabot|^remote: $\"\n'",
+  "description": "Commit and push the MR15 setup script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> staged: backend/scripts/setup-paper-mr15.js,
+> commit OK
+> d902421 feat(paper): trilha MR15 (mean-reversion 15m) p/ paper-validate da alavanca de frequencia
+> To https://github.com/gabrielZarattini/tradeux.git
+>    5c83c31..d902421  HEAD -> master
+> ```
+
+## 🤖 Claude *(23:18:15)*
+
+
+## 🤖 Claude *(23:18:17)*
+
+Slice 1 commitada+pushada (**`d902421`**). Agora o **bundle 2+3** (backend). Investigando os pontos de inserção: o `regimeJob` (onde emitir o slope da SMA pra MEMORY) e reconfirmo o ponto do no-loss no `paperEngine`. Lendo a região do `regimeJob` que escreve REGIME/TREND_CROSS + processa a SMA:
+
+## 🤖 Claude *(23:18:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "offset": 95,
+  "limit": 65
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	                    continue;
+> 96	                }
+> 97	
+> 98	                // executeAutomations=false → gate PASSIVO: a escrita do regime não dispara ordens
+> 99	                // por si; o regime é lido quando o tick de RSI/preço dispara a automação.
+> 100	                await beholder.updateMemory(symbol, indexKeys.REGIME, null, r.regime, false);
+> 101	                AT[symbol] = Date.now();
+> 102	
+> 103	                if (STALE.delete(symbol)) // saiu do estado stale (regime voltou a ser conhecido)
+> 104	                    logger('regime', `${symbol}: regime recuperado => ${r.regime}.`);
+> 105	
+> 106	                if (LAST[symbol] !== r.regime) {
+> 107	                    const prevRegime = LAST[symbol]; // captura síncrona (o microtask abaixo roda após LAST ser sobrescrito)
+> 108	                    logger('regime', `${symbol}:REGIME => ${r.regime} (${r.reason})`);
+> 109	
+> 110	                    // SAÍDA DO BEAR do símbolo macro (bear → não-bear): arma a observação densa da Fase 4 no funil
+> 111	                    // (notifica + pré-arma o shadow + captura ~4h dos dados pra calibrar/escrever o funil ao vivo).
+> 112	                    // Só OBSERVA, NÃO compra. Fire-and-forget. Promise-anchored: ancora QUALQUER rejeição (sync do
+> 113	                    // require OU async do armador) num .catch → blinda o backend contra unhandled-rejection (Node 22
+> 114	                    // derruba o processo, e o backend não tem handler global) mesmo se uma edição futura do armador
+> 115	                    // deixar escapar um throw/await. Nunca bloqueia nem derruba o loop de regime (gate passivo).
+> 116	                    if (symbol === FASE4_MACRO_SYMBOL && prevRegime === 'bear' && r.regime !== 'bear') {
+> 117	                        Promise.resolve()
+> 118	                            .then(() => require('./funnelJob').armFase4Observation(`${symbol} ${prevRegime}->${r.regime}`))
+> 119	                            .catch(e => logger('regime', `falha ao armar a Fase 4: ${e.message}`));
+> 120	                    }
+> 121	
+> 122	                    LAST[symbol] = r.regime;
+> 123	                }
+> 124	
+> 125	                // ---- Trend Following: sinal de cruzamento SMA 50/200 da MAINNET (golden/death) ----
+> 126	                // ORDEM IMPORTA: o REGIME é escrito ACIMA, ANTES deste bloco. A automação de trend
+> 127	                // gateia por REGIME!=='bear' no MESMO tick do TREND_CROSS, então o regime precisa já
+> 128	                // estar fresco na MEMORY quando o sinal dispara. NÃO reordene estas duas escritas.
+> 129	                // O JOB é o ÚNICO detector de borda: deriva a TRANSIÇÃO de `above` (fast>slow) e
+> 130	                // escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h'] = 'golden'|'death'|'none'.
+> 131	                // Só a transição é escrita com executeAutomations=true → dispara a automação de trend
+> 132	                // UMA vez; 'none' é passivo. A automação reage a uma IGUALDADE (==='golden'/'death'),
+> 133	                // SEM o double-check do invertCondition → sem repetição intra-hora nem perda de sinal.
+> 134	                if (r.sma) {
+> 135	                    const above = r.sma.above;
+> 136	                    SMAVAL[symbol] = { fast: r.sma.fast.current, slow: r.sma.slow.current, above };
+> 137	                    const prev = ABOVE[symbol];
+> 138	                    if (prev !== undefined && above !== prev) {
+> 139	                        const dir = above ? 'golden' : 'death';
+> 140	                        CROSS[symbol] = { dir, at: Date.now() };
+> 141	                        logger('regime', `${symbol}: SMA ${dir.toUpperCase()} cross (50/200) — disparando automação de trend`);
+> 142	                        const results = await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, dir, true);
+> 143	                        if (Array.isArray(results)) results.filter(Boolean).forEach(x => logger('regime', `${symbol}: trend => ${JSON.stringify(x)}`));
+> 144	                    } else {
+> 145	                        // sem cruzamento fresco: zera o sinal (passivo) p/ não deixar 'golden'/'death' velho na MEMORY
+> 146	                        await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, 'none', false);
+> 147	                    }
+> 148	                    ABOVE[symbol] = above;
+> 149	                    // persiste o estado de cross (resiliência a restart). smaAbove sempre; dir/at vêm de
+> 150	                    // CROSS (preenchido só num cruzamento). Persistir DEPOIS de disparar = at-least-once:
+> 151	                    // um crash entre o updateMemory e o upsert pode re-disparar no boot — preferível a
+> 152	                    // perder o sinal (entrar 2x num trend é menos pior que não entrar).
+> 153	                    await persistCrossState(symbol);
+> 154	                }
+> 155	            } catch (err) {
+> 156	                logger('regime', `${symbol}: erro ao atualizar regime: ${err.message}`);
+> 157	            }
+> 158	        }
+> 159	    } finally {
+> ```
+
+## 🤖 Claude *(23:18:51)*
+
+
+## 🤖 Claude *(23:18:53)*
+
+Região do `regimeJob` mapeada. Pro slice 2, escrevo o slope da SMA200 (`r.sma.slow.current - previous`) na MEMORY **antes** da escrita do TREND_CROSS (pra ficar fresco quando o golden cross dispara). Confirmo como o `indexKeys.TREND_CROSS` é definido (pra usar a mesma convenção pro `TREND_SLOPE`):
+
+## 🤖 Claude *(23:18:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== indexKeys no regimeJob (require) ===\"\ngrep -nE \"indexKeys\" src/regimeJob.js | head -3\necho \"=== TREND_CROSS / TREND_SLOPE no indexes.js (keys map) ===\"\ngrep -nE \"TREND_CROSS|TREND_SLOPE|TREND\" src/utils/indexes.js | head\necho \"=== r.sma no regimeService (slow tem previous?) ===\"\ngrep -nE \"sma|slow|fast|previous|current\" src/regimeService.js | grep -iE \"sma|slow|fast\" | head -15",
+  "description": "Inspect indexKeys convention and r.sma structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === indexKeys no regimeJob (require) ===
+> 32:const { indexKeys } = require('./utils/indexes');
+> 100:                await beholder.updateMemory(symbol, indexKeys.REGIME, null, r.regime, false);
+> 142:                        const results = await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, dir, true);
+> === TREND_CROSS / TREND_SLOPE no indexes.js (keys map) ===
+> 77:    TREND_CROSS: 'TREND_CROSS',
+> 78:    TREND_QTY: 'TREND_QTY', // posição (base asset) acumulada pelo Trend Following — id6 soma no fill golden, id7 zera no death
+> === r.sma no regimeService (slow tem previous?) ===
+> ugrep: warning: src/regimeService.js: No such file or directory
+> ```
+
+## 🤖 Claude *(23:19:56)*
+
+
+## 🤖 Claude *(23:19:58)*
+
+Confirmado: `indexKeys` em `utils/indexes` (TREND_CROSS='TREND_CROSS', linha 77), sem TREND_SLOPE; e `r.sma.slow` tem `{current, previous}` (vi no journal). Construindo o **slice 2 backend** — adiciono a key + escrevo o slope da SMA lenta na MEMORY (antes do TREND_CROSS, fail-open em dado insuficiente):
+
+## 🤖 Claude *(23:20:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    TREND_CROSS: 'TREND_CROSS',\n    TREND_QTY: 'TREND_QTY', // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death",
+  "new_string": "    TREND_CROSS: 'TREND_CROSS',\n    TREND_SLOPE: 'TREND_SLOPE', // dire\u00e7\u00e3o do fundo (slope da SMA lenta): 'up'|'flat'|'down' \u2014 lido pela trilha [PAPER] de slope-gate\n    TREND_QTY: 'TREND_QTY', // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(23:20:06)*
+
+
+## 🤖 Claude *(23:20:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "offset": 74,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 74	    PREVIOUS_CANDLE: 'PREVIOUS_CANDLE',
+> 75	    TICKER: 'TICKER',
+> 76	    REGIME: 'REGIME',
+> 77	    TREND_CROSS: 'TREND_CROSS',
+> 78	    TREND_QTY: 'TREND_QTY', // posição (base asset) acumulada pelo Trend Following — id6 soma no fill golden, id7 zera no death
+> 79	    FLOW: 'FLOW', // fluxo do taker da mainnet {imbalance,toxicity} (flowJob) — NOWCASTING/timing, NÃO forecast (ver RESEARCH-bear-capture). imbalance gateia a id2 (não comprar dip sob venda agressora AGORA)
+> 80	    FAIR: 'FAIR', // preço de referência da MAINNET {price,at,atMs} (fairPriceJob) — âncora do Harvester de dislocação (compra-limite funda quando o testnet disloca abaixo do FAIR e reverte; sentinel price:0 = fail-safe)
+> 81	    HARVEST: 'HARVEST', // bucket TÁTICO do Harvester {qty,cost} (base asset + custo médio; app-em.updateHarvestPosition) — venda no-loss usa quantity='HARVEST_QTY' (lê .qty); SEPARADO do cofre de BTC. PERSISTIDO (tabela harvestPositions, recarregado no boot por app-em.loadHarvestPositions)
+> ```
+
+## 🤖 Claude *(23:20:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js",
+  "old_string": "    TREND_CROSS: 'TREND_CROSS',\n    TREND_QTY: 'TREND_QTY', // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death",
+  "new_string": "    TREND_CROSS: 'TREND_CROSS',\n    TREND_SLOPE: 'TREND_SLOPE', // dire\u00e7\u00e3o do fundo (slope da SMA lenta): 'up'|'flat'|'down' \u2014 lido pela trilha [PAPER] de slope-gate (passivo, regimeJob)\n    TREND_QTY: 'TREND_QTY', // posi\u00e7\u00e3o (base asset) acumulada pelo Trend Following \u2014 id6 soma no fill golden, id7 zera no death"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:20:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js",
+  "old_string": "                if (r.sma) {\n                    const above = r.sma.above;\n                    SMAVAL[symbol] = { fast: r.sma.fast.current, slow: r.sma.slow.current, above };",
+  "new_string": "                if (r.sma) {\n                    const above = r.sma.above;\n                    SMAVAL[symbol] = { fast: r.sma.fast.current, slow: r.sma.slow.current, above };\n                    // Slope da SMA LENTA (fundo): a trilha [PAPER] de Trend slope-gate l\u00ea isto p/ s\u00f3 entrar no golden\n                    // cross se o fundo N\u00c3O estiver caindo (corta whipsaw lateral). PASSIVO; escrito ANTES do TREND_CROSS\n                    // (mesma ordem-importa do REGIME) p/ estar fresco quando o cross dispara no MESMO tick. Banda morta\n                    // ~0,01% evita chamar ru\u00eddo de slope; dado insuficiente \u2192 'flat' (fail-open, igual aos outros gates).\n                    const sCur = r.sma.slow.current, sPrev = r.sma.slow.previous;\n                    const dSlope = (Number.isFinite(sCur) && Number.isFinite(sPrev)) ? (sCur - sPrev) : NaN;\n                    const slopeEps = Number.isFinite(sCur) ? Math.abs(sCur) * 1e-4 : 0;\n                    const slope = !Number.isFinite(dSlope) ? 'flat' : (dSlope > slopeEps ? 'up' : (dSlope < -slopeEps ? 'down' : 'flat'));\n                    await beholder.updateMemory(symbol, indexKeys.TREND_SLOPE, INTERVAL, slope, false);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/regimeJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:20:49)*
+
+
+## 🤖 Claude *(23:20:50)*
+
+Slice 2 backend pronto (`indexes.js` + `regimeJob.js`). Agora **slice 3** — o guard no-loss no `paperEngine`. Releio as regiões exatas (consts + caminho SELL) pra editar com precisão:
+
+## 🤖 Claude *(23:20:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "offset": 20,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	const PAPER_PREFIX = '[PAPER]';
+> 21	
+> 22	// fee real (0,1%/lado = taker mainnet sem desconto BNB; ajustável por env). Mesma régua do backtest.js.
+> 23	const FEE_RATE = (() => { const r = parseFloat(process.env.PAPER_FEE_RATE || '0.001'); return Number.isFinite(r) && r >= 0 ? r : 0.001; })();
+> 24	// notional default de compra quando o template não usa MIN_NOTIONAL (USDT).
+> 25	const DEFAULT_BUY_USDT = (() => { const n = parseFloat(process.env.PAPER_BUY_USDT || '20'); return Number.isFinite(n) && n > 0 ? n : 20; })();
+> 26	// slippage/spread simulado (bps): a COMPRA preenche ACIMA do mid, a VENDA ABAIXO. Fecha o viés otimista do
+> 27	// MINI_TICKER (mid) — direção CONSERVADORA de propósito (paper levemente pessimista => transfere melhor
+> 28	// pra mainnet, não promete demais). Ajustável por env (default 5 bps = 0,05% por lado).
+> 29	const SLIPPAGE = (() => { const b = parseFloat(process.env.PAPER_SLIPPAGE_BPS || '5'); return Number.isFinite(b) && b >= 0 ? b / 10000 : 0.0005; })();
+> 30	
+> 31	const _inflight = new Set(); // serializa por trilha+símbolo (evita 2 fills no mesmo tick — paper, não-crítico)
+> ```
+
+## 🤖 Claude *(23:20:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "offset": 124,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 124	
+> 125	        // SELL — fecha a posição inteira da trilha (round-trip).
+> 126	        if (heldQty <= 0)
+> 127	            return { type: 'info', text: `[PAPER] ${key} sem posição — venda ignorada.` };
+> 128	
+> 129	        const qty = heldQty;
+> 130	        const cummQuote = qty * price;
+> 131	        const commission = cummQuote * FEE_RATE;
+> 132	        const { net } = computeNet({ side: 'SELL', cummQuote, commission, commissionAsset: 'USDT', symbol: symbolStr, avgPrice: price });
+> 133	        const costBasis = qty * (pos ? parseFloat(pos.avgCost) || 0 : 0);
+> 134	        const realized = net - costBasis; // recebido (cq−fee) − custo (incluía fee de compra) = P&L líquido dos 2 lados
+> 135	        const realizedAcc = prevRealized + realized;
+> 136	
+> 137	        await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty: 0, avgCost: 0, realizedPnl: realizedAcc });
+> 138	        await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: realized });
+> 139	        if (automation.logs) logger(tag, `[PAPER] SELL ${qty} ${symbolStr} @ ${price} (recebido ${net.toFixed(2)} USDT, P&L ${realized.toFixed(2)})`);
+> 140	        return { type: 'success', text: `[PAPER] SELL ${symbolStr} qty ${qty} @ ${price} P&L ${realized.toFixed(2)}` };
+> 141	    } catch (err) {
+> ```
+
+## 🤖 Claude *(23:23:31)*
+
+
+## 🤖 Claude *(23:23:35)*
+
+Slice 2 backend pronto. Agora **slice 3** — o no-loss no `paperEngine`. Escolhi o design limpo (**target na MEMORY**): no fill de COMPRA de uma trilha no-loss, o engine grava `<sym>:FARMNL_TARGET = avgCost×1.012`; a venda dispara só quando `bestBid > TARGET` (condição se auto-gateia → sem spam de avaliação quando flat); + um guard de slippage. Aplicando as 4 mudanças no `paperEngine` (consts, target na compra, guard+clear na venda):
+
+## 🤖 Claude *(23:23:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "old_string": "const SLIPPAGE = (() => { const b = parseFloat(process.env.PAPER_SLIPPAGE_BPS || '5'); return Number.isFinite(b) && b >= 0 ? b / 10000 : 0.0005; })();",
+  "new_string": "const SLIPPAGE = (() => { const b = parseFloat(process.env.PAPER_SLIPPAGE_BPS || '5'); return Number.isFinite(b) && b >= 0 ? b / 10000 : 0.0005; })();\n// Trilhas de FARM \"no-loss\": s\u00f3 VENDEM acima de custo\u00d7PROFIT (espelha o gatilho cost*1.012 do Farm real). O avgCost\n// vive na posi\u00e7\u00e3o PAPER (n\u00e3o na MEMORY) \u2192 no fill de COMPRA o engine grava MEMORY['<sym>:<STRATEGY>_TARGET'] = custo\u00d7PROFIT,\n// e a condition de venda da automa\u00e7\u00e3o compara bestBid>TARGET (se auto-gateia \u2192 sem avalia\u00e7\u00e3o quando flat; o \u00edndice\n// TARGET ausente faz o indexes.every falhar). + guard de slippage abaixo. Conjunto e m\u00faltiplo ajust\u00e1veis por env.\nconst NOLOSS = new Set((process.env.PAPER_NOLOSS_STRATEGIES || 'farmnl').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));\nconst NOLOSS_PROFIT = (() => { const p = parseFloat(process.env.PAPER_NOLOSS_PROFIT || '1.012'); return Number.isFinite(p) && p > 1 ? p : 1.012; })();\nconst noLossTargetKey = strategy => `${String(strategy).toUpperCase()}_TARGET`; // ex.: 'farmnl' -> 'FARMNL_TARGET'"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/paperEngine.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:23:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "old_string": "            await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty, avgCost, realizedPnl: prevRealized });\n            await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: null });\n            if (automation.logs) logger(tag, `[PAPER] BUY ${qty} ${symbolStr} @ ${price} (custo ${net.toFixed(2)} USDT, fee ${commission.toFixed(4)})`);",
+  "new_string": "            await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty, avgCost, realizedPnl: prevRealized });\n            await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: null });\n            // No-loss: publica o alvo de venda (custo\u00d7PROFIT) na MEMORY p/ a condition da venda comparar bestBid>TARGET.\n            // require lazy do beholder (evita ciclo no load); passivo (executeAutomations=false). Best-effort.\n            if (NOLOSS.has(strategy)) {\n                try { await require('./beholder').updateMemory(symbolStr, noLossTargetKey(strategy), null, avgCost * NOLOSS_PROFIT, false); } catch (_) { /* n\u00e3o-cr\u00edtico */ }\n            }\n            if (automation.logs) logger(tag, `[PAPER] BUY ${qty} ${symbolStr} @ ${price} (custo ${net.toFixed(2)} USDT, fee ${commission.toFixed(4)})`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/paperEngine.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:24:04)*
+
+
+## 🤖 Claude *(23:24:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "old_string": "        // SELL \u2014 fecha a posi\u00e7\u00e3o inteira da trilha (round-trip).\n        if (heldQty <= 0)\n            return { type: 'info', text: `[PAPER] ${key} sem posi\u00e7\u00e3o \u2014 venda ignorada.` };",
+  "new_string": "        // SELL \u2014 fecha a posi\u00e7\u00e3o inteira da trilha (round-trip).\n        if (heldQty <= 0)\n            return { type: 'info', text: `[PAPER] ${key} sem posi\u00e7\u00e3o \u2014 venda ignorada.` };\n\n        // No-loss (trilhas de Farm): guard de slippage \u2014 mesmo com bestBid>TARGET na condition, o fill (mid\u2212slippage)\n        // pode cair abaixo do custo\u00d7PROFIT. Adia a venda nesse caso (espelha o no-loss do Farm real: nunca no preju\u00edzo).\n        if (NOLOSS.has(strategy)) {\n            const ac = pos ? parseFloat(pos.avgCost) || 0 : 0;\n            const tgt = ac * NOLOSS_PROFIT;\n            if (ac > 0 && price <= tgt)\n                return { type: 'info', text: `[PAPER] ${key} no-loss: fill ${price.toFixed(6)} <= alvo ${tgt.toFixed(6)} \u2014 venda adiada.` };\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/paperEngine.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:24:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "old_string": "        await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty: 0, avgCost: 0, realizedPnl: realizedAcc });\n        await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: realized });",
+  "new_string": "        await paperRepository.upsertPaperPosition(strategy, symbolStr, { qty: 0, avgCost: 0, realizedPnl: realizedAcc });\n        // No-loss: posi\u00e7\u00e3o zerada \u2192 remove o alvo da MEMORY (indexes.every da venda falha \u2192 n\u00e3o reavalia flat).\n        if (NOLOSS.has(strategy)) {\n            try { await require('./beholder').deleteMemory(symbolStr, noLossTargetKey(strategy), null); } catch (_) { /* n\u00e3o-cr\u00edtico */ }\n        }\n        await paperRepository.insertPaperOrder({ automationId: automation.id, strategy, symbol: symbolStr, side, type, qty, price, fee: commission, net, realizedPnl: realized });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/paperEngine.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:24:54)*
+
+
+## 🤖 Claude *(23:24:54)*
+
+`paperEngine` (slice 3) pronto: target na compra, guard+clear na venda. Agora o setup das 2 trilhas novas (slopegate + farmnl) num script só (convenção do `setup-paper-trilhas`):
+
+## 🤖 Claude *(23:25:29)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-levers.js",
+  "content": "'use strict';\n/*\n * Setup IDEMPOTENTE das trilhas PAPER dos slices 2 e 3 do paper-validate (alavancas da pesquisa). Tudo [PAPER]\n * \u2192 broker VIRTUAL (pre\u00e7o+fee MAINNET reais, SEM Binance, SEM cofre, sob HALT). 2\u00aa palavra do name = TRILHA.\n *\n *   - SLOPEGATE (alavanca #5: cortar whipsaw do Trend): compra no golden cross S\u00d3 se o fundo (slope da SMA200)\n *     N\u00c3O estiver caindo \u2014 TREND_CROSS_1h==='golden' && TREND_SLOPE_1h!=='down' && REGIME!=='bear'. Vende no death.\n *     (TREND_SLOPE_1h \u00e9 escrito pelo regimeJob; N\u00c3O precisa de monitor.)\n *   - FARMNL (alavanca #1/#3: Farm no-loss DE VERDADE no 15m): compra no dip RSI_14_15m<35 (fora de bear E trend);\n *     vende S\u00d3 acima de custo\u00d71.012 \u2014 bestBid > MEMORY['<sym>:FARMNL_TARGET'] (alvo publicado pelo paperEngine no\n *     fill da compra; quando flat o alvo some \u2192 a venda nem reavalia). O guard de slippage do paperEngine refor\u00e7a.\n *     Usa o monitor 15m (RSI_14_15m, criado pelo setup-paper-mr15 \u2014 recriado aqui idempotente p/ ser auto-suficiente)\n *     e o BOOK (monitor de sistema).\n *\n * Uso (dentro do container, server no ar):  node scripts/setup-paper-levers.js   [DRY=true]\n *   env: EM/PW (...), PORT (3001), LEV_SYMBOLS (CSV, default BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT),\n *        FARM_INTERVAL (15m), FARM_RSI_LO (35), LEV_SIZE_MULT (4)\n *   (alvo/m\u00faltiplo do no-loss: PAPER_NOLOSS_PROFIT=1.012, PAPER_NOLOSS_STRATEGIES=farmnl \u2014 lidos pelo paperEngine)\n */\nconst { createClient, resolveEnv } = require('./lib/apiClient');\n\nconst SYMBOLS = (process.env.LEV_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);\nconst FARM_INTERVAL = process.env.FARM_INTERVAL || '15m';\nconst FARM_RSI_KEY = `RSI_14_${FARM_INTERVAL}`;\nconst FARM_RSI_LO = parseFloat(process.env.FARM_RSI_LO || '35');\nconst SIZE_MULT = parseFloat(process.env.LEV_SIZE_MULT || '4');\nconst DRY = String(process.env.DRY || '').toLowerCase() === 'true';\nconst { host, port, email: EM, password: PW } = resolveEnv({\n    hostEnv: 'PAPER_API_HOST',\n    emailEnvs: ['EM', 'DEFAULT_SETTINGS_EMAIL', 'TRADEUX_EMAIL'],\n    passwordEnvs: ['PW', 'DEFAULT_SETTINGS_PWD', 'TRADEUX_PASSWORD'],\n});\nconst client = createClient({ host, port });\nconst req = client.req;\nconst findAutomationByName = (token, name) => client.findAutomationByName(token, name, 80);\n\nasync function ensureMonitor(token, symbol) {\n    if (DRY) return `[DRY] monitor CANDLES ${symbol} ${FARM_INTERVAL} RSI_14`;\n    const r = await req('POST', '/monitors', token, {\n        type: 'CANDLES', symbol, interval: FARM_INTERVAL, indexes: 'RSI_14',\n        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,\n    });\n    if (r.status === 201) return `monitor CANDLES ${symbol} ${FARM_INTERVAL} criado (ATIVO \u2192 ${symbol}:${FARM_RSI_KEY})`;\n    if (r.status === 409) return `monitor CANDLES ${symbol} ${FARM_INTERVAL} j\u00e1 existe`;\n    throw new Error(`falha monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);\n}\n\nasync function ensureTemplate(token, symbol, name, side, quantity) {\n    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);\n    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;\n    if (found) return { id: found.id, msg: `template \"${name}\" j\u00e1 existe (id ${found.id})` };\n    if (DRY) return { id: 0, msg: `[DRY] template \"${name}\" (MARKET ${side} ${quantity})` };\n    const r = await req('POST', '/ordertemplates', token, {\n        name, symbol, type: 'MARKET', side, limitPrice: null, limitPriceMultiplier: 1,\n        stopPrice: null, stopPriceMultiplier: 1, quantity, quantityMultiplier: SIZE_MULT,\n        icebergQty: null, icebergQtyMultiplier: 1,\n    });\n    if (r.status !== 201) throw new Error(`falha template ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return { id: r.body.id, msg: `template \"${name}\" criado (id ${r.body.id})` };\n}\n\nasync function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {\n    const existing = await findAutomationByName(token, name);\n    if (existing) return `automa\u00e7\u00e3o \"${name}\" j\u00e1 existe (id ${existing.id}, isActive=${existing.isActive})`;\n    if (DRY) return `[DRY] automa\u00e7\u00e3o \"${name}\" INATIVA | idx: ${indexes} | cond: ${conditions}`;\n    const r = await req('POST', '/automations', token, {\n        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,\n        actions: [{ type: 'ORDER', orderTemplateId }],\n    });\n    if (r.status !== 201) throw new Error(`falha automa\u00e7\u00e3o ${name}: ${r.status} ${JSON.stringify(r.body)}`);\n    return `automa\u00e7\u00e3o \"${name}\" criada (id ${r.body.id}, INATIVA)`;\n}\n\nasync function setupSymbol(token, symbol) {\n    const K = k => `${symbol}:${k}`;\n    console.log(`\\n## ${symbol}`);\n    console.log('- ' + await ensureMonitor(token, symbol)); // 15m p/ o RSI da FARMNL (BOOK \u00e9 monitor de sistema)\n\n    // ---- SLOPEGATE (trend com slope-gate) ----\n    const sgBuy = await ensureTemplate(token, symbol, `[PAPER] Slopegate Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');\n    console.log('- ' + sgBuy.msg);\n    const sgSell = await ensureTemplate(token, symbol, `[PAPER] Slopegate Sell ${symbol}`, 'SELL', 'MAX_WALLET');\n    console.log('- ' + sgSell.msg);\n    const sgBuyCond = `MEMORY['${K('TREND_CROSS_1h')}']==='golden' && MEMORY['${K('TREND_SLOPE_1h')}']!=='down' && MEMORY['${K('REGIME')}']!=='bear'`;\n    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Slopegate Buy ${symbol}`, sgBuyCond, `${K('TREND_CROSS_1h')},${K('TREND_SLOPE_1h')},${K('REGIME')}`, sgBuy.id));\n    const sgSellCond = `MEMORY['${K('TREND_CROSS_1h')}']==='death'`;\n    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Slopegate Sell ${symbol}`, sgSellCond, `${K('TREND_CROSS_1h')}`, sgSell.id));\n\n    // ---- FARMNL (Farm no-loss 15m de verdade) ----\n    const fBuy = await ensureTemplate(token, symbol, `[PAPER] Farmnl Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');\n    console.log('- ' + fBuy.msg);\n    const fSell = await ensureTemplate(token, symbol, `[PAPER] Farmnl Sell ${symbol}`, 'SELL', 'MAX_WALLET');\n    console.log('- ' + fSell.msg);\n    const fBuyCond = `MEMORY['${K(FARM_RSI_KEY)}'].current<${FARM_RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;\n    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Farmnl Buy ${symbol}`, fBuyCond, `${K(FARM_RSI_KEY)},${K('REGIME')}`, fBuy.id));\n    // venda no-loss: dispara s\u00f3 quando bestBid > alvo (publicado pelo paperEngine no fill). Flat \u2192 FARMNL_TARGET ausente\n    // \u2192 indexes.every falha \u2192 n\u00e3o reavalia. O guard de slippage do paperEngine refor\u00e7a.\n    const fSellCond = `MEMORY['${K('BOOK')}'].current.bestBid > MEMORY['${K('FARMNL_TARGET')}']`;\n    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Farmnl Sell ${symbol}`, fSellCond, `${K('BOOK')},${K('FARMNL_TARGET')}`, fSell.id));\n}\n\n(async () => {\n    if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou DEFAULT_SETTINGS_EMAIL/PWD)'); process.exit(1); }\n    const token = await client.login(EM, PW);\n\n    console.log(`# Setup PAPER LEVERS \u2014 ${SYMBOLS.join(', ')} | Slopegate (golden && slope!=down && !bear) \u00b7 Farmnl (RSI_${FARM_INTERVAL}<${FARM_RSI_LO} \u2192 no-loss bestBid>custo\u00d71.012) \u00b7 size ${SIZE_MULT}\u00d7MIN_NOTIONAL${DRY ? '   [DRY-RUN]' : ''}`);\n    for (const s of SYMBOLS) await setupSymbol(token, s);\n    console.log(`\\n${DRY ? 'DRY-RUN OK.' : 'PRONTO \u2014 automa\u00e7\u00f5es [PAPER] Slopegate/Farmnl INATIVAS.'}`);\n    console.log(`Para ATIVAR: start no grupo paper (ou por id). P&L em GET /analysis/paper. Requer o backend com regimeJob(TREND_SLOPE) + paperEngine(no-loss) DEPLOYADOS. Mainnet CONGELADO.`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-levers.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:25:39)*
+
+
+## 🤖 Claude *(23:25:40)*
+
+Slice 2+3 código completo: `indexes.js` (key TREND_SLOPE), `regimeJob.js` (slope), `paperEngine.js` (no-loss), `setup-paper-levers.js` (2 trilhas). Chown + syntax-check + rodo a suíte (confirma que nada regrediu):
+
+## 🤖 Claude *(23:25:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/utils/indexes.js backend/src/regimeJob.js backend/src/paperEngine.js backend/scripts/setup-paper-levers.js\necho \"=== syntax check ===\"\nfor f in backend/src/utils/indexes.js backend/src/regimeJob.js backend/src/paperEngine.js backend/scripts/setup-paper-levers.js; do\n  sudo -n -u gcrux-tradeux bash -lc \"node -c '/home/gcrux-tradeux/tradeux/$f'\" 2>&1 && echo \"OK $f\" || echo \"FALHA $f\"\ndone\necho \"=== su\u00edte de simula\u00e7\u00e3o (deve seguir 6/6) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'node scripts/sim/run.js' 2>&1 | grep -E \"arquivos OK|FALHARAM\"",
+  "description": "Chown, syntax-check slice 2+3 files, run sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === syntax check ===
+> OK backend/src/utils/indexes.js
+> OK backend/src/regimeJob.js
+> OK backend/src/paperEngine.js
+> OK backend/scripts/setup-paper-levers.js
+> === suíte de simulação (deve seguir 6/6) ===
+> ```
+
+## 🤖 Claude *(23:25:51)*
+
+
+## 🤖 Claude *(23:25:52)*
+
+A suíte não rodou (faltou `cd backend` no shell do gcrux). Re-rodando do diretório certo:
+
+## 🤖 Claude *(23:25:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM\"",
+  "description": "Run sim suite from backend dir"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 9 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 14 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(23:27:27)*
+
+
+## 🤖 Claude *(23:27:30)*
+
+Uma sutileza importante que preciso fechar: a venda do `farmnl` (`bestBid > FARMNL_TARGET`, template MAX_WALLET) seria **EDGE-trigger** por padrão — e com o guard de slippage isso ESTRANDA a posição (igual ao bug que o `fb932a1` corrigiu no Farm real). Preciso torná-la **LEVEL-trigger** via `shouldntInvert` (mesma razão das isenções FARM_QTY/HARVEST que já existem). Releio o `shouldntInvert` pra adicionar a isenção:
+
+## 🤖 Claude *(23:27:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 859,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 859	    }
+> 860	}
+> 861	
+> 862	function shouldntInvert(automation, memoryKey) {
+> 863	    //return true;//descomente para desabilitar 'double check' (teste de condição invertida)
+> 864	    return ['GRID', 'TRAILING'].includes(automation.actions[0].type)
+> 865	        || automation.schedule
+> 866	        // Venda no-loss do Harvester: LEVEL-trigger (dispara enquanto bestBid>alvo), NÃO edge. O 'double check'
+> 867	        // invertido re-adicionaria um previous.bestBid<alvo que perde o revert rápido (o bucket nasce 3s após o
+> 868	        // fill, já acima do alvo → nunca há cruzamento fresco). O anti-empilhamento vira a trava HARVEST_SELLING
+> 869	        // (setada no place, liberada no estado terminal) → 1 venda por bucket, sem oversell.
+> 870	        || (automation.conditions && automation.conditions.indexOf('HARVEST_SELLING') !== -1)
+> 871	        // Venda no-loss do FARM: MESMO caso do Harvester — o lote (FARM_DCA) nasce/fica ACIMA do alvo cost*1.012,
+> 872	        // então NUNCA há cruzamento fresco bestBid<alvo→>alvo e o edge-trigger NUNCA dispara (bug AO VIVO 2026-06-21:
+> 873	        // o LTC cruzou 1x sob o cap antigo, foi BLOQUEADO, e nunca mais re-disparou apesar de >alvo → 0 vendas na
+> 874	        // história do Farm). Vira LEVEL-trigger; o oversell JÁ é barrado pela trava FARM_SELLING (SKIP no place,
+> 875	        // beholder.placeOrder qty='FARM_QTY') + FARM_DCA.qty→0 no fill. Detectado pelo template FARM_QTY (cacheado no BRAIN).
+> 876	        || (automation.actions && automation.actions[0] && automation.actions[0].orderTemplate
+> 877	            && automation.actions[0].orderTemplate.quantity === 'FARM_QTY')
+> 878	        || memoryKey.indexOf(':LAST_ORDER') !== -1
+> ```
+
+## 🤖 Claude *(23:27:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "old_string": "        || (automation.actions && automation.actions[0] && automation.actions[0].orderTemplate\n            && automation.actions[0].orderTemplate.quantity === 'FARM_QTY')\n        || memoryKey.indexOf(':LAST_ORDER') !== -1",
+  "new_string": "        || (automation.actions && automation.actions[0] && automation.actions[0].orderTemplate\n            && automation.actions[0].orderTemplate.quantity === 'FARM_QTY')\n        // Venda no-loss do FARM em PAPER (trilha farmnl): condition `bestBid > <STRAT>_TARGET`. MESMO caso \u2014 o alvo\n        // \u00e9 publicado pelo paperEngine no fill j\u00e1 ACIMA do pre\u00e7o de compra; o edge-trigger + guard de slippage\n        // ESTRANDARIA a posi\u00e7\u00e3o (cruza 1x, guard adia, nunca re-cruza). Vira LEVEL-trigger; o paperEngine gateia a\n        // execu\u00e7\u00e3o (bestBid>alvo + slippage). Marcador: '_TARGET' na condition (nenhuma automa\u00e7\u00e3o real usa).\n        || (automation.conditions && automation.conditions.indexOf('_TARGET') !== -1)\n        || memoryKey.indexOf(':LAST_ORDER') !== -1"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/beholder.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:27:56)*
+
+
+## 🤖 Claude *(23:27:57)*
+
+Bundle slice 2+3 completo (5 arquivos: indexes, regimeJob, paperEngine, beholder shouldntInvert, setup-levers). Chown + syntax + suíte (o `farmTriggers` testa o `shouldntInvert` — confirmo que a isenção '_TARGET' não regride):
+
+## 🤖 Claude *(23:28:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/beholder.js\nsudo -n -u gcrux-tradeux bash -lc \"node -c '/home/gcrux-tradeux/tradeux/backend/src/beholder.js'\" && echo \"syntax OK beholder\"\necho \"=== su\u00edte (farmTriggers usa shouldntInvert) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM\"",
+  "description": "Chown beholder, syntax-check, run suite to confirm shouldntInvert change safe"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK beholder
+> === suíte (farmTriggers usa shouldntInvert) ===
+> ```
+
+## 🤖 Claude *(23:28:05)*
+
+
+## 🤖 Claude *(23:28:06)*
+
+cwd do shell de novo — rodando com `cd` explícito:
+
+## 🤖 Claude *(23:28:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM\"",
+  "description": "Run sim suite with explicit cd to backend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 9 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 14 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(23:28:26)*
+
+
+## 🤖 Claude *(23:28:28)*
+
+Suíte 6/6 (90 asserts) — a isenção '_TARGET' não regride o `farmTriggers`. Bundle slice 2+3 pronto. Gate QA+TL em paralelo (toca `beholder`/`paperEngine`/`regimeJob` → gate antes do deploy):
+
+## 🤖 Claude *(23:28:51)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA gate do bundle slice 2+3",
+  "subagent_type": "qa-engineer",
+  "prompt": "QA gate de um bundle no TradeUX (bot Binance Spot, MAINNET dinheiro real). S\u00e3o os slices 2+3 do paper-validate (trilhas de pesquisa em PAPER, zero risco real) \u2014 mas tocam backend. Repo: /home/gcrux-tradeux/tradeux.\n\n## MUDAN\u00c7AS (working tree vs HEAD)\n`git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- backend/src/utils/indexes.js backend/src/regimeJob.js backend/src/paperEngine.js backend/src/beholder.js` + ler `backend/scripts/setup-paper-levers.js`.\n\n1. **`indexes.js`**: + `TREND_SLOPE: 'TREND_SLOPE'` no indexKeys (additivo).\n2. **`regimeJob.js`** (slice 2): no bloco `if (r.sma)`, ANTES da escrita do TREND_CROSS, escreve `MEMORY['<sym>:TREND_SLOPE_1h']` = 'up'|'flat'|'down' (slope da SMA lenta, banda-morta ~0,01%, dado insuficiente\u2192'flat'), PASSIVO (executeAutomations=false). Sinal NOVO; nenhum consumidor existente l\u00ea TREND_SLOPE.\n3. **`paperEngine.js`** (slice 3, no-loss): consts NOLOSS (Set, default 'farmnl') + NOLOSS_PROFIT (1.012). No fill de COMPRA de trilha no-loss: `require('./beholder').updateMemory(sym, '<STRAT>_TARGET', null, avgCost*PROFIT, false)` (best-effort). Na VENDA: guard de slippage (skip se price<=avgCost*PROFIT) + no fill limpa o alvo (`deleteMemory`). S\u00d3 afeta strategies em NOLOSS (farmnl); consistencia/macro/mr15 intactas.\n4. **`beholder.js` shouldntInvert** (real-path!): + cl\u00e1usula `|| (automation.conditions && automation.conditions.indexOf('_TARGET') !== -1)` \u2192 condition com '_TARGET' vira LEVEL-trigger (espelha a isen\u00e7\u00e3o FARM_QTY/HARVEST). Necess\u00e1rio pq a venda farmnl (`bestBid > <STRAT>_TARGET`) com edge-trigger + guard de slippage ESTRANDARIA a posi\u00e7\u00e3o.\n5. **`setup-paper-levers.js`** (novo): cria trilhas [PAPER] Slopegate (golden && TREND_SLOPE_1h!=='down' && !bear / death) e Farmnl (RSI_14_15m<35 / bestBid>FARMNL_TARGET) nos 4 s\u00edmbolos, INATIVAS.\n\n## VERIFICA\u00c7\u00c3O J\u00c1 FEITA\n- `node -c` OK nos 4. Su\u00edte de simula\u00e7\u00e3o 6/6 (90 asserts) \u2014 `farmTriggers` (que exercita shouldntInvert) intacto.\n- Rodar: `sudo -n -u gcrux-tradeux bash -lc 'node scripts/sim/run.js'` (de /app ou backend/).\n\n## AVALIE (c\u00e9tico)\n- **shouldntInvert '_TARGET' \u2014 risco no caminho REAL**: grep TODAS as conditions de automa\u00e7\u00f5es reais (setup-*.js + DB) por '_TARGET' \u2014 alguma automa\u00e7\u00e3o real (n\u00e3o-paper) casa? Se sim, mudaria o comportamento dela (edge\u2192level). Confirme que S\u00d3 a farmnl paper casa.\n- **regimeJob**: a escrita do slope \u00e9 additiva e n\u00e3o altera REGIME/TREND_CROSS? O `r.sma.slow.previous` sempre existe (sen\u00e3o\u2192'flat')? A ordem (slope ANTES do cross) est\u00e1 certa p/ o slope estar fresco quando o golden dispara?\n- **paperEngine**: o no-loss S\u00d3 afeta NOLOSS strategies? O `require('./beholder')` lazy tem ciclo? updateMemory/deleteMemory com value num\u00e9rico funciona (a condition l\u00ea MEMORY['...TARGET'] como n\u00famero)? best-effort n\u00e3o derruba o fill? A escrita do alvo \u00e9 passiva (n\u00e3o dispara automa\u00e7\u00e3o por si)?\n- **farmnl sell logic**: com level-trigger + guard de slippage + alvo na MEMORY, a venda dispara corretamente quando bestBid>alvo e N\u00c3O estranda? Quando flat, FARMNL_TARGET ausente \u2192 indexes.every falha \u2192 n\u00e3o reavalia? (confirme a sem\u00e2ntica do indexes.every em evalDecision)\n- **setup-levers**: idempotente? as conditions/indexes referenciam as chaves certas (TREND_SLOPE_1h, FARMNL_TARGET)?\n\nVeredito: PASS / PASS COM RESSALVAS / FAIL + achados com severidade (file:line). Tudo \u00e9 PAPER/sinal additivo, mas o shouldntInvert \u00e9 caminho real \u2014 foque a\u00ed."
+}
+```
+
+## 🤖 Claude *(23:29:05)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL gate do bundle slice 2+3",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (tech-lead) de um bundle no TradeUX (bot Binance Spot, MAINNET dinheiro real). Slices 2+3 do paper-validate (trilhas de pesquisa em PAPER), tocando backend. Repo: /home/gcrux-tradeux/tradeux.\n\n## CONTEXTO\nO dono pediu pra paper-validar 3 alavancas da pesquisa. Slice 1 (MR15) j\u00e1 est\u00e1 live (commit d902421). Este bundle = slice 2 (Trend slope-gate) + slice 3 (Farm no-loss real em paper). Tudo roda no broker VIRTUAL (zero risco real, sob HALT).\n\n## MUDAN\u00c7AS (vs HEAD)\n`git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- backend/src/utils/indexes.js backend/src/regimeJob.js backend/src/paperEngine.js backend/src/beholder.js` + ler `backend/scripts/setup-paper-levers.js`.\n1. `indexes.js`: +TREND_SLOPE (key, additivo).\n2. `regimeJob.js`: escreve MEMORY['<sym>:TREND_SLOPE_1h'] (slope da SMA lenta), passivo, antes do TREND_CROSS. Sinal novo.\n3. `paperEngine.js`: no-loss p/ strategies em NOLOSS (default 'farmnl') \u2014 publica alvo (custo\u00d71.012) na MEMORY no fill de compra, guard de slippage + limpa alvo na venda. Existentes (consistencia/macro/mr15) intactas.\n4. `beholder.js` shouldntInvert: condition com '_TARGET' \u2192 LEVEL-trigger (caminho REAL, mas s\u00f3 casa a farmnl paper).\n5. `setup-paper-levers.js`: trilhas [PAPER] Slopegate + Farmnl, INATIVAS, idempotente.\n\n## AVALIE (decis\u00e3o de OWNER de c\u00f3digo)\n- **Design**: surfacing o slope no regimeJob (additivo) vs alternativas \u2014 ok? O no-loss no paperEngine via \"alvo na MEMORY\" (a condition se auto-gateia) vs gate-no-engine \u2014 boa escolha (evita spam de avalia\u00e7\u00e3o quando flat)? O acoplamento paperEngine\u2192beholder.updateMemory \u00e9 aceit\u00e1vel?\n- **shouldntInvert no caminho real**: a cl\u00e1usula '_TARGET' \u00e9 segura (escopo: s\u00f3 conditions com '_TARGET', que hoje \u00e9 s\u00f3 a farmnl paper)? Risco de algum setup-*.js real usar '_TARGET' no futuro? Vale um marcador mais espec\u00edfico?\n- **Bundle vs separado**: faz sentido 2+3 num bundle/1 deploy (cada deploy reinicia o backend de trading)? \n- **Deploy**: seguro com o canary Farm rodando? Ordem? \u00c9 sistema LIVE (halted=false).\n- Manuten\u00e7\u00e3o/conven\u00e7\u00e3o; complexidade do slice 3 (vale o ganho de validar o no-loss vs a pesquisa j\u00e1 ter caracterizado o Farm como marginal?).\n\nVeredito: APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK + must-fix vs nice-to-have. Pragm\u00e1tico."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
