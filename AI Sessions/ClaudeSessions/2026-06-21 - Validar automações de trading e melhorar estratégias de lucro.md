@@ -5439,6 +5439,1309 @@ Chown + rodo contra o código atual (espero **RED** nos 2 casos que expõem os b
 > exit=0
 > ```
 
+## 🤖 Claude *(18:00:58)*
+
+
+## 🤖 Claude *(18:00:59)*
+
+**Tudo GREEN: integração 23/23, suíte 6/6 (89 asserções).** Os 2 bugs de produção corrigidos e provados RED→GREEN. Gate da Fase 3 (toca o caminho de ordem → QA+TL em paralelo):
+
+## 🤖 Claude *(18:01:19)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA gate dos 2 fixes + Fase 3",
+  "subagent_type": "qa-engineer",
+  "prompt": "QA gate de uma mudan\u00e7a no TradeUX (bot Binance Spot, **MAINNET dinheiro real**). \u00c9 a Fase 3 da su\u00edte de simula\u00e7\u00e3o + **2 bug-fixes de produ\u00e7\u00e3o** que uma verifica\u00e7\u00e3o adversarial (workflow) achou no `beholder.placeOrder`. Repo: /home/gcrux-tradeux/tradeux. Base j\u00e1 commitada = `fa26949`.\n\n## MUDAN\u00c7AS (working tree, vs HEAD `fa26949`)\n1. **2 fixes em `backend/src/beholder.js`** (caminho de ordem) \u2014 veja `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- backend/src/beholder.js`:\n   - **:551** (catch de ordem rejeitada): `text: \\`Order failed! \\` + err.body ? err.body : err.message` tinha bug de PRECED\u00caNCIA (`+` liga antes do `?:`) \u2192 sempre retornava `err.body`, que \u00e9 `undefined` p/ um `Error` sem `.body` (ex.: throw do riskGuard/HALT) \u2192 o texto reportado ao dono/Telegram virava `'undefined'`. Fix: `\\`Order failed! \\` + (err.body ? JSON.stringify(err.body) : err.message)`.\n   - **:573**: `STOP_TYPES.includes(order.type)` \u2192 `order.type` \u00e9 sempre `undefined` (o objeto `order` s\u00f3 tem `order.options.type`) \u2192 `stopPrice` N\u00c3O persistia no insert de uma ordem STOP n\u00e3o-trailing. Fix: `order.options.type`.\n2. **NOVO `backend/scripts/sim/integration.test.js`** (23 casos): dirige o `placeOrder`/`placeOco` REAL com Binance/DB/Telegram mockados (injeta no require.cache); o `assertWithinRisk` \u00e9 o REAL (capturado via seam) e \u00e9 chamado pelos fakes buy/sell/oco \u2192 HALT exercitado de verdade. Cobre: roteamento [PAPER], fail-closed, teto Farm, FARM_SELLING (set+anti-stack), HARVEST_SELLING, OCO (happy/\u22602pernas\u2192cancelOrderList/anti-stack), HALT bloqueando, persist\u00eancia BUY/SELL/2-pernas, MARKET-quote, bucket vazio fail-closed, e os 2 expositores de bug.\n\n## RODAR (como gcrux p/ n\u00e3o poluir logs/)\n`sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js'` \u2192 eu rodei: 6/6 OK, 89 asserts; e provei RED\u2192GREEN (antes do fix, integration dava 21/2 falhando EXATAMENTE nos 2 casos de bug).\n\n## AVALIE\n- Os 2 fixes est\u00e3o CORRETOS e COMPLETOS? Edge: o fix do :551 quebra algum caso onde `err.body` \u00e9 objeto/string (JSON.stringify de string vira com aspas \u2014 aceit\u00e1vel?)? O :573 \u2014 h\u00e1 outro ponto que l\u00ea `order.type` errado?\n- O caso STOP do teste prova a persist\u00eancia REAL (n\u00e3o tautologia)? E o caso HALT prova o texto via o `assertWithinRisk` REAL (n\u00e3o um throw forjado)?\n- A fidelidade do harness OCO (fake `oco`/`cancelOrderList`, `orderReports`, `getOpenOcoOrders`) bate com `placeOco` (beholder.js:331-433)?\n- Determinismo entre casos (estado de MEMORY/locks resetado)? Algum caso passaria com o c\u00f3digo quebrado?\n- Os fixes mudam COMPORTAMENTO observ\u00e1vel (texto de erro; stopPrice persistido) \u2014 risco de regress\u00e3o p/ consumidores (Telegram, reconcile, reports)?\n\nVeredito: **PASS / PASS COM RESSALVAS / FAIL** + achados com severidade. Espec\u00edfico (file:line)."
+}
+```
+
+## 🤖 Claude *(18:01:32)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL gate dos 2 fixes + Fase 3",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (tech-lead) no TradeUX (bot Binance Spot, **MAINNET dinheiro real**). Fase 3 da su\u00edte de simula\u00e7\u00e3o + **2 bug-fixes de produ\u00e7\u00e3o** no caminho de ordem. Repo: /home/gcrux-tradeux/tradeux. Base commitada = `fa26949` (Fatia 1+2 j\u00e1 mergeada).\n\n## CONTEXTO\nUma verifica\u00e7\u00e3o adversarial (workflow de 5 agentes) sobre a Fase 3 (integration.test.js) ACHOU 2 bugs latentes reais no `beholder.placeOrder` e deu o veredito \"n\u00e3o commitar a su\u00edte sem corrigi-los\". Eu escrevi os casos que EXP\u00d5EM os bugs (RED), corrigi, e ficou GREEN (su\u00edte 6/6, 89 asserts).\n\n## MUDAN\u00c7AS (vs HEAD `fa26949`)\n- **`backend/src/beholder.js`** (2 fixes; `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- backend/src/beholder.js`):\n  - **:551** preced\u00eancia no catch (`+` antes de `?:`) \u2192 texto de erro virava `'undefined'` p/ throw sem `.body` (HALT/teto/riskGuard). Fix: par\u00eanteses + `JSON.stringify(err.body)`.\n  - **:573** `order.type` (sempre undefined) \u2192 `order.options.type` \u2192 `stopPrice` agora persiste em STOP n\u00e3o-trailing.\n- **NOVO `backend/scripts/sim/integration.test.js`** (23 casos, integrado com mocks; `assertWithinRisk` real fiado nos fakes).\n\n## AVALIE (decis\u00e3o de OWNER de c\u00f3digo)\n- Os 2 fixes s\u00e3o corretos, m\u00ednimos e seguros p/ ir a um sistema LIVE? Mudam comportamento observ\u00e1vel (texto de erro; coluna stopPrice) \u2014 algum consumidor (reconcile de ordens, reports, Telegram, OCO) depende do comportamento ANTIGO? (ex.: `stopPrice` que antes era null e agora vem preenchido)\n- Os fixes devem ir JUNTO com a Fase 3 (acoplados ao teste que os pega) ou separados?\n- O design do teste integrado (inje\u00e7\u00e3o no require.cache, captura do assertWithinRisk via seam) \u00e9 sustent\u00e1vel/aceit\u00e1vel, ou cria fragilidade de manuten\u00e7\u00e3o?\n- Conv\u00e9m commitar agora (trunk-based direct-to-master, como fa26949) ou h\u00e1 must-fix?\n\nVeredito: **APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK** + must-fix vs nice-to-have, com racional. Pragm\u00e1tico: 2 fixes pequenos de corre\u00e7\u00e3o + teste; mas \u00e9 caminho de ordem em produ\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Tudo verificado. Runner propaga exit 1 com bug reintroduzido (CI pega regressão), `.env` gitignored, sem segredos. As mudanças de `backtest-results/` são ruído fora de escopo (artefatos regeneráveis, não fazem parte deste lote).\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nOs 2 fixes são corretos, mínimos e seguros para um sistema LIVE; a Fase 3 é um teste sólido, auto-descoberto pelo CI e isolado por processo. Verifiquei RED-then-GREEN de verdade (reverter cada fix derruba exatamente o caso correspondente) e que nenhum consumidor depende do comportamento antigo.\n\n### Racional dos fixes (caminho de ordem, dinheiro real)\n\n**Fix `:551` (texto do erro)** — Correto. Sem os parênteses, `'Order failed! ' + err.body ? err.body : err.message` avaliava `(string + undefined)` que é sempre truthy → retornava `err.body` (undefined num `Error` puro do HALT/teto/riskGuard) → o dono recebia `text: undefined` no Telegram. Risco de comportamento: **nulo** — só melhora observabilidade num branch de erro. O único consumidor de `.text` é `beholder.js:624` (`telegram(settings, result.text)`); `JSON.stringify(err.body)` é mais seguro que concatenar um objeto cru (evitava `[object Object]`).\n\n**Fix `:573` (`order.type` → `order.options.type`)** — Correto e comprovadamente latente. `order` só carrega `.options.type`; `order.type` era sempre `undefined`, então `STOP_TYPES.includes(undefined)` era sempre falso → a coluna `orders.stopPrice` ficava `null` num STOP/TAKE_PROFIT não-trailing. Ponto importante: **o stopPrice já chegava CORRETO à corretora** (em `:526` o cálculo usa `order.options.type` e grava `order.options.stopPrice` — o teste caso (9) prova `sellCalls[0].options.stopPrice === '43'`). O bug era **só de persistência/visibilidade no DB**, não de execução. Por isso o blast radius é contido.\n\n### Backward-compat dos consumidores de `stopPrice` (a pergunta-chave)\nNão há regressão. Verifiquei os leitores de `orders.stopPrice`:\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js:139` — `orderCopy.stopPrice = orderCopy.stopPrice ? parseFloat(...) : null` — null-safe; preencher o valor é benigno (o stream de execução já trazia o stopPrice real à parte).\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js` — só monta `stopPrice` no envio (não depende do valor histórico).\n- OCO persiste suas pernas por caminho próprio (`beholder.js:401`), não afetado.\n\nEm suma: passar de `null` para o valor real é **correção de dado**, não quebra leitor algum. Reports/Telegram/reconcile não dependem do null antigo.\n\n### Acoplamento fixes + Fase 3\nDevem ir **JUNTOS**. Os fixes nasceram da verificação adversarial sobre `integration.test.js` e os casos (8) e (9) são exatamente os pinos de regressão. Separar deixaria ou um teste vermelho (se o teste for sozinho) ou um fix sem rede (se o fix for sozinho). Coerente com trunk-based: 1 commit autocontido (fix + teste que o trava).\n\n### Design do teste integrado\nSustentável e aceitável para este nível de hot-path:\n- Injeção no `require.cache` **antes** de carregar `beholder` é a única forma de exercitar `placeOrder` ponta-a-ponta sem Binance/DB reais; o runner `run.js` roda cada arquivo em **processo separado** (`spawnSync`), então a poluição de cache/MEMORY não vaza para os outros 5 testes — confirmado 6/6.\n- O **seam do `assertWithinRisk`** (captura o real do exchange antes de sobrescrevê-lo no cache, e o chama dentro dos fakes de buy/sell/oco) é elegante: exercita o HALT de verdade pelo `placeOrder`, sem mockar o guard. Bom.\n\n### Must-fix\nNenhum.\n\n### Nice-to-have (não bloqueia o merge)\n1. **Espelho de STOP_TYPES/LIMIT_TYPES** — o teste redefine literais `STOP_TYPES`/`LIMIT_TYPES` locais (linha ~60) em vez de importar do `ordersRepository`. Se a constante real mudar, o fake fica defasado silenciosamente. Sugestão: derivar do `require('../../src/repositories/ordersRepository')` real, ou um self-assert de paridade.\n2. **`MAX_ORDER_NOTIONAL_USDT=0` no teste** desliga o teto por ordem (justificado: coberto em `riskGuard.test.js`). OK, mas vale 1 caso futuro garantindo que teto + Fase 3 coexistem no mesmo place (interação, não isolado).\n3. **`backtest-results/*.json/.md` modificados/untracked** estão no working tree mas são **fora de escopo** deste lote — não incluir no commit dos fixes (são artefatos regeneráveis).\n\n---\n\n## DECISÃO DE MERGE\n**Commitar AGORA**, direct-to-master (mesmo fluxo de `fa26949`), em **1 commit único**:\n- `backend/src/beholder.js` (os 2 fixes) + `backend/scripts/sim/integration.test.js`.\n- **NÃO** incluir `backend/backtest-results/*` (stage seletivo: `git add backend/src/beholder.js backend/scripts/sim/integration.test.js`).\n\nCondições (já satisfeitas, registradas para o operador):\n- `npm run test:sim` verde antes do push (6/6 — confirmado) e o CI (`.github/workflows/ci.yml:148`) roda o mesmo runner.\n- Push como root com a chave do `ubuntu` + `chown` de volta para `gcrux-tradeux` (gotcha de ownership do `.git`).\n- Sistema está LIVE (`halted=false`); estes fixes **não alteram execução** (stopPrice já ia certo à corretora; texto de erro só afeta branch de falha), então é seguro entrar com o canary Farm rodando — sem necessidade de janela de manutenção.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (fixes `:551`, `:573`/`:576`)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js` (Fase 3)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/run.js` (runner, auto-discovery)\n- `/home/gcrux-tradeux/tradeux/.github/workflows/ci.yml:148` (gate de CI)"}, {'type': 'text', 'text': "agentId: a2d090cf6fe420c63 (use SendMessage with to: 'a2d090cf6fe420c63' to continue this agent)\n<usage>subagent_tokens: 35423\ntool_uses: 17\nduration_ms: 103535</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tudo verificado. Segue o relatório.\n\n---\n\n## QA Gate — Fase 3 (sim suite) + 2 bug-fixes de produção em `beholder.js`\n\nEscopo: working tree vs `fa26949`. Arquivos: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (2 fixes) e `/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js` (novo, 23 casos). Os `backtest-results/*.json|md` modificados são artefatos, fora de escopo de money-path.\n\n### Mudança 1 — fix de precedência :551 (texto da ordem rejeitada)\n**VEREDITO: PASS**\n\n- A correção `\\`Order failed! \\` + (err.body ? JSON.stringify(err.body) : err.message)` está **correta e completa**. O bug era real: `+` liga antes de `?:`, então `(\'Order failed! \' + err.body)` (sempre truthy) era a condição → sempre retornava `err.body`, que é `undefined` para um `Error` puro (throw do riskGuard/HALT) → texto `\'undefined\'` no log/retorno.\n- **Mesmo padrão JÁ corrigido e consistente** em `beholder.js:387` (placeOco) e `automationsController.js:42` — bom; não ficou ponto residual com o bug.\n- **[INFO] Edge `JSON.stringify` de string** (pergunta do prompt): se `err.body` for string (o `node-binance-api` 1.x às vezes traz `body` como string JSON), o texto vira com aspas escapadas, ex.: `Order failed! "{\\"code\\":-2010}"`. É **aceitável** — feio mas legível, e a alternativa (concatenar objeto cru) daria `[object Object]`, pior. Não é regressão de comportamento crítico.\n- **Regressão p/ consumidores: nenhuma material.** O `text` deste retorno NÃO vai pro Telegram nem pro reconcile. O fluxo: `doAction`→`evalDecision` (`beholder.js:916`) só faz `break` no `type:\'error\'`; o alerta Telegram de falha (`:936`) usa `err.message` de um **throw**, não este `text` (bloqueio por HALT/teto retorna objeto, não lança — comentado em `:933`). O `ordersController` (UI) usa `res.json(err.body)` em path separado, intocado. Antes ia `\'undefined\'` ao log `A:<id>`; agora vai a causa — melhora pura.\n\n### Mudança 2 — fix :573/:576 (`order.options.type` na persistência do stopPrice)\n**VEREDITO: PASS**\n\n- Correção **correta e completa**. O objeto `order` (montado em `:473`) só tem `order.options.type` — `order.type` era sempre `undefined`, então `STOP_TYPES.includes(order.type)` era sempre `false` e `stopPrice` NÃO persistia num STOP não-trailing. O insert em `:586` (`stopPrice`) agora recebe o valor calculado.\n- **Não há outro ponto lendo `order.type` errado.** Varri `beholder.js`: todos os outros usos no money-path são `order.options.type` (`:507`, `:516`, `:526`, `:583`, `:585`) ou `orderTemplate.type`. O `app-em.js:139` lê `orderCopy.stopPrice` (já correto, do registro salvo). Coerente.\n- **Consistência interna confirmada:** o `order.options.stopPrice` que será persistido só é setado quando `STOP_TYPES.includes(order.options.type)` (`:526`), e o teste prova que o exchange recebe `options.stopPrice=\'43\'` E o insert recebe `stopPrice=\'43\'` — os dois agora alinhados.\n- **Regressão:** muda comportamento observável (stopPrice deixa de gravar NULL p/ STOP). Consumidores — reconcile/`app-em` `parseFloat(stopPrice)`, reports — só **ganham** o dado correto. Risco zero de quebra (NULL→valor válido).\n\n### Mudança 3 — `integration.test.js` (harness do money-path real)\n**VEREDITO: PASS**\n\nVerifiquei adversarialmente cada ponto que o prompt levantou:\n\n- **RED→GREEN provado por mim** (revert em cópia /tmp, não toquei o working tree):\n  - revertendo só :551 → `22 passed, 1 failed` (falha **exatamente** "HALT → texto do erro carrega a causa").\n  - revertendo só :573 → `22 passed, 1 failed` (falha **exatamente** "STOP → stopPrice PERSISTIDO").\n  - revertendo ambos → `21 passed, 2 failed`. Bate com o que você reportou. **Não são tautologias.**\n- **HALT via `assertWithinRisk` REAL (não throw forjado):** confirmei a ordem do seam programaticamente — `riskState.js` é injetado (offset 2305) ANTES de `require(\'../../src/utils/exchange\').assertWithinRisk` (offset 2472), e a `inject(\'utils/exchange.js\', fakeExchange)` vem DEPOIS (offset 5764). Logo `realAssert` é o `assertWithinRisk` genuíno de `exchange.js:33`, que lê o `riskState.isHalted()` injetado e dá `throw` com a mensagem `[riskGuard] HALT ativo (...) BLOQUEADA.` — o regex do teste (`/HALT|riskGuard|BLOQUEADA/`) casa a mensagem real. Genuíno.\n- **STOP não-tautológico:** o caso 9 usa `type:\'STOP_LOSS_LIMIT\'` com `quantity:\'5\'` literal → não é MARKET-por-quote, cai no branch `else` (`:510`), seta `order.options.stopPrice` via `calcPrice(...,true)` (`stopPrice:\'43\'`, mult 1), e prova `inserted[0].stopPrice === \'43\'`. Exercita o caminho real de persistência.\n- **Fidelidade OCO bate com `placeOco` (beholder.js:331-433):** o fake `oco` devolve `{orderListId, orderReports[], transactionTime}` e `.slice(0, OCO_LEGS)` simula a anomalia ≠2 pernas; a perna SL carrega `stopPrice: belowStopPrice` (igual ao `r.stopPrice` lido em `:414`). `getOpenOcoOrders` real recebe `automationId` — o fake ignora o arg e devolve `OPEN_OCO`, e a real é chamada com `automation.id` (`:342`); compatível. Cobre happy (2 pernas, mesmo `orderListId=7`), ≠2 pernas (`cancelOrderList` + error + 0 inserts) e anti-stack. Fiel ao contrato.\n- **Bucket vazio fail-closed (caso 13):** `FARM_DCA.qty=0` → `calcQty` lança em `:268` (real), e o teste prova `sellCalls=0` E `FARM_SELLING===undefined` (não travou) — o lock só seria posto APÓS o `exchange.sell`, que nunca foi chamado. Correto.\n- **Determinismo entre casos:** cada caso faz `reset()` (zera arrays) + reseta o estado de MEMORY relevante (`FARM_DCA`/`FARM_SELLING` via `updateMemory`/`deleteMemory`). `HALTED` é restaurado a `false` na mesma linha do caso 8 (`:144`). `OCO_LEGS`/`OPEN_OCO` restaurados após casos 11/12. **Nenhum caso passaria com o código quebrado** (provado acima).\n\n**[BAIXA — observação, não bloqueante]** O teto por notional fica OFF aqui (`MAX_ORDER_NOTIONAL_USDT=0`) por design (coberto em `riskGuard.test.js`), mas isso significa que esta suíte NÃO exercita a interação teto×placeOrder no caminho integrado (ex.: bloqueio de uma SELL FARM_QTY MARKET por qty-base que deriva preço do MINI_TICKER frio). É cobertura adjacente desejável num follow-up, não um furo do que foi proposto.\n\n**[INFO]** CI wiring confirmado: `package.json` tem `test:sim`, e o `ci.yml:148` + `ci-preflight.sh:106` rodam `scripts/sim/run.js` — a suíte entra no gate de CI de fato.\n\n### Testes que eu rodaria (e rodei)\n- `node scripts/sim/run.js` como gcrux → **6/6 arquivos OK, 89 asserts** (23+9+9+11+23+14). Confirmado.\n- RED→GREEN dos 2 bugs em cópia isolada → confirmado (22/1, 22/1, 21/2).\n- Verificação do seam (ordem de injeção riskState→capture→fakeExchange) → confirmado.\n- Grep de consumidores de `order.type`/`stopPrice`/`err.body` em todo o backend → nenhum ponto residual com os bugs; nenhum consumidor quebra com os novos comportamentos.\n\nNão rodei (e recomendo antes do merge, são o gate dual-dialect padrão): `bash scripts/ci-preflight.sh` completo (migrate+seed mysql+postgres + frontend build + agent `--check`). As mudanças não tocam migration/seed, então o risco aí é nulo — mas é o ritual.\n\n---\n\n## RECOMENDAÇÃO DE MERGE: **APROVAR**\n\nOs 2 fixes são corretos, completos, sem ponto residual e sem regressão para consumidores (Telegram/reconcile/reports só melhoram). O teste novo dirige o `placeOrder`/`placeOco` REAIS com o `assertWithinRisk` genuíno e provei RED→GREEN dos dois bugs de forma independente — não há tautologia nem caso que passe com o código quebrado. É exatamente o tipo de blindagem que o money-path em mainnet precisa.\n\nRessalva operacional (não-bloqueante de código): o sistema está **LIVE** (`halted=false`). Como toda mudança toca o hot-path de ordem, suba via deploy normal e confirme `GET /system/halt` + um boot limpo do backend; nenhum runtime-state (id2/id3/FARM_DCA) é afetado por estas mudanças.'}, {'type': 'text', 'text': "agentId: ada8e4b720ec3f2b2 (use SendMessage with to: 'ada8e4b720ec3f2b2' to continue this agent)\n<usage>subagent_tokens: 73178\ntool_uses: 21\nduration_ms: 146265</usage>"}]
+> ```
+
+## 🤖 Claude *(18:04:24)*
+
+
+## 🤖 Claude *(18:04:28)*
+
+Ambos os gates passaram:
+- **QA: PASS** — verificou RED→GREEN independentemente (reverter cada fix derruba exatamente o caso correspondente), sem ponto residual, sem regressão de consumidor (stopPrice null→valor é correção de dado; texto de erro só melhora). 1 ressalva BAIXA (teto×placeOrder integrado = follow-up).
+- **TL: APPROVE COM SUGESTÕES** — sem must-fix; **commitar agora**, 1 commit, excluir o scratch de backtest. Nice-to-have #1: derivar `STOP_TYPES`/`LIMIT_TYPES` do `ordersRepository` real em vez de literais (evita drift silencioso).
+
+A #1 é barata e previne um footgun real. Testo se dá pra requerer o `ordersRepository` real sem DB (pra os fakes herdarem as constantes):
+
+## 🤖 Claude *(18:04:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 node -e \"const o=require(\\\"./src/repositories/ordersRepository\\\"); console.log(\\\"STOP_TYPES=\\\"+JSON.stringify(o.STOP_TYPES)); console.log(\\\"LIMIT_TYPES=\\\"+JSON.stringify(o.LIMIT_TYPES)); console.log(\\\"orderTypes ok? \\\"+(o.orderTypes&&o.orderTypes.MARKET))\"' 2>&1 | grep -vE \"Sequelize|deprecated|ExperimentalWarning|node:internal|^\\(node:\" | head",
+  "description": "Test if real ordersRepository requires cleanly without DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> STOP_TYPES=["STOP_LOSS","STOP_LOSS_LIMIT","TAKE_PROFIT","TAKE_PROFIT_LIMIT"]
+> LIMIT_TYPES=["LIMIT","STOP_LOSS_LIMIT","TAKE_PROFIT_LIMIT"]
+> orderTypes ok? MARKET
+> ```
+
+## 🤖 Claude *(18:04:53)*
+
+
+## 🤖 Claude *(18:04:54)*
+
+Requer limpo sem DB, e confirma que meus literais batiam exatamente. Aplico a melhoria #1 (herdar as constantes reais, sem drift):
+
+## 🤖 Claude *(18:04:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "old_string": "const STOP_TYPES = ['STOP_LOSS', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT', 'TAKE_PROFIT_LIMIT'];\nconst LIMIT_TYPES = ['LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT'];\nconst fakeOrders = {\n    STOP_TYPES, LIMIT_TYPES,\n    orderTypes: { MARKET: 'MARKET', LIMIT: 'LIMIT', OCO: 'OCO', STOP_LOSS_LIMIT: 'STOP_LOSS_LIMIT' },\n    insertOrder: async (o) => { inserted.push(o); return { get: () => o, ...o }; },\n    getOpenOcoOrders: async () => OPEN_OCO,\n    calcFillFinancials: () => ({}),\n};",
+  "new_string": "// Herda STOP_TYPES/LIMIT_TYPES/orderTypes REAIS do ordersRepository (sem drift silencioso se mudarem) e s\u00f3\n// sobrescreve os m\u00e9todos que tocariam o DB. Requerer o real \u00e9 seguro (instancia Sequelize, N\u00c3O conecta) e\n// acontece ANTES de injetarmos o fake no cache logo abaixo.\nconst realOrders = require('../../src/repositories/ordersRepository');\nconst fakeOrders = {\n    ...realOrders,\n    insertOrder: async (o) => { inserted.push(o); return { get: () => o, ...o }; },\n    getOpenOcoOrders: async () => OPEN_OCO,\n    calcFillFinancials: () => ({}),\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:05:04)*
+
+
+## 🤖 Claude *(18:05:05)*
+
+Chown + rodo a suíte (confirma verde após a melhoria), depois commito a Fase 3:
+
+## 🤖 Claude *(18:05:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/scripts/sim/integration.test.js\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM\"\necho \"exit=${PIPESTATUS[0]}\"",
+  "description": "Run full suite after constant-mirror improvement"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 9 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 23 passed, 0 failed
+> riskGuard.test.js: 14 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> exit=0
+> ```
+
+## 🤖 Claude *(18:05:44)*
+
+
+## 🤖 Claude *(18:05:44)*
+
+Verde: 6/6, 89 asserções. Commitando a Fase 3 (escopo guardado: só `beholder.js` + `integration.test.js`):
+
+## 🤖 Claude *(18:05:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/beholder.js backend/scripts/sim/integration.test.js\nSTAGED=$(git diff --cached --name-only | sort | tr \"\\n\" \",\")\necho \"staged: $STAGED\"\nif [ \"$STAGED\" != \"backend/scripts/sim/integration.test.js,backend/src/beholder.js,\" ]; then echo \"ESCOPO ERRADO \u2014 abortando\"; exit 1; fi\nMSG=$(mktemp)\ncat > \"$MSG\" <<\"EOF\"\nfix(beholder): 2 bugs no caminho de ordem (texto de erro + stopPrice) + Fase 3 da suite (integrado)\n\nBugs achados por verificacao adversarial da suite de simulacao (workflow):\n- placeOrder:551 precedencia (+ liga antes do ?:) -> texto de ordem rejeitada virava \"undefined\"\n  p/ throw sem .body (HALT/teto/riskGuard) -> dono/Telegram perdia a causa. Fix: parenteses + JSON.stringify.\n- placeOrder:573 order.type (sempre undefined; order so tem .options.type) -> stopPrice NAO persistia\n  num STOP nao-trailing (a corretora ja recebia certo; era furo de DADO no DB). Fix: order.options.type.\n\nFase 3 (sim/integration.test.js, 23 casos): dirige placeOrder/placeOco REAIS com Binance/DB/Telegram\nmockados; assertWithinRisk REAL fiado nos fakes buy/sell/oco (HALT exercitado de verdade via placeOrder).\nCobre roteamento [PAPER]+fail-closed, teto Farm, FARM_SELLING (set por orderId + anti-stack),\nHARVEST_SELLING, OCO (happy/\u22602-pernas->cancelOrderList/anti-stack), persistencia BUY/SELL/2-pernas,\nMARKET-quote, bucket vazio fail-closed, e os 2 expositores de bug (RED->GREEN). Suite: 6 arquivos, 89 asserts.\n\nGate QA PASS + TL APPROVE (RED->GREEN verificado independente; sem regressao de consumidor).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit commit -F \"$MSG\" >/dev/null 2>&1 && echo \"commit OK\" || echo \"commit FALHOU\"\nrm -f \"$MSG\"\ngit log --oneline -1\n'",
+  "description": "Stage scoped, guard, and commit Fase 3"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> staged: backend/scripts/sim/integration.test.js,backend/src/beholder.js,
+> commit OK
+> b95338d fix(beholder): 2 bugs no caminho de ordem (texto de erro + stopPrice) + Fase 3 da suite (integrado)
+> ```
+
+## 🤖 Claude *(18:05:55)*
+
+
+## 🤖 Claude *(18:05:55)*
+
+Commit `b95338d` OK. Push:
+
+## 🤖 Claude *(18:05:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\ngit push \"https://x-access-token:${GITHUB_TOKEN_API}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]*@#x-access-token:***@#g\" | grep -vE \"^remote:.*vulnerab|^remote:.*security|^remote: $|dependabot\"\n'",
+  "description": "Push Fase 3 commit to origin/master"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To https://github.com/gabrielZarattini/tradeux.git
+>    fa26949..b95338d  HEAD -> master
+> ```
+
+## 🤖 Claude *(18:06:37)*
+
+
+## 🤖 Claude *(18:06:52)*
+
+Push confirmado: **`fa26949..b95338d → master`** ✅
+
+## 🎯 Marco — "continue" entregue
+
+Suas duas frentes estão completas, e a suíte **já provou seu valor**: foi construída pra "prever problemas com dinheiro real" e, no processo, **achou 3 bugs reais e latentes no money-path** que estavam invisíveis:
+
+| Bug | Impacto | Como pego |
+|---|---|---|
+| `getStableConversion` não exportada | taxa em BNB sumia do P&L (explodiria ao ligar o desconto BNB) | feeCalc.test (RED→GREEN) |
+| `placeOrder:551` precedência | erro de ordem rejeitada (HALT/teto) virava `undefined` no Telegram | verificação adversarial → integration.test |
+| `placeOrder:573` `order.type` | `stopPrice` não persistia no DB em ordem STOP | verificação adversarial → integration.test |
+
+**Suíte de simulação: 6 arquivos, 89 asserções, no CI** (`calcQty` 23 · `riskGuard` 14 · `feeCalc` 11 · `dailyCap` 9 · `farmTriggers` 9 · `integration` 23). Cobre dimensionamento, guardas (HALT/teto/cap), gatilhos no-loss, circuit-breaker, e o caminho de execução `placeOrder`/`placeOco` ponta a ponta.
+
+**2 commits no `master`:** `fa26949` (Fatia 1+2 + fix BNB) · `b95338d` (Fase 3 + 2 fixes do caminho de ordem). Ambos gated QA+TL. CI rodando.
+
+**Pesquisa de escala:** entregue + salva ([RESEARCH-scaling-149.md](/home/ubuntu/RESEARCH-scaling-149.md)). TL;DR: a $149 você prova o motor, não lucra; única alavanca grátis = **ligar o desconto BNB** (que nosso fix acabou de destravar); exponencial só com %-sizing **sobre edge validado no paper**.
+
+## Follow-ups menores (não-bloqueantes, mapeados pela verificação)
+- Suíte: `calcFillFinancials` real ponta-a-ponta (BNB-fee no insert), TRAILING_STOP, teto×`placeOrder` integrado.
+- Research: BNB-fee (ação sua na Binance) · paper-validar Farm 15m + Trend slope-gate.
+
+## Próximo
+Este é um ponto de selagem natural. Recomendo uma de duas:
+
+1. **Selar a sessão** (`/handoff`) — o estado está limpo, 2 commits no ar, suíte verde. Bom momento pra fechar.
+2. **Continuar** — ou fecho os follow-ups da suíte (TRAILING + `calcFillFinancials` real, que testa o fix do BNB ponta-a-ponta), ou começo a **paper-validar as alavancas** da pesquisa.
+
+Como quer seguir? (Se quiser, eu já checo o status do CI dos 2 pushes também.)
+
+## 👤 User *(22:12:29)*
+
+Ótimo faça isso e já analise antes a última mensagem do telegram.: 
+
+🤖 [AGENTE] Observação: LTCUSDT entrou em regime de tendência (gate trend). Isso fecha o gate de acumulação do farm (correto) e abre o gate de tendência, aguardando golden cross para comprar.
+
+## 🤖 Claude *(22:13:45)*
+
+
+## 🤖 Claude *(22:13:46)*
+
+Boa — primeiro **analiso a mensagem do Telegram com dados ao vivo** (não de memória), checo o **CI** dos 2 pushes, e aí continuo. Puxando o estado real (halt, grupos, regime do LTC, posição do Farm) + status do CI:
+
+## 🤖 Claude *(22:13:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\n# ---- TradeUX live ----\nTUX=$(sudo -n -u gcrux-tradeux bash -lc '\nset -a; source tradeux-mcp/.env 2>/dev/null; set +a\nTOK=$(curl -s -m8 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nH=\"authorization: $TOK\"\necho \"HALT: $(curl -s -m8 https://tradeux.gcrux.com/api/system/halt -H \"$H\")\"\necho \"\"\necho \"GROUPS: $(curl -s -m8 https://tradeux.gcrux.com/api/automations/groups -H \"$H\")\"\necho \"\"\necho \"LTC REGIME: $(curl -s -m8 https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/REGIME -H \"$H\")\"\necho \"LTC TREND_CROSS_1h: $(curl -s -m8 https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/TREND_CROSS_1h -H \"$H\")\"\necho \"LTC FARM_DCA: $(curl -s -m8 https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/FARM_DCA -H \"$H\")\"\n')\necho \"$TUX\"\necho \"\"\necho \"===== CI (GitHub Actions, \u00faltimos runs) =====\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source .env 2>/dev/null; set +a\ncurl -s -m10 -H \"Authorization: Bearer ${GITHUB_TOKEN_API}\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/gabrielZarattini/tradeux/actions/runs?per_page=3\" \\\n | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(r[\\\"head_sha\\\"][:7], r[\\\"display_title\\\"][:48], \\\"| status=\\\"+str(r[\\\"status\\\"]), \\\"conclusion=\\\"+str(r[\\\"conclusion\\\"])) for r in d.get(\\\"workflow_runs\\\",[])]\"\n'",
+  "description": "Fetch live TradeUX state and GitHub CI status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HALT: {"halted":false,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":null,"active":false},"sources":[],"source":null,"reason":null,"since":null}
+> 
+> GROUPS: {"groups":[{"key":"farm","label":"Farm (no-loss alts)","paper":false,"total":6,"active":3,"inactive":3,"ids":[13,14,11,12,9,10]},{"key":"trend","label":"Trend (SMA50/200)","paper":false,"total":8,"active":0,"inactive":8,"ids":[19,20,17,18,6,7,15,16]},{"key":"baseline","label":"Baseline (RSI BTC)","paper":false,"total":2,"active":0,"inactive":2,"ids":[2,3]},{"key":"paper","label":"Paper (research, sem risco)","paper":true,"total":16,"active":16,"inactive":0,"ids":[54,55,56,57,50,51,52,53,58,59,44,45,46,47,48,49]}]}
+> 
+> LTC REGIME: "trend"
+> LTC TREND_CROSS_1h: "none"
+> LTC FARM_DCA: {"qty":0,"cost":0}
+> 
+> ===== CI (GitHub Actions, últimos runs) =====
+> b95338d fix(beholder): 2 bugs no caminho de ordem (texto | status=completed conclusion=success
+> fa26949 test(sim): suite de simulacao do money-path (Fat | status=completed conclusion=success
+> fb932a1 fix(farm): venda no-loss vira LEVEL-trigger (sho | status=completed conclusion=success
+> ```
+
+## 🤖 Claude *(22:16:23)*
+
+
+## 🤖 Claude *(22:16:32)*
+
+Análise feita com dados ao vivo + CI conferido. Veredito:
+
+## 📩 Mensagem do Telegram — análise (estado ao vivo)
+Confirmei no sistema: `LTC REGIME="trend"` ✓, `TREND_CROSS_1h="none"`, `LTC FARM_DCA={qty:0}`, grupos `farm 3/6` (só vendas armadas) · `trend 0/8` (parado) · HALT `halted=false`.
+
+- ✅ **Fato correto:** LTC entrou em regime `trend` (bate com o ao vivo).
+- ✅ **"fecha o gate de acumulação do farm (correto)":** certo — mas **inócuo**: as compras do Farm já estão OFF (canary FARM-ONLY) e o `FARM_DCA` do LTC é **0** (já vendido, LTC está flat em USDT). Não há o que acumular.
+- ⚠️ **"abre o gate de tendência, aguardando golden cross para comprar":** **enganoso.** O grupo **Trend está PARADO (0/8 ativas)** — mesmo se viesse um golden cross, **nada compraria**. E `TREND_CROSS_1h="none"` (sem sinal). É exatamente a confusão **GATE ≠ ATIVO** (item 8 da doutrina / **D3** do handoff): o agente trata "gate aberto" como se a automação estivesse armada.
+- **Operacionalmente INERTE:** zero risco, nada a fazer no trade. É a recorrência do D3 — candidato a apertar a doutrina do agente (não-urgente).
+
+## ✅ CI
+Ambos os pushes verdes: `fa26949` **success** · `b95338d` **success** (e `fb932a1` success). Nada quebrou.
+
+## Continuando
+Vou fechar o follow-up de maior valor da suíte: um caso **end-to-end do fix do BNB** (placeOrder → insert → `calcFillFinancials` REAL → `computeNet` → `getStableConversion`) — capstone do bug-destaque — + o caminho **TRAILING_STOP**. Lendo o `calcFillFinancials` real pra montar o fill fiel:
+
+## 🤖 Claude *(22:16:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "offset": 231,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 231	function calcFillFinancials(result, symbol) {
+> 232	    if (!result) return {};
+> 233	    const executedQty = parseFloat(result.executedQty);
+> 234	    const cummQuote = parseFloat(result.cummulativeQuoteQty);
+> 235	    if (!executedQty || !cummQuote || isNaN(executedQty) || isNaN(cummQuote)) return {};
+> 236	
+> 237	    const out = { avgPrice: cummQuote / executedQty, net: cummQuote };
+> 238	    if (Array.isArray(result.fills) && result.fills.length) {
+> 239	        const commission = result.fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);
+> 240	        out.commission = `${commission}`;
+> 241	        out.isMaker = result.fills.every(f => f.isMaker === true);
+> 242	        const commAsset = result.fills[0].commissionAsset;
+> 243	        out.commissionAsset = commAsset;
+> 244	        // net fee-inclusive ciente do lado (taxa em QUALQUER asset → USDT). result.side vem na resposta da Binance.
+> 245	        const { net } = require('../utils/feeCalc').computeNet({
+> 246	            side: result.side, cummQuote, commission, commissionAsset: commAsset, symbol, avgPrice: out.avgPrice
+> 247	        });
+> 248	        out.net = net;
+> 249	    }
+> 250	    return out;
+> 251	}
+> 252	
+> 253	async function getFarmPosition(symbol) {
+> 254	    const settings = await settingsRepository.getDefaultSettings();
+> 255	    const isTestnet = settings.useTestnet;
+> 256	
+> 257	    // Escopa o bucket DCA às automações do FARM deste símbolo. O Trend Following compra o MESMO ativo na
+> 258	    // MESMA carteira; sem este filtro o FARM_DCA somaria também os BUYs do Trend → a venda no-loss do Farm
+> 259	    // (FARM_QTY) venderia/dumparia a posição do Trend junto (bug P0). E a SELL do Trend (death cross) não
+> 260	    // deve re-basear a janela do Farm. Por isso lastSell e os buys são filtrados pelas automações 'Farm %'.
+> 261	    const farmAutos = await automationModel.findAll({
+> 262	        where: { symbol, name: { [Sequelize.Op.like]: 'Farm %' } },
+> 263	        attributes: ['id'],
+> 264	        raw: true
+> 265	    });
+> ```
+
+## 🤖 Claude *(22:17:39)*
+
+
+## 🤖 Claude *(22:17:41)*
+
+`calcFillFinancials` usa `result.side` + `fills[].commissionAsset` → `computeNet` → `getStableConversion`. Adiciono o caso capstone (venda do Farm com taxa em BNB → o `net` no insert desconta via a função que era o bug) com um fill realista + o `calcFillFinancials` REAL:
+
+## 🤖 Claude *(22:17:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "old_string": "let HALTED = false;                 // kill-switch (flip\u00e1vel)\nlet OCO_LEGS = 2;                   // n\u00ba de pernas que a corretora \"devolve\" na OCO (2=happy)\nlet OPEN_OCO = [];                  // OCOs j\u00e1 abertas (anti-stacking)",
+  "new_string": "let HALTED = false;                 // kill-switch (flip\u00e1vel)\nlet OCO_LEGS = 2;                   // n\u00ba de pernas que a corretora \"devolve\" na OCO (2=happy)\nlet OPEN_OCO = [];                  // OCOs j\u00e1 abertas (anti-stacking)\nlet SELL_FILL = null;               // fill customizado da venda (default abaixo) \u2014 p/ o caso end-to-end de fee\nlet USE_REAL_FILL = false;          // usa o calcFillFinancials REAL (exercita computeNet/getStableConversion no insert)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:17:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "old_string": "    sell: async (symbol, quantity, price, options) => { realAssert('SELL', symbol, quantity, price, options); sellCalls.push({ symbol, quantity, price, options }); return { orderId: 2002, status: 'FILLED', executedQty: quantity, transactTime: 1, clientOrderId: 'cs' }; },",
+  "new_string": "    sell: async (symbol, quantity, price, options) => { realAssert('SELL', symbol, quantity, price, options); sellCalls.push({ symbol, quantity, price, options }); return SELL_FILL || { orderId: 2002, status: 'FILLED', executedQty: quantity, transactTime: 1, clientOrderId: 'cs' }; },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:17:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "old_string": "    insertOrder: async (o) => { inserted.push(o); return { get: () => o, ...o }; },\n    getOpenOcoOrders: async () => OPEN_OCO,\n    calcFillFinancials: () => ({}),\n};",
+  "new_string": "    insertOrder: async (o) => { inserted.push(o); return { get: () => o, ...o }; },\n    getOpenOcoOrders: async () => OPEN_OCO,\n    calcFillFinancials: (r, s) => USE_REAL_FILL ? realOrders.calcFillFinancials(r, s) : ({}),\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:18:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js",
+  "old_string": "    console.log(`\\nintegration.test.js: ${passed} passed, ${failed} failed`);",
+  "new_string": "    // (15) END-TO-END do fix do P&L-BNB: venda do Farm cujo fill tem a taxa em BNB \u2192 o insert usa o\n    //      calcFillFinancials REAL \u2192 computeNet \u2192 getStableConversion (o export que ERA o bug) \u2192 o net desconta a\n    //      taxa em BNB convertida a USDT. Prova a cadeia inteira (placeOrder\u2192insert\u2192net) com a taxa fora do quote.\n    reset(); USE_REAL_FILL = true;\n    updateMemory('BNBUSDT', 'BOOK', null, { current: { bestBid: 600, bestAsk: 600.5 } }, false); // p/ converter BNB\u2192USDT\n    updateMemory('LTCUSDT', 'FARM_DCA', null, { qty: 5, cost: 43 }, false); deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n    SELL_FILL = { orderId: 2002, status: 'FILLED', side: 'SELL', executedQty: '5', cummulativeQuoteQty: '220', fills: [{ commission: '0.0005', commissionAsset: 'BNB' }], transactTime: 1, clientOrderId: 'cs' };\n    r = await placeOrder(SET, { id: 10, name: 'Farm Sell LTCUSDT' }, action(FARM_SELL));\n    checkTrue('E2E BNB-fee \u2192 net do insert desconta a taxa BNB (220 \u2212 0.0005\u00d7600 = 219.7) + commissionAsset BNB',\n        inserted.length === 1 && Math.abs(parseFloat(inserted[0].net) - 219.7) < 0.01 && inserted[0].commissionAsset === 'BNB');\n    SELL_FILL = null; USE_REAL_FILL = false; deleteMemory('LTCUSDT', 'FARM_SELLING', null);\n\n    console.log(`\\nintegration.test.js: ${passed} passed, ${failed} failed`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/integration.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:18:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/scripts/sim/integration.test.js\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js' 2>&1 | grep -E \"passed|arquivos OK|FALHARAM|\u2717\"\necho \"exit=${PIPESTATUS[0]}\"",
+  "description": "Run suite with the BNB end-to-end capstone case"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 9 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 14 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> exit=0
+> ```
+
+## 🤖 Claude *(22:18:33)*
+
+
+## 🤖 Claude *(22:18:34)*
+
+Capstone verde: **integration 24/24, suíte 6/6 (90 asserções).** O caso end-to-end prova a cadeia inteira do fix do BNB (`placeOrder→insert→computeNet→getStableConversion`): `net = 219.7` (taxa BNB descontada). É test-only (sem mudança de produção) → commito direto (escopo só `integration.test.js`):
+
+## 🤖 Claude *(22:18:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/scripts/sim/integration.test.js\nSTAGED=$(git diff --cached --name-only | tr \"\\n\" \",\")\necho \"staged: $STAGED\"\nif [ \"$STAGED\" != \"backend/scripts/sim/integration.test.js,\" ]; then echo \"ESCOPO ERRADO \u2014 abortando\"; exit 1; fi\nMSG=$(mktemp)\ncat > \"$MSG\" <<\"EOF\"\ntest(sim): caso end-to-end do fix P&L-BNB (placeOrder->insert->computeNet->getStableConversion)\n\nVenda do Farm cujo fill tem a taxa em BNB -> o insert usa o calcFillFinancials REAL (via spread do\nordersRepository) -> o net desconta a taxa BNB convertida a USDT (220 - 0.0005x600 = 219.7).\nProva a cadeia inteira do fix do bug latente (getStableConversion nao exportada). Test-only,\nsem mudanca de producao. Suite: 6 arquivos, 90 asserts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ngit commit -F \"$MSG\" >/dev/null 2>&1 && echo \"commit OK\" || echo \"commit FALHOU\"\nrm -f \"$MSG\"\ngit log --oneline -1\nset -a; source .env 2>/dev/null; set +a\ngit push \"https://x-access-token:${GITHUB_TOKEN_API}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s#x-access-token:[^@]*@#x-access-token:***@#g\" | grep -vE \"vulnerab|security|dependabot|^remote: $\"\n'",
+  "description": "Commit and push the BNB end-to-end capstone test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> staged: backend/scripts/sim/integration.test.js,
+> commit OK
+> f152b99 test(sim): caso end-to-end do fix P&L-BNB (placeOrder->insert->computeNet->getStableConversion)
+> To https://github.com/gabrielZarattini/tradeux.git
+>    b95338d..f152b99  HEAD -> master
+> ```
+
+## 🤖 Claude *(22:19:04)*
+
+
+## 🤖 Claude *(22:19:05)*
+
+Push: **`b95338d..f152b99 → master`** ✅
+
+A mensagem do Telegram expôs o **D3** (doutrina do agente: GATE≠ATIVO) de novo — é out-of-scope desta suíte mas vale um fix separado. Registro como tarefa:
+
+## 🤖 Claude *(22:19:16)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Apertar doutrina do agente: GATE \u2260 ATIVO",
+  "prompt": "No TradeUX (bot Binance Spot, repo em /home/gcrux-tradeux/tradeux), o agente LLM (`tradeux-agent/src/agent.js`, no `SYSTEM_PROMPT`) continua confundindo \"gate de regime aberto\" com \"automa\u00e7\u00e3o armada/ativa\" \u2014 o problema \"D3 / ATIVO\u2260GATE\".\n\nExemplo real (Telegram, 2026-06-21): \"LTCUSDT entrou em regime de tend\u00eancia (gate trend)... abre o gate de tend\u00eancia, aguardando golden cross para comprar.\" \u2014 mas o grupo **Trend est\u00e1 PARADO (0/8 automa\u00e7\u00f5es ativas)** no canary FARM-ONLY, ent\u00e3o NENHUMA compra ocorreria num golden cross. O agente implicou uma execu\u00e7\u00e3o que n\u00e3o acontece.\n\nJ\u00e1 existe um item de doutrina \"ATIVO\u2260GATE\" (commit `a21dbae`, \"item 8\" do bloco DIVERG\u00caNCIAS ESPERADAS no prompt) mas n\u00e3o est\u00e1 prevenindo a frase enganosa. \n\nTarefa: apertar o `SYSTEM_PROMPT` para que, ao narrar mudan\u00e7a de regime/gate, o agente SEMPRE verifique o estado ATIVO do grupo (via o cockpit/`tradeux_get_cockpit` ou `/automations/groups`) antes de implicar que uma ordem vai/iria acontecer; quando o grupo est\u00e1 parado, deve dizer explicitamente \"o grupo X est\u00e1 parado, ent\u00e3o nenhuma ordem ocorrer\u00e1\" em vez de \"aguardando golden cross para comprar\". N\u00e3o mudar a l\u00f3gica de trade \u2014 \u00e9 s\u00f3 doutrina/fraseado do agente. Gate QA+TL antes de qualquer deploy. Validar relendo a mem\u00f3ria `tradeux-telegram-notifications` (doutrina anti-ru\u00eddo) e `tradeux-1m-scalping-and-cockpit` (GATE\u2260TRIGGER).",
+  "tldr": "O agente do Telegram diz \"aguardando golden cross para comprar\" mesmo com o grupo Trend parado (n\u00e3o compraria). Apertar a doutrina do prompt pra checar ATIVO antes de implicar execu\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1, task_id: task_f9721201). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. Currently pending: task_f9721201 "Apertar doutrina do agente: GATE ≠ ATIVO". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:19:24)*
+
+
+## 🤖 Claude *(22:19:32)*
+
+## 🏁 Marco completo
+
+A sessão entregou as duas frentes que você pediu, e a suíte de simulação **pagou o próprio investimento** — foi feita pra "prever problemas com dinheiro real" e achou **3 bugs reais latentes** no money-path antes que mordessem.
+
+**3 commits no `master` (CI verde nos 3):**
+| Commit | O quê |
+|---|---|
+| `fa26949` | Fatia 1+2 + **fix do P&L-BNB** (`getStableConversion` não exportada) |
+| `b95338d` | Fase 3 (integrado) + **fix `:551`** (texto de erro `undefined`) + **fix `:573`** (`stopPrice` não persistia) |
+| `f152b99` | Capstone end-to-end do fix BNB (placeOrder→insert→computeNet→getStableConversion) |
+
+**Suíte: 6 arquivos, 90 asserções, no CI** — cobre dimensionamento, guardas (HALT/teto/cap), gatilhos no-loss, circuit-breaker e o caminho de execução `placeOrder`/`placeOco` ponta a ponta.
+
+**Pesquisa de escala:** entregue + salva. **Telegram:** analisado (inerte, zero risco; só o recorrente D3, agora registrado como tarefa).
+
+## Recomendação
+Este é o ponto de selagem ideal — worktree limpo (só o scratch de backtest da pesquisa, fora dos commits), tudo no ar, CI verde, suíte gated. **Recomendo selar a sessão agora com `/handoff`** (você invoca; eu atualizo o `HANDOFF.md` com este estado).
+
+Se preferir seguir em vez de selar, os próximos naturais são: **paper-validar as alavancas** da pesquisa (Farm 15m + Trend slope-gate, pra responder "tem edge?") ou pegar a tarefa do **D3** (doutrina do agente). É sua chamada.
+
+## 👤 User *(22:22:27)*
+
+No TradeUX (bot Binance Spot, repo em /home/gcrux-tradeux/tradeux), o agente LLM (`tradeux-agent/src/agent.js`, no `SYSTEM_PROMPT`) continua confundindo "gate de regime aberto" com "automação armada/ativa" — o problema "D3 / ATIVO≠GATE".
+
+Exemplo real (Telegram, 2026-06-21): "LTCUSDT entrou em regime de tendência (gate trend)... abre o gate de tendência, aguardando golden cross para comprar." — mas o grupo **Trend está PARADO (0/8 automações ativas)** no canary FARM-ONLY, então NENHUMA compra ocorreria num golden cross. O agente implicou uma execução que não acontece.
+
+Já existe um item de doutrina "ATIVO≠GATE" (commit `a21dbae`, "item 8" do bloco DIVERGÊNCIAS ESPERADAS no prompt) mas não está prevenindo a frase enganosa. 
+
+Tarefa: apertar o `SYSTEM_PROMPT` para que, ao narrar mudança de regime/gate, o agente SEMPRE verifique o estado ATIVO do grupo (via o cockpit/`tradeux_get_cockpit` ou `/automations/groups`) antes de implicar que uma ordem vai/iria acontecer; quando o grupo está parado, deve dizer explicitamente "o grupo X está parado, então nenhuma ordem ocorrerá" em vez de "aguardando golden cross para comprar". Não mudar a lógica de trade — é só doutrina/fraseado do agente. Gate QA+TL antes de qualquer deploy. Validar relendo a memória `tradeux-telegram-notifications` (doutrina anti-ruído) e `tradeux-1m-scalping-and-cockpit` (GATE≠TRIGGER).
+
+## 🤖 Claude *(22:23:08)*
+
+
+## 🤖 Claude *(22:23:11)*
+
+O dono escolheu fazer o D3 agora (em vez de selar). Vou tratar como tarefa de produção do agente (gate QA+TL no fim). Primeiro a investigação — e a pergunta-chave é **por que o item 8 não previne**: é fraseado fraco, ou o agente **não tem o estado ATIVO no contexto** (só vê o gate/regime)? Se for falta de dado, prompt sozinho não resolve.
+
+## 🤖 Claude *(22:23:13)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "D3 \u2014 doutrina do agente (GATE\u2260ATIVO)",
+  "summary": "Apertar o SYSTEM_PROMPT do tradeux-agent pra n\u00e3o implicar execu\u00e7\u00e3o quando o grupo est\u00e1 parado; investigar se a causa \u00e9 fraseado ou falta de dado de estado-ativo no contexto"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "D3 — doutrina do agente (GATE≠ATIVO)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:23:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== agent.js: tamanho + marcadores de doutrina =====\"\nwc -l tradeux-agent/src/agent.js\ngrep -nE \"DIVERG|ATIVO|GATE|gate|grupo|parad|armad|cockpit|get_cockpit|groups|golden|item 8|8\\.|9\\.|kickoff\" tradeux-agent/src/agent.js | head -50",
+  "description": "Locate doctrine block and cockpit/group usage in agent.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== agent.js: tamanho + marcadores de doutrina =====
+> 184 tradeux-agent/src/agent.js
+> 19:- TREND (SMA 50/200) no BTC e nas alts: compra no golden cross e zera ESSA posição no death cross. Essa posição de trend é TÁTICA e SEPARADA do cofre de BTC (a venda no death é da automação fechando o trade de trend, não do cofre). É o motor de captura de bull. Gateado por != bear.
+> 20:- BASELINE (BTC): reversão à média (RSI<25 compra / RSI>75 vende), gateada por != bear, != trend e por um filtro de fluxo do taker (não compra dip sob capitulação vendedora). A venda da baseline é a automação id3 — HOJE PAUSADA; se um dia reativada, é venda tática legítima (RSI>75), não venda do cofre.
+> 21:- HARVESTER de dislocação (BTCUSDT, automações id22-25): **DESATIVADO DE PROPÓSITO (isActive=0)** desde 2026-06-17. Descoberta validada: o edge era ARTEFATO de TESTNET — o gatilho ancorava no lastPrice da MAINNET, que no mainnet É o próprio preço atual → a dislocação de -3% NUNCA ocorre; está MORTO no mainnet como está. **NÃO sugira reativar id22-25** — a inatividade é CORRETA e intencional. (Um re-design re-ancorado a HIGH ROLANTE está em pesquisa; se validar, vai PRIMEIRO pro Paper Engine, NÃO reativando as antigas.) Se a doutrina histórica disser "harvester desgateado opera em bear", ignore — o módulo NÃO está operando hoje.
+> 22:- PAPER ENGINE (research, sem risco): automações com prefixo **[PAPER]** (trilhas "Consistencia"/"Macro" em paper) são SIMULAÇÃO — um broker VIRTUAL que preenche ao preço+fee REAIS da mainnet mas NÃO envia ordem à Binance e NÃO toca o cofre nem USDT real. O P&L paper vem em tradeux_get_cockpit (campo 'paper': totais + por trilha) e em GET /analysis/paper. Trate como OBSERVAÇÃO DE RESEARCH (qual trilha tem edge), NUNCA como posição/venda real — e NÃO alarme sobre ordens [PAPER]. A trilha de FREQUÊNCIA/verde-diário foi REFUTADA por backtest (EV<0 líquido) e NÃO existe — não a procure nem sugira.
+> 23:- REGIME-GATING é o coração: em BEAR, as COMPRAS de farm/trend/baseline ficam em CAIXA (protegido) — e o harvester está DESATIVADO (acima), então HOJE nada compra em bear. O edge validado é DRAWDOWN MENOR por não pescar faca caindo — NÃO é alpha. Farm/trend parados em bear é o comportamento CORRETO e desejado, não uma oportunidade perdida.
+> 26:AMBIENTE (crucial — confirme a cada ciclo com tradeux_get_cockpit; NÃO assuma)
+> 27:- O ambiente REAL e o estado de trading vêm de tradeux_get_cockpit: env.useTestnet (mainnet vs testnet) e env.tradingHalt (kill-switch). É a FONTE DE VERDADE — confie nela, não no que este prompt assume.
+> 29:- Se env.useTestnet=FALSE (MAINNET REAL): o capital é REAL (e pequeno); jamais sugira aumentar risco. Em AMBOS os casos o que importa é a MECÂNICA (regime, sinais, gates, coerência das automações), NÃO maximizar "valor total".
+> 30:- Se env.tradingHalt=TRUE: o sistema está CONGELADO (kill-switch) — nenhuma ordem real sai; trate tudo como observação, não aja. HALT é estado CONHECIDO do operador — ver DIVERGÊNCIAS ESPERADAS (não reportar a cada ciclo).
+> 33:- Ler o estado de forma ECONÔMICA (orçamento de ~12 tool calls por ciclo — NÃO o estoure; CONCLUA com folga): por símbolo (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT) faça 1× tradeux_get_regime(symbol) — já traz o regime instantâneo (.regime) + o regime do GATE (.gate.regime, histerético, valor OPERATIVO) + RSI/ADX 1h — e 1× tradeux_get_oracle_state(symbol) para o fluxo; mais 1× tradeux_get_last_orders. Isso basta para o panorama (~9 leituras). Só busque um índice extra com tradeux_get_memory(symbol, index=CHAVE_EXATA — ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW'; passe a chave completa em index, sem o campo interval) se for investigar algo pontual.
+> 34:- 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+> 36:- Avaliar COERÊNCIA com a tese: o regime está sendo respeitado? alguma automação deveria ter disparado e não disparou (ou o contrário — MAS veja (8): grupo INATIVO/parado pelo operador, ex. canary, NÃO é anomalia)? há venda de BTC INDEVIDA — isto é, FORA do módulo tático VIVO (trend id7), vendendo MAIS que a posição tática (TREND_QTY)? (o harvester id22-25 está DESATIVADO — uma venda id25 HOJE seria anomalia a sinalizar, não rotina; o trend corta perda por desenho.) Ordens manuais (sem automationId) costumam ser do dono/operador (testes, ajustes) — registre no diário; só alarme se drenarem o cofre de forma recorrente. NUNCA compare o RSI ou preço atual da memória com o momento de execução de uma ordem passada para alegar incoerência, pois o mercado se moveu e o Beholder não guarda histórico de RSI no momento do preenchimento. A memória do Beholder reflete apenas o estado real-time atual (no segundo da sua leitura). Para divergências cockpit×oráculo (regime/fluxo/gates), consulte DIVERGÊNCIAS ESPERADAS (abaixo) ANTES de chamar de incoerência.
+> 37:- DIVERGÊNCIAS ESPERADAS (NÃO são incoerência/anomalia — NÃO reporte como achado NEM notifique o dono): o cockpit lê as MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oráculos vivos; tradeux_get_regime/tradeux_get_oracle_state são leituras VIVAS separadas → delta pequeno cockpit×vivo é TIMING, não fonte paralela. Itens:
+> 38:  (1) REGIME: instantâneo (tradeux_get_regime.regime) ≠ gate (.gate.regime) na fronteira do ADX = HISTERESE — use .gate.regime (valor operativo); diferir por 1 nível é esperado.
+> 39:  (2) FLUXO eixo IDADE: compare pela IDADE (cockpit flow.ageSec) — imbalance velho mais negativo que o vivo é o MESMO sinal em instantes diferentes.
+> 44:  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> 45:  (8) ATIVO ≠ GATE: uma automação/grupo INATIVO (parado) com o gate ABERTO NÃO é anomalia — LIGAR/PARAR é decisão do OPERADOR pelo painel de grupos (ex.: CANARY = só um grupo ativo por vez; hoje pode ser só o Farm, com Trend e Baseline PARADOS de propósito). Gate liberado = o regime PERMITE a estratégia; NÃO significa que a automação DEVA estar armada (o estado de ATIVAÇÃO vive em /automations/groups e no painel de grupos de Settings — separe "gate aberto" de "grupo armado"). NÃO reporte "a automação X deveria estar ativa / deveria ter disparado" baseado no gate, NEM notifique o dono — ele controla a ativação. Só sinalize se o ESTADO de ativação mudar SOZINHO, sem ação do operador (ex.: automação que estava ON sumiu do BRAIN).
+> 46:  Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> 47:- Sinalizar EVENTOS úteis ao operador: regime SAIU do bear (gatilho p/ ligar o funil / próximas fases); golden/death cross real; farm comprou e/ou lucrou; alt com comportamento ruim no farm; algo travado/stale.
+> 48:- NOTIFICAR O DONO via tradeux_notify_owner (Telegram, one-way) quando: precisar de APROVAÇÃO p/ algo sensível, estiver BLOQUEADO e precisar de ajuda, ou um EVENTO importante acontecer (ex.: saída do bear, cross real, anomalia/incoerência NOVA). É one-way: NÃO espere resposta no ciclo — após notificar, siga o caminho conservador (não agir). No MÁXIMO 1-2 notificações por ciclo. ANTI-SPAM (regra dura): o kickoff de cada ciclo traz a lista de NOTIFICAÇÕES JÁ ENVIADAS recentemente — confira ANTES de notificar; se o ASSUNTO já está na lista (mesmo que com outras palavras), NÃO reenvie. Notificação repetida ensina o dono a ignorar o canal. Rotina sem novidade NÃO notifica. NADA da lista DIVERGÊNCIAS ESPERADAS é notificável (já são esperados). Há também um dedup em CÓDIGO: se a chamada voltar com "notificação SUPRIMIDA — assunto duplicado", o assunto JÁ foi enviado — NÃO reformule pra burlar; consolide no diário (só reformule se for evento REALMENTE novo, destacando o que MUDOU). TODA notificação em português brasileiro (pt-BR).
+> 57:6. IDIOMA: TUDO que você escreve — diário E notificações ao dono — é em PORTUGUÊS BRASILEIRO (pt-BR); somente termos técnicos podem ficar em inglês (FILLED, golden cross, spread, bid/ask...). Nunca escreva uma notificação inteira em inglês.
+> 84:// Cap mecânico de notificações por ciclo (defesa em profundidade do gate TL): a regra do prompt
+> ```
+
+## 🤖 Claude *(22:23:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== cockpitService: exp\u00f5e estado ATIVO x GATE por grupo? =====\"\ngrep -rniE \"ativo|active|gate|grupo|group|paper|status\\.paper|reconcil\" backend/src/utils/cockpitService.js 2>/dev/null | head -30\necho \"\"\necho \"===== quem monta status.paper / gate\u00d7ativo p/ o agente (getCockpitStatus) =====\"\ngrep -rnE \"getCockpitStatus|status\\.paper|gate.?x.?ativo|ativo|grupos|groups\" backend/src/*.js backend/src/utils/*.js 2>/dev/null | grep -iE \"cockpit|gate|ativo|group\" | head -20",
+  "description": "Check if cockpit exposes per-group active state to the agent"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== cockpitService: expõe estado ATIVO x GATE por grupo? =====
+> backend/src/utils/cockpitService.js:58: * o cockpitJob compõe regime/flow/gates lidos da MEMORY por cima disto.
+> 
+> ===== quem monta status.paper / gate×ativo p/ o agente (getCockpitStatus) =====
+> backend/src/app-em.js:221:        // (calcQty capa na CARTEIRA, não no bucket → vazaria o cofre). Usa o `z` cumulativo do
+> backend/src/app-em.js:233:            // <= poeira (ou negativo, se o bucket já estava menor) → zera: mesma semântica do FILLED
+> backend/src/app-em.js:540:// busca o status real na corretora (autoritativo) e atualiza — cobre um executionReport
+> backend/src/dailyCapJob.js:41:// ativo REAL temporariamente frio → fail-safe (espera); LD de qualquer OUTRA base = dust de Earn sem par → ignora.
+> backend/src/dailyCapJob.js:112:            // 'LD'+ativo = wrapper do Binance Simple Earn (LDLTC = LTC em Earn, LDUSDC = USDC em Earn...). Tem valor
+> backend/src/dailyCapJob.js:113:            // REAL e resgatável → marca a mercado pelo ativo SUBJACENTE (strip 'LD'). Sem isto, um saldo que a Binance
+> backend/src/dailyCapJob.js:121:                if (TRACKED_BASES.has(under)) { cold.push(coin); continue; } // Earn de ativo REAL frio → fail-safe
+> backend/src/dailyCapJob.js:189:                logger('system', `[dailyCap] 🛑 CAP DISPARADO — ${reason}. HALT ativo (bloqueia TODAS as ordens).`);
+> backend/src/dailyCapJob.js:193:                    `🚫 HALT ativo: TODAS as ordens bloqueadas (inclusive venda protetiva). ` +
+> backend/src/cockpitJob.js:11: * buy/sell/oco. COCKPIT é informativo (o agente lê via MCP/MEMORY); diferente de REGIME/FAIR, NÃO gateia nada,
+> backend/src/cockpitJob.js:190:    logger('cockpit', `Cockpit job iniciado READ-ONLY (intervalo ${REFRESH_MS}ms; lookback ${LOOKBACK}; break-even ${BREAKEVEN_PCT}%). Informativo — não gateia automação.`);
+> backend/src/paperReviewJob.js:55:                        : 'FRACA (net negativo) — candidata a descartar';
+> backend/src/regimeJob.js:12: *    PASSIVO, lido quando o tick de preço/RSI dispara a automação — não um gatilho ativo (evita
+> backend/src/server.js:64:    // agente LER/REPORTAR. Informativo — NÃO gateia automação, NÃO emite ordem, NÃO toca o money-path.
+> backend/src/beholder.js:264:        // NÃO a carteira inteira do ativo — MAX_WALLET vendia tudo e DUMPAVA junto a posição do Trend
+> backend/src/beholder.js:265:        // Following co-localizada na mesma carteira (mesmo ativo). Falha-fechado se vazio (sem bucket, não vende).
+> backend/src/utils/paperService.js:4:// (status.paper, p/ o agente LER via tradeux_get_cockpit). Por trilha: realizado (round-trips) + não-realizado
+> backend/src/utils/exchange.js:36:        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) — ${action} ${symbol} BLOQUEADA.`;
+> backend/src/utils/exchange.js:226:    // O monitor BOOK fica inativo por padrão (o book é simulado a partir do miniTicker em
+> ```
+
+## 🤖 Claude *(22:23:56)*
+
+
+## 🤖 Claude *(22:24:00)*
+
+Achado-chave: o **item 8 EXISTE** (agent.js:45) mas cobre só "não ALARMAR que automação X deveria estar ativa". A frase do Telegram foi **narração neutra que implica execução** ("aguardando golden cross para comprar") — fora do escopo do item 8. E o item 8 diz que "o estado de ATIVAÇÃO vive em `/automations/groups`" — o que sugere que **o agente NÃO tem o estado ativo no contexto** (só vê o gate/regime). Se for isso, prompt sozinho não resolve — preciso surfacing o estado-ativo no cockpit. Confirmando o que o `tradeux_get_cockpit` entrega:
+
+## 🤖 Claude *(22:24:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== cockpitJob: getStatus / o que vai pro agente =====\"\ngrep -nE \"getCockpitStatus|function getStatus|status\\.|paper|groups|active|ativo|gate\" backend/src/cockpitJob.js | head -30\necho \"\"\necho \"===== /analysis/cockpit controller: monta o payload do agente =====\"\ngrep -rnE \"cockpit|groups|getCockpitStatus|applyAutomationActive|getStatus\" backend/src/controllers/analysisController.js 2>/dev/null | head -20\necho \"\"\necho \"===== a fonte do painel 'gate \u00d7 ativo' (a21dbae) \u2014 frontend-only ou backend? =====\"\ngrep -rliE \"gate.{0,3}ativo|gate.{0,3}x.{0,3}ativo|grupos|groups\" frontend/src 2>/dev/null | head\ngrep -rnE \"automations/groups|/cockpit\" frontend/src 2>/dev/null | head",
+  "description": "Determine if cockpit payload to agent includes group active-state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== cockpitJob: getStatus / o que vai pro agente =====
+> 8: *   - estado DERIVADO dos gates de COMPRA (view do cockpit; limiares transparentes no payload)
+> 11: * buy/sell/oco. COCKPIT é informativo (o agente lê via MCP/MEMORY); diferente de REGIME/FAIR, NÃO gateia nada,
+> 15: * a banda MC é DRIFTLESS (p50 ≡ preço). `gates.buyAllowed` é a VIEW do cockpit (limiar COCKPIT_FLOW_BUY_MIN
+> 16: * exposto no payload) — NÃO é o gate exato da id2 ao vivo (esse vive na condition da automação no banco); por
+> 17: * isso o payload carrega `flowBuyMin` p/ ser transparente. A defasagem de SNAPSHOT (flow/regime/gates velhos no
+> 29: *   COCKPIT_FLOW_BUY_MIN (default -0.4)     — imbalance mínimo p/ a VIEW "fluxo não-capitulação" do gate
+> 50:const FLOW_STALE_MS = 5 * 60 * 1000; // fluxo mais velho que isto não conta p/ a view do gate (fail-safe)
+> 77:// Estado DERIVADO dos gates de compra POR MÓDULO (view do cockpit, limiares transparentes). NÃO emite ordem.
+> 82://   - BASELINE (BTC id2): farm + filtro de FLUXO não-capitulação (setup-flow-gate.js) — É O ÚNICO módulo de
+> 83://     acumulação flow-gated. Aplicar o filtro de fluxo às ALTS MENTE (vetaria entrada que a farm viva FARIA).
+> 84://   - TREND compra no golden cross: gated só por != bear; HARVESTER é DESGATEADO (opera em qualquer regime).
+> 85:// `buyAllowed` = gate de ACUMULAÇÃO do SÍMBOLO: FARM (alts, sem fluxo) ou BASELINE (BTC, com fluxo), conforme FLOW_GATED.
+> 87:// Símbolos cujo módulo de acumulação gateia por FLUXO: SÓ a baseline BTC (id2). Default BTCUSDT; env sobrescreve.
+> 100:    // baseline SÓ existe p/ símbolo flow-gated (BTC). Pra ALT não há módulo baseline (o gate de acumulação é o FARM):
+> 101:    // expor baseline=true p/ alt é um gate-FANTASMA que o agente lê como "incoerência" (baseline aberto c/ RSI>25).
+> 102:    // → baseline=null (n/a) p/ não-flow-gated; buyAllowed e farm ficam INTACTOS (buyAllowed usa baselineRaw p/ BTC).
+> 104:    const buyAllowed = flowGated ? baselineRaw : farm;  // alt: farm (sem fluxo); símbolo flow-gated (BTC): baseline
+> 110:        const cap = (flowFresh && !flowOk) ? ` — fluxo em capitulação (imbalance ${flow.imbalance}) é INFORMATIVO, NÃO gateia o farm` : '';
+> 116:    // doctrine=true (auditoria): estes gates são a DOUTRINA por regime (o que a estratégia FARIA), NÃO confirmam
+> 117:    // que a automação correspondente (ex.: baseline id2, hoje isActive=0) está ATIVA — o gate VIVO mora na
+> 119:    return { regime, regimeOk, flowOk, flowFresh: !!flowFresh, flowBuyMin: FLOW_BUY_MIN, flowGated, farm, baseline, trend, harvesterUngated: true, buyAllowed, reason, doctrine: true };
+> 122:// Reaplica regime/flow/gates FRESCOS (leituras baratas da MEMORY) sobre um snapshot, preservando a
+> 126:// Aqui flow/regime/gates do payload SEMPRE refletem a MEMORY no instante da LEITURA, e expõe a idade do
+> 137:    const gates = deriveGates(regime, flowRaw, symbol);
+> 138:    return { ...snap, regime, flow, gates, flowAgeMs };
+> 160:                const gates = deriveGates(regime, flow, symbol);
+> 168:                    gates,
+> 190:    logger('cockpit', `Cockpit job iniciado READ-ONLY (intervalo ${REFRESH_MS}ms; lookback ${LOOKBACK}; break-even ${BREAKEVEN_PCT}%). Informativo — não gateia automação.`);
+> 199:function getStatus() {
+> 203:        // freshen: regime/flow/gates no instante da leitura (mata a defasagem de até REFRESH_MS do snapshot);
+> 
+> ===== /analysis/cockpit controller: monta o payload do agente =====
+> backend/src/controllers/analysisController.js:5:const cockpitJob = require('../cockpitJob');
+> backend/src/controllers/analysisController.js:28:        // da UI ("Market Regime" = instantâneo). As automações e o cockpit gateiam pelo regime HISTERÉTICO
+> backend/src/controllers/analysisController.js:30:        // histerese evita que o agente compare o instantâneo com o cockpit (=gate) e chame de "contradição":
+> backend/src/controllers/analysisController.js:51:    res.json(regimeJob.getStatus());
+> backend/src/controllers/analysisController.js:71:    res.json(flowJob.getStatus());
+> backend/src/controllers/analysisController.js:74:// GET /analysis/cockpit — snapshot agregado do Cockpit (por símbolo: distribuição de retornos 1m, EV
+> backend/src/controllers/analysisController.js:76:// o painel /cockpit (single source of truth = brain). Não expõe segredos (só estado de mercado).
+> backend/src/controllers/analysisController.js:77:async function getCockpitStatus(req, res) {
+> backend/src/controllers/analysisController.js:78:    const status = cockpitJob.getStatus();
+> backend/src/controllers/analysisController.js:90:    // paper para ANÁLISE: anexa o resumo do Paper Engine (totais + por trilha) ao cockpit que o agente já lê.
+> backend/src/controllers/analysisController.js:91:    // READ-ONLY, best-effort (não derruba o cockpit se o ledger estiver vazio/indisponível).
+> backend/src/controllers/analysisController.js:96:// GET /analysis/cockpit/:symbol — o COCKPIT de um símbolo, lido direto da MEMORY do brain (cópia rasa).
+> backend/src/controllers/analysisController.js:101:    if (!snap) return res.status(404).json({ error: 'sem snapshot de cockpit', symbol });
+> backend/src/controllers/analysisController.js:103:    // que o agente lia como "contradição"); a analítica 1m fica na cadência do job. Ver cockpitJob.freshen.
+> backend/src/controllers/analysisController.js:104:    res.json(cockpitJob.freshen(symbol, snap));
+> backend/src/controllers/analysisController.js:125:module.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit, getPaper };
+> 
+> ===== a fonte do painel 'gate × ativo' (a21dbae) — frontend-only ou backend? =====
+> frontend/src/private/Intelligence/Intelligence.js
+> frontend/src/private/Cockpit/Cockpit.js
+> frontend/src/private/Settings/Settings.js
+> frontend/src/services/AutomationsService.js
+> frontend/src/routes.js:43:            <PrivateRoute path="/cockpit">
+> frontend/src/private/Cockpit/Cockpit.js:10:import './cockpit.css';
+> frontend/src/private/Cockpit/Cockpit.js:297:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Tail · retornos 1m vs fee</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'klines → distribuição'}</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:333:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Probability lattice (Galton)</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'velas 1m reais'}</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:339:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Monte Carlo · median fair</span><span className="cx-src">{mcBand ? '/analysis/cockpit (brain)' : 'σ realizada'}</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:418:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Estratégia — gate × ativo</span><span className="cx-src">/analysis/cockpit · /automations/groups</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:462:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Edge vs fee · agente</span><span className="cx-src">/analysis/cockpit · /agent/runs</span></div>
+> frontend/src/private/Cockpit/Cockpit.js:498:                <div className="cx-panel-title"><span><span className="cx-seal real" /> Paper · Estratégias (research, sem risco)</span><span className="cx-src">/analysis/cockpit · paper</span></div>
+> frontend/src/components/Menu/SideBar.js:47:                    <SideBarItem to="/cockpit" text="Cockpit">
+> frontend/src/services/IntelligenceService.js:44:// tradingHalt). Single source of truth do painel /cockpit — alimenta as métricas vindas do brain.
+> ```
+
+## 🤖 Claude *(22:24:34)*
+
+
+## 🤖 Claude *(22:24:38)*
+
+**Causa-raiz confirmada:** o painel "gate × ativo" (Cockpit.js:418) combina **duas** fontes no frontend — `/analysis/cockpit` **+** `/automations/groups`. O payload do cockpit que o **agente** lê (`getCockpitStatus`) **NÃO inclui o estado ATIVO dos grupos** — só os gates (doutrina, `doctrine:true`). Ou seja, o agente **literalmente não consegue ver** que o Trend está parado; o item 8 manda "não alarmar sobre inativo" mas é **inexequível sem o dado**. Por isso ele cai no fraseado do design ("aguardando golden cross para comprar").
+
+Então o fix correto é **dois passos** (não só prompt, como a tarefa assumia): surfacing o estado-ativo no cockpit (read-only, additivo — não é lógica de trade) **+** apertar a doutrina. Vejo a função que computa os grupos pra reusar:
+
+## 🤖 Claude *(22:24:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== handler/func dos grupos (automationsController) =====\"\ngrep -nE \"groups|getGroups|applyAutomationActive|GROUP|regex|function .*[Gg]roup\" backend/src/controllers/automationsController.js | head -25\necho \"\"\necho \"===== exports do automationsController =====\"\nsed -n '/module.exports/,/}/p' backend/src/controllers/automationsController.js | head -40",
+  "description": "Find reusable groups-computation function in automationsController"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== handler/func dos grupos (automationsController) =====
+> 55:async function applyAutomationActive(automation, active) {
+> 83:        await applyAutomationActive(automation, true);
+> 94:    await applyAutomationActive(automation, false);
+> 101:const AUTOMATION_GROUPS = {
+> 108:async function getAutomationGroups(req, res, next) {
+> 110:    const groups = Object.entries(AUTOMATION_GROUPS).map(([key, def]) => {
+> 115:    res.json({ groups });
+> 118:async function setAutomationGroup(req, res, next) {
+> 120:    const def = AUTOMATION_GROUPS[group];
+> 132:            await applyAutomationActive(a, active);
+> 
+> ===== exports do automationsController =====
+> module.exports = {
+>     startAutomation,
+>     stopAutomation,
+>     getAutomationGroups,
+>     setAutomationGroup,
+>     getAutomation,
+>     getAutomations,
+>     insertAutomation,
+>     updateAutomation,
+>     deleteAutomation
+> }
+> ```
+
+## 🤖 Claude *(22:24:52)*
+
+
+## 🤖 Claude *(22:24:54)*
+
+`getAutomationGroups` é handler Express (faz `res.json`), não função pura. Vou extrair um helper puro pra reusar no cockpit. Lendo a computação dos grupos:
+
+## 🤖 Claude *(22:24:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 99,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 99	// Grupos LÓGICOS derivados do NOME (convenção dos setup-*.js). EXCLUI de propósito harvester (morto),
+> 100	// grid (rejeitado) e scalp (refutado) → não há como reativá-los por este painel.
+> 101	const AUTOMATION_GROUPS = {
+> 102	    farm: { label: 'Farm (no-loss alts)', test: n => /^Farm (Buy|Sell) /.test(n) },
+> 103	    trend: { label: 'Trend (SMA50/200)', test: n => /^Trend (Buy|Sell) /.test(n) },
+> 104	    baseline: { label: 'Baseline (RSI BTC)', test: n => /^Baseline /.test(n) },
+> 105	    paper: { label: 'Paper (research, sem risco)', test: n => n.startsWith('[PAPER] '), paper: true },
+> 106	};
+> 107	
+> 108	async function getAutomationGroups(req, res, next) {
+> 109	    const all = await automationsRepository.getAllAutomations();
+> 110	    const groups = Object.entries(AUTOMATION_GROUPS).map(([key, def]) => {
+> 111	        const items = all.filter(a => def.test(a.name));
+> 112	        const active = items.filter(a => a.isActive).length;
+> 113	        return { key, label: def.label, paper: !!def.paper, total: items.length, active, inactive: items.length - active, ids: items.map(a => a.id) };
+> 114	    });
+> 115	    res.json({ groups });
+> 116	}
+> 117	
+> 118	async function setAutomationGroup(req, res, next) {
+> 119	    const { group, action } = req.params;
+> 120	    const def = AUTOMATION_GROUPS[group];
+> 121	    if (!def) return res.status(404).json({ error: `grupo desconhecido: ${group}` });
+> 122	    if (action !== 'start' && action !== 'stop') return res.status(400).json({ error: `ação inválida: ${action} (use start|stop)` });
+> 123	
+> 124	    const active = action === 'start';
+> 125	    const all = await automationsRepository.getAllAutomations();
+> 126	    const items = all.filter(a => def.test(a.name));
+> 127	
+> 128	    const changed = [], skipped = [], failed = [];
+> 129	    for (const a of items) {
+> 130	        try {
+> 131	            const before = a.isActive;
+> 132	            await applyAutomationActive(a, active);
+> 133	            (before === active ? skipped : changed).push(a.id);
+> 134	        } catch (err) {
+> 135	            failed.push({ id: a.id, error: err.message });
+> 136	            logger('system', `[grupo] ${group} ${action} id ${a.id} FALHOU: ${err.message}`);
+> 137	        }
+> 138	    }
+> ```
+
+## 🤖 Claude *(22:25:11)*
+
+
+## 🤖 Claude *(22:25:13)*
+
+Tenho a computação dos grupos. Vou: (1) extrair um helper puro `computeAutomationGroups()`, (2) anexá-lo ao payload do cockpit (read-only), (3) apertar a doutrina. Lendo os trechos exatos pra editar (getCockpitStatus + as linhas 33-46 do prompt):
+
+## 🤖 Claude *(22:25:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "offset": 74,
+  "limit": 23
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 74	// GET /analysis/cockpit — snapshot agregado do Cockpit (por símbolo: distribuição de retornos 1m, EV
+> 75	// net-de-fee, tail, banda MC driftless, regime/flow e estado dos gates de compra). READ-ONLY; alimenta
+> 76	// o painel /cockpit (single source of truth = brain). Não expõe segredos (só estado de mercado).
+> 77	async function getCockpitStatus(req, res) {
+> 78	    const status = cockpitJob.getStatus();
+> 79	    // AMBIENTE real p/ o painel e o agente: useTestnet (settings, leitura barata sem decrypt) + HALT QUENTE.
+> 80	    // tradingHalt agora vem do riskState (env floor | manual | daily-cap), não mais só do .env — chave mantida
+> 81	    // p/ o frontend (Cockpit.js) e o agente (agent.js) não quebrarem; haltSource/haltReason são ADITIVOS
+> 82	    // (contexto p/ o agente REPORTAR a causa; não é gatilho de notify — ver notifyDedup família 'halt').
+> 83	    const st = riskState.getState();
+> 84	    try {
+> 85	        const s = await settingsRepository.getSettings(process.env.DEFAULT_SETTINGS_ID || 1);
+> 86	        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 87	    } catch (e) {
+> 88	        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 89	    }
+> 90	    // paper para ANÁLISE: anexa o resumo do Paper Engine (totais + por trilha) ao cockpit que o agente já lê.
+> 91	    // READ-ONLY, best-effort (não derruba o cockpit se o ledger estiver vazio/indisponível).
+> 92	    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }
+> 93	    res.json(status);
+> 94	}
+> 95	
+> 96	// GET /analysis/cockpit/:symbol — o COCKPIT de um símbolo, lido direto da MEMORY do brain (cópia rasa).
+> ```
+
+## 🤖 Claude *(22:25:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "offset": 32,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 32	SEU PAPEL a cada ciclo
+> 33	- Ler o estado de forma ECONÔMICA (orçamento de ~12 tool calls por ciclo — NÃO o estoure; CONCLUA com folga): por símbolo (BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT) faça 1× tradeux_get_regime(symbol) — já traz o regime instantâneo (.regime) + o regime do GATE (.gate.regime, histerético, valor OPERATIVO) + RSI/ADX 1h — e 1× tradeux_get_oracle_state(symbol) para o fluxo; mais 1× tradeux_get_last_orders. Isso basta para o panorama (~9 leituras). Só busque um índice extra com tradeux_get_memory(symbol, index=CHAVE_EXATA — ex.: 'RSI_14_1m', 'TREND_CROSS_1h', 'TREND_QTY', 'FLOW'; passe a chave completa em index, sem o campo interval) se for investigar algo pontual.
+> 34	- 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+> 35	- NUNCA chame tradeux_get_memory_indexes, nem tradeux_get_memory/tradeux_get_wallet SEM symbol, nem tradeux_get_wallet_full: retornam centenas de símbolos do faucet (~200k tokens) e ESTOURAM o contexto do modelo, abortando o ciclo. Consulte sempre por símbolo + chave específica.
+> 36	- Avaliar COERÊNCIA com a tese: o regime está sendo respeitado? alguma automação deveria ter disparado e não disparou (ou o contrário — MAS veja (8): grupo INATIVO/parado pelo operador, ex. canary, NÃO é anomalia)? há venda de BTC INDEVIDA — isto é, FORA do módulo tático VIVO (trend id7), vendendo MAIS que a posição tática (TREND_QTY)? (o harvester id22-25 está DESATIVADO — uma venda id25 HOJE seria anomalia a sinalizar, não rotina; o trend corta perda por desenho.) Ordens manuais (sem automationId) costumam ser do dono/operador (testes, ajustes) — registre no diário; só alarme se drenarem o cofre de forma recorrente. NUNCA compare o RSI ou preço atual da memória com o momento de execução de uma ordem passada para alegar incoerência, pois o mercado se moveu e o Beholder não guarda histórico de RSI no momento do preenchimento. A memória do Beholder reflete apenas o estado real-time atual (no segundo da sua leitura). Para divergências cockpit×oráculo (regime/fluxo/gates), consulte DIVERGÊNCIAS ESPERADAS (abaixo) ANTES de chamar de incoerência.
+> 37	- DIVERGÊNCIAS ESPERADAS (NÃO são incoerência/anomalia — NÃO reporte como achado NEM notifique o dono): o cockpit lê as MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oráculos vivos; tradeux_get_regime/tradeux_get_oracle_state são leituras VIVAS separadas → delta pequeno cockpit×vivo é TIMING, não fonte paralela. Itens:
+> 38	  (1) REGIME: instantâneo (tradeux_get_regime.regime) ≠ gate (.gate.regime) na fronteira do ADX = HISTERESE — use .gate.regime (valor operativo); diferir por 1 nível é esperado.
+> 39	  (2) FLUXO eixo IDADE: compare pela IDADE (cockpit flow.ageSec) — imbalance velho mais negativo que o vivo é o MESMO sinal em instantes diferentes.
+> 40	  (3) FLUXO eixo MAGNITUDE — fraco (|imbalance| ~< 0,2): o sinal comprador/vendedor pode INVERTER entre leituras — RUÍDO, não divergência de fonte.
+> 41	  (4) EV/trade ≤ 0 a 1m: ESPERADO (scalp de 1m sangra fee), não alarme.
+> 42	  (5) HALT inalterado (tradingHalt=TRUE estável): estado conhecido do operador — reporte 1× ou só quando MUDAR.
+> 43	  (6) buyGate de acumulação liberado com regime=mixed: CORRETO (range E mixed são mean-reversion; condition viva = regime != bear E != trend) — não sugira "respeitar só range".
+> 44	  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> 45	  (8) ATIVO ≠ GATE: uma automação/grupo INATIVO (parado) com o gate ABERTO NÃO é anomalia — LIGAR/PARAR é decisão do OPERADOR pelo painel de grupos (ex.: CANARY = só um grupo ativo por vez; hoje pode ser só o Farm, com Trend e Baseline PARADOS de propósito). Gate liberado = o regime PERMITE a estratégia; NÃO significa que a automação DEVA estar armada (o estado de ATIVAÇÃO vive em /automations/groups e no painel de grupos de Settings — separe "gate aberto" de "grupo armado"). NÃO reporte "a automação X deveria estar ativa / deveria ter disparado" baseado no gate, NEM notifique o dono — ele controla a ativação. Só sinalize se o ESTADO de ativação mudar SOZINHO, sem ação do operador (ex.: automação que estava ON sumiu do BRAIN).
+> 46	  Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> 47	- Sinalizar EVENTOS úteis ao operador: regime SAIU do bear (gatilho p/ ligar o funil / próximas fases); golden/death cross real; farm comprou e/ou lucrou; alt com comportamento ruim no farm; algo travado/stale.
+> ```
+
+## 🤖 Claude *(22:26:27)*
+
+
+## 🤖 Claude *(22:26:28)*
+
+Tenho os trechos exatos. Aplicando os 4 edits — 2 backend (helper puro + anexar `groups` ao cockpit, read-only) e 2 no prompt (descrição do cockpit + regra de fraseado no item 8):
+
+## 🤖 Claude *(22:26:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "old_string": "async function getAutomationGroups(req, res, next) {\n    const all = await automationsRepository.getAllAutomations();\n    const groups = Object.entries(AUTOMATION_GROUPS).map(([key, def]) => {\n        const items = all.filter(a => def.test(a.name));\n        const active = items.filter(a => a.isActive).length;\n        return { key, label: def.label, paper: !!def.paper, total: items.length, active, inactive: items.length - active, ids: items.map(a => a.id) };\n    });\n    res.json({ groups });\n}",
+  "new_string": "// Estado ATIVO por grupo l\u00f3gico (PURO, reus\u00e1vel): usado pelo endpoint E anexado ao cockpit que o agente l\u00ea\n// (separa \"gate aberto\" de \"grupo armado\" \u2014 o agente precisa do estado de ATIVA\u00c7\u00c3O, n\u00e3o s\u00f3 do gate de regime,\n// p/ n\u00e3o implicar execu\u00e7\u00e3o de um grupo PARADO). Mesma l\u00f3gica do endpoint, extra\u00edda.\nasync function computeAutomationGroups() {\n    const all = await automationsRepository.getAllAutomations();\n    return Object.entries(AUTOMATION_GROUPS).map(([key, def]) => {\n        const items = all.filter(a => def.test(a.name));\n        const active = items.filter(a => a.isActive).length;\n        return { key, label: def.label, paper: !!def.paper, total: items.length, active, inactive: items.length - active, ids: items.map(a => a.id) };\n    });\n}\n\nasync function getAutomationGroups(req, res, next) {\n    res.json({ groups: await computeAutomationGroups() });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:26:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 142,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 142	            logger('system', `[grupo] ${group} ${action} id ${a.id} FALHOU: ${err.message}`);
+> 143	        }
+> 144	    }
+> 145	    logger('system', `[grupo] ${group} ${action}: ${changed.length} alterada(s), ${skipped.length} já-no-estado, ${failed.length} falha(s)`);
+> 146	    res.json({ group, label: def.label, action, total: items.length, changed, skipped, failed });
+> 147	}
+> 148	
+> 149	async function getAutomation(req, res, next) {
+> 150	    const id = req.params.id;
+> 151	    const automation = await automationsRepository.getAutomation(id);
+> 152	    res.json(automation);
+> 153	}
+> 154	
+> 155	async function getAutomations(req, res, next) {
+> 156	    const page = req.query.page;
+> 157	    const result = await automationsRepository.getAutomations(page);
+> 158	    res.json(result);
+> 159	}
+> 160	
+> 161	async function insertAutomation(req, res, next) {
+> 162	    const newAutomation = req.body;
+> 163	    const { quantity, levels } = req.query;
+> 164	
+> 165	    if (!validateConditions(newAutomation.conditions) && !newAutomation.schedule)
+> 166	        return res.status(400).json('You need to have at least one condition per automation!');
+> 167	
+> 168	    if (!newAutomation.actions || newAutomation.actions.length < 1)
+> 169	        return res.status(400).json('You need to have at least one action per automation!');
+> 170	
+> 171	    const isGrid = newAutomation.actions[0].type === actionsRepository.actionTypes.GRID;
+> ```
+
+## 🤖 Claude *(22:26:42)*
+
+
+## 🤖 Claude *(22:26:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && grep -n \"module.exports\" src/controllers/automationsController.js",
+  "description": "Find module.exports line in automationsController"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 331:module.exports = {
+> ```
+
+## 🤖 Claude *(22:26:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 331,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 331	module.exports = {
+> 332	    startAutomation,
+> 333	    stopAutomation,
+> 334	    getAutomationGroups,
+> 335	    setAutomationGroup,
+> 336	    getAutomation,
+> 337	    getAutomations,
+> 338	    insertAutomation,
+> 339	    updateAutomation,
+> 340	    deleteAutomation
+> 341	}
+> 342	
+> ```
+
+## 🤖 Claude *(22:26:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "old_string": "    startAutomation,\n    stopAutomation,\n    getAutomationGroups,\n    setAutomationGroup,",
+  "new_string": "    startAutomation,\n    stopAutomation,\n    getAutomationGroups,\n    computeAutomationGroups,\n    setAutomationGroup,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:27:02)*
+
+Agora o cockpit (anexar `groups`, read-only best-effort) e os 2 edits do prompt:
+
+## 🤖 Claude *(22:27:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "old_string": "    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }\n    res.json(status);",
+  "new_string": "    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }\n    // groups: estado ATIVO por grupo l\u00f3gico (Farm/Trend/Baseline/Paper) \u2014 o agente precisa do estado de ATIVA\u00c7\u00c3O\n    // (n\u00e3o s\u00f3 do gate de regime) p/ N\u00c3O implicar execu\u00e7\u00e3o de um grupo PARADO (\"gate aberto\" \u2260 \"grupo armado\").\n    // READ-ONLY, best-effort. require lazy (mesmo dir de controllers; evita ciclo no load).\n    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }\n    res.json(status);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:27:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "a banda Monte Carlo DRIFTLESS (p50\u2261pre\u00e7o, N\u00c3O previs\u00e3o) e o estado dos gates de COMPRA. REPORTE no di\u00e1rio o estado mec\u00e2nico e a coer\u00eancia dos gates (EV\u22640 a 1m \u00e9 esperado \u2014 ver DIVERG\u00caNCIAS ESPERADAS).",
+  "new_string": "a banda Monte Carlo DRIFTLESS (p50\u2261pre\u00e7o, N\u00c3O previs\u00e3o) e o estado dos gates de COMPRA. TRAZ TAMB\u00c9M `groups` \u2014 o estado ATIVO por grupo l\u00f3gico (Farm/Trend/Baseline/Paper, com active/inactive/total): \u00e9 o que est\u00e1 REALMENTE ARMADO, SEPARADO do gate de regime. Use `groups` p/ saber se um grupo opera ANTES de implicar qualquer execu\u00e7\u00e3o (ver item 8). REPORTE no di\u00e1rio o estado mec\u00e2nico e a coer\u00eancia dos gates (EV\u22640 a 1m \u00e9 esperado \u2014 ver DIVERG\u00caNCIAS ESPERADAS)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:27:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "N\u00c3O reporte \"a automa\u00e7\u00e3o X deveria estar ativa / deveria ter disparado\" baseado no gate, NEM notifique o dono \u2014 ele controla a ativa\u00e7\u00e3o. S\u00f3 sinalize se o ESTADO de ativa\u00e7\u00e3o mudar SOZINHO, sem a\u00e7\u00e3o do operador (ex.: automa\u00e7\u00e3o que estava ON sumiu do BRAIN).",
+  "new_string": "N\u00c3O reporte \"a automa\u00e7\u00e3o X deveria estar ativa / deveria ter disparado\" baseado no gate, NEM notifique o dono \u2014 ele controla a ativa\u00e7\u00e3o. S\u00f3 sinalize se o ESTADO de ativa\u00e7\u00e3o mudar SOZINHO, sem a\u00e7\u00e3o do operador (ex.: automa\u00e7\u00e3o que estava ON sumiu do BRAIN). **FRASEADO (regra dura): ao narrar uma mudan\u00e7a de regime/gate, SEMPRE cheque `cockpit.groups` ANTES de implicar execu\u00e7\u00e3o. Se o grupo relevante est\u00e1 PARADO (active=0), diga explicitamente \"o grupo X est\u00e1 parado \u2192 NENHUMA ordem ocorre\" e NUNCA escreva que est\u00e1 \"aguardando golden cross/dip para comprar\" \u2014 isso AFIRMA uma execu\u00e7\u00e3o que N\u00c3O vai acontecer (foi o erro real do LTC em regime trend com o Trend 0/8 parado). \"Gate aberto\" descreve a DOUTRINA (o que o regime PERMITE), n\u00e3o uma compra iminente.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:27:48)*
+
+
+## 🤖 Claude *(22:27:48)*
+
+4 edits feitos. Chown + checagem de sintaxe dos 3 arquivos, e vejo os requires do topo do `automationsController` (pra montar um teste do helper):
+
+## 🤖 Claude *(22:27:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/controllers/automationsController.js backend/src/controllers/analysisController.js tradeux-agent/src/agent.js\necho \"=== syntax check ===\"\nfor f in backend/src/controllers/automationsController.js backend/src/controllers/analysisController.js tradeux-agent/src/agent.js; do\n  sudo -n -u gcrux-tradeux bash -lc \"node -c '/home/gcrux-tradeux/tradeux/$f'\" 2>&1 && echo \"OK $f\" || echo \"FALHA $f\"\ndone\necho \"\"\necho \"=== requires do topo do automationsController (p/ o teste injetar fakes) ===\"\nsed -n '1,12p' backend/src/controllers/automationsController.js | grep -nE \"require\"",
+  "description": "Chown, syntax-check 3 files, inspect automationsController top requires"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === syntax check ===
+> OK backend/src/controllers/automationsController.js
+> OK backend/src/controllers/analysisController.js
+> /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js:34
+> - 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. TRAZ TAMBÉM `groups` — o estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper, com active/inactive/total): é o que está REALMENTE ARMADO, SEPARADO do gate de regime. Use `groups` p/ saber se um grupo opera ANTES de implicar qualquer execução (ver item 8). REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+>                                                                                                                                                                                                                                                                                                                                         ^^^^^^
+> 
+> SyntaxError: Unexpected identifier
+>     at checkSyntax (node:internal/main/check_syntax:78:5)
+> 
+> Node.js v18.19.1
+> FALHA tradeux-agent/src/agent.js
+> 
+> === requires do topo do automationsController (p/ o teste injetar fakes) ===
+> 1:const automationsRepository = require('../repositories/automationsRepository');
+> 2:const actionsRepository = require('../repositories/actionsRepository');
+> 3:const gridsRepository = require('../repositories/gridsRepository');
+> 4:const orderTemplatesRepository = require('../repositories/orderTemplatesRepository');
+> 5:const ordersRepository = require('../repositories/ordersRepository');
+> 6:const settingsRepository = require('../repositories/settingsRepository');
+> 7:const beholder = require('../beholder');
+> 8:const agenda = require('../agenda');
+> 9:const db = require('../db');
+> 10:const logger = require('../utils/logger');
+> ```
+
+## 🤖 Claude *(22:28:31)*
+
+
+## 🤖 Claude *(22:28:32)*
+
+O `node -c` pegou um **erro real que eu introduzi**: o `SYSTEM_PROMPT` é um template literal (backticks), e eu coloquei `` `groups` `` / `` `cockpit.groups` `` com backticks **dentro** dele → fechou o template e quebrou a sintaxe. Bom o syntax-check ter pego. Corrigindo (troco backticks por aspas simples, que são seguras dentro do template):
+
+## 🤖 Claude *(22:28:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "TRAZ TAMB\u00c9M `groups` \u2014 o estado ATIVO por grupo l\u00f3gico (Farm/Trend/Baseline/Paper, com active/inactive/total): \u00e9 o que est\u00e1 REALMENTE ARMADO, SEPARADO do gate de regime. Use `groups` p/ saber se um grupo opera ANTES de implicar qualquer execu\u00e7\u00e3o (ver item 8).",
+  "new_string": "TRAZ TAMB\u00c9M 'groups' \u2014 o estado ATIVO por grupo l\u00f3gico (Farm/Trend/Baseline/Paper, com active/inactive/total): \u00e9 o que est\u00e1 REALMENTE ARMADO, SEPARADO do gate de regime. Use 'groups' p/ saber se um grupo opera ANTES de implicar qualquer execu\u00e7\u00e3o (ver item 8)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:28:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "ao narrar uma mudan\u00e7a de regime/gate, SEMPRE cheque `cockpit.groups` ANTES de implicar execu\u00e7\u00e3o.",
+  "new_string": "ao narrar uma mudan\u00e7a de regime/gate, SEMPRE cheque 'cockpit.groups' (estado ATIVO por grupo) ANTES de implicar execu\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:28:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux tradeux-agent/src/agent.js\necho \"=== syntax check (3 arquivos) ===\"\nfor f in backend/src/controllers/automationsController.js backend/src/controllers/analysisController.js tradeux-agent/src/agent.js; do\n  sudo -n -u gcrux-tradeux bash -lc \"node -c '/home/gcrux-tradeux/tradeux/$f'\" 2>&1 && echo \"OK $f\" || echo \"FALHA $f\"\ndone\necho \"\"\necho \"=== sanity: computeAutomationGroups exportada + l\u00f3gica (fake repo, sem DB) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 node -e \"\nconst path=require(\\\"path\\\");\nfunction inj(rel,exp){const p=require.resolve(path.join(__dirname,\\\"src\\\",rel));require.cache[p]={id:p,filename:p,loaded:true,exports:exp};}\n// fakes dos requires do topo do automationsController (evita DB/beholder no load)\ninj(\\\"repositories/automationsRepository.js\\\",{getAllAutomations:async()=>[\n  {id:9,name:\\\"Farm Buy LTCUSDT\\\",isActive:false},{id:10,name:\\\"Farm Sell LTCUSDT\\\",isActive:true},\n  {id:6,name:\\\"Trend Buy BTCUSDT SMA50/200\\\",isActive:false},{id:7,name:\\\"Trend Sell BTCUSDT SMA50/200\\\",isActive:false},\n  {id:2,name:\\\"Baseline Buy BTCUSDT\\\",isActive:false},\n  {id:44,name:\\\"[PAPER] Consistencia Buy BTCUSDT\\\",isActive:true}\n]});\ninj(\\\"repositories/actionsRepository.js\\\",{actionTypes:{}});\ninj(\\\"repositories/gridsRepository.js\\\",{});inj(\\\"repositories/orderTemplatesRepository.js\\\",{});\ninj(\\\"repositories/ordersRepository.js\\\",{});inj(\\\"repositories/settingsRepository.js\\\",{});\ninj(\\\"beholder.js\\\",{});inj(\\\"agenda.js\\\",{});inj(\\\"db.js\\\",{});inj(\\\"utils/logger.js\\\",()=>{});\nconst c=require(\\\"./src/controllers/automationsController\\\");\nc.computeAutomationGroups().then(g=>{\n  const farm=g.find(x=>x.key===\\\"farm\\\"), trend=g.find(x=>x.key===\\\"trend\\\");\n  console.log(\\\"farm:\\\",JSON.stringify(farm));\n  console.log(\\\"trend:\\\",JSON.stringify(trend));\n  console.log(\\\"OK?\\\", farm.total===2&&farm.active===1&&trend.total===2&&trend.active===0);\n});\n\"' 2>&1 | grep -vE \"Sequelize|deprecated|Experimental|node:internal|^\\(node:\"",
+  "description": "Re-check syntax and verify computeAutomationGroups logic with fake repo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === syntax check (3 arquivos) ===
+> OK backend/src/controllers/automationsController.js
+> OK backend/src/controllers/analysisController.js
+> OK tradeux-agent/src/agent.js
+> 
+> === sanity: computeAutomationGroups exportada + lógica (fake repo, sem DB) ===
+>   throw err;
+>   ^
+> 
+> Error: Cannot find module 'src/repositories/automationsRepository.js'
+> Require stack:
+> - /home/gcrux-tradeux/tradeux/backend/[eval]
+>     at inj ([eval]:3:39)
+>     at [eval]:5:1
+>     at Script.runInThisContext (node:vm:122:12)
+>     at Object.runInThisContext (node:vm:298:38)
+>     at [eval]-wrapper:6:24
+>   code: 'MODULE_NOT_FOUND',
+>   requireStack: [ '/home/gcrux-tradeux/tradeux/backend/[eval]' ]
+> }
+> 
+> Node.js v18.19.1
+> ```
+
+## 🤖 Claude *(22:29:14)*
+
+
+## 🤖 Claude *(22:29:15)*
+
+Sintaxe OK nos 3 (o fix dos backticks resolveu). O sanity falhou por um bug de path do meu `node -e` (`__dirname` vazio no eval), não no código. Retry com path absoluto:
+
+## 🤖 Claude *(22:29:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 node -e \"\nconst SRC=\\\"/home/gcrux-tradeux/tradeux/backend/src\\\";\nfunction inj(rel,exp){const p=require.resolve(SRC+\\\"/\\\"+rel);require.cache[p]={id:p,filename:p,loaded:true,exports:exp};}\ninj(\\\"repositories/automationsRepository.js\\\",{getAllAutomations:async()=>[\n  {id:9,name:\\\"Farm Buy LTCUSDT\\\",isActive:false},{id:10,name:\\\"Farm Sell LTCUSDT\\\",isActive:true},\n  {id:6,name:\\\"Trend Buy BTCUSDT SMA50/200\\\",isActive:false},{id:7,name:\\\"Trend Sell BTCUSDT SMA50/200\\\",isActive:false},\n  {id:2,name:\\\"Baseline Buy BTCUSDT\\\",isActive:false},\n  {id:44,name:\\\"[PAPER] Consistencia Buy BTCUSDT\\\",isActive:true}\n]});\ninj(\\\"repositories/actionsRepository.js\\\",{actionTypes:{}});\ninj(\\\"repositories/gridsRepository.js\\\",{});inj(\\\"repositories/orderTemplatesRepository.js\\\",{});\ninj(\\\"repositories/ordersRepository.js\\\",{});inj(\\\"repositories/settingsRepository.js\\\",{});\ninj(\\\"beholder.js\\\",{});inj(\\\"agenda.js\\\",{});inj(\\\"db.js\\\",{});inj(\\\"utils/logger.js\\\",()=>{});\nconst c=require(SRC+\\\"/controllers/automationsController\\\");\nc.computeAutomationGroups().then(g=>{\n  const f=g.find(x=>x.key===\\\"farm\\\"),t=g.find(x=>x.key===\\\"trend\\\"),p=g.find(x=>x.key===\\\"paper\\\");\n  console.log(\\\"farm:\\\",JSON.stringify(f));console.log(\\\"trend:\\\",JSON.stringify(t));console.log(\\\"paper:\\\",JSON.stringify(p));\n  console.log(\\\"OK?\\\", f.total===2&&f.active===1&&f.inactive===1&&t.total===2&&t.active===0&&p.active===1);\n});\n\"' 2>&1 | grep -vE \"Sequelize|deprecated|Experimental|node:internal|^\\(node:\"",
+  "description": "Verify computeAutomationGroups logic with absolute path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> farm: {"key":"farm","label":"Farm (no-loss alts)","paper":false,"total":2,"active":1,"inactive":1,"ids":[9,10]}
+> trend: {"key":"trend","label":"Trend (SMA50/200)","paper":false,"total":2,"active":0,"inactive":2,"ids":[6,7]}
+> paper: {"key":"paper","label":"Paper (research, sem risco)","paper":true,"total":1,"active":1,"inactive":0,"ids":[44]}
+> OK? true
+> ```
+
+## 🤖 Claude *(22:29:45)*
+
+
+## 🤖 Claude *(22:29:48)*
+
+`computeAutomationGroups` verificado: farm 2(1at/1in), trend 2(0at), paper 1(1at) — **OK? true**. O refactor é fiel (extração literal do endpoint já live-verificado). Sintaxe dos 3 OK. A suíte sim não depende desses arquivos (inalterada).
+
+Changeset D3: backend (helper + `groups` no cockpit, read-only) + agent (doutrina). Gate QA+TL antes de qualquer deploy (como a tarefa pediu):
+
+## 🤖 Claude *(22:30:09)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA gate do fix D3",
+  "subagent_type": "qa-engineer",
+  "prompt": "QA gate de uma mudan\u00e7a no TradeUX (bot Binance Spot, MAINNET dinheiro real). \u00c9 o fix do \"D3 / ATIVO\u2260GATE\": o agente LLM dizia no Telegram \"abre o gate de tend\u00eancia, aguardando golden cross para comprar\" para LTCUSDT, mas o grupo Trend est\u00e1 PARADO (0/8 ativas) \u2014 implicando uma execu\u00e7\u00e3o que n\u00e3o acontece. Repo: /home/gcrux-tradeux/tradeux.\n\n## CAUSA-RAIZ (j\u00e1 investigada)\nO agente l\u00ea `tradeux_get_cockpit` mas o payload N\u00c3O inclu\u00eda o estado ATIVO dos grupos \u2014 s\u00f3 os gates de regime (doctrine:true). Ou seja, o agente literalmente N\u00c3O via que o Trend estava parado; o item 8 do prompt (\"n\u00e3o alarmar sobre inativo\") era inexequ\u00edvel sem o dado. Fix = surfacing o estado-ativo no cockpit + apertar a doutrina de FRASEADO.\n\n## MUDAN\u00c7AS (working tree vs HEAD)\n`git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- backend/src/controllers/automationsController.js backend/src/controllers/analysisController.js` + ler `tradeux-agent/src/agent.js` (linhas ~34 e ~45).\n1. **`automationsController.js`**: extra\u00eddo helper PURO `computeAutomationGroups()` (mesma l\u00f3gica do endpoint `getAutomationGroups`, que agora o chama) + exportado. Read-only (s\u00f3 `getAllAutomations` + regex de nome \u2192 contagem active/inactive por grupo Farm/Trend/Baseline/Paper).\n2. **`analysisController.js` getCockpitStatus**: anexa `status.groups = await require('./automationsController').computeAutomationGroups()` (READ-ONLY, best-effort try/catch, espelha o append de `status.paper` que j\u00e1 existe; require lazy).\n3. **`agent.js` SYSTEM_PROMPT**: (a) descri\u00e7\u00e3o do cockpit agora cita que traz 'groups' (estado ATIVO por grupo); (b) item 8 ganhou regra de FRASEADO: ao narrar regime/gate, checar 'cockpit.groups' ANTES de implicar execu\u00e7\u00e3o; se o grupo est\u00e1 PARADO (active=0), dizer \"grupo X parado \u2192 nenhuma ordem ocorre\" e NUNCA \"aguardando golden cross/dip para comprar\".\n\n## VERIFICA\u00c7\u00c3O J\u00c1 FEITA\n- `node -c` OK nos 3 (peguei e corrigi um bug: eu tinha posto backticks dentro do SYSTEM_PROMPT que \u00e9 template literal \u2192 quebrava; agora usa aspas simples).\n- `computeAutomationGroups()` com repo fake (sem DB): farm 2(1at/1in), trend 2(0at), paper 1(1at) \u2192 correto. \u00c9 extra\u00e7\u00e3o LITERAL do endpoint `/automations/groups` que verifiquei live (farm 3/6, trend 0/8) nesta sess\u00e3o.\n\n## AVALIE\n- O backend \u00e9 REALMENTE read-only/sem efeito no money-path? O append de `groups` no cockpit n\u00e3o pode derrubar o endpoint (best-effort)? require lazy evita ciclo? Tamanho do payload (impacto de contexto p/ o agente)?\n- O fix de DADO de fato resolve a causa-raiz (o agente agora TEM o estado ativo no MESMO read que j\u00e1 faz, sem tool extra / sem estourar o budget de ~12 calls)?\n- A doutrina de fraseado \u00e9 clara e ACION\u00c1VEL? H\u00e1 risco de regress\u00e3o da doutrina ANTI-RU\u00cdDO (o agente passar a OVER-reportar groups, ou re-litigar canary)? Confira contra as mem\u00f3rias `tradeux-telegram-notifications` e `tradeux-1m-scalping-and-cockpit` (em /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/).\n- O SYSTEM_PROMPT ainda \u00e9 um template literal v\u00e1lido (sem backtick/`${}` \u00f3rf\u00e3o introduzido)?\n\nVeredito: PASS / PASS COM RESSALVAS / FAIL + achados com severidade (file:line). Espec\u00edfico."
+}
+```
+
+## 🤖 Claude *(22:30:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL gate do fix D3",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (tech-lead) no TradeUX (bot Binance Spot, MAINNET dinheiro real). Fix do \"D3 / ATIVO\u2260GATE\" no agente LLM. Repo: /home/gcrux-tradeux/tradeux.\n\n## PROBLEMA\nO agente no Telegram disse \"abre o gate de tend\u00eancia, aguardando golden cross para comprar\" (LTCUSDT) com o grupo Trend PARADO (0/8) \u2014 afirmou execu\u00e7\u00e3o que n\u00e3o ocorre. Investiga\u00e7\u00e3o: o agente l\u00ea `tradeux_get_cockpit` mas o payload N\u00c3O trazia o estado ATIVO dos grupos (s\u00f3 gates de regime) \u2192 ele n\u00e3o TINHA como saber que o Trend estava parado. O item 8 do prompt (\"n\u00e3o alarmar sobre inativo\") era inexequ\u00edvel sem o dado.\n\n## MUDAN\u00c7AS (working tree vs HEAD)\n`git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- backend/src/controllers/automationsController.js backend/src/controllers/analysisController.js` + ler `tradeux-agent/src/agent.js`.\n1. `automationsController.js`: extra\u00eddo `computeAutomationGroups()` PURO (mesma l\u00f3gica do endpoint, que agora o reusa) + exportado.\n2. `analysisController.js` getCockpitStatus: anexa `status.groups` (read-only, best-effort, espelha o `status.paper` j\u00e1 existente; require lazy).\n3. `agent.js` SYSTEM_PROMPT: cockpit agora documenta 'groups'; item 8 ganhou regra de FRASEADO (checar groups antes de implicar execu\u00e7\u00e3o; grupo parado \u2192 \"nenhuma ordem ocorre\", nunca \"aguardando ... para comprar\").\n\n## AVALIE (decis\u00e3o de OWNER de c\u00f3digo)\n- **Design:** surfacing o estado-ativo NO cockpit (que o agente j\u00e1 l\u00ea 1\u00d7/ciclo) \u00e9 a escolha certa vs. um MCP tool novo `tradeux_get_groups` (que gastaria do budget de ~12 calls)? O require lazy entre controllers \u00e9 aceit\u00e1vel (ciclo)?\n- A tarefa original dizia \"s\u00f3 doutrina/fraseado, n\u00e3o mudar l\u00f3gica de trade\" \u2014 eu adicionei o backend read-only porque a doutrina sozinha era inexequ\u00edvel (o agente n\u00e3o via o dado). Esse desvio \u00e9 justificado? Concorda?\n- O acoplamento (backend dado + agent doutrina) deve ir em 1 commit?\n- **Deploy:** a mudan\u00e7a s\u00f3 vale ap\u00f3s deploy (backend restart \u2192 cockpit traz groups; agent restart \u2192 usa o prompt). \u00c9 um sistema LIVE (halted=false, canary Farm). H\u00e1 risco em deployar (restart do backend de trading)? Recomenda janela/cuidado, ou \u00e9 seguro com o canary rodando?\n- Conven\u00e7\u00e3o/manuten\u00e7\u00e3o.\n\nVeredito: APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK + must-fix vs nice-to-have. Pragm\u00e1tico: read-only no backend + doutrina de prompt; mas o agente toca a percep\u00e7\u00e3o do operador num sistema de dinheiro real."
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
