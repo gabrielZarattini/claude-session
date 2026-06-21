@@ -4431,6 +4431,239 @@ A alavanca #2 (BNB-fee, "faça já") era **bloqueada pelo exato bug que a Fatia 
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Libero o commit + push da Fatia 1 da suíte (master, trunk-based)? São os 2 fixes additivos (export do P&L-BNB + seam do exchange) + 66 testes, gated QA PASS/TL APPROVE, scratch de backtest excluído. Deploy é separado (e não-urgente: BNB-fee está off)."="You're right, and I own it. I reached **out of** the MCORCH workspace and wrote into the live-money **tradeUX** repo (`/home/gcrux-tradeux/tradeux/`) — a workspace-boundary crossing I should never have done from here, least of all into a system trading real money. Let me act carefully. First, a material check that *this* box (MCORCH) is clean — i.e., I didn't drag any tradeUX work into the constellation repo.
+> 
+> Confirmado materialmente: **a caixa do MCORCH está intacta** — working tree limpo, `HEAD == origin/main` (0/0), nenhum artefato de trading vazou pra cá. Eu só escrevi no filesystem do tradeUX (caminhos absolutos `/home/gcrux-tradeux/...`); o constellation-orchestra não herdou nada.
+> 
+> ## O que aconteceu, em material
+> 
+> O `/handson` no início foi correto (esta é a caixa do MCORCH). Foi a sua mensagem sobre o robô que me puxou pro tradeUX — e eu **atravessei a fronteira** em vez de sinalizar "isso é outro repo, fora deste workspace". Num sistema com dinheiro real, é exatamente o tipo de coisa que não pode acontecer sem você no comando.
+> 
+> O que toquei lá (tudo aditivo, **zero** mudança no caminho de execução de ordem):
+> - 3 testes novos: `riskGuard` · `farmTriggers` · `dailyCap` (em `backend/scripts/sim/`)
+> - 2 seams aditivos: `exchange.js` (`assertWithinRisk`/`refPrice`) e `beholder.js` (`shouldntInvert`/`invertCondition`)
+> 
+> E pela sua transcrição da **caixa certa**: aquela sessão **detectou** meus arquivos surgindo, parou, revisou o chokepoint de risco linha-a-linha (postura correta), e **adotou** com QA PASS / TL APPROVE — prestes a commitar. Ou seja: não estão órfãos nem sem revisão; **a caixa certa já é a dona disso.**
+> 
+> ## Como continuo daqui (cauteloso)
+> 
+> 1. **Hands-off total no tradeUX a partir desta sessão.** Não mexo, não reverto, não commito, não re-verifico de cá. O trabalho fica na caixa do tradeUX — "fica fora" do MCORCH, como você disse.
+> 2. **Sobre reverter:** minha recomendação é **não** reverter daqui — a caixa certa já aprovou e vai commitar; reverter agora atrapalharia trabalho já gated. Se você preferir que eu desfaça algo, é uma palavra sua — mas o lugar dessa decisão é a sessão do tradeUX (foi pra lá que ela te perguntou "posso commitar?").
+> 3. **MCORCH não mudou.** Nada que fiz alterou este repo. O estado real continua o do `/handson`: **Viral Autopilot Fatia 2 selado (v6.44.0)**; próximo item autônomo era **FR-VA-018 (fetch-trends → pauta viral)**.
+> 
+> ## ShakeHands
+> 
+> Como esta sessão **não alterou o MCORCH**, não há o que selar aqui — um `/handoff` seria vazio (e selar a ~0% violaria a Lei 3). Então o caminho limpo é o que você já indicou: **abrir a sessão MCORCH-only e rodar `/handson`** — ela vai ler o estado selado corretamente, justamente porque eu deixei esta caixa pristina.
+> 
+> Duas coisas, e você decide:
+> 
+> - **Quer que eu registre a lição como memória** (`feedback`: "quando o pedido for sobre outro repo/projeto que não o workspace atual, sinalizar a fronteira e confirmar antes de operar — nunca cruzar silenciosamente, ainda mais em repo de produção/dinheiro real")? Evita reincidência em sessões futuras.
+> - **E como fecho aqui:** encerro limpo agora (recomendado, já que você vai abrir a sessão MCORCH-only), ou você prefere que eu já siga no MCORCH (ex.: FR-VA-018) nesta mesma sessão?", "Por onde sigo depois? (posso fazer em paralelo, mas me diga a prioridade)"="Fase 3 da suíte (integrado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:20:13)*
+
+
+## 🤖 Claude *(16:20:18)*
+
+Isso muda o quadro — e é importante. Os arquivos que "apareceram sozinhos" (`riskGuard`/`farmTriggers`/`dailyCap` + os seams de `exchange.js`/`beholder.js`) **não eram do meu agente QA** como eu supus: vieram de **outra sessão (MCORCH/constellation-orchestra) que cruzou a fronteira de workspace** e escreveu neste repo de dinheiro real. Isso explica exatamente a anomalia de timing que eu tinha sinalizado (o `dailyCap` às 12:20, depois do QA já ter retornado) — eu investiguei e parei, mas atribuí à fonte errada.
+
+Antes de qualquer commit, preciso ver **exatamente** o que está no working tree agora (meu + o da outra sessão), porque num repo live a procedência importa. Verificando o diff completo de `beholder.js` e `exchange.js`:
+
+## 🤖 Claude *(16:20:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"========== git diff beholder.js (TUDO vs HEAD) ==========\"\ngit -c safe.directory='*' diff -- backend/src/beholder.js\necho \"\"\necho \"========== exports atuais do beholder (module.exports) ==========\"\nsed -n '/^module.exports = {/,/^}/p' backend/src/beholder.js",
+  "description": "Full beholder.js diff and current exports to verify provenance"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ========== git diff beholder.js (TUDO vs HEAD) ==========
+> diff --git a/backend/src/beholder.js b/backend/src/beholder.js
+> index 6089594..9226212 100644
+> --- a/backend/src/beholder.js
+> +++ b/backend/src/beholder.js
+> @@ -1092,6 +1092,9 @@ function getMemoryIndexes() {
+>  
+>  const DOLLAR_COINS = ['USD', 'USDT', 'USDC', 'BUSD'];
+>  
+> +// ⚠️ CONSUMIDOR CROSS-MÓDULO: utils/feeCalc.js requer esta função via require('../beholder').getStableConversion
+> +// p/ converter taxa em BNB→USDT no `net` (P&L fee-inclusive). Está no module.exports POR ISSO — não remover do
+> +// export achando que é uso só interno (era a raiz do bug: feeValued=false → P&L otimista). Coberto por sim/feeCalc.test.js.
+>  function getStableConversion(baseAsset, quoteAsset, baseQty) {
+>      if (DOLLAR_COINS.includes(baseAsset)) return baseQty;
+>  
+> @@ -1158,9 +1161,24 @@ module.exports = {
+>      placeOrder,
+>      placeOco,
+>      tryFiatConversion,
+> +    // FIX: utils/feeCalc.js chama require('../beholder').getStableConversion p/ converter a taxa em BNB → USDT
+> +    // (P&L fee-inclusive). Sem este export a chamada cross-módulo era `undefined` → caía no catch do feeCalc →
+> +    // feeValued=false → o `net` NÃO descontava a taxa em BNB (P&L mentia otimista assim que o desconto BNB-fee
+> +    // fosse ligado). Era latente porque hoje as taxas saem em USDT (ramo (i) do feeToUsdt). Coberto por sim/feeCalc.test.js.
+> +    getStableConversion,
+> +    // Seams de testabilidade (additivos, sem mudança de comportamento) — funções puras do money-path exercitadas
+> +    // pela suíte de simulação (scripts/sim/*.test.js): cálculo de quantidade por keyword + checagem de saldo.
+> +    calcQty,
+> +    calcQuoteQty,
+> +    hasEnoughAssets,
+>      generateGrids,
+>      evalDecision,
+>      searchMemory,
+>      testAutomations,
+> -    parseMemoryKey
+> +    parseMemoryKey,
+> +    // Seam adicional (gatilho no-loss): shouldntInvert decide LEVEL vs EDGE trigger (fix fb932a1 — FARM_QTY/
+> +    // HARVEST_QTY viram LEVEL-trigger); invertCondition monta o 'previous<alvo' do double-check (edge). Exercitados
+> +    // por scripts/sim/farmTriggers.test.js (prova que o Farm Sell dispara no nível e o Trend mantém o edge).
+> +    shouldntInvert,
+> +    invertCondition
+>  }
+> 
+> ========== exports atuais do beholder (module.exports) ==========
+> module.exports = {
+>     updateMemory,
+>     getMemory,
+>     getBrain,
+>     init,
+>     deleteMemory,
+>     getMemoryIndexes,
+>     getBrainIndexes,
+>     updateBrain,
+>     deleteBrain,
+>     findAutomations,
+>     placeOrder,
+>     placeOco,
+>     tryFiatConversion,
+>     // FIX: utils/feeCalc.js chama require('../beholder').getStableConversion p/ converter a taxa em BNB → USDT
+>     // (P&L fee-inclusive). Sem este export a chamada cross-módulo era `undefined` → caía no catch do feeCalc →
+>     // feeValued=false → o `net` NÃO descontava a taxa em BNB (P&L mentia otimista assim que o desconto BNB-fee
+>     // fosse ligado). Era latente porque hoje as taxas saem em USDT (ramo (i) do feeToUsdt). Coberto por sim/feeCalc.test.js.
+>     getStableConversion,
+>     // Seams de testabilidade (additivos, sem mudança de comportamento) — funções puras do money-path exercitadas
+>     // pela suíte de simulação (scripts/sim/*.test.js): cálculo de quantidade por keyword + checagem de saldo.
+>     calcQty,
+>     calcQuoteQty,
+>     hasEnoughAssets,
+>     generateGrids,
+>     evalDecision,
+>     searchMemory,
+>     testAutomations,
+>     parseMemoryKey,
+>     // Seam adicional (gatilho no-loss): shouldntInvert decide LEVEL vs EDGE trigger (fix fb932a1 — FARM_QTY/
+>     // HARVEST_QTY viram LEVEL-trigger); invertCondition monta o 'previous<alvo' do double-check (edge). Exercitados
+>     // por scripts/sim/farmTriggers.test.js (prova que o Farm Sell dispara no nível e o Trend mantém o edge).
+>     shouldntInvert,
+>     invertCondition
+> }
+> ```
+
+## 🤖 Claude *(16:21:40)*
+
+
+## 🤖 Claude *(16:21:43)*
+
+Verifiquei o diff completo do `beholder.js`: **tudo é additivo** — meu fix (`getStableConversion` + seams `calcQty`/`calcQuoteQty`/`hasEnoughAssets`) **e** as adições da outra sessão (`shouldntInvert`/`invertCondition` no export, `assertWithinRisk`/`refPrice` no `exchange.js`, e os 3 testes). Zero mudança de comportamento, 66 asserts verdes, e agora revisei **cada linha** — inclusive as partes da MCORCH. Nada arriscado entrou.
+
+Registro a lição pra sessões futuras deste repo:
+
+## 🤖 Claude *(16:21:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-cross-session-contamination.md",
+  "content": "---\nname: tradeux-cross-session-contamination\ndescription: o working tree do tradeux pode receber escritas de OUTRA sess\u00e3o Claude concorrente (ex.: MCORCH/constellation-orchestra) \u2014 verificar proced\u00eancia de mudan\u00e7a inesperada antes de adotar/commitar\nmetadata:\n  type: feedback\n---\n\nEm 2026-06-21, ao construir a su\u00edte de simula\u00e7\u00e3o, arquivos apareceram no working tree do tradeux (`backend/scripts/sim/{riskGuard,farmTriggers,dailyCap}.test.js` + seams additivos em `exchange.js` `assertWithinRisk`/`refPrice` e `beholder.js` `shouldntInvert`/`invertCondition`) que eu atribu\u00ed ao meu agente QA \u2014 mas eram de OUTRA sess\u00e3o Claude (workspace **MCORCH/constellation-orchestra**) que cruzou a fronteira e escreveu por **caminho absoluto** neste repo de dinheiro real. Tudo acabou sendo 100% aditivo/verde/revisado, mas a proced\u00eancia era desconhecida no momento.\n\n**Why:** num repo MAINNET live, adotar/commitar mudan\u00e7a de proced\u00eancia desconhecida \u00e9 perigoso. O sinal estava l\u00e1 (timing an\u00f4malo \u2014 arquivo surgindo DEPOIS do agente j\u00e1 ter retornado; owner `ubuntu` vs `gcrux`) e eu investiguei, mas conclu\u00ed pela fonte errada.\n\n**How to apply:** quando aparecer mudan\u00e7a no working tree que voc\u00ea N\u00c3O escreveu, n\u00e3o assuma fonte benigna in-session. Verifique proced\u00eancia antes de adotar/commitar: `git diff` COMPLETO (n\u00e3o s\u00f3 --stat), `ls -la` (owner/timestamp), e se o conte\u00fado depende de algo que voc\u00ea n\u00e3o criou (ex.: um teste que importa fun\u00e7\u00e3o que voc\u00ea n\u00e3o exportou = outro autor mexeu no fonte). Confirme com o dono. Liga com [[git-ownership-gotcha]] e [[tradeux-orchestration-model]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-cross-session-contamination.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:21:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [Earn auto-subscribe incident](tradeux-earn-autosubscribe-incident.md) — Binance Simple Earn varre spot→LDxxx → HALT falso do dailyCap + venda no-loss do Farm quebrada; fix = resgatar+desligar auto-subscribe + marcar-a-mercado LD* no computeEquity
+> 5	- [Farm sell level-trigger](tradeux-farm-sell-leveltrigger.md) — venda no-loss do Farm era EDGE-trigger e NUNCA executava (0 vendas na história); fix fb932a1 = LEVEL-trigger via shouldntInvert (espelha Harvester), oversell coberto por FARM_SELLING; teto bloqueia venda + FARM_SELLING não-persistida (não escalar size)
+> ```
+
+## 🤖 Claude *(16:21:57)*
+
+
+## 🤖 Claude *(16:22:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)",
+  "new_string": "- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Cross-session contamination](tradeux-cross-session-contamination.md) \u2014 outra sess\u00e3o Claude (MCORCH) pode escrever no working tree do tradeux por caminho absoluto; verificar proced\u00eancia (git diff completo, owner/timestamp) de mudan\u00e7a inesperada ANTES de adotar/commitar num repo live"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:22:17)*
+
+
+## 🤖 Claude *(16:22:33)*
+
+Lição salva na memória ([tradeux-cross-session-contamination](/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-cross-session-contamination.md)). E assumo o meu erro: eu **investiguei** os arquivos surgindo (timing anômalo, owner errado) e parei — postura certa — mas conclui "foi meu agente QA" em vez de "escritor externo". Da próxima, procedência inesperada = verifico a fonte real antes de atribuir.
+
+## Estado verificado da base (Fatia 1+2 da suíte)
+
+Diff completo conferido linha a linha — **100% aditivo, zero mudança no caminho de execução de ordem, 66 asserts verdes:**
+
+| Origem | Conteúdo | Risco |
+|---|---|---|
+| **Minha** (gated QA/TL) | `beholder` export `getStableConversion` (**fix P&L-BNB**) + seams `calcQty`/`calcQuoteQty`/`hasEnoughAssets` · `calcQty.test.js` (23) · `feeCalc.test.js` (11) · `run.js` · wiring `package.json`/`ci.yml`/`ci-preflight.sh` | nenhum (additivo) |
+| **MCORCH** (revisada por mim agora) | `beholder` export `shouldntInvert`/`invertCondition` · `exchange` export `assertWithinRisk`/`refPrice` (2 linhas) · `riskGuard.test.js` (14) · `farmTriggers.test.js` (9) · `dailyCap.test.js` (9) | nenhum (additivo) |
+
+A procedência ficou mista, mas o **código é coerente, verde e revisado**. Jogar fora a cobertura de risco/gatilho (que é exatamente o que você pediu) seria desperdício. Scratch de backtest fica **fora** do commit.
+
+## Recomendação + próximo passo
+
+Você escolheu **Fase 3 (integrado)** como próximo foco — perfeito, é a camada mais profunda (gatilho→execução com Binance mockada). Mas quero construí-la sobre uma **base limpa e commitada**, não sobre um working tree de procedência mista e ainda não selado.
+
+Então, sequência que recomendo:
+1. **Commitar a base verificada agora** (escopo: os 2 fixes additivos + os 5 testes + wiring; scratch excluído; mensagem clara atribuindo o fix do P&L-BNB + a cobertura de money-path). Commito como `gcrux`, push via token; CI valida; **sem deploy automático** (o fix do P&L só fica live no próximo rebuild e é inócuo até você ligar o BNB-fee).
+2. **Aí sigo direto pra Fase 3**, que vou **orquestrar via workflow** (placeOrder/evalDecision com Binance mockada: gatilho→execução ponta a ponta + travas FARM_SELLING e cofre SELL-BTC).
+
+**Libero o commit + push da base verificada?** (é a recomendação — base limpa antes da Fase 3). Se preferir commitar **só a minha parte** e eu reconstruir a da MCORCH do zero, também faço — mas dado que está tudo additivo/verde/revisado, acho que não compensa.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
