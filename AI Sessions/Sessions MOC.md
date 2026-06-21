@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1079
-> * **Sessões do Claude**: 1037
+> * **Total de Sessões Registradas**: 1086
+> * **Sessões do Claude**: 1044
 > * **Sessões do Gemini**: 42
 
 ---
@@ -60,18 +60,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` - *2026-06-21*
+*   `[[2026-06-21 - agent-add2f4d9369d76330]]` - *2026-06-21*
+*   `[[2026-06-21 - agent-ab400a94cbe308930]]` - *2026-06-21*
+*   `[[2026-06-21 - agent-a88866b510d06f02d]]` - *2026-06-21*
+*   `[[2026-06-21 - agent-a53d9862a05b30b01]]` - *2026-06-21*
+*   `[[2026-06-21 - agent-a44f6dd917fed1fe4]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-a0cc6785abf5b1989]]` - *2026-06-21*
+*   `[[2026-06-21 - Validar automações e estratégias de trading LTCUSDT]]` - *2026-06-21*
+*   `[[2026-06-21 - Validar automações de trading e melhorar estratégias de lucro]]` - *2026-06-21*
 *   `[[2026-06-21 - Analisar estratégia de trading e sinais de lucro]]` - *2026-06-21*
 *   `[[2026-06-20 - agent-af831631ec7f7aefd]]` - *2026-06-20*
 *   `[[2026-06-20 - agent-af29cb52dee83493a]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-af26b791934f74423]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-af0f530be048a5cbf]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-ae4353700461f000f]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-ae3972cac6dbd5ff7]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-ae2aaa48dfabca341]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-ad74371076ff08639]]` - *2026-06-20*
-*   `[[2026-06-20 - agent-ad5bb8493e0ae698e]]` - *2026-06-20*
-*   *... e mais 1043 sessões nessa categoria.*
+*   *... e mais 1050 sessões nessa categoria.*
 
 ---
 
@@ -263,7 +263,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-add2f4d9369d76330]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-ab400a94cbe308930]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-a88866b510d06f02d]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-a53d9862a05b30b01]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-a44f6dd917fed1fe4]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a0cc6785abf5b1989]]` (ClaudeSessions)
+*   `[[2026-06-21 - Validar automações e estratégias de trading LTCUSDT]]` (ClaudeSessions)
+*   `[[2026-06-21 - Validar automações de trading e melhorar estratégias de lucro]]` (ClaudeSessions)
 *   `[[2026-06-21 - Analisar estratégia de trading e sinais de lucro]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-af831631ec7f7aefd]]` (ClaudeSessions)
 *   `[[2026-06-20 - agent-af29cb52dee83493a]]` (ClaudeSessions)

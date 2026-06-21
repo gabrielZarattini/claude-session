@@ -7841,6 +7841,258 @@ Git status limpo, `.env` gitignored, sem secrets, stack 4/4. Mas o `origin/maste
 > > 🔴 **ATUALIZAÇÃO 2026-06-20 — NÃO ESTÁ MAIS CONGELADO:** o dono LIBEROU o floor pela UI → trading REAL ON (`halted=false`). Canary **FARM-ONLY** (só as VENDAS do Farm armadas — saída no-loss dos lotes; COMPRAS off). Equity intacta ~$148,75 (USDT↔LTC, sem perda). SEMPRE confira `GET /system/halt` no início da sessão. **O bloco 🛑 abaixo (2026-06-15) é HISTÓRICO** — descreve o estado CONGELADO, já SUPERADO.
 > ```
 
+## 🤖 Claude *(14:00:43)*
+
+
+## 🤖 Claude *(14:00:44)*
+
+Confirmado: código 100% sincronizado (`fb932a1`). Agora HANDOFF.md + memory. Vou checar perms do HANDOFF (pra saber se edito direto ou via sudo):
+
+## 🤖 Claude *(14:00:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrux-tradeux/HANDOFF.md; echo \"wc: $(wc -l < /home/gcrux-tradeux/HANDOFF.md) linhas\"; echo \"whoami: $(whoami)\"",
+  "description": "Check HANDOFF.md ownership and writability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 144954 Jun 19 23:33 /home/gcrux-tradeux/HANDOFF.md
+> wc: 831 linhas
+> whoami: ubuntu
+> ```
+
+## 🤖 Claude *(14:00:55)*
+
+
+## 🤖 Claude *(14:00:56)*
+
+`664 ubuntu` — eu escrevo direto. Vou ler o header (pra editar), atualizar a linha "Updated:", e anexar o seal:
+
+## 🤖 Claude *(14:00:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-20** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (o DONO flipou o floor pela UI; `halted=false`, NÃO está mais congelado!)** · **Canary FARM-ONLY** (só as VENDAS armadas id10/12/14; COMPRAS off após DCA 3× em LTC ~$30, equity intacta ~$148,75) · proteções: cap diário −5%, teto **$25/ordem** (era 300), **teto de exposição do Farm $25/símbolo (notional qty×preço-médio, `FARM_MAX_NOTIONAL_USDT`)**, riskGuard por-ordem, botão de pânico + painel de grupos em Settings · **Bloco B Fase 1 (`apiClient.js` DRY, 8 setup-*.js) + painel Ativação de grupos + cockpit gate×ativo + agente recalibrado (ATIVO≠GATE) + cockpit LIMPO (placeholders/estados falsos removidos)** · Meta: **realista ≈ flat com ~$148** · Vivo==master==**`235484c`** (push pendente → ==origin após o push deste seal)
+> 6	
+> ```
+
+## 🤖 Claude *(14:01:05)*
+
+
+## 🤖 Claude *(14:01:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-20** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (o DONO flipou o floor pela UI; `halted=false`, N\u00c3O est\u00e1 mais congelado!)** \u00b7 **Canary FARM-ONLY** (s\u00f3 as VENDAS armadas id10/12/14; COMPRAS off ap\u00f3s DCA 3\u00d7 em LTC ~$30, equity intacta ~$148,75) \u00b7 prote\u00e7\u00f5es: cap di\u00e1rio \u22125%, teto **$25/ordem** (era 300), **teto de exposi\u00e7\u00e3o do Farm $25/s\u00edmbolo (notional qty\u00d7pre\u00e7o-m\u00e9dio, `FARM_MAX_NOTIONAL_USDT`)**, riskGuard por-ordem, bot\u00e3o de p\u00e2nico + painel de grupos em Settings \u00b7 **Bloco B Fase 1 (`apiClient.js` DRY, 8 setup-*.js) + painel Ativa\u00e7\u00e3o de grupos + cockpit gate\u00d7ativo + agente recalibrado (ATIVO\u2260GATE) + cockpit LIMPO (placeholders/estados falsos removidos)** \u00b7 Meta: **realista \u2248 flat com ~$148** \u00b7 Vivo==master==**`235484c`** (push pendente \u2192 ==origin ap\u00f3s o push deste seal)",
+  "new_string": "> Updated: **2026-06-21** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`)** \u00b7 **Canary FARM-ONLY** (vendas no-loss id10/12/14 \u2014 **AGORA FUNCIONAM**; compras off) \u00b7 **SESS\u00c3O 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** \u2192 `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE\u2192LEVEL-trigger = 1\u00aa sa\u00edda no-loss do Farm a EXECUTAR no mainnet)** \u2192 **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA\u21920, equity **$149,39**) \u00b7 \u26a0\ufe0f **runtime n\u00e3o-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25\u219250` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` \u00b7 prote\u00e7\u00f5es: cap di\u00e1rio \u22125%, teto **$50/ordem**, Farm $25/s\u00edmbolo, riskGuard, p\u00e2nico, painel de grupos \u00b7 Meta: **realista \u2248 flat com ~$149** \u00b7 Vivo==master==origin==**`fb932a1`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:01:22)*
+
+
+## 🤖 Claude *(14:01:22)*
+
+Header atualizado. Agora anexo o Session Record seal no fim:
+
+## 🤖 Claude *(14:02:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> /home/gcrux-tradeux/HANDOFF.md << 'SEAL_EOF'\n\n### \ud83e\udd1d SEAL \u2014 2026-06-21 (MARATONA: incidente Earn + 4 bugs corrigidos + 1\u00aa venda no-loss do Farm a executar)\n**`Vivo==master==origin==fb932a1` (3 commits da sess\u00e3o, TODOS gated QA+TL e deployados). Stack 4/4 up, \ud83d\udd34 LIVE (`halted=false`), canary FARM-ONLY. Equity $149,39 (+$0,49 do ciclo LTC fechado).**\n\n- **\ud83d\udd34 INCIDENTE Earn auto-subscribe (diagnosticado+resolvido):** a Binance auto-subscreveu o LTC comprado pelo Farm no Simple Earn \u2192 virou `LDLTC` (spot LTC=0). Dois estragos da MESMA causa: (a) **HALT FALSO** do cap \u22125% \u00e0s 04:11 (o `computeEquity` exclu\u00eda `LD*` \u2192 equity leu $109 em vez de $148 \u2192 falso drawdown \u221226,76%); (b) **venda no-loss travou silenciosa \u00e0s 07:00** (`There is no LTC in your wallet`, calcQty). Dono **resgatou o LDLTC** (voltou **0,907 INTEIRO** \u2014 os \"0,017 LTC sumidos\" eram artefato cont\u00e1bil do Earn, **SEM vazamento**) + **desligou o auto-subscribe**. HALT limpo via `POST /system/daily-cap/reset` (re-baseline correto $149,07). Mem\u00f3ria: [[tradeux-earn-autosubscribe-incident]].\n- **FIX 1 \u2014 `c6d0853` (dailyCap LD\\*):** `computeEquity` marca a mercado os `LD*` pelo subjacente via `TRACKED_BASES` (LDLTC\u2192pre\u00e7o LTC, LDUSDC\u2192stable; dust sem par\u2192ignored; trackado-frio\u2192cold/fail-safe). Equity volta a ler ~$149 valued, `ignored` sem LDLTC.\n- **FIX 2 \u2014 `457e25a` (notif):** (a) `app-em.sendMessage` N\u00c3O d\u00e1 PUSH p/ resultados `[PAPER]` \u2014 o ru\u00eddo que o dono recebia era **PUSH do navegador, N\u00c3O Telegram** (o audit acertou; eu over-corrigi e rastreei at\u00e9 a fonte); mant\u00e9m o broadcast WS. (b) `evalDecision` catch agora ALERTA o dono no Telegram quando automa\u00e7\u00e3o REAL falha na execu\u00e7\u00e3o (deduped por chave exata `autofail:<id>`), corrigindo a falha-silenciosa. \u26a0\ufe0f d\u00e9bito: bloqueio por HALT/teto (riskGuard) ainda morre em `placeOrder` ANTES do catch \u2192 segue silencioso.\n- **FIX 3 \u2014 `fb932a1` (FARM venda LEVEL-trigger) \u2014 O GRANDE:** a venda no-loss do Farm era **EDGE-triggered** (`shouldntInvert` isentava s\u00f3 `HARVEST_SELLING`, n\u00e3o o Farm) \u2192 o lote `FARM_DCA` nasce/fica ACIMA do alvo `cost*1.012` \u2192 nunca h\u00e1 cruzamento fresco bestBid<alvo\u2192>alvo \u2192 **NUNCA vendia (0 vendas na hist\u00f3ria do Farm no mainnet)**. ID\u00caNTICO ao bug que o Harvester j\u00e1 corrigiu (documentado em `beholder.js:863`). FIX: `shouldntInvert` isenta a venda `FARM_QTY` \u2192 LEVEL-trigger; oversell J\u00c1 coberto pela trava `FARM_SELLING` existente (set no place + clear por orderId no terminal) + `FARM_DCA.qty\u21920` no fill. **Resultado AO VIVO: ordem 264 SELL LTCUSDT FILLED @ $44,54, 0,907 LTC, recebido $40,357, +$0,49, FARM_DCA\u21920, UMA venda s\u00f3 (sem oversell).** PRIMEIRA sa\u00edda no-loss do Farm a executar no mainnet.\n- **\u26a0\ufe0f MUDAN\u00c7AS DE RUNTIME (N\u00c3O-git \u2014 reaplicar p\u00f3s-reset/rebuild se o estado voltar):** (1) `.env` `MAX_ORDER_NOTIONAL_USDT=25\u219250` (band-aid: o teto de $25 bloqueava a VENDA de ~$40 \u2014 venda reduz risco e n\u00e3o devia ser capada; ver NEXT %-teto). (2) DB `monitors` #2 (`*:BOOK`) `isActive=1` (estava OFF; `isSystemMon=1` \u2192 s\u00f3 sobe no boot via DB, a API recusa). NB: a \"simula\u00e7\u00e3o de book\" do MINI_TICKER j\u00e1 alimenta `:BOOK` mesmo sem o monitor real \u2014 o BOOK off N\u00c3O era o bloqueador da venda (era o edge-trigger); liguei por garantia.\n- **AUDITORIA 12h (workflow, 7 agentes, verifica\u00e7\u00e3o adversarial):** capital intacto, nenhuma ordem indevida, nenhum spam Telegram real. Achado GRAVE = **agente LLM falsamente reconfortante** (~91 ciclos \"tudo coerente\" enquanto os 2 incidentes reais aconteciam; nunca detectou) \u2192 o backend agora alerta falha direto (`457e25a`), mas a doutrina do prompt fica de follow-up (D3). `[PAPER] sem posi\u00e7\u00e3o` 37\u00d7 = log-noise interno (n\u00e3o-Telegram). Dedup-por-assunto do agente funcionou.\n- **REVIS\u00c3O estrat\u00e9gia/design (PARCIAL \u2014 529 Overloaded da API derrubou 5/6 agentes 2\u00d7; s\u00f3 o design passou):** ESTRAT\u00c9GIA = **n\u00e3o-erro, escolha conservadora** (a $149 a vit\u00f3ria \u00e9 VALIDAR via paper, N\u00c3O lucrar; funil INERTE com baseline $10k; BTC = hold direcional disfar\u00e7ado, pausar \u00e9 certo; **nada refutado reintroduzido** \u2014 harvester/grid/scalp1m/bear-futures/VPIN todos OFF confirmado no DB). DESIGN = 3 HIGH: `useTestnet` bit-\u00fanico mut\u00e1vel; **posi\u00e7\u00e3o em qty BRUTA** (`getFarmPosition` soma buy.quantity bruto = origem do 0,908 vs 0,907 l\u00edquido); cegueira ao Earn no `loadWallet`. Re-rodar a revis\u00e3o completa quando a API estabilizar.\n\n**\u26a1 NEXT (prioridade):**\n1. **%-teto a 20% do equity tradeable que EXEMPTA VENDA** (compras-only + piso/teto absoluto de seguran\u00e7a) \u2014 substitui o band-aid dos $50; venda nunca mais raspa no cap. Dono aprovou o conceito (%-sizing = motor do exponencial COM edge; a $149 \u00e9 future-proof). Gate QA+TL.\n2. **`loadFarmSellingLocks`** (reconstruir a trava `FARM_SELLING` no boot a partir de vendas abertas, espelhar o Harvester) ANTES de escalar o size do Farm \u2014 limita\u00e7\u00e3o v1: trava n\u00e3o-persistida \u2192 restart com venda em voo re-dispara 1\u00d7.\n3. **D3 \u2014 doutrina do agente** (`tradeux-agent`): parar de re-litigar canary (ATIVO\u2260GATE) + tratar falha como evento; menos cr\u00edtico agora.\n4. **Re-rodar a revis\u00e3o estrat\u00e9gia/design** (workflow) quando a API parar de dar 529.\n5. **Decis\u00e3o do DONO em aberto:** *recuperar USDT e ficar parado* (estado atual, equity livre ~$149) vs *come\u00e7ar a empilhar BTC* (pesquisa primeiro \u2014 Partes 2/3/4). Claude N\u00c3O vira o HALT nem clica LIGAR sozinho.\n\n**D\u00e9bitos:** bloqueio HALT/teto silencioso no Telegram (D1, riskGuard morre antes do catch); `loadWallet`/`calcQty` cegos a `LD*` (mitigado: auto-subscribe off + alerta); qty BRUTA do FARM_DCA (cosm\u00e9tico, calcQty capa na carteira); config cosm\u00e9tica \"Daily Profit Meta $500\" na UI (meta pivotou).\nSEAL_EOF\necho \"\u2705 seal anexado. Total: $(wc -l < /home/gcrux-tradeux/HANDOFF.md) linhas\"\ntail -3 /home/gcrux-tradeux/HANDOFF.md | head -1",
+  "description": "Append session seal to HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ seal anexado. Total: 851 linhas
+> 5. **Decisão do DONO em aberto:** *recuperar USDT e ficar parado* (estado atual, equity livre ~$149) vs *começar a empilhar BTC* (pesquisa primeiro — Partes 2/3/4). Claude NÃO vira o HALT nem clica LIGAR sozinho.
+> ```
+
+## 🤖 Claude *(14:02:22)*
+
+
+## 🤖 Claude *(14:02:24)*
+
+HANDOFF selado. Agora PHASE 4 — memory. Vou adicionar o aprendizado durável e não-óbvio desta sessão (o bug edge→level-trigger do Farm) e atualizar o índice:
+
+## 🤖 Claude *(14:02:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-farm-sell-leveltrigger.md",
+  "content": "---\nname: tradeux-farm-sell-leveltrigger\ndescription: Venda no-loss do Farm era EDGE-triggered e NUNCA executava; fix fb932a1 a tornou LEVEL-trigger (espelha o Harvester)\nmetadata:\n  type: project\n---\n\n**Bug + fix (2026-06-21, `fb932a1`, gate QA+TL):** a venda no-loss do Farm (`orderTemplate.quantity='FARM_QTY'`, condi\u00e7\u00e3o `FARM_DCA.qty>0 && BOOK.bestBid>FARM_DCA.cost*1.012`) **NUNCA executou no mainnet (0 vendas na hist\u00f3ria)** porque era **EDGE-triggered**: o `evalDecision` (`beholder.js`) augmenta a condi\u00e7\u00e3o com a condi\u00e7\u00e3o INVERTIDA (`invertCondition` \u2192 exige `previous.bestBid<alvo`) a menos que `shouldntInvert` exente. O lote `FARM_DCA` nasce/fica ACIMA do alvo `cost*1.012` \u2192 nunca h\u00e1 cruzamento fresco bestBid<alvo\u2192>alvo \u2192 nunca dispara. **ID\u00caNTICO ao bug que o Harvester j\u00e1 tinha corrigido** (documentado em `beholder.js:863`): o `shouldntInvert` isentava `HARVEST_SELLING` mas **n\u00e3o o Farm**.\n\n**FIX:** adicionada cl\u00e1usula no `shouldntInvert` que isenta a venda `FARM_QTY` (detector: `automation.actions[0].orderTemplate.quantity === 'FARM_QTY'`, cacheado no BRAIN) \u2192 vira **LEVEL-trigger** (dispara enquanto bestBid>alvo). O **oversell j\u00e1 estava coberto** pela trava `FARM_SELLING` existente (SKIP no place `beholder.js:487`, set por orderId `:567`, clear no terminal `app-em.js:291`) + `FARM_DCA.qty\u21920` no fill + lock `LOCK_BRAIN` de 60s. Validado ao vivo: ordem 264 SELL LTCUSDT FILLED, **1 venda s\u00f3, sem oversell**.\n\n**Gotchas/limites (do gate):**\n- **Detector \u00e9 por template `FARM_QTY`** (assinatura \u00fanica: compra=MIN_NOTIONAL, Trend=TREND_QTY, Harvest=HARVEST_QTY). Sem falso-positivo.\n- **`FARM_SELLING` \u00e9 v1 N\u00c3O-persistida** (sem `loadFarmSellingLocks`): restart com venda EM VOO re-dispara 1\u00d7 \u2192 **N\u00c3O escalar o size do Farm** at\u00e9 persistir a trava no boot (espelhar o reconcile do Harvester `app-em.js:374`).\n- O **teto `MAX_ORDER_NOTIONAL` tamb\u00e9m bloqueia VENDA** (riskGuard n\u00e3o distingue lado) \u2192 prendeu a venda de $40 sob teto $25; band-aid foi subir pra $50. Fix definitivo pendente = **%-teto que exempta venda** (compras-only). Ver [[tradeux-mainnet-go-live]].\n- A \"simula\u00e7\u00e3o de book\" do MINI_TICKER (`app-em.js:37`) j\u00e1 alimenta `:BOOK` mesmo com o monitor `*:BOOK` (#2) OFF \u2192 o BOOK off N\u00c3O era o bloqueador (era o edge-trigger). Liguei o monitor por garantia (DB `isActive=1`, \u00e9 `isSystemMon` \u2192 s\u00f3 via DB+boot).\n\nLiga com [[tradeux-harvester-experiment]] (mesmo padr\u00e3o edge\u2192level + trava), [[tradeux-trend-following]], [[tradeux-farm-funnel-backtest]] (o Farm), [[tradeux-earn-autosubscribe-incident]] (a venda travada de 07:00 foi o gatilho pra achar tudo isso).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-farm-sell-leveltrigger.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:02:58)*
+
+
+## 🤖 Claude *(14:02:59)*
+
+Memory escrita. Vou adicionar ao índice MEMORY.md:
+
+## 🤖 Claude *(14:02:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [Earn auto-subscribe incident](tradeux-earn-autosubscribe-incident.md) — Binance Simple Earn varre spot→LDxxx → HALT falso do dailyCap + venda no-loss do Farm quebrada; fix = resgatar+desligar auto-subscribe + marcar-a-mercado LD* no computeEquity
+> 5	- [TradeUX deploy topology](tradeux-deploy-topology.md) — app runs via Docker at ~/tradeux on port 8090, NOT from htdocs (which is intentionally empty)
+> ```
+
+## 🤖 Claude *(14:03:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Earn auto-subscribe incident](tradeux-earn-autosubscribe-incident.md) \u2014 Binance Simple Earn varre spot\u2192LDxxx \u2192 HALT falso do dailyCap + venda no-loss do Farm quebrada; fix = resgatar+desligar auto-subscribe + marcar-a-mercado LD* no computeEquity",
+  "new_string": "- [Earn auto-subscribe incident](tradeux-earn-autosubscribe-incident.md) \u2014 Binance Simple Earn varre spot\u2192LDxxx \u2192 HALT falso do dailyCap + venda no-loss do Farm quebrada; fix = resgatar+desligar auto-subscribe + marcar-a-mercado LD* no computeEquity\n- [Farm sell level-trigger](tradeux-farm-sell-leveltrigger.md) \u2014 venda no-loss do Farm era EDGE-trigger e NUNCA executava (0 vendas na hist\u00f3ria); fix fb932a1 = LEVEL-trigger via shouldntInvert (espelha Harvester), oversell coberto por FARM_SELLING; teto bloqueia venda + FARM_SELLING n\u00e3o-persistida (n\u00e3o escalar size)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:03:26)*
+
+
+## 🤖 Claude *(14:03:27)*
+
+Índice atualizado. PHASE 5 — o código já está pushado (`fb932a1==origin`, confirmado). HANDOFF.md e memory são locais (fora do repo). Falta o chown defensivo do `.git` (rodei alguns git read-only como ubuntu na sessão) + checks finais:
+
+## 🤖 Claude *(14:03:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== chown defensivo do .git (gotcha: git-as-ubuntu) ===\"\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git 2>/dev/null && echo \"\u2713 .git \u2192 gcrux-tradeux\" || echo \"(chown sem root \u2014 verificar)\"\necho \"=== estado final ===\"\necho \"master==origin: $(git -c safe.directory='*' rev-parse --short HEAD) == fb932a1\"\ngit -c safe.directory='*' status --short | head -1; echo \"(vazio acima = worktree limpo)\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"{{.Service}} {{.Status}}\"' 2>/dev/null\ncurl -s -m5 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/\necho \"=== memory: arquivos novos/editados nesta sess\u00e3o ===\"\nls -t /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/*.md | head -3",
+  "description": "Defensive .git chown and final handoff verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === chown defensivo do .git (gotcha: git-as-ubuntu) ===
+> ✓ .git → gcrux-tradeux
+> === estado final ===
+> master==origin: fb932a1 == fb932a1
+> (vazio acima = worktree limpo)
+> agent Up 37 hours
+> backend Up 11 hours
+> db Up 5 days (healthy)
+> frontend Up 36 hours
+> site -> 200
+> === memory: arquivos novos/editados nesta sessão ===
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-farm-sell-leveltrigger.md
+> /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-earn-autosubscribe-incident.md
+> ```
+
+## 🤖 Claude *(14:03:45)*
+
+
+## 🤖 Claude *(14:03:59)*
+
+Tudo selado. Aqui está o seal final:
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-21
+───────────────────────────────────────────────────
+Commits     : 3 · fix(dailyCap) c6d0853 · fix(notif) 457e25a · fix(farm) fb932a1
+              Branch: master (trunk-based direto, per doutrina — não PR)
+HANDOFF.md  : ✅ atualizado (header + Session Record completo)
+Memory      : 3 arquivos (índice + earn-incident atualizado + farm-leveltrigger novo)
+PRs abertos : nenhum (trunk-based direct-to-master; sem gh/token)
+Push        : ✅ origin sincronizado — master==origin==fb932a1 (worktree limpo)
+Stack       : db healthy · backend/frontend/agent up · site 200
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+## O que esta sessão deixou pronto
+
+**4 bugs reais corrigidos, gated (QA+TL) e deployados** — todos a partir de UM incidente (a Binance auto-subscrevendo seu LTC no Earn):
+- `c6d0853` — fim do **HALT falso** (dailyCap agora conta saldos do Earn).
+- `457e25a` — fim do **ruído PUSH `[PAPER]`** + **alerta no Telegram quando ordem real falha**.
+- `fb932a1` — **a venda no-loss do Farm finalmente FUNCIONA** (era edge-trigger, nunca vendia em toda a história; agora level-trigger).
+
+**E o ciclo fechou no verde:** LTC vendido a $44,54 → **+$0,49**, USDT recuperado, equity **$149,39**, posição zerada (FARM_DCA=0).
+
+## Pendente pra próxima sessão (no HANDOFF + memory)
+1. **%-teto a 20% que exempta venda** (substitui o band-aid `MAX_ORDER_NOTIONAL=50`).
+2. **`loadFarmSellingLocks`** antes de escalar o size do Farm.
+3. Re-rodar a **revisão estratégia/design** (o 529 da API derrubou; só o design passou).
+4. **Tua decisão em aberto:** recuperar USDT e ficar parado **vs** começar a empilhar BTC (pesquisa primeiro).
+
+> ⚠️ 2 mudanças de runtime NÃO-git (anotadas no HANDOFF, reaplicar se houver reset): `.env MAX_ORDER_NOTIONAL_USDT=50` e DB `monitors#2 BOOK isActive=1`.
+
+Foi uma maratona e tanto — começou num alarme falso e terminou com o motor do Farm consertado e o primeiro ciclo no lucro. Descansa tranquilo: **sistema LIVE, saudável, equity intacta, e agora ele vende sozinho quando deve.** 🤝 Bom descanso!
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -7851,5 +8103,5 @@ Git status limpo, `.env` gitignored, sem secrets, stack 4/4. Mas o `origin/maste
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-20 - agent-af831631ec7f7aefd]]
-> * **Próxima Sessão**: [[2026-06-21 - agent-a0cc6785abf5b1989]]
+> * **Próxima Sessão**: [[2026-06-21 - Validar automações de trading e melhorar estratégias de lucro]]
 %% --- TIMELINE END --- %%
