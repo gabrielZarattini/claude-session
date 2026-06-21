@@ -1,5 +1,5 @@
-# [[2026-06-21 - Analisar estratégia de trading e sinais de lucro|Analisar estratégia de trading e sinais de lucro]]
-**Date:** 2026-06-20 | **Session ID:** `f441b214-aeeb-4754-b4a6-052611f40093`
+# [[2026-06-20 - Analisar estratégia de trading e sinais de lucro|Analisar estratégia de trading e sinais de lucro]]
+**Date:** 2026-06-21 | **Session ID:** `f441b214-aeeb-4754-b4a6-052611f40093`
 
 ---
 
@@ -5731,6 +5731,535 @@ Tenho agora **estratégia + design** revisados. Os débitos estão desenhados. C
 
 Quer que eu **dispare esse lote agora** (começando pela trava do cofre)? Ou prefere reagir primeiro ao recado estratégico — que a $149 a meta honesta é *validar*, não lucrar — e talvez repensar se vale empilhar BTC só com aporte?
 
+## 👤 User *(02:17:28)*
+
+mensagens recebida no telegram.:
+
+🌅 [DAILY_CAP] Novo dia UTC. Cap de -5% re-armado para o novo dia.
+🤖 [AGENTE] Observação: A automação de venda do Farm para LTCUSDT (id10) está ativa, mas não executou ordem de venda apesar das condições serem atendidas (posição aberta, preço atual > custo×1.012). Verificar se há algum travamento ou se a quantidade FARM_QTY está configurada corretamente.
+
+## 🤖 Claude *(02:18:09)*
+
+
+## 🤖 Claude *(02:18:12)*
+
+Dois pontos no Telegram:
+1. `🌅 [DAILY_CAP] Novo dia UTC` — rollover normal (re-baseline do cap pro novo dia). Benigno.
+2. `🤖 [AGENTE]` flagando que a venda do Farm (id10) **não executou apesar das condições atendidas** — isso eu **preciso verificar de verdade**, não confiar no agente (que já errou nos dois sentidos). Pode ser falso alarme (preço não cruzou mesmo) OU um problema real (ex.: FARM_DCA não recarregou no restart). Investigando:
+
+## 🤖 Claude *(02:18:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== LTC: bestBid agora + M\u00c1XIMA das \u00faltimas 8h (cruzou 44.39?) ===\"\ncurl -s -m6 \"https://api.binance.com/api/v3/ticker/bookTicker?symbol=LTCUSDT\" 2>/dev/null; echo \"\"\ncurl -s -m6 \"https://api.binance.com/api/v3/klines?symbol=LTCUSDT&interval=1h&limit=8\" 2>/dev/null | python3 -c \"import sys,json;ks=json.load(sys.stdin);hi=max(float(k[2]) for k in ks);print('m\u00e1xima 8h:',hi,'| gatilho sell = custo*1.012 = 44.387 ->', 'CRUZOU' if hi>44.387 else 'N\u00c3O cruzou')\"\necho \"\"\necho \"=== FARM_DCA recarregou p\u00f3s-restart? (qty>0 \u00e9 a 1\u00aa condi\u00e7\u00e3o) ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"FARM_DCA: $(curl -s -m10 \"https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/FARM_DCA\" -H \"authorization: $T\")\"\necho \"LTC wallet: $(curl -s -m10 \"https://tradeux.gcrux.com/api/beholder/memory/LTC/WALLET\" -H \"authorization: $T\")\"\necho \"HALT: $(curl -s -m10 \"https://tradeux.gcrux.com/api/system/halt\" -H \"authorization: $T\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(d[\\\"halted\\\"])\")\"\n'\necho \"=== A10.log: avalia\u00e7\u00f5es/erros recentes ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -8 /app/logs/A10.log 2>/dev/null\"'\necho \"=== alguma venda real? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT COUNT(*) sells FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\";\\\" 2>/dev/null\"'",
+  "description": "Verify if LTC crossed sell trigger and FARM_DCA/lock state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LTC: bestBid agora + MÁXIMA das últimas 8h (cruzou 44.39?) ===
+> {"symbol":"LTCUSDT","bidPrice":"44.53000000","bidQty":"92.52100000","askPrice":"44.54000000","askQty":"24.21600000"}
+> máxima 8h: 44.63 | gatilho sell = custo*1.012 = 44.387 -> CRUZOU
+> 
+> === FARM_DCA recarregou pós-restart? (qty>0 é a 1ª condição) ===
+> FARM_DCA: {"qty":0.908,"cost":43.862500000000004}
+> LTC wallet: 0.9070944
+> HALT: False
+> === A10.log: avaliações/erros recentes ===
+> error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA. {"stack":"Error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA.\n    at assertWithinRisk (/app/src/utils/exchange.js:53:19)\n    at Object.sell (/app/src/utils/exchange.js:125:9)\n    at placeOrder (/app/src/beholder.js:546:37)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async evalDecision (/app/src/beholder.js:905:28)\n    at async Promise.all (index 0)\n    at async testAutomations (/app/src/beholder.js:963:19)"}
+> info: 2026-06-20T22:12:40.423Z - {
+>   symbol: 'LTCUSDT',
+>   side: 'SELL',
+>   options: { type: 'LIMIT' },
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> === alguma venda real? ===
+> sells
+> 0
+> ```
+
+## 🤖 Claude *(02:19:24)*
+
+
+## 🤖 Claude *(02:19:30)*
+
+**O agente ACERTOU desta vez — e é um problema REAL.** Olha o `A10.log`:
+
+```
+error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA.
+   at assertWithinRisk (exchange.js:53) → sell → placeOrder
+```
+
+**O que está acontecendo:** LTC **cruzou** o gatilho (máxima 8h = $44,63; agora bestBid **$44,53**). A venda no-loss **disparou** — tentou vender 0,907 LTC. Mas foi **BLOQUEADA pelo teto de $25/ordem**: vender $40 de LTC de uma vez excede o `MAX_ORDER_NOTIONAL_USDT=25`.
+
+**Ou seja: o cap que botamos pra limitar tamanho de ordem está PRENDENDO a posição** — o Farm não consegue sair dos $40 num único lote. E (D1 ao vivo) o bloqueio do riskGuard é **silencioso no backend** — só o agente LLM pegou.
+
+Deixa eu ler o `assertWithinRisk` pra propor o fix certo (o cap não deveria bloquear VENDA — venda reduz risco):
+
+## 🤖 Claude *(02:19:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 30,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> 31	const MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;
+> 32	
+> 33	function assertWithinRisk(action, symbol, quantity, price, options) {
+> 34	    if (riskState.isHalted()) {
+> 35	        const st = riskState.getState();
+> 36	        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) — ${action} ${symbol} BLOQUEADA.`;
+> 37	        logger('system', msg);
+> 38	        throw new Error(msg);
+> 39	    }
+> 40	    if (MAX_ORDER_NOTIONAL_USDT > 0 && /USDT$/i.test(symbol || '')) {
+> 41	        const o = options || {};
+> 42	        let notional = null;
+> 43	        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)
+> 44	        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO
+> 45	        else if (quantity != null) {                                                    // MARKET por QTY-base sem price (venda TREND_QTY/HARVEST_QTY/MAX_WALLET; ou STOP/TP-MARKET)
+> 46	            const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: usa o stopPrice (preço-alvo real); senão deriva o spot do MINI_TICKER
+> 47	            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);
+> 48	            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem preço de referência (MINI_TICKER frio) — teto NÃO avaliado (coberto só pelo HALT).`);
+> 49	        }
+> 50	        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {
+> 51	            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} — BLOQUEADA.`;
+> 52	            logger('system', msg);
+> 53	            throw new Error(msg);
+> 54	        }
+> 55	    }
+> 56	}
+> 57	
+> 58	// Preço de referência p/ estimar o notional de uma MARKET-por-quantidade (sem price): MINI_TICKER.close da
+> 59	// MEMORY do beholder. require LAZY de propósito — exchange é boundary de baixo nível e beholder é a engine;
+> ```
+
+## 🤖 Claude *(02:20:53)*
+
+
+## 🤖 Claude *(02:21:05)*
+
+Confirmado o desenho do `assertWithinRisk` (linha 40): o teto `MAX_ORDER_NOTIONAL` aplica a **qualquer** ordem — não distingue lado. Então **bloqueia a VENDA** igual bloquearia uma compra. Mas venda **reduz** risco — capá-la só **prende a posição**. É uma falha de desenho real (e o bloqueio é silencioso no backend, o D1 ao vivo).
+
+## 🎯 A situação, agora (sensível ao tempo)
+
+- **LTC = $44,53** (bestBid) — **acima do gatilho** ($44,39) e do break-even ($44). Vender 0,907 agora = **~$40,35, +$0,48 de lucro**. 🟢
+- A venda no-loss **dispara a cada vela e bate no teto $25** → fica presa.
+
+## Como destravar — 3 opções (recomendo a 1)
+
+1. **🥇 Você vende 0,907 LTC na Binance agora** (market ou limit ~$44,5). Instantâneo, captura o preço, zero risco de config. Eu reconcilio o `FARM_DCA→0` depois pra automação parar de re-tentar. *(eu não disparo ordem real — é tua mão)*
+2. **⚙️ Eu subo o teto $25→$50 + restart** → o Farm vende sozinho em ~1 min (o teto maior é inócuo agora: compras estão off, só as vendas armadas). Resulta numa venda REAL da tua posição.
+3. **🔧 Eu deployo o fix permanente** (o teto passa a **não bloquear VENDA**) com gate QA/TL, ~10 min, e o Farm vende sozinho daí em diante.
+
+**Recomendação:** faça a **(1) agora** pra travar o lucro neste preço, e eu já preparo a **(3)** (o fix definitivo, pra isso nunca mais prender posição) + deployo com gate. Se preferir não tocar na Binance, me dá o OK que eu faço a **(2)** (subo o teto + restart) na hora.
+
+Isso valida exatamente o que a revisão apontou: o cap trapaceia a saída protetiva. **Qual você quer?** (o preço está bom agora — decisão rápida ajuda)
+
+## 👤 User *(02:22:04)*
+
+se o preço ta bom temos que vender certo?
+
+## 🤖 Claude *(02:23:33)*
+
+
+## 🤖 Claude *(02:23:41)*
+
+**Sim — vender está certo.** E não pelo lucro de $0,48 (esse é simbólico). O ponto é:
+- ✅ É **exatamente o que o Farm no-loss foi desenhado pra fazer**: o LTC bounceou acima do custo+margem ($44,53 > $44,39), então sai.
+- ✅ **Recupera o USDT** (libera o capital) e **tira a concentração** num único alt num único regime (range) — que a revisão apontou como o risco real.
+- ✅ Está **verde** ($44,53, acima do break-even $44). Esperar mais é apostar em breakout num ativo lateral — baixa probabilidade.
+
+**A forma mais rápida de fazer agora** (o cap está travando a automação):
+
+- **🥇 Você vende 0,907 LTC na Binance** (market, ou limit ~$44,5) → ~$40,35 no bolso, instantâneo. *(eu não disparo ordem real — tua mão)*
+- **⚙️ OU me dá o "go"** que eu **subo o teto $25→$50 + restart** (~1 min) → o Farm vende sozinho. Inócuo agora (compras off, só vendas armadas).
+
+Depois eu deployo o **fix definitivo** (o teto passa a **não bloquear VENDA** — venda reduz risco, nunca mais prende posição) com gate.
+
+**Me diz: "vendo eu" ou "go destrava"** — e a gente captura esse preço. (rápido, que o LTC tá bom agora)
+
+## 👤 User *(02:23:43)*
+
+go go
+
+## 🤖 Claude *(02:24:25)*
+
+
+## 🤖 Claude *(02:24:27)*
+
+**Go.** Subindo o teto $25→$50 e recriando o backend pra liberar a venda. Primeiro confiro como o compose passa a env (pra garantir que o recreate aplica) + faço a troca no `.env`:
+
+## 🤖 Claude *(02:24:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== como o backend recebe a env (env_file/environment)? ===\"\ngrep -nE \"env_file|MAX_ORDER_NOTIONAL|environment:\" docker-compose.yml | head\necho \"=== valor atual no .env ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"^MAX_ORDER_NOTIONAL_USDT=\" /home/gcrux-tradeux/tradeux/.env'\necho \"=== troca 25 -> 50 ===\"\nsudo -n -u gcrux-tradeux bash -lc 'sed -i -E \"s/^MAX_ORDER_NOTIONAL_USDT=.*/MAX_ORDER_NOTIONAL_USDT=50/\" /home/gcrux-tradeux/tradeux/.env && grep -nE \"^MAX_ORDER_NOTIONAL_USDT=\" /home/gcrux-tradeux/tradeux/.env'",
+  "description": "Check env mechanism and raise MAX_ORDER_NOTIONAL to 50"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como o backend recebe a env (env_file/environment)? ===
+> 10:    environment:
+> 31:    env_file: .env
+> 56:    env_file: tradeux-agent/.env
+> 60:    environment:
+> === valor atual no .env ===
+> 69:MAX_ORDER_NOTIONAL_USDT=25
+> === troca 25 -> 50 ===
+> 69:MAX_ORDER_NOTIONAL_USDT=50
+> ```
+
+## 🤖 Claude *(02:24:40)*
+
+
+## 🤖 Claude *(02:24:41)*
+
+`env_file: .env` confirmado → o `--force-recreate` aplica. Teto agora **$50** no `.env`. Recriando o backend:
+
+## 🤖 Claude *(02:24:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --force-recreate backend 2>&1 | tail -4'",
+  "description": "Force-recreate backend to apply new cap"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(02:24:53)*
+
+
+## 🤖 Claude *(02:24:54)*
+
+Backend recriado. Vou acompanhar o boot + se a venda disparou (pode levar ~1 min: boot + MINI_TICKER aquecer + a vela avaliar):
+
+## 🤖 Claude *(02:24:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== A10.log (a venda disparou agora?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -6 /app/logs/A10.log 2>/dev/null\"' 2>/dev/null || echo \"backend ainda subindo...\"\necho \"\"\necho \"=== ordens SELL reais ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,quantity,net,FROM_UNIXTIME(transactTime/1000) t FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\" ORDER BY id DESC LIMIT 3;\\\" 2>/dev/null\"' 2>/dev/null\necho \"LTC agora: $(curl -s -m6 \"https://api.binance.com/api/v3/ticker/bookTicker?symbol=LTCUSDT\" 2>/dev/null)\"",
+  "description": "Check if Farm sell fired after cap raise"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A10.log (a venda disparou agora?) ===
+>   symbol: 'LTCUSDT',
+>   side: 'SELL',
+>   options: { type: 'LIMIT' },
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> 
+> === ordens SELL reais ===
+> LTC agora: {"symbol":"LTCUSDT","bidPrice":"44.55000000","bidQty":"57.94500000","askPrice":"44.56000000","askQty":"14.66000000"}
+> ```
+
+## 🤖 Claude *(02:25:09)*
+
+
+## 🤖 Claude *(02:25:11)*
+
+Ainda não disparou — backend acabou de recriar (o A10.log mostra a tentativa ANTIGA, pré-restart). LTC subindo: **$44,55**. Vou dar mais um tempo pro boot + ticker aquecer e checar de novo:
+
+## 🤖 Claude *(02:25:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== boot do backend (subiu? cap novo?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 3m backend 2>&1 | grep -iE \"Beholder|riskGuard|teto|brain|started|listening|MINI_TICKER|Farm Sell\" | tail -6'\necho \"\"\necho \"=== A10.log fresco + ordens SELL ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -10 /app/logs/A10.log 2>/dev/null\"'\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,quantity,net FROM orders WHERE isTestnet=0 ORDER BY id DESC LIMIT 3;\\\" 2>/dev/null\"'",
+  "description": "Re-check boot and Farm sell firing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot do backend (subiu? cap novo?) ===
+> 
+> === A10.log fresco + ordens SELL ===
+> info: 2026-06-20T22:12:40.413Z - Beholder evaluated a condition at automation: Farm Sell LTCUSDT => MEMORY['LTCUSDT:FARM_DCA'].qty>0 && MEMORY['LTCUSDT:BOOK'].current.bestBid>MEMORY['LTCUSDT:FARM_DCA'].cost*1.0120
+> info: 2026-06-20T22:12:40.423Z
+> error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA. {"stack":"Error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA.\n    at assertWithinRisk (/app/src/utils/exchange.js:53:19)\n    at Object.sell (/app/src/utils/exchange.js:125:9)\n    at placeOrder (/app/src/beholder.js:546:37)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async evalDecision (/app/src/beholder.js:905:28)\n    at async Promise.all (index 0)\n    at async testAutomations (/app/src/beholder.js:963:19)"}
+> info: 2026-06-20T22:12:40.423Z - {
+>   symbol: 'LTCUSDT',
+>   side: 'SELL',
+>   options: { type: 'LIMIT' },
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> id	side	status	avgPrice	quantity	net
+> 263	BUY	FILLED	43.85000000	0.22700000	9.96390395
+> 262	BUY	FILLED	43.84000000	0.22700000	9.96163168
+> 261	BUY	FILLED	43.87000000	0.22700000	9.96844849
+> ```
+
+## 🤖 Claude *(02:25:28)*
+
+
+## 🤖 Claude *(02:25:29)*
+
+O backend ainda não re-avaliou (A10.log só tem a tentativa antiga das 22:12). O grep do boot veio vazio — quero confirmar que subiu mesmo + que o teto $50 entrou no container. Checando:
+
+## 🤖 Claude *(02:25:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== backend status ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps backend --format \"{{.Status}}\"'\necho \"=== teto no container (deve ser 50) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"printenv MAX_ORDER_NOTIONAL_USDT\" 2>/dev/null' || echo \"container n\u00e3o respondeu\"\necho \"=== \u00faltimas linhas do boot (cru) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 2m backend 2>&1 | tail -8'",
+  "description": "Verify backend up, new cap in env, boot progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === backend status ===
+> Up 49 seconds
+> === teto no container (deve ser 50) ===
+> 50
+> === últimas linhas do boot (cru) ===
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Using environment "production".
+> backend-1  | No seeders found.
+> backend-1  | [TradeUX] Starting backend...
+> backend-1  | 
+> backend-1  | > backend@1.0.0 start
+> backend-1  | > node -r dotenv/config ./src/server
+> backend-1  |
+> ```
+
+## 🤖 Claude *(02:25:44)*
+
+
+## 🤖 Claude *(02:25:46)*
+
+✅ **Teto $50 confirmado no container.** O server node acabou de subir (migrate/seed feito). Falta ~30s pro brain inicializar + ticker aquecer, aí a venda dispara (LTC $44,55 > gatilho $44,39, e $40 < $50 agora passa). Checando se já saiu:
+
+## 🤖 Claude *(02:25:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== server pronto? + venda? ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\nif [ \"${#T}\" -lt 20 ]; then echo \"server ainda subindo...\"; else echo \"server OK\"; echo \"FARM_DCA: $(curl -s -m8 \"https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/FARM_DCA\" -H \"authorization: $T\")\"; fi'\necho \"=== A10.log (nova avalia\u00e7\u00e3o p\u00f3s-boot?) + ordens SELL ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -4 /app/logs/A10.log 2>/dev/null\"'\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,quantity,net,FROM_UNIXTIME(transactTime/1000) t FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\" ORDER BY id DESC LIMIT 2;\\\" 2>/dev/null\"'",
+  "description": "Check server ready and whether Farm sell fired"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === server pronto? + venda? ===
+> server OK
+> FARM_DCA: {"qty":0.908,"cost":43.862500000000004}
+> === A10.log (nova avaliação pós-boot?) + ordens SELL ===
+>   options: { type: 'LIMIT' },
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> ```
+
+## 🤖 Claude *(02:26:15)*
+
+
+## 🤖 Claude *(02:26:17)*
+
+Server up, FARM_DCA carregado, mas a venda ainda não re-avaliou pós-boot. A condição usa `LTCUSDT:BOOK.bestBid` — provável que o stream de BOOK ainda esteja aquecendo. Vou checar se o BOOK já populou + dar mais um tick:
+
+## 🤖 Claude *(02:26:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"LTCUSDT:BOOK = $(curl -s -m8 \"https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/BOOK\" -H \"authorization: $T\" | head -c 200)\"\necho \"HALT = $(curl -s -m8 \"https://tradeux.gcrux.com/api/system/halt\" -H \"authorization: $T\" | python3 -c \"import sys,json;print(json.load(sys.stdin)[\\\"halted\\\"])\")\"\n'\necho \"=== A10.log + SELL ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -c \\\"22:1\\\" /app/logs/A10.log; tail -3 /app/logs/A10.log 2>/dev/null\"'\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,net,FROM_UNIXTIME(transactTime/1000) t FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\";\\\" 2>/dev/null\"'\necho \"LTC: $(curl -s -m6 \"https://api.binance.com/api/v3/ticker/bookTicker?symbol=LTCUSDT\" 2>/dev/null | python3 -c \"import sys,json;d=json.load(sys.stdin);print(d[\\\"bidPrice\\\"])\")\"",
+  "description": "Check BOOK warm, HALT, and sell status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LTCUSDT:BOOK = {"previous":{"symbol":"LTCUSDT","bestAsk":"44.54000000","bestBid":"44.54000000"},"current":{"symbol":"LTCUSDT","bestAsk":"44.54000000","bestBid":"44.54000000"}}
+> HALT = False
+> === A10.log + SELL ===
+> 3
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> LTC: 44.54000000
+> ```
+
+## 🤖 Claude *(02:26:56)*
+
+
+## 🤖 Claude *(02:26:59)*
+
+BOOK quente ($44,54 > gatilho $44,39), HALT off, FARM_DCA ok, teto $50 — a condição está **satisfeita** mas a venda **não re-avaliou** pós-boot (A10.log só tem as 3 tentativas antigas). Algo está segurando a avaliação. Vou inspecionar o BRAIN (id10 está armada e reagindo ao BOOK?) e os monitores:
+
+## 🤖 Claude *(02:27:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"=== BRAIN: chaves com LTCUSDT (id10 armada?) ===\"\ncurl -s -m8 \"https://tradeux.gcrux.com/api/beholder/brain\" -H \"authorization: $T\" 2>/dev/null | python3 -c \"\nimport sys,json\ntry:\n  d=json.load(sys.stdin)\n  for k,v in (d.items() if isinstance(d,dict) else []):\n    if \\\"LTCUSDT\\\" in k:\n      ids=[a.get(\\\"id\\\") for a in v] if isinstance(v,list) else v\n      print(k,\\\"->\\\",ids)\nexcept Exception as e: print(\\\"brain parse:\\\",e, str(sys.stdin.read())[:150])\n\"\necho \"=== monitores LTCUSDT ativos? ===\"\ncurl -s -m8 \"https://tradeux.gcrux.com/api/monitor\" -H \"authorization: $T\" 2>/dev/null | python3 -c \"import sys,json\nd=json.load(sys.stdin); rows=d.get(\\\"rows\\\",d) if isinstance(d,dict) else d\nfor m in (rows if isinstance(rows,list) else []):\n  if m.get(\\\"symbol\\\")==\\\"LTCUSDT\\\" or m.get(\\\"type\\\")==\\\"BOOK\\\": print(m.get(\\\"id\\\"),m.get(\\\"type\\\"),m.get(\\\"symbol\\\"),\\\"active=\\\",m.get(\\\"isActive\\\"))\" 2>/dev/null || echo \"monitor endpoint shape diferente\"\n'",
+  "description": "Inspect BRAIN arming and BOOK monitor for LTCUSDT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BRAIN: chaves com LTCUSDT (id10 armada?) ===
+> === monitores LTCUSDT ativos? ===
+> monitor endpoint shape diferente
+> ```
+
+## 🤖 Claude *(02:27:20)*
+
+
+## 🤖 Claude *(02:27:22)*
+
+O BRAIN não retornou chaves LTCUSDT — pode ser id10 **não armada** pós-restart, ou shape diferente do endpoint. Preciso do dado cru. Vou dumpar o brain + confirmar id10 ativa + o log de boot do brain:
+
+## 🤖 Claude *(02:27:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== id10 ainda isActive? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,name,isActive FROM automations WHERE id IN (9,10);\\\" 2>/dev/null\"'\necho \"=== brain cru (chaves) ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\ncurl -s -m8 \"https://tradeux.gcrux.com/api/beholder/brain\" -H \"authorization: $T\" 2>/dev/null | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\"tipo:\\\",type(d).__name__);print(\\\"chaves:\\\",list(d.keys())[:25] if isinstance(d,dict) else d)\"\n'\necho \"=== boot log: brain arming + Farm Sell + lock ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 4m backend 2>&1 | grep -iE \"brain|Farm Sell|loaded|automation|monitor|lock|LTCUSDT\" | tail -12'",
+  "description": "Confirm id10 active, raw brain keys, boot arming log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === id10 ainda isActive? ===
+> id	name	isActive
+> 9	Farm Buy LTCUSDT	0
+> 10	Farm Sell LTCUSDT	1
+> === brain cru (chaves) ===
+> tipo: dict
+> chaves: ['10', '12', '14', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59']
+> === boot log: brain arming + Farm Sell + lock ===
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Loaded configuration file "config/config.js".
+> ```
+
+## 🤖 Claude *(02:28:25)*
+
+
+## 🤖 Claude *(02:28:28)*
+
+id10 **está armada** (brain keyado por ID: chave '10' presente) e ativa. BOOK quente, cap $50, condição satisfeita — mas não dispara. Suspeito que o **stream de BOOK não está tickando** (a venda só re-avalia num update de BOOK). Vou confirmar se o BOOK está vivo + checar lock/erro + se já vendeu:
+
+## 🤖 Claude *(02:28:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"BOOK #1: $(curl -s -m8 \"https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/BOOK\" -H \"authorization: $T\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(d[\\\"current\\\"][\\\"bestBid\\\"])\")\"\n'\necho \"(espera natural via 2\u00aa query)\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"BOOK #2: $(curl -s -m8 \"https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/BOOK\" -H \"authorization: $T\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(d[\\\"current\\\"][\\\"bestBid\\\"])\")\"\necho \"ordens SELL: $(curl -s -m8 \"https://tradeux.gcrux.com/api/orders/LTCUSDT?side=SELL\" -H \"authorization: $T\" 2>/dev/null | head -c 120)\"\n'\necho \"=== chart streams / book monitor no system.log (vivo?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"stream|terminated|book|monitor\\\" /app/logs/system.log 2>/dev/null | tail -6\"'\necho \"=== ordens SELL no DB ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,net FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\";\\\" 2>/dev/null\"'",
+  "description": "Check if BOOK is ticking, stream health, and sell status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> BOOK #1: 44.59000000
+> (espera natural via 2ª query)
+> BOOK #2: 44.59000000
+> ordens SELL: {"count":4,"rows":[{"id":263,"automationId":9,"symbol":"LTCUSDT","orderId":7322966251,"clientOrderId":"x-B3AUXNYVd9be4a8
+> === chart streams / book monitor no system.log (vivo?) ===
+> info: 2026-06-21T02:13:53.401Z - Monitoramento de Lucro Diário: $0.00 USDT (Meta: $500.00 USDT)
+> info: 2026-06-21T02:18:53.399Z - Monitoramento de Lucro Diário: $0.00 USDT (Meta: $500.00 USDT)
+> info: 2026-06-21T02:23:53.398Z - Monitoramento de Lucro Diário: $0.00 USDT (Meta: $500.00 USDT)
+> info: 2026-06-21T02:24:47.006Z - Monitoramento de Lucro Diário: $0.00 USDT (Meta: $500.00 USDT)
+> info: 2026-06-21T02:24:47.085Z - App Exchange Monitor is running!
+> info: 2026-06-21T02:24:50.777Z - userDataStream:subscribeEvent: "userData"
+> === ordens SELL no DB ===
+> ```
+
+## 🤖 Claude *(02:28:58)*
+
+
+## 🤖 Claude *(02:29:01)*
+
+**Achei a causa: era timing de boot.** O `system.log` mostra **"App Exchange Monitor is running!" às 02:24:47** — o monitor (e o stream de BOOK) só terminou de subir agora. Antes disso não havia ticks de BOOK → sem avaliação. O BOOK agora está **vivo** (44,54→44,59, tickando) e bestBid $44,59 >> gatilho $44,39. Deve disparar a qualquer segundo. Checando:
+
+## 🤖 Claude *(02:29:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== A10.log (disparou p\u00f3s-monitor 02:24:47?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -14 /app/logs/A10.log 2>/dev/null\"'\necho \"=== ordens SELL no DB ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,quantity,net,commissionAsset,FROM_UNIXTIME(transactTime/1000) t FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\";\\\" 2>/dev/null\"'",
+  "description": "Check if Farm sell fired after monitor came up"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A10.log (disparou pós-monitor 02:24:47?) ===
+>   options: { type: 'LIMIT' },
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> info: 2026-06-20T22:12:40.413Z - Beholder evaluated a condition at automation: Farm Sell LTCUSDT => MEMORY['LTCUSDT:FARM_DCA'].qty>0 && MEMORY['LTCUSDT:BOOK'].current.bestBid>MEMORY['LTCUSDT:FARM_DCA'].cost*1.0120
+> info: 2026-06-20T22:12:40.423Z
+> error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA. {"stack":"Error: [riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA.\n    at assertWithinRisk (/app/src/utils/exchange.js:53:19)\n    at Object.sell (/app/src/utils/exchange.js:125:9)\n    at placeOrder (/app/src/beholder.js:546:37)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async evalDecision (/app/src/beholder.js:905:28)\n    at async Promise.all (index 0)\n    at async testAutomations (/app/src/beholder.js:963:19)"}
+> info: 2026-06-20T22:12:40.423Z - {
+>   symbol: 'LTCUSDT',
+>   side: 'SELL',
+>   options: { type: 'LIMIT' },
+>   limitPrice: '44.25000000',
+>   quantity: '0.90700000'
+> }
+> === ordens SELL no DB ===
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5740,6 +6269,5 @@ Quer que eu **dispare esse lote agora** (começando pela trava do cofre)? Ou pre
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-19 - agent-af6d93040e18b75ff]]
-> * **Próxima Sessão**: [[2026-06-20 - Estratégia de lucro em mixed, trend e outros]]
+> * **Sessão Anterior**: [[2026-06-20 - agent-af831631ec7f7aefd]]
 %% --- TIMELINE END --- %%
