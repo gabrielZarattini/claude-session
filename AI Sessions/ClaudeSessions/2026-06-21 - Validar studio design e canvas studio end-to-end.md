@@ -1,0 +1,4446 @@
+# Validar studio design e canvas studio end-to-end
+**Date:** 2026-06-21 | **Session ID:** `960541c2-7795-4f2f-ae49-c8f9f3e35c84`
+
+---
+
+## 👤 User *(22:33:08)*
+
+<command-message>handson</command-message>
+<command-name>/handson</command-name>
+
+## 👤 User *(22:33:08)*
+
+# ShakeHands — Session Pick-Up Protocol v3
+
+Execute the ShakeHands /handson ritual for this project.
+
+> **v3 (2026-05-08):** Added BoK Gate enforcement per MCORCH Master Execution Protocol — alert when active module work has no sealed BoK suite at `docs/bok/<slug>/`.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before reading anything)
+
+```bash
+git log --oneline -7                        # recent history + commit style
+git status --short                          # uncommitted changes
+git diff HEAD --stat                        # change scope
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # Chroma API v2 health
+ls docs/bok/ 2>/dev/null                    # BoK suites disponíveis
+wc -l HANDOFF.md                            # total lines — drives the read-from-end offset
+```
+
+Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+- `HANDOFF.md` with `limit=71` → Task State header + FIRST ACTION FOR NEXT AGENT (sempre estável, contém summary da fase atual selada)
+- `HANDOFF.md` with `offset=<total_lines - 400>` `limit=400` → últimas 1-2 Records + Pending Actions + GraphRAG State + Infrastructure + Key Files (suffix sections always at the tail)
+- `CLAUDE.md` (architecture rules, data flow, key files — incluindo MCORCH Master Execution Protocol + Survival Laws link)
+- `.claude/context/sprint-priorities.md` (sprint goal, 4Cs snapshot, top gaps)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (memory index)
+
+> ⚠️ **Auditoria histórica de seals antigos:** usar `Read` com offset arbitrário em HANDOFF.md (fora do fluxo padrão de pickup). Ordering newest-first: seal mais antigo ≈ linha 2805, seal mais recente logo após linha 71. Cada `## <Phase> Record (YYYY-MM-DD)` marca um seal. Manter o Read em chunks ≤ 400 linhas para preservar budget de tokens.
+
+Also check for loose files in scratch/:
+```bash
+ls scratch/ 2>/dev/null && echo "⚠️ scratch/ has files — consider moving to .claude/scripts/db/" || echo "scratch/ clean ✅"
+```
+
+### BoK Gate check (v3 — MCORCH Master Execution Protocol)
+
+For each BoK suite in `docs/bok/<slug>/`, verify completeness:
+```bash
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] && echo "✅ $slug — BoK complete" || echo "⚠️ $slug — missing: ${missing[*]}"
+done
+```
+
+If the user mentions working on a **new module / complex feature / integration / architectural change**:
+- Check whether `docs/bok/<expected-slug>/` exists with all 9 docs.
+- If missing: surface in the **ALERTAS** section as a critical block per CLAUDE.md MCORCH Master Execution Protocol.
+- Recommend `/bok-scribe <idea summary>` before any code is written.
+
+---
+
+## BRIEF OUTPUT
+
+After gathering all context, produce a structured brief in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDSON — <FASE SELADA> (<data do último seal>)
+═══════════════════════════════════════════════════════════
+
+🏁 ESTADO ATUAL
+  Fase selada: <nome da última fase — do Task State header>
+  Últimos commits:
+    <hash> — <mensagem>
+    <hash> — <mensagem>
+    <hash> — <mensagem>
+
+📂 MUDANÇAS PENDENTES
+  <lista de arquivos M/?? com descrição do que contém, ou "Worktree limpo ✅">
+
+🏗️ INFRA
+  mcorch_chroma:     <status> — Chroma API: <OK / ERRO>
+  mcorch_claude_mem: <status>
+  mega-brain-*:      <status resumido>
+
+🧠 KNOWLEDGE MESH
+  <totalNodes> nós · <totalEdges> arestas (fonte: HANDOFF.md GraphRAG State)
+  Top tipos: <milestone:N · architecture:N · decision:N ...>
+
+🔧 TYPESCRIPT
+  <"Zero erros ✅" ou lista dos erros críticos>
+
+📚 BoK SUITES (v3 — MCORCH Master Execution Protocol)
+  Sealed: <list of docs/bok/<slug>/ com 9 docs completos>
+  Incomplete: <slugs com docs faltando ou "nenhum">
+  Mesh seal nodes:
+    <slug> → <node_id> (stability X.XX)
+
+⚠️ **GATE alert:** se sessão tocar módulo significativo sem BoK selada,
+    listar como bloqueador crítico e sugerir /bok-scribe antes de qualquer commit.
+
+📌 SPRINT
+  Goal: <Sprint Goal de sprint-priorities.md, ou "⚠️ Sprint goal não definido — rode /audit">
+  Top gap: <Gap #1 da seção "Top 3 Gap Closures", ou "não definido">
+
+⚡ PRÓXIMOS PASSOS (prioridade)
+  1. <item de maior prioridade do Pending Actions — com contexto de por que é urgente>
+  2. <segundo item>
+  3. <terceiro item>
+
+⚠️ ALERTAS
+  <containers unhealthy, TS errors, uncommitted changes que conflitam, scratch/ com arquivos, ou "Nenhum alerta ✅">
+
+═══════════════════════════════════════════════════════════
+  Pronto para trabalhar. Aguardando direção.
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+## Rules
+
+- **TypeScript errors → report immediately.** If there are TS errors, list them under ALERTAS. Do not start implementing new features until errors are resolved (unless the user explicitly asks to proceed despite errors).
+- **Unhealthy containers → report with triage.** Suggest the fix command if known (e.g., `docker compose restart mcorch-vector-engine` for chroma).
+- **Uncommitted changes → describe, do not commit.** Only describe what exists in the working tree; committing is the user's call.
+- **Keep the brief tight.** No padding. No repetition of CLAUDE.md architecture. The user already knows the architecture — they need the delta: what changed, what's broken, what's next.
+- **Pending Actions priority order:** CRITICAL (before first client) > NON-CRITICAL > Phase Zeta > Core v3 > Epsilon v9.
+- **Knowledge Mesh numbers:** use `GraphRAG State` section from HANDOFF.md as the source. Do not invent counts.
+
+
+## 🤖 Claude *(22:33:12)*
+
+
+## 🤖 Claude *(22:33:12)*
+
+I'll execute the ShakeHands /handson pickup protocol. Starting with parallel pre-flight checks.
+
+## 🤖 Claude *(22:33:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -7",
+  "description": "Recent git history"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 127b1a1 chore(sprint): registra v6.44.0 — Viral Autopilot Fatia 2 (cadência R2 + loop R3 + UI)
+> 10f2301 docs(handoff): seal Viral Autopilot Fatia 2 — cadência R2 + loop R3 auto-melhorável + UI
+> 1ef3185 docs(readme): v6.44.0 — Viral Autopilot Fatia 2 (cadência R2 + loop R3 auto-melhorável + UI)
+> bfd178b feat: Viral Autopilot Fatia 2 — UI (useAutopilot + AutopilotPage) para criar/gerenciar planos
+> 35554da feat: Viral Autopilot Fatia 2 — R3 loop auto-melhorável (analyze + collect + feedback injection)
+> 54ac2a9 feat: Viral Autopilot Fatia 2 — edge functions do cron (executor + driver + caminho prepaid)
+> 0c59e4d test: smoke zero-cost dos RPCs de custo do Viral Autopilot (G3/G4/G5)
+> ```
+
+## 🤖 Claude *(22:33:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short",
+  "description": "Uncommitted changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(22:33:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git diff HEAD --stat",
+  "description": "Change scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(22:33:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -20",
+  "description": "TypeScript strict check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(22:33:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; echo \"---\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"",
+  "description": "Docker mesh container status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 4 days (healthy)
+> mcorch_claude_mem: Up 6 days (healthy)
+> mcorch_chroma: Up 6 days (healthy)
+> ---
+> mega-brain-dashboard: Up 6 days
+> mega-brain-webhook: Up 6 days (healthy)
+> mega-brain-daemon: Up 6 days (healthy)
+> ```
+
+## 🤖 Claude *(22:33:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s http://localhost:8001/api/v2/heartbeat",
+  "description": "Chroma API v2 health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"nanosecond heartbeat":1782081197356275841}
+> ```
+
+## 🤖 Claude *(22:33:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls docs/bok/ 2>/dev/null; echo \"--- wc HANDOFF ---\"; wc -l HANDOFF.md; echo \"--- scratch ---\"; ls scratch/ 2>/dev/null && echo \"scratch has files\" || echo \"scratch clean\"",
+  "description": "BoK suites, HANDOFF size, scratch check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agentic-workspace
+> aios-sql-bridge
+> authenticated-browser-operator
+> canvas-design
+> constellation-v2
+> conteudo-v2
+> e2e-user-zero
+> gamificacao-nodes
+> identity-fabric
+> marketing-hub
+> mcorch-constellation
+> mcorch-qa-healing
+> mercado-livre-api
+> meta-api
+> openclaw
+> post-engine
+> security
+> viral-autopilot
+> viral-daily-canvas
+> viralmind
+> vision-mcp
+> --- wc HANDOFF ---
+> 8127 HANDOFF.md
+> --- scratch ---
+> scratch has files
+> ```
+
+## 🤖 Claude *(22:33:23)*
+
+
+## 🤖 Claude *(22:33:23)*
+
+TS clean, git clean, all containers healthy, Chroma OK. Now reading HANDOFF (head + tail), sprint priorities, and checking scratch.
+
+## 🤖 Claude *(22:33:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 71
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Session Seal — Viral Autopilot Fatia 2: cadência R2 + loop R3 auto-melhorável + UI (FR-VA-002/005/007/008/010/011/014/016/021) (2026-06-20)
+> 15	
+> 16	`/handson` → diretiva Sovereign "vamos aos próximos passos" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Arco Closed-Loop por fatia (mapeamento do contrato vivo → escopo → SOP Lei 2 → código → /security-review → deploy → smoke zero-cost → seal), 4 GOs soberanos via AskUserQuestion. **Motor de conteúdo viral autônomo COMPLETO (R1+R2+R3+R4), tudo provado materialmente sem gastar 1 centavo do Sovereign.**
+> 17	
+> 18	**O que foi entregue (5 commits granulares):**
+> 19	1. **Fundação (`686bae3`) — gate Lei 2 + tabelas + RPCs de dinheiro.** SOP antecipado `docs/processes/autopilot-cron-identity.md` (OTD-VA-008, 10 gates: identidade cron server-trusted + atomicidade pré-débito/refund). Migrations `20260620120000..120300`: `autopilot_plans`/`autopilot_cycles` (FK composta tenant-escopada `(plan_id,user_id)`, RESTRICTIVE no-delete, fecha a FK composta pendente de `creative_metrics`) + `begin_autopilot_cycle` (cap diário+ciclo+saldo + pré-débito ÚNICO sob `pg_advisory_xact_lock` anti-TOCTOU, service-role-only) + `finalize_autopilot_cycle` (refund crédito-positivo idempotente claim-once, espelha `finalize_vision_job`; nunca deduct negativo).
+> 20	2. **Smoke RPC (`0c59e4d`) — 11/11 zero-cost.** `smoke-autopilot-budget.ts`: pré-débito exato · cap diário/ciclo/saldo abortam sem deduzir · refund idempotente · clamp anti-mint · FK CASCADE.
+> 21	3. **Edge functions (`54ac2a9`) — executor + driver + caminho prepaid.** `autopilot-run` (identidade 2-caminhos service-role+header OU user-JWT+load tenant-scoped → begin → fan-out `orchestrate-content` prepaid → finalize → re-arma `next_run_at`; dry_run zero-cost) · `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) · `orchestrate-content` FR-VA-016 (caminho cron prepaid pula o débito SEM tocar sentinel/produtos/kick; user-path 100% intacto). `verify_jwt=false` no config.toml.
+> 22	4. **R3 loop (`35554da`) — auto-melhorável.** `autopilot-analyze` (FR-VA-010: tenant da linha do ciclo, ranqueia `creative_metrics`→`optimization_policy`; 2mco só standalone+real-data; não inventa) · `autopilot-collect` (FR-VA-008: `affiliate_links`→`creative_metrics`; orgânico fail-soft) · `orchestrate-step` FR-VA-011 (lê policy do tenant → injeta diretiva vencedora nos 3 prompts + taggeia `cycle_id`; hint sanitizado).
+> 23	5. **UI (`bfd178b`) — usável.** `useAutopilot` (hook harness CRUD + ciclos + run-now/Simular + pause/activate) + `AutopilotPage` (`/dashboard/autopilot`: empty-state + cards + dialog de criação) + rota lazy + nav. types.ts regen (additive).
+> 24	
+> 25	**ORO:** Operator=MCORCH Master Execution Agent · Reviewer=Sovereign (4 GOs AskUserQuestion) + `/security-review` independente **SAFE 3×** (migrations 6-vetores · edge fns 6-vetores · R3 7-classes) · Owner=Sovereign (blast radius = carteira do tenant gasta autonomamente).
+> 26	
+> 27	| Verificação (material) | Resultado |
+> 28	|---|---|
+> 29	| Migrations | ✅ `db push` exit 0 + Management API (2 tabelas · RLS 2/2 · 6 policies · 2 RPCs · 5 constraints · grants anon/auth=false svc=true) |
+> 30	| Prova comportamental RPC | ✅ anon→401 `42501 permission denied` · service `projected=0`→`22023` guard antes de débito |
+> 31	| Edge fns deployadas | ✅ orchestrate-content 114.8 · autopilot-run 63.1 · cadence-cron 59.52 · analyze 60.92 · collect 59.72 · orchestrate-step 132 kB |
+> 32	| `/security-review` | ✅ SAFE 3× (0 findings ≥ High) |
+> 33	| Smokes zero-cost (31 gates) | ✅ budget 11/11 · run 9/9 · loop 11/11 (usuário descartável) |
+> 34	| UI render (ocular) | ✅ `/dashboard/autopilot` heading+empty-state+nav+HUD 5241 (preview local à prova de CF, sessão injetada, sem redirect /auth) |
+> 35	| tsc | ✅ 0 erros |
+> 36	| Commits | `686bae3` · `0c59e4d` · `54ac2a9` · `35554da` · `bfd178b` · readme · handoff |
+> 37	
+> 38	### Survival Laws Self-audit
+> 39	```
+> 40	Law 1 (Materiality): ✅ Toda claim provada NESTE turno — migrations via Management API real, RPCs via curl 401/22023, smokes via SELECT real (delta saldo, idempotência), UI via DOM text + screenshot ocular. NÃO fabriquei: o 1º ciclo PAGO real foi declarado gated (Sovereign + 2 blockers CF/OpenAI), não simulado. Fase 5c mecânica abaixo.
+> 41	Law 2 (Process): ✅ SOP [[autopilot-cron-identity|autopilot-cron-identity]].md ANTES do código (gate OTD-VA-008). Mapear o contrato vivo antes de cada fatia pegou correções materiais (analyze lê creative_metrics não affiliate_links; cost-model prepaid; FK composta).
+> 42	Law 3 (Pruning): ✅ Sessão longa empacotada (5 fatias) sob GOs explícitos; recon referenciado por path; selei ao esgotar o roadmap autônomo (resto é Sovereign-side) + GO de seal do Sovereign.
+> 43	Law 4 (ORO): ✅ Triplet declarado; 4 GOs de escopo via AskUserQuestion; /security-review independente como Reviewer mecânico em cada fatia de código.
+> 44	```
+> 45	
+> 46	## Session Seal — Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetização cross-surface + imagem (FR-VA-003/004/009/012/013/016) (2026-06-20)
+> 47	
+> 48	`/handson` → diretiva "vamos aos próximos passos" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Arco Closed-Loop por fatia: **mapeamento (workflow) → escopo cravado → SOP Lei 2 → código → /security-review → deploy → E2E pago material → seal**. Três fatias de trabalho numa sessão, todas provadas em produção; nenhuma improvisação além do BoK + correções materiais declaradas honestamente.
+> 49	
+> 50	**O que foi entregue:**
+> 51	1. **Fatia 1 (commit `4af8b8b`) — gerador product-aware + monetização cross-surface.** Workflow de mapeamento (6 readers BoK + 5 readers código) cravou o escopo. **FR-VA-003:** prompts virais de consumo featuring o produto escolhido (artigo/LinkedIn/X); fallback B2B quando sem produto (backward-compat — campaign-run/intent-execute intactos). **FR-VA-004:** `monetizeForProduct` (`_shared/affiliate.ts`) monetiza as 3 superfícies determinístico por produto; grava `affiliate_links.content_id = content_library.id` (ANTES sempre null — defeito-núcleo FECHADO). **FR-VA-016 (metade-produto):** orchestrate-content resolve `product_ids` do catálogo (authoritative), sanitiza cada nome pelo Cyber-Sentinel (Apify = dado externo, fail-closed por produto), grava em `pipeline_runs.metadata.products`. **FR-VA-009:** nova migration `creative_metrics` (`20260619140000`, RLS SELECT-own + service-role-write default-deny + RESTRICTIVE no-delete + UNIQUE(content_variant_id,source) + 5 CHECKs; cycle_id reservado NULL p/ a fatia do cron). **UI:** picker de produtos na TriggerNode substitui o input de URL livre dropado.
+> 52	2. **Fatia 1b (commit `ba5d281`) — imagem product-referenced (FR-VA-013).** Workflow de mapeamento (4 readers) cravou a fiação. `generate-image` ganhou **dual-path auth** (service-role + `user_id` no body, espelha publish-wordpress) + retorna o `path` durável do storage. orchestrate-step: bloco de imagem DENTRO do article_generation (não novo step na ladder — evita drift), gated `hasProducts`, **FAIL-OPEN com status `skipped`** (não `error` — senão o finalize marcaria o run error), guarda PATH em `content_library.media_url` (bucket privado → re-assina na leitura). Sem migration, sem mudança de frontend, **sem cobrança extra** (imagem já no bundle de 10).
+> 53	3. **fix(generate-image) (commit `803f946`) — bug universal `response_format`.** OpenAI removeu o parâmetro do endpoint de imagens (400 "Unknown parameter"); removido + tratamento url/b64/data-URI (baixa bytes da url) + surfacing do `upstream` error.
+> 54	4. **Diagnóstico cravado da saída visível** (Sovereign pediu "destravar"): **WP publish = Cloudflare bot-challenge** no `/wp-json` (403 "Just a moment...", mesmo autenticado — creds OK; ação: regra WAF Skip como no `mcp.mcorch.com`); **imagem nanobana = `api.nanobana.com` não resolve DNS** (endpoint morto); **imagem openai = chave-projeto `proj_rWo9…` sem acesso a NENHUM modelo de imagem** (chave válida `/v1/models`→200; ação: habilitar model access no OpenAI dashboard).
+> 55	
+> 56	**Correções materiais ao contrato BoK (declaradas):** imagem é DALL·E text-only (sem image-to-image) → product-referenced = prompt descritivo, não o image_url como referência visual (deferido); generate-image precisou do dual-path auth (orchestrate-step roda com service-key). Anexo de imagem no publish-layer (LinkedIn/X/Meta/WP featured) = fatias seguintes.
+> 57	
+> 58	**ORO:** Operator=MCORCH Master Execution Agent · Reviewer=Sovereign (4 decisões via AskUserQuestion: ship Fatia 1 · próxima fatia=1b · destravar=diagnóstico · selar) + `/security-review` independente (SAFE em ambas as fatias) · Owner=Sovereign (blast radius = comportamento de geração + carteira do tenant + links/conteúdo publicados).
+> 59	
+> 60	| Verificação (material) | Resultado |
+> 61	|---|---|
+> 62	| Migration `creative_metrics` | ✅ aplicada (`db push` exit 0) + verificada (RLS on · 2 policies · UNIQUE + 5 CHECKs via Management API) |
+> 63	| Edge fns deployadas | ✅ orchestrate-content 113.8kB · orchestrate-step 130.9kB · generate-image 127.2kB |
+> 64	| Frontend (nginx) | ✅ buildado (exit 0); picker no chunk servido; input antigo removido |
+> 65	| E2E Fatia 1 (`158ba7fc`) | ✅ 3 criativos product-aware · 3/3 `affiliate_links.content_id` NON-NULL casando content_library.id · 3 creative_metrics · delta saldo 10 |
+> 66	| E2E Fatia 1b (`46a98963`) | ✅ step `image_generation` `skipped` (fail-open) · `article_generation` `done` · run não-errado pela imagem · 3/3 content_id NON-NULL (zero regressão) · delta 10 |
+> 67	| Auth generate-image (direto) | ✅ 400 sem user_id · 401 não-service · alcança provider |
+> 68	| UI ocular | ✅ TriggerNode com PRODUTOS (3 SKUs) @ 1920×1080 (preview local + sessão injetada) |
+> 69	| `/security-review` | ✅ SAFE (Fatia 1) · SAFE 9/10 (Fatia 1b dual-path) |
+> 70	| tsc · suíte | ✅ 0 erros · 295 passed |
+> 71	| Commits | `4af8b8b` · `ba5d281` · `803f946` · `0f24ce3` (readme) · (handoff) |
+> ```
+
+## 🤖 Claude *(22:33:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 7727,
+  "limit": 400
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 7727	ContentLibraryPage monetization flow:
+> 7728	  Card (text, body contains mercadolivre.com.br)
+> 7729	    └── DropdownMenu → "Monetizar Links ML"
+> 7730	          → handleMonetizeLinks(item):
+> 7731	               match(ML_URL_RE) → unique URLs
+> 7732	               for url of unique:
+> 7733	                 POST process-affiliate-link → affiliate_url
+> 7734	                 body.split(url).join(affiliate_url)
+> 7735	               updateContent({ body: updatedBody, tags: [..., "afiliado-ml"] })
+> 7736	          → Badge 💰 ML (emerald) exibido após monetização
+> 7737	```
+> 7738	
+> 7739	---
+> 7740	
+> 7741	## Pending Actions (Commercial Launch)
+> 7742	
+> 7743	### CRITICAL — Must complete before first client
+> 7744	
+> 7745	🎯. **[Fatias 1/1b/2 SHIPPED — pendente: ativação Sovereign + trends] Viral Autopilot** — BoK 9/9 selada (`b3398294`). **Motor autônomo R1+R2+R3+R4 COMPLETO e provado zero-cost.** ✅ **Fatia 2 (cadência R2 + loop R3 + UI, commits `686bae3`→`bfd178b`):** SOP Lei 2 `autopilot-cron-identity.md` (OTD-VA-008 fechado) · migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant + RPCs `begin`/`finalize_autopilot_cycle` atômicos sob advisory-lock, service-role-only) · 6 edge fns deployadas (`autopilot-run` executor + `-cadence-cron` driver pg_cron + `-analyze` FR-VA-010 + `-collect` FR-VA-008 + `orchestrate-content` FR-VA-016 prepaid + `orchestrate-step` FR-VA-011 inject) · UI `/dashboard/autopilot` (`useAutopilot`+`AutopilotPage`). `/security-review` SAFE 3× · 3 smokes zero-cost (31 gates) · render ocular. **PENDENTE:** **(A)** ⚠️ **ação Sovereign** — ativar o **`pg_cron` schedule** que chama `autopilot-cadence-cron` (a função existe+provada; só o JOB pg_cron é ativação Sovereign-side, `Bearer SB_SECRET_KEY` via Vault) + rodar o **1º ciclo PAGO real** (mco real), gated nos 2 blockers de saída visível diagnosticados na Fatia 1b: **CF WAF skip `/wp-json/*`** + **OpenAI image model access**; **(B)** `fetch-trends`/`vm_trends`→pauta do ângulo viral (FR-VA-018, último item autônomo); **(C)** mídia viral 9:16 + TikTok/IG/YT (fase 2); **(D)** provar postback ML real (OTD-VA-007/OTD-ML-MP-PER-USER). Constraints chave (cravados no código): `N_runs=prod×rede×ab_variants`, imagem no bundle de 10, refund crédito-positivo (NUNCA deduct negativo — anti-mint `20260603220000:45`), FK composta tenant-escopada, analyze inline=prepaid (reserva de 2 só vira actual com dado real).
+> 7746	
+> 7747	🌌. **[EM ANDAMENTO — Phase Epsilon V9] Unified Sensorial Canvas — Fases 3.5-3.10** — Fases 3.1-3.4 ✅ (scaffold rota/store/shell 72-28 + Code Network R3F InstancedMesh Louvain + Memory Network cymatics shell + Black Hole MegaBrain backdrop; E2E ocular nos 3 modos; commits `210b90d`/`d832084`/`4940b4d`/`38d9760`/`769acb1`). **Restam:** **3.5** Sinapses inter-rede (arestas **REAIS** de `mcorch_edges` cruzando código↔memória, lit só no modo Universo — nunca fabricar) · **3.6** fly-to (select→`useNodeIntelligence` + câmera anima até o cluster) · **3.7** layout/perf (`OTD-UCANVAS-PERF` — a query do código leva **~30s** com 2 canvases; considerar Louvain em Web Worker / streaming do grafo / lazy do backdrop) · **3.8** executar a poda do squad-coloring (`OTD-SQUAD-OWNERSHIP-REVIVAL`) · **3.9** paridade + cutover de nav + gate E2E 1920×1080 · **3.10** seal. Plano vivo: `.claude/context/unified-core-sensorial-canvas-plan.md`. BoK selada (PR-025 · FR-043..049 · NFR-023/024 · SDD §9). **3 páginas legadas (matrix/memory/core-fable) preservadas como backup até 3.9.**
+> 7748	
+> 7749	🔐. **[DEFERIDA — diretiva CISO 2026-06-09] Suíte BoK de Segurança (Production Hardening)** — o Sovereign emitiu a diretiva `MCORCH CYBER-SENTINEL` (gerar `docs/bok/security/{01-brd-security,02-srs-secure-spec,03-sdd-hardening-architecture,04-fmea-security}.md`) mas **interrompeu em favor do seal do Kanban**. O blueprint-semente está commitado (`6b1571a`, `docs/bok/security/00-deepsearch-blueprint.md`). Escopo a gerar (production-ready, sem placeholders): **01-brd** 12 BRs (BR-SEC-001..012 — proteção do ledger mcoCoins, anti-prompt-injection no edge routing, chaves Stripe live, brand protection Yachtmax/OKEAN); **02-srs** 15 FRs (FR-SEC-001..015 — verificação de prompt edge-native, validação manual de assinatura JWT por runtime, rotação OAuth social, Vault; matriz RLS canônica `CREATE POLICY` multi-tenant user_id+project_id); **03-sdd** configs reais (lefthook.yml paralelo de secret-scan, `.husky/pre-commit` p/ monorepo aninhado, middleware Edge TS multi-camada com `@arcjet/next`, Dockerfile multi-stage `appuser` UID 1001, docker-compose dropando `CAP_CHOWN/DAC_OVERRIDE/SETUID/SETGID` + `cpus`/`mem_limit`); **04-fmea** RPN p/ vetores AIOS (prompt-injection→billing bypass, log poisoning ANSI, network drift) com remediação L1 edge-reject + L2 self-heal <50ms. **Sessão dedicada** — reaplicar a diretiva com o blueprint como Fonte da Verdade.
+> 7750	
+> 7751	00. **[✅ DONE — todas as sub-fases completas em 2026-05-31] Plano OE-661 + Ledger SOP + Canvas 4.2c smoke** — Phase 1 (token + content_mesh_asset emit + first E2E em v6.8.2; Amendment D synthetic chain em v6.8.6) ✅ DONE. Phase 2 ledger reconciliation (drift Sovereign -0.01→0.0000 via integer parity bump; OTD-V660-001 retroactively closed pois user 924cb32e foi LGPD-removido) ✅ DONE em v6.8.6. Phase 3.5 watchdog cron permission fix (/var/log/mcorch-canvas-watchdog.log criado chown ubuntu) ✅ DONE em v6.8.6. **Phase 3.2-3.4 Canvas DoP Standard 5s $0.56 paid smoke** ✅ DONE (validado materialmente 2026-05-31) — pipeline async Higgsfield DoP provado 6× via `mcoin_transactions.action=canvas_video_spend` −125 mcoCoins cada (débito atômico `deduct_mco_coins`), com vídeos reais em `canvas-assets` (Roborock `0b86e7d0`/`n_uznqm9z0` → `81bf34ec…mp4` 15.336.638 B; mais recente hoje 20:32 → 8.918.799 B; ambos HTTP 200 `video/mp4`). Gates materiais G4 (débito) / G6 (vídeo ≥100KB) / G8 (`output.videoUrl` no graph) verdes na prática; smoke fresco dispensado por ser gasto redundante. Tracking real = `vm_canvas_executions` + `execution_id` (a `vm_canvas_jobs` nunca foi criada; SOP `canvas-video-async-execution.md` já usa o nome correto). Plan file `.claude/context/execution-plan-oe661-carryovers.md` (mesh node `3dde2572-cad6-491b-b523-c56ec763ff8e`) preservado para sessão dedicada.
+> 7752	
+> 7753	0a. ~~**[SLA 2026-05-24] OTD-SSP01-001 BoK Gate override do `aios-sql-bridge`**~~ ✅ Done em v6.6.8 (2026-05-19) — SDD materializado em `docs/bok/aios-sql-bridge/05-sdd.md` (376 LOC) + suite skeleton `00-index.md` + documentation_suite seal `4e0acc7e` (stability 0.85, DERIVES_FROM openclaw seal). Encerrou retroativamente a OTD antes do SLA.
+> 7754	
+> 7755	0. **[PRÓXIMA SESSÃO] Canvas Studio Phase 4.2** — (a) **analisar a documentação oficial da API Higgsfield** (`platform.higgsfield.ai`) ANTES de testar — evita gastar os créditos pagos com tentativa-e-erro; (b) testar o fix do endpoint Higgsfield (1 geração Soul) confirmando débito de crédito real; (c) executar Phase 4.2 conforme `~/.claude/plans/floating-sleeping-sparrow.md` — port dos 5 nós tipados + inspectors ricos + pipeline de vídeo Higgsfield async (webhook + `vm_canvas_jobs` + realtime). **Bloqueia validação do Canvas → bloqueia lançamento de conteúdo monetizado via afiliados ML.**
+> 7756	
+> 7757	0b. **[PRÓXIMA INICIATIVA] Canvas Design module (`nexu-io/open-design`)** — integração do repo open-source como módulo "Canvas Design" soberano: daemon Docker `mcorch-design-daemon` headless · frontend `/dashboard/canvas-design` (regra espacial 72/28) · mapeamento HyperFrames → `mcorch_nodes`/`mcorch_edges` · BYOK via OpenRouter/Ollama. Sessão dedicada — primeiro passo `/bok-scribe canvas-design` (BoK Gate). Recomendado APÓS o `mcorch-qa-healing` v1 (esta seal) para que o novo gate de prova material valide a integração.
+> 7758	
+> 7759	0c. ~~**[FOLLOW-UP v6.8.5] e2e-user-zero framework — 2ª iteração**~~ ✅ **DONE em v6.19.0** (commits `cf6e464` + `e788d76`) — redactor LGPD + mesh-persistor + telemetry + 6 flows + selftest 8 testes + pre-commit tripwire, todos materializados e provados (suite 224/226, selftest 8/8). Histórico do que faltava (agora entregue): (a) 6 flows restantes (`trigger-orchestration`, `dashboard-tour`, `canvas-overview`, `content-library`, `billing-flow`, `settings-tour`, `orchestrate-pipeline-view`) conforme MR-E2E priorizados na `02-brd.md`; (b) **redactor LGPD Layer 2** (`lib/redactor.ts` ~120 LOC) — sed de headers `Authorization|Cookie|apikey|x-api-key|x-supabase-*` + body redaction em `redactedPaths` + sanitização de cookies — BEFORE qualquer commit de HAR; (c) **mesh-persistor** (`lib/mesh-persistor.ts` ~100 LOC) — insere `observation` node + `OBSERVES` edge por finding com idempotency key SHA-256; (d) **telemetry** (`lib/telemetry.ts` ~60 LOC) — emit `infra_health_logs` events `e2e_user_zero_run_started/complete/failure/auth_expired`; (e) **runner selftest** (`__selftest__/runner.test.ts` ~150 LOC) — runner executado contra mock browser fixtures; (f) **Pre-commit hook extension** — scan `e2e-output/` por padrões `eyJ.*\.eyJ`, `sk_(live|test)_`, `sbp_`, `whsec_` antes de aceitar commit. Total estimado: +590 LOC restantes do SDD. Recomendado executar JUNTO com Canvas Studio Phase 4.2 — primeira sessão real de UI permite testar dogfood mode + redactor sobre flows credentialed e PRIMEIRA emissão do claim `e2e_user_zero_last_pass: <id>` no Phase 5c.
+> 7760	
+> 7761	1. ~~**[DQP 🔴] Implementar `process-affiliate-link`**~~ ✅ Done (2026-04-26)
+> 7762	
+> 7763	2. ~~**[DQP 🔴] Revenue webhook (`handle-ml-postback`)**~~ ✅ Done (2026-05-01) — deployed 58.74 kB · ML Dev Center callback configurado · revenue_cents agora flui do ML para o banco
+> 7764	
+> 7765	3. ~~**[DQP ⚠️] utm_campaign dinâmico**~~ ✅ Done (2026-05-01) — `orchestrate-content` usa `campaign_id` real + `utm_term={keyword}`
+> 7766	
+> 7767	4. **Stripe live keys** — Intencional: sandbox enquanto Gabriel valida como Usuário Zero. Trocar apenas quando primeiro cliente externo:
+> 7768	   ```bash
+> 7769	   npx supabase secrets set STRIPE_SECRET_KEY=sk_live_...
+> 7770	   npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_live_...
+> 7771	   ```
+> 7772	
+> 7773	5. ~~**Bug autonomic-action n8n**~~ ✅ Resolvido — comportamento correto: +10pts/run via endpoint n8n é feature de acúmulo autônomo, não bug.
+> 7774	
+> 7775	6. ~~**Primeiro run end-to-end como Usuário Zero**~~ ✅ Done (2026-05-25 em v6.8.2) — pipeline_run `76702931` status=done, WP draft p=10, content_mesh_asset `6a8bd475`, mco_balance debit -10 atomic. Falta apenas: WP swap draft→publish + processar primeiro affiliate link real + esperar primeira conversão ML para fechar `revenue_cents > 0` no ROIWidget.
+> 7776	
+> 7777	7. ~~**AIOS — modelo gemini-2.0-flash deprecado**~~ ✅ Resolvido (2026-05-02) — migrado para `gemini-2.5-flash` em toda a stack (CorePage, useAIOSChat, aios-chat edge function). Fallback vault captura 404.
+> 7778	
+> 7779	8. ~~**AIOS — provisionar chave Gemini Live**~~ ✅ Resolvido (2026-05-06) — `VITE_GEMINI_API_KEY` no `.env` local + `GEMINI_API_KEY` no vault Supabase. Live Mode (BidiGenerateContent WS) ativo no AIOSTerminal; text chat usa vault.
+> 7780	
+> 7781	8. ~~**[Arena] Deploy `openrouter-swarm`**~~ ✅ Done (2026-04-26)
+> 7782	
+> 7783	9. ~~**[Arena] Injetar secrets LinkedIn**~~ ✅ Done (2026-04-26)
+> 7784	
+> 7785	### SPRINT — Query Consolidation (Issues #002 #003 #009)
+> 7786	
+> 7787	- ~~**#002 user_roles 3x/load** — centralizar em hook com `staleTime: Infinity`~~ ✅ Done (2026-05-04) — `useAdminData` migrado para TanStack Query `staleTime: Infinity, gcTime: Infinity`
+> 7788	- ~~**#003 mcorch_nodes N+1 (6 queries)** — consolidar com `fetchAllPages<T>()` module-level~~ ✅ Done (2026-05-04) — `useMcorchMemory` reescrito, múltiplos mounts compartilham 1 cache
+> 7789	- ~~**#009 aios_conversations 4x/navegação** — único hook com `staleTime: 60_000`~~ ✅ Done (2026-05-04) — `staleTime: 60_000` adicionado ao `useInfiniteQuery`
+> 7790	
+> 7791	### SOCIAL — Next steps
+> 7792	
+> 7793	- **Twitter API Basic tier** — Twitter `CreditsDepleted` (Free tier write limit). Upgrade para Basic ($100/mo) para auto-publish funcionar no Twitter. LinkedIn está publicando ✅.
+> 7794	- **Instagram App Review** — App MCORCH-IG em modo desenvolvimento (funciona para Usuário Zero). Submeter App Review Meta para habilitar publicação com terceiros. Permissões necessárias: `instagram_business_content_publish`, `instagram_business_basic`.
+> 7795	- ~~**Knowledge Mesh ADRs** — Inserir nós `decision` para Twitter PKCE e Instagram Login API v21~~ ✅ Done (2026-05-04) — 5 nós ADR via `seed-social-oauth-adrs.ts`
+> 7796	
+> 7797	### NON-CRITICAL
+> 7798	
+> 7799	- `login.mcorch.com` DNS → redirect to `/auth` (não configurado)
+> 7800	- `decay_mcorch_stability()` — ✅ now callable manually: `SELECT * FROM decay_mcorch_stability();`
+> 7801	- `browserslist` — ✅ updated (2026-04-26)
+> 7802	- **[Arena] Swarm Arena Phase 2:** Integrar `fastest_model` como roteador padrão em `orchestrate-content` — se latência < 2s, usar o modelo vencedor para geração de content rápido em vez de modelo fixo
+> 7803	
+> 7804	### GITNEXUS MCP — Next steps
+> 7805	
+> 7806	- ~~**Build + integrar:** `cd packages/gitnexus-core && npm run build` → adicionar ao `.mcp.json`~~ ✅ Done
+> 7807	- ~~**Delta v2 bridge:** SupabaseAdapter.syncFromGraph() + CLI sync-to-mesh~~ ✅ Done — 493 nós, 344 edges
+> 7808	- ~~**Delta v3 — Call-graph intra-file:** scope-tracked walker no TypeScript visitor~~ ✅ Done
+> 7809	- ~~**Delta v4 — Cross-file calls:** Two-pass ingestion + globalFunctionMap → +259 edges~~ ✅ Done (2026-04-26) — 646 edges total
+> 7810	- ~~**Embeddings dos nós AST:** 493/493 embedded~~ ✅ Done
+> 7811	- ~~**Delta v5 — Embeddings para novos edges (192):** Disparar `embed-mcorch-node` para os 192 CALLS edges inseridos no Delta v4~~ ✅ Done (2026-05-05) — sync-mesh pós-commit → 2559 nós 100% embedded · 3516 edges
+> 7812	- **Subir container Docker:** `docker compose up -d mcorch-gitnexus-mcp` (opcional — stdio já funciona)
+> 7813	
+> 7814	### PHASE EPSILON — Next iterations
+> 7815	
+> 7816	- ~~**Epsilon v1–v8:** Sigma WebGL, Louvain, Semantic Probe, Crew Overlay, MatrixPage, Ownership coloring, Territory UX, CALLS counter~~ ✅ All done
+> 7817	- **Epsilon v9 — WebGPU upgrade:** Monitorar `sigma@next` — não disponível em npm (2026-05-01). Migrar quando estável.
+> 7818	- ~~**Epsilon v9 — Nó de maior conectividade:** Badge/highlight no nó com maior `callsIn` (hub da arquitetura)~~ ✅ Done (2026-05-05) — badge dourado ★ + pulse + fly-to animado
+> 7819	
+> 7820	### CORE — Next iterations
+> 7821	
+> 7822	- ~~**Core v2 — AIOS Consciousness:** Gemini TTS neural (AudioContext AnalyserNode), divider drag, model selector tri-provider, 429 fallback~~ ✅ Done (2026-05-01)
+> 7823	- **Core v3 — Gemini Live WebSocket:** Upgrade do tri-mode para WebSocket nativo da Gemini Live API (Barge-in real com áudio PCM bidirecional) — requer `GEMINI_API_KEY` provisionada
+> 7824	- **Phase Zeta — Social Consciousness:** Cada sessão AIOS persistida como nó `conversation` em `mcorch_nodes`. Feed timeline no CorePage (X/Twitter arch). DERIVES_FROM edges para reasoning threads. Fork de sessão (copy context → novo nó). "Boost": compartilhar conversa para Antigravity ou Claude Code.
+> 7825	- **Core v3 — Ondas reativas a voz:** Conectar AudioContext (frequência do microfone) ao `intensity` das VibrationalWaves — campo visual responde ao timbre da voz em tempo real
+> 7826	
+> 7827	### PHASE DELTA — Next iterations
+> 7828	
+> 7829	- ~~**Delta v2:** Persist canvas pipelines to `mcorch_nodes`~~ ✅ Done
+> 7830	- ~~**Delta v3:** Call-graph intra-file~~ ✅ Done
+> 7831	- ~~**Delta v4:** Cross-file call resolution~~ ✅ Done
+> 7832	- **Delta v5:** Agentic Consensus UI — real-time Auditor/Estrategista triangulation panel no OrchestrationCanvas
+> 7833	- **Delta v6:** Video pipeline canvas — SceneNodes → TransitionNodes wired to `generate-video`
+> 7834	- **Delta v7:** Dynamic sub-agent spawning from failed nodes (AOrchestra pattern)
+> 7835	
+> 7836	### USUÁRIO ZERO — Checklist de validação
+> 7837	
+> 7838	- ✅ mco_balance injetado: 5003 mcoCoins (2026-04-26)
+> 7839	- ✅ Stripe sandbox secrets no vault
+> 7840	- ✅ Token expiry UI visível (DQP auditado 2026-04-26)
+> 7841	- ✅ Latência visual <50ms confirmada (DQP auditado 2026-04-26)
+> 7842	- ✅ Bug autonomic-action resolvido — comportamento correto (+10pts/run via n8n)
+> 7843	- ✅ affiliate_links.revenue_cents: process-affiliate-link + handle-ml-postback implementados (2026-05-01)
+> 7844	- ✅ Neural density 100% — 1993/1993 nós embedded (2026-05-03)
+> 7845	- ✅ Code tab real — 1758 nós com código-fonte (2026-05-03)
+> 7846	- ✅ AI Brain real — analyze-node edge function deployed (2026-05-03)
+> 7847	- ✅ Pipeline embedding autônomo — pg_net trigger + post-commit hook + MeshControlPanel (2026-05-03)
+> 7848	- ✅ **Primeiro run end-to-end** — orchestrate-content → WordPress (draft p=10) → LinkedIn scheduled → content_mesh_asset `6a8bd475` (2026-05-25). Faltam: WP draft→publish swap, affiliate link real, ML conversion para `revenue_cents > 0`.
+> 7849	- ⬜ Verificar `infra_health_logs` populando após 1ª campanha
+> 7850	- ⬜ Swap para Stripe live keys (intencional — sandbox enquanto valida como Usuário Zero)
+> 7851	
+> 7852	---
+> 7853	
+> 7854	## Infrastructure
+> 7855	
+> 7856	| Service | Container | Port | Status |
+> 7857	|---------|-----------|------|--------|
+> 7858	| Vector Engine | `mcorch_chroma` | `localhost:8001` | ✅ healthy (healthcheck fix :1F40 — 2026-05-01) |
+> 7859	| Intelligence Node | `mcorch_claude_mem` | — | ✅ healthy |
+> 7860	| Autonomic Daemon | `mega-brain-daemon` | — | ✅ healthy |
+> 7861	| Brain Webhook | `mega-brain-webhook` | — | ✅ healthy |
+> 7862	| Brain Dashboard | `mega-brain-dashboard` | — | ✅ up |
+> 7863	| **GitNexus MCP** | `mcorch_gitnexus` | `localhost:3100` | ✅ built (stdio ativo) · Docker opcional |
+> 7864	| Watchdog Cron | crontab (ubuntu + gcrUX) | — | ✅ `*/5 * * * *` watchdog-mcorch.sh |
+> 7865	| Auto-publish Cron | crontab gcrUX | — | ✅ `*/5 * * * *` auto-publish-cron.sh |
+> 7866	| Audit 4Cs Cron | crontab gcrUX | — | ✅ `0 12 * * 1` audit-4cs.sh (seg 09h BRT) |
+> 7867	
+> 7868	**Chroma API is v2** — use `http://localhost:8001/api/v2/heartbeat`
+> 7869	
+> 7870	```bash
+> 7871	docker compose up -d
+> 7872	docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+> 7873	```
+> 7874	
+> 7875	---
+> 7876	
+> 7877	## Security Model (Post-Go-Live)
+> 7878	
+> 7879	| Table | Isolation |
+> 7880	|-------|-----------|
+> 7881	| `mcorch_nodes` | `user_id IS NULL OR auth.uid() = user_id` (system nodes visible to all) |
+> 7882	| `mcorch_edges` | Same pattern |
+> 7883	| `infra_health_logs` | Read-all for authenticated; write only service_role |
+> 7884	| All other tables | `user_id = auth.uid()` via existing RESTRICTIVE policies |
+> 7885	
+> 7886	---
+> 7887	
+> 7888	## Billing Architecture
+> 7889	
+> 7890	| Decision | Value |
+> 7891	|----------|-------|
+> 7892	| Canonical billing ledger | `profiles.mco_balance` |
+> 7893	| Deduction RPC | `public.deduct_mco_coins(p_user_id uuid, p_amount decimal)` |
+> 7894	| Cost constants | `src/lib/billing.ts` → `COIN_COSTS` |
+> 7895	| Orchestration cost | 10 mcoCoins/run |
+> 7896	| Plan allocation | Starter: 500 · Pro: 2000 · Enterprise: 10000 |
+> 7897	| Stripe | Sandbox keys active — swap to live before first client |
+> 7898	
+> 7899	---
+> 7900	
+> 7901	## GraphRAG State
+> 7902	
+> 7903	- **8935 total nodes** (verificado live 2026-06-20 via REST count=exact, viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d — cadência R2 (cron + begin/finalize_autopilot_cycle atômicos) + loop R3 (analyze→optimization_policy / collect / feedback-inject) + UI (useAutopilot/AutopilotPage); prev 8934 viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d — Fatias 1 (product-aware + monetização cross-surface + creative_metrics) + 1b (imagem fail-open) + generate-image fix + diagnóstico saída visível; prev 8928 viral-autopilot-bok-seal: +handoff `496ec17c-953e-498c-b18f-e19ef093ad46` embedded 768d + BoK seal `b3398294-aa75-4810-845b-3a15cfe802e7` `documentation_suite` viral-autopilot + DERIVES_FROM edge `05cea16d-b942-409c-9847-1acc693f6ccc` → marketing-hub `d5163fed`; prev 8926 unified-sensorial-canvas-v9 seal: +handoff `5225ff03-5e4d-4599-9c9a-625e2e1806af` embedded 768d + AGI→ASI ref `a576216e` (architecture, edge `INFORMS` `d2827191` → openclaw seal) + AST ingest dos arquivos novos do canvas (CodeNetworkLayer/MemoryNetworkLayer/useUnifiedCanvasStore/useMemoryNetwork); prev 8922 vision-mcp-fatia3-pat-plugin-registry-caps seal: +handoff `c21c53db-cd96-465d-92ba-fc419c0c83e7` embedded 768d — PAT UI + Plugin/Registry + caps; prev 8921 vision-mcp-vhost-live seal: +handoff `0632e1f8-81db-4cc8-bd5e-c5ea8109508d` embedded 768d — OTD-VM-013 fechada; prev 8920 vision-fatia3-pat-erase seal: +handoff `e0695dad-3fc8-4f1e-9973-a40c15aec433` embedded 768d; prev 8918 vision-deepsearch-run-async seal: +handoff `fc0b5efc-9df8-4e03-8544-820caee4ee79` embedded 768d; prev 8917 vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d; prev 8916 vision-mcp-fatia1-deployed seal: +handoff `98fa83d7-3caa-4d23-9f5d-ed040ced9530` embedded 768d; prev 8915 em vision-mcp-bok-9of9 seal: +handoff `b73d141d` + BoK seal `318862b7` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` → mcorch-constellation; prev 8911 em diagnostics-and-continuity +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)
+> 7904	- _(prev snapshot)_ **8755 total nodes** (verificado live 2026-06-03 via REST count=exact após o handoff node `a48d8ff4-1069-4ca0-8764-f01922e2e12f` desta seal v6.21.0, embedded 768d; inclui o BoK seal `d5163fed` marketing-hub; v6.20.4 snapshot era 8753, handoff `af6bffa2`) — **100% embedded** (768d HNSW cosine) — handoff · milestone · architecture · decision · system · observation · requirement · conversation · documentation_suite (BoK seal) · crew_agent · markdown_file · vault_note · feature · ui-ux · content_mesh_asset + AST (file · function · arrow_function · interface · type_alias · class)
+> 7905	- **9070 total edges** (verificado live 2026-06-01 via REST count=exact; v6.6.9 snapshot registrava 11925, cujo +1 foi DERIVES_FROM edge `4254225d-a666-4363-a4bd-98947efc434f` → mcorch-qa-healing parent) — defines · calls · INHABITS · DERIVES_FROM · REQUIRES · observes (OE-661-003) · ATTRIBUTES_REVENUE_TO (OE-661-EXECUTE) · CONTAINS_LINK_FOR (OE-661-004) · OBSERVES (e2e-user-zero finding observations — when runner.ts lands)
+> 7906	- Neural density: **100%** — trigger INSERT autônomo garante embedding imediato
+> 7907	- Paginação completa na Matrix (fetchAll() 1000 rows/page)
+> 7908	- AIOS grounding: 26+ nós por sessão via multi-bucket + semantic search (pgvector HNSW cosine 768d)
+> 7909	- Phase Zeta: node_type `conversation` persistido — cada sessão AIOS vira nó + DERIVES_FROM edges
+> 7910	- `useKnowledgeMesh` exporta `meshStats` com totalNodes/totalEdges/dominantTypes — `contextString` e `contextNodeIds` memoizados
+> 7911	- HNSW cosine index operational
+> 7912	- Milestone node (2026-05-04): `session-handoff-20260504-social-pipeline-live` inserido
+> 7913	- ADR nodes (2026-05-04): 5 decision/milestone nodes via `seed-social-oauth-adrs.ts` — Social OAuth ADRs pesquisáveis semanticamente
+> 7914	- Content backfill: 1758 nós AST com código-fonte real via `scripts/backfill-node-content.ts`
+> 7915	- Milestone node (2026-05-05): `session-handoff-20260505-settings-sovereignty` inserido
+> 7916	- Milestone node (2026-05-06): `session-handoff-20260506-core-promotion` inserido
+> 7917	- Milestone node (2026-05-06): `session-handoff-20260506-devops-security-seal` inserido
+> 7918	- Milestone node (2026-05-06): `session-handoff-20260506-layout-ux-fixes` inserido
+> 7919	- Documentation suite (2026-05-07): `bok-scribe-seal-mcorch-constellation-v1` inserido (type=`documentation_suite` · stability 0.85)
+> 7920	- Milestone node (2026-05-08): `session-handoff-20260508-fmea005-lgpd-deploy` inserido (esta sessão · FMEA-005 closed + LGPD em produção)
+> 7921	- Milestone node (2026-05-07): `session-handoff-20260507-bok-suite-v1` inserido
+> 7922	- Milestone node (2026-05-08): `session-handoff-20260508-sprint-v580` será inserido nesta seal
+> 7923	- Milestone node (2026-05-14): `session-handoff-20260514-canvas-4-1-shell` (`c93c74c3-42cd-4f4b-92d9-775bd9cbfa86`) inserido + embedded (768d) — Canvas 4.1 shell + Higgsfield endpoint fix
+> 7924	- Documentation suite (2026-05-14): `bok-scribe-seal-viralmind-v1` (`5c4bf1e9-b7cb-4896-a3b8-038f64f56ecf`) inserido (type=`documentation_suite` · stability 0.85 · revenue_impact R$ 14M) — suíte BoK viralmind 9/9 selada (04-frd reescrito de handbook CLAUDE.md → FRD real; handbook realocado p/ `viralmind-dev-handbook.md`; 7 OTDs registrados; DERIVES_FROM `bok-scribe-seal-conteudo-v2-v1`)
+> 7925	- Milestone node (2026-05-16): `session-handoff-20260516-openclaw-v631-neural-bridge` (`c1dbc53b-3a27-4da7-aef3-debd5c4047a0`) inserido (type=`milestone` · stability 1.0) — Sprint v6.3.1 selada (OpenClaw Neural Bridge + Departmental Army Pantheon; 9185 chunks indexados across 6 agentes; cron pipeline 02:30/03:00/03:30 ativo; primeira Telegram briefing entregue msg_id 201)
+> 7926	- Observation node (2026-05-17): `pantheon-config-audit-2026-05-17` (`ccecdbd1-8007-40c4-8c88-fb3463b6fe55`) inserido (type=`observation` · stability 0.85) — Phase 1 v6.6.1 (Pantheon canonical files unificados: 7 MEMORY.md + 7 BOOTSTRAP.md + main SOUL enhanced + HEARTBEAT tasks + pantheon-role-matrix.md)
+> 7927	- Observation node (2026-05-17): `memory-wiki-population-2026-05-17` (`569ba6bf-b2df-443e-9bba-b0c064032ab7`) inserido (type=`observation` · stability 0.85) — Phase 2 v6.6.1 (Memory Wiki seed manual MCORCH-aware: 20 wiki pages autorados; 5 syntheses + 8 entities + 6 concepts + 1 chatgpt-export source)
+> 7928	- Handoff node (2026-05-17): `session-handoff-20260517-pantheon-config-memory-wiki-unblock` (`d48f59d4-cf7b-44c5-83a3-2eb3db0b7e17`) inserido (type=`handoff` · stability 1.0) — v6.6.1 selada consolidando 3 trilhos sequenciais (Pantheon config audit + Memory Wiki seed manual + agents.list enabled key drift fix); confirmação visual Sovereign: Memory Palace renderiza 5 syntheses · 18 claims · 11 questions · 2 contradictions + Imported Insights 1 cluster AIOS medium risk
+> 7929	- Handoff node (2026-05-17): `session-handoff-20260517-canvas-4-2c-async-video` (`eb0b3ae0-9ec1-4328-ad31-1b079d3f294e`) inserido (type=`handoff` · stability 1.0) — v6.6.2 selada com Phase 4.2c async video pipeline live (canvas-execute branch image_to_video + Realtime callback + tier-gate dop-standard + watchdog cron) + 3 rounds de hotfix (assertExecuteSuccess unifica fail handling; OpenAI sem response_format + URL download server-side; OpenRouter migrado pra chat-completions multimodal Gemini+FLUX; Replicate column + SettingsPage; canvas-assets RLS reparada via DROP+CREATE com TO public guard); saldo Sovereign 5533 intacto pré e pós-sessão (zero cobrança em failed paths)
+> 7930	- Handoff node (2026-05-18): `session-handoff-20260518-oe661-debt-liquidation` (`6f2cf405-4bb5-440b-a02a-9579fc39f29f`) inserido (type=`handoff` · stability 1.0) — v6.6.3 selada com OE-661-ROADMAP debt liquidation completa (Postback ATTRIBUTES_REVENUE_TO + Memory gateway-recovery skill + Million-BRL Link Forge + OE-661-003 Target Binding) + Financial Stripe DEFERRED por decisão Sovereign; +7 nodes (8336→8343), +1555 edges (10062+→11617 com observes retrofit + autoembed cascade); 3 Edge Functions redeployed (process-affiliate-link 78.31kB Hybrid POST+GET · handle-ml-postback 59.34kB · embed-mcorch-node 105.1kB com auto-stitch); 10/10 observations VALID em Target Binding audit; 4 markdown_files autoembed (gateway-recovery + revenue-flywheel + roadmap-v1 + link-forge-scope)
+> 7931	- Documentation suite (2026-05-18): `bok-scribe-seal-gamificacao-nodes-v1` (`6e8546bc-d995-4cc5-ac88-06cecbece181`) inserido (type=`documentation_suite` · stability 0.85 · revenue_impact 0) — Sprint v6.6.4 selada com gamificacao-nodes BoK 9/9 retroativa (5 docs novos + 3 drifts reconciliados; DERIVES_FROM `bok-scribe-seal-viralmind-v1`; 12 BR-GN + 9 PROC-GN + 10 KPI-GN + 10 FMEA-GN com 4 RPN > 100)
+> 7932	- Documentation suite (2026-05-19): `bok-scribe-seal-openclaw-v1` (`05c55dfd-d318-4dcf-b7f0-aefb0529872f`) inserido (type=`documentation_suite` · stability 0.85 · revenue_impact 0) — Sprint v6.6.5 selada com openclaw BoK 9/9 retroativa (9 docs novos · 2500 LOC total · DERIVES_FROM `bok-scribe-seal-gamificacao-nodes-v1`; 14 BR-OC + 10 PROC-OC + 10 KPI-OC + 10 FMEA-OC com 5 RPN > 100; 5 drifts FECHADOS em v6.4.0/v6.6.1 + 8 ATIVOS como OTDs; OTD-V631-001 RPN 280 fechada por esta seal — 5ª e última suíte BoK do projeto)
+> 7933	- Handoff node (2026-05-19): `session-handoff-20260519-openclaw-bok-9-of-9-v665` (`8455932c-1486-490b-99a2-894022e2ba5a`) inserido (type=`handoff` · stability 1.0) — v6.6.5 selada quitando última dívida BoK do projeto; **5/5 suítes BoK seladas** (viralmind · conteudo-v2 · mcorch-constellation · gamificacao-nodes · openclaw); BoK Gate liberado para código novo em qualquer módulo; carry-overs OE-661 (GCRUX_ML_AFFILIATE_TOKEN + content_mesh_asset emission + primeiro run Usuário Zero) seguem pendentes
+> 7934	- Observation node (2026-05-19): `execution-plan-oe661-carryovers-2026-05-19` (`3dde2572-cad6-491b-b523-c56ec763ff8e`) inserido (type=`observation` · stability 0.85) — plan persistido para Fases 1-3 (OE-661 wire + Ledger SOP + Canvas 4.2c paid smoke) por diretiva Sovereign "slave o plano atual"; emendado com 10 fixes pós-audit (A-J); md5 `0e5f0ba995e89bc7ef76cda00733f941`
+> 7935	- Observation node (2026-05-19): `audit-oe661-debt-sweep-2026-05-19` (`6164c80f-cadd-48d5-95a4-f87f22ebd09b`) inserido (type=`observation` · stability 0.9) — audit completo: 3 Explore agents + 12 REST queries materiais; 21 OTDs ativos catalogados (8 RPN ≥ 100); 5 inconsistências processuais incluindo 5 seals consecutivas omitindo Survival Laws Self-audit; 4 bugs concretos no plan original fixed via amendments
+> 7936	- Edge DERIVES_FROM (2026-05-19): `acb4b0d9-091d-4973-96a8-d40515be7990` (audit `6164c80f` → plan `3dde2572`) weight=1.0 — audit derivou-se do plan + recomendou as 10 emendas
+> 7937	- Handoff node (2026-05-19): `session-handoff-20260519-oe661-plan-audit-v666` (`821dc554-78e2-4abb-999d-37363c5df6c9`) inserido (type=`handoff` · stability 1.0) — v6.6.6 sealed: Planning Seal + Debt Audit + Self-audit Retroativo das 5 seals omitidas; zero código tocado; mesh 8352 nodes; predicted Survival v3 aggregate 4.4/5
+> 7938	- Handoff node (2026-05-19): `session-handoff-20260519-oe661-phase1-prep-v667` (`9d482014-a759-4656-93d9-99e05ab4a714`) inserido (type=`handoff` · stability 1.0) — v6.6.7 sealed: OE-661 Phase 1 prep complete (SOP Law 2 + Amendments A/B/C/E shipped + 2 Edge Functions deployed + vault provisioned + API Tenancy directive Sovereign-class em CLAUDE.md + OTD-OE661-PER-USER); Step 1.5 first run E2E deferido por context budget Sovereign 92% (retoma em ~3h); mesh 8353 nodes; Survival Audit retroativo das 5 seals omitidas incluído (Lei 1 ✓ 5/5 · Lei 2 ✓ 3/5 · Lei 3 ✗ 0/5 · Lei 4 ✗ 0/5 — OTD-PROC-001 RPN 60 / OTD-PROC-002 RPN 40 registradas)
+> 7939	- Handoff node (2026-06-07): `session-handoff-20260607-gemini-3.1-live-mode-migration` (`5acba7aa-793e-4418-9139-a093283c12bb`) inserido (type=`handoff` · stability 1.0) — v6.32.2: Migrada a Live API para Gemini 3.1 Flash Live com audio-only, adicionados Gemini Docs MCP e as API Skills
+> 7940	
+> 7941	### Embedding Model
+> 7942	`openai/text-embedding-3-small`, `dimensions: 768` (truncated output via OpenRouter).
+> 7943	Schema: `vector(768)` — HNSW cosine index.
+> 7944	
+> 7945	### Embedding Pipeline (Autônomo — 2026-05-03)
+> 7946	Três camadas eliminam intervenção manual:
+> 7947	1. **INSERT trigger** — `trg_mcorch_embed_on_insert` (pg_net) dispara `embed-mcorch-node` assincronamente em todo INSERT onde `embedding IS NULL`. Nunca bloqueia o INSERT.
+> 7948	2. **Post-commit hook** — `.git/hooks/post-commit` roda `node scripts/ingest-codebase.ts --quiet` em background após cada commit → re-ingesta AST.
+> 7949	3. **MeshControlPanel** — UI bottom-left do MatrixPage: "Sync Embeddings" (`trigger-embeddings`) e "Refresh Mesh Stats" (`trigger-ingest`).
+> 7950	
+> 7951	### Comandos de manutenção da Mesh
+> 7952	```bash
+> 7953	# Verificar nós sem embedding (deveria retornar array vazio):
+> 7954	curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?embedding=is.null&select=id,name" \
+> 7955	  -H "apikey: $SB_SECRET_KEY" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'{len(d)} nós sem embedding')"
+> 7956	
+> 7957	# Backfill manual (Bun-native — requer .env):
+> 7958	bun run scripts/backfill-embeddings.ts
+> 7959	
+> 7960	# Backfill de código-fonte nos nós AST:
+> 7961	bun run scripts/backfill-node-content.ts
+> 7962	
+> 7963	# Re-sync AST completo:
+> 7964	cd packages/gitnexus-core && npm run sync-mesh
+> 7965	
+> 7966	# Acompanhar re-ingesta pós-commit:
+> 7967	tail -f /tmp/mcorch-ingest.log
+> 7968	```
+> 7969	
+> 7970	---
+> 7971	
+> 7972	## Video Rescue Protocol
+> 7973	
+> 7974	When a video generation operation (Google Veo) times out or client disconnects:
+> 7975	```bash
+> 7976	# Via edge function (production):
+> 7977	curl -X POST "https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/rescue-video" \
+> 7978	  -H "Authorization: Bearer <user_jwt>" \
+> 7979	  -d '{"content_id":"<uuid>","operation_id":"<operation_name>"}'
+> 7980	
+> 7981	# Via local script (admin/debug):
+> 7982	source .env && bun run rescue.ts <operation_id> <content_id>
+> 7983	```
+> 7984	
+> 7985	---
+> 7986	
+> 7987	## Architecture Pillars
+> 7988	
+> 7989	| Layer | Implementation |
+> 7990	|-------|---------------|
+> 7991	| **Infra** | Docker Sovereign Mesh (`mcorch_chroma` + `mcorch_claude_mem` + `mega-brain-daemon`) + `watchdog-mcorch.sh` telemetry |
+> 7992	| **Memory** | GraphRAG (`mcorch_nodes`/`mcorch_edges`) + Neural Embeddings via OpenRouter (openai/text-embedding-3-small, 768d) + HNSW cosine index |
+> 7993	| **Economics** | mcoCoins Gatekeeper (`profiles.mco_balance` → `deduct_mco_coins` RPC) + Real ROI (`affiliate_links.revenue_cents`) + Stripe Sandbox |
+> 7994	| **Rescue** | Video recovery via `rescue-video` edge function + `rescue.ts` local companion |
+> 7995	| **Protocol** | ShakeHands (`/handson` pick-up, `/handoff` seal) |
+> 7996	
+> 7997	---
+> 7998	
+> 7999	## Phase Delta — Architecture
+> 8000	
+> 8001	```
+> 8002	OrchestrationPage (full-canvas, p-0)
+> 8003	  └── OrchestrationCanvas.tsx        ← @xyflow/react, nodeTypes/edgeTypes registry
+> 8004	        ├── nodes/TriggerNode.tsx    ← topic input + platform toggles + Run button
+> 8005	        ├── nodes/AgentNode.tsx      ← AI step display (status pulse animation)
+> 8006	        ├── nodes/SceneNode.tsx      ← video scene (stability + coin cost)
+> 8007	        ├── nodes/QualityGateNode.tsx← blocks downstream on error
+> 8008	        ├── nodes/PublishNode.tsx    ← final distribution output
+> 8009	        ├── edges/OrchestrationEdge.tsx ← glowing bezier (violet when animated)
+> 8010	        └── NodePalette.tsx          ← top toolbar to add nodes
+> 8011	
+> 8012	src/store/useOrchestrationStore.ts   ← Zustand (nodes, edges, run state)
+> 8013	src/hooks/useOrchestrationGraph.ts   ← runPipeline → orchestrate-content → node status sync
+> 8014	supabase/migrations/20260426120000_delta_graph_positioning.sql
+> 8015	  ├── GIN indexes on mcorch_nodes.metadata + mcorch_edges.metadata
+> 8016	  └── decay_mcorch_stability() — FSRS-6 manual decay (free tier safe)
+> 8017	```
+> 8018	
+> 8019	### Canvas State Architecture (Hybrid)
+> 8020	
+> 8021	```
+> 8022	User interaction → ReactFlow internal state (positions, drag)
+> 8023	                         ↓ (debounced 600ms)
+> 8024	                   localStorage (positions persist across refresh)
+> 8025	                         ↑
+> 8026	Store (Zustand) ← runPipeline → orchestrate-content Edge Function
+> 8027	     ↓ (status changes sync to ReactFlow via useEffect)
+> 8028	ReactFlow renders visual status (idle/running/done/error/blocked)
+> 8029	```
+> 8030	
+> 8031	## Key Files
+> 8032	
+> 8033	| Purpose | Path |
+> 8034	|---------|------|
+> 8035	| Architecture rules | `CLAUDE.md` |
+> 8036	| **3D Constellation Graph** | `src/components/graph/CrewGraph.tsx` |
+> 8037	| **Crew data hook** | `src/hooks/useCrewData.ts` |
+> 8038	| **Agent edges (particles)** | `src/components/graph/AgentEdge.tsx` |
+> 8039	| **Squad hull (3D bubble)** | `src/components/graph/SquadHull.tsx` |
+> 8040	| **Visual Orchestrator Canvas** | `src/components/orchestrator/OrchestrationCanvas.tsx` |
+> 8041	| **Orchestration Store (Zustand)** | `src/store/useOrchestrationStore.ts` |
+> 8042	| **Pipeline hook** | `src/hooks/useOrchestrationGraph.ts` |
+> 8043	| **Node types** | `src/components/orchestrator/nodes/` |
+> 8044	| GraphRAG hook | `src/hooks/useMcorchMemory.ts` |
+> 8045	| Memory graph (d3-force + stability) | `src/components/dashboard/MemoryGraphWidget.tsx` |
+> 8046	| Real ROI widget | `src/components/dashboard/ROIWidget.tsx` |
+> 8047	| Dashboard header (mcoCoins HUD) | `src/components/dashboard/DashboardLayout.tsx` |
+> 8048	| Neural Mesh HUD | `src/components/HUD.tsx` |
+> 8049	| Infra status hook | `src/hooks/useInfraStatus.ts` |
+> 8050	| Billing utilities | `src/lib/billing.ts` |
+> 8051	| Orchestration function | `supabase/functions/orchestrate-content/index.ts` |
+> 8052	| Infra status function | `supabase/functions/get-infra-status/index.ts` |
+> 8053	| Embed function | `supabase/functions/embed-mcorch-node/index.ts` |
+> 8054	| Video rescue function | `supabase/functions/rescue-video/index.ts` |
+> 8055	| Video rescue (local) | `rescue.ts` |
+> 8056	| Watchdog + telemetry | `scripts/watchdog-mcorch.sh` |
+> 8057	| Backfill script | `scripts/backfill-embeddings.ts` |
+> 8058	| Deploy harness | `scripts/harness-deploy.sh` |
+> 8059	
+> 8060	---
+> 8061	
+> 8062	## First Client Onboarding Checklist
+> 8063	
+> 8064	1. ~~Set OPENROUTER_API_KEY in vault~~ ✅ Done
+> 8065	2. ~~Run backfill~~ ✅ Done (9/9 nodes)
+> 8066	3. ~~Activate watchdog cron~~ ✅ Done
+> 8067	4. ~~Deploy rescue-video function~~ ✅ Done
+> 8068	5. Swap Stripe to live keys → `npx supabase secrets set STRIPE_SECRET_KEY=<live-key>`
+> 8069	6. Walk client through OnboardingPage → verify 10-coin deduction on first orchestration.
+> 8070	7. Monitor `infra_health_logs` for first 24h.
+> 8071	8. Confirm `affiliate_links.revenue_cents` populates after first campaign run.
+> 8072	
+> 8073	---
+> 8074	
+> 8075	## Constellation Matrix Intelligence & Stabilization Record (2026-05-03)
+> 8076	
+> 8077	Sessão de elevação da `ConstellationMatrix` ao nível de **Code Intelligence** e estabilização do motor gráfico. O motor Sigma.js/ForceAtlas2 apresentava loops de renderização infinitos ("blinking") e resets de estado ao interagir com a sidebar. A correção envolveu a estabilização de referências de props, memoização rigorosa das opções do grafo e desacoplamento de filtros dos ciclos de renderização do canvas. Paralelamente, a Matrix foi dotada de inteligência de código nativa via hook `useNodeIntelligence` e um `NodeDetailsPanel` reestruturado com navegação por abas.
+> 8078	
+> 8079	| Action | Result |
+> 8080	|--------|--------|
+> 8081	| `src/hooks/useNodeIntelligence.ts` — criado | ✅ Orquestração de busca de código (`mcorch_nodes`) + análise semântica simulada Gemini |
+> 8082	| `src/components/orchestrator/NodeDetailsPanel.tsx` | ✅ Navegação por abas (Meta, Code, Brain) + Code Preview + IA Analysis flow |
+> 8083	| `src/components/orchestrator/ConstellationMatrix.tsx` | ✅ Estabilização Sigma.js: memoized options + stable refs + engine integration fix |
+> 8084	| `src/hooks/useConstellationSigma.ts` | ✅ `useRef` para event handlers + callbacks estáveis — fim do "blinking" |
+> 8085	| `src/components/ui/progress.tsx` | ✅ Prop `indicatorClassName` adicionado para estilização dinâmica da barra de IA |
+> 8086	
+> 8087	| Commit | Conteúdo |
+> 8088	|--------|----------|
+> 8089	| `e8f1a2b` | feat(matrix): Code Intelligence — useNodeIntelligence + NodeDetailsPanel tabs |
+> 8090	| `d9c3e4f` | fix(matrix): Sigma.js stabilization — elimina re-render loops e blinking |
+> 8091	| `c7b5a1d` | chore(ui): progress indicator styling support |
+> 8092	
+> 8093	### Arquitetura Matrix Intelligence
+> 8094	
+> 8095	```
+> 8096	ConstellationMatrix (Stabilized Engine)
+> 8097	  ├── useConstellationSigma (stable refs, no re-bind on render)
+> 8098	  └── NodeDetailsPanel (Tabbed Navigation)
+> 8099	        ├── Tab Meta: Neighbor exploration + Net Context
+> 8100	        ├── Tab Code: Source code preview (Supabase sync)
+> 8101	        └── Tab Brain: semantic analysis (Gemini orchestrator)
+> 8102	
+> 8103	useNodeIntelligence Hook:
+> 8104	  - contentQuery: fetch nodes.content column
+> 8105	  - analyzeMutation: REAL AI analysis via analyze-node edge function (OpenRouter)
+> 8106	  - state: isAnalyzing, analysisResult, progress
+> 8107	```
+> 8108	
+> 8109	---
+> 8110	
+> 8111	## AI Brain — Real Intelligence Wiring (2026-05-03)
+> 8112	
+> 8113	Substituição da análise simulada (setTimeout + texto hardcoded) por chamada real ao OpenRouter via edge function.
+> 8114	
+> 8115	| Action | Result |
+> 8116	|--------|--------|
+> 8117	| `supabase/functions/analyze-node/index.ts` — criado | ✅ Edge function com auth JWT + OpenRouter claude-sonnet-4-5 |
+> 8118	| `src/hooks/useNodeIntelligence.ts` — atualizado | ✅ `analyzeNode` chama `supabase.functions.invoke('analyze-node')` |
+> 8119	| Deploy `analyze-node` | ✅ Deployed em bcyvddsykvehvpwstlfa |
+> 8120	
+> 8121	**Output da análise (estruturado em pt-BR):**
+> 8122	- Visão Geral — papel do módulo no sistema
+> 8123	- Padrões Detectados — design patterns, antipatterns
+> 8124	- Acoplamento & Dependências — análise In/Out-Degree
+> 8125	- Recomendações — 1-3 ações priorizadas
+> 8126	
+> ```
+
+## 🤖 Claude *(22:33:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la scratch/ 2>/dev/null",
+  "description": "Scratch contents detail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 8
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Jun  7 14:41 .
+> drwx------ 30 ubuntu ubuntu 4096 Jun 20 17:08 ..
+> ```
+
+## 🤖 Claude *(22:33:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat .claude/context/sprint-priorities.md 2>/dev/null | head -80 || echo \"NO sprint-priorities.md\"",
+  "description": "Sprint priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (63.7KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/960541c2-7795-4f2f-ae49-c8f9f3e35c84/tool-results/bk12obygb.txt
+> 
+> Preview (first 2KB):
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> **Sprint v6.44.0 — Viral Autopilot Fatia 2: cadência R2 + loop R3 auto-melhorável + UI (2026-06-20)** — `/handson` → "vamos aos próximos passos"; 4 GOs Sovereign (AskUserQuestion: migration · edge fns · R3 · selar). Closed-Loop por fatia (mapeamento do contrato vivo → SOP Lei 2 → código → /security-review → deploy → smoke zero-cost → seal). **Motor autônomo R1+R2+R3+R4 COMPLETO, zero gasto do Sovereign.** **(1) Fundação** (`686bae3`): SOP `autopilot-cron-identity.md` (OTD-VA-008, 10 gates) + migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant-escopada + RPCs `begin_autopilot_cycle` [cap+pré-débito ÚNICO sob `pg_advisory_xact_lock` anti-TOCTOU] / `finalize_autopilot_cycle` [refund crédito-positivo idempotente, espelha `finalize_vision_job`], service-role-only) + smoke RPC 11/11 (`0c59e4d`). **(2) Edge fns** (`54ac2a9`): `autopilot-run` (executor identidade 2-caminhos → begin → fan-out `orchestrate-content` prepaid → finalize → re-arma; dry_run) + `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) + orchestrate-content FR-VA-016 prepaid (user-path intacto); smoke 9/9. **(3) R3 loop** (`35554da`): `autopilot-analyze` (FR-VA-010, ranqueia `creative_metrics`→`optimization_policy`, tenant da linha) + `autopilot-collect` (FR-VA-008, ledger→métricas) + orchestrate-step FR-VA-011 (injeta diretiva nos 3 prompts); smoke loop 11/11. **(4) UI** (`bfd178b`): `useAutopilot`+`AutopilotPage` (`/dashboard/autopilot`) + rota + nav; types.ts regen additive. **Prova:** `/security-review` SAFE **3×** · 3 smokes zero-cost (**31 gates**) · 
+> ...
+> </persisted-output>
+> ```
+
+## 🤖 Claude *(22:33:32)*
+
+
+## 🤖 Claude *(22:33:53)*
+
+═══════════════════════════════════════════════════════════
+  HANDSON — Viral Autopilot Fatia 2 (seal 2026-06-20 · v6.44.0)
+═══════════════════════════════════════════════════════════
+
+🏁 **ESTADO ATUAL**
+  Fase selada: **Viral Autopilot Fatia 2** — cadência R2 + loop R3 auto-melhorável + UI
+  Últimos commits:
+    `127b1a1` — chore(sprint): registra v6.44.0
+    `10f2301` — docs(handoff): seal Fatia 2
+    `bfd178b` — feat: Fatia 2 UI (useAutopilot + AutopilotPage)
+    `35554da` — feat: Fatia 2 R3 loop auto-melhorável
+
+📂 **MUDANÇAS PENDENTES**
+  Worktree limpo ✅ — nada a commitar, `scratch/` vazio ✅
+
+🏗️ **INFRA**
+  mcorch_chroma:     ✅ Up 6 days (healthy) — Chroma API v2: **OK** (heartbeat respondeu)
+  mcorch_claude_mem: ✅ Up 6 days (healthy)
+  mcorch_vision_mcp: ✅ Up 4 days (healthy)
+  mega-brain-{daemon,webhook,dashboard}: ✅ todos up/healthy
+
+🧠 **KNOWLEDGE MESH**
+  **8935 nós** · ~9070 arestas (fonte: GraphRAG State, live 2026-06-20)
+  Último seal: handoff `280e94d7` (Fatia 2) embedded 768d · BoK seal viral-autopilot `b3398294`
+
+🔧 **TYPESCRIPT** — Zero erros ✅
+
+📚 **BoK SUITES (Master Execution Protocol)**
+  Módulo ativo **viral-autopilot — BoK 9/9 selada** (nó `b3398294`) → **gate ABERTO** para fatias MVP.
+  21 suítes presentes em `docs/bok/`. Gate não bloqueia o roadmap atual.
+
+📌 **SPRINT**
+  Goal: Distribuição social autônoma operacional (pipeline publica LinkedIn auto; Twitter/IG gated).
+  Foco vivo: Viral Autopilot — motor R1+R2+R3+R4 **COMPLETO e provado zero-cost**.
+
+⚡ **PRÓXIMOS PASSOS** (prioridade)
+
+  1. **🎯 [ação Sovereign] Ativar pg_cron + 1º ciclo PAGO real do Viral Autopilot** — a função `autopilot-cadence-cron` existe e está provada; falta só o JOB pg_cron (`Bearer SB_SECRET_KEY` via Vault) e disparar o 1º ciclo com mco real. **Gated em 2 blockers de saída visível** diagnosticados na Fatia 1b:
+     - **CF WAF skip `/wp-json/*`** (publish WP bloqueado por bot-challenge 403)
+     - **OpenAI image model access** (chave-projeto sem acesso a modelo de imagem)
+
+  2. **`fetch-trends` → pauta viral (FR-VA-018)** — último item **autônomo** do roadmap (não-gated): `vm_trends` alimentando o ângulo viral da geração.
+
+  3. **🌌 Unified Sensorial Canvas — Fases 3.5–3.10** — sinapses inter-rede reais (`mcorch_edges`), fly-to, perf (`OTD-UCANVAS-PERF` — query do código ~30s), poda squad-coloring, paridade + cutover + gate E2E, seal. Plano vivo: `.claude/context/unified-core-sensorial-canvas-plan.md`.
+
+⚠️ **ALERTAS**
+  Nenhum bloqueador técnico ✅ — TS limpo, worktree limpo, infra 100% saudável.
+  Único ponto de atenção: itens #1 são **Sovereign-side** (ativação pg_cron + 2 blockers CF/OpenAI), não código.
+
+═══════════════════════════════════════════════════════════
+  Pronto para trabalhar. Aguardando direção.
+═══════════════════════════════════════════════════════════
+
+O caminho de maior valor autônomo agora é o **item #2 (`fetch-trends` → pauta, FR-VA-018)** — fecha o último elo do motor viral sem depender de ação Sovereign. O item #1 precisa de você (pg_cron + WAF + OpenAI). Qual frente seguimos?
+
+## 👤 User *(22:35:47)*
+
+Antes disso precisamos ir para a parte criativa sem criativo a unica coisa que funciona é texto, precisamos validar de ponta a ponta o studio design e tambem o canvas studio para criar, imagens, videos, audios e musicas, landing pages etc.
+
+## 🤖 Claude *(22:36:13)*
+
+
+## 🤖 Claude *(22:36:16)*
+
+O Sovereign está redirecionando a prioridade: **antes de trends, validar a camada criativa de ponta a ponta** — Studio Design + Canvas Studio (imagem, vídeo, áudio, música, landing pages). Hoje só texto funciona.
+
+Isso é trabalho de módulo significativo. Vou **probe-first** (mapear o estado material real dos dois módulos + providers) antes de propor escopo — Lei 1 e BoK Gate exigem que eu saiba o que existe, o que está quebrado, e o que ainda não existe.
+
+Deixa eu carregar o contexto dos dois módulos em paralelo.
+
+## 🤖 Claude *(22:36:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_canvas_studio_architecture.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 38 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: Canvas Studio Architecture — useCanvasStore
+> 3	description: Canvas Studio (viralmind) state architecture and Sprint 4 phase boundaries
+> 4	type: project
+> 5	originSessionId: 55dd523d-152c-40db-8ac6-295ba7f3fd99
+> 6	---
+> 7	Canvas Studio (`/dashboard/canvas/:id`) is the VIRALmind cinematic canvas, ported from the `viralmind-builder` repo into constellation-orchestra during Sprint 4.
+> 8	
+> 9	## State architecture (Sprint 4.1, 2026-05-14)
+> 10	
+> 11	- **`src/store/useCanvasStore.ts`** — the **3rd Zustand store** (alongside `useCrewStore`, `useOrchestrationStore`). Uses the `zundo` `temporal` middleware for undo/redo (50-step limit, 500ms debounced snapshots, partialized to `{nodes, edges}` only). `useCanvasStore.temporal` exposes `pastStates`/`futureStates`/`undo`/`redo`/`clear`.
+> 12	- **Persistence**: `pipelineMode` / `lanes` / `styleSettings` ride **inside the `vm_canvas_projects.graph` jsonb blob** (type `PersistedCanvasGraph`) — deliberately NO schema migration, so no `/security-review` gate. `viewport` stays its own column. `useAutoSave` (60s debounce + flush-on-hide) persists via the existing `useSaveCanvasGraph` mutation.
+> 13	- **Shell** in `CanvasEditorPage.tsx`: `TopBar` / (`LeftPanel` + ReactFlow canvas) / `StatusBar`, wrapped in `ReactFlowProvider`. `nodeTypes`/`edgeTypes` hoisted to module scope. The generic `canvasNode` + node-config Sheet (RightPanel) from the old page were preserved, re-routed through the store.
+> 14	- **`src/types/canvas.ts`** — `CanvasNodeData` is intentionally permissive in 4.1; strict cinematographic node types come in 4.2.
+> 15	
+> 16	## Phase boundaries (canvas-studio-roadmap + integration-plan-2026-05-14)
+> 17	
+> 18	- **4.1 ✅** — LanesOverlay, LeftPanel (4 tabs: Receitas→`vm_canvas_recipes`, Assets→`vm_canvas_assets`, Tendências→`vm_trends`, Histórico→`vm_canvas_executions`), StatusBar, TopBar, store + autosave.
+> 19	- **4.2** — 4 cinematographic node types (Close-up / Frame Inicial / Frame Final / Vídeo 5s) + `ExportDialog` (needs `jszip`). TopBar Export button is currently `disabled`.
+> 20	- **4.3** — Recipe save flow (select → `editor.toObject()` → INSERT `vm_canvas_recipes`). 4.1 only consumes/applies recipes.
+> 21	- **4.4** — Pipeline mode topological execution (BFS over edges). 4.1 ships a simple sequential "Executar tudo" instead.
+> 22	
+> 23	## Notes
+> 24	
+> 25	- Source repo `viralmind-builder` uses `@tanstack/react-router` + `@tanstack/react-start` server fns — ported to `react-router-dom` + Supabase client/Edge Functions.
+> 26	- Design token remaps applied: `elevated`→`muted`, `success`→`status-active`, `warning`→`status-waiting`, Button `variant="accent"`→`default`.
+> 27	
+> ```
+
+## 🤖 Claude *(22:36:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_canvas_design_initiative.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 32 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: canvas-design-initiative
+> 3	description: "Canvas Design — 7º módulo MCORCH. Integra nexu-io/open-design (Apache-2.0, produto standalone) como sidecar pilotado via CLI od. Suíte BoK 9/9 selada 2026-05-20."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 9b35297a-7383-43a7-97d8-76e2e5a5f90a
+> 8	---
+> 9	
+> 10	Canvas Design é o 7º módulo do MCORCH — superfície de design visual que integra o
+> 11	repositório open-source **`nexu-io/open-design`** (Apache-2.0; clonado em
+> 12	`canvas-design/open-design/`; gitignored via `/canvas-design/` root-anchored).
+> 13	
+> 14	**Decisão de arquitetura (Sovereign, 2026-05-20):** o `open-design` é um **produto
+> 15	standalone local-first completo** (monorepo pnpm — Next.js 16 + daemon próprio + Electron
+> 16	+ SQLite próprio), NÃO um engine embutível. Integração escolhida = **sidecar pilotado via
+> 17	a CLI `od`**: open-design roda como serviço próprio; um worker `design-bridge` no host
+> 18	Soberano pilota o `od`; MCORCH coordena via fila `design_jobs` (Supabase) + Realtime; a
+> 19	mesh guarda nós-referência `design_artifact` (open-design é o system-of-record).
+> 20	
+> 21	**Why:** open-design não se compõe com a stack MCORCH (Vite/bun) — frameworks e package
+> 22	managers distintos. O `od` CLI é o contrato de embeddability oficial do open-design,
+> 23	desenhado para ser pilotado por agentes externos. O rascunho inicial do SDD assumiu
+> 24	"engine embutível" e teve de ser realinhado (v0.2) após verificação material.
+> 25	
+> 26	**How to apply:**
+> 27	- Suíte BoK em `docs/bok/canvas-design/` (9 docs, selada v0.2 em 2026-05-20) é a Fonte da
+> 28	  Verdade — o Trilho B (OpenClaw + Ollama local) implementa a partir dela.
+> 29	- **`pnpm` NUNCA na raiz do repo MCORCH** (bun-only — pnpm é destrutivo lá). O open-design
+> 30	  builda só dentro de `canvas-design/open-design/` com pnpm + Node 24.
+> 31	- "integrar com nosso brand design" = autorar `canvas-design/open-design/design-systems/mcorch/DESIGN.md`.
+> 32	- Bloqueante de lançamento (FMEA-007, RPN 240): o fluxo de erasure LGPD/GDPR (`delete-account`)
+> 33	  deve ser estendido para purgar o `OD_DATA_DIR` per-user do open-design.
+> 34	
+> 35	**Strategic split (Sovereign, 2026-05-20):** Claude Code Pro = trabalho pesado (autoria
+> 36	BoK, raciocínio); OpenClaw + Ollama local = construção do módulo. Agentes locais NÃO devem
+> 37	dar spawn / remote-control em sessões Claude Code — a tentativa via `ollama launch claude`
+> 38	falhou no morning de 2026-05-20 (runtimes distintos não se compõem; o caminho correto para
+> 39	pilotar o Claude programaticamente é `--input-format stream-json`).
+> 40	
+> 41	Relacionado: [[feedback_api_tenancy_per_user]] (credenciais BYOK do open-design resolvidas
+> 42	per-user via `OD_MEDIA_CONFIG_DIR`).
+> 43	
+> ```
+
+## 🤖 Claude *(22:36:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/canvas-studio-cinematic/SKILL.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: canvas-studio-cinematic
+> 3	description: Operar o Canvas Studio cinematográfico do MCORCH — pipeline de creatives visuais consistentes (imagem base → variação → vídeo) para campanhas de afiliados. Use para criar/editar nós tipados, encadear referência+seed para consistência visual, gerar via canvas-execute (Nano Banana / Higgsfield DoP), construir campanhas por produto, ou debugar projetos que abrem em branco (grafo não persistido). Cobre o shape exato dos nós ReactFlow, os Handle ids, e a persistência em vm_canvas_projects.graph.
+> 4	---
+> 5	
+> 6	# Skill: canvas-studio-cinematic — Pipeline de Creatives Consistentes
+> 7	
+> 8	Produção de conteúdo visual **consistente** numa cadeia de nós conectados (mesmo
+> 9	produto/personagem/estilo persistindo de uma geração à seguinte) para monetização afiliada.
+> 10	
+> 11	**SOPs autoritativas:**
+> 12	- `docs/processes/canvas-node-consistency.md` (reference threading + seed lock + graph seeding v1.1)
+> 13	- `docs/processes/canvas-video-async-execution.md` (vídeo Higgsfield async + webhook)
+> 14	- `docs/processes/canvas-pipeline-architecture.md` (arquitetura do canvas)
+> 15	
+> 16	**Validação técnica:** `.claude/context/canvas-consistency-validation-2026-05-29.md`
+> 17	
+> 18	---
+> 19	
+> 20	## ⚠️ Verdade fundamental nº1 — o grafo vive no servidor
+> 21	
+> 22	O grafo de nós/edges de um projeto Canvas é persistido em **`vm_canvas_projects.graph`** (jsonb),
+> 23	não só em localStorage. Um projeto com `graph.nodes = []` **abre em branco no painel**, mesmo
+> 24	que existam assets em `vm_canvas_assets`. Assets têm `node_id`, mas isso **não** materializa nós —
+> 25	o nó só aparece se estiver no `graph`.
+> 26	
+> 27	**Pitfall histórico (corrigido em v1.1):** `scripts/canvas-campaign-build.ts` gerava assets mas
+> 28	deixava `graph.nodes=[]` → as 3 campanhas (Roborock/Samsung/Family Hub) abriam vazias. O fix:
+> 29	`buildCampaignGraph()` + `persistGraph()` escrevem o grafo com as imagens já geradas anexadas.
+> 30	
+> 31	## ⚠️ Verdade fundamental nº2 — o nó renderiza pela `data.output`, não por lookup
+> 32	
+> 33	Um nó exibe sua imagem/vídeo via **`data.output.imageUrl`** / **`data.output.videoUrl`** embutido
+> 34	no próprio nó — NÃO por query de `vm_canvas_assets` por `node_id`. Ao semear um grafo a partir de
+> 35	assets existentes, copie a URL do asset para `data.output.{imageUrl|videoUrl}`.
+> 36	
+> 37	---
+> 38	
+> 39	## Shape exato de um nó ReactFlow (mirror de projeto real)
+> 40	
+> 41	```jsonc
+> 42	{
+> 43	  "id": "n_<slug>",                    // estável; pode ser readable (n_roborock_s8_base)
+> 44	  "type": "generateImage",             // = data.kind ("generateImage" | "imageToVideo" | "characterReference" | "sceneCompose" | "styleTransfer")
+> 45	  "position": { "x": 40, "y": 140 },   // free-form; pipelineMode=false evita math de lanes
+> 46	  "data": {
+> 47	    "kind": "generateImage",
+> 48	    "label": "Base",
+> 49	    "modelId": "openrouter-gemini-image",   // DEFAULT_IMAGE_MODEL (Nano Banana). Vídeo: "dop-standard-5s"
+> 50	    "prompt": "<prompt>",
+> 51	    "negativePrompt": "",
+> 52	    "aspectRatio": "16:9",
+> 53	    "controls": { "creativity": 0.7, "resemblance": 0.3, "hdr": 0.5, "fractality": 0.3, "sharpness": 0.8 },
+> 54	    "seed": 123456789, "fixedSeed": true,    // seed travado = consistência entre gerações
+> 55	    "status": "success",                     // "idle" | "running" | "success" | "error"
+> 56	    "inheritStyle": false,
+> 57	    "output": { "imageUrl": "<asset public_url>", "generatedAt": "<ISO>" }
+> 58	  }
+> 59	}
+> 60	```
+> 61	
+> 62	ImageToVideo: `data.kind="imageToVideo"`, `videoModel:"dop-standard-5s"`, `duration:5`,
+> 63	`motionStrength:0.5`, `output.videoUrl`.
+> 64	
+> 65	Factories canônicas em `src/types/canvas.ts`: `makeDefaultGenerateImage()`, `makeDefaultImageToVideo()`, etc.
+> 66	
+> 67	### Handle ids (críticos — edge não renderiza com handle errado)
+> 68	| Nó | target (entrada) | source (saída) |
+> 69	|----|------------------|----------------|
+> 70	| generateImage | `input_prompt` | `output_image` |
+> 71	| imageToVideo | `input_image` | `output_video` |
+> 72	| characterReference | — | `output` |
+> 73	| sceneCompose | `input_layout` | `output_scene` |
+> 74	| styleTransfer | `input_content_image` / `input_style_image` | `output_styled` |
+> 75	
+> 76	Edge: `{ id, type:"pipeline", source, target, sourceHandle, targetHandle }`.
+> 77	Ex.: base→variação = `output_image`→`input_prompt`; variação→vídeo = `output_image`→`input_image`.
+> 78	
+> 79	### Graph object (top-level)
+> 80	`{ nodes, edges, lanes, pipelineMode, styleSettings }`. Ao atualizar, preserve
+> 81	`lanes`/`styleSettings` (spread do graph atual) e use `pipelineMode:false` para layout livre.
+> 82	
+> 83	---
+> 84	
+> 85	## Consistência (reference threading + seed lock)
+> 86	
+> 87	Para o mesmo produto persistir entre gerações:
+> 88	1. **Seed travado** (`fixedSeed:true`, mesmo `seed`) em toda a cadeia.
+> 89	2. **Reference image** — passe `reference_image_urls: [<upstream output_url>]` no payload do
+> 90	   `canvas-execute` do nó downstream (a imagem upstream entra como referência, não só texto).
+> 91	
+> 92	`canvas-execute` payload:
+> 93	```jsonc
+> 94	{ "project_id", "node_id", "node_type": "generate_image" | "image_to_video",
+> 95	  "provider": "openrouter" | "higgsfield", "model": "google/gemini-2.5-flash-image" | "dop-standard",
+> 96	  "prompt", "reference_image_urls": ["..."], "input_asset_url": "...",
+> 97	  "parameters": { "seed", "aspect_ratio": "16:9", "duration": 5, "motion_strength": 0.5 } }
+> 98	```
+> 99	
+> 100	Imagem = síncrona (retorna `output_url`). Vídeo Higgsfield = **async** (`status:"queued"` + webhook
+> 101	finaliza + debita só após upload OK). Ver `canvas-video-async-execution.md`.
+> 102	
+> 103	---
+> 104	
+> 105	## Modelos & custo
+> 106	- **Imagem barata (validação):** `openrouter` / `google/gemini-2.5-flash-image` (Nano Banana, ~10 mco).
+> 107	- **Vídeo:** `higgsfield` / `dop-standard` (DoP Standard 5s, 125 mco). Whitelist enforced front+back.
+> 108	- Débito atômico via RPC `deduct_mco_coins` (nunca client-side). Daily cap 100 mco/24h por user.
+> 109	
+> 110	---
+> 111	
+> 112	## Campaign builder (per-produto, idempotente)
+> 113	```bash
+> 114	bun run scripts/canvas-campaign-build.ts <roborock_s8|samsung_neo_qled_8k|family_hub> [--video]
+> 115	```
+> 116	- Auth como Sovereign via magiclink OTP (`admin.auth.admin.generateLink` + `verifyOtp`).
+> 117	- Phase A: base + variação consistente (Nano Banana). `--video` = Phase B (DoP, 9 cr Higgsfield).
+> 118	- **Idempotente:** `findExistingAsset()` reusa assets → re-rodar = zero gasto.
+> 119	- **Sempre semeia o grafo** (`buildCampaignGraph` + `persistGraph`) → projeto abre com o pipeline visível.
+> 120	
+> 121	## Materiality gate (Lei 1)
+> 122	Qualquer alteração no Canvas Studio exige `bun run scripts/qa/audit-canvas-ui.ts` (status 0 +
+> 123	screenshot 1920x1080) — ver `survival.md`. E re-rodar `/e2e-audit` se UI mudou.
+> 124	
+> 125	## Pitfalls
+> 126	- ❌ Script que gera assets sem escrever `graph` → projeto em branco.
+> 127	- ❌ Nó sem `data.output.imageUrl` → não renderiza a imagem.
+> 128	- ❌ Handle id errado no edge → conexão não desenha.
+> 129	- ❌ `pnpm` na raiz do repo (move pacotes bun para `node_modules/.ignored/`).
+> 130	- ❌ Buildar no worktree sem `.env` → bundle sem VITE env (Supabase não conecta). Build com env + servir no `dist/` do repo principal.
+> 131	
+> 132	## Key files
+> 133	| Propósito | Path |
+> 134	|-----------|------|
+> 135	| Tipos + factories de nós | `src/types/canvas.ts` |
+> 136	| Canvas store (zundo) | `src/store/useCanvasStore.ts` |
+> 137	| Editor page | `src/pages/CanvasEditorPage.tsx` |
+> 138	| Studio hook (load/save graph) | `src/hooks/useCanvasStudio.ts` |
+> 139	| Node components (Handles) | `src/components/canvas/nodes/` |
+> 140	| Edge function | `supabase/functions/canvas-execute/index.ts` |
+> 141	| Vídeo async webhook | `supabase/functions/higgsfield-webhook/index.ts` |
+> 142	| Realtime jobs hook | `src/hooks/useCanvasJobsRealtime.ts` |
+> 143	| Campaign builder | `scripts/canvas-campaign-build.ts` |
+> 144	| Upstream image collector | `src/lib/canvas-utils.ts` → `findUpstreamImages()` |
+> 145	
+> ```
+
+## 🤖 Claude *(22:36:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== docs/bok/canvas-design ===\"; ls docs/bok/canvas-design/ 2>/dev/null; echo \"=== docs/bok/canvas-studio (?) ===\"; ls docs/bok/canvas-studio/ 2>/dev/null || echo \"(no canvas-studio BoK slug)\"; echo \"=== supabase functions matching canvas/generate/audio/music/video ===\"; ls supabase/functions/ | grep -iE \"canvas|generate|audio|music|video|image|tts|speech|song|landing|page\" 2>/dev/null; echo \"=== all supabase functions count ===\"; ls supabase/functions/ | wc -l",
+  "description": "Check BoK suites + creative edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === docs/bok/canvas-design ===
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> === docs/bok/canvas-studio (?) ===
+> (no canvas-studio BoK slug)
+> === supabase functions matching canvas/generate/audio/music/video ===
+> canvas-execute
+> check-video-status
+> generate-audio-script
+> generate-content
+> generate-image
+> generate-video
+> generate-video-script
+> rescue-video
+> tts-speak
+> === all supabase functions count ===
+> 68
+> ```
+
+## 🤖 Claude *(22:36:46)*
+
+
+## 🤖 Claude *(22:36:49)*
+
+Quadro inicial mapeado. Edge functions criativas presentes: `canvas-execute` (imagem+vídeo), `generate-image`, `generate-video`, `generate-video-script`, `generate-audio-script`, `tts-speak`, `check-video-status`. **Não existem** funções de música nem landing page. Canvas Design (open-design) tem BoK 9/9 mas é sidecar — preciso ver se está implementado/rodando.
+
+Vou aprofundar o estado material: roteamento de providers, o que está configurado/quebrado, e se o sidecar open-design existe de fato.
+
+## 🤖 Claude *(22:36:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+> 3	import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 4	
+> 5	const corsHeaders = {
+> 6	  "Access-Control-Allow-Origin": "*",
+> 7	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 8	  "Access-Control-Allow-Headers":
+> 9	    "authorization, x-client-info, apikey, content-type",
+> 10	};
+> 11	
+> 12	// ── Credit costs per operation (in mcoCoins) ─────────────────────────────
+> 13	// Aligned with .claude/context/higgsfield-api-validation-2026-05-15.md:
+> 14	// Higgsfield pricing is $1 = 16 credits; mcoCoins markup ~13x over USD cost.
+> 15	const CREDIT_COSTS: Record<string, number> = {
+> 16	  "openai/dall-e-3": 15,
+> 17	  "openai/gpt-image-1": 18,
+> 18	  "replicate/flux-1.1-pro": 12,
+> 19	  "replicate/sdxl": 4,
+> 20	  "replicate/flux-schnell": 3,
+> 21	  "openrouter/dall-e-3": 15,
+> 22	  "openrouter/google/gemini-2.5-flash-image": 10,
+> 23	  "openrouter/black-forest-labs/flux-1.1-pro": 12,
+> 24	  // Higgsfield Soul (text-to-image) — tiered by resolution × batch.
+> 25	  // "higgsfield/generate" kept as legacy alias → resolves to soul-1080p-1.
+> 26	  "higgsfield/generate": 40,
+> 27	  "higgsfield/soul-720p-1": 20,   // 1.5 hf credits ≈ $0.09
+> 28	  "higgsfield/soul-720p-4": 26,   // 2.0 hf credits ≈ $0.13
+> 29	  "higgsfield/soul-1080p-1": 40,  // 3.0 hf credits ≈ $0.19
+> 30	  "higgsfield/soul-1080p-4": 65,  // 5.0 hf credits ≈ $0.31
+> 31	  // Higgsfield DoP (image-to-video) — added in Phase 5.3 along with webhook flow.
+> 32	  "higgsfield/dop-lite-5s": 30,       // placeholder; 2 hf credits ≈ $0.13
+> 33	  "higgsfield/dop-turbo-5s": 90,      // placeholder; 6.5 hf credits ≈ $0.41
+> 34	  "higgsfield/dop-standard-5s": 125,  // placeholder; 9 hf credits ≈ $0.56
+> 35	  // Kling 2.1 Pro pricing not tabulated by Higgsfield; placeholder, confirm via Cloud Dashboard.
+> 36	  "higgsfield/kling-2.1-pro-5s": 160,
+> 37	  "higgsfield/seedance-v1-pro-5s": 130,
+> 38	  "upscale-2x": 8,
+> 39	  "upscale-4x": 20,
+> 40	  "inpaint": 6,
+> 41	  "scene-compose": 18,
+> 42	  "style-transfer": 14,
+> 43	  "remove-background": 3,
+> 44	};
+> 45	
+> 46	// Image-gen prompts above this length get rejected with a clear error.
+> 47	// Image models (Nano Banana 2, FLUX, DALL-E) read very long prompts as
+> 48	// instructions and return text — Sovereign hit this on 2026-05-26 with a
+> 49	// 600-word protocol template. 1800 chars ≈ 280 words ≈ Midjourney guidance.
+> 50	const MAX_IMAGE_PROMPT_CHARS = 1800;
+> 51	
+> 52	// Lowercase signals that a prompt is a system-instruction, not a description.
+> 53	// Used by detectInstructionStylePrompt to flag prompts before sending; surfaces
+> 54	// a clearer error than the downstream "no image_url" symptom.
+> 55	const INSTRUCTION_SIGNAL_RE =
+> 56	  /\b(you are |your (core )?function (is|will)|your objective|identity & protocol|output only|system instruction|return only|do not (add|write|include))\b/i;
+> 57	
+> 58	function isImagePromptTooLong(prompt: string): boolean {
+> 59	  return prompt.length > MAX_IMAGE_PROMPT_CHARS;
+> 60	}
+> 61	
+> 62	function detectInstructionStylePrompt(prompt: string): boolean {
+> 63	  return INSTRUCTION_SIGNAL_RE.test(prompt);
+> 64	}
+> 65	
+> 66	// Resolve Higgsfield Soul cost from resolution × batch parameters.
+> 67	// Returns undefined if the body isn't a Soul/legacy Higgsfield request.
+> 68	function resolveHiggsfieldSoulKey(body: ExecuteRequest): string | undefined {
+> 69	  if (body.provider !== "higgsfield") return undefined;
+> 70	  if (body.model !== "soul" && body.model !== "generate") return undefined;
+> 71	  const res = body.parameters?.resolution === "720p" ? "720p" : "1080p";
+> 72	  const batch = body.parameters?.batch === 4 ? 4 : 1;
+> 73	  return `higgsfield/soul-${res}-${batch}`;
+> 74	}
+> 75	
+> 76	interface ExecuteRequest {
+> 77	  project_id: string;
+> 78	  node_id: string;
+> 79	  node_type: string;
+> 80	  provider: string;
+> 81	  model: string;
+> 82	  prompt: string;
+> 83	  negative_prompt?: string;
+> 84	  parameters?: Record<string, any>;
+> 85	  input_asset_url?: string;
+> 86	  input_asset_id?: string;
+> 87	  input_image_1?: string;
+> 88	  input_image_2?: string;
+> 89	  input_layout?: string;
+> 90	  // Cross-node consistency (Phase 4.3): upstream connected node outputs passed
+> 91	  // as reference images, + a locked seed propagated across the connected graph.
+> 92	  // SOP: docs/processes/[[canvas-node-consistency|canvas-node-consistency]].md. Fail-open: absent = current behavior.
+> 93	  reference_image_urls?: string[];
+> 94	  seed?: number;
+> 95	}
+> 96	
+> 97	serve(async (req) => {
+> 98	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 99	
+> 100	  try {
+> 101	    const authHeader = req.headers.get("Authorization");
+> 102	    if (!authHeader) {
+> 103	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 104	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 105	      });
+> 106	    }
+> 107	
+> 108	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 109	    const supabaseAnonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 110	    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+> 111	      global: { headers: { Authorization: authHeader } },
+> 112	    });
+> 113	
+> 114	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 115	    if (authError || !user) {
+> 116	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 117	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 118	      });
+> 119	    }
+> 120	
+> 121	    const body: ExecuteRequest = await req.json();
+> 122	    if (!body.project_id || !body.node_id || !body.prompt) {
+> 123	      return new Response(JSON.stringify({ error: "project_id, node_id, and prompt are required" }), {
+> 124	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 125	      });
+> 126	    }
+> 127	
+> 128	    const admin = createClient(supabaseUrl, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 129	
+> 130	    // ── Resolve API keys (user keys > vault secrets) ─────────────────
+> 131	    const { data: userKeys } = await admin
+> 132	      .from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 133	
+> 134	    const keys = {
+> 135	      openai: userKeys?.openai_api_key || Deno.env.get("OPENAI_API_KEY") || "",
+> 136	      replicate: userKeys?.replicate_api_key || Deno.env.get("REPLICATE_API_KEY") || "",
+> 137	      openrouter: userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "",
+> 138	      gemini: userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY") || "",
+> 139	      higgsfield: Deno.env.get("HIGGSFIELD_API_KEY") || "",
+> 140	      higgsfield_secret: Deno.env.get("HIGGSFIELD_API_KEY_SECRET") || "",
+> 141	    };
+> 142	
+> 143	    // ── Calculate credit cost ────────────────────────────────────────
+> 144	    // Higgsfield Soul resolves to a tiered key (resolution × batch); other
+> 145	    // providers fall back to the provider/model lookup or the node_type slug.
+> 146	    let creditCost = 10;
+> 147	    if (body.node_type === "magic_prompt") {
+> 148	      const level = body.parameters?.level || "curto";
+> 149	      creditCost = level === "longo" ? 5 : (level === "medio" ? 2 : 1);
+> 150	    } else {
+> 151	      const higgsfieldSoulKey = resolveHiggsfieldSoulKey(body);
+> 152	      const costKey = higgsfieldSoulKey
+> 153	        ?? (body.node_type === "image_to_video"
+> 154	          ? `${body.provider}/${body.model}-${body.parameters?.duration || 5}s`
+> 155	          : (body.node_type === "generate_image"
+> 156	            ? `${body.provider}/${body.model}`
+> 157	            : body.node_type.replace("_", "-")));
+> 158	      creditCost = CREDIT_COSTS[costKey] || 10;
+> 159	    }
+> 160	
+> 161	    // ── Check user credits (mco_balance in profiles) ─────────────────
+> 162	    const { data: profile } = await admin
+> 163	      .from("profiles").select("mco_balance").eq("id", user.id).single();
+> 164	
+> 165	    if (!profile || (profile.mco_balance || 0) < creditCost) {
+> 166	      return new Response(JSON.stringify({
+> 167	        error: "Insufficient mcoCoins",
+> 168	        required: creditCost,
+> 169	        balance: profile?.mco_balance || 0,
+> 170	      }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 171	    }
+> 172	
+> 173	    // ── SSP-01 OE04 — Daily cap enforcement (dinâmico com base na role) ──
+> 174	    // Sums abs(amount) of canvas_* ledger entries in the rolling 24h window.
+> 175	    // Fail-open on query error to avoid blocking UX when observability is down.
+> 176	    let dailyCap = 100;
+> 177	    const { data: roleRow, error: roleErr } = await admin
+> 178	      .from("user_roles")
+> 179	      .select("role")
+> 180	      .eq("user_id", user.id)
+> 181	      .maybeSingle();
+> 182	
+> 183	    if (roleErr) {
+> 184	      console.error("[canvas-execute] failed to fetch user role for daily cap:", roleErr);
+> 185	    } else if (roleRow?.role === "admin") {
+> 186	      dailyCap = 10000;
+> 187	    } else if (roleRow?.role === "editor") {
+> 188	      dailyCap = 1000;
+> 189	    }
+> 190	
+> 191	    const dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+> 192	    const { data: spendRows, error: spendErr } = await admin
+> 193	      .from("mcoin_transactions")
+> 194	      .select("amount")
+> 195	      .eq("user_id", user.id)
+> 196	      .like("action", "canvas_%spend")
+> 197	      .gte("created_at", dayAgoIso);
+> 198	
+> 199	    if (spendErr) {
+> 200	      console.error("[canvas-execute] daily cap query error:", spendErr);
+> 201	    }
+> 202	    const spentToday = (spendRows ?? []).reduce(
+> 203	      (sum, r) => sum + Math.abs(Number(r.amount) || 0),
+> 204	      0,
+> 205	    );
+> 206	    if (spentToday + creditCost > dailyCap) {
+> 207	      return new Response(JSON.stringify({
+> 208	        error: "Daily Canvas cap reached",
+> 209	        cap: dailyCap,
+> 210	        spent_today: spentToday,
+> 211	        required: creditCost,
+> 212	        resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+> 213	      }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 214	    }
+> 215	
+> 216	    const ALLOWED_VIDEO_MODELS = [
+> 217	      "dop-lite",
+> 218	      "dop-turbo",
+> 219	      "dop-standard",
+> 220	      "kling-2.1-pro",
+> 221	      "seedance-v1-pro",
+> 222	    ];
+> 223	    if (body.node_type === "image_to_video" && !ALLOWED_VIDEO_MODELS.includes(body.model)) {
+> 224	      return new Response(JSON.stringify({
+> 225	        error: "Tier indisponível — selecione um modelo de vídeo válido nesta fase",
+> 226	        model_requested: body.model,
+> 227	        allowed: ALLOWED_VIDEO_MODELS,
+> 228	      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 229	    }
+> 230	
+> 231	    // ── Map node_type for database enum compliance ───────────────────
+> 232	    // vm_node_type enum: generate_image, generate_video, upscale, inpaint,
+> 233	    // outpaint, style_transfer, relight, remove_background, extend, remix, compose, export
+> 234	    const NODE_TYPE_MAP: Record<string, string> = {
+> 235	      image_to_video: "generate_video",
+> 236	      scene_compose: "compose",
+> 237	      magic_prompt: "generate_image",
+> 238	      generate_image: "generate_image",
+> 239	      style_transfer: "style_transfer",
+> 240	      upscale: "upscale",
+> 241	      inpaint: "inpaint",
+> 242	      outpaint: "outpaint",
+> 243	      relight: "relight",
+> 244	      remove_background: "remove_background",
+> 245	      extend: "extend",
+> 246	      remix: "remix",
+> 247	      compose: "compose",
+> 248	      export: "export",
+> 249	    };
+> 250	    const dbNodeType = NODE_TYPE_MAP[body.node_type] ?? body.node_type;
+> 251	    if (!NODE_TYPE_MAP[body.node_type]) {
+> 252	      console.warn(`[canvas-execute] unmapped node_type "${body.node_type}" — passing through as-is`);
+> 253	    }
+> 254	
+> 255	    // ── Resolve parent/input asset ID ────────────────────────────────
+> 256	    let resolvedInputAssetId: string | null = null;
+> 257	    if (body.input_asset_id) {
+> 258	      resolvedInputAssetId = body.input_asset_id;
+> 259	    } else if (body.input_asset_url) {
+> 260	      const { data: matchedAsset } = await admin
+> 261	        .from("vm_canvas_assets")
+> 262	        .select("id")
+> 263	        .eq("public_url", body.input_asset_url)
+> 264	        .limit(1)
+> 265	        .maybeSingle();
+> 266	      if (matchedAsset) {
+> 267	        resolvedInputAssetId = matchedAsset.id;
+> 268	      }
+> 269	    }
+> 270	
+> 271	    // ── Create execution record ──────────────────────────────────────
+> 272	    // For async video jobs we insert as 'queued' (no deduct yet — webhook
+> 273	    // finalizes atomically). Sync image jobs go 'running' as before.
+> 274	    const initialStatus = body.node_type === "image_to_video" ? "queued" : "running";
+> 275	    const { data: execution, error: execErr } = await admin
+> 276	      .from("vm_canvas_executions")
+> 277	      .insert({
+> 278	        project_id: body.project_id,
+> 279	        user_id: user.id,
+> 280	        node_id: body.node_id,
+> 281	        node_type: dbNodeType,
+> 282	        provider: body.provider,
+> 283	        model: body.model,
+> 284	        prompt: body.prompt,
+> 285	        negative_prompt: body.negative_prompt,
+> 286	        parameters: body.parameters || {},
+> 287	        credits_charged: creditCost,
+> 288	        status: initialStatus,
+> 289	        started_at: new Date().toISOString(),
+> 290	        input_asset_id: resolvedInputAssetId,
+> 291	      })
+> 292	      .select()
+> 293	      .single();
+> 294	
+> 295	    if (execErr) {
+> 296	      console.error("Execution insert error:", execErr);
+> 297	      return new Response(JSON.stringify({
+> 298	        error: "Failed to create execution record",
+> 299	        detail: execErr.message,
+> 300	        code: execErr.code,
+> 301	        hint: execErr.hint ?? undefined,
+> 302	        node_type_received: body.node_type,
+> 303	        node_type_mapped: dbNodeType,
+> 304	      }), {
+> 305	        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 306	      });
+> 307	    }
+> 308	
+> 309	    // ── Magic Prompt generation ──────────────────────────────────────
+> 310	    if (body.node_type === "magic_prompt") {
+> 311	      let campaignContext = "Nenhum contexto de campanha disponível.";
+> 312	      try {
+> 313	        if (body.project_id) {
+> 314	          const { data: project } = await admin
+> 315	            .from("vm_canvas_projects")
+> 316	            .select("name, description, campaign_id")
+> 317	            .eq("id", body.project_id)
+> 318	            .maybeSingle();
+> 319	          
+> 320	          if (project) {
+> 321	            let campaignId = project.campaign_id;
+> 322	            if (!campaignId) {
+> 323	              const { data: latestCampaign } = await admin
+> 324	                .from("campaigns")
+> 325	                .select("id")
+> 326	                .eq("user_id", user.id)
+> 327	                .order("created_at", { ascending: false })
+> 328	                .limit(1)
+> 329	                .maybeSingle();
+> 330	              if (latestCampaign) campaignId = latestCampaign.id;
+> 331	            }
+> 332	
+> 333	            if (campaignId) {
+> 334	              const { data: campaign } = await admin
+> 335	                .from("campaigns")
+> 336	                .select("name, description, target_audience, keywords")
+> 337	                .eq("id", campaignId)
+> 338	                .maybeSingle();
+> 339	              if (campaign) {
+> 340	                campaignContext = `Campanha: ${campaign.name}
+> 341	Descrição: ${campaign.description || ""}
+> 342	Público-Alvo: ${campaign.target_audience || ""}
+> 343	Palavras-chave: ${Array.isArray(campaign.keywords) ? campaign.keywords.join(", ") : (campaign.keywords || "")}`;
+> 344	              }
+> 345	            }
+> 346	          }
+> 347	        }
+> 348	
+> 349	        const level = body.parameters?.level || "curto";
+> 350	        const modelName = body.parameters?.target_model || "generic";
+> 351	        const enhancedPrompt = await generateMagicPrompt(
+> 352	          keys.openrouter,
+> 353	          keys.gemini,
+> 354	          body.prompt,
+> 355	          level,
+> 356	          modelName,
+> 357	          campaignContext,
+> 358	        );
+> 359	
+> 360	        // Finalize execution with success state and result payload
+> 361	        await admin
+> 362	          .from("vm_canvas_executions")
+> 363	          .update({
+> 364	            status: "success",
+> 365	            output_url: null,
+> 366	            response_payload: { enhanced_prompt: enhancedPrompt },
+> 367	            completed_at: new Date().toISOString(),
+> 368	          })
+> 369	          .eq("id", execution.id);
+> 370	
+> 371	        // Deduct mcoCoins
+> 372	        await admin.rpc("deduct_mco_coins", {
+> 373	          p_user_id: user.id,
+> 374	          p_amount: creditCost,
+> 375	          p_action: "canvas_magic_prompt_spend",
+> 376	          p_context: {
+> 377	            execution_id: execution.id,
+> 378	            node_id: body.node_id,
+> 379	            level,
+> 380	          },
+> 381	        });
+> 382	
+> 383	        await admin
+> 384	          .from("infra_health_logs")
+> 385	          .insert({ service: "canvas-execute", status: "healthy" })
+> 386	          .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 387	
+> 388	        return new Response(
+> 389	          JSON.stringify({
+> 390	            execution_id: execution.id,
+> 391	            status: "success",
+> 392	            enhanced_prompt: enhancedPrompt,
+> 393	            credits_charged: creditCost,
+> 394	          }),
+> 395	          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 396	        );
+> 397	      } catch (err: any) {
+> 398	        console.error("Magic Prompt generation failed:", err);
+> 399	        await admin
+> 400	          .from("vm_canvas_executions")
+> 401	          .update({
+> 402	            status: "failed",
+> 403	            error_message: err.message || "Failed to generate magic prompt",
+> 404	            completed_at: new Date().toISOString(),
+> 405	          })
+> 406	          .eq("id", execution.id);
+> 407	
+> 408	        await admin
+> 409	          .from("infra_health_logs")
+> 410	          .insert({ service: "canvas-execute", status: "unhealthy" })
+> 411	          .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 412	
+> 413	        return new Response(JSON.stringify({ error: err.message || "Failed to generate magic prompt" }), {
+> 414	          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 415	        });
+> 416	      }
+> 417	    }
+> 418	
+> 419	    // ── Phase 4.2c async video branch ────────────────────────────────
+> 420	    // image_to_video: submit to Higgsfield with ?hf_webhook=<callback>,
+> 421	    // return immediately with status='queued'. Webhook does atomic deduct
+> 422	    // after upload-OK; useCanvasJobsRealtime flips the UI when status moves.
+> 423	    if (body.node_type === "image_to_video") {
+> 424	      return await submitHiggsfieldVideo({
+> 425	        admin,
+> 426	        supabaseUrl,
+> 427	        apiKey: keys.higgsfield,
+> 428	        apiSecret: keys.higgsfield_secret,
+> 429	        body,
+> 430	        execution,
+> 431	        corsHeaders,
+> 432	      });
+> 433	    }
+> 434	
+> 435	    // ── Route to provider ────────────────────────────────────────────
+> 436	    let outputUrl = "";
+> 437	    let outputB64 = "";
+> 438	    let error = "";
+> 439	
+> 440	    try {
+> 441	      if (body.provider === "openai") {
+> 442	        const result = await generateOpenAI(keys.openai, body);
+> 443	        outputUrl = result.url;
+> 444	        outputB64 = result.b64;
+> 445	      } else if (body.provider === "replicate") {
+> 446	        const result = await generateReplicate(keys.replicate, body);
+> 447	        outputUrl = result.url;
+> 448	      } else if (body.provider === "openrouter") {
+> 449	        const result = await generateOpenRouter(keys.openrouter, body);
+> 450	        outputUrl = result.url;
+> 451	        outputB64 = result.b64;
+> 452	      } else if (body.provider === "higgsfield") {
+> 453	        const result = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> 454	        outputUrl = result.url;
+> 455	      } else {
+> 456	        throw new Error(`Unknown provider: ${body.provider}`);
+> 457	      }
+> 458	    } catch (providerErr: any) {
+> 459	      error = providerErr.message || "Provider error";
+> 460	      console.error(`Provider ${body.provider} error:`, providerErr);
+> 461	    }
+> 462	
+> 463	    // ── Upload to storage (b64 OR URL response) ──────────────────────
+> 464	    // Round 3 hotfix: OpenAI defaults to URL response (no response_format).
+> 465	    // OpenRouter chat-completions multimodal returns URL. Both paths must
+> 466	    // persist to canvas-assets so the provider URL's short TTL doesn't break
+> 467	    // the asset_url stored in vm_canvas_assets. Pattern mirrors rescue-video
+> 468	    // (Google Veo) + higgsfield-webhook (DoP video) download+upload flow.
+> 469	    let storedUrl = outputUrl;
+> 470	    let storedKey: string | null = null;
+> 471	    let storedContentType = "image/png";
+> 472	    if (!error && (outputB64 || outputUrl)) {
+> 473	      try {
+> 474	        let bytes: Uint8Array | null = null;
+> 475	        let contentType = "image/png";
+> 476	
+> 477	        if (outputB64) {
+> 478	          bytes = Uint8Array.from(atob(outputB64), (c) => c.charCodeAt(0));
+> 479	        } else if (outputUrl) {
+> 480	          // Fetch the provider's signed URL, validate, then re-host in bucket.
+> 481	          const dlResp = await fetch(outputUrl);
+> 482	          if (dlResp.ok) {
+> 483	            const ct = dlResp.headers.get("content-type") || "";
+> 484	            if (ct.startsWith("image/")) contentType = ct;
+> 485	            bytes = new Uint8Array(await dlResp.arrayBuffer());
+> 486	          } else {
+> 487	            console.error("[canvas-execute] provider URL fetch failed:", dlResp.status);
+> 488	          }
+> 489	        }
+> 490	
+> 491	        if (bytes && bytes.byteLength > 0) {
+> 492	          const ext = contentType.split("/")[1]?.split(";")[0] || "png";
+> 493	          const fileName = `${user.id}/${execution.id}.${ext}`;
+> 494	          const { error: uploadErr } = await admin.storage
+> 495	            .from("canvas-assets")
+> 496	            .upload(fileName, bytes, { contentType, upsert: true });
+> 497	          if (!uploadErr) {
+> 498	            const { data: urlData } = admin.storage
+> 499	              .from("canvas-assets")
+> 500	              .getPublicUrl(fileName);
+> 501	            storedUrl = urlData.publicUrl;
+> 502	            storedKey = fileName;
+> 503	            storedContentType = contentType;
+> 504	          } else {
+> 505	            console.error("[canvas-execute] upload error:", uploadErr);
+> 506	          }
+> 507	        }
+> 508	      } catch (uploadErr) {
+> 509	        console.error("Upload error:", uploadErr);
+> 510	      }
+> 511	    }
+> 512	
+> 513	    // ── Save asset record ────────────────────────────────────────────
+> 514	    let assetId: string | null = null;
+> 515	    if (!error && storedUrl) {
+> 516	      const { data: asset } = await admin
+> 517	        .from("vm_canvas_assets")
+> 518	        .insert({
+> 519	          user_id: user.id,
+> 520	          project_id: body.project_id,
+> 521	          asset_type: "image",
+> 522	          storage_key: storedKey ?? `${user.id}/${execution.id}.png`,
+> 523	          storage_bucket: "canvas-assets",
+> 524	          public_url: storedUrl,
+> 525	          mime_type: storedContentType,
+> 526	          provider: body.provider,
+> 527	          model_used: body.model,
+> 528	          node_type: dbNodeType,
+> 529	          prompt: body.prompt,
+> 530	          negative_prompt: body.negative_prompt,
+> 531	          parameters: body.parameters || {},
+> 532	          credits_cost: creditCost,
+> 533	          node_id: body.node_id,
+> 534	          input_asset_id: resolvedInputAssetId,
+> 535	        })
+> 536	        .select("id")
+> 537	        .single();
+> 538	      assetId = asset?.id;
+> 539	    }
+> 540	
+> 541	    // ── Update execution status ──────────────────────────────────────
+> 542	    const finalStatus = error ? "failed" : "success";
+> 543	    await admin
+> 544	      .from("vm_canvas_executions")
+> 545	      .update({
+> 546	        status: finalStatus,
+> 547	        output_url: storedUrl || null,
+> 548	        output_asset_id: assetId,
+> 549	        error_message: error || null,
+> 550	        completed_at: new Date().toISOString(),
+> 551	      })
+> 552	      .eq("id", execution.id);
+> 553	
+> 554	    // ── SSP-01 OE03 Pillar 4 (Observability) ─────────────────────────
+> 555	    // Best-effort health pulse; failure to log MUST NOT block the response.
+> 556	    await admin
+> 557	      .from("infra_health_logs")
+> 558	      .insert({ service: "canvas-execute", status: error ? "unhealthy" : "healthy" })
+> 559	      .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 560	
+> 561	    // ── Deduct credits on success ────────────────────────────────────
+> 562	    // SSP-01 OE04: action tagging is REQUIRED for the daily cap query to work.
+> 563	    // canvas_image_spend / canvas_video_spend are the canonical action tags.
+> 564	    if (!error) {
+> 565	      const spendAction = body.node_type === "image_to_video"
+> 566	        ? "canvas_video_spend"
+> 567	        : "canvas_image_spend";
+> 568	      await admin.rpc("deduct_mco_coins", {
+> 569	        p_user_id: user.id,
+> 570	        p_amount: creditCost,
+> 571	        p_action: spendAction,
+> 572	        p_context: {
+> 573	          execution_id: execution.id,
+> 574	          provider: body.provider,
+> 575	          model: body.model,
+> 576	          node_type: body.node_type,
+> 577	        },
+> 578	      });
+> 579	
+> 580	      // Update project stats
+> 581	      await admin
+> 582	        .from("vm_canvas_projects")
+> 583	        .update({
+> 584	          total_executions: (await admin.from("vm_canvas_executions")
+> 585	            .select("id", { count: "exact" })
+> 586	            .eq("project_id", body.project_id)
+> 587	            .eq("status", "success")).count || 0,
+> 588	          last_execution_at: new Date().toISOString(),
+> 589	        })
+> 590	        .eq("id", body.project_id);
+> 591	    }
+> 592	
+> 593	    return new Response(JSON.stringify({
+> 594	      execution_id: execution.id,
+> 595	      status: finalStatus,
+> 596	      output_url: storedUrl || null,
+> 597	      asset_id: assetId,
+> 598	      credits_charged: error ? 0 : creditCost,
+> 599	      credits_remaining: error ? profile.mco_balance : (profile.mco_balance || 0) - creditCost,
+> 600	      error: error || undefined,
+> 601	    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 602	
+> 603	  } catch (e) {
+> 604	    console.error("canvas-execute error:", e);
+> 605	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+> 606	      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 607	    });
+> 608	  }
+> 609	});
+> 610	
+> 611	// ═══════════════════════════════════════════════════════════════════════════
+> 612	// PROVIDER IMPLEMENTATIONS
+> 613	// ═══════════════════════════════════════════════════════════════════════════
+> 614	
+> 615	async function generateOpenAI(apiKey: string, body: ExecuteRequest) {
+> 616	  if (!apiKey) throw new Error("OpenAI API key not configured");
+> 617	
+> 618	  const model = body.model || "dall-e-3";
+> 619	  const size = body.parameters?.size || "1024x1024";
+> 620	
+> 621	  // Round 3 hotfix (2026-05-17): OpenAI rejected `response_format` for both
+> 622	  // `gpt-image-1` AND `dall-e-3` on the /v1/images/generations endpoint with
+> 623	  // HTTP 400 "Unknown parameter". We now omit the param — OpenAI defaults to
+> 624	  // returning a URL (for dall-e-*) or b64_json (for gpt-image-1). The caller
+> 625	  // upload block already handles both shapes via {url, b64} return contract.
+> 626	  const payload: Record<string, unknown> = {
+> 627	    model,
+> 628	    prompt: body.prompt,
+> 629	    n: 1,
+> 630	    size,
+> 631	  };
+> 632	  // quality + style only apply to dall-e-3; gpt-image-1 ignores them.
+> 633	  if (body.parameters?.quality) payload.quality = body.parameters.quality;
+> 634	  if (body.parameters?.style) payload.style = body.parameters.style;
+> 635	
+> 636	  const resp = await fetch("https://api.openai.com/v1/images/generations", {
+> 637	    method: "POST",
+> 638	    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+> 639	    body: JSON.stringify(payload),
+> 640	  });
+> 641	
+> 642	  if (!resp.ok) {
+> 643	    const t = await resp.text();
+> 644	    throw new Error(`OpenAI error ${resp.status}: ${t}`);
+> 645	  }
+> 646	
+> 647	  const data = await resp.json();
+> 648	  // gpt-image-1 returns b64_json by default; dall-e-* returns url. Caller's
+> 649	  // upload block prefers b64 (direct upload) but falls back to URL download.
+> 650	  return { url: data.data?.[0]?.url || "", b64: data.data?.[0]?.b64_json || "" };
+> 651	}
+> 652	
+> 653	async function generateReplicate(apiKey: string, body: ExecuteRequest) {
+> 654	  if (!apiKey) throw new Error("Replicate API key not configured");
+> 655	
+> 656	  const modelMap: Record<string, string> = {
+> 657	    "flux-1.1-pro": "black-forest-labs/flux-1.1-pro",
+> 658	    "flux-schnell": "black-forest-labs/flux-schnell",
+> 659	    "sdxl": "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+> 660	  };
+> 661	
+> 662	  const modelId = modelMap[body.model] || body.model;
+> 663	  const input: Record<string, any> = {
+> 664	    prompt: body.prompt,
+> 665	    ...(body.negative_prompt ? { negative_prompt: body.negative_prompt } : {}),
+> 666	    ...(body.parameters?.width ? { width: body.parameters.width } : {}),
+> 667	    ...(body.parameters?.height ? { height: body.parameters.height } : {}),
+> 668	    ...(body.parameters?.num_inference_steps ? { num_inference_steps: body.parameters.num_inference_steps } : {}),
+> 669	    ...(body.parameters?.guidance_scale ? { guidance_scale: body.parameters.guidance_scale } : {}),
+> 670	  };
+> 671	
+> 672	  // Cross-node consistency: seed (reproducibility, all models) + reference image
+> 673	  // mapped to each model's img2img param. flux-schnell has no image input → skip.
+> 674	  // SOP: docs/processes/[[canvas-node-consistency|canvas-node-consistency]].md. Fail-open if no reference/seed.
+> 675	  const seedVal = typeof body.seed === "number"
+> 676	    ? body.seed
+> 677	    : (typeof body.parameters?.seed === "number" ? body.parameters.seed : undefined);
+> 678	  if (typeof seedVal === "number") input.seed = seedVal;
+> 679	  const refUrl = (body.reference_image_urls ?? []).filter(Boolean)[0];
+> 680	  if (refUrl) {
+> 681	    if (body.model === "flux-1.1-pro") {
+> 682	      input.image_prompt = refUrl; // FLUX 1.1 Pro: composition reference
+> 683	    } else if (body.model === "sdxl") {
+> 684	      input.image = refUrl; // SDXL img2img
+> 685	      input.prompt_strength = typeof body.parameters?.prompt_strength === "number"
+> 686	        ? body.parameters.prompt_strength
+> 687	        : 0.75;
+> 688	    }
+> 689	    // flux-schnell intentionally omitted (text-to-image only).
+> 690	  }
+> 691	
+> 692	  // Create prediction
+> 693	  const createResp = await fetch("https://api.replicate.com/v1/predictions", {
+> 694	    method: "POST",
+> 695	    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+> 696	    body: JSON.stringify({ model: modelId.includes(":") ? undefined : modelId, version: modelId.includes(":") ? modelId.split(":")[1] : undefined, input }),
+> 697	  });
+> 698	
+> 699	  if (!createResp.ok) {
+> 700	    const t = await createResp.text();
+> 701	    throw new Error(`Replicate error ${createResp.status}: ${t}`);
+> 702	  }
+> 703	
+> 704	  let prediction = await createResp.json();
+> 705	
+> 706	  // Poll for completion (max 120s)
+> 707	  const maxWait = 120_000;
+> 708	  const start = Date.now();
+> 709	  while (prediction.status !== "succeeded" && prediction.status !== "failed" && Date.now() - start < maxWait) {
+> 710	    await new Promise((r) => setTimeout(r, 2000));
+> 711	    const pollResp = await fetch(prediction.urls.get, {
+> 712	      headers: { Authorization: `Bearer ${apiKey}` },
+> 713	    });
+> 714	    prediction = await pollResp.json();
+> 715	  }
+> 716	
+> 717	  if (prediction.status === "failed") {
+> 718	    throw new Error(`Replicate failed: ${prediction.error}`);
+> 719	  }
+> 720	
+> 721	  const output = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+> 722	  return { url: output || "" };
+> 723	}
+> 724	
+> 725	async function generateOpenRouter(apiKey: string, body: ExecuteRequest) {
+> 726	  if (!apiKey) throw new Error("OpenRouter API key not configured");
+> 727	
+> 728	  if (isImagePromptTooLong(body.prompt)) {
+> 729	    throw new Error(
+> 730	      `Prompt muito longo (${body.prompt.length} chars; máximo ${MAX_IMAGE_PROMPT_CHARS}). Modelos de imagem interpretam prompts longos como instruções de texto e devolvem texto, não imagem. Use o botão Magic Prompt para reformular como descrição visual concisa.`,
+> 731	    );
+> 732	  }
+> 733	
+> 734	  if (detectInstructionStylePrompt(body.prompt)) {
+> 735	    throw new Error(
+> 736	      `Prompt parece uma instrução de sistema (contém "You are X" / "Output ONLY" / similar), não uma descrição visual. Modelos como Nano Banana 2 responderão com texto em vez de imagem. Reformule como descrição: "A [sujeito], [detalhes], [iluminação/estilo]" ou use o Magic Prompt.`,
+> 737	    );
+> 738	  }
+> 739	
+> 740	  // Round 3 hotfix (2026-05-17): /v1/images/generations returns 404 HTML on
+> 741	  // OpenRouter — endpoint was deprecated. OpenRouter image generation now
+> 742	  // routes through /v1/chat/completions with `modalities: ["image", "text"]`
+> 743	  // for models that support image OUTPUT (e.g. google/gemini-2.5-flash-image-preview,
+> 744	  // black-forest-labs/flux-1.1-pro). Response shape: choices[0].message.content
+> 745	  // is an array of multimodal parts; image parts have type `image_url` with
+> 746	  // `image_url.url` carrying the asset URL.
+> 747	  const model = body.model || "google/gemini-2.5-flash-image";
+> 748	
+> 749	  // Cross-node consistency: attach upstream reference images as image_url parts.
+> 750	  // Gemini ("Nano Banana") accepts up to 4 character refs to preserve identity.
+> 751	  // image_url.url takes both https (preferred — bucket URLs) and data: URIs.
+> 752	  // Fail-open: no references → plain text content (current behavior, zero regression).
+> 753	  const refUrls = (body.reference_image_urls ?? []).filter(Boolean).slice(0, 4);
+> 754	  const userContent: unknown = refUrls.length === 0
+> 755	    ? body.prompt
+> 756	    : [
+> 757	        { type: "text", text: body.prompt },
+> 758	        ...refUrls.map((url) => ({ type: "image_url", image_url: { url } })),
+> 759	      ];
+> 760	
+> 761	  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+> 762	    method: "POST",
+> 763	    headers: {
+> 764	      Authorization: `Bearer ${apiKey}`,
+> 765	      "Content-Type": "application/json",
+> 766	      "HTTP-Referer": "https://mcorch.com",
+> 767	      "X-Title": "GCRUX Canvas Studio",
+> 768	    },
+> 769	    body: JSON.stringify({
+> 770	      model,
+> 771	      modalities: ["image", "text"],
+> 772	      messages: [{ role: "user", content: userContent }],
+> 773	    }),
+> 774	  });
+> 775	
+> 776	  if (!resp.ok) {
+> 777	    const t = await resp.text();
+> 778	    throw new Error(`OpenRouter error ${resp.status}: ${t.slice(0, 200)}`);
+> 779	  }
+> 780	
+> 781	  const data = await resp.json();
+> 782	  const message = data?.choices?.[0]?.message;
+> 783	  if (!message) throw new Error("OpenRouter: resposta sem message");
+> 784	
+> 785	  // Two output shapes seen in the wild:
+> 786	  //   1. message.content = string (text only — image missing)
+> 787	  //   2. message.content = [{type:'text',text:...}, {type:'image_url', image_url:{url:'data:...' | 'https://...'}}]
+> 788	  //   3. message.images = [{url:'...'}] (some OR providers return separate field)
+> 789	  let outUrl = "";
+> 790	  let outB64 = "";
+> 791	
+> 792	  if (Array.isArray(message.content)) {
+> 793	    for (const part of message.content) {
+> 794	      if (part?.type === "image_url" && part?.image_url?.url) {
+> 795	        const u = String(part.image_url.url);
+> 796	        if (u.startsWith("data:image/")) {
+> 797	          outB64 = u.split(",", 2)[1] ?? "";
+> 798	        } else {
+> 799	          outUrl = u;
+> 800	        }
+> 801	        break;
+> 802	      }
+> 803	    }
+> 804	  }
+> 805	
+> 806	  if (!outUrl && !outB64 && Array.isArray(message?.images) && message.images.length > 0) {
+> 807	    const first = message.images[0];
+> 808	    let u = "";
+> 809	    if (typeof first === "string") {
+> 810	      u = first;
+> 811	    } else if (first) {
+> 812	      if (first.url) {
+> 813	        u = String(first.url);
+> 814	      } else if (first.image_url?.url) {
+> 815	        u = String(first.image_url.url);
+> 816	      }
+> 817	    }
+> 818	
+> 819	    if (u) {
+> 820	      if (u.startsWith("data:image/")) {
+> 821	        outB64 = u.split(",", 2)[1] ?? "";
+> 822	      } else {
+> 823	        outUrl = u;
+> 824	      }
+> 825	    }
+> 826	  }
+> 827	
+> 828	  if (!outUrl && !outB64) {
+> 829	    // Text-only response = model treated the prompt as a text-generation
+> 830	    // request (typical when prompt looks like an instruction). Pre-flight
+> 831	    // guards catch the obvious cases; this is the runtime safety net.
+> 832	    if (typeof message.content === "string" && message.content.trim().length > 0) {
+> 833	      throw new Error(
+> 834	        `O modelo respondeu com texto em vez de imagem (provável: prompt parece instrução). Reformule como descrição visual ou use o Magic Prompt. Prévia: ${message.content.slice(0, 150)}…`,
+> 835	      );
+> 836	    }
+> 837	    throw new Error(`OpenRouter: resposta multimodal sem image_url. Response keys: ${Object.keys(data || {})}. Message keys: ${Object.keys(message || {})}. Raw response: ${JSON.stringify(data).slice(0, 400)}`);
+> 838	  }
+> 839	
+> 840	  return { url: outUrl, b64: outB64 };
+> 841	}
+> 842	
+> 843	async function generateHiggsfield(apiKey: string, apiSecret: string, body: ExecuteRequest) {
+> 844	  if (!apiKey || !apiSecret) {
+> 845	    throw new Error("Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)");
+> 846	  }
+> 847	
+> 848	  // Correct Higgsfield Platform API — base + auth + routes per the tested
+> 849	  // viralmind integration (src/lib/higgsfield.server.ts). The previous
+> 850	  // api.higgsfield.ai/v1/generations endpoint was wrong and never worked.
+> 851	  const BASE_URL = "https://platform.higgsfield.ai";
+> 852	  const authHeader = `Key ${apiKey}:${apiSecret}`;
+> 853	  const POLL_INTERVAL_MS = 3000;
+> 854	  const MAX_POLL_MS = 90_000;
+> 855	
+> 856	  // Derive Soul aspect ratio from incoming size / aspect_ratio params.
+> 857	  // Canonical Higgsfield ARs (per /docs/guides/images): 16:9 · 9:16 · 1:1 · 4:5.
+> 858	  const SIZE_TO_AR: Record<string, string> = {
+> 859	    "1024x1024": "1:1",
+> 860	    "1792x1024": "16:9",
+> 861	    "1024x1792": "9:16",
+> 862	    "1024x1280": "4:5",
+> 863	    "1280x1024": "5:4",
+> 864	  };
+> 865	  const VALID_AR = new Set(["16:9", "9:16", "1:1", "4:5"]);
+> 866	  const sizeKey = body.parameters?.size ? String(body.parameters.size) : "";
+> 867	  const requestedAr = body.parameters?.aspect_ratio || SIZE_TO_AR[sizeKey] || "1:1";
+> 868	  const aspectRatio = VALID_AR.has(requestedAr) ? requestedAr : "1:1";
+> 869	  const resolution = body.parameters?.resolution === "720p" ? "720p" : "1080p";
+> 870	
+> 871	  // Video routes (DoP/Kling/Seedance) are handled by submitHiggsfieldVideo()
+> 872	  // below — async path with `?hf_webhook=URL` query param. Soul (image) stays
+> 873	  // sync because gens complete within the 90s edge function window.
+> 874	
+> 875	  // ── Submit Soul text-to-image job ──────────────────────────────────
+> 876	  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> 877	  const endpoint = isCompose
+> 878	    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> 879	    : `${BASE_URL}/higgsfield-ai/soul/standard`;
+> 880	
+> 881	  const payload: Record<string, any> = {
+> 882	    prompt: body.prompt,
+> 883	    aspect_ratio: aspectRatio,
+> 884	    resolution,
+> 885	  };
+> 886	
+> 887	  if (isCompose) {
+> 888	    // Cross-node consistency: explicit input_image_* wins; otherwise fall back to
+> 889	    // upstream connected references so compose preserves identity automatically.
+> 890	    const refs = (body.reference_image_urls ?? []).filter(Boolean);
+> 891	    const image1 = body.input_image_1 || refs[0];
+> 892	    const image2 = body.input_image_2 || refs[1];
+> 893	    if (image1) {
+> 894	      payload.image_1_url = image1;
+> 895	      payload.input_image_1 = image1;
+> 896	    }
+> 897	    if (image2) {
+> 898	      payload.image_2_url = image2;
+> 899	      payload.input_image_2 = image2;
+> 900	    }
+> 901	    if (body.input_layout) {
+> 902	      payload.layout_url = body.input_layout;
+> 903	      payload.input_layout = body.input_layout;
+> 904	    }
+> 905	  }
+> 906	
+> 907	  const submitResp = await fetch(endpoint, {
+> 908	    method: "POST",
+> 909	    headers: {
+> 910	      Authorization: authHeader,
+> 911	      "Content-Type": "application/json",
+> 912	      Accept: "application/json",
+> 913	    },
+> 914	    body: JSON.stringify(payload),
+> 915	  });
+> 916	
+> 917	  if (!submitResp.ok) {
+> 918	    const t = await submitResp.text();
+> 919	    if (submitResp.status === 401 || submitResp.status === 403) {
+> 920	      throw new Error("Higgsfield: credenciais inválidas");
+> 921	    }
+> 922	    if (submitResp.status === 402) {
+> 923	      throw new Error("Higgsfield: saldo de créditos esgotado");
+> 924	    }
+> 925	    if (submitResp.status === 429) {
+> 926	      throw new Error("Higgsfield: limite de requisições atingido");
+> 927	    }
+> 928	    throw new Error(`Higgsfield submit error ${submitResp.status}: ${t.slice(0, 200)}`);
+> 929	  }
+> 930	
+> 931	  const submitData = await submitResp.json();
+> 932	  const requestId = submitData.request_id || submitData.id;
+> 933	  if (!requestId) throw new Error("Higgsfield: resposta de submit inválida (sem request_id)");
+> 934	
+> 935	  // ── Poll until terminal state ──────────────────────────────────────
+> 936	  const started = Date.now();
+> 937	  while (Date.now() - started < MAX_POLL_MS) {
+> 938	    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+> 939	    const statusResp = await fetch(`${BASE_URL}/requests/${requestId}/status`, {
+> 940	      method: "GET",
+> 941	      headers: { Authorization: authHeader, Accept: "application/json" },
+> 942	    });
+> 943	    if (!statusResp.ok) {
+> 944	      const t = await statusResp.text();
+> 945	      throw new Error(`Higgsfield status error ${statusResp.status}: ${t.slice(0, 200)}`);
+> 946	    }
+> 947	    const statusData = await statusResp.json();
+> 948	    if (statusData.status === "completed") {
+> 949	      const url = statusData.images?.[0]?.url || statusData.video?.url || "";
+> 950	      if (!url) throw new Error("Higgsfield: geração concluída sem URL de saída");
+> 951	      return { url };
+> 952	    }
+> 953	    if (statusData.status === "failed") throw new Error("Higgsfield: a geração falhou no provedor");
+> 954	    if (statusData.status === "nsfw") throw new Error("Higgsfield: conteúdo bloqueado por moderação");
+> 955	    if (statusData.status === "cancelled") throw new Error("Higgsfield: geração cancelada");
+> 956	  }
+> 957	  throw new Error("Higgsfield: geração demorou demais (timeout >90s)");
+> 958	}
+> 959	
+> 960	// ═══════════════════════════════════════════════════════════════════════════
+> 961	// Phase 4.2c — Async video submit (image_to_video)
+> 962	// ═══════════════════════════════════════════════════════════════════════════
+> 963	// Fire-and-forget: POST Higgsfield with `?hf_webhook=<callback>`, capture
+> 964	// `request_id`, UPDATE execution.operation_id, return 200 with status='queued'.
+> 965	// `higgsfield-webhook` finalizes atomically (download → upload → deduct → asset row).
+> 966	// Lei 1 trail: every gate inserts a row visible via REST (execution row, asset row,
+> 967	// ledger row, infra_health_logs pulse).
+> 968	// SOP: docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md
+> 969	// Validation doc: .claude/context/higgsfield-api-validation-2026-05-15.md
+> 970	
+> 971	interface SubmitVideoOpts {
+> 972	  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> 973	  admin: any; // SupabaseClient — looser type avoids createClient generic friction
+> 974	  supabaseUrl: string;
+> 975	  apiKey: string;
+> 976	  apiSecret: string;
+> 977	  body: ExecuteRequest;
+> 978	  execution: { id: string; webhook_token: string; credits_charged: number };
+> 979	  corsHeaders: Record<string, string>;
+> 980	}
+> 981	
+> 982	async function submitHiggsfieldVideo(opts: SubmitVideoOpts): Promise<Response> {
+> 983	  const { admin, supabaseUrl, apiKey, apiSecret, body, execution, corsHeaders } = opts;
+> 984	
+> 985	  const fail = async (msg: string, httpStatus: number) => {
+> 986	    await admin
+> 987	      .from("vm_canvas_executions")
+> 988	      .update({
+> 989	        status: "failed",
+> 990	        error_message: msg,
+> 991	        completed_at: new Date().toISOString(),
+> 992	      })
+> 993	      .eq("id", execution.id);
+> 994	    await admin
+> 995	      .from("infra_health_logs")
+> 996	      .insert({ service: "canvas-execute", status: "unhealthy" })
+> 997	      .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 998	    return new Response(
+> 999	      JSON.stringify({ error: msg, execution_id: execution.id, status: "failed" }),
+> 1000	      { status: httpStatus, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 1001	    );
+> 1002	  };
+> 1003	
+> 1004	  if (!apiKey || !apiSecret) {
+> 1005	    return fail(
+> 1006	      "Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)",
+> 1007	      500,
+> 1008	    );
+> 1009	  }
+> 1010	
+> 1011	  const imageUrl = body.input_asset_url;
+> 1012	  if (!imageUrl) {
+> 1013	    return fail(
+> 1014	      "image_to_video requer input_asset_url (conecte uma imagem upstream antes de gerar)",
+> 1015	      400,
+> 1016	    );
+> 1017	  }
+> 1018	
+> 1019	  const duration = typeof body.parameters?.duration === "number" ? body.parameters.duration : 5;
+> 1020	  const motionStrength = typeof body.parameters?.motion_strength === "number"
+> 1021	    ? body.parameters.motion_strength
+> 1022	    : 0.5;
+> 1023	
+> 1024	  // Routing based on model parameter (aligned with .claude/context/higgsfield-api-validation-2026-05-15.md)
+> 1025	  const BASE_URL = "https://platform.higgsfield.ai";
+> 1026	  let modelPath = "higgsfield-ai/dop/standard";
+> 1027	  if (body.model === "dop-lite") {
+> 1028	    modelPath = "higgsfield-ai/dop/lite";
+> 1029	  } else if (body.model === "dop-turbo") {
+> 1030	    modelPath = "higgsfield-ai/dop/turbo";
+> 1031	  } else if (body.model === "kling-2.1-pro") {
+> 1032	    modelPath = "kling-video/v2.1/pro/image-to-video";
+> 1033	  } else if (body.model === "seedance-v1-pro") {
+> 1034	    modelPath = "bytedance/seedance/v1/pro/image-to-video";
+> 1035	  }
+> 1036	  const authHeader = `Key ${apiKey}:${apiSecret}`;
+> 1037	
+> 1038	  // Per-execution token guards against URL leak across rows (UNIQUE index on
+> 1039	  // vm_canvas_executions.webhook_token). Higgsfield POSTs back with this token
+> 1040	  // and the webhook idempotency check rejects replays via HTTP 409.
+> 1041	  const webhookUrl = `${supabaseUrl}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}`;
+> 1042	
+> 1043	  const submitUrl = new URL(`${BASE_URL}/${modelPath}`);
+> 1044	  submitUrl.searchParams.set("hf_webhook", webhookUrl);
+> 1045	
+> 1046	  let submitResp: Response;
+> 1047	  try {
+> 1048	    submitResp = await fetch(submitUrl.toString(), {
+> 1049	      method: "POST",
+> 1050	      headers: {
+> 1051	        Authorization: authHeader,
+> 1052	        "Content-Type": "application/json",
+> 1053	        Accept: "application/json",
+> 1054	      },
+> 1055	      body: JSON.stringify({
+> 1056	        image_url: imageUrl,
+> 1057	        prompt: body.prompt,
+> 1058	        duration,
+> 1059	        motion_strength: motionStrength,
+> 1060	      }),
+> 1061	    });
+> 1062	  } catch (e) {
+> 1063	    const msg = e instanceof Error ? e.message : "Higgsfield submit network error";
+> 1064	    return fail(`Higgsfield submit network error: ${msg}`, 502);
+> 1065	  }
+> 1066	
+> 1067	  if (!submitResp.ok) {
+> 1068	    const text = await submitResp.text().catch(() => "");
+> 1069	    let msg = `Higgsfield submit ${submitResp.status}: ${text.slice(0, 200)}`;
+> 1070	    if (submitResp.status === 401 || submitResp.status === 403) {
+> 1071	      msg = "Higgsfield: credenciais inválidas";
+> 1072	    } else if (submitResp.status === 402) {
+> 1073	      msg = "Higgsfield: saldo de créditos esgotado";
+> 1074	    } else if (submitResp.status === 429) {
+> 1075	      msg = "Higgsfield: limite de requisições atingido";
+> 1076	    }
+> 1077	    return fail(msg, 502);
+> 1078	  }
+> 1079	
+> 1080	  let submitData: { request_id?: string; id?: string; status?: string };
+> 1081	  try {
+> 1082	    submitData = await submitResp.json();
+> 1083	  } catch {
+> 1084	    return fail("Higgsfield: resposta inválida (JSON parse failed)", 502);
+> 1085	  }
+> 1086	
+> 1087	  const operationId = submitData.request_id ?? submitData.id;
+> 1088	  if (!operationId) {
+> 1089	    return fail("Higgsfield: resposta de submit sem request_id", 502);
+> 1090	  }
+> 1091	
+> 1092	  const { error: updErr } = await admin
+> 1093	    .from("vm_canvas_executions")
+> 1094	    .update({ operation_id: operationId })
+> 1095	    .eq("id", execution.id);
+> 1096	  if (updErr) {
+> 1097	    console.error("[canvas-execute] failed to persist operation_id:", updErr);
+> 1098	    // The job is in-flight at Higgsfield but we lost the polling handle.
+> 1099	    // Webhook will still finalize via webhook_token; watchdog poll falls back to noop.
+> 1100	  }
+> 1101	
+> 1102	  await admin
+> 1103	    .from("infra_health_logs")
+> 1104	    .insert({ service: "canvas-execute", status: "healthy" })
+> 1105	    .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 1106	
+> 1107	  return new Response(
+> 1108	    JSON.stringify({
+> 1109	      execution_id: execution.id,
+> 1110	      status: "queued",
+> 1111	      webhook_token: execution.webhook_token,
+> 1112	      operation_id: operationId,
+> 1113	      credits_charged: execution.credits_charged, // intent, not yet deducted
+> 1114	      higgsfield_status: submitData.status ?? "queued",
+> 1115	    }),
+> 1116	    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 1117	  );
+> 1118	}
+> 1119	
+> 1120	// ═══════════════════════════════════════════════════════════════════════════
+> 1121	// Magic Prompt Enhancement (using OpenRouter Gemini 2.5 Flash)
+> 1122	// ═══════════════════════════════════════════════════════════════════════════
+> 1123	async function generateMagicPrompt(
+> 1124	  apiKey: string,
+> 1125	  geminiKey: string,
+> 1126	  prompt: string,
+> 1127	  level: "curto" | "medio" | "longo",
+> 1128	  modelName: string,
+> 1129	  campaignContext: string,
+> 1130	) {
+> 1131	  if (!apiKey) throw new Error("OpenRouter API key not configured");
+> 1132	
+> 1133	  const systemInstruction = `Você é o MCORCH Magic Prompt Engineer, um especialista em engenharia de prompt para modelos de IA generativa de imagem e vídeo (como Gemini 2.5 Flash, FLUX, Dall-E 3, e Higgsfield/Seedance).
+> 1134	Seu objetivo é expandir e aprimorar o prompt genérico fornecido pelo usuário com base no contexto da campanha do usuário e no modelo de destino especificado.
+> 1135	
+> 1136	Nível de expansão solicitado:
+> 1137	- curto: prompt conciso e direto, enriquecido (~25-40 palavras / máximo 400 caracteres).
+> 1138	- medio: prompt moderadamente detalhado, focando em iluminação, composição e estilo (~60-90 palavras / máximo 900 caracteres).
+> 1139	- longo: prompt altamente descritivo, cinemático e rico em detalhes visuais (~120-180 palavras / máximo 1500 caracteres — NUNCA exceda).
+> 1140	
+> 1141	Regras cruciais:
+> 1142	1. Retorne APENAS o prompt final expandido em inglês (ideal para os geradores de imagem/vídeo).
+> 1143	2. Não adicione observações, explicações, aspas extras ou introduções como "Here is your prompt:". Retorne apenas o texto do prompt.
+> 1144	3. Se o modelo de destino for de vídeo (Higgsfield, Seedance, etc.), descreva o movimento da câmera, ações e efeitos temporais.
+> 1145	4. Utilize o contexto da campanha (se fornecido) para alinhar o estilo do prompt com a marca/audiência.
+> 1146	5. NUNCA inclua instruções de comportamento, definições de papel, ou estruturas de saída no output expandido. Proibido: "You are X", "Your function is Y", "Output ONLY", "IDENTITY & PROTOCOL CONTEXT", "Return only JSON", listas numeradas de regras, blocos de código. O output deve ser PURA DESCRIÇÃO VISUAL (substantivos + adjetivos + cenário + iluminação + estilo) — modelos de imagem leem qualquer estrutura instrucional como "gere texto" e devolvem texto em vez de imagem.`;
+> 1147	
+> 1148	  const userContent = `Prompt do usuário a ser expandido: "${prompt}"
+> 1149	Modelo de destino: "${modelName}"
+> 1150	Contexto de Campanha do Usuário:
+> 1151	${campaignContext}`;
+> 1152	
+> 1153	  const resp = await fetchLLMWithFallback("https://openrouter.ai/api/v1/chat/completions", {
+> 1154	    method: "POST",
+> 1155	    headers: {
+> 1156	      Authorization: `Bearer ${apiKey}`,
+> 1157	      "Content-Type": "application/json",
+> 1158	      "HTTP-Referer": "https://mcorch.com",
+> 1159	      "X-Title": "GCRUX Magic Prompt Generator",
+> 1160	    },
+> 1161	    body: JSON.stringify({
+> 1162	      model: "google/gemini-2.5-flash",
+> 1163	      messages: [
+> 1164	        { role: "system", content: systemInstruction },
+> 1165	        { role: "user", content: userContent },
+> 1166	      ],
+> 1167	    }),
+> 1168	  }, {
+> 1169	    functionName: "canvas-execute",
+> 1170	    openRouterKey: apiKey,
+> 1171	    geminiKey,
+> 1172	  });
+> 1173	
+> 1174	  if (!resp.ok) {
+> 1175	    const t = await resp.text();
+> 1176	    throw new Error(`OpenRouter error ${resp.status}: ${t.slice(0, 200)}`);
+> 1177	  }
+> 1178	
+> 1179	  const data = await resp.json();
+> 1180	  const text = data?.choices?.[0]?.message?.content?.trim() || "";
+> 1181	  if (!text) throw new Error("OpenRouter: resposta de magic prompt vazia");
+> 1182	
+> 1183	  // Hard cap output so even an over-eager "longo" stays under the
+> 1184	  // downstream image-gen guard. Trims at last sentence boundary when possible.
+> 1185	  if (text.length > MAX_IMAGE_PROMPT_CHARS) {
+> 1186	    const truncated = text.slice(0, MAX_IMAGE_PROMPT_CHARS);
+> 1187	    const lastPeriod = truncated.lastIndexOf(". ");
+> 1188	    return lastPeriod > MAX_IMAGE_PROMPT_CHARS * 0.6
+> 1189	      ? truncated.slice(0, lastPeriod + 1).trim()
+> 1190	      : truncated.trim();
+> 1191	  }
+> 1192	  return text;
+> 1193	}
+> 1194	
+> ```
+
+## 🤖 Claude *(22:36:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== design_jobs / design_artifact migrations ===\"; ls supabase/migrations/ | grep -iE \"design|canvas\" 2>/dev/null; echo \"=== open-design sidecar dir ===\"; ls -la canvas-design/ 2>/dev/null || echo \"(no canvas-design/ dir)\"; echo \"=== docker design daemon ===\"; docker ps -a --filter \"name=design\" --format \"{{.Names}}: {{.Status}}\" || echo none; echo \"=== design-bridge worker script ===\"; ls scripts/ | grep -iE \"design|bridge\" 2>/dev/null; echo \"=== music/song/landing functions anywhere ===\"; ls supabase/functions/ | grep -iE \"music|song|suno|landing|page-build|sitebuild\" || echo \"(none)\"; echo \"=== routes for canvas/canvas-design in App.tsx ===\"; grep -nE \"canvas|design|studio\" src/App.tsx 2>/dev/null | head -30",
+  "description": "Probe Canvas Design sidecar + music/landing existence + routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === design_jobs / design_artifact migrations ===
+> 20260514040200_viralmind_canvas_studio.sql
+> 20260516224542_vm_canvas_executions_async_video.sql
+> 20260518012541_canvas_assets_update_policy.sql
+> 20260518020030_canvas_assets_rls_repair.sql
+> 20260523194500_canvas_design.sql
+> === open-design sidecar dir ===
+> total 12
+> drwxrwxr-x  3 ubuntu ubuntu 4096 May 20 10:34 .
+> drwx------ 30 ubuntu ubuntu 4096 Jun 20 17:08 ..
+> drwxrwxr-x 30 ubuntu ubuntu 4096 Jun 14 18:40 open-design
+> === docker design daemon ===
+> open-design: Up 6 days (healthy)
+> === design-bridge worker script ===
+> bridge-mesh-to-openclaw.ts
+> design-bridge.ts
+> nightly-bridge-refresh.sh
+> opencode-bridge.ts
+> === music/song/landing functions anywhere ===
+> (none)
+> === routes for canvas/canvas-design in App.tsx ===
+> 123:                <Route path="canvas" element={<CanvasStudioPage />} />
+> 124:                <Route path="canvas/design" element={<CanvasDesignPage />} />
+> 125:                <Route path="canvas/:id" element={<CanvasEditorPage />} />
+> ```
+
+## 🤖 Claude *(22:37:41)*
+
+
+## 🤖 Claude *(22:37:47)*
+
+Ground truth materializado. Quadro real:
+
+- **Canvas Studio** (`canvas-execute`): código **completo** — roteia OpenAI (DALL·E 3 / gpt-image-1), Replicate (FLUX/SDXL), OpenRouter (Gemini 2.5 flash image = "Nano Banana" via chat-completions, **≠** o `api.nanobana.com` morto do `generate-image`), Higgsfield (Soul imagem sync + DoP vídeo async). Chaves per-user > vault. HANDOFF diz DoP vídeo já provado pago 6×.
+- **Canvas Design** (open-design): container `open-design: Up 6 days (healthy)` ✅ + migration `20260523194500_canvas_design.sql` + `scripts/design-bridge.ts` + `CanvasDesignPage`. Existe — falta validar E2E.
+- **Áudio:** `tts-speak` + `generate-audio-script` existem.
+- **Música:** **NÃO existe** (zero função/provider).
+- **Landing pages:** **NÃO existe**.
+
+Vou fazer uma última sondagem precisa: contrastar `generate-image` (a fn que quebrou no autopilot) vs `canvas-execute`, ver quais chaves de provider o Usuário Zero realmente tem, e checar se o Canvas Design está fiado E2E ou só o container de pé.
+
+## 🤖 Claude *(22:37:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== provider keys present in .env (hint do vault local) ===\"\ngrep -oiE \"^(OPENAI|OPENROUTER|REPLICATE|HIGGSFIELD|HIGGSFIELD_API_KEY_SECRET|GEMINI|GOOGLE)_?[A-Z_]*=\" .env 2>/dev/null | sed 's/=.*//' | sort -u || echo \"(no .env or no matches)\"\necho \"\"\necho \"=== generate-image: provider routing (a fn quebrada no autopilot) ===\"\ngrep -nE \"nanobana|api\\.openai|fetch\\(|provider ===|case \\\"|endpoint =|baseUrl|BASE_URL\" supabase/functions/generate-image/index.ts 2>/dev/null | head -40\necho \"\"\necho \"=== generate-audio-script + tts-speak: o que fazem (provider) ===\"\ngrep -nE \"fetch\\(|elevenlabs|openai|api\\.|tts|voice|model:\" supabase/functions/tts-speak/index.ts 2>/dev/null | head -15",
+  "description": "Contrast generate-image vs canvas-execute providers + check env keys + tts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === provider keys present in .env (hint do vault local) ===
+> GEMINI_API_KEY
+> HIGGSFIELD_API_KEY
+> HIGGSFIELD_API_KEY_SECRET
+> OPENROUTER_API_KEY
+> REPLICATE_API_KEY
+> 
+> === generate-image: provider routing (a fn quebrada no autopilot) ===
+> 33:    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 58:      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+> 70:    const adminClient = createClient(supabaseUrl, serviceKey);
+> 74:    const nanobanaKey = userKeys?.nanobana_api_key || Deno.env.get("NANOBANA_API_KEY");
+> 80:    let endpoint = "";
+> 83:    if (prefImage === "nanobana" && nanobanaKey) {
+> 84:      activeKey = nanobanaKey;
+> 85:      endpoint = "https://api.nanobana.com/v1/images/generations"; // Assuming standard proxy or mock
+> 89:      endpoint = openaiKey ? "https://api.openai.com/v1/images/generations" : "https://openrouter.ai/api/v1/images/generations";
+> 101:    const aiResponse = await fetch(endpoint, {
+> 162:      const imgResp = await fetch(imageUrl);
+> 
+> === generate-audio-script + tts-speak: o que fazem (provider) ===
+> 9:// Gemini 2.5 Flash TTS — neural voices, same API key as chat
+> 10:const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+> 80:  let voiceName: string;
+> 85:    voiceName = VALID_VOICES.has(body.voice) ? body.voice : "Kore";
+> 97:        voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+> 102:  const geminiRes = await fetch(`${TTS_URL}?key=${geminiKey}`, {
+> ```
+
+## 🤖 Claude *(22:37:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Usu\u00e1rio Zero keys present (masked view, presence only) ===\"\nsource .env 2>/dev/null\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/user_api_keys?select=user_id,openai_api_key,openrouter_api_key,replicate_api_key,google_api_key,higgsfield_api_key\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | head -c 1200\necho \"\"\necho \"=== CanvasDesignPage: stub ou real? (linhas + sinais) ===\"\nwc -l src/pages/CanvasDesignPage.tsx 2>/dev/null\ngrep -nE \"design_jobs|design-bridge|useDesign|invoke|TODO|placeholder|em breve|Coming soon|iframe|open-design\" src/pages/CanvasDesignPage.tsx 2>/dev/null | head -20\necho \"\"\necho \"=== design-bridge.ts: o worker est\u00e1 completo? ===\"\nwc -l scripts/design-bridge.ts 2>/dev/null\ngrep -nE \"design_jobs|od |execSync|spawn|claim|status|TODO\" scripts/design-bridge.ts 2>/dev/null | head -20",
+  "description": "Check user provider keys + Canvas Design wiring depth"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Usuário Zero keys present (masked view, presence only) ===
+> [{"user_id":"ada39fae-67e1-4e53-af1c-5a18e1c108e8","openai_api_key":"••••••••••••","openrouter_api_key":"••••••••••••","replicate_api_key":"••••••••••••","google_api_key":"••••••••••••","higgsfield_api_key":null}]
+> === CanvasDesignPage: stub ou real? (linhas + sinais) ===
+> 20 src/pages/CanvasDesignPage.tsx
+> 8:        <meta name="description" content="Soberano Módulo de Design Omnichannel baseado em open-design" />
+> 12:        <iframe
+> 
+> === design-bridge.ts: o worker está completo? ===
+> 304 scripts/design-bridge.ts
+> 5: * Bridge worker running on the host that polls `design_jobs` and executes
+> 14:import { spawn } from 'child_process';
+> 38:// Create Supabase client using Service Role to bypass RLS for status updates
+> 55:    const p = spawn(bin, args, { env: { ...process.env, ...env } });
+> 82:  console.log(`🤖 design-bridge is running and polling design_jobs...`);
+> 87:        .from('design_jobs')
+> 89:        .eq('status', 'queued')
+> 107:        // Atomic claim check
+> 108:        const { data: claimed, error: claimError } = await supabase
+> 109:          .from('design_jobs')
+> 110:          .update({ status: 'running', updated_at: new Date().toISOString() })
+> 112:          .eq('status', 'queued')
+> 115:        if (claimError || !claimed || claimed.length === 0) {
+> 116:          console.log(`⚠️ Job ${job.id} already claimed by another worker. Skipping.`);
+> 137:            // Update DB status
+> 139:              .from('design_jobs')
+> 141:                status: 'complete',
+> 260:            // Update job status to complete
+> 262:              .from('design_jobs')
+> 264:                status: 'complete',
+> ```
+
+## 🤖 Claude *(22:38:52)*
+
+
+## 🤖 Claude *(22:39:07)*
+
+Sondagem completa. Tenho o diagnóstico material — e ele é mais preciso (e mais animador) do que o handoff sugeria.
+
+## 🔬 Por que "só texto funciona" — causa-raiz isolada
+
+O sintoma não é "o criativo está todo quebrado". São **endpoints mortos numa única função** do pipeline:
+
+| Superfície | Função | Estado real | Provider do Usuário Zero |
+|---|---|---|---|
+| **Imagem (pipeline/autopilot)** | `generate-image` | ❌ **QUEBRADA** — usa `api.openai.com/v1/images/generations` (chave-projeto sem acesso a modelo de imagem → 400) e, no fallback, `openrouter.ai/v1/images/generations` (**endpoint deprecado → 404**) + `api.nanobana.com` (DNS morto) | openai ✅ openrouter ✅ replicate ✅ |
+| **Imagem (Canvas Studio)** | `canvas-execute` | ✅ **JÁ CORRIGIDA** — migrada p/ OpenRouter **chat-completions multimodal** (Gemini "Nano Banana") + Replicate FLUX/SDXL. Nunca validada E2E com as chaves atuais | mesmas chaves ✅ |
+| **Vídeo (Canvas Studio)** | `canvas-execute`→`higgsfield-webhook` | ✅ provado pago 6× (HANDOFF) | Higgsfield via **vault** (user key null, mas env tem) ✅ |
+| **Áudio/TTS** | `tts-speak` | ✅ Gemini 2.5 TTS — `google_api_key` presente | google ✅ |
+| **Canvas Design** (open-design) | container + `design-bridge.ts` + `design_jobs` | ⚠️ container `Up 6 days (healthy)`, worker existe, página = iframe. **Worker rodando? iframe acessível? não validado E2E** | — |
+| **Música** | — | ❌ **não existe** (zero função/provider) | — |
+| **Landing pages** | — | ❌ **não existe** | — |
+
+**A descoberta-chave:** o `canvas-execute` já tem o path de imagem correto que o `generate-image` precisa. O reparo do pipeline é portar o mesmo fix (chat-completions multimodal **ou** Replicate FLUX) — bug contido em feature documentada (viralmind BoK selada), **isento de BoK gate**.
+
+**⚠️ BoK Gate (Master Execution Protocol):** **Música** e **landing pages** são módulos novos sem BoK → exigem `/bok-scribe` **antes** de qualquer código. Imagem, vídeo, áudio e Canvas Design têm BoK selada (viralmind + canvas-design) → validação/reparo liberados agora.
+
+**ORO desta frente:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign + `/security-review` (se tocar migration/edge) · Owner = Sovereign (blast radius = carteira do tenant + assets publicados).
+
+Antes de codar, preciso travar escopo e ordem — são 5 superfícies em 2 módulos, parte existe, parte não:
+
+## 🤖 Claude *(22:39:08)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Valida\u00e7\u00e3o camada criativa",
+  "summary": "Diagn\u00f3stico E2E de Canvas Studio + Canvas Design (imagem/v\u00eddeo/\u00e1udio/m\u00fasica/landing); generate-image quebrada por endpoint morto"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Validação camada criativa". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:39:18)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Diagn\u00f3stico: o criativo no pipeline quebra porque `generate-image` usa endpoints mortos, enquanto `canvas-execute` (Canvas Studio) j\u00e1 tem o path correto mas nunca foi validado E2E. M\u00fasica e landing pages n\u00e3o existem (BoK gate). Por onde come\u00e7amos esta sess\u00e3o?",
+      "header": "Escopo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Validar+reparar o existente",
+          "description": "1) Provar Canvas Studio imagem E2E (asset real); 2) reparar generate-image (porta o fix do canvas-execute \u2192 desbloqueia autopilot/orchestrate); 3) validar v\u00eddeo DoP; 4) validar \u00e1udio TTS; 5) validar Canvas Design (open-design) E2E. Zero BoK gate \u2014 desbloqueia o criativo hoje."
+        },
+        {
+          "label": "S\u00f3 o reparo do pipeline",
+          "description": "Foco cir\u00fargico: consertar generate-image (endpoint morto \u2192 chat-completions/Replicate) para o autopilot/orchestrate gerar imagem de verdade. Menor escopo, maior alavanca para o motor viral."
+        },
+        {
+          "label": "Validar s\u00f3 o Canvas Studio",
+          "description": "Provar imagem + v\u00eddeo + \u00e1udio no Canvas Studio E2E com assets reais, sem mexer no pipeline generate-image ainda."
+        },
+        {
+          "label": "Iniciar m\u00fasica/landing (BoK)",
+          "description": "Arrancar os m\u00f3dulos novos. Exige /bok-scribe primeiro (BoK gate) antes de qualquer c\u00f3digo \u2014 sess\u00e3o de documenta\u00e7\u00e3o, n\u00e3o de valida\u00e7\u00e3o."
+        }
+      ]
+    },
+    {
+      "question": "Validar E2E significa gerar assets REAIS na carteira do Usu\u00e1rio Zero (saldo ~5241). Custos: imagem ~10 mco, \u00e1udio ~1-5 mco, v\u00eddeo DoP ~125 mco. Autorizo gastar em valida\u00e7\u00e3o?",
+      "header": "GO gasto",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim \u2014 barato (imagem+\u00e1udio)",
+          "description": "Autorizo ~10-20 mco para provar imagem e \u00e1udio materialmente. V\u00eddeo DoP (125 mco) fica para uma confirma\u00e7\u00e3o separada."
+        },
+        {
+          "label": "Sim \u2014 incluindo v\u00eddeo DoP",
+          "description": "Autorizo tamb\u00e9m o v\u00eddeo DoP (~125 mco) para provar a cadeia imagem\u2192v\u00eddeo completa de ponta a ponta."
+        },
+        {
+          "label": "N\u00e3o \u2014 s\u00f3 c\u00f3digo/diagn\u00f3stico",
+          "description": "Sem gasto agora. Fa\u00e7o o reparo e a an\u00e1lise; a valida\u00e7\u00e3o paga fica para um GO posterior."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Diagnóstico: o criativo no pipeline quebra porque `generate-image` usa endpoints mortos, enquanto `canvas-execute` (Canvas Studio) já tem o path correto mas nunca foi validado E2E. Música e landing pages não existem (BoK gate). Por onde começamos esta sessão?"="Validar+reparar o existente", "Validar E2E significa gerar assets REAIS na carteira do Usuário Zero (saldo ~5241). Custos: imagem ~10 mco, áudio ~1-5 mco, vídeo DoP ~125 mco. Autorizo gastar em validação?"="Sim com video DoP mas precisamos de um QA Vision e foi por isso que resolvi criar o MCP Vision, vamos começar agora com um bom olho criativo. Pois quando gerar os videos principalmente os com frame inicial e frame final precisa esta consistente para usar os creditos reais que coloquei no higgsfield para testarmos. Lembre-se de sempre salvar os assets reais desde sempre.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:42:41)*
+
+
+## 🤖 Claude *(22:42:45)*
+
+O Sovereign aprovou a frente completa ("Validar+reparar o existente") + GO de vídeo DoP — **com uma diretiva fundadora**: estabelecer um **QA Vision** (o "bom olho criativo", razão de existir o MCP Vision) que valide **consistência** dos creatives — sobretudo frame-inicial→frame-final dos vídeos — **antes** de queimar os créditos Higgsfield reais. E **sempre persistir os assets reais** (Lei 1, regra permanente).
+
+Antes de prometer um "loop de QA Vision", preciso verificar **o que o Vision MCP realmente faz hoje** (Lei 1 — minha memória diz que `vision.ocr` foi *deferido*). Vou sondar as tools reais do container.
+
+## 🤖 Claude *(22:42:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vision-mcp-core tools dir ===\"\nls -la packages/vision-mcp-core/src/tools/ 2>/dev/null || echo \"(no tools dir)\"\necho \"\"\necho \"=== tool registry in server.ts (nomes de tools registradas) ===\"\ngrep -nE \"registerTool|name:|\\\"vision|'vision|describe|analyze|ocr|image|caption|mesh\\.|deepsearch\\.\" packages/vision-mcp-core/src/server.ts 2>/dev/null | head -40\necho \"\"\necho \"=== qualquer tool de vis\u00e3o/imagem em todo o package ===\"\ngrep -rlEi \"vision\\.(describe|analyze|caption|ocr|compare)|image.?analysis|describeImage|analyzeImage\" packages/vision-mcp-core/src/ 2>/dev/null | head",
+  "description": "Probe Vision MCP actual tool inventory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vision-mcp-core tools dir ===
+> total 60
+> drwxrwxr-x 2 ubuntu ubuntu  4096 Jun 17 00:10 .
+> drwxrwxr-x 9 ubuntu ubuntu  4096 Jun 16 11:47 ..
+> -rw-rw-r-- 1 ubuntu ubuntu  7397 Jun 15 14:52 analyze-video.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  3312 Jun 15 14:31 consolidate-reference.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 23276 Jun 17 00:10 deepsearch-run.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  2910 Jun 15 14:54 deepsearch-scrape.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  5793 Jun 15 14:24 describe-image.ts
+> -rw-rw-r-- 1 ubuntu ubuntu  2734 Jun 15 12:46 mesh-search.ts
+> 
+> === tool registry in server.ts (nomes de tools registradas) ===
+> 
+> === qualquer tool de visão/imagem em todo o package ===
+> packages/vision-mcp-core/src/tools/analyze-video.ts
+> packages/vision-mcp-core/src/infra/billing.ts
+> packages/vision-mcp-core/src/tools/describe-image.ts
+> packages/vision-mcp-core/src/mcp/server.ts
+> packages/vision-mcp-core/src/__tests__/fatia2.test.ts
+> ```
+
+## 🤖 Claude *(22:42:57)*
+
+
+## 🤖 Claude *(22:42:59)*
+
+O Vision MCP **já tem o olho criativo** — minha memória estava desatualizada. Tools reais:
+- `describe-image.ts` → **vision describe** (QA de imagem)
+- `analyze-video.ts` → **QA de vídeo**
+- `consolidate-reference.ts` → **consistência por referência**
+- `deepsearch-run/scrape`, `mesh-search`
+
+Isso é exatamente o que o Sovereign quer. Vou ler os três para saber o contrato exato (input/output, billing, como invocar) — é a fundação do loop de QA.
+
+## 🤖 Claude *(22:43:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/tools/describe-image.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// vision-mcp-core tools/describe-image.ts — FR-VM-018 (vision.describe_image, 2 mco). First Fatia 2
+> 2	// billable tool. Pipeline (SOP [[vision-mcp-billing-credential-resolution|vision-mcp-billing-credential-resolution]].md): SSRF-guard the URL →
+> 3	// duty-of-care red-line (assistive) → resolve provider key (BYOK free / platform charged / 402) →
+> 4	// cost decision → deduct-on-entry (402 before leg) → VLM leg → refund-on-failure → structured result.
+> 5	
+> 6	import { resolveProviderKey } from "../auth/credentials.js";
+> 7	import { costFor, deductOnEntry, refund, ProviderNotConfiguredError } from "../infra/billing.js";
+> 8	import { redlineCheck, assistivePromptSuffix } from "../safety/duty-of-care.js";
+> 9	import { logHealth } from "../infra/telemetry.js";
+> 10	
+> 11	// Platform default VLM (cheap, vision-capable). Cost SOP: Gemini Flash ~$0.0004/img → 2 mco @4×-floor.
+> 12	const VISION_MODEL = process.env.VISION_VLM_MODEL ?? "google/gemini-2.5-flash";
+> 13	
+> 14	export interface DescribeImageInput {
+> 15	  image_url: string;
+> 16	  question?: string;
+> 17	  assistive?: boolean;
+> 18	}
+> 19	export interface DescribeImageResult {
+> 20	  description: string;
+> 21	  confidence: "high" | "medium" | "low";
+> 22	  cost_mco: number;
+> 23	  human_review_required?: boolean;
+> 24	}
+> 25	
+> 26	export class RedlineRefusalError extends Error {
+> 27	  code = "assistive_redline_refusal";
+> 28	  constructor(public domain?: string) {
+> 29	    super("assistive_redline_refusal");
+> 30	  }
+> 31	}
+> 32	export class ImageUrlError extends Error {
+> 33	  code: string;
+> 34	  constructor(code: string) {
+> 35	    super(code);
+> 36	    this.code = code;
+> 37	  }
+> 38	}
+> 39	
+> 40	// SSRF guard: https only + reject private/loopback/link-local hosts (FR-VM-018 "https only; host allowlist").
+> 41	export function assertSafeImageUrl(raw: string): URL {
+> 42	  let u: URL;
+> 43	  try {
+> 44	    u = new URL(raw);
+> 45	  } catch {
+> 46	    throw new ImageUrlError("invalid_image_url");
+> 47	  }
+> 48	  if (u.protocol !== "https:") throw new ImageUrlError("image_url_must_be_https");
+> 49	  const h = u.hostname.toLowerCase();
+> 50	  const blocked =
+> 51	    h === "localhost" ||
+> 52	    h.endsWith(".local") ||
+> 53	    h === "0.0.0.0" ||
+> 54	    h === "::1" ||
+> 55	    h.startsWith("[") || // raw IPv6 literal — refuse rather than parse-classify
+> 56	    /^127\./.test(h) ||
+> 57	    /^10\./.test(h) ||
+> 58	    /^192\.168\./.test(h) ||
+> 59	    /^169\.254\./.test(h) ||
+> 60	    /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+> 61	  if (blocked) throw new ImageUrlError("image_url_host_blocked");
+> 62	  return u;
+> 63	}
+> 64	
+> 65	export async function describeImage(input: DescribeImageInput, sub: string): Promise<DescribeImageResult> {
+> 66	  // 1) SSRF guard (before any cost/leg).
+> 67	  assertSafeImageUrl(input.image_url);
+> 68	
+> 69	  // 2) assistive duty-of-care red-line on the question — refuse free, no charge (FR-VM-014).
+> 70	  if (input.assistive) {
+> 71	    const v = redlineCheck(input.question);
+> 72	    if (v.refuse) {
+> 73	      logHealth("degraded", "assistive_redline_refusal", { domain: v.domain }, "vision-mcp");
+> 74	      throw new RedlineRefusalError(v.domain);
+> 75	    }
+> 76	  }
+> 77	
+> 78	  // 3) resolve provider key (BYOK free / platform charged / 402 not_configured).
+> 79	  const resolved = await resolveProviderKey(sub, "openrouter");
+> 80	  if (!resolved) throw new ProviderNotConfiguredError("openrouter");
+> 81	
+> 82	  // 4) cost decision + deduct on entry (insufficient → throws BEFORE the provider leg).
+> 83	  const cost = costFor("vision.describe_image", sub, resolved.isUserCustomKey);
+> 84	  await deductOnEntry(sub, cost, "vision.describe_image", { model: VISION_MODEL, assistive: !!input.assistive });
+> 85	
+> 86	  // 5) provider leg — refund on ANY failure past the deduct.
+> 87	  try {
+> 88	    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+> 89	      method: "POST",
+> 90	      headers: { Authorization: `Bearer ${resolved.key}`, "Content-Type": "application/json" },
+> 91	      body: JSON.stringify({
+> 92	        model: VISION_MODEL,
+> 93	        max_tokens: 700,
+> 94	        messages: [
+> 95	          {
+> 96	            role: "user",
+> 97	            content: [
+> 98	              { type: "text", text: buildPrompt(input) },
+> 99	              { type: "image_url", image_url: { url: input.image_url } },
+> 100	            ],
+> 101	          },
+> 102	        ],
+> 103	      }),
+> 104	    });
+> 105	    if (!res.ok) {
+> 106	      throw new Error(`vlm_http_${res.status}:${(await res.text()).slice(0, 160)}`);
+> 107	    }
+> 108	    const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+> 109	    const content = data?.choices?.[0]?.message?.content ?? "";
+> 110	    const { description, confidence } = parseVlm(content);
+> 111	    logHealth("healthy", "tool_ok", { tool: "describe_image", cost, byok: resolved.isUserCustomKey });
+> 112	    const out: DescribeImageResult = { description, confidence, cost_mco: cost };
+> 113	    if (input.assistive) out.human_review_required = confidence === "low";
+> 114	    return out;
+> 115	  } catch (e) {
+> 116	    await refund(sub, cost, "describe_image_failed");
+> 117	    throw e;
+> 118	  }
+> 119	}
+> 120	
+> 121	function buildPrompt(input: DescribeImageInput): string {
+> 122	  const base = input.question
+> 123	    ? `Descreva a imagem para responder: "${input.question}".`
+> 124	    : "Descreva a imagem de forma objetiva, completa e fiel.";
+> 125	  const assistive = input.assistive ? assistivePromptSuffix() : "";
+> 126	  return `${base}${assistive} Responda em PT-BR. Retorne SOMENTE um objeto JSON: {"description": string, "confidence": "high"|"medium"|"low"}.`;
+> 127	}
+> 128	
+> 129	// EXPORTED for unit testing the parse robustness without a live VLM.
+> 130	export function parseVlm(content: string): { description: string; confidence: "high" | "medium" | "low" } {
+> 131	  const m = content.match(/\{[\s\S]*\}/);
+> 132	  if (m) {
+> 133	    try {
+> 134	      const j = JSON.parse(m[0]) as { description?: unknown; confidence?: unknown };
+> 135	      const conf = j.confidence === "high" || j.confidence === "low" ? j.confidence : "medium";
+> 136	      if (typeof j.description === "string" && j.description.trim()) {
+> 137	        return { description: j.description.trim(), confidence: conf };
+> 138	      }
+> 139	    } catch {
+> 140	      /* fall through to raw text */
+> 141	    }
+> 142	  }
+> 143	  return { description: content.trim() || "(sem descrição)", confidence: "medium" };
+> 144	}
+> 145	
+> ```
+
+## 🤖 Claude *(22:43:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/tools/analyze-video.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// vision-mcp-core tools/analyze-video.ts — FR-VM-024 (vision.analyze_video, 2 mco/min). Gemini video
+> 2	// understanding (NOT Higgsfield — Higgsfield GENERATES video; Gemini DESCRIBES it). Provider: the direct
+> 3	// Generative Language API (per-user BYOK google_api_key / platform GEMINI_API_KEY / 402). Two input modes:
+> 4	//   • YouTube URL  → fileData.fileUri (Gemini ingests public YouTube natively)
+> 5	//   • direct https → download (size-capped) → inlineData base64
+> 6	// Billing is per-minute: cost = class × ceil(duration_minutes) (declared, capped). Server-side exact-duration
+> 7	// metering is a documented follow-up (cost SOP G4 "medição em produção"); the size cap bounds inline abuse.
+> 8	
+> 9	import { resolveProviderKey } from "../auth/credentials.js";
+> 10	import { costFor, deductOnEntry, refund, ProviderNotConfiguredError } from "../infra/billing.js";
+> 11	import { redlineCheck, assistivePromptSuffix } from "../safety/duty-of-care.js";
+> 12	import { parseVlm } from "./describe-image.js";
+> 13	import { logHealth } from "../infra/telemetry.js";
+> 14	
+> 15	const VIDEO_MODEL = process.env.VISION_VIDEO_MODEL ?? "gemini-2.5-flash";
+> 16	const MAX_VIDEO_BYTES = 20 * 1024 * 1024; // Gemini inline request cap
+> 17	const MAX_DURATION_MINUTES = 30; // first-cut billing cap
+> 18	
+> 19	export interface AnalyzeVideoInput {
+> 20	  video_url: string;
+> 21	  question?: string;
+> 22	  assistive?: boolean;
+> 23	  duration_minutes?: number; // declared, used for per-minute billing (capped); default 1
+> 24	}
+> 25	export interface AnalyzeVideoResult {
+> 26	  description: string;
+> 27	  confidence: "high" | "medium" | "low";
+> 28	  cost_mco: number;
+> 29	  duration_minutes: number;
+> 30	  human_review_required?: boolean;
+> 31	}
+> 32	
+> 33	export class RedlineRefusalError extends Error {
+> 34	  code = "assistive_redline_refusal";
+> 35	  constructor(public domain?: string) {
+> 36	    super("assistive_redline_refusal");
+> 37	  }
+> 38	}
+> 39	export class VideoUrlError extends Error {
+> 40	  code: string;
+> 41	  constructor(code: string) {
+> 42	    super(code);
+> 43	    this.code = code;
+> 44	  }
+> 45	}
+> 46	
+> 47	const YOUTUBE_RE = /(^|\.)(youtube\.com|youtu\.be)$/i;
+> 48	
+> 49	// SSRF guard: https only + reject private/loopback/link-local. Public YouTube hosts are allowed (native ingest).
+> 50	export function assertSafeVideoUrl(raw: string): { url: URL; isYouTube: boolean } {
+> 51	  let u: URL;
+> 52	  try {
+> 53	    u = new URL(raw);
+> 54	  } catch {
+> 55	    throw new VideoUrlError("invalid_video_url");
+> 56	  }
+> 57	  if (u.protocol !== "https:") throw new VideoUrlError("video_url_must_be_https");
+> 58	  const h = u.hostname.toLowerCase();
+> 59	  if (YOUTUBE_RE.test(h)) return { url: u, isYouTube: true };
+> 60	  const blocked =
+> 61	    h === "localhost" ||
+> 62	    h.endsWith(".local") ||
+> 63	    h === "0.0.0.0" ||
+> 64	    h === "::1" ||
+> 65	    h.startsWith("[") ||
+> 66	    /^127\./.test(h) ||
+> 67	    /^10\./.test(h) ||
+> 68	    /^192\.168\./.test(h) ||
+> 69	    /^169\.254\./.test(h) ||
+> 70	    /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+> 71	  if (blocked) throw new VideoUrlError("video_url_host_blocked");
+> 72	  return { url: u, isYouTube: false };
+> 73	}
+> 74	
+> 75	export function billedMinutes(declared: number | undefined): number {
+> 76	  const n = Math.ceil(declared ?? 1);
+> 77	  return Math.min(Math.max(1, n), MAX_DURATION_MINUTES);
+> 78	}
+> 79	
+> 80	// Redirect-safe fetch: the container itself downloads this URL, so EVERY hop must be re-validated
+> 81	// against the SSRF guard (a public host could 302 → http://169.254.169.254 / an internal mesh service,
+> 82	// and default fetch follows redirects + downgrades to http). We follow manually and re-assert each hop.
+> 83	async function fetchInlineVideo(url: string): Promise<{ mimeType: string; data: string }> {
+> 84	  let current = url;
+> 85	  let res: Response | undefined;
+> 86	  for (let hop = 0; hop < 5; hop++) {
+> 87	    assertSafeVideoUrl(current); // re-validate https-only + private/loopback denylist on EVERY hop
+> 88	    res = await fetch(current, { redirect: "manual" });
+> 89	    if (res.status >= 300 && res.status < 400) {
+> 90	      const loc = res.headers.get("location");
+> 91	      if (!loc) throw new VideoUrlError("video_fetch_bad_redirect");
+> 92	      current = new URL(loc, current).toString();
+> 93	      continue;
+> 94	    }
+> 95	    break;
+> 96	  }
+> 97	  if (!res) throw new VideoUrlError("video_fetch_too_many_redirects");
+> 98	  if (!res.ok) throw new VideoUrlError(`video_fetch_${res.status}`);
+> 99	  const buf = Buffer.from(await res.arrayBuffer());
+> 100	  if (buf.length > MAX_VIDEO_BYTES) throw new VideoUrlError("video_too_large");
+> 101	  const ct = (res.headers.get("content-type") ?? "video/mp4").split(";")[0].trim() || "video/mp4";
+> 102	  return { mimeType: ct, data: buf.toString("base64") };
+> 103	}
+> 104	
+> 105	export async function analyzeVideo(input: AnalyzeVideoInput, sub: string): Promise<AnalyzeVideoResult> {
+> 106	  // 1) SSRF guard.
+> 107	  const { isYouTube } = assertSafeVideoUrl(input.video_url);
+> 108	
+> 109	  // 2) assistive duty-of-care red-line on the question — refuse free (FR-VM-014).
+> 110	  if (input.assistive) {
+> 111	    const v = redlineCheck(input.question);
+> 112	    if (v.refuse) {
+> 113	      logHealth("degraded", "assistive_redline_refusal", { domain: v.domain, tool: "analyze_video" }, "vision-mcp");
+> 114	      throw new RedlineRefusalError(v.domain);
+> 115	    }
+> 116	  }
+> 117	
+> 118	  // 3) resolve provider key (google BYOK free / platform charged / 402).
+> 119	  const resolved = await resolveProviderKey(sub, "google");
+> 120	  if (!resolved) throw new ProviderNotConfiguredError("google");
+> 121	
+> 122	  // 4) per-minute cost + deduct on entry (402 before the leg).
+> 123	  const minutes = billedMinutes(input.duration_minutes);
+> 124	  const cost = costFor("vision.analyze_video", sub, resolved.isUserCustomKey, minutes);
+> 125	  await deductOnEntry(sub, cost, "vision.analyze_video", { model: VIDEO_MODEL, minutes, youtube: isYouTube });
+> 126	
+> 127	  // 5) provider leg — refund on ANY failure past the deduct.
+> 128	  try {
+> 129	    const parts: Array<Record<string, unknown>> = [{ text: buildPrompt(input) }];
+> 130	    if (isYouTube) {
+> 131	      parts.push({ fileData: { fileUri: input.video_url } });
+> 132	    } else {
+> 133	      parts.push({ inlineData: await fetchInlineVideo(input.video_url) });
+> 134	    }
+> 135	    const res = await fetch(
+> 136	      `https://generativelanguage.googleapis.com/v1beta/models/${VIDEO_MODEL}:generateContent`,
+> 137	      {
+> 138	        method: "POST",
+> 139	        headers: { "Content-Type": "application/json", "x-goog-api-key": resolved.key },
+> 140	        body: JSON.stringify({ contents: [{ parts }] }),
+> 141	      },
+> 142	    );
+> 143	    if (!res.ok) {
+> 144	      throw new Error(`gemini_http_${res.status}:${(await res.text()).slice(0, 160)}`);
+> 145	    }
+> 146	    const data = (await res.json()) as {
+> 147	      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+> 148	    };
+> 149	    const content = (data?.candidates?.[0]?.content?.parts ?? [])
+> 150	      .map((p) => p.text ?? "")
+> 151	      .filter(Boolean)
+> 152	      .join("");
+> 153	    const { description, confidence } = parseVlm(content);
+> 154	    logHealth("healthy", "tool_ok", { tool: "analyze_video", cost, minutes, byok: resolved.isUserCustomKey });
+> 155	    const out: AnalyzeVideoResult = { description, confidence, cost_mco: cost, duration_minutes: minutes };
+> 156	    if (input.assistive) out.human_review_required = confidence === "low";
+> 157	    return out;
+> 158	  } catch (e) {
+> 159	    await refund(sub, cost, "analyze_video_failed");
+> 160	    throw e;
+> 161	  }
+> 162	}
+> 163	
+> 164	function buildPrompt(input: AnalyzeVideoInput): string {
+> 165	  const base = input.question
+> 166	    ? `Analise o vídeo para responder: "${input.question}".`
+> 167	    : "Descreva o vídeo: cena, ações, objetos e quaisquer textos/áudio relevantes, de forma objetiva e fiel.";
+> 168	  const assistive = input.assistive ? assistivePromptSuffix() : "";
+> 169	  return `${base}${assistive} Responda em PT-BR. Retorne SOMENTE um objeto JSON: {"description": string, "confidence": "high"|"medium"|"low"}.`;
+> 170	}
+> 171	
+> ```
+
+## 🤖 Claude *(22:43:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/tools/consolidate-reference.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// vision-mcp-core tools/consolidate-reference.ts — FR-VM-021 (mesh.consolidate_reference, 1 mco).
+> 2	// WRITE counterpart of mesh.search: persists a tenant-scoped node into the knowledge mesh. TENANT-SAFE
+> 3	// by construction — `user_id` is ALWAYS the ES256-verified `sub` (never from input); the service-role
+> 4	// PostgREST INSERT cannot target another tenant. No external provider leg (the embedding fires via the
+> 5	// mesh INSERT trigger, async/~free), so there is no BYOK discount — the flat class is always charged
+> 6	// (Sovereign exempt). Sentinel L2 over the extracted text is enforced by the caller (server handler).
+> 7	
+> 8	import { costFor, deductOnEntry, refund } from "../infra/billing.js";
+> 9	import { logHealth } from "../infra/telemetry.js";
+> 10	
+> 11	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+> 12	const SB_SECRET_KEY = process.env.SB_SECRET_KEY ?? "";
+> 13	
+> 14	export type Regime = "observation_decay" | "fact_supersede";
+> 15	export interface Provenance {
+> 16	  source_url?: string;
+> 17	  license?: string;
+> 18	  origin?: "tenant" | "scraped";
+> 19	}
+> 20	export interface ConsolidateInput {
+> 21	  name: string;
+> 22	  content: string;
+> 23	  node_type?: string;
+> 24	  regime?: Regime;
+> 25	  provenance?: Provenance;
+> 26	  retention_until?: string; // ISO
+> 27	}
+> 28	export interface ConsolidateResult {
+> 29	  node_id: string;
+> 30	  embedded: boolean; // false at write time — the embed trigger runs async
+> 31	  cost_mco: number;
+> 32	}
+> 33	
+> 34	const ALLOWED_NODE_TYPES = new Set(["observation", "reference", "fact", "note"]);
+> 35	
+> 36	export async function consolidateReference(input: ConsolidateInput, sub: string): Promise<ConsolidateResult> {
+> 37	  const nodeType = input.node_type && ALLOWED_NODE_TYPES.has(input.node_type) ? input.node_type : "observation";
+> 38	
+> 39	  // cost: no provider leg ⇒ no BYOK discount path; Sovereign still exempt (costFor handles it via the
+> 40	  // isUserCustomKey=false branch + the Sovereign check).
+> 41	  const cost = costFor("mesh.consolidate_reference", sub, false);
+> 42	  await deductOnEntry(sub, cost, "mesh.consolidate_reference", { regime: input.regime ?? "observation_decay" });
+> 43	
+> 44	  try {
+> 45	    // TENANT-SCOPED write: user_id is the verified sub — NEVER from input.
+> 46	    const row = {
+> 47	      user_id: sub,
+> 48	      name: input.name,
+> 49	      node_type: nodeType,
+> 50	      content: input.content,
+> 51	      metadata: {
+> 52	        source: "vision-mcp",
+> 53	        regime: input.regime ?? "observation_decay",
+> 54	        provenance: input.provenance ?? {},
+> 55	        retention_until: input.retention_until ?? null,
+> 56	      },
+> 57	    };
+> 58	    const res = await fetch(`${SUPABASE_URL}/rest/v1/mcorch_nodes`, {
+> 59	      method: "POST",
+> 60	      headers: {
+> 61	        apikey: SB_SECRET_KEY,
+> 62	        Authorization: `Bearer ${SB_SECRET_KEY}`,
+> 63	        "Content-Type": "application/json",
+> 64	        Prefer: "return=representation",
+> 65	      },
+> 66	      body: JSON.stringify(row),
+> 67	    });
+> 68	    if (!res.ok) {
+> 69	      throw new Error(`mesh_insert_failed_${res.status}:${(await res.text()).slice(0, 160)}`);
+> 70	    }
+> 71	    const rows = (await res.json()) as Array<{ id: string }>;
+> 72	    const nodeId = rows?.[0]?.id;
+> 73	    if (!nodeId) throw new Error("mesh_insert_no_id");
+> 74	    logHealth("healthy", "tool_ok", { tool: "consolidate_reference", cost, node_id: nodeId });
+> 75	    return { node_id: nodeId, embedded: false, cost_mco: cost };
+> 76	  } catch (e) {
+> 77	    await refund(sub, cost, "consolidate_reference_failed");
+> 78	    throw e;
+> 79	  }
+> 80	}
+> 81	
+> ```
+
+## 🤖 Claude *(22:43:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/mcp/server.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env node
+> 2	/**
+> 3	 * MCORCH Vision MCP — Fatia 1 server (internal, read-only).
+> 4	 *
+> 5	 * Pipeline per request (SDD §1.1): Origin gate → MCP-Protocol-Version → ES256 JWKS identity
+> 6	 * (fail-closed) → [MCP] sentinel.inspectPrompt → tool. The auth gates run in the HTTP handler
+> 7	 * BEFORE the MCP transport (the gitnexus precedent had no auth — this is the new tenant-facing gate).
+> 8	 *
+> 9	 * Transports: HTTP (Streamable HTTP 2025-11-25) when PORT set. Loopback-only behind nginx in prod.
+> 10	 *
+> 11	 * Material proof targets (AT-VM-001/002/017): curl → 401 (no token), 403 (bad Origin),
+> 12	 * 400 (protocol mismatch); mesh.search returns tenant-scoped rows with a valid JWT.
+> 13	 */
+> 14	import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+> 15	import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+> 16	import { SUPPORTED_PROTOCOL_VERSIONS } from "@modelcontextprotocol/sdk/types.js";
+> 17	import * as http from "node:http";
+> 18	import { AsyncLocalStorage } from "node:async_hooks";
+> 19	import { z } from "zod";
+> 20	import {
+> 21	  verifyBearer,
+> 22	  isOriginAllowed,
+> 23	  isProtocolVersionOk,
+> 24	  wwwAuthenticate,
+> 25	  PROTOCOL_VERSION,
+> 26	} from "../auth/identity.js";
+> 27	import { inspectPrompt } from "../safety/sentinel.js";
+> 28	import { meshSearch } from "../tools/mesh-search.js";
+> 29	import { describeImage } from "../tools/describe-image.js";
+> 30	import { analyzeVideo } from "../tools/analyze-video.js";
+> 31	import { consolidateReference } from "../tools/consolidate-reference.js";
+> 32	import { deepsearchScrape } from "../tools/deepsearch-scrape.js";
+> 33	import { deepsearchRun, deepsearchPoll, MAX_PLANNED_UNITS } from "../tools/deepsearch-run.js";
+> 34	import { startRetentionSweep } from "../jobs/retention-sweep.js";
+> 35	import { logHealth } from "../infra/telemetry.js";
+> 36	
+> 37	const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3200;
+> 38	const PUBLIC_BASE = process.env.PUBLIC_BASE_URL ?? "https://mcp.mcorch.com";
+> 39	const ORIGIN_ALLOWLIST = (process.env.ORIGIN_ALLOWLIST ?? PUBLIC_BASE)
+> 40	  .split(",")
+> 41	  .map((s) => s.trim())
+> 42	  .filter(Boolean);
+> 43	
+> 44	// Per-request verified identity (+ scopes), carried into MCP tool handlers (which have no HTTP context).
+> 45	const identityStore = new AsyncLocalStorage<{ sub: string; scopes: string[] }>();
+> 46	
+> 47	function currentSub(): string {
+> 48	  const ctx = identityStore.getStore();
+> 49	  if (!ctx) throw new Error("identity_context_missing"); // never reached: gate runs before tool
+> 50	  return ctx.sub;
+> 51	}
+> 52	
+> 53	// In-band MCP tool error (transport stays HTTP 200; the error is carried in the tool result).
+> 54	function toolError(payload: Record<string, unknown>) {
+> 55	  return { isError: true as const, content: [{ type: "text" as const, text: JSON.stringify(payload) }] };
+> 56	}
+> 57	
+> 58	// FR-VM-003 — per-tool scope gate. JWT (internal tenant) carries all scopes; a PAT carries only its sealed
+> 59	// subset. Returns a 403 scope_insufficient tool error when the verified identity lacks the tool's scope, BEFORE
+> 60	// any cost/leg. Runs after identity (always present at tool time).
+> 61	function requireScope(scope: string): ReturnType<typeof toolError> | null {
+> 62	  const scopes = identityStore.getStore()?.scopes ?? [];
+> 63	  if (scopes.includes(scope)) return null;
+> 64	  logHealth("degraded", "scope_insufficient", { scope, tool: "scope_gate" }, "vision-mcp");
+> 65	  return toolError({ error: "scope_insufficient", layer: "identity", required_scope: scope });
+> 66	}
+> 67	
+> 68	function createMcpServer(): McpServer {
+> 69	  const server = new McpServer({ name: "vision-mcp-core", version: "0.1.0" });
+> 70	
+> 71	  // FR-VM-017 — mesh.search (read-only, tenant-scoped, 1st tool of Fatia 1).
+> 72	  server.tool(
+> 73	    "mesh_search",
+> 74	    "Busca semântica/keyword RLS-scoped na malha de conhecimento do tenant (read-only).",
+> 75	    // .trim() rejects a whitespace-only query (which would ILIKE-match `%<space>%` ≈ everything in the
+> 76	    // tenant's own scope — a degenerate near-unfiltered result, not a leak) and normalizes the value.
+> 77	    { query: z.string().trim().min(1), top_k: z.number().int().min(1).max(50).optional() },
+> 78	    async (input: { query: string; top_k?: number }) => {
+> 79	      const sub = currentSub();
+> 80	      const scopeDenied = requireScope("mesh:read");
+> 81	      if (scopeDenied) return scopeDenied;
+> 82	      // FR-VM-005a — sentinel inspects tool args AFTER identity, BEFORE any work.
+> 83	      const verdict = inspectPrompt(input.query, sub);
+> 84	      if (!verdict.allow) {
+> 85	        logHealth("degraded", "sentinel_block", { code: verdict.code }, "sentinel");
+> 86	        return {
+> 87	          isError: true,
+> 88	          content: [{ type: "text" as const, text: JSON.stringify({ error: verdict.code, layer: "sentinel" }) }],
+> 89	        };
+> 90	      }
+> 91	      const result = await meshSearch(input, sub);
+> 92	      logHealth("healthy", "tool_ok", { tool: "mesh_search", matches: result.matches.length });
+> 93	      return {
+> 94	        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 95	        structuredContent: result as unknown as Record<string, unknown>,
+> 96	      };
+> 97	    },
+> 98	  );
+> 99	
+> 100	  // FR-VM-018 — vision.describe_image (billable: BYOK free / platform 2 mco; assistive duty-of-care).
+> 101	  server.tool(
+> 102	    "vision_describe_image",
+> 103	    "Descreve uma imagem via VLM (tenant-billed: BYOK grátis, senão 2 mcoCoins). assistive=true ativa o duty-of-care (hedge de confiança + recusa red-line de medicação/alérgeno/mobilidade/emergência).",
+> 104	    {
+> 105	      image_url: z.string().url(),
+> 106	      question: z.string().trim().min(1).optional(),
+> 107	      assistive: z.boolean().optional(),
+> 108	    },
+> 109	    async (input: { image_url: string; question?: string; assistive?: boolean }) => {
+> 110	      const sub = currentSub();
+> 111	      const scopeDenied = requireScope("vision:read");
+> 112	      if (scopeDenied) return scopeDenied;
+> 113	      // sentinel over the textual arg AFTER identity, BEFORE any cost/leg (FR-VM-005a).
+> 114	      if (input.question) {
+> 115	        const verdict = inspectPrompt(input.question, sub);
+> 116	        if (!verdict.allow) {
+> 117	          logHealth("degraded", "sentinel_block", { code: verdict.code, tool: "describe_image" }, "sentinel");
+> 118	          return toolError({ error: verdict.code, layer: "sentinel" });
+> 119	        }
+> 120	      }
+> 121	      try {
+> 122	        const result = await describeImage(input, sub);
+> 123	        return {
+> 124	          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 125	          structuredContent: result as unknown as Record<string, unknown>,
+> 126	        };
+> 127	      } catch (e) {
+> 128	        const code = (e as { code?: string })?.code ?? "describe_image_failed";
+> 129	        logHealth("degraded", "tool_error", { tool: "describe_image", code }, "vision-mcp");
+> 130	        const payload: Record<string, unknown> = {
+> 131	          error: code,
+> 132	          layer: code === "insufficient_balance" ? "billing" : "tool",
+> 133	        };
+> 134	        if (code.endsWith("_not_configured")) payload.action = "Configure sua chave em /dashboard/settings";
+> 135	        return toolError(payload);
+> 136	      }
+> 137	    },
+> 138	  );
+> 139	
+> 140	  // FR-VM-024 — vision.analyze_video (Gemini video understanding; billable: BYOK free / platform 2 mco/min).
+> 141	  server.tool(
+> 142	    "vision_analyze_video",
+> 143	    "Analisa/descreve um vídeo via Gemini (tenant-billed: BYOK grátis, senão 2 mcoCoins por minuto). Aceita URL do YouTube ou vídeo https direto (≤20MB inline). assistive=true ativa o duty-of-care.",
+> 144	    {
+> 145	      video_url: z.string().url(),
+> 146	      question: z.string().trim().min(1).optional(),
+> 147	      assistive: z.boolean().optional(),
+> 148	      duration_minutes: z.number().int().min(1).max(30).optional(),
+> 149	    },
+> 150	    async (input: { video_url: string; question?: string; assistive?: boolean; duration_minutes?: number }) => {
+> 151	      const sub = currentSub();
+> 152	      const scopeDenied = requireScope("vision:read");
+> 153	      if (scopeDenied) return scopeDenied;
+> 154	      if (input.question) {
+> 155	        const verdict = inspectPrompt(input.question, sub);
+> 156	        if (!verdict.allow) {
+> 157	          logHealth("degraded", "sentinel_block", { code: verdict.code, tool: "analyze_video" }, "sentinel");
+> 158	          return toolError({ error: verdict.code, layer: "sentinel" });
+> 159	        }
+> 160	      }
+> 161	      try {
+> 162	        const result = await analyzeVideo(input, sub);
+> 163	        return {
+> 164	          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 165	          structuredContent: result as unknown as Record<string, unknown>,
+> 166	        };
+> 167	      } catch (e) {
+> 168	        const code = (e as { code?: string })?.code ?? "analyze_video_failed";
+> 169	        logHealth("degraded", "tool_error", { tool: "analyze_video", code }, "vision-mcp");
+> 170	        const payload: Record<string, unknown> = { error: code, layer: code === "insufficient_balance" ? "billing" : "tool" };
+> 171	        if (code.endsWith("_not_configured")) payload.action = "Configure sua chave em /dashboard/settings";
+> 172	        return toolError(payload);
+> 173	      }
+> 174	    },
+> 175	  );
+> 176	
+> 177	  // FR-VM-007 — deepsearch.scrape (Firecrawl, BYOK-only: free with BYOK, else 402 firecrawl_not_configured).
+> 178	  server.tool(
+> 179	    "deepsearch_scrape",
+> 180	    "Extrai o conteúdo de uma página pública em markdown via Firecrawl (BYOK obrigatório — configure firecrawl_api_key; grátis com BYOK).",
+> 181	    { url: z.string().url() },
+> 182	    async (input: { url: string }) => {
+> 183	      const sub = currentSub();
+> 184	      const scopeDenied = requireScope("deepsearch:run");
+> 185	      if (scopeDenied) return scopeDenied;
+> 186	      try {
+> 187	        const result = await deepsearchScrape(input, sub);
+> 188	        return {
+> 189	          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 190	          structuredContent: result as unknown as Record<string, unknown>,
+> 191	        };
+> 192	      } catch (e) {
+> 193	        const code = (e as { code?: string })?.code ?? "deepsearch_scrape_failed";
+> 194	        logHealth("degraded", "tool_error", { tool: "deepsearch_scrape", code }, "vision-mcp");
+> 195	        const payload: Record<string, unknown> = { error: code, layer: code === "insufficient_balance" ? "billing" : "tool" };
+> 196	        if (code.endsWith("_not_configured")) payload.action = "Configure sua chave Firecrawl em /dashboard/settings";
+> 197	        return toolError(payload);
+> 198	      }
+> 199	    },
+> 200	  );
+> 201	
+> 202	  // FR-VM-021 — mesh.consolidate_reference (WRITE, 1 mco, tenant-scoped). No provider leg.
+> 203	  server.tool(
+> 204	    "mesh_consolidate_reference",
+> 205	    "Persiste uma referência/observação na malha de conhecimento do tenant (write, 1 mcoCoin, escrita escopada ao sub verificado).",
+> 206	    {
+> 207	      name: z.string().trim().min(1),
+> 208	      content: z.string().trim().min(1),
+> 209	      node_type: z.string().trim().min(1).optional(),
+> 210	      regime: z.enum(["observation_decay", "fact_supersede"]).optional(),
+> 211	      provenance: z
+> 212	        .object({
+> 213	          source_url: z.string().url().optional(),
+> 214	          license: z.string().optional(),
+> 215	          origin: z.enum(["tenant", "scraped"]).optional(),
+> 216	        })
+> 217	        .optional(),
+> 218	      retention_until: z.string().optional(),
+> 219	    },
+> 220	    async (input: {
+> 221	      name: string;
+> 222	      content: string;
+> 223	      node_type?: string;
+> 224	      regime?: "observation_decay" | "fact_supersede";
+> 225	      provenance?: { source_url?: string; license?: string; origin?: "tenant" | "scraped" };
+> 226	      retention_until?: string;
+> 227	    }) => {
+> 228	      const sub = currentSub();
+> 229	      const scopeDenied = requireScope("mesh:write");
+> 230	      if (scopeDenied) return scopeDenied;
+> 231	      // FR-VM-005b — sentinel L2 over the extracted text (name + content) BEFORE any cost/write.
+> 232	      const verdict = inspectPrompt(`${input.name}\n${input.content}`, sub);
+> 233	      if (!verdict.allow) {
+> 234	        logHealth("degraded", "sentinel_block", { code: verdict.code, tool: "consolidate_reference" }, "sentinel");
+> 235	        return toolError({ error: verdict.code, layer: "sentinel" });
+> 236	      }
+> 237	      try {
+> 238	        const result = await consolidateReference(input, sub);
+> 239	        return {
+> 240	          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 241	          structuredContent: result as unknown as Record<string, unknown>,
+> 242	        };
+> 243	      } catch (e) {
+> 244	        const code = (e as { code?: string })?.code ?? "consolidate_reference_failed";
+> 245	        logHealth("degraded", "tool_error", { tool: "consolidate_reference", code }, "vision-mcp");
+> 246	        return toolError({ error: code, layer: code === "insufficient_balance" ? "billing" : "tool" });
+> 247	      }
+> 248	    },
+> 249	  );
+> 250	
+> 251	  // FR-VM-007 — deepsearch.run (async grounded research; 3 mco on entry, partial-delivery refund §4.5).
+> 252	  // Engine = Gemini Google-Search grounding via the `google` key (OTD-VM-024 — Sovereign cost directive).
+> 253	  server.tool(
+> 254	    "deepsearch_run",
+> 255	    "Inicia uma pesquisa fundamentada ASSÍNCRONA (3 mcoCoins na entrada; BYOK google grátis). Retorna job_id imediato — use deepsearch_poll(job_id) para o resultado. Refund parcial automático se entregar menos fontes que planned_units.",
+> 256	    {
+> 257	      query: z.string().trim().min(1),
+> 258	      planned_units: z.number().int().min(1).max(MAX_PLANNED_UNITS).optional(),
+> 259	      source_allowlist: z.array(z.string()).max(20).optional(),
+> 260	    },
+> 261	    async (input: { query: string; planned_units?: number; source_allowlist?: string[] }) => {
+> 262	      const sub = currentSub();
+> 263	      const scopeDenied = requireScope("deepsearch:run");
+> 264	      if (scopeDenied) return scopeDenied;
+> 265	      // FR-VM-005a — sentinel over the query AFTER identity, BEFORE any cost/job.
+> 266	      const verdict = inspectPrompt(input.query, sub);
+> 267	      if (!verdict.allow) {
+> 268	        logHealth("degraded", "sentinel_block", { code: verdict.code, tool: "deepsearch_run" }, "sentinel");
+> 269	        return toolError({ error: verdict.code, layer: "sentinel" });
+> 270	      }
+> 271	      // Each source_allowlist entry also reaches the grounding prompt → inspect it too. rateLimit:false so the
+> 272	      // allowlist (≤20 items) doesn't drain the per-identity token bucket already debited by the query above.
+> 273	      for (const src of input.source_allowlist ?? []) {
+> 274	        const v = inspectPrompt(src, sub, { rateLimit: false });
+> 275	        if (!v.allow) {
+> 276	          logHealth("degraded", "sentinel_block", { code: v.code, tool: "deepsearch_run" }, "sentinel");
+> 277	          return toolError({ error: v.code, layer: "sentinel" });
+> 278	        }
+> 279	      }
+> 280	      try {
+> 281	        const result = await deepsearchRun(input, sub);
+> 282	        return {
+> 283	          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 284	          structuredContent: result as unknown as Record<string, unknown>,
+> 285	        };
+> 286	      } catch (e) {
+> 287	        const code = (e as { code?: string })?.code ?? "deepsearch_run_failed";
+> 288	        logHealth("degraded", "tool_error", { tool: "deepsearch_run", code }, "vision-mcp");
+> 289	        const payload: Record<string, unknown> = {
+> 290	          error: code,
+> 291	          layer: code === "insufficient_balance" ? "billing"
+> 292	            : code === "validation_failed" ? "validation"
+> 293	            : code === "daily_cap_reached" ? "rate_limit" : "tool",
+> 294	        };
+> 295	        if (code.endsWith("_not_configured")) payload.action = "Configure sua chave Google/Gemini em /dashboard/settings";
+> 296	        if (code === "daily_cap_reached") payload.action = "Limite diário de deepsearch.run na chave compartilhada atingido. Tente amanhã (UTC) ou configure sua própria chave Google (BYOK) em /dashboard/settings.";
+> 297	        if (code === "validation_failed") { // FRD §4.4 — campo + mensagem PT-BR no body
+> 298	          payload.field = (e as { field?: string }).field;
+> 299	          payload.message = (e as Error).message;
+> 300	        }
+> 301	        return toolError(payload);
+> 302	      }
+> 303	    },
+> 304	  );
+> 305	
+> 306	  // FR-VM-007 — deepsearch.poll (FREE, read-only, tenant-bound: job alheio/inexistente → job_not_found).
+> 307	  server.tool(
+> 308	    "deepsearch_poll",
+> 309	    "Recupera o estado/resultado de um job deepsearch_run por job_id (grátis, escopado ao tenant; poll-able ≥24h pós-terminal).",
+> 310	    { job_id: z.string().trim().min(1) },
+> 311	    async (input: { job_id: string }) => {
+> 312	      const sub = currentSub();
+> 313	      const scopeDenied = requireScope("deepsearch:run");
+> 314	      if (scopeDenied) return scopeDenied;
+> 315	      try {
+> 316	        const result = await deepsearchPoll(input, sub);
+> 317	        return {
+> 318	          content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+> 319	          structuredContent: result as unknown as Record<string, unknown>,
+> 320	        };
+> 321	      } catch (e) {
+> 322	        const code = (e as { code?: string })?.code ?? "deepsearch_poll_failed";
+> 323	        return toolError({ error: code, layer: "tool" });
+> 324	      }
+> 325	    },
+> 326	  );
+> 327	
+> 328	  return server;
+> 329	}
+> 330	
+> 331	function send(res: http.ServerResponse, status: number, body: Record<string, unknown>, extraHeaders: Record<string, string> = {}): void {
+> 332	  res.writeHead(status, { "Content-Type": "application/json", ...extraHeaders });
+> 333	  res.end(JSON.stringify(body));
+> 334	}
+> 335	
+> 336	async function main(): Promise<void> {
+> 337	  const httpServer = http.createServer((req, res) => {
+> 338	    // /health — loopback/watchdog (FR-VM-016). No auth.
+> 339	    if (req.url === "/health") {
+> 340	      send(res, 200, { status: "ok", protocol: PROTOCOL_VERSION, tools: ["mesh_search", "vision_describe_image", "vision_analyze_video", "deepsearch_scrape", "mesh_consolidate_reference", "deepsearch_run", "deepsearch_poll"] });
+> 341	      return;
+> 342	    }
+> 343	    // RFC 9728 Protected Resource Metadata (FR-VM-002).
+> 344	    if (req.url === "/.well-known/oauth-protected-resource") {
+> 345	      send(res, 200, {
+> 346	        resource: PUBLIC_BASE,
+> 347	        authorization_servers: [process.env.SUPABASE_URL ?? ""],
+> 348	        bearer_methods_supported: ["header"],
+> 349	      });
+> 350	      return;
+> 351	    }
+> 352	
+> 353	    // FR-VM-001 — Origin allowlist (anti DNS-rebinding).
+> 354	    if (!isOriginAllowed(req.headers.origin, ORIGIN_ALLOWLIST)) {
+> 355	      send(res, 403, { error: "origin_invalid", layer: "transport" });
+> 356	      return;
+> 357	    }
+> 358	    // FR-VM-001 — MCP-Protocol-Version negotiation.
+> 359	    const pv = req.headers["mcp-protocol-version"];
+> 360	    if (!isProtocolVersionOk(Array.isArray(pv) ? pv[0] : pv)) {
+> 361	      send(res, 400, { error: "protocol_version_mismatch", supported: SUPPORTED_PROTOCOL_VERSIONS });
+> 362	      return;
+> 363	    }
+> 364	
+> 365	    // FR-VM-002 — ES256 JWKS identity, fail-closed.
+> 366	    void verifyBearer(req.headers.authorization)
+> 367	      .then(async (idr) => {
+> 368	        if (!idr.ok) {
+> 369	          send(res, 401, { error: idr.code, layer: "identity" }, { "WWW-Authenticate": wwwAuthenticate(PUBLIC_BASE) });
+> 370	          return;
+> 371	        }
+> 372	        // SDK mandate (webStandardStreamableHttp §"In stateless mode … each request must use a fresh
+> 373	        // transport"): a single SHARED StreamableHTTPServerTransport throws on the 2nd request of a
+> 374	        // session (`_hasHandledRequest` guard) → `initialize` would 200 but `notifications/initialized`
+> 375	        // 500, so no real MCP client can complete a handshake. We therefore build a FRESH McpServer +
+> 376	        // transport per request. With `sessionIdGenerator: undefined` session validation is disabled,
+> 377	        // so each independent POST (initialize / initialized / tools.call) is self-handled.
+> 378	        const server = createMcpServer();
+> 379	        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+> 380	        res.on("close", () => {
+> 381	          void transport.close();
+> 382	          void server.close();
+> 383	        });
+> 384	        await server.connect(transport);
+> 385	        // Carry the verified sub + scopes into the MCP tool via AsyncLocalStorage, then hand to the transport.
+> 386	        await identityStore.run({ sub: idr.identity.sub, scopes: idr.identity.scopes }, () => transport.handleRequest(req, res));
+> 387	      })
+> 388	      .catch(() => {
+> 389	        if (!res.headersSent) send(res, 500, { error: "internal_error" });
+> 390	      });
+> 391	  });
+> 392	
+> 393	  // Bind 0.0.0.0 INSIDE the container so the Docker port publish reaches it. Host-side exposure is
+> 394	  // restricted to loopback by the compose mapping `127.0.0.1:3200:3200` (não expõe à rede do host) +
+> 395	  // o vhost nginx é o único caminho externo. Listening on 127.0.0.1 here breaks the bridge port-map.
+> 396	  httpServer.listen(PORT, () => {
+> 397	    process.stderr.write(`[vision-mcp] Streamable HTTP on :${PORT} (protocol ${PROTOCOL_VERSION}) — host-loopback via compose publish\n`);
+> 398	    logHealth("healthy", "container_health", { port: PORT });
+> 399	    startRetentionSweep(); // FR-VM-009 — daily in-container LGPD retention sweep
+> 400	  });
+> 401	}
+> 402	
+> 403	main().catch((err) => {
+> 404	  process.stderr.write(`[vision-mcp] fatal: ${String(err)}\n`);
+> 405	  process.exit(1);
+> 406	});
+> 407	
+> ```
+
+## 🤖 Claude *(22:43:50)*
+
+
+## 🤖 Claude *(22:43:57)*
+
+O Vision MCP **é exatamente o olho criativo certo** — e melhor: para o Usuário Zero é **BYOK grátis** (tem `openrouter_api_key` p/ describe e `google_api_key` p/ analyze_video → custo 0 de QA):
+
+- **`vision_describe_image`** (FR-VM-018) — VLM olha a imagem, aceita uma `question` → `{description, confidence}`. É o juiz de qualidade **e** de consistência (pergunto "estes frames são o mesmo produto, mesmas cores/ângulo/identidade?").
+- **`vision_analyze_video`** (FR-VM-024) — Gemini entende o vídeo → confirma que o DoP saiu coerente com os frames.
+- Acesso: Origin `mcp.mcorch.com` + MCP-Protocol-Version + Bearer PAT (já tenho `scripts/qa/handshake-vision-pat.ts` + PAT do Usuário Zero no `.env`).
+
+**A diretiva-Lei 2 fica clara:** existe um *processo* novo (gerar → persistir asset → **QA Vision** → portão de consistência → só então queimar crédito Higgsfield). Antes de automatizar, documento o SOP e provo o olho criativo **agora, de graça, num asset que já existe**.
+
+Vou: (1) ver o helper de handshake exato; (2) achar um asset real já no bucket para o primeiro disparo do olho criativo de custo zero.
+
+## 🤖 Claude *(22:43:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/handshake-vision-pat.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Material proof that a Vision MCP PAT authenticates a real MCP host against the PUBLIC endpoint
+> 4	 * (`mcp.mcorch.com`, through Cloudflare) — the exact path Claude Code / Claude Desktop use. Drives the real
+> 5	 * `initialize → tools/list → tools/call mesh_search` dance via the MCP SDK Streamable HTTP client, with the
+> 6	 * PAT in the Authorization header (PAT dispatch in packages/vision-mcp-core/src/auth/identity.ts).
+> 7	 *
+> 8	 * Run: set -a; source .env; set +a; VISION_MCP_PAT=mcorch_pat_... bun run scripts/qa/handshake-vision-pat.ts
+> 9	 *   VISION_MCP_URL overrides the endpoint (default public https://mcp.mcorch.com/mcp).
+> 10	 */
+> 11	import { Client } from "../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js";
+> 12	import { StreamableHTTPClientTransport } from "../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/streamableHttp.js";
+> 13	
+> 14	const PAT = process.env.VISION_MCP_PAT ?? "";
+> 15	const URL = process.env.VISION_MCP_URL ?? "https://mcp.mcorch.com/mcp";
+> 16	const QUERY = process.argv[2] ?? "vision mcp sovereign mesh";
+> 17	if (!PAT) { console.error("Set VISION_MCP_PAT=mcorch_pat_..."); process.exit(2); }
+> 18	
+> 19	const transport = new StreamableHTTPClientTransport(new globalThis.URL(URL), {
+> 20	  requestInit: { headers: { Authorization: `Bearer ${PAT}` } },
+> 21	});
+> 22	const client = new Client({ name: "vision-pat-handshake", version: "1.0.0" }, { capabilities: {} });
+> 23	
+> 24	try {
+> 25	  await client.connect(transport); // initialize handshake (protocol negotiated)
+> 26	  console.log("✅ initialize — handshake completed via", URL);
+> 27	
+> 28	  const tools = await client.listTools();
+> 29	  console.log(`✅ tools/list — ${tools.tools.length} tools: ${tools.tools.map((t) => t.name).join(", ")}`);
+> 30	
+> 31	  const res = await client.callTool({ name: "mesh_search", arguments: { query: QUERY } });
+> 32	  const isError = (res as { isError?: boolean }).isError === true;
+> 33	  const text = (res.content as Array<{ type: string; text?: string }> | undefined)
+> 34	    ?.filter((c) => c.type === "text").map((c) => c.text).join("\n") ?? "";
+> 35	  console.log(`${isError ? "❌" : "✅"} tools/call mesh_search — isError=${isError}`);
+> 36	  console.log("     " + text.slice(0, 280).replace(/\n/g, " "));
+> 37	  await client.close();
+> 38	  process.exit(isError ? 1 : 0);
+> 39	} catch (e) {
+> 40	  console.error("❌ handshake failed:", e instanceof Error ? e.message : String(e));
+> 41	  process.exit(1);
+> 42	}
+> 43	
+> ```
+
+## 🤖 Claude *(22:44:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== VISION_MCP_PAT presente no .env? ===\"\ngrep -q \"VISION_MCP_PAT\" .env && echo \"sim (len: $(grep VISION_MCP_PAT .env | head -1 | cut -d= -f2 | tr -d '\\\"' | wc -c))\" || echo \"N\u00c3O\"\necho \"\"\necho \"=== assets reais j\u00e1 no bucket canvas-assets (\u00faltimos 5 com public_url) ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/vm_canvas_assets?select=id,asset_type,public_url,prompt,created_at&order=created_at.desc&limit=5\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(f\\\"{r['asset_type']:6} {r['created_at'][:10]} {r['public_url'][:90]}\\\") for r in d]\" 2>/dev/null || echo \"(query falhou)\"",
+  "description": "Read handshake helper + check PAT + find existing real assets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === VISION_MCP_PAT presente no .env? ===
+> sim (len: 55)
+> 
+> === assets reais já no bucket canvas-assets (últimos 5 com public_url) ===
+> video  2026-05-31 https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/880b5eba-b41
+> video  2026-05-30 https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/0b86e7d0-5f5
+> video  2026-05-30 https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/880b5eba-b41
+> video  2026-05-30 https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/canvas-assets/880b5eba-b41
+> image  2026-05-30 https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-6
+> ```
+
+## 🤖 Claude *(22:44:29)*
+
+
+## 🤖 Claude *(22:44:33)*
+
+Tudo destravado para o primeiro disparo do olho criativo (custo zero — BYOK):
+- Handshake helper usa o endpoint público `mcp.mcorch.com/mcp` com PAT (presente no `.env`, len 55).
+- Há um asset **imagem com URL pública** (`/object/public/`) já no bucket — perfeito para provar o olho criativo agora, sem gastar e sem depender de URL assinada expirada.
+
+Vou pegar a URL pública completa e criar o **olho criativo reutilizável** (`scripts/qa/vision-qa.ts`, generalização do handshake → `vision_describe_image`), depois disparar contra esse asset existente.
+
+## 🤖 Claude *(22:44:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== URL p\u00fablica completa do asset imagem mais recente ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/vm_canvas_assets?select=id,public_url,prompt,created_at&asset_type=eq.image&order=created_at.desc&limit=3\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | python3 -m json.tool",
+  "description": "Get full public URL of existing image assets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === URL pública completa do asset imagem mais recente ===
+> [
+>     {
+>         "id": "4b418f95-a544-4c56-bd37-0a7d76b05736",
+>         "public_url": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/9caebbae-a17a-42ff-a874-4b3db55cdd31.png",
+>         "prompt": "A determined young woman, her auburn hair flowing dynamically, walks resolutely towards a tempestuous, emerald-green ocean. Giant, foamy waves crash dramatically against the shore under a brooding, overcast sky. The shot is a low-angle, cinematic follow cam from behind, emphasizing her unwavering resolve, captured in a vertical (9:16) aspect ratio.",
+>         "created_at": "2026-05-30T23:15:16.506583+00:00"
+>     },
+>     {
+>         "id": "e6cb5302-861f-472d-be0e-08009b9ff1c7",
+>         "public_url": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/44db9e02-aad2-48f7-a720-ab79eb79d1cd.png",
+>         "prompt": "A lone figure ascends a sand dune crest, silhouetted profoundly against a vibrant, fiery orange sky at dusk. The warm glow of the setting sun creates dramatic backlighting, emphasizing the desert's stark beauty. Photorealistic, 9:16 aspect ratio.",
+>         "created_at": "2026-05-30T23:12:56.912169+00:00"
+>     },
+>     {
+>         "id": "c02c3781-169a-4828-b392-e32ab7b905ec",
+>         "public_url": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/d6d2f3e5-8c46-486d-9a2f-e13104473afa.png",
+>         "prompt": "A solitary figure, silhouette sharp against a dramatic desert sunset. Expansive sand dunes, long and exaggerated shadows stretching across the warm, golden light. A sense of awe and isolation. Ultra-wide shot. Moody, cinematic, 9:16 aspect ratio.",
+>         "created_at": "2026-05-30T23:12:51.999369+00:00"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(22:44:36)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskCreate,TaskUpdate,TaskList",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskCreate'}, {'type': 'tool_reference', 'tool_name': 'TaskUpdate'}, {'type': 'tool_reference', 'tool_name': 'TaskList'}]
+> ```
+
+## 🤖 Claude *(22:44:46)*
+
+
+## 🤖 Claude *(22:44:47)*
+
+URL pública obtida. Vou estruturar o trabalho em tasks e criar o **olho criativo reutilizável**, começando pela prova de custo zero contra o asset que já existe.
+
+## 🤖 Claude *(22:44:50)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Provar olho criativo (Vision MCP) \u2014 custo zero",
+  "description": "Generalizar handshake-vision-pat.ts \u2192 scripts/qa/vision-qa.ts que chama vision_describe_image no endpoint p\u00fablico com PAT. Disparar contra asset imagem p\u00fablico existente (BYOK gr\u00e1tis). Prova material: verdict {description, confidence} retornado.",
+  "activeForm": "Provando olho criativo Vision MCP"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Provar olho criativo (Vision MCP) — custo zero
+> ```
+
+## 🤖 Claude *(22:44:52)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "SOP Lei 2 \u2014 [[creative-qa-vision-gate|creative-qa-vision-gate]].md",
+  "description": "Documentar o processo: gerar criativo \u2192 persistir asset real \u2192 QA Vision (describe/analyze) \u2192 port\u00e3o de consist\u00eancia (frame-inicial vs frame-final) \u2192 s\u00f3 ent\u00e3o queimar cr\u00e9dito Higgsfield DoP. Operator/Sequence/Verification gates/Recovery/Success signal.",
+  "activeForm": "Escrevendo SOP [[creative-qa-vision-gate|creative-qa-vision-gate]]"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: SOP Lei 2 — [[creative-qa-vision-gate|creative-qa-vision-gate]].md
+> ```
+
+## 🤖 Claude *(22:44:55)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Reparar generate-image (endpoint morto)",
+  "description": "generate-image usa api.openai.com/v1/images (proj key sem acesso\u2192400) + openrouter/v1/images (deprecado\u2192404) + nanobana (DNS morto). Portar o path provado do canvas-execute: OpenRouter chat-completions multimodal (Gemini image) e/ou Replicate FLUX. Desbloqueia imagem no autopilot/orchestrate. Bug em feature documentada (viralmind BoK) \u2014 isento de BoK gate.",
+  "activeForm": "Reparando generate-image"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Reparar generate-image (endpoint morto)
+> ```
+
+## 🤖 Claude *(22:44:58)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Validar imagem E2E (Canvas Studio) + QA Vision",
+  "description": "Gerar imagem real via canvas-execute (Nano Banana/OpenRouter ou Replicate FLUX), persistir asset p\u00fablico no bucket, rodar olho criativo (vision_describe_image). Prova: asset row + ledger debit + verdict de QA. GO de gasto: imagem ~10 mco.",
+  "activeForm": "Validando imagem E2E + QA Vision"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Validar imagem E2E (Canvas Studio) + QA Vision
+> ```
+
+## 🤖 Claude *(22:45:00)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Cadeia de consist\u00eancia: frame-inicial + frame-final + port\u00e3o QA",
+  "description": "Gerar frame-inicial e frame-final com seed travado + reference threading ([[canvas-node-consistency|canvas-node-consistency]]). QA Vision compara consist\u00eancia (mesmo produto/cores/identidade). Port\u00e3o: s\u00f3 passa pro v\u00eddeo se consistente. Recovery: regenerar frame com seed/prompt ajustado.",
+  "activeForm": "Construindo cadeia de consist\u00eancia + port\u00e3o QA"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: Cadeia de consistência: frame-inicial + frame-final + portão QA
+> ```
+
+## 🤖 Claude *(22:45:03)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Validar v\u00eddeo DoP (Higgsfield real) + analyze_video QA",
+  "description": "Ap\u00f3s o port\u00e3o de consist\u00eancia passar, gerar v\u00eddeo DoP via canvas-execute (cr\u00e9dito Higgsfield real, ~125 mco) \u2192 higgsfield-webhook persiste asset. QA via vision_analyze_video confirma coer\u00eancia com os frames. GO Sovereign j\u00e1 dado (incl. v\u00eddeo DoP).",
+  "activeForm": "Validando v\u00eddeo DoP + analyze_video"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #6 created successfully: Validar vídeo DoP (Higgsfield real) + analyze_video QA
+> ```
+
+## 🤖 Claude *(22:45:05)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Validar \u00e1udio TTS (tts-speak) E2E",
+  "description": "tts-speak usa Gemini 2.5 TTS (google_api_key presente). Gerar \u00e1udio real, persistir asset, confirmar reprodu\u00e7\u00e3o. Prova: asset/arquivo material.",
+  "activeForm": "Validando \u00e1udio TTS"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #7 created successfully: Validar áudio TTS (tts-speak) E2E
+> ```
+
+## 🤖 Claude *(22:45:07)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Validar Canvas Design (open-design) E2E",
+  "description": "Container open-design Up healthy + design-bridge.ts worker + design_jobs queue + iframe page. Confirmar worker rodando, iframe acess\u00edvel, e um design_job E2E (queued\u2192running\u2192complete). Prova material da cadeia sidecar.",
+  "activeForm": "Validando Canvas Design open-design"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #8 created successfully: Validar Canvas Design (open-design) E2E
+> ```
+
+## 🤖 Claude *(22:45:10)*
+
+
+## 🤖 Claude *(22:45:11)*
+
+Tasks criadas. Começando a **Task #1** — o olho criativo reutilizável + prova de custo zero contra o asset existente.
+
+## 🤖 Claude *(22:45:11)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(22:45:17)*
+
+
+## 🤖 Claude *(22:45:40)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/vision-qa.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Vision QA \u2014 o \"olho criativo\" do MCORCH sobre o Vision MCP p\u00fablico (mcp.mcorch.com).\n *\n * Reusable creative-eye tool for the creative-layer validation track (SOP:\n * docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md). Drives the real MCP handshake with the tenant's PAT and\n * calls the billable vision tools (BYOK-free for the Usu\u00e1rio Zero: openrouter for image, google for video).\n *\n * Modes:\n *   image   <image_url> [\"question\"]                     \u2192 vision_describe_image\n *   video   <video_url> [\"question\"] [duration_minutes]  \u2192 vision_analyze_video\n *   compare <url_a> <url_b> [\"question\"]                  \u2192 describe both, for frame-inicial\u2194frame-final consistency\n *\n * Run: set -a; source .env; set +a; bun run scripts/qa/vision-qa.ts image \"https://\u2026/x.png\" \"\u00c9 um rel\u00f3gio de mergulho?\"\n *   VISION_MCP_URL overrides endpoint (default public https://mcp.mcorch.com/mcp).\n */\nimport { Client } from \"../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js\";\nimport { StreamableHTTPClientTransport } from \"../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/streamableHttp.js\";\n\nconst PAT = process.env.VISION_MCP_PAT ?? \"\";\nconst URL = process.env.VISION_MCP_URL ?? \"https://mcp.mcorch.com/mcp\";\nif (!PAT) { console.error(\"Set VISION_MCP_PAT=mcorch_pat_\u2026 (source .env)\"); process.exit(2); }\n\nconst mode = process.argv[2];\nif (!mode || ![\"image\", \"video\", \"compare\"].includes(mode)) {\n  console.error(\"Uso: vision-qa.ts <image|video|compare> <url> [...]\");\n  process.exit(2);\n}\n\nfunction newClient() {\n  const transport = new StreamableHTTPClientTransport(new globalThis.URL(URL), {\n    requestInit: { headers: { Authorization: `Bearer ${PAT}` } },\n  });\n  const client = new Client({ name: \"vision-qa\", version: \"1.0.0\" }, { capabilities: {} });\n  return { client, transport };\n}\n\nfunction readResult(res: { isError?: boolean; content?: Array<{ type: string; text?: string }> }) {\n  const isError = res.isError === true;\n  const text = (res.content ?? []).filter((c) => c.type === \"text\").map((c) => c.text).join(\"\\n\");\n  let parsed: Record<string, unknown> | null = null;\n  try { parsed = JSON.parse(text); } catch { /* raw */ }\n  return { isError, text, parsed };\n}\n\nasync function callTool(name: string, args: Record<string, unknown>) {\n  const { client, transport } = newClient();\n  await client.connect(transport);\n  const res = await client.callTool({ name, arguments: args });\n  await client.close();\n  return readResult(res as Parameters<typeof readResult>[0]);\n}\n\ntry {\n  if (mode === \"image\") {\n    const image_url = process.argv[3];\n    const question = process.argv[4];\n    if (!image_url) { console.error(\"falta image_url\"); process.exit(2); }\n    const r = await callTool(\"vision_describe_image\", question ? { image_url, question } : { image_url });\n    console.log(r.isError ? \"\u274c vision_describe_image \u2014 isError\" : \"\u2705 vision_describe_image\");\n    if (r.parsed) {\n      console.log(`   confidence: ${r.parsed.confidence}  cost_mco: ${r.parsed.cost_mco}`);\n      console.log(`   ${String(r.parsed.description).replace(/\\n/g, \" \")}`);\n    } else {\n      console.log(\"   \" + r.text.slice(0, 600));\n    }\n    process.exit(r.isError ? 1 : 0);\n  }\n\n  if (mode === \"video\") {\n    const video_url = process.argv[3];\n    const question = process.argv[4];\n    const minutes = process.argv[5] ? parseInt(process.argv[5], 10) : undefined;\n    if (!video_url) { console.error(\"falta video_url\"); process.exit(2); }\n    const args: Record<string, unknown> = { video_url };\n    if (question) args.question = question;\n    if (minutes) args.duration_minutes = minutes;\n    const r = await callTool(\"vision_analyze_video\", args);\n    console.log(r.isError ? \"\u274c vision_analyze_video \u2014 isError\" : \"\u2705 vision_analyze_video\");\n    if (r.parsed) {\n      console.log(`   confidence: ${r.parsed.confidence}  cost_mco: ${r.parsed.cost_mco}  min: ${r.parsed.duration_minutes}`);\n      console.log(`   ${String(r.parsed.description).replace(/\\n/g, \" \")}`);\n    } else {\n      console.log(\"   \" + r.text.slice(0, 600));\n    }\n    process.exit(r.isError ? 1 : 0);\n  }\n\n  // compare \u2014 frame-inicial \u2194 frame-final consistency: describe both with the same structured question.\n  const urlA = process.argv[3];\n  const urlB = process.argv[4];\n  const question = process.argv[5]\n    ?? \"Descreva com precis\u00e3o: produto/sujeito principal, cores dominantes, \u00e2ngulo de c\u00e2mera, ilumina\u00e7\u00e3o e estilo visual. Seja espec\u00edfico para permitir comparar consist\u00eancia entre dois frames.\";\n  if (!urlA || !urlB) { console.error(\"compare exige url_a url_b\"); process.exit(2); }\n  const [a, b] = await Promise.all([\n    callTool(\"vision_describe_image\", { image_url: urlA, question }),\n    callTool(\"vision_describe_image\", { image_url: urlB, question }),\n  ]);\n  console.log(\"\u2500\u2500 FRAME A \u2500\u2500\");\n  console.log(a.parsed ? `[${a.parsed.confidence}] ${String(a.parsed.description).replace(/\\n/g, \" \")}` : a.text.slice(0, 500));\n  console.log(\"\u2500\u2500 FRAME B \u2500\u2500\");\n  console.log(b.parsed ? `[${b.parsed.confidence}] ${String(b.parsed.description).replace(/\\n/g, \" \")}` : b.text.slice(0, 500));\n  process.exit(a.isError || b.isError ? 1 : 0);\n} catch (e) {\n  console.error(\"\u274c vision-qa falhou:\", e instanceof Error ? e.message : String(e));\n  process.exit(1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/vision-qa.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:45:43)*
+
+Agora o disparo de prova — olho criativo contra o asset público existente (BYOK grátis), com uma pergunta de QA real:
+
+## 🤖 Claude *(22:45:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nbun run scripts/qa/vision-qa.ts image \\\n  \"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/9caebbae-a17a-42ff-a874-4b3db55cdd31.png\" \\\n  \"Esta imagem \u00e9 cinematogr\u00e1fica e de alta qualidade para an\u00fancio? Descreva sujeito, cores, \u00e2ngulo e ilumina\u00e7\u00e3o.\" 2>&1",
+  "description": "First creative-eye proof via Vision MCP on existing asset"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    Sim, esta imagem é cinematográfica e de alta qualidade, adequada para um anúncio.   **Sujeito:** O sujeito principal é uma mulher jovem com cabelos ruivos vibrantes e esvoaçantes, vestindo um casaco cinza e calças cargo escuras, além de botas de trilha. Ela tem uma expressão séria e está caminhando em direção ao espectador, sugerindo resiliência ou determinação.   **Cores:** A paleta de cores é predominantemente fria e dramática, com tons de cinza escuro no céu tempestuoso, verde-azulado intenso nas ondas agitadas do mar e branco espumoso na rebentação. O cabelo ruivo da mulher contrasta fortemente e serve como um ponto focal quente em meio à paisagem fria. O raio adiciona um elemento de luz branca e dramática ao fundo.  **Ângulo:** A imagem é capturada em um ângulo próximo ao nível do solo, posicionando a mulher ligeiramente acima do horizonte, o que lhe confere uma presença imponente. O ângulo também enfatiza as ondas turbulentas e a vastidão do céu.  **Iluminação:** A iluminação é dramática e natural, sugerindo um dia nublado ou pré-tempestade. A luz difusa do céu cinzento ilumina o cenário, enquanto o raio no fundo cria um ponto de luz intenso e um contraste marcante, adicionando profundidade e emoção à cena. Há uma iluminação suave no rosto da mulher, que a destaca do fundo.
+> ```
+
+## 🤖 Claude *(22:46:32)*
+
+
+## 🤖 Claude *(22:46:36)*
+
+**Task #1 ✅ — o olho criativo está VIVO e provado materialmente.** `vision_describe_image` via endpoint público `mcp.mcorch.com` (através do Cloudflare) com o PAT do Usuário Zero:
+- `confidence: high` · **`cost_mco: 0`** (BYOK — chave openrouter do tenant)
+- Descrição rica e **fiel**: leu corretamente a mulher ruiva, o mar verde-esmeralda tempestuoso, o ângulo baixo cinematográfico, o raio ao fundo, a iluminação dramática. O VLM realmente *viu* a imagem.
+
+Isso de-risca tudo: o QA Vision funciona, de graça, pelo caminho oficial. Agora a Lei 2 — documento o processo antes de automatizar/gastar.
+
+## 🤖 Claude *(22:46:37)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(22:46:37)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(22:46:41)*
+
+
+## 🤖 Claude *(22:47:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md",
+  "content": "# SOP \u2014 Creative QA Vision Gate (olho criativo antes do cr\u00e9dito real)\n\n> **Lei 2 (Processo Antecipado).** Documenta o processo humano de validar um creative visual com um \"olho\n> criativo\" (VLM via Vision MCP) e o **port\u00e3o de consist\u00eancia** que precede QUALQUER gasto de cr\u00e9dito pago de\n> v\u00eddeo (Higgsfield DoP/Kling). Nenhuma automa\u00e7\u00e3o deste fluxo ganha c\u00f3digo antes deste SOP.\n>\n> **Origem (Diretiva Sovereign 2026-06-21):** \"sem criativo a \u00fanica coisa que funciona \u00e9 texto\u2026 quando gerar\n> os v\u00eddeos principalmente os com frame inicial e frame final precisa estar consistente para usar os cr\u00e9ditos\n> reais que coloquei no Higgsfield.\" + \"Lembre-se de sempre salvar os assets reais desde sempre.\"\n\nRelacionado: [`canvas-node-consistency.md`](canvas-node-consistency.md) (reference threading + seed lock) \u00b7\n[`canvas-video-async-execution.md`](canvas-video-async-execution.md) (DoP async + webhook) \u00b7\n[`vision-mcp-pat-and-erasure.md`](vision-mcp-pat-and-erasure.md) (PAT do tenant).\n\n---\n\n## ORO\n\n| Papel | Quem |\n|-------|------|\n| **Operator** | MCORCH Master Execution Agent (ou o humano operando o Canvas Studio) |\n| **Reviewer** | Sovereign + o pr\u00f3prio olho criativo (VLM) como reviewer mec\u00e2nico de qualidade/consist\u00eancia |\n| **Owner** | Sovereign \u2014 blast radius = cr\u00e9dito Higgsfield real queimado + asset publicado |\n\n---\n\n## Princ\u00edpio n\u00ba1 \u2014 sempre persistir o asset real (Lei 1)\n\nTodo creative gerado (imagem ou v\u00eddeo) **DEVE** terminar como um arquivo material em storage com row em\n`vm_canvas_assets` (bucket `canvas-assets`). `canvas-execute` j\u00e1 faz isso: baixa os bytes do provider, faz\nupload no bucket e grava `public_url` + `storage_key`. **Nunca** confiar na URL ef\u00eamera do provider \u2014 ela\nexpira. A prova de sucesso \u00e9 a row `vm_canvas_assets` + o objeto no bucket, nunca o retorno da API do provider.\n\n## Princ\u00edpio n\u00ba2 \u2014 BYOK torna o QA gr\u00e1tis\n\n`vision_describe_image` resolve a chave `openrouter` per-user; `vision_analyze_video` resolve `google`\nper-user. O Usu\u00e1rio Zero tem ambas \u2192 **QA custa 0 mco**. O olho criativo pode rodar quantas vezes for\npreciso sem gastar; s\u00f3 a GERA\u00c7\u00c3O (imagem ~10 mco, v\u00eddeo DoP ~125 mco) custa.\n\n---\n\n## Operator \u2014 quem executa hoje\n\nO operador gera creatives no Canvas Studio (`/dashboard/canvas/:id`) ou via `scripts/canvas-campaign-build.ts`,\ne roda o olho criativo via `scripts/qa/vision-qa.ts` (handshake MCP+PAT contra `mcp.mcorch.com`).\n\nFerramentas:\n- **Gera\u00e7\u00e3o:** `canvas-execute` edge fn (precisa de user-JWT \u2014 mintar com `scripts/qa/gen-user-jwt.ts`).\n- **Olho criativo:** `scripts/qa/vision-qa.ts {image|video|compare}` (precisa de `VISION_MCP_PAT` no `.env`).\n\n---\n\n## Sequence \u2014 ordem com crit\u00e9rio de sucesso material por step\n\n1. **Gerar frame-inicial (imagem).** `canvas-execute` `node_type=generate_image`, seed travado\n   (`parameters.seed=<S>`), provider que funciona (OpenRouter `google/gemini-2.5-flash-image` ou Replicate\n   `flux-1.1-pro`). **Sucesso:** HTTP 200 + `output_url` p\u00fablico + row `vm_canvas_assets` (asset A).\n2. **Gerar frame-final (imagem) consistente.** Mesmo `seed=<S>` + `reference_image_urls:[<output_url do A>]`\n   (reference threading) + prompt que descreve o MESMO produto/sujeito noutra pose/momento. **Sucesso:** row\n   `vm_canvas_assets` (asset B) com `public_url`.\n3. **Port\u00e3o de consist\u00eancia (olho criativo).** `vision-qa.ts compare <url_A> <url_B>`. O VLM descreve ambos\n   com a mesma pergunta estruturada (produto/cores/\u00e2ngulo/ilumina\u00e7\u00e3o/estilo). O Operator (ou um juiz VLM\n   dedicado) compara: **mesmo produto? mesmas cores dominantes? mesma identidade visual?**\n   **Sucesso (GATE):** os dois descritivos batem nos atributos-chave \u2192 consistente. **Custo:** 0 (BYOK).\n4. **S\u00d3 SE o gate passar \u2014 gerar v\u00eddeo DoP (cr\u00e9dito real).** `canvas-execute` `node_type=image_to_video`,\n   `input_asset_url=<url do frame escolhido>`, `model=dop-standard`. Path async \u2192 `higgsfield-webhook`\n   finaliza (download \u2192 upload \u2192 `deduct_mco_coins` \u2192 row asset). **Sucesso:** `vm_canvas_executions`\n   status `success` + asset v\u00eddeo \u2265 100 KB no bucket + ledger `canvas_video_spend`.\n5. **QA do v\u00eddeo (olho criativo).** `vision-qa.ts video <signed_url do v\u00eddeo> \"o v\u00eddeo \u00e9 coerente com o\n   produto/cena? h\u00e1 artefatos?\"`. **Sucesso:** `confidence` \u2265 medium + descri\u00e7\u00e3o coerente com os frames.\n6. **Persistir o veredito na malha (opcional, 1 mco).** `mesh_consolidate_reference` grava o verdict de QA\n   como n\u00f3 `observation` tenant-scoped (rastreabilidade).\n\n---\n\n## Verification gates (o que o operador confere)\n\n| Gate | Evid\u00eancia material |\n|------|--------------------|\n| G1 \u2014 asset persistido | row `vm_canvas_assets` com `public_url` + objeto no bucket (`storage_key`) |\n| G2 \u2014 frame-inicial OK (olho) | `vision_describe_image` `confidence \u2265 medium` + descri\u00e7\u00e3o bate com o prompt |\n| G3 \u2014 **consist\u00eancia** (PORT\u00c3O) | `compare` \u2192 mesmos atributos-chave (produto/cores/identidade) nos 2 frames |\n| G4 \u2014 d\u00e9bito at\u00f4mico | row `mcoin_transactions` `action=canvas_video_spend` com `amount` correto |\n| G5 \u2014 v\u00eddeo material | asset v\u00eddeo \u2265 100 KB + `vm_canvas_executions.status=success` |\n| G6 \u2014 v\u00eddeo coerente (olho) | `vision_analyze_video` descreve cena coerente com os frames |\n\n---\n\n## Recovery path \u2014 falha por step\n\n- **Step 1/2 falha (provider error / texto em vez de imagem):** o prompt parece instru\u00e7\u00e3o ou est\u00e1 longo\n  demais \u2014 reformular como descri\u00e7\u00e3o visual (ou usar Magic Prompt). Se for endpoint morto, ver\n  `generate-image` (reparo do path de provider). Sem d\u00e9bito em path de erro (canvas-execute s\u00f3 debita no\n  sucesso para imagem).\n- **Step 3 reprova (frames inconsistentes):** **N\u00c3O prosseguir pro v\u00eddeo.** Regenerar o frame-final com o\n  MESMO seed e reference threading mais forte (passar a imagem upstream como `reference_image_urls`), ou\n  ajustar o prompt para repetir os atributos-chave (cor/material/\u00e2ngulo). Repetir o compare. Custo de cada\n  re-tentativa de imagem ~10 mco; o gate evita o desperd\u00edcio de 125 mco de v\u00eddeo sobre frames ruins.\n- **Step 4 falha (Higgsfield 402/credenciais/timeout):** o webhook marca `failed` e **n\u00e3o debita**\n  (deduct s\u00f3 p\u00f3s-upload-OK). Reentrada: re-submeter; \u00f3rf\u00e3o \u2192 watchdog/poll de status. Cr\u00e9dito real s\u00f3 sai\n  com v\u00eddeo material no bucket.\n- **Step 5 reprova (v\u00eddeo incoerente):** o cr\u00e9dito j\u00e1 foi gasto (irrevers\u00edvel) \u2014 registrar o verdict na\n  malha (step 6) como aprendizado e ajustar prompt/motion_strength na pr\u00f3xima. Este \u00e9 exatamente o\n  desperd\u00edcio que o gate G3 existe para minimizar ANTES do gasto.\n\n---\n\n## Success signal \u2014 sinal materialmente observ\u00e1vel do flow completo\n\nCadeia frame-inicial \u2192 frame-final **consistente** (G3 verde) \u2192 v\u00eddeo DoP material no bucket (G5) \u2192\nolho criativo confirma coer\u00eancia (G6), com o d\u00e9bito de 125 mco gasto **uma \u00fanica vez** e **somente** sobre\nframes que passaram pelo port\u00e3o de consist\u00eancia. Assets reais persistidos em `vm_canvas_assets` (Lei 1).\n\n---\n\n## Anti-patterns proibidos\n\n- \u274c Gastar cr\u00e9dito Higgsfield (v\u00eddeo) sem o port\u00e3o G3 de consist\u00eancia ter passado.\n- \u274c Reportar \"v\u00eddeo gerado\" sem o asset \u2265 100 KB no bucket + row de execu\u00e7\u00e3o `success` (Lei 1).\n- \u274c Confiar na URL ef\u00eamera do provider em vez de re-hospedar no bucket.\n- \u274c Rodar o olho criativo sobre uma signed URL expirada (re-assinar antes; ou usar `public_url`).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:47:59)*
+
+
+## 🤖 Claude *(22:48:02)*
+
+**Task #2 ✅** — SOP `creative-qa-vision-gate.md` selado (Operator/Sequence/6 gates/Recovery/Success), com o **portão G3 de consistência obrigatório antes de qualquer crédito de vídeo**, espelhando a diretiva do Sovereign.
+
+Agora a cadeia de validação paga. O caminho prudente com os créditos: gerar **frame-inicial + frame-final** (imagens baratas, seed travado + reference threading), passar pelo **olho criativo grátis** para provar consistência — e só então queimar os 125 mco do vídeo. Preciso de um user-JWT do Usuário Zero para o `canvas-execute`.
+
+## 🤖 Claude *(22:48:02)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(22:48:03)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(22:48:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+> 4	 * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+> 5	 * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+> 6	 *
+> 7	 * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+> 8	 *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+> 9	 *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+> 10	 */
+> 11	import { createClient } from '@supabase/supabase-js';
+> 12	
+> 13	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 14	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 15	const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> 16	const email = process.argv[2];
+> 17	if (!URL || !SVC || !ANON || !email) {
+> 18	  console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+> 19	  process.exit(1);
+> 20	}
+> 21	
+> 22	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 23	const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 24	
+> 25	const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> 26	if (error || !data.properties?.hashed_token) {
+> 27	  console.error('generateLink error:', error?.message ?? 'no hashed_token');
+> 28	  process.exit(1);
+> 29	}
+> 30	const tokenHash = data.properties.hashed_token;
+> 31	
+> 32	let accessToken: string | null = null;
+> 33	for (const type of ['magiclink', 'email'] as const) {
+> 34	  const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });
+> 35	  if (!vErr && sess?.session?.access_token) { accessToken = sess.session.access_token; break; }
+> 36	}
+> 37	if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
+> 38	console.log(accessToken);
+> 39	
+> ```
+
+## 🤖 Claude *(22:48:22)*
+
+
+## 🤖 Claude *(22:48:24)*
+
+Posso mintar JWT do Usuário Zero. Vou confirmar mapeamento email→user_id, saldo, e pegar um `project_id` real (o `canvas-execute` insere execução com `project_id`), depois disparar o frame-inicial.
+
+## 🤖 Claude *(22:48:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\necho \"=== user_id + saldo do Usu\u00e1rio Zero (gabrielcall@gmail.com) ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/profiles?select=id,email,mco_balance&email=eq.gabrielcall@gmail.com\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | python3 -m json.tool\necho \"\"\necho \"=== projetos canvas existentes do user ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/vm_canvas_projects?select=id,name,created_at&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&order=created_at.desc&limit=5\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | python3 -m json.tool\necho \"\"\necho \"=== mint JWT (one-time) ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\nif [ -z \"$TOKEN\" ]; then echo \"FALHOU mint: $(cat /tmp/jwterr)\"; else echo \"JWT mintado (len ${#TOKEN}, prefixo ${TOKEN:0:12}\u2026)\"; fi",
+  "description": "Confirm user mapping, balance, projects, mint JWT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === user_id + saldo do Usuário Zero (gabrielcall@gmail.com) ===
+> {
+>     "code": "42703",
+>     "details": null,
+>     "hint": null,
+>     "message": "column profiles.email does not exist"
+> }
+> 
+> === projetos canvas existentes do user ===
+> [
+>     {
+>         "id": "3f8aa85f-33af-434e-888a-444c2f56d41a",
+>         "name": "Campanha Geladeira Samsung Family Hub",
+>         "created_at": "2026-05-29T18:14:06.951011+00:00"
+>     },
+>     {
+>         "id": "e224f5ae-a2d7-434e-85e8-505a043ab6f9",
+>         "name": "Campanha Samsung Neo QLED 8K",
+>         "created_at": "2026-05-29T18:13:44.729501+00:00"
+>     },
+>     {
+>         "id": "0b86e7d0-5f56-4d28-8709-76bdc88c2bca",
+>         "name": "Campanha Roborock S8 Pro Ultra",
+>         "created_at": "2026-05-29T18:12:28.7843+00:00"
+>     },
+>     {
+>         "id": "46ed45db-4d3d-4615-8784-dbd10f9aa82d",
+>         "name": "#03 Cinematic Story Arc \u2014 3 atos",
+>         "created_at": "2026-05-24T03:44:52.551273+00:00"
+>     },
+>     {
+>         "id": "880b5eba-b41c-490d-8cab-1058def85bc9",
+>         "name": "#02 - Mood board 5 lanes - 5 mundos",
+>         "created_at": "2026-05-18T01:04:57.349761+00:00"
+>     }
+> ]
+> 
+> === mint JWT (one-time) ===
+> JWT mintado (len 1404, prefixo eyJhbGciOiJF…)
+> ```
+
+## 🤖 Claude *(22:48:52)*
+
+
+## 🤖 Claude *(22:48:54)*
+
+JWT mintado, projetos existem (`profiles` não tem coluna email — irrelevante, tenho o user_id `ada39fae`). Vou criar um projeto dedicado de validação e disparar o **frame-inicial** — um produto visualmente distintivo (smartwatch preto-fosco com pulseira laranja) para a consistência ser checável pelo olho criativo.
+
+## 🤖 Claude *(22:49:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\n\necho \"=== saldo atual ===\"\ncurl -s \"${BASE}/rest/v1/profiles?select=id,mco_balance&id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('mco_balance:',d[0]['mco_balance'])\"\n\necho \"=== cria projeto de valida\u00e7\u00e3o ===\"\nPROJ=$(curl -s \"${BASE}/rest/v1/vm_canvas_projects\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"name\":\"Valida\u00e7\u00e3o Criativa \u2014 QA Vision Gate (2026-06-21)\"}' | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) else d)\")\necho \"project_id: $PROJ\"\necho \"$PROJ\" > /tmp/qa_proj.txt\n\necho \"=== mint JWT + dispara frame-inicial (generate_image / openrouter Gemini image) ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\n[ -z \"$TOKEN\" ] && { echo \"mint falhou: $(cat /tmp/jwterr)\"; exit 1; }\n\ncurl -s \"${BASE}/functions/v1/canvas-execute\" \\\n  -H \"Authorization: Bearer ${TOKEN}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"project_id\\\":\\\"${PROJ}\\\",\\\"node_id\\\":\\\"n_frame_inicial\\\",\\\"node_type\\\":\\\"generate_image\\\",\\\"provider\\\":\\\"openrouter\\\",\\\"model\\\":\\\"google/gemini-2.5-flash-image\\\",\\\"prompt\\\":\\\"A sleek matte-black smartwatch with a vivid orange silicone strap and a circular AMOLED display, resting on a smooth light-grey concrete surface. Soft diffused studio lighting, shallow depth of field, premium product hero shot, photorealistic, crisp reflections.\\\",\\\"parameters\\\":{\\\"aspect_ratio\\\":\\\"1:1\\\",\\\"seed\\\":778899}}\" \\\n  | python3 -m json.tool",
+  "description": "Create validation project + generate frame-inicial via canvas-execute"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === saldo atual ===
+> mco_balance: 5241.0
+> === cria projeto de validação ===
+> project_id: 63d406fe-8357-4b90-b1ac-9ef2c0c2a975
+> === mint JWT + dispara frame-inicial (generate_image / openrouter Gemini image) ===
+> {
+>     "execution_id": "e871ceee-6e57-49dd-8ecc-60a5b8d54ed9",
+>     "status": "success",
+>     "output_url": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/e871ceee-6e57-49dd-8ecc-60a5b8d54ed9.png",
+>     "asset_id": "0a01980e-7387-40a7-bb87-44b27324034e",
+>     "credits_charged": 10,
+>     "credits_remaining": 5231
+> }
+> ```
+
+## 🤖 Claude *(22:49:23)*
+
+
+## 🤖 Claude *(22:49:24)*
+
+**Frame-inicial gerado — `canvas-execute` imagem FUNCIONA** (status success, 10 mco, saldo 5231, asset público persistido). Antes de gastar no frame-final, o olho criativo (grátis) confirma que saiu um relógio de verdade:
+
+## 🤖 Claude *(22:49:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nbun run scripts/qa/vision-qa.ts image \\\n  \"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/e871ceee-6e57-49dd-8ecc-60a5b8d54ed9.png\" \\\n  \"Que produto aparece? Descreva cor do corpo, cor da pulseira, formato do mostrador e a superf\u00edcie de fundo.\" 2>&1",
+  "description": "QA frame-inicial via creative eye"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    Um relógio inteligente é o produto em destaque. O corpo do relógio é de cor preta, a pulseira é de um tom vibrante de laranja. O mostrador é redondo e a superfície de fundo é uma textura cinza clara, que parece ser concreta ou cimento, com reflexos.
+> ```
+
+## 🤖 Claude *(22:49:39)*
+
+
+## 🤖 Claude *(22:49:43)*
+
+Olho criativo confirma: **relógio preto, pulseira laranja vibrante, mostrador redondo, fundo de concreto cinza** — `confidence: high`, custo 0. Exatamente o pedido. Agora o **frame-final** com reference threading (passa o frame-inicial como referência visual) + mesmo seed, em outro contexto (no pulso de um corredor) — o teste real de consistência:
+
+## 🤖 Claude *(22:49:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nBASE=\"${VITE_SUPABASE_URL}\"\nPROJ=$(cat /tmp/qa_proj.txt)\nFRAME_A=\"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/e871ceee-6e57-49dd-8ecc-60a5b8d54ed9.png\"\n\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\n[ -z \"$TOKEN\" ] && { echo \"mint falhou: $(cat /tmp/jwterr)\"; exit 1; }\n\necho \"=== frame-final (reference threading p/ frame-inicial + mesmo seed) ===\"\ncurl -s \"${BASE}/functions/v1/canvas-execute\" \\\n  -H \"Authorization: Bearer ${TOKEN}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"project_id\\\":\\\"${PROJ}\\\",\\\"node_id\\\":\\\"n_frame_final\\\",\\\"node_type\\\":\\\"generate_image\\\",\\\"provider\\\":\\\"openrouter\\\",\\\"model\\\":\\\"google/gemini-2.5-flash-image\\\",\\\"prompt\\\":\\\"The same matte-black smartwatch with a vivid orange silicone strap and circular AMOLED display, now worn on the wrist of a runner mid-stride on a city street at golden hour. Dynamic motion blur in the background, photorealistic, shallow depth of field, cinematic.\\\",\\\"reference_image_urls\\\":[\\\"${FRAME_A}\\\"],\\\"parameters\\\":{\\\"aspect_ratio\\\":\\\"1:1\\\",\\\"seed\\\":778899}}\" \\\n  | python3 -m json.tool",
+  "description": "Generate frame-final with reference threading + same seed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === frame-final (reference threading p/ frame-inicial + mesmo seed) ===
+> {
+>     "execution_id": "ef0c0ba1-f900-45bd-b71e-d0e07b39834e",
+>     "status": "success",
+>     "output_url": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ef0c0ba1-f900-45bd-b71e-d0e07b39834e.png",
+>     "asset_id": "b2964768-4030-405e-9659-6942a834eb4d",
+>     "credits_charged": 10,
+>     "credits_remaining": 5221
+> }
+> ```
+
+## 🤖 Claude *(22:50:03)*
+
+
+## 🤖 Claude *(22:50:05)*
+
+Frame-final gerado (10 mco, saldo 5221). Agora o **portão G3 — o teste de consistência** que o Sovereign exigiu: o olho criativo descreve os dois frames com a mesma pergunta estruturada para eu julgar se é o mesmo produto:
+
+## 🤖 Claude *(22:50:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nbun run scripts/qa/vision-qa.ts compare \\\n  \"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/e871ceee-6e57-49dd-8ecc-60a5b8d54ed9.png\" \\\n  \"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ef0c0ba1-f900-45bd-b71e-d0e07b39834e.png\" \\\n  \"Descreva com precis\u00e3o o rel\u00f3gio: cor do corpo, cor e material da pulseira, formato do mostrador e qualquer marca distintiva. Seja espec\u00edfico para comparar consist\u00eancia entre dois frames.\" 2>&1",
+  "description": "Consistency gate G3 \u2014 compare both frames via creative eye"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── FRAME A ──
+> [high] O relógio possui um corpo de metal cinza escuro ou preto fosco com um mostrador redondo. A pulseira é de borracha ou silicone na cor laranja vibrante, com nervuras horizontais visíveis perto da caixa do relógio e furos circulares do outro lado. O mostrador é preto e apresenta marcadores de hora em forma de pequenos retângulos laranja e brancos. Um design distintivo no centro exibe um ponteiro de minutos laranja com uma extremidade vazada em formato de hexágono alongado, apontando para o que parece ser 9 e 12 horas. Há também um ponteiro de horas menor e mais claro com um design similar, apontando para o 6. Ao lado esquerdo do ponteiro de minutos há um design complexo de três hexágonos ocos, sobrepostos e girados, em tons de laranja. No lado direito, há uma série de sete setas brancas cinzentas apontando para a direita, dando a impressão de movimento ou direção. A superfície do relógio (corpo, mostrador e pulseira) está salpicada com gotas de água, sugerindo resistência à água. Há um botão ou coroa proeminente no lado direito da caixa do relógio.
+> ── FRAME B ──
+> [high] O relógio tem um corpo preto, com uma pulseira de cor laranja vibrante, provavelmente de silicone ou borracha, com furos e um fecho prateado visível na parte inferior. O mostrador é redondo e preto, exibindo uma interface digital com um desenho geométrico em tons de laranja e dourado no centro, assemelhando-se a um ícone estilizado. Há duas linhas brancas finas perpendiculares no mostrador, uma na parte superior e outra na inferior, provavelmente marcadores de tempo ou de dados. O corpo do relógio parece ser fosco e o design geral é moderno e esportivo.
+> ```
+
+## 🤖 Claude *(22:51:08)*
+
+
+## 🤖 Claude *(22:51:16)*
+
+O **portão de consistência (G3) funcionou — e revelou exatamente o que o Sovereign temia.** Veredito do olho criativo sobre os dois frames:
+
+| Atributo | Frame-inicial | Frame-final | Consistente? |
+|---|---|---|---|
+| Corpo | preto/cinza-escuro fosco | preto fosco | ✅ |
+| Pulseira | silicone laranja vibrante, furos | silicone laranja vibrante, furos | ✅ |
+| Mostrador (forma) | redondo, preto | redondo, preto | ✅ |
+| **Mostrador (conteúdo)** | complicação analógica (ponteiros + hexágonos + setas + gotas d'água) | UI geométrica laranja-dourada "digital" + 2 linhas | ⚠️ **DERIVOU** |
+| Detalhes | gotas (resist. água) | fecho prateado | ⚠️ menor |
+
+**Identidade macro do produto: consistente** (inconfundivelmente o mesmo relógio). **Conteúdo do mostrador: derivou** — porque o Gemini image (Nano Banana) usa a referência como guia *suave*, sem seed-lock duro. Para um anúncio de produto isso é o que importa (mesmo produto); para um vídeo que *interpola* frame-A→frame-B, essa deriva no mostrador apareceria como "morphing".
+
+E aqui está a realidade arquitetural que muda como gastar seus créditos: **o `canvas-execute` DoP anima UMA imagem** (`image_url` único + movimento de câmera) — ele **não** recebe frame-inicial *e* frame-final. A interpolação verdadeira "frame inicial → frame final" exigiria fiar o *tail-frame* do Kling 2.1 (não existe hoje).
+
+Antes de queimar 125 mco reais, isso é decisão sua — três caminhos:
+
+## 🤖 Claude *(22:51:17)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(22:51:17)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(22:51:25)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Port\u00e3o de consist\u00eancia: identidade macro do produto consistente, mas o mostrador derivou (Gemini = refer\u00eancia suave, sem seed-lock). E o DoP do canvas-execute anima UM frame s\u00f3 (n\u00e3o interpola A\u2192B). Como uso seus cr\u00e9ditos Higgsfield reais agora?",
+      "header": "Caminho do v\u00eddeo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "DoP anima o frame-inicial agora",
+          "description": "Gastar ~125 mco: animar o hero frame (frame-inicial) com DoP standard (movimento de c\u00e2mera). Prova o pipeline de v\u00eddeo E2E + QA via analyze_video. \u00c9 o que est\u00e1 fiado e autorizado hoje. Consist\u00eancia A\u2194B n\u00e3o \u00e9 consumida pelo DoP (1 frame s\u00f3)."
+        },
+        {
+          "label": "Apertar consist\u00eancia primeiro (barato)",
+          "description": "Antes do v\u00eddeo: regenerar os frames via Replicate FLUX/SDXL com seed-lock duro + img2img (consist\u00eancia bem mais apertada que o Gemini), provar frames quase id\u00eanticos pelo olho criativo, e S\u00d3 ent\u00e3o decidir o v\u00eddeo. Custo: ~10-20 mco de imagem, zero de QA."
+        },
+        {
+          "label": "Construir interpola\u00e7\u00e3o A\u2192B (Kling tail-frame)",
+          "description": "Fiar o frame-final como tail-frame no canvas-execute (Kling 2.1) para v\u00eddeo que REALMENTE vai do frame-inicial ao frame-final. Exige verificar suporte da API Higgsfield/Kling + mudan\u00e7a de c\u00f3digo antes de gastar. Adia o gasto at\u00e9 a feature existir."
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-21 - Validar automações e estratégias de trading LTCUSDT]]
+> * **Próxima Sessão**: [[2026-06-21 - agent-a04a1e7d50c5ea281]]
+%% --- TIMELINE END --- %%

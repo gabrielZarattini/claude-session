@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 42
-> * **Total de Sessões**: 1116
+> * **Total de Processos**: 43
+> * **Total de Sessões**: 1119
 
 ---
 
@@ -32,6 +32,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[canvas-video-async-execution]]` - *Processo*
 *   `[[constellation-economic-activation]]` - *Processo*
 *   `[[content-asset-history]]` - *Processo*
+*   `[[creative-qa-vision-gate]]` - *Processo*
 *   `[[credential-disconnect-clear]]` - *Processo*
 *   `[[deepsearch-blueprint]]` - *Processo*
 *   `[[edge-jwt-identity-verification]]` - *Processo*
@@ -65,6 +66,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-21 - bef09883-5be2-4ff8-964a-dfd5658da0ab]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-afde9e097e29f7e2b]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-afa24cc27046fd877]]` (ClaudeSessions) - *2026-06-21*
@@ -84,6 +86,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-21 - agent-aaa3db5f0cfb73510]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a9eceaff0b3d4fecd]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a9cb9f6ee77213f3d]]` (ClaudeSessions) - *2026-06-21*
+*   `[[2026-06-21 - agent-a93d8634c03f9e8b6]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a88866b510d06f02d]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a7ce4b3211ddf877b]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a5abfeb6a685d3aad]]` (ClaudeSessions) - *2026-06-21*
@@ -107,6 +110,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-21 - agent-a0cc6785abf5b1989]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a06d5f5e3d8901057]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - agent-a04a1e7d50c5ea281]]` (ClaudeSessions) - *2026-06-21*
+*   `[[2026-06-21 - Validar studio design e canvas studio end-to-end]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - Validar automações e estratégias de trading LTCUSDT]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - Validar automações de trading e melhorar estratégias de lucro]]` (ClaudeSessions) - *2026-06-21*
 *   `[[2026-06-21 - Analisar estratégia de trading e sinais de lucro]]` (ClaudeSessions) - *2026-06-21*

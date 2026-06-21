@@ -4721,5 +4721,5 @@ Duas coisas, e você decide:
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-21 - Validar automações de trading e melhorar estratégias de lucro]]
-> * **Próxima Sessão**: [[2026-06-21 - agent-a04a1e7d50c5ea281]]
+> * **Próxima Sessão**: [[2026-06-21 - Validar studio design e canvas studio end-to-end]]
 %% --- TIMELINE END --- %%
