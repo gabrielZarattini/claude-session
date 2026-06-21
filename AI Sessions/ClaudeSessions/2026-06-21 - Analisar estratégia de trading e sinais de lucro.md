@@ -7453,6 +7453,394 @@ Sintaxe OK (7 linhas). API voltou, então rodo o gate QA+TL em paralelo (mudanç
 > [{'type': 'text', 'text': 'VEREDITO: **PASS COM RESSALVAS**\n\nO fix faz exatamente o que afirma e é a réplica correta do tratamento já validado do Harvester. Verifiquei o código real (não a descrição) e o estado vivo. A lógica de oversell está coberta por três camadas. Há, porém, um achado ALTO que não é do diff mas é o que de fato manda no comportamento ao vivo, e que muda a recomendação de merge.\n\n---\n\n## Achados\n\n### ALTO — A venda do Farm está bloqueada pelo teto de risco; o fix destrava o gatilho mas o `riskGuard` ainda pode matar a venda\nEvidência ao vivo em `/app/logs/A10.log` (id10, Farm Sell LTCUSDT):\n`[riskGuard] SELL LTCUSDT notional $40.13 > teto $25.00 — BLOQUEADA` (assertWithinRisk, `utils/exchange.js:53`).\n- `FARM_DCA[LTCUSDT]` vivo = `qty=0.908, cost=43.8625` → notional da venda ≈ $40.\n- O teto `MAX_ORDER_NOTIONAL_USDT` no env do container **agora é 50** (os blocks de "$25" são ANTERIORES à subida do teto; `grep "teto $50"` = 0 ocorrências desde o restart). Sob teto 50 a venda de ~$40 PASSA — **mas a margem é fina (~$10).** Se o LTC subir ~25% ou um novo DCA elevar a posição, a venda no-loss volta a estourar o $50 e o fix vira inócuo (o gatilho dispara, a corretora recusa). Pior: sob level-trigger a venda passa a tentar **a cada tick de BOOK** e cada tentativa bloqueada agora **alerta o Telegram** (via o catch novo do `457e25a`, dedup por `autofail:10`, mas é 1 alerta por episódio). Recomendo confirmar/elevar o teto coerente com a maior posição plausível do Farm ANTES de mergear, ou aceitar que a venda pode não sair. Isto é o gargalo real, não o `shouldntInvert`.\n\n### MÉDIA — `INTERVAL=60000` (não 0) é o que torna o anti-empilhamento robusto; a trava `FARM_SELLING` é a 2ª linha, não a 1ª\nRastreei a janela de corrida. Com `AUTOMATION_INTERVAL=60000` (confirmado no env do container), o lock por-automação `LOCK_BRAIN[id]` (`beholder.js:947`) é setado ANTES da avaliação e só liberado **60s após** um resultado bem-sucedido (`finally`/`setTimeout(...,INTERVAL)`, `beholder.js:980-982`). Durante o `await exchange.sell` em voo, novos ticks de `LTCUSDT:BOOK` chamam `testAutomations`→`isLocked([10])`=true→retornam cedo. Então:\n- **place→set `FARM_SELLING` é atômico** relativo a outros ticks: entre o accept (`exchange.sell` resolve, `:546`) e o `await updateMemory(\'FARM_SELLING\',...,false)` (`:567-568`) não há await de I/O que ceda o event-loop (o `updateMemory` com `executeAutomations=false` grava `MEMORY[key]` e retorna sincronamente, `:1000-1004`). Confirmado: sem furo place→set.\n- Camadas de oversell, todas verificadas: (1) lock de 60s pós-sucesso; (2) `FARM_SELLING` (SKIP no place `:487-488`, liberado no terminal por match de `orderId` em `app-em.js:291-294`); (3) `FARM_DCA.qty→0` no fill (`getFarmPosition` filtra `lastSell` → buys posteriores; `app-em.js:297-300`) torna a condição false. **Ponto 2 do pedido confirmado.**\n- Observação: ordem BLOQUEADA pelo teto retorna `{type:\'error\'}` → `evalDecision` faz `break` e devolve `[]` → o lock de 60s **NÃO** segura (libera em `setTimeout(...,0)`) → re-tenta no próximo tick. Por isso o block é o caminho "quente" de spam, não o sucesso.\n\n### BAIXA — `FARM_SELLING` não-persistida: re-place no restart com venda em voo (limitação v1 conhecida, severidade real baixa)\nConfirmado: não há `loadFarmSellingLocks` (ao contrário do `loadHarvestPositions`/reconcile do Harvester). Se o backend reiniciar com uma venda do Farm aceita-mas-não-terminal, a trava some no boot e o próximo tick pode re-colocar. Severidade real para o caso atual = **baixa**: 1 posição (~$40 LTC), `calcQty(FARM_QTY)` capa na carteira (não no bucket), o teto $50 limita o dano, e a janela é estreita (LIMIT marketável fecha em segundos). Mas é um furo de oversell genuíno se o size escalar ou virar multi-símbolo — o gate "não escalar o size do Farm até `loadFarmSellingLocks`" deve ser respeitado. **Ponto 4 confirmado, mitigação aceita para o canary.**\n\n### BAIXA — `MAX_WALLET`/`calcQty` vendem a CARTEIRA inteira, não só o bucket do Farm (co-localização com Trend)\n`FARM_QTY` resolve via `getFarmPosition` (filtrado por `name LIKE \'Farm %\'`), então a *quantidade* pretendida é só o lote do Farm — correto. Mas o `calcQty` aplica floor na carteira real; se a posição do Farm e a do Trend coexistirem no mesmo ativo e a carteira tiver menos base do que `FARM_QTY` (ex.: Earn moveu parte), o comportamento já é tratado por `hasEnoughAssets`. Não é regressão do fix; só registro de que oversell-vs-Trend é evitado pela qty derivada, não por reserva contábil. Sem ação.\n\n### INFO — cosmético\n- Comentário do fix data "2026-06-21" (relógio do container está em 21/06; é coerente, não é erro). \n- O fix está **no working tree, não comitado nem deployado** — o container roda ainda a versão edge-trigger (confirmei: `shouldntInvert` no container NÃO tem a cláusula FARM_QTY). QA é legitimamente pré-merge.\n\n---\n\n## Respostas diretas ao checklist\n1. **Corrida place→trava:** sem furo. Lock de 60s cobre o place em voo; set de `FARM_SELLING` é atômico vs outros ticks; sem `await` de I/O entre accept e set. (`beholder.js:546-568`, `:947-982`, `:1000-1004`)\n2. **Pós-fill para:** sim — `FARM_DCA.qty→0` via `getFarmPosition` torna a condição false. (`app-em.js:297-300`, `ordersRepository.js:269-308`)\n3. **Detector casa só a venda do Farm:** sim, zero falso-positivo — só templates 6/8/10 (`FARM_QTY`/SELL). Buy=`MIN_NOTIONAL`, Trend=`TREND_QTY`, Harvest=`HARVEST_QTY` (confirmado no DB).\n4. **`FARM_SELLING` não-persistida:** confirmado; severidade baixa para o caso real ($40, calcQty capa, teto $50); não escalar size sem `loadFarmSellingLocks`.\n5. **Regressão:** Harvester intocado (continua via `indexOf(\'HARVEST_SELLING\')`); caminho feliz edge-trigger das demais automações intocado (a cláusula só adiciona um OR escopado a `FARM_QTY`). `node --check` OK (reconfirmado por mim).\n6. Testes abaixo.\n\n---\n\n## Testes que eu rodaria (pós-deploy)\n- **Confirmar 1 venda só (oversell):** com a id10 ativa e `FARM_DCA[LTCUSDT].qty>0` acima do alvo (estado atual), fazer deploy e observar `A10.log` + `orders` (`isTestnet=false`, automationId=10): deve aparecer **exatamente 1** SELL FILLED; checar `FARM_SELLING` setado no `risk_state`/MEMORY logo após o accept e limpo no terminal; `FARM_DCA.qty` deve ir a 0. Nenhuma 2ª SELL nos 60s seguintes nem após o fill.\n- **Teto vs venda:** ANTES do deploy, validar que `0.908 × bestBid < MAX_ORDER_NOTIONAL_USDT` (hoje ~$40 < $50, OK). Forçar mentalmente/calcular o cenário "LTC +25%" → notional ~$50 → confirmar se você QUER que o teto bloqueie a saída no-loss; se não, ajustar o teto.\n- **Anti-spam sob block:** se o teto bloquear, confirmar que o Telegram recebe **1** alerta `autofail:10` por episódio (não a cada tick) — o level-trigger multiplica as tentativas; validar o dedup do `457e25a` ao vivo.\n- **Restart com venda em voo (furo conhecido):** em testnet, colocar a venda do Farm como LIMIT não-marketável (fica NEW), `docker compose restart backend`, e verificar se um 2º place ocorre (esperado com v1 → quantificar o dano com o tamanho real; serve de prova para priorizar `loadFarmSellingLocks`).\n- **Regressão Harvester/Trend:** smoke do Harvester (se reativado) e do death-cross do Trend continuam edge/level conforme antes; nenhuma das outras automações passou a level-trigger (grep nos logs por avaliações repetidas inesperadas).\n- **CI:** `bash scripts/ci-preflight.sh` (migrate+seed mysql/postgres + agent --check) — o fix não toca migration/seed, mas mantém o hábito.\n\n---\n\n## Recomendação de merge\n**APROVAR o fix do `shouldntInvert` com a ressalva ALTA tratada primeiro.** O diff em si é correto, específico e sem regressão — é o mesmo padrão do Harvester. Mas mergear/deployar isoladamente **não garante a venda**: ao vivo, o gargalo dominante é o **teto de risco** (`MAX_ORDER_NOTIONAL_USDT`), que com a posição LTC atual (~$40) tem margem de só ~$10 sobre o teto $50. Antes do deploy: (a) confirmar que o teto comporta a maior posição plausível do Farm, ou aceitar explicitamente que a saída no-loss pode ser recusada; (b) **comitar** o fix (está só no working tree). A limitação `FARM_SELLING` não-persistida é aceitável para o canary de 1 posição, desde que o size do Farm não escale até existir `loadFarmSellingLocks`.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (fix em `shouldntInvert` ~873-874; locks `:481-488`/`:567-568`/`:947-982`)\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (clear `FARM_SELLING` `:291-294`; `updateFarmPosition` `:279-305`)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (`assertWithinRisk` `:33-56` — o teto que bloqueia)\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js` (`getFarmPosition` `:253-309`)\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js` (precedência env-seed vs floor persistido; floor vivo = OFF)'}, {'type': 'text', 'text': "agentId: aff5e8023f9ddda4c (use SendMessage with to: 'aff5e8023f9ddda4c' to continue this agent)\n<usage>subagent_tokens: 91605\ntool_uses: 38\nduration_ms: 332000</usage>"}]
 > ```
 
+## 🤖 Claude *(03:00:15)*
+
+
+## 🤖 Claude *(03:00:20)*
+
+**Gate fechado: QA = PASS com ressalvas, TL = APPROVE com sugestões. ZERO must-fix de código.** Ambos confirmaram:
+- ✅ O fix é correto e simétrico ao Harvester; **oversell coberto** por 3 camadas (lock 60s + `FARM_SELLING` set→clear por orderId + `FARM_DCA→0` no fill).
+- ✅ Detector `FARM_QTY` é específico (sem falso-positivo); Harvester/Trend intactos.
+- ⚠️ **QA (ALTA):** o teto ainda pode barrar — hoje a venda (~$40) passa no teto $50, mas margem fina. (É o motivo do **%-teto exempta-venda** que já tínhamos planejado — fica de follow-up.)
+- ⚠️ v1: `FARM_SELLING` não-persistida → aceitável p/ 1 posição; não escalar size do Farm até `loadFarmSellingLocks`.
+
+Como o teto $50 libera a venda atual, **deployar isto FAZ o sistema vender o LTC** (level-trigger dispara no próximo tick) **e conserta o bug pra sempre**. Commitando + deployando:
+
+## 🤖 Claude *(03:00:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux backend/src/beholder.js 2>/dev/null\nnode --check backend/src/beholder.js >/dev/null && echo \"\u2713 sintaxe OK\"\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/beholder.js\ngit commit -q -m \"fix(farm): venda no-loss vira LEVEL-trigger (shouldntInvert) \u2014 destrava a saida do Farm\" -m \"BUG (causa raiz, 0 vendas na historia do Farm): a venda no-loss do Farm (orderTemplate FARM_QTY) era EDGE-triggered \u2014 evalDecision augmenta a condicao com invertCondition (previous<alvo) a menos que shouldntInvert exente. O lote FARM_DCA nasce/fica ACIMA do alvo cost*1.012 -> nunca ha cruzamento fresco bestBid<alvo->>alvo -> NUNCA dispara (LTC cruzou 1x sob o cap antigo, bloqueado, e nunca mais re-disparou apesar de >alvo). IDENTICO ao bug que o Harvester ja corrigiu. FIX: shouldntInvert isenta a venda FARM_QTY (vira LEVEL-trigger, espelha o Harvester); oversell ja barrado pela trava FARM_SELLING existente (SKIP no place + clear por orderId no terminal) + FARM_DCA.qty->0 no fill. Gate QA PASS-c/ressalvas + TL APPROVE, zero must-fix de codigo. Follow-up: %-teto exempta-venda + loadFarmSellingLocks antes de escalar size.\" -m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\"\ngit log --oneline -1\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"\" | tr -d \"\\r\")\ngit push \"https://${TOKEN}@github.com/gabrielZarattini/tradeux.git\" HEAD:master 2>&1 | sed -E \"s/${TOKEN}/***/g\" | tail -2\n'",
+  "description": "Commit and push the Farm level-trigger fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ sintaxe OK
+> fb932a1 fix(farm): venda no-loss vira LEVEL-trigger (shouldntInvert) — destrava a saida do Farm
+> To https://github.com/gabrielZarattini/tradeux.git
+>    457e25a..fb932a1  HEAD -> master
+> ```
+
+## 🤖 Claude *(03:00:37)*
+
+
+## 🤖 Claude *(03:00:39)*
+
+Pushado: `live==master==origin==fb932a1`. Deployando (rebuild). Após o boot (~3-4 min), a venda do Farm vira level-trigger → dispara no próximo tick → vende o LTC. Vou disparar e acompanhar:
+
+## 🤖 Claude *(03:00:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend 2>&1 | tail -3'",
+  "description": "Rebuild and restart backend with the Farm level-trigger fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(03:01:00)*
+
+
+## 🤖 Claude *(03:01:02)*
+
+Deploy disparado (rebuild). O boot leva ~3-4 min e aí a venda level-trigger dispara. Vou deixar um **monitor em background** que avisa assim que o LTC vender (poll do DB), pra não ficar checando à toa:
+
+## 🤖 Claude *(03:01:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 22); do\n  sleep 25\n  SELL=$(sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"SELECT id,status,avgPrice,quantity,net,commissionAsset FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\" ORDER BY id DESC LIMIT 1;\\\" 2>/dev/null\"' 2>/dev/null)\n  if [ -n \"$SELL\" ]; then\n    echo \"\u2705 VENDEU (ap\u00f3s ~$((i*25))s): $SELL\"\n    echo \"--- A10.log ---\"\n    sudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"FILLED|Order SELL|Results\\\" /app/logs/A10.log 2>/dev/null | tail -3\"' 2>/dev/null\n    exit 0\n  fi\ndone\necho \"\u23f1\ufe0f 9min sem venda \u2014 checar boot/teto\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"tail -4 /app/logs/A10.log 2>/dev/null\"' 2>/dev/null",
+  "description": "Background poll for Farm sell fill after deploy",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: blacn41y3. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/tasks/blacn41y3.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(03:01:26)*
+
+
+## 🤖 Claude *(03:01:37)*
+
+## 🎯 Bug encontrado, corrigido, gated e em deploy
+
+**A causa raiz (o que você pediu pra achar):** a venda no-loss do Farm era **EDGE-triggered** — o `evalDecision` exige um **cruzamento fresco** (`bestBid` subindo de *abaixo* pra *acima* do alvo `cost×1.012`). Mas o lote do Farm **nasce e fica acima do alvo** → nunca há cruzamento fresco → **nunca dispara**. Por isso **0 vendas em toda a história do Farm**. É *idêntico* ao bug que o Harvester já tinha corrigido (documentado no próprio código, linha 863) — só que o Farm nunca recebeu o mesmo conserto.
+
+> Não era o cap nem o BOOK monitor (esses eram bloqueios secundários, que também destravei). Era o **edge-trigger**.
+
+**O fix (deployado, `fb932a1`):** isentei a venda do Farm no `shouldntInvert` → vira **LEVEL-trigger** (dispara enquanto `bestBid > alvo`, espelhando o Harvester). O **oversell já estava coberto** pela trava `FARM_SELLING` existente (set no place / clear no terminal por orderId) + `FARM_DCA.qty→0` no fill. **Gate QA PASS + TL APPROVE, zero must-fix de código.**
+
+## ⏳ Status: vendendo automaticamente
+
+- Backend **rebuildando** (~3-4 min). Quando subir, a venda dispara no 1º tick (LTC ~$44,5 > alvo $44,39; ~$40 < teto $50 → passa) → **vende 0,907 LTC → ~$40,4, +$0,5**.
+- Deixei um **monitor em background** observando o DB — **te aviso no segundo em que o LTC vender**, com preço e P&L.
+
+## 📌 Follow-ups que o gate apontou (não bloqueiam)
+1. **%-teto que exempta VENDA** (o que conversamos: 20%, compras only) — pra venda nunca mais ser barrada pelo cap.
+2. **`loadFarmSellingLocks`** — persistir a trava no boot antes de escalar o size do Farm.
+
+Agora é esperar o boot. Volto assim que vender. 🤝
+
+## 👤 User *(03:01:40)*
+
+<task-notification>
+<task-id>blacn41y3</task-id>
+<tool-use-id>toolu_01PvjzkP9ucUKNWjtkn87vKA</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/tasks/blacn41y3.output</output-file>
+<status>completed</status>
+<summary>Background command "Background poll for Farm sell fill after deploy" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(03:01:43)*
+
+
+## 🤖 Claude *(03:01:44)*
+
+O monitor voltou. Vou ler o resultado:
+
+## 🤖 Claude *(03:01:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/f441b214-aeeb-4754-b4a6-052611f40093/tasks/blacn41y3.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	✅ VENDEU (após ~25s): 264	FILLED	44.54000000	0.90700000	40.35738222	USDT
+> 2	--- A10.log ---
+> 3	  status: 'FILLED',
+> 4	Results: [{"type":"success","text":"Order SELL LTCUSDT FILLED"}]
+> 5	
+> ```
+
+## 🤖 Claude *(03:02:07)*
+
+
+## 🤖 Claude *(03:02:08)*
+
+🎉 **VENDEU!** Vou confirmar o resultado completo e — o ponto crítico do gate — que saiu **uma venda só** (sem oversell):
+
+## 🤖 Claude *(03:02:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== a venda (deve ser 1 S\u00d3) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -e \\\"SELECT id,side,status,avgPrice,quantity,net,commissionAsset,FROM_UNIXTIME(transactTime/1000) t FROM orders WHERE isTestnet=0 AND side=\\\\\\\"SELL\\\\\\\";\\\" 2>/dev/null\"'\necho \"=== P&L do ciclo (vendas - compras) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T db sh -c \"mysql -uroot -p\\$MYSQL_ROOT_PASSWORD tradeux -N -e \\\"SELECT ROUND(SUM(CASE WHEN side=\\\\\\\"SELL\\\\\\\" THEN net ELSE -net END),4) FROM orders WHERE isTestnet=0;\\\" 2>/dev/null\"'\necho \"=== estado p\u00f3s-venda: FARM_DCA, wallet, equity, c\u00f3digo vivo ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/tradeux-agent/.env 2>/dev/null; set +a\nT=$(curl -s -m10 -X POST https://tradeux.gcrux.com/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$TRADEUX_EMAIL\\\",\\\"password\\\":\\\"$TRADEUX_PASSWORD\\\"}\" | sed -E \"s/.*\\\"token\\\":\\\"([^\\\"]+)\\\".*/\\1/\")\necho \"FARM_DCA: $(curl -s -m8 \"https://tradeux.gcrux.com/api/beholder/memory/LTCUSDT/FARM_DCA\" -H \"authorization: $T\")\"\necho \"wallet LTC/USDT: $(curl -s -m8 \"https://tradeux.gcrux.com/api/exchange/balance/USDT\" -H \"authorization: $T\" | python3 -c \"import sys,json;b=json.load(sys.stdin).get(\\\"balances\\\",{});print(b.get(\\\"LTC\\\",{}).get(\\\"available\\\"),\\\"/\\\",b.get(\\\"USDT\\\",{}).get(\\\"available\\\"))\" 2>/dev/null)\"\necho \"equity: $(curl -s -m8 \"https://tradeux.gcrux.com/api/system/daily-cap\" -H \"authorization: $T\" | python3 -c \"import sys,json;print(json.load(sys.stdin)[\\\"last\\\"][\\\"equity\\\"])\" 2>/dev/null)\"\n'\necho \"c\u00f3digo vivo: $(git -c safe.directory='*' log --oneline -1)\"",
+  "description": "Verify single sell, P&L, FARM_DCA reconciled, post-sale state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === a venda (deve ser 1 SÓ) ===
+> id	side	status	avgPrice	quantity	net	commissionAsset	t
+> 264	SELL	FILLED	44.54000000	0.90700000	40.35738222	USDT	2026-06-21 03:00:53.2910
+> === P&L do ciclo (vendas - compras) ===
+> 0.4904
+> === estado pós-venda: FARM_DCA, wallet, equity, código vivo ===
+> FARM_DCA: {"qty":0,"cost":0}
+> wallet LTC/USDT: None / None
+> equity: 149.3914955923259
+> código vivo: fb932a1 fix(farm): venda no-loss vira LEVEL-trigger (shouldntInvert) — destrava a saida do Farm
+> ```
+
+## 🤖 Claude *(03:02:50)*
+
+
+## 🤖 Claude *(03:03:03)*
+
+✅✅ **CONFIRMADO — vendeu limpo, e o bug está morto.**
+
+## A venda (uma só — sem oversell, o ponto crítico do gate)
+
+| | |
+|---|---|
+| **Ordem 264** | SELL LTCUSDT **FILLED** @ **$44,54** |
+| Quantidade | 0,907 LTC (a pilha inteira) |
+| Recebido | **$40,357 USDT** (fee em USDT) |
+| **P&L do ciclo** | **+$0,49** 🟢 (vendas − compras, real) |
+| `FARM_DCA` | **{qty:0, cost:0}** — reconciliou sozinho no fill, não re-vende |
+| Equity | **$149,39** (intacta + o ganho) |
+| Código vivo | **`fb932a1`** (o level-trigger) |
+
+**Saiu exatamente 1 venda** — a trava `FARM_SELLING` segurou o oversell ao vivo, como o gate previu. ✅
+
+## O que isso significa
+
+Esta foi a **primeira saída no-loss do Farm que executou na história do mainnet** — antes, **nenhuma** vendia (o edge-trigger barrava todas em silêncio). O bug que você mandou eu caçar está **encontrado, corrigido, gated e deployado**. Daqui pra frente o Farm **vende sozinho** quando o lote bouncar acima do alvo.
+
+E o ciclo completo do canary fechou como devia: comprou LTC barato no range, **saiu no verde**, recuperou o USDT. Capital livre de novo (~$149), sem concentração em alt.
+
+## Pendências (follow-up, não urgentes)
+1. **%-teto a 20% que exempta VENDA** — pra venda nunca mais raspar no cap (o gate marcou que a margem $40-vs-$50 é fina).
+2. **`loadFarmSellingLocks`** — persistir a trava no boot antes de escalar o size do Farm.
+3. A revisão de estratégia/design (a parte que o 529 derrubou) — re-rodar quando quiser.
+
+---
+
+Foi uma maratona, mas valeu: saímos com **4 bugs reais corrigidos e deployados** hoje (Earn/HALT-falso `c6d0853`, ruído+falha-silenciosa `457e25a`, e o edge-trigger do Farm `fb932a1`) + o LTC vendido no lucro.
+
+Recomendo **selar a sessão com `/handoff`** — aconteceu muita coisa e seria bom persistir tudo no HANDOFF.md antes de fechar. Quer que eu prepare o seal?
+
+## 👤 User *(13:57:43)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(13:57:43)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(13:58:25)*
+
+
+## 🤖 Claude *(13:58:25)*
+
+Executando o ritual `/handoff` pra selar a sessão. Pre-flight + secret scan primeiro:
+
+## 🤖 Claude *(13:58:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git status (deve estar limpo \u2014 tudo commitado) ===\"\ngit -c safe.directory='*' status --short\necho \"=== HEAD + sync com origin ===\"\ngit -c safe.directory='*' log --oneline -4\ngit -c safe.directory='*' log --oneline origin/master..master 2>/dev/null | head && echo \"(vazio acima = master==origin)\"\necho \"=== SECRET SCAN (\u00faltimos 3 commits) ===\"\ngit -c safe.directory='*' diff 235484c..HEAD 2>/dev/null | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|BINANCE.*KEY\\s*=\\s*\\S|GITHUB_TOKEN)\" | grep -v \"example\\|<.*>\\|=\\s*$\" | head || echo \"\u2713 sem secrets nos commits\"\necho \"=== .env N\u00c3O est\u00e1 no git? ===\"\ngit -c safe.directory='*' ls-files | grep -E \"^\\.env$\" && echo \"\u26a0\ufe0f .env TRACKED!\" || echo \"\u2713 .env n\u00e3o-tracked (gitignored)\"\necho \"=== stack ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"{{.Service}} {{.Status}}\"' 2>/dev/null",
+  "description": "Handoff pre-flight: git status, secret scan, stack"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (deve estar limpo — tudo commitado) ===
+> === HEAD + sync com origin ===
+> fb932a1 fix(farm): venda no-loss vira LEVEL-trigger (shouldntInvert) — destrava a saida do Farm
+> 457e25a fix(notif): silencia PUSH do [PAPER] + alerta Telegram em falha de execucao de automacao
+> c6d0853 fix(dailyCap): conta saldos LD* do Simple Earn no equity (HALT falso)
+> 235484c feat: teto de exposicao do Farm por simbolo (notional real) + limpeza de estados falsos do cockpit
+> fb932a1 fix(farm): venda no-loss vira LEVEL-trigger (shouldntInvert) — destrava a saida do Farm
+> 457e25a fix(notif): silencia PUSH do [PAPER] + alerta Telegram em falha de execucao de automacao
+> c6d0853 fix(dailyCap): conta saldos LD* do Simple Earn no equity (HALT falso)
+> (vazio acima = master==origin)
+> === SECRET SCAN (últimos 3 commits) ===
+> === .env NÃO está no git? ===
+> ✓ .env não-tracked (gitignored)
+> === stack ===
+> agent Up 37 hours
+> backend Up 11 hours
+> db Up 5 days (healthy)
+> frontend Up 35 hours
+> ```
+
+## 🤖 Claude *(13:59:00)*
+
+
+## 🤖 Claude *(13:59:02)*
+
+Git status limpo, `.env` gitignored, sem secrets, stack 4/4. Mas o `origin/master..master` mostrou os 3 commits — é a **ref local de tracking desatualizada** (empurrei via URL-token, que não atualiza o ref `origin/master` local). Os pushes confirmaram (`235484c→c6d0853→457e25a→fb932a1`). Vou confirmar o SHA real no remoto:
+
+## 🤖 Claude *(13:59:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nTOKEN=$(grep -E \"^GITHUB_TOKEN_API=\" .env | cut -d= -f2- | tr -d \"\\\"\" | tr -d \"\\r\")\necho \"remoto origin/master = $(git ls-remote \"https://${TOKEN}@github.com/gabrielZarattini/tradeux.git\" refs/heads/master 2>/dev/null | cut -f1)\"\necho \"local HEAD          = $(git -c safe.directory=\\\"*\\\" rev-parse HEAD)\"\n'",
+  "description": "Confirm remote master SHA matches local HEAD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remoto origin/master = fb932a12b0cfd0f8f1b06276c393a1bbdf8111ee
+> local HEAD          = fb932a12b0cfd0f8f1b06276c393a1bbdf8111ee
+> ```
+
+## 🤖 Claude *(13:59:23)*
+
+
+## 🤖 Claude *(13:59:24)*
+
+✅ **Remoto = local = `fb932a1`.** Os 3 commits estão pushados (a ref local só estava stale). Push/commit = DONE. Falta HANDOFF.md + memory. Vou ler o topo do HANDOFF pra atualizar o header:
+
+## 🤖 Claude *(13:59:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -8 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Read HANDOFF.md top header"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # TradeUX — HANDOFF (single source of truth)
+> 
+> > ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> > Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> > Updated: **2026-06-20** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (o DONO flipou o floor pela UI; `halted=false`, NÃO está mais congelado!)** · **Canary FARM-ONLY** (só as VENDAS armadas id10/12/14; COMPRAS off após DCA 3× em LTC ~$30, equity intacta ~$148,75) · proteções: cap diário −5%, teto **$25/ordem** (era 300), **teto de exposição do Farm $25/símbolo (notional qty×preço-médio, `FARM_MAX_NOTIONAL_USDT`)**, riskGuard por-ordem, botão de pânico + painel de grupos em Settings · **Bloco B Fase 1 (`apiClient.js` DRY, 8 setup-*.js) + painel Ativação de grupos + cockpit gate×ativo + agente recalibrado (ATIVO≠GATE) + cockpit LIMPO (placeholders/estados falsos removidos)** · Meta: **realista ≈ flat com ~$148** · Vivo==master==**`235484c`** (push pendente → ==origin após o push deste seal)
+> 
+> > 🔴 **ATUALIZAÇÃO 2026-06-20 — NÃO ESTÁ MAIS CONGELADO:** o dono LIBEROU o floor pela UI → trading REAL ON (`halted=false`). Canary **FARM-ONLY** (só as VENDAS do Farm armadas — saída no-loss dos lotes; COMPRAS off). Equity intacta ~$148,75 (USDT↔LTC, sem perda). SEMPRE confira `GET /system/halt` no início da sessão. **O bloco 🛑 abaixo (2026-06-15) é HISTÓRICO** — descreve o estado CONGELADO, já SUPERADO.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
