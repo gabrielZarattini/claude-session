@@ -8477,6 +8477,539 @@ Both callers (`beholder.js:776` automação + `exchangeController.js:139` HTTP) 
 > [{'type': 'text', 'text': "Exatamente os dois callers esperados, ambos passando pelo boundary. Verificação completa.\n\n---\n\n# Re-verificação FOCADA — must-fix do bypass do withdraw lock (FIX 1)\n\n## VEREDITO: PASS — o bypass está RESOLVIDO\n\nO enforcement universal (HALT + allowlist FAIL-CLOSED) foi movido pro boundary `exchange.withdraw`, cobrindo os DOIS callers. A frase de confirmação ficou só no controller HTTP, como projetado.\n\n## Achados por item\n\n**1. Bypass FECHADO — CONFIRMADO.** `backend/src/utils/exchange.js:229-242`: a função `withdraw` chama `assertWithdrawAllowed({halted: st.halted, haltSource: st.source, address})` (linha 233) ANTES do `privateCall` (linha 238). Grep de `exchange.withdraw(` retorna EXATAMENTE os 2 callers — `backend/src/beholder.js:776` (`withdrawCrypto`/automação WITHDRAW) e `backend/src/controllers/exchangeController.js:139` (`doWithdraw`/HTTP) — ambos herdam a trava. Não há terceiro caminho.\n\n**2. `assertWithdrawAllowed` THROWS fail-closed — CONFIRMADO.** `backend/src/utils/withdrawGuard.js:40-44`: throw em HALT ativo; `_addressBlock` throwa em allowlist vazia (linha 19-20) e em endereço fora (linha 21-22). Com allowlist VAZIA (estado live planejado), a automação WITHDRAW é bloqueada por throw mesmo sem HALT — provado no teste de boundary (`withdrawGuard.test.js:54`).\n\n**3. Throw tratado pela automação — CONFIRMADO (com nuance que NÃO é defeito).** O `try/catch` SÍNCRONO em `doAction` (`beholder.js:843-859`) por si só NÃO captura a rejeição da promise de `withdrawCrypto` (o `switch` faz `return withdrawCrypto(...)` sem `await`). Mas o engine não cai porque: (a) `withdrawCrypto` tem try/catch interno (`:781-783`); (b) o caller real `evalDecision` faz `await doAction(...)` (`:921`) dentro de um try/catch (`:931-944`) que captura a rejeição, loga em `A:<id>.log`, alerta o dono no Telegram (deduped `autofail:<id>`) e retorna `{type:'error'}`. O `updateMemory`/hot-path não derruba. OK.\n\n**4. Regressão / ciclo — SEM CICLO.** `withdrawGuard.js` é PURO (grep `require` = zero imports). `exchange.js:9` o requer e `node -e` carrega ambos sem crash. Suíte de sim: **8/8 arquivos, withdrawGuard 13/13**; riskGuard intacto (53/53). `riskState.getState()` retorna `{halted, source}` consistente com o uso nos dois callers.\n\n**5. Resposta de erro virou string — CONFIRMADO.** `exchangeController.js:130` (`res.status(gate.status).json(gate.error)`) e `:143` (catch) retornam string, não `{error}`. Conserta o `[object Object]`/corpo vazio na UI; consistente com o catch.\n\n## Gaps residuais (BAIXOS, não bloqueiam)\n\n- **[BAIXO] Precedência divergente entre as duas portas.** No controller HTTP a ordem é HALT → frase → allowlist (`checkWithdrawGates`); no boundary é HALT → allowlist (sem frase). É by-design (automação não tem `confirm`), mas significa que a frase de confirmação NÃO é uma trava de boundary — só de UI. Aceitável: HALT + allowlist já são fail-closed no boundary.\n- **[BAIXO] Sem teste E2E do caminho da automação.** O teste cobre `assertWithdrawAllowed` em isolamento (boundary) e prova que a automação herda; não há teste que exercite `beholder.withdrawCrypto → exchange.withdraw → throw → evalDecision catch` ponta-a-ponta. A cadeia foi verificada por leitura, mas um sim que injete o boundary lançando e assira que `evalDecision` retorna `{type:'error'}` (e não rejeita) fecharia o item 3 mecanicamente.\n- **[INFORMATIVO] `maskAddress` no log do controller, não no boundary.** O log de bloqueio no boundary (`exchange.js`) não existe — o throw sobe sem log próprio de saque; quem loga/mascara é o controller (`:129`) e o `evalDecision` catch (genérico). Sem vazamento de endereço, mas a observabilidade do bloqueio na automação é só o `autofail` genérico do Telegram.\n\n## Testes que eu rodaria\n- `AES_KEY=… npm run test:sim` — **FEITO**, 8/8 (withdrawGuard 13/13, riskGuard 53/53).\n- E2E da automação (sugerido, não existe): mock de `exchange.withdraw` lançando → `evalDecision` de uma automação WITHDRAW resolve com `{type:'error'}` SEM unhandled rejection.\n- Smoke vivo com allowlist VAZIA: disparar a automação WITHDRAW e confirmar `A:<id>.log` com o erro `WITHDRAW_ADDRESS_ALLOWLIST não configurada` + Telegram `autofail` + nenhum hit no SAPI.\n- HTTP `POST /exchange/withdraw` sob HALT → 409 string; com endereço fora da allowlist → 403 string (verificar UI mostra a msg, não `[object Object]`).\n\n## Recomendação de merge\n**APROVAR.** O must-fix do bypass HIGH está efetivamente resolvido: o chokepoint está na fronteira certa, fail-closed, cobrindo automação e HTTP, sem ciclo, com a suíte verde. Os 3 gaps são BAIXOS/observabilidade e podem virar follow-up — recomendo adicionar o teste E2E do item 3 quando der, mas não é bloqueador do flip.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (boundary `withdraw`, linhas 229-242)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js` (puro; `assertWithdrawAllowed`/`checkWithdrawGates`)\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`withdrawCrypto:748`, `doAction:841`, `evalDecision` catch `:931`)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js` (`doWithdraw`, gate `:126-132`, erros-string `:130/:143`)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js` (13 asserts)"}, {'type': 'text', 'text': "agentId: aa9ba1c078467653c (use SendMessage with to: 'aa9ba1c078467653c' to continue this agent)\n<usage>subagent_tokens: 52849\ntool_uses: 16\nduration_ms: 96874</usage>"}]
 > ```
 
+## 🤖 Claude *(14:30:29)*
+
+
+## 🤖 Claude *(14:30:31)*
+
+QA re-verificou: **PASS — bypass RESOLVIDO** (chokepoint no boundary cobre os 2 callers, fail-closed, sem ciclo, automação trata o throw via `evalDecision` catch). Os 3 gaps residuais são LOW/observabilidade (follow-up). Com QA (re-PASS) + TL (APPROVE) satisfeitos, commito o **Fix 1**:
+
+## 🤖 Claude *(14:30:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/withdraw-msg.txt <<'EOF'\nfeat(security): trava o SAQUE REAL em codigo (HALT + frase + allowlist), no boundary (cobre HTTP E automacao)\n\nFIX 1/3 da re-revisao de design (HIGH): POST /exchange/withdraw/:id chamava exchange.withdraw SEM\npassar pelo assertWithinRisk -> caminho de saida de fundos sem HALT/floor/cap/teto (suporta MAX_WALLET\n= drena a moeda). Mitigado so por config externa na Binance (saque-OFF, reversivel).\n\n- utils/withdrawGuard.js (NOVO, puro): checkWithdrawGates (HTTP: HALT 409 + frase 400 + allowlist 403) e\n  assertWithdrawAllowed (BOUNDARY: HALT + allowlist, THROWS fail-closed). allowlist FAIL-CLOSED: vazia\n  = bloqueia TUDO. WITHDRAW_CONFIRM_PHRASE (default 'SACAR REAL') + WITHDRAW_ADDRESS_ALLOWLIST (CSV).\n- utils/exchange.js: withdraw() agora chama assertWithdrawAllowed ANTES do privateCall -> CHOKEPOINT no\n  boundary node-binance-api, igual ao assertWithinRisk das ordens. Cobre os DOIS callers: o controller\n  HTTP (doWithdraw) E a automacao WITHDRAW do beholder (withdrawCrypto) -- fecha o bypass que o QA achou.\n- controllers/exchangeController.js: doWithdraw aplica os 3 gates (frase + UX de status 409/400/403) +\n  loga/notifica; erro vira STRING (conserta [object Object] na UI).\n- scripts/sim/withdrawGuard.test.js (NOVO): 13 asserts (HTTP 3 camadas + precedencia + boundary throws).\n- .env.example: doc das 2 envs. frontend: manda confirm via window.prompt (espelha o go-live do floor).\n\nGate QA (PASS, re-verificou que o bypass do beholder foi fechado) + TL (APPROVE). Suite 8/8. Direcao\ndo risco: so NEGA saque (fail-closed). WITHDRAW_ADDRESS_ALLOWLIST fica VAZIO no .env live (saque ja off\nna Binance) -> saque duplamente travado (codigo + Binance). Divida (nao-bloq.): E2E do path da automacao.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ncd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/utils/withdrawGuard.js backend/src/utils/exchange.js backend/src/controllers/exchangeController.js backend/.env.example backend/scripts/sim/withdrawGuard.test.js frontend/src/services/ExchangeService.js frontend/src/private/WithdrawTemplates/WithdrawTemplates.js 2>/dev/null\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/utils/withdrawGuard.js backend/src/utils/exchange.js backend/src/controllers/exchangeController.js backend/.env.example backend/scripts/sim/withdrawGuard.test.js frontend/src/services/ExchangeService.js frontend/src/private/WithdrawTemplates/WithdrawTemplates.js\ngit commit -F /tmp/withdraw-msg.txt\necho \"=== commit (7 arquivos; SEM backtest-results) ===\"; git show --stat --oneline HEAD | head -10'",
+  "description": "Commit Fix 1 withdraw lock"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master c6f67ef] feat(security): trava o SAQUE REAL em codigo (HALT + frase + allowlist), no boundary (cobre HTTP E automacao)
+>  7 files changed, 150 insertions(+), 4 deletions(-)
+>  create mode 100644 backend/scripts/sim/withdrawGuard.test.js
+>  create mode 100644 backend/src/utils/withdrawGuard.js
+> === commit (7 arquivos; SEM backtest-results) ===
+> c6f67ef feat(security): trava o SAQUE REAL em codigo (HALT + frase + allowlist), no boundary (cobre HTTP E automacao)
+>  backend/.env.example                               | 11 +++-
+>  backend/scripts/sim/withdrawGuard.test.js          | 61 ++++++++++++++++++++++
+>  backend/src/controllers/exchangeController.js      | 15 ++++++
+>  backend/src/utils/exchange.js                      |  5 ++
+>  backend/src/utils/withdrawGuard.js                 | 52 ++++++++++++++++++
+>  .../private/WithdrawTemplates/WithdrawTemplates.js |  6 ++-
+>  frontend/src/services/ExchangeService.js           |  4 +-
+>  7 files changed, 150 insertions(+), 4 deletions(-)
+> ```
+
+## 🤖 Claude *(14:30:56)*
+
+
+## 🤖 Claude *(14:30:57)*
+
+Fix 1 commitado (`c6f67ef`). Push + adiciono as envs no `.env` live (allowlist VAZIA = fail-closed) + deploy backend **e frontend** (a UI do saque mudou):
+
+## 🤖 Claude *(14:31:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\n# push como ubuntu (chave SSH)\nORIGIN=$(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1); PARENT=$(git -c safe.directory='*' rev-parse HEAD~1)\nif [ \"$ORIGIN\" = \"$PARENT\" ]; then\n  git -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected\" | head -2\n  sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\n  echo \"origin==HEAD: $([ \"$(git -c safe.directory='*' ls-remote origin refs/heads/master|cut -f1)\" = \"$(git -c safe.directory='*' rev-parse HEAD)\" ] && echo SIM || echo NAO)\"\nelse echo \"\u26a0\ufe0f diverg\u00eancia (origin=$ORIGIN parent=$PARENT)\"; fi\n# adiciona as envs do withdraw no .env live (allowlist VAZIA = fail-closed)\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngrep -q \"^WITHDRAW_ADDRESS_ALLOWLIST\" .env || printf \"\\n# saque travado em codigo (allowlist VAZIA = fail-closed; saque ja off na Binance)\\nWITHDRAW_CONFIRM_PHRASE=SACAR REAL\\nWITHDRAW_ADDRESS_ALLOWLIST=\\n\" >> .env\necho \"=== .env withdraw ===\"; grep -E \"WITHDRAW_\" .env'",
+  "description": "Push Fix 1, add withdraw envs to live .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    43e8b74..c6f67ef  master -> master
+> origin==HEAD: SIM
+> === .env withdraw ===
+> WITHDRAW_CONFIRM_PHRASE=SACAR REAL
+> WITHDRAW_ADDRESS_ALLOWLIST=
+> ```
+
+## 🤖 Claude *(14:31:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rebuild backend + frontend (frontend \u00e9 vite, demora mais) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend frontend 2>&1 | tail -6'",
+  "description": "Rebuild backend and frontend for Fix 1",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild backend + frontend (frontend é vite, demora mais) ===
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(14:31:33)*
+
+
+## 🤖 Claude *(14:31:34)*
+
+Backend + frontend reiniciados. Smoke do Fix 1 (sem executar saque real — testo o gate no código vivo + halt + site):
+
+## 🤖 Claude *(14:31:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguarda backend ===\"\nfor i in $(seq 1 25); do c=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null); [ \"$c\" = \"401\" ] && { echo \"backend UP\"; break; }; sleep 2; done\necho \"=== env withdraw no container + boot limpo ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"env | grep WITHDRAW; echo ---; grep -iE \\\"Error|withdrawGuard\\\" logs/system.log 2>/dev/null | tail -3 || echo sem-erro-boot\"'\necho \"=== smoke do gate no c\u00f3digo buildado (sem saque real) ===\"\ncat > /tmp/wsmoke.js <<'EOF'\nconst { checkWithdrawGates, assertWithdrawAllowed } = require('/app/src/utils/withdrawGuard');\nfunction thr(n,fn){let t=false;try{fn();}catch(e){t=true;} console.log((t?'THROW   ':'PASSOU  ')+'| '+n);}\nconsole.log('checkWithdrawGates HALT \u2192', checkWithdrawGates({halted:true,haltSource:'manual',confirm:'SACAR REAL',address:'x'}).status, '(esp 409)');\nconsole.log('checkWithdrawGates sem confirm \u2192', checkWithdrawGates({halted:false,confirm:undefined,address:'x'}).status, '(esp 400)');\nconsole.log('checkWithdrawGates allowlist vazia \u2192', checkWithdrawGates({halted:false,confirm:'SACAR REAL',address:'x'}).status, '(esp 403)');\nthr('BOUNDARY assertWithdrawAllowed allowlist vazia (cobre automa\u00e7\u00e3o) \u2192 throw', ()=>assertWithdrawAllowed({halted:false,address:'x'}));\nEOF\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node < /tmp/wsmoke.js'\necho \"=== halt + site ===\"\nsudo -n -u gcrux-tradeux bash -lc 'set -a;source .env;set +a;TOK=$(curl -s -m8 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\"|grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\"|cut -d\\\" -f4);curl -s -m8 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOK\"|python3 -c \"import sys,json;print(\\\"halt:\\\",json.load(sys.stdin)[\\\"halted\\\"])\"'\ncurl -s -m6 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Smoke Fix 1: env, boot, gate behavior, halt, site"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguarda backend ===
+> backend UP
+> === env withdraw no container + boot limpo ===
+> WITHDRAW_CONFIRM_PHRASE=SACAR REAL
+> WITHDRAW_ADDRESS_ALLOWLIST=
+> ---
+> error: jwt expired {"expiredAt":"2026-06-21T02:47:40.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-21T02:47:40.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> error: jwt expired {"expiredAt":"2026-06-21T02:47:40.000Z","name":"TokenExpiredError","stack":"TokenExpiredError: jwt expired\n    at /app/node_modules/jsonwebtoken/verify.js:190:21\n    at getSecret (/app/node_modules/jsonwebtoken/verify.js:97:14)\n    at module.exports [as verify] (/app/node_modules/jsonwebtoken/verify.js:101:10)\n    at Object.verifyClient (/app/src/app-ws.js:25:33)\n    at WebSocketServer.handleUpgrade (/app/node_modules/ws/lib/websocket-server.js:266:22)\n    at Server.upgrade (/app/node_modules/ws/lib/websocket-server.js:113:16)\n    at Server.emit (node:events:519:28)\n    at onParserExecuteCommon (node:_http_server:977:14)\n    at onParserExecute (node:_http_server:881:3)"}
+> === smoke do gate no código buildado (sem saque real) ===
+> checkWithdrawGates HALT → 409 (esp 409)
+> checkWithdrawGates sem confirm → 400 (esp 400)
+> checkWithdrawGates allowlist vazia → 403 (esp 403)
+> THROW   | BOUNDARY assertWithdrawAllowed allowlist vazia (cobre automação) → throw
+> === halt + site ===
+> .env: line 80: REAL: command not found
+> halt: False
+> site -> 200
+> ```
+
+## 🤖 Claude *(14:32:24)*
+
+
+## 🤖 Claude *(14:32:28)*
+
+Smoke do Fix 1 **OK** — gate funciona no código vivo (409/400/403 + boundary throw que cobre a automação), halt intacto, site 200. (Os `jwt expired` no log são pré-existentes — um cliente WebSocket com token velho de 21/jun reconectando, não-relacionado.)
+
+Um detalhe: `WITHDRAW_CONFIRM_PHRASE=SACAR REAL` tem espaço → quebra `source .env` no bash (o `REAL: command not found`). O **app não usa bash-source** (docker-compose/dotenv leem o valor certo — confirmei no container), mas pra não envenenar meus scripts de ops, removo a linha do `.env` live (o default `'SACAR REAL'` do código vale igual):
+
+## 🤖 Claude *(14:32:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nsed -i \"/^WITHDRAW_CONFIRM_PHRASE=/d\" .env\necho \"=== .env withdraw (s\u00f3 allowlist; phrase usa default do c\u00f3digo) ===\"; grep -E \"WITHDRAW_\" .env\necho \"=== source .env limpo agora? ===\"; (set -a; source .env; set +a) 2>&1 | grep -i \"command not found\" || echo \"source OK (sem erro)\"'\necho \"=== restart backend p/ aplicar (r\u00e1pido, sem rebuild) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose restart backend 2>&1 | tail -2'",
+  "description": "Remove phrase line from live .env, restart backend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .env withdraw (só allowlist; phrase usa default do código) ===
+> WITHDRAW_ADDRESS_ALLOWLIST=
+> === source .env limpo agora? ===
+> source OK (sem erro)
+> === restart backend p/ aplicar (rápido, sem rebuild) ===
+>  Container tradeux-backend-1 Restarting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(14:32:40)*
+
+
+## 🤖 Claude *(14:32:41)*
+
+`.env` limpo, `source` funciona, backend reiniciado. **Fix 1 fechado.** Agora o **Fix 2 (getAveragePrices filtrar isTestnet)** — leio a função + a getReportOrders que já filtra (pra espelhar):
+
+## 🤖 Claude *(14:32:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "offset": 33,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 33	    }
+> 34	    return orderModel.create(newOrder);
+> 35	}
+> 36	
+> 37	async function getAveragePrices() {
+> 38	    const result = await orderModel.findAll({
+> 39	        where: { side: 'BUY', status: 'FILLED', net: { [Sequelize.Op.gt]: 0 } },
+> 40	        group: 'symbol',
+> 41	        attributes: [
+> 42	            [Sequelize.fn('max', Sequelize.col('symbol')), 'symbol'],
+> 43	            [Sequelize.fn('sum', Sequelize.col('net')), 'net'],
+> 44	            [Sequelize.fn('sum', Sequelize.col('quantity')), 'qty']
+> 45	        ],
+> 46	        raw: true
+> 47	    })
+> 48	
+> 49	    return result.map(r => {
+> 50	        return {
+> 51	            symbol: r.symbol,
+> 52	            net: parseFloat(r.net),
+> 53	            qty: parseFloat(r.qty),
+> 54	            avg: parseFloat(r.net) / parseFloat(r.qty)
+> 55	        }
+> 56	    })
+> 57	}
+> 58	
+> 59	async function getOrders(symbol, page = 1, isTestnet = null) {
+> 60	    if (isTestnet === null) {
+> 61	        const settings = await settingsRepository.getDefaultSettings();
+> 62	        isTestnet = settings.useTestnet;
+> 63	    }
+> 64	
+> 65	    const options = {
+> 66	        where: { isTestnet },
+> 67	        order: [['id', 'DESC']],
+> 68	        limit: 10,
+> 69	        offset: 10 * (page - 1),
+> 70	        distinct: true
+> 71	    };
+> 72	
+> ```
+
+## 🤖 Claude *(14:32:58)*
+
+
+## 🤖 Claude *(14:32:59)*
+
+`getAveragePrices` (linha 37-57) não tem `isTestnet` no `where` (linha 39) → mistura testnet+mainnet. Fix espelha o `getOrders`/`getOpenOrdersByAutomation` (resolve `settings.useTestnet`):
+
+## 🤖 Claude *(14:33:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "old_string": "async function getAveragePrices() {\n    const result = await orderModel.findAll({\n        where: { side: 'BUY', status: 'FILLED', net: { [Sequelize.Op.gt]: 0 } },\n        group: 'symbol',",
+  "new_string": "async function getAveragePrices() {\n    // Filtra pelo ambiente ATIVO (isTestnet) \u2014 sen\u00e3o o custo-base agrega BUYs de testnet + mainnet (a tabela\n    // orders MISTURA os dois) \u2192 pre\u00e7o m\u00e9dio do painel Wallet / tradeux_get_wallet_full contaminado. Espelha\n    // getOrders/getOpenOrdersByAutomation/getReportOrders. (re-revis\u00e3o de design 2026-06-22, MEDIUM)\n    const settings = await settingsRepository.getDefaultSettings();\n    const result = await orderModel.findAll({\n        where: { side: 'BUY', status: 'FILLED', net: { [Sequelize.Op.gt]: 0 }, isTestnet: settings.useTestnet },\n        group: 'symbol',"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:33:09)*
+
+
+## 🤖 Claude *(14:33:09)*
+
+Confirmo import + syntax + sim (não-regressão):
+
+## 🤖 Claude *(14:33:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\ngrep -n \"settingsRepository\\s*=\" src/repositories/ordersRepository.js | head -1\nnode --check src/repositories/ordersRepository.js && echo \"syntax OK\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep \"sim suite\"\necho \"=== quem chama getAveragePrices (impacto) ===\"\ngrep -rn \"getAveragePrices\" src/ | grep -v \"function getAveragePrices\"",
+  "description": "Verify import, syntax, sim, callers of getAveragePrices"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 4:const settingsRepository = require('./settingsRepository');
+> syntax OK
+> sim suite: 8/8 arquivos OK.
+> === quem chama getAveragePrices (impacto) ===
+> src/utils/feeCalc.js:61:    if (!(net > 0)) net = cq;                                                          // guard: net>0 (invariante de getReportOrders/getAveragePrices)
+> src/repositories/ordersRepository.js:395:    getAveragePrices,
+> src/controllers/exchangeController.js:57:        const averages = await ordersRepository.getAveragePrices();//BTCUSDT, BTCBNB, ETHBUSD
+> ```
+
+## 🤖 Claude *(14:33:28)*
+
+
+## 🤖 Claude *(14:33:29)*
+
+Import OK, sim 8/8. Único caller real é o painel Wallet (`exchangeController:57`) — fix de cost-base/display, baixo risco, espelha 3 funções existentes. Gate QA+TL focado:
+
+## 🤖 Claude *(14:33:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/repositories/ordersRepository.js 2>/dev/null\ngit -c safe.directory='*' diff -- backend/src/repositories/ordersRepository.js > /tmp/avgprice.diff 2>&1\ncat /tmp/avgprice.diff | head -30",
+  "description": "Chown and show getAveragePrices diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff --git a/backend/src/repositories/ordersRepository.js b/backend/src/repositories/ordersRepository.js
+> index c858de1..f8ea184 100644
+> --- a/backend/src/repositories/ordersRepository.js
+> +++ b/backend/src/repositories/ordersRepository.js
+> @@ -35,8 +35,12 @@ async function insertOrder(newOrder) {
+>  }
+>  
+>  async function getAveragePrices() {
+> +    // Filtra pelo ambiente ATIVO (isTestnet) — senão o custo-base agrega BUYs de testnet + mainnet (a tabela
+> +    // orders MISTURA os dois) → preço médio do painel Wallet / tradeux_get_wallet_full contaminado. Espelha
+> +    // getOrders/getOpenOrdersByAutomation/getReportOrders. (re-revisão de design 2026-06-22, MEDIUM)
+> +    const settings = await settingsRepository.getDefaultSettings();
+>      const result = await orderModel.findAll({
+> -        where: { side: 'BUY', status: 'FILLED', net: { [Sequelize.Op.gt]: 0 } },
+> +        where: { side: 'BUY', status: 'FILLED', net: { [Sequelize.Op.gt]: 0 }, isTestnet: settings.useTestnet },
+>          group: 'symbol',
+>          attributes: [
+>              [Sequelize.fn('max', Sequelize.col('symbol')), 'symbol'],
+> ```
+
+## 🤖 Claude *(14:33:46)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review getAveragePrices isTestnet",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge R\u00c1PIDA do FIX 2 (de 3) da re-revis\u00e3o de design do TradeUX. MAINNET LIVE. APPROVE/REQUEST CHANGES.\n\n## Contexto\nMEDIUM da re-revis\u00e3o: `getAveragePrices()` (backend/src/repositories/ordersRepository.js:37) N\u00c3O filtrava `isTestnet` no where \u2192 o custo-base do painel Wallet (e do MCP tradeux_get_wallet_full, agent-reachable) agregava BUYs FILLED de testnet + mainnet (a tabela `orders` mistura os dois ambientes) \u2192 pre\u00e7o m\u00e9dio contaminado no n\u00famero que informa a venda no-loss.\n\n## Mudan\u00e7a (diff em /tmp/avgprice.diff; arquivo em /home/gcrux-tradeux/tradeux)\nAdiciona `isTestnet: settings.useTestnet` no where, resolvendo `settings` via `settingsRepository.getDefaultSettings()` \u2014 ID\u00caNTICO ao padr\u00e3o de `getOrders` (:60-63), `getOpenOrdersByAutomation` (:194-199) e `getReportOrders`.\n\n## Avalie\n1. O fix est\u00e1 correto e fiel ao padr\u00e3o existente das outras queries isTestnet-aware?\n2. \u00danico caller \u00e9 `exchangeController.js:57` (painel Wallet / get_wallet_full) \u2014 algum efeito colateral? (o pre\u00e7o m\u00e9dio vai MUDAR ao vivo: dropa a contamina\u00e7\u00e3o testnet \u2014 \u00e9 o comportamento certo?)\n3. `settingsRepository` j\u00e1 importado (linha 4)? Sem ciclo/perf (1 query a mais por chamada \u2014 aceit\u00e1vel num caminho de display)?\n4. Precisa de teste? (\u00e9 query Sequelize, sem l\u00f3gica pura; as outras 3 isTestnet-queries n\u00e3o t\u00eam sim test \u2014 precedente).\n\nSu\u00edte de sim segue 8/8. Foque na decis\u00e3o (\u00e9 trivial). pt-BR, MUITO conciso, must-fix separado."
+}
+```
+
+## 🤖 Claude *(14:33:53)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review getAveragePrices isTestnet",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revis\u00e3o QA R\u00c1PIDA do FIX 2 (de 3) da re-revis\u00e3o de design do TradeUX. MAINNET LIVE. PASS/FAIL.\n\n## Mudan\u00e7a (diff em /tmp/avgprice.diff; /home/gcrux-tradeux/tradeux)\n`getAveragePrices()` (backend/src/repositories/ordersRepository.js:37) ganhou `isTestnet: settings.useTestnet` no where (resolvendo via settingsRepository.getDefaultSettings()), pra n\u00e3o misturar custo-base testnet+mainnet no painel Wallet / MCP get_wallet_full. Espelha getOrders/getOpenOrdersByAutomation/getReportOrders.\n\n## Verifique (r\u00e1pido)\n1. O where novo est\u00e1 correto? `isTestnet: settings.useTestnet` casa o tipo da coluna (boolean) e o padr\u00e3o das outras queries?\n2. Algum caller que dependia do comportamento ANTIGO (misturado)? grep getAveragePrices. O pre\u00e7o m\u00e9dio mudar ao vivo (s\u00f3 mainnet agora) \u00e9 correto, n\u00e3o regress\u00e3o?\n3. Edge: e se n\u00e3o houver BUY FILLED mainnet pro s\u00edmbolo (result vazio)? a fun\u00e7\u00e3o degrada bem (map vazio)? Havia esse risco antes tamb\u00e9m?\n4. settings null/sem useTestnet \u2014 algum crash novo? (getDefaultSettings sempre retorna settings com useTestnet?)\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (8/8). Veredito curto. pt-BR, conciso."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "VEREDITO: APPROVE\n\n**Racional**\n1. Fix correto e fiel ao padrão. `isTestnet: settings.useTestnet` resolvido via `settingsRepository.getDefaultSettings()` — idêntico a `getOrders` (:64-66), `getOpenOrdersByAutomation` (:186) e `getReportOrders` (:203). Não quebra o `group: 'symbol'` nem o `net > 0`.\n2. Caller único confirmado: `exchangeController.js:57` (`getFullBalance` → painel Wallet / `tradeux_get_wallet_full`). Sem outros callers. O preço médio VAI mudar ao vivo, e essa é a mudança certa: hoje em MAINNET (`useTestnet=0`) ele dropa BUYs FILLED de testnet do custo-base. Como a sessão LIVE atual é Farm-only em alts com poucas ordens reais, a contaminação testnet provavelmente inflava/distorcia o avg que alimenta a decisão de venda no-loss — limpar é estritamente correto. Zero efeito em order/money flow (caminho de display read-only; `beholder.js` intocado).\n3. `settingsRepository` já importado (linha 4). Sem ciclo. 1 query extra por chamada num caminho de display de baixa frequência — trivial, e o padrão dos vizinhos já paga esse mesmo custo.\n4. Teste não exigido: query Sequelize sem lógica pura; as outras 3 queries isTestnet-aware não têm sim test — precedente consistente. Suíte 8/8 segue verde.\n\n**Must-fix:** nenhum.\n**Nice-to-have:** nenhum bloqueante. (Eventual: as 4 queries repetem o mesmo `getDefaultSettings()`+filtro; um helper centralizado seria DRY no futuro — fora de escopo, não mexer agora em LIVE.)\n\n**Decisão de merge:** APPROVE para PR. Mergeável isolado (reversível: 1 linha + comentário). Sem condições. Arquivo: `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js:37-61`."}, {'type': 'text', 'text': "agentId: a8409cd8c83c343b6 (use SendMessage with to: 'a8409cd8c83c343b6' to continue this agent)\n<usage>subagent_tokens: 21082\ntool_uses: 4\nduration_ms: 23482</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Análise completa. Verifiquei tipos, contrato do `getDefaultSettings`, o único caller e o edge de result vazio.\n\n---\n\n## VEREDITO: PASS\n\nFix correto, alinhado ao padrão do arquivo, sem regressão nova. Suíte de sim 8/8 (130 asserts).\n\n### Verificação ponto a ponto\n\n**1. Tipo do where novo — OK.** `orders.isTestnet` é `BOOLEAN`/`allowNull:false`/`default:true` (`backend/migrations/20260615010000-add-is-testnet-to-orders.js`, espelhado em `backend/src/models/orderModel.js:54`). `settings.useTestnet` também é `BOOLEAN`/`allowNull:false`/`default:false` (`backend/src/models/settingsModel.js:29`). Boolean casa boolean — Sequelize emite o literal correto por dialeto. É exatamente o padrão de `getLastFilledOrders`/`getFarmPosition`/`getTrendPosition`/`getOpenOrdersByAutomation`, que usam o mesmo `isTestnet: settings.useTestnet` direto no where.\n\n**2. Caller único — sem dependência do comportamento antigo.** Só `exchangeController.js:57` (`getFullBalance` → painel Wallet / `get_wallet_full`). Consome `averages[].{symbol,net,qty,avg}` para preço médio. O comportamento misto ANTIGO era o bug (custo-base agregava BUYs testnet+mainnet). Em MAINNET live (`useTestnet=false`), o avg passar a refletir só BUYs mainnet é a CORREÇÃO desejada, não regressão. Nenhum outro consumidor (report usa `getReportOrders`, que já filtra).\n\n**3. Edge result vazio — degrada bem, e a mudança não cria buraco novo.** Sem BUY FILLED mainnet (`net>0`) para um símbolo → `findAll` com `group` retorna `[]` → `.map` retorna `[]`. Esse caminho já existia antes do fix. RESSALVA pré-existente (não introduzida aqui): em `exchangeController.js:83`, `coins.map(coin => info[coin].avg = grouped[coin].net / grouped[coin].qty)` deriva `coins` do próprio `averages`, então o conjunto está sempre coberto por `grouped` — sem `undefined`. O risco real seria divisão por zero se `qty=0`, mas o where `net>0` + a agregação garantem qty>0 nas linhas retornadas. Comportamento idêntico ao de antes; o filtro só REDUZ as linhas, nunca produz uma chave órfã. Sem crash novo.\n\n**4. settings null / sem useTestnet — sem crash novo.** `getDefaultSettings` (`settingsRepository.js:40`) faz `findOne({id:1})` e repassa a `getSettingsDecrypted` — se a row não existir, já lançaria HOJE em todo o resto do arquivo (`getOrders`, `getFarmPosition`, etc. chamam o mesmo método). Não é regressão deste fix. Como `useTestnet` é `allowNull:false` com default, a coluna nunca vem null numa row válida; pior caso seria `undefined` num settings sintético, e `isTestnet: undefined` no where é ignorado pelo Sequelize (volta ao comportamento antigo misto, não crash). O fix herda exatamente a mesma robustez/fragilidade das queries irmãs — consistente.\n\n### Observação menor (não-bloqueante)\n- `getAveragePrices()` agora faz uma ida extra ao banco (`getDefaultSettings`) por chamada. É caminho frio (abertura do painel Wallet / `get_wallet_full`), não hot-path do `beholder`/`placeOrder` — custo desprezível e idêntico ao das outras leituras do arquivo. Sem ação.\n\n### Testes que eu rodaria\n- `npm run test:sim` — 8/8 OK (já rodei: 130 asserts verdes).\n- Manual em DB com mix: inserir BUY FILLED `net>0` para o MESMO símbolo em `isTestnet=true` e `isTestnet=false`; com `useTestnet=false` confirmar que `getAveragePrices()` retorna o avg só das mainnet (e vice-versa ao flipar `useTestnet`).\n- Smoke vivo: `GET /exchange/:fiat/full` (ou `tradeux_get_wallet_full`) em mainnet — o `avg`/custo-base de um ativo com histórico testnet deve cair para o valor mainnet-only; nenhum símbolo deve sumir nem dar `NaN`.\n- Regressão CI: migrate+seed mysql+postgres (literal boolean por dialeto) + `agent --check`.\n\n---\n\n**Recomendação de merge: APROVAR.** Fix cirúrgico, consistente com as 4 queries irmãs já em produção, corrige contaminação real de custo-base no painel/MCP em MAINNET, sem novos modos de falha. Arquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js:37-61` e o único caller `/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js:50-85`.'}, {'type': 'text', 'text': "agentId: accc4ab1fa67872b3 (use SendMessage with to: 'accc4ab1fa67872b3' to continue this agent)\n<usage>subagent_tokens: 31360\ntool_uses: 13\nduration_ms: 65163</usage>"}]
+> ```
+
+## 🤖 Claude *(14:35:02)*
+
+
+## 🤖 Claude *(14:35:03)*
+
+**Fix 2: QA PASS + TL APPROVE**, zero must-fix (fix cirúrgico, espelha 4 queries irmãs). Commit + push + deploy backend:
+
+## 🤖 Claude *(14:35:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/avg-msg.txt <<'EOF'\nfix(orders): getAveragePrices filtra isTestnet -- custo-base nao mistura mais testnet+mainnet\n\nFIX 2/3 da re-revisao de design (MEDIUM): getAveragePrices() agregava BUYs FILLED de testnet E\nmainnet (a tabela orders mistura os 2 ambientes) -> preco medio do painel Wallet / MCP\ntradeux_get_wallet_full contaminado, no numero que informa a venda no-loss. Fix: isTestnet:\nsettings.useTestnet no where, IDENTICO a getOrders/getOpenOrdersByAutomation/getReportOrders.\n\nGate QA (PASS) + TL (APPROVE), zero must-fix. Caminho de display read-only (beholder intocado);\no avg muda ao vivo (dropa contaminacao testnet) = comportamento correto. Suite 8/8.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ncd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/repositories/ordersRepository.js\ngit commit -F /tmp/avg-msg.txt | tail -2'\n# push\nORIGIN=$(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1); PARENT=$(git -c safe.directory='*' rev-parse HEAD~1)\n[ \"$ORIGIN\" = \"$PARENT\" ] && { git -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected\"|head -1; sudo chown -R gcrux-tradeux:gcrux-tradeux .git; echo \"pushed\"; } || echo \"DIVERG\"\necho \"=== deploy backend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend 2>&1 | tail -3'",
+  "description": "Commit, push, deploy Fix 2",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 39dfa88] fix(orders): getAveragePrices filtra isTestnet -- custo-base nao mistura mais testnet+mainnet
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+>    c6f67ef..39dfa88  master -> master
+> pushed
+> === deploy backend ===
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(14:35:26)*
+
+
+## 🤖 Claude *(14:35:27)*
+
+Fix 2 deployado (`39dfa88`). Smoke rápido + extraio o design do **Fix 3 (H3 sizing LD-aware)** que o TL projetou:
+
+## 🤖 Claude *(14:35:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nfor i in $(seq 1 20); do c=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null); [ \"$c\" = \"401\" ] && { echo \"backend UP\"; break; }; sleep 2; done\nsudo -n -u gcrux-tradeux bash -lc 'set -a;source .env;set +a;TOK=$(curl -s -m8 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\"|grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\"|cut -d\\\" -f4);curl -s -m8 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOK\"|python3 -c \"import sys,json;print(\\\"halt:\\\",json.load(sys.stdin)[\\\"halted\\\"])\"'\necho \"=== FIX DESIGN: H3 sizing LD-aware ===\"\npython3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output'))['result']\nfor f in d['fixes']:\n    if 'sizing' in f['title'].lower() or 'earn' in f['title'].lower() or 'LD' in f['title']:\n        print('TITLE:',f['title']); print('APPROACH:',f['approach'][:2600])\n\"",
+  "description": "Smoke Fix 2, extract H3 sizing fix design"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backend UP
+> halt: False
+> === FIX DESIGN: H3 sizing LD-aware ===
+> TITLE: Sizing de SELL cego ao Earn (LD*): resgate proativo de LD<base> + helper de saldo LD-aware
+> APPROACH: Confirmado no código real (não refutável). Cadeia: balance() = GET /api/v3/account só-spot (exchange.js:173-176) → loadWallet grava MEMORY['LD<base>:WALLET'] como chave SEPARADA, nunca somada na base (app-em.js:107; idem exchangeController.js:17) → sizing de SELL lê só o spot: calcQty:211-212 (throw 'There is no <base>'), caps newQty>asset em 237/247/259/272/280, hasEnoughAssets:302-303. Único LD-aware do repo é dailyCapJob:116-123 (só equity). O catch evalDecision:932-943 documenta o modo de falha e SÓ adiciona alerta Telegram (942) — não corrige sizing.
+> 
+> DESIGN EM 2 CAMADAS (ordem importa):
+> 
+> CAMADA 1 (o fix de verdade — RESGATE PROATIVO, desacoplado do hot-path de ordem):
+> Novo job/passo `earnRedeemJob` (espelha dailyCapJob: usa exchange.balance() + as MESMAS constantes TRACKED_BASES/STABLES). Em cada tick do scheduler (ou no boot + intervalo): para cada coin LD<base> com under em TRACKED_BASES e qty>0, dispara `exchange.redeemFlexible(under, amount)`. Implementar `redeemFlexible` em exchange.js reusando o boundary que JÁ existe: privateCall(SAPI_URL + 'simple-earn/flexible/redeem', {productId|asset, amount, redeemAll:true}, 'POST') — exatamente o padrão de withdraw()/getCoins() (exchange.js:228-261). GUARD por isTestnet (exchange.js:148): testnet NÃO tem SAPI → no-op + log (não throw). Desliga via env (EARN_AUTO_REDEEM, default ON em mainnet). Best-effort com try/catch como notify do dailyCapJob (nunca quebra o ciclo). Isto mantém o spot quente ANTES do gatilho de venda — resolve a causa-raiz sem tocar o despacho de ordem.
+> 
+> CAMADA 2 (rede de segurança no sizing — leitura LD-aware, SEM I/O):
+> Extrair o strip 'LD'->base de dailyCapJob:116-123 para um helper compartilhado `utils/earnAware.js` (ex.: stripLd(coin) e walletBalanceOf(base) que retorna parseFloat(MEMORY[base:WALLET]||0) + parseFloat(MEMORY['LD'+base:WALLET]||0)). Trocar os 5 pontos de leitura de SELL em calcQty (211, e o `asset` usado em 237/247/259/272/280) e hasEnoughAssets:303 por esse helper. Isso faz o throw/cap considerar o saldo em Earn como existente. NÃO altera BUY (quote em USDT/LD*USDT é tratado em separado e fora de escopo). Com a Camada 1 ativa a Camada 2 raramente é exercida, mas remove o fail-OPEN silencioso se um resgate ainda não liquidou (e o helper único elimina a duplicação do strip).
+> 
+> NÃO escolher: redeem síncrono dentro de placeOrder (latência SAPI no hot-path + ordem dependendo de liquidação do Earn = blast-radius inaceitável no money-path LIVE). A Camada 1 é o fix; a Camada 2 é o cinto de segurança.
+> ```
+
+## 🤖 Claude *(14:37:34)*
+
+
+## 🤖 Claude *(14:37:43)*
+
+Fix 2 smoke OK (halt False). Agora o **Fix 3 (H3 sizing)**. Analisando o design do TL com cuidado, refino o escopo:
+
+- **Camada 1 (o fix real)**: `earnRedeemJob` proativo — resgata `LD<base>` de volta pro spot, mantendo os fundos líquidos ANTES do gatilho de venda. Resolve a causa-raiz, **não toca o hot-path** do beholder.
+- **Camada 2 (sizing lê Earn)**: na verdade é **dúbia** — se os fundos estão no Earn (não no spot) e o sizing "vê" o saldo Earn, o `calcQty` computa uma qty que o **spot não consegue preencher** → a ordem é REJEITADA pela Binance (pior que o throw atual). Com a Camada 1 ativa, os fundos ficam no spot e a Camada 2 vira no-op. Então vou **fazer só a Camada 1** (o fix de verdade) e deixar a 2 como dívida documentada (marginal/contraproducente no transiente).
+
+⚠️ A Camada 1 adiciona um **job autônomo que move dinheiro** (Earn→spot). É seguro por desenho (resgate flexível é não-destrutivo/instantâneo/sem fee; best-effort; gated por `EARN_AUTO_REDEEM`; no-op em testnet e quando não há nada no Earn — auto-subscribe está OFF hoje). Vou implementar com gate QA+TL focado nessa segurança. Leio os pré-requisitos (estrutura do dailyCapJob + padrão SAPI):
+
+## 🤖 Claude *(14:37:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== dailyCapJob: start() + como \u00e9 wired no server.js ===\"\nsed -n '/^function start()/,/^}/p' src/dailyCapJob.js | head -12\ngrep -n \"dailyCapJob\\|regimeJob\\|funnelJob\\|\\.start()\" src/server.js | head\necho \"=== exchange.js: padr\u00e3o SAPI (getCoins GET) + SAPI_URL + isTestnet ===\"\nsed -n '239,247p' src/utils/exchange.js\ngrep -n \"const SAPI_URL\\|isTestnet\\s*=\" src/utils/exchange.js | head -3",
+  "description": "Read dailyCapJob start, server wiring, SAPI pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === dailyCapJob: start() + como é wired no server.js ===
+> function start() {
+>     if (!ENABLED) { logger('system', '[dailyCap] DESABILITADO (DAILY_CAP_ENABLED=false).'); return; }
+>     if (timer) return; // idempotente
+>     loadSnap();
+>     checkCap(); // primeira passada no boot (provável fail-safe se MINI_TICKER ainda frio — esperado)
+>     timer = setInterval(checkCap, CHECK_MS);
+>     if (timer.unref) timer.unref();
+>     logger('system', `[dailyCap] iniciado — teto -${(CAP_PCT * 100).toFixed(0)}% sobre o equity do dia (intervalo ${CHECK_MS}ms).`);
+> }
+> 9:const regimeJob = require('./regimeJob');
+> 13:const funnelJob = require('./funnelJob');
+> 15:const dailyCapJob = require('./dailyCapJob');
+> 50:    regimeJob.start();
+> 55:    flowJob.start();
+> 60:    fairPriceJob.start();
+> 66:    cockpitJob.start();
+> 71:    funnelJob.start();
+> 75:    dailyProfitJob.start();
+> 81:    dailyCapJob.start();
+> === exchange.js: padrão SAPI (getCoins GET) + SAPI_URL + isTestnet ===
+>         } catch (err) {
+>             throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+>         }
+>     }
+> 
+>     async function getCoins() {
+>         try {
+>             const coins = await privateCall(SAPI_URL + 'capital/config/getall', null, 'GET');
+>             return coins.map(c => {
+> 6:const SAPI_URL = process.env.BINANCE_SAPI_URL;
+> 149:    const isTestnet = /testnet|binance\.vision/i.test(settings.apiUrl || '');
+> ```
+
+## 🤖 Claude *(14:38:34)*
+
+
+## 🤖 Claude *(14:38:42)*
+
+Antes de construir, descobri que o Fix 3 (H3) é **materialmente diferente** do 1 e 2, e isso muda a decisão. Quero te passar o achado antes de mexer:
+
+**O problema:** pra venda no-loss funcionar com fundos no Earn, eles precisam estar **no spot**. O fix de verdade (Camada 1) é um **job autônomo que move dinheiro** (resgata `LD<base>` Earn→spot proativamente). Implicações:
+- É um **resgate flexível via SAPI** (fluxo de 2 chamadas: listar posições → resgatar por `productId`). Não-destrutivo, instantâneo, sem fee.
+- **Não dá pra verificar o resgate real agora**: não há nada no Earn (auto-subscribe está OFF desde o incidente) → **o risco imediato do H3 é BAIXO** e o job seria no-op hoje. Testar de verdade exigiria subscrever+resgatar fundos reais.
+- A **Camada 2** (sizing ler o Earn) eu já descartei — é dúbia/contraproducente (faria a Binance rejeitar a ordem no transiente).
+
+Então é adicionar uma **capacidade autônoma de mover dinheiro** num sistema live, que não consigo validar além do no-op. Diferente do withdraw (que só NEGA) e do getAveragePrices (display). Como você quer que eu trate?
+
+## 🤖 Claude *(14:38:49)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O Fix 3 (H3) precisa de um job aut\u00f4nomo de resgate Earn\u2192spot (move dinheiro, n\u00e3o-verific\u00e1vel agora, risco imediato baixo pois auto-subscribe est\u00e1 OFF). Como prosseguir?",
+      "header": "Escopo do H3",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Construir gated OFF (capacidade + dry-run)",
+          "description": "Implemento o earnRedeemJob + redeemFlexible, mas com EARN_AUTO_REDEEM=OFF por default: o job s\u00f3 LOGA/alerta o que resgataria (visibilidade), sem mover dinheiro, at\u00e9 voc\u00ea flipar a env. Seguro pra deployar agora, gate QA+TL; voc\u00ea ativa o resgate real quando quiser. RECOMENDADO."
+        },
+        {
+          "label": "Construir ON (resgate aut\u00f4nomo ativo)",
+          "description": "Resgate real aut\u00f4nomo ligado por default em mainnet \u2014 fixa o H3 de fato, mas adiciona movimento aut\u00f4nomo de dinheiro que n\u00e3o consigo validar al\u00e9m do no-op (nada no Earn hoje). Gate QA+TL mesmo assim."
+        },
+        {
+          "label": "Adiar o Fix 3 (manter o alerta como interino)",
+          "description": "N\u00e3o construir agora. A mitiga\u00e7\u00e3o atual (o agente alerta se um base do Farm for auto-subscrito e a venda travar) cobre o risco baixo. Fa\u00e7o o H3 numa sess\u00e3o focada e fresca, com o design j\u00e1 pronto. Fecho a sess\u00e3o com Fix 1+2 entregues."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
