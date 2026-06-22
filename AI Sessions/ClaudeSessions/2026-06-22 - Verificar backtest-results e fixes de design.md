@@ -4582,6 +4582,663 @@ Como quer seguir?
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Próximo passo com o Fix B (cripto)?"="Fix B completo agora (A + migração GCM)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:10:43)*
+
+
+## 🤖 Claude *(19:10:45)*
+
+Entendido — **Fix B completo** (mask + migração GCM das chaves vivas). É o mais arriscado, então vou no modo cuidadoso: investigar a cripto real → implementar (retrocompatível) → gate QA+TL → e o deploy+backfill **sob HALT**, com o backup como rede. Primeiro a investigação:
+
+## 🤖 Claude *(19:10:46)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Fix B: cripto AES-GCM",
+  "summary": "Mask accessKey + migra\u00e7\u00e3o CTR\u2192GCM das chaves Binance vivas; backfill manual sob HALT"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Fix B: cripto AES-GCM". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(19:10:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/crypto.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const aes = require('aes-js');
+> 2	
+> 3	const key = aes.utils.utf8.toBytes(process.env.AES_KEY);
+> 4	if (key.length !== 32) throw new Error('Invalid key size for AES. Must be 256-bit / 32 bytes.');
+> 5	
+> 6	function encrypt(text) {
+> 7	    const bytesInfo = aes.utils.utf8.toBytes(text);
+> 8	
+> 9	    const aesCtr = new aes.ModeOfOperation.ctr(key);
+> 10	    const encryptedBytes = aesCtr.encrypt(bytesInfo);
+> 11	    const encryptedHex = aes.utils.hex.fromBytes(encryptedBytes);
+> 12	    return encryptedHex;
+> 13	}
+> 14	
+> 15	function decrypt(encryptedHex) {
+> 16	    const encryptedBytes = aes.utils.hex.toBytes(encryptedHex);
+> 17	    const aesCtr = new aes.ModeOfOperation.ctr(key);
+> 18	    const decryptedBytes = aesCtr.decrypt(encryptedBytes);
+> 19	    return aes.utils.utf8.fromBytes(decryptedBytes);
+> 20	}
+> 21	
+> 22	module.exports = {
+> 23	    encrypt,
+> 24	    decrypt
+> 25	}
+> ```
+
+## 🤖 Claude *(19:10:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== callers de crypto.encrypt/decrypt ===\"; grep -rn \"crypto.encrypt\\|crypto.decrypt\\|require.*utils/crypto\" src/ | grep -v \"node_modules\"\necho; echo \"=== campos criptografados (encrypt) ===\"; grep -rn \"crypto.encrypt\" src/\necho; echo \"=== migrations dir ===\"; ls migrations/ 2>/dev/null | tail -6; echo \"(total: $(ls migrations/ 2>/dev/null | wc -l))\"\necho; echo \"=== settings model: colunas de chave ===\"; grep -nE \"accessKey|secretKey|apiUrl\" src/models/settingsModel.js 2>/dev/null | head",
+  "description": "Read crypto.js and find all encrypt/decrypt callers, migrations, model"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === callers de crypto.encrypt/decrypt ===
+> src/repositories/settingsRepository.js:3:const crypto = require('../utils/crypto');
+> src/repositories/settingsRepository.js:11:        if (settings.secretKey) settings.secretKey = crypto.decrypt(settings.secretKey);
+> src/repositories/settingsRepository.js:12:        if (settings.testnetSecretKey) settings.testnetSecretKey = crypto.decrypt(settings.testnetSecretKey);
+> src/repositories/settingsRepository.js:92:        currentSettings.secretKey = crypto.encrypt(newSettings.secretKey);
+> src/repositories/settingsRepository.js:95:        currentSettings.testnetSecretKey = crypto.encrypt(newSettings.testnetSecretKey);
+> 
+> === campos criptografados (encrypt) ===
+> src/repositories/settingsRepository.js:92:        currentSettings.secretKey = crypto.encrypt(newSettings.secretKey);
+> src/repositories/settingsRepository.js:95:        currentSettings.testnetSecretKey = crypto.encrypt(newSettings.testnetSecretKey);
+> 
+> === migrations dir ===
+> 20260614190000-farm-dca-sell.js
+> 20260615000000-add-testnet-settings.js
+> 20260615010000-add-is-testnet-to-orders.js
+> 20260615200000-farm-sell-bucket-scoped-and-baseline-off.js
+> 20260618170000-add-commissionAsset-to-orders.js
+> 20260619000000-create-paper-tables.js
+> (total: 28)
+> 
+> === settings model: colunas de chave ===
+> 21:    apiUrl: Sequelize.STRING,
+> 23:    accessKey: Sequelize.STRING,
+> 24:    secretKey: Sequelize.STRING,
+> ```
+
+## 🤖 Claude *(19:12:41)*
+
+
+## 🤖 Claude *(19:12:48)*
+
+Investigação completa. Quadro da cripto:
+
+- **`crypto.js`**: `aes-js` **AES-256-CTR sem IV** (`new aes.ModeOfOperation.ctr(key)` sem counter) → mesmo keystream em todo encrypt = two-time-pad entre `secretKey`/`testnetSecretKey`; sem MAC. Key = `AES_KEY` (32 bytes UTF-8).
+- **Apenas 2 campos criptografados**: `secretKey` + `testnetSecretKey` (em `settingsRepository`, leitura :11-12 / escrita :92,95). `accessKey`/`testnetAccessKey` são **plaintext** (e vazam no GET /settings).
+- 28 migrations; backfill será **script manual** (não migration no boot — crash-loop).
+
+**Subtileza cross-cutting que vou tratar** (a agenda alertou): mascarar o `accessKey` no GET faz o frontend reenviar o **mask** no save → o repo (e o **step-up do Fix C**) veriam "accessKey diferente" e (a) sobrescreveriam a chave real com o mask, (b) exigiriam a frase num não-change. Solução: util `maskSecret` compartilhado, e o repo + `stepUpGuard` ignoram valor que seja exatamente o mask do atual.
+
+Escrevendo `crypto.js` (GCM + decrypt dual-formato retrocompatível) e `mask.js`:
+
+## 🤖 Claude *(19:13:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/txb-crypto.js",
+  "content": "'use strict';\n/*\n * Criptografia das credenciais em repouso (secretKey/testnetSecretKey).\n *\n * ESCRITA: AES-256-GCM com IV aleat\u00f3rio por valor + auth tag (integridade). Formato versionado:\n *   gcm:v1:<iv_b64>:<tag_b64>:<ct_b64>\n * Antes era AES-256-CTR SEM IV (aes-js): mesmo keystream em todo encrypt => two-time-pad entre os dois\n * segredos (XOR de 2 ciphertexts vaza XOR dos 2 plaintexts) + sem MAC. O GCM com IV aleat\u00f3rio elimina os dois.\n *\n * LEITURA: retrocompat\u00edvel. Valor com prefixo gcm:v1: => GCM; sen\u00e3o => legado CTR (hex) \u2014 decifrado\n * byte-id\u00eantico ao c\u00f3digo antigo (mesma key utf8, mesmo counter default do aes-js). Assim o backend l\u00ea o\n * que j\u00e1 est\u00e1 no banco ANTES do backfill, e o backfill (scripts/reencrypt-secrets-gcm.js) migra CTR->GCM.\n *\n * Sem novas deps: usa o 'crypto' nativo p/ GCM e mant\u00e9m 'aes-js' s\u00f3 p/ decifrar o legado.\n */\nconst nodeCrypto = require('crypto');\nconst aes = require('aes-js');\n\nconst KEY_STR = process.env.AES_KEY || '';\nconst key = Buffer.from(KEY_STR, 'utf8');\nif (key.length !== 32) throw new Error('Invalid key size for AES. Must be 256-bit / 32 bytes.');\n\nconst GCM_PREFIX = 'gcm:v1:';\n\nfunction encrypt(text) {\n    const iv = nodeCrypto.randomBytes(12);                       // 96-bit IV (padr\u00e3o GCM)\n    const cipher = nodeCrypto.createCipheriv('aes-256-gcm', key, iv);\n    const ct = Buffer.concat([cipher.update(String(text), 'utf8'), cipher.final()]);\n    const tag = cipher.getAuthTag();                             // 128-bit auth tag\n    return GCM_PREFIX + [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');\n}\n\nfunction decryptGcm(value) {\n    const parts = value.slice(GCM_PREFIX.length).split(':');\n    if (parts.length !== 3) throw new Error('formato GCM inv\u00e1lido');\n    const iv = Buffer.from(parts[0], 'base64');\n    const tag = Buffer.from(parts[1], 'base64');\n    const ct = Buffer.from(parts[2], 'base64');\n    const decipher = nodeCrypto.createDecipheriv('aes-256-gcm', key, iv);\n    decipher.setAuthTag(tag);                                    // .final() lan\u00e7a se o tag n\u00e3o bater (adultera\u00e7\u00e3o)\n    return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8');\n}\n\n// Legado: id\u00eantico ao crypto.js antigo (aes-js CTR, key utf8, counter default) \u2014 decifra o que est\u00e1 no banco.\nfunction decryptCtr(encryptedHex) {\n    const encryptedBytes = aes.utils.hex.toBytes(encryptedHex);\n    const aesCtr = new aes.ModeOfOperation.ctr(aes.utils.utf8.toBytes(KEY_STR));\n    const decryptedBytes = aesCtr.decrypt(encryptedBytes);\n    return aes.utils.utf8.fromBytes(decryptedBytes);\n}\n\nfunction isGcm(value) { return typeof value === 'string' && value.startsWith(GCM_PREFIX); }\n\nfunction decrypt(value) {\n    if (isGcm(value)) return decryptGcm(value);\n    return decryptCtr(value);                                    // legado CTR (hex)\n}\n\nmodule.exports = { encrypt, decrypt, isGcm, GCM_PREFIX };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/txb-crypto.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:13:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/txb-mask.js",
+  "content": "'use strict';\n/*\n * M\u00e1scara de segredo para EXIBI\u00c7\u00c3O (GET /settings) \u2014 primeiros4 + '****' + \u00faltimos4.\n * Chaves curtas (<8) viram '****'. Usado em 3 pontos que precisam concordar EXATAMENTE (sen\u00e3o o\n * re-save do valor mascarado sobrescreveria a chave real / dispararia step-up num n\u00e3o-change):\n *   - settingsController.getSettings  (mascara accessKey/testnetAccessKey na resposta)\n *   - settingsRepository.updateSettings (ignora accessKey se vier == m\u00e1scara do atual)\n *   - utils/stepUpGuard.requiresStepUp (n\u00e3o considera \"sens\u00edvel\" se vier == m\u00e1scara do atual)\n */\nfunction maskSecret(v) {\n    if (v === null || v === undefined) return v;\n    const s = String(v);\n    if (s.length === 0) return s;\n    if (s.length < 8) return '****';\n    return s.slice(0, 4) + '****' + s.slice(-4);\n}\n\nmodule.exports = { maskSecret };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/txb-mask.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:13:21)*
+
+
+## 🤖 Claude *(19:13:22)*
+
+Agora o script de backfill. Vou ver como os scripts do backend conectam no DB (modelo Sequelize):
+
+## 🤖 Claude *(19:13:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== db.js ===\"; sed -n '1,30p' src/db.js\necho; echo \"=== settingsModel.js (head) ===\"; sed -n '1,15p' src/models/settingsModel.js\necho; echo \"=== como um script standalone conecta? (setup-farm ou similar usa apiClient HTTP, nao DB direto?) ===\"; head -20 scripts/setup-farm.js 2>/dev/null\necho; echo \"=== algum script que usa o model/sequelize direto? ===\"; grep -rln \"require.*models/\\|require.*src/db\\|sequelize\" scripts/*.js 2>/dev/null | head",
+  "description": "Inspect DB connection pattern for backfill script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === db.js ===
+> const Sequelize = require('sequelize');
+> 
+> // Postgres gerenciado (ex: Supabase) exige SSL. Ative com DB_SSL=true.
+> const dialectOptions = process.env.DB_SSL === 'true'
+>     ? { ssl: { require: true, rejectUnauthorized: false } }
+>     : {};
+> 
+> const sequelize = new Sequelize(
+>     process.env.DB_NAME || 'beholder',
+>     process.env.DB_USER || 'root',
+>     process.env.DB_PWD,
+>     {
+>         dialect: process.env.DB_DIALECT || 'mysql',
+>         host: process.env.DB_HOST || 'localhost',
+>         port: process.env.DB_PORT || 3306,
+>         logging: process.env.DB_LOGS === 'true',
+>         dialectOptions
+>     });
+> 
+> module.exports = sequelize;
+> === settingsModel.js (head) ===
+> const Sequelize = require('sequelize');
+> const database = require('../db');
+> 
+> const settingsModel = database.define('settings', {
+>     id: {
+>         type: Sequelize.INTEGER,
+>         autoIncrement: true,
+>         allowNull: false,
+>         primaryKey: true
+>     },
+>     email: {
+>         type: Sequelize.STRING,
+>         allowNull: false
+>     },
+>     password: {
+> 
+> === como um script standalone conecta? (setup-farm ou similar usa apiClient HTTP, nao DB direto?) ===
+> 'use strict';
+> /*
+>  * Setup IDEMPOTENTE do FARM no-loss das ALTS (Fase 2 da estratégia Farm-and-Funnel) — config pura,
+>  * sem código novo no engine. Ver docs/STRATEGY-farm-funnel.md e memória tradeux-farm-funnel-backtest.
+>  *
+>  * A regra do dono ("vende só por mais caro que comprou"): a venda dispara pelo PREÇO (no-loss), não
+>  * pelo RSI — vende a posição quando o bestBid supera o preço de compra (LAST_ORDER.avgPrice) + margem.
+>  * A compra entra no dip (RSI baixo) só fora de bear/trend (mean-reversion vive em range). Fiel ao
+>  * engine do backtest (compra RSI<lo; vende lote com lucro). 1 lote por vez no v1 (grid multi-nível = refino).
+>  *
+>  * Cria, por alt (se ausentes; INATIVAS por segurança):
+>  *   - monitor CANDLES (RSI_14) ATIVO — alimenta MEMORY['<sym>:RSI_14_<interval>'] (gatilho da compra).
+>  *     MINI_TICKER/BOOK já vêm do monitor system '*' (preço/bestBid de todas as alts, sem monitor próprio).
+>  *   - templates LIMIT marketável: BUY = bestAsk×(1+buf) MIN_NOTIONAL ; SELL = bestBid×(1−buf) LAST_ORDER_QTY.
+>  *   - automação "Farm Buy <sym>"  (RSI<lo + regime!=bear/trend + sem posição), INATIVA.
+>  *   - automação "Farm Sell <sym>" no-loss (tem posição + bestBid > avgPrice×(1+lucro)), INATIVA.
+>  *
+>  * Por que INATIVAS: é money-path. Ativar (1 alt por vez, com gate) é um passo SEPARADO — garantir antes
+>  * que o regimeJob computa o REGIME da alt (resolveSymbols pega símbolos de automações ATIVAS; até o 1º
+>  * poll a compra fica fail-safe pelo guard de REGIME na condition) e o sizing. Ver §5 do doc.
+> 
+> === algum script que usa o model/sequelize direto? ===
+> scripts/backfill-funnel-buys.js
+> scripts/insert-manual-ada-sell.js
+> ```
+
+## 🤖 Claude *(19:13:31)*
+
+
+## 🤖 Claude *(19:13:32)*
+
+Há um template perfeito: `scripts/backfill-funnel-buys.js`. Lendo o padrão de conexão/encerramento:
+
+## 🤖 Claude *(19:13:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== backfill-funnel-buys.js (estrutura: require, run, close) ===\"; sed -n '1,40p' scripts/backfill-funnel-buys.js\necho \"...\"; tail -15 scripts/backfill-funnel-buys.js",
+  "description": "Read backfill script template structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === backfill-funnel-buys.js (estrutura: require, run, close) ===
+> 'use strict';
+> 
+> const db = require('../src/db');
+> const ordersRepository = require('../src/repositories/ordersRepository');
+> 
+> (async () => {
+>     try {
+>         // GUARD: este script INSERE ordens no ledger. Rodar com o ambiente ATIVO em MAINNET (useTestnet=0)
+>         // carimbaria estes fills de TESTNET como reais e corromperia o P&L. Exige opt-in explícito; e os
+>         // inserts abaixo fixam isTestnet:true (são ordens testnet), então nem com opt-in viram mainnet.
+>         if (process.env.ALLOW_BACKFILL !== 'true') {
+>             console.error('RECUSADO: defina ALLOW_BACKFILL=true para rodar (insere ordens — pode corromper o ledger vivo).');
+>             process.exit(1);
+>         }
+>         console.log('Iniciando o backfill das ordens do funil...');
+> 
+>         const now = new Date();
+> 
+>         // 1. Ordem 4929845: Compra de 0.02003000 BTC por 1311.44422000 USDT às 02:01:10 UTC (transactTime: 1781488870844)
+>         const order1 = await ordersRepository.insertOrder({
+>             automationId: null,
+>             symbol: 'BTCUSDT',
+>             quantity: '0.02003000',
+>             type: 'MARKET',
+>             side: 'BUY',
+>             limitPrice: null,
+>             stopPrice: null,
+>             icebergQty: null,
+>             orderId: 4929845,
+>             clientOrderId: 'x-B3AUXNYV102df6ed7ab1470b9dd3e8',
+>             transactTime: 1781488870844,
+>             status: 'FILLED',
+>             avgPrice: 65474.00000000,
+>             net: 1311.44422000,
+>             commission: '0',
+>             isMaker: false,
+>             isTestnet: true,
+>             createdAt: now,
+>             updatedAt: now
+>         });
+> ...
+>             commission: '0',
+>             isMaker: false,
+>             isTestnet: true,
+>             createdAt: now,
+>             updatedAt: now
+>         });
+>         console.log('Ordem 4944277 inserida com sucesso ID:', order2.id);
+> 
+>         console.log('Backfill concluído com sucesso!');
+>         process.exit(0);
+>     } catch (err) {
+>         console.error('Erro ao realizar o backfill:', err);
+>         process.exit(1);
+>     }
+> })();
+> ```
+
+## 🤖 Claude *(19:14:46)*
+
+
+## 🤖 Claude *(19:14:47)*
+
+Padrão claro (`require('../src/db')` + model, IIFE async, opt-in guard, `process.exit`). Escrevendo o backfill manual + o sim-test da cripto:
+
+## 🤖 Claude *(19:15:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/txb-reencrypt.js",
+  "content": "'use strict';\n/*\n * Backfill ONE-SHOT: re-encripta secretKey/testnetSecretKey de AES-CTR (legado) -> AES-GCM.\n *\n * N\u00c3O \u00e9 migration (n\u00e3o roda no boot do backend \u2014 um throw aqui derrubaria o boot em crash-loop e\n * deixaria o bot\u00e3o de p\u00e2nico inalcan\u00e7\u00e1vel). Rodar MANUALMENTE, sob HALT, com backup feito (make backup-state).\n *\n * Dry-run por padr\u00e3o (N\u00c3O grava). Para PERSISTIR: ALLOW_REENCRYPT=true.\n * Idempotente: pula o que j\u00e1 \u00e9 GCM (prefixo gcm:v1:). All-or-nothing: aborta SEM gravar nada se QUALQUER\n * valor falhar o sentinela (AES_KEY errada decifra LIXO -> roundtrip passaria com lixo===lixo, por isso o\n * sentinela de plaintext \u00e9 a defesa real) ou o roundtrip GCM. NUNCA imprime o segredo (s\u00f3 tamanho/flags).\n *\n *   docker compose exec backend node scripts/reencrypt-secrets-gcm.js                  # dry-run\n *   docker compose exec -e ALLOW_REENCRYPT=true backend node scripts/reencrypt-secrets-gcm.js   # aplica\n */\nconst settingsModel = require('../src/models/settingsModel');\nconst crypto = require('../src/utils/crypto');\n\nconst APPLY = process.env.ALLOW_REENCRYPT === 'true';\nconst FIELDS = ['secretKey', 'testnetSecretKey'];\n\n// Plaintext de segredo Binance \u00e9 ASCII imprim\u00edvel (HMAC ~64 alfanum; Ed25519 PEM tem \\n/\\r). Lixo de\n// AES_KEY errada quase sempre cai fora disto (bytes de controle / n\u00e3o-utf8).\nfunction looksLikeSecret(s) {\n    return typeof s === 'string' && s.length >= 16 && s.length <= 4096 && /^[\\x09\\x0A\\x0D\\x20-\\x7E]+$/.test(s);\n}\n\n(async () => {\n    try {\n        console.log(`reencrypt-secrets-gcm: modo=${APPLY ? 'APLICAR' : 'DRY-RUN'}`);\n        const rows = await settingsModel.findAll();\n        let aborts = 0;\n        const staged = [];   // { row, updates:{field:newCipher} }\n\n        for (const row of rows) {\n            const updates = {};\n            for (const f of FIELDS) {\n                const raw = row[f];\n                if (!raw) { console.log(`  id=${row.id} ${f}: vazio -> skip`); continue; }\n                if (crypto.isGcm(raw)) { console.log(`  id=${row.id} ${f}: j\u00e1 GCM -> skip`); continue; }\n                let plain;\n                try { plain = crypto.decrypt(raw); }\n                catch (e) { console.error(`  id=${row.id} ${f}: ERRO ao decifrar CTR (${e.message}) -> ABORT`); aborts++; continue; }\n                if (!looksLikeSecret(plain)) {\n                    console.error(`  id=${row.id} ${f}: SENTINELA FALHOU (len=${plain.length}) \u2014 AES_KEY possivelmente incorreta -> ABORT`);\n                    aborts++; continue;\n                }\n                const cipher = crypto.encrypt(plain);\n                if (crypto.decrypt(cipher) !== plain) {\n                    console.error(`  id=${row.id} ${f}: ROUNDTRIP GCM FALHOU -> ABORT`);\n                    aborts++; continue;\n                }\n                console.log(`  id=${row.id} ${f}: CTR -> GCM  (len=${plain.length}, sentinela OK, roundtrip OK)`);\n                updates[f] = cipher;\n            }\n            if (Object.keys(updates).length) staged.push({ row, updates });\n        }\n\n        if (aborts > 0) {\n            console.error(`\\nABORTADO: ${aborts} valor(es) falharam sentinela/decrypt/roundtrip. NADA foi gravado.`);\n            process.exit(1);\n        }\n        if (!staged.length) { console.log('\\nNada a migrar (tudo j\u00e1 GCM ou vazio).'); process.exit(0); }\n        if (!APPLY) {\n            console.log(`\\nDRY-RUN: ${staged.length} linha(s) MIGRARIAM. ALLOW_REENCRYPT=true p/ persistir. Nada gravado.`);\n            process.exit(0);\n        }\n        for (const { row, updates } of staged) {\n            await row.update(updates);\n            console.log(`  id=${row.id}: PERSISTIDO (${Object.keys(updates).join(', ')})`);\n        }\n        console.log(`\\nOK: ${staged.length} linha(s) migrada(s) CTR->GCM.`);\n        process.exit(0);\n    } catch (err) {\n        console.error('Erro no backfill:', err && err.message ? err.message : err);\n        process.exit(1);\n    }\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/txb-reencrypt.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:15:29)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/txb-crypto.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 crypto.js (AES-256-GCM novo + retrocompat AES-CTR legado) e utils/mask.\n * Garante: roundtrip GCM, IV aleat\u00f3rio (n\u00e3o-determinismo), MAC rejeita adultera\u00e7\u00e3o, decifra o legado CTR,\n * e a m\u00e1scara \u00e9 est\u00e1vel. Errar aqui = perder/corromper as chaves Binance OU n\u00e3o conseguir ler o que j\u00e1\n * est\u00e1 no banco. AES_KEY \u00e9 injetada pelo run.js (32 bytes).\n */\nprocess.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';\n\nconst aes = require('aes-js');\nconst crypto = require('../../src/utils/crypto');\nconst { maskSecret } = require('../../src/utils/mask');\n\nlet passed = 0, failed = 0;\nfunction tt(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\nfunction eq(name, a, b) { if (a === b) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${a} exp ${b}`); } }\nfunction thr(name, fn) { let t = false; try { fn(); } catch (_) { t = true; } if (t) passed++; else { failed++; console.error(`  \u2717 ${name}: N\u00c3O lan\u00e7ou`); } }\n\n// Encrypt do c\u00f3digo ANTIGO (aes-js CTR, sem counter) \u2014 p/ provar a retrocompat do decrypt.\nfunction oldCtrEncrypt(text) {\n    const k = aes.utils.utf8.toBytes(process.env.AES_KEY);\n    const ctr = new aes.ModeOfOperation.ctr(k);\n    return aes.utils.hex.fromBytes(ctr.encrypt(aes.utils.utf8.toBytes(text)));\n}\n\nconst SECRET = 'NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j'; // 64 alfanum (estilo HMAC Binance)\n\n// (1) GCM roundtrip\nconst enc = crypto.encrypt(SECRET);\neq('GCM roundtrip', crypto.decrypt(enc), SECRET);\ntt('formato gcm:v1:', enc.startsWith('gcm:v1:'));\ntt('isGcm(true)', crypto.isGcm(enc) === true);\n\n// (2) N\u00e3o-determinismo (IV aleat\u00f3rio) \u2014 dois encrypts do mesmo texto diferem\ntt('IV aleat\u00f3rio: 2 encrypts diferem', crypto.encrypt(SECRET) !== crypto.encrypt(SECRET));\n\n// (3) MAC: adulterar o ciphertext faz o decrypt LAN\u00c7AR (integridade)\nconst parts = enc.split(':'); // gcm v1 iv tag ct\nconst ctBuf = Buffer.from(parts[4], 'base64'); ctBuf[0] ^= 0x01;\nconst tampered = `${parts[0]}:${parts[1]}:${parts[2]}:${parts[3]}:${ctBuf.toString('base64')}`;\nthr('MAC rejeita ciphertext adulterado', () => crypto.decrypt(tampered));\nconst tagBuf = Buffer.from(parts[3], 'base64'); tagBuf[0] ^= 0x01;\nconst tamperedTag = `${parts[0]}:${parts[1]}:${parts[2]}:${tagBuf.toString('base64')}:${parts[4]}`;\nthr('MAC rejeita tag adulterada', () => crypto.decrypt(tamperedTag));\n\n// (4) RETROCOMPAT: decrypt do legado CTR (o que J\u00c1 est\u00e1 no banco)\nconst legacy = oldCtrEncrypt(SECRET);\ntt('legado n\u00e3o tem prefixo gcm', !crypto.isGcm(legacy));\neq('decrypt do legado CTR', crypto.decrypt(legacy), SECRET);\n\n// (5) Conte\u00fado com newline (Ed25519 PEM) sobrevive ao GCM\nconst pem = '-----BEGIN PRIVATE KEY-----\\nMC4CAQAwBQYDK2VwBCIEIabc\\n-----END PRIVATE KEY-----';\neq('GCM roundtrip c/ newline (PEM)', crypto.decrypt(crypto.encrypt(pem)), pem);\n\n// (6) maskSecret est\u00e1vel\neq('mask de 64 chars', maskSecret(SECRET), SECRET.slice(0, 4) + '****' + SECRET.slice(-4));\neq('mask de chave curta (<8)', maskSecret('abc'), '****');\neq('mask de vazio', maskSecret(''), '');\neq('mask de null', maskSecret(null), null);\n\nconsole.log(`\\ncrypto.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/txb-crypto.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:16:00)*
+
+
+## 🤖 Claude *(19:16:01)*
+
+Agora instalo + faço os 4 edits (controller mask, repo mask-aware, stepUpGuard mask-aware, test) via python-as-gcrux:
+
+## 🤖 Claude *(19:16:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\n# instalar novos + overwrite crypto.js\nsudo -n -u gcrux-tradeux bash -c '\n  cp /tmp/txb-crypto.js       backend/src/utils/crypto.js\n  cp /tmp/txb-mask.js         backend/src/utils/mask.js\n  cp /tmp/txb-reencrypt.js    backend/scripts/reencrypt-secrets-gcm.js\n  cp /tmp/txb-crypto.test.js  backend/scripts/sim/crypto.test.js\n  chmod 644 backend/src/utils/crypto.js backend/src/utils/mask.js backend/scripts/sim/crypto.test.js\n  chmod 755 backend/scripts/reencrypt-secrets-gcm.js\n'\necho \"novos/overwrite instalados.\"\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nR='/home/gcrux-tradeux/tradeux/backend'\ndef patch(path, old, new, label, n=1):\n    s=open(path,encoding='utf-8').read()\n    if s.count(old)!=n: print(f'ABORT {label}: ancora x{s.count(old)} (esp {n})'); sys.exit(1)\n    open(path,'w',encoding='utf-8').write(s.replace(old,new,1)); print(f'OK {label}')\n\n# settingsController: require + mask no getSettings\npatch(R+'/src/controllers/settingsController.js',\n\"const stepUpGuard = require('../utils/stepUpGuard');\",\n\"const stepUpGuard = require('../utils/stepUpGuard');\\nconst { maskSecret } = require('../utils/mask');\",\n'settingsController require')\npatch(R+'/src/controllers/settingsController.js',\n\"\"\"    delete plainSettings.testnetSecretKey;\n\n    res.json(plainSettings);\"\"\",\n\"\"\"    delete plainSettings.testnetSecretKey;\n    plainSettings.accessKey = maskSecret(plainSettings.accessKey);\n    plainSettings.testnetAccessKey = maskSecret(plainSettings.testnetAccessKey);\n\n    res.json(plainSettings);\"\"\",\n'settingsController getSettings mask')\n\n# settingsRepository: require + guards mask-aware\npatch(R+'/src/repositories/settingsRepository.js',\n\"const crypto = require('../utils/crypto');\",\n\"const crypto = require('../utils/crypto');\\nconst { maskSecret } = require('../utils/mask');\",\n'settingsRepository require')\npatch(R+'/src/repositories/settingsRepository.js',\n\"\"\"    if (newSettings.accessKey && newSettings.accessKey !== currentSettings.accessKey)\n        currentSettings.accessKey = newSettings.accessKey;\"\"\",\n\"\"\"    if (newSettings.accessKey && newSettings.accessKey !== currentSettings.accessKey\n        && newSettings.accessKey !== maskSecret(currentSettings.accessKey))\n        currentSettings.accessKey = newSettings.accessKey;\"\"\",\n'settingsRepository accessKey guard')\npatch(R+'/src/repositories/settingsRepository.js',\n\"\"\"    if (newSettings.testnetAccessKey !== undefined && newSettings.testnetAccessKey !== currentSettings.testnetAccessKey)\n        currentSettings.testnetAccessKey = newSettings.testnetAccessKey;\"\"\",\n\"\"\"    if (newSettings.testnetAccessKey !== undefined && newSettings.testnetAccessKey !== currentSettings.testnetAccessKey\n        && newSettings.testnetAccessKey !== maskSecret(currentSettings.testnetAccessKey))\n        currentSettings.testnetAccessKey = newSettings.testnetAccessKey;\"\"\",\n'settingsRepository testnetAccessKey guard')\n\n# stepUpGuard: mask-aware\npatch(R+'/src/utils/stepUpGuard.js',\n\"\"\"// Campos leg\u00edveis: sens\u00edvel se PRESENTE no body E diferente do atual.\nconst COMPARABLE = ['accessKey', 'testnetAccessKey', 'apiUrl', 'streamUrl', 'testnetApiUrl', 'testnetStreamUrl'];\"\"\",\n\"\"\"const { maskSecret } = require('./mask');\n\n// Credenciais MASCARADAS no GET: \"diferente\" ignora o valor mascarado (re-save do mask n\u00e3o \u00e9 troca).\nconst MASKED = ['accessKey', 'testnetAccessKey'];\n// Campos de ambiente leg\u00edveis (URLs): compara\u00e7\u00e3o simples.\nconst COMPARABLE = ['apiUrl', 'streamUrl', 'testnetApiUrl', 'testnetStreamUrl'];\"\"\",\n'stepUpGuard MASKED split')\npatch(R+'/src/utils/stepUpGuard.js',\n\"\"\"    for (const f of COMPARABLE)\n        if (body[f] !== undefined && body[f] !== null && String(body[f]) !== String(current[f] ?? '')) return true;\"\"\",\n\"\"\"    for (const f of MASKED)\n        if (body[f] !== undefined && body[f] !== null\n            && String(body[f]) !== String(current[f] ?? '')\n            && String(body[f]) !== String(maskSecret(current[f] ?? ''))) return true;\n    for (const f of COMPARABLE)\n        if (body[f] !== undefined && body[f] !== null && String(body[f]) !== String(current[f] ?? '')) return true;\"\"\",\n'stepUpGuard requiresStepUp mask-aware')\npatch(R+'/src/utils/stepUpGuard.js',\n\"module.exports = { requiresStepUp, stepUpEnabled, confirmPhrase, checkSettingsStepUp, COMPARABLE, SECRETS };\",\n\"module.exports = { requiresStepUp, stepUpEnabled, confirmPhrase, checkSettingsStepUp, COMPARABLE, SECRETS, MASKED };\",\n'stepUpGuard exports')\n\n# stepUpGuard.test: require mask + 2 asserts do mask\npatch(R+'/scripts/sim/stepUpGuard.test.js',\n\"const g = require('../../src/utils/stepUpGuard');\",\n\"const g = require('../../src/utils/stepUpGuard');\\nconst { maskSecret } = require('../../src/utils/mask');\",\n'stepUpGuard.test require mask')\npatch(R+'/scripts/sim/stepUpGuard.test.js',\n\"tt('accessKey igual ao atual \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, { accessKey: 'AK_atual' }) === false);\",\n\"\"\"tt('accessKey igual ao atual \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, { accessKey: 'AK_atual' }) === false);\ntt('accessKey == MASCARA do atual \u2192 N\u00c3O sens\u00edvel (re-save do GET)', g.requiresStepUp(CUR, { accessKey: maskSecret(CUR.accessKey) }) === false);\"\"\",\n'stepUpGuard.test mask assert')\nprint('TODOS OS PATCHES OK')\nPY\necho\necho \"=== node -c dos tocados ===\"\nfor f in backend/src/utils/crypto.js backend/src/utils/mask.js backend/src/controllers/settingsController.js backend/src/repositories/settingsRepository.js backend/src/utils/stepUpGuard.js backend/scripts/reencrypt-secrets-gcm.js; do\n  node -c \"$f\" && echo \"  OK $f\" || echo \"  !! ERRO $f\"\ndone",
+  "description": "Install Fix B files and apply mask-aware edits, syntax check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> novos/overwrite instalados.
+> OK settingsController require
+> OK settingsController getSettings mask
+> OK settingsRepository require
+> OK settingsRepository accessKey guard
+> OK settingsRepository testnetAccessKey guard
+> OK stepUpGuard MASKED split
+> OK stepUpGuard requiresStepUp mask-aware
+> OK stepUpGuard exports
+> OK stepUpGuard.test require mask
+> OK stepUpGuard.test mask assert
+> TODOS OS PATCHES OK
+> 
+> === node -c dos tocados ===
+>   OK backend/src/utils/crypto.js
+>   OK backend/src/utils/mask.js
+>   OK backend/src/controllers/settingsController.js
+>   OK backend/src/repositories/settingsRepository.js
+>   OK backend/src/utils/stepUpGuard.js
+>   OK backend/scripts/reencrypt-secrets-gcm.js
+> ```
+
+## 🤖 Claude *(19:16:28)*
+
+
+## 🤖 Claude *(19:16:29)*
+
+Todos os patches OK + sintaxe OK. Rodando a sim suite (agora com `crypto.test.js` + `stepUpGuard.test.js` atualizado):
+
+## 🤖 Claude *(19:16:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js 2>&1 | grep -E \"test.js:|sim suite|\u2717\" '",
+  "description": "Run full sim suite including new crypto test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> crypto.test.js: 13 passed, 0 failed
+> dailyCap.test.js: 10 passed, 0 failed
+> earnRedeem.test.js: 12 passed, 0 failed
+> earnRedeemDryRun.test.js: 5 passed, 0 failed
+> farmSellBoot.test.js: 10 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 53 passed, 0 failed
+> stepUpGuard.test.js: 21 passed, 0 failed
+> withdrawGuard.test.js: 13 passed, 0 failed
+> sim suite: 12/12 arquivos OK.
+> ```
+
+## 🤖 Claude *(19:17:06)*
+
+
+## 🤖 Claude *(19:17:09)*
+
+**Sim suite 12/12** (`crypto.test.js` 13/13: GCM roundtrip, IV aleatório, MAC rejeita adulteração, retrocompat CTR, PEM/newline, mask; `stepUpGuard` 21/21 com o caso do mask). 
+
+Agora o **pre-check crítico (read-only)**: a nova `crypto.js` consegue **decifrar a `secretKey` CTR vива do banco**? Se sim, a migração é segura. Leio o ciphertext do DB + AES_KEY do `.env` e testo no host, **sem imprimir o segredo**:
+
+## 🤖 Claude *(19:17:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngetenv(){ grep -m1 \"^$1=\" .env | cut -d= -f2-; }\nAES=$(getenv AES_KEY); DBN=$(getenv DB_NAME); DBU=$(getenv DB_USER); DBP=$(getenv DB_PWD)\nSK=$(MYSQL_PWD=\"$DBP\" docker exec -e MYSQL_PWD tradeux-db-1 mysql -N -u\"$DBU\" \"$DBN\" -e \"SELECT IFNULL(secretKey,\\\"\\\") FROM settings WHERE id=1\" 2>/dev/null)\nTSK=$(MYSQL_PWD=\"$DBP\" docker exec -e MYSQL_PWD tradeux-db-1 mysql -N -u\"$DBU\" \"$DBN\" -e \"SELECT IFNULL(testnetSecretKey,\\\"\\\") FROM settings WHERE id=1\" 2>/dev/null)\necho \"secretKey raw len=${#SK}, testnetSecretKey raw len=${#TSK}\"\ncd backend\nAES_KEY=\"$AES\" SK=\"$SK\" TSK=\"$TSK\" node -e \"\nconst crypto=require(\\\"./src/utils/crypto\\\");\nfunction check(label, raw){\n  if(!raw){ console.log(\\\"  \\\"+label+\\\": vazio/nulo\\\"); return; }\n  const isGcm=crypto.isGcm(raw);\n  let plain; try{ plain=crypto.decrypt(raw); }catch(e){ console.log(\\\"  \\\"+label+\\\": ERRO decrypt -> \\\"+e.message); return; }\n  const printable=/^[\\x09\\x0A\\x0D\\x20-\\x7E]+$/.test(plain);\n  console.log(\\\"  \\\"+label+\\\": formato=\\\"+(isGcm?\\\"GCM\\\":\\\"CTR-legado\\\")+\\\"  decrypt-len=\\\"+plain.length+\\\"  sentinela(printable)=\\\"+printable+\\\"  [segredo NAO impresso]\\\");\n}\ncheck(\\\"secretKey\\\", process.env.SK);\ncheck(\\\"testnetSecretKey\\\", process.env.TSK);\n\"\n'",
+  "description": "Pre-check: new crypto decrypts live CTR secretKey (read-only, no secret printed)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> secretKey raw len=128, testnetSecretKey raw len=128
+>   secretKey: formato=CTR-legado  decrypt-len=64  sentinela(printable)=true  [segredo NAO impresso]
+>   testnetSecretKey: formato=CTR-legado  decrypt-len=64  sentinela(printable)=true  [segredo NAO impresso]
+> ```
+
+## 🤖 Claude *(19:17:30)*
+
+
+## 🤖 Claude *(19:17:33)*
+
+**Pre-check PASSOU** — o ponto make-or-break do Fix B:
+- `secretKey` e `testnetSecretKey` são **CTR-legado** (128 hex = 64 bytes), e a nova `crypto.decrypt` lê ambos → **64 chars printáveis** (HMAC Binance clássico), sentinela OK. **AES_KEY é a certa, a migração lê os valores vivos.** Segredo nunca impresso.
+
+Agora o **gate QA + TL** do Fix B (paralelo), antes de commitar e executar a migração:
+
+## 🤖 Claude *(19:17:58)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review do Fix B",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revis\u00e3o QA pr\u00e9-merge do **Fix B \u2014 AES-CTR\u2192GCM + mask do accessKey** (relat\u00f3rio de design 2026-06-22). TradeUX MAINNET REAL (~$149). Este \u00e9 o fix MAIS PERIGOSO: migra as CHAVES BINANCE VIVAS criptografadas no DB. Responda pt-BR: PASS / PASS COM RESSALVAS / FAIL, achados por severidade + testes.\n\n## Diff (novo, N\u00c3O commitado). Veja como gcrux:\n`sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff` + leia os novos:\n- **`backend/src/utils/crypto.js`** (reescrito): ESCRITA agora AES-256-GCM (crypto nativo) com IV aleat\u00f3rio/valor + auth tag, formato `gcm:v1:<iv_b64>:<tag_b64>:<ct_b64>`. LEITURA retrocompat\u00edvel: prefixo gcm:v1: \u2192 GCM; sen\u00e3o \u2192 legado CTR (aes-js, byte-id\u00eantico ao c\u00f3digo antigo). `isGcm()`. Sem novas deps.\n- **NOVO `backend/src/utils/mask.js`** \u2014 `maskSecret` (primeiros4+****+\u00faltimos4; <8 \u2192 ****).\n- **NOVO `backend/scripts/reencrypt-secrets-gcm.js`** \u2014 backfill ONE-SHOT manual (N\u00c3O migration de boot): dry-run default, ALLOW_REENCRYPT=true aplica; idempotente (pula GCM); SENTINELA de plaintext (printable ASCII 16-4096, aceita \\n do PEM) antes de re-encriptar (pega AES_KEY errada) + roundtrip; ALL-OR-NOTHING (aborta sem gravar se qualquer falhar); nunca imprime o segredo.\n- **`settingsController.getSettings`** \u2014 mascara accessKey + testnetAccessKey na resposta (n\u00e3o vazam mais plaintext).\n- **`settingsRepository.updateSettings`** \u2014 guards de accessKey/testnetAccessKey ignoram valor == maskSecret(atual) (re-save do mask n\u00e3o sobrescreve a chave real).\n- **`stepUpGuard.requiresStepUp`** \u2014 accessKey/testnetAccessKey mask-aware (re-save do mask n\u00e3o dispara step-up).\n- **NOVO `backend/scripts/sim/crypto.test.js`** (13 asserts) + `stepUpGuard.test.js` +1.\n\n## S\u00f3 campos secretKey/testnetSecretKey s\u00e3o criptografados (2 campos). accessKey/testnetAccessKey s\u00e3o plaintext no DB (Entrega A s\u00f3 MASCARA na resposta; encriptar at-rest \u00e9 follow-up declarado).\n\n## J\u00e1 validado por mim ao vivo\n- sim suite 12/12 (crypto 13/13: GCM roundtrip, IV aleat\u00f3rio/n\u00e3o-determinismo, MAC rejeita ct E tag adulterados, retrocompat CTR, PEM com \\n, mask; stepUpGuard 21/21).\n- **PRE-CHECK read-only contra o DB VIVO**: a nova crypto.decrypt l\u00ea secretKey E testnetSecretKey reais (formato CTR-legado, 128 hex\u219264 bytes), decrypt-len=64 print\u00e1vel (HMAC), sentinela OK \u2192 AES_KEY certa, migra\u00e7\u00e3o l\u00ea os valores vivos. Segredo n\u00e3o impresso.\n\n## Verifique ESPECIFICAMENTE (ressalvas do c\u00e9tico)\n1. Backfill \u00e9 SCRIPT MANUAL one-shot (n\u00e3o migration no boot \u2192 sem crash-loop). Opt-in ALLOW_REENCRYPT.\n2. SENTINELA de plaintext pega AES_KEY errada (decifra lixo \u2192 sentinela falha \u2192 aborta ANTES de gravar). Confirme que lixo de chave errada de fato falharia o regex printable.\n3. Roundtrip GCM por valor antes de persistir.\n4. ALL-OR-NOTHING: se um valor falhar, NADA \u00e9 gravado (staged s\u00f3 aplica ap\u00f3s o check de aborts).\n5. Retrocompat: backend l\u00ea CTR legado (provado no pre-check) \u2014 ent\u00e3o deploy do crypto.js PRECEDE o backfill sem perda.\n6. Mask: compara\u00e7\u00e3o EXATA com maskSecret(atual) nos 3 pontos (controller/repo/stepUpGuard) \u2014 re-save do mask N\u00c3O sobrescreve a chave nem dispara step-up. Procure qualquer ponto onde o accessKey mascarado poderia ser persistido como valor real (corromper a chave).\n7. MAC/GCM: setAuthTag + final() lan\u00e7a em adultera\u00e7\u00e3o (testado).\n8. Idempot\u00eancia do backfill (re-rodar = tudo GCM \u2192 skip).\n\nAvalie tamb\u00e9m: a guarda anti-re-hash de senha + o step-up (Fix C) seguem corretos com o mask; o getSettingsDecrypted (cache) decifra ambos formatos; algum caller de crypto fora do settingsRepository (n\u00e3o deve haver). Liste os testes concretos a rodar (o backfill DRY-RUN no container \u00e9 o teste-chave antes do --apply). N\u00c3O rode o backfill com --apply nem altere o DB."
+}
+```
+
+## 🤖 Claude *(19:18:16)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review do Fix B",
+  "subagent_type": "tech-lead",
+  "prompt": "Revis\u00e3o de TECH LEAD / code owner (decis\u00e3o de merge) do **Fix B \u2014 AES-CTR\u2192GCM + mask accessKey** (relat\u00f3rio de design 2026-06-22). TradeUX MAINNET REAL (~$149). O MAIS perigoso: migra CHAVES BINANCE VIVAS. Responda pt-BR: APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK + must-fix, E aprove/critique a SEQU\u00caNCIA DE DEPLOY+BACKFILL.\n\n## Diff (novo, N\u00c3O commitado): `sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff` + novos:\n- `backend/src/utils/crypto.js` (GCM com IV/tag, formato versionado gcm:v1:; leitura dual CTR/GCM retrocompat)\n- `backend/src/utils/mask.js` (maskSecret)\n- `backend/scripts/reencrypt-secrets-gcm.js` (backfill manual one-shot, dry-run default, sentinela+roundtrip, all-or-nothing)\n- `settingsController.getSettings` (mask accessKey/testnetAccessKey), `settingsRepository.updateSettings` (guards mask-aware), `stepUpGuard` (mask-aware)\n- `backend/scripts/sim/crypto.test.js` + stepUpGuard.test +1\n\n## Contexto: s\u00f3 secretKey/testnetSecretKey s\u00e3o encriptados. accessKey plaintext no DB (Entrega A s\u00f3 mascara na resposta; encriptar at-rest \u00e9 follow-up). Fix A (backup) e Fix C (step-up) j\u00e1 em prod (commits 78e4e65/5690a63).\n\n## J\u00e1 validado: sim 12/12 (crypto 13/13), pre-check read-only confirmou que a nova crypto decifra a secretKey CTR VIVA (64 chars HMAC, sentinela OK, AES_KEY certa).\n\n## Foco do TL\n- **Design/risco:** GCM versionado + leitura dual \u00e9 a abordagem certa? O formato `gcm:v1:` \u00e9 \u00e0 prova de futuro? Algum jeito de o backfill corromper/perder a chave (AES_KEY errada, persist\u00eancia parcial, race)? A sentinela + roundtrip + all-or-nothing + backup s\u00e3o rede suficiente?\n- **Mask cross-cutting:** os 3 pontos (controller mask, repo guard, stepUpGuard) concordam? Algum caminho onde o accessKey mascarado vira valor persistido (corromper a chave) ou onde o step-up do Fix C regride?\n- **Conven\u00e7\u00e3o:** crypto nativo + aes-js s\u00f3 p/ legado \u00e9 aceit\u00e1vel? Script segue o padr\u00e3o (backfill-funnel-buys.js)? pt-BR/sim-test?\n- **SEQU\u00caNCIA DE DEPLOY que proponho \u2014 critique e ajuste:** (1) make backup-state fresco; (2) HALT via POST /system/halt {on:true} (manual, quente, sem frase, sem restart); (3) rebuild backend+frontend (novo crypto l\u00ea CTR); (4) smoke: backend l\u00ea secretKey CTR viva \u2192 Binance auth OK (ex: GET /exchange/balance) ANTES do backfill; (5) docker compose exec backend node scripts/reencrypt-secrets-gcm.js (dry-run) \u2192 confirma; (6) exec -e ALLOW_REENCRYPT=true ... (aplica); (7) restart backend \u2192 smoke Binance auth OK (agora l\u00ea GCM); (8) un-HALT POST /system/halt {on:false}. Algum passo faltando/arriscado? O HALT manual realmente cobre a janela? Precisa de algo entre 6 e 7?\n- **Must-fix antes de mergear/deployar.**\n\nN\u00e3o rode o backfill --apply nem altere DB/.env. Veredicto + must-fix + parecer sobre a sequ\u00eancia."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Suite verde (12/12), incluindo crypto 13/13 e stepUpGuard 21/21. Tenho tudo que preciso. Análise final.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nCódigo sólido, bem escopado e reversível. A criptografia está correta (GCM nativo, IV de 96 bits por valor, auth tag, formato versionado), a leitura dual é byte-fiel ao legado (provada pelo teste e pelo pre-check ao vivo), e o backfill tem rede de segurança real (sentinela de plaintext + roundtrip + all-or-nothing + dry-run default + backup). O mask cross-cutting concorda nos 3 pontos. Não há caminho onde o valor mascarado vire credencial persistida nem onde o step-up do Fix C regrida. **Aprovo o merge e a sequência de deploy, com 1 must-fix barato e ajustes na sequência.**\n\n### Design/risco — está certo\n- **GCM versionado + leitura dual**: abordagem correta. O prefixo `gcm:v1:` é à prova de futuro (a leitura faz `startsWith` e roteia; trocar para `v2` é trivial sem quebrar `v1`). `decryptCtr` reproduz exatamente o `crypto.js` antigo (mesma key utf8, counter default do aes-js) — confirmado pelo `oldCtrEncrypt` no teste e pelo seu pre-check decifrando a secretKey CTR VIVA.\n- **Blast radius contido**: os únicos consumidores de `crypto.decrypt/encrypt` são `settingsRepository` (linhas 12-13, 95-98). O caminho de credencial ativa (`getSettingsDecrypted` → `exchange.js`/`app-em.js`) **nunca** passa pelo mask — o mask só vive em `settingsController.getSettings` (display). Confirmado: `symbolsController`/`app-em` usam `getSettingsDecrypted`/`getDefaultSettings`, não o getter mascarado.\n- **Backfill não corrompe**: AES_KEY errada → `looksLikeSecret` rejeita (lixo não-ASCII) → ABORT sem gravar; persistência parcial é impossível (stage-then-write, e qualquer abort zera tudo antes do loop de `row.update`); race não existe (one-shot manual sob HALT, sem o backend escrevendo settings concorrentemente). A sentinela é a defesa real contra a armadilha "roundtrip de lixo===lixo" — bem pensado.\n- **Idempotência**: re-rodar pula GCM (`isGcm`), seguro contra dupla execução.\n\n### Mask cross-cutting — concorda\nOs 3 pontos usam o mesmo `maskSecret` e a mesma regra "diferente-da-máscara-não-é-troca": `settingsRepository.updateSettings:71-73` e `:81-83` ignoram `accessKey`==máscara; `stepUpGuard` (MASKED, linha 31-34) idem. Logo o round-trip GET(mascarado)→PUT não sobrescreve a chave real nem dispara step-up falso. Secrets continuam write-only (stripados no GET, guard por `.trim().length>0`). Sem regressão no Fix C.\n\n### Convenção — aceitável\ncrypto nativo + aes-js só p/ legado é a decisão certa (zero deps novas, legado isolado). O script segue o padrão do `backfill-funnel-buys.js` (opt-in por env var, guard fail-closed, `process.exit`). Comentários pt-BR e sim-tests no padrão da suíte. 12/12 verde reproduzido aqui.\n\n---\n\n### MUST-FIX (antes de mergear)\n1. **Coluna `secretKey`/`testnetSecretKey` é `Sequelize.STRING` = VARCHAR(255), e o GCM infla o tamanho.** Medi: HMAC de 64 chars → **137** (ok); PEM Ed25519 típico ~115 → **205** (ok); plaintext >~150 chars → **estoura 255 e o MySQL trunca silenciosamente** (`STRICT` off corta sem erro), corrompendo a chave de forma irreversível. Para **este** deploy é seguro (a chave viva é HMAC 64 → 137), mas é um footgun latente. **Pelo menos** um dos dois:\n   - (a) **Hard-guard no `crypto.encrypt`**: se `result.length > 255` lançar (`throw new Error(\'cipher GCM excede VARCHAR(255)\')`) — barato, fail-closed, impede truncamento silencioso em qualquer caller futuro (ex.: alguém colando uma chave Ed25519 longa pela UI).\n   - (b) opcionalmente, migration `secretKey`/`testnetSecretKey` → `TEXT` como follow-up (não bloqueia este deploy, mas resolve a raiz). O guard (a) é o que torna o merge seguro hoje.\n\n### NICE-TO-HAVE\n- **`looksLikeSecret` no `encrypt` path também**: o backfill valida o plaintext decifrado, mas só checa range/ASCII. Suficiente, não-bloqueante.\n- **`accessKey` plaintext at-rest** permanece — você já o marcou como follow-up (Entrega A só mascara o display). OK para esta fatia; registrar no HANDOFF para não esquecer (a máscara dá falsa sensação de "protegido").\n- **Os 2 `backtest-results/*.json|md` no diff/untracked** são ruído não relacionado a este Fix — não commitar junto (mantém o commit cirúrgico e auditável; este é o commit que toca chaves vivas, blast radius deve ser mínimo).\n\n---\n\n### Parecer sobre a SEQUÊNCIA DE DEPLOY+BACKFILL — APROVADA com 2 ajustes\n\nA sequência está fundamentalmente correta e a ordem é segura. O smoke **antes** do backfill (passo 4) é o ponto-chave que prova que a nova crypto lê o CTR vivo no container real — excelente. O HALT manual quente (`POST /system/halt`, sem restart) cobre a janela de negociação, mas **não cobre a janela de leitura de credenciais**, que é o risco real aqui. Ajustes:\n\n- **Falta passo entre 6 e 7 (CRÍTICO de operação)**: o backend que está rodando em (6) ainda tem o `settingsCache` quente da secretKey **decifrada do CTR** — ele não lê o DB de novo até o restart. Logo, entre o `--apply` (6) e o restart (7), o DB já está em GCM mas o processo vivo ainda opera com a chave do cache CTR. Isso é benigno (segue autenticando), mas significa que **a prova de que o GCM é legível só acontece em (7)**. Garanta que **(7) seja restart limpo** (não `make restart` que poderia disparar o `process.exit` do controller por outro caminho) e que o smoke de (7) seja **bloqueante**: se o Binance auth falhar pós-GCM, o rollback é restaurar o `make backup-state` de (1) e o `.env` — documente esse rollback explícito **antes** de iniciar, não improvisado.\n\n- **Passo 4 — torne o gate explícito**: se o smoke de (4) (ler CTR vivo → Binance auth OK) **falhar**, ABORTE e não rode o backfill — porque significa que o container novo não reproduz o legado (AES_KEY divergente entre `.env` e o que cifrou o DB). Você já fez o pre-check read-only que confirma isso, mas deixe como condição de parada formal na runbook.\n\n- **Adicione passo 4.5**: rode o **dry-run (5) com o backup já feito (1) e confirme que reporta exatamente N linhas migrariam** (esperado: 1 linha, 1-2 campos — `secretKey` e, se houver, `testnetSecretKey`). Se reportar 0 ("tudo já GCM") ou um número inesperado, pare e investigue antes do `--apply`.\n\n- **HALT cobre a janela?** Sim para ordens/dinheiro (o `riskState` é fonte única e quente). Mas o backfill em si não toca o money-path — ele toca o repositório de settings. O único agente que poderia escrever settings concorrentemente é um PUT `/settings` (que dispararia o `process.exit`/restart e recarregaria o cache). Improvável durante uma janela de manutenção operada por você, mas: **não salve nada na tela Settings durante a janela** (o restart do controller pegaria o DB em estado intermediário se você fizesse entre 6 e 7). Vale anotar na runbook.\n\n**Sequência final recomendada**: (1) backup → (2) HALT → (3) rebuild → (4) smoke CTR→Binance **[gate: falhou ⇒ aborta]** → (5) dry-run **[gate: confirma N=1 esperado]** → (6) `--apply` → **(6.5) NÃO mexer em Settings/UI** → (7) restart **limpo** + smoke GCM→Binance **[gate: falhou ⇒ rollback backup+.env]** → (8) un-HALT.\n\n---\n\n**Decisão de merge**: APPROVE após o must-fix #1 (guard de tamanho no `encrypt`). É um one-liner, mantém o blast radius mínimo neste commit que mexe em chaves vivas, e elimina o único caminho de corrupção silenciosa. Feito isso, mergear e seguir a sequência ajustada. Não commitar os `backtest-results/*` junto.\n\nArquivos revisados:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/crypto.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/mask.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/reencrypt-secrets-gcm.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/models/settingsModel.js` (coluna VARCHAR(255) — origem do must-fix)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/crypto.test.js`, `stepUpGuard.test.js`'}, {'type': 'text', 'text': "agentId: a5138ebdba2ed3fc2 (use SendMessage with to: 'a5138ebdba2ed3fc2' to continue this agent)\n<usage>subagent_tokens: 56136\ntool_uses: 18\nduration_ms: 125133</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmado e mitigado:\n- Colunas são `VARCHAR(255)`, nullable.\n- **`sql_mode` inclui `STRICT_TRANS_TABLES`** → MySQL **NÃO trunca silenciosamente**: um INSERT/UPDATE com string > 255 chars dá **erro** (Data too long), não corrupção silenciosa.\n\nIsso muda a severidade do achado de VARCHAR de "corrupção silenciosa" para "fail-loud". Combinado com o ALL-OR-NOTHING do script (e o roundtrip GCM por valor antes de persistir), o pior caso de um secret futuro >~190 chars seria: o `row.update` lança "Data too long" → o backfill aborta na primeira persistência. Mas atenção à atomicidade: se houver **múltiplas rows** e a primeira persistir e a segunda estourar o VARCHAR, NÃO é atômico (o loop de persist faz `row.update` separados, sem transação). Em produção há **1 row (id=1)** com 2 campos no mesmo `row.update`, então é atômico na prática para o caso real. Vou registrar isso como ressalva.\n\nPara os secrets de produção atuais (64 chars → 137 de cipher), não há risco de estouro. Tenho tudo. Vou compor o relatório final.\n\n---\n\nVEREDITO: **PASS COM RESSALVAS**\n\n## Fix B — AES-CTR→GCM + mask do accessKey\n\nRevisei o diff completo, rodei a suíte de simulação (12/12, crypto 13/13), exercitei a lógica empiricamente fora do DB e fiz pre-checks read-only contra o DB e o backend VIVOS. O design é sólido, defensivo e a retrocompatibilidade está provada. As ressalvas são de baixa/média severidade e não bloqueiam o merge.\n\n### Confirmações (os 8 pontos do cético)\n- **[1] Backfill é script manual, fora do boot** — CONFIRMADO. `backend/docker-entrypoint.sh` só faz `db:migrate`+`db:seed:all`; nenhuma referência a `reencrypt` no entrypoint/server.js/Makefile/compose/setup.sh. Sem risco de crash-loop. Opt-in via `ALLOW_REENCRYPT=true`, dry-run default.\n- **[2] Sentinela pega AES_KEY errada** — CONFIRMADO empiricamente: 0 de 2000 decrypts com chave errada passariam o regex printável (`/^[\\x09\\x0A\\x0D\\x20-\\x7E]+$/`). Probabilidade teórica de falso-OK ≈ (95/256)^64 ≈ 10⁻²⁷. Defesa real e robusta.\n- **[3] Roundtrip GCM por valor antes de persistir** — CONFIRMADO (`reencrypt-secrets-gcm.js:49`, aborta se `decrypt(cipher) !== plain`).\n- **[4] ALL-OR-NOTHING** — CONFIRMADO: `if (aborts>0) process.exit(1)` ocorre ANTES do loop de persistência; simulei [C] (1 ok + 1 sentinela-falha) → não persiste nada.\n- **[5] Retrocompat / ordem de deploy** — PROVADO em dois níveis: (a) `decryptCtr` novo é byte-idêntico ao código antigo (mesma key UTF8 via `KEY_STR`, mesmo counter default do aes-js) — teste `[1]` roundtrip legado == true; (b) pre-check read-only no DB VIVO: `id=1 secretKey` e `testnetSecretKey` são CTR-legado (`hex=true`, sem prefixo gcm, cipherLen=128→64 bytes, sentinela OK). Deploy do crypto.js novo PRECEDE o backfill sem perda.\n- **[6] Mask não corrompe a chave** — CONFIRMADO nos 3 pontos (controller mascara, repo/stepUpGuard comparam contra `maskSecret(atual)`). Simulei: re-save do mask preserva; chave nova real sobrescreve; BYOK 1ª config (current null/"") escreve; chave curta (<8→`****`) preserva. **Não há caminho onde o valor mascarado seja persistido como chave real** (a comparação de gravação é `body !== current && body !== maskSecret(current)`).\n- **[7] MAC/GCM** — `setAuthTag`+`final()` lança em adulteração de ct E de tag (crypto.test.js cobre ambos; verifiquei).\n- **[8] Idempotência** — simulei [B]: re-run com tudo GCM → 0 staged, skip total via `crypto.isGcm()`.\n\n### Verificações adicionais (do meu escopo)\n- **Guarda anti-re-hash de senha**: intacta (`settingsRepository:62`), independente do mask.\n- **`getSettingsDecrypted` (cache)**: decifra ambos formatos via `crypto.decrypt` (roteia por `isGcm`); o caminho da Binance (`exchange.js:152/307`, `app-em.js:878`, `symbolsController:88`) usa o accessKey REAL desse path — o mask vive SÓ no `settingsController.getSettings`, não contamina o uso real. `analysisController:85` só lê `useTestnet`.\n- **Único caller de `crypto` é `settingsRepository`** (+ o script). Nenhum uso solto de aes-js fora do crypto.js.\n- **Step-up (Fix C) com mask**: correto — `requiresStepUp` ignora `accessKey == maskSecret(atual)`, então re-save do GET não dispara step-up nem na rotação real (chave nova distinta dispara normalmente).\n\n### Achados\n\n**[MÉDIA] `secretKey`/`testnetSecretKey` são `VARCHAR(255)`; GCM aumenta o ciphertext.**\nGCM cipher: secret 64-char (caso de prod atual) = 137 chars (cabe folgado); mas plaintext de ~190+ chars estoura 255. Mitigante forte: `sql_mode` do MySQL vivo inclui `STRICT_TRANS_TABLES` → estouro é **erro "Data too long" (fail-loud)**, não truncamento silencioso; e o roundtrip GCM roda em memória ANTES do persist. Para os secrets atuais (decryptLen=64), **zero risco**. Risco só existiria com um secret futuro muito longo (ex.: PEM Ed25519 completo). Recomendo, como follow-up, migrar essas 2 colunas para `TEXT` antes de aceitar credenciais Ed25519 longas.\n\n**[BAIXA] Atomicidade do loop de persistência.** O loop final faz `row.update()` por linha, sem transação Sequelize envolvendo todas. Em prod há 1 row (id=1) com os 2 campos no MESMO `row.update` → atômico na prática. Só seria não-atômico com múltiplas rows e falha de DB no meio. Robustez extra: envolver o loop num `sequelize.transaction`.\n\n**[BAIXA] Colisão de máscara na rotação não é problema, mas registro a análise.** Confirmei que trocar para uma chave nova cujo mask coincide com o atual (mesmo prefixo/sufixo 4+4) AINDA escreve corretamente (a 1ª condição `body !== current` já é true). A única chave dropada seria uma literalmente igual a `prefixo****sufixo` — formato que credenciais Binance reais nunca têm. Aceitável.\n\n**[INFO] Estado vivo:** sistema está **LIVE (`GET /system/halt` → `halted:false`, trading REAL ON)** e o `GET /settings` ainda vaza accessKey em **plaintext** — esperado, pois o diff NÃO está deployado. A máscara só protege após deploy do `settingsController.js`. O fix deve ser deployado sob HALT.\n\n### Testes que eu rodaria (antes do `--apply`)\n1. **Backfill DRY-RUN no container** (teste-chave, read-only): após buildar a imagem com o crypto novo, `docker compose exec backend node scripts/reencrypt-secrets-gcm.js` → esperar "2 linha(s) MIGRARIAM, nada gravado", sentinela OK, roundtrip OK. (No container ATUAL o crypto é o antigo — precisa do rebuild para exercitar o caminho novo; meu pre-check inline já provou que os valores vivos são CTR-legado decifráveis.)\n2. **`make backup-state`** antes de qualquer `--apply` (recuperável via `make restore-state`).\n3. `npm run test:sim` no CI (já 12/12 local) + `bash scripts/ci-preflight.sh` (migrate+seed mysql/postgres + agent --check).\n4. **Pós-deploy, pré-backfill**: smoke do backend lendo CTR-legado (login OK, ordens/wallet funcionando — prova retrocompat ao vivo).\n5. **Pós-`--apply`**: re-rodar o backfill (esperar "Nada a migrar — tudo já GCM" = idempotência); confirmar `isGcm` no DB; restart do backend e smoke da Binance (a chave decifra GCM agora).\n6. **UI mask E2E**: `GET /settings` retorna `accessKey` mascarado; salvar Settings sem trocar chave (re-save do mask) → accessKey real intacto no DB + sem step-up; trocar accessKey de verdade → exige a frase + grava a nova.\n7. **Step-up**: PATCH com `secretKey` não-vazio sem `confirm` → 400 STEP_UP_REQUIRED; com a frase → grava + re-encripta em GCM.\n\n### Recomendação de merge\n**APROVAR e mergear.** Sequência operacional obrigatória: (1) `make backup-state`; (2) deploy do crypto.js/mask/controllers (retrocompat provada — backend lê CTR-legado); (3) **backfill em DRY-RUN** e ler o output; (4) só então `ALLOW_REENCRYPT=true --apply`, sob o HALT atual. Tratar a coluna `VARCHAR(255)→TEXT` como follow-up de baixa urgência (sql_mode STRICT já protege os secrets atuais). Não executei `--apply` nem alterei o DB.\n\nArquivos revisados: `/home/gcrux-tradeux/tradeux/backend/src/utils/crypto.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/mask.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/reencrypt-secrets-gcm.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js`, `/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/sim/crypto.test.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/sim/stepUpGuard.test.js`.'}, {'type': 'text', 'text': "agentId: a7f46830914cc0b70 (use SendMessage with to: 'a7f46830914cc0b70' to continue this agent)\n<usage>subagent_tokens: 76654\ntool_uses: 34\nduration_ms: 337771</usage>"}]
+> ```
+
+## 🤖 Claude *(19:23:54)*
+
+
+## 🤖 Claude *(19:23:57)*
+
+Ambos os gates passaram. **QA PASS COM RESSALVAS** (8/8 pontos do cético confirmados; achado [MÉDIA] VARCHAR(255) mitigado por `STRICT_TRANS_TABLES`=fail-loud + secrets atuais 64→137 chars seguros). **TL APPROVE COM SUGESTÕES** com **1 must-fix**: guard de tamanho no `encrypt()` (fail-closed contra truncamento silencioso de chave futura longa). Mais a sequência de deploy refinada com gates explícitos.
+
+Aplico o must-fix (one-liner) + assert no teste:
+
+## 🤖 Claude *(19:24:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nR='/home/gcrux-tradeux/tradeux/backend'\ndef patch(path, old, new, label):\n    s=open(path,encoding='utf-8').read()\n    if s.count(old)!=1: print(f'ABORT {label}: x{s.count(old)}'); sys.exit(1)\n    open(path,'w',encoding='utf-8').write(s.replace(old,new,1)); print(f'OK {label}')\n\n# must-fix TL: guard de tamanho no encrypt (fail-closed vs truncamento silencioso em VARCHAR(255))\npatch(R+'/src/utils/crypto.js',\n\"\"\"    const tag = cipher.getAuthTag();                            // 128-bit auth tag\n    return GCM_PREFIX + [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');\n}\"\"\",\n\"\"\"    const tag = cipher.getAuthTag();                            // 128-bit auth tag\n    const out = GCM_PREFIX + [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');\n    // Coluna secretKey/testnetSecretKey \u00e9 VARCHAR(255). Fail-CLOSED: segredo longo demais (ex.: PEM Ed25519\n    // grande) que estouraria a coluna LAN\u00c7A aqui em vez de truncar silenciosamente e corromper a chave.\n    if (out.length > 255) throw new Error(`cipher GCM (${out.length}) excede VARCHAR(255) \u2014 migre a coluna p/ TEXT antes de usar esse segredo.`);\n    return out;\n}\"\"\",\n'crypto.encrypt size-guard')\n\n# assert no sim-test: encrypt de segredo gigante lan\u00e7a\npatch(R+'/scripts/sim/crypto.test.js',\n\"\"\"console.log(`\\\\ncrypto.test.js: ${passed} passed, ${failed} failed`);\"\"\",\n\"\"\"// (7) size-guard: segredo que estoura VARCHAR(255) LAN\u00c7A (fail-closed, n\u00e3o trunca)\nthr('encrypt de segredo gigante (>255 cipher) lan\u00e7a', () => crypto.encrypt('x'.repeat(300)));\neq('encrypt de 64-char N\u00c3O lan\u00e7a (cabe)', typeof crypto.encrypt(SECRET), 'string');\n\nconsole.log(`\\\\ncrypto.test.js: ${passed} passed, ${failed} failed`);\"\"\",\n'crypto.test size-guard assert')\nprint('PATCHES OK')\nPY\necho\necho \"=== node -c + sim (crypto) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'node -c src/utils/crypto.js && node scripts/sim/run.js 2>&1 | grep -E \"crypto.test|sim suite|\u2717\"'",
+  "description": "Apply encrypt size-guard must-fix and add test, re-run sim"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ABORT crypto.encrypt size-guard: x0
+> 
+> === node -c + sim (crypto) ===
+> node:internal/modules/cjs/loader:1137
+>   throw err;
+>   ^
+> 
+> Error: Cannot find module '/home/gcrux-tradeux/tradeux/src/utils/crypto.js'
+>     at Module._resolveFilename (node:internal/modules/cjs/loader:1134:15)
+>     at node:internal/main/check_syntax:35:20 {
+>   code: 'MODULE_NOT_FOUND',
+>   requireStack: []
+> }
+> 
+> Node.js v18.19.1
+> ```
+
+## 🤖 Claude *(19:24:28)*
+
+
+## 🤖 Claude *(19:24:30)*
+
+O anchor do guard não bateu (espaçamento do comentário) e o `node -c` rodou do dir errado (o `bash -lc` reseta pra home do gcrux). Ambos os patches abortaram limpos (nada aplicado). Refaço com anchor na linha do `return` (única) + `cd` correto:
+
+## 🤖 Claude *(19:24:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nR='/home/gcrux-tradeux/tradeux/backend'\ndef patch(path, old, new, label):\n    s=open(path,encoding='utf-8').read()\n    if s.count(old)!=1: print(f'ABORT {label}: x{s.count(old)}'); sys.exit(1)\n    open(path,'w',encoding='utf-8').write(s.replace(old,new,1)); print(f'OK {label}')\n\npatch(R+'/src/utils/crypto.js',\n\"    return GCM_PREFIX + [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');\",\n\"\"\"    const out = GCM_PREFIX + [iv.toString('base64'), tag.toString('base64'), ct.toString('base64')].join(':');\n    // Coluna secretKey/testnetSecretKey \u00e9 VARCHAR(255). Fail-CLOSED: segredo cujo cipher estoura a coluna\n    // (ex.: PEM Ed25519 grande) LAN\u00c7A aqui em vez de truncar silenciosamente e corromper a chave.\n    if (out.length > 255) throw new Error(`cipher GCM (${out.length}) excede VARCHAR(255) \u2014 migre a coluna p/ TEXT antes de usar esse segredo.`);\n    return out;\"\"\",\n'crypto.encrypt size-guard')\n\npatch(R+'/scripts/sim/crypto.test.js',\n\"console.log(`\\\\ncrypto.test.js: ${passed} passed, ${failed} failed`);\",\n\"\"\"// (7) size-guard: segredo que estoura VARCHAR(255) LAN\u00c7A (fail-closed, n\u00e3o trunca)\nthr('encrypt de segredo gigante (>255 cipher) lan\u00e7a', () => crypto.encrypt('x'.repeat(300)));\neq('encrypt de 64-char N\u00c3O lan\u00e7a (cabe)', typeof crypto.encrypt(SECRET), 'string');\n\nconsole.log(`\\\\ncrypto.test.js: ${passed} passed, ${failed} failed`);\"\"\",\n'crypto.test size-guard assert')\nprint('PATCHES OK')\nPY\necho\nsudo -n -u gcrux-tradeux bash -lc 'node -c src/utils/crypto.js && echo \"node -c OK\" && node scripts/sim/run.js 2>&1 | grep -E \"crypto.test|stepUpGuard.test|sim suite|\u2717\"'",
+  "description": "Re-apply size-guard with correct anchor and re-run sim"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> OK crypto.encrypt size-guard
+> OK crypto.test size-guard assert
+> PATCHES OK
+> 
+> node:internal/modules/cjs/loader:1137
+>   throw err;
+>   ^
+> 
+> Error: Cannot find module '/home/gcrux-tradeux/tradeux/src/utils/crypto.js'
+>     at Module._resolveFilename (node:internal/modules/cjs/loader:1134:15)
+>     at node:internal/main/check_syntax:35:20 {
+>   code: 'MODULE_NOT_FOUND',
+>   requireStack: []
+> }
+> 
+> Node.js v18.19.1
+> ```
+
+## 🤖 Claude *(19:24:44)*
+
+
+## 🤖 Claude *(19:24:45)*
+
+Só o `cd` faltou no `bash -lc`. Re-rodando do dir certo:
+
+## 🤖 Claude *(19:24:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'node -c src/utils/crypto.js && echo \"node -c crypto OK\" && node scripts/sim/run.js 2>&1 | grep -E \"crypto.test|stepUpGuard.test|sim suite|\u2717\"'",
+  "description": "Syntax check and sim suite from correct dir"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> node -c crypto OK
+> === sim/crypto.test.js ===
+> crypto.test.js: 15 passed, 0 failed
+> === sim/stepUpGuard.test.js ===
+> stepUpGuard.test.js: 21 passed, 0 failed
+> sim suite: 12/12 arquivos OK.
+> ```
+
+## 🤖 Claude *(19:25:17)*
+
+
+## 🤖 Claude *(19:25:19)*
+
+**Sim 12/12** (crypto **15/15** com os 2 asserts do size-guard; stepUpGuard 21/21). Must-fix aplicado. Fix B completo + gated. Vou commitar (seletivo) e já localizar o endpoint que exercita auth na Binance (pro smoke do deploy):
+
+## 🤖 Claude *(19:25:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/txb-commit.txt",
+  "content": "feat(security): cripto das chaves AES-CTR->AES-GCM + mask do accessKey no GET /settings\n\nFix B do relatorio de design 2026-06-22 (o mais sensivel: toca as chaves Binance vivas).\n\n- utils/crypto.js: ESCRITA agora AES-256-GCM (crypto nativo) com IV aleatorio/valor + auth tag,\n  formato versionado gcm:v1:<iv>:<tag>:<ct>. Fecha o two-time-pad do CTR-sem-IV (mesmo keystream\n  entre os 2 segredos) + ganha integridade (MAC). LEITURA retrocompativel: prefixo gcm:v1: -> GCM,\n  senao -> legado CTR (aes-js, byte-identico ao codigo antigo) -> backend le o que ja esta no banco.\n  Guard fail-closed: cipher > VARCHAR(255) LANCA (nao trunca silenciosamente).\n- utils/mask.js: maskSecret (primeiros4+****+ultimos4). settingsController.getSettings mascara\n  accessKey/testnetAccessKey (paravam de vazar plaintext no GET e pro contexto do LLM).\n- settingsRepository + stepUpGuard: guards mask-aware (re-save do valor mascarado NAO sobrescreve a\n  chave real nem dispara step-up falso) -- concordam nos 3 pontos via o mesmo maskSecret.\n- scripts/reencrypt-secrets-gcm.js: backfill ONE-SHOT manual (NAO migration de boot -> sem crash-loop),\n  dry-run default / ALLOW_REENCRYPT=true aplica; idempotente; SENTINELA de plaintext (pega AES_KEY\n  errada antes de gravar) + roundtrip GCM + ALL-OR-NOTHING; nunca imprime o segredo.\n- sim: crypto.test.js (15 asserts: GCM roundtrip, IV aleatorio, MAC rejeita ct/tag, retrocompat CTR,\n  PEM/newline, mask, size-guard) + stepUpGuard.test +1 (mask).\n\nGate QA (PASS com ressalvas) + TL (APPROVE com sugestoes; must-fix size-guard aplicado). sim 12/12;\npre-check read-only confirmou a nova crypto decifrando a secretKey CTR VIVA (64 chars, sentinela OK).\nMigracao = deploy (le CTR) -> dry-run -> backfill --apply sob HALT, com backup como rede.\nFollow-ups: coluna VARCHAR(255)->TEXT; encriptar accessKey at-rest (so mascarado hoje).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/txb-commit.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:25:32)*
+
+You've hit your session limit · resets 7:10pm (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -4592,5 +5249,5 @@ Como quer seguir?
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-22 - Validar studio design e canvas studio end-to-end]]
-> * **Próxima Sessão**: [[2026-06-22 - agent-a009bfb37ed7509b8]]
+> * **Próxima Sessão**: [[2026-06-22 - agent-a0084933295f2111e]]
 %% --- TIMELINE END --- %%

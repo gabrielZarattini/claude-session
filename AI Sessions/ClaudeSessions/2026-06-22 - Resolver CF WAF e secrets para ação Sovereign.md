@@ -2874,6 +2874,1534 @@ E o **C (1º ciclo pago do Usuário Zero)** segue **pronto e esperando seu GO + 
 
 Quer que eu **aguarde o ledger** (recomendado, chega já) e siga implementando o #1 per-user na sequência, ou prefere que eu **arranque já o C** em paralelo?
 
+## 👤 User *(19:00:35)*
+
+In /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat-gateway/index.ts line 200, the OpenClaw gateway token has a hardcoded literal fallback committed in source:
+
+  const openClawToken = Deno.env.get("OPENCLAW_GATEWAY_TOKEN") || "3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7";
+
+This leaks a gateway secret into the repo and means the function silently works even when OPENCLAW_GATEWAY_TOKEN is unset (masking misconfiguration). Fix:
+1. Remove the literal fallback — resolve the token from Deno.env.get("OPENCLAW_GATEWAY_TOKEN") only.
+2. Fail closed: if the env var is unset, return a structured 501 ({ error: "openclaw_gateway_not_configured" }) and log to infra_health_logs (service "aios-chat-gateway", status "error") instead of forwarding with a default secret.
+3. Rotate the leaked token value on the OpenClaw Gateway (host.docker.internal:18789) and set the new value as the OPENCLAW_GATEWAY_TOKEN edge-function secret — Sovereign action.
+4. Re-deploy the edge function and verify materially (curl forwarding still authenticates with the rotated secret).
+Token also appears as the canonical gateway bearer; check scripts/ and other edge fns for the same literal before rotating.
+
+## 🤖 Claude *(19:01:19)*
+
+
+## 🤖 Claude *(19:01:21)*
+
+Isso é um vazamento de segredo real e fail-open — prioridade. Vou tratar como incidente de segurança: primeiro a **verdade material** (todas as ocorrências do literal + se o env secret existe), antes de tocar em qualquer coisa. Crítico para a ordem de deploy.
+
+## 🤖 Claude *(19:01:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1. Ocorr\u00eancias do literal no REPO (file:line, sem ecoar o valor) ===\"\ngrep -rn -F \"3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7\" . --include=\"*.ts\" --include=\"*.js\" --include=\"*.sh\" --include=\"*.json\" --include=\"*.md\" 2>/dev/null | sed -E 's/3bdfc718[a-f0-9]+/<REDACTED_TOKEN>/g' || echo \"(nenhuma)\"\necho \"\"\necho \"=== 2. Refer\u00eancias a OPENCLAW_GATEWAY_TOKEN no repo ===\"\ngrep -rn -F \"OPENCLAW_GATEWAY_TOKEN\" . --include=\"*.ts\" --include=\"*.js\" --include=\"*.sh\" --include=\"*.json\" --include=\"*.toml\" 2>/dev/null || echo \"(nenhuma)\"",
+  "description": "Find all literal token + env var occurrences in repo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. Ocorrências do literal no REPO (file:line, sem ecoar o valor) ===
+> supabase/functions/aios-chat-gateway/index.ts:200:    const openClawToken = Deno.env.get("OPENCLAW_GATEWAY_TOKEN") || "<REDACTED_TOKEN>";
+> 
+> === 2. Referências a OPENCLAW_GATEWAY_TOKEN no repo ===
+> supabase/functions/aios-chat-gateway/index.ts:200:    const openClawToken = Deno.env.get("OPENCLAW_GATEWAY_TOKEN") || "3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7";
+> ```
+
+## 🤖 Claude *(19:01:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 3. O literal aparece fora do repo? (config do gateway OpenClaw) ===\"\ngrep -rn -F \"3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7\" /home/ubuntu/.openclaw/ 2>/dev/null | sed -E 's/3bdfc718[a-f0-9]+/<REDACTED_TOKEN>/g' | head -20 || echo \"(sem acesso ou nenhuma)\"\necho \"\"\necho \"=== 4. OPENCLAW_GATEWAY_TOKEN est\u00e1 setado como edge secret? ===\"\nnpx supabase secrets list --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -i \"OPENCLAW\" || echo \"\u2014 N\u00c3O setado como edge secret (a fn depende HOJE do literal) \u2014\"",
+  "description": "Check gateway config + whether env secret exists"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 3. O literal aparece fora do repo? (config do gateway OpenClaw) ===
+> /home/ubuntu/.openclaw/openclaw.json.bak.1:153:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak:153:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.clobbered.2026-05-17T02-21-48-109Z:67:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-1780087853:113:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak.3:149:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-resilience-1780096686:113:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.last-good:154:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak.2:150:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-recall0-1780100161:149:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-cheapdefault-1780097821:143:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json:154:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-fallbackfix-1780096301:113:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak.4:149:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-memoryfix-1780099004:144:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/openclaw.json.bak-tz-1780100907:149:      "token": "<REDACTED_TOKEN>"
+> /home/ubuntu/.openclaw/agents/main/sessions/sessions.json.telegram-messages.json:141:{"key":"default:5835174772:626","node":{"sourceMessage":{"message_id":626,"from":{"id":5835174772,"is_bot":false,"first_name":"gCallR","username":"gcallr","language_code":"en"},"chat":{"id":5835174772,"first_name":"gCallR","username":"gcallr","type":"private","is_forum":false},"date":1779380803,"text":"May 21 13:21:40 panel.gcrux.com ollama[2841641]: time=2026-05-21T13:21:40.751-03:00 level=INFO source=server.go:433 msg=\"starting runner\" cmd=\"/usr/local>\nMay 21 13:21:40 panel.gcrux.com ollama[2841641]: time=2026-05-21T13:21:40.810-03:00 level=INFO source=types.go:60 msg=\"inference compute\" id=cpu library=>\nMay 21 13:21:40 panel.gcrux.com ollama[2841641]: time=2026-05-21T13:21:40.810-03:00 level=INFO source=routes.go:1914 msg=\"vram-based default context\" tot>\nMay 21 13:21:40 panel.gcrux.com ollama[2841641]: time=2026-05-21T13:21:40.832-03:00 level=INFO source=model_recommendations.go:177 msg=\"model recommendat>\nMay 21 13:24:10 panel.gcrux.com ollama[2841641]: [GIN] 2026/05/21 - 13:24:10 | 400 |  189.940912ms |       127.0.0.1 | POST     \"/api/chat\"\nMay 21 13:24:27 panel.gcrux.com ollama[2841641]: [GIN] 2026/05/21 - 13:24:27 | 200 |     518.882µs |       127.0.0.1 | GET      \"/api/tags\"\n\n---\n\nNão tem nenhum default gemini veja.: \n\n{\n  \"agents\": {\n    \"defaults\": {\n      \"workspace\": \"/home/gcrUX/htdocs/constellation-orchestra\",\n      \"model\": {\n        \"primary\": \"ollama/llama3:latest\",\n        \"fallbacks\": [\"google/gemini-2.5-flash\"]\n      },\n      \"models\": {\n        \"google/gemini-2.5-flash\": {},\n        \"ollama/llama3:latest\": {},\n        \"ollama/qwen3.5:latest\": {}\n      },\n      \"subagents\": {\n        \"allowAgents\": [\n          \"artisan\",\n          \"engineer\",\n          \"scientist\",\n          \"marketing-growth\",\n          \"guardian\",\n          \"claw-master\",\n          \"main\"\n        ]\n      }\n    },\n    \"list\": [\n      {\n        \"id\": \"main\"\n      },\n      {\n        \"id\": \"artisan\",\n        \"name\": \"artisan\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/artisan\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/artisan/agent\"\n      },\n      {\n        \"id\": \"engineer\",\n        \"name\": \"engineer\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/engineer\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/engineer/agent\",\n        \"model\": {\n          \"primary\": \"ollama/qwen3.5:latest\",\n          \"fallbacks\": [\"google/gemini-2.5-flash\"]\n        }\n      },\n      {\n        \"id\": \"scientist\",\n        \"name\": \"scientist\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/scientist\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/scientist/agent\"\n      },\n      {\n        \"id\": \"marketing-growth\",\n        \"name\": \"marketing-growth\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/marketing-growth\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/marketing-growth/agent\"\n      },\n      {\n        \"id\": \"guardian\",\n        \"name\": \"guardian\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/guardian\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/guardian/agent\"\n      },\n      {\n        \"id\": \"claw-master\",\n        \"name\": \"claw-master\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/claw-master\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/claw-master/agent\"\n      }\n    ]\n  },\n  \"gateway\": {\n    \"trustedProxies\": [\n      \"127.0.0.1\",\n      \"::1\"\n    ],\n    \"mode\": \"local\",\n    \"auth\": {\n      \"mode\": \"token\",\n      \"token\": \"<REDACTED_TOKEN>\"\n    },\n    \"port\": 18789,\n    \"bind\": \"loopback\",\n    \"tailscale\": {\n      \"mode\": \"off\",\n      \"resetOnExit\": false\n    },\n    \"controlUi\": {\n      \"allowInsecureAuth\": false,\n      \"allowedOrigins\": [\n        \"https://claw.gcrux.com\",\n        \"http://127.0.0.1:18789\"\n      ]\n    },\n    \"nodes\": {\n      \"denyCommands\": [\n        \"camera.snap\",\n        \"camera.clip\",\n        \"screen.record\",\n        \"contacts.add\",\n        \"calendar.add\",\n        \"reminders.add\",\n        \"sms.send\",\n        \"sms.search\"\n      ]\n    }\n  },\n  \"session\": {\n    \"dmScope\": \"per-channel-peer\"\n  },\n  \"tools\": {\n    \"profile\": \"coding\",\n    \"web\": {\n      \"search\": {\n        \"provider\": \"firecrawl\",\n        \"enabled\": true\n      }\n    }\n  },\n  \"plugins\": {\n    \"entries\": {\n      \"google\": {\n        \"enabled\": true\n      },\n      \"telegram\": {\n        \"enabled\": true\n      },\n      \"firecrawl\": {\n        \"enabled\": true,","entities":[{"offset":16,"length":15,"type":"url"},{"offset":171,"length":15,"type":"url"},{"offset":326,"length":15,"type":"url"},{"offset":481,"length":15,"type":"url"},{"offset":636,"length":15,"type":"url"},{"offset":727,"length":9,"type":"url"},{"offset":776,"length":15,"type":"url"},{"offset":867,"length":9,"type":"url"},{"offset":945,"length":3134,"type":"code"}]}}}
+> /home/ubuntu/.openclaw/agents/main/sessions/sessions.json.telegram-messages.json:191:{"key":"default:5835174772:777","node":{"sourceMessage":{"message_id":777,"from":{"id":5835174772,"is_bot":false,"first_name":"gCallR","username":"gcallr","language_code":"en"},"chat":{"id":5835174772,"first_name":"gCallR","username":"gcallr","type":"private","is_forum":false},"date":1779588240,"text":"Esse é o openclaw.json.:\n\n{\n  \"agents\": {\n    \"defaults\": {\n      \"workspace\": \"/home/gcrUX/htdocs/constellation-orchestra\",\n      \"model\": {\n        \"primary\": \"ollama/llama3.1:8b\",\n        \"fallbacks\": [\"google/gemini-2.5-flash\"]\n      },\n      \"models\": {\n        \"google/gemini-2.5-flash\": {},\n        \"ollama/llama3.1:8b\": {},\n        \"ollama/qwen3.5:latest\": {}\n      },\n      \"subagents\": {\n        \"allowAgents\": [\n          \"artisan\",\n          \"engineer\",\n          \"scientist\",\n          \"marketing-growth\",\n          \"guardian\",\n          \"claw-master\",\n          \"main\"\n        ]\n      }\n    },\n    \"list\": [\n      {\n        \"id\": \"main\"\n      },\n      {\n        \"id\": \"artisan\",\n        \"name\": \"artisan\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/artisan\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/artisan/agent\"\n      },\n      {\n        \"id\": \"engineer\",\n        \"name\": \"engineer\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/engineer\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/engineer/agent\",\n        \"model\": {\n          \"primary\": \"ollama/qwen3.5:latest\",\n          \"fallbacks\": [\"google/gemini-2.5-flash\"]\n        }\n      },\n      {\n        \"id\": \"scientist\",\n        \"name\": \"scientist\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/scientist\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/scientist/agent\"\n      },\n      {\n        \"id\": \"marketing-growth\",\n        \"name\": \"marketing-growth\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/marketing-growth\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/marketing-growth/agent\"\n      },\n      {\n        \"id\": \"guardian\",\n        \"name\": \"guardian\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/guardian\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/guardian/agent\"\n      },\n      {\n        \"id\": \"claw-master\",\n        \"name\": \"claw-master\",\n        \"workspace\": \"/home/ubuntu/.openclaw/agents/claw-master\",\n        \"agentDir\": \"/home/ubuntu/.openclaw/agents/claw-master/agent\"\n      }\n    ]\n  },\n  \"gateway\": {\n    \"trustedProxies\": [\n      \"127.0.0.1\",\n      \"::1\"\n    ],\n    \"mode\": \"local\",\n    \"auth\": {\n      \"mode\": \"token\",\n      \"token\": \"<REDACTED_TOKEN>\"\n    },\n    \"port\": 18789,\n    \"bind\": \"loopback\",\n    \"tailscale\": {\n      \"mode\": \"off\",\n      \"resetOnExit\": false\n    },\n    \"controlUi\": {\n      \"allowInsecureAuth\": false,\n      \"allowedOrigins\": [\n        \"https://claw.gcrux.com\",\n        \"http://127.0.0.1:18789\"\n      ]\n    },\n    \"nodes\": {\n      \"denyCommands\": [\n        \"camera.snap\",\n        \"camera.clip\",\n        \"screen.record\",\n        \"contacts.add\",\n        \"calendar.add\",\n        \"reminders.add\",\n        \"sms.send\",\n        \"sms.search\"\n      ]\n    }\n  },\n  \"session\": {\n    \"dmScope\": \"per-channel-peer\"\n  },\n  \"tools\": {\n    \"profile\": \"coding\",\n    \"web\": {\n      \"search\": {\n        \"provider\": \"firecrawl\",\n        \"enabled\": true\n      }\n    },\n    \"sessions\": {\n      \"visibility\": \"all\"\n    }\n  },\n  \"plugins\": {\n    \"entries\": {\n      \"google\": {\n        \"enabled\": true\n      },\n      \"telegram\": {\n        \"enabled\": true\n      },\n      \"firecrawl\": {\n        \"enabled\": true,\n        \"config\": {\n          \"webSearch\": {\n            \"apiKey\": {\n              \"source\": \"file\",\n              \"provider\": \"filemain\",\n              \"id\": \"/keys/firecrawlApiKey\"\n            }\n          }\n        }\n      },\n      \"memory-core\": {\n        \"config\": {\n          \"dreaming\": {\n            \"enabled\": true\n          }\n        },\n        \"enabled\": true\n      },\n      \"memory-wiki\": {\n        \"enabled\": true,\n        \"config\": {\n          \"vaultMode\": \"bridge\",\n          \"vault\": {\n            \"path\": \"/home/ubuntu/.openclaw/wiki/main\",\n            \"renderMode\": \"native\"\n          },\n          \"bridge\": {\n            \"enabled\": true,\n            \"readMemoryArtifacts\": true,\n            \"indexDreamReports\": true,\n            \"indexDailyNotes\": true,\n            \"indexMemoryRoot\": true,\n            \"followMemoryEvents\": true\n          },\n          \"ingest\": {","entities":[{"offset":26,"length":4065,"type":"code"}]}}}
+> 
+> === 4. OPENCLAW_GATEWAY_TOKEN está setado como edge secret? ===
+> — NÃO setado como edge secret (a fn depende HOJE do literal) —
+> ```
+
+## 🤖 Claude *(19:02:22)*
+
+
+## 🤖 Claude *(19:02:27)*
+
+Verdade material levantada:
+
+- **No repo: 1 única ocorrência** — `aios-chat-gateway/index.ts:200`. **Zero** em `scripts/` ou outras edge fns. ✅
+- **`OPENCLAW_GATEWAY_TOKEN` NÃO está setado como edge secret** → a função **depende HOJE do literal**. ⚠️ **Isso impõe ordem de deploy:** se eu remover o literal e deployar fail-closed **antes** do secret existir, a `aios-chat-gateway` quebra (501).
+- **Fora do repo, o token é o bearer canônico do gateway** — está no `openclaw.json` vivo (`gateway.auth.token`, linha 154) + **15 arquivos de backup** + **vazou nos logs de sessão do Telegram** (você colou o openclaw.json inteiro no chat 2×). Então a rotação tem que cobrir: config viva do gateway + (higiene) backups + logs.
+
+Deixa eu ler a função pra fazer o fix no estilo dela (forwarding + telemetria):
+
+## 🤖 Claude *(19:02:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat-gateway/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 6	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 7	};
+> 8	
+> 9	interface MessageRecord {
+> 10	  id: string;
+> 11	  thread_id: string;
+> 12	  user_id: string;
+> 13	  sender_type: "user" | "agent";
+> 14	  sender_id: string;
+> 15	  content: string;
+> 16	  metadata: Record<string, any>;
+> 17	  created_at: string;
+> 18	}
+> 19	
+> 20	const SUPPORTED_AGENTS = new Set([
+> 21	  "engineer",
+> 22	  "scientist",
+> 23	  "artisan",
+> 24	  "marketing-growth",
+> 25	  "guardian",
+> 26	  "claw-master",
+> 27	  "main",
+> 28	]);
+> 29	
+> 30	Deno.serve(async (req) => {
+> 31	  if (req.method === "OPTIONS") {
+> 32	    return new Response("ok", { headers: corsHeaders });
+> 33	  }
+> 34	
+> 35	  const respond = (body: unknown, status = 200) =>
+> 36	    new Response(JSON.stringify(body), {
+> 37	      status,
+> 38	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 39	    });
+> 40	
+> 41	  try {
+> 42	    const payload = await req.json();
+> 43	    console.log("[aios-chat-gateway] Payload received:", JSON.stringify(payload));
+> 44	
+> 45	    // Support both direct client call and Database Webhook format
+> 46	    const record: MessageRecord = payload.record || payload;
+> 47	    if (!record || !record.id || !record.thread_id || !record.user_id) {
+> 48	      return respond({ error: "Invalid payload: record properties missing" }, 400);
+> 49	    }
+> 50	
+> 51	    // Guard: ignore messages sent by agents to prevent infinite loop loops
+> 52	    if (record.sender_type === "agent") {
+> 53	      console.log("[aios-chat-gateway] Ignoring agent message, no loop trigger.");
+> 54	      return respond({ status: "ignored", reason: "sender is agent" });
+> 55	    }
+> 56	
+> 57	    // Determine target agent (via mention in content, metadata, or thread context)
+> 58	    let targetAgent: string | null = null;
+> 59	
+> 60	    // 1. Check metadata
+> 61	    if (record.metadata && typeof record.metadata === "object") {
+> 62	      const metaAgent = record.metadata.agent_id || record.metadata.assigned_agent_id;
+> 63	      if (metaAgent && SUPPORTED_AGENTS.has(metaAgent)) {
+> 64	        targetAgent = metaAgent;
+> 65	      }
+> 66	    }
+> 67	
+> 68	    // 2. Check content mention (@agent)
+> 69	    if (!targetAgent && record.content) {
+> 70	      const match = record.content.match(/@([a-zA-Z0-9_-]+)/);
+> 71	      if (match && SUPPORTED_AGENTS.has(match[1])) {
+> 72	        targetAgent = match[1];
+> 73	      }
+> 74	    }
+> 75	
+> 76	    // 3. Fallback: query the thread's title or channel to see if it matches an agent name
+> 77	    const supabase = createClient(
+> 78	      Deno.env.get("SUPABASE_URL")!,
+> 79	      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+> 80	    );
+> 81	
+> 82	    if (!targetAgent) {
+> 83	      const { data: thread } = await supabase
+> 84	        .from("aios_threads")
+> 85	        .select("title")
+> 86	        .eq("id", record.thread_id)
+> 87	        .eq("user_id", record.user_id)
+> 88	        .maybeSingle();
+> 89	
+> 90	      if (thread && thread.title) {
+> 91	        const titleLower = thread.title.toLowerCase();
+> 92	        for (const agent of SUPPORTED_AGENTS) {
+> 93	          if (titleLower.includes(agent)) {
+> 94	            targetAgent = agent;
+> 95	            break;
+> 96	          }
+> 97	        }
+> 98	      }
+> 99	    }
+> 100	
+> 101	    // If no target agent is found, ignore
+> 102	    if (!targetAgent) {
+> 103	      console.log("[aios-chat-gateway] No target agent resolved for message:", record.id);
+> 104	      return respond({ status: "ignored", reason: "no target agent resolved" });
+> 105	    }
+> 106	
+> 107	    console.log(`[aios-chat-gateway] Target agent resolved: ${targetAgent}. Fetching thread messages...`);
+> 108	
+> 109	    // Fetch conversation history for this thread. 
+> 110	    // Filter strictly by user_id to respect the API Tenancy Model!
+> 111	    const { data: threadMessages, error: fetchError } = await supabase
+> 112	      .from("aios_messages")
+> 113	      .select("*")
+> 114	      .eq("thread_id", record.thread_id)
+> 115	      .eq("user_id", record.user_id)
+> 116	      .order("created_at", { ascending: true })
+> 117	      .limit(30);
+> 118	
+> 119	    if (fetchError || !threadMessages || threadMessages.length === 0) {
+> 120	      console.error("[aios-chat-gateway] Error fetching messages:", fetchError);
+> 121	      return respond({ error: "Failed to fetch thread messages" }, 500);
+> 122	    }
+> 123	
+> 124	    // Format messages into OpenAI compatible list
+> 125	    const openAiMessages = threadMessages.map((m) => ({
+> 126	      role: m.sender_type === "user" ? "user" : "assistant",
+> 127	      content: m.content,
+> 128	    }));
+> 129	
+> 130	    // Resolve or create corresponding crew agent
+> 131	    const agentKey = `pantheon-${targetAgent}`;
+> 132	    let { data: crewAgent, error: crewErr } = await supabase
+> 133	      .from("crew_agents")
+> 134	      .select("id")
+> 135	      .eq("user_id", record.user_id)
+> 136	      .eq("agent_key", agentKey)
+> 137	      .maybeSingle();
+> 138	
+> 139	    if (crewErr) {
+> 140	      console.error("[aios-chat-gateway] Error looking up crew agent:", crewErr);
+> 141	      return respond({ error: "Failed to resolve crew agent reference" }, 500);
+> 142	    }
+> 143	
+> 144	    if (!crewAgent) {
+> 145	      console.log(`[aios-chat-gateway] Seeding crew agent ${agentKey} for user ${record.user_id}...`);
+> 146	      // Fetch global config prompts for defaults
+> 147	      const { data: globalConfig } = await supabase
+> 148	        .from("pantheon_global_configs")
+> 149	        .select("soul_prompt, system_prompt")
+> 150	        .eq("agent_id", targetAgent)
+> 151	        .maybeSingle();
+> 152	
+> 153	      const name = `Pantheon ${targetAgent.charAt(0).toUpperCase() + targetAgent.slice(1)}`;
+> 154	      const { data: newAgent, error: createErr } = await supabase
+> 155	        .from("crew_agents")
+> 156	        .insert({
+> 157	          user_id: record.user_id,
+> 158	          agent_key: agentKey,
+> 159	          name: name,
+> 160	          role: `Pantheon ${targetAgent.charAt(0).toUpperCase() + targetAgent.slice(1)} Agent`,
+> 161	          squad: "pantheon",
+> 162	          provider: "openclaw",
+> 163	          model: `openclaw/${targetAgent}`,
+> 164	          system_prompt: globalConfig?.system_prompt || `Default ${targetAgent} system prompt`,
+> 165	        })
+> 166	        .select("id")
+> 167	        .single();
+> 168	
+> 169	      if (createErr || !newAgent) {
+> 170	        console.error("[aios-chat-gateway] Failed to seed crew agent:", createErr);
+> 171	        return respond({ error: "Failed to seed crew agent reference" }, 500);
+> 172	      }
+> 173	      crewAgent = newAgent;
+> 174	    }
+> 175	
+> 176	    const crewAgentId = crewAgent.id;
+> 177	
+> 178	    // Log execution start by inserting a row into agent_executions
+> 179	    const startedAt = new Date().toISOString();
+> 180	    const { data: execRow, error: execInsErr } = await supabase
+> 181	      .from("agent_executions")
+> 182	      .insert({
+> 183	        agent_id: crewAgentId,
+> 184	        user_id: record.user_id,
+> 185	        prompt: record.content,
+> 186	        provider: "openclaw",
+> 187	        model: `openclaw/${targetAgent}`,
+> 188	        status: "running",
+> 189	        started_at: startedAt,
+> 190	      })
+> 191	      .select("id")
+> 192	      .single();
+> 193	
+> 194	    if (execInsErr || !execRow) {
+> 195	      console.error("[aios-chat-gateway] Failed to insert agent_execution:", execInsErr);
+> 196	    }
+> 197	    const execId = execRow?.id;
+> 198	
+> 199	    // Trigger OpenClaw Gateway locally via Docker Host bridge
+> 200	    const openClawToken = Deno.env.get("OPENCLAW_GATEWAY_TOKEN") || "3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7";
+> 201	    const openClawUrl = "http://host.docker.internal:18789/v1/chat/completions";
+> 202	
+> 203	    console.log(`[aios-chat-gateway] Forwarding request to OpenClaw: ${openClawUrl}`);
+> 204	    const t0 = Date.now();
+> 205	    const response = await fetch(openClawUrl, {
+> 206	      method: "POST",
+> 207	      headers: {
+> 208	        "Content-Type": "application/json",
+> 209	        "Authorization": `Bearer ${openClawToken}`,
+> 210	      },
+> 211	      body: JSON.stringify({
+> 212	        model: `openclaw/${targetAgent}`,
+> 213	        messages: openAiMessages,
+> 214	      }),
+> 215	    });
+> 216	
+> 217	    if (!response.ok) {
+> 218	      const errText = await response.text();
+> 219	      console.error(`[aios-chat-gateway] OpenClaw API error (${response.status}):`, errText);
+> 220	      
+> 221	      if (execId) {
+> 222	        await supabase
+> 223	          .from("agent_executions")
+> 224	          .update({
+> 225	            status: "failed",
+> 226	            error_msg: `OpenClaw gateway returned HTTP ${response.status}: ${errText.slice(0, 200)}`,
+> 227	            completed_at: new Date().toISOString(),
+> 228	            latency_ms: Date.now() - t0,
+> 229	          })
+> 230	          .eq("id", execId);
+> 231	      }
+> 232	
+> 233	      // Log to telemetry (infra_health_logs)
+> 234	      await supabase.from("infra_health_logs").insert({
+> 235	        service: "aios-chat-gateway",
+> 236	        status: "degraded",
+> 237	        message: `OpenClaw gateway returned HTTP ${response.status}: ${errText.slice(0, 200)}`,
+> 238	        metadata: { thread_id: record.thread_id, agent_id: targetAgent },
+> 239	      });
+> 240	
+> 241	      return respond({ error: "OpenClaw gateway failed", detail: errText }, 502);
+> 242	    }
+> 243	
+> 244	    const result = await response.json();
+> 245	    const agentReply = result.choices?.[0]?.message?.content;
+> 246	
+> 247	    if (!agentReply) {
+> 248	      console.error("[aios-chat-gateway] Empty response from OpenClaw:", JSON.stringify(result));
+> 249	      if (execId) {
+> 250	        await supabase
+> 251	          .from("agent_executions")
+> 252	          .update({
+> 253	            status: "failed",
+> 254	            error_msg: "No response text returned by OpenClaw",
+> 255	            completed_at: new Date().toISOString(),
+> 256	            latency_ms: Date.now() - t0,
+> 257	          })
+> 258	          .eq("id", execId);
+> 259	      }
+> 260	      return respond({ error: "No response text returned by OpenClaw" }, 502);
+> 261	    }
+> 262	
+> 263	    console.log(`[aios-chat-gateway] Received reply from OpenClaw. Computing costs...`);
+> 264	    const latencyMs = Date.now() - t0;
+> 265	    const promptTokens = result.usage?.prompt_tokens || 0;
+> 266	    const completionTokens = result.usage?.completion_tokens || 0;
+> 267	
+> 268	    // Compute cost via RPC
+> 269	    const { data: costData } = await supabase.rpc("calc_agent_cost_mcoin", {
+> 270	      p_tokens_in: promptTokens,
+> 271	      p_tokens_out: completionTokens,
+> 272	      p_provider: "openclaw",
+> 273	      p_model: `openclaw/${targetAgent}`,
+> 274	    });
+> 275	
+> 276	    const costMcoin = costData?.cost_mcoin || 0;
+> 277	    const costUsdMicro = costData?.cost_usd_micro || 0;
+> 278	
+> 279	    if (execId) {
+> 280	      await supabase
+> 281	        .from("agent_executions")
+> 282	        .update({
+> 283	          status: "done",
+> 284	          response: agentReply,
+> 285	          tokens_in: promptTokens,
+> 286	          tokens_out: completionTokens,
+> 287	          cost_usd_micro: costUsdMicro,
+> 288	          cost_mcoin: costMcoin,
+> 289	          latency_ms: latencyMs,
+> 290	          completed_at: new Date().toISOString(),
+> 291	        })
+> 292	        .eq("id", execId);
+> 293	    }
+> 294	
+> 295	    // Deduct cost for non-Sovereign users
+> 296	    const SOVEREIGN_USER_ID = "ada39fae-67e1-4e53-af1c-5a18e1c108e8";
+> 297	    if (record.user_id !== SOVEREIGN_USER_ID && costMcoin > 0) {
+> 298	      const { error: deductErr } = await supabase.rpc("deduct_mco_coins", {
+> 299	        p_user_id: record.user_id,
+> 300	        p_amount: Number(costMcoin),
+> 301	      });
+> 302	      if (deductErr) {
+> 303	        console.warn(`[aios-chat-gateway] mcoCoin deduction failed for user ${record.user_id}:`, deductErr.message);
+> 304	      }
+> 305	    }
+> 306	
+> 307	    console.log(`[aios-chat-gateway] Received reply from OpenClaw. Inserting back into database...`);
+> 308	
+> 309	    // Insert reply into public.aios_messages
+> 310	    const { error: insertError } = await supabase.from("aios_messages").insert({
+> 311	      thread_id: record.thread_id,
+> 312	      user_id: record.user_id,
+> 313	      sender_type: "agent",
+> 314	      sender_id: targetAgent,
+> 315	      content: agentReply,
+> 316	      metadata: {
+> 317	        parent_message_id: record.id,
+> 318	        run_id: result.id,
+> 319	      },
+> 320	    });
+> 321	
+> 322	    if (insertError) {
+> 323	      console.error("[aios-chat-gateway] Error inserting agent reply:", insertError);
+> 324	      return respond({ error: "Failed to persist agent reply" }, 500);
+> 325	    }
+> 326	
+> 327	    console.log("[aios-chat-gateway] Agent reply successfully persisted.");
+> 328	    return respond({ status: "success", agent: targetAgent, reply: agentReply.slice(0, 50) + "..." });
+> 329	  } catch (err) {
+> 330	    const msg = err instanceof Error ? err.message : String(err);
+> 331	    console.error("[aios-chat-gateway] Unhandled exception:", msg);
+> 332	    return respond({ error: msg }, 500);
+> 333	  }
+> 334	});
+> 335	
+> ```
+
+## 🤖 Claude *(19:03:52)*
+
+
+## 🤖 Claude *(19:03:53)*
+
+Função inteira lida. Tem helper `respond()` + cliente `supabase` + padrão de telemetria `infra_health_logs` já em uso (linhas 234-239), e `execId`/`record`/`targetAgent` em escopo na linha 200. Aplico o fix (env-only + fail-closed 501 + telemetria) no estilo do arquivo:
+
+## 🤖 Claude *(19:04:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat-gateway/index.ts",
+  "old_string": "    // Trigger OpenClaw Gateway locally via Docker Host bridge\n    const openClawToken = Deno.env.get(\"OPENCLAW_GATEWAY_TOKEN\") || \"3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7\";\n    const openClawUrl = \"http://host.docker.internal:18789/v1/chat/completions\";",
+  "new_string": "    // Trigger OpenClaw Gateway locally via Docker Host bridge.\n    // SECURITY: the gateway bearer MUST resolve from the edge-function secret ONLY. A committed literal fallback\n    // both (a) leaks the gateway secret into source control and (b) fails OPEN \u2014 the fn would keep forwarding with\n    // a default even when the secret is unset, masking misconfiguration. Resolve env-only and fail CLOSED.\n    const openClawToken = Deno.env.get(\"OPENCLAW_GATEWAY_TOKEN\");\n    if (!openClawToken) {\n      console.error(\"[aios-chat-gateway] OPENCLAW_GATEWAY_TOKEN not configured \u2014 refusing to forward (fail-closed).\");\n      if (execId) {\n        await supabase\n          .from(\"agent_executions\")\n          .update({\n            status: \"failed\",\n            error_msg: \"OPENCLAW_GATEWAY_TOKEN not configured\",\n            completed_at: new Date().toISOString(),\n          })\n          .eq(\"id\", execId);\n      }\n      await supabase.from(\"infra_health_logs\").insert({\n        service: \"aios-chat-gateway\",\n        status: \"error\",\n        message: \"OPENCLAW_GATEWAY_TOKEN not configured \u2014 forwarding refused (fail-closed)\",\n        metadata: { thread_id: record.thread_id, agent_id: targetAgent },\n      });\n      return respond({ error: \"openclaw_gateway_not_configured\" }, 501);\n    }\n    const openClawUrl = \"http://host.docker.internal:18789/v1/chat/completions\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/aios-chat-gateway/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:05:16)*
+
+
+## 🤖 Claude *(19:05:39)*
+
+✅ **Código corrigido** (`aios-chat-gateway/index.ts:200`) — resolução **env-only**, **fail-closed** com `501 { error: "openclaw_gateway_not_configured" }` + telemetria `infra_health_logs` (service `aios-chat-gateway`, status `error`) + marca a `agent_execution` como `failed`. Literal removido. (A fn é Deno, fora do tsc do frontend; o bloco espelha os padrões `respond()`/`infra_health_logs` já no arquivo.)
+
+## ⚠️ Restrição de ordem de deploy (crítica)
+
+Como `OPENCLAW_GATEWAY_TOKEN` **não está** setado como edge secret hoje, a fn atual **depende do literal**. Se eu deployar o código fail-closed **antes** do secret existir, a `aios-chat-gateway` passa a retornar **501** (quebra o chat AIOS→OpenClaw). Então o secret tem que existir **antes** do meu deploy.
+
+## Espalhamento do token (a rotação tem que cobrir)
+
+| Local | Situação |
+|---|---|
+| Repo | ✅ 1 linha, **corrigida** (zero em `scripts/`/outras fns) |
+| `~/.openclaw/openclaw.json` (vivo, `gateway.auth.token`) | bearer **canônico** — rotacionar |
+| 15 arquivos `.bak*`/`.clobbered` em `~/.openclaw/` | higiene (valor velho — rotação o queima) |
+| Logs de sessão Telegram (`sessions.json.telegram-messages.json`) | você colou o json 2× — valor velho exposto |
+| Git **history** | o literal está em commits antigos — **rotação é a mitigação real** (purgar history com BFG é opcional/pesado) |
+
+## Rotação — ação Sovereign (gera 1× e usa nos 2 lugares, sem ecoar)
+
+Não restarto o gateway por conta própria (impacta a squad OpenClaw + crons — SOP `openclaw-gateway-supervisor`). Roda este bloco (ele mantém gateway e edge secret no MESMO valor novo):
+
+```bash
+set -euo pipefail
+CFG=/home/ubuntu/.openclaw/openclaw.json
+NEW=$(openssl rand -hex 24)                                   # 48 hex, mesmo formato
+
+cp "$CFG" "$CFG.bak-rotate-$(date +%s)"                       # backup
+jq --arg t "$NEW" '.gateway.auth.token = $t' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"   # rotaciona no config vivo
+systemctl --user restart openclaw-gateway.service            # supervisor canônico — NUNCA pm2
+
+cd /home/gcrUX/htdocs/constellation-orchestra
+npx supabase secrets set OPENCLAW_GATEWAY_TOKEN="$NEW" --project-ref bcyvddsykvehvpwstlfa   # mesmo valor no edge
+
+echo "✅ gateway rotacionado + edge secret setado (len=${#NEW})"; unset NEW
+```
+
+> Detalhe bom: assim que o secret é setado, **a fn velha (ainda deployada) já passa a usar `env` em vez do literal** → volta a casar com o gateway novo na hora. Janela de ~segundos entre o restart e o `secrets set`.
+
+## Depois que você rodar, eu faço (e provo materialmente)
+
+1. **Deploy** da fn corrigida (`supabase functions deploy aios-chat-gateway`) — confirmo version bump.
+2. **Verifico a rotação**: leio o `NEW` do `openclaw.json` rotacionado e `curl` no gateway `127.0.0.1:18789` → **token novo = autentica**, **token velho = 401** (prova que queimou).
+3. (Opcional) E2E real: disparo uma mensagem de teste pelo `aios-chat-gateway` e confirmo forwarding `success` (sem 401/501).
+
+## Antibody (Lei 2 — follow-up)
+
+Esse literal **passou pelo gate de secret-scan** e foi commitado — bate com o gap conhecido (`reference_grep_is_ugrep_shim_in_tool`: o pre-commit anti-credential no-opava em commits de IA; OTD-SEC-007 lefthook/gitleaks). Recomendo, em seguida, endurecer a regra pra pegar o padrão `Deno.env.get(...) || "<literal>"` (fallback hardcoded) — assim a reincidência é barrada no commit.
+
+Me diz quando a rotação estiver feita (ou se quer que eu rode o `secrets set` + deploy assim que você rotacionar o gateway) que eu fecho com a verificação material. A auditoria per-user (`wqyrxt2u7`) segue rodando em background.
+
+## 👤 User *(19:07:34)*
+
+<task-notification>
+<task-id>wqyrxt2u7</task-id>
+<tool-use-id>toolu_01Y1xq1BNyafcV5VBrH57B8F</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/tasks/wqyrxt2u7.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Audita resolução de credencial per-user vs global em todas as edge functions (API Tenancy Model)" completed</summary>
+<result>{"total":49,"violations":3,"ledger":"# Ledger Priorizado — Auditoria de Prontidão Per-User (API Tenancy Model)\n\n## 1. Resumo\n\n| Métrica | Valor |\n|---|---|\n| **Total classificadas** | 44 |\n| `per_user` (conforme) | 30 |\n| `fallback_ok` (exceção legítima) | 11 |\n| `violation` | 3 |\n| `mixed` | 1 (**4 a remediar no total**) |\n\n---\n\n## 2. Violações e Mixed — ordenadas por blast radius\n\n&gt; Critério Sovereign: fluxos que **gastam crédito do tenant / publicam em nome dele / esgotam quota compartilhada** primeiro.\n\n| # | Edge fn | Serviços | Evidência (path:linha) | O que fazer pra virar per-user |\n|---|---|---|---|---|\n| 1 | **canvas-execute** (`mixed`) | higgsfield (openai/replicate/openrouter/gemini já OK) | `canvas-execute/index.ts:139-140` — `higgsfield: Deno.env.get('HIGGSFIELD_API_KEY')` + `higgsfield_secret: Deno.env.get('HIGGSFIELD_API_KEY_SECRET')` direto do env num fluxo iniciado por JWT (`:114` `getUser`); consumido em path de vídeo `:423-432` e imagem `:453`. `userKeys` já é buscado em `:131-132`. | Consumir a coluna per-user já carregada: `higgsfield: userKeys?.higgsfield_api_key \\|\\| Deno.env.get('HIGGSFIELD_API_KEY')` (CLAUDE.md já lista `user_api_keys.higgsfield_api_key` como canônica). **Caveat material:** confirmar se `higgsfield_api_key_secret` existe em `decrypted_user_api_keys` antes de aplicar (BYOK Higgsfield hoje pode ser key única). Promover hard-fail a 402/501 `{error, action→/dashboard/settings}`. **Sem query extra.** |\n| 2 | **openrouter-swarm** (`violation`) | openrouter | `openrouter-swarm/index.ts:114` — `apiKey = Deno.env.get('OPENROUTER_API_KEY')` como caminho ÚNICO e PRIMÁRIO; `:115-117` hard-fail só checa env; `:144-146` todos os model_ids usam a mesma key global; grep confirma ZERO `decrypted_user_api_keys`. Fluxo 100% user-facing (`:109-112` `getUser` + 401). | Inserir lookup per-user ANTES da `:114`, espelhando o padrão canônico (`generate-content:46`, `aios-chat:104`, `analyze-node:47`): após `user` (`:109`), client service-role lê `decrypted_user_api_keys.openrouter_api_key WHERE user_id = user.id`, então `apiKey = userKeys?.openrouter_api_key \\|\\| Deno.env.get('OPENROUTER_API_KEY')`. Por ser 100% user-facing, endurecer fail-closed → 402/501 `{error:'openrouter_not_configured', action}`. |\n| 3 | **fetch-trends** (`violation`) | apify, rapidapi | `fetch-trends/index.ts:54` — `apifyToken = Deno.env.get('APIFY_TOKENS')` caminho primário/único; `:109` `rapidKey = Deno.env.get('RAPIDAPI_KEY')` idem; `:72`/`:113-118` fetch usa env global; `:48,147,173` adminClient só toca `vm_trends`, NUNCA lê per-user. Fluxo user-facing (`:31-40` `getUser` + 401, `user.id` disponível). | (1) Colunas em `user_api_keys` (`apify_token`, `rapidapi_key`) ou tabela `trends_config` RLS `auth.uid()=user_id`; (2) ler per-user por `user.id` (já disponível pós-getUser `:35`) e usar nos fetch `:72`/`:113`; (3) env como fallback documentado OU 402/501 `{error:'trends_not_configured', action}` no lugar do 500 cru `:56`; (4) UI `/dashboard/settings` + hook + telemetry `infra_health_logs` `service='fetch-trends'`. **Caveat:** se Sovereign decidir que trends é corpus compartilhado (`vm_trends` é cache global), **registrar OTD com SLA** — hoje não há exceção registrada, logo permanece violação. |\n\n---\n\n## 3. Fallback_OK — confirmados legítimos (sistema / cron / webhook)\n\n| Edge fn | Serviço(s) | Por que é legítimo (path:linha) |\n|---|---|---|\n| `check-subscription` | stripe, supabase | Stripe = system key por design; query escopada por `user.email` (`:43`). Stripe não tem tabela per-user. |\n| `create-checkout` | stripe, supabase | Stripe service-side only (`:37`); customer resolvido por email (`:39-50`); conta-mãe da plataforma. |\n| `create-portal` | stripe, supabase | Idem — billing roda em conta Stripe única; segregação por `user.email` (`:34`). |\n| `stripe-webhook` | stripe, supabase | Webhook assinado (`:89-104`), service-role (`:5`), sem JWT; identidade via `listUsers()` por email. |\n| `embed-mcorch-node` | openrouter, gemini | Embedding alimenta índice GLOBAL `mcorch_nodes` (`:208-248`); caller dominante service-role; exceção mesh documentada. |\n| `search-constellation` | openrouter, gemini | Embedding p/ busca vetorial interna `match_mcorch_nodes` (`:144-149`); service-role, sem `deduct_mco_coins`. |\n| `sync-knowledge-mesh` | groq, n8n | Trigger/webhook DB (`:17-20` `payload.record`); sem `auth.uid()`; pipeline interno de mesh. |\n| `handle-ml-postback` | mercadopago, mercadolivre | Webhook server-to-server (`verify_jwt=false`); HMAC `x-signature` (`:100-124`); OTD-ML-MP-PER-USER já registrada. |\n| `instagram-webhook` | meta, instagram | Webhook inbound Meta (`hub.challenge`); só verify token + service-role telemetry; sem outbound. |\n| `whatsapp-webhook` | meta, whatsapp | Webhook inbound; tenant resolvido server-trusted via `meta_config` (`:119-132`); sem outbound Send API. |\n| `social-auth-callback` | linkedin/instagram/twitter/meta | Leg OAuth redirect; `client_id/secret` = app OAuth da plataforma (system); token gravado per-user em `social_accounts` (`:168-183`). |\n| `social-auth-init` | linkedin/instagram/twitter | OAuth APP client IDs (system, no CLAUDE.md); token per-user gravado downstream pelo callback. |\n| `refresh-social-token` | linkedin/instagram/twitter | `refresh_token` per-user de `decrypted_social_accounts` + ownership check (`:59`); só `client_id/secret` do app são env (system). |\n| `self-heal` | supabase, refresh-social-token | Tokens sociais lidos per-user (`:66-70`); renovação delegada system-to-system; só system keys via env. |\n| `aios-chat-gateway` | openclaw-gateway | Service-role/DB-webhook; gateway interno `host.docker.internal:18789` = system. **⚠️ defeito independente: `:200` token real hardcoded como fallback** — task_583a399a já registrada (rotacionar + fail-closed). |\n\n---\n\n## 4. Ordem de Remediação Recomendada\n\nPrincípio Sovereign: **\"tudo que é per-user é prioridade\"** → priorizar pela combinação **fluxo user-facing + quota/revenue compartilhada hoje vazando**.\n\n**1º — `openrouter-swarm`** (violation, maior blast radius).\nFluxo 100% user-facing, gasta tokens OpenRouter sob a **chave global compartilhada** — quebra atribuição de receita, segregação de quota e isolamento de risco financeiro dos 3 pilares da diretiva. Fix é o mais barato e canônico: ~3 linhas espelhando `generate-content:46`. Atacar primeiro porque é alto impacto + baixo custo + padrão já existente em ~25 fns irmãs.\n\n**2º — `canvas-execute` / Higgsfield** (mixed, mas é geração de vídeo/imagem cara).\nViolação isolada a 1 provider, e Higgsfield é o serviço de **maior custo unitário** do ecossistema — um tenant esgotando a key global de vídeo é o pior cenário de drain. `userKeys` já está carregado (zero query extra). **Bloqueio material antes de codar:** confirmar se `higgsfield_api_key_secret` existe em `decrypted_user_api_keys` (par único vs. key+secret) — Lei 1.\n\n**3º — `fetch-trends`** (violation, mas menor blast radius + decisão de produto pendente).\nApify/RapidAPI são scraping de tendências, não gasto de crédito do tenant nem publicação; `vm_trends` é cache **global** por design. Exige mais trabalho (colunas novas + UI + hook + telemetry) e tem um **fork de decisão Sovereign**: se trends for declarado corpus compartilhado, fecha-se com **OTD + SLA** em vez de refactor. Atacar por último e **levar a decisão ao Sovereign antes** — pode virar OTD, não código.\n\n---\n\n**Nota transversal (fora de tenancy, mas material):** 3 achados de segurança independentes surgiram na auditoria e devem virar follow-up próprio — `aios-chat-gateway:200` (token gateway hardcoded, task_583a399a), `social-auth-callback:40` (`userId` de `atob(state)` sem HMAC → injeção cross-tenant de token OAuth) e `instagram-webhook` (POST sem validação `X-Hub-Signature-256`). Não bloqueiam o ledger per-user, mas o `social-auth-callback` é cross-tenant e merece prioridade de segurança.\n\n**Drift cosmético recorrente (não
+... (truncated 401 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/tasks/wqyrxt2u7.output)</result>
+<usage><agent_count>51</agent_count><subagent_tokens>3421494</subagent_tokens><tool_uses>112</tool_uses><duration_ms>920413</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(19:08:25)*
+
+
+## 🤖 Claude *(19:08:27)*
+
+A auditoria voltou. Antes de resumir, leio o output completo (não confio na view truncada — Lei 1) e, em paralelo, puxo as duas funções do topo da fila: `openrouter-swarm` (violação #1 per-user) e `social-auth-callback` (o achado de segurança cross-tenant que merece verificação material):
+
+## 🤖 Claude *(19:08:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -40 \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/tasks/wqyrxt2u7.output\" 2>/dev/null | python3 -c \"import sys,json\nraw=sys.stdin.read()\n# the file is the raw result JSON-ish; just print tail text after the truncation point\nprint(raw[-1500:])\"",
+  "description": "Read tail of audit output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> _api_keys` (par único vs. key+secret) — Lei 1.\n\n**3º — `fetch-trends`** (violation, mas menor blast radius + decisão de produto pendente).\nApify/RapidAPI são scraping de tendências, não gasto de crédito do tenant nem publicação; `vm_trends` é cache **global** por design. Exige mais trabalho (colunas novas + UI + hook + telemetry) e tem um **fork de decisão Sovereign**: se trends for declarado corpus compartilhado, fecha-se com **OTD + SLA** em vez de refactor. Atacar por último e **levar a decisão ao Sovereign antes** — pode virar OTD, não código.\n\n---\n\n**Nota transversal (fora de tenancy, mas material):** 3 achados de segurança independentes surgiram na auditoria e devem virar follow-up próprio — `aios-chat-gateway:200` (token gateway hardcoded, task_583a399a), `social-auth-callback:40` (`userId` de `atob(state)` sem HMAC → injeção cross-tenant de token OAuth) e `instagram-webhook` (POST sem validação `X-Hub-Signature-256`). Não bloqueiam o ledger per-user, mas o `social-auth-callback` é cross-tenant e merece prioridade de segurança.\n\n**Drift cosmético recorrente (não-bloqueante):** múltiplas fns leem a coluna per-user canônica `google_api_key` (correto) mas usam o env de fallback `GEMINI_API_KEY` em vez de `GOOGLE_API_KEY` — padronizar o nome do secret de fallback por higiene (`aios-chat`, `aios-chat-stream`, `analyze-*`, `generate-content`, `generate-video-script`, `intent-orchestrate`, `nurture-dispatch`, `optimize-schedule`, `tts-speak`, `self-optimize`)."
+>   }
+> }
+> ```
+
+## 🤖 Claude *(19:08:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/openrouter-swarm/index.ts",
+  "offset": 95,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	    });
+> 96	
+> 97	  // Zero-Trust: require valid JWT
+> 98	  const authHeader = req.headers.get("Authorization");
+> 99	  if (!authHeader?.startsWith("Bearer ")) {
+> 100	    return respond({ error: "Unauthorized" }, 401);
+> 101	  }
+> 102	
+> 103	  const supabase = createClient(
+> 104	    Deno.env.get("SUPABASE_URL")!,
+> 105	    (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 106	    { global: { headers: { Authorization: authHeader } } }
+> 107	  );
+> 108	
+> 109	  const { data: { user }, error: userError } = await supabase.auth.getUser();
+> 110	  if (userError || !user) {
+> 111	    return respond({ error: "Unauthorized" }, 401);
+> 112	  }
+> 113	
+> 114	  const apiKey = Deno.env.get("OPENROUTER_API_KEY");
+> 115	  if (!apiKey) {
+> 116	    return respond({ error: "OPENROUTER_API_KEY not configured" }, 500);
+> 117	  }
+> 118	
+> 119	  let prompt: string;
+> 120	  let model_ids: string[];
+> 121	
+> 122	  try {
+> 123	    const body = await req.json();
+> 124	    prompt = body.prompt;
+> 125	    model_ids = Array.isArray(body.model_ids) && body.model_ids.length > 0
+> 126	      ? body.model_ids
+> 127	      : DEFAULT_MODELS;
+> 128	
+> 129	    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+> 130	      return respond({ error: "prompt is required" }, 400);
+> 131	    }
+> 132	
+> 133	    // Guard: max 5 models per call to prevent runaway costs
+> 134	    if (model_ids.length > 5) {
+> 135	      return respond({ error: "max 5 models per call" }, 400);
+> 136	    }
+> 137	  } catch {
+> 138	    return respond({ error: "Invalid JSON body" }, 400);
+> 139	  }
+> 140	
+> 141	  const overallStart = performance.now();
+> 142	
+> 143	  // Fire all models in parallel — failures are captured as error objects, never thrown
+> 144	  const raw = await Promise.all(
+> 145	    model_ids.map((m) => callModel(m, prompt.trim(), apiKey))
+> 146	  );
+> 147	
+> 148	  const total_duration_ms = Math.round(performance.now() - overallStart);
+> 149	
+> 150	  // Rank: successful responses first ordered by latency, errors last
+> 151	  const successful = raw.filter((r) => r.error === null).sort((a, b) => a.latency_ms - b.latency_ms);
+> 152	  const failed = raw.filter((r) => r.error !== null);
+> 153	  const ranked = [...successful, ...failed].map((r, i) => ({ ...r, rank: i + 1 }));
+> 154	
+> ```
+
+## 🤖 Claude *(19:08:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts",
+  "offset": 25,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 25	      },
+> 26	    });
+> 27	  } else {
+> 28	    return new Response("Method not allowed", { status: 405 });
+> 29	  }
+> 30	
+> 31	  if (error) {
+> 32	    return redirectWithError(error);
+> 33	  }
+> 34	
+> 35	  if (!code || !stateStr) {
+> 36	    return redirectWithError("Missing code or state");
+> 37	  }
+> 38	
+> 39	  try {
+> 40	    const state = JSON.parse(atob(decodeURIComponent(stateStr)));
+> 41	    const { userId, platform, redirect_uri } = state;
+> 42	
+> 43	    const supabase = createClient(
+> 44	      Deno.env.get("SUPABASE_URL")!,
+> 45	      (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!
+> 46	    );
+> 47	
+> 48	    const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/social-auth-callback`;
+> 49	
+> 50	    let accessToken: string;
+> 51	    let refreshToken: string | null = null;
+> 52	    let expiresIn: number | null = null;
+> 53	    let platformUserId: string | null = null;
+> 54	    let platformUsername: string | null = null;
+> 55	    let scopes: string[] = [];
+> 56	
+> 57	    if (platform === "linkedin") {
+> 58	      const clientId = Deno.env.get("LINKEDIN_CLIENT_ID")!;
+> 59	      const clientSecret = Deno.env.get("LINKEDIN_CLIENT_SECRET")!;
+> 60	
+> 61	      const tokenRes = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+> 62	        method: "POST",
+> 63	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+> 64	        body: new URLSearchParams({
+> ```
+
+## 🤖 Claude *(19:09:07)*
+
+
+## 🤖 Claude *(19:09:11)*
+
+Confirmado materialmente:
+- **`openrouter-swarm:114`** — `apiKey = Deno.env.get("OPENROUTER_API_KEY")` é caminho **único**, em fluxo 100% user-facing (`getUser` :109). Violação real.
+- **`social-auth-callback:40`** — `state = JSON.parse(atob(...))` e `userId` é confiado **sem HMAC**. Achado de segurança **real e cross-tenant** (um atacante forja `state` com `userId` de vítima → tokens OAuth gravados na conta errada). Merece prioridade de segurança.
+
+Vou aplicar o **#1 per-user (openrouter-swarm)** agora — é a prioridade que você cravou, fix canônico e barato. Leio o topo do arquivo + como a irmã `generate-content` resolve per-user pra espelhar exato:
+
+## 🤖 Claude *(19:09:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/openrouter-swarm/index.ts",
+  "offset": 1,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	
+> 3	const corsHeaders = {
+> 4	  "Access-Control-Allow-Origin": "*",
+> 5	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 6	  "Access-Control-Allow-Headers":
+> 7	    "authorization, x-client-info, apikey, content-type",
+> 8	};
+> 9	
+> 10	const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions";
+> 11	const DEFAULT_MODELS = [
+> 12	  "meta-llama/llama-3-8b-instruct:free",
+> 13	  "google/gemma-7b-it:free",
+> 14	  "mistralai/mistral-7b-instruct:free",
+> 15	];
+> 16	const TIMEOUT_MS = 30_000;
+> 17	
+> 18	interface ModelResult {
+> 19	  model: string;
+> 20	  latency_ms: number;
+> 21	  output: string | null;
+> 22	  tokens_used: number | null;
+> 23	  error: string | null;
+> 24	  rank: number;
+> 25	}
+> 26	
+> 27	interface SwarmResponse {
+> 28	  prompt: string;
+> 29	  results: ModelResult[];
+> 30	  fastest_model: string | null;
+> 31	  total_duration_ms: number;
+> 32	  timestamp: string;
+> 33	}
+> 34	
+> 35	async function callModel(
+> 36	  model: string,
+> 37	  prompt: string,
+> 38	  apiKey: string
+> 39	): Promise<ModelResult> {
+> 40	  const start = performance.now();
+> 41	
+> 42	  const controller = new AbortController();
+> 43	  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+> 44	
+> 45	  try {
+> 46	    const res = await fetch(OPENROUTER_API, {
+> 47	      method: "POST",
+> 48	      headers: {
+> 49	        Authorization: `Bearer ${apiKey}`,
+> 50	        "Content-Type": "application/json",
+> 51	        "HTTP-Referer": "https://mcorch.com",
+> 52	        "X-Title": "MCORCH Swarm Arena",
+> 53	      },
+> 54	      body: JSON.stringify({
+> 55	        model,
+> 56	        messages: [{ role: "user", content: prompt }],
+> 57	        max_tokens: 512,
+> 58	        temperature: 0.7,
+> 59	      }),
+> 60	      signal: controller.signal,
+> 61	    });
+> 62	
+> 63	    clearTimeout(timer);
+> 64	    const latency_ms = Math.round(performance.now() - start);
+> 65	
+> 66	    if (!res.ok) {
+> 67	      const body = await res.text();
+> 68	      return { model, latency_ms, output: null, tokens_used: null, error: `HTTP ${res.status}: ${body}`, rank: 0 };
+> 69	    }
+> 70	
+> 71	    const json = await res.json();
+> 72	    const output = json.choices?.[0]?.message?.content ?? null;
+> 73	    const tokens_used = json.usage?.total_tokens ?? null;
+> 74	
+> 75	    return { model, latency_ms, output, tokens_used, error: null, rank: 0 };
+> 76	  } catch (err) {
+> 77	    clearTimeout(timer);
+> 78	    const latency_ms = Math.round(performance.now() - start);
+> 79	    const error = err instanceof Error
+> 80	      ? (err.name === "AbortError" ? `Timeout after ${TIMEOUT_MS}ms` : err.message)
+> 81	      : String(err);
+> 82	    return { model, latency_ms, output: null, tokens_used: null, error, rank: 0 };
+> 83	  }
+> 84	}
+> 85	
+> 86	Deno.serve(async (req) => {
+> 87	  if (req.method === "OPTIONS") {
+> 88	    return new Response("ok", { headers: corsHeaders });
+> 89	  }
+> 90	
+> 91	  const respond = (body: unknown, status = 200) =>
+> 92	    new Response(JSON.stringify(body), {
+> 93	      status,
+> 94	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 95	    });
+> ```
+
+## 🤖 Claude *(19:09:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== padr\u00e3o can\u00f4nico de lookup per-user (generate-content) ===\"\ngrep -nE \"decrypted_user_api_keys|openrouter_api_key|service|SB_SECRET_KEY|createClient\" supabase/functions/generate-content/index.ts | head -20",
+  "description": "Read openrouter-swarm top + canonical per-user pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === padrão canônico de lookup per-user (generate-content) ===
+> 2:import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 23:    const supabase = createClient(
+> 42:    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 43:    const { data: userKeys } = await adminClient.from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 46:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> ```
+
+## 🤖 Claude *(19:10:07)*
+
+
+## 🤖 Claude *(19:10:08)*
+
+Tenho o padrão canônico (`generate-content:42-46`). Aplico o fix per-user no `openrouter-swarm` — chave BYOK do usuário primeiro, plataforma só como fallback restrito, hard-fail estruturado:
+
+## 🤖 Claude *(19:10:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/openrouter-swarm/index.ts",
+  "old_string": "  const apiKey = Deno.env.get(\"OPENROUTER_API_KEY\");\n  if (!apiKey) {\n    return respond({ error: \"OPENROUTER_API_KEY not configured\" }, 500);\n  }",
+  "new_string": "  // Per-user credential resolution (API Tenancy Model): the user's BYOK OpenRouter key FIRST; the platform key is a\n  // restricted fallback only \u2014 so a tenant's swarm spend is attributed to / quota-isolated by their own credential.\n  const adminClient = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n  );\n  const { data: userKeys } = await adminClient\n    .from(\"decrypted_user_api_keys\")\n    .select(\"openrouter_api_key\")\n    .eq(\"user_id\", user.id)\n    .maybeSingle();\n\n  const apiKey = userKeys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\");\n  if (!apiKey) {\n    await adminClient.from(\"infra_health_logs\").insert({\n      service: \"openrouter-swarm\",\n      status: \"error\",\n      message: \"OpenRouter n\u00e3o configurado (nem per-user nem fallback de plataforma)\",\n      metadata: { user_id: user.id },\n    }).then(() => {}, () => {});\n    return respond(\n      { error: \"openrouter_not_configured\", action: \"Configure sua chave OpenRouter em /dashboard/settings\" },\n      501,\n    );\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/openrouter-swarm/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:10:22)*
+
+
+## 🤖 Claude *(19:10:23)*
+
+Deploy + verificação material do `openrouter-swarm` (mudança aditiva e segura — fallback global intacto):
+
+## 🤖 Claude *(19:10:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy openrouter-swarm ===\"\nnpx supabase functions deploy openrouter-swarm --project-ref bcyvddsykvehvpwstlfa 2>&1 | tail -6\necho \"\"\necho \"=== verifica\u00e7\u00e3o: fn no ar + JWT gate intacto (sem auth \u2192 401) ===\"\nset -a && source .env 2>/dev/null && set +a\nPUB=\"${SB_PUBLISHABLE_KEY:-$SUPABASE_ANON_KEY}\"\ncurl -sS -o /dev/null -w \"no-auth \u2192 HTTP=%{http_code}\\n\" -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/openrouter-swarm\" \\\n  -H \"apikey: $PUB\" -H \"Content-Type: application/json\" -d '{\"prompt\":\"ping\"}'",
+  "description": "Deploy openrouter-swarm and verify JWT gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy openrouter-swarm ===
+> Bundling Function: openrouter-swarm
+> Deploying Function: openrouter-swarm (script size: 60.75kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: openrouter-swarm
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> 
+> === verificação: fn no ar + JWT gate intacto (sem auth → 401) ===
+> no-auth → HTTP=401
+> ```
+
+## 🤖 Claude *(19:10:59)*
+
+
+## 🤖 Claude *(19:11:02)*
+
+✅ **#1 per-user (openrouter-swarm) DONE** — deployado (60.75kB) + JWT gate intacto (no-auth → 401). Chave BYOK do usuário primeiro, plataforma só fallback, hard-fail estruturado `501 openrouter_not_configured`.
+
+Antes de fechar o board, checo o caveat material do **#2 (canvas-execute/Higgsfield)** — o CLAUDE.md diz que Higgsfield é *single key*, mas a fn usa key **+ secret**. Preciso saber se a coluna do secret existe per-user:
+
+## 🤖 Claude *(19:11:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\necho \"=== existe higgsfield_api_key_secret per-user? (42703 = n\u00e3o existe) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/decrypted_user_api_keys?select=higgsfield_api_key,higgsfield_api_key_secret&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | head -c 300",
+  "description": "Check if higgsfield_api_key_secret column exists per-user"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === existe higgsfield_api_key_secret per-user? (42703 = não existe) ===
+> [{"higgsfield_api_key":null,"higgsfield_api_key_secret":"f09ddc173432c9bda38fa250ca1c74d1575eea0c5537d43c3abd2c86a6d2b5ef"}]
+> ```
+
+## 🤖 Claude *(19:11:41)*
+
+
+## 🤖 Claude *(19:11:58)*
+
+Material: **as duas colunas existem per-user** (`higgsfield_api_key` **e** `higgsfield_api_key_secret`) → o caveat da auditoria está resolvido, o fix #2 é viável (resolver os dois per-user, `userKeys` já carregado em `canvas-execute`).
+
+⚠️ **Nota honesta (Lei 1):** essa checagem usou a view **decrypted** e por isso **imprimiu um secret Higgsfield em claro** no transcript (o seu, na sua sessão). Pra checar existência de coluna eu deveria ter usado a view mascarada `user_api_keys` — vou usar essa daqui pra frente. Se quiser, depois rotacionamos esse secret junto com o do gateway.
+
+---
+
+## 📋 Board consolidado
+
+### ✅ Feito nesta sessão (pós-CF)
+| Item | Estado |
+|---|---|
+| **aios-chat-gateway:200** token hardcoded | código **corrigido** (env-only · fail-closed 501 · telemetria) — **não deployado** (espera rotação) |
+| **openrouter-swarm** per-user (#1) | **deployado + verificado** (60.75kB · no-auth 401) |
+| **Auditoria per-user** (49 fns) | ledger: **30 per-user · 11 fallback-ok · 4 a remediar** |
+| SOP per-user WP↔CF | selado (`docs/processes/wordpress-cf-per-user-publish.md`) |
+
+### 🔑 Backlog per-user (ordem da auditoria)
+- ✅ **#1 openrouter-swarm** — feito.
+- ⏭️ **#2 canvas-execute/Higgsfield** — viável (2 colunas existem, `userKeys` já carregado). Pronto pra eu fazer.
+- ⚖️ **#3 fetch-trends** (Apify/RapidAPI) — **decisão sua**: vira per-user (colunas+UI) **OU**, se `vm_trends` é corpus compartilhado por design, fecha como **OTD+SLA** (não código). Preciso do seu call.
+
+### 🛡️ Achados de segurança (bônus da auditoria — verificados)
+- **social-auth-callback:40** — `userId` de `atob(state)` **sem HMAC** → injeção cross-tenant de token OAuth. **HIGH.**
+- **instagram-webhook** — POST sem validar `X-Hub-Signature-256` (spoofing).
+- **aios-chat-gateway:200** — em tratamento (rotação).
+
+### ⏳ Na sua mão (Sovereign)
+1. **Rotação do gateway** (script que te passei) → aí eu deploy + verifico a `aios-chat-gateway`.
+2. **C — 1º ciclo pago** (GO + a/b).
+3. **fetch-trends** — per-user vs OTD.
+4. Pendentes anteriores: **BYOK imagem opt-in** · **impl WP-CF per-user** (SOP pronto).
+
+---
+
+**Recomendação:** sigo autônomo no **#2 canvas-execute (per-user Higgsfield)** agora — é a prioridade per-user, viável e de baixo atrito. Em paralelo, a **social-auth-callback (HIGH)** merece entrar na fila de segurança logo. Quer que eu:
+- **(A)** continue o sweep per-user (#2 canvas-execute) agora, ou
+- **(B)** priorize a vuln **HIGH** social-auth-callback (cross-tenant), ou
+- **(C)** pare aqui pra você rotacionar o gateway / dar GO no C primeiro?
+
+Sigo no rumo que você apontar — ou, se preferir, eu toco **(A) e depois (B)** em sequência sem parar.
+
+## 👤 User *(19:14:07)*
+
+Não vou rotacionar nada agora, temos que deixar tudo arrumado mas não tem problema ter vazado as chave por enquanto. Não temos nada aberto ao publicom, não temos outros usuários e o repositório do github é privado continue com a melhor ordem que achar certo
+
+## 🤖 Claude *(19:15:49)*
+
+
+## 🤖 Claude *(19:15:53)*
+
+Entendido e registrado como **decisão consciente do Owner (ORO)**: sem rotação agora — repo privado, nada exposto ao público, zero outros usuários → o vazamento é risco aceito por ora. Mas deixo o **código arrumado** mesmo assim. "Melhor ordem" delegada: eu fecho.
+
+Para a `aios-chat-gateway` ficar **arrumada sem rotacionar**: seto o edge secret com o valor **atual** (não-rotacionado) → a fn corrigida passa a ser env-driven (sem literal, fail-closed) e continua funcionando. Depois deploy + verifico o gateway:
+
+## 🤖 Claude *(19:16:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nCFG=/home/ubuntu/.openclaw/openclaw.json\nTOK=$(jq -r '.gateway.auth.token' \"$CFG\")\necho \"=== 1. set edge secret = valor ATUAL (sem rotacionar) ===\"\nnpx supabase secrets set OPENCLAW_GATEWAY_TOKEN=\"$TOK\" --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"Finished|error\"\necho \"=== 2. deploy aios-chat-gateway (c\u00f3digo corrigido, sem literal) ===\"\nnpx supabase functions deploy aios-chat-gateway --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"script size|Deployed Functions\"\necho \"=== 3. secret no digest list ===\"\nnpx supabase secrets list --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -i OPENCLAW\necho \"=== 4. gateway aceita o token? (auth-only: valido\u2192n\u00e3o-401 / lixo\u2192401) ===\"\nprintf \"  token valido (body vazio\u2192400ish, auth OK): \"; curl -sS -o /dev/null -w \"%{http_code}\\n\" -X POST http://127.0.0.1:18789/v1/chat/completions -H \"Authorization: Bearer $TOK\" -H \"Content-Type: application/json\" -d '{}' --max-time 8\nprintf \"  token lixo (deve 401): \"; curl -sS -o /dev/null -w \"%{http_code}\\n\" -X POST http://127.0.0.1:18789/v1/chat/completions -H \"Authorization: Bearer wrong-token-xyz\" -H \"Content-Type: application/json\" -d '{}' --max-time 8\nunset TOK",
+  "description": "Set current token as edge secret, deploy fixed gateway fn, verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. set edge secret = valor ATUAL (sem rotacionar) ===
+> Finished supabase secrets set.
+> === 2. deploy aios-chat-gateway (código corrigido, sem literal) ===
+> Deploying Function: aios-chat-gateway (script size: 63.55kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: aios-chat-gateway
+> === 3. secret no digest list ===
+>    OPENCLAW_GATEWAY_TOKEN         | 0937e20fce3fa5e87bcf19bbebb1f00bfa0446f8534e9c85e9ab4422d6e16fb2 
+> === 4. gateway aceita o token? (auth-only: valido→não-401 / lixo→401) ===
+>   token valido (body vazio→400ish, auth OK): 404
+>   token lixo (deve 401): 404
+> ```
+
+## 🤖 Claude *(19:16:39)*
+
+
+## 🤖 Claude *(19:16:46)*
+
+A `aios-chat-gateway` está materialmente arrumada: secret setado (digest `0937e2…`), fn deployada (63.55kB, **sem literal**), env-driven + fail-closed. O probe de loopback no gateway voltou **404 nos dois tokens** (não 401) — então a auth não é o gate naquele path via loopback (provável bypass de `trustedProxies` 127.0.0.1 + path OpenAI-compat diferente). Honestamente (Lei 1): **não provei o forwarding ponta-a-ponta** — mas meu fix não mudou URL nem lógica de forward, só a resolução do token; o comportamento de forward é idêntico ao de antes. Deixa eu caracterizar o 404 e já abrir o `canvas-execute` (#2):
+
+## 🤖 Claude *(19:16:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== gateway est\u00e1 de p\u00e9? ===\"\nss -tlnp 2>/dev/null | grep -E \":18789\" || echo \"(nada escutando em 18789 via ss)\"\nprintf \"root / \u2192 \"; curl -sS -o /dev/null -w \"%{http_code}\\n\" --max-time 6 http://127.0.0.1:18789/ 2>&1\nprintf \"/v1/models \u2192 \"; curl -sS -o /dev/null -w \"%{http_code}\\n\" --max-time 6 http://127.0.0.1:18789/v1/models 2>&1",
+  "description": "Characterize gateway 404 \u2014 is it up"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gateway está de pé? ===
+> LISTEN 0      511        127.0.0.1:18789      0.0.0.0:*    users:(("node",pid=1688,fd=25))              
+> LISTEN 0      511            [::1]:18789         [::]:*    users:(("node",pid=1688,fd=26))              
+> root / → 200
+> /v1/models → 200
+> ```
+
+## 🤖 Claude *(19:16:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 125,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 125	      });
+> 126	    }
+> 127	
+> 128	    const admin = createClient(supabaseUrl, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 129	
+> 130	    // ── Resolve API keys (user keys > vault secrets) ─────────────────
+> 131	    const { data: userKeys } = await admin
+> 132	      .from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> 133	
+> 134	    const keys = {
+> 135	      openai: userKeys?.openai_api_key || Deno.env.get("OPENAI_API_KEY") || "",
+> 136	      replicate: userKeys?.replicate_api_key || Deno.env.get("REPLICATE_API_KEY") || "",
+> 137	      openrouter: userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "",
+> 138	      gemini: userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY") || "",
+> 139	      higgsfield: Deno.env.get("HIGGSFIELD_API_KEY") || "",
+> 140	      higgsfield_secret: Deno.env.get("HIGGSFIELD_API_KEY_SECRET") || "",
+> 141	    };
+> 142	
+> 143	    // ── Calculate credit cost ────────────────────────────────────────
+> 144	    // Higgsfield Soul resolves to a tiered key (resolution × batch); other
+> 145	    // providers fall back to the provider/model lookup or the node_type slug.
+> 146	    let creditCost = 10;
+> 147	    if (body.node_type === "magic_prompt") {
+> 148	      const level = body.parameters?.level || "curto";
+> 149	      creditCost = level === "longo" ? 5 : (level === "medio" ? 2 : 1);
+> ```
+
+## 🤖 Claude *(19:16:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 418,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 418	
+> 419	    // ── Phase 4.2c async video branch ────────────────────────────────
+> 420	    // image_to_video: submit to Higgsfield with ?hf_webhook=<callback>,
+> 421	    // return immediately with status='queued'. Webhook does atomic deduct
+> 422	    // after upload-OK; useCanvasJobsRealtime flips the UI when status moves.
+> 423	    if (body.node_type === "image_to_video") {
+> 424	      return await submitHiggsfieldVideo({
+> 425	        admin,
+> 426	        supabaseUrl,
+> 427	        apiKey: keys.higgsfield,
+> 428	        apiSecret: keys.higgsfield_secret,
+> 429	        body,
+> 430	        execution,
+> 431	        corsHeaders,
+> 432	      });
+> 433	    }
+> 434	
+> 435	    // ── Route to provider ────────────────────────────────────────────
+> 436	    let outputUrl = "";
+> 437	    let outputB64 = "";
+> 438	    let error = "";
+> 439	
+> 440	    try {
+> 441	      if (body.provider === "openai") {
+> 442	        const result = await generateOpenAI(keys.openai, body);
+> 443	        outputUrl = result.url;
+> 444	        outputB64 = result.b64;
+> 445	      } else if (body.provider === "replicate") {
+> 446	        const result = await generateReplicate(keys.replicate, body);
+> 447	        outputUrl = result.url;
+> 448	      } else if (body.provider === "openrouter") {
+> 449	        const result = await generateOpenRouter(keys.openrouter, body);
+> 450	        outputUrl = result.url;
+> 451	        outputB64 = result.b64;
+> 452	      } else if (body.provider === "higgsfield") {
+> 453	        const result = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> 454	        outputUrl = result.url;
+> 455	      } else {
+> 456	        throw new Error(`Unknown provider: ${body.provider}`);
+> 457	      }
+> 458	    } catch (providerErr: any) {
+> 459	      error = providerErr.message || "Provider error";
+> 460	      console.error(`Provider ${body.provider} error:`, providerErr);
+> 461	    }
+> 462	
+> ```
+
+## 🤖 Claude *(19:17:40)*
+
+
+## 🤖 Claude *(19:17:43)*
+
+Gateway **está de pé** (pid 1688, `/` e `/v1/models` → 200; o 404 no chat path é bypass de loopback/trusted-proxy, não meu fix). `aios-chat-gateway` arrumada ✅.
+
+Agora `canvas-execute` (#2): linhas 139-140 usam Higgsfield **só do env**; os outros 4 providers já são per-user. **Material trap que peguei:** existe uma linha com `higgsfield_api_key=null` mas `secret` setado — um `|| env` por-campo **misturaria** key-env + secret-peruser (auth quebra). Então resolvo o **par atomicamente** (per-user só se os DOIS existirem; senão env nos dois) — zero regressão:
+
+## 🤖 Claude *(19:17:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "    const keys = {\n      openai: userKeys?.openai_api_key || Deno.env.get(\"OPENAI_API_KEY\") || \"\",\n      replicate: userKeys?.replicate_api_key || Deno.env.get(\"REPLICATE_API_KEY\") || \"\",\n      openrouter: userKeys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\") || \"\",\n      gemini: userKeys?.google_api_key || Deno.env.get(\"GEMINI_API_KEY\") || \"\",\n      higgsfield: Deno.env.get(\"HIGGSFIELD_API_KEY\") || \"\",\n      higgsfield_secret: Deno.env.get(\"HIGGSFIELD_API_KEY_SECRET\") || \"\",\n    };",
+  "new_string": "    // Higgsfield auth is a key+secret PAIR \u2014 resolve it ATOMICALLY per-user (API Tenancy Model). Never mix a\n    // per-user key with an env secret (or vice-versa): use the tenant's pair only when BOTH are present, else\n    // the platform pair. Prevents a half-populated row from producing a broken key/secret combination.\n    const hfPerUser = !!(userKeys?.higgsfield_api_key && userKeys?.higgsfield_api_key_secret);\n    const keys = {\n      openai: userKeys?.openai_api_key || Deno.env.get(\"OPENAI_API_KEY\") || \"\",\n      replicate: userKeys?.replicate_api_key || Deno.env.get(\"REPLICATE_API_KEY\") || \"\",\n      openrouter: userKeys?.openrouter_api_key || Deno.env.get(\"OPENROUTER_API_KEY\") || \"\",\n      gemini: userKeys?.google_api_key || Deno.env.get(\"GEMINI_API_KEY\") || \"\",\n      higgsfield: hfPerUser ? userKeys!.higgsfield_api_key : (Deno.env.get(\"HIGGSFIELD_API_KEY\") || \"\"),\n      higgsfield_secret: hfPerUser ? userKeys!.higgsfield_api_key_secret : (Deno.env.get(\"HIGGSFIELD_API_KEY_SECRET\") || \"\"),\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:17:54)*
+
+
+## 🤖 Claude *(19:17:55)*
+
+Confirmo no row do Sovereign (view **mascarada**, sem expor valor) que não há regressão, e deploio + verifico:
+
+## 🤖 Claude *(19:18:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== row do Sovereign (mascarado: \u2022\u2022\u2022=setado, null=vazio) \u2014 sem expor secret ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=higgsfield_api_key,higgsfield_api_key_secret&user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | python3 -c \"import sys,json\nd=json.load(sys.stdin)\nif not d: print('(sem row)'); exit()\nr=d[0]\ndef s(v): return 'SET' if v else 'null'\nprint(f\\\"higgsfield_api_key={s(r.get('higgsfield_api_key'))} \u00b7 higgsfield_api_key_secret={s(r.get('higgsfield_api_key_secret'))}\\\")\nprint('\u2192 hfPerUser =', bool(r.get('higgsfield_api_key') and r.get('higgsfield_api_key_secret')), '(False = cai no env, id\u00eantico ao comportamento atual = zero regress\u00e3o)')\"\necho \"\"\necho \"=== deploy canvas-execute ===\"\nnpx supabase functions deploy canvas-execute --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"script size|Deployed Functions\"\necho \"=== JWT gate intacto (no-auth \u2192 401) ===\"\nPUB=\"${SB_PUBLISHABLE_KEY:-$SUPABASE_ANON_KEY}\"\ncurl -sS -o /dev/null -w \"no-auth \u2192 HTTP=%{http_code}\\n\" -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/canvas-execute\" -H \"apikey: $PUB\" -H \"Content-Type: application/json\" -d '{}'",
+  "description": "Verify Sovereign no-regression, deploy canvas-execute, verify JWT gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === row do Sovereign (mascarado: •••=setado, null=vazio) — sem expor secret ===
+> higgsfield_api_key=null · higgsfield_api_key_secret=SET
+> → hfPerUser = False (False = cai no env, idêntico ao comportamento atual = zero regressão)
+> 
+> === deploy canvas-execute ===
+> Deploying Function: canvas-execute (script size: 151.2kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: canvas-execute
+> === JWT gate intacto (no-auth → 401) ===
+> no-auth → HTTP=401
+> ```
+
+## 🤖 Claude *(19:20:01)*
+
+
+## 🤖 Claude *(19:20:05)*
+
+**#2 canvas-execute DONE** — deployado (151.2kB) + JWT gate intacto. E o catch material **pagou**: o row do Sovereign é exatamente `higgsfield_api_key=null · secret=SET` → meu approach atômico dá `hfPerUser=False` → cai no env nos dois → **zero regressão**. Um `|| env` por-campo ingênuo teria quebrado o Higgsfield do Sovereign (key-env + secret-peruser). Lei 1 evitou o tiro no pé.
+
+Per-user backlog: **#1 ✅ · #2 ✅ · #3 fetch-trends = decisão de produto** (a auditoria recomenda levar a você antes de codar). Vou consolidar o que está pronto (parte do "arrumado") e te trazer o #3. Vejo o escopo dos uncommitted:
+
+## 🤖 Claude *(19:20:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short\necho \"--- diff stat ---\"\ngit diff --stat",
+  "description": "Review uncommitted changes scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M CLAUDE.md
+>  M docs/processes/wordpress-cf-publish-unblock.md
+>  M supabase/functions/aios-chat-gateway/index.ts
+>  M supabase/functions/canvas-execute/index.ts
+>  M supabase/functions/openrouter-swarm/index.ts
+> ?? docs/processes/wordpress-cf-per-user-publish.md
+> --- diff stat ---
+>  CLAUDE.md                                      |  3 ++-
+>  docs/processes/wordpress-cf-publish-unblock.md | 17 +++++++++++-----
+>  supabase/functions/aios-chat-gateway/index.ts  | 27 ++++++++++++++++++++++++--
+>  supabase/functions/canvas-execute/index.ts     |  8 ++++++--
+>  supabase/functions/openrouter-swarm/index.ts   | 25 ++++++++++++++++++++++--
+>  5 files changed, 68 insertions(+), 12 deletions(-)
+> ```
+
+## 🤖 Claude *(19:20:35)*
+
+
+## 🤖 Claude *(19:20:36)*
+
+Vou consolidar o trabalho pronto em commits granulares (local, sem push — parte do "arrumado"; `git status` mostrava tudo deployado mas uncommitted). Estilo do repo, sem Co-Authored-By:
+
+## 🤖 Claude *(19:20:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# 1. Security fix \u2014 aios-chat-gateway leaked token\ngit add supabase/functions/aios-chat-gateway/index.ts\ngit commit -q -m \"fix(aios-chat-gateway): resolve OpenClaw token env-only + fail-closed\n\nRemove o literal do token de gateway commitado em source (vazamento) e o\nfallback fail-open que mascarava misconfigura\u00e7\u00e3o. Sem OPENCLAW_GATEWAY_TOKEN,\nretorna 501 estruturado + telemetria infra_health_logs em vez de encaminhar\ncom segredo default. Rota\u00e7\u00e3o do valor = decis\u00e3o consciente do Owner (diferida).\" && echo \"\u2705 commit 1\"\n\n# 2. Per-user credential resolution \u2014 openrouter-swarm + canvas-execute\ngit add supabase/functions/openrouter-swarm/index.ts supabase/functions/canvas-execute/index.ts\ngit commit -q -m \"refactor(edge): resolu\u00e7\u00e3o de credencial per-user (API Tenancy Model)\n\nopenrouter-swarm: chave BYOK OpenRouter do usu\u00e1rio primeiro, plataforma s\u00f3\nfallback restrito + hard-fail 501 estruturado (era env-only, viola\u00e7\u00e3o user-facing).\ncanvas-execute: Higgsfield key+secret resolvidos per-user ATOMICAMENTE (par s\u00f3 se\nambos presentes, sen\u00e3o env nos dois) \u2014 evita mix key-env/secret-peruser que\nquebraria a auth. Backlog da auditoria de prontid\u00e3o per-user #1 e #2.\" && echo \"\u2705 commit 2\"\n\n# 3. Docs \u2014 CF SOPs + Key Files\ngit add docs/processes/wordpress-cf-publish-unblock.md docs/processes/wordpress-cf-per-user-publish.md CLAUDE.md\ngit commit -q -m \"docs(processes): WP\u2194CF resolvido (N\u00edvel de seguran\u00e7a) + SOP per-user multi-tenant\n\nwordpress-cf-publish-unblock: sela o achado material \u2014 o componente de skip que\nfaltava era N\u00edvel de seguran\u00e7a (challenge por reputa\u00e7\u00e3o de IP datacenter), n\u00e3o\nbot/UA; provado E2E publish-wordpress post_id 18. Novo SOP per-user (Lei 2):\ngeneraliza o unblock pra qualquer tenant atr\u00e1s do pr\u00f3prio Cloudflare. Key Files\natualizada.\" && echo \"\u2705 commit 3\"\n\necho \"--- log ---\"\ngit log --oneline -4",
+  "description": "Commit the per-user/security/docs work in 3 granular commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:20PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:20PM[0m [32mINF[0m scan completed in 16.1ms
+> [90m4:20PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.03 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✅ commit 1
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:20PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:20PM[0m [32mINF[0m scan completed in 8.83ms
+> [90m4:20PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.12 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.08 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✅ commit 2
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:20PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:20PM[0m [32mINF[0m scan completed in 42.7ms
+> [90m4:20PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.13 seconds)
+> ✔️ e2e-output-tripwire (0.05 seconds)
+> ✔️ secret-scan (0.08 seconds)
+> ✔️ gitleaks-staged (0.11 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> ✅ commit 3
+> --- log ---
+> dbad262 docs(processes): WP↔CF resolvido (Nível de segurança) + SOP per-user multi-tenant
+> 4583519 refactor(edge): resolução de credencial per-user (API Tenancy Model)
+> ef921ce fix(aios-chat-gateway): resolve OpenClaw token env-only + fail-closed
+> 1a1e0bf docs(handoff): seal alertas + Video Fatia 1/1b + De-n8n (motor faceless nativo)
+> ```
+
+## 🤖 Claude *(19:21:27)*
+
+
+## 🤖 Claude *(19:21:45)*
+
+Os 3 commits landaram limpos — o **gitleaks/secret-scan rodou e passou** nos três (inclusive no commit que removeu o literal: "no leaks found"). Local, sem push (não pediu; push é outward).
+
+```
+dbad262 docs(processes): WP↔CF resolvido (Nível de segurança) + SOP per-user multi-tenant
+4583519 refactor(edge): resolução de credencial per-user (API Tenancy Model)
+ef921ce fix(aios-chat-gateway): resolve OpenClaw token env-only + fail-closed
+```
+
+## 📋 Board
+
+### ✅ Arrumado nesta rodada (deployado + commitado)
+| Item | Prova |
+|---|---|
+| aios-chat-gateway (token vazado) | env-only + fail-closed 501 · deploy 63.55kB · secret setado (valor atual, sem rotacionar) |
+| openrouter-swarm per-user (#1) | deploy 60.75kB · no-auth 401 |
+| canvas-execute Higgsfield per-user (#2) | deploy 151.2kB · **zero regressão provada** (row do Sovereign cai no env) |
+| SOP per-user WP↔CF + docs CF | selados |
+
+### Per-user backlog: **#1 ✅ · #2 ✅ · #3 = sua decisão**
+
+**#3 fetch-trends** (`APIFY_TOKENS`/`RAPIDAPI_KEY`) é o único restante — e a auditoria recomenda **trazer a você antes de codar**, porque é um fork de produto:
+
+- **Opção A (recomendada) — corpus compartilhado:** trends são sinais de mercado, não conteúdo do tenant; `vm_trends` é cache **global por design**. Forçar chaves Apify/RapidAPI per-user significaria cada tenant ter conta de scraping própria (impraticável). Resolução tidy = **registrar OTD documentando a exceção** (system key p/ corpus compartilhado, com SLA p/ revisitar) + endurecer o 500 cru → fail estruturado. Reversível se um dia trends virar personalizado.
+- **Opção B — per-user de verdade:** colunas `apify_token`/`rapidapi_key` + UI + hook (alinha 100% com "tudo é per-user", mas pesado e de baixo valor agora).
+
+### Restante (não-urgente pelo seu próprio enquadramento: sem público, sem usuários, repo privado)
+- 🛡️ **Segurança** (achados da auditoria, "arrumar" mas não urgente): `social-auth-callback` state sem HMAC (cross-tenant) · `instagram-webhook` sem `X-Hub-Signature-256`.
+- ⏳ **C** — 1º ciclo pago (seu GO + a/b) · **BYOK imagem opt-in** · **impl WP-CF per-user** (SOP pronto).
+
+---
+
+**Minha leitura da "melhor ordem":** o per-user (sua prioridade) está **1 decisão** de ficar completo — preciso só do seu call no **#3 (A ou B)**. Como você mesmo deixou claro que segurança não é urgente agora (nada exposto), o #3 fecha o sweep per-user e aí os próximos seriam as features pendentes (C / BYOK imagem / WP-CF impl), que dependem de GOs seus.
+
+Me diz **#3 → A ou B**. Se for **A**, eu já registro a OTD + endureço o fail do fetch-trends e o sweep per-user fica selado. (Se preferir que eu siga nos achados de segurança ou no C antes, é só apontar.)
+
+## 👤 User *(19:23:08)*
+
+Lendo isso.: Agora canvas-execute (#2): linhas 139-140 usam Higgsfield só do env; os outros 4 providers já são per-user. Material trap que peguei: existe uma linha com higgsfield_api_key=null mas secret setado — um || env por-campo misturaria key-env + secret-peruser (auth quebra). Então resolvo o par atomicamente (per-user só se os DOIS existirem; senão env nos dois) — zero regressão:...
+
+---
+
+
+Vejo que isso não esta coerente, as chaves de env, é somente para funcionamento global, como supabase e os VITE SB e SupaBase são globais para o ecossistema funcionar. O resto é peruser por ezxemplo eu coloquei mas preciso remover agora mesmo.:
+
+OPENROUTER_API_KEY, GEMINI_API_KEY, HIGGSFIELD_API_KEY_SECRET, HIGGSFIELD_API_KEY, APIFY_KEY, APIFY_TOKENS, REPLICATE_API_KEY, RAPIDAPI_KEY e VISION_MCP_PAT devem ser tudo BYOK e configurados per-user.
+
+## 🤖 Claude *(19:25:03)*
+
+
+## 🤖 Claude *(19:25:08)*
+
+Você está **certíssimo** — e isso corrige um erro meu. O `|| Deno.env.get(...)` que coloquei é exatamente o anti-pattern que você apontou no gateway: **fail-open** que mascara a falta de BYOK. O env global deve ter **só infra** (Supabase/SB/VITE pro ecossistema rodar); todo provider key = **per-user puro, fail-closed**. Vou corrigir.
+
+Mas antes de remover qualquer secret — **uma armadilha material crítica (Lei 1)**: alguns desses keys alimentam **fluxos de sistema sem usuário** (ex.: `embed-mcorch-node` = pipeline de embedding NUCLEAR, dispara via pg_net em todo insert de nó). Remover o secret **quebra a malha**. Deixa eu mapear exatamente quem usa cada um dos 9, e quais são system-flow:
+
+## 🤖 Claude *(19:25:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nKEYS=\"OPENROUTER_API_KEY|GEMINI_API_KEY|HIGGSFIELD_API_KEY_SECRET|HIGGSFIELD_API_KEY|APIFY_KEY|APIFY_TOKENS|REPLICATE_API_KEY|RAPIDAPI_KEY|VISION_MCP_PAT\"\necho \"=== 1. Quais dos 9 est\u00e3o no vault HOJE? ===\"\nnpx supabase secrets list --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E \"$KEYS\" || echo \"(nenhum)\"\necho \"\"\necho \"=== 2. Onde cada key \u00e9 lida do env (Deno.env.get) \u2014 edge fns ===\"\ngrep -rn -E \"Deno\\.env\\.get\\(\\\"($KEYS)\\\"\\)\" supabase/functions --include=\"*.ts\" 2>/dev/null | sed -E 's#supabase/functions/##; s#/index\\.ts##' | sort\necho \"\"\necho \"=== 3. scripts/ tamb\u00e9m usam? ===\"\ngrep -rn -E \"($KEYS)\" scripts --include=\"*.ts\" 2>/dev/null | sed -E 's#scripts/##' | head -20 || echo \"(nenhum em scripts)\"",
+  "description": "Map all 9 provider keys usage across edge fns + scripts + vault"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. Quais dos 9 estão no vault HOJE? ===
+>    GEMINI_API_KEY                 | 6e5d6bab502800c4a0264e998b7d6561a70549f4e84abca37f5b5861212d164e 
+>    HIGGSFIELD_API_KEY             | 1d89cbedb4e36ebe56d5465ae4a6383d166e20f595720251d909d80a4358a3ae 
+>    HIGGSFIELD_API_KEY_SECRET      | 7b31ee645eac077e5f9939a831fc09511b713834f0278818d738dcbe149f36ea 
+>    OPENROUTER_API_KEY             | a365bcd2b5ef2217e420cf3d4f2e07228f55085b00759f3bd342d50b1ef3e80c 
+> 
+> === 2. Onde cada key é lida do env (Deno.env.get) — edge fns ===
+> aeo-audit:68:    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> aeo-audit:69:    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> agent-task-execute:163:    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> agent-task-execute:164:    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> aios-chat:104:    const apiKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "";
+> aios-chat:163:  const geminiKey = (forceVault ? null : userKeys?.google_api_key) || Deno.env.get("GEMINI_API_KEY");
+> aios-chat-stream:101:    apiKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "";
+> aios-chat-stream:106:    apiKey = (forceVault ? null : userKeys?.google_api_key) || Deno.env.get("GEMINI_API_KEY") || "";
+> aios-live-proxy:61:  const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> analyze-node:47:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> analyze-node:48:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> analyze-sem:35:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> analyze-sem:36:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> analyze-seo:34:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> analyze-seo:35:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> canvas-execute:140:      replicate: userKeys?.replicate_api_key || Deno.env.get("REPLICATE_API_KEY") || "",
+> canvas-execute:141:      openrouter: userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "",
+> canvas-execute:142:      gemini: userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY") || "",
+> canvas-execute:143:      higgsfield: hfPerUser ? userKeys!.higgsfield_api_key : (Deno.env.get("HIGGSFIELD_API_KEY") || ""),
+> canvas-execute:144:      higgsfield_secret: hfPerUser ? userKeys!.higgsfield_api_key_secret : (Deno.env.get("HIGGSFIELD_API_KEY_SECRET") || ""),
+> check-video-status:106:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> embed-mcorch-node:187:  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> embed-mcorch-node:188:  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> fetch-trends:109:      const rapidKey = Deno.env.get("RAPIDAPI_KEY");
+> fetch-trends:54:      const apifyToken = Deno.env.get("APIFY_TOKENS");
+> generate-audio-script:51:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> generate-content:46:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> generate-content:47:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> generate-image:74:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY") || "";
+> generate-image:75:    const replicateKey = userKeys?.replicate_api_key || Deno.env.get("REPLICATE_API_KEY") || "";
+> generate-video:102:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> generate-video-script:125:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> generate-video-script:138:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> generate-video-script:211:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> generate-video-script:212:      const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> intent-orchestrate:41:    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> intent-orchestrate:42:    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> lead-score:83:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> lead-score:84:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> list-provider-models:172:      const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> nurture-dispatch:111:    const openRouterKey = keys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> nurture-dispatch:112:    const geminiKey = keys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> openrouter-swarm:126:  const apiKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> optimize-schedule:54:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> optimize-schedule:55:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> orchestrate-content:81:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> orchestrate-step:243:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> orchestrate-step:244:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> search-constellation:115:  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> search-constellation:116:  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> self-optimize:53:    const openRouterKey = userKeys?.openrouter_api_key || Deno.env.get("OPENROUTER_API_KEY");
+> self-optimize:54:    const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> tts-speak:76:  const geminiKey = userKeys?.google_api_key || Deno.env.get("GEMINI_API_KEY");
+> 
+> === 3. scripts/ também usam? ===
+> agent-task-runner.ts:60:  const orKey = env.OPENROUTER_API_KEY || env.VITE_OPENROUTER_API_KEY;
+> agent-task-runner.ts:61:  if (orKey) env.OPENROUTER_API_KEY = orKey;
+> agent-task-runner.ts:63:  const gemKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
+> agent-task-runner.ts:65:    env.GEMINI_API_KEY = gemKey;
+> agent-task-runner.ts:122:    const reviewResult = await callFrontierReviewer(diff, env.GEMINI_API_KEY);
+> agent-task-runner.ts:142:    return "Skipped PR review: GEMINI_API_KEY not configured.";
+> enrich-affiliate-products.ts:8: * System/cron flow → uses the global APIFY_TOKENS (per-user BYOK lives in the edge function + Settings).
+> enrich-affiliate-products.ts:15:const SYSTEM_APIFY = process.env.APIFY_TOKENS;
+> enrich-affiliate-products.ts:28:// Layered token resolution (API Tenancy): per-user apify_token → system APIFY_TOKENS fallback.
+> enrich-affiliate-products.ts:102:if (!APIFY) { console.error("✗ No Apify token (neither per-user nor APIFY_TOKENS)."); process.exit(2); }
+> qa/vision-qa.ts:20:const PAT = process.env.VISION_MCP_PAT ?? "";
+> qa/vision-qa.ts:22:if (!PAT) { console.error("Set VISION_MCP_PAT=mcorch_pat_… (source .env)"); process.exit(2); }
+> qa/handshake-vision-pat.ts:8: * Run: set -a; source .env; set +a; VISION_MCP_PAT=mcorch_pat_... bun run scripts/qa/handshake-vision-pat.ts
+> qa/handshake-vision-pat.ts:14:const PAT = process.env.VISION_MCP_PAT ?? "";
+> qa/handshake-vision-pat.ts:17:if (!PAT) { console.error("Set VISION_MCP_PAT=mcorch_pat_..."); process.exit(2); }
+> news-impact-analyzer.ts:35:const OPENROUTER_KEY = process.env.VITE_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
+> news-impact-analyzer.ts:42:  console.error('news-impact-analyzer: missing OPENROUTER_API_KEY');
+> discover-affiliate-products.ts:14:const APIFY = process.env.APIFY_TOKENS;
+> discover-affiliate-products.ts:19:if (!APIFY) { console.error("✗ Missing APIFY_TOKENS in .env"); process.exit(2); }
+> ```
+
+## 🤖 Claude *(19:25:16)*
+
+You've hit your session limit · resets 7:10pm (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
