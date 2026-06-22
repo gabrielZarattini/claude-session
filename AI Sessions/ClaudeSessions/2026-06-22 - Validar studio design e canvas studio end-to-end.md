@@ -1,5 +1,5 @@
-# [[2026-06-22 - Validar studio design e canvas studio end-to-end|Validar studio design e canvas studio end-to-end]]
-**Date:** 2026-06-21 | **Session ID:** `960541c2-7795-4f2f-ae49-c8f9f3e35c84`
+# [[2026-06-21 - Validar studio design e canvas studio end-to-end|Validar studio design e canvas studio end-to-end]]
+**Date:** 2026-06-22 | **Session ID:** `5a859960-462e-4932-954d-123729ae158a`
 
 ---
 
@@ -7454,13 +7454,1566 @@ Tudo registrado (memória + tsc limpo). **Frente concluída** — a camada criat
 
 Quer que eu **commite** este trabalho agora, ou seguimos para uma dessas frentes (recomendo `/bok-scribe music` ou `/bok-scribe landing-pages`, já que destravam novos formatos virais)?
 
-## 👤 User *(23:43:12)*
+## 👤 User *(23:44:03)*
 
 Agora vamos integrar mais um módulo que criamos que é o menu Vídeo dentro de Canvas Studio > [https://login.mcorch.com/dashboard/canvas/](https://login.mcorch.com/dashboard/canvas/63d406fe-8357-4b90-b1ac-9ef2c0c2a975):id/ tem o botçao pipeline ali podemos colocar tambem um botão "Vídeo" para alterar para dentro do nosso dashboard melhorado pois já existe em /home/gcrUX/studio/  mas na verdade eu quero a UI de edição de video do https://hyperframes.heygen.com/ onde você pode instalar tambem no mesmo diretorio do stuido ou se achar melhor colocar no global mcorch (constellation-orchestra) ou até mesmo /home/gcrUX/* pode ser tambem pois apos instalar a skill https://github.com/heygen-com/hyperframes geralmente ele ja abre algo no localhost:3002 então temos uqe ver se já não esta ocupada a porta que ele escolhe na instalação. E então usar como whitepape no nosso menu /dashboard/canvas/video/ .
 
-## 👤 User *(23:43:21)*
+Abra /home/gcrUX/studio, leia o README.md. Este é o módulo de vídeo do MCORCH (estúdio faceless automático). Quero que você: (1) me explique a arquitetura em 5 linhas; (2) preencha os segredos {{GEMINI_API_KEY}} e {{TELEGRAM_BOT_TOKEN}} no n8n/workflow.json a partir das minhas envs; (3) rode docker compose up -d --build pra o módulo virar o deploy ativo; (4) copie n8n/scripts/ltx.js e composite.sh pro volume do n8n e rode scripts/gen-sfx.sh; (5) registre o serviço remotion-render:8088 e o dashboard como módulo do MCORCH, plugando mcorch_vision_mcp no QA e mcorch_chroma na memória de roteiros/vídeos; (6) instale a skill do editor: npx skills add heygen-com/hyperframes. Não exponha segredos no git.
 
-[Request interrupted by user]
+## 🤖 Claude *(23:46:11)*
+
+
+## 🤖 Claude *(23:46:16)*
+
+O Sovereign quer integrar o módulo de vídeo (estúdio faceless `/home/gcrUX/studio`) + o editor HyperFrames (heygen-com/hyperframes) no Canvas Studio, com 6 passos operacionais incluindo deploy real, secrets e skill install. Isso é uma **integração de módulo complexa com efeitos colaterais reais** (docker compose `--build` "deploy ativo", secrets, portas, skill global) — Lei 1 (materialidade) + o Master Execution Protocol exigem que eu **entenda materialmente antes de tocar em qualquer coisa stateful**. E você mesmo pediu a explicação da arquitetura primeiro (passo 1).
+
+Vou disparar uma recon exaustiva **read-only** (Ultracode) em paralelo: estúdio + n8n/secrets + serviços + portas/envs + pesquisa do HyperFrames. Nada será mutado nesta fase.
+
+## 🤖 Claude *(23:46:17)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Integra\u00e7\u00e3o m\u00f3dulo V\u00eddeo + HyperFrames",
+  "summary": "/home/gcrUX/studio (est\u00fadio faceless) + editor HyperFrames no Canvas Studio: recon, deploy, wiring MCORCH"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Integração módulo Vídeo + HyperFrames". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(23:46:20)*
+
+
+## 🤖 Claude *(23:46:50)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'studio-video-module-recon',\n  description: 'Read-only recon of /home/gcrUX/studio (faceless video module) + HyperFrames editor before any deploy/secret/install',\n  phases: [\n    { title: 'Recon', detail: 'parallel read-only readers: studio arch, n8n/secrets, services, env/ports, hyperframes research' },\n  ],\n}\n\nconst FINDINGS = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['area', 'summary', 'facts', 'risks', 'open_questions'],\n  properties: {\n    area: { type: 'string' },\n    summary: { type: 'string', description: 'concise prose summary of what was found' },\n    facts: { type: 'array', items: { type: 'string' }, description: 'material facts, each with a file path, port, container name, or literal command output' },\n    risks: { type: 'array', items: { type: 'string' }, description: 'risks/conflicts/gotchas discovered' },\n    open_questions: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst READONLY = 'STRICT READ-ONLY: you may use ls/cat/Read/Grep/Glob and read-only shell (docker ps, ss, lsof, env presence checks). You MUST NOT run docker compose up/build, MUST NOT write/edit any file, MUST NOT install anything (no npm/npx install, no skills add), MUST NOT start/stop services. NEVER print the VALUE of any secret/API key/token \u2014 report only PRESENCE (set/unset) and the variable name.'\n\nconst tasks = [\n  {\n    label: 'recon:studio-arch',\n    prompt: `${READONLY}\\n\\nRecon the MCORCH faceless-video module at /home/gcrUX/studio.\\n1. Read /home/gcrUX/studio/README.md IN FULL.\\n2. List the directory tree (top 2-3 levels): ls -la /home/gcrUX/studio and its key subdirs (n8n, scripts, remotion, dashboard, etc).\\n3. Read docker-compose.yml (and any compose override) in full.\\nReport: what the module does (faceless auto video studio), EVERY service in compose (name, image, build context, published ports, volumes, depends_on), whether services BUILD locally or pull, and CRITICALLY whether running 'docker compose up -d --build' would conflict with or replace anything already serving (e.g. login.mcorch.com nginx, existing mcorch_* containers, ports already bound). Capture exact ports and the remotion-render:8088 + dashboard services.`,\n  },\n  {\n    label: 'recon:n8n-secrets-scripts',\n    prompt: `${READONLY}\\n\\nRecon the n8n workflow + helper scripts in /home/gcrUX/studio.\\n1. Read /home/gcrUX/studio/n8n/workflow.json \u2014 find EVERY {{...}} placeholder (especially {{GEMINI_API_KEY}} and {{TELEGRAM_BOT_TOKEN}}). Report the exact JSON location/context of each placeholder and how the workflow node uses it. Report total count of each placeholder.\\n2. Read /home/gcrUX/studio/n8n/scripts/ltx.js and the composite.sh (find its exact path) and /home/gcrUX/studio/scripts/gen-sfx.sh \u2014 summarize what each does, what inputs/env they expect, and what the 'n8n volume' target path is (where ltx.js + composite.sh must be copied to).\\nReport facts with exact paths. NEVER print secret values.`,\n  },\n  {\n    label: 'recon:services-wiring',\n    prompt: `${READONLY}\\n\\nRecon how /home/gcrUX/studio exposes its services and how it would register as an MCORCH module.\\n1. Find the remotion-render service (port 8088) \u2014 how it runs, what it renders, its HTTP API if any.\\n2. Find the dashboard app (which dir, framework, port, how served).\\n3. Understand how the Sovereign wants mcorch_vision_mcp plugged into QA and mcorch_chroma plugged into the memory of scripts/videos \u2014 look for any existing integration points, config, or env referencing vision/chroma/qa/memory in the studio module.\\nReport the service map (name -> port -> purpose) and any existing MCORCH-integration hooks or the absence thereof.`,\n  },\n  {\n    label: 'recon:env-ports-canvas',\n    prompt: `${READONLY}\\n\\nProbe the host environment for the integration.\\n1. docker ps --format '{{.Names}} | {{.Status}} | {{.Ports}}' \u2014 list ALL running containers + their published ports.\\n2. Which of these ports are ALREADY bound: 3002 (hyperframes default), 8088 (remotion-render), 5678 (n8n), 3000/3001 (dashboards)? Use 'ss -ltnp' or 'lsof -i' (read-only). Report each port -> free or bound-by-what.\\n3. Check PRESENCE (set/unset, NOT value) of GEMINI_API_KEY and TELEGRAM_BOT_TOKEN in: /home/gcrUX/studio/.env (and .env.* there), /home/gcrUX/htdocs/constellation-orchestra/.env, and the current shell env. Report which file has which (presence only).\\n4. In /home/gcrUX/htdocs/constellation-orchestra/src: find where the Canvas Studio editor TopBar renders the 'pipeline' button (the file + component) so a 'V\u00eddeo' button can be added beside it, and find the route table in src/App.tsx to see how to add a /dashboard/canvas/video route. Report exact file paths + the relevant component/route lines.\\nNEVER print secret values \u2014 presence only.`,\n  },\n  {\n    label: 'recon:hyperframes',\n    prompt: `Research the HeyGen HyperFrames video editor for embedding into MCORCH. Use WebSearch/WebFetch (or the firecrawl skill) to investigate:\\n1. github.com/heygen-com/hyperframes \u2014 what it is (the video-editing UI behind hyperframes.heygen.com), how it installs and runs, the default port (the Sovereign says it opens on localhost:3002), its license, and its tech stack.\\n2. The 'npx skills add heygen-com/hyperframes' mechanism \u2014 what 'skills add' does, what it installs and where, and whether it pulls the hyperframes editor.\\n3. Is HyperFrames self-hostable and embeddable in an iframe (X-Frame-Options/CSP)? Any auth/API-key requirement? Any security caveats for hosting it?\\nReport concrete facts WITH the source URL for each claim (Lei 1 \u2014 no fabrication). If something cannot be verified from the web, say so in open_questions.`,\n  },\n]\n\nconst results = await Promise.all(\n  tasks.map((t) => agent(t.prompt, { label: t.label, phase: 'Recon', schema: FINDINGS }).catch(() => null)),\n)\n\nreturn { findings: results.filter(Boolean) }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wqqxyutzu
+> Summary: Read-only recon of /home/gcrUX/studio (faceless video module) + HyperFrames editor before any deploy/secret/install
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/subagents/workflows/wf_afce995b-d19
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/studio-video-module-recon-wf_afce995b-d19.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/studio-video-module-recon-wf_afce995b-d19.js"} to iterate without resending the script.)
+> Run ID: wf_afce995b-d19
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/studio-video-module-recon-wf_afce995b-d19.js", resumeFromRunId: "wf_afce995b-d19"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(23:46:58)*
+
+
+## 🤖 Claude *(23:47:07)*
+
+Recon exaustiva disparada em background (5 agentes read-only paralelos). Enquanto roda, **não toco em nada stateful** — sem `docker compose up`, sem secrets, sem skill install.
+
+Quando ela completar, te trago de uma vez:
+1. **Arquitetura do `/home/gcrUX/studio` em ≤6 linhas** (seu passo 1)
+2. **Mapa de serviços + portas** (incl. se a porta 3002 do HyperFrames e a 8088 do remotion-render estão livres, e o que `docker compose up --build` significa como "deploy ativo" — preciso garantir que não derruba o login.mcorch.com)
+3. **Veredito do BoK Gate** — integração de módulo novo no MCORCH; decidimos `/bok-scribe` vs override consciente (precedente: viralmind)
+4. **Plano sequenciado dos seus 6 passos + o botão "Vídeo"**, cada um com gate de verificação material e marcando o que precisa do seu GO (especialmente o deploy e o skill install global)
+5. **HyperFrames** — o que `npx skills add heygen-com/hyperframes` realmente instala, em que porta, e se é embeddável em iframe (como fizemos com o open-design)
+
+Aguardando o resultado da recon para sintetizar com prova material (Lei 1). Volto em seguida.
+
+## 👤 User *(23:52:15)*
+
+Alias aproveitando aqui enquanto não termina o fluxo de trabalho em segundo plano... o open design não esta funcionando
+
+## 🤖 Claude *(23:52:35)*
+
+
+## 🤖 Claude *(23:52:36)*
+
+Vou investigar o open-design materialmente agora (o fluxo da recon continua em background). "Não está funcionando" provavelmente é a página do editor (`/dashboard/canvas/design`) — o iframe aponta pra `http://127.0.0.1:7456`, que no **seu** navegador é o loopback da sua máquina + mixed-content (foi o gap que diagnostiquei). Mas não vou assumir — deixa eu checar container, worker, porta e o que você vê:
+
+## 🤖 Claude *(23:52:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== container open-design ===\"\ndocker ps -a --filter \"name=open-design\" --format \"{{.Names}} | {{.Status}} | {{.Ports}}\"\necho \"=== serve em :7456? (origem) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code} \u00b7 %{size_download} bytes \u00b7 ct=%{content_type}\\n\" http://127.0.0.1:7456 2>&1\necho \"=== worker design-bridge (systemd) ===\"\nsystemctl --user is-active design-bridge.service 2>/dev/null\necho \"=== iframe atual na p\u00e1gina ===\"\ngrep -nE \"iframe|src=\" src/pages/CanvasDesignPage.tsx 2>/dev/null\necho \"=== media-config global ainda existe? (presence, sem valor) ===\"\ndocker exec open-design sh -c 'test -f /app/.od/media-config.json && echo \"config presente: $(wc -c < /app/.od/media-config.json) bytes\" || echo \"config AUSENTE\"' 2>&1\necho \"=== jobs recentes (estado) ===\"\nset -a; source .env; set +a\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=id,status,created_at&order=created_at.desc&limit=4\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | python3 -c \"import json,sys;[print(r['status'],r['created_at'][:19],r['id'][:8]) for r in json.load(sys.stdin)]\" 2>/dev/null",
+  "description": "Diagnose open-design current state: container, port, worker, iframe, config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === container open-design ===
+> open-design | Up 6 days (healthy) | 127.0.0.1:7456->7456/tcp
+> === serve em :7456? (origem) ===
+> HTTP 200 · 9863 bytes · ct=text/html; charset=utf-8
+> === worker design-bridge (systemd) ===
+> active
+> === iframe atual na página ===
+> 12:        <iframe
+> 13:          src="http://127.0.0.1:7456"
+> === media-config global ainda existe? (presence, sem valor) ===
+> config presente: 115 bytes
+> === jobs recentes (estado) ===
+> complete 2026-06-21T23:32:07 6d312e0e
+> complete 2026-06-21T23:30:58 35885a6c
+> complete 2026-06-21T23:29:50 3331ee5f
+> complete 2026-06-21T23:28:55 c6bd411d
+> ```
+
+## 🤖 Claude *(23:53:12)*
+
+
+## 🤖 Claude *(23:53:15)*
+
+Diagnóstico claro: o **backend está 100% saudável** — container up, serve HTTP 200, worker `active`, config presente, jobs completando. O que "não funciona" é só o **iframe do editor**: `src="http://127.0.0.1:7456"` → no SEU navegador isso é o loopback da SUA máquina + **mixed-content** (http dentro de https) → tela branca. É exatamente o gap que sinalizei (precisa de URL https acessível pelo browser).
+
+A questão decisiva: consigo resolver isso **sem** você mexer no DNS? Depende de já existir wildcard `*.mcorch.com` no Cloudflare. Vou testar:
+
+## 🤖 Claude *(23:53:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== design.mcorch.com j\u00e1 resolve? ===\"\ndig +short design.mcorch.com 2>/dev/null || nslookup design.mcorch.com 2>/dev/null | tail -4\necho \"=== subdom\u00ednio aleat\u00f3rio (teste de wildcard *.mcorch.com) ===\"\ndig +short zzqxtest9.mcorch.com 2>/dev/null || echo \"(dig indispon\u00edvel)\"\necho \"=== mcp.mcorch.com resolve para (CF?) ===\"\ndig +short mcp.mcorch.com 2>/dev/null\necho \"=== login.mcorch.com resolve para ===\"\ndig +short login.mcorch.com 2>/dev/null\necho \"=== IP p\u00fablico da origem ===\"\ncurl -s -4 ifconfig.me 2>/dev/null; echo\necho \"=== nginx: map \\$http_upgrade existe? + ssl-certificates dir ===\"\nsudo -n grep -rn \"map \\$http_upgrade\" /etc/nginx/ 2>/dev/null | head -2\nsudo -n ls /etc/nginx/ssl-certificates/ 2>/dev/null | head",
+  "description": "Check DNS wildcard + CF resolution + nginx map/cert setup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === design.mcorch.com já resolve? ===
+> === subdomínio aleatório (teste de wildcard *.mcorch.com) ===
+> === mcp.mcorch.com resolve para (CF?) ===
+> 104.21.51.118
+> 172.67.180.42
+> === login.mcorch.com resolve para ===
+> 172.67.180.42
+> 104.21.51.118
+> === IP público da origem ===
+> 137.131.243.179
+> === nginx: map $http_upgrade existe? + ssl-certificates dir ===
+> agno.gcrux.com.crt
+> agno.gcrux.com.key
+> api.gcrux.com.crt
+> api.gcrux.com.key
+> claw.gcrux.com.crt
+> claw.gcrux.com.key
+> custom-domain.crt
+> custom-domain.key
+> dash.gcrux.com.crt
+> dash.gcrux.com.key
+> ```
+
+## 🤖 Claude *(23:53:58)*
+
+
+## 🤖 Claude *(23:54:01)*
+
+**Causa confirmada e cravada:** não há wildcard `*.mcorch.com` (subdomínio aleatório não resolve), e `design.mcorch.com` não resolve. `mcp.mcorch.com`/`login.mcorch.com` são registros explícitos no Cloudflare (IPs CF), origem `137.131.243.179`. Ou seja: o editor precisa de **1 registro DNS no Cloudflare** para `design.mcorch.com` — ou eu o crio via API (se houver token CF), ou é ação sua de ~2 min.
+
+Vou ver se tenho credencial Cloudflare para fazer 100% sozinho:
+
+## 🤖 Claude *(23:54:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== token/credencial Cloudflare em algum env? (presence only) ===\"\n{ env | grep -iE \"CLOUDFLARE|^CF_|CF_API\"; grep -hiE \"CLOUDFLARE|^CF_API|^CF_ZONE|^CF_TOKEN\" .env /home/gcrUX/studio/.env 2>/dev/null | sed 's/=.*/=<set>/'; } | sed 's/=.*/=<set>/' | sort -u || echo \"(nenhuma)\"\necho \"--- procura mais ampla por credencial CF em homes/configs (nomes s\u00f3) ---\"\ngrep -rliE \"cloudflare\" /home/gcrUX/.cloudflared ~/.cloudflared /home/gcrUX/studio 2>/dev/null | head -3 || echo \"(sem .cloudflared)\"\nls ~/.cloudflared 2>/dev/null; ls /home/gcrUX/.cloudflared 2>/dev/null\necho \"=== nginx http{}: map \\$http_upgrade definido? ===\"\nsudo -n grep -rnE \"map .*http_upgrade.*connection_upgrade|connection_upgrade\" /etc/nginx/nginx.conf /etc/nginx/conf.d/ /etc/nginx/sites-enabled/ 2>/dev/null | head -3 || echo \"(map n\u00e3o encontrado \u2014 vhost precisa defini-lo)\"",
+  "description": "Check for Cloudflare API credentials + nginx upgrade map"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === token/credencial Cloudflare em algum env? (presence only) ===
+> --- procura mais ampla por credencial CF em homes/configs (nomes só) ---
+> === nginx http{}: map $http_upgrade definido? ===
+> ```
+
+## 🤖 Claude *(23:55:05)*
+
+
+## 🤖 Claude *(23:55:10)*
+
+A recon do módulo de vídeo **terminou** (vou sintetizar em seguida). Mas primeiro o open-design, que você levantou:
+
+**Diagnóstico material:** o backend está **100% saudável** (container up, HTTP 200, worker `active`, jobs completando). O que quebra é só o **iframe do editor** — aponta pra `http://127.0.0.1:7456`, que no seu navegador é o loopback da *sua* máquina + mixed-content. Precisa de URL https acessível. Não há wildcard DNS, `design.mcorch.com` não resolve, e **não há token Cloudflare aqui** → o registro DNS é ação sua. Mas vou **deixar o lado-servidor 100% pronto** pra você só adicionar 1 registro DNS.
+
+Primeiro ajusto o vhost pra não depender do `map $http_upgrade` (que não existe no nginx) — espelho o padrão SSE do mcp:
+
+## 🤖 Claude *(23:55:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/nginx/design.mcorch.com.conf",
+  "old_string": "  # open-design daemon (Express/Next) on host loopback. WebSocket/SSE upgrade for the agent stream.\n  location / {\n    proxy_pass http://127.0.0.1:7456;\n    proxy_http_version 1.1;\n    proxy_set_header Upgrade           $http_upgrade;\n    proxy_set_header Connection        $connection_upgrade;\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_buffering        off;          # editor streams (agent turns) \u2014 don't buffer\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n  }\n}\n\n# Requires the standard map in http{} (already present for mcp):\n#   map $http_upgrade $connection_upgrade { default upgrade; '' close; }",
+  "new_string": "  # open-design daemon (Express/Next) on host loopback. SSE-friendly (agent stream) over HTTP/1.1\n  # keepalive \u2014 mirrors mcp.mcorch.com (Connection \"\" + proxy_buffering off), so NO map $http_upgrade\n  # dependency in http{} (which this server lacks).\n  location / {\n    proxy_pass http://127.0.0.1:7456;\n    proxy_http_version 1.1;\n    proxy_set_header Connection        \"\";\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_buffering        off;          # editor streams (agent turns) \u2014 don't buffer\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/nginx/design.mcorch.com.conf has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:55:20)*
+
+
+## 🤖 Claude *(23:55:21)*
+
+Agora gero o cert self-signed, ativo o vhost e recarrego o nginx (com `nginx -t` antes do reload — só recarrega se passar):
+
+## 🤖 Claude *(23:55:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1) cert self-signed da origem (CF Full) ===\"\nsudo -n openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \\\n  -keyout /etc/nginx/ssl-certificates/design.mcorch.com.key \\\n  -out    /etc/nginx/ssl-certificates/design.mcorch.com.crt \\\n  -subj \"/CN=design.mcorch.com\" 2>&1 | tail -1\nsudo -n ls -la /etc/nginx/ssl-certificates/design.mcorch.com.* 2>/dev/null | awk '{print $5,$9}'\necho \"=== 2) instala o vhost em sites-enabled ===\"\nsudo -n cp nginx/design.mcorch.com.conf /etc/nginx/sites-enabled/design.mcorch.com.conf && echo \"copiado\"\necho \"=== 3) nginx -t ===\"\nsudo -n nginx -t 2>&1 | tail -3\necho \"=== 4) reload se -t passou ===\"\nsudo -n nginx -t 2>/dev/null && sudo -n systemctl reload nginx && echo \"nginx recarregado \u2705\" || echo \"\u26a0\ufe0f -t falhou \u2014 vhost N\u00c3O ativado (revertendo)\"\n# safety: if -t failed, remove the vhost to not leave nginx in a bad include state\nsudo -n nginx -t 2>/dev/null || sudo -n rm -f /etc/nginx/sites-enabled/design.mcorch.com.conf\necho \"=== 5) prova local: origem responde pelo vhost? (Host header + resolve) ===\"\ncurl -s -k -o /dev/null -w \"via vhost (origin): HTTP %{http_code}\\n\" --resolve design.mcorch.com:443:137.131.243.179 https://design.mcorch.com/ 2>&1 | tail -1",
+  "description": "Generate cert, enable vhost, nginx -t, reload, prove via origin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1) cert self-signed da origem (CF Full) ===
+> -----
+> === 2) instala o vhost em sites-enabled ===
+> copiado
+> === 3) nginx -t ===
+> nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/www.mcorch.com.crt"
+> nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+> nginx: configuration file /etc/nginx/nginx.conf test is successful
+> === 4) reload se -t passou ===
+> nginx recarregado ✅
+> === 5) prova local: origem responde pelo vhost? (Host header + resolve) ===
+> via vhost (origin): HTTP 000
+> ```
+
+## 🤖 Claude *(23:55:38)*
+
+
+## 🤖 Claude *(23:55:40)*
+
+nginx **recarregado ✅** (`-t` passou; só um warning não-relacionado de www.mcorch.com). O HTTP 000 foi por hairpin NAT (a origem não acessa o próprio IP público). Vou provar pelo loopback (127.0.0.1) com o Host header — confirma que o vhost serve o open-design:
+
+## 🤖 Claude *(23:55:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== cert presente? ===\"\nsudo -n ls -la /etc/nginx/ssl-certificates/design.mcorch.com.crt /etc/nginx/ssl-certificates/design.mcorch.com.key 2>/dev/null\necho \"=== vhost serve o open-design via loopback? ===\"\ncurl -s -k -o /dev/null -w \"design.mcorch.com via 127.0.0.1:443 \u2192 HTTP %{http_code} \u00b7 %{size_download} bytes\\n\" --resolve design.mcorch.com:443:127.0.0.1 https://design.mcorch.com/ 2>&1 | tail -1\necho \"=== confirma que \u00e9 o conte\u00fado do open-design (_next assets) ===\"\ncurl -s -k --resolve design.mcorch.com:443:127.0.0.1 https://design.mcorch.com/ 2>/dev/null | grep -oE \"/_next/static/[^\\\"']+\" | head -2",
+  "description": "Verify vhost serves open-design via loopback Host header"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === cert presente? ===
+> -rw-r--r-- 1 root root 1135 Jun 21 20:55 /etc/nginx/ssl-certificates/design.mcorch.com.crt
+> -rw------- 1 root root 1704 Jun 21 20:55 /etc/nginx/ssl-certificates/design.mcorch.com.key
+> === vhost serve o open-design via loopback? ===
+> design.mcorch.com via 127.0.0.1:443 → HTTP 200 · 9863 bytes
+> === confirma que é o conteúdo do open-design (_next assets) ===
+> /_next/static/chunks/0epvgk6mzhxi7.css
+> /_next/static/chunks/0jykm9.-ma2lc.css
+> ```
+
+## 🤖 Claude *(23:56:02)*
+
+
+## 🤖 Claude *(23:56:07)*
+
+**Lado-servidor do open-design: 100% pronto e provado.**
+- Cert self-signed gerado, vhost ativado, `nginx -t` ok, **nginx recarregado**.
+- Prova material: `design.mcorch.com` via loopback → **HTTP 200, 9863 bytes**, servindo os assets `/_next/...` do open-design.
+
+**Falta só 1 ação sua (~2 min, não tenho token Cloudflare):** no Cloudflare, adicionar registro DNS:
+> **A** · `design` · **137.131.243.179** · Proxy **ON** (laranja)
+
+SSL mode já é Full na zona (o mcp funciona). Se o editor levar bot-challenge da CF, adicione uma **WAF Skip rule** pra `design.mcorch.com` (mesmo gotcha do mcp). Assim que o DNS propagar, eu **troco o iframe pra `https://design.mcorch.com` + rebuild** e endureço o `OD_API_TOKEN` antes de expor. (O caminho headless de geração já funciona independente disso.)
+
+Agora deixa eu puxar o resultado completo da recon do módulo de vídeo pra te apresentar o plano:
+
+## 🤖 Claude *(23:56:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wqqxyutzu.output 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor f in d['findings']:\n    print('\\n'+'='*70)\n    print('AREA:', f['area'][:90])\n    print('SUMMARY:', f['summary'])\n    print('-- FACTS --')\n    for x in f.get('facts',[]): print('  \u2022', x)\n    print('-- RISKS --')\n    for x in f.get('risks',[]): print('  \u26a0', x)\n    print('-- OPEN Q --')\n    for x in f.get('open_questions',[]): print('  ?', x)\n\" 2>/dev/null | head -200",
+  "description": "Read full recon workflow findings"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(23:56:15)*
+
+
+## 🤖 Claude *(23:56:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -c /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wqqxyutzu.output 2>/dev/null\nhead -c 300 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wqqxyutzu.output 2>/dev/null",
+  "description": "Inspect recon output file structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 48432 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wqqxyutzu.output
+> {
+>   "summary": "Read-only recon of /home/gcrUX/studio (faceless video module) + HyperFrames editor before any deploy/secret/install",
+>   "agentCount": 5,
+>   "logs": [],
+>   "result": {
+>     "findings": [
+>       {
+>         "area": "MCORCH faceless-video module recon — /home/gcrUX/studio",
+>         "summary
+> ```
+
+## 🤖 Claude *(23:56:19)*
+
+
+## 🤖 Claude *(23:56:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wqqxyutzu.output 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfs=d['result']['findings']\nfor f in fs:\n    print('\\n'+'#'*60)\n    print('AREA:', f['area'][:100])\n    print('SUMMARY:', f['summary'][:1200])\n    print('-- KEY FACTS --')\n    for x in f.get('facts',[])[:14]: print('  \u2022', x[:240])\n    print('-- RISKS --')\n    for x in f.get('risks',[])[:8]: print('  !', x[:240])\n    print('-- OPEN Q --')\n    for x in f.get('open_questions',[])[:6]: print('  ?', x[:200])\n\"",
+  "description": "Parse recon findings with correct path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (31.5KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tool-results/bbi1u4kon.txt
+> 
+> Preview (first 2KB):
+> ############################################################
+> AREA: MCORCH faceless-video module recon — /home/gcrUX/studio
+> SUMMARY: /home/gcrUX/studio ("AI and Peoples — Studio") is the MCORCH faceless 100%-automatic video module: it writes a script, narrates with a cloned voice, draws cinematic HUD/captions, animates stills via image-to-video, adds contextual SFX, runs QA, and delivers to Telegram — all CPU-only with free tools. The actual pipeline brain is an EXISTING n8n container (n8n-n8n-1, workflow id e7e3beeb58f7411a) that loops scene-by-scene calling Gemini (director/QA), Pollinations (images), VoxCPM (TTS), LTX HF Space (i2v, Ken-Burns fallback), FFmpeg, and the Remotion render service. This repo's docker-compose.yml only stands up TWO services — remotion-render (motion-graphics HTTP render engine) and studio-dashboard (ops UI) — and attaches to the n8n stack's EXTERNAL network/volume. Both services BUILD/RUN locally (no registry pull beyond base node image). CRITICAL: both containers are ALREADY RUNNING, and there are TWO independent things bound to :8088 — the in-container remotion service (intra-network only, NOT host-published) AND a separate HOST node process (pid 3298714, /home/ubuntu/remotion-studio/server.js) on 0.0.0.0:8088. login.mcorch.com (host nginx/CloudPanel on :80/:443) is NOT in docker
+> -- KEY FACTS --
+>   • Module purpose (README.md:3): faceless 100% automatic video studio — script + cloned-voice TTS + cinematic HUD/captions + image-to-video motion + contextual SFX + auto-QA + delivery, CPU-only on the server with free tools.
+>   • The pipeline 'brain' is an EXTERNAL existing container, not in this compose: n8n container n8n-n8n-1, workflow 'AI and Peoples - Faceless Video Builder (Motion HUD)' id e7e3beeb58f7411a (README.md:11). n8n-n8n-1 is running (image n8n-ffmpeg
+> ...
+> </persisted-output>
+> ```
+
+## 🤖 Claude *(23:56:26)*
+
+
+## 🤖 Claude *(23:56:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tool-results/bbi1u4kon.txt",
+  "offset": 30,
+  "limit": 170
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	  ? Is there a CloudPanel reverse-proxy already mapping studio.gcrux.com -> 127.0.0.1:8095 (README:65 suggests it as the intended publish path)? Not verifiable read-only from here; host nginx/CloudPanel c
+> 31	  ? n8n runtime scripts (ltx.js, composite.sh) live in the repo under n8n/scripts but must be docker cp'd into n8n-n8n-1:/home/node/.n8n/assets/ to take effect — current sync state of those files inside t
+> 32	  ? The repo's docs/ directory is empty — no additional in-repo SOP/architecture beyond README.md.
+> 33	
+> 34	############################################################
+> 35	AREA: n8n Faceless Video Builder workflow + helper scripts recon (/home/gcrUX/studio)
+> 36	SUMMARY: The workflow.json is a single-element JSON array describing the n8n workflow "AI and Peoples - Faceless Video Builder (Motion HUD)" (id e7e3beeb58f7411a, active:false). It contains exactly 3 placeholder occurrences across 2 distinct placeholder names: {{GEMINI_API_KEY}} appears 2x (both inside the URL query string of HTTP Request nodes calling Google Generative Language API), and {{TELEGRAM_BOT_TOKEN}} appears 1x (inside the Telegram sendVideo URL path). No other {{UPPER_SNAKE}} placeholders exist. The three helper scripts (ltx.js, composite.sh, gen-sfx.sh) all operate against the n8n container's assets volume mounted at /home/node/.n8n/assets/ — that is the target path where ltx.js and composite.sh must be copied (the workflow's executeCommand nodes invoke them as `node /home/node/.n8n/assets/ltx.js <scene>` and `sh /home/node/.n8n/assets/composite.sh <scene> <ambience> <dur>`). No secret values were read or printed.
+> 37	-- KEY FACTS --
+> 38	  • File: /home/gcrUX/studio/n8n/workflow.json (22924 bytes). It is a JSON array with one workflow object: name 'AI and Peoples - Faceless Video Builder (Motion HUD)', id 'e7e3beeb58f7411a', active:false, isArchived:false.
+> 39	  • PLACEHOLDER COUNT — exact: {{GEMINI_API_KEY}} = 2 occurrences; {{TELEGRAM_BOT_TOKEN}} = 1 occurrence. Verified via `grep -oE '\{\{[A-Z_]+\}\}'` → only these two token names appear; no others.
+> 40	  • {{GEMINI_API_KEY}} occurrence #1: node id '6fb680e8-0033-42eb-834c-5550e216674e', name 'Gemini - Generate Scenes1' (type n8n-nodes-base.httpRequest, method POST). Location: the node's `url` parameter = 'https://generativelanguage.googleapis
+> 41	  • {{GEMINI_API_KEY}} occurrence #2: node id '07f8b628-e5cb-4b5c-ad1c-d819564b9abd', name 'QA - Vision' (type n8n-nodes-base.httpRequest, method POST). Location: same `url` parameter pattern '...gemini-2.5-flash:generateContent?key={{GEMINI_AP
+> 42	  • {{TELEGRAM_BOT_TOKEN}} occurrence (only one): node id 'edc8a421-89e6-4841-8a8e-d64a8774c53f', name 'Telegram - Send Video' (type n8n-nodes-base.httpRequest, method POST, contentType multipart-form-data). Location: the node's `url` parameter
+> 43	  • Both Gemini nodes pass the key as an inline URL query param (?key=...), NOT via an n8n credential — so the placeholder must be substituted before import or the URL rewritten to use a credential/header.
+> 44	  • n8n VOLUME TARGET PATH = /home/node/.n8n/assets/ — this is where ltx.js and composite.sh must be copied. Evidence: composite.sh sets `A=/home/node/.n8n/assets`; the 'FFmpeg - Animate Scene1' executeCommand node runs `sh /home/node/.n8n/asse
+> 45	  • Script: /home/gcrUX/studio/n8n/scripts/ltx.js (3840 bytes). Node.js. LTX image-to-video via free Gradio HF Spaces (lightricks-ltx-video-distilled.hf.space) with optional AuraSR upscale (gokaygokay-aurasr-v2.hf.space). INPUTS: argv[2]=scene 
+> 46	  • Script: /home/gcrUX/studio/n8n/scripts/composite.sh (1232 bytes, mode 0777, POSIX sh). Per-scene compositor. ARGS: $1=scene, $2=ambience, $3=durationSeconds. Uses A=/home/node/.n8n/assets. If scene<N>_ltx.mp4 exists it loops that video as b
+> 47	  • Script: /home/gcrUX/studio/scripts/gen-sfx.sh (1304 bytes, mode 0777, POSIX sh). Generates the procedural ambience/SFX library with FFmpeg lavfi inside the n8n container. It runs `docker exec n8n-n8n-1 sh -c '...'`, cd's to /home/node/.n8n/
+> 48	-- RISKS --
+> 49	  ! The Gemini key is embedded directly in the URL query string (?key={{GEMINI_API_KEY}}) of two httpRequest nodes — substituting it bakes the secret into workflow.json on disk/import. Prefer an n8n credential or header-based injection rather t
+> 50	  ! {{TELEGRAM_BOT_TOKEN}} is in the URL path (bot<token>); same exposure concern on substitution. The Telegram chat_id 5835174772 is hardcoded in the node body.
+> 51	  ! gen-sfx.sh hardcodes container name 'n8n-n8n-1' in `docker exec` — if the actual n8n container has a different compose project/name, the script silently targets nothing or errors. Container name was NOT verified live in this read-only recon
+> 52	  ! composite.sh and ltx.js depend on being physically present at /home/node/.n8n/assets/ inside the n8n container (not just on the host) — they are invoked by absolute path from executeCommand nodes. If only copied to the host studio dir and n
+> 53	  ! ltx.js relies on global fetch/FormData (Node 18+); the n8n container's Node runtime version must support them or every LTX call silently falls back to Ken Burns.
+> 54	  ! composite.sh expects hud<N>.mov to exist (Remotion-rendered HUD overlay from the 'Render HUD' branch). If the LTX/HUD lower branch is skipped, the overlay input is missing and ffmpeg will error.
+> 55	-- OPEN Q --
+> 56	  ? Are ltx.js and composite.sh already present inside the running n8n container at /home/node/.n8n/assets/, or do they currently only exist in the host path /home/gcrUX/studio/n8n/scripts/? (requires doc
+> 57	  ? Is the n8n container actually named 'n8n-n8n-1' as gen-sfx.sh assumes? (not verified).
+> 58	  ? Where/how are the {{...}} placeholders intended to be substituted — by a deploy/import script, manual edit, or an n8n env-expression mechanism? The raw {{NAME}} form is not native n8n expression synta
+> 59	  ? Which env var names hold the actual GEMINI_API_KEY and TELEGRAM_BOT_TOKEN values, and are they currently set in the deploy environment? (presence not checked under this task's narrow scope).
+> 60	
+> 61	############################################################
+> 62	AREA: /home/gcrUX/studio — MCORCH "video module" (remotion-render + studio-dashboard + n8n brain); recon o
+> 63	SUMMARY: /home/gcrUX/studio is a self-contained "faceless video" studio module: an n8n workflow (the "brain") drives a per-scene pipeline (Gemini script -> Pollinations image -> VoxCPM voice -> Remotion HUD overlay -> LTX image-to-video / Ken Burns fallback -> FFmpeg composite -> Gemini-vision QA -> Telegram). Two containers belong to this module: remotion-render (the motion-graphics HTTP render engine, port 8088, container-internal only) and studio-dashboard (operations UI, port 8095, host-bound 127.0.0.1). Both are running. The README's "Integração com o MCORCH" section is ASPIRATIONAL ONLY — it states mcorch_vision_mcp "pode substituir/assistir" the QA-award step and outputs/metrics "podem ir" to mcorch_chroma for semantic search, but there is ZERO code, config, or env wiring for either. Today QA is done in-workflow by Gemini-2.5-flash vision against a contact-sheet, and there is no memory/embedding sink at all. CRITICAL BLOCKER: the studio containers and the MCORCH Sovereign Mesh containers are on DIFFERENT, isolated Docker networks, so the documented container-DNS integration cannot work until they are bridged.
+> 64	-- KEY FACTS --
+> 65	  • SERVICE MAP — remotion-render -> port 8088 -> motion-graphics render engine. docker ps: `remotion-render  remotion-render  Up 28 minutes  8088/tcp` (no host publish — container-internal only). Network: n8n_default. HTTP API in /home/gcrUX/s
+> 66	  • SERVICE MAP — studio-dashboard -> port 8095 -> operations UI. docker ps: `studio-dashboard  node:22-bookworm-slim  Up About an hour  127.0.0.1:8095->8095/tcp` (host-bound to localhost; meant to be reverse-proxied via CloudPanel to studio.gc
+> 67	  • n8n is the orchestrator ('brain'): container n8n-n8n-1 (image n8n-ffmpeg:latest), port 127.0.0.1:5678, network n8n_default. Workflow `AI and Peoples - Faceless Video Builder (Motion HUD)` id e7e3beeb58f7411a (export at /home/gcrUX/studio/n8
+> 68	  • MCORCH integration is PROSE-ONLY, no implementation. Only two references exist in the entire module (grep over *.js/*.ts/*.json/*.sh/*.yml/*.md): README.md:76 `**QA** -> o mcorch_vision_mcp pode substituir/assistir o QA award` and README.md
+> 69	  • Current QA is in-workflow, NOT vision-mcp: workflow.json node `QA - Vision` POSTs a contact-sheet image to `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{GEMINI_API_KEY}}` with a senior-motio
+> 70	  • Current memory sink = NONE. The pipeline ends at Telegram sendVideo (node `Telegram - Send Video`). No embeddings, no chroma write, no Supabase mesh node, no infra_health_logs telemetry — the README's mcorch_chroma 'semantic search of video
+> 71	  • NETWORK ISOLATION BLOCKER (docker inspect): remotion-render -> network `n8n_default`; studio-dashboard -> network `bridge`; mcorch_vision_mcp -> network `constellation-orchestra_mcorch-sovereign-net`; mcorch_chroma -> `constellation-orchest
+> 72	  • MCORCH Mesh targets exist and are healthy: `mcorch_vision_mcp  constellation-orchestra-mcorch-vision-mcp  Up 4 days (healthy)  127.0.0.1:3200->3200/tcp`; `mcorch_chroma  chromadb/chroma:latest  Up 6 days (healthy)  127.0.0.1:8001->8000/tcp`
+> 73	  • docker-compose.yml (/home/gcrUX/studio/docker-compose.yml) declares only remotion-render (build ./remotion, networks [n8n_default]) and studio-dashboard (PORT 8095, host 127.0.0.1:8095, mounts n8n_n8n_assets:ro). It consumes external networ
+> 74	  • No env wiring for MCORCH in module: no .env file at /home/gcrUX/studio (ls .env* -> none). Only secrets referenced anywhere are GEMINI_API_KEY and TELEGRAM_BOT_TOKEN (redacted as {{...}} placeholders in workflow.json; README lists GEMINI_AP
+> 75	  • Remotion compositions registered in /home/gcrUX/studio/remotion/src/Root.tsx: Stat, Hud, Neon, NeonCaption, SceneOverlay (all 1920x1080 @30fps). The n8n pipeline renders the `SceneOverlay` composition (codec prores) per scene via Build HUD 
+> 76	-- RISKS --
+> 77	  ! Network isolation is a hard blocker: remotion/n8n live on n8n_default while mcorch_vision_mcp + mcorch_chroma live on constellation-orchestra_mcorch-sovereign-net. The README's `http://mcorch_vision_mcp:3200` / `http://mcorch_chroma:8000` c
+> 78	  ! studio-dashboard runs on the default `bridge` network, NOT n8n_default, even though it mounts the n8n assets volume. It cannot reach n8n/remotion by container name. (It only needs the filesystem volume, so this is fine today, but any future
+> 79	  ! Vision-MCP integration is non-trivial: mcorch_vision_mcp is a Streamable-HTTP MCP server requiring ES256 JWKS or a PAT Bearer token and an Origin gate (per mcorch CLAUDE.md). The studio module has no PAT, no MCP client, and no auth wiring —
+> 80	  ! MCORCH Master Protocol gate: README treats this as an existing module to 'assume', but there is no BoK suite at docs/bok/<slug>/ for it and docs/ is empty. Per CLAUDE.md Closed-Loop Protocol, formally plugging it into MCORCH QA/memory (a ne
+> 81	  ! No telemetry / mesh observation: the module writes nothing to infra_health_logs or mcorch_nodes, violating the Mesh Connection Mandate that every feature insert an observation node on first success and a health log on failure. As-is it is i
+> 82	  ! workflow.json is active:false and contains a hardcoded Telegram chat_id (5835174772) and {{GEMINI_API_KEY}}/{{TELEGRAM_BOT_TOKEN}} placeholders that must be filled on import; the LTX free ZeroGPU tier is ~5 GPU-min/day so most scenes fall b
+> 83	-- OPEN Q --
+> 84	  ? How does the Sovereign want vision-mcp wired in — replace the Gemini-2.5-flash QA-award node entirely, or run vision-mcp as a second gate/assist? And via which transport: attach studio containers to c
+> 85	  ? What is the chroma write contract — which collection, what gets embedded (final video metadata? per-scene scripts? QA verdicts?), and which embedding model? mcorch_chroma is ChromaDB API v2 on :8001(h
+> 86	  ? Should this module register formally as an MCORCH module (BoK suite under docs/bok/<slug>/, Key Files Reference entry, mesh observation node, infra_health_logs telemetry, mcoCoins cost) or remain a st
+> 87	  ? Will vision-mcp QA need a PAT/JWT issued for this module (it requires Bearer auth + Origin gate)? If so, which tenant/identity owns it?
+> 88	  ? Is remotion-render meant to be the MCORCH-wide render engine (README: 'MCORCH chama http://remotion-render:8088/render pra qualquer composição')? If yes it must become reachable from the sovereign-net
+> 89	
+> 90	############################################################
+> 91	AREA: Host environment probe for Studio/Vídeo integration (ports, container map, env-key presence, Canvas 
+> 92	SUMMARY: Probed the host read-only. 27 containers run; of the four target ports only 8088 and 3000 are bound — 3002 (hyperframes default), 5678 (n8n) [n8n IS up on 127.0.0.1:5678 but ss did not show a foreign PID line for it under this user, see facts], and 3001 are effectively free to publish on the host loopback. GEMINI_API_KEY is set ONLY in constellation-orchestra/.env; TELEGRAM_BOT_TOKEN is unset everywhere; /home/gcrUX/studio exists but has NO .env file at all. For the UI work: the Canvas Studio Pipeline button lives in src/components/canvas/TopBar.tsx (rendered by CanvasEditorPage.tsx), and a 'Vídeo' button can be added beside it; the route table is in src/App.tsx with exact insertion points identified for a /dashboard/canvas/video route.
+> 93	-- KEY FACTS --
+> 94	  • docker ps shows 27 running containers. Studio-relevant: 'remotion-render | Up 29 minutes | 8088/tcp' (port NOT host-published, internal only) and 'studio-dashboard | Up About an hour | 127.0.0.1:8095->8095/tcp'.
+> 95	  • Other notable containers: mcorch_vision_mcp (127.0.0.1:3200->3200, healthy, Up 4 days), open-design (127.0.0.1:7456->7456), n8n-n8n-1 (127.0.0.1:5678->5678, healthy), mega-brain-dashboard (0.0.0.0:3000->3000), mega-brain-webhook (0.0.0.0:80
+> 96	  • Port 3002 (hyperframes default): FREE on host. `ss -ltn | grep :3002` returned 3002_FREE; no listener.
+> 97	  • Port 8088 (remotion-render): BOUND on host 0.0.0.0:8088 by a host node process — `ss -ltnp` shows users:(("node /home/ubun",pid=3298714,fd=23)). NOTE: this is a HOST node process bound to 0.0.0.0:8088, distinct from the remotion-render cont
+> 98	  • Port 5678 (n8n): BOUND on 127.0.0.1:5678 (n8n-n8n-1 container publishes it; `ss -ltn` shows LISTEN 127.0.0.1:5678). No -p PID shown because it is a docker-proxy/container publish, not a same-user host process.
+> 99	  • Port 3000 (dashboards): BOUND on 0.0.0.0:3000 and [::]:3000 by mega-brain-dashboard container. NOT free.
+> 100	  • Port 3001 (dashboards): FREE on host loopback/0.0.0.0 — `ss -ltnp | grep :3001` returned no match (the 'tradeux-backend-1 | 3001/tcp' container exposes 3001 internally only, NOT host-published). 3001 is available to publish.
+> 101	  • Env key presence (NAMES/PRESENCE only, no values printed): /home/gcrUX/htdocs/constellation-orchestra/.env -> GEMINI_API_KEY: SET, TELEGRAM_BOT_TOKEN: UNSET.
+> 102	  • Env key presence: /home/gcrUX/studio/.env -> FILE MISSING entirely. `find /home/gcrUX/studio -maxdepth 3 -name '.env*'` returned NONE; no .env, .env.* anywhere under the studio tree (incl. remotion/, n8n/, dashboard/).
+> 103	  • Env key presence: current shell env -> GEMINI_API_KEY: UNSET, TELEGRAM_BOT_TOKEN: UNSET (neither exported into this shell).
+> 104	  • Net: GEMINI_API_KEY resolvable ONLY from constellation-orchestra/.env; TELEGRAM_BOT_TOKEN is set in NO probed location (constellation .env, studio .env*, shell).
+> 105	  • /home/gcrUX/studio exists (owner ubuntu): contains docker-compose.yml, dashboard/, docs/, n8n/, remotion/, scripts/, README.md, .git/, .gitignore. docker-compose.yml defines services remotion-render (build ./remotion, n8n calls http://remot
+> 106	  • Canvas Studio Pipeline button: file src/components/canvas/TopBar.tsx, exported component `TopBar`. The Pipeline toggle Button is at lines 113-122 (variant toggles on `pipelineMode`, icon `Layers`, label 'Pipeline', onClick `setPipelineMode(
+> 107	  • TopBar is rendered by src/pages/CanvasEditorPage.tsx (the per-project editor at route /dashboard/canvas/:id). Icons imported from lucide-react at TopBar.tsx line 3: ArrowLeft, Download, Layers, Loader2, Play, Redo2, Save, Undo2 (add a video
+> 108	-- RISKS --
+> 109	  ! Port-ordering trap in App.tsx: `canvas/:id` (line 125) is a dynamic segment. Any new static `canvas/video` route declared AFTER it would be shadowed and resolve as :id='video'. The new route must be registered before line 125.
+> 110	  ! Host port 8088 is ALREADY occupied by a host node process (pid 3298714, bound 0.0.0.0:8088), separate from the remotion-render container. If the Studio/Vídeo integration intends to publish remotion-render to host:8088, it will collide. The 
+> 111	  ! Port 3000 is taken by mega-brain-dashboard (0.0.0.0:3000); do not assume 3000 is available for a new dashboard. 3001, 3002 are free; 5678 is taken by n8n.
+> 112	  ! TELEGRAM_BOT_TOKEN is not present in ANY probed location — if the integration needs it (e.g. Studio notifications), it must be provisioned; it cannot be sourced today.
+> 113	  ! /home/gcrUX/studio has NO .env file — any docker-compose env interpolation there will resolve to empty. GEMINI_API_KEY currently lives only in the constellation-orchestra repo .env, not in the studio tree, so the studio compose cannot read 
+> 114	  ! Per CLAUDE.md / Survival Law 2, a 'Vídeo' Canvas feature + new /dashboard/canvas/video route is a new user-facing module — it likely requires a BoK gate / SOP (docs/processes) before code, and the API Tenancy model if it calls external vide
+> 115	-- OPEN Q --
+> 116	  ? Should the Studio/Vídeo integration publish remotion-render to a host port, or call it only over the internal n8n_default docker network (http://remotion-render:8088)? Host 8088 is already taken by an
+> 117	  ? Where should GEMINI_API_KEY / TELEGRAM_BOT_TOKEN be sourced for the studio side — copy/wire from constellation-orchestra/.env into a new /home/gcrUX/studio/.env, or inject via the constellation app's 
+> 118	  ? Is the new 'Vídeo' button meant to navigate to a brand-new page (/dashboard/canvas/video, needs a CanvasVideoPage component + lazy import + route) or to toggle a mode within the existing CanvasEditorP
+> 119	  ? Does the host node process on 8088 (pid 3298714, 'node /home/ubun...') belong to the studio remotion server or something else? It is a host-level process, not the remotion-render container — its ident
+> 120	
+> 121	############################################################
+> 122	AREA: HeyGen HyperFrames video editor — feasibility of embedding into MCORCH
+> 123	SUMMARY: HyperFrames (github.com/heygen-com/hyperframes) is an Apache-2.0, open-source, agent-first framework from HeyGen that turns HTML/CSS/JS + media into deterministic MP4 videos via headless Chrome (Puppeteer) + FFmpeg. It is NOT a SaaS — it is a local toolchain. The "video-editing UI behind hyperframes.heygen.com" that the Sovereign sees on localhost:3002 is the `@hyperframes/studio` package: a browser-based Non-Linear Editor (NLE) with live preview, timeline scrubber, CodeMirror source editor and hot reload. It is launched with `npx hyperframes preview` which prints `# Studio running at http://localhost:3002` (port confirmed; override with `--port`). Tech stack: TypeScript (~80%) + JavaScript, React (Studio is a React app), Puppeteer (headless Chrome capture), FFmpeg (encode), plus animation adapters (GSAP, CSS, Lottie, Three.js, Anime.js, WAAPI) and WebGL shader transitions. Requirements: Node 22+ and FFmpeg. License is Apache-2.0 explicitly "with no per-render fees or commercial-use thresholds" and no API key / HeyGen account is required to run it locally — HeyGen confirms it is "separate from the main HeyGen video editor."
+> 124	
+> 125	`npx skills add heygen-com/hyperframes` is NOT how you in
+> 126	-- KEY FACTS --
+> 127	  • Repo identity: HyperFrames is 'an open-source framework that converts HTML, CSS, media, and animations into deterministic MP4 videos', tagline 'Write HTML. Render video. Built for agents.' — https://github.com/heygen-com/hyperframes
+> 128	  • License is Apache-2.0, stated verbatim as 'Apache-2.0 license, with no per-render fees or commercial-use thresholds' — https://github.com/heygen-com/hyperframes
+> 129	  • Tech stack per GitHub language bar: TypeScript 80.4%, JavaScript 18.5%, plus Shell, Python, CSS — https://github.com/heygen-com/hyperframes
+> 130	  • Core engine: headless Chrome via Puppeteer + FFmpeg for encoding; animation adapters GSAP, CSS animations, Lottie, Three.js, Anime.js, WAAPI; WebGL shader transitions — https://github.com/heygen-com/hyperframes
+> 131	  • Requirements: Node.js 22+ and FFmpeg — https://github.com/heygen-com/hyperframes
+> 132	  • Install/run path (manual): `npx hyperframes init my-video` -> `npx hyperframes preview` (browser preview, live reload) -> `npx hyperframes render` (MP4) — https://github.com/heygen-com/hyperframes
+> 133	  • The editor UI = `@hyperframes/studio`, described as 'Browser-based composition editor UI' / 'browser-based visual editor ... with real-time preview, timeline editing, and hot reload' — https://github.com/heygen-com/hyperframes/blob/main/REA
+> 134	  • `npx hyperframes preview` 'starts the studio development server, opens your composition in the browser, and watches for file changes' — https://hyperframes.heygen.com/packages/studio
+> 135	  • DEFAULT PORT CONFIRMED 3002: CLI README quotes `npx hyperframes preview  # Studio running at http://localhost:3002`; override with `npx hyperframes preview --port 4567` — https://github.com/heygen-com/hyperframes/tree/main/packages/cli
+> 136	  • Studio is a React app and EXPORTS React components for embedding: StudioApp, NLELayout, NLEPreview, Player, Timeline, SourceEditor, PropertyPanel, FileTree, PlayerControls, PreviewPanel, AgentActivityTrack — https://hyperframes.heygen.com/p
+> 137	  • Studio's documented intended use: 'Build a custom composition editor UI (e.g., embedded in your own web application)' and 'Integrate the Hyperframes preview player into a larger product' — https://hyperframes.heygen.com/packages/studio
+> 138	  • Embeddable player = `@hyperframes/player`: `<hyperframes-player src="./my-composition/index.html" controls>`, zero dependencies, ~3KB gzipped, install via `npm install @hyperframes/player` or jsDelivr CDN, no auth/API key — https://hyperfra
+> 139	  • Player renders 'using an iframe inside a Shadow DOM container' for isolation; mirrors HTML5 video API (play/pause/seek + ready/timeupdate/play/pause/ended/error events) — https://hyperframes.heygen.com/packages/player
+> 140	  • `skills` = Vercel Labs 'open agent skills tool' (npx skills); `skills add owner/repo` fetches SKILL.md (markdown + YAML frontmatter: name, description) and installs/symlinks into detected agent dirs like .claude/skills, .agents/skills; `-g`
+> 141	-- RISKS --
+> 142	  ! IFRAME-OF-LOCALHOST IS THE WRONG PATTERN. The Sovereign's stated goal ('opens on localhost:3002, embed in an iframe') would point an MCORCH page's iframe at a separate dev server. That is fragile and cross-origin: localhost:3002 (Studio dev
+> 143	  ! X-Frame-Options / CSP for the Studio dev server are NOT documented anywhere I could find (README, studio.md, SECURITY.md). So whether localhost:3002 can even be iframed cross-origin is UNVERIFIED — must be tested empirically (curl -I the ru
+> 144	  ! The `@hyperframes/player` already 'uses an iframe inside a Shadow DOM container' internally. Wrapping that in ANOTHER MCORCH iframe = nested iframes; and note the player is a PLAYER (playback only), not the EDITOR — it cannot satisfy a 'vid
+> 145	  ! Studio is a DEV server (`npx hyperframes preview` = 'studio development server'). There is no documented production-hardened server mode, no documented host-binding/auth. Running it as a long-lived service behind nginx (the MCORCH Sovereign
+> 146	  ! SECURITY GOTCHA — untrusted HTML execution: HyperFrames renders arbitrary HTML/CSS/JS through headless Chrome (Puppeteer). In a multi-tenant MCORCH context, compositions authored by one tenant would execute JS in the rendering Chrome. This 
+> 147	  ! Per-user credential model (CLAUDE.md UNBREAKABLE RULE): HyperFrames itself needs no API key, but if MCORCH wires it to AI generation or asset sources, those creds must resolve per-user via auth.uid(), not a shared key in the render env.
+> 148	  ! BoK gate (CLAUDE.md Master Protocol): 'embedding the HyperFrames editor into MCORCH' is a new module/integration — it requires the BoK family (01-mrd..05-sdd) under docs/bok/<slug>/ before code, unless the Sovereign issues a conscious overr
+> 149	-- OPEN Q --
+> 150	  ? Does the Studio dev server (localhost:3002) send X-Frame-Options or Content-Security-Policy: frame-ancestors headers? Not documented — must be verified empirically by running `npx hyperframes preview`
+> 151	  ? Can the Studio dev server bind to a non-localhost host (0.0.0.0) for serving behind nginx? Only a `--port` flag is documented; no `--host` flag was found in docs. Needs to be checked in the CLI source
+> 152	  ? Is there any production/served mode for the Studio (vs the `preview` dev server), or is hosting it = running the dev server long-lived? Not documented.
+> 153	  ? Exact latest npm version of `hyperframes` and `@hyperframes/studio` could not be retrieved — npmjs.com returned HTTP 403 to the fetch. SECURITY.md says supported version is '0.x' (i.e. pre-1.0, expect
+> 154	  ? How the `@hyperframes/studio` React components expect to be fed compositions and how their file I/O works when embedded (vs the CLI's filesystem watcher) — the export list is documented but the wiring
+> 155	  ? Whether the Apache-2.0 'no per-render fees / no commercial-use thresholds' wording extends cleanly to a hosted multi-tenant SaaS use inside MCORCH (it reads permissive, but a legal read of NOTICE/trad
+> 156	
+> ```
+
+## 🤖 Claude *(23:57:55)*
+
+
+## 🤖 Claude *(23:58:11)*
+
+Recon completa (5 agentes, 78 tool-uses). Aqui está a síntese com prova material — e ela **corrige vários pontos do plano ingênuo**, então preciso das suas decisões antes de executar.
+
+## 🎬 Arquitetura do `/home/gcrUX/studio` (seu passo 1)
+
+1. **"AI and Peoples — Studio"** — módulo faceless 100% automático, CPU-only, ferramentas grátis.
+2. **Cérebro = workflow n8n EXISTENTE** (`n8n-n8n-1`, id `e7e3beeb…`, hoje `active:false`) que roda cena-a-cena.
+3. **Pipeline:** Gemini (roteiro + QA-visão) → Pollinations (imagem) → VoxCPM (voz clonada) → **Remotion** (HUD/captions, `:8088`) → **LTX HF Space** (image-to-video, fallback Ken Burns) → FFmpeg (composite) → QA Gemini-visão → entrega **Telegram**.
+4. O `docker-compose.yml` do repo sobe só **2 serviços**: `remotion-render` (`:8088`, rede interna) + `studio-dashboard` (`127.0.0.1:8095`), plugados na rede/volume **externos do n8n**.
+5. A "Integração MCORCH" (vision_mcp QA + chroma memória) é **só prosa no README — zero código**.
+6. `login.mcorch.com` (nginx/CloudPanel) está **fora do docker** → `compose up` não o toca.
+
+## ⚠️ Achados que mudam o plano (Lei 1, todos materiais)
+
+- **F1 — `npx skills add` ≠ o editor.** `npx skills add heygen-com/hyperframes` instala um **SKILL de agente** (SKILL.md em `.claude/skills`), **não a UI**. O editor em `:3002` é `npx hyperframes init` + `preview` (pacote `@hyperframes/studio`, **React**). São duas coisas distintas.
+- **F2 — iframar `localhost:3002` reproduz o bug do open-design.** Loopback do *seu* browser + mixed-content + é um **dev server** não-hardened. Mas o HyperFrames **é Apache-2.0 e EXPORTA componentes React pra embed** (`StudioApp`, `NLELayout`, `Timeline`…) → o caminho limpo é montar nativo no app, sem iframe.
+- **F3 — bloqueador de rede docker.** `mcorch_vision_mcp` + `mcorch_chroma` estão na rede `…mcorch-sovereign-net`; o n8n/studio na `n8n_default`. **Redes isoladas** → o `http://mcorch_vision_mcp:3200`/`chroma:8000` do README **não resolve** até bridar as redes (+ vision_mcp exige PAT/JWT + Origin gate).
+- **F4 — Telegram ausente.** `TELEGRAM_BOT_TOKEN` **não existe em lugar nenhum**; `GEMINI_API_KEY` só no `.env` do constellation. Não dá pra preencher o Telegram (passo 2 parcial).
+- **F5 — deploy é seguro.** `compose up -d --build` **recria os 2 containers do studio** (downtime breve de render+dashboard) e **NÃO toca o login.mcorch.com**. Há também um processo **host** stray no `:8088` (pid 3298714) duplicando o container — confirmar o canônico.
+- **Canvas UI:** o botão Pipeline está em [TopBar.tsx:113](src/components/canvas/TopBar.tsx) — dá pra pôr "Vídeo" ao lado. **Atenção:** a rota `canvas/video` tem que vir **antes** de `canvas/:id` em [App.tsx:125](src/App.tsx) senão `:id="video"` engole.
+- **BoK Gate:** módulo novo sem suíte BoK (`docs/` do studio vazio) → Master Protocol pede `/bok-scribe` ou override consciente.
+
+Três decisões suas antes de eu tocar em qualquer coisa stateful:
+
+## 🤖 Claude *(23:58:23)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Integrar o m\u00f3dulo V\u00eddeo (studio + editor HyperFrames + bot\u00e3o/rota no Canvas) \u00e9 m\u00f3dulo novo sem BoK. Como destravar o Master Protocol?",
+      "header": "BoK Gate",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Override consciente + logar d\u00e9bito",
+          "description": "Proceder agora (m\u00f3dulo j\u00e1 existe + HyperFrames \u00e9 tool 3rd-party Apache-2.0 revisada \u2014 precedente viralmind). Selo o d\u00e9bito BoK no /handoff. Mais r\u00e1pido."
+        },
+        {
+          "label": "/bok-scribe primeiro",
+          "description": "Gerar a su\u00edte BoK (MRD\u2192SDD) do m\u00f3dulo V\u00eddeo antes de qualquer c\u00f3digo. Sess\u00e3o de documenta\u00e7\u00e3o; mais rigoroso, mais lento."
+        },
+        {
+          "label": "H\u00edbrido: blueprint-semente",
+          "description": "[[deepsearch-blueprint|deepsearch-blueprint]] r\u00e1pido (semente de BoK) + proceder no operacional (deploy/scripts, que \u00e9 ops n\u00e3o c\u00f3digo-novo) em paralelo."
+        }
+      ]
+    },
+    {
+      "question": "O editor HyperFrames: `npx skills add` instala um skill de agente, N\u00c3O a UI. A UI (:3002) \u00e9 React e d\u00e1 pra embedar nativo. Qual abordagem para /dashboard/canvas/video?",
+      "header": "Editor",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Embed React nativo",
+          "description": "Montar @hyperframes/studio direto no app constellation (sem iframe, MCORCH-native, sem o bug de loopback/mixed-content). Mais trabalho de integra\u00e7\u00e3o, mais robusto."
+        },
+        {
+          "label": "vhost + iframe (estilo design.mcorch.com)",
+          "description": "Servir o studio hardened atr\u00e1s de um subdom\u00ednio (ex: studio.mcorch.com) + iframe. Precisa DNS (sua a\u00e7\u00e3o) + hardening do dev server + testar X-Frame-Options."
+        },
+        {
+          "label": "Instalar s\u00f3 a skill de agente",
+          "description": "`npx skills add heygen-com/hyperframes` p/ renderiza\u00e7\u00e3o HTML\u2192MP4 dirigida por agente. N\u00c3O \u00e9 uma UI visual de edi\u00e7\u00e3o \u2014 complementa, n\u00e3o substitui o editor."
+        }
+      ]
+    },
+    {
+      "question": "`docker compose up -d --build` recria os 2 containers do studio (downtime breve; N\u00c3O toca o login.mcorch.com). At\u00e9 onde executo agora?",
+      "header": "Deploy",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Deploy + scripts + GEMINI (n\u00e3o-git)",
+          "description": "compose up --build, copio ltx.js/composite.sh pro container n8n, rodo gen-sfx.sh, injeto GEMINI_API_KEY via env (NUNCA commit). Telegram fica pendente (token ausente)."
+        },
+        {
+          "label": "S\u00f3 o deploy",
+          "description": "compose up -d --build agora (recria render+dashboard), sem mexer em secrets/scripts ainda \u2014 provo que o m\u00f3dulo sobe limpo primeiro."
+        },
+        {
+          "label": "Nada ainda \u2014 plano primeiro",
+          "description": "Segura tudo at\u00e9 decidir BoK + arquitetura do editor + o wiring de rede vision_mcp/chroma. Eu escrevo o plano detalhado antes de qualquer muta\u00e7\u00e3o."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Integrar o módulo Vídeo (studio + editor HyperFrames + botão/rota no Canvas) é módulo novo sem BoK. Como destravar o Master Protocol?"="/bok-scribe primeiro", "O editor HyperFrames: `npx skills add` instala um skill de agente, NÃO a UI. A UI (:3002) é React e dá pra embedar nativo. Qual abordagem para /dashboard/canvas/video?"="design.mcorch.com esta funcionando mas deve ser per user usando o BYOK do mcorch e tudo do modulo video tambem.", "`docker compose up -d --build` recria os 2 containers do studio (downtime breve; NÃO toca o login.mcorch.com). Até onde executo agora?"="Verifique se ambos os novos modulos entrem como apps isolados mas que usa a autenticação do mcorch e seu sistema de mcoCoins para usar dentro dos aplicativos design e video que estamos em contexto. Após isso faça deploy e inclua toda a documentação necessária". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(00:08:25)*
+
+
+## 🤖 Claude *(00:08:29)*
+
+Diretivas claras e estratégicas. Consolidando o que você definiu:
+- **BoK primeiro** (Master Protocol formal).
+- **Per-user BYOK** para **ambos** os módulos (design + vídeo) — credenciais via `auth.uid()` do `user_api_keys`, nunca chave global.
+- **Ambos = apps isolados** mas gateados por **autenticação MCORCH + mcoCoins**.
+- **design.mcorch.com já está no ar** (você adicionou o DNS).
+- Depois: deploy + documentação completa.
+
+Vou (1) verificar o design.mcorch.com público e (2) lançar o `/bok-scribe` do módulo Vídeo com toda a inteligência da recon, cravando o padrão "app isolado sob MCORCH (auth + mcoCoins + BYOK per-user + mesh)".
+
+## 🤖 Claude *(00:08:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== design.mcorch.com resolve publicamente agora? ===\"\ndig +short design.mcorch.com 2>/dev/null || echo \"(ainda n\u00e3o resolve)\"\necho \"=== handshake p\u00fablico (atrav\u00e9s do CF) ===\"\ncurl -s -o /dev/null -w \"https://design.mcorch.com \u2192 HTTP %{http_code} \u00b7 %{size_download} bytes \u00b7 ct=%{content_type}\\n\" -m 15 https://design.mcorch.com/ 2>&1 | tail -1",
+  "description": "Verify design.mcorch.com resolves publicly via Cloudflare"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === design.mcorch.com resolve publicamente agora? ===
+> 104.21.51.118
+> 172.67.180.42
+> === handshake público (através do CF) ===
+> https://design.mcorch.com → HTTP 403 · 5258 bytes · ct=text/html; charset=UTF-8
+> ```
+
+## 🤖 Claude *(00:09:03)*
+
+
+## 🤖 Claude *(00:09:07)*
+
+**design.mcorch.com resolve agora** (IPs Cloudflare — você adicionou o DNS ✅). Mas o handshake retorna **HTTP 403 text/html** = o **bot-challenge do Cloudflare** (exatamente o gotcha que sinalizei, igual ao mcp). No seu navegador real ele provavelmente passa, mas pra ser confiável no iframe falta **1 ação sua: WAF Skip rule pra `design.mcorch.com`** (idêntico ao mcp). A origem+vhost servem 200 (provado por loopback); o 403 é só a CF desafiando requests não-browser.
+
+Vou apontar o iframe pro endereço correto agora (rebuild vai junto no deploy) e lançar o `/bok-scribe`:
+
+## 🤖 Claude *(00:09:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasDesignPage.tsx",
+  "old_string": "        <iframe\n          src=\"http://127.0.0.1:7456\"\n          className=\"w-full h-full bg-black border-none\"\n          title=\"OpenDesign Workspace\"\n        />",
+  "new_string": "        <iframe\n          src=\"https://design.mcorch.com\"\n          className=\"w-full h-full bg-black border-none\"\n          title=\"OpenDesign Workspace\"\n        />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasDesignPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:09:14)*
+
+
+## 🤖 Claude *(00:09:15)*
+
+Iframe apontado pro `https://design.mcorch.com`. Agora o evento principal — `/bok-scribe` do módulo Vídeo, com a inteligência da recon e o padrão arquitetural que você definiu (app isolado sob MCORCH + auth + mcoCoins + BYOK per-user):
+
+## 🤖 Claude *(00:09:46)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "slug: video-studio \u2014 M\u00f3dulo V\u00eddeo do MCORCH: est\u00fadio faceless autom\u00e1tico + editor HyperFrames, como APP ISOLADO dentro do MCORCH, gateado por autentica\u00e7\u00e3o MCORCH + mcoCoins + credenciais per-user (BYOK via user_api_keys/auth.uid()).\n\nCONTEXTO MATERIAL (recon verificada 2026-06-21):\n\n(A) EST\u00daDIO FACELESS \u2014 /home/gcrUX/studio (\"AI and Peoples \u2014 Studio\"), CPU-only, ferramentas gr\u00e1tis. C\u00e9rebro = workflow n8n EXISTENTE (container n8n-n8n-1, image n8n-ffmpeg, workflow id e7e3beeb58f7411a, hoje active:false) que roda cena-a-cena: Gemini (roteiro/diretor + QA-vis\u00e3o gemini-2.5-flash) \u2192 Pollinations (imagem) \u2192 VoxCPM (voz clonada TTS) \u2192 Remotion (overlays HUD/captions, render engine container remotion-render :8088 rede n8n_default, N\u00c3O publicado no host) \u2192 LTX HF Space lightricks-ltx-video-distilled (image-to-video, fallback Ken Burns; tier ZeroGPU gr\u00e1tis ~5 GPU-min/dia) \u2192 FFmpeg (composite) \u2192 QA Gemini-vis\u00e3o (award) \u2192 entrega Telegram. Scripts auxiliares: n8n/scripts/ltx.js + composite.sh devem ser copiados pra DENTRO do container n8n em /home/node/.n8n/assets/; scripts/gen-sfx.sh roda docker exec n8n-n8n-1 pra gerar biblioteca de SFX procedural via ffmpeg lavfi. Ops UI = studio-dashboard (127.0.0.1:8095). Compose s\u00f3 sobe remotion-render + studio-dashboard (rede/volume externos do n8n: n8n_default + n8n_n8n_assets).\n\n(B) EDITOR HYPERFRAMES \u2014 github.com/heygen-com/hyperframes, Apache-2.0, agent-first: HTML/CSS/JS+m\u00eddia \u2192 MP4 determin\u00edstico via headless Chrome (Puppeteer) + FFmpeg. A UI = pacote @hyperframes/studio (React NLE: timeline, preview live, CodeMirror, hot reload), roda via `npx hyperframes preview` em localhost:3002 (porta LIVRE no host), Node 22+. EXPORTA componentes React (StudioApp, NLELayout, NLEPreview, Player, Timeline, SourceEditor, PropertyPanel) para EMBED NATIVO. N\u00c3O \u00e9 SaaS, n\u00e3o exige chave HeyGen. Superf\u00edcie MCORCH: rota /dashboard/canvas/video + bot\u00e3o \"V\u00eddeo\" ao lado do Pipeline em src/components/canvas/TopBar.tsx (a rota canvas/video DEVE preceder canvas/:id em App.tsx). NOTA: `npx skills add heygen-com/hyperframes` instala um SKILL de agente (SKILL.md), N\u00c3O a UI \u2014 coisas distintas.\n\nREQUISITOS ARQUITETURAIS MCORCH (UNBREAKABLE \u2014 diretiva Sovereign 2026-06-21):\n1. PER-USER BYOK (API Tenancy Model): Gemini e qualquer provider externo resolvidos por user_id=auth.uid() do user_api_keys/decrypted_user_api_keys, NUNCA chave global. Aplica tamb\u00e9m ao m\u00f3dulo Design (open-design hoje usa media-config.json GLOBAL single-tenant \u2014 gap OTD-003 a fechar: o `od` \u00e9 cliente fino\u2192daemon compartilhado, ent\u00e3o o per-user exige repensar isolamento).\n2. mcoCoins GATEKEEPER: d\u00e9bito at\u00f4mico via deduct_mco_coins por render/gera\u00e7\u00e3o de v\u00eddeo (custo calibrado modelo 4\u00d7-floor; v\u00eddeo \u00e9 caro). 402 em saldo insuficiente.\n3. AUTH MCORCH: o app isolado (design.mcorch.com / o editor de v\u00eddeo) \u00e9 gateado pela sess\u00e3o/JWT do MCORCH \u2014 n\u00e3o exposto an\u00f4nimo. design.mcorch.com j\u00e1 no ar via CF (precisa WAF skip + hardening OD_API_TOKEN).\n4. MESH CONNECTION: n\u00f3 observation por render bem-sucedido + infra_health_logs em falha; mem\u00f3ria de roteiros/v\u00eddeos em mcorch_chroma (semantic search) e/ou mcorch_nodes.\n5. BRIDGE DE REDE DOCKER (bloqueador material): n8n/remotion est\u00e3o na rede n8n_default; mcorch_vision_mcp (:3200, ES256 JWKS/PAT + Origin gate) e mcorch_chroma (:8001 API v2) na rede constellation-orchestra_mcorch-sovereign-net \u2014 REDES ISOLADAS. O wiring vision_mcp-QA + chroma-mem\u00f3ria do README \u00e9 prosa e n\u00e3o funciona at\u00e9 bridar as redes + emitir PAT/JWT pro vision_mcp.\n\nVIS\u00c3O: ambos os m\u00f3dulos (Design via open-design + V\u00eddeo via studio+HyperFrames) s\u00e3o \"apps isolados sob MCORCH\" \u2014 superf\u00edcies pr\u00f3prias (subdom\u00ednio/iframe ou embed React) mas gateadas por auth + mcoCoins + BYOK per-user + mesh do MCORCH. Beachhead econ\u00f4mico: conte\u00fado viral faceless monetizado com afiliados Mercado Livre (alinhado ao Viral Autopilot). Refer\u00eancia externa do editor: hyperframes.heygen.com.\n\nGerar a su\u00edte BoK completa (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics) em docs/bok/video-studio/, production-ready, com FRs cobrindo os 5 requisitos arquiteturais, OTDs para os gaps materiais (bridge de rede, per-user open-design, telegram token ausente, host :8088 duplicado, dev-server hardening do HyperFrames, untrusted-HTML exec do Puppeteer multi-tenant), e FMEA dos vetores de risco."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(00:09:46)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `slug: video-studio — Módulo Vídeo do MCORCH: estúdio faceless automático + editor HyperFrames, como APP ISOLADO dentro do MCORCH, gateado por autenticação MCORCH + mcoCoins + credenciais per-user (BYOK via user_api_keys/auth.uid()).
+
+CONTEXTO MATERIAL (recon verificada 2026-06-21):
+
+(A) ESTÚDIO FACELESS — /home/gcrUX/studio ("AI and Peoples — Studio"), CPU-only, ferramentas grátis. Cérebro = workflow n8n EXISTENTE (container n8n-n8n-1, image n8n-ffmpeg, workflow id e7e3beeb58f7411a, hoje active:false) que roda cena-a-cena: Gemini (roteiro/diretor + QA-visão gemini-2.5-flash) → Pollinations (imagem) → VoxCPM (voz clonada TTS) → Remotion (overlays HUD/captions, render engine container remotion-render :8088 rede n8n_default, NÃO publicado no host) → LTX HF Space lightricks-ltx-video-distilled (image-to-video, fallback Ken Burns; tier ZeroGPU grátis ~5 GPU-min/dia) → FFmpeg (composite) → QA Gemini-visão (award) → entrega Telegram. Scripts auxiliares: n8n/scripts/ltx.js + composite.sh devem ser copiados pra DENTRO do container n8n em /home/node/.n8n/assets/; scripts/gen-sfx.sh roda docker exec n8n-n8n-1 pra gerar biblioteca de SFX procedural via ffmpeg lavfi. Ops UI = studio-dashboard (127.0.0.1:8095). Compose só sobe remotion-render + studio-dashboard (rede/volume externos do n8n: n8n_default + n8n_n8n_assets).
+
+(B) EDITOR HYPERFRAMES — github.com/heygen-com/hyperframes, Apache-2.0, agent-first: HTML/CSS/JS+mídia → MP4 determinístico via headless Chrome (Puppeteer) + FFmpeg. A UI = pacote @hyperframes/studio (React NLE: timeline, preview live, CodeMirror, hot reload), roda via `npx hyperframes preview` em localhost:3002 (porta LIVRE no host), Node 22+. EXPORTA componentes React (StudioApp, NLELayout, NLEPreview, Player, Timeline, SourceEditor, PropertyPanel) para EMBED NATIVO. NÃO é SaaS, não exige chave HeyGen. Superfície MCORCH: rota /dashboard/canvas/video + botão "Vídeo" ao lado do Pipeline em src/components/canvas/TopBar.tsx (a rota canvas/video DEVE preceder canvas/:id em App.tsx). NOTA: `npx skills add heygen-com/hyperframes` instala um SKILL de agente (SKILL.md), NÃO a UI — coisas distintas.
+
+REQUISITOS ARQUITETURAIS MCORCH (UNBREAKABLE — diretiva Sovereign 2026-06-21):
+1. PER-USER BYOK (API Tenancy Model): Gemini e qualquer provider externo resolvidos por user_id=auth.uid() do user_api_keys/decrypted_user_api_keys, NUNCA chave global. Aplica também ao módulo Design (open-design hoje usa media-config.json GLOBAL single-tenant — gap OTD-003 a fechar: o `od` é cliente fino→daemon compartilhado, então o per-user exige repensar isolamento).
+2. mcoCoins GATEKEEPER: débito atômico via deduct_mco_coins por render/geração de vídeo (custo calibrado modelo 4×-floor; vídeo é caro). 402 em saldo insuficiente.
+3. AUTH MCORCH: o app isolado (design.mcorch.com / o editor de vídeo) é gateado pela sessão/JWT do MCORCH — não exposto anônimo. design.mcorch.com já no ar via CF (precisa WAF skip + hardening OD_API_TOKEN).
+4. MESH CONNECTION: nó observation por render bem-sucedido + infra_health_logs em falha; memória de roteiros/vídeos em mcorch_chroma (semantic search) e/ou mcorch_nodes.
+5. BRIDGE DE REDE DOCKER (bloqueador material): n8n/remotion estão na rede n8n_default; mcorch_vision_mcp (:3200, ES256 JWKS/PAT + Origin gate) e mcorch_chroma (:8001 API v2) na rede constellation-orchestra_mcorch-sovereign-net — REDES ISOLADAS. O wiring vision_mcp-QA + chroma-memória do README é prosa e não funciona até bridar as redes + emitir PAT/JWT pro vision_mcp.
+
+VISÃO: ambos os módulos (Design via open-design + Vídeo via studio+HyperFrames) são "apps isolados sob MCORCH" — superfícies próprias (subdomínio/iframe ou embed React) mas gateadas por auth + mcoCoins + BYOK per-user + mesh do MCORCH. Beachhead econômico: conteúdo viral faceless monetizado com afiliados Mercado Livre (alinhado ao Viral Autopilot). Referência externa do editor: hyperframes.heygen.com.
+
+Gerar a suíte BoK completa (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics) em docs/bok/video-studio/, production-ready, com FRs cobrindo os 5 requisitos arquiteturais, OTDs para os gaps materiais (bridge de rede, per-user open-design, telegram token ausente, host :8088 duplicado, dev-server hardening do HyperFrames, untrusted-HTML exec do Puppeteer multi-tenant), e FMEA dos vetores de risco.`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in slug: video-studio — Módulo Vídeo do MCORCH: estúdio faceless automático + editor HyperFrames, como APP ISOLADO dentro do MCORCH, gateado por autenticação MCORCH + mcoCoins + credenciais per-user (BYOK via user_api_keys/auth.uid()).
+
+CONTEXTO MATERIAL (recon verificada 2026-06-21):
+
+(A) ESTÚDIO FACELESS — /home/gcrUX/studio ("AI and Peoples — Studio"), CPU-only, ferramentas grátis. Cérebro = workflow n8n EXISTENTE (container n8n-n8n-1, image n8n-ffmpeg, workflow id e7e3beeb58f7411a, hoje active:false) que roda cena-a-cena: Gemini (roteiro/diretor + QA-visão gemini-2.5-flash) → Pollinations (imagem) → VoxCPM (voz clonada TTS) → Remotion (overlays HUD/captions, render engine container remotion-render :8088 rede n8n_default, NÃO publicado no host) → LTX HF Space lightricks-ltx-video-distilled (image-to-video, fallback Ken Burns; tier ZeroGPU grátis ~5 GPU-min/dia) → FFmpeg (composite) → QA Gemini-visão (award) → entrega Telegram. Scripts auxiliares: n8n/scripts/ltx.js + composite.sh devem ser copiados pra DENTRO do container n8n em /home/node/.n8n/assets/; scripts/gen-sfx.sh roda docker exec n8n-n8n-1 pra gerar biblioteca de SFX procedural via ffmpeg lavfi. Ops UI = studio-dashboard (127.0.0.1:8095). Compose só sobe remotion-render + studio-dashboard (rede/volume externos do n8n: n8n_default + n8n_n8n_assets).
+
+(B) EDITOR HYPERFRAMES — github.com/heygen-com/hyperframes, Apache-2.0, agent-first: HTML/CSS/JS+mídia → MP4 determinístico via headless Chrome (Puppeteer) + FFmpeg. A UI = pacote @hyperframes/studio (React NLE: timeline, preview live, CodeMirror, hot reload), roda via `npx hyperframes preview` em localhost:3002 (porta LIVRE no host), Node 22+. EXPORTA componentes React (StudioApp, NLELayout, NLEPreview, Player, Timeline, SourceEditor, PropertyPanel) para EMBED NATIVO. NÃO é SaaS, não exige chave HeyGen. Superfície MCORCH: rota /dashboard/canvas/video + botão "Vídeo" ao lado do Pipeline em src/components/canvas/TopBar.tsx (a rota canvas/video DEVE preceder canvas/:id em App.tsx). NOTA: `npx skills add heygen-com/hyperframes` instala um SKILL de agente (SKILL.md), NÃO a UI — coisas distintas.
+
+REQUISITOS ARQUITETURAIS MCORCH (UNBREAKABLE — diretiva Sovereign 2026-06-21):
+1. PER-USER BYOK (API Tenancy Model): Gemini e qualquer provider externo resolvidos por user_id=auth.uid() do user_api_keys/decrypted_user_api_keys, NUNCA chave global. Aplica também ao módulo Design (open-design hoje usa media-config.json GLOBAL single-tenant — gap OTD-003 a fechar: o `od` é cliente fino→daemon compartilhado, então o per-user exige repensar isolamento).
+2. mcoCoins GATEKEEPER: débito atômico via deduct_mco_coins por render/geração de vídeo (custo calibrado modelo 4×-floor; vídeo é caro). 402 em saldo insuficiente.
+3. AUTH MCORCH: o app isolado (design.mcorch.com / o editor de vídeo) é gateado pela sessão/JWT do MCORCH — não exposto anônimo. design.mcorch.com já no ar via CF (precisa WAF skip + hardening OD_API_TOKEN).
+4. MESH CONNECTION: nó observation por render bem-sucedido + infra_health_logs em falha; memória de roteiros/vídeos em mcorch_chroma (semantic search) e/ou mcorch_nodes.
+5. BRIDGE DE REDE DOCKER (bloqueador material): n8n/remotion estão na rede n8n_default; mcorch_vision_mcp (:3200, ES256 JWKS/PAT + Origin gate) e mcorch_chroma (:8001 API v2) na rede constellation-orchestra_mcorch-sovereign-net — REDES ISOLADAS. O wiring vision_mcp-QA + chroma-memória do README é prosa e não funciona até bridar as redes + emitir PAT/JWT pro vision_mcp.
+
+VISÃO: ambos os módulos (Design via open-design + Vídeo via studio+HyperFrames) são "apps isolados sob MCORCH" — superfícies próprias (subdomínio/iframe ou embed React) mas gateadas por auth + mcoCoins + BYOK per-user + mesh do MCORCH. Beachhead econômico: conteúdo viral faceless monetizado com afiliados Mercado Livre (alinhado ao Viral Autopilot). Referência externa do editor: hyperframes.heygen.com.
+
+Gerar a suíte BoK completa (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics) em docs/bok/video-studio/, production-ready, com FRs cobrindo os 5 requisitos arquiteturais, OTDs para os gaps materiais (bridge de rede, per-user open-design, telegram token ausente, host :8088 duplicado, dev-server hardening do HyperFrames, untrusted-HTML exec do Puppeteer multi-tenant), e FMEA dos vetores de risco.):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(00:10:06)*
+
+
+## 🤖 Claude *(00:10:07)*
+
+O skill carregou. Vou ler a definição do agente bok-scribe + os templates para seguir o workflow canônico de 7 fases, depois orquestrar a autoria das 9 docs (Ultracode → Workflow).
+
+## 🤖 Claude *(00:10:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(00:10:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== templates dispon\u00edveis ===\"\nls -la .claude/agents/bok-scribe/templates/ 2>/dev/null\necho \"=== exemplo de su\u00edte BoK existente (vision-mcp) p/ refer\u00eancia de estilo ===\"\nls docs/bok/vision-mcp/ 2>/dev/null\necho \"=== docs/bok/video-studio j\u00e1 existe? ===\"\nls -la docs/bok/video-studio/ 2>/dev/null || echo \"(n\u00e3o existe \u2014 criar)\"",
+  "description": "Read bok-scribe agent def + list templates + check existing suites"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === templates disponíveis ===
+> total 68
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May  6 13:37 .
+> drwxrwxr-x 3 ubuntu ubuntu 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 ubuntu ubuntu 7550 May  6 13:37 08-quality-metrics.md
+> === exemplo de suíte BoK existente (vision-mcp) p/ referência de estilo ===
+> 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 09-agent-system.md
+> === docs/bok/video-studio já existe? ===
+> (não existe — criar)
+> ```
+
+## 🤖 Claude *(00:11:04)*
+
+
+## 🤖 Claude *(00:11:07)*
+
+Tenho o framework completo de 7 fases + os 9 templates. Vou orquestrar a autoria da suíte BoK via Workflow (Ultracode) — pipeline sequencial de 4 estágios (Fundação → Técnico → Dados/Processo → Qualidade), cada um lendo os templates + os docs anteriores do disco + o contexto material da recon. Depois eu escrevo o índice, valido a rastreabilidade e o seed.
+
+## 🤖 Claude *(00:11:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "mkdir -p /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio && echo \"dir criado: $(ls -d /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio)\"",
+  "description": "Create video-studio BoK directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dir criado: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio
+> ```
+
+## 🤖 Claude *(00:12:33)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'video-studio-bok-author',\n  description: 'Author the 9-doc BoK suite for the MCORCH video-studio module (sequential, template-driven, recon-grounded)',\n  phases: [\n    { title: 'Foundation', detail: '01-mrd + 02-brd + 03-prd (BABOK/ProdBOK/CXBOK)' },\n    { title: 'Technical', detail: '04-frd + 05-sdd (SWEBOK/CISSP)' },\n    { title: 'DataProcess', detail: '06-data-model + 07-process-flow (DMBOK/BPM)' },\n    { title: 'Quality', detail: '08-quality-metrics (CMQ/OE)' },\n  ],\n}\n\nconst OUT = 'docs/bok/video-studio'\n\nconst SHARED = `\nYou are the MCORCH BoK Scribe Agent authoring the BoK suite for the module slug \"video-studio\".\nINPUTS: marketSegment=B2B2C \u00b7 monetization=hybrid (mcoCoins per render + Mercado Livre affiliate) \u00b7 regulatory=LGPD \u00b7 integrationSurface=extends-mcorch.\nOUTPUT DIR: ${OUT}/ . You WRITE markdown files only. NEVER write code, NEVER touch src/ or supabase/functions/.\nID PREFIXES (zero-pad 3): MR-VS-, BR-VS-, PR-VS-, FR-VS-, NFR-VS-, OTD-VS-, FMEA-VS-. File footer: \"_Generated by MCORCH BoK Scribe Agent v1.0.0_\".\nNarrative tone = executive PT-BR; IDs/headings/labels = English. Production-ready, NO placeholders.\n\nREAD FIRST for structure + house style (use Read):\n- The matching template(s) in .claude/agents/bok-scribe/templates/ for each doc you write.\n- docs/bok/vision-mcp/05-sdd.md and docs/bok/vision-mcp/04-frd.md (depth/style reference of a sealed MCORCH suite).\n- docs/processes/canvas-design-deploy-and-provision.md (the open-design OTD-003 per-user gap + design.mcorch.com).\n- docs/processes/creative-qa-vision-gate.md and docs/processes/vision-mcp-cost-calibration.md (Vision MCP QA + cost model).\nThen read the PRIOR ${OUT}/*.md docs already written by earlier stages and keep IDs/traceability consistent.\n\n=== MATERIAL FACTS (recon verified 2026-06-21 \u2014 DO NOT invent beyond these) ===\nVISION: Two creative sub-systems delivered as ISOLATED APPS *inside* MCORCH, each gated by MCORCH auth + mcoCoins + per-user BYOK + mesh:\n(A) FACELESS STUDIO (/home/gcrUX/studio \"AI and Peoples \u2014 Studio\"), CPU-only, free tools. Brain = EXISTING n8n workflow (container n8n-n8n-1, image n8n-ffmpeg, workflow id e7e3beeb58f7411a, currently active:false) looping per-scene: Gemini (script/director + vision-QA gemini-2.5-flash) -> Pollinations (image) -> VoxCPM (cloned-voice TTS) -> Remotion (HUD/caption overlays; render engine container \"remotion-render\" port 8088 on docker network n8n_default, NOT host-published) -> LTX HF Space lightricks-ltx-video-distilled (image-to-video; Ken-Burns fallback; free ZeroGPU ~5 GPU-min/day) -> FFmpeg composite -> Gemini-vision QA award -> Telegram delivery. Helper scripts n8n/scripts/ltx.js + composite.sh must be copied INTO the n8n container at /home/node/.n8n/assets/; scripts/gen-sfx.sh runs \"docker exec n8n-n8n-1\" to build a procedural SFX library via ffmpeg lavfi. Ops UI = studio-dashboard (127.0.0.1:8095). docker-compose.yml raises only remotion-render + studio-dashboard, attaching to EXTERNAL n8n resources (network n8n_default + volume n8n_n8n_assets). A \"docker compose up -d --build\" recreates the 2 already-running ad-hoc studio containers (brief downtime) and does NOT touch login.mcorch.com (host nginx/CloudPanel, outside docker).\n(B) HYPERFRAMES EDITOR (github.com/heygen-com/hyperframes, Apache-2.0, agent-first): HTML/CSS/JS+media -> deterministic MP4 via headless Chrome (Puppeteer)+FFmpeg. The UI is the @hyperframes/studio package (React NLE: timeline, live preview, CodeMirror, hot reload), launched by \"npx hyperframes preview\" on localhost:3002 (port FREE on host), Node 22+. It EXPORTS React components (StudioApp, NLELayout, NLEPreview, Player, Timeline, SourceEditor, PropertyPanel) for NATIVE EMBED \u2014 the chosen MCORCH integration is native React embed at route /dashboard/canvas/video, NOT an iframe to a dev server. A \"Video\" button sits beside the Pipeline button in src/components/canvas/TopBar.tsx; the new route canvas/video MUST be declared BEFORE canvas/:id in src/App.tsx (else :id=\"video\" shadows it). NOTE: \"npx skills add heygen-com/hyperframes\" installs an AGENT SKILL (SKILL.md), NOT the editor UI.\n\n=== FIVE UNBREAKABLE MCORCH REQUIREMENTS (Sovereign directive 2026-06-21) \u2014 every doc must honor ===\nR1 PER-USER BYOK (API Tenancy Model): Gemini & every external provider resolved by user_id=auth.uid() from user_api_keys/decrypted_user_api_keys (Vault-encrypted masked view) \u2014 NEVER a global key in a user-facing path. The Design module (open-design) currently uses a GLOBAL /app/.od/media-config.json (single-tenant) \u2014 OTD-VS for closing this (the \"od\" CLI is a thin client to a SHARED daemon, so per-invocation OD_MEDIA_CONFIG_DIR does NOT isolate; per-user requires re-architecture).\nR2 mcoCoins GATEKEEPER: atomic deduct via public.deduct_mco_coins(p_user_id,p_amount,...) RPC ONLY (never client-side); HTTP 402 on insufficient balance; cost via the 4x-floor calibration model (mco=ceil(usd/0.018*4)); video render is the expensive op.\nR3 MCORCH AUTH: the isolated apps (design.mcorch.com editor / the video editor) are gated by the MCORCH session/JWT \u2014 never anonymous. design.mcorch.com is LIVE via Cloudflare (origin 137.131.243.179, self-signed origin cert, nginx vhost proven HTTP 200 via loopback) but CF bot-challenges non-browser requests (403) -> needs a CF WAF Skip rule + OD_API_TOKEN hardening (currently \"development_token\") + OD_ALLOWED_ORIGINS.\nR4 MESH CONNECTION: insert an \"observation\" node into mcorch_nodes on each successful render + an infra_health_logs row on failure; persist script/video memory into mcorch_chroma (ChromaDB API v2 on 127.0.0.1:8001) for semantic search, and/or mcorch_nodes with the embed-mcorch-node trigger.\nR5 DOCKER NETWORK BRIDGE (material blocker): n8n/remotion live on network n8n_default; mcorch_vision_mcp (127.0.0.1:3200, Streamable-HTTP MCP, ES256 JWKS or PAT Bearer + Origin gate, BYOK-billed) and mcorch_chroma live on network constellation-orchestra_mcorch-sovereign-net \u2014 ISOLATED networks. The README's vision_mcp-QA + chroma-memory wiring is PROSE-ONLY and cannot resolve container DNS until the networks are bridged + a PAT/JWT is issued for the studio identity.\n\n=== OTDs to register (in 05-sdd Open Technical Decisions) ===\nOTD-VS-001 Docker network bridge strategy (attach studio to sovereign-net vs a dedicated proxy) for vision_mcp QA + chroma memory.\nOTD-VS-002 Per-user BYOK for open-design (shared-daemon isolation): per-job ephemeral daemon vs daemon-per-tenant vs stateless od.\nOTD-VS-003 TELEGRAM_BOT_TOKEN is absent everywhere (GEMINI_API_KEY exists only in constellation .env) \u2014 provision per-user vs system, or make Telegram delivery optional.\nOTD-VS-004 Host :8088 has BOTH a stray host node process (pid) AND the container \u2014 pick the canonical render engine.\nOTD-VS-005 HyperFrames Studio is a DEV server (npx preview) with no documented production/host/auth mode \u2014 native React embed (chosen) vs hardened served build.\nOTD-VS-006 Untrusted-HTML execution: HyperFrames renders arbitrary tenant HTML/JS via headless Chrome (Puppeteer) \u2014 multi-tenant sandboxing required (per-render container, no shared creds in render env).\nOTD-VS-007 mcoCoins cost calibration for a faceless video render (multi-leg: Gemini + LTX + Remotion + FFmpeg) using the 4x-floor model.\n\nThe current MCORCH economics: profiles.mco_balance ledger; COIN_COSTS in src/lib/billing.ts; orchestrate-content=10 mco; canvas video DoP=125 mco. Plans: Starter 500 / Pro 2000 / Enterprise 10000. Harness Engineering: business logic in src/hooks/, components display-only, TanStack Query, Zustand, Supabase Edge Functions for sensitive ops, RLS default-deny on every table, embed trigger on node tables, tenant isolation user_id+project_id.\n`\n\nphase('Foundation')\nconst r1 = await agent(\n  `${SHARED}\\n\\nSTAGE = FOUNDATION (BABOK v3 + ProdBOK + CXBOK). WRITE three files, each following its template structure exactly:\\n` +\n  `1) ${OUT}/01-mrd.md (Market Requirements \u2014 9 sections per template/01-mrd.md: exec summary, market problem, segments+TAM/SAM/SOM, competitive landscape \u22653 alternatives [e.g. HeyGen/Synthesia, Argil, manual CapCut+ElevenLabs, Remotion-only], opportunity/timing, MR-VS-001..NNN with priority, market KPIs, regulatory/LGPD context, MR->BR traceability stub).\\n` +\n  `2) ${OUT}/02-brd.md (Business Requirements \u2014 per template/02-brd.md: SMART objectives \u22653, stakeholder register, BR-VS-001..NNN each traced to an MR-VS, ROI model, mcoCoins economics [per-render cost, plan mapping], constraints/assumptions, business risks, acceptance criteria, MR->BR->PR stub). Honor R1-R5.\\n` +\n  `3) ${OUT}/03-prd.md (Product Requirements \u2014 per template/03-prd.md: vision statement, \u22652 personas [faceless-creator, agency operator], journey maps, MoSCoW feature inventory PR-VS-001..NNN each traced to BR-VS with effort+mcoCoins, release phasing MVP/v1/future, MCORCH luxury UX specs, Gherkin acceptance criteria, traceability). MVP must note the network-bridge + per-user-BYOK as gating.\\n` +\n  `Cover BOTH sub-systems (faceless studio + HyperFrames editor) and the \"isolated app under MCORCH\" pattern. Return a concise summary: files written, ID ranges (MR/BR/PR), and any cross-doc note.`,\n  { label: 'bok:foundation', phase: 'Foundation', agentType: 'general-purpose' },\n)\n\nphase('Technical')\nconst r2 = await agent(\n  `${SHARED}\\n\\nSTAGE = TECHNICAL (SWEBOK v4 + CISSP CBK). The Foundation docs (01-mrd,02-brd,03-prd) are written in ${OUT}/ \u2014 READ them first to trace IDs. WRITE two files:\\n` +\n  `1) ${OUT}/04-frd.md (Functional Requirements \u2014 per template/04-frd.md: scope, FR-VS-001..NNN [ID,title,desc,priority,PR traced,acceptance-test id,category UI/Hook/EdgeFunction/DB/Cron/Container], NFR-VS-001..NNN [perf/scale/availability/security/maintainability], interface requirements (component->hook->edge fn + external API contracts: Gemini per-user, LTX HF, Remotion /render, Telegram, vision_mcp, chroma), data requirements, test strategy matrix, PR->FR traceability). FRs MUST cover R1 BYOK resolution, R2 mcoCoins deduct points, R3 auth gating of the isolated apps, R4 mesh observation+chroma memory, R5 network bridge, the \"Video\" button+route, native HyperFrames embed, and the n8n studio orchestration.\\n` +\n  `2) ${OUT}/05-sdd.md (System Design \u2014 per template/05-sdd.md, DEEP like docs/bok/vision-mcp/05-sdd.md: architecture overview text-diagram of the isolated-app topology + the docker network bridge; component catalog (new hooks src/hooks/, display-only components, new edge functions, zustand slices, new tables); data-flow diagrams per use case (render a faceless video; open the HyperFrames editor; per-user BYOK resolution; mcoCoins deduct); API contracts (edge fn signatures: method/path/auth/req/resp/error + the deduct_mco_coins call site); SECURITY DESIGN (STRIDE per component \u2014 emphasize untrusted-HTML Puppeteer exec, the shared open-design daemon, network exposure of design.mcorch.com; RLS policy defs; JWT/PAT validation points; secrets inventory by VAULT KEY NAME ONLY); infrastructure touchpoints (n8n_default<->sovereign-net bridge, remotion-render:8088, vision_mcp PAT, chroma API v2); migration stubs (RLS default-deny + embed/HNSW); and OTD-VS-001..007 as specified with options+recommendation). Enforce: every edge fn has JWT stub + secret list; every table RLS default-deny; mcoCoins via deduct_mco_coins RPC only; no secret VALUES.\\n` +\n  `Return a summary: FR/NFR/OTD ID ranges, new tables, new edge functions, new hooks/components.`,\n  { label: 'bok:technical', phase: 'Technical', agentType: 'general-purpose' },\n)\n\nphase('DataProcess')\nconst r3 = await agent(\n  `${SHARED}\\n\\nSTAGE = DATA & PROCESS (DMBOK v2 + BPM CBOK v4). READ ${OUT}/01..05 first. WRITE two files:\\n` +\n  `1) ${OUT}/06-data-model.md (per template/06-data-model.md: conceptual model (entities: video_project, video_render/job, video_scene, script, render_asset, byok provider config per-user, mcoin txn link; HyperFrames composition; design artifact link); logical model per table; Supabase physical CREATE TABLE stubs with RLS default-deny + per-user(user_id)+project_id isolation + B-tree FKs + HNSW where embeddings; GraphRAG nodes/edges this introduces (video_render observation node, script/video memory nodes feeding embed-mcorch-node + chroma; edges); tenant isolation map; data-quality rules; LGPD retention/erasure policy (must extend delete-account to purge open-design OD_DATA_DIR/OD_MEDIA_CONFIG_DIR + studio assets + n8n volume artifacts)). Mirror existing canonical tables (vm_canvas_*, creative_metrics, autopilot_*) for consistency.\\n` +\n  `2) ${OUT}/07-process-flow.md (per template/07-process-flow.md: process inventory; BPMN-lite maps with swimlanes User|Frontend Hook|Edge Function|n8n|External API|DB for: (a) render a faceless video end-to-end via n8n, (b) open+edit in HyperFrames then render, (c) per-user BYOK resolution, (d) mcoCoins pre-debit/refund, (e) vision_mcp QA gate + chroma memory write); the EXISTING n8n workflow blueprint (id e7e3beeb58f7411a) node sequence + error branches + the script-copy + gen-sfx setup; orchestration integration points (Canvas + Viral Autopilot); error handling/retry per step; SLA per step (LTX ZeroGPU daily-limit fallback to Ken Burns); cron jobs if any). Every n8n flow defines its error branch; mesh node insertion appears in at least one flow.\\n` +\n  `Return a summary: tables defined, processes mapped, the per-user BYOK + mcoCoins flow, LGPD erasure coverage.`,\n  { label: 'bok:dataprocess', phase: 'DataProcess', agentType: 'general-purpose' },\n)\n\nphase('Quality')\nconst r4 = await agent(\n  `${SHARED}\\n\\nSTAGE = QUALITY (CMQ/OE BOK). READ ${OUT}/01..07 first. WRITE one file:\\n` +\n  `${OUT}/08-quality-metrics.md (per template/08-quality-metrics.md: quality objectives aligned to BRD; KPI dashboard (render success rate, cost-per-video mco, QA pass rate via vision_mcp, time-to-render, BYOK-configured rate, refund rate) with formula/target/threshold/source; FMEA-VS-001..NNN per critical FR with S/O/D + RPN=S*O*D + recommended action \u2014 MUST include: untrusted-HTML Puppeteer exec (high RPN), shared open-design daemon cross-tenant key leak (high RPN), network-bridge exposure, LTX daily-limit silent fallback, mcoCoins double-charge, Telegram token absence, design.mcorch.com CF/auth exposure; self-optimization loops; self-healing (watchdog infra_health_logs event types + auto-recovery stubs + mega-brain-daemon hooks); SLA/SLO/SLI; PDCA cadence; observability checklist). Every FMEA with RPN>100 needs a recommended action.\\n` +\n  `Return a summary: KPI count, FMEA count, list of FMEA items with RPN>100 and their RPN values, self-healing event types.`,\n  { label: 'bok:quality', phase: 'Quality', agentType: 'general-purpose' },\n)\n\nreturn { foundation: r1, technical: r2, dataprocess: r3, quality: r4 }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wx2t3098h
+> Summary: Author the 9-doc BoK suite for the MCORCH video-studio module (sequential, template-driven, recon-grounded)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/subagents/workflows/wf_526a9f30-3ac
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/video-studio-bok-author-wf_526a9f30-3ac.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/video-studio-bok-author-wf_526a9f30-3ac.js"} to iterate without resending the script.)
+> Run ID: wf_526a9f30-3ac
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/video-studio-bok-author-wf_526a9f30-3ac.js", resumeFromRunId: "wf_526a9f30-3ac"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(00:12:52)*
+
+
+## 🤖 Claude *(00:12:54)*
+
+A autoria da suíte BoK está rodando em background (4 estágios sequenciais: Fundação → Técnico → Dados/Processo → Qualidade). Vou registrar a nova fase de trabalho e te dar o status — **respeitando seu "/bok-scribe primeiro": nada de deploy até a BoK estar pronta e revisada.**
+
+## 🤖 Claude *(00:12:56)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Autorar su\u00edte BoK video-studio (9 docs)",
+  "description": "/bok-scribe do m\u00f3dulo V\u00eddeo (studio faceless + HyperFrames editor) como app isolado sob MCORCH (auth+mcoCoins+BYOK per-user+mesh). Workflow 4 est\u00e1gios. Depois: \u00edndice + traceability + seed node.",
+  "activeForm": "Autorando su\u00edte BoK video-studio"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Autorar suíte BoK video-studio (9 docs)
+> ```
+
+## 🤖 Claude *(00:12:59)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Deploy studio + scripts + GEMINI per-user (p\u00f3s-BoK)",
+  "description": "docker compose up -d --build (recria remotion-render+studio-dashboard), copiar ltx.js/composite.sh\u2192/home/node/.n8n/assets/ no container n8n, rodar gen-sfx.sh, resolver GEMINI per-user (nunca git/global). Telegram pendente (token ausente).",
+  "activeForm": "Deployando m\u00f3dulo studio"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: Deploy studio + scripts + GEMINI per-user (pós-BoK)
+> ```
+
+## 🤖 Claude *(00:13:04)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Bridge de rede + vision_mcp QA + chroma mem\u00f3ria (p\u00f3s-BoK)",
+  "description": "Bridar n8n_default\u2194mcorch-sovereign-net + emitir PAT/JWT pro studio \u2192 vision_mcp QA (substitui/assiste o award Gemini) + chroma mem\u00f3ria de roteiros/v\u00eddeos. Bloqueador material da recon.",
+  "activeForm": "Bridando rede + vision/chroma"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Bridge de rede + vision_mcp QA + chroma memória (pós-BoK)
+> ```
+
+## 🤖 Claude *(00:13:04)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "HyperFrames embed nativo + bot\u00e3o/rota V\u00eddeo (p\u00f3s-BoK)",
+  "description": "Embed React nativo do @hyperframes/studio em /dashboard/canvas/video (rota ANTES de canvas/:id) + bot\u00e3o \"V\u00eddeo\" ao lado do Pipeline em TopBar.tsx. Gateado por auth+mcoCoins.",
+  "activeForm": "Embedando HyperFrames + bot\u00e3o V\u00eddeo"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: HyperFrames embed nativo + botão/rota Vídeo (pós-BoK)
+> ```
+
+## 🤖 Claude *(00:13:06)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Per-user BYOK design+v\u00eddeo + mcoCoins gating (p\u00f3s-BoK)",
+  "description": "Fechar OTD-003: open-design per-user (daemon compartilhado\u2192isolamento) + Gemini/providers do studio resolvidos por auth.uid(). D\u00e9bito at\u00f4mico deduct_mco_coins por render. Apps isolados gateados por auth MCORCH.",
+  "activeForm": "Implementando per-user BYOK + mcoCoins"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: Per-user BYOK design+vídeo + mcoCoins gating (pós-BoK)
+> ```
+
+## 🤖 Claude *(00:13:08)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "design.mcorch.com: WAF skip + hardening + rebuild iframe",
+  "description": "Sovereign: CF WAF Skip rule p/ design.mcorch.com. Eu: hardening OD_API_TOKEN+OD_ALLOWED_ORIGINS + rebuild frontend (iframe j\u00e1 apontado p/ https://design.mcorch.com).",
+  "activeForm": "Endurecendo + ativando design.mcorch.com"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #6 created successfully: design.mcorch.com: WAF skip + hardening + rebuild iframe
+> ```
+
+## 🤖 Claude *(00:13:12)*
+
+
+## 🤖 Claude *(00:13:13)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(00:13:26)*
+
+## 📍 Status consolidado
+
+**open-design / design.mcorch.com:**
+- Backend + vhost **100% prontos e provados** (HTTP 200 via loopback). DNS no ar (você adicionou ✅). Iframe já apontado pra `https://design.mcorch.com` no source.
+- **Falta só você:** adicionar **1 WAF Skip rule** no Cloudflare pra `design.mcorch.com` (o 403 atual é o bot-challenge da CF, igual ao mcp). Depois eu faço o hardening (`OD_API_TOKEN`) + rebuild no deploy.
+
+**Módulo Vídeo (sua diretiva nova):**
+- ✅ Recon material completa (estúdio faceless + HyperFrames + portas + envs + Canvas UI).
+- 🔄 **Suíte BoK `video-studio` sendo autorada agora** (workflow 4 estágios, 9 docs) — cravando o padrão "app isolado sob MCORCH": auth + mcoCoins + **BYOK per-user** + mesh, mais os OTDs dos bloqueadores reais (bridge de rede docker, per-user open-design, Telegram token ausente, untrusted-HTML do Puppeteer).
+
+**Sequência que vou seguir (respeitando seu "BoK primeiro → depois deploy"):**
+1. BoK pronta → eu **reviso + te apresento** (e selo o nó na malha).
+2. Deploy do studio (`compose up --build`, recria os 2 containers — sem tocar o login.mcorch.com) + scripts no n8n + GEMINI per-user.
+3. Bridge de rede → vision_mcp QA + chroma memória.
+4. HyperFrames embed nativo + botão/rota Vídeo.
+5. Per-user BYOK (design + vídeo) + gating mcoCoins.
+6. Documentação completa (SOPs) + handoff.
+
+Te aviso assim que a BoK aterrissar pra revisão. Enquanto isso não toco em nada stateful. Quando puder, adiciona a WAF Skip rule do `design.mcorch.com` pra eu fechar o editor de design no mesmo deploy.
+
+## 👤 User *(00:26:11)*
+
+ótimo ja criei tambem o video.mcorch.com no cloudflare com proxy laranja ativo para 137.131.243.179 tambem. O Open Design ja esta propagado e consegui acessar pelo design.mcorch.com mas deveria ser autenticado pelo mcorch.com/login/ se não estiver autenticado é redirecionado para fazer login  normalmente como ja acontece com https://login.mcorch.com/auth
 
 ---
 
@@ -7471,6 +9024,6 @@ Agora vamos integrar mais um módulo que criamos que é o menu Vídeo dentro de 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-21 - Validar automações e estratégias de trading LTCUSDT]]
-> * **Próxima Sessão**: [[2026-06-21 - agent-a04a1e7d50c5ea281]]
+> * **Sessão Anterior**: [[2026-06-22 - Resolver dois pontos pendentes]]
+> * **Próxima Sessão**: [[2026-06-22 - agent-a52237acea8dd6eec]]
 %% --- TIMELINE END --- %%

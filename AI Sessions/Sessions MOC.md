@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1132
-> * **Sessões do Claude**: 1090
+> * **Total de Sessões Registradas**: 1136
+> * **Sessões do Claude**: 1094
 > * **Sessões do Gemini**: 42
 
 ---
@@ -46,6 +46,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-03 - AIOS Constelação MCORCH system updates]]` - *2026-05-03*
 
 ### UI Extensions & Layouts
+*   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
 *   `[[2026-06-21 - Validar studio design e canvas studio end-to-end]]` - *2026-06-21*
 *   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` - *2026-06-01*
 *   `[[2026-05-30 - Configure canvas nodes and validate enterprise deploy]]` - *2026-05-30*
@@ -60,6 +61,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-22 - agent-a861272b0597dc2eb]]` - *2026-06-22*
+*   `[[2026-06-22 - agent-a52237acea8dd6eec]]` - *2026-06-22*
+*   `[[2026-06-22 - Resolver dois pontos pendentes]]` - *2026-06-22*
 *   `[[2026-06-21 - e7003282-79e7-4c59-a5db-de911c1e290a]]` - *2026-06-21*
 *   `[[2026-06-21 - bef09883-5be2-4ff8-964a-dfd5658da0ab]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` - *2026-06-21*
@@ -69,10 +73,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-21 - agent-aec5e9fa493c83892]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-aea26917b70fb91b7]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-ae6c84287e7c2f9e8]]` - *2026-06-21*
-*   `[[2026-06-21 - agent-ae134389ce1eecd9f]]` - *2026-06-21*
-*   `[[2026-06-21 - agent-adeced1106804b2ea]]` - *2026-06-21*
-*   `[[2026-06-21 - agent-ade4359293adb43ea]]` - *2026-06-21*
-*   *... e mais 1095 sessões nessa categoria.*
+*   *... e mais 1098 sessões nessa categoria.*
 
 ---
 
@@ -263,6 +264,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-22 - agent-a861272b0597dc2eb]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-a52237acea8dd6eec]]` (ClaudeSessions)
+*   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` (ClaudeSessions)
+*   `[[2026-06-22 - Resolver dois pontos pendentes]]` (ClaudeSessions)
 *   `[[2026-06-21 - e7003282-79e7-4c59-a5db-de911c1e290a]]` (ClaudeSessions)
 *   `[[2026-06-21 - bef09883-5be2-4ff8-964a-dfd5658da0ab]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` (ClaudeSessions)
