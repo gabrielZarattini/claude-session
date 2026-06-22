@@ -6285,6 +6285,151 @@ UI commitada (`f343dd2`) + **frontend deployado** (env baked ✅, chunk fresco n
 
 Como quer seguir?
 
+## 👤 User *(15:23:16)*
+
+Já temos tudo funcionando com ou sem o n8n, mas como estamos integrando ou implementando em nosso ecossistema, o MCORCH não tem n8n e tudo que for relacionado a workflow deve usar algo que ja existe para nós, ou o canvas studio, ou https://login.mcorch.com/dashboard/orchestration que ja parece com um n8n, podemos usar ele pois não quero usar o n8n junto com o mcorch. Como ja temos o processo praticamente validado, é só implantar tudo no mcorch. Mas a intenção desde o inicio era usar a UI que o próprio HyperFrames cria de editor de video e disponibilizar tambem igual fizemos com o open design, criando video.mcorch.com e adicionando no submenu conforme ja falamos anteriormente. Mas me diz se realmente é melhor deixar o n8n pois o MCORCH é um SaaS com varios micro serviços e módulos per user não seria escalvel deixar no n8n
+
+## 🤖 Claude *(15:24:46)*
+
+
+## 🤖 Claude *(15:24:47)*
+
+Boa pergunta arquitetural — e a sua intuição está certa. Deixa eu confirmar materialmente o que já temos nativo antes de te dar o veredito (não quero recomendar de cabeça):
+
+## 🤖 Claude *(15:24:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Visual Orchestrator: o que runPipeline orquestra hoje? ===\"\ngrep -nE \"invoke\\(|orchestrate|runPipeline|functions\\.\" src/hooks/useOrchestrationGraph.ts 2>/dev/null | head\necho \"=== node types que J\u00c1 existem no orchestration canvas ===\"\nls src/components/orchestrator/nodes/ 2>/dev/null\necho \"=== canvas-execute: capabilities nativas (image/video/audio/providers) ===\"\ngrep -noE \"(case '[a-z_]+'|nano.?bana|higgsfield|replicate|flux|tts|voxcpm|elevenlabs|gemini|generate-image|kind === '[a-z]+')\" supabase/functions/canvas-execute/index.ts 2>/dev/null | head -30\necho \"=== existe edge fn de \u00e1udio/tts nativa? ===\"\nls supabase/functions/ | grep -iE \"audio|tts|voice|speech|canvas|video\" ",
+  "description": "Verify native orchestration + creative capabilities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Visual Orchestrator: o que runPipeline orquestra hoje? ===
+> 27:  const runPipeline = useCallback(async (
+> 49:      const { data, error } = await supabase.functions.invoke('orchestrate-content', {
+> 110:  return { runPipeline, persistPositions };
+> === node types que JÁ existem no orchestration canvas ===
+> AgentNode.tsx
+> PublishNode.tsx
+> QualityGateNode.tsx
+> SceneNode.tsx
+> TriggerNode.tsx
+> === canvas-execute: capabilities nativas (image/video/audio/providers) ===
+> 13:higgsfield
+> 18:replicate
+> 18:flux
+> 19:replicate
+> 20:replicate
+> 20:flux
+> 22:gemini
+> 23:flux
+> 25:higgsfield
+> 26:higgsfield
+> 27:higgsfield
+> 28:higgsfield
+> 29:higgsfield
+> 30:higgsfield
+> 32:higgsfield
+> 33:higgsfield
+> 34:higgsfield
+> 36:higgsfield
+> 37:higgsfield
+> 69:higgsfield
+> 73:higgsfield
+> 136:replicate
+> 136:replicate
+> 138:gemini
+> 139:higgsfield
+> 140:higgsfield
+> 151:higgsfield
+> 152:higgsfield
+> 353:gemini
+> 427:higgsfield
+> === existe edge fn de áudio/tts nativa? ===
+> canvas-execute
+> check-video-status
+> generate-audio-script
+> generate-video
+> generate-video-script
+> rescue-video
+> tts-speak
+> video-render
+> video-render-poll
+> ```
+
+## 🤖 Claude *(15:25:44)*
+
+
+## 🤖 Claude *(15:26:02)*
+
+Confirmei materialmente o que temos nativo. Aqui vai o veredito honesto.
+
+## Sua intuição está certa: **tira o n8n.**
+
+Para um SaaS multi-tenant per-user, manter o pipeline no n8n **não escala** — e não é só preferência, é estrutural:
+
+1. **n8n é single-tenant por design.** BYOK per-user (`decrypted_user_api_keys`), débito atômico de mcoCoins *antes* do dispatch, nó de malha por run, isolamento por tenant — tudo isso briga com o modelo do n8n. A própria `OTD-VS-002` (daemon compartilhado vaza credencial cross-tenant) é exatamente esse atrito. n8n compartilhado = noisy-neighbor; n8n per-user = não escala.
+2. **n8n é um stack paralelo que só existe pra falar de volta com o MCORCH.** Container + `n8n-postgres` + rede `n8n_default` isolada. A **ponte R5 (OTD-VS-001) — o maior blocker da Fatia 2 — só existe POR CAUSA do n8n.** Tirar o n8n **deleta o blocker R5 inteiro.**
+3. **O killer (provei agora):** *toda perna do pipeline faceless já é capability nativa do MCORCH* —
+
+| Perna faceless | Era no n8n | **Nativo MCORCH (já existe)** |
+|---|---|---|
+| roteiro product-aware | Gemini node | `generate-content` / orchestrate (Gemini) |
+| imagem | Pollinations | `canvas-execute` (Gemini/FLUX/Replicate) |
+| **voz/TTS** | VoxCPM | **`tts-speak`** (edge fn nativa) |
+| **motion/i2v** | LTX | **`canvas-execute` Higgsfield DoP** (já provado, 6.4MB mp4) |
+| overlay HUD | Remotion | container Remotion **MCORCH-owned** na sovereign-net |
+| **QA de consistência** | Gemini-vision | **`vision-mcp`** (olho criativo, já provado — e já está na sovereign-net) |
+| composite | FFmpeg | FFmpeg em container MCORCH |
+
+n8n é **redundante**. "Já está validado o processo" = perfeito: a gente **re-implanta nativo**, não chama o n8n.
+
+## Arquitetura nativa revisada (Fatia 2)
+
+- **Faceless engine = orquestração nativa**, dirigida pelo **`/dashboard/orchestration`** (Visual Orchestrator) — que **já tem `SceneNode` + `QualityGateNode` + `PublishNode`**, feitos exatamente pra isso — sobre o motor de steps async (padrão `orchestrate-content`/`orchestrate-step`). Trabalho pesado (Remotion/FFmpeg/i2v) em container(es) MCORCH **na sovereign-net** → `vision_mcp`/`chroma` alcançáveis **sem ponte**. O `video-render` que já fiz (Fatia 1) muda só o *destino do trigger*: em vez de webhook n8n, dispara a orquestração nativa. O contrato (JWT/BYOK/deduct/insert/refund/poll) fica **idêntico**.
+- **HyperFrames editor = app isolado em `video.mcorch.com`** (igual ao open-design em `design.mcorch.com`): a UI de editor que o próprio HyperFrames gera, **SSO R3 já pronto** (o gate genérico já serve `video.`), entrada no submenu. DNS+cert de `video.mcorch.com` = sua ação (padrão mcp/design).
+
+## Master Protocol (Closed-Loop)
+Isso é **mudança arquitetural** → supera o `05-sdd §1` do BoK video-studio (que mandava "instrumentar n8n + ponte R5"). Antes de codar a Fatia 2, **emendo o BoK SDD** selando a decisão "native-orchestration, no n8n", matando `OTD-VS-001` (R5) e revisando `OTD-VS-002`. É o passo correto — a Fatia 1 que já entreguei (domínio + contrato + UI) **permanece 100% válida**, só a Fatia 2 (engine) muda de n8n→nativo.
+
+Confirmo o caminho e a prioridade:
+
+## 🤖 Claude *(15:26:10)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Confirmado: tirar o n8n, re-implantar nativo. Emendo o BoK SDD primeiro (Master Protocol) \u2014 e depois qual engine construo primeiro?",
+      "header": "Engine 1\u00ba",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Faceless nativo (Visual Orchestrator)",
+          "description": "Re-implanta o pipeline faceless compondo as capabilities nativas (canvas-execute Higgsfield + tts-speak + vision-mcp QA + Remotion/FFmpeg container MCORCH) orquestradas no /dashboard/orchestration. video-render passa a disparar isso. Mata a ponte R5. Caminho p/ o 1\u00ba v\u00eddeo faceless real."
+        },
+        {
+          "label": "HyperFrames @ video.mcorch.com 1\u00ba",
+          "description": "Sobe o editor HyperFrames como app isolado (igual open-design): eu clono+hardenizo+gateio (SSO R3 pronto) + preparo o vhost + submenu; DNS/cert video.mcorch.com = sua a\u00e7\u00e3o. Entrega a UI de editor visual antes do faceless."
+        },
+        {
+          "label": "S\u00f3 emendar o BoK SDD agora",
+          "description": "Selo a decis\u00e3o arquitetural nativa no SSOT (mata OTD-VS-001/R5, revisa OTD-VS-002, HyperFrames@video.mcorch.com) e paro a\u00ed pra voc\u00ea revisar antes de qualquer c\u00f3digo de engine."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

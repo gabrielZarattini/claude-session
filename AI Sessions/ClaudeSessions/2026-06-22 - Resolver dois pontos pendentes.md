@@ -9010,6 +9010,423 @@ Então é adicionar uma **capacidade autônoma de mover dinheiro** num sistema l
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O Fix 3 (H3) precisa de um job autônomo de resgate Earn→spot (move dinheiro, não-verificável agora, risco imediato baixo pois auto-subscribe está OFF). Como prosseguir?"="Construir gated OFF (capacidade + dry-run)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(15:19:29)*
+
+
+## 🤖 Claude *(15:19:30)*
+
+Escolhido: **gated OFF (dry-run)** — adiciono a capacidade + visibilidade, sem mover dinheiro até você flipar `EARN_AUTO_REDEEM`. Seguro pra deployar. Confirmo onde o factory do exchange expõe métodos + o padrão de job:
+
+## 🤖 Claude *(15:19:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== exchange.js: return do factory (onde expor redeemFlexible) ===\"\ngrep -n \"return {\" src/utils/exchange.js | head; sed -n '/^    return {/,/^    }/p' src/utils/exchange.js | grep -nE \"balance|withdraw|getCoins|buy|sell|^    }\" | head\necho \"=== server.js: bloco de starts dos jobs (onde plugar earnRedeemJob) ===\"\nsed -n '78,85p' src/server.js\necho \"=== dailyCapJob notify (espelhar) ===\"\ngrep -n \"async function notify\" src/dailyCapJob.js",
+  "description": "Find exchange factory return, server job wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === exchange.js: return do factory (onde expor redeemFlexible) ===
+> 248:                return {
+> 251:                        return {
+> 371:    return {
+> 411:    return {
+> 3:        balance,
+> 4:        buy,
+> 5:        sell,
+> 18:        getCoins,
+> 19:        withdraw
+> 20:    }
+> 23:        buyCapUsdt: Number.isFinite(buyCap) ? buyCap : null,     // teto de COMPRA por ordem; null = sem teto (inerte)
+> 24:        buyCapBasis: !Number.isFinite(buyCap) ? 'none' : (Number.isFinite(pctCap) && pctCap <= absCeil ? 'pct-equity' : 'absolute'),
+> 25:        sellCapUsdt: Number.isFinite(sellCap) ? sellCap : null,  // rede anti-runaway de VENDA; null = sem teto (off ou equity frio → degrade-open)
+> 30:            sellEquityMult: MAX_SELL_EQUITY_MULT || null,
+> === server.js: bloco de starts dos jobs (onde plugar earnRedeemJob) ===
+>     // (riskState fonte 'daily-cap') quando o equity do dia cai além do teto. Fail-safe a preço frio (não
+>     // dispara no escuro); o primeiro ciclo no boot provavelmente só faz baseline (MINI_TICKER ainda frio).
+>     logger('system', `Starting the Daily Loss Cap Job (-${(parseFloat(process.env.DAILY_LOSS_CAP_PCT || '0.05') * 100).toFixed(0)}%)...`);
+>     dailyCapJob.start();
+> 
+>     // Paper Review Job: revisão diária do ledger do Paper Engine; notifica o dono no Telegram quando uma trilha
+>     // cruza um marco de round-trips (veredito preliminar candidata/fraca). Passivo/read-only — não toca money-path.
+>     logger('system', `Starting the Paper Review Job...`);
+> === dailyCapJob notify (espelhar) ===
+> 132:async function notify(settings, msg) {
+> ```
+
+## 🤖 Claude *(15:19:39)*
+
+
+## 🤖 Claude *(15:19:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 371,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 371	    return {
+> 372	        exchangeInfo,
+> 373	        balance,
+> 374	        buy,
+> 375	        sell,
+> 376	        oco,
+> 377	        cancel,
+> 378	        cancelOrderList,
+> 379	        miniTickerStream,
+> 380	        bookStream,
+> 381	        chartStream,
+> 382	        terminateChartStream,
+> 383	        terminateTickerStream,
+> 384	        userDataStream,
+> 385	        orderStatus,
+> 386	        orderTrade,
+> 387	        tickerStream,
+> 388	        getCoins,
+> 389	        withdraw
+> 390	    }
+> 391	}
+> 392	
+> ```
+
+## 🤖 Claude *(15:19:48)*
+
+
+## 🤖 Claude *(15:19:49)*
+
+Adiciono os métodos SAPI no `exchange.js` (após o `withdraw`):
+
+## 🤖 Claude *(15:19:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "            return privateCall(SAPI_URL + 'capital/withdraw/apply', data, 'POST');\n        } catch (err) {\n            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);\n        }\n    }\n\n    async function getCoins() {",
+  "new_string": "            return privateCall(SAPI_URL + 'capital/withdraw/apply', data, 'POST');\n        } catch (err) {\n            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);\n        }\n    }\n\n    // Simple Earn Flexible \u2014 posi\u00e7\u00f5es e resgate (Earn\u2192spot). Usado pelo earnRedeemJob p/ manter os fundos do\n    // Farm L\u00cdQUIDOS no spot (a venda no-loss l\u00ea s\u00f3 o spot). SAPI (mainnet); em testnet o privateCall falha \u2192 o\n    // caller (best-effort) loga e segue. redeemFlexible exige productId (obtido via getFlexiblePositions).\n    async function getFlexiblePositions(asset) {\n        try {\n            const res = await privateCall(SAPI_URL + 'simple-earn/flexible/position', asset ? { asset } : {}, 'GET');\n            return (res && res.rows) || [];\n        } catch (err) {\n            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);\n        }\n    }\n\n    function redeemFlexible(productId, redeemAll = true) {\n        try {\n            return privateCall(SAPI_URL + 'simple-earn/flexible/redeem', { productId, redeemAll }, 'POST');\n        } catch (err) {\n            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);\n        }\n    }\n\n    async function getCoins() {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:19:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "        tickerStream,\n        getCoins,\n        withdraw\n    }\n}",
+  "new_string": "        tickerStream,\n        getCoins,\n        withdraw,\n        getFlexiblePositions,\n        redeemFlexible\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:20:35)*
+
+
+## 🤖 Claude *(15:20:36)*
+
+Crio o `earnRedeemJob.js` (dry-run por default; helper puro `redeemTargetUnder` pra sim test):
+
+## 🤖 Claude *(15:20:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js",
+  "content": "'use strict';\n\n// earnRedeemJob \u2014 mant\u00e9m os fundos do Farm L\u00cdQUIDOS no spot resgatando LD<base> (Simple Earn Flexible) de volta.\n// CAUSA-RAIZ do H3 (sizing cego ao Earn): a venda no-loss do Farm l\u00ea S\u00d3 o spot (calcQty/hasEnoughAssets), mas\n// balance() lista o saldo em Earn como chave SEPARADA LD<base> \u2014 se um base do Farm for auto-subscrito, a venda\n// lan\u00e7a \"There is no <base>\" e N\u00c3O liquida. O auto-subscribe est\u00e1 OFF hoje (incidente 2026-06-20); este job \u00e9 a\n// rede pra quando religar (default da Binance). DESACOPLADO do hot-path de ordem (job no scheduler, igual ao\n// dailyCapJob). Best-effort: erro n\u00e3o quebra o ciclo.\n//   EARN_AUTO_REDEEM (default OFF) \u2192 OFF = DRY-RUN: s\u00f3 DETECTA + loga + alerta o que resgataria (ZERO movimento\n//                                    de dinheiro). ON = resgata de verdade (Earn\u2192spot via SAPI flexible/redeem).\n//   No-op em testnet (sem Earn real / sem SAPI) e quando n\u00e3o h\u00e1 LD<base> de base RASTREADA do Farm com saldo.\n\nconst settingsRepository = require('./repositories/settingsRepository');\nconst logger = require('./utils/logger');\n\nconst ENABLED = (process.env.EARN_REDEEM_ENABLED || 'true') === 'true'; // o JOB roda (detecta+alerta); o RESGATE real \u00e9 gated \u00e0 parte\nconst AUTO_REDEEM = process.env.EARN_AUTO_REDEEM === 'true';            // default OFF = dry-run (n\u00e3o move dinheiro)\nconst _ms = parseInt(process.env.EARN_REDEEM_CHECK_MS || '300000', 10);\nconst CHECK_MS = Number.isFinite(_ms) && _ms >= 60000 ? _ms : 300000;  // 5min default, piso 1min\nconst STABLES = new Set(['USDT', 'USDC', 'BUSD', 'FDUSD', 'TUSD', 'DAI']);\nconst TRACKED_BASES = new Set((process.env.REGIME_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT')\n    .split(',').map(s => s.trim().toUpperCase().replace(/USDT$/, '')).filter(Boolean));\n\nlet timer = null, running = false;\n\n// PURO/test\u00e1vel: dado o nome da chave de saldo, retorna o BASE subjacente se for um wrapper Earn LD<base> de uma\n// base RASTREADA do Farm (n\u00e3o-stable), sen\u00e3o null. (LDLTC\u2192LTC; LDUSDC/'LDO' curto/base n\u00e3o-rastreada \u2192 null.)\nfunction redeemTargetUnder(coin) {\n    if (typeof coin !== 'string' || !coin.startsWith('LD') || coin.length <= 3) return null;\n    const under = coin.slice(2);\n    if (STABLES.has(under) || !TRACKED_BASES.has(under)) return null;\n    return under;\n}\n\nasync function notify(settings, msg) {\n    try { await require('./utils/telegram')(settings, msg); } catch (e) { /* best-effort */ }\n}\n\nasync function checkRedeem() {\n    if (running) return;\n    running = true;\n    try {\n        const settings = await settingsRepository.getDefaultSettings();\n        if (!settings || !settings.id) return;\n        if (settings.useTestnet) return; // testnet n\u00e3o tem Earn real (sem SAPI)\n        const exchange = require('./utils/exchange')(settings);\n        const bal = await exchange.balance();\n        if (!bal) return;\n\n        for (const [coin, b] of Object.entries(bal)) {\n            const under = redeemTargetUnder(coin);\n            if (!under) continue;\n            const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);\n            if (qty <= 0) continue;\n\n            if (!AUTO_REDEEM) { // DRY-RUN: s\u00f3 visibilidade, n\u00e3o move dinheiro.\n                logger('system', `[earnRedeem] DRY-RUN: ${coin} ${qty} em Simple Earn \u2014 resgataria ${under} p/ spot (EARN_AUTO_REDEEM off).`);\n                await notify(settings, `\ud83c\udfe6 [EARN] ${under} (${qty}) preso em Simple Earn (${coin}) \u2014 a venda no-loss do Farm precisa do spot. EARN_AUTO_REDEEM=off (dry-run): resgate manual na Binance OU ligue o auto-redeem.`);\n                continue;\n            }\n            try { // LIVE: resgata Earn\u2192spot.\n                const positions = await exchange.getFlexiblePositions(under);\n                let n = 0;\n                for (const p of (positions || [])) { if (p && p.productId) { await exchange.redeemFlexible(p.productId); n++; } }\n                logger('system', `[earnRedeem] resgatado ${under} (${n} posi\u00e7\u00e3o(\u00f5es)) Earn\u2192spot.`);\n                await notify(settings, `\ud83c\udfe6 [EARN] Resgatado ${under} de Simple Earn p/ spot (fundos liberados p/ a venda do Farm).`);\n            } catch (e) {\n                logger('system', `[earnRedeem] resgate ${under} FALHOU: ${e.message}`);\n                await notify(settings, `\u26a0\ufe0f [EARN] Falha ao resgatar ${under} do Earn: ${e.message}. Resgate manual na Binance.`);\n            }\n        }\n    } catch (err) {\n        logger('system', `[earnRedeem] erro no ciclo: ${err.message}`);\n    } finally {\n        running = false;\n    }\n}\n\nfunction start() {\n    if (!ENABLED) { logger('system', '[earnRedeem] DESABILITADO (EARN_REDEEM_ENABLED=false).'); return; }\n    if (timer) return; // idempotente\n    checkRedeem(); // 1\u00aa passada no boot\n    timer = setInterval(checkRedeem, CHECK_MS);\n    if (timer.unref) timer.unref();\n    logger('system', `[earnRedeem] iniciado \u2014 ${AUTO_REDEEM ? 'AUTO-REDEEM ON (resgata Earn\u2192spot)' : 'DRY-RUN (s\u00f3 detecta+alerta; EARN_AUTO_REDEEM off)'}, intervalo ${CHECK_MS}ms.`);\n}\n\nfunction stop() { if (timer) { clearInterval(timer); timer = null; } running = false; }\n\nmodule.exports = { start, stop, checkRedeem, redeemTargetUnder };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:21:01)*
+
+
+## 🤖 Claude *(15:21:01)*
+
+Wiring no `server.js` (require + start após o dailyCapJob):
+
+## 🤖 Claude *(15:21:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "offset": 13,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 13	const funnelJob = require('./funnelJob');
+> 14	const dailyProfitJob = require('./dailyProfitJob');
+> 15	const dailyCapJob = require('./dailyCapJob');
+> 16	const paperReviewJob = require('./paperReviewJob');
+> ```
+
+## 🤖 Claude *(15:21:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "old_string": "const dailyCapJob = require('./dailyCapJob');\nconst paperReviewJob = require('./paperReviewJob');",
+  "new_string": "const dailyCapJob = require('./dailyCapJob');\nconst earnRedeemJob = require('./earnRedeemJob');\nconst paperReviewJob = require('./paperReviewJob');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:21:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "offset": 82,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 82	    dailyCapJob.start();
+> 83	
+> 84	    // Paper Review Job: revisão diária do ledger do Paper Engine; notifica o dono no Telegram quando uma trilha
+> 85	    // cruza um marco de round-trips (veredito preliminar candidata/fraca). Passivo/read-only — não toca money-path.
+> 86	    logger('system', `Starting the Paper Review Job...`);
+> 87	    paperReviewJob.start();
+> 88	
+> 89	    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).
+> ```
+
+## 🤖 Claude *(15:21:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/server.js",
+  "old_string": "    dailyCapJob.start();\n\n    // Paper Review Job: revis\u00e3o di\u00e1ria do ledger do Paper Engine; notifica o dono no Telegram quando uma trilha",
+  "new_string": "    dailyCapJob.start();\n\n    // Earn Redeem Job: mant\u00e9m os fundos do Farm L\u00cdQUIDOS no spot (resgata LD<base> do Simple Earn) p/ a venda\n    // no-loss nunca travar com \"There is no <base>\". Default DRY-RUN (s\u00f3 detecta+alerta; EARN_AUTO_REDEEM off).\n    logger('system', `Starting the Earn Redeem Job (${process.env.EARN_AUTO_REDEEM === 'true' ? 'auto-redeem ON' : 'dry-run'})...`);\n    earnRedeemJob.start();\n\n    // Paper Review Job: revis\u00e3o di\u00e1ria do ledger do Paper Engine; notifica o dono no Telegram quando uma trilha"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/server.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:21:40)*
+
+
+## 🤖 Claude *(15:21:40)*
+
+Sim test do helper puro `redeemTargetUnder`:
+
+## 🤖 Claude *(15:21:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/earnRedeem.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 detec\u00e7\u00e3o do earnRedeemJob.redeemTargetUnder (PURO): qual chave de saldo \u00e9 um wrapper Earn\n * LD<base> de uma base RASTREADA do Farm a resgatar (Earn\u2192spot). Errar p/ \"resgatar\" um token REAL (LDO=Lido) ou\n * p/ N\u00c3O-resgatar um LD<base> leg\u00edtimo quebraria a liquidez da venda no-loss. Puro: s\u00f3 requer o helper (TRACKED_BASES\n * vem do default REGIME_SYMBOLS = BTC,LTC,BNB,ADA).\n */\nconst { redeemTargetUnder } = require('../../src/earnRedeemJob');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\n\n// RESGATA: LD<base> de base RASTREADA do Farm (n\u00e3o-stable).\neq('LDLTC \u2192 LTC', redeemTargetUnder('LDLTC'), 'LTC');\neq('LDBNB \u2192 BNB', redeemTargetUnder('LDBNB'), 'BNB');\neq('LDADA \u2192 ADA', redeemTargetUnder('LDADA'), 'ADA');\neq('LDBTC \u2192 BTC', redeemTargetUnder('LDBTC'), 'BTC');\n\n// N\u00c3O resgata: stables em Earn (valem ~$1, n\u00e3o s\u00e3o posi\u00e7\u00e3o do Farm).\neq('LDUSDC \u2192 null (stable)', redeemTargetUnder('LDUSDC'), null);\neq('LDUSDT \u2192 null (stable)', redeemTargetUnder('LDUSDT'), null);\n\n// N\u00c3O resgata: token REAL curto (LDO = Lido), N\u00c3O \u00e9 wrapper Earn (guard length<=3).\neq('LDO \u2192 null (token real, length<=3)', redeemTargetUnder('LDO'), null);\n\n// N\u00c3O resgata: base N\u00c3O-rastreada / n\u00e3o-LD / lixo.\neq('LDXRP \u2192 null (XRP n\u00e3o rastreada)', redeemTargetUnder('LDXRP'), null);\neq('LTC \u2192 null (n\u00e3o come\u00e7a com LD)', redeemTargetUnder('LTC'), null);\neq('LD \u2192 null (curto)', redeemTargetUnder('LD'), null);\neq('null \u2192 null', redeemTargetUnder(null), null);\neq('n\u00famero \u2192 null', redeemTargetUnder(123), null);\n\nconsole.log(`\\nearnRedeem.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/sim/earnRedeem.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:21:53)*
+
+Doc no `.env.example` + syntax + sim:
+
+## 🤖 Claude *(15:22:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/.env.example",
+  "old_string": "#  (3) FAIL-CLOSED: CSV de enderecos permitidos. VAZIO = NENHUM saque (bloqueia tudo). Popule c/ os enderecos do\n#      dono p/ habilitar saque (ancora o destino; mesmo JWT+frase comprometidos nao desviam p/ endereco novo).\nWITHDRAW_ADDRESS_ALLOWLIST=",
+  "new_string": "#  (3) FAIL-CLOSED: CSV de enderecos permitidos. VAZIO = NENHUM saque (bloqueia tudo). Popule c/ os enderecos do\n#      dono p/ habilitar saque (ancora o destino; mesmo JWT+frase comprometidos nao desviam p/ endereco novo).\nWITHDRAW_ADDRESS_ALLOWLIST=\n\n# === Earn Redeem Job (mantem os fundos do Farm liquidos no spot p/ a venda no-loss nao travar) ===\n#ex: false  (AUTO-REDEEM: false = DRY-RUN (so detecta+alerta LD<base> em Earn, NAO move dinheiro); true = resgata\n#            Earn->spot de verdade via SAPI. Mantenha false ate querer o resgate automatico.)\nEARN_AUTO_REDEEM=false\n#EARN_REDEEM_ENABLED=true   (o job roda; detecta+alerta mesmo em dry-run. false = desliga o job inteiro)\n#EARN_REDEEM_CHECK_MS=300000  (intervalo do job; piso 60000)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/.env.example has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:22:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/earnRedeemJob.js && node --check src/utils/exchange.js && node --check src/server.js && echo \"syntax OK\"\nAES_KEY=01234567890123456789012345678901 node -e \"require('./src/earnRedeemJob.js'); console.log('require earnRedeemJob OK')\" 2>&1 | head -1\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"earnRedeem|sim suite\"",
+  "description": "Syntax, require, sim with earnRedeem test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> require earnRedeemJob OK
+> === sim/earnRedeem.test.js ===
+> earnRedeem.test.js: 12 passed, 0 failed
+> sim suite: 9/9 arquivos OK.
+> ```
+
+## 🤖 Claude *(15:22:17)*
+
+
+## 🤖 Claude *(15:22:18)*
+
+9/9 (earnRedeem 12/12), require OK. Chown + diff + gate QA/TL do **Fix 3 (H3 Camada 1, dry-run)** — foco na segurança do job autônomo:
+
+## 🤖 Claude *(15:22:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/earnRedeemJob.js backend/src/utils/exchange.js backend/src/server.js backend/.env.example backend/scripts/sim/earnRedeem.test.js 2>/dev/null\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git add -N backend/src/earnRedeemJob.js backend/scripts/sim/earnRedeem.test.js && git -c safe.directory=\"*\" diff -- backend/src/earnRedeemJob.js backend/src/utils/exchange.js backend/src/server.js backend/.env.example backend/scripts/sim/earnRedeem.test.js > /tmp/earn.diff 2>&1'\necho \"diff bytes: $(wc -c </tmp/earn.diff)\"",
+  "description": "Chown and generate Fix 3 diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff bytes: 11676
+> ```
+
+## 🤖 Claude *(15:22:48)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review earnRedeemJob",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise o FIX 3 (de 3) da re-revis\u00e3o de design do TradeUX: earnRedeemJob (H3 \u2014 sizing cego ao Earn). MAINNET LIVE (~$149). \u00c9 um job AUT\u00d4NOMO que pode MOVER DINHEIRO (Earn\u2192spot), mas entregue GATED OFF (dry-run). Veredito PASS/PASS COM RESSALVAS/FAIL.\n\n## Contexto\nHIGH H3: a venda no-loss do Farm l\u00ea s\u00f3 o spot (calcQty/hasEnoughAssets); se um base for auto-subscrito no Simple Earn (LD<base>), a venda lan\u00e7a \"There is no <base>\" e n\u00e3o liquida. Auto-subscribe est\u00e1 OFF hoje (risco latente). O fix mant\u00e9m os fundos l\u00edquidos no spot via resgate proativo. DECIS\u00c3O DO DONO: entregar GATED OFF \u2014 EARN_AUTO_REDEEM=false (default) = DRY-RUN (s\u00f3 detecta+alerta, ZERO movimento de dinheiro).\n\n## O que mudou (diff em /tmp/earn.diff; working tree em /home/gcrux-tradeux/tradeux \u2014 LEIA os arquivos)\n- **`backend/src/earnRedeemJob.js`** (NOVO): job no scheduler (mirror dailyCapJob). `redeemTargetUnder(coin)` PURO (LD<base> de base rastreada n\u00e3o-stable \u2192 under; sen\u00e3o null). checkRedeem: balance() \u2192 p/ cada LD<base> com qty>0: se AUTO_REDEEM off \u2192 DRY-RUN (log+Telegram, sem resgate); se on \u2192 getFlexiblePositions(under)\u2192redeemFlexible(productId). No-op em testnet (settings.useTestnet). Best-effort.\n- **`backend/src/utils/exchange.js`**: novos getFlexiblePositions(asset) [GET simple-earn/flexible/position] + redeemFlexible(productId,redeemAll=true) [POST simple-earn/flexible/redeem] via privateCall (mesmo padr\u00e3o de withdraw/getCoins) + expostos no return.\n- **`backend/src/server.js`**: earnRedeemJob.start() no boot (ap\u00f3s dailyCapJob).\n- **`backend/scripts/sim/earnRedeem.test.js`** (NOVO): 12 asserts do redeemTargetUnder.\n- **`.env.example`**: doc EARN_AUTO_REDEEM/ENABLED/CHECK_MS.\n\n## Foco (adversarial)\n1. **DRY-RUN \u00e9 REALMENTE no-money-movement?** Com EARN_AUTO_REDEEM ausente/false (estado live), checkRedeem NUNCA chama redeemFlexible/getFlexiblePositions? S\u00f3 log+notify? Confirme que AUTO_REDEEM l\u00ea o env certo (default OFF).\n2. **redeemTargetUnder n\u00e3o pega token REAL?** LDO (Lido, length 3) \u2192 null? LDUSDC/LDUSDT (stables) \u2192 null? S\u00f3 LD<base> de TRACKED_BASES (BTC/LTC/BNB/ADA) \u2192 under? Algum falso-positivo que resgataria algo errado quando ligado?\n3. **No-op seguro**: testnet (settings.useTestnet) retorna cedo? balance() vazio/null? 0 LD no Earn (estado atual) \u2192 job n\u00e3o faz nada e n\u00e3o erra?\n4. **SAPI path (quando ON)**: getFlexiblePositions/redeemFlexible usam o padr\u00e3o privateCall certo (igual withdraw)? productId vem das positions? redeemAll=true correto? erro de SAPI \u00e9 caught (best-effort, n\u00e3o derruba o ciclo nem o boot)?\n5. **Boot/scheduler**: earnRedeemJob.start() n\u00e3o quebra o boot? running-flag evita reentr\u00e2ncia? timer.unref? N\u00e3o toca o hot-path do beholder/placeOrder?\n6. **Churn**: se auto-subscribe RE-ligar e AUTO_REDEEM=on, o job resgata e a Binance re-subscreve \u2192 loop. \u00c9 benigno (sem fee no flexible)? Vale alertar?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (9/9, earnRedeem 12). Aponte gaps. pt-BR, conciso."
+}
+```
+
+## 🤖 Claude *(15:23:01)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review earnRedeemJob",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge do FIX 3 (de 3) da re-revis\u00e3o de design do TradeUX: earnRedeemJob (H3). MAINNET LIVE (~$149, trunk-based). APPROVE/APPROVE COM SUGEST\u00d5ES/REQUEST CHANGES/BLOCK.\n\n## Contexto\nHIGH H3: a venda no-loss do Farm l\u00ea s\u00f3 o spot; se um base for auto-subscrito no Simple Earn (LD<base>), a venda trava. Fix = manter os fundos l\u00edquidos no spot via resgate proativo. DECIS\u00c3O DO DONO (expl\u00edcita): entregar GATED OFF \u2014 EARN_AUTO_REDEEM=false default = DRY-RUN (s\u00f3 detecta+alerta, ZERO movimento de dinheiro). O dono liga o resgate real quando quiser. A \"Camada 2\" (sizing ler Earn) foi DESCARTADA na an\u00e1lise (d\u00fabia: faria a Binance rejeitar a ordem no transiente \u2014 funds no Earn, n\u00e3o no spot).\n\n## Mudan\u00e7a (diff em /tmp/earn.diff; arquivos em /home/gcrux-tradeux/tradeux)\n- `earnRedeemJob.js` (NOVO, mirror dailyCapJob): redeemTargetUnder puro + checkRedeem (dry-run|live) + start/stop. No-op em testnet, best-effort.\n- `exchange.js`: getFlexiblePositions + redeemFlexible (SAPI, padr\u00e3o withdraw/getCoins).\n- `server.js`: start no boot. `earnRedeem.test.js` (12 asserts). `.env.example` doc.\n\n## Avalie (must-fix vs nice-to-have)\n1. **Escopo gated-OFF/dry-run** \u00e9 a postura certa p/ um job aut\u00f4nomo que move dinheiro num sistema LIVE? Adicionar a capacidade desligada (owner opt-in) \u00e9 melhor que ON-by-default? Concorda em DESCARTAR a Camada 2 (sizing ler Earn) \u2014 \u00e9 mesmo d\u00fabia/contraproducente?\n2. **Arquitetura**: job no scheduler (mirror dailyCapJob) desacoplado do hot-path \u2014 certo vs algum acoplamento? SAPI methods no exchange.js (boundary) \u2014 ok? helper puro test\u00e1vel?\n3. **Risco residual**: mesmo gated-off, algum caminho move dinheiro inadvertidamente? O dry-run alerta demais (spam Telegram)? O CHECK_MS 5min \u00e9 s\u00e3o?\n4. **Quando ON (futuro)**: o resgate redeemAll=true por productId \u00e9 a forma certa? falta idempot\u00eancia/guard?\n5. Conven\u00e7\u00f5es/naming/d\u00edvida. Vale registrar a Camada 2 descartada + o \"ligar EARN_AUTO_REDEEM\" no HANDOFF?\n\nSu\u00edte: `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (9/9). Foque na decis\u00e3o. pt-BR, conciso, must-fix separado."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmei tudo que precisava. O `redeemFlexible` espelha exatamente o padrão do `withdraw` existente (mesmo try/catch sync que não pega a rejeição da promise — dívida pré-existente, não introduzida aqui). E `SAPI_URL` aponta para mainnet mesmo em testnet, mas o job já é gated por `useTestnet`. Veredito abaixo.\n\n---\n\nVEREDITO: **APPROVE COM SUGESTÕES**\n\nMudança pequena, bem-escopada, reversível e — crucialmente — **gated-OFF por padrão (dry-run, zero movimento de dinheiro)**. Postura correta para um sistema LIVE. Nada toca `beholder.js` nem o hot-path de ordem. Mergeável.\n\n## Racional por eixo\n\n**1. Escopo gated-OFF/dry-run — postura certa.** Sim, sem reservas. Adicionar a capacidade desligada com owner opt-in (`EARN_AUTO_REDEEM=false`) é exatamente o padrão certo para um job autônomo que move dinheiro num sistema com ~$149 reais. O dry-run entrega o valor imediato (visibilidade/alerta da causa-raiz do H3) com risco zero, e o caminho LIVE fica pronto mas dormente. Espelha a doutrina já estabelecida (saque fail-closed, harvester desativado por flag). **Concordo em DESCARTAR a Camada 2** (sizing ler Earn): ela é genuinamente contraproducente — se os fundos estão no Earn no instante da ordem, a Binance rejeita de qualquer jeito; ler o saldo Earn no `calcQty` daria um número que o spot não honra no momento do fill (transiente de resgate). A solução certa é **manter líquido no spot** (este job), não ensinar o sizing a contar dinheiro que não está disponível. Decisão arquitetural correta.\n\n**2. Arquitetura — sólida.** Job no scheduler espelhando `dailyCapJob` byte-a-byte no padrão (`running`-guard de reentrância, `setInterval`+`unref`, `getDefaultSettings` já descriptografado, no-op em testnet). Desacoplado do hot-path — certo. `getFlexiblePositions`/`redeemFlexible` no `exchange.js` é o boundary correto (SAPI já mora ali, ao lado de `withdraw`/`getCoins`/`getall`). `redeemTargetUnder` puro e testável foi a escolha certa — concentra a lógica de classificação arriscada (não resgatar `LDO`=Lido, stables, base não-rastreada) num helper coberto por 12 asserts. `/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`.\n\n**3. Risco residual — baixo, contido.** Com `AUTO_REDEEM` off não há **nenhum** caminho que mova dinheiro: o branch `getFlexiblePositions`/`redeemFlexible` está inteiramente atrás de `if (!AUTO_REDEEM) { ...; continue; }`. O dry-run **pode** spammar: alerta Telegram a cada 5min por ativo enquanto houver `LD<base>` parado (sem dedup). Hoje auto-subscribe está OFF, então na prática é inerte (zero `LD*`), mas se religar e houver saldo preso é 1 alerta/ativo a cada 5min indefinidamente. CHECK_MS de 5min com piso de 1min é são. `getDefaultSettings` por ciclo (descriptografa) é overhead trivial nesse intervalo.\n\n**4. Quando ON (futuro) — corretude OK, mas falta idempotência.** `redeemAll=true` por `productId` via `simple-earn/flexible/redeem` é a forma certa (resgata a posição inteira de volta ao spot). O loop sobre `getFlexiblePositions` cobre múltiplas posições. **Porém** não há guard de "já resgatei / resgate em voo": se o resgate Binance não for instantâneo (pode levar segundos), o próximo ciclo (ou um fill no mesmo ciclo) ainda vê `LD<base>` com saldo e **dispara outro `redeem`** — duplo-resgate é inócuo por valor (idempotente no resultado: já está no spot, segundo redeem não-op/erro), mas gera ruído de log/alerta e chamadas SAPI redundantes (peso no rate-limit). Não bloqueia o merge porque está gated-off, mas é must-fix **antes do owner ligar o LIVE**.\n\n**5. Convenções — aderente.** Comentários pt-BR, naming consistente com os jobs vizinhos, `.env.example` documentado, teste no padrão da sim-suite (mesmo estilo `eq`/exit-code). Suíte 9/9 confirma que não regrediu nada.\n\n---\n\n## Must-fix (bloqueiam o **flip** `EARN_AUTO_REDEEM=true`, NÃO o merge)\n- **Idempotência/guard de resgate-em-voo no caminho LIVE**: marcar `under` como "redeem in-flight" (Set com TTL) ou só logar 1x até o saldo `LD<base>` zerar, evitando re-disparo a cada ciclo enquanto o resgate liquida. Hoje gated-off ⇒ não trava o merge, mas tem que estar resolvido antes de o dono virar a flag.\n\n## Nice-to-have (não bloqueiam nada)\n- **Dedup do alerta dry-run** (mesma classe do `notifyDedup.js` já existente): hoje é 1 alerta/ativo a cada 5min. Reusar o util de dedup por assunto ou guardar último-alertado-por-coin. Inócuo hoje (auto-subscribe OFF), mas é a higiene que a doutrina anti-ruído pede.\n- **`redeemFlexible` é `function` (não `async`) com try/catch síncrono** envolvendo `privateCall` (que retorna promise) → o `catch` **não captura** a rejeição; o erro propaga como promise rejeitada e é pego só pelo try/catch do caller no job. Funciona (o caller trata), mas é inconsistente com `getFlexiblePositions` (que é `async`). **Nota:** isto **espelha exatamente o `withdraw` existente** (mesmo bug latente lá) — é dívida pré-existente do boundary, não introduzida aqui. Alinhar ambos (tornar `async`) numa limpeza separada.\n- **`STABLES` duplicado** (já existe noção de stable em outros pontos do código money-path) — candidato a constante compartilhada eventual.\n\n## HANDOFF\n- **Sim, registrar** (você pediu e é a prática da casa): (a) a **Camada 2 DESCARTADA** com o racional (sizing ler Earn = ordem rejeitada no transiente) para não ser re-proposta; (b) o **runbook "ligar `EARN_AUTO_REDEEM=true`"** com o pré-requisito de código (guard de idempotência) anexado como gate. Coerente com a memória `tradeux-earn-autosubscribe-incident`.\n\n## Decisão de merge\n**APPROVE — mergear este FIX 3 isolado, no estado dry-run.** É a entrega correta do H3: fecha a visibilidade da causa-raiz com risco zero e deixa o LIVE armado-mas-desligado para o owner. **Condição única do flip futuro** (não do merge): resolver o guard de idempotência do caminho LIVE antes que `EARN_AUTO_REDEEM` vá a `true`. Como é o 3º de 3 e não toca money-path ativo, pode subir junto/após os outros dois sem ordenação especial.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`, `/home/gcrux-tradeux/tradeux/backend/src/server.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/sim/earnRedeem.test.js`, `/home/gcrux-tradeux/tradeux/backend/.env.example`.'}, {'type': 'text', 'text': "agentId: a7a17fd7bb0993721 (use SendMessage with to: 'a7a17fd7bb0993721' to continue this agent)\n<usage>subagent_tokens: 39005\ntool_uses: 7\nduration_ms: 70415</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmado: o try/catch do `redeemFlexible` (síncrono) NÃO captura a rejeição da Promise — escapa direto. Tenho tudo para o veredito.\n\n---\n\n# REVISÃO — FIX 3/3: earnRedeemJob (H3 — sizing cego ao Earn)\n\n## VEREDITO: PASS COM RESSALVAS\n\nO fix entrega exatamente o que promete no estado live: **DRY-RUN é genuinamente no-money-movement** e a detecção (`redeemTargetUnder`) está correta e bem testada. As ressalvas são todas no path LIVE (AUTO_REDEEM=on), que **não é o estado de entrega** — então nada bloqueia o merge GATED OFF. Mas há um bug real de tratamento de erro que precisa ser corrigido **antes** de alguém virar a chave.\n\nSuíte: `9/9 arquivos, earnRedeem 12/12`. Confirmado rodando.\n\n---\n\n## Achados por foco\n\n### 1. DRY-RUN é REALMENTE no-money-movement? — CONFIRMADO (BAIXA/nenhuma)\n`AUTO_REDEEM = process.env.EARN_AUTO_REDEEM === \'true\'` (`earnRedeemJob.js:17`). Com env ausente/`false` → `AUTO_REDEEM=false`. No `checkRedeem`, o ramo `if (!AUTO_REDEEM)` faz `continue` ANTES de qualquer chamada a `getFlexiblePositions`/`redeemFlexible` (`:56-59`). Verificado: no estado live **nenhuma** função de movimento é referenciada, só `logger` + `notify`. Default OFF correto.\n\n### 2. redeemTargetUnder pega token real? — NÃO (nenhum falso-positivo) (PASS)\nGuard `length <= 3` mata `LDO` (Lido, len 3) e `LD`. STABLES barra `LDUSDC`/`LDUSDT`/`LDBUSD`/etc. `TRACKED_BASES` (default BTC/LTC/BNB/ADA, derivado do mesmo `REGIME_SYMBOLS` do dailyCapJob/regimeJob) barra `LDXRP`. Os 12 asserts cobrem isso. Lógica é **idêntica em espírito** ao tratamento LD<base> já em produção no `dailyCapJob.js:116-122` — boa consistência. Sem falso-positivo que resgataria algo errado.\n\n### 3. No-op seguro — CONFIRMADO (PASS)\n- testnet: `if (settings.useTestnet) return` (`:45`) retorna cedo, antes de instanciar o exchange.\n- `balance()` null/vazio: `if (!bal) return` (`:48`); `Object.entries({})` → loop vazio.\n- 0 LD no Earn (estado atual): nenhuma chave casa `redeemTargetUnder` → no-op silencioso, sem erro.\n- `qty<=0` pulado (`:54`). Shape `available`/`onOrder` bate com o uso real da lib (mesmo de dailyCapJob/exchangeController).\n\n### 4. SAPI path (quando ON) — RESSALVAS\n\n**[MÉDIA] Bug de tratamento de erro em `redeemFlexible` — try/catch INERTE.** `exchange.js:256-262`: `redeemFlexible` é `function` **síncrona** com `return privateCall(...)` dentro de `try/catch`. `privateCall` é `async` (retorna Promise); a rejeição do axios resolve DEPOIS do `return`, então o `catch` síncrono **nunca dispara** — reproduzido aqui (o caller vê `"SAPI boom"` cru, não o `JSON.stringify(err.response.data)` que o catch pretendia formatar). Consequência prática: quando ligado, um erro de SAPI no redeem propaga a mensagem do axios **sem o corpo da resposta da Binance** (perde o código/razão real do erro no Telegram/log). Não derruba o ciclo (o `try` do caller em `:61-70` pega), mas o tratamento de erro "rico" que o padrão `withdraw` tem aqui está morto. **Fix:** ou tornar `async function redeemFlexible` + `return await privateCall(...)`, ou (mais simples e consistente) remover o try/catch e deixar o caller formatar. `getFlexiblePositions` está correto (é `async` + `await`).\n\n**[BAIXA] `redeemAll=true` correto, mas sem fallback de `amount`.** Para flexible, `redeemAll:true` resgata a posição inteira do `productId` — é o comportamento desejado (liberar tudo p/ o spot). OK. `productId` vem de `getFlexiblePositions` (`p.productId`), guardado por `if (p && p.productId)`. Correto.\n\n**[BAIXA — observação] Não há `await binance.useServerTime()` no privateCall.** `balance()` chama `useServerTime()` antes; o `privateCall` usa `Date.now()` cru com `recvWindow:60000`. Mesmo padrão de `withdraw`/`getCoins` já em prod — não é regressão deste fix, só registro de que herda o mesmo risco de clock-skew dos outros SAPI calls.\n\n### 5. Boot/scheduler — CONFIRMADO (PASS)\n`earnRedeemJob.start()` espelha `dailyCapJob`: `running`-flag anti-reentrância (`:40`), `timer.unref()` (`:84`), `if(timer) return` idempotente, `checkRedeem()` na 1ª passada do boot. O `checkRedeem` é todo `try/catch` no topo (`:42-76`) → erro não derruba o boot. **Não toca beholder/placeOrder** — é job de scheduler desacoplado, lê só `balance()` + (quando on) SAPI. Boot order correta (após dailyCapJob).\n\n### 6. Churn (auto-subscribe + AUTO_REDEEM=on) — RESSALVA (BAIXA)\nCenário real: Binance re-subscreve LD<base> a cada ciclo → o job resgata a cada 5min, em loop, indefinidamente. Flexible redeem **não tem fee**, então é benigno em custo. Porém:\n- **Não há detecção/alerta do loop** — o job vai notificar "Resgatado X" repetidamente a cada 5min (spam no Telegram) sem nunca sinalizar "isto está em loop, desligue o auto-subscribe na origem". O fix correto da causa-raiz é desligar auto-subscribe (como foi feito no incidente 2026-06-20); este job é só a rede. **Sugestão (não-bloqueante):** quando on, se o mesmo `under` for resgatado em N ciclos consecutivos, alertar UMA vez "auto-subscribe parece religado — desligue na Binance" em vez de notificar todo ciclo. Hoje mitigado por `notifyDedup`? Não — este job chama `utils/telegram` direto, **não passa pelo `telegramNotify`/dedup**. Em dry-run idem: alerta a cada 5min enquanto houver LD preso (pode irritar, mas é visibilidade desejada).\n\n---\n\n## Achados adicionais (fora do checklist)\n\n- **[BAIXA] `REGIME_SYMBOLS` não está no `.env.example`.** O `earnRedeemJob` (e já o `dailyCapJob`/`regimeJob`) dependem de `REGIME_SYMBOLS` para `TRACKED_BASES`; o default hardcoded (`BTC,LTC,BNB,ADA`) cobre o estado atual, mas se o operador trocar os símbolos do Farm sem setar `REGIME_SYMBOLS`, o job ignora silenciosamente o novo base (LD<novo> → `null` → não resgata, não alerta). Não é regressão deste fix (herdado), mas o `.env.example` deste diff documenta `EARN_*` e não menciona a dependência de `REGIME_SYMBOLS`.\n- **[INFO] Notificação dry-run usa `qty` cru** (`:58`) sem formatar casas decimais — cosmético.\n- **[INFO] Boa decisão:** `getFlexiblePositions(under)` filtra por asset, evitando varrer todo o Earn. Correto.\n\n---\n\n## Testes que eu rodaria\n\n1. **Suíte sim** (feito): `9/9`, earnRedeem `12/12`. Asserts cobrem os falso-positivos críticos (LDO, stables, não-rastreados).\n2. **Dry-run no-money unit** (gap — adicionar): stub `exchange` com `getFlexiblePositions`/`redeemFlexible` que **lançam se chamados**; rodar `checkRedeem` com `AUTO_REDEEM` ausente e um `balance` contendo `LDLTC` → asseverar que NENHUMA das duas é invocada (prova mecânica do "zero movimento", hoje só validado por leitura).\n3. **No-op testnet/empty**: `checkRedeem` com `settings.useTestnet=true` e com `balance()` retornando `null`/`{}` → sem throw, sem chamada de exchange.\n4. **Erro de SAPI é caught (LIVE)**: stub `redeemFlexible` rejeitando → asseverar que o ciclo não derruba E que a mensagem do Telegram contém o corpo do erro da Binance (este teste **falharia hoje** por causa do bug do try/catch síncrono — é a forma de pegar o achado MÉDIO).\n5. **Boot smoke**: subir o backend com o diff e `EARN_REDEEM_ENABLED=true`/`AUTO_REDEEM` ausente → confirmar log `[earnRedeem] iniciado — DRY-RUN` e que o boot completa.\n6. **Idempotência do start**: chamar `start()` 2× → um único timer.\n\n---\n\n## Recomendação de merge\n\n**MERGE OK — gated OFF (dry-run), como entregue.** No estado live (`EARN_AUTO_REDEEM` ausente) o código é comprovadamente read-only/no-money e não toca o hot-path; risco de merge ≈ zero. \n\n**Pré-requisito antes de virar `EARN_AUTO_REDEEM=true`:** corrigir o bug MÉDIO do try/catch síncrono em `redeemFlexible` (`/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js:256`) — tornar `async`/`return await`, senão o handling de erro do path de dinheiro fica mascarando o motivo real da falha da Binance. Idealmente também adicionar o teste #2 (prova mecânica do no-money) e o anti-spam/anti-loop do churn (#6) antes do flip.\n\n**Arquivos revisados:**\n- `/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js` (novo)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (`getFlexiblePositions`/`redeemFlexible`)\n- `/home/gcrux-tradeux/tradeux/backend/src/server.js` (boot)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/earnRedeem.test.js` (novo)\n- `/home/gcrux-tradeux/tradeux/backend/.env.example`'}, {'type': 'text', 'text': "agentId: a19a78ea4ff640787 (use SendMessage with to: 'a19a78ea4ff640787' to continue this agent)\n<usage>subagent_tokens: 53307\ntool_uses: 12\nduration_ms: 116150</usage>"}]
+> ```
+
+## 🤖 Claude *(15:26:30)*
+
+
+## 🤖 Claude *(15:26:33)*
+
+Os **dois gates: QA PASS COM RESSALVAS + TL APPROVE** — ambos dizem **MERGE OK no estado dry-run** (zero movimento de dinheiro, não toca hot-path). Sem must-fix pro merge. Mas levantaram 3 itens que valem aplicar agora (deixam o fix flip-ready e o dry-run limpo): (a) `redeemFlexible` com try/catch inerte (bug real), (b) idempotência/dedup (sem re-disparo/spam), (c) prova mecânica do "dry-run não move dinheiro". Aplico os 3.
+
+**(a)** `redeemFlexible` → async:
+
+## 🤖 Claude *(15:26:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "    function redeemFlexible(productId, redeemAll = true) {\n        try {\n            return privateCall(SAPI_URL + 'simple-earn/flexible/redeem', { productId, redeemAll }, 'POST');\n        } catch (err) {\n            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);\n        }\n    }",
+  "new_string": "    async function redeemFlexible(productId, redeemAll = true) {\n        try {\n            return await privateCall(SAPI_URL + 'simple-earn/flexible/redeem', { productId, redeemAll }, 'POST');\n        } catch (err) {\n            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message); // await \u2192 o catch pega a rejei\u00e7\u00e3o (corpo do erro da Binance)\n        }\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:26:38)*
+
+You've hit your session limit · resets 2pm (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
