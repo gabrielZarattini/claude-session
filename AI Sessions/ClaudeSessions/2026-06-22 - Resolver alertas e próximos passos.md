@@ -7772,6 +7772,6 @@ README atualizado. Commit do README + lendo o ponto de inserção do HANDOFF.md:
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-22 - 22f214a3-c50c-49c1-b8a4-3b29e21e17fa]]
+> * **Sessão Anterior**: [[2026-06-22 - Resolver CF WAF e secrets para ação Sovereign]]
 > * **Próxima Sessão**: [[2026-06-22 - Resolver dois pontos pendentes]]
 %% --- TIMELINE END --- %%

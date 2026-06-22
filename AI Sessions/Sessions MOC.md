@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1243
-> * **Sessões do Claude**: 1201
+> * **Total de Sessões Registradas**: 1257
+> * **Sessões do Claude**: 1215
 > * **Sessões do Gemini**: 42
 
 ---
@@ -63,17 +63,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-06-22 - agent-afbda1deee15bc84c]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-af852d35cb5925df7]]` - *2026-06-22*
+*   `[[2026-06-22 - agent-af7f4efba486aa1a9]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-af76386dd378755a8]]` - *2026-06-22*
+*   `[[2026-06-22 - agent-af7080eb3482ad9a5]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-aefbf591e63c0b3d7]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-ae156a5aa88b3fb4a]]` - *2026-06-22*
+*   `[[2026-06-22 - agent-adfb2fe5487df4916]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-adf81471815d31a7f]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-adc6384c8d36b360d]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-ada788861244fbb1a]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-ad8a1e0c5d811ed2d]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-ad6f57e218901236b]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-ad5aedba7c0e1c3f6]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-ad463d72ad94664fa]]` - *2026-06-22*
-*   *... e mais 1205 sessões nessa categoria.*
+*   *... e mais 1219 sessões nessa categoria.*
 
 ---
 
@@ -266,9 +266,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Junho 2026
 *   `[[2026-06-22 - agent-afbda1deee15bc84c]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-af852d35cb5925df7]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-af7f4efba486aa1a9]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-af76386dd378755a8]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-af7080eb3482ad9a5]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-aefbf591e63c0b3d7]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ae156a5aa88b3fb4a]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-adfb2fe5487df4916]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-adf81471815d31a7f]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-adc6384c8d36b360d]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ada788861244fbb1a]]` (ClaudeSessions)
@@ -279,16 +282,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-ad307a2d6f4690225]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ad2bce5530ab7b785]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ad10caef00dd42911]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-ad0d268bc6a366575]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ad0b5edee0b492420]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-accc4ab1fa67872b3]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-acbd482835e8a83e7]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ac78d762bc6b7b944]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ac3d71447239b9e91]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-ac2e982c33b3a0163]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ac15f5369279979b6]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ab79d046081ece497]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ab5a72e9967a11c6f]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ab53eb2ab433b6e60]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-ab4ce3f24aac987d5]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-ab255c6422ac751f5]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-aa9fff75dfcffc53a]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-aa9ba1c078467653c]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-aa90553eb4d9e904c]]` (ClaudeSessions)
@@ -296,6 +302,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-aa8ea4909b89f1855]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-aa4d02a9edc426b08]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-aa47204b71e984638]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-aa11d284cb5badb09]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a9dd1e3aaf5dbe836]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a9a29392a9945eaec]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a99efb3b907f34b99]]` (ClaudeSessions)
@@ -307,6 +314,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-a925de20143b32d73]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a9142127bad2bff62]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a8ca76d2a88b7ea4e]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-a8b2d9999df649e85]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a86caaf8fa3f450bd]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a861272b0597dc2eb]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a8409cd8c83c343b6]]` (ClaudeSessions)
@@ -327,6 +335,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-a5bf58337a4669fcf]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a5b2bda3a49f0f26f]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a59570ccbf403f7f1]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-a56eae0f61fc418c0]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a558a60d39fb59bc8]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a52237acea8dd6eec]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a51f5232c0eec7ab5]]` (ClaudeSessions)
@@ -350,8 +359,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-a297f5b1534dbe928]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a28d6ac465fb556d7]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a25cbdfc509d1dec7]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-a2205f27a91624271]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a1eb3ea50dfaa99ba]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a1e10748a137cd63d]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-a1d613efe5dac649a]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a1c8d7fd69bbeb5cd]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a1c78f4deef69c210]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a19a78ea4ff640787]]` (ClaudeSessions)
@@ -369,11 +380,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-a0940db4cb9a271fd]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a086bcdbea4609f2b]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a077ba49f65659e8d]]` (ClaudeSessions)
+*   `[[2026-06-22 - agent-a05aff637fc81a794]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a037871aeb5aea03e]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-a009bfb37ed7509b8]]` (ClaudeSessions)
+*   `[[2026-06-22 - Verificar backtest-results e fixes de design]]` (ClaudeSessions)
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` (ClaudeSessions)
 *   `[[2026-06-22 - Resolver dois pontos pendentes]]` (ClaudeSessions)
 *   `[[2026-06-22 - Resolver alertas e próximos passos]]` (ClaudeSessions)
+*   `[[2026-06-22 - Resolver CF WAF e secrets para ação Sovereign]]` (ClaudeSessions)
 *   `[[2026-06-22 - 22f214a3-c50c-49c1-b8a4-3b29e21e17fa]]` (ClaudeSessions)
 *   `[[2026-06-21 - e7003282-79e7-4c59-a5db-de911c1e290a]]` (ClaudeSessions)
 *   `[[2026-06-21 - bef09883-5be2-4ff8-964a-dfd5658da0ab]]` (ClaudeSessions)
