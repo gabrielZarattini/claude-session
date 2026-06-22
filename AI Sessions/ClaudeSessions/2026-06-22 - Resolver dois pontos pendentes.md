@@ -765,6 +765,250 @@ Sobram dois itens cosméticos e opcionais que posso fazer se quiser — nenhum a
 
 Fora isso, sigo de pé e aguardando direção — o próximo natural da fila continua sendo o **%-teto a 20% do equity que exempta venda** (item 1 dos NEXT), ou a decisão macro tua (recuperar USDT e parar vs. empilhar BTC pós-validação do paper).
 
+## 👤 User *(00:44:09)*
+
+🌅 [DAILY_CAP] Novo dia UTC. Cap de -5% re-armado para o novo dia.
+🤖 [AGENTE] Observação: LTCUSDT voltou ao regime de bear (gate bear). Isso fecha o gate de acumulação do farm e o gate de tendência, mantendo as automações de compra em caixa. Nenhuma automação de compra deve operar enquanto o regime permanecer bear.
+
+isso foi apos o 📝 [PAPER-REVIEW] trilha "consistencia": 5 round-trips · win 100% · net +$0.10 (realizado +$0.10 + aberto +$0.00) → amostra inicial (aguardando mais round-trips p/ veredito)
+
+--
+
+E nenhuma ordem foi executada acho que permos a janela de fazer trades de 1m
+
+## 🤖 Claude *(00:44:57)*
+
+
+## 🤖 Claude *(00:44:59)*
+
+Boa — vou ancorar isso em dado ao vivo antes de responder, porque tem uma confusão importante embutida aí. Deixa eu confirmar o regime do LTC, o que está armado e se existe **qualquer** automação de 1m viva.
+
+## 🤖 Claude *(00:45:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env 2>/dev/null; set +a\nBASE=\"http://127.0.0.1:8090/api\"\nTOK=$(curl -s -m8 -X POST \"$BASE/login\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\n[ -z \"$TOK\" ] && { echo \"LOGIN FALHOU\"; exit 1; }\necho \"=== REGIME por simbolo (memory indexes :REGIME) ===\"\ncurl -s -m8 \"$BASE/beholder/memory\" -H \"Authorization: $TOK\" 2>/dev/null \\\n  | grep -oE \"\\\"[A-Z]+USDT:REGIME\\\":\\\"[a-z]+\\\"\" | sort -u\necho \"=== automacoes ATIVAS: id | symbol | name | indexes (procurar _1m) ===\"\ncurl -s -m8 \"$BASE/automations\" -H \"Authorization: $TOK\" 2>/dev/null \\\n  | python3 -c \"import sys,json\nd=json.load(sys.stdin)\nrows=d if isinstance(d,list) else d.get(\\\"rows\\\",d.get(\\\"automations\\\",[]))\nfor a in rows:\n    if a.get(\\\"isActive\\\"):\n        idxs=a.get(\\\"indexes\\\") or a.get(\\\"index\\\") or \\\"\\\"\n        print(a.get(\\\"id\\\"), \\\"|\\\", a.get(\\\"symbol\\\"), \\\"|\\\", str(a.get(\\\"name\\\"))[:42], \\\"|\\\", str(idxs)[:80])\n\" 2>/dev/null | head -60\n' 2>&1 | head -80",
+  "description": "Check live regime per symbol and active automations for any 1m timeframe"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === REGIME por simbolo (memory indexes :REGIME) ===
+> "ADAUSDT:REGIME":"bear"
+> "BNBUSDT:REGIME":"bear"
+> "BTCUSDT:REGIME":"bear"
+> "LTCUSDT:REGIME":"bear"
+> === automacoes ATIVAS: id | symbol | name | indexes (procurar _1m) ===
+> 54 | ADAUSDT | [PAPER] Consistencia Buy ADAUSDT | ADAUSDT:RSI_14_1m,ADAUSDT:REGIME
+> 55 | ADAUSDT | [PAPER] Consistencia Sell ADAUSDT | ADAUSDT:RSI_14_1m
+> 82 | ADAUSDT | [PAPER] Farmnl Buy ADAUSDT | ADAUSDT:RSI_14_15m,ADAUSDT:REGIME
+> 83 | ADAUSDT | [PAPER] Farmnl Sell ADAUSDT | ADAUSDT:BOOK,ADAUSDT:FARMNL_TARGET
+> 56 | ADAUSDT | [PAPER] Macro Buy ADAUSDT | ADAUSDT:TREND_CROSS_1h,ADAUSDT:REGIME
+> 57 | ADAUSDT | [PAPER] Macro Sell ADAUSDT | ADAUSDT:TREND_CROSS_1h
+> 66 | ADAUSDT | [PAPER] Mr15 Buy ADAUSDT | ADAUSDT:RSI_14_15m,ADAUSDT:REGIME
+> 67 | ADAUSDT | [PAPER] Mr15 Sell ADAUSDT | ADAUSDT:RSI_14_15m
+> 80 | ADAUSDT | [PAPER] Slopegate Buy ADAUSDT | ADAUSDT:TREND_CROSS_1h,ADAUSDT:TREND_SLOPE_1h,ADAUSDT:REGIME
+> 81 | ADAUSDT | [PAPER] Slopegate Sell ADAUSDT | ADAUSDT:TREND_CROSS_1h
+> ```
+
+## 🤖 Claude *(00:45:16)*
+
+
+## 🤖 Claude *(00:45:18)*
+
+Vejo o padrão, mas preciso separar o que é **paper** do que é **real**. Deixa eu isolar as automações de dinheiro real (sem `[PAPER]`) e contar.
+
+## 🤖 Claude *(00:45:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env 2>/dev/null; set +a\nBASE=\"http://127.0.0.1:8090/api\"\nTOK=$(curl -s -m8 -X POST \"$BASE/login\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\ncurl -s -m8 \"$BASE/automations\" -H \"Authorization: $TOK\" 2>/dev/null \\\n  | python3 -c \"import sys,json\nd=json.load(sys.stdin)\nrows=d if isinstance(d,list) else d.get(\\\"rows\\\",d.get(\\\"automations\\\",[]))\nreal=[a for a in rows if a.get(\\\"isActive\\\") and not str(a.get(\\\"name\\\",\\\"\\\")).startswith(\\\"[PAPER]\\\")]\npaper=[a for a in rows if a.get(\\\"isActive\\\") and str(a.get(\\\"name\\\",\\\"\\\")).startswith(\\\"[PAPER]\\\")]\nprint(\\\"ATIVAS REAIS (dinheiro real):\\\", len(real), \\\"| ATIVAS PAPER:\\\", len(paper))\nprint(\\\"--- REAIS ---\\\")\nfor a in real:\n    idxs=a.get(\\\"indexes\\\") or a.get(\\\"index\\\") or \\\"\\\"\n    print(\\\" \\\", a.get(\\\"id\\\"), \\\"|\\\", a.get(\\\"symbol\\\"), \\\"|\\\", str(a.get(\\\"name\\\"))[:46], \\\"|\\\", str(idxs)[:70])\noneM=[a for a in real if \\\"_1m\\\" in str(a.get(\\\"indexes\\\") or a.get(\\\"index\\\") or \\\"\\\")]\nprint(\\\"--- REAIS que reagem a sinal _1m:\\\", len(oneM), \\\"---\\\")\n\"\n' 2>&1 | head -60",
+  "description": "Isolate real (non-paper) active automations and any reacting to 1m"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ATIVAS REAIS (dinheiro real): 0 | ATIVAS PAPER: 10
+> --- REAIS ---
+> --- REAIS que reagem a sinal _1m: 0 ---
+> ```
+
+## 🤖 Claude *(00:45:52)*
+
+
+## 🤖 Claude *(00:45:56)*
+
+O endpoint `/automations` devolveu só ADA (escopa por símbolo). Preciso da visão real por grupo — vou puxar o endpoint de grupos que o cockpit usa + as automações reais ativas de cada símbolo do canary.
+
+## 🤖 Claude *(00:46:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env 2>/dev/null; set +a\nBASE=\"http://127.0.0.1:8090/api\"\nTOK=$(curl -s -m8 -X POST \"$BASE/login\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\necho \"=== TODAS as automacoes REAIS ATIVAS (todos simbolos, sem [PAPER]) ===\"\nfor SY in BTCUSDT LTCUSDT BNBUSDT ADAUSDT; do\n  curl -s -m8 \"$BASE/automations/$SY\" -H \"Authorization: $TOK\" 2>/dev/null \\\n  | python3 -c \"import sys,json\ntry: d=json.load(sys.stdin)\nexcept: sys.exit()\nrows=d if isinstance(d,list) else d.get(\\\"rows\\\",d.get(\\\"automations\\\",[]))\nfor a in rows:\n    nm=str(a.get(\\\"name\\\",\\\"\\\"))\n    if a.get(\\\"isActive\\\") and not nm.startswith(\\\"[PAPER]\\\"):\n        idxs=a.get(\\\"indexes\\\") or a.get(\\\"index\\\") or \\\"\\\"\n        tf=\\\"1m\\\" if \\\"_1m\\\" in str(idxs) else (\\\"15m\\\" if \\\"_15m\\\" in str(idxs) else (\\\"1h\\\" if \\\"_1h\\\" in str(idxs) else \\\"book/outro\\\"))\n        print(\\\" \\\", a.get(\\\"id\\\"),\\\"|\\\",a.get(\\\"symbol\\\"),\\\"|\\\",nm[:40],\\\"| tf=\\\",tf,\\\"|\\\",str(idxs)[:60])\n\"\ndone\necho \"=== paper consistencia (a que reportou +0.10) \u2014 timeframe ===\"\ncurl -s -m8 \"$BASE/automations/ADAUSDT\" -H \"Authorization: $TOK\" 2>/dev/null \\\n  | python3 -c \"import sys,json\nd=json.load(sys.stdin); rows=d if isinstance(d,list) else d.get(\\\"rows\\\",[])\nfor a in rows:\n  if \\\"Consistencia\\\" in str(a.get(\\\"name\\\",\\\"\\\")): print(\\\" \\\",a.get(\\\"name\\\"),\\\"->\\\",a.get(\\\"indexes\\\") or a.get(\\\"index\\\"))\n\"\n' 2>&1 | head -50",
+  "description": "List all real active automations across canary symbols with timeframe"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TODAS as automacoes REAIS ATIVAS (todos simbolos, sem [PAPER]) ===
+> Traceback (most recent call last):
+>   File "<string>", line 4, in <module>
+> AttributeError: 'NoneType' object has no attribute 'get'
+> Traceback (most recent call last):
+>   File "<string>", line 4, in <module>
+> AttributeError: 'NoneType' object has no attribute 'get'
+> Traceback (most recent call last):
+>   File "<string>", line 4, in <module>
+> AttributeError: 'NoneType' object has no attribute 'get'
+> Traceback (most recent call last):
+>   File "<string>", line 4, in <module>
+> AttributeError: 'NoneType' object has no attribute 'get'
+> === paper consistencia (a que reportou +0.10) — timeframe ===
+> Traceback (most recent call last):
+>   File "<string>", line 2, in <module>
+> AttributeError: 'NoneType' object has no attribute 'get'
+> ```
+
+## 🤖 Claude *(00:46:19)*
+
+
+## 🤖 Claude *(00:46:20)*
+
+O route por-símbolo está errado (retornou null). Volto pro `/automations` que funcionou e faço o breakdown completo — sem truncar.
+
+## 🤖 Claude *(00:46:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env 2>/dev/null; set +a\nBASE=\"http://127.0.0.1:8090/api\"\nTOK=$(curl -s -m8 -X POST \"$BASE/login\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\ncurl -s -m8 \"$BASE/automations\" -H \"Authorization: $TOK\" 2>/dev/null > /tmp/autos.json\npython3 -c \"import json\nd=json.load(open(\\\"/tmp/autos.json\\\"))\nrows=d if isinstance(d,list) else d.get(\\\"rows\\\",d.get(\\\"automations\\\",[]))\nprint(\\\"total rows:\\\", len(rows))\nfrom collections import Counter\nsyms=Counter(a.get(\\\"symbol\\\") for a in rows)\nprint(\\\"por simbolo:\\\", dict(syms))\nrealact=[a for a in rows if a.get(\\\"isActive\\\") and not str(a.get(\\\"name\\\",\\\"\\\")).startswith(\\\"[PAPER]\\\")]\npaperact=[a for a in rows if a.get(\\\"isActive\\\") and str(a.get(\\\"name\\\",\\\"\\\")).startswith(\\\"[PAPER]\\\")]\nprint(\\\"REAIS ativas:\\\", len(realact), \\\"| PAPER ativas:\\\", len(paperact))\nprint(\\\"--- REAIS ativas (todas) ---\\\")\nfor a in realact:\n    idxs=str(a.get(\\\"indexes\\\") or a.get(\\\"index\\\") or \\\"\\\")\n    tf=\\\"1m\\\" if \\\"_1m\\\" in idxs else (\\\"15m\\\" if \\\"_15m\\\" in idxs else (\\\"1h\\\" if \\\"_1h\\\" in idxs else \\\"book/x\\\"))\n    print(\\\" \\\",a.get(\\\"id\\\"),a.get(\\\"symbol\\\"),str(a.get(\\\"name\\\"))[:38],\\\"| tf=\\\"+tf)\n\"\n' 2>&1 | head -50",
+  "description": "Full automations breakdown by symbol/active/paper"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total rows: 10
+> por simbolo: {'ADAUSDT': 10}
+> REAIS ativas: 0 | PAPER ativas: 10
+> --- REAIS ativas (todas) ---
+> ```
+
+## 🤖 Claude *(00:46:43)*
+
+
+## 🤖 Claude *(00:46:44)*
+
+O `/automations` é escopado por símbolo (default ADA). Vou direto na fonte canônica que o agente lê — o cockpit com `status.groups` — que dá regime + o que está armado por grupo de uma vez.
+
+## 🤖 Claude *(00:46:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env 2>/dev/null; set +a\nBASE=\"http://127.0.0.1:8090/api\"\nTOK=$(curl -s -m8 -X POST \"$BASE/login\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\nfor EP in analysis/cockpit cockpit beholder/cockpit; do\n  R=$(curl -s -m8 \"$BASE/$EP\" -H \"Authorization: $TOK\" 2>/dev/null)\n  if echo \"$R\" | grep -q \"groups\\|regime\\|status\"; then echo \"### endpoint: /$EP\"; echo \"$R\" > /tmp/ck.json; break; fi\ndone\npython3 -c \"import json\nd=json.load(open(\\\"/tmp/ck.json\\\"))\ndef find(o,k,path=\\\"\\\"):\n    out=[]\n    if isinstance(o,dict):\n        for kk,v in o.items():\n            if kk==k: out.append((path+\\\"/\\\"+kk,v))\n            out+=find(v,k,path+\\\"/\\\"+kk)\n    elif isinstance(o,list):\n        for i,v in enumerate(o): out+=find(v,k,path+f\\\"[{i}]\\\")\n    return out\ng=find(d,\\\"groups\\\")\nprint(\\\"GROUPS:\\\", json.dumps(g[0][1], ensure_ascii=False)[:600] if g else \\\"(nao achou)\\\")\n\" 2>&1 | head -30\n' 2>&1 | head -40",
+  "description": "Fetch cockpit status.groups (canonical armed-by-group view)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### endpoint: /analysis/cockpit
+> GROUPS: [{"key": "farm", "label": "Farm (no-loss alts)", "paper": false, "total": 6, "active": 3, "inactive": 3, "ids": [13, 14, 11, 12, 9, 10]}, {"key": "trend", "label": "Trend (SMA50/200)", "paper": false, "total": 8, "active": 0, "inactive": 8, "ids": [19, 20, 17, 18, 6, 7, 15, 16]}, {"key": "baseline", "label": "Baseline (RSI BTC)", "paper": false, "total": 2, "active": 0, "inactive": 2, "ids": [2, 3]}, {"key": "paper", "label": "Paper (research, sem risco)", "paper": true, "total": 40, "active": 40, "inactive": 0, "ids": [54, 55, 82, 83, 56, 57, 66, 67, 80, 81, 50, 51, 78, 79, 52, 53, 64, 65, 76
+> ```
+
+## 🤖 Claude *(00:47:18)*
+
+
+## 🤖 Claude *(00:47:41)*
+
+Puxei os dados ao vivo e dá pra desfazer a confusão com precisão. Resposta curta: **não perdemos nenhuma janela — porque não existe trade de 1m no dinheiro real pra perder.**
+
+## O que de fato está rodando agora (cockpit ao vivo)
+
+| Grupo | Real? | Armado | Timeframe | Estado |
+|---|---|---|---|---|
+| **farm** (no-loss alts) | 💰 real | **3/6** (ids 9-14) | 15m / book | só **VENDAS** armadas, compras off |
+| **trend** (SMA 50/200) | 💰 real | **0/8** | 1h | parado |
+| **baseline** (RSI BTC) | 💰 real | **0/2** | — | parado |
+| **paper** (pesquisa) | 🧪 virtual | **40/40** | vários | zero risco real |
+
+E o regime: **os 4 símbolos estão `bear`** (BTC, LTC, BNB, ADA) — não só o LTC. Ou seja, **todo gate de compra está fechado**, em todo lugar.
+
+## Por que "nenhuma ordem executada" está CERTO, não é falha
+
+1. **No dinheiro real não há nada de 1m.** O único grupo armado é o **Farm**, e só as **vendas no-loss** (DCA em 15m + trigger de book) — compras desligadas. Trend e Baseline estão **parados**. Nenhuma automação real reage a sinal de 1m.
+2. **Estamos em bear nos 4.** Mesmo que houvesse compra armada, o gate de regime a seguraria. Sistema parado em caixa durante bear de 4 símbolos é **a estratégia funcionando** — a observação do agente é doutrina correta.
+
+## A pegadinha: a "consistência" que ganhou É de 1m… mas é PAPER
+
+A trilha que reportou `+$0.10 · win 100% · 5 RT` é a **`[PAPER] Consistencia`**, que reage a `RSI_14_1m` — **é exatamente a alavanca de 1m**. Confirmei no banco. Só que:
+
+- **É broker virtual** (`paper:false`→ os 40 paper rodam fora da Binance, fill simulado no MINI_TICKER + fee). **Zero dinheiro real envolvido.**
+- **5 round-trips a +$0.10 total ≈ +$0,02/trade.** Isso é **ruído**, não edge — a própria notificação diz "aguardando mais round-trips p/ veredito" (alvo é 15-30+ RT, net pós-fee/slippage).
+- **1m no dinheiro real foi REFUTADO em backtest** (−0,14% a −0,23%/trade; a alavanca de frequência deu 8/8 EV<0 líquido). O edge de 1m **morre na microestrutura real** (slippage/fila), que é justo o que o paper *não* sente. Por isso ele está em paper: pra provar **antes** de arriscar — não pra ser copiado pro real enquanto ganha no simulador.
+
+## Veredito
+
+Não há janela perdida. **A posição é não-operar** — e em bear de 4 símbolos isso é ainda mais correto. A `[DAILY_CAP]` foi só o rollover de meia-noite UTC (baseline re-armado em $149,40, piso $141,93). O paper consistência ganhando é o **mecanismo de validação fazendo o trabalho dele**; quando juntar amostra (15-30 RT) e o veredito sair net-positivo pós-custo, aí sim a gente discute o flip — e mesmo assim eu **não viro o HALT nem ligo nada sozinho**.
+
+Quer que eu fique de olho na `[PAPER] Consistencia` especificamente e te avise quando ela cruzar ~15-20 RT (o ponto onde a amostra começa a valer)? Posso medir o net real dela agora em `/analysis/paper` pra você ver onde está.
+
+## 👤 User *(00:57:46)*
+
+Não é possivel obter lucros com trade nesse momento atual ou seja em momentos de bear?
+
+## 🤖 Claude *(00:58:21)*
+
+
+## 🤖 Claude *(00:58:45)*
+
+Pergunta certeira — e a resposta honesta tem nuance, porque "dá pra lucrar no bear" depende de **quais armas você se permite usar**. Pro *nosso* sistema (spot, só comprado, $149, sem alavancagem), a resposta curta é: **lucrar no bear é estruturalmente difícil — e isso é uma escolha de projeto baseada em backtest, não um buraco que esquecemos de tapar.**
+
+Existem só dois jeitos de "ganhar no bear", e cada um está onde está por um motivo pesquisado:
+
+## 1. Lucrar *da queda* (short / futures) — pesquisado e REFUTADO pra nós
+Pra ganhar **com** o preço caindo você precisa vender o que não tem (short), e isso exige **futuros/margem**. Eu rodei deep research + backtest próprio nisso (`~/RESEARCH-bear-capture.md`, commit `239cdc5`). Verdict:
+
+- Capturar a queda via futuros foi **falso positivo no ciclo**: deu **+88%** contra **+338%** da estratégia atual (só *gatear* o bear e cavalgar os bulls). Ou seja, tentar lucrar na queda rendeu **menos** do que simplesmente ficar de fora dela.
+- Adiciona **risco de liquidação**, quebra o desenho spot-only e o vault guard do BTC.
+- **Decisão registrada: NÃO construir módulo de short.** Não foi esquecimento — foi rejeição com número.
+
+## 2. Lucrar *durante* o bear com long spot (raspar o repique) — único candidato compatível, ainda não provado
+Num bear que na verdade é **lateral/choppy**, dá pra comprar fundo e vender repique pequeno (grid no-loss / mean-reversion). Isso é o que o **Farm** e as trilhas **`Consistencia`/`MR15`** fazem. Mas:
+
+- Em bear **direcional de verdade** (preço fazendo mínimas cada vez mais baixas), comprar o dip é **pegar faca caindo** — você acumula saco. Por isso o Farm também é gateado por regime: pra **não** fazer DCA na ladeira.
+- A "alavanca de frequência" (raspar a oscilação) deu **8/8 EV<0 líquido** no backtest depois de taxa. Por isso ela está **em paper agora** — provando antes de arriscar. A `Consistencia` ganhando +$0,10 é simulador, amostra de ruído (já conversamos).
+
+## O que o backtest diz que realmente funciona
+O motor do retorno (+338% no ciclo, e a tese dos +3 BTC) **não vem de extrair do bear** — vem de:
+
+> **estar comprado no bull + NÃO sangrar no bear.**
+
+É uma vantagem **assimétrica e proposital**. No bear, o jogo EV-positivo pra um sistema spot do nosso tamanho é **preservação de capital**: ficar em caixa/stable e esperar o regime virar. Não é derrotismo — o próprio número mostra que tentar ser esperto no bear destruiu retorno.
+
+---
+
+**Então, respondendo direto:** sim, *no nosso setup atual* é essencialmente verdade que não dá pra lucrar de forma confiável agora — e o movimento certo é exatamente o que está acontecendo: **parado, capital intacto em $149,40, esperando.** Quem lucra em bear de verdade são mesas com short/opções/arb de funding — todas refutadas ou fora do escopo aqui por decisão consciente.
+
+A única porta legítima ainda aberta é a #2 (mean-reversion no chop), e ela está sendo **medida em paper** justamente pra responder "tem edge líquido ou não?" sem queimar dinheiro real. Se quiser, eu puxo agora o `/analysis/paper` e te mostro como as trilhas de bear/chop (Consistencia + MR15) estão se saindo no acumulado — é o lugar onde essa pergunta vai virar um sim/não com número.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
