@@ -10192,6 +10192,1386 @@ Go go go
 
 [Request interrupted by user]
 
+## 🤖 Claude *(03:14:04)*
+
+No response requested.
+
+## 👤 User *(03:14:12)*
+
+go go continue
+
+## 🤖 Claude *(03:15:42)*
+
+
+## 🤖 Claude *(03:15:45)*
+
+GO confirmado. Decisão do interim (você não escolheu, mas seu requisito é explícito — "redireciona pro `login.mcorch.com/auth` se não autenticado, como já acontece"): **vou direto no SSO-MCORCH** (não CF Access — esse seria um login da Cloudflare, não o seu). 
+
+Começando pelo **R3 (SSO cross-subdomínio)** — o gate de auth pros subdomínios. Probe-first dos building blocks: como o SPA guarda a sessão, o client Supabase, se o nginx tem `auth_request`, e o verificador JWKS do vision-mcp que vou reusar.
+
+## 🤖 Claude *(03:15:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== supabase client init (storage da sess\u00e3o) ===\"\nsed -n '1,40p' src/integrations/supabase/client.ts 2>/dev/null | grep -nE \"createClient|storage|persistSession|auth:|localStorage|cookie|storageKey\" \necho \"=== auth provider/hook + ProtectedRoute (redirect /auth) ===\"\ngrep -rlE \"onAuthStateChange|ProtectedRoute|Navigate to=\\\"/auth\\\"|useAuth\" src/ 2>/dev/null | head -8\necho \"=== como o ProtectedRoute redireciona hoje ===\"\ngrep -rnE \"Navigate to=.?/auth|redirect.*auth|/auth\" src/App.tsx 2>/dev/null | head -5\necho \"=== nginx tem auth_request module? ===\"\nsudo -n nginx -V 2>&1 | tr ' ' '\\n' | grep -iE \"auth_request|http_auth\" || echo \"(checar: --with-http_auth_request_module)\"\necho \"=== vision-mcp verifyBearer/JWKS (reuso p/ o gate) ===\"\nls packages/vision-mcp-core/src/auth/ 2>/dev/null\ngrep -nE \"JWKS|jwksUri|jwks|ES256|createRemoteJWKSet|jwtVerify|SUPABASE_URL\" packages/vision-mcp-core/src/auth/identity.ts 2>/dev/null | head -12",
+  "description": "Probe frontend auth, supabase client storage, nginx auth_request, vision-mcp JWKS verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === supabase client init (storage da sessão) ===
+> 2:import { createClient } from '@supabase/supabase-js';
+> 11:export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+> 12:  auth: {
+> 13:    storage: localStorage,
+> 14:    persistSession: true,
+> === auth provider/hook + ProtectedRoute (redirect /auth) ===
+> src/pages/ResetPassword.tsx
+> src/pages/SocialAccountsPage.tsx
+> src/pages/SettingsPage.tsx
+> src/pages/DashboardHome.tsx
+> src/App.tsx
+> src/pages/AdminPage.tsx
+> src/pages/ContentLibraryPage.tsx
+> src/pages/AnalyticsPage.tsx
+> === como o ProtectedRoute redireciona hoje ===
+> src/App.tsx:66:  if (!user) return <Navigate to="/auth" replace />;
+> src/App.tsx:132:              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> === nginx tem auth_request module? ===
+> --with-http_auth_request_module
+> === vision-mcp verifyBearer/JWKS (reuso p/ o gate) ===
+> credentials.ts
+> identity.ts
+> pat.ts
+> 1:// vision-mcp-core auth/identity.ts — FR-VM-002 (ES256 JWKS fail-closed) + FR-VM-001 (Origin gate).
+> 6:import { createRemoteJWKSet, jwtVerify } from "jose";
+> 10:const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+> 16:// createRemoteJWKSet caches keys in-process and refetches on unknown kid; we build it lazily so the
+> 17:// module imports cleanly in tests where SUPABASE_URL may be unset.
+> 18:let _jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+> 19:function jwks() {
+> 20:  if (!SUPABASE_URL) throw new Error("SUPABASE_URL not configured");
+> 21:  if (!_jwks) {
+> 22:    _jwks = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
+> 24:  return _jwks;
+> 43:// FR-VM-002: verify the bearer JWT via ES256 JWKS BEFORE trusting `sub`. Fail-closed on ANY error
+> ```
+
+## 🤖 Claude *(03:16:16)*
+
+
+## 🤖 Claude *(03:16:19)*
+
+Building blocks confirmados: SPA usa `localStorage` (preciso adicionar cookie `.mcorch.com`), nginx **tem `auth_request`** ✅, e o vision-mcp tem o verificador **ES256 JWKS** (`identity.ts`) que vou reusar no gate. Arquitetura R3: cookie `.mcorch.com` no login → `auth_request` no nginx dos subdomínios → gate local valida o JWT → 401 redireciona pro `login.mcorch.com/auth`.
+
+Vou achar o provider de auth (onAuthStateChange) pra plugar o cookie:
+
+## 🤖 Claude *(03:16:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== onde est\u00e1 onAuthStateChange / AuthProvider ===\"\ngrep -rln \"onAuthStateChange\" src/ 2>/dev/null\necho \"=== contexto do provider de auth ===\"\nF=$(grep -rln \"onAuthStateChange\" src/ 2>/dev/null | head -1)\necho \"arquivo: $F\"\ngrep -nE \"onAuthStateChange|setSession|setUser|access_token|session|SIGNED_IN|SIGNED_OUT|signOut|export (function|const)\" \"$F\" 2>/dev/null | head -25\necho \"=== porta livre p/ o gate (8787/8099/3001) ===\"\nfor p in 8787 8099 3001; do ss -ltn 2>/dev/null | grep -q \":$p \" && echo \"$p OCUPADA\" || echo \"$p livre\"; done",
+  "description": "Find auth provider for cookie hook + pick free gate port"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde está onAuthStateChange / AuthProvider ===
+> src/pages/ResetPassword.tsx
+> src/hooks/useAuth.ts
+> === contexto do provider de auth ===
+> arquivo: src/pages/ResetPassword.tsx
+> 24:    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+> === porta livre p/ o gate (8787/8099/3001) ===
+> 8787 livre
+> 8099 livre
+> 3001 livre
+> ```
+
+## 🤖 Claude *(03:16:27)*
+
+
+## 🤖 Claude *(03:16:28)*
+
+`useAuth.ts` é o hook de auth. Porta **8787 livre** pro gate. Lendo o `useAuth` pra plugar o cookie `.mcorch.com`:
+
+## 🤖 Claude *(03:16:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAuth.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useState } from 'react';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import type { User, Session } from '@supabase/supabase-js';
+> 4	
+> 5	export function useAuth() {
+> 6	  const [user, setUser] = useState<User | null>(null);
+> 7	  const [session, setSession] = useState<Session | null>(null);
+> 8	  const [loading, setLoading] = useState(true);
+> 9	
+> 10	  useEffect(() => {
+> 11	    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+> 12	      setSession(session);
+> 13	      setUser(session?.user ?? null);
+> 14	      setLoading(false);
+> 15	    });
+> 16	
+> 17	    supabase.auth.getSession().then(({ data: { session }, error }) => {
+> 18	      if (error) {
+> 19	        console.warn('[useAuth] Session recovery failed, clearing corrupt session:', error.message);
+> 20	        supabase.auth.signOut().catch(() => {});
+> 21	        setSession(null);
+> 22	        setUser(null);
+> 23	      } else {
+> 24	        setSession(session);
+> 25	        setUser(session?.user ?? null);
+> 26	      }
+> 27	      setLoading(false);
+> 28	    }).catch((err) => {
+> 29	      console.error('[useAuth] Unexpected auth error:', err);
+> 30	      setSession(null);
+> 31	      setUser(null);
+> 32	      setLoading(false);
+> 33	    });
+> 34	
+> 35	    return () => subscription.unsubscribe();
+> 36	  }, []);
+> 37	
+> 38	  const signOut = async () => {
+> 39	    await supabase.auth.signOut();
+> 40	  };
+> 41	
+> 42	  return { user, session, loading, signOut };
+> 43	}
+> 44	
+> ```
+
+## 🤖 Claude *(03:17:00)*
+
+
+## 🤖 Claude *(03:17:02)*
+
+`useAuth.ts` limpo. Vou criar o util de cookie SSO + plugar nele (guardado pra só rodar em `*.mcorch.com`, sem quebrar dev/preview), e depois o gate service.
+
+## 🤖 Claude *(03:17:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/sso-cookie.ts",
+  "content": "// Cross-subdomain SSO cookie for the isolated MCORCH apps (design.mcorch.com / video.mcorch.com).\n//\n// The SPA persists the Supabase session in localStorage (per-origin). The isolated apps live on sibling\n// subdomains and CANNOT read login.mcorch.com's localStorage. To gate them with MCORCH auth, we mirror the\n// access token into a cookie scoped to `.mcorch.com` (sent by the browser to every *.mcorch.com host). nginx\n// `auth_request` on those subdomains forwards this cookie to the local SSO gate (sso-auth-gate), which verifies\n// the Supabase JWT (ES256 JWKS) and returns 200/401 \u2192 401 redirects to login.mcorch.com/auth?return_to=...\n//\n// SECURITY: the token is already JS-readable in localStorage, so a JS-set cookie does not worsen XSS exposure.\n// Cookie is Secure + SameSite=Lax; *.mcorch.com subdomains are same-site, so the cookie flows on navigation.\n// Only set on a real *.mcorch.com host \u2014 browsers reject a Domain=.mcorch.com cookie from localhost/preview.\n\nconst COOKIE_NAME = 'sb-mcorch-session';\nconst COOKIE_DOMAIN = '.mcorch.com';\n\ninterface SsoSession {\n  access_token?: string | null;\n  expires_at?: number | null; // unix seconds\n}\n\nfunction onMcorchHost(): boolean {\n  return typeof location !== 'undefined' && /(^|\\.)mcorch\\.com$/.test(location.hostname);\n}\n\n/** Mirror (or clear) the MCORCH session into the `.mcorch.com` SSO cookie. Call on every auth-state change. */\nexport function syncSsoCookie(session: SsoSession | null): void {\n  if (typeof document === 'undefined' || !onMcorchHost()) return;\n  if (session?.access_token) {\n    const nowSec = Math.floor(Date.now() / 1000);\n    const maxAge = session.expires_at ? Math.max(0, session.expires_at - nowSec) : 3600;\n    document.cookie =\n      `${COOKIE_NAME}=${session.access_token}; Domain=${COOKIE_DOMAIN}; Path=/; Secure; SameSite=Lax; Max-Age=${maxAge}`;\n  } else {\n    document.cookie =\n      `${COOKIE_NAME}=; Domain=${COOKIE_DOMAIN}; Path=/; Secure; SameSite=Lax; Max-Age=0`;\n  }\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/sso-cookie.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAuth.ts",
+  "old_string": "import { useEffect, useState } from 'react';\nimport { supabase } from '@/integrations/supabase/client';\nimport type { User, Session } from '@supabase/supabase-js';\n\nexport function useAuth() {\n  const [user, setUser] = useState<User | null>(null);\n  const [session, setSession] = useState<Session | null>(null);\n  const [loading, setLoading] = useState(true);\n\n  useEffect(() => {\n    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {\n      setSession(session);\n      setUser(session?.user ?? null);\n      setLoading(false);\n    });\n\n    supabase.auth.getSession().then(({ data: { session }, error }) => {\n      if (error) {\n        console.warn('[useAuth] Session recovery failed, clearing corrupt session:', error.message);\n        supabase.auth.signOut().catch(() => {});\n        setSession(null);\n        setUser(null);\n      } else {\n        setSession(session);\n        setUser(session?.user ?? null);\n      }\n      setLoading(false);\n    }).catch((err) => {",
+  "new_string": "import { useEffect, useState } from 'react';\nimport { supabase } from '@/integrations/supabase/client';\nimport { syncSsoCookie } from '@/lib/sso-cookie';\nimport type { User, Session } from '@supabase/supabase-js';\n\nexport function useAuth() {\n  const [user, setUser] = useState<User | null>(null);\n  const [session, setSession] = useState<Session | null>(null);\n  const [loading, setLoading] = useState(true);\n\n  useEffect(() => {\n    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {\n      setSession(session);\n      setUser(session?.user ?? null);\n      // Mirror the session into the .mcorch.com SSO cookie so design/video.mcorch.com can gate on it.\n      syncSsoCookie(session);\n      setLoading(false);\n    });\n\n    supabase.auth.getSession().then(({ data: { session }, error }) => {\n      if (error) {\n        console.warn('[useAuth] Session recovery failed, clearing corrupt session:', error.message);\n        supabase.auth.signOut().catch(() => {});\n        setSession(null);\n        setUser(null);\n        syncSsoCookie(null);\n      } else {\n        setSession(session);\n        setUser(session?.user ?? null);\n        syncSsoCookie(session);\n      }\n      setLoading(false);\n    }).catch((err) => {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAuth.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:07)*
+
+
+## 🤖 Claude *(03:18:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAuth.ts",
+  "old_string": "  const signOut = async () => {\n    await supabase.auth.signOut();\n  };",
+  "new_string": "  const signOut = async () => {\n    await supabase.auth.signOut();\n    syncSsoCookie(null); // clear the cross-subdomain SSO cookie on logout\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAuth.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:12)*
+
+
+## 🤖 Claude *(03:18:14)*
+
+Frontend do SSO pronto (cookie `.mcorch.com` sincronizado no login/refresh/logout). Agora o gate service — checando runtime (deno/jose) pra o verificador JWKS:
+
+## 🤖 Claude *(03:18:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deno dispon\u00edvel? ===\"; which deno && deno --version 2>/dev/null | head -1 || echo \"(sem deno no host)\"\necho \"=== jose no node_modules do repo? ===\"; ls node_modules/jose/package.json 2>/dev/null && echo \"jose\u2705 (repo)\" || echo \"(jose n\u00e3o no repo root)\"\necho \"=== jose no vision-mcp? ===\"; ls packages/vision-mcp-core/node_modules/jose/package.json 2>/dev/null && echo \"jose\u2705 (vision-mcp)\" || echo \"no\"\necho \"=== bun version ===\"; bun --version 2>/dev/null\necho \"=== SUPABASE jwks endpoint responde? (verifica\u00e7\u00e3o ES256) ===\"\nset -a; source .env 2>/dev/null; set +a\ncurl -s -o /dev/null -w \"jwks: HTTP %{http_code}\\n\" \"${VITE_SUPABASE_URL}/auth/v1/.well-known/jwks.json\" 2>/dev/null",
+  "description": "Check deno/jose/bun availability + JWKS endpoint for the SSO gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno disponível? ===
+> (sem deno no host)
+> === jose no node_modules do repo? ===
+> (jose não no repo root)
+> === jose no vision-mcp? ===
+> packages/vision-mcp-core/node_modules/jose/package.json
+> jose✅ (vision-mcp)
+> === bun version ===
+> 1.3.12
+> === SUPABASE jwks endpoint responde? (verificação ES256) ===
+> jwks: HTTP 200
+> ```
+
+## 🤖 Claude *(03:18:42)*
+
+
+## 🤖 Claude *(03:18:43)*
+
+Runtime: **bun 1.3.12** + **jose** no vision-mcp + JWKS HTTP 200. Vou escrever o gate como serviço bun (importa jose do vision-mcp, igual aos scripts de handshake), verificando o JWT ES256 via JWKS cacheado:
+
+## 🤖 Claude *(03:18:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/sso-auth-gate.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * MCORCH SSO Auth Gate \u2014 nginx `auth_request` backend for the isolated apps (design.mcorch.com / video.mcorch.com).\n *\n * Pipeline: browser holds the `.mcorch.com` SSO cookie (sb-mcorch-session = Supabase access_token, set by the SPA\n * via src/lib/sso-cookie.ts). nginx on the subdomain runs `auth_request /_mcorch_auth` \u2192 proxies the Cookie here.\n * This gate extracts the token, verifies it via the Supabase ES256 JWKS (cached in-process \u2014 mirrors\n * packages/vision-mcp-core/src/auth/identity.ts), and returns 200 (authenticated) or 401 (\u2192 nginx 302 to\n * login.mcorch.com/auth?return_to=...). Fail-closed on ANY error. Loopback-only (127.0.0.1).\n *\n * Run: bun run scripts/sso-auth-gate.ts   (supervised by ~/.config/systemd/user/sso-auth-gate.service)\n */\nimport { existsSync, readFileSync } from 'node:fs';\nimport { join, dirname } from 'node:path';\nimport { fileURLToPath } from 'node:url';\nimport { createRemoteJWKSet, jwtVerify } from '../packages/vision-mcp-core/node_modules/jose/dist/node/esm/index.js';\n\n// \u2500\u2500 Load SUPABASE_URL from .env (public value; only used to locate the JWKS) \u2500\u2500\nconst __dirname = dirname(fileURLToPath(import.meta.url));\nconst envPath = join(__dirname, '../.env');\nif (existsSync(envPath)) {\n  for (const line of readFileSync(envPath, 'utf-8').split('\\n')) {\n    const m = line.match(/^([^#=\\s][^=]*)=(.*)$/);\n    if (m && !process.env[m[1].trim()]) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, '');\n  }\n}\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '';\nconst PORT = process.env.SSO_GATE_PORT ? parseInt(process.env.SSO_GATE_PORT, 10) : 8787;\nconst COOKIE_NAME = 'sb-mcorch-session';\nif (!SUPABASE_URL) { console.error('SUPABASE_URL not set'); process.exit(1); }\n\n// ES256 JWKS \u2014 createRemoteJWKSet caches keys in-process + refetches on unknown kid (no per-request network).\nconst JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));\n\nfunction readCookie(header: string | null, name: string): string | null {\n  if (!header) return null;\n  for (const part of header.split(';')) {\n    const i = part.indexOf('=');\n    if (i < 0) continue;\n    if (part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());\n  }\n  return null;\n}\n\nBun.serve({\n  hostname: '127.0.0.1',\n  port: PORT,\n  async fetch(req) {\n    const url = new URL(req.url);\n    if (url.pathname === '/health') {\n      return new Response(JSON.stringify({ status: 'ok', gate: 'mcorch-sso' }), {\n        headers: { 'Content-Type': 'application/json' },\n      });\n    }\n    // /verify \u2014 nginx auth_request target. 200 = allow, 401 = redirect-to-login.\n    const token = readCookie(req.headers.get('cookie'), COOKIE_NAME);\n    if (!token) return new Response('no_session', { status: 401 });\n    try {\n      const { payload } = await jwtVerify(token, JWKS, { algorithms: ['ES256'] });\n      // jwtVerify already enforces exp/nbf. Require an authenticated subject.\n      if (!payload.sub) return new Response('no_sub', { status: 401 });\n      return new Response('ok', { status: 200, headers: { 'X-Mcorch-Sub': String(payload.sub) } });\n    } catch {\n      return new Response('invalid', { status: 401 }); // fail-closed\n    }\n  },\n});\n\nprocess.stderr.write(`[sso-auth-gate] listening on 127.0.0.1:${PORT} (JWKS ${SUPABASE_URL}/auth/v1/.well-known/jwks.json)\\n`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/sso-auth-gate.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:07)*
+
+
+## 🤖 Claude *(03:19:08)*
+
+Gate escrito. Vou testá-lo materialmente antes de systemd/nginx — subir em background, `/health`, `/verify` sem cookie (→401) e com JWT válido (→200):
+
+## 🤖 Claude *(03:19:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\n# start gate in background\nnohup bun run scripts/sso-auth-gate.ts > /tmp/sso-gate.log 2>&1 &\nsleep 3\necho \"=== log ===\"; cat /tmp/sso-gate.log\necho \"=== /health ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" http://127.0.0.1:8787/health\necho \"=== /verify SEM cookie (espera 401) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" http://127.0.0.1:8787/verify\necho \"=== /verify com JWT v\u00e1lido (espera 200) ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/tmp/jwterr)\n[ -z \"$TOKEN\" ] && echo \"mint falhou: $(cat /tmp/jwterr)\" || curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -H \"Cookie: sb-mcorch-session=${TOKEN}\" http://127.0.0.1:8787/verify\necho \"=== /verify com cookie LIXO (espera 401) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -H \"Cookie: sb-mcorch-session=garbage.token.here\" http://127.0.0.1:8787/verify",
+  "description": "Test SSO gate: health, no-cookie 401, valid-JWT 200, garbage 401"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === log ===
+> [sso-auth-gate] listening on 127.0.0.1:8787 (JWKS https://bcyvddsykvehvpwstlfa.supabase.co/auth/v1/.well-known/jwks.json)
+> === /health ===
+> HTTP 200
+> === /verify SEM cookie (espera 401) ===
+> HTTP 401
+> === /verify com JWT válido (espera 200) ===
+> HTTP 200
+> === /verify com cookie LIXO (espera 401) ===
+> HTTP 401
+> ```
+
+## 🤖 Claude *(03:19:33)*
+
+
+## 🤖 Claude *(03:19:34)*
+
+Gate **funciona** (health 200 · sem cookie 401 · JWT válido 200 · lixo 401). Vou torná-lo durável (systemd) e ativar:
+
+## 🤖 Claude *(03:19:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.config/systemd/user/sso-auth-gate.service",
+  "content": "[Unit]\nDescription=MCORCH SSO Auth Gate (nginx auth_request backend for design/video.mcorch.com \u2014 verifies the .mcorch.com session cookie via Supabase ES256 JWKS)\nAfter=network-online.target\nWants=network-online.target\nStartLimitBurst=5\nStartLimitIntervalSec=60\n\n[Service]\nWorkingDirectory=/home/gcrUX/htdocs/constellation-orchestra\nExecStart=/home/ubuntu/.bun/bin/bun run scripts/sso-auth-gate.ts\nRestart=always\nRestartSec=5\nTimeoutStopSec=15\n# The gate reads SUPABASE_URL from ../.env itself (public value \u2014 JWKS lookup only).\nEnvironment=HOME=/home/ubuntu\nEnvironment=TMPDIR=/tmp\nEnvironment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt\nEnvironment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin\n\n[Install]\nWantedBy=default.target\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.config/systemd/user/sso-auth-gate.service (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# kill the nohup gate on 8787 (by port, not by pattern \u2192 no self-kill)\nfuser -k 8787/tcp 2>/dev/null; sleep 2\nsystemctl --user daemon-reload\nsystemctl --user enable --now sso-auth-gate.service 2>&1 | tail -1\nsleep 3\necho \"is-active: $(systemctl --user is-active sso-auth-gate.service)\"\nsystemctl --user status sso-auth-gate.service --no-pager 2>/dev/null | grep -E \"Active:|Main PID:\" | head -2\necho \"=== /health sob systemd ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" http://127.0.0.1:8787/health",
+  "description": "Activate sso-auth-gate systemd unit + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  3171449Created symlink /home/ubuntu/.config/systemd/user/default.target.wants/sso-auth-gate.service → /home/ubuntu/.config/systemd/user/sso-auth-gate.service.
+> is-active: active
+>      Active: active (running) since Mon 2026-06-22 00:19:47 -03; 3s ago
+>    Main PID: 3172864 (bun)
+> === /health sob systemd ===
+> HTTP 200
+> ```
+
+## 🤖 Claude *(03:20:08)*
+
+
+## 🤖 Claude *(03:20:09)*
+
+Gate **ativo sob systemd** (PID 3172864, /health 200). Agora o `auth_request` no vhost do design.mcorch.com → gate → 302 pro login em 401:
+
+## 🤖 Claude *(03:20:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/nginx/design.mcorch.com.conf",
+  "old_string": "  # open-design daemon (Express/Next) on host loopback. SSE-friendly (agent stream) over HTTP/1.1\n  # keepalive \u2014 mirrors mcp.mcorch.com (Connection \"\" + proxy_buffering off), so NO map $http_upgrade\n  # dependency in http{} (which this server lacks).\n  location / {\n    proxy_pass http://127.0.0.1:7456;\n    proxy_http_version 1.1;\n    proxy_set_header Connection        \"\";\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_buffering        off;          # editor streams (agent turns) \u2014 don't buffer\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n  }\n}",
+  "new_string": "  # \u2500\u2500 R3 SSO gate: every request is gated by the MCORCH session (.mcorch.com cookie) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  # auth_request \u2192 local SSO gate (sso-auth-gate :8787) which verifies the Supabase ES256 JWT in the\n  # sb-mcorch-session cookie. 401 \u2192 302 to login.mcorch.com/auth (the standard MCORCH login), like the\n  # main app's ProtectedRoute. Authenticated users pass through to the open-design editor.\n  location = /_mcorch_auth {\n    internal;\n    proxy_pass http://127.0.0.1:8787/verify;\n    proxy_pass_request_body off;\n    proxy_set_header Content-Length \"\";\n    proxy_set_header Cookie $http_cookie;\n  }\n  location @mcorch_login {\n    return 302 https://login.mcorch.com/auth?return_to=$scheme://$host$request_uri;\n  }\n\n  # open-design daemon (Express/Next) on host loopback. SSE-friendly (agent stream) over HTTP/1.1\n  # keepalive \u2014 mirrors mcp.mcorch.com (Connection \"\" + proxy_buffering off), so NO map $http_upgrade\n  # dependency in http{} (which this server lacks).\n  location / {\n    auth_request /_mcorch_auth;\n    error_page 401 = @mcorch_login;\n\n    proxy_pass http://127.0.0.1:7456;\n    proxy_http_version 1.1;\n    proxy_set_header Connection        \"\";\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_buffering        off;          # editor streams (agent turns) \u2014 don't buffer\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/nginx/design.mcorch.com.conf has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:20:24)*
+
+
+## 🤖 Claude *(03:20:25)*
+
+nginx config atualizado. Deploy + verificação material (sem cookie → 302 login; com cookie válido → 200):
+
+## 🤖 Claude *(03:20:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsudo -n cp nginx/design.mcorch.com.conf /etc/nginx/sites-enabled/design.mcorch.com.conf\nsudo -n nginx -t 2>&1 | tail -2\nsudo -n nginx -t 2>/dev/null && sudo -n systemctl reload nginx && echo \"reload \u2705\" || echo \"\u26a0\ufe0f -t falhou\"\nset -a; source .env 2>/dev/null; set +a\necho \"=== design.mcorch.com SEM cookie (espera 302 \u2192 login) ===\"\ncurl -s -k -o /dev/null -w \"HTTP %{http_code} \u2192 %{redirect_url}\\n\" --resolve design.mcorch.com:443:127.0.0.1 https://design.mcorch.com/ 2>&1 | tail -1\necho \"=== design.mcorch.com COM cookie JWT v\u00e1lido (espera 200) ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null)\ncurl -s -k -o /dev/null -w \"HTTP %{http_code}\\n\" --resolve design.mcorch.com:443:127.0.0.1 -H \"Cookie: sb-mcorch-session=${TOKEN}\" https://design.mcorch.com/ 2>&1 | tail -1\necho \"=== design.mcorch.com com cookie LIXO (espera 302 \u2192 login) ===\"\ncurl -s -k -o /dev/null -w \"HTTP %{http_code} \u2192 %{redirect_url}\\n\" --resolve design.mcorch.com:443:127.0.0.1 -H \"Cookie: sb-mcorch-session=garbage\" https://design.mcorch.com/ 2>&1 | tail -1",
+  "description": "Deploy nginx SSO gate + materially verify 302/200/302"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+> nginx: configuration file /etc/nginx/nginx.conf test is successful
+> reload ✅
+> === design.mcorch.com SEM cookie (espera 302 → login) ===
+> HTTP 200 → 
+> === design.mcorch.com COM cookie JWT válido (espera 200) ===
+> HTTP 200
+> === design.mcorch.com com cookie LIXO (espera 302 → login) ===
+> HTTP 302 → https://login.mcorch.com/auth?return_to=https://design.mcorch.com/
+> ```
+
+## 🤖 Claude *(03:20:52)*
+
+
+## 🤖 Claude *(03:20:54)*
+
+O cookie-lixo → 302 ✅ e o JWT válido → 200 ✅, mas o sem-cookie deu 200 (esperava 302) — provável corrida do reload do nginx (1ª request pegou worker antigo). Re-testando agora que o reload assentou:
+
+## 🤖 Claude *(03:20:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== design.mcorch.com SEM cookie (re-teste p\u00f3s-reload) ===\"\nfor i in 1 2 3; do\n  curl -s -k -o /dev/null -w \"  try$i: HTTP %{http_code} \u2192 %{redirect_url}\\n\" --resolve design.mcorch.com:443:127.0.0.1 https://design.mcorch.com/ 2>&1 | tail -1\ndone\necho \"=== gate /verify direto sem cookie (sanidade) ===\"\ncurl -s -o /dev/null -w \"  HTTP %{http_code}\\n\" http://127.0.0.1:8787/verify",
+  "description": "Re-test no-cookie case after reload settled"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === design.mcorch.com SEM cookie (re-teste pós-reload) ===
+>   try1: HTTP 302 → https://login.mcorch.com/auth?return_to=https://design.mcorch.com/
+>   try2: HTTP 302 → https://login.mcorch.com/auth?return_to=https://design.mcorch.com/
+>   try3: HTTP 302 → https://login.mcorch.com/auth?return_to=https://design.mcorch.com/
+> === gate /verify direto sem cookie (sanidade) ===
+>   HTTP 401
+> ```
+
+## 🤖 Claude *(03:21:14)*
+
+
+## 🤖 Claude *(03:21:17)*
+
+**Era corrida do reload** — agora o sem-cookie retorna **302 → `login.mcorch.com/auth?return_to=...`** consistente (3/3). 
+
+**R3 SSO gate funciona materialmente:** sem cookie → 302 login · cookie lixo → 302 login · JWT válido → 200 (passa pro open-design). Exatamente seu requisito.
+
+Falta o **deploy do frontend** (o cookie só é setado pelo SPA buildado) + fechar o loop `return_to` (auto-retorno pós-login). Vou ver como o Auth redireciona hoje:
+
+## 🤖 Claude *(03:21:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== PublicRoute redirect + Auth post-login ===\"\ngrep -nE \"PublicRoute|Navigate to=|/dashboard|return_to|returnTo|redirect|searchParams|window.location\" src/App.tsx 2>/dev/null | head -10\necho \"=== Auth page: redirect p\u00f3s-login ===\"\nF=$(ls src/pages/Auth.tsx 2>/dev/null || grep -rln \"PublicRoute\\|signInWithPassword\\|signin\" src/pages/Auth* 2>/dev/null | head -1)\necho \"arquivo: $F\"\ngrep -nE \"navigate\\(|Navigate|/dashboard|return_to|returnTo|window.location|useNavigate|onAuthStateChange|SIGNED_IN\" \"$F\" 2>/dev/null | head -15",
+  "description": "Find Auth page post-login redirect to add return_to handling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PublicRoute redirect + Auth post-login ===
+> 8:import { DashboardLayout } from "./components/dashboard/DashboardLayout.tsx";
+> 66:  if (!user) return <Navigate to="/auth" replace />;
+> 70:function PublicRoute({ children }: { children: React.ReactNode }) {
+> 73:  if (user) return <Navigate to="/dashboard" replace />;
+> 88:                path="/dashboard"
+> 105:                <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+> 116:                <Route path="core" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 117:                <Route path="core-v2" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 132:              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> === Auth page: redirect pós-login ===
+> arquivo: src/pages/Auth.tsx
+> 2:import { useNavigate } from 'react-router-dom';
+> 18:  const navigate = useNavigate();
+> 29:      navigate('/dashboard');
+> 41:        emailRedirectTo: window.location.origin,
+> 62:      redirectTo: `${window.location.origin}/reset-password`,
+> 77:        redirectTo: `${window.location.origin}/dashboard`,
+> ```
+
+## 🤖 Claude *(03:21:32)*
+
+
+## 🤖 Claude *(03:21:33)*
+
+Auth faz `navigate('/dashboard')` pós-login. Vou adicionar honra ao `return_to` (auto-retorno seguro pra `*.mcorch.com`, com proteção anti-open-redirect). Adiciono o helper + leio os pontos exatos de Auth/PublicRoute:
+
+## 🤖 Claude *(03:21:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "offset": 15,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 15	  const [email, setEmail] = useState('');
+> 16	  const [password, setPassword] = useState('');
+> 17	  const [fullName, setFullName] = useState('');
+> 18	  const navigate = useNavigate();
+> 19	  const { toast } = useToast();
+> 20	
+> 21	  const handleLogin = async (e: React.FormEvent) => {
+> 22	    e.preventDefault();
+> 23	    setLoading(true);
+> 24	    const { error } = await supabase.auth.signInWithPassword({ email, password });
+> 25	    setLoading(false);
+> 26	    if (error) {
+> 27	      toast({ title: 'Erro ao entrar', description: error.message, variant: 'destructive' });
+> 28	    } else {
+> 29	      navigate('/dashboard');
+> 30	    }
+> 31	  };
+> 32	
+> 33	  const handleSignup = async (e: React.FormEvent) => {
+> 34	    e.preventDefault();
+> 35	    setLoading(true);
+> 36	    const { error } = await supabase.auth.signUp({
+> 37	      email,
+> 38	      password,
+> 39	      options: {
+> 40	        data: { full_name: fullName },
+> 41	        emailRedirectTo: window.location.origin,
+> 42	      },
+> 43	    });
+> 44	    setLoading(false);
+> 45	    if (error) {
+> 46	      toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
+> 47	    } else {
+> 48	      toast({
+> 49	        title: 'Cadastro realizado!',
+> ```
+
+## 🤖 Claude *(03:21:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 60,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	  );
+> 61	}
+> 62	
+> 63	function ProtectedRoute({ children }: { children: React.ReactNode }) {
+> 64	  const { user, loading } = useAuth();
+> 65	  if (loading) return <PageLoader />;
+> 66	  if (!user) return <Navigate to="/auth" replace />;
+> 67	  return <>{children}</>;
+> 68	}
+> 69	
+> 70	function PublicRoute({ children }: { children: React.ReactNode }) {
+> 71	  const { user, loading } = useAuth();
+> 72	  if (loading) return <PageLoader />;
+> 73	  if (user) return <Navigate to="/dashboard" replace />;
+> 74	  return <>{children}</>;
+> 75	}
+> 76	
+> 77	const App = () => (
+> 78	  <QueryClientProvider client={queryClient}>
+> 79	    <HelmetProvider>
+> ```
+
+## 🤖 Claude *(03:21:52)*
+
+
+## 🤖 Claude *(03:21:53)*
+
+Vou adicionar o helper `safeReturnTo` (anti open-redirect) + honrar `return_to` no PublicRoute (catch-all) e no handleLogin:
+
+## 🤖 Claude *(03:21:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/sso-cookie.ts",
+  "old_string": "/** Mirror (or clear) the MCORCH session into the `.mcorch.com` SSO cookie. Call on every auth-state change. */\nexport function syncSsoCookie(session: SsoSession | null): void {",
+  "new_string": "/**\n * Read a safe `?return_to` from the current URL \u2014 ONLY allow https://<host>.mcorch.com targets\n * (anti open-redirect). Used by the auth flow to bounce back to the isolated app (design/video.mcorch.com)\n * after the user authenticates on login.mcorch.com. Returns null when absent or unsafe.\n */\nexport function safeReturnTo(): string | null {\n  if (typeof location === 'undefined') return null;\n  const rt = new URLSearchParams(location.search).get('return_to');\n  if (!rt) return null;\n  try {\n    const u = new URL(rt);\n    if (u.protocol === 'https:' && /(^|\\.)mcorch\\.com$/.test(u.hostname)) return u.toString();\n  } catch { /* invalid URL */ }\n  return null;\n}\n\n/** Mirror (or clear) the MCORCH session into the `.mcorch.com` SSO cookie. Call on every auth-state change. */\nexport function syncSsoCookie(session: SsoSession | null): void {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/sso-cookie.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:22:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "    if (error) {\n      toast({ title: 'Erro ao entrar', description: error.message, variant: 'destructive' });\n    } else {\n      navigate('/dashboard');\n    }\n  };",
+  "new_string": "    if (error) {\n      toast({ title: 'Erro ao entrar', description: error.message, variant: 'destructive' });\n    } else {\n      // SSO loop: if we arrived from an isolated app (design/video.mcorch.com) via ?return_to, bounce back.\n      const rt = safeReturnTo();\n      if (rt) { window.location.href = rt; } else { navigate('/dashboard'); }\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:22:10)*
+
+
+## 🤖 Claude *(03:22:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "import { useNavigate } from 'react-router-dom';",
+  "new_string": "import { useNavigate } from 'react-router-dom';\nimport { safeReturnTo } from '@/lib/sso-cookie';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:22:17)*
+
+
+## 🤖 Claude *(03:22:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "function PublicRoute({ children }: { children: React.ReactNode }) {\n  const { user, loading } = useAuth();\n  if (loading) return <PageLoader />;\n  if (user) return <Navigate to=\"/dashboard\" replace />;\n  return <>{children}</>;\n}",
+  "new_string": "function PublicRoute({ children }: { children: React.ReactNode }) {\n  const { user, loading } = useAuth();\n  if (loading) return <PageLoader />;\n  if (user) {\n    // SSO loop: an already-authenticated user who landed on /auth?return_to=<isolated app> bounces back.\n    const rt = safeReturnTo();\n    if (rt) { window.location.replace(rt); return <PageLoader />; }\n    return <Navigate to=\"/dashboard\" replace />;\n  }\n  return <>{children}</>;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:22:23)*
+
+
+## 🤖 Claude *(03:22:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "import { DashboardLayout } from \"./components/dashboard/DashboardLayout.tsx\";",
+  "new_string": "import { DashboardLayout } from \"./components/dashboard/DashboardLayout.tsx\";\nimport { safeReturnTo } from \"@/lib/sso-cookie\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:22:34)*
+
+
+## 🤖 Claude *(03:22:35)*
+
+SSO loop completo (cookie + `return_to` seguro). Verificando tsc + buildando/deployando o frontend (no repo principal, build = deploy via nginx). Vou conferir materialmente que o chunk servido contém a lógica do cookie:
+
+## 🤖 Claude *(03:22:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -8 && echo \"tsc exit: ${PIPESTATUS[0]}\"",
+  "description": "TypeScript check after SSO frontend changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> ```
+
+## 🤖 Claude *(03:22:49)*
+
+
+## 🤖 Claude *(03:22:49)*
+
+tsc limpo (exit 0). Build + deploy do frontend (repo principal → nginx serve o dist/), com verificação material de que o chunk servido tem a lógica do cookie SSO:
+
+## 🤖 Claude *(03:22:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build (repo principal, .env presente) ===\"\nbun run build 2>&1 | tail -8\necho \"=== verifica\u00e7\u00e3o material: cookie SSO no bundle servido? ===\"\ngrep -rl \"sb-mcorch-session\" dist/assets/*.js 2>/dev/null | head -2 && echo \"\u2705 cookie SSO no dist\" || echo \"\u26a0\ufe0f n\u00e3o achei no dist\"\necho \"=== env Supabase baked? (sanidade) ===\"\ngrep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js 2>/dev/null | head -1 >/dev/null && echo \"\u2705 Supabase URL baked\" || echo \"\u26a0\ufe0f env n\u00e3o baked\"",
+  "description": "Build frontend + verify SSO cookie logic + env in served bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build (repo principal, .env presente) ===
+> dist/assets/index-y__U6gtM.js                  629.75 kB │ gzip: 188.25 kB
+> dist/assets/react-three-fiber.esm-c2QxEX8c.js  824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.43s
+> === verificação material: cookie SSO no bundle servido? ===
+> dist/assets/index-y__U6gtM.js
+> ✅ cookie SSO no dist
+> === env Supabase baked? (sanidade) ===
+> ✅ Supabase URL baked
+> ```
+
+## 🤖 Claude *(03:23:50)*
+
+
+## 🤖 Claude *(03:23:57)*
+
+**R3 SSO — LIVE e provado materialmente:**
+- Build deployado (23.4s); o cookie SSO (`sb-mcorch-session`) **está no bundle servido** ✅ + env Supabase baked ✅.
+- Gate `sso-auth-gate.service` ativo (systemd, durável) · nginx `auth_request` no design.mcorch.com.
+- Cadeia provada: sem sessão → **302 `login.mcorch.com/auth?return_to=…`** · JWT válido → **200** · `return_to` seguro (anti open-redirect, só `*.mcorch.com`).
+
+Seu requisito está atendido: design.mcorch.com agora exige login MCORCH. **Ação sua p/ fechar 100% no browser:** adicionar a **WAF Skip rule** do `design.mcorch.com` no Cloudflare (o 403 era bot-challenge; com a regra + o cookie do SPA logado, o iframe carrega). Pode verificar: logar em login.mcorch.com → abrir design.mcorch.com (passa) → deslogar → design.mcorch.com redireciona pro login.
+
+Seguindo pro próximo (você disse go): **fundação de tenancy** (migration `organizations`/`organization_members`/`clients` + RLS por membership + `erase_client_artifacts`), aterrada na SDD §AG.
+
+## 🤖 Claude *(03:23:58)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Task not found
+> ```
+
+## 🤖 Claude *(03:23:59)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "description": "FEITO: iframe\u2192https://design.mcorch.com + rebuild deployado. PENDENTE Sovereign: CF WAF Skip rule design.mcorch.com. PENDENTE eu: hardening OD_API_TOKEN+OD_ALLOWED_ORIGINS."
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Task not found
+> ```
+
+## 🤖 Claude *(03:24:00)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Task not found
+> ```
+
+## 🤖 Claude *(03:24:07)*
+
+
+## 🤖 Claude *(03:24:07)*
+
+
+🛠️ **Tool Call**: `TaskList`
+```json
+{}
+```
+
+> **Tool Result (TaskList)** - ✅ Success
+>
+> ```
+> No tasks found
+> ```
+
+## 🤖 Claude *(03:24:23)*
+
+
+## 🤖 Claude *(03:24:24)*
+
+O task list resetou (nova janela de contexto). Vou recriá-lo refletindo o estado real (R3 ✅) e seguir pra fundação de tenancy:
+
+## 🤖 Claude *(03:24:26)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Funda\u00e7\u00e3o tenancy: migration org/client + RLS + erase_client_artifacts",
+  "description": "Migration organizations/organization_members/clients + org_id/client_id (nullable) nas tabelas video_* + RLS por membership + deduct_mco_coins_org + erase_client_artifacts (fix LGPD per-cliente). Aterrada na SDD \u00a7AG. Passa /security-review.",
+  "activeForm": "Escrevendo migration de tenancy"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Fundação tenancy: migration org/client + RLS + erase_client_artifacts
+> ```
+
+## 🤖 Claude *(03:24:29)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Deploy studio + scripts n8n + GEMINI per-user",
+  "description": "docker compose up -d --build (recria remotion-render+studio-dashboard) + copiar ltx.js/composite.sh\u2192/home/node/.n8n/assets/ + rodar gen-sfx.sh + GEMINI per-user (nunca git). Telegram pendente.",
+  "activeForm": "Deployando studio"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: Deploy studio + scripts n8n + GEMINI per-user
+> ```
+
+## 🤖 Claude *(03:24:30)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Bridge de rede + vision_mcp QA + chroma mem\u00f3ria",
+  "description": "Bridar n8n_default\u2194mcorch-sovereign-net + PAT do studio \u2192 vision_mcp QA + chroma mem\u00f3ria de roteiros/v\u00eddeos.",
+  "activeForm": "Bridando rede + vision/chroma"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Bridge de rede + vision_mcp QA + chroma memória
+> ```
+
+## 🤖 Claude *(03:24:33)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "HyperFrames em video.mcorch.com + bot\u00e3o/rota V\u00eddeo",
+  "description": "Servir @hyperframes/studio + vhost video.mcorch.com (gateado pelo SSO, igual design) + bot\u00e3o \"V\u00eddeo\" no TopBar + rota /dashboard/canvas/video (ANTES de canvas/:id).",
+  "activeForm": "Integrando HyperFrames + bot\u00e3o V\u00eddeo"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: HyperFrames em video.mcorch.com + botão/rota Vídeo
+> ```
+
+## 🤖 Claude *(03:24:34)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Hardening design.mcorch.com (OD_API_TOKEN) + WAF skip (Sovereign)",
+  "description": "FEITO: iframe\u2192https + rebuild + SSO gate. Eu: OD_API_TOKEN forte + OD_ALLOWED_ORIGINS. Sovereign: CF WAF Skip rule design.mcorch.com + video.mcorch.com.",
+  "activeForm": "Endurecendo design.mcorch.com"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: Hardening design.mcorch.com (OD_API_TOKEN) + WAF skip (Sovereign)
+> ```
+
+## 🤖 Claude *(03:24:41)*
+
+
+## 🤖 Claude *(03:24:41)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(03:24:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio\necho \"=== 06 \u00a7AG: CREATE TABLE / RLS / RPC stubs (mirror p/ a migration) ===\"\nawk '/\u00a7AG/{f=1} f' 06-data-model.md | grep -nE \"CREATE TABLE|ALTER TABLE|ENABLE ROW LEVEL|CREATE POLICY|CREATE OR REPLACE FUNCTION|organizations|organization_members|clients|org_id|client_id|erase_client_artifacts|deduct_mco_coins_org|RESTRICTIVE|search_path\" | head -60",
+  "description": "Extract SDD/data-model \u00a7AG migration stubs to ground the migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 06 §AG: CREATE TABLE / RLS / RPC stubs (mirror p/ a migration) ===
+> 5:> **Superset gate honored:** todas as seções 1–8 e todos os IDs acima (MR-VS-001..014 · BR-VS-001..016 · PR-VS-001..023 · FR-VS-001..032 · NFR-VS-001..017 · OTD-VS-001..007 · FMEA-VS-001..019) PRESERVADOS verbatim. Esta seção **APENAS adiciona** o modelo de dados da camada de **agência** (organizations → clients → projects) e **emenda** as tabelas existentes com `org_id`/`client_id` **nullable** (NULL = solo-creator backward-compat — R-suite intacta).
+> 15:| FMEA | FMEA-VS-020 (cross-client data leak via missing client_id scope) · FMEA-VS-021 (org wholesale double-debit) | — |
+> 27:  ├── organization_members (RBAC + seats: owner/billing_admin/editor/viewer)
+> 30:  └──1:N──▶ clients (sub-contas de cliente da agência)
+> 36:**Backward-compat (UNBREAKABLE):** `org_id`/`client_id` são **nullable** em toda tabela emendada. `org_id IS NULL` ⇒ linha solo-creator (semântica idêntica à v0.1; `user_id = auth.uid()` continua o único gate). `org_id IS NOT NULL` ⇒ linha de agência (gate estendido por membership). Nenhuma migração força backfill — o solo-creator nunca vê uma org.
+> 40:| `organizations` | Master (tenant) | **new** | O tenant de **agência**: nome/slug, dono, `plan_tier ∈ {agency,enterprise}`, `custom_domain`/`brand_theme` (white-label), `wholesale_mco_balance` (carteira de atacado — alavanca de margem) | FR-VS-033/037 |
+> 41:| `organization_members` | Reference (RBAC) | **new** | Membership + seats: `role ∈ {owner,billing_admin,editor,viewer}`, `seat_active` — base da RLS estendida e do seat management | FR-VS-033/036 |
+> 42:| `clients` | Master | **new** | Sub-conta de cliente da agência: `byok_ref` (config de provider por cliente), `affiliate_tag` (receita ML por cliente), `status` — unidade de cost-center e de erasure seletiva | FR-VS-033/034/035 |
+> 43:| `video_render` (amend) | Transactional | extend | +`org_id`/`client_id` nullable + RLS por membership — **amends §1.1 / §2.1** | FR-VS-036 |
+> 44:| `video_scene` (amend) | Transactional | extend | +`org_id`/`client_id` nullable — **amends §1.1 / §2.2** | FR-VS-036 |
+> 45:| `video_asset` (amend) | Transactional | extend | +`org_id`/`client_id` nullable (escopo do cascade de erasure por cliente) — **amends §1.1 / §2.4** | FR-VS-035/036 |
+> 46:| `video_template` (amend) | Master | extend | +`org_id`/`client_id` nullable (template compartilhável no escopo da org) — **amends §1.1 / §2.3** | FR-VS-036 |
+> 47:| `affiliate_link` (amend) | Transactional | extend | +`org_id`/`client_id` nullable (atribuição de receita por cliente) — **amends §1.1 / §2.6** | FR-VS-034/036 |
+> 48:| `mco_transaction` / org ledger (amend) | Operational | extend | +`org_id`/`client_id` nullable + carteira de atacado `organizations.wholesale_mco_balance` + cost-center por cliente — **amends §1.1 / §2.6** | FR-VS-034 |
+> 53:organizations ──1:N──▶ organization_members   (org_id; UNIQUE(org_id,user_id); seat_active gate)
+> 54:              ──1:N──▶ clients                 (org_id, ON DELETE CASCADE)
+> 55:              ──1:1──▶ wholesale_mco_balance   (carteira de ATACADO — deduct_mco_coins_org)
+> 56:organization_members ──N:1──▶ auth.users       (user_id; RBAC role + seat)
+> 57:clients      ──1:N──▶ projects                 (client_id; herda escopo org→client)
+> 62:   ──N:1 (nullable)──▶ organizations  (org_id)     ◀── NULL = solo-creator (backward-compat)
+> 63:   ──N:1 (nullable)──▶ clients        (client_id)  ◀── set = escopado a um cliente da agência
+> 66:**Cardinalidade-chave (v1.1):** a `organization` é a nova raiz do ledger de **atacado** (`wholesale_mco_balance` debitado atomicamente por `deduct_mco_coins_org`, com cost-center por `client_id`). O `client` é a nova raiz da **erasure seletiva** (`erase_client_artifacts(p_org_id,p_client_id)` derruba SÓ os artefatos daquele cliente — corrige o bug confirmado em que `erase_video_artifacts(p_user_id)` purga TODOS os clientes de uma agência, ver §AG.5). `delete-account` continua purgando a org inteira; a erasure por cliente é **escopada**.
+> 72:#### §AG.2.1 `organizations` (FR-VS-033/037 — agency tenant + wholesale wallet + white-label)
+> 83:| `wholesale_mco_balance` | numeric | NO | CHECK ≥0 DEFAULT 0 | **carteira de atacado** (alavanca de margem; debitada por `deduct_mco_coins_org`) |
+> 86:#### §AG.2.2 `organization_members` (FR-VS-033/036 — RBAC + seat management)
+> 90:| `org_id` | uuid | NO | FK → `organizations(id)` CASCADE | tenant de agência |
+> 95:| — | — | — | **UNIQUE(`org_id`,`user_id`)** | 1 membership por par |
+> 99:#### §AG.2.3 `clients` (FR-VS-033/034/035 — client sub-accounts · cost-center · erasure unit)
+> 104:| `org_id` | uuid | NO | FK → `organizations(id)` CASCADE | dona (agência) |
+> 111:#### §AG.2.4 Amend existentes — `org_id`/`client_id` nullable (amends §2.1/§2.2/§2.3/§2.4/§2.6)
+> 117:| `video_renders` (amends §2.1) | `org_id uuid NULL` · `client_id uuid NULL` | → `organizations(id)` / `clients(id)` (ON DELETE CASCADE) | `NULL` = render solo-creator |
+> 118:| `video_scenes` (amends §2.2) | `org_id uuid NULL` · `client_id uuid NULL` | idem | acompanha o render |
+> 119:| `video_templates` (amends §2.3) | `org_id uuid NULL` · `client_id uuid NULL` | idem | `NULL` = template pessoal |
+> 120:| `video_assets` (amends §2.4) | `org_id uuid NULL` · `client_id uuid NULL` | idem | escopo do cascade por cliente |
+> 121:| `affiliate_links` (amends §2.6) | `org_id uuid NULL` · `client_id uuid NULL` | idem | atribuição de receita por cliente |
+> 122:| `mco_transaction` / ledger (amends §2.6) | `org_id uuid NULL` · `client_id uuid NULL` | idem | cost-center; carteira de atacado em `organizations` |
+> 124:> **Regra de coerência (data-quality §AG.6):** se `org_id IS NOT NULL` então `client_id` pertence à mesma org (CHECK lógico via FK composta tenant-escopada — espelha a família `creative_metrics`/`autopilot_cycles`); e o `user_id` da linha DEVE ser um `organization_members` `seat_active` da `org_id` (defesa contra injeção cross-org, ver FMEA-VS-020).
+> 130:> Stubs copy-ready; cada migration passa `/security-review` independente ANTES do commit (FMEA-011 + NFR-VS-011). Ordem de aplicação: organizations → organization_members → clients → ALTER tabelas vídeo → RPCs.
+> 133:-- Migration: <ts>_video_studio_organizations.sql (FR-VS-033/037 — agency tenant + wholesale + white-label)
+> 134:CREATE TABLE IF NOT EXISTS public.organizations (
+> 146:ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;  -- default-deny
+> 148:CREATE POLICY org_member_select ON public.organizations FOR SELECT
+> 149:  USING (id IN (SELECT org_id FROM public.organization_members
+> 152:CREATE POLICY org_admin_update ON public.organizations FOR UPDATE
+> 153:  USING (id IN (SELECT org_id FROM public.organization_members
+> 158:CREATE TABLE IF NOT EXISTS public.organization_members (
+> 159:  org_id      uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+> 164:  UNIQUE (org_id, user_id)
+> 166:ALTER TABLE public.organization_members ENABLE ROW LEVEL SECURITY;  -- default-deny
+> 168:CREATE POLICY orgmem_select ON public.organization_members FOR SELECT
+> 169:  USING (org_id IN (SELECT org_id FROM public.organization_members
+> 172:CREATE POLICY orgmem_admin_write ON public.organization_members FOR ALL
+> 173:  USING (org_id IN (SELECT org_id FROM public.organization_members m
+> 175:  WITH CHECK (org_id IN (SELECT org_id FROM public.organization_members m
+> 177:CREATE INDEX ON public.organization_members (user_id) WHERE seat_active;
+> 179:-- Migration: <ts>_video_studio_clients.sql (FR-VS-033/034/035 — client sub-accounts)
+> 180:CREATE TABLE IF NOT EXISTS public.clients (
+> 182:  org_id        uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+> 189:  UNIQUE (org_id, id)                          -- chave composta tenant-escopada (alvo das FKs compostas)
+> 191:ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;  -- default-deny
+> ```
+
+## 🤖 Claude *(03:25:22)*
+
+
+## 🤖 Claude *(03:25:25)*
+
+Os stubs §AG estão copy-ready — mas peguei um **risco crítico de correção** que o stub do BoK ignorou: a policy de `organization_members` que faz `SELECT … FROM organization_members` é **RLS recursiva** (o bug clássico do Supabase que o CLAUDE.md alerta — `has_role()` SECURITY DEFINER existe exatamente pra isso). Vou usar helpers SECURITY DEFINER (`is_org_member`/`org_role`) em vez de subquery auto-referente. Escopo da migration de fundação: org/members/clients + helpers (as tabelas video_* + RPCs vêm com o deploy do studio, pra os RPCs referenciarem tabelas existentes).
+
+Pegando o timestamp + escrevendo a migration:
+
+## 🤖 Claude *(03:25:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== \u00faltima migration (p/ timestamp > ela) ===\"\nls supabase/migrations/ | sort | tail -3\necho \"=== precedente has_role SECURITY DEFINER (anti-recurs\u00e3o) p/ espelhar ===\"\ngrep -rlE \"has_role\" supabase/migrations/ 2>/dev/null | tail -1",
+  "description": "Get latest migration timestamp + has_role precedent"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === última migration (p/ timestamp > ela) ===
+> 20260620120100_viral_autopilot_cycles.sql
+> 20260620120200_begin_autopilot_cycle.sql
+> 20260620120300_finalize_autopilot_cycle.sql
+> === precedente has_role SECURITY DEFINER (anti-recursão) p/ espelhar ===
+> supabase/migrations/20260412011113_6b696172-c924-4303-9534-626da5f98d04.sql
+> ```
+
+## 🤖 Claude *(03:26:15)*
+
+
+## 🤖 Claude *(03:26:17)*
+
+Última migration `20260620120300`. Vou usar `20260622030000`. Escrevendo a migration de fundação de tenancy **com os helpers SECURITY DEFINER anti-recursão** (`is_org_member`/`org_role`) + RPC `create_organization` (resolve o bootstrap chicken-and-egg do 1º membro):
+
+## 🤖 Claude *(03:26:47)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622030000_video_studio_org_tenancy.sql",
+  "content": "-- video-studio BoK v1.1 \u00a7AG \u2014 Agency-Leverage tenancy FOUNDATION (FR-VS-033/036/037).\n-- organizations \u2192 organization_members (RBAC + seats) \u2192 clients (sub-accounts \u00b7 cost-center \u00b7 erasure unit).\n--\n-- CRITICAL DESIGN (over the BoK \u00a7AG stub): RLS uses SECURITY DEFINER helpers (is_org_member / org_role) to\n-- AVOID recursive RLS on organization_members. The \u00a7AG stub's self-subquery\n-- (USING org_id IN (SELECT org_id FROM organization_members WHERE user_id=auth.uid())) would infinite-loop \u2014\n-- CLAUDE.md mandates the has_role() definer pattern for exactly this. Org creation goes through the\n-- create_organization() definer RPC so the owner membership is inserted atomically (solves the first-member\n-- bootstrap chicken-and-egg). Backward-compat: this migration ONLY ADDS the agency layer; solo-creator\n-- (user_id-scoped) tables/paths are untouched. The video_* tables + org_id/client_id columns + the money/erasure\n-- RPCs (deduct_mco_coins_org, erase_client_artifacts) land WITH the studio-integration migration (those RPCs\n-- must reference existing render tables).\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Tables\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n-- organizations \u2014 the agency tenant: white-label (custom_domain/brand_theme) + wholesale wallet (margin lever).\nCREATE TABLE IF NOT EXISTS public.organizations (\n  id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  name                  text NOT NULL,\n  slug                  text UNIQUE NOT NULL,\n  owner_user_id         uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  plan_tier             text NOT NULL DEFAULT 'agency' CHECK (plan_tier IN ('agency','enterprise')),\n  custom_domain         text,\n  brand_theme           jsonb NOT NULL DEFAULT '{}'::jsonb,\n  wholesale_mco_balance numeric NOT NULL DEFAULT 0 CHECK (wholesale_mco_balance >= 0),\n  created_at            timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;  -- default-deny\n\n-- organization_members \u2014 membership + RBAC + seat management.\nCREATE TABLE IF NOT EXISTS public.organization_members (\n  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  org_id      uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,\n  user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  role        text NOT NULL DEFAULT 'editor' CHECK (role IN ('owner','billing_admin','editor','viewer')),\n  seat_active boolean NOT NULL DEFAULT true,\n  created_at  timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (org_id, user_id)\n);\nALTER TABLE public.organization_members ENABLE ROW LEVEL SECURITY;  -- default-deny\nCREATE INDEX IF NOT EXISTS idx_org_members_user_active ON public.organization_members (user_id) WHERE seat_active;\nCREATE INDEX IF NOT EXISTS idx_org_members_org ON public.organization_members (org_id);\n\n-- clients \u2014 agency client sub-accounts: cost-center + selective-erasure unit. Composite (org_id,id) key is the\n-- FK target for the video_* tables' (org_id,client_id) tenant-scoped FKs (added in the studio migration).\nCREATE TABLE IF NOT EXISTS public.clients (\n  id            uuid NOT NULL DEFAULT gen_random_uuid(),\n  org_id        uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,\n  name          text NOT NULL,\n  byok_ref      text,\n  affiliate_tag text,\n  status        text NOT NULL DEFAULT 'active' CHECK (status IN ('active','paused','archived')),\n  created_at    timestamptz NOT NULL DEFAULT now(),\n  PRIMARY KEY (id),\n  UNIQUE (org_id, id)\n);\nALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;  -- default-deny\nCREATE INDEX IF NOT EXISTS idx_clients_org ON public.clients (org_id);\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Anti-recursion membership helpers (SECURITY DEFINER \u2014 mirror public.has_role())\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.is_org_member(p_org_id uuid)\nRETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$\n  SELECT EXISTS (\n    SELECT 1 FROM public.organization_members m\n    WHERE m.org_id = p_org_id AND m.user_id = auth.uid() AND m.seat_active\n  );\n$$;\n\nCREATE OR REPLACE FUNCTION public.org_role(p_org_id uuid)\nRETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$\n  SELECT m.role FROM public.organization_members m\n  WHERE m.org_id = p_org_id AND m.user_id = auth.uid() AND m.seat_active\n  LIMIT 1;\n$$;\n\nREVOKE ALL ON FUNCTION public.is_org_member(uuid) FROM PUBLIC;\nREVOKE ALL ON FUNCTION public.org_role(uuid) FROM PUBLIC;\nGRANT EXECUTE ON FUNCTION public.is_org_member(uuid) TO authenticated, service_role;\nGRANT EXECUTE ON FUNCTION public.org_role(uuid) TO authenticated, service_role;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Bootstrap RPC \u2014 atomic org + owner-membership (solves first-member chicken-and-egg under RLS)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.create_organization(p_name text, p_slug text)\nRETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$\nDECLARE v_org uuid;\nBEGIN\n  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'authentication required'; END IF;\n  IF p_name IS NULL OR btrim(p_name) = '' OR p_slug IS NULL OR btrim(p_slug) = '' THEN\n    RAISE EXCEPTION 'name and slug are required';\n  END IF;\n  INSERT INTO public.organizations (name, slug, owner_user_id)\n    VALUES (btrim(p_name), btrim(p_slug), auth.uid())\n    RETURNING id INTO v_org;\n  INSERT INTO public.organization_members (org_id, user_id, role, seat_active)\n    VALUES (v_org, auth.uid(), 'owner', true);\n  RETURN v_org;\nEND; $$;\nREVOKE ALL ON FUNCTION public.create_organization(text, text) FROM PUBLIC;\nGRANT EXECUTE ON FUNCTION public.create_organization(text, text) TO authenticated;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- RLS policies (helper-based \u2014 NO recursion). Direct INSERT into organizations is NOT granted a policy:\n-- org creation MUST go through create_organization() so an owner membership always exists.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE POLICY org_member_select ON public.organizations FOR SELECT TO authenticated\n  USING (public.is_org_member(id));\nCREATE POLICY org_admin_update ON public.organizations FOR UPDATE TO authenticated\n  USING (public.org_role(id) IN ('owner','billing_admin'))\n  WITH CHECK (public.org_role(id) IN ('owner','billing_admin'));\nCREATE POLICY org_owner_delete ON public.organizations FOR DELETE TO authenticated\n  USING (public.org_role(id) = 'owner');\n\nCREATE POLICY orgmem_select ON public.organization_members FOR SELECT TO authenticated\n  USING (public.is_org_member(org_id));\nCREATE POLICY orgmem_admin_write ON public.organization_members FOR ALL TO authenticated\n  USING (public.org_role(org_id) IN ('owner','billing_admin'))\n  WITH CHECK (public.org_role(org_id) IN ('owner','billing_admin'));\n\nCREATE POLICY clients_member_select ON public.clients FOR SELECT TO authenticated\n  USING (public.is_org_member(org_id));\nCREATE POLICY clients_member_write ON public.clients FOR ALL TO authenticated\n  USING (public.org_role(org_id) IN ('owner','billing_admin','editor'))\n  WITH CHECK (public.org_role(org_id) IN ('owner','billing_admin','editor'));\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Grants \u2014 service_role full; authenticated DML gated by the policies above; anon denied.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nREVOKE ALL ON public.organizations, public.organization_members, public.clients FROM anon;\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.organizations, public.organization_members, public.clients TO authenticated;\nGRANT ALL ON public.organizations, public.organization_members, public.clients TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622030000_video_studio_org_tenancy.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:28:23)*
+
+
+## 🤖 Claude *(03:28:24)*
+
+Migration de fundação escrita (com a correção anti-recursão que o stub do BoK não tinha). CLAUDE.md exige `/security-review` em toda migration nova antes do commit. Rodando:
+
+## 🤖 Claude *(03:28:24)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(03:28:24)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/App.tsx
+	modified:   src/hooks/useAuth.ts
+	modified:   src/pages/Auth.tsx
+	modified:   src/pages/CanvasDesignPage.tsx
+	modified:   supabase/functions/generate-image/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/bok/video-studio/
+	docs/processes/[[canvas-design-deploy-and-provision|canvas-design-deploy-and-provision]].md
+	docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md
+	nginx/design.mcorch.com.conf
+	public/canvas-design/
+	scripts/qa/vision-qa.ts
+	scripts/seed-video-studio-agency-amendment.ts
+	scripts/seed-video-studio-bok-seal.ts
+	scripts/sso-auth-gate.ts
+	src/lib/sso-cookie.ts
+	supabase/migrations/20260622030000_video_studio_org_tenancy.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(03:29:13)*
+
+
+## 🤖 Claude *(03:29:16)*
+
+O diff veio vazio no prompt do skill — vou rodar a revisão (Ultracode: finder → verificadores paralelos → filtro ≥8) com os agentes lendo os arquivos do disco. Foco no que é superfície real: a migration (RLS/RBAC/financeiro) + o SSO gate + generate-image.
+
+## 🤖 Claude *(03:29:39)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'sec-review-video-tenancy-sso',\n  description: 'Security review of the agency-tenancy migration + SSO gate + related changes; FP-filter to confidence>=8',\n  phases: [\n    { title: 'Find', detail: 'finders over migration RLS, SSO gate/cookie/auth, generate-image/nginx' },\n    { title: 'Verify', detail: 'adversarial FP-filter per finding (confidence 1-10)' },\n  ],\n}\n\nconst FINDINGS = {\n  type: 'object', additionalProperties: false,\n  required: ['findings'],\n  properties: {\n    findings: { type: 'array', items: {\n      type: 'object', additionalProperties: false,\n      required: ['title', 'file_line', 'severity', 'category', 'description', 'exploit', 'recommendation'],\n      properties: {\n        title: { type: 'string' }, file_line: { type: 'string' },\n        severity: { type: 'string', enum: ['HIGH', 'MEDIUM', 'LOW'] },\n        category: { type: 'string' }, description: { type: 'string' },\n        exploit: { type: 'string' }, recommendation: { type: 'string' },\n      },\n    } },\n  },\n}\nconst VERDICT = {\n  type: 'object', additionalProperties: false,\n  required: ['title', 'confidence', 'is_real', 'note'],\n  properties: { title: { type: 'string' }, confidence: { type: 'number' }, is_real: { type: 'boolean' }, note: { type: 'string' } },\n}\n\nconst RULES = `Only HIGH-confidence, concretely-exploitable security vulns NEWLY introduced. EXCLUSIONS: DoS/rate-limit/resource; secrets-on-disk; client-side JS/TS auth checks (backend is authority); React/tsx XSS unless dangerouslySetInnerHTML; SSRF that only controls path; regex injection; docs/markdown; shell-script command-injection unless concrete untrusted-input path; env vars are trusted; outdated deps; theoretical races. Postgres RLS/RBAC privilege-escalation + financial-integrity (client minting balance) ARE in scope. Be precise with file:line.`\n\nphase('Find')\nconst finders = [\n  { key: 'migration-rls', p: `Security-review the NEW Postgres migration supabase/migrations/20260622030000_video_studio_org_tenancy.sql (Read it fully). Focus: RLS policy correctness (recursion, tenant isolation), RBAC privilege escalation (can a non-owner escalate role? can billing_admin become owner?), FINANCIAL INTEGRITY (can an authenticated client directly UPDATE organizations.wholesale_mco_balance or plan_tier or owner_user_id to mint coins / take over \u2014 column-level grants?), SECURITY DEFINER function safety (search_path, auth.uid scoping), the create_organization bootstrap. Compare against the project's has_role/ledger-RPC security patterns (grep supabase/migrations for has_role, deduct_mco_coins, RESTRICTIVE).` },\n  { key: 'sso-gate-auth', p: `Security-review the NEW SSO auth gate + flow: scripts/sso-auth-gate.ts (JWT verification \u2014 does it verify signature/exp/alg correctly? algorithm-confusion? missing checks that allow bypass?), src/lib/sso-cookie.ts (cookie scope/flags), src/hooks/useAuth.ts, src/pages/Auth.tsx + src/App.tsx (the safeReturnTo open-redirect guard \u2014 can it be bypassed to redirect to a non-mcorch host?), and nginx/design.mcorch.com.conf (auth_request wiring \u2014 can the gate be bypassed? is /_mcorch_auth internal? does an attacker control the cookie verification?). Read each file fully.` },\n  { key: 'generate-image', p: `Security-review the MODIFIED supabase/functions/generate-image/index.ts (Read it). Focus: the dual-path auth (service-role bearer vs user JWT) \u2014 can a non-service caller reach the body-trusted user_id path? any injection/SSRF that controls host (not just path)? secret leakage in responses/errors? Compare with the canvas-execute pattern.` },\n]\nconst found = await parallel(finders.map((f) => () =>\n  agent(`${RULES}\\n\\n${f.p}\\n\\nReturn structured findings (may be empty). Only >80% exploitable.`, { label: `find:${f.key}`, phase: 'Find', schema: FINDINGS, agentType: 'Explore' })))\n\nconst all = found.filter(Boolean).flatMap((r) => r.findings || [])\nif (all.length === 0) return { confirmed: [], note: 'no findings' }\n\nphase('Verify')\nconst verdicts = await parallel(all.map((f) => () =>\n  agent(`${RULES}\\n\\nADVERSARIALLY verify this claimed vuln \u2014 default to skepticism, confirm a CONCRETE exploit path against the actual code (Read the cited file). Assign confidence 1-10 (>=8 only if a real, exploitable issue).\\n\\nTITLE: ${f.title}\\nWHERE: ${f.file_line}\\nSEVERITY: ${f.severity}\\nCLAIM: ${f.description}\\nEXPLOIT: ${f.exploit}`,\n    { label: `verify`, phase: 'Verify', schema: VERDICT, agentType: 'Explore' }).then((v) => ({ finding: f, verdict: v }))))\n\nconst confirmed = verdicts.filter(Boolean).filter((x) => x.verdict && x.verdict.confidence >= 8 && x.verdict.is_real)\nreturn { confirmed, all_count: all.length, verdicts: verdicts.filter(Boolean).map((x) => ({ t: x.finding.title, c: x.verdict?.confidence, real: x.verdict?.is_real })) }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wxol22f8f
+> Summary: Security review of the agency-tenancy migration + SSO gate + related changes; FP-filter to confidence>=8
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f2b532e2-ba74-49e3-b521-a2eb204b5e47/subagents/workflows/wf_79e1c9ff-fca
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f2b532e2-ba74-49e3-b521-a2eb204b5e47/workflows/scripts/sec-review-video-tenancy-sso-wf_79e1c9ff-fca.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f2b532e2-ba74-49e3-b521-a2eb204b5e47/workflows/scripts/sec-review-video-tenancy-sso-wf_79e1c9ff-fca.js"} to iterate without resending the script.)
+> Run ID: wf_79e1c9ff-fca
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f2b532e2-ba74-49e3-b521-a2eb204b5e47/workflows/scripts/sec-review-video-tenancy-sso-wf_79e1c9ff-fca.js", resumeFromRunId: "wf_79e1c9ff-fca"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(03:29:52)*
+
+
+## 🤖 Claude *(03:29:55)*
+
+Revisão de segurança rodando em background (finder → verificadores ≥8). Já identifiquei na leitura 2 candidatos reais que vou confirmar e corrigir: (1) `organizations.wholesale_mco_balance`/`plan_tier`/`owner_user_id` mutáveis via UPDATE do cliente (cunhagem de saldo wholesale / takeover — falta GRANT por coluna); (2) escalada `billing_admin → owner` via `orgmem_admin_write`. Quando o workflow fechar, emito o relatório e aplico os fixes na migration antes do `db push`. Volto em seguida.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

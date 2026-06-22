@@ -3675,6 +3675,307 @@ Sim segue com o followup 1
 
 You've hit your session limit · resets 12:10am (America/Sao_Paulo)
 
+## 👤 User *(03:14:03)*
+
+Sim segue com o followup 1
+
+## 🤖 Claude *(03:14:23)*
+
+
+## 🤖 Claude *(03:14:26)*
+
+O **TL aprovou** (APPROVE COM SUGESTÕES, zero must-fix) — confirmou que o refactor é byte-equivalente na compra, o degrade-open na venda está certo, 3× não tem falso-positivo, e a reordenação do check USDT é idêntica. Mas o **agente QA morreu num limite de sessão** sem emitir veredito. Vou re-rodar o QA (focado) pra fechar o gate:
+
+## 🤖 Claude *(03:14:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review rede de venda (retry)",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revis\u00e3o QA FOCADA (o agente anterior caiu por limite). FOLLOW-UP aditivo no money-path do TradeUX, MAINNET REAL (\ud83d\udd34 LIVE, ~$149). Veredito curto: PASS / PASS COM RESSALVAS / FAIL + achados por severidade.\n\n## O que \u00e9\nCommit anterior `fe06c74` (no ar) deixou a VENDA isenta do teto de notional. Este diff adiciona uma **rede anti-runaway FOLGADA na venda**: env `MAX_SELL_EQUITY_MULT` (default 0=off; ser\u00e1 ligado a 3). Teto da venda = `n\u00d7equity quente`; barra s\u00f3 venda egr\u00e9gia (notional>3\u00d7equity), degrade-OPEN (equity frio\u2192venda passa). Refactor: helpers `notionalOf()`/`freshEquity()` extra\u00eddos, reusados na compra e venda.\n\nDiff em /tmp/sell-net.diff. Working tree aplicado em /home/gcrux-tradeux/tradeux. Arquivos: `backend/src/utils/exchange.js` + `backend/scripts/sim/riskGuard.test.js`.\n\n## Verifique (r\u00e1pido, escopo no DELTA)\n1. **Regress\u00e3o da COMPRA p\u00f3s-refactor**: comportamento id\u00eantico ao anterior? Especialmente o log \"MARKET-por-qty MINI_TICKER frio\" \u2014 virou `notional==null && quantity!=null && price==null && quoteOrderQty==null`. Reproduz os MESMOS casos do `else` antigo?\n2. **Falso-positivo na venda**: alguma venda leg\u00edtima (cofre BTC inteiro, MAX_WALLET, equity subestimado) > 3\u00d7equity barrada por engano?\n3. **Degrade-open**: equity frio/velho/ausente \u2192 venda SEMPRE passa? Nenhum ramo bloqueia com equity stale?\n4. **Cobertura da Se\u00e7\u00e3o E** (riskGuard.test.js): falta caso relevante?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (deve dar 6/6, riskGuard 38). Seja conciso, pt-BR. Se n\u00e3o houver must-fix, diga PASS claramente."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Os call-sites confirmam que as formas testadas batem com a realidade: `OCO-SELL` recebe o preço via `abovePrice||belowPrice`, `SELL` MARKET passa `price=null` (cai no ref MINI_TICKER ou stopPrice), e LIMIT/STOP passam price/stopPrice. Um ponto fino para registrar: no OCO o guard avalia `quantity × abovePrice` — mas como abovePrice é o teto de lucro (LIMIT_MAKER acima), é o preço mais alto da OCO, então é o pior caso de notional, o que é conservador e correto para uma rede anti-runaway. Tenho tudo o que preciso.\n\n---\n\n# Revisão QA — FOLLOW-UP rede anti-runaway na VENDA (`MAX_SELL_EQUITY_MULT`)\n\nArquivos: `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` · `/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js`\n\n## VEREDITO: PASS\n\nSuíte: `test:sim` 6/6, `riskGuard 38 passed / 0 failed`. Refactor correto, degrade-open à prova de bala, falso-positivo só em cenário implausível (equity quente subestimado >3×).\n\n## Verificação dos 4 pontos pedidos\n\n**1. Regressão da COMPRA pós-refactor — OK (idêntico).** A `notionalOf()` extraída reproduz a cadeia `if/else-if` antiga ordem-por-ordem (quote → price×qty → qty×ref). O ramo de log reescrito (`exchange.js:116`) reproduz exatamente os mesmos casos do `else` antigo:\n- MINI frio + sem stopPrice → loga (igual antigo). Validado.\n- `stopPrice` presente mas inválido (`0`/NaN) → `notionalOf` retorna null e loga igual ao `else logger(...)` antigo (no antigo `ref=0` caía no `else`). Mesmo comportamento. Validado.\n- `price+qty` com MINI frio → calcula via price×qty, não loga (igual). Validado.\n- A guarda `notional == null && quantity != null && price == null && o.quoteOrderQty == null` é **mais estrita** que o antigo (que vivia dentro do ramo `quantity != null`), mas todas as combinações testadas convergem — não achei caso que logue diferente.\n\n**2. Falso-positivo na venda — não em cenário realista.** Venda de qualquer ativo individual é ≤ equity total; equity quente é mark-to-market completo (Earn LD* incluído) → notional de venda legítima ≈ ≤1×equity, muito abaixo de 3×equity. Cofre BTC inteiro, MAX_WALLET, equity subestimado em 3× (ex.: Earn fora): **todos passam**. O único bloqueio só aparece com equity quente reportado **< 1/3 do valor real da venda** (testei `equity=$40` vs `SELL $148` → bloqueia) — implausível, e `n=3` dá folga deliberada. Com o `n=3` planejado, OK.\n\n**3. Degrade-open — sólido.** Testei exaustivamente: `null`, `value=0`, `value=NaN`, `value<0`, `at=null`, `at=0`, stale 11min, e `riskState` sem `getEquity` → **toda venda gigante passa**. `freshEquity()` retorna null em todos esses ramos e o bloco SELL só barra quando `eqv != null`. Nenhum ramo bloqueia venda com equity stale/ausente/inválido.\n\n**4. Cobertura da Seção E — boa, com 1 lacuna BAIXA.** Cobre as 4 formas (price×qty, OCO-SELL, STOP-MARKET via stopPrice, MARKET-por-qty), degrade frio/velho, MINI frio, e isolamento compra/venda. O boundary `==teto` não está na suíte (eu validei à mão: `$450 ==` passa, `$450.01` bloqueia — `>` estrito correto).\n\n## Achados\n\n- **[BAIXA] Boundary `==sellCap` não testado na Seção E.** A suíte testa `$440<$450` e `$660>$450`, mas não o limiar exato. Validei manualmente que `>` é estrito (igual ao teto de compra). Sugestão: adicionar `checkOk('venda-net: SELL exatamente 3×equity passa', () => g('SELL','LTCUSDT',450/44,44,{}))`. Não bloqueia.\n\n- **[INFO/intencional] OCO-SELL usa `abovePrice` (perna LIMIT_MAKER de lucro, o preço mais ALTO).** O guard avalia `qty × abovePrice` = pior-caso de notional → conservador e correto para uma rede anti-runaway. Registrado apenas para clareza; nenhum ajuste.\n\n- **[INFO] `n=3` está fora do versionamento (runtime `.env`, default 0=off).** Igual aos demais tetos. Reaplicar pós-`make nuke`. Como combina com `MAX_ORDER_PCT_EQUITY` da compra (também runtime), só funciona se o equity quente do `dailyCapJob` estiver sendo publicado — se o job parar, equity envelhece e a rede entra em degrade-open (venda passa). Comportamento desejado, mas significa que a rede **não cobre venda runaway durante uma janela de equity stale**. Aceitável: a venda runaway exige um qty buggado simultâneo a equity stale; o HALT/MCP-vault seguem cobrindo o cofre BTC.\n\n## Testes que eu rodaria\n- `cd backend && AES_KEY=... npm run test:sim` → 6/6, riskGuard 38 (feito, verde).\n- Boundary `==3×equity` (validado à mão; passa).\n- Degrade-open em 7 variantes de equity inválido (validado à mão; todas passam).\n- Equivalência do ramo de log da compra em stopPrice=0/MINI-frio (validado à mão; idêntico).\n- **No deploy:** confirmar `MAX_SELL_EQUITY_MULT=3` no `.env` vivo + restart, e checar `logs/system.log` por algum `BLOQUEADA (runaway?)` inesperado nas primeiras 24h (não deve aparecer com Farm-only no-loss).\n\n## Recomendação de merge\n**MERGE.** Aditivo, fail-safe na direção certa (degrade-open na venda), refactor sem regressão na compra, suíte verde. O único achado é cosmético (boundary test ausente, BAIXA). Defesa-em-profundidade genuína: liga a `n=3` sem reabrir o furo histórico que barrava venda no-loss legítima."}, {'type': 'text', 'text': "agentId: a086bcdbea4609f2b (use SendMessage with to: 'a086bcdbea4609f2b' to continue this agent)\n<usage>subagent_tokens: 60314\ntool_uses: 12\nduration_ms: 132228</usage>"}]
+> ```
+
+## 🤖 Claude *(03:16:59)*
+
+
+## 🤖 Claude *(03:17:00)*
+
+Os **dois gates fecharam**: **QA PASS (MERGE)** + **TL APPROVE**, zero must-fix. QA sugeriu um teste de borda (`==3×equity` passa) — barato, adiciono pra fechar o gap antes do commit:
+
+## 🤖 Claude *(03:17:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "old_string": "checkOk('venda-net: SELL $440 (10\u00d744 < $450) passa', () => g('SELL', 'LTCUSDT', 10, 44, {}));",
+  "new_string": "checkOk('venda-net: SELL $440 (10\u00d744 < $450) passa', () => g('SELL', 'LTCUSDT', 10, 44, {}));\ncheckOk('venda-net: SELL exatamente $450 (==3\u00d7equity, > estrito) passa', () => g('SELL', 'LTCUSDT', 10, 45, {}));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:17:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"riskGuard|sim suite\"\nnode --check scripts/sim/riskGuard.test.js && echo \"OK syntax\"",
+  "description": "Re-run sim with boundary test, syntax check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sim/riskGuard.test.js ===
+> riskGuard.test.js: 39 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> OK syntax
+> ```
+
+## 🤖 Claude *(03:18:01)*
+
+
+## 🤖 Claude *(03:18:03)*
+
+6/6, riskGuard 39. Agora `.env` (liga a rede a 3×), commit seletivo (só os 2 arquivos — os `backtest-results` ficam de fora, são contaminação cross-session de outro processo), push e deploy.
+
+Primeiro `.env`:
+
+## 🤖 Claude *(03:18:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ncp .env .env.bak-sellnet\nsed -i \"s/^MIN_ORDER_NOTIONAL_FLOOR=12$/MIN_ORDER_NOTIONAL_FLOOR=12\\nMAX_SELL_EQUITY_MULT=3/\" .env\necho \"=== resultado ===\"\ngrep -nE \"MAX_ORDER_NOTIONAL_USDT|MAX_ORDER_PCT_EQUITY|MIN_ORDER_NOTIONAL_FLOOR|MAX_SELL_EQUITY_MULT\" .env\necho \"=== diff ===\"; diff .env.bak-sellnet .env; rm -f .env.bak-sellnet; echo \"(backup removido)\"\n'",
+  "description": "Add MAX_SELL_EQUITY_MULT=3 to .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === resultado ===
+> 69:MAX_ORDER_NOTIONAL_USDT=100
+> 70:MAX_ORDER_PCT_EQUITY=0.20
+> 71:MIN_ORDER_NOTIONAL_FLOOR=12
+> 72:MAX_SELL_EQUITY_MULT=3
+> === diff ===
+> 71a72
+> > MAX_SELL_EQUITY_MULT=3
+> (backup removido)
+> ```
+
+## 🤖 Claude *(03:18:09)*
+
+`.env` atualizado (rede de venda a 3×). Agora commito seletivamente (só os 2 arquivos), pusho e devolvo o `.git`:
+
+## 🤖 Claude *(03:18:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/sellnet-msg.txt <<'EOF'\nfeat(risk): rede anti-runaway na venda (MAX_SELL_EQUITY_MULT, folgada) + refactor do guard\n\nFollow-up do %-teto (fe06c74): a VENDA ficou isenta do teto de notional. Esta rede\nrecupera a 2a linha contra qty BUGGADO sem reintroduzir o bug do no-loss (teto FOLGADO).\n\n- Novo env MAX_SELL_EQUITY_MULT (default 0=off): teto da VENDA = n x equity quente\n  (equity-relativo -> escala com o capital, consistente com o %-teto de compra). Barra SO\n  venda EGREGIA (notional > n x equity); nunca venda legitima (1 posicao <= equity << n x equity).\n- Degrade-OPEN: equity frio/velho/ausente -> venda PASSA (jamais barrar venda protetiva por\n  memoria fria; assimetria deliberada vs a compra, que degrada pro teto absoluto).\n- Refactor: helpers notionalOf() (derivacao de notional, pura) e freshEquity() (equity quente\n  fresco|null) extraidos e reusados na compra E venda. Comportamento da COMPRA inalterado\n  (byte-equivalente; log MARKET-por-qty-frio preservado).\n- Suite riskGuard.test.js: Secao E nova (venda passa/bloqueia, degrade-open, MINI frio,\n  isolamento compra/venda, borda ==3x) -> 39 asserts. test:sim 6/6.\n\nParam ao vivo (.env, runtime nao-git): MAX_SELL_EQUITY_MULT=3.\nGate QA (PASS) + TL (APPROVE c/ sugestoes), zero must-fix.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/utils/exchange.js backend/scripts/sim/riskGuard.test.js\ngit commit -F /tmp/sellnet-msg.txt\necho \"=== staged corretamente? (backtest-results N\u00c3O devem aparecer no commit) ===\"\ngit show --stat --oneline HEAD | head -8'",
+  "description": "Commit sell-net selectively as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master d9f0dc5] feat(risk): rede anti-runaway na venda (MAX_SELL_EQUITY_MULT, folgada) + refactor do guard
+>  2 files changed, 87 insertions(+), 21 deletions(-)
+> === staged corretamente? (backtest-results NÃO devem aparecer no commit) ===
+> d9f0dc5 feat(risk): rede anti-runaway na venda (MAX_SELL_EQUITY_MULT, folgada) + refactor do guard
+>  backend/scripts/sim/riskGuard.test.js | 29 ++++++++++++-
+>  backend/src/utils/exchange.js         | 79 ++++++++++++++++++++++++++---------
+>  2 files changed, 87 insertions(+), 21 deletions(-)
+> ```
+
+## 🤖 Claude *(03:18:22)*
+
+
+## 🤖 Claude *(03:18:23)*
+
+Commit `d9f0dc5` limpo (só os 2 arquivos). Push + chown + deploy:
+
+## 🤖 Claude *(03:18:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected|error\" | head -4\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\necho \"origin: $(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\"\necho \"HEAD  : $(git -c safe.directory='*' rev-parse HEAD)\"\necho \"=== rebuild + restart backend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend 2>&1 | tail -4'",
+  "description": "Push, chown, rebuild+restart backend",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    fe06c74..d9f0dc5  master -> master
+> origin: d9f0dc5815932bf30aa4838f668ec35450932f72
+> HEAD  : d9f0dc5815932bf30aa4838f668ec35450932f72
+> === rebuild + restart backend ===
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(03:18:38)*
+
+
+## 🤖 Claude *(03:18:39)*
+
+Pushed (`origin==HEAD==d9f0dc5`), backend rebuiltado. Smoke da rede de venda no código vivo:
+
+## 🤖 Claude *(03:18:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/smoke2.js <<'EOF'\nconst exch = require('/app/src/utils/exchange');\nconst riskState = require('/app/src/riskState');\nconst g = exch.assertWithinRisk;\nfunction thr(name, fn){ let t=false; try{fn();}catch(e){t=true;} console.log((t?'BLOQUEOU ':'PASSOU   ')+'| '+name); }\nconsole.log('# equity frio (rede de venda degrade-OPEN \u2192 venda passa):');\nthr('SELL 1000@44=$44k (esperado PASSAR \u2014 venda protetiva nunca barrada por mem\u00f3ria fria)', ()=>g('SELL','LTCUSDT',1000,44,{}));\nriskState.setEquity(149);\nconsole.log('# equity $149 \u2192 teto de venda = 3\u00d7149 = $447:');\nthr('SELL $440 (10\u00d744 < $447, esperado PASSAR \u2014 venda leg\u00edtima)', ()=>g('SELL','LTCUSDT',10,44,{}));\nthr('SELL $660 (15\u00d744 > $447, esperado BLOQUEAR \u2014 runaway)', ()=>g('SELL','LTCUSDT',15,44,{}));\nthr('OCO-SELL $660 > $447 (esperado BLOQUEAR)', ()=>g('OCO-SELL','LTCUSDT',15,44,{abovePrice:44}));\nconsole.log('# compra inalterada (%-teto $29.80):');\nthr('BUY quote $29 (esperado PASSAR)', ()=>g('BUY','LTCUSDT',null,null,{quoteOrderQty:29}));\nthr('BUY quote $31 (esperado BLOQUEAR)', ()=>g('BUY','LTCUSDT',null,null,{quoteOrderQty:31}));\nEOF\ncd /home/gcrux-tradeux/tradeux\necho \"=== aguarda backend + env ===\"\nfor i in $(seq 1 20); do c=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null); [ \"$c\" = \"401\" ] && { echo \"backend UP\"; break; }; sleep 2; done\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"env | grep -E \\\"MAX_SELL_EQUITY_MULT|MAX_ORDER_PCT|MIN_ORDER\\\" | sort\"'\necho \"=== /system/halt ===\"\nsudo -n -u gcrux-tradeux bash -lc 'set -a; source .env; set +a; TOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4); curl -s -m8 \"http://127.0.0.1:8090/api/system/halt\" -H \"Authorization: $TOK\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(\\\"halted=%s source=%s\\\"%(d[\\\"halted\\\"],d[\\\"source\\\"]))\"'\necho \"=== smoke da rede de venda (sem ordem real) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node < /tmp/smoke2.js'",
+  "description": "Smoke: env, halt, sell-net behavior in built container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguarda backend + env ===
+> backend UP
+> MAX_ORDER_PCT_EQUITY=0.20
+> MAX_SELL_EQUITY_MULT=3
+> MIN_ORDER_NOTIONAL_FLOOR=12
+> === /system/halt ===
+> halted=False source=None
+> === smoke da rede de venda (sem ordem real) ===
+> # equity frio (rede de venda degrade-OPEN → venda passa):
+> PASSOU   | SELL 1000@44=$44k (esperado PASSAR — venda protetiva nunca barrada por memória fria)
+> # equity $149 → teto de venda = 3×149 = $447:
+> PASSOU   | SELL $440 (10×44 < $447, esperado PASSAR — venda legítima)
+> BLOQUEOU | SELL $660 (15×44 > $447, esperado BLOQUEAR — runaway)
+> BLOQUEOU | OCO-SELL $660 > $447 (esperado BLOQUEAR)
+> # compra inalterada (%-teto $29.80):
+> PASSOU   | BUY quote $29 (esperado PASSAR)
+> BLOQUEOU | BUY quote $31 (esperado BLOQUEAR)
+> ```
+
+## 🤖 Claude *(03:19:02)*
+
+
+## 🤖 Claude *(03:19:04)*
+
+Smoke impecável — rede de venda funcionando no código vivo:
+- **Equity frio → degrade-open**: venda de $44k passa ✓ (nunca trava venda protetiva)
+- **Equity $149 → teto venda $447**: $440 passa, $660 bloqueia, OCO-SELL $660 bloqueia ✓
+- **Compra inalterada**: $29 passa, $31 bloqueia ✓
+- **`halted=false`** intacto, env carregado (`MAX_SELL_EQUITY_MULT=3`) ✓
+
+Atualizo a memória (follow-up agora FEITO) e confirmo o estado final:
+
+## 🤖 Claude *(03:19:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "- **\u26a0\ufe0f Params ao vivo (`.env`, RUNTIME N\u00c3O-GIT \u2014 reaplicar p\u00f3s-nuke):** `MAX_ORDER_NOTIONAL_USDT=50\u2192100` (agora \u00e9 runaway guard), `MAX_ORDER_PCT_EQUITY=0.20`, `MIN_ORDER_NOTIONAL_FLOOR=12` (acima do minNotional $5 dos pares). A $149 \u2192 compra capada em ~$29,80; o teto de exposi\u00e7\u00e3o do Farm $25/s\u00edmbolo (`FARM_MAX_NOTIONAL_USDT`) morde antes no canary.\n- **\u26a0\ufe0f CAVEAT (QA+TL, anotar): venda do COFRE BTC agora ISENTA do teto** \u2192 coberta S\u00d3 por HALT + trava-MCP (que N\u00c3O cobre o caminho de automa\u00e7\u00e3o baseline/UI). Aceit\u00e1vel com baseline PARADO. **FOLLOW-UP priorit\u00e1rio antes de religar Trend/Baseline:** rede anti-runaway opt-in na venda (`MAX_SELL_NOTIONAL_USDT` folgado ~2-3\u00d7 equity, default off) \u2014 recupera a 2\u00aa linha contra `qty` buggado sem reintroduzir o bug do no-loss. Outro nice-to-have: surfar o cap efetivo no cockpit. Ver [[tradeux-vault-guard]], [[tradeux-sim-suite]].",
+  "new_string": "- **\u26a0\ufe0f Params ao vivo (`.env`, RUNTIME N\u00c3O-GIT \u2014 reaplicar p\u00f3s-nuke):** `MAX_ORDER_NOTIONAL_USDT=50\u2192100` (agora \u00e9 runaway guard), `MAX_ORDER_PCT_EQUITY=0.20`, `MIN_ORDER_NOTIONAL_FLOOR=12` (acima do minNotional $5 dos pares), **`MAX_SELL_EQUITY_MULT=3`** (rede de venda, ver abaixo). A $149 \u2192 compra capada em ~$29,80; o teto de exposi\u00e7\u00e3o do Farm $25/s\u00edmbolo (`FARM_MAX_NOTIONAL_USDT`) morde antes no canary.\n\n### Rede anti-runaway na VENDA (follow-up #1 do %-teto) \u2705 FEITO+DEPLOYADO \u2014 2026-06-22, commit `d9f0dc5` (QA PASS + TL APPROVE, sim 6/6 riskGuard 39, smoke vivo OK)\nResolve o CAVEAT do %-teto (venda totalmente isenta \u2192 cofre BTC coberto s\u00f3 por HALT+MCP). Env **`MAX_SELL_EQUITY_MULT`** (default 0=off; ligado a **3** no `.env`): teto da VENDA = `n\u00d7equity quente` (equity-relativo, escala). Barra S\u00d3 venda EGR\u00c9GIA (notional > 3\u00d7equity \u2248 $447 a $149; pega `qty` buggado tipo \u22121013/casa-decimal); NUNCA venda leg\u00edtima (1 posi\u00e7\u00e3o \u2264 equity << 3\u00d7equity). **Degrade-OPEN**: equity frio/velho/ausente \u2192 venda PASSA (jamais barrar venda protetiva por mem\u00f3ria fria \u2014 assimetria deliberada vs a compra que degrada pro teto absoluto). Refactor: helpers `notionalOf()`/`freshEquity()` extra\u00eddos+reusados na compra e venda (compra byte-equivalente). \u26a0\ufe0f gap aceito: a rede some durante janela de equity stale (precisa qty-bug + equity-stale simult\u00e2neos; HALT/MCP-vault seguem). Nice-to-have ainda aberto: surfar o cap efetivo no cockpit. Ver [[tradeux-vault-guard]], [[tradeux-sim-suite]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== working tree (s\u00f3 backtest-results esperado) ===\"\ngit -c safe.directory='*' status --short\necho \"=== vivo == master == origin ===\"\necho \"origin: $(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\"\necho \"HEAD  : $(git -c safe.directory='*' rev-parse HEAD)\"\necho \"=== \u00faltimos 2 commits ===\"\ngit -c safe.directory='*' log --oneline -2\necho \"=== containers ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"table {{.Service}}\\t{{.Status}}\"' 2>/dev/null | head -6",
+  "description": "Confirm clean state, origin sync, containers up"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree (só backtest-results esperado) ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> === vivo == master == origin ===
+> origin: d9f0dc5815932bf30aa4838f668ec35450932f72
+> HEAD  : d9f0dc5815932bf30aa4838f668ec35450932f72
+> === últimos 2 commits ===
+> d9f0dc5 feat(risk): rede anti-runaway na venda (MAX_SELL_EQUITY_MULT, folgada) + refactor do guard
+> fe06c74 feat(risk): %-teto de compra (20% do equity) com isencao de venda + teto absoluto
+> === containers ===
+> SERVICE    STATUS
+> agent      Up 5 hours
+> backend    Up 55 seconds
+> db         Up 6 days (healthy)
+> frontend   Up 2 days
+> ```
+
+## 🤖 Claude *(03:19:39)*
+
+
+## 🤖 Claude *(03:19:50)*
+
+✅ **Follow-up #1 no ar e verificado.** A rede anti-runaway na venda está deployada (`d9f0dc5`), fechando o caveat que QA+TL levantaram no %-teto.
+
+## Estado final do risk guard (completo)
+
+| Lado | Regra | A $149 |
+|---|---|---|
+| **COMPRA** | `min(teto_abs $100, 20%×equity)`, piso $12 | capada em ~**$29,80**, escala com o capital |
+| **VENDA** | isenta do teto de sizing + **rede folgada 3×equity** (anti-runaway), degrade-open | passa até ~**$447**; runaway acima disso bloqueia; equity frio → passa |
+
+Ambos os lados leem o **equity quente** publicado pelo `dailyCapJob` (~60s, fail-safe). A rede de venda recupera a 2ª linha contra um `qty` buggado **sem** reintroduzir o bug que travava venda no-loss legítima.
+
+## Gate + verificação
+- **QA: PASS** · **TL: APPROVE** — zero must-fix nos dois follow-ups.
+- **Sim suite 6/6** (riskGuard **39 asserts**).
+- **Smoke vivo** (código buildado, sem ordem real): venda $440 passa · $660 bloqueia · OCO-SELL $660 bloqueia · compra $31 bloqueia · equity frio → venda passa · `halted=false` intacto.
+- `Vivo == master == origin == d9f0dc5`. Containers up, capital intacto ~$149,40.
+
+## Pendências (nenhuma urgente)
+- **Runtime não-git no `.env`** (reaplicar só pós-`make nuke`): `MAX_ORDER_NOTIONAL_USDT=100`, `MAX_ORDER_PCT_EQUITY=0.20`, `MIN_ORDER_NOTIONAL_FLOOR=12`, `MAX_SELL_EQUITY_MULT=3`. Gravado na memória; falta carimbar no HANDOFF.
+- **Nice-to-have aberto** (QA+TL, não bloqueia): surfar o cap efetivo no cockpit pro agente/dono entenderem um capamento antes do bloqueio.
+
+Os dois itens da fila (%-teto + rede de venda) estão entregues. Quer que eu **sele a sessão com `/handoff`** (carimba os params de runtime + os 2 commits + o estado LIVE no HANDOFF.md), ou seguimos pra mais alguma coisa?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
