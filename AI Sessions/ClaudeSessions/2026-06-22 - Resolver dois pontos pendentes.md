@@ -5084,6 +5084,613 @@ Consertei os três de uma vez (`out.groups/paper/riskCaps = d.x || null`). Confi
 
 Sessão acumulou 3 commits de risk-guard (`fe06c74` %-teto compra · `d9f0dc5` rede venda · `6b9b97b` riskCaps+fix MCP). O `/handoff` carimba tudo isso quando você quiser. Seguimos pra mais alguma coisa, ou paramos por aqui?
 
+## 👤 User *(12:22:58)*
+
+No TradeUX, o tool MCP `tradeux_get_cockpit` (em `tradeux-mcp/src/index.js`) monta um objeto `out` SELETIVO a partir do payload de `GET /analysis/cockpit` e o retorna ao agente. Em 2026-06-22 (commit `6b9b97b`) descobrimos um bug REAL: o handler montava `out = {env, enabled, symbols}` e DROPAVA os campos top-level `groups`, `paper` e `riskCaps` — apesar do prompt do agente (`tradeux-agent/src/agent.js`) referenciá-los. Resultado: a feature "D3/groups" (`5c83c31`) e o "paper-no-cockpit" (`faed249`) ficaram INERTES pelo caminho real do agente por 2 entregas, porque o "verificado ao vivo" testou o ENDPOINT, não o TOOL. Já foi corrigido (forwarding adicionado), mas NÃO há teste que cubra essa classe de bug.
+
+TAREFA: adicionar um smoke test mínimo (puro Node, estilo `backend/scripts/sim/*.test.js`, sem rede) que cubra o forwarding do `tradeux_get_cockpit`:
+1. Refatore o handler do `tradeux_get_cockpit` em `tradeux-mcp/src/index.js` para extrair a transformação payload→out numa função pura EXPORTÁVEL (ex.: `buildCockpitOut(d)`), sem mudar o comportamento (a função recebe o JSON do endpoint e devolve o `out`). O handler passa a chamar essa função.
+2. Crie um teste (ex.: `tradeux-mcp/test/cockpitOut.test.js` ou integre ao runner de sim do backend se fizer sentido) que: dá um payload `d` fake com `env/enabled/symbols/groups/paper/riskCaps` preenchidos e assere que `buildCockpitOut(d).groups/paper/riskCaps` saem NÃO-null e iguais à entrada; e um caso com `groups:[]`/`paper` com totais zero confirmando que `|| null` NÃO os transforma em null indevidamente (array vazio e objeto são truthy).
+3. Garanta que o teste roda no CI (ou no `npm run test:sim`).
+
+Contexto: o `tradeux-mcp` hoje NÃO tem harness de teste — essa é a dívida que deixou o bug passar. Convenções: comentários em pt-BR. Rode o teste e confirme verde. Gate: QA + TL antes de mergear (trunk-based, deploy via rebuild do container `agent`, que empacota o `tradeux-mcp`).
+
+## 🤖 Claude *(12:23:23)*
+
+
+## 🤖 Claude *(12:23:24)*
+
+Você quer que eu execute essa tarefa agora, nesta sessão. Vou fazer. Primeiro descarto o chip que eu tinha criado (seria duplicado) e exploro o estado atual do handler + o setup do pacote MCP + o CI:
+
+## 🤖 Claude *(12:23:25)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__dismiss_task`
+```json
+{
+  "task_id": "task_a96d97b1",
+  "reason": "executando inline nesta sess\u00e3o a pedido do usu\u00e1rio"
+}
+```
+
+> **Tool Result (mcp__ccd_session__dismiss_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Task task_a96d97b1 was already started by the user — it's no longer pending and can't be withdrawn. Nothing was changed."}]
+> ```
+
+## 🤖 Claude *(12:23:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "offset": 211,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 211	);
+> 212	
+> 213	readTool(
+> 214	  "tradeux_get_cockpit",
+> 215	  "Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por simbolo a partir de klines 1m REAIS da mainnet — distribuicao de retornos (mediana |move|, sigma, % de moves >= break-even de fee), EV/trade NET de fee (mecanica da distribuicao 1m; costuma ser <=0 = por que scalping de 1m sangra taxa), banda Monte Carlo DRIFTLESS (p50 == preco, NAO previsao) e o snapshot regime/fluxo + estado dos gates de COMPRA por simbolo. Tambem informa o AMBIENTE real (env.useTestnet) e se o trading esta congelado (env.tradingHalt), o estado ATIVO por grupo (groups: Farm/Trend/Baseline/Paper com active/inactive/total — o que esta REALMENTE ARMADO, separado do gate de regime), o resumo do Paper Engine (paper) e o teto EFETIVO por ordem (riskCaps: buyCapUsdt da COMPRA ~%-equity, sellCapUsdt da rede anti-runaway de VENDA; null = sem teto). Use para REPORTAR ao operador o estado MECANICO do mercado e a coerencia dos gates; NAO e sinal de trade nem forecast. ATENCAO: os gates (buyGate/farm/baseline/trend, doctrine=true) sao a DOUTRINA por regime (o que a estrategia FARIA), NAO confirmam que a automacao correspondente esta ATIVA/ligada (ex.: a baseline id2 esta isActive=0) — o gate VIVO mora na condition da automacao no banco. Reporte como doutrina, nao como estado vivo, e o fluxo e fail-closed (stale/ausente => CAIXA). O campo baseline SO se aplica a simbolo flow-gated (BTC); para ALTS vem null (n/a) — o gate de acumulacao da alt e o farm, entao NAO trate baseline=null (nem farm aberto com RSI>35/25) como incoerencia: o gate e a DOUTRINA de regime/fluxo, o RSI e o GATILHO (gate != gatilho). O regime/fluxo do cockpit sao lidos das MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oraculos vivos (tradeux_get_regime/tradeux_get_oracle_state) — NAO uma fonte paralela; o fluxo carrega flow.ageSec (idade em segundos). Por isso NAO trate diferenca cockpit×oraculo-vivo como contradicao: compare pela idade (um imbalance velho mais negativo que o vivo e o MESMO sinal em instantes diferentes) e, no regime, use o gate.regime histeretico.",
+> 216	  {},
+> 217	  async () => {
+> 218	    const d = await api.get(`/analysis/cockpit`);
+> 219	    const out = { env: d.env || null, enabled: d.enabled, symbols: {} };
+> 220	    for (const [sym, c] of Object.entries(d.symbols || {})) {
+> 221	      const dist = c.dist || {}, ev = c.ev || {}, mc = c.mc || {}, gates = c.gates || {};
+> 222	      out.symbols[sym] = {
+> 223	        price: c.price, regime: c.regime,
+> 224	        flow: c.flow ? { imbalance: c.flow.imbalance, toxicity: c.flow.toxicity, ageSec: Number.isFinite(c.flow.ageMs) ? Math.round(c.flow.ageMs / 1000) : null } : null,
+> 225	        medAbsMovePct: dist.medAbsMovePct, sigmaPct: dist.sigmaPct, pHitBreakevenPct: dist.pHitBreakevenPct,
+> 226	        evNetPct: ev.netPct, breakevenPct: ev.breakevenPct,
+> 227	        mc: { p10: mc.p10, p50: mc.p50, p90: mc.p90, horizonMin: mc.horizonMin, driftless: true },
+> 228	        buyGate: { allowed: gates.buyAllowed, reason: gates.reason, flowFresh: gates.flowFresh, flowGated: gates.flowGated, farm: gates.farm, baseline: gates.baseline },
+> 229	        stale: c.stale,
+> 230	      };
+> 231	    }
+> 232	    // Top-level do cockpit que o agente PRECISA (o prompt referencia): estado ATIVO por grupo (D3), resumo do
+> 233	    // Paper Engine e o teto EFETIVO por ordem. Sem isto o backend computa mas o agente NUNCA recebe (eram dropados).
+> 234	    out.groups = d.groups || null;       // ATIVO por grupo (Farm/Trend/Baseline/Paper) — separa "armado" de "gate"
+> 235	    out.paper = d.paper || null;         // P&L do Paper/Shadow (totais + por trilha)
+> 236	    out.riskCaps = d.riskCaps || null;   // teto efetivo: compra ~%-equity, venda = rede anti-runaway
+> 237	    return out;
+> 238	  }
+> ```
+
+## 🤖 Claude *(12:24:52)*
+
+
+## 🤖 Claude *(12:24:55)*
+
+O dismiss diz que a tarefa "já foi iniciada" — então o clique no chip a roteou pra cá (esta sessão é a execução). Sigo com ela.
+
+> ⚠️ Nota de coordenação: se em algum momento o `master` divergir (outra sessão empurrar algo), eu paro antes de pushar pra não criar commit conflitante. Por ora sigo no tree vivo.
+
+Explorando o setup do pacote MCP + CI pra escolher o melhor ponto de teste:
+
+## 🤖 Claude *(12:24:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== tradeux-mcp/package.json ===\"\ncat tradeux-mcp/package.json\necho \"=== imports no topo do index.js (onde plugar o cockpitOut) ===\"\ngrep -nE \"^import |^const .*require\" tradeux-mcp/src/index.js | head -12\necho \"=== CI: jobs e onde tradeux-mcp \u00e9 instalado/rodado ===\"\ngrep -nE \"name:|run:|cd tradeux-mcp|tradeux-mcp|npm |node \" .github/workflows/ci.yml | head -40",
+  "description": "Inspect MCP package.json, index imports, CI structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tradeux-mcp/package.json ===
+> {
+>   "name": "tradeux-mcp",
+>   "version": "0.1.0",
+>   "description": "Servidor MCP que expõe a API do TradeUX como ferramentas (wallet, preços, indicadores, ordens, automações).",
+>   "type": "module",
+>   "bin": {
+>     "tradeux-mcp": "src/index.js"
+>   },
+>   "main": "src/index.js",
+>   "scripts": {
+>     "start": "node src/index.js",
+>     "test": "node test/place-order-vault-guard.mjs"
+>   },
+>   "engines": {
+>     "node": ">=18"
+>   },
+>   "dependencies": {
+>     "@modelcontextprotocol/sdk": "^1.12.0",
+>     "zod": "^3.23.8"
+>   }
+> }
+> === imports no topo do index.js (onde plugar o cockpitOut) ===
+> 11:import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+> 12:import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+> 13:import { z } from "zod";
+> 14:import { api } from "./api.js";
+> === CI: jobs e onde tradeux-mcp é instalado/rodado ===
+> 1:name: CI
+> 11:    name: frontend (vite build)
+> 14:      run:
+> 23:      - run: npm ci
+> 24:      - name: Build
+> 25:        run: npm run build
+> 33:    name: backend (migrate+seed)
+> 64:      run:
+> 90:      - run: npm ci
+> 91:      - name: Migrations (${{ matrix.dialect }})
+> 92:        run: npx sequelize-cli db:migrate
+> 93:      - name: Seeds (${{ matrix.dialect }})
+> 94:        run: npx sequelize-cli db:seed:all
+> 95:      - name: Re-run migrate+seed (idempotência)
+> 96:        run: npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all
+> 98:  # Integração MCP + agente: o agente sobe o tradeux-mcp e lista as ferramentas
+> 101:    name: mcp + agent (--check)
+> 108:      - name: Install tradeux-mcp
+> 109:        working-directory: tradeux-mcp
+> 110:        run: npm ci
+> 111:      - name: Install tradeux-agent
+> 113:        run: npm ci
+> 114:      - name: Agent --check (sobe o MCP e lista as ferramentas)
+> 119:        run: node src/index.js --check
+> 120:      - name: Dedup de notificacoes por assunto (self-test)
+> 122:        run: npm test
+> 123:      - name: Trava do cofre (SELL-BTC bloqueado em tradeux_place_order)
+> 124:        working-directory: tradeux-mcp
+> 125:        run: npm test
+> 128:  # (calcQty/feeCalc + regressões) que requer o beholder → precisa das deps do backend (npm ci) + AES_KEY.
+> 130:    name: backend logic self-tests (apiClient + sim)
+> 133:      run:
+> 144:      - run: npm ci
+> 145:      - name: apiClient self-test (req/login/findAutomationByName/resolveEnv)
+> 146:        run: node scripts/lib/apiClient.test.js
+> 147:      - name: Suíte de simulação (money-path — calcQty/feeCalc + regressões)
+> 148:        run: node scripts/sim/run.js
+> 152:    name: npm audit (informativo)
+> 160:      - name: Backend (prod)
+> 162:        run: npm audit --omit=dev || true
+> ```
+
+## 🤖 Claude *(12:25:08)*
+
+
+## 🤖 Claude *(12:25:11)*
+
+Achado: o `tradeux-mcp` **já tem harness** — `test/place-order-vault-guard.mjs`, rodado por `npm test` no CI (job "Trava do cofre"). Minha nota anterior ("MCP sem harness") estava imprecisa — corrijo na memória depois. Vou **seguir esse padrão** (`.mjs`) e encadear no `npm test`. Vejo o teste existente pra espelhar o estilo:
+
+## 🤖 Claude *(12:25:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-mcp\necho \"=== test/ dir ===\"; ls -la test/\necho \"=== estilo do teste existente (place-order-vault-guard.mjs) ===\"\nsed -n '1,40p' test/place-order-vault-guard.mjs",
+  "description": "Inspect existing MCP test style"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === test/ dir ===
+> total 16
+> drwxrwxr-x 2 gcrux-tradeux gcrux-tradeux 4096 Jun  8 20:23 .
+> drwxrwxr-x 5 gcrux-tradeux gcrux-tradeux 4096 Jun  8 20:14 ..
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 4418 Jun  8 20:23 place-order-vault-guard.mjs
+> === estilo do teste existente (place-order-vault-guard.mjs) ===
+> // Teste de regressão da TRAVA DO COFRE (Farm-and-Funnel): o agente NUNCA vende BTC.
+> //
+> // Sobe o tradeux-mcp por stdio (igual o tradeux-agent faz) e chama tradeux_place_order.
+> // HERMÉTICO: a trava de SELL-BTC lança ANTES de qualquer chamada HTTP, então não precisa
+> // de backend. Para os casos NÃO-bloqueados (que seguem para o api.post), forçamos credenciais
+> // vazias + API inalcançável no ambiente do MCP — assim eles falham no login e NUNCA enviam
+> // uma ordem real, em qualquer máquina (inclusive CI). Precisa de TRADEUX_ALLOW_TRADING=true
+> // para passar do gate de trading e exercitar a trava.
+> //
+> // Rodar: node test/place-order-vault-guard.mjs   (ou: npm test)
+> 
+> import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+> import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+> import path from "node:path";
+> import { fileURLToPath } from "node:url";
+> 
+> const __dirname = path.dirname(fileURLToPath(import.meta.url));
+> const serverPath = path.resolve(__dirname, "../src/index.js");
+> 
+> const transport = new StdioClientTransport({
+>   command: process.execPath,
+>   args: [serverPath],
+>   env: {
+>     ...process.env,
+>     TRADEUX_ALLOW_TRADING: "true",       // necessário p/ chegar na trava (senão o gate de trading barra antes)
+>     TRADEUX_API_URL: "http://127.0.0.1:1", // inalcançável (porta 1) — defesa extra
+>     TRADEUX_EMAIL: "",                    // sem credenciais => login lança antes de qualquer fetch
+>     TRADEUX_PASSWORD: "",                 // => nenhum caso NÃO-bloqueado consegue enviar ordem real
+>   },
+> });
+> 
+> const client = new Client({ name: "vault-guard-test", version: "0.0.0" }, { capabilities: {} });
+> await client.connect(transport);
+> 
+> async function place(args) {
+>   const res = await client.callTool({ name: "tradeux_place_order", arguments: args });
+>   const text = (res.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
+>   return { text, isError: !!res.isError };
+> }
+> ```
+
+## 🤖 Claude *(12:26:08)*
+
+
+## 🤖 Claude *(12:26:10)*
+
+O teste existente é integration-style (sobe o MCP via stdio). O meu é **unit puro** da função extraída (é o que a tarefa pede) — mais rápido e hermético. Vou: criar `src/cockpitOut.js` (extração byte-fiel), plugar no handler, criar `test/cockpit-out.mjs`, e encadear no `npm test` (que o CI já roda). Vejo as linhas exatas do CI pra ajustar o nome do step:
+
+## 🤖 Claude *(12:26:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/.github/workflows/ci.yml",
+  "offset": 114,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 114	      - name: Agent --check (sobe o MCP e lista as ferramentas)
+> 115	        working-directory: tradeux-agent
+> 116	        env:
+> 117	          TRADEUX_EMAIL: ci@example.com
+> 118	          TRADEUX_PASSWORD: ci-pass
+> 119	        run: node src/index.js --check
+> 120	      - name: Dedup de notificacoes por assunto (self-test)
+> 121	        working-directory: tradeux-agent
+> 122	        run: npm test
+> 123	      - name: Trava do cofre (SELL-BTC bloqueado em tradeux_place_order)
+> 124	        working-directory: tradeux-mcp
+> 125	        run: npm test
+> 126	
+> 127	  # Testes de lógica do backend EM PROCESSO (sem DB): apiClient (puro Node) + suíte de SIMULAÇÃO do money-path
+> ```
+
+## 🤖 Claude *(12:26:22)*
+
+
+## 🤖 Claude *(12:26:24)*
+
+Plano confirmado: o step do CI (linha 123-125) roda `npm test` no `tradeux-mcp` — encadeio meu teste no `npm test` e ajusto o nome do step. Implementando.
+
+**1.** Extraio a transformação pura (byte-fiel) pra `src/cockpitOut.js`:
+
+## 🤖 Claude *(12:26:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/cockpitOut.js",
+  "content": "// Transforma\u00e7\u00e3o PURA do payload de GET /analysis/cockpit \u2192 objeto `out` que o tool tradeux_get_cockpit\n// devolve ao agente. EXTRA\u00cdDA p/ testabilidade: o tool \u00e9 stdio/side-effecty, mas a FORMA do `out` \u00e9 o que\n// importa \u2014 e foi exatamente aqui que um bug REAL passou (commit 6b9b97b): o `out` montado a m\u00e3o DROPAVA os\n// campos top-level `groups`/`paper`/`riskCaps`, deixando a D3 e o paper-no-cockpit INERTES pelo caminho real\n// do agente (o \"verificado ao vivo\" testou o ENDPOINT, n\u00e3o o TOOL). Esta fun\u00e7\u00e3o pura \u00e9 coberta por\n// test/cockpit-out.mjs \u2014 regress\u00e3o dessa classe de bug (endpoint tem o campo \u2260 tool encaminha o campo).\nexport function buildCockpitOut(d) {\n  const out = { env: d.env || null, enabled: d.enabled, symbols: {} };\n  for (const [sym, c] of Object.entries(d.symbols || {})) {\n    const dist = c.dist || {}, ev = c.ev || {}, mc = c.mc || {}, gates = c.gates || {};\n    out.symbols[sym] = {\n      price: c.price, regime: c.regime,\n      flow: c.flow ? { imbalance: c.flow.imbalance, toxicity: c.flow.toxicity, ageSec: Number.isFinite(c.flow.ageMs) ? Math.round(c.flow.ageMs / 1000) : null } : null,\n      medAbsMovePct: dist.medAbsMovePct, sigmaPct: dist.sigmaPct, pHitBreakevenPct: dist.pHitBreakevenPct,\n      evNetPct: ev.netPct, breakevenPct: ev.breakevenPct,\n      mc: { p10: mc.p10, p50: mc.p50, p90: mc.p90, horizonMin: mc.horizonMin, driftless: true },\n      buyGate: { allowed: gates.buyAllowed, reason: gates.reason, flowFresh: gates.flowFresh, flowGated: gates.flowGated, farm: gates.farm, baseline: gates.baseline },\n      stale: c.stale,\n    };\n  }\n  // Top-level que o agente PRECISA (o prompt referencia cockpit.groups/paper/riskCaps). N\u00c3O REMOVER \u2014 sem\n  // estes o backend computa mas o agente NUNCA recebe (o bug 6b9b97b). `|| null` s\u00f3 captura null/undefined:\n  // array vazio e objeto com zeros s\u00e3o truthy \u2192 preservados (testado).\n  out.groups = d.groups || null;\n  out.paper = d.paper || null;\n  out.riskCaps = d.riskCaps || null;\n  return out;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/tradeux-mcp/src/cockpitOut.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:38)*
+
+**2.** Plugo no handler (import + corpo vira a chamada pura):
+
+## 🤖 Claude *(12:26:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "import { api } from \"./api.js\";",
+  "new_string": "import { api } from \"./api.js\";\nimport { buildCockpitOut } from \"./cockpitOut.js\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "  async () => {\n    const d = await api.get(`/analysis/cockpit`);\n    const out = { env: d.env || null, enabled: d.enabled, symbols: {} };\n    for (const [sym, c] of Object.entries(d.symbols || {})) {\n      const dist = c.dist || {}, ev = c.ev || {}, mc = c.mc || {}, gates = c.gates || {};\n      out.symbols[sym] = {\n        price: c.price, regime: c.regime,\n        flow: c.flow ? { imbalance: c.flow.imbalance, toxicity: c.flow.toxicity, ageSec: Number.isFinite(c.flow.ageMs) ? Math.round(c.flow.ageMs / 1000) : null } : null,\n        medAbsMovePct: dist.medAbsMovePct, sigmaPct: dist.sigmaPct, pHitBreakevenPct: dist.pHitBreakevenPct,\n        evNetPct: ev.netPct, breakevenPct: ev.breakevenPct,\n        mc: { p10: mc.p10, p50: mc.p50, p90: mc.p90, horizonMin: mc.horizonMin, driftless: true },\n        buyGate: { allowed: gates.buyAllowed, reason: gates.reason, flowFresh: gates.flowFresh, flowGated: gates.flowGated, farm: gates.farm, baseline: gates.baseline },\n        stale: c.stale,\n      };\n    }\n    // Top-level do cockpit que o agente PRECISA (o prompt referencia): estado ATIVO por grupo (D3), resumo do\n    // Paper Engine e o teto EFETIVO por ordem. Sem isto o backend computa mas o agente NUNCA recebe (eram dropados).\n    out.groups = d.groups || null;       // ATIVO por grupo (Farm/Trend/Baseline/Paper) \u2014 separa \"armado\" de \"gate\"\n    out.paper = d.paper || null;         // P&L do Paper/Shadow (totais + por trilha)\n    out.riskCaps = d.riskCaps || null;   // teto efetivo: compra ~%-equity, venda = rede anti-runaway\n    return out;\n  }",
+  "new_string": "  // A transforma\u00e7\u00e3o payload\u2192out vive em ./cockpitOut.js (PURA, testada em test/cockpit-out.mjs) \u2014 n\u00e3o inline\n  // o `out` aqui de novo: foi o `out` montado a m\u00e3o que DROPOU groups/paper/riskCaps (bug 6b9b97b).\n  async () => buildCockpitOut(await api.get(`/analysis/cockpit`))"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:55)*
+
+
+## 🤖 Claude *(12:26:56)*
+
+**3.** Crio o teste de regressão `test/cockpit-out.mjs` (puro, cobre o coração do bug + falsy-mas-válido + não-regressão do transform):
+
+## 🤖 Claude *(12:27:15)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/test/cockpit-out.mjs",
+  "content": "// Teste de REGRESS\u00c3O do forwarding do tool tradeux_get_cockpit (buildCockpitOut). Cobre a classe de bug do\n// commit 6b9b97b: campos top-level (groups/paper/riskCaps) PRESENTES no payload do endpoint mas DROPADOS no\n// `out` montado a m\u00e3o \u2192 D3 e paper-no-cockpit ficaram INERTES pelo caminho real do agente. Puro: testa a\n// fun\u00e7\u00e3o extra\u00edda, sem stdio/rede/backend. Rodar: node test/cockpit-out.mjs  (ou: npm test).\nimport { buildCockpitOut } from \"../src/cockpitOut.js\";\n\nlet passed = 0, failed = 0;\nfunction ok(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\nfunction eq(name, a, b) { const A = JSON.stringify(a), B = JSON.stringify(b); if (A === B) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${A} exp ${B}`); } }\n\n// Payload representativo do /analysis/cockpit: campos top-level + 1 s\u00edmbolo.\nconst payload = {\n  env: { useTestnet: false, tradingHalt: false, haltSource: null },\n  enabled: true,\n  symbols: {\n    BTCUSDT: {\n      price: 65000, regime: \"bear\",\n      flow: { imbalance: -0.2, toxicity: 0.1, ageMs: 30000 },\n      dist: { medAbsMovePct: 0.05, sigmaPct: 0.1, pHitBreakevenPct: 0.3 },\n      ev: { netPct: -0.17, breakevenPct: 0.2 },\n      mc: { p10: 64000, p50: 65000, p90: 66000, horizonMin: 15 },\n      gates: { buyAllowed: false, reason: \"bear\", flowFresh: true, flowGated: true, farm: false, baseline: null },\n      stale: false,\n    },\n  },\n  groups: [{ key: \"farm\", active: 3, total: 6 }],\n  paper: { totals: { totalPnl: 0.1, fees: 0.2 }, strategies: [{ strategy: \"consistencia\" }] },\n  riskCaps: { equityUsdt: 149.4, buyCapUsdt: 29.88, buyCapBasis: \"pct-equity\", sellCapUsdt: 448.2 },\n};\n\nconst out = buildCockpitOut(payload);\n\n// (1) O CORA\u00c7\u00c3O \u2014 os 3 campos top-level que o bug 6b9b97b dropava DEVEM ser encaminhados, n\u00e3o-null e iguais.\neq(\"groups encaminhado igual \u00e0 entrada\", out.groups, payload.groups);\neq(\"paper encaminhado igual \u00e0 entrada\", out.paper, payload.paper);\neq(\"riskCaps encaminhado igual \u00e0 entrada\", out.riskCaps, payload.riskCaps);\nok(\"groups N\u00c3O \u00e9 null\", out.groups !== null);\nok(\"paper N\u00c3O \u00e9 null\", out.paper !== null);\nok(\"riskCaps N\u00c3O \u00e9 null\", out.riskCaps !== null);\n\n// (2) Falsy-mas-V\u00c1LIDO: array vazio e objeto com zeros s\u00e3o TRUTHY \u2192 o `|| null` N\u00c3O os transforma em null.\nconst zeroish = buildCockpitOut({ ...payload, groups: [], paper: { totals: { totalPnl: 0, fees: 0 }, strategies: [] } });\neq(\"groups:[] preservado (n\u00e3o vira null)\", zeroish.groups, []);\nok(\"paper com totais ZERO preservado (n\u00e3o null)\", zeroish.paper !== null && zeroish.paper.totals.totalPnl === 0);\n\n// (3) Aus\u00eancia REAL (undefined) \u2192 cai pro `|| null` (contrato do tool: campo ausente = null expl\u00edcito).\nconst missing = buildCockpitOut({ env: payload.env, enabled: true, symbols: {} });\neq(\"groups ausente \u2192 null\", missing.groups, null);\neq(\"paper ausente \u2192 null\", missing.paper, null);\neq(\"riskCaps ausente \u2192 null\", missing.riskCaps, null);\n\n// (4) N\u00c3O-REGRESS\u00c3O do resto do `out` (env/enabled/symbols/buyGate/flow.ageSec).\neq(\"env encaminhado\", out.env, payload.env);\nok(\"enabled encaminhado\", out.enabled === true);\nok(\"symbols.BTCUSDT.price\", out.symbols.BTCUSDT.price === 65000);\nok(\"symbols.BTCUSDT.buyGate.allowed=false\", out.symbols.BTCUSDT.buyGate.allowed === false);\nok(\"symbols.BTCUSDT.buyGate.baseline=null (alt n/a preservado)\", out.symbols.BTCUSDT.buyGate.baseline === null);\neq(\"flow.ageSec = round(ageMs/1000) = 30\", out.symbols.BTCUSDT.flow.ageSec, 30);\nok(\"symbols.BTCUSDT.mc.driftless=true\", out.symbols.BTCUSDT.mc.driftless === true);\n\n// (5) symbols ausente \u2192 {} (sem throw), flow ausente \u2192 null.\nconst noSyms = buildCockpitOut({ env: null, enabled: false });\neq(\"symbols ausente \u2192 {}\", noSyms.symbols, {});\nconst noFlow = buildCockpitOut({ symbols: { ADAUSDT: { price: 1, gates: {} } } });\neq(\"flow ausente \u2192 null\", noFlow.symbols.ADAUSDT.flow, null);\n\nconsole.log(`\\ncockpit-out.mjs: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/tradeux-mcp/test/cockpit-out.mjs (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:27:20)*
+
+
+## 🤖 Claude *(12:27:21)*
+
+**4.** Encadeio no `npm test` (cockpit-out roda primeiro — puro/rápido — depois a trava do cofre):
+
+## 🤖 Claude *(12:27:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json",
+  "old_string": "    \"test\": \"node test/place-order-vault-guard.mjs\"",
+  "new_string": "    \"test\": \"node test/cockpit-out.mjs && node test/place-order-vault-guard.mjs\""
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(12:27:26)*
+
+
+## 🤖 Claude *(12:27:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json",
+  "offset": 8,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 8	  },
+> 9	  "main": "src/index.js",
+> 10	  "scripts": {
+> 11	    "start": "node src/index.js",
+> 12	    "test": "node test/place-order-vault-guard.mjs"
+> ```
+
+## 🤖 Claude *(12:27:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json",
+  "old_string": "    \"test\": \"node test/place-order-vault-guard.mjs\"",
+  "new_string": "    \"test\": \"node test/cockpit-out.mjs && node test/place-order-vault-guard.mjs\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/package.json has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:27:35)*
+
+**5.** Ajusto o nome do step do CI (agora cobre forwarding + cofre):
+
+## 🤖 Claude *(12:27:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/.github/workflows/ci.yml",
+  "old_string": "      - name: Trava do cofre (SELL-BTC bloqueado em tradeux_place_order)\n        working-directory: tradeux-mcp\n        run: npm test",
+  "new_string": "      - name: Self-tests do MCP (forwarding do cockpit + trava do cofre SELL-BTC)\n        working-directory: tradeux-mcp\n        run: npm test"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/.github/workflows/ci.yml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:27:51)*
+
+
+## 🤖 Claude *(12:27:51)*
+
+Rodo o teste novo + valido o refactor do handler:
+
+## 🤖 Claude *(12:27:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-mcp\necho \"=== teste novo (puro, sem deps) ===\"\nnode test/cockpit-out.mjs\necho \"=== syntax do handler refatorado ===\"\nnode --check src/index.js && echo \"OK index.js\" || echo \"(ESM check)\"\nnode --check src/cockpitOut.js && echo \"OK cockpitOut.js\"\necho \"=== node_modules presente p/ rodar a su\u00edte inteira (npm test)? ===\"\nls node_modules/@modelcontextprotocol >/dev/null 2>&1 && echo \"deps OK \u2192 rodo npm test inteiro\" || echo \"sem node_modules local (vault-guard s\u00f3 roda no CI)\"",
+  "description": "Run new cockpit-out test, syntax-check refactor, check deps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === teste novo (puro, sem deps) ===
+> 
+> cockpit-out.mjs: 20 passed, 0 failed
+> === syntax do handler refatorado ===
+> OK index.js
+> OK cockpitOut.js
+> === node_modules presente p/ rodar a suíte inteira (npm test)? ===
+> deps OK → rodo npm test inteiro
+> ```
+
+## 🤖 Claude *(12:27:59)*
+
+
+## 🤖 Claude *(12:28:00)*
+
+20/20. Rodo o `npm test` inteiro — a trava do cofre sobe o MCP via stdio, então valida que meu refactor não quebrou o boot do servidor:
+
+## 🤖 Claude *(12:28:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-mcp\ntimeout 90 npm test 2>&1 | tail -25; echo \"exit=${PIPESTATUS[0]}\"",
+  "description": "Run full MCP npm test (cockpit-out + vault-guard)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> cockpit-out.mjs: 20 passed, 0 failed
+> tradeux-mcp pronto (API=http://127.0.0.1:1, trading=ON)
+> ok   - SELL 'BTCUSDT' é REJEITADO pela trava do cofre
+> ok   - SELL 'btcusdt' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCBRL' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCFDUSD' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCEUR' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCUSDS' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCUSD1' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCEURI' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCIDR' é REJEITADO pela trava do cofre
+> ok   - SELL 'BTCU' é REJEITADO pela trava do cofre
+> ok   - SELL ' btcusdt ' é REJEITADO pela trava do cofre
+> ok   - SELL BTCUSDT type=MARKET é REJEITADO
+> ok   - SELL BTCUSDT type=LIMIT é REJEITADO
+> ok   - SELL BTCUSDT type=STOP_LOSS_LIMIT é REJEITADO
+> ok   - SELL BTCUSDT type=TRAILING_STOP é REJEITADO
+> ok   - SELL ETHUSDT NÃO é barrado pela trava do cofre
+> ok   - BUY BTCUSDT NÃO é barrado pela trava do cofre
+> ok   - SELL ETHBTC NÃO é barrado pela trava do cofre
+> ok   - SELL BTCUPUSDT NÃO é barrado pela trava do cofre
+> ok   - SELL BTCDOWNUSDT NÃO é barrado pela trava do cofre
+> ok   - SELL BTCSTUSDT NÃO é barrado pela trava do cofre
+> 
+> ✔ TODOS OS TESTES PASSARAM (trava do cofre OK)
+> exit=0
+> ```
+
+## 🤖 Claude *(12:28:17)*
+
+
+## 🤖 Claude *(12:28:18)*
+
+`npm test` inteiro verde: **cockpit-out 20/20** + trava do cofre OK (e o MCP subiu via stdio → o refactor não quebrou o boot). `exit=0`.
+
+Gate QA+TL (a tarefa exige). Chown + diff + lanço os dois:
+
+## 🤖 Claude *(12:28:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux tradeux-mcp/src/cockpitOut.js tradeux-mcp/src/index.js tradeux-mcp/test/cockpit-out.mjs tradeux-mcp/package.json .github/workflows/ci.yml 2>/dev/null\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git add -N tradeux-mcp/src/cockpitOut.js tradeux-mcp/test/cockpit-out.mjs && git -c safe.directory=\"*\" diff -- tradeux-mcp .github/workflows/ci.yml > /tmp/mcptest.diff 2>&1'\necho \"diff bytes: $(wc -c </tmp/mcptest.diff)\"\ngit -c safe.directory='*' status --short | grep -vE \"backtest-results\"",
+  "description": "Chown, intent-add new files, generate diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff bytes: 12056
+>  M .github/workflows/ci.yml
+>  M tradeux-mcp/package.json
+>  A tradeux-mcp/src/cockpitOut.js
+>  M tradeux-mcp/src/index.js
+>  A tradeux-mcp/test/cockpit-out.mjs
+> ```
+
+## 🤖 Claude *(12:28:43)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review do harness MCP",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise uma mudan\u00e7a no TradeUX: REFATORA\u00c7\u00c3O + TESTE DE REGRESS\u00c3O no `tradeux-mcp` (N\u00c3O toca money-path nem backend). Veredito PASS / PASS COM RESSALVAS / FAIL.\n\n## Contexto\nEm `6b9b97b` corrigimos um bug: o tool MCP `tradeux_get_cockpit` montava `out` a m\u00e3o e DROPAVA `groups`/`paper`/`riskCaps` (D3+paper inertes pelo caminho do agente). N\u00c3O havia teste cobrindo essa classe. Esta mudan\u00e7a adiciona a rede de seguran\u00e7a.\n\n## O que mudou (diff em /tmp/mcptest.diff; working tree em /home/gcrux-tradeux/tradeux \u2014 LEIA os arquivos novos direto)\n1. **`tradeux-mcp/src/cockpitOut.js`** (NOVO): extrai a transforma\u00e7\u00e3o `payload(/analysis/cockpit) \u2192 out` numa fun\u00e7\u00e3o PURA export\u00e1vel `buildCockpitOut(d)`.\n2. **`tradeux-mcp/src/index.js`**: importa `buildCockpitOut` e o handler do tool vira `async () => buildCockpitOut(await api.get('/analysis/cockpit'))` (corpo inline removido).\n3. **`tradeux-mcp/test/cockpit-out.mjs`** (NOVO): teste puro (sem stdio/rede) \u2014 20 asserts.\n4. **`tradeux-mcp/package.json`**: `npm test` agora encadeia `cockpit-out.mjs && place-order-vault-guard.mjs`.\n5. **`.github/workflows/ci.yml`**: nome do step ajustado (o job de integra\u00e7\u00e3o j\u00e1 roda `cd tradeux-mcp && npm test`).\n\n## Foco (adversarial)\n1. **Fidelidade da extra\u00e7\u00e3o**: `buildCockpitOut` \u00e9 BYTE-equivalente ao corpo inline anterior? Compare campo a campo (env/enabled/symbols/flow.ageSec/buyGate/mc.driftless + os 3 forwardings). Alguma diverg\u00eancia sutil (ex.: `d` null agora vs antes)?\n2. **O teste realmente PEGA o bug original**: se algu\u00e9m reverter o forwarding (remover `out.groups=d.groups||null`), o teste FALHA? (\u00e9 o ponto todo). Os asserts de \"groups/paper/riskCaps encaminhado\" cobrem isso?\n3. **Casos falsy-mas-v\u00e1lido** (`groups:[]`, `paper` com zeros): o teste assere que N\u00c3O viram null? H\u00e1 caso falsy que DEVERIA virar null e n\u00e3o \u00e9 coberto?\n4. **CI**: `npm test` encadeado com `&&` \u2014 se `cockpit-out.mjs` passar mas `vault-guard` falhar (ou vice-versa), o exit code propaga? O CI pega ambos? Algum risco do `&&` mascarar falha?\n5. **Cobertura faltante**: algum ramo de `buildCockpitOut` n\u00e3o exercitado (symbols ausente, flow ausente, s\u00edmbolo sem gates)?\n\nRode `cd /home/gcrux-tradeux/tradeux/tradeux-mcp && npm test` (deve dar cockpit-out 20/20 + trava do cofre OK, exit 0). Tamb\u00e9m rode s\u00f3 `node test/cockpit-out.mjs`. Confirme que revertendo 1 forwarding o teste quebra (fa\u00e7a o experimento mental ou real). pt-BR, conciso."
+}
+```
+
+## 🤖 Claude *(12:28:55)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review do harness MCP",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) de uma REFATORA\u00c7\u00c3O + TESTE no `tradeux-mcp` do TradeUX (trunk-based; N\u00c3O toca money-path/backend).\n\n## Contexto\n`6b9b97b` corrigiu um bug onde o tool MCP `tradeux_get_cockpit` dropava `groups`/`paper`/`riskCaps` do `out` (D3+paper inertes pelo caminho do agente). Faltava teste pra essa classe. Esta mudan\u00e7a fecha a d\u00edvida.\n\n## Mudan\u00e7a (diff em /tmp/mcptest.diff; arquivos em /home/gcrux-tradeux/tradeux)\n- `tradeux-mcp/src/cockpitOut.js` (NOVO): fun\u00e7\u00e3o PURA `buildCockpitOut(d)` (transforma\u00e7\u00e3o payload\u2192out extra\u00edda, byte-fiel).\n- `tradeux-mcp/src/index.js`: handler vira `buildCockpitOut(await api.get(...))`.\n- `tradeux-mcp/test/cockpit-out.mjs` (NOVO): teste puro, 20 asserts (forwarding dos 3 campos + falsy-mas-v\u00e1lido + n\u00e3o-regress\u00e3o).\n- `tradeux-mcp/package.json`: `npm test` encadeia os 2 testes.\n- `ci.yml`: nome do step (o job de integra\u00e7\u00e3o j\u00e1 roda o `npm test` do mcp).\n\n## Avalie (must-fix vs nice-to-have)\n1. **A extra\u00e7\u00e3o pra fun\u00e7\u00e3o pura \u00e9 a abordagem certa** p/ testabilidade (vs testar via stdio como o vault-guard faz)? O acoplamento (index importa cockpitOut) \u00e9 s\u00e3o?\n2. **Encadear no `npm test` existente** com `&&` \u00e9 melhor que um step separado no CI? O `&&` propaga falha corretamente?\n3. **`.mjs` em `tradeux-mcp/test/`** (ESM) \u00e9 o lugar certo, ou deveria integrar ao runner de sim do backend (CJS)? (lembre: o pacote mcp \u00e9 `type:module`; o backend \u00e9 CJS \u2014 mismatch.)\n4. **Conven\u00e7\u00f5es**: pt-BR, naming, o coment\u00e1rio do cockpitOut.js documenta bem o \"porqu\u00ea\" (regress\u00e3o do 6b9b97b)?\n5. D\u00edvida residual: o teste \u00e9 unit puro (n\u00e3o exercita o tool via stdio de ponta a ponta). Aceit\u00e1vel dado que o vault-guard j\u00e1 cobre o caminho stdio?\n\nRode `cd /home/gcrux-tradeux/tradeux/tradeux-mcp && npm test`. Foque na decis\u00e3o de merge. pt-BR, conciso, must-fix separado de sugest\u00f5es."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tudo verificado. A extração é byte-fiel (confirmei pelo diff: o corpo de `buildCockpitOut` é idêntico ao bloco inline removido), `index.js` importa e resolve, o `npm test` passa 20 (cockpit) + 21 (vault-guard) com `EXIT=0`, e o `&&` encadeia corretamente.\n\n---\n\n## VEREDITO: APPROVE\n\nRefatoração pequena, bem-escopada, reversível, **fora do money-path** (só `tradeux-mcp`, caminho read-only do agente; não toca `beholder.js`, backend, nem ordens). Fecha uma dívida de teste de uma classe de bug que já mordeu de verdade (`6b9b97b`: campos presentes no endpoint mas dropados no `out` do tool). Blast radius mínimo. Sem segredos, sem chave em log.\n\n### Racional (respondendo aos 5 pontos)\n\n1. **Função pura é a abordagem certa.** O bug do `6b9b97b` foi exatamente "endpoint tem o campo ≠ tool encaminha o campo" — uma falha de **transformação de payload**, não de I/O. Extrair a transformação pura (`buildCockpitOut`) e testá-la diretamente ataca a causa raiz sem o custo/flakiness de subir stdio+backend só pra inspecionar a forma do `out`. O acoplamento é são e unidirecional (`index.js` → `cockpitOut.js`, nenhum import reverso, `cockpitOut` não importa nada). Bônus: o handler ficou de ~22 linhas para 1 expressão legível.\n\n2. **`&&` no `npm test` está correto.** Verificado ao vivo: roda os dois e `EXIT=0`; o `&&` propaga falha (short-circuit + exit code do primeiro que falhar — e o `cockpit-out.mjs` faz `process.exit(failed?1:0)`). Encadear é melhor que um step de CI separado aqui porque o job de integração já invoca `npm test` do mcp — um step novo no `ci.yml` duplicaria o `working-directory`/setup sem ganho. O rename do step (`Self-tests do MCP …`) reflete a cobertura nova com honestidade.\n\n3. **`.mjs` em `tradeux-mcp/test/` é o lugar certo.** O pacote mcp é `type:module`; o backend é CJS. Forçar o teste no runner de sim do backend (`scripts/sim`, CJS) criaria o mismatch ESM/CJS que a própria pergunta levanta, e pioraria a coesão (testaria código do mcp a partir do backend). Fica junto do `place-order-vault-guard.mjs`, mesmo estilo, mesmo runner (`node`). Coerente.\n\n4. **Convenções OK.** pt-BR nos comentários/asserts, naming consistente (`buildCockpitOut`, `cockpit-out.mjs` espelha `cockpitOut.js`). O comentário documenta bem o **porquê** — cita o commit `6b9b97b`, explica que "verificado ao vivo testou o ENDPOINT, não o TOOL" (a lição certa) e o detalhe do `|| null` (falsy-mas-válido preservado), que o teste (2) cobre explicitamente. Documentação de regressão exemplar.\n\n5. **Dívida residual aceitável.** O teste é unit puro e não exercita o tool via stdio ponta-a-ponta — mas o `place-order-vault-guard.mjs` já cobre o caminho stdio do servidor, e o `agent --check` no CI sobe o MCP e lista as tools. A lacuna que sobra (regressão de wiring: handler deixar de chamar `buildCockpitOut`) é estreita e improvável; cobri-la exigiria mock de `api.get` + stdio, custo desproporcional. Aceitável.\n\n### Must-fix\nNenhum.\n\n### Nice-to-have (não bloqueiam)\n- O teste cobre a **forma** do `out`, não o **wiring** (que o handler de fato chama `buildCockpitOut`). Se um dia quiser blindar isso, um assert leve no estilo vault-guard (mock `api.get` → invoca o handler) fecharia o último centímetro. Hoje é overkill.\n- Considerar uma asserção de paridade explícita "todo top-level do payload existe no `out`" pra pegar um **4º** campo futuro que alguém adicione ao endpoint e esqueça de encaminhar (o teste atual fixa os 3 conhecidos, não detecta um novo dropado). Anti-regressão estrutural, opcional.\n\n---\n\n## Decisão de merge\n\n**Merge aprovado**, mudança única e atômica — sem ordenação a coordenar. Sem condições. Segue o fluxo padrão: PR (não direto-a-master), merge como root com a key do `ubuntu` + `chown` de volta pra `gcrux-tradeux`. Não há deploy de runtime necessário pra valer no agente além do restart normal do serviço mcp/compose; nada toca o backend em produção nem o estado LIVE do bot.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/cockpitOut.js` (novo, função pura)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js` (handler vira one-liner)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/test/cockpit-out.mjs` (novo, 20 asserts)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json` (`npm test` encadeado)\n- `/home/gcrux-tradeux/tradeux/.github/workflows/ci.yml` (rename do step)'}, {'type': 'text', 'text': "agentId: a1001239f622f5310 (use SendMessage with to: 'a1001239f622f5310' to continue this agent)\n<usage>subagent_tokens: 23527\ntool_uses: 6\nduration_ms: 49390</usage>"}]
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
