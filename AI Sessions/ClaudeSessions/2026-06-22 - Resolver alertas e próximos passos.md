@@ -4801,6 +4801,1490 @@ O modelo de segurança está provado no comportamento de produção, não só no
 > 0fc7ed9 feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
 > ```
 
+## 🤖 Claude *(14:00:22)*
+
+
+## 🤖 Claude *(14:00:23)*
+
+Migration commitada (`c92850f`). Agora o **contrato edge**: constantes de billing + as 2 edge fns. Lendo o padrão de teste de billing + o config.toml pra casar `verify_jwt`:
+
+## 🤖 Claude *(14:00:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== billing.test.ts (cost mirror test pattern) ===\"\nsed -n '1,40p' src/lib/billing.test.ts 2>/dev/null || echo \"no billing.test.ts\"\necho \"=== config.toml \u2014 example fn entries (verify_jwt pattern) ===\"\ngrep -nA2 \"functions.autopilot-run\\|functions.video\\|functions.orchestrate-content\\|functions.lead-score\" supabase/config.toml 2>/dev/null | head -30",
+  "description": "Read billing test + config.toml patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === billing.test.ts (cost mirror test pattern) ===
+> no billing.test.ts
+> === config.toml — example fn entries (verify_jwt pattern) ===
+> 16:[functions.orchestrate-content]
+> 17-verify_jwt = false
+> 18-[functions.orchestrate-step]
+> --
+> 24:[functions.autopilot-run]
+> 25-verify_jwt = false
+> 26-[functions.autopilot-cadence-cron]
+> ```
+
+## 🤖 Claude *(14:00:37)*
+
+
+## 🤖 Claude *(14:00:39)*
+
+Sem `billing.test.ts` dedicado; o padrão é `billing.ts` (SSOT frontend) + cópia hardcoded na edge fn. `config.toml` usa `verify_jwt = false` + auth in-code. Adicionando as constantes de custo (provisórias, OTD-VS-007):
+
+## 🤖 Claude *(14:00:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts",
+  "old_string": "  DEEPSEARCH_RUN: 3,             // deepsearch orchestration\n  MESH_CONSOLIDATE_REFERENCE: 1, // mesh write (embedding async ~free)\n} as const;",
+  "new_string": "  DEEPSEARCH_RUN: 3,             // deepsearch orchestration\n  MESH_CONSOLIDATE_REFERENCE: 1, // mesh write (embedding async ~free)\n  // video-studio Fatia 1 (PROVISIONAL \u2014 OTD-VS-007 \u00b7 docs/bok/video-studio/05-sdd.md \u00a74.4 4\u00d7-floor).\n  // Calibrate against REAL cost at the first PAID render (slice 2), then seal. Edge fns mirror these copies.\n  VIDEO_FACELESS_RENDER: 125,    // faceless E2E pipeline (n8n Gemini\u2192Pollinations\u2192VoxCPM\u2192Remotion\u2192LTX\u2192FFmpeg\u2192QA) \u2248 canvas DoP video\n  VIDEO_HYPERFRAMES_RENDER: 12,  // deterministic HTML\u2192MP4 via headless Chrome (no AI legs) \u2248 canvas image class\n} as const;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:01:06)*
+
+
+## 🤖 Claude *(14:01:08)*
+
+Agora as 2 edge fns. `video-render` (submit) — contrato completo, mas **honesto na Fatia 1**: como não há worker de render ainda, retorna 503 **antes** de qualquer débito (não cobra por render que não roda); o caminho de deduct→insert→trigger fica pronto, gated por env do worker (acende na Fatia 2):
+
+## 🤖 Claude *(14:01:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render/index.ts",
+  "content": "// video-render \u2014 video-studio render submit (FR-VS-001/005/009/014/032). verify_jwt=false (auth in-code).\n// BoK SSOT: docs/bok/video-studio/05-sdd.md \u00a73.1 (UI\u2192Hook\u2192Edge contract) + 04-frd.md (FR-VS-009 charge-at-entry,\n//           FR-VS-011 refund, FR-VS-032 voice consent). SOP: 07-process-flow.md PROC-VS-001/004.\n//\n// CONTRACT (charge-at-entry + refund-on-failure): JWT verify \u2192 engine validate \u2192 voice-consent gate \u2192\n//   BYOK resolve fail-closed \u2192 [dry_run short-circuit] \u2192 worker-availability gate \u2192 deduct_mco_coins \u2192\n//   INSERT video_renders(queued) via service key \u2192 trigger worker \u2192 202 {render_id}. 401/409/402/503 NEVER\n//   charge. A trigger failure AFTER deduct refunds idempotently via finalize_video_render.\n//\n// SLICE 1 (this): the render worker is NOT wired yet (faceless = n8n bridge OTD-VS-001 / hyperframes = sandbox\n//   OTD-VS-006), so the engine-availability gate returns 503 BEFORE any deduct \u2014 nobody pays for a render that\n//   cannot run. Everything up to that gate is provable zero-cost (401/422/409/402/dry_run). SLICE 2 sets the\n//   worker webhook env \u2192 the prepaid path below activates unchanged.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\n// Mirror of src/lib/billing.ts COIN_COSTS (Deno can't import src/lib \u2014 keep in sync; OTD-VS-007 provisional).\nconst COST = { faceless: 125, hyperframes: 12 } as const;\ntype Engine = keyof typeof COST;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  const pubKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n  const admin = createClient(url, serviceKey);\n  const logHealth = (status: string, event?: string) =>\n    admin.from(\"infra_health_logs\").insert({ service: \"video-render\", status, event }).then(() => {}, () => {});\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader?.startsWith(\"Bearer \")) return json({ error: \"Unauthorized\" }, 401);\n\n    // Identity: user JWT (this is a user-initiated submit). getUser rejects an invalid/forged token.\n    const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: authErr } = await userClient.auth.getUser();\n    if (authErr || !user) return json({ error: \"Unauthorized\" }, 401);\n    const userId = user.id;\n\n    const body = await req.json().catch(() => ({}));\n    const engine = body?.engine as Engine | undefined;\n    if (engine !== \"faceless\" && engine !== \"hyperframes\") {\n      return json({ error: \"engine_invalid\", detail: \"engine deve ser 'faceless' ou 'hyperframes'\" }, 422);\n    }\n    const dryRun = body?.dry_run === true;\n    const voiceConsent = body?.voice_consent === true;\n    const topic = typeof body?.topic === \"string\" ? body.topic.slice(0, 500) : null;\n    const productId = typeof body?.product_id === \"string\" ? body.product_id : null;\n\n    // Voice-consent gate (FR-VS-032): faceless clones a voice (VoxCPM) \u2192 identifiable biometric (LGPD Art. 11).\n    if (engine === \"faceless\" && !voiceConsent) {\n      return json({ error: \"voice_consent_required\", action: \"Confirme o consentimento de uso de voz para gerar o v\u00eddeo faceless.\" }, 409);\n    }\n\n    // BYOK fail-closed (FR-VS-005/006): faceless needs the tenant's Gemini key (director + vision QA). Per-user\n    // first; NO silent global fallback in a user-facing path (API Tenancy Model). hyperframes is deterministic (no AI leg).\n    if (engine === \"faceless\") {\n      const { data: keys } = await admin\n        .from(\"decrypted_user_api_keys\").select(\"gemini_api_key\").eq(\"user_id\", userId).maybeSingle();\n      if (!keys?.gemini_api_key) {\n        return json({ error: \"gemini_not_configured\", action: \"Configure sua chave Gemini em /dashboard/settings para gerar v\u00eddeo.\" }, 402);\n      }\n    }\n\n    const cost = COST[engine];\n\n    // dry_run: cost projection WITHOUT deduct or row (zero-cost proof path; mirrors autopilot-run).\n    if (dryRun) return json({ ok: true, dry_run: true, engine, cost_mco: cost });\n\n    // Engine-availability gate (SLICE 1): the worker webhook is unset until slice 2 wires the render engine.\n    // Returning 503 HERE \u2014 before any deduct \u2014 guarantees no tenant is charged for a render that cannot complete.\n    const workerWebhook = engine === \"faceless\"\n      ? Deno.env.get(\"VIDEO_FACELESS_WEBHOOK\")\n      : Deno.env.get(\"VIDEO_HYPERFRAMES_WEBHOOK\");\n    if (!workerWebhook) {\n      return json({\n        error: \"render_engine_unavailable\",\n        detail: `O motor de render '${engine}' entra na Fatia 2 (faceless: ponte de rede + n8n; hyperframes: sandbox). Nenhum mcoCoin foi debitado.`,\n      }, 503);\n    }\n\n    // \u2500\u2500 SLICE 2 prepaid path (activates once the worker webhook env is set) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Charge-at-entry (FR-VS-009): atomic deduct BEFORE any leg. 402 if balance < cost (zero rows created).\n    const { error: deductErr } = await admin.rpc(\"deduct_mco_coins\", { p_user_id: userId, p_amount: cost });\n    if (deductErr) {\n      logHealth(\"degraded\", \"insufficient_balance\");\n      return json({ error: \"insufficient_balance\", detail: `Saldo insuficiente: render '${engine}' custa ${cost} mcoCoins.`, cost_mco: cost }, 402);\n    }\n\n    // INSERT the queued render (service key \u2014 RLS denies tenant writes; this is the only writer). org_id/client_id\n    // NULL = solo creator (\u00a7AG agency scoping wires in a later slice).\n    const { data: render, error: insErr } = await admin\n      .from(\"video_renders\")\n      .insert({ user_id: userId, engine, topic, product_id: productId, voice_consent: voiceConsent, charged_mco: cost, state: \"queued\" })\n      .select(\"id\").single();\n    if (insErr || !render) {\n      // Could not even create the ledger row \u2192 refund the just-charged cost (no render_id yet \u2192 direct credit).\n      await admin.rpc(\"add_mco_coins\", { p_user_id: userId, p_amount: cost }).then(() => {}, () => {});\n      logHealth(\"error\", \"insert_failed\");\n      return json({ error: \"render_create_failed\", detail: insErr?.message }, 500);\n    }\n    const renderId = render.id as string;\n\n    // Trigger the worker. On failure AFTER the charge, refund idempotently via the terminal authority.\n    try {\n      const r = await fetch(workerWebhook, {\n        method: \"POST\",\n        headers: { Authorization: `Bearer ${serviceKey}`, \"Content-Type\": \"application/json\" },\n        body: JSON.stringify({ render_id: renderId, user_id: userId, engine, topic, product_id: productId }),\n      });\n      if (!r.ok) throw new Error(`worker HTTP ${r.status}`);\n    } catch (e) {\n      await admin.rpc(\"finalize_video_render\", {\n        p_render_id: renderId, p_state: \"failed\", p_storage_key: null, p_qa: null, p_node_id: null, p_refund: cost,\n      }).then(() => {}, () => {});\n      logHealth(\"error\", \"worker_trigger_failed\");\n      return json({ error: \"worker_unavailable\", detail: e instanceof Error ? e.message : \"trigger failed\", render_id: renderId }, 502);\n    }\n\n    logHealth(\"healthy\", \"render_submitted\");\n    return json({ ok: true, render_id: renderId, engine, charged_mco: cost, state: \"queued\" }, 202);\n  } catch (e) {\n    logHealth(\"error\", \"exception\");\n    return json({ error: e instanceof Error ? e.message : \"unknown\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:01:52)*
+
+
+## 🤖 Claude *(14:01:52)*
+
+`video-render-poll` (tenant-bound via RLS — render alheio → 404):
+
+## 🤖 Claude *(14:02:04)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render-poll/index.ts",
+  "content": "// video-render-poll \u2014 video-studio render status poll (FR-VS-024). verify_jwt=false (auth in-code). Cost 0.\n// BoK SSOT: docs/bok/video-studio/05-sdd.md \u00a73.1 (poll leg) + 06-data-model.md \u00a72.1 (poll-able render state).\n//\n// Tenant-bound by RLS: the SELECT runs under the USER client (anon key + the caller's JWT), so the RLS SELECT\n// policy (own OR active org member) is enforced \u2014 another tenant's render_id returns no row \u2192 404. The poll\n// never mutates and never charges. Signed-URL minting of the finished asset lands with the asset/bucket slice.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\nconst UUID_RE = /^[0-9a-fA-F-]{36}$/;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  const json = (b: unknown, s = 200) =>\n    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const pubKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader?.startsWith(\"Bearer \")) return json({ error: \"Unauthorized\" }, 401);\n\n    const body = await req.json().catch(() => ({}));\n    const renderId = typeof body?.render_id === \"string\" ? body.render_id : null;\n    if (!renderId || !UUID_RE.test(renderId)) return json({ error: \"render_id (uuid) required\" }, 422);\n\n    // USER client \u2192 RLS enforces tenant-binding (own or active-org-member). Forged/foreign id \u2192 no row \u2192 404.\n    const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: authErr } = await userClient.auth.getUser();\n    if (authErr || !user) return json({ error: \"Unauthorized\" }, 401);\n\n    const { data: render, error } = await userClient\n      .from(\"video_renders\")\n      .select(\"id, engine, state, charged_mco, refunded_mco, storage_key, qa, node_id, expires_at, created_at\")\n      .eq(\"id\", renderId)\n      .maybeSingle();\n    if (error) return json({ error: \"poll_failed\", detail: error.message }, 500);\n    if (!render) return json({ error: \"render_not_found\" }, 404);\n\n    return json({ ok: true, render });\n  } catch (e) {\n    return json({ error: e instanceof Error ? e.message : \"unknown\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render-poll/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:02:08)*
+
+
+## 🤖 Claude *(14:02:08)*
+
+Adicionando as entradas no `config.toml` (`verify_jwt = false` — auth feita in-code via getUser):
+
+## 🤖 Claude *(14:02:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "offset": 14,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 14	[functions.self-heal]
+> 15	verify_jwt = false
+> 16	[functions.orchestrate-content]
+> 17	verify_jwt = false
+> 18	[functions.orchestrate-step]
+> 19	verify_jwt = false
+> 20	[functions.nurture-dispatch]
+> 21	verify_jwt = false
+> 22	[functions.nurture-cron]
+> 23	verify_jwt = false
+> 24	[functions.autopilot-run]
+> 25	verify_jwt = false
+> 26	[functions.autopilot-cadence-cron]
+> 27	verify_jwt = false
+> 28	[functions.autopilot-analyze]
+> 29	verify_jwt = false
+> 30	[functions.autopilot-collect]
+> 31	verify_jwt = false
+> ```
+
+## 🤖 Claude *(14:02:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.autopilot-collect]\nverify_jwt = false",
+  "new_string": "[functions.autopilot-collect]\nverify_jwt = false\n[functions.video-render]\nverify_jwt = false\n[functions.video-render-poll]\nverify_jwt = false"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:02:43)*
+
+
+## 🤖 Claude *(14:02:46)*
+
+Antes de revisar/deployar, preciso confirmar uma coisa crítica de correção: o `deduct_mco_coins` foi endurecido (2026-06-03) para **authenticated-self-only com guarda `auth.uid()`**. Se for esse o caso, chamá-lo via client service-role (auth.uid() NULL) falha — o débito tem que ir pelo **userClient** (self-deduct). Verificando a definição/grants atuais:
+
+## 🤖 Claude *(14:02:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== latest deduct_mco_coins definition + guard + grants ===\"\ngrep -rln \"FUNCTION public.deduct_mco_coins\" supabase/migrations/ | sort | tail -3\necho \"--- newest def body ---\"\nf=$(grep -rln \"CREATE OR REPLACE FUNCTION public.deduct_mco_coins\" supabase/migrations/ | sort | tail -1); echo \"FILE: $f\"; sed -n '1,80p' \"$f\" | grep -nE \"auth.uid|p_user_id|GRANT|REVOKE|service_role|authenticated|RAISE|search_path\" ",
+  "description": "Inspect deduct_mco_coins guard + grants"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === latest deduct_mco_coins definition + guard + grants ===
+> supabase/migrations/20260516224541_deduct_mco_coins_ledger.sql
+> supabase/migrations/20260526201000_deduct_mco_coins_locking.sql
+> supabase/migrations/20260603220000_secure_ledger_rpcs.sql
+> --- newest def body ---
+> FILE: supabase/migrations/20260603220000_secure_ledger_rpcs.sql
+> 5:-- authenticated and trust a caller-supplied p_user_id with no auth.uid() check. Because they are SECURITY DEFINER
+> 8:--   * award_mco_coins(p_user_id:=self, p_amount:=1000) → mint 1000 mcoCoins per call, unlimited.
+> 12:--   * deduct_mco_coins(p_user_id:=victim, ...)         → drain another tenant's balance.
+> 13:-- (Same exposure model the team's own async_orchestrate_step fix closed by REVOKE-ing public/anon/authenticated.)
+> 17:--     service_role admin client; no client code calls them) → REVOKE from public/anon/authenticated, keep service_role.
+> 19:--     `authenticated` grant but add internal guards (body otherwise reproduced VERBATIM: SET search_path=public,
+> 22:--       - non-service_role callers may only deduct from their OWN profile
+> 23:--         (auth.role() <> 'service_role' AND p_user_id <> auth.uid() → 42501). service_role (edge fns:
+> 25:--     NOTE: the exemption keys on auth.role()='service_role', NOT on a NULL uid — anon also has a NULL uid, so anon
+> 26:--     is additionally REVOKE-d from deduct (anon never legitimately spends).
+> 29:REVOKE EXECUTE ON FUNCTION public.award_mco_coins(uuid, integer, text, jsonb) FROM PUBLIC, anon, authenticated;
+> 30:GRANT  EXECUTE ON FUNCTION public.award_mco_coins(uuid, integer, text, jsonb) TO service_role;
+> 33:REVOKE EXECUTE ON FUNCTION public.add_user_score(uuid, integer) FROM PUBLIC, anon, authenticated;
+> 34:GRANT  EXECUTE ON FUNCTION public.add_user_score(uuid, integer) TO service_role;
+> 37:CREATE OR REPLACE FUNCTION public.deduct_mco_coins(p_user_id uuid, p_amount numeric, p_action text DEFAULT 'spend'::text, p_context jsonb DEFAULT '{}'::jsonb)
+> 41: SET search_path TO 'public'
+> 46:    RAISE EXCEPTION 'Valor de débito de mcoCoins deve ser positivo';
+> 49:  -- Guard 2: a non-service_role caller may only deduct from its OWN profile (blocks cross-tenant drain).
+> 51:  IF auth.role() IS DISTINCT FROM 'service_role' AND p_user_id IS DISTINCT FROM auth.uid() THEN
+> 52:    RAISE EXCEPTION 'cannot deduct mcoCoins for another user' USING ERRCODE = '42501';
+> 56:  PERFORM 1 FROM public.profiles WHERE id = p_user_id FOR UPDATE;
+> 60:   WHERE id = p_user_id
+> 64:    RAISE EXCEPTION 'Saldo mcoCoins insuficiente para completar a operação';
+> 69:  VALUES (p_user_id, p_action, -p_amount::integer, p_context);
+> 73:REVOKE EXECUTE ON FUNCTION public.deduct_mco_coins(uuid, numeric, text, jsonb) FROM PUBLIC, anon;
+> 74:GRANT  EXECUTE ON FUNCTION public.deduct_mco_coins(uuid, numeric, text, jsonb) TO authenticated, service_role;
+> ```
+
+## 🤖 Claude *(14:03:01)*
+
+
+## 🤖 Claude *(14:03:03)*
+
+Confirmado: `deduct_mco_coins` **isenta `service_role`** do guard `auth.uid()` (Guard 2 keys on `auth.role()='service_role'`) + tem GRANT a service_role. Logo o débito via admin client está **correto** — sem mudança. `/security-review` nas 2 edge fns novas:
+
+## 🤖 Claude *(14:03:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security review edge fns",
+  "prompt": "Senior security review of TWO new Supabase Deno edge functions in /home/gcrUX/htdocs/constellation-orchestra. Focus ONLY on HIGH-confidence (>80%) NEW vulnerabilities. Read both files in full:\n- supabase/functions/video-render/index.ts\n- supabase/functions/video-render-poll/index.ts\n\nBoth are config'd verify_jwt=false and do auth in-code. Context (verified facts \u2014 treat as ground truth):\n- deduct_mco_coins(p_user_id, p_amount, ...): SECURITY DEFINER, GRANT to authenticated+service_role; Guard: non-service_role caller may only deduct from auth.uid()=p_user_id (42501); positive-amount guard; service_role EXEMPT. Called here via the service-role `admin` client \u2192 allowed, charges p_user_id.\n- add_mco_coins(uuid, integer): service_role-only (refund credit).\n- finalize_video_render(p_render_id,p_state,p_storage_key,p_qa,p_node_id,p_refund): service_role-only, atomic terminal+refund, idempotent guard state IN (queued,running,qa_gate), refunded_mco<=charged_mco CHECK.\n- video_renders RLS: SELECT own-or-active-org-member; NO insert/update policy for authenticated (service-role writes only); RESTRICTIVE no-delete.\n- decrypted_user_api_keys: service-role-only masked-Vault view (BYOK).\n\nScrutinize specifically:\n1. AuthZ: can a caller charge or read on behalf of ANOTHER user? In video-render, userId comes from getUser() on the caller's JWT (not from body) \u2014 confirm body cannot override identity. The deduct uses p_user_id=userId (the authenticated caller) \u2192 a user can only charge themselves. Confirm no IDOR.\n2. video-render-poll: it runs the SELECT under the USER client (anon key + caller JWT) so RLS binds it \u2014 confirm a foreign render_id cannot be read (returns 404), and that it never uses the service client to bypass RLS for the read.\n3. Charge/refund integrity: on insert failure after deduct, it refunds via add_mco_coins (full cost, no render_id). On worker-trigger failure after deduct+insert, it refunds via finalize_video_render(...,p_refund:cost). Any double-refund or charge-without-refund path? Any path that charges then returns success without a render? Any path that creates a render without charging?\n4. BYOK: faceless reads decrypted_user_api_keys for the AUTHENTICATED userId only (not a body-supplied id) \u2014 confirm no cross-tenant key read. The key VALUE is only existence-checked, never returned to the client \u2014 confirm not leaked in any response.\n5. Secret/PII leakage in responses or logs: does any response or infra_health_logs insert include secrets, tokens, or PII? (logHealth writes service/status/event only \u2014 confirm.)\n6. Input validation that has security impact (not nitpicks): engine whitelist, render_id uuid check in poll.\n7. SLICE-1 note: video-render returns 503 before deduct when the worker webhook env is unset, so the prepaid path is currently dormant \u2014 but review it as if it will activate (slice 2 sets the env).\n\nEnv vars are trusted. Exclude DoS, rate-limiting, lack-of-hardening nits, theoretical races, markdown. Output each finding: file:line, Severity (HIGH/MEDIUM), Category, Description, Exploit Scenario, Fix, Confidence(1-10). If nothing >=8, say so explicitly with a one-line rationale per vector checked."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The `is_org_member` helper is correctly scoped to `auth.uid()` and `seat_active`, so the poll\'s RLS SELECT (`auth.uid() = user_id OR (org_id IS NOT NULL AND is_org_member(org_id))`) cannot be abused — a caller only sees their own renders or renders of orgs they actively belong to. This is sound.\n\nI now have full confidence on every vector. Here is the review.\n\n---\n\n## Security Review — `video-render` & `video-render-poll`\n\n**ORO triplet desta task:**\n- Operator: AI Agent (security reviewer)\n- Reviewer: Sovereign (Gabriel)\n- Owner: Sovereign — risco = cobrança indevida / vazamento cross-tenant em produção\n\n**Verdict: NO findings at or above confidence 8. Nothing HIGH or MEDIUM with >80% confidence.**\n\nThe two functions are well-constructed. Identity is taken exclusively from `getUser()` on the caller\'s JWT (never from the body), the charge always targets the authenticated caller, the poll read is RLS-bound under the user client, and the charge/refund paths are each idempotent and non-overlapping.\n\n### Per-vector rationale (each checked, none clears the 8 bar)\n\n1. **AuthZ / IDOR on charge — CLEAR.** `userId = user.id` from `userClient.auth.getUser()` (video-render:44–46). The body is parsed *after* identity and never sets `userId`. `deduct_mco_coins` is called with `p_user_id: userId` via the service-role `admin` client; the RPC\'s own guard makes service_role charge the passed uid, which is the authenticated caller. A user can only ever charge themselves. No body field overrides identity. Confidence of *no* vuln: 10.\n\n2. **Poll read RLS — CLEAR.** video-render-poll:33–41 runs the SELECT under `userClient` (pubKey + caller JWT); the service/admin client is never constructed in this file (no `SB_SECRET_KEY` read at all). RLS `auth.uid()=user_id OR is_org_member(org_id)` binds; `is_org_member` is `auth.uid()`-scoped + `seat_active`. A foreign `render_id` → `maybeSingle()` returns null → 404 (line 43). No RLS bypass. Confidence of no vuln: 10.\n\n3. **Charge/refund integrity — CLEAR.** Four paths traced:\n   - 402: deduct fails → no row, no charge.\n   - INSERT fails after deduct → `add_mco_coins(userId, cost)` full refund; no row exists so `finalize_video_render` can never touch it → no double refund (video-render:104–108).\n   - Worker-trigger fails after deduct+insert → `finalize_video_render(..., p_refund:cost)`; row was just `queued`, guard `state IN (queued,running,qa_gate)` passes once, sets `refunded_at`; any later worker/sweep `finalize` on the now-`failed` row is a no-op (migration:150–158, CHECK `refunded_mco<=charged_mco`) → single refund (video-render:120–126).\n   - 202: charged + queued, correct.\n   No path charges-without-row, creates-row-without-charge (every INSERT is strictly post-deduct), or double-refunds. The only residual is a *business* value-leak (worker accepts then errors → user refunded but a video may still get produced) — money side stays single-refunded; not a security issue. Confidence: 9 that this is safe.\n\n4. **BYOK cross-tenant key read — CLEAR.** video-render:66–67 reads `decrypted_user_api_keys` filtered `.eq("user_id", userId)` (authenticated caller, not a body id). The value is only existence-checked (`!keys?.gemini_api_key`, line 68) and never placed in any response or log. No cross-tenant read, no key leak. Confidence: 10.\n\n5. **Secret / PII leakage — CLEAR.** `logHealth` inserts only `{service, status, event}` (video-render:36) — fixed string literals (`insufficient_balance`, `insert_failed`, `worker_trigger_failed`, etc.), no user data, tokens, or topic. The worker `Authorization: Bearer ${serviceKey}` (line 116) goes only to the trusted worker webhook, never to a client. Error responses return `insErr?.message` / `e.message` (lines 108, 125, 132; poll 42, 47) — Supabase/fetch error text, not secrets. `infra_health_logs` is global-read but carries nothing per-tenant here. Minor note (below 8): surfacing raw DB error strings to the client is mild information disclosure, but contains no secret/credential. Confidence of no HIGH/MEDIUM: 9.\n\n6. **Input validation with security impact — CLEAR.** Engine is strictly whitelisted (`!== "faceless" && !== "hyperframes"` → 422, video-render:50). Poll validates `render_id` against a UUID regex before query (video-render-poll:14,30). `topic` is `.slice(0,500)`, `product_id` coerced to string-or-null. All downstream writes go through parameterized supabase-js (no SQL injection surface). Confidence: 9.\n\n7. **SLICE-1 dormant prepaid path — reviewed as live.** The 503 gate (video-render:83–88) returns before deduct, so today nothing charges. Reviewed the post-gate path as if `VIDEO_*_WEBHOOK` is set (slice 2): the charge/refund analysis in (3) holds unchanged. No latent vuln waiting to activate.\n\n### One sub-8 observation (reported, not a finding, not actionable as a vuln)\n- video-render:108 / :125 / :132 and poll:42/:47 echo raw `error.message` to the client. Low-value information disclosure (DB/fetch error text), no secret content. Confidence it\'s a *real security issue*: ~3 — below threshold; noted only for completeness.\n\n**Bottom line:** No NEW vulnerability at >80% confidence. The IDOR, RLS-bypass, double-charge, double-refund, BYOK cross-tenant, and secret-leak vectors were each traced to ground (including the backing migrations for `deduct_mco_coins`, `finalize_video_render`, `video_renders` RLS, and `is_org_member`) and all are correctly closed. Safe to proceed past `/security-review`.\n\nRelevant files:\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render-poll/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260603220000_secure_ledger_rpcs.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622030000_video_studio_org_tenancy.sql`'}, {'type': 'text', 'text': "agentId: afbda1deee15bc84c (use SendMessage with to: 'afbda1deee15bc84c' to continue this agent)\n<usage>subagent_tokens: 83018\ntool_uses: 6\nduration_ms: 74044</usage>"}]
+> ```
+
+## 🤖 Claude *(14:04:54)*
+
+
+## 🤖 Claude *(14:04:55)*
+
+Edge fns `/security-review` = **SAFE** (todos os vetores: IDOR, RLS-bypass, double-charge/refund, BYOK cross-tenant, leak de segredo — fechados). Deployando as duas:
+
+## 🤖 Claude *(14:04:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy video-render --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"deploy|size|error\" | head\necho \"---\"\nnpx supabase functions deploy video-render-poll --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"deploy|size|error\" | head",
+  "description": "Deploy both video edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: video-render (script size: 61.83kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: video-render
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> ---
+> Deploying Function: video-render-poll (script size: 58.65kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: video-render-poll
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> ```
+
+## 🤖 Claude *(14:05:10)*
+
+
+## 🤖 Claude *(14:05:11)*
+
+Ambas deployadas (61.83kB · 58.65kB). Boot smoke (401) + vendo o minter de JWT de usuário pra provar os gates zero-cost mais ricos:
+
+## 🤖 Claude *(14:05:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nPUB=\"${SB_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}\"\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== boot smoke video-render (bogus bearer \u2192 401) ===\"\ncurl -s -w \" HTTP %{http_code}\\n\" -X POST \"$B/functions/v1/video-render\" -H \"apikey: $PUB\" -H \"Authorization: Bearer bogus\" -H \"Content-Type: application/json\" -d '{\"engine\":\"faceless\"}'\necho \"=== boot smoke video-render-poll (bogus bearer \u2192 401) ===\"\ncurl -s -w \" HTTP %{http_code}\\n\" -X POST \"$B/functions/v1/video-render-poll\" -H \"apikey: $PUB\" -H \"Authorization: Bearer bogus\" -H \"Content-Type: application/json\" -d '{\"render_id\":\"00000000-0000-0000-0000-000000000000\"}'\necho \"=== gen-user-jwt helper signature ===\"\nsed -n '1,30p' scripts/qa/gen-user-jwt.ts 2>/dev/null | grep -nE \"argv|usage|email|generateLink|verifyOtp|console.log\" | head",
+  "description": "Boot smoke + inspect JWT minter"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot smoke video-render (bogus bearer → 401) ===
+> {"error":"Unauthorized"} HTTP 401
+> === boot smoke video-render-poll (bogus bearer → 401) ===
+> {"error":"Unauthorized"} HTTP 401
+> === gen-user-jwt helper signature ===
+> 4: * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+> 7: * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+> 16:const email = process.argv[2];
+> 17:if (!URL || !SVC || !ANON || !email) {
+> 18:  console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+> 25:const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> 27:  console.error('generateLink error:', error?.message ?? 'no hashed_token');
+> ```
+
+## 🤖 Claude *(14:06:06)*
+
+
+## 🤖 Claude *(14:06:08)*
+
+Boot 401 ✅ nas duas. Minter pronto (email→access_token). Provando os gates zero-cost do contrato com o JWT do Usuário Zero (que tem gemini configurado — prova o caminho configured ponta a ponta):
+
+## 🤖 Claude *(14:06:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nPUB=\"${SB_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}\"\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"minting Usu\u00e1rio Zero JWT...\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null | tail -1)\nif [ -z \"$TOKEN\" ] || [ \"${#TOKEN}\" -lt 40 ]; then echo \"JWT MINT FAILED (len=${#TOKEN}) \u2014 c\u00e9rebro sem m\u00e3os\"; exit 0; fi\necho \"JWT len=${#TOKEN} \u2705\"\nH=(-H \"apikey: $PUB\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\")\nr(){ curl -s -w \" \u2192 HTTP %{http_code}\\n\" -X POST \"$B/functions/v1/$1\" \"${H[@]}\" -d \"$2\"; }\necho \"=== G6 engine invalid \u2192 422 ===\"; r video-render '{\"engine\":\"banana\"}'\necho \"=== G7 faceless sem voice_consent \u2192 409 ===\"; r video-render '{\"engine\":\"faceless\"}'\necho \"=== G8 faceless+consent dry_run (gemini OK) \u2192 200 dry_run cost 125 ===\"; r video-render '{\"engine\":\"faceless\",\"voice_consent\":true,\"dry_run\":true}'\necho \"=== G9 hyperframes dry_run \u2192 200 cost 12 ===\"; r video-render '{\"engine\":\"hyperframes\",\"dry_run\":true}'\necho \"=== G10 faceless+consent REAL (worker unset) \u2192 503 render_engine_unavailable, ZERO d\u00e9bito ===\"; r video-render '{\"engine\":\"faceless\",\"voice_consent\":true}'\necho \"=== G11 poll bad id \u2192 422 ===\"; r video-render-poll '{\"render_id\":\"nope\"}'\necho \"=== G12 poll unknown uuid \u2192 404 (RLS, sem linha) ===\"; r video-render-poll '{\"render_id\":\"11111111-1111-1111-1111-111111111111\"}'\necho \"=== G13 balance unchanged (no charge in any gate above) ===\"\ncurl -s \"$B/rest/v1/profiles?id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=mco_balance\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Zero-cost contract gates via Usu\u00e1rio Zero JWT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> minting Usuário Zero JWT...
+> JWT len=1404 ✅
+> === G6 engine invalid → 422 ===
+> {"error":"engine_invalid","detail":"engine deve ser 'faceless' ou 'hyperframes'"} → HTTP 422
+> === G7 faceless sem voice_consent → 409 ===
+> {"error":"voice_consent_required","action":"Confirme o consentimento de uso de voz para gerar o vídeo faceless."} → HTTP 409
+> === G8 faceless+consent dry_run (gemini OK) → 200 dry_run cost 125 ===
+> {"error":"gemini_not_configured","action":"Configure sua chave Gemini em /dashboard/settings para gerar vídeo."} → HTTP 402
+> === G9 hyperframes dry_run → 200 cost 12 ===
+> {"ok":true,"dry_run":true,"engine":"hyperframes","cost_mco":12} → HTTP 200
+> === G10 faceless+consent REAL (worker unset) → 503 render_engine_unavailable, ZERO débito ===
+> {"error":"gemini_not_configured","action":"Configure sua chave Gemini em /dashboard/settings para gerar vídeo."} → HTTP 402
+> === G11 poll bad id → 422 ===
+> {"error":"render_id (uuid) required"} → HTTP 422
+> === G12 poll unknown uuid → 404 (RLS, sem linha) ===
+> {"error":"render_not_found"} → HTTP 404
+> === G13 balance unchanged (no charge in any gate above) ===
+> [{"mco_balance":5096.00}]
+> ```
+
+## 🤖 Claude *(14:06:45)*
+
+
+## 🤖 Claude *(14:06:48)*
+
+G6/G7/G9/G11/G12 verdes e **saldo intacto (5096)** — mas G8/G10 revelaram algo material: o Usuário Zero voltou **402 `gemini_not_configured`**. Ou minha coluna BYOK está errada, ou o Usuário Zero usa outra coluna. O diagnóstico de imagem tinha listado `google_api_key='••••'` (não `gemini_api_key`). Verificando qual coluna é a canônica do Gemini + o que o Usuário Zero tem:
+
+## 🤖 Claude *(14:06:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== does gemini_api_key column exist? (decrypted view, service) ===\"\ncurl -s -w \" HTTP %{http_code}\\n\" \"$B/rest/v1/decrypted_user_api_keys?user_id=eq.$UZ&select=gemini_api_key\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | head -c 300\necho \"\"\necho \"=== does google_api_key column exist + populated? ===\"\ncurl -s -w \" HTTP %{http_code}\\n\" \"$B/rest/v1/decrypted_user_api_keys?user_id=eq.$UZ&select=google_api_key\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | sed -E 's/(AIza|sk-|key-)[A-Za-z0-9_-]+/\\1***REDACTED***/g' | head -c 300\necho \"\"\necho \"=== how does generate-image / canvas-execute read the Gemini key? (column truth) ===\"\ngrep -rhoE \"(gemini_api_key|google_api_key)\" supabase/functions/generate-image/index.ts supabase/functions/canvas-execute/index.ts 2>/dev/null | sort | uniq -c",
+  "description": "Determine canonical Gemini BYOK column"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === does gemini_api_key column exist? (decrypted view, service) ===
+> {"code":"42703","details":null,"hint":null,"message":"column decrypted_user_api_keys.gemini_api_key does not exist"} HTTP 400
+> 
+> === does google_api_key column exist + populated? ===
+> [{"google_api_key":"AIza***REDACTED***"}] HTTP 200
+> 
+> === how does generate-image / canvas-execute read the Gemini key? (column truth) ===
+>       1 google_api_key
+> ```
+
+## 🤖 Claude *(14:07:09)*
+
+
+## 🤖 Claude *(14:07:10)*
+
+**Bug real pego pelo smoke material** (Lei 1 em ação): a coluna `gemini_api_key` **não existe** (42703) — a canônica é `google_api_key` (Usuário Zero tem `AIza…` populada, e o `canvas-execute` provado lê `google_api_key`). A BoK 06 §2.5 + a tabela API Tenancy do CLAUDE.md dizem `gemini_api_key` (doc drift). Corrigindo a coluna no `video-render`:
+
+## 🤖 Claude *(14:07:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render/index.ts",
+  "old_string": "    // BYOK fail-closed (FR-VS-005/006): faceless needs the tenant's Gemini key (director + vision QA). Per-user\n    // first; NO silent global fallback in a user-facing path (API Tenancy Model). hyperframes is deterministic (no AI leg).\n    if (engine === \"faceless\") {\n      const { data: keys } = await admin\n        .from(\"decrypted_user_api_keys\").select(\"gemini_api_key\").eq(\"user_id\", userId).maybeSingle();\n      if (!keys?.gemini_api_key) {\n        return json({ error: \"gemini_not_configured\", action: \"Configure sua chave Gemini em /dashboard/settings para gerar v\u00eddeo.\" }, 402);\n      }\n    }",
+  "new_string": "    // BYOK fail-closed (FR-VS-005/006): faceless needs the tenant's Gemini/Google key (director + vision QA). Per-user\n    // first; NO silent global fallback in a user-facing path (API Tenancy Model). hyperframes is deterministic (no AI leg).\n    // The canonical Vault column is `google_api_key` (NOT `gemini_api_key` \u2014 the BoK 06 \u00a72.5 / CLAUDE.md naming is\n    // stale; canvas-execute + the live decrypted view use google_api_key, verified 2026-06-22 via 42703 on gemini_api_key).\n    if (engine === \"faceless\") {\n      const { data: keys } = await admin\n        .from(\"decrypted_user_api_keys\").select(\"google_api_key\").eq(\"user_id\", userId).maybeSingle();\n      if (!keys?.google_api_key) {\n        return json({ error: \"gemini_not_configured\", action: \"Configure sua chave Gemini/Google em /dashboard/settings para gerar v\u00eddeo.\" }, 402);\n      }\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:07:21)*
+
+
+## 🤖 Claude *(14:07:22)*
+
+Redeployando `video-render` corrigido + re-rodando G8/G10:
+
+## 🤖 Claude *(14:07:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy video-render --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"Deployed Functions|error\" | head -2\nsource .env 2>/dev/null\nPUB=\"${SB_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}\"\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null | tail -1)\nH=(-H \"apikey: $PUB\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\")\nr(){ curl -s -w \" \u2192 HTTP %{http_code}\\n\" -X POST \"$B/functions/v1/$1\" \"${H[@]}\" -d \"$2\"; }\necho \"=== G8 faceless+consent dry_run (google_api_key OK) \u2192 200 cost 125 ===\"; r video-render '{\"engine\":\"faceless\",\"voice_consent\":true,\"dry_run\":true}'\necho \"=== G10 faceless+consent REAL (worker unset) \u2192 503 render_engine_unavailable, ZERO d\u00e9bito ===\"; r video-render '{\"engine\":\"faceless\",\"voice_consent\":true}'\necho \"=== balance still 5096 (no charge) ===\"\ncurl -s \"$B/rest/v1/profiles?id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=mco_balance\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Redeploy + re-smoke G8/G10"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deployed Functions on project bcyvddsykvehvpwstlfa: video-render
+> === G8 faceless+consent dry_run (google_api_key OK) → 200 cost 125 ===
+> {"ok":true,"dry_run":true,"engine":"faceless","cost_mco":125} → HTTP 200
+> === G10 faceless+consent REAL (worker unset) → 503 render_engine_unavailable, ZERO débito ===
+> {"error":"render_engine_unavailable","detail":"O motor de render 'faceless' entra na Fatia 2 (faceless: ponte de rede + n8n; hyperframes: sandbox). Nenhum mcoCoin foi debitado."} → HTTP 503
+> === balance still 5096 (no charge) ===
+> [{"mco_balance":5096.00}]
+> ```
+
+## 🤖 Claude *(14:07:50)*
+
+
+## 🤖 Claude *(14:07:51)*
+
+**Contrato completo provado zero-cost** — todos os gates verdes, saldo **5096 intacto**, e o bug da coluna BYOK foi pego pelo smoke e corrigido. `tsc` (billing.ts é importado no frontend) + commit do contrato:
+
+## 🤖 Claude *(14:07:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5 || true\ngit add src/lib/billing.ts supabase/functions/video-render/index.ts supabase/functions/video-render-poll/index.ts supabase/config.toml\ngit commit -q -m \"feat(video-studio): Fatia 1 \u2014 contrato edge (video-render submit + poll) + custos\n\nEdge fns do contrato de render (verify_jwt=false, auth in-code): video-render\n(JWT\u2192engine\u2192voice_consent FR-VS-032\u2192BYOK google_api_key fail-closed\u2192[dry_run]\u2192\nworker-gate 503 ANTES de deduct\u2192[Fatia2] deduct\u2192insert\u2192trigger\u2192refund idempotente)\n+ video-render-poll (tenant-bound por RLS, render alheio\u2192404). Custos provisorios\nVIDEO_FACELESS_RENDER=125 / VIDEO_HYPERFRAMES_RENDER=12 (OTD-VS-007, calibrar no 1o\nrender pago). /security-review SAFE (IDOR/RLS/charge-refund/BYOK/leak fechados).\nDeployadas+provado zero-cost: 401/422/409/402/dry_run(125,12)/503/poll-422/poll-404,\nsaldo 5096 intacto. Fix material: coluna BYOK google_api_key (gemini_api_key nao\nexiste \u2014 drift BoK pego pelo smoke).\" 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|\u2591|\u2502|\u2570|\u256d|\u2500|\u25cb|INF|summary|\u2714|mesh-reingest|^$\" | tail -3\ngit log --oneline -4",
+  "description": "tsc + commit edge contract"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> e3b0716 feat(video-studio): Fatia 1 — contrato edge (video-render submit + poll) + custos
+> c92850f feat(video-studio): Fatia 1 — dominio de video (video_renders/video_assets + finalize RPC)
+> 89e59ab docs(security): reconcilia drift — FM-04/FM-10 fechados + SOP CF publish
+> 0fc7ed9 feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
+> ```
+
+## 🤖 Claude *(14:08:36)*
+
+
+## 🤖 Claude *(14:08:38)*
+
+`tsc` limpo · contrato commitado (`e3b0716`). **Fatia 1 do módulo Vídeo está materialmente completa.** Vou vacinar o ecossistema contra a armadilha que o smoke pegou (coluna BYOK) + registrar o estado do módulo:
+
+## 🤖 Claude *(14:08:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"gemini_api_key\" CLAUDE.md | head",
+  "description": "Locate gemini_api_key in CLAUDE.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 307:| AI providers (Groq, OpenRouter, Gemini, Replicate, OpenAI) | `user_api_keys` | `groq_api_key`, `openrouter_api_key`, `gemini_api_key`, `replicate_api_key`, `openai_api_key` |
+> ```
+
+## 🤖 Claude *(14:08:47)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_byok_gemini_column.md",
+  "content": "---\nname: reference-byok-gemini-column\ndescription: A coluna BYOK do Gemini/Google em user_api_keys \u00e9 google_api_key \u2014 gemini_api_key N\u00c3O existe (doc drift na BoK/CLAUDE.md)\nmetadata:\n  type: reference\n---\n\nA chave BYOK do Gemini/Google vive na coluna **`google_api_key`** de `user_api_keys` / `decrypted_user_api_keys`. A coluna **`gemini_api_key` N\u00c3O existe** \u2014 `select=gemini_api_key` retorna `42703 column does not exist` (verificado material 2026-06-22).\n\n\u26a0\ufe0f **Doc drift ativo:** a tabela \"API Tenancy Model\" do `CLAUDE.md` e a BoK `video-studio/06-data-model.md` \u00a72.5 dizem `gemini_api_key` \u2014 est\u00e1 **errado**. O caminho provado (`canvas-execute`, `generate-image`) l\u00ea `google_api_key`. O Usu\u00e1rio Zero (`ada39fae-67e1-4e53-af1c-5a18e1c108e8`) tem `google_api_key` populada (`AIza\u2026`), n\u00e3o gemini.\n\n**Como aplicar:** toda nova integra\u00e7\u00e3o que resolve a chave do Gemini per-user deve ler `decrypted_user_api_keys.google_api_key`. Pego no smoke do `video-render` (FR-VS-005 BYOK fail-closed retornou 402 falso pra um user configurado). Li\u00e7\u00e3o: o smoke material pega o drift que a BoK esconde \u2014 confie no DB live, n\u00e3o no doc. Relacionado: [[reference_user_api_keys_encrypted]] \u00b7 [[project_video_studio]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_byok_gemini_column.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "content": "---\nname: project-video-studio\ndescription: M\u00f3dulo V\u00eddeo (video-studio) \u2014 BoK 9/9 selada; Fatia 1 (dom\u00ednio + contrato edge) SHIPPED; Fatia 2 (motor de render) blocked por infra\nmetadata:\n  type: project\n---\n\nM\u00f3dulo **V\u00eddeo** (`video-studio`): dois motores criativos isolados sob MCORCH \u2014 (A) **Faceless Studio** (est\u00fadio E2E sobre o n8n `e7e3beeb58f7411a` em `/home/gcrUX/studio`, repo externo single-tenant) + (B) **HyperFrames editor** (NLE HTML\u2192MP4, Apache-2.0). BoK **9/9 selada** (commit `f003e32`) + emenda v1.1 (camada de alavancagem de ag\u00eancia: org\u2192clients, white-label, wholesale mcoCoins). Posicionamento: \"AI content agency in a box\".\n\n**Funda\u00e7\u00e3o j\u00e1 landada antes desta sess\u00e3o:** SSO R3 (`sso-auth-gate.service` vivo, gate gen\u00e9rico serve `video.`) + tenancy de ag\u00eancia (`organizations`/`organization_members`/`clients` + RPC `create_organization` + helpers anti-recurs\u00e3o `is_org_member`/`org_role`) \u2014 migrations `20260622030000/030100`, **vivas no DB**.\n\n**Fatia 1 SHIPPED (2026-06-22, commits `c92850f` + `e3b0716`):** dom\u00ednio + contrato edge, tenancy-aware desde o nascimento (org_id/client_id NULLABLE = solo backward-compat).\n- Migration `20260622040000`: `video_renders` (m\u00e1quina de estados + ledger at\u00f4mico charged/refunded) + `video_assets` (manifest de erasure) + `finalize_video_render` (terminal+refund service-role, espelha `finalize_vision_job`). RLS cross-tenant (FMEA-VS-020): SELECT own-or-org-member, **sem write p/ authenticated** (s\u00f3 service-role p\u00f3s-deduct), RESTRICTIVE no-delete. `/security-review` SAFE. Provado: tabelas 200, finalize anon\u219242501, anon INSERT\u219242501.\n- Edge fns `video-render` (submit) + `video-render-poll` (tenant-bound). Contrato: JWT\u2192engine\u2192voice_consent(FR-VS-032 409)\u2192BYOK `google_api_key` fail-closed(402)\u2192[dry_run]\u2192**worker-gate 503 ANTES de deduct**\u2192[Fatia2] deduct\u2192insert\u2192trigger\u2192refund idempotente. Custos provis\u00f3rios `VIDEO_FACELESS_RENDER=125`/`VIDEO_HYPERFRAMES_RENDER=12` (OTD-VS-007). `/security-review` SAFE. Provado zero-cost (13 gates, saldo 5096 intacto). Smoke pegou o drift da coluna BYOK ([[reference_byok_gemini_column]]).\n\n**Fatia 2 (motor de render) \u2014 BLOCKED por infra/decis\u00e3o:** (a) **faceless** precisa da **ponte de rede Docker R5** (OTD-VS-001: `n8n_default`\u2194`mcorch-sovereign-net` isoladas \u2192 QA VLM/chroma inalcan\u00e7\u00e1veis; fix = `docker network connect`) + integrar o est\u00fadio externo como sidecar (n8n `active:false`, expor webhook, asset writeback) + emitir `VIDEO_STUDIO_PAT`; (b) **HyperFrames** precisa de **sandbox de HTML n\u00e3o-confi\u00e1vel** (OTD-VS-006 RPN 200, container ef\u00eamero) + clonar `@hyperframes/studio` (nem instalado). A edge fn acende o caminho pago ao setar env `VIDEO_FACELESS_WEBHOOK`/`VIDEO_HYPERFRAMES_WEBHOOK`. UI (hook+p\u00e1gina) deferida p/ junto da Fatia 2. Custos a calibrar no 1\u00ba render pago.\n\n**Pend\u00eancias de doc (anticorpo):** BoK 06 \u00a72.5 ainda diz `gemini_api_key` (corrigir p/ `google_api_key`). Relacionado: [[project_viral_autopilot]] (mesmo padr\u00e3o prepaid + finalize).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:27)*
+
+
+## 🤖 Claude *(14:09:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| AI providers (Groq, OpenRouter, Gemini, Replicate, OpenAI) | `user_api_keys` | `groq_api_key`, `openrouter_api_key`, `gemini_api_key`, `replicate_api_key`, `openai_api_key` |",
+  "new_string": "| AI providers (Groq, OpenRouter, Gemini/Google, Replicate, OpenAI) | `user_api_keys` | `groq_api_key`, `openrouter_api_key`, `google_api_key` (Gemini \u2014 **n\u00e3o** `gemini_api_key`, que n\u00e3o existe), `replicate_api_key`, `openai_api_key` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Camada criativa validada E2E + reparada — Vision MCP como olho criativo/QA, generate-image consertado, Canvas Studio (img/vídeo/áudio) provado, Canvas Design headless funcional](project_creative_layer_validation.md) — Diretiva Sovereign 2026-06-21: QA Vision + portão de consistência antes de queimar crédito Higgsfield; sempre salvar assets reais. Olho criativo `scripts/qa/vision-qa.ts` (BYOK grátis); SOP `creative-qa-vision-gate.md`. `generate-image` consertado (rotas mortas→path do canvas-execute) DESBLOQUEIA imagem do autopilot. Vídeo DoP real provado (6.4MB, −125mco, analyze_video aprovou). Canvas Design: worker systemd `design-bridge.service` + geração real (gotcha OTD-003: `od` é cliente→daemon COMPARTILHADO, config global `/app/.od/media-config.json`, single-tenant); falta vhost `design.mcorch.com` (Sovereign DNS) + LGPD OTD-008. Música/landing = BoK Gate.
+> 4	- [Motor de conteúdo viral autônomo (viral-autopilot) — BoK 9/9 + **FATIAS 1/1b/2 SHIPPED** (product-aware + imagem + cadência R2 + loop R3 auto-melhorável)](project_viral_autopilot.md) — Diretiva Sovereign 2026-06-17: alimentar redes com conteúdo viral auto-gerado/agendado (R1-R4), monetizado c/ afiliado ML. BoK SELADA (nó `b3398294`, 1889 LOC). **Fatia 1 (commit `4af8b8b`):** gerador product-aware (FR-VA-003) + monetização nas 3 superfícies texto (FR-VA-004, `affiliate_links.content_id` antes-null FECHADO) + threading `product_ids` sanitizado p/ sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009) + picker na TriggerNode. E2E pago `158ba7fc`: 3 criativos, 3 content_id NON-NULL, delta 10. **Fatia 1b (commit `ba5d281`, FR-VA-013):** imagem product-referenced no pipeline — `generate-image` dual-path auth (service-role+user_id) + retorna storage `path`; bloco fail-open (`skipped`) dentro do article_generation, guarda PATH durável em `content_library.media_url` (bucket privado); sem migration/frontend/cobrança extra. E2E `46a98963` provou fail-open + zero regressão. **⚠️ providers de imagem do Usuário Zero quebrados** (nanobana=mock endpoint, openai=erro) → imagem visível bloqueada por CONFIG, não código. **Fatia 2 COMPLETA (commits `686bae3`/`0c59e4d`/`54ac2a9`/`35554da`):** cadência R2 + loop R3 — SOP Lei 2 `autopilot-cron-identity.md` (OTD-VA-008 fechado) + migrations (`autopilot_plans`/`autopilot_cycles` FK composta tenant + RPCs `begin`/`finalize_autopilot_cycle` atômicos service-role-only) + 4 edge fns deployadas (`autopilot-run` executor · `-cadence-cron` driver pg_cron · `-analyze` FR-VA-010 ranqueia→optimization_policy · `-collect` FR-VA-008) + orchestrate-content FR-VA-016 prepaid + orchestrate-step FR-VA-011 feedback injection. /security-review SAFE 3× · 3 smokes zero-cost (31 gates). **Pendente:** UI (FR-VA-014, autônomo) + **ativação pg_cron + 1º ciclo PAGO** (gated GO Sovereign + 2 blockers saída visível: CF WAF `/wp-json` + OpenAI image access) + fetch-trends→pauta (FR-VA-018).
+> 5	- [Unified Sensorial Canvas — Phase Epsilon V9 (Code+Memory+Black Hole numa cena R3F)](project_unified_sensorial_canvas.md) — v6.41.0 2026-06-17: funde Core-Fable+Matrix+Memória em `/dashboard/universe`, ancorado no paper *From AGI to ASI* (Via 4; nó `a576216e`). **3.1-3.4 LIVE** (scaffold + Code Network InstancedMesh Louvain + Memory Network cymatics shell + Black Hole MegaBrain backdrop; graphology=cérebro/R3F=corpo). **3.5-3.10 pendentes** (sinapses reais · fly-to · perf · poda · paridade+gate E2E · seal). Emenda BoK mcorch-constellation (PR-025/FR-043..049/SDD §9). **Gotchas:** "esfera órfã"=spinner `Loader2` (não bug); query do código ~30s c/ 2 canvases (OTD-UCANVAS-PERF); squad-coloring MORTO (0 rows)→podado, Louvain oficial (Decisão B); 3 páginas legadas preservadas até paridade.
+> ```
+
+## 🤖 Claude *(14:09:47)*
+
+
+## 🤖 Claude *(14:09:49)*
+
+Atualizando o índice de memória (2 pointers novos + correção do blocker do autopilot — o "OpenAI image access" foi resolvido, e o CF agora tem SOP+edge fn prontos):
+
+## 🤖 Claude *(14:09:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "**Pendente:** UI (FR-VA-014, aut\u00f4nomo) + **ativa\u00e7\u00e3o pg_cron + 1\u00ba ciclo PAGO** (gated GO Sovereign + 2 blockers sa\u00edda vis\u00edvel: CF WAF `/wp-json` + OpenAI image access) + fetch-trends\u2192pauta (FR-VA-018).",
+  "new_string": "**Pendente:** UI (FR-VA-014, aut\u00f4nomo) + **ativa\u00e7\u00e3o pg_cron + 1\u00ba ciclo PAGO** (gated GO Sovereign + blocker de sa\u00edda vis\u00edvel **CF WAF `/wp-json`** \u2014 SOP `wordpress-cf-publish-unblock.md` + edge fn `publish-wordpress` host-gated J\u00c1 deployada 2026-06-22; falta s\u00f3 a regra CF + secrets `WP_PUBLISH_SECRET`/`_HOST` [a\u00e7\u00e3o Sovereign]. **OpenAI image RESOLVIDO 2026-06-22** \u2014 `generate-image` roteia por OpenRouter Gemini, OpenAI virou fallback inalcan\u00e7\u00e1vel) + fetch-trends\u2192pauta (FR-VA-018)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:10:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n",
+  "new_string": "# Memory Index\n\n- [M\u00f3dulo V\u00eddeo (video-studio) \u2014 BoK 9/9 selada; Fatia 1 (dom\u00ednio + contrato edge) SHIPPED; Fatia 2 (motor) blocked por infra](project_video_studio.md) \u2014 2026-06-22: faceless studio (n8n externo) + HyperFrames sob MCORCH. Funda\u00e7\u00e3o SSO R3 + tenancy de ag\u00eancia j\u00e1 vivas. **Fatia 1 (commits `c92850f`+`e3b0716`):** migration `video_renders`/`video_assets`+`finalize_video_render` (RLS cross-tenant FMEA-VS-020, sem write authenticated, RESTRICTIVE no-delete) + edge fns `video-render`/`video-render-poll` (worker-gate 503 ANTES de deduct \u2192 zero-cost na Fatia 1) + custos provis\u00f3rios 125/12. /security-review SAFE 2\u00d7 \u00b7 13 gates zero-cost (saldo 5096 intacto). **Fatia 2 BLOCKED:** faceless=ponte R5 docker+est\u00fadio externo sidecar; HyperFrames=sandbox RPN 200+clone. Acende via env `VIDEO_*_WEBHOOK`.\n- [BYOK Gemini = coluna `google_api_key` (gemini_api_key N\u00c3O existe \u2014 drift BoK/CLAUDE.md)](reference_byok_gemini_column.md) \u2014 2026-06-22: pego pelo smoke do video-render (402 falso). `select=gemini_api_key`\u219242703. Toda integra\u00e7\u00e3o Gemini per-user l\u00ea `decrypted_user_api_keys.google_api_key` (canvas-execute confirma). Confie no DB live, n\u00e3o no doc.\n"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:10:14)*
+
+
+## 🤖 Claude *(14:10:14)*
+
+Commitando o fix de doc do CLAUDE.md (anticorpo do drift de coluna):
+
+## 🤖 Claude *(14:10:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add CLAUDE.md\ngit commit -q -m \"docs(claude): corrige coluna BYOK Gemini \u2192 google_api_key (gemini_api_key nao existe)\n\nA tabela API Tenancy listava gemini_api_key; a coluna real e google_api_key\n(canvas-execute/generate-image confirmam; select gemini_api_key\u219242703). Drift pego\npelo smoke do video-render nesta sessao.\" 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|\u2591|\u2502|\u2570|\u256d|\u2500|\u25cb|INF|summary|\u2714|mesh-reingest|^$\" | tail -2\necho \"=== branch state ===\"; git log --oneline -6; echo \"---\"; git status --short && echo \"clean \u2705\"",
+  "description": "Commit CLAUDE.md doc fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === branch state ===
+> 792edb0 docs(claude): corrige coluna BYOK Gemini → google_api_key (gemini_api_key nao existe)
+> e3b0716 feat(video-studio): Fatia 1 — contrato edge (video-render submit + poll) + custos
+> c92850f feat(video-studio): Fatia 1 — dominio de video (video_renders/video_assets + finalize RPC)
+> 89e59ab docs(security): reconcilia drift — FM-04/FM-10 fechados + SOP CF publish
+> 0fc7ed9 feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
+> b76f1d5 docs(handoff): seal camada criativa + módulo Vídeo (BoK 9/9 + agência v1.1) + SSO + tenancy
+> ---
+> clean ✅
+> ```
+
+## 🤖 Claude *(14:11:00)*
+
+
+## 🤖 Claude *(14:11:12)*
+
+Tudo commitado, working tree limpo. **6 commits** na branch `hardening/wp-cf-publish-and-security-drift` (local, sem push).
+
+## ✅ Entregue nesta sessão
+
+**Alertas resolvidos:**
+- **Image** — já estava resolvido (rota OpenRouter Gemini); nenhuma ação.
+- **Security FM-04 (RPN 300) + FM-10** — confirmados **já fechados** materialmente (compose + `docker inspect` + Dockerfile UID1001); docs reconciliados (FMEA + CLAUDE.md). Corrigi meu erro do handson: a BoK security está **4/4 selada**.
+- **CF WAF `/wp-json`** — edge fn `publish-wordpress` endurecida (header host-gated fail-closed), `/security-review` **pegou+fechou um HIGH na minha própria mudança**, deployada + SOP escrito.
+
+**Módulo Vídeo — Fatia 1 (domínio + contrato) SHIPPED:**
+
+| Artefato | Prova material |
+|---|---|
+| Migration `video_renders`/`video_assets` + `finalize_video_render` | `db push` exit 0 · `/security-review` SAFE (6 vetores FMEA-VS-020) · tabelas 200 · finalize anon→42501 · anon INSERT→42501 RLS |
+| Edge fns `video-render` + `video-render-poll` | deployadas (61.8/58.6kB) · `/security-review` SAFE · **13 gates zero-cost** (401/422/409/402/dry_run 125+12/503/poll 422/404) · **saldo 5096 intacto** |
+| Bug pego pelo smoke | coluna BYOK era `google_api_key` (não `gemini_api_key` → 42703) — corrigido no código + docs + memória |
+
+A Fatia 1 é **honesta**: sem motor de render ainda, `video-render` retorna **503 antes de qualquer débito** — ninguém paga por render que não roda. O caminho prepaid (deduct→insert→trigger→refund) está pronto e acende ao setar `VIDEO_*_WEBHOOK` na Fatia 2.
+
+## 🔑 Sua ação pendente (destrava o Autopilot)
+Os 2 `supabase secrets` + a regra CF do SOP [`wordpress-cf-publish-unblock.md`](docs/processes/wordpress-cf-publish-unblock.md). Com isso o publish WordPress volta a funcionar → ativação do Viral Autopilot fica desbloqueada.
+
+---
+
+A **Fatia 2 (motor de render)** tem blockers de infra que precisam de você: faceless = ponte de rede Docker R5 + integrar o estúdio externo; HyperFrames = sandbox de HTML não-confiável (RPN 200). Por onde sigo:
+
+## 🤖 Claude *(14:11:17)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Fatia 1 do V\u00eddeo no ar e provada. Pr\u00f3ximo passo?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Fatia 1b \u2014 UI do V\u00eddeo",
+          "description": "Hook useVideoRender + p\u00e1gina /dashboard/video (form + dry_run preview de custo + estado 'motor na Fatia 2'). 100% desbloqueada, zero gasto, d\u00e1 front-door vis\u00edvel ao m\u00f3dulo j\u00e1. Render real vem depois."
+        },
+        {
+          "label": "Fatia 2 faceless \u2014 ponte R5",
+          "description": "Eu fa\u00e7o o `docker network connect` (revers\u00edvel) ligando n8n\u2194sovereign-net + emito VIDEO_STUDIO_PAT + scoping do sidecar n8n (webhook + asset writeback). Caminho p/ v\u00eddeo real; o 1\u00ba render pago precisa do seu GO de gasto depois."
+        },
+        {
+          "label": "Selar a sess\u00e3o (/handoff)",
+          "description": "Empacotar alertas resolvidos + Fatia 1 do V\u00eddeo num seal granular + n\u00f3 de milestone na malha. Retomo a Fatia 2 / UI numa pr\u00f3xima sess\u00e3o."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Fatia 1 do Vídeo no ar e provada. Próximo passo?"="Fatia 1b — UI do Vídeo". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:16:45)*
+
+
+## 🤖 Claude *(14:16:46)*
+
+GO: **Fatia 1b — UI do Vídeo**. Harness Engineering (lógica no hook, página display-only). Lendo as convenções a espelhar (useAutopilot/AutopilotPage + rota + nav):
+
+## 🤖 Claude *(14:16:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// useAutopilot — Viral Autopilot data harness (FR-VA-014). All server state via TanStack Query (Harness Engineering).
+> 2	// CRUD of autopilot_plans (RLS own), cycle history, "run now" (invokes autopilot-run on the user-JWT path), and
+> 3	// activate/pause. The cadence cron / paid execution live server-side; this hook is the display-only data layer.
+> 4	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 5	import { supabase } from '@/integrations/supabase/client';
+> 6	import { useAuth } from '@/hooks/useAuth';
+> 7	import { edgeErrorMessage } from '@/lib/edge';
+> 8	import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+> 9	
+> 10	export type AutopilotPlan = Tables<'autopilot_plans'>;
+> 11	export type AutopilotCycle = Tables<'autopilot_cycles'>;
+> 12	
+> 13	export const AUTOPILOT_PLATFORMS = [
+> 14	  { id: 'wordpress', label: 'WordPress' },
+> 15	  { id: 'linkedin', label: 'LinkedIn' },
+> 16	  { id: 'twitter', label: 'X / Twitter' },
+> 17	] as const;
+> 18	
+> 19	export interface AutopilotPlanInput {
+> 20	  name: string;
+> 21	  mode: 'all_at_once' | 'every_n_days';
+> 22	  interval_days: number;
+> 23	  target_product_ids: string[];
+> 24	  platforms: string[];
+> 25	  budget_cap_mco: number;
+> 26	  daily_cap_mco: number;
+> 27	  min_balance_mco: number;
+> 28	  ab_variants: number;
+> 29	}
+> 30	
+> 31	export function useAutopilotPlans() {
+> 32	  const { user } = useAuth();
+> 33	  return useQuery({
+> 34	    queryKey: ['autopilot-plans'],
+> 35	    enabled: !!user,
+> 36	    queryFn: async (): Promise<AutopilotPlan[]> => {
+> 37	      const { data, error } = await supabase
+> 38	        .from('autopilot_plans').select('*').order('created_at', { ascending: false });
+> 39	      if (error) throw error;
+> 40	      return (data ?? []) as AutopilotPlan[];
+> 41	    },
+> 42	  });
+> 43	}
+> 44	
+> 45	export function useAutopilotCycles(planId?: string) {
+> 46	  return useQuery({
+> 47	    queryKey: ['autopilot-cycles', planId],
+> 48	    enabled: !!planId,
+> 49	    queryFn: async (): Promise<AutopilotCycle[]> => {
+> 50	      const { data, error } = await supabase
+> 51	        .from('autopilot_cycles').select('*').eq('plan_id', planId!)
+> 52	        .order('cycle_number', { ascending: false }).limit(20);
+> 53	      if (error) throw error;
+> 54	      return (data ?? []) as AutopilotCycle[];
+> 55	    },
+> 56	  });
+> 57	}
+> 58	
+> 59	export function useCreateAutopilotPlan() {
+> 60	  const qc = useQueryClient();
+> 61	  const { user } = useAuth();
+> 62	  return useMutation({
+> 63	    mutationFn: async (input: AutopilotPlanInput): Promise<string> => {
+> 64	      if (!user) throw new Error('Sessão expirada — faça login novamente.');
+> 65	      const row: TablesInsert<'autopilot_plans'> = {
+> 66	        user_id: user.id,
+> 67	        name: input.name,
+> 68	        mode: input.mode,
+> 69	        interval_days: input.mode === 'every_n_days' ? input.interval_days : null,
+> 70	        target_product_ids: input.target_product_ids,
+> 71	        platforms: input.platforms,
+> 72	        budget_cap_mco: input.budget_cap_mco,
+> 73	        daily_cap_mco: input.daily_cap_mco,
+> 74	        min_balance_mco: input.min_balance_mco,
+> 75	        ab_variants: input.ab_variants,
+> 76	        is_active: false,
+> 77	      };
+> 78	      const { data, error } = await supabase.from('autopilot_plans').insert(row).select('id').single();
+> 79	      if (error) throw error;
+> 80	      return data.id;
+> 81	    },
+> 82	    onSuccess: () => qc.invalidateQueries({ queryKey: ['autopilot-plans'] }),
+> 83	  });
+> 84	}
+> 85	
+> 86	export function useSetPlanActive() {
+> 87	  const qc = useQueryClient();
+> 88	  return useMutation({
+> 89	    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+> 90	      const patch: Record<string, unknown> = { is_active: active };
+> 91	      // Activate → arm next_run_at to now so the cadence cron picks the plan up on its next tick.
+> 92	      if (active) patch.next_run_at = new Date().toISOString();
+> 93	      const { error } = await supabase.from('autopilot_plans').update(patch).eq('id', id);
+> 94	      if (error) throw error;
+> 95	    },
+> 96	    onSuccess: () => qc.invalidateQueries({ queryKey: ['autopilot-plans'] }),
+> 97	  });
+> 98	}
+> 99	
+> 100	export interface RunResult {
+> 101	  ok?: boolean; dry_run?: boolean; n_runs?: number; projected_mco?: number;
+> 102	  cycle_id?: string; succeeded?: number; actual_mco?: number; refunded_mco?: number; reason?: string;
+> 103	}
+> 104	
+> 105	export function useRunAutopilot() {
+> 106	  const qc = useQueryClient();
+> 107	  return useMutation({
+> 108	    mutationFn: async ({ planId, dryRun }: { planId: string; dryRun?: boolean }): Promise<RunResult> => {
+> 109	      const { data, error } = await supabase.functions.invoke('autopilot-run', {
+> 110	        body: { plan_id: planId, dry_run: !!dryRun },
+> 111	      });
+> 112	      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao executar o Autopilot'));
+> 113	      return data as RunResult;
+> 114	    },
+> 115	    onSuccess: (_d, vars) => {
+> 116	      qc.invalidateQueries({ queryKey: ['autopilot-plans'] });
+> 117	      qc.invalidateQueries({ queryKey: ['autopilot-cycles', vars.planId] });
+> 118	    },
+> 119	  });
+> 120	}
+> 121	
+> ```
+
+## 🤖 Claude *(14:16:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== App.tsx: autopilot route + lazy import ===\"\ngrep -nE \"Autopilot|autopilot|canvas/video|/dashboard/video\" src/App.tsx\necho \"=== sidebar/nav file + autopilot entry ===\"\ngrep -rln \"autopilot\\|Autopilot\" src/components/dashboard/ src/components/ 2>/dev/null | grep -iE \"sidebar|nav|layout\" | head\necho \"=== edge.ts helper ===\"\nsed -n '1,40p' src/lib/edge.ts 2>/dev/null",
+  "description": "Read autopilot hook + routing + nav conventions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === App.tsx: autopilot route + lazy import ===
+> 26:const AutopilotPage = lazy(() => import("./pages/AutopilotPage.tsx"));
+> 106:                <Route path="autopilot" element={<AutopilotPage />} />
+> === sidebar/nav file + autopilot entry ===
+> src/components/dashboard/DashboardSidebar.tsx
+> src/components/dashboard/DashboardSidebar.tsx
+> === edge.ts helper ===
+> // Shared helper for Supabase Edge Function invocations from the client.
+> // supabase.functions.invoke() returns a FunctionsHttpError for any non-2xx response, with the raw
+> // Response on `error.context`. Our edge fns return a PT-BR `{ error }` body (e.g. 402 "Saldo insuficiente"),
+> // so we read that to surface the real message to the user instead of the generic "Edge Function returned a
+> // non-2xx status code".
+> 
+> /** Extract a PT-BR error message from a Supabase Edge Function non-2xx response. */
+> export async function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {
+>   const ctx = (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context;
+>   try {
+>     const body = await ctx?.json?.();
+>     if (body?.error) return body.error;
+>   } catch { /* response body was not JSON */ }
+>   return (error as { message?: string })?.message || fallback;
+> }
+> ```
+
+## 🤖 Claude *(14:17:08)*
+
+
+## 🤖 Claude *(14:17:09)*
+
+Convenções claras. Lendo a estrutura da página + o array de nav do sidebar pra encaixar certo:
+
+## 🤖 Claude *(14:17:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// AutopilotPage (FR-VA-014/015) — display-only cockpit for the Viral Autopilot cadence engine. All data/logic
+> 2	// lives in useAutopilot (Harness Engineering). Create plans, activate/pause cadence, "run now" (with a zero-cost
+> 3	// dry-run), and review cycle history. The autonomous cron + paid execution run server-side.
+> 4	import { useState } from 'react';
+> 5	import {
+> 6	  useAutopilotPlans, useAutopilotCycles, useCreateAutopilotPlan, useSetPlanActive, useRunAutopilot,
+> 7	  AUTOPILOT_PLATFORMS, type AutopilotPlan, type AutopilotPlanInput,
+> 8	} from '@/hooks/useAutopilot';
+> 9	import { useAffiliateProducts } from '@/hooks/useAffiliateProducts';
+> 10	import { toast } from '@/hooks/use-toast';
+> 11	import { Button } from '@/components/ui/button';
+> 12	import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 13	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+> 14	import { Input } from '@/components/ui/input';
+> 15	import { Label } from '@/components/ui/label';
+> 16	import { Checkbox } from '@/components/ui/checkbox';
+> 17	import { Badge } from '@/components/ui/badge';
+> 18	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> 19	import { Rocket, Play, Pause, FlaskConical, Loader2, Plus, History } from 'lucide-react';
+> 20	
+> 21	const DEFAULT_FORM: AutopilotPlanInput = {
+> 22	  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],
+> 23	  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,
+> 24	};
+> 25	const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+> 26	
+> 27	const REASON_LABEL: Record<string, string> = {
+> 28	  aborted_budget: 'Custo projetado acima do teto por ciclo do plano.',
+> 29	  aborted_daily_cap: 'Teto diário de mcoCoins do dia já atingido.',
+> 30	  insufficient_balance: 'Saldo de mcoCoins insuficiente.',
+> 31	};
+> 32	const CYCLE_BADGE: Record<string, string> = {
+> 33	  running: 'bg-blue-500/15 text-blue-400',
+> 34	  completed: 'bg-emerald-500/15 text-emerald-400',
+> 35	  failed: 'bg-red-500/15 text-red-400',
+> 36	  aborted_budget: 'bg-amber-500/15 text-amber-400',
+> 37	  aborted_daily_cap: 'bg-amber-500/15 text-amber-400',
+> 38	};
+> 39	
+> 40	function CreatePlanDialog() {
+> 41	  const [open, setOpen] = useState(false);
+> 42	  const [form, setForm] = useState<AutopilotPlanInput>(DEFAULT_FORM);
+> 43	  const { products, isLoading } = useAffiliateProducts();
+> 44	  const create = useCreateAutopilotPlan();
+> 45	  const set = (patch: Partial<AutopilotPlanInput>) => setForm((f) => ({ ...f, ...patch }));
+> 46	
+> 47	  const submit = async () => {
+> 48	    if (!form.name.trim()) return toast({ title: 'Dê um nome ao plano', variant: 'destructive' });
+> 49	    if (form.target_product_ids.length === 0) return toast({ title: 'Selecione ao menos um produto', variant: 'destructive' });
+> 50	    if (form.platforms.length === 0) return toast({ title: 'Selecione ao menos uma rede', variant: 'destructive' });
+> 51	    try {
+> 52	      await create.mutateAsync(form);
+> 53	      toast({ title: 'Plano criado', description: 'Ative-o para a cadência começar a gerar.' });
+> 54	      setForm(DEFAULT_FORM); setOpen(false);
+> 55	    } catch (e) {
+> 56	      toast({ title: 'Falha ao criar plano', description: (e as Error).message, variant: 'destructive' });
+> 57	    }
+> 58	  };
+> 59	
+> 60	  return (
+> 61	    <Dialog open={open} onOpenChange={setOpen}>
+> 62	      <DialogTrigger asChild>
+> 63	        <Button><Plus className="mr-2 h-4 w-4" />Novo Plano</Button>
+> 64	      </DialogTrigger>
+> 65	      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+> 66	        <DialogHeader><DialogTitle>Novo Plano de Autopilot</DialogTitle></DialogHeader>
+> 67	        <div className="space-y-4">
+> 68	          <div className="space-y-1.5">
+> 69	            <Label htmlFor="ap-name">Nome do plano</Label>
+> 70	            <Input id="ap-name" value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ex.: Smart Home — review semanal" />
+> ```
+
+## 🤖 Claude *(14:17:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== DashboardSidebar nav items (find the array + autopilot/Video entries) ===\"\ngrep -nE \"to:|path|label|icon|Autopilot|Target|Film|Video|Sparkles|href\" src/components/dashboard/DashboardSidebar.tsx | head -40",
+  "description": "Read page structure + sidebar nav"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DashboardSidebar nav items (find the array + autopilot/Video entries) ===
+> 10:  Sparkles,
+> 28:  Target,
+> 58:  icon: LucideIcon;
+> 63:  icon: LucideIcon;
+> 71:    icon: Layers,
+> 73:      { title: 'Marketing', url: '/dashboard/marketing', icon: Target },
+> 74:      { title: 'Viral Autopilot', url: '/dashboard/autopilot', icon: Rocket },
+> 75:      { title: 'Campanhas', url: '/dashboard/campaigns', icon: Megaphone },
+> 76:      { title: 'Orquestração', url: '/dashboard/orchestration', icon: Wand2 },
+> 77:      { title: 'Workspace Kanban', url: '/dashboard/kanban', icon: Layers },
+> 78:      { title: 'Conteúdo', url: '/dashboard/content', icon: FileText },
+> 79:      { title: 'Blog', url: '/dashboard/blog', icon: BookOpen },
+> 80:      { title: 'Calendário', url: '/dashboard/calendar', icon: Calendar },
+> 85:    icon: Coins,
+> 87:      { title: 'Produtos', url: '/dashboard/affiliate-products', icon: PackageSearch },
+> 88:      { title: 'Afiliados', url: '/dashboard/affiliates', icon: ShoppingBag },
+> 89:      { title: 'Viral Miner', url: '/dashboard/miner', icon: TrendingUp },
+> 90:      { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+> 95:    icon: Bot,
+> 97:      { title: 'Core Fable', url: '/dashboard/core-fable', icon: Brain },
+> 98:      { title: 'Workspace Chat', url: '/dashboard/chat', icon: MessageSquare },
+> 99:      { title: 'AI Arena', url: '/dashboard/arena', icon: Cpu },
+> 100:      { title: 'Economia dos Agentes', url: '/dashboard/agent-economics', icon: LineChart },
+> 106:  { title: 'Redes Sociais', url: '/dashboard/social', icon: Users },
+> 107:  { title: 'Assinatura', url: '/dashboard/billing', icon: CreditCard },
+> 108:  { title: 'Configurações', url: '/dashboard/settings', icon: Settings },
+> 115:    (it) => location.pathname === it.url || location.pathname.startsWith(it.url + '/'),
+> 122:            <category.icon className="mr-2 h-4 w-4 shrink-0" />
+> 137:                    <it.icon className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 158:  const isConstellationActive = location.pathname.includes('/constellation');
+> 159:  const isCanvasActive = location.pathname.includes('/canvas');
+> 161:  // In icon-only (collapsed) mode, collapsibles have no room — render every
+> 162:  // destination as a flat icon button so the whole app stays one click away.
+> 164:    { title: 'Visão Geral', url: '/dashboard', icon: LayoutDashboard },
+> 165:    { title: 'Constelação', url: '/dashboard/constellation', icon: Orbit },
+> 166:    { title: 'Canvas Studio', url: '/dashboard/canvas', icon: Palette },
+> 177:    <Sidebar collapsible="icon">
+> 181:          <Sparkles className="h-6 w-6 text-primary shrink-0" />
+> 203:                        <item.icon className="h-4 w-4 shrink-0" />
+> 259:                            size="icon"
+> ```
+
+## 🤖 Claude *(14:17:47)*
+
+
+## 🤖 Claude *(14:17:48)*
+
+Tenho tudo. A `types.ts` (auto-gerada) ainda não tem `video_renders`/`video_assets` — regenerando (fluxo do projeto, additive) antes de escrever o hook tipado:
+
+## 🤖 Claude *(14:17:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp src/integrations/supabase/types.ts /tmp/types.bak.ts\nnpx supabase gen types typescript --linked > src/integrations/supabase/types.ts 2>/tmp/gentypes.err || { echo \"GEN FAILED:\"; cat /tmp/gentypes.err | tail -5; cp /tmp/types.bak.ts src/integrations/supabase/types.ts; exit 0; }\necho \"=== diff summary (expect additive: video_renders/video_assets/finalize_video_render) ===\"\ngit diff --stat src/integrations/supabase/types.ts\necho \"=== new tables/rpc present? ===\"\ngrep -cE \"video_renders:|video_assets:|finalize_video_render:\" src/integrations/supabase/types.ts\necho \"=== anything REMOVED? (lines only in backup, ignoring reorder) \u2014 sample ===\"\ndiff <(grep -oE \"^\\s+[a-z_]+: \\{$\" /tmp/types.bak.ts | sort -u) <(grep -oE \"^\\s+[a-z_]+: \\{$\" src/integrations/supabase/types.ts | sort -u) | grep \"^<\" | head",
+  "description": "Regenerate Supabase types + verify additive"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === diff summary (expect additive: video_renders/video_assets/finalize_video_render) ===
+>  src/integrations/supabase/types.ts | 257 +++++++++++++++++++++++++++++++++++++
+>  1 file changed, 257 insertions(+)
+> === new tables/rpc present? ===
+> 3
+> === anything REMOVED? (lines only in backup, ignoring reorder) — sample ===
+> ```
+
+## 🤖 Claude *(14:18:14)*
+
+
+## 🤖 Claude *(14:18:15)*
+
+types.ts regen **100% additive** (+257, 0 remoções, 3 objetos novos presentes). Escrevendo o hook (Harness):
+
+## 🤖 Claude *(14:18:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRender.ts",
+  "content": "// useVideoRender \u2014 video-studio render data harness (Fatia 1b). All server state via TanStack Query\n// (Harness Engineering). Lists the tenant's renders (RLS own/org) + submits a render to the video-render edge fn\n// (dry_run for a zero-cost cost preview; real submit returns 503 until the render engine lands in Fatia 2).\nimport { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport type { Tables } from '@/integrations/supabase/types';\n\nexport type VideoRender = Tables<'video_renders'>;\nexport type VideoEngine = 'faceless' | 'hyperframes';\n\n// Mirror of src/lib/billing.ts COIN_COSTS (provisional \u2014 OTD-VS-007, calibrate at the first paid render).\nexport const VIDEO_RENDER_COSTS: Record<VideoEngine, number> = { faceless: 125, hyperframes: 12 };\n\nexport const VIDEO_ENGINES: { id: VideoEngine; label: string; desc: string }[] = [\n  { id: 'faceless', label: 'Faceless', desc: 'V\u00eddeo vertical sem rosto, narrado \u2014 pipeline E2E (Gemini \u2192 voz \u2192 motion \u2192 QA).' },\n  { id: 'hyperframes', label: 'HyperFrames', desc: 'Render program\u00e1tico HTML \u2192 MP4, determin\u00edstico (sem IA generativa).' },\n];\n\nexport function useVideoRenders() {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['video-renders'],\n    enabled: !!user,\n    queryFn: async (): Promise<VideoRender[]> => {\n      const { data, error } = await supabase\n        .from('video_renders').select('*').order('created_at', { ascending: false }).limit(50);\n      if (error) throw error;\n      return (data ?? []) as VideoRender[];\n    },\n  });\n}\n\nexport interface VideoRenderInput {\n  engine: VideoEngine;\n  topic?: string | null;\n  voice_consent?: boolean;\n  dry_run?: boolean;\n}\nexport interface VideoRenderResult {\n  ok?: boolean;\n  dry_run?: boolean;\n  engine?: string;\n  cost_mco?: number;\n  render_id?: string;\n  charged_mco?: number;\n  state?: string;\n}\n\nexport function useSubmitVideoRender() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: async (input: VideoRenderInput): Promise<VideoRenderResult> => {\n      const { data, error } = await supabase.functions.invoke('video-render', {\n        body: {\n          engine: input.engine,\n          topic: input.topic ?? null,\n          voice_consent: !!input.voice_consent,\n          dry_run: !!input.dry_run,\n        },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao gerar v\u00eddeo'));\n      return data as VideoRenderResult;\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['video-renders'] }),\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRender.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:18:40)*
+
+
+## 🤖 Claude *(14:18:40)*
+
+Página display-only (consome o hook; honesta sobre o motor na Fatia 2):
+
+## 🤖 Claude *(14:19:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoStudioPage.tsx",
+  "content": "// VideoStudioPage (Fatia 1b) \u2014 display-only front door for the video-studio module. All data/logic lives in\n// useVideoRender (Harness Engineering). The render submit validates the full contract (consent, BYOK, cost) end to\n// end; the render ENGINE itself lands in Fatia 2 (faceless = Docker bridge + n8n; hyperframes = sandbox), so a real\n// submit currently returns a friendly 503 and charges nothing.\nimport { useState } from 'react';\nimport {\n  useVideoRenders, useSubmitVideoRender, VIDEO_RENDER_COSTS, VIDEO_ENGINES, type VideoEngine,\n} from '@/hooks/useVideoRender';\nimport { toast } from '@/hooks/use-toast';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { Badge } from '@/components/ui/badge';\nimport { Film, Clapperboard, Loader2, Coins, Hammer } from 'lucide-react';\n\nconst STATE_BADGE: Record<string, string> = {\n  queued: 'bg-blue-500/15 text-blue-400',\n  running: 'bg-blue-500/15 text-blue-400',\n  qa_gate: 'bg-violet-500/15 text-violet-400',\n  done: 'bg-emerald-500/15 text-emerald-400',\n  qa_failed: 'bg-amber-500/15 text-amber-400',\n  failed: 'bg-red-500/15 text-red-400',\n};\n\nexport default function VideoStudioPage() {\n  const { data: renders = [], isLoading } = useVideoRenders();\n  const submit = useSubmitVideoRender();\n  const [engine, setEngine] = useState<VideoEngine>('faceless');\n  const [topic, setTopic] = useState('');\n  const [voiceConsent, setVoiceConsent] = useState(false);\n\n  const cost = VIDEO_RENDER_COSTS[engine];\n\n  const onGenerate = async () => {\n    if (engine === 'faceless' && !voiceConsent) {\n      return toast({ title: 'Consentimento de voz necess\u00e1rio', description: 'O v\u00eddeo faceless clona uma voz \u2014 confirme o consentimento.', variant: 'destructive' });\n    }\n    try {\n      const r = await submit.mutateAsync({ engine, topic: topic.trim() || null, voice_consent: voiceConsent });\n      // In Fatia 2 this returns 202 {render_id}; in Fatia 1 the engine gate returns 503 (handled in catch).\n      toast({ title: 'Render enfileirado', description: `render_id ${r.render_id} \u00b7 ${r.charged_mco} mcoCoins` });\n    } catch (e) {\n      const msg = (e as Error).message;\n      // Engine-unavailable (Fatia 1) is expected \u2014 surface it as info, not an error.\n      const pending = /Fatia 2|render_engine_unavailable|indispon/i.test(msg);\n      toast({\n        title: pending ? 'Motor de render em constru\u00e7\u00e3o' : 'N\u00e3o foi poss\u00edvel gerar',\n        description: msg,\n        variant: pending ? 'default' : 'destructive',\n      });\n    }\n  };\n\n  return (\n    <div className=\"space-y-6 p-6\">\n      <div>\n        <h1 className=\"flex items-center gap-2 text-2xl font-bold\">\n          <Film className=\"h-6 w-6 text-primary\" /> Est\u00fadio de V\u00eddeo\n        </h1>\n        <p className=\"text-sm text-muted-foreground\">\n          Gere v\u00eddeos verticais faceless ou renders program\u00e1ticos HyperFrames \u2014 gateados por BYOK, mcoCoins e a malha.\n        </p>\n      </div>\n\n      {/* Fatia 2 honesty banner */}\n      <Card className=\"border-amber-500/30 bg-amber-500/5\">\n        <CardContent className=\"flex items-start gap-3 py-4 text-sm\">\n          <Hammer className=\"mt-0.5 h-4 w-4 shrink-0 text-amber-400\" />\n          <span className=\"text-muted-foreground\">\n            <strong className=\"text-amber-400\">Fatia 1 ativa.</strong> O formul\u00e1rio valida o contrato completo\n            (consentimento de voz, chave BYOK, custo, isolamento por tenant). O <strong>motor de render</strong>{' '}\n            (faceless: ponte de rede + n8n \u00b7 HyperFrames: sandbox) entra na <strong>Fatia 2</strong> \u2014 at\u00e9 l\u00e1 uma\n            gera\u00e7\u00e3o real n\u00e3o debita mcoCoins.\n          </span>\n        </CardContent>\n      </Card>\n\n      <Card>\n        <CardHeader><CardTitle className=\"text-base\">Novo render</CardTitle></CardHeader>\n        <CardContent className=\"space-y-4\">\n          <div className=\"grid gap-3 sm:grid-cols-2\">\n            {VIDEO_ENGINES.map((e) => (\n              <button\n                key={e.id}\n                type=\"button\"\n                onClick={() => setEngine(e.id)}\n                className={`rounded-lg border p-3 text-left transition ${\n                  engine === e.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'\n                }`}\n              >\n                <div className=\"flex items-center gap-2 font-medium\">\n                  <Clapperboard className=\"h-4 w-4\" /> {e.label}\n                </div>\n                <p className=\"mt-1 text-xs text-muted-foreground\">{e.desc}</p>\n              </button>\n            ))}\n          </div>\n\n          <div className=\"space-y-1.5\">\n            <Label htmlFor=\"vs-topic\">Tema / briefing</Label>\n            <Input id=\"vs-topic\" value={topic} onChange={(ev) => setTopic(ev.target.value)}\n              placeholder=\"Ex.: 3 gadgets de cozinha que viralizaram\" />\n          </div>\n\n          {engine === 'faceless' && (\n            <label className=\"flex items-start gap-2 text-sm\">\n              <Checkbox checked={voiceConsent} onCheckedChange={(v) => setVoiceConsent(v === true)} className=\"mt-0.5\" />\n              <span className=\"text-muted-foreground\">\n                Consinto o uso/clonagem de voz para a narra\u00e7\u00e3o deste v\u00eddeo (LGPD Art. 11).\n              </span>\n            </label>\n          )}\n\n          <div className=\"flex items-center justify-between border-t pt-3\">\n            <span className=\"flex items-center gap-1.5 text-sm text-muted-foreground\">\n              <Coins className=\"h-4 w-4 text-amber-400\" /> Custo: <strong className=\"text-foreground\">{cost} mcoCoins</strong>\n              <span className=\"text-xs\">(provis\u00f3rio)</span>\n            </span>\n            <Button onClick={onGenerate} disabled={submit.isPending}>\n              {submit.isPending ? <Loader2 className=\"mr-2 h-4 w-4 animate-spin\" /> : <Film className=\"mr-2 h-4 w-4\" />}\n              Gerar v\u00eddeo\n            </Button>\n          </div>\n        </CardContent>\n      </Card>\n\n      <Card>\n        <CardHeader><CardTitle className=\"text-base\">Seus renders</CardTitle></CardHeader>\n        <CardContent>\n          {isLoading ? (\n            <div className=\"flex items-center gap-2 py-6 text-sm text-muted-foreground\">\n              <Loader2 className=\"h-4 w-4 animate-spin\" /> Carregando\u2026\n            </div>\n          ) : renders.length === 0 ? (\n            <p className=\"py-6 text-center text-sm text-muted-foreground\">\n              Nenhum render ainda. Crie o primeiro acima.\n            </p>\n          ) : (\n            <ul className=\"divide-y\">\n              {renders.map((r) => (\n                <li key={r.id} className=\"flex items-center justify-between gap-3 py-3 text-sm\">\n                  <div className=\"min-w-0\">\n                    <p className=\"truncate font-medium\">{r.topic || r.engine}</p>\n                    <p className=\"text-xs text-muted-foreground\">\n                      {r.engine} \u00b7 {r.charged_mco} mcoCoins{r.refunded_mco ? ` \u00b7 ${r.refunded_mco} reembolsado` : ''}\n                    </p>\n                  </div>\n                  <Badge className={STATE_BADGE[r.state] ?? 'bg-muted text-muted-foreground'}>{r.state}</Badge>\n                </li>\n              ))}\n            </ul>\n          )}\n        </CardContent>\n      </Card>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoStudioPage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:18)*
+
+
+## 🤖 Claude *(14:19:19)*
+
+Rota + nav. Editando App.tsx (lazy + rota) e o DashboardSidebar:
+
+## 🤖 Claude *(14:19:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const AutopilotPage = lazy(() => import(\"./pages/AutopilotPage.tsx\"));",
+  "new_string": "const AutopilotPage = lazy(() => import(\"./pages/AutopilotPage.tsx\"));\nconst VideoStudioPage = lazy(() => import(\"./pages/VideoStudioPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:19:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"autopilot\" element={<AutopilotPage />} />",
+  "new_string": "                <Route path=\"autopilot\" element={<AutopilotPage />} />\n                <Route path=\"video\" element={<VideoStudioPage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:19:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== lucide import line in DashboardSidebar (is Film imported?) ===\"\ngrep -nE \"^import|Film|Rocket,\" src/components/dashboard/DashboardSidebar.tsx | head",
+  "description": "App.tsx edits + check Film icon import"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === lucide import line in DashboardSidebar (is Film imported?) ===
+> 1:import {
+> 29:  Rocket,
+> 33:import { NavLink } from '@/components/NavLink';
+> 34:import { useLocation, useNavigate } from 'react-router-dom';
+> 35:import { useAuth } from '@/hooks/useAuth';
+> 36:import { useIsAdmin } from '@/hooks/useAdminData';
+> 37:import {
+> 52:import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+> 53:import { Button } from '@/components/ui/button';
+> ```
+
+## 🤖 Claude *(14:19:32)*
+
+
+## 🤖 Claude *(14:19:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 24,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 24	const CampaignDetail = lazy(() => import("./pages/CampaignDetail.tsx"));
+> 25	const MarketingPage = lazy(() => import("./pages/MarketingPage.tsx"));
+> 26	const AutopilotPage = lazy(() => import("./pages/AutopilotPage.tsx"));
+> 27	const SocialAccountsPage = lazy(() => import("./pages/SocialAccountsPage.tsx"));
+> 28	const SocialCallback = lazy(() => import("./pages/SocialCallback.tsx"));
+> 29	const ContentLibraryPage = lazy(() => import("./pages/ContentLibraryPage.tsx"));
+> ```
+
+## 🤖 Claude *(14:19:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 104,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 104	                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 105	                <Route path="marketing" element={<MarketingPage />} />
+> 106	                <Route path="autopilot" element={<AutopilotPage />} />
+> 107	                <Route path="campaigns" element={<CampaignsPage />} />
+> 108	                <Route path="campaigns/new" element={<CampaignWizard />} />
+> ```
+
+## 🤖 Claude *(14:19:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 26,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 26	  Bot,
+> 27	  LineChart,
+> 28	  Target,
+> 29	  Rocket,
+> 30	  MessageSquare,
+> 31	  type LucideIcon,
+> 32	} from 'lucide-react';
+> 33	import { NavLink } from '@/components/NavLink';
+> ```
+
+## 🤖 Claude *(14:19:39)*
+
+Agora os edits (App.tsx lazy+rota, sidebar import+nav):
+
+## 🤖 Claude *(14:19:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const AutopilotPage = lazy(() => import(\"./pages/AutopilotPage.tsx\"));\nconst SocialAccountsPage = lazy(() => import(\"./pages/SocialAccountsPage.tsx\"));",
+  "new_string": "const AutopilotPage = lazy(() => import(\"./pages/AutopilotPage.tsx\"));\nconst VideoStudioPage = lazy(() => import(\"./pages/VideoStudioPage.tsx\"));\nconst SocialAccountsPage = lazy(() => import(\"./pages/SocialAccountsPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"autopilot\" element={<AutopilotPage />} />\n                <Route path=\"campaigns\" element={<CampaignsPage />} />",
+  "new_string": "                <Route path=\"autopilot\" element={<AutopilotPage />} />\n                <Route path=\"video\" element={<VideoStudioPage />} />\n                <Route path=\"campaigns\" element={<CampaignsPage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  Rocket,\n  MessageSquare,\n  type LucideIcon,\n} from 'lucide-react';",
+  "new_string": "  Rocket,\n  Film,\n  MessageSquare,\n  type LucideIcon,\n} from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "      { title: 'Viral Autopilot', url: '/dashboard/autopilot', icon: Rocket },",
+  "new_string": "      { title: 'Viral Autopilot', url: '/dashboard/autopilot', icon: Rocket },\n      { title: 'Est\u00fadio de V\u00eddeo', url: '/dashboard/video', icon: Film },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:56)*
+
+
+## 🤖 Claude *(14:19:56)*
+
+tsc + verificação de que a UI compila:
+
+## 🤖 Claude *(14:19:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -15 && echo \"TSC CLEAN \u2705\"",
+  "description": "tsc check after UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC CLEAN ✅
+> ```
+
+## 🤖 Claude *(14:20:17)*
+
+
+## 🤖 Claude *(14:20:18)*
+
+tsc limpo. Build (no repo principal = deploy; vou verificar materialmente o artefato servido depois — SOP build-deploy):
+
+## 🤖 Claude *(14:20:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build ===\"\nbun run build 2>&1 | tail -12\necho \"=== fresh VideoStudio chunk in dist? (material proof the page is in the served bundle) ===\"\nls -la dist/assets/ 2>/dev/null | grep -iE \"VideoStudio\" || echo \"(no named chunk \u2014 checking grep across dist)\"\ngrep -rl \"Est\u00fadio de V\u00eddeo\" dist/assets/*.js 2>/dev/null | head -3",
+  "description": "Build frontend + verify VideoStudio in bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build ===
+> dist/assets/CanvasEditorPage-pPmtpoez.js       140.18 kB │ gzip:  38.74 kB
+> dist/assets/index-DOd5pbPB.js                  167.01 kB │ gzip:  53.33 kB
+> dist/assets/ConstellationPage-BzZ_FuFE.js      184.45 kB │ gzip:  63.67 kB
+> dist/assets/CartesianChart-BY9boem2.js         325.06 kB │ gzip:  96.83 kB
+> dist/assets/index-T-Jw5wxr.js                  630.53 kB │ gzip: 188.39 kB
+> dist/assets/react-three-fiber.esm-BLvdim5U.js  824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.25s
+> === fresh VideoStudio chunk in dist? (material proof the page is in the served bundle) ===
+> -rw-rw-r-- 1 ubuntu ubuntu   6538 Jun 22 11:20 VideoStudioPage-VvBc5Qu5.js
+> dist/assets/index-T-Jw5wxr.js
+> dist/assets/VideoStudioPage-VvBc5Qu5.js
+> ```
+
+## 🤖 Claude *(14:20:58)*
+
+
+## 🤖 Claude *(14:20:59)*
+
+Build OK (23.25s) + chunk fresco `VideoStudioPage-VvBc5Qu5.js` no `dist/` servido + string presente = **deploy material**. Verificação env-baked (Lei 1) + commit da UI:
+
+## 🤖 Claude *(14:21:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== env baked? (Supabase URL in served bundle \u2014 not worktree trap) ===\"\ngrep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js 2>/dev/null | head -1 && echo \"ENV BAKED \u2705\" || echo \"\u26a0\ufe0f env NOT baked\"\necho \"=== git status (is dist tracked?) ===\"\ngit status --short | head\necho \"=== commit UI source ===\"\ngit add src/hooks/useVideoRender.ts src/pages/VideoStudioPage.tsx src/App.tsx src/components/dashboard/DashboardSidebar.tsx src/integrations/supabase/types.ts\ngit commit -q -m \"feat(video-studio): Fatia 1b \u2014 UI do Estudio de Video (/dashboard/video)\n\nFront door display-only do modulo (Harness): useVideoRender (lista renders RLS-own +\nsubmit via edge fn, dry_run cost preview) + VideoStudioPage (seletor faceless/hyperframes,\ntopic, consentimento de voz LGPD, custo, lista de renders com state badges) + rota lazy\n/dashboard/video + nav 'Estudio de Video' (icone Film). Banner honesto: contrato valida\ntudo, motor de render entra na Fatia 2 (503 nao debita). types.ts regen additive (+257,\nvideo_renders/video_assets/finalize_video_render). tsc limpo + build OK (chunk no dist).\" 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|\u2591|\u2502|\u2570|\u256d|\u2500|\u25cb|INF|summary|\u2714|mesh-reingest|^$\" | tail -3\ngit log --oneline -3",
+  "description": "Verify env baked + commit UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === env baked? (Supabase URL in served bundle — not worktree trap) ===
+> dist/assets/CalendarPage-BKrOKIwd.js
+> ENV BAKED ✅
+> === git status (is dist tracked?) ===
+>  M src/App.tsx
+>  M src/components/dashboard/DashboardSidebar.tsx
+>  M src/integrations/supabase/types.ts
+> ?? src/hooks/useVideoRender.ts
+> ?? src/pages/VideoStudioPage.tsx
+> === commit UI source ===
+> f343dd2 feat(video-studio): Fatia 1b — UI do Estudio de Video (/dashboard/video)
+> 792edb0 docs(claude): corrige coluna BYOK Gemini → google_api_key (gemini_api_key nao existe)
+> e3b0716 feat(video-studio): Fatia 1 — contrato edge (video-render submit + poll) + custos
+> ```
+
+## 🤖 Claude *(14:21:35)*
+
+
+## 🤖 Claude *(14:21:49)*
+
+UI commitada (`f343dd2`) + **frontend deployado** (env baked ✅, chunk fresco no `dist/` que o nginx serve; `dist/` é gitignored). 
+
+**Honestidade Lei 1:** provei que a UI **compila + bundla + está no artefato servido + env baked** — mas **não** rodei a verificação ocular logada (screenshot de `/dashboard/video`) nesta sessão. Você pode ver com hard-refresh em `login.mcorch.com/dashboard/video` (Ctrl+Shift+R); ou eu rodo o preview-local-logado se quiser a screenshot material.
+
+---
+
+## 🏁 Resumo da sessão
+
+**Branch `hardening/wp-cf-publish-and-security-drift` — 7 commits (local, sem push):**
+
+| # | Commit | O quê |
+|---|---|---|
+| 1 | `0fc7ed9` | publish-wordpress: header CF host-gated (desbloqueio `/wp-json`) |
+| 2 | `89e59ab` | reconcilia drift FM-04/FM-10 + SOP CF |
+| 3 | `c92850f` | **Vídeo Fatia 1** — migration domínio + finalize RPC |
+| 4 | `e3b0716` | **Vídeo Fatia 1** — contrato edge (render + poll) + custos |
+| 5 | `792edb0` | fix doc coluna BYOK `google_api_key` |
+| 6 | `f343dd2` | **Vídeo Fatia 1b** — UI `/dashboard/video` |
+
+**Alertas:** ✅ todos resolvidos (image já ok · security FM-04/FM-10 fechados+reconciliados · CF endurecido+deployado+SOP).
+**Módulo Vídeo:** ✅ Fatia 1 (domínio+contrato, `/security-review` SAFE 2×, 18 gates materiais zero-cost) + Fatia 1b (UI deployada). Saldo do Usuário Zero **5096 intacto** o tempo todo.
+
+**Survival Laws:** Lei 1 — toda claim provada (curls/HTTP/db push/build); o smoke pegou 2 bugs reais (HIGH no meu CF header + coluna BYOK errada). Lei 2 — SOP CF antecipado + BoK como processo do Vídeo. Lei 4 — ORO declarado, GOs via AskUserQuestion, `/security-review` independente 3×.
+
+## 🔑 Sua ação (destrava o Autopilot)
+2 `supabase secrets` + regra CF do [`wordpress-cf-publish-unblock.md`](docs/processes/wordpress-cf-publish-unblock.md).
+
+## ⏭️ Próximos (sua escolha)
+- **Vídeo Fatia 2** (motor real): ponte R5 + sidecar n8n (faceless) ou sandbox (HyperFrames) — precisa de decisão de infra + GO de gasto.
+- **Push da branch / PR**, ou **/handoff** pra selar.
+
+Como quer seguir?
+
 ---
 
 %% --- PROJECT METADATA START --- %%

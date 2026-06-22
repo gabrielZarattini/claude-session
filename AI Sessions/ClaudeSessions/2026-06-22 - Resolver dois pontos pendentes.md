@@ -7350,6 +7350,1133 @@ Os 3 HIGH conhecidos (useTestnet bit-único, qty bruta, cegueira ao Earn) entram
 
 Você pode acompanhar ao vivo com `/workflows`. Eu sou re-invocado automaticamente quando terminar — aí te trago a síntese (3 HIGH re-validados/refutados + novos achados + plano de ataque priorizado) e a gente decide o que implementar primeiro. Sigo aguardando.
 
+## 👤 User *(14:14:02)*
+
+<task-notification>
+<task-id>wyzo1zfr3</task-id>
+<tool-use-id>toolu_011JeUyZ7dpV4D8Nd72ttykn</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Re-roda a revisao de design/estrategia do TradeUX + re-valida os 3 HIGH (useTestnet, qty bruta, Earn-blindness) e projeta fixes" completed</summary>
+<result>{"totalFindings":39,"confirmedCount":15,"highCount":2,"knownHighStatus":[{"title":"Flip de ambiente (real&lt;-&gt;testnet) e um &lt;select&gt; sem confirmacao — assimetrico com kill-switch/go-live que EXIGEM confirmacao","dimension":"env-safety","confirmed":true,"severityFinal":"MEDIUM","reasoning":"A logica do achado se reproduz no codigo real: o toggle de ambiente nao tem nenhuma confirmacao, ao contrario do go-live e do kill-switch no MESMO arquivo. CADEIA CONFIRMADA: (1) Settings.js:266-270 e um &lt;select&gt; cujo onChange so faz setSettings({...,useTestnet}); (2) Settings.js:56 monta payload={...settings} e NAO deleta useTestnet (so password/secretKeys em :57-59); (3) settingsController.js:9-14 devolve useTestnet no GET /settings (round-trippa de volta no submit); (4) settingsRepository.js:82-83 persiste o flip com um simples if de mudanca de valor, sem frase/re-auth/segunda etapa; (5) ASSIMETRIA REAL: onGoLive exige window.prompt 'LIGAR REAL' (Settings.js:98) E o backend reforca confirm===GO_LIVE_PHRASE (systemController.js:34-35, defesa em profundidade); kill-switch usa window.confirm (:82,:107); o toggle de ambiente nao tem NENHUMA das duas camadas. H1 revalidada (settingsModel.js:29 BOOLEAN defaultValue:false, bit unico). REBAIXEI de HIGH p/ MEDIUM apos tentar refutar e achar mitigacoes concretas: (a) o HALT/floor e PERSISTIDO separado em risk_state.json (riskState.js) e o guard le isHalted() por ordem (exchange.js:72) — o flip NAO toca o HALT, entao com o sistema travado um flip sozinho nao solta ordens; (b) updateSettings faz process.exit(0)/restart ~1s apos salvar (settingsController.js:25-28) e o HALT sobrevive ao reboot — nao e 'um clique e ja era'; (c) o &lt;select&gt; tem value controlado (precisa do Save, nao muda estado por clique solto). Nao e HIGH porque nao ha bypass do kill-switch nem caminho de ordem imediato. POReM segue REAL: e a falta de uma guarda de confirmacao coerente num toggle que decide dinheiro-real-vs-faucet, e o estado vivo atual e halted=false (canary FARM-ONLY trading real) — o guard e cego ao useTestnet (exchange.js:72 nunca le o flag), logo nenhuma rede protege contra operar no ambiente errado. Correcao: espelhar o go-live (window.confirm/prompt dedicado no toggle + idealmente frase server-side em updateSettings quando useTestnet muda, ou exigir HALT ativo)."},{"title":"getFarmPosition/getTrendPosition somam quantity BRUTA (origQty), não a base líquida de fee recebida na carteira","dimension":"position-accounting","confirmed":true,"severityFinal":"LOW","reasoning":"H2 é REAL: o campo `quantity` persistido é sempre a quantidade BRUTA pedida (origQty/calcQty), nunca a base líquida de fee, e getFarmPosition/getTrendPosition somam isso direto. Quando a taxa de COMPRA cai na BASE (BNBUSDT sempre; LTC/ADA só se o desconto BNB-fee estiver OFF), a carteira recebe ~0,075-0,1% a menos que o registrado nos buckets FARM_DCA.qty/TREND_QTY/FARM_MAX_NOTIONAL.\n\nRebaixei de MEDIUM para LOW por três motivos concretos: (a) magnitude é DUST (~0,1% por lote, equity ~$149 → ordem de centavos), e só materializa no sub-caso fee-na-base; (b) net/P&amp;L em dinheiro NÃO herda o erro (computeNet é fee-inclusive); (c) o impacto mais \"afiado\" alegado (no-loss target disparando cedo via FARM_DCA.cost) NÃO se aplica à automação Farm SEEDADA viva, que usa LAST_ORDER.avgPrice (commission-independent) e LAST_ORDER_QTY — então não há gatilho de venda-com-prejuízo real. Os efeitos residuais (custo médio levemente subestimado no FARM_DCA.cost; teto superestimando o investido) são todos CONSERVADORES (vendem/bloqueiam um tiquinho cedo), sem perda direta de dinheiro e sem oversell além de dust (calcQty clampa na carteira).\n\nNão é falso-positivo — é defeito real de contabilidade de posição — mas a severidade fiel é LOW (dívida de precisão de dust), não HIGH. Recomendação de fix barato e correto: na persistência da BUY, gravar `quantity = executedQty − (commission se commissionAsset==base)`, OU derivar a posição do bucket a partir de (quantity − fee-na-base) em getFarmPosition/getTrendPosition. Como já existe commissionAsset persistido (coluna nova do `854bab5`) e o helper feeToUsdt sabe distinguir o ramo `sym.startsWith(asset)`, o fix é localizado.\n\nVEREDITO: PASS COM RESSALVAS (defeito real, severidade LOW, sem leak de dinheiro). Testes que eu rodaria: (1) sim/integration cobrindo BUY de BNBUSDT com commissionAsset=BNB → assert FARM_DCA.qty == executedQty − commission; (2) BUY de LTCUSDT com commissionAsset=BNB (terceiro asset) → assert SEM drift (qty cheia); (3) BUY de LTCUSDT com commissionAsset=LTC (desconto BNB OFF) → assert drift presente; (4) sequência BUY→tentar SELL LAST_ORDER_QTY com saldo líquido &lt; qty → confirmar que calcQty clampa na carteira e não há REJECTED por insufficient balance."},{"title":"H3 na contabilidade de posição: cegueira ao Earn (LD*) torna o cap de venda MAIS conservador, não perigoso — divergência vs computeEquity","dimension":"position-accounting","confirmed":true,"severityFinal":"INFO","reasoning":"VEREDITO: PASS COM RESSALVAS (achado é INFO confirmado, não defeito).\n\nTentei refutar e NÃO consegui — a lógica do achado bate com o código real, mas a severidade INFO está correta (não é dano).\n\nEVIDÊNCIA (reproduzi a lógica no código):\n1) loadWallet usa SÓ free spot: backend/src/app-em.js:107 grava `MEMORY[item[0]:WALLET] = parseFloat(item[1].available)` por chave de ativo retornada por `exchange.balance()` → `binance.balance()` (exchange.js:173-175). Quando um base é auto-subscrito no Simple Earn, o saldo migra para uma chave SEPARADA `LDxxx` (ex.: LDLTC) e o `available` do base (LTC) encolhe. Logo `MEMORY['LTC:WALLET']` NÃO inclui o LDLTC.\n2) A venda clampa por esse free spot: calcQty (beholder.js:211) faz `asset = parseFloat(MEMORY[base:WALLET])` no lado SELL, e os ramos FARM_QTY (beholder.js:272), TREND_QTY (:247) e HARVEST_QTY (:259) aplicam `if (side==='SELL' &amp;&amp; newQty &gt; asset) newQty = asset`. Como o bucket (FARM_DCA.qty / TREND_QTY) deriva das ORDENS (ordersRepository.getFarmPosition:296-308, soma das BUYs FILLED), se a qty migrou pro Earn o clamp empurra a venda PRA BAIXO → vende menos/nada. É fail-safe: jamais oversell, jamais vaza o cofre.\n3) ASSIMETRIA confirmada: dailyCapJob.computeEquity (dailyCapJob.js:116-121) marca LD* a mercado pelo subjacente (strip 'LD', priceOf(under)) — fonte de saldo DIVERGENTE do loadWallet. As duas leem `exchange.balance()` mas tratam LD* diferente (computeEquity inclui; loadWallet não). A location do achado está CORRETA (app-em.js:107 vs dailyCapJob.js:116-121).\n\nCORREÇÃO MENOR de location: o achado cita \"loadWallet usa available\" como :107 — é exatamente onde o `updateMemory(...:WALLET..., parseFloat(item[1].available))` acontece; e o clamp efetivo da posição vendável está em beholder.js:247/259/272 (vale citar junto, pois é onde o dano-zero se materializa).\n\nPOR QUE INFO e não HIGH/MEDIUM na dimensão de posição: o lado nocivo do H3 (USDT preso em LDUSDT encolhendo o calcQty da COMPRA via MEMORY[USDT:WALLET], beholder.js:207) é dimensão de SIZING, não de contabilidade de posição — o achado reconhece isso explicitamente e é honesto ao marcar a fronteira. Na dimensão de posição (vender o que o Farm/Trend acumulou) o efeito é estritamente conservador: subconta a posição vendável → fail-safe. Risco residual real é só operacional/cosmético: (a) a venda no-loss do Farm pode \"não disparar/disparar parcial\" se o base estiver auto-subscrito (a posição fica presa até resgate manual ou até o auto-resgate, mas NÃO há perda nem leak); (b) reconciliação manual pode confundir quem compara loadWallet(free) com computeEquity(inclui LD*). Nenhum dos dois é oversell, double-spend ou vazamento de cofre.\n\nTESTES QUE EU RODARIA:\n- Unit/sim (espelhando backend/scripts/sim/): MEMORY['LTC:WALLET']=0 (todo LTC virou LDLTC) + FARM_DCA={qty:0.9,cost:44} → calcQty SELL FARM_QTY deve clampar para 0 (ou throw 'not enough'), NUNCA retornar 0.9. Confirmar que NÃO há o
+... (truncated 93194 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output)</result>
+<usage><agent_count>49</agent_count><subagent_tokens>2874326</subagent_tokens><tool_uses>795</tool_uses><duration_ms>3337990</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(14:14:29)*
+
+
+## 🤖 Claude *(14:14:30)*
+
+O workflow terminou: **49 agentes, 2,87M tokens, 39 achados, 15 confirmados, 2 HIGH**. Notável: a re-revisão adversarial **rebaixou os 3 HIGH conhecidos** (H1→MEDIUM, H2→LOW, H3→INFO) ao achar mitigações — e os 2 HIGH reais são NOVOS. Vou extrair a síntese e os 2 HIGH do resultado completo:
+
+## 🤖 Claude *(14:14:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output'))\nprint('=== TOTAIS ===')\nprint('total',d['totalFindings'],'| confirmados',d['confirmedCount'],'| HIGH',d['highCount'])\nprint()\nprint('=== CONFIRMADOS (HIGH/MEDIUM) ===')\nfor c in d.get('confirmed',[]):\n    print(f\\\"  [{c['severity']}] {c['title'][:90]}\\\")\n    print(f\\\"        loc: {c.get('location','?')[:80]} | dim: {c['dimension']}\\\")\nprint()\nprint('=== FIXES (HIGH) ===')\nfor f in d.get('fixes',[]):\n    print(f\\\"  \u2022 {f['title'][:80]}\\\")\n    print(f\\\"    rec={f.get('recommendation')} esforco={f.get('effort')} risco={str(f.get('risk',''))[:70]}\\\")\n\"",
+  "description": "Extract confirmed findings and fixes from workflow output"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<string>", line 5, in <module>
+> KeyError: 'totalFindings'
+> === TOTAIS ===
+> ```
+
+## 🤖 Claude *(14:14:40)*
+
+
+## 🤖 Claude *(14:14:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output'))\nprint('type:', type(d).__name__)\nprint('keys:', list(d.keys()) if isinstance(d,dict) else 'len='+str(len(d)))\n\" 2>&1 | head -10\necho \"=== raw head ===\"\nhead -c 600 /tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output",
+  "description": "Inspect output JSON structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> type: dict
+> keys: ['summary', 'agentCount', 'logs', 'result']
+> === raw head ===
+> {
+>   "summary": "Re-roda a revisao de design/estrategia do TradeUX + re-valida os 3 HIGH (useTestnet, qty bruta, Earn-blindness) e projeta fixes",
+>   "agentCount": 49,
+>   "logs": [
+>     "Revisando 7 dimensoes + verificando cada achado adversarialmente...",
+>     "39 achados verificados → 15 confirmados (HIGH/MEDIUM); 2 HIGH. Projetando fixes..."
+>   ],
+>   "result": {
+>     "totalFindings": 39,
+>     "confirmedCount": 15,
+>     "highCount": 2,
+>     "knownHighStatus": [
+>       {
+>         "title": "Flip de ambiente (real<->testnet) e um <select> sem confirmacao — assimetrico com kill-switch/go-live que EXIGEM
+> ```
+
+## 🤖 Claude *(14:14:45)*
+
+
+## 🤖 Claude *(14:14:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output'))['result']\nprint('=== CONFIRMADOS (HIGH/MEDIUM):',d['confirmedCount'],' | HIGH:',d['highCount'],' ===')\nfor c in d.get('confirmed',[]):\n    print(f\\\"  [{c['severity']:6}] {c['title'][:88]}\\\")\n    print(f\\\"           {str(c.get('location','?'))[:78]}  ({c['dimension']})\\\")\nprint()\nprint('=== FIXES dos HIGH ===')\nfor f in d.get('fixes',[]):\n    print(f\\\"  \u2022 [{f.get('recommendation')}/{f.get('effort')}] {f['title'][:78]}\\\")\n    print(f\\\"    arquivos: {', '.join(f.get('filesToChange',[]))[:90]}\\\")\n\" 2>&1 | head -60",
+  "description": "Extract confirmed findings and HIGH fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CONFIRMADOS (HIGH/MEDIUM): 15  | HIGH: 2  ===
+>   [MEDIUM] Flip de ambiente (real<->testnet) e um <select> sem confirmacao — assimetrico com kill-s
+>            frontend/src/private/Settings/Settings.js:56,266-270; backend/src/repositories  (env-safety)
+>   [MEDIUM] Duas fontes-de-verdade independentes para o ambiente: regex de apiUrl (conexao Binance) 
+>            backend/src/utils/exchange.js:148 (regex) vs backend/src/repositories/ordersRe  (env-safety)
+>   [MEDIUM] Salvar QUALQUER campo do Settings reinicia o backend (process.exit) sem checar ordens em
+>            backend/src/controllers/settingsController.js:24-28 (process.exit em :27)  (env-safety)
+>   [HIGH  ] calcQty/hasEnoughAssets dimensionam por MEMORY['<base>:WALLET'] cego ao Earn (LD*) — ven
+>            backend/src/beholder.js:211-212 (throw), 247/259/272 (cap newQty>asset), 298-3  (wallet-earn)
+>   [MEDIUM] get_wallet (MCP) zera fiatEstimate de Earn (LD*) e o leanWallet corta do top-N → agente 
+>            backend/src/controllers/exchangeController.js:19,22,24; backend/src/beholder.j  (wallet-earn)
+>   [MEDIUM] getAveragePrices NAO filtra isTestnet — custo-base mistura testnet+mainnet
+>            backend/src/repositories/ordersRepository.js:37-57 (where na :39, sem isTestne  (money-path-sweep)
+>   [MEDIUM] calcQty/hasEnoughAssets cegos ao saldo em Simple Earn (LD*) — sizing nao ve o auto-subsc
+>            backend/src/app-em.js:107 (único writer de <coin>:WALLET, 1:1 sem merge LD*);   (money-path-sweep)
+>   [MEDIUM] `make nuke` (down -v) apaga o volume backend_logs → perde risk_state.json (HALT floor/ma
+>            /home/gcrux-tradeux/tradeux/Makefile:13-14; /home/gcrux-tradeux/tradeux/docker  (resilience-state)
+>   [MEDIUM] Equity-quente: janela de staleness assimétrica — EQUITY_MAX_AGE_MS default 10min vs publ
+>            backend/src/utils/exchange.js:47-48 (EQUITY_MAX_AGE_MS=600000) e :64-69 (fresh  (resilience-state)
+>   [HIGH  ] Real withdrawal endpoint POST /exchange/withdraw/:id behind the same single owner-JWT as
+>            backend/src/routers/exchangeRouter.js:11 + backend/src/controllers/exchangeCon  (security-secrets)
+>   [MEDIUM] Trava de venda do COFRE (SELL-BTC) existe SO no MCP; o backend POST /orders nao tem a tr
+>            tradeux-mcp/src/index.js:313-318,366-373 (isBtcVaultSymbol — única trava) vs b  (security-secrets)
+>   [MEDIUM] GET /settings vaza a API key publica (accessKey/testnetAccessKey) em plaintext para qual
+>            backend/src/controllers/settingsController.js:9-14 (delete password/secretKey/  (security-secrets)
+>   [MEDIUM] AES-CTR com contador fixo e sem IV/nonce: keystream reutilizado em todos os segredos (se
+>            backend/src/utils/crypto.js:9 e :17 (CTR sem counter); reuso do mesmo keystrea  (security-secrets)
+>   [MEDIUM] useTestnet e um unico bit mutavel a quente que flipa testnet<->mainnet (dinheiro real), 
+>            backend/src/repositories/settingsRepository.js:18-23 (swap testnet→mainnet) e   (security-secrets)
+>   [MEDIUM] Rotas operacionais sensiveis (floor/halt/withdraw/settings) compartilham um unico nivel 
+>            backend/src/app.js:40-64 + backend/src/middlewares/authMiddleware.js:5-26 + ba  (security-secrets)
+> 
+> === FIXES dos HIGH ===
+>   • [FAZER_AGORA/M] Sizing de SELL cego ao Earn (LD*): resgate proativo de LD<base> + helper de sa
+>     arquivos: /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js (novo redeemFlexible via private
+>   • [FAZER_AGORA/S] Travar saque REAL (POST /exchange/withdraw/:id) em código: HALT + frase de con
+>     arquivos: /home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js, /home/gcrux-tra
+> ```
+
+## 🤖 Claude *(14:15:09)*
+
+
+## 🤖 Claude *(14:15:11)*
+
+Quadro claro. Os 2 HIGH reais são **novos** (não os 3 conhecidos): (1) sizing de venda/compra cego ao Earn `LD*` — o núcleo nocivo do H3; (2) endpoint de saque real fracamente gateado. Os 3 HIGH conhecidos foram todos rebaixados com mitigação. Leio a síntese executiva completa:
+
+## 🤖 Claude *(14:15:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output'))['result']\nprint(d['synthesis'])\n\"",
+  "description": "Print the executive synthesis report"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Tudo confirmado. As evidências batem: (1) o toggle de ambiente é um `<select>` controlado sem nenhum `window.confirm/prompt`, em contraste direto com o `onGoLive` que exige `window.prompt('...LIGAR REAL')` (Settings.js:98); (2) o único LD-aware do repo está em `dailyCapJob.js:116` (equity), não no caminho de sizing; (3) o fix de sessão `942` só adiciona alerta Telegram (`autofail:<id>`), não corrige a cegueira. Vou produzir o relatório executivo.
+> 
+> ---
+> 
+> # Re-revisão de design/estratégia — TradeUX (relatório executivo)
+> 
+> Sistema 🔴 LIVE em mainnet, equity ~$149, canary FARM-ONLY. Veredito geral: **nenhum bug de perda-direta-de-dinheiro novo**; o único achado HIGH acionável é a cegueira ao Earn no *sizing de venda*. Tudo verificado contra o código real (file:line citados).
+> 
+> ## 1) Os 3 HIGH conhecidos — re-validados
+> 
+> | # | Achado | Veredito | Severidade final | Evidência (1 linha) |
+> |---|--------|----------|-----------------|---------------------|
+> | **H1** | `useTestnet` flipa testnet↔mainnet sem cerimônia | **CONFIRMADO** | **MEDIUM** | Toggle é `<select>` controlado sem `window.confirm/prompt` (Settings.js:267), ao contrário do go-live que exige `window.prompt('LIGAR REAL')` (Settings.js:98) + frase server-side (systemController.js:34-35). NÃO é flip a quente (`process.exit(0)` em settingsController.js:27) e o HALT é guard independente por-ordem (exchange.js:72) — não há caminho de ordem imediato. Assimetria real de design, mas dano limitado por defesa-em-profundidade a jusante. |
+> | **H2** | `getFarmPosition/getTrendPosition` somam qty BRUTA | **CONFIRMADO (defeito real)** | **LOW** | A qty bruta entra no bucket, mas o oversell é **dupla-mitigado**: `calcQty` capa `newQty>asset` na carteira real (beholder.js:247/259/272) + `hasEnoughAssets` (beholder.js:298-303). Resíduo = dust (~0,1%/lote, centavos) + custo-médio levemente otimista. `net`/P&L NÃO herda o erro (computeNet é fee-inclusive). Sem perda, sem oversell efetivo. |
+> | **H3** | `calcQty/loadWallet` cego ao Earn (LD*) | **CONFIRMADO** | **HIGH (latente, de-armado por config externa)** | Único writer de WALLET é 1:1 sem merge LD* (app-em.js:107); o tratamento LD→subjacente existe SÓ no `computeEquity` (dailyCapJob.js:116), **nunca no sizing**. Se um base do Farm for auto-subscrito, a venda no-loss lança `There is no <base>` (beholder.js:212) em vez de liquidar. É o ÚNICO caminho de saída armado do canary. Fix de sessão (`457e25a`/beholder.js:942) só dá **alerta**, não corrige. |
+> 
+> **Nota de calibração H2 vs H3:** ambos derivam da contabilidade de qty, mas divergem em severidade porque o cap-na-carteira protege o H2 (oversell impossível) e *não* protege o H3 (a falha é a venda *não disparar*, fail-OPEN). Por isso H2=LOW e H3=HIGH.
+> 
+> **Probabilidade live do H3 hoje:** o gatilho está desarmado **out-of-band** — o dono desligou o auto-subscribe na Binance em 2026-06-20. Mas Earn Flexible auto-subscribe é default e religa sozinho; quando religar, a saída protetiva volta a travar (agora notificada). É HIGH **latente por configuração de conta, não por código**.
+> 
+> ## 2) Novos achados confirmados (além dos 3)
+> 
+> **HIGH:**
+> - **Withdraw real (`POST /exchange/withdraw/:id`) escapa de TODOS os guards.** `exchange.withdraw` (exchange.js:228-237) não passa por `assertWithinRisk` — único caminho de saída de fundos sem HALT/floor/cap/teto. Suporta `amount='MAX_WALLET'` (drena a moeda). Mitigação atual é só saque-OFF na Binance (config externa, reversível). Sem MCP tool, mas alcançável por qualquer holder do JWT do dono.
+> 
+> **MEDIUM (os mais relevantes):**
+> - **Dupla fonte-de-verdade do ambiente:** regex de `apiUrl` (conexão) vs boolean `useTestnet` (tag `isTestnet` das ordens) podem dessincronizar; sem invariante no boot. Linha viva está coerente hoje; é foot-gun de um flip futuro.
+> - **`getAveragePrices` NÃO filtra `isTestnet`** (ordersRepository.js:39) — custo-base do painel Wallet e do `tradeux_get_wallet_full` (MCP, agent-reachable) mistura ledger testnet+mainnet. LTCUSDT real contaminado. Não afeta sizing/risco, mas é dado errado ao vivo no número que decide venda no-loss. Fix trivial.
+> - **`process.exit(0)` incondicional em qualquer save de Settings** (settingsController.js:27), sem graceful-shutdown — restart no meio de ordem = janela de ghost-order. Deveria reiniciar só em mudança de campo de ambiente/credencial.
+> - **`make nuke` (`down -v`) apaga o volume `backend_logs`** → perde `risk_state.json` (postura HALT quente do operador) e baseline do cap diário; floor re-semeia só do env `TRADING_HALT`.
+> - **Auth plano sem RBAC:** floor/halt/withdraw/settings compartilham o mesmo JWT da leitura; separação agente-vs-operador é só "o MCP não tem a tool". Blacklist de logout é volátil (zera no restart).
+> - **`get_wallet` (MCP) zera fiatEstimate de LD\*** → agente fica cego ao capital em Earn (observabilidade, não dinheiro).
+> - **AES-CTR sem IV/nonce** (crypto.js) → keystream reusado entre secretKey/testnetSecretKey (two-time-pad) + sem MAC; e **`accessKey` vaza em plaintext** no GET /settings e pro contexto do LLM. Ambos exigem breach do DB (onde já há plaintext vizinho), por isso MEDIUM.
+> 
+> **LOW/INFO notáveis:** Farm Buy não checa `TREND_QTY` (diverge do backtest; latente, fix "de 1 linha" é **falsa** — `!(...)` falha no `validateConditions`, usar `<=0` + publicar `TREND_QTY=0` quando flat); RSI_14_**1m** no Farm Buy live vs **15m** no paper (incoerência de validação, mas capado por `FARM_MAX_NOTIONAL_USDT=25`); `net` multi-fill subtrai só a taxa do último fill (precisão de P&L, raro no canary).
+> 
+> ## 3) Plano de ataque priorizado
+> 
+> > Cada fix passa por gate QA+TL antes do mainnet LIVE. Padrão de teste = suíte de simulação determinística em `backend/scripts/sim/`.
+> 
+> | Ordem | Fix | Esforço | Risco | Recomendação |
+> |-------|-----|---------|-------|--------------|
+> | **1** | **Travar withdraw em código** (gate HALT no `doWithdraw` + frase de confirmação + allowlist de endereço fail-closed) | **S** | Baixo, direção segura (só nega) | **FAZER AGORA** — blast radius máximo (drena tudo) por custo mínimo; padrão GO_LIVE_PHRASE já existe. Não toca hot-path. |
+> | **2** | **H3 — sizing LD-aware** (2 camadas: `earnRedeemJob` proativo de resgate via SAPI guard-por-`isTestnet` + helper `earnAware` somando `LD<base>` ao WALLET no sizing) | **M** | Money-path LIVE; faseado em 2 PRs | **FAZER AGORA, FASEADO** — é o único caminho de saída do canary e o gatilho pode religar fora do nosso controle. PR-1 (redeem, baixo blast, não toca beholder.js) + PR-2 (sizing, gated pela sim-suite). |
+> | **3** | **`getAveragePrices` filtrar `isTestnet`** | **S** | Trivial | **FAZER AGORA** — dado errado ao vivo no número de decisão de venda; one-liner idêntico a getReportOrders. |
+> | **4** | **Restart condicional + graceful-shutdown** em updateSettings | **S-M** | Baixo | **AGENDAR** — disponibilidade/janela de ghost-order; reconcile-on-boot cobre hoje. |
+> | **5** | **Invariante de ambiente no boot** (assert `/testnet/.test(apiUrl)===useTestnet`, fail-closed) + **H1: confirmação no toggle** (espelhar go-live) | **S** | Baixo | **AGENDAR** — fecha dupla-fonte-de-verdade e a assimetria de cerimônia juntos. |
+> | **6** | **Crypto AES-GCM + IV** + encriptar/mascarar `accessKey` | **M** | Baixo (backfill idempotente) | **AGENDAR** — hardening; exige breach do DB pra explorar. |
+> | **7** | **`make nuke` preservar `backend_logs`** (ou backup do `risk_state.json` + alerta no boot quando estado perdido) | **S** | Baixo | **AGENDAR** — comando manual deliberado; reversão é na direção segura. |
+> | **8** | **RBAC / escopos no JWT** + blacklist persistida | **M-L** | Médio | **AGENDAR** — troca "segurança por doutrina" por enforcement; não bloqueia o canary. |
+> | **9** | **H2 — gravar qty líquida de fee** (`quantity = executedQty − commission` quando `commissionAsset==base`) | **S** | Baixo | **AGENDAR** — dívida de dust; vira MEDIUM só quando Trend co-localizar com Farm. |
+> 
+> **Pré-requisitos de re-armamento (não bloqueiam o canary, mas registrar):** antes de religar Farm Buy/Trend nas alts — corrigir gate Farm×`TREND_QTY` (forma `<=0` + publicar `TREND_QTY=0`) e alinhar RSI 1m→15m com o paper.
+> 
+> ## 4) O que está OK / refutado (não gastar tempo)
+> 
+> - **Oversell pós-restart / FARM_DCA bruto disparando venda > carteira:** **REFUTADO**. O claim load-bearing é falso — toda venda passa por `calcQty` com cap-na-carteira + `hasEnoughAssets`; oversell é impossível por esse caminho. Coberto por `scripts/sim/calcQty.test.js:49-50` (23 passed).
+> - **Agente LLM consegue flipar ambiente / sacar / virar HALT:** **REFUTADO**. MCP só expõe `tradeux_get_settings` (read); zero write-tool para settings/withdraw/system. A barreira é ausência-de-tool — vetor real é o JWT do operador, não o agente.
+> - **riskGuard %-teto de COMPRA usa equity cego ao Earn:** **OK**. O denominador é Earn-aware via `freshEquity`/`computeEquity`; o lado do TETO está correto. A cegueira do H3 é só do NUMERADOR (sizing).
+> - **H3 na dimensão de *posição* (vender o acumulado):** **INFO, não dano**. A cegueira ao Earn torna a venda mais *conservadora* (subconta → fail-safe), nunca oversell/leak. O risco real do H3 é só no sizing (item 2 do plano).
+> - **`isTestnet` "fresca por ordem" → ordem permanente no ambiente errado:** **REFUTADO**. Tag vem do cache em memória invalidado só por `updateSettings` (que sempre faz `process.exit`); escrita out-of-band no DB é no-op até restart. Resíduo = janela de ~1s, auto-curada.
+> - **`quantityMultiplier` null → qty 0:** LOW latente (0 exposição viva; direção segura; DB tem 0 nulos).
+> - **`validateConditions` regex sem espaço / grid quebra com `>=`:** INFO (gate de form, sem impacto monetário).
+> - **Estrutura estratégica geral (postura FARM-ONLY conservadora a ~$149):** **OK/coerente** com a meta de validar-via-paper antes do flip.
+> ```
+
+## 🤖 Claude *(14:15:54)*
+
+
+## 🤖 Claude *(14:16:07)*
+
+A re-revisão terminou e foi muito valiosa — **recalibrou os 3 HIGH** e achou os reais. Resumo:
+
+## Os 3 HIGH conhecidos — rebaixados (com mitigação provada)
+
+| | Veredito | Por quê |
+|---|---|---|
+| **H1** useTestnet bit | → **MEDIUM** | toggle sem confirmação (assimétrico com go-live/kill-switch), mas não é flip a quente (`process.exit`+restart) e o HALT é guard independente — sem caminho de ordem imediato |
+| **H2** qty bruta | → **LOW** | defeito real, mas **dupla-mitigado** (`calcQty` capa na carteira + `hasEnoughAssets`); resíduo = dust (~0,1%, centavos); `net`/P&L não herda |
+| **H3** cegueira ao Earn | → **HIGH só no SIZING** | na *posição* é INFO (conservador/fail-safe); o nocivo é o **sizing da venda** |
+
+## Os 2 HIGH reais (novos)
+
+1. **🔴 Sizing de venda cego ao Earn (`LD*`)** — se um base do Farm for auto-subscrito no Earn, a venda no-loss lança `There is no <base>` em vez de liquidar. **É o único caminho de saída armado do canary.** O dono desligou o auto-subscribe na Binance, mas "religa sozinho" (default). Latente-por-config, não por código.
+2. **🔴 Endpoint de saque (`POST /exchange/withdraw/:id`) escapa de TODOS os guards** — não passa por HALT/floor/cap, suporta `MAX_WALLET` (drena a moeda). Mitigado só pelo saque-OFF na Binance (config externa, reversível). Blast radius máximo.
+
+## Achados MEDIUM que valem (dos 13)
+- **`getAveragePrices` não filtra `isTestnet`** → custo-base do painel/agente **mistura testnet+mainnet** (dado errado no número que decide a venda no-loss). Fix trivial.
+- `make nuke` apaga `backend_logs` → **perde `risk_state.json`** (postura HALT do operador).
+- AES-CTR sem IV (keystream reusado) + `accessKey` em plaintext no GET /settings.
+
+## Refutado (não gastar tempo)
+Oversell pós-restart, agente conseguir sacar/flipar ambiente/HALT, o %-teto de compra ser cego ao Earn (o **denominador** é Earn-aware) — todos **REFUTADOS** com evidência.
+
+---
+
+O plano do TL marca **3 itens como FAZER_AGORA**: (1) travar withdraw em código `S`, (2) H3 sizing LD-aware `M` faseado, (3) `getAveragePrices` filtrar isTestnet `S`. Os demais são AGENDAR. Cada fix passa por gate QA+TL. Como ataco?
+
+## 🤖 Claude *(14:16:14)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A re-revis\u00e3o achou 2 HIGH reais (sizing cego ao Earn + withdraw destravado) + 1 MEDIUM trivial de alto valor (getAveragePrices). Por onde ataco?",
+      "header": "Ordem de ataque",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Os 3 FAZER_AGORA em sequ\u00eancia",
+          "description": "withdraw-lock (S) \u2192 getAveragePrices isTestnet (S) \u2192 H3 sizing LD-aware (M, faseado: earnRedeemJob + helper de sizing). Ataca tudo que o TL marcou como 'fazer agora', cada um com gate QA+TL. \u00c9 o pacote completo recomendado."
+        },
+        {
+          "label": "S\u00f3 os 2 quick-wins (S) primeiro",
+          "description": "withdraw-lock + getAveragePrices (ambos esfor\u00e7o S, baixo risco, fecham um HIGH e um dado-errado-ao-vivo r\u00e1pido). Deixa o H3 sizing (M) pra um pr\u00f3ximo passo dedicado."
+        },
+        {
+          "label": "Priorizar o H3 sizing (caminho de sa\u00edda do canary)",
+          "description": "atacar primeiro o \u00fanico HIGH operacional do canary (a venda no-loss que pode travar se o Earn religar). Faseado em 2 PRs. Withdraw e getAveragePrices depois."
+        },
+        {
+          "label": "S\u00f3 revisar/salvar o relat\u00f3rio por ora",
+          "description": "n\u00e3o implementar agora \u2014 salvar o relat\u00f3rio completo (artefato) + a fila de fixes priorizada, e voc\u00ea decide a ordem depois (ex.: junto da decis\u00e3o macro)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A re-revisão achou 2 HIGH reais (sizing cego ao Earn + withdraw destravado) + 1 MEDIUM trivial de alto valor (getAveragePrices). Por onde ataco?"="Os 3 FAZER_AGORA em sequência". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:16:58)*
+
+
+## 🤖 Claude *(14:17:00)*
+
+Vamos atacar os 3 em sequência, cada um com gate QA+TL. Primeiro salvo o relatório completo como artefato e extraio os planos de fix detalhados que o TL já projetou (withdraw + H3):
+
+## 🤖 Claude *(14:17:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "OUT=/tmp/claude-1001/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/tasks/wyzo1zfr3.output\npython3 -c \"\nimport json\nd=json.load(open('$OUT'))['result']\n# salva o relat\u00f3rio como artefato\nopen('/home/ubuntu/RESEARCH-design-review-2026-06-22.md','w').write('# TradeUX \u2014 Re-revis\u00e3o design/estrat\u00e9gia (2026-06-22)\\n\\n'+d['synthesis']+'\\n\\n---\\n\\n## Dados estruturados\\n\\n\\`\\`\\`json\\n'+json.dumps({'confirmed':d['confirmed'],'fixes':d['fixes']},ensure_ascii=False,indent=2)+'\\n\\`\\`\\`\\n')\nprint('relat\u00f3rio salvo em /home/ubuntu/RESEARCH-design-review-2026-06-22.md')\nprint()\nprint('=== FIX DESIGN: withdraw lock ===')\nfor f in d['fixes']:\n    if 'withdraw' in f['title'].lower() or 'saque' in f['title'].lower():\n        print('TITLE:',f['title'])\n        print('APPROACH:',f['approach'])\n        print('FILES:',f['filesToChange'])\n        print('TEST:',f.get('testStrategy'))\n        print('RISK:',f['risk'])\n\"",
+  "description": "Save report artifact and extract withdraw fix design"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> relatório salvo em /home/ubuntu/RESEARCH-design-review-2026-06-22.md
+> 
+> === FIX DESIGN: withdraw lock ===
+> TITLE: Travar saque REAL (POST /exchange/withdraw/:id) em código: HALT + frase de confirmação + allowlist de endereço
+> APPROACH: VEREDITO: REQUEST CHANGES (achado CONFIRMADO contra o código real; furo de defesa-em-profundidade no money-path, mitigado hoje só por config EXTERNA na Binance, reversível).
+> 
+> EVIDÊNCIA (re-validada file:line):
+> - exchangeRouter.js:11 `router.post('/withdraw/:id', exchangeController.doWithdraw)` montado em app.js:44 `app.use('/exchange', authMiddleware, exchangeRouter)` — MESMO authMiddleware de leitura; authMiddleware só valida JWT (sem role/tier).
+> - exchangeController.js:104-118 resolve withdrawTemplate e suporta amount='MAX_WALLET' (esvazia a moeda via beholder.getMemory(coin,'WALLET')) e 'LAST_ORDER_QTY'; :125 chama exchange.withdraw(coin, amount, address, network, addressTag).
+> - exchange.js:228-237 `withdraw(...)` chama `privateCall(SAPI_URL+'capital/withdraw/apply', data,'POST')` SEM assertWithinRisk. O chokepoint assertWithinRisk (exchange.js:71-77, `if (riskState.isHalted()) throw`) só roda em buy:184 / sell:193 / oco:206. Logo o saque é o ÚNICO caminho de saída de fundos que escapa de HALT/floor/cap-diário/teto.
+> - grep por whitelist|allowlist|withdrawWhitelist|role|permission na cadeia de saque = VAZIO. Contraste: cofre BTC tem fail-closed em código no MCP, e setFloor exige confirm===GO_LIVE_PHRASE (systemController.js:34-35). O saque não tem nada equivalente.
+> - Mitigação atual (memória: 'saque-OFF+IP') é config na Binance, FORA do repo e reversível — não é enforcement em código.
+> 
+> DESIGN DA CORREÇÃO (3 camadas de defesa-em-profundidade, todas em código):
+> 
+> (1) GATE DE HALT NO PRÓPRIO doWithdraw — fail-closed, espelhando o guard de ordem. Em exchangeController.doWithdraw (antes de chamar exchange.withdraw, ~:123), exigir `const riskState = require('../riskState'); if (riskState.isHalted()) return res.status(409).json({ error: '[withdraw] HALT ativo ('+riskState.getState().source+') — saque BLOQUEADO.' });`. riskState é síncrono, sem ciclo (já requerido por exchange.js top-level). Assim QUALQUER fonte de HALT (env-hard/floor/manual/daily-cap) trava o saque exatamente como trava ordem — fecha o bypass do chokepoint sem refatorar exchange.js. Como o sistema vive sob floor/HALT no canary, isso por si já neutraliza a exploração no estado atual.
+> 
+> (2) FRASE DE CONFIRMAÇÃO EXPLÍCITA — espelhar setFloor. Exigir no body `confirm===WITHDRAW_PHRASE` (`const WITHDRAW_PHRASE = process.env.WITHDRAW_CONFIRM_PHRASE || 'SACAR REAL';`). Sem a frase exata → 400. Isto quebra o vetor 'curl com JWT roubado' / 'futuro MCP tool ingênuo': um GET/POST simples não basta, precisa da frase fora-de-banda. Espelha exatamente o padrão já aceito em systemController.js:34-35.
+> 
+> (3) ALLOWLIST DE ENDEREÇO DE DESTINO — em código, fail-closed. Adicionar `WITHDRAW_ADDRESS_ALLOWLIST` no .env (CSV de endereços permitidos). Em doWithdraw, após resolver o template: se a allowlist estiver setada e `withdrawTemplate.address` não estiver nela → 403. Se NÃO setada → 403 também (fail-closed: sem allowlist configurada, nenhum saque — direção segura para money-path; documentar no .env.example). Isso ancora o destino a um conjunto fixo de endereços do dono, então mesmo JWT+frase comprometidos não conseguem desviar fundos para endereço novo.
+> 
+> (4) (nice-to-have) Logar a tentativa de saque via logger('system', ...) com coin/amount/address ANTES de chamar a Binance (NUNCA logar chave), e disparar telegramNotify (util já existe) — visibilidade de qualquer saque, espelhando a doutrina 'TODAS as ordens notificam'.
+> 
+> ORDEM/CONDIÇÕES DE MERGE: as 3 camadas no MESMO PR (são pequenas e coesas; separar deixaria janela). Gate de HALT (1) é o must-fix mínimo; (2) e (3) são must-fix de defesa-em-profundidade já que o custo é trivial. Não tocar exchange.js:228 withdraw() em si (manter a função pura como wrapper da Binance) — todo o enforcement no controller, que é o único caller e onde estão os dados (template/req.body). Zero migration, zero mudança de assinatura pública, backward-compatível (a UI de WithdrawTemplates só roda saques que o dono dispara; precisará passar confirm — ajustar o onRunClick do frontend para pedir o prompt, mesmo padrão do window.prompt do floor).
+> FILES: ['/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js', '/home/gcrux-tradeux/tradeux/backend/src/routers/exchangeRouter.js', '/home/gcrux-tradeux/tradeux/.env.example', '/home/gcrux-tradeux/tradeux/frontend/src/private/WithdrawTemplates/WithdrawTemplates.js', '/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js', '/home/gcrux-tradeux/tradeux/backend/scripts/sim/run.js']
+> TEST: Padrão = suíte de simulação determinística em backend/scripts/sim (puro Node, assert manual, injeta fakes no require.cache, ZERO rede, roda no CI via run.js). Como o enforcement vai no CONTROLLER (não no exchange.js), criar backend/scripts/sim/withdrawGuard.test.js extraindo a lógica de gate para uma função testável (ou testar doWithdraw com req/res fakes + fakes de riskState/repository/exchange injetados, espelhando o estilo de riskGuard.test.js:21-54 injectModule + fakeRiskState). Asserts mínimos (espelhando riskGuard.test.js:57-58 checkThrows/checkOk):\n- HALT ativo (fakeRiskState.isHalted=>true) → saque BLOQUEADO (409), exchange.withdraw NUNCA chamado (spy).\n- HALT inativo + confirm ausente/errado → BLOQUEADO (400), withdraw não chamado.\n- confirm===WITHDRAW_PHRASE + address FORA da allowlist → BLOQUEADO (403).\n- allowlist NÃO configurada (env vazia) → BLOQUEADO (403, fail-closed).\n- HALT off + confirm correto + address NA allowlist → PASSA (withdraw chamado 1×, com coin/amount/address corretos).\n- MAX_WALLET resolve amount mas continua sujeito aos 3 gates (não burla).\nRegistrar o novo arquivo em scripts/sim/run.js para entrar no `npm run test:sim` do CI. Smoke vivo pós-deploy: GET /system/halt e um POST /exchange/withdraw/:id com confirm errado deve dar 400 sem tocar a Binance (testar com template de coin sem saldo p/ garantir zero efeito).
+> RISK: RISCO DA MUDANÇA: BAIXO-MÉDIO, e a DIREÇÃO do risco é segura (mais restritivo). É money-path LIVE, mas a mudança só ADICIONA travas no caminho de SAÍDA de fundos — falha fecha (nega saque), nunca abre. Não toca beholder.js nem o hot-path de ordens; não altera buy/sell/oco; não altera assinatura de exchange.withdraw (mantida pura). Sem migration/DB. Blast radius confinado ao endpoint de saque, que hoje praticamente não é exercido (sem MCP tool; só UI manual do dono). RISCO RESIDUAL: (a) allowlist fail-closed vazia bloqueia saque legítimo do dono até ele popular WITHDRAW_ADDRESS_ALLOWLIST — aceitável e documentado (era a intenção; saque é raro e deliberado); (b) a UI atual não envia `confirm` → precisa do ajuste no frontend no mesmo PR senão o botão Run quebra (degradação segura: 400, não saque indevido); (c) cuidado para NÃO logar endereço completo/secret em log persistido se houver receio de PII — logar coin+amount+address-mascarado. Reversível por revert simples (sem estado persistido novo além de env vars).
+> ```
+
+## 🤖 Claude *(14:18:06)*
+
+
+## 🤖 Claude *(14:18:08)*
+
+Relatório salvo em `/home/ubuntu/RESEARCH-design-review-2026-06-22.md`. O design do withdraw-lock é sólido (3 camadas: gate HALT + frase + allowlist de endereço, tudo no controller). Começo o **Fix 1 (withdraw lock)**. Leio o `doWithdraw` atual pra integrar com fidelidade:
+
+## 🤖 Claude *(14:18:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "offset": 95,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	}
+> 96	
+> 97	async function doWithdraw(req, res, next) {
+> 98	    const withdrawTemplateId = req.params.id;
+> 99	    if (!withdrawTemplateId) return res.sendStatus(404);
+> 100	
+> 101	    const withdrawTemplate = await withdrawTemplatesRepository.getWithdrawTemplate(withdrawTemplateId);
+> 102	    if (!withdrawTemplate) return res.sendStatus(404);
+> 103	
+> 104	    let amount = parseFloat(withdrawTemplate.amount);
+> 105	    if (!amount) {
+> 106	        if (withdrawTemplate.amount === 'MAX_WALLET') {
+> 107	            const available = beholder.getMemory(withdrawTemplate.coin, 'WALLET', null);
+> 108	            if (!available) return res.status(400).json(`No available funds for this coin.`);
+> 109	
+> 110	            amount = available * (withdrawTemplate.amountMultiplier > 1 ? 1 : withdrawTemplate.amountMultiplier);
+> 111	        }
+> 112	        else if (withdrawTemplate.amount === 'LAST_ORDER_QTY') {
+> 113	            const keys = beholder.searchMemory(new RegExp(`^((${withdrawTemplate.coin}.+|.+${withdrawTemplate.coin}):LAST_ORDER)$`));
+> 114	            if (!keys || !keys.length) return res.status(400).json(`No last order for this coin.`);
+> 115	
+> 116	            amount = keys[keys.length - 1].value.quantity * withdrawTemplate.amountMultiplier;
+> 117	        }
+> 118	    }
+> 119	
+> 120	    const settingsId = res.locals.token.id;
+> 121	    const settings = await settingsRepository.getSettingsDecrypted(settingsId);
+> 122	    const exchange = require('../utils/exchange')(settings);
+> 123	
+> 124	    try {
+> 125	        const result = await exchange.withdraw(withdrawTemplate.coin, amount, withdrawTemplate.address, withdrawTemplate.network, withdrawTemplate.addressTag);
+> 126	        res.json(result);
+> 127	    } catch (err) {
+> 128	        res.status(400).json(err.response ? JSON.stringify(err.response.data) : err.message);
+> 129	    }
+> 130	}
+> 131	
+> 132	module.exports = {
+> 133	    getBalance,
+> 134	    getCoins,
+> ```
+
+## 🤖 Claude *(14:18:33)*
+
+
+## 🤖 Claude *(14:18:34)*
+
+`doWithdraw` mapeado — os gates entram após resolver o amount (linha 118), antes do `exchange.withdraw`. Vou extrair a lógica pura pra um util testável (`withdrawGuard.js`, padrão do `cockpitOut.js`). Confirmo os imports do controller:
+
+## 🤖 Claude *(14:18:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "offset": 1,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const settingsRepository = require('../repositories/settingsRepository');
+> 2	const ordersRepository = require('../repositories/ordersRepository');
+> 3	const withdrawTemplatesRepository = require('../repositories/withdrawTemplatesRepository');
+> 4	const symbolsRepository = require('../repositories/symbolsRepository');
+> 5	const beholder = require('../beholder');
+> 6	
+> 7	async function loadBalance(settingsId, fiat) {
+> 8	    const settings = await settingsRepository.getSettingsDecrypted(settingsId);
+> 9	    const exchange = require('../utils/exchange')(settings);
+> 10	    const info = await exchange.balance();
+> ```
+
+## 🤖 Claude *(14:18:41)*
+
+
+## 🤖 Claude *(14:18:42)*
+
+Controller importa repos + beholder, sem logger/riskState. Crio o util puro `withdrawGuard.js`:
+
+## 🤖 Claude *(14:18:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js",
+  "content": "'use strict';\n\n// Gate FAIL-CLOSED do saque REAL (POST /exchange/withdraw/:id) \u2014 defesa-em-profundidade EM C\u00d3DIGO. O\n// exchange.withdraw N\u00c3O passa pelo chokepoint assertWithinRisk (s\u00f3 buy/sell/oco passam), ent\u00e3o o saque \u00e9 o\n// \u00daNICO caminho de SA\u00cdDA de fundos que escapa de HALT/floor/cap-di\u00e1rio/teto. Hoje mitigado s\u00f3 por config EXTERNA\n// na Binance (saque-OFF, revers\u00edvel). Estas 3 camadas trazem o enforcement pro repo (espelham GO_LIVE_PHRASE do\n// setFloor + a trava do cofre BTC):\n//   (1) HALT  \u2192 qualquer fonte de HALT (env-hard/floor/manual/daily-cap) bloqueia o saque, igual a uma ordem.\n//   (2) FRASE \u2192 confirm===WITHDRAW_CONFIRM_PHRASE (default 'SACAR REAL'); quebra JWT roubado / tool MCP ing\u00eanuo.\n//   (3) ALLOWLIST de endere\u00e7o (CSV WITHDRAW_ADDRESS_ALLOWLIST), FAIL-CLOSED: vazia = bloqueia TUDO; endere\u00e7o fora\n//       dela = bloqueia. Ancora o destino a endere\u00e7os do dono \u2192 JWT+frase comprometidos n\u00e3o desviam p/ endere\u00e7o novo.\n// PURA/s\u00edncrona/sem deps \u2192 test\u00e1vel (scripts/sim/withdrawGuard.test.js) e sem ciclo. Retorna { ok } ou { ok:false, status, error }.\nfunction checkWithdrawGates({ halted, haltSource, confirm, address } = {}) {\n    if (halted)\n        return { ok: false, status: 409, error: `[withdraw] HALT ativo (${haltSource || 'kill-switch'}) \u2014 saque BLOQUEADO.` };\n\n    const PHRASE = process.env.WITHDRAW_CONFIRM_PHRASE || 'SACAR REAL';\n    if (String(confirm == null ? '' : confirm) !== PHRASE)\n        return { ok: false, status: 400, error: `[withdraw] confirma\u00e7\u00e3o obrigat\u00f3ria: o campo 'confirm' deve ser exatamente '${PHRASE}'.` };\n\n    const allow = (process.env.WITHDRAW_ADDRESS_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean);\n    if (!allow.length)\n        return { ok: false, status: 403, error: `[withdraw] WITHDRAW_ADDRESS_ALLOWLIST n\u00e3o configurada \u2014 saque BLOQUEADO (fail-closed; popule a allowlist no .env p/ habilitar saque).` };\n    if (!allow.includes(String(address)))\n        return { ok: false, status: 403, error: `[withdraw] endere\u00e7o de destino fora da WITHDRAW_ADDRESS_ALLOWLIST \u2014 saque BLOQUEADO.` };\n\n    return { ok: true };\n}\n\n// Mascara o endere\u00e7o p/ log/notify (n\u00e3o vazar o endere\u00e7o inteiro): primeiros 6 + \u00faltimos 4.\nfunction maskAddress(addr) {\n    const s = String(addr || '');\n    return s.length > 12 ? `${s.slice(0, 6)}\u2026${s.slice(-4)}` : s;\n}\n\nmodule.exports = { checkWithdrawGates, maskAddress };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:07)*
+
+
+## 🤖 Claude *(14:19:08)*
+
+Agora ligo no controller — imports + os gates no `doWithdraw`:
+
+## 🤖 Claude *(14:19:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "old_string": "const symbolsRepository = require('../repositories/symbolsRepository');\nconst beholder = require('../beholder');",
+  "new_string": "const symbolsRepository = require('../repositories/symbolsRepository');\nconst beholder = require('../beholder');\nconst riskState = require('../riskState');\nconst logger = require('../utils/logger');\nconst telegramNotify = require('../utils/telegramNotify');\nconst { checkWithdrawGates, maskAddress } = require('../utils/withdrawGuard');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "old_string": "    const settingsId = res.locals.token.id;\n    const settings = await settingsRepository.getSettingsDecrypted(settingsId);\n    const exchange = require('../utils/exchange')(settings);\n\n    try {\n        const result = await exchange.withdraw(withdrawTemplate.coin, amount, withdrawTemplate.address, withdrawTemplate.network, withdrawTemplate.addressTag);\n        res.json(result);\n    } catch (err) {\n        res.status(400).json(err.response ? JSON.stringify(err.response.data) : err.message);\n    }\n}",
+  "new_string": "    // GATE FAIL-CLOSED do saque (defesa-em-profundidade EM C\u00d3DIGO; o exchange.withdraw escapa do assertWithinRisk \u2014\n    // \u00fanico caminho de sa\u00edda de fundos sem HALT/cap). 3 camadas: HALT + frase de confirma\u00e7\u00e3o + allowlist de endere\u00e7o.\n    const st = riskState.getState();\n    const gate = checkWithdrawGates({ halted: st.halted, haltSource: st.source, confirm: (req.body || {}).confirm, address: withdrawTemplate.address });\n    if (!gate.ok) {\n        logger('system', `${gate.error} (coin=${withdrawTemplate.coin}, amount=${amount}, addr=${maskAddress(withdrawTemplate.address)})`);\n        return res.status(gate.status).json({ error: gate.error });\n    }\n    logger('system', `[withdraw] AUTORIZADO pelos 3 gates: ${withdrawTemplate.coin} ${amount} \u2192 ${maskAddress(withdrawTemplate.address)}.`);\n\n    const settingsId = res.locals.token.id;\n    const settings = await settingsRepository.getSettingsDecrypted(settingsId);\n    const exchange = require('../utils/exchange')(settings);\n\n    try {\n        const result = await exchange.withdraw(withdrawTemplate.coin, amount, withdrawTemplate.address, withdrawTemplate.network, withdrawTemplate.addressTag);\n        telegramNotify.notify(`\ud83d\udcb8 [WITHDRAW] Saque executado: ${withdrawTemplate.coin} ${amount} \u2192 ${maskAddress(withdrawTemplate.address)}.`, `withdraw:${withdrawTemplate.id}`).catch(() => { });\n        res.json(result);\n    } catch (err) {\n        res.status(400).json(err.response ? JSON.stringify(err.response.data) : err.message);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:19:42)*
+
+
+## 🤖 Claude *(14:19:43)*
+
+Sim test do gate (`withdrawGuard.test.js`) — cobre as 3 camadas + precedência:
+
+## 🤖 Claude *(14:19:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 gate FAIL-CLOSED do saque (utils/withdrawGuard.checkWithdrawGates). O saque \u00e9 o \u00daNICO\n * caminho de SA\u00cdDA de fundos que escapa do assertWithinRisk \u2192 estas 3 travas (HALT + frase + allowlist de\n * endere\u00e7o) s\u00e3o a defesa-em-profundidade EM C\u00d3DIGO. Errar p/ \"ok\" libera saque indevido. Puro: s\u00f3 requer o util.\n */\nconst { checkWithdrawGates } = require('../../src/utils/withdrawGuard');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\n\nconst ADDR = '0xDONOaddress1234567890';\nfunction setEnv(phrase, allowlist) {\n    if (phrase == null) delete process.env.WITHDRAW_CONFIRM_PHRASE; else process.env.WITHDRAW_CONFIRM_PHRASE = phrase;\n    if (allowlist == null) delete process.env.WITHDRAW_ADDRESS_ALLOWLIST; else process.env.WITHDRAW_ADDRESS_ALLOWLIST = allowlist;\n}\n\n// (1) HALT ativo bloqueia TUDO (mesmo com frase certa e endere\u00e7o na allowlist) \u2192 409.\nsetEnv('SACAR REAL', ADDR);\neq('HALT ativo \u2192 409 (mesmo c/ frase+allowlist OK)', checkWithdrawGates({ halted: true, haltSource: 'manual', confirm: 'SACAR REAL', address: ADDR }).status, 409);\n\n// (2) Frase ausente/errada \u2192 400.\neq('sem confirm \u2192 400', checkWithdrawGates({ halted: false, confirm: undefined, address: ADDR }).status, 400);\neq('confirm errado \u2192 400', checkWithdrawGates({ halted: false, confirm: 'sacar', address: ADDR }).status, 400);\n\n// (3) Allowlist FAIL-CLOSED: vazia \u2192 403 (sem allowlist configurada, nenhum saque).\nsetEnv('SACAR REAL', null);\neq('allowlist VAZIA \u2192 403 (fail-closed)', checkWithdrawGates({ halted: false, confirm: 'SACAR REAL', address: ADDR }).status, 403);\n\n// (3b) Endere\u00e7o fora da allowlist \u2192 403.\nsetEnv('SACAR REAL', '0xOUTRO,0xMAISUM');\neq('endere\u00e7o fora da allowlist \u2192 403', checkWithdrawGates({ halted: false, confirm: 'SACAR REAL', address: ADDR }).status, 403);\n\n// (PASSA) HALT off + frase certa + endere\u00e7o NA allowlist \u2192 ok.\nsetEnv('SACAR REAL', `0xOUTRO,${ADDR},0xMAISUM`);\neq('tudo OK \u2192 ok:true', checkWithdrawGates({ halted: false, confirm: 'SACAR REAL', address: ADDR }).ok, true);\n\n// Frase custom (env) respeitada.\nsetEnv('MINHA FRASE', ADDR);\neq('frase custom: confirm certo \u2192 ok', checkWithdrawGates({ halted: false, confirm: 'MINHA FRASE', address: ADDR }).ok, true);\neq('frase custom: confirm com a default errada \u2192 400', checkWithdrawGates({ halted: false, confirm: 'SACAR REAL', address: ADDR }).status, 400);\n\n// Preced\u00eancia: HALT vence frase/allowlist (halt ativo + sem confirm \u2192 409, n\u00e3o 400).\nsetEnv(null, null);\neq('preced\u00eancia: HALT > frase \u2192 409', checkWithdrawGates({ halted: true, haltSource: 'floor', confirm: undefined, address: ADDR }).status, 409);\n\nconsole.log(`\\nwithdrawGuard.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:20:04)*
+
+
+## 🤖 Claude *(14:20:04)*
+
+Rodo o sim test + valido sintaxe do controller/util:
+
+## 🤖 Claude *(14:20:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/utils/withdrawGuard.js && node --check src/controllers/exchangeController.js && echo \"syntax OK\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"withdrawGuard|sim suite\"",
+  "description": "Syntax check + run sim with withdrawGuard test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> === sim/withdrawGuard.test.js ===
+> withdrawGuard.test.js: 9 passed, 0 failed
+> sim suite: 8/8 arquivos OK.
+> ```
+
+## 🤖 Claude *(14:20:14)*
+
+
+## 🤖 Claude *(14:20:15)*
+
+withdrawGuard 9/9, suíte 8/8. Agora documento no `.env.example` e ajusto o frontend (mandar `confirm`). Localizo o `.env.example` + o trecho do withdraw no frontend:
+
+## 🤖 Claude *(14:20:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== .env.example existe? onde docar (perto de MAX_ORDER/TRADING_HALT) ===\"\nls backend/.env.example .env.example 2>/dev/null\ngrep -n \"MAX_ORDER_NOTIONAL_USDT\\|MAX_SELL_EQUITY_MULT\\|TRADING_HALT\\|SYSTEM_FLOOR_PHRASE\\|WITHDRAW\" backend/.env.example 2>/dev/null | head\necho \"=== frontend WithdrawTemplates: onde dispara o saque (onRun/Run) ===\"\ngrep -rn \"withdraw\\|onRun\\|doWithdraw\\|/exchange/withdraw\\|placeWithdraw\\|runWithdraw\" frontend/src/private/WithdrawTemplates/*.js 2>/dev/null | head -15",
+  "description": "Find .env.example and frontend withdraw trigger"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .env.example existe? onde docar (perto de MAX_ORDER/TRADING_HALT) ===
+> backend/.env.example
+> .env.example
+> 74:MAX_ORDER_NOTIONAL_USDT=
+> 79:TRADING_HALT=false
+> === frontend WithdrawTemplates: onde dispara o saque (onRun/Run) ===
+> frontend/src/private/WithdrawTemplates/WithdrawTemplateRow.js:8: * - onRunClick
+> frontend/src/private/WithdrawTemplates/WithdrawTemplateRow.js:29:                <button id={"run" + props.data.id} type="button" className="btn btn-success btn-xs ms-2" title="Withdraw Now" onClick={props.onRunClick}>
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:11:import { doWithdraw } from '../../services/ExchangeService';
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:35:    const [withdrawTemplates, setWithdrawTemplates] = useState([]);
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:63:        const template = withdrawTemplates.find(o => o.id == id);
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:78:    function onRunClick(event) {
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:81:        doWithdraw(id, token)
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:123:                                withdrawTemplates && withdrawTemplates.length
+> frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:124:                                    ? withdrawTemplates.map(ot => (<WithdrawTemplateRow key={ot.id} data={ot} onEditClick={onEditClick} onDeleteClick={onDeleteClick} onRunClick={onRunClick} />))
+> ```
+
+## 🤖 Claude *(14:20:24)*
+
+
+## 🤖 Claude *(14:20:25)*
+
+Leio o `.env.example` (área de risco) + o `onRunClick`/`doWithdraw` do frontend:
+
+## 🤖 Claude *(14:20:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/.env.example",
+  "offset": 70,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 70	FUNNEL_MAX_BUY_USDT=
+> 71	
+> 72	# === Travas de risco do BACKEND (valem p/ TODA ordem: automacao, funil e manual) ===
+> 73	#ex: 500  (teto de notional por ORDEM em USDT; 0 = desligado. Aumente conforme a conta cresce)
+> 74	MAX_ORDER_NOTIONAL_USDT=
+> 75	#ex: 25  (teto de EXPOSICAO do Farm por simbolo em USDT investido = qty*preco-medio; 0 = desligado.
+> 76	#         barra DCA-infinito: o Farm Buy nao compra mais se ja tem >= esse notional no simbolo)
+> 77	FARM_MAX_NOTIONAL_USDT=
+> 78	#ex: false  (kill-switch global: true bloqueia QUALQUER ordem real — parada de emergencia)
+> 79	TRADING_HALT=false
+> ```
+
+## 🤖 Claude *(14:20:37)*
+
+
+## 🤖 Claude *(14:20:38)*
+
+Adiciono os docs do withdraw no `.env.example` (após o bloco de travas de risco):
+
+## 🤖 Claude *(14:20:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/.env.example",
+  "old_string": "#ex: false  (kill-switch global: true bloqueia QUALQUER ordem real \u2014 parada de emergencia)\nTRADING_HALT=false",
+  "new_string": "#ex: false  (kill-switch global: true bloqueia QUALQUER ordem real \u2014 parada de emergencia)\nTRADING_HALT=false\n\n# === Travas do SAQUE REAL (POST /exchange/withdraw/:id \u2014 defesa-em-profundidade EM CODIGO) ===\n# O saque NAO passa pelo assertWithinRisk (HALT/cap so cobrem ordens). Estas 3 camadas travam a saida de fundos:\n#  (1) HALT ativo bloqueia o saque (automatico, sem env).\n#  (2) o body precisa de confirm === a frase abaixo (default 'SACAR REAL'). Quebra JWT roubado / tool ingenuo.\nWITHDRAW_CONFIRM_PHRASE=SACAR REAL\n#  (3) FAIL-CLOSED: CSV de enderecos permitidos. VAZIO = NENHUM saque (bloqueia tudo). Popule c/ os enderecos do\n#      dono p/ habilitar saque (ancora o destino; mesmo JWT+frase comprometidos nao desviam p/ endereco novo).\nWITHDRAW_ADDRESS_ALLOWLIST="
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/.env.example has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:20:48)*
+
+
+## 🤖 Claude *(14:20:49)*
+
+Agora o frontend — leio o `onRunClick` + a assinatura do `doWithdraw` pra adicionar o prompt da frase:
+
+## 🤖 Claude *(14:20:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/WithdrawTemplates/WithdrawTemplates.js",
+  "offset": 78,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 78	    function onRunClick(event) {
+> 79	        const id = event.target.id.replace('run', '');
+> 80	        const token = localStorage.getItem('token');
+> 81	        doWithdraw(id, token)
+> 82	            .then(result => setNotification({ type: 'success', text: `Withdrawal #${result.id} successful!` }))
+> 83	            .catch(err => {
+> 84	                console.error(err.response ? err.response.data : err.message);
+> 85	                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });
+> 86	            })
+> 87	    }
+> 88	
+> 89	    function onWithdrawTemplateSubmit(template) {
+> 90	        history.go(0);
+> 91	    }
+> ```
+
+## 🤖 Claude *(14:20:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\ngrep -n \"doWithdraw\" src/services/ExchangeService.js",
+  "description": "Find doWithdraw service signature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 28:export async function doWithdraw(withdrawTemplateId, token) {
+> ```
+
+## 🤖 Claude *(14:21:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/ExchangeService.js",
+  "offset": 28,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 28	export async function doWithdraw(withdrawTemplateId, token) {
+> 29	    const headers = { 'authorization': token };
+> 30	    const response = await axios.post(`${EXCHANGE_URL}withdraw/${withdrawTemplateId}`, null, { headers });
+> 31	    return response.data;
+> 32	}
+> 33	
+> ```
+
+## 🤖 Claude *(14:21:12)*
+
+
+## 🤖 Claude *(14:21:13)*
+
+Atualizo o serviço (manda `confirm` no body) e o `onRunClick` (prompt da frase, espelha o go-live do floor):
+
+## 🤖 Claude *(14:21:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/services/ExchangeService.js",
+  "old_string": "export async function doWithdraw(withdrawTemplateId, token) {\n    const headers = { 'authorization': token };\n    const response = await axios.post(`${EXCHANGE_URL}withdraw/${withdrawTemplateId}`, null, { headers });\n    return response.data;\n}",
+  "new_string": "export async function doWithdraw(withdrawTemplateId, token, confirm) {\n    const headers = { 'authorization': token };\n    const response = await axios.post(`${EXCHANGE_URL}withdraw/${withdrawTemplateId}`, { confirm }, { headers });\n    return response.data;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/services/ExchangeService.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:21:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/WithdrawTemplates/WithdrawTemplates.js",
+  "old_string": "    function onRunClick(event) {\n        const id = event.target.id.replace('run', '');\n        const token = localStorage.getItem('token');\n        doWithdraw(id, token)",
+  "new_string": "    function onRunClick(event) {\n        const id = event.target.id.replace('run', '');\n        // SAQUE REAL de fundos \u2014 exige a frase de confirmacao (espelha o go-live do floor). O backend ainda valida\n        // confirm + HALT + allowlist de endereco (fail-closed); este prompt e a 1a camada de defesa-em-profundidade.\n        const confirm = window.prompt(\"SAQUE REAL de fundos. Digite a frase de confirmacao para prosseguir (ex.: SACAR REAL):\");\n        if (!confirm) return; // cancelou\n        const token = localStorage.getItem('token');\n        doWithdraw(id, token, confirm)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/WithdrawTemplates/WithdrawTemplates.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:21:53)*
+
+
+## 🤖 Claude *(14:21:55)*
+
+Suíte 8/8, frontend ajustado. Chown + diff + gate QA/TL do **Fix 1 (withdraw lock)** — destaco a decisão fail-closed pra eles escrutinarem:
+
+## 🤖 Claude *(14:21:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep \"sim suite\"\ncd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/utils/withdrawGuard.js backend/src/controllers/exchangeController.js backend/.env.example backend/scripts/sim/withdrawGuard.test.js frontend/src/services/ExchangeService.js frontend/src/private/WithdrawTemplates/WithdrawTemplates.js 2>/dev/null\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git add -N backend/src/utils/withdrawGuard.js backend/scripts/sim/withdrawGuard.test.js && git -c safe.directory=\"*\" diff -- backend/src/utils/withdrawGuard.js backend/src/controllers/exchangeController.js backend/.env.example backend/scripts/sim/withdrawGuard.test.js frontend/ > /tmp/withdraw.diff 2>&1'\necho \"diff bytes: $(wc -c </tmp/withdraw.diff)\"",
+  "description": "Sim sanity, chown, generate withdraw diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sim suite: 8/8 arquivos OK.
+> diff bytes: 11476
+> ```
+
+## 🤖 Claude *(14:22:24)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review withdraw lock",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise o FIX 1 (de 3) da re-revis\u00e3o de design do TradeUX: travar o SAQUE REAL em c\u00f3digo. MAINNET LIVE (~$149). Veredito PASS/PASS COM RESSALVAS/FAIL.\n\n## Contexto\nA re-revis\u00e3o achou um HIGH: `POST /exchange/withdraw/:id` (exchangeController.doWithdraw) chama `exchange.withdraw` SEM passar pelo `assertWithinRisk` \u2192 \u00e9 o \u00daNICO caminho de sa\u00edda de fundos sem HALT/floor/cap/teto. Suporta amount='MAX_WALLET' (drena a moeda). Mitigado hoje S\u00d3 por config externa na Binance (saque-OFF, revers\u00edvel). Este fix traz 3 camadas de defesa-em-profundidade pro c\u00f3digo.\n\n## O que mudou (diff em /tmp/withdraw.diff; working tree em /home/gcrux-tradeux/tradeux \u2014 LEIA os arquivos)\n- **`backend/src/utils/withdrawGuard.js`** (NOVO): `checkWithdrawGates({halted,haltSource,confirm,address})` PURO \u2192 3 camadas: (1) HALT ativo \u2192 409; (2) confirm !== WITHDRAW_CONFIRM_PHRASE (default 'SACAR REAL') \u2192 400; (3) WITHDRAW_ADDRESS_ALLOWLIST (CSV) FAIL-CLOSED: vazia \u2192 403, endere\u00e7o fora \u2192 403. + maskAddress.\n- **`backend/src/controllers/exchangeController.js`**: doWithdraw chama checkWithdrawGates (ap\u00f3s resolver amount, antes de exchange.withdraw); bloqueio loga + retorna status/error; sucesso notifica Telegram. Imports: riskState, logger, telegramNotify, withdrawGuard.\n- **`backend/scripts/sim/withdrawGuard.test.js`** (NOVO): 9 asserts (HALT/frase/allowlist/preced\u00eancia).\n- **`backend/.env.example`**: doc das 2 envs novas.\n- **frontend** (`ExchangeService.doWithdraw` + `WithdrawTemplates.onRunClick`): manda `confirm` no body via window.prompt (espelha o go-live do floor).\n\n## Foco (adversarial)\n1. **DECIS\u00c3O-CHAVE \u2014 allowlist FAIL-CLOSED-VAZIA bloqueia TODOS os saques at\u00e9 configurar.** Isso \u00e9 correto/seguro (saque \u00e9 raro+deliberado, j\u00e1 est\u00e1 OFF na Binance) ou \u00e9 uma regress\u00e3o que vai surpreender o dono? O comportamento est\u00e1 claro/documentado? (vou setar WITHDRAW_ADDRESS_ALLOWLIST VAZIO no .env live \u2192 saque bloqueado em c\u00f3digo.)\n2. **Bypass**: algum caminho pro saque que N\u00c3O passa pelo doWithdraw? (outro controller/rota/MCP tool chama exchange.withdraw?). O gate cobre MAX_WALLET/LAST_ORDER_QTY?\n3. **Ordem/preced\u00eancia** dos 3 gates correta? HALT vence frase vence allowlist? `confirm` ausente (req.body undefined) tratado?\n4. **Fidelidade ao padr\u00e3o existente**: espelha o GO_LIVE_PHRASE do systemController.setFloor? riskState.getState() \u00e9 a fonte certa de halted/source?\n5. **Frontend**: o onRunClick cancelado (prompt vazio) n\u00e3o dispara; o body {confirm} chega no req.body.confirm (o backend tem body-parser?). Algum consumidor do doWithdraw que quebra com a nova assinatura?\n6. **Regress\u00e3o**: a mudan\u00e7a toca S\u00d3 o caminho de saque? n\u00e3o afeta ordens/hot-path?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (8/8, withdrawGuard 9). Confirme que N\u00c3O h\u00e1 outro caller de exchange.withdraw. Aponte testes/gaps. pt-BR, conciso."
+}
+```
+
+## 🤖 Claude *(14:22:36)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review withdraw lock",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge do FIX 1 (de 3) da re-revis\u00e3o de design do TradeUX: travar o SAQUE REAL em c\u00f3digo. MAINNET LIVE (~$149, trunk-based). APPROVE/APPROVE COM SUGEST\u00d5ES/REQUEST CHANGES/BLOCK.\n\n## Contexto\nHIGH da re-revis\u00e3o: `POST /exchange/withdraw/:id` escapa do assertWithinRisk \u2192 \u00fanico caminho de sa\u00edda de fundos sem HALT/cap; suporta MAX_WALLET (drena). Mitigado s\u00f3 por config externa (saque-OFF na Binance, revers\u00edvel). Este fix traz enforcement pro c\u00f3digo, espelhando o GO_LIVE_PHRASE do setFloor.\n\n## Mudan\u00e7a (diff em /tmp/withdraw.diff; arquivos em /home/gcrux-tradeux/tradeux)\n- `backend/src/utils/withdrawGuard.js` (NOVO, puro): checkWithdrawGates \u2192 3 camadas (HALT 409 / frase 400 / allowlist fail-closed 403) + maskAddress.\n- `backend/src/controllers/exchangeController.js`: doWithdraw aplica os gates antes do exchange.withdraw; loga + notifica.\n- `backend/scripts/sim/withdrawGuard.test.js` (NOVO, 9 asserts). `.env.example` doc. frontend manda confirm via prompt.\n\n## Avalie (must-fix vs nice-to-have)\n1. **Allowlist FAIL-CLOSED-VAZIA** (vazia = bloqueia tudo): \u00e9 a postura certa p/ money-out, ou deveria ser opcional (s\u00f3 enforce se setada)? Trade-off: seguran\u00e7a m\u00e1xima vs surpreender o dono (saque leg\u00edtimo bloqueado at\u00e9 popular a allowlist). Vou deixar VAZIO no .env live (saque j\u00e1 off na Binance). Aceit\u00e1vel?\n2. **Arquitetura**: gate no controller (n\u00e3o no exchange.js withdraw()) \u2014 certo? extrair p/ util puro test\u00e1vel \u00e9 bom?\n3. **3 camadas no mesmo PR** vs separar: coeso?\n4. **Frontend no mesmo PR** (precisa rebuild): necess\u00e1rio (sen\u00e3o o bot\u00e3o Run quebra com 400)? ok?\n5. Conven\u00e7\u00f5es, naming, d\u00edvida. O `.env.example` documenta bem? (nota: o .env.example N\u00c3O tem os params de risco recentes \u2014 MAX_ORDER_PCT_EQUITY/MIN_ORDER_NOTIONAL_FLOOR/MAX_SELL_EQUITY_MULT; vale flag separado, fora deste PR?)\n\nSu\u00edte: `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (8/8). Foque na decis\u00e3o. pt-BR, conciso, must-fix separado."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Verifiquei tudo. O contrato `getState()` bate (`source`/`halted`), o gate é aplicado depois da resolução de `amount` (inclusive `MAX_WALLET`) e antes do `exchange.withdraw`, a suíte passa 8/8 e o frontend foi atualizado em par com o contrato do service. Decisão abaixo.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\n### Racional\nMudança **bem-escopada, reversível e de baixo blast-radius** que fecha um HIGH real: `POST /exchange/withdraw/:id` era o único caminho de saída de fundos fora do `assertWithinRisk`, mitigado só por config externa reversível na Binance. Traz o enforcement pro código com defesa-em-profundidade de 3 camadas. Arquitetura está **correta**:\n\n- **Util puro testável** (`/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js`) — síncrono, sem deps, sem ciclo, retorna `{ok}|{ok,status,error}`. Decisão certa. 9 asserts cobrem precedência (HALT > frase > allowlist), fail-closed e frase custom.\n- **Gate no controller, não no `exchange.js`** — correto. `exchange.withdraw()` é o boundary node-binance-api (puro wrapper); a policy pertence à camada de orquestração, que é onde `riskState`/`req.body` vivem. Pôr policy no wrapper poluiria o boundary e seria menos testável.\n- **Ordenação no controller correta**: gate roda *depois* de resolver `amount` (inclui `MAX_WALLET`) e *antes* do `exchange.withdraw` — não há janela de drain.\n- **Contrato `riskState.getState()` confere**: `st.halted`/`st.source` existem; HALT no withdraw agora cobre env-hard/floor/manual/daily-cap (mesma fonte única do resto do sistema). Bom.\n- **Segurança/logs**: `maskAddress` evita vazar endereço em log/Telegram. Nenhum secret tocado. `.env` não commitado.\n\n### Respostas diretas às suas perguntas\n1. **Allowlist FAIL-CLOSED-VAZIA**: postura **certa** para money-out e consistente com a doutrina do repo (cofre BTC fail-closed, GO_LIVE_PHRASE). Deixar VAZIO no `.env` live é **aceitável** — saque já off na Binance, então é defesa redundante intencional; nenhum saque legítimo está planejado. O custo (surpreender o dono) é mitigado pela mensagem de erro 403, que diz exatamente o que popular. Não torne opcional.\n2. **Arquitetura**: aprovada (acima).\n3. **3 camadas no mesmo PR**: coeso — são uma única feature (gate de saque). Separar seria over-engineering.\n4. **Frontend no mesmo PR**: **necessário** e correto. Sem o `confirm` no body o botão Run quebraria com 400 — manter back+front atômicos evita janela de quebra. Aceito o rebuild.\n\n### Must-fix\n- Nenhum. Não bloqueia o merge.\n\n### Nice-to-have (follow-up, fora deste PR)\n- **`next` não usado**: `doWithdraw(req, res, next)` agora trata erro com `res.status(...)` em vez de `next(err)` — herdado, não regressão. Ignorável.\n- **Mismatch de shape no catch herdado**: o sucesso/gate retornam `{error}`, mas o `catch` final (linha 143) responde `res.status(400).json(stringOuJSON)` — formato divergente. Pré-existente, fora de escopo; padronizar depois.\n- **`.env.example` incompleto** (seu flag): confirmo que faltam `MAX_ORDER_PCT_EQUITY`/`MIN_ORDER_NOTIONAL_FLOOR`/`MAX_SELL_EQUITY_MULT`. Este PR documenta bem os 2 params novos do withdraw; o débito dos params de risco é **separado** — abrir issue/PR próprio, não atrasar este.\n- **`maskAddress` com `…` (U+2026)**: char não-ASCII em log; cosmético, ok dado que comentários do repo já usam acentuação.\n\n### Decisão de merge\n**APPROVE — mergear este FIX 1 isolado, sem esperar os FIX 2/3.** É independente e reversível.\n\nCondições operacionais (não bloqueiam o código):\n- Manter `WITHDRAW_ADDRESS_ALLOWLIST` **vazio** no `.env` live (confirma o fail-closed; saque continua duplamente travado: código + Binance-off).\n- Após merge: rebuild do frontend (Vite build-time) + restart do backend pra carregar o novo controller/util.\n- Ops: PR via fluxo padrão (git/docker como `gcrux-tradeux`, push com a chave do `ubuntu`, chown de `.git` de volta).\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js`, `/home/gcrux-tradeux/tradeux/backend/.env.example`, `/home/gcrux-tradeux/tradeux/frontend/src/private/WithdrawTemplates/WithdrawTemplates.js`, `/home/gcrux-tradeux/tradeux/frontend/src/services/ExchangeService.js`.'}, {'type': 'text', 'text': "agentId: a9142127bad2bff62 (use SendMessage with to: 'a9142127bad2bff62' to continue this agent)\n<usage>subagent_tokens: 30401\ntool_uses: 7\nduration_ms: 51958</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tenho tudo que preciso. Análise completa.\n\n---\n\n# Re-revisão FIX 1 — Travar SAQUE REAL em código\n\n**VEREDITO: PASS COM RESSALVAS**\n\nA trava em `exchangeController.doWithdraw` é sólida, FAIL-CLOSED correta, precedência certa, espelha bem o padrão `GO_LIVE_PHRASE`/`riskState`. A suíte roda 8/8 (withdrawGuard 9/9). Mas o fix **fecha só 1 dos 2 caminhos de saída de fundos no código** — existe um segundo caller de `exchange.withdraw` que NÃO recebeu o gate.\n\n## Achados\n\n### 🔴 ALTO — BYPASS: `beholder.withdrawCrypto` é um 2º caminho de saque SEM o gate\n`backend/src/beholder.js:748-784` (`withdrawCrypto`) chama `exchange.withdraw(coin, amount, address, network, tag)` na **mesma assinatura** do controller, despachado por `doAction → case actionTypes.WITHDRAW` (`beholder.js:850`). É uma **automação** com action `WITHDRAW`: dispara na hot-path do beholder quando a condição arma, e suporta o mesmo `MAX_WALLET`/`LAST_ORDER_QTY` (drena a moeda) — `beholder.js:759-770`. **Esse caminho NÃO passa por `checkWithdrawGates`**: sem HALT, sem frase, sem allowlist. O premissa do FIX ("o saque é o ÚNICO caminho... via doWithdraw") está incorreta — há dois.\n\nMitigantes (por que é ALTO e não CRÍTICO): verifiquei o DB live — **0 actions WITHDRAW, 0 withdrawTemplates** (`automations`/`actions`/`withdrawTemplates` vazios). Hoje o vetor está desarmado e o saque-OFF da Binance ainda cobre. Mas a capacidade de código existe: basta criar uma automação WITHDRAW (UI/API) para drenar fundos contornando as 3 camadas que este fix acabou de instalar. Defesa-em-profundidade que deixa a porta dos fundos pela automação aberta não é defesa-em-profundidade.\n\n**Correção:** chamar `checkWithdrawGates` também em `withdrawCrypto` (ler `riskState.getState()`; a frase de `confirm` não existe no contexto de automação — então para esse caminho a regra deve ser **HALT + allowlist FAIL-CLOSED**, dispensando a frase, ou simplesmente bloquear WITHDRAW-por-automação enquanto não for um caso de uso real). O ideal arquitetural: mover o gate para **dentro de `exchange.withdraw`** (o wrapper), igual o `assertWithinRisk` fez para buy/sell/oco — aí qualquer caller futuro herda a trava (single chokepoint). Hoje a defesa está no controller, não na fronteira Binance.\n\n### 🟢 As 3 camadas do controller estão corretas\n- **Precedência HALT > frase > allowlist**: correta. `withdrawGuard.js:14/18/21` na ordem certa; o teste `precedência: HALT > frase → 409` cobre. `confirm` ausente (`req.body` undefined) tratado em dois pontos: `(req.body || {}).confirm` no controller (`exchangeController.js:127`) e `confirm == null ? \'\'` no guard (`withdrawGuard.js:18`). \n- **FAIL-CLOSED-vazia**: `withdrawGuard.js:22` retorna 403 com allowlist vazia. Correto e desejável aqui — saque é raro/deliberado, já está OFF na Binance, e o custo de um falso-negativo (drenagem) >> custo de configurar 1 env. **Decisão-chave APROVADA.** Ressalva de clareza abaixo.\n- **`riskState.getState()` é a fonte certa**: `halted`/`source` batem com o consumo (`getState()` retorna `halted: isHalted()` cobrindo env-hard/floor/manual/daily-cap, e `source` resolve a causa dominante). Fiel ao padrão.\n- **Frase espelha `GO_LIVE_PHRASE`**: sim — `systemController.js:34` usa `String(confirm||\'\')!==GO_LIVE_PHRASE`; o guard usa a mesma comparação estrita. Consistente. (Frase default DIFERE de propósito: floor=\'LIGAR REAL\', withdraw=\'SACAR REAL\' — bom, evita colar uma na outra.)\n\n### 🟡 MÉDIO — Clareza/descoberta da regressão FAIL-CLOSED-vazia\nO comportamento é correto, mas o dono vai apertar "Run" no template e levar **403** sem entender. Mitigantes existem (msg de erro é explícita e o frontend exibe `err.response.data`). Mas:\n- O 403 do gate retorna **`{error}`** (objeto JSON); o frontend faz `setNotification({text: err.response.data})` (`WithdrawTemplates.js:89`) → vai renderizar `[object Object]` em vez da mensagem. O catch de erro de *exchange* (`exchangeController.js:143`) retorna string crua; o catch do *gate* retorna objeto. Inconsistente — a mensagem útil do fail-closed se perde na UI. **Sugiro retornar string ou ajustar o front para `err.response.data.error`.**\n- `.env.example` documenta bem as 2 envs, mas o HANDOFF/runbook não menciona "saque agora bloqueado em código por allowlist vazia". Como é runtime-config no `.env` live, registre para não surpreender num restart.\n\n### 🟢 BAIXO — observações\n- **Idempotência/notify**: o `telegramNotify.notify(msg, dedupKey)` com `dedupKey=withdraw:${id}` está certo (assinatura confere). `.catch(()=>{})` evita que falha de Telegram derrube o saque já executado. OK.\n- **maskAddress**: `>12` chars mascara; endereços curtos (raro) vazam inteiros no log — aceitável.\n- **Hot-path/ordens**: o controller toca SÓ o caminho de saque; nenhuma mudança em placeOrder/assertWithinRisk/beholder updateMemory. Sem regressão na engine. **MAS** a correção do achado ALTO vai tocar `beholder.js` (hot-path) — fazer com cuidado (gate síncrono, sem throw não-tratado; o `doAction` já tem try/catch em `beholder.js:853`).\n- **Frontend**: prompt cancelado (`!confirm`) não dispara (`WithdrawTemplates.js:83`); body `{confirm}` chega via `express.json()` (confirmado em `app.js:36`). MCP **não** tem tool de withdraw (confirmado). Único caller HTTP é `POST /withdraw/:id`.\n\n## Testes que eu rodaria\n1. **Suíte de sim** — feito: `AES_KEY=… npm run test:sim` → 8/8, withdrawGuard 9/9. run.js auto-descobre o `.test.js` (está no CI).\n2. **Bypass do beholder (o gap)**: criar withdrawTemplate + automação WITHDRAW no testnet, armar a condição, confirmar que `exchange.withdraw` é chamado **sem** passar pelo gate (hoje passa). Depois da correção, confirmar que HALT/allowlist bloqueiam esse caminho também.\n3. **Gate no controller (E2E live, sem executar saque real)**: `POST /withdraw/:id` (a) sem body → espera 400 frase; (b) com `confirm` certo + allowlist vazia → 403; (c) HALT ligado (já está `halted=false` hoje, mas testável via `POST /system/halt`) + tudo certo → 409; (d) endereço fora da allowlist → 403.\n4. **UI**: clicar Run, cancelar prompt (não dispara); digitar frase errada → ver se a notificação mostra a mensagem ou `[object Object]` (achado MÉDIO).\n5. **Boot**: subir backend com `WITHDRAW_ADDRESS_ALLOWLIST=` vazio e confirmar que nada quebra no boot (gate é lazy, só no request — OK).\n\n## Recomendação de merge\n**NÃO mergear como "fecha o único caminho de saque" — porque não fecha.** O controller está pronto e correto; mergear ELE é seguro e melhora a postura. Mas o FIX só está completo quando o **bypass do `beholder.withdrawCrypto`** (achado ALTO) for fechado — idealmente movendo o gate para dentro de `exchange.withdraw` (chokepoint único, igual `assertWithinRisk`). Recomendo: **mergear o controller + corrigir o caminho do beholder no mesmo lote** antes de declarar o HIGH da re-revisão resolvido. O achado MÉDIO (`{error}` objeto vs string na UI) é cosmético, pode ir junto. Enquanto o saque-OFF da Binance estiver ativo e sem automação WITHDRAW no DB, não há exposição imediata — mas a premissa do fix precisa ser corrigida para não dar falsa sensação de cobertura.\n\n**Arquivos relevantes:**\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js:748-784` (bypass `withdrawCrypto`) e `:850` (dispatch)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js:124-144`\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js:92-115` (`getState`)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/WithdrawTemplates/WithdrawTemplates.js:78-91`'}, {'type': 'text', 'text': "agentId: a964b9a086fb299f3 (use SendMessage with to: 'a964b9a086fb299f3' to continue this agent)\n<usage>subagent_tokens: 62230\ntool_uses: 19\nduration_ms: 161123</usage>"}]
+> ```
+
+## 🤖 Claude *(14:26:16)*
+
+
+## 🤖 Claude *(14:26:20)*
+
+QA pegou um **must-fix real que eu e o workflow perdemos**: existe um **segundo caller** de `exchange.withdraw` — `beholder.withdrawCrypto` (automação `WITHDRAW`, hot-path) — que **bypassa** meu gate no controller. A premissa "doWithdraw é o único caminho" estava errada (há 2). O TL aprovou sem checar outros callers; o QA foi mais fundo. 
+
+A correção certa é a que o QA recomendou: mover o enforcement universal (HALT + allowlist) pra **dentro do `exchange.withdraw`** (boundary chokepoint, igual ao `assertWithinRisk`) — aí os 2 callers herdam. A frase fica só no controller (HTTP). Também corrijo o `{error}`→string (UI mostrava `[object Object]`). Leio o `exchange.withdraw`:
+
+## 🤖 Claude *(14:26:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 250,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 250	                            name: n.name,
+> 251	                            withdrawFee: n.withdrawFee,
+> 252	                            withdrawMin: n.withdrawMin,
+> 253	                            minConfirm: n.minConfirm
+> 254	                        }
+> 255	                    })
+> 256	                }
+> 257	            })
+> 258	        } catch (err) {
+> 259	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 260	        }
+> 261	    }
+> 262	
+> 263	    async function privateCall(apiUrl, data = {}, method = 'GET') {
+> 264	
+> 265	        const timestamp = Date.now();
+> 266	        const recvWindow = 60000;
+> 267	
+> ```
+
+## 🤖 Claude *(14:26:25)*
+
+
+## 🤖 Claude *(14:26:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\ngrep -n \"function withdraw\\|withdraw(\" src/utils/exchange.js | head -5",
+  "description": "Locate withdraw function in exchange.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 228:    function withdraw(coin, amount, address, network, addressTag) {
+> ```
+
+## 🤖 Claude *(14:26:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 228,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 228	    function withdraw(coin, amount, address, network, addressTag) {
+> 229	        try {
+> 230	            const data = { coin, amount, address };
+> 231	            if (addressTag) data.addressTag = addressTag;
+> 232	            if (network) data.network = network;
+> 233	            return privateCall(SAPI_URL + 'capital/withdraw/apply', data, 'POST');
+> 234	        } catch (err) {
+> 235	            throw new Error(err.response ? JSON.stringify(err.response.data) : err.message);
+> 236	        }
+> 237	    }
+> 238	
+> 239	    async function getCoins() {
+> 240	        try {
+> 241	            const coins = await privateCall(SAPI_URL + 'capital/config/getall', null, 'GET');
+> ```
+
+## 🤖 Claude *(14:26:33)*
+
+
+## 🤖 Claude *(14:26:34)*
+
+Tenho tudo. Reescrevo o `withdrawGuard.js` (DRY: controller 3-camadas + boundary HALT+allowlist que THROWS):
+
+## 🤖 Claude *(14:26:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js",
+  "content": "'use strict';\n\n// Travas do SAQUE REAL \u2014 defesa-em-profundidade EM C\u00d3DIGO. O saque N\u00c3O passa pelo chokepoint assertWithinRisk\n// (s\u00f3 buy/sell/oco passam), ent\u00e3o \u00e9 um caminho de SA\u00cdDA de fundos que escapava de HALT/floor/cap/teto. Hoje\n// mitigado s\u00f3 por config EXTERNA na Binance (saque-OFF, revers\u00edvel). H\u00e1 DOIS callers de exchange.withdraw: o\n// controller HTTP (doWithdraw) e a automa\u00e7\u00e3o WITHDRAW do beholder (withdrawCrypto). Por isso o enforcement\n// universal (HALT + allowlist) vai no BOUNDARY (exchange.withdraw via assertWithdrawAllowed \u2192 cobre os 2\n// callers, igual ao assertWithinRisk), e a FRASE de confirma\u00e7\u00e3o fica s\u00f3 no controller HTTP (a automa\u00e7\u00e3o n\u00e3o tem\n// req.body). PURO/s\u00edncrono/sem deps \u2192 test\u00e1vel (scripts/sim/withdrawGuard.test.js) e sem ciclo.\n\nfunction _allowlist() {\n    return (process.env.WITHDRAW_ADDRESS_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean);\n}\nfunction _phrase() { return process.env.WITHDRAW_CONFIRM_PHRASE || 'SACAR REAL'; }\n\n// Allowlist de endere\u00e7o FAIL-CLOSED: vazia = bloqueia TUDO; endere\u00e7o fora = bloqueia. null = ok; sen\u00e3o {status,error}.\nfunction _addressBlock(address) {\n    const allow = _allowlist();\n    if (!allow.length)\n        return { status: 403, error: `[withdraw] WITHDRAW_ADDRESS_ALLOWLIST n\u00e3o configurada \u2014 saque BLOQUEADO (fail-closed; popule a allowlist no .env p/ habilitar saque).` };\n    if (!allow.includes(String(address)))\n        return { status: 403, error: `[withdraw] endere\u00e7o de destino fora da WITHDRAW_ADDRESS_ALLOWLIST \u2014 saque BLOQUEADO.` };\n    return null;\n}\n\n// CAMINHO HTTP (controller doWithdraw): 3 camadas \u2014 HALT + frase + allowlist. Retorna {ok} ou {ok:false,status,error}.\nfunction checkWithdrawGates({ halted, haltSource, confirm, address } = {}) {\n    if (halted)\n        return { ok: false, status: 409, error: `[withdraw] HALT ativo (${haltSource || 'kill-switch'}) \u2014 saque BLOQUEADO.` };\n    if (String(confirm == null ? '' : confirm) !== _phrase())\n        return { ok: false, status: 400, error: `[withdraw] confirma\u00e7\u00e3o obrigat\u00f3ria: o campo 'confirm' deve ser exatamente '${_phrase()}'.` };\n    const ab = _addressBlock(address);\n    if (ab) return { ok: false, status: ab.status, error: ab.error };\n    return { ok: true };\n}\n\n// BOUNDARY (exchange.withdraw \u2192 cobre TODO caller: controller HTTP E automa\u00e7\u00e3o WITHDRAW do beholder). HALT +\n// allowlist, SEM frase (a automa\u00e7\u00e3o n\u00e3o tem confirm). THROWS fail-closed igual ao assertWithinRisk \u2014 single\n// chokepoint na fronteira node-binance-api, qualquer caller futuro herda a trava.\nfunction assertWithdrawAllowed({ halted, haltSource, address } = {}) {\n    if (halted) throw new Error(`[withdraw] HALT ativo (${haltSource || 'kill-switch'}) \u2014 saque BLOQUEADO.`);\n    const ab = _addressBlock(address);\n    if (ab) throw new Error(ab.error);\n}\n\n// Mascara o endere\u00e7o p/ log/notify (n\u00e3o vazar o endere\u00e7o inteiro): primeiros 6 + \u00faltimos 4.\nfunction maskAddress(addr) {\n    const s = String(addr || '');\n    return s.length > 12 ? `${s.slice(0, 6)}...${s.slice(-4)}` : s;\n}\n\nmodule.exports = { checkWithdrawGates, assertWithdrawAllowed, maskAddress };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:59)*
+
+
+## 🤖 Claude *(14:26:59)*
+
+Agora ligo o boundary no `exchange.withdraw` (require + a chamada que THROWS — cobre os 2 callers):
+
+## 🤖 Claude *(14:27:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "const riskState = require('../riskState'); // fonte \u00fanica do HALT (QUENTE); sem ciclo (riskState n\u00e3o requer o app)",
+  "new_string": "const riskState = require('../riskState'); // fonte \u00fanica do HALT (QUENTE); sem ciclo (riskState n\u00e3o requer o app)\nconst { assertWithdrawAllowed } = require('./withdrawGuard'); // trava de SA\u00cdDA de fundos no boundary (HALT + allowlist)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:27:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "    function withdraw(coin, amount, address, network, addressTag) {\n        try {\n            const data = { coin, amount, address };",
+  "new_string": "    function withdraw(coin, amount, address, network, addressTag) {\n        // CHOKEPOINT de sa\u00edda de fundos (fail-closed, igual ao assertWithinRisk das ordens): HALT + allowlist de\n        // endere\u00e7o. Cobre TODO caller \u2014 controller HTTP (doWithdraw) E automa\u00e7\u00e3o WITHDRAW do beholder (withdrawCrypto).\n        const st = riskState.getState();\n        assertWithdrawAllowed({ halted: st.halted, haltSource: st.source, address });\n        try {\n            const data = { coin, amount, address };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:27:15)*
+
+
+## 🤖 Claude *(14:27:16)*
+
+Corrijo a resposta de erro do controller (string, não `{error}` — conserta o `[object Object]` na UI; consistente com o catch existente):
+
+## 🤖 Claude *(14:27:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js",
+  "old_string": "        logger('system', `${gate.error} (coin=${withdrawTemplate.coin}, amount=${amount}, addr=${maskAddress(withdrawTemplate.address)})`);\n        return res.status(gate.status).json({ error: gate.error });",
+  "new_string": "        logger('system', `${gate.error} (coin=${withdrawTemplate.coin}, amount=${amount}, addr=${maskAddress(withdrawTemplate.address)})`);\n        return res.status(gate.status).json(gate.error); // string (consistente c/ o catch; a UI mostra a msg, n\u00e3o [object Object])"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:27:24)*
+
+
+## 🤖 Claude *(14:27:25)*
+
+Atualizo a suíte com o teste do boundary `assertWithdrawAllowed` (throws):
+
+## 🤖 Claude *(14:27:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js",
+  "old_string": "const { checkWithdrawGates } = require('../../src/utils/withdrawGuard');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }",
+  "new_string": "const { checkWithdrawGates, assertWithdrawAllowed } = require('../../src/utils/withdrawGuard');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\nfunction thr(name, fn) { let t = false; try { fn(); } catch (_) { t = true; } if (t) passed++; else { failed++; console.error(`  \u2717 ${name}: N\u00c3O lan\u00e7ou (esperava throw)`); } }\nfunction ok(name, fn) { let e = null; try { fn(); } catch (err) { e = err; } if (!e) passed++; else { failed++; console.error(`  \u2717 ${name}: lan\u00e7ou indevidamente (${e.message})`); } }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:27:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js",
+  "old_string": "// Preced\u00eancia: HALT vence frase/allowlist (halt ativo + sem confirm \u2192 409, n\u00e3o 400).\nsetEnv(null, null);\neq('preced\u00eancia: HALT > frase \u2192 409', checkWithdrawGates({ halted: true, haltSource: 'floor', confirm: undefined, address: ADDR }).status, 409);\n\nconsole.log(`\\nwithdrawGuard.test.js: ${passed} passed, ${failed} failed`);",
+  "new_string": "// Preced\u00eancia: HALT vence frase/allowlist (halt ativo + sem confirm \u2192 409, n\u00e3o 400).\nsetEnv(null, null);\neq('preced\u00eancia: HALT > frase \u2192 409', checkWithdrawGates({ halted: true, haltSource: 'floor', confirm: undefined, address: ADDR }).status, 409);\n\n// === BOUNDARY (assertWithdrawAllowed) \u2014 cobre o controller HTTP E a automa\u00e7\u00e3o WITHDRAW do beholder; THROWS. ===\n// SEM frase (automa\u00e7\u00e3o n\u00e3o tem confirm): s\u00f3 HALT + allowlist.\nsetEnv(null, ADDR);\nthr('boundary: HALT ativo \u2192 throw', () => assertWithdrawAllowed({ halted: true, haltSource: 'manual', address: ADDR }));\nsetEnv(null, null);\nthr('boundary: allowlist VAZIA \u2192 throw (fail-closed; cobre a automa\u00e7\u00e3o)', () => assertWithdrawAllowed({ halted: false, address: ADDR }));\nsetEnv(null, '0xOUTRO');\nthr('boundary: endere\u00e7o fora da allowlist \u2192 throw', () => assertWithdrawAllowed({ halted: false, address: ADDR }));\nsetEnv(null, `0xOUTRO,${ADDR}`);\nok('boundary: HALT off + endere\u00e7o na allowlist \u2192 passa (sem throw)', () => assertWithdrawAllowed({ halted: false, address: ADDR }));\n\nconsole.log(`\\nwithdrawGuard.test.js: ${passed} passed, ${failed} failed`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:27:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/utils/withdrawGuard.js && node --check src/utils/exchange.js && node --check src/controllers/exchangeController.js && echo \"syntax OK\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"withdrawGuard|riskGuard|sim suite\"\necho \"=== confirma: assertWithdrawAllowed agora cobre os 2 callers (controller + beholder.withdrawCrypto) ===\"\ngrep -rn \"exchange.withdraw\\|\\.withdraw(\" src/beholder.js src/controllers/exchangeController.js | grep -iE \"withdraw\\(\" | head",
+  "description": "Syntax + sim + confirm both withdraw callers go through boundary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> === sim/riskGuard.test.js ===
+> riskGuard.test.js: 53 passed, 0 failed
+> === sim/withdrawGuard.test.js ===
+> withdrawGuard.test.js: 13 passed, 0 failed
+> sim suite: 8/8 arquivos OK.
+> === confirma: assertWithdrawAllowed agora cobre os 2 callers (controller + beholder.withdrawCrypto) ===
+> src/beholder.js:776:        const result = await exchange.withdraw(withdrawTemplate.coin, amount, withdrawTemplate.address, withdrawTemplate.network, withdrawTemplate.addressTag);
+> src/controllers/exchangeController.js:139:        const result = await exchange.withdraw(withdrawTemplate.coin, amount, withdrawTemplate.address, withdrawTemplate.network, withdrawTemplate.addressTag);
+> ```
+
+## 🤖 Claude *(14:28:06)*
+
+
+## 🤖 Claude *(14:28:08)*
+
+Both callers (`beholder.js:776` automação + `exchangeController.js:139` HTTP) agora passam por `exchange.withdraw` → `assertWithdrawAllowed`. Bypass fechado. withdrawGuard **13/13**, riskGuard intacto (53), suíte 8/8. Re-verifico com o QA que o must-fix foi de fato fechado:
+
+## 🤖 Claude *(14:28:20)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA re-verify bypass closed",
+  "subagent_type": "qa-engineer",
+  "prompt": "Re-verifica\u00e7\u00e3o FOCADA de um must-fix do FIX 1 (withdraw lock) no TradeUX. Na revis\u00e3o anterior, o QA achou um BYPASS HIGH: `beholder.withdrawCrypto` (automa\u00e7\u00e3o WITHDRAW) chama `exchange.withdraw` SEM o gate que estava s\u00f3 no controller `doWithdraw`. A corre\u00e7\u00e3o aplicada: mover o enforcement universal (HALT + allowlist FAIL-CLOSED) pro BOUNDARY `exchange.withdraw` (igual ao assertWithinRisk), cobrindo os 2 callers; a frase de confirma\u00e7\u00e3o fica s\u00f3 no controller HTTP.\n\n## Verifique (no c\u00f3digo real em /home/gcrux-tradeux/tradeux):\n1. **O bypass est\u00e1 FECHADO?** `backend/src/utils/exchange.js` (fun\u00e7\u00e3o `withdraw`, ~linha 228): ela agora chama `assertWithdrawAllowed({halted, haltSource, address})` ANTES do privateCall? Os DOIS callers (`backend/src/beholder.js:776` withdrawCrypto + `backend/src/controllers/exchangeController.js:139` doWithdraw) passam por essa fun\u00e7\u00e3o \u2192 herdam HALT+allowlist?\n2. **`assertWithdrawAllowed`** (backend/src/utils/withdrawGuard.js) THROWS fail-closed em: HALT ativo, allowlist vazia, endere\u00e7o fora? Com allowlist VAZIA (estado live planejado), a automa\u00e7\u00e3o WITHDRAW tamb\u00e9m \u00e9 bloqueada (throw)?\n3. **A automa\u00e7\u00e3o trata o throw?** beholder.js doAction tem try/catch em volta do withdrawCrypto (n\u00e3o derruba o engine)?\n4. **Regress\u00e3o**: o novo require `./withdrawGuard` em exchange.js cria ciclo? (withdrawGuard \u00e9 puro, sem deps). A su\u00edte de sim ainda passa (riskGuard intacto)?\n5. **Controller**: a resposta de erro virou string (n\u00e3o `{error}` objeto) \u2014 conserta o `[object Object]` na UI?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (deve dar 8/8, withdrawGuard 13). Veredito curto: o must-fix do bypass est\u00e1 RESOLVIDO? Algum gap residual? pt-BR, conciso."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Exatamente os dois callers esperados, ambos passando pelo boundary. Verificação completa.\n\n---\n\n# Re-verificação FOCADA — must-fix do bypass do withdraw lock (FIX 1)\n\n## VEREDITO: PASS — o bypass está RESOLVIDO\n\nO enforcement universal (HALT + allowlist FAIL-CLOSED) foi movido pro boundary `exchange.withdraw`, cobrindo os DOIS callers. A frase de confirmação ficou só no controller HTTP, como projetado.\n\n## Achados por item\n\n**1. Bypass FECHADO — CONFIRMADO.** `backend/src/utils/exchange.js:229-242`: a função `withdraw` chama `assertWithdrawAllowed({halted: st.halted, haltSource: st.source, address})` (linha 233) ANTES do `privateCall` (linha 238). Grep de `exchange.withdraw(` retorna EXATAMENTE os 2 callers — `backend/src/beholder.js:776` (`withdrawCrypto`/automação WITHDRAW) e `backend/src/controllers/exchangeController.js:139` (`doWithdraw`/HTTP) — ambos herdam a trava. Não há terceiro caminho.\n\n**2. `assertWithdrawAllowed` THROWS fail-closed — CONFIRMADO.** `backend/src/utils/withdrawGuard.js:40-44`: throw em HALT ativo; `_addressBlock` throwa em allowlist vazia (linha 19-20) e em endereço fora (linha 21-22). Com allowlist VAZIA (estado live planejado), a automação WITHDRAW é bloqueada por throw mesmo sem HALT — provado no teste de boundary (`withdrawGuard.test.js:54`).\n\n**3. Throw tratado pela automação — CONFIRMADO (com nuance que NÃO é defeito).** O `try/catch` SÍNCRONO em `doAction` (`beholder.js:843-859`) por si só NÃO captura a rejeição da promise de `withdrawCrypto` (o `switch` faz `return withdrawCrypto(...)` sem `await`). Mas o engine não cai porque: (a) `withdrawCrypto` tem try/catch interno (`:781-783`); (b) o caller real `evalDecision` faz `await doAction(...)` (`:921`) dentro de um try/catch (`:931-944`) que captura a rejeição, loga em `A:<id>.log`, alerta o dono no Telegram (deduped `autofail:<id>`) e retorna `{type:'error'}`. O `updateMemory`/hot-path não derruba. OK.\n\n**4. Regressão / ciclo — SEM CICLO.** `withdrawGuard.js` é PURO (grep `require` = zero imports). `exchange.js:9` o requer e `node -e` carrega ambos sem crash. Suíte de sim: **8/8 arquivos, withdrawGuard 13/13**; riskGuard intacto (53/53). `riskState.getState()` retorna `{halted, source}` consistente com o uso nos dois callers.\n\n**5. Resposta de erro virou string — CONFIRMADO.** `exchangeController.js:130` (`res.status(gate.status).json(gate.error)`) e `:143` (catch) retornam string, não `{error}`. Conserta o `[object Object]`/corpo vazio na UI; consistente com o catch.\n\n## Gaps residuais (BAIXOS, não bloqueiam)\n\n- **[BAIXO] Precedência divergente entre as duas portas.** No controller HTTP a ordem é HALT → frase → allowlist (`checkWithdrawGates`); no boundary é HALT → allowlist (sem frase). É by-design (automação não tem `confirm`), mas significa que a frase de confirmação NÃO é uma trava de boundary — só de UI. Aceitável: HALT + allowlist já são fail-closed no boundary.\n- **[BAIXO] Sem teste E2E do caminho da automação.** O teste cobre `assertWithdrawAllowed` em isolamento (boundary) e prova que a automação herda; não há teste que exercite `beholder.withdrawCrypto → exchange.withdraw → throw → evalDecision catch` ponta-a-ponta. A cadeia foi verificada por leitura, mas um sim que injete o boundary lançando e assira que `evalDecision` retorna `{type:'error'}` (e não rejeita) fecharia o item 3 mecanicamente.\n- **[INFORMATIVO] `maskAddress` no log do controller, não no boundary.** O log de bloqueio no boundary (`exchange.js`) não existe — o throw sobe sem log próprio de saque; quem loga/mascara é o controller (`:129`) e o `evalDecision` catch (genérico). Sem vazamento de endereço, mas a observabilidade do bloqueio na automação é só o `autofail` genérico do Telegram.\n\n## Testes que eu rodaria\n- `AES_KEY=… npm run test:sim` — **FEITO**, 8/8 (withdrawGuard 13/13, riskGuard 53/53).\n- E2E da automação (sugerido, não existe): mock de `exchange.withdraw` lançando → `evalDecision` de uma automação WITHDRAW resolve com `{type:'error'}` SEM unhandled rejection.\n- Smoke vivo com allowlist VAZIA: disparar a automação WITHDRAW e confirmar `A:<id>.log` com o erro `WITHDRAW_ADDRESS_ALLOWLIST não configurada` + Telegram `autofail` + nenhum hit no SAPI.\n- HTTP `POST /exchange/withdraw` sob HALT → 409 string; com endereço fora da allowlist → 403 string (verificar UI mostra a msg, não `[object Object]`).\n\n## Recomendação de merge\n**APROVAR.** O must-fix do bypass HIGH está efetivamente resolvido: o chokepoint está na fronteira certa, fail-closed, cobrindo automação e HTTP, sem ciclo, com a suíte verde. Os 3 gaps são BAIXOS/observabilidade e podem virar follow-up — recomendo adicionar o teste E2E do item 3 quando der, mas não é bloqueador do flip.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (boundary `withdraw`, linhas 229-242)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/withdrawGuard.js` (puro; `assertWithdrawAllowed`/`checkWithdrawGates`)\n- `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`withdrawCrypto:748`, `doAction:841`, `evalDecision` catch `:931`)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/exchangeController.js` (`doWithdraw`, gate `:126-132`, erros-string `:130/:143`)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/withdrawGuard.test.js` (13 asserts)"}, {'type': 'text', 'text': "agentId: aa9ba1c078467653c (use SendMessage with to: 'aa9ba1c078467653c' to continue this agent)\n<usage>subagent_tokens: 52849\ntool_uses: 16\nduration_ms: 96874</usage>"}]
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
