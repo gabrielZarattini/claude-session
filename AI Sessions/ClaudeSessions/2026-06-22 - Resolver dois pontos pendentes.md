@@ -5691,6 +5691,783 @@ Gate QA+TL (a tarefa exige). Chown + diff + lanço os dois:
 > [{'type': 'text', 'text': 'Tudo verificado. A extração é byte-fiel (confirmei pelo diff: o corpo de `buildCockpitOut` é idêntico ao bloco inline removido), `index.js` importa e resolve, o `npm test` passa 20 (cockpit) + 21 (vault-guard) com `EXIT=0`, e o `&&` encadeia corretamente.\n\n---\n\n## VEREDITO: APPROVE\n\nRefatoração pequena, bem-escopada, reversível, **fora do money-path** (só `tradeux-mcp`, caminho read-only do agente; não toca `beholder.js`, backend, nem ordens). Fecha uma dívida de teste de uma classe de bug que já mordeu de verdade (`6b9b97b`: campos presentes no endpoint mas dropados no `out` do tool). Blast radius mínimo. Sem segredos, sem chave em log.\n\n### Racional (respondendo aos 5 pontos)\n\n1. **Função pura é a abordagem certa.** O bug do `6b9b97b` foi exatamente "endpoint tem o campo ≠ tool encaminha o campo" — uma falha de **transformação de payload**, não de I/O. Extrair a transformação pura (`buildCockpitOut`) e testá-la diretamente ataca a causa raiz sem o custo/flakiness de subir stdio+backend só pra inspecionar a forma do `out`. O acoplamento é são e unidirecional (`index.js` → `cockpitOut.js`, nenhum import reverso, `cockpitOut` não importa nada). Bônus: o handler ficou de ~22 linhas para 1 expressão legível.\n\n2. **`&&` no `npm test` está correto.** Verificado ao vivo: roda os dois e `EXIT=0`; o `&&` propaga falha (short-circuit + exit code do primeiro que falhar — e o `cockpit-out.mjs` faz `process.exit(failed?1:0)`). Encadear é melhor que um step de CI separado aqui porque o job de integração já invoca `npm test` do mcp — um step novo no `ci.yml` duplicaria o `working-directory`/setup sem ganho. O rename do step (`Self-tests do MCP …`) reflete a cobertura nova com honestidade.\n\n3. **`.mjs` em `tradeux-mcp/test/` é o lugar certo.** O pacote mcp é `type:module`; o backend é CJS. Forçar o teste no runner de sim do backend (`scripts/sim`, CJS) criaria o mismatch ESM/CJS que a própria pergunta levanta, e pioraria a coesão (testaria código do mcp a partir do backend). Fica junto do `place-order-vault-guard.mjs`, mesmo estilo, mesmo runner (`node`). Coerente.\n\n4. **Convenções OK.** pt-BR nos comentários/asserts, naming consistente (`buildCockpitOut`, `cockpit-out.mjs` espelha `cockpitOut.js`). O comentário documenta bem o **porquê** — cita o commit `6b9b97b`, explica que "verificado ao vivo testou o ENDPOINT, não o TOOL" (a lição certa) e o detalhe do `|| null` (falsy-mas-válido preservado), que o teste (2) cobre explicitamente. Documentação de regressão exemplar.\n\n5. **Dívida residual aceitável.** O teste é unit puro e não exercita o tool via stdio ponta-a-ponta — mas o `place-order-vault-guard.mjs` já cobre o caminho stdio do servidor, e o `agent --check` no CI sobe o MCP e lista as tools. A lacuna que sobra (regressão de wiring: handler deixar de chamar `buildCockpitOut`) é estreita e improvável; cobri-la exigiria mock de `api.get` + stdio, custo desproporcional. Aceitável.\n\n### Must-fix\nNenhum.\n\n### Nice-to-have (não bloqueiam)\n- O teste cobre a **forma** do `out`, não o **wiring** (que o handler de fato chama `buildCockpitOut`). Se um dia quiser blindar isso, um assert leve no estilo vault-guard (mock `api.get` → invoca o handler) fecharia o último centímetro. Hoje é overkill.\n- Considerar uma asserção de paridade explícita "todo top-level do payload existe no `out`" pra pegar um **4º** campo futuro que alguém adicione ao endpoint e esqueça de encaminhar (o teste atual fixa os 3 conhecidos, não detecta um novo dropado). Anti-regressão estrutural, opcional.\n\n---\n\n## Decisão de merge\n\n**Merge aprovado**, mudança única e atômica — sem ordenação a coordenar. Sem condições. Segue o fluxo padrão: PR (não direto-a-master), merge como root com a key do `ubuntu` + `chown` de volta pra `gcrux-tradeux`. Não há deploy de runtime necessário pra valer no agente além do restart normal do serviço mcp/compose; nada toca o backend em produção nem o estado LIVE do bot.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/cockpitOut.js` (novo, função pura)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js` (handler vira one-liner)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/test/cockpit-out.mjs` (novo, 20 asserts)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json` (`npm test` encadeado)\n- `/home/gcrux-tradeux/tradeux/.github/workflows/ci.yml` (rename do step)'}, {'type': 'text', 'text': "agentId: a1001239f622f5310 (use SendMessage with to: 'a1001239f622f5310' to continue this agent)\n<usage>subagent_tokens: 23527\ntool_uses: 6\nduration_ms: 49390</usage>"}]
 > ```
 
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Confirmei tudo o que precisava. Análise de fidelidade: o corpo de `buildCockpitOut` é byte-idêntico ao inline anterior (comparei o diff linha a linha — `env||null`, `enabled`, loop sobre `d.symbols||{}`, os defaults `dist/ev/mc/gates`, `flow` com `ageSec`, `mc.driftless`, `buyGate`, `stale`, e os 3 forwardings `||null`). A única diferença de comportamento entre o tool antigo e o novo é onde o `api.get` é chamado — antes dentro do handler, agora como argumento de `buildCockpitOut` — semanticamente idêntico.\n\nSobre `d` null/undefined: o inline antigo também acessava `d.env` direto (`const out = { env: d.env || null, ...}`), ou seja, **já lançava** com `d` null/undefined. Não é regressão — é comportamento preservado, e o endpoint do backend sempre retorna objeto.\n\nVEREDITO: PASS\n\nRefatoração + teste de regressão no `tradeux-mcp`. Money-path e backend intocados. Tudo verificado ao vivo.\n\nEvidência executada\n- `npm test` (encadeado): cockpit-out 20/20 + trava do cofre 21/21, exit 0.\n- `node test/cockpit-out.mjs` isolado: 20/20, exit 0.\n- Teste de mutação (reintroduzindo o bug original): drop de `groups` → 17 passed/3 failed exit 1; drop de `paper` → exit 1; drop de `riskCaps` → exit 1; `groups=null` forçado → exit 1; `ageSec` sem `/1000` → exit 1. **A rede pega exatamente a classe do bug `6b9b97b`.**\n- Semântica do `&&`: primeiro falha → exit 1 (segundo não roda, short-circuit); segundo falha → propaga (exit 2); ambos passam → 0. Sem mascaramento.\n\nRespostas ao foco adversarial\n1. **Fidelidade (BAIXA, OK):** `buildCockpitOut` é byte-equivalente ao corpo inline removido — comparei campo a campo no diff (`env/enabled/symbols`, defaults `dist/ev/mc/gates`, `flow.ageSec` via `Number.isFinite(ageMs)?round(ageMs/1000):null`, `mc.driftless`, `buyGate`, `stale`, os 3 forwardings `|| null`). Único deslocamento é o `await api.get` migrar pro call-site (`async () => buildCockpitOut(await api.get(...))`) — semanticamente idêntico.\n2. **Pega o bug original (OK):** sim. Reverter qualquer dos 3 forwardings quebra o teste com exit 1 (provado por mutação real). Os asserts `eq(...encaminhado igual à entrada)` + `ok(... !== null)` cobrem tanto valor quanto não-nulidade.\n3. **Falsy-mas-válido (OK):** caso (2) do teste assere `groups:[]` preservado e `paper` com `totalPnl===0` não-null. Caso (3) assere ausência real (undefined) → null. Cobertura correta do contrato `|| null`.\n4. **CI (OK):** `&&` propaga exit code; o step de integração já roda `cd tradeux-mcp && npm test`. Nome do step ajustado coerente. Sem risco de mascaramento.\n5. **Cobertura de ramos (OK):** caso (5) cobre `symbols` ausente → `{}` (sem throw) e `flow` ausente → `null`. Edge extra que rodei à parte: símbolo totalmente vazio → `buyGate:{}`, `mc:{driftless:true}`, sem throw; `d={}` → `{env:null,symbols:{},groups:null,paper:null,riskCaps:null}`.\n\nFindings\n- **[INFO] `buildCockpitOut(null/undefined)` lança** (`Cannot read properties of ... 'env'`). NÃO é regressão — o inline antigo tinha o mesmo acesso `d.env` direto, e o endpoint sempre retorna objeto. Não vale endurecer (`api.get` já trata falha HTTP antes). Apenas registro de que o teste não cobre esse caso porque o contrato real nunca o produz.\n- **[INFO/nit] Ruído no working tree:** `backend/backtest-results/farm-funnel-*.{json,md}` aparecem modified/untracked — **fora do escopo** desta mudança (provável contaminação de outra sessão, ver memória cross-session). NÃO commitar junto. Stage apenas os 5 arquivos do MCP/CI.\n- **[INFO/nit] Short-circuit do `&&`:** se `cockpit-out.mjs` falhar, o `vault-guard.mjs` não roda na mesma execução (não some do CI numa run limpa, mas atrasa o sinal da trava do cofre). Aceitável; se quiser ambos sempre reportarem, trocar por `;` com checagem de exit ou rodar steps separados. Não-bloqueante.\n\nTestes que eu rodaria (e rodei)\n- `cd tradeux-mcp && npm test` → exit 0 (feito).\n- `node test/cockpit-out.mjs` isolado (feito).\n- Mutação: comentar cada `out.<campo> = d.<campo> || null` e confirmar exit 1 (feito, 3/3).\n- Mutação no `flow.ageSec` e no resto do `out` para confirmar que o bloco (4) não é decorativo (feito).\n- Semântica do `&&` para descartar mascaramento de exit (feito).\n\nRecomendação de merge: **MERGE.** Refatoração fiel, rede de regressão eficaz e mínima, zero toque em money-path/backend, CI já encadeia o `npm test` do MCP. Só garantir que o commit inclua apenas `tradeux-mcp/src/cockpitOut.js`, `tradeux-mcp/src/index.js`, `tradeux-mcp/test/cockpit-out.mjs`, `tradeux-mcp/package.json`, `.github/workflows/ci.yml` — e deixe os `backtest-results` de fora.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/cockpitOut.js`\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js` (handler em torno da linha 220)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/test/cockpit-out.mjs`\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/package.json`\n- `/home/gcrux-tradeux/tradeux/.github/workflows/ci.yml`"}, {'type': 'text', 'text': "agentId: a18dede360632425f (use SendMessage with to: 'a18dede360632425f' to continue this agent)\n<usage>subagent_tokens: 52415\ntool_uses: 14\nduration_ms: 100097</usage>"}]
+> ```
+
+## 🤖 Claude *(12:30:57)*
+
+
+## 🤖 Claude *(12:31:00)*
+
+Os **dois gates passaram limpos** — **QA PASS** (rodou inclusive **teste de mutação**: revertendo cada forwarding o teste falha com exit 1 → a rede pega exatamente a classe do bug) e **TL APPROVE** (sem condições, zero must-fix). Os nice-to-have são opcionais (um assert de "paridade estrutural" pra pegar um 4º campo futuro — anotado como follow-up, tem trade-off de fragilidade).
+
+Commit dos 5 arquivos (sem backtest-results), push e rebuild do agente (que empacota o MCP):
+
+## 🤖 Claude *(12:31:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/mcptest-msg.txt <<'EOF'\ntest(mcp): harness de regressao do forwarding do tradeux_get_cockpit + extrai buildCockpitOut\n\nFecha a divida que deixou o bug 6b9b97b passar: o tool tradeux_get_cockpit montava o `out`\na mao e DROPAVA groups/paper/riskCaps (D3+paper inertes pelo caminho do agente), e NAO havia\nteste cobrindo essa classe (campo no endpoint != campo encaminhado pelo tool).\n\n- tradeux-mcp/src/cockpitOut.js (NOVO): extrai a transformacao payload(/analysis/cockpit)->out\n  numa funcao PURA exportavel buildCockpitOut(d), byte-fiel ao corpo inline anterior.\n- tradeux-mcp/src/index.js: handler vira `buildCockpitOut(await api.get('/analysis/cockpit'))`.\n- tradeux-mcp/test/cockpit-out.mjs (NOVO): teste puro (sem stdio/rede), 20 asserts -- forwarding\n  dos 3 campos (igual a entrada + nao-null), falsy-mas-valido (groups:[]/paper zero preservados),\n  ausencia->null, e nao-regressao do transform (env/enabled/symbols/flow.ageSec/buyGate).\n- tradeux-mcp/package.json: `npm test` encadeia cockpit-out.mjs && place-order-vault-guard.mjs.\n- ci.yml: nome do step ajustado (o job de integracao ja roda o npm test do mcp).\n\nComportamento inalterado (extracao byte-fiel; vault-guard ainda passa = MCP boota ok).\nGate QA (PASS, mutacao confirma que reverter 1 forwarding quebra o teste) + TL (APPROVE), zero must-fix.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add tradeux-mcp/src/cockpitOut.js tradeux-mcp/src/index.js tradeux-mcp/test/cockpit-out.mjs tradeux-mcp/package.json .github/workflows/ci.yml\ngit commit -F /tmp/mcptest-msg.txt\necho \"=== conte\u00fado do commit (5 arquivos; SEM backtest-results) ===\"\ngit show --stat --oneline HEAD | head -9'",
+  "description": "Commit the MCP test harness (5 files)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 03f6757] test(mcp): harness de regressao do forwarding do tradeux_get_cockpit + extrai buildCockpitOut
+>  5 files changed, 102 insertions(+), 24 deletions(-)
+>  create mode 100644 tradeux-mcp/src/cockpitOut.js
+>  create mode 100644 tradeux-mcp/test/cockpit-out.mjs
+> === conteúdo do commit (5 arquivos; SEM backtest-results) ===
+> 03f6757 test(mcp): harness de regressao do forwarding do tradeux_get_cockpit + extrai buildCockpitOut
+>  .github/workflows/ci.yml         |  2 +-
+>  tradeux-mcp/package.json         |  2 +-
+>  tradeux-mcp/src/cockpitOut.js    | 28 +++++++++++++++++
+>  tradeux-mcp/src/index.js         | 26 +++------------
+>  tradeux-mcp/test/cockpit-out.mjs | 68 ++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 102 insertions(+), 24 deletions(-)
+> ```
+
+## 🤖 Claude *(12:31:20)*
+
+
+## 🤖 Claude *(12:31:21)*
+
+Commit `03f6757` limpo. Antes de pushar, confiro se o `origin` divergiu (coordenação — caso a sessão paralela tenha empurrado algo):
+
+## 🤖 Claude *(12:31:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nORIGIN=$(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\nPARENT=$(git -c safe.directory='*' rev-parse HEAD~1)\necho \"origin/master remoto: $ORIGIN\"\necho \"meu HEAD~1 (parent) : $PARENT\"\nif [ \"$ORIGIN\" = \"$PARENT\" ]; then\n  echo \"\u2192 FAST-FORWARD limpo (origin == meu parent). Pushando.\"\n  git -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected|error\" | head -3\n  sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\n  echo \"origin agora: $(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\"\n  echo \"HEAD        : $(git -c safe.directory='*' rev-parse HEAD)\"\nelse\n  echo \"\u26a0\ufe0f DIVERG\u00caNCIA \u2014 origin ($ORIGIN) != meu parent ($PARENT). N\u00c3O vou pushar; preciso reconciliar/coordenar.\"\nfi",
+  "description": "Check origin divergence, push if fast-forward"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> origin/master remoto: 6b9b97b9c11380557434555057952bf172528eee
+> meu HEAD~1 (parent) : 6b9b97b9c11380557434555057952bf172528eee
+> → FAST-FORWARD limpo (origin == meu parent). Pushando.
+>    6b9b97b..03f6757  master -> master
+> origin agora: 03f67579542f03a4c718cbe0b0d7a236e23f1814
+> HEAD        : 03f67579542f03a4c718cbe0b0d7a236e23f1814
+> ```
+
+## 🤖 Claude *(12:31:41)*
+
+
+## 🤖 Claude *(12:31:42)*
+
+Sem divergência — fast-forward limpo (`origin==HEAD==03f6757`). A sessão "paralela" era moot: esta sessão foi a execução. Deploy: rebuild do agente (empacota o MCP). Comportamento é idêntico (extração byte-fiel) → é higiene vivo==master:
+
+## 🤖 Claude *(12:31:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rebuild + restart agent ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build agent 2>&1 | tail -4'\necho \"=== smoke: cockpitOut.js na imagem + MCP boota (agent --check lista o tool) ===\"\nsleep 3\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent sh -c \"test -f /app/tradeux-mcp/src/cockpitOut.js && echo COCKPITOUT_PRESENTE; grep -c buildCockpitOut /app/tradeux-mcp/src/index.js\"'\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent sh -c \"cd /app/tradeux-agent && timeout 25 node src/index.js --check 2>&1 | grep -iE \\\"get_cockpit|error\\\" | head -3\"'",
+  "description": "Rebuild agent, smoke MCP boot + cockpitOut present",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild + restart agent ===
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started 
+> === smoke: cockpitOut.js na imagem + MCP boota (agent --check lista o tool) ===
+> COCKPITOUT_PRESENTE
+> 2
+> [tradeux-agent]  - tradeux_get_cockpit
+> ```
+
+## 🤖 Claude *(12:32:13)*
+
+
+## 🤖 Claude *(12:32:15)*
+
+Smoke verde: agente rebuiltado, `cockpitOut.js` na imagem (`COCKPITOUT_PRESENTE`), `buildCockpitOut` referenciado 2× no `index.js`, e o `agent --check` sobe o MCP e lista `tradeux_get_cockpit` → boota limpo.
+
+Corrijo a memória (eu havia escrito "MCP NÃO tem harness" — impreciso: já tinha o vault-guard; e agora o TODO está FEITO):
+
+## 🤖 Claude *(12:32:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "old_string": "**Li\u00e7\u00e3o dur\u00e1vel: ao expor dado pro agente, o ENDPOINT ter o campo \u2260 o AGENTE receber \u2014 o tool MCP filtra; verifique no caminho do tool (ou fa\u00e7a `node src/index.js --once`), n\u00e3o s\u00f3 no endpoint. O MCP N\u00c3O tem harness de teste (foi o que deixou o gap passar 2 entregas \u2014 TODO: smoke que mocka api.get e assere o `out`).**",
+  "new_string": "**Li\u00e7\u00e3o dur\u00e1vel: ao expor dado pro agente, o ENDPOINT ter o campo \u2260 o AGENTE receber \u2014 o tool MCP filtra; verifique no caminho do tool (ou fa\u00e7a `node src/index.js --once`), n\u00e3o s\u00f3 no endpoint. \u2705 TODO FEITO (commit `03f6757`, QA PASS + TL APPROVE): a transforma\u00e7\u00e3o payload\u2192out foi extra\u00edda pra fun\u00e7\u00e3o PURA `tradeux-mcp/src/cockpitOut.js::buildCockpitOut(d)` (byte-fiel) e `tradeux-mcp/test/cockpit-out.mjs` (20 asserts) trava o forwarding \u2014 muta\u00e7\u00e3o confirma que dropar qualquer campo quebra o teste. `npm test` do mcp encadeia `cockpit-out.mjs && place-order-vault-guard.mjs` (o CI j\u00e1 roda esse `npm test`; o MCP J\u00c1 tinha harness \u2014 o vault-guard SELL-BTC \u2014 s\u00f3 faltava cobrir o cockpit). Nice-to-have aberto (TL): assert de PARIDADE estrutural pra pegar um 4\u00ba campo top-level futuro dropado.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:32:28)*
+
+
+## 🤖 Claude *(12:32:41)*
+
+Tarefa concluída e no ar (`03f6757` — vivo == master == origin).
+
+## ✅ Entregue
+
+A dívida de teste que deixou o bug `6b9b97b` passar está fechada:
+
+1. **`tradeux-mcp/src/cockpitOut.js`** (novo) — a transformação `payload → out` virou função **pura** `buildCockpitOut(d)`, extração byte-fiel do corpo inline.
+2. **`tradeux-mcp/src/index.js`** — o handler virou one-liner: `buildCockpitOut(await api.get('/analysis/cockpit'))`.
+3. **`tradeux-mcp/test/cockpit-out.mjs`** (novo) — teste puro, **20 asserts**: o coração (groups/paper/riskCaps encaminhados, iguais e não-null), falsy-mas-válido (`groups:[]`/paper-zero preservados), ausência→null, e não-regressão do transform (env/symbols/flow.ageSec/buyGate).
+4. **`package.json`** — `npm test` encadeia `cockpit-out.mjs && place-order-vault-guard.mjs`; **o CI já roda esse `npm test`**, então a cobertura entra automática.
+5. **`ci.yml`** — nome do step ajustado (cobre forwarding + cofre).
+
+## Verificação
+- `npm test` inteiro: **cockpit-out 20/20 + trava do cofre OK**, exit 0 (e o vault-guard sobe o MCP via stdio → confirma que o refactor não quebrou o boot).
+- **QA PASS** — rodou **teste de mutação**: revertendo cada forwarding o teste falha com exit 1 → a rede pega exatamente a classe do bug. **TL APPROVE** — sem condições, zero must-fix.
+- Deploy: agente rebuiltado, `cockpitOut.js` na imagem, MCP boota e registra `tradeux_get_cockpit`. Comportamento idêntico (extração byte-fiel) — foi higiene vivo==master.
+- Push foi fast-forward limpo (sem divergência — confirmei que a "sessão paralela" não empurrou nada; esta sessão foi a execução).
+
+## Correção de registro
+Eu havia anotado "MCP sem harness" — impreciso: já existia o vault-guard (SELL-BTC); só faltava cobrir o cockpit. Corrigi na memória.
+
+**Nice-to-have aberto** (TL, opcional): um assert de *paridade estrutural* que pegue um 4º campo top-level futuro que alguém adicione ao endpoint e esqueça de encaminhar — tem trade-off de fragilidade (campo intencionalmente não-encaminhado quebraria), por isso deixei como follow-up, não inline.
+
+---
+
+A sessão acumulou **4 commits** (`fe06c74` %-teto compra · `d9f0dc5` rede venda · `6b9b97b` riskCaps+fix MCP · `03f6757` harness do forwarding). O `/handoff` carimba tudo quando você quiser. Seguimos ou paro por aqui?
+
+## 👤 User *(12:49:18)*
+
+podemos continuar ainda tem espaço na janela de contexto
+
+## 🤖 Claude *(12:50:07)*
+
+
+## 🤖 Claude *(12:50:11)*
+
+Seguimos. Olhando a fila, minha recomendação é o **`loadFarmSellingLocks`** — é o pré-requisito documentado pra escalar o Farm ("NÃO escalar `FARM_SIZE_MULT` até implementá-la") **e** fecha um furo de correção no Farm que está rodando AGORA (o único grupo live): a trava `FARM_SELLING` não é persistida → um restart com uma venda em voo pode re-disparar a venda 1×. A v1 (`baf0f4b`) já deixou isso documentado como limitação. Mira o mesmo padrão derive-from-orders que o Trend/Harvester já usam no boot.
+
+Deixa eu mapear o mecanismo atual (set/release da trava + os `load*Position` que reconstroem no boot) pra trazer um plano concreto:
+
+## 🤖 Claude *(12:50:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== FARM_SELLING: set/release/skip ===\"\ngrep -rn \"FARM_SELLING\" src/ | head -20\necho; echo \"=== load*Position no boot (padr\u00e3o a espelhar) ===\"\ngrep -rn \"loadTrendPosition\\|loadFarmPosition\\|loadFarmSellingLocks\\|HARVEST_SELLING\" src/ | head -20",
+  "description": "Map FARM_SELLING lock and boot reconstruction patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FARM_SELLING: set/release/skip ===
+> src/app-em.js:285:        // Trava de venda (FARM_SELLING): liberada em QUALQUER estado TERMINAL da venda do Farm que a SETOU.
+> src/app-em.js:292:            const lock = beholder.getMemory(order.symbol, indexKeys.FARM_SELLING);
+> src/app-em.js:294:                beholder.deleteMemory(order.symbol, indexKeys.FARM_SELLING);
+> src/utils/indexes.js:85:    FARM_SELLING: 'FARM_SELLING', // trava da venda no-loss do Farm de alts {orderId,at}: setada no place (beholder.placeOrder, qty='FARM_QTY'), liberada no estado TERMINAL por MATCH DE ORDERID (app-em.updateFarmPosition) — BRAIN-independente. Anti-empilhamento = SKIP no place se já em voo (NÃO via condition, sem migration/reload). Ausência = destravado. NÃO persistida (v1: sem reconstrução-no-boot → não escalar o size do Farm até adicionar loadFarmSellingLocks)
+> src/beholder.js:481:    // Anti-empilhamento da venda do Farm (v1): se já há uma venda FARM_QTY EM VOO (FARM_SELLING setado p/ o
+> src/beholder.js:487:    if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY' && getMemory(order.symbol, 'FARM_SELLING'))
+> src/beholder.js:488:        return { type: 'info', text: `Venda do Farm ${order.symbol} já em voo (FARM_SELLING) — skip anti-empilhamento.` };
+> src/beholder.js:566:    // Trava de venda do Farm (espelha HARVEST_SELLING): marca FARM_SELLING ASSIM QUE a ordem é ACEITA pela
+> src/beholder.js:571:        await updateMemory(order.symbol, 'FARM_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> src/beholder.js:874:        // história do Farm). Vira LEVEL-trigger; o oversell JÁ é barrado pela trava FARM_SELLING (SKIP no place,
+> 
+> === load*Position no boot (padrão a espelhar) ===
+> src/app-em.js:165:// loadTrendPosition recomputa no boot → a posição do golden NÃO orfana num restart (o death seguinte encontra
+> src/app-em.js:211:        // Trava de venda (HARVEST_SELLING): liberada em QUALQUER estado TERMINAL da venda do harvester.
+> src/app-em.js:216:            beholder.deleteMemory(order.symbol, indexKeys.HARVEST_SELLING);
+> src/app-em.js:287:        // perma-trava se a automação estiver fora do BRAIN num stop/start, ao contrário do HARVEST_SELLING que
+> src/app-em.js:290:        // perdida num restart re-dispararia → gate "não escalar o size do Farm até loadFarmSellingLocks".
+> src/app-em.js:307:async function loadFarmPositions() {
+> src/app-em.js:316:        logger('system', `loadFarmPositions: ${err.message}`);
+> src/app-em.js:320:// Boot-load da posição do Trend: recomputa TREND_QTY do banco de ordens p/ MEMORY (espelho de loadFarmPositions).
+> src/app-em.js:325:// (init() não é awaited por server.js); como loadTrendPosition é await DENTRO de init, conclui cedo no boot,
+> src/app-em.js:327:async function loadTrendPosition() {
+> src/app-em.js:338:        logger('system', `loadTrendPosition: ${err.message}`);
+> src/app-em.js:344:// (o userData stream NÃO tem replay — sem isto o bucket recarrega errado), e RECONSTRÓI a trava HARVEST_SELLING
+> src/app-em.js:383:                    await beholder.updateMemory(o.symbol, indexKeys.HARVEST_SELLING, null, { orderId: o.orderId, at: Date.now() }, false);
+> src/app-em.js:804:    await loadFarmPositions();
+> src/app-em.js:805:    await loadTrendPosition();   // restaura TREND_QTY do banco (resiliência a restart — ver loadTrendPosition)
+> src/beholder.js:485:    // HARVEST_SELLING (que usa a condition + migration/reload). calcQty capa na carteira, não no bucket, então
+> src/beholder.js:557:    // Trava de venda do Harvester: marca HARVEST_SELLING ASSIM QUE a ordem é ACEITA pela corretora (logo após
+> src/beholder.js:564:        await updateMemory(order.symbol, 'HARVEST_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> src/beholder.js:566:    // Trava de venda do Farm (espelha HARVEST_SELLING): marca FARM_SELLING ASSIM QUE a ordem é ACEITA pela
+> src/beholder.js:868:        // fill, já acima do alvo → nunca há cruzamento fresco). O anti-empilhamento vira a trava HARVEST_SELLING
+> ```
+
+## 🤖 Claude *(12:50:19)*
+
+
+## 🤖 Claude *(12:50:21)*
+
+Há precedente claro: o Harvester reconstrói `HARVEST_SELLING` no boot (app-em.js ~344-383), e `loadFarmPositions`/`loadTrendPosition` reconstroem `FARM_DCA`/`TREND_QTY`. Vou ler esses pra espelhar com fidelidade:
+
+## 🤖 Claude *(12:50:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 300,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 300	        await beholder.updateMemory(order.symbol, indexKeys.FARM_DCA, null, dca, false);
+> 301	        logger('system', `FARM_DCA[${order.symbol}] atualizado: qty=${dca.qty}, cost=${dca.cost} (pós-fill de ${order.side})`);
+> 302	    } catch (err) {
+> 303	        logger('system', `updateFarmPosition: ${err.message}`);
+> 304	    }
+> 305	}
+> 306	
+> 307	async function loadFarmPositions() {
+> 308	    try {
+> 309	        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];
+> 310	        for (const symbol of farmSymbols) {
+> 311	            const dca = await ordersRepository.getFarmPosition(symbol);
+> 312	            await beholder.updateMemory(symbol, indexKeys.FARM_DCA, null, dca, false);
+> 313	            logger('system', `FARM_DCA[${symbol}] carregado no boot: qty=${dca.qty}, cost=${dca.cost}`);
+> 314	        }
+> 315	    } catch (err) {
+> 316	        logger('system', `loadFarmPositions: ${err.message}`);
+> 317	    }
+> 318	}
+> 319	
+> 320	// Boot-load da posição do Trend: recomputa TREND_QTY do banco de ordens p/ MEMORY (espelho de loadFarmPositions).
+> 321	// Sem isto, um restart entre golden e death perde TREND_QTY (volátil) e o death dá throw na calcQty → posição
+> 322	// órfã. NÃO precisa do reconcile-on-boot do Harvester (ordens de trend são por cross, não ficam LIMIT abertas) —
+> 323	// derivar do banco JÁ é a fonte de verdade. A segurança contra disparo no boot vem da edge-detection do
+> 324	// regimeJob (um restart com posição aberta escreve 'none', não 'death'), NÃO da ordem init()×getActiveMonitors
+> 325	// (init() não é awaited por server.js); como loadTrendPosition é await DENTRO de init, conclui cedo no boot,
+> 326	// bem antes de qualquer death GENUÍNO (REGIME_REFRESH_MS). Pula qty<=0 (TREND_QTY ausente = estado fresco).
+> 327	async function loadTrendPosition() {
+> 328	    try {
+> 329	        const trendSymbols = ['BTCUSDT', 'LTCUSDT', 'BNBUSDT', 'ADAUSDT'];
+> 330	        for (const symbol of trendSymbols) {
+> 331	            const pos = await ordersRepository.getTrendPosition(symbol);
+> 332	            if (pos.qty > 0) {
+> 333	                await beholder.updateMemory(symbol, indexKeys.TREND_QTY, null, pos.qty, false);
+> 334	                logger('system', `TREND_QTY[${symbol}] carregado no boot: qty=${pos.qty}`);
+> 335	            }
+> 336	        }
+> 337	    } catch (err) {
+> 338	        logger('system', `loadTrendPosition: ${err.message}`);
+> 339	    }
+> 340	}
+> 341	
+> 342	// Boot-load do Harvester: recarrega os buckets persistidos p/ MEMORY (a posição sobrevive ao restart em vez de
+> 343	// orfanar), RECONCILIA contra a corretora as ordens do harvester que viraram TERMINAIS com o backend OFF
+> 344	// (o userData stream NÃO tem replay — sem isto o bucket recarrega errado), e RECONSTRÓI a trava HARVEST_SELLING
+> 345	// só p/ vendas ainda DE FATO abertas (senão bucket + trava ausente re-disparariam a venda no 1º tick acima do
+> 346	// alvo → oversell, já que calcQty capa na carteira e não no bucket). Best-effort: erro aqui não impede o boot.
+> 347	// Chamado por init() (exchange já inicializado). Dívida do TL fechada: pré-req p/ escalar o size.
+> 348	async function loadHarvestPositions() {
+> 349	    try {
+> 350	        const brain = beholder.getBrain();
+> 351	
+> 352	        // 0º) Buckets persistidos num mapa LOCAL primeiro — a reconciliação offline (1º/2º) ajusta o mapa
+> 353	        // ANTES de armar a MEMORY, e a trava continua sendo posta antes do bucket aparecer (invariante original).
+> 354	        const rows = await harvestPositionsRepository.getAll();
+> 355	        const buckets = {};
+> 356	        for (const r of rows)
+> 357	            buckets[r.symbol] = { qty: Number(r.qty) || 0, cost: Number(r.cost) || 0, atMs: (r.atMs === undefined || r.atMs === null) ? undefined : Number(r.atMs), dirty: false };
+> 358	
+> 359	        // Aplica um delta de reconciliação ao bucket local (mesma matemática do updateHarvestPosition):
+> 360	        // venda FILLED zera; venda parcial subtrai (custo médio intacto); compra soma na média ponderada.
+> 361	        function reconBucket(symbol, fn) {
+> 362	            const b = buckets[symbol] || (buckets[symbol] = { qty: 0, cost: 0, atMs: undefined, dirty: false });
+> 363	            fn(b);
+> 364	            b.atMs = Date.now();
+> 365	            b.dirty = true;
+> 366	        }
+> 367	
+> 368	        // 1º) VENDAS do harvester abertas no banco (in-flight no restart) — conditions têm ':HARVEST'.
+> 369	        // RECONCILE-ON-BOOT: consulta a corretora (autoritativa) p/ cada uma:
+> 370	        //   - ainda aberta lá → trava (comportamento original; a venda não re-dispara contra a ordem em voo);
+> 371	        //   - TERMINAL offline → atualiza o DB, reconcilia o bucket e NÃO arma a trava (senão a venda ficaria
+> 372	        //     silenciada p/ sempre apontando p/ uma ordem morta — era a intervenção manual que este fix mata);
+> 373	        //   - REST falhou → trava (FAIL-CLOSED: melhor venda silenciada até o próximo boot do que oversell).
+> 374	        const sellAutos = Object.values(brain).filter(a => a && a.conditions && a.conditions.indexOf(':HARVEST') !== -1);
+> 375	        for (const a of sellAutos) {
+> 376	            const open = await ordersRepository.getOpenOrdersByAutomation(a.id);
+> 377	            for (const o of open) {
+> 378	                let remote = null;
+> 379	                try { remote = await exchange.orderStatus(o.symbol, o.orderId); }
+> 380	                catch (e) { logger('system', `loadHarvestPositions: orderStatus #${o.orderId} falhou (${e.body ? JSON.stringify(e.body) : e.message}) — trava mantida (fail-closed).`); }
+> 381	
+> 382	                if (!remote || !HARVEST_TERMINAL_STATUSES.includes(remote.status)) {
+> 383	                    await beholder.updateMemory(o.symbol, indexKeys.HARVEST_SELLING, null, { orderId: o.orderId, at: Date.now() }, false);
+> 384	                    continue;
+> 385	                }
+> 386	
+> 387	                // Terminal offline: bucket PRIMEIRO (recon + persist), DB da ordem POR ÚLTIMO (gate QA: se
+> 388	                // crashar entre os dois, a ordem segue "aberta" no DB e o próximo boot RE-reconcilia — FILLED
+> 389	                // re-zera (idempotente) e parcial re-subtrai (undersell, direção segura); na ordem inversa o
+> ```
+
+## 🤖 Claude *(12:51:01)*
+
+
+## 🤖 Claude *(12:51:03)*
+
+Mecanismo claro. Pro Farm é mais simples que o Harvester (o `FARM_DCA` já é derivado-de-ordens por `loadFarmPositions`, então só preciso re-armar a TRAVA pra vendas ainda em voo — sem reconciliar bucket). Vou confirmar: estrutura da automação no brain (`action.orderTemplate.side/quantity`), `HARVEST_TERMINAL_STATUSES`, e o ponto no `init()`:
+
+## 🤖 Claude *(12:51:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== HARVEST_TERMINAL_STATUSES def ===\"\ngrep -rn \"HARVEST_TERMINAL_STATUSES\\s*=\" src/\necho \"=== como o set da trava identifica a venda do Farm (beholder.js:481-490, 560-572) ===\"\nsed -n '481,490p;560,572p' src/beholder.js\necho \"=== init(): onde load* s\u00e3o chamados + exchange em escopo ===\"\nsed -n '798,810p' src/app-em.js\necho \"=== getOpenOrdersByAutomation: assinatura + filtro isTestnet ===\"\ngrep -n \"getOpenOrdersByAutomation\" src/repositories/ordersRepository.js",
+  "description": "Verify brain orderTemplate shape, terminal statuses, init wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HARVEST_TERMINAL_STATUSES def ===
+> src/app-em.js:192:const HARVEST_TERMINAL_STATUSES = [orderStatus.FILLED, orderStatus.CANCELED, orderStatus.REJECTED, 'EXPIRED', 'EXPIRED_IN_MATCH'];
+> === como o set da trava identifica a venda do Farm (beholder.js:481-490, 560-572) ===
+>     // Anti-empilhamento da venda do Farm (v1): se já há uma venda FARM_QTY EM VOO (FARM_SELLING setado p/ o
+>     // símbolo), NÃO coloca outra do MESMO bucket — a venda pode re-disparar no MESMO nível (oscilação do bestBid
+>     // em torno do alvo no-loss) entre o place e o estado terminal. A trava (setada abaixo, liberada no terminal
+>     // por match de orderId em app-em.updateFarmPosition) é o mutex, BRAIN-independente — diferença vs
+>     // HARVEST_SELLING (que usa a condition + migration/reload). calcQty capa na carteira, não no bucket, então
+>     // sem isto o re-fire venderia 2× o lote e vazaria a posição co-localizada do Trend.
+>     if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY' && getMemory(order.symbol, 'FARM_SELLING'))
+>         return { type: 'info', text: `Venda do Farm ${order.symbol} já em voo (FARM_SELLING) — skip anti-empilhamento.` };
+> 
+>     // Teto de EXPOSIÇÃO do Farm por símbolo (FARM_MAX_NOTIONAL_USDT): a COMPRA do Farm NÃO acumula mais que o teto
+>     // uma 2ª venda do MESMO bucket no próximo tick (oversell vazaria o reserve: calcQty capa na carteira, não no
+>     // bucket). A venda no-loss é LEVEL-trigger (ver shouldntInvert); a trava é o anti-empilhamento. Liberada no
+>     // estado terminal (app-em.updateHarvestPosition). Detecta pela qty='HARVEST_QTY' (assinatura única da venda).
+>     if (order.side === 'SELL' && orderTemplate.quantity === 'HARVEST_QTY')
+>         await updateMemory(order.symbol, 'HARVEST_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> 
+>     // Trava de venda do Farm (espelha HARVEST_SELLING): marca FARM_SELLING ASSIM QUE a ordem é ACEITA pela
+>     // corretora (logo após exchange.sell, ANTES do insertOrder) — se o insert der throw depois, a venda já está
+>     // na corretora e a trava JÁ está posta (fail-closed) → o skip acima barra um 2º place. Liberada no estado
+>     // TERMINAL por match de orderId (app-em.updateFarmPosition). Detecta pela qty='FARM_QTY' (assinatura única).
+>     if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY')
+>         await updateMemory(order.symbol, 'FARM_SELLING', null, { orderId: result.orderId, at: Date.now() }, false);
+> 
+> === init(): onde load* são chamados + exchange em escopo ===
+>     exchange = require('./utils/exchange')(settings);
+> 
+>     // Recarrega + RECONCILIA os buckets do Harvester ANTES de subir os monitores (gate TL): com o
+>     // userData stream ainda fora do ar, a reconciliação de boot não corre contra fills ao vivo —
+>     // o guard do passo 3 vira cinto, não a única defesa. Ver loadHarvestPositions.
+>     await loadHarvestPositions();
+>     await loadFarmPositions();
+>     await loadTrendPosition();   // restaura TREND_QTY do banco (resiliência a restart — ver loadTrendPosition)
+> 
+>     const monitors = await getActiveMonitors();
+>     monitors.map(m => {
+>         setTimeout(() => {
+>             switch (m.type) {
+> === getOpenOrdersByAutomation: assinatura + filtro isTestnet ===
+> 174:    // Mesmo motivo de getOpenOrdersByAutomation: o cancel das pernas bate na corretora do ambiente
+> 190:async function getOpenOrdersByAutomation(automationId) {
+> 389:    getOpenOrdersByAutomation,
+> ```
+
+## 🤖 Claude *(12:51:20)*
+
+
+## 🤖 Claude *(12:51:22)*
+
+Quase lá. Preciso confirmar a forma da automação no brain (como filtrar as vendas do Farm) e se `getOpenOrdersByAutomation` filtra `isTestnet`:
+
+## 🤖 Claude *(12:51:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js",
+  "offset": 190,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 190	async function getOpenOrdersByAutomation(automationId) {
+> 191	    // Filtra pelo ambiente ATIVO (isTestnet): no boot do reconcile não pode alimentar orderIds de
+> 192	    // TESTNET pro exchange.orderStatus de MAINNET (e vice-versa) — IDs cruzam ambientes e o status
+> 193	    // volta errado (−2013 etc.), podendo abandonar/re-disparar venda do harvester.
+> 194	    const settings = await settingsRepository.getDefaultSettings();
+> 195	    return orderModel.findAll({
+> 196	        where: {
+> 197	            automationId,
+> 198	            status: { [Sequelize.Op.in]: [orderStatus.NEW, orderStatus.PARTIALLY_FILLED] },
+> 199	            isTestnet: settings.useTestnet
+> 200	        }
+> 201	    });
+> 202	}
+> 203	
+> 204	async function getReportOrders(quoteAsset, startDate, endDate, isTestnet = null) {
+> 205	    if (isTestnet === null) {
+> ```
+
+## 🤖 Claude *(12:51:29)*
+
+
+## 🤖 Claude *(12:51:30)*
+
+`getOpenOrdersByAutomation` já filtra `isTestnet` (mainnet-only) — reuso. Agora a estrutura do brain pra filtrar as vendas do Farm (o set usa `orderTemplate.quantity==='FARM_QTY'`; preciso do path no brain):
+
+## 🤖 Claude *(12:51:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== getBrain + estrutura da automa\u00e7\u00e3o no BRAIN (action/orderTemplate/conditions) ===\"\ngrep -n \"function getBrain\\|BRAIN\\[\\|\\.action\\b\\|orderTemplate\\|\\.conditions\\b\\|pushOrder\\|updateBrain\" src/beholder.js | head -30",
+  "description": "Find BRAIN automation structure and orderTemplate path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getBrain + estrutura da automação no BRAIN (action/orderTemplate/conditions) ===
+> 3:const orderTemplatesRepository = require('./repositories/orderTemplatesRepository');
+> 39:                updateBrain(auto)
+> 50:        return automationId.some(id => LOCK_BRAIN[id] === true);
+> 51:    return LOCK_BRAIN[automationId] === true;
+> 56:        return automationId.map(id => LOCK_BRAIN[id] = value);
+> 57:    LOCK_BRAIN[automationId] = value;
+> 60:function updateBrainIndex(index, automationId) {
+> 79:function updateBrain(automation) {
+> 80:    if (!automation.isActive || !automation.conditions) return;
+> 86:        //delete a.orderTemplate;
+> 95:        if (g.orderTemplate) {
+> 96:            delete g.orderTemplate.createdAt;
+> 97:            delete g.orderTemplate.updatedAt;
+> 98:            delete g.orderTemplate.name;
+> 112:    BRAIN[automation.id] = automation;
+> 113:    automation.indexes.split(',').map(ix => updateBrainIndex(ix, automation.id));
+> 119:        delete BRAIN[automation.id];
+> 138:    return [...new Set(ids)].map(id => BRAIN[id]);
+> 167:function calcPrice(orderTemplate, symbol, isStopPrice) {
+> 172:    if (LIMIT_TYPES.includes(orderTemplate.type) || orderTemplate.type === 'OCO') {
+> 175:                if (parseFloat(orderTemplate.limitPrice)) return orderTemplate.limitPrice;
+> 176:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.limitPrice))(MEMORY) * orderTemplate.limitPriceMultiplier;
+> 179:                if (parseFloat(orderTemplate.stopPrice)) return orderTemplate.stopPrice;
+> 180:                newPrice = Function("MEMORY", "return " + getEval(orderTemplate.stopPrice))(MEMORY) * orderTemplate.stopPriceMultiplier;
+> 185:                throw new Error(`Error trying to calc Stop Price with params: ${orderTemplate.stopPrice} x ${orderTemplate.stopPriceMultiplier}. Error: ${err.message}`);
+> 187:                throw new Error(`Error trying to calc Limit Price with params: ${orderTemplate.limitPrice} x ${orderTemplate.limitPriceMultiplier}. Error: ${err.message}`);
+> 191:        const memory = MEMORY[`${orderTemplate.symbol}:BOOK`];
+> 193:            throw new Error(`Error trying to get market price. OTID: ${orderTemplate.id}, ${isStopPrice}. No Book.`);
+> 195:        newPrice = orderTemplate.side === 'BUY' ? memory.current.bestAsk : memory.current.bestBid;
+> 196:        newPrice = isStopPrice ? newPrice * orderTemplate.stopPriceMultiplier : newPrice * orderTemplate.limitPriceMultiplier;
+> ```
+
+## 🤖 Claude *(12:51:37)*
+
+
+## 🤖 Claude *(12:51:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 79,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 79	function updateBrain(automation) {
+> 80	    if (!automation.isActive || !automation.conditions) return;
+> 81	
+> 82	    const actions = automation.actions ? automation.actions.map(a => {
+> 83	        a = a.toJSON ? a.toJSON() : a;
+> 84	        delete a.createdAt;
+> 85	        delete a.updatedAt;
+> 86	        //delete a.orderTemplate;
+> 87	        return a;
+> 88	    }) : [];
+> 89	
+> 90	    const grids = automation.grids ? automation.grids.map(g => {
+> 91	        g = g.toJSON ? g.toJSON() : g;
+> 92	        delete g.createdAt;
+> 93	        delete g.updatedAt;
+> 94	        delete g.automationId;
+> 95	        if (g.orderTemplate) {
+> 96	            delete g.orderTemplate.createdAt;
+> 97	            delete g.orderTemplate.updatedAt;
+> 98	            delete g.orderTemplate.name;
+> 99	        }
+> 100	        return g;
+> 101	    }) : [];
+> 102	
+> 103	    if (automation.toJSON)
+> 104	        automation = automation.toJSON();
+> 105	
+> 106	    delete automation.createdAt;
+> 107	    delete automation.updatedAt;
+> 108	
+> 109	    automation.actions = actions;
+> 110	    automation.grids = grids;
+> 111	
+> 112	    BRAIN[automation.id] = automation;
+> 113	    automation.indexes.split(',').map(ix => updateBrainIndex(ix, automation.id));
+> 114	}
+> 115	
+> 116	function deleteBrain(automation) {
+> 117	    try {
+> 118	        setLocked(automation.id, true);
+> ```
+
+## 🤖 Claude *(12:52:02)*
+
+
+## 🤖 Claude *(12:52:03)*
+
+Brain automation tem `.actions[]` (cada um com `.orderTemplate`). Confirmo o path exato de execução (`action.orderTemplate`) pra filtrar pelo MESMO critério do set (`quantity==='FARM_QTY'`, não por nome frágil):
+
+## 🤖 Claude *(12:52:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== onde placeOrder \u00e9 chamado (doAction) + como orderTemplate \u00e9 obtido ===\"\ngrep -n \"placeOrder\\|\\.orderTemplate\\|function doAction\\|action\\.orderTemplate\\|for .*actions\\|of actions\" src/beholder.js | grep -iE \"doAction|placeOrder|action.orderTemplate|actions\" | head -15",
+  "description": "Confirm action.orderTemplate execution path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde placeOrder é chamado (doAction) + como orderTemplate é obtido ===
+> 401:    // Persiste AMBAS as pernas com o mesmo orderListId (consistente com placeOrder). Se a
+> 436:async function placeOrder(settings, automation, action) {
+> 441:    if (!action.orderTemplateId)
+> 444:    const orderTemplate = action.orderTemplate ? { ...action.orderTemplate } : await orderTemplatesRepository.getOrderTemplate(action.orderTemplateId);
+> 574:    if (action.orderTemplate && action.orderTemplate.type === 'TRAILING_STOP')
+> 575:        stopPrice = action.orderTemplate.stopPrice;
+> 618:        automation.actions[0].orderTemplateId = grid.orderTemplateId;
+> 623:        const result = await placeOrder(settings, automation, automation.actions[0]);
+> 793:    const isBuy = action.orderTemplate.side === 'BUY';
+> 798:    const activationPrice = parseFloat(action.orderTemplate.limitPrice);
+> 799:    const stopPrice = parseFloat(action.orderTemplate.stopPrice);
+> 818:        const results = await placeOrder(settings, automation, action);
+> 829:    const newStopPrice = isBuy ? currentPrice * (1 + (parseFloat(action.orderTemplate.stopPriceMultiplier) / 100))
+> 830:        : currentPrice * (1 - (parseFloat(action.orderTemplate.stopPriceMultiplier) / 100));
+> 836:        action.orderTemplate.stopPrice = newStopPrice;
+> ```
+
+## 🤖 Claude *(12:52:31)*
+
+
+## 🤖 Claude *(12:52:34)*
+
+Confirmado: `placeOrder(settings, automation, action)` resolve `action.orderTemplate` (cached, fallback via repo na linha 444). Vou filtrar pelo MESMO critério do set (`orderTemplate.quantity==='FARM_QTY'`) pra reconstrução não poder divergir do set. Confirmo os imports do `app-em.js`:
+
+## 🤖 Claude *(12:52:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== imports relevantes em app-em.js ===\"\ngrep -nE \"require\\(.*ordersRepository|require\\(.*orderTemplatesRepository|require\\(.*beholder|^const exchange|let exchange|require\\(.*indexes\" src/app-em.js | head\necho \"=== a venda do Farm fica LIMIT aberta (NEW/PARTIAL) ou \u00e9 MARKET? (define se loadFarmSellingLocks tem o que reconstruir) ===\"\ngrep -rn \"Farm Sell\\|FARM_QTY\" src/repositories/orderTemplatesRepository.js 2>/dev/null | head\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source .env; set +a\nTOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\necho \"--- orderTemplates de venda do Farm (type/quantity) ---\"\ncurl -s -m8 \"http://127.0.0.1:8090/api/orderTemplates/LTCUSDT\" -H \"Authorization: $TOK\" 2>/dev/null | python3 -c \"import sys,json\ntry:\n d=json.load(sys.stdin); rows=d if isinstance(d,list) else d.get(\\\"rows\\\",[])\n for o in rows:\n  if str(o.get(\\\"quantity\\\"))==\\\"FARM_QTY\\\": print(\\\"  id\\\",o.get(\\\"id\\\"),\\\"side\\\",o.get(\\\"side\\\"),\\\"type\\\",o.get(\\\"type\\\"),\\\"qty\\\",o.get(\\\"quantity\\\"))\nexcept Exception as e: print(\\\"  (err)\\\",e)\"'",
+  "description": "Check app-em imports and Farm sell order type (LIMIT vs MARKET)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === imports relevantes em app-em.js ===
+> 1:const ordersRepository = require('./repositories/ordersRepository');
+> 2:const { orderStatus } = require('./repositories/ordersRepository');
+> 5:const { execCalc, indexKeys } = require('./utils/indexes');
+> === a venda do Farm fica LIMIT aberta (NEW/PARTIAL) ou é MARKET? (define se loadFarmSellingLocks tem o que reconstruir) ===
+> bash: line 2: .env: No such file or directory
+> --- orderTemplates de venda do Farm (type/quantity) ---
+>   (err) 'str' object has no attribute 'get'
+> ```
+
+## 🤖 Claude *(12:53:25)*
+
+
+## 🤖 Claude *(12:53:26)*
+
+`.env` path quebrou no subshell + o tipo da venda do Farm é decisivo: se for **MARKET** (preenche na hora), quase nunca há venda "aberta" num restart → a reconstrução teria pouco o que fazer. Confirmo o tipo direto no banco:
+
+## 🤖 Claude *(12:53:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env; set +a\necho \"=== orderTemplates de venda do Farm (quantity=FARM_QTY): type? ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \\\n  \"SELECT id, symbol, side, type, quantity FROM orderTemplates WHERE quantity=\\\"FARM_QTY\\\";\" 2>/dev/null\necho \"=== alguma ordem de venda do Farm j\u00e1 ficou NEW/PARTIAL na hist\u00f3ria (mainnet)? ===\"\ndocker compose exec -T db mysql -u\"$DB_USER\" -p\"$DB_PWD\" \"$DB_NAME\" -N -e \\\n  \"SELECT o.status, COUNT(*) FROM orders o JOIN automations a ON o.automationId=a.id WHERE a.name LIKE \\\"Farm Sell%\\\" AND o.isTestnet=0 GROUP BY o.status;\" 2>/dev/null\n'",
+  "description": "Determine Farm sell order type and historical statuses"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orderTemplates de venda do Farm (quantity=FARM_QTY): type? ===
+> 6	LTCUSDT	SELL	LIMIT	FARM_QTY
+> 8	BNBUSDT	SELL	LIMIT	FARM_QTY
+> 10	ADAUSDT	SELL	LIMIT	FARM_QTY
+> === alguma ordem de venda do Farm já ficou NEW/PARTIAL na história (mainnet)? ===
+> FILLED	1
+> ```
+
+## 🤖 Claude *(12:54:43)*
+
+
+## 🤖 Claude *(12:54:47)*
+
+Decisivo: a venda do Farm é **LIMIT** (descansa aberta no alvo no-loss) — então um restart PODE pegar uma venda em voo de verdade (não é MARKET instantâneo). Isso **valida** o item. Estado atual limpo (1 venda na história, FILLED). 
+
+Mas a exploração revelou que é mais robusto do que "só re-armar a trava": como o `FARM_DCA` é **derivado das ordens** (`getFarmPosition`), uma venda LIMIT preenchida OFFLINE (backend caído) fica `NEW` no banco → `FARM_DCA` fantasma. Confirmo se `getFarmPosition` conta venda `NEW` ou só `FILLED` (define se preciso reconciliar o banco como o Harvester faz):
+
+## 🤖 Claude *(12:54:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== getFarmPosition: conta sell NEW ou s\u00f3 FILLED? ===\"\ngrep -n \"getFarmPosition\\|getTrendPosition\" src/repositories/ordersRepository.js\nsed -n \"/async function getFarmPosition/,/^}/p\" src/repositories/ordersRepository.js | head -40",
+  "description": "Read getFarmPosition to see if it counts NEW sells"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getFarmPosition: conta sell NEW ou só FILLED? ===
+> 253:async function getFarmPosition(symbol) {
+> 312:// FILLED 'Trend %' (espelho EXATO de getFarmPosition, escopado por name LIKE 'Trend %'). Derivar do banco torna
+> 316:async function getTrendPosition(symbol) {
+> 392:    getFarmPosition,
+> 393:    getTrendPosition
+> async function getFarmPosition(symbol) {
+>     const settings = await settingsRepository.getDefaultSettings();
+>     const isTestnet = settings.useTestnet;
+> 
+>     // Escopa o bucket DCA às automações do FARM deste símbolo. O Trend Following compra o MESMO ativo na
+>     // MESMA carteira; sem este filtro o FARM_DCA somaria também os BUYs do Trend → a venda no-loss do Farm
+>     // (FARM_QTY) venderia/dumparia a posição do Trend junto (bug P0). E a SELL do Trend (death cross) não
+>     // deve re-basear a janela do Farm. Por isso lastSell e os buys são filtrados pelas automações 'Farm %'.
+>     const farmAutos = await automationModel.findAll({
+>         where: { symbol, name: { [Sequelize.Op.like]: 'Farm %' } },
+>         attributes: ['id'],
+>         raw: true
+>     });
+>     const farmIds = farmAutos.map(a => a.id);
+>     if (!farmIds.length) return { qty: 0, cost: 0 };
+> 
+>     const lastSell = await orderModel.findOne({
+>         where: {
+>             symbol,
+>             side: 'SELL',
+>             status: orderStatus.FILLED,
+>             isTestnet,
+>             automationId: { [Sequelize.Op.in]: farmIds }
+>         },
+>         order: [['id', 'DESC']]
+>     });
+> 
+>     const whereClause = {
+>         symbol,
+>         side: 'BUY',
+>         status: orderStatus.FILLED,
+>         isTestnet,
+>         automationId: { [Sequelize.Op.in]: farmIds }
+>     };
+>     if (lastSell) {
+>         whereClause.id = { [Sequelize.Op.gt]: lastSell.id };
+>     }
+> 
+>     const buys = await orderModel.findAll({
+>         where: whereClause,
+> ```
+
+## 🤖 Claude *(12:55:27)*
+
+
+## 🤖 Claude *(12:55:31)*
+
+Agora tenho o quadro completo. `getFarmPosition` usa o **último SELL `FILLED`** como marco e soma os BUYs `FILLED` depois dele. Implicação: uma venda LIMIT preenchida **offline** (backend caído) fica `NEW` no banco → `getFarmPosition` não a vê como marco → **`FARM_DCA` fantasma** (posição superestimada). Então o fix correto não é só "re-armar a trava" — é reconciliar o banco contra a corretora no boot, como o Harvester já faz.
+
+Isso torna o item maior do que um "quick win" — é uma feature de boot no money-path, com uma escolha real de escopo. Deixa eu te passar a decisão:
+
+## 🤖 Claude *(12:55:39)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A venda do Farm \u00e9 LIMIT (descansa aberta no alvo no-loss), ent\u00e3o um restart pode peg\u00e1-la em voo. O FARM_DCA \u00e9 DERIVADO das ordens. Qual escopo pro loadFarmSellingLocks?",
+      "header": "Escopo do fix",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Completo (reconcilia, recomendado)",
+          "description": "Espelha o loadHarvestPositions: no boot, p/ cada venda FARM_QTY aberta no DB, consulta a corretora \u2192 ainda aberta: re-arma a trava FARM_SELLING (anti-duplicata); preenchida offline: reconcilia o status no DB (pra getFarmPosition derivar o FARM_DCA certo, sem fantasma); REST falha: arma (fail-closed). Roda ANTES do loadFarmPositions. Correto+completo, mais c\u00f3digo + escrita no DB no boot."
+        },
+        {
+          "label": "M\u00ednimo (s\u00f3 a trava)",
+          "description": "S\u00f3 re-arma FARM_SELLING p/ vendas ainda abertas na corretora. Conserta a duplicata-no-restart (o gap documentado), mas deixa o caso raro de preenchimento-offline \u2192 FARM_DCA fantasma (bounded: a re-venda falha na carteira vazia, sem oversell). Menos c\u00f3digo, fecha o pr\u00e9-req parcialmente."
+        },
+        {
+          "label": "Pausar e pegar item mais leve",
+          "description": "Adiar o loadFarmSellingLocks (Farm \u00e9 canary, risco bounded, escalar n\u00e3o \u00e9 iminente) e fazer algo menor \u2014 ex.: o assert de paridade estrutural do MCP, ou outra coisa que voc\u00ea priorize."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A venda do Farm é LIMIT (descansa aberta no alvo no-loss), então um restart pode pegá-la em voo. O FARM_DCA é DERIVADO das ordens. Qual escopo pro loadFarmSellingLocks?"="Completo (reconcilia, recomendado)". You can now continue with these answers in mind.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5700,6 +6477,6 @@ Gate QA+TL (a tarefa exige). Chown + diff + lanço os dois:
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-21 - e7003282-79e7-4c59-a5db-de911c1e290a]]
+> * **Sessão Anterior**: [[2026-06-22 - Resolver alertas e próximos passos]]
 > * **Próxima Sessão**: [[2026-06-22 - Validar studio design e canvas studio end-to-end]]
 %% --- TIMELINE END --- %%
