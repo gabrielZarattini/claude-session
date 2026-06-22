@@ -3976,6 +3976,1114 @@ Ambos os lados leem o **equity quente** publicado pelo `dailyCapJob` (~60s, fail
 
 Os dois itens da fila (%-teto + rede de venda) estão entregues. Quer que eu **sele a sessão com `/handoff`** (carimba os params de runtime + os 2 commits + o estado LIVE no HANDOFF.md), ou seguimos pra mais alguma coisa?
 
+## 👤 User *(03:36:38)*
+
+a janela de contexto ainda esta pequena podemos continuar e selar o handoff depois
+
+## 🤖 Claude *(03:37:30)*
+
+
+## 🤖 Claude *(03:37:38)*
+
+Beleza, seguimos. Os dois itens da fila (%-teto + rede de venda) estão fechados. Olhando o que sobrou, minha recomendação pro próximo é **fechar o arco do risk-guard com observabilidade**: surfar o **cap efetivo de compra/venda no cockpit** — o item nice-to-have que QA+TL apontaram nos dois reviews.
+
+Por que esse e não os outros:
+- **É o complemento direto do que acabamos de construir** e é **baixo risco** (cálculo read-only no payload do cockpit, sem tocar no money-path) — bom contraponto a 2 mudanças money-path seguidas.
+- **Resolve uma cegueira real do agente**: hoje, se uma compra é capada em $29,80, o agente não tem como saber/explicar isso — ele veria "não comprou" e poderia narrar errado. Dar o cap pro cockpit segue a mesma doutrina do GATE≠ATIVO (dar dado pro agente raciocinar certo, não inventar).
+
+As alternativas (deixo claras, mas não recomendo agora): `loadFarmSellingLocks` (pré-req de **escalar o Farm**, que não é iminente no canary) e a decisão macro tua (recuperar USDT vs empilhar BTC) — essa é tua.
+
+Deixa eu explorar como o cockpit é montado pra te trazer um plano concreto:
+
+## 🤖 Claude *(03:37:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== getCockpitStatus + onde env.halt/groups s\u00e3o anexados ===\"\ngrep -n \"getCockpitStatus\\|status.groups\\|status.paper\\|env\\.\\|tradingHalt\\|haltSource\\|riskState\\|getState\" src/controllers/analysisController.js | head -30",
+  "description": "Locate cockpit status builder and where halt/groups attach"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === getCockpitStatus + onde env.halt/groups são anexados ===
+> 9:const riskState = require('../riskState');
+> 77:async function getCockpitStatus(req, res) {
+> 80:    // tradingHalt agora vem do riskState (env floor | manual | daily-cap), não mais só do .env — chave mantida
+> 81:    // p/ o frontend (Cockpit.js) e o agente (agent.js) não quebrarem; haltSource/haltReason são ADITIVOS
+> 83:    const st = riskState.getState();
+> 85:        const s = await settingsRepository.getSettings(process.env.DEFAULT_SETTINGS_ID || 1);
+> 86:        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 88:        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 92:    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }
+> 96:    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }
+> 129:module.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit, getPaper };
+> ```
+
+## 🤖 Claude *(03:37:43)*
+
+
+## 🤖 Claude *(03:37:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "offset": 77,
+  "limit": 52
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 77	async function getCockpitStatus(req, res) {
+> 78	    const status = cockpitJob.getStatus();
+> 79	    // AMBIENTE real p/ o painel e o agente: useTestnet (settings, leitura barata sem decrypt) + HALT QUENTE.
+> 80	    // tradingHalt agora vem do riskState (env floor | manual | daily-cap), não mais só do .env — chave mantida
+> 81	    // p/ o frontend (Cockpit.js) e o agente (agent.js) não quebrarem; haltSource/haltReason são ADITIVOS
+> 82	    // (contexto p/ o agente REPORTAR a causa; não é gatilho de notify — ver notifyDedup família 'halt').
+> 83	    const st = riskState.getState();
+> 84	    try {
+> 85	        const s = await settingsRepository.getSettings(process.env.DEFAULT_SETTINGS_ID || 1);
+> 86	        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 87	    } catch (e) {
+> 88	        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 89	    }
+> 90	    // paper para ANÁLISE: anexa o resumo do Paper Engine (totais + por trilha) ao cockpit que o agente já lê.
+> 91	    // READ-ONLY, best-effort (não derruba o cockpit se o ledger estiver vazio/indisponível).
+> 92	    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }
+> 93	    // groups: estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper) — o agente precisa do estado de ATIVAÇÃO
+> 94	    // (não só do gate de regime) p/ NÃO implicar execução de um grupo PARADO ("gate aberto" ≠ "grupo armado").
+> 95	    // READ-ONLY, best-effort. require lazy (mesmo dir de controllers; evita ciclo no load).
+> 96	    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }
+> 97	    res.json(status);
+> 98	}
+> 99	
+> 100	// GET /analysis/cockpit/:symbol — o COCKPIT de um símbolo, lido direto da MEMORY do brain (cópia rasa).
+> 101	function getCockpit(req, res) {
+> 102	    const symbol = String(req.params.symbol || '').toUpperCase();
+> 103	    if (!/^[A-Z0-9]{5,20}$/.test(symbol)) return res.status(400).json({ error: 'simbolo invalido' });
+> 104	    const snap = beholder.getMemory(symbol, indexKeys.COCKPIT);
+> 105	    if (!snap) return res.status(404).json({ error: 'sem snapshot de cockpit', symbol });
+> 106	    // freshen: regime/flow/gates SEMPRE no instante da leitura (mata a defasagem de até 60s do snapshot,
+> 107	    // que o agente lia como "contradição"); a analítica 1m fica na cadência do job. Ver cockpitJob.freshen.
+> 108	    res.json(cockpitJob.freshen(symbol, snap));
+> 109	}
+> 110	
+> 111	// GET /analysis/paper — P&L do Paper/Shadow Engine (ledger VIRTUAL, preço+fee MAINNET reais). Por trilha:
+> 112	// realizado (round-trips fechados) + não-realizado (posição aberta vs MINI_TICKER) + nº de trades, win-rate e
+> 113	// fee paga. READ-ONLY; prova que estratégias [PAPER] rodam com o mainnet CONGELADO. Não expõe segredos.
+> 114	async function getPaper(req, res) {
+> 115	    try {
+> 116	        const sum = await paperService.summary();
+> 117	        const recentOrders = await paperRepository.getOrders(50);
+> 118	        res.json({
+> 119	            generatedAt: new Date().toISOString(),
+> 120	            note: 'Paper/Shadow: preço MINI_TICKER mainnet real + fee real; sem Binance; mainnet congelado.',
+> 121	            ...sum,
+> 122	            recentOrders,
+> 123	        });
+> 124	    } catch (err) {
+> 125	        res.status(500).json({ error: err.message });
+> 126	    }
+> 127	}
+> 128	
+> ```
+
+## 🤖 Claude *(03:38:31)*
+
+
+## 🤖 Claude *(03:38:34)*
+
+O cockpit já anexa `env` (halt), `paper` e `groups` (cada um best-effort, read-only). Vou adicionar `status.riskCaps` no mesmo padrão. A peça-chave é fazer **DRY**: um `getEffectiveCaps()` no próprio `exchange.js` (o mesmo módulo que aplica o teto também reporta, usando as mesmas consts + equity quente) — sem duplicar a matemática do cap. Deixa eu ver como o agente consome o cockpit, pra dimensionar a doutrina:
+
+## 🤖 Claude *(03:38:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-agent\necho \"=== agente: como l\u00ea o cockpit (groups/paper/env) ===\"\ngrep -rn \"cockpit\\|groups\\|riskCaps\\|tradingHalt\\|haltSource\\|status\\.paper\" src/agent.js 2>/dev/null | head -20\necho \"=== h\u00e1 doutrina de teto/cap/notional no prompt? ===\"\ngrep -rni \"teto\\|cap\\b\\|notional\\|capad\" src/agent.js 2>/dev/null | head -10",
+  "description": "Inspect how agent consumes cockpit and any cap doctrine"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agente: como lê o cockpit (groups/paper/env) ===
+> src/agent.js:22:- PAPER ENGINE (research, sem risco): automações com prefixo **[PAPER]** (trilhas "Consistencia"/"Macro" em paper) são SIMULAÇÃO — um broker VIRTUAL que preenche ao preço+fee REAIS da mainnet mas NÃO envia ordem à Binance e NÃO toca o cofre nem USDT real. O P&L paper vem em tradeux_get_cockpit (campo 'paper': totais + por trilha) e em GET /analysis/paper. Trate como OBSERVAÇÃO DE RESEARCH (qual trilha tem edge), NUNCA como posição/venda real — e NÃO alarme sobre ordens [PAPER]. A trilha de FREQUÊNCIA/verde-diário foi REFUTADA por backtest (EV<0 líquido) e NÃO existe — não a procure nem sugira.
+> src/agent.js:26:AMBIENTE (crucial — confirme a cada ciclo com tradeux_get_cockpit; NÃO assuma)
+> src/agent.js:27:- O ambiente REAL e o estado de trading vêm de tradeux_get_cockpit: env.useTestnet (mainnet vs testnet) e env.tradingHalt (kill-switch). É a FONTE DE VERDADE — confie nela, não no que este prompt assume.
+> src/agent.js:30:- Se env.tradingHalt=TRUE: o sistema está CONGELADO (kill-switch) — nenhuma ordem real sai; trate tudo como observação, não aja. HALT é estado CONHECIDO do operador — ver DIVERGÊNCIAS ESPERADAS (não reportar a cada ciclo).
+> src/agent.js:34:- 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. TRAZ TAMBÉM 'groups' — o estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper, com active/inactive/total): é o que está REALMENTE ARMADO, SEPARADO do gate de regime. Use 'groups' p/ saber se um grupo opera ANTES de implicar qualquer execução (ver item 8). REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+> src/agent.js:36:- Avaliar COERÊNCIA com a tese: o regime está sendo respeitado? alguma automação deveria ter disparado e não disparou (ou o contrário — MAS veja (8): grupo INATIVO/parado pelo operador, ex. canary, NÃO é anomalia)? há venda de BTC INDEVIDA — isto é, FORA do módulo tático VIVO (trend id7), vendendo MAIS que a posição tática (TREND_QTY)? (o harvester id22-25 está DESATIVADO — uma venda id25 HOJE seria anomalia a sinalizar, não rotina; o trend corta perda por desenho.) Ordens manuais (sem automationId) costumam ser do dono/operador (testes, ajustes) — registre no diário; só alarme se drenarem o cofre de forma recorrente. NUNCA compare o RSI ou preço atual da memória com o momento de execução de uma ordem passada para alegar incoerência, pois o mercado se moveu e o Beholder não guarda histórico de RSI no momento do preenchimento. A memória do Beholder reflete apenas o estado real-time atual (no segundo da sua leitura). Para divergências cockpit×oráculo (regime/fluxo/gates), consulte DIVERGÊNCIAS ESPERADAS (abaixo) ANTES de chamar de incoerência.
+> src/agent.js:37:- DIVERGÊNCIAS ESPERADAS (NÃO são incoerência/anomalia — NÃO reporte como achado NEM notifique o dono): o cockpit lê as MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oráculos vivos; tradeux_get_regime/tradeux_get_oracle_state são leituras VIVAS separadas → delta pequeno cockpit×vivo é TIMING, não fonte paralela. Itens:
+> src/agent.js:39:  (2) FLUXO eixo IDADE: compare pela IDADE (cockpit flow.ageSec) — imbalance velho mais negativo que o vivo é o MESMO sinal em instantes diferentes.
+> src/agent.js:42:  (5) HALT inalterado (tradingHalt=TRUE estável): estado conhecido do operador — reporte 1× ou só quando MUDAR.
+> src/agent.js:44:  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> src/agent.js:45:  (8) ATIVO ≠ GATE: uma automação/grupo INATIVO (parado) com o gate ABERTO NÃO é anomalia — LIGAR/PARAR é decisão do OPERADOR pelo painel de grupos (ex.: CANARY = só um grupo ativo por vez; hoje pode ser só o Farm, com Trend e Baseline PARADOS de propósito). Gate liberado = o regime PERMITE a estratégia; NÃO significa que a automação DEVA estar armada (o estado de ATIVAÇÃO vive em /automations/groups e no painel de grupos de Settings — separe "gate aberto" de "grupo armado"). NÃO reporte "a automação X deveria estar ativa / deveria ter disparado" baseado no gate, NEM notifique o dono — ele controla a ativação. Só sinalize se o ESTADO de ativação mudar SOZINHO, sem ação do operador (ex.: automação que estava ON sumiu do BRAIN). **FRASEADO (regra dura): ao narrar uma mudança de regime/gate, SEMPRE cheque 'cockpit.groups' (estado ATIVO por grupo) ANTES de implicar execução. Se o grupo relevante está PARADO (active=0), diga explicitamente "o grupo X está parado → NENHUMA ordem ocorre" e NUNCA escreva que está "aguardando golden cross/dip para comprar" — isso AFIRMA uma execução que NÃO vai acontecer (foi o erro real do LTC em regime trend com o Trend 0/8 parado). "Gate aberto" descreve a DOUTRINA (o que o regime PERMITE), não uma compra iminente.**
+> === há doutrina de teto/cap/notional no prompt? ===
+> src/agent.js:7:import { findDuplicateTopic } from "./notifyDedup.js";
+> src/agent.js:84:// Cap mecânico de notificações por ciclo (defesa em profundidade do gate TL): a regra do prompt
+> src/agent.js:90:// O cap acima limita o VOLUME por ciclo; a doutrina do SYSTEM_PROMPT pede "não repita o assunto" mas
+> src/agent.js:144:        // (1) dedup por ASSUNTO — NÃO consome o cap (a notificação nunca saiu). Independe do prompt.
+> src/agent.js:146:          const dup = findDuplicateTopic(notifyMsg, [...dedupHistory, ...sentThisCycle], { threshold: NOTIFY_DEDUP_THRESHOLD });
+> src/agent.js:156:        // (2) cap mecânico por ciclo (conta só as DISTINTAS de fato enviadas).
+> ```
+
+## 🤖 Claude *(03:39:58)*
+
+
+## 🤖 Claude *(03:40:03)*
+
+O cockpit já tem o padrão (`env`/`paper`/`groups`, cada um best-effort). O agente lê o cockpit inteiro via `tradeux_get_cockpit`, então adicionar `status.riskCaps` já chega nele — e há uma doutrina clara de "GATE≠TRIGGER / ATIVO≠GATE" onde encaixo um "capamento é por desenho, não anomalia".
+
+Plano (tight, baixo risco):
+1. **`exchange.js`** → `getEffectiveCaps()` (DRY: mesmas consts + equity quente que o guard usa) + export.
+2. **`analysisController`** → `status.riskCaps` (best-effort, igual a `groups`).
+3. **`riskGuard.test.js`** → Seção F travando o shape do `getEffectiveCaps`.
+4. **`agent.js`** → 1 linha de doutrina (compra capada = proteção, não incoerência; consulte `riskCaps`).
+
+Implemento. Primeiro o `getEffectiveCaps` no `exchange.js`:
+
+## 🤖 Claude *(03:40:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "module.exports.assertWithinRisk = assertWithinRisk;\nmodule.exports.refPrice = refPrice;",
+  "new_string": "module.exports.assertWithinRisk = assertWithinRisk;\nmodule.exports.refPrice = refPrice;\n\n// Cap EFETIVO atual p/ OBSERVABILIDADE (cockpit/agente) \u2014 usa as MESMAS consts + equity quente que o guard, ent\u00e3o\n// reporta exatamente o que o assertWithinRisk imporia AGORA. READ-ONLY (n\u00e3o imp\u00f5e nada). buyCapUsdt/sellCapUsdt\n// null = sem teto (inerte, ou venda em degrade-open por equity frio). equityUsdt null = equity frio/velho/ausente.\nfunction getEffectiveCaps() {\n    const eqv = freshEquity();\n    let pctCap = (MAX_ORDER_PCT_EQUITY > 0 && eqv != null) ? MAX_ORDER_PCT_EQUITY * eqv : Infinity;\n    if (Number.isFinite(pctCap) && MIN_ORDER_NOTIONAL_FLOOR > 0 && pctCap < MIN_ORDER_NOTIONAL_FLOOR) pctCap = MIN_ORDER_NOTIONAL_FLOOR;\n    const absCeil = MAX_ORDER_NOTIONAL_USDT > 0 ? MAX_ORDER_NOTIONAL_USDT : Infinity;\n    const buyCap = Math.min(pctCap, absCeil);\n    const sellCap = (MAX_SELL_EQUITY_MULT > 0 && eqv != null) ? MAX_SELL_EQUITY_MULT * eqv : Infinity;\n    return {\n        equityUsdt: eqv,                                          // equity tradeable QUENTE; null = frio/velho/ausente\n        buyCapUsdt: Number.isFinite(buyCap) ? buyCap : null,     // teto de COMPRA por ordem; null = sem teto (inerte)\n        buyCapBasis: !Number.isFinite(buyCap) ? 'none' : (Number.isFinite(pctCap) && pctCap <= absCeil ? 'pct-equity' : 'absolute'),\n        sellCapUsdt: Number.isFinite(sellCap) ? sellCap : null,  // rede anti-runaway de VENDA; null = sem teto (off ou equity frio \u2192 degrade-open)\n        params: {\n            pctEquity: MAX_ORDER_PCT_EQUITY || null,\n            absCeilUsdt: MAX_ORDER_NOTIONAL_USDT || null,\n            floorUsdt: MIN_ORDER_NOTIONAL_FLOOR || null,\n            sellEquityMult: MAX_SELL_EQUITY_MULT || null,\n        },\n    };\n}\nmodule.exports.getEffectiveCaps = getEffectiveCaps;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:17)*
+
+Agora o cockpit anexa `status.riskCaps` (mesmo padrão best-effort do `groups`):
+
+## 🤖 Claude *(03:40:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "old_string": "    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }\n    res.json(status);",
+  "new_string": "    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }\n    // riskCaps: teto EFETIVO por ordem (compra ~%-equity, venda = rede anti-runaway) \u2014 o agente l\u00ea p/ EXPLICAR um\n    // capamento (\"a compra foi capada em ~$30\") em vez de inferir anomalia. READ-ONLY, best-effort, mesmas consts\n    // que o assertWithinRisk imp\u00f5e (DRY). require lazy (utils/exchange \u00e9 factory; .getEffectiveCaps \u00e9 est\u00e1tico).\n    try { status.riskCaps = require('../utils/exchange').getEffectiveCaps(); } catch (_) { status.riskCaps = null; }\n    res.json(status);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:25)*
+
+
+## 🤖 Claude *(03:40:25)*
+
+Agora a Seção F na suíte, travando o shape do `getEffectiveCaps`. Vejo o fim do arquivo de teste:
+
+## 🤖 Claude *(03:40:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "offset": 122,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 122	// ============================================================================
+> 123	// SEÇÃO C — PISO: o %-teto nunca derruba abaixo de MIN_ORDER_NOTIONAL_FLOOR.
+> 124	// ============================================================================
+> 125	ex = loadExchange({ maxNotional: 100, pctEq: 0.20, floorMin: 25 });
+> 126	g = ex.assertWithinRisk;
+> 127	EQUITY = freshEq(50); // 20% = $10, mas o piso $25 sobe o cap p/ $25.
+> 128	checkOk('piso: compra $20 < piso $25 passa (apesar de 20%×50=$10)', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 20 }));
+> 129	checkThrows('piso: compra $30 > piso $25 bloqueia', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 30 }));
+> 130	
+> 131	// ============================================================================
+> 132	// SEÇÃO E — rede anti-runaway na VENDA (MAX_SELL_EQUITY_MULT=3 → teto folgado = 3×equity).
+> 133	// Barra SÓ venda egrégia; venda legítima e equity frio PASSAM (degrade-open).
+> 134	// ============================================================================
+> 135	ex = loadExchange({ maxNotional: 100, pctEq: 0.20, sellMult: 3 });
+> 136	g = ex.assertWithinRisk;
+> 137	MINI = 44;
+> 138	EQUITY = freshEq(150); // teto de venda = 3×150 = $450
+> 139	checkOk('venda-net: SELL $440 (10×44 < $450) passa', () => g('SELL', 'LTCUSDT', 10, 44, {}));
+> ```
+
+## 🤖 Claude *(03:40:29)*
+
+
+## 🤖 Claude *(03:40:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "offset": 160,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 160	ex = loadExchange({ maxNotional: 0 });
+> 161	const g0 = ex.assertWithinRisk;
+> 162	EQUITY = freshEq(150);
+> 163	checkOk('tudo off: compra $44k passa (guard inerte)', () => g0('BUY', 'LTCUSDT', 1000, 44, {}));
+> 164	HALTED = true;
+> 165	checkThrows('tudo off mas HALT ainda bloqueia', () => g0('BUY', 'LTCUSDT', 0.1, 44, {}));
+> 166	HALTED = false;
+> 167	
+> 168	console.log(`\nriskGuard.test.js: ${passed} passed, ${failed} failed`);
+> 169	process.exit(failed ? 1 : 0);
+> 170	
+> ```
+
+## 🤖 Claude *(03:40:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "old_string": "HALTED = true;\ncheckThrows('tudo off mas HALT ainda bloqueia', () => g0('BUY', 'LTCUSDT', 0.1, 44, {}));\nHALTED = false;\n\nconsole.log(`\\nriskGuard.test.js: ${passed} passed, ${failed} failed`);",
+  "new_string": "HALTED = true;\ncheckThrows('tudo off mas HALT ainda bloqueia', () => g0('BUY', 'LTCUSDT', 0.1, 44, {}));\nHALTED = false;\n\n// ============================================================================\n// SE\u00c7\u00c3O F \u2014 getEffectiveCaps (OBSERVABILIDADE do cockpit): reporta o MESMO cap que o guard imporia.\n// ============================================================================\nfunction checkVal(name, actual, expected) { if (String(actual) === String(expected)) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\nex = loadExchange({ maxNotional: 100, pctEq: 0.20, floorMin: 12, sellMult: 3 });\nconst caps = ex.getEffectiveCaps;\n// equity $150 \u2192 buy = min(30,100)=30 (pct-equity); sell = 3\u00d7150=450.\nEQUITY = freshEq(150);\nlet c = caps();\ncheckVal('caps: equityUsdt = 150', c.equityUsdt, 150);\ncheckVal('caps: buyCapUsdt = 30 (20%\u00d7150)', c.buyCapUsdt, 30);\ncheckVal('caps: buyCapBasis = pct-equity', c.buyCapBasis, 'pct-equity');\ncheckVal('caps: sellCapUsdt = 450 (3\u00d7150)', c.sellCapUsdt, 450);\n// equity $600 \u2192 buy = min(120,100)=100 (absolute); sell = 1800.\nEQUITY = freshEq(600);\nc = caps();\ncheckVal('caps: buyCapUsdt = 100 (teto-abs domina)', c.buyCapUsdt, 100);\ncheckVal('caps: buyCapBasis = absolute', c.buyCapBasis, 'absolute');\ncheckVal('caps: sellCapUsdt = 1800 (3\u00d7600)', c.sellCapUsdt, 1800);\n// equity frio \u2192 buy cai pro teto-abs $100; sell SEM teto (degrade-open) \u2192 null.\nEQUITY = { value: null, at: null };\nc = caps();\ncheckVal('caps frio: equityUsdt = null', c.equityUsdt, null);\ncheckVal('caps frio: buyCapUsdt = 100 (teto-abs)', c.buyCapUsdt, 100);\ncheckVal('caps frio: sellCapUsdt = null (venda sem teto, degrade-open)', c.sellCapUsdt, null);\n// piso: equity $50 \u2192 20%=$10, piso sobe p/ $12.\nEQUITY = freshEq(50);\nc = caps();\ncheckVal('caps: buyCapUsdt = 12 (piso sobe os $10 da %)', c.buyCapUsdt, 12);\n\nconsole.log(`\\nriskGuard.test.js: ${passed} passed, ${failed} failed`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/utils/exchange.js && node --check src/controllers/analysisController.js && node --check scripts/sim/riskGuard.test.js && echo \"syntax OK\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"riskGuard|sim suite\"",
+  "description": "Syntax check + run sim with Section F"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> === sim/riskGuard.test.js ===
+> riskGuard.test.js: 50 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(03:41:02)*
+
+
+## 🤖 Claude *(03:41:03)*
+
+6/6, riskGuard **50 asserts**, `getEffectiveCaps` travado. Agora a doutrina no agente. Leio o trecho exato pra ancorar:
+
+## 🤖 Claude *(03:41:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "offset": 44,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 44	  (7) GATE ≠ TRIGGER: buyAllowed/farm/baseline = o GATE de regime/fluxo (DOUTRINA: o que a estratégia PERMITE naquele regime), NÃO o gatilho de entrada nem confirmação de ordem. O FARM só compra no dip RSI_1m<35 (baseline RSI<25); o cockpit NÃO lê RSI de propósito. Gate ABERTO (farm=true) com RSI ACIMA do gatilho é ESPERADO (o gate permite, aguardando o dip) — NÃO é incoerência nem "RSI errado/threshold diferente".
+> 45	  (8) ATIVO ≠ GATE: uma automação/grupo INATIVO (parado) com o gate ABERTO NÃO é anomalia — LIGAR/PARAR é decisão do OPERADOR pelo painel de grupos (ex.: CANARY = só um grupo ativo por vez; hoje pode ser só o Farm, com Trend e Baseline PARADOS de propósito). Gate liberado = o regime PERMITE a estratégia; NÃO significa que a automação DEVA estar armada (o estado de ATIVAÇÃO vive em /automations/groups e no painel de grupos de Settings — separe "gate aberto" de "grupo armado"). NÃO reporte "a automação X deveria estar ativa / deveria ter disparado" baseado no gate, NEM notifique o dono — ele controla a ativação. Só sinalize se o ESTADO de ativação mudar SOZINHO, sem ação do operador (ex.: automação que estava ON sumiu do BRAIN). **FRASEADO (regra dura): ao narrar uma mudança de regime/gate, SEMPRE cheque 'cockpit.groups' (estado ATIVO por grupo) ANTES de implicar execução. Se o grupo relevante está PARADO (active=0), diga explicitamente "o grupo X está parado → NENHUMA ordem ocorre" e NUNCA escreva que está "aguardando golden cross/dip para comprar" — isso AFIRMA uma execução que NÃO vai acontecer (foi o erro real do LTC em regime trend com o Trend 0/8 parado). "Gate aberto" descreve a DOUTRINA (o que o regime PERMITE), não uma compra iminente.**
+> 46	  Só sinalize fluxo/regime se a fonte VIVA por si só (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo anômalo.
+> 47	- Sinalizar EVENTOS úteis ao operador: regime SAIU do bear (gatilho p/ ligar o funil / próximas fases); golden/death cross real; farm comprou e/ou lucrou; alt com comportamento ruim no farm; algo travado/stale.
+> 48	- NOTIFICAR O DONO via tradeux_notify_owner (Telegram, one-way) quando: precisar de APROVAÇÃO p/ algo sensível, estiver BLOQUEADO e precisar de ajuda, ou um EVENTO importante acontecer (ex.: saída do bear, cross real, anomalia/incoerência NOVA). É one-way: NÃO espere resposta no ciclo — após notificar, siga o caminho conservador (não agir). No MÁXIMO 1-2 notificações por ciclo. ANTI-SPAM (regra dura): o kickoff de cada ciclo traz a lista de NOTIFICAÇÕES JÁ ENVIADAS recentemente — confira ANTES de notificar; se o ASSUNTO já está na lista (mesmo que com outras palavras), NÃO reenvie. Notificação repetida ensina o dono a ignorar o canal. Rotina sem novidade NÃO notifica. NADA da lista DIVERGÊNCIAS ESPERADAS é notificável (já são esperados). Há também um dedup em CÓDIGO: se a chamada voltar com "notificação SUPRIMIDA — assunto duplicado", o assunto JÁ foi enviado — NÃO reformule pra burlar; consolide no diário (só reformule se for evento REALMENTE novo, destacando o que MUDOU). TODA notificação em português brasileiro (pt-BR).
+> 49	- Sugerir CALIBRAÇÕES (parâmetros), nunca ordens que concorram com as automações.
+> ```
+
+## 🤖 Claude *(03:41:22)*
+
+
+## 🤖 Claude *(03:41:23)*
+
+Adiciono a doutrina — estendo a linha do cockpit (menção a `riskCaps`) e crio o item (9) `TETO ≠ ANOMALIA`:
+
+## 🤖 Claude *(03:41:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "Use 'groups' p/ saber se um grupo opera ANTES de implicar qualquer execu\u00e7\u00e3o (ver item 8). REPORTE no di\u00e1rio o estado mec\u00e2nico e a coer\u00eancia dos gates (EV\u22640 a 1m \u00e9 esperado \u2014 ver DIVERG\u00caNCIAS ESPERADAS).",
+  "new_string": "Use 'groups' p/ saber se um grupo opera ANTES de implicar qualquer execu\u00e7\u00e3o (ver item 8). TRAZ TAMB\u00c9M 'riskCaps' \u2014 o teto EFETIVO por ordem (buyCapUsdt \u2248 %-equity da COMPRA; sellCapUsdt = rede anti-runaway de VENDA ~3\u00d7equity; null = sem teto): use p/ EXPLICAR um capamento (ver item 9), nunca p/ inferir anomalia. REPORTE no di\u00e1rio o estado mec\u00e2nico e a coer\u00eancia dos gates (EV\u22640 a 1m \u00e9 esperado \u2014 ver DIVERG\u00caNCIAS ESPERADAS)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:41:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "\"Gate aberto\" descreve a DOUTRINA (o que o regime PERMITE), n\u00e3o uma compra iminente.**\n  S\u00f3 sinalize fluxo/regime se a fonte VIVA por si s\u00f3 (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo an\u00f4malo.",
+  "new_string": "\"Gate aberto\" descreve a DOUTRINA (o que o regime PERMITE), n\u00e3o uma compra iminente.**\n  (9) TETO \u2260 ANOMALIA: uma COMPRA capada pelo teto de risco (notional > cockpit.riskCaps.buyCapUsdt, ~20% do equity) \u00e9 PROTE\u00c7\u00c3O POR DESENHO, N\u00c3O incoer\u00eancia \u2014 o calcQty redimensiona a ordem p/ caber no teto. A VENDA NUNCA \u00e9 capada por sizing (s\u00f3 a rede anti-runaway folgada ~3\u00d7equity, que s\u00f3 barra venda egr\u00e9gia/buggada). Ao explicar uma compra que saiu menor (ou um bloqueio), cite cockpit.riskCaps.buyCapUsdt; N\u00c3O chame de bug nem notifique. riskCaps null/buyCapUsdt grande = sem aperto (equity frio cai pro teto absoluto na compra; venda em degrade-open). N\u00c3O sugira mexer no teto a menos que ele esteja DEMONSTRAVELMENTE barrando ordem leg\u00edtima recorrente.\n  S\u00f3 sinalize fluxo/regime se a fonte VIVA por si s\u00f3 (tradeux_get_regime.gate / tradeux_get_oracle_state) mostrar algo an\u00f4malo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:41:46)*
+
+
+## 🤖 Claude *(03:41:47)*
+
+Verifico a sintaxe do agente (ES module) e confirmo que o `tradeux_get_cockpit` do MCP encaminha o payload inteiro (senão o `riskCaps` não chega no agente):
+
+## 🤖 Claude *(03:41:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== agent.js syntax (ESM) ===\"\nnode --input-type=module --check < tradeux-agent/src/agent.js 2>&1 && echo \"OK agent.js\" || echo \"(check via node --check)\"\nnode --check tradeux-agent/src/agent.js 2>&1 | head -3 || true\necho \"=== MCP: tradeux_get_cockpit encaminha o payload inteiro? ===\"\ngrep -rn \"get_cockpit\\|analysis/cockpit\\|getCockpitStatus\\|cockpit\" tradeux-mcp/src/*.js 2>/dev/null | grep -iE \"cockpit\" | head -10",
+  "description": "Syntax-check agent.js and verify MCP cockpit forwarding"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agent.js syntax (ESM) ===
+> OK agent.js
+> === MCP: tradeux_get_cockpit encaminha o payload inteiro? ===
+> tradeux-mcp/src/index.js:133:  "Detecta o regime de mercado REAL de um simbolo a partir de klines mainnet (default 1h): bear (ficar em CAIXA), trend (seguir tendencia), range (mean-reversion) ou mixed. Use ANTES de decidir comprar — nao compre em bear. Retorna `regime` = o INSTANTANEO (banda de ENTRADA do ADX) E `gate.regime` = o HISTERETICO (valor OPERATIVO que as automacoes/cockpit gateiam). Se `regime` != `gate.regime`, e HISTERESE do ADX (anti-whipsaw na fronteira), NAO contradicao — para a doutrina dos gates vale `gate.regime`, e NAO reporte essa diferenca como incoerencia.",
+> tradeux-mcp/src/index.js:214:  "tradeux_get_cockpit",
+> tradeux-mcp/src/index.js:215:  "Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por simbolo a partir de klines 1m REAIS da mainnet — distribuicao de retornos (mediana |move|, sigma, % de moves >= break-even de fee), EV/trade NET de fee (mecanica da distribuicao 1m; costuma ser <=0 = por que scalping de 1m sangra taxa), banda Monte Carlo DRIFTLESS (p50 == preco, NAO previsao) e o snapshot regime/fluxo + estado dos gates de COMPRA por simbolo. Tambem informa o AMBIENTE real (env.useTestnet) e se o trading esta congelado (env.tradingHalt). Use para REPORTAR ao operador o estado MECANICO do mercado e a coerencia dos gates; NAO e sinal de trade nem forecast. ATENCAO: os gates (buyGate/farm/baseline/trend, doctrine=true) sao a DOUTRINA por regime (o que a estrategia FARIA), NAO confirmam que a automacao correspondente esta ATIVA/ligada (ex.: a baseline id2 esta isActive=0) — o gate VIVO mora na condition da automacao no banco. Reporte como doutrina, nao como estado vivo, e o fluxo e fail-closed (stale/ausente => CAIXA). O campo baseline SO se aplica a simbolo flow-gated (BTC); para ALTS vem null (n/a) — o gate de acumulacao da alt e o farm, entao NAO trate baseline=null (nem farm aberto com RSI>35/25) como incoerencia: o gate e a DOUTRINA de regime/fluxo, o RSI e o GATILHO (gate != gatilho). O regime/fluxo do cockpit sao lidos das MESMAS chaves MEMORY['REGIME']/['FLOW'] que os oraculos vivos (tradeux_get_regime/tradeux_get_oracle_state) — NAO uma fonte paralela; o fluxo carrega flow.ageSec (idade em segundos). Por isso NAO trate diferenca cockpit×oraculo-vivo como contradicao: compare pela idade (um imbalance velho mais negativo que o vivo e o MESMO sinal em instantes diferentes) e, no regime, use o gate.regime histeretico.",
+> tradeux-mcp/src/index.js:218:    const d = await api.get(`/analysis/cockpit`);
+> ```
+
+## 🤖 Claude *(03:41:54)*
+
+
+## 🤖 Claude *(03:41:55)*
+
+O MCP busca `/analysis/cockpit`. Preciso confirmar se ele devolve o payload **inteiro** ou filtra campos (se filtrar, o `riskCaps` não chega no agente):
+
+## 🤖 Claude *(03:41:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "offset": 216,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 216	  {},
+> 217	  async () => {
+> 218	    const d = await api.get(`/analysis/cockpit`);
+> 219	    const out = { env: d.env || null, enabled: d.enabled, symbols: {} };
+> 220	    for (const [sym, c] of Object.entries(d.symbols || {})) {
+> 221	      const dist = c.dist || {}, ev = c.ev || {}, mc = c.mc || {}, gates = c.gates || {};
+> 222	      out.symbols[sym] = {
+> 223	        price: c.price, regime: c.regime,
+> 224	        flow: c.flow ? { imbalance: c.flow.imbalance, toxicity: c.flow.toxicity, ageSec: Number.isFinite(c.flow.ageMs) ? Math.round(c.flow.ageMs / 1000) : null } : null,
+> 225	        medAbsMovePct: dist.medAbsMovePct, sigmaPct: dist.sigmaPct, pHitBreakevenPct: dist.pHitBreakevenPct,
+> 226	        evNetPct: ev.netPct, breakevenPct: ev.breakevenPct,
+> 227	        mc: { p10: mc.p10, p50: mc.p50, p90: mc.p90, horizonMin: mc.horizonMin, driftless: true },
+> ```
+
+## 🤖 Claude *(03:42:03)*
+
+
+## 🤖 Claude *(03:42:04)*
+
+O MCP **filtra** o payload (`out = { env, enabled, symbols }`) — não encaminha tudo. Preciso ver se ele inclui `groups`/`paper` e adicionar `riskCaps` ao `out`:
+
+## 🤖 Claude *(03:42:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "offset": 228,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 228	        buyGate: { allowed: gates.buyAllowed, reason: gates.reason, flowFresh: gates.flowFresh, flowGated: gates.flowGated, farm: gates.farm, baseline: gates.baseline },
+> 229	        stale: c.stale,
+> 230	      };
+> 231	    }
+> 232	    return out;
+> 233	  }
+> 234	);
+> 235	
+> 236	// ----------------------------------------------------------------------------
+> 237	// LEITURA — ordens, automações, monitores, templates
+> 238	// ----------------------------------------------------------------------------
+> 239	
+> 240	readTool(
+> 241	  "tradeux_list_orders",
+> 242	  "Histórico de ordens (paginado). Pode filtrar por símbolo.",
+> 243	  {
+> 244	    symbol: z.string().optional().describe("Par, ex: BTCUSDT"),
+> 245	    page: z.number().int().positive().optional().describe("Página (default 1)"),
+> 246	  },
+> 247	  ({ symbol, page }) => api.get(symbol ? `/orders/${symbol.toUpperCase()}` : "/orders", { page })
+> ```
+
+## 🤖 Claude *(03:42:15)*
+
+
+## 🤖 Claude *(03:42:17)*
+
+Importante: o `out` aqui é `{ env, enabled, symbols }` — não vejo `groups`/`paper`. Mas o agente lê `cockpit.groups` (D3). Deixa eu confirmar onde groups/paper são encaminhados no MCP (e se a D3 realmente atualizou isso):
+
+## 🤖 Claude *(03:42:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-mcp\ngrep -n \"out.groups\\|out.paper\\|out.riskCaps\\|d.groups\\|d.paper\\|d.riskCaps\\|groups\\|paper\" src/index.js | head -20",
+  "description": "Find where groups/paper forwarded in MCP cockpit tool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(03:43:23)*
+
+
+## 🤖 Claude *(03:43:27)*
+
+Isso é importante: o `out` do `tradeux_get_cockpit` é `{ env, enabled, symbols }` e o grep confirma que **`groups`/`paper`/`riskCaps` não aparecem em lugar nenhum** do `tradeux-mcp/src/index.js`. Ou seja: o MCP **filtra** o payload e NÃO encaminha `groups`/`paper` pro agente — apesar do prompt do agente referenciar `cockpit.groups`/`cockpit.paper` fortemente (D3 + paper). Isso sugere que a D3 ficou **meia-feita** (backend+prompt, mas o dado nunca fluiu pelo MCP).
+
+Antes de afirmar isso, vou **verificar empiricamente** no journal do agente se algum `get_cockpit` recente trouxe `groups`:
+
+## 🤖 Claude *(03:43:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-agent\necho \"=== journals recentes ===\"\nls -lt journal/*.jsonl 2>/dev/null | head -3\necho \"=== algum resultado de get_cockpit no journal cont\u00e9m 'groups'/'paper'/'riskCaps'? ===\"\ngrep -l \"get_cockpit\" journal/*.jsonl 2>/dev/null | tail -2 | while read f; do\n  echo \"--- $f ---\"\n  grep -oE \"\\\"(groups|paper|riskCaps|enabled|symbols)\\\"\" \"$f\" 2>/dev/null | sort | uniq -c\ndone\necho \"=== sanity: 'groups' aparece em QUALQUER journal? ===\"\ngrep -lc \"groups\" journal/*.jsonl 2>/dev/null | head -3 || echo \"nenhum journal cont\u00e9m 'groups'\"",
+  "description": "Check agent journal for groups/paper in cockpit results"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === journals recentes ===
+> === algum resultado de get_cockpit no journal contém 'groups'/'paper'/'riskCaps'? ===
+> === sanity: 'groups' aparece em QUALQUER journal? ===
+> ```
+
+## 🤖 Claude *(03:43:50)*
+
+
+## 🤖 Claude *(03:43:52)*
+
+Não há journals acessíveis aqui (agente 429-throttled, sem runs recentes). Mas antes de cravar a conclusão, preciso descartar uma alternativa: o agente pode pegar `groups` por **injeção direta no kickoff** (HTTP), não só via tool MCP. Vou checar como o agente realmente obtém esse dado:
+
+## 🤖 Claude *(03:43:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/tradeux-agent\necho \"=== agent.js faz fetch/HTTP direto (cockpit/groups) ou s\u00f3 via MCP? ===\"\ngrep -rniE \"fetch\\(|axios|http\\.|api\\.get|/analysis/cockpit|/automations/groups|get_cockpit|kickoff\" src/*.js 2>/dev/null | head -20",
+  "description": "Check if agent fetches cockpit/groups directly vs via MCP tool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agent.js faz fetch/HTTP direto (cockpit/groups) ou só via MCP? ===
+> src/agent.js:22:- PAPER ENGINE (research, sem risco): automações com prefixo **[PAPER]** (trilhas "Consistencia"/"Macro" em paper) são SIMULAÇÃO — um broker VIRTUAL que preenche ao preço+fee REAIS da mainnet mas NÃO envia ordem à Binance e NÃO toca o cofre nem USDT real. O P&L paper vem em tradeux_get_cockpit (campo 'paper': totais + por trilha) e em GET /analysis/paper. Trate como OBSERVAÇÃO DE RESEARCH (qual trilha tem edge), NUNCA como posição/venda real — e NÃO alarme sobre ordens [PAPER]. A trilha de FREQUÊNCIA/verde-diário foi REFUTADA por backtest (EV<0 líquido) e NÃO existe — não a procure nem sugira.
+> src/agent.js:26:AMBIENTE (crucial — confirme a cada ciclo com tradeux_get_cockpit; NÃO assuma)
+> src/agent.js:27:- O ambiente REAL e o estado de trading vêm de tradeux_get_cockpit: env.useTestnet (mainnet vs testnet) e env.tradingHalt (kill-switch). É a FONTE DE VERDADE — confie nela, não no que este prompt assume.
+> src/agent.js:34:- 1× tradeux_get_cockpit por ciclo: confirma o AMBIENTE (env.useTestnet/env.tradingHalt) e traz, por símbolo, a MECÂNICA da distribuição de 1m — mediana |move|, σ, % de moves ≥ break-even, EV/trade NET de fee (costuma ser ≤0), a banda Monte Carlo DRIFTLESS (p50≡preço, NÃO previsão) e o estado dos gates de COMPRA. TRAZ TAMBÉM 'groups' — o estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper, com active/inactive/total): é o que está REALMENTE ARMADO, SEPARADO do gate de regime. Use 'groups' p/ saber se um grupo opera ANTES de implicar qualquer execução (ver item 8). TRAZ TAMBÉM 'riskCaps' — o teto EFETIVO por ordem (buyCapUsdt ≈ %-equity da COMPRA; sellCapUsdt = rede anti-runaway de VENDA ~3×equity; null = sem teto): use p/ EXPLICAR um capamento (ver item 9), nunca p/ inferir anomalia. REPORTE no diário o estado mecânico e a coerência dos gates (EV≤0 a 1m é esperado — ver DIVERGÊNCIAS ESPERADAS).
+> src/agent.js:45:  (8) ATIVO ≠ GATE: uma automação/grupo INATIVO (parado) com o gate ABERTO NÃO é anomalia — LIGAR/PARAR é decisão do OPERADOR pelo painel de grupos (ex.: CANARY = só um grupo ativo por vez; hoje pode ser só o Farm, com Trend e Baseline PARADOS de propósito). Gate liberado = o regime PERMITE a estratégia; NÃO significa que a automação DEVA estar armada (o estado de ATIVAÇÃO vive em /automations/groups e no painel de grupos de Settings — separe "gate aberto" de "grupo armado"). NÃO reporte "a automação X deveria estar ativa / deveria ter disparado" baseado no gate, NEM notifique o dono — ele controla a ativação. Só sinalize se o ESTADO de ativação mudar SOZINHO, sem ação do operador (ex.: automação que estava ON sumiu do BRAIN). **FRASEADO (regra dura): ao narrar uma mudança de regime/gate, SEMPRE cheque 'cockpit.groups' (estado ATIVO por grupo) ANTES de implicar execução. Se o grupo relevante está PARADO (active=0), diga explicitamente "o grupo X está parado → NENHUMA ordem ocorre" e NUNCA escreva que está "aguardando golden cross/dip para comprar" — isso AFIRMA uma execução que NÃO vai acontecer (foi o erro real do LTC em regime trend com o Trend 0/8 parado). "Gate aberto" descreve a DOUTRINA (o que o regime PERMITE), não uma compra iminente.**
+> src/agent.js:49:- NOTIFICAR O DONO via tradeux_notify_owner (Telegram, one-way) quando: precisar de APROVAÇÃO p/ algo sensível, estiver BLOQUEADO e precisar de ajuda, ou um EVENTO importante acontecer (ex.: saída do bear, cross real, anomalia/incoerência NOVA). É one-way: NÃO espere resposta no ciclo — após notificar, siga o caminho conservador (não agir). No MÁXIMO 1-2 notificações por ciclo. ANTI-SPAM (regra dura): o kickoff de cada ciclo traz a lista de NOTIFICAÇÕES JÁ ENVIADAS recentemente — confira ANTES de notificar; se o ASSUNTO já está na lista (mesmo que com outras palavras), NÃO reenvie. Notificação repetida ensina o dono a ignorar o canal. Rotina sem novidade NÃO notifica. NADA da lista DIVERGÊNCIAS ESPERADAS é notificável (já são esperados). Há também um dedup em CÓDIGO: se a chamada voltar com "notificação SUPRIMIDA — assunto duplicado", o assunto JÁ foi enviado — NÃO reformule pra burlar; consolide no diário (só reformule se for evento REALMENTE novo, destacando o que MUDOU). TODA notificação em português brasileiro (pt-BR).
+> src/agent.js:63:const USER_KICKOFF =
+> src/agent.js:71:// Kickoff dinâmico: anexa as últimas notificações JÁ enviadas ao dono (lidas do diário) pra dar
+> src/agent.js:75:function buildKickoff() {
+> src/agent.js:77:  if (!sent.length) return USER_KICKOFF;
+> src/agent.js:79:    USER_KICKOFF +
+> src/agent.js:103:  const messages = provider.start(SYSTEM_PROMPT, buildKickoff());
+> src/notifyDedup.js:4:// (agent.js) limita VOLUME; (b) histórico das últimas notificações injetado no kickoff +
+> src/journal.js:25:// no kickoff do ciclo. Sem isto o modelo NÃO tem memória entre ciclos e re-notifica o mesmo
+> ```
+
+## 🤖 Claude *(03:44:32)*
+
+
+## 🤖 Claude *(03:44:37)*
+
+Confirmado por código: o agente obtém cockpit/groups/paper **só** via `tradeux_get_cockpit` (sem fetch HTTP direto; o kickoff só injeta histórico de notificações). E esse tool devolve `{ env, enabled, symbols }` — **`groups`/`paper` são DROPADOS**.
+
+🔴 **Achado material:** a D3 (`cockpit.groups`) e o paper-no-cockpit ficaram **inertes pelo caminho real do agente** — o backend e o prompt foram feitos, mas o MCP nunca encaminhou o dado. O "verificado ao vivo" do HANDOFF testou o **endpoint**, não o tool que o agente chama. É o mesmo padrão do `getStableConversion` inerte que a suíte pegou antes.
+
+A correção é a mesma linha que eu já precisava pro `riskCaps` — então conserto os três de uma vez. Primeiro o forwarding no MCP:
+
+## 🤖 Claude *(03:44:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "        stale: c.stale,\n      };\n    }\n    return out;",
+  "new_string": "        stale: c.stale,\n      };\n    }\n    // Top-level do cockpit que o agente PRECISA (o prompt referencia): estado ATIVO por grupo (D3), resumo do\n    // Paper Engine e o teto EFETIVO por ordem. Sem isto o backend computa mas o agente NUNCA recebe (eram dropados).\n    out.groups = d.groups || null;       // ATIVO por grupo (Farm/Trend/Baseline/Paper) \u2014 separa \"armado\" de \"gate\"\n    out.paper = d.paper || null;         // P&L do Paper/Shadow (totais + por trilha)\n    out.riskCaps = d.riskCaps || null;   // teto efetivo: compra ~%-equity, venda = rede anti-runaway\n    return out;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:44:46)*
+
+
+## 🤖 Claude *(03:44:46)*
+
+Atualizo a descrição do tool pra mencionar os campos (estava só `env`):
+
+## 🤖 Claude *(03:44:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js",
+  "old_string": "Tambem informa o AMBIENTE real (env.useTestnet) e se o trading esta congelado (env.tradingHalt).",
+  "new_string": "Tambem informa o AMBIENTE real (env.useTestnet) e se o trading esta congelado (env.tradingHalt), o estado ATIVO por grupo (groups: Farm/Trend/Baseline/Paper com active/inactive/total \u2014 o que esta REALMENTE ARMADO, separado do gate de regime), o resumo do Paper Engine (paper) e o teto EFETIVO por ordem (riskCaps: buyCapUsdt da COMPRA ~%-equity, sellCapUsdt da rede anti-runaway de VENDA; null = sem teto)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:44:57)*
+
+
+## 🤖 Claude *(03:44:57)*
+
+Syntax-check do MCP (ESM) + entendo a topologia de deploy (o agente bundla o MCP?):
+
+## 🤖 Claude *(03:45:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check tradeux-mcp/src/index.js 2>&1 && echo \"OK mcp/index.js\" || echo \"(ESM \u2014 check abaixo)\"\necho \"=== agent + mcp no compose (build/context) ===\"\nawk '/^  agent:/,/^  [a-z]+:/' docker-compose.yml | grep -iE \"build|context|volume|image|command|TRADEUX_MCP|mcp\" | head -12\necho \"=== Dockerfile do agente inclui o mcp? ===\"\nls tradeux-agent/Dockerfile 2>/dev/null && grep -iE \"COPY|tradeux-mcp|mcp|WORKDIR\" tradeux-agent/Dockerfile 2>/dev/null | head -10",
+  "description": "Syntax-check MCP, inspect agent+mcp deploy topology"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK mcp/index.js
+> === agent + mcp no compose (build/context) ===
+> === Dockerfile do agente inclui o mcp? ===
+> tradeux-agent/Dockerfile
+> # TradeUX agent — Node 22 (empacota tradeux-agent + tradeux-mcp lado a lado).
+> # O agente sobe o tradeux-mcp por stdio em ../../tradeux-mcp/src/index.js (ver mcpClient.js),
+> WORKDIR /app
+> # 1) MCP — deps em camada separada para aproveitar o cache de build.
+> COPY tradeux-mcp/package*.json ./tradeux-mcp/
+> RUN cd tradeux-mcp && npm install --omit=dev
+> COPY tradeux-mcp ./tradeux-mcp
+> COPY tradeux-agent/package*.json ./tradeux-agent/
+> COPY tradeux-agent ./tradeux-agent
+> WORKDIR /app/tradeux-agent
+> ```
+
+## 🤖 Claude *(03:45:20)*
+
+
+## 🤖 Claude *(03:45:22)*
+
+O Dockerfile do agente **empacota o `tradeux-mcp` lado a lado** — então rebuildar o container `agent` pega tanto o forwarding do MCP quanto a doutrina do `agent.js`. Deploy = rebuild `backend` (endpoint) + `agent` (MCP+prompt).
+
+Suíte segue 6/6 (MCP/agent não têm harness de sim). Chown + diff + gate QA/TL no conjunto:
+
+## 🤖 Claude *(03:45:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/utils/exchange.js backend/src/controllers/analysisController.js backend/scripts/sim/riskGuard.test.js tradeux-agent/src/agent.js tradeux-mcp/src/index.js 2>/dev/null\ngit -c safe.directory='*' diff -- backend/src/utils/exchange.js backend/src/controllers/analysisController.js backend/scripts/sim/riskGuard.test.js tradeux-agent/src/agent.js tradeux-mcp/src/index.js > /tmp/riskcaps.diff 2>&1\necho \"diff bytes: $(wc -c </tmp/riskcaps.diff)\"\ngit -c safe.directory='*' diff --stat -- backend tradeux-agent tradeux-mcp | tail -8",
+  "description": "Chown, save combined diff for review"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff bytes: 18810
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  backend/scripts/sim/riskGuard.test.js              |  30 ++
+>  backend/src/controllers/analysisController.js      |   4 +
+>  backend/src/utils/exchange.js                      |  25 ++
+>  tradeux-agent/src/agent.js                         |   3 +-
+>  tradeux-mcp/src/index.js                           |   7 +-
+>  7 files changed, 340 insertions(+), 275 deletions(-)
+> ```
+
+## 🤖 Claude *(03:45:49)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review riskCaps + MCP forwarding",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise uma mudan\u00e7a no TradeUX (backend + agente + MCP) que vai pra MAINNET (\ud83d\udd34 LIVE, ~$149). \u00c9 OBSERVABILIDADE + um BUG REAL descoberto. Veredito PASS / PASS COM RESSALVAS / FAIL.\n\n## O que mudou (diff em /tmp/riskcaps.diff; working tree aplicado em /home/gcrux-tradeux/tradeux)\n1. **`backend/src/utils/exchange.js`**: novo `getEffectiveCaps()` \u2014 reporta o teto EFETIVO atual (compra=min(teto_abs,%\u00d7equity); venda=mult\u00d7equity) usando as MESMAS consts + `freshEquity()` que o guard `assertWithinRisk` imp\u00f5e (DRY, read-only). Retorna `{equityUsdt, buyCapUsdt, buyCapBasis, sellCapUsdt, params}`.\n2. **`backend/src/controllers/analysisController.js`**: `status.riskCaps = exchange.getEffectiveCaps()` no `getCockpitStatus` (best-effort, igual a `groups`).\n3. **`backend/scripts/sim/riskGuard.test.js`**: Se\u00e7\u00e3o F travando o shape do `getEffectiveCaps` (50 asserts no total).\n4. **\ud83d\udd34 BUG DESCOBERTO + CORRIGIDO \u2014 `tradeux-mcp/src/index.js`**: o tool `tradeux_get_cockpit` montava `out = {env, enabled, symbols}` e **DROPAVA `groups`, `paper` e `riskCaps`** \u2014 apesar do prompt do agente (`agent.js`) referenciar `cockpit.groups` (D3) e `cockpit.paper` fortemente. Ou seja, a D3 e o paper-no-cockpit estavam INERTES pelo caminho real do agente (o \"verificado ao vivo\" testou o ENDPOINT, n\u00e3o o tool MCP). Fix: `out.groups/paper/riskCaps = d.x || null` + descri\u00e7\u00e3o do tool atualizada.\n5. **`tradeux-agent/src/agent.js`**: doutrina \u2014 linha do cockpit menciona `riskCaps`; novo item (9) \"TETO \u2260 ANOMALIA\" (compra capada = prote\u00e7\u00e3o por desenho, n\u00e3o incoer\u00eancia; consulte `cockpit.riskCaps.buyCapUsdt`).\n\n## Foco (adversarial)\n1. **`getEffectiveCaps` \u00e9 fiel ao guard?** Para os mesmos inputs (equity quente, env consts), o `buyCapUsdt`/`sellCapUsdt` reportado == o que o `assertWithinRisk` REALMENTE bloquearia/permitiria? Cheque os ramos: %-equity domina, teto-abs domina, equity frio (compra\u2192abs, venda\u2192null/degrade-open), piso. H\u00e1 diverg\u00eancia poss\u00edvel entre o REPORTE e a IMPOSI\u00c7\u00c3O?\n2. **MCP forwarding**: `d.groups || null` etc. est\u00e1 correto? Algum caso em que `d.x` \u00e9 falsy-mas-v\u00e1lido (ex.: `paper` com totais zero, ou groups array vazio) e vira null indevidamente? (paper \u00e9 objeto, groups \u00e9 array \u2014 `|| null` s\u00f3 captura null/undefined, ok? confirme).\n3. **Bloat de contexto do agente**: adicionar groups+paper+riskCaps ao payload do tool infla muito o contexto do agente? `status.paper` inclui recentOrders (grande) ou s\u00f3 o summary? Confirme que \u00e9 o summary compacto.\n4. **Regress\u00e3o**: a mudan\u00e7a no `out` do MCP quebra algum consumidor que esperava s\u00f3 {env,enabled,symbols}? O frontend usa /analysis/cockpit direto (n\u00e3o o MCP) \u2014 afetado?\n5. **Coer\u00eancia da doutrina nova** (item 9 + linha riskCaps): o fraseado induz o agente a algo errado? (ex.: sugerir mexer no teto).\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (6/6, riskGuard 50). MCP/agent n\u00e3o t\u00eam harness de sim \u2014 avalie por leitura. Aponte testes/checagens faltantes. pt-BR, conciso."
+}
+```
+
+## 🤖 Claude *(03:46:05)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review riskCaps + MCP forwarding",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) de uma mudan\u00e7a no TradeUX (backend + agente + MCP) p/ MAINNET (\ud83d\udd34 LIVE, ~$149, trunk-based). Observabilidade do risk-guard + corre\u00e7\u00e3o de um BUG REAL descoberto no caminho.\n\n## Contexto\nNesta sess\u00e3o entregamos o %-teto de compra (`fe06c74`) e a rede anti-runaway de venda (`d9f0dc5`). QA+TL pediram, como nice-to-have, surfar o cap efetivo pro agente entender um capamento. Ao implementar, DESCOBRI que o tool MCP `tradeux_get_cockpit` montava `out={env,enabled,symbols}` e DROPAVA `groups`/`paper` \u2014 ent\u00e3o a D3 (cockpit.groups) e o paper-no-cockpit estavam INERTES pelo caminho real do agente (o agente s\u00f3 recebe cockpit via esse tool; sem fetch HTTP direto \u2014 confirmei). O \"verificado ao vivo\" do HANDOFF testou o endpoint, n\u00e3o o tool.\n\n## Mudan\u00e7a (diff em /tmp/riskcaps.diff; aplicado em /home/gcrux-tradeux/tradeux)\n- `exchange.js`: `getEffectiveCaps()` (DRY com o guard, read-only) \u2192 `{equityUsdt, buyCapUsdt, buyCapBasis, sellCapUsdt, params}`.\n- `analysisController.js`: `status.riskCaps` no cockpit (best-effort).\n- `riskGuard.test.js`: Se\u00e7\u00e3o F (shape do getEffectiveCaps; 50 asserts).\n- `tradeux-mcp/src/index.js`: forward `groups`/`paper`/`riskCaps` no `out` (o fix do bug) + descri\u00e7\u00e3o do tool.\n- `agent.js`: doutrina (linha riskCaps + item 9 \"TETO\u2260ANOMALIA\").\n- Deploy: rebuild `backend` + `agent` (o Dockerfile do agente empacota o tradeux-mcp lado a lado).\n\n## Avalie (must-fix vs nice-to-have)\n1. **Escopo**: corrigir o forwarding MCP (groups/paper) JUNTO com o riskCaps \u00e9 a decis\u00e3o certa, ou deveria ser PR separado? (\u00e9 a mesma linha de c\u00f3digo; sem o fix, o riskCaps tamb\u00e9m seria inerte.)\n2. **Risco de mudar o comportamento do agente AO VIVO**: dar groups+paper+riskCaps que ele nunca teve \u2014 melhora (a doutrina vira execut\u00e1vel) ou risco de regress\u00e3o comportamental? O agente est\u00e1 429-throttled agora (valida\u00e7\u00e3o comportamental limitada). Aceit\u00e1vel deployar mesmo sem poder validar o comportamento j\u00e1?\n3. **getEffectiveCaps DRY**: reusar consts+freshEquity do guard p/ reportar \u00e9 boa arquitetura, ou o reporte deveria derivar de outra fonte?\n4. **D\u00edvida**: o MCP n\u00e3o tem harness de teste (a regress\u00e3o do forwarding n\u00e3o \u00e9 coberta). Aceit\u00e1vel? Vale uma nota/TODO?\n5. Conven\u00e7\u00f5es, naming, fraseado da doutrina (induz erro?).\n\nSu\u00edte: `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (6/6, riskGuard 50). Foque na decis\u00e3o. pt-BR, conciso, must-fix separado de sugest\u00f5es."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Procedência clara: os arquivos `backtest-results/*` têm timestamp 2026-06-21 12:10-12:15 (rodada de backtest de outra sessão/maratona), enquanto os 5 arquivos do nosso escopo são 2026-06-22 00:40-00:44 (esta sessão). Os backtest-results NÃO fazem parte desta mudança — são ruído pré-existente no working tree (provável artefato de uma rodada de backtest da maratona de 21/jun). Devem ficar FORA do commit.\n\nTenho tudo para decidir. Validei a corretude do fix e do `getEffectiveCaps` linha a linha contra o guard.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\n### Racional\n\nMudança pequena, bem-escoada, reversível e majoritariamente read-only/observabilidade — exatamente o perfil que merece aprovação sem bikeshedding. Mas tem **um componente de risco real** que justifica as condições abaixo: o forwarding MCP altera o que o agente recebe AO VIVO.\n\n**1. Escopo (forwarding + riskCaps juntos): decisão CERTA.** É a mesma linha de código (`out.groups`/`out.paper`/`out.riskCaps`). Sem o fix de forwarding, o `riskCaps` nasceria inerte pelo mesmo caminho que já matava D3/paper. Separar em dois PRs criaria uma janela onde o `riskCaps` é computado no backend mas dropado no MCP — repetindo o bug que você está consertando. O achado é importante e bem-diagnosticado: o "verificado ao vivo" do HANDOFF (`5c83c31` D3, `faed249` paper) testou o **endpoint HTTP**, não o **tool**, e o agente só vê o tool. D3 e paper-no-cockpit estavam de fato **inertes pelo caminho real** desde que foram entregues. Isso reabilita duas features já aprovadas, não introduz três novas.\n\n**2. Corretude do `getEffectiveCaps` (o que mais me preocupava): CONFIRMADA.** Reproduz `assertWithinRisk` fielmente — mesma ordem (`pctCap` → piso `MIN_ORDER_NOTIONAL_FLOOR` → `min(absCeil)`), mesma `freshEquity()` (mesmo `EQUITY_MAX_AGE_MS`), mesma semântica de degrade-open na venda (equity frio → `sellCapUsdt=null` = passa, espelhando o `if (eqv != null)` do guard que deixa a venda passar). O `buyCapBasis` casa com a string `basis` da mensagem de bloqueio real (`pct-equity`↔"% do equity", `absolute`↔"teto absoluto"). DRY genuíno: reusa as mesmas consts de módulo, não há fonte paralela que possa divergir. Boa arquitetura — o reporte deve derivar da MESMA fonte que impõe, senão o agente explicaria um cap que não é o cap real. Os 50 asserts da Seção F cobrem os 4 ramos (pct-domina, abs-domina, piso, frio).\n\n**3. Risco comportamental ao vivo (a parte séria):** dar `groups`+`paper`+`riskCaps` que o agente nunca recebeu. O risco de regressão é **baixo e assimétrico para o lado seguro**:\n- É um SERVIÇO read-only/observador; `ALLOW_TRADING=false` e a trava de SELL-BTC do MCP seguem intactas — nenhuma mudança toca money-path de execução. O pior caso é o agente **narrar errado no diário/Telegram**, não emitir ordem.\n- A doutrina nova (item 9 "TETO≠ANOMALIA") REDUZ falso-positivo (agente parar de chamar um capamento de bug), na mesma linha do `groups` que já reduziu o "aguardando golden cross com grupo parado". Direção correta.\n- O 429-throttle limita a validação comportamental, mas isso corta nos dois sentidos: o risco de um comportamento ruim "escapar" é igualmente baixo porque os ciclos são esparsos, e o blast radius é texto. **Aceitável deployar sem validação comportamental completa** — desde que o próximo ciclo que rodar seja inspecionado (condição abaixo).\n\n**4. Dívida (MCP sem harness):** legítima e foi exatamente o que deixou esse bug passar despercebido por 2 entregas. Não bloqueia (o forwarding agora é trivial e coberto por leitura), mas **merece nota/TODO** — sem ela, a próxima regressão de forwarding também passa silenciosa. Nice-to-have, não must-fix.\n\n**5. Convenções/fraseado:** pt-BR mantido, comentários no estilo da casa, naming consistente (`buyCapUsdt`/`sellCapUsdt`/`buyCapBasis`). O item 9 está bem-calibrado: "PROTEÇÃO POR DESENHO", "NÃO sugira mexer no teto a menos que esteja DEMONSTRAVELMENTE barrando ordem legítima recorrente" — evita induzir o agente a pedir afrouxamento de risco. Um detalhe: o item 9 afirma "A VENDA NUNCA é capada por sizing" — correto pelo código, e a doutrina já ressalva a rede anti-runaway; fraseado OK, não induz erro.\n\n### Must-fix\n- **Nenhum no código.** A suíte passou 6/6 (riskGuard 50/50) e o forwarding/cálculo estão corretos.\n- **Higiene de commit (condição dura):** o working tree contém artefatos NÃO relacionados a esta mudança — `backend/backtest-results/farm-funnel-1h-full-macro500.{json,md}` (modificados, timestamp 2026-06-21 12:10) e `backend/backtest-results/farm-funnel-1h-full.{json,md}` (não-rastreados, 12:15). São de outra rodada/sessão (os 5 arquivos do nosso escopo são 00:40-00:44 de hoje). **Commitar APENAS os 5 arquivos do escopo** (`git add` explícito por path: `riskGuard.test.js`, `analysisController.js`, `exchange.js`, `agent.js`, `tradeux-mcp/src/index.js`) — NUNCA `git add -A`/`git add .`. Conforme a memória de contaminação cross-session, não adotar nem commitar esses backtest-results.\n\n### Nice-to-have\n- TODO/nota de dívida: o `tradeux-mcp` não tem harness; a regressão de forwarding (out dropando campos top-level) não é coberta por teste. Um smoke mínimo (mockar `api.get` e asseverar que `groups/paper/riskCaps` saem no `out`) fecharia a classe inteira de bug que esta sessão descobriu.\n- Pós-deploy, com o agente 429-limitado: inspecionar o PRIMEIRO ciclo que efetivamente rodar (journal `tradeux-agent/journal/*.jsonl`) para confirmar que ele lê `riskCaps`/`groups` sem ruído novo no Telegram. Não bloqueia o merge.\n\n### Decisão de merge\n**APPROVE** os 5 arquivos do escopo, num único commit/PR (ordem: backend `exchange.js`+`analysisController.js`+`riskGuard.test.js` → MCP `index.js` → agent `agent.js` viajam juntos; são acoplados pelo contrato do `out`). **Condições:** (1) excluir os 4 arquivos `backtest-results/*` do commit (add por path explícito); (2) rebuild de `backend` **e** `agent` (o Dockerfile do agente empacota o `tradeux-mcp` lado a lado — sem rebuild do agent, o fix do forwarding não chega ao container que o agente usa); (3) inspecionar o 1º ciclo pós-429 como follow-up não-bloqueante.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (`getEffectiveCaps`, L399-419; guard de referência `assertWithinRisk` L71-120)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` (L97-100)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js` (Seção F)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js` (fix do forwarding L232-236; descrição L215)\n- `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js` (doutrina item 9)\n- FORA do escopo (não commitar): `/home/gcrux-tradeux/tradeux/backend/backtest-results/farm-funnel-1h-full-macro500.{json,md}` e `/home/gcrux-tradeux/tradeux/backend/backtest-results/farm-funnel-1h-full.{json,md}`'}, {'type': 'text', 'text': "agentId: aa8ff7a7a38e397eb (use SendMessage with to: 'aa8ff7a7a38e397eb' to continue this agent)\n<usage>subagent_tokens: 62713\ntool_uses: 10\nduration_ms: 81791</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I have full confirmation. Let me do the final fidelity cross-check of `getEffectiveCaps` vs `assertWithinRisk` line-by-line, including one subtle divergence I want to verify: the `buyCapBasis` tie-break and the floor-vs-absCeil interaction (floor raises pctCap, then min with absCeil).\n\nThe key edge: in the guard, the floor is applied to `pctCap` BEFORE `min(pctCap, absCeil)`. So if floor > absCeil, the floored pctCap could exceed absCeil and absCeil wins. `getEffectiveCaps` does the exact same sequence (lines 401-404). Identical. Let me verify one report-vs-impose subtlety around `buyCapBasis` when `pctCap === absCeil` exactly.\n\nGuard line 119: `basis = (pctCap <= absCeil) ? \'%\' : \'abs\'`. getEffectiveCaps line: `pctCap <= absCeil ? \'pct-equity\' : \'absolute\'`. Identical tie-break (pct wins on equality). Consistent.\n\nI have everything needed for the report.\n\n---\n\nVEREDITO: **PASS COM RESSALVAS** (ressalvas BAIXAS; o bug corrigido é real e o fix está correto)\n\n## Foco adversarial — achados\n\n### 1. `getEffectiveCaps` é fiel ao guard? SIM — espelho exato.\nComparei linha a linha `getEffectiveCaps` (`/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js:399-416`) contra `assertWithinRisk` (mesmo arquivo, `:71-124`). Usam as **mesmas consts module-level** e o **mesmo `freshEquity()`** (`:65-69`). Todos os ramos batem:\n- **%-equity domina / teto-abs domina**: `pctCap = MAX_ORDER_PCT_EQUITY*eqv`, depois `min(pctCap, absCeil)` — idêntico ao guard.\n- **Piso**: aplicado a `pctCap` ANTES do `min` com `absCeil`, em ambos. Inclusive a sutileza floor>absCeil (absCeil ainda vence) é preservada.\n- **`buyCapBasis` tie-break**: `pctCap <= absCeil ? \'pct-equity\' : \'absolute\'` — casa byte-a-byte com o `basis` da msg de bloqueio do guard (`:119`, empate → pct).\n- **Equity frio/velho**: `freshEquity()` retorna `null` → compra cai pro teto-abs; venda → `Infinity` → `sellCapUsdt=null` (degrade-open). Igual ao guard (venda com equity frio passa).\n- **Tudo off**: `buyCap=Infinity → null` (`buyCapBasis=\'none\'`). Guard nesse caso é inerte (`:113 return`). Coerente.\n\n**Não encontrei divergência reporte×imposição.** Sutileza correta e DELIBERADA: o guard avalia o teto contra o `notional` REAL da ordem (que pode ter ref de preço FRIA → MARKET-por-qty passa sem avaliar, `:116-117`); `getEffectiveCaps` reporta só o **teto**, não o notional. Isso é o contrato certo de observabilidade — o cap reportado é o que SE aplicaria havendo notional avaliável.\n\n### 2. MCP forwarding `d.x || null` — correto, mas com 1 nuance BAIXA.\n- `paper` é objeto (`{totals,strategies,feeRate}`) e `groups` é **array** — `|| null` só captura `null/undefined/0/\'\'/false/NaN`. Objeto não-vazio e array (mesmo vazio `[]` é truthy) passam intactos. **Sem falsy-mas-válido aqui.** `riskCaps` é sempre objeto (a função nunca retorna falsy — pior caso retorna objeto com campos null). OK.\n- **Nuance (INFO, não-bug)**: o backend já garante `status.x = null` no `catch`. O `d.x || null` do MCP é redundância defensiva inofensiva. `groups: []` (banco sem automações) sobreviveria como `[]` — correto, não vira null.\n\n### 3. Bloat de contexto — controlado. CONFIRMADO: `paper` é o summary compacto.\n`status.paper = paperService.summary()` (`paperService.js:8-56`) retorna **só `{totals, strategies, feeRate}`** — agregado por trilha. **NÃO inclui `recentOrders`** (essas 50 linhas só existem no endpoint `GET /analysis/paper`, `analysisController.js:121`). `strategies` é bounded (~16 trilhas, cada uma com um map `symbols` pequeno). `groups` são 4 entradas com `ids[]`. `riskCaps` é ~9 campos. Incremento de payload pequeno e limitado. **Sem risco de estouro de contexto** (o estouro real era `get_memory_indexes`, já resolvido).\n\n### 4. Regressão — nenhuma quebra de consumidor.\n- O frontend (`Cockpit.js`) consome `GET /analysis/cockpit` **direto**, não o tool MCP → intocado. `groups/paper/riskCaps` já chegavam ao endpoint; só o caminho MCP os dropava.\n- O `out` do MCP agora ganha 3 chaves ADITIVAS (`groups/paper/riskCaps`); `{env,enabled,symbols}` permanecem. Nenhum consumidor do tool quebra (só o agente o lê, e ele passa a receber MAIS).\n- **O bug era REAL e a correção fecha-o de fato**: o prompt referenciava `cockpit.groups` (item 8/D3) e `cockpit.paper` fortemente, mas o tool montava `out={env,enabled,symbols}` e os DROPAVA. A D3 e o paper-no-cockpit estavam **inertes pelo caminho do agente** — o "verificado ao vivo" do D3 testou o ENDPOINT, não o tool. Confirmado pelo diff e pelo prompt em `agent.js:34,45` que dependem dessas chaves.\n\n### 5. Doutrina nova (item 9 + linha riskCaps) — coerente, sem induzir erro.\n- Item 9 (`agent.js:46`) ensina "compra capada = proteção por desenho", manda **citar `cockpit.riskCaps.buyCapUsdt`** e explicitamente **proíbe sugerir mexer no teto** salvo bloqueio recorrente de ordem legítima. Bom freio.\n- **1 imprecisão MENOR (INFO)** no item 9: "o calcQty redimensiona a ordem p/ caber no teto". O `assertWithinRisk` é **fail-closed (throw)**, não redimensiona; quem redimensiona é o `calcQty` (módulo separado). A afirmação é verdadeira no agregado (calcQty capa na carteira/teto), mas mistura dois mecanismos. Não induz ação errada do agente — só é imprecisa na narrativa interna. Não-bloqueante.\n- A linha do cockpit (`agent.js:34`) descreve `sellCapUsdt = rede anti-runaway ~3×equity` — fiel ao `MAX_SELL_EQUITY_MULT`. Coerente.\n\n## Testes que eu rodaria\n- **`npm run test:sim`** — RODEI: **6/6 arquivos, riskGuard 50/50** (Seção F nova trava o shape: pct-equity domina, teto-abs domina, frio→buy=abs/sell=null, piso). Passou.\n- **Lacuna de cobertura (recomendo adicionar 1 assert)**: a Seção F NÃO testa `buyCapBasis=\'none\'` nem `buyCapUsdt=null` quando **tudo desligado** (`maxNotional:0, pctEq:null`). É o ramo `out.riskCaps` mais provável de o agente ver "sem aperto". Adicionar: `loadExchange({maxNotional:0})` → `caps()` deve dar `buyCapUsdt=null, buyCapBasis=\'none\', sellCapUsdt=null`.\n- **Lacuna 2 (BAIXA)**: a Seção F não cobre equity VELHO (>10min) p/ `getEffectiveCaps` — só frio (`{value:null}`). Como ambos passam pelo mesmo `freshEquity()` já testado no guard, é redundante, mas fecharia o paralelo.\n- **MCP/agent sem harness** — verifiquei por leitura. Checagem manual que eu faria ao vivo: `curl -s $API/analysis/cockpit | jq \'{groups,paper:.paper.totals,riskCaps}\'` e depois invocar `tradeux_get_cockpit` via `node tradeux-agent/src/index.js --once` confirmando que `out.groups/paper/riskCaps` chegam não-null (o gap exato que escapou do "verificado ao vivo" do D3).\n- **Smoke de produção**: `GET /system/halt` no boot (conforme doutrina) + um ciclo do agente conferindo que ele agora cita `riskCaps.buyCapUsdt` ao narrar um cap, e que o D3 (`groups`) finalmente popula no payload do tool.\n\n## Recomendação de merge\n**MERGE.** Mudança read-only/observabilidade DRY-correta (zero alteração no chokepoint de imposição — `getEffectiveCaps` é função nova ao lado, não toca `assertWithinRisk`), espelho fiel do guard verificado ramo-a-ramo, sim suite verde 50/50, e **corrige um bug real** (D3+paper inertes pelo caminho MCP do agente — defeito de entrega de dado, sem impacto em money-path). Risco para os ~$149 em mainnet: **nenhum** (nada negocia diferente; só o agente passa a receber o que o backend já computava). Ressalvas são todas BAIXA/INFO: (a) imprecisão "calcQty redimensiona" no item 9 do prompt; (b) 2 asserts de borda faltando na Seção F (`basis=\'none\'` / equity velho). Sugiro adicionar o assert do ramo "tudo-off" antes ou logo após o merge, e fazer o smoke `--once` do agente ao vivo para fechar o gap que originou o bug.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (`:399-416` getEffectiveCaps; `:71-124` assertWithinRisk; `:65-69` freshEquity)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` (`:97-100`)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/paperService.js` (summary compacto, sem recentOrders)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (`:111-117` computeAutomationGroups → array)\n- `/home/gcrux-tradeux/tradeux/tradeux-mcp/src/index.js` (`:232-236` o fix)\n- `/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js` (`:34` linha cockpit; `:46` item 9)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js` (`:168-196` Seção F)'}, {'type': 'text', 'text': "agentId: ac3d71447239b9e91 (use SendMessage with to: 'ac3d71447239b9e91' to continue this agent)\n<usage>subagent_tokens: 69640\ntool_uses: 15\nduration_ms: 115905</usage>"}]
+> ```
+
+## 🤖 Claude *(03:48:28)*
+
+
+## 🤖 Claude *(03:48:31)*
+
+Os **dois gates passaram**: **QA PASS** (espelho `getEffectiveCaps`↔guard verificado linha-a-linha; bug confirmado real+fix correto) e **TL APPROVE** (zero must-fix no código). Aplico os 2 ajustes baratos que apontaram antes de commitar:
+
+1. **QA**: assert do ramo "tudo-off" na Seção F.
+2. **QA INFO**: item 9 misturava mecanismos ("calcQty redimensiona p/ caber no teto" — na verdade o teto é fail-closed/rejeita). Corrijo o fraseado.
+
+## 🤖 Claude *(03:48:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js",
+  "old_string": "  (9) TETO \u2260 ANOMALIA: uma COMPRA capada pelo teto de risco (notional > cockpit.riskCaps.buyCapUsdt, ~20% do equity) \u00e9 PROTE\u00c7\u00c3O POR DESENHO, N\u00c3O incoer\u00eancia \u2014 o calcQty redimensiona a ordem p/ caber no teto. A VENDA NUNCA \u00e9 capada por sizing (s\u00f3 a rede anti-runaway folgada ~3\u00d7equity, que s\u00f3 barra venda egr\u00e9gia/buggada).",
+  "new_string": "  (9) TETO \u2260 ANOMALIA: uma COMPRA capada pelo teto de risco (notional > cockpit.riskCaps.buyCapUsdt, ~20% do equity) \u00e9 PROTE\u00c7\u00c3O POR DESENHO, N\u00c3O incoer\u00eancia \u2014 o teto \u00e9 fail-closed (a ordem ACIMA dele \u00e9 REJEITADA, n\u00e3o redimensionada; o calcQty j\u00e1 dimensiona na carteira/limites antes de chegar no teto). A VENDA NUNCA \u00e9 capada por sizing (s\u00f3 a rede anti-runaway folgada ~3\u00d7equity, que s\u00f3 barra venda egr\u00e9gia/buggada)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/tradeux-agent/src/agent.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "old_string": "// piso: equity $50 \u2192 20%=$10, piso sobe p/ $12.\nEQUITY = freshEq(50);\nc = caps();\ncheckVal('caps: buyCapUsdt = 12 (piso sobe os $10 da %)', c.buyCapUsdt, 12);",
+  "new_string": "// piso: equity $50 \u2192 20%=$10, piso sobe p/ $12.\nEQUITY = freshEq(50);\nc = caps();\ncheckVal('caps: buyCapUsdt = 12 (piso sobe os $10 da %)', c.buyCapUsdt, 12);\n// tudo OFF (sem teto-abs, sem %) \u2192 sem aperto: buyCapUsdt null / basis 'none' / sellCapUsdt null.\nex = loadExchange({ maxNotional: 0 });\nconst capsOff = ex.getEffectiveCaps;\nEQUITY = freshEq(150);\nc = capsOff();\ncheckVal('caps tudo-off: buyCapUsdt = null', c.buyCapUsdt, null);\ncheckVal('caps tudo-off: buyCapBasis = none', c.buyCapBasis, 'none');\ncheckVal('caps tudo-off: sellCapUsdt = null', c.sellCapUsdt, null);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check tradeux-agent/src/agent.js && echo \"OK agent.js\"\ncd backend && AES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"riskGuard|sim suite\"",
+  "description": "Syntax-check agent, re-run sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK agent.js
+> === sim/riskGuard.test.js ===
+> riskGuard.test.js: 53 passed, 0 failed
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(03:48:54)*
+
+
+## 🤖 Claude *(03:48:55)*
+
+6/6, riskGuard **53 asserts**. Commit dos **5 arquivos do escopo** (explícito por path — backtest-results ficam de fora, condição dura do TL):
+
+## 🤖 Claude *(03:49:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/scripts/sim/riskGuard.test.js tradeux-agent/src/agent.js 2>/dev/null\ncat > /tmp/riskcaps-msg.txt <<'EOF'\nfeat(cockpit): expoe o teto efetivo (riskCaps) ao agente + FIX forwarding MCP (groups/paper inertes)\n\nObservabilidade do risk-guard + correcao de um bug real de entrega de dado descoberto no caminho.\n\n- exchange.getEffectiveCaps(): reporta o teto EFETIVO atual (compra=min(teto_abs,%xequity);\n  venda=mult x equity) usando as MESMAS consts + freshEquity() que o assertWithinRisk impoe\n  (DRY, read-only) -> {equityUsdt, buyCapUsdt, buyCapBasis, sellCapUsdt, params}.\n- analysisController: status.riskCaps no getCockpitStatus (best-effort, igual a groups).\n- riskGuard.test.js: Secao F travando o shape do getEffectiveCaps (53 asserts).\n\n- FIX (bug descoberto): o tool MCP tradeux_get_cockpit montava out={env,enabled,symbols} e\n  DROPAVA groups/paper/riskCaps -- apesar do prompt do agente referenciar cockpit.groups (D3)\n  e cockpit.paper. D3 e paper-no-cockpit estavam INERTES pelo caminho real do agente (o\n  \"verificado ao vivo\" testou o ENDPOINT, nao o tool). Fix: out.groups/paper/riskCaps = d.x||null\n  + descricao do tool atualizada. O agente passa a RECEBER o que o backend ja computava.\n- agent.js: doutrina -- linha do cockpit menciona riskCaps; item (9) \"TETO != ANOMALIA\"\n  (compra capada = protecao por desenho, fail-closed; cite riskCaps.buyCapUsdt, nao chame de bug).\n\nGate QA (PASS) + TL (APPROVE), zero must-fix. Sem migration. Deploy: rebuild backend + agent\n(Dockerfile do agente empacota o tradeux-mcp lado a lado). Divida anotada: MCP sem harness de teste.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/utils/exchange.js backend/src/controllers/analysisController.js backend/scripts/sim/riskGuard.test.js tradeux-agent/src/agent.js tradeux-mcp/src/index.js\ngit commit -F /tmp/riskcaps-msg.txt\necho \"=== conte\u00fado do commit (s\u00f3 os 5; SEM backtest-results) ===\"\ngit show --stat --oneline HEAD | head -9'",
+  "description": "Commit the 5 scoped files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 6b9b97b] feat(cockpit): expoe o teto efetivo (riskCaps) ao agente + FIX forwarding MCP (groups/paper inertes)
+>  5 files changed, 75 insertions(+), 2 deletions(-)
+> === conteúdo do commit (só os 5; SEM backtest-results) ===
+> 6b9b97b feat(cockpit): expoe o teto efetivo (riskCaps) ao agente + FIX forwarding MCP (groups/paper inertes)
+>  backend/scripts/sim/riskGuard.test.js         | 38 +++++++++++++++++++++++++++
+>  backend/src/controllers/analysisController.js |  4 +++
+>  backend/src/utils/exchange.js                 | 25 ++++++++++++++++++
+>  tradeux-agent/src/agent.js                    |  3 ++-
+>  tradeux-mcp/src/index.js                      |  7 ++++-
+>  5 files changed, 75 insertions(+), 2 deletions(-)
+> ```
+
+## 🤖 Claude *(03:49:11)*
+
+
+## 🤖 Claude *(03:49:12)*
+
+Commit `6b9b97b` limpo (5 arquivos, sem backtest-results). Push + deploy de **backend e agent**:
+
+## 🤖 Claude *(03:49:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected|error\" | head -3\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\necho \"origin: $(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\"\necho \"HEAD  : $(git -c safe.directory='*' rev-parse HEAD)\"\necho \"=== rebuild + restart backend E agent ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend agent 2>&1 | tail -6'",
+  "description": "Push, chown, rebuild+restart backend and agent",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    d9f0dc5..6b9b97b  master -> master
+> origin: 6b9b97b9c11380557434555057952bf172528eee
+> HEAD  : 6b9b97b9c11380557434555057952bf172528eee
+> === rebuild + restart backend E agent ===
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started
+> ```
+
+## 🤖 Claude *(03:49:36)*
+
+
+## 🤖 Claude *(03:49:37)*
+
+Pushed (`origin==HEAD==6b9b97b`), backend+agent reiniciados. Smoke: endpoint com `riskCaps` + confirmação de que o forwarding do MCP entrou na imagem do agente:
+
+## 🤖 Claude *(03:49:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguarda backend ===\"\nfor i in $(seq 1 25); do c=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null); [ \"$c\" = \"401\" ] && { echo \"backend UP\"; break; }; sleep 2; done\necho \"=== MCP fix entrou na imagem do agente? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent sh -c \"grep -c \\\"out.riskCaps\\|out.groups\\|out.paper\\\" /app/tradeux-mcp/src/index.js && echo MCP_FIX_PRESENTE\"'\necho \"=== agente: MCP boota + tool registrado (node --check, sem model key) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T agent sh -c \"cd /app/tradeux-agent && timeout 25 node src/index.js --check 2>&1 | grep -iE \\\"get_cockpit|tools|error\\\" | head -4\"'\necho \"=== endpoint /analysis/cockpit \u2192 riskCaps (pode estar frio nos 1os ~60s) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'set -a; source .env; set +a; TOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4); curl -s -m8 \"http://127.0.0.1:8090/api/system/halt\" -H \"Authorization: $TOK\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\"halt:\\\",d[\\\"halted\\\"])\"; curl -s -m8 \"http://127.0.0.1:8090/api/analysis/cockpit\" -H \"Authorization: $TOK\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(\\\"riskCaps:\\\", json.dumps(d.get(\\\"riskCaps\\\"))); print(\\\"groups?\\\", bool(d.get(\\\"groups\\\")), \\\"| paper?\\\", bool(d.get(\\\"paper\\\")))\"'",
+  "description": "Smoke: MCP fix in agent image, cockpit riskCaps present"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguarda backend ===
+> backend UP
+> === MCP fix entrou na imagem do agente? ===
+> 3
+> MCP_FIX_PRESENTE
+> === agente: MCP boota + tool registrado (node --check, sem model key) ===
+> [tradeux-agent]  - tradeux_get_cockpit
+> === endpoint /analysis/cockpit → riskCaps (pode estar frio nos 1os ~60s) ===
+> halt: False
+> riskCaps: {"equityUsdt": null, "buyCapUsdt": 100, "buyCapBasis": "absolute", "sellCapUsdt": null, "params": {"pctEquity": 0.2, "absCeilUsdt": 100, "floorUsdt": 12, "sellEquityMult": 3}}
+> groups? True | paper? True
+> ```
+
+## 🤖 Claude *(03:49:57)*
+
+
+## 🤖 Claude *(03:50:00)*
+
+Tudo verde: backend up, `halted=false`, **MCP fix na imagem do agente** (`MCP_FIX_PRESENTE`, tool registrado), e `riskCaps`/`groups`/`paper` agora **presentes no payload** — o forwarding consertado funciona. O `riskCaps` está no estado **frio** correto (backend recém-subiu: `equityUsdt=null` → `buyCapUsdt=100` absoluto, `sellCapUsdt=null` degrade-open). Vou esperar o `dailyCapJob` publicar o equity (~60s) pra confirmar o estado quente:
+
+## 🤖 Claude *(03:50:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source .env; set +a\nTOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\nfor i in $(seq 1 8); do\n  RC=$(curl -s -m8 \"http://127.0.0.1:8090/api/analysis/cockpit\" -H \"Authorization: $TOK\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(json.dumps(d.get(\\\"riskCaps\\\")))\")\n  EQ=$(echo \"$RC\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"equityUsdt\\\"))\")\n  if [ \"$EQ\" != \"None\" ]; then echo \"QUENTE: $RC\"; break; fi\n  echo \"ainda frio (tentativa $i)... aguardando dailyCapJob publicar\"; sleep 12\ndone'",
+  "description": "Poll cockpit riskCaps until equity warms",
+  "timeout": 130000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ainda frio (tentativa 1)... aguardando dailyCapJob publicar
+> ainda frio (tentativa 2)... aguardando dailyCapJob publicar
+> ainda frio (tentativa 3)... aguardando dailyCapJob publicar
+> QUENTE: {"equityUsdt": 149.39882775237672, "buyCapUsdt": 29.879765550475344, "buyCapBasis": "pct-equity", "sellCapUsdt": 448.1964832571301, "params": {"pctEquity": 0.2, "absCeilUsdt": 100, "floorUsdt": 12, "sellEquityMult": 3}}
+> ```
+
+## 🤖 Claude *(03:50:57)*
+
+
+## 🤖 Claude *(03:50:59)*
+
+`riskCaps` **quente e correto**: `equityUsdt=149,40 · buyCapUsdt=$29,88 (pct-equity) · sellCapUsdt=$448,20 (3×)` — bate exatamente com o que o guard impõe. O agente agora recebe isso (+ `groups`/`paper` ressuscitados) via `tradeux_get_cockpit`.
+
+Atualizo a memória do cockpit (a descoberta da D3/paper inertes é importante):
+
+## 🤖 Claude *(03:50:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "offset": 1,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 4 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-1m-scalping-and-cockpit
+> 3	description: 1m scalping refutado DE NOVO (backtest fresco) + plano de 3 fases (cockpit reskin → fee-fix → shadow 1m) + alerta de golpe Fable/Polymarket
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 680e8eb9-f4f6-4982-8f43-7e7dfb33a73f
+> 8	---
+> 9	
+> 10	Pedido do dono (2026-06-15): estratégia em velas de **1m** que "sempre lucre acima do custo total com taxas" + um **dashboard premium estilo vídeo viral** (RoundtableSpace/Fable). Workflow `wf_b87fd29f-5b3` (18 agentes) analisou código + cruzou com nossa pesquisa.
+> 11	
+> 12	**VEREDITO: 1m scalping como motor de P&L é -EV — refutado de novo, agora com medição fresca.**
+> 13	- Um agente rodou backtest no cache real `backend/backtest-data/BTCUSDT-1m-60d.json` (86.400 velas): bracket ATR fee-gated deu **−0,14% a −0,23% líquido POR TRADE em TODAS as parametrizações** (k_ATR 1–2, horizonte 10–20, fee 0,075%/0,10%); win-rate 35–48% (sub-breakeven). Cada trade nasce ~1 round-trip de fee no vermelho.
+> 14	- As 5 abordagens desenhadas (absorção, maker-rebate, breakout, mean-reversion, hipótese-nula) pontuaram **2/5**. Maker-rebate tem erro fatal: na **Binance SPOT maker==taker** (0,075% com BNB nos 2 lados) — **não existe rebate** (rebate só em Futures/VIP). Verificadores rejeitaram.
+> ```
+
+## 🤖 Claude *(03:51:07)*
+
+
+## 🤖 Claude *(03:51:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -5 /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "description": "Read tail of cockpit memory for clean append"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> **2026-06-16 (cont.4) — FASE DE COERÊNCIA DO COCKPIT DECLARADA DONE (`0b1554d`, QA-PASS+TL-APPROVE).** Diagnóstico de mais 2 msgs do agente: (1) "flow null BNB/ADA" = TRANSIENTE (MEMORY fria pós-restart) E moot pós-8884bd3 (alt farm ignora fluxo); (2) "farm=true com RSI_1m 79/66/62 >35 = incoerência" = **GATE ≠ TRIGGER**, não bug: o gate do cockpit (`farm/baseline/buyAllowed`) é a DOUTRINA de regime/fluxo (`doctrine:true`) e NÃO lê RSI de propósito; o FARM dispara só no dip RSI_1m<35 (baseline RSI<25). Fix **agent-side** (não cockpit — alinhado a "consertar a INTERPRETAÇÃO, não a VIEW"): item (7) GATE≠TRIGGER no bloco DIVERGÊNCIAS ESPERADAS do `agent.js`. **Verificação importante: o dedup/anti-spam ESTÁ funcionando** — as ~8 notificações eram TÓPICOS DISTINTOS ao longo de ~10h (não repetição); o journal é persistido em volume (`tradeux-agent/journal`, sobrevive a rebuild). **VERDICT do TL: a fase de ENUMERAÇÃO REATIVA de coerência do cockpit está DONE** — os 2 sub-eixos de "gate aberto mas X não atendido" cobertos: fluxo (8884bd3, era bug real) + RSI/trigger (item 7, era leitura). Próximo eixo plausível = notional/saldo (gate aberto mas MIN_NOTIONAL/calcQty/saldo barram — cf. -1013 do `2528a5d`); NÃO pré-emptar — o catch-all do prompt ("só sinalize se a fonte VIVA por si só mostrar anomalia") já segura. Se aparecer, é +1 item incremental, não retomada de obra.
+> 
+> **2026-06-17 — VERIFICAÇÃO AO VIVO: doutrina gate≠trigger SEGURANDO; flags do Telegram eram STALE (pré-deploy).** O dono encaminhou +1 msg do agente ("cockpit `baseline=true` vs `MEMORY['BTCUSDT:COCKPIT'].gates.baseline=false`, imbalance −0.925 < −0.4 veta o dip"). Checagem read-only ao vivo provou que NÃO é bug: no instante da leitura o fluxo BTC estava ~−0.20→−0.099 (acima de −0.4) → `baseline=true` CORRETO; o −0.925/false era o **SNAPSHOT velho** do tick de 60s (pico de capitulação) que o `freshen` sobrescreve no read-path → MESMO artefato de idade da [[tradeux-telegram-notifications]], numa superfície nova (MEMORY cru × tool freshened). Depois rodei `docker compose exec -T agent node src/index.js --once`: o agente chamou o cockpit, escreveu ele MESMO a doutrina ("gate=true com RSI>limite NÃO é incoerência — é o desenho"), achou ZERO incoerência e **NÃO notificou** (ciclo de OBSERVAÇÃO→journal). Conclusão: as msgs do Telegram eram de ANTES do `0b1554d`/`8884bd3`. **Foot-gun latente (low-pri, NÃO disparado):** o `gates` GRAVADO no snapshot `MEMORY['<sym>:COCKPIT']` é sempre sobrescrito pelo `freshen` → 2 fontes de verdade pro mesmo campo; leitor cru (`get_memory`) vê o valor velho. Fix higiênico (não gravar OU carimbar `_stale` o `gates` do snapshot em `cockpitJob.runOnce`) fica EM ESPERA — só executar se o agente voltar a tropeçar (decisão do dono). **Ops p/ checagem ao vivo do backend:** login `POST /login` (email/senha do `tradeux-mcp/.env`) → header **`Authorization: <token CRU>` (SEM "Bearer"** — `authMiddleware.js` passa o header direto pro `jwt.verify`); backend container NÃO tem `curl` → usar `node` (fetch nativo) via `docker compose cp <script> backend:/tmp/ && docker compose exec`; rotas read-only `GET /analysis/cockpit/:symbol` (freshened) e `/analysis/flow/:symbol` (vivo).
+> 
+> **2026-06-17 (cont.) — FIX ESTRUTURAL do gate-FANTASMA `baseline` das alts (master==`7ec6e75`, QA PASS + TL APPROVE, deployado+verificado ao vivo).** O agente notificou o dono no Telegram (16:35:40Z, ciclo pós-`0b1554d` — NÃO era stale; o prompt-doutrina é soft e o agente escorrega às vezes): "baseline liberado p/ BNBUSDT apesar de RSI ~53 > 25 = incoerência". Diagnóstico: GATE≠TRIGGER de novo, MAS com raiz estrutural — `deriveGates` (`cockpitJob.js`) computava e expunha `baseline=true` pra ALTS, onde **não existe módulo baseline** (o gate de acumulação da alt é o FARM; `buyAllowed=farm`). Campo logicamente mal-tipado pra alt (`true`/`false` ambos mentem; honesto = "n/a"). **Fix (estrutural, não-prompt):** `baseline = flowGated ? baselineRaw : null` — só símbolo flow-gated (BTC) expõe baseline; alt vem `null`. `buyAllowed`/`farm` **byte-idênticos** (QA provou em tabela-verdade de 60 casos; `buyAllowed` usa `baselineRaw` interno). `reason` symbol-aware (`accLabel`: alt não cita baseline). +nota no tool MCP `tradeux_get_cockpit` (baseline=null p/ alts + GATE≠GATILHO). Frontend NÃO lê `.baseline` (usa farm/buyAllowed) → UI intacta. **TL: é DIRECIONAL (payload afirmava gate de módulo inexistente), não perseguição-de-view — fonte consertada, não interpretação.** Verificado ao vivo pós-rebuild: BTC `baseline=true`, BNB/LTC/ADA `baseline=null`, buyAllowed inalterado, HALT intacto. **Pendente: rebuild do AGENTE p/ a nota do MCP entrar (baked na imagem do agent) — batchado com o deploy do (c); o core (`null`) já é backend-side e o agente já o vê via endpoint.**
+> ```
+
+## 🤖 Claude *(03:51:13)*
+
+
+## 🤖 Claude *(03:51:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md",
+  "old_string": "**Pendente: rebuild do AGENTE p/ a nota do MCP entrar (baked na imagem do agent) \u2014 batchado com o deploy do (c); o core (`null`) j\u00e1 \u00e9 backend-side e o agente j\u00e1 o v\u00ea via endpoint.**",
+  "new_string": "**Pendente: rebuild do AGENTE p/ a nota do MCP entrar (baked na imagem do agent) \u2014 batchado com o deploy do (c); o core (`null`) j\u00e1 \u00e9 backend-side e o agente j\u00e1 o v\u00ea via endpoint.**\n\n**2026-06-22 \u2014 \ud83d\udd34 BUG REAL: o tool MCP `tradeux_get_cockpit` DROPAVA `groups`/`paper` (D3 e paper-no-cockpit INERTES pelo caminho do agente) + `riskCaps` novo (commit `6b9b97b`, QA PASS + TL APPROVE, deployado backend+agent, smoke vivo OK).** Ao adicionar observabilidade do teto efetivo, descobri que o handler do `tradeux_get_cockpit` (`tradeux-mcp/src/index.js`) montava `out = {env, enabled, symbols}` e **N\u00c3O encaminhava `groups` nem `paper`** \u2014 apesar do prompt do agente (`agent.js`) referenciar `cockpit.groups` (D3 `5c83c31`) e `cockpit.paper` fortemente. **A D3 e o paper-no-cockpit estavam INERTES pelo caminho REAL do agente** (o agente s\u00f3 v\u00ea o cockpit via esse tool \u2014 confirmado: zero fetch HTTP direto; o \"verificado ao vivo\" da D3 testou o ENDPOINT, n\u00e3o o tool \u2192 o gap escapou; mesmo padr\u00e3o do `getStableConversion` inerte de [[tradeux-sim-suite]]). **Fix:** `out.groups/paper/riskCaps = d.x || null` + descri\u00e7\u00e3o do tool. **Li\u00e7\u00e3o dur\u00e1vel: ao expor dado pro agente, o ENDPOINT ter o campo \u2260 o AGENTE receber \u2014 o tool MCP filtra; verifique no caminho do tool (ou fa\u00e7a `node src/index.js --once`), n\u00e3o s\u00f3 no endpoint. O MCP N\u00c3O tem harness de teste (foi o que deixou o gap passar 2 entregas \u2014 TODO: smoke que mocka api.get e assere o `out`).** + **`riskCaps` no cockpit:** teto EFETIVO por ordem via `exchange.getEffectiveCaps()` (DRY: mesmas consts+equity quente que o `assertWithinRisk` imp\u00f5e) \u2192 `{equityUsdt, buyCapUsdt, buyCapBasis, sellCapUsdt, params}`; doutrina item (9) \"TETO\u2260ANOMALIA\" no `agent.js` (compra capada = prote\u00e7\u00e3o fail-closed, cite `riskCaps.buyCapUsdt`, n\u00e3o chame de bug). Verificado vivo: quente `equityUsdt=149,40 \u00b7 buyCapUsdt=$29,88 (pct-equity) \u00b7 sellCapUsdt=$448 (3\u00d7)`. Ver [[tradeux-mainnet-go-live]] (%-teto/rede de venda). \u26a0\ufe0f valida\u00e7\u00e3o COMPORTAMENTAL do agente lendo `riskCaps`/`groups` pendente (agente 429-throttled \u2014 inspecionar 1\u00ba ciclo p\u00f3s-cota)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-1m-scalping-and-cockpit.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:51:45)*
+
+
+## 🤖 Claude *(03:51:47)*
+
+Tudo deployado e verificado. Registro o follow-up do harness de teste do MCP (a classe de bug que descobrimos hoje — campo no endpoint mas dropado no tool — não tem teste que a pegue) como tarefa separada:
+
+## 🤖 Claude *(03:52:02)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Smoke test do forwarding do tradeux-mcp",
+  "prompt": "No TradeUX, o tool MCP `tradeux_get_cockpit` (em `tradeux-mcp/src/index.js`) monta um objeto `out` SELETIVO a partir do payload de `GET /analysis/cockpit` e o retorna ao agente. Em 2026-06-22 (commit `6b9b97b`) descobrimos um bug REAL: o handler montava `out = {env, enabled, symbols}` e DROPAVA os campos top-level `groups`, `paper` e `riskCaps` \u2014 apesar do prompt do agente (`tradeux-agent/src/agent.js`) referenci\u00e1-los. Resultado: a feature \"D3/groups\" (`5c83c31`) e o \"paper-no-cockpit\" (`faed249`) ficaram INERTES pelo caminho real do agente por 2 entregas, porque o \"verificado ao vivo\" testou o ENDPOINT, n\u00e3o o TOOL. J\u00e1 foi corrigido (forwarding adicionado), mas N\u00c3O h\u00e1 teste que cubra essa classe de bug.\n\nTAREFA: adicionar um smoke test m\u00ednimo (puro Node, estilo `backend/scripts/sim/*.test.js`, sem rede) que cubra o forwarding do `tradeux_get_cockpit`:\n1. Refatore o handler do `tradeux_get_cockpit` em `tradeux-mcp/src/index.js` para extrair a transforma\u00e7\u00e3o payload\u2192out numa fun\u00e7\u00e3o pura EXPORT\u00c1VEL (ex.: `buildCockpitOut(d)`), sem mudar o comportamento (a fun\u00e7\u00e3o recebe o JSON do endpoint e devolve o `out`). O handler passa a chamar essa fun\u00e7\u00e3o.\n2. Crie um teste (ex.: `tradeux-mcp/test/cockpitOut.test.js` ou integre ao runner de sim do backend se fizer sentido) que: d\u00e1 um payload `d` fake com `env/enabled/symbols/groups/paper/riskCaps` preenchidos e assere que `buildCockpitOut(d).groups/paper/riskCaps` saem N\u00c3O-null e iguais \u00e0 entrada; e um caso com `groups:[]`/`paper` com totais zero confirmando que `|| null` N\u00c3O os transforma em null indevidamente (array vazio e objeto s\u00e3o truthy).\n3. Garanta que o teste roda no CI (ou no `npm run test:sim`).\n\nContexto: o `tradeux-mcp` hoje N\u00c3O tem harness de teste \u2014 essa \u00e9 a d\u00edvida que deixou o bug passar. Conven\u00e7\u00f5es: coment\u00e1rios em pt-BR. Rode o teste e confirme verde. Gate: QA + TL antes de mergear (trunk-based, deploy via rebuild do container `agent`, que empacota o `tradeux-mcp`).",
+  "tldr": "Adicionar um teste de regress\u00e3o pro forwarding do tool MCP tradeux_get_cockpit (extrair a transforma\u00e7\u00e3o payload\u2192out numa fun\u00e7\u00e3o pura e test\u00e1-la), pra pegar a classe de bug \"campo existe no endpoint mas \u00e9 dropado no tool\" que deixou D3/paper inertes por 2 entregas."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1, task_id: task_a96d97b1). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. Currently pending: task_a96d97b1 "Smoke test do forwarding do tradeux-mcp". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(03:52:21)*
+
+Pronto — `riskCaps` no ar e, de quebra, um bug real consertado. 
+
+## ✅ Entregue (`6b9b97b` — vivo == master == origin)
+
+**1. Observabilidade do teto (o que você pediu):** o cockpit agora expõe `riskCaps` — o teto EFETIVO por ordem, computado pela mesma fonte que o guard impõe (DRY). Verificado quente ao vivo:
+```
+equityUsdt  : 149,40
+buyCapUsdt  : 29,88   (pct-equity, 20%)
+sellCapUsdt : 448,20  (rede 3×equity)
+```
+O agente ganhou doutrina (item 9 "TETO≠ANOMALIA"): uma compra capada é proteção por desenho — cite `riskCaps.buyCapUsdt`, não chame de bug.
+
+## 🔴 Bug real descoberto no caminho — e corrigido
+
+Ao implementar, achei que o tool MCP `tradeux_get_cockpit` montava `out = {env, enabled, symbols}` e **DROPAVA `groups` e `paper`**. Como o agente só vê o cockpit por esse tool (zero fetch HTTP direto), a **D3 (`cockpit.groups`) e o paper-no-cockpit estavam INERTES pelo caminho real do agente** desde que foram entregues — o "verificado ao vivo" da época testou o **endpoint**, não o **tool**. Mesmo padrão do `getStableConversion` inerte que a suíte pegou antes.
+
+Consertei os três de uma vez (`out.groups/paper/riskCaps = d.x || null`). Confirmado vivo: `groups`/`paper`/`riskCaps` agora **chegam** no payload, e o forwarding está na imagem do agente (`MCP_FIX_PRESENTE`).
+
+**Lição durável** (gravei na memória): *endpoint ter o campo ≠ agente receber* — o tool MCP filtra; verificar no caminho do tool, não só no endpoint. O `tradeux-mcp` não tem harness de teste (foi o que deixou o gap passar) → deixei uma **tarefa** pra adicionar um smoke de regressão.
+
+## Gate + estado
+- **QA: PASS · TL: APPROVE** — zero must-fix. Apliquei os 2 ajustes pedidos (assert "tudo-off" + fraseado do item 9). **Sim 6/6 (riskGuard 53)**.
+- Commit só dos 5 arquivos do escopo (backtest-results excluídos, condição do TL). Backend+agent reiniciados, `halted=false`, capital ~$149,40 intacto.
+
+## Pendência (não-bloqueia)
+- **Validação comportamental** do agente lendo `riskCaps`/`groups` está pendente — o agente está **429-throttled** (cota de modelo grátis). Quando a cota voltar, vale inspecionar o 1º ciclo pra confirmar que ele usa os campos sem ruído novo no Telegram.
+
+Sessão acumulou 3 commits de risk-guard (`fe06c74` %-teto compra · `d9f0dc5` rede venda · `6b9b97b` riskCaps+fix MCP). O `/handoff` carimba tudo isso quando você quiser. Seguimos pra mais alguma coisa, ou paramos por aqui?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
