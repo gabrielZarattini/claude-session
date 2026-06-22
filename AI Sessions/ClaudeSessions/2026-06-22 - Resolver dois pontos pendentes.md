@@ -6468,6 +6468,888 @@ Isso torna o item maior do que um "quick win" — é uma feature de boot no mone
 > Your questions have been answered: "A venda do Farm é LIMIT (descansa aberta no alvo no-loss), então um restart pode pegá-la em voo. O FARM_DCA é DERIVADO das ordens. Qual escopo pro loadFarmSellingLocks?"="Completo (reconcilia, recomendado)". You can now continue with these answers in mind.
 > ```
 
+## 🤖 Claude *(13:00:12)*
+
+
+## 🤖 Claude *(13:00:14)*
+
+Escolhido: **completo (reconcilia)**. Vou espelhar o `loadHarvestPositions`. Antes de codar, settlo a forma de identificar a venda do Farm no brain — verifico se o brain cacheia `action.orderTemplate.quantity` (pra filtrar pelo MESMO critério do set, `FARM_QTY`, sem depender de nome):
+
+## 🤖 Claude *(13:00:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env; set +a\nTOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\ncurl -s -m8 \"http://127.0.0.1:8090/api/beholder/brain\" -H \"Authorization: $TOK\" 2>/dev/null | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\n# brain pode ser {id:auto} ou {BRAIN:..., MEMORY:...}\nbrain = d.get(\\\"BRAIN\\\", d) if isinstance(d,dict) else {}\nfound=0\nfor k,a in (brain.items() if isinstance(brain,dict) else []):\n    if not isinstance(a,dict): continue\n    name=str(a.get(\\\"name\\\",\\\"\\\"))\n    acts=a.get(\\\"actions\\\") or []\n    for act in acts:\n        ot=act.get(\\\"orderTemplate\\\") if isinstance(act,dict) else None\n        if ot and str(ot.get(\\\"quantity\\\"))==\\\"FARM_QTY\\\":\n            print(\\\"id\\\",a.get(\\\"id\\\"),\\\"| name\\\",name[:28],\\\"| ot.side\\\",ot.get(\\\"side\\\"),\\\"| ot.type\\\",ot.get(\\\"type\\\"),\\\"| ot.quantity\\\",ot.get(\\\"quantity\\\"))\n            found+=1\nprint(\\\"-- Farm sells achadas no brain via action.orderTemplate.quantity=FARM_QTY:\\\",found)\n\"'",
+  "description": "Verify brain caches action.orderTemplate.quantity for Farm sells"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> id 10 | name Farm Sell LTCUSDT | ot.side SELL | ot.type LIMIT | ot.quantity FARM_QTY
+> id 12 | name Farm Sell BNBUSDT | ot.side SELL | ot.type LIMIT | ot.quantity FARM_QTY
+> id 14 | name Farm Sell ADAUSDT | ot.side SELL | ot.type LIMIT | ot.quantity FARM_QTY
+> -- Farm sells achadas no brain via action.orderTemplate.quantity=FARM_QTY: 3
+> ```
+
+## 🤖 Claude *(13:00:27)*
+
+
+## 🤖 Claude *(13:00:29)*
+
+O brain cacheia `action.orderTemplate.quantity` — as 3 vendas do Farm (id 10/12/14, LIMIT, FARM_QTY) aparecem. Filtro pelo MESMO critério do set (não por nome). Leio o resto do `loadHarvestPositions` pra espelhar a reconciliação do banco:
+
+## 🤖 Claude *(13:00:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 386,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 386	
+> 387	                // Terminal offline: bucket PRIMEIRO (recon + persist), DB da ordem POR ÚLTIMO (gate QA: se
+> 388	                // crashar entre os dois, a ordem segue "aberta" no DB e o próximo boot RE-reconcilia — FILLED
+> 389	                // re-zera (idempotente) e parcial re-subtrai (undersell, direção segura); na ordem inversa o
+> 390	                // bucket stale nunca mais seria reconciliado = oversell).
+> 391	                const executed = parseFloat(remote.executedQty);
+> 392	                let reconciled = false;
+> 393	                if (remote.status === orderStatus.FILLED) {
+> 394	                    reconBucket(o.symbol, b => { b.qty = 0; b.cost = 0; }); // mesma semântica do FILLED ao vivo
+> 395	                    countedHarvestFills.add(o.orderId); // um report FILLED tardio do stream não re-zera/duplica
+> 396	                    reconciled = true;
+> 397	                } else if (Number.isFinite(executed) && executed > 0) {
+> 398	                    reconBucket(o.symbol, b => {
+> 399	                        const remaining = Number((b.qty - executed).toFixed(8));
+> 400	                        if (remaining > 1e-8) b.qty = remaining; else { b.qty = 0; b.cost = 0; }
+> 401	                    });
+> 402	                    countedHarvestFills.add(`recon:${o.orderId}`); // dedup compartilhado com a recon ao vivo
+> 403	                    reconciled = true;
+> 404	                }
+> 405	                if (reconciled) {
+> 406	                    const b = buckets[o.symbol];
+> 407	                    try { await harvestPositionsRepository.upsertPosition(o.symbol, { qty: b.qty, cost: b.cost, atMs: b.atMs }); b.dirty = false; }
+> 408	                    catch (e) { logger('system', `loadHarvestPositions persist: ${e.message}`); } // dirty=true → passo 3 re-tenta
+> 409	                }
+> 410	                try { await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }
+> 411	                catch (e) { logger('system', `loadHarvestPositions: update DB #${o.orderId}: ${e.message}`); }
+> 412	                logger('system', `loadHarvestPositions: [boot-reconcile] venda #${o.orderId} (${o.symbol}) resolvida OFFLINE como ${remote.status} (executedQty=${remote.executedQty}); bucket ${reconciled ? 'reconciliado' : 'intacto (cancel limpo)'}, trava NÃO rearmada.`);
+> 413	                telegramNotify.notify(`🔁 [BOOT] Venda do harvester #${o.orderId} (${o.symbol}) resolveu OFFLINE como ${remote.status} (exec=${remote.executedQty}). Bucket ${reconciled ? 'reconciliado' : 'intacto'} no boot.`, `bootrecon:${o.orderId}`).catch(() => { });
+> 414	            }
+> 415	        }
+> 416	
+> 417	        // 2º) COMPRAS do harvester abertas no banco — conditions têm ':FAIR'. Compra que FILLOU (ou parcial)
+> 418	        // com o backend OFF soma no bucket — senão a posição ORFANA na carteira (foi exatamente o que orfanou
+> 419	        // a canary 0,00015 no deploy de 2026-06-09). Direção segura (undersell nunca; só evita órfã).
+> 420	        const buyAutos = Object.values(brain).filter(a => a && a.conditions && a.conditions.indexOf(':FAIR') !== -1);
+> ```
+
+## 🤖 Claude *(13:02:01)*
+
+
+## 🤖 Claude *(13:02:04)*
+
+O brain confirma o filtro. Design fechado (mais simples que o Harvester — sem bucket separado; só reconcilio o status no DB e re-armo a trava). Vou checar os requires do `app-em.js` (pra decidir se dá pra extrair um helper de decisão testável na suíte sem puxar o módulo inteiro):
+
+## 🤖 Claude *(13:02:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== app-em.js: requires no topo + tem execu\u00e7\u00e3o top-level (connect)? ===\"\nsed -n '1,20p' src/app-em.js\necho \"=== telegramNotify importado? getBrain exportado? ===\"\ngrep -n \"telegramNotify\\s*=\\|require.*telegram\" src/app-em.js | head -3\ngrep -n \"getBrain\\|module.exports\" src/beholder.js | grep -i \"getBrain\" | head -3\necho \"=== loadHarvestPositions tem teste na su\u00edte de sim? ===\"\ngrep -rln \"loadHarvestPositions\\|loadFarmSellingLocks\\|decideFarmSell\" scripts/sim/ 2>/dev/null || echo \"(nenhum \u2014 boot-loads n\u00e3o s\u00e3o sim-testados; precedente)\"",
+  "description": "Check app-em requires, telegramNotify import, sim precedent"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === app-em.js: requires no topo + tem execução top-level (connect)? ===
+> const ordersRepository = require('./repositories/ordersRepository');
+> const { orderStatus } = require('./repositories/ordersRepository');
+> const harvestPositionsRepository = require('./repositories/harvestPositionsRepository');
+> const { monitorTypes, getActiveMonitors } = require('./repositories/monitorsRepository');
+> const { execCalc, indexKeys } = require('./utils/indexes');
+> const logger = require('./utils/logger');
+> const push = require('./utils/push');
+> const telegramNotify = require('./utils/telegramNotify');
+> const { getDefaultSettings } = require('./repositories/settingsRepository');
+> 
+> let WSS, beholder, exchange;
+> 
+> // Atraso da reconciliação de listStatus da OCO: > 3s do executionReport por-perna, para
+> // que o caminho primário (processExecutionData) atualize antes e evitemos REST à toa.
+> const OCO_RECONCILE_DELAY_MS = 4000;
+> 
+> function startMiniTickerMonitor(monitorId, broadcastLabel, logs) {
+>     if (!exchange) return new Error('Exchange Monitor not initialized yet.');
+>     exchange.miniTickerStream(async (markets) => {
+>         if (logs) logger('M:' + monitorId, markets);
+> === telegramNotify importado? getBrain exportado? ===
+> 8:const telegramNotify = require('./utils/telegramNotify');
+> 1045:function getBrain() {
+> 1049:function getBrainIndexes() {
+> 1162:    getBrain,
+> === loadHarvestPositions tem teste na suíte de sim? ===
+> (nenhum — boot-loads não são sim-testados; precedente)
+> ```
+
+## 🤖 Claude *(13:02:35)*
+
+
+## 🤖 Claude *(13:02:38)*
+
+Precedente claro: boot-loads não são sim-testados. Vou espelhar o `loadHarvestPositions` fielmente. Pra cobrir o pedaço mais arriscado (a decisão FAIL-CLOSED arm-vs-reconcilia) na suíte, vou extrair um helper PURO e testá-lo — mas só vale se der pra requerer o `app-em.js` sem conexão de DB. Testo:
+
+## 🤖 Claude *(13:02:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nAES_KEY=01234567890123456789012345678901 timeout 20 node -e \"\ntry { const m = require('./src/app-em.js'); console.log('require app-em OK; exports:', Object.keys(m).slice(0,12).join(',')); }\ncatch(e){ console.log('require app-em FALHOU:', e.message.split(String.fromCharCode(10))[0]); }\n\" 2>&1 | head -5",
+  "description": "Check if app-em.js is requireable without DB for sim test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> require app-em OK; exports: init,startChartMonitor,stopChartMonitor,startTickerMonitor,stopTickerMonitor,sendMessage
+> ```
+
+## 🤖 Claude *(13:03:07)*
+
+
+## 🤖 Claude *(13:03:10)*
+
+`require app-em` funciona sem DB (só AES_KEY) → dá pra extrair um helper puro e sim-testá-lo. Plano de edição fechado. Leio os exports + confirmo os pontos de ancoragem (rename do status terminal pra genérico, wiring no init):
+
+## 🤖 Claude *(13:03:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 1150,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>Warning: the file exists but is shorter than the provided offset (1150). The file has 844 lines.</system-reminder>
+> ```
+
+## 🤖 Claude *(13:03:18)*
+
+
+## 🤖 Claude *(13:03:18)*
+
+O arquivo tem 844 linhas (o 1162 era do beholder). Leio o fim do `app-em.js` pros exports:
+
+## 🤖 Claude *(13:03:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 824,
+  "limit": 21
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 824	        }, 250)//Binance only permits 5 commands / second
+> 825	    })
+> 826	
+> 827	    const lastOrders = await ordersRepository.getLastFilledOrders();
+> 828	    await Promise.all(lastOrders.map(async (order) => {
+> 829	        const orderCopy = getLightOrder(order.get({ plain: true }));
+> 830	        await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
+> 831	    }))
+> 832	
+> 833	    logger('system', 'App Exchange Monitor is running!');
+> 834	}
+> 835	
+> 836	module.exports = {
+> 837	    init,
+> 838	    startChartMonitor,
+> 839	    stopChartMonitor,
+> 840	    startTickerMonitor,
+> 841	    stopTickerMonitor,
+> 842	    sendMessage
+> 843	}
+> 844	
+> ```
+
+## 🤖 Claude *(13:03:29)*
+
+
+## 🤖 Claude *(13:03:30)*
+
+Exports na linha 836. Faço o rename do status terminal pra genérico (usado por Harvester e agora Farm) — leio o contexto exato:
+
+## 🤖 Claude *(13:03:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 188,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 188	
+> 189	// Estados TERMINAIS de ordem do harvester (compartilhado entre o caminho vivo e o reconcile-on-boot).
+> 190	// EXPIRED/EXPIRED_IN_MATCH são literais (não existem no enum orderStatus); EXPIRED_IN_MATCH (STP da
+> 191	// Binance) é raríssimo, mas fora da lista cairia no braço "ainda aberta" e perma-travaria a venda.
+> 192	const HARVEST_TERMINAL_STATUSES = [orderStatus.FILLED, orderStatus.CANCELED, orderStatus.REJECTED, 'EXPIRED', 'EXPIRED_IN_MATCH'];
+> 193	
+> ```
+
+## 🤖 Claude *(13:03:35)*
+
+
+## 🤖 Claude *(13:03:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "// Estados TERMINAIS de ordem do harvester (compartilhado entre o caminho vivo e o reconcile-on-boot).\n// EXPIRED/EXPIRED_IN_MATCH s\u00e3o literais (n\u00e3o existem no enum orderStatus); EXPIRED_IN_MATCH (STP da\n// Binance) \u00e9 rar\u00edssimo, mas fora da lista cairia no bra\u00e7o \"ainda aberta\" e perma-travaria a venda.\nconst HARVEST_TERMINAL_STATUSES = [orderStatus.FILLED, orderStatus.CANCELED, orderStatus.REJECTED, 'EXPIRED', 'EXPIRED_IN_MATCH'];",
+  "new_string": "// Estados TERMINAIS de ordem (compartilhado entre o caminho vivo e o reconcile-on-boot do harvester E do Farm).\n// EXPIRED/EXPIRED_IN_MATCH s\u00e3o literais (n\u00e3o existem no enum orderStatus); EXPIRED_IN_MATCH (STP da\n// Binance) \u00e9 rar\u00edssimo, mas fora da lista cairia no bra\u00e7o \"ainda aberta\" e perma-travaria a venda.\nconst ORDER_TERMINAL_STATUSES = [orderStatus.FILLED, orderStatus.CANCELED, orderStatus.REJECTED, 'EXPIRED', 'EXPIRED_IN_MATCH'];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:03:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "                if (!remote || !HARVEST_TERMINAL_STATUSES.includes(remote.status)) {\n                    await beholder.updateMemory(o.symbol, indexKeys.HARVEST_SELLING, null, { orderId: o.orderId, at: Date.now() }, false);\n                    continue;\n                }",
+  "new_string": "                if (!remote || !ORDER_TERMINAL_STATUSES.includes(remote.status)) {\n                    await beholder.updateMemory(o.symbol, indexKeys.HARVEST_SELLING, null, { orderId: o.orderId, at: Date.now() }, false);\n                    continue;\n                }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:03:51)*
+
+
+## 🤖 Claude *(13:03:51)*
+
+Agora o helper puro + o `loadFarmSellingLocks`, logo após `loadFarmPositions`:
+
+## 🤖 Claude *(13:04:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "async function loadFarmPositions() {\n    try {\n        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        for (const symbol of farmSymbols) {\n            const dca = await ordersRepository.getFarmPosition(symbol);\n            await beholder.updateMemory(symbol, indexKeys.FARM_DCA, null, dca, false);\n            logger('system', `FARM_DCA[${symbol}] carregado no boot: qty=${dca.qty}, cost=${dca.cost}`);\n        }\n    } catch (err) {\n        logger('system', `loadFarmPositions: ${err.message}`);\n    }\n}",
+  "new_string": "async function loadFarmPositions() {\n    try {\n        const farmSymbols = ['LTCUSDT', 'BNBUSDT', 'ADAUSDT'];\n        for (const symbol of farmSymbols) {\n            const dca = await ordersRepository.getFarmPosition(symbol);\n            await beholder.updateMemory(symbol, indexKeys.FARM_DCA, null, dca, false);\n            logger('system', `FARM_DCA[${symbol}] carregado no boot: qty=${dca.qty}, cost=${dca.cost}`);\n        }\n    } catch (err) {\n        logger('system', `loadFarmPositions: ${err.message}`);\n    }\n}\n\n// Decis\u00e3o FAIL-CLOSED da reconstru\u00e7\u00e3o da trava do Farm no boot, dado o status REMOTO (corretora, autoritativo)\n// de uma venda FARM_QTY aberta no DB. PURA (testada em scripts/sim/farmSellBoot.test.js):\n//   - remote ausente (REST falhou) OU status N\u00c3O-terminal (ainda aberta) \u2192 'arm' (re-arma FARM_SELLING:\n//     fail-closed \u2014 venda silenciada at\u00e9 o pr\u00f3ximo boot \u00e9 melhor que oversell por trava perdida).\n//   - status TERMINAL (preencheu/cancelou OFFLINE, sem replay do userData) \u2192 'reconcile' (atualiza o DB \u2192 o\n//     getFarmPosition deriva o FARM_DCA correto; N\u00c3O arma, n\u00e3o h\u00e1 venda em voo).\nfunction farmSellBootAction(remote) {\n    if (!remote || !ORDER_TERMINAL_STATUSES.includes(remote.status)) return 'arm';\n    return 'reconcile';\n}\n\n// Boot-load da trava FARM_SELLING (espelha a reconstru\u00e7\u00e3o do HARVEST_SELLING em loadHarvestPositions, por\u00e9m SEM\n// bucket separado \u2014 o FARM_DCA \u00e9 DERIVADO das ordens por loadFarmPositions/getFarmPosition). Sem isto, um restart\n// com uma venda LIMIT FARM_QTY EM VOO perde a trava (v1 n\u00e3o-persistida) \u2192 a venda no-loss re-dispara no 1\u00ba tick\n// acima do alvo (LEVEL-trigger) ANTES de a ordem em voo preencher \u2192 place DUPLICADO (a 2\u00aa venda vaza o reserve:\n// calcQty capa na carteira, n\u00e3o no bucket). Pra cada venda FARM_QTY aberta no DB, RECONCILIA contra a corretora:\n//   'arm'       \u2192 RE-ARMA FARM_SELLING (a venda resting fila normal; o skip anti-empilhamento barra um 2\u00ba place).\n//   'reconcile' \u2192 atualiza o STATUS no DB (\u2192 getFarmPosition deriva o FARM_DCA sem fantasma) e N\u00c3O arma a trava.\n// DEVE rodar ANTES de loadFarmPositions (DB reconciliado primeiro \u2192 FARM_DCA certo). Best-effort: erro n\u00e3o impede\n// o boot. Fecha o gate documentado (pr\u00e9-req p/ escalar o size do Farm; ver indexKeys.FARM_SELLING / baf0f4b).\nasync function loadFarmSellingLocks() {\n    try {\n        const brain = beholder.getBrain();\n        // Vendas do Farm = automa\u00e7\u00f5es cujo action.orderTemplate vende 'FARM_QTY' (MESMO crit\u00e9rio do set da trava em\n        // beholder.placeOrder \u2192 a reconstru\u00e7\u00e3o n\u00e3o pode divergir do set; robusto a rename, ao contr\u00e1rio de name LIKE).\n        const farmSells = Object.values(brain).filter(a => a && Array.isArray(a.actions)\n            && a.actions.some(act => act && act.orderTemplate\n                && act.orderTemplate.side === 'SELL' && act.orderTemplate.quantity === 'FARM_QTY'));\n        for (const a of farmSells) {\n            const open = await ordersRepository.getOpenOrdersByAutomation(a.id); // j\u00e1 filtra isTestnet (mainnet-only)\n            for (const o of open) {\n                let remote = null;\n                try { remote = await exchange.orderStatus(o.symbol, o.orderId); }\n                catch (e) { logger('system', `loadFarmSellingLocks: orderStatus #${o.orderId} falhou (${e.body ? JSON.stringify(e.body) : e.message}) \u2014 trava ARMADA (fail-closed).`); }\n\n                if (farmSellBootAction(remote) === 'arm') {\n                    await beholder.updateMemory(o.symbol, indexKeys.FARM_SELLING, null, { orderId: o.orderId, at: Date.now() }, false);\n                    logger('system', `FARM_SELLING[${o.symbol}] re-armado no boot (venda #${o.orderId} ainda aberta).`);\n                    continue;\n                }\n\n                // Terminal OFFLINE: reconcilia o STATUS no DB \u2192 loadFarmPositions deriva o FARM_DCA correto (a venda\n                // vira o novo marco 'lastSell' FILLED). Idempotente: um report tardio do stream re-aplica o mesmo\n                // status/financials. N\u00c3O arma a trava (n\u00e3o h\u00e1 venda em voo).\n                try { await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }\n                catch (e) { logger('system', `loadFarmSellingLocks: update DB #${o.orderId}: ${e.message}`); }\n                logger('system', `loadFarmSellingLocks: [boot-reconcile] venda #${o.orderId} (${o.symbol}) resolvida OFFLINE como ${remote.status} (executedQty=${remote.executedQty}); trava N\u00c3O rearmada.`);\n                telegramNotify.notify(`\ud83d\udd01 [BOOT] Venda do Farm #${o.orderId} (${o.symbol}) resolveu OFFLINE como ${remote.status} (exec=${remote.executedQty}).`, `bootrecon-farm:${o.orderId}`).catch(() => { });\n            }\n        }\n    } catch (err) {\n        logger('system', `loadFarmSellingLocks: ${err.message}`);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:04:19)*
+
+
+## 🤖 Claude *(13:04:20)*
+
+Wiring no `init()` (ANTES de `loadFarmPositions`, pra o DB ser reconciliado antes do `FARM_DCA` ser derivado) + export do helper:
+
+## 🤖 Claude *(13:04:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "    await loadHarvestPositions();\n    await loadFarmPositions();\n    await loadTrendPosition();   // restaura TREND_QTY do banco (resili\u00eancia a restart \u2014 ver loadTrendPosition)",
+  "new_string": "    await loadHarvestPositions();\n    await loadFarmSellingLocks(); // reconcilia venda do Farm + re-arma FARM_SELLING ANTES do loadFarmPositions (\u2192 FARM_DCA certo)\n    await loadFarmPositions();\n    await loadTrendPosition();   // restaura TREND_QTY do banco (resili\u00eancia a restart \u2014 ver loadTrendPosition)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:04:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "module.exports = {\n    init,\n    startChartMonitor,\n    stopChartMonitor,\n    startTickerMonitor,\n    stopTickerMonitor,\n    sendMessage\n}",
+  "new_string": "module.exports = {\n    init,\n    startChartMonitor,\n    stopChartMonitor,\n    startTickerMonitor,\n    stopTickerMonitor,\n    sendMessage,\n    farmSellBootAction, // seam de teste (decis\u00e3o fail-closed da reconstru\u00e7\u00e3o da trava do Farm no boot)\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:04:48)*
+
+
+## 🤖 Claude *(13:04:48)*
+
+Agora o sim test do helper (cobre o ponto mais arriscado: arm-fail-closed vs reconcile):
+
+## 🤖 Claude *(13:04:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/farmSellBoot.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 decis\u00e3o FAIL-CLOSED da reconstru\u00e7\u00e3o da trava do Farm no boot (app-em.farmSellBootAction).\n * Cobre o ponto mais arriscado do loadFarmSellingLocks: quando RE-ARMAR a trava FARM_SELLING (venda ainda em voo,\n * ou REST falhou \u2192 fail-closed) vs RECONCILIAR o DB (terminal offline). Errar p/ 'reconcile' numa venda ainda\n * ABERTA = trava perdida \u2192 oversell no re-fire do LEVEL-trigger. Puro: s\u00f3 requer a fun\u00e7\u00e3o + o enum de status\n * (require de app-em \u00e9 barato \u2014 fun\u00e7\u00f5es/consts; init() N\u00c3O roda; sem rede/DB).\n */\nconst { farmSellBootAction } = require('../../src/app-em');\nconst { orderStatus } = require('../../src/repositories/ordersRepository');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\n\n// ARM (fail-closed) \u2014 venda ainda EM VOO ou status indeterminado \u2192 re-arma a trava.\neq('REST falhou (remote null) \u2192 arm (fail-closed)', farmSellBootAction(null), 'arm');\neq('remote undefined \u2192 arm', farmSellBootAction(undefined), 'arm');\neq('NEW (resting aberta) \u2192 arm', farmSellBootAction({ status: orderStatus.NEW }), 'arm');\neq('PARTIALLY_FILLED (parcial, ainda aberta) \u2192 arm', farmSellBootAction({ status: orderStatus.PARTIALLY_FILLED }), 'arm');\neq('status desconhecido da Binance \u2192 arm (fail-closed, n\u00e3o cai em reconcile)', farmSellBootAction({ status: 'PENDING_NEW' }), 'arm');\n\n// RECONCILE \u2014 terminal OFFLINE \u2192 reconcilia o DB, N\u00c3O arma.\neq('FILLED offline \u2192 reconcile', farmSellBootAction({ status: orderStatus.FILLED }), 'reconcile');\neq('CANCELED offline \u2192 reconcile', farmSellBootAction({ status: orderStatus.CANCELED }), 'reconcile');\neq('REJECTED offline \u2192 reconcile', farmSellBootAction({ status: orderStatus.REJECTED }), 'reconcile');\neq('EXPIRED (literal, fora do enum) offline \u2192 reconcile', farmSellBootAction({ status: 'EXPIRED' }), 'reconcile');\neq('EXPIRED_IN_MATCH (STP Binance) offline \u2192 reconcile', farmSellBootAction({ status: 'EXPIRED_IN_MATCH' }), 'reconcile');\n\nconsole.log(`\\nfarmSellBoot.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/sim/farmSellBoot.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:05:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/app-em.js && echo \"OK app-em.js\"\necho \"=== su\u00edte de sim inteira (novo farmSellBoot + n\u00e3o-regress\u00e3o) ===\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"\\.test\\.js:|sim suite\"",
+  "description": "Syntax-check app-em, run full sim suite with farmSellBoot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK app-em.js
+> === suíte de sim inteira (novo farmSellBoot + não-regressão) ===
+> calcQty.test.js: 23 passed, 0 failed
+> dailyCap.test.js: 10 passed, 0 failed
+> farmSellBoot.test.js: 10 passed, 0 failed
+> farmTriggers.test.js: 9 passed, 0 failed
+> feeCalc.test.js: 11 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 53 passed, 0 failed
+> sim suite: 7/7 arquivos OK.
+> ```
+
+## 🤖 Claude *(13:05:12)*
+
+
+## 🤖 Claude *(13:05:14)*
+
+7/7 (farmSellBoot 10/10), app-em sintaxe OK. Confirmo que o rename do status terminal não deixou referência órfã:
+
+## 🤖 Claude *(13:05:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== HARVEST_TERMINAL_STATUSES \u00f3rf\u00e3o? (deve ser 0) ===\"\ngrep -rn \"HARVEST_TERMINAL_STATUSES\" src/ | wc -l\necho \"=== ORDER_TERMINAL_STATUSES (def + usos) ===\"\ngrep -rn \"ORDER_TERMINAL_STATUSES\" src/\necho \"=== preflight lint de migrations (nenhuma mudou, sanity) ===\"\nbash scripts/ci-lint-migrations.sh 2>&1 | tail -2",
+  "description": "Verify no orphan rename refs, lint sanity"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HARVEST_TERMINAL_STATUSES órfão? (deve ser 0) ===
+> 4
+> === ORDER_TERMINAL_STATUSES (def + usos) ===
+> src/app-em.js:192:const ORDER_TERMINAL_STATUSES = [orderStatus.FILLED, orderStatus.CANCELED, orderStatus.REJECTED, 'EXPIRED', 'EXPIRED_IN_MATCH'];
+> src/app-em.js:327:    if (!remote || !ORDER_TERMINAL_STATUSES.includes(remote.status)) return 'arm';
+> src/app-em.js:437:                if (!remote || !ORDER_TERMINAL_STATUSES.includes(remote.status)) {
+> === preflight lint de migrations (nenhuma mudou, sanity) ===
+> bash: scripts/ci-lint-migrations.sh: No such file or directory
+> ```
+
+## 🤖 Claude *(13:05:30)*
+
+
+## 🤖 Claude *(13:05:32)*
+
+O rename deixou **4 referências órfãs** a `HARVEST_TERMINAL_STATUSES` (a const agora se chama `ORDER_TERMINAL_STATUSES`) — isso daria `ReferenceError` em runtime no caminho VIVO do Harvester (o `node --check` não pega, é erro de execução). Vejo as 4 e completo o rename:
+
+## 🤖 Claude *(13:05:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\ngrep -rn \"HARVEST_TERMINAL_STATUSES\" src/",
+  "description": "Locate orphan HARVEST_TERMINAL_STATUSES references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/app-em.js:215:        if (isHarvestSell && HARVEST_TERMINAL_STATUSES.includes(order.status))
+> src/app-em.js:224:        if (isHarvestSell && order.status !== orderStatus.FILLED && HARVEST_TERMINAL_STATUSES.includes(order.status)) {
+> src/app-em.js:291:        if (order.side === 'SELL' && HARVEST_TERMINAL_STATUSES.includes(order.status)) {
+> src/app-em.js:482:                if (!remote || !HARVEST_TERMINAL_STATUSES.includes(remote.status)) continue; // aberta segue aberta (compra não trava nada)
+> ```
+
+## 🤖 Claude *(13:05:40)*
+
+
+## 🤖 Claude *(13:05:41)*
+
+As 4 estão no caminho VIVO do Harvester (updateHarvestPosition etc.) — bom que o grep pegou. Completo o rename (replace_all):
+
+## 🤖 Claude *(13:05:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "HARVEST_TERMINAL_STATUSES",
+  "new_string": "ORDER_TERMINAL_STATUSES"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:05:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== \u00f3rf\u00e3o restante? (deve ser 0) ===\"; grep -rcn \"HARVEST_TERMINAL_STATUSES\" src/ | grep -v \":0\" || echo \"0 \u00f3rf\u00e3os \u2713\"\necho \"=== ORDER_TERMINAL_STATUSES: def(1) + usos(5) ===\"; grep -rc \"ORDER_TERMINAL_STATUSES\" src/app-em.js\necho \"=== require app-em + su\u00edte de sim (n\u00e3o-regress\u00e3o p\u00f3s-rename completo) ===\"\nAES_KEY=01234567890123456789012345678901 node -e \"require('./src/app-em.js'); console.log('require OK')\" 2>&1 | head -1\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"sim suite\"",
+  "description": "Verify rename complete, app-em requires, sim passes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === órfão restante? (deve ser 0) ===
+> 0 órfãos ✓
+> === ORDER_TERMINAL_STATUSES: def(1) + usos(5) ===
+> src/app-em.js:7
+> === require app-em + suíte de sim (não-regressão pós-rename completo) ===
+> require OK
+> sim suite: 7/7 arquivos OK.
+> ```
+
+## 🤖 Claude *(13:06:02)*
+
+
+## 🤖 Claude *(13:06:04)*
+
+Tudo consistente: 0 órfãos, `ORDER_TERMINAL_STATUSES` em 7 pontos, `require app-em` OK, **sim 7/7**. (Boa pegada — o rename tinha 4 usos vivos no Harvester que o `node --check` não acusaria.)
+
+Chown + diff + gate QA/TL (mudança de boot no money-path):
+
+## 🤖 Claude *(13:06:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/app-em.js backend/scripts/sim/farmSellBoot.test.js 2>/dev/null\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git add -N backend/scripts/sim/farmSellBoot.test.js && git -c safe.directory=\"*\" diff -- backend/src/app-em.js backend/scripts/sim/farmSellBoot.test.js > /tmp/farmlock.diff 2>&1'\necho \"diff bytes: $(wc -c </tmp/farmlock.diff)\"\ngit -c safe.directory='*' diff --stat -- backend/src/app-em.js backend/scripts/sim/farmSellBoot.test.js",
+  "description": "Chown, generate diff for review"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff bytes: 13545
+>  backend/scripts/sim/farmSellBoot.test.js | 30 +++++++++++++
+>  backend/src/app-em.js                    | 73 ++++++++++++++++++++++++++++----
+>  2 files changed, 95 insertions(+), 8 deletions(-)
+> ```
+
+## 🤖 Claude *(13:06:33)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review loadFarmSellingLocks",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise uma mudan\u00e7a no money-path do TradeUX (backend boot) p/ MAINNET REAL (\ud83d\udd34 LIVE, ~$149, canary FARM-ONLY). Veredito PASS / PASS COM RESSALVAS / FAIL.\n\n## Contexto\nA trava `FARM_SELLING` (anti-empilhamento da venda no-loss do Farm) \u00e9 v1 N\u00c3O-persistida \u2192 um restart com uma venda LIMIT FARM_QTY EM VOO perde a trava \u2192 o LEVEL-trigger re-dispara a venda no 1\u00ba tick acima do alvo \u2192 place DUPLICADO. Era o gate documentado: \"n\u00e3o escalar o size do Farm at\u00e9 loadFarmSellingLocks\". A venda do Farm \u00c9 LIMIT (confirmado no DB) \u2192 descansa aberta \u2192 o restart pega de verdade. Esta mudan\u00e7a implementa a reconstru\u00e7\u00e3o-no-boot, espelhando o `loadHarvestPositions` (que j\u00e1 faz isso p/ o Harvester).\n\n## O que mudou (diff em /tmp/farmlock.diff; working tree em /home/gcrux-tradeux/tradeux \u2014 LEIA app-em.js direto)\n- **`app-em.js`**: \n  - rename `HARVEST_TERMINAL_STATUSES` \u2192 `ORDER_TERMINAL_STATUSES` (gen\u00e9rico, agora compartilhado Harvester+Farm; 1 def + 6 usos, todos atualizados \u2014 verifiquei 0 \u00f3rf\u00e3os).\n  - novo `farmSellBootAction(remote)` PURO (decis\u00e3o fail-closed: remote null/n\u00e3o-terminal \u2192 'arm'; terminal \u2192 'reconcile').\n  - novo `loadFarmSellingLocks()`: p/ cada automa\u00e7\u00e3o cujo `action.orderTemplate.quantity==='FARM_QTY'` (MESMO crit\u00e9rio do set da trava em beholder), `getOpenOrdersByAutomation` (j\u00e1 filtra isTestnet) \u2192 `exchange.orderStatus` \u2192 'arm' re-arma `FARM_SELLING`; 'reconcile' atualiza o DB via `updateOrderByOrderId(...calcFillFinancials)` (\u2192 getFarmPosition deriva FARM_DCA certo) e N\u00c3O arma.\n  - wiring no `init()`: `await loadFarmSellingLocks()` ANTES de `loadFarmPositions()` (DB reconciliado primeiro \u2192 FARM_DCA correto).\n  - export de `farmSellBootAction` (seam de teste).\n- **`scripts/sim/farmSellBoot.test.js`** (NOVO): 10 asserts da decis\u00e3o fail-closed.\n\n## Foco (adversarial)\n1. **Fidelidade ao loadHarvestPositions**: a reconstru\u00e7\u00e3o do Farm est\u00e1 correta dado que N\u00c3O h\u00e1 bucket separado (FARM_DCA \u00e9 DERIVADO por getFarmPosition do banco)? Reconciliar S\u00d3 o status no DB (sem mexer em bucket) \u00e9 suficiente p/ o getFarmPosition derivar certo? Confira getFarmPosition (ordersRepository): ele usa o \u00faltimo SELL FILLED como marco \u2014 marcar a venda offline como FILLED faz o FARM_DCA zerar corretamente?\n2. **ORDEM no init()**: loadFarmSellingLocks ANTES de loadFarmPositions \u00e9 obrigat\u00f3rio? Se invertido, o que quebra?\n3. **FAIL-CLOSED**: o `farmSellBootAction` arma em remote null (REST falhou) e em qualquer status n\u00e3o-terminal? Algum status que DEVERIA reconciliar mas cai em 'arm' (perma-trava) ou vice-versa (status aberto que cai em reconcile \u2192 trava perdida \u2192 oversell)?\n4. **Crit\u00e9rio de identifica\u00e7\u00e3o** (`action.orderTemplate.quantity==='FARM_QTY'`): pega exatamente as 3 vendas do Farm (id 10/12/14) e NADA mais (n\u00e3o pega Harvest/Trend/Baseline)? \u00c9 robusto a o brain n\u00e3o ter orderTemplate cacheado?\n5. **Idempot\u00eancia**: re-rodar o boot (ou um report tardio do stream p\u00f3s-reconcile) re-aplica o mesmo status sem dano? `updateOrderByOrderId` + `calcFillFinancials` s\u00e3o os mesmos que o Harvester usa?\n6. **Estado atual**: 0 vendas do Farm abertas (1 hist\u00f3rica FILLED) \u2192 no boot atual \u00e9 no-op. Algum risco no caminho no-op?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (7/7, farmSellBoot 10). Confirme `require('./src/app-em.js')` carrega. Aponte testes/checagens faltantes. pt-BR, conciso."
+}
+```
+
+## 🤖 Claude *(13:06:48)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review loadFarmSellingLocks",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) de uma mudan\u00e7a no money-path do TradeUX (backend boot) p/ MAINNET (\ud83d\udd34 LIVE, ~$149, canary FARM-ONLY, trunk-based).\n\n## Contexto\nA trava `FARM_SELLING` (v1, baf0f4b) N\u00c3O \u00e9 persistida \u2192 restart com venda LIMIT FARM_QTY em voo perde a trava \u2192 re-dispara venda duplicada. Gate documentado: \"n\u00e3o escalar o Farm at\u00e9 loadFarmSellingLocks\". Esta mudan\u00e7a implementa a reconstru\u00e7\u00e3o-no-boot, escolha de escopo COMPLETO (reconcilia o DB, n\u00e3o s\u00f3 re-arma a trava) aprovada pelo dono, espelhando o `loadHarvestPositions` existente.\n\n## Mudan\u00e7a (diff em /tmp/farmlock.diff; arquivos em /home/gcrux-tradeux/tradeux)\n- `app-em.js`: rename `HARVEST_TERMINAL_STATUSES`\u2192`ORDER_TERMINAL_STATUSES` (gen\u00e9rico, Harvester+Farm); `farmSellBootAction(remote)` puro (fail-closed); `loadFarmSellingLocks()` (arm trava p/ venda aberta / reconcilia DB p/ terminal offline); wiring no init ANTES de loadFarmPositions; export do helper p/ teste.\n- `scripts/sim/farmSellBoot.test.js` (NOVO): 10 asserts da decis\u00e3o.\n\n## Avalie (must-fix vs nice-to-have)\n1. **Reuso do padr\u00e3o loadHarvestPositions**: espelhar \u00e9 a decis\u00e3o certa, ou h\u00e1 diverg\u00eancia arquitetural (o Farm n\u00e3o tem bucket persistido \u2014 FARM_DCA \u00e9 derivado)? A vers\u00e3o do Farm ficou MAIS simples (s\u00f3 reconcilia status no DB) \u2014 est\u00e1 completa/correta?\n2. **O rename HARVEST_\u2192ORDER_TERMINAL_STATUSES** (toca o caminho VIVO do Harvester em 6 usos) \u2014 vale a limpeza ou era churn arriscado num path de produ\u00e7\u00e3o? (foi puro rename, mesmo valor; 0 \u00f3rf\u00e3os confirmado, sim 7/7).\n3. **Extrair `farmSellBootAction` puro + sim-test\u00e1-lo**: boa cobertura do peda\u00e7o cr\u00edtico (fail-closed) dado que loadHarvestPositions N\u00c3O tem sim test (precedente)? Suficiente, ou o orchestration (loop/DB-write/lock) tamb\u00e9m precisa de teste?\n4. **Risco do boot-reconcile escrever no DB** (updateOrderByOrderId) durante o boot \u2014 aceit\u00e1vel? Best-effort com try/catch por-ordem.\n5. **Identifica\u00e7\u00e3o por `orderTemplate.quantity==='FARM_QTY'`** (vs name LIKE 'Farm %' que o getFarmPosition usa) \u2014 qual \u00e9 mais robusto? H\u00e1 inconsist\u00eancia entre os dois crit\u00e9rios que possa morder?\n6. Conven\u00e7\u00f5es/naming/d\u00edvida.\n\nSu\u00edte: `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (7/7). Foque na decis\u00e3o. pt-BR, conciso, must-fix separado de sugest\u00f5es."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "This confirms the critical consistency: all three live FARM_QTY SELL automations are named `Farm Sell <SYM>` — they DO match `name LIKE 'Farm %'`. So the reconcile path (identify by FARM_QTY) and `getFarmPosition` (filter by `name LIKE 'Farm %'`) are consistent on the live data: a sell reconciled to FILLED by the boot path WILL be picked up as `lastSell`. The two criteria don't diverge in practice.\n\nI have everything needed for the verdict.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nMudança bem-escopada, fail-closed por desenho, espelha um padrão já validado em produção (`loadHarvestPositions`) e fecha um gate documentado (pré-req p/ escalar size do Farm). A suíte roda 7/7. Verifiquei os pontos de risco no código vivo e no DB de produção — nenhum must-fix bloqueante. Racional por eixo abaixo.\n\n### Respostas diretas às suas perguntas\n\n**1. Reuso do padrão `loadHarvestPositions` + Farm mais simples — correto.** A simplificação está justificada arquiteturalmente: o Harvester tem bucket persistido (`harvestPositions`) que precisa de reconciliação aritmética (recon-delta no bucket local antes de armar a MEMORY); o Farm **não tem bucket** — `FARM_DCA` é derivado das ordens FILLED por `getFarmPosition`. Logo a versão do Farm corretamente só (a) re-arma a trava ou (b) reconcilia o status no DB e deixa `loadFarmPositions`/`getFarmPosition` derivar. A ordenação `loadFarmSellingLocks` → `loadFarmPositions` está certa (DB reconciliado primeiro → DCA certo). Está completa para o que se propõe (v1: não escalar size).\n\n**2. Rename `HARVEST_→ORDER_TERMINAL_STATUSES` — vale, não é churn arriscado.** Confirmei: é rename puro, mesmo array de valores, 7 referências (6 do Harvester + 1 do Farm já existente em `updateFarmPosition:291`), 0 órfãos do nome antigo. Semanticamente o enum sempre foi genérico — só ganhou um 2º consumidor real. Aceito num path de produção porque é mecânico e a suíte cobre a regressão do Harvester indiretamente. Não bikeshed.\n\n**3. `farmSellBootAction` puro + sim-test — cobertura suficiente.** A decisão fail-closed é o pedaço de maior consequência (errar p/ `reconcile` numa venda ainda aberta = trava perdida = oversell), e os 10 asserts cobrem bem: arm em remote null/undefined/NEW/PARTIALLY_FILLED/status-desconhecido; reconcile nos 5 terminais incl. literais `EXPIRED`/`EXPIRED_IN_MATCH` fora do enum. Dado que `loadHarvestPositions` (precedente, mesma classe de risco) NÃO tem sim-test, exigir teste do orchestration (loop/DB-write/lock) aqui seria assimétrico — o orchestration é I/O best-effort e espelha código já em produção. Suficiente p/ o gate.\n\n**4. Boot-reconcile escrevendo no DB (`updateOrderByOrderId`) — aceitável.** Best-effort com try/catch por-ordem (erro não derruba o boot, não impede o `loadFarmPositions` seguinte). E o write é seguro pelo guard de `updateOrder` (`ordersRepository.js:110-113`): só transiciona a partir de NEW/PARTIALLY_FILLED — exatamente o estado das ordens que `getOpenOrdersByAutomation` retorna. Idempotente contra um report tardio do stream (re-aplica o mesmo status). E roda ANTES do userData stream subir (mesma janela segura do Harvester), então não corre contra fills ao vivo.\n\n**5. Identificação por `orderTemplate.quantity==='FARM_QTY'` vs `name LIKE 'Farm %'` — a escolha está certa E não há divergência mordedora (verificado no DB vivo).** O critério FARM_QTY é o mais robusto porque é **idêntico ao ponto que SETA a trava** (`beholder.js:570`: `side==='SELL' && orderTemplate.quantity==='FARM_QTY'`) — a reconstrução não pode divergir do set, e é robusto a rename (o `updateBrain` inclusive faz `delete g.orderTemplate.name`, então name-LIKE seria frágil no BRAIN). A pergunta legítima é se a reconciliação (identifica por FARM_QTY) e `getFarmPosition` (filtra por `name LIKE 'Farm %'`) podem divergir: confirmei no DB de produção que as 3 automações FARM_QTY são `Farm Sell LTCUSDT/BNBUSDT/ADAUSDT` (id 10/12/14) — **ambos critérios coincidem**, então uma venda reconciliada a FILLED É vista como `lastSell` e re-baseia a janela do DCA corretamente. Sem mordida hoje.\n\n### Must-fix\n- Nenhum.\n\n### Nice-to-have (não bloqueiam o merge)\n- **(Sugestão #5, dívida latente):** o acoplamento implícito FARM_QTY-template ⟷ `name LIKE 'Farm %'` funciona só porque as automações vivas respeitam ambas as convenções. Se um dia uma automação FARM_QTY for criada SEM o prefixo `Farm `, a reconciliação atualizaria o status no DB mas `getFarmPosition` ignoraria a venda como `lastSell` → DCA fantasma. Vale um comentário em `getFarmPosition`/`loadFarmSellingLocks` cruzando a invariante, ou (melhor, futuro) unificar num único critério. Documental, não funcional.\n- **PARTIALLY_FILLED terminal-offline:** uma venda que ficou PARTIALLY_FILLED e depois resolveu offline cai sempre em `arm` (é não-terminal), nunca em reconcile — a trava re-arma e a venda fica silenciada até o próximo boot resolver. É o lado seguro (fail-closed, sem oversell), mas diferente do Harvester, que reconcilia parciais subtraindo do bucket. Como o Farm não tem bucket e a parcial preenchida vira `lastSell` só quando FILLED, isso é aceitável p/ v1; só registrar como diferença consciente de comportamento (não bug).\n- **Telegram dedup key** `bootrecon-farm:${o.orderId}` é por-ordem — ok; idêntico padrão do resto.\n\n### Decisão de merge\nAPPROVE — pode subir como commit único no master (trunk-based), sem condições bloqueantes. Arquivos:\n- `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` (helper puro + `loadFarmSellingLocks` + wiring no `init` + rename + export do seam)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/farmSellBoot.test.js` (novo, 10 asserts)\n\nCondição operacional (não de código): rodar a suíte no pré-push (já 7/7) e confirmar boot limpo do backend após deploy (`make logs`), já que o caminho roda no `init`. Como o sistema está 🔴 LIVE com canary FARM-ONLY (id10/12/14 são exatamente as automações tocadas), validar 1 restart com `logs/system.log` mostrando `FARM_SELLING[...] re-armado` ou `[boot-reconcile]` conforme o estado das ordens em voo. As duas sugestões viram dívida documentada, não follow-up bloqueante."}, {'type': 'text', 'text': "agentId: a69ff6ce298d1c40f (use SendMessage with to: 'a69ff6ce298d1c40f' to continue this agent)\n<usage>subagent_tokens: 60789\ntool_uses: 17\nduration_ms: 118178</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Working tree matches the diff (app-em.js + new test file). The backtest-results changes are unrelated noise (likely from another session/run — flagging per the cross-session contamination memory, but they're not part of this change). The change under review is scoped to exactly the two files claimed.\n\nLet me do a final adversarial check on one thing I haven't fully closed: the inactive-automation gap and whether the `quantityMultiplier` or any edge in `getOpenOrdersByAutomation` could surprise. I've confirmed enough. Compiling the report.\n\n---\n\n# REVISÃO — `loadFarmSellingLocks` (reconstrução-no-boot da trava FARM_SELLING)\n\n**Arquivos:** `/home/gcrux-tradeux/tradeux/backend/src/app-em.js` · `/home/gcrux-tradeux/tradeux/backend/scripts/sim/farmSellBoot.test.js`\n\n## VEREDITO: PASS COM RESSALVAS\n\nA mudança faz o que afirma. Validei cada um dos 6 pontos adversariais contra o código real E contra o DB ao vivo. A lógica está correta, fiel ao `loadHarvestPositions` (corretamente mais simples por não haver bucket), fail-closed, idempotente, e identifica exatamente id 10/12/14. As ressalvas são gaps de borda conhecidos/herdados, nenhum bloqueia o merge.\n\n## Achados (por ponto)\n\n**1. Fidelidade / FARM_DCA derivado — [OK, confirmado no DB]**\n`getFarmPosition` (`ordersRepository.js:253`) acha `lastSell` = SELL FILLED do Farm mais recente por `id DESC`, e conta só BUYs com `id > lastSell.id`. Marcar a venda offline como FILLED no DB faz ela virar o novo `lastSell` → nenhum BUY com `id` maior → **FARM_DCA deriva qty=0 corretamente**. Reconciliar só o status (sem bucket) É suficiente. A simplificação vs Harvester (sem `reconBucket`/dedup/`countedHarvestFills`) é correta: o Farm não tem accumulator volátil.\n\n**2. Ordem no init() — [OK, obrigatória]**\n`loadFarmSellingLocks` ANTES de `loadFarmPositions` (linhas 859-860) é **necessário**. Se invertido, no braço `reconcile` o `loadFarmPositions` rodaria com a venda ainda `NEW` no DB → não a veria como `lastSell` → **FARM_DCA fantasma/inflado** com os buys stale, e nada recomputaria até o próximo fill ao vivo (o reconcile só escreve status no DB, NÃO chama `updateMemory(FARM_DCA)`). A ordem escolhida está certa.\n- *Ressalva BAIXA (acoplamento implícito):* o braço `reconcile` depende inteiramente de `loadFarmPositions` rodar depois p/ refrescar o FARM_DCA em MEMORY — não é auto-suficiente. Correto dado o wiring, mas frágil a um futuro reorder. Um comentário no reconcile reforçando isso ajudaria.\n\n**3. Fail-closed — [OK]**\n`farmSellBootAction`: `remote` null (REST falhou) OU status fora de `ORDER_TERMINAL_STATUSES` → `'arm'`. `EXPIRED`/`EXPIRED_IN_MATCH` são literais no enum (cobertos). NEW/PARTIALLY_FILLED/status desconhecido → `'arm'` (não perde trava). Terminal → `'reconcile'`. **Nenhum status aberto cai em reconcile** (sem oversell) e nenhum terminal perma-trava. No braço reconcile, `remote` é garantidamente não-null + terminal, então `remote.status`/`remote.executedQty` são acessados com segurança.\n\n**4. Critério de identificação — [OK, verificado no DB ao vivo]**\nQuery no DB: **exatamente** id 10/12/14 têm `side='SELL' quantity='FARM_QTY'` e são as únicas com FARM_QTY (ativas). `side` é gravado UPPERCASE → o filtro `=== 'SELL'` (sem `.toUpperCase()`) casa. Não pega Harvest (HARVEST_QTY), Trend (TREND_QTY), Baseline (MIN_NOTIONAL/MAX_WALLET) nem Paper FARMNL (`MAX_WALLET`, não FARM_QTY). É o MESMO critério do set em `beholder.js:570` → reconstrução não diverge do set.\n- *Ressalva MÉDIA (gap herdado do Harvester):* o loader lê `getBrain()`, que só contém automações **ATIVAS** (`updateBrain` faz `if (!isActive) return`). Uma venda FARM_QTY que ficou resting na corretora enquanto sua automação foi **parada** (ex.: via painel de grupos) NÃO entra no `getBrain()` → a trava não é re-armada → se a automação for religada com a venda ainda em voo, há janela de re-fire. É o MESMO gap do `loadHarvestPositions` (que filtra por `conditions.indexOf(':HARVEST')` no brain ativo), então é fidelidade fiel, não regressão nova. Mitigante: no canary o Farm fica ARMADO (não parado), e a release ao vivo é BRAIN-independente (match por orderId). Não bloqueia, mas vale registrar como dívida (usar `getAllAutomations` fecharia).\n\n**5. Idempotência — [OK]**\nReconcile usa o MESMO `updateOrderByOrderId(...calcFillFinancials(remote, symbol))` do braço do Harvester (`app-em.js:465`) e do stream vivo (`:563`). Report tardio do stream após reconcile: `updateOrder` (`ordersRepository.js:110-113`) só muda status se atual é NEW/PARTIALLY_FILLED → já-FILLED não re-muda; `updateFarmPosition` re-deriva FARM_DCA idempotente e o `deleteMemory(FARM_SELLING)` por orderId é no-op (trava ausente). Re-rodar o boot no braço `arm` só reescreve `{orderId, at}` (release é só por orderId → `at` novo é inócuo). `executeAutomations=false` no re-arm (`:356`) confirmado — não dispara automação no boot.\n\n**6. Estado atual (no-op) — [OK, verificado no DB]**\n0 vendas do Farm abertas (NEW/PARTIALLY_FILLED) agora; só 2 FILLED (id 234 testnet, id 264 mainnet +$0,49). `getOpenOrdersByAutomation` retorna `[]` p/ 10/12/14 → loop interno vazio → **no-op limpo**. Sem risco no caminho no-op (o `try/catch` externo cobre até `getBrain` vazio).\n\n## Verificações que rodei\n- `require('./src/app-em.js')` carrega limpo; `farmSellBootAction` exportado como function. **OK**\n- `npm run test:sim` → **7/7 arquivos, farmSellBoot 10/10**. Runner auto-descobre `*.test.js` (`run.js:14`) e CI roda `node scripts/sim/run.js` (`ci.yml:148`) → o novo teste ESTÁ no CI.\n- `ORDER_TERMINAL_STATUSES`: 1 def + 6 usos, **0 órfãos de `HARVEST_TERMINAL_STATUSES`** (grep confirmou).\n- Boot order: `beholder.init(getActiveAutomations())` (`server.js:33`) ANTES de `appEm.init()` (`:45`) → BRAIN populado quando o loader lê. `getActiveAutomations` usa `include:{all,nested}` → `actions[].orderTemplate` eager-loaded. `exchange` reatribuído ao wrapper do ambiente correto (`app-em.js:853`) ANTES do loader (`:859`).\n- DB ao vivo: Farm sells = LIMIT FARM_QTY (descansam abertas → o restart pega de verdade, premissa confirmada).\n\n## Testes que eu rodaria (faltantes)\n1. **E2E do braço `arm`** (o único caminho exercitado no oversell real): seed de 1 ordem Farm sell `NEW` no DB + stub de `exchange.orderStatus` retornando `NEW` → assert que `MEMORY['<sym>:FARM_SELLING']` foi re-armado e que um `beholder.placeOrder` subsequente do MESMO template retorna o skip anti-empilhamento. Os 10 asserts atuais cobrem só a função pura `farmSellBootAction`, não o wiring `loadFarmSellingLocks`.\n2. **E2E do braço `reconcile`**: ordem `NEW` no DB + `orderStatus`→`FILLED` → assert status virou FILLED no DB E que `loadFarmPositions` subsequente deriva `FARM_DCA.qty===0`. Fecha o ponto #1/#2 de ponta a ponta (hoje é raciocínio, não teste).\n3. **Idempotência sob report tardio**: rodar reconcile, depois `processExecutionData` com o mesmo orderId FILLED → assert sem duplo-efeito no FARM_DCA e sem segundo place.\n4. **Gap inativo (ponto #4)**: parar a automação Farm sell com ordem aberta, restart, religar → confirmar/documentar o comportamento de re-fire (regressão fiel ao Harvester, mas não testada).\n5. **Smoke vivo pós-deploy**: grep `logs/system.log` por `loadFarmSellingLocks` no boot — deve estar silencioso (no-op), confirmando que não loga ruído/erro no caminho atual.\n\n## Recomendação de merge\n**MERGE.** É código de boot fora do hot-path do tick, fail-closed em todas as bordas, idempotente, e fecha um gate documentado (pré-req p/ escalar o size do Farm — `baf0f4b`). No estado atual é no-op verificado; o risco de regressão é mínimo. Antes de **escalar o size do Farm** (o motivo desta mudança existir), eu pediria os testes E2E #1 e #2 acima — a função pura está coberta, mas o wiring de `loadFarmSellingLocks` (a parte que de fato previne o oversell) só tem cobertura por inspeção. Registrar como dívida BAIXA: (a) acoplamento implícito reconcile→loadFarmPositions; (b) gap de automação inativa (herdado do Harvester; `getAllAutomations` fecharia).\n\n*Nota de procedência:* o working tree também tem `backend/backtest-results/farm-funnel-*.{json,md}` modificados/novos — NÃO fazem parte desta mudança (provável ruído de outra sessão/run; ver memória de cross-session contamination). Não commitar junto."}, {'type': 'text', 'text': "agentId: a5b2bda3a49f0f26f (use SendMessage with to: 'a5b2bda3a49f0f26f' to continue this agent)\n<usage>subagent_tokens: 90202\ntool_uses: 40\nduration_ms: 281615</usage>"}]
+> ```
+
+## 🤖 Claude *(13:11:34)*
+
+
+## 🤖 Claude *(13:11:37)*
+
+Os **dois gates passaram** — **QA PASS** (validou contra o DB vivo: fail-closed, idempotente, identificação correta) e **TL APPROVE**, zero must-fix. Ambos confirmaram no DB que as 3 autos FARM_QTY são `Farm Sell *` → os dois critérios (FARM_QTY ↔ `name LIKE 'Farm %'`) coincidem. Os E2E #1/#2 ficam gated pra "antes de escalar o size" (não bloqueiam — função coberta, orquestração espelha código provado, estado atual no-op).
+
+Aplico as 2 sugestões de comentário (baratas, blindam contra reorder/drift futuro):
+
+## 🤖 Claude *(13:11:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "        const farmSells = Object.values(brain).filter(a => a && Array.isArray(a.actions)\n            && a.actions.some(act => act && act.orderTemplate\n                && act.orderTemplate.side === 'SELL' && act.orderTemplate.quantity === 'FARM_QTY'));",
+  "new_string": "        // INVARIANTE (gate QA/TL): toda automa\u00e7\u00e3o FARM_QTY VIVA tamb\u00e9m casa `name LIKE 'Farm %'` (id 10/12/14 =\n        // 'Farm Sell <SYM>'), que \u00e9 o crit\u00e9rio do getFarmPosition. Os dois coincidem hoje \u2192 uma venda reconciliada\n        // a FILLED vira o 'lastSell' que re-baseia o FARM_DCA. Se um dia criarem uma venda FARM_QTY SEM o prefixo\n        // 'Farm ', os crit\u00e9rios divergiriam (DCA fantasma) \u2014 manter ambas as conven\u00e7\u00f5es juntas.\n        const farmSells = Object.values(brain).filter(a => a && Array.isArray(a.actions)\n            && a.actions.some(act => act && act.orderTemplate\n                && act.orderTemplate.side === 'SELL' && act.orderTemplate.quantity === 'FARM_QTY'));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:11:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "old_string": "                // Terminal OFFLINE: reconcilia o STATUS no DB \u2192 loadFarmPositions deriva o FARM_DCA correto (a venda\n                // vira o novo marco 'lastSell' FILLED). Idempotente: um report tardio do stream re-aplica o mesmo\n                // status/financials. N\u00c3O arma a trava (n\u00e3o h\u00e1 venda em voo).",
+  "new_string": "                // Terminal OFFLINE: reconcilia o STATUS no DB \u2192 loadFarmPositions deriva o FARM_DCA correto (a venda\n                // vira o novo marco 'lastSell' FILLED). \u26a0\ufe0f ACOPLAMENTO: este bra\u00e7o s\u00f3 escreve o STATUS no DB; quem\n                // refresca o FARM_DCA em MEMORY \u00e9 o loadFarmPositions QUE RODA DEPOIS (ver init) \u2014 N\u00c3O reordenar\n                // loadFarmSellingLocks p/ DEPOIS do loadFarmPositions. Idempotente: um report tardio do stream\n                // re-aplica o mesmo status/financials. N\u00c3O arma a trava (n\u00e3o h\u00e1 venda em voo)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/app-em.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:11:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/app-em.js && echo \"OK syntax\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"sim suite\"\nsudo chown gcrux-tradeux:gcrux-tradeux src/app-em.js 2>/dev/null",
+  "description": "Syntax + sim after comment edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK syntax
+> sim suite: 7/7 arquivos OK.
+> ```
+
+## 🤖 Claude *(13:12:02)*
+
+
+## 🤖 Claude *(13:12:03)*
+
+7/7. Commit (2 arquivos do escopo), check de divergência, push, deploy do backend:
+
+## 🤖 Claude *(13:12:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/farmlock-msg.txt <<'EOF'\nfeat(farm): loadFarmSellingLocks -- reconstroi a trava FARM_SELLING no boot (pre-req p/ escalar o Farm)\n\nA trava FARM_SELLING (anti-empilhamento da venda no-loss, v1 baf0f4b) NAO era persistida -> um\nrestart com uma venda LIMIT FARM_QTY EM VOO perdia a trava -> o LEVEL-trigger re-disparava a\nvenda no 1o tick acima do alvo -> place DUPLICADO. Fecha o gate documentado \"nao escalar o size\ndo Farm ate loadFarmSellingLocks\". Espelha o loadHarvestPositions, porem mais simples (o Farm NAO\ntem bucket separado -- FARM_DCA e DERIVADO das ordens por getFarmPosition).\n\n- farmSellBootAction(remote) PURO (fail-closed): remote null (REST falhou) ou status nao-terminal\n  -> 'arm'; terminal -> 'reconcile'. Exportado p/ teste.\n- loadFarmSellingLocks(): p/ cada automacao com action.orderTemplate.quantity==='FARM_QTY' (MESMO\n  criterio do set da trava em beholder -> nao diverge), getOpenOrdersByAutomation (ja filtra\n  isTestnet) -> exchange.orderStatus -> 'arm' re-arma FARM_SELLING; 'reconcile' atualiza o status no\n  DB (updateOrderByOrderId+calcFillFinancials, idempotente) p/ getFarmPosition derivar o FARM_DCA\n  certo (sem fantasma). Roda no init() ANTES de loadFarmPositions (DB reconciliado primeiro).\n- rename HARVEST_TERMINAL_STATUSES -> ORDER_TERMINAL_STATUSES (generico, Harvester+Farm; 0 orfaos).\n- scripts/sim/farmSellBoot.test.js (NOVO): 10 asserts da decisao fail-closed. Suite 7/7.\n\nGate QA (PASS c/ ressalvas) + TL (APPROVE c/ sugestoes), zero must-fix. No-op no estado atual (0\nvendas do Farm abertas). Divida documentada (nao-bloq.): E2E do wiring arm/reconcile ANTES de\nescalar o size; gap de automacao inativa (herdado do Harvester).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/app-em.js backend/scripts/sim/farmSellBoot.test.js\ngit commit -F /tmp/farmlock-msg.txt\necho \"=== commit (2 arquivos; SEM backtest-results) ===\"; git show --stat --oneline HEAD | head -6\nORIGIN=$(git -c safe.directory=\"*\" ls-remote origin refs/heads/master | cut -f1); PARENT=$(git -c safe.directory=\"*\" rev-parse HEAD~1)\necho \"origin=$ORIGIN parent=$PARENT\"\n[ \"$ORIGIN\" = \"$PARENT\" ] && { echo \"FF limpo, pushando\"; git -c safe.directory=\"*\" push origin master 2>&1 | grep -E \"master|rejected\" | head -2; } || echo \"DIVERGENCIA - nao push\"\n'\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git",
+  "description": "Commit, check divergence, push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 43e8b74] feat(farm): loadFarmSellingLocks -- reconstroi a trava FARM_SELLING no boot (pre-req p/ escalar o Farm)
+>  2 files changed, 101 insertions(+), 8 deletions(-)
+>  create mode 100644 backend/scripts/sim/farmSellBoot.test.js
+> === commit (2 arquivos; SEM backtest-results) ===
+> 43e8b74 feat(farm): loadFarmSellingLocks -- reconstroi a trava FARM_SELLING no boot (pre-req p/ escalar o Farm)
+>  backend/scripts/sim/farmSellBoot.test.js | 30 ++++++++++++
+>  backend/src/app-em.js                    | 79 ++++++++++++++++++++++++++++----
+>  2 files changed, 101 insertions(+), 8 deletions(-)
+> git@github.com: Permission denied (publickey).
+> fatal: Could not read from remote repository.
+> 
+> Please make sure you have the correct access rights
+> and the repository exists.
+> origin= parent=03f67579542f03a4c718cbe0b0d7a236e23f1814
+> DIVERGENCIA - nao push
+> ```
+
+## 🤖 Claude *(13:12:28)*
+
+
+## 🤖 Claude *(13:12:30)*
+
+O push falhou porque rodei o `ls-remote`/push **dentro** do subshell `gcrux-tradeux` (que não tem chave SSH) → "Permission denied" → falso "divergência". O commit `43e8b74` está OK, só não foi pushado. Refaço a checagem+push como **ubuntu** (shell padrão, com a chave):
+
+## 🤖 Claude *(13:12:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nORIGIN=$(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\nPARENT=$(git -c safe.directory='*' rev-parse HEAD~1)\necho \"origin/master remoto: $ORIGIN\"\necho \"meu HEAD~1 (parent) : $PARENT\"\nif [ \"$ORIGIN\" = \"$PARENT\" ]; then\n  echo \"\u2192 FF limpo, pushando (como ubuntu)\"\n  git -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected|error\" | head -3\n  sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\n  echo \"origin agora: $(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\"\n  echo \"HEAD        : $(git -c safe.directory='*' rev-parse HEAD)\"\nelse\n  echo \"\u26a0\ufe0f diverg\u00eancia real \u2014 origin ($ORIGIN) != parent ($PARENT)\"\nfi",
+  "description": "Re-check divergence and push as ubuntu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> origin/master remoto: 03f67579542f03a4c718cbe0b0d7a236e23f1814
+> meu HEAD~1 (parent) : 03f67579542f03a4c718cbe0b0d7a236e23f1814
+> → FF limpo, pushando (como ubuntu)
+>    03f6757..43e8b74  master -> master
+> origin agora: 43e8b74cf4892696c4a54a300d6060f79c219482
+> HEAD        : 43e8b74cf4892696c4a54a300d6060f79c219482
+> ```
+
+## 🤖 Claude *(13:12:46)*
+
+
+## 🤖 Claude *(13:12:46)*
+
+Pushed limpo (`origin==HEAD==43e8b74`). Deploy do backend (a mudança é no boot/`init`):
+
+## 🤖 Claude *(13:12:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rebuild + restart backend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend 2>&1 | tail -4'\necho \"=== aguarda backend + halt intacto ===\"\nfor i in $(seq 1 25); do c=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null); [ \"$c\" = \"401\" ] && { echo \"backend UP\"; break; }; sleep 2; done\necho \"=== boot: loadFarmSellingLocks rodou sem erro? (no-op esperado: 0 vendas abertas) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"loadFarmSellingLocks|FARM_SELLING.*re-armado|App Exchange Monitor is running\\\" logs/system.log 2>/dev/null | tail -5; echo \\\"--- erros no boot? ---\\\"; grep -iE \\\"loadFarmSellingLocks:.*(Error|falhou)|ReferenceError|ORDER_TERMINAL\\\" logs/system.log 2>/dev/null | tail -5 || echo nenhum\"'",
+  "description": "Rebuild backend, verify boot clean + loadFarmSellingLocks ran",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild + restart backend ===
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === aguarda backend + halt intacto ===
+> backend UP
+> === boot: loadFarmSellingLocks rodou sem erro? (no-op esperado: 0 vendas abertas) ===
+> info: 2026-06-21T23:34:33.823Z - App Exchange Monitor is running!
+> info: 2026-06-22T01:44:16.067Z - App Exchange Monitor is running!
+> info: 2026-06-22T03:18:37.026Z - App Exchange Monitor is running!
+> info: 2026-06-22T03:49:29.800Z - App Exchange Monitor is running!
+> info: 2026-06-22T13:12:58.797Z - App Exchange Monitor is running!
+> --- erros no boot? ---
+> ```
+
+## 🤖 Claude *(13:13:18)*
+
+
+## 🤖 Claude *(13:13:20)*
+
+Boot **limpo** — backend up, halt intacto, `App Exchange Monitor is running!` no boot pós-deploy (init completou), **zero erros** de `loadFarmSellingLocks`/`ReferenceError`/`ORDER_TERMINAL`. No-op esperado (0 vendas do Farm abertas). 
+
+Atualizo a memória (o gate "loadFarmSellingLocks DEFERIDA" agora está FEITO):
+
+## 🤖 Claude *(13:13:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "**Reconstru\u00e7\u00e3o-no-boot (loadFarmSellingLocks) + reconcilia\u00e7\u00e3o partial\u2192cancel do Farm DEFERIDAS** \u2014 gate documentado: N\u00c3O escalar `FARM_SIZE_MULT` at\u00e9 implement\u00e1-las (risco bounded: s\u00f3 remistura alt-wallet LTC/BNB/ADA, NUNCA o cofre de BTC, nunca oversell al\u00e9m da carteira). \u26a0\ufe0f Escopo por `name LIKE 'Farm %'` \u00e9 fr\u00e1gil a rename \u2014 nice-to-have: tag/flag expl\u00edcita.",
+  "new_string": "**Reconstru\u00e7\u00e3o-no-boot (loadFarmSellingLocks) \u2705 FEITA (2026-06-22, commit `43e8b74`, QA PASS + TL APPROVE, sim 7/7, boot vivo limpo/no-op):** espelha o `loadHarvestPositions` mas SEM bucket (o `FARM_DCA` \u00e9 DERIVADO por `getFarmPosition`). `app-em.farmSellBootAction(remote)` PURO+sim-testado (fail-closed: remote null/n\u00e3o-terminal\u2192`arm` re-arma `FARM_SELLING`; terminal\u2192`reconcile` atualiza s\u00f3 o STATUS no DB via `updateOrderByOrderId`+`calcFillFinancials` \u2192 `getFarmPosition` deriva o `FARM_DCA` certo). Roda no `init()` **ANTES** de `loadFarmPositions` (DB reconciliado primeiro; \u26a0\ufe0f N\u00c3O reordenar \u2014 o reconcile s\u00f3 escreve status, quem refresca o FARM_DCA em MEMORY \u00e9 o loadFarmPositions depois). Identifica a venda do Farm por `action.orderTemplate.quantity==='FARM_QTY'` (MESMO crit\u00e9rio do set em `beholder.js:570` \u2192 n\u00e3o diverge; mais robusto que name-LIKE). Rename `HARVEST_TERMINAL_STATUSES`\u2192`ORDER_TERMINAL_STATUSES` (gen\u00e9rico; \u26a0\ufe0f gotcha: tinha 4 usos VIVOS no Harvester al\u00e9m do boot \u2014 `node --check` N\u00c3O pega ReferenceError de rename, grepar). **D\u00edvida (n\u00e3o-bloq., antes de ESCALAR o size):** (a) E2E do wiring `arm`/`reconcile` (s\u00f3 a fun\u00e7\u00e3o pura est\u00e1 sim-testada; o orchestration espelha o loadHarvestPositions n\u00e3o-testado); (b) `PARTIALLY_FILLED` terminal-offline cai sempre em `arm` (fail-closed, sem bucket pra subtrair \u2014 difere do Harvester de prop\u00f3sito); (c) gap de automa\u00e7\u00e3o INATIVA (a venda fica fora do `getBrain()` se o grupo for parado \u2014 herdado do Harvester; `getAllAutomations` fecharia); (d) invariante FARM_QTY\u2194`name LIKE 'Farm %'` (getFarmPosition) \u2014 manter as 2 conven\u00e7\u00f5es juntas. Risco bounded: s\u00f3 alt-wallet LTC/BNB/ADA, NUNCA o cofre BTC, nunca oversell al\u00e9m da carteira."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:13:44)*
+
+
+## 🤖 Claude *(13:14:00)*
+
+`loadFarmSellingLocks` entregue e no ar — o **gate documentado "não escalar o Farm até implementá-la" está fechado**.
+
+## ✅ Entregue (`43e8b74` — vivo == master == origin)
+
+A trava `FARM_SELLING` agora **sobrevive a restart**:
+- **`farmSellBootAction(remote)`** — decisão pura fail-closed (REST falhou / venda ainda aberta → re-arma a trava; terminal offline → reconcilia). Sim-testada (10 asserts).
+- **`loadFarmSellingLocks()`** — no boot, pra cada venda LIMIT `FARM_QTY` aberta no DB: consulta a corretora → re-arma `FARM_SELLING` (anti-duplicata) ou reconcilia o status no DB (pra `getFarmPosition` derivar o `FARM_DCA` sem fantasma). Roda **antes** do `loadFarmPositions`. Espelha o `loadHarvestPositions`, mais simples (o Farm não tem bucket separado).
+- **Rename** `HARVEST_TERMINAL_STATUSES`→`ORDER_TERMINAL_STATUSES` (genérico). **Gotcha pego:** tinha 4 usos vivos no Harvester que o `node --check` não acusaria (ReferenceError é runtime) — grep confirmou 0 órfãos.
+
+## Gate + verificação
+- **QA PASS · TL APPROVE** — zero must-fix; ambos validaram a lógica contra o **DB de produção** (as 3 autos FARM_QTY são `Farm Sell *` → critérios coincidem; fail-closed correto; idempotente).
+- **Sim 7/7** (novo `farmSellBoot.test.js`). Boot vivo **limpo** pós-deploy (`App Exchange Monitor is running!`, zero erros, no-op no estado atual: 0 vendas abertas).
+- Push foi FF limpo (peguei e corrigi um falso "divergência" — eu tinha rodado o `ls-remote` dentro do subshell `gcrux` que não tem chave SSH).
+- Dívida documentada na memória (não-bloqueia; antes de **escalar o size**): E2E do wiring arm/reconcile, gap de automação inativa (herdado do Harvester).
+
+---
+
+A sessão já tem **5 commits** (todos gate QA+TL + deploy + smoke):
+| | |
+|---|---|
+| `fe06c74` | %-teto de compra (20% equity) |
+| `d9f0dc5` | rede anti-runaway na venda (3×) |
+| `6b9b97b` | riskCaps no cockpit + fix forwarding MCP (D3/paper inertes) |
+| `03f6757` | harness de regressão do forwarding MCP |
+| `43e8b74` | loadFarmSellingLocks (pré-req de escalar o Farm) |
+
+Foi um bloco grande e coeso de hardening do risco + Farm. O `/handoff` carimba tudo (os 5 commits + os 4 params runtime do `.env` + as dívidas) quando você quiser. 
+
+Quer **continuar** com mais um item (a fila tem: re-rodar a revisão de estratégia/design pra atacar os 3 HIGH; ou itens menores), ou **selar com `/handoff`**?
+
+## 👤 User *(13:14:35)*
+
+re-rodar a revisão de estratégia/design pra atacar os 3 HIGH; ou itens menores
+
+## 🤖 Claude *(13:17:07)*
+
+
+## 🤖 Claude *(13:17:10)*
+
+Ultracode está on e isso é exatamente o tipo de tarefa pra orquestração: re-rodar a revisão de design/estratégia (a original morreu em 5/6 agentes por 529) de forma exaustiva, **re-validar adversarialmente os 3 HIGH** e produzir planos de correção concretos. Vou rodar um workflow multi-fase: revisores por dimensão → verificação adversarial de cada achado → design de fix por HIGH confirmado → síntese. A implementação dos fixes vem depois, por mim, com gate QA+TL (não deixo agentes paralelos editarem money-path live).
+
+## 🤖 Claude *(13:18:24)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'tradeux-design-review',\n  description: 'Re-roda a revisao de design/estrategia do TradeUX + re-valida os 3 HIGH (useTestnet, qty bruta, Earn-blindness) e projeta fixes',\n  phases: [\n    { title: 'Review', detail: 'revisores adversariais por dimensao' },\n    { title: 'Verify', detail: 'verificacao adversarial de cada achado (tenta refutar)' },\n    { title: 'Fix-design', detail: 'plano de correcao por HIGH confirmado' },\n    { title: 'Synthesize', detail: 'relatorio consolidado priorizado (pt-BR)' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux'\n\nconst SHARED = `TradeUX = bot de trading SPOT Binance (Beholder/Node/Express + Sequelize + agente LLM via MCP). Sistema \ud83d\udd34 LIVE em MAINNET REAL, equity ~$149, canary FARM-ONLY (so vendas no-loss do Farm armadas). Codigo REAL em ${REPO} (backend/, tradeux-agent/, tradeux-mcp/). LEIA o codigo de verdade com Read/Grep/Bash e CITE file:line. Comentarios do repo sao pt-BR.\n\nJA FEITO NESTA SESSAO (NAO re-flagar como bug \u2014 esta corrigido+deployado):\n- riskGuard (backend/src/utils/exchange.js): %-teto de COMPRA min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY x equity) + piso; VENDA isenta do teto de sizing mas com rede anti-runaway MAX_SELL_EQUITY_MULT (3x equity, degrade-open); equity quente publicado pelo dailyCapJob no riskState. getEffectiveCaps() expoe no cockpit (riskCaps).\n- FARM_SELLING ganhou reconstrucao-no-boot (app-em.loadFarmSellingLocks + farmSellBootAction).\n- P&L fee-em-BNB ja corrigido (utils/feeCalc.computeNet, coluna orders.commissionAsset).\n- forwarding do tool MCP tradeux_get_cockpit corrigido (encaminha groups/paper/riskCaps; src/cockpitOut.js).\n- suite de simulacao money-path em backend/scripts/sim/ (7 arquivos; calcQty/riskGuard/dailyCap/feeCalc/farmTriggers/integration/farmSellBoot).\n\n3 HIGH conhecidos da revisao PARCIAL anterior (RE-VALIDE se ainda sao reais com EVIDENCIA no codigo, e ache NOVOS):\nH1. useTestnet bit-unico mutavel: um unico bit (settings.useTestnet) flipa testnet<->mainnet (modo dinheiro real).\nH2. posicao em qty BRUTA: getFarmPosition/getTrendPosition somam buy.quantity BRUTO (nao liquido de fee) -> 0,908 comprado vs 0,907 recebido.\nH3. cegueira ao Earn (LD*) no loadWallet/calcQty: saldo auto-subscrito no Simple Earn (LDxxx) some do sizing/calculo.\n\nSeja adversarial mas PRECISO: nao invente; se algo esta OK, diga OK (nao force achado). Foque DESIGN/CORRECAO, nao estilo.`\n\nconst DIMENSIONS = [\n  { key: 'env-safety', prompt: `SEGURANCA DE AMBIENTE (testnet vs mainnet = dinheiro real). Investigue settings.useTestnet: e um bit unico mutavel? Onde e LIDO (isTestnet derivado em utils/exchange.js, filtros isTestnet em ordersRepository, riskState, reconcile) e onde e ESCRITO (UI /settings, controllers, migrations)? Que guardas impedem um flip ACIDENTAL (autofill da UI, PATCH, seed, migration) de trocar o modo de dinheiro real sem confirmacao? Um flip silencioso mainnet->testnet (ou vice-versa) causaria perda/confusao/ordem no ambiente errado? Re-valide H1.` },\n  { key: 'position-accounting', prompt: `CONTABILIDADE DE POSICAO. getFarmPosition e getTrendPosition (backend/src/repositories/ordersRepository.js): somam quantity BRUTA das ordens FILLED, ou liquida de fee? A fee de COMPRA reduz a base recebida (compra 0,908 mas fee em base deixa 0,907 na carteira). Onde isso morde: FARM_DCA.qty, a venda FARM_QTY (tenta vender mais do que tem na carteira?), TREND_QTY, P&L. O calcQty capa na carteira (mitiga o oversell)? Quao REAL e o impacto em dinheiro (so dust, ou pode falhar ordem / vazar)? Re-valide H2.` },\n  { key: 'wallet-earn', prompt: `WALLET vs SIMPLE EARN (LD*). loadWallet/get_wallet (MCP) e calcQty (beholder) enxergam saldo em Earn (LDxxx) ou so o spot livre? O dailyCapJob.computeEquity JA marca LD* a mercado pelo subjacente \u2014 mas o caminho de SIZING (calcQty, loadWallet, equity usado pelo %-teto) tambem? Um saldo que a Binance AUTO-SUBSCREVE no Earn (incidente historico LTC->LDLTC) some do sizing -> ordem subdimensionada ou HALT falso? Onde exatamente a cegueira morde hoje. Re-valide H3.` },\n  { key: 'money-path-sweep', prompt: `VARREDURA DE MONEY-PATH alem dos 3 HIGH. Procure bugs de CORRECAO novos em: calcQty (keywords FARM_QTY/TREND_QTY/HARVEST_QTY/MAX_WALLET/-1013), placeOrder/placeOco (backend/src/beholder.js), feeCalc/computeNet, reconcile (app-em), dailyCap, validateConditions (regex sem espaco ao redor do operador). A suite em backend/scripts/sim cobre varios \u2014 ache o que NAO esta coberto e poderia morder (precedencia, undefined, persistencia, off-by-one, condition mal-formada).` },\n  { key: 'resilience-state', prompt: `RESILIENCIA / ESTADO no boot e restart. Estado volatil que orfana: FARM_DCA (derivado), TREND_QTY, locks FARM_SELLING/HARVEST_SELLING, harvest buckets, riskState.json, daily_cap_snapshot.json, equity quente (riskState.setEquity novo). Corrida init() x stream x getActiveMonitors? Algum estado que sobrevive errado a um make nuke / rebuild? O equity quente recem-introduzido tem buraco de staleness/fail-safe? Ordem dos load* no init() esta certa?` },\n  { key: 'strategy-coherence', prompt: `COERENCIA DE ESTRATEGIA (desenho, nao codigo). O regime-gating (bear=caixa, trend=seguir), Farm no-loss, Trend SMA50/200, paper-validation, funil shadow \u2014 sao coerentes com a meta (validar via paper, ~flat a $149, capturar ciclos pra +3 BTC)? Algum ERRO DE DESENHO estrategico? A revisao anterior concluiu 'conservador = escolha correta a $149' \u2014 CONFIRME ou REFUTE com argumento. Algo refutado (harvester id22-25, scalp 1m, bear-futures/short, VPIN-forecast) esta sendo re-introduzido por engano? Veja os isActive no DB se precisar.` },\n  { key: 'security-secrets', prompt: `SEGURANCA. Chaves API (AES-256 em repouso via crypto.js; accessKey fica plaintext?), trava SELL-BTC do cofre (tradeux-mcp place_order): tem buracos (BUY BTCUSDT, SELL alts que somam exposicao, SELL ETHBTC/par cruzado)? HALT/floor/kill-switch (riskState): o agente LLM consegue flipar o HALT (NAO deveria \u2014 sem MCP write tool)? ALLOW_TRADING gating. Algum vetor REAL dado que o sistema esta LIVE com chave mainnet real?` },\n]\n\nfunction reviewPrompt(d) {\n  return `${SHARED}\\n\\n=== SUA DIMENSAO: ${d.key} ===\\n${d.prompt}\\n\\nRetorne os achados REAIS da sua dimensao via schema (HIGH/MEDIUM/LOW/INFO), cada um com location file:line, descricao tecnica e impacto concreto. Marque isKnownHigh=true se for um dos 3 HIGH conhecidos (H1/H2/H3). Se a dimensao estiver limpa, retorne findings vazio com uma nota INFO do que voce verificou.`\n}\n\nfunction verifyPrompt(f, dim) {\n  return `${SHARED}\\n\\n=== VERIFICACAO ADVERSARIAL ===\\nVerifique este achado da dimensao \"${dim}\" contra o codigo REAL (Read/Grep/Bash em ${REPO}). TENTE REFUTAR: e problema REAL ou falso-positivo? Confirme/corrija a location (file:line), reproduza a logica no codigo, e de o veredito honesto + severidade FINAL. Default CETICO: se nao conseguir confirmar com evidencia concreta no codigo, confirmed=false. Se confirmar, ajuste a severidade pra realidade (um \"qty bruta\" que o calcQty mitiga pode ser MEDIUM/LOW, nao HIGH).\\n\\nACHADO:\\n${JSON.stringify(f, null, 1)}`\n}\n\nfunction fixPrompt(x) {\n  return `${SHARED}\\n\\n=== DESIGN DE CORRECAO (voce e o tech lead) ===\\nProjete a CORRECAO concreta deste problema CONFIRMADO. Leia o codigo real (file:line). De: abordagem tecnica (o QUE mudar e COMO), arquivos a mudar, risco da mudanca (e money-path LIVE com dinheiro real), estrategia de teste (a suite de sim em backend/scripts/sim e o padrao \u2014 diga quais asserts/arquivo), esforco (S/M/L), e recomendacao (FAZER_AGORA / AGENDAR / ACEITAR_COMO_DIVIDA com porque). Seja especifico e implementavel \u2014 este plano vai virar um PR que passa por gate QA+TL.\\n\\nPROBLEMA CONFIRMADO:\\n${JSON.stringify({ finding: x.finding, verdict: x.verdict, dimension: x.dimension }, null, 1)}`\n}\n\nconst FINDINGS_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    dimension: { type: 'string' },\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        properties: {\n          title: { type: 'string' },\n          severity: { type: 'string', enum: ['HIGH', 'MEDIUM', 'LOW', 'INFO'] },\n          location: { type: 'string', description: 'file:line' },\n          description: { type: 'string' },\n          impact: { type: 'string', description: 'impacto concreto no dinheiro/correcao' },\n          isKnownHigh: { type: 'boolean', description: 'true se for H1/H2/H3' },\n        },\n        required: ['title', 'severity', 'location', 'description', 'impact', 'isKnownHigh'],\n      },\n    },\n  },\n  required: ['dimension', 'findings'],\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    title: { type: 'string' },\n    confirmed: { type: 'boolean', description: 'true se for problema REAL' },\n    severityFinal: { type: 'string', enum: ['HIGH', 'MEDIUM', 'LOW', 'INFO', 'NOT_AN_ISSUE'] },\n    locationConfirmed: { type: 'string', description: 'file:line confirmado/corrigido' },\n    reasoning: { type: 'string' },\n    evidence: { type: 'string', description: 'trecho/logica do codigo que prova' },\n  },\n  required: ['title', 'confirmed', 'severityFinal', 'reasoning'],\n}\n\nconst FIX_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    title: { type: 'string' },\n    approach: { type: 'string' },\n    filesToChange: { type: 'array', items: { type: 'string' } },\n    risk: { type: 'string' },\n    testStrategy: { type: 'string' },\n    effort: { type: 'string', enum: ['S', 'M', 'L'] },\n    recommendation: { type: 'string', enum: ['FAZER_AGORA', 'AGENDAR', 'ACEITAR_COMO_DIVIDA'] },\n    rationale: { type: 'string' },\n  },\n  required: ['title', 'approach', 'filesToChange', 'risk', 'effort', 'recommendation', 'rationale'],\n}\n\nphase('Review')\nlog(`Revisando ${DIMENSIONS.length} dimensoes + verificando cada achado adversarialmente...`)\n\nconst reviewed = await pipeline(\n  DIMENSIONS,\n  d => agent(reviewPrompt(d), { label: `review:${d.key}`, phase: 'Review', schema: FINDINGS_SCHEMA, agentType: 'general-purpose' }),\n  (r, d) => {\n    const fs = (r && Array.isArray(r.findings)) ? r.findings : []\n    if (!fs.length) return []\n    return parallel(fs.map(f => () =>\n      agent(verifyPrompt(f, d.key), { label: `verify:${d.key}:${String(f.title).slice(0, 18)}`, phase: 'Verify', schema: VERDICT_SCHEMA, agentType: 'qa-engineer' })\n        .then(v => ({ finding: f, verdict: v, dimension: d.key }))\n        .catch(() => null)\n    ))\n  }\n)\n\nconst all = reviewed.flat().filter(Boolean).filter(x => x.verdict)\nconst confirmed = all.filter(x => x.verdict.confirmed && ['HIGH', 'MEDIUM'].includes(x.verdict.severityFinal))\nconst highs = confirmed.filter(x => x.verdict.severityFinal === 'HIGH')\nlog(`${all.length} achados verificados \u2192 ${confirmed.length} confirmados (HIGH/MEDIUM); ${highs.length} HIGH. Projetando fixes...`)\n\nphase('Fix-design')\nconst fixes = (await parallel(highs.map(h => () =>\n  agent(fixPrompt(h), { label: `fix:${String(h.finding.title).slice(0, 20)}`, phase: 'Fix-design', schema: FIX_SCHEMA, agentType: 'tech-lead' }).catch(() => null)\n))).filter(Boolean)\n\nphase('Synthesize')\nconst synthInput = {\n  knownHighStatus: all.filter(x => x.finding && x.finding.isKnownHigh).map(x => ({ title: x.finding.title, dimension: x.dimension, confirmed: x.verdict.confirmed, severityFinal: x.verdict.severityFinal, reasoning: x.verdict.reasoning })),\n  confirmed: confirmed.map(x => ({ title: x.finding.title, dimension: x.dimension, severity: x.verdict.severityFinal, location: x.verdict.locationConfirmed || x.finding.location, impact: x.finding.impact, reasoning: x.verdict.reasoning })),\n  fixes,\n  refutedOrLow: all.filter(x => !x.verdict.confirmed || ['LOW', 'INFO', 'NOT_AN_ISSUE'].includes(x.verdict.severityFinal)).map(x => ({ title: x.finding.title, severityFinal: x.verdict.severityFinal, reasoning: x.verdict.reasoning })),\n}\nconst synthesis = await agent(\n  `${SHARED}\\n\\n=== SINTESE EXECUTIVA (pt-BR) ===\\nVoce recebe o resultado da re-revisao de design/estrategia do TradeUX (achados ja verificados adversarialmente + planos de fix dos HIGH). Escreva um relatorio executivo CONCISO e ACIONAVEL em pt-BR (markdown), com:\\n1) OS 3 HIGH CONHECIDOS (H1 useTestnet, H2 qty bruta, H3 Earn-blindness): cada um RE-VALIDADO ou REFUTADO, com a severidade final e a evidencia/razao (1-2 linhas).\\n2) NOVOS achados HIGH/MEDIUM confirmados (alem dos 3).\\n3) PLANO DE ATAQUE PRIORIZADO: ordem de implementacao, esforco (S/M/L), risco, e recomendacao (fazer agora / agendar) \u2014 lembrando que cada fix passara por gate QA+TL antes de ir pro mainnet LIVE.\\n4) O QUE ESTA OK / refutado (pra nao perder tempo): liste curto o que foi verificado e NAO e problema.\\nNAO repita o codigo; foque na decisao. Seja honesto sobre severidade (um problema que o calcQty mitiga nao e HIGH).\\n\\nDADOS:\\n${JSON.stringify(synthInput, null, 1)}`,\n  { label: 'synthesis', phase: 'Synthesize', agentType: 'general-purpose' }\n)\n\nreturn {\n  totalFindings: all.length,\n  confirmedCount: confirmed.length,\n  highCount: highs.length,\n  knownHighStatus: synthInput.knownHighStatus,\n  confirmed: synthInput.confirmed,\n  fixes,\n  synthesis,\n}\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wyzo1zfr3
+> Summary: Re-roda a revisao de design/estrategia do TradeUX + re-valida os 3 HIGH (useTestnet, qty bruta, Earn-blindness) e projeta fixes
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/subagents/workflows/wf_e602419f-ce8
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/workflows/scripts/tradeux-design-review-wf_e602419f-ce8.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/workflows/scripts/tradeux-design-review-wf_e602419f-ce8.js"} to iterate without resending the script.)
+> Run ID: wf_e602419f-ce8
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/e7003282-79e7-4c59-a5db-de911c1e290a/workflows/scripts/tradeux-design-review-wf_e602419f-ce8.js", resumeFromRunId: "wf_e602419f-ce8"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(13:18:32)*
+
+
+## 🤖 Claude *(13:18:38)*
+
+Workflow lançado em background (`wyzo1zfr3`). Estrutura:
+
+```
+Review     → 7 revisores adversariais por dimensão (env-safety, position-accounting,
+             wallet-earn, money-path-sweep, resilience-state, strategy-coherence, security)
+Verify     → cada achado verificado por um qa-engineer que TENTA REFUTAR (cético por padrão)
+Fix-design → tech-lead projeta a correção concreta de cada HIGH confirmado
+Synthesize → relatório executivo pt-BR priorizado
+```
+
+Os 3 HIGH conhecidos (useTestnet bit-único, qty bruta, cegueira ao Earn) entram explícitos pra re-validação com evidência no código, e as 7 dimensões abertas caçam novos. Os agentes só **leem e analisam** — nenhum edita money-path; a implementação dos fixes aprovados vem depois, por mim, com gate QA+TL.
+
+Você pode acompanhar ao vivo com `/workflows`. Eu sou re-invocado automaticamente quando terminar — aí te trago a síntese (3 HIGH re-validados/refutados + novos achados + plano de ataque priorizado) e a gente decide o que implementar primeiro. Sigo aguardando.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

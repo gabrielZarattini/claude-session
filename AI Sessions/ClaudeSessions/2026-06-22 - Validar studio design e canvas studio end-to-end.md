@@ -13378,5 +13378,5 @@ Quando quiser retomar, o caminho está pronto pro **deploy do studio** + **Hyper
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-22 - Resolver dois pontos pendentes]]
-> * **Próxima Sessão**: [[2026-06-22 - agent-a037871aeb5aea03e]]
+> * **Próxima Sessão**: [[2026-06-22 - agent-a009bfb37ed7509b8]]
 %% --- TIMELINE END --- %%
