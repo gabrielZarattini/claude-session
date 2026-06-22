@@ -2763,6 +2763,2044 @@ Os "próximos passos" têm um detalhe de dependência: **a ativação do Viral A
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Resolvidos os alertas acionáveis. Por onde sigo agora? (a ativação do Autopilot exige você aplicar os 2 secrets + a regra CF acima primeiro)"="Módulo Vídeo (1ª fatia)", "A edge fn já está deployada (drift deployado↔repo). Como trato os commits da resolução dos alertas?"="Commitar agora (em branch)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(13:32:18)*
+
+
+## 🤖 Claude *(13:32:19)*
+
+Decisões registradas: **Módulo Vídeo (1ª fatia)** + **commitar agora em branch**. Fechando o drift primeiro (branch a partir de main, sem push, sem Co-Authored-By por preferência sua):
+
+## 🤖 Claude *(13:32:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit checkout -b hardening/wp-cf-publish-and-security-drift\ngit add supabase/functions/publish-wordpress/index.ts\ngit commit -q -m \"feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json\n\nO publish server-side morria em HTTP 403 (cf-mitigated:challenge) \u2014 fetch Deno\nnao resolve o desafio JS do Cloudflare. Adiciona header secreto X-MCORCH-Publish\npara a CF WAF poder fazer Skip gated por header (sem abrir /wp-json ao mundo).\nHost-gated fail-closed: o secret so e enviado quando o host de destino bate com\nWP_PUBLISH_SECRET_HOST \u2014 nunca para um wp_site_url arbitrario de tenant\n(/security-review HIGH fechado na mesma sessao). Deployado 106.3kB + boot-smoke 401.\"\ngit add docs/bok/security/04-fmea-security.md docs/processes/wordpress-cf-publish-unblock.md CLAUDE.md\ngit commit -q -m \"docs(security): reconcilia drift \u2014 FM-04/FM-10 fechados + SOP CF publish\n\nA FMEA (selo 09-jun) ainda apontava FM-04 (env service_role legada no compose,\nRPN 300) e FM-10 (gitnexus root) como gaps fisicos abertos, mas ambos ja estavam\nremediados materialmente (compose saneado + docker inspect runtime + Dockerfile\nUSER 1001). Marca FM-04/FM-10 Fechado + OTD-SEC-004/005 fechadas; corrige a linha\nda suite security no CLAUDE.md. Adiciona SOP wordpress-cf-publish-unblock (Lei 2)\ncom os passos Sovereign (secrets + CF rule) e gates de verificacao.\"\necho \"=== log ===\"; git log --oneline -3; echo \"=== status ===\"; git status --short",
+  "description": "Branch + 2 granular commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Switched to a new branch 'hardening/wp-cf-publish-and-security-drift'
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:32AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:32AM[0m [32mINF[0m scan completed in 9.47ms
+> [90m10:32AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:32AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:32AM[0m [32mINF[0m scan completed in 13.5ms
+> [90m10:32AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> === log ===
+> 89e59ab docs(security): reconcilia drift — FM-04/FM-10 fechados + SOP CF publish
+> 0fc7ed9 feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
+> b76f1d5 docs(handoff): seal camada criativa + módulo Vídeo (BoK 9/9 + agência v1.1) + SSO + tenancy
+> === status ===
+> ```
+
+## 🤖 Claude *(13:32:57)*
+
+
+## 🤖 Claude *(13:33:01)*
+
+Drift fechado — 2 commits granulares (`0fc7ed9`, `89e59ab`), lefthook/gitleaks verdes, working tree limpo.
+
+Agora o **Módulo Vídeo — 1ª fatia**. BoK 9/9 selada = gate aberto, mas a **escolha da fatia** é decisão (Closed-Loop: a BoK é a SSOT do *o quê*, a fatia é o *recorte*). Vou mapear o contrato vivo da BoK + o que já aterrissou (SSO R3 + tenancy + estúdio faceless/HyperFrames) em paralelo, pra te propor o recorte certo antes de codar:
+
+## 🤖 Claude *(13:33:02)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "M\u00f3dulo V\u00eddeo \u2014 1\u00aa fatia (scoping)",
+  "summary": "Mapear o contrato vivo da BoK video-studio (9/9 + v1.1 ag\u00eancia) + scaffolding j\u00e1 landado (SSO R3, tenancy, faceless studio, HyperFrames) para propor o recorte da 1\u00aa fatia MVP"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Módulo Vídeo — 1ª fatia (scoping)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(13:33:38)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'video-studio-slice-scoping',\n  description: 'Mapear o contrato vivo da BoK video-studio + scaffolding j\u00e1 landado para propor a 1\u00aa fatia MVP',\n  phases: [\n    { title: 'Understand', detail: 'BoK strategic \u00b7 spec \u00b7 data/process \u00b7 scaffolding landado em paralelo' },\n  ],\n}\n\nconst READER = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['layer', 'summary', 'keyIds', 'alreadyLanded', 'sliceCandidates', 'risks', 'evidence'],\n  properties: {\n    layer: { type: 'string' },\n    summary: { type: 'string', description: 's\u00edntese densa do que esta camada estabelece (o qu\u00ea/por qu\u00ea/como)' },\n    keyIds: { type: 'array', items: { type: 'string' }, description: 'IDs can\u00f4nicos (FR-VS/BR-VS/PR/tabela/etc.) com uma linha cada \u2014 os que importam pra recortar a 1\u00aa fatia' },\n    alreadyLanded: { type: 'array', items: { type: 'string' }, description: 'o que J\u00c1 existe materialmente no repo/infra (com file:line ou migration/servi\u00e7o) \u2014 pra fatia construir sobre, n\u00e3o duplicar' },\n    sliceCandidates: { type: 'array', items: { type: 'string' }, description: 'da \u00f3tica desta camada, o que uma 1\u00aa fatia MVP m\u00ednima-mas-vertical poderia entregar (menor caminho de valor que conecta na malha + tem self-healing)' },\n    risks: { type: 'array', items: { type: 'string' }, description: 'armadilhas/depend\u00eancias externas/gaps de config que travam a fatia' },\n    evidence: { type: 'array', items: { type: 'string' }, description: 'doc:section ou file:line literais que ancoram as claims (Lei 1)' },\n  },\n}\n\nphase('Understand')\n\nconst BASE = `Repo MCORCH em /home/gcrUX/htdocs/constellation-orchestra. M\u00f3dulo novo: \"V\u00eddeo\" (video-studio), BoK 9/9 SELADA (gate de c\u00f3digo aberto) + emenda v1.1 (camada de alavancagem de ag\u00eancia). Objetivo do Sovereign: integrar um est\u00fadio de v\u00eddeo faceless + editor como APP ISOLADO sob MCORCH (auth MCORCH + mcoCoins + BYOK per-user), com posicionamento \"ag\u00eancia de conte\u00fado em caixa\". Voc\u00ea \u00e9 um leitor que vai me dar a base material pra eu recortar a 1\u00aa FATIA MVP. Lei 1: toda claim com doc:section ou file:line. Primeiro rode 'ls -la docs/bok/video-studio/' pra ver os arquivos exatos. Leia S\u00d3 o necess\u00e1rio e seja denso. Retorne via StructuredOutput.`\n\nconst [strat, spec, data, landed] = await parallel([\n  () => agent(`${BASE}\\n\\nSUA CAMADA: ESTRAT\u00c9GICA. Leia 00 (index/blueprint se houver), 01-mrd, 02-brd, 03-prd da BoK video-studio + a emenda v1.1 (procure um arquivo com \"v1.1\"/\"agency\"/\"agencia\" no nome ou se\u00e7\u00e3o). Extraia: o problema/mercado, o beachhead, o posicionamento ag\u00eancia v1.1 (organizations\u2192clients, white-label, wholesale mcoCoins, RBAC/seats), e QUAIS BR/PR/MR s\u00e3o MVP (must-have da 1\u00aa onda) vs depois. sliceCandidates = o menor produto vertical que prova o valor central.`, { label: 'bok-strategic', phase: 'Understand', schema: READER }),\n  () => agent(`${BASE}\\n\\nSUA CAMADA: ESPECIFICA\u00c7\u00c3O. Leia 04-frd (lista FR-VS-001..NNN) e 05-sdd (arquitetura f\u00edsica). Extraia: a lista de FR-VS com prioridade/fase, a ARQUITETURA do app isolado (como o est\u00fadio faceless n8n + editor HyperFrames + Remotion/FFmpeg/Gemini/etc. se encaixam; o que \u00e9 container Sovereign Mesh vs edge fn vs frontend), o contrato de auth (SSO cross-subdom\u00ednio), mcoCoins (custos/RPC), BYOK per-user, e o mapa de slicing que o SDD prop\u00f5e (Fatia 1/2/3...). sliceCandidates = a Fatia 1 que o pr\u00f3prio SDD desenha, se desenhar.`, { label: 'bok-spec', phase: 'Understand', schema: READER }),\n  () => agent(`${BASE}\\n\\nSUA CAMADA: DADOS/PROCESSO/QUALIDADE. Leia 06-data-model, 07-process-flow, 08-quality-metrics. Extraia: as tabelas+RLS que a 1\u00aa fatia precisa (e quais J\u00c1 existem \u2014 cheque migrations em supabase/migrations/ por organizations/clients/video/etc.), o fluxo do pipeline de v\u00eddeo (do briefing ao asset final), os gates de qualidade/KPIs e quaisquer OTD-VS/FMEA-VS relevantes pra fatia 1. sliceCandidates = o menor subconjunto de tabelas+fluxo que entrega 1 v\u00eddeo end-to-end num tenant.`, { label: 'bok-data', phase: 'Understand', schema: READER }),\n  () => agent(`${BASE}\\n\\nSUA CAMADA: O QUE J\u00c1 ATERRISSOU (scaffolding material). N\u00c3O confie em docs \u2014 verifique o repo/infra. Cheque: (1) SSO R3 \u2014 procure 'sso-auth-gate' (servi\u00e7o systemd? arquivo? nginx auth_request?), commit 6eca4bc; (2) tenancy \u2014 migrations 20260622030000/030100 (organizations/organization_members/clients + helpers is_org_member/org_role + RPC create_organization): leia o que criaram + RLS; (3) o est\u00fadio faceless \u2014 existe em /home/gcrUX/studio? (ls -la); que stack (n8n workflow e7e3beeb? Remotion:8088? FFmpeg? VoxCPM/LTX?); (4) editor HyperFrames \u2014 est\u00e1 no repo? onde?; (5) qualquer c\u00f3digo video-studio j\u00e1 no repo (grep -ri 'video.studio\\\\|video_studio\\\\|hyperframes' src/ supabase/ packages/ --include='*.ts' -l). Reporte o estado REAL de cada um (existe/parcial/ausente) com prova (ls/grep/migration:line). Isso define sobre o que a fatia constr\u00f3i.`, { label: 'scaffolding-landed', phase: 'Understand', schema: READER }),\n])\n\nreturn { strat, spec, data, landed }",
+  "description": "Map video-studio BoK + scaffolding"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w8rkss8lx
+> Summary: Mapear o contrato vivo da BoK video-studio + scaffolding já landado para propor a 1ª fatia MVP
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/subagents/workflows/wf_5750fe6d-e66
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/workflows/scripts/video-studio-slice-scoping-wf_5750fe6d-e66.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/workflows/scripts/video-studio-slice-scoping-wf_5750fe6d-e66.js"} to iterate without resending the script.)
+> Run ID: wf_5750fe6d-e66
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/workflows/scripts/video-studio-slice-scoping-wf_5750fe6d-e66.js", resumeFromRunId: "wf_5750fe6d-e66"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(13:33:41)*
+
+
+## 🤖 Claude *(13:33:46)*
+
+Alertas fechados e commitados. Agora o scoping do módulo Vídeo está rodando — 4 leitores em paralelo mapeando a BoK (estratégia · spec · dados/processo) + o que já aterrissou materialmente (SSO R3, tenancy, estúdio faceless, HyperFrames). 
+
+Quando voltar, te trago a **proposta da 1ª fatia** (recorte vertical mínimo, mapeado em FR-VS, ORO, plano) pra seu GO antes de eu codar. Te aviso.
+
+Enquanto isso, se quiser adiantar o desbloqueio do publish (③), os 2 comandos de `supabase secrets` + a regra CF do SOP destravam a ativação do Autopilot depois.
+
+## 👤 User *(13:39:39)*
+
+<task-notification>
+<task-id>w8rkss8lx</task-id>
+<tool-use-id>toolu_014DmMcgLEnzFEXAujmH4z48</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/tasks/w8rkss8lx.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Mapear o contrato vivo da BoK video-studio + scaffolding já landado para propor a 1ª fatia MVP" completed</summary>
+<result>{"strat":{"layer":"ESTRATÉGICA (00-index · 01-mrd · 02-brd · 03-prd + emenda §AG v1.1)","summary":"video-studio = módulo Vídeo do MCORCH entregue como DOIS motores criativos isolados (\"apps dentro do app\"), ambos gateados por (R1) BYOK per-user · (R2) mcoCoins gatekeeper atômico · (R3) auth/SSO MCORCH · (R4) malha · (R5) ponte de rede docker: (A) FACELESS STUDIO — fábrica autônoma E2E de vídeo vertical sem rosto sobre o workflow n8n existente `e7e3beeb58f7411a` (Gemini director/QA → Pollinations → VoxCPM TTS clonado → Remotion HUD → LTX i2v + Ken-Burns fallback → FFmpeg → Gemini-vision QA → entrega); (B) HYPERFRAMES EDITOR — NLE agent-first (HeyGen HyperFrames, Apache-2.0) que renderiza HTML/CSS/JS→MP4 determinístico via Chrome headless, embed nativo em `/dashboard/canvas/video` (01-mrd.md:15). PROBLEMA/MERCADO: criador faceless BR + micro-agência montam Shorts num pipeline manual fragmentado (CapCut+ElevenLabs USD, 1-3h/vídeo, zero aprendizado acumulado), SaaS de avatar (HeyGen/Synthesia/Argil) cobra em USD, prende o criador e NÃO monetiza nem conecta à malha/afiliado (01-mrd.md:25). TAM R$~2,8bi · SAM R$~340mi (01-mrd.md:54-55). BEACHHEAD v0.1 = criador solo \"Léo\" (segmento primário); a emenda v1.1 REFRAME a altitude: o ativo defensável NÃO é \"mais um SaaS de vídeo\" — é a ALAVANCA DE AGÊNCIA (\"AI content agency in a box\"). O criador solo é a porta de entrada; a agência/power-creator multi-cliente é onde vive a margem composta: 1 org → N clientes → N× volume de render + consumo wholesale de mcoCoins + receita afiliada (01-mrd.md:151,168; 03-prd.md:264). POSICIONAMENTO v1.1: a STACK costurada sob 1 cockpit (video-studio + Viral Autopilot + Marketing Hub + afiliado ML) — o concorrente real passa a ser o agency-tooling/SMMA white-label, NÃO o SaaS de criador (01-mrd.md:155-164,195-202). MONETIZAÇÃO híbrida: mcoCoins por render (4×-floor) + afiliado ML; na agência, margem = mcoCoins WHOLESALE com desconto por volume revendido ao cliente final (02-brd.md:278-281). LGPD elevada (voz clonada Art.11 + erasure). Backward-compat R-superset SAGRADA: `org_id`/`client_id` NULL = criador solo v0.1 intacto; toda camada de agência é aditiva/opt-in (01-mrd.md:166; 03-prd.md:266).","keyIds":["BEACHHEAD: Léo, criador faceless solo (segmento primário §3) — porta de entrada; Marina, operadora de agência, PROMOVIDA de Secondary a persona co-primária first-class na v1.1 (03-prd.md:33,270)","MR-VS-001: faceless E2E (Critical) · MR-VS-002: editor programático HTML→MP4 embed (Critical) · MR-VS-007: monetização afiliado ML nativa","MR-VS-015: white-label demand (Critical) · MR-VS-016: reseller/micro-agência como alavanca PRIMÁRIA (Critical) · MR-VS-017: plataforma content-ops · MR-VS-018: economia de margem wholesale · MR-VS-019: LGPD erasure per-cliente (corrige bug)","MVP MUST (solo §4): PR-VS-001 ponte rede docker (GATING) · PR-VS-002 auth 401 · PR-VS-003 BYOK per-user (GATING) · PR-VS-004 débito atômico · PR-VS-005 faceless render E2E · PR-VS-006 portão QA VLM · PR-VS-007 persistência asset · PR-VS-008 mesh+health (03-prd.md:136)","MVP MUST (agência §AG.3 v1.0 first-class): PR-VS-018 tenancy org/member/client + org_id/client_id nullable + RLS estendida (GATING da camada agência) · PR-VS-019 wholesale + deduct_mco_coins_org · PR-VS-024 dashboard multi-cliente · PR-VS-025 onboarding cliente + byok_ref · PR-VS-026 RBAC+seats · PR-VS-027 erase_client_artifacts (gate GA) (03-prd.md:321-326)","SHOULD/v1.0 (depois): PR-VS-009/010/011 HyperFrames embed+sandbox+render · PR-VS-012 afiliado ML · PR-VS-013 BYOK open-design · PR-VS-016 erasure solo (gate GA) · PR-VS-028 client portal · PR-VS-029 white-label custom_domain · PR-VS-030 compra wholesale · PR-VS-031 reseller PAT API","COULD/Future: PR-VS-020 render em lote · PR-VS-021 recomendação GraphRAG · PR-VS-022 lib templates · PR-VS-023 auto-publish","BR-VS-017 tenancy (Critical) · BR-VS-018 plano Agency ~25k mco/mo+N seats (Critical) · BR-VS-019 wholesale RPC (Critical) · BR-VS-021 RBAC owner/billing_admin/editor/viewer · BR-VS-024 erase_client_artifacts","Plano Agency: ≈25.000 mco/mo + N seats + wholesale rate (desconto volume) + white-label (custom_domain+brand_theme); revenue split MCORCH↔agência↔cliente, MCORCH retém fração minoritária (03-prd.md:343-350; 02-brd.md:261)","OTD-VS-001 ponte rede docker (MVP gate) · OTD-VS-002 BYOK open-design single-tenant · OTD-VS-006 sandbox HTML não-confiável (RPN 200) · OTD-VS-007 calibração mco render (faceless≈125 · hyperframes≈12 provisórios) · OTD-VS-008 migração linhas user_id-only→org-scoped"],"alreadyLanded":["Fundação de tenancy de agência JÁ MIGRADA: supabase/migrations/20260622030000_video_studio_org_tenancy.sql cria 3 tabelas `organizations` (wholesale_mco_balance numeric default 0, custom_domain, brand_theme, plan_tier) + `organization_members` (role+seat_active+UNIQUE(org_id,user_id)) + `clients` (org_id, byok_ref, affiliate_tag, status) com RLS members-only e helper RPCs is_org_member / org_role / create_organization (linhas 19,33,48,65,73,88)","Grant hardening JÁ MIGRADO: 20260622030100_video_studio_org_grant_hardening.sql faz REVOKE ALL + re-GRANT só colunas seguras (name,slug,custom_domain,brand_theme) em organizations — financeiras/ownership mexíveis só via service-role RPC (linhas 14-16)","SSO cross-subdomínio R3 JÁ LANDADO (commit 6eca4bc): src/lib/sso-cookie.ts + scripts/sso-auth-gate.ts + nginx/design.mcorch.com.conf + src/hooks/useAuth.ts + src/App.tsx + src/pages/Auth.tsx — gate de auth MCORCH p/ apps isolados (PR-VS-002 / BR-VS-003 / R3 parcialmente coberto p/ design.mcorch.com)","BoK 9/9 selada (commit f003e32) + handoff/readme v6.45.0 selados (commits b76f1d5/a1d7303); seed de malha: scripts/seed-video-studio-bok-seal.ts","Edge functions de vídeo PRÉ-EXISTENTES (geração legada, NÃO o pipeline BoK): supabase/functions/{generate-video, generate-video-script, check-video-status, rescue-video}","Página VideoEditorPage.tsx PRÉ-EXISTENTE mas é o editor de conteúdo legado na rota content/video-editor/:id (src/App.tsx:20,112) — NÃO é o HyperFrames /dashboard/canvas/video do BoK (não confundir/duplicar)","Precedentes reutilizáveis para os RPCs de agência: deduct_mco_coins atômico advisory-lock (20260526201000_deduct_mco_coins_locking.sql) + begin/finalize_autopilot_cycle (viral-autopilot) + erase_vision_artifacts/erase_lead — deduct_mco_coins_org e erase_client_artifacts devem ESPELHAR esses padrões","Bucket de storage de vídeo já existe: 20260422000000_create_video_storage_bucket.sql"],"sliceCandidates":["FATIA-MVP RECOMENDADA (menor caminho vertical de valor da camada estratégica): completar a VERTICAL DE TENANCY DE AGÊNCIA já semi-landada — fechar PR-VS-018 adicionando `org_id`/`client_id` NULLABLE às tabelas de domínio + RLS estendida `user_id = auth.uid() OR org_id IN (SELECT org_id FROM organization_members WHERE user_id=auth.uid() AND seat_active)`, e expor uma 1ª superfície fina: hook useAgency (TanStack) + página display-only /dashboard/agency (PR-VS-024) que cria org (RPC create_organization já existe), lista clients e mostra membership. Prova o valor central da TESE v1.1 (1 org→N clientes) end-to-end sobre a fundação JÁ migrada, sem tocar render caro. Self-healing: RLS deny cross-org + observation node + infra_health_logs.","FATIA-MVP ALTERNATIVA (vertical de dinheiro): RPC atômico `deduct_mco_coins_org(p_org_id,p_client_id,p_amount)` espelhando deduct_mco_coins (advisory-lock, debita wholesale_mco_balance, grava cost-center per-cliente, 402 fail-closed, refund idempotente) — PR-VS-019/BR-VS-019. Menor incremento que prova a ALAVANCA ECONÔMICA (margem wholesale) e desbloqueia qualquer render escopado por cliente. Depende da Fatia de colunas org_id/client_id.","FATIA-MVP do MOTOR (se Sovereign priorizar produto sobre agência): a vertical solo §4 — PR-VS-005 faceless render E2E gateado (JWT) + debitado (deduct_mco_coins) + portão VLM (PR-VS-006, BYOK grátis) + asset persistido (PR-VS-007) + mesh observation (PR-VS-008). PORÉM bloqueada pelos 2 gates duros 
+... (truncated 45664 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/tasks/w8rkss8lx.output)</result>
+<usage><agent_count>4</agent_count><subagent_tokens>487164</subagent_tokens><tool_uses>47</tool_uses><duration_ms>360978</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(13:39:43)*
+
+Scoping voltou rico (truncado). Lendo o output completo — preciso das camadas spec/data/scaffolding e dos candidatos de fatia:
+
+## 🤖 Claude *(13:39:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/tasks/w8rkss8lx.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>[Truncated: PARTIAL view — showing lines 1-222 of 284 total (27091 tokens, cap 25000). Call Read with offset=223 limit=222 for the next page, or Grep to find a specific section. Do NOT answer from this page alone if the answer may be further in the file.]</system-reminder>
+> 
+> 1	{
+> 2	  "summary": "Mapear o contrato vivo da BoK video-studio + scaffolding já landado para propor a 1ª fatia MVP",
+> 3	  "agentCount": 4,
+> 4	  "logs": [],
+> 5	  "result": {
+> 6	    "strat": {
+> 7	      "layer": "ESTRATÉGICA (00-index · 01-mrd · 02-brd · 03-prd + emenda §AG v1.1)",
+> 8	      "summary": "video-studio = módulo Vídeo do MCORCH entregue como DOIS motores criativos isolados (\"apps dentro do app\"), ambos gateados por (R1) BYOK per-user · (R2) mcoCoins gatekeeper atômico · (R3) auth/SSO MCORCH · (R4) malha · (R5) ponte de rede docker: (A) FACELESS STUDIO — fábrica autônoma E2E de vídeo vertical sem rosto sobre o workflow n8n existente `e7e3beeb58f7411a` (Gemini director/QA → Pollinations → VoxCPM TTS clonado → Remotion HUD → LTX i2v + Ken-Burns fallback → FFmpeg → Gemini-vision QA → entrega); (B) HYPERFRAMES EDITOR — NLE agent-first (HeyGen HyperFrames, Apache-2.0) que renderiza HTML/CSS/JS→MP4 determinístico via Chrome headless, embed nativo em `/dashboard/canvas/video` (01-mrd.md:15). PROBLEMA/MERCADO: criador faceless BR + micro-agência montam Shorts num pipeline manual fragmentado (CapCut+ElevenLabs USD, 1-3h/vídeo, zero aprendizado acumulado), SaaS de avatar (HeyGen/Synthesia/Argil) cobra em USD, prende o criador e NÃO monetiza nem conecta à malha/afiliado (01-mrd.md:25). TAM R$~2,8bi · SAM R$~340mi (01-mrd.md:54-55). BEACHHEAD v0.1 = criador solo \"Léo\" (segmento primário); a emenda v1.1 REFRAME a altitude: o ativo defensável NÃO é \"mais um SaaS de vídeo\" — é a ALAVANCA DE AGÊNCIA (\"AI content agency in a box\"). O criador solo é a porta de entrada; a agência/power-creator multi-cliente é onde vive a margem composta: 1 org → N clientes → N× volume de render + consumo wholesale de mcoCoins + receita afiliada (01-mrd.md:151,168; 03-prd.md:264). POSICIONAMENTO v1.1: a STACK costurada sob 1 cockpit (video-studio + Viral Autopilot + Marketing Hub + afiliado ML) — o concorrente real passa a ser o agency-tooling/SMMA white-label, NÃO o SaaS de criador (01-mrd.md:155-164,195-202). MONETIZAÇÃO híbrida: mcoCoins por render (4×-floor) + afiliado ML; na agência, margem = mcoCoins WHOLESALE com desconto por volume revendido ao cliente final (02-brd.md:278-281). LGPD elevada (voz clonada Art.11 + erasure). Backward-compat R-superset SAGRADA: `org_id`/`client_id` NULL = criador solo v0.1 intacto; toda camada de agência é aditiva/opt-in (01-mrd.md:166; 03-prd.md:266).",
+> 9	      "keyIds": [
+> 10	        "BEACHHEAD: Léo, criador faceless solo (segmento primário §3) — porta de entrada; Marina, operadora de agência, PROMOVIDA de Secondary a persona co-primária first-class na v1.1 (03-prd.md:33,270)",
+> 11	        "MR-VS-001: faceless E2E (Critical) · MR-VS-002: editor programático HTML→MP4 embed (Critical) · MR-VS-007: monetização afiliado ML nativa",
+> 12	        "MR-VS-015: white-label demand (Critical) · MR-VS-016: reseller/micro-agência como alavanca PRIMÁRIA (Critical) · MR-VS-017: plataforma content-ops · MR-VS-018: economia de margem wholesale · MR-VS-019: LGPD erasure per-cliente (corrige bug)",
+> 13	        "MVP MUST (solo §4): PR-VS-001 ponte rede docker (GATING) · PR-VS-002 auth 401 · PR-VS-003 BYOK per-user (GATING) · PR-VS-004 débito atômico · PR-VS-005 faceless render E2E · PR-VS-006 portão QA VLM · PR-VS-007 persistência asset · PR-VS-008 mesh+health (03-prd.md:136)",
+> 14	        "MVP MUST (agência §AG.3 v1.0 first-class): PR-VS-018 tenancy org/member/client + org_id/client_id nullable + RLS estendida (GATING da camada agência) · PR-VS-019 wholesale + deduct_mco_coins_org · PR-VS-024 dashboard multi-cliente · PR-VS-025 onboarding cliente + byok_ref · PR-VS-026 RBAC+seats · PR-VS-027 erase_client_artifacts (gate GA) (03-prd.md:321-326)",
+> 15	        "SHOULD/v1.0 (depois): PR-VS-009/010/011 HyperFrames embed+sandbox+render · PR-VS-012 afiliado ML · PR-VS-013 BYOK open-design · PR-VS-016 erasure solo (gate GA) · PR-VS-028 client portal · PR-VS-029 white-label custom_domain · PR-VS-030 compra wholesale · PR-VS-031 reseller PAT API",
+> 16	        "COULD/Future: PR-VS-020 render em lote · PR-VS-021 recomendação GraphRAG · PR-VS-022 lib templates · PR-VS-023 auto-publish",
+> 17	        "BR-VS-017 tenancy (Critical) · BR-VS-018 plano Agency ~25k mco/mo+N seats (Critical) · BR-VS-019 wholesale RPC (Critical) · BR-VS-021 RBAC owner/billing_admin/editor/viewer · BR-VS-024 erase_client_artifacts",
+> 18	        "Plano Agency: ≈25.000 mco/mo + N seats + wholesale rate (desconto volume) + white-label (custom_domain+brand_theme); revenue split MCORCH↔agência↔cliente, MCORCH retém fração minoritária (03-prd.md:343-350; 02-brd.md:261)",
+> 19	        "OTD-VS-001 ponte rede docker (MVP gate) · OTD-VS-002 BYOK open-design single-tenant · OTD-VS-006 sandbox HTML não-confiável (RPN 200) · OTD-VS-007 calibração mco render (faceless≈125 · hyperframes≈12 provisórios) · OTD-VS-008 migração linhas user_id-only→org-scoped"
+> 20	      ],
+> 21	      "alreadyLanded": [
+> 22	        "Fundação de tenancy de agência JÁ MIGRADA: supabase/migrations/20260622030000_video_studio_org_tenancy.sql cria 3 tabelas `organizations` (wholesale_mco_balance numeric default 0, custom_domain, brand_theme, plan_tier) + `organization_members` (role+seat_active+UNIQUE(org_id,user_id)) + `clients` (org_id, byok_ref, affiliate_tag, status) com RLS members-only e helper RPCs is_org_member / org_role / create_organization (linhas 19,33,48,65,73,88)",
+> 23	        "Grant hardening JÁ MIGRADO: 20260622030100_video_studio_org_grant_hardening.sql faz REVOKE ALL + re-GRANT só colunas seguras (name,slug,custom_domain,brand_theme) em organizations — financeiras/ownership mexíveis só via service-role RPC (linhas 14-16)",
+> 24	        "SSO cross-subdomínio R3 JÁ LANDADO (commit 6eca4bc): src/lib/sso-cookie.ts + scripts/sso-auth-gate.ts + nginx/design.mcorch.com.conf + src/hooks/useAuth.ts + src/App.tsx + src/pages/Auth.tsx — gate de auth MCORCH p/ apps isolados (PR-VS-002 / BR-VS-003 / R3 parcialmente coberto p/ design.mcorch.com)",
+> 25	        "BoK 9/9 selada (commit f003e32) + handoff/readme v6.45.0 selados (commits b76f1d5/a1d7303); seed de malha: scripts/seed-video-studio-bok-seal.ts",
+> 26	        "Edge functions de vídeo PRÉ-EXISTENTES (geração legada, NÃO o pipeline BoK): supabase/functions/{generate-video, generate-video-script, check-video-status, rescue-video}",
+> 27	        "Página VideoEditorPage.tsx PRÉ-EXISTENTE mas é o editor de conteúdo legado na rota content/video-editor/:id (src/App.tsx:20,112) — NÃO é o HyperFrames /dashboard/canvas/video do BoK (não confundir/duplicar)",
+> 28	        "Precedentes reutilizáveis para os RPCs de agência: deduct_mco_coins atômico advisory-lock (20260526201000_deduct_mco_coins_locking.sql) + begin/finalize_autopilot_cycle (viral-autopilot) + erase_vision_artifacts/erase_lead — deduct_mco_coins_org e erase_client_artifacts devem ESPELHAR esses padrões",
+> 29	        "Bucket de storage de vídeo já existe: 20260422000000_create_video_storage_bucket.sql"
+> 30	      ],
+> 31	      "sliceCandidates": [
+> 32	        "FATIA-MVP RECOMENDADA (menor caminho vertical de valor da camada estratégica): completar a VERTICAL DE TENANCY DE AGÊNCIA já semi-landada — fechar PR-VS-018 adicionando `org_id`/`client_id` NULLABLE às tabelas de domínio + RLS estendida `user_id = auth.uid() OR org_id IN (SELECT org_id FROM organization_members WHERE user_id=auth.uid() AND seat_active)`, e expor uma 1ª superfície fina: hook useAgency (TanStack) + página display-only /dashboard/agency (PR-VS-024) que cria org (RPC create_organization já existe), lista clients e mostra membership. Prova o valor central da TESE v1.1 (1 org→N clientes) end-to-end sobre a fundação JÁ migrada, sem tocar render caro. Self-healing: RLS deny cross-org + observation node + infra_health_logs.",
+> 33	        "FATIA-MVP ALTERNATIVA (vertical de dinheiro): RPC atômico `deduct_mco_coins_org(p_org_id,p_client_id,p_amount)` espelhando deduct_mco_coins (advisory-lock, debita wholesale_mco_balance, grava cost-center per-cliente, 402 fail-closed, refund idempotente) — PR-VS-019/BR-VS-019. Menor incremento que prova a ALAVANCA ECONÔMICA (margem wholesale) e desbloqueia qualquer render escopado por cliente. Depende da Fatia de colunas org_id/client_id.",
+> 34	        "FATIA-MVP do MOTOR (se Sovereign priorizar produto sobre agência): a vertical solo §4 — PR-VS-005 faceless render E2E gateado (JWT) + debitado (deduct_mco_coins) + portão VLM (PR-VS-006, BYOK grátis) + asset persistido (PR-VS-007) + mesh observation (PR-VS-008). PORÉM bloqueada pelos 2 gates duros PR-VS-001 (ponte rede docker OTD-VS-001) e PR-VS-003 (BYOK per-user) — maior superfície, mais risco de infra; menos 'mínima' que a fatia de tenancy.",
+> 35	        "Recorte de valor central da v1.1 numa fatia: org com ≥2 clients + 1 render qualquer (faceless OU hyperframes) escopado por client_id debitado do wholesale via deduct_mco_coins_org, visível num dashboard read-only — é o menor E2E que materializa 'agência de conteúdo em caixa'."
+> 36	      ],
+> 37	      "risks": [
+> 38	        "GAP CRÍTICO p/ qualquer fatia de agência: as colunas `org_id`/`client_id` NÃO foram adicionadas a video_renders/video_scenes/video_assets/video_templates/affiliate_links/ledger (grep vazio) — a migration de tenancy explicitamente DEFERE isso e os RPCs de dinheiro/erasure para 'a studio-integration migration' (20260622030000 linha 11). PR-VS-018 está só PELA METADE.",
+> 39	        "GAP: `deduct_mco_coins_org` e `erase_client_artifacts` NÃO existem em migration nem edge fn nenhuma (grep vazio) — são Critical/gate-GA mas ainda prosa.",
+> 40	        "GAP de domínio: as tabelas-núcleo video_renders/video_scenes/video_assets/video_templates NÃO existem (grep vazio). A fundação de agência foi construída ANTES do domínio que ela escopa — qualquer fatia de render precisa criar essas tabelas primeiro (ou a fatia de tenancy fica 'pendurada' sem linhas para escopar).",
+> 41	        "GATES DUROS DE INFRA da vertical solo: PR-VS-001 ponte de rede docker n8n_default↔mcorch-sovereign-net (OTD-VS-001) + PAT/JWT do studio — sem isso vision-QA/chroma são prosa (02-brd.md:115). Dependência externa de rede docker, fora do código React.",
+> 42	        "FMEA-VS-020 cross-tenant isolation = NOVO TOPO DE RPN da v1.1: qualquer migration de RLS estendida ou INSTEAD OF de tenancy precisa de /security-review obrigatório (CLAUDE.md FMEA-011) — precedente de injeção cross-tenant em VIEWS Vault (meta/social) exige guard auth.uid() nas triggers.",
+> 43	        "OTD-VS-002 open-design single-tenant: BYOK per-user no daemon compartilhado exige re-arquitetura (daemon per-job / od stateless / container por tenant) — bloqueia o motor de DESIGN da stack, não o vídeo, mas é dependência da tese white-label.",
+> 44	        "OTD-VS-006 (RPN 200): HyperFrames executa HTML/JS arbitrário de tenant via Chrome headless → sandbox per-render obrigatório antes de multi-tenant; trava PR-VS-010/011.",
+> 45	        "OTD-VS-007: custos mco (faceless≈125 · hyperframes≈12) são PROVISÓRIOS — só calibrados materialmente no 1º render pago; qualquer projeção de margem wholesale (§AG.4) é estimativa até medição.",
+> 46	        "Confusão de superfície: VideoEditorPage.tsx legado (rota content/video-editor/:id) e edge fns generate-video* PRÉ-existem mas NÃO são o pipeline do BoK — risco de uma fatia 'reaproveitar' o legado e divergir do FRD/SDD. A rota canônica é /dashboard/canvas/video (embed HyperFrames), declarada ANTES de canvas/:id.",
+> 47	        "OTD-VS-008: linhas user_id-only existentes precisam de estratégia de migração p/ org-scoped quando a agência ativar — não pode quebrar o solo path (NULL)."
+> 48	      ],
+> 49	      "evidence": [
+> 50	        "docs/bok/video-studio/00-index.md:8 (escopo v1.1 superset: org→client→project, erase_client_artifacts, deduct_mco_coins_org, white-label, plano Agency, posicionamento)",
+> 51	        "docs/bok/video-studio/00-index.md:124-141 (§AG layer + MVP/GA gates solo e agência)",
+> 52	        "docs/bok/video-studio/01-mrd.md:15,25 (dois motores; problema de mercado faceless/agência)",
+> 53	        "docs/bok/video-studio/01-mrd.md:151-164 (reframe AI content agency in a box + STACK de alavancagem)",
+> 54	        "docs/bok/video-studio/01-mrd.md:184-202 (MR-VS-015..020 + competitive landscape agency-tooling)",
+> 55	        "docs/bok/video-studio/02-brd.md:50-65 (BR-VS-001..016 solo) · 201-203 (tabelas org/member/client canônicas) · 221-237 (BO-VS-006..008 + BR-VS-017..024) · 248-281 (AGENCY ROI + wholesale mechanics)",
+> 56	        "docs/bok/video-studio/03-prd.md:86-122,136 (MoSCoW solo + MVP scope) · 270-348 (§AG persona/MoSCoW agência first-class + plano tier)",
+> 57	        "supabase/migrations/20260622030000_video_studio_org_tenancy.sql:11,19,33,48,65,88 (3 tabelas + helper RPCs landados; money/erasure RPCs e colunas org_id/client_id DEFERIDOS)",
+> 58	        "supabase/migrations/20260622030100_video_studio_org_grant_hardening.sql:14-16 (REVOKE+re-GRANT colunas seguras)",
+> 59	        "git commit 6eca4bc (SSO R3): src/lib/sso-cookie.ts, scripts/sso-auth-gate.ts, nginx/design.mcorch.com.conf, src/hooks/useAuth.ts, src/App.tsx, src/pages/Auth.tsx",
+> 60	        "src/App.tsx:20,112 (VideoEditorPage legado em content/video-editor/:id — NÃO o HyperFrames do BoK)",
+> 61	        "grep vazio: org_id/client_id ADD COLUMN, deduct_mco_coins_org, erase_client_artifacts, CREATE TABLE video_renders/scenes/assets/templates — confirmam os gaps materiais",
+> 62	        "supabase/migrations/20260526201000_deduct_mco_coins_locking.sql (precedente atômico p/ deduct_mco_coins_org)"
+> 63	      ]
+> 64	    },
+> 65	    "spec": {
+> 66	      "layer": "ESPECIFICAÇÃO (04-frd + 05-sdd)",
+> 67	      "summary": "video-studio entrega DOIS motores criativos como apps isolados sob o cockpit MCORCH, governados pelas 5 Regras Soberanas (R1 BYOK per-user · R2 mcoCoins atômico · R3 auth/SSO · R4 malha · R5 bridge Docker): (A) FACELESS STUDIO — geração E2E async sobre o workflow n8n EXISTENTE `e7e3beeb58f7411a` (ativá-lo+instrumentá-lo, NÃO reescrever): loop por cena Gemini-director→Pollinations→VoxCPM(TTS)→Remotion(overlays :8088)→LTX-i2v HF(Ken-Burns fallback)→FFmpeg→Gemini-vision QA→entrega soberana (signed URL); (B) HYPERFRAMES EDITOR — embed NATIVO React de `@hyperframes/studio` em `/dashboard/canvas/video`, render determinístico HTML→MP4 via Chrome+FFmpeg em container EFÊMERO sandboxed. ARQUITETURA FÍSICA (SDD §1.1): frontend display-only (login.mcorch.com nginx) → hooks TanStack (sem novo Zustand store, §2.5) → 3 edge fns Deno (`video-faceless-render`/`video-hyperframes-render`/`video-render-poll`) que fazem APENAS JWT-gate→BYOK-resolve→deduct_mco_coins→enqueue/spawn e retornam 202 (zero wall-clock de Edge no caminho quente, lição orchestrate-async) → trabalho pesado nos containers Docker. O contrato é sempre: JWT verify → BYOK resolve (R1) → deduct (R2) → enqueue/spawn; 401/402/409 NUNCA debitam; refund idempotente por render_id pós-débito. CONTAINER vs EDGE vs FRONTEND: render/legs/billing-débito NUNCA passam pelo frontend; débito vive na edge fn; render vive no container falando Supabase por PostgREST/RPC com `SB_SECRET_KEY`. O R5 BRIDGE é o bloqueador material declarado (SDD §1.4): n8n+remotion vivem em `n8n_default`, vision_mcp+chroma em `constellation-orchestra_mcorch-sovereign-net` — redes isoladas, DNS de container não cruza → sem bridge+PAT do studio, o portão de QA (FR-VS-019) e a memória semântica (FR-VS-028) são prosa. SSO/AUTH (R3): edge fns validam JWT MCORCH via `supabase.auth.getUser` antes de qualquer lógica; rota HyperFrames protegida por DashboardLayout/ProtectedRoute; design.mcorch.com exige OD_API_TOKEN forte+origins restritos+CF WAF Skip (não `development_token`); a identidade do STUDIO p/ chamar vision_mcp é um PAT emitido (`VIDEO_STUDIO_PAT`, scopes vision:read/mesh:write). mcoCoins: VIDEO_FACELESS_RENDER ~125 + VIDEO_HYPERFRAMES_RENDER ~12 (provisórios 4×-floor `mco=ceil(usd/$0.018×4)`, calibrar no 1º render pago OTD-VS-007), QA via BYOK=0 mco; espelhamento triplo billing.ts+const-da-edge+billing.test.ts; débito ÚNICO via deduct_mco_coins RPC. BYOK per-user fail-closed via `decrypted_user_api_keys` (VIEW Vault), 402 `{error:'<svc>_not_configured',action}` se ausente, zero `Deno.env.get('<SVC>_API_KEY')` em path user-facing. A emenda §AG (v1.1) APÊNDE a camada-agência estritamente ADITIVA (org_id/client_id nullable=solo backward-compat): organizations→organization_members(RBAC owner/billing_admin/editor/viewer+seats)→clients, RLS membership via is_org_member() SECURITY DEFINER anti-recursão, deduct_mco_coins_org (débito wholesale+cost-center por cliente), erase_client_artifacts (corrige o bug LGPD do erase per-user que apagaria TODOS os clientes), reseller PAT (espelha mcp_access_tokens), white-label custom_domain+brand_theme, client portal. O SDD NÃO numera \"Fatia 1/2/3\" — desenha MVP GATES: MVP-solo = OTD-VS-001(bridge R5)+OTD-VS-002(BYOK open-design)+R3(SSO); MVP-agência = entidades org/client+RLS membership+erase_client_artifacts+isolamento cross-tenant (FMEA-VS-020 novo topo RPN); GA = erasure LGPD cascata per-cliente ≤24h + consentimento voz clonada Art.11.",
+> 68	      "keyIds": [
+> 69	        "FR-VS-001/002 (Critical, UI/Edge): JWT-gate nas 3 superfícies — faceless trigger, rota HyperFrames, design.mcorch.com; 401 sem auth",
+> 70	        "FR-VS-005/006 (Critical, Edge): BYOK per-user fail-closed via decrypted_user_api_keys; 402 {error,action}; zero env-global em path user-facing",
+> 71	        "FR-VS-009/010/011 (Critical, Edge): deduct atômico ANTES da 1ª leg (402 se saldo<custo, 0 legs) + refund idempotente por render_id pós-falha",
+> 72	        "FR-VS-014 (Critical, Edge/Container): orquestração faceless — aciona n8n e7e3beeb58f7411a + loop por cena Gemini→Pollinations→VoxCPM→Remotion→LTX/Ken-Burns→FFmpeg→QA",
+> 73	        "FR-VS-016 (High): LTX HF i2v (ZeroGPU ~5 GPU-min/dia) com Ken-Burns FFmpeg fallback determinístico — render nunca trava por cota GPU",
+> 74	        "FR-VS-019 (High, Container): consistency gate G3 pré-render-caro via vision.compare(frame inicial+final) BYOK custo-0; divergente→NÃO prossegue (não gasta i2v)",
+> 75	        "FR-VS-021/022/023 (Critical, UI): embed NATIVO @hyperframes/studio (NÃO iframe dev-server) + rota canvas/video ANTES de canvas/:id + botão Video na TopBar",
+> 76	        "FR-VS-024/025 (High, Container): MP4 determinístico (2 renders=byte-idênticos sha256) em container EFÊMERO sandbox, ZERO credencial de tenant no env (OTD-VS-006 RPN 200)",
+> 77	        "FR-VS-026/027 (High, DB): nó observation em mcorch_nodes (NUNCA user_id NULL p/ tenant) + infra_health_logs service='video-studio' allowlist",
+> 78	        "FR-VS-029 (Critical, Container): bridge de rede Docker n8n_default⇄sovereign-net p/ vision_mcp(:3200)+chroma(:8001) — OTD-VS-001, bloqueador MVP",
+> 79	        "FR-VS-030 (High): persistência de asset material em bucket privado video-studio-assets (vídeo ≥100KB), nunca URL efêmera do provider (Lei 1)",
+> 80	        "FR-VS-031/032 (High): erasure LGPD cascata ≤24h + consentimento voz clonada VoxCPM (Art.11)",
+> 81	        "FR-VS-033/034/035/036 (§AG, Critical): org/client CRUD + RBAC 4-roles server-side + seat_active — JÁ MATERIALIZADO em migration 030000",
+> 82	        "FR-VS-037/038/040 (§AG, Critical): per-client render/affiliate scoping + deduct_mco_coins_org (débito wholesale + cost-center por client_id server-trusted)",
+> 83	        "FR-VS-045 (§AG, High): erase_client_artifacts(p_org_id,p_client_id) — erasure SELETIVA por cliente, corrige bug do erase_video_artifacts(p_user_id) que apagaria todos os clientes",
+> 84	        "OTD-VS-001 (Open, MVP gate): bridge Docker — recomendação A (multi-network attach de n8n/remotion à sovereign-net) + emitir VIDEO_STUDIO_PAT",
+> 85	        "OTD-VS-006 (Open, RPN 200): untrusted-HTML Puppeteer — recomendação A container per-render efêmero, /security-review obrigatório, bloquear multi-tenant até selar",
+> 86	        "OTD-VS-007 (Open): calibração mcoCoins faceless ~125/hyperframes ~12 — medir 1 render real no 1º run pago"
+> 87	      ],
+> 88	      "alreadyLanded": [
+> 89	        "Camada-agência (§AG) JÁ MATERIALIZADA no DB: supabase/migrations/20260622030000_video_studio_org_tenancy.sql cria organizations + organization_members + clients (todas RLS default-deny) + RPCs is_org_member()/org_role()/create_organization() + 7 policies (org_member_select/org_admin_update/org_owner_delete/orgmem_select/orgmem_owner_write/clients_member_select/clients_member_write) — commit bcd85ce",
+> 90	        "Grant hardening da org já corrigido: supabase/migrations/20260622030100_video_studio_org_grant_hardening.sql:14-16 — REVOKE ALL FROM authenticated + re-GRANT só SELECT,DELETE + UPDATE de colunas seguras (name,slug,custom_domain,brand_theme); fecha grant aditivo broad",
+> 91	        "Container do n8n cérebro EXISTE e saudável: docker ps → n8n-n8n-1 Up 6 days (healthy) na rede n8n_default (workflow e7e3beeb58f7411a a ativar de active:false, não criar)",
+> 92	        "remotion-render Up 14 hours na rede n8n_default (precedente de render-container; NÃO host-published — confirma OTD-VS-004)",
+> 93	        "mcorch_vision_mcp Up 5 days (healthy) — porém SÓ na rede constellation-orchestra_mcorch-sovereign-net (isolado de n8n)",
+> 94	        "mcorch_chroma Up 6 days (healthy) na sovereign-net — memória semântica disponível atrás do bridge",
+> 95	        "open-design Up 6 days (healthy) atrás de design.mcorch.com (módulo Design irmão; existe rede open-design_mcorch-sovereign-net separada — terceira rede a considerar no bridge)",
+> 96	        "Edge fns de vídeo LEGADAS já existem: supabase/functions/{generate-video,generate-video-script,check-video-status,rescue-video} — NÃO são as 3 fns do video-studio (faceless/hyperframes/poll), mas há padrão de geração de vídeo + rescue-video (recovery de operação Veo) reutilizável"
+> 97	      ],
+> 98	      "sliceCandidates": [
+> 99	        "FATIA 1 (HyperFrames-first, menor caminho de valor solo-creator, NÃO depende do bridge R5): rota canvas/video ANTES de canvas/:id em src/App.tsx (FR-VS-022) + botão Video na TopBar (FR-VS-023) + embed nativo @hyperframes/studio (FR-VS-021, instalar pacote — NÃO está em package.json) + hook useHyperframesRender + edge fn video-hyperframes-render (JWT→deduct VIDEO_HYPERFRAMES_RENDER→spawn sandbox→render MP4 determinístico→bucket video-studio-assets) + video-render-poll + migration video_renders/video_assets + VIDEO_HYPERFRAMES_RENDER no billing (triplo). Self-healing: refund idempotente FR-VS-011 + infra_health_logs + nó observation. Corta a fatia faceless (que precisa do bridge R5+n8n+QA) e a camada-agência (já landed no DB). Gate de segurança: OTD-VS-006 sandbox per-render exige /security-review.",
+> 100	        "FATIA 1-alt (vertical mínima MAIS magra — render determinístico sem editor): só video-hyperframes-render + useHyperframesRender + video_renders + poll + billing, recebendo html/props via API (sem o embed @hyperframes/studio ainda) — prova o caminho de valor JWT→deduct→sandbox→MP4≥100KB→bucket→poll com 1 edge fn e 1 migration; o editor visual vem na Fatia 2. Menor blast-radius, mais rápido de selar materialmente.",
+> 101	        "PRÉ-FATIA / desbloqueador (se a 1ª fatia for faceless): selar OTD-VS-001 (bridge Docker — recomendação A: multi-network attach de n8n-n8n-1 + remotion-render à constellation-orchestra_mcorch-sovereign-net) + emitir VIDEO_STUDIO_PAT em mcp_access_tokens (scopes vision:read/mesh:write) + provar handshake MCP+PAT do studio→vision_mcp. Sem isso o QA gate (FR-VS-019) e chroma (FR-VS-028) não rodam — é o bloqueador material #1 declarado no SDD §1.4.",
+> 102	        "FATIA-agência (depois das fatias solo, aproveita o DB já landed): wirar useOrganization/useClients/create_organization na UI + per-client render scoping (FR-VS-037 grava video_renders.org_id/client_id) + deduct_mco_coins_org + erase_client_artifacts (FR-VS-045, fecha o bug LGPD) — as tabelas/RPCs base já existem (migration 030000), falta a camada edge-fn+hook+UI+os 2 RPCs de billing/erasure ainda NÃO criados."
+> 103	      ],
+> 104	      "risks": [
+> 105	        "BLOQUEADOR MATERIAL #1 (SDD §1.4): bridge R5 NÃO existe — verificado: n8n-n8n-1 e remotion-render só em n8n_default; mcorch_vision_mcp só em constellation-orchestra_mcorch-sovereign-net; DNS de container não cruza. Toda fatia FACELESS com QA/chroma está travada até OTD-VS-001 + VIDEO_STUDIO_PAT serem selados. Uma fatia HyperFrames-first contorna isso.",
+> 106	        "@hyperframes/studio NÃO está em package.json — o embed nativo (FR-VS-021) exige instalar o pacote Apache-2.0; npx skills add heygen-com/hyperframes instala SKILL.md (agent), NÃO a UI (gotcha SDD §1.3). Risco de a fatia assumir que a UI já existe.",
+> 107	        "Rota canvas/video NÃO existe e canvas/:id já está em src/App.tsx:131 — se canvas/video for declarada DEPOIS, :id='video' a sombreia e o editor nunca carrega (FR-VS-022). Ordem é load-bearing.",
+> 108	        "OTD-VS-006 (RPN 200, FMEA-VS-001 topo): HyperFrames executa HTML/JS de tenant via Puppeteer → RCE/SSRF/leak de env. Exige container efêmero per-render (cap_drop, no-new-privileges, egress restrito, ZERO credencial no env) + /security-review obrigatório ANTES de multi-tenant. É o maior risco de segurança da fatia HyperFrames.",
+> 109	        "OTD-VS-002 (FMEA-VS-002 RPN 180): open-design daemon é COMPARTILHADO single-tenant (config global /app/.od/media-config.json) → BYOK de um tenant vaza cross-tenant. Bloqueia GA do módulo Design irmão; não trava HyperFrames mas é gate do 2º tenant.",
+> 110	        "Três redes sovereign-net distintas existem (constellation-orchestra_..., open-design_...) — o bridge precisa apontar p/ a CERTA (constellation-orchestra_mcorch-sovereign-net, onde vivem vision_mcp+chroma); risco de attach na rede errada.",
+> 111	        "OTD-VS-007: custo do faceless render é PROVISÓRIO (~125); calibrar só no 1º render pago real — qualquer fatia faceless não pode cravar a constante sem medição material (Lei 1).",
+> 112	        "Dependências externas frágeis: LTX HF ZeroGPU ~5 GPU-min/dia (cota compartilhada, NFR-VS-020 gargalo material — Ken-Burns fallback absorve); TELEGRAM_BOT_TOKEN ausente (OTD-VS-003, entrega soberana é o caminho garantido); GEMINI_API_KEY só no .env da constellation (BYOK per-user é o path correto).",
+> 113	        "Caveat operacional (SDD §1.2): NÃO adicionar name: ao docker-compose.yml da constellation (project deve permanecer constellation-orchestra ou containers viram órfãos — precedente vision-mcp). docker compose up -d --build recria 2 containers ad-hoc (downtime breve) mas NÃO toca login.mcorch.com.",
+> 114	        "Os RPCs de billing/erasure da agência (deduct_mco_coins_org, erase_client_artifacts) e a tabela org_access_tokens (reseller PAT) ainda NÃO existem como migration — só as tabelas base org/client landed. A fatia-agência ainda tem trabalho de DB."
+> 115	      ],
+> 116	      "evidence": [
+> 117	        "04-frd.md:42-45 (FR-VS-001..004 Auth & Identity R3)",
+> 118	        "04-frd.md:51-54 (FR-VS-005..008 BYOK fail-closed R1)",
+> 119	        "04-frd.md:60-64 (FR-VS-009..013 mcoCoins deduct/refund/cost 4×-floor)",
+> 120	        "04-frd.md:70-74 (FR-VS-014..018 faceless pipeline + LTX/Ken-Burns + delivery)",
+> 121	        "04-frd.md:80-81 (FR-VS-019/020 consistency gate G3 + post-render QA)",
+> 122	        "04-frd.md:87-91 (FR-VS-021..025 HyperFrames embed nativo + route ordering + sandbox)",
+> 123	        "04-frd.md:97-99 (FR-VS-026..028 mesh/memory R4)",
+> 124	        "04-frd.md:105-106 (FR-VS-029/030 bridge + asset persistence)",
+> 125	        "04-frd.md:112-113 (FR-VS-031/032 erasure + voice consent LGPD)",
+> 126	        "04-frd.md:359-387 (FR-VS-033..046 §AG agency layer)",
+> 127	        "04-frd.md:145-169 (§4.1 UI→Hook→Edge→Container contract, ambos motores)",
+> 128	        "05-sdd.md:18-65 (§1.1 Isolated-App Topology — layer map físico + R5 bridge box)",
+> 129	        "05-sdd.md:69-78 (§1.2 instrumentar n8n e7e3beeb58f7411a, não reescrever + caveat name:)",
+> 130	        "05-sdd.md:80-86 (§1.3 HyperFrames embed nativo + gotcha route ordering + npx skills warning)",
+> 131	        "05-sdd.md:88-90 (§1.4 'R5 bridge is the material blocker')",
+> 132	        "05-sdd.md:118-127 (§2.3 as 3 edge fns + secrets VIDEO_STUDIO_PAT)",
+> 133	        "05-sdd.md:142-145 (§2.5 SEM novo Zustand store; reuso embed-mcorch-node/get-infra-status)",
+> 134	        "05-sdd.md:327-336 (§4.4 cost classes 4×-floor + espelhamento triplo)",
+> 135	        "05-sdd.md:344-356 (§5.1 STRIDE — Puppeteer Critical, open-design Critical)",
+> 136	        "05-sdd.md:517-525 (§8 OTD-VS-001..007 com recomendações)",
+> 137	        "00-index.md:139-141 (MVP gate solo + MVP gate agência + GA gate)",
+> 138	        "supabase/migrations/20260622030000_video_studio_org_tenancy.sql:19-130 (organizations/members/clients + is_org_member/org_role/create_organization + policies — JÁ LANDED)",
+> 139	        "supabase/migrations/20260622030100_video_studio_org_grant_hardening.sql:14-16 (REVOKE+re-GRANT colunas seguras)",
+> 140	        "src/App.tsx:131 (canvas/:id existe; canvas/video AUSENTE)",
+> 141	        "docker ps: n8n-n8n-1/remotion-render(n8n_default) + mcorch_vision_mcp/mcorch_chroma(constellation-orchestra_mcorch-sovereign-net) — redes isoladas confirmam bloqueador R5",
+> 142	        "package.json: 'hyperframes' ausente (embed @hyperframes/studio não instalado)"
+> 143	      ]
+> 144	    },
+> 145	    "data": {
+> 146	      "layer": "DADOS / PROCESSO / QUALIDADE (06-data-model · 07-process-flow · 08-quality-metrics)",
+> 147	      "summary": "A camada de dados/processo define o video-studio como app isolado sob MCORCH com tenancy de DOIS níveis: (a) o caminho SOLO-CREATOR v0.1 — flat `user_id = auth.uid()` em cinco tabelas novas de vídeo (`video_renders`, `video_scenes`, `video_assets`, `video_templates` + extensão BYOK em `user_api_keys`); e (b) a camada de AGÊNCIA v1.1 (§AG) — `organizations` → `organization_members` (RBAC) → `clients`, com `org_id`/`client_id` NULÁVEIS adicionados às tabelas de vídeo (NULL = solo, retrocompat byte-idêntica). O processo central é PROC-VS-001 (render faceless E2E async): submit→JWT(401)→BYOK resolve(402)→voice_consent(409)→`deduct_mco_coins`(402)→INSERT video_renders(queued)→ACK 202 {render_id}→worker n8n `e7e3beeb58f7411a` loopa por cena (Gemini director→Pollinations→VoxCPM→Remotion overlay→QA gate G3→LTX i2v/Ken-Burns fallback→FFmpeg composite)→upload MP4≥100KB→affiliate_links(content_id)→INSERT mcorch_node observation→state=done; poll tenant-bound. A REGRA-MÃE financeira é charge-at-entry + refund-on-failure idempotente (guard `refunded_at` por render_id, espelha `finalize_vision_job`/`finalize_autopilot_cycle`). A disciplina de qualidade central (CMQ/OE) é \"não queimar crédito caro sem prova\": gate VLM G3 ANTES da leg cara de motion, validação bytes≥100KB antes de `done`, refund atômico, e erasure provada (zero-resíduo) antes do 2º tenant. ESTADO MATERIAL: a fundação de tenancy (orgs/members/clients) JÁ ESTÁ LANDED e endurecida (migrations 20260622030000/030100, com fix de mint via column-grant), MAS NENHUMA das cinco tabelas de vídeo nem o bucket privado nem as RPCs de money/erasure existem ainda — é exatamente o que a \"studio-integration migration\" precisa entregar. O bloqueador crítico do MVP para o caminho de QA/memória semântica é a ponte de rede R5 (OTD-VS-001): sem ela vision_mcp/chroma não resolvem DNS e PROC-VS-005 inteiro é prosa.",
+> 148	      "keyIds": [
+> 149	        "FR-VS-009 — débito atômico via deduct_mco_coins(p_user_id,p_amount,...) ANTES de qualquer leg; 402 se saldo<custo (Critical · 04-frd:60)",
+> 150	        "FR-VS-011 — refund-on-failure idempotente, guard por render_id, nunca lança, espelha finalize_vision_job (Critical · 04-frd:62)",
+> 151	        "FR-VS-014 — orquestração faceless: edge fn aciona n8n e7e3beeb58f7411a, loop por cena (Critical · 04-frd:70)",
+> 152	        "FR-VS-026 — nó observation em mcorch_nodes (user_id+project_id, embed-on-insert) por render success; NUNCA system node p/ tenant (High · 04-frd:97)",
+> 153	        "FR-VS-030 — persistência de asset material: objeto no bucket privado + row video_assets, vídeo≥100KB, prova=objeto não resposta API (High · 04-frd:106)",
+> 154	        "FR-VS-031 — erasure cascade LGPD via erase_video_artifacts(p_user_id), zero-resíduo ≤24h (gate de GA)",
+> 155	        "FR-VS-033..037 (§AG) — org/member/client tables + RLS membership + wholesale wallet + white-label (camada agência)",
+> 156	        "FR-VS-034/035/046 (§AG) — deduct_mco_coins_org (wholesale+cost-center) + erase_client_artifacts per-client (corrige bug de blast radius)",
+> 157	        "PROC-VS-001 — render faceless E2E (06/07 ancora): video_renders/scenes/assets/mcorch_nodes/affiliate_links/infra_health_logs",
+> 158	        "PROC-VS-003 — BYOK resolve fail-closed (gemini_api_key de decrypted_user_api_keys; 402 se ausente; nunca Deno.env global em path user-facing)",
+> 159	        "PROC-VS-004 — pré-débito + refund-on-failure (sub-rotina; profiles.mco_balance + video_renders.refunded_at)",
+> 160	        "PROC-VS-005 — gate QA G3 vision_mcp + upsert Chroma (BLOQUEADO até R5/OTD-VS-001)",
+> 161	        "video_renders — máquina de estados {queued,running,qa_gate,done,qa_failed,failed} + ledger charged_mco/refunded_mco (CHECK refunded≤charged) + storage_key + RESTRICTIVE no-delete (06 §2.1)",
+> 162	        "video_assets — manifest de erasure {render_id, kind, storage_key, node_id, bytes≥100KB, retention_until} (06 §2.4)",
+> 163	        "KPI-VS-013 — real-asset persistence rate = 100% (done com storage_key + bytes≥100KB); KPI-VS-011 double-charge guard = 0",
+> 164	        "OTD-VS-001 (R5 bridge) · OTD-VS-007 (cost calibration no 1º render pago) · FMEA-VS-001 (sandbox HTML RPN 200) · FMEA-VS-010 (asset stub RPN 72) · FMEA-VS-020 (cross-tenant org-RLS RPN 200)"
+> 165	      ],
+> 166	      "alreadyLanded": [
+> 167	        "TENANCY FOUNDATION COMPLETA E ENDURECIDA: supabase/migrations/20260622030000_video_studio_org_tenancy.sql cria organizations + organization_members + clients com RLS anti-recursão via SECURITY DEFINER (is_org_member/org_role), bootstrap RPC create_organization() atômico, e column-level GRANT que protege wholesale_mco_balance/plan_tier/owner_user_id de mint via UPDATE",
+> 168	        "HARDENING SEAL do mint: supabase/migrations/20260622030100_video_studio_org_grant_hardening.sql:14 — REVOKE ALL FROM authenticated antes do re-grant só das colunas white-label (corrige o additive-grant bug que deixou mint passar com 204→balance 9999999, pego no /security-review 2026-06-22)",
+> 169	        "deduct_mco_coins canônico (solo) com locking: supabase/migrations/20260526201000_deduct_mco_coins_locking.sql — assinatura (p_user_id uuid, p_amount decimal, p_action text, jsonb), GRANT authenticated — é o ponto de débito que FR-VS-009 reusa SEM mudança",
+> 170	        "profiles.mco_balance ledger + RPCs ledger (20260516224541_deduct_mco_coins_ledger.sql) — carteira solo já existe",
+> 171	        "Padrão de refund idempotente PRONTO p/ espelhar: supabase/migrations/20260620120300_finalize_autopilot_cycle.sql (refund crédito-positivo idempotente) — o BoK manda video refund espelhar este exato arquivo",
+> 172	        "Padrão de erasure cascade PRONTO p/ espelhar: supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql (erase_vision_artifacts: SECURITY DEFINER search_path='' + guard de tenant + RETURN storage_keys p/ caller deletar via Storage API, OTD-VM-026)",
+> 173	        "Storage bucket DE VÍDEO JÁ EXISTE mas é o ERRADO p/ o design: supabase/migrations/20260422000000_create_video_storage_bucket.sql cria 'generated-videos' PÚBLICO; o BoK pede bucket PRIVADO 'video-studio-assets' (06 §1.1) — FR-VS-030 aceita ambos os nomes (04-frd:106), mas público viola o modelo de segurança (signed URL curto). Decisão de fatia: reusar generated-videos OU criar privado",
+> 174	        "user_api_keys (VIEW Vault mascarada) + decrypted_user_api_keys + família trigger vault_upsert_secret idempotente — BYOK gemini_api_key já existe e é reusado (06 §2.5), sem coluna nova necessária na fatia 1",
+> 175	        "embed-mcorch-node Edge Function + trigger embed-on-insert (pgvector 768 HNSW) — reuso grátis p/ FR-VS-026, sem encanamento novo",
+> 176	        "n8n workflow e7e3beeb58f7411a no container n8n-n8n-1 (imagem n8n-ffmpeg) — o 'cérebro' faceless JÁ EXISTE; a decisão SDD §1.2 é ATIVAR+INSTRUMENTAR, não reescrever",
+> 177	        "infra_health_logs com event+metadata jsonb (20260615170000) — telemetria reusada com service='video-studio' (sem DDL)"
+> 178	      ],
+> 179	      "sliceCandidates": [
+> 180	        "FATIA 1 MVP SOLO-CREATOR (menor caminho vertical, 1 vídeo E2E num tenant, ZERO camada de agência): (1) migration video_studio_renders.sql — só video_renders (PK id, user_id FK CASCADE, project_id text [NÃO uuid FK — projects não existe], engine CHECK, state máquina-de-estados DEFAULT queued, charged_mco/refunded_mco CHECK refunded≤charged, refunded_at guard, storage_key, node_id, expires_at; RLS default-deny SELECT/INSERT own + UPDATE service-role + RESTRICTIVE no client delete); (2) migration video_studio_assets.sql — video_assets (manifest mínimo render_id/kind/storage_key/bytes; SELECT own, writes service-role); (3) reusar bucket generated-videos existente (evita 6ª migration de Storage na 1ª fatia); (4) edge fn video-faceless-render: JWT gate(401)→BYOK gemini resolve fail-closed(402)→deduct_mco_coins(402)→INSERT video_renders(queued)→trigger n8n e7e3beeb→ACK 202; (5) edge fn video-render-poll tenant-bound (alheio→404); (6) refund idempotente espelhando finalize_autopilot_cycle. Prova material da fatia: 1 render done com storage_key + bytes≥100KB (KPI-VS-013) + delta mco_balance por SELECT em sucesso E falha+refund (KPI-VS-011=0) + nó observation com fr_id (KPI-VS-014).",
+> 181	        "SELF-HEALING já embutido na fatia 1 (R3/R4 do Master Protocol): nó observation em mcorch_nodes por success (FR-VS-026, embed grátis) + INSERT infra_health_logs service='video-studio' em CADA path (render_submitted/render_failed/refund_applied/asset_stub_rejected) — telemetria reusada sem DDL, conecta à malha no 1º run.",
+> 182	        "ADIAR p/ fatias posteriores (NÃO na fatia 1): video_scenes (granularidade fina — pode começar com legs jsonb inline em video_renders), video_templates (engine HyperFrames PROC-VS-002 = segmento secundário), gate QA G3/Chroma (PROC-VS-005 — BLOQUEADO por R5/OTD-VS-001), erase_video_artifacts (gate de GA, não gate de 1º render), e TODA a camada §AG agência (deduct_mco_coins_org, erase_client_artifacts, batch render, client portal). A fatia 1 deve ser puramente solo-creator org_id=NULL.",
+> 183	        "Se a fatia precisar tocar agência: as 3 tabelas org/member/client JÁ EXISTEM — basta ADD COLUMN org_id/client_id NULLABLE + FK composta NOT VALID (06 §AG.3.1) sem backfill; mas recomendo NÃO incluir na 1ª fatia (dobra a superfície de RLS/segurança — FMEA-VS-020 RPN 200)."
+> 184	      ],
+> 185	      "risks": [
+> 186	        "BLOQUEADOR MATERIAL DO MVP (R5/OTD-VS-001): vision_mcp (rede mcorch-sovereign-net) e n8n/remotion (rede n8n_default) são REDES ISOLADAS — DNS de container não resolve entre elas (05-sdd:90). Sem a ponte + VIDEO_STUDIO_PAT emitido, o gate QA G3 (FR-VS-019) e a memória Chroma (FR-VS-028) são PROSA. ⇒ a fatia 1 DEVE ou (a) excluir o gate QA do caminho crítico, ou (b) selar a R5 primeiro. Recomendo fatia 1 sem QA gate.",
+> 187	        "mco_transaction NÃO EXISTE: o deduct_mco_coins_org da camada agência (06 §AG.3.2:621) faz INSERT em mco_transaction que nenhuma migration cria. Bloqueia QUALQUER fatia que toque billing de agência até a tabela ser criada. Solo-creator não é afetado (usa profiles.mco_balance direto).",
+> 188	        "DRIFT DE SCHEMA no data model: a §2.1/§2.3 do 06 declara project_id como FK→projects(id) CASCADE, mas projects NÃO EXISTE — mcorch_tenant_isolation.sql:13 adicionou project_id como TEXT (não uuid, sem FK). A migration de vídeo deve usar project_id text (consistente com a malha) OU criar projects primeiro. Usar uuid FK = migration quebra.",
+> 189	        "BUCKET MISMATCH: existe generated-videos PÚBLICO (20260422000000); o BoK pede video-studio-assets PRIVADO (signed URL curto, 06 §1.1). Reusar o público viola o modelo de segurança (qualquer um lê o vídeo pela URL); criar o privado é uma migration de Storage + policy extra. Decisão de fatia explícita necessária.",
+> 190	        "FMEA-VS-001 (RPN 200) — HyperFrames executa HTML/JS UNTRUSTED de tenant via Puppeteer: gate de GA exige container per-render efêmero (cap_drop=ALL, zero credencial no env). ⇒ NÃO incluir engine HyperFrames (PROC-VS-002) na fatia 1 sem o sandbox selado.",
+> 191	        "FMEA-VS-010 (asset stub): provider pode retornar stub JSON e o pipeline marcar done confiando na URL efêmera. A fatia 1 DEVE validar bytes≥100KB antes de state=done (precedente rescue-video) — senão tenant é cobrado por um 'vídeo' que é erro (viola Lei 1).",
+> 192	        "FMEA-VS-005 (LTX cota ZeroGPU ~5 GPU-min/dia): a leg de motion satura rápido; o Ken-Burns fallback (FFmpeg 0 GPU) precisa estar no n8n workflow senão o render trava por cota. Dependência externa do HF Space.",
+> 193	        "OTD-VS-007 cost calibration: VIDEO_FACELESS_RENDER (≈125 mco) é PROVISÓRIO — deve ser medido no 1º render PAGO real (G4 mcoin-cost-calibration.md, modelo 4×-floor) antes de cravar, senão risco de vender sub-margem (FMEA-VS-015).",
+> 194	        "FMEA-VS-009 telemetria global-read: infra_health_logs é leitura global — NUNCA escrever topic/prompt/produto/voz per-tenant nela; só allowlist (service/event/render_id/contadores). Gate de /security-review da migration.",
+> 195	        "GATE OBRIGATÓRIO: cada migration nova passa /security-review independente ANTES do commit (FMEA-011 + NFR-VS-011) — RLS default-deny, financeiras RESTRICTIVE no-delete, SECURITY DEFINER com search_path=''."
+> 196	      ],
+> 197	      "evidence": [
+> 198	        "docs/bok/video-studio/06-data-model.md:65-86 — video_renders logical model (ledger + máquina de estados, charged/refunded CHECK, refunded_at idempotência)",
+> 199	        "docs/bok/video-studio/06-data-model.md:117-129 — video_assets manifest de erasure (storage_key, node_id, bytes≥100KB, retention_until)",
+> 200	        "docs/bok/video-studio/06-data-model.md:150-159 — tabela de 6 migrations + RLS/índices + RESTRICTIVE no-delete familia creative_metrics/autopilot_cycles",
+> 201	        "docs/bok/video-studio/06-data-model.md:581-627 — deduct_mco_coins_org (service-role-only, advisory-lock, INSERT mco_transaction [tabela inexistente], 402)",
+> 202	        "docs/bok/video-studio/06-data-model.md:640-689 — erase_client_artifacts(p_org_id,p_client_id) per-client (corrige bug de blast radius §AG.5:718)",
+> 203	        "docs/bok/video-studio/07-process-flow.md:17-26 — Process Inventory PROC-VS-001..008 + pré-requisito R5 do MVP (linha 26)",
+> 204	        "docs/bok/video-studio/07-process-flow.md:36-72 — PROC-VS-001 BPMN faceless E2E (submit→débito→n8n loop→QA gate→entrega + error branch refund)",
+> 205	        "docs/bok/video-studio/07-process-flow.md:131-148 — PROC-VS-004 charge-at-entry + refund-on-failure (regra-mãe, guard refunded_at)",
+> 206	        "docs/bok/video-studio/07-process-flow.md:150-166 — PROC-VS-005 QA gate G3 + Chroma BLOQUEADO por R5 (linha 166)",
+> 207	        "docs/bok/video-studio/08-quality-metrics.md:37-54 — KPI-VS-001..018 (success rate, cost-per-video, QA pass, KPI-VS-013 persistence=100%, KPI-VS-011 double-charge=0)",
+> 208	        "docs/bok/video-studio/08-quality-metrics.md:64-73 — FMEA-VS-001 (sandbox RPN 200) + FMEA-VS-010 (asset stub) + FMEA-VS-007 (erasure gate de GA)",
+> 209	        "docs/bok/video-studio/08-quality-metrics.md:219 — Gates de GA não-negociáveis antes do 2º tenant: FMEA-VS-001/002/007",
+> 210	        "docs/bok/video-studio/08-quality-metrics.md:298 — FMEA-VS-020 cross-tenant org-RLS RPN 200 (novo topo, blast radius = todos os clientes de todas as agências)",
+> 211	        "supabase/migrations/20260622030000_video_studio_org_tenancy.sql:1-12 — comentário confirma: video_* tables + org_id/client_id cols + money/erasure RPCs landam COM a studio-integration migration (NÃO nesta)",
+> 212	        "supabase/migrations/20260622030100_video_studio_org_grant_hardening.sql:1-16 — hotfix do mint (REVOKE ALL antes de re-grant; prova material 204→balance 9999999)",
+> 213	        "supabase/migrations/20260422000000_create_video_storage_bucket.sql:1-3 — bucket generated-videos é PÚBLICO (conflita com bucket privado do BoK)",
+> 214	        "Bash grep: NENHUMA migration cria video_renders/scenes/assets/templates; mco_transaction NÃO existe; projects NÃO existe (project_id é text em 20260425210000_mcorch_tenant_isolation.sql:13)",
+> 215	        "supabase/migrations/20260526201000_deduct_mco_coins_locking.sql — deduct_mco_coins(p_user_id uuid, p_amount decimal, p_action text, jsonb) GRANT authenticated (ponto de débito reusado por FR-VS-009)",
+> 216	        "supabase/migrations/20260620120300_finalize_autopilot_cycle.sql + 20260615200000_vision_mcp_erase_rpc.sql — padrões EXISTENTES de refund idempotente e erasure cascade que o BoK manda espelhar"
+> 217	      ]
+> 218	    },
+> 219	    "landed": {
+> 220	      "layer": "O QUE JÁ ATERRISSOU (scaffolding material — estado real verificado no repo/infra)",
+> 221	      "summary": "A camada de scaffolding do módulo Vídeo está PARCIAL: a fundação de auth (SSO R3) e a fundação de tenancy de agência estão MATERIALMENTE prontas no repo+infra; o estúdio faceless RODA mas é externo e desconectado do MCORCH; o editor HyperFrames e TODA a integração de aplicação (tabelas video_*, RPCs de dinheiro, hooks, página, edge fns, subdomínio video.mcorch.com) estão AUSENTES. (1) SSO R3 = COMPLETO E VIVO: serviço systemd-user `sso-auth-gate.service` active 10h (PID 3172864), health 200 em 127.0.0.1:8787, verifica JWT via Supabase ES256 JWKS, fail-closed; nginx `design.mcorch.com.conf` já faz auth_request→302 login; mas NÃO existe `nginx/video.mcorch.com.conf` (o gate é genérico, só falta o vhost). (2) TENANCY = COMPLETA NA FUNDAÇÃO (2 migrations aplicáveis): `organizations`+`organization_members`+`clients` com RLS default-deny, helpers anti-recursão `is_org_member`/`org_role` (SECURITY DEFINER search_path=''), bootstrap RPC `create_organization`; passou /security-review com 3 vulns achadas+corrigidas (escalation billing_admin→owner, mint de wholesale_mco_balance via grant table-level — hotfix 030100). MAS: as migrations só criam o esqueleto da agência; explicitamente NÃO criam tabelas video_*, colunas org_id/client_id, nem os RPCs de dinheiro/erasure (`deduct_mco_coins_org`/`erase_client_artifacts` aparecem APENAS em comentários, não há CREATE). (3) ESTÚDIO FACELESS = EXISTE e 2 containers UP (`studio-dashboard` 15h, `remotion-render` 14h) em /home/gcrUX/studio (git PRÓPRIO, separado do monorepo), stack n8n(e7e3beeb,31 nós,active:false)+Remotion:8088+LTX+VoxCPM+Pollinations+Gemini+FFmpeg; PORÉM totalmente fora do MCORCH (sem auth/mcoCoins/BYOK/mesh) e o bridge de rede R5 NÃO existe (n8n_default só tem n8n+remotion; `mcorch_vision_mcp`/`mcorch_chroma` rodam mas em rede separada). (4) HyperFrames = AUSENTE: nenhum clone em disco, nenhum pacote @hyperframes/studio; só citado na BoK/README como dep Apache-2.0 a integrar. (5) Código video-studio no monorepo = ZERO (grep só bateu node_modules); o `VideoEditorPage.tsx` existente é LEGADO (30/05, escreve em content_library, sem org/módulo). A 1ª fatia constrói sobre auth+tenancy prontos, mas tem que trazer toda a malha de aplicação do zero.",
+> 222	      "keyIds": [
+> ```
+
+## 🤖 Claude *(13:39:51)*
+
+
+## 🤖 Claude *(13:39:52)*
+
+Falta a parte final do leitor de scaffolding (estado real da infra). Lendo o resto:
+
+## 🤖 Claude *(13:39:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f232593a-1ef8-4045-8b83-67389d10213f/tasks/w8rkss8lx.output",
+  "offset": 222,
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 222	      "keyIds": [
+> 223	        "FR-VS-033/036/037 — fundação org→members→clients (migration 20260622030000:1)",
+> 224	        "R3 (SSO cross-subdomínio) — gate genérico design/video.mcorch.com, sso-auth-gate.ts:3 + commit 6eca4bc",
+> 225	        "OTD-VS-001 — bridge de rede docker (R5) p/ vision_mcp QA + chroma: AINDA ABERTO (n8n_default sem mcorch_*)",
+> 226	        "OTD-VS-002 — per-user BYOK do estúdio: ABERTO (studio externo não resolve credencial per-user)",
+> 227	        "OTD-VS-005 — HyperFrames é dev-server sem auth/prod: ABERTO (editor nem clonado)",
+> 228	        "OTD-VS-007 — calibração mcoCoins render (placeholders VIDEO_FACELESS_RENDER≈125 · VIDEO_HYPERFRAMES_RENDER≈12): ABERTO",
+> 229	        "§AG — Agency-Leverage layer v1.1 (00-index.md:124): white-label, wholesale, erasure per-cliente, RBAC/seats",
+> 230	        "deduct_mco_coins_org / erase_client_artifacts — RPCs §AG NÃO IMPLEMENTADOS (só comentário na migration:11)"
+> 231	      ],
+> 232	      "alreadyLanded": [
+> 233	        "SSO gate VIVO: systemd-user `sso-auth-gate.service` active(running) 10h, PID 3172864; `curl 127.0.0.1:8787/health`→200 {gate:mcorch-sso}; verifica JWT ES256 via JWKS bcyvddsykvehvpwstlfa.supabase.co, fail-closed — scripts/sso-auth-gate.ts:46-68",
+> 234	        "nginx auth_request já cabeado p/ DESIGN: nginx/design.mcorch.com.conf:36-54 (auth_request /_mcorch_auth → proxy 127.0.0.1:8787/verify → 302 login.mcorch.com/auth?return_to). O mesmo gate serve video; falta só criar nginx/video.mcorch.com.conf",
+> 235	        "SPA já sincroniza cookie .mcorch.com (sb-mcorch-session) no login/refresh/logout — src/lib/sso-cookie.ts + useAuth.ts + App.tsx + Auth.tsx (commit 6eca4bc, 208 insertions)",
+> 236	        "Tabela `organizations` (white-label custom_domain/brand_theme + wholesale_mco_balance≥0 + plan_tier agency/enterprise) — migration 20260622030000:19-29, RLS ENABLE :30",
+> 237	        "Tabela `organization_members` (RBAC owner/billing_admin/editor/viewer + seat_active + UNIQUE(org_id,user_id) + 2 índices) — :33-44, RLS :42",
+> 238	        "Tabela `clients` (sub-conta/cost-center/erasure-unit + byok_ref + affiliate_tag + status; PK(id)+UNIQUE(org_id,id) = alvo p/ FK composta tenant-escopada das futuras video_*) — :48-60",
+> 239	        "Helpers anti-recursão `is_org_member(uuid)` + `org_role(uuid)` SECURITY DEFINER STABLE search_path='' (espelham has_role) + EXECUTE revogado de PUBLIC, concedido a authenticated/service_role — :65-83",
+> 240	        "Bootstrap RPC `create_organization(name,slug)` SECURITY DEFINER: insere org + owner-membership atomicamente (resolve chicken-and-egg do 1º membro sob RLS); guard auth.uid()+validação — :88-104",
+> 241	        "RLS policies helper-based sem recursão: org_member_select/admin_update(owner+billing_admin)/owner_delete; orgmem_owner_write OWNER-ONLY (vuln escalation corrigida); clients editor+ — :110-132",
+> 242	        "Hardening /security-review (migration 030100): REVOKE broad UPDATE FIRST + re-grant SÓ colunas white-label (name/slug/custom_domain/brand_theme); financeiras (wholesale_mco_balance/plan_tier/owner_user_id) sem grant → só via service-role RPC. Prova material: mint antes retornava 204→9999999, depois permission denied — 030100:1-16",
+> 243	        "Estúdio faceless RODANDO: docker ps → `studio-dashboard` Up 15h (127.0.0.1:8095) + `remotion-render` Up 14h (8088/tcp interno) em /home/gcrUX/studio (git próprio)",
+> 244	        "Pipeline faceless real: n8n workflow e7e3beeb58f7411a 'AI and Peoples - Faceless Video Builder (Motion HUD)', 31 nós (Gemini→Pollinations→VoxCPM→Remotion HUD alpha→LTX i2v→composite.sh FFmpeg→QA→Telegram) — /home/gcrUX/studio/n8n/workflow.json + README.md",
+> 245	        "Remotion render engine: cenas Hud/Neon/NeonCaption/SceneOverlay + server.js (POST /render ProRes 4444 alpha) + Dockerfile — /home/gcrUX/studio/remotion/src/*",
+> 246	        "BoK 9/9 SELADA (gate de código ABERTO): docs/bok/video-studio/ tem 00-index..08-quality-metrics (9 arquivos, v1.1 Agency-Leverage superset; FR-VS-001..032 + §AG FR-VS-033+)"
+> 247	      ],
+> 248	      "sliceCandidates": [
+> 249	        "Fatia mais fina que conecta na malha: criar nginx/video.mcorch.com.conf reusando o sso-auth-gate JÁ VIVO + iframe gateado de uma página /dashboard/video (placeholder) — prova R3 ponta-a-ponta (anônimo→302, logado→200) sem dep externa nova. Self-healing herdado: gate fail-closed + JWKS cache",
+> 250	        "Fatia vertical mínima de valor: tabelas video_* (ex. video_jobs/video_renders) com colunas org_id/client_id NULLABLE (NULL=solo backward-compat, padrão da BoK §AG:130) + FK composta (org_id,client_id)→clients(org_id,id) + RLS por is_org_member/org_role JÁ EXISTENTES + RPC `deduct_mco_coins_org` atômico (espelhar deduct_mco_coins + cost-center per-cliente) → desbloqueia o 1º render PAGO faceless disparando o n8n e7e3beeb via edge fn com JWT+mcoCoins",
+> 251	        "Fatia de monetização-primeiro (solo path, ignora agência): edge fn `video-render` (JWT guard + deduct_mco_coins solo + BYOK per-user + invoca n8n webhook + observation node na mesh + infra_health_logs) — encaixa em TODOS os 5 contratos R1-R5 reaproveitando padrões de orchestrate-content; org_id deixado NULL nesta fatia, agência vem depois",
+> 252	        "Pré-requisito de infra de QUALQUER fatia de render: fechar OTD-VS-001 (R5) conectando mcorch_vision_mcp+mcorch_chroma à rede n8n_default (docker network connect) — sem isso o QA criativo (vision) e a memória não alcançam o estúdio"
+> 253	      ],
+> 254	      "risks": [
+> 255	        "R5 bridge de rede AUSENTE (OTD-VS-001): `docker network inspect n8n_default` só lista n8n-postgres-1/n8n-n8n-1/remotion-render; mcorch_vision_mcp e mcorch_chroma RODAM mas em rede separada → QA criativo + memória NÃO alcançam o estúdio. Bloqueia fatias com QA/mesh até `docker network connect`",
+> 256	        "Estúdio é REPO GIT SEPARADO (/home/gcrUX/studio, toplevel próprio) e single-tenant: dashboard lê volume n8n_n8n_assets read-only, sem noção de user/org; integrar = ou puxar pro monorepo ou tratar como sidecar via webhook (decisão de arquitetura pendente)",
+> 257	        "n8n workflow e7e3beeb está `active:false` no export → disparo é manual/Manual Trigger hoje; fatia de render precisa expor um webhook trigger + preencher segredos {{GEMINI_API_KEY}}/{{TELEGRAM_BOT_TOKEN}} redigidos no workflow.json",
+> 258	        "BYOK per-user do estúdio NÃO existe (OTD-VS-002): o pipeline n8n usa chaves globais/HF Spaces grátis; resolver credencial per-user (Gemini/etc via user_api_keys) exige reescrever os nós n8n ou interpor edge fn — viola API Tenancy Model se shipado com chave global em fluxo user-facing",
+> 259	        "HyperFrames nem clonado: editor é só citação BoK (@hyperframes/studio Apache-2.0); qualquer fatia que prometa 'editor' parte do zero (clone+hardening+gate, OTD-VS-005)",
+> 260	        "vhost video.mcorch.com exige ação Sovereign (DNS + cert CF, padrão de mcp.mcorch.com/design.mcorch.com) — gate de ativação fora do código",
+> 261	        "RPCs de dinheiro/erasure da agência (deduct_mco_coins_org, erase_client_artifacts) são SÓ comentário na migration — a coluna wholesale_mco_balance existe mas nada a debita ainda; fatia de agência paga depende dessas RPCs (service-role-only, espelhar finalize_vision_job/deduct_mco_coins)",
+> 262	        "CAVEAT Lei 1 (cérebro sem mãos): NÃO validei via SQL que as 2 migrations de tenancy estão APLICADAS no DB live (sem SQL bridge neste turno) — confirmei só a existência dos arquivos .sql; recomendo SELECT em organizations/pg_proc antes de a fatia assumir o schema vivo",
+> 263	        "OTD-VS-007 mcoCoins do render é placeholder não-calibrado (FACELESS≈125 · HYPERFRAMES≈12) — o 1º render pago precisa medir custo real (4×-floor) antes de cobrar"
+> 264	      ],
+> 265	      "evidence": [
+> 266	        "scripts/sso-auth-gate.ts:1-70 (gate ES256 JWKS fail-closed, COOKIE sb-mcorch-session, porta 8787)",
+> 267	        "systemctl --user status sso-auth-gate.service → active(running) since 2026-06-22 00:19:47, PID 3172864; curl 127.0.0.1:8787/health → 200 {\"status\":\"ok\",\"gate\":\"mcorch-sso\"}",
+> 268	        "nginx/design.mcorch.com.conf:36,41,47,54 (auth_request /_mcorch_auth → proxy_pass 127.0.0.1:8787/verify → 302 login.mcorch.com/auth?return_to)",
+> 269	        "git show --stat 6eca4bc → feat(sso) 6 files 208 insertions (nginx/design + sso-auth-gate.ts + App.tsx + useAuth.ts + sso-cookie.ts + Auth.tsx)",
+> 270	        "supabase/migrations/20260622030000_video_studio_org_tenancy.sql:19-148 (organizations:19 / organization_members:33 / clients:48 / is_org_member:65 / org_role:73 / create_organization:88 / policies:110-132 / grants:142-148)",
+> 271	        "supabase/migrations/20260622030100_video_studio_org_grant_hardening.sql:1-19 (REVOKE-then-regrant colunas white-label; prova mint 204→9999999 antes)",
+> 272	        "grep deduct_mco_coins_org → só :11 e :139 (comentários, zero CREATE FUNCTION)",
+> 273	        "docker ps → studio-dashboard Up 15h 127.0.0.1:8095 · remotion-render Up 14h 8088/tcp · mcorch_vision_mcp · mcorch_chroma (count 27)",
+> 274	        "docker network inspect n8n_default → Containers: n8n-postgres-1 n8n-n8n-1 remotion-render (mcorch_* AUSENTES = R5 não construído)",
+> 275	        "/home/gcrUX/studio/README.md + docker-compose.yml (n8n e7e3beeb + remotion:8088 + LTX/VoxCPM/Pollinations/Gemini/FFmpeg) · git rev-parse --show-toplevel → /home/gcrUX/studio",
+> 276	        "/home/gcrUX/studio/n8n/workflow.json: id e7e3beeb58f7411a, 31 nós, \"active\":false",
+> 277	        "grep -rliE 'video.studio|video_studio|hyperframes' src/ supabase/functions/ packages/ → só node_modules (zero app code); find hyperframes → No such file or directory",
+> 278	        "src/App.tsx:20,112 VideoEditorPage (LEGADO) + git log VideoEditorPage.tsx → b89afeb/9a42f5b (30/05, content_library, pré-módulo)",
+> 279	        "docs/bok/video-studio/00-index.md:4,23,102,104,124,130,139 (v1.1 Agency-Leverage · R1-R5 · OTD-VS-005/007 · §AG · org_id/client_id nullable · MVP gate OTD-VS-001/002+R3)",
+> 280	        "ls docs/bok/video-studio/ → 9 arquivos 00-index..08-quality-metrics (BoK 9/9 selada)"
+> 281	      ]
+> 282	    }
+> 283	  }
+> ```
+
+## 🤖 Claude *(13:42:00)*
+
+
+## 🤖 Claude *(13:42:01)*
+
+Tenho o mapa completo do módulo Vídeo. Antes de propor, uma verificação material rápida (o leitor de scaffolding ressalvou que não confirmou via SQL que a fundação de tenancy está **aplicada no DB live**):
+
+## 🤖 Claude *(13:42:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== organizations table live? (expect 200 + []) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/organizations?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== clients table live? ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/clients?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== create_organization RPC live? (expect 4xx param error, not 404) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/rpc/create_organization\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{}'\necho \"=== video_renders table (expect 404 \u2014 NOT created yet, confirms gap) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/video_renders?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Verify tenancy foundation live + video tables gap"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === organizations table live? (expect 200 + []) ===
+> HTTP 200
+> === clients table live? ===
+> HTTP 200
+> === create_organization RPC live? (expect 4xx param error, not 404) ===
+> HTTP 404
+> === video_renders table (expect 404 — NOT created yet, confirms gap) ===
+> HTTP 404
+> ```
+
+## 🤖 Claude *(13:42:28)*
+
+
+## 🤖 Claude *(13:42:44)*
+
+Fundação verificada **viva**: `organizations` + `clients` retornam 200 (tabelas aplicadas no DB). `video_renders` → 404 (gap confirmado — domínio de vídeo não existe). O `create_organization` 404 com body vazio é o PGRST202 normal de arg-mismatch (a função existe com `(name, slug)`; não é problema).
+
+## 🗺️ Estado real do módulo Vídeo
+
+| Camada | Estado |
+|---|---|
+| **Auth SSO R3** | ✅ vivo (`sso-auth-gate.service` active, gate genérico já serve `video.`; falta só o vhost = sua ação DNS) |
+| **Tenancy de agência** (org/member/client + RPC + RLS anti-recursão) | ✅ landed + hardened + **live** |
+| **Estúdio faceless** (n8n `e7e3beeb` + Remotion) | ⚠️ RODA mas é **repo externo** (`/home/gcrUX/studio`), single-tenant, `active:false`, sem auth/mcoCoins/BYOK/mesh |
+| **HyperFrames editor** | ❌ ausente (nem clonado) |
+| **Código de app** (tabelas `video_*`, RPCs $, hooks, página, edge fns) | ❌ **zero** |
+
+**Os 2 motores de render têm blocker duro:** faceless = ponte de rede Docker R5 (OTD-VS-001, redes `n8n_default`↔`sovereign-net` isoladas) + estúdio externo + n8n inativo; HyperFrames = sandbox de HTML não-confiável (OTD-VS-006, **RPN 200**, exige container efêmero + /security-review antes de multi-tenant).
+
+**O insight-chave:** a fundação de agência foi construída **antes do domínio que ela escopa** — hoje ela não escopa nenhuma linha. O próximo tijolo natural é o **domínio de vídeo**.
+
+## 🎯 Minha recomendação de 1ª fatia
+
+**Fundação do domínio + contrato edge (sem o motor pesado ainda)** — tenancy-aware desde o nascimento (`org_id`/`client_id` NULLABLE, NULL=solo, evita o imposto de migração OTD-VS-008 depois):
+- Migration `video_renders` + `video_assets` (máquina de estados + ledger `charged/refunded` + RLS solo+agência + RESTRICTIVE no-delete) → **/security-review obrigatório** (FMEA-VS-020 cross-tenant é o novo topo de RPN).
+- Edge fns `video-render` (JWT→BYOK fail-closed→`deduct_mco_coins`→INSERT queued→202) + `video-render-poll` tenant-bound + refund idempotente (espelha `finalize_autopilot_cycle`).
+- Self-healing: nó observation + `infra_health_logs`. Custos provisórios em `billing.ts` (calibrar no 1º render pago).
+
+É **100% desbloqueada**, prova-se **zero-cost** (gates comportamentais 401/402/tenant-isolation/refund, como a Fatia 1 do autopilot), e é o tijolo sobre o qual TODO render (faceless ou HyperFrames) e a camada de agência se encaixam. O motor de render real vem na Fatia 2 (aí sim a ponte R5 / estúdio).
+
+Confirma o recorte?
+
+## 🤖 Claude *(13:42:53)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Confirma o recorte da 1\u00aa fatia do m\u00f3dulo V\u00eddeo? (os 2 motores de render t\u00eam blocker de infra/seguran\u00e7a; a escolha \u00e9 onde assenta o 1\u00ba tijolo)",
+      "header": "Recorte Fatia 1",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Funda\u00e7\u00e3o dom\u00ednio + contrato (rec.)",
+          "description": "Migration video_renders/video_assets tenancy-aware + RLS + edge submit/poll + billing solo + self-healing. Desbloqueada, /security-review-gated, prov\u00e1vel zero-cost. Render real vem na Fatia 2. \u00c9 o tijolo que tudo escopa."
+        },
+        {
+          "label": "Faceless render E2E (v\u00eddeo real)",
+          "description": "Funda\u00e7\u00e3o + ligar o est\u00fadio n8n externo como sidecar (ativar workflow + webhook + asset writeback) + ponte R5. Entrega 1 v\u00eddeo real, mas +superf\u00edcie de infra/cross-repo + caveat BYOK (chaves shared-default p/ Usu\u00e1rio Zero) + gasto ~125 mco provis\u00f3rio."
+        },
+        {
+          "label": "Selar ponte R5 + PAT do studio 1\u00ba",
+          "description": "Desbloqueador puro de infra (docker network connect n8n\u2194sovereign-net + emitir VIDEO_STUDIO_PAT) que destrava o QA gate VLM + chroma p/ qualquer fatia faceless. Pr\u00e9-requisito, n\u00e3o entrega produto sozinho."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Confirma o recorte da 1ª fatia do módulo Vídeo? (os 2 motores de render têm blocker de infra/segurança; a escolha é onde assenta o 1º tijolo)"="Fundação domínio + contrato (rec.)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(13:53:17)*
+
+
+## 🤖 Claude *(13:53:20)*
+
+GO confirmado: **Fatia 1 = Fundação domínio + contrato**. 
+
+**ORO:** Operator=eu · Reviewer=Sovereign + `/security-review` (obrigatório — FMEA-VS-020 cross-tenant é o topo de RPN) · Owner=Sovereign (blast radius = isolamento multi-tenant do domínio de vídeo + billing). **Lei 2:** o processo antecipado já está na BoK (`07-process-flow` PROC-VS-001/004).
+
+Vou construir **para a SSOT da BoK**, não inventar. Lendo o modelo exato + os precedentes a espelhar, em paralelo:
+
+## 🤖 Claude *(13:53:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/06-data-model.md",
+  "limit": 170
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Data Model — Data & Knowledge Model
+> 2	
+> 3	**Project:** video-studio
+> 4	**Version:** v0.1 | **Date:** 2026-06-21
+> 5	**BoK Applied:** DMBOK v2 (Data Modeling & Design · Data Quality · Reference & Master Data · Metadata)
+> 6	**Status:** Draft
+> 7	**Source of Truth:** `01-mrd.md` (MR-VS-001..014) + `02-brd.md` (BR-VS-001..016) + `03-prd.md` (PR-VS-001..023) + `04-frd.md` (FR-VS-001..032, NFR-VS-001..017) + `05-sdd.md` (§2.6 New DB Objects, §5.2 RLS, §5.5 Erasure, §7 Migration Stubs, §8 OTD-VS-001..007) — todo objeto de dados rastreia ≥1 FR-VS; os stubs físicos do SDD §7 são autoridade (aqui referenciados, não duplicados verbatim).
+> 8	**Regulatory:** LGPD **ELEVADO** — voz clonada (VoxCPM) = dado biométrico potencial (Art. 11); HTML/dados arbitrários do editor; config BYOK por tenant; erasure em cascata (Art. 18) e retention (Art. 16) tratados como Critical.
+> 9	**Market segment:** B2B2C · **Monetization:** híbrida (mcoCoins por render + afiliado Mercado Livre) · **Integration surface:** extends-mcorch.
+> 10	**Five Unbreakable Rules (Sovereign 2026-06-21) honored:** R1 BYOK per-user · R2 mcoCoins gatekeeper atômico · R3 auth MCORCH nos apps isolados · R4 conexão à malha · R5 ponte de rede Docker.
+> 11	
+> 12	---
+> 13	
+> 14	## 1. Conceptual Data Model
+> 15	
+> 16	### 1.1 Entity inventory
+> 17	
+> 18	| Entity | Kind | New? | Purpose | FR traced |
+> 19	|--------|------|------|---------|-----------|
+> 20	| `tenant` (≡ `auth.users` + `profiles`) | Reference | reuse | Dono de renders, templates, assets, config BYOK e nós; carteira `mco_balance` (ledger de cobrança) | — |
+> 21	| `video_render` (≡ render/job) | Transactional | **new** | Máquina de estados de um render (faceless OU hyperframes); ledger atômico charged/refunded; poll-able | FR-VS-009/010/011/014/024/026 |
+> 22	| `video_template` | Master | **new** | Template HyperFrames versionado reutilizável (HTML/props), tenant-scoped — habilita PR-VS-022 | FR-VS-021/024 |
+> 23	| `video_asset` (≡ render_asset) | Transactional | **new** | Manifest de artefatos materiais (vídeo/imagem/áudio em Storage + node_ids) — unidade atômica de erasure | FR-VS-030/031 |
+> 24	| `video_scene` | Transactional | **new** | Cena individual do loop faceless (script + image + voice + motion + QA por cena) — granularidade do pipeline n8n | FR-VS-014/016/019 |
+> 25	| `script` (≡ roteiro) | Knowledge | typed | Roteiro product-aware do director Gemini + verdict de QA → memória semântica (`mcorch_nodes` tipado + Chroma) | FR-VS-017/028 |
+> 26	| `user_api_key` (VIEW Vault) | Master | extend | + coluna BYOK de provider de vídeo (família trigger Vault); `gemini_api_key` reusado | FR-VS-005/008 |
+> 27	| `affiliate_link` (≡ mcoin/monetização link) | Transactional | reuse | Link afiliado ML + UTM ligado ao asset gerado (`content_id` NON-NULL) | FR-VS-017 |
+> 28	| `mco_transaction` / `profiles.mco_balance` | Operational | reuse | Ledger de débito/refund atômico via `deduct_mco_coins`/refund | FR-VS-009/010/011 |
+> 29	| `observation` (≡ `mcorch_nodes` tipado) | Knowledge | reuse+typed | Nó de observação por render `success` (embed-on-insert) + nó de roteiro/verdict | FR-VS-026/028 |
+> 30	| `mesh_edge` (≡ `mcorch_edges`) | Knowledge | reuse | Edge observation→render/produto (instrumenta KPI) + `DERIVES_FROM` | FR-VS-026 |
+> 31	| `infra_health_log` | Operational | reuse | Telemetria de todo path (success/degraded/error) — `service='video-studio'` | FR-VS-027 |
+> 32	| `design_artifact` (≡ open-design link) | Knowledge | reuse | Artefato de design do open-design (sidecar) ligado à malha (`design_artifact_refs`) — alvo de erasure | FR-VS-007/031 |
+> 33	| `video-studio-assets` (Storage bucket) | Binary | **new** | Vídeo/imagem/áudio privados (signed URL curto · entrega soberana) | FR-VS-030 |
+> 34	
+> 35	### 1.2 Text ERD (relacionamentos)
+> 36	
+> 37	```
+> 38	auth.users (tenant) ──1:N──▶ video_renders            (user_id, ON DELETE CASCADE; id = PK poll-able)
+> 39	                   ──1:N──▶ video_templates           (user_id; HyperFrames reuse)
+> 40	                   ──1:N──▶ video_assets              (user_id; manifest de erasure)
+> 41	                   ──1:1──▶ user_api_keys (VIEW)       (BYOK gemini/<video_provider> — Vault)
+> 42	                   ──1:N──▶ mcorch_nodes (vídeo)       (user_id NOT NULL p/ tenant — NUNCA system node)
+> 43	                   ──1:N──▶ affiliate_links           (monetização; content_id liga ao asset)
+> 44	                   ──1:1──▶ profiles (mco_balance)     (ledger via deduct_mco_coins/refund)
+> 45	
+> 46	video_renders   ──1:N──▶ video_scenes                (render_id, ON DELETE CASCADE; loop faceless)
+> 47	                ──1:N──▶ video_assets                (render_id → manifest dos artefatos materiais)
+> 48	                ──1:1──▶ mcorch_nodes (observation)  (node_id; observação na malha por success)
+> 49	                ──1:N──▶ affiliate_links             (content_id NON-NULL p/ link de vídeo)
+> 50	video_assets    ──N:M──▶ mcorch_nodes                (node_id — alvo do cascade de erasure)
+> 51	                ──1:N──▶ storage.objects             (storage_key no bucket video-studio-assets)
+> 52	video_templates ──1:N──▶ video_renders              (template_id; reuso determinístico HyperFrames)
+> 53	mcorch_nodes (observation) ──edge──▶ mcorch_nodes (produto/roteiro)  (instrumenta KPI de receita)
+> 54	mcorch_nodes (roteiro/verdict) ──upsert──▶ mcorch_chroma            (memória semântica API v2)
+> 55	```
+> 56	
+> 57	**Cardinalidade-chave:** um `video_render` é a raiz do ledger financeiro (charged/refunded atômico) e a raiz da cascata de artefatos. Um `video_asset` agrega o objeto de Storage + os `node_ids` derivados — apagar o tenant (ou chamar `erase_video_artifacts`) derruba renders → scenes → assets → objetos de Storage → nós/embeddings de roteiro em cascata (FR-VS-031). O `video_template` é a única entidade Master per-tenant (reuso determinístico — argumento Enterprise PR-VS-022).
+> 58	
+> 59	---
+> 60	
+> 61	## 2. Logical Data Model
+> 62	
+> 63	> Tipos/constraints físicos selados no SDD §7 (autoridade copy-ready). Aqui: contrato lógico + chaves + nullability + isolamento. As tabelas espelham as canônicas existentes (`vm_canvas_*`, `creative_metrics`, `autopilot_cycles`) para consistência de família.
+> 64	
+> 65	### 2.1 `video_renders` (FR-VS-009/010/011/014/024/026 — ledger + máquina de estados)
+> 66	
+> 67	| Column | Type | Null | Key / Constraint | Notes |
+> 68	|--------|------|------|------------------|-------|
+> 69	| `id` (= `render_id`) | uuid | NO | PK | retornado no 202; poll-able (`video-render-poll`) |
+> 70	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | tenant; poll alheio → 404 |
+> 71	| `project_id` | uuid | YES | FK → `projects(id)` CASCADE | isolamento de malha |
+> 72	| `engine` | text | NO | CHECK ∈ {`faceless`,`hyperframes`} | qual motor produziu o render |
+> 73	| `state` | text | NO | CHECK ∈ {queued,running,qa_gate,done,qa_failed,failed} DEFAULT `queued` | máquina de estados (FRD §4.3) |
+> 74	| `product_id` | uuid | YES | (lógico → produto do tenant) | product-aware (FR-VS-017); sem FK físico (produto pode ser podado) |
+> 75	| `topic` | text | YES | — | tema livre quando sem produto |
+> 76	| `template_id` | uuid | YES | FK → `video_templates(id)` | reuso HyperFrames (FR-VS-024) |
+> 77	| `legs` | jsonb | NO | DEFAULT `'[]'` | status por leg (script/image/voice/motion/overlay/composite/qa) |
+> 78	| `qa` | jsonb | YES | — | `{ consistent, confidence }` do portão VLM (FR-VS-019/020) |
+> 79	| `charged_mco` | int | NO | CHECK ≥0 DEFAULT 0 | débito integral na entrada (R2) |
+> 80	| `refunded_mco` | int | NO | CHECK ≥0 e `≤ charged_mco` DEFAULT 0 | crédito de refund (floor a favor do tenant) |
+> 81	| `refunded_at` | timestamptz | YES | — | **guard de idempotência** (refund 1×/render) |
+> 82	| `storage_key` | text | YES (até `done`) | objeto existe no bucket; vídeo ≥100KB | prova material (Lei 1) |
+> 83	| `voice_consent` | boolean | NO | DEFAULT false | exigido p/ clonagem de voz identificável (FR-VS-032) |
+> 84	| `node_id` | uuid | YES | (lógico → `mcorch_nodes.id`) | observação na malha (FR-VS-026) |
+> 85	| `expires_at` | timestamptz | NO | DEFAULT now()+24h | retenção de poll ≥24h |
+> 86	| `created_at`/`updated_at` | timestamptz | NO | DEFAULT now() | audit |
+> 87	
+> 88	### 2.2 `video_scenes` (FR-VS-014/016/019 — granularidade do loop faceless)
+> 89	
+> 90	| Column | Type | Null | Key / Constraint | Notes |
+> 91	|--------|------|------|------------------|-------|
+> 92	| `id` | uuid | NO | PK | — |
+> 93	| `render_id` | uuid | NO | FK → `video_renders(id)` CASCADE | cena pertence ao render |
+> 94	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | redundância de tenant p/ RLS direto |
+> 95	| `scene_index` | int | NO | CHECK ≥0; UNIQUE `(render_id, scene_index)` | ordem no loop |
+> 96	| `script_text` | text | YES | — | roteiro da cena (director Gemini) |
+> 97	| `image_storage_key` | text | YES | — | frame da cena (Pollinations) |
+> 98	| `voice_storage_key` | text | YES | — | TTS da cena (VoxCPM) |
+> 99	| `motion_storage_key` | text | YES | — | clipe i2v (LTX) ou Ken-Burns fallback |
+> 100	| `motion_fallback` | boolean | NO | DEFAULT false | true = Ken-Burns (cota LTX excedida — FR-VS-016) |
+> 101	| `qa_consistent` | boolean | YES | — | gate G3 por cena (frames inicial/final) |
+> 102	| `created_at` | timestamptz | NO | DEFAULT now() | — |
+> 103	
+> 104	### 2.3 `video_templates` (FR-VS-021/024 — Master HyperFrames reuse)
+> 105	
+> 106	| Column | Type | Null | Key / Constraint | Notes |
+> 107	|--------|------|------|------------------|-------|
+> 108	| `id` | uuid | NO | PK | — |
+> 109	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | tenant-scoped CRUD |
+> 110	| `project_id` | uuid | YES | FK → `projects(id)` CASCADE | — |
+> 111	| `name` | text | NO | — | rótulo do template |
+> 112	| `html` | text | NO | tamanho ≤ cap; sanitizado p/ sandbox (OTD-VS-006) | HTML/CSS/JS UNTRUSTED |
+> 113	| `props` | jsonb | NO | DEFAULT `'{}'` | props data-driven |
+> 114	| `version` | int | NO | DEFAULT 1 | versionamento determinístico (PR-VS-022) |
+> 115	| `created_at`/`updated_at` | timestamptz | NO | DEFAULT now() | — |
+> 116	
+> 117	### 2.4 `video_assets` (FR-VS-030/031 — manifest de erasure)
+> 118	
+> 119	| Column | Type | Null | Key / Constraint | Notes |
+> 120	|--------|------|------|------------------|-------|
+> 121	| `id` | uuid | NO | PK | — |
+> 122	| `user_id` | uuid | NO | FK → `auth.users(id)` CASCADE | dono |
+> 123	| `render_id` | uuid | NO | FK → `video_renders(id)` CASCADE | render que produziu |
+> 124	| `kind` | text | NO | CHECK ∈ {`video`,`image`,`audio`} | tipo de artefato |
+> 125	| `storage_key` | text | NO | objeto no bucket `video-studio-assets` | chave de Storage (deletada via Storage API — OTD-VM-026 lição) |
+> 126	| `node_id` | uuid | YES | (lógico → `mcorch_nodes.id`) | nó derivado (roteiro/observação) |
+> 127	| `bytes` | bigint | YES | CHECK ≥0 | tamanho material (vídeo ≥100KB) |
+> 128	| `retention_until` | timestamptz | YES | > now() quando setado; teto = política §7 | clock de retenção LGPD (Art. 16) |
+> 129	| `created_at` | timestamptz | NO | DEFAULT now() | — |
+> 130	
+> 131	### 2.5 `user_api_keys` extension — BYOK de provider de vídeo (FR-VS-005/008 · família Vault)
+> 132	
+> 133	VIEW Vault-mascarada (família de trigger `vault_upsert_secret` idempotente — precedente `20260602140000`). `gemini_api_key` é **reusado** (director + vision QA); coluna nova apenas se um provider de vídeo dedicado exigir chave separada:
+> 134	
+> 135	| Column | Type | Null | Write rule | Lookup |
+> 136	|--------|------|------|-----------|--------|
+> 137	| `gemini_api_key` (reuso) | text (Vault) | YES | `.insert` na VIEW (NUNCA `.upsert`); null não limpa (clear via RPC) | `decrypted_user_api_keys` (service-role only) |
+> 138	| `<video_provider>_api_key` (condicional) | text (Vault) | YES | idem | idem — só se OTD-VS-002 exigir provider de vídeo dedicado |
+> 139	
+> 140	### 2.6 Reuse — sem alteração de schema
+> 141	
+> 142	`affiliate_config` (BYOK ML per-user · `app_id`/`affiliate_tag`), `affiliate_links` (`content_id` NON-NULL no link de vídeo — FR-VS-017), `profiles.mco_balance` (carteira via `deduct_mco_coins`/refund), `mcorch_nodes`/`mcorch_edges` (malha, §4), `infra_health_logs` (telemetria, novo `service='video-studio'` + `event` types — sem DDL), `design_artifact_refs` (open-design — alvo de erasure FR-VS-031).
+> 143	
+> 144	---
+> 145	
+> 146	## 3. Supabase Physical Schema Stubs
+> 147	
+> 148	Os `CREATE TABLE`/RLS/índices/RPC físicos estão selados no **SDD §7 (Migration Stubs)** e **§5.2 (RLS Policies)** — autoridade única copy-ready para os arquivos de migration. Resumo das migrations (ordem de aplicação):
+> 149	
+> 150	| # | Migration file (stub) | Cria | RLS | Índices |
+> 151	|---|----------------------|------|-----|---------|
+> 152	| 1 | `<ts>_video_studio_renders.sql` | `video_renders` (+CHECK engine/state, `refunded_mco ≤ charged_mco`) | default-deny; SELECT/INSERT own; UPDATE service-role; **RESTRICTIVE no client delete** (ledger financeiro) | `(user_id, state)`, `(user_id, created_at DESC)`, `expires_at` |
+> 153	| 2 | `<ts>_video_studio_scenes.sql` | `video_scenes` | default-deny; SELECT own; writes service-role | `(render_id, scene_index)` UNIQUE, `user_id` |
+> 154	| 3 | `<ts>_video_studio_templates.sql` | `video_templates` | default-deny; ALL own (CRUD tenant-scoped) | `user_id`, `project_id` |
+> 155	| 4 | `<ts>_video_studio_assets.sql` | `video_assets` | default-deny; SELECT own; writes service-role | `render_id`, `user_id`, `retention_until` |
+> 156	| 5 | `<ts>_video_studio_byok.sql` | coluna BYOK condicional + re-create da família trigger/VIEW Vault | herdada (VIEW Vault mascarada) | — |
+> 157	| 6 | `<ts>_video_studio_erase_rpc.sql` | `erase_video_artifacts(p_user_id)` SECURITY DEFINER `search_path=''` | EXECUTE revogado de PUBLIC/anon; GRANT authenticated (own via guard) + service_role (sweep) | — |
+> 158	
+> 159	**Padrão de cobrança:** nenhuma das tabelas tem coluna de embedding própria — roteiro/verdict embedam em `mcorch_nodes`/Chroma (§4). Tabelas financeiras (`video_renders`) seguem a família **RESTRICTIVE no-delete** de `creative_metrics`/`autopilot_cycles` (clientes nunca apagam o ledger). **Gate house:** cada migration passa `/security-review` independente ANTES do commit (FMEA-011 + NFR-VS-011). Bucket `video-studio-assets` privado (config + policy de Storage).
+> 160	
+> 161	### 3.1 RPC de erasure — `erase_video_artifacts(p_user_id)` (FR-VS-031 · espelha `erase_vision_artifacts`/`erase_lead`)
+> 162	
+> 163	```sql
+> 164	-- Migration: <ts>_video_studio_erase_rpc.sql (FR-VS-031 — LGPD cascade · gate de GA).
+> 165	-- Espelha erase_vision_artifacts (20260615200000) + erase_lead: SECURITY DEFINER + search_path='' +
+> 166	-- guard de tenant em CADA cascade DELETE (um node_ids[] envenenado nunca vira primitiva cross-tenant).
+> 167	-- Storage: NÃO deletado em SQL (storage.objects é do storage-admin → 42501); RETURN storage_keys p/ o
+> 168	-- CALLER (container erase-broker / delete-account, service-role) remover via Storage API (lição OTD-VM-026).
+> 169	CREATE OR REPLACE FUNCTION public.erase_video_artifacts(p_user_id uuid)
+> 170	RETURNS jsonb
+> ```
+
+## 🤖 Claude *(13:53:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "offset": 140,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 140	| open-design | `open-design` (`:7456`) behind `design.mcorch.com` | Editor de design (sidecar) — single-tenant hoje (OTD-VS-002) | FR-VS-007 |
+> 141	
+> 142	### 2.5 Edge Functions & Stores — decisões negativas (seladas)
+> 143	
+> 144	- **SEM novo Zustand store.** O estado de run de vídeo é server state (jobs vivem no container/`video_renders`, consultados por poll) → TanStack Query (regra da casa). O canvas/grafo interativo do HyperFrames é estado INTERNO do `@hyperframes/studio` (timeline/preview), não um store MCORCH. Um store só se justificaria se o orquestrador visual de pipeline fosse adicionado (fora deste ciclo).
+> 145	- **Reuso de edge functions existentes:** `embed-mcorch-node` (embed-on-insert dos nós de observação), `get-infra-status` (HUD/health). Nenhum shim novo além das 3 funções de vídeo + a extensão do `delete-account`.
+> 146	
+> 147	### 2.6 New DB Objects
+> 148	
+> 149	| Object | Type | Purpose | Migration file |
+> 150	|--------|------|---------|---------------|
+> 151	| `video_renders` | Table | Máquina de estados de render (`queued→running→qa_gate→done\|qa_failed\|failed`), engine, charged/refunded mco, storage_key, poll-able ≥24h | `<ts>_video_studio_renders.sql` |
+> 152	| `video_templates` | Table | Templates HyperFrames versionados reutilizáveis (HTML/props), tenant-scoped | `<ts>_video_studio_templates.sql` |
+> 153	| `video_assets` | Table | Manifest de artefatos (vídeo/imagem/áudio em Storage, node_ids, `retention_until`) — habilita cascade de erasure | `<ts>_video_studio_assets.sql` |
+> 154	| `user_api_keys.gemini_api_key` (reuso) / `.<video_provider>_api_key` | Columns (VIEW Vault family) | BYOK de provider de vídeo (padrão Vault `vault_upsert_secret` idempotente) | `<ts>_video_studio_byok.sql` |
+> 155	| `erase_video_artifacts(p_user_id)` | RPC (SECURITY DEFINER, service-role) | Cascade LGPD: rows + Storage + nós/embeddings + config BYOK (espelha `erase_vision_artifacts`/`erase_lead`) | `<ts>_video_studio_erase_rpc.sql` |
+> 156	| `video-studio-assets` | Storage bucket (private) | Vídeo/imagem/áudio servidos por signed URL curto (entrega soberana) | config + migration |
+> 157	
+> 158	Toda migration passa `/security-review` antes do commit (FMEA-011 house rule; NFR-VS-011).
+> 159	
+> 160	---
+> 161	
+> 162	## 3. Data Flow Diagrams
+> 163	
+> 164	### 3.1 Render a faceless video (FR-VS-014/009/019/026 · happy path)
+> 165	
+> 166	```
+> 167	Léo (UI)          useFacelessRender   video-faceless-render        n8n+vision_mcp+chroma        Supabase
+> 168	 │                    │                      │                          │                          │
+> 169	 │──[Gerar vídeo]────▶│                      │                          │                          │
+> 170	 │  {product_id}      │──POST JWT───────────▶│                          │                          │
+> 171	 │                    │                      │──auth.getUser()──────────────────────────────────────▶│ 401 se inválido
+> 172	 │                    │                      │──resolve BYOK (Gemini)──────────────────────────────▶│ decrypted_user_api_keys
+> 173	 │                    │                      │   402 <service>_not_configured se ausente            │
+> 174	 │                    │                      │──deduct_mco_coins(uid, VIDEO_FACELESS_RENDER)───────▶│ RPC · 402 saldo<custo
+> 175	 │                    │                      │──INSERT video_renders(state=queued)─────────────────▶│
+> 176	 │                    │                      │──trigger n8n e7e3beeb (Bearer VIDEO_STUDIO_PAT)──────▶│ (via bridge R5)
+> 177	 │◀──202 {render_id, charged_mco}───────────│                          │                          │
+> 178	 │                    │                      │   …worker async (sem teto Edge)…                     │
+> 179	 │                    │                      │   script(Gemini)→image(Pollinations)→voice(VoxCPM)   │
+> 180	 │                    │                      │   →overlays(Remotion:8088)→[frame inicial+final]     │
+> 181	 │                    │                      │──QA GATE: vision.compare(frames) via PAT────────────▶│ vision_mcp (BYOK, 0 mco)
+> 182	 │                    │                      │   inconsistente → state=qa_failed (NÃO gasta i2v)    │
+> 183	 │                    │                      │   consistente → LTX i2v (Ken-Burns fallback)→FFmpeg  │
+> 184	 │                    │                      │──upload MP4(≥100KB)─────────────────────────────────▶│ bucket video-studio-assets
+> 185	 │                    │                      │──vision.analyze_video QA + mesh.consolidate_reference▶│ vision_mcp → mcorch_nodes (embed)
+> 186	 │                    │                      │──upsert roteiro/verdict─────────────────────────────▶│ mcorch_chroma (API v2)
+> 187	 │                    │                      │──UPDATE video_renders(state=done, storage_key)──────▶│
+> 188	 │                    │                      │   (falha pós-débito → erase_video_artifacts? não;    │
+> 189	 │                    │                      │    refund idempotente por render_id + infra_health_logs)
+> 190	 │──[poll]───────────▶│──video-render-poll──▶│──SELECT (tenant-bound; outro tenant→404)────────────▶│
+> 191	 │◀──{state:done, video_url(signed), node_id}│                          │                          │
+> 192	```
+> 193	
+> 194	### 3.2 Open the HyperFrames editor + deterministic render (FR-VS-021/024/025)
+> 195	
+> 196	```
+> 197	Marina (UI)        Route/App.tsx         HyperFramesEditor     video-hyperframes-render    hyperframes-render (ephemeral)
+> 198	 │                    │                       │                       │                          │
+> 199	 │──/dashboard/canvas/video──────────────────▶│ (rota ANTES de canvas/:id — FR-VS-022)           │
+> ```
+
+## 🤖 Claude *(13:53:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615160000_vision_mcp_jobs.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: vision-mcp async jobs — `vision_jobs` state machine for deepsearch.run/poll (FR-VM-007 / FM-VM-07).
+> 2	-- BoK SSOT: docs/bok/vision-mcp/05-sdd.md (§3.3 sequence, §5.2 RLS lines 539-544, §6 table lines 673-695)
+> 3	--           + 04-frd.md §4.5 (partial-delivery refund contract).
+> 4	-- SOP: docs/processes/vision-mcp-deepsearch-async.md (Lei 2 — written before this code).
+> 5	--
+> 6	-- deepsearch.run debits the full class (3 mco) on entry, INSERTs a 'queued' row here, kicks an in-process
+> 7	-- worker, and returns job_id immediately (NEVER blocking). deepsearch.poll (cost 0, tenant-bound) reads state.
+> 8	-- The worker computes the partial-delivery refund (§4.5: floor in the tenant's favor) and writes refunded_mco
+> 9	-- + refunded_at (the once-per-job idempotency guard).
+> 10	--
+> 11	-- Tenancy: SELECT-own only (poll/dashboard). The container is the ONLY writer — via the service key (bypasses
+> 12	-- RLS). NO INSERT/UPDATE/DELETE policy for authenticated → default-deny: a tenant can never forge nor mutate a
+> 13	-- job (so a tenant cannot fabricate a 'done' job to read someone else's result, nor zero its own charge).
+> 14	-- Mirrors the marketing-hub lead_core tenancy pattern (20260603000000). Passes /security-review (FMEA-011).
+> 15	
+> 16	CREATE TABLE IF NOT EXISTS public.vision_jobs (
+> 17	  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),       -- = job_id do contrato FR-VM-007
+> 18	  user_id         uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 19	  project_id      uuid,                                                    -- optional tenant project (no projects table)
+> 20	  tool            text        NOT NULL,                                    -- 'deepsearch.run'
+> 21	  state           text        NOT NULL DEFAULT 'queued'
+> 22	                    CHECK (state IN ('queued','running','done','partial','failed')),
+> 23	  planned_units   int         NOT NULL DEFAULT 1 CHECK (planned_units >= 1),   -- cap por plano app-side (DD-VM-003)
+> 24	  delivered_units int         NOT NULL DEFAULT 0 CHECK (delivered_units >= 0),
+> 25	  charged_mco     int         NOT NULL CHECK (charged_mco >= 0),
+> 26	  refunded_mco    int         CHECK (refunded_mco IS NULL OR (refunded_mco >= 0 AND refunded_mco <= charged_mco)),
+> 27	  refunded_at     timestamptz,                                             -- idempotency guard (refund 1×/job — §4.5.6)
+> 28	  failed_units    jsonb,
+> 29	  result          jsonb,
+> 30	  expires_at      timestamptz NOT NULL DEFAULT (now() + interval '7 days'),-- poll retention ≥24h (NFR-VM-003)
+> 31	  created_at      timestamptz NOT NULL DEFAULT now(),
+> 32	  updated_at      timestamptz NOT NULL DEFAULT now()
+> 33	);
+> 34	
+> 35	ALTER TABLE public.vision_jobs ENABLE ROW LEVEL SECURITY;
+> 36	
+> 37	-- SELECT own only (§5.2). No write policies → authenticated default-deny; the container writes via service key.
+> 38	CREATE POLICY "vision_jobs_select_own" ON public.vision_jobs
+> 39	  FOR SELECT USING (auth.uid() = user_id);
+> 40	
+> 41	CREATE INDEX IF NOT EXISTS vision_jobs_user_state_idx ON public.vision_jobs (user_id, state);
+> 42	CREATE INDEX IF NOT EXISTS vision_jobs_expires_idx    ON public.vision_jobs (expires_at);
+> 43	
+> 44	-- Maintain updated_at on every write (shared trigger fn used across the schema, e.g. lead_core).
+> 45	CREATE TRIGGER tr_update_vision_jobs_updated_at
+> 46	  BEFORE UPDATE ON public.vision_jobs
+> 47	  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 48	
+> 49	COMMENT ON TABLE public.vision_jobs IS
+> 50	  'Vision MCP async job state machine (deepsearch.run/poll — FR-VM-007). queued→running→done|partial|failed; '
+> 51	  'partial-delivery refund §4.5 (refunded_mco/refunded_at). SELECT-own RLS; container writes via service key.';
+> 52	
+> 53	-- ── Atomic finalize + refund authority (closes the /security-review HIGH: charge-without-value + refund/guard
+> 54	--    atomicity). The ONLY way a job goes terminal + refunds. Guard `state IN (queued,running)` ⇒ exactly the
+> 55	--    FIRST finalizer wins (worker OR the poll lazy-reconcile OR a future sweep) — idempotent: a second call on
+> 56	--    an already-terminal job is a no-op (no double refund). The vision_jobs guard write AND the balance credit
+> 57	--    (add_mco_coins) commit in ONE transaction ⇒ never money-without-guard nor guard-without-money (§4.5.6).
+> 58	--    service_role-only (the container calls it via SB_SECRET_KEY; tenants never reach it). FMEA-011 reviewed.
+> 59	CREATE OR REPLACE FUNCTION public.finalize_vision_job(
+> 60	  p_job_id    uuid,
+> 61	  p_state     text,
+> 62	  p_delivered int,
+> 63	  p_amount    int,    -- refund to credit (0 = no refund, e.g. 'done')
+> 64	  p_failed    jsonb,
+> 65	  p_result    jsonb
+> 66	)
+> 67	RETURNS jsonb
+> 68	LANGUAGE plpgsql
+> 69	SECURITY DEFINER
+> 70	SET search_path = ''
+> 71	AS $$
+> 72	DECLARE
+> 73	  v_uid uuid;
+> 74	BEGIN
+> 75	  IF p_state NOT IN ('done','partial','failed') THEN
+> 76	    RAISE EXCEPTION 'finalize_vision_job: terminal state required, got %', p_state USING errcode = '22023';
+> 77	  END IF;
+> 78	
+> 79	  -- Claim + finalize a NON-TERMINAL job exactly once.
+> 80	  UPDATE public.vision_jobs
+> 81	     SET state           = p_state,
+> 82	         delivered_units = p_delivered,
+> 83	         result          = p_result,
+> 84	         failed_units    = p_failed,
+> 85	         refunded_mco    = CASE WHEN p_amount > 0 THEN p_amount ELSE refunded_mco END,
+> 86	         refunded_at     = CASE WHEN p_amount > 0 THEN now()  ELSE refunded_at END
+> 87	   WHERE id = p_job_id
+> 88	     AND state IN ('queued','running')
+> 89	   RETURNING user_id INTO v_uid;
+> 90	
+> 91	  IF v_uid IS NULL THEN
+> 92	    RETURN jsonb_build_object('finalized', false);   -- already terminal → no-op (no double refund)
+> 93	  END IF;
+> 94	
+> 95	  -- Guard write (above) + balance credit commit in the SAME transaction.
+> 96	  IF p_amount > 0 THEN
+> 97	    PERFORM public.add_mco_coins(v_uid, p_amount);
+> 98	    RETURN jsonb_build_object('finalized', true, 'refunded', p_amount);
+> 99	  END IF;
+> 100	
+> 101	  RETURN jsonb_build_object('finalized', true, 'refunded', 0);
+> 102	END;
+> 103	$$;
+> 104	
+> 105	REVOKE ALL ON FUNCTION public.finalize_vision_job(uuid, text, int, int, jsonb, jsonb) FROM PUBLIC, anon, authenticated;
+> 106	GRANT EXECUTE ON FUNCTION public.finalize_vision_job(uuid, text, int, int, jsonb, jsonb) TO service_role;
+> 107	
+> ```
+
+## 🤖 Claude *(13:54:12)*
+
+
+## 🤖 Claude *(13:54:14)*
+
+Tenho o modelo exato da BoK + o precedente `finalize_vision_job` a espelhar. Vou ler o `billing.ts` (constantes de custo) + o `autopilot-run` (precedente de JWT→deduct→finalize) pra casar o contrato:
+
+## 🤖 Claude *(13:54:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { SupabaseClient } from '@supabase/supabase-js';
+> 2	
+> 3	// mcoCoins cost per operation — single source of truth (frontend).
+> 4	//
+> 5	// CALIBRATION MODEL (2026-06-03 · OTD-MCOIN-CALIBRATION CLOSED) — derived from REAL provider cost, not round figures.
+> 6	// SOP: docs/processes/mcoin-cost-calibration.md.
+> 7	//   formula:    mco(op) = ceil( real_cost_usd(op) / USD_PER_MCO_FLOOR × MARGIN )
+> 8	//   floor rate: USD_PER_MCO_FLOOR = $0.018/mco — the CHEAPEST sale: Enterprise R$997 / 10000 mco ÷ R$5.5/USD.
+> 9	//               (Starter R$147/500 = $0.053/mco and Pro R$397/2000 = $0.036/mco sell DEARER → more margin there.)
+> 10	//   margin:     MARGIN = 4× (target gross markup at the worst-case sale price).
+> 11	//   FX:         R$5.5/USD assumed; conclusions hold across R$5–7 except IMAGE near R$7 (kept at 4× headroom).
+> 12	//
+> 13	//   Measured real costs (USD): text llama-3.3-70b ≈ $0.001 (Groq ~free) · DALL·E 3 1024² image = $0.04 ·
+> 14	//   orchestrate run (3 texts + 1 image) ≈ $0.04 · Higgsfield DoP 5s video = $0.56 (canvas-execute, validated 4×).
+> 15	//   Per-op markup at the floor: ORCHESTRATION_RUN 10 → 4.4× ✓ · canvas video 125 → 4.0× ✓ · canvas image 12 → 5.4× ✓.
+> 16	//   ORCHESTRATION_RUN stays a FLAT 10 (bundle): covers 3×CONTENT_GENERATION + IMAGE_GENERATION (sum 15) at a
+> 17	//   deliberate bundle discount. Edge fns hardcode their own copies (Deno can't import src/lib) — keep in sync.
+> 18	export const COIN_COSTS = {
+> 19	  ORCHESTRATION_RUN: 10,   // 3 texts + 1 image, charged flat (bundle discount vs the 15 below). ~4.4× at floor.
+> 20	  CONTENT_GENERATION: 2,   // 1 LLM article (~$0.0006). Strict floor is 1; held at 2 as a conservative minimum. (was 5)
+> 21	  IMAGE_GENERATION: 9,     // 1 DALL·E 3 1024² image ($0.04 → 4× at floor). WAS 3 = 1.36× (under-margined) → fixed.
+> 22	  EMBED_NODE: 1,           // 1 embedding call (~$0.000002). Floor minimum.
+> 23	  LEAD_SCORE: 1,           // 1 LLM scoring call (~$0.0005). marketing-hub FR-MH-003 (lead-score edge fn mirrors this).
+> 24	  CAMPAIGN_RUN: 10,        // marketing-hub FR-MH-004 — orchestration FEE on top of the cascaded per-step ORCHESTRATION_RUN.
+> 25	  NURTURE_DISPATCH: 2,     // marketing-hub FR-MH-008 — 1 LLM message (~$0.0006). nurture-dispatch edge fn mirrors this.
+> 26	  // vision-mcp Fatia 2 (sealed grade — docs/processes/vision-mcp-cost-calibration.md, OTD-VM-004).
+> 27	  // Mirrored from packages/vision-mcp-core/src/infra/billing.ts COIN_COSTS (G3 triple-mirror gate).
+> 28	  // Charged on the PLATFORM-key path only; per-user BYOK runs free; Sovereign exempt (FR-VM-006).
+> 29	  VISION_DESCRIBE_IMAGE: 2,      // VLM ~$0.0004/img (Gemini Flash) → 4×-floor
+> 30	  VISION_ANALYZE_VIDEO: 2,       // per minute (Gemini video @1FPS ~$0.0054/min)
+> 31	  VISION_OCR: 1,                 // per page (Mistral OCR ~$0.002)
+> 32	  VISION_DETECT: 2,              // Gemini native boxes
+> 33	  DEEPSEARCH_SCRAPE: 1,          // Firecrawl (~$0.0006/pág Growth)
+> 34	  DEEPSEARCH_RUN: 3,             // deepsearch orchestration
+> 35	  MESH_CONSOLIDATE_REFERENCE: 1, // mesh write (embedding async ~free)
+> 36	} as const;
+> 37	
+> 38	export type CoinOperation = keyof typeof COIN_COSTS;
+> 39	
+> 40	/**
+> 41	 * Deducts mcoCoins from the authenticated user's profile.
+> 42	 * Calls the `deduct_mco_coins` SECURITY DEFINER RPC which enforces
+> 43	 * the balance check atomically in the database.
+> 44	 * Throws if balance is insufficient or the RPC fails.
+> 45	 */
+> 46	export async function deductMcoCoins(
+> 47	  supabase: SupabaseClient,
+> 48	  userId: string,
+> 49	  amount: number,
+> 50	): Promise<void> {
+> 51	  const { error } = await supabase.rpc('deduct_mco_coins', {
+> 52	    p_user_id: userId,
+> 53	    p_amount: amount,
+> 54	  });
+> 55	
+> 56	  if (error) {
+> 57	    throw new Error(error.message || 'Falha ao deduzir mcoCoins');
+> 58	  }
+> 59	}
+> 60	
+> 61	/**
+> 62	 * Returns the current mco_balance for the given user.
+> 63	 * Returns 0 if the profile row is not found.
+> 64	 */
+> 65	export async function getMcoBalance(
+> 66	  supabase: SupabaseClient,
+> 67	  userId: string,
+> 68	): Promise<number> {
+> 69	  const { data, error } = await supabase
+> 70	    .from('profiles')
+> 71	    .select('mco_balance')
+> 72	    .eq('id', userId)
+> 73	    .maybeSingle();
+> 74	
+> 75	  if (error) throw new Error(error.message);
+> 76	  return (data?.mco_balance as number | null) ?? 0;
+> 77	}
+> 78	
+> 79	/**
+> 80	 * Returns true if the user has enough mcoCoins for the operation.
+> 81	 * Prefer this for UI guard checks (non-destructive read).
+> 82	 */
+> 83	export async function hasSufficientBalance(
+> 84	  supabase: SupabaseClient,
+> 85	  userId: string,
+> 86	  required: number,
+> 87	): Promise<boolean> {
+> 88	  const balance = await getMcoBalance(supabase, userId);
+> 89	  return balance >= required;
+> 90	}
+> 91	
+> 92	/**
+> 93	 * Convenience wrapper: checks balance then deducts in sequence.
+> 94	 * Use this in Edge Functions where you want an explicit pre-check message.
+> 95	 */
+> 96	export async function checkAndDeductCoins(
+> 97	  supabase: SupabaseClient,
+> 98	  userId: string,
+> 99	  operation: CoinOperation,
+> 100	): Promise<void> {
+> 101	  const cost = COIN_COSTS[operation];
+> 102	  const sufficient = await hasSufficientBalance(supabase, userId, cost);
+> 103	  if (!sufficient) {
+> 104	    throw new Error(
+> 105	      `Saldo insuficiente: operação "${operation}" custa ${cost} mcoCoins`,
+> 106	    );
+> 107	  }
+> 108	  await deductMcoCoins(supabase, userId, cost);
+> 109	}
+> 110	
+> ```
+
+## 🤖 Claude *(13:54:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
+> 3	//
+> 4	// Identity (two paths):
+> 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
+> 6	//     derived it from autopilot_plans.user_id). The header is re-validated by the TENANT-SCOPED plan load below.
+> 7	//   - user "gerar agora": user JWT → getUser → the plan load is scoped to that user (IDOR-safe).
+> 8	// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9	//   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 10	//   self-bill) → finalize_autopilot_cycle(actual) → re-arm next_run_at. dry_run short-circuits after the cost
+> 11	//   projection (no cycle, no deduct) — the zero-cost proof path.
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	
+> 14	const corsHeaders = {
+> 15	  "Access-Control-Allow-Origin": "*",
+> 16	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 17	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-autopilot-user-id",
+> 18	};
+> 19	const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 20	const ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)
+> 21	const CONCURRENCY = 6;    // wall-clock bound on the fan-out (mirrors nurture-cron / campaign-run)
+> 22	const UUID_RE = /^[0-9a-fA-F-]{36}$/;
+> 23	
+> 24	Deno.serve(async (req) => {
+> 25	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 26	  const json = (b: unknown, s = 200) =>
+> 27	    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 28	
+> 29	  const url = Deno.env.get("SUPABASE_URL")!;
+> 30	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 31	  const pubKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 32	  const admin = createClient(url, serviceKey);
+> 33	  const logHealth = (status: string) =>
+> 34	    admin.from("infra_health_logs").insert({ service: "autopilot-run", status }).then(() => {}, () => {});
+> 35	
+> 36	  try {
+> 37	    const authHeader = req.headers.get("Authorization");
+> 38	    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+> 39	
+> 40	    const body = await req.json().catch(() => ({}));
+> 41	    const planId = typeof body?.plan_id === "string" ? body.plan_id : null;
+> 42	    const dryRun = body?.dry_run === true;
+> 43	    if (!planId || !UUID_RE.test(planId)) return json({ error: "plan_id (uuid) required" }, 422);
+> 44	
+> 45	    // ── Identity: service path (proven key + server-trusted header) OR user JWT path. ──────────────────────────
+> 46	    const isService = authHeader === `Bearer ${serviceKey}`;
+> 47	    let userId: string;
+> 48	    if (isService) {
+> 49	      const hdr = req.headers.get("x-autopilot-user-id");
+> 50	      if (!hdr || !UUID_RE.test(hdr)) return json({ error: "x-autopilot-user-id (uuid) required for service path" }, 400);
+> 51	      userId = hdr;
+> 52	    } else {
+> 53	      const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });
+> 54	      const { data: { user }, error } = await userClient.auth.getUser();
+> 55	      if (error || !user) return json({ error: "Unauthorized" }, 401);
+> 56	      userId = user.id;
+> 57	    }
+> 58	
+> 59	    // ── Load plan TENANT-SCOPED (plan MUST belong to userId — cross-tenant/missing → 404). ───────────────────────
+> 60	    const { data: plan } = await admin
+> 61	      .from("autopilot_plans")
+> 62	      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants")
+> 63	      .eq("id", planId).eq("user_id", userId).maybeSingle();
+> 64	    if (!plan) return json({ error: "plan_not_found" }, 404);
+> 65	
+> 66	    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 67	    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 68	    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 69	    const nRuns = products.length * platforms.length * abVariants;
+> 70	    if (nRuns < 1) return json({ error: "plan_has_no_targets", detail: "plano sem produtos/redes válidos" }, 422);
+> 71	
+> 72	    const projected = nRuns * ORCH_COST + ANALYZE_COST;
+> 73	
+> 74	    // dry_run: return the cost projection WITHOUT opening a cycle or deducting (zero-cost proof path).
+> 75	    if (dryRun) {
+> 76	      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,
+> 77	        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 78	    }
+> 79	
+> 80	    // ── begin_autopilot_cycle: ATOMIC cap-check + single pre-debit (or abort reason, no deduct). ────────────────
+> 81	    const { data: begun, error: beginErr } = await admin.rpc("begin_autopilot_cycle", {
+> 82	      p_plan_id: planId, p_user_id: userId, p_projected_mco: projected, p_planned_units: nRuns,
+> 83	    });
+> 84	    if (beginErr) { logHealth("error"); return json({ error: "begin_failed", detail: beginErr.message }, 500); }
+> 85	    if (!begun?.ok) {
+> 86	      const reason = begun?.reason ?? "aborted";
+> 87	      // Hard stop (budget too low / insufficient balance) → pause the plan so it stops re-firing every tick.
+> 88	      if (reason === "aborted_budget" || reason === "insufficient_balance") {
+> 89	        await admin.from("autopilot_plans").update({ is_active: false }).eq("id", planId).eq("user_id", userId);
+> 90	      }
+> 91	      logHealth("degraded");
+> 92	      return json({ ok: false, reason, projected_mco: projected }, reason === "insufficient_balance" ? 402 : 409);
+> 93	    }
+> 94	    const cycleId = begun.cycle_id as string;
+> 95	
+> 96	    // ── R3 loop (FR-VA-010/011): analyze the PREVIOUS completed cycle to steer THIS cycle's generation. ─────────
+> 97	    // collect (sync the live click ledger → creative_metrics) then analyze (→ optimization_policy). Both inline and
+> 98	    // PREPAID — the cycle reserved ANALYZE_COST(2); analyzeCharged consumes it only when real data produced a policy
+> 99	    // (else finalize refunds the 2). Best-effort — a missing/empty previous cycle just means no steering this round.
+> 100	    let analyzeCharged = 0;
+> 101	    const svcCall = (fn: string, payload: unknown) => fetch(`${url}/functions/v1/${fn}`, {
+> 102	      method: "POST",
+> 103	      headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 104	      body: JSON.stringify(payload),
+> 105	    });
+> 106	    try {
+> 107	      const { data: prev } = await admin.from("autopilot_cycles")
+> 108	        .select("id").eq("plan_id", planId).eq("user_id", userId).eq("status", "completed")
+> 109	        .neq("id", cycleId).order("cycle_number", { ascending: false }).limit(1).maybeSingle();
+> 110	      if (prev?.id) {
+> 111	        await svcCall("autopilot-collect", { cycle_id: prev.id }).catch(() => {});
+> 112	        const ar = await svcCall("autopilot-analyze", { previous_cycle_id: prev.id, prepaid: true })
+> 113	          .then((r) => r.json()).catch(() => null);
+> 114	        if (ar?.has_real_data) analyzeCharged = ANALYZE_COST;
+> 115	      }
+> 116	    } catch (e) { console.warn(`[autopilot-run] R3 analyze skipped: ${e}`); }
+> 117	
+> 118	    // ── Fan-out: product × platform × variant → orchestrate-content (prepaid → NO self-bill). ───────────────────
+> 119	    let succeeded = 0;
+> 120	    const tasks: Array<() => Promise<void>> = [];
+> 121	    for (const productId of products) {
+> 122	      for (const platform of platforms) {
+> 123	        for (let v = 0; v < abVariants; v++) {
+> 124	          tasks.push(async () => {
+> 125	            try {
+> 126	              const r = await fetch(`${url}/functions/v1/orchestrate-content`, {
+> 127	                method: "POST",
+> 128	                headers: {
+> 129	                  Authorization: `Bearer ${serviceKey}`,
+> 130	                  "x-autopilot-user-id": userId,
+> 131	                  "Content-Type": "application/json",
+> 132	                },
+> 133	                body: JSON.stringify({
+> 134	                  topic: plan.name, platforms: [platform], product_ids: [productId],
+> 135	                  prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 136	                }),
+> 137	              });
+> 138	              if (r.ok) succeeded++;
+> 139	              else console.warn(`[autopilot-run] sub-run ${productId}/${platform} → HTTP ${r.status}`);
+> 140	            } catch (e) {
+> 141	              console.warn(`[autopilot-run] sub-run ${productId}/${platform} error: ${e}`);
+> 142	            }
+> 143	          });
+> 144	        }
+> 145	      }
+> 146	    }
+> 147	    for (let i = 0; i < tasks.length; i += CONCURRENCY) {
+> 148	      await Promise.all(tasks.slice(i, i + CONCURRENCY).map((t) => t()));
+> 149	    }
+> 150	
+> 151	    // actual = successful runs × 10 + analyzeCharged (the reserved 2 is consumed only when the R3 analyze produced
+> 152	    // a policy from real data; otherwise finalize refunds it). Zero successes → actual = analyzeCharged.
+> 153	    const actual = succeeded * ORCH_COST + analyzeCharged;
+> 154	    const status = succeeded > 0 ? "completed" : "failed";
+> 155	    const { data: fin } = await admin.rpc("finalize_autopilot_cycle", {
+> 156	      p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,
+> 157	    });
+> 158	
+> 159	    // ── Re-arm cadence (every_n_days) or deactivate after a single all_at_once run. ─────────────────────────────
+> 160	    if (plan.mode === "every_n_days") {
+> 161	      const days = Math.min(30, Math.max(1, Number(plan.interval_days ?? 3)));
+> 162	      const next = new Date(Date.now() + days * 86_400_000).toISOString();
+> 163	      await admin.from("autopilot_plans").update({ next_run_at: next }).eq("id", planId).eq("user_id", userId);
+> 164	    } else {
+> 165	      await admin.from("autopilot_plans").update({ is_active: false }).eq("id", planId).eq("user_id", userId);
+> 166	    }
+> 167	
+> 168	    logHealth("healthy");
+> 169	    return json({
+> 170	      ok: true, cycle_id: cycleId, n_runs: nRuns, succeeded,
+> 171	      projected_mco: projected, actual_mco: actual, refunded_mco: fin?.refunded ?? 0, status,
+> 172	    });
+> 173	  } catch (e) {
+> 174	    logHealth("error");
+> 175	    return json({ error: e instanceof Error ? e.message : "unknown" }, 500);
+> 176	  }
+> 177	});
+> 178	
+> ```
+
+## 🤖 Claude *(13:55:09)*
+
+
+## 🤖 Claude *(13:55:11)*
+
+Tenho todos os padrões. Antes de escrever a migration, confirmo dois alvos de integridade que ela referencia (Lei 1 — não quero `db push` falhar no meio): a constraint `UNIQUE(org_id, id)` em `clients` (alvo da FK composta) + a assinatura de `add_mco_coins` (chamada pelo refund):
+
+## 🤖 Claude *(13:55:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== clients table def (composite unique target) ===\"\nsed -n '46,64p' supabase/migrations/20260622030000_video_studio_org_tenancy.sql\necho \"=== add_mco_coins signature(s) ===\"\ngrep -rn \"FUNCTION public.add_mco_coins\" supabase/migrations/ | head\necho \"=== update_updated_at_column exists? ===\"\ngrep -rln \"FUNCTION public.update_updated_at_column\" supabase/migrations/ | head -1",
+  "description": "Confirm FK target + add_mco_coins signature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === clients table def (composite unique target) ===
+> -- clients — agency client sub-accounts: cost-center + selective-erasure unit. Composite (org_id,id) key is the
+> -- FK target for the video_* tables' (org_id,client_id) tenant-scoped FKs (added in the studio migration).
+> CREATE TABLE IF NOT EXISTS public.clients (
+>   id            uuid NOT NULL DEFAULT gen_random_uuid(),
+>   org_id        uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+>   name          text NOT NULL,
+>   byok_ref      text,
+>   affiliate_tag text,
+>   status        text NOT NULL DEFAULT 'active' CHECK (status IN ('active','paused','archived')),
+>   created_at    timestamptz NOT NULL DEFAULT now(),
+>   PRIMARY KEY (id),
+>   UNIQUE (org_id, id)
+> );
+> ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;  -- default-deny
+> CREATE INDEX IF NOT EXISTS idx_clients_org ON public.clients (org_id);
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- Anti-recursion membership helpers (SECURITY DEFINER — mirror public.has_role())
+> -- ─────────────────────────────────────────────────────────────────────────────
+> === add_mco_coins signature(s) ===
+> supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql:11:CREATE OR REPLACE FUNCTION public.add_mco_coins(
+> supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql:40:REVOKE ALL ON FUNCTION public.add_mco_coins(UUID, INTEGER) FROM PUBLIC;
+> supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql:41:GRANT EXECUTE ON FUNCTION public.add_mco_coins(UUID, INTEGER) TO authenticated;
+> supabase/migrations/20260520150000_admin_user_lifecycle.sql:17:REVOKE EXECUTE ON FUNCTION public.add_mco_coins(uuid, integer) FROM authenticated;
+> supabase/migrations/20260520150000_admin_user_lifecycle.sql:18:GRANT  EXECUTE ON FUNCTION public.add_mco_coins(uuid, integer) TO service_role;
+> === update_updated_at_column exists? ===
+> supabase/migrations/20260531210000_meta_ads_metrics.sql
+> ```
+
+## 🤖 Claude *(13:55:19)*
+
+
+## 🤖 Claude *(13:55:21)*
+
+Confirmado: `clients` tem `UNIQUE(org_id, id)` (FK composta válida) · `add_mco_coins(UUID, INTEGER)` service-role ✅ · `update_updated_at_column` existe. Escrevendo a migration da Fatia 1 (construída para a SSOT da BoK 06 §2.1/§2.4 + espelhando `finalize_vision_job`):
+
+## 🤖 Claude *(13:56:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql",
+  "content": "-- Migration: video-studio Fatia 1 \u2014 domain foundation (video_renders + video_assets + finalize/refund RPC).\n-- BoK SSOT: docs/bok/video-studio/06-data-model.md (\u00a72.1 video_renders, \u00a72.4 video_assets, \u00a73 RLS/index plan)\n--           + 04-frd.md (FR-VS-009/010/011/014/024/026/030) + 05-sdd.md (\u00a72.6 New DB Objects).\n-- Anticipated process (Lei 2): docs/bok/video-studio/07-process-flow.md PROC-VS-001/004 (charge-at-entry + refund).\n--\n-- SCOPE (slice 1 \u2014 foundation + edge contract; render engine deferred to slice 2):\n--   \u2022 video_renders \u2014 render state machine + atomic charged/refunded ledger, poll-able, tenancy-aware from birth\n--     (org_id/client_id NULLABLE: NULL = solo creator v0.1, byte-identical backward-compat; set = agency \u00a7AG).\n--   \u2022 video_assets \u2014 material artifact manifest (Storage object + node_id) = the erasure unit (FR-VS-030).\n--   \u2022 finalize_video_render \u2014 the ONLY terminal+refund authority (service-role), mirrors finalize_vision_job\n--     (20260615160000): atomic guard `state IN (queued,running,qa_gate)` \u21d2 first finalizer wins, idempotent,\n--     never money-without-guard nor double-refund.\n--\n-- TENANCY MODEL (FMEA-VS-020 \u2014 cross-tenant isolation is the v1.1 top RPN; /security-review gated):\n--   SELECT = own row OR (agency) a row of an org the caller is an active member of (public.is_org_member, the\n--   anti-recursion SECURITY DEFINER helper from 20260622030000). NO INSERT/UPDATE policy for authenticated \u21d2\n--   default-deny writes: the edge fn (video-render) is the ONLY writer, via the service key, AFTER deduct_mco_coins.\n--   A tenant therefore can NEVER forge a render row (bypassing the charge) nor mutate one (zeroing its charge /\n--   faking 'done' to read another tenant's asset). Mirrors vision_jobs (20260615160000) + lead_core tenancy.\n--   video_renders carries a RESTRICTIVE no-delete (financial ledger family: creative_metrics / autopilot_cycles).\n--\n-- project_id is uuid WITHOUT FK (there is no `projects` table \u2014 project_id is text/uuid tenant tag elsewhere;\n-- mirrors vision_jobs:19). The (org_id, client_id) composite FK \u2192 clients(org_id, id) is NOT VALID (no backfill\n-- scan; existing/solo rows have NULLs \u21d2 MATCH SIMPLE skips the FK) and proves a render's client truly belongs to\n-- the stated org. CHECK keeps client_id from being set without an org.\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 1. video_renders \u2014 render state machine + atomic ledger (FR-VS-009/010/011/014/024/026)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.video_renders (\n  id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),    -- = render_id (returned in 202; poll-able)\n  user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  org_id        uuid        REFERENCES public.organizations(id) ON DELETE CASCADE,  -- NULL = solo creator (\u00a7AG opt-in)\n  client_id     uuid,                                                 -- agency cost-center; FK is composite (below)\n  project_id    uuid,                                                 -- optional tenant project tag (no projects table)\n  engine        text        NOT NULL CHECK (engine IN ('faceless','hyperframes')),\n  state         text        NOT NULL DEFAULT 'queued'\n                  CHECK (state IN ('queued','running','qa_gate','done','qa_failed','failed')),\n  product_id    uuid,                                                 -- product-aware (FR-VS-017); logical, no FK (prunable)\n  topic         text,                                                 -- free topic when no product\n  template_id   uuid,                                                 -- HyperFrames reuse (FR-VS-024); logical until templates land\n  legs          jsonb       NOT NULL DEFAULT '[]'::jsonb,             -- per-leg status (script/image/voice/motion/overlay/composite/qa)\n  qa            jsonb,                                                -- { consistent, confidence } from the VLM gate (FR-VS-019/020)\n  charged_mco   int         NOT NULL DEFAULT 0 CHECK (charged_mco >= 0),\n  refunded_mco  int         NOT NULL DEFAULT 0 CHECK (refunded_mco >= 0 AND refunded_mco <= charged_mco),\n  refunded_at   timestamptz,                                          -- idempotency guard (refund 1\u00d7/render \u2014 PROC-VS-004)\n  storage_key   text,                                                 -- set at `done`; object \u2265100KB (Lei 1 proof)\n  voice_consent boolean     NOT NULL DEFAULT false,                   -- required for identifiable voice cloning (FR-VS-032)\n  node_id       uuid,                                                 -- mesh observation (FR-VS-026); logical \u2192 mcorch_nodes.id\n  expires_at    timestamptz NOT NULL DEFAULT (now() + interval '24 hours'),  -- poll retention \u226524h\n  created_at    timestamptz NOT NULL DEFAULT now(),\n  updated_at    timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT video_renders_client_needs_org CHECK (client_id IS NULL OR org_id IS NOT NULL),\n  CONSTRAINT video_renders_client_fk FOREIGN KEY (org_id, client_id)\n    REFERENCES public.clients(org_id, id) ON DELETE SET NULL NOT VALID\n);\n\nALTER TABLE public.video_renders ENABLE ROW LEVEL SECURITY;\n\n-- SELECT: own row, OR an agency row whose org the caller actively belongs to (anti-recursion helper).\nCREATE POLICY \"video_renders_select_own_or_org\" ON public.video_renders\n  FOR SELECT USING (\n    auth.uid() = user_id\n    OR (org_id IS NOT NULL AND public.is_org_member(org_id))\n  );\n\n-- No INSERT/UPDATE policy for authenticated \u21d2 default-deny: the edge fn writes via the service key AFTER the\n-- atomic deduct. RESTRICTIVE no-delete: the financial ledger is never client-deletable (service-role erasure only).\nCREATE POLICY \"video_renders_no_client_delete\" ON public.video_renders\n  AS RESTRICTIVE FOR DELETE USING (false);\n\nCREATE INDEX IF NOT EXISTS video_renders_user_state_idx   ON public.video_renders (user_id, state);\nCREATE INDEX IF NOT EXISTS video_renders_user_created_idx ON public.video_renders (user_id, created_at DESC);\nCREATE INDEX IF NOT EXISTS video_renders_org_idx          ON public.video_renders (org_id) WHERE org_id IS NOT NULL;\nCREATE INDEX IF NOT EXISTS video_renders_expires_idx      ON public.video_renders (expires_at);\n\nCREATE TRIGGER tr_update_video_renders_updated_at\n  BEFORE UPDATE ON public.video_renders\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\nCOMMENT ON TABLE public.video_renders IS\n  'video-studio render state machine (FR-VS-009/014/024). queued\u2192running\u2192qa_gate\u2192done|qa_failed|failed; atomic '\n  'charged/refunded ledger (refunded_mco<=charged_mco, refunded_at idempotency). SELECT own-or-org-member RLS; '\n  'edge fn writes via service key after deduct; RESTRICTIVE no client delete. org_id/client_id NULL = solo (\u00a7AG opt-in).';\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 2. video_assets \u2014 material artifact manifest = the erasure unit (FR-VS-030/031)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.video_assets (\n  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id         uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  render_id       uuid        NOT NULL REFERENCES public.video_renders(id) ON DELETE CASCADE,\n  kind            text        NOT NULL CHECK (kind IN ('video','image','audio')),\n  storage_key     text        NOT NULL,                              -- object in private bucket video-studio-assets\n  node_id         uuid,                                              -- derived mesh node (FR-VS-026); logical\n  bytes           bigint      CHECK (bytes IS NULL OR bytes >= 0),   -- material size (video \u2265100KB) \u2014 Lei 1\n  retention_until timestamptz,                                       -- LGPD retention clock (Art. 16)\n  created_at      timestamptz NOT NULL DEFAULT now()\n);\n\nALTER TABLE public.video_assets ENABLE ROW LEVEL SECURITY;\n\n-- SELECT own only (the asset row is tenant-bound via user_id; org members read assets through the render join in\n-- the app layer when agency surfaces land). No write policy \u21d2 service-role writes only (same billing-integrity rule).\nCREATE POLICY \"video_assets_select_own\" ON public.video_assets\n  FOR SELECT USING (auth.uid() = user_id);\n\nCREATE INDEX IF NOT EXISTS video_assets_render_idx    ON public.video_assets (render_id);\nCREATE INDEX IF NOT EXISTS video_assets_user_idx      ON public.video_assets (user_id);\nCREATE INDEX IF NOT EXISTS video_assets_retention_idx ON public.video_assets (retention_until);\n\nCOMMENT ON TABLE public.video_assets IS\n  'video-studio material artifact manifest (FR-VS-030). Storage object + node_id = atomic erasure unit. '\n  'SELECT-own RLS; service-role writes. bytes>=100KB enforced app-side before render reaches done (Lei 1).';\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 3. finalize_video_render \u2014 atomic terminal + refund authority (FR-VS-011 \u00b7 mirrors finalize_vision_job)\n--    Closes the /security-review HIGH class (charge-without-value + refund/guard atomicity). The ONLY way a\n--    render goes terminal. Guard `state IN (queued,running,qa_gate)` \u21d2 the FIRST finalizer wins (worker OR a\n--    future poll lazy-reconcile OR a sweep); a second call on an already-terminal render is a no-op (no double\n--    refund). The video_renders guard write AND the balance credit (add_mco_coins) commit in ONE transaction.\n--    service_role-only (the worker/edge calls it via SB_SECRET_KEY; tenants never reach it). FMEA-011 reviewed.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.finalize_video_render(\n  p_render_id   uuid,\n  p_state       text,\n  p_storage_key text,    -- NULL keeps existing (set on success)\n  p_qa          jsonb,   -- NULL keeps existing (VLM verdict)\n  p_node_id     uuid,    -- NULL keeps existing (mesh observation)\n  p_refund      int      -- refund to credit (0 = none, e.g. 'done'); must be <= charged_mco\n)\nRETURNS jsonb\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_uid uuid;\nBEGIN\n  IF p_state NOT IN ('done','qa_failed','failed') THEN\n    RAISE EXCEPTION 'finalize_video_render: terminal state required, got %', p_state USING errcode = '22023';\n  END IF;\n\n  -- Claim + finalize a NON-TERMINAL render exactly once.\n  UPDATE public.video_renders\n     SET state        = p_state,\n         storage_key  = COALESCE(p_storage_key, storage_key),\n         qa           = COALESCE(p_qa, qa),\n         node_id      = COALESCE(p_node_id, node_id),\n         refunded_mco = CASE WHEN p_refund > 0 THEN p_refund ELSE refunded_mco END,\n         refunded_at  = CASE WHEN p_refund > 0 THEN now()    ELSE refunded_at END\n   WHERE id = p_render_id\n     AND state IN ('queued','running','qa_gate')\n   RETURNING user_id INTO v_uid;\n\n  IF v_uid IS NULL THEN\n    RETURN jsonb_build_object('finalized', false);   -- already terminal \u2192 no-op (no double refund)\n  END IF;\n\n  IF p_refund > 0 THEN\n    PERFORM public.add_mco_coins(v_uid, p_refund);\n    RETURN jsonb_build_object('finalized', true, 'refunded', p_refund);\n  END IF;\n\n  RETURN jsonb_build_object('finalized', true, 'refunded', 0);\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.finalize_video_render(uuid, text, text, jsonb, uuid, int) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.finalize_video_render(uuid, text, text, jsonb, uuid, int) TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:56:29)*
+
+
+## 🤖 Claude *(13:56:31)*
+
+Migration escrita. Regra do projeto: **toda migration passa `/security-review` antes do commit** (FMEA-011 + FMEA-VS-020 cross-tenant é o topo de RPN). Staging pra ficar visível no diff + rodando o review:
+
+## 🤖 Claude *(13:56:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260622040000_video_studio_renders_and_assets.sql\ngit status --short",
+  "description": "Stage migration for review"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A  supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> ```
+
+## 🤖 Claude *(13:56:42)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(13:56:42)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch hardening/wp-cf-publish-and-security-drift
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+```
+
+FILES MODIFIED:
+
+```
+CLAUDE.md
+docs/bok/security/04-fmea-security.md
+docs/processes/wordpress-cf-publish-unblock.md
+supabase/functions/publish-wordpress/index.ts
+```
+
+COMMITS:
+
+```
+commit 89e59ab21986334d25ea13dfdf8c73d5919387c0
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 22 10:32:25 2026 -0300
+
+    docs(security): reconcilia drift — FM-04/FM-10 fechados + SOP CF publish
+    
+    A FMEA (selo 09-jun) ainda apontava FM-04 (env service_role legada no compose,
+    RPN 300) e FM-10 (gitnexus root) como gaps fisicos abertos, mas ambos ja estavam
+    remediados materialmente (compose saneado + docker inspect runtime + Dockerfile
+    USER 1001). Marca FM-04/FM-10 Fechado + OTD-SEC-004/005 fechadas; corrige a linha
+    da suite security no CLAUDE.md. Adiciona SOP wordpress-cf-publish-unblock (Lei 2)
+    com os passos Sovereign (secrets + CF rule) e gates de verificacao.
+
+commit 0fc7ed94c4d1ed500f0aef6d589c776a69673fe3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 22 10:32:25 2026 -0300
+
+    feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
+    
+    O publish server-side morria em HTTP 403 (cf-mitigated:challenge) — fetch Deno
+    nao resolve o desafio JS do Cloudflare. Adiciona header secreto X-MCORCH-Publish
+    para a CF WAF poder fazer Skip gated por header (sem abrir /wp-json ao mundo).
+    Host-gated fail-closed: o secret so e enviado quando o host de destino bate com
+    WP_PUBLISH_SECRET_HOST — nunca para um wp_site_url arbitrario de tenant
+    (/security-review HIGH fechado na mesma sessao). Deployado 106.3kB + boot-smoke 401.
+```
+
+DIFF CONTENT:
+
+```
+diff --git a/CLAUDE.md b/CLAUDE.md
+index d768c82..1f0b166 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -417,6 +417,7 @@ Edge Function secrets (configured in Lovable Cloud vault, not in `.env`): `STRIP
+ | Deploy harness | `scripts/harness-deploy.sh` |
+ | **Build & Deploy materiality SOP** | `docs/processes/build-deploy-materiality.md` (worktree trap + gates) |
+ | **Orchestrate async pipeline SOP** | `docs/processes/orchestrate-async-pipeline.md` (pg_net→`verify_jwt=false` mandate + RPC param-name contract + WP canonical-URL; the 3 key-migration failure modes + recovery) |
++| **WordPress CF publish-unblock SOP** | `docs/processes/wordpress-cf-publish-unblock.md` (CF managed challenge 403 em `/wp-json/*` mata o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header; secrets `WP_PUBLISH_SECRET`/`_HOST` = ação Sovereign; gates de verificação curl) |
+ | **Schema drift audit SOP + tool** | `docs/processes/schema-drift-audit.md` + `scripts/qa/audit-schema-drift.sh` (deployed↔migration drift: ledger · out-of-band fns/triggers · RPC caller-contract · edge `verify_jwt` · RLS/search_path advisory; exit 1=drift. Born do P0 do hotfix-sem-migration. **Regra: todo hotfix de prod vira migration na MESMA sessão**) |
+ | **Drift audit report + remediation (2026-06-03)** | `.claude/context/drift-audit-2026-06-03.md` (1 drift real benigno `rls_auto_enable` capturado · 7 SECURITY DEFINER search_path travados · trigger pg_net morto kong:8000 dropado — migrations `20260603210000`/`210500`/`211000`, /security-review SAFE, re-audit exit 0) |
+ | **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4×-floor model `mco=ceil(usd/$0.018×4)`; OTD-MCOIN-CALIBRATION closed) |
+@@ -487,7 +488,7 @@ Edge Function secrets (configured in Lovable Cloud vault, not in `.env`): `STRIP
+ | **Vision MCP PAT mint + handshake (ops/QA)** | `scripts/qa/mint-vision-pat.ts` (service-role mint, plaintext once) · `scripts/qa/handshake-vision-pat.ts` (prova handshake MCP+PAT pela URL pública) |
+ | **Vision MCP cost-caps smoke (DD-VM-003/OTD-VM-025)** | `scripts/qa/smoke-vision-cost-caps.ts` (C1 per-plano over→validation_failed · C2 boundary→insufficient_balance · C3 daily→daily_cap_reached, zero-cost LIVE) |
+ | **Vision MCP Registry manifest (FR-VM-011)** | `packages/vision-mcp-core/server.json` (`com.mcorch/vision-mcp` · schema 2025-12-11 · remote streamable-http · header Bearer PAT) + SOP publish `docs/processes/vision-mcp-registry-publish.md` (DNS TXT challenge = ação Sovereign; publish GATED) |
+-| **Security BoK suite (Cyber-Sentinel)** | `docs/bok/security/` (00-blueprint · 01-brd 12 BRs+Risk Ledger · 02-srs 15 FRs+RLS Matrix+`SET LOCAL` pooling · 03-sdd lefthook/husky/Arcjet+sentinel/Dockerfile UID1001/compose cap_drop · 04-fmea RPN AIOS — gaps físicos abertos: compose env `SUPABASE_SERVICE_ROLE_KEY` legada [FM-04 RPN 300] + gitnexus Dockerfile root [FM-10]; OTDs SEC-004..007) |
++| **Security BoK suite (Cyber-Sentinel)** | `docs/bok/security/` (00-blueprint · 01-brd 12 BRs+Risk Ledger · 02-srs 15 FRs+RLS Matrix+`SET LOCAL` pooling · 03-sdd lefthook/husky/Arcjet+sentinel/Dockerfile UID1001/compose cap_drop · 04-fmea RPN AIOS — gaps físicos FM-04 (compose env `SUPABASE_SERVICE_ROLE_KEY` legada) + FM-10 (gitnexus Dockerfile root) **FECHADOS 2026-06-22** [compose saneado + `docker inspect` runtime + Dockerfile UID1001]; OTD-SEC-004/005 fechadas, restam SEC-006 sentinel-wiring + SEC-007 lefthook/gitleaks) |
+ | **OpenClaw SOUL template (Pantheon)** | `.claude/agents/openclaw-soul-template.md` |
+ | **Pantheon Role Matrix (authoritative)** | `.claude/context/pantheon-role-matrix.md` |
+ | **OpenClaw squad config** | `/home/ubuntu/.openclaw/openclaw.json` |
+diff --git a/docs/bok/security/04-fmea-security.md b/docs/bok/security/04-fmea-security.md
+index 5764038..d6a0a0e 100644
+--- a/docs/bok/security/04-fmea-security.md
++++ b/docs/bok/security/04-fmea-security.md
+@@ -28,17 +28,17 @@
+ | FM-01 | Prompt injection força bypass de billing / ação outward | Conteúdo hostil em tópico/lead/documento processado por agente | 9 | 6 | 4 | **216** | FR-SEC-002/003 · SDD §3 · intent-policy fail-closed | 9 | 2 | 2 | **36** | Parcial (sentinel a fiar) |
+ | FM-02 | Envenenamento de log terminal com contaminação ANSI | Agente lê log adulterado; instrução oculta do humano via escapes | 7 | 5 | 7 | **245** | FR-SEC-012 (sanitize/block) · sentinel control-char gate | 7 | 3 | 2 | **42** | Parcial (sanitizer a fiar) |
+ | FM-03 | Drift de configuração de rede/infra | Porta/supervisor/manifesto divergem do versionado; agentes operam sobre estado fantasma | 8 | 5 | 6 | **240** | FR-SEC-015 · audit-schema-drift.sh · hash de manifestos | 8 | 3 | 2 | **48** | Parcial (hash infra a fiar) |
+-| FM-04 | Credential drift em worker autônomo | Chave revogada/viva esquecida em env de daemon 24/7 | 10 | 5 | 6 | **300** | FR-SEC-015 · SDD §5 (SB_SECRET_KEY fix) · watchdog | 10 | 2 | 2 | **40** | **Gap físico aberto** (`docker-compose.yml:19`) |
++| FM-04 | Credential drift em worker autônomo | Chave revogada/viva esquecida em env de daemon 24/7 | 10 | 5 | 6 | **300** | FR-SEC-015 · SDD §5 (SB_SECRET_KEY fix) · watchdog | 10 | 2 | 2 | **40** | **Fechado** (prova material 2026-06-22) |
+ | FM-05 | Manipulação direta do ledger via RPC PostgREST | `SECURITY DEFINER` com EXECUTE amplo + `p_user_id` confiado | 10 | 7 | 5 | **350** | FR-SEC-004 (REVOKE + guards) — **deployado** `20260603220000` | 10 | 1 | 2 | **20** | Fechado (prova material) |
+ | FM-06 | Injeção cross-tenant via views `INSTEAD OF` | INSERT com `user_id` alheio em view de credencial | 9 | 4 | 6 | **216** | FR-SEC-005 (tenant guard) — **deployado** `20260602150000` | 9 | 1 | 2 | **18** | Fechado (antes 200/depois 42501) |
+ | FM-07 | Cascata de expiração / roubo de token OAuth social | Canal do cliente silencia ou publica sob controle hostil | 6 | 6 | 4 | **144** | FR-SEC-007 (rotação) · FR-SEC-005 (Vault) | 6 | 2 | 2 | **24** | Parcial (pre-flight cron a fiar) |
+ | FM-08 | Identidade forjada por JWT não-verificado (`atob` cego) | Função `verify_jwt=false` confia em `sub` sem assinatura | 9 | 5 | 6 | **270** | FR-SEC-001 (ES256/JWKS) — **deployado** (SOP, exploit→401) | 9 | 1 | 2 | **18** | Fechado (G4 401 literal) |
+ | FM-09 | Segredo commitado no repositório | Agente/humano commita chave; `--no-verify` salta o gate | 9 | 4 | 5 | **180** | FR-SEC-010 · SDD §1–2 (dupla varredura + pre-push range + tripwire) | 9 | 2 | 2 | **36** | Parcial (lefthook a adotar) |
+-| FM-10 | Escape de container root → pivot no host | Exploit em dep do `mcorch_gitnexus` (roda root hoje) → poisoning do `dist/` | 9 | 3 | 7 | **189** | FR-SEC-011 · SDD §4–5 (UID 1001 + cap_drop + read-only) | 9 | 2 | 3 | **54** | **Gap físico aberto** (Dockerfile root) |
++| FM-10 | Escape de container root → pivot no host | Exploit em dep do `mcorch_gitnexus` → poisoning do `dist/` | 9 | 3 | 7 | **189** | FR-SEC-011 · SDD §4–5 (UID 1001 + cap_drop + read-only) | 9 | 2 | 3 | **54** | **Fechado** (prova material 2026-06-22) |
+ | FM-11 | Spoofing de webhook Stripe / vazamento de chave live | POST forjado em `stripe-webhook`; `sk_live_` exposta no swap | 9 | 3 | 4 | **108** | Verificação `whsec_` + Vault + FR-SEC-010 | 9 | 1 | 2 | **18** | Controle ativo (sandbox) |
+ | FM-12 | Segredos órfãos acumulados no Vault | Disconnect apaga linha mas não o segredo → resíduo vivo | 5 | 5 | 7 | **175** | FR-SEC-005 (disconnect RPCs) — **deployado** `20260602120000/160000` (12 órfãos limpos) | 5 | 1 | 2 | **10** | Fechado |
+ 
+-**Leitura executiva:** os três maiores RPNs brutos (FM-05 350 · FM-04 300 · FM-08 270) são exatamente os três com **histórico material neste sistema** — o FMEA confirma que o perfil de risco do MCORCH é dominado por integridade de credencial/identidade/ledger, não por ataques exóticos. Pós-controles, nenhum modo residual cruza 100; os dois gaps físicos abertos (FM-04, FM-10) têm correção integral pronta no SDD §4–§5 aguardando adoção.
++**Leitura executiva:** os três maiores RPNs brutos (FM-05 350 · FM-04 300 · FM-08 270) são exatamente os três com **histórico material neste sistema** — o FMEA confirma que o perfil de risco do MCORCH é dominado por integridade de credencial/identidade/ledger, não por ataques exóticos. Pós-controles, nenhum modo residual cruza 100; os dois gaps físicos antes abertos (FM-04, FM-10) foram **fechados e verificados materialmente em 2026-06-22** (compose sem a env legada + container `mcorch_claude_mem` provado por `docker inspect`; gitnexus `USER 1001` + cap_drop) — **nenhum gap físico aberto remanescente**.
+ 
+ ## 3. Fichas Detalhadas — Vetores Mandatórios
+ 
+@@ -68,9 +68,11 @@
+ - **L2 — Self-healing:** sentinela de drift (FR-SEC-015) compara hash SHA-256 dos manifestos (`docker-compose.yml`, snippet nginx versionado, crontab exportada) ao baseline + `scripts/qa/audit-schema-drift.sh` (8 checagens, exit 1 = drift) ⇒ divergência gera `security_events(warning)` + pulso `drift-audit/degraded` + n8n ⇒ recovery por restauração do manifesto versionado (`git checkout -- <manifest>` + `docker compose up -d` / `systemctl --user restart`) — runbook por recurso, nunca "tente de novo" vago. **Regra de ouro:** hotfix de produção vira migration/commit na MESMA sessão (lição do flywheel 2026-06-03).
+ - **Verificação:** mutação proposital de 1 byte num manifesto ⇒ detecção no ciclo seguinte da auditoria; re-audit pós-restauração exit 0.
+ 
+-### FM-04 — Credential drift em worker autônomo (RPN bruto 300 → residual 40) — **gap físico aberto**
++### FM-04 — Credential drift em worker autônomo (RPN bruto 300 → residual 40) — **FECHADO 2026-06-22**
+ 
+-**Evidência material (Lei 1):** `docker-compose.yml:19` injeta `SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}` no `mcorch_claude_mem` — chave **revogada** no cutover de 2026-06-01 (toda chamada com ela morre em PGRST301). Dupla face do risco: (a) a env morta mascara falhas do worker como "rede instável" (drift de comportamento); (b) o padrão inverso — chave viva esquecida num manifesto após rotação — entrega service-role a quem ler o arquivo/imagem/snapshot. S=10: service key = malha inteira + `decrypted_user_api_keys` de todos os tenants + ledger.
++**Evidência material (Lei 1) do risco original:** à época do selo (2026-06-09), `docker-compose.yml:19` injetava `SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}` no `mcorch_claude_mem` — chave **revogada** no cutover de 2026-06-01 (toda chamada com ela morre em PGRST301). Dupla face do risco: (a) a env morta mascara falhas do worker como "rede instável" (drift de comportamento); (b) o padrão inverso — chave viva esquecida num manifesto após rotação — entrega service-role a quem ler o arquivo/imagem/snapshot. S=10: service key = malha inteira + `decrypted_user_api_keys` de todos os tenants + ledger.
++
++**Fechamento (prova material 2026-06-22):** o manifesto foi saneado — `mcorch_claude_mem` recebe **apenas** `SUPABASE_URL` + `SB_SECRET_KEY` (`docker-compose.yml:47-51`). O **container em execução** foi provado por `docker inspect mcorch_claude_mem` (StartedAt 2026-06-15T16:13) carregando **só essas duas envs**, sem `SUPABASE_SERVICE_ROLE_KEY` — repo↔runtime convergidos. Gate de verificação verde: `grep -c SUPABASE_SERVICE_ROLE_KEY docker-compose.yml` retorna apenas comentários do fix (linhas 2/49), zero injeção real. **OTD-SEC-004 fechada.**
+ 
+ - **L1 — Contenção:** manifesto corrigido (SDD §5: `SB_SECRET_KEY` única); secret-scan bloqueia chave literal em commit; envs sempre por referência `${VAR}`, nunca valor.
+ - **L2 — Self-healing:** watchdog (`*/5`) valida autenticação real do worker (chamada autenticada de heartbeat) ⇒ falha de auth gera pulso `unhealthy` imediato (não silêncio); drift sentinel acusa qualquer reaparição da env legada em manifesto; rotação de chave dispara checklist Anticorpo: **remover a env antiga de todo manifesto na MESMA sessão** (compose, crontab, systemd units, `.env` de scripts).
+@@ -95,7 +97,7 @@
+ 
+ ## 5. Política de Limiar e Cadência
+ 
+-1. **RPN ≥ 100 (residual)** ⇒ OTD obrigatória com SLA e dono; hoje: **nenhum** modo residual cruza o limiar — condicionado à adoção dos dois gaps físicos (FM-04 compose, FM-10 Dockerfile), cuja correção integral já está pronta no SDD §4–§5.
++1. **RPN ≥ 100 (residual)** ⇒ OTD obrigatória com SLA e dono; hoje: **nenhum** modo residual cruza o limiar — os dois gaps físicos (FM-04 compose, FM-10 Dockerfile) foram **adotados e verificados materialmente em 2026-06-22** (sem condição pendente); nenhuma OTD de gap físico permanece aberta.
+ 2. **Re-score gatilhado:** a cada incidente real (o modo ganha O ancorado em histórico), a cada `/security-review` reprovado, e a cada selo de sprint que toque superfície de segurança.
+ 3. **Cadência fixa:** revisão trimestral da tabela mestre + verificação dos gates G-L0…G-L4c do SDD §6 no `/handoff` self-audit (Lei 1).
+ 4. **Aprendizado vacinal (Anticorpo):** todo modo de falha que se materializar vira, na mesma sessão: atualização deste FMEA (O recalibrado) + SOP em `docs/processes/` + skill/gate quando automatizável — a regra "se o mesmo erro pode reincidir, ele ainda não foi resolvido" aplicada ao domínio cyber.
+@@ -104,8 +106,8 @@
+ 
+ | OTD | Origem | Ação | SLA |
+ |---|---|---|---|
+-| OTD-SEC-004 | FM-04 (RPN bruto 300) | Adotar compose endurecido SDD §5 (inclui fix `SB_SECRET_KEY`) com gates G-L4b/G-L4c | próxima sessão de infra |
+-| OTD-SEC-005 | FM-10 (RPN bruto 189) | Adotar Dockerfile UID 1001 SDD §4 com gate G-L4a | junto com OTD-SEC-004 |
++| ~~OTD-SEC-004~~ | FM-04 (RPN bruto 300) | Adotar compose endurecido SDD §5 (inclui fix `SB_SECRET_KEY`) com gates G-L4b/G-L4c | ✅ **FECHADA 2026-06-22** (compose saneado + `docker inspect` runtime) |
++| ~~OTD-SEC-005~~ | FM-10 (RPN bruto 189) | Adotar Dockerfile UID 1001 SDD §4 com gate G-L4a | ✅ **FECHADA 2026-06-22** (Dockerfile `USER 1001` + compose user/read-only/cap_drop) |
+ | OTD-SEC-006 | FM-01/FM-02 | Fiar `_shared/sentinel.ts` nas funções pagas de maior tráfego (`orchestrate-content`, `generate-content`, `lead-score`) + migration FR-SEC-014 (`security_events` + quarentena) via `/security-review` | sprint corrente +1 |
+ | OTD-SEC-007 | FM-09 | Adoção lefthook + gitleaks (SDD §1–2) substituindo o hook serial | sprint corrente +1 |
+ 
+diff --git a/docs/processes/wordpress-cf-publish-unblock.md b/docs/processes/wordpress-cf-publish-unblock.md
+new file mode 100644
+index 0000000..70b7c93
+--- /dev/null
++++ b/docs/processes/[[wordpress-cf-publish-unblock|wordpress-cf-publish-unblock]].md
+@@ -0,0 +1,91 @@
++# SOP — Desbloqueio do publish WordPress atrás do Cloudflare managed challenge
++
++> **Slug:** `wordpress-cf-publish-unblock` · **Criado:** 2026-06-22 · **Lei 2 (Processo Antecipado)**
++> **Origem:** diagnóstico material 2026-06-22 — `https://www.mcorch.com/wp-json/*` retorna **HTTP 403 `cf-mitigated: challenge`** em toda requisição (GET+POST, www+apex, auth+anon). A edge function `publish-wordpress` faz `fetch` server-to-server (Deno, sem engine JS) e **não resolve** o desafio JS do Cloudflare → todo POST a `/wp-json/wp/v2/posts` morre em 403 → nenhum post criado → a função devolve 502 ao chamador (`orchestrate-content` / Viral Autopilot). Este é o **blocker de saída visível** do flywheel de conteúdo.
++
++## Modelo da solução (defense-in-depth)
++
++Não basta "abrir o `/wp-json` no Cloudflare" — isso exporia enumeração (`/wp-json/wp/v2/users`) e brute-force de Basic Auth sem o atrito do challenge. A solução é um **Skip gated por segredo compartilhado**:
++
++1. A edge function envia o header `X-MCORCH-Publish: <segredo>` **apenas** quando o host de destino bate com `WP_PUBLISH_SECRET_HOST` (fail-closed — nunca envia para um `wp_site_url` arbitrário de tenant; ver `supabase/functions/publish-wordpress/index.ts`, gate de host adicionado 2026-06-22 + `/security-review` HIGH fechado na mesma sessão).
++2. Uma regra WAF Custom do Cloudflare faz **Skip** do managed challenge **somente** quando o path é `/wp-json/*` **E** o header bate com o segredo. Sem o header correto, o challenge continua valendo para o resto do mundo.
++
++## ORO
++
++- **Operator:** Sovereign (Gabriel) — ações no painel Cloudflare + `supabase secrets` (valores de segredo não estão no alcance do agente).
++- **Reviewer:** `/security-review` (já passou SAFE sobre a edge function); o próprio gate de verificação abaixo.
++- **Owner:** Sovereign — blast radius = superfície `/wp-json` do site de produção + a saída visível do conteúdo monetizado.
++
++## Sequence (passos numerados, cada um com critério material)
++
++### Step 1 — Gerar o segredo compartilhado (Operator: Sovereign)
++```bash
++openssl rand -hex 32     # copie o valor (64 chars hex)
++```
++**Sucesso:** uma string hex de 64 chars na mão.
++
++### Step 2 — Provisionar os secrets na edge function (Operator: Sovereign)
++```bash
++npx supabase secrets set \
++  WP_PUBLISH_SECRET=<o-hex-do-step-1> \
++  WP_PUBLISH_SECRET_HOST=www.mcorch.com \
++  --project-ref bcyvddsykvehvpwstlfa
++```
++> `WP_PUBLISH_SECRET_HOST` deve ser **exatamente** o host canônico do `wp_site_url` do tenant (hoje `www.mcorch.com`). O gate da função é match exato de `new URL(apiBase).hostname` — sem isso, o header **nunca** é anexado (fail-closed).
++
++**Verificação material:**
++```bash
++npx supabase secrets list --project-ref bcyvddsykvehvpwstlfa | grep -E "WP_PUBLISH_SECRET(_HOST)?"
++```
++**Sucesso:** as duas linhas aparecem (valor mostrado como digest).
++
++### Step 3 — Criar a regra WAF Custom no Cloudflare (Operator: Sovereign)
++Painel Cloudflare → zona `mcorch.com` → **Security → WAF → Custom rules → Create rule**:
++
++- **Rule name:** `MCORCH publish-wordpress Skip (header-gated)`
++- **Expression (Edit expression):**
++  ```
++  (http.host eq "www.mcorch.com" and starts_with(http.request.uri.path, "/wp-json/") and http.request.headers["x-mcorch-publish"][0] eq "<o-hex-do-step-1>")
++  ```
++- **Action:** `Skip` → marcar:
++  - ✅ All managed rules
++  - ✅ Super Bot Fight Mode (se o plano expõe a opção)
++  - ✅ qualquer "Managed Challenge / Bot Fight"
++- **Place at:** topo da ordem de execução (First).
++- Save + Deploy.
++
++> ⚠️ **Caveat de plano:** em planos onde o **Bot Fight Mode global** não é "skippável" por regra, ele pode reintroduzir o challenge mesmo com o Skip de WAF. Se o Step 4 ainda der 403, revisar **Security → Bots** e desligar/ajustar o Bot Fight Mode global para esse path, ou subir de plano.
++
++### Step 4 — Validação material end-to-end
++**4a — Header correto passa, sem header não passa (zero-cost, via curl):**
++```bash
++# COM o header → deve ser 200 (ou 401 do WP por auth, mas NUNCA 403 do CF)
++curl -sS -o /dev/null -w "%{http_code}\n" \
++  -H "X-MCORCH-Publish: <o-hex-do-step-1>" \
++  https://www.mcorch.com/wp-json/wp/v2/types
++# Esperado: 200 (e SEM header `cf-mitigated: challenge`)
++
++# SEM o header → o mundo continua barrado (challenge intacto)
++curl -sS -o /dev/null -w "%{http_code}\n" https://www.mcorch.com/wp-json/wp/v2/types
++# Esperado: 403 (cf-mitigated: challenge)
++```
++**4b — Confirmar ausência do challenge no header:**
++```bash
++curl -sS -D - -o /dev/null -H "X-MCORCH-Publish: <o-hex-do-step-1>" \
++  https://www.mcorch.com/wp-json/ | grep -i "cf-mitigated"
++# Esperado: NENHUMA linha (challenge removido para o caminho gated)
++```
++
++**Success signal (flow completo):** um run de `orchestrate-content` (ou do Viral Autopilot) com publish WordPress habilitado retorna `{ success: true, post_url, post_id }` em vez do 502 `no_post_returned` — e o post aparece como rascunho no WP admin.
++
++## Recovery path (falha no step N)
++
++- **Step 4a dá 403 mesmo COM o header:** o Skip não pegou. Conferir (i) que a expressão usa `http.request.headers["x-mcorch-publish"]` em **lowercase** (CF normaliza nomes de header), (ii) que o valor no rule bate byte-a-byte com o `WP_PUBLISH_SECRET`, (iii) que a regra está no topo da ordem, (iv) o caveat de Bot Fight Mode global acima.
++- **Step 4a dá 200 SEM o header:** a regra está aberta demais (não exige o header) — `/wp-json` ficou exposto. **Corrigir imediatamente** adicionando a cláusula do header à expressão; é uma regressão de segurança.
++- **Step 4 com header correto mas publish ainda 502:** não é mais o CF — investigar Basic Auth do WP (`wp_app_password` válido?) ou a resposta do WP REST (a função já distingue 403-CF de array-por-redirect; ler `wp_http_status` no corpo do 502).
++- **Rollback total:** remover a CF rule + `npx supabase secrets unset WP_PUBLISH_SECRET WP_PUBLISH_SECRET_HOST`. A função volta ao comportamento fail-closed (sem header) — sem regressão, só sem publish (estado pré-fix).
++
++## Referências
++- Edge function: `supabase/functions/publish-wordpress/index.ts` (gate de host, deployado 2026-06-22 script 106.3kB)
++- FMEA security FM-04/FM-08 (credencial/identidade), `docs/bok/security/04-fmea-security.md`
++- Memória relacionada: flywheel de conteúdo (`project_orchestrate_pipeline_repair`) — o #3 wp_site_url não-www já estava resolvido; o CF challenge é o blocker remanescente.
+diff --git a/supabase/functions/publish-wordpress/index.ts b/supabase/functions/publish-wordpress/index.ts
+index 96dd688..812b2b0 100644
+--- a/supabase/functions/publish-wordpress/index.ts
++++ b/supabase/functions/publish-wordpress/index.ts
+@@ -77,6 +77,27 @@ Deno.serve(async (req) => {
+     const credentials = btoa(`${wpUsername}:${wpAppPassword}`);
+     const apiBase = wpSiteUrl.replace(/\/$/, "");
+ 
++    // CF hardening (security SDD §5 / FM-04 vector): the MCORCH WP REST API sits behind a Cloudflare managed
++    // challenge that a server-side fetch (no JS engine) cannot solve → all /wp-json/* requests 403. The Sovereign
++    // adds a CF WAF "Skip" rule scoped to /wp-json/* AND gated on this shared-secret header, so the path is NOT
++    // opened wide to the public internet (no /wp-json/wp/v2/users enumeration).
++    //
++    // SECURITY: wp_site_url is PER-USER controlled (decrypted_user_api_keys). The shared CF-skip secret is bound to
++    // exactly ONE MCORCH-operated origin behind our Cloudflare zone — it is meaningless off-platform and, if sent to
++    // a tenant-chosen host, that tenant could exfiltrate it and replay it to bypass the WAF Skip on the real origin.
++    // So attach it ONLY when the target host equals WP_PUBLISH_SECRET_HOST (exact match). Fail-closed: no allowlisted
++    // host, no secret, or a host mismatch / malformed URL ⇒ the header is never sent.
++    const wpPublishSecret = Deno.env.get("WP_PUBLISH_SECRET");
++    const wpPublishSecretHost = Deno.env.get("WP_PUBLISH_SECRET_HOST");
++    const wpAuthHeaders: Record<string, string> = { Authorization: `Basic ${credentials}` };
++    if (wpPublishSecret && wpPublishSecretHost) {
++      try {
++        if (new URL(apiBase).hostname.toLowerCase() === wpPublishSecretHost.toLowerCase()) {
++          wpAuthHeaders["X-MCORCH-Publish"] = wpPublishSecret;
++        }
++      } catch { /* malformed wp_site_url ⇒ never attach the shared secret */ }
++    }
++
+     // Resolve tag IDs (create if they don't exist)
+     const tagIds: number[] = [];
+     if (tags) {
+@@ -88,7 +109,7 @@ Deno.serve(async (req) => {
+         try {
+           // Try to find existing tag
+           const searchRes = await fetch(`${apiBase}/wp-json/wp/v2/tags?search=${encodeURIComponent(tagName)}&per_page=1`, {
+-            headers: { Authorization: `Basic ${credentials}` },
++            headers: { ...wpAuthHeaders },
+           });
+           const found = await searchRes.json();
+           if (Array.isArray(found) && found.length > 0) {
+@@ -97,7 +118,7 @@ Deno.serve(async (req) => {
+             // Create new tag
+             const createRes = await fetch(`${apiBase}/wp-json/wp/v2/tags`, {
+               method: "POST",
+-              headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/json" },
++              headers: { ...wpAuthHeaders, "Content-Type": "application/json" },
+               body: JSON.stringify({ name: tagName }),
+             });
+             if (createRes.ok) {
+@@ -123,10 +144,7 @@ Deno.serve(async (req) => {
+ 
+     const wpRes = await fetch(`${apiBase}/wp-json/wp/v2/posts`, {
+       method: "POST",
+-      headers: {
+-        Authorization: `Basic ${credentials}`,
+-        "Content-Type": "application/json",
+-      },
++      headers: { ...wpAuthHeaders, "Content-Type": "application/json" },
+       body: JSON.stringify(body),
+     });
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(13:56:49)*
+
+
+## 🤖 Claude *(13:56:50)*
+
+Rodando a identificação focada na migration nova (o `publish-wordpress` já foi revisado+aprovado; docs são excluídos):
+
+## 🤖 Claude *(13:57:09)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security review migration",
+  "prompt": "You are a senior security engineer reviewing a NEW Supabase Postgres migration in the MCORCH repo at /home/gcrUX/htdocs/constellation-orchestra. Focus ONLY on HIGH-CONFIDENCE security vulnerabilities (>80%) newly introduced by this migration. The other diff files (docs/*.md, publish-wordpress) are already reviewed \u2014 ignore them.\n\nFILE: supabase/migrations/20260622040000_video_studio_renders_and_assets.sql \u2014 read it in full.\n\nTHREAT MODEL (this is the project's TOP risk for this module \u2014 FMEA-VS-020 cross-tenant isolation): video_renders/video_assets are multi-tenant. A tenant must NEVER be able to (a) read another tenant's render/asset, (b) forge a render row to bypass the mcoCoins charge, (c) mutate a render to zero its charge or fake 'done' to read another's asset, (d) escalate via the agency org_id/client_id columns, (e) over-refund / double-refund via the finalize RPC, (f) call the finalize RPC at all (service-role only).\n\nCONTEXT TO VERIFY (read these to ground your analysis):\n- supabase/migrations/20260622030000_video_studio_org_tenancy.sql \u2014 defines organizations/clients + the SECURITY DEFINER helper `is_org_member(uuid)` used in the new SELECT policy. Confirm is_org_member is anti-recursion + correctly scoped (active membership only).\n- supabase/migrations/20260615160000_vision_mcp_jobs.sql \u2014 the precedent this mirrors (finalize_vision_job + SELECT-own RLS + service-role writes). Compare the new finalize_video_render against it.\n- supabase/migrations/20260505100000_add_pref_ai_model_and_rpc.sql + 20260520150000_admin_user_lifecycle.sql \u2014 add_mco_coins signature + grants (called by finalize for refund).\n\nSpecifically scrutinize:\n1. RLS completeness: is RLS ENABLED on both tables? Are there any unintended permissive policies? With NO INSERT/UPDATE policy for authenticated, confirm writes are truly default-denied (so a tenant cannot INSERT a render bypassing deduct, nor UPDATE to zero charged_mco). Is the SELECT policy correct (own OR active org member) \u2014 can it leak cross-tenant?\n2. The RESTRICTIVE delete policy `USING (false)` \u2014 correct? Does it actually prevent client deletes given there's no permissive delete policy?\n3. finalize_video_render: SECURITY DEFINER + search_path='' present? Is it REVOKEd from PUBLIC/anon/authenticated and granted ONLY to service_role? Can the guard `state IN (queued,running,qa_gate)` + refunded_mco<=charged_mco CHECK be bypassed to double-refund or over-credit? Does it trust any caller-supplied user_id (it derives v_uid from the row \u2014 confirm)?\n4. The composite FK (org_id,client_id)\u2192clients(org_id,id) NOT VALID + the CHECK client_id requires org_id \u2014 any integrity gap that enables cross-tenant attachment?\n5. add_mco_coins call: is it the service-role-only function, callable from within this SECURITY DEFINER context?\n6. search_path / SECURITY DEFINER hygiene; any function missing SET search_path=''.\n\nOutput each finding as: file:line, Severity (HIGH/MEDIUM only), Category, Description, concrete Exploit Scenario, Fix, Confidence (1-10). If nothing reaches confidence >=8, say so explicitly with a one-line rationale per checked vector. Env vars/UUIDs are trusted. Exclude DoS, theoretical races, markdown docs, lack-of-hardening nits."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "`update_updated_at_column` is a pre-existing shared trigger function (defined in an earlier migration) — not newly introduced by this migration, so out of scope. The trigger reattachment is benign.\n\nI now have everything needed to render the verdict. Let me work through each threat vector systematically.\n\n## Security Review: `20260622040000_video_studio_renders_and_assets.sql`\n\nI read the migration in full and grounded against the org-tenancy migration (`is_org_member`), the `finalize_vision_job` precedent, and the `add_mco_coins` signature/grants chain.\n\n### Verdict: No findings reach confidence ≥8. The migration is sound against all six FMEA-VS-020 vectors.\n\nBelow is the per-vector adversarial trace proving why each is closed.\n\n---\n\n**Vector (a) — Cross-tenant READ of renders/assets**\n- `video_renders`: RLS enabled (line 58). SELECT policy (61-65) is `auth.uid() = user_id OR (org_id IS NOT NULL AND public.is_org_member(org_id))`. The org branch is gated on a non-NULL `org_id` AND active membership. I verified `is_org_member` (org-tenancy migration, 65-71): `SECURITY DEFINER`, `STABLE`, `SET search_path = ''`, filters `org_id = p_org_id AND user_id = auth.uid() AND m.seat_active` — anti-recursion (definer breaks the RLS loop on `organization_members`), correctly scoped to *active* membership only. No leak: a tenant only sees own rows or rows of an org they actively belong to.\n- `video_assets`: RLS enabled (101). SELECT policy is `auth.uid() = user_id` only (105-106) — strictly own. No org branch, so no asset leak even if an attacker were an org member. Tighter than renders by design (comment 103-104). Sound.\n\n**Vector (b) — Forge a render row to bypass the mcoCoins charge**\n- No INSERT policy exists for `authenticated`. Default-deny applies. Critically, unlike the org-tenancy tables, this migration grants **no table-level DML** to `authenticated` on `video_renders`/`video_assets` (no `GRANT INSERT/UPDATE` anywhere in the file). Confirmed: writes are doubly blocked (no grant + no policy). Only the service key (RLS-bypassing) writes, after `deduct_mco_coins`. A tenant cannot INSERT a render. Closed.\n\n**Vector (c) — Mutate a render to zero its charge / fake 'done'**\n- No UPDATE policy and no UPDATE grant for `authenticated`. Default-deny. A tenant cannot UPDATE `charged_mco`, `state`, `storage_key`, etc. The `update_updated_at_column` BEFORE-UPDATE trigger only fires on writes that already passed RLS (i.e., service-role) — it grants no new write surface. Closed.\n\n**Vector (d) — Escalate via agency `org_id`/`client_id` columns**\n- Since tenants cannot INSERT/UPDATE at all (vector b/c), they cannot set or pivot `org_id`/`client_id` on a render. The composite FK `(org_id, client_id) → clients(org_id, id)` (54-55) ensures any client a render references genuinely belongs to the stated org — even the service-role writer cannot attach a render to client X under org A if X belongs to org B (FK would reject once validated; `NOT VALID` skips only the historical backfill scan, but **enforces on all new rows**). The CHECK `client_id IS NULL OR org_id IS NOT NULL` (53) prevents an orphan client_id without an org. The `ON DELETE SET NULL` on that composite FK is correct (clearing the cost-center on client deletion, not cascading the render away). No integrity gap.\n\n**Vector (e) — Over-refund / double-refund via finalize**\n- `finalize_video_render` (124-167): `SECURITY DEFINER` + `SET search_path = ''` present (134-135).\n- Double-refund: the `UPDATE ... WHERE id = p_render_id AND state IN ('queued','running','qa_gate')` (152-153) atomically claims the row; a second call finds the row already terminal, `v_uid` is NULL, returns `{finalized:false}` no-op (156-158). `add_mco_coins` is only called inside the `v_uid IS NOT NULL` branch. First-finalizer-wins, idempotent. Mirrors `finalize_vision_job` exactly (the precedent's guard is `('queued','running')`; this correctly adds `'qa_gate'` as the third non-terminal state per its own state machine).\n- Over-refund: `p_refund` is written to `refunded_mco` without an in-code clamp, but the table CHECK `refunded_mco >= 0 AND refunded_mco <= charged_mco` (45) rejects any `p_refund > charged_mco` — the UPDATE aborts the transaction, so no over-credit and no `add_mco_coins` call commits. The caller is service-role (trusted worker), and even a buggy/over-large refund value fails closed at the constraint. Closed. (Defense-in-depth note, not a vuln: an in-code `LEAST(p_refund, charged_mco)` would convert a hard abort into a graceful clamp, but the current behavior fails *safe*.)\n\n**Vector (f) — Calling finalize at all (service-role only)**\n- `REVOKE ALL ... FROM PUBLIC, anon, authenticated` (169) + `GRANT EXECUTE ... TO service_role` (170). The full 6-arg signature is matched exactly in both statements. Tenants cannot invoke it. Closed.\n\n**Sub-question 5 — `add_mco_coins` callable from the definer context?**\n- I traced the grant chain: `20260520150000` REVOKEd EXECUTE from `authenticated` and GRANTed to `service_role` only. `add_mco_coins` is `SECURITY DEFINER` with `SET search_path = public`. Inside `finalize_video_render` (itself `SECURITY DEFINER`, owned by the migration role with EXECUTE), the `PERFORM public.add_mco_coins(...)` resolves under the definer's privileges, so the refund credit succeeds regardless of the invoking service_role's direct grant. Fully qualified `public.add_mco_coins` is immune to the `search_path=''` of the caller. Sound.\n\n**Sub-question 6 — SECURITY DEFINER / search_path hygiene**\n- Both new functions in scope: `finalize_video_render` has `SET search_path = ''` and fully-qualifies every object reference (`public.video_renders`, `public.add_mco_coins`). No unqualified identifier that could be hijacked. The org-tenancy helpers (`is_org_member`, `org_role`, `create_organization`) all carry `SET search_path = ''` too. No missing-search_path definer was introduced.\n\n---\n\n### Notes (below HIGH/MEDIUM threshold — not findings, no fix required)\n- **`refunded_mco` over-refund relies on the table CHECK rather than an in-code `LEAST` clamp.** Fails safe (transaction abort), caller is trusted service-role. Hardening nit only — excluded per scope.\n- **Composite FK is `NOT VALID`.** Correct and intentional (skips backfill of pre-existing NULL solo rows under MATCH SIMPLE); it still enforces on every new row, so it is not an integrity gap. Matches the documented pattern.\n\nAll `SUCCESS` claims above are anchored to literal line numbers in the four files read this turn (Law 1 satisfied — no fabricated UUIDs/hashes)."}, {'type': 'text', 'text': "agentId: adf81471815d31a7f (use SendMessage with to: 'adf81471815d31a7f' to continue this agent)\n<usage>subagent_tokens: 80275\ntool_uses: 7\nduration_ms: 68952</usage>"}]
+> ```
+
+## 🤖 Claude *(13:58:31)*
+
+
+## 🤖 Claude *(13:58:37)*
+
+### 🔒 `/security-review` — Migration `20260622040000` — **SAFE**
+
+Revisão adversarial dos 6 vetores do FMEA-VS-020 (cross-tenant), nenhum achado ≥8:
+
+| Vetor | Veredito |
+|---|---|
+| (a) read cross-tenant | ✅ RLS SELECT own-or-active-org-member (`is_org_member` anti-recursão); assets = own-only |
+| (b) forjar render p/ furar cobrança | ✅ sem policy **nem grant** de INSERT p/ authenticated → default-deny duplo; só service-role escreve pós-deduct |
+| (c) mutar p/ zerar charge / fakear done | ✅ sem UPDATE policy/grant |
+| (d) escalar via org_id/client_id | ✅ tenant não escreve; FK composta + CHECK impedem attach cross-org |
+| (e) over/double-refund | ✅ guard `state IN (queued,running,qa_gate)` first-wins idempotente + CHECK `refunded≤charged` aborta over-refund |
+| (f) chamar finalize | ✅ REVOKE PUBLIC/anon/authenticated + GRANT service_role only · SECURITY DEFINER + search_path='' |
+
+Aplicando a migration (prova material):
+
+## 🤖 Claude *(13:58:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase db push --include-all 2>&1 | tail -30",
+  "description": "Apply migration to linked project"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260622040000_video_studio_renders_and_assets.sql
+> 
+>  [Y/n] 
+> Applying migration 20260622040000_video_studio_renders_and_assets.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(13:59:03)*
+
+
+## 🤖 Claude *(13:59:03)*
+
+Migration aplicada: **"Applying migration 20260622040000... Finished supabase db push."** Verificação material do schema + comportamento RLS:
+
+## 🤖 Claude *(13:59:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nPUB=\"${SB_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}\"\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== G1: video_renders exists (service) \u2192 expect 200 ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" \"$B/rest/v1/video_renders?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== G2: video_assets exists (service) \u2192 expect 200 ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" \"$B/rest/v1/video_assets?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== G3: finalize_video_render exists + service-callable + no-op on unknown id \u2192 expect {finalized:false} ===\"\ncurl -s -w \"\\nHTTP %{http_code}\\n\" -X POST \"$B/rest/v1/rpc/finalize_video_render\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"p_render_id\":\"00000000-0000-0000-0000-000000000000\",\"p_state\":\"failed\",\"p_storage_key\":null,\"p_qa\":null,\"p_node_id\":null,\"p_refund\":0}'\necho \"=== G4: finalize is NOT callable by anon (service-role only) \u2192 expect permission denied / 404 ===\"\ncurl -s -w \"\\nHTTP %{http_code}\\n\" -X POST \"$B/rest/v1/rpc/finalize_video_render\" -H \"apikey: $PUB\" -H \"Authorization: Bearer $PUB\" -H \"Content-Type: application/json\" \\\n  -d '{\"p_render_id\":\"00000000-0000-0000-0000-000000000000\",\"p_state\":\"failed\",\"p_storage_key\":null,\"p_qa\":null,\"p_node_id\":null,\"p_refund\":0}'\necho \"=== G5: anon CANNOT INSERT a render (RLS default-deny, no forge) \u2192 expect 401/403/42501 ===\"\ncurl -s -w \"\\nHTTP %{http_code}\\n\" -X POST \"$B/rest/v1/video_renders\" -H \"apikey: $PUB\" -H \"Authorization: Bearer $PUB\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"00000000-0000-0000-0000-000000000000\",\"engine\":\"faceless\",\"charged_mco\":0}'",
+  "description": "Material verification of schema + RLS + RPC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === G1: video_renders exists (service) → expect 200 ===
+> HTTP 200
+> === G2: video_assets exists (service) → expect 200 ===
+> HTTP 200
+> === G3: finalize_video_render exists + service-callable + no-op on unknown id → expect {finalized:false} ===
+> {"finalized": false}
+> HTTP 200
+> === G4: finalize is NOT callable by anon (service-role only) → expect permission denied / 404 ===
+> {"code":"42501","details":null,"hint":null,"message":"permission denied for function finalize_video_render"}
+> HTTP 401
+> === G5: anon CANNOT INSERT a render (RLS default-deny, no forge) → expect 401/403/42501 ===
+> {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"video_renders\""}
+> HTTP 401
+> ```
+
+## 🤖 Claude *(13:59:34)*
+
+
+## 🤖 Claude *(13:59:41)*
+
+**Fatia 1 — fundação provada materialmente em produção:**
+
+| Gate | Resultado |
+|---|---|
+| G1 `video_renders` existe | ✅ HTTP 200 (era 404) |
+| G2 `video_assets` existe | ✅ HTTP 200 |
+| G3 `finalize_video_render` service-callable + idempotente | ✅ `{"finalized": false}` em id inexistente (no-op) |
+| G4 finalize bloqueada p/ anon (service-only) | ✅ `42501 permission denied` |
+| G5 anon **não** forja render (RLS anti-bypass de cobrança) | ✅ `42501 row-level security policy` |
+
+O modelo de segurança está provado no comportamento de produção, não só no código. Commitando a migration (regra FM-03: aplicada em prod → commit na mesma sessão):
+
+## 🤖 Claude *(13:59:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit commit -q -m \"feat(video-studio): Fatia 1 \u2014 dominio de video (video_renders/video_assets + finalize RPC)\n\nFunda\u00e7\u00e3o do m\u00f3dulo V\u00eddeo sobre a tenancy de ag\u00eancia j\u00e1 landada. Cria video_renders\n(m\u00e1quina de estados + ledger at\u00f4mico charged/refunded, tenancy-aware org_id/client_id\nNULLABLE = solo backward-compat) + video_assets (manifest de erasure) + finalize_video_render\n(autoridade \u00fanica terminal+refund, service-role, espelha finalize_vision_job). RLS\ncross-tenant (FMEA-VS-020): SELECT own-or-org-member, sem write p/ authenticated (s\u00f3\nservice-role p\u00f3s-deduct), RESTRICTIVE no-delete no ledger. /security-review SAFE (6 vetores).\nAplicada+provada: tabelas 200, finalize service-only (anon 42501), anon INSERT 42501 RLS.\" 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|\u2591|\u2502|\u2570|\u256d|\u2500|\u25cb|INF|summary|\u2714|mesh-reingest|^$\" | tail -5\necho \"=== log ===\"; git log --oneline -3",
+  "description": "Commit migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === log ===
+> c92850f feat(video-studio): Fatia 1 — dominio de video (video_renders/video_assets + finalize RPC)
+> 89e59ab docs(security): reconcilia drift — FM-04/FM-10 fechados + SOP CF publish
+> 0fc7ed9 feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
