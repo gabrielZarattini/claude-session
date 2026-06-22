@@ -2101,6 +2101,1580 @@ Dois números são apetite de risco teu (dinheiro real), então confirmo antes d
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual % do equity tradeable como teto por COMPRA? (equity hoje ≈ $149)"="20% (~$30/compra)", "Teto ABSOLUTO de segurança (runaway guard, $/ordem) — só atua ACIMA do %-teto, pra barrar uma leitura de equity errada. Hoje o %-teto é ~$30."="$100". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:33:33)*
+
+
+## 🤖 Claude *(01:33:34)*
+
+Decisões registradas: **20% por compra + teto absoluto $100 + venda isenta**. Vou implementar. Marco o capítulo e começo pelo `riskState` (cache de equity quente).
+
+## 🤖 Claude *(01:33:35)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "%-teto de compra (risk guard)",
+  "summary": "Substituir teto fixo $50 por %-teto (20% do equity) com isen\u00e7\u00e3o de venda + teto absoluto $100; gate QA+TL"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "%-teto de compra (risk guard)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(01:33:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/riskState.js",
+  "old_string": "let manual = { on: false, reason: null, since: null };\nlet dailyCap = { on: false, reason: null, since: null, day: null };",
+  "new_string": "let manual = { on: false, reason: null, since: null };\nlet dailyCap = { on: false, reason: null, since: null, day: null };\n\n// Equity tradeable QUENTE \u2014 publicado pelo dailyCapJob a cada ciclo `valued` (~60s, mark-to-market, fail-safe).\n// Lido S\u00cdNCRONO pelo guard (utils/exchange.assertWithinRisk) p/ dimensionar o %-teto de COMPRA. N\u00c3O persistido\n// (recomputado em <=60s no boot) e N\u00c3O entra no isHalted() \u2014 \u00e9 s\u00f3 um n\u00famero p/ o teto. value=null at\u00e9 o 1\u00ba c\u00e1lculo\n// v\u00e1lido; equity ausente/velho faz o guard degradar p/ o teto absoluto (dire\u00e7\u00e3o segura).\nlet equitySnap = { value: null, at: null };\nfunction setEquity(v) {\n    const n = parseFloat(v);\n    if (Number.isFinite(n) && n > 0) equitySnap = { value: n, at: Date.now() };\n}\nfunction getEquity() { return { value: equitySnap.value, at: equitySnap.at }; }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/riskState.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:33:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/riskState.js",
+  "old_string": "module.exports = { dayKeyUTC, isHalted, getState, setFloor, setHalt, clearDailyCap, getDailyCapDay };",
+  "new_string": "module.exports = { dayKeyUTC, isHalted, getState, setFloor, setHalt, clearDailyCap, getDailyCapDay, setEquity, getEquity };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/riskState.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:33:53)*
+
+Agora o `dailyCapJob` publica o equity quente nos dois pontos onde já o tem `valued`:
+
+## 🤖 Claude *(01:33:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "        if (COLD_LOGGED) { COLD_LOGGED = false; COLD_SINCE = null; COLD_ALERTED = false; logger('system', `[dailyCap] equity avali\u00e1vel novamente ($${eq.equity.toFixed(2)}).`); }\n\n        // 3) Baseline do dia ausente",
+  "new_string": "        if (COLD_LOGGED) { COLD_LOGGED = false; COLD_SINCE = null; COLD_ALERTED = false; logger('system', `[dailyCap] equity avali\u00e1vel novamente ($${eq.equity.toFixed(2)}).`); }\n\n        // Publica o equity QUENTE p/ o %-teto de COMPRA (utils/exchange.assertWithinRisk). S\u00f3 em ciclo `valued`\n        // (acima j\u00e1 retornamos no fail-safe), ent\u00e3o o guard nunca dimensiona a compra por um equity frio.\n        riskState.setEquity(eq.equity);\n\n        // 3) Baseline do dia ausente"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:34:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "        const eq = await computeEquity();\n        if (!eq.valued) return { ok: false, reason: eq.error || `pre\u00e7os frios: ${(eq.cold || []).join(', ')}`, snapshot: SNAP };\n        SNAP = { day: riskState.dayKeyUTC(), equity: eq.equity, at: new Date().toISOString() };",
+  "new_string": "        const eq = await computeEquity();\n        if (!eq.valued) return { ok: false, reason: eq.error || `pre\u00e7os frios: ${(eq.cold || []).join(', ')}`, snapshot: SNAP };\n        riskState.setEquity(eq.equity); // re-baseline manual tamb\u00e9m atualiza o equity quente do %-teto\n        SNAP = { day: riskState.dayKeyUTC(), equity: eq.equity, at: new Date().toISOString() };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:34:11)*
+
+
+## 🤖 Claude *(01:34:12)*
+
+Agora o coração — `utils/exchange.js`. Reescrevo o bloco de doc + consts e o `assertWithinRisk`:
+
+## 🤖 Claude *(01:34:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "// === Teto de risco global (chokepoint \u00fanico: TODA ordem real \u2014 automa\u00e7\u00e3o, funil ou manual \u2014 passa por\n// buy()/sell()/oco() aqui). \u00danica trava de tamanho do BACKEND (o ALLOW_TRADING \u00e9 s\u00f3 do agente LLM).\n//   HALT (kill-switch)           \u2192 bloqueia QUALQUER ordem (parada de emerg\u00eancia) \u2014 cobre TUDO. AGORA \u00e9 QUENTE:\n//                                  lido por ordem via riskState.isHalted() (n\u00e3o mais um const no load). TRADING_HALT=true\n//                                  no .env SEEDA o riskState como floor permanente (mexer no .env ainda exige restart);\n//                                  o operador (POST /system/halt) e o cap di\u00e1rio -5% (dailyCapJob) flipam SEM restart.\n//   MAX_ORDER_NOTIONAL_USDT=<n>  \u2192 teto de notional por ordem em USDT (0 = desligado). Cobre MARKET por\n//                                  quote (quoteOrderQty, ex.: funil), LIMIT/OCO (price\u00d7qty) e \u2014 desde o fix\n//                                  do furo MARKET-por-quantidade \u2014 MARKET por QTY-base sem price (venda de\n//                                  TREND_QTY/HARVEST_QTY/MAX_WALLET): deriva o pre\u00e7o do MINI_TICKER p/ estimar\n//                                  o notional. Se o MINI_TICKER estiver frio (sem pre\u00e7o de refer\u00eancia), a\n//                                  ordem PASSA (logada) e fica coberta s\u00f3 pelo HALT \u2014 escolha deliberada p/\n//                                  N\u00c3O bloquear venda protetiva (ex.: death cross) por mem\u00f3ria fria.\n//                                  S\u00f3 pares *USDT (notional em USDT); quote \u2260 USDT passa.\n//   DIMENSIONAMENTO: o teto deve ficar logo ACIMA do maior pedido LEG\u00cdTIMO (venda de posi\u00e7\u00e3o/bucket por s\u00edmbolo,\n//   capada na carteira pelo calcQty) e MUITO ABAIXO de um runaway. ~2\u00d7 o saldo total da conta \u00e9 a r\u00e9gua; reajuste\n//   ao aportar. \u26a0\ufe0f vendas de EXCEDENTE de BTC (BTC_EXCESS, meta +3 BTC) t\u00eam notional ALTO \u2192 se reativar a 'BTC\n//   Scalp Excess' (id38), tornar o teto symbol-aware (isentar/segregar BTCUSDT SELL): um teto fixo a MARKET\n//   bloquearia a colheita de BTC. Hoje id38 est\u00e1 isActive=0, ent\u00e3o o teto fixo \u00e9 seguro.\n// Inerte por padr\u00e3o; ajust\u00e1vel por env SEM deploy de c\u00f3digo (basta reiniciar). Fail-closed (lan\u00e7a). ===\nconst _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');\nconst MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;\n\nfunction assertWithinRisk(action, symbol, quantity, price, options) {\n    if (riskState.isHalted()) {\n        const st = riskState.getState();\n        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) \u2014 ${action} ${symbol} BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }\n    if (MAX_ORDER_NOTIONAL_USDT > 0 && /USDT$/i.test(symbol || '')) {\n        const o = options || {};\n        let notional = null;\n        if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)\n        else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n        else if (quantity != null) {                                                    // MARKET por QTY-base sem price (venda TREND_QTY/HARVEST_QTY/MAX_WALLET; ou STOP/TP-MARKET)\n            const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: usa o stopPrice (pre\u00e7o-alvo real); sen\u00e3o deriva o spot do MINI_TICKER\n            if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);\n            else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n        }\n        if (Number.isFinite(notional) && notional > MAX_ORDER_NOTIONAL_USDT) {\n            const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${MAX_ORDER_NOTIONAL_USDT.toFixed(2)} \u2014 BLOQUEADA.`;\n            logger('system', msg);\n            throw new Error(msg);\n        }\n    }\n}",
+  "new_string": "// === Teto de risco global (chokepoint \u00fanico: TODA ordem real \u2014 automa\u00e7\u00e3o, funil ou manual \u2014 passa por\n// buy()/sell()/oco() aqui). \u00danica trava de tamanho do BACKEND (o ALLOW_TRADING \u00e9 s\u00f3 do agente LLM).\n//   HALT (kill-switch)           \u2192 bloqueia QUALQUER ordem (parada de emerg\u00eancia) \u2014 cobre TUDO, COMPRA E VENDA.\n//                                  QUENTE: lido por ordem via riskState.isHalted(). TRADING_HALT=true no .env SEEDA\n//                                  o riskState como floor permanente (mexer no .env ainda exige restart); o operador\n//                                  (POST /system/halt) e o cap di\u00e1rio -5% (dailyCapJob) flipam SEM restart.\n//\n//   TETO DE NOTIONAL \u2014 aplica-se S\u00d3 A COMPRA. Venda CONVERTE ativo\u2192USDT (reduz exposi\u00e7\u00e3o) e j\u00e1 \u00e9 limitada pela\n//   carteira no calcQty \u2192 fica ISENTA do teto (segue coberta pelo HALT; o cofre BTC, pela trava do MCP). Isso conserta\n//   o furo hist\u00f3rico em que o teto fixo barrava venda no-loss leg\u00edtima (ex.: a venda de $40 do LTC vs teto $25) e\n//   dispensa o symbol-aware de BTC (a colheita de BTC_EXCESS \u00e9 VENDA \u2192 isenta). O limite efetivo da compra \u00e9:\n//        cap = min( MAX_ORDER_NOTIONAL_USDT , MAX_ORDER_PCT_EQUITY \u00d7 equityTrade\u00e1vel )  , nunca < MIN_ORDER_NOTIONAL_FLOOR\n//   MAX_ORDER_PCT_EQUITY=<0..1>  \u2192 teto da COMPRA como fra\u00e7\u00e3o do equity tradeable QUENTE (publicado pelo dailyCapJob\n//                                  no riskState a cada ~60s; mark-to-market, conta Earn LD*). \u00c9 o motor do\n//                                  dimensionamento que ESCALA com o capital. equity ausente/frio/velho\n//                                  (> EQUITY_MAX_AGE_MS) \u2192 a % \u00e9 ignorada e cai-se pro teto absoluto (degrada seguro).\n//                                  0/ausente = %-teto desligado.\n//   MAX_ORDER_NOTIONAL_USDT=<n>  \u2192 TETO ABSOLUTO (runaway guard) em USDT \u2014 barra uma leitura de equity errada/grande.\n//                                  Deve ficar ACIMA do %-teto t\u00edpico. 0 = sem teto absoluto.\n//   MIN_ORDER_NOTIONAL_FLOOR=<n> \u2192 piso: o %-teto NUNCA derruba o limite abaixo disto (n\u00e3o barra ordem m\u00ednima\n//                                  leg\u00edtima quando o equity \u00e9 pequeno). 0/ausente = sem piso.\n//   Formas de notional cobertas: quote (quoteOrderQty, ex.: funil), LIMIT/OCO (price\u00d7qty) e MARKET-por-QTY sem price\n//   (deriva o pre\u00e7o do MINI_TICKER; STOP/TP-MARKET usa o stopPrice). MINI_TICKER frio \u2192 PASSA (logado), coberto s\u00f3\n//   pelo HALT. S\u00f3 pares *USDT (notional em USDT); quote \u2260 USDT passa.\n// Inerte por padr\u00e3o; ajust\u00e1vel por env SEM deploy de c\u00f3digo (basta reiniciar). Fail-closed (lan\u00e7a). ===\nconst _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');\nconst MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;\nconst _pctEq = parseFloat(process.env.MAX_ORDER_PCT_EQUITY || '0');\nconst MAX_ORDER_PCT_EQUITY = Number.isFinite(_pctEq) && _pctEq > 0 && _pctEq < 1 ? _pctEq : 0;\nconst _floorMin = parseFloat(process.env.MIN_ORDER_NOTIONAL_FLOOR || '0');\nconst MIN_ORDER_NOTIONAL_FLOOR = Number.isFinite(_floorMin) && _floorMin > 0 ? _floorMin : 0;\nconst _eqMaxAge = parseInt(process.env.EQUITY_MAX_AGE_MS || '600000', 10);\nconst EQUITY_MAX_AGE_MS = Number.isFinite(_eqMaxAge) && _eqMaxAge > 0 ? _eqMaxAge : 600000; // equity mais velho que isto \u2192 cai pro teto absoluto\n\nfunction assertWithinRisk(action, symbol, quantity, price, options) {\n    if (riskState.isHalted()) {\n        const st = riskState.getState();\n        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) \u2014 ${action} ${symbol} BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }\n\n    // VENDA isenta do teto (reduz risco; coberta pelo HALT). 'SELL' e 'OCO-SELL'.\n    if (/SELL/i.test(action || '')) return;\n    if (!/USDT$/i.test(symbol || '')) return; // teto em USDT s\u00f3 vale p/ pares *USDT\n\n    // Limite efetivo da COMPRA = min(teto absoluto, %\u00d7equity), com piso de ordem m\u00ednima.\n    let pctCap = Infinity;\n    if (MAX_ORDER_PCT_EQUITY > 0) {\n        const eq = (riskState.getEquity && riskState.getEquity()) || null;\n        const fresh = eq && Number.isFinite(eq.value) && eq.value > 0 && eq.at && (Date.now() - eq.at) <= EQUITY_MAX_AGE_MS;\n        if (fresh) {\n            pctCap = MAX_ORDER_PCT_EQUITY * eq.value;\n            if (MIN_ORDER_NOTIONAL_FLOOR > 0 && pctCap < MIN_ORDER_NOTIONAL_FLOOR) pctCap = MIN_ORDER_NOTIONAL_FLOOR;\n        }\n    }\n    const absCeil = MAX_ORDER_NOTIONAL_USDT > 0 ? MAX_ORDER_NOTIONAL_USDT : Infinity;\n    const cap = Math.min(pctCap, absCeil);\n    if (!Number.isFinite(cap)) return; // nem % (equity frio) nem teto absoluto configurado \u2192 inerte (s\u00f3 HALT cobre)\n\n    const o = options || {};\n    let notional = null;\n    if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)\n    else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n    else if (quantity != null) {                                                    // MARKET por QTY-base sem price (ou STOP/TP-MARKET)\n        const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: stopPrice; sen\u00e3o deriva o spot do MINI_TICKER\n        if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);\n        else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n    }\n    if (Number.isFinite(notional) && notional > cap) {\n        const basis = (Number.isFinite(pctCap) && pctCap <= absCeil) ? `${(MAX_ORDER_PCT_EQUITY * 100).toFixed(0)}% do equity` : 'teto absoluto';\n        const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${cap.toFixed(2)} (${basis}) \u2014 BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:35:02)*
+
+
+## 🤖 Claude *(01:35:03)*
+
+Agora reescrevo a suíte do guard pra travar o novo contrato (compra capada por %/absoluto, venda isenta, equity quente/frio/velho, piso):
+
+## 🤖 Claude *(01:35:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 CHOKEPOINT DE RISCO (utils/exchange.assertWithinRisk): a \u00daNICA trava de tamanho/parada\n * do backend por onde TODA ordem real (automa\u00e7\u00e3o, funil, manual) passa antes de tocar a Binance. Cada caso \u00e9\n * uma SITUA\u00c7\u00c3O que poderia disparar (ou que DEVE barrar) uma ordem de compra/venda \u2014 money-path.\n *\n * Puro Node + assert manual (estilo scripts/sim/calcQty.test.js). ZERO rede: injeta fakes de riskState/logger/\n * beholder no require.cache ANTES de requerer o exchange; l\u00ea o teto do env (lido no load do m\u00f3dulo).\n *\n * CONTRATO (ap\u00f3s o %-teto):\n *   (HALT)   kill-switch ativo \u2192 QUALQUER ordem \u00e9 bloqueada (lan\u00e7a), inclusive venda protetiva.\n *   (VENDA)  ISENTA do teto de notional (reduz risco) \u2014 s\u00f3 o HALT a cobre. Em TODA forma (price\u00d7qty, MARKET-por-qty,\n *            STOP/TP, OCO-SELL). \u00c9 a corre\u00e7\u00e3o do furo que barrava venda no-loss leg\u00edtima.\n *   (COMPRA) capada por min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY \u00d7 equity quente), nunca < MIN_ORDER_NOTIONAL_FLOOR.\n *            equity frio/velho \u2192 cai pro teto absoluto. Cobre quote (funil), price\u00d7qty (LIMIT), MARKET-por-qty via MINI_TICKER.\n *   (PASSA)  sob o teto; MINI_TICKER frio (passa, coberto s\u00f3 pelo HALT); par n\u00e3o-USDT; tudo desligado.\n */\nconst path = require('path');\n\n// injeta um m\u00f3dulo fake no require.cache pelo caminho ABSOLUTO que o exchange.js resolveria.\nfunction injectModule(absPath, exportsObj) {\n    const resolved = require.resolve(absPath);\n    require.cache[resolved] = { id: resolved, filename: resolved, loaded: true, exports: exportsObj };\n}\n\nconst SRC = path.resolve(__dirname, '../../src');\nconst EXCHANGE = path.join(SRC, 'utils', 'exchange.js');\n\nlet HALTED = false;                     // flip\u00e1vel pelos testes (kill-switch)\nlet EQUITY = { value: null, at: null };  // equity quente p/ o %-teto (null/velho = guard cai pro teto absoluto)\nconst fakeRiskState = {\n    isHalted: () => HALTED,\n    getState: () => ({ halted: HALTED, source: 'manual', reason: 'sim' }),\n    getEquity: () => ({ value: EQUITY.value, at: EQUITY.at }),\n};\nconst fakeLogger = () => { };            // no-op (sem ru\u00eddo nem disco)\nlet MINI = null;                        // pre\u00e7o do MINI_TICKER p/ o teto de MARKET-por-qty (null = frio)\nconst fakeBeholder = { getMemory: (symbol, key) => (key === 'MINI_TICKER' && MINI != null ? { close: MINI } : undefined) };\n\n// equity fresco (agora) e velho (al\u00e9m do EQUITY_MAX_AGE_MS default de 10min).\nconst freshEq = (v) => ({ value: v, at: Date.now() });\nconst staleEq = (v) => ({ value: v, at: Date.now() - 11 * 60 * 1000 });\n\nfunction loadExchange({ maxNotional = 0, pctEq = null, floorMin = null } = {}) {\n    process.env.MAX_ORDER_NOTIONAL_USDT = String(maxNotional);\n    if (pctEq != null) process.env.MAX_ORDER_PCT_EQUITY = String(pctEq); else delete process.env.MAX_ORDER_PCT_EQUITY;\n    if (floorMin != null) process.env.MIN_ORDER_NOTIONAL_FLOOR = String(floorMin); else delete process.env.MIN_ORDER_NOTIONAL_FLOOR;\n    injectModule(path.join(SRC, 'riskState.js'), fakeRiskState);   // injeta ANTES de (re)requerer o exchange\n    injectModule(path.join(SRC, 'utils', 'logger.js'), fakeLogger);\n    injectModule(path.join(SRC, 'beholder.js'), fakeBeholder);\n    delete require.cache[require.resolve(EXCHANGE)];                // for\u00e7a re-leitura dos tetos (const no load)\n    return require(EXCHANGE);                                       // a factory + seam .assertWithinRisk\n}\n\nlet passed = 0, failed = 0;\nfunction checkThrows(name, fn) { let t = false; try { fn(); } catch (_) { t = true; } if (t) passed++; else { failed++; console.error(`  \u2717 ${name}: N\u00c3O bloqueou (esperava throw)`); } }\nfunction checkOk(name, fn) { let e = null; try { fn(); } catch (err) { e = err; } if (!e) passed++; else { failed++; console.error(`  \u2717 ${name}: bloqueou indevidamente (${e.message})`); } }\n\n// ============================================================================\n// SE\u00c7\u00c3O A \u2014 s\u00f3 teto ABSOLUTO ($50), sem %-equity. Venda ISENTA (a grande mudan\u00e7a).\n// ============================================================================\nlet ex = loadExchange({ maxNotional: 50 });\nlet g = ex.assertWithinRisk;\n\n// (HALT) \u2014 kill-switch ativo bloqueia TUDO, mesmo notional min\u00fasculo e mesmo venda protetiva.\nHALTED = true;\ncheckThrows('HALT bloqueia BUY (mesmo $4.4 < teto)', () => g('BUY', 'LTCUSDT', 0.1, 44, {}));\ncheckThrows('HALT bloqueia SELL protetiva', () => g('SELL', 'LTCUSDT', 0.1, 44, {}));\nHALTED = false;\n\n// (COMPRA) \u2014 capada pelo teto absoluto em TODA forma.\ncheckOk('compra passa sob o teto (LIMIT $22)', () => g('BUY', 'LTCUSDT', 0.5, 44, {}));\ncheckThrows('compra: LIMIT price\u00d7qty $88 > $50', () => g('BUY', 'LTCUSDT', 2, 44, {}));\ncheckThrows('compra: quoteOrderQty $100 > $50', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 100 }));\ncheckOk('compra: quoteOrderQty $30 < $50', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 30 }));\nMINI = 44;\ncheckThrows('compra: MARKET-por-qty 2\u00d7$44=$88 via MINI_TICKER', () => g('BUY', 'LTCUSDT', 2, null, {}));\n\n// (VENDA) \u2014 ISENTA do teto em TODA forma (a corre\u00e7\u00e3o). S\u00f3 o HALT a cobre.\ncheckOk('VENDA isenta: price\u00d7qty $88 passa', () => g('SELL', 'LTCUSDT', 2, 44, {}));\ncheckOk('VENDA isenta: OCO-SELL $88 passa', () => g('OCO-SELL', 'LTCUSDT', 2, 44, { abovePrice: 44 }));\ncheckOk('VENDA isenta: MARKET-por-qty $88 passa', () => g('SELL', 'LTCUSDT', 2, null, {}));\ncheckOk('VENDA isenta: STOP-MARKET stopPrice $88 passa', () => g('SELL', 'LTCUSDT', 2, null, { stopPrice: 44 }));\ncheckOk('VENDA isenta: venda gigante $44k passa (s\u00f3 HALT cobriria)', () => g('SELL', 'LTCUSDT', 1000, 44, {}));\n\n// (PASSA) par n\u00e3o-USDT ignora o teto (notional em USDT). compra ou venda.\nMINI = null;\ncheckOk('par n\u00e3o-USDT (compra) ignora o teto', () => g('BUY', 'LTCBTC', 999, 1, {}));\n\n// ============================================================================\n// SE\u00c7\u00c3O B \u2014 %-equity ON (20%) + teto absoluto $100. cap = min($100, 20%\u00d7equity).\n// ============================================================================\nex = loadExchange({ maxNotional: 100, pctEq: 0.20 });\ng = ex.assertWithinRisk;\nMINI = 44;\n\n// equity $150 \u2192 20% = $30 (min(30,100)=30). compra capada em $30.\nEQUITY = freshEq(150);\ncheckOk('%-teto: compra $22 (0.5\u00d744) < $30 passa', () => g('BUY', 'LTCUSDT', 0.5, 44, {}));\ncheckThrows('%-teto: compra $35.2 (0.8\u00d744) > $30 bloqueia', () => g('BUY', 'LTCUSDT', 0.8, 44, {}));\ncheckOk('%-teto: quoteOrderQty $30 == cap passa', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 30 }));\ncheckThrows('%-teto: quoteOrderQty $31 > $30 bloqueia', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 31 }));\ncheckOk('%-teto: VENDA $88 segue isenta', () => g('SELL', 'LTCUSDT', 2, 44, {}));\n\n// equity $600 \u2192 20% = $120, mas teto absoluto $100 manda \u2192 cap $100.\nEQUITY = freshEq(600);\ncheckOk('teto-abs domina: compra $90 < $100 passa', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 90 }));\ncheckThrows('teto-abs domina: compra $110 > $100 bloqueia (20%\u00d7600=$120, mas abs=$100)', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 110 }));\n\n// equity VELHO (>10min) \u2192 ignora a % e cai pro teto absoluto $100.\nEQUITY = staleEq(150);\ncheckOk('equity velho: cai pro teto-abs \u2192 compra $90 passa (n\u00e3o os $30 da %)', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 90 }));\ncheckThrows('equity velho: teto-abs $100 ainda barra $120', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 120 }));\n\n// equity FRIO (null) \u2192 ignora a % e cai pro teto absoluto $100.\nEQUITY = { value: null, at: null };\ncheckOk('equity frio: compra $90 passa pelo teto-abs', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 90 }));\ncheckThrows('equity frio: teto-abs $100 barra $120', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 120 }));\n\n// ============================================================================\n// SE\u00c7\u00c3O C \u2014 PISO: o %-teto nunca derruba abaixo de MIN_ORDER_NOTIONAL_FLOOR.\n// ============================================================================\nex = loadExchange({ maxNotional: 100, pctEq: 0.20, floorMin: 25 });\ng = ex.assertWithinRisk;\nEQUITY = freshEq(50); // 20% = $10, mas o piso $25 sobe o cap p/ $25.\ncheckOk('piso: compra $20 < piso $25 passa (apesar de 20%\u00d750=$10)', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 20 }));\ncheckThrows('piso: compra $30 > piso $25 bloqueia', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 30 }));\n\n// ============================================================================\n// SE\u00c7\u00c3O D \u2014 tudo DESLIGADO (sem teto absoluto, sem %) \u2192 guard inerte (s\u00f3 HALT).\n// ============================================================================\nex = loadExchange({ maxNotional: 0 });\nconst g0 = ex.assertWithinRisk;\nEQUITY = freshEq(150);\ncheckOk('tudo off: compra $44k passa (guard inerte)', () => g0('BUY', 'LTCUSDT', 1000, 44, {}));\nHALTED = true;\ncheckThrows('tudo off mas HALT ainda bloqueia', () => g0('BUY', 'LTCUSDT', 0.1, 44, {}));\nHALTED = false;\n\nconsole.log(`\\nriskGuard.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:35:58)*
+
+
+## 🤖 Claude *(01:35:59)*
+
+Reescrita feita. Preciso garantir que a suíte roda isolada (vazamento de env entre arquivos quebraria) e ver o runner. Deixo o comentário do chokepoint coerente também:
+
+## 🤖 Claude *(01:36:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== test:sim script ===\"; node -e \"console.log(require('./package.json').scripts['test:sim'])\" 2>/dev/null\necho \"=== runner em scripts/sim? ===\"; ls scripts/sim/\necho \"=== coment\u00e1rio chokepoint (exchange.js ~325) ===\"; grep -n \"CHOKEPOINT de risco\\|chokepoint\\|HALT + teto\" src/utils/exchange.js",
+  "description": "Inspect test:sim runner and chokepoint comment"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === test:sim script ===
+> node scripts/sim/run.js
+> === runner em scripts/sim? ===
+> calcQty.test.js
+> dailyCap.test.js
+> farmTriggers.test.js
+> feeCalc.test.js
+> integration.test.js
+> riskGuard.test.js
+> run.js
+> === comentário chokepoint (exchange.js ~325) ===
+> 10:// === Teto de risco global (chokepoint único: TODA ordem real — automação, funil ou manual — passa por
+> 350:// assertWithinRisk é o CHOKEPOINT de risco (HALT + teto de notional) por onde TODA ordem real passa: buy()/sell()/
+> ```
+
+## 🤖 Claude *(01:36:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/run.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Runner da SUÍTE DE SIMULAÇÃO (scripts/sim/*.test.js). Puro Node, zero deps.
+> 4	 * Descobre cada *.test.js do diretório, roda em processo separado (isolamento de MEMORY/env) e agrega.
+> 5	 * Sai 1 se QUALQUER arquivo falhar. Usado por `npm run test:sim`, pelo ci-preflight e pelo CI.
+> 6	 */
+> 7	const fs = require('fs');
+> 8	const path = require('path');
+> 9	const { spawnSync } = require('child_process');
+> 10	
+> 11	process.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';
+> 12	
+> 13	const DIR = __dirname;
+> 14	const files = fs.readdirSync(DIR).filter(f => f.endsWith('.test.js')).sort();
+> 15	
+> 16	if (!files.length) { console.error('sim/run.js: nenhum *.test.js encontrado'); process.exit(1); }
+> 17	
+> 18	let failures = 0;
+> 19	for (const f of files) {
+> 20	    console.log(`\n=== sim/${f} ===`);
+> 21	    const r = spawnSync(process.execPath, [path.join(DIR, f)], { stdio: 'inherit', env: process.env });
+> 22	    if (r.status !== 0) failures++;
+> 23	}
+> 24	
+> 25	console.log(`\nsim suite: ${files.length - failures}/${files.length} arquivos OK${failures ? ` — ${failures} FALHARAM` : ''}.`);
+> 26	process.exit(failures ? 1 : 0);
+> 27	
+> ```
+
+## 🤖 Claude *(01:36:08)*
+
+
+## 🤖 Claude *(01:36:09)*
+
+Cada teste roda em processo separado (`spawnSync`) — sem vazamento de env. Atualizo o comentário do chokepoint (linha 350) pra refletir a isenção de venda:
+
+## 🤖 Claude *(01:36:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 348,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 348	
+> 349	// === Seam de testabilidade (additivo, sem mudança de comportamento) ===
+> 350	// assertWithinRisk é o CHOKEPOINT de risco (HALT + teto de notional) por onde TODA ordem real passa: buy()/sell()/
+> 351	// oco() o chamam ANTES de tocar a Binance. Exposto como propriedade da factory (que segue chamável como sempre)
+> 352	// p/ a suíte de simulação (scripts/sim/riskGuard.test.js) exercitar "HALT bloqueia tudo" e "teto por notional"
+> 353	// sem rede. refPrice idem (deriva o preço do MINI_TICKER p/ o teto de MARKET-por-qty).
+> 354	module.exports.assertWithinRisk = assertWithinRisk;
+> 355	module.exports.refPrice = refPrice;
+> ```
+
+## 🤖 Claude *(01:36:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "// assertWithinRisk \u00e9 o CHOKEPOINT de risco (HALT + teto de notional) por onde TODA ordem real passa: buy()/sell()/\n// oco() o chamam ANTES de tocar a Binance. Exposto como propriedade da factory (que segue cham\u00e1vel como sempre)\n// p/ a su\u00edte de simula\u00e7\u00e3o (scripts/sim/riskGuard.test.js) exercitar \"HALT bloqueia tudo\" e \"teto por notional\"\n// sem rede. refPrice idem (deriva o pre\u00e7o do MINI_TICKER p/ o teto de MARKET-por-qty).",
+  "new_string": "// assertWithinRisk \u00e9 o CHOKEPOINT de risco (HALT cobre tudo; teto de notional s\u00f3 na COMPRA, venda isenta) por onde\n// TODA ordem real passa: buy()/sell()/oco() o chamam ANTES de tocar a Binance. Exposto como propriedade da factory\n// (que segue cham\u00e1vel como sempre) p/ a su\u00edte de simula\u00e7\u00e3o (scripts/sim/riskGuard.test.js) exercitar \"HALT bloqueia\n// tudo\", \"venda isenta\" e o \"%-teto de compra\" sem rede. refPrice idem (deriva o pre\u00e7o do MINI_TICKER p/ MARKET-por-qty)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:36:19)*
+
+Agora rodo a suíte de simulação inteira pra validar o novo contrato + não-regressão dos outros 5 arquivos:
+
+## 🤖 Claude *(01:36:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "AES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | tail -40",
+  "description": "Run full simulation suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> > backend@1.0.0 test:sim
+> > node scripts/sim/run.js
+> 
+> 
+> === sim/calcQty.test.js ===
+> 
+> calcQty.test.js: 23 passed, 0 failed
+> 
+> === sim/dailyCap.test.js ===
+>   ✗ baseline do dia = equity: got null exp 100
+>   ✗ equity -5% exato DISPARA o HALT (<=)
+>   ✗ equity -10% DISPARA o HALT (daily-cap)
+>   ✗ LD* avaliado pelo subjacente (LDLTC→LTC×$44): got null exp 94
+> 
+> dailyCap.test.js: 5 passed, 4 failed
+> 
+> === sim/farmTriggers.test.js ===
+> 
+> farmTriggers.test.js: 9 passed, 0 failed
+> 
+> === sim/feeCalc.test.js ===
+> 
+> feeCalc.test.js: 11 passed, 0 failed
+> 
+> === sim/integration.test.js ===
+> 
+> integration.test.js: 24 passed, 0 failed
+> 
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 28 passed, 0 failed
+> 
+> sim suite: 5/6 arquivos OK — 1 FALHARAM.
+> ```
+
+## 🤖 Claude *(01:36:28)*
+
+
+## 🤖 Claude *(01:36:30)*
+
+Meu `riskGuard.test.js` passa 28/28. Mas o `dailyCap.test.js` quebrou 4 casos — porque adicionei `riskState.setEquity(...)` no `dailyCapJob` e o fake de `riskState` daquele teste não tem `setEquity` (a chamada lança e o try/catch engole, abortando o snapshot). Vou ver o fake e adicionar o seam:
+
+## 🤖 Claude *(01:36:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend; grep -n \"riskState\\|setHalt\\|clearDailyCap\\|setEquity\\|const fake\" scripts/sim/dailyCap.test.js | head -30",
+  "description": "Find fake riskState in dailyCap.test.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 8: * riskState / telegram / logger no require.cache ANTES de requerer o dailyCapJob, e dirige checkCap() com fixtures.
+> 23:let haltCalls = [];           // captura riskState.setHalt(on,reason,source)
+> 26:const fakeExchange = (settings) => ({ balance: async () => BAL });
+> 27:const fakeBeholder = { getMemory: (symbol, key) => (key === 'MINI_TICKER' && PRICES[symbol] != null ? { close: PRICES[symbol] } : undefined) };
+> 28:const fakeSettings = { getDefaultSettings: async () => ({ id: 1, accessKey: 'k', secretKey: 's', apiUrl: 'https://api.binance.com/api', streamUrl: 'wss://x' }) };
+> 29:const fakeRiskState = {
+> 31:    clearDailyCap: () => false,
+> 32:    setHalt: (on, reason, source) => { haltCalls.push({ on, reason, source }); return true; },
+> 35:const fakeLogger = () => { };
+> 36:const fakeTelegram = async () => { };
+> 42:    injectModule(path.join(SRC, 'riskState.js'), fakeRiskState);
+> ```
+
+## 🤖 Claude *(01:36:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js",
+  "offset": 29,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 29	const fakeRiskState = {
+> 30	    dayKeyUTC: () => DAY,
+> 31	    clearDailyCap: () => false,
+> 32	    setHalt: (on, reason, source) => { haltCalls.push({ on, reason, source }); return true; },
+> 33	    getState: () => ({ halted: false, dailyCap: { on: false }, source: null }),
+> 34	};
+> 35	const fakeLogger = () => { };
+> 36	const fakeTelegram = async () => { };
+> ```
+
+## 🤖 Claude *(01:36:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js",
+  "old_string": "const fakeRiskState = {\n    dayKeyUTC: () => DAY,\n    clearDailyCap: () => false,\n    setHalt: (on, reason, source) => { haltCalls.push({ on, reason, source }); return true; },\n    getState: () => ({ halted: false, dailyCap: { on: false }, source: null }),\n};",
+  "new_string": "let lastEquityPub = null;     // captura riskState.setEquity(v) \u2014 o dailyCapJob publica o equity quente p/ o %-teto\nconst fakeRiskState = {\n    dayKeyUTC: () => DAY,\n    clearDailyCap: () => false,\n    setHalt: (on, reason, source) => { haltCalls.push({ on, reason, source }); return true; },\n    setEquity: (v) => { lastEquityPub = v; },\n    getState: () => ({ halted: false, dailyCap: { on: false }, source: null }),\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:36:45)*
+
+
+## 🤖 Claude *(01:36:46)*
+
+Adiciono uma asserção do novo contrato (dailyCapJob publica o equity quente) pra travá-lo na suíte. Deixa eu ver onde o baseline é testado:
+
+## 🤖 Claude *(01:36:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend; grep -n \"baseline do dia = equity\\|check(\\|function check\\|checkEq\\|passed++\" scripts/sim/dailyCap.test.js | head -20",
+  "description": "Find assertion helper and baseline test in dailyCap.test.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 54:function checkTrue(name, cond) { if (cond) passed++; else { failed++; console.error(`  ✗ ${name}`); } }
+> 55:function check(name, actual, expected) { const ok = String(actual) === String(expected); if (ok) passed++; else { failed++; console.error(`  ✗ ${name}: got ${actual} exp ${expected}`); } }
+> 66:    check('baseline do dia = equity', job.getStatus().snapshot && job.getStatus().snapshot.equity, 100);
+> 91:    check('LD* avaliado pelo subjacente (LDLTC→LTC×$44)', job.getStatus().snapshot && job.getStatus().snapshot.equity, 94);
+> ```
+
+## 🤖 Claude *(01:36:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js",
+  "offset": 58,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 58	function bal(obj) { BAL = {}; for (const [c, v] of Object.entries(obj)) BAL[c] = { available: String(v), onOrder: '0' }; }
+> 59	
+> 60	(async () => {
+> 61	    // ===== Cenário 1: baseline do dia + LIMIAR -5% exato (piso = baseline×0.95) =====
+> 62	    let job = freshJob();
+> 63	    PRICES = {};
+> 64	    bal({ USDT: 100 });                         // equity 100
+> 65	    await job.checkCap();                        // 1ª passada → snapshota o baseline, NÃO halta
+> 66	    check('baseline do dia = equity', job.getStatus().snapshot && job.getStatus().snapshot.equity, 100);
+> 67	    checkTrue('estabelecer baseline NÃO halta', haltCalls.length === 0);
+> 68	
+> 69	    bal({ USDT: 96 });                           // -4% → ACIMA do piso ($95) → não dispara
+> ```
+
+## 🤖 Claude *(01:36:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js",
+  "old_string": "    check('baseline do dia = equity', job.getStatus().snapshot && job.getStatus().snapshot.equity, 100);\n    checkTrue('estabelecer baseline N\u00c3O halta', haltCalls.length === 0);",
+  "new_string": "    check('baseline do dia = equity', job.getStatus().snapshot && job.getStatus().snapshot.equity, 100);\n    checkTrue('estabelecer baseline N\u00c3O halta', haltCalls.length === 0);\n    check('publica o equity QUENTE p/ o %-teto (riskState.setEquity)', lastEquityPub, 100);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:37:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend; AES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | tail -22",
+  "description": "Re-run full simulation suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sim/dailyCap.test.js ===
+> 
+> dailyCap.test.js: 10 passed, 0 failed
+> 
+> === sim/farmTriggers.test.js ===
+> 
+> farmTriggers.test.js: 9 passed, 0 failed
+> 
+> === sim/feeCalc.test.js ===
+> 
+> feeCalc.test.js: 11 passed, 0 failed
+> 
+> === sim/integration.test.js ===
+> 
+> integration.test.js: 24 passed, 0 failed
+> 
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 28 passed, 0 failed
+> 
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(01:37:14)*
+
+
+## 🤖 Claude *(01:37:15)*
+
+6/6 arquivos OK (105 asserts — subiu de 90; adicionei os casos do %-teto + a asserção do publish). Valido sintaxe dos arquivos tocados e gero o diff pra revisão:
+
+## 🤖 Claude *(01:37:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nfor f in src/riskState.js src/dailyCapJob.js src/utils/exchange.js scripts/sim/riskGuard.test.js scripts/sim/dailyCap.test.js; do\n  node --check \"$f\" && echo \"OK  $f\" || echo \"FAIL $f\"\ndone",
+  "description": "Syntax-check all changed files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK  src/riskState.js
+> OK  src/dailyCapJob.js
+> OK  src/utils/exchange.js
+> OK  scripts/sim/riskGuard.test.js
+> OK  scripts/sim/dailyCap.test.js
+> ```
+
+## 🤖 Claude *(01:37:23)*
+
+
+## 🤖 Claude *(01:37:29)*
+
+Sintaxe OK em todos. Os arquivos editados viraram `ubuntu`-owned (gotcha conhecido) — devolvo pro `gcrux-tradeux` e gero o diff pra revisão:
+
+## 🤖 Claude *(01:37:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/riskState.js backend/src/dailyCapJob.js backend/src/utils/exchange.js backend/scripts/sim/riskGuard.test.js backend/scripts/sim/dailyCap.test.js 2>/dev/null\necho \"=== diff stat ===\"\ngit -c safe.directory='*' diff --stat -- backend/src backend/scripts\necho \"=== owners ===\"\nstat -c '%U %n' backend/src/riskState.js backend/src/utils/exchange.js backend/scripts/sim/riskGuard.test.js",
+  "description": "Chown changed files to gcrux and show diff stat"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === diff stat ===
+>  backend/scripts/sim/dailyCap.test.js  |   3 +
+>  backend/scripts/sim/riskGuard.test.js | 119 ++++++++++++++++++++++++----------
+>  backend/src/dailyCapJob.js            |   5 ++
+>  backend/src/riskState.js              |  13 +++-
+>  backend/src/utils/exchange.js         |  99 ++++++++++++++++++----------
+>  5 files changed, 167 insertions(+), 72 deletions(-)
+> === owners ===
+> gcrux-tradeux backend/src/riskState.js
+> gcrux-tradeux backend/src/utils/exchange.js
+> gcrux-tradeux backend/scripts/sim/riskGuard.test.js
+> ```
+
+## 🤖 Claude *(01:37:34)*
+
+
+## 🤖 Claude *(01:37:35)*
+
+Mudança contida (5 arquivos, +167/−72). Agora o gate: lanço **QA** e **Tech Lead** em paralelo pra revisar antes de qualquer deploy. Salvo o diff pra eles:
+
+## 🤖 Claude *(01:37:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' diff -- backend/src backend/scripts > /tmp/pct-cap.diff 2>&1\necho \"diff bytes: $(wc -c </tmp/pct-cap.diff)\"",
+  "description": "Save full diff for review agents"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> diff bytes: 27287
+> ```
+
+## 🤖 Claude *(01:38:09)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review do %-teto",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise uma mudan\u00e7a no money-path do TradeUX (backend) ANTES de deploy em MAINNET REAL (sistema \ud83d\udd34 LIVE, equity ~$149). Veredito PASS / PASS COM RESSALVAS / FAIL com achados por severidade e os testes concretos a rodar.\n\n## O que mudou e POR QU\u00ca\nO teto de risco por ordem (`assertWithinRisk` em `backend/src/utils/exchange.js`) era um valor FIXO em USDT (`MAX_ORDER_NOTIONAL_USDT`, hoje $50 no .env) aplicado a COMPRA **e VENDA**. Isso causou um bug real: a venda no-loss de ~$40 do LTC foi BLOQUEADA por um teto de $25 (band-aid). Agora:\n1. **VENDA fica ISENTA do teto de notional** (vender reduz risco/exposi\u00e7\u00e3o e j\u00e1 \u00e9 limitada pela carteira no calcQty); s\u00f3 o HALT cobre venda. Detecta venda por `/SELL/i.test(action)` \u2192 cobre `'SELL'` e `'OCO-SELL'`.\n2. **COMPRA** passa a ser capada por `cap = min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY \u00d7 equityTrade\u00e1vel)`, nunca abaixo de `MIN_ORDER_NOTIONAL_FLOOR`.\n3. O equity trade\u00e1vel QUENTE \u00e9 publicado pelo `dailyCapJob` (que j\u00e1 o calcula mark-to-market a cada ~60s, fail-safe, conta Earn LD*) no `riskState` (m\u00f3dulo dependency-free) via novos `setEquity/getEquity`; o guard s\u00edncrono l\u00ea de l\u00e1. Equity ausente/frio/velho (> `EQUITY_MAX_AGE_MS`, default 10min) \u2192 ignora a % e cai pro teto absoluto (degrada\u00e7\u00e3o segura).\nPar\u00e2metros aprovados pelo dono: `MAX_ORDER_PCT_EQUITY=0.20` (20%), teto absoluto `MAX_ORDER_NOTIONAL_USDT=100` (runaway guard). A $149 \u2192 compra capada em ~$30.\n\n## Arquivos (diff salvo em /tmp/pct-cap.diff \u2014 leia-o inteiro; o working tree em /home/gcrux-tradeux/tradeux tem as mudan\u00e7as aplicadas)\n- `backend/src/utils/exchange.js` \u2014 novo `assertWithinRisk` (isen\u00e7\u00e3o de venda + %-teto + piso + teto absoluto) + doc block + coment\u00e1rio do seam.\n- `backend/src/riskState.js` \u2014 cache `equitySnap` + `setEquity()`/`getEquity()` + export.\n- `backend/src/dailyCapJob.js` \u2014 publica `riskState.setEquity(eq.equity)` em ciclo `valued` (checkCap e reSnapshot).\n- `backend/scripts/sim/riskGuard.test.js` \u2014 reescrito p/ o novo contrato (28 asserts).\n- `backend/scripts/sim/dailyCap.test.js` \u2014 fake riskState ganhou `setEquity` + asser\u00e7\u00e3o do publish.\n\n## Foco da revis\u00e3o (seja adversarial)\n1. **Furo de seguran\u00e7a na isen\u00e7\u00e3o de venda**: algum caminho de COMPRA \u00e9 rotulado de forma que `/SELL/i` o isente por engano? (ex.: action contendo \"SELL\" numa compra). E o inverso \u2014 alguma venda leg\u00edtima que N\u00c3O bate `/SELL/i`? Considere o cofre BTC (grupo baseline): a venda do cofre fica coberta s\u00f3 por HALT + trava do MCP \u2014 isso \u00e9 aceit\u00e1vel? O teto fixo protegia algo que agora fica descoberto?\n2. **Degrada\u00e7\u00e3o com equity frio/velho/zero**: o fallback pro teto absoluto est\u00e1 correto em TODOS os ramos? H\u00e1 risco de a % dimensionar por equity stale? E se `getEquity` faltar (fakes/boot antes do 1\u00ba ciclo do dailyCap)?\n3. **Ciclo de require / boot order**: `exchange.js` \u2192 `riskState` (ok, j\u00e1 existia). `dailyCapJob` \u2192 `riskState`. Algum ciclo novo? O guard chama `getEquity` antes do dailyCapJob ter publicado (boot) \u2192 cai no teto absoluto? confirme.\n4. **Cobertura de notional**: quote (funil), price\u00d7qty (LIMIT/OCO), MARKET-por-qty (MINI_TICKER), STOP/TP (stopPrice) \u2014 todas ainda avaliadas na COMPRA? A label `basis` (% vs absoluto) est\u00e1 correta nos limites (pctCap==absCeil, pctCap=Infinity)?\n5. **Idempot\u00eancia/efeitos colaterais** no dailyCapJob (publicar equity n\u00e3o deve alterar o disparo do cap nem o snapshot).\n6. **Regress\u00e3o dos testes**: o contrato testado cobre os casos novos e os antigos? Algo importante N\u00c3O testado?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` e confirme 6/6. Aponte testes faltantes concretos. N\u00c3O precisa rodar o stack inteiro. Responda em pt-BR."
+}
+```
+
+## 🤖 Claude *(01:38:29)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Tech Lead review do %-teto",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) de uma mudan\u00e7a no money-path do TradeUX (backend) que vai pra MAINNET REAL (\ud83d\udd34 LIVE, equity ~$149, trunk-based direct-to-master). Avalie design, manutenibilidade, risco, seguran\u00e7a e ader\u00eancia \u00e0s conven\u00e7\u00f5es (coment\u00e1rios em pt-BR, camada utils=boundary).\n\n## Contexto e objetivo\nO teto de risco por ordem (`assertWithinRisk`, `backend/src/utils/exchange.js`) era um valor FIXO em USDT aplicado a COMPRA e VENDA. Bug real: travou a venda no-loss de ~$40 do LTC (teto $25). Objetivo aprovado pelo dono: trocar o teto fixo por um **%-teto do equity que ESCALA com o capital** (motor do dimensionamento), **isentando VENDA** (reduz risco), com piso e teto absoluto de seguran\u00e7a. Par\u00e2metros: 20% do equity, teto absoluto $100.\n\n## Design implementado\n- `assertWithinRisk`: HALT cobre tudo (inalterado) \u2192 VENDA (`/SELL/i.test(action)`) retorna cedo (isenta) \u2192 COMPRA capada por `cap = min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY \u00d7 equityQuente)`, com piso `MIN_ORDER_NOTIONAL_FLOOR`.\n- Equity quente: o `dailyCapJob` j\u00e1 computa equity mark-to-market a cada ~60s (fail-safe, Earn LD*); agora publica no `riskState` (dependency-free, sem ciclo) via `setEquity`; o guard s\u00edncrono l\u00ea via `getEquity`. Equity ausente/velho (>10min, `EQUITY_MAX_AGE_MS`) \u2192 cai pro teto absoluto.\n- Backward-compat: com `MAX_ORDER_PCT_EQUITY=0` o comportamento volta ao teto fixo (s\u00f3 que venda isenta). Tudo ajust\u00e1vel por env sem deploy de c\u00f3digo.\n\n## Arquivos (diff em /tmp/pct-cap.diff; working tree aplicado em /home/gcrux-tradeux/tradeux)\n- `backend/src/utils/exchange.js`, `backend/src/riskState.js`, `backend/src/dailyCapJob.js`, `backend/scripts/sim/riskGuard.test.js` (reescrito), `backend/scripts/sim/dailyCap.test.js`.\n\n## Avalie em particular (must-fix vs nice-to-have)\n1. **Arquitetura do equity quente**: usar `riskState` como barramento (publish do dailyCapJob \u2192 read do guard) \u00e9 a escolha certa, ou acopla demais coisas que deveriam ser separadas? Alternativas melhores dado que o guard \u00e9 S\u00cdNCRONO e n\u00e3o pode fazer wallet-call por ordem?\n2. **Postura de risco da isen\u00e7\u00e3o de venda**: defens\u00e1vel que a venda n\u00e3o tenha NENHUM teto de tamanho no backend (s\u00f3 HALT + MCP vault guard p/ BTC)? Algum cen\u00e1rio (automa\u00e7\u00e3o buggada, runaway SELL) que justifique manter um teto absoluto tamb\u00e9m na venda?\n3. **Escolha dos par\u00e2metros como ENV vs hardcode**: `EQUITY_MAX_AGE_MS`, piso, etc. \u2014 granularidade ok? Defaults s\u00e3os?\n4. **Observabilidade**: o bloqueio loga a base (% vs absoluto). Falta surfar o cap efetivo em algum lugar (cockpit/agente) p/ o dono entender por que uma compra foi capada? (nice-to-have?)\n5. **Conven\u00e7\u00f5es**: coment\u00e1rios pt-BR, naming, o doc block ficou claro? D\u00edvida t\u00e9cnica introduzida?\n6. Confirme que N\u00c3O h\u00e1 migration nem mudan\u00e7a de schema (n\u00e3o h\u00e1) e que a mudan\u00e7a \u00e9 env-tun\u00e1vel.\n\nA su\u00edte de simula\u00e7\u00e3o roda com `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (deve dar 6/6). Foque na decis\u00e3o de merge, n\u00e3o em re-rodar tudo. Liste must-fix separado de sugest\u00f5es. Responda em pt-BR."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Suíte 6/6 OK (riskGuard 28, dailyCap 10). Tenho o diff completo, o estado aplicado e o contexto. Segue o review.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nMudança bem-desenhada, bem-escopada e reversível por env. Resolve um bug real e comprovado (teto fixo barrava venda no-loss legítima de ~$40 do LTC vs teto $25) e troca um teto que NÃO escalava por um motor de dimensionamento que escala com o capital. O design respeita as convenções (chokepoint único em `utils/exchange.js`, comentários pt-BR, boundary preservado), é fail-safe nas degradações, sem migration/schema, e tem cobertura de simulação que exercita exatamente os caminhos novos (Seções A-D, 28 asserts). Para o estado atual (🔴 LIVE, equity ~$149) é mergeável — com 1 ressalva de risco que recomendo endereçar antes ou logo após o flip dos params.\n\nRacional ponto-a-ponto do que foi pedido para avaliar:\n\n**1. Arquitetura do equity quente (riskState como barramento) — escolha CERTA.** O guard é síncrono e está no caminho de TODA ordem; não pode fazer wallet-call por ordem (latência + rate-limit + falha de rede = fail-open acidental). `riskState` já é o módulo dependency-free e sem ciclo (não requer o app) que o `exchange.js` importa para o HALT — reusá-lo como barramento publish/read é coerente e não acopla nada novo: o `dailyCapJob` já computa esse equity mark-to-market a cada ~60s, então o custo marginal é uma atribuição. A alternativa "cache TTL no exchange chamando wallet" seria pior (rede no hot-path). `setEquity` valida `Number.isFinite && >0`, `getEquity` é puro, e o `equitySnap` deliberadamente NÃO entra no `isHalted()` — é só um número para o teto. Bom isolamento. Sem objeção.\n\n**2. Postura de risco da isenção TOTAL de venda — defensável, mas é o ÚNICO ponto que eu sinalizo.** Conceptualmente a venda reduz exposição e já é capada na carteira pelo `calcQty`, então isentá-la do teto de notional resolve o bug e dispensa o symbol-aware de BTC. Concordo com a direção. O risco residual: uma automação buggada / runaway SELL passa SEM nenhum teto de tamanho no backend — a única defesa é o HALT (frio até alguém apertar) e o vault guard do MCP, que só cobre **SELL-BTC** e só no caminho do agente. Uma venda runaway de uma ALT (LTC/BNB/ADA) via automação no caminho nativo (não-MCP) não tem teto algum. Hoje o blast radius é pequeno (Canary FARM-ONLY, posições alt minúsculas, `calcQty` limita à carteira), então não bloqueio. Mas o cap fixo anterior, na venda, funcionava como segunda linha contra um bug de `qty` (ex.: a memória `getFarmPosition`/`TREND_QTY` calcular qty errado). Recomendação concreta como nice-to-have forte: manter um teto absoluto MUITO folgado também na venda (ex.: `MAX_SELL_NOTIONAL_USDT` ≈ 2-3× equity, default desligado) como rede anti-runaway, sem reintroduzir o bug do no-loss (que era um teto APERTADO). Não é must-fix dado o estado canary, mas anote no follow-up antes de ampliar para Trend/Baseline.\n\n**3. ENV vs hardcode / defaults — ok.** `EQUITY_MAX_AGE_MS` (default 600000 = 10min) é são: o `dailyCapJob` publica a ~60s, então 10min tolera ~10 ciclos perdidos antes de degradar pro teto absoluto — folga boa sem ficar dimensionando por equity estagnado. `MIN_ORDER_NOTIONAL_FLOOR`/`MAX_ORDER_PCT_EQUITY`/`MAX_ORDER_NOTIONAL_USDT` todos parseados defensivamente (`Number.isFinite`, faixa `0<pct<1`, `>0`). Backward-compat real: `MAX_ORDER_PCT_EQUITY=0` volta ao teto fixo. Granularidade adequada — não precisa de mais env.\n\n**4. Observabilidade — nice-to-have legítimo.** O bloqueio loga base e cap efetivo (`(${basis})` distingue "% do equity" vs "teto absoluto") — bom para post-mortem no `system.log`. O que falta é surfar o **cap efetivo corrente** (não só no momento do bloqueio) pro cockpit/agente, pra o dono entender por que uma compra foi capada ANTES de bater no teto. Sugestão: expor `cap` derivado em `status` do cockpit (o agente já lê `status.groups`/`status.paper`). Não bloqueia.\n\n**5. Convenções / dívida técnica — em conformidade.** Comentários pt-BR, doc block reescrito e claro (explica o "porquê" da isenção e da degradação segura), naming consistente (`pctCap`/`absCeil`/`cap`). Os early-returns (`SELL` isenta → não-USDT isenta → `!Number.isFinite(cap)` inerte) deixam o fluxo legível. Zero dívida nova relevante.\n\n**6. Schema/env — confirmado.** Nenhuma migration, nenhum model tocado, nenhuma mudança de schema. Só `backend/src/utils/exchange.js`, `backend/src/riskState.js`, `backend/src/dailyCapJob.js` e os 2 testes de sim. 100% env-tunável; requer apenas restart do backend para reler os `const` do load (já documentado no doc block).\n\n---\n\n### Observações finas (não-bloqueantes)\n- `reSnapshot()` (re-baseline manual) também chama `setEquity` — correto, mantém o equity quente coerente quando o operador re-baseline. Bem pensado.\n- O `dailyCapJob` só publica `setEquity` no ciclo `valued` (após o fail-safe que retorna em equity frio), então o guard nunca dimensiona por um equity de cálculo incompleto. Esse acoplamento de ordem está correto e comentado, mas é sutil: se um refactor futuro mover o `return` do fail-safe, o equity quente passa a publicar lixo. Vale um comentário "NÃO mover acima do fail-safe" no `dailyCapJob` (já há um, mas reforce). Nice-to-have.\n- Verificação de coerência de params: com `MAX_ORDER_PCT_EQUITY=0.20` e equity ~$149 → cap ≈ $29,80; teto absoluto $100. Para o canary FARM-ONLY isso é folgado vs o teto Farm de $25/símbolo (a trava de exposição do Farm é a que morde primeiro). Coerente com a intenção do dono.\n\n---\n\n## Must-fix (bloqueiam o merge)\n- **Nenhum.** Suíte 6/6, sem schema, reversível por env, bug real corrigido.\n\n## Nice-to-have (follow-up)\n1. **(risco, prioritário antes de ampliar p/ Trend/Baseline)** Rede anti-runaway na VENDA: teto absoluto FOLGADO opt-in (`MAX_SELL_NOTIONAL_USDT`, default off, ~2-3× equity) — recupera a 2ª linha contra `qty` buggado sem reintroduzir o bug do no-loss.\n2. Surfar o `cap` efetivo corrente no cockpit/`status` pro agente/dono entenderem capamentos antes do bloqueio.\n3. Reforçar comentário em `dailyCapJob` de que o `setEquity` depende de estar APÓS o fail-safe `valued`.\n\n---\n\n## Decisão de merge\n**APPROVE COM SUGESTÕES — mergeável agora** (trunk-based direct-to-master, via fluxo root+chave-ubuntu+chown).\n\nCondições/ordem:\n1. **Antes do deploy:** confirmar os params no `.env` ao vivo (`MAX_ORDER_PCT_EQUITY=0.20`, `MAX_ORDER_NOTIONAL_USDT=100`, e definir `MIN_ORDER_NOTIONAL_FLOOR` — sugiro o `MIN_NOTIONAL` da Binance, p.ex. ~$10-11, p/ não barrar ordem mínima legítima com equity pequeno). **Reaplicar no `.env` é runtime não-git** (igual ao band-aid 25→50 do HANDOFF) → registrar no HANDOFF e reiniciar o backend.\n2. **Smoke vivo pós-deploy:** confirmar no `logs/system.log` que o `dailyCapJob` está publicando equity (linha `valued`) e que `GET /system/halt` segue intacto; provocar 1 bloqueio de compra (ou só observar) p/ ver o `(basis)` correto no log.\n3. **Follow-up agendado:** nice-to-have #1 (teto folgado na venda) ANTES de tirar o canary de FARM-ONLY e religar Trend/Baseline.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (chokepoint `assertWithinRisk`, linhas 44-85)\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js` (barramento `setEquity`/`getEquity`)\n- `/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js` (publish do equity quente)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js` e `/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js` (cobertura)'}, {'type': 'text', 'text': "agentId: a2cf789201cb7c4a4 (use SendMessage with to: 'a2cf789201cb7c4a4' to continue this agent)\n<usage>subagent_tokens: 50560\ntool_uses: 4\nduration_ms: 71463</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tenho todo o contexto necessário. As mudanças estão isoladas no working tree (não-commitadas), suíte 6/6, e confirmei as labels de action e a interação com o teto de exposição do Farm. Deixe-me confirmar um último ponto adversarial sobre a venda do cofre BTC e a degradação com `getEquity` ausente nos fakes — verificar se o guard com `riskState.getEquity &&` é defensivo o suficiente.\n\nA análise está completa. Segue o relatório.\n\n---\n\n# REVISÃO MONEY-PATH — %-teto de risco (isenção de venda + escala por equity)\n\n**Escopo:** working tree não-commitado (`git status`: 5 arquivos de código/teste + 2 backtest JSON/MD irrelevantes). Vivo==master==`2c55fe0`; a mudança NÃO está commitada ainda. Suíte de simulação: **6/6 arquivos OK, riskGuard 28/28, dailyCap 10/10**.\n\n## VEREDITO GERAL: **PASS COM RESSALVAS**\n\nA lógica está correta, bem isolada, fail-safe na direção certa, e os testes cobrem o contrato novo e o antigo. As ressalvas são de **dimensionamento/cobertura operacional** (não bugs de código), e uma ressalva REAL de comportamento: o teto absoluto fixo que antes cobria a VENDA agora desaparece — isso é intencional e aceitável, mas amplia a superfície coberta-só-pelo-HALT.\n\n---\n\n## 1. Furo de segurança na isenção de venda — `/SELL/i.test(action)`\n\n**VEREDITO: PASS**\n\nRastreei TODOS os callers de `assertWithinRisk`. O `action` NUNCA é uma string livre/user-controlled — é um literal de código em cada chamada:\n- `buy()` (`exchange.js:145`) → `\'BUY\'` literal. Callers: `beholder.js:544`, `funnelJob.js:163`, `ordersController.js:124` — todos só atingem `buy()` quando `side===\'BUY\'`.\n- `sell()` (`exchange.js:154`) → `\'SELL\'` literal.\n- `oco()` (`exchange.js:167`) → `OCO-${side}`, e `placeOco` (`beholder.js:332-334`) **lança** se `side !== \'SELL\'`. Logo só existe `\'OCO-SELL\'`.\n\n**Não há caminho de COMPRA rotulado com "SELL"** nem venda legítima que escape do `/SELL/i` (cobre `SELL` e `OCO-SELL`; não existe `OCO-BUY` no código). Regex sem âncora é seguro aqui justamente porque o domínio de `action` é fechado.\n\n**[MÉDIA] Cofre BTC (grupo baseline) fica descoberto pelo teto de notional — INTENCIONAL, mas registre o trade-off:** a venda do cofre BTC (id baseline) agora passa isenta. A proteção do cofre passa a depender exclusivamente de (a) HALT e (b) trava SELL-BTC no MCP. **Atenção:** a trava do MCP só cobre o caminho do agente; uma venda de BTC disparada por **automação baseline** ou por **ordem manual na UI** (`ordersController`) NÃO passa pela trava do MCP e agora também não tem o teto fixo. Antes, o `MAX_ORDER_NOTIONAL_USDT=50` limitava o dano de uma venda-BTC errante a ~$50/ordem; agora o único freio backend é o HALT. O comentário antigo no código reconhecia exatamente esse risco (id38 "BTC Scalp Excess"). **Aceitável no estado atual** (baseline PARADO via painel de grupos, id38 isActive=0), mas é uma regressão de defesa-em-profundidade que vale anotar no HANDOFF: *se o grupo baseline for religado, a venda do cofre BTC fica coberta SÓ por HALT.*\n\n## 2. Degradação com equity frio/velho/zero\n\n**VEREDITO: PASS**\n\nO fallback pro teto absoluto está correto em todos os ramos (`exchange.js:57-68`):\n- `getEquity` ausente: `(riskState.getEquity && riskState.getEquity()) || null` — guard defensivo. Nos fakes/boot, vira `null` → `fresh=false` → `pctCap=Infinity` → `cap=absCeil`. ✓\n- `value=null` / `at=null` (boot antes do 1º ciclo): `fresh=false` → cai no absoluto. ✓ (testado seção B "equity frio").\n- velho (`>EQUITY_MAX_AGE_MS`): `fresh=false` → absoluto. ✓ (testado).\n- A % **nunca** dimensiona por equity stale: a checagem `fresh` exige `at && (Date.now()-eq.at) <= EQUITY_MAX_AGE_MS`. ✓\n- `setEquity` rejeita não-finito/≤0 (`riskState.js:43-45`) → equity zero nunca vira cap zero; fica no último válido ou null.\n\n**[BAIXA] Janela de stale-publish dentro do EQUITY_MAX_AGE:** se o `dailyCapJob` entrar em fail-safe (preços frios) por <10min, ele **para de publicar** mas o `equitySnap` antigo continua "fresh" até envelhecer 10min. Cenário: equity REAL despencou mas o MINI_TICKER está frio → o guard dimensiona a compra pelo equity de até 10min atrás (possivelmente maior). Impacto limitado: é só o teto de COMPRA (compra é a direção de risco que estamos tentando limitar de qualquer forma), o `absCeil=$100` ainda corta o runaway, e o cap diário já está armado pelo mesmo fail-safe. Aceitável; documentar.\n\n## 3. Ciclo de require / boot order\n\n**VEREDITO: PASS**\n\n`exchange.js → riskState` já existia (top-level, sem ciclo — `riskState` só requer fs/path/logger). `dailyCapJob → riskState` idem. Nenhum ciclo novo. No boot, o guard chama `getEquity()` antes do 1º ciclo do `dailyCapJob` publicar → `{value:null}` → cai no teto absoluto. Confirmado e correto (degradação segura).\n\n## 4. Cobertura de notional na COMPRA\n\n**VEREDITO: PASS**\n\nTodas as formas seguem avaliadas na compra, idênticas ao código anterior, só reordenadas após o early-return de venda:\n- quote/funil (`quoteOrderQty`), LIMIT/OCO (`price×qty`), MARKET-por-qty (deriva `MINI_TICKER`), STOP/TP (`stopPrice`). ✓\n- A label `basis` está correta: `(Number.isFinite(pctCap) && pctCap <= absCeil) ? \'20% do equity\' : \'teto absoluto\'`. Nos limites — `pctCap==absCeil` rotula "% do equity" (cosmético, inócuo); `pctCap=Infinity` (equity frio) → `Number.isFinite(pctCap)=false` → "teto absoluto". ✓\n\n**[BAIXA] Funil (`funnelJob.js:163`) está OFF/SHADOW**, mas se religado, a compra de BTC via `quoteOrderQty` passará pelo %-teto corretamente — vale revalidar o sizing do funil contra `cap=~$30` quando a Fase 4 sair do shadow.\n\n## 5. Idempotência / efeitos colaterais no dailyCapJob\n\n**VEREDITO: PASS**\n\n`riskState.setEquity(eq.equity)` é publicado **depois** do early-return de fail-safe (`:155-171`) e **antes** do snapshot/avaliação do drawdown — não altera o disparo do cap nem o `SNAP`. `reSnapshot` (`:216`) publica antes de re-baseline. `setEquity` é puro (escreve um cache local, sem side-effect de HALT). Re-publicar o mesmo valor é idempotente. ✓\n\n## 6. Regressão dos testes\n\n**VEREDITO: PASS COM RESSALVAS**\n\nCobre bem: HALT (compra+venda), venda isenta em TODAS as formas (price×qty, OCO-SELL, MARKET-por-qty, STOP, venda gigante $44k), %-teto, teto-abs dominando, equity velho/frio/piso, tudo-off, par não-USDT. Contrato antigo (HALT, teto absoluto, MINI frio passa) preservado.\n\n**Lacunas concretas de teste (recomendo adicionar antes de commitar):**\n- **[MÉDIA] `OCO-SELL` na SEÇÃO B (%-teto ON)** não é testado — só na seção A (teto absoluto). Adicionar: `checkOk(\'%-teto: OCO-SELL $88 isenta\', () => g(\'OCO-SELL\',\'LTCUSDT\',2,44,{abovePrice:44}))` com EQUITY fresco $150. Garante que a isenção de venda precede o cálculo do %-teto (hoje precede, mas não há teste).\n- **[BAIXA] `EQUITY_MAX_AGE_MS` na fronteira exata** (`Date.now()-at === EQUITY_MAX_AGE_MS` → `<=` deve ser `fresh`). O `staleEq` usa 11min (folgado); falta o teste de borda.\n- **[BAIXA] `getEquity` ausente do fake** (cobertura do `riskState.getEquity &&` defensivo): nenhum teste exercita o ramo em que `getEquity` é `undefined`. O fake sempre o define.\n- **[BAIXA] `MAX_ORDER_PCT_EQUITY` fora de range** (`>=1`, negativo, `\'abc\'`): o load faz `_pctEq > 0 && _pctEq < 1` → 0 (desligado). Não testado, mas a guarda existe.\n\n---\n\n## Testes que eu rodaria antes do deploy\n\n1. **Suíte de simulação** (FEITO): `cd backend && AES_KEY=… npm run test:sim` → 6/6 ✓.\n2. **Smoke do %-teto ao vivo** (sem ordem real): num shell node no container backend, injetar `riskState.setEquity(149)` e chamar `exchange.assertWithinRisk(\'BUY\',\'LTCUSDT\',null,null,{quoteOrderQty:31})` → deve lançar "20% do equity / teto $29.80"; `…30` deve passar. Confirma que o publish do dailyCapJob chega ao guard em runtime.\n3. **Confirmar `.env` de produção** antes do restart — não consegui ler o `.env` (fora do working tree). **Bloqueador operacional:** o dono aprovou `MAX_ORDER_PCT_EQUITY=0.20`, `MAX_ORDER_NOTIONAL_USDT=100`, e implicitamente um `MIN_ORDER_NOTIONAL_FLOOR` (senão a $149 o cap $29.80 pode ficar abaixo do `minNotional` de algum par e barrar a ordem mínima legítima — exatamente o bug que motivou a mudança!). **Verificar que `MIN_ORDER_NOTIONAL_FLOOR` está setado** (ex.: ~$11-12, acima do maior `minNotional` dos pares do Farm). Sem ele, com equity pequeno o %-teto pode reintroduzir o bloqueio de ordem mínima.\n4. **Verificar idade do equity pós-restart**: `GET /system/halt` + logs `[dailyCap] baseline` confirmando que o equity quente é publicado em <60s (1º ciclo costuma ser fail-safe se MINI frio).\n5. **Regressão do cap diário**: confirmar via `getStatus()` que publicar equity não mexeu em `snapshot`/`floor`/`tripped`.\n\n---\n\n## Recomendação de merge\n\n**PASS COM RESSALVAS — pode ir, com 2 ações antes do restart:**\n\n1. **[BLOQUEADOR LEVE] Confirmar `MIN_ORDER_NOTIONAL_FLOOR` no `.env`** ≥ maior `minNotional` dos pares operados — senão o %-teto a $149 reintroduz o bloqueio de ordem mínima (o próprio bug que essa mudança conserta). O código está certo; o risco é de configuração.\n2. **[ANOTAR NO HANDOFF] Cofre BTC:** a venda do cofre BTC agora é isenta do teto de notional → coberta SÓ por HALT + trava-MCP (que não cobre UI/automação baseline). Aceitável com baseline parado; documentar para quando religar.\n\nRecomendo também adicionar o teste **OCO-SELL sob %-teto ON** (MÉDIA) antes de commitar — é a única lacuna de contrato relevante. Não bloqueia o deploy, mas fecha o gap de cobertura. As demais lacunas são BAIXA.\n\n**Arquivos revisados:**\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (guard novo — `assertWithinRisk:44-85`)\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js` (`setEquity`/`getEquity:42-47`)\n- `/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js` (publish `:176`, `:216`)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js` (28 asserts)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js` (publish assert)\n- Callers verificados: `/home/gcrux-tradeux/tradeux/backend/src/beholder.js` (`:332-334`, `:543-546`), `/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js` (`:123-126`), `/home/gcrux-tradeux/tradeux/backend/src/funnelJob.js` (`:163`)'}, {'type': 'text', 'text': "agentId: a51f5232c0eec7ab5 (use SendMessage with to: 'a51f5232c0eec7ab5' to continue this agent)\n<usage>subagent_tokens: 80917\ntool_uses: 13\nduration_ms: 113026</usage>"}]
+> ```
+
+## 🤖 Claude *(01:41:12)*
+
+
+## 🤖 Claude *(01:41:17)*
+
+Os dois gates passaram **sem nenhum must-fix**:
+- **QA: PASS COM RESSALVAS** · **TL: APPROVE COM SUGESTÕES**
+
+Ambos convergiram em 3 pontos acionáveis. Endereço os baratos agora antes de commitar:
+
+1. **Definir `MIN_ORDER_NOTIONAL_FLOOR`** (QA "bloqueador leve"): sem piso, se o equity encolher o %-teto poderia re-bloquear a ordem mínima — o próprio bug que estamos consertando. A $149 não morde, mas é seguro setar.
+2. **Lacuna de teste MÉDIA (QA)**: falta `OCO-SELL` sob %-teto ON. Adiciono.
+3. **Reforçar comentário** no `dailyCapJob` (não mover o `setEquity` pra cima do fail-safe).
+
+Os follow-ups maiores (rede anti-runaway na venda do cofre BTC antes de religar Trend/Baseline; surfar o cap no cockpit) eu registro como tarefas, não bloqueiam. Aplicando os fixes:
+
+## 🤖 Claude *(01:41:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "old_string": "checkOk('%-teto: VENDA $88 segue isenta', () => g('SELL', 'LTCUSDT', 2, 44, {}));",
+  "new_string": "checkOk('%-teto: VENDA $88 segue isenta', () => g('SELL', 'LTCUSDT', 2, 44, {}));\ncheckOk('%-teto: OCO-SELL $88 isenta (isen\u00e7\u00e3o de venda precede o c\u00e1lculo do %-teto)', () => g('OCO-SELL', 'LTCUSDT', 2, 44, { abovePrice: 44 }));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:41:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js",
+  "old_string": "        // Publica o equity QUENTE p/ o %-teto de COMPRA (utils/exchange.assertWithinRisk). S\u00f3 em ciclo `valued`\n        // (acima j\u00e1 retornamos no fail-safe), ent\u00e3o o guard nunca dimensiona a compra por um equity frio.\n        riskState.setEquity(eq.equity);",
+  "new_string": "        // Publica o equity QUENTE p/ o %-teto de COMPRA (utils/exchange.assertWithinRisk). S\u00f3 em ciclo `valued`\n        // (acima j\u00e1 retornamos no fail-safe), ent\u00e3o o guard nunca dimensiona a compra por um equity frio.\n        // \u26a0\ufe0f N\u00c3O mover esta linha p/ ACIMA do early-return do fail-safe (linha ~155): publicaria equity de\n        // c\u00e1lculo incompleto e o %-teto passaria a dimensionar por lixo.\n        riskState.setEquity(eq.equity);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:41:35)*
+
+
+## 🤖 Claude *(01:41:36)*
+
+Agora confirmo o `minNotional` real dos pares operados pra setar o piso acima dele (sem chutar):
+
+## 🤖 Claude *(01:41:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset -a; source /home/gcrux-tradeux/tradeux/.env 2>/dev/null; set +a\nBASE=\"http://127.0.0.1:8090/api\"\nTOK=$(curl -s -m8 -X POST \"$BASE/login\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\nfor SY in BTCUSDT LTCUSDT BNBUSDT ADAUSDT; do\n  curl -s -m8 \"$BASE/symbols/$SY\" -H \"Authorization: $TOK\" 2>/dev/null \\\n   | python3 -c \"import sys,json\ntry:\n  s=json.load(sys.stdin)\n  print(\\\"  %-8s minNotional=%s stepSize=%s minLotSize=%s\\\"%(s.get(\\\"symbol\\\"),s.get(\\\"minNotional\\\"),s.get(\\\"stepSize\\\"),s.get(\\\"minLotSize\\\")))\nexcept Exception as e: print(\\\"  parse err\\\",e)\"\ndone\n' 2>&1 | head -10",
+  "description": "Get minNotional for operated pairs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   BTCUSDT  minNotional=5.00000000 stepSize=0.00001000 minLotSize=0.00001000
+>   LTCUSDT  minNotional=5.00000000 stepSize=0.00100000 minLotSize=0.00100000
+>   BNBUSDT  minNotional=5.00000000 stepSize=0.00100000 minLotSize=0.00100000
+>   ADAUSDT  minNotional=5.00000000 stepSize=0.10000000 minLotSize=0.10000000
+> ```
+
+## 🤖 Claude *(01:41:53)*
+
+
+## 🤖 Claude *(01:41:53)*
+
+Todos os pares têm `minNotional=$5`. Piso de **$12** fica confortavelmente acima (com folga pra fee/arredondamento) e não morde a $149 (só abaixo de ~$60 de equity). Re-rodo a suíte com o teste OCO-SELL novo:
+
+## 🤖 Claude *(01:41:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend; AES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | tail -6",
+  "description": "Re-run sim suite after fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 29 passed, 0 failed
+> 
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(01:42:10)*
+
+
+## 🤖 Claude *(01:42:11)*
+
+6/6, riskGuard 29/29. Tudo verde. Agora preparo o commit e o `.env`. Devolvo ownership dos arquivos reeditados e vejo as linhas do `.env` pra editar com precisão:
+
+## 🤖 Claude *(01:42:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/scripts/sim/riskGuard.test.js backend/src/dailyCapJob.js 2>/dev/null\necho \"=== linhas atuais do .env (tetos) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"MAX_ORDER_NOTIONAL_USDT|MAX_ORDER_PCT_EQUITY|MIN_ORDER_NOTIONAL_FLOOR|FARM_MAX_NOTIONAL_USDT\" /home/gcrux-tradeux/tradeux/.env'\necho \"=== como o backend roda: volume-mount ou imagem baked? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && grep -nA3 \"backend:\" docker-compose.yml | grep -iE \"volumes|build|image|src\" ; echo \"--- volumes do backend ---\"; awk \"/^  backend:/,/^  [a-z]/\" docker-compose.yml | grep -iE \"volume|/app|src|build|image\"'",
+  "description": "View .env cap lines and backend deploy mechanism"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === linhas atuais do .env (tetos) ===
+> 69:MAX_ORDER_NOTIONAL_USDT=50
+> 70:FARM_MAX_NOTIONAL_USDT=25
+> === como o backend roda: volume-mount ou imagem baked? ===
+> 29-    build: ./backend
+> --- volumes do backend ---
+> ```
+
+## 🤖 Claude *(01:42:43)*
+
+
+## 🤖 Claude *(01:42:45)*
+
+Backend é imagem `build: ./backend` (sem volume-mount) → o deploy exige `--build`. `.env` tem `MAX_ORDER_NOTIONAL_USDT=50` (linha 69); as duas chaves novas não existem. Atualizo o `.env` (com backup) — muda teto absoluto 50→100 e adiciona o %-teto + piso:
+
+## 🤖 Claude *(01:42:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ncp .env .env.bak-pretct\nsed -i \"s/^MAX_ORDER_NOTIONAL_USDT=50$/MAX_ORDER_NOTIONAL_USDT=100\\nMAX_ORDER_PCT_EQUITY=0.20\\nMIN_ORDER_NOTIONAL_FLOOR=12/\" .env\necho \"=== resultado (.env) ===\"\ngrep -nE \"MAX_ORDER_NOTIONAL_USDT|MAX_ORDER_PCT_EQUITY|MIN_ORDER_NOTIONAL_FLOOR|FARM_MAX_NOTIONAL_USDT\" .env\necho \"=== diff vs backup ===\"\ndiff .env.bak-pretct .env\n'",
+  "description": "Update .env cap params with backup"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === resultado (.env) ===
+> 69:MAX_ORDER_NOTIONAL_USDT=100
+> 70:MAX_ORDER_PCT_EQUITY=0.20
+> 71:MIN_ORDER_NOTIONAL_FLOOR=12
+> 72:FARM_MAX_NOTIONAL_USDT=25
+> === diff vs backup ===
+> 69c69,71
+> < MAX_ORDER_NOTIONAL_USDT=50
+> ---
+> > MAX_ORDER_NOTIONAL_USDT=100
+> > MAX_ORDER_PCT_EQUITY=0.20
+> > MIN_ORDER_NOTIONAL_FLOOR=12
+> ```
+
+## 🤖 Claude *(01:43:04)*
+
+
+## 🤖 Claude *(01:43:05)*
+
+`.env` atualizado (teto abs 50→100, %-teto 0.20, piso 12). Backup salvo. Agora commito o código (como `gcrux`, pra não poluir o ownership do `.git`):
+
+## 🤖 Claude *(01:43:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/pct-cap-msg.txt <<'EOF'\nfeat(risk): %-teto de compra (20% do equity) com isencao de venda + teto absoluto\n\nO teto de risco por ordem (assertWithinRisk) era um valor FIXO em USDT aplicado a COMPRA\ne VENDA -- barrava venda no-loss legitima (a venda de ~$40 do LTC vs teto $25).\n\n- VENDA isenta do teto de notional (reduz exposicao; ja capada na carteira pelo calcQty);\n  so o HALT a cobre. Dispensa o symbol-aware de BTC (colheita = venda -> isenta).\n- COMPRA capada por min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY x equity), nunca\n  abaixo de MIN_ORDER_NOTIONAL_FLOOR. %-sizing escala com o capital.\n- Equity tradeable QUENTE publicado pelo dailyCapJob (mark-to-market ~60s, fail-safe, Earn\n  LD*) no riskState (dependency-free) via setEquity/getEquity; guard sincrono le de la.\n  Equity ausente/frio/velho (>EQUITY_MAX_AGE_MS) -> cai pro teto absoluto (degrada seguro).\n- Backward-compat: MAX_ORDER_PCT_EQUITY=0 volta ao teto fixo. Tudo env-tunavel.\n- Suite de simulacao reescrita (riskGuard 29 asserts) + assercao do publish no dailyCap.\n\nParams ao vivo (.env, runtime nao-git): MAX_ORDER_PCT_EQUITY=0.20,\nMAX_ORDER_NOTIONAL_USDT=50->100, MIN_ORDER_NOTIONAL_FLOOR=12.\nGate QA (PASS c/ ressalvas) + TL (APPROVE c/ sugestoes).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/utils/exchange.js backend/src/riskState.js backend/src/dailyCapJob.js backend/scripts/sim/riskGuard.test.js backend/scripts/sim/dailyCap.test.js\ngit commit -F /tmp/pct-cap-msg.txt\necho \"=== HEAD ===\"; git log --oneline -1\necho \"=== status (deve sobrar s\u00f3 backtest-results) ===\"; git status --short'",
+  "description": "Commit the %-cap change as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master fe06c74] feat(risk): %-teto de compra (20% do equity) com isencao de venda + teto absoluto
+>  5 files changed, 170 insertions(+), 72 deletions(-)
+> === HEAD ===
+> fe06c74 feat(risk): %-teto de compra (20% do equity) com isencao de venda + teto absoluto
+> === status (deve sobrar só backtest-results) ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? .env.bak-pretct
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> ```
+
+## 🤖 Claude *(01:43:29)*
+
+
+## 🤖 Claude *(01:43:29)*
+
+Commitado `fe06c74`. Agora push (remote é SSH → chave do ubuntu, via root, e devolvo o ownership do `.git` depois):
+
+## 🤖 Claude *(01:43:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo bash -c 'cd /home/gcrux-tradeux/tradeux && HOME=/home/ubuntu git -c safe.directory=\"*\" push origin master 2>&1' | tail -8\necho \"=== chown .git de volta pro gcrux ===\"\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\necho \"=== confirma origin == local ===\"\ngit -c safe.directory='*' ls-remote origin refs/heads/master\ngit -c safe.directory='*' rev-parse HEAD",
+  "description": "Push to origin via ubuntu key, chown .git back, verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> git@github.com: Permission denied (publickey).
+> fatal: Could not read from remote repository.
+> 
+> Please make sure you have the correct access rights
+> and the repository exists.
+> === chown .git de volta pro gcrux ===
+> === confirma origin == local ===
+> 2c55fe08889146941b437b5c93efef0bdb55a069	refs/heads/master
+> fe06c749d82df7f20bb7b7f11fab30cce7590368
+> ```
+
+## 🤖 Claude *(01:43:51)*
+
+
+## 🤖 Claude *(01:43:53)*
+
+O push como `root` não pegou a chave do ubuntu. Mas o `ls-remote` funcionou antes rodando como **ubuntu** (o shell já é ubuntu e tem a chave válida). Faço o push como ubuntu e depois devolvo o ownership do `.git` pro gcrux (gotcha conhecido):
+
+## 🤖 Claude *(01:43:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' push origin master 2>&1 | tail -6\necho \"=== chown .git de volta pro gcrux ===\"\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git\necho \"=== verifica origin == HEAD ===\"\necho \"origin: $(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1)\"\necho \"HEAD  : $(git -c safe.directory='*' rev-parse HEAD)\"",
+  "description": "Push as ubuntu, chown .git back, verify origin==HEAD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    2c55fe0..fe06c74  master -> master
+> === chown .git de volta pro gcrux ===
+> === verifica origin == HEAD ===
+> origin: fe06c749d82df7f20bb7b7f11fab30cce7590368
+> HEAD  : fe06c749d82df7f20bb7b7f11fab30cce7590368
+> ```
+
+## 🤖 Claude *(01:44:05)*
+
+
+## 🤖 Claude *(01:44:06)*
+
+Push OK — `origin == HEAD == fe06c74`, `.git` devolvido pro gcrux. (As "17 vulnerabilities" do Dependabot são pré-existentes, não desta mudança.) Agora o deploy: rebuild + restart do backend (imagem baked, sem volume) como `gcrux`:
+
+## 🤖 Claude *(01:44:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "stat -c '.git owner: %U:%G' /home/gcrux-tradeux/tradeux/.git\necho \"=== rebuild + restart backend (pode levar 1-2min) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend 2>&1 | tail -15'",
+  "description": "Rebuild and restart backend container as gcrux",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> .git owner: gcrux-tradeux:gcrux-tradeux
+> === rebuild + restart backend (pode levar 1-2min) ===
+> #13 exporting layers 0.4s done
+> #13 writing image sha256:bc801bec19ca4b01d0842f1685cc154f35f4ac3503c873ae966ec34abafe3391 done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 0.4s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(01:44:32)*
+
+
+## 🤖 Claude *(01:44:35)*
+
+Backend rebuiltado e reiniciado. Smoke time — confirmo: (1) backend de pé + `/system/halt` intacto, (2) env novo carregado no container, (3) `dailyCapJob` publicando equity, e (4) o %-teto barrando de verdade via `assertWithinRisk` no código já buildado (sem ordem real). Primeiro espero subir e checo env+path:
+
+## 🤖 Claude *(01:44:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== aguarda backend responder ===\"\nfor i in $(seq 1 20); do\n  code=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null)\n  [ \"$code\" = \"401\" ] && { echo \"backend UP (api respondendo, $code)\"; break; }\n  sleep 2\ndone\necho \"=== env do container (teto) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"env | grep -E \\\"MAX_ORDER|MIN_ORDER\\\" | sort\"'\necho \"=== path do app no container ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"ls -d /app/src 2>/dev/null || ls -d /usr/src/app/src 2>/dev/null || (cd / && find . -maxdepth 3 -name exchange.js -path \\\"*utils*\\\" 2>/dev/null | head -1)\"'",
+  "description": "Wait for backend, verify env params and app path in container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === aguarda backend responder ===
+> backend UP (api respondendo, 401)
+> === env do container (teto) ===
+> MAX_ORDER_NOTIONAL_USDT=100
+> MAX_ORDER_PCT_EQUITY=0.20
+> MIN_ORDER_NOTIONAL_FLOOR=12
+> === path do app no container ===
+> /app/src
+> ```
+
+## 🤖 Claude *(01:44:58)*
+
+
+## 🤖 Claude *(01:45:00)*
+
+Backend de pé, env carregado certo (`100 / 0.20 / 12`), app em `/app/src`. Agora o smoke real do guard no código buildado + `/system/halt` + log do publish. Escrevo o script de smoke e rodo dentro do container (sem ordem real):
+
+## 🤖 Claude *(01:45:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/smoke.js <<'EOF'\nconst exch = require('/app/src/utils/exchange');\nconst riskState = require('/app/src/riskState');\nconst g = exch.assertWithinRisk;\nfunction thr(name, fn){ let t=false; try{fn();}catch(e){t=true;} console.log((t?'BLOQUEOU ':'PASSOU   ')+'| '+name); }\n// --- equity FRIO (processo rec\u00e9m-subido, equitySnap null) \u2192 deve cair no teto absoluto $100 ---\nconsole.log('# equity frio (cai pro teto absoluto $100):');\nthr('BUY quote $90  (<100, esperado PASSAR)', ()=>g('BUY','LTCUSDT',null,null,{quoteOrderQty:90}));\nthr('BUY quote $120 (>100, esperado BLOQUEAR)', ()=>g('BUY','LTCUSDT',null,null,{quoteOrderQty:120}));\n// --- publica equity $149 \u2192 %-teto = 20% = $29.80 ---\nriskState.setEquity(149);\nconsole.log('# equity $149 publicado \u2192 %-teto 20% = $29.80:');\nthr('BUY quote $29  (<29.80, esperado PASSAR)', ()=>g('BUY','LTCUSDT',null,null,{quoteOrderQty:29}));\nthr('BUY quote $31  (>29.80, esperado BLOQUEAR)', ()=>g('BUY','LTCUSDT',null,null,{quoteOrderQty:31}));\nthr('SELL 1000@44 = $44k (VENDA isenta, esperado PASSAR)', ()=>g('SELL','LTCUSDT',1000,44,{}));\nthr('SELL stopPrice $44k (VENDA isenta, esperado PASSAR)', ()=>g('SELL','LTCUSDT',1000,null,{stopPrice:44}));\nconsole.log('# getEquity vivo:', JSON.stringify(riskState.getEquity()));\nEOF\ncd /home/gcrux-tradeux/tradeux\necho \"=== /system/halt (autenticado) ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source .env 2>/dev/null; set +a\nTOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\ncurl -s -m8 \"http://127.0.0.1:8090/api/system/halt\" -H \"Authorization: $TOK\"; echo'\necho \"=== smoke do guard (c\u00f3digo buildado, sem ordem real) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node < /tmp/smoke.js'",
+  "description": "Live smoke: halt state + guard behavior in built container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /system/halt (autenticado) ===
+> {"halted":false,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":null,"active":false},"sources":[],"source":null,"reason":null,"since":null}
+> === smoke do guard (código buildado, sem ordem real) ===
+> # equity frio (cai pro teto absoluto $100):
+> PASSOU   | BUY quote $90  (<100, esperado PASSAR)
+> BLOQUEOU | BUY quote $120 (>100, esperado BLOQUEAR)
+> # equity $149 publicado → %-teto 20% = $29.80:
+> PASSOU   | BUY quote $29  (<29.80, esperado PASSAR)
+> BLOQUEOU | BUY quote $31  (>29.80, esperado BLOQUEAR)
+> PASSOU   | SELL 1000@44 = $44k (VENDA isenta, esperado PASSAR)
+> PASSOU   | SELL stopPrice $44k (VENDA isenta, esperado PASSAR)
+> # getEquity vivo: {"value":149,"at":1782092711145}
+> ```
+
+## 🤖 Claude *(01:45:22)*
+
+
+## 🤖 Claude *(01:45:25)*
+
+Smoke impecável — todos os ramos batem com o desenho:
+- **Equity frio → teto absoluto $100**: $90 passa, $120 bloqueia ✓
+- **Equity $149 → %-teto $29,80**: $29 passa, $31 bloqueia ✓
+- **Venda isenta**: $44k passa (MARKET-por-qty e STOP) ✓
+- **`/system/halt` intacto**: `halted=false`, sem fonte de halt ✓
+
+Falta confirmar que o **processo vivo** do backend (não meu smoke avulso) está publicando o equity quente via `dailyCapJob`. Checo o cap diário + logs do boot:
+
+## 🤖 Claude *(01:45:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== /system/daily-cap (live process computa equity?) ===\"\nsudo -n -u gcrux-tradeux bash -lc '\nset -a; source .env 2>/dev/null; set +a\nTOK=$(curl -s -m8 -X POST \"http://127.0.0.1:8090/api/login\" -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\" | cut -d\\\" -f4)\ncurl -s -m8 \"http://127.0.0.1:8090/api/system/daily-cap\" -H \"Authorization: $TOK\" | python3 -m json.tool 2>/dev/null | grep -E \"enabled|equity|valued|at|floor|tripped|running\" | head -12'\necho \"=== logs de boot (riskState init + dailyCap) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --since 5m backend 2>&1 | grep -iE \"riskState\\] inicializado|dailyCap\\] (iniciado|baseline|equity)\" | tail -8'",
+  "description": "Confirm live dailyCapJob computing+publishing equity, check boot logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /system/daily-cap (live process computa equity?) ===
+>     "enabled": true,
+>         "equity": 149.3987144689845,
+>         "at": "2026-06-22T00:00:34.856Z"
+>         "at": "2026-06-22T01:45:16.389Z",
+>         "valued": true,
+>         "equity": 149.3989707571549,
+>     "floor": 141.92877874553528,
+>     "tripped": {
+>     "running": false,
+>     "at": "2026-06-22T01:45:16.389Z",
+> === logs de boot (riskState init + dailyCap) ===
+> ```
+
+## 🤖 Claude *(01:46:00)*
+
+
+## 🤖 Claude *(01:46:03)*
+
+O processo vivo confirma: `dailyCap` rodando ciclo `valued=true` agora (01:45:16, equity $149,40) → o `setEquity` publica nesse exato caminho, então uma compra real agora é capada em 20%×$149,40 ≈ **$29,88**. (Os logs do `dailyCap` vão pro `logs/system.log`, não pro stdout do docker — por isso o grep vazio; o endpoint é a fonte autoritativa.)
+
+Deploy verificado. Limpo o backup do `.env` e atualizo a memória:
+
+## 🤖 Claude *(01:46:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'rm -f /home/gcrux-tradeux/tradeux/.env.bak-pretct && echo \"backup removido\"'\necho \"=== status final do working tree ===\"\ngit -c safe.directory='*' status --short\necho \"=== vivo == master == origin ===\"\necho \"HEAD/origin: $(git -c safe.directory='*' rev-parse HEAD)\"",
+  "description": "Remove env backup, confirm clean working tree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backup removido
+> === status final do working tree ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> === vivo == master == origin ===
+> HEAD/origin: fe06c749d82df7f20bb7b7f11fab30cce7590368
+> ```
+
+## 🤖 Claude *(01:46:10)*
+
+
+## 🤖 Claude *(01:46:10)*
+
+Working tree limpo (só o scratch dos backtests). `Vivo==master==origin==fe06c74`. Atualizo a memória das proteções mainnet:
+
+## 🤖 Claude *(01:46:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-mainnet-go-live
+> 3	description: Antigravity colocou o sistema em MAINNET (dinheiro real) via feature dual-env; armado mas NÃO seguro p/ fundar — must-fix list
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 78499af7-71fd-4dbf-816c-c5996402727d
+> 8	---
+> 9	
+> 10	Em 2026-06-15 (madrugada BRT) a sessão do **Antigravity** (commits `e610f90`..`1fe3364`, autor gabrielcall@gmail.com, NÃO selados no HANDOFF, 5 à frente do seal `a408500`) entregou **ambiente dual + funil live-buy da Fase 4** e o dono **virou `settings.useTestnet=0` → MAINNET REAL** (api.binance.com, chaves mainnet ≠ testnet).
+> 11	
+> 12	**Por que nenhuma ordem mainnet ainda (CONFIRMADO ao vivo, NÃO é bug):** engine roda live em mainnet; todo módulo está armed-waiting/gateado. Regime=trend nos 4 → farm OFF; trend precisa de golden cross FRESCO (above=true só recarregado); id2 RSI gate aberto mas RSI~45<25; harvester armado (FAIR saudável 66.893; trigger 64.887 vs bestAsk 66.895, precisa −3%); funil dormente (USDT real **$148,84** < baseline $10.000). Ledger mainnet frio: 259 ordens TODAS `isTestnet=1` (o filtro de isolamento de `e610f90` esconde o histórico lucrativo testnet na visão mainnet → "o lucro sumiu"). 0 ordens mainnet, 0 abertas.
+> 13	
+> 14	**MUST-FIX DE CÓDIGO RESOLVIDOS + DEPLOYADOS** (commit `96915e0`, gate QA PASS-c/ressalvas + TL APPROVE; auditoria wf `wf_b252a2ba-9de`). Estado vivo após deploy (rebuild backend + up -d, boot limpo 17:35): **TRADING_HALT=true (CONGELADO — nada negocia)**, FUNNEL_LIVE_BUY=false (funil em SHADOW), caps no ar, SAPI=mainnet. Sistema espera o GO do dono.
+> 15	1. ✅ **Funil live-buy** refeito (`maybeLiveBuy`/`persistFunnelBuy`): usa SÓ o baseline FIXO do env (nunca RUNTIME_BASELINE → mata o dreno-por-depósito da Fase4), TETO obrigatório `FUNNEL_MAX_BUY_USDT` (sem teto = RECUSA), persiste com isTestnet + alerta dono se falhar. + `FUNNEL_LIVE_BUY=false` no .env.
+> 16	2. ✅ **AÇÃO DO DONO (Binance) — FEITA 2026-06-17.** Dono editou a chave HMAC "tradeUX" na UI da Binance: desmarcou **Enable Withdrawals** (= "saque off"; NÃO existe botão "saque off" — é só desmarcar Withdrawals) E **Permits Universal Transfer**; restou **Reading + Spot&Margin Trading**; IP **Restrict to trusted IPs = `137.131.243.179`** (= IP de saída do servidor, host==container, confirmado via api.ipify). Verificação read-only minha (login + `GET /exchange/balance/USDT` → HTTP 200, **USDT 148.84** lido, 767 ativos) confirma **Reading+IP OK** com HALT intacto. ⚠️ Saque-OFF NÃO é verificável por leitura (e NÃO se testa saque — nunca mover dinheiro); confiança vem do Save na UI. `exchange.js` ainda expõe `withdraw()` mas a chave agora recusa saque na Binance.
+> 17	3. ✅ **`.env` SAPI/API/STREAM → mainnet** (encerra o split-brain de SAPI).
+> 18	4. ✅ **`ordersController` morto** corrigido (passa settings plano) → venda manual/emergência volta a funcionar.
+> 19	5. ✅ **`insertOrder` ghost** mitigado (honra isTestnet explícito; funil alerta dono na falha de persistência).
+> 20	6. ✅ **`getOpenOrdersByAutomation`+`getOpenOcoOrders`** ganham filtro isTestnet (reconcile não cruza ambientes).
+> 21	7. ✅ **Scripts backfill** guard `ALLOW_BACKFILL=true` + `isTestnet:true` fixo.
+> 22	8. ✅ **Teto de risco no BACKEND** (`exchange.js` chokepoint buy/sell/oco): `TRADING_HALT` kill-switch (cobre TUDO) + `MAX_ORDER_NOTIONAL_USDT=1500` por ordem (calibrado acima do farm $1000). ✅ furo MARKET-por-quantidade **FECHADO** (2026-06-17, commit `e27339a`, QA PASS-c/ressalvas + TL APPROVE): o riskGuard agora deriva o preço (`stopPrice` quando presente, senão `MINI_TICKER.close` via require lazy do beholder) e capa MARKET-por-qty-base (TREND_QTY/HARVEST_QTY/MAX_WALLET; STOP/TP-MARKET). MINI_TICKER frio → passa logado (coberto só pelo HALT; deliberado p/ não bloquear venda protetiva). **Inerte sob HALT** (branch nem é alcançado). Pré-existente e fora deste fix: pares quote≠USDT seguem sem teto.
+> 23	
+> 24	**PRA IR AO VIVO (flip único `TRADING_HALT=false`):** (a) ✅ saque-off/IP FEITO 2026-06-17 (item 2); (e) ✅ cap −5% + kill-switch QUENTE FEITO 2026-06-18 (item 9); (c) ✅ P&L-BNB FEITO 2026-06-18 (item 10). **🎯 TODOS os pré-reqs de CÓDIGO (a)-(e) FEITOS+DEPLOYADOS → falta só o GO DO DONO pro flip + canary de UM-GRUPO-SÓ.** BNB-fee agora SEGURO de ligar na UI Binance (P&L honesto pós-(c)) — mas é decisão do dono. **FOLLOW-UPS antes de escalar/ligar funil:** plano de aporte vs baseline $10k do funil; **Farm Buy id5/7/9 está em MIN_NOTIONAL×200≈$1000/ordem numa conta de $149 → falha por saldo quando disparar (resizing é decisão do dono)**; re-selar HANDOFF (ainda diz "testnet"). HANDOFF NÃO selado nesta sessão.
+> 25	
+> 26	9. ✅ **CAP DIÁRIO −5% + KILL-SWITCH QUENTE** (item (e); 2026-06-18, commits `8ef1b69`+`1b639ce`, QA PASS-c/ressalvas + TL APPROVE, plan-mode aprovado pelo dono; smoke ao vivo OK). **`riskState.js` é a FONTE ÚNICA do HALT** — 3 fontes empilháveis: `env` (floor PERMANENTE de `TRADING_HALT=true`; só `.env`+restart o derruba) · `manual` (operador) · `daily-cap` (auto-expira na virada UTC). `exchange.js` agora lê `riskState.isHalted()` POR ORDEM (não mais `const` no load) → **HALT é QUENTE**. **`dailyCapJob`**: snapshota o equity-TRADEABLE (USDT + spot precificado via MINI_TICKER; **Earn/Locked `LD*` e `DAILY_CAP_IGNORE_ASSETS` EXCLUÍDOS** — a conta tem LDGUN/LDBABY) na virada UTC, arma o HALT quando `equity ≤ snapshot×0.95` (block-ALL, inclusive venda protetiva → exige intervenção manual). Fail-safe a preço frio (não dispara no escuro) + alarme Telegram anti-silêncio (15min). Persiste em `logs/risk_state.json` + `logs/daily_cap_snapshot.json` (sobrevive restart; daily-cap auto-expira pós-meia-noite). **🔴 BOTÃO DE PÂNICO QUENTE NOVO:** `POST /system/halt {on:true,reason}` (operator-only, JWT; SEM MCP write tool — agente não flipa) trava sem restart; `POST /system/halt {on:false}` solta o manual (mas NÃO o env floor); `POST /system/daily-cap/reset` re-arma; `GET /system/halt` e `/system/daily-cap` observam. Cockpit/agent leem o estado quente via `/analysis/cockpit` (`env.tradingHalt` boolean preservado + `haltSource`/`haltReason` aditivos). Estado vivo pós-deploy: baseline hoje **$148,84**, piso **$141,40**, `tripped:false`, `halted:true` (source `env`). Inerte sob HALT. **Dívida documentada (não-bloq.):** rollover c/ preço frio fica sem baseline até esquentar (auto-cura); reSnapshot serializado via flag `running`. Knobs env (defaults seguros): `DAILY_CAP_ENABLED=true`, `DAILY_LOSS_CAP_PCT=0.05`, `DAILY_CAP_CHECK_MS=60000`, `DAILY_CAP_COLD_ALERT_MS=900000`, `DAILY_CAP_IGNORE_ASSETS=`.
+> 27	
+> 28	10. ✅ **P&L-BNB — net fee-inclusive ciente do lado** (item (c); 2026-06-18, commit `854bab5`, QA PASS-c/ressalvas + TL APPROVE, plan-mode aprovado; deploy+migration ao vivo OK). Hoje o `net` só descontava taxa paga no QUOTE (USDT); taxa em **BNB** (o que o desconto BNB-fee −25% liga) passava batido → P&L/painel mentiam OTIMISTA. Fix: **helper único `backend/src/utils/feeCalc.js` `computeNet`** unifica os 3 pontos de cálculo (`calcFillFinancials`, `app-em.processExecutionData`, `ordersController.syncOrder`): **VENDA `net=cummQuote−taxa(USDT-eq)`, COMPRA `net=cummQuote+taxa(USDT-eq)`** (a taxa de COMPRA não some mais do P&L); taxa em quote→direto, base→×avgPrice, **BNB/outro→`beholder.getStableConversion(...,'USDT',...)`** (require LAZY, sem ciclo). **Coluna nova `orders.commissionAsset`** (migration `20260618170000`, idempotente dual-dialect, rodou no boot) persiste o asset → recompute/auditoria via **`POST /orders/:id/sync`**. **Fail-safes:** preço BNB frio → `net=cummQuote` + commissionAsset persistido (recomputa no sync); `side` ausente → sem ajuste (não assume venda); guard `net>0`. Consumidores (getDailyProfit, relatórios, getAveragePrices) ficam mais honestos (P&L p/ baixo), sem quebra. **NÃO** construído (escopo): toggle bnbBurn (dono liga na UI Binance), backfill (0 ordens mainnet), break-even do cockpit (segue 0,20% conservador), Farm no-loss (buffer 1,2% >> fee → já fee-safe). ⚠️ pré-existente (QA P1, fora de escopo): em par NÃO-USDT o `net` fica denominado no quote, não USDT — irrelevante hoje (só pares *USDT negociam).
+> 29	
+> 30	**REVISÃO DE ESTRATÉGIA p/ $148 reais (wf `wte6rt68t`, 8 agentes + verif. adversarial 3 lentes; dono fundou ~150 USDT mainnet):**
+> 31	- **🪦 HARVESTER (id22-25) MORTO no mainnet** (código+dado vivo). FAIR=lastPrice MAINNET hardcoded (`fairPriceService.js:33`, api.binance.com) e o BOOK do bot é SIMULADO do miniTicker (`app-em.js:38-39`; monitor BOOK id2 OFF → bestAsk=bestBid=close). Mesma venue → spread ~$0.01; gatilho `bestAsk<FAIR×0.97` (−3% na MESMA corretora) só dispara em flash-crash raro (pior queda sub-minuto recente <1%) e aí é falling-knife (desgateado de regime). Os "10/10 ciclos" eram **arbitragem testnet-vs-mainnet**. NÃO afrouxar 0.97 nem ligar o monitor BOOK real (vira scalper que sangra fee). Redesign: re-ancorar FAIR a HIGH rolante 24-48h (klines) → MR real; backtestar + gate `REGIME!=bear` antes de fundar. Corrige a tese de [[tradeux-harvester-experiment]] (era testnet-específica).
+> 32	- ✅ **BUG P0 (Farm Sell) RESOLVIDO+DEPLOYADO** (commit `c163112`, QA PASS-c/ressalvas + TL APPROVE re-review). Era: `orderTemplates` id6/8/10 = `MAX_WALLET` → vendia a carteira INTEIRA e dumpava a posição do Trend co-localizado. Fix: (1) keyword **`FARM_QTY`** em `beholder.calcQty` (espelho do HARVEST_QTY, vende só `MEMORY['<sym>:FARM_DCA'].qty`); (2) **`getFarmPosition` escopado por automação** (`name LIKE 'Farm %'` → BUYs/lastSell filtrados por automationId; o Trend não infla/re-baseia mais o bucket); (3) **migration `20260615200000`** durável (sobrescreve a `20260614190000` que era o próprio bug): Farm Sell→FARM_QTY, Farm Buy ×200→**×2** (~$10/ordem), Baseline RSI Buy id2→**isActive=0** (era acumulador pelado, compra sem venda). Verificado no DB pós-migrate. **FOLLOW-UP `FARM_SELLING` ✅ FEITO v1 (2026-06-17, commit `baf0f4b`, QA PASS+TL APPROVE+cético money-path PASS):** trava anti-empilhamento via SKIP no place + SET por orderId + RELEASE por **match de orderId** em qualquer terminal (app-em.updateFarmPosition) — **BRAIN-independente** (superior ao HARVEST_SELLING, que perma-trava no stop/start). Sem migration/condition/reload (skip de código, não via condition). **Reconstrução-no-boot (loadFarmSellingLocks) + reconciliação partial→cancel do Farm DEFERIDAS** — gate documentado: NÃO escalar `FARM_SIZE_MULT` até implementá-las (risco bounded: só remistura alt-wallet LTC/BNB/ADA, NUNCA o cofre de BTC, nunca oversell além da carteira). ⚠️ Escopo por `name LIKE 'Farm %'` é frágil a rename — nice-to-have: tag/flag explícita.
+> 33	- **TREND (id6/7 BTC, id15-20 alts) = ÚNICO edge real** (same-exchange, golden/death cross 1h), mas minúsculo ($5-15/perna, ~1-3 RT/símbolo/mês). BTC a $5 = no piso do minNotional (frágil). Correlação: 4 golden agora → death cross geral = drawdown único.
+> 34	- **EXPECTATIVA REAL: $148 spot ≈ FLAT no mês** (~$0/dia mediano; melhor mês ~+5%=$0.25/dia amortizado só num bull geral). SEM rendimento diário nessa escala. **+3 BTC é impossível (1.350×).** 0 ordens mainnet → nada validado com fill/fee/slippage reais. Win = validação + compor o trend + PACIÊNCIA; maior risco = forçar trade pra ver P&L e sangrar fee. Capital travável: até ~$80/$148 num downtrend (buckets MR sem stop). Plano: P0 fixes (seguros, halted) → redesign harvester+backtest → canary 1 trade → só então descongelar.
+> 35	
+> 36	**Bom (ruled out / sólido):** agente LLM NÃO coloca ordem real (`ALLOW_TRADING=false` verificado no container; MCP write throws); trava SELL-BTC do cofre vale; migrations portáveis; `secretKey` cifrado em repouso (só `accessKey` plaintext); sem split-brain no caminho SPOT. ⚠️ Se `ALLOW_TRADING` for ligado: guarda SELL-BTC tem buracos (BUY BTCUSDT, SELL alts, BUY ETHBTC). Ver [[tradeux-farm-funnel-backtest]], [[tradeux-harvester-experiment]], [[tradeux-settings-password-incident]], [[tradeux-vault-guard]].
+> 37	
+> 38	## Painel "Ativação de grupos" em Settings (2026-06-19, commit `771ecf0`, deployado+verificado ao vivo)
+> 39	Botão **Ligar/Parar GRUPOS de automação em lote** (Farm/Trend/Baseline/Paper) no card de Settings, ao lado dos botões de HALT — substitui SSH/`automation-ctl.js`. Backend: `GET /automations/groups` + `POST /automations/groups/:group/:action` (atrás do authMiddleware, ANTES de `/:id` no router); grupos por **REGEX de nome**; `applyAutomationActive` extraído de start/stop = **MESMO caminho do botão por-linha** (registra no BRAIN com as ações, via `getAllAutomations` com include). **harvester/grid/scalp EXCLUÍDOS** de propósito (mortos/refutados, não reativáveis por aqui). Frontend: confirm **fail-SAFE ciente do floor** (avisa em trading-liberado E em estado desconhecido; pega HALT fresco antes de ativar grupo real). **Ativar só ARMA — NÃO mexe no HALT** (guard por-ordem do `riskState` segura execução se o floor estiver up). Gate: verify 3/3 ok, QA PASS, TL APPROVE (zero must-fix); smoke vivo stop→start paper 16→0→16 OK; **freeze preservado no deploy** (`halted=true, floor=true`). ⚠️ **CAVEAT money-path:** o grupo `baseline` inclui `Baseline RSI Sell BTCUSDT` (venda do COFRE BTC) — a trava `isBtcVaultSymbol` vive SÓ no caminho MCP, NÃO no beholder/exchange; com floor liberado, ativar Baseline arma uma venda real de BTC coberta só por **HALT+riskGuard**, não pela trava do cofre (já era assim no start por-linha — o botão só agiliza). Ver [[tradeux-vault-guard]]. Nice-to-have deferidos: migrar grupo p/ coluna explícita (regex frágil a rename), teste do regex no CI, re-arm DB↔BRAIN no painel.
+> 40	
+> 41	## 🔴 GO-LIVE REAL — dono flipou o floor (2026-06-19) — NÃO ESTÁ MAIS CONGELADO
+> 42	O dono **destravou o floor pela UI** (botão LIGAR trading real). Estado verificado ao vivo: `GET /system/halt` → **`halted=false, floor=false, manual=false, dailyCap=false, envHard=false`** = trading REAL permitido. **Decisão do dono, deliberada** (a UI exige digitar `LIGAR REAL`); Claude NÃO virou — só verificou e orientou. **Nenhuma ordem real disparou no flip** (orders 252-259 eram testnet de 15/jun; ledger real ainda frio).
+> 43	- **Canary escolhido pelo dono (via AskUserQuestion) = FARM-ONLY.** Claude executou `POST /automations/groups/trend/stop` (8 paradas) pelo painel novo → estado: **Farm 6/6 ON (REAL/LIVE)**, Trend 0/8 OFF, Baseline 0/2 OFF, Paper 16/16 (virtual). Farm é **no-loss** (só vende acima do custo), alts LTC/BNB/ADA, **nunca o cofre BTC** → downside limitado (capital pode ficar preso em alts num downtrend, sem perda realizada por desenho).
+> 44	- **Proteções vivas mesmo LIVE:** cap diário −5% (baseline novo de hoje UTC; arma HALT no drawdown ≈ −$7,40/$148), teto $300/ordem, riskGuard por-ordem, **pânico** = UI "TRAVAR floor"/"Travar agora" ou `POST /system/halt {on:true}` / `POST /system/floor {on:true}`. Telegram notifica TODA ordem (NEW/FILLED…) → a 1ª ordem real do Farm avisa.
+> 45	- **Expectativa honesta (dado do dia):** EV fino/negativo — o único round-trip do paper consistência BTC fechou **+$0,0143 líquido** (taxa comeu 73% do bruto), por sorte (BTC subiu no hold), não por edge; EV BTC −0,17%, pHit 0,40. É **validação da plumbing com dinheiro real**, não rota de lucro. Veredito precisa de 15-30 round-trips (paperReviewJob).
+> 46	- ⚠️ Pra re-congelar: `POST /system/floor {on:true}` (ou UI TRAVAR floor). Pra re-armar à prova de clique: `TRADING_HALT_HARD=true` no `.env`+restart.
+> 47	
+> 48	## Caps recalibrados + 1ª ordem real + 2 GOTCHAS duráveis (2026-06-20, commit `235484c`)
+> 49	- **Teto por-ordem $300→$25** (`.env MAX_ORDER_NOTIONAL_USDT=25`+restart): $300 num saldo de ~$148 era DECORATIVO (não dá pra colocar ordem > saldo; Binance recusa). $25 é proporcional (≈17%/ordem).
+> 50	- **Teto de EXPOSIÇÃO do Farm por símbolo (`FARM_MAX_NOTIONAL_USDT=25`):** guard novo em `beholder.placeOrder` (hot path, antes do calcQty) — Farm Buy (BUY + `automation.name` ~ `/^Farm Buy /`) é SKIPado se o notional investido no símbolo ≥ teto. Soft-cap, BRAIN-independente (espelha `FARM_SELLING`), `0`=off. Doc em `backend/.env.example`.
+> 51	- **🔴 GOTCHA 1 (pego no gate QA/TL — money-path):** `MEMORY['<sym>:FARM_DCA'].cost` é o **PREÇO MÉDIO PONDERADO por unidade** (DCA), **NÃO o USDT investido** (`ordersRepository`: `cost = totalCost/totalQty`; a condition do Farm Sell faz `bestBid > cost*1.012` = preço×preço). O **notional investido = `qty × cost`**. O 1º guard comparava `cost` cru com $25 → bloquearia BNB (~$600/un) já no 1º fill e NUNCA bloquearia ADA (~$0,40/un). FIX = `qty × cost`; unit test 5/5. **Qualquer cálculo de exposição/investido do Farm: use `qty × cost`, nunca `cost` sozinho.**
+> 52	- **🔴 GOTCHA 2 (queima fácil):** a tabela `orders` MISTURA testnet + mainnet. Pra posição/P&L REAL **SEMPRE filtre `isTestnet=false`** — senão soma fantasmas (ex.: ordens LTC de 22 LTC/$997 de 15/jun eram TESTNET; davam um falso "$3030 investido").
+> 53	- **1ª ordem real + canary refinado:** Farm fez **DCA 3× em LTC** (~$30, avg $43,91; esperado — LTC virou range, RSI<35). Operador parou o Farm (concentração, NÃO perda — equity ~$148,75 intacta, USDT↔LTC). Depois **religou SÓ as VENDAS do Farm** (id10/12/14) → lotes saem no-loss quando LTC bouncar ~$44,4; **compras off** (id9/11/13). Estado canary atual: Farm **3/6** (vendas armadas), Trend/Baseline off.
+> 54	
+> ```
+
+## 🤖 Claude *(01:46:20)*
+
+
+## 🤖 Claude *(01:46:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "- **1\u00aa ordem real + canary refinado:** Farm fez **DCA 3\u00d7 em LTC** (~$30, avg $43,91; esperado \u2014 LTC virou range, RSI<35). Operador parou o Farm (concentra\u00e7\u00e3o, N\u00c3O perda \u2014 equity ~$148,75 intacta, USDT\u2194LTC). Depois **religou S\u00d3 as VENDAS do Farm** (id10/12/14) \u2192 lotes saem no-loss quando LTC bouncar ~$44,4; **compras off** (id9/11/13). Estado canary atual: Farm **3/6** (vendas armadas), Trend/Baseline off.",
+  "new_string": "- **1\u00aa ordem real + canary refinado:** Farm fez **DCA 3\u00d7 em LTC** (~$30, avg $43,91; esperado \u2014 LTC virou range, RSI<35). Operador parou o Farm (concentra\u00e7\u00e3o, N\u00c3O perda \u2014 equity ~$148,75 intacta, USDT\u2194LTC). Depois **religou S\u00d3 as VENDAS do Farm** (id10/12/14) \u2192 lotes saem no-loss quando LTC bouncar ~$44,4; **compras off** (id9/11/13). Estado canary atual: Farm **3/6** (vendas armadas), Trend/Baseline off.\n\n## %-teto de COMPRA (substitui o teto fixo) \u2014 2026-06-22, commit `fe06c74` (QA PASS-c/ressalvas + TL APPROVE, sim 6/6, smoke vivo OK)\nO teto fixo (`MAX_ORDER_NOTIONAL_USDT`) aplicava a COMPRA **e VENDA** \u2192 barrava venda no-loss leg\u00edtima (a venda de ~$40 do LTC vs teto $25; o band-aid 25\u219250 do HANDOFF era paliativo). Reescrita do `assertWithinRisk` (`utils/exchange.js`):\n- **VENDA agora ISENTA do teto de notional** (`/SELL/i.test(action)` cobre SELL e OCO-SELL; reduz exposi\u00e7\u00e3o, j\u00e1 capada na carteira pelo calcQty) \u2014 s\u00f3 o HALT a cobre. Dispensa o symbol-aware de BTC (colheita = venda \u2192 isenta).\n- **COMPRA capada por `cap = min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY \u00d7 equityQuente)`, nunca < `MIN_ORDER_NOTIONAL_FLOOR`.** %-sizing ESCALA com o capital.\n- **Equity quente**: o `dailyCapJob` publica o equity mark-to-market (j\u00e1 computado ~60s, fail-safe, Earn LD*) no `riskState` (dependency-free) via `setEquity`/`getEquity` novos; o guard S\u00cdNCRONO l\u00ea de l\u00e1. Equity ausente/frio/velho (`> EQUITY_MAX_AGE_MS`, default 600000=10min) \u2192 ignora a % e cai pro teto absoluto (degrada seguro). Publish DEPOIS do early-return do fail-safe (nunca dimensiona por equity incompleto).\n- **Backward-compat:** `MAX_ORDER_PCT_EQUITY=0` volta ao teto fixo. Tudo env-tun\u00e1vel (consts lidos no load \u2192 restart). Su\u00edte `riskGuard.test.js` reescrita (29 asserts) + asser\u00e7\u00e3o do publish no `dailyCap.test.js`.\n- **\u26a0\ufe0f Params ao vivo (`.env`, RUNTIME N\u00c3O-GIT \u2014 reaplicar p\u00f3s-nuke):** `MAX_ORDER_NOTIONAL_USDT=50\u2192100` (agora \u00e9 runaway guard), `MAX_ORDER_PCT_EQUITY=0.20`, `MIN_ORDER_NOTIONAL_FLOOR=12` (acima do minNotional $5 dos pares). A $149 \u2192 compra capada em ~$29,80; o teto de exposi\u00e7\u00e3o do Farm $25/s\u00edmbolo (`FARM_MAX_NOTIONAL_USDT`) morde antes no canary.\n- **\u26a0\ufe0f CAVEAT (QA+TL, anotar): venda do COFRE BTC agora ISENTA do teto** \u2192 coberta S\u00d3 por HALT + trava-MCP (que N\u00c3O cobre o caminho de automa\u00e7\u00e3o baseline/UI). Aceit\u00e1vel com baseline PARADO. **FOLLOW-UP priorit\u00e1rio antes de religar Trend/Baseline:** rede anti-runaway opt-in na venda (`MAX_SELL_NOTIONAL_USDT` folgado ~2-3\u00d7 equity, default off) \u2014 recupera a 2\u00aa linha contra `qty` buggado sem reintroduzir o bug do no-loss. Outro nice-to-have: surfar o cap efetivo no cockpit. Ver [[tradeux-vault-guard]], [[tradeux-sim-suite]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:46:48)*
+
+
+## 🤖 Claude *(01:47:04)*
+
+Pronto — o **%-teto está no ar e verificado ao vivo**. Resumo do que entregamos:
+
+## ✅ Entregue (`fe06c74` — vivo == master == origin)
+
+O teto fixo de $50 que travava venda virou um **teto percentual que escala com o capital e isenta venda**:
+
+- **VENDA** → isenta do teto de notional (reduz risco; já limitada pela carteira). Só o HALT a cobre. **Nunca mais raspa uma venda no-loss.**
+- **COMPRA** → capada por `min(teto_absoluto, 20% × equity)`, com piso de $12. A **$149,40 → compra capada em ~$29,80**, escalando sozinha conforme o capital cresce.
+- **Equity quente**: o `dailyCapJob` (que já calcula equity a cada ~60s) publica no `riskState`; o guard lê síncrono. Equity frio/velho → cai pro teto absoluto $100 (degrada seguro).
+
+## 🧪 Smoke ao vivo (código buildado, sem ordem real)
+
+```
+equity frio   → teto-abs $100 : $90 PASSA · $120 BLOQUEIA   ✓
+equity $149   → %-teto $29,80 : $29 PASSA · $31 BLOQUEIA    ✓
+venda $44k    → ISENTA         : PASSA (MARKET-qty e STOP)   ✓
+/system/halt  → halted=false, sem fonte de halt              ✓
+dailyCap vivo → valued, equity $149,40, tripped=false        ✓
+```
+
+## 🔒 Gate (sem nenhum must-fix)
+
+**QA: PASS c/ ressalvas · TL: APPROVE c/ sugestões.** Apliquei os 3 itens baratos antes do commit (piso `$12` no `.env`, teste `OCO-SELL` sob %-teto, comentário de não-mover o publish). Suíte de simulação **6/6 (riskGuard 29 asserts)**.
+
+## ⚠️ Dois follow-ups que QA+TL levantaram (não bloqueiam, mas registra)
+
+1. **Venda do cofre BTC agora também é isenta do teto** → coberta só por HALT + trava-MCP (que não pega o caminho de automação/UI). **Tudo bem com o Baseline parado** (estado atual), mas **antes de religar Trend/Baseline** vale uma rede anti-runaway opt-in na venda (`MAX_SELL_NOTIONAL_USDT` folgado, ~2-3× equity). Gravei na memória.
+2. Surfar o cap efetivo no cockpit (observabilidade) — nice-to-have.
+
+## 📌 Notas
+
+- **Params no `.env` são runtime não-git** (igual ao band-aid antigo): `MAX_ORDER_NOTIONAL_USDT=100`, `MAX_ORDER_PCT_EQUITY=0.20`, `MIN_ORDER_NOTIONAL_FLOOR=12` → reaplicar só se houver `nuke`/rebuild from scratch. Anoto no HANDOFF no seal.
+- Estado segue **🔴 LIVE, equity ~$149,40 intacta**, canary FARM-ONLY, nada disparou no deploy.
+
+Quer que eu já deixe o **follow-up #1 (rede anti-runaway na venda)** encaminhado como tarefa separada pra não se perder, ou seguimos e fechamos a sessão com `/handoff`?
+
+## 👤 User *(01:47:48)*
+
+Sim segue com o followup 1
+
+## 🤖 Claude *(01:49:42)*
+
+
+## 🤖 Claude *(01:49:45)*
+
+Beleza. Follow-up #1: rede anti-runaway **na venda** — um teto FOLGADO que só barra venda egrégia (notional muito acima do que a conta inteira vale), sem reintroduzir o bug que isentou a venda. Vou fazer equity-relativo (escala com o capital, igual ao %-teto de compra) e **degrade-OPEN** (equity frio → venda passa; nunca travar venda protetiva por memória fria).
+
+Releio o `assertWithinRisk` atual pra reestruturar com precisão:
+
+## 🤖 Claude *(01:49:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 33,
+  "limit": 52
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 33	//   pelo HALT. Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+> 34	// Inerte por padrão; ajustável por env SEM deploy de código (basta reiniciar). Fail-closed (lança). ===
+> 35	const _maxNotional = parseFloat(process.env.MAX_ORDER_NOTIONAL_USDT || '0');
+> 36	const MAX_ORDER_NOTIONAL_USDT = Number.isFinite(_maxNotional) && _maxNotional > 0 ? _maxNotional : 0;
+> 37	const _pctEq = parseFloat(process.env.MAX_ORDER_PCT_EQUITY || '0');
+> 38	const MAX_ORDER_PCT_EQUITY = Number.isFinite(_pctEq) && _pctEq > 0 && _pctEq < 1 ? _pctEq : 0;
+> 39	const _floorMin = parseFloat(process.env.MIN_ORDER_NOTIONAL_FLOOR || '0');
+> 40	const MIN_ORDER_NOTIONAL_FLOOR = Number.isFinite(_floorMin) && _floorMin > 0 ? _floorMin : 0;
+> 41	const _eqMaxAge = parseInt(process.env.EQUITY_MAX_AGE_MS || '600000', 10);
+> 42	const EQUITY_MAX_AGE_MS = Number.isFinite(_eqMaxAge) && _eqMaxAge > 0 ? _eqMaxAge : 600000; // equity mais velho que isto → cai pro teto absoluto
+> 43	
+> 44	function assertWithinRisk(action, symbol, quantity, price, options) {
+> 45	    if (riskState.isHalted()) {
+> 46	        const st = riskState.getState();
+> 47	        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) — ${action} ${symbol} BLOQUEADA.`;
+> 48	        logger('system', msg);
+> 49	        throw new Error(msg);
+> 50	    }
+> 51	
+> 52	    // VENDA isenta do teto (reduz risco; coberta pelo HALT). 'SELL' e 'OCO-SELL'.
+> 53	    if (/SELL/i.test(action || '')) return;
+> 54	    if (!/USDT$/i.test(symbol || '')) return; // teto em USDT só vale p/ pares *USDT
+> 55	
+> 56	    // Limite efetivo da COMPRA = min(teto absoluto, %×equity), com piso de ordem mínima.
+> 57	    let pctCap = Infinity;
+> 58	    if (MAX_ORDER_PCT_EQUITY > 0) {
+> 59	        const eq = (riskState.getEquity && riskState.getEquity()) || null;
+> 60	        const fresh = eq && Number.isFinite(eq.value) && eq.value > 0 && eq.at && (Date.now() - eq.at) <= EQUITY_MAX_AGE_MS;
+> 61	        if (fresh) {
+> 62	            pctCap = MAX_ORDER_PCT_EQUITY * eq.value;
+> 63	            if (MIN_ORDER_NOTIONAL_FLOOR > 0 && pctCap < MIN_ORDER_NOTIONAL_FLOOR) pctCap = MIN_ORDER_NOTIONAL_FLOOR;
+> 64	        }
+> 65	    }
+> 66	    const absCeil = MAX_ORDER_NOTIONAL_USDT > 0 ? MAX_ORDER_NOTIONAL_USDT : Infinity;
+> 67	    const cap = Math.min(pctCap, absCeil);
+> 68	    if (!Number.isFinite(cap)) return; // nem % (equity frio) nem teto absoluto configurado → inerte (só HALT cobre)
+> 69	
+> 70	    const o = options || {};
+> 71	    let notional = null;
+> 72	    if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)
+> 73	    else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO
+> 74	    else if (quantity != null) {                                                    // MARKET por QTY-base sem price (ou STOP/TP-MARKET)
+> 75	        const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: stopPrice; senão deriva o spot do MINI_TICKER
+> 76	        if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);
+> 77	        else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem preço de referência (MINI_TICKER frio) — teto NÃO avaliado (coberto só pelo HALT).`);
+> 78	    }
+> 79	    if (Number.isFinite(notional) && notional > cap) {
+> 80	        const basis = (Number.isFinite(pctCap) && pctCap <= absCeil) ? `${(MAX_ORDER_PCT_EQUITY * 100).toFixed(0)}% do equity` : 'teto absoluto';
+> 81	        const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${cap.toFixed(2)} (${basis}) — BLOQUEADA.`;
+> 82	        logger('system', msg);
+> 83	        throw new Error(msg);
+> 84	    }
+> ```
+
+## 🤖 Claude *(01:49:53)*
+
+
+## 🤖 Claude *(01:49:55)*
+
+Reestruturando — adiciono o env const, extraio helpers (`notionalOf`/`freshEquity`, reuso na compra e venda) e ponho a rede na venda:
+
+## 🤖 Claude *(01:50:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "const _eqMaxAge = parseInt(process.env.EQUITY_MAX_AGE_MS || '600000', 10);\nconst EQUITY_MAX_AGE_MS = Number.isFinite(_eqMaxAge) && _eqMaxAge > 0 ? _eqMaxAge : 600000; // equity mais velho que isto \u2192 cai pro teto absoluto\n\nfunction assertWithinRisk(action, symbol, quantity, price, options) {\n    if (riskState.isHalted()) {\n        const st = riskState.getState();\n        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) \u2014 ${action} ${symbol} BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }\n\n    // VENDA isenta do teto (reduz risco; coberta pelo HALT). 'SELL' e 'OCO-SELL'.\n    if (/SELL/i.test(action || '')) return;\n    if (!/USDT$/i.test(symbol || '')) return; // teto em USDT s\u00f3 vale p/ pares *USDT\n\n    // Limite efetivo da COMPRA = min(teto absoluto, %\u00d7equity), com piso de ordem m\u00ednima.\n    let pctCap = Infinity;\n    if (MAX_ORDER_PCT_EQUITY > 0) {\n        const eq = (riskState.getEquity && riskState.getEquity()) || null;\n        const fresh = eq && Number.isFinite(eq.value) && eq.value > 0 && eq.at && (Date.now() - eq.at) <= EQUITY_MAX_AGE_MS;\n        if (fresh) {\n            pctCap = MAX_ORDER_PCT_EQUITY * eq.value;\n            if (MIN_ORDER_NOTIONAL_FLOOR > 0 && pctCap < MIN_ORDER_NOTIONAL_FLOOR) pctCap = MIN_ORDER_NOTIONAL_FLOOR;\n        }\n    }\n    const absCeil = MAX_ORDER_NOTIONAL_USDT > 0 ? MAX_ORDER_NOTIONAL_USDT : Infinity;\n    const cap = Math.min(pctCap, absCeil);\n    if (!Number.isFinite(cap)) return; // nem % (equity frio) nem teto absoluto configurado \u2192 inerte (s\u00f3 HALT cobre)\n\n    const o = options || {};\n    let notional = null;\n    if (o.quoteOrderQty != null) notional = parseFloat(o.quoteOrderQty);            // MARKET por quote (ex.: funil)\n    else if (price != null && quantity != null) notional = parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n    else if (quantity != null) {                                                    // MARKET por QTY-base sem price (ou STOP/TP-MARKET)\n        const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: stopPrice; sen\u00e3o deriva o spot do MINI_TICKER\n        if (Number.isFinite(ref) && ref > 0) notional = ref * parseFloat(quantity);\n        else logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n    }\n    if (Number.isFinite(notional) && notional > cap) {\n        const basis = (Number.isFinite(pctCap) && pctCap <= absCeil) ? `${(MAX_ORDER_PCT_EQUITY * 100).toFixed(0)}% do equity` : 'teto absoluto';\n        const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${cap.toFixed(2)} (${basis}) \u2014 BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }",
+  "new_string": "const _eqMaxAge = parseInt(process.env.EQUITY_MAX_AGE_MS || '600000', 10);\nconst EQUITY_MAX_AGE_MS = Number.isFinite(_eqMaxAge) && _eqMaxAge > 0 ? _eqMaxAge : 600000; // equity mais velho que isto \u2192 cai pro teto absoluto\nconst _sellMult = parseFloat(process.env.MAX_SELL_EQUITY_MULT || '0');\nconst MAX_SELL_EQUITY_MULT = Number.isFinite(_sellMult) && _sellMult > 0 ? _sellMult : 0; // teto FOLGADO da venda = n\u00d7equity (rede anti-runaway). 0 = sem teto de venda.\n\n// Deriva o notional em USDT da ordem (quote do funil, price\u00d7qty do LIMIT/OCO, ou MARKET-por-qty via stopPrice/MINI_TICKER).\n// null quando n\u00e3o d\u00e1 p/ avaliar (MARKET-por-qty com pre\u00e7o de refer\u00eancia frio). Puro/read-only.\nfunction notionalOf(symbol, quantity, price, o) {\n    if (o.quoteOrderQty != null) return parseFloat(o.quoteOrderQty);                 // MARKET por quote (ex.: funil)\n    if (price != null && quantity != null) return parseFloat(price) * parseFloat(quantity); // LIMIT/OCO\n    if (quantity != null) {                                                          // MARKET por QTY-base sem price (ou STOP/TP-MARKET)\n        const ref = (o.stopPrice != null ? parseFloat(o.stopPrice) : refPrice(symbol)); // STOP/TP-MARKET: stopPrice; sen\u00e3o deriva o spot do MINI_TICKER\n        if (Number.isFinite(ref) && ref > 0) return ref * parseFloat(quantity);\n    }\n    return null;\n}\n\n// Equity trade\u00e1vel QUENTE e FRESCO (publicado pelo dailyCapJob no riskState), ou null se ausente/frio/velho.\nfunction freshEquity() {\n    const eq = (riskState.getEquity && riskState.getEquity()) || null;\n    if (eq && Number.isFinite(eq.value) && eq.value > 0 && eq.at && (Date.now() - eq.at) <= EQUITY_MAX_AGE_MS) return eq.value;\n    return null;\n}\n\nfunction assertWithinRisk(action, symbol, quantity, price, options) {\n    if (riskState.isHalted()) {\n        const st = riskState.getState();\n        const msg = `[riskGuard] HALT ativo (${st.source}: ${st.reason || 'kill-switch'}) \u2014 ${action} ${symbol} BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }\n\n    if (!/USDT$/i.test(symbol || '')) return; // teto em USDT s\u00f3 vale p/ pares *USDT (compra e venda)\n    const o = options || {};\n\n    // VENDA: isenta do %-teto de COMPRA (reduz risco; j\u00e1 capada na carteira pelo calcQty). S\u00f3 o HALT e a rede\n    // anti-runaway FOLGADA (opt-in) a cobrem. A rede barra S\u00d3 venda egr\u00e9gia (notional > n\u00d7equity) p/ pegar um qty\n    // buggado, NUNCA venda leg\u00edtima (1 posi\u00e7\u00e3o \u2264 equity << n\u00d7equity). equity frio/velho \u2192 venda PASSA (degrade\n    // OPEN: jamais barrar venda protetiva por mem\u00f3ria fria \u2014 a dire\u00e7\u00e3o segura na venda \u00e9 deixar passar).\n    if (/SELL/i.test(action || '')) {\n        if (MAX_SELL_EQUITY_MULT > 0) {\n            const eqv = freshEquity();\n            if (eqv != null) {\n                const sellCap = MAX_SELL_EQUITY_MULT * eqv;\n                const n = notionalOf(symbol, quantity, price, o);\n                if (Number.isFinite(n) && n > sellCap) {\n                    const msg = `[riskGuard] ${action} ${symbol} notional $${n.toFixed(2)} > teto de venda $${sellCap.toFixed(2)} (${MAX_SELL_EQUITY_MULT}\u00d7 equity) \u2014 BLOQUEADA (runaway?).`;\n                    logger('system', msg);\n                    throw new Error(msg);\n                }\n            }\n        }\n        return;\n    }\n\n    // COMPRA: limite efetivo = min(teto absoluto, %\u00d7equity), com piso de ordem m\u00ednima.\n    let pctCap = Infinity;\n    if (MAX_ORDER_PCT_EQUITY > 0) {\n        const eqv = freshEquity();\n        if (eqv != null) {\n            pctCap = MAX_ORDER_PCT_EQUITY * eqv;\n            if (MIN_ORDER_NOTIONAL_FLOOR > 0 && pctCap < MIN_ORDER_NOTIONAL_FLOOR) pctCap = MIN_ORDER_NOTIONAL_FLOOR;\n        }\n    }\n    const absCeil = MAX_ORDER_NOTIONAL_USDT > 0 ? MAX_ORDER_NOTIONAL_USDT : Infinity;\n    const cap = Math.min(pctCap, absCeil);\n    if (!Number.isFinite(cap)) return; // nem % (equity frio) nem teto absoluto configurado \u2192 inerte (s\u00f3 HALT cobre)\n\n    const notional = notionalOf(symbol, quantity, price, o);\n    if (notional == null && quantity != null && price == null && o.quoteOrderQty == null) // MARKET-por-qty c/ ref fria\n        logger('system', `[riskGuard] ${action} ${symbol} MARKET-por-qty sem pre\u00e7o de refer\u00eancia (MINI_TICKER frio) \u2014 teto N\u00c3O avaliado (coberto s\u00f3 pelo HALT).`);\n    if (Number.isFinite(notional) && notional > cap) {\n        const basis = (Number.isFinite(pctCap) && pctCap <= absCeil) ? `${(MAX_ORDER_PCT_EQUITY * 100).toFixed(0)}% do equity` : 'teto absoluto';\n        const msg = `[riskGuard] ${action} ${symbol} notional $${notional.toFixed(2)} > teto $${cap.toFixed(2)} (${basis}) \u2014 BLOQUEADA.`;\n        logger('system', msg);\n        throw new Error(msg);\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:30)*
+
+
+## 🤖 Claude *(01:50:31)*
+
+Atualizo o doc block pra documentar a rede de venda:
+
+## 🤖 Claude *(01:50:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "offset": 16,
+  "limit": 19
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 16	//
+> 17	//   TETO DE NOTIONAL — aplica-se SÓ A COMPRA. Venda CONVERTE ativo→USDT (reduz exposição) e já é limitada pela
+> 18	//   carteira no calcQty → fica ISENTA do teto (segue coberta pelo HALT; o cofre BTC, pela trava do MCP). Isso conserta
+> 19	//   o furo histórico em que o teto fixo barrava venda no-loss legítima (ex.: a venda de $40 do LTC vs teto $25) e
+> 20	//   dispensa o symbol-aware de BTC (a colheita de BTC_EXCESS é VENDA → isenta). O limite efetivo da compra é:
+> 21	//        cap = min( MAX_ORDER_NOTIONAL_USDT , MAX_ORDER_PCT_EQUITY × equityTradeável )  , nunca < MIN_ORDER_NOTIONAL_FLOOR
+> 22	//   MAX_ORDER_PCT_EQUITY=<0..1>  → teto da COMPRA como fração do equity tradeable QUENTE (publicado pelo dailyCapJob
+> 23	//                                  no riskState a cada ~60s; mark-to-market, conta Earn LD*). É o motor do
+> 24	//                                  dimensionamento que ESCALA com o capital. equity ausente/frio/velho
+> 25	//                                  (> EQUITY_MAX_AGE_MS) → a % é ignorada e cai-se pro teto absoluto (degrada seguro).
+> 26	//                                  0/ausente = %-teto desligado.
+> 27	//   MAX_ORDER_NOTIONAL_USDT=<n>  → TETO ABSOLUTO (runaway guard) em USDT — barra uma leitura de equity errada/grande.
+> 28	//                                  Deve ficar ACIMA do %-teto típico. 0 = sem teto absoluto.
+> 29	//   MIN_ORDER_NOTIONAL_FLOOR=<n> → piso: o %-teto NUNCA derruba o limite abaixo disto (não barra ordem mínima
+> 30	//                                  legítima quando o equity é pequeno). 0/ausente = sem piso.
+> 31	//   Formas de notional cobertas: quote (quoteOrderQty, ex.: funil), LIMIT/OCO (price×qty) e MARKET-por-QTY sem price
+> 32	//   (deriva o preço do MINI_TICKER; STOP/TP-MARKET usa o stopPrice). MINI_TICKER frio → PASSA (logado), coberto só
+> 33	//   pelo HALT. Só pares *USDT (notional em USDT); quote ≠ USDT passa.
+> 34	// Inerte por padrão; ajustável por env SEM deploy de código (basta reiniciar). Fail-closed (lança). ===
+> ```
+
+## 🤖 Claude *(01:50:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js",
+  "old_string": "//   TETO DE NOTIONAL \u2014 aplica-se S\u00d3 A COMPRA. Venda CONVERTE ativo\u2192USDT (reduz exposi\u00e7\u00e3o) e j\u00e1 \u00e9 limitada pela\n//   carteira no calcQty \u2192 fica ISENTA do teto (segue coberta pelo HALT; o cofre BTC, pela trava do MCP). Isso conserta\n//   o furo hist\u00f3rico em que o teto fixo barrava venda no-loss leg\u00edtima (ex.: a venda de $40 do LTC vs teto $25) e\n//   dispensa o symbol-aware de BTC (a colheita de BTC_EXCESS \u00e9 VENDA \u2192 isenta). O limite efetivo da compra \u00e9:",
+  "new_string": "//   TETO DE NOTIONAL \u2014 aplica-se S\u00d3 A COMPRA. Venda CONVERTE ativo\u2192USDT (reduz exposi\u00e7\u00e3o) e j\u00e1 \u00e9 limitada pela\n//   carteira no calcQty \u2192 fica ISENTA do teto de compra (segue coberta pelo HALT; o cofre BTC, pela trava do MCP).\n//   Isso conserta o furo hist\u00f3rico em que o teto fixo barrava venda no-loss leg\u00edtima (ex.: a venda de $40 do LTC vs\n//   teto $25) e dispensa o symbol-aware de BTC (a colheita de BTC_EXCESS \u00e9 VENDA \u2192 isenta).\n//   MAX_SELL_EQUITY_MULT=<n>     \u2192 rede anti-runaway na VENDA (defesa-em-profundidade, N\u00c3O sizing): teto FOLGADO =\n//                                  n\u00d7equity quente. Barra S\u00d3 venda EGR\u00c9GIA (qty buggado: notional > n\u00d7equity), nunca\n//                                  venda leg\u00edtima (1 posi\u00e7\u00e3o \u2264 equity << n\u00d7equity). equity frio/velho \u2192 venda PASSA\n//                                  (degrade OPEN \u2014 jamais barrar venda protetiva por mem\u00f3ria fria). 0/ausente = sem\n//                                  teto de venda. Recomendado folgado (2-3\u00d7).\n//   O limite efetivo da compra \u00e9:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:49)*
+
+
+## 🤖 Claude *(01:50:50)*
+
+Agora estendo a suíte com a Seção E (rede de venda) e o param `sellMult` no `loadExchange`:
+
+## 🤖 Claude *(01:50:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "old_string": "function loadExchange({ maxNotional = 0, pctEq = null, floorMin = null } = {}) {\n    process.env.MAX_ORDER_NOTIONAL_USDT = String(maxNotional);\n    if (pctEq != null) process.env.MAX_ORDER_PCT_EQUITY = String(pctEq); else delete process.env.MAX_ORDER_PCT_EQUITY;\n    if (floorMin != null) process.env.MIN_ORDER_NOTIONAL_FLOOR = String(floorMin); else delete process.env.MIN_ORDER_NOTIONAL_FLOOR;",
+  "new_string": "function loadExchange({ maxNotional = 0, pctEq = null, floorMin = null, sellMult = null } = {}) {\n    process.env.MAX_ORDER_NOTIONAL_USDT = String(maxNotional);\n    if (pctEq != null) process.env.MAX_ORDER_PCT_EQUITY = String(pctEq); else delete process.env.MAX_ORDER_PCT_EQUITY;\n    if (floorMin != null) process.env.MIN_ORDER_NOTIONAL_FLOOR = String(floorMin); else delete process.env.MIN_ORDER_NOTIONAL_FLOOR;\n    if (sellMult != null) process.env.MAX_SELL_EQUITY_MULT = String(sellMult); else delete process.env.MAX_SELL_EQUITY_MULT;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:51:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js",
+  "old_string": "// ============================================================================\n// SE\u00c7\u00c3O D \u2014 tudo DESLIGADO (sem teto absoluto, sem %) \u2192 guard inerte (s\u00f3 HALT).\n// ============================================================================",
+  "new_string": "// ============================================================================\n// SE\u00c7\u00c3O E \u2014 rede anti-runaway na VENDA (MAX_SELL_EQUITY_MULT=3 \u2192 teto folgado = 3\u00d7equity).\n// Barra S\u00d3 venda egr\u00e9gia; venda leg\u00edtima e equity frio PASSAM (degrade-open).\n// ============================================================================\nex = loadExchange({ maxNotional: 100, pctEq: 0.20, sellMult: 3 });\ng = ex.assertWithinRisk;\nMINI = 44;\nEQUITY = freshEq(150); // teto de venda = 3\u00d7150 = $450\ncheckOk('venda-net: SELL $440 (10\u00d744 < $450) passa', () => g('SELL', 'LTCUSDT', 10, 44, {}));\ncheckThrows('venda-net: SELL $660 (15\u00d744 > $450) BLOQUEIA (runaway)', () => g('SELL', 'LTCUSDT', 15, 44, {}));\ncheckThrows('venda-net: OCO-SELL $660 > $450 BLOQUEIA', () => g('OCO-SELL', 'LTCUSDT', 15, 44, { abovePrice: 44 }));\ncheckThrows('venda-net: STOP-MARKET $660 (stopPrice) > $450 BLOQUEIA', () => g('SELL', 'LTCUSDT', 15, null, { stopPrice: 44 }));\ncheckOk('venda-net: COMPRA segue no %-teto $30 (net de venda n\u00e3o afeta compra)', () => g('BUY', 'LTCUSDT', null, null, { quoteOrderQty: 29 }));\ncheckThrows('venda-net: COMPRA $35 ainda bloqueada pelo %-teto', () => g('BUY', 'LTCUSDT', 0.8, 44, {}));\n// equity FRIO \u2192 venda passa mesmo gigante (degrade OPEN: n\u00e3o barrar venda protetiva por mem\u00f3ria fria)\nEQUITY = { value: null, at: null };\ncheckOk('venda-net + equity frio: SELL $44k passa (degrade-open)', () => g('SELL', 'LTCUSDT', 1000, 44, {}));\n// equity VELHO \u2192 idem (degrade-open)\nEQUITY = staleEq(150);\ncheckOk('venda-net + equity velho: SELL $44k passa (degrade-open)', () => g('SELL', 'LTCUSDT', 1000, 44, {}));\n// MINI frio (MARKET-por-qty sem ref) com equity fresco \u2192 notional indeterminado \u2192 passa\nEQUITY = freshEq(150); MINI = null;\ncheckOk('venda-net + MINI frio: MARKET-por-qty passa (notional indeterminado)', () => g('SELL', 'LTCUSDT', 9999, null, {}));\nMINI = 44;\n\n// ============================================================================\n// SE\u00c7\u00c3O D \u2014 tudo DESLIGADO (sem teto absoluto, sem %) \u2192 guard inerte (s\u00f3 HALT).\n// ============================================================================"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/scripts/sim/riskGuard.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:51:22)*
+
+
+## 🤖 Claude *(01:51:22)*
+
+Rodo a suíte com a Seção E nova:
+
+## 🤖 Claude *(01:51:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend; AES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | tail -16",
+  "description": "Run full sim suite with sell-net tests"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> farmTriggers.test.js: 9 passed, 0 failed
+> 
+> === sim/feeCalc.test.js ===
+> 
+> feeCalc.test.js: 11 passed, 0 failed
+> 
+> === sim/integration.test.js ===
+> 
+> integration.test.js: 24 passed, 0 failed
+> 
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 38 passed, 0 failed
+> 
+> sim suite: 6/6 arquivos OK.
+> ```
+
+## 🤖 Claude *(01:51:36)*
+
+
+## 🤖 Claude *(01:51:38)*
+
+6/6 — riskGuard agora **38 asserts**. Sintaxe + diff (delta desde `fe06c74`) e mando pro gate QA+TL (revisão focada no adicional):
+
+## 🤖 Claude *(01:51:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nnode --check backend/src/utils/exchange.js && echo \"OK exchange.js\"\nnode --check backend/scripts/sim/riskGuard.test.js && echo \"OK riskGuard.test.js\"\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/utils/exchange.js backend/scripts/sim/riskGuard.test.js 2>/dev/null\ngit -c safe.directory='*' diff -- backend/src/utils/exchange.js backend/scripts/sim/riskGuard.test.js > /tmp/sell-net.diff 2>&1\necho \"diff bytes: $(wc -c </tmp/sell-net.diff)\"",
+  "description": "Syntax check, chown, save delta diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK exchange.js
+> OK riskGuard.test.js
+> diff bytes: 12256
+> ```
+
+## 🤖 Claude *(01:52:08)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review da rede de venda",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise um FOLLOW-UP aditivo no money-path do TradeUX (backend), em MAINNET REAL (\ud83d\udd34 LIVE, equity ~$149). Este follow-up foi RECOMENDADO por voc\u00ea mesmo na revis\u00e3o anterior do %-teto. Veredito PASS / PASS COM RESSALVAS / FAIL.\n\n## Contexto\nNa mudan\u00e7a anterior (commit `fe06c74`, j\u00e1 no ar) a VENDA ficou TOTALMENTE isenta do teto de notional (s\u00f3 HALT + trava-MCP do cofre BTC a cobrem). QA+TL pediram uma **rede anti-runaway na venda**: um teto FOLGADO que barre s\u00f3 venda EGR\u00c9GIA (qty buggado), sem reintroduzir o bug do no-loss. Este diff implementa exatamente isso.\n\n## O que mudou (diff em /tmp/sell-net.diff; working tree aplicado em /home/gcrux-tradeux/tradeux)\n`backend/src/utils/exchange.js` (`assertWithinRisk` reestruturado) + `backend/scripts/sim/riskGuard.test.js` (Se\u00e7\u00e3o E nova).\n- Novo env `MAX_SELL_EQUITY_MULT` (default 0=off). Quando >0, teto da VENDA = `n \u00d7 equity quente`.\n- Refactor: extra\u00eddos helpers `notionalOf()` (deriva\u00e7\u00e3o de notional, pura) e `freshEquity()` (equity quente fresco ou null), reusados na compra E venda.\n- Fluxo novo do `assertWithinRisk`: HALT \u2192 n\u00e3o-USDT retorna \u2192 se VENDA: rede anti-runaway (se `MAX_SELL_EQUITY_MULT>0` e equity FRESCO e notional > n\u00d7equity \u2192 bloqueia; **equity frio/velho \u2192 venda PASSA, degrade-OPEN**) e retorna \u2192 sen\u00e3o COMPRA: %-teto como antes.\n- Param ao vivo planejado: `MAX_SELL_EQUITY_MULT=3` (3\u00d7equity \u2248 $448 a $149).\n\n## Foco (adversarial, mas escopo no DELTA)\n1. **Regress\u00e3o do refactor**: o comportamento da COMPRA \u00e9 ID\u00caNTICO ao de antes? Em particular o log \"MARKET-por-qty MINI_TICKER frio\" \u2014 antes era um `else` no derivador; agora \u00e9 `notional==null && quantity!=null && price==null && quoteOrderQty==null`. Essa condi\u00e7\u00e3o reproduz EXATAMENTE os mesmos casos? H\u00e1 caso em que a condi\u00e7\u00e3o loga (ou deixa de logar) diferente do original? (ex.: quoteOrderQty presente mas inv\u00e1lido; price presente mas quantity null).\n2. **Falso-positivo na venda (o medo principal)**: existe venda LEG\u00cdTIMA que possa exceder `3\u00d7equity` e ser barrada por engano? Considere venda do cofre BTC inteiro, venda de MAX_WALLET, e o caso em que o equity quente est\u00e1 SUBestimado (publicado baixo) enquanto uma posi\u00e7\u00e3o grande \u00e9 vendida.\n3. **Degrade-open correto**: equity frio/velho/ausente \u2192 venda SEMPRE passa? Confirme que n\u00e3o h\u00e1 ramo onde o sell-net bloqueia com equity stale.\n4. **`notionalOf` pureza**: mudou algum retorno vs a l\u00f3gica inline antiga? (quote, price\u00d7qty, MARKET-por-qty via stopPrice/MINI, e o caso de s\u00f3-quantity sem ref \u2192 null).\n5. **Cobertura da Se\u00e7\u00e3o E**: cobre venda-passa, venda-bloqueia (price\u00d7qty, OCO-SELL, STOP), compra-inalterada, equity frio/velho degrade-open, MINI frio? Falta algum caso (ex.: borda exata notional==sellCap)?\n\nRode `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (deve dar 6/6, riskGuard 38 asserts). Aponte testes faltantes concretos. Responda em pt-BR, conciso."
+}
+```
+
+## 🤖 Claude *(01:52:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review da rede de venda",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK) de um FOLLOW-UP aditivo no money-path do TradeUX que vai pra MAINNET REAL (\ud83d\udd34 LIVE, equity ~$149, trunk-based). Este follow-up foi RECOMENDADO por voc\u00ea na revis\u00e3o anterior (nice-to-have #1).\n\n## Contexto\nCommit anterior `fe06c74` (no ar): VENDA ficou isenta do teto de notional. Voc\u00ea pediu uma rede anti-runaway FOLGADA na venda (default off, ~2-3\u00d7equity) pra recuperar a 2\u00aa linha contra `qty` buggado sem reintroduzir o bug do no-loss. Este diff implementa.\n\n## Design\n- Novo env `MAX_SELL_EQUITY_MULT` (default 0=off). Teto da venda = `n \u00d7 equity quente` (equity-relativo \u2192 escala com o capital, consistente com o %-teto de compra). Ser\u00e1 ligado a `3` no `.env`.\n- **Degrade-OPEN**: equity frio/velho/ausente \u2192 venda PASSA (nunca barrar venda protetiva por mem\u00f3ria fria \u2014 assimetria deliberada vs a compra, que degrada pro teto absoluto).\n- Refactor: helpers `notionalOf()` e `freshEquity()` extra\u00eddos e reusados na compra e venda (reduz duplica\u00e7\u00e3o).\n- A rede barra s\u00f3 venda EGR\u00c9GIA (notional > 3\u00d7equity), nunca venda leg\u00edtima (1 posi\u00e7\u00e3o \u2264 equity << 3\u00d7equity).\n\n## Diff em /tmp/sell-net.diff (working tree em /home/gcrux-tradeux/tradeux): `backend/src/utils/exchange.js` + `backend/scripts/sim/riskGuard.test.js`.\n\n## Avalie (must-fix vs nice-to-have)\n1. **A escolha equity-relativo (3\u00d7) vs o `MAX_SELL_NOTIONAL_USDT` fixo que voc\u00ea sugeriu**: o multiplicador \u00e9 melhor (escala, n\u00e3o precisa bump manual)? Ou um teto fixo seria mais previs\u00edvel como rede de seguran\u00e7a?\n2. **Degrade-open na venda \u00e9 a postura certa** (a rede some quando equity \u00e9 frio)? Aceit\u00e1vel que a prote\u00e7\u00e3o anti-runaway tenha esse gap, dado que \u00e9 defesa-em-profundidade e que travar venda protetiva \u00e9 o pior erro?\n3. **3\u00d7 \u00e9 o n\u00famero certo** dado o cofre BTC (venda do cofre inteiro \u2248 equity \u2192 bem abaixo de 3\u00d7)? Algum cen\u00e1rio de venda leg\u00edtima > 3\u00d7equity?\n4. **Qualidade do refactor** (notionalOf/freshEquity): melhora ou s\u00f3 move c\u00f3digo? Introduz risco de regress\u00e3o na compra?\n5. Confirme: sem migration, env-tun\u00e1vel, default-off seguro (backward-compat).\n\nSu\u00edte: `cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 npm run test:sim` (6/6, riskGuard 38). Foque na decis\u00e3o. Responda em pt-BR, conciso."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Os backtest-results são de ~12h (sessão anterior/outro processo), não fazem parte deste follow-up (22h51). Confirmo o ponto sutil: no diff antigo, a venda retornava ANTES de checar `USDT$`, agora a checagem de `USDT$` vem PRIMEIRO. Verifico se isso muda comportamento para venda de par não-USDT.\n\nA nova ordem é: `if (!/USDT$/) return` → depois o branch SELL. Antes era: SELL retornava primeiro, depois `!USDT return`. Para um SELL de par não-USDT (ex.: ETHBTC), ambos retornam sem barrar — comportamento idêntico. Confirmo que para SELL de par USDT a rede agora atua. Está correto.\n\nVEREDITO: **APPROVE COM SUGESTÕES**\n\n## Racional\n\nFollow-up pequeno, aditivo, default-off, bem isolado no único chokepoint (`assertWithinRisk` em `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js`). Suíte 6/6, riskGuard 38 asserts (eram 33; +5 cobrindo a seção E nova) — verifiquei rodando. Implementa exatamente o nice-to-have #1 que eu havia pedido: rede anti-runaway FOLGADA na venda, sem reintroduzir o bug do no-loss (`fe06c74` deixou a venda isenta do teto fixo de $25 que barrava venda legítima de $40). Respondendo aos 5 pontos:\n\n**1. Equity-relativo (3×) vs teto fixo — multiplicador é a escolha certa.** Concordo em mudar de ideia vs. minha sugestão original. Um `MAX_SELL_NOTIONAL_USDT` fixo recriaria exatamente a dívida operacional do teto de compra: você teve que bumpar `MAX_ORDER_NOTIONAL_USDT` à mão (25→50, runtime não-git) justamente porque um número absoluto não escala. O `n×equity` escala com o capital, é consistente com o `%-teto` de compra (mesma base `freshEquity()`), e zero-manutenção. Para uma rede de defesa-em-profundidade (não sizing), previsibilidade importa menos que "nunca barrar venda legítima sem ajuste manual". Correto.\n\n**2. Degrade-OPEN na venda — postura certa.** A assimetria é deliberada e bem fundamentada: a compra degrada FECHADO (cai pro teto absoluto) porque comprar grande com equity errado AUMENTA risco; a venda degrada ABERTO porque travar uma venda protetiva por memória fria é o pior erro possível (não liquida no death/stop → posição órfã exposta). O gap é aceitável porque (a) é a 2ª linha — o HALT e o calcQty-na-carteira são a 1ª, (b) equity frio é transitório (dailyCapJob publica ~60s), (c) a direção segura na venda é deixar passar. OK.\n\n**3. 3× é folgado o suficiente.** Cenário do cofre: venda do BTC inteiro ≈ equity (1×) << 3× — passa. Não vejo cenário de venda legítima single-order > 3×equity num spot long-only: o notional de venda é limitado pelo que você possui do ativo, e nenhuma posição isolada pode valer 3× a carteira inteira. Um `qty` buggado (ex.: o −1013 histórico, ou casas decimais trocadas) é o único jeito de estourar 3×. Alvo correto.\n\n**4. Refactor — melhora real, baixo risco de regressão.** `notionalOf()` e `freshEquity()` são puros/read-only e a extração é byte-equivalente à lógica inline anterior (li os dois lados). O caminho da COMPRA agora chama os mesmos helpers — a única diferença comportamental é cosmética: o log de "MARKET-por-qty sem ref" virou condição explícita (`notional == null && quantity != null && price == null && quoteOrderQty == null`) em vez do `else` antigo, preservando a mensagem. Cobertura de compra na suíte segue verde. Sem regressão.\n\n**5. Confirmado: sem migration, env-tunável, default-off, backward-compat.** `MAX_SELL_EQUITY_MULT` ausente/0 → rede inerte, comportamento idêntico ao `fe06c74` no ar. Sutileza que verifiquei e está OK: a ordem da checagem inverteu (`!/USDT$/ return` agora vem ANTES do branch SELL); para SELL de par não-USDT ambos os caminhos retornam sem barrar → idêntico. Sem segredos, sem log de chave.\n\n## Must-fix\nNenhum.\n\n## Nice-to-have (não bloqueia)\n- **Não commitar `backtest-results/farm-funnel-1h-full*.{json,md}`** neste follow-up: são de ~12h15 (sessão anterior/outro processo), owner `gcrux-tradeux`, fora do escopo money-path. O `farm-funnel-1h-full.json/.md` é untracked. Faça o stage seletivo só de `backend/src/utils/exchange.js` + `backend/scripts/sim/riskGuard.test.js` (memória avisa sobre contaminação cross-session — confirmei procedência: backtest-results NÃO pertencem a este diff).\n- Observabilidade: quando `MAX_SELL_EQUITY_MULT>0` mas a venda passa por degrade-open (equity frio), nada é logado. Um `logger(\'system\', ...)` de info ali documentaria o gap em produção. Marginal — não atrapalha.\n\n## Decisão de merge\n**APPROVE** para ir pra MAINNET via PR (trunk-based/push-via-token). Condições antes do push:\n1. Stage seletivo: apenas `backend/src/utils/exchange.js` e `backend/scripts/sim/riskGuard.test.js`. Deixar os `backtest-results/` de fora (descartar/segregar — não são deste follow-up).\n2. Push como `gcrux-tradeux` (chave SSH do `ubuntu`, chown `.git` de volta) — git-ownership-gotcha.\n3. Pós-deploy: ligar `MAX_SELL_EQUITY_MULT=3` no `.env` e reiniciar o backend (é runtime não-git → registrar no HANDOFF junto do `MAX_ORDER_NOTIONAL_USDT=50` e do gate id2/id3, pra reaplicar após `make nuke`). Smoke vivo: `GET /system/halt` deve seguir `halted=false`; uma venda no-loss do Farm (notional << $450 = 3×$149) deve continuar passando.\n\nOrdem: este é o único item. Pode subir direto após o stage seletivo.'}, {'type': 'text', 'text': "agentId: a2d798c632d0d96cc (use SendMessage with to: 'a2d798c632d0d96cc' to continue this agent)\n<usage>subagent_tokens: 47303\ntool_uses: 6\nduration_ms: 61032</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "You've hit your session limit · resets 12:10am (America/Sao_Paulo)"}, {'type': 'text', 'text': "agentId: a037871aeb5aea03e (use SendMessage with to: 'a037871aeb5aea03e' to continue this agent)\n<usage>subagent_tokens: 0\ntool_uses: 14\nduration_ms: 120752</usage>"}]
+> ```
+
+## 🤖 Claude *(01:54:09)*
+
+You've hit your session limit · resets 12:10am (America/Sao_Paulo)
+
+## 👤 User *(01:55:35)*
+
+Sim segue com o followup 1
+
+## 🤖 Claude *(01:55:36)*
+
+You've hit your session limit · resets 12:10am (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%

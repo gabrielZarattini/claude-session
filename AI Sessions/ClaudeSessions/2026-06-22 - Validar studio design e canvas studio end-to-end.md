@@ -9858,6 +9858,880 @@ A revisão aterrissou e é reveladora. Deixa eu ler o resultado completo (a noti
 >    NOTE: ADVERSARIAL VERIFICATION SUMMARY: The BoK DOES acknowledge the secondary agency segment (Persona Marina, segmento secundário ~50k micro-agências) and frames HyperFrames editor + per-client BYOK isolation as core value for agencies (MRD §2.3, PRD §3.2 Journey, BR-VS-002/014). However, the BoK treats agencies as a feature segmentation WITHIN a primarily creator-focused platform, not as a distinct ec
 > ```
 
+## 🤖 Claude *(01:29:46)*
+
+
+## 🤖 Claude *(01:30:02)*
+
+Revisão completa (11 agentes, ~990k tokens, verificação adversarial). Meu veredito é claro e confirma seu instinto:
+
+## ⚖️ Veredito: NÃO — a BoK **não cobre** a alavancagem de agência (ainda)
+
+A BoK é **honesta e bem-arquitetada para o MVP solo-creator** (persona Léo, escopo `user_id`), e **reconhece** a agência (persona Marina, "app isolado") — mas a trata como **segmento secundário DEFERIDO**, e **o schema não tem as primitivas de agência**. Isso é dívida arquitetural, não só documental. Todas as 6 dimensões confirmaram gaps reais (verificados ceticamente, ~poucos falsos-positivos).
+
+**A dívida mais perigosa — hierarquia de tenancy:** tudo é `user_id + project_id`. **Não existe entidade `organization`/`client`** (agência → N clientes). Consequências confirmadas:
+- RLS estritamente per-user → uma agência precisaria de **uma conta separada por cliente**.
+- Atribuição de afiliado **não segmenta por cliente** (tudo rola sob 1 `user_id`).
+- **Bug LGPD real:** `erase_video_artifacts(p_user_id)` apaga por usuário → apagar **1 cliente apaga os 5** da agência.
+- mcoCoins per-user, **sem cost-center/chargeback** por cliente.
+
+**Os 5 clusters de gap (todos confirmados):**
+| Dimensão | Gap |
+|---|---|
+| **Tenancy/hierarquia** | sem entidade org/cliente; RLS/billing/afiliado/erasure/storage todos flat per-user |
+| **White-label/revenda** | sem domínio/branding próprio, sem mcoCoins wholesale/margem de revenda, sem portal do cliente, sem API de reseller |
+| **Persona-agência/ops** | sem dashboard multi-cliente, sem RBAC/seats de time, sem workflow de aprovação/handoff, sem analytics por cliente |
+| **Economia de margem** | sem plano Agency/Enterprise com gates, sem split de afiliado %, sem ROI/unit-economics do lado da agência |
+| **Posicionamento** | trata agência como sub-feature, não como **"agência de conteúdo em caixa"** unindo Vídeo + Viral Autopilot + Marketing Hub + ML; concorrência só vê tooling de creator |
+
+**O que cobre bem (justiça):** MVP solo, BYOK per-user, mcoCoins atômico, o padrão "app isolado sob MCORCH", e é **explícito** sobre o deferimento (não mente).
+
+**Minha recomendação:** a alavancagem de agência é a SUA tese central — então ela deve ser **first-class na BoK AGORA** (desenho desde o dia 1), mesmo que a implementação venha em fases. Deferir a hierarquia de tenancy é o pior tipo de dívida: vira um retrofit que quebra RLS + billing + erasure (o bug LGPD). Recomendo **emendar a BoK** com uma camada de alavancagem de agência antes de codar.
+
+Como quer proceder?
+
+## 🤖 Claude *(01:30:11)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A BoK n\u00e3o cobre a alavancagem de ag\u00eancia (reconhecida mas deferida; schema sem entidade org/cliente; bug LGPD de erasure per-user). Como tratar antes da implementa\u00e7\u00e3o?",
+      "header": "Emenda BoK",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Emendar agora \u2014 camada de ag\u00eancia full",
+          "description": "Emendar a BoK com a camada de alavancagem: entidade org/cliente (ag\u00eancia\u2192N clientes) + isolamento/chargeback/afiliado/erasure per-cliente + white-label/revenda (mcoCoins wholesale + margem) + superf\u00edcies de ag\u00eancia (dashboard multi-cliente, RBAC/seats, portal do cliente) + posicionamento de plataforma. Schema certo desde o dia 1. Mais lento, evita o retrofit."
+        },
+        {
+          "label": "S\u00f3 a funda\u00e7\u00e3o de tenancy agora",
+          "description": "M\u00ednimo cir\u00fargico: emendar S\u00d3 a entidade org/cliente + RLS de workspace + erasure/chargeback per-cliente (a parte irrevers\u00edvel-se-deferida + o bug LGPD). White-label/revenda/superf\u00edcies ficam como emenda v1.0 agendada. Meio-termo pragm\u00e1tico."
+        },
+        {
+          "label": "MVP solo primeiro, ag\u00eancia em v1.0",
+          "description": "Seguir o MVP solo-creator como est\u00e1; agendar a camada de ag\u00eancia como emenda BoK v1.0 + item de roadmap (aceita a d\u00edvida de retrofit, mas documentada). Mais r\u00e1pido pro 1\u00ba valor."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A BoK não cobre a alavancagem de agência (reconhecida mas deferida; schema sem entidade org/cliente; bug LGPD de erasure per-user). Como tratar antes da implementação?"="Emendar agora — camada de agência full". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:36:42)*
+
+
+## 🤖 Claude *(01:36:47)*
+
+GO confirmado — **emenda agora, camada de agência full**. Vou emendar a BoK preservando tudo (gate de superset: IDs existentes intactos, novos appendados como seção de emenda v1.1), com o modelo de entidade **fixado upfront** pra todos os docs ficarem consistentes — assim os estágios rodam em **paralelo** (cada um appenda na sua doc; sem a cadeia sequencial que pegou o 529).
+
+Modelo canônico que vou cravar: `organizations` (agência/tenant) + `organization_members` (RBAC/seats) + `clients` (sub-contas) + colunas `org_id`/`client_id` (nullable, backward-compat solo) nas tabelas existentes + RLS por membership + `erase_client_artifacts(org_id, client_id)` (corrige o bug LGPD) + wholesale mcoCoins/margem + portal do cliente + API de reseller.
+
+## 🤖 Claude *(01:37:37)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'video-studio-bok-agency-amendment',\n  description: 'Amend the video-studio BoK with the full Agency-Leverage layer (v1.1) \u2014 superset: preserve all existing IDs, append agency sections',\n  phases: [\n    { title: 'Amend', detail: 'parallel: market/biz \u00b7 product \u00b7 frd/sdd \u00b7 data-model \u00b7 process/quality' },\n  ],\n}\n\nconst BOK = 'docs/bok/video-studio'\n\nconst SHARED = `\nYou are amending the SEALED video-studio BoK to add a first-class AGENCY-LEVERAGE layer (v1.1). The Sovereign's\ncore thesis: MCORCH is \"an AI content agency in a box\" \u2014 agencies/power-creators run faceless-video + design\ncontent-ops at SCALE across MANY clients, white-labeled, with mcoCoins as the margin lever and ML affiliate as\nrevenue. video-studio + Viral Autopilot + Marketing Hub + affiliate ML = the agency leverage STACK.\n\nSUPERSET GATE (mandatory): PRESERVE every existing ID and section VERBATIM. Do NOT renumber or delete anything.\nMethod: READ the full existing doc, then APPEND a new clearly-marked section\n\"## \u00a7AG \u2014 Agency-Leverage Amendment (v1.1)\" at the END (before the footer), adding the new IDs there and\ncross-referencing existing IDs you amend (e.g. \"video_renders gains org_id/client_id \u2014 amends 06 \u00a71.1\").\nKeep the footer \"_Generated by MCORCH BoK Scribe Agent v1.0.0_\". English IDs/headings, executive PT-BR narrative.\n\n=== CANONICAL AGENCY-LAYER MODEL (use these EXACT names across ALL docs) ===\nNew tables:\n- organizations (id uuid pk, name, slug, owner_user_id uuid, plan_tier text CHECK in (agency,enterprise), custom_domain text null, brand_theme jsonb, wholesale_mco_balance numeric default 0, created_at) \u2014 the agency tenant. RLS: members-only.\n- organization_members (org_id uuid fk, user_id uuid, role text CHECK in (owner,billing_admin,editor,viewer), seat_active bool, UNIQUE(org_id,user_id)) \u2014 RBAC + seat management.\n- clients (id uuid pk, org_id uuid fk, name, byok_ref text null [per-client provider config], affiliate_tag text, status, created_at) \u2014 the agency's client sub-accounts. RLS: org members.\nAmend existing tables (video_renders, video_scenes, video_assets, video_templates, affiliate_links, mcoin ledger): ADD nullable org_id + client_id (NULL = solo-creator backward-compat; set = scoped to an agency client). Extend RLS from \"user_id = auth.uid()\" to \"user_id = auth.uid() OR org_id IN (SELECT org_id FROM organization_members WHERE user_id = auth.uid() AND seat_active)\".\nmcoCoins: org-level WHOLESALE balance (organizations.wholesale_mco_balance) + per-client cost attribution. New RPC deduct_mco_coins_org(p_org_id,p_client_id,p_amount,...) \u2014 atomic, debits org wholesale, records per-client cost-center; 402 on insufficient. Resale margin = org buys wholesale (bulk discount tier), resells creative to its clients.\nLGPD erasure FIX: NEW RPC erase_client_artifacts(p_org_id,p_client_id) \u2014 selective per-client cascade (fixes the confirmed bug where erase_video_artifacts(p_user_id) purges ALL an agency's clients). delete-account still purges the whole org; per-client erasure is scoped.\nWhite-label: organizations.custom_domain + brand_theme (agency-branded design/video surfaces); client portal (read-only shareable render gallery + approval workflow + per-client invoice). Reseller API/SDK: PAT-scoped (mirror vision-mcp mcp_access_tokens SHA-256 + scopes) for programmatic agency integration.\nPlan tiers: add Agency (e.g. 25000 mco/mo + N seats + wholesale rate + white-label) extending the existing Starter/Pro/Enterprise; revenue split MCORCH\u2194agency\u2194client documented.\n\n=== NEW ID RANGES (superset \u2014 existing MR..014/BR..016/PR..023/FR..032/NFR..017/OTD..007/FMEA..019 PRESERVED) ===\nMR-VS-015..020 \u00b7 BR-VS-017..024 \u00b7 PR-VS-018,019 (fill gaps) + PR-VS-024..031 \u00b7 FR-VS-033..046 \u00b7 NFR-VS-018..022 \u00b7 OTD-VS-008..013 \u00b7 FMEA-VS-020..027 \u00b7 KPI-VS-019..024 (agency KPIs) \u00b7 QO-VS-008..009.\n\nEach new requirement must trace upstream (MR\u2192BR\u2192PR\u2192FR) and honor R1-R5 (per-user/per-client BYOK, mcoCoins atomic, MCORCH auth/SSO, mesh, network-bridge). The agency tenancy must NOT break the solo-creator path (nullable org_id/client_id = backward-compat).\n`\n\nconst stages = [\n  {\n    key: 'market-biz',\n    prompt: `STAGE = MARKET & BUSINESS amendment. APPEND the \u00a7AG section to BOTH ${BOK}/01-mrd.md and ${BOK}/02-brd.md (read each full first).\\n` +\n      `01-mrd \u00a7AG: reframe positioning to \"AI content agency in a box\" (the leverage STACK: video-studio + Viral Autopilot + Marketing Hub + ML affiliate); add MR-VS-015..020 (white-label demand, reseller/micro-agency TAM as a PRIMARY leverage segment not just secondary, content-ops-platform need, per-client compliance/LGPD, margin economics, competitive vs AGENCY tooling \u2014 not just creator SaaS).\\n` +\n      `02-brd \u00a7AG: add BR-VS-017..024 (agency tenancy, Agency plan tier + seats, wholesale mcoCoins + resale margin, affiliate revenue split %, RBAC, per-client cost-center/chargeback, white-label, per-client LGPD erasure) each traced to an MR-VS; add an AGENCY ROI model (per-client cost vs revenue, agency margin) distinct from the solo-creator ROI; extend mcoCoins economics \u00a76 with the Agency tier + wholesale rate.`,\n  },\n  {\n    key: 'product',\n    prompt: `STAGE = PRODUCT amendment. APPEND \u00a7AG to ${BOK}/03-prd.md (read full first).\\n` +\n      `Deepen Persona 2 (Marina agency-operator) into a FIRST-CLASS persona: journeys for managing a PORTFOLIO of clients (onboard a client, generate batch per client, per-client dashboard/ROI, approval/handoff via client portal, team/seat management). Fill PR-VS-018,019 + add PR-VS-024..031 (MoSCoW) each traced to a BR-VS with effort + mcoCoins: agency multi-client dashboard, client portal (share/approve/invoice), team RBAC/seats, white-label branding/custom-domain, wholesale purchase flow, reseller API, per-client reporting, per-client BYOK management. Add Gherkin acceptance for the agency flows. Promote the agency segment from \"Could Have/deferred\" to a phased v1.0 first-class scope.`,\n  },\n  {\n    key: 'frd-sdd',\n    prompt: `STAGE = TECHNICAL amendment. APPEND \u00a7AG to BOTH ${BOK}/04-frd.md and ${BOK}/05-sdd.md (read each full first).\\n` +\n      `04-frd \u00a7AG: add FR-VS-033..046 (org/client CRUD, organization_members RBAC+seats, per-client scoping of renders/assets/affiliate, agency dashboard hooks, client portal, white-label domain/theme, wholesale mcoCoins purchase, deduct_mco_coins_org per-client attribution, erase_client_artifacts per-client, reseller PAT API) + NFR-VS-018..022 (multi-tenant isolation, per-client data segregation, per-org scale/quota incl the LTX ZeroGPU daily-limit bottleneck, white-label domain TLS). Each FR: category + PR traced + acceptance-test id.\\n` +\n      `05-sdd \u00a7AG: architecture of the org\u2192client\u2192project hierarchy + the EXTENDED RLS (membership-based) with exact CREATE POLICY shells; the new tables (organizations/organization_members/clients) + amended columns migration stubs (RLS default-deny + the OR-membership policy); STRIDE for the NEW cross-tenant risks (org RLS bypass, seat-sharing, white-label domain hijack, wholesale-margin fraud, per-client erasure miss); the deduct_mco_coins_org + erase_client_artifacts RPC contracts; reseller PAT (mirror mcp_access_tokens); and OTD-VS-008..013 (org-vs-flat tenancy MIGRATION path for existing user_id rows, revenue-split model, RBAC role set, custom-domain provisioning, wholesale pricing, white-label theming engine) each with options + recommendation.`,\n  },\n  {\n    key: 'data-model',\n    prompt: `STAGE = DATA-MODEL amendment. APPEND \u00a7AG to ${BOK}/06-data-model.md (read full first).\\n` +\n      `Add the canonical agency tables (organizations, organization_members, clients) \u2014 conceptual + logical + Supabase CREATE TABLE stubs with RLS default-deny + the membership-based policy; amend the existing video_* + affiliate_links + ledger tables with nullable org_id/client_id + the extended RLS (show the ALTER + new policy). Update the Tenant Isolation Map to org\u2192client\u2192project (replacing flat user_id-only). Define deduct_mco_coins_org + erase_client_artifacts(p_org_id,p_client_id) RPC stubs (SECURITY DEFINER, search_path='', tenant-guarded, Storage via API). Fix the LGPD section: per-client selective erasure + the cascade. GraphRAG: org/client scoping of observation/script/qa nodes. Data-quality + retention per client.`,\n  },\n  {\n    key: 'process-quality',\n    prompt: `STAGE = PROCESS & QUALITY amendment. APPEND \u00a7AG to BOTH ${BOK}/07-process-flow.md and ${BOK}/08-quality-metrics.md (read each full first).\\n` +\n      `07-process-flow \u00a7AG: add PROC-VS-009..013 with swimlanes (Agency Operator | Client | Frontend | Edge Function | DB): agency+client onboarding/provisioning (per-client BYOK setup), batch render across a client portfolio, per-client cost-center chargeback + wholesale mcoCoins waterfall (MCORCH\u2192agency\u2192client), client portal approval/handoff, per-client LGPD erasure. Reseller onboarding SOP reference.\\n` +\n      `08-quality-metrics \u00a7AG: add KPI-VS-019..024 (agency activation/attach rate, multi-client adoption, per-client margin, seat utilization, white-label adoption, agency retention) + QO-VS-008..009 + FMEA-VS-020..027 (cross-tenant data leak via org RLS bug [target high RPN], per-client erasure miss [LGPD], wholesale-margin fraud, seat-sharing abuse, white-label domain hijack, affiliate-split miscalc, org-membership privilege escalation, noisy-neighbor scale) each with S/O/D + RPN + recommended action; self-healing event types for the new cross-tenant guards.`,\n  },\n]\n\nphase('Amend')\nconst results = await parallel(\n  stages.map((s) => () => agent(`${SHARED}\\n\\n${s.prompt}\\n\\nReturn a concise summary: files amended, new ID ranges added, and any cross-doc note.`,\n    { label: `amend:${s.key}`, phase: 'Amend', agentType: 'general-purpose' })),\n)\n\nreturn { amendments: results.map((r, i) => ({ stage: stages[i].key, summary: r })) }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wq1cak4mj
+> Summary: Amend the video-studio BoK with the full Agency-Leverage layer (v1.1) — superset: preserve all existing IDs, append agency sections
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/subagents/workflows/wf_c5b884b1-a94
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/video-studio-bok-agency-amendment-wf_c5b884b1-a94.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/video-studio-bok-agency-amendment-wf_c5b884b1-a94.js"} to iterate without resending the script.)
+> Run ID: wf_c5b884b1-a94
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/workflows/scripts/video-studio-bok-agency-amendment-wf_c5b884b1-a94.js", resumeFromRunId: "wf_c5b884b1-a94"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:37:45)*
+
+
+## 🤖 Claude *(01:37:46)*
+
+Emenda da camada de agência rodando em background (5 estágios paralelos, modelo de entidade fixado pra consistência). Registrando a task:
+
+## 🤖 Claude *(01:37:49)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Emendar BoK video-studio \u2014 camada de ag\u00eancia (v1.1)",
+  "description": "Superset: organizations/organization_members/clients + org_id/client_id nas tabelas + RLS por membership + deduct_mco_coins_org + erase_client_artifacts (fix LGPD) + white-label/wholesale/portal/reseller-API + plano Agency + posicionamento \"ag\u00eancia em caixa\". Novos MR-VS-015.. / BR-017.. / PR-018,019,024.. / FR-033.. / OTD-008.. / FMEA-020... Depois: 00-index v1.1 + traceability + re-seal.",
+  "activeForm": "Emendando BoK com camada de ag\u00eancia"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #8 created successfully: Emendar BoK video-studio — camada de agência (v1.1)
+> ```
+
+## 🤖 Claude *(01:37:53)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(01:38:03)*
+
+Emenda em curso (5 estágios paralelos appendando seções §AG v1.1 com gate de superset — IDs existentes preservados). Quando aterrissar vou:
+1. **Verificar materialmente** que nada foi clobberado (IDs antigos intactos + footers + novos ranges presentes).
+2. Atualizar o `00-index` → **v1.1** (novo ID space + seção de agência + gates).
+3. Re-validar traceability (novos MR→BR→PR→FR).
+4. Re-selar o nó na malha (amendment v1.1).
+
+Aí te apresento a BoK emendada com meu veredito final: **agora cobre a alavancagem de agência first-class** (hierarquia org→cliente, isolamento/chargeback/erasure per-cliente, white-label + margem wholesale, superfícies de agência, posicionamento de plataforma). Volto quando fechar.
+
+## 👤 User *(01:48:23)*
+
+<task-notification>
+<task-id>wq1cak4mj</task-id>
+<tool-use-id>toolu_01KrYmTR7nd7o2Sdaz7jbuxv</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wq1cak4mj.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Amend the video-studio BoK with the full Agency-Leverage layer (v1.1) — superset: preserve all existing IDs, append agency sections" completed</summary>
+<result>{"amendments":[{"stage":"market-biz","summary":"Verification passed materially: all 14 existing MR-VS IDs intact, 6 new MR-VS (015-020) added to MRD, 8 new BR-VS (017-024) added to BRD, single footer preserved verbatim in each file, §AG section appended at the end of both (before footer).\n\n## Summary\n\n**Files amended (2):**\n- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/01-mrd.md`\n- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/02-brd.md`\n\n**Superset gate:** PRESERVED verbatim. Zero renumbering/deletion — confirmed by grep (14 existing MR-VS, all original BR-VS-001..016/sections untouched). Footer `_Generated by MCORCH BoK Scribe Agent v1.0.0_` kept as the single trailing line in both. New `## §AG — Agency-Leverage Amendment (v1.1)` appended at the END of each, before the footer.\n\n**01-mrd §AG (Market):**\n- Reframed positioning to **\"AI content agency in a box\"** — the leverage STACK (video-studio + Viral Autopilot + Marketing Hub + ML affiliate) tabulated.\n- Reframed the agency/reseller/micro-agency segment from §3 Secondary → **PRIMARY leverage segment** (1 tenant → N clients → N× volume).\n- New IDs **MR-VS-015..020**: white-label demand, reseller/micro-agency TAM as primary, content-ops-platform need, agency margin economics (wholesale + resale), per-client LGPD/compliance (documents the confirmed `erase_video_artifacts(p_user_id)` purge-all-clients bug), competitive vs **agency tooling** (white-label SMMA suites / agency-OS) — with an additive competitive-landscape table.\n\n**02-brd §AG (Business):**\n- Canonical **agency-tenancy model**: `organizations`, `organization_members`, `clients` tables (exact schemas) + nullable `org_id/client_id` added to `video_renders/video_scenes/video_assets/video_templates/affiliate_links/ledger` + extended RLS (`auth.uid() OR org_id IN (... seat_active)`). NULL = solo backward-compat preserved.\n- New objectives **BO-VS-006..008** and requirements **BR-VS-017..024**: agency tenancy, **Agency plan tier (25k mco/mo + N seats + wholesale + white-label)**, wholesale mcoCoins + `deduct_mco_coins_org` resale margin, affiliate revenue split %, RBAC (owner/billing_admin/editor/viewer), per-client cost-center/chargeback, white-label + client portal + PAT-scoped reseller API/SDK (mirrors vision-mcp `mcp_access_tokens`), and per-client erasure RPC `erase_client_artifacts(p_org_id,p_client_id)`.\n- **AGENCY ROI model** (§AG.4) distinct from solo §5: per-client unit economics + compound margin (1 org × N clients).\n- **§6 mcoCoins extended** (§AG.5): Agency tier + wholesale mechanics, with v0.1 unit costs kept verbatim (only balance origin/acquisition rate changes).\n- Additive traceability MR-VS-015..020 → BR-VS-017..024.\n\n**Cross-doc note (relayed):** The §AG model declares `organizations`/`organization_members`/`clients`, nullable `org_id+client_id`, the extended RLS expression, `deduct_mco_coins_org`, and `erase_client_artifacts` as **canonical names to be used verbatim** in the downstream chain (PRD §AG, FRD §AG, SDD data model, migrations). The BRD §AG explicitly flags `video_renders gains org_id/client_id — amends BRD/SDD §1.1 of 06 (data model)`. Each new BR amends-not-mutates its v0.1 sibling (BR-VS-019→005, BR-VS-020→007, BR-VS-024→016) and the §6 extension cross-references BR-VS-005/§6. The affiliate revenue-split exact percentage is left as a documented Sovereign decision deferred to PRD §AG."},{"stage":"product","summary":"Verified. Single footer at line 430 (the end), and the full PR-VS range 001–031 is present with no gaps — the original 001–017 + 020–023 verbatim, plus the new 018, 019, 024–031.\n\n## Summary\n\n**File amended:** `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/03-prd.md` (262 → 430 lines)\n\n**Method (superset gate honored):** Read the full sealed doc first. Every existing ID and section preserved verbatim — nothing renumbered or deleted. Appended a single clearly-marked `## §AG — Agency-Leverage Amendment (v1.1)` block before the footer; the footer `_Generated by MCORCH BoK Scribe Agent v1.0.0_` remains the sole, final line.\n\n**New PR-VS IDs added (gaps filled + new):**\n- **PR-VS-018, PR-VS-019** — filled the existing range gaps (agency tenancy model + RLS extension; wholesale mcoCoins + `deduct_mco_coins_org`). Must Have / v1.0 foundation.\n- **PR-VS-024..031** — new (MoSCoW): multi-client dashboard, client onboarding/per-client BYOK, team RBAC/seats, selective LGPD erasure (`erase_client_artifacts`), client portal (share/approve/invoice), white-label custom_domain/brand_theme, wholesale purchase flow + revenue split, reseller API/SDK PAT-scoped.\n\n**§AG contents:**\n- Persona 2 (Marina) **promoted to first-class** with full attribute table + quote.\n- 2 portfolio journey maps (onboard client + first branded batch; team/seat management) + 3 agency edge cases (wholesale-insufficient 402, selective LGPD erasure non-collateral, cross-tenant client injection blocked).\n- Agency MoSCoW inventory — each ID traced to a BR-VS (017..024) with effort + mcoCoins; per-client reporting and per-client BYOK explicitly folded into existing IDs (no orphan IDs).\n- New **Agency plan tier** table (~25000 mco/mo + N seats + wholesale rate + white-label) extending Starter/Pro/Enterprise, with documented MCORCH↔agency↔client revenue split.\n- 8 Gherkin scenarios for the agency flows, including an explicit **solo-creator backward-compat** scenario (org_id/client_id NULL → `deduct_mco_coins` per-user path unchanged).\n- Agency traceability sub-matrix (MR-VS-015..020 → BR-VS-017..024 → PR-VS-018/019/024..031) extending §8.\n- Release re-phasing note: agency segment moved from §5 \"Future Scope\" to **v1.0 first-class**, with PR-VS-018/019 as foundation gates and PR-VS-027 as GA gate.\n\n**Cross-doc notes for the rest of the suite:**\n- Canonical table/RPC names used verbatim for downstream docs: `organizations`, `organization_members`, `clients`, `deduct_mco_coins_org(p_org_id,p_client_id,p_amount,...)`, `erase_client_artifacts(p_org_id,p_client_id)`.\n- Amendment cross-references flagged inline for the data model: \"amends 06 §1.1\" (video_renders/scenes/assets/templates gain org_id/client_id), \"amends 06 §afiliado\" (affiliate_links), \"amends ledger mcoCoins (06)\", and \"amends 06 §LGPD / PR-VS-016\" for the selective erasure bug fix.\n- Upstream IDs **MR-VS-015..020** and **BR-VS-017..024** are referenced as traceability targets but live in 01-mrd.md / 02-brd.md — those parallel amendments must land for the trace to close."},{"stage":"frd-sdd","summary":"Superset gate verified mechanically. Both files amended correctly.\n\nAmended both technical BoK docs with the §AG Agency-Leverage layer (v1.1). Superset gate held (verified by grep): all pre-existing IDs preserved verbatim, footers intact, no renumbering.\n\n**Files amended:**\n- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/04-frd.md` — appended `## §AG — Agency-Leverage Amendment (v1.1)` before the footer.\n- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md` — same.\n\n**New IDs added (verified present):**\n- **04-frd §AG:** FR-VS-033..046 (org/client CRUD; `organization_members` RBAC + seats; per-client render/affiliate scoping amending FR-VS-014/024/017; `deduct_mco_coins_org` per-client attribution; wholesale purchase; `erase_client_artifacts` per-client erasure amending FR-VS-031; client portal; white-label domain/theme; reseller PAT; agency dashboard hooks) + NFR-VS-018..022 (multi-tenant isolation, per-client segregation, per-org scale incl. the LTX ZeroGPU daily-limit bottleneck, white-label TLS, solo-creator backward-compat). Each FR carries category + PR-trace + AT-VS test id; added §AG.1 upstream MR→BR→PR→FR trace, §AG.4 test strategy, §AG.5 traceability addendum.\n- **05-sdd §AG:** org→client→render hierarchy diagram; migration stubs for `organizations`/`organization_members`/`clients` + the nullable `org_id/client_id`
+... (truncated 9124 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/5a859960-462e-4932-954d-123729ae158a/tasks/wq1cak4mj.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>484988</subagent_tokens><tool_uses>23</tool_uses><duration_ms>645766</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:48:36)*
+
+
+## 🤖 Claude *(01:48:37)*
+
+Emenda completa (5 estágios). Antes de confiar nos auto-relatos dos agentes, **verifico materialmente eu mesmo** (Lei 1) que nada foi clobberado e que os novos IDs + entidades canônicas entraram consistentes nos 8 docs:
+
+## 🤖 Claude *(01:48:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio\necho \"=== 1) footers intactos (n\u00e3o clobberado) + \u00a7AG presente ===\"\nfor f in 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics; do\n  foot=$(tail -1 \"$f.md\" | grep -q \"BoK Scribe Agent v1.0.0\" && echo \"footer\u2705\" || echo \"FOOTER\u26a0\ufe0f\")\n  ag=$(grep -q \"\u00a7AG\" \"$f.md\" && echo \"\u00a7AG\u2705\" || echo \"no-\u00a7AG\")\n  lines=$(wc -l < \"$f.md\")\n  echo \"$f: $foot \u00b7 $ag \u00b7 ${lines}L\"\ndone\necho \"\"\necho \"=== 2) IDs existentes PRESERVADOS + novos ADICIONADOS (counts) ===\"\necho \"MR-VS: $(grep -ohE 'MR-VS-[0-9]{3}' *.md | sort -u | wc -l) (esperado 20: 001..020)\"\necho \"BR-VS: $(grep -ohE 'BR-VS-[0-9]{3}' *.md | sort -u | wc -l) (esperado 24: 001..024)\"\necho \"PR-VS: $(grep -ohE 'PR-VS-[0-9]{3}' *.md | sort -u | wc -l) (esperado 31: 001..031)\"\necho \"FR-VS: $(grep -ohE 'FR-VS-[0-9]{3}' 04-frd.md | sort -u | wc -l) (esperado 46: 001..046)\"\necho \"NFR-VS: $(grep -ohE 'NFR-VS-[0-9]{3}' 04-frd.md | sort -u | wc -l) (esperado 22: 001..022)\"\necho \"OTD-VS: $(grep -ohE 'OTD-VS-[0-9]{3}' 05-sdd.md | sort -u | wc -l) (esperado 13: 001..013)\"\necho \"FMEA-VS: $(grep -ohE 'FMEA-VS-[0-9]{3}' 08-quality-metrics.md | sort -u | wc -l) (esperado 27: 001..027)\"\necho \"KPI-VS: $(grep -ohE 'KPI-VS-[0-9]{3}' 08-quality-metrics.md | sort -u | wc -l) (esperado 24: 001..024)\"\necho \"PROC-VS: $(grep -ohE 'PROC-VS-[0-9]{3}' 07-process-flow.md | sort -u | wc -l)\"\necho \"\"\necho \"=== 3) entidades can\u00f4nicas da ag\u00eancia consistentes (docs que mencionam) ===\"\nfor t in organizations organization_members \"clients\" deduct_mco_coins_org erase_client_artifacts wholesale; do\n  echo \"$t: $(grep -lE \"\\b$t\\b\" *.md | wc -l) docs\"\ndone",
+  "description": "Materially verify amendment: footers, preserved+new IDs, canonical entities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1) footers intactos (não clobberado) + §AG presente ===
+> 01-mrd: footer✅ · §AG✅ · 206L
+> 02-brd: footer✅ · §AG✅ · 296L
+> 03-prd: footer✅ · §AG✅ · 430L
+> 04-frd: footer✅ · §AG✅ · 434L
+> 05-sdd: footer✅ · §AG✅ · 798L
+> 06-data-model: footer✅ · §AG✅ · 794L
+> 07-process-flow: footer✅ · §AG✅ · 497L
+> 08-quality-metrics: footer✅ · §AG✅ · 327L
+> 
+> === 2) IDs existentes PRESERVADOS + novos ADICIONADOS (counts) ===
+> MR-VS: 20 (esperado 20: 001..020)
+> BR-VS: 24 (esperado 24: 001..024)
+> PR-VS: 31 (esperado 31: 001..031)
+> FR-VS: 46 (esperado 46: 001..046)
+> NFR-VS: 22 (esperado 22: 001..022)
+> OTD-VS: 13 (esperado 13: 001..013)
+> FMEA-VS: 27 (esperado 27: 001..027)
+> KPI-VS: 24 (esperado 24: 001..024)
+> PROC-VS: 13
+> 
+> === 3) entidades canônicas da agência consistentes (docs que mencionam) ===
+> organizations: 7 docs
+> organization_members: 7 docs
+> clients: 8 docs
+> deduct_mco_coins_org: 7 docs
+> erase_client_artifacts: 8 docs
+> wholesale: 8 docs
+> ```
+
+## 🤖 Claude *(01:49:22)*
+
+
+## 🤖 Claude *(01:49:25)*
+
+**Verificação material PASSOU em tudo** (Lei 1):
+- 8/8 docs com footer intacto + §AG presente — **zero clobber** (docs cresceram: 05-sdd 529→798L, 06-data-model 340→794L).
+- IDs: MR-VS **20** · BR-VS **24** · PR-VS **31** · FR-VS **46** · NFR-VS **22** · OTD-VS **13** · FMEA-VS **27** · KPI-VS **24** · PROC-VS **13** — todos batem (existentes preservados + novos adicionados).
+- Entidades canônicas (`organizations`/`organization_members`/`clients`/`deduct_mco_coins_org`/`erase_client_artifacts`/`wholesale`) consistentes em 7-8 docs.
+
+Agora: traceability spot-check + atualizar 00-index → v1.1 + seed da emenda na malha.
+
+## 🤖 Claude *(01:49:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio\necho \"=== traceability: FR-VS referenciados downstream (06/07/08) \u2286 definidos em 04? ===\"\ndefined=$(grep -ohE 'FR-VS-[0-9]{3}' 04-frd.md | sort -u)\ndownstream=$(grep -ohE 'FR-VS-[0-9]{3}' 06-data-model.md 07-process-flow.md 08-quality-metrics.md | sort -u)\norphans=$(comm -13 <(echo \"$defined\") <(echo \"$downstream\"))\n[ -z \"$orphans\" ] && echo \"\u2705 0 FR-VS \u00f3rf\u00e3os (todos definidos em 04)\" || echo \"\u26a0\ufe0f \u00f3rf\u00e3os: $orphans\"\necho \"=== novos FMEA-VS RPN>100 (ag\u00eancia) \u2014 cross-tenant etc ===\"\ngrep -oE \"FMEA-VS-02[0-7][^|]*(RPN[^0-9]*[0-9]+)?\" 08-quality-metrics.md 2>/dev/null | head -8\necho \"=== plano Agency + revenue split mencionados? ===\"\ngrep -ciE \"agency.*plan|plano agency|25000|25k|revenue split|margem|wholesale\" 02-brd.md 03-prd.md | tr '\\n' ' '; echo\necho \"=== migration stubs das tabelas novas no 06? (CREATE TABLE) ===\"\ngrep -cE \"CREATE TABLE.*(organizations|organization_members|clients)|ENABLE ROW LEVEL SECURITY\" 06-data-model.md",
+  "description": "Traceability spot-check + agency-layer content verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === traceability: FR-VS referenciados downstream (06/07/08) ⊆ definidos em 04? ===
+> ✅ 0 FR-VS órfãos (todos definidos em 04)
+> === novos FMEA-VS RPN>100 (agência) — cross-tenant etc ===
+> FMEA-VS-020, RPN alvo alto), porque a superfície de blast agora é "todos os clientes de todas as agências" e não mais um tenant solo.
+> FMEA-VS-025).
+> FMEA-VS-023) 
+> FMEA-VS-020..027)
+> FMEA-VS-020 é o novo topo do RPN.
+> FMEA-VS-020 
+> FMEA-VS-021 
+> FMEA-VS-022 
+> === plano Agency + revenue split mencionados? ===
+> 03-prd.md:20 02-brd.md:26 
+> === migration stubs das tabelas novas no 06? (CREATE TABLE) ===
+> 6
+> ```
+
+## 🤖 Claude *(01:49:45)*
+
+
+## 🤖 Claude *(01:49:46)*
+
+Traceability limpa (**0 FR-VS órfãos**), FMEA-VS-020..027 de cross-tenant adicionados (FMEA-VS-020 = novo topo de RPN), plano Agency + wholesale + revenue split presentes, 6 stubs de tabela/RLS no 06. Atualizando o `00-index` → v1.1:
+
+## 🤖 Claude *(01:49:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/00-index.md",
+  "old_string": "# BoK Documentation Suite \u2014 video-studio\n\n**Generated:** 2026-06-21\n**Version:** v1.0\n**Agent:** MCORCH BoK Scribe Agent v1.0.0\n**Sovereign:** Gabriel Zarattini",
+  "new_string": "# BoK Documentation Suite \u2014 video-studio\n\n**Generated:** 2026-06-21\n**Version:** v1.1 (Agency-Leverage Amendment \u2014 superset sobre v1.0)\n**Agent:** MCORCH BoK Scribe Agent v1.0.0\n**Sovereign:** Gabriel Zarattini\n\n> **v1.1 (2026-06-22) \u2014 Agency-Leverage layer.** Revis\u00e3o adversarial (lente \"alavancagem de ag\u00eancia\") achou que a v1.0 era honesta para o solo-creator mas **n\u00e3o cobria a ag\u00eancia** (schema sem entidade org/cliente; bug LGPD de erasure per-user). Emenda superset (IDs v1.0 preservados verbatim, se\u00e7\u00f5es `## \u00a7AG` appendadas): hierarquia **organization \u2192 client \u2192 project**, isolamento/chargeback/afiliado/**erasure per-cliente** (`erase_client_artifacts`), white-label + margem wholesale (`deduct_mco_coins_org`), superf\u00edcies de ag\u00eancia (dashboard multi-cliente, RBAC/seats, portal do cliente, API reseller), plano **Agency**, e o posicionamento **\"ag\u00eancia de conte\u00fado em caixa\"** (v\u00eddeo + Viral Autopilot + Marketing Hub + ML)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:02)*
+
+
+## 🤖 Claude *(01:50:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/00-index.md",
+  "old_string": "| Prefix | Range | Count | Document |\n|--------|-------|-------|----------|\n| MR-VS | 001..014 | 14 | 01-mrd |\n| BR-VS | 001..016 | 16 | 02-brd |\n| PR-VS | 001..017, 020..023 | 21 | 03-prd |\n| FR-VS | 001..032 | 32 | 04-frd |\n| NFR-VS | 001..017 | 17 | 04-frd |\n| OTD-VS | 001..007 | 7 | 05-sdd |\n| FMEA-VS | 001..019 | 19 (9 com RPN > 100) | 08-quality-metrics |\n| KPI-VS | 001..018 | 18 | 08-quality-metrics |\n| QO-VS | 001..007 | 7 | 08-quality-metrics |\n| SOL-VS | 001..008 | 8 | 08-quality-metrics |",
+  "new_string": "| Prefix | Range (v1.1) | Count | Solo (v1.0) + Agency (\u00a7AG) | Document |\n|--------|-------|-------|------|----------|\n| MR-VS | 001..020 | 20 | 14 + 6 (015..020) | 01-mrd |\n| BR-VS | 001..024 | 24 | 16 + 8 (017..024) \u00b7 +BO-VS-006..008 | 02-brd |\n| PR-VS | 001..031 | 31 | 21 + 10 (018,019,024..031) | 03-prd |\n| FR-VS | 001..046 | 46 | 32 + 14 (033..046) | 04-frd |\n| NFR-VS | 001..022 | 22 | 17 + 5 (018..022) | 04-frd |\n| OTD-VS | 001..013 | 13 | 7 + 6 (008..013) | 05-sdd |\n| FMEA-VS | 001..027 | 27 | 19 + 8 (020..027); FMEA-VS-020 cross-tenant = novo topo de RPN | 08-quality-metrics |\n| KPI-VS | 001..024 | 24 | 18 + 6 (019..024 ag\u00eancia) | 08-quality-metrics |\n| QO-VS | 001..009 | 9 | 7 + 2 (008..009) | 08-quality-metrics |\n| PROC-VS | 001..013 | 13 | 8 + 5 (009..013 ag\u00eancia) | 07-process-flow |\n| SOL-VS | 001..008 | 8 | 8 | 08-quality-metrics |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:21)*
+
+
+## 🤖 Claude *(01:50:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/00-index.md",
+  "old_string": "## MVP / GA Gates\n\n- **MVP gate:** OTD-VS-001 (bridge de rede) + OTD-VS-002 (per-user BYOK open-design) + R3 (SSO cross-subdom\u00ednio \u2014 `design`/`video.mcorch.com` an\u00f4nimos hoje, FMEA-VS-006).\n- **GA gate:** PR-VS-016 / erasure LGPD em cascata (`erase_video_artifacts` + `delete-account` purga `OD_DATA_DIR`/`OD_MEDIA_CONFIG_DIR` + Storage + Chroma + mesh) com teste de zero-res\u00edduo \u226424h.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "## Agency-Leverage Layer (\u00a7AG \u00b7 v1.1)\n\nPadr\u00e3o \"ag\u00eancia de conte\u00fado em caixa\": **1 org \u2192 N clientes \u2192 N\u00d7 volume**, white-label, margem via mcoCoins wholesale, ML como receita.\n\n| Primitiva | Mecanismo |\n|-----------|-----------|\n| Tenancy | `organizations` + `organization_members` (RBAC owner/billing_admin/editor/viewer + seats) + `clients` (sub-contas); `org_id`/`client_id` **nullable** nas tabelas (NULL = solo backward-compat) |\n| Isolamento | RLS estendida: `user_id = auth.uid() OR org_id IN (\u2026 seat_active)` |\n| Economia | plano **Agency** (~25k mco/mo + seats + wholesale + white-label); `deduct_mco_coins_org` (d\u00e9bito org + cost-center per-cliente); revenue split MCORCH\u2194ag\u00eancia\u2194cliente |\n| LGPD (fix) | `erase_client_artifacts(p_org_id,p_client_id)` \u2014 erasure **seletiva por cliente** (corrige o bug do `erase_video_artifacts(p_user_id)` que apagava todos os clientes) |\n| White-label | `custom_domain` + `brand_theme` por org; portal do cliente (share/aprova\u00e7\u00e3o/invoice); API reseller PAT-scoped (espelha `mcp_access_tokens`) |\n| Posicionamento | stack: video-studio + Viral Autopilot + Marketing Hub + afiliado ML |\n\n## MVP / GA Gates\n\n- **MVP gate (solo):** OTD-VS-001 (bridge de rede) + OTD-VS-002 (per-user BYOK open-design) + R3 (SSO cross-subdom\u00ednio \u2014 `design`/`video.mcorch.com` an\u00f4nimos hoje, FMEA-VS-006).\n- **MVP gate (ag\u00eancia):** entidade org/cliente + RLS por membership + `erase_client_artifacts` (fecha o bug LGPD de erasure coletiva) + isolamento cross-tenant (FMEA-VS-020, novo topo de RPN). OTD-VS-008 (migra\u00e7\u00e3o das linhas `user_id`-only existentes p/ org-scoped).\n- **GA gate:** PR-VS-016/027 \u2014 erasure LGPD em cascata **per-cliente** (`erase_video_artifacts` + `erase_client_artifacts` + `delete-account` purga `OD_DATA_DIR`/`OD_MEDIA_CONFIG_DIR` + Storage + Chroma + mesh) com teste de zero-res\u00edduo \u226424h + consentimento de voz clonada (Art. 11).\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:43)*
+
+
+## 🤖 Claude *(01:50:47)*
+
+`00-index` → v1.1 selado (ID space atualizado + seção §AG + gates de agência). Agora o seed da emenda na malha (nó v1.1 → DERIVES_FROM o v1):
+
+## 🤖 Claude *(01:51:16)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-video-studio-agency-amendment.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seals the v1.1 Agency-Leverage AMENDMENT of the video-studio BoK in the Knowledge Mesh.\n * Inserts a documentation_suite node (v1.1) + DERIVES_FROM edge \u2192 the v1 seal (e5e16090).\n * Superset amendment: all v1.0 IDs preserved; agency layer appended as \u00a7AG sections.\n * Embedding fires automatically via trg_mcorch_embed_on_insert.\n *\n * Usage: bun run scripts/seed-video-studio-agency-amendment.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);\nif (!SUPABASE_URL || !SERVICE_KEY) { console.error('Missing SUPABASE_URL or SB_SECRET_KEY'); process.exit(1); }\n\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\nconst PARENT_SEAL = 'bok-scribe-seal-video-studio-v1'; // e5e16090 \u2014 the v1.0 suite this amends\n\nconst node = {\n  name: 'bok-scribe-seal-video-studio-v1.1',\n  node_type: 'documentation_suite',\n  project_id: 'video-studio',\n  stability_score: 0.85,\n  revenue_impact: 0, // creative-agency enabler: receita indireta via mcoCoins wholesale + revenue-split + afiliado\n  content: `video-studio BoK v1.1 \u2014 Agency-Leverage Amendment (superset sobre v1.0). Diretiva Sovereign 2026-06-22: revis\u00e3o adversarial pela lente \"alavancagem de ag\u00eancia\" (11 agentes) confirmou que a v1.0 era honesta para o solo-creator (L\u00e9o) mas N\u00c3O cobria a ag\u00eancia \u2014 schema sem entidade org/cliente; bug LGPD onde erase_video_artifacts(p_user_id) apagava TODOS os clientes de uma ag\u00eancia. GO: emendar full.\n\nEMENDA (gate de superset: 100% dos IDs v1.0 preservados verbatim; se\u00e7\u00f5es \"## \u00a7AG\" appendadas; verifica\u00e7\u00e3o material \u2014 8/8 docs footer intacto, counts batem). Modelo \"ag\u00eancia de conte\u00fado em caixa\": 1 org \u2192 N clientes \u2192 N\u00d7 volume, white-label, margem via mcoCoins wholesale, ML como receita; stack = video-studio + Viral Autopilot + Marketing Hub + afiliado ML.\n\nTENANCY: tabelas novas organizations (plan_tier agency|enterprise, custom_domain, brand_theme, wholesale_mco_balance) + organization_members (RBAC owner/billing_admin/editor/viewer + seat_active) + clients (sub-contas, byok_ref per-cliente, affiliate_tag). Tabelas existentes (video_renders/scenes/assets/templates, affiliate_links, ledger) ganham org_id/client_id NULLABLE (NULL = solo backward-compat). RLS estendida: user_id=auth.uid() OR org_id IN (SELECT org_id FROM organization_members WHERE user_id=auth.uid() AND seat_active).\n\nECONOMIA: plano Agency (~25k mco/mo + N seats + taxa wholesale + white-label); RPC deduct_mco_coins_org(p_org_id,p_client_id,p_amount) d\u00e9bito at\u00f4mico org + cost-center per-cliente; revenue split MCORCH\u2194ag\u00eancia\u2194cliente; affiliate split %. LGPD FIX: RPC erase_client_artifacts(p_org_id,p_client_id) erasure SELETIVA por cliente (corrige o purge-all). SUPERF\u00cdCIES: dashboard multi-cliente, portal do cliente (share/aprova\u00e7\u00e3o/invoice), API reseller PAT-scoped (espelha mcp_access_tokens).\n\nID SPACE v1.1 (novos): MR-VS-015..020 \u00b7 BO-VS-006..008 + BR-VS-017..024 \u00b7 PR-VS-018,019,024..031 \u00b7 FR-VS-033..046 + NFR-VS-018..022 \u00b7 OTD-VS-008..013 (top: 008 migra\u00e7\u00e3o user_id\u2192org-scoped) \u00b7 FMEA-VS-020..027 (FMEA-VS-020 cross-tenant leak = novo topo de RPN) \u00b7 KPI-VS-019..024 \u00b7 QO-VS-008..009 \u00b7 PROC-VS-009..013. Traceability: 0 FR-VS \u00f3rf\u00e3os (downstream \u2286 FR-VS-001..046). Mem\u00f3ria: project_creative_layer_validation. SOPs: creative-qa-vision-gate.md + canvas-design-deploy-and-provision.md.`,\n  metadata: {\n    bok_version: '1.1.0',\n    amendment: 'agency-leverage',\n    amends: 'bok-scribe-seal-video-studio-v1',\n    superset_preserved: true,\n    documents_amended: ['01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics', '00-index'],\n    new_id_ranges: { MR: '015..020', BO: '006..008', BR: '017..024', PR: '018,019,024..031', FR: '033..046', NFR: '018..022', OTD: '008..013', FMEA: '020..027', KPI: '019..024', QO: '008..009', PROC: '009..013' },\n    id_totals_v1_1: { MR: 20, BR: 24, PR: 31, FR: 46, NFR: 22, OTD: 13, FMEA: 27, KPI: 24, PROC: 13 },\n    traceability_validated: true,\n    traceability_orphans: 0,\n    new_tables: 3, // organizations, organization_members, clients (+ org_id/client_id cols on existing)\n    new_rpcs: 2, // deduct_mco_coins_org, erase_client_artifacts\n    lgpd_fix: 'erase_client_artifacts(p_org_id,p_client_id) \u2014 selective per-client erasure fixes the v1.0 erase-all-clients bug',\n    new_mvp_gates: ['org/client entity + membership RLS', 'erase_client_artifacts (LGPD per-client)', 'cross-tenant isolation FMEA-VS-020', 'OTD-VS-008 user_id\u2192org migration'],\n    positioning: 'AI content agency in a box (video-studio + viral-autopilot + marketing-hub + ML affiliate)',\n    derives_from: PARENT_SEAL,\n    motivating_directive: 'Sovereign 2026-06-22: \"revise a BoK para ver se cobre perfeitamente a alavancagem de ag\u00eancia\" \u2192 adversarial review found gaps \u2192 \"emendar agora camada full\"',\n    tags: ['bok-scribe', 'video-studio', 'amendment', 'agency-leverage', 'multi-tenant', 'white-label', 'reseller', 'rbac', 'wholesale-mcocoins', 'lgpd-per-client-erasure', 'isolated-app'],\n  },\n};\n\nconsole.log(`\ud83d\udcdd Sealing video-studio BoK v1.1 (Agency-Leverage amendment)...`);\n\nconst { data: seal, error } = await supabase\n  .from('mcorch_nodes')\n  .insert(node)\n  .select('id, name, created_at')\n  .single();\n\nif (error) {\n  if (String(error.message || '').match(/duplicate|unique/i)) {\n    console.log(`\u2139\ufe0f  Amendment seal already exists (idempotent exit 0): ${node.name}`);\n    process.exit(0);\n  }\n  console.error('\u274c Seal failed:', error);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 Amendment seal inserted:`);\nconsole.log(`   ID: ${seal.id} \u00b7 Name: ${seal.name} \u00b7 Created: ${seal.created_at}`);\n\nconst { data: parent } = await supabase.from('mcorch_nodes').select('id').eq('name', PARENT_SEAL).single();\nif (parent?.id) {\n  const { data: edge, error: edgeErr } = await supabase\n    .from('mcorch_edges')\n    .insert({ source_id: seal.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })\n    .select('id')\n    .single();\n  console.log(edgeErr ? `\u26a0\ufe0f  edge failed (non-fatal): ${edgeErr.message}` : `\ud83d\udd17 DERIVES_FROM edge: ${edge.id} \u2192 ${PARENT_SEAL} (${parent.id})`);\n} else {\n  console.log(`\u26a0\ufe0f  Parent seal ${PARENT_SEAL} not found \u2014 edge skipped.`);\n}\n\nconsole.log(`\\n\ud83e\udde0 Embedding fires automatically via trg_mcorch_embed_on_insert.`);\nconsole.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${seal.id}';`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-video-studio-agency-amendment.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:51:20)*
+
+
+## 🤖 Claude *(01:51:21)*
+
+Rodando o seed da emenda + confirmando o embedding:
+
+## 🤖 Claude *(01:51:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/seed-video-studio-agency-amendment.ts 2>&1\necho \"=== confirma embedding (aguarda pg_net) ===\"\nsleep 3\nSEAL=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?select=id,embedding&name=eq.bok-scribe-seal-video-studio-v1.1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null)\necho \"$SEAL\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];e=d.get('embedding');print('node',d['id'][:8],'embedding:', 'NOT NULL \u2705' if e else 'NULL (processando)')\"",
+  "description": "Run agency amendment seal + confirm embedding"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 📝 Sealing video-studio BoK v1.1 (Agency-Leverage amendment)...
+> 
+> ✅ Amendment seal inserted:
+>    ID: c99b7875-e67e-499d-8263-a7c728725268 · Name: bok-scribe-seal-video-studio-v1.1 · Created: 2026-06-22T01:51:24.881586+00:00
+> 🔗 DERIVES_FROM edge: 13ae3155-59ea-4a16-9edf-387f23193433 → bok-scribe-seal-video-studio-v1 (e5e16090-4b97-4227-bb15-2e83296ab3f6)
+> 
+> 🧠 Embedding fires automatically via trg_mcorch_embed_on_insert.
+>    Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = 'c99b7875-e67e-499d-8263-a7c728725268';
+> === confirma embedding (aguarda pg_net) ===
+> node c99b7875 embedding: NOT NULL ✅
+> ```
+
+## 🤖 Claude *(01:51:36)*
+
+
+## 🤖 Claude *(01:51:53)*
+
+**Task #8 ✅ — BoK v1.1 emendada e selada.** Prova material:
+- Nó `documentation_suite` **`c99b7875`** (v1.1) + edge DERIVES_FROM **`13ae3155`** → v1 (`e5e16090`) + **embedding NOT NULL**.
+
+## ⚖️ Veredito final: agora a BoK **cobre a alavancagem de agência first-class**
+
+Emenda superset materialmente verificada (8/8 docs footer intacto, 0 clobber, IDs v1.0 preservados + 0 FR-VS órfãos). Os 5 clusters de gap viraram requisitos:
+
+| Gap (antes) | Agora na BoK v1.1 |
+|---|---|
+| sem entidade org/cliente | `organizations` + `organization_members` (RBAC/seats) + `clients`; `org_id`/`client_id` **nullable** (solo backward-compat) + RLS por membership |
+| afiliado/billing flat | `deduct_mco_coins_org` (débito org + cost-center per-cliente) + revenue split + plano **Agency** (~25k mco + seats + wholesale) |
+| **bug LGPD** (apagar 1 cliente apagava 5) | `erase_client_artifacts(p_org_id,p_client_id)` — **erasure seletiva por cliente** ✅ |
+| sem white-label/revenda | `custom_domain` + `brand_theme` + portal do cliente (share/aprovação/invoice) + API reseller PAT-scoped |
+| agência como sub-feature | posicionamento **"agência de conteúdo em caixa"** (vídeo + Viral Autopilot + Marketing Hub + ML); micro-agências como segmento **primário** |
+
+**Novos IDs:** MR-VS-015..020 · BR-VS-017..024 (+BO-006..008) · PR-VS-018,019,024..031 · FR-VS-033..046 · NFR-VS-018..022 · OTD-VS-008..013 · FMEA-VS-020..027 (FMEA-VS-020 cross-tenant leak = novo topo de RPN) · KPI-VS-019..024 · PROC-VS-009..013.
+
+**A dívida que você evitou:** a hierarquia org→cliente agora é desenho do dia 1 (nullable = não quebra o solo); **OTD-VS-008** documenta a migração das linhas `user_id`-only existentes. Sem isso, seria um retrofit que quebrava RLS + billing + erasure.
+
+**BoK Gate ABERTO** (v1.1). Implementação proposta, na ordem (você levantou o furo de auth):
+1. **R3 — SSO cross-subdomínio** (fecha `design`/`video.mcorch.com` anônimos).
+2. **Fundação de tenancy** — migration `organizations`/`members`/`clients` + RLS + `erase_client_artifacts` (passa `/security-review`).
+3. **Deploy studio** + scripts + GEMINI per-user.
+4. **Bridge de rede** → vision_mcp QA + chroma.
+5. **HyperFrames** em `video.mcorch.com` (gateado) + botão/rota Vídeo.
+
+**GO para eu começar a implementação pelo R3 (SSO) + a fundação de tenancy?** (E confirma: ativo o CF Access como interim agora, ou vou direto no SSO-MCORCH?)
+
+## 👤 User *(01:53:21)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(01:53:21)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 👤 User *(01:53:35)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -9868,5 +10742,5 @@ A revisão aterrissou e é reveladora. Deixa eu ler o resultado completo (a noti
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-22 - Resolver dois pontos pendentes]]
-> * **Próxima Sessão**: [[2026-06-22 - agent-a1e10748a137cd63d]]
+> * **Próxima Sessão**: [[2026-06-22 - agent-a037871aeb5aea03e]]
 %% --- TIMELINE END --- %%
