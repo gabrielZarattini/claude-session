@@ -2215,6 +2215,665 @@ Qual direção? (Posso encadear: B como de-risk → C com seu GO, e A em paralel
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Com o WP destravado, qual frente atacamos agora?"="faça todos na ordem que achar melhor. Observação: (2) OpenAI image deve ser optin para o usuário escolher qual provedor e modelo do BYOK quer ser usado. IMPORTANTE: Isso que resolvemos do WP com CF agora deve ser per user dentro do ecossistema. Então se o usuário precisar adicionar uma regra no cloudflare devemos deixe esplicito e claro na UI do painel para o usuário fazer o passo correto.,B: Dry-run do executor (zero-custo)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(18:40:01)*
+
+
+## 🤖 Claude *(18:40:08)*
+
+Entendido — e anotei as duas diretivas, que são importantes e mudam o escopo do ecossistema:
+
+1. **🎯 Imagem BYOK = opt-in** — o usuário escolhe provedor + modelo de imagem (não hardcoded em OpenRouter Gemini).
+2. **🔑 O unblock WP↔Cloudflare deve ser per-user** — cada tenant tem seu próprio `wp_site_url` (atrás do *seu* Cloudflare). O segredo/regra não pode ser global (`www.mcorch.com` é só o Usuário Zero). E a UI do painel precisa **guiar o usuário explicitamente** a criar a regra CF correta (com o segredo + expressão dele, pré-preenchidos).
+
+Ambas são **features novas** que aplicam o **API Tenancy Model — Per-User Credentials** (diretiva Sovereign no CLAUDE.md) → acionam o gate da Lei 2 (SOP antes de código). Vou tratá-las com o rigor devido na sequência, mas **nenhuma das duas bloqueia o Usuário Zero** (o unblock global que acabamos de provar já serve o tenant-zero) — elas são prontidão multi-tenant para o Usuário 1+.
+
+Começo agora pelo **B (dry-run, zero-custo)** que você marcou. Deixa eu ler o contrato do `autopilot-run` pra invocar o dry_run corretamente:
+
+## 🤖 Claude *(18:40:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== autopilot fns + smokes existentes ===\"\nls -la supabase/functions/ | grep -i autopilot\necho \"--- smokes ---\"\nls scripts/qa/ | grep -iE \"autopilot|cadence\" || echo \"(nenhum smoke autopilot em scripts/qa)\"\necho \"--- linhas do autopilot-run ---\"\nwc -l supabase/functions/autopilot-run/index.ts 2>/dev/null",
+  "description": "Locate autopilot-run function and smoke scripts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot fns + smokes existentes ===
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jun 20 16:32 autopilot-analyze
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jun 20 15:58 autopilot-cadence-cron
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jun 20 16:26 autopilot-collect
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jun 20 16:27 autopilot-run
+> --- smokes ---
+> smoke-autopilot-budget.ts
+> smoke-autopilot-loop.ts
+> smoke-autopilot-run.ts
+> --- linhas do autopilot-run ---
+> 177 supabase/functions/autopilot-run/index.ts
+> ```
+
+## 🤖 Claude *(18:40:15)*
+
+
+## 🤖 Claude *(18:40:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
+> 3	//
+> 4	// Identity (two paths):
+> 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
+> 6	//     derived it from autopilot_plans.user_id). The header is re-validated by the TENANT-SCOPED plan load below.
+> 7	//   - user "gerar agora": user JWT → getUser → the plan load is scoped to that user (IDOR-safe).
+> 8	// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9	//   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 10	//   self-bill) → finalize_autopilot_cycle(actual) → re-arm next_run_at. dry_run short-circuits after the cost
+> 11	//   projection (no cycle, no deduct) — the zero-cost proof path.
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	
+> 14	const corsHeaders = {
+> 15	  "Access-Control-Allow-Origin": "*",
+> 16	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 17	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-autopilot-user-id",
+> 18	};
+> 19	const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 20	const ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)
+> 21	const CONCURRENCY = 6;    // wall-clock bound on the fan-out (mirrors nurture-cron / campaign-run)
+> 22	const UUID_RE = /^[0-9a-fA-F-]{36}$/;
+> 23	
+> 24	Deno.serve(async (req) => {
+> 25	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 26	  const json = (b: unknown, s = 200) =>
+> 27	    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 28	
+> 29	  const url = Deno.env.get("SUPABASE_URL")!;
+> 30	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 31	  const pubKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 32	  const admin = createClient(url, serviceKey);
+> 33	  const logHealth = (status: string) =>
+> 34	    admin.from("infra_health_logs").insert({ service: "autopilot-run", status }).then(() => {}, () => {});
+> 35	
+> 36	  try {
+> 37	    const authHeader = req.headers.get("Authorization");
+> 38	    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+> 39	
+> 40	    const body = await req.json().catch(() => ({}));
+> 41	    const planId = typeof body?.plan_id === "string" ? body.plan_id : null;
+> 42	    const dryRun = body?.dry_run === true;
+> 43	    if (!planId || !UUID_RE.test(planId)) return json({ error: "plan_id (uuid) required" }, 422);
+> 44	
+> 45	    // ── Identity: service path (proven key + server-trusted header) OR user JWT path. ──────────────────────────
+> 46	    const isService = authHeader === `Bearer ${serviceKey}`;
+> 47	    let userId: string;
+> 48	    if (isService) {
+> 49	      const hdr = req.headers.get("x-autopilot-user-id");
+> 50	      if (!hdr || !UUID_RE.test(hdr)) return json({ error: "x-autopilot-user-id (uuid) required for service path" }, 400);
+> 51	      userId = hdr;
+> 52	    } else {
+> 53	      const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });
+> 54	      const { data: { user }, error } = await userClient.auth.getUser();
+> 55	      if (error || !user) return json({ error: "Unauthorized" }, 401);
+> 56	      userId = user.id;
+> 57	    }
+> 58	
+> 59	    // ── Load plan TENANT-SCOPED (plan MUST belong to userId — cross-tenant/missing → 404). ───────────────────────
+> 60	    const { data: plan } = await admin
+> 61	      .from("autopilot_plans")
+> 62	      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants")
+> 63	      .eq("id", planId).eq("user_id", userId).maybeSingle();
+> 64	    if (!plan) return json({ error: "plan_not_found" }, 404);
+> 65	
+> 66	    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 67	    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 68	    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 69	    const nRuns = products.length * platforms.length * abVariants;
+> 70	    if (nRuns < 1) return json({ error: "plan_has_no_targets", detail: "plano sem produtos/redes válidos" }, 422);
+> 71	
+> 72	    const projected = nRuns * ORCH_COST + ANALYZE_COST;
+> 73	
+> 74	    // dry_run: return the cost projection WITHOUT opening a cycle or deducting (zero-cost proof path).
+> 75	    if (dryRun) {
+> 76	      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,
+> 77	        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 78	    }
+> 79	
+> 80	    // ── begin_autopilot_cycle: ATOMIC cap-check + single pre-debit (or abort reason, no deduct). ────────────────
+> 81	    const { data: begun, error: beginErr } = await admin.rpc("begin_autopilot_cycle", {
+> 82	      p_plan_id: planId, p_user_id: userId, p_projected_mco: projected, p_planned_units: nRuns,
+> 83	    });
+> 84	    if (beginErr) { logHealth("error"); return json({ error: "begin_failed", detail: beginErr.message }, 500); }
+> 85	    if (!begun?.ok) {
+> 86	      const reason = begun?.reason ?? "aborted";
+> 87	      // Hard stop (budget too low / insufficient balance) → pause the plan so it stops re-firing every tick.
+> 88	      if (reason === "aborted_budget" || reason === "insufficient_balance") {
+> 89	        await admin.from("autopilot_plans").update({ is_active: false }).eq("id", planId).eq("user_id", userId);
+> 90	      }
+> 91	      logHealth("degraded");
+> 92	      return json({ ok: false, reason, projected_mco: projected }, reason === "insufficient_balance" ? 402 : 409);
+> 93	    }
+> 94	    const cycleId = begun.cycle_id as string;
+> 95	
+> 96	    // ── R3 loop (FR-VA-010/011): analyze the PREVIOUS completed cycle to steer THIS cycle's generation. ─────────
+> 97	    // collect (sync the live click ledger → creative_metrics) then analyze (→ optimization_policy). Both inline and
+> 98	    // PREPAID — the cycle reserved ANALYZE_COST(2); analyzeCharged consumes it only when real data produced a policy
+> 99	    // (else finalize refunds the 2). Best-effort — a missing/empty previous cycle just means no steering this round.
+> 100	    let analyzeCharged = 0;
+> 101	    const svcCall = (fn: string, payload: unknown) => fetch(`${url}/functions/v1/${fn}`, {
+> 102	      method: "POST",
+> 103	      headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 104	      body: JSON.stringify(payload),
+> 105	    });
+> 106	    try {
+> 107	      const { data: prev } = await admin.from("autopilot_cycles")
+> 108	        .select("id").eq("plan_id", planId).eq("user_id", userId).eq("status", "completed")
+> 109	        .neq("id", cycleId).order("cycle_number", { ascending: false }).limit(1).maybeSingle();
+> 110	      if (prev?.id) {
+> 111	        await svcCall("autopilot-collect", { cycle_id: prev.id }).catch(() => {});
+> 112	        const ar = await svcCall("autopilot-analyze", { previous_cycle_id: prev.id, prepaid: true })
+> 113	          .then((r) => r.json()).catch(() => null);
+> 114	        if (ar?.has_real_data) analyzeCharged = ANALYZE_COST;
+> 115	      }
+> 116	    } catch (e) { console.warn(`[autopilot-run] R3 analyze skipped: ${e}`); }
+> 117	
+> 118	    // ── Fan-out: product × platform × variant → orchestrate-content (prepaid → NO self-bill). ───────────────────
+> 119	    let succeeded = 0;
+> 120	    const tasks: Array<() => Promise<void>> = [];
+> 121	    for (const productId of products) {
+> 122	      for (const platform of platforms) {
+> 123	        for (let v = 0; v < abVariants; v++) {
+> 124	          tasks.push(async () => {
+> 125	            try {
+> 126	              const r = await fetch(`${url}/functions/v1/orchestrate-content`, {
+> 127	                method: "POST",
+> 128	                headers: {
+> 129	                  Authorization: `Bearer ${serviceKey}`,
+> 130	                  "x-autopilot-user-id": userId,
+> 131	                  "Content-Type": "application/json",
+> 132	                },
+> 133	                body: JSON.stringify({
+> 134	                  topic: plan.name, platforms: [platform], product_ids: [productId],
+> 135	                  prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 136	                }),
+> 137	              });
+> 138	              if (r.ok) succeeded++;
+> 139	              else console.warn(`[autopilot-run] sub-run ${productId}/${platform} → HTTP ${r.status}`);
+> 140	            } catch (e) {
+> 141	              console.warn(`[autopilot-run] sub-run ${productId}/${platform} error: ${e}`);
+> 142	            }
+> 143	          });
+> 144	        }
+> 145	      }
+> 146	    }
+> 147	    for (let i = 0; i < tasks.length; i += CONCURRENCY) {
+> 148	      await Promise.all(tasks.slice(i, i + CONCURRENCY).map((t) => t()));
+> 149	    }
+> 150	
+> 151	    // actual = successful runs × 10 + analyzeCharged (the reserved 2 is consumed only when the R3 analyze produced
+> 152	    // a policy from real data; otherwise finalize refunds it). Zero successes → actual = analyzeCharged.
+> 153	    const actual = succeeded * ORCH_COST + analyzeCharged;
+> 154	    const status = succeeded > 0 ? "completed" : "failed";
+> 155	    const { data: fin } = await admin.rpc("finalize_autopilot_cycle", {
+> 156	      p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,
+> 157	    });
+> 158	
+> 159	    // ── Re-arm cadence (every_n_days) or deactivate after a single all_at_once run. ─────────────────────────────
+> 160	    if (plan.mode === "every_n_days") {
+> 161	      const days = Math.min(30, Math.max(1, Number(plan.interval_days ?? 3)));
+> 162	      const next = new Date(Date.now() + days * 86_400_000).toISOString();
+> 163	      await admin.from("autopilot_plans").update({ next_run_at: next }).eq("id", planId).eq("user_id", userId);
+> 164	    } else {
+> 165	      await admin.from("autopilot_plans").update({ is_active: false }).eq("id", planId).eq("user_id", userId);
+> 166	    }
+> 167	
+> 168	    logHealth("healthy");
+> 169	    return json({
+> 170	      ok: true, cycle_id: cycleId, n_runs: nRuns, succeeded,
+> 171	      projected_mco: projected, actual_mco: actual, refunded_mco: fin?.refunded ?? 0, status,
+> 172	    });
+> 173	  } catch (e) {
+> 174	    logHealth("error");
+> 175	    return json({ error: e instanceof Error ? e.message : "unknown" }, 500);
+> 176	  }
+> 177	});
+> 178	
+> ```
+
+## 🤖 Claude *(18:40:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-run.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Smoke — autopilot-run + autopilot-cadence-cron edge fns (FR-VA-002/005/016), ZERO-COST.
+> 4	 *
+> 5	 * Proves the IDENTITY GATES and the dry_run COST PROJECTION against the DEPLOYED functions without spending any
+> 6	 * mcoCoins (dry_run short-circuits BEFORE begin_autopilot_cycle — no cycle, no deduct, no fan-out). The real
+> 7	 * paid cycle is intentionally NOT exercised (gated on Sovereign GO). Throwaway @example.com user + plan, cleaned up.
+> 8	 *
+> 9	 * Gates:
+> 10	 *   I1 cadence-cron anon → 403 (service-role self-check)            I2 cadence-cron service → 200 ok
+> 11	 *   I3 run anon → 401                                              I4 run service w/o x-autopilot-user-id → 400
+> 12	 *   I5 run service + header + no plan_id → 422
+> 13	 *   D1 run service + header + plan + dry_run → ok, n_runs=3, projected=32 (3×10+2), ZERO balance delta
+> 14	 *   X1 run service + WRONG x-autopilot-user-id + real plan → 404 (tenant-scoped load blocks cross-tenant)
+> 15	 *
+> 16	 * Usage: bun run scripts/qa/smoke-autopilot-run.ts
+> 17	 */
+> 18	import { createClient } from '@supabase/supabase-js';
+> 19	
+> 20	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 21	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 22	const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> 23	if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 24	
+> 25	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 26	const ZERO = '00000000-0000-0000-0000-000000000000';
+> 27	let uid: string | null = null;
+> 28	let pass = true;
+> 29	function check(label: string, ok: boolean, detail = '') {
+> 30	  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? `  → ${detail}` : ''}`);
+> 31	  if (!ok) pass = false;
+> 32	}
+> 33	interface Resp { status: number; body: Record<string, unknown> }
+> 34	async function callRun(headers: Record<string, string>, body: unknown): Promise<Resp> {
+> 35	  const r = await fetch(`${URL}/functions/v1/autopilot-run`, {
+> 36	    method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body),
+> 37	  });
+> 38	  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }
+> 39	  return { status: r.status, body: b };
+> 40	}
+> 41	async function callCron(bearer: string): Promise<Resp> {
+> 42	  const r = await fetch(`${URL}/functions/v1/autopilot-cadence-cron`, {
+> 43	    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: bearer, Authorization: `Bearer ${bearer}` }, body: '{}',
+> 44	  });
+> 45	  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }
+> 46	  return { status: r.status, body: b };
+> 47	}
+> 48	async function getBalance(): Promise<number> {
+> 49	  const { data } = await admin.from('profiles').select('mco_balance').eq('id', uid!).single();
+> 50	  return Number(data?.mco_balance ?? 0);
+> 51	}
+> 52	
+> 53	const svcHdr = { apikey: SVC, Authorization: `Bearer ${SVC}` };
+> 54	try {
+> 55	  // ── Identity gates (no user/plan needed) ────────────────────────────────────────────────────────────────────
+> 56	  check('I1 cadence-cron anon → 403', (await callCron(PUB)).status === 403);
+> 57	  const c2 = await callCron(SVC);
+> 58	  check('I2 cadence-cron service → 200 ok', c2.status === 200 && c2.body.status === 'ok', `due=${c2.body.due}`);
+> 59	  check('I3 run anon → 401', (await callRun({ apikey: PUB, Authorization: `Bearer ${PUB}` }, { plan_id: ZERO })).status === 401);
+> 60	  check('I4 run service w/o x-autopilot-user-id → 400', (await callRun(svcHdr, { plan_id: crypto.randomUUID() })).status === 400);
+> 61	  check('I5 run service + header + no plan_id → 422', (await callRun({ ...svcHdr, 'x-autopilot-user-id': ZERO }, {})).status === 422);
+> 62	
+> 63	  // ── dry_run cost projection (throwaway user + plan; 3 products × 1 platform × 1 variant = 3 runs) ─────────────
+> 64	  const email = `ap-run-${Date.now()}@example.com`;
+> 65	  const { data: u, error: ue } = await admin.auth.admin.createUser({ email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });
+> 66	  if (ue || !u?.user) throw new Error(`createUser: ${ue?.message}`);
+> 67	  uid = u.user.id;
+> 68	  const { data: planRow, error: pe } = await admin.from('autopilot_plans').insert({
+> 69	    user_id: uid, name: 'smoke-run-plan', mode: 'every_n_days', interval_days: 3,
+> 70	    target_product_ids: ['MLB-A', 'MLB-B', 'MLB-C'], platforms: ['linkedin'],
+> 71	    budget_cap_mco: 200, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1, is_active: true,
+> 72	  }).select('id').single();
+> 73	  if (pe || !planRow) throw new Error(`insert plan: ${pe?.message}`);
+> 74	  const planId = planRow.id as string;
+> 75	
+> 76	  const b0 = await getBalance();
+> 77	  const d1 = await callRun({ ...svcHdr, 'x-autopilot-user-id': uid }, { plan_id: planId, dry_run: true });
+> 78	  const b1 = await getBalance();
+> 79	  check('D1 dry_run → ok · n_runs=3 · projected=32',
+> 80	    d1.status === 200 && d1.body.ok === true && d1.body.n_runs === 3 && d1.body.projected_mco === 32, JSON.stringify(d1.body));
+> 81	  check('D1 dry_run did NOT spend (delta 0)', b1 === b0, `delta=${b1 - b0}`);
+> 82	
+> 83	  // ── Cross-tenant: service key + WRONG x-autopilot-user-id + the real plan → 404 (tenant-scoped load blocks it) ─
+> 84	  const x1 = await callRun({ ...svcHdr, 'x-autopilot-user-id': ZERO }, { plan_id: planId, dry_run: true });
+> 85	  check('X1 cross-tenant header → 404 plan_not_found', x1.status === 404, JSON.stringify(x1.body));
+> 86	} catch (e) {
+> 87	  check(`FATAL: ${(e as Error).message}`, false);
+> 88	} finally {
+> 89	  if (uid) {
+> 90	    const { error } = await admin.auth.admin.deleteUser(uid);
+> 91	    check('cleanup: throwaway user deleted', !error);
+> 92	  }
+> 93	  console.log(pass ? '\n🟢 SMOKE PASS' : '\n🔴 SMOKE FAIL');
+> 94	  process.exit(pass ? 0 : 1);
+> 95	}
+> 96	
+> ```
+
+## 🤖 Claude *(18:40:31)*
+
+
+## 🤖 Claude *(18:40:34)*
+
+Entendi o contrato: o `dry_run` curto-circuita **antes** do `begin`/fan-out (linha 75) — retorna só a projeção de custo, sem abrir ciclo, sem deduzir, sem tocar `orchestrate-content`/WP. Ou seja, o dry-run prova **identidade + projeção de custo do executor**, zero-custo; a perna do WP já provei E2E há pouco (post_id 18, e `orchestrate-content` chama `publish-wordpress` internamente). Existe um smoke pronto pra isso. Rodando contra as funções **deployadas**:
+
+## 🤖 Claude *(18:40:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nbun run scripts/qa/smoke-autopilot-run.ts 2>&1 | tail -20",
+  "description": "Run zero-cost autopilot-run dry-run smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ I1 cadence-cron anon → 403
+> ✅ I2 cadence-cron service → 200 ok  → due=0
+> ✅ I3 run anon → 401
+> ✅ I4 run service w/o x-autopilot-user-id → 400
+> ✅ I5 run service + header + no plan_id → 422
+> ✅ D1 dry_run → ok · n_runs=3 · projected=32  → {"ok":true,"dry_run":true,"n_runs":3,"projected_mco":32,"breakdown":{"products":3,"platforms":1,"ab_variants":1}}
+> ✅ D1 dry_run did NOT spend (delta 0)  → delta=0
+> ✅ X1 cross-tenant header → 404 plan_not_found  → {"error":"plan_not_found"}
+> ✅ cleanup: throwaway user deleted
+> 
+> 🟢 SMOKE PASS
+> ```
+
+## 🤖 Claude *(18:41:44)*
+
+
+## 🤖 Claude *(18:41:48)*
+
+✅ **B (dry-run) GREEN — 8/8 gates contra as funções deployadas, zero-custo:** identidade (401/403/400/422), projeção `n_runs=3 · projected=32` (3×10+2), **delta de saldo = 0**, cross-tenant → 404, cleanup OK. Notável: `cadence-cron service → due=0` (nenhum plano vencido ainda; pg_cron não agendado). O executor está saudável e wired; somada à perna WP já provada (post_id 18), a cadeia está de-riscada — falta só o fan-out pago real (que é o C).
+
+Antes de te propor a ordem do resto, deixa eu ver materialmente se o **C (1º ciclo pago)** é rodável agora — se o Usuário Zero tem plano + produtos reais + saldo:
+
+## 🤖 Claude *(18:41:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== saldo mcoCoins do Usu\u00e1rio Zero ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/profiles?select=mco_balance&id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"\necho \"\"\necho \"=== planos de autopilot do Usu\u00e1rio Zero ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/autopilot_plans?select=id,name,mode,interval_days,target_product_ids,platforms,ab_variants,is_active,next_run_at,budget_cap_mco,daily_cap_mco&user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"\necho \"\"\necho \"=== produtos de afiliado reais dispon\u00edveis (count) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_affiliate_products?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>&1 | grep -i \"content-range\"",
+  "description": "Check Usuario Zero autopilot plan, balance, products for paid cycle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === saldo mcoCoins do Usuário Zero ===
+> [{"mco_balance":5096.00}]
+> === planos de autopilot do Usuário Zero ===
+> []
+> === produtos de afiliado reais disponíveis (count) ===
+> content-range: 0-0/3
+> ```
+
+## 🤖 Claude *(18:43:56)*
+
+
+## 🤖 Claude *(18:44:14)*
+
+📊 **Estado material para o C:**
+- Saldo Usuário Zero: **5096 mcoCoins** (folga enorme)
+- Planos de autopilot: **nenhum ainda** (`[]`) → o 1º ciclo exige criar um plano primeiro
+- Produtos de afiliado reais: **3 disponíveis** (`vm_affiliate_products`)
+
+## Ordem recomendada (você delegou — esta é a minha)
+
+Valido o **tenant-zero primeiro**, depois generalizo pro multi-tenant:
+
+1. ✅ **B — dry-run** (feito, verde)
+2. **C — 1º ciclo PAGO (Usuário Zero)** ← a milestone que estava travada; agora desbloqueada. **Precisa do seu GO** (gasta mco + publica). Detalhe abaixo.
+3. **🔑 Per-user WP↔CF** (sua diretiva IMPORTANTE) — Lei 2: SOP primeiro → coluna per-user `wp_cf_publish_secret` (Vault) + UI em Settings→WordPress que **gera o segredo do tenant + mostra a regra CF exata dele pra colar** + botão "Verificar" + lookup per-user no `publish-wordpress` (global vira fallback só do tenant-zero, conforme API Tenancy Model).
+4. **🎯 BYOK imagem opt-in** (sua observação) — seletor de provedor+modelo de imagem em Settings; `generate-image` honra a escolha do user (OpenRouter Gemini vira default, não trava).
+5. **A — FR-VA-018** `fetch-trends → pauta` (autônomo, último item do motor).
+
+Os itens 3 e 4 acionam a Lei 2 (SOP antes de código) — vou tratá-los com esse rigor.
+
+## C — o que eu rodaria (preciso do seu GO + uma escolha)
+
+Crio um plano mínimo e rodo **1 ciclo**:
+
+| Config | Custo | O que publica |
+|---|---|---|
+| **1 produto × LinkedIn × 1 variante = 1 run** | **12 mco** (10 + 2 reserva, refund se sem dado R3) | Artigo → **WP rascunho** (seguro, não-público) + 1 post LinkedIn **agendado** |
+
+⚠️ **Blast radius honesto:** o WP sai como **rascunho** (você revisa antes de publicar). Mas o post de LinkedIn fica **agendado** e o cron `auto-publish` vai **postar ao vivo** no seu LinkedIn. Então o C é genuinamente *outward*.
+
+**Sua escolha (recomendo a conservadora pro 1º):**
+- **(a) Conservador** — eu rodo com o LinkedIn agendado mas **desligo/seguro o auto-publish** pra você revisar o conteúdo antes de ir ao ar. Prova a cadeia sem postar nada público ainda.
+- **(b) Full** — deixa o LinkedIn ir ao ar de verdade (validação ponta-a-ponta real, incluindo a publicação social).
+
+Me diz **GO + (a) ou (b)** que eu executo o C na hora. Enquanto isso — como você delegou a ordem — posso já começar o **SOP do per-user WP↔CF** (item 3, Lei 2), que é a sua diretiva IMPORTANTE e o contexto do Cloudflare está fresquíssimo agora. Quer que eu arranque o SOP em paralelo ao seu GO do C?
+
+## 👤 User *(18:48:59)*
+
+Sim continue é prioridade resolver o SOP do per-user não somente do WP-CF mas como tudo que é Per-User sempre é prioridade ser resolvido per-user.
+
+## 🤖 Claude *(18:51:06)*
+
+
+## 🤖 Claude *(18:51:10)*
+
+Entendido, e essa é uma diretiva de peso: **per-user é prioridade permanente em TODO o ecossistema** — não só WP-CF. Isso reafirma e eleva o "API Tenancy Model — Per-User Credentials" do CLAUDE.md ao status de princípio sempre-ativo. Vou agir em duas frentes:
+
+1. **Escrever o SOP do per-user WP↔CF agora** (Lei 2, antes de qualquer código — contexto Cloudflare fresco).
+2. **Lançar uma auditoria de prontidão per-user em todo o ecossistema** (em background) — materializa o "tudo que é per-user" num backlog priorizado: quais edge functions ainda resolvem credencial global em fluxo user-facing (violação) vs per-user (ok) vs fallback-legítimo.
+
+Começo lançando a auditoria (roda em paralelo enquanto escrevo o SOP):
+
+## 🤖 Claude *(18:51:43)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'per-user-readiness-audit',\n  description: 'Audita resolu\u00e7\u00e3o de credencial per-user vs global em todas as edge functions (API Tenancy Model)',\n  phases: [\n    { title: 'Discover', detail: 'lista edge fns que tocam credencial/API externa' },\n    { title: 'Classify', detail: 'classifica cada fn: per-user / fallback-ok / viola\u00e7\u00e3o' },\n    { title: 'Synthesize', detail: 'ledger priorizado de gaps per-user' },\n  ],\n}\n\nconst TENANCY_CONTEXT = `\nMCORCH API Tenancy Model \u2014 Per-User Credentials (Sovereign Directive, CLAUDE.md):\nResolution order MANDATORY para toda integra\u00e7\u00e3o com API externa em fluxo USER-FACING:\n  1. PER-USER table primeiro: ler de user_api_keys / <service>_config / decrypted_user_api_keys filtrando por user_id = auth.uid() (ou x-autopilot-user-id server-trusted no path de cron).\n  2. GLOBAL env fallback (Deno.env.get('<SERVICE>_API_KEY')) S\u00d3 permitido em: cron/service-role flows (sem auth.uid()), onboarding default expl\u00edcito documentado, ou trigger/webhook onde JWT do user n\u00e3o est\u00e1 no path.\n  3. Hard failure estruturado (402/501) se nenhum resolve \u2014 NUNCA seguir com shared/default key silenciosamente.\nTabelas can\u00f4nicas per-user: user_api_keys (groq_api_key, openrouter_api_key, google_api_key [Gemini], replicate_api_key, openai_api_key, higgsfield_api_key, resend_api_key, wp_site_url/wp_username/wp_app_password), affiliate_config, social_credentials, meta_config, mcp_access_tokens.\nANTI-PATTERN (viola\u00e7\u00e3o): Deno.env.get('<SERVICE>_API_KEY') usado como caminho PRIM\u00c1RIO num fluxo iniciado por JWT de usu\u00e1rio, sem tentar a tabela per-user antes.\nEXCE\u00c7\u00c3O leg\u00edtima (fallback-ok): chaves de sistema (STRIPE_SECRET_KEY, SB_SECRET_KEY, SUPABASE_*, embeddings via OPENROUTER em pipeline interno de mesh), webhooks (pg_net/ML postback), e crons service-role.\n`;\n\nconst DISCOVER_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['functions'],\n  properties: {\n    functions: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['name', 'touches_external_credential', 'reason'],\n        properties: {\n          name: { type: 'string' },\n          touches_external_credential: { type: 'boolean' },\n          reason: { type: 'string', description: 'por que toca (ou n\u00e3o) credencial de API externa' },\n        },\n      },\n    },\n  },\n};\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['function', 'verdict', 'evidence', 'services', 'is_user_facing', 'recommendation'],\n  properties: {\n    function: { type: 'string' },\n    verdict: { type: 'string', enum: ['per_user', 'fallback_ok', 'violation', 'mixed'] },\n    is_user_facing: { type: 'boolean', description: 'fluxo iniciado por JWT de usu\u00e1rio (vs cron/service/webhook)' },\n    services: { type: 'array', items: { type: 'string' }, description: 'APIs externas tocadas (ex: openrouter, gemini, wp, meta)' },\n    evidence: { type: 'array', items: { type: 'string' }, description: 'path:linha citando a resolu\u00e7\u00e3o de credencial' },\n    recommendation: { type: 'string', description: 'se viola\u00e7\u00e3o/mixed: o que fazer pra ficar per-user; sen\u00e3o \"nenhuma\"' },\n  },\n};\n\nphase('Discover')\nconst discovered = await agent(\n  `Voc\u00ea audita o reposit\u00f3rio MCORCH em /home/gcrUX/htdocs/constellation-orchestra.\nListe TODAS as edge functions em supabase/functions/*/index.ts (use: ls supabase/functions/).\nPara cada uma, determine se ela TOCA credencial de API externa (faz fetch a provedor de IA / rede social / WP / afiliado / pagamento, OU l\u00ea Deno.env.get de *_API_KEY/*_SECRET/*_TOKEN, OU l\u00ea de user_api_keys/<service>_config/decrypted_user_api_keys).\nUse grep/Read para checar r\u00e1pido (n\u00e3o leia tudo inteiro; grepe os padr\u00f5es). Retorne o array completo.\n${TENANCY_CONTEXT}`,\n  { schema: DISCOVER_SCHEMA, label: 'discover:edge-fns' }\n)\n\nconst toClassify = (discovered?.functions ?? []).filter(f => f.touches_external_credential).map(f => f.name)\nlog(`Discover: ${toClassify.length} edge fns tocam credencial externa \u2192 classificando`)\n\nphase('Classify')\nconst verdicts = await pipeline(\n  toClassify,\n  (fnName) => agent(\n    `Classifique a resolu\u00e7\u00e3o de credencial da edge function supabase/functions/${fnName}/index.ts no projeto MCORCH (/home/gcrUX/htdocs/constellation-orchestra).\nLeia o arquivo. Determine:\n- is_user_facing: o fluxo \u00e9 iniciado por JWT de USU\u00c1RIO (getUser/auth.uid)? Ou \u00e9 cron/service-role/webhook (service key, x-*-user-id server-trusted, pg_net)?\n- services: quais APIs externas toca.\n- verdict:\n  * per_user = resolve credencial de tabela per-user (user_api_keys/<service>_config/decrypted_user_api_keys por user_id) ANTES de qualquer env global.\n  * fallback_ok = usa env global MAS \u00e9 legitimamente cron/service/webhook/onboarding (n\u00e3o user-facing), OU chave de sistema (Stripe/Supabase/embeddings de mesh).\n  * violation = usa Deno.env.get('<SERVICE>_API_KEY') como caminho PRIM\u00c1RIO num fluxo USER-FACING sem tentar a tabela per-user antes.\n  * mixed = alguns servi\u00e7os per-user, outros viola\u00e7\u00e3o.\n- evidence: cite path:linha exatos da resolu\u00e7\u00e3o de credencial.\n- recommendation: se violation/mixed, o que muda pra ficar per-user.\nSeja material: cite linhas reais, n\u00e3o suponha.\n${TENANCY_CONTEXT}`,\n    { schema: VERDICT_SCHEMA, label: `classify:${fnName}`, phase: 'Classify' }\n  )\n)\n\nconst clean = verdicts.filter(Boolean)\nconst violations = clean.filter(v => v.verdict === 'violation' || v.verdict === 'mixed')\nlog(`Classify: ${clean.length} classificadas \u00b7 ${violations.length} com gap per-user`)\n\nphase('Synthesize')\nconst ledger = await agent(\n  `Voc\u00ea \u00e9 o sintetizador da auditoria de prontid\u00e3o per-user do MCORCH.\nAqui est\u00e3o os veredictos por edge function (JSON):\n${JSON.stringify(clean, null, 2)}\n\nProduza um LEDGER PRIORIZADO em markdown PT-BR:\n1. Resumo: total classificadas, quantas per_user / fallback_ok / violation / mixed.\n2. Tabela de VIOLA\u00c7\u00d5ES e MIXED ordenada por blast radius (fluxos de dinheiro/publica\u00e7\u00e3o primeiro), com colunas: edge fn \u00b7 servi\u00e7os \u00b7 evid\u00eancia (path:linha) \u00b7 o que fazer pra virar per-user.\n3. Tabela curta dos fallback_ok (confirmando que s\u00e3o leg\u00edtimos: cron/service/webhook/sistema).\n4. Recomenda\u00e7\u00e3o de ordem de remedia\u00e7\u00e3o (qual atacar primeiro e por qu\u00ea), alinhada ao princ\u00edpio Sovereign \"tudo que \u00e9 per-user \u00e9 prioridade\".\nSeja conciso e material. Cite path:linha sempre. N\u00e3o invente \u2014 use s\u00f3 os veredictos fornecidos.`,\n  { label: 'synthesize:ledger' }\n)\n\nreturn { total: clean.length, violations: violations.length, ledger }\n",
+  "run_in_background": "true"
+}
+```
+
+> **Tool Result (Workflow)** - ❌ Error
+>
+> ```
+> <tool_use_error>InputValidationError: Workflow failed due to the following issue:
+> An unexpected parameter `run_in_background` was provided</tool_use_error>
+> ```
+
+## 🤖 Claude *(18:51:46)*
+
+
+## 🤖 Claude *(18:51:47)*
+
+Workflows já rodam em background por padrão — removo o parâmetro inválido:
+
+## 🤖 Claude *(18:52:13)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'per-user-readiness-audit',\n  description: 'Audita resolu\u00e7\u00e3o de credencial per-user vs global em todas as edge functions (API Tenancy Model)',\n  phases: [\n    { title: 'Discover', detail: 'lista edge fns que tocam credencial/API externa' },\n    { title: 'Classify', detail: 'classifica cada fn: per-user / fallback-ok / viola\u00e7\u00e3o' },\n    { title: 'Synthesize', detail: 'ledger priorizado de gaps per-user' },\n  ],\n}\n\nconst TENANCY_CONTEXT = `\nMCORCH API Tenancy Model \u2014 Per-User Credentials (Sovereign Directive, CLAUDE.md):\nResolution order MANDATORY para toda integra\u00e7\u00e3o com API externa em fluxo USER-FACING:\n  1. PER-USER table primeiro: ler de user_api_keys / <service>_config / decrypted_user_api_keys filtrando por user_id = auth.uid() (ou x-autopilot-user-id server-trusted no path de cron).\n  2. GLOBAL env fallback (Deno.env.get('<SERVICE>_API_KEY')) S\u00d3 permitido em: cron/service-role flows (sem auth.uid()), onboarding default expl\u00edcito documentado, ou trigger/webhook onde JWT do user n\u00e3o est\u00e1 no path.\n  3. Hard failure estruturado (402/501) se nenhum resolve \u2014 NUNCA seguir com shared/default key silenciosamente.\nTabelas can\u00f4nicas per-user: user_api_keys (groq_api_key, openrouter_api_key, google_api_key [Gemini], replicate_api_key, openai_api_key, higgsfield_api_key, resend_api_key, wp_site_url/wp_username/wp_app_password), affiliate_config, social_credentials, meta_config, mcp_access_tokens.\nANTI-PATTERN (viola\u00e7\u00e3o): Deno.env.get('<SERVICE>_API_KEY') usado como caminho PRIM\u00c1RIO num fluxo iniciado por JWT de usu\u00e1rio, sem tentar a tabela per-user antes.\nEXCE\u00c7\u00c3O leg\u00edtima (fallback-ok): chaves de sistema (STRIPE_SECRET_KEY, SB_SECRET_KEY, SUPABASE_*, embeddings via OPENROUTER em pipeline interno de mesh), webhooks (pg_net/ML postback), e crons service-role.\n`;\n\nconst DISCOVER_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['functions'],\n  properties: {\n    functions: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['name', 'touches_external_credential', 'reason'],\n        properties: {\n          name: { type: 'string' },\n          touches_external_credential: { type: 'boolean' },\n          reason: { type: 'string', description: 'por que toca (ou n\u00e3o) credencial de API externa' },\n        },\n      },\n    },\n  },\n};\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['function', 'verdict', 'evidence', 'services', 'is_user_facing', 'recommendation'],\n  properties: {\n    function: { type: 'string' },\n    verdict: { type: 'string', enum: ['per_user', 'fallback_ok', 'violation', 'mixed'] },\n    is_user_facing: { type: 'boolean', description: 'fluxo iniciado por JWT de usu\u00e1rio (vs cron/service/webhook)' },\n    services: { type: 'array', items: { type: 'string' }, description: 'APIs externas tocadas (ex: openrouter, gemini, wp, meta)' },\n    evidence: { type: 'array', items: { type: 'string' }, description: 'path:linha citando a resolu\u00e7\u00e3o de credencial' },\n    recommendation: { type: 'string', description: 'se viola\u00e7\u00e3o/mixed: o que fazer pra ficar per-user; sen\u00e3o \"nenhuma\"' },\n  },\n};\n\nphase('Discover')\nconst discovered = await agent(\n  `Voc\u00ea audita o reposit\u00f3rio MCORCH em /home/gcrUX/htdocs/constellation-orchestra.\nListe TODAS as edge functions em supabase/functions/*/index.ts (use: ls supabase/functions/).\nPara cada uma, determine se ela TOCA credencial de API externa (faz fetch a provedor de IA / rede social / WP / afiliado / pagamento, OU l\u00ea Deno.env.get de *_API_KEY/*_SECRET/*_TOKEN, OU l\u00ea de user_api_keys/<service>_config/decrypted_user_api_keys).\nUse grep/Read para checar r\u00e1pido (n\u00e3o leia tudo inteiro; grepe os padr\u00f5es). Retorne o array completo.\n${TENANCY_CONTEXT}`,\n  { schema: DISCOVER_SCHEMA, label: 'discover:edge-fns' }\n)\n\nconst toClassify = (discovered?.functions ?? []).filter(f => f.touches_external_credential).map(f => f.name)\nlog(`Discover: ${toClassify.length} edge fns tocam credencial externa de um total levantado`)\n\nphase('Classify')\nconst verdicts = await pipeline(\n  toClassify,\n  (fnName) => agent(\n    `Classifique a resolu\u00e7\u00e3o de credencial da edge function supabase/functions/${fnName}/index.ts no projeto MCORCH (/home/gcrUX/htdocs/constellation-orchestra).\nLeia o arquivo. Determine:\n- is_user_facing: o fluxo \u00e9 iniciado por JWT de USU\u00c1RIO (getUser/auth.uid)? Ou \u00e9 cron/service-role/webhook (service key, x-*-user-id server-trusted, pg_net)?\n- services: quais APIs externas toca.\n- verdict:\n  * per_user = resolve credencial de tabela per-user (user_api_keys/<service>_config/decrypted_user_api_keys por user_id) ANTES de qualquer env global.\n  * fallback_ok = usa env global MAS \u00e9 legitimamente cron/service/webhook/onboarding (n\u00e3o user-facing), OU chave de sistema (Stripe/Supabase/embeddings de mesh).\n  * violation = usa Deno.env.get('<SERVICE>_API_KEY') como caminho PRIM\u00c1RIO num fluxo USER-FACING sem tentar a tabela per-user antes.\n  * mixed = alguns servi\u00e7os per-user, outros viola\u00e7\u00e3o.\n- evidence: cite path:linha exatos da resolu\u00e7\u00e3o de credencial.\n- recommendation: se violation/mixed, o que muda pra ficar per-user.\nSeja material: cite linhas reais, n\u00e3o suponha.\n${TENANCY_CONTEXT}`,\n    { schema: VERDICT_SCHEMA, label: `classify:${fnName}`, phase: 'Classify' }\n  )\n)\n\nconst clean = verdicts.filter(Boolean)\nconst violations = clean.filter(v => v.verdict === 'violation' || v.verdict === 'mixed')\nlog(`Classify: ${clean.length} classificadas \u00b7 ${violations.length} com gap per-user`)\n\nphase('Synthesize')\nconst ledger = await agent(\n  `Voc\u00ea \u00e9 o sintetizador da auditoria de prontid\u00e3o per-user do MCORCH.\nAqui est\u00e3o os veredictos por edge function (JSON):\n${JSON.stringify(clean, null, 2)}\n\nProduza um LEDGER PRIORIZADO em markdown PT-BR:\n1. Resumo: total classificadas, quantas per_user / fallback_ok / violation / mixed.\n2. Tabela de VIOLA\u00c7\u00d5ES e MIXED ordenada por blast radius (fluxos de dinheiro/publica\u00e7\u00e3o primeiro), com colunas: edge fn \u00b7 servi\u00e7os \u00b7 evid\u00eancia (path:linha) \u00b7 o que fazer pra virar per-user.\n3. Tabela curta dos fallback_ok (confirmando que s\u00e3o leg\u00edtimos: cron/service/webhook/sistema).\n4. Recomenda\u00e7\u00e3o de ordem de remedia\u00e7\u00e3o (qual atacar primeiro e por qu\u00ea), alinhada ao princ\u00edpio Sovereign \"tudo que \u00e9 per-user \u00e9 prioridade\".\nSeja conciso e material. Cite path:linha sempre. N\u00e3o invente \u2014 use s\u00f3 os veredictos fornecidos.`,\n  { label: 'synthesize:ledger' }\n)\n\nreturn { total: clean.length, violations: violations.length, ledger }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wqyrxt2u7
+> Summary: Audita resolução de credencial per-user vs global em todas as edge functions (API Tenancy Model)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/subagents/workflows/wf_102ef5ac-474
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/workflows/scripts/per-user-readiness-audit-wf_102ef5ac-474.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/workflows/scripts/per-user-readiness-audit-wf_102ef5ac-474.js"} to iterate without resending the script.)
+> Run ID: wf_102ef5ac-474
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/workflows/scripts/per-user-readiness-audit-wf_102ef5ac-474.js", resumeFromRunId: "wf_102ef5ac-474"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:52:17)*
+
+
+## 🤖 Claude *(18:52:18)*
+
+Auditoria rodando em background (`wqyrxt2u7`) — me avisa quando o ledger per-user estiver pronto. Agora escrevo o **SOP do per-user WP↔CF** (Lei 2, antes do código):
+
+## 🤖 Claude *(18:53:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/wordpress-cf-per-user-publish.md",
+  "content": "# SOP \u2014 Publish WordPress per-user atr\u00e1s do Cloudflare (multi-tenant)\n\n> **Slug:** `wordpress-cf-per-user-publish` \u00b7 **Criado:** 2026-06-22 \u00b7 **Lei 2 (Processo Antecipado)** \u00b7 **API Tenancy Model \u2014 Per-User Credentials**\n> **Origem:** diretiva Sovereign 2026-06-22 \u2014 *\"o que resolvemos do WP com CF agora deve ser per-user dentro do ecossistema; se o usu\u00e1rio precisar adicionar uma regra no Cloudflare, devemos deixar expl\u00edcito e claro na UI do painel para o usu\u00e1rio fazer o passo correto\"* + *\"tudo que \u00e9 per-user sempre \u00e9 prioridade ser resolvido per-user\"*.\n> **Generaliza** o unblock **global/tenant-zero** j\u00e1 vivo (`docs/processes/wordpress-cf-publish-unblock.md`, secret global `WP_PUBLISH_SECRET`/`_HOST` \u2192 `www.mcorch.com`) para **qualquer tenant** cujo WordPress self-hosted esteja atr\u00e1s do **pr\u00f3prio** Cloudflare.\n\n---\n\n## Problema\n\nO unblock atual \u00e9 **single-tenant**: um \u00fanico `WP_PUBLISH_SECRET` global bound a `WP_PUBLISH_SECRET_HOST=www.mcorch.com` (o site do Usu\u00e1rio Zero). Quando o Usu\u00e1rio 1+ conecta o **pr\u00f3prio** WP (`user_api_keys.wp_site_url` \u2260 `www.mcorch.com`), atr\u00e1s do **pr\u00f3prio** Cloudflare, o `publish-wordpress` faz `fetch` server-side (Deno, sem engine JS) e morre no **managed challenge** do CF *daquele* tenant \u2192 publish 502. Estender o secret global a hosts de tenant \u00e9 **proibido** (o segredo de skip do CF do MCORCH \u00e9 bound a UMA origem nossa; mand\u00e1-lo a um host escolhido pelo tenant permitiria replay/exfil \u2014 ver fail-closed em `publish-wordpress/index.ts:80-99`).\n\n## Modelo da solu\u00e7\u00e3o (per-user, fail-closed)\n\nCada tenant que tem WP atr\u00e1s do pr\u00f3prio Cloudflare ganha o **seu pr\u00f3prio segredo compartilhado**, guardado **cifrado por-usu\u00e1rio** no Vault, e a **UI o guia** a criar a regra de WAF Skip correta no **Cloudflare dele** \u2014 com a express\u00e3o e o segredo **dele** j\u00e1 preenchidos.\n\n**Resolution order (API Tenancy Model):**\n1. **Per-user primeiro** \u2014 `decrypted_user_api_keys.wp_cf_publish_secret` (do `user_id`). Anexa `X-MCORCH-Publish: <segredo-do-tenant>` **somente** quando o host de destino == host do `wp_site_url` **do pr\u00f3prio tenant** (sempre \u00e9 \u2014 publicamos no site dele; o segredo nunca viaja para outro host).\n2. **Global fallback restrito** \u2014 `Deno.env.get('WP_PUBLISH_SECRET')` S\u00d3 quando o host de destino == `WP_PUBLISH_SECRET_HOST` (= `www.mcorch.com`, tenant-zero / onboarding default documentado).\n3. **No-op fail-closed** \u2014 sem secret per-user e host \u2260 tenant-zero \u21d2 **header nunca \u00e9 anexado** (o publish segue sem o skip; correto se o WP do tenant **n\u00e3o** est\u00e1 atr\u00e1s de um CF que desafia).\n\n**Seguran\u00e7a:** o segredo per-user \u00e9 do **pr\u00f3prio** tenant, bound ao **pr\u00f3prio** host \u2192 zero exfil cross-tenant. Cifrado em repouso como qualquer BYOK (`wp_app_password`). \u00c9 **retrievable** (a edge fn precisa replay\u00e1-lo como header) \u2014 diferente de um PAT (hash-only); portanto a UI o exibe na gera\u00e7\u00e3o e a rota\u00e7\u00e3o = re-gerar.\n\n---\n\n## ORO\n\n- **Operator:** MCORCH Master Execution Agent (migration + edge fn + UI) **+ o TENANT** (cria a regra de WAF Skip no Cloudflare **dele**, na conta CF dele).\n- **Reviewer:** `/security-review` independente (migration + edge fn) + Sovereign.\n- **Owner:** Sovereign \u2014 blast radius = publish multi-tenant + manuseio de segredo per-user + isolamento entre tenants. (O Owner da regra CF de cada tenant \u00e9 o pr\u00f3prio tenant.)\n\n---\n\n## Sequence (passos numerados, cada um com crit\u00e9rio material)\n\n### Step 1 \u2014 Schema: coluna per-user cifrada `wp_cf_publish_secret`\nMigration adicionando a coluna ao **backing table** do `user_api_keys` (VIEW mascarada Vault \u2014 ver `reference_encrypted_views_write_pattern`), com:\n- Trigger de encripta\u00e7\u00e3o Vault idempotente (padr\u00e3o `vault_upsert_secret`, migration `20260602140000`) \u2014 re-save n\u00e3o d\u00e1 23505.\n- VIEW mascarada exp\u00f5e `wp_cf_publish_secret` como `\u2022\u2022\u2022\u2022`; `decrypted_user_api_keys` exp\u00f5e o claro (s\u00f3 service_role).\n- INSTEAD OF trigger **UPDATE-first** + guard de tenant `auth.uid()` (padr\u00e3o migrations `20260602130000`/`150000` \u2014 NUNCA `INSERT...ON CONFLICT` [double-fire] nem inje\u00e7\u00e3o cross-tenant).\n- `/security-review` **obrigat\u00f3rio** antes do commit (FMEA-011).\n\n**Sucesso material:** `db push` exit 0; `SELECT wp_cf_publish_secret FROM user_api_keys` mostra `\u2022\u2022\u2022\u2022`; service-role `SELECT ... FROM decrypted_user_api_keys` retorna o claro; INSERT por JWT de outro tenant \u2192 42501.\n\n### Step 2 \u2014 Edge fn `publish-wordpress`: lookup per-user\nEstender o gate de host (`publish-wordpress/index.ts:90-99`) para a resolution order acima:\n```\nconst perUser = userKeys?.wp_cf_publish_secret;            // j\u00e1 vem do decrypted_user_api_keys select\nconst targetHost = new URL(apiBase).hostname.toLowerCase();\nif (perUser && targetHost === new URL(wpSiteUrl).hostname.toLowerCase()) {\n  wpAuthHeaders[\"X-MCORCH-Publish\"] = perUser;             // per-user: segredo do tenant \u2192 host do tenant\n} else if (wpPublishSecret && wpPublishSecretHost && targetHost === wpPublishSecretHost.toLowerCase()) {\n  wpAuthHeaders[\"X-MCORCH-Publish\"] = wpPublishSecret;     // fallback restrito: tenant-zero\n}                                                          // sen\u00e3o: nada (fail-closed)\n```\nAdicionar `wp_cf_publish_secret` ao `.select()` do `decrypted_user_api_keys` (linha ~53). Telemetria `infra_health_logs` service `wordpress-cf-publish` com path (`per_user` / `global_fallback` / `no_secret`).\n\n**Sucesso material:** deploy com script size; boot-smoke 401 sem auth; um tenant \u2260 zero com secret per-user + host pr\u00f3prio \u2192 header anexado (provado pelo Step 4).\n\n### Step 3 \u2014 UI: Settings \u2192 WordPress \u2192 se\u00e7\u00e3o \"Cloudflare\" (guia expl\u00edcito)\nHook `useWpCloudflare` (TanStack Query) + card em `MetaConfigCard`-style:\n- Toggle **\"Meu WordPress est\u00e1 atr\u00e1s do Cloudflare\"**.\n- Ao ativar: **gerar segredo client-side** (CSPRNG 32B \u2192 hex; padr\u00e3o `useMcpTokens`), **exibir uma vez**, persistir via `.insert()` (N\u00c3O `.upsert` \u2014 `reference_encrypted_views_write_pattern`).\n- Renderizar a **regra CF exata**, pr\u00e9-preenchida com `new URL(wp_site_url).hostname` + o segredo do tenant:\n  ```\n  (http.host eq \"<HOST_DO_TENANT>\" and starts_with(http.request.uri.path, \"/wp-json/\") and http.request.headers[\"x-mcorch-publish\"][0] eq \"<SEGREDO_DO_TENANT>\")\n  ```\n  + passo-a-passo: **Action: Skip** \u2192 marcar **All managed rules + Super Bot Fight + N\u00edvel de seguran\u00e7a** (ver caveat datacenter em `wordpress-cf-publish-unblock.md`) \u2192 **Place at: First** \u2192 Save/Deploy. Bot\u00e3o \"copiar regra\".\n- Bot\u00e3o **\"Verificar\"** \u2192 chama o Step 4.\n\n**Sucesso material:** UI renderiza (E2E ocular 1920\u00d71080 \u00e0 prova de CF); `SELECT` mostra `wp_cf_publish_secret` = `\u2022\u2022\u2022\u2022` (n\u00e3o null, n\u00e3o claro) ap\u00f3s salvar.\n\n### Step 4 \u2014 Edge fn `verify-wp-cf`: gate de verifica\u00e7\u00e3o per-user\nJWT do user \u2192 resolve `wp_site_url` + `wp_cf_publish_secret` per-user \u2192 `fetch(<wp_site_url>/wp-json/wp/v2/types, { header X-MCORCH-Publish })` \u2192 retorna `{ ok, http_status, cf_challenge: boolean }`.\n\n**Sucesso material:** `http_status=200, cf_challenge=false` quando a regra do tenant est\u00e1 certa; `403 + cf_challenge=true` quando n\u00e3o (a UI mostra a recovery: confira **N\u00edvel de seguran\u00e7a** + Deploy + valor byte-a-byte).\n\n### Step 5 \u2014 Telemetria\n`infra_health_logs` em cada path do publish e do verify (success/degraded/error), service `wordpress-cf-publish` / `verify-wp-cf`.\n\n---\n\n## Verification gates (material, antes de declarar \"pronto\")\n\n| Gate | Comando | Esperado |\n|---|---|---|\n| G1 coluna cifrada | `SELECT wp_cf_publish_secret FROM user_api_keys WHERE user_id=<t>` | `\u2022\u2022\u2022\u2022` (n\u00e3o null/claro) |\n| G2 tenant guard | INSERT/UPDATE per JWT de outro tenant | `42501` |\n| G3 per-user header | `verify-wp-cf` (JWT do tenant, regra CF do tenant no ar) | `http_status=200, cf_challenge=false` |\n| G4 fail-closed | tenant SEM secret, host \u2260 zero | header n\u00e3o anexado (publish segue sem skip; sem vazar global) |\n| G5 fallback intacto | tenant-zero (`www.mcorch.com`) sem regress\u00e3o | continua publicando (Step do SOP global) |\n| G6 isolamento | secret do tenant A nunca anexado a host do tenant B | code-review + grep do gate de host |\n\n## Recovery path\n\n- **G3 d\u00e1 403 com header:** mesm\u00edssima recovery do `wordpress-cf-publish-unblock.md` \u2014 Security \u2192 Events do tenant nomeia o culpado; #1 datacenter = **N\u00edvel de seguran\u00e7a** n\u00e3o-marcado.\n- **Header n\u00e3o anexa (deveria):** confira `wp_cf_publish_secret` no `.select()` do decrypted view + match de host case-insensitive.\n- **23505 ao salvar o secret:** trigger de encrypt n\u00e3o-idempotente \u2014 aplicar o padr\u00e3o `vault_upsert_secret` (Step 1).\n- **Rollback:** UI desliga o toggle \u2192 RPC nula a coluna + revoga o segredo Vault (padr\u00e3o `disconnect_wordpress`, migration `20260602120000`). Volta ao fail-closed sem regress\u00e3o.\n\n## Success signal (flow completo)\n\nUm tenant **\u2260 tenant-zero**, com WP atr\u00e1s do **pr\u00f3prio** Cloudflare + **pr\u00f3prio** segredo + a regra CF dele no ar, dispara `orchestrate-content` (ou Viral Autopilot) com publish WP e recebe `{ success: true, post_id }` \u2014 e o post aparece como rascunho no WP-admin **dele**, sem nenhum secret global ter sido usado.\n\n## Refer\u00eancias\n\n- SOP global/tenant-zero: `docs/processes/wordpress-cf-publish-unblock.md` (achado datacenter \"N\u00edvel de seguran\u00e7a\")\n- API Tenancy Model \u2014 Per-User Credentials (CLAUDE.md) + `feedback_api_tenancy_per_user`\n- Padr\u00f5es de escrita em VIEW cifrada: `reference_encrypted_views_write_pattern` \u00b7 `reference_user_api_keys_encrypted`\n- Gera\u00e7\u00e3o de segredo client-side CSPRNG: `src/hooks/useMcpTokens.ts`\n- Disconnect/revoga\u00e7\u00e3o de segredo Vault: `supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql`\n- Idempot\u00eancia do encrypt: `supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql`\n- Edge fn alvo: `supabase/functions/publish-wordpress/index.ts:49-99`\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/wordpress-cf-per-user-publish.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:53:28)*
+
+
+## 🤖 Claude *(18:53:29)*
+
+SOP escrito. Agora registro na Key Files Reference do CLAUDE.md e atualizo o pointer do SOP global (que agora está resolvido, com o achado "Nível de segurança"):
+
+## 🤖 Claude *(18:53:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"wordpress-cf-publish-unblock\" CLAUDE.md",
+  "description": "Find exact CLAUDE.md line for the WP CF SOP entry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 420:| **WordPress CF publish-unblock SOP** | `docs/processes/wordpress-cf-publish-unblock.md` (CF managed challenge 403 em `/wp-json/*` mata o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header; secrets `WP_PUBLISH_SECRET`/`_HOST` = ação Sovereign; gates de verificação curl) |
+> ```
+
+## 🤖 Claude *(18:53:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **WordPress CF publish-unblock SOP** | `docs/processes/wordpress-cf-publish-unblock.md` (CF managed challenge 403 em `/wp-json/*` mata o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header; secrets `WP_PUBLISH_SECRET`/`_HOST` = a\u00e7\u00e3o Sovereign; gates de verifica\u00e7\u00e3o curl) |",
+  "new_string": "| **WordPress CF publish-unblock SOP (tenant-zero/global)** | `docs/processes/wordpress-cf-publish-unblock.md` (**RESOLVIDO 2026-06-22**: CF managed challenge 403 em `/wp-json/*` matava o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header. **Achado material decisivo: o componente de skip que faltava era \"N\u00edvel de seguran\u00e7a\" (Security Level)** \u2014 o challenge era por reputa\u00e7\u00e3o do IP de **datacenter** (Oracle AS31898), n\u00e3o bot/UA; `All managed rules`+`Super Bot Fight` sozinhos n\u00e3o resolviam. Provado E2E `publish-wordpress`\u2192`{\"success\":true,\"post_id\":18}`. Diagn\u00f3stico via Security\u2192Events nomeia o culpado. Secrets `WP_PUBLISH_SECRET`/`_HOST` = a\u00e7\u00e3o Sovereign j\u00e1 provisionada) |\n| **WordPress CF publish per-user SOP (multi-tenant)** | `docs/processes/wordpress-cf-per-user-publish.md` (generaliza o unblock global para QUALQUER tenant atr\u00e1s do PR\u00d3PRIO Cloudflare \u2014 Lei 2/API Tenancy Model. Coluna per-user cifrada `wp_cf_publish_secret` (Vault) + lookup per-user em `publish-wordpress` (global vira fallback restrito do tenant-zero) + UI Settings\u2192WordPress que GERA o segredo do tenant e MOSTRA a regra CF dele pr\u00e9-preenchida + edge `verify-wp-cf`. Segredo per-user bound ao host do pr\u00f3prio tenant = zero exfil cross-tenant. **SOP selado; c\u00f3digo pendente**) |"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(18:53:49)*
+
+
+## 🤖 Claude *(18:53:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 418,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 418	| **Build & Deploy materiality SOP** | `docs/processes/build-deploy-materiality.md` (worktree trap + gates) |
+> 419	| **Orchestrate async pipeline SOP** | `docs/processes/orchestrate-async-pipeline.md` (pg_net→`verify_jwt=false` mandate + RPC param-name contract + WP canonical-URL; the 3 key-migration failure modes + recovery) |
+> 420	| **WordPress CF publish-unblock SOP** | `docs/processes/wordpress-cf-publish-unblock.md` (CF managed challenge 403 em `/wp-json/*` mata o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header; secrets `WP_PUBLISH_SECRET`/`_HOST` = ação Sovereign; gates de verificação curl) |
+> 421	| **Schema drift audit SOP + tool** | `docs/processes/schema-drift-audit.md` + `scripts/qa/audit-schema-drift.sh` (deployed↔migration drift: ledger · out-of-band fns/triggers · RPC caller-contract · edge `verify_jwt` · RLS/search_path advisory; exit 1=drift. Born do P0 do hotfix-sem-migration. **Regra: todo hotfix de prod vira migration na MESMA sessão**) |
+> 422	| **Drift audit report + remediation (2026-06-03)** | `.claude/context/drift-audit-2026-06-03.md` (1 drift real benigno `rls_auto_enable` capturado · 7 SECURITY DEFINER search_path travados · trigger pg_net morto kong:8000 dropado — migrations `20260603210000`/`210500`/`211000`, /security-review SAFE, re-audit exit 0) |
+> 423	| **mcoCoins cost calibration SOP** | `docs/processes/mcoin-cost-calibration.md` (4×-floor model `mco=ceil(usd/$0.018×4)`; OTD-MCOIN-CALIBRATION closed) |
+> ```
+
+## 🤖 Claude *(18:54:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **WordPress CF publish-unblock SOP** | `docs/processes/wordpress-cf-publish-unblock.md` (CF managed challenge 403 em `/wp-json/*` mata o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header; secrets `WP_PUBLISH_SECRET`/`_HOST` = a\u00e7\u00e3o Sovereign; gates de verifica\u00e7\u00e3o curl) |",
+  "new_string": "| **WordPress CF publish-unblock SOP (tenant-zero/global)** | `docs/processes/wordpress-cf-publish-unblock.md` (**RESOLVIDO 2026-06-22**: CF managed challenge 403 em `/wp-json/*` matava o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header. **Achado material decisivo: o componente de skip que faltava era \"N\u00edvel de seguran\u00e7a\" (Security Level)** \u2014 challenge por reputa\u00e7\u00e3o do IP de **datacenter** (Oracle AS31898), n\u00e3o bot/UA; `All managed rules`+`Super Bot Fight` sozinhos n\u00e3o resolviam. Provado E2E `publish-wordpress`\u2192`{\"success\":true,\"post_id\":18}`. Diagn\u00f3stico via Security\u2192Events. Secrets `WP_PUBLISH_SECRET`/`_HOST` provisionados) |\n| **WordPress CF publish per-user SOP (multi-tenant)** | `docs/processes/wordpress-cf-per-user-publish.md` (generaliza o unblock global p/ QUALQUER tenant atr\u00e1s do PR\u00d3PRIO Cloudflare \u2014 Lei 2/API Tenancy Model. Coluna per-user cifrada `wp_cf_publish_secret` (Vault) + lookup per-user em `publish-wordpress` (global vira fallback restrito do tenant-zero) + UI Settings\u2192WordPress que GERA o segredo do tenant e MOSTRA a regra CF dele pr\u00e9-preenchida + edge `verify-wp-cf`. Segredo per-user bound ao host do pr\u00f3prio tenant = zero exfil cross-tenant. **SOP selado; c\u00f3digo pendente**) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:54:35)*
+
+
+## 🤖 Claude *(18:54:48)*
+
+Pronto — frente per-user encaminhada com rigor de Lei 2:
+
+## ✅ Entregue neste turno
+
+1. **SOP `wordpress-cf-per-user-publish.md`** — selado (Lei 2 satisfeita; código pode prosseguir). Cobre: coluna per-user cifrada `wp_cf_publish_secret` (Vault) · lookup per-user no `publish-wordpress` (global vira fallback restrito do tenant-zero) · UI Settings→WordPress que **gera o segredo do tenant + mostra a regra CF dele pré-preenchida** + edge `verify-wp-cf` · 6 gates materiais · recovery · success signal. Segredo per-user bound ao host do próprio tenant = **zero exfil cross-tenant**.
+2. **CLAUDE.md Key Files** — registrei o SOP per-user + marquei o SOP global como **RESOLVIDO** com o achado decisivo ("Nível de segurança" / IP de datacenter).
+3. **Auditoria de prontidão per-user** rodando em background (`wqyrxt2u7`) — vai varrer **todas** as edge functions e devolver um **ledger priorizado**: o que ainda resolve credencial global em fluxo user-facing (violação) vs per-user (ok) vs fallback-legítimo. Isso materializa o seu "tudo que é per-user é prioridade" num backlog ordenado por blast radius.
+
+## Próximo passo
+
+A auditoria chega em instantes e vai **definir a ordem certa** de remediação per-user (pode haver um fluxo de dinheiro/publicação ainda global que mereça vir antes do próprio WP-CF). Por isso prefiro deixá-la pousar antes de cravar o código — evita eu implementar o WP-CF per-user enquanto uma violação maior espera.
+
+Assim que o ledger voltar, eu:
+- te mostro o backlog priorizado, e
+- arranco a **implementação do item #1** (provavelmente o WP-CF per-user: migration Step 1 → edge fn → UI → `verify-wp-cf`, cada um com `/security-review` + gate material).
+
+E o **C (1º ciclo pago do Usuário Zero)** segue **pronto e esperando seu GO + escolha (a) conservador / (b) full** — não esqueci, só não disparo gasto+publish sem seu aceite (ORO/Owner).
+
+Quer que eu **aguarde o ledger** (recomendado, chega já) e siga implementando o #1 per-user na sequência, ou prefere que eu **arranque já o C** em paralelo?
+
 ---
 
 %% --- PROJECT METADATA START --- %%

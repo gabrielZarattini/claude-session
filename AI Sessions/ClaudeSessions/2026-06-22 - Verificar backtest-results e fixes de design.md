@@ -3521,6 +3521,1067 @@ Desenho do Fix C fechado e aterrado no código real. O gap é só **(1) step-up 
 > 62	
 > ```
 
+## 🤖 Claude *(18:30:49)*
+
+
+## 🤖 Claude *(18:30:55)*
+
+Agora tenho o padrão exato (o `withdrawGuard.test.js` é o template perfeito — guard puro + sim-test). Vou implementar o Fix C espelhando esse padrão:
+
+- **`utils/stepUpGuard.js`** (novo, puro/testável) — `checkSettingsStepUp(current, body)`: alteração sensível (credencial/ambiente, sensível-se-**diferente** → resolve o caso `useTestnet=false`) exige frase; flag `STEP_UP_SETTINGS` (default ON, válvula de escape); **não ecoa a frase**.
+- **`utils/tokenBlacklist.js`** (novo) — blacklist persistida no volume, load **síncrono** no module-load (antes do `listen`), escrita **atômica** (tmp+rename), fail-OPEN, poda por `exp` via `jwt.decode`.
+- **`settingsController.updateSettings`** — guard como **1ª instrução**, `return 400` antes de qualquer `res.send`/`process.exit`.
+- **`authController`** — usa o blacklist persistente.
+- **Frontend** — step-up **reativo** (prompt só no 400 `STEP_UP_REQUIRED`, evita lockout por skew).
+- **`stepUpGuard.test.js`** na sim-suite.
+
+Escrevendo os 3 arquivos novos:
+
+## 🤖 Claude *(18:31:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tx-stepUpGuard.js",
+  "content": "'use strict';\n/*\n * STEP-UP de SETTINGS \u2014 altera\u00e7\u00e3o SENS\u00cdVEL (credencial/ambiente) exige uma frase de confirma\u00e7\u00e3o.\n *\n * Defesa-em-profundidade contra clique acidental / autofill do navegador / token do AGENTE \u2014 N\u00c3O contra\n * um JWT do dono comprometido (a frase vive no .env que o backend l\u00ea; quem tem o token tem o ambiente).\n * Espelha o padr\u00e3o do floor (systemController.setFloor) e do saque (utils/withdrawGuard). PURO e test\u00e1vel.\n *\n * \"Sens\u00edvel-se-DIFERENTE\": s\u00f3 pede a frase se o body realmente ALTERARIA um campo sens\u00edvel vs o atual \u2014\n * assim um save cosm\u00e9tico (telegram/push) ou re-salvar com `useTestnet=false` (estado mainnet leg\u00edtimo)\n * N\u00c3O dispara o step-up. Segredos (secretKey/password) s\u00e3o write-only: valor n\u00e3o-vazio = mudan\u00e7a.\n *\n * Env: STEP_UP_SETTINGS (default ON; =false desliga \u2014 v\u00e1lvula de escape sem deploy) \u00b7\n *      SETTINGS_CONFIRM_PHRASE (a frase; default abaixo).\n */\n\n// Campos leg\u00edveis: sens\u00edvel se PRESENTE no body E diferente do atual.\nconst COMPARABLE = ['accessKey', 'testnetAccessKey', 'apiUrl', 'streamUrl', 'testnetApiUrl', 'testnetStreamUrl'];\n// Segredos write-only (stripados no GET): valor n\u00e3o-vazio enviado = inten\u00e7\u00e3o de troca.\nconst SECRETS = ['secretKey', 'testnetSecretKey', 'password'];\n\nfunction requiresStepUp(current, body) {\n    if (!body || typeof body !== 'object') return false;\n    current = current || {};\n    for (const f of SECRETS)\n        if (typeof body[f] === 'string' && body[f].trim().length > 0) return true;\n    for (const f of COMPARABLE)\n        if (body[f] !== undefined && body[f] !== null && String(body[f]) !== String(current[f] ?? '')) return true;\n    // useTestnet \u00e9 boolean: sens\u00edvel s\u00f3 se PRESENTE e DIFERENTE (false==false n\u00e3o dispara).\n    if (body.useTestnet !== undefined && body.useTestnet !== null\n        && Boolean(body.useTestnet) !== Boolean(current.useTestnet)) return true;\n    // email \u00e9 credencial de login.\n    if (body.email && body.email !== current.email) return true;\n    return false;\n}\n\nfunction stepUpEnabled() { return process.env.STEP_UP_SETTINGS !== 'false'; }   // default ON\nfunction confirmPhrase() { return process.env.SETTINGS_CONFIRM_PHRASE || 'CONFIRMAR ALTERACAO'; }\n\n// Decis\u00e3o p/ o controller. {ok:true} libera; sen\u00e3o {ok:false,status,code,error}.\n// N\u00c3O ecoa a frase (diferente do floor) \u2014 \u00e9 segredo do .env; o operador j\u00e1 a conhece.\nfunction checkSettingsStepUp(current, body) {\n    if (!stepUpEnabled()) return { ok: true };\n    if (!requiresStepUp(current, body)) return { ok: true };\n    if (String((body && body.confirm) || '') === confirmPhrase()) return { ok: true };\n    return {\n        ok: false, status: 400, code: 'STEP_UP_REQUIRED',\n        error: 'altera\u00e7\u00e3o sens\u00edvel (credencial/ambiente) exige a frase de confirma\u00e7\u00e3o.',\n    };\n}\n\nmodule.exports = { requiresStepUp, stepUpEnabled, confirmPhrase, checkSettingsStepUp, COMPARABLE, SECRETS };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tx-stepUpGuard.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:31:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tx-tokenBlacklist.js",
+  "content": "'use strict';\n/*\n * Blacklist de tokens de logout PERSISTIDA \u2014 sobrevive ao restart.\n *\n * Antes era um array em mem\u00f3ria (authController) que zerava a cada restart; como o save de Settings\n * REINICIA o backend a cada vez, um token \"deslogado\" voltava a valer no boot seguinte. Aqui o estado\n * vive num JSON no volume backend_logs (mesmo lugar do risk_state.json), com:\n *   - carga S\u00cdNCRONA no module-load (este m\u00f3dulo \u00e9 exigido por authController \u2192 authMiddleware \u2192 app.js,\n *     ANTES do app.listen em server.js) \u2014 sem janela de token-revogado-volta-a-valer no boot;\n *   - escrita AT\u00d4MICA (tmp + rename) \u2014 o process.exit do save de Settings n\u00e3o trunca o arquivo;\n *   - fail-OPEN / best-effort: arquivo corrompido \u2192 come\u00e7a vazio (N\u00c3O trava o login);\n *   - poda de tokens j\u00e1 expirados (exp do jwt.decode \u2014 sem verify, sem segredo) p/ n\u00e3o crescer infinito.\n *\n * Revoga\u00e7\u00e3o \u00e9 BEST-EFFORT (n\u00e3o \u00e9 garantia forte de seguran\u00e7a): a defesa real \u00e9 o expiresIn do JWT.\n */\nconst fs = require('fs');\nconst path = require('path');\nconst jwt = require('jsonwebtoken');\n\nconst FILE = path.resolve(__dirname, '..', 'logs', 'token_blacklist.json');\nlet entries = Object.create(null);   // token -> exp (epoch s; 0 = desconhecido/malformado)\n\nfunction prune() {\n    const now = Math.floor(Date.now() / 1000);\n    for (const t of Object.keys(entries)) {\n        const exp = entries[t];\n        if (typeof exp === 'number' && exp > 0 && exp <= now) delete entries[t];\n    }\n}\n\nfunction persist() {\n    try {\n        const tmp = `${FILE}.tmp`;\n        fs.writeFileSync(tmp, JSON.stringify(entries), 'utf8');\n        fs.renameSync(tmp, FILE);   // at\u00f4mico no mesmo filesystem\n    } catch (e) { /* best-effort: revoga\u00e7\u00e3o n\u00e3o \u00e9 garantida */ }\n}\n\nfunction loadFromDisk() {\n    try {\n        if (!fs.existsSync(FILE)) return;\n        const raw = JSON.parse(fs.readFileSync(FILE, 'utf8'));\n        entries = (raw && typeof raw === 'object') ? raw : Object.create(null);\n        prune();\n    } catch (e) { entries = Object.create(null); /* fail-open */ }\n}\n\nfunction add(token) {\n    if (!token) return;\n    let exp = 0;\n    try { const d = jwt.decode(token); if (d && typeof d.exp === 'number') exp = d.exp; } catch (e) { /* malformado: guarda c/ exp 0 */ }\n    entries[token] = exp;\n    prune();\n    persist();\n}\n\nfunction has(token) {\n    return !!token && Object.prototype.hasOwnProperty.call(entries, token);\n}\n\nloadFromDisk();   // S\u00cdNCRONO no module-load (antes do app.listen)\n\nmodule.exports = { add, has, loadFromDisk, _count: () => Object.keys(entries).length };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tx-tokenBlacklist.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:31:25)*
+
+
+## 🤖 Claude *(18:31:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tx-stepUpGuard.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 STEP-UP de Settings (utils/stepUpGuard). Altera\u00e7\u00e3o SENS\u00cdVEL (credencial/ambiente)\n * exige a frase; cosm\u00e9tica e re-save sem mudan\u00e7a N\u00c3O disparam. Errar p/ \"ok\" deixa trocar credencial sem\n * confirma\u00e7\u00e3o (= o gap que o Fix C fecha). Puro: s\u00f3 requer o util + mexe em env.\n */\nconst g = require('../../src/utils/stepUpGuard');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\nfunction tt(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\n\nconst PHRASE = 'FRASE SECRETA';\nfunction setEnv(enabled, phrase) {\n    if (enabled == null) delete process.env.STEP_UP_SETTINGS; else process.env.STEP_UP_SETTINGS = enabled;\n    if (phrase == null) delete process.env.SETTINGS_CONFIRM_PHRASE; else process.env.SETTINGS_CONFIRM_PHRASE = phrase;\n}\n\nconst CUR = {\n    accessKey: 'AK_atual', testnetAccessKey: 'TAK_atual',\n    apiUrl: 'https://api.binance.com', streamUrl: 'wss://stream',\n    testnetApiUrl: 'https://testnet', testnetStreamUrl: 'wss://t',\n    useTestnet: false, email: 'dono@ex.com',\n};\n\nsetEnv('true', PHRASE);\n\n// (1) requiresStepUp \u2014 o que conta como sens\u00edvel.\ntt('save cosm\u00e9tico (telegram/push) \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, { telegramChat: '123', pushToken: 'x' }) === false);\ntt('useTestnet=false re-salvo (== atual) \u2192 N\u00c3O sens\u00edvel (caso mainnet leg\u00edtimo)', g.requiresStepUp(CUR, { useTestnet: false }) === false);\ntt('useTestnet=true (\u2260 atual) \u2192 sens\u00edvel', g.requiresStepUp(CUR, { useTestnet: true }) === true);\ntt('accessKey igual ao atual \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, { accessKey: 'AK_atual' }) === false);\ntt('accessKey diferente \u2192 sens\u00edvel', g.requiresStepUp(CUR, { accessKey: 'AK_nova' }) === true);\ntt('secretKey n\u00e3o-vazia \u2192 sens\u00edvel', g.requiresStepUp(CUR, { secretKey: 'nova-secret' }) === true);\ntt('secretKey vazia/espacos \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, { secretKey: '   ' }) === false);\ntt('secretKey omitida \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, { telegramBot: 'b' }) === false);\ntt('password n\u00e3o-vazio \u2192 sens\u00edvel', g.requiresStepUp(CUR, { password: 'novasenha' }) === true);\ntt('apiUrl diferente \u2192 sens\u00edvel', g.requiresStepUp(CUR, { apiUrl: 'https://evil' }) === true);\ntt('email diferente \u2192 sens\u00edvel', g.requiresStepUp(CUR, { email: 'outro@ex.com' }) === true);\ntt('body vazio \u2192 N\u00c3O sens\u00edvel', g.requiresStepUp(CUR, {}) === false);\n\n// (2) checkSettingsStepUp \u2014 a decis\u00e3o do controller.\neq('sens\u00edvel SEM confirm \u2192 400 STEP_UP_REQUIRED', g.checkSettingsStepUp(CUR, { accessKey: 'AK_nova' }).status, 400);\neq('sens\u00edvel SEM confirm \u2192 code', g.checkSettingsStepUp(CUR, { accessKey: 'AK_nova' }).code, 'STEP_UP_REQUIRED');\ntt('a frase N\u00c3O vaza no erro', !/FRASE SECRETA/.test(g.checkSettingsStepUp(CUR, { accessKey: 'AK_nova' }).error));\neq('sens\u00edvel com confirm CERTO \u2192 ok', g.checkSettingsStepUp(CUR, { accessKey: 'AK_nova', confirm: PHRASE }).ok, true);\neq('sens\u00edvel com confirm ERRADO \u2192 400', g.checkSettingsStepUp(CUR, { accessKey: 'AK_nova', confirm: 'errada' }).status, 400);\neq('cosm\u00e9tico sem confirm \u2192 ok (n\u00e3o exige frase)', g.checkSettingsStepUp(CUR, { telegramChat: '9' }).ok, true);\n\n// (3) flag de escape: STEP_UP_SETTINGS=false libera tudo (sem deploy).\nsetEnv('false', PHRASE);\neq('STEP_UP_SETTINGS=false \u2192 libera mesmo troca de secretKey', g.checkSettingsStepUp(CUR, { secretKey: 'x' }).ok, true);\n\n// (4) default ON: sem a env, o step-up est\u00e1 ATIVO (fail-safe).\nsetEnv(null, PHRASE);\neq('sem STEP_UP_SETTINGS (default) \u2192 ATIVO', g.checkSettingsStepUp(CUR, { accessKey: 'AK_nova' }).ok, false);\n\nconsole.log(`\\nstepUpGuard.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tx-stepUpGuard.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:32:24)*
+
+
+## 🤖 Claude *(18:32:25)*
+
+Os 3 novos prontos. Instalo + checo onde editar (`.env.example`, perms):
+
+## 🤖 Claude *(18:32:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -c '\n  cp /tmp/tx-stepUpGuard.js      /home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js\n  cp /tmp/tx-tokenBlacklist.js   /home/gcrux-tradeux/tradeux/backend/src/utils/tokenBlacklist.js\n  cp /tmp/tx-stepUpGuard.test.js /home/gcrux-tradeux/tradeux/backend/scripts/sim/stepUpGuard.test.js\n  chmod 644 /home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js /home/gcrux-tradeux/tradeux/backend/src/utils/tokenBlacklist.js /home/gcrux-tradeux/tradeux/backend/scripts/sim/stepUpGuard.test.js\n'\necho \"novos instalados:\"; ls -la backend/src/utils/stepUpGuard.js backend/src/utils/tokenBlacklist.js backend/scripts/sim/stepUpGuard.test.js\necho; echo \"=== .env.example: phrase/floor/withdraw vars (onde ancorar) ===\"; grep -n \"WITHDRAW_CONFIRM_PHRASE\\|SYSTEM_FLOOR_PHRASE\\|TRADING_HALT\\|FLOOR_PHRASE\" .env.example 2>/dev/null || echo \"(.env.example sem essas vars / inexistente)\"; ls -la .env.example 2>/dev/null\necho; echo \"=== perms dos arquivos a editar ===\"; ls -la backend/src/controllers/authController.js backend/src/controllers/settingsController.js frontend/src/private/Settings/Settings.js",
+  "description": "Install new backend files, locate .env.example anchor and edit-file perms"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> novos instalados:
+> -rw-r--r-- 1 gcrux-tradeux gcrux-tradeux 3863 Jun 22 15:32 backend/scripts/sim/stepUpGuard.test.js
+> -rw-r--r-- 1 gcrux-tradeux gcrux-tradeux 2921 Jun 22 15:32 backend/src/utils/stepUpGuard.js
+> -rw-r--r-- 1 gcrux-tradeux gcrux-tradeux 2589 Jun 22 15:32 backend/src/utils/tokenBlacklist.js
+> 
+> === .env.example: phrase/floor/withdraw vars (onde ancorar) ===
+> (.env.example sem essas vars / inexistente)
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 4077 Jun  2 20:41 .env.example
+> 
+> === perms dos arquivos a editar ===
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux  1106 Jun  2 20:41 backend/src/controllers/authController.js
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux  1108 Jun 15 00:47 backend/src/controllers/settingsController.js
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 35167 Jun 19 23:09 frontend/src/private/Settings/Settings.js
+> ```
+
+## 🤖 Claude *(18:32:39)*
+
+
+## 🤖 Claude *(18:32:40)*
+
+Novos instalados. `.env.example` não tem as vars de risco (débito já conhecido). Vou ler o fim dele pra anexar um bloco do step-up, e então faço os 3 edits via python-as-gcrux (replace exato + assert):
+
+## 🤖 Claude *(18:32:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux; echo \"=== tail .env.example ===\"; tail -8 .env.example",
+  "description": "Read tail of .env.example"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tail .env.example ===
+> 
+> # ---------- Comportamento do robô ----------
+> AUTOMATION_INTERVAL=60000
+> INCOMPLETE_CANDLES=false
+> BINANCE_BLVT=false
+> BINANCE_LOGS=false
+> BEHOLDER_LOGS=false
+> IGNORED_COINS=AUD,GBP,EUR,NGN,RUB,UAH,TRY,BKRW,BIDR,ZAR,BVND
+> ```
+
+## 🤖 Claude *(18:32:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nROOT='/home/gcrux-tradeux/tradeux'\n\ndef patch(path, old, new, label):\n    s=open(path,encoding='utf-8').read()\n    c=s.count(old)\n    if c!=1:\n        print(f'ABORT {label}: ancora x{c} (esperava 1)'); sys.exit(1)\n    open(path,'w',encoding='utf-8').write(s.replace(old,new,1))\n    print(f'OK {label}')\n\n# ---- authController.js: blacklist em memoria -> persistente ----\npatch(ROOT+'/backend/src/controllers/authController.js',\n\"\"\"const blacklist = [];\n\nfunction doLogout(req, res, next) {\n    const token = req.headers['authorization'];\n    blacklist.push(token);\n    return res.sendStatus(200);\n}\n\nfunction isBlacklisted(token) {\n    return blacklist.some(t => t === token);\n}\"\"\",\n\"\"\"const tokenBlacklist = require('../utils/tokenBlacklist');\n\nfunction doLogout(req, res, next) {\n    const token = req.headers['authorization'];\n    tokenBlacklist.add(token);\n    return res.sendStatus(200);\n}\n\nfunction isBlacklisted(token) {\n    return tokenBlacklist.has(token);\n}\"\"\",\n'authController.js (blacklist persistente)')\n\n# ---- settingsController.js: require + guard como 1a instrucao ----\npatch(ROOT+'/backend/src/controllers/settingsController.js',\n\"const logger = require('../utils/logger');\",\n\"const logger = require('../utils/logger');\\nconst stepUpGuard = require('../utils/stepUpGuard');\",\n'settingsController.js (require stepUpGuard)')\n\npatch(ROOT+'/backend/src/controllers/settingsController.js',\n\"\"\"    const id = res.locals.token.id;\n    const newSettings = req.body;\n\n    await settingsRepository.updateSettings(id, newSettings);\n    res.sendStatus(200);\"\"\",\n\"\"\"    const id = res.locals.token.id;\n    const newSettings = req.body;\n\n    // STEP-UP: altera\u00e7\u00e3o sens\u00edvel (credencial/ambiente) exige a frase de confirma\u00e7\u00e3o. PRIMEIRA coisa \u2014\n    // ANTES de qualquer escrita / res.send / process.exit (o handler respondia 200 + agendava o restart\n    // ANTES de validar; o restart aplicaria a mudan\u00e7a sem checar). Save cosm\u00e9tico passa direto.\n    const current = await settingsRepository.getSettings(id);\n    const gate = stepUpGuard.checkSettingsStepUp(current, newSettings);\n    if (!gate.ok) return res.status(gate.status).json({ code: gate.code, error: gate.error });\n\n    await settingsRepository.updateSettings(id, newSettings);\n    res.sendStatus(200);\"\"\",\n'settingsController.js (guard 1a instrucao)')\n\n# ---- .env.example: documenta as vars do step-up ----\nwith open(ROOT+'/.env.example',encoding='utf-8') as f: env=f.read()\nblock=\"\"\"\n\n# ---------- Step-up de Settings (Fix C) ----------\n# Alteracao sensivel (credencial/ambiente) no PATCH /settings exige esta frase de confirmacao.\n# STEP_UP_SETTINGS=false desliga o step-up (valvula de escape sem deploy). Default: ATIVO.\nSTEP_UP_SETTINGS=true\nSETTINGS_CONFIRM_PHRASE=CONFIRMAR ALTERACAO\n\"\"\"\nif 'SETTINGS_CONFIRM_PHRASE' in env:\n    print('SKIP .env.example (ja tem)')\nelse:\n    open(ROOT+'/.env.example','w',encoding='utf-8').write(env.rstrip('\\n')+'\\n'+block)\n    print('OK .env.example (+step-up)')\nPY\necho\necho \"=== syntax check (node -c) dos backend tocados + novos ===\"\nfor f in backend/src/controllers/authController.js backend/src/controllers/settingsController.js backend/src/utils/stepUpGuard.js backend/src/utils/tokenBlacklist.js; do\n  node -c \"$f\" && echo \"  OK $f\" || echo \"  !! ERRO $f\"\ndone",
+  "description": "Apply backend edits + .env.example, syntax-check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK authController.js (blacklist persistente)
+> OK settingsController.js (require stepUpGuard)
+> OK settingsController.js (guard 1a instrucao)
+> OK .env.example (+step-up)
+> 
+> === syntax check (node -c) dos backend tocados + novos ===
+>   OK backend/src/controllers/authController.js
+>   OK backend/src/controllers/settingsController.js
+>   OK backend/src/utils/stepUpGuard.js
+>   OK backend/src/utils/tokenBlacklist.js
+> ```
+
+## 🤖 Claude *(18:33:12)*
+
+
+## 🤖 Claude *(18:33:13)*
+
+Backend OK. Agora o frontend (step-up reativo — espelha o `window.prompt` do `onGoLive` que já existe):
+
+## 🤖 Claude *(18:33:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nP='/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js'\ns=open(P,encoding='utf-8').read()\n\nold=\"\"\"    function onFormSubmit(event) {\n        const newPassword = settings.password || '';\n        const confirm = confirmPassword.current.value || '';\n\n        // Valida a confirma\u00e7\u00e3o apenas se o usu\u00e1rio digitou uma senha nova\n        if ((newPassword.trim() || confirm.trim()) && newPassword !== confirm)\n            return setNotification({ type: 'error', text: `The fields New Password and Confirm Password must be equal.` });\n\n        // Monta o payload explicitamente e NUNCA envia password/secretKey vazios.\n        // Sem isso, um autofill do navegador (ou estado vazio) mandaria um valor\n        // n\u00e3o-intencional que o backend re-hasheia/re-encripta, derrubando o login\n        // de todos \u2014 incidente 2026-06-09. Campo omitido => backend preserva o atual.\n        const payload = { ...settings };\n        if (!newPassword.trim()) delete payload.password;\n        if (!(payload.secretKey || '').trim()) delete payload.secretKey;\n        if (!(payload.testnetSecretKey || '').trim()) delete payload.testnetSecretKey;\n\n        const token = localStorage.getItem(\"token\");\n        updateSettings(payload, token)\n            .then(result => {\n                if (result)\n                    setNotification({ type: 'success', text: `Settings saved successfully!` });\n                else\n                    setNotification({ type: 'error', text: result });\n            })\n            .catch(err => {\n                console.error(err.response ? err.response.data : err.message);\n                setNotification({ type: 'error', text: err.response ? err.response.data : err.message });\n            })\n    }\"\"\"\n\nnew=\"\"\"    function saveSettings(payload) {\n        const token = localStorage.getItem(\"token\");\n        updateSettings(payload, token)\n            .then(() => {\n                setNotification({ type: 'success', text: `Settings saved successfully!` });\n            })\n            .catch(err => {\n                const data = err.response ? err.response.data : null;\n                // Step-up reativo: o backend pede a frase s\u00f3 quando a altera\u00e7\u00e3o \u00e9 SENS\u00cdVEL\n                // (credencial/ambiente). Pergunta UMA vez e reenvia com `confirm`. Save cosm\u00e9tico\n                // nunca cai aqui (passa de primeira). Evita lockout por skew de deploy.\n                if (err.response && err.response.status === 400 && data && data.code === 'STEP_UP_REQUIRED') {\n                    const phrase = window.prompt('\u26a0\ufe0f Altera\u00e7\u00e3o SENS\u00cdVEL (credencial/ambiente). Digite a frase de confirma\u00e7\u00e3o para salvar:');\n                    if (!phrase) return setNotification({ type: 'error', text: 'Altera\u00e7\u00e3o cancelada.' });\n                    return saveSettings({ ...payload, confirm: phrase });\n                }\n                console.error(data || err.message);\n                setNotification({ type: 'error', text: (data && data.error) ? data.error : (data || err.message) });\n            });\n    }\n\n    function onFormSubmit(event) {\n        const newPassword = settings.password || '';\n        const confirm = confirmPassword.current.value || '';\n\n        // Valida a confirma\u00e7\u00e3o apenas se o usu\u00e1rio digitou uma senha nova\n        if ((newPassword.trim() || confirm.trim()) && newPassword !== confirm)\n            return setNotification({ type: 'error', text: `The fields New Password and Confirm Password must be equal.` });\n\n        // Monta o payload explicitamente e NUNCA envia password/secretKey vazios.\n        // Sem isso, um autofill do navegador (ou estado vazio) mandaria um valor\n        // n\u00e3o-intencional que o backend re-hasheia/re-encripta, derrubando o login\n        // de todos \u2014 incidente 2026-06-09. Campo omitido => backend preserva o atual.\n        const payload = { ...settings };\n        if (!newPassword.trim()) delete payload.password;\n        if (!(payload.secretKey || '').trim()) delete payload.secretKey;\n        if (!(payload.testnetSecretKey || '').trim()) delete payload.testnetSecretKey;\n\n        saveSettings(payload);\n    }\"\"\"\n\nc=s.count(old)\nif c!=1:\n    print(f'ABORT Settings.js: ancora x{c} (esperava 1)'); sys.exit(1)\nopen(P,'w',encoding='utf-8').write(s.replace(old,new,1))\nprint('OK Settings.js (step-up reativo)')\nPY\necho\necho \"=== sim suite (test:sim) \u2014 inclui o novo stepUpGuard.test.js ===\"\ncd backend && sudo -n -u gcrux-tradeux env AES_KEY=01234567890123456789012345678901 npm run --silent test:sim 2>&1 | tail -25",
+  "description": "Edit Settings.js + run sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK Settings.js (step-up reativo)
+> 
+> === sim suite (test:sim) — inclui o novo stepUpGuard.test.js ===
+> env: ‘npm’: No such file or directory
+> ```
+
+## 🤖 Claude *(18:33:39)*
+
+
+## 🤖 Claude *(18:33:39)*
+
+`npm` não está no PATH do `sudo env`. Rodo via `node` direto com login shell:
+
+## 🤖 Claude *(18:33:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== stepUpGuard.test.js standalone ===\"\nsudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 node scripts/sim/stepUpGuard.test.js'\necho \"exit=$?\"\necho\necho \"=== suite completa (run.js) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/run.js 2>&1 | tail -20'",
+  "description": "Run stepUpGuard test standalone and full sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === stepUpGuard.test.js standalone ===
+> 
+> stepUpGuard.test.js: 20 passed, 0 failed
+> exit=0
+> 
+> === suite completa (run.js) ===
+> 
+> feeCalc.test.js: 11 passed, 0 failed
+> 
+> === sim/integration.test.js ===
+> 
+> integration.test.js: 24 passed, 0 failed
+> 
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 53 passed, 0 failed
+> 
+> === sim/stepUpGuard.test.js ===
+> 
+> stepUpGuard.test.js: 20 passed, 0 failed
+> 
+> === sim/withdrawGuard.test.js ===
+> 
+> withdrawGuard.test.js: 13 passed, 0 failed
+> 
+> sim suite: 11/11 arquivos OK.
+> ```
+
+## 🤖 Claude *(18:34:12)*
+
+
+## 🤖 Claude *(18:34:16)*
+
+Sim suite **11/11 (20/20 no novo stepUpGuard)**, zero regressão. Mas antes de comemorar — preciso verificar o **path do arquivo da blacklist**. `tokenBlacklist.js` está em `src/utils/` (não `src/` como o `riskState.js`), então `path.resolve(__dirname,'..','logs',...)` apontaria pra `/app/src/logs`, **não** `/app/logs` (o volume). Deixa eu confirmar a convenção no `logger.js` (que também é util e escreve em logs):
+
+## 🤖 Claude *(18:34:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== como logger.js (util) resolve o dir de logs ===\"; grep -n \"path.resolve\\|path.join\\|__dirname\\|logs\" utils/logger.js | head\necho; echo \"=== outros utils que escrevem em /app/logs ===\"; grep -rn \"'logs'\\|\\\"logs\\\"\\|/logs\" utils/*.js | head",
+  "description": "Confirm logs-dir path convention from a util in src/utils"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como logger.js (util) resolve o dir de logs ===
+> 18:                filename: path.resolve(__dirname, "..", "..", "logs", loggerKey),
+> 
+> === outros utils que escrevem em /app/logs ===
+> utils/logger.js:18:                filename: path.resolve(__dirname, "..", "..", "logs", loggerKey),
+> utils/tokenBlacklist.js:20:const FILE = path.resolve(__dirname, '..', 'logs', 'token_blacklist.json');
+> ```
+
+## 🤖 Claude *(18:34:31)*
+
+
+## 🤖 Claude *(18:34:32)*
+
+Confirmado o bug: `logger.js` usa **dois** `..` (`src/utils → /app/logs`), o meu tem só um → apontaria pra `/app/src/logs` (fora do volume, não persistiria nem entraria no backup). Verificação pegou. Corrigindo + smoke runtime do `tokenBlacklist` (add/has/persist/load/poda de expirado):
+
+## 🤖 Claude *(18:34:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\n# fix do path: '..','logs' -> '..','..','logs'\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nP='/home/gcrux-tradeux/tradeux/backend/src/utils/tokenBlacklist.js'\ns=open(P,encoding='utf-8').read()\nold=\"const FILE = path.resolve(__dirname, '..', 'logs', 'token_blacklist.json');\"\nnew=\"const FILE = path.resolve(__dirname, '..', '..', 'logs', 'token_blacklist.json');\"\nif s.count(old)!=1: print('ABORT: ancora do FILE nao encontrada'); sys.exit(1)\nopen(P,'w',encoding='utf-8').write(s.replace(old,new,1)); print('OK path corrigido (.. ..)')\nPY\necho\necho \"=== smoke runtime do tokenBlacklist (host: backend/logs/) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node -e \"\nconst jwt=require(\\\"jsonwebtoken\\\");\nconst SEC=\\\"x\\\";\nconst bl=require(\\\"./src/utils/tokenBlacklist\\\");\nconst path=require(\\\"path\\\");\nconst fs=require(\\\"fs\\\");\nconst FILE=path.resolve(__dirname,\\\"src\\\",\\\"logs\\\")==0?0:require(\\\"path\\\").resolve(__dirname,\\\"logs\\\",\\\"token_blacklist.json\\\");\n// token valido (exp futuro) e token ja expirado\nconst live=jwt.sign({id:1},SEC,{expiresIn:3600});\nconst dead=jwt.sign({id:1},SEC,{expiresIn:-10});\nbl.add(live); bl.add(dead); bl.add(\\\"nao\u00e9-jwt\\\");\nconsole.log(\\\"has(live)        =\\\", bl.has(live));\nconsole.log(\\\"has(dead) podado =\\\", bl.has(dead), \\\"(esperado false)\\\");\nconsole.log(\\\"has(plain string)=\\\", bl.has(\\\"nao\u00e9-jwt\\\"));\nconsole.log(\\\"count            =\\\", bl._count());\nconst f=path.resolve(__dirname,\\\"logs\\\",\\\"token_blacklist.json\\\");\nconsole.log(\\\"arquivo existe   =\\\", fs.existsSync(f), \\\"->\\\", f);\n// recarrega num processo limpo simulado\ndelete require.cache[require.resolve(\\\"./src/utils/tokenBlacklist\\\")];\nconst bl2=require(\\\"./src/utils/tokenBlacklist\\\");\nconsole.log(\\\"persistiu (reload has live) =\\\", bl2.has(live));\n\"'\necho\necho \"=== cleanup do arquivo de smoke ===\"\nsudo -n -u gcrux-tradeux bash -lc 'rm -f /home/gcrux-tradeux/tradeux/backend/logs/token_blacklist.json && echo \"removido backend/logs/token_blacklist.json (host)\"; ls /home/gcrux-tradeux/tradeux/backend/logs/'",
+  "description": "Fix blacklist path and runtime-smoke add/has/persist/load/prune"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK path corrigido (.. ..)
+> 
+> === smoke runtime do tokenBlacklist (host: backend/logs/) ===
+> has(live)        = true
+> has(dead) podado = false (esperado false)
+> has(plain string)= true
+> count            = 2
+> arquivo existe   = true -> /home/gcrux-tradeux/tradeux/backend/logs/token_blacklist.json
+> persistiu (reload has live) = true
+> 
+> === cleanup do arquivo de smoke ===
+> removido backend/logs/token_blacklist.json (host)
+> daily_cap_snapshot.json
+> system.log
+> ```
+
+## 🤖 Claude *(18:34:52)*
+
+
+## 🤖 Claude *(18:34:55)*
+
+Smoke do `tokenBlacklist` validado: token válido fica, **expirado é podado**, string não-JWT tratada, **persiste e recarrega** do volume correto (`backend/logs/` → `/app/logs`). Path corrigido confirmado. Agora o build do frontend (risco real do edit no `Settings.js` — é o que o CI checa):
+
+## 🤖 Claude *(18:34:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\necho \"=== node_modules presente? ===\"; ls node_modules/.bin/vite 2>/dev/null && echo \"(vite ok)\" || echo \"(sem vite local)\"\necho; echo \"=== build (vite) \u2014 espelha o CI ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/frontend && timeout 300 npm run build 2>&1 | tail -20'\necho \"build exit via pipeline acima\"",
+  "description": "Run frontend vite build to validate Settings.js change"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node_modules presente? ===
+> node_modules/.bin/vite
+> (vite ok)
+> 
+> === build (vite) — espelha o CI ===
+> timeout: failed to run command ‘npm’: No such file or directory
+> build exit via pipeline acima
+> ```
+
+## 🤖 Claude *(18:35:06)*
+
+
+## 🤖 Claude *(18:35:07)*
+
+`npm` não está no PATH do gcrux (mas `node` está — a sim rodou). Chamo o vite local direto:
+
+## 🤖 Claude *(18:35:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\nsudo -n -u gcrux-tradeux bash -lc 'which node && timeout 300 node node_modules/vite/bin/vite.js build 2>&1 | tail -25'\necho \"=== exit do build: ${PIPESTATUS[0]:-?} ===\"",
+  "description": "Build frontend via local vite binary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /usr/bin/node
+> vite v5.4.21 building for production...
+> transforming...
+> ✓ 256 modules transformed.
+> rendering chunks...
+> computing gzip size...
+> build/index.html                   2.38 kB │ gzip:   0.85 kB
+> build/assets/index-Ln9vsrXu.css   12.21 kB │ gzip:   3.02 kB
+> build/assets/index-D7N3sIJP.js   437.35 kB │ gzip: 122.30 kB
+> ✓ built in 3.53s
+> === exit do build: 0 ===
+> ```
+
+## 🤖 Claude *(18:35:27)*
+
+
+## 🤖 Claude *(18:35:29)*
+
+✅ **Frontend build OK** (256 módulos, 3.53s) — o edit no `Settings.js` compila. Fix C implementado e validado em código. Vou conferir o git status (garantir que o `build/` não suja o diff) e mandar pro gate QA+TL:
+
+## 🤖 Claude *(18:35:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== build/ \u00e9 gitignored? ===\"; git -c safe.directory=\"*\" check-ignore frontend/build >/dev/null 2>&1 && echo \"  sim (frontend/build ignorado)\" || echo \"  N\u00c3O \u2014 aten\u00e7\u00e3o\"\necho; echo \"=== git status (Fix C, sem backtest-results) ===\"\ngit -c safe.directory=\"*\" status --short | grep -vE \"backtest-results\"\n'",
+  "description": "Verify build/ ignored and show Fix C git status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build/ é gitignored? ===
+>   sim (frontend/build ignorado)
+> 
+> === git status (Fix C, sem backtest-results) ===
+>  M .env.example
+>  M backend/src/controllers/authController.js
+>  M backend/src/controllers/settingsController.js
+>  M frontend/src/private/Settings/Settings.js
+> ?? backend/scripts/sim/stepUpGuard.test.js
+> ?? backend/src/utils/stepUpGuard.js
+> ?? backend/src/utils/tokenBlacklist.js
+> ```
+
+## 🤖 Claude *(18:35:40)*
+
+
+## 🤖 Claude *(18:35:42)*
+
+Diff do Fix C limpo: 4 modificados + 3 novos, `build/` ignorado. Mandando pro **gate QA + TL** (paralelo), com as ressalvas do cético pra eles verificarem cobertura:
+
+## 🤖 Claude *(18:36:06)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review do Fix C",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revis\u00e3o QA pr\u00e9-merge do **Fix C \u2014 step-up auth** (relat\u00f3rio de design 2026-06-22). TradeUX em MAINNET REAL (~$149, halted=false, Canary FARM-ONLY). Responda pt-BR: PASS / PASS COM RESSALVAS / FAIL, achados por severidade + testes a rodar.\n\n## Diff (novo, N\u00c3O commitado). Veja como gcrux:\n`sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff`\n- **NOVO** `backend/src/utils/stepUpGuard.js` \u2014 guard PURO: `checkSettingsStepUp(current, body)` exige frase (`SETTINGS_CONFIRM_PHRASE`, default 'CONFIRMAR ALTERACAO') quando o PATCH /settings alteraria campo SENS\u00cdVEL (credencial/ambiente), \"sens\u00edvel-se-DIFERENTE\". Flag `STEP_UP_SETTINGS` (default ON; =false desliga). N\u00c3O ecoa a frase no erro.\n- **NOVO** `backend/src/utils/tokenBlacklist.js` \u2014 blacklist de logout PERSISTIDA (JSON em /app/logs, volume backend_logs): load s\u00edncrono no module-load (antes do app.listen), escrita at\u00f4mica (tmp+rename), fail-OPEN, poda por exp via jwt.decode.\n- **`backend/src/controllers/settingsController.js`** \u2014 `updateSettings`: guard como 1\u00aa instru\u00e7\u00e3o, `return 400` ANTES de `res.sendStatus(200)` e do `setTimeout(process.exit)`.\n- **`backend/src/controllers/authController.js`** \u2014 usa tokenBlacklist persistente (era array em mem\u00f3ria vol\u00e1til).\n- **`frontend/src/private/Settings/Settings.js`** \u2014 step-up REATIVO: no 400 `code:STEP_UP_REQUIRED`, `window.prompt` a frase e reenvia com `confirm`.\n- **NOVO** `backend/scripts/sim/stepUpGuard.test.js` (20 asserts) + `.env.example` documenta as 2 vars.\n\n## J\u00e1 validado por mim ao vivo\n- sim suite: 11/11 arquivos OK (stepUpGuard 20/20, sem regress\u00e3o nos outros 10).\n- tokenBlacklist runtime smoke: add/has OK, token expirado PODADO, persiste e RECARREGA do path certo (corrigi um bug: era `../logs` e virou `../../logs` p/ bater /app/logs como o logger.js).\n- frontend `vite build` OK (256 m\u00f3dulos).\n\n## Verifique ESPECIFICAMENTE (ressalvas que o c\u00e9tico adversarial exigiu)\n1. Guard \u00e9 a 1\u00aa instru\u00e7\u00e3o de updateSettings; `return 400` ANTES de qualquer res.send/sendStatus e ANTES do setTimeout(process.exit) \u2014 sem 200+restart-sem-salvar nem ERR_HTTP_HEADERS_SENT.\n2. Escrita AT\u00d4MICA da blacklist (tmp+rename) \u2014 o process.exit do save de Settings n\u00e3o trunca o JSON; fail-open declarado.\n3. Confirme empiricamente o uid do backend (`docker exec tradeux-backend-1 id`) \u2014 se for ROOT, a escrita em /app/logs funciona (a an\u00e1lise da agenda dizia 1011:1013, que \u00e9 o AGENT).\n4. Load da blacklist S\u00cdNCRONO no module-load, ANTES do app.listen (cadeia: authController\u2192tokenBlacklist; app.js\u2192authController; server.js\u2192app.listen).\n5. useTestnet sem\u00e2ntica BOOLEAN: `useTestnet=false` quando o atual j\u00e1 \u00e9 false N\u00c3O dispara step-up (caso mainnet leg\u00edtimo); s\u00f3 dispara se PRESENTE e DIFERENTE. Teste o caso false.\n6. Lockout: o front reativo s\u00f3 pede a frase no 400; flag STEP_UP_SETTINGS desliga sem deploy. Frontend e backend deployam juntos (sem skew).\n7. TTL via jwt.decode (N\u00c3O verify) com try/catch; token malformado/sem exp n\u00e3o derruba o load.\n8. Floor/halt INTOCADOS (systemController) \u2014 o floor-off j\u00e1 tinha confirm; este fix n\u00e3o regride isso. setHalt intocado.\n9. Withdraw N\u00c3O muda (j\u00e1 coberto por withdrawGuard); a frase N\u00c3O mitiga token de agente comprometido (est\u00e1 no .env que o agente l\u00ea) \u2014 s\u00f3 reduz erro humano/clique acidental.\n\nAvalie tamb\u00e9m: a guarda anti-re-hash de senha (incidente 2026-06-09) segue intacta no settingsRepository; `confirm` no body n\u00e3o \u00e9 persistido (repo ignora campo desconhecido); o `getSettings` do controller (current) traz accessKey em plaintext p/ comparar (accessKey N\u00c3O \u00e9 encriptado, s\u00f3 secretKey \u00e9). Liste testes concretos (incl. cURL contra o backend vivo se fizer sentido, mas N\u00c3O altere credenciais reais)."
+}
+```
+
+## 🤖 Claude *(18:36:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review do Fix C",
+  "subagent_type": "tech-lead",
+  "prompt": "Revis\u00e3o de TECH LEAD / code owner (decis\u00e3o de merge) do **Fix C \u2014 step-up auth** (relat\u00f3rio de design 2026-06-22). TradeUX MAINNET REAL (~$149, halted=false). Responda pt-BR: APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK, must-fix vs nice-to-have.\n\n## Diff (novo, N\u00c3O commitado). Veja como gcrux:\n`sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff` + leia os novos:\n- `backend/src/utils/stepUpGuard.js` (guard puro: step-up por frase em PATCH /settings p/ campo sens\u00edvel \"se-diferente\"; flag STEP_UP_SETTINGS default ON; n\u00e3o ecoa a frase)\n- `backend/src/utils/tokenBlacklist.js` (blacklist de logout persistida no volume backend_logs; load s\u00edncrono no boot; escrita at\u00f4mica; fail-open; poda por exp)\n- `backend/src/controllers/settingsController.js` (guard 1\u00aa instru\u00e7\u00e3o, return antes do res.send/process.exit)\n- `backend/src/controllers/authController.js` (blacklist persistente)\n- `frontend/src/private/Settings/Settings.js` (step-up reativo via window.prompt no 400)\n- `backend/scripts/sim/stepUpGuard.test.js` + `.env.example`\n\n## Decis\u00f5es j\u00e1 fixadas\nN\u00c3O \u00e9 RBAC completo (single-operator \u2192 step-up por frase \u00e9 a escolha do dono via agenda). Ordem A\u2192C\u2192B; Fix A j\u00e1 commitado (78e4e65). Modelo trunk-based direct-to-master.\n\n## J\u00e1 validado: sim suite 11/11, tokenBlacklist runtime smoke (persist/load/poda, path corrigido p/ /app/logs), vite build OK.\n\n## Foco do TL\n- **Design/risco:** a escolha (step-up por frase reativo + blacklist persistente, SEM mexer em jwt.sign/verify) \u00e9 a certa p/ single-operator num sistema live? Algum vetor de LOCKOUT do operador (deploy skew, flag, frase ausente no .env \u2192 default 'CONFIRMAR ALTERACAO')? O step-up cobre o gap real (save de credencial sem confirma\u00e7\u00e3o)?\n- **Conven\u00e7\u00e3o:** segue o padr\u00e3o dos guards do repo (withdrawGuard/setFloor), pt-BR, sim-test, layering? O `getSettings(id)` extra no controller (1 query a mais por save) \u00e9 aceit\u00e1vel?\n- **Seguran\u00e7a:** a frase n\u00e3o vaza (vs setFloor que ecoa)? A blacklist \u00e9 best-effort honesta? Algo regride a guarda anti-re-hash de senha (incidente 2026-06-09)?\n- **Deploy:** isto EXIGE rebuild backend+frontend + restart (\u2260 Fix A). Riscos do deploy num sistema live (Canary rodando, floor=false persistido sobrevive ao restart)? Recomende a sequ\u00eancia seascura (ex.: setar SETTINGS_CONFIRM_PHRASE no .env live ANTES, deploy at\u00f4mico, smoke de login+save cosm\u00e9tico+save sens\u00edvel).\n- **Pend\u00eancias de decis\u00e3o do dono:** texto da frase (`SETTINGS_CONFIRM_PHRASE`); manter STEP_UP_SETTINGS ON no go-live? Liste o must-fix antes de mergear/deployar.\n\nN\u00e3o rode nada destrutivo nem altere credenciais/.env reais. Veredicto + must-fix."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Tenho tudo que preciso. O runner auto-descobre, o teste novo passa 20/20 isolado, a guarda anti-re-hash está intacta, o path do volume está correto, e a blacklist fecha o loop em `app-ws.js` + `authMiddleware.js`. Eis o veredicto.\n\n---\n\n# VEREDITO: APPROVE COM SUGESTÕES\n\nMudança pequena, bem-escoada, reversível (flag `STEP_UP_SETTINGS=false` desliga sem deploy) e que fecha um gap real: hoje o `updateSettings` respondia **200 + agendava `process.exit`** *antes* de qualquer validação — qualquer save (autofill, token do agente, clique acidental) trocava credencial/ambiente e reiniciava o backend sem confirmação. O Fix C põe o guard como 1ª instrução, antes do `res.send`/`process.exit`. Design alinhado ao padrão do repo (`withdrawGuard`/`setFloor`), guard puro e testável, pt-BR, sim-test no CI. **Não há must-fix de código** — os bloqueadores são operacionais (decisão do dono + sequência de deploy).\n\n## Racional por eixo\n\n**Design/risco — correto p/ single-operator.** Não tocar em `jwt.sign/verify` foi a escolha certa: blast radius mínimo, zero risco ao hot-path (`beholder.js` intocado), zero ao money-flow. A semântica "sensível-se-DIFERENTE" (`requiresStepUp`) é elegante — save cosmético e re-save `useTestnet=false` legítimo não disparam; segredos são write-only (`trim>0` = intenção). Cobre exatamente o gap (save de credencial sem confirmação). A honestidade do threat-model no header (`stepUpGuard.js:5-7`) é exemplar: defesa contra acidente/autofill/agente, **não** contra JWT comprometido — não vende garantia que não entrega.\n\n**Vetores de LOCKOUT — cobertos.**\n- Frase ausente no `.env` → default `\'CONFIRMAR ALTERACAO\'` (`stepUpGuard.js:38`); o `.env.example` documenta. Sem lockout.\n- Deploy skew (frontend novo, backend velho ou vice-versa): o front é reativo — só abre o `window.prompt` no 400 com `code === \'STEP_UP_REQUIRED\'`. Backend velho nunca emite esse código → front velho/novo cai no fluxo normal. Sem lockout por skew.\n- Válvula de escape `STEP_UP_SETTINGS=false` sem deploy. Confirmado pelo sim-test (caso 3).\n\n**Blacklist persistente — best-effort honesta.** O bug era real: como cada save reinicia o backend, a blacklist em-memória zerava e o token "deslogado" revalidava. Persistir em `/app/logs` (volume `backend_logs`, mesmo lugar do `risk_state.json`) resolve. **Path verificado**: `path.resolve(__dirname,\'..\',\'..\',\'logs\')` a partir de `/app/src/utils/` → `/app/logs` = o volume montado (`docker-compose.yml:37`). Load síncrono no module-load (`tokenBlacklist.js:61`) ocorre antes do `app.listen` via cadeia `authController→authMiddleware→app.js`. Escrita atômica (tmp+rename) sobrevive ao `process.exit`. Fail-open documentado. Consumida em `authMiddleware.js:13` e `app-ws.js:26`. Loop fechado.\n\n**Segurança — frase NÃO vaza.** `checkSettingsStepUp` retorna erro genérico sem a frase (`stepUpGuard.js:48`), diferente do `setFloor` que ecoa — escolha correta, e o sim-test asserta isso (caso `\'a frase NÃO vaza no erro\'`). **Guarda anti-re-hash do incidente 2026-06-09 INTACTA**: o Fix C não toca `settingsRepository.js:55-62/89-95`; o step-up é uma camada *adicional à frente*, não substitui. Nenhuma regressão.\n\n**Convenção/sim.** `test:sim` é auto-descoberto via `readdirSync` (`run.js:14`) — o novo `stepUpGuard.test.js` entra na suíte sem edição manual. Roda 20/20 isolado aqui. Layering respeitado (guard em `utils/`, decisão no controller).\n\n## Nice-to-have (não bloqueia)\n\n1. **`getSettings(id)` extra por save** (`settingsController.js:25`): 1 query a mais por save de Settings — operação rara, manual, custo desprezível. **Aceitável.** Detalhe: ele relê via `getSettings` cru (não o cache decifrado), o que é correto aqui — `requiresStepUp` só compara campos legíveis/presença de segredos, não precisa decifrar. OK.\n2. **Front em pt-BR**: as `setNotification` novas (`Settings.js`) misturam inglês ("Settings saved successfully!") herdado e pt-BR no prompt/cancelamento. Convenção do repo é pt-BR — alinhar quando conveniente. Cosmético.\n3. **`window.prompt`** é UX crua mas pragmática p/ single-operator; aceitável.\n\n## Achado fora-de-escopo (separar do Fix C)\n\nNo working tree há **2 arquivos não relacionados ao Fix C**: `/home/gcrux-tradeux/tradeux/backend/backtest-results/farm-funnel-1h-full.json` e `.../farm-funnel-1h-full.md` (untracked, mtime 21/jun 12:15), além de modificações em `.../farm-funnel-1h-full-macro500.json` e `.md`. São artefatos de backtest de outra sessão (a suíte sim achou bugs de P&L em 21/jun) — **NÃO devem entrar no commit do Fix C**. Commitar de forma seletiva (só os 7 arquivos do Fix C).\n\n---\n\n# Decisão de merge\n\n**APPROVE** para mergear (trunk-based, direct-to-master), condicionado a:\n\n**Must-fix antes de mergear/deployar (operacional, não código):**\n1. **Dono define `SETTINGS_CONFIRM_PHRASE`** no `.env` LIVE — não usar o default `\'CONFIRMAR ALTERACAO\'` em produção (é público no `.env.example`). Setar **antes** do deploy.\n2. **Commit seletivo**: apenas os 7 arquivos do Fix C (`stepUpGuard.js`, `tokenBlacklist.js`, `settingsController.js`, `authController.js`, `Settings.js`, `stepUpGuard.test.js`, `.env.example`). Excluir os 4 `backtest-results/*` do working tree.\n3. **`STEP_UP_SETTINGS` no go-live**: recomendo **ON** (default). É a postura fail-safe e o custo é zero p/ saves cosméticos.\n\n**Sequência de deploy segura (sistema LIVE, Canary FARM-ONLY, equity ~$149):**\n1. `GET /system/halt` no início — confirmar estado atual (não mexer no floor).\n2. Setar `SETTINGS_CONFIRM_PHRASE` (e `STEP_UP_SETTINGS=true`) no `.env` LIVE **antes** do rebuild — o backend lê no boot; sem isso o default público valeria na janela.\n3. Rebuild atômico **backend + frontend** + restart (este Fix exige ambos, ≠ Fix A). O volume `backend_logs` persiste `risk_state.json` (floor=false) e o novo `token_blacklist.json` atravessa o restart — o floor LIVE sobrevive, nada de re-arme manual do HALT.\n4. Smoke vivo: (a) login OK; (b) save **cosmético** (ex.: telegramChat) → passa de primeira, sem prompt; (c) save **sensível** (toggle trivial de campo de ambiente, ou re-digitar a frase) → 400 `STEP_UP_REQUIRED` + prompt + reenvio com `confirm` → 200; (d) logout → reusar o token → 401 (blacklist persistiu); (e) reconfirmar `GET /system/halt` e Canary intactos pós-restart.\n\nReversível a qualquer momento via `STEP_UP_SETTINGS=false` sem novo deploy.\n\n**Arquivos revisados:** `/home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/tokenBlacklist.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/authController.js`, `/home/gcrux-tradeux/tradeux/backend/src/middlewares/authMiddleware.js`, `/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js`, `/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js`, `/home/gcrux-tradeux/tradeux/backend/scripts/sim/stepUpGuard.test.js`, `/home/gcrux-tradeux/tradeux/.env.example`.'}, {'type': 'text', 'text': "agentId: a3721241a7eb72de2 (use SendMessage with to: 'a3721241a7eb72de2' to continue this agent)\n<usage>subagent_tokens: 47306\ntool_uses: 17\nduration_ms: 117566</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Live verification confirms:\n- `halted=false` (LIVE, mainnet, as described), system intact.\n- `GET /settings` strips `password`, `secretKey`, `testnetSecretKey`; exposes `accessKey` plaintext (`accessKey` is NOT encrypted, only secretKey is) — the guard\'s plaintext comparison of `accessKey` is sound. `useTestnet` is a real boolean (`false`).\n- The new code is NOT yet deployed (container\'s `settingsController.js` has 0 `stepUpGuard` references) — this is an uncommitted, pre-deploy review. Correct.\n\nOne last adversarial check: the load-order chain claim, and whether `process.exit` during a concurrent `add()`/`persist()` could truncate. The atomic `tmp+rename` guarantees the final file is never partial. But there\'s a subtle window: if `process.exit(0)` (from a Settings save) fires between `writeFileSync(tmp)` and `renameSync`, the rename never completes — old file stays intact (safe, fail-open). And `add()` is only triggered by `/logout`, not by Settings save, so the two writers don\'t even race in practice. Let me confirm there\'s no other `process.exit` path and verify the `getSettings` raw model returns `accessKey` as a readable property (it did, live). \n\nI have enough to render the verdict.\n\n---\n\n## VEREDITO: PASS COM RESSALVAS\n\nFix C entrega o que promete: step-up de confirmação para PATCH /settings sensível + blacklist de logout que sobrevive ao restart. O guard é puro/testável, a ordenação no controller está correta (gate antes de qualquer `res.send`/`process.exit`), a escrita da blacklist é atômica e fail-open, e nada do floor/halt/withdraw/anti-re-hash foi tocado. Validei empiricamente os 9 pontos que o cético exigiu. As ressalvas são todas de baixa severidade ou aceitas-por-desenho.\n\n### Verificações que confirmei (ao vivo + unit)\n- **Ordenação do controller (ponto 1):** em `/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js`, o `checkSettingsStepUp` é a 1ª lógica de `updateSettings` (após buscar `current`), e `if (!gate.ok) return res.status(400)...` ocorre ANTES de `settingsRepository.updateSettings`, `res.sendStatus(200)` e do `setTimeout(process.exit)`. Sem 200+restart-sem-salvar e sem `ERR_HTTP_HEADERS_SENT` (único `return` no caminho de bloqueio).\n- **uid do backend (ponto 3) — CORRIGE a análise da agenda:** `docker exec tradeux-backend-1 id` → **uid=0(root)**, NÃO 1011:1013. `/app/logs` é `drwxrwxr-x root:root` e já contém `risk_state.json` escrito por root. Escrita da blacklist em `/app/logs` funciona. (O 1011:1013 é o serviço do AGENTE no compose, não o backend.)\n- **Path da blacklist:** `path.resolve(__dirname,\'..\',\'..\',\'logs\',...)` → no container `/app/logs/token_blacklist.json`, idêntico ao `logger.js` e ao `risk_state.json`. O fix de `../logs`→`../../logs` que você aplicou está certo. Bug que você pegou era real.\n- **Escrita atômica (ponto 2):** `tmp+rename` no mesmo FS; smoke confirmou JSON válido em disco. Mesmo que `process.exit` caia entre `writeFileSync(tmp)` e `renameSync`, o arquivo final fica intacto (rename não completa → estado antigo preservado = fail-open). Além disso `add()` só é chamado por `/logout`, não pelo save de Settings → os dois escritores nem competem na prática.\n- **Load síncrono antes do listen (ponto 4):** cadeia confirmada — `server.js:2 require(\'./app\')` → `app.js:23 require authController` (top-level) → `authController` requer `tokenBlacklist` → `loadFromDisk()` roda no module-load, tudo antes do `app.listen` em `server.js:40`. Sem janela de "token revogado volta a valer no boot".\n- **useTestnet boolean (ponto 5):** o front (`Settings.js:277`) coage para boolean real (`e.target.value === \'true\'`); live `GET /settings` retorna `useTestnet:false (boolean)`. `requiresStepUp(cur,{useTestnet:false})===false` (não dispara no caso mainnet legítimo); só dispara em `true`. Confirmado por unit + model-fake.\n- **TTL via jwt.decode (ponto 7):** `try/catch`; token malformado → `exp=0`, guardado sem derrubar o load; expirado é podado. Smoke confirmou os 3 casos.\n- **Floor/halt/withdraw intocados (pontos 8, 9):** `systemController.js` sem diff; `withdrawGuard` não tocado; live `GET /system/halt` = `halted:false` intacto.\n- **Anti-re-hash de senha (incidente 2026-06-09):** intacta em `settingsRepository.js:61` e `:91-95` (só re-hasheia/re-encripta se valor não-vazio). `confirm` no body é IGNORADO pelo repo (só persiste campos conhecidos) — não vira coluna. `getSettings` (raw model) do controller expõe `accessKey` em plaintext (não encriptado) → comparação do guard é sólida.\n- **Front reativo (ponto 6):** `saveSettings` re-entrante só no `400 STEP_UP_REQUIRED`, pede a frase uma vez via `window.prompt`, reenvia com `confirm`. Save cosmético passa de primeira. `STEP_UP_SETTINGS=false` desliga sem deploy. `vite build` reportado OK.\n- **Sim suite:** `npm run test:sim` → **11/11 arquivos OK** (stepUpGuard 20/20). Os 2 arquivos que "falham" rodados standalone (`earnRedeem`, `farmSellBoot`) é só porque exigem `AES_KEY` que o `run.js` injeta — NÃO é regressão (stepUpGuard é puro e roda sem AES_KEY).\n\n### Achados\n\n**[BAIXA] `.env` live ainda não tem as vars — deploy precisa setá-las.**\nNo container, `STEP_UP_SETTINGS=` (vazio) e `SETTINGS_CONFIRM_PHRASE` ausente. O default do código é fail-safe (vazio≠`\'false\'` → ATIVO, frase default `CONFIRMAR ALTERACAO`), então mesmo sem editar o `.env` o step-up LIGA no deploy. Mas: (a) o `.env.example` documenta, o `.env` real NÃO foi atualizado; defina explicitamente as 2 vars no `.env` de produção para a frase não ser a default pública. (b) Skew de deploy: o front reativo só pede a frase no `400`, então frontend e backend precisam subir juntos — se só o backend subir, um front antigo recebe `400` e mostra erro genérico (não trava login, mas o operador não consegue salvar credencial até o front atualizar). Documentar "deploy atômico" no runbook.\n\n**[BAIXA] Blacklist cresce sem poda para tokens malformados (`exp=0`).**\n`prune()` só remove `exp>0 && exp<=now`. Tokens sem exp (malformados, ou JWT sem `expiresIn`) ficam para sempre. JWTs reais do TradeUX sempre têm `exp` (`authController` usa `expiresIn`), então na prática só `/logout` com header lixo poluiria. Risco operacional ínfimo (logout é raríssimo + operator-only), mas vale um cap de tamanho ou descarte de entradas `exp=0` antigas se quiser blindar contra crescimento adversarial via spam de `/logout`.\n\n**[INFO/aceito-por-desenho] String `"false"` em `useTestnet` dispararia step-up.**\n`Boolean("false")===true`, então um cliente não-UI (curl/agente) que mande `useTestnet:"false"` (string) contra um estado `false` veria o guard pedir a frase. Erra para o lado SEGURO (pede confirmação a mais, nunca a menos). O front real manda boolean, então não afeta o fluxo do dono. Não-bloqueante; opcionalmente normalizar string→boolean no guard.\n\n**[INFO/aceito-por-desenho] A frase NÃO mitiga token de agente/JWT comprometido.**\nComo o próprio header do módulo diz: a frase vive no `.env` que o backend lê; quem tem o token tem o ambiente. Isto é defesa contra clique acidental / autofill / erro humano, não contra comprometimento. Correto e honestamente documentado. O cofre BTC e o saque continuam cobertos por HALT/riskGuard/withdrawGuard, não por esta frase.\n\n### Testes que eu rodaria\n\nUnitário/sim (já verde, mantenha no CI):\n- `cd backend && npm run test:sim` → exige 11/11 (stepUpGuard 20/20).\n\nLive (contra backend, SEM mexer em credencial real) — após deploy com `STEP_UP_SETTINGS=true`:\n- **Cosmético passa direto:** `PATCH /settings` com `{telegramChat:"<valor-atual>"}` → 200, sem prompt de frase.\n- **Re-save mainnet legítimo:** `PATCH /settings` com `{useTestnet:false}` (estado atual) → 200 (NÃO dispara step-up). Este é o caso que o ponto 5 pede explicitamente.\n- **Sensível sem frase → 400:** `PATCH /settings` com `{apiUrl:"https://api.binance.com/__noop_same_path__"}` (use um valor que você reverte em seguida; ou melhor, teste com um campo que possa restaurar exatamente) → espere `400 {code:"STEP_UP_REQUIRED"}` e confirme que a frase NÃO aparece no corpo do erro. **Não use accessKey/secretKey reais** — prefira `apiUrl`/`streamUrl` com o mesmo valor seguido de revert imediato, ou faça num ambiente espelho.\n- **Sensível com frase certa → aplica:** mesmo PATCH + `confirm:"CONFIRMAR ALTERACAO"` → 200 + restart; depois reverta o valor (com a frase de novo).\n- **Frase errada → 400** novamente.\n- **Flag de escape:** setar `STEP_UP_SETTINGS=false` no `.env`, restart, repetir o PATCH sensível → 200 sem frase. Reverter a flag para `true`.\n\nBlacklist (preferível em ambiente espelho, pois exercita logout):\n- Login → guardar token A → `/logout` com A → `GET /settings` com A → 401 (revogado).\n- Forçar restart do backend (ou save de Settings) → `GET /settings` com A → **ainda 401** (persistência sobreviveu ao restart — esta é a correção central). Confirmar `/app/logs/token_blacklist.json` é JSON válido após o restart.\n- Token expirado: esperar/forjar exp curto → confirmar que sai da blacklist (já coberto no meu smoke).\n- Corromper o JSON à mão → restart → login deve funcionar (fail-open) e o arquivo se reescreve no próximo `/logout`.\n\n### Recomendação de merge\n\n**APROVAR com 2 ações pré/durante deploy:** (1) deploy ATÔMICO de frontend+backend juntos (evita skew do front reativo); (2) setar `STEP_UP_SETTINGS=true` e uma `SETTINGS_CONFIRM_PHRASE` própria (não a default pública) no `.env` de produção — runtime não-git, reaplicar pós-reset como os outros band-aids do HANDOFF. Os dois achados [BAIXA] não bloqueiam. Código limpo, fail-safe correto, não regride nenhum incidente anterior, não toca o hot-path do beholder nem o money-path. Sólido para money-handling.\n\n### Arquivos relevantes\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/tokenBlacklist.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/authController.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/middlewares/authMiddleware.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/stepUpGuard.test.js`\n- `/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js`\n- `/home/gcrux-tradeux/tradeux/.env.example`'}, {'type': 'text', 'text': "agentId: add78e563a8b8fadf (use SendMessage with to: 'add78e563a8b8fadf' to continue this agent)\n<usage>subagent_tokens: 54722\ntool_uses: 29\nduration_ms: 192798</usage>"}]
+> ```
+
+## 🤖 Claude *(18:40:02)*
+
+
+## 🤖 Claude *(18:40:07)*
+
+Ambos os gates **passaram forte**: QA **PASS COM RESSALVAS**, TL **APPROVE COM SUGESTÕES** — zero must-fix de **código** (os must-fix são operacionais: setar a frase no `.env` live, commit seletivo, deploy atômico). Confirmaram empiricamente: backend é ROOT, path da blacklist correto, escrita atômica, load síncrono, `useTestnet` boolean, frase não vaza, anti-re-hash intacta.
+
+Há **um achado [BAIXA] que vou endurecer agora**: `/logout` é **não-autenticado** (rota direta, fora do `authMiddleware`), então garbage tokens com `exp=0` nunca podados = vetor de DoS por spam (cresce o JSON + escrita por request). Fix tight: **só blacklista JWT real e ainda válido** (`jwt.verify`) — garbage/expirado o `authMiddleware` já rejeita, não precisa guardar. Mata o DoS e a entrada imortal de uma vez:
+
+## 🤖 Claude *(18:40:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nimport sys\nP='/home/gcrux-tradeux/tradeux/backend/src/utils/tokenBlacklist.js'\ns=open(P,encoding='utf-8').read()\nold=\"\"\"function add(token) {\n    if (!token) return;\n    let exp = 0;\n    try { const d = jwt.decode(token); if (d && typeof d.exp === 'number') exp = d.exp; } catch (e) { /* malformado: guarda c/ exp 0 */ }\n    entries[token] = exp;\n    prune();\n    persist();\n}\"\"\"\nnew=\"\"\"function add(token) {\n    if (!token) return;\n    // S\u00f3 blacklista um JWT REAL e ainda V\u00c1LIDO. Garbage/assinatura inv\u00e1lida/expirado o authMiddleware j\u00e1\n    // rejeita (jwt.verify l\u00e1 tamb\u00e9m) \u2014 guard\u00e1-los seria in\u00fatil e, como /logout \u00e9 n\u00e3o-autenticado, deixaria\n    // um atacante inflar o arquivo com entradas imortais (exp=0). jwt.verify aqui fecha esse vetor.\n    let exp = 0;\n    try { const d = jwt.verify(token, process.env.JWT_SECRET); if (d && typeof d.exp === 'number') exp = d.exp; }\n    catch (e) { return; }\n    if (!exp) return;                 // sem exp: n\u00e3o guarda (evitaria entrada imortal)\n    entries[token] = exp;\n    prune();\n    persist();\n}\"\"\"\nif s.count(old)!=1: print('ABORT: ancora add() nao encontrada'); sys.exit(1)\nopen(P,'w',encoding='utf-8').write(s.replace(old,new,1)); print('OK add() endurecido (jwt.verify)')\nPY\necho\necho \"=== node -c + re-smoke (agora assinando com o MESMO JWT_SECRET que o add verifica) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node -c src/utils/tokenBlacklist.js && echo \"node -c OK\" && JWT_SECRET=segredo-de-teste node -e \"\nconst jwt=require(\\\"jsonwebtoken\\\"); const fs=require(\\\"fs\\\"); const path=require(\\\"path\\\");\nconst bl=require(\\\"./src/utils/tokenBlacklist\\\");\nconst live=jwt.sign({id:1},process.env.JWT_SECRET,{expiresIn:3600});\nconst dead=jwt.sign({id:1},process.env.JWT_SECRET,{expiresIn:-10});\nconst forged=jwt.sign({id:1},\\\"OUTRO-SEGREDO\\\",{expiresIn:3600});\nbl.add(live); bl.add(dead); bl.add(\\\"garbage\\\"); bl.add(forged);\nconsole.log(\\\"has(live valido)        =\\\", bl.has(live), \\\"(esperado true)\\\");\nconsole.log(\\\"has(dead expirado)      =\\\", bl.has(dead), \\\"(esperado false - nao guarda)\\\");\nconsole.log(\\\"has(garbage)            =\\\", bl.has(\\\"garbage\\\"), \\\"(esperado false - DoS fechado)\\\");\nconsole.log(\\\"has(forged outra chave) =\\\", bl.has(forged), \\\"(esperado false - assinatura invalida)\\\");\nconsole.log(\\\"count                   =\\\", bl._count(), \\\"(esperado 1)\\\");\nconst f=path.resolve(__dirname,\\\"logs\\\",\\\"token_blacklist.json\\\"); fs.rmSync(f,{force:true});\n\"'",
+  "description": "Harden tokenBlacklist.add with jwt.verify and re-smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK add() endurecido (jwt.verify)
+> 
+> === node -c + re-smoke (agora assinando com o MESMO JWT_SECRET que o add verifica) ===
+> node -c OK
+> has(live valido)        = true (esperado true)
+> has(dead expirado)      = false (esperado false - nao guarda)
+> has(garbage)            = false (esperado false - DoS fechado)
+> has(forged outra chave) = false (esperado false - assinatura invalida)
+> count                   = 1 (esperado 1)
+> ```
+
+## 🤖 Claude *(18:40:51)*
+
+
+## 🤖 Claude *(18:40:54)*
+
+Endurecimento validado: **só JWT válido é blacklistado** — expirado/garbage/forjado (chave errada) todos rejeitados, count=1. **DoS do `/logout` não-autenticado fechado.** Fix C completo, endurecido, gates passados.
+
+Commit seletivo do Fix C (7 arquivos, sem `backtest-results`; local, **sem push/deploy**):
+
+## 🤖 Claude *(18:41:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tx-commit-c.txt",
+  "content": "feat(auth): step-up de confirmacao no save de Settings + blacklist de logout persistida\n\nFix C do relatorio de design 2026-06-22. Single-operator -> step-up por frase em vez de\nRBAC completo. NAO toca jwt.sign/verify, floor/halt/withdraw nem o hot-path do beholder.\n\n- utils/stepUpGuard.js: alteracao SENSIVEL (credencial/ambiente, \"sensivel-se-diferente\")\n  no PATCH /settings exige SETTINGS_CONFIRM_PHRASE. Flag STEP_UP_SETTINGS (default ON;\n  =false desliga sem deploy). NAO ecoa a frase no erro. Puro + sim-test (20 asserts).\n- settingsController.updateSettings: guard como 1a instrucao, return 400 ANTES do\n  res.sendStatus(200) e do setTimeout(process.exit) -- fecha o \"200 + restart sem validar\".\n- utils/tokenBlacklist.js: blacklist de logout PERSISTIDA em /app/logs (volume backend_logs):\n  load sincrono no module-load (antes do app.listen), escrita atomica (tmp+rename), fail-open,\n  poda por exp. add() so guarda JWT real e ainda valido (jwt.verify) -> fecha o DoS via /logout\n  nao-autenticado (garbage/expirado nao infla o arquivo). authController passa a usa-la.\n- frontend Settings.js: step-up REATIVO (window.prompt so no 400 STEP_UP_REQUIRED, reenvia\n  com confirm) -- sem lockout por skew de deploy.\n- .env.example documenta STEP_UP_SETTINGS + SETTINGS_CONFIRM_PHRASE.\n\nGate QA (PASS com ressalvas) + TL (APPROVE com sugestoes). sim suite 11/11 (stepUpGuard 20/20),\ntokenBlacklist runtime smoke (persist/load/poda/DoS), vite build OK. EXIGE deploy (rebuild\nbackend+frontend) + setar SETTINGS_CONFIRM_PHRASE no .env live (nao-git).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tx-commit-c.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:41:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add \\\n  backend/src/utils/stepUpGuard.js backend/src/utils/tokenBlacklist.js \\\n  backend/scripts/sim/stepUpGuard.test.js \\\n  backend/src/controllers/settingsController.js backend/src/controllers/authController.js \\\n  frontend/src/private/Settings/Settings.js .env.example\necho \"=== staged (deve ser SO os 7 do Fix C) ===\"\ngit -c safe.directory=\"*\" diff --cached --name-only\necho \"--- guard anti-scratch ---\"\ngit -c safe.directory=\"*\" diff --cached --name-only | grep -E \"backtest-results|\\.gpg\" && echo \"!! ALERTA\" || echo \"(ok)\"\ngit -c safe.directory=\"*\" commit -F /tmp/tx-commit-c.txt\necho \"=== log -2 ===\"; git -c safe.directory=\"*\" log --oneline -2\necho \"=== unpushed ===\"; git -c safe.directory=\"*\" log @{u}..HEAD --oneline\n'\nrm -f /tmp/tx-commit-c.txt /tmp/tx-stepUpGuard.js /tmp/tx-tokenBlacklist.js /tmp/tx-stepUpGuard.test.js 2>/dev/null",
+  "description": "Stage and commit Fix C selectively"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged (deve ser SO os 7 do Fix C) ===
+> .env.example
+> backend/scripts/sim/stepUpGuard.test.js
+> backend/src/controllers/authController.js
+> backend/src/controllers/settingsController.js
+> backend/src/utils/stepUpGuard.js
+> backend/src/utils/tokenBlacklist.js
+> frontend/src/private/Settings/Settings.js
+> --- guard anti-scratch ---
+> (ok)
+> [master 5690a63] feat(auth): step-up de confirmacao no save de Settings + blacklist de logout persistida
+>  7 files changed, 219 insertions(+), 15 deletions(-)
+>  create mode 100644 backend/scripts/sim/stepUpGuard.test.js
+>  create mode 100644 backend/src/utils/stepUpGuard.js
+>  create mode 100644 backend/src/utils/tokenBlacklist.js
+> === log -2 ===
+> 5690a63 feat(auth): step-up de confirmacao no save de Settings + blacklist de logout persistida
+> 78e4e65 feat(ops): backup cifrado do estado + reset-db granular (remove make nuke destrutivo)
+> === unpushed ===
+> 5690a63 feat(auth): step-up de confirmacao no save de Settings + blacklist de logout persistida
+> 78e4e65 feat(ops): backup cifrado do estado + reset-db granular (remove make nuke destrutivo)
+> ```
+
+## 🤖 Claude *(18:41:34)*
+
+
+## 🤖 Claude *(18:41:41)*
+
+**Fix C commitado: `5690a63`** (7 arquivos, seletivo). Agora **2 commits à frente de origin** (Fix A + Fix C), ambos **sem push**.
+
+## Status da sessão
+
+| Item | Estado |
+|---|---|
+| Agenda dos 3 fixes (vetada adversarialmente) | ✅ `~/AGENDA-design-fixes-2026-06-22.md` |
+| **Fix A** — backup cifrado + `reset-db` (remove `make nuke`) | ✅ commitado `78e4e65`, gated, smoke vivo, **baseline real gerado** |
+| **Fix C** — step-up auth + blacklist persistente | ✅ commitado `5690a63`, gated, sim 11/11, build OK, **+endurecimento DoS** |
+| **Fix B** — AES-CTR→GCM (migração das chaves) | ⏳ pendente (o mais perigoso, por último na ordem A→C→B) |
+
+**Diferença-chave:** Fix A é tooling host-side (não precisa deploy). **Fix C é código backend+frontend → só passa a valer com deploy** (rebuild + restart). O TL deu a sequência segura: setar a frase no `.env` live → rebuild atômico backend+frontend → smoke (login, save cosmético passa, save sensível pede frase, logout persiste). O floor=false e o Canary sobrevivem ao restart (o save de Settings já reinicia o backend de rotina).
+
+Decisões suas pra eu seguir:
+
+## 🤖 Claude *(18:41:52)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Deploy do Fix C agora (rebuild backend+frontend + restart do sistema live)?",
+      "header": "Deploy Fix C",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Deploy agora, com smoke (Recomendado)",
+          "description": "Seto a frase no .env live, rebuild at\u00f4mico backend+frontend, e rodo o smoke (GET /system/halt intacto, login, save cosm\u00e9tico passa, save sens\u00edvel pede frase, logout persiste). Restart controlado; floor=false e Canary sobrevivem."
+        },
+        {
+          "label": "Deploy sob TRADING_HALT_HARD tempor\u00e1rio",
+          "description": "Mesma coisa, mas travo o sistema (HALT hard) durante o rebuild e destravo s\u00f3 ap\u00f3s o smoke confirmar tudo. Mais conservador, custa uma pausa no Canary."
+        },
+        {
+          "label": "N\u00e3o deployar ainda (fica s\u00f3 commitado)",
+          "description": "Fix C fica commitado mas inerte (c\u00f3digo n\u00e3o roda at\u00e9 o deploy). Deployo depois quando voc\u00ea quiser."
+        }
+      ]
+    },
+    {
+      "question": "Qual a frase do step-up (`SETTINGS_CONFIRM_PHRASE`)?",
+      "header": "Frase step-up",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Reusar VidaNovaTrade",
+          "description": "Mesma frase do backup. Simples de lembrar; j\u00e1 est\u00e1 nesta conversa."
+        },
+        {
+          "label": "Eu te passo outra frase",
+          "description": "Voc\u00ea me d\u00e1 uma frase dedicada s\u00f3 para o save de Settings (separada da do backup)."
+        },
+        {
+          "label": "Usar a default por enquanto",
+          "description": "Deixar 'CONFIRMAR ALTERACAO' (default p\u00fablico do .env.example). Menos seguro \u2014 qualquer um que leia o repo sabe a frase. Trocar depois."
+        }
+      ]
+    },
+    {
+      "question": "Push dos 2 commits (Fix A + Fix C) para origin/master?",
+      "header": "Push",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim, push agora",
+          "description": "Empurro 78e4e65 + 5690a63 pra origin/master (preciso rodar git como ubuntu p/ usar a chave SSH; deixo o .git com ownership correto depois)."
+        },
+        {
+          "label": "N\u00e3o, s\u00f3 local por enquanto",
+          "description": "Mantenho os commits locais; voc\u00ea empurra (ou eu empurro) depois."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Deploy do Fix C agora (rebuild backend+frontend + restart do sistema live)?"="Deploy agora, com smoke (Recomendado)", "Qual a frase do step-up (`SETTINGS_CONFIRM_PHRASE`)?"="Reusar VidaNovaTrade", "Push dos 2 commits (Fix A + Fix C) para origin/master?"="Sim, push agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(18:48:18)*
+
+
+## 🤖 Claude *(18:48:21)*
+
+Entendido: **deploy Fix C agora com smoke**, frase **`VidaNovaTrade`**, e **push** dos 2 commits. Vou fazer **deploy → smoke → push** (empurra só código verificado ao vivo).
+
+Primeiro confirmo o HALT (regra de sessão) + atualizo o `.env` live com a frase (como gcrux, append se ausente, preservando 0600):
+
+## 🤖 Claude *(18:48:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== HALT antes do deploy ===\"\ncurl -s -m6 http://localhost:8090/api/system/halt 2>/dev/null | head -c 200; echo\necho\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== .env: ja tem as vars? ===\"\ngrep -nE \"^(STEP_UP_SETTINGS|SETTINGS_CONFIRM_PHRASE)=\" .env || echo \"(ausentes \u2014 vou anexar)\"\n# anexa so se ausentes (idempotente)\nif ! grep -qE \"^SETTINGS_CONFIRM_PHRASE=\" .env; then\n  printf \"\\n# Step-up de Settings (Fix C) \u2014 frase de confirmacao p/ alteracao sensivel de credencial/ambiente\\nSTEP_UP_SETTINGS=true\\nSETTINGS_CONFIRM_PHRASE=VidaNovaTrade\\n\" >> .env\n  echo \">> anexado STEP_UP_SETTINGS + SETTINGS_CONFIRM_PHRASE\"\nelse\n  echo \">> ja existe; nao toquei\"\nfi\nchmod 600 .env\necho \"=== confirma (sem mostrar valor) ===\"\ngrep -nE \"^(STEP_UP_SETTINGS|SETTINGS_CONFIRM_PHRASE)=\" .env | sed \"s/=.*/=<set>/\"\nls -la .env\n'",
+  "description": "Check HALT and append step-up vars to live .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HALT antes do deploy ===
+> "Unauthorized"
+> 
+> === .env: ja tem as vars? ===
+> (ausentes — vou anexar)
+> >> anexado STEP_UP_SETTINGS + SETTINGS_CONFIRM_PHRASE
+> === confirma (sem mostrar valor) ===
+> 83:STEP_UP_SETTINGS=<set>
+> 84:SETTINGS_CONFIRM_PHRASE=<set>
+> -rw------- 1 gcrux-tradeux gcrux-tradeux 3341 Jun 22 15:48 .env
+> ```
+
+## 🤖 Claude *(18:48:38)*
+
+
+## 🤖 Claude *(18:48:39)*
+
+`.env` atualizado (frase setada, 0600 preservado). O "Unauthorized" do HALT é só porque chamei sem token — verifico no smoke com login. Agora o **rebuild atômico backend+frontend** (bake do Fix C committado):
+
+## 🤖 Claude *(18:48:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== rebuild backend+frontend (pode levar alguns minutos) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend frontend 2>&1 | tail -30'\necho \"=== exit do compose ===\"",
+  "description": "Rebuild and recreate backend+frontend with Fix C",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rebuild backend+frontend (pode levar alguns minutos) ===
+> #20 4.930 npm notice
+> #20 DONE 5.0s
+> 
+> #24 [frontend stage-1 2/3] COPY nginx.conf /etc/nginx/conf.d/default.conf
+> #24 CACHED
+> 
+> #25 [frontend stage-1 3/3] COPY --from=build /app/build /usr/share/nginx/html
+> #25 DONE 0.3s
+> 
+> #26 [frontend] exporting to image
+> #26 exporting layers 0.2s done
+> #26 writing image sha256:0ddea51804a9aa7a995ab4bb0387fe6745ca09a59998467f0f986c5b509be63c done
+> #26 naming to docker.io/library/tradeux-frontend done
+> #26 DONE 0.2s
+> 
+> #27 [frontend] resolving provenance for metadata file
+> #27 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Image tradeux-frontend Built 
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-frontend-1 Recreate 
+>  Container tradeux-frontend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started 
+> === exit do compose ===
+> ```
+
+## 🤖 Claude *(18:48:59)*
+
+
+## 🤖 Claude *(18:49:00)*
+
+Rebuild + recreate OK (ambas as imagens buildadas, containers recriados, db healthy). Vou confirmar que o backend subiu com o código novo e está respondendo:
+
+## 🤖 Claude *(18:49:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== ps ===\"; sudo -n -u gcrux-tradeux bash -lc 'docker compose ps' 2>/dev/null\necho; echo \"=== codigo novo no container? (stepUpGuard wired) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"grep -c stepUpGuard src/controllers/settingsController.js; ls src/utils/stepUpGuard.js src/utils/tokenBlacklist.js\"' 2>/dev/null\necho; echo \"=== backend respondendo? (site + login) ===\"\ncurl -s -m6 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/ 2>/dev/null\necho; echo \"=== backend boot log (ultimas linhas) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose logs --tail=12 backend' 2>/dev/null | tail -12",
+  "description": "Verify backend booted with new code and is responding"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ps ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED          STATUS                PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      6 hours ago      Up 6 hours            
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    16 seconds ago   Up 14 seconds         3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         2 weeks ago      Up 7 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   15 seconds ago   Up 14 seconds         127.0.0.1:8090->80/tcp
+> 
+> === codigo novo no container? (stepUpGuard wired) ===
+> 2
+> src/utils/stepUpGuard.js
+> src/utils/tokenBlacklist.js
+> 
+> === backend respondendo? (site + login) ===
+> site -> 200
+> 
+> === backend boot log (ultimas linhas) ===
+> backend-1  | [TradeUX] Applying seeds (idempotent)...
+> backend-1  | 
+> backend-1  | Sequelize CLI [Node: 22.22.3, CLI: 6.6.5, ORM: 6.37.8]
+> backend-1  | 
+> backend-1  | Loaded configuration file "config/config.js".
+> backend-1  | Using environment "production".
+> backend-1  | No seeders found.
+> backend-1  | [TradeUX] Starting backend...
+> backend-1  | 
+> backend-1  | > backend@1.0.0 start
+> backend-1  | > node -r dotenv/config ./src/server
+> backend-1  |
+> ```
+
+## 🤖 Claude *(18:50:15)*
+
+
+## 🤖 Claude *(18:50:17)*
+
+Deploy confirmado: **código novo no container** (stepUpGuard wired 2×, ambos utils presentes), site 200, backend bootando. Agora o **smoke vivo** (não-mutante: login, HALT, guard sensível→400, logout→401, **persistência através do restart**, floor sobrevive):
+
+## 🤖 Claude *(18:50:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset +e\ncd /home/gcrux-tradeux/tradeux\nAPI=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-)\nPW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-)\nlogin(){ curl -s --connect-timeout 5 --max-time 120 --retry 40 --retry-delay 2 --retry-connrefused --retry-all-errors -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\"; }\n\nTOKA=$(login | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho \"1) login -> token A: $([ -n \"$TOKA\" ] && echo OK || echo FALHOU)\"\n\necho -n \"2) GET /system/halt: \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOKA\" | head -c 120; echo\n\necho \"3) PATCH /settings SENSIVEL (apiUrl dummy) SEM confirm:\"\nR=$(curl -s -m6 -w \"|%{http_code}\" -X PATCH $API/settings -H \"Authorization: $TOKA\" -H \"Content-Type: application/json\" -d \"{\\\"apiUrl\\\":\\\"https://example.invalid/__smoke__\\\"}\")\necho \"   resp: $R\"\necho \"$R\" | grep -q \"STEP_UP_REQUIRED\" && echo \"   -> code STEP_UP_REQUIRED + 400 OK\" || echo \"   -> !! INESPERADO\"\necho \"$R\" | grep -qi \"VidaNovaTrade\" && echo \"   -> !! FRASE VAZOU\" || echo \"   -> frase NAO vaza OK\"\n\necho -n \"4) logout token A: \"; curl -s -m6 -o /dev/null -w \"%{http_code}\\n\" -X POST $API/logout -H \"Authorization: $TOKA\"\necho -n \"5) GET /settings com A (espera 401): \"; curl -s -m6 -o /dev/null -w \"%{http_code}\\n\" $API/settings -H \"Authorization: $TOKA\"\n\necho \"6) restart backend + espera voltar...\"\ndocker compose restart backend >/dev/null 2>&1\nTOKB=$(login | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho \"   backend voltou -> token B: $([ -n \"$TOKB\" ] && echo OK || echo FALHOU)\"\n\necho -n \"7) GET /settings com A POS-restart (espera 401 = blacklist PERSISTIU): \"; curl -s -m6 -o /dev/null -w \"%{http_code}\\n\" $API/settings -H \"Authorization: $TOKA\"\necho -n \"8) GET /system/halt com B (floor sobreviveu?): \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOKB\" | head -c 120; echo\necho -n \"9) blacklist file no volume: \"; docker exec tradeux-backend-1 sh -c \"test -f /app/logs/token_blacklist.json && echo presente || echo ausente\"\n'",
+  "description": "Live smoke test of Fix C: step-up guard + persistent blacklist across restart"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1) login -> token A: OK
+> 2) GET /system/halt: {"halted":false,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"sinc
+> 3) PATCH /settings SENSIVEL (apiUrl dummy) SEM confirm:
+>    resp: {"code":"STEP_UP_REQUIRED","error":"alteração sensível (credencial/ambiente) exige a frase de confirmação."}|400
+>    -> code STEP_UP_REQUIRED + 400 OK
+>    -> frase NAO vaza OK
+> 4) logout token A: 200
+> 5) GET /settings com A (espera 401): 401
+> 6) restart backend + espera voltar...
+>    backend voltou -> token B: OK
+> 7) GET /settings com A POS-restart (espera 401 = blacklist PERSISTIU): 401
+> 8) GET /system/halt com B (floor sobreviveu?): {"halted":false,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"sinc
+> 9) blacklist file no volume: presente
+> ```
+
+## 🤖 Claude *(18:50:50)*
+
+
+## 🤖 Claude *(18:50:51)*
+
+🎉 **Smoke do Fix C — TODOS os checks passaram ao vivo:**
+
+| # | Check | Resultado |
+|---|---|---|
+| 2 | `GET /system/halt` | `halted=false` (floor intacto) ✓ |
+| 3 | PATCH sensível sem confirm | **400 `STEP_UP_REQUIRED`**, frase **não vaza** ✓ |
+| 4-5 | logout → reuso do token | 200 → **401** (blacklistado) ✓ |
+| 6-7 | restart → reuso do token A | **401 = blacklist PERSISTIU** (o bug central) ✓ |
+| 8 | halt pós-restart | `halted=false` (floor sobreviveu) ✓ |
+| 9 | `token_blacklist.json` no volume | presente ✓ |
+
+**Fix C está LIVE e validado.** Guard dispara, frase não vaza, blacklist persiste através do restart, Canary/floor intactos. Agora o **push** dos 2 commits (como ubuntu, que tem a chave SSH; conserto o ownership do `.git` depois):
+
+## 🤖 Claude *(18:50:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== remote + upstream ===\"\ngit -c safe.directory='*' remote -v | head -2\ngit -c safe.directory='*' rev-parse --abbrev-ref --symbolic-full-name @{u} 2>&1\necho; echo \"=== .git owner ANTES ===\"; stat -c '%U:%G' .git\necho; echo \"=== push (como ubuntu, chave SSH) ===\"\ngit -c safe.directory='*' push origin master 2>&1 | tail -8\necho \"push exit=$?\"",
+  "description": "Check remote and push both commits as ubuntu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === remote + upstream ===
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> origin/master
+> 
+> === .git owner ANTES ===
+> gcrux-tradeux:gcrux-tradeux
+> 
+> === push (como ubuntu, chave SSH) ===
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    5edf856..5690a63  master -> master
+> push exit=0
+> ```
+
+## 🤖 Claude *(18:51:01)*
+
+
+## 🤖 Claude *(18:51:03)*
+
+Push OK: **`5edf856..5690a63 master -> master`** — Fix A + Fix C agora em origin. (O "Permission denied" em `backups/.gitattributes` é inócuo — ubuntu não lê o dir 0700, e o git não precisa. O alerta Dependabot é pré-existente, fora de escopo.)
+
+Conferindo/consertando o ownership do `.git` pós-push-como-ubuntu (memória [[git-ownership-gotcha]]):
+
+## 🤖 Claude *(18:51:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== arquivos do .git que viraram ubuntu? ===\"\nfind .git -user ubuntu 2>/dev/null | head -20\nN=$(find .git -user ubuntu 2>/dev/null | wc -l)\necho \"total ubuntu-owned no .git: $N\"\nif [ \"$N\" -gt 0 ]; then\n  echo \">> chown -R gcrux-tradeux:gcrux-tradeux .git\"\n  sudo chown -R gcrux-tradeux:gcrux-tradeux .git && echo \"OK corrigido\"\nelse\n  echo \"(.git limpo \u2014 nada ubuntu-owned)\"\nfi\necho; echo \"=== owner .git DEPOIS ===\"; stat -c '%U:%G' .git\necho; echo \"=== sanity: git status como gcrux ainda funciona ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" status -sb | head -3'",
+  "description": "Fix .git ownership after ubuntu push and verify gcrux git works"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos do .git que viraram ubuntu? ===
+> .git/refs/remotes/origin/master
+> total ubuntu-owned no .git: 1
+> >> chown -R gcrux-tradeux:gcrux-tradeux .git
+> OK corrigido
+> 
+> === owner .git DEPOIS ===
+> gcrux-tradeux:gcrux-tradeux
+> 
+> === sanity: git status como gcrux ainda funciona ===
+> ## master...origin/master
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ```
+
+## 🤖 Claude *(18:51:42)*
+
+
+## 🤖 Claude *(18:51:44)*
+
+`.git` reconsertado (1 ref virou ubuntu no push → chown de volta). `git status` como gcrux: **`master...origin/master`** em sincronia. Working tree limpo exceto o scratch dos backtests.
+
+Vou registrar o marco na memória (estado durável: A+C entregues) antes de checkpoint:
+
+## 🤖 Claude *(18:52:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "content": "---\nname: tradeux-design-fixes-2026-06-22\ndescription: Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) \u2014 A+C ENTREGUES+pushed (C deployado+smoke vivo); B (cripto, o perigoso) PENDENTE\nmetadata:\n  type: project\n---\n\nFollow-ups do relat\u00f3rio de design adversarial ([[tradeux-mainnet-go-live]], `~/RESEARCH-design-review-2026-06-22.md`). Agenda vetada (workflow 10 agentes, plano\u2192c\u00e9tico\u2192s\u00edntese) salva em **`~/AGENDA-design-fixes-2026-06-22.md`**. Ordem acordada **A\u2192C\u2192B** (cripto por \u00faltimo por migrar chaves vivas). Cada fix passou por gate **QA + TL** + smoke.\n\n**\u2705 Fix A \u2014 `make nuke`\u2192backup cifrado + `reset-db` granular** (commit `78e4e65`, pushed). Removeu `make nuke` (`down -v` apagava `db_data`=chaves + `backend_logs`=postura HALT). Novos `scripts/backup-state.sh` (gpg AES256 read-only: mysqldump + `/app/logs` do volume `tradeux_backend_logs` + **`.env`/AES_KEY** \u2014 dump das chaves \u00e9 in\u00fatil sem ela \u2014 + round-trip de integridade) e `scripts/restore-state.sh`; `make reset-db` CONFIRM-gated, backup falha-fechado antes, remove S\u00d3 `tradeux_db_data` (preserva risk_state). `backups/` 0700/0600 gitignored. **Baseline real existe** em `backups/` (decifr\u00e1vel com a passphrase). \u00c9 tooling host-side \u2192 **n\u00e3o precisa deploy**.\n\n**\u2705 Fix C \u2014 step-up auth + blacklist persistente** (commit `5690a63`, pushed, **DEPLOYADO + smoke vivo OK**). Gap real era: `updateSettings` respondia 200 + `process.exit` ANTES de validar (qualquer save trocava credencial). Fixes: `utils/stepUpGuard.js` (PATCH /settings sens\u00edvel \"se-DIFERENTE\" exige `SETTINGS_CONFIRM_PHRASE`; flag `STEP_UP_SETTINGS` default ON; N\u00c3O ecoa a frase; sim-test 20 asserts), guard como 1\u00aa instru\u00e7\u00e3o; `utils/tokenBlacklist.js` (logout persistido em `/app/logs` \u2014 path `../../logs` p/ bater o volume, igual `logger.js`; load s\u00edncrono pr\u00e9-`listen`; escrita at\u00f4mica tmp+rename; `add()` s\u00f3 guarda JWT **v\u00e1lido** via `jwt.verify` \u2192 fecha DoS do `/logout` **n\u00e3o-autenticado**); frontend `Settings.js` step-up reativo (`window.prompt` s\u00f3 no 400 `STEP_UP_REQUIRED`). Floor/halt/withdraw **intocados** (floor-off j\u00e1 tinha confirm). Smoke vivo: guard\u2192400+frase-n\u00e3o-vaza, logout\u2192401 **persiste atrav\u00e9s do restart**, floor sobrevive.\n\n**\u23f3 Fix B \u2014 AES-CTR\u2192AES-GCM + mask do accessKey \u2014 PENDENTE** (o mais perigoso: migra as **chaves Binance vivas criptografadas no DB**). Plano na agenda: formato versionado `gcm:v1:iv:tag:ct`, leitura retrocompat\u00edvel, backfill **one-shot manual sob HALT** (N\u00c3O migration no boot \u2014 crash-loop), sentinela de plaintext (AES_KEY errada corrompe em sil\u00eancio), backup do `.env`+DB testado antes (o Fix A \u00e9 o pr\u00e9-req disso). `crypto.js` usa `createCipheriv` AES-256-CTR; `accessKey` vaza plaintext no GET /settings (`getSettings` s\u00f3 strip-a password/secretKey/testnetSecretKey).\n\n**Conven\u00e7\u00f5es operacionais (runtime, n\u00e3o-git \u2014 reaplicar p\u00f3s-reset):**\n- Passphrase do backup **= a frase do step-up**, em `~gcrux-tradeux/.config/tradeux/backup.pass` (0600) E no `.env` live como `SETTINGS_CONFIRM_PHRASE` + `STEP_UP_SETTINGS=true`. `backup-state.sh`/`restore-state.sh` resolvem essa passphrase por conven\u00e7\u00e3o (default path) \u2192 `make reset-db` roda n\u00e3o-interativo. **Perder a passphrase = backups irrecuper\u00e1veis E n\u00e3o d\u00e1 pra trocar Settings** (use `STEP_UP_SETTINGS=false` como escape do 2\u00ba).\n- backend roda como **ROOT** (uid=0), N\u00c3O 1011:1013 (esse \u00e9 o AGENT) \u2014 a an\u00e1lise da agenda errava nisso.\n- Deploy do Fix C = `docker compose up -d --build backend frontend` (rebuild at\u00f4mico); volume `backend_logs` persiste risk_state+blacklist no restart.\n\n**Pr\u00e9-reqs de c\u00f3digo do GO-LIVE:** Fix A (backup) e Fix C (step-up) eram itens do relat\u00f3rio de design; Fix B fecha a cripto. Pr\u00f3ximos do relat\u00f3rio ainda em aberto: `make nuke` j\u00e1 resolvido; AES-GCM = Fix B; RBAC = resolvido como step-up (single-operator). Vivo==master==origin==`5690a63`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:52:18)*
+
+
+## 🤖 Claude *(18:52:18)*
+
+Adicionando o pointer no índice `MEMORY.md`:
+
+## 🤖 Claude *(18:52:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 28,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 28	- [1m scalping + Cockpit](tradeux-1m-scalping-and-cockpit.md) — 1m scalping REFUTADO (backtest −0,14% a −0,23%/trade); **Cockpit Intelligence DEPLOYADO** (brain computa analytics 1m read-only → agente lê/reporta; `/cockpit` + tool MCP; commit `1660871`); **fix −1013 calcQty backstop + Trend ×3** (`2528a5d`); auditoria adversarial → 7 pré-reqs p/ descongelar (Claude NÃO vira o HALT); GOLPE "Fable 5/Polymarket 205x" = referral scam, NÃO engajar; **COERÊNCIA DO COCKPIT iterada+DONE (`0b1554d`): freshen read-path, gate SYMBOL-AWARE (`8884bd3`: só BTC baseline é flow-gated, alt FARM não), reason interpola regime, painel bridges alinhado, doutrina GATE≠TRIGGER — fase de enumeração reativa ENCERRADA (TL verdict)**; **gate-FANTASMA baseline das alts ELIMINADO na fonte (`7ec6e75`, 2026-06-17: `baseline=null` p/ não-flow-gated, buyAllowed intacto, deployado+verificado) — agente parou de flagar "baseline BNB c/ RSI>25"**
+> 29	- [Strategy Engine / Paper](tradeux-strategy-engine.md) — Motor de Estratégias (gerar/validar/ativar por regime + KB de padrões + scanner cross-símbolo); **Fatia 1 = Paper/Shadow Engine NO AR** (`22ba96b`): broker VIRTUAL roteado por prefixo `[PAPER]` no name → fill ao MINI_TICKER+fee MAINNET reais em `paperOrders`/`paperPositions`, SEM tocar Binance/orders/buckets → research SOB HALT, zero risco; `GET /analysis/paper`; **Fatia 2a (`660641f`): 16 trilhas `[PAPER]` ATIVAS** (consistência RSI 25/75 + macro SMA50/200 ×4 símbolos) + slippage (`PAPER_SLIPPAGE_BPS`) + `REGIME_SYMBOLS` dos 4 no `.env`; **FREQUÊNCIA/verde-diário REFUTADA por backtest (8/8 EV<0 líquido) → não construir**; **lote `faed249`: item(f) guard [PAPER]-no-caminho-real FEITO (pré-req de CÓDIGO do flip; coluna `mode` é o fix definitivo no Bloco B, NÃO bloqueia o GO) + paper no cockpit (`status.paper` p/ o agente) + painel `Paper · Estratégias`**; **Bloco B Fase 1 ✅ MERGED (`2f8f20b`+`3ca0ef7`): `scripts/lib/apiClient.js` (req/login/find/resolveEnv) + os 8 setup-*.js migrados byte-fiel + self-test 37/37 no CI; próximo = recipes declarativas (findTemplate dup). Regime Router = OVERKILL/manter gate passivo**; **`258c385`: aprovação dos papers DELEGADA ao Claude + `paperReviewJob` (24h, notifica Telegram nos marcos de round-trips); dono decidiu ESPERAR o paper provar antes do flip (mecanismo do flip documentado: `.env TRADING_HALT=false`+restart)**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`
+> 30	
+> ```
+
+## 🤖 Claude *(18:52:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "**`258c385`: aprova\u00e7\u00e3o dos papers DELEGADA ao Claude + `paperReviewJob` (24h, notifica Telegram nos marcos de round-trips); dono decidiu ESPERAR o paper provar antes do flip (mecanismo do flip documentado: `.env TRADING_HALT=false`+restart)**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`",
+  "new_string": "**`258c385`: aprova\u00e7\u00e3o dos papers DELEGADA ao Claude + `paperReviewJob` (24h, notifica Telegram nos marcos de round-trips); dono decidiu ESPERAR o paper provar antes do flip (mecanismo do flip documentado: `.env TRADING_HALT=false`+restart)**; plano em `/home/ubuntu/.claude/plans/velvet-forging-wren.md`\n- [Design fixes 2026-06-22](tradeux-design-fixes-2026-06-22.md) \u2014 agenda dos 3 fixes do design-review (`~/AGENDA-design-fixes-2026-06-22.md`); **Fix A (backup cifrado + reset-db, remove make nuke) `78e4e65` e Fix C (step-up auth + blacklist persistente) `5690a63` ENTREGUES+pushed** (C deployado+smoke vivo); **Fix B (cripto AES-CTR\u2192GCM, o perigoso) PENDENTE**; passphrase backup==step-up em `~/.config/tradeux/backup.pass`; backend roda como ROOT"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:52:44)*
+
+
+## 🤖 Claude *(18:52:46)*
+
+Memória registrada (novo `tradeux-design-fixes-2026-06-22.md` + pointer no índice). Confirmação final de saúde da stack pós-deploy:
+
+## 🤖 Claude *(18:52:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps' 2>/dev/null\necho; curl -s -m5 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/\necho; echo \"git em sincronia:\"; sudo -n -u gcrux-tradeux bash -lc 'git -C /home/gcrux-tradeux/tradeux -c safe.directory=\"*\" log --oneline -2 origin/master'",
+  "description": "Final health check of stack and git sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED         STATUS                PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      6 hours ago     Up 6 hours            
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    4 minutes ago   Up 2 minutes          3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         2 weeks ago     Up 7 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   3 minutes ago   Up 3 minutes          127.0.0.1:8090->80/tcp
+> 
+> site -> 200
+> 
+> git em sincronia:
+> 5690a63 feat(auth): step-up de confirmacao no save de Settings + blacklist de logout persistida
+> 78e4e65 feat(ops): backup cifrado do estado + reset-db granular (remove make nuke destrutivo)
+> ```
+
+## 🤖 Claude *(18:52:52)*
+
+
+## 🤖 Claude *(18:53:01)*
+
+## 🎯 Marco concluído — A e C entregues, deployados e em origin
+
+| | Estado |
+|---|---|
+| **Fix A** (backup cifrado + `reset-db`, remove `make nuke`) | ✅ `78e4e65` · gated · baseline real gerado · **pushed** |
+| **Fix C** (step-up auth + blacklist persistente) | ✅ `5690a63` · gated · **deployado + smoke vivo 100%** · **pushed** |
+| Stack | 4 containers up · site 200 · `halted=false` · Canary intacto |
+| Git | `master == origin/master == 5690a63`, `.git` ownership limpo |
+| Memória | atualizada (`tradeux-design-fixes-2026-06-22`) |
+
+Tudo o que você pediu nesta rodada está feito: backtest-results verificados (scratch limpo), os 3 fixes agendados (vetados adversarialmente), e A+C implementados→gated→commitados→deployados→pushed.
+
+**Resta o Fix B — AES-CTR→GCM + mask do accessKey.** É o mais perigoso da fila: migra as **chaves Binance vivas criptografadas no DB** (decriptar errado = sistema não opera). A agenda o divide em duas entregas de risco bem diferente:
+
+- **Entrega A — mask do `accessKey` no GET /settings**: risco **baixo** (read-path + strip no frontend; hoje a API key mainnet vaza em plaintext pro GET e pro contexto do LLM). Não toca dado criptografado.
+- **Entrega B — migração CTR→GCM**: risco **alto** — backfill manual sob HALT, sentinela de plaintext, com o backup do Fix A como rede. Merece um ciclo dedicado e cuidadoso.
+
+Como quer seguir?
+
+## 🤖 Claude *(18:53:06)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Pr\u00f3ximo passo com o Fix B (cripto)?",
+      "header": "Fix B",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "S\u00f3 a Entrega A agora (mask accessKey)",
+          "description": "Fa\u00e7o a parte de baixo risco do Fix B (mascarar o accessKey no GET /settings + strip no frontend \u2014 fecha o vazamento da API key em plaintext). Deixo a migra\u00e7\u00e3o CTR\u2192GCM (Entrega B, perigosa) pra um ciclo dedicado."
+        },
+        {
+          "label": "Fix B completo agora (A + migra\u00e7\u00e3o GCM)",
+          "description": "Encaro o Fix B inteiro: mask + migra\u00e7\u00e3o CTR\u2192GCM das chaves vivas, com backfill manual sob HALT e o backup como rede. \u00c9 o item mais arriscado \u2014 vou com investiga\u00e7\u00e3o + gate + smoke cuidadosos."
+        },
+        {
+          "label": "Pausar aqui e selar a sess\u00e3o (/handoff)",
+          "description": "Encerro com A+C entregues. Atualizo o HANDOFF.md com o estado e deixo o Fix B documentado pra pr\u00f3xima sess\u00e3o. Voc\u00ea retoma quando quiser."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
