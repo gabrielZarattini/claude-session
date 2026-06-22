@@ -6584,6 +6584,884 @@ Config provisionado (101 bytes, chave OpenRouter presente). Agora o job real —
 }
 ```
 
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> job_id: 3331ee5f-ec25-4514-92b0-20021e26f52e
+> status: complete
+> render_url: /canvas-design/image-openrouter-google-gemini-2-5-fla-mqof5j06.png
+> size: 67 bytes  providerId: openrouter stubFallback: True
+> providerNote: [stub] [openrouter error → stub] no OpenRouter API key — configure it in Settings or set OPENROUTER_API_KEY
+> error: None
+> 📦 Processing job 3331ee5f-ec25-4514-92b0-20021e26f52e (kind: generate)
+> 🚀 Executing open-design command: docker exec -e OD_PROJECT_ID=d1f19b7f-63ac-4791-bea1-1c3caa63e340 -e OD_MEDIA_CONFIG_DIR=/app/.od/users/ada39fae-67e1-4e53-af1c-5a18e1c108e8 open-design node apps/daemon/dist/cli.js media generate --surface image --model openrouter/google/gemini-2.5-flash-image --prompt A premium matte-black wireless speaker on a wooden table, soft morning light, product photography --aspect 1:1
+> 📁 Generated media: image-openrouter-google-gemini-2-5-fla-mqof5j06.png (67 bytes)
+> ✅ Job 3331ee5f-ec25-4514-92b0-20021e26f52e marked as complete.
+> ```
+
+## 🤖 Claude *(23:30:30)*
+
+
+## 🤖 Claude *(23:30:32)*
+
+Ainda stub — escrevi o `media-config.json` mas o daemon não o lê (provider openrouter selecionado, mas "no OpenRouter API key"). É detalhe de **formato/caminho** do arquivo. Vou ler a lógica exata de leitura/escrita do `media-config` para acertar o schema:
+
+## 🤖 Claude *(23:30:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/canvas-design/open-design/apps/daemon/src/media-config.ts",
+  "offset": 95,
+  "limit": 175
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	  replicate: ['OD_REPLICATE_API_TOKEN', 'REPLICATE_API_TOKEN'],
+> 96	  google: ['OD_GOOGLE_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY'],
+> 97	  kling: ['OD_KLING_API_KEY', 'KLING_API_KEY'],
+> 98	  midjourney: ['OD_MIDJOURNEY_API_KEY'],
+> 99	  minimax: ['OD_MINIMAX_API_KEY', 'MINIMAX_API_KEY'],
+> 100	  suno: ['OD_SUNO_API_KEY'],
+> 101	  udio: ['OD_UDIO_API_KEY'],
+> 102	  elevenlabs: ['OD_ELEVENLABS_API_KEY', 'ELEVENLABS_API_KEY'],
+> 103	  fishaudio: ['OD_FISHAUDIO_API_KEY', 'FISH_AUDIO_API_KEY'],
+> 104	  senseaudio: ['OD_SENSEAUDIO_API_KEY', 'SENSEAUDIO_API_KEY'],
+> 105	  aihubmix: ['OD_AIHUBMIX_API_KEY', 'AIHUBMIX_API_KEY'],
+> 106	  tavily: ['OD_TAVILY_API_KEY', 'TAVILY_API_KEY'],
+> 107	  leonardo: ['OD_LEONARDO_API_KEY', 'LEONARDO_API_KEY'],
+> 108	};
+> 109	
+> 110	// Resolve an `OD_*_DIR` env override using the same semantics as
+> 111	// `resolveDataDir()` in server.ts: expandHomePrefix() handles the `~`,
+> 112	// `$HOME`, and `${HOME}` shorthands (with either `/` or `\` separator),
+> 113	// then relative paths anchor to <projectRoot>, not process.cwd, since
+> 114	// the daemon is often launched from a directory that has nothing to do
+> 115	// with the workspace, e.g. systemd's `/`. The writability check that
+> 116	// resolveDataDir does on startup is intentionally NOT replicated here:
+> 117	// configFile() is on the read path and a missing/unwritable directory
+> 118	// is a normal "no config yet" condition handled by readStored(); the
+> 119	// write path's mkdir(recursive) creates the directory on first use.
+> 120	function resolveOverrideDir(raw: string, projectRoot: string): string {
+> 121	  // Share expandHomePrefix with resolveDataDir (server.ts) so OD_DATA_DIR
+> 122	  // and OD_MEDIA_CONFIG_DIR cannot split state under a $HOME-style value.
+> 123	  // A launcher passing OD_DATA_DIR=$HOME/.open-design without a shell to
+> 124	  // expand it would otherwise route SQLite/projects/artifacts to the
+> 125	  // expanded path while media-config.json stayed under
+> 126	  // <projectRoot>/$HOME/.open-design, leaving stored credentials
+> 127	  // unreachable on the next read.
+> 128	  const expanded = expandHomePrefix(raw);
+> 129	  return path.isAbsolute(expanded)
+> 130	    ? expanded
+> 131	    : path.resolve(projectRoot, expanded);
+> 132	}
+> 133	
+> 134	function envOverrideDir(envName: string, projectRoot: string): string | null {
+> 135	  const raw = process.env[envName];
+> 136	  if (typeof raw !== 'string') return null;
+> 137	  const trimmed = raw.trim();
+> 138	  return trimmed ? resolveOverrideDir(trimmed, projectRoot) : null;
+> 139	}
+> 140	
+> 141	/**
+> 142	 * Resolve the directory media-config.json (and credentials living next to
+> 143	 * it, like xai-tokens.json) actually live in. Precedence: explicit
+> 144	 * media-config override > general data dir > default.
+> 145	 */
+> 146	export function mediaConfigDir(projectRoot: string): string {
+> 147	  return (
+> 148	    envOverrideDir('OD_MEDIA_CONFIG_DIR', projectRoot)
+> 149	    ?? envOverrideDir('OD_DATA_DIR', projectRoot)
+> 150	    ?? path.join(projectRoot, '.od')
+> 151	  );
+> 152	}
+> 153	
+> 154	function configFile(projectRoot: string): string {
+> 155	  return path.join(mediaConfigDir(projectRoot), 'media-config.json');
+> 156	}
+> 157	
+> 158	/**
+> 159	 * Normalise an arbitrary unknown into a string-to-string map, dropping
+> 160	 * keys that have empty / non-string values. Shared by the env-var
+> 161	 * parser and the on-disk reader so both layers reject malformed
+> 162	 * entries the same way.
+> 163	 */
+> 164	function coerceAliasMap(raw: unknown): ModelAliasMap {
+> 165	  if (!isRecord(raw)) return {};
+> 166	  const out: ModelAliasMap = {};
+> 167	  for (const [k, v] of Object.entries(raw)) {
+> 168	    if (typeof k !== 'string' || !k.trim()) continue;
+> 169	    if (typeof v !== 'string' || !v.trim()) continue;
+> 170	    out[k.trim()] = v.trim();
+> 171	  }
+> 172	  return out;
+> 173	}
+> 174	
+> 175	async function readStoredFile(projectRoot: string): Promise<JsonRecord> {
+> 176	  try {
+> 177	    const raw = await readFile(configFile(projectRoot), 'utf8');
+> 178	    const parsed = JSON.parse(raw);
+> 179	    return isRecord(parsed) ? parsed : {};
+> 180	  } catch (err) {
+> 181	    if (errorCode(err) === 'ENOENT') return {};
+> 182	    throw err;
+> 183	  }
+> 184	}
+> 185	
+> 186	async function readStored(projectRoot: string): Promise<ProviderMap> {
+> 187	  const parsed = await readStoredFile(projectRoot);
+> 188	  return isRecord(parsed.providers) ? (parsed.providers as ProviderMap) : {};
+> 189	}
+> 190	
+> 191	async function readStoredAliases(projectRoot: string): Promise<ModelAliasMap> {
+> 192	  const parsed = await readStoredFile(projectRoot);
+> 193	  return coerceAliasMap(parsed.aliases);
+> 194	}
+> 195	
+> 196	async function writeStored(
+> 197	  projectRoot: string,
+> 198	  providers: ProviderMap,
+> 199	  aliases?: ModelAliasMap,
+> 200	): Promise<void> {
+> 201	  const file = configFile(projectRoot);
+> 202	  await mkdir(path.dirname(file), { recursive: true });
+> 203	  // Preserve any existing aliases when the caller doesn't pass them.
+> 204	  // The Settings UI writes providers only; without this, every
+> 205	  // provider edit would silently wipe the user's model aliases (issue
+> 206	  // #1277 introduces aliases but the Settings UI surface for editing
+> 207	  // them lands in a follow-up PR).
+> 208	  const resolvedAliases = aliases ?? (await readStoredAliases(projectRoot));
+> 209	  const body: JsonRecord = { providers };
+> 210	  if (Object.keys(resolvedAliases).length > 0) {
+> 211	    body.aliases = resolvedAliases;
+> 212	  }
+> 213	  await writeFile(file, JSON.stringify(body, null, 2), 'utf8');
+> 214	}
+> 215	
+> 216	function readEnvAliases(): ModelAliasMap {
+> 217	  const raw = process.env[ENV_MODEL_ALIASES];
+> 218	  if (typeof raw !== 'string' || !raw.trim()) return {};
+> 219	  try {
+> 220	    return coerceAliasMap(JSON.parse(raw));
+> 221	  } catch {
+> 222	    // Malformed JSON is non-fatal — the user can fix the env var
+> 223	    // without restarting the daemon mid-generation, and silent fall-
+> 224	    // through to the on-disk map matches the precedent of the rest
+> 225	    // of the env / stored config resolution in this module.
+> 226	    return {};
+> 227	  }
+> 228	}
+> 229	
+> 230	/**
+> 231	 * Resolve a registered model id to the wire-name the provider should
+> 232	 * actually receive on the network. Env wins over stored, mirroring
+> 233	 * the precedence the rest of media-config uses for `apiKey` (issue
+> 234	 * #1277). Pass-through when no alias is configured.
+> 235	 */
+> 236	export async function resolveModelAlias(
+> 237	  projectRoot: string,
+> 238	  modelId: string,
+> 239	): Promise<string> {
+> 240	  const envAliases = readEnvAliases();
+> 241	  if (envAliases[modelId]) return envAliases[modelId]!;
+> 242	  const stored = await readStoredAliases(projectRoot);
+> 243	  return stored[modelId] ?? modelId;
+> 244	}
+> 245	
+> 246	/**
+> 247	 * Read the merged alias map (env + stored). Exposed for the
+> 248	 * `/api/media/config` GET endpoint so the Settings UI can display
+> 249	 * which aliases are active and where they came from.
+> 250	 */
+> 251	export async function readAliasMap(
+> 252	  projectRoot: string,
+> 253	): Promise<{ effective: ModelAliasMap; env: ModelAliasMap; stored: ModelAliasMap }> {
+> 254	  const env = readEnvAliases();
+> 255	  const stored = await readStoredAliases(projectRoot);
+> 256	  const effective: ModelAliasMap = { ...stored, ...env };
+> 257	  return { effective, env, stored };
+> 258	}
+> 259	
+> 260	function readEnvKey(providerId: string): string | null {
+> 261	  const keys = ENV_KEYS[providerId];
+> 262	  if (!keys) return null;
+> 263	  for (const k of keys) {
+> 264	    const v = process.env[k];
+> 265	    if (typeof v === 'string' && v.trim()) return v.trim();
+> 266	  }
+> 267	  return null;
+> 268	}
+> 269	
+> ```
+
+## 🤖 Claude *(23:30:45)*
+
+
+## 🤖 Claude *(23:30:47)*
+
+Achei o bug: o formato é **aninhado sob `providers`** — `readStored` lê `parsed.providers`, não o topo. Escrevi `{"openrouter":{...}}` em vez de `{"providers":{"openrouter":{...}}}`. Corrigindo + re-rodando:
+
+## 🤖 Claude *(23:30:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nUID2=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nKEY=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/decrypted_user_api_keys?select=openrouter_api_key&user_id=eq.${UID2}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['openrouter_api_key'])\")\n# correct schema: { providers: { openrouter: { apiKey } } }\ndocker exec -e ODKEY=\"$KEY\" -e ODUID=\"$UID2\" open-design sh -c 'printf \"{\\\"providers\\\":{\\\"openrouter\\\":{\\\"apiKey\\\":\\\"%s\\\"}}}\" \"$ODKEY\" > \"/app/.od/users/$ODUID/media-config.json\"'\ndocker exec -e ODUID=\"$UID2\" open-design sh -c 'echo \"bytes: $(wc -c < /app/.od/users/$ODUID/media-config.json) \u00b7 providers key: $(grep -c providers /app/.od/users/$ODUID/media-config.json)\"'\nJOB=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"kind\":\"generate\",\"od_project_id\":\"d1f19b7f-63ac-4791-bea1-1c3caa63e340\",\"prompt\":\"A premium matte-black wireless speaker on a wooden table, soft morning light, product photography\",\"params\":{\"surface\":\"image\",\"model\":\"openrouter/google/gemini-2.5-flash-image\",\"aspect\":\"1:1\"},\"status\":\"queued\",\"coins_charged\":0}' \\\n  | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['id'])\")\necho \"job: $JOB\"; echo \"$JOB\" > /tmp/qa_design_job4.txt\nsleep 25\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=status,render_url,result,error_message&id=eq.${JOB}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];r=d.get('result') or {};print('status:',d['status']);print('size:',r.get('size'),'bytes  providerId:',r.get('providerId'),'stubFallback:',r.get('usedStubFallback'));print('providerNote:',r.get('providerNote'));print('name:',r.get('name'))\"",
+  "description": "Re-provision with correct providers schema + run real image job"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bytes: 115 · providers key: 1
+> job: 35885a6c-e924-4ae0-9310-f3c2b75db7c7
+> status: complete
+> size: 67 bytes  providerId: openrouter stubFallback: True
+> providerNote: [stub] [openrouter error → stub] no OpenRouter API key — configure it in Settings or set OPENROUTER_API_KEY
+> name: image-openrouter-google-gemini-2-5-fla-mqof70ui.png
+> ```
+
+## 🤖 Claude *(23:31:54)*
+
+
+## 🤖 Claude *(23:31:58)*
+
+O stub persiste com schema correto → significa que **o `cli.js media generate` é um cliente fino que fala com o DAEMON** (o erro "daemon 404" antes confirma). O `-e OD_MEDIA_CONFIG_DIR` vai pro processo-cliente, mas o **daemon** (que resolve provider + gera) roda com o env do container → lê o config **global** `/app/.od/media-config.json`, não o per-user. 
+
+**Achado arquitetural real:** a OTD-003 da SDD ("od respeita OD_MEDIA_CONFIG_DIR por invocação") **não vale** neste modo cliente-daemon → isolamento BYOK per-user não funciona como desenhado (gap multi-tenant a registrar). Para a validação single-tenant, escrevo o config **global** e provo geração real:
+
+## 🤖 Claude *(23:32:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nUID2=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nKEY=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/decrypted_user_api_keys?select=openrouter_api_key&user_id=eq.${UID2}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['openrouter_api_key'])\")\n# write GLOBAL daemon config (the daemon reads /app/.od/media-config.json)\ndocker exec -e ODKEY=\"$KEY\" open-design sh -c 'mkdir -p /app/.od && printf \"{\\\"providers\\\":{\\\"openrouter\\\":{\\\"apiKey\\\":\\\"%s\\\"}}}\" \"$ODKEY\" > /app/.od/media-config.json && echo \"global config: $(wc -c < /app/.od/media-config.json) bytes\"'\nJOB=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"kind\":\"generate\",\"od_project_id\":\"d1f19b7f-63ac-4791-bea1-1c3caa63e340\",\"prompt\":\"A premium matte-black wireless speaker on a wooden table, soft morning light, product photography\",\"params\":{\"surface\":\"image\",\"model\":\"openrouter/google/gemini-2.5-flash-image\",\"aspect\":\"1:1\"},\"status\":\"queued\",\"coins_charged\":0}' \\\n  | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['id'])\")\necho \"job: $JOB\"; echo \"$JOB\" > /tmp/qa_design_job5.txt\nsleep 28\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_jobs?select=status,render_url,result&id=eq.${JOB}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];r=d.get('result') or {};print('status:',d['status']);print('size:',r.get('size'),'bytes  providerId:',r.get('providerId'),'stubFallback:',r.get('usedStubFallback'));print('note:',r.get('providerNote'));print('name:',r.get('name'))\"",
+  "description": "Write global daemon config + run real image job"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> global config: 115 bytes
+> job: 6d312e0e-b53f-4e1e-b3f2-be9a4ebdee28
+> status: complete
+> size: 1268994 bytes  providerId: openrouter stubFallback: False
+> note: openrouter/google/gemini-2.5-flash-image · 1:1 · 1268994 bytes
+> name: image-openrouter-google-gemini-2-5-fla-mqof8h4f.png
+> ```
+
+## 🤖 Claude *(23:32:48)*
+
+
+## 🤖 Claude *(23:32:50)*
+
+**Canvas Design gera REAL agora!** `size: 1.268.994 bytes` (1.27 MB), `providerId: openrouter`, **`stubFallback: False`**. O bridge completo funciona: job → worker → daemon gera imagem real via OpenRouter → copiada pro host → nó `design_artifact` na malha → complete. Vou verificar o arquivo no host + o nó na malha e te entregar a imagem:
+
+## 🤖 Claude *(23:32:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nNAME=\"image-openrouter-google-gemini-2-5-fla-mqof8h4f.png\"\necho \"=== arquivo copiado pro host (public/canvas-design) ===\"\nls -la \"public/canvas-design/${NAME}\" 2>/dev/null | awk '{print $5, $9}'\nfile \"public/canvas-design/${NAME}\" 2>/dev/null\ncp \"public/canvas-design/${NAME}\" /tmp/qa_canvas_design.png 2>/dev/null && echo \"copiado p/ envio\"\necho \"=== n\u00f3 design_artifact na malha (mais recente do user) ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?select=id,name,node_type,created_at&node_type=eq.design_artifact&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&order=created_at.desc&limit=2\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys;d=json.load(sys.stdin);[print(f\\\"{n['id'][:8]} \u00b7 {n['node_type']} \u00b7 {n['name'][:50]} \u00b7 {n['created_at'][:19]}\\\") for n in d]\"\necho \"=== design_artifact_refs (espelho) ===\"\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/design_artifact_refs?select=od_artifact_id,kind,mesh_node_id,render_url&order=updated_at.desc&limit=2\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool 2>/dev/null | head -20",
+  "description": "Verify host file + mesh node + artifact refs for Canvas Design real gen"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivo copiado pro host (public/canvas-design) ===
+> 1268994 public/canvas-design/image-openrouter-google-gemini-2-5-fla-mqof8h4f.png
+> public/canvas-design/image-openrouter-google-gemini-2-5-fla-mqof8h4f.png: PNG image data, 1024 x 1024, 8-bit/color RGB, non-interlaced
+> copiado p/ envio
+> === nó design_artifact na malha (mais recente do user) ===
+> 58fd73ae · design_artifact · A premium matte-black wireless speaker on a wooden · 2026-06-21T23:32:16
+> cfb2c8e7 · design_artifact · A premium matte-black wireless speaker on a wooden · 2026-06-21T23:31:01
+> === design_artifact_refs (espelho) ===
+> [
+>     {
+>         "od_artifact_id": "image-openrouter-google-gemini-2-5-fla-mqof8h4f.png",
+>         "kind": "hyperframe",
+>         "mesh_node_id": "58fd73ae-b584-4842-9e45-dc453308c7e3",
+>         "render_url": "/canvas-design/image-openrouter-google-gemini-2-5-fla-mqof8h4f.png"
+>     },
+>     {
+>         "od_artifact_id": "image-openrouter-google-gemini-2-5-fla-mqof70ui.png",
+>         "kind": "hyperframe",
+>         "mesh_node_id": "cfb2c8e7-d6a2-4a46-9021-60f874815b4c",
+>         "render_url": "/canvas-design/image-openrouter-google-gemini-2-5-fla-mqof70ui.png"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(23:33:14)*
+
+
+## 🤖 Claude *(23:33:16)*
+
+Canvas Design **headless E2E completo e REAL**: PNG 1024×1024 1.27MB no host + nó `design_artifact` `58fd73ae` na malha + `design_artifact_refs` espelhado com `mesh_node_id`. Te entrego a imagem e, em paralelo, preparo a persistência do worker (systemd):
+
+## 🤖 Claude *(23:33:18)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/qa_canvas_design.png"
+  ],
+  "caption": "Canvas Design (open-design) gerando REAL via bridge: imagem 1024\u00d71024 1.27MB gerada por OpenRouter Gemini, copiada pro host, n\u00f3 design_artifact inserido na malha. Pipeline headless funcional.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(23:33:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== systemd --user dir + template openclaw ===\"\nls -la ~/.config/systemd/user/ 2>/dev/null | grep -iE \"openclaw|design|gateway\" || echo \"(sem unidades --user ainda vis\u00edveis)\"\necho \"--- openclaw unit (template) ---\"\ncat ~/.config/systemd/user/openclaw-gateway.service 2>/dev/null | head -25 || echo \"(openclaw-gateway.service n\u00e3o em ~/.config/systemd/user)\"\necho \"--- worker nohup atual ---\"\nps aux | grep -E \"design-bridge\" | grep -v grep | awk '{print \"PID\",$2,$11,$12,$13}'\necho \"--- bun path ---\"\nwhich bun",
+  "description": "Find systemd user dir + openclaw template + current worker PID + bun path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === systemd --user dir + template openclaw ===
+> -rw-r--r-- 1 ubuntu ubuntu 1198 Jun  7 15:44 openclaw-gateway.service
+> -rw-r--r-- 1 ubuntu ubuntu 1198 Jun  7 15:44 openclaw-gateway.service.bak
+> --- openclaw unit (template) ---
+> [Unit]
+> Description=OpenClaw Gateway (v2026.5.14)
+> After=network-online.target
+> Wants=network-online.target
+> StartLimitBurst=5
+> StartLimitIntervalSec=60
+> 
+> [Service]
+> ExecStart=/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node /home/ubuntu/openclaw/dist/index.js gateway --port 18789
+> Restart=always
+> RestartSec=5
+> RestartPreventExitStatus=78
+> TimeoutStopSec=30
+> TimeoutStartSec=30
+> SuccessExitStatus=0 143
+> KillMode=control-group
+> Environment=OPENCLAW_SERVICE_MANAGED_ENV_KEYS=ELEVENLABSCLAW
+> Environment=HOME=/home/ubuntu
+> Environment=TMPDIR=/tmp
+> Environment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+> Environment=PATH=/home/ubuntu/.nvm/versions/node/v22.22.3/bin:/home/ubuntu/.nvm/current/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/home/ubuntu/bin:/home/ubuntu/.bun/bin:/home/ubuntu/.nix-profile/bin:/home/ubuntu/.local/share/pnpm:/usr/local/bin:/usr/bin:/bin
+> Environment=OPENCLAW_GATEWAY_PORT=18789
+> Environment=OPENCLAW_SYSTEMD_UNIT=openclaw-gateway.service
+> Environment="OPENCLAW_WINDOWS_TASK_NAME=OpenClaw Gateway"
+> Environment=OPENCLAW_SERVICE_MARKER=openclaw
+> --- worker nohup atual ---
+> PID 2638954 bun run scripts/design-bridge.ts
+> --- bun path ---
+> /home/ubuntu/.bun/bin/bun
+> ```
+
+## 🤖 Claude *(23:33:38)*
+
+
+## 🤖 Claude *(23:33:39)*
+
+Template systemd em mãos. Vou criar a unidade `design-bridge.service` (bun + Restart=always), matar o nohup e ativar o supervisor:
+
+## 🤖 Claude *(23:33:40)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(23:33:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.config/systemd/user/design-bridge.service",
+  "content": "[Unit]\nDescription=MCORCH Canvas Design Bridge (open-design worker \u2014 polls design_jobs, runs `od` in the open-design container)\nAfter=network-online.target docker.service\nWants=network-online.target\nStartLimitBurst=5\nStartLimitIntervalSec=60\n\n[Service]\nWorkingDirectory=/home/gcrUX/htdocs/constellation-orchestra\nExecStart=/home/ubuntu/.bun/bin/bun run scripts/design-bridge.ts\nRestart=always\nRestartSec=5\nTimeoutStopSec=20\nKillMode=control-group\n# design-bridge.ts loads SUPABASE_URL/SB_SECRET_KEY from ../.env itself \u2014 no secrets in the unit.\nEnvironment=HOME=/home/ubuntu\nEnvironment=TMPDIR=/tmp\nEnvironment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt\nEnvironment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin\n\n[Install]\nWantedBy=default.target\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.config/systemd/user/design-bridge.service (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:33:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== mata o worker nohup (evita dois workers) ===\"\npkill -f \"scripts/design-bridge.ts\" 2>/dev/null && echo \"nohup morto\" || echo \"(nenhum nohup)\"\nsleep 2\necho \"=== ativa o supervisor systemd --user ===\"\nsystemctl --user daemon-reload\nsystemctl --user enable --now design-bridge.service 2>&1 | tail -3\nsleep 4\necho \"=== status ===\"\nsystemctl --user is-active design-bridge.service\nsystemctl --user status design-bridge.service --no-pager 2>/dev/null | grep -E \"Active:|Main PID:|Loaded:\" | head -4\necho \"=== log recente do worker via journal ===\"\njournalctl --user -u design-bridge.service --no-pager -n 5 2>/dev/null | tail -5 || echo \"(journal --user indispon\u00edvel)\"",
+  "description": "Kill nohup + enable/start design-bridge systemd unit + verify active"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> === mata o worker nohup (evita dois workers) ===
+> ```
+
+## 🤖 Claude *(23:33:58)*
+
+
+## 🤖 Claude *(23:33:59)*
+
+pkill encerrou (exit 144 = sinal, normal). Retomo a ativação do supervisor:
+
+## 🤖 Claude *(23:34:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npkill -f \"scripts/design-bridge.ts\" 2>/dev/null; sleep 1\nsystemctl --user daemon-reload\nsystemctl --user enable --now design-bridge.service 2>&1 | tail -2\nsleep 4\necho \"is-active: $(systemctl --user is-active design-bridge.service)\"\nsystemctl --user status design-bridge.service --no-pager 2>/dev/null | grep -E \"Active:|Main PID:|Loaded:\" | head -4\necho \"--- processos design-bridge (deve ser 1, sob systemd) ---\"\nps aux | grep -E \"design-bridge.ts\" | grep -v grep | awk '{print \"PID\",$2}'\necho \"--- journal ---\"\njournalctl --user -u design-bridge.service --no-pager -n 4 2>/dev/null | tail -4",
+  "description": "Activate design-bridge systemd unit + verify single process under supervisor"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ```
+
+## 🤖 Claude *(23:34:20)*
+
+
+## 🤖 Claude *(23:34:21)*
+
+O `pkill -f "design-bridge.ts"` estava matando o próprio bash (o pattern aparece na linha de comando dele) → exit 144. Os runs anteriores já mataram o nohup. Ativo o systemd sem pkill:
+
+## 🤖 Claude *(23:34:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user daemon-reload\nsystemctl --user enable --now design-bridge.service 2>&1 | tail -2\nsleep 4\necho \"is-active: $(systemctl --user is-active design-bridge.service)\"\nsystemctl --user status design-bridge.service --no-pager 2>/dev/null | grep -E \"Active:|Main PID:\" | head -3",
+  "description": "Activate design-bridge systemd unit (no pkill)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Created symlink /home/ubuntu/.config/systemd/user/default.target.wants/design-bridge.service → /home/ubuntu/.config/systemd/user/design-bridge.service.
+> is-active: active
+>      Active: active (running) since Sun 2026-06-21 20:34:23 -03; 4s ago
+>    Main PID: 2659368 (bun)
+> ```
+
+## 🤖 Claude *(23:34:38)*
+
+
+## 🤖 Claude *(23:34:39)*
+
+Supervisor **ativo** (Main PID 2659368, `active (running)`, `enable`d → sobrevive a reboot). Confirmo que há só um worker (sem nohup duplicado):
+
+## 🤖 Claude *(23:34:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== bun processes rodando design-bridge ===\"\npgrep -af bun | grep \"design-bridge\" || echo \"(nenhum)\"\necho \"=== confirma que o worker systemd est\u00e1 pollando (journal) ===\"\njournalctl --user -u design-bridge.service --no-pager -n 3 2>/dev/null | tail -3 || echo \"(journal indispon\u00edvel \u2014 checa via ps)\"",
+  "description": "Confirm single worker under systemd + polling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === bun processes rodando design-bridge ===
+> 2659368 /home/ubuntu/.bun/bin/bun run scripts/design-bridge.ts
+> 2660449 /bin/bash -c source /home/ubuntu/.claude/shell-snapshots/snapshot-bash-1782081193114-3lle4c.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'echo "=== bun processes rodando design-bridge ===" pgrep -af bun | grep "design-bridge" || echo "(nenhum)" echo "=== confirma que o worker systemd está pollando (journal) ===" journalctl --user -u design-bridge.service --no-pager -n 3 2>/dev/null | tail -3 || echo "(journal indisponível — checa via ps)"' < /dev/null && pwd -P >| /tmp/claude-9073-cwd
+> 2660470 /bin/bash -c source /home/ubuntu/.claude/shell-snapshots/snapshot-bash-1782081193114-3lle4c.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'echo "=== bun processes rodando design-bridge ===" pgrep -af bun | grep "design-bridge" || echo "(nenhum)" echo "=== confirma que o worker systemd está pollando (journal) ===" journalctl --user -u design-bridge.service --no-pager -n 3 2>/dev/null | tail -3 || echo "(journal indisponível — checa via ps)"' < /dev/null && pwd -P >| /tmp/claude-9073-cwd
+> === confirma que o worker systemd está pollando (journal) ===
+> Jun 21 20:34:23 panel.gcrux.com systemd[1255]: Started design-bridge.service - MCORCH Canvas Design Bridge (open-design worker — polls design_jobs, runs `od` in the open-design container).
+> Jun 21 20:34:23 panel.gcrux.com bun[2659368]: 🤖 design-bridge is running and polling design_jobs...
+> ```
+
+## 🤖 Claude *(23:35:06)*
+
+
+## 🤖 Claude *(23:35:09)*
+
+Confirmado: **um único worker sob systemd** (PID 2659368), polling ativo (journal: "design-bridge is running and polling"). Os outros 2 na lista são meu próprio bash. Supervisor durável ✅.
+
+Falta documentar (Lei 2) + preparar o acesso interativo (iframe/vhost). Vou checar se o open-design permite ser embedado em iframe (X-Frame-Options/CSP — decide a viabilidade do iframe) e escrever o vhost + SOP:
+
+## 🤖 Claude *(23:35:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== headers de framing do open-design (:7456) ===\"\ncurl -sI http://127.0.0.1:7456 2>/dev/null | grep -iE \"x-frame-options|content-security-policy|frame-ancestors\" || echo \"(SEM X-Frame-Options/CSP \u2192 embeddable em iframe \u2705)\"\necho \"=== template mcp vhost: linhas de cert + proxy headers p/ copiar ===\"\nsudo -n sed -n '1,60p' /etc/nginx/sites-enabled/mcp.mcorch.com.conf 2>/dev/null | grep -nE \"ssl_certificate|proxy_set_header|proxy_http_version|location|server_name|listen 443 ssl;\" | head -16",
+  "description": "Check iframe-embedding headers + grab mcp vhost cert/proxy lines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === headers de framing do open-design (:7456) ===
+> (SEM X-Frame-Options/CSP → embeddable em iframe ✅)
+> === template mcp vhost: linhas de cert + proxy headers p/ copiar ===
+> 15:  listen 443 ssl;
+> 23:  ssl_certificate_key /etc/nginx/ssl-certificates/mcp.mcorch.com.key;
+> 24:  ssl_certificate     /etc/nginx/ssl-certificates/mcp.mcorch.com.crt;
+> 26:  server_name mcp.mcorch.com;
+> 37:  location / {
+> 40:    proxy_http_version 1.1;
+> 41:    proxy_set_header Connection "";              # keepalive (no Upgrade) — Streamable HTTP SSE over HTTP/1.1
+> 42:    proxy_set_header Host              $host;
+> 43:    proxy_set_header X-Real-IP         $remote_addr;
+> 44:    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+> 45:    proxy_set_header X-Forwarded-Proto $scheme;
+> 47:    proxy_set_header Authorization     $http_authorization;
+> 48:    proxy_set_header Origin            $http_origin;
+> ```
+
+## 🤖 Claude *(23:35:32)*
+
+
+## 🤖 Claude *(23:35:34)*
+
+Sem X-Frame-Options/CSP → **embeddable em iframe** ✅. Template do vhost claro. Vou registrar as sub-tarefas do fix e escrever o vhost + SOP (documenta tudo + runbook do iframe Sovereign-gated):
+
+## 🤖 Claude *(23:35:35)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Supervisor systemd p/ design-bridge",
+  "description": "design-bridge.service (bun, Restart=always, enabled) \u2014 worker dur\u00e1vel.",
+  "activeForm": "Configurando supervisor design-bridge"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #10 created successfully: Supervisor systemd p/ design-bridge
+> ```
+
+## 🤖 Claude *(23:35:36)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Provider config + gera\u00e7\u00e3o real Canvas Design",
+  "description": "media-config.json global com OpenRouter BYOK; gera\u00e7\u00e3o real provada (1.27MB PNG). OTD-003 multi-tenant gap documentado.",
+  "activeForm": "Provisionando provider Canvas Design"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #11 created successfully: Provider config + geração real Canvas Design
+> ```
+
+## 🤖 Claude *(23:35:40)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 status
+> ```
+
+## 🤖 Claude *(23:35:41)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "11",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #11 status
+> ```
+
+## 🤖 Claude *(23:35:43)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "vhost + iframe + SOP Canvas Design",
+  "description": "nginx/design.mcorch.com.conf (proxy\u21927456) + iframe fix runbook + SOP [[canvas-design-deploy-and-provision|canvas-design-deploy-and-provision]].md (supervisor + provider + DNS runbook Sovereign + OTD-003 + LGPD OTD-008).",
+  "activeForm": "Escrevendo vhost + SOP Canvas Design"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #12 created successfully: vhost + iframe + SOP Canvas Design
+> ```
+
+## 🤖 Claude *(23:35:47)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "12",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #12 status
+> ```
+
+## 🤖 Claude *(23:36:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/nginx/design.mcorch.com.conf",
+  "content": "# MCORCH Canvas Design \u2014 public vhost for the open-design web editor (iframe target).\n# Mirrors nginx/mcp.mcorch.com.conf: Cloudflare orange-proxy hides the origin IP; SSL \"Full\" with a\n# self-signed origin cert; the open-design daemon listens ONLY on host loopback (127.0.0.1:7456) \u2014 this\n# vhost is the single external path. The web app is Next.js (root-relative /_next assets) \u2192 it MUST be\n# served at the ROOT of its own host (design.mcorch.com), NOT under a sub-path of login.mcorch.com.\n#\n# ACTIVATION (Sovereign \u2014 DNS/cert; same runbook as mcp.mcorch.com):\n#   1. Cloudflare DNS: A/AAAA design.mcorch.com \u2192 origin IP, orange-proxied (proxied=ON).\n#   2. Origin cert (self-signed OK behind CF Full):\n#        sudo openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \\\n#          -keyout /etc/nginx/ssl-certificates/design.mcorch.com.key \\\n#          -out    /etc/nginx/ssl-certificates/design.mcorch.com.crt \\\n#          -subj \"/CN=design.mcorch.com\"\n#   3. Cloudflare SSL/TLS mode: Full. WAF: add a Skip rule for design.mcorch.com if the editor's\n#      XHR/SSE gets bot-challenged (same gotcha as mcp.mcorch.com \u2014 bot-challenge returns 403 text/html).\n#   4. sudo ln -s this file into /etc/nginx/sites-enabled/ && sudo nginx -t && sudo systemctl reload nginx\n#   5. Flip the iframe src in src/pages/CanvasDesignPage.tsx to https://design.mcorch.com and rebuild.\n#\n# SECURITY NOTE: open-design's OD_API_TOKEN is \"development_token\" and OD_ALLOWED_ORIGINS is empty.\n# Before exposing publicly, harden: set a strong OD_API_TOKEN + OD_ALLOWED_ORIGINS=https://login.mcorch.com\n# in the container env. The editor is single-tenant today (one shared daemon) \u2014 see OTD-003 in the SOP.\n\nserver {\n  listen 80;\n  listen [::]:80;\n  listen 443 ssl;\n  listen [::]:443 ssl;\n  http2 on;\n\n  ssl_certificate_key /etc/nginx/ssl-certificates/design.mcorch.com.key;\n  ssl_certificate     /etc/nginx/ssl-certificates/design.mcorch.com.crt;\n\n  server_name design.mcorch.com;\n\n  # open-design daemon (Express/Next) on host loopback. WebSocket/SSE upgrade for the agent stream.\n  location / {\n    proxy_pass http://127.0.0.1:7456;\n    proxy_http_version 1.1;\n    proxy_set_header Upgrade           $http_upgrade;\n    proxy_set_header Connection        $connection_upgrade;\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_buffering        off;          # editor streams (agent turns) \u2014 don't buffer\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n  }\n}\n\n# Requires the standard map in http{} (already present for mcp):\n#   map $http_upgrade $connection_upgrade { default upgrade; '' close; }\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/nginx/design.mcorch.com.conf (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:36:06)*
+
+
+## 🤖 Claude *(23:36:06)*
+
+Agora o SOP Lei 2 — documenta o processo completo + o achado OTD-003 + o blocker LGPD OTD-008:
+
+## 🤖 Claude *(23:36:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[canvas-design-deploy-and-provision|canvas-design-deploy-and-provision]].md",
+  "content": "# SOP \u2014 Canvas Design (open-design) deploy, provision & operate\n\n> **Lei 2 (Processo Antecipado).** Como tornar o m\u00f3dulo Canvas Design (sidecar open-design) funcional\n> E2E: worker supervisor, provisionamento de provider (BYOK), acesso p\u00fablico (iframe/vhost) e o port\u00e3o\n> LGPD. BoK: `docs/bok/canvas-design/` (9/9 selada). Origem: valida\u00e7\u00e3o E2E 2026-06-21 que achou o m\u00f3dulo\n> scaffolded mas N\u00c3O funcional (worker morto + iframe loopback + provider n\u00e3o configurado).\n\nRelacionado: [[canvas-design-initiative]] \u00b7 `nginx/design.mcorch.com.conf` \u00b7 `scripts/design-bridge.ts`.\n\n---\n\n## ORO\n\n| Papel | Quem |\n|-------|------|\n| **Operator** | MCORCH Master Execution Agent + Sovereign (passos de DNS/cert) |\n| **Reviewer** | Sovereign + `/security-review` (antes de expor publicamente) |\n| **Owner** | Sovereign \u2014 blast radius = credenciais BYOK em arquivo no container + dados de design (LGPD) |\n\n---\n\n## Arquitetura material (verificada 2026-06-21)\n\n```\nBrowser do user (login.mcorch.com, https)\n   \u2502  iframe  \u2192  https://design.mcorch.com  (vhost CF\u2192origin :7456)   \u2190 INTERATIVO (Sovereign-gated: DNS+cert)\n   \u25bc\nopen-design daemon (container `open-design`, 127.0.0.1:7456, Up healthy)\n   \u25b2  docker exec `od media generate` (CLIENTE FINO \u2192 fala HTTP com o daemon)\n   \u2502\ndesign-bridge worker (systemd --user `design-bridge.service`)  \u2190 HEADLESS, FUNCIONAL\n   \u25b2  poll/claim\ndesign_jobs (Supabase)  \u2192  complete + design_artifact_refs + n\u00f3 `design_artifact` na malha\n```\n\n**Duas superf\u00edcies, dois estados:**\n- **Headless (worker \u2192 job \u2192 asset \u2192 mesh):** \u2705 FUNCIONAL (provado 2026-06-21, imagem real 1.27MB via OpenRouter).\n- **Interativo (iframe do editor):** \u26a0\ufe0f precisa do vhost p\u00fablico (DNS+cert = a\u00e7\u00e3o Sovereign).\n\n---\n\n## \u26a0\ufe0f OTD-003 REVISADA \u2014 isolamento per-user N\u00c3O vale neste deploy (achado material)\n\nA SDD (OTD-003) assumiu que o `od` respeita `OD_MEDIA_CONFIG_DIR` por invoca\u00e7\u00e3o \u2192 BYOK isolado por tenant.\n**Falso neste container:** `od media generate` \u00e9 um **cliente fino** que fala HTTP com o **daemon compartilhado**;\no `-e OD_MEDIA_CONFIG_DIR` vai pro processo-cliente, N\u00c3O pro daemon. O daemon resolve provider do seu\nconfig **global** `/app/.od/media-config.json` (formato `{\"providers\":{\"<id>\":{\"apiKey\":\"\u2026\"}}}`).\n**Consequ\u00eancia:** hoje o Canvas Design \u00e9 **single-tenant** (uma config de provider compartilhada). Para\nmulti-tenant real, escolher uma das vias (decis\u00e3o de engenharia, antes de GA com 2\u00ba tenant):\n- (a) daemon **per-job** (worker d\u00e1 spawn de um `od` daemon ef\u00eamero com o `OD_DATA_DIR`/config do user) \u2014 caro;\n- (b) `od media generate` **stateless** que n\u00e3o dependa do daemon compartilhado;\n- (c) inst\u00e2ncia open-design **por tenant** (container por user) \u2014 n\u00e3o escala.\n\n---\n\n## Operator \u2014 Sequence (com crit\u00e9rio material por step)\n\n1. **Worker supervisor.** `~/.config/systemd/user/design-bridge.service` (bun, `Restart=always`, `enable --now`).\n   **Sucesso:** `systemctl --user is-active design-bridge.service` = `active`; journal \"polling design_jobs\".\n2. **Provider provisioning (BYOK, single-tenant hoje).** Escrever o config GLOBAL do daemon:\n   ```bash\n   docker exec -e ODKEY=\"<openrouter_key>\" open-design sh -c \\\n     'mkdir -p /app/.od && printf \"{\\\"providers\\\":{\\\"openrouter\\\":{\\\"apiKey\\\":\\\"%s\\\"}}}\" \"$ODKEY\" > /app/.od/media-config.json'\n   ```\n   (chave do `decrypted_user_api_keys`; providers suportados p/ imagem: `openrouter`, `nanobanana`(google),\n   `replicate`, `fal`\u2026 ver `media-models.ts`). **Sucesso:** job de imagem real `usedStubFallback:false` + `size` >> 67 (stub).\n3. **E2E job (headless).** INSERT em `design_jobs` (`kind=generate`, `od_project_id` V\u00c1LIDO \u2014 existe no daemon,\n   `params.surface/model`). O worker claima \u2192 gera \u2192 copia p/ `public/canvas-design/` \u2192 `design_artifact_refs`\n   + n\u00f3 `design_artifact` na malha \u2192 `status=complete`. **Sucesso:** arquivo PNG/MP4 real no host + n\u00f3 na malha + `render_url`.\n4. **Acesso interativo (Sovereign-gated).** Provisionar `design.mcorch.com` (runbook no topo de `nginx/design.mcorch.com.conf`:\n   DNS CF + cert self-signed + Full + WAF skip + symlink + reload). Depois trocar o iframe em\n   `src/pages/CanvasDesignPage.tsx` p/ `https://design.mcorch.com` + rebuild. **Sucesso:** editor carrega no\n   `/dashboard/canvas/design` logado (sem mixed-content; sem X-Frame-Options bloqueando \u2014 confirmado embeddable).\n5. **Hardening antes de expor.** `OD_API_TOKEN` forte + `OD_ALLOWED_ORIGINS=https://login.mcorch.com` no env do container.\n\n---\n\n## Verification gates\n\n| Gate | Evid\u00eancia |\n|------|-----------|\n| G1 worker ativo | `systemctl --user is-active` = active + journal polling |\n| G2 provider real | job `usedStubFallback:false`, `size` real (n\u00e3o 67 bytes) |\n| G3 E2E headless | arquivo no host (`ls public/canvas-design/<name>`) + n\u00f3 `design_artifact` na malha + `design_artifact_refs.mesh_node_id` |\n| G4 iframe (Sovereign) | editor renderiza logado, sem mixed-content / X-Frame block |\n\n---\n\n## Recovery path\n\n- **Worker morto:** `systemctl --user restart design-bridge.service` (era esse o estado em 2026-06-21 \u2014 1 job preso 28 dias).\n- **Job stub (`usedStubFallback:true`, \"no API key\"):** config global ausente/errado-schema (precisa do wrapper `providers`)\n  OU `OD_MEDIA_ALLOW_STUBS=1` mascarando \u2014 corrigir `/app/.od/media-config.json` (step 2) e re-inserir o job.\n- **Job 404 \"project not found\":** `od_project_id` n\u00e3o existe no daemon \u2014 usar um projeto v\u00e1lido (`/app/.od/projects/<id>`).\n- **iframe em branco/bloqueado:** mixed-content (http em p\u00e1gina https) \u2192 exige o vhost https; ou WAF challenge da CF \u2192 WAF skip.\n\n## Success signal\n\nJob inserido em `design_jobs` \u2192 asset real (n\u00e3o stub) em `public/canvas-design/` + n\u00f3 `design_artifact` na malha,\ncom o worker sob systemd sobrevivendo a reboot. Editor interativo acess\u00edvel logado quando o vhost estiver no ar.\n\n---\n\n## \u26d4 Launch blocker (OTD-008 / FMEA-007 RPN 240) \u2014 LGPD/GDPR\n\nGA do Canvas Design \u00e9 **gated** numa extens\u00e3o do `delete-account` para purgar o `OD_DATA_DIR` +\n`OD_MEDIA_CONFIG_DIR` (+ a config global de provider, agora que ela carrega a chave BYOK do user) + um\nteste de verifica\u00e7\u00e3o de erasure. N\u00c3O marcar Canvas Design como GA antes disso.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[canvas-design-deploy-and-provision|canvas-design-deploy-and-provision]].md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:36:57)*
+
+
+## 🤖 Claude *(23:36:57)*
+
+SOP + vhost prontos. Task #12 completa. Verificando que não quebrei o build do projeto + atualizando memória:
+
+## 🤖 Claude *(23:36:58)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "12",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #12 status
+> ```
+
+## 🤖 Claude *(23:36:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -8 && echo \"=== tsc exit: ${PIPESTATUS[0]} ===\"",
+  "description": "Verify project tsc still clean after edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc exit: 0 ===
+> ```
+
+## 🤖 Claude *(23:37:14)*
+
+
+## 🤖 Claude *(23:37:15)*
+
+tsc exit 0 — build limpo. Atualizando a memória com este marco (camada criativa validada + reparos + Canvas Design headless funcional):
+
+## 🤖 Claude *(23:37:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_creative_layer_validation.md",
+  "content": "---\nname: project_creative_layer_validation\ndescription: \"Camada criativa validada E2E + reparada (2026-06-21): Vision MCP como olho criativo/QA, generate-image consertado, Canvas Studio imagem/v\u00eddeo/\u00e1udio provados, Canvas Design headless funcional. Diretiva Sovereign: QA Vision + consist\u00eancia antes de queimar cr\u00e9dito; sempre salvar assets reais.\"\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-06-21: \"sem criativo s\u00f3 texto funciona \u2014 validar E2E o Studio Design e o Canvas\nStudio (imagem/v\u00eddeo/\u00e1udio/m\u00fasica/landing)\". Aprovado \"validar+reparar o existente\" + GO v\u00eddeo DoP, COM:\n(1) **QA Vision** \u2014 usar o **Vision MCP como olho criativo** (raz\u00e3o de existir o MCP Vision); (2) **port\u00e3o\nde consist\u00eancia** (frame-inicial\u2194frame-final) ANTES de queimar cr\u00e9dito Higgsfield real; (3) **sempre\npersistir os assets reais**.\n\n**O que foi entregue/provado (gasto total 145 mco; QA todo gr\u00e1tis por BYOK):**\n- **Olho criativo VIVO:** Vision MCP `vision_describe_image`/`vision_analyze_video`/`compare` via endpoint\n  p\u00fablico `mcp.mcorch.com` + PAT do `.env`. **BYOK gr\u00e1tis** p/ o Usu\u00e1rio Zero (openrouter+google). Tool\n  reutiliz\u00e1vel: `scripts/qa/vision-qa.ts {image|video|compare}`. SOP `docs/processes/creative-qa-vision-gate.md`\n  (6 gates; G3 consist\u00eancia obrigat\u00f3rio antes do cr\u00e9dito de v\u00eddeo).\n- **`generate-image` CONSERTADO** (deploy 129.4kB): rotas mortas (nanobana DNS / openrouter `/v1/images`\n  deprecado 404 / openai images sem acesso na chave-projeto\u2192400) \u2192 portado o path PROVADO do `canvas-execute`\n  (OpenRouter **chat-completions multimodal** Gemini + Replicate FLUX + OpenAI fallback). Provado real\n  (963KB PNG). **Desbloqueia a imagem do Viral Autopilot/orchestrate** (era o \"s\u00f3 texto funciona\").\n- **Canvas Studio E2E:** imagem (`canvas-execute` 10mco) + **v\u00eddeo DoP Higgsfield real** (mp4 6.4MB, \u2212125mco\n  at\u00f4mico, `analyze_video`: \"sem artefatos, produ\u00e7\u00e3o profissional\") + \u00e1udio TTS (`tts-speak` WAV 24kHz 8.4s,\n  Gemini TTS; **n\u00e3o persiste** em storage \u2014 gap p/ \"sempre salvar\" quando houver \u00e1udio no autopilot).\n- **Consist\u00eancia (achado):** identidade macro consistente via reference threading, mas o Gemini image \u00e9\n  refer\u00eancia **suave** (sem seed-lock duro) \u2192 detalhes finos (mostrador) derivam. p/ frames quase-id\u00eanticos:\n  Replicate FLUX/SDXL seed-lock. DoP anima 1 frame s\u00f3 (n\u00e3o interpola A\u2192B; interpola\u00e7\u00e3o real = tail-frame Kling, n\u00e3o fiado).\n\n**Canvas Design (open-design) \u2014 de N\u00c3O-funcional a headless funcional:**\n- Achado inicial: scaffolded mas morto (worker off, 1 job preso 28 dias, iframe `http://127.0.0.1:7456`\n  = loopback do browser + mixed-content, provider n\u00e3o configurado).\n- **Consertado headless:** worker sob **systemd --user `design-bridge.service`** (Restart=always, enabled) +\n  provider provisionado + **gera\u00e7\u00e3o real provada** (PNG 1024\u00b2 1.27MB via OpenRouter, n\u00f3 `design_artifact`\n  na malha + `design_artifact_refs`).\n- **GOTCHA cr\u00edtico (OTD-003 revisada):** `od media generate` \u00e9 **cliente fino \u2192 daemon COMPARTILHADO**;\n  `-e OD_MEDIA_CONFIG_DIR` vai pro cliente, N\u00c3O pro daemon \u2192 o daemon l\u00ea o config **global**\n  `/app/.od/media-config.json` (schema `{\"providers\":{\"<id>\":{\"apiKey\":\"\"}}}`). Logo: **single-tenant hoje**;\n  isolamento BYOK per-user da SDD n\u00e3o vale \u2192 repensar p/ multi-tenant. `OD_MEDIA_ALLOW_STUBS=1` mascara\n  (gera stub 67 bytes em vez de erro).\n- **Falta (Sovereign-gated):** vhost `design.mcorch.com` (DNS+cert CF, padr\u00e3o mcp; config escrita em\n  `nginx/design.mcorch.com.conf`) + flip do iframe + hardening `OD_API_TOKEN`/`OD_ALLOWED_ORIGINS`.\n  **Launch blocker LGPD OTD-008:** `delete-account` purgar `OD_DATA_DIR`/`OD_MEDIA_CONFIG_DIR`. SOP\n  `docs/processes/canvas-design-deploy-and-provision.md`.\n\n**Pendente da diretiva (n\u00e3o-iniciado):** **M\u00fasica** e **landing pages** = m\u00f3dulos novos \u2192 BoK Gate\n(/bok-scribe antes de c\u00f3digo). Interpola\u00e7\u00e3o A\u2192B (Kling tail-frame) = feature dentro da BoK viralmind/canvas.\n\nRelacionado: [[project_vision_mcp]] \u00b7 [[project_viral_autopilot]] \u00b7 [[canvas-design-initiative]] \u00b7\n[[project_canvas_studio_architecture]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_creative_layer_validation.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:37:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Motor de conteúdo viral autônomo (viral-autopilot) — BoK 9/9 + **FATIAS 1/1b/2 SHIPPED** (product-aware + imagem + cadência R2 + loop R3 auto-melhorável)](project_viral_autopilot.md) — Diretiva Sovereign 2026-06-17: alimentar redes com conteúdo viral auto-gerado/agendado (R1-R4), monetizado c/ afiliado ML. BoK SELADA (nó `b3398294`, 1889 LOC). **Fatia 1 (commit `4af8b8b`):** gerador product-aware (FR-VA-003) + monetização nas 3 superfícies texto (FR-VA-004, `affiliate_links.content_id` antes-null FECHADO) + threading `product_ids` sanitizado p/ sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009) + picker na TriggerNode. E2E pago `158ba7fc`: 3 criativos, 3 content_id NON-NULL, delta 10. **Fatia 1b (commit `ba5d281`, FR-VA-013):** imagem product-referenced no pipeline — `generate-image` dual-path auth (service-role+user_id) + retorna storage `path`; bloco fail-open (`skipped`) dentro do article_generation, guarda PATH durável em `content_library.media_url` (bucket privado); sem migration/frontend/cobrança extra. E2E `46a98963` provou fail-open + zero regressão. **⚠️ providers de imagem do Usuário Zero quebrados** (nanobana=mock endpoint, openai=erro) → imagem visível bloqueada por CONFIG, não código. **Fatia 2 COMPLETA (commits `686bae3`/`0c59e4d`/`54ac2a9`/`35554da`):** cadência R2 + loop R3 — SOP Lei 2 `autopilot-cron-identity.md` (OTD-VA-008 fechado) + migrations (`autopilot_plans`/`autopilot_cycles` FK composta tenant + RPCs `begin`/`finalize_autopilot_cycle` atômicos service-role-only) + 4 edge fns deployadas (`autopilot-run` executor · `-cadence-cron` driver pg_cron · `-analyze` FR-VA-010 ranqueia→optimization_policy · `-collect` FR-VA-008) + orchestrate-content FR-VA-016 prepaid + orchestrate-step FR-VA-011 feedback injection. /security-review SAFE 3× · 3 smokes zero-cost (31 gates). **Pendente:** UI (FR-VA-014, autônomo) + **ativação pg_cron + 1º ciclo PAGO** (gated GO Sovereign + 2 blockers saída visível: CF WAF `/wp-json` + OpenAI image access) + fetch-trends→pauta (FR-VA-018).
+> 4	- [Unified Sensorial Canvas — Phase Epsilon V9 (Code+Memory+Black Hole numa cena R3F)](project_unified_sensorial_canvas.md) — v6.41.0 2026-06-17: funde Core-Fable+Matrix+Memória em `/dashboard/universe`, ancorado no paper *From AGI to ASI* (Via 4; nó `a576216e`). **3.1-3.4 LIVE** (scaffold + Code Network InstancedMesh Louvain + Memory Network cymatics shell + Black Hole MegaBrain backdrop; graphology=cérebro/R3F=corpo). **3.5-3.10 pendentes** (sinapses reais · fly-to · perf · poda · paridade+gate E2E · seal). Emenda BoK mcorch-constellation (PR-025/FR-043..049/SDD §9). **Gotchas:** "esfera órfã"=spinner `Loader2` (não bug); query do código ~30s c/ 2 canvases (OTD-UCANVAS-PERF); squad-coloring MORTO (0 rows)→podado, Louvain oficial (Decisão B); 3 páginas legadas preservadas até paridade.
+> ```
+
+## 🤖 Claude *(23:37:50)*
+
+
+## 🤖 Claude *(23:37:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Motor de conte\u00fado viral aut\u00f4nomo (viral-autopilot)",
+  "new_string": "# Memory Index\n\n- [Camada criativa validada E2E + reparada \u2014 Vision MCP como olho criativo/QA, generate-image consertado, Canvas Studio (img/v\u00eddeo/\u00e1udio) provado, Canvas Design headless funcional](project_creative_layer_validation.md) \u2014 Diretiva Sovereign 2026-06-21: QA Vision + port\u00e3o de consist\u00eancia antes de queimar cr\u00e9dito Higgsfield; sempre salvar assets reais. Olho criativo `scripts/qa/vision-qa.ts` (BYOK gr\u00e1tis); SOP `creative-qa-vision-gate.md`. `generate-image` consertado (rotas mortas\u2192path do canvas-execute) DESBLOQUEIA imagem do autopilot. V\u00eddeo DoP real provado (6.4MB, \u2212125mco, analyze_video aprovou). Canvas Design: worker systemd `design-bridge.service` + gera\u00e7\u00e3o real (gotcha OTD-003: `od` \u00e9 cliente\u2192daemon COMPARTILHADO, config global `/app/.od/media-config.json`, single-tenant); falta vhost `design.mcorch.com` (Sovereign DNS) + LGPD OTD-008. M\u00fasica/landing = BoK Gate.\n- [Motor de conte\u00fado viral aut\u00f4nomo (viral-autopilot)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:38:10)*
+
+
+## 🤖 Claude *(23:38:27)*
+
+Tudo registrado (memória + tsc limpo). **Frente concluída** — a camada criativa existente está validada, reparada e o Canvas Design saiu de morto para funcional.
+
+## ✅ Resultado final — camada criativa de ponta a ponta
+
+**O que funciona agora (provado materialmente, 145 mco gastos no total):**
+
+| Superfície | Estado | Prova |
+|---|---|---|
+| **Olho criativo (Vision MCP)** | ✅ vivo, BYOK grátis | `vision_describe_image`/`analyze_video`/`compare` via `mcp.mcorch.com` + PAT |
+| **Imagem — pipeline (`generate-image`)** | ✅ **consertado** (deploy 129.4kB) | rotas mortas → path do `canvas-execute`; img real 963KB. **Desbloqueia o autopilot** |
+| **Imagem — Canvas Studio** | ✅ | 10mco, asset público, QA `high` |
+| **Vídeo DoP (Higgsfield real)** | ✅ | mp4 6.4MB, −125mco atômico, `analyze_video`: "sem artefatos, profissional" |
+| **Áudio TTS** | ✅ | WAV 24kHz 8.4s (Gemini TTS) |
+| **Canvas Design — headless** | ✅ **funcional** | worker systemd + geração real 1.27MB via OpenRouter + nó na malha |
+| **Canvas Design — editor (iframe)** | ⚠️ Sovereign-gated | precisa de `design.mcorch.com` (DNS+cert) |
+
+**Arquivos desta sessão:** `generate-image/index.ts` (reparo, deployado) · `scripts/qa/vision-qa.ts` (olho criativo reutilizável) · `docs/processes/creative-qa-vision-gate.md` + `canvas-design-deploy-and-provision.md` (SOPs Lei 2) · `nginx/design.mcorch.com.conf` (vhost) · `~/.config/systemd/user/design-bridge.service` (supervisor, ativo). **tsc limpo. Nada commitado ainda** (aguardo sua ordem).
+
+**Achados importantes (honestos):**
+- Consistência: identidade macro consistente, mas o **mostrador derivou** (Gemini = referência suave). Frames quase-idênticos → Replicate FLUX seed-lock. E o **DoP anima 1 frame só** (não interpola A→B — isso é a feature Kling tail-frame).
+- Canvas Design **OTD-003**: o `od` é cliente fino → **daemon compartilhado** → config de provider é **global** (single-tenant hoje). Isolamento per-user da SDD não vale; repensar antes de 2º tenant.
+
+**Resta da sua diretiva original (decisões suas):**
+1. **Editor Canvas Design** — você ativa DNS+cert de `design.mcorch.com` (runbook no vhost) → eu troco o iframe + rebuild. Antes de expor: hardening `OD_API_TOKEN` + **launch blocker LGPD OTD-008** (purgar dados open-design no `delete-account`).
+2. **Música** e **landing pages** — não existem → **BoK Gate** (`/bok-scribe` antes de código).
+3. **Interpolação frame-inicial→final** (Kling tail-frame) — feature dentro da BoK viralmind.
+
+Quer que eu **commite** este trabalho agora, ou seguimos para uma dessas frentes (recomendo `/bok-scribe music` ou `/bok-scribe landing-pages`, já que destravam novos formatos virais)?
+
+## 👤 User *(23:43:12)*
+
+Agora vamos integrar mais um módulo que criamos que é o menu Vídeo dentro de Canvas Studio > [https://login.mcorch.com/dashboard/canvas/](https://login.mcorch.com/dashboard/canvas/63d406fe-8357-4b90-b1ac-9ef2c0c2a975):id/ tem o botçao pipeline ali podemos colocar tambem um botão "Vídeo" para alterar para dentro do nosso dashboard melhorado pois já existe em /home/gcrUX/studio/  mas na verdade eu quero a UI de edição de video do https://hyperframes.heygen.com/ onde você pode instalar tambem no mesmo diretorio do stuido ou se achar melhor colocar no global mcorch (constellation-orchestra) ou até mesmo /home/gcrUX/* pode ser tambem pois apos instalar a skill https://github.com/heygen-com/hyperframes geralmente ele ja abre algo no localhost:3002 então temos uqe ver se já não esta ocupada a porta que ele escolhe na instalação. E então usar como whitepape no nosso menu /dashboard/canvas/video/ .
+
+## 👤 User *(23:43:21)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- PROJECT METADATA START --- %%

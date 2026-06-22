@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1126
-> * **Sessões do Claude**: 1084
+> * **Total de Sessões Registradas**: 1132
+> * **Sessões do Claude**: 1090
 > * **Sessões do Gemini**: 42
 
 ---
@@ -60,9 +60,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-21 - e7003282-79e7-4c59-a5db-de911c1e290a]]` - *2026-06-21*
 *   `[[2026-06-21 - bef09883-5be2-4ff8-964a-dfd5658da0ab]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-afde9e097e29f7e2b]]` - *2026-06-21*
+*   `[[2026-06-21 - agent-afa5cef47110d2e80]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-afa24cc27046fd877]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-aec5e9fa493c83892]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-aea26917b70fb91b7]]` - *2026-06-21*
@@ -70,9 +72,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-21 - agent-ae134389ce1eecd9f]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-adeced1106804b2ea]]` - *2026-06-21*
 *   `[[2026-06-21 - agent-ade4359293adb43ea]]` - *2026-06-21*
-*   `[[2026-06-21 - agent-add9ba5214d3a531f]]` - *2026-06-21*
-*   `[[2026-06-21 - agent-add2f4d9369d76330]]` - *2026-06-21*
-*   *... e mais 1089 sessões nessa categoria.*
+*   *... e mais 1095 sessões nessa categoria.*
 
 ---
 
@@ -263,9 +263,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-21 - e7003282-79e7-4c59-a5db-de911c1e290a]]` (ClaudeSessions)
 *   `[[2026-06-21 - bef09883-5be2-4ff8-964a-dfd5658da0ab]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-aff5e8023f9ddda4c]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-afde9e097e29f7e2b]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-afa5cef47110d2e80]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-afa24cc27046fd877]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-aec5e9fa493c83892]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-aea26917b70fb91b7]]` (ClaudeSessions)
@@ -277,6 +279,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-21 - agent-add2f4d9369d76330]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-ada8e4b720ec3f2b2]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-ad76b6f00024fe64d]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-ad5d562f845c54e8b]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-ac6bf77555777a8ab]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-abdd73099e7ec14c6]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-ab400a94cbe308930]]` (ClaudeSessions)
@@ -285,8 +288,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-21 - agent-a9eceaff0b3d4fecd]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a9cb9f6ee77213f3d]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a93d8634c03f9e8b6]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-a8b228fe12f560778]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a88866b510d06f02d]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a7ce4b3211ddf877b]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-a5ed7e2519af727f5]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a5abfeb6a685d3aad]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a56292f2932d4f90d]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a53d9862a05b30b01]]` (ClaudeSessions)
@@ -307,6 +312,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-21 - agent-a115ba57830880fc4]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a1028c58dcc11e2b9]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a0cc6785abf5b1989]]` (ClaudeSessions)
+*   `[[2026-06-21 - agent-a0ad2181ad5a65e03]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a06d5f5e3d8901057]]` (ClaudeSessions)
 *   `[[2026-06-21 - agent-a04a1e7d50c5ea281]]` (ClaudeSessions)
 *   `[[2026-06-21 - Validar studio design e canvas studio end-to-end]]` (ClaudeSessions)
