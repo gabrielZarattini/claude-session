@@ -9427,6 +9427,718 @@ Os **dois gates: QA PASS COM RESSALVAS + TL APPROVE** — ambos dizem **MERGE OK
 
 You've hit your session limit · resets 2pm (America/Sao_Paulo)
 
+## 👤 User *(17:19:20)*
+
+re-rodar a revisão de estratégia/design pra atacar os 3 HIGH; ou itens menores
+
+## 🤖 Claude *(17:19:45)*
+
+
+## 🤖 Claude *(17:19:48)*
+
+Nota: essa mensagem é uma repetição — a revisão de design **já rodou** (workflow `wyzo1zfr3`, 49 agentes) e os 2 HIGH reais já foram achados. Estou no meio de **atacá-los**: Fix 1 (withdraw) ✅ e Fix 2 (getAveragePrices) ✅ deployados; **Fix 3 (earnRedeemJob/H3) em andamento** — acabei de aplicar o (a) do gate. Não re-rodo a revisão; **continuo finalizando o Fix 3**.
+
+**(b)** Idempotência/dedup no `earnRedeemJob` (evita re-disparo/spam — pré-req do flip que o TL pediu):
+
+## 🤖 Claude *(17:19:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js",
+  "old_string": "let timer = null, running = false;",
+  "new_string": "let timer = null, running = false;\n// Dedup/idempot\u00eancia POR EPIS\u00d3DIO: um LD<base> s\u00f3 \u00e9 alertado (dry-run) / resgatado (live) UMA vez enquanto\n// permanecer com saldo; re-arma quando o saldo zera (resgate liquidou OU resgate manual) \u2192 um novo\n// auto-subscribe re-dispara 1\u00d7. Evita spam de alerta a cada ciclo e re-disparo de resgate enquanto liquida.\nconst flagged = new Set();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:20:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js",
+  "old_string": "        const bal = await exchange.balance();\n        if (!bal) return;\n\n        for (const [coin, b] of Object.entries(bal)) {\n            const under = redeemTargetUnder(coin);\n            if (!under) continue;\n            const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);\n            if (qty <= 0) continue;\n\n            if (!AUTO_REDEEM) { // DRY-RUN: s\u00f3 visibilidade, n\u00e3o move dinheiro.",
+  "new_string": "        const bal = await exchange.balance();\n        if (!bal) return;\n\n        const seen = new Set(); // LD<base> com saldo NESTE ciclo \u2014 p/ re-armar o `flagged` quando um deles zera.\n        for (const [coin, b] of Object.entries(bal)) {\n            const under = redeemTargetUnder(coin);\n            if (!under) continue;\n            const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);\n            if (qty <= 0) continue;\n            seen.add(coin);\n            if (flagged.has(coin)) continue; // j\u00e1 alertado/resgatado neste epis\u00f3dio \u2014 dedup + idempot\u00eancia\n            flagged.add(coin);\n\n            if (!AUTO_REDEEM) { // DRY-RUN: s\u00f3 visibilidade, n\u00e3o move dinheiro."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:20:12)*
+
+
+## 🤖 Claude *(17:20:13)*
+
+Agora a re-armagem (remover do `flagged` os que zeraram) ao fim do loop:
+
+## 🤖 Claude *(17:20:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js",
+  "old_string": "                await notify(settings, `\u26a0\ufe0f [EARN] Falha ao resgatar ${under} do Earn: ${e.message}. Resgate manual na Binance.`);\n            }\n        }\n    } catch (err) {\n        logger('system', `[earnRedeem] erro no ciclo: ${err.message}`);",
+  "new_string": "                await notify(settings, `\u26a0\ufe0f [EARN] Falha ao resgatar ${under} do Earn: ${e.message}. Resgate manual na Binance.`);\n            }\n        }\n        // Re-arma: LD<base> que SAIU do Earn (saldo zerou) volta a poder alertar/resgatar num pr\u00f3ximo epis\u00f3dio.\n        for (const c of [...flagged]) if (!seen.has(c)) flagged.delete(c);\n    } catch (err) {\n        logger('system', `[earnRedeem] erro no ciclo: ${err.message}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/backend/src/earnRedeemJob.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:20:21)*
+
+
+## 🤖 Claude *(17:20:22)*
+
+**(c)** Prova mecânica do "dry-run não move dinheiro" + dedup (`earnRedeemDryRun.test.js`, integration-style com fakes):
+
+## 🤖 Claude *(17:20:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/earnRedeemDryRun.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 PROVA MEC\u00c2NICA do \"DRY-RUN n\u00e3o move dinheiro\" do earnRedeemJob (+ dedup por epis\u00f3dio).\n * Com EARN_AUTO_REDEEM off (estado de ENTREGA), checkRedeem NUNCA pode chamar getFlexiblePositions/redeemFlexible.\n * Injeta fakes no require.cache e ESPIA. Errar aqui = job aut\u00f4nomo movendo dinheiro sem o owner ter ligado.\n */\nconst path = require('path');\nfunction inject(absPath, exportsObj) { const r = require.resolve(absPath); require.cache[r] = { id: r, filename: r, loaded: true, exports: exportsObj }; }\nconst SRC = path.resolve(__dirname, '../../src');\n\nlet BAL = {};\nlet moneyMoved = false; // vira true se QUALQUER chamada SAPI de movimento (positions/redeem) for feita\nlet alerts = [];\nconst fakeExchange = () => ({\n    balance: async () => BAL,\n    getFlexiblePositions: async () => { moneyMoved = true; return []; },\n    redeemFlexible: async () => { moneyMoved = true; return {}; },\n});\nconst fakeSettings = { getDefaultSettings: async () => ({ id: 1, useTestnet: false, accessKey: 'k', secretKey: 's', apiUrl: 'https://api.binance.com/api' }) };\nconst fakeTelegram = async (settings, msg) => { alerts.push(msg); };\nconst fakeLogger = () => { };\n\ndelete process.env.EARN_AUTO_REDEEM; // dry-run (default)\nprocess.env.EARN_REDEEM_ENABLED = 'true';\ninject(path.join(SRC, 'repositories', 'settingsRepository.js'), fakeSettings);\ninject(path.join(SRC, 'utils', 'logger.js'), fakeLogger);\ninject(path.join(SRC, 'utils', 'exchange.js'), fakeExchange);\ninject(path.join(SRC, 'utils', 'telegram.js'), fakeTelegram);\n\nconst job = require(path.join(SRC, 'earnRedeemJob.js'));\n\nlet passed = 0, failed = 0;\nfunction ok(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\n\n(async () => {\n    // (1) LDLTC preso em Earn + dry-run \u2192 ALERTA (visibilidade), mas ZERO movimento de dinheiro.\n    BAL = { LDLTC: { available: '0.9', onOrder: '0' } };\n    moneyMoved = false; alerts = [];\n    await job.checkRedeem();\n    ok('dry-run: NENHUM resgate/posi\u00e7\u00e3o chamado (zero movimento de dinheiro)', moneyMoved === false);\n    ok('dry-run: alertou o LDLTC preso (visibilidade)', alerts.length === 1 && /LTC/.test(alerts[0]));\n\n    // (2) 2\u00ba ciclo com o MESMO LDLTC \u2192 dedup por epis\u00f3dio: N\u00c3O re-alerta (anti-spam).\n    await job.checkRedeem();\n    ok('dry-run: 2\u00ba ciclo N\u00c3O re-alerta o mesmo LDLTC (dedup)', alerts.length === 1 && moneyMoved === false);\n\n    // (3) LDLTC SAIU do Earn (saldo zerou) e depois VOLTA \u2192 re-arma \u2192 alerta de novo (1\u00d7).\n    BAL = {};\n    await job.checkRedeem();                 // zerou \u2192 re-arma o flagged\n    BAL = { LDLTC: { available: '0.5', onOrder: '0' } };\n    await job.checkRedeem();                 // voltou \u2192 re-alerta 1\u00d7\n    ok('dry-run: re-arma ap\u00f3s zerar \u2192 re-alerta o LDLTC que voltou', alerts.length === 2);\n\n    // (4) LDUSDC (stable) e LDO (token real curto) \u2192 nem alerta nem move.\n    BAL = { LDUSDC: { available: '50', onOrder: '0' }, LDO: { available: '10', onOrder: '0' } };\n    moneyMoved = false; alerts = [];\n    await job.checkRedeem();\n    ok('stable LDUSDC + token LDO: ignorados (sem alerta, sem movimento)', moneyMoved === false && alerts.length === 0);\n\n    console.log(`\\nearnRedeemDryRun.test.js: ${passed} passed, ${failed} failed`);\n    process.exit(failed ? 1 : 0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrux-tradeux/tradeux/backend/scripts/sim/earnRedeemDryRun.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:20:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode --check src/earnRedeemJob.js && node --check src/utils/exchange.js && echo \"syntax OK\"\nAES_KEY=01234567890123456789012345678901 npm run test:sim 2>&1 | grep -E \"earnRedeem|sim suite\"",
+  "description": "Syntax + sim with new earn tests"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> syntax OK
+> === sim/earnRedeem.test.js ===
+> earnRedeem.test.js: 12 passed, 0 failed
+> === sim/earnRedeemDryRun.test.js ===
+> earnRedeemDryRun.test.js: 5 passed, 0 failed
+> sim suite: 10/10 arquivos OK.
+> ```
+
+## 🤖 Claude *(17:21:04)*
+
+
+## 🤖 Claude *(17:21:06)*
+
+10/10 — `earnRedeem` 12/12 + `earnRedeemDryRun` 5/5 (prova: dry-run move **zero dinheiro**, dedup funciona, re-arma ao zerar). Os 3 itens do gate aplicados e test-cobertos (a async, b dedup, c prova mecânica). Commito o **Fix 3**:
+
+## 🤖 Claude *(17:21:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/earn-msg.txt <<'EOF'\nfeat(earn): earnRedeemJob -- mantem fundos do Farm liquidos no spot (H3), GATED OFF (dry-run)\n\nFIX 3/3 da re-revisao de design (H3): a venda no-loss do Farm le so o spot; se um base for\nauto-subscrito no Simple Earn (LD<base>), a venda lanca \"There is no <base>\" e nao liquida.\nAuto-subscribe esta OFF hoje (risco latente). Fix = resgate proativo Earn->spot, ENTREGUE GATED\nOFF por decisao do dono: EARN_AUTO_REDEEM=false (default) = DRY-RUN (so detecta+alerta, ZERO\nmovimento de dinheiro). A \"Camada 2\" (sizing ler Earn) foi DESCARTADA: contraproducente (funds\nno Earn -> Binance rejeita a ordem no transiente); manter liquido no spot e a solucao certa.\n\n- earnRedeemJob.js (NOVO, mirror dailyCapJob): redeemTargetUnder PURO (LD<base> de base rastreada\n  nao-stable; LDO/stables/nao-rastreada -> null) + checkRedeem (dry-run|live) + dedup POR EPISODIO\n  (1 alerta/resgate por LD<base> ate o saldo zerar; re-arma ao zerar) + no-op em testnet, best-effort.\n- exchange.js: getFlexiblePositions + redeemFlexible (SAPI; redeemFlexible async -> o catch pega o\n  corpo do erro da Binance, ao contrario do try/catch sync inerte).\n- server.js: start no boot (dry-run). .env.example doc.\n- scripts/sim: earnRedeem.test.js (12 asserts, classificacao) + earnRedeemDryRun.test.js (5 asserts:\n  PROVA MECANICA de zero-movimento em dry-run + dedup + re-arma + ignora stable/LDO). Suite 10/10.\n\nGate QA (PASS) + TL (APPROVE), merge gated-off. Pre-req do FLIP (EARN_AUTO_REDEEM=true): ja aplicados\no guard de idempotencia (dedup) e o redeemFlexible async. Divida pre-existente (NAO neste fix): o\nwithdraw() tem o mesmo try/catch-sync inerte (limpeza separada).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ncd /home/gcrux-tradeux/tradeux\nsudo chown gcrux-tradeux:gcrux-tradeux backend/src/earnRedeemJob.js backend/src/utils/exchange.js backend/src/server.js backend/.env.example backend/scripts/sim/earnRedeem.test.js backend/scripts/sim/earnRedeemDryRun.test.js 2>/dev/null\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/earnRedeemJob.js backend/src/utils/exchange.js backend/src/server.js backend/.env.example backend/scripts/sim/earnRedeem.test.js backend/scripts/sim/earnRedeemDryRun.test.js\ngit commit -F /tmp/earn-msg.txt | tail -2'\nORIGIN=$(git -c safe.directory='*' ls-remote origin refs/heads/master | cut -f1); PARENT=$(git -c safe.directory='*' rev-parse HEAD~1)\n[ \"$ORIGIN\" = \"$PARENT\" ] && { git -c safe.directory='*' push origin master 2>&1 | grep -E \"master|rejected\"|head -1; sudo chown -R gcrux-tradeux:gcrux-tradeux .git; echo \"pushed\"; } || echo \"DIVERG origin=$ORIGIN parent=$PARENT\"",
+  "description": "Commit and push Fix 3"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  create mode 100644 backend/scripts/sim/earnRedeemDryRun.test.js
+>  create mode 100644 backend/src/earnRedeemJob.js
+>    39dfa88..5edf856  master -> master
+> pushed
+> ```
+
+## 🤖 Claude *(17:21:30)*
+
+
+## 🤖 Claude *(17:21:31)*
+
+Fix 3 pushed (`5edf856`). Deploy backend + smoke (boot mostra o earnRedeem em dry-run):
+
+## 🤖 Claude *(17:21:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend 2>&1 | tail -3'\necho \"=== aguarda backend + boot do earnRedeem ===\"\nfor i in $(seq 1 25); do c=$(curl -s -m4 -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8090/api/system/halt 2>/dev/null); [ \"$c\" = \"401\" ] && { echo \"backend UP\"; break; }; sleep 2; done\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend sh -c \"grep -iE \\\"earnRedeem\\] iniciado|earnRedeem\\] DRY-RUN|earnRedeem.*erro|Earn Redeem Job\\\" logs/system.log 2>/dev/null | tail -4; echo ---; grep -iE \\\"App Exchange Monitor is running\\\" logs/system.log 2>/dev/null | tail -1\"'\necho \"=== halt intacto ===\"\nsudo -n -u gcrux-tradeux bash -lc 'set -a;source .env;set +a;TOK=$(curl -s -m8 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\"|grep -oE \"\\\"token\\\":\\\"[^\\\"]+\\\"\"|cut -d\\\" -f4);curl -s -m8 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOK\"|python3 -c \"import sys,json;print(\\\"halt:\\\",json.load(sys.stdin)[\\\"halted\\\"])\"'",
+  "description": "Deploy Fix 3, smoke boot + earnRedeem dry-run",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === aguarda backend + boot do earnRedeem ===
+> backend UP
+> info: 2026-06-22T17:21:44.113Z - Starting the Earn Redeem Job (dry-run)...
+> info: 2026-06-22T17:21:44.113Z - [earnRedeem] iniciado — DRY-RUN (só detecta+alerta; EARN_AUTO_REDEEM off), intervalo 300000ms.
+> ---
+> info: 2026-06-22T17:21:44.359Z - App Exchange Monitor is running!
+> === halt intacto ===
+> halt: False
+> ```
+
+## 🤖 Claude *(17:21:58)*
+
+
+## 🤖 Claude *(17:22:00)*
+
+**Fix 3 deployado** — `earnRedeem` iniciado em **DRY-RUN** (intervalo 5min), boot completo sem erro, halt intacto. Os **3 FAZER_AGORA estão entregues**. Atualizo a memória do Earn (o TL pediu pra registrar o runbook do flip + a Camada 2 descartada):
+
+## 🤖 Claude *(17:22:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-earn-autosubscribe-incident.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 2 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-earn-autosubscribe-incident
+> 3	description: "Binance Simple Earn auto-subscribe move saldo spot → LDxxx, o que dispara HALT falso do dailyCap E quebra a venda no-loss do Farm"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: f441b214-aeeb-4754-b4a6-052611f40093
+> 8	---
+> 9	
+> 10	**Incidente 2026-06-20 (~04:11 UTC): HALT falso do daily-cap.** A Binance **auto-subscreveu** o LTC comprado pelo Farm no **Simple Earn Flexible** → o saldo spot virou **`LDLTC`** (prefixo "LD" = Locked/Earn) e o **spot LTC ficou 0**. Provado via `GET /system/daily-cap` → `LAST.ignored=["LDLTC","LDUSDC","LDGUN","LDBABY"]`, `equity=109.02` (só USDT) e `GET /exchange/balance/USDT` → `LDLTC.available=0.8901`, `LTC.available=0`.
+> 11	
+> 12	**Dois estragos da mesma causa:**
+> 13	1. **HALT falso:** `dailyCapJob.computeEquity` (linha ~108) tem guard `coin.startsWith('LD') && length>3` que EXCLUI qualquer `LD*` do equity (feito pra dust tipo LDGUN/LDBABY). Mas `LDLTC` é valor REAL/resgatável → equity caiu $148,8→$109 → falso −26,76% → cap −5% tripou. Timeline: 02:29 LTC ainda spot (equity $148,79, sem trip) → varrido pro Earn → 04:11 trip.
+> 14	2. **Venda no-loss QUEBRADA:** o Farm Sell precisa de LTC **spot** pra vender; com tudo em `LDLTC` o sell falharia (saldo spot 0) quando LTC bouncasse ao alvo.
+> 15	
+> 16	**RESOLVIDO 2026-06-20:**
+> 17	- **Dono:** resgatou `LDLTC`→LTC spot (voltou **0,90709440 = o TOTAL**, provando que os "0,017 LTC sumidos" eram só artefato contábil do Earn, NÃO vazamento) + **desligou o auto-subscribe**.
+> 18	- **Código:** fix do `computeEquity` deployado+commitado+pushado (**`c6d0853`**, gate QA PASS + TL APPROVE, zero must-fix): marca `LD*` a mercado pelo subjacente via `TRACKED_BASES` (LDLTC→preço LTC, LDUSDC→stable; dust sem par→ignored; trackado frio→cold/fail-safe). Smoke vivo: equity voltou a ler ~$149 valued, `ignored` sem LDLTC.
+> 19	- **HALT limpo** via `POST /system/daily-cap/reset` (re-baseline correto **$149,07**) DEPOIS do resgate. Venda no-loss do Farm re-armada (id10 a $44,39; `MEMORY['LTC:WALLET']=0,907` sincronizada; `calcQty` capa na carteira sozinho).
+> 20	
+> 21	**FEITO 2026-06-20 (lote `457e25a`, gate QA PASS + TL APPROVE):** (a) **ruído `[PAPER]` era PUSH, NÃO Telegram** (canal = `app-em.sendMessage`→`push.send`, não `telegramNotify`; o audit ESTAVA certo, eu me equivoquei rastreando) → suprimido o push p/ resultados `[PAPER]` (mantém o WS broadcast p/ UI). (b) **falha silenciosa**: `evalDecision` catch (`beholder.js`) agora ALERTA o dono no Telegram quando automação REAL falha na execução (ex.: `no LTC in wallet`), deduped por chave exata `autofail:<id>` (NÃO Jaccard — esse é só do agente), `[PAPER]` excluído.
+> 22	
+> 23	**DÉBITOS ainda abertos:** (1) `loadWallet`/`calcQty` (`app-em.js:101`/`beholder.js:212`) não enxergam `LD*` → se o auto-subscribe religar, a venda re-falha (mas agora NOTIFICA, via (b)). (2) **bloqueio por HALT/teto segue silencioso no Telegram** — morre em `placeOrder` (`return {type:'error'}`) ANTES do catch do `evalDecision`; cobrir = alertar no return de `placeOrder` com dedup próprio. (3) **doutrina do agente LLM**: ainda re-litiga "baseline/trend inativas" todo ciclo (canary) e não detecta falhas por conta própria — agora menos crítico pois o BACKEND alerta direto via (b); ajuste de prompt em `tradeux-agent` fica p/ depois.
+> 24	
+> 25	Liga com [[tradeux-mainnet-go-live]] (cap diário −5% / botão de pânico) e [[tradeux-farm-funnel-backtest]].
+> 26	
+> ```
+
+## 🤖 Claude *(17:22:05)*
+
+
+## 🤖 Claude *(17:22:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-earn-autosubscribe-incident.md",
+  "old_string": "**D\u00c9BITOS ainda abertos:** (1) `loadWallet`/`calcQty` (`app-em.js:101`/`beholder.js:212`) n\u00e3o enxergam `LD*` \u2192 se o auto-subscribe religar, a venda re-falha (mas agora NOTIFICA, via (b)).",
+  "new_string": "**D\u00c9BITOS:** (1) \u2705 **ATACADO 2026-06-22 (`earnRedeemJob`, commit `5edf856`, gate QA PASS + TL APPROVE) \u2014 era o H3 da re-revis\u00e3o de design.** `loadWallet`/`calcQty` n\u00e3o enxergam `LD*` \u2192 se o auto-subscribe religar, a venda no-loss re-falha (`There is no <base>`). Fix REAL = manter os fundos L\u00cdQUIDOS no spot via resgate proativo (job no scheduler, mirror dailyCapJob, `app-em` intocado). **ENTREGUE GATED OFF (decis\u00e3o do dono): `EARN_AUTO_REDEEM=false` (default) = DRY-RUN** \u2014 s\u00f3 DETECTA `LD<base>` de base do Farm + ALERTA no Telegram (dedup por epis\u00f3dio), ZERO movimento de dinheiro. **\ud83d\udd27 RUNBOOK DO FLIP (ligar resgate real):** setar `EARN_AUTO_REDEEM=true` no `.env`+restart \u2192 o job passa a resgatar `LD<base>`\u2192spot via SAPI (`exchange.getFlexiblePositions`+`redeemFlexible`, redeemAll). Pr\u00e9-reqs J\u00c1 aplicados no `5edf856`: guard de idempot\u00eancia (dedup, sem re-disparo) + `redeemFlexible` async (catch pega o corpo do erro). \u26a0\ufe0f **Camada 2 DESCARTADA** (sizing ler Earn no calcQty): contraproducente \u2014 se os fundos est\u00e3o no Earn no instante da ordem, a Binance REJEITA de qualquer jeito; ler saldo Earn daria qty que o spot n\u00e3o honra no fill (transiente). A solu\u00e7\u00e3o certa \u00e9 manter L\u00cdQUIDO no spot (este job), n\u00e3o ensinar o sizing a contar dinheiro indispon\u00edvel. `redeemTargetUnder` puro + sim-testado (LDO=Lido/stables/n\u00e3o-rastreada \u2192 null). Auto-subscribe segue OFF hoje \u2192 o job \u00e9 no-op at\u00e9 religar."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-earn-autosubscribe-incident.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:22:25)*
+
+
+## 🤖 Claude *(17:22:25)*
+
+Adiciono um resumo da re-revisão + os 3 fixes ao [[tradeux-mainnet-go-live]]:
+
+## 🤖 Claude *(17:22:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -3 /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "description": "Read tail of mainnet memory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### Rede anti-runaway na VENDA (follow-up #1 do %-teto) ✅ FEITO+DEPLOYADO — 2026-06-22, commit `d9f0dc5` (QA PASS + TL APPROVE, sim 6/6 riskGuard 39, smoke vivo OK)
+> Resolve o CAVEAT do %-teto (venda totalmente isenta → cofre BTC coberto só por HALT+MCP). Env **`MAX_SELL_EQUITY_MULT`** (default 0=off; ligado a **3** no `.env`): teto da VENDA = `n×equity quente` (equity-relativo, escala). Barra SÓ venda EGRÉGIA (notional > 3×equity ≈ $447 a $149; pega `qty` buggado tipo −1013/casa-decimal); NUNCA venda legítima (1 posição ≤ equity << 3×equity). **Degrade-OPEN**: equity frio/velho/ausente → venda PASSA (jamais barrar venda protetiva por memória fria — assimetria deliberada vs a compra que degrada pro teto absoluto). Refactor: helpers `notionalOf()`/`freshEquity()` extraídos+reusados na compra e venda (compra byte-equivalente). ⚠️ gap aceito: a rede some durante janela de equity stale (precisa qty-bug + equity-stale simultâneos; HALT/MCP-vault seguem). Nice-to-have ainda aberto: surfar o cap efetivo no cockpit. Ver [[tradeux-vault-guard]], [[tradeux-sim-suite]].
+> ```
+
+## 🤖 Claude *(17:22:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md",
+  "old_string": "Refactor: helpers `notionalOf()`/`freshEquity()` extra\u00eddos+reusados na compra e venda (compra byte-equivalente). \u26a0\ufe0f gap aceito: a rede some durante janela de equity stale (precisa qty-bug + equity-stale simult\u00e2neos; HALT/MCP-vault seguem). Nice-to-have ainda aberto: surfar o cap efetivo no cockpit. Ver [[tradeux-vault-guard]], [[tradeux-sim-suite]].",
+  "new_string": "Refactor: helpers `notionalOf()`/`freshEquity()` extra\u00eddos+reusados na compra e venda (compra byte-equivalente). \u26a0\ufe0f gap aceito: a rede some durante janela de equity stale (precisa qty-bug + equity-stale simult\u00e2neos; HALT/MCP-vault seguem). Nice-to-have ainda aberto: surfar o cap efetivo no cockpit. Ver [[tradeux-vault-guard]], [[tradeux-sim-suite]].\n\n## RE-REVIS\u00c3O de design/estrat\u00e9gia (workflow `wyzo1zfr3`, 49 agentes, 2026-06-22) \u2014 3 HIGH conhecidos REBAIXADOS + 2 HIGH reais atacados\nA revis\u00e3o parcial anterior (5/6 agentes morreram em 529) listava 3 HIGH; a re-rodada adversarial **rebaixou todos** com mitiga\u00e7\u00e3o provada: **H1 useTestnet bit \u2192 MEDIUM** (toggle sem confirma\u00e7\u00e3o, mas `process.exit`+restart e HALT independente, sem caminho de ordem imediato); **H2 qty BRUTA \u2192 LOW** (defeito real mas dust ~0,1%, dupla-mitigado por `calcQty`-capa-carteira + `hasEnoughAssets`; `net`/P&L n\u00e3o herda); **H3 Earn-blindness \u2192 HIGH s\u00f3 no SIZING** (na posi\u00e7\u00e3o \u00e9 INFO/fail-safe). Relat\u00f3rio completo em `/home/ubuntu/RESEARCH-design-review-2026-06-22.md`. **Os 2 HIGH reais (novos) + 1 MEDIUM trivial atacados (FAZER_AGORA, cada um gate QA+TL):**\n1. \u2705 **Withdraw destravado (`c6f67ef`):** `POST /exchange/withdraw/:id` escapava do `assertWithinRisk` (sa\u00edda de fundos sem HALT/cap; suporta MAX_WALLET). Fix = 3 camadas em c\u00f3digo: HALT + frase `WITHDRAW_CONFIRM_PHRASE` ('SACAR REAL') + **allowlist FAIL-CLOSED** (`WITHDRAW_ADDRESS_ALLOWLIST` vazia = bloqueia TUDO). **QA achou bypass: `beholder.withdrawCrypto` (automa\u00e7\u00e3o WITHDRAW) era 2\u00ba caller** \u2192 enforcement movido pro BOUNDARY `exchange.withdraw` (`assertWithdrawAllowed`, igual ao assertWithinRisk) cobrindo os 2 callers; frase fica s\u00f3 no HTTP. `withdrawGuard.js` puro (13 asserts). \u26a0\ufe0f **runtime .env: `WITHDRAW_ADDRESS_ALLOWLIST=` VAZIO no live** (saque j\u00e1 off na Binance) \u2192 saque duplamente travado.\n2. \u2705 **getAveragePrices isTestnet (`39dfa88`):** custo-base do painel Wallet / MCP `get_wallet_full` misturava BUYs testnet+mainnet \u2192 `isTestnet: settings.useTestnet` no where (espelha getOrders/getReportOrders).\n3. \u2705 **H3 sizing \u2014 `earnRedeemJob` (`5edf856`, dry-run/gated-off):** ver [[tradeux-earn-autosubscribe-incident]] (runbook do flip `EARN_AUTO_REDEEM=true` l\u00e1). **N\u00c3O est\u00e1 fixo at\u00e9 o flip** \u2014 entregue como capacidade+visibilidade.\n**Achados ainda ABERTOS (AGENDAR, no relat\u00f3rio):** `make nuke` apaga `risk_state.json` (postura HALT); AES-CTR sem IV (keystream reusado) + `accessKey` plaintext no GET /settings; restart-incondicional em qualquer save de Settings; H1 confirma\u00e7\u00e3o no toggle + invariante de ambiente no boot; RBAC (floor/halt/withdraw compartilham 1 JWT). **REFUTADOS (n\u00e3o gastar tempo):** oversell p\u00f3s-restart, agente flipar ambiente/sacar/HALT, %-teto de COMPRA cego ao Earn (o denominador \u00e9 Earn-aware). `.env.example` n\u00e3o tem os params de risco recentes (`MAX_ORDER_PCT_EQUITY`/`MIN_ORDER_NOTIONAL_FLOOR`/`MAX_SELL_EQUITY_MULT`) \u2014 d\u00e9bito separado."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-mainnet-go-live.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:23:04)*
+
+
+## 🤖 Claude *(17:23:05)*
+
+Os **3 FAZER_AGORA estão entregues e no ar**. Confirmo o estado final:
+
+## 🤖 Claude *(17:23:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"origin: $(git -c safe.directory='*' ls-remote origin refs/heads/master|cut -f1)\"\necho \"HEAD  : $(git -c safe.directory='*' rev-parse HEAD)\"\necho \"=== \u00faltimos 6 commits da sess\u00e3o ===\"\ngit -c safe.directory='*' log --oneline -6\necho \"=== containers ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"table {{.Service}}\\t{{.Status}}\"' 2>/dev/null | head -6\necho \"=== working tree (s\u00f3 backtest scratch esperado) ===\"\ngit -c safe.directory='*' status --short | grep -v backtest-results || echo \"(s\u00f3 backtest-results)\"",
+  "description": "Confirm final state: origin sync, commits, containers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> origin: 5edf856fb8454eaecfc9321bd0a07baaf3c3b787
+> HEAD  : 5edf856fb8454eaecfc9321bd0a07baaf3c3b787
+> === últimos 6 commits da sessão ===
+> 5edf856 feat(earn): earnRedeemJob -- mantem fundos do Farm liquidos no spot (H3), GATED OFF (dry-run)
+> 39dfa88 fix(orders): getAveragePrices filtra isTestnet -- custo-base nao mistura mais testnet+mainnet
+> c6f67ef feat(security): trava o SAQUE REAL em codigo (HALT + frase + allowlist), no boundary (cobre HTTP E automacao)
+> 43e8b74 feat(farm): loadFarmSellingLocks -- reconstroi a trava FARM_SELLING no boot (pre-req p/ escalar o Farm)
+> 03f6757 test(mcp): harness de regressao do forwarding do tradeux_get_cockpit + extrai buildCockpitOut
+> 6b9b97b feat(cockpit): expoe o teto efetivo (riskCaps) ao agente + FIX forwarding MCP (groups/paper inertes)
+> === containers ===
+> SERVICE    STATUS
+> agent      Up 5 hours
+> backend    Up About a minute
+> db         Up 7 days (healthy)
+> frontend   Up 3 hours
+> === working tree (só backtest scratch esperado) ===
+> (só backtest-results)
+> ```
+
+## 🤖 Claude *(17:23:18)*
+
+
+## 🤖 Claude *(17:23:35)*
+
+Tudo limpo: `origin==HEAD==5edf856`, containers up, working tree só com scratch. A re-revisão de design está **completa e atacada**.
+
+## ✅ Re-revisão de design — resultado
+
+**Os 3 HIGH conhecidos foram REBAIXADOS** (a re-rodada adversarial achou as mitigações que a parcial não viu):
+| | → | Por quê |
+|---|---|---|
+| H1 useTestnet bit | **MEDIUM** | `process.exit`+restart, HALT independente — sem caminho de ordem imediato |
+| H2 qty bruta | **LOW** | dust ~0,1%, dupla-mitigado (`calcQty` capa carteira + `hasEnoughAssets`); P&L não herda |
+| H3 Earn-blindness | **HIGH só no sizing** | na posição é fail-safe/INFO |
+
+**Os 2 HIGH reais (novos) + 1 MEDIUM trivial — atacados, cada um gate QA+TL:**
+
+1. **`c6f67ef` — Saque destravado** → 3 camadas (HALT + frase + allowlist fail-closed). **QA pegou um bypass que eu e o workflow perdemos** (`beholder.withdrawCrypto`, automação WITHDRAW, é 2º caller) → movi o enforcement pro **boundary `exchange.withdraw`**, cobrindo os 2 callers.
+2. **`39dfa88` — getAveragePrices** → filtra `isTestnet` (custo-base não mistura mais testnet+mainnet no painel/agente).
+3. **`5edf856` — H3 sizing (`earnRedeemJob`)** → entregue **GATED OFF (dry-run)** por tua decisão. **Honestidade: isto NÃO fixa o H3 ainda** — é a capacidade + visibilidade (detecta+alerta `LD<base>` preso, zero movimento de dinheiro). O fix real liga com `EARN_AUTO_REDEEM=true` (runbook na memória; pré-reqs de idempotência/async já aplicados).
+
+Relatório completo salvo em [RESEARCH-design-review-2026-06-22.md](../../../RESEARCH-design-review-2026-06-22.md).
+
+## 📋 Ainda ABERTOS (AGENDAR — no relatório)
+`make nuke` apaga o `risk_state.json` (postura HALT) · AES-CTR sem IV + `accessKey` plaintext no GET /settings · restart-incondicional em qualquer save de Settings · H1 confirmação no toggle + invariante de ambiente no boot · RBAC (floor/halt/withdraw num só JWT).
+
+**REFUTADOS** (não gastar tempo): oversell pós-restart, agente flipar ambiente/sacar/HALT, %-teto de compra cego ao Earn.
+
+---
+
+## 🏁 Sessão (8 commits, todos gate QA+TL + deploy + smoke)
+`fe06c74` %-teto compra · `d9f0dc5` rede venda · `6b9b97b` riskCaps+fix MCP · `03f6757` harness MCP · `43e8b74` loadFarmSellingLocks · `c6f67ef` withdraw-lock · `39dfa88` getAveragePrices · `5edf856` earnRedeemJob.
+
+Estado: 🔴 LIVE, halt=false, capital ~$149 intacto, vivo==master==origin. Foi uma maratona grande de hardening — o `/handoff` carimba os 8 commits + os runtime `.env` + os débitos AGENDAR quando você quiser. Seguimos ou selamos?
+
+## 👤 User *(17:23:52)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(17:23:52)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(17:24:16)*
+
+
+## 🤖 Claude *(17:24:18)*
+
+Executando o `/handoff`. Nota importante: esta sessão seguiu o modelo **trunk-based direct-to-master** documentado ([[tradeux-orchestration-model]]) — os 8 commits já estão gated QA+TL **e pushados** em `origin/master`. Então Phase 2 (branch+PR) é N/A (não há código não-commitado). Pre-flight + secret scan:
+
+## 🤖 Claude *(17:24:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== PRE-FLIGHT: status ===\"\ngit -c safe.directory='*' status --short\necho \"=== diff HEAD --stat (n\u00e3o-commitado) ===\"\ngit -c safe.directory='*' diff HEAD --stat\necho \"=== containers ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps --format \"table {{.Service}}\\t{{.Status}}\"' 2>/dev/null | head -6\necho \"=== PHASE 1 \u2014 SECRET SCAN do range da sess\u00e3o (2c55fe0..5edf856) ===\"\ngit -c safe.directory='*' diff 2c55fe0..5edf856 \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head || echo \"(scan rodou)\"\necho \"--- resultado do scan (vazio acima = LIMPO) ---\"",
+  "description": "Pre-flight status + secret scan of session commit range"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PRE-FLIGHT: status ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> === diff HEAD --stat (não-commitado) ===
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  2 files changed, 273 insertions(+), 273 deletions(-)
+> === containers ===
+> SERVICE    STATUS
+> agent      Up 5 hours
+> backend    Up 2 minutes
+> db         Up 7 days (healthy)
+> frontend   Up 3 hours
+> === PHASE 1 — SECRET SCAN do range da sessão (2c55fe0..5edf856) ===
+> --- resultado do scan (vazio acima = LIMPO) ---
+> ```
+
+## 🤖 Claude *(17:24:39)*
+
+
+## 🤖 Claude *(17:24:41)*
+
+Secret scan **LIMPO** — seal não bloqueado. Working tree só tem o scratch dos backtests (contaminação cross-session, não-meu → não commito). Os 8 commits já estão em `origin/master` (trunk-based) → Phase 2 N/A. Agora atualizo o `HANDOFF.md` (Phase 3). Leio o header + o rodapé atual:
+
+## 🤖 Claude *(17:24:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== HANDOFF.md header (top) ===\"; head -8 /home/gcrux-tradeux/HANDOFF.md\necho \"...\"; echo \"=== owner ===\"; stat -c '%U:%G' /home/gcrux-tradeux/HANDOFF.md\necho \"=== tail (\u00faltimo seal) ===\"; tail -c 1400 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Read HANDOFF.md header and tail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HANDOFF.md header (top) ===
+> # TradeUX — HANDOFF (single source of truth)
+> 
+> > ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> > Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> > Updated: **2026-06-21** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`)** · **Canary FARM-ONLY** (vendas no-loss id10/12/14 — **AGORA FUNCIONAM**; compras off) · **SESSÃO 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** → `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE→LEVEL-trigger = 1ª saída no-loss do Farm a EXECUTAR no mainnet)** → **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA→0, equity **$149,39**) · ⚠️ **runtime não-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25→50` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` · proteções: cap diário −5%, teto **$50/ordem**, Farm $25/símbolo, riskGuard, pânico, painel de grupos · Meta: **realista ≈ flat com ~$149** · Vivo==master==origin==**`fb932a1`**
+> 
+> > 🟢 **ATUALIZAÇÃO 2026-06-21 (cont. — MARATONA 2): suíte de simulação money-path + D3 deployado + paper-validate das 3 alavancas.** Estado segue **🔴 LIVE (`halted=false`), Canary FARM-ONLY**, equity ~$149, HALT intacto o tempo todo. 7 commits (todos gate QA+TL, CI verde, 2 deploys de backend): **(1) SUÍTE DE SIMULAÇÃO** (`backend/scripts/sim/`, 6 arquivos, **90 asserts**, no CI) — achou+corrigiu **3 bugs REAIS latentes**: `getStableConversion` não-exportada (taxa BNB sumia do P&L → `854bab5` estava INERTE), `placeOrder:551` precedência (erro virava `undefined` no Telegram), `placeOrder:573` `order.type` (stopPrice não persistia). **(2) D3 DEPLOYADO** (`5c83c31`): `tradeux_get_cockpit` traz `status.groups` (ATIVO por grupo) + doutrina GATE≠ATIVO (agente para de dizer "aguardando golden cross p/ comprar" com grupo parado; valida no próx. ciclo pós-429). **(3) PAPER-VALIDATE: 3 alavancas LIVE em paper** (grupo paper **40/40**): MR15 (mean-reversion 15m), Slopegate (trend só entra se `TREND_SLOPE_1h!='down'` — sinal novo no regimeJob), Farmnl (Farm no-loss REAL: paperEngine publica `FARMNL_TARGET`=custo×1.012). **Vivo==master==origin==`2c55fe0`.** ⚠️ trilhas paper são RUNTIME — reaplicar pós-`make nuke`: `setup-paper-mr15.js` + `setup-paper-levers.js`.
+> 
+> ...
+> === owner ===
+> ubuntu:ubuntu
+> === tail (último seal) ===
+> cia de mudança inesperada antes de adotar (memória [[tradeux-cross-session-contamination]]). (2) **`validateConditions` é regex SEM espaço ao redor do operador** — conditions de setup devem ser `current<25`/`bestBid>MEMORY[...]` colados. (3) `bash -lc '...'` quebra com aspas simples no heredoc da msg de commit → usar `git commit -F arquivo`. (4) `HANDOFF.md` é ubuntu-owned; arquivos do REPO viram ubuntu no Edit → `chown gcrux` antes de git/docker (feito em cada lote).
+> 
+> **⚡ NEXT:** (1) **observar o paper** (`GET /analysis/paper` + `paperReviewJob` no Telegram): veredito "tem edge?" em ~1-2 semanas (MR15 1m×15m, Slopegate vs Macro plano, Farmnl no-loss; net+ pós-fee/slippage, ≥15-30 RT). Hoje os 4 em `trend` → MR15/Farmnl gated (`!=trend`), Slopegate aguardando golden cross. (2) **confirmar o D3 ao vivo** no próximo ciclo do agente (pós-429). (3) follow-ups da suíte (TRAILING, teto×placeOrder integrado) — incrementais. (4) decisão macro do dono em aberto (recuperar USDT e parar vs empilhar BTC pós-validação). **Claude NÃO vira o HALT.** Working tree: só `backtest-results/*` (scratch regenerável do workflow de pesquisa, NÃO commitado). Pesquisa de escala salva em `/home/ubuntu/RESEARCH-scaling-149.md`. Memórias: nova `tradeux-cross-session-contamination`, nova `tradeux-sim-suite`, atualizadas `tradeux-strategy-engine` + `tradeux-mainnet-go-live`.
+> ```
+
+## 🤖 Claude *(17:25:15)*
+
+
+## 🤖 Claude *(17:25:16)*
+
+`HANDOFF.md` é ubuntu-owned (edito direto). Atualizo o header (data + nova linha desta maratona) e anexo o SEAL no rodapé:
+
+## 🤖 Claude *(17:25:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-21** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`)**",
+  "new_string": "> Updated: **2026-06-22** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`)**"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(17:25:22)*
+
+
+## 🤖 Claude *(17:25:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-21** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`)** · **Canary FARM-ONLY** (vendas no-loss id10/12/14 — **AGORA FUNCIONAM**; compras off) · **SESSÃO 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** → `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE→LEVEL-trigger = 1ª saída no-loss do Farm a EXECUTAR no mainnet)** → **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA→0, equity **$149,39**) · ⚠️ **runtime não-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25→50` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` · proteções: cap diário −5%, teto **$50/ordem**, Farm $25/símbolo, riskGuard, pânico, painel de grupos · Meta: **realista ≈ flat com ~$149** · Vivo==master==origin==**`fb932a1`**
+> 6	
+> 7	> 🟢 **ATUALIZAÇÃO 2026-06-21 (cont. — MARATONA 2): suíte de simulação money-path + D3 deployado + paper-validate das 3 alavancas.** Estado segue **🔴 LIVE (`halted=false`), Canary FARM-ONLY**, equity ~$149, HALT intacto o tempo todo. 7 commits (todos gate QA+TL, CI verde, 2 deploys de backend): **(1) SUÍTE DE SIMULAÇÃO** (`backend/scripts/sim/`, 6 arquivos, **90 asserts**, no CI) — achou+corrigiu **3 bugs REAIS latentes**: `getStableConversion` não-exportada (taxa BNB sumia do P&L → `854bab5` estava INERTE), `placeOrder:551` precedência (erro virava `undefined` no Telegram), `placeOrder:573` `order.type` (stopPrice não persistia). **(2) D3 DEPLOYADO** (`5c83c31`): `tradeux_get_cockpit` traz `status.groups` (ATIVO por grupo) + doutrina GATE≠ATIVO (agente para de dizer "aguardando golden cross p/ comprar" com grupo parado; valida no próx. ciclo pós-429). **(3) PAPER-VALIDATE: 3 alavancas LIVE em paper** (grupo paper **40/40**): MR15 (mean-reversion 15m), Slopegate (trend só entra se `TREND_SLOPE_1h!='down'` — sinal novo no regimeJob), Farmnl (Farm no-loss REAL: paperEngine publica `FARMNL_TARGET`=custo×1.012). **Vivo==master==origin==`2c55fe0`.** ⚠️ trilhas paper são RUNTIME — reaplicar pós-`make nuke`: `setup-paper-mr15.js` + `setup-paper-levers.js`.
+> 8	
+> ```
+
+## 🤖 Claude *(17:25:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-21** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`)** \u00b7 **Canary FARM-ONLY** (vendas no-loss id10/12/14 \u2014 **AGORA FUNCIONAM**; compras off)",
+  "new_string": "> Updated: **2026-06-22** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`)** \u00b7 **Canary FARM-ONLY** (vendas no-loss id10/12/14 \u2014 **AGORA FUNCIONAM**; compras off)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:25:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**Vivo==master==origin==`2c55fe0`.** \u26a0\ufe0f trilhas paper s\u00e3o RUNTIME \u2014 reaplicar p\u00f3s-`make nuke`: `setup-paper-mr15.js` + `setup-paper-levers.js`.",
+  "new_string": "**Vivo==master==origin==`2c55fe0`.** \u26a0\ufe0f trilhas paper s\u00e3o RUNTIME \u2014 reaplicar p\u00f3s-`make nuke`: `setup-paper-mr15.js` + `setup-paper-levers.js`.\n\n> \ud83d\udfe2 **ATUALIZA\u00c7\u00c3O 2026-06-22 (MARATONA 3): hardening de risco + Farm + RE-REVIS\u00c3O de design (workflow `wyzo1zfr3`, 49 agentes).** **8 commits** (todos gate QA+TL + deploy + smoke; vivo==master==origin==**`5edf856`**), \ud83d\udd34 LIVE `halted=false` o tempo todo, Canary FARM-ONLY, equity **~$149 intacta**. **Risk-guard:** %-teto de COMPRA 20% (`fe06c74`) + rede anti-runaway na VENDA 3\u00d7equity (`d9f0dc5`) + `riskCaps` no cockpit (`6b9b97b` \u2014 + FIX do MCP que DROPAVA `groups`/`paper`: a D3 e o paper-no-cockpit estavam **INERTES** pelo caminho do agente!) + harness MCP (`03f6757`). **Farm:** `loadFarmSellingLocks` no boot (`43e8b74`, pr\u00e9-req de escalar). **RE-REVIS\u00c3O:** 3 HIGH conhecidos REBAIXADOS (H1 useTestnet\u2192MEDIUM, H2 qty-bruta\u2192LOW, H3 Earn\u2192HIGH-s\u00f3-sizing); **2 HIGH reais ATACADOS:** withdraw-lock (`c6f67ef`, HALT+frase+allowlist no BOUNDARY, cobre HTTP **e** automa\u00e7\u00e3o) + getAveragePrices isTestnet (`39dfa88`) + earnRedeemJob H3 (`5edf856`, **DRY-RUN gated-off \u2014 N\u00c3O fixa at\u00e9 `EARN_AUTO_REDEEM=true`**). Relat\u00f3rio: `~/RESEARCH-design-review-2026-06-22.md`. \u26a0\ufe0f **runtime n\u00e3o-git (reaplicar p\u00f3s-`make nuke`):** `.env` `MAX_ORDER_NOTIONAL_USDT=100` \u00b7 `MAX_ORDER_PCT_EQUITY=0.20` \u00b7 `MIN_ORDER_NOTIONAL_FLOOR=12` \u00b7 `MAX_SELL_EQUITY_MULT=3` \u00b7 `WITHDRAW_ADDRESS_ALLOWLIST=` (vazio=fail-closed)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:25:53)*
+
+
+## 🤖 Claude *(17:25:53)*
+
+Anexo o SEAL desta sessão no rodapé:
+
+## 🤖 Claude *(17:26:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "Pesquisa de escala salva em `/home/ubuntu/RESEARCH-scaling-149.md`. Mem\u00f3rias: nova `tradeux-cross-session-contamination`, nova `tradeux-sim-suite`, atualizadas `tradeux-strategy-engine` + `tradeux-mainnet-go-live`.",
+  "new_string": "Pesquisa de escala salva em `/home/ubuntu/RESEARCH-scaling-149.md`. Mem\u00f3rias: nova `tradeux-cross-session-contamination`, nova `tradeux-sim-suite`, atualizadas `tradeux-strategy-engine` + `tradeux-mainnet-go-live`.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-22 (MARATONA 3: hardening de risco + Farm + re-revis\u00e3o de design adversarial)\n**`Vivo==master==origin==5edf856` (8 commits, todos gate QA+TL + deploy + smoke vivo). \ud83d\udd34 LIVE `halted=false` o tempo todo, Canary FARM-ONLY, equity ~$149 intacta. Secret-scan do range LIMPO.** Modelo trunk-based direct-to-master (sem PR; cada commit j\u00e1 em origin/master).\n\n**(1) RISK-GUARD reescrito (4 commits):** **%-teto de COMPRA** (`fe06c74`) = `min(MAX_ORDER_NOTIONAL_USDT, MAX_ORDER_PCT_EQUITY\u00d7equity)` com piso; **VENDA isenta** do teto de sizing + **rede anti-runaway** (`d9f0dc5`) `MAX_SELL_EQUITY_MULT\u00d7equity` (3\u00d7, degrade-OPEN). Equity quente publicado pelo dailyCapJob no `riskState`. **`riskCaps` no cockpit** (`6b9b97b`) via `exchange.getEffectiveCaps()` \u2014 **e fechou um BUG REAL: o tool MCP `tradeux_get_cockpit` DROPAVA `groups`/`paper`** (a D3 `5c83c31` e o paper-no-cockpit estavam INERTES pelo caminho do agente; o \"verificado ao vivo\" testou o ENDPOINT, n\u00e3o o TOOL). **Harness de regress\u00e3o do MCP** (`03f6757`, `cockpitOut.js` puro + 20 asserts no `npm test` do mcp). A $149: compra capada ~$29,80, venda livre at\u00e9 ~$448.\n\n**(2) FARM \u2014 `loadFarmSellingLocks`** (`43e8b74`): reconstr\u00f3i a trava `FARM_SELLING` no boot (espelha loadHarvestPositions; reconcilia status no DB p/ getFarmPosition derivar o FARM_DCA certo) \u2192 fecha o gate \"n\u00e3o escalar o Farm at\u00e9 implement\u00e1-la\". `farmSellBootAction` puro + sim-test. Gotcha: rename `HARVEST_TERMINAL_STATUSES`\u2192`ORDER_TERMINAL_STATUSES` tinha 4 usos VIVOS no Harvester (node --check N\u00c3O pega ReferenceError de rename \u2014 grepar).\n\n**(3) RE-REVIS\u00c3O de design/estrat\u00e9gia** (workflow `wyzo1zfr3`, 49 agentes, 2,87M tokens; relat\u00f3rio `~/RESEARCH-design-review-2026-06-22.md`): os 3 HIGH conhecidos REBAIXADOS (H1 useTestnet\u2192MEDIUM, H2 qty-bruta\u2192LOW, H3 Earn\u2192HIGH-s\u00f3-sizing). **2 HIGH reais + 1 MEDIUM trivial ATACADOS (FAZER_AGORA):** **withdraw-lock** (`c6f67ef`): saque escapava do assertWithinRisk \u2192 3 camadas (HALT+frase+allowlist fail-closed) no **boundary `exchange.withdraw`** (QA achou o bypass `beholder.withdrawCrypto`); **getAveragePrices isTestnet** (`39dfa88`); **earnRedeemJob** (`5edf856`, H3): resgate proativo Earn\u2192spot, **DRY-RUN/gated-off** (`EARN_AUTO_REDEEM=false`) \u2014 s\u00f3 detecta+alerta, ZERO movimento de dinheiro; Camada 2 (sizing ler Earn) DESCARTADA (contraproducente). Su\u00edte de sim agora **10 arquivos**.\n\n**Gotchas DUR\u00c1VEIS desta sess\u00e3o:** (1) **endpoint ter o campo \u2260 AGENTE receber** \u2014 o tool MCP filtra o payload; verificar no caminho do tool (`node src/index.js --once`), n\u00e3o s\u00f3 no endpoint (foi o que deixou D3/paper inertes 2 entregas). (2) **`source .env` no bash quebra com valor que tem espa\u00e7o** (`WITHDRAW_CONFIRM_PHRASE=SACAR REAL` \u2192 `REAL: command not found`); o app (docker env_file/dotenv) l\u00ea certo, mas remover do .env live (usa default do c\u00f3digo) mant\u00e9m os scripts de ops limpos. (3) **rename de const compartilhada**: `node --check` N\u00c3O pega ReferenceError de rename \u2014 grepar os usos. (4) `ls-remote`/push DENTRO do subshell `gcrux` falha (sem chave SSH) \u2192 rodar como ubuntu.\n\n**\u26a1 NEXT (prioridade):** (1) **AGENDAR (do relat\u00f3rio de design):** `make nuke` apaga `risk_state.json` (postura HALT) \u2192 preservar volume/backup; AES-CTR sem IV (keystream reusado) + `accessKey` plaintext no GET /settings \u2192 AES-GCM+mask; restart-incondicional em qualquer save de Settings; H1 confirma\u00e7\u00e3o no toggle + invariante de ambiente no boot; RBAC (floor/halt/withdraw num s\u00f3 JWT). (2) **flip do H3** quando quiser o resgate real: `EARN_AUTO_REDEEM=true`+restart (pr\u00e9-reqs de idempot\u00eancia/async J\u00c1 aplicados). (3) `.env.example` n\u00e3o tem os params de risco recentes \u2192 d\u00e9bito separado. (4) **observar o paper** (veredito edge em ~1-2 sem) + **decis\u00e3o macro do dono** (recuperar USDT vs empilhar BTC). **Claude N\u00c3O vira o HALT.** Working tree: s\u00f3 `backtest-results/*` (scratch cross-session, N\u00c3O commitado). Mem\u00f3rias atualizadas: `tradeux-earn-autosubscribe-incident` (runbook do flip + Camada 2 descartada), `tradeux-mainnet-go-live` (re-revis\u00e3o + 3 fixes), `tradeux-1m-scalping-and-cockpit` (fix forwarding MCP), `tradeux-api-auth-recipe` (nova). **D\u00e9bitos:** withdraw() tem o mesmo try/catch-sync inerte do redeemFlexible (limpeza separada); E2E do wiring do loadFarmSellingLocks + do path da automa\u00e7\u00e3o do withdraw (antes de escalar/flipar)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:26:42)*
+
+
+## 🤖 Claude *(17:26:44)*
+
+Phase 4 (memória): atualizei 4 memórias esta sessão (`earn-incident` runbook do flip, `mainnet-go-live` re-revisão, `1m-cockpit` fix MCP, `api-auth-recipe` nova). Confirmo o índice + faço o chown final do repo (Phase 5):
+
+## 🤖 Claude *(17:26:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== \u00edndice de mem\u00f3ria tem o api-auth-recipe? ===\"\ngrep -c \"api-auth-recipe\" /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md\necho \"=== chown final do repo (Phase 5 \u2014 limpa qualquer arquivo ubuntu-owned de edits) ===\"\nsudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux && echo \"chown OK\"\necho \"=== origin sincronizado? (c\u00f3digo j\u00e1 em master trunk-based) ===\"\necho \"origin: $(git -c safe.directory='*' ls-remote origin refs/heads/master|cut -f1)\"\necho \"HEAD  : $(git -c safe.directory='*' rev-parse HEAD)\"\necho \"=== .git owner final ===\"; stat -c '%U:%G' .git\necho \"=== HANDOFF.md atualizado? ===\"; grep -c \"MARATONA 3\" /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Verify memory index, final chown, origin sync, HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === índice de memória tem o api-auth-recipe? ===
+> 1
+> === chown final do repo (Phase 5 — limpa qualquer arquivo ubuntu-owned de edits) ===
+> chown OK
+> === origin sincronizado? (código já em master trunk-based) ===
+> origin: 5edf856fb8454eaecfc9321bd0a07baaf3c3b787
+> HEAD  : 5edf856fb8454eaecfc9321bd0a07baaf3c3b787
+> === .git owner final ===
+> gcrux-tradeux:gcrux-tradeux
+> === HANDOFF.md atualizado? ===
+> 2
+> ```
+
+## 🤖 Claude *(17:26:59)*
+
+
+## 🤖 Claude *(17:27:12)*
+
+Todas as fases do `/handoff` concluídas. Secret-scan limpo, código já em `origin/master` (trunk-based — sem PR, conforme o modelo documentado), `HANDOFF.md` + 4 memórias atualizados, repo chowneado pro `gcrux-tradeux`.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-22
+───────────────────────────────────────────────────
+Commits     : 8  (feat(risk)/feat(security)/feat(cockpit)/feat(farm)/
+                  feat(earn)/fix(orders)/test(mcp))  |  Branch: master (trunk-based)
+HANDOFF.md  : ✅ atualizado (header MARATONA 3 + SEAL + Next/Débitos)
+Memory      : 4 arquivos (earn-incident · mainnet-go-live · 1m-cockpit · api-auth-recipe)
+PRs abertos : nenhum (direct-to-master gated QA+TL — modelo trunk-based)
+Push        : ✅ origin sincronizado (vivo==master==origin==5edf856)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Sessão selada.** Resumo do que ficou no registro pra próxima:
+
+- **8 commits**, todos gate QA+TL + deploy + smoke, 🔴 LIVE o tempo todo, equity ~$149 intacta. Bloco grande de hardening: risk-guard reescrito (%-teto compra + rede de venda + riskCaps + fix do MCP que dropava groups/paper), `loadFarmSellingLocks`, e a re-revisão de design (49 agentes) que rebaixou os 3 HIGH conhecidos e atacou os 2 reais (withdraw-lock + getAveragePrices) + entregou o H3 em dry-run.
+- **⚠️ Pendências mais quentes pra próxima** (no SEAL + relatório `~/RESEARCH-design-review-2026-06-22.md`): os AGENDAR de segurança (`make nuke` apaga `risk_state.json`, AES sem IV, accessKey plaintext, RBAC) · o **flip do H3** (`EARN_AUTO_REDEEM=true` quando quiser resgate real) · `.env.example` sem os params de risco recentes · a **decisão macro tua** (recuperar USDT vs empilhar BTC) segue em aberto.
+- **Runtime não-git a reaplicar pós-`make nuke`** está carimbado no header: os 4 params de risco do `.env` + `WITHDRAW_ADDRESS_ALLOWLIST=`.
+
+Foi uma maratona e tanto. Até o próximo `/handson`. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
