@@ -1,4 +1,4 @@
-# Próximos passos do projeto
+# [[2026-06-23 - Próximos passos do projeto|Próximos passos do projeto]]
 **Date:** 2026-06-20 | **Session ID:** `cdba5e5b-0613-433e-84ae-1ff6e559e8c5`
 
 ---

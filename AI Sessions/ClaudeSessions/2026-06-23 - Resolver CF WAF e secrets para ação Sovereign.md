@@ -8453,6 +8453,6 @@ Sessão monumental selada. O objetivo que você cravou como prioridade — **per
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-22 - agent-afbda1deee15bc84c]]
+> * **Sessão Anterior**: [[2026-06-23 - Próximos passos do projeto]]
 > * **Próxima Sessão**: [[2026-06-23 - Verificar backtest-results e fixes de design]]
 %% --- TIMELINE END --- %%
