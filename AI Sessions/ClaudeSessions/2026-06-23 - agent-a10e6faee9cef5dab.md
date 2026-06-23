@@ -1725,6 +1725,6 @@ Já validei localmente (não toquei o DB):
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-23 - Verificar backtest-results e fixes de design]]
+> * **Sessão Anterior**: [[2026-06-23 - agent-a0ab9f49893cfaa5e]]
 > * **Próxima Sessão**: [[2026-06-23 - agent-a3149af88084452ca]]
 %% --- TIMELINE END --- %%

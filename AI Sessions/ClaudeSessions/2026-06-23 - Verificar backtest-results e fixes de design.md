@@ -7761,5 +7761,5 @@ Estado: trading live, Canary FARM-ONLY, equity ~$149, segurança das credenciais
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]
-> * **Próxima Sessão**: [[2026-06-23 - agent-a10e6faee9cef5dab]]
+> * **Próxima Sessão**: [[2026-06-23 - agent-a0ab9f49893cfaa5e]]
 %% --- TIMELINE END --- %%
