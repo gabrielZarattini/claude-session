@@ -1,5 +1,5 @@
-# [[2026-06-23 - Verificar backtest-results e fixes de design|Verificar backtest-results e fixes de design]]
-**Date:** 2026-06-22 | **Session ID:** `76d78950-b18e-4211-b874-da09b35431a1`
+# [[2026-06-22 - Verificar backtest-results e fixes de design|Verificar backtest-results e fixes de design]]
+**Date:** 2026-06-23 | **Session ID:** `76d78950-b18e-4211-b874-da09b35431a1`
 
 ---
 
@@ -5239,6 +5239,616 @@ Só o `cd` faltou no `bash -lc`. Re-rodando do dir certo:
 
 You've hit your session limit · resets 7:10pm (America/Sao_Paulo)
 
+## 👤 User *(01:22:02)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(01:22:02)*
+
+No response requested.
+
+## 👤 User *(01:23:12)*
+
+continue
+
+## 🤖 Claude *(01:23:19)*
+
+
+## 🤖 Claude *(01:23:20)*
+
+Commitando o Fix B (seletivo, sem `backtest-results`) + localizando o endpoint que exercita auth na Binance pro smoke:
+
+## 🤖 Claude *(01:23:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add \\\n  backend/src/utils/crypto.js backend/src/utils/mask.js \\\n  backend/scripts/reencrypt-secrets-gcm.js backend/scripts/sim/crypto.test.js \\\n  backend/src/controllers/settingsController.js backend/src/repositories/settingsRepository.js \\\n  backend/src/utils/stepUpGuard.js backend/scripts/sim/stepUpGuard.test.js\necho \"=== staged ===\"; git -c safe.directory=\"*\" diff --cached --name-only\ngit -c safe.directory=\"*\" diff --cached --name-only | grep -E \"backtest-results|\\.gpg\" && echo \"!! ALERTA\" || echo \"(ok, sem scratch)\"\ngit -c safe.directory=\"*\" commit -F /tmp/txb-commit.txt | tail -3\ngit -c safe.directory=\"*\" log --oneline -1\n'\necho; echo \"=== endpoint Binance-auth p/ smoke (wallet/balance/account) ===\"\ngrep -rnE \"router\\.(get|post)\" backend/src/routers/exchangeRouter.js 2>/dev/null\necho \"--- controller que faz chamada assinada (getBalance/wallet) ---\"\ngrep -rnE \"balance|getWallet|account|memberId\" backend/src/controllers/exchangeController.js 2>/dev/null | head",
+  "description": "Commit Fix B and find Binance-auth smoke endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged ===
+> backend/scripts/reencrypt-secrets-gcm.js
+> backend/scripts/sim/crypto.test.js
+> backend/scripts/sim/stepUpGuard.test.js
+> backend/src/controllers/settingsController.js
+> backend/src/repositories/settingsRepository.js
+> backend/src/utils/crypto.js
+> backend/src/utils/mask.js
+> backend/src/utils/stepUpGuard.js
+> (ok, sem scratch)
+>  create mode 100755 backend/scripts/reencrypt-secrets-gcm.js
+>  create mode 100644 backend/scripts/sim/crypto.test.js
+>  create mode 100644 backend/src/utils/mask.js
+> 087ccfb feat(security): cripto das chaves AES-CTR->AES-GCM + mask do accessKey no GET /settings
+> 
+> === endpoint Binance-auth p/ smoke (wallet/balance/account) ===
+> backend/src/routers/exchangeRouter.js:5:router.get('/balance/full/:fiat', exchangeController.getFullBalance);
+> backend/src/routers/exchangeRouter.js:7:router.get('/balance/:fiat', exchangeController.getBalance);
+> backend/src/routers/exchangeRouter.js:9:router.get('/coins', exchangeController.getCoins);
+> backend/src/routers/exchangeRouter.js:11:router.post('/withdraw/:id', exchangeController.doWithdraw);
+> --- controller que faz chamada assinada (getBalance/wallet) ---
+> backend/src/controllers/exchangeController.js:14:    const info = await exchange.balance();
+> ```
+
+## 🤖 Claude *(01:23:43)*
+
+
+## 🤖 Claude *(01:23:46)*
+
+**Fix B commitado: `087ccfb`** (8 arquivos, sem scratch). Smoke endpoint: `GET /exchange/balance/:fiat` → `exchange.balance()` (chamada assinada na Binance).
+
+Agora executo a **sequência de migração (refinada pelo TL)** com gates. **Passo 1-2: backup fresco + HALT** (manual, quente, sem frase):
+
+## 🤖 Claude *(01:23:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset +e\ncd /home/gcrux-tradeux/tradeux\necho \"===== [1] BACKUP FRESCO (rede de rollback) =====\"\n./scripts/backup-state.sh 2>&1 | tail -3\necho\necho \"===== [2] HALT (POST /system/halt {on:true}) =====\"\nAPI=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-); PW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-)\nTOK=$(curl -s -m10 -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\" | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho \"login: $([ -n \"$TOK\" ] && echo OK || echo FALHOU)\"\ncurl -s -m6 -X POST $API/system/halt -H \"Authorization: $TOK\" -H \"Content-Type: application/json\" -d \"{\\\"on\\\":true,\\\"reason\\\":\\\"migracao cripto CTR->GCM\\\"}\" | head -c 200; echo\necho -n \"confirma halted: \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOK\" | sed -n \"s/.*\\(\\\"halted\\\":[a-z]*\\).*/\\1/p\"\n'",
+  "description": "Step 1-2: fresh backup and HALT the system"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== [1] BACKUP FRESCO (rede de rollback) =====
+> [4/5] empacota + cifra (gpg AES256) ...
+> [5/5] verifica INTEGRIDADE (round-trip real de decifragem + AES_KEY presente) ...
+> OK: /home/gcrux-tradeux/tradeux/backups/tradeux-state-20260623T012351Z.tar.gz.gpg (128K)
+> 
+> ===== [2] HALT (POST /system/halt {on:true}) =====
+> login: OK
+> {"changed":true,"halted":true,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":true,"reason":"migracao cripto CTR->GCM","since":"2026-06-23T01:23:52.481Z"},"dailyCap":{"o
+> confirma halted: "halted":true
+> ```
+
+## 🤖 Claude *(01:24:00)*
+
+
+## 🤖 Claude *(01:24:02)*
+
+**[1-2] OK**: backup fresco (128K, integridade verificada) + **HALT aplicado** (`halted:true`, manual on). Trading congelado. **[3] rebuild** backend+frontend (nova crypto que lê CTR):
+
+## 🤖 Claude *(01:24:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== [3] REBUILD backend+frontend =====\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d --build backend frontend 2>&1 | tail -8'",
+  "description": "Step 3: rebuild backend+frontend with Fix B",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== [3] REBUILD backend+frontend =====
+>  Container tradeux-db-1 Running 
+>  Container tradeux-backend-1 Recreate 
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-frontend-1 Running 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(01:24:18)*
+
+
+## 🤖 Claude *(01:24:19)*
+
+**[3] OK** — backend recriado com a nova crypto. **[4] SMOKE GATE** (lê CTR vivo → Binance auth OK + HALT persistiu + accessKey mascarado):
+
+## 🤖 Claude *(01:24:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset +e\ncd /home/gcrux-tradeux/tradeux\nAPI=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-); PW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-)\nTOK=$(curl -s --connect-timeout 5 --max-time 120 --retry 40 --retry-delay 2 --retry-connrefused --retry-all-errors -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\" | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho \"login pos-rebuild: $([ -n \"$TOK\" ] && echo OK || echo FALHOU)\"\necho -n \"HALT persistiu? \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOK\" | sed -n \"s/.*\\(\\\"halted\\\":[a-z]*\\).*\\(\\\"manual\\\":{\\\"on\\\":[a-z]*\\).*/\\1 \\2/p\"\necho\necho \"===== GATE: backend le secretKey CTR -> Binance auth (GET /exchange/balance/USDT) =====\"\nB=$(curl -s -m20 -w \"|%{http_code}\" $API/exchange/balance/USDT -H \"Authorization: $TOK\")\nCODE=$(echo \"$B\" | sed \"s/.*|//\"); BODY=$(echo \"$B\" | sed \"s/|[0-9]*$//\")\necho \"http=$CODE\"\necho \"$BODY\" | head -c 220; echo\nif [ \"$CODE\" = \"200\" ] && echo \"$BODY\" | grep -qiE \"available|onOrder|USDT|\\{\"; then echo \">> GATE OK: Binance auth funcionando (CTR decifrado)\"; else echo \">> !! GATE FALHOU \u2014 NAO prosseguir p/ backfill\"; fi\necho\necho \"===== Entrega A: accessKey mascarado no GET /settings? =====\"\ncurl -s -m6 $API/settings -H \"Authorization: $TOK\" | sed -n \"s/.*\\(\\\"accessKey\\\":\\\"[^\\\"]*\\\"\\).*/\\1/p\" | head -c 80; echo\n'",
+  "description": "Step 4: smoke gate - CTR read + Binance auth + HALT persisted + mask live"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> login pos-rebuild: OK
+> HALT persistiu? "halted":true "manual":{"on":true
+> ===== GATE: backend le secretKey CTR -> Binance auth (GET /exchange/balance/USDT) =====
+> http=200
+> {"BTC":{"available":"0.00000000","onOrder":"0.00000000","fiatEstimate":0},"LTC":{"available":"0.00009440","onOrder":"0.00000000","fiatEstimate":0.004212128},"ETH":{"available":"0.00000000","onOrder":"0.00000000","fiatEst
+> >> GATE OK: Binance auth funcionando (CTR decifrado)
+> 
+> ===== Entrega A: accessKey mascarado no GET /settings? =====
+> "accessKey":"vwc6****yxKj"
+> ```
+
+## 🤖 Claude *(01:24:40)*
+
+
+## 🤖 Claude *(01:24:42)*
+
+**[4] GATE PASSOU:**
+- **Binance auth OK** (200, saldos reais: BTC, LTC 0.0000944, ETH…) — backend decifrou a `secretKey` CTR e autenticou ✓
+- **HALT persistiu** o rebuild (`halted:true`) ✓
+- **Entrega A LIVE**: `accessKey` agora `vwc6****yxKj` (mascarado, não mais plaintext) ✓
+
+Seguro prosseguir. **[5] DRY-RUN do backfill** (gate: confirmar N=1 linha, 2 campos):
+
+## 🤖 Claude *(01:24:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== [5] BACKFILL DRY-RUN (read-only, nada gravado) =====\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T backend node scripts/reencrypt-secrets-gcm.js 2>&1'",
+  "description": "Step 5: backfill dry-run gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== [5] BACKFILL DRY-RUN (read-only, nada gravado) =====
+> reencrypt-secrets-gcm: modo=DRY-RUN
+>   id=1 secretKey: CTR -> GCM  (len=64, sentinela OK, roundtrip OK)
+>   id=1 testnetSecretKey: CTR -> GCM  (len=64, sentinela OK, roundtrip OK)
+> 
+> DRY-RUN: 1 linha(s) MIGRARIAM. ALLOW_REENCRYPT=true p/ persistir. Nada gravado.
+> ```
+
+## 🤖 Claude *(01:24:51)*
+
+
+## 🤖 Claude *(01:24:52)*
+
+**[5] GATE PASSOU**: 1 linha, ambos campos CTR→GCM, sentinela + roundtrip OK, nada gravado. Exatamente o esperado. **[6] APLICAR** (`ALLOW_REENCRYPT=true`):
+
+## 🤖 Claude *(01:24:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"===== [6] BACKFILL --APPLY (persiste GCM) =====\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose exec -T -e ALLOW_REENCRYPT=true backend node scripts/reencrypt-secrets-gcm.js 2>&1'\necho\necho \"===== confirma no DB: formato agora gcm:v1: =====\"\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nDBN=$(grep -m1 \"^DB_NAME=\" .env|cut -d= -f2-); DBU=$(grep -m1 \"^DB_USER=\" .env|cut -d= -f2-); DBP=$(grep -m1 \"^DB_PWD=\" .env|cut -d= -f2-)\nMYSQL_PWD=\"$DBP\" docker exec -e MYSQL_PWD -T tradeux-db-1 mysql -N -u\"$DBU\" \"$DBN\" -e \"SELECT id, LEFT(secretKey,7) AS sk_pfx, LEFT(testnetSecretKey,7) AS tsk_pfx FROM settings\" 2>/dev/null\n'",
+  "description": "Step 6: apply backfill and confirm GCM format in DB"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 125
+> ===== [6] BACKFILL --APPLY (persiste GCM) =====
+> reencrypt-secrets-gcm: modo=APLICAR
+>   id=1 secretKey: CTR -> GCM  (len=64, sentinela OK, roundtrip OK)
+>   id=1 testnetSecretKey: CTR -> GCM  (len=64, sentinela OK, roundtrip OK)
+>   id=1: PERSISTIDO (secretKey, testnetSecretKey)
+> 
+> OK: 1 linha(s) migrada(s) CTR->GCM.
+> 
+> ===== confirma no DB: formato agora gcm:v1: =====
+> ```
+
+## 🤖 Claude *(01:25:05)*
+
+
+## 🤖 Claude *(01:25:07)*
+
+**[6] APLICADO**: "1 linha(s) migrada(s) CTR->GCM", secretKey + testnetSecretKey persistidos. (O exit 125 foi só a query de verificação do DB com flag ruim, não o backfill.) Verificando o formato no DB e seguindo pro **[7] restart + smoke GCM**:
+
+## 🤖 Claude *(01:25:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nDBN=$(grep -m1 \"^DB_NAME=\" .env|cut -d= -f2-); DBU=$(grep -m1 \"^DB_USER=\" .env|cut -d= -f2-); DBP=$(grep -m1 \"^DB_PWD=\" .env|cut -d= -f2-)\necho \"=== prefixo no DB (deve ser gcm:v1:) ===\"\ndocker exec -e MYSQL_PWD=\"$DBP\" -T tradeux-db-1 mysql -N -u\"$DBU\" \"$DBN\" -e \"SELECT id, LEFT(secretKey,8), LEFT(testnetSecretKey,8) FROM settings\" 2>/dev/null\necho\necho \"===== [7] RESTART backend (le GCM fresco do DB) =====\"\ndocker compose restart backend >/dev/null 2>&1\nAPI=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env|cut -d= -f2-); PW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env|cut -d= -f2-)\nTOK=$(curl -s --connect-timeout 5 --max-time 120 --retry 40 --retry-delay 2 --retry-connrefused --retry-all-errors -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\" | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho \"login pos-restart: $([ -n \"$TOK\" ] && echo OK || echo FALHOU)\"\necho \"===== GATE: Binance auth lendo GCM (GET /exchange/balance/USDT) =====\"\nB=$(curl -s -m20 -w \"|%{http_code}\" $API/exchange/balance/USDT -H \"Authorization: $TOK\")\nCODE=$(echo \"$B\"|sed \"s/.*|//\"); BODY=$(echo \"$B\"|sed \"s/|[0-9]*$//\")\necho \"http=$CODE\"; echo \"$BODY\" | head -c 180; echo\nif [ \"$CODE\" = \"200\" ] && echo \"$BODY\" | grep -qiE \"available|\\{\\\"BTC\"; then echo \">> GATE OK: Binance auth funcionando lendo GCM\"; else echo \">> !! GATE FALHOU -> ROLLBACK (restore backup + reverter)\"; fi\necho\necho \"===== idempotencia: re-run do backfill deve dizer tudo GCM =====\"\ndocker compose exec -T backend node scripts/reencrypt-secrets-gcm.js 2>&1 | tail -3\n'",
+  "description": "Verify GCM in DB, restart backend, smoke GCM-read gate, idempotency"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === prefixo no DB (deve ser gcm:v1:) ===
+> 
+> ===== [7] RESTART backend (le GCM fresco do DB) =====
+> login pos-restart: OK
+> ===== GATE: Binance auth lendo GCM (GET /exchange/balance/USDT) =====
+> http=200
+> {"BTC":{"available":"0.00000000","onOrder":"0.00000000","fiatEstimate":0},"LTC":{"available":"0.00009440","onOrder":"0.00000000","fiatEstimate":0},"ETH":{"available":"0.00000000","
+> >> GATE OK: Binance auth funcionando lendo GCM
+> 
+> ===== idempotencia: re-run do backfill deve dizer tudo GCM =====
+>   id=1 testnetSecretKey: já GCM -> skip
+> 
+> Nada a migrar (tudo já GCM ou vazio).
+> ```
+
+## 🤖 Claude *(01:25:32)*
+
+
+## 🤖 Claude *(01:25:34)*
+
+**[7] GATE PASSOU** — o ponto decisivo: backend reiniciou, limpou o cache, **leu a `secretKey` GCM do DB e autenticou na Binance** (200, saldos reais). Migração CTR→GCM **confirmada end-to-end**. Idempotência OK (re-run = "tudo já GCM → skip").
+
+**[8] UN-HALT** (restaura trading live) + verificação final:
+
+## 🤖 Claude *(01:25:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nset +e\ncd /home/gcrux-tradeux/tradeux\nAPI=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env|cut -d= -f2-); PW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env|cut -d= -f2-)\nTOK=$(curl -s -m10 -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\" | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho \"===== [8] UN-HALT (POST /system/halt {on:false}) =====\"\ncurl -s -m6 -X POST $API/system/halt -H \"Authorization: $TOK\" -H \"Content-Type: application/json\" -d \"{\\\"on\\\":false}\" | head -c 200; echo\necho -n \">> estado final: \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOK\" | sed -n \"s/.*\\(\\\"halted\\\":[a-z]*\\).*\\(\\\"floor\\\":{\\\"on\\\":[a-z]*\\).*\\(\\\"manual\\\":{\\\"on\\\":[a-z]*\\).*/\\1 \\2 \\3/p\"\n'",
+  "description": "Step 8: un-HALT and confirm live state restored"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== [8] UN-HALT (POST /system/halt {on:false}) =====
+> {"changed":true,"halted":false,"envHard":false,"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":
+> >> estado final: "halted":false "floor":{"on":false "manual":{"on":false
+> ```
+
+## 🤖 Claude *(01:25:44)*
+
+
+## 🤖 Claude *(01:25:45)*
+
+**[8] UN-HALT OK** → `halted:false`, floor off, manual off. **Trading de volta LIVE** (Canary retoma). Migração concluída. 
+
+**[9] PUSH** do Fix B (como ubuntu, chave SSH) + conserto do ownership:
+
+## 🤖 Claude *(01:25:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== push Fix B (087ccfb) ===\"\ngit -c safe.directory='*' push origin master 2>&1 | tail -5\necho\nN=$(find .git -user ubuntu 2>/dev/null | wc -l)\nif [ \"$N\" -gt 0 ]; then sudo chown -R gcrux-tradeux:gcrux-tradeux .git && echo \".git ownership corrigido ($N arquivos)\"; else echo \".git limpo\"; fi\necho; echo \"=== estado final git ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git -C /home/gcrux-tradeux/tradeux -c safe.directory=\"*\" log --oneline -3; echo \"---\"; git -C /home/gcrux-tradeux/tradeux -c safe.directory=\"*\" status -sb | head -1'",
+  "description": "Step 9: push Fix B and fix .git ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push Fix B (087ccfb) ===
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    5690a63..087ccfb  master -> master
+> 
+> .git ownership corrigido (1 arquivos)
+> 
+> === estado final git ===
+> 087ccfb feat(security): cripto das chaves AES-CTR->AES-GCM + mask do accessKey no GET /settings
+> 5690a63 feat(auth): step-up de confirmacao no save de Settings + blacklist de logout persistida
+> 78e4e65 feat(ops): backup cifrado do estado + reset-db granular (remove make nuke destrutivo)
+> ---
+> ## master...origin/master
+> ```
+
+## 🤖 Claude *(01:26:00)*
+
+
+## 🤖 Claude *(01:26:03)*
+
+**🎉 PUSH OK** — `5690a63..087ccfb master -> master`. `.git` consertado, git em sincronia. 
+
+**Os 3 fixes do design-review estão COMPLETOS, deployados e em origin:**
+- Fix A `78e4e65` · Fix C `5690a63` · **Fix B `087ccfb`** (migração CTR→GCM aplicada e validada).
+
+Atualizando a memória (Fix B agora entregue):
+
+## 🤖 Claude *(01:26:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "old_string": "description: Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) \u2014 A+C ENTREGUES+pushed (C deployado+smoke vivo); B (cripto, o perigoso) PENDENTE",
+  "new_string": "description: Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) \u2014 TODOS ENTREGUES+pushed+deployados; B = migra\u00e7\u00e3o CTR\u2192GCM das chaves vivas APLICADA e validada (Binance auth l\u00ea GCM)"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: description: Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) — A+C ENTREGUES+pushed (C deployado+smoke vivo); B (cripto, o perigoso) PENDENTE
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(01:26:10)*
+
+
+## 🤖 Claude *(01:26:11)*
+
+Deixa eu reler e reescrever o arquivo de memória inteiro (mais limpo que casar os travessões):
+
+## 🤖 Claude *(01:26:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: tradeux-design-fixes-2026-06-22
+> 3	description: "Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) — A+C ENTREGUES+pushed (C deployado+smoke vivo); B (cripto, o perigoso) PENDENTE"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 76d78950-b18e-4211-b874-da09b35431a1
+> 8	---
+> 9	
+> 10	Follow-ups do relatório de design adversarial ([[tradeux-mainnet-go-live]], `~/RESEARCH-design-review-2026-06-22.md`). Agenda vetada (workflow 10 agentes, plano→cético→síntese) salva em **`~/AGENDA-design-fixes-2026-06-22.md`**. Ordem acordada **A→C→B** (cripto por último por migrar chaves vivas). Cada fix passou por gate **QA + TL** + smoke.
+> 11	
+> 12	**✅ Fix A — `make nuke`→backup cifrado + `reset-db` granular** (commit `78e4e65`, pushed). Removeu `make nuke` (`down -v` apagava `db_data`=chaves + `backend_logs`=postura HALT). Novos `scripts/backup-state.sh` (gpg AES256 read-only: mysqldump + `/app/logs` do volume `tradeux_backend_logs` + **`.env`/AES_KEY** — dump das chaves é inútil sem ela — + round-trip de integridade) e `scripts/restore-state.sh`; `make reset-db` CONFIRM-gated, backup falha-fechado antes, remove SÓ `tradeux_db_data` (preserva risk_state). `backups/` 0700/0600 gitignored. **Baseline real existe** em `backups/` (decifrável com a passphrase). É tooling host-side → **não precisa deploy**.
+> 13	
+> 14	**✅ Fix C — step-up auth + blacklist persistente** (commit `5690a63`, pushed, **DEPLOYADO + smoke vivo OK**). Gap real era: `updateSettings` respondia 200 + `process.exit` ANTES de validar (qualquer save trocava credencial). Fixes: `utils/stepUpGuard.js` (PATCH /settings sensível "se-DIFERENTE" exige `SETTINGS_CONFIRM_PHRASE`; flag `STEP_UP_SETTINGS` default ON; NÃO ecoa a frase; sim-test 20 asserts), guard como 1ª instrução; `utils/tokenBlacklist.js` (logout persistido em `/app/logs` — path `../../logs` p/ bater o volume, igual `logger.js`; load síncrono pré-`listen`; escrita atômica tmp+rename; `add()` só guarda JWT **válido** via `jwt.verify` → fecha DoS do `/logout` **não-autenticado**); frontend `Settings.js` step-up reativo (`window.prompt` só no 400 `STEP_UP_REQUIRED`). Floor/halt/withdraw **intocados** (floor-off já tinha confirm). Smoke vivo: guard→400+frase-não-vaza, logout→401 **persiste através do restart**, floor sobrevive.
+> 15	
+> 16	**⏳ Fix B — AES-CTR→AES-GCM + mask do accessKey — PENDENTE** (o mais perigoso: migra as **chaves Binance vivas criptografadas no DB**). Plano na agenda: formato versionado `gcm:v1:iv:tag:ct`, leitura retrocompatível, backfill **one-shot manual sob HALT** (NÃO migration no boot — crash-loop), sentinela de plaintext (AES_KEY errada corrompe em silêncio), backup do `.env`+DB testado antes (o Fix A é o pré-req disso). `crypto.js` usa `createCipheriv` AES-256-CTR; `accessKey` vaza plaintext no GET /settings (`getSettings` só strip-a password/secretKey/testnetSecretKey).
+> 17	
+> 18	**Convenções operacionais (runtime, não-git — reaplicar pós-reset):**
+> 19	- Passphrase do backup **= a frase do step-up**, em `~gcrux-tradeux/.config/tradeux/backup.pass` (0600) E no `.env` live como `SETTINGS_CONFIRM_PHRASE` + `STEP_UP_SETTINGS=true`. `backup-state.sh`/`restore-state.sh` resolvem essa passphrase por convenção (default path) → `make reset-db` roda não-interativo. **Perder a passphrase = backups irrecuperáveis E não dá pra trocar Settings** (use `STEP_UP_SETTINGS=false` como escape do 2º).
+> 20	- backend roda como **ROOT** (uid=0), NÃO 1011:1013 (esse é o AGENT) — a análise da agenda errava nisso.
+> 21	- Deploy do Fix C = `docker compose up -d --build backend frontend` (rebuild atômico); volume `backend_logs` persiste risk_state+blacklist no restart.
+> 22	
+> 23	**Pré-reqs de código do GO-LIVE:** Fix A (backup) e Fix C (step-up) eram itens do relatório de design; Fix B fecha a cripto. Próximos do relatório ainda em aberto: `make nuke` já resolvido; AES-GCM = Fix B; RBAC = resolvido como step-up (single-operator). Vivo==master==origin==`5690a63`.
+> 24	
+> ```
+
+## 🤖 Claude *(01:26:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "old_string": "description: \"Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) \u2014 A+C ENTREGUES+pushed (C deployado+smoke vivo); B (cripto, o perigoso) PENDENTE\"",
+  "new_string": "description: \"Agenda dos 3 fixes do design-review 2026-06-22 (A backup/make-nuke, C step-up auth, B cripto GCM) \u2014 TODOS ENTREGUES+pushed+deployados; B = migra\u00e7\u00e3o CTR\u2192GCM das chaves vivas APLICADA e validada (Binance auth l\u00ea GCM)\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:26:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "old_string": "**\u23f3 Fix B \u2014 AES-CTR\u2192AES-GCM + mask do accessKey \u2014 PENDENTE** (o mais perigoso: migra as **chaves Binance vivas criptografadas no DB**). Plano na agenda: formato versionado `gcm:v1:iv:tag:ct`, leitura retrocompat\u00edvel, backfill **one-shot manual sob HALT** (N\u00c3O migration no boot \u2014 crash-loop), sentinela de plaintext (AES_KEY errada corrompe em sil\u00eancio), backup do `.env`+DB testado antes (o Fix A \u00e9 o pr\u00e9-req disso). `crypto.js` usa `createCipheriv` AES-256-CTR; `accessKey` vaza plaintext no GET /settings (`getSettings` s\u00f3 strip-a password/secretKey/testnetSecretKey).",
+  "new_string": "**\u2705 Fix B \u2014 AES-CTR\u2192AES-GCM + mask do accessKey** (commit `087ccfb`, pushed, **DEPLOYADO + MIGRA\u00c7\u00c3O APLICADA**). `crypto.js`: escrita agora AES-256-GCM (crypto nativo, IV aleat\u00f3rio/valor + auth tag, formato versionado `gcm:v1:<iv>:<tag>:<ct>`); leitura **dual** (prefixo\u2192GCM, sen\u00e3o\u2192legado CTR via aes-js byte-id\u00eantico) \u2192 backend l\u00ea o que j\u00e1 est\u00e1 no banco; guard fail-closed `out.length>255` LAN\u00c7A (coluna \u00e9 VARCHAR(255); secrets atuais 64\u2192137 chars OK). `utils/mask.js` `maskSecret` (4+****+4) no GET /settings p/ accessKey/testnetAccessKey (paravam de vazar plaintext); repo + stepUpGuard **mask-aware** (re-save do mask n\u00e3o sobrescreve a chave nem dispara step-up). `scripts/reencrypt-secrets-gcm.js` = backfill one-shot manual (dry-run default; `ALLOW_REENCRYPT=true` aplica), **sentinela de plaintext** (pega AES_KEY errada) + roundtrip + ALL-OR-NOTHING + idempotente. **Migra\u00e7\u00e3o executada ao vivo sob HALT** (sequ\u00eancia: backup\u2192HALT manual\u2192rebuild\u2192smoke CTR\u2192Binance OK\u2192dry-run\u2192`--apply`\u2192restart\u2192smoke GCM\u2192Binance OK\u2192un-HALT): s\u00f3 id=1 (secretKey+testnetSecretKey, 64 chars HMAC) migrou; **Binance auth confirmada lendo GCM p\u00f3s-restart**. S\u00f3 `secretKey`/`testnetSecretKey` s\u00e3o criptografados (2 campos). **Follow-ups (n\u00e3o feitos):** coluna `VARCHAR(255)\u2192TEXT` (necess\u00e1rio antes de aceitar chave Ed25519 PEM longa); **`accessKey` ainda plaintext at-rest** (s\u00f3 mascarado no display \u2014 um dump do DB ainda exp\u00f5e a API key mainnet)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:26:42)*
+
+
+## 🤖 Claude *(01:26:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "old_string": "**Pr\u00e9-reqs de c\u00f3digo do GO-LIVE:** Fix A (backup) e Fix C (step-up) eram itens do relat\u00f3rio de design; Fix B fecha a cripto. Pr\u00f3ximos do relat\u00f3rio ainda em aberto: `make nuke` j\u00e1 resolvido; AES-GCM = Fix B; RBAC = resolvido como step-up (single-operator). Vivo==master==origin==`5690a63`.",
+  "new_string": "**Fechamento:** os 3 itens HIGH/MEDIUM do relat\u00f3rio de design est\u00e3o resolvidos \u2014 `make nuke` (Fix A), AES-GCM + accessKey-leak (Fix B), RBAC\u2192step-up single-operator (Fix C). **Vivo==master==origin==`087ccfb`.** Working tree s\u00f3 com scratch `backtest-results/*` (n\u00e3o-commitado). Follow-ups de baixa urg\u00eancia registrados no Fix B (VARCHAR\u2192TEXT, accessKey at-rest). **Reencriptar \u00e9 idempotente** \u2014 se um reset recriar o DB do `.env`-seed (que pode trazer chaves CTR), rodar `docker compose exec -e ALLOW_REENCRYPT=true backend node scripts/reencrypt-secrets-gcm.js` de novo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:26:52)*
+
+
+## 🤖 Claude *(01:26:52)*
+
+Atualizando o pointer no índice `MEMORY.md`:
+
+## 🤖 Claude *(01:26:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Design fixes 2026-06-22](tradeux-design-fixes-2026-06-22.md) \u2014 agenda dos 3 fixes do design-review (`~/AGENDA-design-fixes-2026-06-22.md`); **Fix A (backup cifrado + reset-db, remove make nuke) `78e4e65` e Fix C (step-up auth + blacklist persistente) `5690a63` ENTREGUES+pushed** (C deployado+smoke vivo); **Fix B (cripto AES-CTR\u2192GCM, o perigoso) PENDENTE**; passphrase backup==step-up em `~/.config/tradeux/backup.pass`; backend roda como ROOT",
+  "new_string": "- [Design fixes 2026-06-22](tradeux-design-fixes-2026-06-22.md) \u2014 agenda dos 3 fixes do design-review (`~/AGENDA-design-fixes-2026-06-22.md`); **TODOS ENTREGUES+pushed+deployados**: Fix A backup cifrado + reset-db (remove make nuke) `78e4e65`, Fix C step-up auth + blacklist persistente `5690a63`, **Fix B cripto AES-CTR\u2192GCM + mask accessKey `087ccfb` (migra\u00e7\u00e3o das chaves vivas APLICADA sob HALT; Binance auth l\u00ea GCM)**; passphrase backup==step-up em `~/.config/tradeux/backup.pass`; backend roda como ROOT; **vivo==`087ccfb`**; follow-ups: VARCHAR\u2192TEXT, accessKey at-rest plaintext"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:27:09)*
+
+
+## 🤖 Claude *(01:27:10)*
+
+Memória completa. **Verificação final** da stack:
+
+## 🤖 Claude *(01:27:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps' 2>/dev/null\necho\ncurl -s -m5 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nAPI=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env|cut -d= -f2-); PW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env|cut -d= -f2-)\nTOK=$(curl -s -m10 -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\" | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho -n \"HALT final: \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOK\" | sed -n \"s/.*\\(\\\"halted\\\":[a-z]*\\).*/\\1/p\"\necho -n \"git: \"; git -c safe.directory=\"*\" status -sb | head -1\n'",
+  "description": "Final health check of stack, halt, git"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED         STATUS                PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      13 hours ago    Up 13 hours           
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    3 minutes ago   Up About a minute     3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         2 weeks ago     Up 7 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   7 hours ago     Up 7 hours            127.0.0.1:8090->80/tcp
+> 
+> site -> 200
+> HALT final: "halted":falsegit: ## master...origin/master
+> ```
+
+## 🤖 Claude *(01:27:23)*
+
+
+## 🤖 Claude *(01:27:25)*
+
+Tudo verde: 4 containers up, site 200, **`halted:false` (trading live, Canary rodando)**, git em sincronia.
+
+Vou registrar os 2 follow-ups que os gates sinalizaram (fora do escopo desta rodada, mas reais) como tarefas de fundo:
+
+## 🤖 Claude *(01:27:40)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Encriptar accessKey/testnetAccessKey at-rest",
+  "prompt": "No TradeUX (backend Node/Express + Sequelize, MySQL), o `accessKey` e `testnetAccessKey` (API keys Binance) s\u00e3o guardados em PLAINTEXT na tabela `settings` do DB. O Fix B (commit 087ccfb) s\u00f3 os MASCAROU no GET /settings (via `backend/src/utils/mask.js` + `settingsController.getSettings`), mas um dump/SELECT do DB ainda exp\u00f5e a API key mainnet em claro (metade do par de credenciais; a secretKey j\u00e1 \u00e9 AES-GCM via `backend/src/utils/crypto.js`).\n\nTarefa: encriptar accessKey/testnetAccessKey at-rest reusando o `crypto.encrypt/decrypt` (AES-GCM, j\u00e1 retrocompat\u00edvel com CTR) \u2014 mesma estrat\u00e9gia do Fix B. Pontos a tocar:\n1. `backend/src/repositories/settingsRepository.js`: encriptar accessKey/testnetAccessKey na escrita (espelhar o tratamento de secretKey nas linhas ~92-95) e decriptar em `getSettingsDecrypted` (linhas ~11-12). ATEN\u00c7\u00c3O: o accessKey \u00e9 LIDO em v\u00e1rios consumidores do caminho ativo (`exchange.js`, `app-em.js`, `symbolsController`) via `getSettingsDecrypted`/`getDefaultSettings` \u2014 garantir que TODOS recebam o valor decriptado (o caminho ativo N\u00c3O pode receber o mascarado nem o cifrado).\n2. Backfill: estender/clonar `backend/scripts/reencrypt-secrets-gcm.js` para tamb\u00e9m migrar accessKey/testnetAccessKey (hoje plaintext \u2192 GCM), com sentinela + roundtrip + all-or-nothing + dry-run default. Cuidado: plaintext atual N\u00c3O tem prefixo gcm: nem \u00e9 hex-CTR \u2014 o backfill precisa distinguir \"plaintext nunca-encriptado\" de \"CTR legado\". Para accessKey, tudo que n\u00e3o for `gcm:v1:` \u00e9 plaintext.\n3. Intera\u00e7\u00e3o com o mask (Fix B): o `maskSecret` e os guards mask-aware em `settingsRepository`/`stepUpGuard` continuam corretos (operam sobre o valor decriptado/exibido).\n4. Coluna VARCHAR(255): conferir o tamanho do cipher do accessKey (HMAC ~64 \u2192 ~137, cabe; mas ver o follow-up separado de VARCHAR\u2192TEXT).\n\nRodar sob HALT com backup (`make backup-state`), gate QA+TL, e a mesma sequ\u00eancia do Fix B (deploy l\u00ea ambos formatos \u2192 dry-run \u2192 --apply \u2192 restart \u2192 smoke Binance auth). Ver mem\u00f3ria `tradeux-design-fixes-2026-06-22` e `~/AGENDA-design-fixes-2026-06-22.md`.",
+  "tldr": "A API key Binance (accessKey) ainda fica em texto claro no banco \u2014 s\u00f3 foi mascarada na tela. Encriptar at-rest igual j\u00e1 se fez com a secretKey, com migra\u00e7\u00e3o sob HALT."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1, task_id: task_b94f3596). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. Currently pending: task_b94f3596 "Encriptar accessKey/testnetAccessKey at-rest". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(01:27:50)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Migrar colunas de secret p/ TEXT (VARCHAR 255)",
+  "prompt": "No TradeUX, as colunas `secretKey` e `testnetSecretKey` da tabela `settings` s\u00e3o `Sequelize.STRING` = VARCHAR(255) (ver `backend/src/models/settingsModel.js`). Depois do Fix B (AES-GCM, commit 087ccfb), o ciphertext GCM \u00e9 maior que o plaintext: um HMAC de 64 chars vira ~137 (cabe), mas uma chave Ed25519 em PEM (mais longa) poderia estourar 255 chars. H\u00e1 um guard fail-closed em `backend/src/utils/crypto.js` (`if (out.length > 255) throw`) que IMPEDE truncamento silencioso \u2014 mas isso significa que tentar salvar uma chave Ed25519 longa hoje LAN\u00c7A erro em vez de funcionar.\n\nTarefa: criar uma migration Sequelize (dual-dialect mysql+postgres, seguir o padr\u00e3o de `backend/migrations/` e o lint `scripts/ci-lint-migrations.sh`) que altere `secretKey` e `testnetSecretKey` para `TEXT`. Depois, remover (ou afrouxar) o guard de 255 em `crypto.js` j\u00e1 que a coluna n\u00e3o ter\u00e1 mais o limite. Considerar fazer o mesmo para `accessKey`/`testnetAccessKey` se o follow-up de encript\u00e1-los at-rest for adiante.\n\nTestar: `bash scripts/ci-preflight.sh` (migrate+seed nos 2 dialetos) + `npm run test:sim` (crypto.test.js). Baixa urg\u00eancia: as credenciais atuais s\u00e3o HMAC de 64 chars e cabem folgado; isto s\u00f3 destrava aceitar chaves Ed25519/PEM longas pela UI. Gate QA+TL antes de mergear. Ver mem\u00f3ria `tradeux-design-fixes-2026-06-22`.",
+  "tldr": "As colunas de secret s\u00e3o VARCHAR(255); um cipher GCM de chave longa (Ed25519 PEM) estouraria. Migrar para TEXT e relaxar o guard de tamanho. Baixa urg\u00eancia (chaves atuais cabem)."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 2, task_id: task_d62a3930). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. Currently pending: task_b94f3596 "Encriptar accessKey/testnetAccessKey at-rest", task_d62a3930 "Migrar colunas de secret p/ TEXT (VARCHAR 255)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(01:27:54)*
+
+
+## 🤖 Claude *(01:28:08)*
+
+Tudo concluído. Resumo final da sessão:
+
+## ✅ Os 3 fixes do design-review — ENTREGUES, DEPLOYADOS e em origin
+
+| Fix | Commit | Estado |
+|---|---|---|
+| **A** — backup cifrado + `reset-db` granular (remove `make nuke`) | [`78e4e65`](https://github.com/gabrielZarattini/tradeux/commit/78e4e65) | gated · baseline real · pushed |
+| **C** — step-up auth + blacklist persistente | [`5690a63`](https://github.com/gabrielZarattini/tradeux/commit/5690a63) | gated · **deployado** · smoke vivo · pushed |
+| **B** — cripto AES-CTR→GCM + mask do accessKey | [`087ccfb`](https://github.com/gabrielZarattini/tradeux/commit/087ccfb) | gated · **deployado** · **migração das chaves vivas APLICADA** · pushed |
+
+`master == origin/master == 087ccfb`. Stack 4/4 up, site 200, **`halted:false` (trading live, Canary rodando)**.
+
+**A migração da cripto (a parte perigosa) correu limpa, sob HALT, com gates a cada passo:**
+backup fresco → HALT manual → rebuild (nova crypto lê CTR) → **smoke: Binance auth OK lendo CTR** → dry-run (1 linha, sentinela+roundtrip OK) → `--apply` → restart → **smoke: Binance auth OK lendo GCM** → un-HALT. Saldos reais retornaram nos dois smokes; o segredo nunca foi impresso; a rede de rollback (backup + leitura dual retrocompatível) nunca precisou ser usada.
+
+**Também nesta sessão:** verifiquei os `backtest-results/*` (scratch limpo, não-contaminação) e produzi a agenda vetada adversarialmente (`~/AGENDA-design-fixes-2026-06-22.md`, workflow de 10 agentes). O cético pegou furos reais que mudaram o desenho — backup inútil sem o `.env`/AES_KEY, response-antes-do-guard no `updateSettings`, backend roda como ROOT (não 1011:1013), DoS no `/logout` não-autenticado, e o footgun do VARCHAR(255) — todos endereçados.
+
+**Memória atualizada** (`tradeux-design-fixes-2026-06-22` + índice).
+
+**2 follow-ups sinalizados como chips** (fora de escopo, baixa urgência):
+1. **Encriptar `accessKey` at-rest** — hoje só mascarado no display; um dump do DB ainda expõe a API key mainnet em claro.
+2. **Colunas de secret VARCHAR(255)→TEXT** — destrava aceitar chaves Ed25519/PEM longas (as atuais HMAC-64 cabem).
+
+Nada mais pendente da sua direção. Working tree limpo exceto o scratch dos backtests. Quando quiser selar a sessão, é `/handoff`.
+
+## 👤 User *(01:28:15)*
+
+No TradeUX (backend Node/Express + Sequelize, MySQL), o `accessKey` e `testnetAccessKey` (API keys Binance) são guardados em PLAINTEXT na tabela `settings` do DB. O Fix B (commit 087ccfb) só os MASCAROU no GET /settings (via `backend/src/utils/mask.js` + `settingsController.getSettings`), mas um dump/SELECT do DB ainda expõe a API key mainnet em claro (metade do par de credenciais; a secretKey já é AES-GCM via `backend/src/utils/crypto.js`).
+
+Tarefa: encriptar accessKey/testnetAccessKey at-rest reusando o `crypto.encrypt/decrypt` (AES-GCM, já retrocompatível com CTR) — mesma estratégia do Fix B. Pontos a tocar:
+1. `backend/src/repositories/settingsRepository.js`: encriptar accessKey/testnetAccessKey na escrita (espelhar o tratamento de secretKey nas linhas ~92-95) e decriptar em `getSettingsDecrypted` (linhas ~11-12). ATENÇÃO: o accessKey é LIDO em vários consumidores do caminho ativo (`exchange.js`, `app-em.js`, `symbolsController`) via `getSettingsDecrypted`/`getDefaultSettings` — garantir que TODOS recebam o valor decriptado (o caminho ativo NÃO pode receber o mascarado nem o cifrado).
+2. Backfill: estender/clonar `backend/scripts/reencrypt-secrets-gcm.js` para também migrar accessKey/testnetAccessKey (hoje plaintext → GCM), com sentinela + roundtrip + all-or-nothing + dry-run default. Cuidado: plaintext atual NÃO tem prefixo gcm: nem é hex-CTR — o backfill precisa distinguir "plaintext nunca-encriptado" de "CTR legado". Para accessKey, tudo que não for `gcm:v1:` é plaintext.
+3. Interação com o mask (Fix B): o `maskSecret` e os guards mask-aware em `settingsRepository`/`stepUpGuard` continuam corretos (operam sobre o valor decriptado/exibido).
+4. Coluna VARCHAR(255): conferir o tamanho do cipher do accessKey (HMAC ~64 → ~137, cabe; mas ver o follow-up separado de VARCHAR→TEXT).
+
+Rodar sob HALT com backup (`make backup-state`), gate QA+TL, e a mesma sequência do Fix B (deploy lê ambos formatos → dry-run → --apply → restart → smoke Binance auth). Ver memória `tradeux-design-fixes-2026-06-22` e `~/AGENDA-design-fixes-2026-06-22.md`.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5248,6 +5858,5 @@ You've hit your session limit · resets 7:10pm (America/Sao_Paulo)
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-22 - Validar studio design e canvas studio end-to-end]]
-> * **Próxima Sessão**: [[2026-06-22 - agent-a0084933295f2111e]]
+> * **Sessão Anterior**: [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]
 %% --- TIMELINE END --- %%

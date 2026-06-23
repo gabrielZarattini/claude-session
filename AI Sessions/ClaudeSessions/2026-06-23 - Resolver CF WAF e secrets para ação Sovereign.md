@@ -1,5 +1,5 @@
-# [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign|Resolver CF WAF e secrets para ação Sovereign]]
-**Date:** 2026-06-22 | **Session ID:** `57ddea14-715c-47a6-ad8d-1cb57387c027`
+# [[2026-06-22 - Resolver CF WAF e secrets para ação Sovereign|Resolver CF WAF e secrets para ação Sovereign]]
+**Date:** 2026-06-23 | **Session ID:** `57ddea14-715c-47a6-ad8d-1cb57387c027`
 
 ---
 
@@ -4402,6 +4402,160 @@ Mas antes de remover qualquer secret — **uma armadilha material crítica (Lei 
 
 You've hit your session limit · resets 7:10pm (America/Sao_Paulo)
 
+## 👤 User *(01:22:03)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(01:22:03)*
+
+No response requested.
+
+## 👤 User *(01:22:04)*
+
+Lendo isso.: Agora canvas-execute (#2): linhas 139-140 usam Higgsfield só do env; os outros 4 providers já são per-user. Material trap que peguei: existe uma linha com higgsfield_api_key=null mas secret setado — um || env por-campo misturaria key-env + secret-peruser (auth quebra). Então resolvo o par atomicamente (per-user só se os DOIS existirem; senão env nos dois) — zero regressão:...
+
+---
+
+
+Vejo que isso não esta coerente, as chaves de env, é somente para funcionamento global, como supabase e os VITE SB e SupaBase são globais para o ecossistema funcionar. O resto é peruser por ezxemplo eu coloquei mas preciso remover agora mesmo.:
+
+OPENROUTER_API_KEY, GEMINI_API_KEY, HIGGSFIELD_API_KEY_SECRET, HIGGSFIELD_API_KEY, APIFY_KEY, APIFY_TOKENS, REPLICATE_API_KEY, RAPIDAPI_KEY e VISION_MCP_PAT devem ser tudo BYOK e configurados per-user.
+
+## 🤖 Claude *(01:23:09)*
+
+
+## 🤖 Claude *(01:23:14)*
+
+Mapa material completo. **Decisivo:** só **4 dos 9 estão no vault** (OPENROUTER, GEMINI, HIGGSFIELD, HIGGSFIELD_SECRET); APIFY/RAPIDAPI/REPLICATE/VISION_MCP_PAT **nem são edge secrets** (só `.env` local/scripts). E o uso se divide em dois mundos:
+
+- **~25 fns user-facing** com `userKeys?.X || env` → fallback a **remover** (per-user puro).
+- **2 fns de SISTEMA env-only (sem usuário)** que **quebram** se eu remover o secret: **`embed-mcorch-node`** (NUCLEAR — embedding via pg_net em todo insert) + **`search-constellation`**, ambas usam OPENROUTER+GEMINI.
+
+Antes de remover qualquer coisa, o fato que decide o blast radius: **você (Usuário Zero) tem suas BYOK setadas per-user?** Se não, remover o fallback quebra o SEU próprio pipeline. Checando (mascarado):
+
+## 🤖 Claude *(01:23:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== BYOK per-user do Usu\u00e1rio Zero (SET=configurado / null=vazio) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=openrouter_api_key,google_api_key,replicate_api_key,higgsfield_api_key,higgsfield_api_key_secret,apify_token,rapidapi_key&user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | python3 -c \"import sys,json\nd=json.load(sys.stdin)\nif not d: print('(sem row)'); exit()\nr=d[0]\nfor k in ['openrouter_api_key','google_api_key','replicate_api_key','higgsfield_api_key','higgsfield_api_key_secret','apify_token','rapidapi_key']:\n    print(f'  {k:28} = {\\\"SET\\\" if r.get(k) else \\\"null\\\"}')\"",
+  "description": "Check Usuario Zero per-user BYOK keys status"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === BYOK per-user do Usuário Zero (SET=configurado / null=vazio) ===
+> Traceback (most recent call last):
+>   File "<string>", line 4, in <module>
+> KeyError: 0
+> ```
+
+## 🤖 Claude *(01:23:30)*
+
+
+## 🤖 Claude *(01:23:31)*
+
+A query quebrou porque `apify_token`/`rapidapi_key` **não existem como coluna** (fetch-trends ainda não tem tabela per-user — é o #3). Refaço só com as colunas que existem:
+
+## 🤖 Claude *(01:23:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== BYOK per-user do Usu\u00e1rio Zero (colunas existentes) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=openrouter_api_key,google_api_key,replicate_api_key,openai_api_key,groq_api_key,higgsfield_api_key,higgsfield_api_key_secret&user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | python3 -c \"import sys,json\nd=json.load(sys.stdin)\nif isinstance(d,dict): print('ERRO:',d.get('message','?')); exit()\nif not d: print('(sem row)'); exit()\nr=d[0]\nfor k in ['openrouter_api_key','google_api_key','replicate_api_key','openai_api_key','groq_api_key','higgsfield_api_key','higgsfield_api_key_secret']:\n    print(f'  {k:28} = {\\\"SET\\\" if r.get(k) else \\\"null\\\"}')\"",
+  "description": "Check Usuario Zero per-user BYOK keys (existing columns)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BYOK per-user do Usuário Zero (colunas existentes) ===
+>   openrouter_api_key           = SET
+>   google_api_key               = SET
+>   replicate_api_key            = SET
+>   openai_api_key               = SET
+>   groq_api_key                 = SET
+>   higgsfield_api_key           = null
+>   higgsfield_api_key_secret    = SET
+> ```
+
+## 🤖 Claude *(01:25:00)*
+
+
+## 🤖 Claude *(01:25:10)*
+
+Material decisivo — **você (Usuário Zero) tem quase tudo BYOK setado**:
+
+| Key per-user | Status |
+|---|---|
+| openrouter · google(gemini) · replicate · openai · groq | ✅ **SET** |
+| **higgsfield_api_key** | ❌ **null** (só o secret está set — row meio-preenchido) |
+
+Ou seja: remover o fallback de OPENROUTER/GEMINI/REPLICATE é **seguro pro seu pipeline** (você roda nas suas chaves). Só o **Higgsfield** quebraria até você setar a key per-user.
+
+## Plano da migração "env = só infra" (3 fases)
+
+**Fase 1 — ~25 fns user-facing:** trocar `userKeys?.X || env` → **per-user puro + fail-closed** (402/501 `{error, action→/dashboard/settings}` + telemetria). Seguro pra você (BYOK set).
+
+**Fase 2 — 2 fns de SISTEMA sem usuário** (`embed-mcorch-node` NUCLEAR + `search-constellation`): hoje env-only. **Não dá pra simplesmente remover** — quebra a malha. Precisam de uma fonte de chave → **decisão sua abaixo**.
+
+**Fase 3 — remover os 4 secrets do vault** (OPENROUTER, GEMINI, HIGGSFIELD, HIGGSFIELD_SECRET) — só **depois** de 1+2. (APIFY/RAPIDAPI/REPLICATE/VISION_MCP_PAT **nem estão no vault** — nada a remover lá.)
+
+**Notas:** (a) **Higgsfield:** seu `higgsfield_api_key` está null → preciso que você seta a key em Settings antes (ou o Higgsfield fica fail-closed). (b) **Scripts** (`enrich/discover-affiliate-products`, `agent-task-runner`, `vision-qa`) rodam do `.env` local em contexto **cron/sistema** — não são edge secrets; ficam como estão (exceção legítima). (c) **fetch-trends** (#3) precisa de colunas per-user novas (`apify_token`/`rapidapi_key` não existem) — entra junto se você quiser.
+
+Preciso de 2 decisões pra executar a migração inteira (via workflow):
+
+## 🤖 Claude *(01:25:22)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Fase 2 \u2014 as 2 fns de sistema (embed-mcorch-node + search-constellation) n\u00e3o t\u00eam usu\u00e1rio. De onde elas tiram a chave de embedding?",
+      "header": "Chave de sistema",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Chave de infra dedicada (recomendado)",
+          "description": "Mant\u00e9m UMA chave no env S\u00d3 pra o pipeline de embedding, renomeada como infra (ex.: MESH_EMBED_KEY) \u2014 n\u00e3o \u00e9 fallback user-facing. Alinha com 'env = infra pro ecossistema funcionar' (a malha \u00c9 infra global). Mais robusto: n\u00e3o acopla infra \u00e0 sua chave pessoal nem cobra embeddings de sistema na sua carteira."
+        },
+        {
+          "label": "Sua BYOK de operador",
+          "description": "embed/search resolvem a SUA chave per-user (operador da plataforma). 'env = zero provider keys' de forma pura, mas acopla a infra \u00e0 sua chave pessoal (se voc\u00ea rotacionar/remover, a malha para) e os embeddings de n\u00f3s de sistema passam a ser custeados na sua conta."
+        }
+      ]
+    },
+    {
+      "question": "Executo a migra\u00e7\u00e3o completa agora (workflow: ~25 fns user-facing \u2192 per-user puro fail-closed + Fase 2 + remover os 4 secrets)?",
+      "header": "Executar",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "GO \u2014 migra\u00e7\u00e3o completa",
+          "description": "Rodo o workflow que transforma as ~25 fns (remove fallback, fail-closed estruturado, telemetria), migra as 2 de sistema conforme a decis\u00e3o acima, deploya tudo, e remove os 4 secrets do vault. Higgsfield fica fail-closed at\u00e9 voc\u00ea setar sua key."
+        },
+        {
+          "label": "S\u00f3 c\u00f3digo, secrets depois",
+          "description": "Fa\u00e7o todas as mudan\u00e7as de c\u00f3digo (per-user puro) + deploy, mas N\u00c3O removo os secrets do vault ainda \u2014 voc\u00ea remove quando confirmar que tudo roda nas BYOK. Mais conservador (rollback trivial)."
+        },
+        {
+          "label": "Incluir fetch-trends (#3)",
+          "description": "Al\u00e9m da migra\u00e7\u00e3o, j\u00e1 crio as colunas per-user apify_token/rapidapi_key + UI + fail-closed no fetch-trends, fechando o #3 per-user no mesmo arco (em vez de OTD)."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -4411,6 +4565,6 @@ You've hit your session limit · resets 7:10pm (America/Sao_Paulo)
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-22 - 22f214a3-c50c-49c1-b8a4-3b29e21e17fa]]
-> * **Próxima Sessão**: [[2026-06-22 - Resolver alertas e próximos passos]]
+> * **Sessão Anterior**: [[2026-06-22 - agent-afbda1deee15bc84c]]
+> * **Próxima Sessão**: [[2026-06-23 - Verificar backtest-results e fixes de design]]
 %% --- TIMELINE END --- %%

@@ -808,4 +808,5 @@ Relevant files:
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-22 - agent-af8f621c5a5a09ed3]]
+> * **Próxima Sessão**: [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]
 %% --- TIMELINE END --- %%
