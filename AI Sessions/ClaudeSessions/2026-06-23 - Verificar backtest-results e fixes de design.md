@@ -7558,6 +7558,199 @@ HANDOFF.md está em `/home/gcrux-tradeux/HANDOFF.md` (o `/handson` leu de lá). 
 > **⚡ NEXT (prioridade):** (1) **AGENDAR (do relatório de design):** `make nuke` apaga `risk_state.json` (postura HALT) → preservar volume/backup; AES-CTR sem IV (keystream reusado) + `accessKey` plaintext no GET /settings → AES-GCM+mask; restart-incondicional em qualquer save de Settings; H1 confirmação no toggle + invariante de ambiente no boot; RBAC (floor/halt/withdraw num só JWT). (2) **flip do H3** quando quiser o resgate real: `EARN_AUTO_REDEEM=true`+restart (pré-reqs de idempotência/async JÁ aplicados). (3) `.env.example` não tem os params de risco recentes → débito separado. (4) **observar o paper** (veredito edge em ~1-2 sem) + **decisão macro do dono** (recuperar USDT vs empilhar BTC). **Claude NÃO vira o HALT.** Working tree: só `backtest-results/*` (scratch cross-session, NÃO commitado). Memórias atualizadas: `tradeux-earn-autosubscribe-incident` (runbook do flip + Camada 2 descartada), `tradeux-mainnet-go-live` (re-revisão + 3 fixes), `tradeux-1m-scalping-and-cockpit` (fix forwarding MCP), `tradeux-api-auth-recipe` (nova). **Débitos:** withdraw() tem o mesmo try/catch-sync inerte do redeemFlexible (limpeza separada); E2E do wiring do loadFarmSellingLocks + do path da automação do withdraw (antes de escalar/flipar).
 > ```
 
+## 🤖 Claude *(01:59:57)*
+
+
+## 🤖 Claude *(01:59:58)*
+
+HANDOFF.md está em `/home/gcrux-tradeux/HANDOFF.md` (ubuntu-owned, 163KB). Vou atualizar o ponteiro Vivo no header + anexar o SEAL desta sessão. Escrevendo o registro:
+
+## 🤖 Claude *(02:00:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/seal-record.md",
+  "content": "\n### \ud83e\udd1d SEAL \u2014 2026-06-23 (DESIGN-REVIEW 2026-06-22 \u2014 3 FIXES FECHADOS A\u2192C\u2192B + 2 follow-ups; todos gate QA+TL, deployados, pushed)\n\n**`Vivo==master==origin==2cd9ed9` (5 commits, todos gate QA+TL + smoke vivo). \ud83d\udd34 LIVE (`halted=false`) o tempo todo (exceto janelas curtas de HALT MANUAL nas migra\u00e7\u00f5es de chave), Canary FARM-ONLY, equity ~$149 intacta. Secret-scan do range `5edf856..2cd9ed9` LIMPO (.env/.gpg/passphrase N\u00c3O versionados).** Trunk-based direct-to-master; cada commit j\u00e1 em origin.\n\nEntregou os 3 fixes do relat\u00f3rio de design adversarial (`~/RESEARCH-design-review-2026-06-22.md`), ordem A\u2192C\u2192B + 2 follow-ups. Agenda vetada (workflow 10 agentes, plano\u2192c\u00e9tico\u2192s\u00edntese) em `~/AGENDA-design-fixes-2026-06-22.md`. Mem\u00f3ria: nova `tradeux-design-fixes-2026-06-22`.\n\n**(A) `make nuke`\u2192backup cifrado + reset-db granular** (`78e4e65`, host-side, SEM deploy): removeu `make nuke` (`down -v` apagava db_data=chaves + backend_logs=postura HALT). `scripts/backup-state.sh` (gpg AES256 read-only: mysqldump + /app/logs do volume backend_logs + **.env/AES_KEY** \u2014 dump das chaves \u00e9 lixo sem ela \u2014 + round-trip de integridade) + `restore-state.sh`; `make reset-db` CONFIRM-gated, backup falha-fechado ANTES, remove S\u00d3 `tradeux_db_data`. backups/ 0700 gitignored. Baseline real gerado.\n\n**(C) step-up auth + blacklist persistente** (`5690a63`, deployado): `updateSettings` respondia 200+`process.exit` ANTES de validar (qualquer save trocava credencial) \u2192 `stepUpGuard.js` (PATCH /settings sens\u00edvel \"se-DIFERENTE\" exige `SETTINGS_CONFIRM_PHRASE`; flag `STEP_UP_SETTINGS` default ON), guard como 1\u00aa instru\u00e7\u00e3o; `tokenBlacklist.js` (logout persistido em /app/logs; load s\u00edncrono pr\u00e9-`listen`; escrita at\u00f4mica; `add()` s\u00f3 guarda JWT v\u00e1lido via `jwt.verify` \u2192 fecha DoS do `/logout` N\u00c3O-autenticado); frontend step-up reativo (window.prompt s\u00f3 no 400). Floor/halt/withdraw intocados. Smoke: 400+frase-n\u00e3o-vaza, logout persiste atrav\u00e9s do restart.\n\n**(B) AES-CTR\u2192GCM + mask accessKey** (`087ccfb` + follow-ups `acd745c`/`2cd9ed9`, deployados+MIGRADOS): migrou as CHAVES BINANCE VIVAS. `crypto.js` escreve AES-256-GCM (IV/tag, formato `gcm:v1:`), l\u00ea DUAL (retrocompat CTR byte-id\u00eantico). `mask.js`. `reencrypt-secrets-gcm.js` = backfill manual one-shot (dry-run default, `ALLOW_REENCRYPT=true` aplica; sentinela de plaintext + roundtrip + all-or-nothing + idempotente). Migra\u00e7\u00e3o ao vivo sob HALT: deploy l\u00ea CTR \u2192 smoke Binance auth \u2192 dry-run \u2192 --apply \u2192 restart \u2192 smoke Binance auth lendo GCM \u2192 un-HALT. **`acd745c`:** encripta accessKey/testnetAccessKey at-rest tamb\u00e9m (eram plaintext, s\u00f3 mascarados; `decryptIfGcm` format-agn\u00f3stico p/ a janela plaintext\u2192GCM). **`2cd9ed9`:** 4 colunas de credencial `VARCHAR(255)\u2192TEXT` (cipher 137 cabia, mas Ed25519/PEM longa estourava) + guard `crypto.encrypt >255`\u2192`MAX_CIPHER_LEN=60000`. As 4 migra\u00e7\u00f5es de chave correram com Binance auth validada NAS DUAS PONTAS.\n\n**\u26a0\ufe0f RUNTIME n\u00e3o-git (reaplicar p\u00f3s-reset, AL\u00c9M do que j\u00e1 est\u00e1 no header):**\n- `.env`: `STEP_UP_SETTINGS=true` + `SETTINGS_CONFIRM_PHRASE=VidaNovaTrade`.\n- Passphrase do backup: `~gcrux-tradeux/.config/tradeux/backup.pass` (0600, conte\u00fado `VidaNovaTrade`) \u2014 \u00c9 A MESMA frase do step-up; `backup-state.sh`/`make reset-db` a resolvem por conven\u00e7\u00e3o (default path). **Perd\u00ea-la = backups irrecuper\u00e1veis E n\u00e3o d\u00e1 pra salvar Settings** (escape do 2\u00ba: `STEP_UP_SETTINGS=false`+restart).\n- P\u00f3s-reset que recrie o DB do .env-seed (chaves podem voltar plaintext/CTR): rodar `docker compose exec -e ALLOW_REENCRYPT=true backend node scripts/reencrypt-secrets-gcm.js` (idempotente) p/ re-encriptar em GCM.\n\n**Gotchas DUR\u00c1VEIS:** (1) `docker exec` N\u00c3O aceita `-T` (\u00e9 flag do `docker compose exec`) \u2192 query mysql via `docker exec` puro. (2) `npx` N\u00c3O est\u00e1 no PATH do login-shell do gcrux (s\u00f3 `node`) \u2192 ci-preflight Postgres ef\u00eamero falha por isso; e o passo MySQL do ci-preflight roda `db:migrate` contra o DB **LIVE** (n\u00e3o rodar antes de querer aplicar a migration). (3) `scripts/` \u00e9 755 (ubuntu n\u00e3o cria l\u00e1) \u2192 novos arquivos via /tmp + `sudo -u gcrux cp`; edits de arquivo existente via `sudo -u gcrux python3` (replace exato preserva ownership). (4) Mask round-trip: ao mascarar um campo TAMB\u00c9M comparado (repo guard + stepUpGuard), comparar SEMPRE contra `maskSecret(valor-DECIFRADO)`, sen\u00e3o re-save do mask corrompe a chave / dispara step-up falso. (5) `accessKey` plaintext-legado N\u00c3O \u00e9 hex-CTR \u2192 `decryptIfGcm` (gated por isGcm) evita mand\u00e1-lo pro `decryptCtr` (que o trataria como hex=lixo).\n\n**\u26a1 NEXT:** (1) **observar o paper** (`GET /analysis/paper` + paperReviewJob no Telegram): veredito edge em ~1-2 sem (MR15/Slopegate/Farmnl). (2) **decis\u00e3o macro do dono** (recuperar USDT e parar vs empilhar BTC p\u00f3s-valida\u00e7\u00e3o do paper). (3) d\u00e9bitos antigos: `withdraw()` try/catch-sync inerte; flip do H3 `EARN_AUTO_REDEEM=true` quando quiser o resgate real. **Claude N\u00c3O vira o HALT nem clica LIGAR sozinho.** Working tree: s\u00f3 `backtest-results/*` (scratch regener\u00e1vel, N\u00c3O commitado). **Design-review 2026-06-22 100% FECHADO \u2014 nenhum follow-up restante.**\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/seal-record.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:00:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux\n# 1) atualiza o ponteiro Vivo no header (ubuntu owns o arquivo)\npython3 - <<'PY'\nimport sys\nP='/home/gcrux-tradeux/HANDOFF.md'\ns=open(P,encoding='utf-8').read()\nold='Vivo==master==origin==**`fb932a1`**'\nnew='Vivo==master==origin==**`2cd9ed9`** (design-review 2026-06-22 100% FECHADO; ver SEAL 2026-06-23 no rodap\u00e9)'\nif s.count(old)!=1: print('AVISO: ancora do Vivo no header x',s.count(old),'\u2014 pulo o update do header (o SEAL do rodap\u00e9 \u00e9 autoritativo)')\nelse:\n    open(P,'w',encoding='utf-8').write(s.replace(old,new,1)); print('OK header Vivo->2cd9ed9')\nPY\n# 2) anexa o SEAL no rodap\u00e9\ncat /tmp/seal-record.md >> /home/gcrux-tradeux/HANDOFF.md && echo \"OK SEAL anexado\"\nrm -f /tmp/seal-record.md\necho \"=== verifica\u00e7\u00e3o: header + rodap\u00e9 ===\"\ngrep -c \"2cd9ed9\" /home/gcrux-tradeux/HANDOFF.md | sed 's/^/ocorr\u00eancias de 2cd9ed9: /'\ntail -1 /home/gcrux-tradeux/HANDOFF.md | head -c 120; echo\nwc -l /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Update HANDOFF.md header pointer and append seal record"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK header Vivo->2cd9ed9
+> OK SEAL anexado
+> === verificação: header + rodapé ===
+> ocorrências de 2cd9ed9: 3
+> **⚡ NEXT:** (1) **observar o paper** (`GET /analysis/paper` + paperReviewJob no Telegram): veredito edge em ~1-2 sem (
+> 902 /home/gcrux-tradeux/HANDOFF.md
+> ```
+
+## 🤖 Claude *(02:00:56)*
+
+
+## 🤖 Claude *(02:00:58)*
+
+HANDOFF.md selado (header→`2cd9ed9` + SEAL no rodapé). **Phase 4 — memória:** já atualizei muito ao longo da sessão. Vou revisar o estado final e adicionar os gotchas de shell/ops duráveis. Relendo:
+
+## 🤖 Claude *(02:00:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "offset": 18,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 18	**Convenções operacionais (runtime, não-git — reaplicar pós-reset):**
+> 19	- Passphrase do backup **= a frase do step-up**, em `~gcrux-tradeux/.config/tradeux/backup.pass` (0600) E no `.env` live como `SETTINGS_CONFIRM_PHRASE` + `STEP_UP_SETTINGS=true`. `backup-state.sh`/`restore-state.sh` resolvem essa passphrase por convenção (default path) → `make reset-db` roda não-interativo. **Perder a passphrase = backups irrecuperáveis E não dá pra trocar Settings** (use `STEP_UP_SETTINGS=false` como escape do 2º).
+> 20	- backend roda como **ROOT** (uid=0), NÃO 1011:1013 (esse é o AGENT) — a análise da agenda errava nisso.
+> 21	- Deploy do Fix C = `docker compose up -d --build backend frontend` (rebuild atômico); volume `backend_logs` persiste risk_state+blacklist no restart.
+> 22	
+> 23	**Fechamento:** os 3 itens HIGH/MEDIUM do relatório de design estão resolvidos — `make nuke` (Fix A), AES-GCM + accessKey-leak (Fix B + follow-ups `acd745c` accessKey at-rest e `2cd9ed9` colunas→TEXT), RBAC→step-up single-operator (Fix C). **Vivo==master==origin==`2cd9ed9`.** Design-review 2026-06-22 100% FECHADO. Working tree só com scratch `backtest-results/*` (não-commitado). Follow-ups de baixa urgência registrados no Fix B (VARCHAR→TEXT, accessKey at-rest). **Reencriptar é idempotente** — se um reset recriar o DB do `.env`-seed (que pode trazer chaves CTR), rodar `docker compose exec -e ALLOW_REENCRYPT=true backend node scripts/reencrypt-secrets-gcm.js` de novo.
+> 24	
+> ```
+
+## 🤖 Claude *(02:01:05)*
+
+
+## 🤖 Claude *(02:01:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "old_string": "- Deploy do Fix C = `docker compose up -d --build backend frontend` (rebuild at\u00f4mico); volume `backend_logs` persiste risk_state+blacklist no restart.",
+  "new_string": "- Deploy do Fix C = `docker compose up -d --build backend frontend` (rebuild at\u00f4mico); volume `backend_logs` persiste risk_state+blacklist no restart.\n- **Sequ\u00eancia de migra\u00e7\u00e3o de chave (provada 4\u00d7):** `make backup-state` \u2192 HALT manual (`POST /system/halt {on:true}`, quente, sem frase, sem restart) \u2192 rebuild (c\u00f3digo novo l\u00ea AMBOS formatos) \u2192 smoke Binance auth (`GET /exchange/balance/USDT`) lendo o legado \u2192 dry-run do backfill \u2192 `--apply` \u2192 restart (limpa o settingsCache) \u2192 smoke Binance auth lendo GCM \u2192 un-HALT (`{on:false}`). O cache (getSettingsDecrypted) s\u00f3 limpa no restart \u2014 N\u00c3O pular.\n- **Gotchas de shell/ops (dur\u00e1veis):** (1) `docker exec` N\u00c3O aceita `-T` (\u00e9 flag do `docker compose exec`) \u2192 query mysql falha silenciosa; use `docker exec` puro. (2) `npx` N\u00c3O est\u00e1 no PATH do login-shell do gcrux (s\u00f3 `node`) \u2192 `npm`/ci-preflight Postgres falham; rode bin\u00e1rios via `node node_modules/.bin/x` ou `node script.js`. (3) o passo MySQL do `ci-preflight` roda `db:migrate` contra o DB **LIVE** (n\u00e3o rodar antes de querer aplicar a migration); use `--skip-mysql` p/ validar s\u00f3 o Postgres ef\u00eamero. (4) `scripts/` \u00e9 755 (ubuntu n\u00e3o cria l\u00e1) \u2192 novo arquivo via /tmp + `sudo -u gcrux cp`; edit de existente via `sudo -u gcrux python3` (replace exato) preserva ownership."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:01:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md",
+  "old_string": "Working tree s\u00f3 com scratch `backtest-results/*` (n\u00e3o-commitado). Follow-ups de baixa urg\u00eancia registrados no Fix B (VARCHAR\u2192TEXT, accessKey at-rest). **Reencriptar \u00e9 idempotente**",
+  "new_string": "Working tree s\u00f3 com scratch `backtest-results/*` (n\u00e3o-commitado). **Ambos os follow-ups (accessKey at-rest `acd745c`, VARCHAR\u2192TEXT `2cd9ed9`) FEITOS \u2014 nenhum follow-up restante.** **Reencriptar \u00e9 idempotente**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-fixes-2026-06-22.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:01:38)*
+
+
+## 🤖 Claude *(02:01:39)*
+
+Memória completa. **Phase 5 — push:** já feito durante a sessão (cada commit pushed com autorização). Confirmação final + chown de fechamento do repo (passo final do ritual) + saúde da stack:
+
+## 🤖 Claude *(02:01:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git em sincronia com origin? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'git -C /home/gcrux-tradeux/tradeux -c safe.directory=\"*\" status -sb | head -1; git -C /home/gcrux-tradeux/tradeux -c safe.directory=\"*\" log @{u}..HEAD --oneline | head -3 | sed \"s/^/UNPUSHED: /\" || true'\necho\necho \"=== arquivos ubuntu-owned no working tree (exceto .git/backups)? ===\"\nN=$(find . -path ./.git -prune -o -path ./backups -prune -o -user ubuntu -print 2>/dev/null | head -20 | wc -l)\nif [ \"$N\" -gt 0 ]; then echo \"$N ubuntu-owned -> chown\"; sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux; echo \"chown feito\"; else echo \"(0 \u2014 working tree todo gcrux-owned)\"; fi\necho\necho \"=== stack + site + HALT final ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps --format \"{{.Service}}: {{.Status}}\"' 2>/dev/null\ncurl -s -m5 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux; API=http://localhost:8090/api\nEM=$(grep -m1 \"^DEFAULT_SETTINGS_EMAIL=\" .env|cut -d= -f2-); PW=$(grep -m1 \"^DEFAULT_SETTINGS_PWD=\" .env|cut -d= -f2-)\nTOK=$(curl -s -m10 -X POST $API/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$EM\\\",\\\"password\\\":\\\"$PW\\\"}\" | sed -n \"s/.*\\\"token\\\":\\\"\\([^\\\"]*\\)\\\".*/\\1/p\")\necho -n \"HALT: \"; curl -s -m6 $API/system/halt -H \"Authorization: $TOK\" | sed -n \"s/.*\\(\\\"halted\\\":[a-z]*\\).*/\\1/p\"\n'",
+  "description": "Phase 5: confirm sync, final chown, health check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git em sincronia com origin? ===
+> ## master...origin/master
+> 
+> === arquivos ubuntu-owned no working tree (exceto .git/backups)? ===
+> (0 — working tree todo gcrux-owned)
+> 
+> === stack + site + HALT final ===
+> agent: Up 13 hours
+> backend: Up 8 minutes
+> db: Up 7 days (healthy)
+> frontend: Up 7 hours
+> site -> 200
+> HALT: "halted":false
+> ```
+
+## 🤖 Claude *(02:02:05)*
+
+
+## 🤖 Claude *(02:02:20)*
+
+Sessão totalmente selada. `master == origin/master`, working tree 100% gcrux-owned, stack saudável, **trading live (`halted:false`)**, Canary rodando.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-23
+───────────────────────────────────────────────────
+Commits     : 5  (feat(ops) · feat(auth) · feat(security)×2 · feat(db))
+              Branch: master  (trunk-based direct-to-master, modelo do projeto)
+HANDOFF.md  : ✅ atualizado (header → 2cd9ed9 + SEAL 2026-06-23 no rodapé)
+Memory      : 2 arquivos (novo tradeux-design-fixes-2026-06-22 + MEMORY.md index)
+PRs abertos : nenhum — não usamos PR aqui (cada commit já em origin/master)
+Push        : ✅ origin sincronizado (5edf856..2cd9ed9, secret-scan LIMPO)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**O que esta sessão fechou** — o relatório de design adversarial 2026-06-22, 100% (ordem A→C→B + 2 follow-ups, todos gate QA+TL + smoke vivo):
+
+| Commit | Entrega |
+|---|---|
+| `78e4e65` | **A** — backup cifrado + `reset-db` (remove `make nuke`) |
+| `5690a63` | **C** — step-up auth + blacklist persistente (deployado) |
+| `087ccfb` | **B** — AES-CTR→GCM + mask accessKey (migrado sob HALT) |
+| `acd745c` | └ accessKey/testnetAccessKey at-rest GCM (migrado) |
+| `2cd9ed9` | └ colunas de credencial → TEXT + guard `MAX_CIPHER_LEN` |
+
+**⚠️ Pontos de atenção pra você (documentados no SEAL):**
+- **Runtime não-git** a reaplicar se o ambiente resetar: `.env` ganhou `STEP_UP_SETTINGS=true` + `SETTINGS_CONFIRM_PHRASE=VidaNovaTrade`; e a passphrase do backup vive em `~gcrux-tradeux/.config/tradeux/backup.pass` (mesma frase). **Perder essa frase = backups irrecuperáveis E não consegue salvar Settings** (escape: `STEP_UP_SETTINGS=false`).
+- **Desvio do template do `/handoff`:** ele sugere branch+PR, mas o projeto é trunk-based direct-to-master (memória [[tradeux-orchestration-model]]) e os 5 commits foram pushados direto, cada um com sua autorização ao longo da sessão. Não há PR pra abrir.
+- O scratch `backtest-results/*` segue não-commitado (regenerável) — de propósito.
+
+Estado: trading live, Canary FARM-ONLY, equity ~$149, segurança das credenciais bem mais dura (par Binance inteiro em GCM, accessKey não vaza, saque/Settings travados, `make nuke` destrutivo eliminado). Pronto pra próxima sessão.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
