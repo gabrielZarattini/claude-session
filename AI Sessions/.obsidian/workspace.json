@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "48c3999779e21279",
+        "id": "2c7ab055618a5183",
         "type": "tabs",
         "children": [
           {
-            "id": "cc675e17c542cae0",
+            "id": "f17dda916d8a9606",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -187,8 +187,9 @@
       "github-sync:Sync with Remote": false
     }
   },
-  "active": "8f5a01492875c909",
+  "active": "f17dda916d8a9606",
   "lastOpenFiles": [
+    "MCORCH.md",
     "ClaudeSessions/2026-06-20 - Estratégia de lucro em mixed, trend e outros.md",
     "ClaudeSessions/2026-06-20 - Analisar estratégia de trading e sinais de lucro.md",
     "ClaudeSessions/2026-06-19 - agent-af6d93040e18b75ff.md",
@@ -214,7 +215,6 @@
     "ClaudeSessions/2026-06-19 - agent-a085804d7cbe6790d.md",
     "ClaudeSessions/2026-06-19 - agent-a07c80aeaf7911c6e.md",
     "ClaudeSessions/2026-06-19 - agent-a02d9d9f6df3912d8.md",
-    "ClaudeSessions/2026-06-19 - agent-a009438569d3ec97d.md",
     "MCORCH Processes",
     "ClaudeSessions/image.png",
     "skills-lock.json"
