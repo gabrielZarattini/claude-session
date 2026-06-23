@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 47
-> * **Total de Sessões**: 1318
+> * **Total de Processos**: 48
+> * **Total de Sessões**: 1325
 
 ---
 
@@ -54,6 +54,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
+*   `[[trend-informed-angle-sanitization]]` - *Processo*
 *   `[[trends-credential-resolution]]` - *Processo*
 *   `[[viral-autopilot-product-aware-monetization]]` - *Processo*
 *   `[[vision-mcp-billing-credential-resolution]]` - *Processo*
@@ -70,10 +71,17 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-23 - agent-afe8da4908bc6253f]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-ad712f9ef0400f04b]]` (ClaudeSessions) - *2026-06-23*
+*   `[[2026-06-23 - agent-acdc444197d387c70]]` (ClaudeSessions) - *2026-06-23*
+*   `[[2026-06-23 - agent-ac88e66c748ac7f49]]` (ClaudeSessions) - *2026-06-23*
+*   `[[2026-06-23 - agent-abebbcac649b3cd15]]` (ClaudeSessions) - *2026-06-23*
+*   `[[2026-06-23 - agent-a98f6a48601b6a832]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-a7a685781cec36e94]]` (ClaudeSessions) - *2026-06-23*
+*   `[[2026-06-23 - agent-a42de3151cf8aaafb]]` (ClaudeSessions) - *2026-06-23*
+*   `[[2026-06-23 - agent-a3dc564f3f1d51e42]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-a3149af88084452ca]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-a10e6faee9cef5dab]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - Verificar backtest-results e fixes de design]]` (ClaudeSessions) - *2026-06-23*

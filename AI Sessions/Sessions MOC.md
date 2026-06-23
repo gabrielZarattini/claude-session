@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1323
-> * **Sessões do Claude**: 1281
+> * **Total de Sessões Registradas**: 1330
+> * **Sessões do Claude**: 1288
 > * **Sessões do Gemini**: 42
 
 ---
@@ -61,19 +61,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-23 - agent-afe8da4908bc6253f]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-ad712f9ef0400f04b]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-acdc444197d387c70]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-ac88e66c748ac7f49]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-abebbcac649b3cd15]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-a98f6a48601b6a832]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-a7a685781cec36e94]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-a42de3151cf8aaafb]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-a3dc564f3f1d51e42]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-a3149af88084452ca]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-a10e6faee9cef5dab]]` - *2026-06-23*
-*   `[[2026-06-23 - Verificar backtest-results e fixes de design]]` - *2026-06-23*
-*   `[[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]` - *2026-06-23*
-*   `[[2026-06-23 - Próximos passos do projeto]]` - *2026-06-23*
-*   `[[2026-06-22 - agent-afbda1deee15bc84c]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-af8f621c5a5a09ed3]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-af852d35cb5925df7]]` - *2026-06-22*
-*   *... e mais 1285 sessões nessa categoria.*
+*   *... e mais 1292 sessões nessa categoria.*
 
 ---
 
@@ -264,10 +264,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-23 - agent-afe8da4908bc6253f]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-ad712f9ef0400f04b]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-acdc444197d387c70]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-ac88e66c748ac7f49]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-abebbcac649b3cd15]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-a98f6a48601b6a832]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-a7a685781cec36e94]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-a42de3151cf8aaafb]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-a3dc564f3f1d51e42]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-a3149af88084452ca]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-a10e6faee9cef5dab]]` (ClaudeSessions)
 *   `[[2026-06-23 - Verificar backtest-results e fixes de design]]` (ClaudeSessions)
