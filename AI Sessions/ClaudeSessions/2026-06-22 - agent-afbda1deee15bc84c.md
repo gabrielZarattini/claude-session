@@ -808,5 +808,5 @@ Relevant files:
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-22 - agent-af8f621c5a5a09ed3]]
-> * **Próxima Sessão**: [[2026-06-23 - Próximos passos do projeto]]
+> * **Próxima Sessão**: [[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]
 %% --- TIMELINE END --- %%

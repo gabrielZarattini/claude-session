@@ -116,3 +116,16 @@ if (halt) action='halt';
 
 ---
 *Breadcrumb gerado na sessão Cowork de 2026-06-23. Projeto: [[Agente Lovable Browser]].*
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-22 - agent-afbda1deee15bc84c]]
+> * **Próxima Sessão**: [[2026-06-23 - Próximos passos do projeto]]
+%% --- TIMELINE END --- %%

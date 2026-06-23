@@ -5737,6 +5737,6 @@ Your final reply must contain the markdown report and nothing else.
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-22 - agent-afbda1deee15bc84c]]
+> * **Sessão Anterior**: [[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]
 > * **Próxima Sessão**: [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]
 %% --- TIMELINE END --- %%
