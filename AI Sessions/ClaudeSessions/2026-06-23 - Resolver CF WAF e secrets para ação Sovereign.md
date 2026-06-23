@@ -7636,6 +7636,814 @@ Pre-flight limpo: **working tree commitado** (5 commits ahead), **tsc 0 erros**,
 > src/test/canvas-video-async-smoke.test.ts:252:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
 > ```
 
+## 🤖 Claude *(02:59:50)*
+
+
+## 🤖 Claude *(02:59:53)*
+
+**Fase 1 verdict:**
+- **1a** ✅ PASS — nenhum secret literal nos commits (o commit do gateway REMOVEU o literal; gitleaks limpo nos 5).
+- **1b** ⚠️ WARN — `autonomic-action`/`instagram-webhook`/`stripe-webhook`/`whatsapp-webhook` são **webhooks signature-validated** (verify_jwt=false por design), **pré-existentes, não tocados nesta sessão**. Não-bloqueante.
+- **1c** ✅ PASS · **1e** ✅ PASS (só test file).
+
+Sem 🔴. Prossigo. **Fase 3 — Knowledge Mesh milestone:**
+
+## 🤖 Claude *(03:00:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nSUMMARY=\"CF WP unblock (achado Nivel de seguranca/IP datacenter, E2E post_id 18, SOP atualizada) + SOP per-user WP-CF multi-tenant + auditoria de prontidao per-user (workflow 49 fns) + migracao env=so-infra (25 fns user-facing per-user PURO fail-closed + MESH_EMBED dedicada nas 2 fns de sistema embed/search) + BYOK seed do User 0 + #3 fetch-trends per-user (migration rapidapi_key + UI + 402 provado) + aios-chat-gateway token vazado fail-closed. Sweep per-user FECHADO. 6 commits, /security-review SAFE 2x.\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-per-user-env-infra-sweep\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"per-user-env-infra-sweep\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -6 | tr '\\n' '|')\\\"}}\")\nNODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"=== embed ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${KEY}\" -H \"Authorization: Bearer ${KEY}\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\":\\\"${NODE_ID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', {k:d.get(k) for k in ['node_id','dims','chunks']})\" 2>/dev/null || echo \"embed: check\"",
+  "description": "Insert handoff milestone node + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 4e57bf72-8cc0-4e1c-ae48-10d7f19b0dac
+> === embed ===
+> Embedded: {'node_id': '4e57bf72-8cc0-4e1c-ae48-10d7f19b0dac', 'dims': 768, 'chunks': 1}
+> ```
+
+## 🤖 Claude *(03:00:11)*
+
+
+## 🤖 Claude *(03:00:12)*
+
+Node `4e57bf72` inserido + embedded (768d). **Fase 4 — README:** busco o count live + leio o README:
+
+## 🤖 Claude *(03:00:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\necho \"=== node count live ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'\necho \"=== README badges + What's New (head) ===\"\nhead -30 README.md",
+  "description": "Get live node count + read README head"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node count live ===
+> 8947
+> 
+> 
+> === README badges + What's New (head) ===
+> <p align="center">
+>   <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+>   <img src="https://img.shields.io/badge/version-6.46.0--video--fatia1--de--n8n-blueviolet?style=for-the-badge" alt="Version" />
+>   <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+>   <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+>   <img src="https://img.shields.io/badge/neural_mesh-8946_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+>   <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+>   <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+>   <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+>   <img src="https://img.shields.io/badge/viral--autopilot-fatia_2_cadencia_%2B_R3_live-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+>   <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.4_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+>   <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+>   <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+>   <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+>   <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+>   <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+>   <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+>   <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+>   <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+>   <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+>   <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+>   <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+>   <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+>   <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+>   <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+>   <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+>   <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+>   <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+>   <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+>   <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> ```
+
+## 🤖 Claude *(03:00:27)*
+
+
+## 🤖 Claude *(03:00:28)*
+
+Count live **8947**, versão 6.46.0. Atualizo badges (versão + mesh + novo per-user):
+
+## 🤖 Claude *(03:00:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.46.0--video--fatia1--de--n8n-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.47.0--per--user--env%3Dinfra-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:00:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8946_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8947_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge\" alt=\"API Tenancy\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:00:37)*
+
+
+## 🤖 Claude *(03:00:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.46.0--video--fatia1--de--n8n-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8946_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> ```
+
+## 🤖 Claude *(03:00:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.46.0--video--fatia1--de--n8n-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.47.0--per--user--env%3Dinfra-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:00:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8946_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8947_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge\" alt=\"API Tenancy\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:00:52)*
+
+
+## 🤖 Claude *(03:00:52)*
+
+Badges atualizados. Acho a seção "What's New" pra adicionar entrada:
+
+## 🤖 Claude *(03:00:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"What's New|## \\[v6\\.46|### \\[v6\\.46|Novidades|## Changelog\" README.md | head -5",
+  "description": "Find What's New section in README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 527:### [v6.46.0] — Alertas resolvidos + Vídeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)
+> ```
+
+## 🤖 Claude *(03:00:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 527,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 527	### [v6.46.0] — Alertas resolvidos + Vídeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)
+> 528	- **Alertas fechados (diagnóstico material em workflow paralelo):** **(1)** CF managed challenge bloqueava `/wp-json/*` (403 `cf-mitigated`) → `publish-wordpress` com header `X-MCORCH-Publish` **host-gated fail-closed** (`/security-review` pegou+fechou um HIGH na própria mudança) + SOP `wordpress-cf-publish-unblock.md` (regra CF + secrets = ação Sovereign); **(2)** security FM-04 (RPN 300) + FM-10 já estavam **fechados** materialmente (compose saneado + `docker inspect` + Dockerfile UID1001) — drift de doc reconciliado (FMEA + CLAUDE.md); **(3)** image path já resolvido (OpenRouter Gemini).
+> 529	- **Módulo Vídeo — Fatia 1 (domínio + contrato):** migration `video_renders`/`video_assets` + `finalize_video_render` (RLS cross-tenant FMEA-VS-020, sem write authenticated, RESTRICTIVE no-delete) + edge fns `video-render`/`video-render-poll` (worker-gate 503 **antes** de deduct → zero-cost na Fatia 1). `/security-review` SAFE 2× · **18 gates materiais zero-cost** (saldo intacto). Smoke pegou 2 bugs reais (HIGH no header CF + coluna BYOK `google_api_key`, não `gemini_api_key`).
+> 530	- **Fatia 1b (UI):** `/dashboard/video` (`useVideoRender` + `VideoStudioPage` display-only + nav "Estúdio de Vídeo") — deployada (chunk no dist, env baked).
+> 531	- **Decisão arquitetural (emenda BoK SDD v1.2 §1.5): De-n8n.** O MCORCH não usa n8n (single-tenant não escala num SaaS per-user). Motor faceless re-implantado **nativo** no Visual Orchestrator (`/dashboard/orchestration`) compondo capabilities existentes (`canvas-execute` Higgsfield + `tts-speak` + `vision-mcp` QA + Remotion/FFmpeg em container MCORCH co-locado na sovereign-net). **OTD-VS-001 (ponte R5) VOID.** HyperFrames editor → app isolado em `video.mcorch.com` (igual open-design).
+> 532	
+> 533	### [v6.42.0] — Viral Autopilot BoK 9/9 (motor de conteúdo viral autônomo, R1-R4) (2026-06-17)
+> 534	- **Diretiva-núcleo retomada:** alimentar redes sociais com conteúdo viral gerado automaticamente, agendado (tudo de uma vez OU a cada N dias), que a cada ciclo analisa o desempenho anterior para melhorar os próximos criativos — monetizado com afiliado do Mercado Livre.
+> 535	- **Auditoria material (7 agentes, prova path:linha):** R1 (geração) e R4 (receita ML) parciais e vivos, mas **R2 (recorrência a cada 3 dias) e R3 (loop auto-melhorável) AUSENTES** — `campaign_metrics` sem writer, `optimization_policy` nunca lida por gerador, `self-optimize` sem cron.
+> 536	- **BoK 9/9 selada (1889 LOC):** suíte-mãe nova `viral-autopilot` unifica R1-R4 + 4 decisões soberanas (suite novo · MVP texto+imagem nas redes atuais · sinal R3 combo · 3 SKUs semente). Nó `documentation_suite` `b3398294`, DERIVES_FROM `marketing-hub`.
+> ```
+
+## 🤖 Claude *(03:01:01)*
+
+
+## 🤖 Claude *(03:01:01)*
+
+Adiciono a entrada v6.47.0 no topo do What's New:
+
+## 🤖 Claude *(03:01:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.46.0] \u2014 Alertas resolvidos + V\u00eddeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)",
+  "new_string": "### [v6.47.0] \u2014 Per-user 100% (env = s\u00f3 infra) + CF WP unblock + sweep per-user fechado (2026-06-22)\n- **CF WordPress unblock RESOLVIDO:** o managed challenge em `/wp-json/*` era do componente **\"N\u00edvel de seguran\u00e7a\"** (challenge por reputa\u00e7\u00e3o do IP de **datacenter** Oracle AS31898, n\u00e3o bot/UA) \u2014 `All managed rules`+`Super Bot Fight` sozinhos n\u00e3o resolviam; diagnosticado via Security\u2192Events. Regra CF Skip header-gated (`X-MCORCH-Publish`) + secrets `WP_PUBLISH_SECRET`/`_HOST` provisionados. Provado E2E: `publish-wordpress` \u2192 `{\"success\":true,\"post_id\":18}`. SOPs `wordpress-cf-publish-unblock.md` (atualizada) + `wordpress-cf-per-user-publish.md` (multi-tenant, Lei 2).\n- **Diretiva Sovereign \u2014 env = s\u00f3 infra, todo provider key per-user BYOK:** auditoria de prontid\u00e3o per-user (workflow `wf_102ef5ac`, 49 edge fns) \u2192 ledger (30 per-user \u00b7 11 fallback-ok \u00b7 4 remediadas). Removido o fallback global `|| Deno.env.get(<provider>)` de **25 fns user-facing** (47 ocorr\u00eancias) \u2192 per-user **puro fail-closed** (atribui\u00e7\u00e3o/quota/risco isolados por tenant). As 2 fns de **sistema** sem usu\u00e1rio (`embed-mcorch-node` NUCLEAR + `search-constellation`) \u2192 chaves de infra dedicadas **`MESH_EMBED_OPENROUTER_KEY`/`MESH_EMBED_GEMINI_KEY`**. Secrets antigos mantidos no vault (seed source do BYOK do User 0); `.env` anotado (gitignored).\n- **Sweep per-user FECHADO:** #1 `openrouter-swarm` \u00b7 #2 `canvas-execute` Higgsfield \u00b7 #3 `fetch-trends` Apify/RapidAPI (migration `rapidapi_key` espelha template firecrawl + UI Settings + 402 provado zero-cost) \u00b7 + `aios-chat-gateway` (token vazado hardcoded \u2192 env-only fail-closed). BYOK do User 0 seedado do `.env`.\n- **Prova:** `/security-review` SAFE 2\u00d7 \u00b7 embedding pipeline intacto p\u00f3s-rename (200) \u00b7 OpenRouter autenticou com chave per-user do User 0 \u00b7 27 fns deployadas 0 falhas \u00b7 tsc 0 \u00b7 gitleaks limpo nos 6 commits.\n\n### [v6.46.0] \u2014 Alertas resolvidos + V\u00eddeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:25)*
+
+
+## 🤖 Claude *(03:01:26)*
+
+README atualizado (v6.47.0 + badges). Commito o README (Fase 4):
+
+## 🤖 Claude *(03:01:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.47.0 \u2014 per-user 100% (env=infra) + CF WP unblock + sweep per-user fechado\" 2>&1 | grep -v \"lefthook\\|gitleaks\\|\u2501\\|\u2502\\|\u2570\\|\u256d\\|\u25cb\\|\u2591\\|INF\\|summary\\|\u2714\\|\u276f\\|\u2500\\|scanned\\|completed\" | tail -3\necho \"\u2705 README commitado\"",
+  "description": "Commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ README commitado
+> ```
+
+## 🤖 Claude *(03:01:33)*
+
+
+## 🤖 Claude *(03:01:34)*
+
+**Fase 5 — HANDOFF.md.** Leio o cabeçalho pra inserir o novo record no topo:
+
+## 🤖 Claude *(03:01:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 12,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 12	## Task State
+> 13	
+> 14	## Session Seal — Alertas resolvidos + Vídeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)
+> 15	
+> 16	`/handson` → "resolver os alertas, depois os próximos passos". Arco: diagnóstico material (workflow paralelo de 3 agentes) dos alertas → reparo/reconciliação → Vídeo Fatia 1 (domínio+contrato) → Fatia 1b (UI) → diretiva Sovereign **De-n8n** → emenda BoK SDD v1.2. Duas surpresas materiais: a security BoK estava **selada** (naming alternativo enganou o handson) e os "gaps físicos" FM-04/FM-10 já estavam **fechados** (docs stale). O smoke pegou 2 bugs reais antes de virar prod.
+> ```
+
+## 🤖 Claude *(03:01:43)*
+
+
+## 🤖 Claude *(03:01:43)*
+
+Insiro o novo record (Fase 5):
+
+## 🤖 Claude *(03:02:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Alertas resolvidos + V\u00eddeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Per-user 100% (env = s\u00f3 infra) + CF WP unblock + sweep per-user FECHADO (2026-06-22)\n\n`/handson` \u2192 \"resolver o CF WAF + secrets, depois os pr\u00f3ximos passos\". Arco: **(1)** desbloqueio material do CF no `/wp-json` \u2192 **(2)** SOP per-user WP\u2194CF \u2192 **(3)** fix do token vazado `aios-chat-gateway` \u2192 **(4)** auditoria de prontid\u00e3o per-user (workflow) \u2192 **(5)** diretiva Sovereign **\"env = s\u00f3 infra, todo provider key per-user BYOK\"** \u2192 migra\u00e7\u00e3o de 27 fns + #3 fetch-trends. Surpresa material decisiva: o componente de skip que faltava no Cloudflare era **\"N\u00edvel de seguran\u00e7a\"** (challenge por reputa\u00e7\u00e3o de IP de **datacenter**, n\u00e3o bot/UA) \u2014 diagnosticado lendo o **Security\u2192Events** (a regra Skip j\u00e1 disparava `Ignorar`, mas o `N\u00edvel de seguran\u00e7a` desafiava por cima). O teste E2E \"falhou bonito\" (OpenRouter respondeu 404 de modelo + `user_id` \u2192 **provou** que a chave per-user autenticou).\n\n**O que foi entregue (6 commits granulares):**\n1. **CF WP unblock (`a\u00e7\u00e3o Sovereign` + verifica\u00e7\u00e3o).** Secrets `WP_PUBLISH_SECRET`/`_HOST` provisionados + regra CF Skip header-gated com **N\u00edvel de seguran\u00e7a** marcado \u2192 `curl` com header sai do 403 (200 + JSON real do WP), sem header continua 403 (mundo barrado). E2E `publish-wordpress` \u2192 `{\"success\":true,\"post_id\":18}` (rascunho de teste deletado). SOP `wordpress-cf-publish-unblock.md` atualizada com o achado + diagn\u00f3stico via Events; novo SOP `wordpress-cf-per-user-publish.md` (multi-tenant, Lei 2).\n2. **`aios-chat-gateway` token vazado (`ef921ce`).** Literal hardcoded removido + fail-closed 501 + telemetria. Rota\u00e7\u00e3o = decis\u00e3o consciente do Owner (diferida \u2014 repo privado, sem p\u00fablico, sem outros users). Secret setado com valor atual (sem rotacionar).\n3. **Auditoria per-user (workflow `wf_102ef5ac`, 49 fns).** Ledger: 30 per-user \u00b7 11 fallback-ok \u00b7 4 remediadas. Achados de seguran\u00e7a b\u00f4nus (n\u00e3o-per-user, pr\u00f3xima sess\u00e3o): `social-auth-callback` state sem HMAC (cross-tenant), `instagram-webhook` sem signature.\n4. **Migra\u00e7\u00e3o env=s\u00f3-infra (`4583519`+`432fa01`).** Removido `|| Deno.env.get(<provider>)` de **25 fns user-facing** (47 ocorr\u00eancias) \u2192 per-user PURO fail-closed. 2 fns de sistema (`embed-mcorch-node` NUCLEAR + `search-constellation`) \u2192 `MESH_EMBED_OPENROUTER_KEY`/`MESH_EMBED_GEMINI_KEY` dedicadas. BYOK do User 0 seedado do `.env` (higgsfield_api_key estava null). 27 fns deployadas 0 falhas.\n5. **#3 fetch-trends per-user (`f6734e9`).** Migration `20260622210000` adiciona coluna cifrada `rapidapi_key` (espelha template firecrawl verbatim; `apify_token` j\u00e1 existia) + edge fn per-user fail-closed 402 + UI Settings (Apify/RapidAPI) + seed User 0. `/security-review` SAFE.\n\n**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (GOs via AskUserQuestion) + `/security-review` independente 2\u00d7 \u00b7 Owner=Sovereign (blast radius = pipeline de conte\u00fado do User 0 + carteira + isolamento multi-tenant; rota\u00e7\u00e3o de secrets vazados diferida conscientemente).\n\n| Verifica\u00e7\u00e3o (material) | Resultado |\n|---|---|\n| CF WP unblock | \u2705 curl com header 200 + JSON WP \u00b7 sem header 403 \u00b7 E2E `publish-wordpress` `post_id 18` |\n| Migra\u00e7\u00e3o per-user | \u2705 47 fallbacks removidos \u00b7 0 res\u00edduo \u00b7 27 fns deployadas 0 falhas |\n| Embedding pipeline p\u00f3s-rename | \u2705 `embed-mcorch-node` 200 `dims:768` (MESH_EMBED funciona) |\n| Per-user E2E | \u2705 openrouter-swarm: OpenRouter autenticou com chave per-user do User 0 |\n| #3 fetch-trends fail-closed | \u2705 throwaway sem key \u2192 402 `trends_not_configured` (zero-cost) |\n| Migration rapidapi_key | \u2705 `db push` aplicada \u00b7 coluna `\u2022\u2022\u2022\u2022`/null \u00b7 `/security-review` SAFE |\n| `/security-review` | \u2705 SAFE 2\u00d7 (migra\u00e7\u00e3o CF host-gate pr\u00e9via + migra\u00e7\u00e3o rapidapi) |\n| tsc \u00b7 gitleaks | \u2705 0 erros \u00b7 gitleaks limpo nos 6 commits |\n| Handoff node | `4e57bf72-8cc0-4e1c-ae48-10d7f19b0dac` (embedded 768d) |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Toda claim provada NESTE arco \u2014 CF via curl 200/403 + post_id 18; migra\u00e7\u00e3o via grep 0-res\u00edduo + 27 deploys; embedding via 200 dims:768; per-user via OpenRouter user_id; fetch-trends via 402 throwaway. O E2E \"falhou bonito\" PROVOU a chave per-user (n\u00e3o fabriquei). Pego material: o trap do canvas-execute Higgsfield (row null/secret \u2192 approach at\u00f4mico evitou regress\u00e3o); o caveat do datacenter IP (N\u00edvel de seguran\u00e7a). Fase 5c mec\u00e2nica abaixo.\nLaw 2 (Process): \u2705 SOPs antecipados (wordpress-cf-per-user-publish \u00b7 trends-credential-resolution) ANTES do c\u00f3digo; migration espelha template live verbatim (n\u00e3o inventa).\nLaw 3 (Pruning): \u2705 Sess\u00e3o MUITO densa empacotada (CF \u2192 auditoria \u2192 migra\u00e7\u00e3o 27 fns \u2192 #3) sob GOs expl\u00edcitos; selada ao FECHAR o objetivo-prioridade (per-user em tudo) a pedido do Sovereign.\nLaw 4 (ORO): \u2705 Triplet declarado; m\u00faltiplos GOs via AskUserQuestion (chave de sistema \u00b7 execu\u00e7\u00e3o \u00b7 #3); /security-review como Reviewer mec\u00e2nico independente 2\u00d7; rota\u00e7\u00e3o de secrets = decis\u00e3o consciente do Owner registrada.\n```\n\n## Session Seal \u2014 Alertas resolvidos + V\u00eddeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:02:28)*
+
+
+## 🤖 Claude *(03:02:29)*
+
+Record adicionado. **Fase 5b — secret scan no HANDOFF.md** (antes de commitar):
+
+## 🤖 Claude *(03:02:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1. credenciais reais no HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -10 || echo \"HANDOFF.md: NENHUMA CREDENCIAL \u2705\"\necho \"=== 5b-2. Google API keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -5 || echo \"NO GOOGLE API KEYS \u2705\"\necho \"=== 5b-3. = 'value' assignments suspeitos ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|[0-9a-f-]\\{36\\}\\|success.*true\\|post_id\" | head -5 || echo \"NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. credenciais reais no HANDOFF.md ===
+> === 5b-2. Google API keys ===
+> === 5b-3. = 'value' assignments suspeitos ===
+> 903:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 7517:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 7519:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 7520:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 7562:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> ```
+
+## 🤖 Claude *(03:02:41)*
+
+
+## 🤖 Claude *(03:02:42)*
+
+**Fase 5b PASS** ✅ — zero credenciais. Os 4 matches do 5b-3 são pré-existentes e falsos-positivos (seletor eslint `dangerouslySetInnerHTML` + slug `project_id='mcorch-constellation'`), nenhum no meu record novo. Commito o HANDOFF.md:
+
+## 🤖 Claude *(03:02:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal per-user 100% (env=infra) + CF WP unblock + sweep per-user fechado\" 2>&1 | grep -v \"lefthook\\|gitleaks\\|\u2501\\|\u2502\\|\u2570\\|\u256d\\|\u25cb\\|\u2591\\|INF\\|summary\\|\u2714\\|\u276f\\|\u2500\\|scanned\\|completed\" | tail -3\necho \"\u2705 HANDOFF commitado\"\ngit log --oneline -8",
+  "description": "Commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ HANDOFF commitado
+> bdb56b1 docs(handoff): seal per-user 100% (env=infra) + CF WP unblock + sweep per-user fechado
+> a77a8e2 docs(readme): v6.47.0 — per-user 100% (env=infra) + CF WP unblock + sweep per-user fechado
+> f6734e9 feat(fetch-trends): per-user Apify/RapidAPI BYOK (fecha #3 do sweep per-user)
+> 432fa01 refactor(edge): provider keys 100% per-user (env = só infra) + MESH_EMBED dedicada
+> dbad262 docs(processes): WP↔CF resolvido (Nível de segurança) + SOP per-user multi-tenant
+> 4583519 refactor(edge): resolução de credencial per-user (API Tenancy Model)
+> ef921ce fix(aios-chat-gateway): resolve OpenClaw token env-only + fail-closed
+> 1a1e0bf docs(handoff): seal alertas + Video Fatia 1/1b + De-n8n (motor faceless nativo)
+> ```
+
+## 🤖 Claude *(03:02:51)*
+
+
+## 🤖 Claude *(03:02:51)*
+
+HANDOFF commitado (`bdb56b1`). **Fase 5c — Material Proof Audit:**
+
+## 🤖 Claude *(03:02:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nls scripts/qa/run-audit.ts 2>/dev/null && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -45 || echo \"\u26a0\ufe0f run-audit.ts n\u00e3o existe \u2014 fa\u00e7o verifica\u00e7\u00e3o manual\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/run-audit.ts
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node 4e57bf72 | mesh_node | 4e57bf72-8cc0-4e1c-ae48-10d7f19b0dac | 4e57bf72-8cc0-4e1c-ae48-10d7f19b0dac | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 11.8s)
+> ```
+
+## 🤖 Claude *(03:03:15)*
+
+
+## 🤖 Claude *(03:03:17)*
+
+**Fase 5c: SEAL ALLOWED** ✅ (10 verificadas · 0 falhas · handoff node 4e57bf72 confirmado). **Fase 6 — BoK status** (sessão foi refactor/per-user de fns existentes — sem módulo novo → sem gate BoK):
+
+## 🤖 Claude *(03:03:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== m\u00f3dulos NOVOS criados nesta sess\u00e3o (src/pages ou supabase/functions)? ===\"\ngit diff --name-only ef921ce~1..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/[a-z])\" | grep -E \"index\\.ts$|\\.tsx$\" | xargs -I{} dirname {} 2>/dev/null | sort -u | head\necho \"\u2192 (acima = arquivos TOCADOS; nenhum \u00e9 M\u00d3DULO novo \u2014 todos refactor/per-user de fns existentes + 1 migration)\"\necho \"\"\necho \"=== security BoK (schema CISO) presente? ===\"\nls docs/bok/security/ 2>/dev/null | head",
+  "description": "Phase 6 BoK status check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === módulos NOVOS criados nesta sessão (src/pages ou supabase/functions)? ===
+> src/pages
+> supabase/functions/[[aeo-audit|aeo-audit]]
+> supabase/functions/agent-task-execute
+> supabase/functions/aios-chat
+> supabase/functions/aios-chat-gateway
+> supabase/functions/aios-chat-stream
+> supabase/functions/aios-live-proxy
+> supabase/functions/analyze-node
+> supabase/functions/analyze-sem
+> supabase/functions/analyze-seo
+> → (acima = arquivos TOCADOS; nenhum é MÓDULO novo — todos refactor/per-user de fns existentes + 1 migration)
+> 
+> === security BoK (schema CISO) presente? ===
+> 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> 01-brd-security.md
+> 02-srs-secure-spec.md
+> 03-sdd-hardening-architecture.md
+> 04-fmea-security.md
+> ```
+
+## 🤖 Claude *(03:03:32)*
+
+
+## 🤖 Claude *(03:03:33)*
+
+**Fase 6 PASS** ✅ — todos os arquivos tocados são fns/páginas EXISTENTES (refactor per-user) + 1 migration; **nenhum módulo novo** → sem gate BoK (aplicação da diretiva API Tenancy Model já documentada). Security BoK presente (schema CISO). **Fase 7 — push:**
+
+## 🤖 Claude *(03:03:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json\necho \"=== push ===\"\ngit push origin main 2>&1 | tail -5\necho \"=== confirma sync ===\"\ngit rev-list --count origin/main..HEAD 2>/dev/null && echo \"commits ahead de origin (deve ser 0)\"",
+  "description": "Phase 7 push to origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push ===
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ gitleaks-range (0.10 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    1a1e0bf..bdb56b1  main -> main
+> === confirma sync ===
+> 0
+> commits ahead de origin (deve ser 0)
+> ```
+
+## 🤖 Claude *(03:03:48)*
+
+
+## 🤖 Claude *(03:03:49)*
+
+Push **OK** — `1a1e0bf..bdb56b1 main -> main`, gitleaks-range limpo, 0 ahead (sincronizado). **Fase 7b — sprint hygiene + scratch:**
+
+## 🤖 Claude *(03:03:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"(tem arquivos)\" || echo \"scratch/ limpo \u2705\"\necho \"=== sprint-priorities head (linhas 6-8) ===\"\nsed -n '6,8p' .claude/context/sprint-priorities.md 2>/dev/null | cut -c1-120",
+  "description": "Check scratch + sprint-priorities format"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> (tem arquivos)
+> === sprint-priorities head (linhas 6-8) ===
+> 
+> **Sprint v6.44.0 — Viral Autopilot Fatia 2: cadência R2 + loop R3 auto-melhorável + UI (2026-06-20)** — `/handson`
+> ```
+
+## 🤖 Claude *(03:03:58)*
+
+
+## 🤖 Claude *(03:04:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch contents ===\"; ls -la scratch/ 2>/dev/null\necho \"=== sprint-priorities: linha exata da entrada mais recente ===\"\ngrep -nE \"^\\*\\*Sprint v6\\.\" .claude/context/sprint-priorities.md | head -2",
+  "description": "Inspect scratch + sprint entry location"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch contents ===
+> total 8
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Jun  7 14:41 .
+> drwx------ 30 ubuntu ubuntu 4096 Jun 23 00:03 ..
+> === sprint-priorities: linha exata da entrada mais recente ===
+> 7:**Sprint v6.44.0 — Viral Autopilot Fatia 2: cadência R2 + loop R3 auto-melhorável + UI (2026-06-20)** — `/handson` → "vamos aos próximos passos"; 4 GOs Sovereign (AskUserQuestion: migration · edge fns · R3 · selar). Closed-Loop por fatia (mapeamento do contrato vivo → SOP Lei 2 → código → /security-review → deploy → smoke zero-cost → seal). **Motor autônomo R1+R2+R3+R4 COMPLETO, zero gasto do Sovereign.** **(1) Fundação** (`686bae3`): SOP `autopilot-cron-identity.md` (OTD-VA-008, 10 gates) + migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant-escopada + RPCs `begin_autopilot_cycle` [cap+pré-débito ÚNICO sob `pg_advisory_xact_lock` anti-TOCTOU] / `finalize_autopilot_cycle` [refund crédito-positivo idempotente, espelha `finalize_vision_job`], service-role-only) + smoke RPC 11/11 (`0c59e4d`). **(2) Edge fns** (`54ac2a9`): `autopilot-run` (executor identidade 2-caminhos → begin → fan-out `orchestrate-content` prepaid → finalize → re-arma; dry_run) + `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) + orchestrate-content FR-VA-016 prepaid (user-path intacto); smoke 9/9. **(3) R3 loop** (`35554da`): `autopilot-analyze` (FR-VA-010, ranqueia `creative_metrics`→`optimization_policy`, tenant da linha) + `autopilot-collect` (FR-VA-008, ledger→métricas) + orchestrate-step FR-VA-011 (injeta diretiva nos 3 prompts); smoke loop 11/11. **(4) UI** (`bfd178b`): `useAutopilot`+`AutopilotPage` (`/dashboard/autopilot`) + rota + nav; types.ts regen additive. **Prova:** `/security-review` SAFE **3×** · 3 smokes zero-cost (**31 gates**) · 6 edge fns deployadas · migrations via Management API · render ocular (preview local à prova de CF) · tsc 0 · Phase 5c **SEAL ALLOWED** (10) · mesh **8935** · handoff `280e94d7`. **Pending (ação Sovereign):** ativar `pg_cron` + 1º ciclo **PAGO** real (gated nos 2 blockers: CF WAF `/wp-json` + OpenAI image) · `fetch-trends`→pauta (FR-VA-018, último autônomo). **Lição:** mapear o contrato vivo antes de cada fatia pegou correções materiais (analyze lê `creative_metrics` não `affiliate_links`; cost-model prepaid); `/security-review` independente 3× confirmou o caminho de dinheiro fechado; selei ao esgotar o roadmap autônomo (resto Sovereign-side).
+> 9:**Sprint v6.43.0 — Viral Autopilot Fatias 1 + 1b: gerador product-aware + monetização cross-surface + imagem (2026-06-20)** — `/handson` → "vamos aos próximos passos" sobre o roadmap do Viral Autopilot (BoK gate ABERTO). Closed-Loop por fatia (mapeamento workflow → escopo → SOP Lei 2 → código → /security-review → deploy → E2E pago → seal). **(1) Fatia 1** (`4af8b8b`): gerador product-aware (FR-VA-003, prompts virais featuring o produto escolhido; fallback B2B backward-compat) + monetização nas **3 superfícies** (FR-VA-004, `affiliate_links.content_id` antes-null **FECHADO**) + threading `product_ids` sanitizado pelo sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009, RLS provada) + picker na TriggerNode. **(2) Fatia 1b** (`ba5d281`): imagem product-referenced (FR-VA-013) DENTRO do article_generation, **fail-open** (`skipped`, nunca quebra a geração), PATH durável em `content_library.media_url`, dual-path auth na generate-image; sem migration/frontend/cobrança extra. **(3) fix generate-image** (`803f946`): bug universal `response_format` (OpenAI removeu o param) → removido + tratamento url/b64 + surfacing. **(4) Diagnóstico saída visível** (Sovereign pediu "destravar"): WP=Cloudflare challenge no /wp-json (ação: WAF Skip como mcp.mcorch.com), nanobana=DNS morto, openai=chave-projeto sem acesso a modelo de imagem (config OpenAI). **Prova:** 2 E2E pagos (`158ba7fc`/`46a98963`, delta 10 cada · 3/3 content_id NON-NULL · fail-open) · UI ocular 1920×1080 · /security-review SAFE 2× · tsc 0 · 295 testes · Phase 5c **SEAL ALLOWED** (10) · mesh **8934** · handoff `385d3dd5`. **Pending:** Fatia 2 cron/cadência R2 (SOP `autopilot-cron-identity.md` Lei 2/OTD-VA-008) · loop R3 · anexo imagem no publish-layer · **2 ações Sovereign** (CF WAF skip /wp-json + OpenAI image model access). **Lição:** mapear o contrato vivo ANTES de codar pegou 3 correções materiais (imagem text-only, dual-path auth, response_format); diagnóstico por status/headers reais cravou as causas; não fabriquei imagem visível (providers do tenant quebrados = config, declarado).
+> ```
+
+## 🤖 Claude *(03:04:07)*
+
+
+## 🤖 Claude *(03:04:07)*
+
+`scratch/` limpo ✅ (vazio). Adiciono entrada v6.47.0 no sprint-priorities (estava em v6.44.0):
+
+## 🤖 Claude *(03:04:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.44.0 \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\";",
+  "new_string": "**Sprint v6.47.0 \u2014 Per-user 100% (env = s\u00f3 infra) + CF WP unblock + sweep per-user FECHADO (2026-06-22)** \u2014 `/handson` \u2192 \"resolver CF WAF + secrets, depois os pr\u00f3ximos passos\". **(1) CF WP unblock RESOLVIDO:** o componente de skip que faltava no Cloudflare era **\"N\u00edvel de seguran\u00e7a\"** (challenge por reputa\u00e7\u00e3o de IP de **datacenter** Oracle AS31898, n\u00e3o bot/UA) \u2014 diagnosticado via Security\u2192Events (a regra Skip j\u00e1 disparava `Ignorar`, mas o N\u00edvel de seguran\u00e7a desafiava por cima). Regra CF header-gated + secrets `WP_PUBLISH_SECRET`/`_HOST`; E2E `publish-wordpress`\u2192`post_id 18`. SOPs `wordpress-cf-publish-unblock.md` (atualizada) + `wordpress-cf-per-user-publish.md` (multi-tenant). **(2) Diretiva Sovereign env=s\u00f3-infra:** auditoria per-user (workflow `wf_102ef5ac`, 49 fns; 30 per-user \u00b7 11 fallback-ok \u00b7 4 remediadas) \u2192 removido `|| Deno.env.get(<provider>)` de **25 fns user-facing** (47 ocorr\u00eancias) \u2192 per-user PURO fail-closed; 2 fns de sistema (`embed-mcorch-node`/`search-constellation`) \u2192 `MESH_EMBED_*` dedicadas; secrets antigos mantidos (seed source) + `.env` anotado. **(3) Sweep per-user FECHADO:** #1 openrouter-swarm \u00b7 #2 canvas-execute Higgsfield \u00b7 #3 fetch-trends (migration `rapidapi_key` + UI + 402 provado) \u00b7 + `aios-chat-gateway` token vazado fail-closed. BYOK do User 0 seedado do `.env`. **Prova:** `/security-review` SAFE 2\u00d7 \u00b7 27 fns deployadas 0 falhas \u00b7 embedding p\u00f3s-rename 200 \u00b7 OpenRouter autenticou com chave per-user do User 0 \u00b7 tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8947** \u00b7 handoff `4e57bf72`. **Pending (pr\u00f3xima):** seguran\u00e7a `social-auth-callback` HMAC + `instagram-webhook` signature \u00b7 **C** 1\u00ba ciclo pago (CF desbloqueado!) \u00b7 BYOK imagem opt-in \u00b7 impl WP-CF per-user. **Li\u00e7\u00e3o:** o E2E \"falhou bonito\" (OpenRouter 404-de-modelo + `user_id`) PROVOU a chave per-user; o approach at\u00f4mico do Higgsfield pegou o trap do row null/secret antes do deploy; o \"N\u00edvel de seguran\u00e7a\" s\u00f3 apareceu no Security\u2192Events (n\u00e3o chutei checkbox).\n\n**Sprint v6.44.0 \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\";"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:04:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 7,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 7	**Sprint v6.44.0 — Viral Autopilot Fatia 2: cadência R2 + loop R3 auto-melhorável + UI (2026-06-20)** — `/handson` → "vamos aos próximos passos"; 4 GOs Sovereign (AskUserQuestion: migration · edge fns · R3 · selar). Closed-Loop por fatia (mapeamento do contrato vivo → SOP Lei 2 → código → /security-review → deploy → smoke zero-cost → seal). **Motor autônomo R1+R2+R3+R4 COMPLETO, zero gasto do Sovereign.** **(1) Fundação** (`686bae3`): SOP `autopilot-cron-identity.md` (OTD-VA-008, 10 gates) + migrations `20260620120000..120300` (`autopilot_plans`/`autopilot_cycles` FK composta tenant-escopada + RPCs `begin_autopilot_cycle` [cap+pré-débito ÚNICO sob `pg_advisory_xact_lock` anti-TOCTOU] / `finalize_autopilot_cycle` [refund crédito-positivo idempotente, espelha `finalize_vision_job`], service-role-only) + smoke RPC 11/11 (`0c59e4d`). **(2) Edge fns** (`54ac2a9`): `autopilot-run` (executor identidade 2-caminhos → begin → fan-out `orchestrate-content` prepaid → finalize → re-arma; dry_run) + `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key) + orchestrate-content FR-VA-016 prepaid (user-path intacto); smoke 9/9. **(3) R3 loop** (`35554da`): `autopilot-analyze` (FR-VA-010, ranqueia `creative_metrics`→`optimization_policy`, tenant da linha) + `autopilot-collect` (FR-VA-008, ledger→métricas) + orchestrate-step FR-VA-011 (injeta diretiva nos 3 prompts); smoke loop 11/11. **(4) UI** (`bfd178b`): `useAutopilot`+`AutopilotPage` (`/dashboard/autopilot`) + rota + nav; types.ts regen additive. **Prova:** `/security-review` SAFE **3×** · 3 smokes zero-cost (**31 gates**) · 6 edge fns deployadas · migrations via Management API · render ocular (preview local à prova de CF) · tsc 0 · Phase 5c **SEAL ALLOWED** (10) · mesh **8935** · handoff `280e94d7`. **Pending (ação Sovereign):** ativar `pg_cron` + 1º ciclo **PAGO** real (gated nos 2 blockers: CF WAF `/wp-json` + OpenAI image) · `fetch-trends`→pauta (FR-VA-018, último autônomo). **Lição:** mapear o contrato vivo antes de cada fatia pegou correções materiais (analyze lê `creative_metrics` não `affiliate_links`; cost-model prepaid); `/security-review` independente 3× confirmou o caminho de dinheiro fechado; selei ao esgotar o roadmap autônomo (resto Sovereign-side).
+> ```
+
+## 🤖 Claude *(03:04:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.44.0 \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\"; 4 GOs Sovereign",
+  "new_string": "**Sprint v6.47.0 \u2014 Per-user 100% (env = s\u00f3 infra) + CF WP unblock + sweep per-user FECHADO (2026-06-22)** \u2014 `/handson` \u2192 \"resolver CF WAF + secrets, depois os pr\u00f3ximos passos\". **(1) CF WP unblock RESOLVIDO:** o componente de skip que faltava no Cloudflare era **\"N\u00edvel de seguran\u00e7a\"** (challenge por reputa\u00e7\u00e3o de IP de **datacenter** Oracle AS31898, n\u00e3o bot/UA) \u2014 diagnosticado via Security\u2192Events (a regra Skip j\u00e1 disparava `Ignorar`, mas o N\u00edvel de seguran\u00e7a desafiava por cima). Regra CF header-gated + secrets `WP_PUBLISH_SECRET`/`_HOST`; E2E `publish-wordpress`\u2192`post_id 18`. SOPs `wordpress-cf-publish-unblock.md` (atualizada) + `wordpress-cf-per-user-publish.md` (multi-tenant). **(2) Diretiva Sovereign env=s\u00f3-infra:** auditoria per-user (workflow `wf_102ef5ac`, 49 fns; 30 per-user \u00b7 11 fallback-ok \u00b7 4 remediadas) \u2192 removido `|| Deno.env.get(<provider>)` de **25 fns user-facing** (47 ocorr\u00eancias) \u2192 per-user PURO fail-closed; 2 fns de sistema (`embed-mcorch-node`/`search-constellation`) \u2192 `MESH_EMBED_*` dedicadas; secrets antigos mantidos (seed source) + `.env` anotado. **(3) Sweep per-user FECHADO:** #1 openrouter-swarm \u00b7 #2 canvas-execute Higgsfield \u00b7 #3 fetch-trends (migration `rapidapi_key` + UI + 402 provado) \u00b7 + `aios-chat-gateway` token vazado fail-closed. BYOK do User 0 seedado do `.env`. **Prova:** `/security-review` SAFE 2\u00d7 \u00b7 27 fns deployadas 0 falhas \u00b7 embedding p\u00f3s-rename 200 \u00b7 OpenRouter autenticou com chave per-user do User 0 \u00b7 tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8947** \u00b7 handoff `4e57bf72`. **Pending (pr\u00f3xima):** seguran\u00e7a `social-auth-callback` HMAC + `instagram-webhook` signature \u00b7 **C** 1\u00ba ciclo pago (CF desbloqueado!) \u00b7 BYOK imagem opt-in \u00b7 impl WP-CF per-user. **Li\u00e7\u00e3o:** o E2E \"falhou bonito\" (OpenRouter 404-de-modelo + `user_id`) PROVOU a chave per-user; o approach at\u00f4mico do Higgsfield pegou o trap do row null/secret antes do deploy; o \"N\u00edvel de seguran\u00e7a\" s\u00f3 apareceu no Security\u2192Events (n\u00e3o chutei checkbox).\n\n**Sprint v6.44.0 \u2014 Viral Autopilot Fatia 2: cad\u00eancia R2 + loop R3 auto-melhor\u00e1vel + UI (2026-06-20)** \u2014 `/handson` \u2192 \"vamos aos pr\u00f3ximos passos\"; 4 GOs Sovereign"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:05:01)*
+
+
+## 🤖 Claude *(03:05:01)*
+
+Sprint atualizado. Commito + push:
+
+## 🤖 Claude *(03:05:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): v6.47.0 \u2014 per-user 100% (env=infra) + CF WP unblock + sweep fechado\" 2>&1 | grep -iE \"lefthook|no leaks\" | head -1 || true\ngit push origin main 2>&1 | tail -2\necho \"\u2705 sprint commitado + pushed\"",
+  "description": "Commit + push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    bdb56b1..21bc53d  main -> main
+> ✅ sprint commitado + pushed
+> ```
+
+## 🤖 Claude *(03:05:15)*
+
+
+## 🤖 Claude *(03:05:17)*
+
+Sprint pushed (`21bc53d`). Atualizo a memória durável (`feedback_api_tenancy_per_user` ganhou refinamento env=infra):
+
+## 🤖 Claude *(03:05:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_api_tenancy_per_user.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 34 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: API Tenancy Model — credenciais sempre per-user
+> 3	description: Diretiva Sovereign 2026-05-19. Toda integração com API externa MUST resolver credenciais por user (auth.uid() + tabela per-user). Env global é fallback restrito a cron/service-role/Sovereign-only. Bloqueante p/ Phase Commercial multi-tenant.
+> 4	type: feedback
+> 5	originSessionId: 731718a9-4abd-4afd-8801-17d295656326
+> 6	---
+> 7	**Rule:** Toda nova integração com API externa (AI, social, afiliados, pagamentos, vídeo, etc.) MUST resolver credenciais via tabela per-user (`user_api_keys`, `affiliate_config`, `social_credentials`, etc.) escopada por `auth.uid()` ANTES de qualquer fallback para env global. Env global (`Deno.env.get('<SERVICE>_API_KEY')`) é permitido SÓ em: (a) cron jobs sem JWT, (b) service-role/system flows, (c) onboarding default explicitamente documentado como free tier compartilhado. Em fluxos user-facing, env global sem fallback per-user = anti-pattern.
+> 8	
+> 9	**Why:** (1) Multi-tenant Phase Commercial precisa de revenue attribution correto por tenant — credencial global atribui receita a quem hardcodou o env; (2) Segregação de quota/rate limit — um user não pode esgotar limite global de outro; (3) Risco financeiro isolado — credencial vazada de um tenant não compromete outros; (4) Compliance LGPD — cada user controla suas credenciais. Descoberto materialmente em 2026-05-19: `scripts/link-forge.ts` e `process-affiliate-link/index.ts` GET branch usavam `GCRUX_ML_AFFILIATE_TOKEN` global hardcoded enquanto a tabela `affiliate_config` per-user JÁ EXISTIA (migration `20260415201855`). Inconsistência arquitetural latente identificada por questionamento direto do Sovereign.
+> 10	
+> 11	**How to apply:**
+> 12	
+> 13	- Antes de codar nova integração: verificar se existe coluna em `user_api_keys` OU tabela dedicada `<service>_config`. Se não existe, MIGRATION primeiro (RLS `auth.uid() = user_id` + UNIQUE constraint).
+> 14	- Edge function/script SEMPRE faz lookup per-user primeiro; fallback global SÓ se path é cron/service-role.
+> 15	- UI no `/dashboard/settings` ou page dedicada com hook TanStack Query (`useUserApiKeys` / `use<Service>Config`).
+> 16	- Telemetry em `infra_health_logs` por path (success/degraded/error).
+> 17	- SOP em `docs/processes/<integration>-credential-resolution.md` antes do código (Lei 2 Survival).
+> 18	- Detectou uso de env global em fluxo user-facing? Registrar OTD com SLA explícito (modelo: OTD-OE661-PER-USER RPN 120 SLA 14d).
+> 19	- Doc oficial em `CLAUDE.md` seção "API Tenancy Model — Per-User Credentials" (Architecture).
+> 20	
+> ```
+
+## 🤖 Claude *(03:05:22)*
+
+
+## 🤖 Claude *(03:05:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_api_tenancy_per_user.md",
+  "old_string": "**Rule:** Toda nova integra\u00e7\u00e3o com API externa (AI, social, afiliados, pagamentos, v\u00eddeo, etc.) MUST resolver credenciais via tabela per-user (`user_api_keys`, `affiliate_config`, `social_credentials`, etc.) escopada por `auth.uid()` ANTES de qualquer fallback para env global. Env global (`Deno.env.get('<SERVICE>_API_KEY')`) \u00e9 permitido S\u00d3 em: (a) cron jobs sem JWT, (b) service-role/system flows, (c) onboarding default explicitamente documentado como free tier compartilhado. Em fluxos user-facing, env global sem fallback per-user = anti-pattern.",
+  "new_string": "**Rule:** Toda nova integra\u00e7\u00e3o com API externa (AI, social, afiliados, pagamentos, v\u00eddeo, etc.) MUST resolver credenciais via tabela per-user (`user_api_keys`, `affiliate_config`, `social_credentials`, etc.) escopada por `auth.uid()` ANTES de qualquer fallback para env global. Env global (`Deno.env.get('<SERVICE>_API_KEY')`) \u00e9 permitido S\u00d3 em: (a) cron jobs sem JWT, (b) service-role/system flows, (c) onboarding default explicitamente documentado como free tier compartilhado. Em fluxos user-facing, env global sem fallback per-user = anti-pattern.\n\n**ESCALA\u00c7\u00c3O Sovereign 2026-06-22 (mais forte que o original):** **env = S\u00d3 infra** (Supabase/SB/VITE + chaves de infra dedicadas). TODO provider key \u00e9 per-user BYOK **puro fail-closed** \u2014 NEM o fallback `|| Deno.env.get(<provider>)` \u00e9 permitido em fluxo user-facing (o fallback mascara a falta de BYOK = mesmo anti-pattern do token hardcoded). Migra\u00e7\u00e3o v6.47.0 (commit `432fa01`): removeu o fallback de 25 fns user-facing. Fluxos de SISTEMA sem usu\u00e1rio (ex.: `embed-mcorch-node` pipeline de embedding NUCLEAR via pg_net, `search-constellation`) N\u00c3O podem ser per-user (n\u00e3o h\u00e1 `auth.uid()`) \u2192 usam **chave de infra DEDICADA renomeada** (`MESH_EMBED_OPENROUTER_KEY`/`MESH_EMBED_GEMINI_KEY`), n\u00e3o a chave user-facing. **Trap material (Lei 1):** ao remover o fallback, GARANTA que o Usu\u00e1rio Zero (gabrielcall@gmail.com) tem a BYOK setada per-user ANTES (seed do `.env` via PATCH em `user_api_keys`) \u2014 sen\u00e3o o pipeline do pr\u00f3prio Sovereign quebra. Higgsfield \u00e9 par key+secret \u2192 resolver AT\u00d4MICO (per-user s\u00f3 se AMBOS presentes; um row null/secret mistura env+peruser e quebra a auth). Secrets antigos no vault: MANTER (seed source do BYOK), `.env` anotado (gitignored) explicando \"usar s\u00f3 p/ adicionar no vault do user\"."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_api_tenancy_per_user.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:05:57)*
+
+
+## 🤖 Claude *(03:06:14)*
+
+Memória durável atualizada (env=infra + MESH_EMBED + trap do seed). Tudo selado. **Fase 8 — Relatório final:**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Per-user 100% (env=infra) + CF WP unblock (2026-06-22)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret leak       ✅ PASS (nenhum literal; gateway token REMOVIDO; gitleaks limpo 8/8)
+  1b JWT edge fns      ⚠️ WARN (4 webhooks signature-validated, pré-existentes, não tocados)
+  1c client mco_balance ✅ PASS
+  1e console.log secret ✅ PASS (só test file)
+  5b HANDOFF.md scan   ✅ PASS (0 credenciais)
+
+📦 COMMITS (8 total)
+  ef921ce — fix(aios-chat-gateway): token env-only + fail-closed
+  4583519 — refactor(edge): per-user openrouter-swarm + canvas-execute
+  dbad262 — docs: WP↔CF resolvido + SOP per-user multi-tenant
+  432fa01 — refactor(edge): provider keys 100% per-user (env=infra) + MESH_EMBED
+  f6734e9 — feat(fetch-trends): per-user Apify/RapidAPI BYOK (#3)
+  a77a8e2 — docs(readme): v6.47.0
+  bdb56b1 — docs(handoff): seal per-user 100%
+  21bc53d — chore(sprint): v6.47.0
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 4e57bf72-8cc0-4e1c-ae48-10d7f19b0dac — session-handoff-…-per-user-env-infra-sweep
+  Embedding: ✅ 768d (1 chunk)
+
+📖 README.md
+  Versão: 6.46.0 → 6.47.0
+  Badge neural_mesh: 8946 → 8947 nós · + badge "API Tenancy 100% per-user (env=infra)"
+  Seção: What's New v6.47.0
+
+🧠 HANDOFF.md
+  Fase selada: Per-user 100% + CF WP unblock + sweep per-user FECHADO
+  Seções: Task State, Record novo, Survival Laws self-audit (4/4)
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas
+
+🚀 PUSH
+  Branch: main → origin/main (1a1e0bf..21bc53d)
+  Commits enviados: 8 · 0 ahead (sincronizado)
+
+📌 SPRINT
+  sprint-priorities.md: ✅ v6.47.0 adicionado
+  scratch/ cleanup: limpo ✅
+  BoK gate: ✅ sem módulo novo (refactor/per-user de fns existentes)
+
+⏭  PRÓXIMOS PASSOS
+  1. C — 1º ciclo PAGO do Viral Autopilot (CF agora DESBLOQUEADO — o blocker caiu)
+  2. Segurança: social-auth-callback HMAC (cross-tenant) + instagram-webhook signature
+  3. BYOK imagem opt-in · impl WP-CF per-user (SOP pronto)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão monumental selada. O objetivo que você cravou como prioridade — **per-user em tudo, env = só infra** — está **fechado, deployado e verificado materialmente** (27 fns, sweep completo, BYOK do User 0 seedado). O CF WordPress está desbloqueado, então o **1º ciclo pago do Viral Autopilot** (a saída visível de receita) está agora destravado pra quando você der o GO. Tudo no `origin/main`.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
