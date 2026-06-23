@@ -4556,6 +4556,1063 @@ Preciso de 2 decisões pra executar a migração inteira (via workflow):
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Fase 2 — as 2 fns de sistema (embed-mcorch-node + search-constellation) não têm usuário. De onde elas tiram a chave de embedding?"="Chave de infra dedicada (recomendado)", "Executo a migração completa agora (workflow: ~25 fns user-facing → per-user puro fail-closed + Fase 2 + remover os 4 secrets)?"="Faça a migração completa mas não remova a secrets comente elas no .env para que quando uma IA for ler entende que pode usar mas somente para adicionar no vault do usuário 0 no caso que sou eu. Eu como usuário 0 preciso desenvolver e ao mesmo tempo pensar como usuário 1, pois se eu obter lucro usando a ferramenta todos os próximos usuários vão lucrar e pagar a ferramenta, consequentemente eu pago mais para você e para seu criado e ou fabricante. Logo quando terminar de migrar vai precisar testar e se algo der errado ja sabe onde buscar as chaves no .env mas não usar ela por .env e sim adicionando elas nas configurações do usuário zero gabrielcall@gmail.com do ecossistema. Então parece mais rapido começar por ai, criando os input BYOK com as chaves do .env". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:38:47)*
+
+
+## 🤖 Claude *(01:38:52)*
+
+Recebido — e é uma diretiva inteligente: **não remover, seed o BYOK do Usuário Zero a partir do `.env`** (você desenvolve como User 0 mas pensa como User 1 — o fluxo BYOK tem que funcionar pra você exatamente como pro cliente). Decisões registradas: **(1)** sistema = chave de infra dedicada; **(2)** migração completa, secrets ficam (comentadas no `.env` como "fonte pra seed do vault do User 0", não uso global).
+
+Começo por aí: **seed do BYOK do Usuário Zero**. O único gap real é `higgsfield_api_key` (null). Leio o valor do `.env` e seto per-user (sem ecoar):
+
+## 🤖 Claude *(01:39:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\n# valor do .env (sem ecoar)\nHF=\"${HIGGSFIELD_API_KEY:-}\"\nif [ -z \"$HF\" ]; then echo \"\u26a0\ufe0f HIGGSFIELD_API_KEY n\u00e3o est\u00e1 no .env \u2014 n\u00e3o posso seedar\"; exit 0; fi\necho \"HIGGSFIELD_API_KEY presente no .env (len=${#HF})\"\n\necho \"=== PATCH user_api_keys: seta higgsfield_api_key per-user do User 0 ===\"\ncurl -sS -X PATCH \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?user_id=eq.$UZ\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" \\\n  -d \"{\\\"higgsfield_api_key\\\": \\\"$HF\\\"}\" -w \"\\n\u2192 HTTP=%{http_code}\\n\" 2>&1 | tail -3\n\necho \"=== verifica (mascarado + match de comprimento sem expor valor) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/decrypted_user_api_keys?select=higgsfield_api_key&user_id=eq.$UZ\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | python3 -c \"\nimport sys,json,os\nd=json.load(sys.stdin)\nv=(d[0].get('higgsfield_api_key') or '') if isinstance(d,list) and d else ''\nenv=os.environ.get('HIGGSFIELD_API_KEY','')\nprint('per-user higgsfield_api_key agora:', 'SET' if v else 'null', '\u00b7 bate com .env:', v==env and v!='')\n\"",
+  "description": "Seed Usuario Zero higgsfield_api_key from .env, verify match"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HIGGSFIELD_API_KEY presente no .env (len=36)
+> === PATCH user_api_keys: seta higgsfield_api_key per-user do User 0 ===
+> 
+> → HTTP=204
+> === verifica (mascarado + match de comprimento sem expor valor) ===
+> per-user higgsfield_api_key agora: SET · bate com .env: True
+> ```
+
+## 🤖 Claude *(01:41:57)*
+
+
+## 🤖 Claude *(01:42:02)*
+
+**BYOK seedado** — PATCH 204, `higgsfield_api_key` per-user agora **SET e bate com o `.env`**. Usuário Zero tem **todas** as provider keys per-user (openrouter/google/replicate/openai/groq/higgsfield+secret). Logo, remover o fallback global é seguro pro seu pipeline.
+
+Agora a migração de código. É um transform **mecânico** (remover ` || Deno.env.get("<provider>")`), então uso um script **determinístico** (mais confiável que 25 agentes pra isso) e reviso o diff antes de deployar. As 2 fns de sistema (`embed`/`search`) usam `Deno.env.get` **sem** `|| ` → o regex as ignora naturalmente (trato elas à parte como infra dedicada). Escrevo e rodo edit-only:
+
+## 🤖 Claude *(01:42:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/migrate_peruser.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"Remove global env fallbacks for provider keys in user-facing edge fns (pure per-user, API Tenancy Model).\nStrips `  || Deno.env.get(\"<VAR>\")` occurrences. System fns (embed-mcorch-node, search-constellation) use a\nbare `Deno.env.get(...)` with NO `|| ` prefix, so the regex naturally skips them \u2014 but we exclude them anyway.\"\"\"\nimport re, glob, os\n\nBASE = \"/home/gcrUX/htdocs/constellation-orchestra/supabase/functions\"\nEXCLUDE = {\"embed-mcorch-node\", \"search-constellation\"}  # system/infra flows \u2014 keep their dedicated key\nVARS = [\n    \"OPENROUTER_API_KEY\", \"GEMINI_API_KEY\", \"REPLICATE_API_KEY\",\n    \"OPENAI_API_KEY\", \"HIGGSFIELD_API_KEY\", \"HIGGSFIELD_API_KEY_SECRET\",\n]\n# match `<ws>||<ws>Deno.env.get(\"VAR\")` \u2014 removes ONLY the env fallback, keeps the per-user resolution\npatterns = {v: re.compile(r'\\s*\\|\\|\\s*Deno\\.env\\.get\\(\"' + re.escape(v) + r'\"\\)') for v in VARS}\n\ntotal = 0\nreport = []\nfor path in sorted(glob.glob(f\"{BASE}/*/index.ts\")):\n    fn = os.path.basename(os.path.dirname(path))\n    if fn in EXCLUDE:\n        continue\n    src = open(path).read()\n    orig = src\n    cnt = 0\n    for v, pat in patterns.items():\n        src, n = pat.subn(\"\", src)\n        cnt += n\n    if cnt:\n        open(path, \"w\").write(src)\n        report.append((fn, cnt))\n        total += cnt\n\nfor fn, cnt in report:\n    print(f\"  {fn:28} -{cnt}\")\nprint(f\"\\nTotal fallbacks removidos: {total} em {len(report)} fns\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/migrate_peruser.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:42:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 /tmp/migrate_peruser.py\necho \"\"\necho \"=== sanity: nenhum '|| Deno.env.get(provider)' restante em user-facing? ===\"\ngrep -rn -E '\\|\\| *Deno\\.env\\.get\\(\"(OPENROUTER_API_KEY|GEMINI_API_KEY|REPLICATE_API_KEY|OPENAI_API_KEY|HIGGSFIELD_API_KEY|HIGGSFIELD_API_KEY_SECRET)\"\\)' supabase/functions --include=\"*.ts\" 2>/dev/null | sed -E 's#supabase/functions/##' || echo \"\u2705 nenhum (todos removidos)\"\necho \"\"\necho \"=== confirma que as 2 fns de SISTEMA ficaram intactas ===\"\ngrep -nE 'Deno\\.env\\.get\\(\"(OPENROUTER_API_KEY|GEMINI_API_KEY)\"\\)' supabase/functions/embed-mcorch-node/index.ts supabase/functions/search-constellation/index.ts",
+  "description": "Run per-user migration transform + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   aeo-audit                    -2
+>   agent-task-execute           -2
+>   aios-chat-stream             -2
+>   aios-chat                    -2
+>   aios-live-proxy              -1
+>   analyze-node                 -2
+>   analyze-sem                  -2
+>   analyze-seo                  -2
+>   canvas-execute               -4
+>   check-video-status           -1
+>   generate-audio-script        -1
+>   generate-content             -2
+>   generate-image               -3
+>   generate-video-script        -4
+>   generate-video               -1
+>   intent-orchestrate           -2
+>   lead-score                   -2
+>   list-provider-models         -1
+>   nurture-dispatch             -2
+>   openrouter-swarm             -1
+>   optimize-schedule            -2
+>   orchestrate-content          -1
+>   orchestrate-step             -2
+>   self-optimize                -2
+>   tts-speak                    -1
+> 
+> Total fallbacks removidos: 47 em 25 fns
+> 
+> === sanity: nenhum '|| Deno.env.get(provider)' restante em user-facing? ===
+> 
+> === confirma que as 2 fns de SISTEMA ficaram intactas ===
+> supabase/functions/search-constellation/index.ts:115:  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> supabase/functions/search-constellation/index.ts:116:  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> supabase/functions/embed-mcorch-node/index.ts:187:  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> supabase/functions/embed-mcorch-node/index.ts:188:  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> ```
+
+## 🤖 Claude *(01:43:09)*
+
+
+## 🤖 Claude *(01:43:12)*
+
+Transform aplicado: **47 fallbacks removidos em 25 fns**, sanity grep confirma **zero `|| Deno.env.get(provider)` restante** em user-facing, e as 2 fns de sistema (`embed`/`search`) **intactas**. `openrouter-swarm` ficou perfeito (per-user puro + guard 501).
+
+Falta o caso especial do `canvas-execute` Higgsfield (ternário com env, que o regex não pega) → pure per-user. E leio as 2 fns de sistema pra fazer a chave de infra dedicada certa:
+
+## 🤖 Claude *(01:43:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "    // Higgsfield auth is a key+secret PAIR \u2014 resolve it ATOMICALLY per-user (API Tenancy Model). Never mix a\n    // per-user key with an env secret (or vice-versa): use the tenant's pair only when BOTH are present, else\n    // the platform pair. Prevents a half-populated row from producing a broken key/secret combination.\n    const hfPerUser = !!(userKeys?.higgsfield_api_key && userKeys?.higgsfield_api_key_secret);\n    const keys = {\n      openai: userKeys?.openai_api_key || \"\",\n      replicate: userKeys?.replicate_api_key || \"\",\n      openrouter: userKeys?.openrouter_api_key || \"\",\n      gemini: userKeys?.google_api_key || \"\",\n      higgsfield: hfPerUser ? userKeys!.higgsfield_api_key : (Deno.env.get(\"HIGGSFIELD_API_KEY\") || \"\"),\n      higgsfield_secret: hfPerUser ? userKeys!.higgsfield_api_key_secret : (Deno.env.get(\"HIGGSFIELD_API_KEY_SECRET\") || \"\"),\n    };",
+  "new_string": "    // Pure per-user credential resolution (API Tenancy Model) \u2014 NO global env fallback for provider keys (env is\n    // infra-only). Higgsfield is a key+secret PAIR; both come from the tenant's own BYOK (a half-populated row just\n    // fails closed at the provider, which is the correct BYOK behavior).\n    const keys = {\n      openai: userKeys?.openai_api_key || \"\",\n      replicate: userKeys?.replicate_api_key || \"\",\n      openrouter: userKeys?.openrouter_api_key || \"\",\n      gemini: userKeys?.google_api_key || \"\",\n      higgsfield: userKeys?.higgsfield_api_key || \"\",\n      higgsfield_secret: userKeys?.higgsfield_api_key_secret || \"\",\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:43:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts",
+  "offset": 183,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 183	    Deno.env.get("SUPABASE_URL")!,
+> 184	    serviceKey,
+> 185	  );
+> 186	
+> 187	  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> 188	  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> 189	  if (!openRouterKey && !geminiKey) {
+> 190	    return new Response(
+> 191	      JSON.stringify({ error: "Neither OPENROUTER_API_KEY nor GEMINI_API_KEY configured" }),
+> 192	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 193	    );
+> 194	  }
+> 195	
+> 196	  let node_id: string;
+> 197	  try {
+> 198	    ({ node_id } = await req.json());
+> 199	    if (!node_id) throw new Error("missing node_id");
+> 200	  } catch {
+> 201	    return new Response(
+> 202	      JSON.stringify({ error: "Request body must contain { node_id: string }" }),
+> 203	      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 204	    );
+> 205	  }
+> 206	
+> 207	  // Fetch node content
+> 208	  const { data: node, error: fetchErr } = await supabase
+> 209	    .from("mcorch_nodes")
+> 210	    .select("id, name, content, node_type")
+> 211	    .eq("id", node_id)
+> 212	    .maybeSingle();
+> 213	
+> 214	  if (fetchErr || !node) {
+> 215	    return new Response(
+> 216	      JSON.stringify({ error: "Node not found", node_id }),
+> 217	      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> ```
+
+## 🤖 Claude *(01:43:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/search-constellation/index.ts",
+  "offset": 110,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 110	  const supabase = createClient(
+> 111	    Deno.env.get("SUPABASE_URL")!,
+> 112	    (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 113	  );
+> 114	
+> 115	  const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+> 116	  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+> 117	  if (!openRouterKey && !geminiKey) return err(500, "Neither OPENROUTER_API_KEY nor GEMINI_API_KEY configured");
+> 118	
+> 119	  let query: string;
+> 120	  let project_id: string;
+> 121	  let match_count: number;
+> 122	
+> 123	  try {
+> 124	    const body = await req.json();
+> 125	    query = body.query?.trim();
+> 126	    project_id = body.project_id ?? "mcorch-constellation";
+> 127	    match_count = Math.min(body.match_count ?? 20, 50);
+> 128	    if (!query) throw new Error("empty query");
+> 129	  } catch {
+> 130	    return err(400, "Body must be { query: string, project_id?: string, match_count?: number }");
+> 131	  }
+> 132	
+> 133	  // Generate embedding for the search query via OpenRouter → Gemini fallback
+> 134	  let vector: number[];
+> 135	  try {
+> 136	    const result = await embedQuery(query, openRouterKey, geminiKey);
+> 137	    vector = result.vector;
+> 138	  } catch (embErr) {
+> 139	    console.error("Embedding generation failed:", embErr);
+> ```
+
+## 🤖 Claude *(01:44:24)*
+
+
+## 🤖 Claude *(01:44:27)*
+
+Entendi as 2 fns de sistema: ambas usam OpenRouter→Gemini (fallback) pra gerar embeddings. Honro sua escolha — **chave de infra dedicada renomeada** (`MESH_EMBED_*`), mantendo as antigas no vault (seed source, sem remover). Renomeio no código + seto os secrets de infra (antes de deployar, pra não quebrar):
+
+## 🤖 Claude *(01:44:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts",
+  "old_string": "  const openRouterKey = Deno.env.get(\"OPENROUTER_API_KEY\");\n  const geminiKey = Deno.env.get(\"GEMINI_API_KEY\");\n  if (!openRouterKey && !geminiKey) {\n    return new Response(\n      JSON.stringify({ error: \"Neither OPENROUTER_API_KEY nor GEMINI_API_KEY configured\" }),\n      { status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n    );\n  }",
+  "new_string": "  // INFRA: dedicated mesh-embedding system keys. This pipeline is pg_net-triggered (no user in scope), so it is\n  // NOT a user-facing flow \u2014 these are NOT BYOK fallbacks. User flows resolve per-user (API Tenancy Model); the\n  // distinct MESH_EMBED_* names make the infra-only role unambiguous (env = infra only).\n  const openRouterKey = Deno.env.get(\"MESH_EMBED_OPENROUTER_KEY\");\n  const geminiKey = Deno.env.get(\"MESH_EMBED_GEMINI_KEY\");\n  if (!openRouterKey && !geminiKey) {\n    return new Response(\n      JSON.stringify({ error: \"Neither MESH_EMBED_OPENROUTER_KEY nor MESH_EMBED_GEMINI_KEY configured\" }),\n      { status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n    );\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/embed-mcorch-node/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:44:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/search-constellation/index.ts",
+  "old_string": "  const openRouterKey = Deno.env.get(\"OPENROUTER_API_KEY\");\n  const geminiKey = Deno.env.get(\"GEMINI_API_KEY\");\n  if (!openRouterKey && !geminiKey) return err(500, \"Neither OPENROUTER_API_KEY nor GEMINI_API_KEY configured\");",
+  "new_string": "  // INFRA: dedicated mesh-embedding system keys (system-role search, no user-facing BYOK fallback \u2014 API Tenancy Model).\n  const openRouterKey = Deno.env.get(\"MESH_EMBED_OPENROUTER_KEY\");\n  const geminiKey = Deno.env.get(\"MESH_EMBED_GEMINI_KEY\");\n  if (!openRouterKey && !geminiKey) return err(500, \"Neither MESH_EMBED_OPENROUTER_KEY nor MESH_EMBED_GEMINI_KEY configured\");"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/search-constellation/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:44:41)*
+
+
+## 🤖 Claude *(01:44:41)*
+
+Seto os secrets de infra `MESH_EMBED_*` a partir dos valores do `.env` (sem ecoar), antes do deploy:
+
+## 🤖 Claude *(01:44:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nOR=\"${OPENROUTER_API_KEY:-}\"; GM=\"${GEMINI_API_KEY:-}\"\nif [ -z \"$OR\" ] || [ -z \"$GM\" ]; then echo \"\u26a0\ufe0f falta OPENROUTER_API_KEY/GEMINI_API_KEY no .env\"; exit 1; fi\necho \"valores do .env presentes (OR len=${#OR} \u00b7 GM len=${#GM})\"\nnpx supabase secrets set MESH_EMBED_OPENROUTER_KEY=\"$OR\" MESH_EMBED_GEMINI_KEY=\"$GM\" --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"Finished|error\"\necho \"=== confirma no vault ===\"\nnpx supabase secrets list --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -i \"MESH_EMBED\"",
+  "description": "Set MESH_EMBED infra secrets from .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> valores do .env presentes (OR len=73 · GM len=39)
+> Finished supabase secrets set.
+> === confirma no vault ===
+>    MESH_EMBED_GEMINI_KEY          | 6e5d6bab502800c4a0264e998b7d6561a70549f4e84abca37f5b5861212d164e 
+>    MESH_EMBED_OPENROUTER_KEY      | a365bcd2b5ef2217e420cf3d4f2e07228f55085b00759f3bd342d50b1ef3e80c
+> ```
+
+## 🤖 Claude *(01:45:15)*
+
+
+## 🤖 Claude *(01:45:17)*
+
+Secrets de infra setados — e os **digests batem** com os antigos (`6e5d6bab`/`a365bcd2`), confirmando que o pipeline de embedding roda idêntico com os nomes novos. Agora verifico sintaxe (deno) antes do deploy em massa e listo as fns mudadas:
+
+## 🤖 Claude *(01:45:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== fns mudadas (git) ===\"\nCHANGED=$(git diff --name-only -- 'supabase/functions/*/index.ts' | sed -E 's#supabase/functions/##; s#/index.ts##' | sort)\necho \"$CHANGED\" | tr '\\n' ' '; echo \"\"\necho \"total: $(echo \"$CHANGED\" | grep -c .) fns\"\necho \"\"\necho \"=== deno dispon\u00edvel? syntax-check de amostra ===\"\nif command -v deno >/dev/null 2>&1; then\n  deno --version | head -1\n  for f in canvas-execute embed-mcorch-node search-constellation generate-video-script aios-chat; do\n    deno check \"supabase/functions/$f/index.ts\" 2>&1 | tail -2 && echo \"  \u2191 $f\"\n  done\nelse\n  echo \"(deno n\u00e3o instalado \u2014 verifico por leitura/grep)\"\nfi",
+  "description": "List changed fns + deno syntax check sample"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === fns mudadas (git) ===
+> aeo-audit agent-task-execute aios-chat aios-chat-stream aios-live-proxy analyze-node analyze-sem analyze-seo canvas-execute check-video-status embed-mcorch-node generate-audio-script generate-content generate-image generate-video generate-video-script intent-orchestrate lead-score list-provider-models nurture-dispatch openrouter-swarm optimize-schedule orchestrate-content orchestrate-step search-constellation self-optimize tts-speak 
+> total: 27 fns
+> 
+> === deno disponível? syntax-check de amostra ===
+> (deno não instalado — verifico por leitura/grep)
+> ```
+
+## 🤖 Claude *(01:45:35)*
+
+
+## 🤖 Claude *(01:45:35)*
+
+27 fns. Deno não instalado → verifico por grep (o transform foi mecânico, mas confirmo zero resíduo + zero sintaxe quebrada):
+
+## 🤖 Claude *(01:45:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1. resta algum Deno.env.get dos 6 provider keys? (esperado: 0) ===\"\ngrep -rn -E 'Deno\\.env\\.get\\(\"(OPENROUTER_API_KEY|GEMINI_API_KEY|REPLICATE_API_KEY|OPENAI_API_KEY|HIGGSFIELD_API_KEY|HIGGSFIELD_API_KEY_SECRET)\"\\)' supabase/functions --include=\"*.ts\" 2>/dev/null | sed -E 's#supabase/functions/##' || echo \"\u2705 zero res\u00edduo\"\necho \"\"\necho \"=== 2. sintaxe suspeita p\u00f3s-transform (|| pendurado, = vazio)? ===\"\ngrep -rn -E '(\\|\\|\\s*$|\\|\\|\\s*\\)|=\\s*\\|\\||,\\s*\\|\\||\\|\\|\\s*;)' supabase/functions --include=\"*.ts\" 2>/dev/null | grep -vE '\\|\\|\\s*\"' | sed -E 's#supabase/functions/##' | head -20 || true\necho \"(se vazio acima = nenhuma sintaxe quebrada)\"\necho \"\"\necho \"=== 3. amostra: linhas que ficaram (devem ser per-user puras) ===\"\ngrep -nE 'openRouterKey|geminiKey|openrouter:|gemini:' supabase/functions/generate-content/index.ts supabase/functions/orchestrate-step/index.ts 2>/dev/null | grep -iE \"userKeys|keys\\?\\.\" | head -6",
+  "description": "Verify no residue + no broken syntax + sample correctness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1. resta algum Deno.env.get dos 6 provider keys? (esperado: 0) ===
+> 
+> === 2. sintaxe suspeita pós-transform (|| pendurado, = vazio)? ===
+> lead-score/index.ts:144:      rationale = rationale ||
+> publish-wordpress/index.ts:161:          error: (wpData && wpData.message) ||
+> list-provider-models/index.ts:46:        VIDEO_KEYWORDS.some((kw) => id.includes(kw) || desc.includes(kw)) ||
+> list-provider-models/index.ts:47:        methods.includes("generateVideo") ||
+> list-provider-models/index.ts:68:        VIDEO_KEYWORDS.some((kw) => id.includes(kw) || name.includes(kw)) ||
+> list-provider-models/index.ts:69:        modality.includes("video") ||
+> higgsfield-webhook/index.ts:205:    (body.result_url as string | undefined) ||
+> higgsfield-webhook/index.ts:206:    (body.url as string | undefined) ||
+> higgsfield-webhook/index.ts:207:    video?.url ||
+> higgsfield-webhook/index.ts:208:    payload?.video?.url ||
+> higgsfield-webhook/index.ts:209:    payload?.result_url ||
+> (se vazio acima = nenhuma sintaxe quebrada)
+> 
+> === 3. amostra: linhas que ficaram (devem ser per-user puras) ===
+> supabase/functions/generate-content/index.ts:46:    const openRouterKey = userKeys?.openrouter_api_key;
+> supabase/functions/generate-content/index.ts:47:    const geminiKey = userKeys?.google_api_key;
+> supabase/functions/orchestrate-step/index.ts:243:    const openRouterKey = userKeys?.openrouter_api_key;
+> supabase/functions/orchestrate-step/index.ts:244:    const geminiKey = userKeys?.google_api_key;
+> ```
+
+## 🤖 Claude *(01:46:15)*
+
+
+## 🤖 Claude *(01:46:15)*
+
+Verificação limpa: **zero resíduo** dos 6 provider keys, **nenhuma sintaxe quebrada** (os `||` pendurados são expressões multi-linha pré-existentes, não do transform), e amostra confirma per-user puro (`userKeys?.openrouter_api_key`). Secrets de infra prontos.
+
+Deploy das 27 fns (secrets MESH_EMBED já setados → embed/search não quebram):
+
+## 🤖 Claude *(01:46:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nCHANGED=\"aeo-audit agent-task-execute aios-chat aios-chat-stream aios-live-proxy analyze-node analyze-sem analyze-seo canvas-execute check-video-status embed-mcorch-node generate-audio-script generate-content generate-image generate-video generate-video-script intent-orchestrate lead-score list-provider-models nurture-dispatch openrouter-swarm optimize-schedule orchestrate-content orchestrate-step search-constellation self-optimize tts-speak\"\nok=0; fail=0; failed=\"\"\nfor fn in $CHANGED; do\n  out=$(npx supabase functions deploy \"$fn\" --project-ref bcyvddsykvehvpwstlfa 2>&1)\n  if echo \"$out\" | grep -qi \"Deployed Functions\"; then\n    sz=$(echo \"$out\" | grep -oE \"script size: [0-9.]+kB\" | head -1)\n    printf \"  \u2705 %-22s %s\\n\" \"$fn\" \"$sz\"; ok=$((ok+1))\n  else\n    printf \"  \u274c %-22s\\n\" \"$fn\"; fail=$((fail+1)); failed=\"$failed $fn\"\n  fi\ndone\necho \"\"\necho \"=== $ok deployadas \u00b7 $fail falhas${failed:+ \u2192$failed} ===\"",
+  "description": "Deploy all 27 changed edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   ✅ aeo-audit              script size: 87.04kB
+>   ✅ agent-task-execute     script size: 116.8kB
+>   ✅ aios-chat              script size: 63.65kB
+>   ✅ aios-chat-stream       script size: 63.6kB
+>   ✅ aios-live-proxy        script size: 61.36kB
+>   ✅ analyze-node           script size: 64.14kB
+>   ✅ analyze-sem            script size: 84kB
+>   ✅ analyze-seo            script size: 83.64kB
+>   ✅ canvas-execute         script size: 151kB
+>   ✅ check-video-status     script size: 159kB
+>   ✅ embed-mcorch-node      script size: 108.6kB
+>   ✅ generate-audio-script  script size: 140kB
+>   ✅ generate-content       script size: 82.65kB
+>   ✅ generate-image         script size: 129.4kB
+>   ✅ generate-video         script size: 157.2kB
+>   ✅ generate-video-script  script size: 162.7kB
+>   ✅ intent-orchestrate     script size: 85.93kB
+>   ✅ lead-score             script size: 85.93kB
+>   ✅ list-provider-models   script size: 157.4kB
+>   ✅ nurture-dispatch       script size: 88.27kB
+>   ✅ openrouter-swarm       script size: 60.74kB
+>   ✅ optimize-schedule      script size: 64.68kB
+>   ✅ orchestrate-content    script size: 114.8kB
+>   ✅ orchestrate-step       script size: 132kB
+>   ✅ search-constellation   script size: 104.4kB
+>   ✅ self-optimize          script size: 66.04kB
+>   ✅ tts-speak              script size: 60.27kB
+> 
+> === 27 deployadas · 0 falhas ===
+> ```
+
+## 🤖 Claude *(01:48:40)*
+
+
+## 🤖 Claude *(01:48:42)*
+
+**27/27 deployadas, 0 falhas.** Migração per-user pura no ar. Agora a prova material mais importante (Lei 1): o **pipeline de embedding NUCLEAR** ainda funciona com a chave renomeada? Re-embedo um nó real via `embed-mcorch-node`:
+
+## 🤖 Claude *(01:48:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nNODE=$(curl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id,name&limit=1&order=created_at.desc\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if d else '')\")\necho \"node_id de teste: $NODE\"\necho \"=== invoca embed-mcorch-node (service role) \u2014 usa MESH_EMBED_OPENROUTER_KEY agora ===\"\ncurl -sS -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" \\\n  -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\":\\\"$NODE\\\"}\" -w \"\\n\u2192 HTTP=%{http_code}\\n\" --max-time 30 2>&1 | python3 -c \"\nimport sys\nraw=sys.stdin.read()\nfor line in raw.splitlines():\n    if line.startswith('\u2192'): print(line); continue\n    print(line[:200])\"",
+  "description": "Verify embedding pipeline works with renamed MESH_EMBED key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> node_id de teste: bb23b9dc-265e-4338-9709-d320371908b4
+> === invoca embed-mcorch-node (service role) — usa MESH_EMBED_OPENROUTER_KEY agora ===
+> {"node_id":"bb23b9dc-265e-4338-9709-d320371908b4","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> → HTTP=200
+> ```
+
+## 🤖 Claude *(01:49:11)*
+
+
+## 🤖 Claude *(01:49:14)*
+
+✅ **Pipeline de embedding INTACTO** — `embed-mcorch-node` → HTTP 200, `dims:768, model:text-embedding-3-small, provider:openrouter`. A chave renomeada `MESH_EMBED_OPENROUTER_KEY` funciona; a malha não quebrou.
+
+Migração completa e verificada. Agora a anotação no `.env` (que você pediu) — leio a estrutura pra colocar o comentário no lugar certo sem quebrar os scripts cron que legitimamente leem dali:
+
+## 🤖 Claude *(01:49:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== linhas dos provider keys no .env (s\u00f3 nomes, sem valores) ===\"\ngrep -nE \"^(OPENROUTER_API_KEY|GEMINI_API_KEY|HIGGSFIELD_API_KEY|HIGGSFIELD_API_KEY_SECRET|APIFY_KEY|APIFY_TOKENS|REPLICATE_API_KEY|RAPIDAPI_KEY|VISION_MCP_PAT|MESH_EMBED)\" .env 2>/dev/null | sed -E 's/=.*/=<redacted>/'\necho \"--- primeiras 3 linhas do .env (\u00e2ncora) ---\"\nhead -3 .env | sed -E 's/=.*/=<redacted>/'\necho \"--- total de linhas ---\"; wc -l .env",
+  "description": "Locate provider keys in .env without exposing values"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === linhas dos provider keys no .env (só nomes, sem valores) ===
+> 11:OPENROUTER_API_KEY=<redacted>
+> 12:GEMINI_API_KEY=<redacted>
+> 14:HIGGSFIELD_API_KEY_SECRET=<redacted>
+> 15:HIGGSFIELD_API_KEY=<redacted>
+> 17:APIFY_KEY=<redacted>
+> 18:APIFY_TOKENS=<redacted>
+> 20:REPLICATE_API_KEY=<redacted>
+> 21:RAPIDAPI_KEY=<redacted>
+> 24:VISION_MCP_PAT=<redacted>
+> --- primeiras 3 linhas do .env (âncora) ---
+> SUPABASE_URL=<redacted>
+> VITE_SUPABASE_URL=<redacted>
+> 
+> --- total de linhas ---
+> 24 .env
+> ```
+
+## 🤖 Claude *(01:49:59)*
+
+
+## 🤖 Claude *(01:50:02)*
+
+Pipeline intacto. Agora a anotação no `.env` (linhas 11-24 são os provider keys; 1-10 são infra Supabase/VITE). Insiro um bloco de comentário acima deles via Python (sem ecoar valores, sem desabilitar — desabilitar quebraria os scripts cron que leem dali):
+
+## 🤖 Claude *(01:50:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/annotate_env.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"Insert an API-Tenancy annotation block above the provider keys in .env (no values touched/echoed).\"\"\"\nENV = \"/home/gcrUX/htdocs/constellation-orchestra/.env\"\nPROVIDERS = (\"OPENROUTER_API_KEY\", \"GEMINI_API_KEY\", \"HIGGSFIELD_API_KEY\", \"HIGGSFIELD_API_KEY_SECRET\",\n             \"APIFY_KEY\", \"APIFY_TOKENS\", \"REPLICATE_API_KEY\", \"RAPIDAPI_KEY\", \"VISION_MCP_PAT\")\nBLOCK = [\n    \"\",\n    \"# \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\",\n    \"# \u26a0\ufe0f  PROVIDER API KEYS \u2014 N\u00c3O s\u00e3o chaves de uso global/edge. (API Tenancy Model)\",\n    \"#   \u2022 As edge functions resolvem credencial de provider PER-USER (user_api_keys),\",\n    \"#     fail-closed. Nenhuma edge fn usa estas chaves como fallback global.\",\n    \"#   \u2022 Estes valores existem aqui S\u00d3 como: (a) SEED SOURCE do BYOK do Usu\u00e1rio Zero\",\n    \"#     (gabrielcall@gmail.com) \u2014 uma IA lendo isto deve ADICION\u00c1-LOS nas configura\u00e7\u00f5es\",\n    \"#     do usu\u00e1rio (vault per-user via /dashboard/settings), NUNCA us\u00e1-los por env;\",\n    \"#     e (b) scripts cron/sistema LOCAIS (enrich/discover-affiliate, agent-task-runner).\",\n    \"#   \u2022 Infra global de embedding usa MESH_EMBED_OPENROUTER_KEY / MESH_EMBED_GEMINI_KEY\",\n    \"#     (renomeadas, dedicadas \u2014 env = s\u00f3 infra).\",\n    \"# \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\",\n]\nlines = open(ENV).read().splitlines()\n# already annotated? skip\nif any(\"PROVIDER API KEYS \u2014 N\u00c3O s\u00e3o chaves\" in l for l in lines):\n    print(\"j\u00e1 anotado \u2014 skip\"); raise SystemExit(0)\nidx = next((i for i, l in enumerate(lines) if l.split(\"=\", 1)[0].strip() in PROVIDERS), None)\nif idx is None:\n    print(\"nenhum provider key encontrado \u2014 nada a anotar\"); raise SystemExit(0)\nout = lines[:idx] + BLOCK + lines[idx:]\nopen(ENV, \"w\").write(\"\\n\".join(out) + \"\\n\")\nprint(f\"anota\u00e7\u00e3o inserida acima da linha {idx+1} ({lines[idx].split('=')[0]})\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/annotate_env.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:50:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 /tmp/annotate_env.py\necho \"=== confirma: .env \u00e9 gitignored (anota\u00e7\u00e3o fica local)? ===\"\ngit check-ignore .env && echo \"\u2705 .env gitignored \u2014 anota\u00e7\u00e3o n\u00e3o vaza pro git\" || echo \"\u26a0\ufe0f .env N\u00c3O est\u00e1 gitignored\"\necho \"=== bloco no .env (sem valores) ===\"\ngrep -nE \"^#|PROVIDER API KEYS\" .env | head -14",
+  "description": "Run .env annotation + confirm gitignored"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> anotação inserida acima da linha 11 (OPENROUTER_API_KEY)
+> === confirma: .env é gitignored (anotação fica local)? ===
+> .env
+> ✅ .env gitignored — anotação não vaza pro git
+> === bloco no .env (sem valores) ===
+> 12:# ─────────────────────────────────────────────────────────────────────────────
+> 13:# ⚠️  PROVIDER API KEYS — NÃO são chaves de uso global/edge. (API Tenancy Model)
+> 14:#   • As edge functions resolvem credencial de provider PER-USER (user_api_keys),
+> 15:#     fail-closed. Nenhuma edge fn usa estas chaves como fallback global.
+> 16:#   • Estes valores existem aqui SÓ como: (a) SEED SOURCE do BYOK do Usuário Zero
+> 17:#     (gabrielcall@gmail.com) — uma IA lendo isto deve ADICIONÁ-LOS nas configurações
+> 18:#     do usuário (vault per-user via /dashboard/settings), NUNCA usá-los por env;
+> 19:#     e (b) scripts cron/sistema LOCAIS (enrich/discover-affiliate, agent-task-runner).
+> 20:#   • Infra global de embedding usa MESH_EMBED_OPENROUTER_KEY / MESH_EMBED_GEMINI_KEY
+> 21:#     (renomeadas, dedicadas — env = só infra).
+> 22:# ─────────────────────────────────────────────────────────────────────────────
+> 35:# Vision MCP PAT (Usuário Zero) — Claude Code connector auth
+> ```
+
+## 🤖 Claude *(01:50:40)*
+
+
+## 🤖 Claude *(01:50:41)*
+
+`.env` anotado (linhas 12-22) — e **gitignored**, então a anotação fica local, não vaza pro git. Agora commito a migração:
+
+## 🤖 Claude *(01:50:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/\necho \"=== staged ===\"\ngit diff --cached --name-only | wc -l\ngit commit -q -m \"refactor(edge): provider keys 100% per-user (env = s\u00f3 infra) + MESH_EMBED dedicada\n\nRemove o fallback global \\`|| Deno.env.get(<provider>)\\` de 25 edge fns user-facing\n(47 ocorr\u00eancias) \u2192 resolu\u00e7\u00e3o per-user PURA fail-closed (API Tenancy Model). Nenhum\nfluxo user-facing usa mais chave de provider global \u2014 atribui\u00e7\u00e3o/quota/risco isolados\npor tenant. As 2 fns de SISTEMA sem usu\u00e1rio (embed-mcorch-node NUCLEAR + search-\nconstellation) passam a usar chaves de infra dedicadas MESH_EMBED_OPENROUTER_KEY /\nMESH_EMBED_GEMINI_KEY (renomeadas \u2014 env = s\u00f3 infra). Secrets antigos mantidos (seed\nsource do BYOK do User 0). Diretiva Sovereign 2026-06-22.\" && echo \"\u2705 commit migra\u00e7\u00e3o\"\ngit log --oneline -3",
+  "description": "Commit the per-user migration (27 fns)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged ===
+> 27
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:50PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:50PM[0m [32mINF[0m scan completed in 10.1ms
+> [90m10:50PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✅ commit migração
+> 432fa01 refactor(edge): provider keys 100% per-user (env = só infra) + MESH_EMBED dedicada
+> dbad262 docs(processes): WP↔CF resolvido (Nível de segurança) + SOP per-user multi-tenant
+> 4583519 refactor(edge): resolução de credencial per-user (API Tenancy Model)
+> ```
+
+## 🤖 Claude *(01:51:15)*
+
+
+## 🤖 Claude *(01:51:17)*
+
+Migração **commitada** (`432fa01`, gitleaks limpo). Você disse que "vai precisar testar" — então faço **um teste material end-to-end** com o SEU JWT (não só confiar que a estrutura está certa, Lei 1). O `openrouter-swarm` usa modelos `:free` (custo ~$0) e resolve a chave per-user — se passar do guard 501, prova que o per-user funciona. Vejo o helper de JWT:
+
+## 🤖 Claude *(01:51:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== helper de JWT ===\"; ls scripts/qa/gen-user-jwt.ts scripts/qa/gen-user-session.ts 2>/dev/null; head -25 scripts/qa/gen-user-jwt.ts 2>/dev/null",
+  "description": "Inspect JWT minter helper usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === helper de JWT ===
+> scripts/qa/gen-user-jwt.ts
+> scripts/qa/gen-user-session.ts
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+>  * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+>  * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+>  *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+>  *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> ```
+
+## 🤖 Claude *(01:51:24)*
+
+
+## 🤖 Claude *(01:51:25)*
+
+Mintando o seu JWT + invocando `openrouter-swarm` com 1 modelo `:free` (prova per-user, custo ~$0):
+
+## 🤖 Claude *(01:51:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null)\nif [ -z \"$TOKEN\" ]; then echo \"\u26a0\ufe0f falha ao mintar JWT\"; exit 1; fi\necho \"JWT mintado (len=${#TOKEN})\"\necho \"=== openrouter-swarm com JWT do User 0 (resolve openrouter_api_key per-user) ===\"\ncurl -sS -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/openrouter-swarm\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d '{\"prompt\":\"Responda apenas: OK\",\"model_ids\":[\"meta-llama/llama-3-8b-instruct:free\"]}' \\\n  -w \"\\n\u2192 HTTP=%{http_code}\\n\" --max-time 40 2>&1 | python3 -c \"\nimport sys,json\nraw=sys.stdin.read()\nhttp=[l for l in raw.splitlines() if l.startswith('\u2192')]\nbody=raw.split('\u2192')[0].strip()\ntry:\n    d=json.loads(body)\n    if 'error' in d:\n        print('RESULTADO: erro \u2192', d.get('error'), d.get('action',''))\n    else:\n        r=(d.get('results') or [{}])[0]\n        print('RESULTADO: per-user OK \u00b7 fastest=', d.get('fastest_model'), '\u00b7 rank1 error=', r.get('error'), '\u00b7 output=', (r.get('output') or '')[:60])\nexcept Exception:\n    print(body[:200])\nprint(http[0] if http else '')\"",
+  "description": "E2E test openrouter-swarm with Sovereign JWT (per-user resolution)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> JWT mintado (len=1404)
+> === openrouter-swarm com JWT do User 0 (resolve openrouter_api_key per-user) ===
+> RESULTADO: per-user OK · fastest= None · rank1 error= HTTP 404: {"error":{"message":"This model is unavailable for free. The paid version is available now - use this slug instead: meta-llama/llama-3-8b-instruct","code":404},"user_id":"user_3CPE9byf0hxhKYyAUl9OovO3Prg"} · output= 
+> → HTTP=200
+> ```
+
+## 🤖 Claude *(01:52:05)*
+
+
+## 🤖 Claude *(01:52:21)*
+
+✅ **Teste E2E PROVA a migração** (e o "erro" é boa notícia): HTTP **200** (não 501 → chave per-user resolvida), e o OpenRouter respondeu com **`user_id:user_3CPE...`** — ou seja, **autenticou com a SUA chave per-user**. O único erro é o slug `:free` estar deprecado no OpenRouter (`use meta-llama/llama-3-8b-instruct`), **não** problema de chave/migração. Se a chave estivesse faltando, viria 401, não um 404 de modelo.
+
+---
+
+## 🏁 Migração "env = só infra" — COMPLETA e verificada
+
+| Etapa | Prova material |
+|---|---|
+| BYOK seed do User 0 | `higgsfield_api_key` PATCH 204 · bate com `.env` |
+| 25 fns user-facing → per-user puro | 47 fallbacks removidos · **0 resíduo** · sintaxe limpa |
+| 2 fns sistema → infra dedicada | `MESH_EMBED_*` (digests batem) · embed-mcorch-node **200** `dims:768` |
+| Deploy | **27/27 fns · 0 falhas** |
+| Per-user E2E | openrouter-swarm 200 · OpenRouter autenticou com a chave do User 0 |
+| `.env` anotado | bloco linhas 12-22 · **gitignored** (não vaza) |
+| Commit | `432fa01` (gitleaks limpo) |
+
+**Notas:** (a) os 4 secrets antigos no vault **ficaram** (sua diretiva — seed source); agora **nenhuma edge fn os usa** (embed/search migraram pra MESH_EMBED). (b) Achado menor não-relacionado: `openrouter-swarm` tem slugs `:free` deprecados no `DEFAULT_MODELS` — vale atualizar depois.
+
+---
+
+## O que resta
+
+**Per-user (sweep quase fechado):**
+- ⚖️ **#3 fetch-trends** — único restante. Usa `APIFY_TOKENS`/`RAPIDAPI_KEY` (nem no vault, só `.env`). Pra ficar per-user precisa de **colunas novas** `apify_token`/`rapidapi_key` + UI + resolução. **OU** OTD (se trends = corpus compartilhado). Sua decisão.
+
+**Fora do per-user (do board anterior, não-urgente pelo seu enquadramento):**
+- 🛡️ Segurança: `social-auth-callback` (state sem HMAC) · `instagram-webhook` (sem signature).
+- ⏳ **C** (1º ciclo pago) · **BYOK imagem opt-in** · **impl WP-CF per-user** (SOP pronto).
+
+---
+
+Esta foi uma sessão **densa** (CF unblock → per-user audit → migração de 27 fns → arrumação). Recomendo: **fecho o #3 fetch-trends** (último item per-user, ~30min) pra selar o sweep completo, **ou** se preferir consolidar, eu rodo `/handoff` agora (selo tudo: CF + per-user audit + migração) e retomamos #3/segurança/C numa próxima. Qual você prefere?
+
+## 👤 User *(01:57:26)*
+
+ótimo segue o recomendado
+
+## 🤖 Claude *(01:58:15)*
+
+
+## 🤖 Claude *(01:58:18)*
+
+Perfeito — fecho o **#3 fetch-trends per-user** pra selar o sweep completo. É um surface de credencial novo, então: SOP (Lei 2) → migration (colunas cifradas) → /security-review → edge fn → UI. Primeiro leio o padrão exato de como uma coluna BYOK cifrada é adicionada ao `user_api_keys` (Vault triggers), pra espelhar certo:
+
+## 🤖 Claude *(01:58:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migrations que adicionaram coluna BYOK cifrada ao user_api_keys ===\"\ngrep -rln -E \"resend_api_key|matt_tool|higgsfield_api_key\" supabase/migrations/ 2>/dev/null | sort | tail -5\necho \"\"\necho \"=== mais recente: como faz o encrypt trigger + view + INSTEAD OF? ===\"\nLATEST=$(grep -rln \"resend_api_key\" supabase/migrations/ 2>/dev/null | sort | tail -1)\necho \"arquivo: $LATEST\"\nwc -l \"$LATEST\" 2>/dev/null",
+  "description": "Find the encrypted column-add pattern for user_api_keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrations que adicionaram coluna BYOK cifrada ao user_api_keys ===
+> supabase/migrations/20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql
+> supabase/migrations/20260603240000_user_api_keys_resend_channel.sql
+> supabase/migrations/20260604150000_affiliate_matt_tool.sql
+> supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql
+> 
+> === mais recente: como faz o encrypt trigger + view + INSTEAD OF? ===
+> arquivo: supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql
+> 216 supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql
+> ```
+
+## 🤖 Claude *(01:58:25)*
+
+
+## 🤖 Claude *(01:58:26)*
+
+`20260615140000_user_api_keys_firecrawl_channel.sql` é o template perfeito (adiciona `firecrawl_api_key`). Leio pra espelhar exato:
+
+## 🤖 Claude *(01:58:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: per-user Firecrawl (deepsearch.scrape) BYOK — vision-mcp Fatia 2 / FR-VM-007.
+> 2	-- BoK SSOT: docs/bok/vision-mcp/04-frd.md FR-VM-007 (deepsearch) + 03-prd PR-VM-008 + API Tenancy Model
+> 3	-- (CLAUDE.md) + SOP docs/processes/vision-mcp-billing-credential-resolution.md.
+> 4	--
+> 5	-- Sovereign directive 2026-06-15 ("usar as chaves já configuradas per-user BYOK para o deepsearch"):
+> 6	-- deepsearch.scrape resolves the Firecrawl key per-user (BYOK). Lays the credential column the
+> 7	-- vision-mcp container reads from `decrypted_user_api_keys` (service-role) by the verified sub.
+> 8	--
+> 9	-- Appends `firecrawl_api_key` to the user_api_keys credential machinery, reproducing the CURRENT live
+> 10	-- definitions VERBATIM (from 20260603240000_user_api_keys_resend_channel.sql — the latest live def):
+> 11	-- encrypt trigger uses the IDEMPOTENT `vault_upsert_secret` (20260602140000); the INSTEAD OF is
+> 12	-- UPDATE-first + tenant guard (20260602130000); search_path='' preserved. Additive only: views append
+> 13	-- the new column at the END (CREATE OR REPLACE VIEW constraint).
+> 14	
+> 15	-- ── 1. base column ──────────────────────────────────────────────────────────────────────────────
+> 16	ALTER TABLE public.user_api_keys_table ADD COLUMN IF NOT EXISTS firecrawl_api_key text;
+> 17	COMMENT ON COLUMN public.user_api_keys_table.firecrawl_api_key
+> 18	  IS 'Per-user Firecrawl API key (BYOK) for vision-mcp deepsearch.scrape. Vault-encrypted at rest. NULL → 402 firecrawl_not_configured (no system fallback).';
+> 19	
+> 20	-- ── 2. encrypt trigger (live verbatim + firecrawl block; idempotent vault_upsert_secret) ─────────
+> 21	CREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()
+> 22	 RETURNS trigger
+> 23	 LANGUAGE plpgsql
+> 24	 SECURITY DEFINER
+> 25	 SET search_path TO ''
+> 26	AS $function$
+> 27	DECLARE
+> 28	  v_id UUID;
+> 29	BEGIN
+> 30	  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN
+> 31	    IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 32	      v_id := public.vault_upsert_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key'); NEW.groq_api_key = v_id::text;
+> 33	    END IF;
+> 34	  END IF;
+> 35	  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN
+> 36	    IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 37	      v_id := public.vault_upsert_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key'); NEW.openrouter_api_key = v_id::text;
+> 38	    END IF;
+> 39	  END IF;
+> 40	  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN
+> 41	    IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 42	      v_id := public.vault_upsert_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key'); NEW.openai_api_key = v_id::text;
+> 43	    END IF;
+> 44	  END IF;
+> 45	  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN
+> 46	    IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 47	      v_id := public.vault_upsert_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key'); NEW.elevenlabs_api_key = v_id::text;
+> 48	    END IF;
+> 49	  END IF;
+> 50	  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN
+> 51	    IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 52	      v_id := public.vault_upsert_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key'); NEW.google_api_key = v_id::text;
+> 53	    END IF;
+> 54	  END IF;
+> 55	  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN
+> 56	    IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 57	      v_id := public.vault_upsert_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key'); NEW.nanobana_api_key = v_id::text;
+> 58	    END IF;
+> 59	  END IF;
+> 60	  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN
+> 61	    IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 62	      v_id := public.vault_upsert_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key'); NEW.seedance_api_key = v_id::text;
+> 63	    END IF;
+> 64	  END IF;
+> 65	  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN
+> 66	    IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 67	      v_id := public.vault_upsert_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password'); NEW.wp_app_password = v_id::text;
+> 68	    END IF;
+> 69	  END IF;
+> 70	  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN
+> 71	    IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 72	      v_id := public.vault_upsert_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key'); NEW.replicate_api_key = v_id::text;
+> 73	    END IF;
+> 74	  END IF;
+> 75	  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN
+> 76	    IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 77	      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key'); NEW.higgsfield_api_key = v_id::text;
+> 78	    END IF;
+> 79	  END IF;
+> 80	  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN
+> 81	    IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 82	      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret'); NEW.higgsfield_api_key_secret = v_id::text;
+> 83	    END IF;
+> 84	  END IF;
+> 85	  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN
+> 86	    IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 87	      v_id := public.vault_upsert_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token'); NEW.apify_token = v_id::text;
+> 88	    END IF;
+> 89	  END IF;
+> 90	  IF NEW.resend_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.resend_api_key IS DISTINCT FROM OLD.resend_api_key) THEN
+> 91	    IF NEW.resend_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 92	      v_id := public.vault_upsert_secret(NEW.resend_api_key, 'user_api_keys_resend_api_key_' || NEW.user_id::text, 'Resend API Key'); NEW.resend_api_key = v_id::text;
+> 93	    END IF;
+> 94	  END IF;
+> 95	  -- firecrawl_api_key (NEW — per-user deepsearch.scrape BYOK)
+> 96	  IF NEW.firecrawl_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.firecrawl_api_key IS DISTINCT FROM OLD.firecrawl_api_key) THEN
+> 97	    IF NEW.firecrawl_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE
+> 98	      v_id := public.vault_upsert_secret(NEW.firecrawl_api_key, 'user_api_keys_firecrawl_api_key_' || NEW.user_id::text, 'Firecrawl API Key'); NEW.firecrawl_api_key = v_id::text;
+> 99	    END IF;
+> 100	  END IF;
+> 101	  RETURN NEW;
+> 102	END;
+> 103	$function$;
+> 104	
+> 105	-- ── 3. masked public view (live verbatim + firecrawl masked, appended at END) ────────────────────
+> 106	CREATE OR REPLACE VIEW public.user_api_keys AS
+> 107	SELECT
+> 108	  user_id, created_at, updated_at, pref_audio_provider, pref_image_provider, pref_video_provider,
+> 109	  wp_site_url, wp_username, pref_ai_model,
+> 110	  CASE WHEN groq_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS groq_api_key,
+> 111	  CASE WHEN openrouter_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openrouter_api_key,
+> 112	  CASE WHEN openai_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS openai_api_key,
+> 113	  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS elevenlabs_api_key,
+> 114	  CASE WHEN google_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS google_api_key,
+> 115	  CASE WHEN nanobana_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS nanobana_api_key,
+> 116	  CASE WHEN seedance_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS seedance_api_key,
+> 117	  CASE WHEN wp_app_password IS NOT NULL THEN '••••••••••••' ELSE NULL END AS wp_app_password,
+> 118	  CASE WHEN replicate_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS replicate_api_key,
+> 119	  CASE WHEN higgsfield_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key,
+> 120	  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '••••••••••••' ELSE NULL END AS higgsfield_api_key_secret,
+> 121	  CASE WHEN apify_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS apify_token,
+> 122	  CASE WHEN resend_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS resend_api_key,
+> 123	  CASE WHEN firecrawl_api_key IS NOT NULL THEN '••••••••••••' ELSE NULL END AS firecrawl_api_key
+> 124	FROM public.user_api_keys_table
+> 125	WHERE (auth.uid() = user_id OR auth.role() = 'service_role');
+> 126	GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;
+> 127	
+> 128	-- ── 4. INSTEAD OF trigger (live verbatim + firecrawl in guard-preserving UPDATE-first/INSERT) ────
+> 129	CREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()
+> 130	 RETURNS trigger
+> 131	 LANGUAGE plpgsql
+> 132	 SECURITY DEFINER
+> 133	 SET search_path TO ''
+> 134	AS $function$
+> 135	BEGIN
+> 136	  IF TG_OP = 'DELETE' THEN
+> 137	    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;
+> 138	    RETURN OLD;
+> 139	  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+> 140	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 141	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 142	    END IF;
+> 143	    UPDATE public.user_api_keys_table SET
+> 144	      groq_api_key              = COALESCE(NULLIF(NEW.groq_api_key, '••••••••••••'), public.user_api_keys_table.groq_api_key),
+> 145	      openrouter_api_key        = COALESCE(NULLIF(NEW.openrouter_api_key, '••••••••••••'), public.user_api_keys_table.openrouter_api_key),
+> 146	      openai_api_key            = COALESCE(NULLIF(NEW.openai_api_key, '••••••••••••'), public.user_api_keys_table.openai_api_key),
+> 147	      pref_audio_provider       = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),
+> 148	      pref_image_provider       = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),
+> 149	      pref_video_provider       = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),
+> 150	      elevenlabs_api_key        = COALESCE(NULLIF(NEW.elevenlabs_api_key, '••••••••••••'), public.user_api_keys_table.elevenlabs_api_key),
+> 151	      google_api_key            = COALESCE(NULLIF(NEW.google_api_key, '••••••••••••'), public.user_api_keys_table.google_api_key),
+> 152	      nanobana_api_key          = COALESCE(NULLIF(NEW.nanobana_api_key, '••••••••••••'), public.user_api_keys_table.nanobana_api_key),
+> 153	      seedance_api_key          = COALESCE(NULLIF(NEW.seedance_api_key, '••••••••••••'), public.user_api_keys_table.seedance_api_key),
+> 154	      wp_site_url               = COALESCE(NEW.wp_site_url, public.user_api_keys_table.wp_site_url),
+> 155	      wp_username               = COALESCE(NEW.wp_username, public.user_api_keys_table.wp_username),
+> 156	      wp_app_password           = COALESCE(NULLIF(NEW.wp_app_password, '••••••••••••'), public.user_api_keys_table.wp_app_password),
+> 157	      pref_ai_model             = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),
+> 158	      replicate_api_key         = COALESCE(NULLIF(NEW.replicate_api_key, '••••••••••••'), public.user_api_keys_table.replicate_api_key),
+> 159	      higgsfield_api_key        = COALESCE(NULLIF(NEW.higgsfield_api_key, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key),
+> 160	      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key_secret),
+> 161	      apify_token               = COALESCE(NULLIF(NEW.apify_token, '••••••••••••'), public.user_api_keys_table.apify_token),
+> 162	      resend_api_key            = COALESCE(NULLIF(NEW.resend_api_key, '••••••••••••'), public.user_api_keys_table.resend_api_key),
+> 163	      firecrawl_api_key         = COALESCE(NULLIF(NEW.firecrawl_api_key, '••••••••••••'), public.user_api_keys_table.firecrawl_api_key),
+> 164	      updated_at                = now()
+> 165	    WHERE user_id = NEW.user_id;
+> 166	    IF NOT FOUND THEN
+> 167	      INSERT INTO public.user_api_keys_table (
+> 168	        user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token, resend_api_key, firecrawl_api_key
+> 169	      ) VALUES (
+> 170	        NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token, NEW.resend_api_key, NEW.firecrawl_api_key
+> 171	      );
+> 172	    END IF;
+> 173	    RETURN NEW;
+> 174	  END IF;
+> 175	  RETURN NULL;
+> 176	END;
+> 177	$function$;
+> 178	
+> 179	-- ── 5. decrypted view (service_role only; live verbatim + firecrawl COALESCE + join, appended at END) ─
+> 180	CREATE OR REPLACE VIEW public.decrypted_user_api_keys AS
+> 181	SELECT
+> 182	  uak.user_id,
+> 183	  COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,
+> 184	  COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,
+> 185	  COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,
+> 186	  uak.created_at, uak.updated_at, uak.pref_audio_provider, uak.pref_image_provider, uak.pref_video_provider,
+> 187	  COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,
+> 188	  COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,
+> 189	  COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,
+> 190	  COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,
+> 191	  uak.wp_site_url, uak.wp_username,
+> 192	  COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,
+> 193	  uak.pref_ai_model,
+> 194	  COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,
+> 195	  COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,
+> 196	  COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret,
+> 197	  COALESCE(s_apify.decrypted_secret, uak.apify_token) AS apify_token,
+> 198	  COALESCE(s_resend.decrypted_secret, uak.resend_api_key) AS resend_api_key,
+> 199	  COALESCE(s_firecrawl.decrypted_secret, uak.firecrawl_api_key) AS firecrawl_api_key
+> 200	FROM public.user_api_keys_table uak
+> 201	LEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid
+> 202	LEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid
+> 203	LEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid
+> 204	LEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid
+> 205	LEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid
+> 206	LEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid
+> 207	LEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid
+> 208	LEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid
+> 209	LEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid
+> 210	LEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid
+> 211	LEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid
+> 212	LEFT JOIN vault.decrypted_secrets s_apify ON uak.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_apify.id = uak.apify_token::uuid
+> 213	LEFT JOIN vault.decrypted_secrets s_resend ON uak.resend_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_resend.id = uak.resend_api_key::uuid
+> 214	LEFT JOIN vault.decrypted_secrets s_firecrawl ON uak.firecrawl_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_firecrawl.id = uak.firecrawl_api_key::uuid;
+> 215	REVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated;
+> 216	GRANT SELECT ON public.decrypted_user_api_keys TO service_role;
+> 217	
+> ```
+
+## 🤖 Claude *(01:58:59)*
+
+
+## 🤖 Claude *(01:59:00)*
+
+Achado importante no template: **`apify_token` JÁ EXISTE** como coluna per-user (linhas 85-88, 121, 161, 197) — minha query anterior falhou só por causa do `rapidapi_key` (PostgREST erra a query inteira se 1 coluna não existe). Então a migration só precisa adicionar **`rapidapi_key`**. Confirmo material:
+
+## 🤖 Claude *(01:59:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\necho \"apify_token existe?\";   curl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=apify_token&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | head -c 120; echo \"\"\necho \"rapidapi_key existe?\";  curl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=rapidapi_key&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | head -c 120; echo \"\"\necho \"=== fetch-trends usa apify_token per-user hoje? ===\"\ngrep -nE \"apify|rapid|userKeys|user_api_keys\" supabase/functions/fetch-trends/index.ts | head",
+  "description": "Verify apify_token exists, rapidapi_key doesn't, check fetch-trends"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> apify_token existe?
+> [{"apify_token":"••••••••••••"}]
+> rapidapi_key existe?
+> {"code":"42703","details":null,"hint":null,"message":"column user_api_keys.rapidapi_key does not exist"}
+> === fetch-trends usa apify_token per-user hoje? ===
+> 15:  source?: "apify" | "rapidapi" | "mock";
+> 46:    const source = body.source || "apify";
+> 53:    if (source === "apify") {
+> 54:      const apifyToken = Deno.env.get("APIFY_TOKENS");
+> 55:      if (!apifyToken) {
+> 64:        : "apify~instagram-hashtag-scraper";
+> 72:          `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${apifyToken}`,
+> 98:            metadata: { source: "apify", raw_id: item.id, actor: actorId },
+> 101:      } catch (apifyErr) {
+> 102:        console.error("Apify error:", apifyErr);
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

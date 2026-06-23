@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1316
-> * **Sessões do Claude**: 1274
+> * **Total de Sessões Registradas**: 1320
+> * **Sessões do Claude**: 1278
 > * **Sessões do Gemini**: 42
 
 ---
@@ -61,6 +61,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-23 - agent-ad712f9ef0400f04b]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-a7a685781cec36e94]]` - *2026-06-23*
+*   `[[2026-06-23 - agent-a10e6faee9cef5dab]]` - *2026-06-23*
 *   `[[2026-06-23 - Verificar backtest-results e fixes de design]]` - *2026-06-23*
 *   `[[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]` - *2026-06-23*
 *   `[[2026-06-22 - agent-afbda1deee15bc84c]]` - *2026-06-22*
@@ -69,11 +73,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-22 - agent-af7f4efba486aa1a9]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-af77c00b84500888f]]` - *2026-06-22*
 *   `[[2026-06-22 - agent-af76386dd378755a8]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-af7080eb3482ad9a5]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-af4c04e89a8ccdc7b]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-aefbf591e63c0b3d7]]` - *2026-06-22*
-*   `[[2026-06-22 - agent-aef2fa79f77ce5e56]]` - *2026-06-22*
-*   *... e mais 1278 sessões nessa categoria.*
+*   *... e mais 1282 sessões nessa categoria.*
 
 ---
 
@@ -264,6 +264,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-23 - agent-ad712f9ef0400f04b]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-a7a685781cec36e94]]` (ClaudeSessions)
+*   `[[2026-06-23 - agent-a10e6faee9cef5dab]]` (ClaudeSessions)
 *   `[[2026-06-23 - Verificar backtest-results e fixes de design]]` (ClaudeSessions)
 *   `[[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]` (ClaudeSessions)
 *   `[[2026-06-22 - agent-afbda1deee15bc84c]]` (ClaudeSessions)
