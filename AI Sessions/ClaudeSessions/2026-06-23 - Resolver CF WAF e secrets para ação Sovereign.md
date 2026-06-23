@@ -5613,6 +5613,1476 @@ Achado importante no template: **`apify_token` JÁ EXISTE** como coluna per-user
 > 102:        console.error("Apify error:", apifyErr);
 > ```
 
+## 🤖 Claude *(01:59:38)*
+
+
+## 🤖 Claude *(01:59:40)*
+
+Confirmado: **`apify_token` existe** (per-user), **`rapidapi_key` não** (42703), e `fetch-trends:54` usa `Deno.env.get("APIFY_TOKENS")` (env, não a coluna per-user). Então #3 = SOP + migration (só `rapidapi_key`) + per-user no fetch-trends + seed + UI.
+
+Escrevo o SOP (Lei 2) e a migration (espelha o template firecrawl, adicionando só `rapidapi_key`):
+
+## 🤖 Claude *(02:00:06)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/trends-credential-resolution.md",
+  "content": "# SOP \u2014 Resolu\u00e7\u00e3o per-user de credenciais de Trends (Apify / RapidAPI)\n\n> **Slug:** `trends-credential-resolution` \u00b7 **Criado:** 2026-06-22 \u00b7 **Lei 2 (Processo Antecipado)** \u00b7 **API Tenancy Model**\n> **Origem:** diretiva Sovereign 2026-06-22 \u2014 *\"tudo que \u00e9 per-user sempre \u00e9 prioridade ser resolvido per-user\"*. Fecha o item **#3** da auditoria de prontid\u00e3o per-user (`fetch-trends` era a \u00faltima viola\u00e7\u00e3o user-facing: `APIFY_TOKENS`/`RAPIDAPI_KEY` resolvidos do env global num fluxo iniciado por JWT).\n\n## Problema\n\n`supabase/functions/fetch-trends/index.ts` resolve `Deno.env.get(\"APIFY_TOKENS\")` (`:54`) e `Deno.env.get(\"RAPIDAPI_KEY\")` (`:109`) \u2014 chaves **globais** \u2014 num fluxo **user-facing** (`getUser` + 401). Viola o API Tenancy Model (atribui\u00e7\u00e3o/quota/risco n\u00e3o isolados por tenant; um tenant esgota a quota de scraping global).\n\n## Modelo da solu\u00e7\u00e3o (per-user puro, fail-closed)\n\n- `fetch-trends` resolve **per-user**: `decrypted_user_api_keys.apify_token` (coluna **j\u00e1 existe**) + `decrypted_user_api_keys.rapidapi_key` (**coluna nova**). **Sem fallback de env** (env = s\u00f3 infra). Sem chave \u2192 `402 {error:\"trends_not_configured\", action:\"Configure sua chave Apify/RapidAPI em /dashboard/settings\"}` + telemetria.\n- **Exce\u00e7\u00e3o leg\u00edtima registrada:** os scripts cron/sistema `scripts/enrich-affiliate-products.ts` / `discover-affiliate-products.ts` rodam do `.env` local em contexto **system/cron** (sem `auth.uid()`) \u2192 continuam usando `APIFY_TOKENS` (documentado, n\u00e3o \u00e9 fluxo user-facing). `vm_trends`/`vm_affiliate_products` s\u00e3o caches globais por design; a credencial \u00e9 que vira per-user.\n\n## ORO\n\n- **Operator:** MCORCH Master Execution Agent (migration + edge fn + UI) + Tenant (configura a pr\u00f3pria chave Apify/RapidAPI).\n- **Reviewer:** `/security-review` (migration) + Sovereign.\n- **Owner:** Sovereign \u2014 blast radius = quota de scraping per-tenant + isolamento.\n\n## Sequence (cada step com crit\u00e9rio material)\n\n1. **Migration `rapidapi_key`** \u2014 adiciona a coluna ao maquin\u00e1rio cifrado do `user_api_keys` espelhando **verbatim** o \u00faltimo live def (`20260615140000_user_api_keys_firecrawl_channel.sql`): base column + encrypt trigger (`vault_upsert_secret` idempotente) + masked view (`\u2022\u2022\u2022\u2022`) + INSTEAD OF (UPDATE-first + tenant guard `auth.uid()`) + decrypted view (service-role + JOIN vault). `apify_token` j\u00e1 existe \u2014 s\u00f3 `rapidapi_key` \u00e9 novo. **`/security-review` obrigat\u00f3rio.** Sucesso: `db push` exit 0 \u00b7 `SELECT rapidapi_key FROM user_api_keys` = `\u2022\u2022\u2022\u2022`/null \u00b7 write cross-tenant \u2192 42501.\n2. **fetch-trends per-user** \u2014 `userKeys?.apify_token` / `userKeys?.rapidapi_key` (service-role read de `decrypted_user_api_keys` por `user.id`), fail-closed 402, telemetria `infra_health_logs service='fetch-trends'`. Sucesso: deploy + 402 quando sem chave.\n3. **Seed do Usu\u00e1rio Zero** \u2014 popula `apify_token`/`rapidapi_key` per-user a partir do `.env` (BYOK do tenant-zero, como User 1 faria). Sucesso: masked = `\u2022\u2022\u2022\u2022` + match de comprimento.\n4. **UI** \u2014 inputs Apify/RapidAPI em Settings (hook `useUserApiKeys`). Sucesso: render + persiste cifrado.\n\n## Verification gates\n\n| Gate | Esperado |\n|---|---|\n| Coluna cifrada | `rapidapi_key` = `\u2022\u2022\u2022\u2022`/null no masked view; valor real s\u00f3 em `decrypted_user_api_keys` (service-role) |\n| Tenant guard | write per JWT de outro tenant \u2192 `42501` |\n| fail-closed | tenant sem chave \u2192 `402 trends_not_configured` |\n| per-user resolve | tenant com chave \u2192 fetch-trends usa a chave dele (n\u00e3o env) |\n\n## Recovery path\n\n- **402 com chave setada:** confira `apify_token`/`rapidapi_key` no `.select()` do decrypted view + `user.id` correto.\n- **23505 ao salvar:** trigger de encrypt n\u00e3o-idempotente \u2192 garantir `vault_upsert_secret` (j\u00e1 \u00e9 o padr\u00e3o).\n- **Rollback:** edge fn volta ao env? **N\u00e3o** \u2014 env removido por design; rollback = re-adicionar fallback s\u00f3 em emerg\u00eancia documentada (OTD).\n\n## Success signal\n\nUm tenant com a pr\u00f3pria chave Apify configurada dispara `fetch-trends` e recebe trends populados em `vm_trends` usando **a chave dele** (quota isolada), sem nenhuma chave global ter sido tocada.\n\n## Refer\u00eancias\n- Template de coluna cifrada: `supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql`\n- API Tenancy Model (CLAUDE.md) \u00b7 `feedback_api_tenancy_per_user`\n- Auditoria per-user 2026-06-22 (#3) \u00b7 edge fn alvo `supabase/functions/fetch-trends/index.ts`\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/trends-credential-resolution.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:00:25)*
+
+
+## 🤖 Claude *(02:00:26)*
+
+Agora a migration — espelho o template firecrawl **verbatim** (preserva todas as colunas live) e adiciono só `rapidapi_key`:
+
+## 🤖 Claude *(02:01:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql",
+  "content": "-- Migration: per-user RapidAPI BYOK \u2014 fetch-trends per-user (#3 do sweep de prontid\u00e3o per-user, API Tenancy Model).\n-- SOP SSOT: docs/processes/trends-credential-resolution.md + API Tenancy Model (CLAUDE.md).\n--\n-- Sovereign directive 2026-06-22 (\"tudo que \u00e9 per-user sempre \u00e9 prioridade\"): fetch-trends resolve as credenciais\n-- de trends per-user. apify_token J\u00c1 EXISTE (20260615140000); aqui s\u00f3 acrescentamos rapidapi_key ao maquin\u00e1rio\n-- cifrado do user_api_keys, reproduzindo o \u00daLTIMO live def VERBATIM (20260615140000_user_api_keys_firecrawl_channel.sql):\n-- encrypt trigger usa vault_upsert_secret idempotente (20260602140000); INSTEAD OF \u00e9 UPDATE-first + tenant guard\n-- (20260602130000); search_path='' preservado. Aditivo: views acrescentam a coluna nova no FIM.\n\n-- \u2500\u2500 1. base column \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nALTER TABLE public.user_api_keys_table ADD COLUMN IF NOT EXISTS rapidapi_key text;\nCOMMENT ON COLUMN public.user_api_keys_table.rapidapi_key\n  IS 'Per-user RapidAPI key (BYOK) for fetch-trends. Vault-encrypted at rest. NULL \u2192 402 trends_not_configured (no system fallback in user-facing flow).';\n\n-- \u2500\u2500 2. encrypt trigger (live verbatim + rapidapi_key; idempotent vault_upsert_secret) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  v_id UUID;\nBEGIN\n  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN\n    IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key'); NEW.groq_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN\n    IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key'); NEW.openrouter_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN\n    IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key'); NEW.openai_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN\n    IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key'); NEW.elevenlabs_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN\n    IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key'); NEW.google_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN\n    IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key'); NEW.nanobana_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN\n    IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key'); NEW.seedance_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN\n    IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password'); NEW.wp_app_password = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN\n    IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key'); NEW.replicate_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN\n    IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key'); NEW.higgsfield_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN\n    IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret'); NEW.higgsfield_api_key_secret = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN\n    IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token'); NEW.apify_token = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.resend_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.resend_api_key IS DISTINCT FROM OLD.resend_api_key) THEN\n    IF NEW.resend_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.resend_api_key, 'user_api_keys_resend_api_key_' || NEW.user_id::text, 'Resend API Key'); NEW.resend_api_key = v_id::text;\n    END IF;\n  END IF;\n  IF NEW.firecrawl_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.firecrawl_api_key IS DISTINCT FROM OLD.firecrawl_api_key) THEN\n    IF NEW.firecrawl_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.firecrawl_api_key, 'user_api_keys_firecrawl_api_key_' || NEW.user_id::text, 'Firecrawl API Key'); NEW.firecrawl_api_key = v_id::text;\n    END IF;\n  END IF;\n  -- rapidapi_key (NEW \u2014 per-user fetch-trends BYOK)\n  IF NEW.rapidapi_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.rapidapi_key IS DISTINCT FROM OLD.rapidapi_key) THEN\n    IF NEW.rapidapi_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN ELSE\n      v_id := public.vault_upsert_secret(NEW.rapidapi_key, 'user_api_keys_rapidapi_key_' || NEW.user_id::text, 'RapidAPI Key'); NEW.rapidapi_key = v_id::text;\n    END IF;\n  END IF;\n  RETURN NEW;\nEND;\n$function$;\n\n-- \u2500\u2500 3. masked public view (live verbatim + rapidapi_key masked, appended at END) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.user_api_keys AS\nSELECT\n  user_id, created_at, updated_at, pref_audio_provider, pref_image_provider, pref_video_provider,\n  wp_site_url, wp_username, pref_ai_model,\n  CASE WHEN groq_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS groq_api_key,\n  CASE WHEN openrouter_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS openrouter_api_key,\n  CASE WHEN openai_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS openai_api_key,\n  CASE WHEN elevenlabs_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS elevenlabs_api_key,\n  CASE WHEN google_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS google_api_key,\n  CASE WHEN nanobana_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS nanobana_api_key,\n  CASE WHEN seedance_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS seedance_api_key,\n  CASE WHEN wp_app_password IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS wp_app_password,\n  CASE WHEN replicate_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS replicate_api_key,\n  CASE WHEN higgsfield_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS higgsfield_api_key,\n  CASE WHEN higgsfield_api_key_secret IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS higgsfield_api_key_secret,\n  CASE WHEN apify_token IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS apify_token,\n  CASE WHEN resend_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS resend_api_key,\n  CASE WHEN firecrawl_api_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS firecrawl_api_key,\n  CASE WHEN rapidapi_key IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS rapidapi_key\nFROM public.user_api_keys_table\nWHERE (auth.uid() = user_id OR auth.role() = 'service_role');\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.user_api_keys TO anon, authenticated;\n\n-- \u2500\u2500 4. INSTEAD OF trigger (live verbatim + rapidapi_key in UPDATE-first/INSERT, tenant-guarded) \u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;\n    RETURN OLD;\n  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN\n    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN\n      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';\n    END IF;\n    UPDATE public.user_api_keys_table SET\n      groq_api_key              = COALESCE(NULLIF(NEW.groq_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.groq_api_key),\n      openrouter_api_key        = COALESCE(NULLIF(NEW.openrouter_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openrouter_api_key),\n      openai_api_key            = COALESCE(NULLIF(NEW.openai_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.openai_api_key),\n      pref_audio_provider       = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),\n      pref_image_provider       = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),\n      pref_video_provider       = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),\n      elevenlabs_api_key        = COALESCE(NULLIF(NEW.elevenlabs_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.elevenlabs_api_key),\n      google_api_key            = COALESCE(NULLIF(NEW.google_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.google_api_key),\n      nanobana_api_key          = COALESCE(NULLIF(NEW.nanobana_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.nanobana_api_key),\n      seedance_api_key          = COALESCE(NULLIF(NEW.seedance_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.seedance_api_key),\n      wp_site_url               = COALESCE(NEW.wp_site_url, public.user_api_keys_table.wp_site_url),\n      wp_username               = COALESCE(NEW.wp_username, public.user_api_keys_table.wp_username),\n      wp_app_password           = COALESCE(NULLIF(NEW.wp_app_password, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.wp_app_password),\n      pref_ai_model             = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),\n      replicate_api_key         = COALESCE(NULLIF(NEW.replicate_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.replicate_api_key),\n      higgsfield_api_key        = COALESCE(NULLIF(NEW.higgsfield_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key),\n      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.higgsfield_api_key_secret),\n      apify_token               = COALESCE(NULLIF(NEW.apify_token, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.apify_token),\n      resend_api_key            = COALESCE(NULLIF(NEW.resend_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.resend_api_key),\n      firecrawl_api_key         = COALESCE(NULLIF(NEW.firecrawl_api_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.firecrawl_api_key),\n      rapidapi_key              = COALESCE(NULLIF(NEW.rapidapi_key, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.user_api_keys_table.rapidapi_key),\n      updated_at                = now()\n    WHERE user_id = NEW.user_id;\n    IF NOT FOUND THEN\n      INSERT INTO public.user_api_keys_table (\n        user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret, apify_token, resend_api_key, firecrawl_api_key, rapidapi_key\n      ) VALUES (\n        NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret, NEW.apify_token, NEW.resend_api_key, NEW.firecrawl_api_key, NEW.rapidapi_key\n      );\n    END IF;\n    RETURN NEW;\n  END IF;\n  RETURN NULL;\nEND;\n$function$;\n\n-- \u2500\u2500 5. decrypted view (service_role only; live verbatim + rapidapi_key COALESCE + join at END) \u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.decrypted_user_api_keys AS\nSELECT\n  uak.user_id,\n  COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,\n  COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,\n  COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,\n  uak.created_at, uak.updated_at, uak.pref_audio_provider, uak.pref_image_provider, uak.pref_video_provider,\n  COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,\n  COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,\n  COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,\n  COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,\n  uak.wp_site_url, uak.wp_username,\n  COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,\n  uak.pref_ai_model,\n  COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,\n  COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,\n  COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret,\n  COALESCE(s_apify.decrypted_secret, uak.apify_token) AS apify_token,\n  COALESCE(s_resend.decrypted_secret, uak.resend_api_key) AS resend_api_key,\n  COALESCE(s_firecrawl.decrypted_secret, uak.firecrawl_api_key) AS firecrawl_api_key,\n  COALESCE(s_rapidapi.decrypted_secret, uak.rapidapi_key) AS rapidapi_key\nFROM public.user_api_keys_table uak\nLEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid\nLEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid\nLEFT JOIN vault.decrypted_secrets s_apify ON uak.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_apify.id = uak.apify_token::uuid\nLEFT JOIN vault.decrypted_secrets s_resend ON uak.resend_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_resend.id = uak.resend_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_firecrawl ON uak.firecrawl_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_firecrawl.id = uak.firecrawl_api_key::uuid\nLEFT JOIN vault.decrypted_secrets s_rapidapi ON uak.rapidapi_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_rapidapi.id = uak.rapidapi_key::uuid;\nREVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated;\nGRANT SELECT ON public.decrypted_user_api_keys TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:02:09)*
+
+
+## 🤖 Claude *(02:02:10)*
+
+Migration escrita (espelha firecrawl verbatim + `rapidapi_key`). Padrão do projeto: **toda migration passa por `/security-review` antes do commit**. Rodo agora:
+
+## 🤖 Claude *(02:02:10)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(02:02:10)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 4 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/trends-credential-resolution.md
+	supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+FILES MODIFIED:
+
+```
+CLAUDE.md
+docs/processes/wordpress-cf-per-user-publish.md
+docs/processes/wordpress-cf-publish-unblock.md
+supabase/functions/aeo-audit/index.ts
+supabase/functions/agent-task-execute/index.ts
+supabase/functions/aios-chat-gateway/index.ts
+supabase/functions/aios-chat-stream/index.ts
+supabase/functions/aios-chat/index.ts
+supabase/functions/aios-live-proxy/index.ts
+supabase/functions/analyze-node/index.ts
+supabase/functions/analyze-sem/index.ts
+supabase/functions/analyze-seo/index.ts
+supabase/functions/canvas-execute/index.ts
+supabase/functions/check-video-status/index.ts
+supabase/functions/embed-mcorch-node/index.ts
+supabase/functions/generate-audio-script/index.ts
+supabase/functions/generate-content/index.ts
+supabase/functions/generate-image/index.ts
+supabase/functions/generate-video-script/index.ts
+supabase/functions/generate-video/index.ts
+supabase/functions/intent-orchestrate/index.ts
+supabase/functions/lead-score/index.ts
+supabase/functions/list-provider-models/index.ts
+supabase/functions/nurture-dispatch/index.ts
+supabase/functions/openrouter-swarm/index.ts
+supabase/functions/optimize-schedule/index.ts
+supabase/functions/orchestrate-content/index.ts
+supabase/functions/orchestrate-step/index.ts
+supabase/functions/search-constellation/index.ts
+supabase/functions/self-optimize/index.ts
+supabase/functions/tts-speak/index.ts
+```
+
+COMMITS:
+
+```
+commit 432fa01b695d715b6d60c455dc7a183c5f449b9f
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 22 22:50:46 2026 -0300
+
+    refactor(edge): provider keys 100% per-user (env = só infra) + MESH_EMBED dedicada
+    
+    Remove o fallback global `|| Deno.env.get(<provider>)` de 25 edge fns user-facing
+    (47 ocorrências) → resolução per-user PURA fail-closed (API Tenancy Model). Nenhum
+    fluxo user-facing usa mais chave de provider global — atribuição/quota/risco isolados
+    por tenant. As 2 fns de SISTEMA sem usuário (embed-mcorch-node NUCLEAR + search-
+    constellation) passam a usar chaves de infra dedicadas MESH_EMBED_OPENROUTER_KEY /
+    MESH_EMBED_GEMINI_KEY (renomeadas — env = só infra). Secrets antigos mantidos (seed
+    source do BYOK do User 0). Diretiva Sovereign 2026-06-22.
+
+commit dbad2620648f317e6394647c8ee087567bda1dc7
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 22 16:20:47 2026 -0300
+
+    docs(processes): WP↔CF resolvido (Nível de segurança) + SOP per-user multi-tenant
+    
+    wordpress-cf-publish-unblock: sela o achado material — o componente de skip que
+    faltava era Nível de segurança (challenge por reputação de IP datacenter), não
+    bot/UA; provado E2E publish-wordpress post_id 18. Novo SOP per-user (Lei 2):
+    generaliza o unblock pra qualquer tenant atrás do próprio Cloudflare. Key Files
+    atualizada.
+
+commit 458351943d6078f30fcc0646048f5d5dafca5945
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 22 16:20:47 2026 -0300
+
+    refactor(edge): resolução de credencial per-user (API Tenancy Model)
+    
+    openrouter-swarm: chave BYOK OpenRouter do usuário primeiro, plataforma só
+    fallback restrito + hard-fail 501 estruturado (era env-only, violação user-facing).
+    canvas-execute: Higgsfield key+secret resolvidos per-user ATOMICAMENTE (par só se
+    ambos presentes, senão env nos dois) — evita mix key-env/secret-peruser que
+    quebraria a auth. Backlog da auditoria de prontidão per-user #1 e #2.
+
+commit ef921ce197a17aaf0a7350a263dba992d17afa15
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Mon Jun 22 16:20:47 2026 -0300
+
+    fix(aios-chat-gateway): resolve OpenClaw token env-only + fail-closed
+    
+    Remove o literal do token de gateway commitado em source (vazamento) e o
+    fallback fail-open que mascarava misconfiguração. Sem OPENCLAW_GATEWAY_TOKEN,
+    retorna 501 estruturado + telemetria infra_health_logs em vez de encaminhar
+    com segredo default. Rotação do valor = decisão consciente do Owner (diferida).
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (45.2KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/tool-results/b5vbxlb4e.txt
+
+Preview (first 2KB):
+diff --git a/CLAUDE.md b/CLAUDE.md
+index d99b2f8..ebf8fdb 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -417,7 +417,8 @@ Edge Function secrets (configured in Lovable Cloud vault, not in `.env`): `STRIP
+ | Deploy harness | `scripts/harness-deploy.sh` |
+ | **Build & Deploy materiality SOP** | `docs/processes/build-deploy-materiality.md` (worktree trap + gates) |
+ | **Orchestrate async pipeline SOP** | `docs/processes/orchestrate-async-pipeline.md` (pg_net→`verify_jwt=false` mandate + RPC param-name contract + WP canonical-URL; the 3 key-migration failure modes + recovery) |
+-| **WordPress CF publish-unblock SOP** | `docs/processes/wordpress-cf-publish-unblock.md` (CF managed challenge 403 em `/wp-json/*` mata o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header; secrets `WP_PUBLISH_SECRET`/`_HOST` = ação Sovereign; gates de verificação curl) |
++| **WordPress CF publish-unblock SOP (tenant-zero/global)** | `docs/processes/wordpress-cf-publish-unblock.md` (**RESOLVIDO 2026-06-22**: CF managed challenge 403 em `/wp-json/*` matava o publish server-side; fix = header secreto `X-MCORCH-Publish` host-gated fail-closed na edge fn + CF WAF Skip gated por header. **Achado material decisivo: o componente de skip que faltava era "Nível de segurança" (Security Level)** — challenge por reputação do IP de **datacenter** (Oracle AS31898), não bot/UA; `All managed rules`+`Super Bot Fight` sozinhos não resolviam. Provado E2E `publish-wordpress`→`{"success":true,"post_id":18}`. Diagnóstico via Security→Events. Secrets `WP_PUBLISH_SECRET`/`_HOST` provisionados) |
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(02:02:29)*
+
+
+## 🤖 Claude *(02:02:30)*
+
+I'll conduct the security review per the methodology. Launching the vulnerability-identification sub-task with full repository context.
+
+## 🤖 Claude *(02:02:49)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify security vulns in PR",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing a focused PR diff in the MCORCH repo at /home/gcrUX/htdocs/constellation-orchestra.\n\nThe full diff is persisted at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/57ddea14-715c-47a6-ad8d-1cb57387c027/tool-results/b5vbxlb4e.txt \u2014 read it.\n\nALSO review these two NEW untracked files directly:\n- supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql (new migration adding a per-user encrypted `rapidapi_key` column to user_api_keys machinery)\n- docs/processes/[[trends-credential-resolution|trends-credential-resolution]].md (markdown SOP \u2014 EXCLUDED, do not review docs)\n\nCONTEXT of the PR (what it does):\n1. Removes the global `|| Deno.env.get(\"<PROVIDER>\")` fallback from 25 user-facing edge functions \u2192 pure per-user credential resolution (reads `decrypted_user_api_keys` scoped to the authenticated `user.id`). This REMOVES a shared global key \u2014 a tenancy/security improvement.\n2. embed-mcorch-node + search-constellation (system/pg_net flows, no user) renamed their env key reads from OPENROUTER_API_KEY/GEMINI_API_KEY to MESH_EMBED_OPENROUTER_KEY/MESH_EMBED_GEMINI_KEY (env-only, infra).\n3. aios-chat-gateway removed a hardcoded literal token fallback \u2192 env-only + fail-closed 501.\n4. New migration adds `rapidapi_key` \u2014 it is a VERBATIM mirror of the already-reviewed live migration supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql, adding only the rapidapi_key column in each section (base column, encrypt trigger, masked view, INSTEAD OF trigger, decrypted view).\n\nYOUR TASK: Identify ONLY high-confidence, newly-introduced, concretely-exploitable security vulnerabilities (>80% confidence). This is NOT a general review.\n\nFocus areas: SQL injection, authn/authz bypass, privilege escalation, cross-tenant data access, hardcoded secrets, crypto issues, injection/RCE, sensitive data exposure.\n\nKey things to verify in the NEW migration (compare against the firecrawl template it mirrors):\n- Is the new `rapidapi_key` handled identically to the other encrypted columns (encrypt trigger uses vault_upsert_secret; masked view shows '\u2022\u2022\u2022\u2022'; INSTEAD OF has the tenant guard `auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid()` \u2192 42501; decrypted view REVOKEd from anon/authenticated, GRANTed only to service_role; functions are SECURITY DEFINER SET search_path TO '')?\n- Any deviation from the template that opens a cross-tenant read/write, secret exposure, or privilege escalation?\n- Does CREATE OR REPLACE VIEW / FUNCTION drop any GRANT/REVOKE or RLS that the template had?\n\nFor the edge fn changes: does removing the env fallback or the per-user resolution introduce any cross-tenant access (e.g., reading another user's key)? Verify the `decrypted_user_api_keys` reads are scoped to the authenticated user's id.\n\nEXCLUSIONS: No DOS, no rate-limiting, no \"secrets on disk\", no library-version issues, no theoretical races, no findings in markdown/docs, no lack-of-hardening, no log-spoofing. Environment variables are trusted. Client-side checks are not vulns.\n\nOUTPUT: For each REAL finding (>80% confidence), give: file:line, severity (HIGH/MEDIUM), category, description, concrete exploit scenario, fix recommendation, and a confidence score 1-10. If you find NO high-confidence vulnerabilities, say so explicitly. Read the actual files \u2014 do not speculate."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Both files read in full. Let me verify the firecrawl template\'s GRANT/REVOKE/tenant-guard lines against the new rapidapi migration — they are line-for-line identical except for the added `rapidapi_key` references. Let me now do a focused analysis.\n\n## Analysis\n\n### New migration `20260622210000_user_api_keys_rapidapi_channel.sql`\n\nCompared section-by-section against the already-reviewed firecrawl template `20260615140000`:\n\n| Security control | Template | New migration | Match? |\n|---|---|---|---|\n| Encrypt trigger uses `vault_upsert_secret` + UUID-passthrough guard | L96-100 | L96-100 (`rapidapi_key`) | Identical pattern |\n| `SECURITY DEFINER SET search_path TO \'\'` on both functions | yes | yes (L19-20, L133-134) | Identical |\n| Masked view shows `\'••••••••••••\'` | L123 | L124 (`rapidapi_key`) | Identical |\n| Masked view `WHERE (auth.uid() = user_id OR auth.role() = \'service_role\')` | L125 | L126 | Identical |\n| INSTEAD OF tenant guard `auth.role() IS DISTINCT FROM \'service_role\' AND NEW.user_id IS DISTINCT FROM auth.uid()` → 42501 | L140-142 | L141-143 | Identical |\n| INSTEAD OF UPDATE-first, COALESCE/NULLIF masked-sentinel preservation | L163 | L165 (`rapidapi_key`) | Identical |\n| Decrypted view `REVOKE ALL ... FROM PUBLIC, anon, authenticated` | L215 | L219 | Identical |\n| Decrypted view `GRANT SELECT ... TO service_role` only | L216 | L220 | Identical |\n| Decrypted-view UUID-anchored vault JOIN (`s_rapidapi.id = uak.rapidapi_key::uuid`) | L214 | L218 | Identical |\n\nThe new column is wired identically to every other encrypted column. No GRANT/REVOKE dropped. The `CREATE OR REPLACE VIEW` reissues `GRANT SELECT,INSERT,UPDATE,DELETE ... TO anon,authenticated` on the masked view and `REVOKE ALL ... / GRANT SELECT TO service_role` on the decrypted view — so replacing the view does not lose any grant/revoke. No deviation that opens cross-tenant read/write, secret exposure, or privesc.\n\n### Edge function changes\n\n- All 25 per-user resolutions read `decrypted_user_api_keys ... .eq("user_id", user.id|userId).maybeSingle()` — scoped to the authenticated principal. `user.id` is the JWT-verified caller; `userId` in service-role-invoked fns (`generate-image`, `orchestrate-content`) is the row-owner the function already trusts. Removing `|| Deno.env.get(...)` only *narrows* access (drops a shared global key). No new cross-tenant path introduced.\n- `canvas-execute`: higgsfield now reads `userKeys?.higgsfield_api_key`/`_secret` per-user instead of global env — strictly tighter.\n- `openrouter-swarm`: adds a properly scoped `decrypted_user_api_keys.select("openrouter_api_key").eq("user_id", user.id)` lookup; `user` is from the 401-gated auth check above. Correct.\n- `aios-chat-gateway`: removes a **hardcoded literal bearer token** (`"3bdfc718fb880d4d585c540339ba6d3c2a72d7510b2479d7"`) and replaces it with env-only + fail-closed 501. This *removes* a committed secret — a security improvement, not a regression.\n- `embed-mcorch-node` / `search-constellation`: env key var renamed (`OPENROUTER_API_KEY`→`MESH_EMBED_OPENROUTER_KEY`, etc.). These are system/pg_net flows with no user in scope; env is trusted; no authz change.\n\nNo edge change introduces reading another user\'s key, an authz bypass, or secret exposure. (The literal token that *was* in source control is now removed; it lives in git history but that is pre-existing and out of this PR\'s introduced-vulnerability scope — and rotation of that token is an ops action, not a code finding.)\n\n## Verdict\n\n**No high-confidence, newly-introduced, concretely-exploitable security vulnerabilities found.**\n\nThe new `rapidapi_key` migration is a verbatim, control-preserving mirror of the already-reviewed firecrawl template — encrypt trigger (idempotent `vault_upsert_secret`), masked view (`••••` + `auth.uid()=user_id OR service_role`), INSTEAD OF tenant guard (`42501` on cross-tenant write), and decrypted view (`REVOKE ALL FROM PUBLIC/anon/authenticated`, `GRANT SELECT TO service_role` only) are all identical, with `search_path TO \'\'` and `SECURITY DEFINER` preserved on both functions. No GRANT/REVOKE/RLS was dropped by the `CREATE OR REPLACE`.\n\nThe 25 edge-function edits only *remove* a shared global key fallback (or, for `aios-chat-gateway`, a hardcoded literal token) and resolve credentials per-authenticated-user via `decrypted_user_api_keys.eq("user_id", <verified caller>)`. Every change tightens tenancy; none opens a cross-tenant read, authz bypass, privilege escalation, or new secret exposure.\n\nRelevant files:\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615140000_user_api_keys_firecrawl_channel.sql` (template compared against)\n\nOne non-blocking, pre-existing note (explicitly out of the introduced-vuln scope you asked for, so not counted as a finding): the literal OpenClaw gateway token previously hardcoded in `aios-chat-gateway/index.ts` remains in git history — it should be rotated as an ops follow-up since the PR correctly removes it from the working tree.'}, {'type': 'text', 'text': "agentId: af1bcc5d008dba1ef (use SendMessage with to: 'af1bcc5d008dba1ef' to continue this agent)\n<usage>subagent_tokens: 110006\ntool_uses: 3\nduration_ms: 36846</usage>"}]
+> ```
+
+## 🤖 Claude *(02:03:51)*
+
+
+## 🤖 Claude *(02:03:56)*
+
+## Security Review Report
+
+**No high-confidence, newly-introduced, concretely-exploitable vulnerabilities found. — SAFE**
+
+The identification sub-task verified the new migration section-by-section against the already-reviewed firecrawl template (`20260615140000`): `rapidapi_key` is wired **identically** to every other encrypted column —
+- encrypt trigger uses idempotent `vault_upsert_secret`; both functions `SECURITY DEFINER SET search_path TO ''`;
+- masked view `••••` + `WHERE (auth.uid() = user_id OR auth.role() = 'service_role')`;
+- INSTEAD OF tenant guard (`auth.role() <> 'service_role' AND NEW.user_id <> auth.uid()` → `42501`);
+- decrypted view `REVOKE ALL FROM PUBLIC, anon, authenticated` + `GRANT SELECT TO service_role` only.
+
+No GRANT/REVOKE/RLS dropped by `CREATE OR REPLACE`. The 25 edge-fn edits only **tighten** tenancy (remove a shared global key / hardcoded literal; resolve per authenticated `user.id`). No cross-tenant read, authz bypass, or secret exposure introduced. No findings to filter (none reached confidence ≥ 8).
+
+---
+
+`/security-review` **SAFE** ✅. Aplico a migration (e verifico material — Lei 1):
+
+## 🤖 Claude *(02:03:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== status de migrations pendentes ===\"\nnpx supabase migration list --project-ref bcyvddsykvehvpwstlfa 2>&1 | tail -8",
+  "description": "Check pending migration status before push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status de migrations pendentes ===
+>       --network-id string                              use the specified docker network instead of a generated one
+>   -o, --output [ env | pretty | json | toml | yaml ]   output format of status variables (default pretty)
+>       --profile string                                 use a specific profile for connecting to Supabase API (default "supabase")
+>       --workdir string                                 path to a Supabase project directory
+>       --yes                                            answer yes to all prompts
+> 
+> unknown flag: --project-ref
+> Try rerunning the command with --debug to troubleshoot the error.
+> ```
+
+## 🤖 Claude *(02:04:23)*
+
+
+## 🤖 Claude *(02:04:25)*
+
+`migration list` não aceita `--project-ref`. Recentes sessões aplicaram via **Management API** (PAT em `~/.supabase/access-token`). Aplico a migration por esse caminho (proven), construindo o payload com Python pra escapar o SQL corretamente:
+
+## 🤖 Claude *(02:04:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token 2>/dev/null)\nif [ -z \"$TOKEN\" ]; then echo \"\u26a0\ufe0f sem PAT em ~/.supabase/access-token\"; exit 1; fi\necho \"PAT presente (len=${#TOKEN})\"\npython3 - \"$TOKEN\" <<'PY'\nimport sys, json, urllib.request\ntoken = sys.argv[1]\nsql = open(\"supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql\").read()\nreq = urllib.request.Request(\n    \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\",\n    data=json.dumps({\"query\": sql}).encode(),\n    headers={\"Authorization\": f\"Bearer {token}\", \"Content-Type\": \"application/json\"},\n    method=\"POST\",\n)\ntry:\n    r = urllib.request.urlopen(req, timeout=60)\n    print(\"HTTP\", r.status, \"\u2192 aplicada:\", r.read().decode()[:200])\nexcept urllib.error.HTTPError as e:\n    print(\"HTTP\", e.code, \"ERRO:\", e.read().decode()[:400])\nPY",
+  "description": "Apply rapidapi migration via Management API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> PAT presente (len=44)
+> HTTP 403 ERRO: error code: 1010
+> ```
+
+## 🤖 Claude *(02:04:43)*
+
+
+## 🤖 Claude *(02:04:44)*
+
+HTTP 403 / error 1010 = **Cloudflare bloqueando o `api.supabase.com` do IP de datacenter** (mesma reputação de IP do WP). A Management API está barrada daqui. O caminho que funciona é a **conexão DB direta** (não passa pelo CF). Procuro a connection string + aplico via psql:
+
+## 🤖 Claude *(02:04:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\necho \"=== connection string dispon\u00edvel? (nomes, sem valor) ===\"\nenv | grep -iE \"SUPABASE_DB_URL|DATABASE_URL|DB_URL|POSTGRES|PGHOST\" | sed -E 's/=.*/=<set>/' || echo \"(nenhuma no env)\"\necho \"--- .env tem? ---\"\ngrep -iE \"^(SUPABASE_DB_URL|DATABASE_URL|DB_URL|POSTGRES)\" .env | sed -E 's/=.*/=<set>/' || echo \"(n\u00e3o no .env)\"\necho \"--- psql dispon\u00edvel? ---\"; command -v psql >/dev/null 2>&1 && psql --version || echo \"(sem psql)\"\necho \"--- supabase config/linked? ---\"; ls -la supabase/.temp/ 2>/dev/null | head; cat supabase/.temp/project-ref 2>/dev/null",
+  "description": "Find DB connection string + psql availability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === connection string disponível? (nomes, sem valor) ===
+> --- .env tem? ---
+> --- psql disponível? ---
+> psql (PostgreSQL) 16.14 (Ubuntu 16.14-0ubuntu0.24.04.1)
+> --- supabase config/linked? ---
+> total 44
+> drwxr-xr-x 2 ubuntu ubuntu 4096 Jun 22 22:47 .
+> drwxrwxr-x 5 ubuntu ubuntu 4096 Jun 22 14:32 ..
+> -rw-rw-r-- 1 ubuntu ubuntu    8 Jun 22 22:44 cli-latest
+> -rw-r--r-- 1 ubuntu ubuntu    8 May 16 19:46 gotrue-version
+> -rw-r--r-- 1 ubuntu ubuntu  157 May 16 19:46 linked-project.json
+> -rw-r--r-- 1 ubuntu ubuntu   92 May 16 19:46 pooler-url
+> -rw-r--r-- 1 ubuntu ubuntu   10 May 16 19:46 postgres-version
+> -rw-r--r-- 1 ubuntu ubuntu   20 May 16 19:46 project-ref
+> -rw-r--r-- 1 ubuntu ubuntu    5 May 16 19:46 rest-version
+> bcyvddsykvehvpwstlfa
+> ```
+
+## 🤖 Claude *(02:05:02)*
+
+
+## 🤖 Claude *(02:05:03)*
+
+Tem `pooler-url` em `supabase/.temp/`. Vejo o formato (redatando senha) — se tiver a senha embutida, uso psql direto:
+
+## 🤖 Claude *(02:05:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== pooler-url (redatado) ===\"\nsed -E 's#://([^:]+):[^@]+@#://\\1:<PWD>@#' supabase/.temp/pooler-url; echo \"\"\necho \"=== senha embutida ou placeholder? ===\"\ngrep -qE '\\[YOUR-PASSWORD\\]|\\[PASSWORD\\]|<PWD>|\\[.*\\]' supabase/.temp/pooler-url && echo \"PLACEHOLDER (preciso da senha)\" || echo \"senha parece embutida\"\necho \"=== SUPABASE_DB_URL no vault de edge \u00e9 acess\u00edvel? (n\u00e3o, \u00e9 secret). Tem SUPABASE_ACCESS_TOKEN/DB pwd em env? ===\"\nset -a && source .env 2>/dev/null && set +a\nenv | grep -iE \"SUPABASE.*(PASSWORD|PWD|DB)\" | sed -E 's/=.*/=<set>/' || echo \"(nada)\"",
+  "description": "Inspect pooler-url for embedded password"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pooler-url (redatado) ===
+> postgresql://postgres.bcyvddsykvehvpwstlfa@aws-1-sa-east-1.pooler.supabase.com:5432/postgres
+> === senha embutida ou placeholder? ===
+> senha parece embutida
+> === SUPABASE_DB_URL no vault de edge é acessível? (não, é secret). Tem SUPABASE_ACCESS_TOKEN/DB pwd em env? ===
+> ```
+
+## 🤖 Claude *(02:05:37)*
+
+
+## 🤖 Claude *(02:05:38)*
+
+`pooler-url` **sem senha** (só user, sem `:pwd@`), e nenhuma `SUPABASE_DB_PASSWORD` no env. O `db push` aplicou a video-studio hoje — pode ter senha cacheada. Tento (com stdin fechado pra não travar em prompt):
+
+## 🤖 Claude *(02:05:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 90 npx supabase db push --yes < /dev/null 2>&1 | tail -20",
+  "description": "Attempt supabase db push for the migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260622210000_user_api_keys_rapidapi_channel.sql
+> 
+>  [Y/n] y
+> Applying migration 20260622210000_user_api_keys_rapidapi_channel.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.107.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(02:05:56)*
+
+
+## 🤖 Claude *(02:05:58)*
+
+✅ **Migration aplicada** — `db push` conectou (senha cacheada) + aplicou `20260622210000`. Verifico a coluna + leio o `fetch-trends` pra editar:
+
+## 🤖 Claude *(02:06:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\necho \"=== rapidapi_key existe agora? (masked) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=apify_token,rapidapi_key&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | head -c 120; echo \"\"",
+  "description": "Verify rapidapi_key column now exists"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rapidapi_key existe agora? (masked) ===
+> [{"apify_token":"••••••••••••","rapidapi_key":null}]
+> ```
+
+## 🤖 Claude *(02:06:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+> 3	
+> 4	const corsHeaders = {
+> 5	  "Access-Control-Allow-Origin": "*",
+> 6	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 7	  "Access-Control-Allow-Headers":
+> 8	    "authorization, x-client-info, apikey, content-type",
+> 9	};
+> 10	
+> 11	interface TrendInput {
+> 12	  platform?: string;
+> 13	  niche?: string;
+> 14	  limit?: number;
+> 15	  source?: "apify" | "rapidapi" | "mock";
+> 16	}
+> 17	
+> 18	serve(async (req) => {
+> 19	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 20	
+> 21	  try {
+> 22	    const authHeader = req.headers.get("Authorization");
+> 23	    if (!authHeader) {
+> 24	      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+> 25	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 26	      });
+> 27	    }
+> 28	
+> 29	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 30	    const supabaseAnonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 31	    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+> 32	      global: { headers: { Authorization: authHeader } },
+> 33	    });
+> 34	
+> 35	    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 36	    if (authError || !user) {
+> 37	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 38	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 39	      });
+> 40	    }
+> 41	
+> 42	    const body: TrendInput = await req.json().catch(() => ({}));
+> 43	    const platform = body.platform || "tiktok";
+> 44	    const niche = body.niche || "tech";
+> 45	    const limit = Math.min(body.limit || 20, 50);
+> 46	    const source = body.source || "apify";
+> 47	
+> 48	    const adminClient = createClient(supabaseUrl, (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!);
+> 49	
+> 50	    let trends: any[] = [];
+> 51	
+> 52	    // ── Source: Apify (preferred — TikTok/Instagram scraper) ──────────
+> 53	    if (source === "apify") {
+> 54	      const apifyToken = Deno.env.get("APIFY_TOKENS");
+> 55	      if (!apifyToken) {
+> 56	        return new Response(JSON.stringify({ error: "APIFY_TOKENS not configured" }), {
+> 57	          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 58	        });
+> 59	      }
+> 60	
+> 61	      // Use Apify TikTok Scraper actor
+> 62	      const actorId = platform === "tiktok"
+> 63	        ? "clockworks~free-tiktok-scraper"
+> 64	        : "apify~instagram-hashtag-scraper";
+> 65	
+> 66	      const runInput = platform === "tiktok"
+> 67	        ? { hashtags: [niche], resultsPerPage: limit, shouldDownloadVideos: false }
+> 68	        : { hashtags: [niche], resultsLimit: limit };
+> 69	
+> 70	      try {
+> 71	        const runResp = await fetch(
+> 72	          `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${apifyToken}`,
+> 73	          {
+> 74	            method: "POST",
+> 75	            headers: { "Content-Type": "application/json" },
+> 76	            body: JSON.stringify(runInput),
+> 77	          }
+> 78	        );
+> 79	
+> 80	        if (runResp.ok) {
+> 81	          const items = await runResp.json();
+> 82	          trends = (items || []).slice(0, limit).map((item: any) => ({
+> 83	            external_id: item.id || item.shortCode || crypto.randomUUID(),
+> 84	            platform,
+> 85	            niche,
+> 86	            title: item.text || item.desc || item.caption || "Trending content",
+> 87	            description: item.text || item.desc || "",
+> 88	            thumbnail_url: item.videoMeta?.coverUrl || item.displayUrl || item.thumbnailUrl || null,
+> 89	            source_url: item.webVideoUrl || item.url || item.postUrl || null,
+> 90	            hashtags: (item.hashtags || []).map((h: any) => typeof h === "string" ? h : h.name),
+> 91	            viral_score: Math.min(100, Math.round(
+> 92	              ((item.diggCount || item.likesCount || 0) / Math.max(1, item.playCount || item.commentsCount || 1000)) * 100
+> 93	            )),
+> 94	            velocity: (item.diggCount || item.likesCount || 0) > 10000 ? 1.5 : 0.8,
+> 95	            engagement_rate: item.playCount
+> 96	              ? ((item.diggCount + item.commentCount + item.shareCount) / item.playCount)
+> 97	              : 0.05,
+> 98	            metadata: { source: "apify", raw_id: item.id, actor: actorId },
+> 99	          }));
+> 100	        }
+> 101	      } catch (apifyErr) {
+> 102	        console.error("Apify error:", apifyErr);
+> 103	        // Fallback to cached/mock data
+> 104	      }
+> 105	    }
+> 106	
+> 107	    // ── Source: RapidAPI (TikTok Trending) ────────────────────────────
+> 108	    if (source === "rapidapi" || (source === "apify" && trends.length === 0)) {
+> 109	      const rapidKey = Deno.env.get("RAPIDAPI_KEY");
+> 110	      if (rapidKey) {
+> 111	        try {
+> 112	          const rapidResp = await fetch(
+> 113	            `https://tiktok-scraper7.p.rapidapi.com/feed/list?region=BR&count=${limit}`,
+> 114	            {
+> 115	              headers: {
+> 116	                "X-RapidAPI-Key": rapidKey,
+> 117	                "X-RapidAPI-Host": "tiktok-scraper7.p.rapidapi.com",
+> 118	              },
+> 119	            }
+> 120	          );
+> 121	          if (rapidResp.ok) {
+> 122	            const data = await rapidResp.json();
+> 123	            const items = data.data?.videos || data.itemList || [];
+> 124	            trends = items.slice(0, limit).map((item: any) => ({
+> 125	              external_id: item.video_id || item.id || crypto.randomUUID(),
+> 126	              platform: "tiktok",
+> 127	              niche,
+> 128	              title: item.title || item.desc || "Trending",
+> 129	              description: item.title || "",
+> 130	              thumbnail_url: item.cover || item.originCover || null,
+> 131	              source_url: `https://www.tiktok.com/@${item.author?.unique_id || "user"}/video/${item.video_id || item.id}`,
+> 132	              hashtags: (item.title || "").match(/#\w+/g)?.map((h: string) => h.replace("#", "")) || [],
+> 133	              viral_score: Math.min(100, Math.round((item.digg_count || 0) / 1000)),
+> 134	              velocity: 1.0,
+> 135	              engagement_rate: 0.05,
+> 136	              metadata: { source: "rapidapi" },
+> 137	            }));
+> 138	          }
+> 139	        } catch (rapidErr) {
+> 140	          console.error("RapidAPI error:", rapidErr);
+> 141	        }
+> 142	      }
+> 143	    }
+> 144	
+> 145	    // ── Fallback: Return cached trends from DB ───────────────────────
+> 146	    if (trends.length === 0) {
+> 147	      const { data: cached } = await adminClient
+> 148	        .from("vm_trends")
+> 149	        .select("*")
+> 150	        .eq("platform", platform)
+> 151	        .eq("is_active", true)
+> 152	        .order("viral_score", { ascending: false })
+> 153	        .limit(limit);
+> 154	
+> 155	      return new Response(JSON.stringify({
+> 156	        trends: cached || [],
+> 157	        source: "cache",
+> 158	        count: cached?.length || 0,
+> 159	      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 160	    }
+> 161	
+> 162	    // ── Upsert trends into vm_trends ─────────────────────────────────
+> 163	    const upsertData = trends.map((t) => ({
+> 164	      ...t,
+> 165	      sub_niches: [],
+> 166	      sounds: [],
+> 167	      effects: [],
+> 168	      language: "pt",
+> 169	      region: "BR",
+> 170	      is_active: true,
+> 171	    }));
+> 172	
+> 173	    const { data: upserted, error: upsertErr } = await adminClient
+> 174	      .from("vm_trends")
+> 175	      .upsert(upsertData, { onConflict: "external_id", ignoreDuplicates: false })
+> 176	      .select();
+> 177	
+> 178	    if (upsertErr) {
+> 179	      console.error("Upsert error:", upsertErr);
+> 180	    }
+> 181	
+> 182	    return new Response(JSON.stringify({
+> 183	      trends: upserted || trends,
+> 184	      source,
+> 185	      count: (upserted || trends).length,
+> 186	      message: `Fetched ${(upserted || trends).length} trends from ${source}`,
+> 187	    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 188	
+> 189	  } catch (e) {
+> 190	    console.error("fetch-trends error:", e);
+> 191	    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+> 192	      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 193	    });
+> 194	  }
+> 195	});
+> 196	
+> ```
+
+## 🤖 Claude *(02:06:34)*
+
+
+## 🤖 Claude *(02:06:34)*
+
+`rapidapi_key` existe (null). Edito o `fetch-trends` pra per-user puro (apify hard-fail 402, rapid per-user soft-fallback):
+
+## 🤖 Claude *(02:06:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts",
+  "old_string": "    const adminClient = createClient(supabaseUrl, (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!);\n\n    let trends: any[] = [];",
+  "new_string": "    const adminClient = createClient(supabaseUrl, (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!);\n\n    // Per-user credential resolution (API Tenancy Model) \u2014 trends scraping keys are BYOK, NO global env fallback.\n    const { data: userKeys } = await adminClient\n      .from(\"decrypted_user_api_keys\")\n      .select(\"apify_token, rapidapi_key\")\n      .eq(\"user_id\", user.id)\n      .maybeSingle();\n\n    let trends: any[] = [];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:06:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts",
+  "old_string": "      const apifyToken = Deno.env.get(\"APIFY_TOKENS\");\n      if (!apifyToken) {\n        return new Response(JSON.stringify({ error: \"APIFY_TOKENS not configured\" }), {\n          status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }",
+  "new_string": "      const apifyToken = userKeys?.apify_token;\n      if (!apifyToken) {\n        await adminClient.from(\"infra_health_logs\").insert({\n          service: \"fetch-trends\", status: \"error\",\n          message: \"Apify n\u00e3o configurado (per-user)\", metadata: { user_id: user.id, source: \"apify\" },\n        }).then(() => {}, () => {});\n        return new Response(JSON.stringify({ error: \"trends_not_configured\", action: \"Configure sua chave Apify em /dashboard/settings\" }), {\n          status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:06:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts",
+  "old_string": "      const rapidKey = Deno.env.get(\"RAPIDAPI_KEY\");\n      if (rapidKey) {",
+  "new_string": "      const rapidKey = userKeys?.rapidapi_key;\n      if (rapidKey) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/fetch-trends/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:06:55)*
+
+
+## 🤖 Claude *(02:06:56)*
+
+fetch-trends per-user pronto. Seedo as chaves do Usuário Zero a partir do `.env` (apify_token + rapidapi_key) + deploy:
+
+## 🤖 Claude *(02:07:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUZ=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nAP=\"${APIFY_TOKENS:-}\"; RK=\"${RAPIDAPI_KEY:-}\"\necho \"valores .env: APIFY_TOKENS len=${#AP} \u00b7 RAPIDAPI_KEY len=${#RK}\"\n# PATCH both per-user (idempotent \u2014 encrypt trigger update-in-place)\nPAYLOAD=\"{\"\n[ -n \"$AP\" ] && PAYLOAD=\"$PAYLOAD\\\"apify_token\\\":\\\"$AP\\\"\"\n[ -n \"$RK\" ] && { [ -n \"$AP\" ] && PAYLOAD=\"$PAYLOAD,\"; PAYLOAD=\"$PAYLOAD\\\"rapidapi_key\\\":\\\"$RK\\\"\"; }\nPAYLOAD=\"$PAYLOAD}\"\ncurl -sS -X PATCH \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?user_id=eq.$UZ\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" \\\n  -d \"$PAYLOAD\" -w \"seed \u2192 HTTP=%{http_code}\\n\" 2>&1 | tail -1\necho \"=== verifica (mascarado) ===\"\ncurl -sS \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/user_api_keys?select=apify_token,rapidapi_key&user_id=eq.$UZ\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>&1 | head -c 120; echo \"\"\necho \"=== deploy fetch-trends ===\"\nnpx supabase functions deploy fetch-trends --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -iE \"script size|Deployed Functions\"",
+  "description": "Seed Sovereign apify/rapidapi keys + deploy fetch-trends"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> valores .env: APIFY_TOKENS len=46 · RAPIDAPI_KEY len=91
+> seed → HTTP=204
+> === verifica (mascarado) ===
+> [{"apify_token":"••••••••••••","rapidapi_key":"••••••••••••"}]
+> === deploy fetch-trends ===
+> Deploying Function: fetch-trends (script size: 127kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: fetch-trends
+> ```
+
+## 🤖 Claude *(02:07:43)*
+
+
+## 🤖 Claude *(02:07:45)*
+
+Seed OK (apify_token + rapidapi_key agora •••• pro User 0), fetch-trends deployado (127kB). Teste zero-custo do fail-closed (usuário throwaway sem keys → deve 402, não scrapeia):
+
+## 🤖 Claude *(02:07:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/test_fetch_trends.ts",
+  "content": "import { createClient } from '@supabase/supabase-js';\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst email = `tt-${Date.now()}@example.com`;\nconst { data: u, error: ue } = await admin.auth.admin.createUser({ email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\nif (ue || !u?.user) { console.error('createUser fail', ue?.message); process.exit(1); }\nconst uid = u.user.id;\nconst { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\nconst { data: sess } = await anon.auth.verifyOtp({ type: 'magiclink', token_hash: (link as any).properties.hashed_token });\nconst token = sess!.session!.access_token;\nconst r = await fetch(`${URL}/functions/v1/fetch-trends`, {\n  method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n  body: JSON.stringify({ source: 'apify', platform: 'tiktok', niche: 'tech' }),\n});\nconst body: any = await r.json().catch(() => ({}));\nconsole.log('throwaway (sem keys) \u2192 HTTP', r.status, '\u00b7', body.error, body.action || '');\nconsole.log(r.status === 402 && body.error === 'trends_not_configured' ? '\u2705 fail-closed per-user OK (n\u00e3o scrapeou)' : '\u274c inesperado');\nawait admin.auth.admin.deleteUser(uid);\nconsole.log('cleanup OK');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/test_fetch_trends.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:07:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nbun run /tmp/test_fetch_trends.ts 2>&1 | tail -5; rm -f /tmp/test_fetch_trends.ts",
+  "description": "Run fetch-trends fail-closed zero-cost test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       at new SupabaseClient (/home/ubuntu/.bun/install/cache/@supabase/supabase-js@2.108.2@@@1/dist/index.mjs:646:31)
+>       at createClient (/home/ubuntu/.bun/install/cache/@supabase/supabase-js@2.108.2@@@1/dist/index.mjs:872:9)
+>       at /tmp/test_fetch_trends.ts:6:14
+> 
+> Bun v1.3.12 (Linux arm64)
+> ```
+
+## 🤖 Claude *(02:08:21)*
+
+
+## 🤖 Claude *(02:08:23)*
+
+O teste falhou no createClient anon — provável nome de var da publishable key. Vejo qual está no `.env`:
+
+## 🤖 Claude *(02:08:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"^(SB_PUBLISHABLE_KEY|SUPABASE_ANON_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|VITE_SUPABASE_ANON_KEY|SUPABASE_URL|VITE_SUPABASE_URL)\" .env | sed -E 's/=.*/=<set>/'",
+  "description": "Check anon/publishable key var name in .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1:SUPABASE_URL=<set>
+> 2:VITE_SUPABASE_URL=<set>
+> 9:VITE_SUPABASE_PUBLISHABLE_KEY=<set>
+> ```
+
+## 🤖 Claude *(02:08:35)*
+
+
+## 🤖 Claude *(02:08:35)*
+
+A publishable key no `.env` é `VITE_SUPABASE_PUBLISHABLE_KEY`. Corrijo o fallback e re-rodo:
+
+## 🤖 Claude *(02:08:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/test_fetch_trends.ts",
+  "content": "import { createClient } from '@supabase/supabase-js';\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst email = `tt-${Date.now()}@example.com`;\nconst { data: u, error: ue } = await admin.auth.admin.createUser({ email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\nif (ue || !u?.user) { console.error('createUser fail', ue?.message); process.exit(1); }\nconst uid = u.user.id;\nconst { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\nconst { data: sess } = await anon.auth.verifyOtp({ type: 'magiclink', token_hash: (link as any).properties.hashed_token });\nconst token = sess!.session!.access_token;\nconst r = await fetch(`${URL}/functions/v1/fetch-trends`, {\n  method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n  body: JSON.stringify({ source: 'apify', platform: 'tiktok', niche: 'tech' }),\n});\nconst body: any = await r.json().catch(() => ({}));\nconsole.log('throwaway (sem keys) \u2192 HTTP', r.status, '\u00b7', body.error, body.action || '');\nconsole.log(r.status === 402 && body.error === 'trends_not_configured' ? '\u2705 fail-closed per-user OK (n\u00e3o scrapeou)' : '\u274c inesperado');\nawait admin.auth.admin.deleteUser(uid);\nconsole.log('cleanup OK');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/test_fetch_trends.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:08:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nbun run /tmp/test_fetch_trends.ts 2>&1 | tail -4; rm -f /tmp/test_fetch_trends.ts",
+  "description": "Re-run fetch-trends fail-closed test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> throwaway (sem keys) → HTTP 402 · trends_not_configured Configure sua chave Apify em /dashboard/settings
+> ✅ fail-closed per-user OK (não scrapeou)
+> cleanup OK
+> ```
+
+## 🤖 Claude *(02:09:12)*
+
+
+## 🤖 Claude *(02:09:14)*
+
+✅ **Fail-closed PROVADO** — throwaway sem keys → **HTTP 402 `trends_not_configured`** (não scrapeou). #3 fetch-trends per-user verificado. Vejo se a UI de Settings é data-driven (pra decidir se adiciono o input agora ou é follow-up):
+
+## 🤖 Claude *(02:09:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== onde apify_token/rapidapi/firecrawl aparecem na UI (src/) ===\"\ngrep -rln -E \"apify_token|rapidapi_key|firecrawl_api_key\" src/ 2>/dev/null || echo \"(nenhum na UI \u2014 apify/rapid n\u00e3o t\u00eam input)\"\necho \"=== o componente de Settings que renderiza as BYOK keys ===\"\ngrep -rln -E \"useUserApiKeys|higgsfield_api_key|openrouter_api_key\" src/ 2>/dev/null | grep -iE \"settings|api.?key\" | head",
+  "description": "Find BYOK settings UI rendering"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde apify_token/rapidapi/firecrawl aparecem na UI (src/) ===
+> src/integrations/supabase/types.ts
+> src/pages/SettingsPage.tsx
+> === o componente de Settings que renderiza as BYOK keys ===
+> src/pages/SettingsPage.tsx
+> src/hooks/useUserApiKeys.ts
+> ```
+
+## 🤖 Claude *(02:09:23)*
+
+
+## 🤖 Claude *(02:09:24)*
+
+`SettingsPage.tsx` já referencia `apify_token`/`firecrawl`. Vejo como renderiza (se é lista de campos, adiciono `rapidapi_key` trivial):
+
+## 🤖 Claude *(02:09:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== contexto de apify_token em SettingsPage ===\"\ngrep -nE \"apify_token|firecrawl_api_key|rapidapi|key:|label:|placeholder\" src/pages/SettingsPage.tsx | head -40",
+  "description": "Inspect SettingsPage BYOK field structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === contexto de apify_token em SettingsPage ===
+> 29:async function testApiKey(provider: string, key: string): Promise<boolean> {
+> 33:    const body = masked || !trimmed ? { provider } : { provider, key: trimmed };
+> 43:  id, label, placeholder, description, provider, value, onChange,
+> 45:  id: string; label: string; placeholder: string; description: string;
+> 73:          placeholder={placeholder}
+> 124:    groq_api_key: "",
+> 125:    openrouter_api_key: "",
+> 126:    openai_api_key: "",
+> 127:    elevenlabs_api_key: "",
+> 128:    google_api_key: "",
+> 129:    nanobana_api_key: "",
+> 130:    seedance_api_key: "",
+> 131:    replicate_api_key: "",
+> 132:    apify_token: "",
+> 133:    resend_api_key: "",
+> 134:    firecrawl_api_key: "",
+> 154:      groq_api_key: userKeys.groq_api_key || "",
+> 155:      openrouter_api_key: userKeys.openrouter_api_key || "",
+> 156:      openai_api_key: userKeys.openai_api_key || "",
+> 157:      elevenlabs_api_key: userKeys.elevenlabs_api_key || "",
+> 158:      google_api_key: userKeys.google_api_key || "",
+> 159:      nanobana_api_key: userKeys.nanobana_api_key || "",
+> 160:      seedance_api_key: userKeys.seedance_api_key || "",
+> 161:      replicate_api_key: userKeys.replicate_api_key || "",
+> 162:      apify_token: userKeys.apify_token || "",
+> 163:      resend_api_key: userKeys.resend_api_key || "",
+> 164:      firecrawl_api_key: userKeys.firecrawl_api_key || "",
+> 248:                id="openrouter_api_key" label="OpenRouter API Key" placeholder="sk-or-v1-..."
+> 252:                onChange={(v) => setKeys((p) => ({ ...p, openrouter_api_key: v }))}
+> 255:                id="google_api_key" label="Google API Key (Gemini)" placeholder="AIzaSy..."
+> 259:                onChange={(v) => setKeys((p) => ({ ...p, google_api_key: v }))}
+> 262:                id="groq_api_key" label="Groq API Key" placeholder="gsk_..."
+> 266:                onChange={(v) => setKeys((p) => ({ ...p, groq_api_key: v }))}
+> 269:                id="openai_api_key" label="OpenAI API Key" placeholder="sk-proj-..."
+> 273:                onChange={(v) => setKeys((p) => ({ ...p, openai_api_key: v }))}
+> 276:                id="replicate_api_key" label="Replicate API Key" placeholder="r8_..."
+> 280:                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}
+> 283:                id="apify_token" label="Apify Token (mineração de produtos ML)" placeholder="apify_api_..."
+> 286:                value={keys.apify_token}
+> 287:                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}
+> ```
+
+## 🤖 Claude *(02:09:57)*
+
+
+## 🤖 Claude *(02:09:58)*
+
+SettingsPage é data-driven (state + load + `<ApiKeyField>`). Adicionar `rapidapi_key` = 3 edits + types. Leio o bloco do campo apify pra espelhar:
+
+## 🤖 Claude *(02:09:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 282,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 282	              <KeyField
+> 283	                id="apify_token" label="Apify Token (mineração de produtos ML)" placeholder="apify_api_..."
+> 284	                description="BYOK opcional p/ enriquecer foto/preço/estoque de afiliados via Apify. Sem ela, usa o token de sistema (catálogo compartilhado)."
+> 285	                provider="apify"
+> 286	                value={keys.apify_token}
+> 287	                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}
+> 288	              />
+> 289	              <KeyField
+> 290	                id="resend_api_key" label="Resend API Key (canal de e-mail — nurturing)" placeholder="re_..."
+> 291	                description="BYOK opcional p/ entrega de e-mail das sequências de nutrição. Sem ela, usa o canal de sistema quando a entrega externa for ativada (hoje gated)."
+> 292	                provider="resend"
+> 293	                value={keys.resend_api_key}
+> 294	                onChange={(v) => setKeys((p) => ({ ...p, resend_api_key: v }))}
+> 295	              />
+> ```
+
+## 🤖 Claude *(02:10:30)*
+
+
+## 🤖 Claude *(02:10:30)*
+
+Adiciono `rapidapi_key` à UI (state + load + KeyField, espelhando apify):
+
+## 🤖 Claude *(02:10:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "    apify_token: \"\",\n    resend_api_key: \"\",\n    firecrawl_api_key: \"\",\n  });",
+  "new_string": "    apify_token: \"\",\n    resend_api_key: \"\",\n    firecrawl_api_key: \"\",\n    rapidapi_key: \"\",\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:10:43)*
+
+
+## 🤖 Claude *(02:10:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "      apify_token: userKeys.apify_token || \"\",\n      resend_api_key: userKeys.resend_api_key || \"\",\n      firecrawl_api_key: userKeys.firecrawl_api_key || \"\",",
+  "new_string": "      apify_token: userKeys.apify_token || \"\",\n      resend_api_key: userKeys.resend_api_key || \"\",\n      firecrawl_api_key: userKeys.firecrawl_api_key || \"\",\n      rapidapi_key: userKeys.rapidapi_key || \"\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:10:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "                id=\"apify_token\" label=\"Apify Token (minera\u00e7\u00e3o de produtos ML)\" placeholder=\"apify_api_...\"\n                description=\"BYOK opcional p/ enriquecer foto/pre\u00e7o/estoque de afiliados via Apify. Sem ela, usa o token de sistema (cat\u00e1logo compartilhado).\"\n                provider=\"apify\"\n                value={keys.apify_token}\n                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}\n              />",
+  "new_string": "                id=\"apify_token\" label=\"Apify Token (trends + minera\u00e7\u00e3o de produtos ML)\" placeholder=\"apify_api_...\"\n                description=\"BYOK p/ trends (fetch-trends, per-user obrigat\u00f3rio) e enriquecer afiliados ML. Cat\u00e1logo de afiliados compartilhado usa token de sistema; trends \u00e9 per-user.\"\n                provider=\"apify\"\n                value={keys.apify_token}\n                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}\n              />\n              <KeyField\n                id=\"rapidapi_key\" label=\"RapidAPI Key (trends \u2014 fallback TikTok)\" placeholder=\"...\"\n                description=\"BYOK opcional p/ trends via RapidAPI (fallback do Apify no fetch-trends). Per-user, sem fallback de sistema.\"\n                provider=\"rapidapi\"\n                value={keys.rapidapi_key}\n                onChange={(v) => setKeys((p) => ({ ...p, rapidapi_key: v }))}\n              />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:11:07)*
+
+
+## 🤖 Claude *(02:11:08)*
+
+SettingsPage pronto. Agora `types.ts` precisa do `rapidapi_key`. Tento regen (pode estar CF-blocked como a Management API); se falhar, hand-edit aditivo:
+
+## 🤖 Claude *(02:11:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 60 npx supabase gen types typescript --linked > /tmp/newtypes.ts 2>/tmp/gentypes.err\nif grep -q \"rapidapi_key\" /tmp/newtypes.ts 2>/dev/null && [ $(wc -l < /tmp/newtypes.ts) -gt 100 ]; then\n  cp /tmp/newtypes.ts src/integrations/supabase/types.ts\n  echo \"\u2705 gen types OK (rapidapi_key presente, $(wc -l < /tmp/newtypes.ts) linhas) \u2192 types.ts atualizado\"\nelse\n  echo \"\u26a0\ufe0f gen types falhou/bloqueado:\"; head -3 /tmp/gentypes.err\n  echo \"\u2192 hand-edit aditivo de rapidapi_key\"\n  grep -c \"apify_token\" src/integrations/supabase/types.ts\nfi\nrm -f /tmp/newtypes.ts /tmp/gentypes.err",
+  "description": "Regen types via linked; fallback to hand-edit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ gen types OK (rapidapi_key presente, 4630 linhas) → types.ts atualizado
+> ```
+
+## 🤖 Claude *(02:11:33)*
+
+
+## 🤖 Claude *(02:11:34)*
+
+✅ `types.ts` regen (rapidapi_key presente, 4630 linhas) — gen types usou a conexão DB (não bloqueada). Build + deploy do frontend (estou no repo PRINCIPAL → build = deploy):
+
+## 🤖 Claude *(02:11:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc check (SettingsPage + types) ===\"\nnpx tsc --noEmit 2>&1 | tail -8 || true\necho \"=== build ===\"\ntimeout 300 bun run build 2>&1 | tail -8",
+  "description": "tsc check + build frontend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc check (SettingsPage + types) ===
+> === build ===
+> dist/assets/index-CyI09jnN.js                  630.53 kB │ gzip: 188.39 kB
+> dist/assets/react-three-fiber.esm-BZCAxGVP.js  824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.73s
+> ```
+
+## 🤖 Claude *(02:12:12)*
+
+
+## 🤖 Claude *(02:12:13)*
+
+Build OK (23.73s, tsc 0 erros). Verifico materialmente o deploy (Lei 1 — chunk Settings novo + env baked):
+
+## 🤖 Claude *(02:12:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SettingsPage chunk no dist + rapidapi presente? ===\"\nSP=$(ls -t dist/assets/SettingsPage-*.js 2>/dev/null | head -1)\necho \"chunk: $SP\"\n[ -n \"$SP\" ] && grep -lq \"rapidapi\" \"$SP\" && echo \"\u2705 rapidapi no chunk Settings servido\" || echo \"(rapidapi n\u00e3o achado no chunk \u2014 verificar)\"\necho \"=== env Supabase baked no bundle? ===\"\ngrep -rlq \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js 2>/dev/null && echo \"\u2705 Supabase URL baked (env presente)\" || echo \"\u26a0\ufe0f env n\u00e3o baked\"",
+  "description": "Verify SettingsPage deploy materially"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SettingsPage chunk no dist + rapidapi presente? ===
+> chunk: dist/assets/SettingsPage-wyUWJkHT.js
+> ✅ rapidapi no chunk Settings servido
+> === env Supabase baked no bundle? ===
+> ✅ Supabase URL baked (env presente)
+> ```
+
+## 🤖 Claude *(02:12:29)*
+
+
+## 🤖 Claude *(02:12:31)*
+
+✅ **Deploy material OK** — chunk `SettingsPage-wyUWJkHT.js` servido com `rapidapi` + Supabase URL baked. #3 fetch-trends per-user **COMPLETO** (backend + UI + verificado).
+
+Registro no CLAUDE.md + commito #3:
+
+## 🤖 Claude *(02:12:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"[[affiliate-credential-resolution|affiliate-credential-resolution]] SOP\" CLAUDE.md | head -1",
+  "description": "Find anchor for trends SOP entry in CLAUDE.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(02:12:35)*
+
+
+## 🤖 Claude *(02:12:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"credential resolution SOP|Affiliate credential\" CLAUDE.md | head -3",
+  "description": "Find credential resolution SOP entries in CLAUDE.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 433:| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |
+> 442:| **Meta credential resolution SOP** | `docs/processes/meta-credential-resolution.md` (per-user `meta_config`, fail-closed, OTD-META-ENCRYPT) |
+> ```
+
+## 🤖 Claude *(02:12:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 433,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 433	| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |
+> ```
+
+## 🤖 Claude *(02:12:43)*
+
+
+## 🤖 Claude *(02:12:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |",
+  "new_string": "| **Affiliate credential resolution SOP** | `docs/processes/affiliate-credential-resolution.md` |\n| **Trends credential resolution SOP (per-user)** | `docs/processes/trends-credential-resolution.md` (fetch-trends Apify/RapidAPI per-user fail-closed \u2014 fecha #3 da auditoria de prontid\u00e3o per-user. Coluna cifrada `rapidapi_key` migration `20260622210000` espelha o template firecrawl; `apify_token` j\u00e1 existia. Cron scripts enrich/discover-affiliate ficam em env de sistema. Provado: throwaway sem key \u2192 402 `trends_not_configured`) |\n| **Per-user readiness migration (env = s\u00f3 infra)** | Diretiva Sovereign 2026-06-22: TODA provider key \u00e9 per-user BYOK; env s\u00f3 infra. Commit `432fa01` removeu o fallback `\\|\\| Deno.env.get(<provider>)` de 25 edge fns user-facing (per-user puro fail-closed); `embed-mcorch-node`/`search-constellation` (sistema, sem user) usam **`MESH_EMBED_OPENROUTER_KEY`/`MESH_EMBED_GEMINI_KEY`** dedicadas. Secrets antigos no vault MANTIDOS (seed source do BYOK do User 0); `.env` anotado (gitignored). Auditoria: `wf_102ef5ac` (30 per-user \u00b7 11 fallback-ok \u00b7 4 remediadas: openrouter-swarm/canvas-execute/fetch-trends + aios-chat-gateway token) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:13:01)*
+
+
+## 🤖 Claude *(02:13:02)*
+
+Commito #3 (migration + fetch-trends + SOP + UI + types + CLAUDE.md):
+
+## 🤖 Claude *(02:13:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260622210000_user_api_keys_rapidapi_channel.sql supabase/functions/fetch-trends/index.ts docs/processes/[[trends-credential-resolution|trends-credential-resolution]].md src/pages/SettingsPage.tsx src/integrations/supabase/types.ts CLAUDE.md\ngit commit -q -m \"feat(fetch-trends): per-user Apify/RapidAPI BYOK (fecha #3 do sweep per-user)\n\nfetch-trends resolve apify_token/rapidapi_key per-user (decrypted_user_api_keys\npor user.id), fail-closed 402 trends_not_configured \u2014 era env global (viola\u00e7\u00e3o\nuser-facing, \u00faltima da auditoria). Migration 20260622210000 adiciona coluna cifrada\nrapidapi_key (espelha template firecrawl verbatim; apify_token j\u00e1 existia); /security-\nreview SAFE. UI: inputs Apify/RapidAPI em Settings. Seed do User 0 a partir do .env.\nCron scripts enrich/discover-affiliate ficam em env de sistema (exce\u00e7\u00e3o registrada).\nProvado: throwaway sem key \u2192 402 zero-cost. Diretiva Sovereign 2026-06-22.\" && echo \"\u2705 commit #3\"\ngit log --oneline -5",
+  "description": "Commit fetch-trends per-user #3"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:13PM[0m [32mINF[0m 1 commits scanned.
+> [90m11:13PM[0m [32mINF[0m scan completed in 33.5ms
+> [90m11:13PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✅ commit #3
+> f6734e9 feat(fetch-trends): per-user Apify/RapidAPI BYOK (fecha #3 do sweep per-user)
+> 432fa01 refactor(edge): provider keys 100% per-user (env = só infra) + MESH_EMBED dedicada
+> dbad262 docs(processes): WP↔CF resolvido (Nível de segurança) + SOP per-user multi-tenant
+> 4583519 refactor(edge): resolução de credencial per-user (API Tenancy Model)
+> ef921ce fix(aios-chat-gateway): resolve OpenClaw token env-only + fail-closed
+> ```
+
+## 🤖 Claude *(02:13:36)*
+
+
+## 🤖 Claude *(02:13:48)*
+
+**#3 commitado (`f6734e9`, gitleaks limpo).** O **sweep per-user está COMPLETO** — toda a remediação da auditoria fechada.
+
+## 🏁 Sweep per-user — FECHADO (capstone)
+
+| Item da auditoria | Estado |
+|---|---|
+| #1 openrouter-swarm | ✅ per-user puro + 501 |
+| #2 canvas-execute Higgsfield | ✅ per-user (zero regressão) |
+| #3 fetch-trends Apify/RapidAPI | ✅ migration + edge + UI + 402 provado |
+| + aios-chat-gateway (token vazado) | ✅ env-only fail-closed |
+| + 25 fns user-facing (env=infra) | ✅ 47 fallbacks removidos · deployadas |
+| + 2 fns sistema → MESH_EMBED | ✅ pipeline embedding intacto (200) |
+
+**Resultado:** nenhuma edge fn user-facing usa chave de provider global. `env` = só infra (Supabase + `MESH_EMBED_*`). Toda credencial de provider é BYOK per-user, fail-closed. Secrets antigos mantidos no vault (seed source) + `.env` anotado.
+
+## 📜 Arco completo desta sessão
+
+1. **CF WP unblock** — resolvido (achado material: "Nível de segurança"/IP datacenter) + E2E `post_id 18` + SOP atualizada.
+2. **SOP per-user WP↔CF** (multi-tenant, Lei 2).
+3. **Auditoria de prontidão per-user** (workflow `wf_102ef5ac`, 49 fns) → ledger.
+4. **Migração env=infra** (27 fns + MESH_EMBED + BYOK seed) — `/security-review` SAFE 2× · provado E2E (OpenRouter autenticou com chave do User 0; embedding 200; fetch-trends 402).
+5. **6 commits** (`ef921ce` → `f6734e9`), gitleaks limpo em todos.
+
+## Recomendação
+
+Sessão muito densa e o objetivo que você cravou como prioridade (**per-user em tudo**) está **fechado e verificado**. Recomendo **`/handoff`** agora pra selar tudo (CF + auditoria + migração + #3) no HANDOFF.md + malha + milestone.
+
+Restam pra próxima sessão (não-per-user, fora do seu foco atual): segurança (`social-auth-callback` HMAC · `instagram-webhook` signature) · **C** (1º ciclo pago) · **BYOK imagem opt-in** · **impl WP-CF per-user** (SOP pronto).
+
+Quer que eu rode o **`/handoff`** pra selar, ou prefere seguir em mais alguma frente antes?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
