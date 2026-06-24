@@ -8397,6 +8397,684 @@ Toggle exato em mãos. Implemento o #5b agora (enquanto o #4 gateia — arquivos
 
 Aguardo o gate do #4 → deploy backend + commit → depois gate+build do #5b (frontend) + commit. Te aviso quando o #4 fechar.
 
+## 👤 User *(17:33:29)*
+
+<task-notification>
+<task-id>w05kesdpx</task-id>
+<tool-use-id>toolu_01K5enhATfhJXzGMCLysAuPo</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w05kesdpx.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Gate QA+TL+critico do #4: restart condicional + graceful-shutdown no updateSettings" completed</summary>
+<result>{"reviews":[{"role":"QA","verdict":"PASS COM RESSALVAS","summary":"Mudança #4 (restart CONDICIONAL + graceful-shutdown no PATCH /settings) está correta e bem-fundamentada. Auditei a inversão central: needsRestart = requiresStepUp(currentForGuard, newSettings) — o MESMO predicado do step-up, e currentForGuard já é o objeto decifrado. Inventariei TODAS as 20 colunas de settingsModel contra requiresStepUp e contra o padrão de consumo. CONCLUSÃO PRINCIPAL (pergunta-chave): NÃO existe campo boot-only que mude comportamento e fique de fora do requiresStepUp. O único estado capturado em closure no boot é app-em.init(settings) → exchange(settings) (accessKey/secretKey/apiUrl/streamUrl + isTestnet derivado do apiUrl) — todos dentro do requiresStepUp → needsRestart=true. Os campos cosméticos excluídos do restart (phone, pushToken, sendGridKey, twilioSid/Token/Phone, telegramBot, telegramChat) são TODOS de notificação e lidos por-chamada via getDefaultSettings()/getSettingsDecrypted() (email/sms/telegram/push recebem o settings do chamador, que busca fresco a cada ciclo/evento — beholder:916, jobs por ciclo, app-em.sendMessage:850, telegramNotify:28); updateSettings chama clearSettingsCache(id) → aplicam SEM restart, sem staleness. Graceful (srv.close sem await + timer 1s + process.exit) é seguro e superior ao exit abrupto: o WS compartilha o mesmo http server, então close() para conexões novas sem pendurar nas WS abertas, e o exit garante a saída. Invariante #5a re-avalia (apiUrl/streamUrl/useTestnet/testnet*Url estão no requiresStepUp). stepUpGuard.test.js 21/21, node -c OK nos 2 arquivos. Sem regressão de staleness; achados são MÉDIO/BAIXO/NIT, nenhum bloqueador. Arquivos: backend/src/controllers/settingsController.js, backend/src/server.js, backend/src/utils/stepUpGuard.js, backend/src/repositories/settingsRepository.js, backend/src/app-em.js, backend/src/utils/exchange.js, backend/src/utils/env.js.","findings":[{"severity":"MEDIUM","mustFix":false,"title":"res.sendStatus(200) é enviado ANTES de decidir/executar o restart — cliente não distingue \"aplicado sem restart\" de \"vai reiniciar\"","detail":"Em settingsController.updateSettings (linhas 46-47) o await settingsRepository.updateSettings(id, newSettings) e o res.sendStatus(200) rodam antes do branch de restart. No caminho needsRestart=true o backend responde 200 e ~1s depois mata o processo: o cliente recebe sucesso mas a conexão pode cair logo em seguida. Não é bug de corretude (a escrita no DB já aconteceu e o restart é determinístico), mas a UX fica ambígua entre 'salvo a quente' e 'salvo + reiniciando'. Como o OBJETIVO do #4 é parar de reiniciar em save cosmético, faz sentido o cliente saber qual dos dois ocorreu. Sugestão não-bloqueante: devolver no corpo {restarting: needsRestart} e a UI mostrar o aviso adequado. Não toca money-path."},{"severity":"LOW","mustFix":false,"title":"testnet*Url/testnetAccessKey/testnetSecretKey forçam restart mesmo com useTestnet=false (over-restart inócuo)","detail":"requiresStepUp inclui testnetApiUrl/testnetStreamUrl (COMPARABLE), testnetAccessKey (MASKED) e testnetSecretKey (SECRETS). No estado LIVE atual (useTestnet=0, mainnet) a conexão ativa usa SÓ os campos de mainnet (getSettingsDecrypted só faz o swap quando useTestnet=true), então alterar um campo testnet* NÃO afeta o exchange/Beholder em execução — ainda assim dispara needsRestart=true e reinicia. É conservador (over-restart), NÃO staleness, e está alinhado ao step-up (qualquer credencial/ambiente exige a frase). Aceitável; só documentar. Não fixar agora."},{"severity":"LOW","mustFix":false,"title":"Janela de até 1s entre escrita no DB e process.exit pode emitir 1 ordem com config nova mas conexão antiga (ghost-order minúscula, não-nova)","detail":"No save de AMBIENTE/CREDENCIAL: updateSettings escreve no DB e limpa o cache ANTES do setTimeout(1s)+exit. Nessa janela, beholder.placeOrder/jobs leem getDefaultSettings() já com URLs/keys NOVAS (cache repovoado), mas o exchange em memória ainda usa as ANTIGAS (capturado no boot do app-em). Uma ordem disparada na janela usaria credencial/URL antiga na conexão e derivação nova na lógica — exatamente a 'janela de ghost-order' que o comentário cita e que o restart fecha. O #4 REDUZ a janela (só existe quando needsRestart) e o srv.close() barra conexões novas; a defesa real segue sendo o restart curto. Mitigação total (fora de escopo do #4): setar riskState halt transitório antes do close. Risco prático ínfimo (1s, save de ambiente raro, sistema em HALT na maior parte)."},{"severity":"LOW","mustFix":false,"title":"Mudança de email reinicia o backend embora email também seja credencial de notificação lida a quente — correto, só informativo","detail":"requiresStepUp flaga email (linha 41) → needsRestart=true. Correto: email é credencial de LOGIN (getSettingsByEmail) e índice unique, exige restart/relogin. Efeito colateral: email também é o to/from do sendGrid (utils/email.js), canal que por si só pegaria o valor novo via cache; mas como é credencial de login o restart É necessário. Não é regressão (antes reiniciava em QUALQUER save). Nota informativa, manter fail-safe."},{"severity":"NIT","mustFix":false,"title":"Acoplamento implícito needsRestart ⇔ predicado do step-up — robusto hoje, blindar com teste/comentário contra refactor futuro","detail":"requiresStepUp é chamado com currentForGuard (current decifrado: accessKey/testnetAccessKey passaram por decryptIfGcm nas linhas 32-34) e newSettings — o MESMO objeto passado ao checkSettingsStepUp logo acima. Logo a decisão de restart é coerente por construção com a de step-up (não há como exigir a frase e NÃO reiniciar, nem o inverso, para campos sensíveis). Bom design (fonte única). Hoje só o util é coberto (stepUpGuard.test.js 21/21); sugestão defensiva: comentar 'needsRestart === predicado do step-up por desenho' e/ou um sim-test afirmando requiresStepUp ⇔ caminho-de-restart no controller. Puramente anti-refactor."},{"severity":"NIT","mustFix":false,"title":"Working tree mistura o #4 com o #5b (frontend Settings.js) e backtest-results regenerados","detail":"O diff traz também frontend/src/private/Settings/Settings.js (window.confirm no toggle Active Environment = fix #5b, UX defesa-em-profundidade, NÃO toca o restart) e dois backtest-results regenerados (farm-funnel-1h-full*). Inócuos ao #4 e ao money-path, mas o commit deve separar claramente #4 (restart condicional + graceful) de #5b (UX do toggle). Sem impacto técnico."}]},{"role":"TL","summary":"Mudança #4 (restart condicional + graceful-shutdown no save de Settings): reusa stepUpGuard.requiresStepUp como gate de \"precisa reiniciar?\", elimina o process.exit em todo save (só reinicia em mudança de ambiente/credencial), e usa app.set('httpServer') no server.js (Express-native, sem global). Diff pequeno (2 arquivos, ~20 linhas), bem-comentado em pt-BR, alto-ganho (mata o restart-a-cada-save cosmético + janela de ghost-order) e reversível. Confirmei os 5 fatos contra o código real.\n\nCONFIRMAÇÕES:\n(a) exchange.js (fronteira Binance) lê SÓ accessKey/secretKey/apiUrl/streamUrl — todos resolvidos por useTestnet via getDefaultSettings, e TODOS cobertos por requiresStepUp (+ useTestnet/email). Não achei campo lido só-no-boot que mude comportamento e esteja FORA de requiresStepUp.\n(b) clearSettingsCache(id) roda no fim do updateSettings do repository; telegram/push/twilio/sendgrid/phone são lidos via getDefaultSettings (cache) em runtime (telegramNotify, push em app-em.sendMessage, jobs) → pegam o novo valor SEM restart. Confirmado.\n(c) graceful srv.close() sem aguardar callback + setTimeout(1s)+process.exit(0): estritamente melhor que o exit abrupto anterior (para de aceitar conexões novas; o exit garante a saída mesmo com WS pendurado). Aceitável.\n(d) invariante de ambiente #5a (server.js boot) depende de apiUrl/useTestnet reiniciarem → ambos em requiresStepUp → needsRestart=true → re-avalia. Confirmado.\n(e) o único caminho que dependia de restart é a instância e
+... (truncated 4604 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w05kesdpx.output)</result>
+<usage><agent_count>3</agent_count><subagent_tokens>335714</subagent_tokens><tool_uses>116</tool_uses><duration_ms>986218</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(17:33:36)*
+
+
+## 🤖 Claude *(17:33:36)*
+
+#4 gate: **QA=PASS · TL=APPROVE**. Vendo crítico + must-fix:
+
+## 🤖 Claude *(17:33:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w05kesdpx.output'))\nprint('LOG:', d.get('logs'))\nres=d['result']\ncr=[r for r in res['reviews'] if r['role']=='CRITICO'][0]\nprint('CRITICO =>', cr['verdict'][:160])\nfor f in cr.get('findings',[]):\n    print(f\\\"  ({f['severity']}){' MUSTFIX' if f.get('mustFix') else ''} {f['title']}\\\")\nprint('=== MUST-FIX:', len(res.get('mustFix',[])),'===')\nfor m in res.get('mustFix',[]): print('*',m['from'],m['severity'],m['title'])\n\"",
+  "description": "Read #4 critic + must-fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LOG: ['Vereditos: QA=PASS COM RESSALVAS · TL=APPROVE COM SUGESTÕES · CRITICO=APROVAR fix seguro e correto nenhum must-fix · must-fix=0']
+> CRITICO => APROVAR fix seguro e correto nenhum must-fix
+>   (LOW) Restart a toa com apiUrl ou streamUrl vazio
+>   (NIT) srv.close e cosmetico com WebSocket no mesmo server porem seguro
+>   (LOW) Confirmado: sem stale e sem credencial sem restart
+> === MUST-FIX: 0 ===
+> ```
+
+## 🤖 Claude *(17:33:58)*
+
+
+## 🤖 Claude *(17:33:59)*
+
+**#4: APPROVE×3, must-fix=0.** Ressalvas LOW/NIT (over-restart à toa com URL vazia = edge benigno, era o comportamento antigo). Deploy do #4 (backend; o #5b/frontend fica separado):
+
+## 🤖 Claude *(17:34:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\nTOKEN=$(curl -s -m5 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\necho \"HALT antes:\"; curl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\" halted=\\\",d[\\\"halted\\\"])\"\necho \"=== rebuild+recreate backend (#4) ===\"\ndocker compose up -d --build backend 2>&1 | tail -3'",
+  "description": "Snapshot HALT + rebuild backend for #4",
+  "timeout": 320000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HALT antes:
+>  halted= False
+> === rebuild+recreate backend (#4) ===
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(17:34:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\ndocker exec tradeux-backend-1 sh -lc \"grep -iE \\\"App is running|invariante|Boot falhou\\\" /app/logs/system.log | tail -2\"\nTOKEN=$(curl -s -m6 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\ncurl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\"halted=\\\",d[\\\"halted\\\"],\\\"| sources=\\\",d.get(\\\"sources\\\"))\"\necho \"=== commit #4 (s\u00f3 backend) ===\"\ngit add backend/src/controllers/settingsController.js backend/src/server.js\ngit status --short backend/src/controllers/settingsController.js backend/src/server.js'",
+  "description": "Verify #4 boot + HALT + stage backend files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-24T17:34:09.701Z - [BOOT] invariante de ambiente OK (mainnet: api+stream <=> useTestnet).
+> info: 2026-06-24T17:34:09.842Z - App is running at 3001
+> halted= False | sources= []
+> === commit #4 (só backend) ===
+> M  backend/src/controllers/settingsController.js
+> M  backend/src/server.js
+> ```
+
+## 🤖 Claude *(17:34:21)*
+
+
+## 🤖 Claude *(17:34:21)*
+
+#4 deploy OK (boot limpo, `halted=false`). Backend staged. Commit + push do #4:
+
+## 🤖 Claude *(17:34:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/fix4_msg.txt",
+  "content": "feat(settings): restart CONDICIONAL + graceful-shutdown no save de Settings (design-review #4)\n\nANTES updateSettings fazia process.exit(0) em QUALQUER save (1s depois) -> reiniciava o backend mesmo em\nmudanca cosmetica (telegram/push) + abria janela de ghost-order toda vez. Agora:\n\n- needsRestart = stepUpGuard.requiresStepUp(currentForGuard, newSettings) -> reinicia SO em mudanca de\n  AMBIENTE/CREDENCIAL (apiUrl/streamUrl/testnet*Url/keys/useTestnet/email), que e o que exige reconectar o\n  Beholder/exchange a Binance. Mudanca cosmetica NAO reinicia: settingsRepository ja chama clearSettingsCache\n  -> getDefaultSettings devolve fresco e os canais (telegram/push/sms/email) leem por-chamada via cache.\n- graceful leve: no caminho de restart, req.app.get('httpServer').close() (para conexoes novas; sem aguardar\n  o callback p/ nao pendurar nas WS) + setTimeout(1s)+process.exit(0). server.js expoe via app.set('httpServer')\n  (Express-native, sem global.*).\n- compativel com o invariante de ambiente do #5a: apiUrl/useTestnet seguem reiniciando -> re-avaliam no boot.\n\nGate QA+TL+critico: APPROVE x3, must-fix=0. QA inventariou as 20 colunas de settings: NENHUM campo boot-only\nfora do requiresStepUp ficaria stale sem restart. Ressalvas LOW/NIT: over-restart benigno com URL vazia (era o\ncomportamento antigo); UX poderia devolver {restarting} no body (follow-up opcional). requiresStepUp ja coberto\npor sim/stepUpGuard.test.js (21/21).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/fix4_msg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:34:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -u gcrux-tradeux git commit -F /tmp/fix4_msg.txt 2>&1 | tail -2\ngit -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo chown -R gcrux-tradeux:gcrux-tradeux .git\nstat -c \".git owner: %U:%G\" .git\ngit -c safe.directory='*' log --oneline -2",
+  "description": "Commit + push #4"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master dfee294] feat(settings): restart CONDICIONAL + graceful-shutdown no save de Settings (design-review #4)
+>  2 files changed, 18 insertions(+), 2 deletions(-)
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    cf8c4a3..dfee294  master -> master
+> .git owner: gcrux-tradeux:gcrux-tradeux
+> dfee294 feat(settings): restart CONDICIONAL + graceful-shutdown no save de Settings (design-review #4)
+> cf8c4a3 fix(orders): qty FILLED correta e liquida de fee-em-base (design-review #9/H2)
+> ```
+
+## 🤖 Claude *(17:35:04)*
+
+
+## 🤖 Claude *(17:35:05)*
+
+**#4 ✅** — `vivo==master==origin==dfee294`.
+
+Agora **#5b** (frontend, último). Vou validar o JSX com um **build sem deploy** (`docker compose build frontend`) + uma revisão adversarial rápida do diff em paralelo:
+
+## 🤖 Claude *(17:35:15)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Review #5b toggle confirm",
+  "prompt": "Revis\u00e3o r\u00e1pida e adversarial de uma mudan\u00e7a de FRONTEND no TradeUX (React). Arquivo: /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js\n\nMudan\u00e7a #5b (design-review): o `<select id=\"useTestnet\">` (toggle de Ambiente Ativo, ~linha 277) ganhou um `window.confirm` no onChange ANTES de mudar o estado \u2014 espelha a cerim\u00f4nia do `onGoLive()` (~linha 107). \u00c9 defesa-em-profundidade UX; o backend j\u00e1 trava incoer\u00eancia no boot (#5a) e exige frase no Salvar.\n\nLeia o trecho do `<select>` e confirme/refute:\n1. O `<select>` \u00e9 CONTROLADO por `value={settings.useTestnet ? 'true':'false'}`. Se o usu\u00e1rio CANCELAR o confirm (estado N\u00c3O muda), o React re-renderiza e o select reverte sozinho ao valor antigo? (Confirme que N\u00c3O fica dessincronizado \u2014 \u00e9 o ponto cr\u00edtico de um controlled select com onChange que \u00e0s vezes n\u00e3o atualiza o state.)\n2. O guard `if (newVal === Boolean(settings.useTestnet)) return;` \u00e9 correto/in\u00f3cuo?\n3. H\u00e1 erro de sintaxe JSX \u00f3bvio (chaves/par\u00eanteses/arrow) no novo onChange?\n4. A mudan\u00e7a quebra o fluxo de Salvar (o save \u00e9 por outro bot\u00e3o; o onChange s\u00f3 mexe no state local)?\n\nResponda CONCISO em pt-BR: veredito (APPROVE / APPROVE_COM_SUGESTOES / REQUEST_CHANGES) + s\u00f3 achados REAIS com severidade. N\u00e3o reescreva o arquivo.",
+  "subagent_type": "Explore"
+}
+```
+
+## 🤖 Claude *(17:35:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== build frontend (valida JSX; SEM deploy) ===\"\ndocker compose build frontend 2>&1 | tail -15'",
+  "description": "Build frontend to validate JSX (no deploy)",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Analisando o `<select>` (linhas 277–288):\n\n## Veredito: **APPROVE**\n\n### Achados:\n\n**1. Select CONTROLADO (valor ✅)**\n- `value={settings.useTestnet ? 'true' : 'false'}` está correto.\n- O guard na linha 281 (`if (newVal === Boolean(settings.useTestnet)) return;`) **previne a mudança do estado se o usuário CANCELAR** — React re-renderiza com `value` atado ao `settings` inalterado, e o select reverte visualmente sozinho ao valor anterior. **Sem dessincronização.**\n- A ordem é: `onChange` → check → `window.confirm()` → se OK, chama `setSettings()` → se CANCELAR, retorna early e o state não muda → React re-renderiza com o valor antigo. **Correto.**\n\n**2. Guard `if (newVal === Boolean(settings.useTestnet)) return;` (linha 281)**\n- **Inócuo e útil**: evita re-render desnecessário se o usuário clicar na mesma opção duas vezes (guarda contra cliques redundantes). Não quebra o fluxo.\n\n**3. Sintaxe JSX (linhas 277–288)**\n- ✅ **Sem erros**: arrow function bem-formada, chaves, `e.target.value`, strings nos `<option>`, semântica correta.\n\n**4. Fluxo de Salvar**\n- ✅ **Não quebra**: o `onChange` só muda `settings.useTestnet` no state local. O Salvar é por `onFormSubmit()` (botão em linha 377), que monta o payload e chama `saveSettings()` → no backend, vai pedir a frase de confirmação se `useTestnet` mudou (step-up reativo). **Camadas de defesa em ordem: UX prompt no toggle + backend step-up + frase no Salvar.**\n\n---\n\n**Nenhum achado REAL** — a implementação está defensável, o controlled select não fica dessincronizado, e a cerimônia é coerente com o fluxo existente (`onGoLive()` em linha 107). Aprovado."}]
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build frontend (valida JSX; SEM deploy) ===
+> #14 CACHED
+> 
+> #15 [stage-1 3/3] COPY --from=build /app/build /usr/share/nginx/html
+> #15 DONE 0.3s
+> 
+> #16 exporting to image
+> #16 exporting layers
+> #16 exporting layers 0.2s done
+> #16 writing image sha256:c2c85287f43e6ba9b70735f7c166723057e214ff2703ae4eba84a2e8440a7421 done
+> #16 naming to docker.io/library/tradeux-frontend done
+> #16 DONE 0.2s
+> 
+> #17 resolving provenance for metadata file
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built
+> ```
+
+## 🤖 Claude *(17:35:41)*
+
+
+## 🤖 Claude *(17:35:43)*
+
+#5b: reviewer **APPROVE** (controlled select reverte no cancel, JSX OK, save intacto) + **build do frontend passou** (imagem construída = JSX válido). Deploy (recreate frontend, imagem já buildada) + verifica site + commit:
+
+## 🤖 Claude *(17:35:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== recreate frontend (imagem j\u00e1 buildada) ===\"\ndocker compose up -d frontend 2>&1 | tail -3\nsleep 2\necho \"=== site up? ===\"\ncurl -s -m8 -o /dev/null -w \"site https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/\ncurl -s -m8 -o /dev/null -w \"local :8090 -> %{http_code}\\n\" http://127.0.0.1:8090/'",
+  "description": "Deploy frontend + verify site up",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === recreate frontend (imagem já buildada) ===
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started 
+> === site up? ===
+> site https://tradeux.gcrux.com -> 200
+> local :8090 -> 200
+> ```
+
+## 🤖 Claude *(17:35:53)*
+
+
+## 🤖 Claude *(17:35:54)*
+
+Frontend deployado, **site HTTP 200**. Commit + push do #5b (só o frontend):
+
+## 🤖 Claude *(17:36:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/fix5b_msg.txt",
+  "content": "feat(ui): confirmacao no toggle de Ambiente Ativo (design-review #5b / H1)\n\nO <select> \"Active Environment\" (useTestnet) trocava testnet<->mainnet sem cerimonia, ao contrario do\nonGoLive (que exige window.prompt 'LIGAR REAL'). Agora o onChange pede window.confirm ANTES de mudar o estado,\nnomeando o destino (MAINNET = DINHEIRO REAL) e avisando que as URLs api+stream tem que casar (senao o trading\nTRAVA no boot pelo invariante de ambiente #5a). E defesa-em-profundidade UX: o backend ja trava incoerencia no\nboot (#5a) e exige a frase de step-up no Salvar.\n\n- <select> e CONTROLADO por value={settings.useTestnet}; cancelar o confirm NAO muda o state -> o React reverte\n  o select sozinho no re-render (sem dessincronizacao). Guard de no-op contra clique redundante.\n- so mexe no state local; o Salvar continua por outro botao (e o step-up reativo do backend).\n\nRevisao: APPROVE (controlled-select reverte no cancel, JSX ok, fluxo de Salvar intacto); build do frontend (vite)\npassou. Fecha a metade UX do #5; a metade server-enforced ja estava no #5a.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/fix5b_msg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:36:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -u gcrux-tradeux git add frontend/src/private/Settings/Settings.js\nsudo -u gcrux-tradeux git commit -F /tmp/fix5b_msg.txt 2>&1 | tail -2\ngit -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo chown -R gcrux-tradeux:gcrux-tradeux .git\nstat -c \".git owner: %U:%G\" .git\necho \"=== working tree restante ===\"\ngit -c safe.directory='*' status --short | head\ngit -c safe.directory='*' log --oneline -6",
+  "description": "Commit + push #5b + show remaining tree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 6cec694] feat(ui): confirmacao no toggle de Ambiente Ativo (design-review #5b / H1)
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    dfee294..6cec694  master -> master
+> .git owner: gcrux-tradeux:gcrux-tradeux
+> === working tree restante ===
+> backups/.gitignore: Permission denied
+> warning: could not open directory 'backups/': Permission denied
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> 6cec694 feat(ui): confirmacao no toggle de Ambiente Ativo (design-review #5b / H1)
+> dfee294 feat(settings): restart CONDICIONAL + graceful-shutdown no save de Settings (design-review #4)
+> cf8c4a3 fix(orders): qty FILLED correta e liquida de fee-em-base (design-review #9/H2)
+> f21549b feat(rearm): pre-reqs de re-armamento Farm — gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)
+> 8b5c5d9 docs(env): documenta os params de risco/operacionais faltantes no backend/.env.example
+> 7140726 feat(safety): invariante de ambiente no boot (design-review #5a) — HALT se apiUrl/streamUrl x useTestnet divergirem
+> ```
+
+## 🤖 Claude *(17:36:26)*
+
+
+## 🤖 Claude *(17:36:28)*
+
+**#5b ✅** — `vivo==master==origin==6cec694`. Working tree só com `backtest-results/*` (scratch regenerável, como sempre). 
+
+**Design-review 100% ZERADO.** Vou atualizar a memória:
+
+## 🤖 Claude *(17:36:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-review-backlog.md",
+  "content": "---\nname: tradeux-design-review-backlog\ndescription: status do plano de 9 fixes da re-revis\u00e3o de design 2026-06-22 \u2014 TODOS fechados exceto RBAC (DEFER consciente)\nmetadata:\n  type: project\n---\n\nRelat\u00f3rio: `~/RESEARCH-design-review-2026-06-22.md` (re-revis\u00e3o adversarial, workflow 49 agentes). Plano de 9 fixes + pr\u00e9-reqs de re-armamento. Cada fix passou por gate QA+TL+cr\u00edtico antes do mainnet LIVE. **2026-06-24: backlog ZERADO** (exceto RBAC=DEFER). Ver [[tradeux-mainnet-go-live]] e [[tradeux-design-fixes-2026-06-22]] (1\u00ba design-review A/B/C).\n\n**TODOS FECHADOS (2026-06-24, sess\u00e3o maratona; HALT/equity $149,40/Farm Sell intactos o tempo todo):**\n- **#1 withdraw-lock** `c6f67ef` \u00b7 **#3 getAveragePrices isTestnet** `39dfa88` \u00b7 **#6 crypto GCM+mask** `087ccfb`/`acd745c`/`2cd9ed9` \u00b7 **#7 make nuke\u2192backup** `78e4e65` \u00b7 **#8 step-up+blacklist persistida** `5690a63` (RBAC=DEFER, ver abaixo) \u00b7 **#2/H3** PR-1 earnRedeem `5edf856` (PR-2 sizing DESCARTADA, ver [[tradeux-earn-autosubscribe-incident]]).\n- **#5a invariante de ambiente** `7140726` \u2014 `utils/env.js` helper `isTestnetApiUrl` (exchange.js usa, mata drift); fonte HALT `env-mismatch` no riskState (n\u00e3o-persistida); server.js no boot compara `isTestnetApiUrl(apiUrl/streamUrl)` vs `useTestnet` \u2192 divergiu = HALT fail-closed + Telegram, UI de p\u00e9. **Cobre o caso perigoso do H1** (fat-finger no toggle \u2192 incoer\u00eancia \u2192 HALT).\n- **.env.example params de risco** `8b5c5d9` \u2014 doc-only (TRADING_HALT_HARD, %-equity, daily-cap, step-up/frases, AGENT_HEARTBEAT_*, regime, paper, funil); frases com default gen\u00e9rico (n\u00e3o vaza viva).\n- **A1+A2 re-arm prereqs** `f21549b` \u2014 A1: gate `MEMORY['<sym>:TREND_QTY']<=0` no Farm Buy + `loadTrendPosition` publica TREND_QTY=0 quando flat (sem isso `undefined<=0=false` bloquearia o Farm Buy enquanto Trend nunca operou); A2: RSI do Farm Buy `1m\u219215m` (alinha c/ paper). **Gotchas:** `validateConditions` aceita `<=0` (testei); `ensureAutomation` \u00e9 idempotente-POR-NOME (n\u00e3o atualiza linha existente \u2192 as 3 Farm Buy id9/11/13 INATIVAS foram PATCHadas via API, n\u00e3o SQL, p/ passar pelo validateConditions); o \"gate no-op\" do cr\u00edtico era erro dele (leu o default BTC do setup-trend; o DB VIVO tem Trend p/ as alts \u2192 gate TEM valor). `sim/farmTriggers.test.js` +7 (16/16). Farm Buy segue INATIVO (s\u00f3 fica CORRETO pra re-arm); p\u00f3s reset-db o seed cria j\u00e1 certo.\n- **#9/H2 qty l\u00edquida + bug q\u2192z** `cf8c4a3` \u2014 `feeCalc.netFilledQty` (desconta fee s\u00f3 quando paga no asset BASE = `!endsWith && startsWith`); app-em.js executionReport passou de `executionData.q` (qty do PEDIDO) p/ `z` (FILLED cumulativo, consistente c/ avgPrice) + l\u00edquida; syncOrder idem. avgPrice BRUTO + net via computeNet \u2192 SEM dupla-contagem. **getFarmPosition computa cost=m\u00e9dia ponderada do avgPrice (N\u00c3O quote/qty)** \u2192 mudar qty N\u00c3O muda o cost/gatilho no-loss (a spec errou nisso); gatilho usa `LAST_ORDER.avgPrice`. `sim/feeCalc.test.js` +8 (19/19). **D\u00c9BITO (pr\u00e9-existente, flagado): commission do executionReport (`n`) \u00e9 por-fill e `orderTrade().find()` pega s\u00f3 a 1\u00aa trade \u2192 em ordem MULTI-FILL a fee \u00e9 sub-descontada no net E na qty (fail-safe; dust nas ordens de ~$25 que enchem em 1 fill). Fix = acumular commission por orderId / somar todas as trades.**\n- **#4 restart condicional + graceful** `dfee294` \u2014 `needsRestart = stepUpGuard.requiresStepUp(...)` \u2192 reinicia S\u00d3 em mudan\u00e7a de ambiente/credencial (cosm\u00e9tico n\u00e3o reinicia: `clearSettingsCache` j\u00e1 deixa fresco); graceful `req.app.get('httpServer').close()` (via `app.set` no server.js) + setTimeout+exit. QA inventariou as 20 colunas: nenhum campo boot-only fora do requiresStepUp.\n- **#5b confirm no toggle** `6cec694` \u2014 `window.confirm` no onChange do `<select useTestnet>` (espelha onGoLive); controlled-select reverte no cancel; defesa-em-profundidade UX (o #5a j\u00e1 trava server-side). Build do frontend OK.\n\n**\u00daNICO ABERTO \u2014 RBAC/escopos no JWT (#8 resto): DEFER consciente.** Avalia\u00e7\u00e3o do gate: step-up + HALT + allowlist de saque + MCP read-only j\u00e1 cobrem ~95% da superf\u00edcie; RBAC s\u00f3 agrega com M\u00daLTIPLOS operadores (hoje = 1 dono). N\u00e3o bloqueia nada. Retomar se houver operador terceiro/SLA.\n\n**D\u00e9bitos menores abertos (todos LOW, documentados):** (a) multi-fill commission sub-descontada (ver #9 acima); (b) #4 poderia devolver `{restarting}` no body p/ a UI distinguir; (c) over-restart benigno com URL vazia no save (era o comportamento antigo). **Refutados (n\u00e3o gastar tempo):** ver se\u00e7\u00e3o 4 do relat\u00f3rio (oversell, agente-flipa-ambiente, riskGuard-cego-ao-Earn).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-design-review-backlog.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:37:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Design-review backlog](tradeux-design-review-backlog.md) \u2014 status dos 9 fixes da re-revis\u00e3o 2026-06-22: #1/#3/#5a/#6/#7/#8(parcial) feitos + .env.example doc; #5a (invariante de ambiente, 7140726) j\u00e1 cobre o H1; abertos #4/#5b/#9/RBAC + pr\u00e9-reqs de re-armamento (todos LOW/AGENDAR)",
+  "new_string": "- [Design-review backlog](tradeux-design-review-backlog.md) \u2014 re-revis\u00e3o 2026-06-22 **ZERADA** (2026-06-24): #1/#3/#6/#7/#8 + #5a(invariante ambiente, 7140726) + .env.example(8b5c5d9) + A1/A2 re-arm(f21549b) + #9/H2(cf8c4a3) + #4(dfee294) + #5b(6cec694); **\u00fanico aberto = RBAC (DEFER consciente: 1 operador)**; d\u00e9bitos LOW: multi-fill commission sub-descontada"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:37:17)*
+
+
+## 🤖 Claude *(17:37:27)*
+
+Pronto — **design-review 100% zerado** (exceto RBAC, que é DEFER consciente). Memória atualizada.
+
+## ✅ "Zerar todos" — concluído
+
+| Commit | Item | Gate |
+|---|---|---|
+| `f21549b` | **A1+A2** re-arm (gate Farm×TREND_QTY + RSI 15m) | APPROVE×3 |
+| `cf8c4a3` | **#9/H2** qty líquida + bug `q`→`z` no fill handler | APPROVE×3 |
+| `dfee294` | **#4** restart condicional + graceful-shutdown | APPROVE×3 |
+| `6cec694` | **#5b** confirmação no toggle de ambiente (frontend) | APPROVE + build OK |
+
+**`vivo == master == origin == 6cec694`** · `.git` restaurado · todos com sim-tests onde aplicável (farmTriggers 16/16, feeCalc 19/19, stepUpGuard 21/21; sim-suite 12/12).
+
+## Estado ao vivo (intacto o tempo todo)
+- **HALT** `halted=false` · **equity $149,40** · **Farm Sell ativo** (id10/12/14) · **site HTTP 200** · backend+frontend rebuildados e saudáveis.
+
+## RBAC → DEFER (decisão registrada)
+Step-up + HALT + allowlist de saque + MCP read-only já cobrem ~95% da superfície. RBAC só agrega com **múltiplos operadores** (hoje = 1 dono). Não bloqueia nada — retomar se houver operador terceiro.
+
+## Débitos LOW remanescentes (documentados, não-urgentes)
+- **Multi-fill commission sub-descontada** (pré-existente): `n` do executionReport é por-fill e `orderTrade().find()` pega só a 1ª trade → fee sub-descontada no `net` E na qty em ordem multi-fill (fail-safe; dust nas ordens de ~$25 que enchem em 1 fill). Fix = acumular commission por orderId.
+- #4 poderia devolver `{restarting}` no body (UX); over-restart benigno com URL vazia.
+
+---
+
+Sessão muito longa e produtiva: **10 commits** (watchdog do agente, retenção do journal, invariante de ambiente, .env.example, A1+A2, #9, #4, #5b + os de doc) — todos gated, deployados e verificados ao vivo, com HALT/equity sempre intactos.
+
+Quer que eu **sele a sessão** (`/handoff`) pra registrar tudo no `HANDOFF.md`, ou seguimos em algo?
+
+## 👤 User *(17:38:00)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(17:38:00)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(17:38:17)*
+
+
+## 🤖 Claude *(17:38:18)*
+
+Sessão já está toda em master (trunk-based, gates = review — modelo do projeto [[tradeux-orchestration-model]]). Então o /handoff aqui é: secret-scan do range, atualizar `HANDOFF.md`, confirmar memória/push. Pre-flight + secret-scan:
+
+## 🤖 Claude *(17:38:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== status ===\"; git -c safe.directory='*' status --short 2>/dev/null | grep -v \"Permission denied\\|could not open\"\necho \"=== diff HEAD --stat (n\u00e3o-commitado) ===\"; git -c safe.directory='*' diff HEAD --stat 2>/dev/null\necho \"=== docker ps ===\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>/dev/null | awk '{print $1, $(NF-1), $NF}' | head\necho \"=== SECRET SCAN do range desta sess\u00e3o (2cd9ed9..HEAD) ===\"\ngit -c safe.directory='*' diff 2cd9ed9..HEAD \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\necho \"--- (vazio acima = LIMPO) ---\"\necho \"=== origin/master == HEAD? ===\"\ngit -c safe.directory='*' ls-remote origin refs/heads/master\ngit -c safe.directory='*' log --oneline -1",
+  "description": "Pre-flight + secret scan of session range"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> === diff HEAD --stat (não-commitado) ===
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  backups/.gitignore                                 |   4 -
+>  3 files changed, 273 insertions(+), 277 deletions(-)
+> === docker ps ===
+> NAME STATUS PORTS
+> tradeux-agent-1 4 hours
+> tradeux-backend-1 minutes 3001/tcp
+> tradeux-db-1 3306/tcp, 33060/tcp
+> tradeux-frontend-1 minutes 127.0.0.1:8090->80/tcp
+> === SECRET SCAN do range desta sessão (2cd9ed9..HEAD) ===
+> --- (vazio acima = LIMPO) ---
+> === origin/master == HEAD? ===
+> 6cec69440465103092acbcff68ea798fa34fd071	refs/heads/master
+> 6cec694 feat(ui): confirmacao no toggle de Ambiente Ativo (design-review #5b / H1)
+> ```
+
+## 🤖 Claude *(17:38:44)*
+
+
+## 🤖 Claude *(17:38:47)*
+
+Secret-scan **LIMPO** · `origin/master==HEAD==6cec694` (sincronizado) · **nenhum código a commitar** (os 10 commits já em master, trunk-based+gates = o modelo do projeto). Working tree só scratch (`backtest-results/*` regenerável; `backups/.gitignore` é falso-positivo de permissão lido como ubuntu — **não tocar**). 
+
+PHASE 2 = N/A. Vou atualizar o `HANDOFF.md`. Lendo o header pra editar:
+
+## 🤖 Claude *(17:38:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '1,6p' /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Read HANDOFF.md header"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # TradeUX — HANDOFF (single source of truth)
+> 
+> > ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> > Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> > Updated: **2026-06-22** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`)** · **Canary FARM-ONLY** (vendas no-loss id10/12/14 — **AGORA FUNCIONAM**; compras off) · **SESSÃO 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** → `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE→LEVEL-trigger = 1ª saída no-loss do Farm a EXECUTAR no mainnet)** → **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA→0, equity **$149,39**) · ⚠️ **runtime não-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25→50` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` · proteções: cap diário −5%, teto **$50/ordem**, Farm $25/símbolo, riskGuard, pânico, painel de grupos · Meta: **realista ≈ flat com ~$149** · Vivo==master==origin==**`2cd9ed9`** (design-review 2026-06-22 100% FECHADO; ver SEAL 2026-06-23 no rodapé)
+> ```
+
+## 🤖 Claude *(17:39:16)*
+
+
+## 🤖 Claude *(17:39:17)*
+
+Secret-scan limpo, push sincronizado. Vou atualizar o header (data + commit) e anexar o **SEAL 2026-06-24** no rodapé (via gcrux pra preservar ownership):
+
+## 🤖 Claude *(17:39:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/handoff_update.py",
+  "content": "# -*- coding: utf-8 -*-\nimport io\np = \"/home/gcrux-tradeux/HANDOFF.md\"\ns = io.open(p, encoding=\"utf-8\").read()\n\n# (1) header: data + commit vivo\ns = s.replace(\"> Updated: **2026-06-22** \u00b7\", \"> Updated: **2026-06-24** \u00b7\", 1)\ns = s.replace(\n    \"Vivo==master==origin==**`2cd9ed9`** (design-review 2026-06-22 100% FECHADO; ver SEAL 2026-06-23 no rodap\u00e9)\",\n    \"Vivo==master==origin==**`6cec694`** (re-revis\u00e3o de design 2026-06-22 **100% ZERADA** \u2014 s\u00f3 RBAC=DEFER; agente caiu por toggle ZDR do OpenRouter e VOLTOU; ver SEAL 2026-06-24 no rodap\u00e9)\",\n    1)\n\nseal = u\"\"\"\n\n### \ud83e\udd1d SEAL \u2014 2026-06-24 (RE-REVIS\u00c3O DE DESIGN 2026-06-22 **ZERADA** + incidente do agente + reten\u00e7\u00e3o do journal \u2014 10 commits, todos gate QA+TL(+cr\u00edtico), deployados+verificados ao vivo, push direto-a-master)\n\n**`Vivo==master==origin==6cec694`.** \ud83d\udd34 LIVE (`halted=false`) o tempo todo \u00b7 Canary FARM-ONLY \u00b7 **equity $149,40 intacta** \u00b7 Farm Sell (id10/12/14) ATIVO e intocado \u00b7 site HTTP 200. Secret-scan do range `2cd9ed9..6cec694` LIMPO. Trunk-based direto-a-master (gates QA+TL+cr\u00edtico = a revis\u00e3o; ver [[tradeux-orchestration-model]]).\n\n**(1) INCIDENTE \u2014 agente LLM caiu ~24h (silencioso) e VOLTOU.** Desde `2026-06-23T02:44Z` todo ciclo dava `OpenRouter 404 \"No endpoints available matching your guardrail restrictions and data policy\"`. **Causa-raiz (setting da conta OpenRouter, N\u00c3O o repo):** toggle **Zero Data Retention \u2192 \"Non-frontier\" = ON** for\u00e7a ZDR em modelo non-frontier; o modelo `OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free` (`:free`) n\u00e3o tem endpoint ZDR \u2192 404. **Fix: o DONO DESLIGOU o toggle (~03:08) \u2192 0\u00d7404 desde 03:10, agente voltou** (modelo `:free` \u00e9 LENTO ~12 min/ciclo, mas conclui). \u26a0\ufe0f **Se o agente 404ar de novo: checar esse toggle.** Caminho B (modelo pago c/ ZDR) em espera (dono: \"sem lucro, n\u00e3o compensa\"). Ver [[tradeux-agent-heartbeat-watchdog]].\n\n**(2) Watchdog da outage silenciosa** `e7afb72` \u2014 `backend/src/agentHeartbeatJob.js`: alerta Telegram 1\u00d7 quando o agente PARA de concluir ciclos e 1\u00d7 quando volta. Batimento = \u00faltimo record **`cycle_end`** (N\u00c3O \"qualquer ts\" \u2014 `tool_call`/`cycle_aborted` carregam ts fresco \u2192 BLOCKER do gate); tail-scan (~1MB) p/ n\u00e3o bloquear o event loop; STALE default 30min. **(3) Reten\u00e7\u00e3o do journal** `00b560e` \u2014 `tradeux-agent/src/journal.js` apara at\u00f4mico (temp+rename) p/ \u00faltimos ~12MB (cap por BYTES = sem re-trim-loop). Deploy fez 38,5MB\u219212,6MB; hist\u00f3rico arquivado 1\u00d7 em gzip (`tradeux-agent/journal-archive/`, gitignored).\n\n**(4) DESIGN-REVIEW (re-revis\u00e3o 2026-06-22) \u2014 TODOS os 9 fixes fechados (exceto RBAC=DEFER):** `#5a` invariante de ambiente no boot `7140726` (HALT `env-mismatch` se `isTestnetApiUrl(apiUrl/streamUrl)\u2260useTestnet`; cobre o H1); `.env.example` params de risco `8b5c5d9`; **A1+A2 re-arm** `f21549b` (gate Farm Buy\u00d7`TREND_QTY<=0` + `loadTrendPosition` publica 0-no-flat + RSI 1m\u219215m; Farm Buy segue INATIVO, s\u00f3 fica CORRETO p/ re-arm); `#9/H2` `cf8c4a3` (qty FILLED `q`\u2192`z` + l\u00edquida de fee-em-base via `feeCalc.netFilledQty`); `#4` `dfee294` (restart CONDICIONAL via `requiresStepUp` + graceful-shutdown); `#5b` `6cec694` (confirm no toggle de ambiente, frontend). **RBAC = DEFER consciente** (1 operador; step-up+HALT+allowlist+MCP-read-only j\u00e1 cobrem ~95%). Ver [[tradeux-design-review-backlog]].\n\n**\u26a0\ufe0f RUNTIME n\u00e3o-git (reaplicar/saber p\u00f3s-reset, AL\u00c9M do que j\u00e1 estava no header):**\n- **OpenRouter \"Non-frontier\" ZDR = OFF** (conta, fora do reset-db). Se o agente voltar a dar 404 data-policy, religar = desligar esse toggle (ou trocar o modelo).\n- As 3 Farm Buy (id9/11/13, INATIVAS) foram **PATCHadas ao vivo** p/ `RSI_14_15m + TREND_QTY<=0` (`ensureAutomation` \u00e9 idempotente-por-NOME, n\u00e3o atualiza linha existente). **P\u00f3s reset-db N\u00c3O precisa reaplicar** \u2014 o `setup-farm.js` corrigido cria as automa\u00e7\u00f5es j\u00e1 certas (15m+gate). Monitores 15m de LTC/BNB/ADA j\u00e1 existem.\n\n**Gotchas DUR\u00c1VEIS desta sess\u00e3o:** (1) `logger('cat',\u2026)` grava em ARQUIVO `logs/<cat>.log`, **N\u00c3O no stdout** \u2014 boot/jobs do backend s\u00f3 aparecem em `docker exec \u2026 cat /app/logs/system.log`, n\u00e3o em `docker logs`. (2) `ensureAutomation`/`ensureMonitor` s\u00e3o idempotentes POR EXIST\u00caNCIA (n\u00e3o atualizam) \u2192 retrofit de linha viva \u00e9 via **PATCH /automations/:id** (passa pelo `validateConditions`), nunca SQL cru. (3) `getFarmPosition` computa `cost = m\u00e9dia ponderada do avgPrice` (N\u00c3O quote/qty) \u2192 gravar qty l\u00edquida N\u00c3O muda o gatilho no-loss (que usa `LAST_ORDER.avgPrice`). (4) heredoc dentro de `sudo bash -lc '\u2026'` quebra com `<sym>`/ap\u00f3strofo \u2192 usar Write+arquivo ou `python3 - <<PY`. (5) `git` como ubuntu envenena o owner do `.git` \u2192 `sudo chown -R gcrux-tradeux:gcrux-tradeux .git` ap\u00f3s push.\n\n**\u26a1 NEXT:** (1) **observar o paper** (`GET /analysis/paper` + paperReviewJob) \u2014 veredito de edge das trilhas. (2) **decis\u00e3o macro do dono** (recuperar USDT vs empilhar BTC). (3) d\u00e9bitos LOW abertos: **multi-fill commission sub-descontada** (pr\u00e9-existente: `n` do executionReport \u00e9 por-fill + `orderTrade().find()` pega s\u00f3 a 1\u00aa trade \u2192 fee sub-descontada no net E na qty; fail-safe/dust nas ordens de $25 que enchem em 1 fill; fix = acumular commission por orderId); `#4` devolver `{restarting}` no body (UX); RBAC se houver operador terceiro. (4) Caminho B (modelo pago ZDR) s\u00f3 quando houver lucro. **Claude N\u00c3O vira o HALT nem clica LIGAR sozinho.** Working tree: s\u00f3 `backtest-results/*` (scratch regener\u00e1vel) + `backups/.gitignore` (falso-positivo de permiss\u00e3o lido como ubuntu \u2014 N\u00c3O commitar). **Mem\u00f3rias atualizadas:** `tradeux-agent-heartbeat-watchdog` (incidente+watchdog+reten\u00e7\u00e3o), `tradeux-design-review-backlog` (9 fixes zerados), `tradeux-mainnet-go-live` (j\u00e1 existia).\n\"\"\"\n\ns = s.rstrip() + \"\\n\" + seal\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"HANDOFF.md atualizado; novo tamanho:\", len(s), \"bytes\")\nprint(\"commit no header:\", \"6cec694\" in s.split(\"SEAL \u2014 2026-06-24\")[0][-1500:])\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/handoff_update.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:40:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux\necho \"=== owner do HANDOFF.md ===\"; stat -c \"%U:%G\" HANDOFF.md\nsudo -u gcrux-tradeux python3 /tmp/handoff_update.py 2>&1 || python3 /tmp/handoff_update.py\necho \"=== header atualizado ===\"; sed -n '5p' HANDOFF.md | cut -c1-90\necho \"=== rodap\u00e9 (SEAL) ===\"; grep -c \"SEAL \u2014 2026-06-24\" HANDOFF.md",
+  "description": "Apply HANDOFF.md update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === owner do HANDOFF.md ===
+> ubuntu:ubuntu
+> Traceback (most recent call last):
+>   File "/tmp/handoff_update.py", line 35, in <module>
+>     io.open(p, "w", encoding="utf-8").write(s)
+>     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> PermissionError: [Errno 13] Permission denied: '/home/gcrux-tradeux/HANDOFF.md'
+> HANDOFF.md atualizado; novo tamanho: 168858 bytes
+> commit no header: False
+> === header atualizado ===
+> > Updated: **2026-06-24** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`)** · 
+> === rodapé (SEAL) ===
+> 1
+> ```
+
+## 🤖 Claude *(17:40:13)*
+
+
+## 🤖 Claude *(17:40:14)*
+
+HANDOFF.md é owned por ubuntu (escreveu via fallback). Verificando header (commit) + SEAL completo:
+
+## 🤖 Claude *(17:40:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux\necho \"=== Vivo== no header ===\"; sed -n '5p' HANDOFF.md | grep -oE \"Vivo==master==origin==\\*\\*\\`[a-z0-9]+\\`\\*\\* \\([^)]*ZERADA[^)]*\\)\" | head -c 160\necho; echo \"=== SEAL 2026-06-24 \u2014 primeiras linhas ===\"; grep -A2 \"SEAL \u2014 2026-06-24\" HANDOFF.md | head -3 | cut -c1-110\necho \"=== \u00e2ncoras-chave presentes no SEAL? ===\"\nfor k in \"6cec694\" \"Non-frontier\" \"agentHeartbeatJob\" \"RBAC = DEFER\" \"multi-fill commission\" \"logger.*ARQUIVO\"; do\n  grep -qE \"$k\" HANDOFF.md && echo \"  ok: $k\" || echo \"  FALTA: $k\"\ndone",
+  "description": "Verify HANDOFF.md header + SEAL content"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Vivo== no header ===
+> Vivo==master==origin==**`6cec694`** (re-revisão de design 2026-06-22 **100% ZERADA** — só RBAC=DEFER; agente caiu por toggle ZDR do OpenRouter e VOLTOU; ver
+> === SEAL 2026-06-24 — primeiras linhas ===
+> ### 🤝 SEAL — 2026-06-24 (RE-REVISÃO DE DESIGN 2026-06-22 **ZERADA** + incidente do agente + retenção d
+> 
+> **`Vivo==master==origin==6cec694`.** 🔴 LIVE (`halted=false`) o tempo todo · Canary FARM-ONLY · **equity $
+> === âncoras-chave presentes no SEAL? ===
+>   ok: 6cec694
+>   ok: Non-frontier
+>   ok: agentHeartbeatJob
+>   ok: RBAC = DEFER
+>   ok: multi-fill commission
+>   ok: logger.*ARQUIVO
+> ```
+
+## 🤖 Claude *(17:40:27)*
+
+
+## 🤖 Claude *(17:40:28)*
+
+HANDOFF.md ✅ (header `6cec694` + SEAL completo). Verificação final da memória + estado:
+
+## 🤖 Claude *(17:40:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory\necho \"=== mem\u00f3rias desta sess\u00e3o ===\"\nls -la tradeux-agent-heartbeat-watchdog.md tradeux-design-review-backlog.md 2>&1 | awk '{print $5, $NF}'\necho \"=== linhas no \u00edndice MEMORY.md ===\"\ngrep -E \"heartbeat watchdog|Design-review backlog\" MEMORY.md | cut -c1-120\necho\necho \"=== confirma\u00e7\u00e3o final: origin == HEAD ===\"\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' ls-remote origin refs/heads/master | cut -c1-12\ngit -c safe.directory='*' rev-parse HEAD | cut -c1-12\necho \"=== HALT vivo (fecho a sess\u00e3o com o estado de seguran\u00e7a) ===\"\nset -a; source <(sudo -n -u gcrux-tradeux cat .env 2>/dev/null | grep -E \"DEFAULT_SETTINGS_(EMAIL|PWD)\") 2>/dev/null; set +a\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux; set -a; source .env; set +a; T=$(curl -s -m5 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\"); curl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $T\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\"halted=\\\",d[\\\"halted\\\"],\\\"sources=\\\",d.get(\\\"sources\\\"))\"'",
+  "description": "Verify memory index + push sync + live HALT"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === memórias desta sessão ===
+> 4396 tradeux-agent-heartbeat-watchdog.md
+> 4664 tradeux-design-review-backlog.md
+> === linhas no índice MEMORY.md ===
+> - [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) — incidente OpenRouter ZDR "Non-frontier" ON × mode
+> - [Design-review backlog](tradeux-design-review-backlog.md) — re-revisão 2026-06-22 **ZERADA** (2026-06-24): #1/#3/#6
+> 
+> === confirmação final: origin == HEAD ===
+> 6cec69440465
+> 6cec69440465
+> === HALT vivo (fecho a sessão com o estado de segurança) ===
+> halted= False sources= []
+> ```
+
+## 🤖 Claude *(17:40:51)*
+
+
+## 🤖 Claude *(17:41:03)*
+
+Tudo selado e verificado. Memória ✅, `origin==HEAD==6cec694`, **HALT vivo confirmado `halted=false`** (estado seguro).
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-24
+───────────────────────────────────────────────────
+Commits     : 8 (feat(ops/agent/safety/rearm/settings/ui), fix(orders), docs(env))
+              Branch: master (trunk-based direto-a-master; gates QA+TL+crítico = a revisão)
+Secret-scan : ✅ LIMPO (range 2cd9ed9..6cec694)
+HANDOFF.md  : ✅ atualizado (header → 6cec694 + SEAL 2026-06-24)
+Memory      : 2 arquivos (agent-heartbeat-watchdog, design-review-backlog) + índice
+PRs abertos : N/A (sem fluxo de PR neste projeto — cada commit já em origin)
+Push        : ✅ origin sincronizado (6cec694)
+Stack       : db/backend/frontend/agent up · site HTTP 200 · halted=false · equity $149,40
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Resumo do que esta sessão deixou pronto:**
+- 🔴 **Incidente do agente resolvido**: caiu ~24h por toggle ZDR "Non-frontier" do OpenRouter × modelo `:free`; você desligou o toggle → voltou. **Watchdog** (`e7afb72`) garante que uma próxima outage silenciosa avise no Telegram.
+- 🧹 **Retenção do journal** (`00b560e`) — fim do crescimento ilimitado (38,5→12,6 MB, histórico arquivado).
+- 🛡️ **Design-review 2026-06-22 100% ZERADO**: invariante de ambiente (`7140726`), `.env.example` (`8b5c5d9`), re-arm prereqs A1+A2 (`f21549b`), qty líquida/H2 (`cf8c4a3`), restart condicional/#4 (`dfee294`), confirm no toggle/#5b (`6cec694`). **Único aberto: RBAC = DEFER** (1 operador).
+
+**Próxima sessão (`/handson`):** observar o paper, decisão macro do dono (USDT vs BTC), e o débito LOW da commission multi-fill. **Re-arm está pronto** — quando ligar Trend+Farm nas alts, o gate de colisão e o RSI 15m já estão corretos. Se o agente voltar a dar 404: checar o toggle "Non-frontier" do OpenRouter.
+
+Sessão selada. 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%

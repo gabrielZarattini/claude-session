@@ -72,3 +72,10 @@ hosts MCP de terceiros (Claude Desktop/Code, VS Code), fechando a metade "regist
 O MCP Registry está em **preview**; o formato/fluxo pode mudar. A sintaxe exata do `mcp-publisher` deve ser
 reconferida contra a doc oficial (`github.com/modelcontextprotocol/registry`) no momento do publish. Este
 runbook reflete o fluxo documentado em 2026-06 (schema `2025-12-11`).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

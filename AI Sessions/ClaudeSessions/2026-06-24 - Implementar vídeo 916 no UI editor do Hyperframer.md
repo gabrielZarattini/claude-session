@@ -9156,16 +9156,3 @@ Both commits pushed (`1f770e4..8e0084b`). **The billing-accuracy gap is closed, 
 - tsc 0 · gitleaks limpo · backward-compat (ciclos sem vídeo nunca alcançam o path — `videoEnabled && cycleId`).
 
 Documentado: OTD-VA-010 (nota de fechamento), SOP `autopilot-video-9x16.md` (recovery path corrigido — antes dizia erroneamente "vira refund no finalize"), CLAUDE.md Key Files. Saldo do User 0 intacto (5076), zero linhas órfãs.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
-
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-24 - Analisar mudanças recentes e contato]]
-> * **Próxima Sessão**: [[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]
-%% --- TIMELINE END --- %%
