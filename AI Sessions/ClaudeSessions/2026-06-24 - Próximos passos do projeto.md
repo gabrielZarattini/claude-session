@@ -8354,5 +8354,5 @@ Sprint selado (`f6c8914`). Confirmando que o remoto está em dia:
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]
-> * **Próxima Sessão**: [[2026-06-24 - agent-a14b361a0fc014c35]]
+> * **Próxima Sessão**: [[2026-06-24 - ada015e6-a810-46e1-9d5e-d09047bb5fad]]
 %% --- TIMELINE END --- %%

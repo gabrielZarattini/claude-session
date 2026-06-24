@@ -84,3 +84,10 @@ Step 3 é o que alimenta os endpoints `doctor.memory.dreamDiary`, `wiki.importIn
 ## Risco adjacente conhecido (registrar OTD se materializar)
 
 `crontab -l` atual também tem `0 6 * * * node scripts/ingest-codebase.ts --quiet >> /tmp/mcorch-ingest.log 2>&1` — mesmo padrão de `node` sem path absoluto. Se Sovereign confirmar que ingest-codebase também está silenciosamente falhando há ≥ 3 dias (via tail `/tmp/mcorch-ingest.log`), aplicar mesmo fix neste cron (pin via `/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node`). NÃO incluso neste SOP — escopo aqui é apenas bridge recovery.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

@@ -9157,6 +9157,1273 @@ Both commits pushed (`1f770e4..8e0084b`). **The billing-accuracy gap is closed, 
 
 Documentado: OTD-VA-010 (nota de fechamento), SOP `autopilot-video-9x16.md` (recovery path corrigido — antes dizia erroneamente "vira refund no finalize"), CLAUDE.md Key Files. Saldo do User 0 intacto (5076), zero linhas órfãs.
 
+## 👤 User *(22:11:07)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(22:11:07)*
+
+No response requested.
+
+## 👤 User *(22:14:07)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(22:14:07)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(22:14:14)*
+
+I'll execute the ShakeHands /handoff seal protocol. Starting with pre-flight checks in parallel.
+
+## 🤖 Claude *(22:14:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short; echo \"---diff-stat---\"; git diff HEAD --stat; echo \"---log---\"; git log --oneline -8",
+  "description": "Git inventory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---diff-stat---
+> ---log---
+> 8e0084b docs(bok): crédito compensatório de enqueue-fail de vídeo (OTD-VA-010 gap fechado)
+> 9773f92 fix(viral-autopilot): crédito compensatório de enqueue-fail de vídeo (fecha gap OTD-VA-010)
+> 1f770e4 docs(video-studio): blueprint de integração do HyperFrames Studio (funda Fatia VS-UI)
+> c65b78a docs(handoff): seal vídeo 9:16 autônomo + motor HyperFrames determinístico vivo
+> d63e451 docs(readme): v6.49.0 — vídeo 9:16 autônomo + motor HyperFrames determinístico vivo
+> b31c84b docs(bok): emenda vídeo 9:16 — viral-autopilot v0.2 + SOP + flip editor video-studio v0.3
+> 28bc4f4 feat(viral-autopilot): vídeo 9:16 autônomo no pipeline (Fatia VA-V1)
+> 39f8001 feat(video-studio): motor HyperFrames determinístico 9:16 vivo (Fatia VS-2)
+> ```
+
+## 🤖 Claude *(22:14:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -12 && echo \"TSC_DONE\"",
+  "description": "TypeScript strict check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_DONE
+> ```
+
+## 🤖 Claude *(22:14:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; echo \"---\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; echo \"---chroma---\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat; echo \"---video-bridge---\"; XDG_RUNTIME_DIR=/run/user/1001 systemctl --user is-active video-bridge.service 2>/dev/null",
+  "description": "Infra health + video-bridge service"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 7 days (healthy)
+> mcorch_claude_mem: Up 9 days (healthy)
+> mcorch_chroma: Up 9 days (healthy)
+> ---
+> mega-brain-dashboard: Up 9 days
+> mega-brain-webhook: Up 9 days (healthy)
+> mega-brain-daemon: Up 9 days (healthy)
+> ---chroma---
+> {"nanosecond heartbeat":1782339259083943928}---video-bridge---
+> active
+> ```
+
+## 🤖 Claude *(22:14:32)*
+
+
+## 🤖 Claude *(22:14:33)*
+
+Working tree is **clean** — all session work was committed + pushed incrementally. tsc clean, infra healthy, `video-bridge.service` active. This seal records the incremental work since the prior seal (`c65b78a`): the Studio blueprint + the OTD-VA-010 billing fix. Running Phase 1 security audit on the recent changes.
+
+## 🤖 Claude *(22:14:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (commits since last seal c65b78a) ===\"\ngit diff c65b78a..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|SB_SECRET_KEY\\|SUPABASE_SERVICE_ROLE\\|WP_PUBLISH_SECRET\\|process.env\\|Deno.env\" | head -10 || echo \"NO HARDCODED SECRETS \u2705\"\necho \"=== 1b. edge fn JWT enforcement (new/changed fns) ===\"\nfor f in supabase/functions/video-render supabase/functions/orchestrate-step; do\n  grep -lq \"Authorization\\|jwt\\|JWT\\|service_role\\|SB_SECRET_KEY\" $f/index.ts && echo \"\u2705 $f: auth present\" || echo \"\u26a0\ufe0f $f: NO auth\"\ndone\necho \"=== 1c. client-side coin deduction guard ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5 || echo \"NO CLIENT DEDUCTION \u2705\"\necho \"=== 1d. service_role in client src/ ===\"\ngrep -rn \"service_role\\|SB_SECRET_KEY\\|SUPABASE_SERVICE_ROLE\" src/ | head -5 || echo \"NO SERVICE-ROLE IN CLIENT \u2705\"\necho \"=== 1e. sensitive console.log in new scripts ===\"\ngrep -rnE \"console\\.(log|warn).*(token|secret|password|api_key)\" scripts/hyperframes/ scripts/video-bridge.ts scripts/qa/smoke-autopilot-video-refund.ts | head -5 || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (commits since last seal c65b78a) ===
+> === 1b. edge fn JWT enforcement (new/changed fns) ===
+> ✅ supabase/functions/video-render: auth present
+> ✅ supabase/functions/orchestrate-step: auth present
+> === 1c. client-side coin deduction guard ===
+> === 1d. service_role in client src/ ===
+> src/test/aios-sql-bridge-smoke.test.ts:22:// SB_SECRET_KEY is canonical (legacy SUPABASE_SERVICE_ROLE_KEY was REVOKED 2026-06-01).
+> src/test/aios-sql-bridge-smoke.test.ts:23:const serviceRoleKey = process.env.SB_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+> src/test/canvas-video-async-smoke.test.ts:22:// SB_SECRET_KEY is canonical (legacy SUPABASE_SERVICE_ROLE_KEY was REVOKED 2026-06-01).
+> src/test/canvas-video-async-smoke.test.ts:23:const serviceRoleKey = process.env.SB_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> === 1e. sensitive console.log in new scripts ===
+> ```
+
+## 🤖 Claude *(22:15:04)*
+
+
+## 🤖 Claude *(22:15:06)*
+
+**Phase 1 verdict — all ✅ PASS:**
+- 1a NO hardcoded secrets ✅
+- 1b both edge fns auth-enforced ✅
+- 1c NO client coin deduction ✅
+- 1d matches are benign (test files reading `process.env` + a doc comment — pre-existing, not this session) ✅
+- 1e NO sensitive logs ✅
+
+No 🔴. **Phase 2:** working tree clean — all session work already committed granularly (`1f770e4`/`9773f92`/`8e0084b`). Proceeding to **Phase 3 — Knowledge Mesh milestone**:
+
+## 🤖 Claude *(22:15:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-hyperframes-studio-blueprint-and-video-billing-fix\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] HyperFrames Studio integration blueprint (deepsearch material-citado @ ae8b94c5 \u2014 StudioApp zero-props server-backed, seam StudioApiAdapter, montar studio unmodified + McorchAdapter.startRender\u2192video-render; funda Fatia VS-UI m\u00f3dulo-container React 19; Apache-2.0) + OTD-VA-010 billing-accuracy fix: cr\u00e9dito compensat\u00f3rio idempotente refund_autopilot_video_enqueue (migration 20260624140000, anchor run_id PK, anti-mint \u2264100, service-role-only) chamado no fail-open do orchestrate-step quando !enqueued \u2014 fecha cobran\u00e7a-sem-valor (actual otimista contou 12 mas enqueue falho sem linha \u2192 finalize_video_render nunca refundaria). Smoke 8/8 net-debit=ORCH_COST (12 exclu\u00eddo), /security-review SAFE.\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null,\n    \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"hyperframes-studio-blueprint-and-video-billing-fix\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -3 | tr '\\n' '|')\\\"\n    }\n  }\")\necho \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))\"\necho \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else '')\" > /tmp/handoff_node_id.txt\necho \"saved: $(cat /tmp/handoff_node_id.txt)\"",
+  "description": "Insert handoff milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: b42e89f9-3636-4ff0-a86e-674ed479d3c5
+> saved: b42e89f9-3636-4ff0-a86e-674ed479d3c5
+> ```
+
+## 🤖 Claude *(22:15:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=$(cat /tmp/handoff_node_id.txt)\necho \"=== trigger embedding ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d.get('success', d))\" 2>/dev/null || echo \"\u26a0\ufe0f embedding deferred to autotrigger\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"proof-manifest.json written\"\necho \"=== live node count (incl this handoff node) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Embed node + proof manifest + live count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === trigger embedding ===
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> proof-manifest.json written
+> === live node count (incl this handoff node) ===
+> 8959
+> ```
+
+## 🤖 Claude *(22:15:35)*
+
+
+## 🤖 Claude *(22:15:36)*
+
+The embed fn wants `{node_id}` not `{record}`. Re-triggering (the INSERT trigger also auto-embeds, but confirming explicitly):
+
+## 🤖 Claude *(22:15:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nNODE_ID=$(cat /tmp/handoff_node_id.txt)\ncurl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d)\" 2>/dev/null\necho \"=== verify embedding present (dims) ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id,embedding&id=eq.${NODE_ID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); e=d[0].get('embedding'); print('embedding:', 'present \u2705' if e else 'NULL (autotrigger pending)')\"",
+  "description": "Re-trigger embedding with correct param"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Embedded: {'node_id': 'b42e89f9-3636-4ff0-a86e-674ed479d3c5', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small', 'provider': 'openrouter', 'stitched': 0}
+> === verify embedding present (dims) ===
+> embedding: present ✅
+> ```
+
+## 🤖 Claude *(22:15:44)*
+
+
+## 🤖 Claude *(22:15:45)*
+
+Embedded ✅ (768 dims). **Phase 4 — README.md.** Reading the badges + What's New to patch-bump (prior seal was v6.49.0; this increment → v6.49.1):
+
+## 🤖 Claude *(22:15:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"version-|neural_mesh-|What's New|v6.49|v6.48\" README.md | head -16",
+  "description": "Locate README badges + What's New"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.49.0--video--9%3A16--aut%C3%B4nomo--%2B--motor--HyperFrames-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8958_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 527:### [v6.49.0] — Vídeo viral 9:16 autônomo + motor HyperFrames determinístico vivo (2026-06-24)
+> 533:### [v6.48.0] — Viral Autopilot ATIVADO (1º ciclo pago + pg_cron) + FR-VA-018 + segurança social-auth + paridade sentinel pt-BR (2026-06-23)
+> ```
+
+## 🤖 Claude *(22:15:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 527,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 527	### [v6.49.0] — Vídeo viral 9:16 autônomo + motor HyperFrames determinístico vivo (2026-06-24)
+> 528	- **Motor HyperFrames (Fatia VS-2) VIVO:** o render determinístico que faltava da Fatia 2 do `video-studio` está de pé — single-tenant Usuário Zero (hardening multi-tenant FMEA-VS-001 diferido). `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg) transforma uma composição HTML em **MP4 9:16 1080×1920**, no molde do `design-bridge`: worker host (`scripts/video-bridge.ts`, systemd `video-bridge.service` `active`) faz claim atômico de `video_renders` (engine=`hyperframes`, queued) → renderiza → sobe no bucket privado `video-studio-assets` → fecha via `finalize_video_render`. **Provado material:** `ffprobe` 1080×1920, **sha256 byte-idêntico** entre 2 renders (NFR-VS-016), asset ≥100KB, E2E via service. Edge `video-render` ganhou transporte `poll://` (Edge não alcança daemon do host) + transporte da composição. `/security-review` SAFE.
+> 529	- **Vídeo 9:16 autônomo no Viral Autopilot (Fatia VA-V1):** cada sub-run product-aware gera um vídeo vertical 9:16 quando o plano opta (`autopilot_plans.video_enabled`). Custo (12 mco) entra no **pré-débito do ciclo** (projected/actual += N×VIDEO_COST — OTD-VA-010, cobrança única, cap-aware); `orchestrate-step` monta a composição do **ângulo viral REAL** (título gerado + foto ML do produto + CTA, sanitizado) e enfileira no motor provado; render falho refunda via `finalize_video_render`; o worker anexa o asset (`content_library` type=video + `creative_metrics`) no `done` (FR-VA-025, event-driven OTD-VA-014). **Provado E2E real**: artigo "Roborock S8 Pro Ultra…" gerado → render 9:16 → biblioteca, **saldo intacto** (prepaid). `/security-review` SAFE.
+> 530	- **BoK selada ANTES do código (Lei 2):** Amendment v0.2 do `viral-autopilot` (PR-VA-020→FR-VA-022..026 + OTD-VA-009..014 + SOP `autopilot-video-9x16.md`) + flip Amendment v0.3 da OTD-VS-005/FR-VS-021 do `video-studio` (editor HyperFrames vira **módulo-container** no padrão open-design — embed in-SPA inviável por React 19 vs nosso React 18, prova `npm view`) + reconciliação do drift §2.3.
+> 531	- **Próximo:** editor HyperFrames Studio como módulo-container (deepsearch da API → app React 19 → bridge → módulo frontend → vhost `studio.mcorch.com` [DNS Sovereign]) + 1º ciclo pago de vídeo witnessed.
+> 532	
+> ```
+
+## 🤖 Claude *(22:15:52)*
+
+Now updating the README — version badge → v6.49.1, mesh badge → 8959, and prepending the new entry:
+
+## 🤖 Claude *(22:15:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.49.0--video--9%3A16--aut%C3%B4nomo--%2B--motor--HyperFrames-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.49.1--Studio--blueprint--%2B--billing--gap--fechado-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:15:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8958_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8959_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:16:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.49.0] \u2014 V\u00eddeo viral 9:16 aut\u00f4nomo + motor HyperFrames determin\u00edstico vivo (2026-06-24)",
+  "new_string": "### [v6.49.1] \u2014 Blueprint do HyperFrames Studio (funda VS-UI) + gap de billing do v\u00eddeo fechado (2026-06-24)\n- **Blueprint de integra\u00e7\u00e3o do HyperFrames Studio (deepsearch, funda Fatia VS-UI):** material-citado no repo HeyGen `@ ae8b94c5` (Apache-2.0). Achado decisivo \u2014 `StudioApp` \u00e9 **zero-props**, server-backed por um `/api` REST+SSE na mesma origem; a HeyGen exp\u00f4s um seam de inje\u00e7\u00e3o limpo (`StudioApiAdapter` de `@hyperframes/core/studio-api`). Logo **N\u00c3O forkamos a UI**: montamos o `StudioApp` unmodified + implementamos nosso `McorchAdapter` cujo `startRender()` faz bridge pro nosso `video-render` j\u00e1 provado. Composi\u00e7\u00e3o = HTML+CSS+GSAP \u2192 `bundleToSingleHtml` (o que o motor j\u00e1 come). React 19 \u2192 container+iframe `studio.mcorch.com`. `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` (6 gates emp\u00edricos, render-parity `frame=floor(time*fps)` = maior risco).\n- **Gap de billing-accuracy do v\u00eddeo fechado (OTD-VA-010):** o `actual` do ciclo \u00e9 **otimista** (`succeeded \u00d7 (ORCH+VIDEO)`, calculado pelo `autopilot-run` ANTES do enqueue async). Se o INSERT de `video_renders` falha (fail-open `skipped`), n\u00e3o h\u00e1 linha \u2192 o `finalize_video_render` nunca refunda \u2192 o tenant pagava 12 por um render nunca enfileirado. **Fix:** cr\u00e9dito compensat\u00f3rio idempotente `refund_autopilot_video_enqueue` (migration `20260624140000`, anchor `run_id` PK, anti-mint \u2264100, service-role-only, cr\u00e9dito positivo) chamado no fail-open do `orchestrate-step` quando `!enqueued`. Completa o modelo de refund de 3 caminhos (ciclo / render-fail / enqueue-fail; exatamente um de render/enqueue por sub-run \u2014 sem dupla-credito). **Provado:** smoke `smoke-autopilot-video-refund.ts` **8/8 zero-net-cost** \u2014 net debit = ORCH_COST (12 exclu\u00eddo; sem fix seria 22) + idempot\u00eancia + anti-mint + saldo restaurado. `/security-review` SAFE (mint travado em service-role, cross-tenant imposs\u00edvel, idempot\u00eancia via PK).\n\n### [v6.49.0] \u2014 V\u00eddeo viral 9:16 aut\u00f4nomo + motor HyperFrames determin\u00edstico vivo (2026-06-24)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:16:15)*
+
+
+## 🤖 Claude *(22:16:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.49.1 \u2014 blueprint HyperFrames Studio (funda VS-UI) + gap de billing do v\u00eddeo fechado\" 2>&1 | grep -vE \"lefthook|gitleaks|INF|summary|\u2714|\u25cb|\u2502|\u2591|\u256d|\u2570|\u2500|\u276f|^$\" | head -3\necho \"committed\"; git log --oneline -1",
+  "description": "Commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> committed
+> 2d349dc docs(readme): v6.49.1 — blueprint HyperFrames Studio (funda VS-UI) + gap de billing do vídeo fechado
+> ```
+
+## 🤖 Claude *(22:16:21)*
+
+Now **Phase 5 — HANDOFF.md.** Reading the head to append the new Record block:
+
+## 🤖 Claude *(22:16:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 10,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Session Seal — Vídeo viral 9:16 AUTÔNOMO + motor HyperFrames determinístico VIVO (2026-06-24)
+> 15	
+> 16	`/handson` → "fichar o vídeo 9:16 com a UI editor do hyperframer assim como o open design" → sob **ultracode**. Diretiva Sovereign decompôs em 2 escolhas via AskUserQuestion: motor = **HyperFrames editor + worker (Usuário Zero single-tenant)**, alvo = **Integração Autopilot primeiro**. Workflow de mapeamento (6 leitores + síntese) fundou o terreno ANTES de codar. **3 de 4 fatias entregues e provadas E2E; editor decidido como módulo-container (deepsearch é o próximo passo).** Surpresa material decisiva: o embed in-SPA do `@hyperframes/studio` (que a BoK assumia) é **inviável** — exige React 19 e o SPA é React 18; a linha React-18 (0.5.x) ships source não-buildado (pego por `npm view` ANTES de instalar/quebrar o build).
+> 17	
+> 18	**O que foi entregue (4 commits granulares + handoff):**
+> 19	1. **Fatia VA-V0 — BoK gate (Lei 2, `b31c84b`).** Decompôs PR-VA-020 (vídeo 9:16, antes "Fase 2 não-decomposto") em **FR-VA-022..026** (FRD Amendment v0.2) + **OTD-VA-009..014** (SDD) + SOP `docs/processes/autopilot-video-9x16.md` (Operator/Sequence/Verification/Recovery/Success; gate do motor + cobrança única). Reconciliou o drift do `video-studio` SDD §2.3 (N8N_WEBHOOK→VIDEO_*_WEBHOOK, fn unificada `video-render`).
+> 20	2. **Fatia VS-2 — Motor HyperFrames VIVO (`39f8001`).** `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg) + template `viral-short-9x16.html` (determinístico, textContent XSS-safe). Worker host `scripts/video-bridge.ts` (systemd `video-bridge.service` `active`) no molde do `design-bridge`: claim atômico `video_renders` (engine=hyperframes, queued) → render 1080×1920 → bucket privado `video-studio-assets` → `finalize_video_render`. Migration `20260624120000` (coluna `composition` jsonb + bucket). Edge `video-render`: transporte `poll://` (Edge não alcança host) + composição. **Provado:** ffprobe **1080×1920**, **sha256 byte-idêntico** 2 renders (NFR-VS-016), asset 271KB, E2E via service.
+> 21	3. **Fatia VA-V1 — Integração 9:16 no Autopilot (`28bc4f4`).** Migration `20260624130000` (`autopilot_plans.video_enabled`/`video_format`). `autopilot-run`: projected/actual += N×VIDEO_COST(12) — **cobrança única no pré-débito do ciclo** (OTD-VA-010, cap-aware). `orchestrate-content`/`orchestrate-step`: plumbing do flag + enfileira render da **composição do ângulo REAL** (título gerado + foto ML do produto, sanitizado), fail-open `skipped`. Worker anexa asset (`content_library` type=video + `creative_metrics` source=organic) no `done` (FR-VA-025, event-driven OTD-VA-014). **Provado E2E real:** sub-run prepaid `video_enabled` → artigo "Roborock S8 Pro Ultra: A Faxina Acabou…" → render 9:16 done → biblioteca, **saldo intacto 5076** (prepaid charged nothing). dry_run `projected=46` (2×10+2×12+2).
+> ```
+
+## 🤖 Claude *(22:16:35)*
+
+
+## 🤖 Claude *(22:16:36)*
+
+Now inserting the new Record block for this incremental seal (Studio blueprint + billing fix), at the top of the history:
+
+## 🤖 Claude *(22:17:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 V\u00eddeo viral 9:16 AUT\u00d4NOMO + motor HyperFrames determin\u00edstico VIVO (2026-06-24)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 HyperFrames Studio blueprint (funda VS-UI) + gap de billing do v\u00eddeo fechado (2026-06-24)\n\nContinua\u00e7\u00e3o imediata do seal anterior (v\u00eddeo 9:16 + motor), sob **ultracode**. Dois arcos: **(1)** o deepsearch da API do HyperFrames Studio que o seal anterior deixou como pr\u00f3ximo passo (funda a Fatia VS-UI) \u2192 **(2)** fechamento de um **gap de billing-accuracy** que o `/security-review` do motor havia sinalizado como res\u00edduo (cobran\u00e7a-sem-valor, n\u00e3o vuln). Surpresa material do arco 2: a Option 1 do diretivo (plumbar o resultado do enqueue de volta ao `autopilot-run`) \u00e9 **invi\u00e1vel** \u2014 confirmei que `orchestrate-content` \u00e9 **ass\u00edncrono** (kicka o 1\u00ba step via `async_orchestrate_step` e retorna `steps:[]` na hora; o enqueue de v\u00eddeo roda ~60s depois) \u2192 o `autopilot-run` **finaliza o ciclo ANTES** dos enqueues \u2192 n\u00e3o pode saber o resultado. Logo: Option 2 endurecida (cr\u00e9dito compensat\u00f3rio idempotente).\n\n**O que foi entregue (3 commits granulares + README + handoff):**\n1. **Blueprint do HyperFrames Studio (deepsearch, `1f770e4`).** Material-citado no repo HeyGen `@ ae8b94c5` (Apache-2.0). Achado decisivo: `StudioApp` \u00e9 **zero-props**, server-backed por um `/api` REST+SSE na mesma origem; a HeyGen exp\u00f4s o seam `StudioApiAdapter` (`@hyperframes/core/studio-api`). **Montamos o studio unmodified + nosso `McorchAdapter.startRender()` faz bridge pro `video-render` provado** \u2014 n\u00e3o forkamos a UI. Composi\u00e7\u00e3o = HTML+CSS+GSAP \u2192 `bundleToSingleHtml`. React 19 \u2192 container+iframe `studio.mcorch.com`. `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` (6 gates emp\u00edricos; render-parity `frame=floor(time*fps)` = maior risco; 9 riscos). Flip OTD-VS-005 A\u2192C confirmado pela prova material.\n2. **Fix do gap de billing OTD-VA-010 (`9773f92`).** Migration `20260624140000`: ledger idempotente `autopilot_video_refunds` (PK `run_id`) + RPC `refund_autopilot_video_enqueue` (SECURITY DEFINER `search_path=''`, service-role-only, anti-mint `(0,100]`, cr\u00e9dito positivo via `add_mco_coins`). `orchestrate-step`: no fail-open, quando `!enqueued && cycleId`, chama o RPC; flag `enqueued` garante que se a linha existe o ciclo do render \u00e9 dono do refund (exatamente UM de render-fail/enqueue-fail por sub-run \u2014 sem dupla-credito) + telemetria `degraded` n\u00e3o-vazante se o cr\u00e9dito falhar. Completa o modelo de refund de 3 caminhos.\n3. **Docs do fix (`8e0084b`).** OTD-VA-010 nota de fechamento (SDD) + SOP `autopilot-video-9x16.md` recovery path corrigido (antes dizia erroneamente \"vira refund no finalize\"; agora os 3 caminhos) + Key Files.\n\n**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (diretivo do gap + escolha do fix) + `/security-review` independente (SAFE) \u00b7 Owner=Sovereign (blast radius = carteira do User 0 \u2014 cobran\u00e7a-sem-valor se o enqueue falha).\n\n| Verifica\u00e7\u00e3o (material) | Resultado |\n|---|---|\n| Motor 9:16 (re-confirmado) | \u2705 ffprobe 1080\u00d71920 \u00b7 sha256 byte-id\u00eantico (NFR-VS-016) \u00b7 `video-bridge.service` `active` |\n| Smoke do fix de billing | \u2705 `smoke-autopilot-video-refund.ts` **8/8** \u2014 net debit = ORCH_COST (10), os 12 do v\u00eddeo n\u00e3o-enfileirado **exclu\u00eddos** (sem fix seria 22) |\n| Idempot\u00eancia + anti-mint | \u2705 2\u00aa chamada no-op (saldo igual) \u00b7 amount 0 e 200 \u2192 22023 \u00b7 ledger 1 linha |\n| `/security-review` (migration + orchestrate-step) | \u2705 SAFE \u2014 mint travado service-role \u00b7 cross-tenant imposs\u00edvel (`user_id` da linha) \u00b7 idempot\u00eancia PK |\n| Saldo User 0 | \u2705 5076 intacto \u00b7 0 linhas \u00f3rf\u00e3s (cleanup) |\n| tsc \u00b7 gitleaks | \u2705 0 erros \u00b7 limpo nos 3 commits |\n| Studio blueprint | \u2705 deepsearch 7/7 quest\u00f5es material-citadas (`ae8b94c5`, npm registry, docs) |\n| Handoff node | `b42e89f9-3636-4ff0-a86e-674ed479d3c5` (embedded 768d) |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Billing fix provado pelo smoke 8/8 contra os RPCs REAIS (begin/finalize_autopilot_cycle + refund_autopilot_video_enqueue) na sequ\u00eancia real \u2014 net debit medido por SELECT do saldo. Achado material: orchestrate-content \u00e9 async (steps:[] imediato) \u2192 inviabiliza a Option 1, decidiu o design. Blueprint: cada claim carrega a URL/arquivo lido @ commit pinado (n\u00e3o fabricado). Fase 5c mec\u00e2nica abaixo.\nLaw 2 (Process): \u2705 O fix \u00e9 bug-fix em feature documentada (OTD-VA-010, SOP [[autopilot-video-9x16|autopilot-video-9x16]] j\u00e1 existia) \u2192 isento de BoK gate; mesmo assim documentei a nota de fechamento + corrigi o recovery path do SOP (que estava factualmente errado). Blueprint = anticipated-process da Fatia VS-UI (Lei 2 do pr\u00f3ximo c\u00f3digo de UI).\nLaw 3 (Pruning): \u2705 Sess\u00e3o de continua\u00e7\u00e3o enxuta (2 arcos); deepsearch rodou como subagent (resultado por path, n\u00e3o recarregado no contexto). Probes de billing por output verificado neste turno.\nLaw 4 (ORO): \u2705 Triplet declarado; diretivo do Sovereign nomeou o gap + as 2 op\u00e7\u00f5es de fix; /security-review independente como Reviewer.\n```\n\n## Session Seal \u2014 V\u00eddeo viral 9:16 AUT\u00d4NOMO + motor HyperFrames determin\u00edstico VIVO (2026-06-24)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:17:15)*
+
+
+## 🤖 Claude *(22:17:15)*
+
+Now updating the GraphRAG State count (8959 + this handoff node). Locating it:
+
+## 🤖 Claude *(22:17:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"total nodes|GraphRAG State\" HANDOFF.md | head -4",
+  "description": "Locate GraphRAG State count line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2474:- **Fase 2 — Drift GraphRAG State corrigido** — o footer do `HANDOFF.md` estava congelado no snapshot v6.8.6 (8605 nós/11925 arestas). Reconciliado para a contagem viva via REST `count=exact`: **8714 nós / 9040 arestas / 100% embedded** (0 sem embedding). Observação flagada: arestas caíram de 11925 (v6.6.9) → 9040, sem causa confirmada.
+> 2496:| `9607a44` | docs(handoff): reconcile GraphRAG State to live mesh counts 8714/9040 |
+> 5012:**1) Phase 0 — HANDOFF.md read-from-end.** O `/handson` da própria sessão falhou imediatamente: HANDOFF.md cresceu para 113922 tokens (3167 linhas, 48 sprint seals newest-first) e estourou o limite de 25k do Read tool. Decisão Sovereign (Option B): mantém arquivo monolítico, modifica `.claude/commands/handson.md` linhas 11-26 para ler em duas fatias — `head -71` (Task State header + FIRST ACTION) + `tail -400` (últimas 1-2 seals + Pending Actions + GraphRAG State + Infrastructure + Key Files). Token usage por sessão futura: 5-8k. Auditoria histórica via Read com offset arbitrário fora do fluxo padrão. Outras opções (A: split por sprint; C: híbrido) descartadas por exigirem migração estrutural + atualização de `/handoff` em paralelo.
+> 8089:## GraphRAG State
+> ```
+
+## 🤖 Claude *(22:17:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 8089,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 8089	## GraphRAG State
+> 8090	
+> 8091	- **8958 total nodes** (verificado live 2026-06-24 via REST count=exact, video-9x16-motor-and-autopilot seal: +handoff `5e470dff-d7b3-4936-a130-2c34350d56c8` embedded 768d via trigger — vídeo 9:16 autônomo: VS-2 motor HyperFrames determinístico vivo [render-core Playwright+FFmpeg 1080×1920 sha256-idêntico, video-bridge.service, bucket, edge poll://] + VA-V1 integração Autopilot [orchestrate-step enfileira render do ângulo real, custo no pré-débito do ciclo, attach content_library+creative_metrics] + flip editor OTD-VS-005 A→C módulo-container; prev 8954 autopilot-activation-security-hardening seal: +handoff `bc175ac9-e8a8-483b-a32f-4660dd0b90ba` embedded 768d via trigger — 3 arcos: Viral Autopilot ATIVADO [1º ciclo pago `947ef8b5` + pg_cron jobid 3] + FR-VA-018 trend angle hardened + segurança social-auth [state HMAC + webhook IG sig] + paridade pt-BR Cyber-Sentinel OTD-VA-018; prev 8946 alertas-video-fatia1-de-n8n seal: +handoff `bb23b9dc-265e-4338-9709-d320371908b4` embedded 768d — alertas CF/security-drift + Vídeo Fatia 1 [video_renders/video_assets/finalize_video_render + edge video-render/poll] + Fatia 1b UI + emenda BoK SDD v1.2 De-n8n; prev 8935 viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d — cadência R2 (cron + begin/finalize_autopilot_cycle atômicos) + loop R3 (analyze→optimization_policy / collect / feedback-inject) + UI (useAutopilot/AutopilotPage); prev 8934 viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d — Fatias 1 (product-aware + monetização cross-surface + creative_metrics) + 1b (imagem fail-open) + generate-image fix + diagnóstico saída visível; prev 8928 viral-autopilot-bok-seal: +handoff `496ec17c-953e-498c-b18f-e19ef093ad46` embedded 768d + BoK seal `b3398294-aa75-4810-845b-3a15cfe802e7` `documentation_suite` viral-autopilot + DERIVES_FROM edge `05cea16d-b942-409c-9847-1acc693f6ccc` → marketing-hub `d5163fed`; prev 8926 unified-sensorial-canvas-v9 seal: +handoff `5225ff03-5e4d-4599-9c9a-625e2e1806af` embedded 768d + AGI→ASI ref `a576216e` (architecture, edge `INFORMS` `d2827191` → openclaw seal) + AST ingest dos arquivos novos do canvas (CodeNetworkLayer/MemoryNetworkLayer/useUnifiedCanvasStore/useMemoryNetwork); prev 8922 vision-mcp-fatia3-pat-plugin-registry-caps seal: +handoff `c21c53db-cd96-465d-92ba-fc419c0c83e7` embedded 768d — PAT UI + Plugin/Registry + caps; prev 8921 vision-mcp-vhost-live seal: +handoff `0632e1f8-81db-4cc8-bd5e-c5ea8109508d` embedded 768d — OTD-VM-013 fechada; prev 8920 vision-fatia3-pat-erase seal: +handoff `e0695dad-3fc8-4f1e-9973-a40c15aec433` embedded 768d; prev 8918 vision-deepsearch-run-async seal: +handoff `fc0b5efc-9df8-4e03-8544-820caee4ee79` embedded 768d; prev 8917 vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d; prev 8916 vision-mcp-fatia1-deployed seal: +handoff `98fa83d7-3caa-4d23-9f5d-ed040ced9530` embedded 768d; prev 8915 em vision-mcp-bok-9of9 seal: +handoff `b73d141d` + BoK seal `318862b7` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` → mcorch-constellation; prev 8911 em diagnostics-and-continuity +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)
+> 8092	- _(prev snapshot)_ **8755 total nodes** (verificado live 2026-06-03 via REST count=exact após o handoff node `a48d8ff4-1069-4ca0-8764-f01922e2e12f` desta seal v6.21.0, embedded 768d; inclui o BoK seal `d5163fed` marketing-hub; v6.20.4 snapshot era 8753, handoff `af6bffa2`) — **100% embedded** (768d HNSW cosine) — handoff · milestone · architecture · decision · system · observation · requirement · conversation · documentation_suite (BoK seal) · crew_agent · markdown_file · vault_note · feature · ui-ux · content_mesh_asset + AST (file · function · arrow_function · interface · type_alias · class)
+> ```
+
+## 🤖 Claude *(22:17:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8958 total nodes** (verificado live 2026-06-24 via REST count=exact, video-9x16-motor-and-autopilot seal: +handoff `5e470dff-d7b3-4936-a130-2c34350d56c8` embedded 768d via trigger \u2014 v\u00eddeo 9:16 aut\u00f4nomo: VS-2 motor HyperFrames determin\u00edstico vivo",
+  "new_string": "- **8959 total nodes** (verificado live 2026-06-24 via REST count=exact, hyperframes-studio-blueprint-and-video-billing-fix seal: +handoff `b42e89f9-3636-4ff0-a86e-674ed479d3c5` embedded 768d via trigger \u2014 blueprint de integra\u00e7\u00e3o do HyperFrames Studio [deepsearch `ae8b94c5`, StudioApp zero-props + seam StudioApiAdapter \u2192 m\u00f3dulo-container VS-UI] + fix do gap de billing OTD-VA-010 [cr\u00e9dito compensat\u00f3rio idempotente `refund_autopilot_video_enqueue` migration `20260624140000`, smoke 8/8 net-debit-exclui-12, /security-review SAFE]; prev 8958 video-9x16-motor-and-autopilot seal: +handoff `5e470dff-d7b3-4936-a130-2c34350d56c8` embedded 768d via trigger \u2014 v\u00eddeo 9:16 aut\u00f4nomo: VS-2 motor HyperFrames determin\u00edstico vivo"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:17:35)*
+
+
+## 🤖 Claude *(22:17:36)*
+
+**Phase 5b — HANDOFF.md secret scan** (mandatory before commit):
+
+## 🤖 Claude *(22:17:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credential values ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\\|hash\" | head -10 || echo \"NO CREDENTIALS \u2705\"\necho \"=== 5b-2 google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -5 || echo \"NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3 inline assignments ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|digest\\|hash\\|uuid\\|[0-9a-f-]\\{36\\}\" | head -5 || echo \"NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b HANDOFF secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credential values ===
+> === 5b-2 google keys ===
+> === 5b-3 inline assignments ===
+> 996:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 7610:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 7612:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> 7613:  └── count(embedding IS NULL, project_id = 'mcorch-constellation') → neuralDensity
+> 7655:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> ```
+
+## 🤖 Claude *(22:17:46)*
+
+
+## 🤖 Claude *(22:17:47)*
+
+Phase 5b passes — 5b-1/5b-2 clean; the 5b-3 matches are benign pre-existing string literals (an eslint selector `dangerouslySetInnerHTML` + the `project_id = 'mcorch-constellation'` slug), not credentials. Committing HANDOFF.md:
+
+## 🤖 Claude *(22:17:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md proof-manifest.json\ngit commit -q -m \"docs(handoff): seal HyperFrames Studio blueprint (funda VS-UI) + gap de billing do v\u00eddeo fechado\" 2>&1 | grep -vE \"lefthook|gitleaks|INF|summary|\u2714|\u25cb|\u2502|\u2591|\u256d|\u2570|\u2500|\u276f|^$\" | head -3\necho \"committed\"; git log --oneline -1",
+  "description": "Commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> committed
+> f76f787 docs(handoff): seal HyperFrames Studio blueprint (funda VS-UI) + gap de billing do vídeo fechado
+> ```
+
+## 🤖 Claude *(22:17:53)*
+
+
+## 🤖 Claude *(22:17:54)*
+
+**Phase 5c — Material Proof Audit:**
+
+## 🤖 Claude *(22:17:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntest -f scripts/qa/run-audit.ts && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -45 || echo \"AUDIT_SCRIPT_MISSING\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node b42e89f9 | mesh_node | b42e89f9-3636-4ff0-a86e-674ed479d3c5 | b42e89f9-3636-4ff0-a86e-674ed479d3c5 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 13.2s)
+> ```
+
+## 🤖 Claude *(22:18:25)*
+
+
+## 🤖 Claude *(22:18:27)*
+
+**Phase 5c: SEAL ALLOWED** — 10 verified, 0 failed; my handoff node `b42e89f9` explicitly verified, test suite 295 passed. **Phase 6 — BoK Seal Status:**
+
+## 🤖 Claude *(22:18:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== BoK completeness ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=(); for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho \"=== session: any NEW module (page/edge fn) without BoK? ===\"\ngit diff --name-only c65b78a..HEAD | grep -E \"^(src/pages/|supabase/functions/[a-z-]+/index.ts)\" | sort -u || echo \"(none \u2014 only modified existing fns)\"",
+  "description": "Phase 6 BoK seal status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BoK completeness ===
+> ✅ agentic-workspace
+> ✅ aios-sql-bridge
+> ✅ authenticated-browser-operator
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ conteudo-v2
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ identity-fabric
+> ✅ marketing-hub
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ post-engine
+> ⚠️ security — missing: 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics
+> ✅ video-studio
+> ✅ viral-autopilot
+> ✅ viral-daily-canvas
+> ✅ viralmind
+> ✅ vision-mcp
+> === session: any NEW module (page/edge fn) without BoK? ===
+> supabase/functions/orchestrate-step/index.ts
+> ```
+
+## 🤖 Claude *(22:18:38)*
+
+
+## 🤖 Claude *(22:18:40)*
+
+**Phase 6 PASS:** all suites complete except `security` (the known deliberately-deferred Cyber-Sentinel suite with non-standard naming — documented). The session only **modified** `orchestrate-step` (existing fn in the BoK-sealed viral-autopilot module; the fix is a bug-fix in documented feature OTD-VA-010) — no new module lacks BoK. **Phase 7 — Push:**
+
+## 🤖 Claude *(22:18:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -3\necho \"=== commits this seal (since c65b78a) ===\"\ngit log --oneline c65b78a..HEAD",
+  "description": "Phase 7 push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    8e0084b..f76f787  main -> main
+> === commits this seal (since c65b78a) ===
+> f76f787 docs(handoff): seal HyperFrames Studio blueprint (funda VS-UI) + gap de billing do vídeo fechado
+> 2d349dc docs(readme): v6.49.1 — blueprint HyperFrames Studio (funda VS-UI) + gap de billing do vídeo fechado
+> 8e0084b docs(bok): crédito compensatório de enqueue-fail de vídeo (OTD-VA-010 gap fechado)
+> 9773f92 fix(viral-autopilot): crédito compensatório de enqueue-fail de vídeo (fecha gap OTD-VA-010)
+> 1f770e4 docs(video-studio): blueprint de integração do HyperFrames Studio (funda Fatia VS-UI)
+> ```
+
+## 🤖 Claude *(22:18:50)*
+
+
+## 🤖 Claude *(22:18:51)*
+
+Pushed (`8e0084b..f76f787`), 5 commits this seal. **Phase 7b — Sprint hygiene + scratch + MCP docs:**
+
+## 🤖 Claude *(22:18:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"(has files)\" || echo \"scratch/ clean \u2705\"\necho \"=== sprint-priorities top sprint line ===\"; grep -nE \"^\\*\\*Sprint v6.49|^\\*\\*Sprint v6.48\" .claude/context/sprint-priorities.md | head -2\necho \"=== .mcp.json servers ===\"; cat .mcp.json 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print('servers:', list(d.get('mcpServers',{}).keys()))\" 2>/dev/null || echo \"(no .mcp.json or unparseable)\"",
+  "description": "Scratch + sprint + MCP check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> (has files)
+> === sprint-priorities top sprint line ===
+> 7:**Sprint v6.48.0 — Viral Autopilot ATIVADO + FR-VA-018 + segurança social-auth + paridade sentinel pt-BR (2026-06-23)** — `/handson` → "vamos com os próximos passos" → "continue" (×N) sob **ultracode** (4 workflows adversariais). 3 arcos. **(1) Viral Autopilot ATIVADO:** heartbeat pg_cron `autopilot-cadence */15` jobid 3 `active` (migration `20260623040000`) + **1º ciclo PAGO real** (cycle `947ef8b5` completed, débito 22/refund 2, saldo 5096→5076, 2 sub-runs `done`) — GO Sovereign respeitado; trap material: produto resolve por `external_id`, não UUID. **(2) FR-VA-018** trend-informed angle: `autopilot-run` lê `vm_trends` (fonte global não-confiável) → gate `sanitizeTrendTitle` (whitelist destrói URLs/payloads + reject de verbos) → DADO inerte; red-team `wf_6cc97c75` pegou MEDIUM (sentinel English-only → injection pt-BR cross-tenant), hardened. **(3) Segurança social-auth** (auditoria per-user): state OAuth **HMAC** fail-closed + janela ts 10min (`_shared/oauth-state.ts`) + `instagram-webhook` **X-Hub-Signature-256**; 8/8 gates. **(4) OTD-VA-018-SENTINEL-PTBR:** 7 famílias pt-BR no Cyber-Sentinel, **0 FP real** em 58 amostras (loop `wf_0459e1c1` → tunei f3/f4/f5), live 403 `score=2` sem regressão do inglês. **Prova:** `/security-review` SAFE múltiplo · tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8954** · handoff `bc175ac9` · 6 commits. **Pending (próxima):** Unified Canvas 3.5-3.10 (gate visual 1920×1080) · mídia viral 9:16 · postback ML real · Security BoK suite (diferida). **Lição:** o sentinel é TRIAGE score≥2 — single-intent passa por design (=inglês), defesa cross-tenant é o gate de fonte; testar FP contra copy real é o make-or-break ao tocar o pipeline vivo.
+> === .mcp.json servers ===
+> servers: ['gitnexus', 'obsidian', 'playwright', 'gemini-api-docs-mcp', 'vision-mcp']
+> ```
+
+## 🤖 Claude *(22:19:03)*
+
+
+## 🤖 Claude *(22:19:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch contents (real) ===\"; ls -A scratch/ 2>/dev/null | head; [ -z \"$(ls -A scratch/ 2>/dev/null)\" ] && echo \"scratch/ EMPTY \u2705\" || echo \"scratch/ has real files\"",
+  "description": "Verify scratch truly empty"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch contents (real) ===
+> scratch/ EMPTY ✅
+> ```
+
+## 🤖 Claude *(22:19:10)*
+
+
+## 🤖 Claude *(22:19:10)*
+
+scratch/ empty ✅, MCP servers all documented. Adding a v6.49.1 sprint header line:
+
+## 🤖 Claude *(22:19:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 5,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.48.0 — Viral Autopilot ATIVADO + FR-VA-018 + segurança social-auth + paridade sentinel pt-BR (2026-06-23)** — `/handson` → "vamos com os próximos passos" → "continue" (×N) sob **ultracode** (4 workflows adversariais). 3 arcos. **(1) Viral Autopilot ATIVADO:** heartbeat pg_cron `autopilot-cadence */15` jobid 3 `active` (migration `20260623040000`) + **1º ciclo PAGO real** (cycle `947ef8b5` completed, débito 22/refund 2, saldo 5096→5076, 2 sub-runs `done`) — GO Sovereign respeitado; trap material: produto resolve por `external_id`, não UUID. **(2) FR-VA-018** trend-informed angle: `autopilot-run` lê `vm_trends` (fonte global não-confiável) → gate `sanitizeTrendTitle` (whitelist destrói URLs/payloads + reject de verbos) → DADO inerte; red-team `wf_6cc97c75` pegou MEDIUM (sentinel English-only → injection pt-BR cross-tenant), hardened. **(3) Segurança social-auth** (auditoria per-user): state OAuth **HMAC** fail-closed + janela ts 10min (`_shared/oauth-state.ts`) + `instagram-webhook` **X-Hub-Signature-256**; 8/8 gates. **(4) OTD-VA-018-SENTINEL-PTBR:** 7 famílias pt-BR no Cyber-Sentinel, **0 FP real** em 58 amostras (loop `wf_0459e1c1` → tunei f3/f4/f5), live 403 `score=2` sem regressão do inglês. **Prova:** `/security-review` SAFE múltiplo · tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8954** · handoff `bc175ac9` · 6 commits. **Pending (próxima):** Unified Canvas 3.5-3.10 (gate visual 1920×1080) · mídia viral 9:16 · postback ML real · Security BoK suite (diferida). **Lição:** o sentinel é TRIAGE score≥2 — single-intent passa por design (=inglês), defesa cross-tenant é o gate de fonte; testar FP contra copy real é o make-or-break ao tocar o pipeline vivo.
+> ```
+
+## 🤖 Claude *(22:19:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.48.0 \u2014 Viral Autopilot ATIVADO + FR-VA-018 + seguran\u00e7a social-auth + paridade sentinel pt-BR (2026-06-23)** \u2014",
+  "new_string": "**Sprint v6.49.0/v6.49.1 \u2014 V\u00eddeo viral 9:16 aut\u00f4nomo + motor HyperFrames vivo \u2192 Studio blueprint + gap de billing fechado (2026-06-24)** \u2014 `/handson` \u2192 \"fichar o v\u00eddeo 9:16 com a UI editor do hyperframer assim como o open design\" \u2192 sob **ultracode**. **v6.49.0:** decis\u00e3o Sovereign (AskUserQuestion) = motor HyperFrames + worker single-tenant, alvo Autopilot-primeiro \u2192 BoK gate (Amendment v0.2, FR-VA-022..026 + SOP) \u2192 **motor HyperFrames VIVO** (`render-core.ts` Playwright+FFmpeg \u2192 MP4 9:16 1080\u00d71920 sha256-id\u00eantico NFR-VS-016; worker `video-bridge.ts` systemd active; bucket; edge `poll://`) \u2192 integra\u00e7\u00e3o Autopilot (custo no pr\u00e9-d\u00e9bito do ciclo OTD-VA-010; E2E real \"Roborock S8\u2026\" render 9:16, saldo intacto). **v6.49.1:** **(1)** deepsearch do HyperFrames Studio (`ae8b94c5`, Apache-2.0) \u2192 flip OTD-VS-005 A\u2192C **m\u00f3dulo-container** (StudioApp zero-props + seam `StudioApiAdapter`; embed in-SPA invi\u00e1vel React 19 vs 18); blueprint `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md`. **(2)** gap de billing OTD-VA-010 fechado: cr\u00e9dito compensat\u00f3rio idempotente `refund_autopilot_video_enqueue` (migration `20260624140000`) no fail-open do enqueue (actual otimista contava 12 sem linha \u2192 cobran\u00e7a-sem-valor); smoke **8/8** net-debit-exclui-12. **Prova:** `/security-review` SAFE (motor + billing) \u00b7 tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8959** \u00b7 handoff `b42e89f9`. **Pending (pr\u00f3xima):** **Fatia VS-UI** editor Studio m\u00f3dulo-container (API `/api` \u2192 container React 19 \u2192 `McorchAdapter` \u2192 vhost `studio.mcorch.com` [DNS Sovereign] \u2192 render-parity gate) \u00b7 1\u00ba ciclo pago de v\u00eddeo witnessed \u00b7 Unified Canvas 3.5-3.10 \u00b7 postback ML real \u00b7 Security BoK suite (diferida). **Li\u00e7\u00e3o:** o achado material (orchestrate-content \u00e9 async \u2192 autopilot-run finaliza ANTES dos enqueues) inviabilizou a Option 1 do diretivo e decidiu o design do fix; o deepsearch pr\u00e9-c\u00f3digo achou o seam zero-props que evita forkar a UI HeyGen.\n\n**Sprint v6.48.0 \u2014 Viral Autopilot ATIVADO + FR-VA-018 + seguran\u00e7a social-auth + paridade sentinel pt-BR (2026-06-23)** \u2014"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:19:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): update sprint-priorities \u2014 v6.49.1 Studio blueprint + gap de billing do v\u00eddeo\" 2>&1 | grep -vE \"lefthook|gitleaks|INF|summary|\u2714|\u25cb|\u2502|\u2591|\u256d|\u2570|\u2500|\u276f|^$\" | head -2\ngit push origin main 2>&1 | tail -2",
+  "description": "Commit + push sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    f76f787..10d4699  main -> main
+> ```
+
+## 🤖 Claude *(22:19:49)*
+
+
+## 🤖 Claude *(22:20:14)*
+
+All phases complete. **Phase 8 — Final Report:**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — HyperFrames Studio blueprint (funda VS-UI) + gap de billing do vídeo fechado (2026-06-24)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA (Fase 1 + 5b)
+  1a secret leak scan ......... ✅ NO hardcoded secrets
+  1b edge fn JWT enforcement .. ✅ video-render + orchestrate-step auth-enforced
+  1c client coin deduction .... ✅ NONE
+  1d service-role in client ... ✅ só test-env reads + doc comment (benigno, pré-existente)
+  1e sensitive logs ........... ✅ NONE
+  5b HANDOFF.md credentials ... ✅ limpo (matches = eslint selector + project slug)
+  /security-review (migration + orchestrate-step) ... ✅ SAFE
+  Veredito: nenhum 🔴
+
+📦 COMMITS (5 deste seal · push 8e0084b..10d4699)
+  1f770e4 — docs(video-studio): blueprint de integração do HyperFrames Studio (funda Fatia VS-UI)
+  9773f92 — fix(viral-autopilot): crédito compensatório de enqueue-fail de vídeo (fecha gap OTD-VA-010)
+  8e0084b — docs(bok): crédito compensatório de enqueue-fail de vídeo (OTD-VA-010 gap fechado)
+  2d349dc — docs(readme): v6.49.1 — blueprint Studio + gap de billing fechado
+  f76f787 — docs(handoff): seal Studio blueprint + gap de billing
+  (+ 10d4699 chore(sprint))
+
+⬡ KNOWLEDGE MESH
+  Handoff node: b42e89f9-3636-4ff0-a86e-674ed479d3c5
+  Embedding: ✅ 768d (openai/text-embedding-3-small via OpenRouter)
+  Total: 8959 nós
+
+📖 README.md
+  Versão: 6.49.0 → 6.49.1
+  Badge neural_mesh: 8958 → 8959 nós
+  Seção: "[v6.49.1] — Blueprint do HyperFrames Studio + gap de billing fechado"
+
+🧠 HANDOFF.md
+  Fase selada: HyperFrames Studio blueprint + gap de billing do vídeo
+  Seções: Task State, Record (novo), GraphRAG State (8959), Survival Self-audit
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas (handoff node b42e89f9 ✅ · test suite 295 passed)
+
+📚 BoK SEAL (Fase 6)
+  Todas as suítes completas (9 docs) exceto `security` (Cyber-Sentinel diferida, naming não-padrão — documentado)
+  Sessão só MODIFICOU orchestrate-step (módulo viral-autopilot BoK 9/9; fix de feature documentada OTD-VA-010) → sem violação de gate
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: 6 (8e0084b..10d4699)
+
+📌 SPRINT
+  sprint-priorities.md: atualizado ✅ (v6.49.0/v6.49.1)
+  scratch/ cleanup: limpo ✅
+  MCP docs: ok ✅ (gitnexus · obsidian · playwright · gemini-api-docs · vision-mcp — nenhum novo)
+
+⏭  PRÓXIMOS PASSOS
+  1. Fatia VS-UI — editor HyperFrames Studio como módulo-container: enumerar o contrato /api (core/studio-api/routes/*) → npm pack (gates CSS/exports) → render-parity gate (frame=floor(time*fps)) → container React 19 + McorchAdapter → módulo frontend iframe → vhost studio.mcorch.com (DNS Sovereign). Blueprint pronto.
+  2. 1º ciclo pago de vídeo witnessed (plano video_enabled → ciclo autônomo produz + publica 9:16 real).
+  3. Unified Canvas 3.5-3.10 (gate visual 1920×1080) · postback ML real · Security BoK suite (diferida).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada, Maestro. Esta sessão fechou dois arcos sobre o vídeo 9:16 que já estava vivo: **(1)** o deepsearch do HyperFrames Studio que funda a Fatia VS-UI como módulo-container (achado decisivo — `StudioApp` zero-props + seam `StudioApiAdapter` = não forkamos a UI da HeyGen), e **(2)** o fechamento materialmente provado do gap de billing OTD-VA-010 (crédito compensatório idempotente — smoke 8/8 provando net-debit-exclui-12, `/security-review` SAFE). Tudo no `origin/main`. O editor HyperFrames está fundado e é o próximo arranque.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

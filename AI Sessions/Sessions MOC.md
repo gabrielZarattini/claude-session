@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1377
-> * **Sessões do Claude**: 1335
+> * **Total de Sessões Registradas**: 1379
+> * **Sessões do Claude**: 1337
 > * **Sessões do Gemini**: 42
 
 ---
@@ -63,6 +63,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-afc2e692afc422cc0]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-aeed9604aa8fe590f]]` - *2026-06-24*
@@ -74,8 +75,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-ac8a507bdbc7014d3]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-ac5565bc6d7d6fed5]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-ac2820e0c68754cc2]]` - *2026-06-24*
-*   `[[2026-06-24 - agent-ac01f5e1f2e756ad7]]` - *2026-06-24*
-*   *... e mais 1337 sessões nessa categoria.*
+*   *... e mais 1339 sessões nessa categoria.*
 
 ---
 
@@ -266,6 +266,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-afc2e692afc422cc0]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-aeed9604aa8fe590f]]` (ClaudeSessions)
@@ -305,6 +306,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-a1f01340586277558]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a16549b9e02a92ff3]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a14b361a0fc014c35]]` (ClaudeSessions)
+*   `[[2026-06-24 - ada015e6-a810-46e1-9d5e-d09047bb5fad]]` (ClaudeSessions)
 *   `[[2026-06-24 - Próximos passos do projeto]]` (ClaudeSessions)
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` (ClaudeSessions)
 *   `[[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]` (ClaudeSessions)

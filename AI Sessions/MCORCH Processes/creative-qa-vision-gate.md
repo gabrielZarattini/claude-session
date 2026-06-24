@@ -119,3 +119,10 @@ frames que passaram pelo portão de consistência. Assets reais persistidos em `
 - ❌ Reportar "vídeo gerado" sem o asset ≥ 100 KB no bucket + row de execução `success` (Lei 1).
 - ❌ Confiar na URL efêmera do provider em vez de re-hospedar no bucket.
 - ❌ Rodar o olho criativo sobre uma signed URL expirada (re-assinar antes; ou usar `public_url`).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
