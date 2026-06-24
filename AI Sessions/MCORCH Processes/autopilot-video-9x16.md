@@ -81,7 +81,7 @@ finalize_autopilot_cycle (refund crédito-positivo idempotente — inalterado; a
 |-------|---------------|
 | Custo de vídeo no projetado | `projected = N_runs×10 + N_video×VIDEO_HYPERFRAMES_RENDER(12) + ANALYZE_COST(2)`, `N_video = N_runs` se `video_enabled` senão 0 (FR-VA-007 estendido) |
 | Débito único | Pré-débito do ciclo cobre o vídeo; o enqueue usa **`prepaid=true`** → o motor `video-render` **suprime** o `deduct_mco_coins` (espelha `orchestrate-content` FR-VA-016) |
-| Refund | `finalize_autopilot_cycle(cycle_id, actual)` — `actual` inclui os renders que **de fato** entregaram; o não-usado volta como **crédito positivo idempotente** (NUNCA `deduct` negativo — `migration 20260603220000:45`) |
+| Refund (3 caminhos, todos crédito positivo idempotente — NUNCA `deduct` negativo, `20260603220000:45`) | (a) **ciclo**: `finalize_autopilot_cycle(cycle_id, actual)` devolve `projected − actual` (sub-runs não-iniciados). (b) **render falho**: `finalize_video_render(failed, refund=VIDEO_COST)` (a linha `video_renders` existe). (c) **enqueue falho** (sem linha): `refund_autopilot_video_enqueue(run_id, …)` idempotente por `run_id` — fecha o gap "actual otimista contou 12, mas nenhuma linha p/ o (b) refundar". Exatamente UM de (b)/(c) por sub-run com vídeo (`enqueued` decide) — sem dupla-credito |
 | Cap diário | `N_video×12` entra no `acumulado + projetado` do cap diário (FR-VA-021); o plano (default 200) e o cap diário devem comportar +12/sub-run (OTD-VA-010) |
 | Identidade | service-role + `user_id` server-trusted da linha (`autopilot_cycles`/`autopilot_plans`/`video_renders`), **nunca do body** (OTD-VA-008, herdado de `autopilot-cron-identity`) |
 
@@ -107,7 +107,7 @@ finalize_autopilot_cycle (refund crédito-positivo idempotente — inalterado; a
 | Falha no passo | Rollback/retry exato |
 |----------------|----------------------|
 | Sanitização rejeita (G1) | Sub-run gera texto/imagem normalmente; vídeo `skipped`; log `infra_health_logs` `service='autopilot-video' event='sanitize_blocked'`. Sem deduct extra. |
-| Enqueue falha (motor 503/erro) | **fail-open**: `skipped`; o pré-débito de vídeo daquele sub-run vira refund no `finalize` (`actual` não conta o vídeo não-entregue). Nunca derruba o ciclo. |
+| Enqueue falha (INSERT `video_renders` lança) | **fail-open**: `skipped` + **crédito compensatório idempotente** `refund_autopilot_video_enqueue(run_id, cycle_id, user_id, VIDEO_COST)`. ⚠️ O `actual` do ciclo é OTIMISTA (`succeeded × (ORCH+VIDEO)`, calculado pelo `autopilot-run` ANTES do enqueue async) → ele JÁ contou o 12; como NÃO há linha `video_renders`, o `finalize_video_render` nunca refunda → sem o crédito, o tenant é cobrado por um render nunca enfileirado (gap OTD-VA-010 fechado 2026-06-24). Idempotente por `run_id` (PK em `autopilot_video_refunds`); só dispara quando `!enqueued && cycleId` (se a linha foi criada, o ciclo do render é dono do refund — sem dupla-credito). Nunca derruba o ciclo. |
 | Render trava (worker morto) | O poller `autopilot-video-reconcile` reaproveita o padrão `rescue-video`: re-claim de `video_renders` em `running` há > timeout → `failed` + refund; ou re-render manual via `video-render-poll`. |
 | Asset chega após `finalize` | É o caso **normal** — o poller anexa por `content_variant_id` depois do `done`. Idempotente (não re-anexa se `content_library` já tem a linha do `content_variant_id`). |
 | Dupla cobrança detectada | Bug de contrato: o enqueue não passou `prepaid=true`. Halt, corrigir o flag, refund manual via `finalize_autopilot_cycle` reconciliando `actual`. |
@@ -141,10 +141,3 @@ Materialmente observável que o flow 9:16 está completo e seguro:
 ## Sibling reference
 
 Esta SOP é a **camada de vídeo** sobre a base financeira de `autopilot-cron-identity.md` (que já cobre identidade do cron + pré-débito/refund + cap diário). Reusa o motor de `video-studio` (FR-VS-024/025) e o padrão de render async + reconciliação de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim atômico + execução em container) descrito na reconciliação de drift do `video-studio` SDD §2.3.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

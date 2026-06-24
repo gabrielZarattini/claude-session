@@ -7208,6 +7208,1195 @@ Como o #9 acabou se revelando dust (e toca o fill handler **ativo**), quer que e
 
 1
 
+## 🤖 Claude *(17:00:49)*
+
+
+## 🤖 Claude *(17:00:50)*
+
+Opção 1 — continuo e zero os 3. Começando o **#9** (fix de consistência `q→z` + qty-líquida via helper compartilhado, com sim-test). Lendo o `feeCalc.js` (onde mora a lógica de fee) + os 2 hotspots do ordersController:
+
+## 🤖 Claude *(17:00:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/feeCalc.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// === computeNet — FONTE ÚNICA do `net` de uma ordem (fee-inclusive, ciente do lado) ===
+> 4	//
+> 5	// Hoje o `net` só descontava a taxa quando paga no QUOTE (USDT); taxa em BNB (o que o desconto
+> 6	// BNB-fee da Binance liga) passava batido → P&L/painel/relatórios mentiam OTIMISTA. Este helper
+> 7	// torna o `net` fee-inclusive de verdade, com a taxa em QUALQUER asset convertida a USDT:
+> 8	//   VENDA:  net = cummQuote − taxa(USDT-eq)   (USDT que realmente FICA)
+> 9	//   COMPRA: net = cummQuote + taxa(USDT-eq)   (USDT que realmente CUSTOU — a taxa de compra
+> 10	//                                               não some mais do P&L)
+> 11	//
+> 12	// Os 3 pontos que calculavam net (ordersRepository.calcFillFinancials, app-em.processExecutionData,
+> 13	// ordersController.syncOrder) passam a CHAMAR aqui — fim da lógica triplicada e cega a BNB.
+> 14	//
+> 15	// Premissa de derivação base/quote (mantém o helper SÍNCRONO, sem I/O ao symbolModel): para os
+> 16	// pares do projeto (sufixos USDT/USDC/BTC/...), `symbol.endsWith(asset)` ⇒ taxa no QUOTE e
+> 17	// `symbol.startsWith(asset)` ⇒ taxa na BASE; qualquer outro asset (BNB etc.) cai no ramo de conversão.
+> 18	//
+> 19	// FAIL-SAFE a preço frio: se a taxa não puder ser convertida a USDT (BOOK do par frio), `feeValued`
+> 20	// volta false e `net = cummQuote` (sem ajuste, = comportamento de hoje). O chamador PERSISTE o
+> 21	// `commissionAsset` mesmo assim → um `POST /orders/:id/sync` posterior (BOOK quente) recomputa.
+> 22	
+> 23	// Converte a taxa (em `commissionAsset`) para USDT. Retorna { feeUsdt, feeValued }.
+> 24	// `feeValued=false` só quando a taxa existe mas não pôde ser valorada (preço frio) — nunca lança.
+> 25	function feeToUsdt(commission, commissionAsset, symbol, avgPrice) {
+> 26	    if (!commission || commission <= 0 || !commissionAsset) return { feeUsdt: 0, feeValued: true }; // sem taxa = nada a valorar
+> 27	    const asset = String(commissionAsset).toUpperCase();
+> 28	    const sym = String(symbol || '').toUpperCase();
+> 29	
+> 30	    if (sym.endsWith(asset)) return { feeUsdt: commission, feeValued: true };           // (i) taxa no QUOTE (mesma moeda do par; nos pares *USDT do projeto = USDT)
+> 31	    if (sym.startsWith(asset)) {                                                          // (ii) taxa na BASE → vale a avgPrice
+> 32	        const px = parseFloat(avgPrice);
+> 33	        if (Number.isFinite(px) && px > 0) return { feeUsdt: commission * px, feeValued: true };
+> 34	        return { feeUsdt: 0, feeValued: false };
+> 35	    }
+> 36	    // (iii) outro asset (BNB etc.) → converte via BOOK. require LAZY do beholder: beholder.js já requer
+> 37	    // o ordersRepository no topo; um require top-level daqui (chamado pelo repo) fecharia o ciclo.
+> 38	    try {
+> 39	        const beholder = require('../beholder');
+> 40	        const usdt = beholder.getStableConversion(asset, 'USDT', commission); // 0 se BOOK frio/ausente
+> 41	        const n = parseFloat(usdt);
+> 42	        if (Number.isFinite(n) && n > 0) return { feeUsdt: n, feeValued: true };
+> 43	    } catch (_) { /* não-lançante: cai no fail-safe */ }
+> 44	    return { feeUsdt: 0, feeValued: false };
+> 45	}
+> 46	
+> 47	// computeNet({ side, cummQuote, commission, commissionAsset, symbol, avgPrice }) → { net, feeUsdt, feeValued }
+> 48	function computeNet({ side, cummQuote, commission, commissionAsset, symbol, avgPrice }) {
+> 49	    const cq = parseFloat(cummQuote);
+> 50	    if (!Number.isFinite(cq)) return { net: cummQuote, feeUsdt: 0, feeValued: true }; // defensivo (não deveria ocorrer)
+> 51	    const s = String(side || '').toUpperCase();
+> 52	    // Direção desconhecida (resposta degradada/sem `side`): NÃO assume o lado — fail-safe sem ajuste
+> 53	    // (net=cummQuote); commissionAsset segue persistido p/ recompute via POST /orders/:id/sync. (QA P2)
+> 54	    if (s !== 'BUY' && s !== 'SELL') return { net: cq, feeUsdt: 0, feeValued: false };
+> 55	    const comm = parseFloat(commission) || 0;
+> 56	
+> 57	    const { feeUsdt, feeValued } = feeToUsdt(comm, commissionAsset, symbol, avgPrice);
+> 58	    if (!feeValued) return { net: cq, feeUsdt: 0, feeValued: false };                  // fail-safe: sem ajuste
+> 59	
+> 60	    let net = s === 'BUY' ? cq + feeUsdt : cq - feeUsdt;
+> 61	    if (!(net > 0)) net = cq;                                                          // guard: net>0 (invariante de getReportOrders/getAveragePrices)
+> 62	    return { net, feeUsdt, feeValued: true };
+> 63	}
+> 64	
+> 65	module.exports = { computeNet };
+> 66	
+> ```
+
+## 🤖 Claude *(17:01:04)*
+
+
+## 🤖 Claude *(17:01:05)*
+
+`feeCalc.js` já tem o padrão `startsWith(asset)` pra base. Vou adicionar um `netFilledQty` lá (helper único). Achando os 2 hotspots do ordersController:
+
+## 🤖 Claude *(17:01:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== ordersController: onde quantity \u00e9 setado de um fill (syncOrder / placeOrder) ===\"\ngrep -nE \"\\.quantity *=|executedQty|order\\.quantity|quantity:\" controllers/ordersController.js | head -25",
+  "description": "Find quantity-setting hotspots in ordersController"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ordersController: onde quantity é setado de um fill (syncOrder / placeOrder) ===
+> 46:        quantity: order.quantity,
+> 236:    order.avgPrice = quoteQuantity / parseFloat(binanceOrder.executedQty);
+> 240:    order.quantity = binanceOrder.executedQty;
+> ```
+
+## 🤖 Claude *(17:01:24)*
+
+
+## 🤖 Claude *(17:01:26)*
+
+Hotspots: app-em.js:559 (executionReport — onde mora o bug `q`), ordersController.js:240 (syncOrder). Falta ver o caminho do placeOrder/MARKET (`calcFillFinancials`). Deixa eu checar se ele seta quantity:
+
+## 🤖 Claude *(17:01:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== calcFillFinancials (ordersRepository) seta quantity? ===\"\ngrep -nA20 \"function calcFillFinancials\" repositories/ordersRepository.js | grep -nE \"quantity|executedQty|avgPrice|net|return\" | head\necho\necho \"=== placeOrder (ordersController): como a qty da ordem MARKET vai pro insert ===\"\nsed -n '120,150p' controllers/ordersController.js",
+  "description": "Check calcFillFinancials + placeOrder quantity path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === calcFillFinancials (ordersRepository) seta quantity? ===
+> 2:236-    if (!result) return {};
+> 3:237-    const executedQty = parseFloat(result.executedQty);
+> 5:239-    if (!executedQty || !cummQuote || isNaN(executedQty) || isNaN(cummQuote)) return {};
+> 7:241-    const out = { avgPrice: cummQuote / executedQty, net: cummQuote };
+> 14:248-        // net fee-inclusive ciente do lado (taxa em QUALQUER asset → USDT). result.side vem na resposta da Binance.
+> 15:249-        const { net } = require('../utils/feeCalc').computeNet({
+> 16:250-            side: result.side, cummQuote, commission, commissionAsset: commAsset, symbol, avgPrice: out.avgPrice
+> 18:252-        out.net = net;
+> 20:254-    return out;
+> 
+> === placeOrder (ordersController): como a qty da ordem MARKET vai pro insert ===
+>     let result;
+> 
+>     try {
+>         if (side === 'BUY')
+>             result = await exchange.buy(symbol, quantity, limitPrice, options);
+>         else if (side === 'SELL')
+>             result = await exchange.sell(symbol, quantity, limitPrice, options);
+>     }
+>     catch (err) {
+>         return res.status(400).json(err.body);
+>     }
+> 
+>     const order = await ordersRepository.insertOrder({
+>         automationId,
+>         symbol,
+>         quantity,
+>         type: options ? options.type : 'MARKET',
+>         side,
+>         limitPrice,
+>         stopPrice: options ? options.stopPrice : null,
+>         icebergQty: options ? options.icebergQty : null,
+>         orderId: result.orderId,
+>         clientOrderId: result.clientOrderId,
+>         transactTime: result.transactTime,
+>         status: result.status || 'NEW',
+>         // net/avgPrice/commission no insert quando já executou (MARKET) — não depende do stream
+>         ...ordersRepository.calcFillFinancials(result, symbol)
+>     })
+> 
+>     // Telegram pro dono (pedido: notificar todas as novas ordens — cobre UI e agente/MCP).
+>     // Best-effort, não-lançante; dedup por orderId+status evita duplicar com o stream.
+> ```
+
+## 🤖 Claude *(17:01:47)*
+
+
+## 🤖 Claude *(17:01:49)*
+
+Os 3 caminhos claros: `calcFillFinancials` (MARKET insert, retorna avgPrice/net — adiciono `quantity`), `app-em.js:559` (executionReport — o bug `q`), `syncOrder:240`. Deixa eu ver os campos de commission disponíveis no syncOrder:
+
+## 🤖 Claude *(17:01:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\nsed -n '225,255p' controllers/ordersController.js",
+  "description": "Read syncOrder context (commission fields)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>             return res.json(order);
+>         }
+> 
+>         binanceTrade = await exchange.orderTrade(order.symbol, order.orderId);
+>     }
+>     catch (err) {
+>         logger('system', err);
+>         return res.sendStatus(404);
+>     }
+> 
+>     const quoteQuantity = parseFloat(binanceOrder.cummulativeQuoteQty);
+>     order.avgPrice = quoteQuantity / parseFloat(binanceOrder.executedQty);
+>     order.isMaker = binanceTrade.isMaker;
+>     order.commission = binanceTrade.commission;
+>     order.commissionAsset = binanceTrade.commissionAsset;
+>     order.quantity = binanceOrder.executedQty;
+> 
+>     // net fee-inclusive ciente do lado (taxa em QUALQUER asset → USDT); recomputa e fecha o gap retroativo.
+>     order.net = require('../utils/feeCalc').computeNet({
+>         side: order.side, cummQuote: quoteQuantity, commission: parseFloat(binanceTrade.commission),
+>         commissionAsset: binanceTrade.commissionAsset, symbol: order.symbol, avgPrice: order.avgPrice
+>     }).net;
+> 
+>     await order.save();
+> 
+>     res.json(order);
+> }
+> 
+> async function getLastOrders(req, res, next) {
+>     const orders = await ordersRepository.getLastFilledOrders();
+>     res.json(orders);
+> ```
+
+## 🤖 Claude *(17:01:57)*
+
+
+## 🤖 Claude *(17:01:58)*
+
+Todos os 3 têm `executedQty`+commission+commissionAsset+symbol. Deixa eu ver as vars exatas do `calcFillFinancials`:
+
+## 🤖 Claude *(17:01:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\nsed -n '233,255p' repositories/ordersRepository.js",
+  "description": "Read calcFillFinancials exact vars"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> // ficariam só a cargo do executionReport (stream intermitente) e a maioria das MARKET ficava
+> // com net/avgPrice NULOS → P&L, custo-base e AVG PRICE furados. Retorna {} se não executou.
+> function calcFillFinancials(result, symbol) {
+>     if (!result) return {};
+>     const executedQty = parseFloat(result.executedQty);
+>     const cummQuote = parseFloat(result.cummulativeQuoteQty);
+>     if (!executedQty || !cummQuote || isNaN(executedQty) || isNaN(cummQuote)) return {};
+> 
+>     const out = { avgPrice: cummQuote / executedQty, net: cummQuote };
+>     if (Array.isArray(result.fills) && result.fills.length) {
+>         const commission = result.fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);
+>         out.commission = `${commission}`;
+>         out.isMaker = result.fills.every(f => f.isMaker === true);
+>         const commAsset = result.fills[0].commissionAsset;
+>         out.commissionAsset = commAsset;
+>         // net fee-inclusive ciente do lado (taxa em QUALQUER asset → USDT). result.side vem na resposta da Binance.
+>         const { net } = require('../utils/feeCalc').computeNet({
+>             side: result.side, cummQuote, commission, commissionAsset: commAsset, symbol, avgPrice: out.avgPrice
+>         });
+>         out.net = net;
+>     }
+>     return out;
+> }
+> ```
+
+## 🤖 Claude *(17:02:33)*
+
+
+## 🤖 Claude *(17:02:35)*
+
+Tenho os 3 caminhos. Antes de adicionar `quantity` ao `calcFillFinancials`, vou confirmar que só o `placeOrder` o chama (senão o novo campo `quantity` vazaria pra outro caller):
+
+## 🤖 Claude *(17:02:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== callers de calcFillFinancials ===\"\ngrep -rnE \"calcFillFinancials\" . | grep -v \"function calcFillFinancials\"",
+  "description": "Find all calcFillFinancials callers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === callers de calcFillFinancials ===
+> utils/feeCalc.js:12:// Os 3 pontos que calculavam net (ordersRepository.calcFillFinancials, app-em.processExecutionData,
+> beholder.js:8:const { STOP_TYPES, LIMIT_TYPES, insertOrder, getOpenOcoOrders, calcFillFinancials } = require('./repositories/ordersRepository');
+> beholder.js:558:    // exchange.sell, ANTES do insertOrder) — se o insertOrder/calcFillFinancials der throw depois, a venda já
+> beholder.js:593:        ...calcFillFinancials(result, order.symbol)
+> app-em.js:370:                try { await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }
+> app-em.js:473:                try { await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }
+> app-em.js:496:                try { updated = await ordersRepository.updateOrderByOrderId(o.orderId, o.clientOrderId, { status: remote.status, ...ordersRepository.calcFillFinancials(remote, o.symbol) }); }
+> funnelJob.js:189:            ...ordersRepository.calcFillFinancials(result, BTC)
+> repositories/ordersRepository.js:394:    calcFillFinancials,
+> controllers/ordersController.js:146:        ...ordersRepository.calcFillFinancials(result, symbol)
+> ```
+
+## 🤖 Claude *(17:03:18)*
+
+
+## 🤖 Claude *(17:03:21)*
+
+`calcFillFinancials` é chamado em **6 lugares** (beholder, reconciliação ×3, funnel, placeOrder) — adicionar `quantity` lá teria blast radius grande demais pra valor dust. Vou restringir o #9 aos **2 caminhos autoritativos** que setam `quantity` de um fill: `app-em.js:559` (executionReport — o bug `q`→`z` + net) e `syncOrder:240` (net). Isso zera o H2 nos caminhos vivos sem mexer no `calcFillFinancials`. Helper único em `feeCalc.js` + sim-test:
+
+## 🤖 Claude *(17:03:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/patch_fix9.py",
+  "content": "import io\ndef patch(path, edits):\n    s = io.open(path, encoding=\"utf-8\").read()\n    for old, new in edits:\n        assert s.count(old) == 1, f\"[{path}] \u00e2ncora n\u00e3o \u00fanica ({s.count(old)}x): {old[:70]!r}\"\n        s = s.replace(old, new)\n    io.open(path, \"w\", encoding=\"utf-8\").write(s)\n    print(\"patched\", path)\n\n# (1) feeCalc.js \u2014 helper netFilledQty + export\npatch(\"/home/gcrux-tradeux/tradeux/backend/src/utils/feeCalc.js\", [\n    (\"module.exports = { computeNet };\",\n     \"// netFilledQty \u2014 quantidade FILLED L\u00cdQUIDA da taxa. Quando a taxa \u00e9 paga no ASSET BASE (base = prefixo do par,\\n\"\n     \"// p.ex. fee em LTC num LTCUSDT), o saldo REALMENTE recebido \u00e9 executedQty \u2212 commission; nos demais casos (taxa\\n\"\n     \"// no quote/BNB/etc.) = executedQty. Espelha a heur\u00edstica base/quote do feeToUsdt (endsWith=quote, startsWith=base).\\n\"\n     \"// Usado onde a ordem persiste `quantity` a partir de um fill (app-em executionReport, ordersController.syncOrder)\\n\"\n     \"// p/ o FARM_DCA/TREND_QTY.qty refletir o que de fato se tem na carteira. N\u00c3O mexe em avgPrice (bruto) nem em net\\n\"\n     \"// (j\u00e1 fee-inclusive). SELL: a taxa sai no quote \u2192 asset != base \u2192 devolve a qty bruta (corretamente, o base vendido).\\n\"\n     \"function netFilledQty({ executedQty, commission, commissionAsset, symbol }) {\\n\"\n     \"    const qty = parseFloat(executedQty);\\n\"\n     \"    if (!Number.isFinite(qty) || qty <= 0) return 0;\\n\"\n     \"    const comm = parseFloat(commission) || 0;\\n\"\n     \"    const asset = String(commissionAsset || '').toUpperCase();\\n\"\n     \"    const sym = String(symbol || '').toUpperCase();\\n\"\n     \"    if (comm > 0 && asset && !sym.endsWith(asset) && sym.startsWith(asset)) return Math.max(0, qty - comm);\\n\"\n     \"    return qty;\\n\"\n     \"}\\n\\n\"\n     \"module.exports = { computeNet, netFilledQty };\"),\n])\n\n# (2) app-em.js:559 \u2014 q (qty do PEDIDO) -> z (filled cumulativo, consistente com avgPrice) + l\u00edquida de fee-em-base\npatch(\"/home/gcrux-tradeux/tradeux/backend/src/app-em.js\", [\n    (\"        order.quantity = executionData.q;\",\n     \"        // quantity = z (FILLED cumulativo, consistente com o avgPrice acima \u2014 N\u00c3O `q`, que \u00e9 a qty do PEDIDO),\\n\"\n     \"        // l\u00edquida da taxa quando paga no asset base (o que de fato fica na carteira). Ver utils/feeCalc.netFilledQty.\\n\"\n     \"        order.quantity = require('./utils/feeCalc').netFilledQty({ executedQty: executionData.z, commission: executionData.n, commissionAsset: executionData.N, symbol: order.symbol });\"),\n])\n\n# (3) ordersController.js:240 \u2014 syncOrder: mesma qty l\u00edquida (recompute retroativo)\npatch(\"/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js\", [\n    (\"    order.quantity = binanceOrder.executedQty;\",\n     \"    order.quantity = require('../utils/feeCalc').netFilledQty({ executedQty: binanceOrder.executedQty, commission: binanceTrade.commission, commissionAsset: binanceTrade.commissionAsset, symbol: order.symbol });\"),\n])\nprint(\"ALL PATCHED\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/patch_fix9.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:03:41)*
+
+
+## 🤖 Claude *(17:03:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\npython3 /tmp/patch_fix9.py\nfor f in src/utils/feeCalc.js src/app-em.js src/controllers/ordersController.js; do\n  node --check /home/gcrux-tradeux/tradeux/backend/$f && echo \"OK $f\"\ndone\necho \"=== fim do feeCalc.test.js (pra adicionar testes no padr\u00e3o) ===\"\ntail -25 /home/gcrux-tradeux/tradeux/backend/scripts/sim/feeCalc.test.js'",
+  "description": "Apply fix9 patch + syntax check + read test tail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> patched /home/gcrux-tradeux/tradeux/backend/src/utils/feeCalc.js
+> patched /home/gcrux-tradeux/tradeux/backend/src/app-em.js
+> patched /home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js
+> ALL PATCHED
+> OK src/utils/feeCalc.js
+> OK src/app-em.js
+> OK src/controllers/ordersController.js
+> === fim do feeCalc.test.js (pra adicionar testes no padrão) ===
+> 
+> // (3) ⭐ REGRESSÃO: taxa em BNB → converte via BOOK e desconta. (0.001 BNB × 600 = 0.6 USDT)
+> checkNet('SELL fee em BNB convertida e descontada', { side: 'SELL', cummQuote: 100, commission: 0.001, commissionAsset: 'BNB', symbol: 'LTCUSDT', avgPrice: 44 }, 99.4, true);
+> checkNet('BUY fee em BNB convertida e somada', { side: 'BUY', cummQuote: 100, commission: 0.001, commissionAsset: 'BNB', symbol: 'LTCUSDT', avgPrice: 44 }, 100.6, true);
+> 
+> // (4) fail-safe: taxa na base sem avgPrice → não valora (net=cummQuote, feeValued=false).
+> checkNet('fail-safe: base sem preço → sem ajuste', { side: 'SELL', cummQuote: 100, commission: 0.01, commissionAsset: 'LTC', symbol: 'LTCUSDT', avgPrice: 0 }, 100, false);
+> 
+> // (5) fail-safe: taxa em BNB sem BOOK (par sem book) → não valora.
+> checkNet('fail-safe: BNB sem BOOK → sem ajuste', { side: 'SELL', cummQuote: 100, commission: 0.001, commissionAsset: 'SHIB', symbol: 'LTCUSDT', avgPrice: 44 }, 100, false);
+> 
+> // (6) sem taxa → net = cummQuote, valorado.
+> checkNet('sem taxa → net=cummQuote', { side: 'SELL', cummQuote: 100, commission: 0, commissionAsset: 'USDT', symbol: 'LTCUSDT', avgPrice: 44 }, 100, true);
+> 
+> // (7) lado desconhecido → fail-safe sem ajuste (não assume direção).
+> checkNet('side ausente → sem ajuste', { side: '', cummQuote: 100, commission: 0.1, commissionAsset: 'USDT', symbol: 'LTCUSDT', avgPrice: 44 }, 100, false);
+> 
+> // (8) guard net>0: SELL com taxa > recebido → não deixa net negativo (volta p/ cummQuote).
+> checkNet('guard net>0 (taxa > recebido)', { side: 'SELL', cummQuote: 0.5, commission: 1, commissionAsset: 'USDT', symbol: 'LTCUSDT', avgPrice: 44 }, 0.5, true);
+> 
+> // invariante de sanidade: a função existe e é exportada do beholder (a raiz do bug era essa).
+> check('beholder.getStableConversion EXPORTADA (raiz do bug BNB)', typeof beholder.getStableConversion === 'function');
+> 
+> console.log(`\nfeeCalc.test.js: ${passed} passed, ${failed} failed`);
+> process.exit(failed ? 1 : 0);
+> ```
+
+## 🤖 Claude *(17:03:51)*
+
+
+## 🤖 Claude *(17:03:52)*
+
+Vou ver o topo do `feeCalc.test.js` (imports + helper `check`) pra adicionar os testes do `netFilledQty`:
+
+## 🤖 Claude *(17:03:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/feeCalc.test.js",
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Suíte de SIMULAÇÃO — feeCalc.computeNet (money-path: o `net` fee-inclusive de TODA ordem).
+> 4	 * Puro Node + assert manual (mesmo estilo de scripts/lib/apiClient.test.js). Requer o `beholder`
+> 5	 * (só p/ popular o BOOK de conversão da taxa em BNB) — precisa das deps do backend + AES_KEY.
+> 6	 *
+> 7	 * REGRESSÃO PRINCIPAL (incidente "taxa em BNB invisível no P&L"): computeNet com commissionAsset='BNB'
+> 8	 * deve converter a taxa via getStableConversion (BNBUSDT:BOOK) e descontá-la do `net`. Se a função não
+> 9	 * estiver EXPORTADA do beholder, feeCalc cai no catch → feeValued:false → P&L mente otimista (era o bug).
+> 10	 */
+> 11	process.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';
+> 12	
+> 13	const beholder = require('../../src/beholder');
+> 14	const { computeNet } = require('../../src/utils/feeCalc');
+> 15	
+> 16	let passed = 0, failed = 0;
+> 17	function approx(a, b, eps = 1e-9) { return Math.abs(parseFloat(a) - parseFloat(b)) <= eps; }
+> 18	function check(name, cond) { if (cond) passed++; else { failed++; console.error(`  ✗ ${name}`); } }
+> 19	function checkNet(name, args, expectedNet, expectedValued) {
+> 20	    const r = computeNet(args);
+> 21	    const okNet = approx(r.net, expectedNet, 1e-6);
+> 22	    const okVal = expectedValued === undefined || r.feeValued === expectedValued;
+> 23	    if (okNet && okVal) passed++;
+> 24	    else { failed++; console.error(`  ✗ ${name}: got net=${r.net} feeValued=${r.feeValued} exp net=${expectedNet} feeValued=${expectedValued}`); }
+> 25	}
+> 26	
+> 27	// BOOK do BNB p/ a conversão da taxa em BNB → USDT (getStableConversion lê BNBUSDT:BOOK.current.bestBid).
+> 28	beholder.updateMemory('BNBUSDT', 'BOOK', null, { current: { bestBid: 600, bestAsk: 600.5 } }, false);
+> 29	
+> 30	// (1) taxa no QUOTE (USDT) — caminho de hoje (sem desconto BNB).
+> ```
+
+## 🤖 Claude *(17:04:03)*
+
+
+## 🤖 Claude *(17:04:04)*
+
+Vou adicionar os testes do `netFilledQty` (import + asserções):
+
+## 🤖 Claude *(17:04:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/patch_fix9_test.py",
+  "content": "import io\np = \"/home/gcrux-tradeux/tradeux/backend/scripts/sim/feeCalc.test.js\"\ns = io.open(p, encoding=\"utf-8\").read()\n\ns = s.replace(\n    \"const { computeNet } = require('../../src/utils/feeCalc');\",\n    \"const { computeNet, netFilledQty } = require('../../src/utils/feeCalc');\", 1)\n\nblock = (\n    \"// (9) netFilledQty \u2014 qty FILLED l\u00edquida de fee-em-base (H2). approx p/ float.\\n\"\n    \"function checkQty(name, args, exp) { const g = netFilledQty(args); if (approx(g, exp, 1e-9)) passed++; else { failed++; console.error(`  \\\\u2717 ${name}: got ${g} exp ${exp}`); } }\\n\"\n    \"checkQty('BUY fee na BASE (LTC em LTCUSDT) \u2192 desconta', { executedQty: 1, commission: 0.001, commissionAsset: 'LTC', symbol: 'LTCUSDT' }, 0.999);\\n\"\n    \"checkQty('fee no QUOTE (USDT) \u2192 qty bruta', { executedQty: 1, commission: 0.1, commissionAsset: 'USDT', symbol: 'LTCUSDT' }, 1);\\n\"\n    \"checkQty('fee em BNB num par n\u00e3o-BNB \u2192 qty bruta', { executedQty: 1, commission: 0.001, commissionAsset: 'BNB', symbol: 'LTCUSDT' }, 1);\\n\"\n    \"checkQty('fee na BASE BNB (BNBUSDT) \u2192 desconta', { executedQty: 2, commission: 0.002, commissionAsset: 'BNB', symbol: 'BNBUSDT' }, 1.998);\\n\"\n    \"checkQty('SELL fee no quote \u2192 qty bruta (base vendido inteiro)', { executedQty: 5, commission: 0.5, commissionAsset: 'USDT', symbol: 'LTCUSDT' }, 5);\\n\"\n    \"checkQty('sem fee \u2192 qty bruta', { executedQty: 3, commission: 0, commissionAsset: 'USDT', symbol: 'LTCUSDT' }, 3);\\n\"\n    \"checkQty('guard: executedQty inv\u00e1lida \u2192 0', { executedQty: 'abc', commission: 0, commissionAsset: 'USDT', symbol: 'LTCUSDT' }, 0);\\n\"\n    \"checkQty('guard: fee > qty \u2192 n\u00e3o fica negativo (0)', { executedQty: 0.0005, commission: 0.001, commissionAsset: 'LTC', symbol: 'LTCUSDT' }, 0);\\n\\n\"\n    \"console.log(`\\\\nfeeCalc.test.js: ${passed} passed, ${failed} failed`);\"\n)\ns = s.replace(\"console.log(`\\\\nfeeCalc.test.js: ${passed} passed, ${failed} failed`);\", block, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"OK\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/patch_fix9_test.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:04:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\npython3 /tmp/patch_fix9_test.py\ncd /home/gcrux-tradeux/tradeux/backend\nnode --check scripts/sim/feeCalc.test.js && echo \"OK syntax\"\necho \"=== sim-suite inteira ===\"\nnode scripts/sim/run.js 2>&1 | grep -E \"feeCalc|farmTriggers|sim suite|failed\" | tail -8'",
+  "description": "Apply test patch + run sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK
+> OK syntax
+> === sim-suite inteira ===
+> farmTriggers.test.js: 16 passed, 0 failed
+> === sim/feeCalc.test.js ===
+> feeCalc.test.js: 19 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 53 passed, 0 failed
+> stepUpGuard.test.js: 21 passed, 0 failed
+> withdrawGuard.test.js: 13 passed, 0 failed
+> sim suite: 12/12 arquivos OK.
+> ```
+
+## 🤖 Claude *(17:04:35)*
+
+
+## 🤖 Claude *(17:04:37)*
+
+**feeCalc.test.js: 19 passed** (+8 do `netFilledQty`); sim-suite **12/12**. Código #9 completo (helper + app-em `q→z`+net + syncOrder net + testes). Toca o **fill handler ativo** → gate QA+TL+crítico em background:
+
+## 🤖 Claude *(17:05:08)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'fix9-netqty-gate',\n  description: 'Gate QA+TL+critico do #9: qty FILLED consistente (q->z) + liquida de fee-em-base',\n  phases: [{ title: 'Review', detail: 'QA + TL + critico revisam o #9' }],\n}\n\nconst CONTEXT = `\n# Contexto (TradeUX, mainnet LIVE, canary FARM-ONLY, equity ~US$149). #9 (design-review H2): gravar qty FILLED\n# correta/liquida de fee. Toca o FILL HANDLER ATIVO (Farm Sell id10/12/14 enche \u2192 este c\u00f3digo roda VIVO).\n# Diff (working tree, N\u00c3O deployado):\n#\n# 1) backend/src/utils/feeCalc.js \u2014 NOVO helper netFilledQty({executedQty,commission,commissionAsset,symbol}):\n#    se a taxa \u00e9 paga no ASSET BASE (base=prefixo do par: !endsWith(asset) && startsWith(asset)) devolve\n#    executedQty-commission (Math.max(0,...)); sen\u00e3o (quote/BNB/etc.) devolve executedQty. Espelha a heuristica\n#    base/quote do feeToUsdt. SELL: taxa no quote -> asset!=base -> qty bruta (o base vendido inteiro).\n# 2) backend/src/app-em.js:~559 (executionReport) \u2014 order.quantity passou de executionData.q (qty do PEDIDO)\n#    para netFilledQty(executedQty=executionData.z (FILLED cumulativo), n, N, symbol). Corrige a INCONSISTENCIA\n#    (avgPrice ja usava z na linha de cima) + desconta fee-em-base.\n# 3) backend/src/controllers/ordersController.js:~240 (syncOrder) \u2014 mesma troca p/ netFilledQty (recompute retroativo).\n# 4) scripts/sim/feeCalc.test.js \u2014 +8 asserts do netFilledQty (19/19; sim suite 12/12).\n#\n# ESCOPO DELIBERADAMENTE LIMITADO: N\u00c3O toquei ordersRepository.calcFillFinancials (que tem 6 callers \u2014 beholder,\n# reconciliacao x3, funnel, placeOrder) p/ n\u00e3o inflar o blast radius por valor dust. O executionReport (app-em)\n# \u00e9 autoritativo e SOBRESCREVE quantity em todo fill -> cobre o caminho vivo; calcFillFinancials segue gravando\n# a qty do insert (corrigida pelo executionReport/syncOrder depois, como j\u00e1 era).\n#\n# FATOS a confirmar: (a) avgPrice continua BRUTO (Z/z) e net continua via computeNet (fee-inclusive) -> N\u00c3O h\u00e1\n# dupla-contagem de fee (qty liquida + net fee-inclusive s\u00e3o dimens\u00f5es diferentes: qty=base que fica, net=USDT).\n# (b) getFarmPosition (ordersRepository) computa cost=media ponderada do avgPrice (N\u00c3O quote/qty) -> mudar qty\n# p/ liquida N\u00c3O muda o cost/gatilho no-loss; muda s\u00f3 FARM_DCA.qty (o que de fato se tem). (c) SELL: netFilledQty\n# devolve bruto (commissionAsset=USDT != base). (d) q->z \u00e9 seguro (FILLED => z==q no full-fill; consistente c/ avgPrice).\n#\n# Sua tarefa: ca\u00e7ar bug/regress\u00e3o NO FILL HANDLER ATIVO. Pontos quentes: dupla-contagem de fee no P&L; a\n# deteccao base/quote do netFilledQty (pares tipo BNBUSDT, USDCUSDT, ETHBTC; fee em BNB; SELL); q->z quebra\n# algum consumidor de quantity (LAST_ORDER_QTY do Farm Sell, getFarmPosition, painel)? algum caminho que ainda\n# dependa de quantity=qty-do-pedido? Confirme contra os arquivos reais. Tudo em pt-BR.\n`;\n\nconst SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: { verdict: { type: 'string' }, summary: { type: 'string' },\n    findings: { type: 'array', items: { type: 'object', additionalProperties: false,\n      properties: { severity: { type: 'string', enum: ['BLOCKER','HIGH','MEDIUM','LOW','NIT'] }, mustFix: { type: 'boolean' }, title: { type: 'string' }, detail: { type: 'string' } },\n      required: ['severity','mustFix','title','detail'] } } },\n  required: ['verdict','summary','findings'],\n}\n\nphase('Review')\nconst [qa, tl, critic] = await parallel([\n  () => agent(`${CONTEXT}\\n\\nVoce e o QA. Revisao pre-merge: correcao, dupla-contagem de fee, base/quote, guards, regressao no fill handler/Farm Sell, consumidores de quantity. Veredito estruturado, pt-BR.`,\n    { label: 'qa', phase: 'Review', agentType: 'qa-engineer', schema: SCHEMA }),\n  () => agent(`${CONTEXT}\\n\\nVoce e o Tech Lead. Decida o merge: risco de mexer no fill handler ativo, escopo (limitado vs calcFillFinancials), manutenibilidade, convencoes. Veredito estruturado, pt-BR.`,\n    { label: 'tl', phase: 'Review', agentType: 'tech-lead', schema: SCHEMA }),\n  () => agent(`${CONTEXT}\\n\\nVoce e um critico ADVERSARIAL. Tente QUEBRAR: dupla-contagem de fee, par onde a heuristica base/quote erra, q->z corrompendo qty, consumidor que esperava qty-do-pedido, SELL virando qty errada, partial-fill/iceberg. So achados REAIS. Veredito estruturado, pt-BR.`,\n    { label: 'critico', phase: 'Review', schema: SCHEMA }),\n])\n\nconst reviews = [\n  { role: 'QA', ...(qa || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n  { role: 'TL', ...(tl || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n  { role: 'CRITICO', ...(critic || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n]\nconst mustFix = reviews.flatMap(r => (r.findings || []).filter(f => f.mustFix || f.severity === 'BLOCKER').map(f => ({ from: r.role, ...f })))\nlog(`Vereditos: QA=${reviews[0].verdict} \u00b7 TL=${reviews[1].verdict} \u00b7 CRITICO=${reviews[2].verdict} \u00b7 must-fix=${mustFix.length}`)\nreturn { reviews, mustFix }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wbbj27apf
+> Summary: Gate QA+TL+critico do #9: qty FILLED consistente (q->z) + liquida de fee-em-base
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/subagents/workflows/wf_f58f73b6-687
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend-src/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/fix9-netqty-gate-wf_f58f73b6-687.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend-src/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/fix9-netqty-gate-wf_f58f73b6-687.js"} to iterate without resending the script.)
+> Run ID: wf_f58f73b6-687
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend-src/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/fix9-netqty-gate-wf_f58f73b6-687.js", resumeFromRunId: "wf_f58f73b6-687"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(17:05:18)*
+
+
+## 🤖 Claude *(17:05:22)*
+
+#9 implementado e no gate (`wbbj27apf`, background): helper `netFilledQty` + fix `q→z` no executionReport + `syncOrder` + 8 sim-tests (19/19), escopo limitado aos 2 caminhos autoritativos (não toquei o `calcFillFinancials` de 6-callers).
+
+Quando o gate fechar: corrijo must-fix → deploy (rebuild, confiro HALT/Farm Sell) → commit/push → sigo pro **#4** (graceful-shutdown) e depois **#5b** (frontend). Não vou começar o #4 antes do #9 commitar (pra não misturar dois changesets no working tree de um deploy). Te aviso.
+
+## 👤 User *(17:11:52)*
+
+<task-notification>
+<task-id>wbbj27apf</task-id>
+<tool-use-id>toolu_01CqhjmG9bEfkAv9DrpPs4ZK</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbbj27apf.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Gate QA+TL+critico do #9: qty FILLED consistente (q-&gt;z) + liquida de fee-em-base" completed</summary>
+<result>{"reviews":[{"role":"QA","summary":"Revisei o diff #9 (gravar qty FILLED líquida de fee) contra os arquivos reais: utils/feeCalc.js (novo netFilledQty), app-em.js:561 (executionReport, fill handler VIVO), ordersController.js:240 (syncOrder), e todos os consumidores de quantity (beholder LAST_ORDER_QTY/FARM_QTY, getFarmPosition/getTrendPosition, getAveragePrices, calcFillFinancials, updateHarvest/Farm/TrendPosition, getReportOrders, withdraw LAST_ORDER_QTY). Rodei a sim suite (12/12 arquivos, feeCalc 19/19) e testes ad-hoc da heurística base/quote. A correção é sólida e o blast radius está bem contido: avgPrice continua BRUTO (z), net continua fee-inclusive via computeNet, qty agora é líquida da fee-em-base — três dimensões distintas, SEM dupla-contagem de fee no P&amp;L (confirmado: avg=net/qty passa a refletir custo-USDT-por-unidade-REALMENTE-detida). A heurística endsWith=quote/startsWith=base acerta todos os pares reais e os capciosos (USDCUSDT, ETHBTC, BNBUSDT, fee em BNB num par não-BNB). O gatilho no-loss do Farm NÃO depende de FARM_DCA.cost (usa LAST_ORDER.avgPrice, bruto) → trigger intocado; e a redução de qty é fail-towards-safe (vende um pouco MENOS, nunca mais). Achei 1 imprecisão real na FATO (b) e propaguei 1 defeito pré-existente (commission parcial no syncOrder), ambos sem risco de dinheiro no canary atual.","verdict":"PASS COM RESSALVAS — o fill handler ativo está correto, sem dupla-contagem de fee, base/quote sólida, gatilho no-loss intocado e regressões fail-towards-safe. Mergeable. Ressalvas são LOW/NIT (imprecisão de um comentário + defeito pré-existente herdado no syncOrder), nenhuma bloqueante.","findings":[{"severity":"LOW","mustFix":false,"title":"FATO (b) impreciso: o cost da média ponderada NÃO é exatamente invariante (mas o gatilho real não usa esse cost)","detail":"A FATO (b) afirma que mudar a qty p/ líquida 'NÃO muda o cost' porque getFarmPosition computa cost=média ponderada do avgPrice. Isso é matematicamente FALSO: cost = Σ(qty_net×avgPrice)/Σ(qty_net), e como netFilledQty subtrai um valor ABSOLUTO de fee por ordem (não proporcional), os pesos mudam ligeiramente entre lotes de qty diferente → o cost deriva (verifiquei: 106.6667→106.6678 num exemplo sintético; com fee real ~0,075% a deriva é da ordem de 1e-5 relativo, desprezível). O que SALVA a alegação: o gatilho no-loss real do Farm (setup-farm.js:119) é `bestBid &gt; LAST_ORDER.avgPrice*1.012` — usa avgPrice BRUTO, NÃO FARM_DCA.cost. E mesmo o caminho FARM_QTY do canary lê FARM_DCA.qty (não .cost) p/ a qty. Então a CONCLUSÃO (trigger seguro) está certa, mas a PREMISSA do comentário está errada e pode confundir um futuro mantenedor que passe a basear o gatilho em FARM_DCA.cost. Ação: corrigir o texto do comentário/FATO (b) — dizer 'o gatilho usa LAST_ORDER.avgPrice (bruto), não FARM_DCA.cost; a qty muda, o cost deriva de forma desprezível'. Sem mudança de código."},{"severity":"LOW","mustFix":false,"title":"syncOrder herda defeito pré-existente: commission de UM ÚNICO trade aplicada à executedQty TOTAL (multi-fill)","detail":"Em ordersController.js:240, netFilledQty recebe executedQty=binanceOrder.executedQty (TOTAL preenchido) mas commission=binanceTrade.commission, onde binanceTrade = exchange.orderTrade() = `trades.find(t =&gt; t.orderId === orderId)` (utils/exchange.js:226) — apenas o PRIMEIRO trade da ordem. Numa ordem preenchida em MÚLTIPLOS trades, a fee é SUBcontabilizada (só o 1º fill), então a qty líquida fica um pouco ALTA demais (e o net, idem — já era assim no caminho de net pré-diff). Esse defeito já existia no cálculo de net (computeNet usa a mesma binanceTrade.commission); o diff apenas o PROPAGA para a qty. Impacto real: (a) syncOrder é caminho manual/retroativo, não o hot-path; (b) a direção do erro é fail-towards-safe (qty alta de menos não causa oversell; o cap-na-carteira do calcQty protege); (c) o executionReport (app-em) é autoritativo e usa executionData.n/z do MESMO evento, então é consistente lá. Ainda assim, vale uma issue de follow-up: orderTrade deveria somar commission de TODOS os trades do orderId (igual ao calcFillFinancials que faz fills.reduce). Não bloqueia o merge."},{"severity":"NIT","mustFix":false,"title":"require inline de feeCalc no hot-path (executionReport) — cosmético","detail":"app-em.js:561 e :563 fazem `require('./utils/feeCalc')` inline dentro de processExecutionData (executado a cada fill). O require é cacheado pelo module system do Node, então o custo é só um lookup de cache — desprezível e SEM impacto de performance/correção. Padrão já usado no arquivo (linha 563 do net pré-existente). Poderia ser um require no topo do módulo p/ legibilidade, mas há justificativa documentada noutros pontos sobre ciclo de require com beholder. Aceitável como está; menciono só por completude."},{"severity":"NIT","mustFix":false,"title":"netFilledQty não arredonda ao stepSize do par — qty líquida pode ter dust não-tradeável","detail":"netFilledQty devolve executedQty-commission cru (ex.: 0.999... ). Quando essa qty vira o bucket FARM_DCA.qty/LAST_ORDER.quantity e depois alimenta uma SELL (LAST_ORDER_QTY/FARM_QTY), o calcQty existente já aplica o LOT_SIZE/stepSize e o cap-na-carteira, então não há regressão de filtro Binance. Verifiquei que a sim suite (calcQty + farmTriggers + integration) passa 12/12. Só registro que a qty persistida no banco passa a carregar mais casas decimais que antes (z-fee vs z), o que é correto/intencional e o painel/telegram apenas exibem. Sem ação."}]},{"role":"TL","summary":"Diff #9 (design-review H2) grava a qty FILLED correta (cumulativa `z`, não a do pedido `q`) e líquida de fee-em-base no fill handler ativo do mainnet, via novo helper `utils/feeCalc.netFilledQty`. Auditei contra os arquivos reais: detecção base/quote, dupla-contagem de fee, consumidores de `quantity` (getFarmPosition/getTrendPosition, calcQty FARM_QTY/TREND_QTY/LAST_ORDER_QTY/HARVEST_QTY, getAveragePrices/painel, updateOrder persist). Sim suite 12/12 (feeCalc 19/19) + meus 7 casos de borda extras (ETHBTC, BTCUSDT fee-em-BTC, USDCUSDT, BNBBTC, asset/symbol vazios) batem. Não achei bug nem regressão real. Escopo deliberadamente limitado (não toca calcFillFinancials de 6 callers) é a decisão certa de blast-radius. Há 1 inconsistência transitória conhecida (qty do INSERT segue bruta até o executionReport/syncOrder sobrescrever) que é dust e aceitável.","verdict":"APPROVE COM SUGESTÕES","findings":[{"severity":"LOW","mustFix":false,"title":"Qty do INSERT (MARKET) fica BRUTA até o executionReport/syncOrder sobrescrever","detail":"beholder.js:582 (insert no placeOrder) e funnelJob.js:178 gravam `quantity` BRUTA (qty pedida / result.executedQty); calcFillFinancials NÃO recomputa quantity. Só o app-em executionReport (:561) e o ordersController.syncOrder (:240) aplicam netFilledQty. Para uma MARKET FILLED-na-hora cujo stream esteja intermitente/atrasado, a `quantity` persiste bruta até o report chegar (ou um POST /orders/:id/sync). Como o autor declarou, isso é dust: fee-em-base no Farm é ~0,075% sobre ~$20-25/ordem = sub-centavo de qty. O executionReport é autoritativo e cobre o caminho vivo. Aceito como trade-off de blast-radius — registrar, não bloquear. Nice-to-have: aplicar netFilledQty também no insert (ou em calcFillFinancials) fecharia a janela transitória, mas aí infla o blast radius pros 6 callers do calcFillFinancials, então NÃO recomendo fazer agora."},{"severity":"NIT","mustFix":false,"title":"netFilledQty=0 não atualiza quantity (guard benigno, mas implícito)","detail":"ordersRepository.updateOrder:144 usa `if (newOrder.quantity &amp;&amp; ...)`: se netFilledQty retornar 0 (entrada inválida ou fee&gt;qty), o 0 é falsy e a quantity NÃO é sobrescrita — preserva o valor anterior. Num fill real full-fill z&gt;0 sempre, então o único gatilho de 0 é entrada corrompida; preservar é mais seguro que zerar. Comportamento correto, mas depende de um falsy implícito no updateOrder — vale um comentário de 1 linha no netFilledQty notando que o 0
+... (truncated 6126 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbbj27apf.output)</result>
+<usage><agent_count>3</agent_count><subagent_tokens>233394</subagent_tokens><tool_uses>80</tool_uses><duration_ms>403357</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(17:12:15)*
+
+
+## 🤖 Claude *(17:12:16)*
+
+#9 gate: **QA=PASS · TL=APPROVE** (ressalvas LOW/NIT). Vendo o crítico + must-fix:
+
+## 🤖 Claude *(17:12:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbbj27apf.output'))\nprint('LOG:', d.get('logs'))\nres=d['result']\ncr=[r for r in res['reviews'] if r['role']=='CRITICO'][0]\nprint('CRITICO =>', cr['verdict'][:200])\nfor f in cr.get('findings',[]):\n    print(f\\\"  ({f['severity']}){' MUSTFIX' if f.get('mustFix') else ''} {f['title']}\\\")\nprint('=== MUST-FIX:', len(res.get('mustFix',[])), '===')\nfor m in res.get('mustFix',[]): print('*',m['from'],m['severity'],m['title'])\n\"",
+  "description": "Read #9 critic + must-fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LOG: ['Vereditos: QA=PASS COM RESSALVAS — o fill handler ativo está correto, sem dupla-contagem de fee, base/quote sólida, gatilho no-loss intocado e regressões fail-towards-safe. Mergeable. Ressalvas são LOW/NIT (imprecisão de um comentário + defeito pré-existente herdado no syncOrder), nenhuma bloqueante. · TL=APPROVE COM SUGESTÕES · CRITICO=APROVAR_COM_RESSALVA · must-fix=0']
+> CRITICO => APROVAR_COM_RESSALVA
+>   (MEDIUM) executionReport: `n` (commission) é incremental por-trade, mas `z`/`Z` são cumulativos — fees de fills parciais sub-descontadas
+>   (LOW) syncOrder: orderTrade().find() retorna só a 1ª trade — recompute retroativo também sub-desconta fee em fills multi-trade
+>   (NIT) Divergência setup-farm.js (LAST_ORDER_QTY) vs código FARM_QTY/FARM_DCA — confirmar qual venda está viva no canary
+> === MUST-FIX: 0 ===
+> ```
+
+## 🤖 Claude *(17:12:47)*
+
+
+## 🤖 Claude *(17:12:51)*
+
+#9: **APPROVE×3, must-fix=0.** A ressalva mais citada (crítico MEDIUM + QA LOW): a commission no executionReport (`n`) é por-fill enquanto `z`/`Z` são cumulativos → em ordem multi-fill a fee é sub-descontada (no `net` **e** agora na qty). Mas isso é **pré-existente** (o `net` já usava `n`), **dust** (ordens de $25 do canary enchem em 1 fill → `n`=fee total → correto) e **fail-towards-safe**. Meu `q→z` é melhoria mesmo em multi-fill. Vou **documentar como débito** (não expandir um fix dust num acúmulo de commission stateful no hot-path). Deploy:
+
+## 🤖 Claude *(17:12:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\nTOKEN=$(curl -s -m5 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\necho \"HALT antes:\"; curl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\" halted=\\\",d[\\\"halted\\\"],\\\"sources=\\\",d.get(\\\"sources\\\"))\"\necho \"=== rebuild+recreate backend ===\"\ndocker compose up -d --build backend 2>&1 | tail -3'",
+  "description": "Snapshot HALT + rebuild backend for #9",
+  "timeout": 320000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HALT antes:
+>  halted= False sources= []
+> === rebuild+recreate backend ===
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started
+> ```
+
+## 🤖 Claude *(17:13:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\nsleep 1\necho \"=== boot + HALT + Farm Sell + erros no fill handler ===\"\ndocker exec tradeux-backend-1 sh -lc \"grep -iE \\\"App is running|invariante|Boot falhou\\\" /app/logs/system.log | tail -2\"\nTOKEN=$(curl -s -m6 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\ncurl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\" halted=\\\",d[\\\"halted\\\"],\\\"| sources=\\\",d.get(\\\"sources\\\"))\"\ncurl -s -m5 http://127.0.0.1:8090/api/system/daily-cap -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);s=d.get(\\\"snapshot\\\",{});print(\\\" equity=\\\",s.get(\\\"equity\\\"))\"\necho \"Farm Sell ativas:\"; docker exec tradeux-backend-1 node -e \"const db=require(\\\"/app/src/db\\\");(async()=>{const r=await db.query(\\\"SELECT id,name,isActive FROM automations WHERE name LIKE \\x27Farm Sell%\\x27\\\");for(const a of (r[0]||r))console.log(\\\" \\\",a.id,a.name,\\\"active=\\\"+a.isActive);process.exit(0);})();\" 2>&1 | tail -4\necho \"erros recentes no app-em/fill?\"; docker exec tradeux-backend-1 sh -lc \"grep -iE \\\"processExecutionData|netFilledQty|TypeError\\\" /app/logs/*.log 2>/dev/null | tail -3 || echo nenhum\"'",
+  "description": "Verify #9 deploy: boot, HALT, Farm Sell, no fill errors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot + HALT + Farm Sell + erros no fill handler ===
+> info: 2026-06-24T17:13:01.466Z - [BOOT] invariante de ambiente OK (mainnet: api+stream <=> useTestnet).
+> info: 2026-06-24T17:13:01.622Z - App is running at 3001
+>  halted= False | sources= []
+>  equity= 149.3980240116958
+> Farm Sell ativas:
+>   14 Farm Sell ADAUSDT active=1
+>   12 Farm Sell BNBUSDT active=1
+>   10 Farm Sell LTCUSDT active=1
+> erros recentes no app-em/fill?
+> ```
+
+## 🤖 Claude *(17:13:16)*
+
+
+## 🤖 Claude *(17:13:17)*
+
+**#9 deploy OK:** boot limpo, `halted=false`, equity $149,40, Farm Sell ativo, sem erros no fill handler. Commit + push:
+
+## 🤖 Claude *(17:13:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/fix9_msg.txt",
+  "content": "fix(orders): qty FILLED correta e liquida de fee-em-base (design-review #9/H2)\n\ngetFarmPosition/getTrendPosition somavam qty BRUTA; alem disso o fill handler gravava executionData.q\n(qty do PEDIDO) enquanto o avgPrice usava executionData.z (FILLED cumulativo) \u2014 inconsistente em ordem\nmulti-fill. Fix:\n\n- utils/feeCalc.js: novo helper netFilledQty({executedQty,commission,commissionAsset,symbol}) \u2014 devolve\n  executedQty-commission quando a taxa e paga no asset BASE (base=prefixo do par: !endsWith && startsWith),\n  senao a qty bruta. Espelha a heuristica base/quote do feeToUsdt. SELL: taxa no quote -> qty bruta.\n- app-em.js (executionReport, fill handler vivo): order.quantity = netFilledQty(executedQty=z, n, N, symbol)\n  -> consistente com o avgPrice (z) + liquida da fee-em-base. (era executionData.q.)\n- ordersController.js syncOrder: mesma qty liquida no recompute retroativo.\n- avgPrice segue BRUTO (Z/z) e net segue via computeNet (fee-inclusive) -> SEM dupla-contagem (qty=base que\n  fica; net=USDT). O gatilho no-loss do Farm usa LAST_ORDER.avgPrice (bruto), nao FARM_DCA.cost -> intocado.\n- sim/feeCalc.test.js: +8 asserts do netFilledQty (19/19; sim suite 12/12).\n\nEscopo limitado aos 2 caminhos autoritativos (executionReport + syncOrder); NAO toca calcFillFinancials (6\ncallers) \u2014 o executionReport e autoritativo e sobrescreve a qty do insert. Gate QA+TL+critico: APPROVE x3,\nmust-fix=0; ressalvas LOW/dust/fail-safe.\n\nDEBITO conhecido (pre-existente, nao introduzido aqui; flagado pelo gate): a commission do executionReport\n(`n`) e por-fill enquanto z/Z sao cumulativos, e orderTrade().find() pega so a 1a trade -> em ordem\nMULTI-FILL a fee e sub-descontada no net E na qty (fail-towards-safe; dust nas ordens de ~$25 do canary que\nenchem em 1 fill). Fix correto = acumular commission por orderId (executionReport) e somar todas as trades\n(syncOrder/orderTrade) \u2014 follow-up separado, fora do escopo deste fix.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/fix9_msg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:13:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/src/utils/feeCalc.js backend/src/app-em.js backend/src/controllers/ordersController.js backend/scripts/sim/feeCalc.test.js\ngit commit -F /tmp/fix9_msg.txt 2>&1 | tail -2\ngit show --stat --oneline HEAD | head -7'",
+  "description": "Commit #9"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master cf8c4a3] fix(orders): qty FILLED correta e liquida de fee-em-base (design-review #9/H2)
+>  4 files changed, 33 insertions(+), 4 deletions(-)
+> cf8c4a3 fix(orders): qty FILLED correta e liquida de fee-em-base (design-review #9/H2)
+>  backend/scripts/sim/feeCalc.test.js         | 13 ++++++++++++-
+>  backend/src/app-em.js                       |  4 +++-
+>  backend/src/controllers/ordersController.js |  2 +-
+>  backend/src/utils/feeCalc.js                | 18 +++++++++++++++++-
+>  4 files changed, 33 insertions(+), 4 deletions(-)
+> ```
+
+## 🤖 Claude *(17:13:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo chown -R gcrux-tradeux:gcrux-tradeux .git\nstat -c \".git owner: %U:%G\" .git\ngit -c safe.directory='*' log --oneline -3",
+  "description": "Push #9 + restore ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    f21549b..cf8c4a3  master -> master
+> .git owner: gcrux-tradeux:gcrux-tradeux
+> cf8c4a3 fix(orders): qty FILLED correta e liquida de fee-em-base (design-review #9/H2)
+> f21549b feat(rearm): pre-reqs de re-armamento Farm — gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)
+> 8b5c5d9 docs(env): documenta os params de risco/operacionais faltantes no backend/.env.example
+> ```
+
+## 🤖 Claude *(17:14:10)*
+
+
+## 🤖 Claude *(17:14:11)*
+
+**#9 ✅** — `vivo==master==origin==cf8c4a3`. HALT/equity/Farm Sell intactos.
+
+Agora **#4 (restart condicional + graceful-shutdown)**. Deixa eu ler o `settingsController.updateSettings` + o `stepUpGuard.requiresStepUp` (o spec usa ele pra decidir o restart):
+
+## 🤖 Claude *(17:14:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const settingsRepository = require('../repositories/settingsRepository');
+> 2	const { getFromCache } = require('../utils/push');
+> 3	const logger = require('../utils/logger');
+> 4	const stepUpGuard = require('../utils/stepUpGuard');
+> 5	const { maskSecret } = require('../utils/mask');
+> 6	const crypto = require('../utils/crypto');
+> 7	
+> 8	async function getSettings(req, res, next) {
+> 9	    const id = res.locals.token.id;
+> 10	    const settings = await settingsRepository.getSettings(id);
+> 11	
+> 12	    const plainSettings = settings.get({ plain: true });
+> 13	    delete plainSettings.password;
+> 14	    delete plainSettings.secretKey;
+> 15	    delete plainSettings.testnetSecretKey;
+> 16	    plainSettings.accessKey = maskSecret(crypto.decryptIfGcm(plainSettings.accessKey));
+> 17	    plainSettings.testnetAccessKey = maskSecret(crypto.decryptIfGcm(plainSettings.testnetAccessKey));
+> 18	
+> 19	    res.json(plainSettings);
+> 20	}
+> 21	
+> 22	async function updateSettings(req, res, next) {
+> 23	    const id = res.locals.token.id;
+> 24	    const newSettings = req.body;
+> 25	
+> 26	    // STEP-UP: alteração sensível (credencial/ambiente) exige a frase de confirmação. PRIMEIRA coisa —
+> 27	    // ANTES de qualquer escrita / res.send / process.exit (o handler respondia 200 + agendava o restart
+> 28	    // ANTES de validar; o restart aplicaria a mudança sem checar). Save cosmético passa direto.
+> 29	    const current = await settingsRepository.getSettings(id);
+> 30	    // accessKey/testnetAccessKey são criptografados no DB mas mascarados no GET; o body traz o mask. Decifra-os
+> 31	    // no objeto comparado p/ o step-up reconhecer "mask == atual" e não pedir frase num não-change.
+> 32	    const currentForGuard = { ...current.get({ plain: true }) };
+> 33	    currentForGuard.accessKey = crypto.decryptIfGcm(currentForGuard.accessKey);
+> 34	    currentForGuard.testnetAccessKey = crypto.decryptIfGcm(currentForGuard.testnetAccessKey);
+> 35	    const gate = stepUpGuard.checkSettingsStepUp(currentForGuard, newSettings);
+> 36	    if (!gate.ok) return res.status(gate.status).json({ code: gate.code, error: gate.error });
+> 37	
+> 38	    await settingsRepository.updateSettings(id, newSettings);
+> 39	    res.sendStatus(200);
+> 40	
+> 41	    // Reinicia o container para recarregar as credenciais ativas do Beholder
+> 42	    setTimeout(() => {
+> 43	        logger('system', 'Restarting backend container to apply updated configurations...');
+> 44	        process.exit(0);
+> 45	    }, 1000);
+> 46	}
+> 47	
+> 48	async function getAlerts(req, res, next) {
+> 49	    res.json(getFromCache());
+> 50	}
+> 51	
+> 52	module.exports = {
+> 53	    getSettings,
+> 54	    updateSettings,
+> 55	    getAlerts
+> 56	}
+> ```
+
+## 🤖 Claude *(17:14:17)*
+
+
+## 🤖 Claude *(17:14:18)*
+
+Vou ler o `stepUpGuard` pra reusar a detecção de "campo sensível mudou" (decide o restart condicional):
+
+## 🤖 Claude *(17:14:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/stepUpGuard.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * STEP-UP de SETTINGS — alteração SENSÍVEL (credencial/ambiente) exige uma frase de confirmação.
+> 4	 *
+> 5	 * Defesa-em-profundidade contra clique acidental / autofill do navegador / token do AGENTE — NÃO contra
+> 6	 * um JWT do dono comprometido (a frase vive no .env que o backend lê; quem tem o token tem o ambiente).
+> 7	 * Espelha o padrão do floor (systemController.setFloor) e do saque (utils/withdrawGuard). PURO e testável.
+> 8	 *
+> 9	 * "Sensível-se-DIFERENTE": só pede a frase se o body realmente ALTERARIA um campo sensível vs o atual —
+> 10	 * assim um save cosmético (telegram/push) ou re-salvar com `useTestnet=false` (estado mainnet legítimo)
+> 11	 * NÃO dispara o step-up. Segredos (secretKey/password) são write-only: valor não-vazio = mudança.
+> 12	 *
+> 13	 * Env: STEP_UP_SETTINGS (default ON; =false desliga — válvula de escape sem deploy) ·
+> 14	 *      SETTINGS_CONFIRM_PHRASE (a frase; default abaixo).
+> 15	 */
+> 16	
+> 17	const { maskSecret } = require('./mask');
+> 18	
+> 19	// Credenciais MASCARADAS no GET: "diferente" ignora o valor mascarado (re-save do mask não é troca).
+> 20	const MASKED = ['accessKey', 'testnetAccessKey'];
+> 21	// Campos de ambiente legíveis (URLs): comparação simples.
+> 22	const COMPARABLE = ['apiUrl', 'streamUrl', 'testnetApiUrl', 'testnetStreamUrl'];
+> 23	// Segredos write-only (stripados no GET): valor não-vazio enviado = intenção de troca.
+> 24	const SECRETS = ['secretKey', 'testnetSecretKey', 'password'];
+> 25	
+> 26	function requiresStepUp(current, body) {
+> 27	    if (!body || typeof body !== 'object') return false;
+> 28	    current = current || {};
+> 29	    for (const f of SECRETS)
+> 30	        if (typeof body[f] === 'string' && body[f].trim().length > 0) return true;
+> 31	    for (const f of MASKED)
+> 32	        if (body[f] !== undefined && body[f] !== null
+> 33	            && String(body[f]) !== String(current[f] ?? '')
+> 34	            && String(body[f]) !== String(maskSecret(current[f] ?? ''))) return true;
+> 35	    for (const f of COMPARABLE)
+> 36	        if (body[f] !== undefined && body[f] !== null && String(body[f]) !== String(current[f] ?? '')) return true;
+> 37	    // useTestnet é boolean: sensível só se PRESENTE e DIFERENTE (false==false não dispara).
+> 38	    if (body.useTestnet !== undefined && body.useTestnet !== null
+> 39	        && Boolean(body.useTestnet) !== Boolean(current.useTestnet)) return true;
+> 40	    // email é credencial de login.
+> 41	    if (body.email && body.email !== current.email) return true;
+> 42	    return false;
+> 43	}
+> 44	
+> 45	function stepUpEnabled() { return process.env.STEP_UP_SETTINGS !== 'false'; }   // default ON
+> 46	function confirmPhrase() { return process.env.SETTINGS_CONFIRM_PHRASE || 'CONFIRMAR ALTERACAO'; }
+> 47	
+> 48	// Decisão p/ o controller. {ok:true} libera; senão {ok:false,status,code,error}.
+> 49	// NÃO ecoa a frase (diferente do floor) — é segredo do .env; o operador já a conhece.
+> 50	function checkSettingsStepUp(current, body) {
+> 51	    if (!stepUpEnabled()) return { ok: true };
+> 52	    if (!requiresStepUp(current, body)) return { ok: true };
+> 53	    if (String((body && body.confirm) || '') === confirmPhrase()) return { ok: true };
+> 54	    return {
+> 55	        ok: false, status: 400, code: 'STEP_UP_REQUIRED',
+> 56	        error: 'alteração sensível (credencial/ambiente) exige a frase de confirmação.',
+> 57	    };
+> 58	}
+> 59	
+> 60	module.exports = { requiresStepUp, stepUpEnabled, confirmPhrase, checkSettingsStepUp, COMPARABLE, SECRETS, MASKED };
+> 61	
+> ```
+
+## 🤖 Claude *(17:14:36)*
+
+
+## 🤖 Claude *(17:14:38)*
+
+`requiresStepUp` já detecta exatamente os campos de ambiente/credencial que exigem reconectar o Beholder — perfeito pro restart condicional. Mas preciso garantir que o caminho **sem-restart** limpe o cache de settings (senão mudança cosmética não pegaria). Lendo `settingsRepository.updateSettings`:
+
+## 🤖 Claude *(17:14:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js",
+  "offset": 49,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 49	async function updateSettings(id, newSettings) {
+> 50	    const currentSettings = await getSettings(id);
+> 51	
+> 52	    if (newSettings.email && newSettings.email !== currentSettings.email)
+> 53	        currentSettings.email = newSettings.email;
+> 54	
+> 55	    if (newSettings.phone !== null && newSettings.phone !== undefined
+> 56	        && newSettings.phone !== currentSettings.phone)
+> 57	        currentSettings.phone = newSettings.phone;
+> 58	
+> 59	    // Só re-hasheia quando um password NOVO e não-vazio é enviado; senão preserva
+> 60	    // o hash atual. Sem essa guarda, salvar a tela Settings sem trocar a senha
+> 61	    // (ex.: autofill do navegador num campo type=password) re-hasheia um valor
+> 62	    // não-intencional e derruba TODOS os logins em 401 — incidente 2026-06-09.
+> 63	    // Hasheia o valor BRUTO (sem trim) p/ bater com o compareSync do login; o trim
+> 64	    // serve apenas para decidir se o campo está vazio.
+> 65	    if (typeof newSettings.password === 'string' && newSettings.password.trim().length > 0)
+> 66	        currentSettings.password = bcrypt.hashSync(newSettings.password);
+> 67	
+> 68	    if (newSettings.apiUrl && newSettings.apiUrl !== currentSettings.apiUrl)
+> 69	        currentSettings.apiUrl = newSettings.apiUrl;
+> 70	
+> 71	    if (newSettings.streamUrl && newSettings.streamUrl !== currentSettings.streamUrl)
+> 72	        currentSettings.streamUrl = newSettings.streamUrl;
+> 73	
+> 74	    // accessKey agora é criptografado at-rest (GCM). Compara o body contra o atual DECIFRADO (+ sua máscara)
+> 75	    // p/ o re-save do valor mascarado não sobrescrever a chave; encripta o valor novo real. A guarda `&&`
+> 76	    // exige truthy → a accessKey de PRODUÇÃO nunca é limpa por save (≠ testnetAccessKey, que usa `!== undefined`
+> 77	    // p/ permitir limpar via string vazia).
+> 78	    const curAccessKey = crypto.decryptIfGcm(currentSettings.accessKey);
+> 79	    if (newSettings.accessKey && newSettings.accessKey !== curAccessKey
+> 80	        && newSettings.accessKey !== maskSecret(curAccessKey))
+> 81	        currentSettings.accessKey = crypto.encrypt(newSettings.accessKey);
+> 82	
+> 83	    if (newSettings.testnetApiUrl !== undefined && newSettings.testnetApiUrl !== currentSettings.testnetApiUrl)
+> ```
+
+## 🤖 Claude *(17:14:44)*
+
+
+## 🤖 Claude *(17:14:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/repositories/settingsRepository.js",
+  "offset": 84,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 84	        currentSettings.testnetApiUrl = newSettings.testnetApiUrl;
+> 85	
+> 86	    if (newSettings.testnetStreamUrl !== undefined && newSettings.testnetStreamUrl !== currentSettings.testnetStreamUrl)
+> 87	        currentSettings.testnetStreamUrl = newSettings.testnetStreamUrl;
+> 88	
+> 89	    const curTestnetAccessKey = crypto.decryptIfGcm(currentSettings.testnetAccessKey);
+> 90	    if (newSettings.testnetAccessKey !== undefined && newSettings.testnetAccessKey !== curTestnetAccessKey
+> 91	        && newSettings.testnetAccessKey !== maskSecret(curTestnetAccessKey))
+> 92	        currentSettings.testnetAccessKey = newSettings.testnetAccessKey ? crypto.encrypt(newSettings.testnetAccessKey) : newSettings.testnetAccessKey;
+> 93	
+> 94	    if (newSettings.useTestnet !== undefined && newSettings.useTestnet !== currentSettings.useTestnet)
+> 95	        currentSettings.useTestnet = newSettings.useTestnet;
+> 96	
+> 97	    if (newSettings.pushToken !== null && newSettings.pushToken !== undefined
+> 98	        && newSettings.pushToken !== currentSettings.pushToken)
+> 99	        currentSettings.pushToken = newSettings.pushToken;
+> 100	
+> 101	    // Mesma guarda da senha: só re-encripta se vier uma Secret Key nova e não-vazia,
+> 102	    // senão preserva a atual (evita zerar as credenciais da Binance num save).
+> 103	    if (typeof newSettings.secretKey === 'string' && newSettings.secretKey.trim().length > 0)
+> 104	        currentSettings.secretKey = crypto.encrypt(newSettings.secretKey);
+> 105	
+> 106	    if (typeof newSettings.testnetSecretKey === 'string' && newSettings.testnetSecretKey.trim().length > 0)
+> 107	        currentSettings.testnetSecretKey = crypto.encrypt(newSettings.testnetSecretKey);
+> 108	
+> 109	    if (newSettings.sendGridKey !== null && newSettings.sendGridKey !== undefined
+> 110	        && newSettings.sendGridKey !== currentSettings.sendGridKey)
+> 111	        currentSettings.sendGridKey = newSettings.sendGridKey;
+> 112	
+> 113	    if (newSettings.twilioSid !== null && newSettings.twilioSid !== undefined
+> ```
+
+## 🤖 Claude *(17:14:49)*
+
+
+## 🤖 Claude *(17:14:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\nsed -n '113,150p' repositories/settingsRepository.js | grep -nE \"save|clearSettingsCache|settingsCache|return|^}\" ",
+  "description": "Find save + cache clear at end of updateSettings"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 21:    await currentSettings.save();
+> 23:    clearSettingsCache(id);
+> 24:}
+> 32:}
+> ```
+
+## 🤖 Claude *(17:15:54)*
+
+
+## 🤖 Claude *(17:15:56)*
+
+`updateSettings` já chama `clearSettingsCache` no fim → caminho **sem-restart é seguro** (cache fresco). E `requiresStepUp` detecta exatamente os campos que exigem reconectar o Beholder. Implemento o #4: restart **condicional** (só em mudança de ambiente/credencial) + graceful leve (`srv.close()` via `app.set`, sem global.* nem hang em WS):
+
+## 🤖 Claude *(17:16:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/patch_fix4.py",
+  "content": "import io\ndef patch(path, edits):\n    s = io.open(path, encoding=\"utf-8\").read()\n    for old, new in edits:\n        assert s.count(old) == 1, f\"[{path}] \u00e2ncora n\u00e3o \u00fanica ({s.count(old)}x): {old[:70]!r}\"\n        s = s.replace(old, new)\n    io.open(path, \"w\", encoding=\"utf-8\").write(s)\n    print(\"patched\", path)\n\n# (1) server.js \u2014 exp\u00f5e o httpServer p/ o graceful-shutdown (via app.set, Express-native; sem global.*)\npatch(\"/home/gcrux-tradeux/tradeux/backend/src/server.js\", [\n    (\"    const server = app.listen(process.env.PORT, () => {\\n        logger('system', 'App is running at ' + process.env.PORT);\\n    })\\n\",\n     \"    const server = app.listen(process.env.PORT, () => {\\n        logger('system', 'App is running at ' + process.env.PORT);\\n    })\\n\"\n     \"    app.set('httpServer', server); // ref p/ o graceful-shutdown condicional do updateSettings (#4)\\n\"),\n])\n\n# (2) settingsController.js \u2014 restart CONDICIONAL + graceful leve\npatch(\"/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js\", [\n    (\"    await settingsRepository.updateSettings(id, newSettings);\\n\"\n     \"    res.sendStatus(200);\\n\\n\"\n     \"    // Reinicia o container para recarregar as credenciais ativas do Beholder\\n\"\n     \"    setTimeout(() => {\\n\"\n     \"        logger('system', 'Restarting backend container to apply updated configurations...');\\n\"\n     \"        process.exit(0);\\n\"\n     \"    }, 1000);\\n\"\n     \"}\",\n     \"    // RESTART CONDICIONAL (#4): s\u00f3 reinicia em mudan\u00e7a de AMBIENTE/CREDENCIAL (reconectar o Beholder/exchange\\n\"\n     \"    // \u00e0 Binance). requiresStepUp detecta exatamente esses campos (apiUrl/streamUrl/keys/useTestnet/email).\\n\"\n     \"    // Mudan\u00e7a cosm\u00e9tica (telegram/push/risco-via-.env) N\u00c3O reinicia \u2014 o updateSettings j\u00e1 limpa o cache\\n\"\n     \"    // (clearSettingsCache) \u2192 getDefaultSettings devolve fresco. Elimina o restart-a-cada-save + reduz a\\n\"\n     \"    // janela de ghost-order. (O invariante de ambiente do #5a roda no boot; apiUrl/useTestnet CONTINUAM\\n\"\n     \"    // reiniciando \u2192 re-avaliam.)\\n\"\n     \"    const needsRestart = stepUpGuard.requiresStepUp(currentForGuard, newSettings);\\n\\n\"\n     \"    await settingsRepository.updateSettings(id, newSettings);\\n\"\n     \"    res.sendStatus(200);\\n\\n\"\n     \"    if (!needsRestart) {\\n\"\n     \"        logger('system', 'Settings aplicadas SEM restart (mudan\u00e7a n\u00e3o-ambiente; cache limpo).');\\n\"\n     \"        return;\\n\"\n     \"    }\\n\\n\"\n     \"    // Graceful: para de aceitar conex\u00f5es novas (srv.close \u2014 sem aguardar o callback, p/ n\u00e3o pendurar nas\\n\"\n     \"    // conex\u00f5es WS) e d\u00e1 uma janela curta p/ o in-flight assentar antes de sair; o compose reinicia.\\n\"\n     \"    setTimeout(() => {\\n\"\n     \"        try { const srv = req.app.get('httpServer'); if (srv) srv.close(); } catch (_) { /* best-effort */ }\\n\"\n     \"        logger('system', 'Mudan\u00e7a de ambiente/credencial \u2014 reiniciando o backend p/ recarregar o Beholder...');\\n\"\n     \"        process.exit(0);\\n\"\n     \"    }, 1000);\\n\"\n     \"}\"),\n])\nprint(\"ALL PATCHED\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/patch_fix4.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:16:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\npython3 /tmp/patch_fix4.py\nnode --check /home/gcrux-tradeux/tradeux/backend/src/server.js && echo \"OK server.js\"\nnode --check /home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js && echo \"OK settingsController.js\"\necho \"=== sanity: requiresStepUp j\u00e1 testado na sim-suite? ===\"\ncd /home/gcrux-tradeux/tradeux/backend && node scripts/sim/stepUpGuard.test.js 2>&1 | tail -2'",
+  "description": "Apply #4 patch + syntax + stepUpGuard test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> patched /home/gcrux-tradeux/tradeux/backend/src/server.js
+> patched /home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js
+> ALL PATCHED
+> OK server.js
+> OK settingsController.js
+> === sanity: requiresStepUp já testado na sim-suite? ===
+> 
+> stepUpGuard.test.js: 21 passed, 0 failed
+> ```
+
+## 🤖 Claude *(17:16:35)*
+
+
+## 🤖 Claude *(17:16:36)*
+
+#4 implementado (restart condicional via `requiresStepUp` + graceful `srv.close`), sintaxe OK, decisão de restart já coberta por `stepUpGuard.test.js` (21/21). Gate QA+TL+crítico em background:
+
+## 🤖 Claude *(17:17:03)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'fix4-restart-gate',\n  description: 'Gate QA+TL+critico do #4: restart condicional + graceful-shutdown no updateSettings',\n  phases: [{ title: 'Review', detail: 'QA + TL + critico revisam o #4' }],\n}\n\nconst CONTEXT = `\n# Contexto (TradeUX, mainnet LIVE). #4 (design-review): restart CONDICIONAL + graceful-shutdown no save de Settings.\n# ANTES: updateSettings (settingsController.js) fazia process.exit(0) em QUALQUER save (1s depois) -> restart\n# desnecess\u00e1rio em mudan\u00e7a cosm\u00e9tica + janela de ghost-order. Diff (working tree, N\u00c3O deployado):\n#\n# - settingsController.updateSettings: needsRestart = stepUpGuard.requiresStepUp(currentForGuard, newSettings).\n#   Se !needsRestart -> loga e RETORNA (sem restart). Se needsRestart -> setTimeout(1s){ req.app.get('httpServer').close();\n#   process.exit(0) }. (currentForGuard j\u00e1 \u00e9 o decifrado usado pelo step-up logo acima.)\n# - server.js: app.set('httpServer', server) ap\u00f3s o app.listen (ref p/ o close; Express-native, sem global.*).\n#\n# FATOS a confirmar contra o c\u00f3digo real:\n# (a) requiresStepUp (utils/stepUpGuard.js) detecta: secretKey/testnetSecretKey/password (write-only),\n#     accessKey/testnetAccessKey (mask-aware), apiUrl/streamUrl/testnetApiUrl/testnetStreamUrl, useTestnet, email.\n#     S\u00e3o EXATAMENTE os campos que exigem reconectar o Beholder/exchange \u00e0 Binance (app-em.init usa\n#     apiUrl/streamUrl/keys no boot). Existe ALGUM campo de settings lido S\u00d3 no boot (n\u00e3o via getDefaultSettings\n#     em runtime) que mude comportamento e N\u00c3O esteja em requiresStepUp -> ficaria stale sem restart?\n# (b) settingsRepository.updateSettings chama clearSettingsCache(id) no fim -> getDefaultSettings devolve fresco;\n#     logo telegram/push/sendGrid/twilio/phone (lidos via getDefaultSettings no notify) pegam o novo valor SEM\n#     restart. Confirme que os consumidores desses campos leem via getDefaultSettings (cache) e n\u00e3o um valor de boot.\n# (c) graceful: srv.close() para de aceitar conex\u00f5es novas; N\u00c3O aguardamos o callback (conex\u00f5es WS manteriam\n#     o close pendurado) -> o setTimeout(1s)+process.exit garante a sa\u00edda. \u00c9 seguro? melhor que o exit abrupto?\n# (d) o invariante de ambiente do #5a (server.js boot) DEPENDE de que mudan\u00e7a de apiUrl/useTestnet reinicie \u2014\n#     requiresStepUp inclui os dois -> needsRestart=true nesses casos -> re-avalia. Confirme.\n# (e) regress\u00e3o: algum save que ANTES reiniciava (e dependia disso p/ aplicar) agora N\u00c3O reinicia e fica stale?\n#\n# Arquivos: backend/src/controllers/settingsController.js, backend/src/server.js, backend/src/utils/stepUpGuard.js,\n# backend/src/repositories/settingsRepository.js, backend/src/app-em.js (init usa settings no boot).\n# requiresStepUp j\u00e1 \u00e9 coberto por scripts/sim/stepUpGuard.test.js (21/21). Tudo em pt-BR.\n`;\n\nconst SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: { verdict: { type: 'string' }, summary: { type: 'string' },\n    findings: { type: 'array', items: { type: 'object', additionalProperties: false,\n      properties: { severity: { type: 'string', enum: ['BLOCKER','HIGH','MEDIUM','LOW','NIT'] }, mustFix: { type: 'boolean' }, title: { type: 'string' }, detail: { type: 'string' } },\n      required: ['severity','mustFix','title','detail'] } } },\n  required: ['verdict','summary','findings'],\n}\n\nphase('Review')\nconst [qa, tl, critic] = await parallel([\n  () => agent(`${CONTEXT}\\n\\nVoce e o QA. Foco: existe campo boot-only fora do requiresStepUp que ficaria stale sem restart? os consumidores cosm\u00e9ticos leem via getDefaultSettings(cache)? graceful seguro? regressao. Veredito estruturado, pt-BR.`,\n    { label: 'qa', phase: 'Review', agentType: 'qa-engineer', schema: SCHEMA }),\n  () => agent(`${CONTEXT}\\n\\nVoce e o Tech Lead. Decida o merge: design do gate de restart (reusar requiresStepUp), risco no save de Settings, graceful via app.set, manutenibilidade. Veredito estruturado, pt-BR.`,\n    { label: 'tl', phase: 'Review', agentType: 'tech-lead', schema: SCHEMA }),\n  () => agent(`${CONTEXT}\\n\\nVoce e um critico ADVERSARIAL. Tente achar um campo que PRECISA de restart mas requiresStepUp NAO pega (-> fica stale silenciosamente) ou um que dispara restart \u00e0 toa; race do srv.close; o caso de o save mudar credencial E o restart NAO acontecer. So achados REAIS. Veredito estruturado, pt-BR.`,\n    { label: 'critico', phase: 'Review', schema: SCHEMA }),\n])\n\nconst reviews = [\n  { role: 'QA', ...(qa || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n  { role: 'TL', ...(tl || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n  { role: 'CRITICO', ...(critic || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n]\nconst mustFix = reviews.flatMap(r => (r.findings || []).filter(f => f.mustFix || f.severity === 'BLOCKER').map(f => ({ from: r.role, ...f })))\nlog(`Vereditos: QA=${reviews[0].verdict} \u00b7 TL=${reviews[1].verdict} \u00b7 CRITICO=${reviews[2].verdict} \u00b7 must-fix=${mustFix.length}`)\nreturn { reviews, mustFix }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w05kesdpx
+> Summary: Gate QA+TL+critico do #4: restart condicional + graceful-shutdown no updateSettings
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/subagents/workflows/wf_5f026a57-fda
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend-src/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/fix4-restart-gate-wf_5f026a57-fda.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend-src/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/fix4-restart-gate-wf_5f026a57-fda.js"} to iterate without resending the script.)
+> Run ID: wf_5f026a57-fda
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend-src/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/fix4-restart-gate-wf_5f026a57-fda.js", resumeFromRunId: "wf_5f026a57-fda"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(17:17:14)*
+
+
+## 🤖 Claude *(17:17:16)*
+
+#4 no gate (`w05kesdpx`). Vou usar o tempo do gate pra adiantar o **#5b** (frontend, arquivo separado — não conflita com o #4 backend). Lendo o `Settings.js` no toggle + no `onGoLive` (padrão a espelhar):
+
+## 🤖 Claude *(17:17:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend/src\necho \"=== onGoLive (padr\u00e3o de cerim\u00f4nia) ===\"\ngrep -nE \"onGoLive|window\\.(confirm|prompt)|LIGAR REAL|useTestnet\" private/Settings/Settings.js | head -20",
+  "description": "Find onGoLive + useTestnet toggle in Settings.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onGoLive (padrão de cerimônia) ===
+> 29:                if (result.useTestnet) setActiveTab('testnet');
+> 56:                    const phrase = window.prompt('⚠️ Alteração SENSÍVEL (credencial/ambiente). Digite a frase de confirmação para salvar:');
+> 92:        if (!window.confirm(`Confirmar: ${verb} o kill-switch manual?`)) return;
+> 100:        if (!window.confirm('Re-armar o cap diário? (limpa o HALT por cap e re-baseline o equity do dia)')) return;
+> 107:    function onGoLive() {
+> 108:        const phrase = window.prompt('⚠️ Isto LIBERA TRADING COM DINHEIRO REAL (desliga o floor). Digite LIGAR REAL para confirmar:');
+> 117:        if (!window.confirm('TRAVAR o floor operacional? (congela o trading; quente, sobrevive a restart)')) return;
+> 137:            if (!window.confirm(msg)) return;
+> 276:                                        <label htmlFor="useTestnet">Active Environment</label>
+> 277:                                        <select className="form-select" id="useTestnet" value={settings.useTestnet ? 'true' : 'false'} onChange={(e) => setSettings(prev => ({ ...prev, useTestnet: e.target.value === 'true' }))}>
+> 402:                                            ? <button className="btn btn-sm btn-danger" type="button" onClick={onGoLive} disabled={halt.envHard}>LIGAR trading real</button>
+> ```
+
+## 🤖 Claude *(17:17:30)*
+
+
+## 🤖 Claude *(17:17:30)*
+
+Toggle na linha 277, cerimônias já existentes (`onGoLive` 107, save step-up 56). Lendo o trecho exato do toggle:
+
+## 🤖 Claude *(17:17:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js",
+  "offset": 274,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 274	                                <div className="col-12">
+> 275	                                    <div className="form-group">
+> 276	                                        <label htmlFor="useTestnet">Active Environment</label>
+> 277	                                        <select className="form-select" id="useTestnet" value={settings.useTestnet ? 'true' : 'false'} onChange={(e) => setSettings(prev => ({ ...prev, useTestnet: e.target.value === 'true' }))}>
+> 278	                                            <option value="false">Mainnet (Real Money)</option>
+> 279	                                            <option value="true">Testnet (Simulated)</option>
+> 280	                                        </select>
+> 281	                                    </div>
+> 282	                                </div>
+> 283	                            </div>
+> ```
+
+## 🤖 Claude *(17:17:49)*
+
+
+## 🤖 Claude *(17:17:50)*
+
+Toggle exato em mãos. Implemento o #5b agora (enquanto o #4 gateia — arquivos/builds separados). O `<select>` é controlado por `value`, então cancelar reverte sozinho no re-render (sem revert manual):
+
+## 🤖 Claude *(17:17:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'python3 - <<\"PY\"\nimport io\np=\"/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js\"\ns=io.open(p,encoding=\"utf-8\").read()\nold=\"<select className=\\\"form-select\\\" id=\\\"useTestnet\\\" value={settings.useTestnet ? \\x27true\\x27 : \\x27false\\x27} onChange={(e) => setSettings(prev => ({ ...prev, useTestnet: e.target.value === \\x27true\\x27 }))}>\"\nassert s.count(old)==1, \"anchor %d\"%s.count(old)\nnew=(\"<select className=\\\"form-select\\\" id=\\\"useTestnet\\\" value={settings.useTestnet ? \\x27true\\x27 : \\x27false\\x27} onChange={(e) => {\\n\"\n\"                                            // #5b: cerimonia no toggle de AMBIENTE (espelha o onGoLive). Defesa-em-profundidade UX \u2014\\n\"\n\"                                            // o backend ja trava incoerencia no boot (#5a) e exige a frase no Salvar; aqui avisa ANTES.\\n\"\n\"                                            const newVal = e.target.value === \\x27true\\x27;\\n\"\n\"                                            if (newVal === Boolean(settings.useTestnet)) return;\\n\"\n\"                                            const dest = newVal ? \\x27TESTNET (simulado)\\x27 : \\x27MAINNET (DINHEIRO REAL)\\x27;\\n\"\n\"                                            if (!window.confirm(`\u26a0\ufe0f Mudar o AMBIENTE ATIVO para ${dest}?\\\\n\\\\nAs URLs da Binance (api + stream) precisam casar com o ambiente, senao o trading TRAVA no boot. A troca so vale apos Salvar (que ainda exige a frase de confirmacao).`)) return;\\n\"\n\"                                            setSettings(prev => ({ ...prev, useTestnet: newVal }));\\n\"\n\"                                        }}>\")\nio.open(p,\"w\",encoding=\"utf-8\").write(s.replace(old,new))\nprint(\"patched Settings.js\")\nprint(\"confirm presente?\", \"window.confirm\" in io.open(p,encoding=\"utf-8\").read())\nPY'",
+  "description": "Implement #5b toggle confirm in Settings.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> patched Settings.js
+> confirm presente? True
+> ```
+
+## 🤖 Claude *(17:18:12)*
+
+
+## 🤖 Claude *(17:18:15)*
+
+#5b implementado (`Settings.js` toggle → `window.confirm`). JSX valida no build do frontend (deploy).
+
+**Status do "zerar todos":**
+| Item | Estado |
+|---|---|
+| A1+A2, #9 | ✅ deployado+pushed (`cf8c4a3`) |
+| **#4** graceful-shutdown | 🟡 gate rodando (`w05kesdpx`) |
+| **#5b** toggle confirm | ✅ código pronto (aguarda #4 commitar → build frontend + gate) |
+| RBAC | DEFER |
+
+Aguardo o gate do #4 → deploy backend + commit → depois gate+build do #5b (frontend) + commit. Te aviso quando o #4 fechar.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
