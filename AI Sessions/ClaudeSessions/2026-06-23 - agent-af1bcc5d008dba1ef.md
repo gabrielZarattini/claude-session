@@ -1252,6 +1252,6 @@ One non-blocking, pre-existing note (explicitly out of the introduced-vuln scope
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-23 - agent-ad712f9ef0400f04b]]
+> * **Sessão Anterior**: [[2026-06-23 - agent-add3c88d55b9c16ff]]
 > * **Próxima Sessão**: [[2026-06-23 - agent-afe8da4908bc6253f]]
 %% --- TIMELINE END --- %%
