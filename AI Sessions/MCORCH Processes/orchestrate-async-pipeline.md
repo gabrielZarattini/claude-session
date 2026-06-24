@@ -64,10 +64,3 @@ contrato** com os edge fns que a chamam — renomear em prod sem atualizar os ca
 - **`scheduled_posts.status` é enum `post_status`** (não aceita `'draft'`); p/ **segurar** um post sem publicar, adie
   `scheduled_at` p/ o futuro (o cron `auto-publish` só pega `status='queued' AND scheduled_at <= now`).
 - Nunca ecoar valores de `SB_SECRET_KEY` no output (use `${v:+SET}`, não `${v:-...}`).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
