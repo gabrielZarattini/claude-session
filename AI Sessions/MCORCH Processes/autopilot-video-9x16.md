@@ -65,12 +65,12 @@ orchestrate-content → orchestrate-step  (prepaid=true)
 [worker host HyperFrames] ── claim atômico video_renders (engine=hyperframes, state=queued)
   │  render no container efêmero (Chrome headless + FFmpeg) → MP4 1080×1920
   │  upload bucket privado video-studio-assets → finalize_video_render(refund=0 no prepaid)
+  │  RECONCILIAÇÃO (event-driven, no instante do `done` — OTD-VA-014): se a render carrega
+  │  `composition.autopilot`, o próprio worker anexa o asset:                  ◀── FR-VA-025
+  │    content_library(type='video', media_url=storage_key) + creative_metrics(source='organic')
+  │  (renders genéricos/editor sem `autopilot` → não anexam. Mesma latência de um poller, sem cron novo.)
   ▼
-autopilot-video-reconcile (poller service-role, user_id da linha)            ◀── FR-VA-025
-  │  detecta video_renders.state='done' do ciclo
-  │  content_library(type='video', media_url=storage_key) + creative_metrics + scheduled_posts.content_id
-  ▼
-finalize_autopilot_cycle (refund crédito-positivo idempotente — inalterado; absorve N_video no actual)
+finalize_autopilot_cycle (refund crédito-positivo idempotente — inalterado; actual = succeeded×10 + succeeded×12 + analyze)
 ```
 
 ---
