@@ -5045,6 +5045,1206 @@ Status dos 9 fixes: **#1, #3, #5a, #6, #7 feitos**; **#2/H3** decidido; **#8** p
 
 Recomendo **parar por aqui** (ou `/handoff` pra selar). Se quiser continuar mesmo assim, o próximo mais útil é o **#4** (graceful-shutdown — fecha a janela de ghost-order no save de Settings). Como prefere?
 
+## 👤 User *(15:05:09)*
+
+Então é possivel deixar certo quando rearmar? Digo deixar pronto para não deixar virar uma prioridade? Vamos tentar zerar todos itens de segurança e design
+
+## 🤖 Claude *(15:06:03)*
+
+
+## 🤖 Claude *(15:06:06)*
+
+Entendido — deixar os pré-reqs de re-armamento **prontos** agora (pra não virarem prioridade/risco quando você religar Trend/Farm Buy) e zerar o resto do design/segurança. É um lote grande e heterogêneo (alguns money-path, alguns frontend), então vou primeiro **investigar cada item aberto contra o código ATUAL em paralelo** (pra não implementar em cima de premissas de 22/jun que podem ter mudado) e produzir specs precisas. Depois implemento cada um com gate + deploy.
+
+## 🤖 Claude *(15:06:42)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'design-backlog-investigate',\n  description: 'Investiga os itens abertos do design-review contra o c\u00f3digo atual e produz specs de implementa\u00e7\u00e3o',\n  phases: [{ title: 'Investigar', detail: '1 agente por item, read-only, retorna spec precisa' }],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux';\nconst COMMON = `\nSistema TradeUX (bot Binance Spot, mainnet LIVE, canary FARM-ONLY, equity ~US$149, halted=false). Repo: ${REPO}.\nLeitura-only. Cite SEMPRE file:line do c\u00f3digo ATUAL (n\u00e3o confie em premissas de 2026-06-22 \u2014 verifique). Conven\u00e7\u00f5es:\ncoment\u00e1rios pt-BR; riskState \u00e9 a fonte \u00fanica do HALT; ordens via beholder/exchange; automa\u00e7\u00f5es compiladas no BRAIN\n(validateConditions \u00e9 regex SEM espa\u00e7o ao redor do operador, ex. 'current<25'); settings em settingsRepository.\nProduza uma SPEC IMPLEMENT\u00c1VEL (o que mudar, exatamente onde, risco, plano de teste). N\u00c3O implemente.`;\n\nconst SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    item: { type: 'string' },\n    currentState: { type: 'string', description: 'o que o c\u00f3digo faz hoje, com file:line' },\n    changeNeeded: { type: 'string', description: 'a mudan\u00e7a exata (trechos/pseudoc\u00f3digo), com file:line' },\n    files: { type: 'array', items: { type: 'string' } },\n    rebuild: { type: 'string', enum: ['backend', 'frontend', 'ambos', 'none'] },\n    moneyPath: { type: 'boolean' },\n    risk: { type: 'string', enum: ['low', 'medium', 'high'] },\n    testPlan: { type: 'string' },\n    gotchas: { type: 'string' },\n    recommendation: { type: 'string', description: 'DO_NOW | DEFER | DROP + 1 frase do porqu\u00ea' },\n  },\n  required: ['item', 'currentState', 'changeNeeded', 'files', 'rebuild', 'moneyPath', 'risk', 'testPlan', 'gotchas', 'recommendation'],\n}\n\nconst ITEMS = [\n  { key: 'rearm-trendqty', prompt: `RE-ARM #A1 \u2014 gate Farm Buy \u00d7 TREND_QTY. O relat\u00f3rio de design diz: o Farm Buy N\u00c3O checa TREND_QTY (diverge do backtest); o fix \"de 1 linha\" \\`!(...)\\` \u00e9 FALSO porque \\`!\\` quebra no validateConditions; a forma certa \u00e9 usar \\`<=0\\` na condi\u00e7\u00e3o E PUBLICAR \\`TREND_QTY=0\\` quando a posi\u00e7\u00e3o trend est\u00e1 flat (sen\u00e3o a MEMORY n\u00e3o tem a chave e a condi\u00e7\u00e3o n\u00e3o avalia). Investigue: como as automa\u00e7\u00f5es Farm Buy (id9/11/13) s\u00e3o definidas hoje (conditions/orderTemplate no DB ou seed), como TREND_QTY \u00e9 publicado na MEMORY (getTrendPosition/loadTrendPosition, qual job/escrita), e o que validateConditions aceita. Spec: a condi\u00e7\u00e3o exata a adicionar no Farm Buy + onde publicar TREND_QTY=0 quando flat (derive-from-orders j\u00e1 existe?).` },\n  { key: 'rearm-rsi', prompt: `RE-ARM #A2 \u2014 alinhar RSI do Farm Buy live (RSI_14_1m) com o paper (RSI 15m). Investigue: a condi\u00e7\u00e3o RSI atual das automa\u00e7\u00f5es Farm Buy live (qual \u00edndice/timeframe na condition), a condi\u00e7\u00e3o RSI das trilhas [PAPER] de consist\u00eancia, e qual \u00e9 a \"verdade\" desejada (o paper usa 15m). Spec: o que mudar na condition do Farm Buy live p/ casar o timeframe do paper, e se o \u00edndice RSI_14_15m est\u00e1 dispon\u00edvel na MEMORY (indexes.js/quais klines o app assina).` },\n  { key: 'fix4-restart', prompt: `#4 \u2014 restart condicional + graceful-shutdown no updateSettings. Hoje settingsController faz process.exit(0) em QUALQUER save (janela de ghost-order + restart desnecess\u00e1rio). Investigue settingsController.js (o exit), o que updateSettings persiste, e quais campos REALMENTE exigem restart (ambiente/credencial: apiUrl/useTestnet/keys/streamUrl) vs os que n\u00e3o exigem (telegram, risco, etc.). IMPORTANTE: o invariante de ambiente do #5a (server.js boot) DEPENDE de que mudan\u00e7a de campo de ambiente continue reiniciando. Spec: restart s\u00f3 em diff de campo de ambiente/credencial + graceful (fechar server/terminar in-flight) antes do exit.` },\n  { key: 'fix9-netqty', prompt: `#9 (H2) \u2014 gravar qty L\u00cdQUIDA de fee. getFarmPosition/getTrendPosition somam qty BRUTA; o res\u00edduo \u00e9 dust (oversell \u00e9 imposs\u00edvel por cap-na-carteira), mas o custo-m\u00e9dio fica levemente otimista. O relat\u00f3rio sugere: quantity = executedQty - commission quando commissionAsset==base. Investigue onde a ordem \u00e9 inserida (ordersRepository.insertOrder / o fill handler app-em.js), se commissionAsset/commission est\u00e3o dispon\u00edveis no fill, e o impacto em computeNet/feeCalc (N\u00c3O duplicar o desconto de fee que o computeNet j\u00e1 faz no P&L). Spec: onde e como gravar a qty l\u00edquida sem quebrar P&L.` },\n  { key: 'fix5b-toggle', prompt: `#5b \u2014 confirma\u00e7\u00e3o no toggle de ambiente (frontend Settings.js). O onGoLive j\u00e1 exige window.prompt('LIGAR REAL') (Settings.js perto da :98); o <select> de useTestnet (perto da :267) N\u00c3O tem cerim\u00f4nia. Investigue o componente do toggle e o padr\u00e3o do onGoLive. Spec: como adicionar um window.confirm/prompt no onChange do toggle (espelhar o go-live), e o que dispara o save (precisa rebuild do frontend). NOTA: o #5a backend j\u00e1 trava incoer\u00eancia no boot \u2014 ent\u00e3o isto \u00e9 defesa-em-profundidade UX.` },\n  { key: 'rbac', prompt: `#8 (resto) \u2014 RBAC/escopos no JWT. Hoje floor/halt/withdraw/settings compartilham o MESMO JWT da leitura (separa\u00e7\u00e3o agente-vs-operador \u00e9 s\u00f3 \"o MCP n\u00e3o tem a tool\"). A blacklist de logout j\u00e1 foi persistida (5690a63) e o step-up j\u00e1 existe. Investigue authMiddleware.js, como o JWT \u00e9 emitido (login), e quais rotas sens\u00edveis existem (systemController floor/halt, exchange withdraw, settings). Spec REALISTA p/ um sistema de 1 operador: vale escopo/role no JWT? Qual o desenho m\u00ednimo (ex.: claim de role, middleware requireRole nas rotas sens\u00edveis) e o custo/risco. Seja honesto se DEFER (baixo valor marginal dado step-up+MCP-sem-write j\u00e1 cobrirem o grosso).` },\n];\n\nphase('Investigar')\nconst specs = await parallel(ITEMS.map(it => () =>\n  agent(`${COMMON}\\n\\n# ITEM\\n${it.prompt}`, { label: it.key, phase: 'Investigar', agentType: 'Explore', schema: SCHEMA })\n));\n\nconst out = specs.map((s, i) => ({ key: ITEMS[i].key, ...(s || { item: ITEMS[i].key, recommendation: 'ERRO: sem retorno' }) }));\nfor (const s of out) log(`${s.key}: risk=${s.risk} rebuild=${s.rebuild} moneyPath=${s.moneyPath} \u2192 ${s.recommendation}`);\nreturn out;\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w1xf490t9
+> Summary: Investiga os itens abertos do design-review contra o código atual e produz specs de implementação
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/subagents/workflows/wf_61678ae4-3d5
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/design-backlog-investigate-wf_61678ae4-3d5.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/design-backlog-investigate-wf_61678ae4-3d5.js"} to iterate without resending the script.)
+> Run ID: wf_61678ae4-3d5
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/design-backlog-investigate-wf_61678ae4-3d5.js", resumeFromRunId: "wf_61678ae4-3d5"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(15:06:46)*
+
+
+## 🤖 Claude *(15:06:52)*
+
+Investigação em paralelo rodando (`w1xf490t9`, 6 agentes Explore — um por item aberto, cada um produzindo spec contra o código atual). Quando voltar, vou ter o mapa preciso (estado atual, mudança exata, risco, money-path?, rebuild?, plano de teste) e implemento em sequência — cada um com gate QA+TL + deploy.
+
+Itens em investigação:
+1. **Re-arm A1** — gate Farm Buy × `TREND_QTY` (forma `<=0` + publicar `TREND_QTY=0` quando flat)
+2. **Re-arm A2** — alinhar RSI do Farm Buy live (1m) → 15m do paper
+3. **#4** — restart condicional + graceful-shutdown no save de Settings
+4. **#9 (H2)** — gravar qty líquida de fee
+5. **#5b** — confirmação no toggle de ambiente (frontend)
+6. **RBAC** — escopos no JWT (avaliação honesta de valor p/ 1 operador)
+
+Te trago o resultado + ordem de ataque assim que fechar.
+
+## 👤 User *(15:12:24)*
+
+<task-notification>
+<task-id>w1xf490t9</task-id>
+<tool-use-id>toolu_01TnaUMrod3D9onbDuwtPcQx</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Investiga os itens abertos do design-review contra o código atual e produz specs de implementação" completed</summary>
+<result>[{"key":"rearm-trendqty","item":"RE-ARM #A1 — gate Farm Buy × TREND_QTY (divergence do backtest, condition validation, memory publish)","currentState":"Farm Buy (id9/11/13 — LTC/BNB/ADA, criadas por `setup-farm.js:108`) NÃO checa TREND_QTY, divergindo do backtest. Condition atual: `MEMORY['LTCUSDT:RSI_14_1m'].current&lt;35 &amp;&amp; MEMORY['LTCUSDT:REGIME']!=='bear' &amp;&amp; MEMORY['LTCUSDT:REGIME']!=='trend'` (arquivo: `/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js:108`). Quando o Trend (id6/id7) está flat (TREND_QTY=0), o Farm Buy ainda dispara, acumulando posição no mesmo ativo — a venda no-loss do Farm (id10/12/14) usa `FARM_QTY` (bucket-scoped, v1 após migration `20260615200000`), enquanto Trend venda usa `TREND_QTY`, causando colisão de carteiras. TREND_QTY é publicado APENAS no fill (`app-em.js:175` via `updateTrendPosition`), SEM publicação de \"0\" quando flat — a condition não pode verificar posição ausente (MEMORY key não existe). O `validateConditions` regex (`controllers/automationsController.js:13`) não aceita `!` sozinho ou operadores NOT complexos — aceita APENAS `[&gt;&lt;=!]+` colados sem espaço, ex. `!=`, `!==` para igualdade. Forma correta: usar `&lt;=0` na condição E publicar `TREND_QTY=0` quando flat (padrão já existe para FARM_DCA e HARVEST).","changeNeeded":"(1) Modificar Farm Buy condition (setup-farm.js:108): adicionar gate `&amp;&amp; MEMORY['LTCUSDT:TREND_QTY']&lt;=0` (ou `== MEMORY['LTCUSDT:TREND_QTY'] &amp;&amp; MEMORY['LTCUSDT:TREND_QTY']&lt;=0` se quiser ser explícito). Exemplo para LTC: `MEMORY['LTCUSDT:RSI_14_1m'].current&lt;35 &amp;&amp; MEMORY['LTCUSDT:REGIME']!=='bear' &amp;&amp; MEMORY['LTCUSDT:REGIME']!=='trend' &amp;&amp; MEMORY['LTCUSDT:TREND_QTY']&lt;=0`. (2) Publicar `TREND_QTY=0` quando a posição está flat (qty=0) — adicionar na função `updateTrendPosition` (app-em.js:168-180): após calcular `pos` via `getTrendPosition`, se `pos.qty&lt;=0`, fazer `await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, 0, false);`. (3) Adicionar `LTCUSDT:TREND_QTY` aos indexes do Farm Buy automation (setup-farm.js:109) — mudança do 3º argumento de `ensureAutomation`: de `${K(RSI_KEY_SUFFIX)},${K('REGIME')}` para `${K(RSI_KEY_SUFFIX)},${K('REGIME')},${K('TREND_QTY')}` (3 símbolos). Mesmo para BNB/ADA.","files":["/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js","/home/gcrux-tradeux/tradeux/backend/src/app-em.js","/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js (reference only)"],"rebuild":"backend","moneyPath":true,"risk":"high","testPlan":"1. Unit: validateConditions regex com 3 cláusulas (`RSI&lt;lo &amp;&amp; REGIME!==... &amp;&amp; TREND_QTY&lt;=0`) — deve passar. 2. Integration (scripts/sim/farmTriggers.test.js): Farm Buy dispara APENAS quando TREND_QTY ausente OU =0; quando TREND_QTY&gt;0, não dispara (gate funciona). 3. Boot-load (loadTrendPosition + updateTrendPosition): quando Trend venda preenche (death), TREND_QTY zerado e MEMORY['LTCUSDT:TREND_QTY']=0 gravado; Farm Buy NÃO dispara até Trend re-comprar (golden). 4. Live: ativar Trend+Farm no mainnet/canary com orçamento pequeno, observar 1 ciclo: golden compra Trend, Farm NÃO compra até Trend vender; Trend venda zera TREND_QTY, Farm pode comprar novamente (if RSI baixo). 5. Regressão: Farm Sell continua zerrando FARM_DCA, não muda comportamento.","gotchas":"- `validateConditions` regex NÃO aceita `!` ou `NOT` — usar `&lt;=0` (OU `&lt;1` se preferir ser mais explícito). `!=` só funciona em operadores simples, não `!MEMORY[...]`. - TREND_QTY publicado APENAS via fill (updateTrendPosition): se o Trend SELL cancela/falha, a posição permanece em MEMORY (não zera) — que é correto (posição não liquidou). APENAS no FILLED a posição muda (compra soma, venda zera via getTrendPosition derivação). Quando setup-farm.js roda PRIMEIRA VEZ, Trend ainda não tem ordem, então TREND_QTY NÃO existe em MEMORY → condition NÃO avalia (fai-safe até o 1º golden). - loadTrendPosition (app-em.js:388-401) skip `qty&lt;=0` (pula se zerado) — CORRETO, porque qty=0 significa flat, não queremos 0 em MEMORY, queremos AUSÊNCIA (condition NÃO avalia). O fix de publicar 0 no updateTrendPosition é MAS cuidadoso: só publica NO FILL (em event-driven, não em boot). Idempotente: report FILLED duplicado (retry) re-publica o mesmo 0. - Indexes: adicionar TREND_QTY aos indexes do Farm Buy força isChecked (todos os 3 presentes) antes de avaliar → fail-safe até Trend ativo + regime conhecido.","recommendation":"DO_NOW. O item diverge do backtest e causa colisão de carteiras no mainnet (~$149 em risco). A condição é trivial (1 gate `&lt;=0`), updateTrendPosition já tem padrão HARVEST/FARM (copy-paste seguro), e setup-farm.js é seed idempotente (rodar novamente REAPLICA a condition via migration/retrofix se necess). Testar em FARM-ONLY canary PRIMEIRO, observar 1 ciclo golden→death. Migration para retrofix da Farm Buy condition (se necesário refazer histórico) é low-friction: UPDATE automations SET conditions=CONCAT(conditions, ' &amp;&amp; MEMORY[\\\\'LTCUSDT:TREND_QTY\\\\']&lt;=0') WHERE name='Farm Buy LTCUSDT' AND conditions NOT LIKE '%TREND_QTY%'."},{"key":"rearm-rsi","item":"RE-ARM #A2: Alinhar RSI do Farm Buy live (RSI_14_1m) com o paper (RSI_14_15m)","currentState":"/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js:32 define Farm Buy live com RSI_14_1m (1-minute interval). A condition (gerada por setup-farm.js:108) usa MEMORY['&lt;sym&gt;:RSI_14_1m'].current&lt;35. Paper trails Farmnl [/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-levers.js:24] usam RSI_14_15m via variável FARM_RSI_KEY=RSI_14_${FARM_INTERVAL} where FARM_INTERVAL defaults a '15m'. Memory indexing é feito em app-em.js:710-756 (startChartMonitor) onde processChartData atualiza beholder.updateMemory(symbol, index, interval, calc, false) com estrutura MEMORY['&lt;sym&gt;:&lt;index&gt;_&lt;interval&gt;'] (per beholder.js:995-997). KSI_14_1m está subscrito via monitor criado pelo setup-farm.js:51 (CANDLES type, INTERVAL='1m', indexes='RSI_14'). No momento Farm Buy live está em operação mainnet LIVE rodando a cada vela 1m, enquanto paper Farmnl roda em 15m - divergência de timeframe causa defasagem de ~14 velas entre sinais.","changeNeeded":"SPEC: Alterar setup-farm.js line 31 de INTERVAL = '1m' → INTERVAL = '15m' OU manter setup-farm.js como está (criando monitor 1m por default) e criar um setup-farm-15m.js que sobrescreve as automações Farm Buy para usar RSI_14_15m ao invés de RSI_14_1m. Recomendação: segunda opção (mais limpa, evita quebra de backward-compatibility no setup-farm). Se primeira opção: alterar /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js:31 de 'const INTERVAL = process.env.FARM_INTERVAL || '1m';' para 'const INTERVAL = process.env.FARM_INTERVAL || '15m';' e setup-farm.js:32 passaria a gerar RSI_14_15m na condition (line 108). Qualquer escolha requer migration p/ atualizar as automações existentes 'Farm Buy LTCUSDT/BNBUSDT/ADAUSDT' no banco: alterar column 'indexes' de 'LTCUSDT:RSI_14_1m,LTCUSDT:REGIME' → 'LTCUSDT:RSI_14_15m,LTCUSDT:REGIME' + atualizar 'conditions' de \"MEMORY['LTCUSDT:RSI_14_1m'].current&lt;35 &amp;&amp; ...\" → \"MEMORY['LTCUSDT:RSI_14_15m'].current&lt;35 &amp;&amp; ...\"","files":["/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js","/home/gcrux-tradeux/tradeux/backend/src/beholder.js:line 995-997 (parseMemoryKey)","/home/gcrux-tradeux/tradeux/backend/src/app-em.js:line 710-756 (startChartMonitor)","/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-levers.js"],"rebuild":"backend","moneyPath":true,"risk":"medium","testPlan":"(1) Verify setup-farm.js generates RSI_14_15m in automation indexes e condition (dry-run FARM_INTERVAL=15m). (2) Confirm monitor CANDLES 15m é criado p/ cada símbolo (idempotent). (3) Run migration em ambiente testnet: atualize automações 'Farm Buy LTCUSDT/BNBUSDT/ADAUSDT' no banco com indexes + conditions pointing RSI_14_15m. (4) Activate uma automação Farm Buy no testnet, observe: memoria keys deve 
+... (truncated 40265 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output)</result>
+<usage><agent_count>6</agent_count><subagent_tokens>364184</subagent_tokens><tool_uses>188</tool_uses><duration_ms>341727</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(15:12:32)*
+
+
+## 🤖 Claude *(15:12:33)*
+
+Investigação completa (6 specs). O resultado veio truncado — deixa eu ler tudo:
+
+## 🤖 Claude *(15:12:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output'))\nfor s in d:\n    print('='*75)\n    print(s['key'].upper(),'| risk='+str(s.get('risk')),'| rebuild='+str(s.get('rebuild')),'| moneyPath='+str(s.get('moneyPath')))\n    print('REC:', s.get('recommendation'))\n    print('-- changeNeeded --'); print((s.get('changeNeeded') or '')[:900])\n    print('-- gotchas --'); print((s.get('gotchas') or '')[:400])\n\"",
+  "description": "Read all 6 investigation specs"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<string>", line 6, in <module>
+> TypeError: string indices must be integers, not 'str'
+> ===========================================================================
+> ```
+
+## 🤖 Claude *(15:12:40)*
+
+
+## 🤖 Claude *(15:12:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output'))\nprint('top type:', type(d), '| keys:' , d.keys() if isinstance(d,dict) else len(d))\n\" 2>&1\necho \"---- first 300 chars ----\"\nhead -c 300 /tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output",
+  "description": "Inspect output structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> top type: <class 'dict'> | keys: dict_keys(['summary', 'agentCount', 'logs', 'result'])
+> ---- first 300 chars ----
+> {
+>   "summary": "Investiga os itens abertos do design-review contra o código atual e produz specs de implementação",
+>   "agentCount": 6,
+>   "logs": [
+>     "rearm-trendqty: risk=high rebuild=backend moneyPath=true → DO_NOW. O item diverge do backtest e causa colisão de carteiras no mainnet (~$149 e
+> ```
+
+## 🤖 Claude *(15:12:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output'))['result']\nfor s in d:\n    print('='*75)\n    print(s['key'].upper(),'| risk='+str(s.get('risk')),'| rebuild='+str(s.get('rebuild')),'| moneyPath='+str(s.get('moneyPath')))\n    print('REC:', (s.get('recommendation') or '')[:300])\n\"",
+  "description": "List all 6 specs summary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===========================================================================
+> REARM-TRENDQTY | risk=high | rebuild=backend | moneyPath=True
+> REC: DO_NOW. O item diverge do backtest e causa colisão de carteiras no mainnet (~$149 em risco). A condição é trivial (1 gate `<=0`), updateTrendPosition já tem padrão HARVEST/FARM (copy-paste seguro), e setup-farm.js é seed idempotente (rodar novamente REAPLICA a condition via migration/retrofix se nec
+> ===========================================================================
+> REARM-RSI | risk=medium | rebuild=backend | moneyPath=True
+> REC: DO_NOW — Alinhamento de timeframe é money-path (Farm Buy live dispara com atraso 14 velas vs paper). Custo baixo (1 migration + opcional update no script). Risk médium porque muda entry-trigger (RSI assessment shifts from 1m candle-close para 15m, ie, RESET behavior: pode haver gaping de preço entre
+> ===========================================================================
+> FIX4-RESTART | risk=medium | rebuild=backend | moneyPath=True
+> REC: DO_NOW — Esta mudança é crítica (ghost-order risk + desnecessário restarts) e bem-circunscrita (3 arquivos, lógica testável). Deve ser feita ANTES que o #5a (invariante de boot) seja finalizado, pois #5a assume que restart só ocorra em mudança de ambiente. Baixo risco se testes forem rigorosos na co
+> ===========================================================================
+> FIX9-NETQTY | risk=medium | rebuild=backend | moneyPath=True
+> REC: DO_NOW — criticalidade média-alta. O bug de iceberg (q vs z) afeta rastreio de posição em múltiplos fills. Fee em base-asset afeta P&L de forma otimista. Impacto baixo hoje (ainda não há Iceberg em prod), mas design-correctness alto. Esforço ~4h (3 hotspots, testes).
+> ===========================================================================
+> FIX5B-TOGGLE | risk=medium | rebuild=frontend | moneyPath=True
+> REC: 
+> DO_NOW — A mudança é **baixa complexidade e alto valor**: adiciona ceremony defensiva ao toggle mais crítico (ambiente ativo), espelha o padrão consolidado do `onGoLive()` (money-path), e integra com o backend já pronto (stepUpGuard). Reduz risco de acidente (clique errado, autofill) e melhora disc
+> ===========================================================================
+> RBAC | risk=low | rebuild=none | moneyPath=False
+> REC: DEFER + 1 frase do porquê — Proteções de defesa-em-profundidade (step-up, HALT, allowlist, frase de confirmação, MCP read-only) já cobrem 95%+ do ataque surface. RBAC ganha valor real quando houver múltiplos operadores ou quando o "operador" for um SLA de terceiros (não o dono). Hoje (1 operador, do
+> ```
+
+## 🤖 Claude *(15:13:32)*
+
+
+## 🤖 Claude *(15:13:33)*
+
+Specs prontas: **5 DO_NOW + RBAC = DEFER** (avaliação honesta: defesa-em-profundidade já cobre ~95%; RBAC só agrega com múltiplos operadores). Deixa eu ler as specs completas pra implementar com precisão:
+
+## 🤖 Claude *(15:13:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/w1xf490t9.output'))['result']\nfor s in d:\n    if s['key']=='rbac': continue\n    print('#'*78)\n    print(s['key'].upper(), '| risk='+str(s.get('risk')),'rebuild='+str(s.get('rebuild')),'money='+str(s.get('moneyPath')))\n    print('FILES:', s.get('files'))\n    print('-- CHANGE --'); print(s.get('changeNeeded'))\n    print('-- GOTCHAS --'); print(s.get('gotchas'))\n    print('-- TEST --'); print((s.get('testPlan') or '')[:500])\n\"",
+  "description": "Dump full specs for 5 DO_NOW items"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ##############################################################################
+> REARM-TRENDQTY | risk=high rebuild=backend money=True
+> FILES: ['/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js', '/home/gcrux-tradeux/tradeux/backend/src/app-em.js', '/home/gcrux-tradeux/tradeux/backend/src/utils/indexes.js (reference only)']
+> -- CHANGE --
+> (1) Modificar Farm Buy condition (setup-farm.js:108): adicionar gate `&& MEMORY['LTCUSDT:TREND_QTY']<=0` (ou `== MEMORY['LTCUSDT:TREND_QTY'] && MEMORY['LTCUSDT:TREND_QTY']<=0` se quiser ser explícito). Exemplo para LTC: `MEMORY['LTCUSDT:RSI_14_1m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend' && MEMORY['LTCUSDT:TREND_QTY']<=0`. (2) Publicar `TREND_QTY=0` quando a posição está flat (qty=0) — adicionar na função `updateTrendPosition` (app-em.js:168-180): após calcular `pos` via `getTrendPosition`, se `pos.qty<=0`, fazer `await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, 0, false);`. (3) Adicionar `LTCUSDT:TREND_QTY` aos indexes do Farm Buy automation (setup-farm.js:109) — mudança do 3º argumento de `ensureAutomation`: de `${K(RSI_KEY_SUFFIX)},${K('REGIME')}` para `${K(RSI_KEY_SUFFIX)},${K('REGIME')},${K('TREND_QTY')}` (3 símbolos). Mesmo para BNB/ADA.
+> -- GOTCHAS --
+> - `validateConditions` regex NÃO aceita `!` ou `NOT` — usar `<=0` (OU `<1` se preferir ser mais explícito). `!=` só funciona em operadores simples, não `!MEMORY[...]`. - TREND_QTY publicado APENAS via fill (updateTrendPosition): se o Trend SELL cancela/falha, a posição permanece em MEMORY (não zera) — que é correto (posição não liquidou). APENAS no FILLED a posição muda (compra soma, venda zera via getTrendPosition derivação). Quando setup-farm.js roda PRIMEIRA VEZ, Trend ainda não tem ordem, então TREND_QTY NÃO existe em MEMORY → condition NÃO avalia (fai-safe até o 1º golden). - loadTrendPosition (app-em.js:388-401) skip `qty<=0` (pula se zerado) — CORRETO, porque qty=0 significa flat, não queremos 0 em MEMORY, queremos AUSÊNCIA (condition NÃO avalia). O fix de publicar 0 no updateTrendPosition é MAS cuidadoso: só publica NO FILL (em event-driven, não em boot). Idempotente: report FILLED duplicado (retry) re-publica o mesmo 0. - Indexes: adicionar TREND_QTY aos indexes do Farm Buy força isChecked (todos os 3 presentes) antes de avaliar → fail-safe até Trend ativo + regime conhecido.
+> -- TEST --
+> 1. Unit: validateConditions regex com 3 cláusulas (`RSI<lo && REGIME!==... && TREND_QTY<=0`) — deve passar. 2. Integration (scripts/sim/farmTriggers.test.js): Farm Buy dispara APENAS quando TREND_QTY ausente OU =0; quando TREND_QTY>0, não dispara (gate funciona). 3. Boot-load (loadTrendPosition + updateTrendPosition): quando Trend venda preenche (death), TREND_QTY zerado e MEMORY['LTCUSDT:TREND_QTY']=0 gravado; Farm Buy NÃO dispara até Trend re-comprar (golden). 4. Live: ativar Trend+Farm no mai
+> ##############################################################################
+> REARM-RSI | risk=medium rebuild=backend money=True
+> FILES: ['/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js', '/home/gcrux-tradeux/tradeux/backend/src/beholder.js:line 995-997 (parseMemoryKey)', '/home/gcrux-tradeux/tradeux/backend/src/app-em.js:line 710-756 (startChartMonitor)', '/home/gcrux-tradeux/tradeux/backend/scripts/setup-paper-levers.js']
+> -- CHANGE --
+> SPEC: Alterar setup-farm.js line 31 de INTERVAL = '1m' → INTERVAL = '15m' OU manter setup-farm.js como está (criando monitor 1m por default) e criar um setup-farm-15m.js que sobrescreve as automações Farm Buy para usar RSI_14_15m ao invés de RSI_14_1m. Recomendação: segunda opção (mais limpa, evita quebra de backward-compatibility no setup-farm). Se primeira opção: alterar /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js:31 de 'const INTERVAL = process.env.FARM_INTERVAL || '1m';' para 'const INTERVAL = process.env.FARM_INTERVAL || '15m';' e setup-farm.js:32 passaria a gerar RSI_14_15m na condition (line 108). Qualquer escolha requer migration p/ atualizar as automações existentes 'Farm Buy LTCUSDT/BNBUSDT/ADAUSDT' no banco: alterar column 'indexes' de 'LTCUSDT:RSI_14_1m,LTCUSDT:REGIME' → 'LTCUSDT:RSI_14_15m,LTCUSDT:REGIME' + atualizar 'conditions' de "MEMORY['LTCUSDT:RSI_14_1m'].current<35 && ..." → "MEMORY['LTCUSDT:RSI_14_15m'].current<35 && ..."
+> -- GOTCHAS --
+> Monitor 1m p/ RSI_14_1m pode ainda existir no banco (criado por setup-farm.js chamadas anteriores) — será INÚTIL mas inócuo. Se manter setup-farm.js com default 1m e criar setup-farm-15m.js, testar conflito de idempotência (dois scripts, mesmo symbol, monitor 15m). Condition do Farm Buy usa regex SEM espaços (beholder.js:141-152, validateConditions), ex. 'current<35' não 'current < 35' — migration DEVE respeitar isto. Timezones se usadas: RSI_14_15m muda a cada 15 minutos UTC (Binance), enquanto paper trails tb usam 15m — aligned.
+> -- TEST --
+> (1) Verify setup-farm.js generates RSI_14_15m in automation indexes e condition (dry-run FARM_INTERVAL=15m). (2) Confirm monitor CANDLES 15m é criado p/ cada símbolo (idempotent). (3) Run migration em ambiente testnet: atualize automações 'Farm Buy LTCUSDT/BNBUSDT/ADAUSDT' no banco com indexes + conditions pointing RSI_14_15m. (4) Activate uma automação Farm Buy no testnet, observe: memoria keys deve ter '<sym>:RSI_14_15m' appearing in MEMORY a cada 15m (não a cada 1m) — check via GET /analysis/
+> ##############################################################################
+> FIX4-RESTART | risk=medium rebuild=backend money=True
+> FILES: ['/home/gcrux-tradeux/tradeux/backend/src/controllers/settingsController.js', '/home/gcrux-tradeux/tradeux/backend/src/server.js', '/home/gcrux-tradeux/tradeux/backend/src/app-em.js']
+> -- CHANGE --
+> **settingsController.js:22-46** — Implementar restart condicional + graceful-shutdown:
+> 
+> ```javascript
+> async function updateSettings(req, res, next) {
+>     const id = res.locals.token.id;
+>     const newSettings = req.body;
+> 
+>     // STEP-UP (linhas 26-36 atuais, sem mudança)
+>     const current = await settingsRepository.getSettings(id);
+>     const currentForGuard = { ...current.get({ plain: true }) };
+>     currentForGuard.accessKey = crypto.decryptIfGcm(currentForGuard.accessKey);
+>     currentForGuard.testnetAccessKey = crypto.decryptIfGcm(currentForGuard.testnetAccessKey);
+>     const gate = stepUpGuard.checkSettingsStepUp(currentForGuard, newSettings);
+>     if (!gate.ok) return res.status(gate.status).json({ code: gate.code, error: gate.error });
+> 
+>     // Determina se restart é necessário (diff em campo de ambiente/credencial)
+>     const needsRestart = stepUpGuard.requiresStepUp(currentForGuard, newSettings);
+>     
+>     await settingsRepository.updateSettings(id, newSettings);
+>     res.sendStatus(200);
+> 
+>     // GRACEFUL SHUTDOWN (restart condicional): só se houve mudança em campo sensível
+>     if (needsRestart) {
+>         setTimeout(() => {
+>             logger('system', 'Detected environment/credential change. Initiating graceful shutdown before restart...');
+>             gracefulShutdown();
+>         }, 1000);
+>     }
+> }
+> ```
+> 
+> **Novo arquivo: settingsController.js (adicionar função auxiliar)**:
+> ```javascript
+> // Graceful shutdown: fecha server, aguarda in-flight, termina processes
+> async function gracefulShutdown() {
+>     try {
+>         // Fechar server HTTP (para de aceitar requisições novas)
+>         if (global.httpServer) {
+>             logger('system', 'Closing HTTP server...');
+>             await new Promise(resolve => global.httpServer.close(resolve));
+>         }
+>         
+>         // WebSocket connections — fechar graciously
+>         if (global.wss) {
+>             logger('system', 'Closing WebSocket server...');
+>             global.wss.clients.forEach(ws => ws.close(1001, 'Server restarting'));
+>             global.wss.close(() => {
+>                 logger('system', 'WebSocket server closed.');
+>             });
+>         }
+>         
+>         // Agenda (scheduled jobs) — encerrar
+>         const agenda = global.agendaInstance;
+>         if (agenda) {
+>             logger('system', 'Stopping agenda (scheduled jobs)...');
+>             await agenda.stop();
+>         }
+>         
+>         // Exchange streams (miniTicker, book, userData, chart) — terminate
+>         if (global.exchange) {
+>             logger('system', 'Terminating exchange streams...');
+>             try {
+>                 global.exchange.terminate?.();
+>             } catch (e) {
+>                 logger('system', `Warning: exchange.terminate() failed: ${e.message}`);
+>             }
+>         }
+>         
+>         // DB close
+>         const db = require('./db');
+>         if (db && db.sequelize) {
+>             logger('system', 'Closing database...');
+>             await db.sequelize.close();
+>         }
+>         
+>         logger('system', 'Graceful shutdown complete. Exiting...');
+>         process.exit(0);
+>     } catch (err) {
+>         logger('system', `Graceful shutdown error (forcing exit): ${err.message}`);
+>         process.exit(1);
+>     }
+> }
+> ```
+> 
+> **server.js (linhas 68-72)** — Capturar referências globais para o graceful shutdown:
+> ```javascript
+>     logger('system', `Starting the server apps...`);
+>     const server = app.listen(process.env.PORT, () => {
+>         logger('system', 'App is running at ' + process.env.PORT);
+>     })
+>     global.httpServer = server;  // Expõe para gracefulShutdown
+> 
+>     const wss = appWs(server);
+>     global.wss = wss;            // Expõe para gracefulShutdown
+> 
+>     appEm.init(settings, wss, beholder);
+>     
+>     // Expõe agenda global (necessário para gracefulShutdown parar jobs)
+>     global.agendaInstance = agenda;
+>     
+>     // Expõe exchange para terminar streams
+>     // (será atribuído em appEm.init quando exchange for instanciado)
+> ```
+> 
+> **app-em.js (linha 859)** — Expor exchange:
+> ```javascript
+> async function init(settings, wssInstance, beholderInstance) {
+>     // ...
+>     exchange = require('./utils/exchange')(settings);
+>     global.exchange = exchange;  // Expõe para gracefulShutdown
+>     // ...
+> }
+> ```
+> 
+> **Invariante de #5a**: A mudança RESPEITA o invariante — restart só ocorre quando `useTestnet`, `apiUrl`, `streamUrl`, `testnetApiUrl`, ou `testnetStreamUrl` sofrem diff, ou credenciais mudam. Isso garante que após restart, server.js re-avaliará a coerência (linhas 43-57) contra as URLs novas salvas.
+> -- GOTCHAS --
+> **WebSocket.close(1001)**: RFC 6455, 1001 = "going away" (servidor se desliga). Clients devem reagir com reconnect automático (se implementados corretamente). Verificar se a UI (`frontend/`) e o agent (`tradeux-agent/`) tratam 1001 graciosamente.
+> 
+> **global.exchange**: em appEm.init (L859), `exchange` é local. Para expor globalmente, atribuir `global.exchange = exchange` na mesma linha. Risco: se appEm.init falhar antes, `global.exchange` fica undefined → gracefulShutdown.exchange?.terminate?.() protege com optional chaining.
+> 
+> **agenda.stop()**: `agenda` é local em server.js (L65). Atribuir `global.agendaInstance = agenda` APÓS init (linha 65), não dentro de uma callback async. Risco: race condition se stop() for chamado antes que `start()` complete — ver se `agenda.init()` retorna um evento ou promise para sincronizar.
+> 
+> **Database close**: `db` é um singleton (require('./db')). Certifique que `.sequelize` existe e que a chamada não conflita com outras transações abertas. Timeout recomendado: 5s antes de forçar exit (não implementado aqui, deixar como fail-safe cultural).
+> 
+> **Timing de 1s (L42-45)**: mantém compatibilidade com o original, permitindo que a resposta 200 seja entregue ANTES do shutdown iniciar. Se testado em rede lenta, considerar aumentar para 2-3s ou usar event-driven (ex.: res.on('finish')).
+> 
+> **Testes paralelos**: race condition se dois PATCH /settings forem enviados simultaneamente. GracefulShutdown escalonará dois process.exit(0) — só o primeiro mata o processo; o segundo é no-op. Aceitável, mas logar colisão seria prudente.
+> -- TEST --
+> 1. **Teste de restart condicional** (não-restart):
+>    - Alterar `telegramBot` ou `pushToken` via PATCH /settings
+>    - Verificar que resposta 200 é enviada
+>    - Verificar que processo NÃO sai (grep process.exit logs durante ~2s pós-save)
+>    - Verificar que bot continua operacional
+> 
+> 2. **Teste de restart condicional** (restart):
+>    - Alterar `apiUrl` para uma URL testnet válida + ajustar `useTestnet=true`
+>    - Verificar que resposta 200 é enviada
+>    - Aguardar ~1.5s
+>    - Verificar que gracefulShut
+> ##############################################################################
+> FIX9-NETQTY | risk=medium rebuild=backend money=True
+> FILES: ['/home/gcrux-tradeux/tradeux/backend/src/app-em.js', '/home/gcrux-tradeux/tradeux/backend/src/controllers/ordersController.js', '/home/gcrux-tradeux/tradeux/backend/src/repositories/ordersRepository.js']
+> -- CHANGE --
+> **Estratégia: Armazenar qty LÍQUIDA (executedQty - commission de base-asset) diretamente no campo `quantity`**
+> 
+> Rationale: `quantity` é armazenado como DECIMAL(18,8) no DB, permitindo 8 casas decimais — suficiente para deitar fee. Mantém backward-compat: todas as leituras de `order.quantity` já assumem qty líquida (só mudar o escritor).
+> 
+> **1. app-em.js:557 — Fix executionData.q → executionData.z**
+> ```javascript
+> // ANTES
+> if (order.status === orderStatus.FILLED) {
+>     const quoteAmount = parseFloat(executionData.Z);
+>     order.avgPrice = quoteAmount / parseFloat(executionData.z);
+>     order.commission = executionData.n;
+>     order.commissionAsset = executionData.N;
+>     order.quantity = executionData.q;  // ← BUG: último lote, não cumulativo
+>     order.net = require('./utils/feeCalc').computeNet({...}).net;
+> }
+> 
+> // DEPOIS
+> if (order.status === orderStatus.FILLED) {
+>     const quoteAmount = parseFloat(executionData.Z);
+>     const executedQty = parseFloat(executionData.z);  // cumulativo
+>     order.avgPrice = quoteAmount / executedQty;
+>     order.commission = executionData.n;
+>     order.commissionAsset = executionData.N;
+>     
+>     // Calcula qty LÍQUIDA: deduz fee de base-asset (se aplicável)
+>     const commissionAsset = String(executionData.N || '').toUpperCase();
+>     const symbol = String(executionData.s || '').toUpperCase();
+>     const comm = parseFloat(executionData.n) || 0;
+>     
+>     // Se fee em base-asset (ex: BTC/USDT com comissão em BTC), subtrai da qty
+>     let netQty = executedQty;
+>     if (comm > 0 && commissionAsset && symbol.startsWith(commissionAsset)) {
+>         netQty = executedQty - comm;
+>     }
+>     order.quantity = String(Math.max(netQty, 0).toFixed(8)); // ← guard contra negativo (dust)
+>     
+>     order.net = require('./utils/feeCalc').computeNet({...}).net;
+> }
+> ```
+> 
+> **2. ordersController.js:240 (syncOrder) — aplicar mesma lógica**
+> ```javascript
+> // ANTES
+> order.quantity = binanceOrder.executedQty;
+> 
+> // DEPOIS
+> const executedQty = parseFloat(binanceOrder.executedQty);
+> const commissionAsset = String(binanceTrade.commissionAsset || '').toUpperCase();
+> const symbol = String(order.symbol || '').toUpperCase();
+> const comm = parseFloat(binanceTrade.commission) || 0;
+> 
+> let netQty = executedQty;
+> if (comm > 0 && commissionAsset && symbol.startsWith(commissionAsset)) {
+>     netQty = executedQty - comm;
+> }
+> order.quantity = Math.max(netQty, 0).toFixed(8);
+> ```
+> 
+> **3. ordersController.js:132-147 (placeOrder) — incluir qty líquida se MARKET executar**
+> ```javascript
+> // Após calcFillFinancials, se resultado executou (MARKET):
+> if (result.executedQty) {
+>     const executedQty = parseFloat(result.executedQty);
+>     const fills = Array.isArray(result.fills) ? result.fills : [];
+>     const totalCommission = fills.reduce((a, f) => a + parseFloat(f.commission || 0), 0);
+>     const commissionAsset = fills.length > 0 ? String(fills[0].commissionAsset || '').toUpperCase() : '';
+>     const symbol = String(order.symbol || '').toUpperCase();
+>     
+>     let netQty = executedQty;
+>     if (totalCommission > 0 && commissionAsset && symbol.startsWith(commissionAsset)) {
+>         netQty = executedQty - totalCommission;
+>     }
+>     // Spread na chamada insertOrder agora inclui quantity líquida
+>     spreadObj.quantity = Math.max(netQty, 0).toFixed(8);
+> }
+> // Isso substitui o `quantity` do request (se MARKET executou)
+> ```
+> 
+> **4. Não alterar getFarmPosition/getTrendPosition**
+> - Essas funções JÁ leem quantity do DB (que agora será líquida)
+> - Nenhuma mudança necessária — a mudança em `quantity` propaga automaticamente
+> - IMPORTANTE: `avgPrice` permanece inalterado (é custo médio da qty bruta executada, não afetado por fee em base-asset)
+> 
+> **GOTCHA crítico: avgPrice está CORRETO**
+> - `avgPrice = quoteAmount / executedQty` usa qtys brutas (antes de fee)
+> - Fee em base-asset **não** afeta quoteAmount, só reduz a qty final
+> - Exemplo: BUY 1 BTC @ 40k USDT, fee 0.001 BTC
+>   - quoteAmount = 40k USDT (taxa já paga = 0.001 BTC, não reduz quoteAmount na Binance)
+>   - executedQty = 1 BTC (bruta)
+>   - avgPrice = 40k USDT / 1 BTC = 40k/BTC ✓ CORRETO
+>   - netQty = 1 - 0.001 = 0.999 BTC (o que realmente fica)
+>   - custo-médio visto pelo getFarmPosition: agora 40k USDT / 0.999 BTC = 40.04k/BTC (realista)
+>   
+> P&L **não duplica fee**: 
+> - BUY net = quoteAmount + feeValued(USDT-eq) [já feito no computeNet]
+> - Qty armazenada = netQty (sem fee de base)
+> - P&L = (avgPrice × netQty) = (40k × 0.999) = 39,960 USDT — gate QA p/ não duplicar
+> -- GOTCHAS --
+> 1. **Orden pode não ter fills[] no executionReport:**
+>    - `executionData.z` (cumulative qty) SEMPRE existe em FILLED
+>    - `executionData.q` pode ser undefined para fills vazios (edge case raro)
+>    - **Guard:** use `parseFloat(executionData.z) || 0`
+> 
+> 2. **Dust (poeira):**
+>    - Fee de 0.00001 BTC em BUY de 1 BTC = 0.99999 BTC
+>    - getFarmPosition filtra `if (qty > 0)` — ok
+>    - Gate anti-negativo: `Math.max(netQty, 0)` no cálculo
+> 
+> 3. **Precisão decimal:**
+>    - Armazenar em DECIMAL(18,8) suporta até 8 casas (padrão Binance)
+>    - Fee em BTC: até 0.00000001 suportado
+>    - **Guard:** `.toFixed(8)` antes de armazenar
+> 
+> 4. **Backwards-compat:**
+>    - Ordens antigas no DB têm quantity = requestQty (nunca executaram)
+>    - Nova lógica só afeta FILLED orders com commission
+>    - Ordens REJECTED/CANCELED não têm commission — quantity = requestQty (certo)
+>    - **Seguro:** old orders seguem certo, novo código só altera BUY/SELL FILLED
+> 
+> 5. **Fee em Quote (USDT) não afeta quantity:**
+>    - BUY 1 LTC @ 100 USDT, fee 0.1 USDT
+>    - qty armazenada = 1.0 (CORRETA — fee já descontado em `net`)
+>    - Só desconta quantity se `symbol.startsWith(commissionAsset)` = true
+> 
+> 6. **P&L não duplica fee:**
+>    - `computeNet` já ajustou net em feeCalc.js (VENDA: net = cummQuote - fee; COMPRA: net = cummQuote + fee)
+>    - Múltipla-contagem se fizer AMBOS: descontar fee em quantity E em net
+>    - **Gate QA:** qty é custo bruto (para calcular cost-base) + net já fee-inclusive (para P&L)
+>    - Exemplo: BUY 1 BTC @ 40k USDT, fee 0.001 BTC
+>      - net = 40k + (0.001 × 40k) = 40.04k USDT ✓ (fee em USDT-eq)
+>      - qty = 0.999 BTC (líquida)
+>      - cost-base = 40k / 0.999 ≈ 40.04k/BTC (realista)
+>      - P&L calcula sobre net, não sobre qty — seguro
+> -- TEST --
+> 1. **Teste Iceberg (múltiplos fills):**
+>    - Place BUY 1 BTC @ LIMIT com Iceberg (ex: 10 fills de 0.1 cada)
+>    - Verify: BD recebe qty = 1.0 (cumulativo, não 0.1)
+>    - Verify: getFarmPosition/getTrendPosition retorna qty = 1.0
+>    - Verify: painel Wallet mostra cost-base correto (avgPrice × qty)
+> 
+> 2. **Teste Fee em Base-Asset:**
+>    - Place BUY 1 LTC USDT com fee em LTC (ex: 0.001 LTC)
+>    - Verify: order.quantity = 1.0 - 0.001 = 0.999
+>    - Verify: getFarmPosition retorna qty = 0.999 (para FARM_DCA)
+> ##############################################################################
+> FIX5B-TOGGLE | risk=medium rebuild=frontend money=True
+> FILES: ['/home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js']
+> -- CHANGE --
+> 
+> **Arquivo: /home/gcrux-tradeux/tradeux/frontend/src/private/Settings/Settings.js**
+> 
+> **1. Adicionar handler `onToggleEnvironment()` (novo, inserir depois de `onGoLive()` na linha ~115):**
+> ```javascript
+> function onToggleEnvironment(newUseTestnet) {
+>     const want = newUseTestnet ? 'testnet (simulado)' : 'mainnet (dinheiro real)';
+>     const msg = `⚠️ Isto muda o AMBIENTE ATIVO para ${want}. As URLs da Binance (api + stream) DEVEM coincidir com o novo ambiente, senão o trading TRAVA no boot.\n\nConfirmar mudança?`;
+>     if (!window.confirm(msg)) return false; // retorna falso = não muda
+>     return true; // OK, proceder
+> }
+> ```
+> 
+> **2. Modificar o `<select>` (linha 277):**
+> 
+> De:
+> ```jsx
+> <select className="form-select" id="useTestnet" value={settings.useTestnet ? 'true' : 'false'} onChange={(e) => setSettings(prev => ({ ...prev, useTestnet: e.target.value === 'true' }))}>
+> ```
+> 
+> Para:
+> ```jsx
+> <select className="form-select" id="useTestnet" value={settings.useTestnet ? 'true' : 'false'} onChange={(e) => {
+>     const newVal = e.target.value === 'true';
+>     if (onToggleEnvironment(newVal)) {
+>         setSettings(prev => ({ ...prev, useTestnet: newVal }));
+>     } else {
+>         // Reverter o <select> ao valor anterior (não deixar o DOM pendurado)
+>         e.target.value = settings.useTestnet ? 'true' : 'false';
+>     }
+> }}>
+> ```
+> 
+> **3. Observações críticas:**
+> - A mudança é LOCAL no estado (via `setSettings()`), o save é AINDA via botão "Save" (linha 369)
+> - Não é "money-path" imediato (como `onGoLive()`) porque o ambiente é protegido também no backend boot
+> - O backend já trata `STEP_UP_REQUIRED` reativamente (linha 55-59): pergunta frase de confirmação quando POST falha
+> - Este `window.confirm()` é defesa-em-profundidade UX: avisa **antes** do user mudar o toggle, não depois
+> 
+> **4. Build necessário:**
+> - Frontend precisa recompilar (Vite) pois a lógica é React/JSX
+> - Backend NÃO muda (já suporta stepUpGuard reativo)
+> 
+> -- GOTCHAS --
+> 
+> 1. **DOM não reverte sozinho se user cancela:** O `<select>` tem atributo `value={...}` controlado por React. Se mudarmos apenas o estado local sem o confirm, o `<select>` DOM "pensa" que mudou, mas se rejeitarmos no prompt, o valor local não foi atualizado, então o `<select>` fica dessincronizado. **Solução:** na mudança rejeitada, fazer `e.target.value = settings.useTestnet ? 'true' : 'false'` para forçar voltar. Ver linha da mudança acima.
+> 
+> 2. **Frontend build é obrigatório:** As mudanças são React/JSX compiladas. O backend NÃO muda, então não precisa rebuild dele. Mas o frontend bundler (Vite) precisa rodar `npm run build` ou estar em dev-mode com hot-reload ativo.
+> 
+> 3. **SETTINGS_CONFIRM_PHRASE é env-var:** A frase de confirmação vem de `process.env.SETTINGS_CONFIRM_PHRASE` no backend (default 'CONFIRMAR ALTERACAO'). Se o operador tiver mudado no `.env` ou no deploy, o prompt do frontend não vai "ecoar" a frase — o backend é a autoridade. O backend nunca devolve a frase no erro (linha 49 de stepUpGuard.js: "NÃO ecoa a frase").
+> 
+> 4. **Dupla proteção (defesa-em-profundidade):** Este toggle agora tem:
+>    - UX `window.confirm()` (this change): avisa ANTES
+>    - Backend `stepUpGuard.requiresStepUp()`: valida DEPOIS
+>    - Backend boot `riskState.setEnvMismatch()`: trava se incoerente
+>    
+>    Se o operador conseguir contornar o confirm do frontend (ex: DevTools), o backend ainda vai exigir a frase. Seguro.
+> 
+> 5. **Telegrams notificado no #5a:** Se houver incoerência no boot, o backend loga E notifica via Telegram. Não silencioso. Operador será avisado pelo canal de alerta.
+> 
+> 6. **Comportamento com `STEP_UP_SETTINGS=false`:** Se o admin desligar o stepUpGuard no `.env` (rare), o backend não pedirá a frase e a mudança vai passando direto. A confirmação do frontend (`window.confirm()`) ainda aparecerá, mas não há validação backend. Não muda o risco dessa change.
+> 
+> -- TEST --
+> 
+> 1. **Teste do confirm (UX bloqueador):**
+>    - Carregue Settings, note ambiente atual (mainnet/testnet)
+>    - Clique no toggle `<select useTestnet>` para mudar (ex: mainnet → testnet)
+>    - Confirme que aparece `window.confirm()` com msg "⚠️ Isto muda o AMBIENTE ATIVO para testnet..."
+>    - Clique "Cancelar" → toggle REVERTE ao valor anterior (não muda DOM nem state)
+>    - Clique "OK" → toggle MUDA no `<select>`, estado React atualiza, tabs Mainnet/Testnet ficam sincronizadas
+> 
+> 2. **Teste do save com
+> ```
+
+## 🤖 Claude *(15:15:31)*
+
+
+## 🤖 Claude *(15:15:40)*
+
+Tenho as 6 specs completas. Resumo do veredito + a ordem que vou seguir:
+
+| Item | Risco | Money-path | Veredito |
+|---|---|---|---|
+| **A1 — gate Farm×TREND_QTY** | HIGH | sim (dormente: Trend/Farm Buy off) | DO_NOW |
+| **A2 — RSI 1m→15m** | MED | sim (dormente) | DO_NOW |
+| **#9 — qty líquida + bug `q`→`z`** | MED | **sim (fill handler ATIVO)** | DO_NOW (achou bug REAL: `q`=último lote vs `z`=cumulativo) |
+| **#4 — graceful-shutdown** | MED | sim (save de Settings) | DO_NOW |
+| **#5b — confirm no toggle** | MED | frontend | DO_NOW |
+| **RBAC** | low | não | **DEFER** (step-up+HALT+allowlist+MCP-read-only já cobrem ~95%; só agrega com múltiplos operadores) |
+
+⚠️ **Peguei um erro na spec do A1** que vou corrigir: ela manda publicar `TREND_QTY=0` **só no fill**. Mas se eu adicionar `TREND_QTY` aos índices da automação e o Trend nunca tiver operado, a chave fica **ausente** → `undefined<=0` é `false` → **Farm Buy ficaria bloqueado pra sempre** quando o Trend está flat. O correto é publicar `TREND_QTY=0` **também no boot/quando flat** (Farm acumula quando o Trend não está segurando — que é a intenção do backtest). Vou desenhar assim e deixar o gate validar.
+
+Vou atacar **um de cada vez** (gate + deploy + verificação), começando pelo **A1** (sua prioridade de re-arm). Lendo o código exato:
+
+## 🤖 Claude *(15:15:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js",
+  "offset": 22,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 22	 * Reproduz o setup após `make reset-db` (dado runtime, não seeders).
+> 23	 * Uso (dentro do container, server no ar):  node scripts/setup-farm.js   [DRY=true p/ preview]
+> 24	 *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001),
+> 25	 *        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (1m),
+> 26	 *        FARM_RSI_LO (35), FARM_PROFIT (0.012), FARM_BUFFER (0.003), FARM_SIZE_MULT (2)
+> 27	 */
+> 28	const { createClient, resolveEnv } = require('./lib/apiClient');
+> 29	
+> 30	const SYMBOLS = (process.env.FARM_SYMBOLS || 'LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> 31	const INTERVAL = process.env.FARM_INTERVAL || '1m';
+> 32	const RSI_KEY_SUFFIX = `RSI_14_${INTERVAL}`;
+> 33	const RSI_LO = parseFloat(process.env.FARM_RSI_LO || '35');
+> 34	const PROFIT = parseFloat(process.env.FARM_PROFIT || '0.012');   // lucro-alvo sobre o avgPrice (cobre buffer+fees no testnet)
+> 35	const BUF = parseFloat(process.env.FARM_BUFFER || '0.003');      // buffer do LIMIT marketável (atravessa o book fino do testnet)
+> 36	const SIZE_MULT = parseFloat(process.env.FARM_SIZE_MULT || '2'); // MIN_NOTIONAL×2 (~$9-10 nas alts): ×1 arredonda pra baixo (Math.floor por stepSize no calcQty) e FALHA o filtro NOTIONAL ($5) ao disparar — validado ao vivo: -1013 (mesmo fix do setup-harvester.js)
+> 37	const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> 38	const { host, port, email: EM, password: PW } = resolveEnv({
+> 39	    hostEnv: 'FARM_API_HOST',
+> 40	    emailEnvs: ['EM', 'TRADEUX_EMAIL'],
+> 41	    passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],
+> 42	});
+> 43	const client = createClient({ host, port });
+> 44	const req = client.req;
+> 45	const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 40); // cap preservado (era 40)
+> 46	
+> 47	// monitor CANDLES (RSI) ATIVO — alimenta o RSI da alt. Idempotente: insertMonitor responde 409 se já existe.
+> 48	async function ensureMonitor(token, symbol) {
+> 49	    if (DRY) return `[DRY] POST monitor CANDLES ${symbol} ${INTERVAL} RSI_14 (ativo)`;
+> 50	    const r = await req('POST', '/monitors', token, {
+> 51	        type: 'CANDLES', symbol, interval: INTERVAL, indexes: 'RSI_14',
+> 52	        isActive: true, isSystemMon: false, broadcastLabel: null, logs: false,
+> 53	    });
+> 54	    if (r.status === 201) return `monitor CANDLES ${symbol} ${INTERVAL} criado (id ${r.body.id}, ATIVO → ${symbol}:${RSI_KEY_SUFFIX})`;
+> 55	    if (r.status === 409) return `monitor CANDLES ${symbol} ${INTERVAL} já existe`;
+> 56	    throw new Error(`falha ao criar monitor ${symbol}: ${r.status} ${JSON.stringify(r.body)}`);
+> 57	}
+> 58	
+> 59	async function ensureTemplate(token, symbol, name, side, opts) {
+> 60	    const all = await req('GET', `/ordertemplates/all/${symbol}`, token);
+> 61	    const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+> 62	    if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+> 63	    if (DRY) return { id: 0, msg: `[DRY] POST template "${name}" (${opts.type} ${side} qty ${opts.quantity}×${opts.quantityMultiplier})` };
+> 64	    const r = await req('POST', '/ordertemplates', token, {
+> 65	        name, symbol, type: opts.type, side,
+> 66	        limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+> 67	        stopPrice: null, stopPriceMultiplier: 1,
+> 68	        quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+> 69	        icebergQty: null, icebergQtyMultiplier: 1,
+> 70	    });
+> 71	    if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 72	    return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> 73	}
+> 74	
+> 75	async function ensureAutomation(token, symbol, name, conditions, indexes, orderTemplateId) {
+> 76	    const existing = await findAutomationByName(token, name);
+> 77	    if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+> 78	    if (DRY) return `[DRY] POST automação "${name}" INATIVA\n      cond: ${conditions}\n      idx:  ${indexes}`;
+> 79	    const r = await req('POST', '/automations', token, {
+> 80	        name, symbol, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 81	        actions: [{ type: 'ORDER', orderTemplateId }],
+> 82	    });
+> 83	    if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+> 84	    return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> 85	}
+> 86	
+> 87	async function setupSymbol(token, symbol) {
+> 88	    const K = k => `${symbol}:${k}`;
+> 89	    console.log(`\n## ${symbol}`);
+> 90	    console.log('- ' + await ensureMonitor(token, symbol));
+> 91	
+> 92	    const buyTpl = await ensureTemplate(token, symbol, `Farm Buy ${symbol}`, 'BUY', {
+> 93	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestAsk * ${(1 + BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 94	        quantity: 'MIN_NOTIONAL', quantityMultiplier: SIZE_MULT,
+> 95	    });
+> 96	    console.log('- ' + buyTpl.msg);
+> 97	    const sellTpl = await ensureTemplate(token, symbol, `Farm Sell ${symbol}`, 'SELL', {
+> 98	        type: 'LIMIT', limitPrice: `MEMORY['${K('BOOK')}'].current.bestBid * ${(1 - BUF).toFixed(4)}`, limitPriceMultiplier: 1,
+> 99	        quantity: 'LAST_ORDER_QTY', quantityMultiplier: 1, // vende o lote comprado (a última ordem foi a compra)
+> 100	    });
+> 101	    console.log('- ' + sellTpl.msg);
+> 102	
+> 103	    // COMPRA: dip (RSI<lo) fora de bear/trend. Condition regex-safe (validateConditions exige cada cláusula
+> 104	    // = MEMORY[...]OP valor, SEM espaços/||/guards soltos). O REGIME vai no INDEX → isChecked é o FAIL-SAFE
+> 105	    // (sem regime conhecido a automação NÃO avalia). invertCondition no RSI → dispara só na TRANSIÇÃO p/ baixo
+> 106	    // de lo (anti-empilhamento). v1 = 1 lote simples; sem trava de posição → pode haver DCA leve em re-cruzamentos
+> 107	    // (a venda realiza a última compra via LAST_ORDER_QTY; rastreio multi-lote/FARM_QTY é refino — §5 do doc).
+> 108	    const buyCond = `MEMORY['${K(RSI_KEY_SUFFIX)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;
+> 109	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')}`, buyTpl.id));
+> 110	
+> 111	    // VENDA no-loss: tem posição (última ordem = compra) E o bestBid já dá lucro sobre o preço de compra.
+> 112	    // Index = BOOK,LAST_ORDER → isChecked garante AMBOS presentes (sem guards soltos; até a 1ª compra não avalia).
+> 113	    // invertCondition no BOOK → realiza só na TRANSIÇÃO em que o bestBid cruza o alvo (anti-empilhamento), indep. do RSI.
+> 114	    const sellCond = `MEMORY['${K('LAST_ORDER')}'].side==='BUY' && MEMORY['${K('BOOK')}'].current.bestBid>MEMORY['${K('LAST_ORDER')}'].avgPrice*${(1 + PROFIT).toFixed(4)}`;
+> 115	    console.log('- ' + await ensureAutomation(token, symbol, `Farm Sell ${symbol}`, sellCond, `${K('BOOK')},${K('LAST_ORDER')}`, sellTpl.id));
+> 116	}
+> ```
+
+## 🤖 Claude *(15:16:18)*
+
+
+## 🤖 Claude *(15:16:21)*
+
+`ensureAutomation` é idempotente **por nome** (linha 76-77: se existe, NÃO atualiza). Então aplicar A1/A2 exige um UPDATE pontual das linhas existentes (id9/11/13, inativas → seguro; não estão no BRAIN) + corrigir o seed pro futuro. Deixa eu ler as funções de TREND_QTY no `app-em.js` pra fechar o design do A1 (publicar 0-quando-flat sem quebrar a venda do Trend):
+
+## 🤖 Claude *(15:16:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== updateTrendPosition + loadTrendPosition + getTrendPosition (app-em.js) ===\"\ngrep -nE \"updateTrendPosition|loadTrendPosition|getTrendPosition|TREND_QTY|TREND_POS\" app-em.js | head -40\necho\necho \"=== indexes.js: chave TREND_QTY ===\"\ngrep -nE \"TREND_QTY|TREND_POS\" utils/indexes.js\necho\necho \"=== quem CONSOME TREND_QTY (automa\u00e7\u00e3o de venda do Trend) ===\"\ngrep -rnE \"TREND_QTY\" /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend*.js 2>/dev/null | head",
+  "description": "Recon TREND_QTY publish/consume paths"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === updateTrendPosition + loadTrendPosition + getTrendPosition (app-em.js) ===
+> 159:// Trend Following — mantém MEMORY['<sym>:TREND_QTY'] (posição em base asset atribuída ao trend), lido pela
+> 161:// getFarmPosition): a cada fill de uma ordem de um símbolo de trend, RECOMPUTA TREND_QTY = soma das BUYs FILLED
+> 165:// loadTrendPosition recomputa no boot → a posição do golden NÃO orfana num restart (o death seguinte encontra
+> 166:// TREND_QTY e liquida). Best-effort: erro aqui não quebra o fluxo da ordem (o gate da id7 falha fechado se
+> 167:// TREND_QTY ausente). Recomputar em fill de FARM no mesmo símbolo é inócuo (getTrendPosition ignora ordens não-Trend).
+> 168:async function updateTrendPosition(order) {
+> 174:        const pos = await ordersRepository.getTrendPosition(order.symbol);
+> 175:        await beholder.updateMemory(order.symbol, indexKeys.TREND_QTY, null, pos.qty, false);
+> 176:        logger('system', `TREND_QTY[${order.symbol}] atualizado: qty=${pos.qty} (pós-fill de ${order.side})`);
+> 178:        logger('system', `updateTrendPosition: ${err.message}`);
+> 381:// Boot-load da posição do Trend: recomputa TREND_QTY do banco de ordens p/ MEMORY (espelho de loadFarmPositions).
+> 382:// Sem isto, um restart entre golden e death perde TREND_QTY (volátil) e o death dá throw na calcQty → posição
+> 386:// (init() não é awaited por server.js); como loadTrendPosition é await DENTRO de init, conclui cedo no boot,
+> 387:// bem antes de qualquer death GENUÍNO (REGIME_REFRESH_MS). Pula qty<=0 (TREND_QTY ausente = estado fresco).
+> 388:async function loadTrendPosition() {
+> 392:            const pos = await ordersRepository.getTrendPosition(symbol);
+> 394:                await beholder.updateMemory(symbol, indexKeys.TREND_QTY, null, pos.qty, false);
+> 395:                logger('system', `TREND_QTY[${symbol}] carregado no boot: qty=${pos.qty}`);
+> 399:        logger('system', `loadTrendPosition: ${err.message}`);
+> 582:                await updateTrendPosition(updatedOrder.get({ plain: true }));
+> 867:    await loadTrendPosition();   // restaura TREND_QTY do banco (resiliência a restart — ver loadTrendPosition)
+> 
+> === indexes.js: chave TREND_QTY ===
+> 79:    TREND_QTY: 'TREND_QTY', // posição (base asset) acumulada pelo Trend Following — id6 soma no fill golden, id7 zera no death
+> 
+> === quem CONSOME TREND_QTY (automação de venda do Trend) ===
+> /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js:17: *     bestBid×0.997 **TREND_QTY** (vende a posição acumulada pelo trend, não LAST_ORDER). O buffer
+> /home/gcrux-tradeux/tradeux/backend/scripts/setup-trend.js:91:        quantity: 'TREND_QTY', quantityMultiplier: 1, // vende a posição acumulada pelo trend (id6 soma no fill; zera no death) — NÃO LAST_ORDER
+> ```
+
+## 🤖 Claude *(15:17:27)*
+
+
+## 🤖 Claude *(15:17:29)*
+
+TREND_QTY mechanics claras: `updateTrendPosition` (linha 175) **já publica 0 após venda** (recomputa pos.qty); o gap é só o `loadTrendPosition` que **pula qty<=0 no boot** (linha 387). Pra o gate do Farm Buy ser avaliável com Trend flat, preciso publicar `TREND_QTY=0` no boot também — mas antes preciso confirmar que isso **não dispara a venda do Trend (id7) com qty 0**. Lendo a condição do id7:
+
+## 🤖 Claude *(15:17:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== condi\u00e7\u00e3o da venda do Trend (id7) no setup-trend.js ===\"\ngrep -nE \"cond|TREND_QTY|TREND_CROSS|conditions|ensureAutomation.*Sell|Trend Sell\" scripts/setup-trend.js | head -20\necho\necho \"=== a condi\u00e7\u00e3o exata (linhas ao redor) ===\"\nsed -n '80,120p' scripts/setup-trend.js",
+  "description": "Read Trend Sell (id7) condition to verify TREND_QTY=0 safety"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === condição da venda do Trend (id7) no setup-trend.js ===
+> 9: * job detecta a transição golden/death e escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h']
+> 17: *     bestBid×0.997 **TREND_QTY** (vende a posição acumulada pelo trend, não LAST_ORDER). O buffer
+> 35:const KC = `${SYMBOL}:TREND_CROSS_${INTERVAL}`;     // memoryKey do sinal de cruzamento (escrito pelo job)
+> 61:async function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {
+> 65:        name, symbol: SYMBOL, indexes, conditions, isActive: false, logs: true, schedule: null,
+> 89:    const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {
+> 91:        quantity: 'TREND_QTY', quantityMultiplier: 1, // vende a posição acumulada pelo trend (id6 soma no fill; zera no death) — NÃO LAST_ORDER
+> 101:    console.log('- ' + await ensureAutomation(token, `Trend Sell ${SYMBOL} ${TAG}`, sellCond, `${KC}`, sellTpl.id));
+> 
+> === a condição exata (linhas ao redor) ===
+>     // de MARKET no book fino do testnet. O BOOK é sempre vivo (miniTickerStream o popula, bestAsk=bestBid=
+>     // close quando não há book real). Buffer no EVAL pois limitPriceMultiplier é DECIMAL(10,2) (≥1%).
+>     // SHAPE CANÔNICO (type/limitPrice/buffer/quantityMultiplier) — espelhado em activate-trend.js
+>     // (ensureTemplateShape). Mudou aqui → mude lá (senão o reshape idempotente fica num PATCH eterno).
+>     const buyTpl = await ensureTemplate(token, `Trend Buy ${SYMBOL} ${TAG}`, 'BUY', {
+>         type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestAsk * 1.003`, limitPriceMultiplier: 1,
+>         quantity: 'MIN_NOTIONAL', quantityMultiplier: 3, // size pequeno p/ observar 1 cross; calibrar depois
+>     });
+>     console.log('- ' + buyTpl.msg);
+>     const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {
+>         type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestBid * 0.997`, limitPriceMultiplier: 1,
+>         quantity: 'TREND_QTY', quantityMultiplier: 1, // vende a posição acumulada pelo trend (id6 soma no fill; zera no death) — NÃO LAST_ORDER
+>     });
+>     console.log('- ' + sellTpl.msg);
+> 
+>     // BUY = sinal golden (cruzamento p/ cima) + trava de segurança != bear.
+>     const buyCond = `MEMORY['${KC}']==='golden' && MEMORY['${KR}']!=='bear'`;
+>     console.log('- ' + await ensureAutomation(token, `Trend Buy ${SYMBOL} ${TAG}`, buyCond, `${KC},${KR}`, buyTpl.id));
+> 
+>     // SELL = sinal death (cruzamento p/ baixo) — saída p/ caixa, sem gate.
+>     const sellCond = `MEMORY['${KC}']==='death'`;
+>     console.log('- ' + await ensureAutomation(token, `Trend Sell ${SYMBOL} ${TAG}`, sellCond, `${KC}`, sellTpl.id));
+> 
+>     console.log(`\nPRONTO (automações INATIVAS). Para ATIVAR rode: node scripts/activate-trend.js`);
+>     console.log(`  (coordena id2/id3 por MEMORY['${KR}']!=='trend' — incl. ${KR} nos indexes de AMBAS — e dá start na id6/id7)`);
+>     console.log(`  SIZING: id6 = 3× MIN_NOTIONAL (pequeno, p/ observar 1 cross); calibrar após 1 golden→death real.`);
+> })();
+> ```
+
+## 🤖 Claude *(15:18:02)*
+
+
+## 🤖 Claude *(15:18:05)*
+
+Confirmado: o id7 (Trend Sell) é gateado pelo **sinal de death cross** (`TREND_CROSS_1h==='death'`), não por TREND_QTY. Publicar `TREND_QTY=0` no boot é **seguro** — id7 não fira por isso, e se firar com qty 0 o `calcQty` falha-fechado igual a "ausente". Design do A1 validado.
+
+Vou **combinar A1+A2** (mesmas linhas do Farm Buy, unidade coesa "re-arm"). Lendo o `loadTrendPosition` exato:
+
+## 🤖 Claude *(15:18:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 381,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 381	// Boot-load da posição do Trend: recomputa TREND_QTY do banco de ordens p/ MEMORY (espelho de loadFarmPositions).
+> 382	// Sem isto, um restart entre golden e death perde TREND_QTY (volátil) e o death dá throw na calcQty → posição
+> 383	// órfã. NÃO precisa do reconcile-on-boot do Harvester (ordens de trend são por cross, não ficam LIMIT abertas) —
+> 384	// derivar do banco JÁ é a fonte de verdade. A segurança contra disparo no boot vem da edge-detection do
+> 385	// regimeJob (um restart com posição aberta escreve 'none', não 'death'), NÃO da ordem init()×getActiveMonitors
+> 386	// (init() não é awaited por server.js); como loadTrendPosition é await DENTRO de init, conclui cedo no boot,
+> 387	// bem antes de qualquer death GENUÍNO (REGIME_REFRESH_MS). Pula qty<=0 (TREND_QTY ausente = estado fresco).
+> 388	async function loadTrendPosition() {
+> 389	    try {
+> 390	        const trendSymbols = ['BTCUSDT', 'LTCUSDT', 'BNBUSDT', 'ADAUSDT'];
+> 391	        for (const symbol of trendSymbols) {
+> 392	            const pos = await ordersRepository.getTrendPosition(symbol);
+> 393	            if (pos.qty > 0) {
+> 394	                await beholder.updateMemory(symbol, indexKeys.TREND_QTY, null, pos.qty, false);
+> 395	                logger('system', `TREND_QTY[${symbol}] carregado no boot: qty=${pos.qty}`);
+> 396	            }
+> 397	        }
+> 398	    } catch (err) {
+> 399	        logger('system', `loadTrendPosition: ${err.message}`);
+> 400	    }
+> 401	}
+> 402	
+> ```
+
+## 🤖 Claude *(15:18:32)*
+
+
+## 🤖 Claude *(15:18:35)*
+
+loadTrendPosition exato em mãos. Antes de escrever a condição, **um detalhe crítico**: preciso saber como `TREND_QTY` é ARMAZENADO na MEMORY (escalar cru vs `{current}`) pra escrever o gate certo (`...TREND_QTY']<=0` vs `.current<=0`). Deixa eu ver o `updateMemory` e como o template do Trend resolve `TREND_QTY`:
+
+## 🤖 Claude *(15:18:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\necho \"=== beholder.updateMemory: como armazena (scalar interval=null) ===\"\ngrep -nA22 \"function updateMemory\" beholder.js | head -30\necho\necho \"=== como TREND_QTY (scalar) \u00e9 LIDO numa condi\u00e7\u00e3o/qty? procurar precedente de MEMORY['..:TREND_QTY'] ou FARM_DCA/FARM_QTY em conditions ===\"\ngrep -rnE \"TREND_QTY|FARM_QTY|FARM_DCA\" scripts/*.js | grep -iE \"conditions|cond =|MEMORY\\[\" | head",
+  "description": "Inspect updateMemory storage + scalar memory access in conditions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === beholder.updateMemory: como armazena (scalar interval=null) ===
+> 1000:async function updateMemory(symbol, index, interval, value, executeAutomations = true) {
+> 1001-
+> 1002-    if (value === undefined || value === null) return false;
+> 1003-    if (value.toJSON) value = value.toJSON();
+> 1004-    if (value.get) value = value.get({ plain: true });
+> 1005-
+> 1006-    if (LOCK_MEMORY) return false;
+> 1007-
+> 1008-    const memoryKey = parseMemoryKey(symbol, index, interval);
+> 1009-    MEMORY[memoryKey] = value;
+> 1010-
+> 1011-    if (LOGS) logger('beholder', `Beholder memory updated: ${memoryKey} => ${JSON.stringify(value)}, will exec autos? ${executeAutomations}`);
+> 1012-
+> 1013-    if (!executeAutomations) return false;
+> 1014-
+> 1015-    return testAutomations(memoryKey);
+> 1016-}
+> 1017-
+> 1018-function deleteMemory(symbol, index, interval) {
+> 1019-    try {
+> 1020-        const indexKey = interval ? `${index}_${interval}` : index;
+> 1021-        const memoryKey = `${symbol}:${indexKey}`;
+> 1022-        if (MEMORY[memoryKey] === undefined) return;
+> 
+> === como TREND_QTY (scalar) é LIDO numa condição/qty? procurar precedente de MEMORY['..:TREND_QTY'] ou FARM_DCA/FARM_QTY em conditions ===
+> ugrep: warning: scripts/*.js: No such file or directory
+> ```
+
+## 🤖 Claude *(15:18:58)*
+
+
+## 🤖 Claude *(15:19:01)*
+
+Chave: `updateMemory` armazena o valor **cru** (`MEMORY[key]=value`, linha 1009) — então `TREND_QTY` é um **escalar** e o gate é `MEMORY['<sym>:TREND_QTY']<=0` (sem `.current`). E `0` é gravado ok (passa do guard null/undefined). Antes de escrever, vou **testar a condição proposta no `validateConditions` REAL** (o regex sem-espaço é o ponto que silenciosamente quebra):
+
+## 🤖 Claude *(15:19:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== onde est\u00e1 validateConditions ===\"\ngrep -rnE \"function validateConditions|validateConditions *=|exports.*validateConditions\" src | head\necho\necho \"=== testar a condi\u00e7\u00e3o A1+A2 proposta no validateConditions REAL ===\"\ndocker exec tradeux-backend-1 node -e \"\nlet vc;\ntry { vc = require('/app/src/controllers/automationsController').validateConditions; } catch(e){}\nif(!vc){ for (const p of ['/app/src/utils/automations','/app/src/controllers/automationsController']){ try{ const m=require(p); if(m.validateConditions){vc=m.validateConditions;break;} }catch(e){} } }\nconsole.log('validateConditions encontrada?', typeof vc);\nconst conds=[\n \\\"MEMORY['LTCUSDT:RSI_14_15m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend' && MEMORY['LTCUSDT:TREND_QTY']<=0\\\",\n \\\"MEMORY['LTCUSDT:TREND_QTY']<=0\\\",\n \\\"MEMORY['BNBUSDT:RSI_14_15m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend' && MEMORY['BNBUSDT:TREND_QTY']<=0\\\",\n];\nif(vc){ for(const c of conds){ try{ const r=vc(c); console.log('OK?', r, '::', c.slice(0,60)+'...'); }catch(e){ console.log('THREW:', e.message, '::', c.slice(0,50)); } } }\n\" 2>&1 | tail -8",
+  "description": "Test proposed conditions against real validateConditions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde está validateConditions ===
+> src/controllers/automationsController.js:12:function validateConditions(conditions) {
+> 
+> === testar a condição A1+A2 proposta no validateConditions REAL ===
+> validateConditions encontrada? undefined
+> ```
+
+## 🤖 Claude *(15:19:12)*
+
+
+## 🤖 Claude *(15:19:13)*
+
+`validateConditions` não é exportada. Deixa eu ler a função (linha 12) pra testar o regex exato:
+
+## 🤖 Claude *(15:19:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js",
+  "offset": 12,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 12	function validateConditions(conditions) {
+> 13	    return /^(MEMORY\[\'.+?\'\](\..+)?[><=!]+([0-9\.\-]+|(\'.+?\')|true|false|MEMORY\[\'.+?\'\](\..+)?)( && )?)+$/ig.test(conditions);
+> 14	}
+> 15	
+> 16	// Cancela na corretora as OCO ainda abertas de uma automação (ao parar/remover),
+> 17	// para não deixar listas órfãs vivas sem a automação que as gerencia. Best-effort:
+> 18	// loga e segue em caso de falha — nunca derruba o stop/delete da automação.
+> 19	async function cancelAutomationOcoOrders(automationId) {
+> 20	    try {
+> 21	        const openLegs = await ordersRepository.getOpenOcoOrders(automationId);
+> 22	        if (!openLegs || !openLegs.length) return;
+> 23	
+> 24	        const settings = await settingsRepository.getDefaultSettings();
+> 25	        const exchange = require('../utils/exchange')(settings);
+> 26	
+> 27	        const handled = new Set(); // uma lista = 2 pernas; cancela só 1x por orderListId
+> 28	        for (const leg of openLegs) {
+> 29	            const key = `${leg.symbol}:${leg.orderListId}`;
+> 30	            if (handled.has(key)) continue;
+> 31	            handled.add(key);
+> 32	
+> 33	            try {
+> 34	                const result = await exchange.cancelOrderList(leg.symbol, leg.orderListId);
+> 35	                const reports = (result && Array.isArray(result.orderReports)) ? result.orderReports : [];
+> 36	                // origClientOrderId = clientOrderId ORIGINAL da perna (o `clientOrderId` da
+> 37	                // resposta de cancel é um id novo e não casa com o armazenado).
+> 38	                for (const r of reports)
+> 39	                    await ordersRepository.updateOrderByOrderId(r.orderId, r.origClientOrderId, { status: r.status });
+> ```
+
+## 🤖 Claude *(15:19:29)*
+
+
+## 🤖 Claude *(15:19:30)*
+
+Tenho o regex exato. Vou testá-lo direto (verificação crítica — é onde quebra silenciosamente):
+
+## 🤖 Claude *(15:19:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "node -e '\nfunction validateConditions(conditions) {\n    return /^(MEMORY\\[\\x27.+?\\x27\\](\\..+)?[><=!]+([0-9\\.\\-]+|(\\x27.+?\\x27)|true|false|MEMORY\\[\\x27.+?\\x27\\](\\..+)?)( && )?)+$/ig.test(conditions);\n}\nconst old = \"MEMORY[\\x27LTCUSDT:RSI_14_1m\\x27].current<35 && MEMORY[\\x27LTCUSDT:REGIME\\x27]!==\\x27bear\\x27 && MEMORY[\\x27LTCUSDT:REGIME\\x27]!==\\x27trend\\x27\";\nconst a1a2 = \"MEMORY[\\x27LTCUSDT:RSI_14_15m\\x27].current<35 && MEMORY[\\x27LTCUSDT:REGIME\\x27]!==\\x27bear\\x27 && MEMORY[\\x27LTCUSDT:REGIME\\x27]!==\\x27trend\\x27 && MEMORY[\\x27LTCUSDT:TREND_QTY\\x27]<=0\";\nconst justgate = \"MEMORY[\\x27LTCUSDT:TREND_QTY\\x27]<=0\";\nconsole.log(\"condi\u00e7\u00e3o ATUAL (1m, sem gate):       \", validateConditions(old));\nconsole.log(\"condi\u00e7\u00e3o NOVA  (15m + TREND_QTY<=0): \", validateConditions(a1a2));\nconsole.log(\"s\u00f3 o gate TREND_QTY<=0:              \", validateConditions(justgate));\nfor (const s of [\"BNBUSDT\",\"ADAUSDT\"]) {\n  const c = a1a2.replace(/LTCUSDT/g, s);\n  console.log(\"novo \"+s+\":                        \", validateConditions(c));\n}\n'",
+  "description": "Verify proposed conditions pass the real regex"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> condição ATUAL (1m, sem gate):        true
+> condição NOVA  (15m + TREND_QTY<=0):  true
+> só o gate TREND_QTY<=0:               true
+> novo BNBUSDT:                         true
+> novo ADAUSDT:                         true
+> ```
+
+## 🤖 Claude *(15:20:02)*
+
+
+## 🤖 Claude *(15:20:04)*
+
+**Tudo validado:** condição nova passa no `validateConditions` real (15m + `TREND_QTY<=0`, todos os 3 símbolos). Design A1+A2 fechado. Implementando o código (setup-farm.js seed + app-em.js loadTrendPosition):
+
+## 🤖 Claude *(15:20:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/patch_rearm.py",
+  "content": "import io\n\ndef patch(path, edits):\n    s = io.open(path, encoding=\"utf-8\").read()\n    for old, new in edits:\n        assert s.count(old) == 1, f\"[{path}] \u00e2ncora n\u00e3o \u00fanica ({s.count(old)}x): {old[:70]!r}\"\n        s = s.replace(old, new)\n    io.open(path, \"w\", encoding=\"utf-8\").write(s)\n    print(\"patched\", path)\n\n# ---- setup-farm.js (A1 gate TREND_QTY + A2 RSI 1m->15m) ----\npatch(\"/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js\", [\n    (\"        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (1m),\",\n     \"        FARM_SYMBOLS (CSV, default LTCUSDT,BNBUSDT,ADAUSDT), FARM_INTERVAL (15m, alinha c/ o paper),\"),\n    (\"const INTERVAL = process.env.FARM_INTERVAL || '1m';\",\n     \"const INTERVAL = process.env.FARM_INTERVAL || '15m';   // 15m alinha o RSI live com as trilhas [PAPER] (#A2)\"),\n    # buyCond: + gate TREND_QTY<=0 (coordena\u00e7\u00e3o com o Trend; evita colis\u00e3o de carteiras Farm\u00d7Trend no mesmo ativo)\n    (\"MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend'`;\",\n     \"MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend' && MEMORY['${K('TREND_QTY')}']<=0`;\"),\n    # indexes: + TREND_QTY (isChecked exige a chave presente; loadTrendPosition publica 0 quando flat -> avali\u00e1vel)\n    (\"`Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')}`, buyTpl.id));\",\n     \"`Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')},${K('TREND_QTY')}`, buyTpl.id));\"),\n    # nota no coment\u00e1rio do buyCond (linha ~106-107)\n    (\"(a venda realiza a \u00faltima compra via LAST_ORDER_QTY; rastreio multi-lote/FARM_QTY \u00e9 refino \u2014 \u00a75 do doc).\",\n     \"(a venda realiza a \u00faltima compra via LAST_ORDER_QTY; rastreio multi-lote/FARM_QTY \u00e9 refino \u2014 \u00a75 do doc).\\n    // #A1: gate TREND_QTY<=0 \u2192 o Farm N\u00c3O acumula no mesmo ativo enquanto o Trend (golden) est\u00e1 segurando posi\u00e7\u00e3o\\n    // (evita colis\u00e3o de carteiras Farm\u00d7Trend). loadTrendPosition publica TREND_QTY=0 quando flat \u2192 gate avali\u00e1vel.\"),\n])\n\n# ---- app-em.js loadTrendPosition: publicar 0 quando flat (A1) ----\npatch(\"/home/gcrux-tradeux/tradeux/backend/src/app-em.js\", [\n    (\"// bem antes de qualquer death GENU\u00cdNO (REGIME_REFRESH_MS). Pula qty<=0 (TREND_QTY ausente = estado fresco).\",\n     \"// bem antes de qualquer death GENU\u00cdNO (REGIME_REFRESH_MS). Publica SEMPRE (inclusive 0 quando flat) \u2014 ver corpo.\"),\n    (\n        \"            const pos = await ordersRepository.getTrendPosition(symbol);\\n\"\n        \"            if (pos.qty > 0) {\\n\"\n        \"                await beholder.updateMemory(symbol, indexKeys.TREND_QTY, null, pos.qty, false);\\n\"\n        \"                logger('system', `TREND_QTY[${symbol}] carregado no boot: qty=${pos.qty}`);\\n\"\n        \"            }\\n\",\n        \"            const pos = await ordersRepository.getTrendPosition(symbol);\\n\"\n        \"            // Publica SEMPRE (inclusive 0 quando flat): o gate do Farm Buy (TREND_QTY<=0) precisa da chave\\n\"\n        \"            // PRESENTE p/ avaliar \u2014 ausente daria undefined<=0=false e bloquearia o Farm Buy enquanto o Trend\\n\"\n        \"            // nunca operou. id7 (Trend Sell) \u00e9 gateado por death-cross (n\u00e3o por TREND_QTY); com 0 o calcQty\\n\"\n        \"            // falha-fechado igual a ausente \u2192 publicar 0 n\u00e3o dispara venda esp\u00faria.\\n\"\n        \"            await beholder.updateMemory(symbol, indexKeys.TREND_QTY, null, pos.qty, false);\\n\"\n        \"            if (pos.qty > 0) logger('system', `TREND_QTY[${symbol}] carregado no boot: qty=${pos.qty}`);\\n\",\n    ),\n])\nprint(\"ALL PATCHED\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/patch_rearm.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:20:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\npython3 /tmp/patch_rearm.py\necho \"=== node --check ===\"\nnode --check /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js && echo \"  OK setup-farm.js\"\nnode --check /home/gcrux-tradeux/tradeux/backend/src/app-em.js && echo \"  OK app-em.js\"\necho \"=== confere o buyCond + indexes resultantes (DRY do setup-farm) ===\"\ngrep -nE \"buyCond =|Farm Buy \\\\\\$\\{symbol\\}.*buyCond\" /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js\necho \"=== loadTrendPosition agora publica sempre? ===\"\ngrep -nA2 \"Publica SEMPRE\" /home/gcrux-tradeux/tradeux/backend/src/app-em.js | head -4'",
+  "description": "Apply re-arm patch + syntax check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> patched /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js
+> patched /home/gcrux-tradeux/tradeux/backend/src/app-em.js
+> ALL PATCHED
+> === node --check ===
+>   OK setup-farm.js
+>   OK app-em.js
+> === confere o buyCond + indexes resultantes (DRY do setup-farm) ===
+> 110:    const buyCond = `MEMORY['${K(RSI_KEY_SUFFIX)}'].current<${RSI_LO} && MEMORY['${K('REGIME')}']!=='bear' && MEMORY['${K('REGIME')}']!=='trend' && MEMORY['${K('TREND_QTY')}']<=0`;
+> 111:    console.log('- ' + await ensureAutomation(token, symbol, `Farm Buy ${symbol}`, buyCond, `${K(RSI_KEY_SUFFIX)},${K('REGIME')},${K('TREND_QTY')}`, buyTpl.id));
+> === loadTrendPosition agora publica sempre? ===
+> 387:// bem antes de qualquer death GENUÍNO (REGIME_REFRESH_MS). Publica SEMPRE (inclusive 0 quando flat) — ver corpo.
+> 388-async function loadTrendPosition() {
+> 389-    try {
+> --
+> ```
+
+## 🤖 Claude *(15:20:42)*
+
+
+## 🤖 Claude *(15:20:43)*
+
+Código A1+A2 implementado, sintaxe OK (buyCond e indexes corretos; loadTrendPosition publica sempre). Como é **HIGH risk money-path**, vou gatear (QA+TL+crítico) incluindo o plano de deploy, em background:
+
+## 🤖 Claude *(15:21:18)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'rearm-prereqs-gate',\n  description: 'Gate QA+TL+critico dos pre-reqs de re-armamento A1 (gate Farm x TREND_QTY) + A2 (RSI 1m->15m)',\n  phases: [{ title: 'Review', detail: 'QA + TL + critico revisam A1+A2 + o plano de deploy' }],\n}\n\nconst CONTEXT = `\n# Contexto (TradeUX, mainnet LIVE, canary FARM-ONLY, equity ~US$149). Pr\u00e9-reqs de RE-ARMAMENTO (Farm Buy/Trend\n# est\u00e3o OFF hoje; isto prepara p/ quando o dono religar). Mudan\u00e7as (diff no working tree, N\u00c3O deployado):\n#\n# A1 \u2014 gate Farm Buy \u00d7 TREND_QTY (evita colis\u00e3o de carteiras Farm\u00d7Trend no mesmo ativo):\n#  - backend/scripts/setup-farm.js: buyCond += \" && MEMORY['<sym>:TREND_QTY']<=0\"; indexes += \",<sym>:TREND_QTY\".\n#  - backend/src/app-em.js loadTrendPosition(): passou a publicar TREND_QTY SEMPRE (inclusive 0 quando flat) \u2014\n#    antes PULAVA qty<=0. Motivo: o gate <=0 precisa da chave PRESENTE; ausente=undefined<=0=false bloquearia o\n#    Farm Buy enquanto o Trend nunca operou. (updateTrendPosition j\u00e1 publicava 0 ap\u00f3s venda.)\n#\n# A2 \u2014 alinhar RSI do Farm Buy live (era 1m) com o paper (15m):\n#  - setup-farm.js: FARM_INTERVAL default '1m' -> '15m' (RSI_KEY_SUFFIX vira RSI_14_15m; cria monitor CANDLES 15m).\n#\n# FATOS verificados por mim (confirme): (1) TREND_QTY \u00e9 escalar cru (beholder.updateMemory:1009 MEMORY[key]=value;\n# 0 \u00e9 gravado, passa do guard null/undefined) -> gate \u00e9 MEMORY['<sym>:TREND_QTY']<=0 SEM .current. (2) o\n# validateConditions REAL (automationsController.js:13, regex sem-espa\u00e7o) ACEITA a condi\u00e7\u00e3o nova (15m + TREND_QTY<=0)\n# nos 3 s\u00edmbolos (testei). (3) id7 (Trend Sell) \u00e9 gateado por TREND_CROSS death (setup-trend.js), N\u00c3O por\n# TREND_QTY; com TREND_QTY=0 o calcQty falha-fechado igual a ausente -> publicar 0 N\u00c3O dispara venda esp\u00faria.\n# (4) ensureAutomation \u00e9 idempotente POR NOME (n\u00e3o atualiza linha existente) -> as 3 linhas Farm Buy (id9/11/13,\n# INATIVAS) precisam de UPDATE no DB; inativas n\u00e3o est\u00e3o no BRAIN -> seguro.\n#\n# PLANO DE DEPLOY (vet tamb\u00e9m): (a) rebuild backend com o c\u00f3digo novo; (b) criar monitores CANDLES 15m p/\n# LTC/BNB/ADA (POST /monitors; o 1m fica \u00f3rf\u00e3o mas in\u00f3cuo); (c) UPDATE das 3 linhas Farm Buy INATIVAS no DB:\n# conditions -> nova (RSI_14_15m + TREND_QTY<=0), indexes -> '<sym>:RSI_14_15m,<sym>:REGIME,<sym>:TREND_QTY';\n# (d) restart p/ app-em subscrever o 15m + loadTrendPosition publicar TREND_QTY=0. Farm Buy SEGUE INATIVO\n# (s\u00f3 fica CORRETO p/ quando ativar). N\u00c3O toca Farm Sell (id10/12/14, ATIVO) nem nada vivo.\n#\n# Arquivos: backend/scripts/setup-farm.js, backend/src/app-em.js (loadTrendPosition + updateTrendPosition contexto),\n# backend/src/beholder.js (updateMemory/parseMemoryKey), backend/scripts/setup-trend.js (id7), \n# backend/src/controllers/automationsController.js (validateConditions).\n#\n# Sua tarefa: ca\u00e7ar bug/regress\u00e3o/risco. Pontos quentes: (a) publicar TREND_QTY=0 no boot quebra ALGO?\n# (id7, getFarmPosition, o teto/sizing, qualquer leitor de TREND_QTY) (b) o gate <=0 est\u00e1 semanticamente certo\n# (Farm acumula S\u00d3 quando Trend n\u00e3o segura; e quando Trend est\u00e1 flat-nunca-operou)? (c) a condi\u00e7\u00e3o passa mesmo\n# no validateConditions e a automa\u00e7\u00e3o avalia (isChecked com 3 \u00edndices)? (d) o plano de deploy (UPDATE de linha\n# inativa + monitor 15m + restart) \u00e9 seguro e n\u00e3o afeta o Farm Sell ativo? (e) o 1m \u00f3rf\u00e3o causa problema?\n# (f) algum efeito no app-em.js fora do loadTrendPosition? Tudo em pt-BR.\n`;\n\nconst SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    verdict: { type: 'string' },\n    summary: { type: 'string' },\n    findings: { type: 'array', items: { type: 'object', additionalProperties: false,\n      properties: { severity: { type: 'string', enum: ['BLOCKER','HIGH','MEDIUM','LOW','NIT'] }, mustFix: { type: 'boolean' }, title: { type: 'string' }, detail: { type: 'string' } },\n      required: ['severity','mustFix','title','detail'] } },\n  },\n  required: ['verdict','summary','findings'],\n}\n\nphase('Review')\nconst [qa, tl, critic] = await parallel([\n  () => agent(`${CONTEXT}\\n\\nVoce e o QA. Revisao pre-merge: correcao do gate, do publish-0, edge cases, idempotencia, plano de deploy/migra\u00e7\u00e3o, regressao no que est\u00e1 vivo (Farm Sell). Veredito estruturado, pt-BR.`,\n    { label: 'qa', phase: 'Review', agentType: 'qa-engineer', schema: SCHEMA }),\n  () => agent(`${CONTEXT}\\n\\nVoce e o Tech Lead. Decida o merge: design do gate/coordena\u00e7\u00e3o Farm\u00d7Trend, risco de mexer no app-em (monitor) e no DB vivo, manutenibilidade, conven\u00e7\u00f5es. Veredito estruturado, pt-BR.`,\n    { label: 'tl', phase: 'Review', agentType: 'tech-lead', schema: SCHEMA }),\n  () => agent(`${CONTEXT}\\n\\nVoce e um critico ADVERSARIAL. Tente QUEBRAR: cenario onde o Farm Buy fica bloqueado/dispara errado, onde publicar TREND_QTY=0 causa efeito colateral (id7, sizing, boot order, regimeJob edge-detection), onde a migra\u00e7\u00e3o de linha inativa colide com o BRAIN/grupo, o 1m orfao, race no boot. So achados REAIS. Veredito estruturado, pt-BR.`,\n    { label: 'critico', phase: 'Review', schema: SCHEMA }),\n])\n\nconst reviews = [\n  { role: 'QA', ...(qa || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n  { role: 'TL', ...(tl || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n  { role: 'CRITICO', ...(critic || { verdict: 'ERRO', summary: 'sem retorno', findings: [] }) },\n]\nconst mustFix = reviews.flatMap(r => (r.findings || []).filter(f => f.mustFix || f.severity === 'BLOCKER').map(f => ({ from: r.role, ...f })))\nlog(`Vereditos: QA=${reviews[0].verdict} \u00b7 TL=${reviews[1].verdict} \u00b7 CRITICO=${reviews[2].verdict} \u00b7 must-fix=${mustFix.length}`)\nreturn { reviews, mustFix }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wbk5esew5
+> Summary: Gate QA+TL+critico dos pre-reqs de re-armamento A1 (gate Farm x TREND_QTY) + A2 (RSI 1m->15m)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/subagents/workflows/wf_def1c63b-f38
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/rearm-prereqs-gate-wf_def1c63b-f38.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/rearm-prereqs-gate-wf_def1c63b-f38.js"} to iterate without resending the script.)
+> Run ID: wf_def1c63b-f38
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux-backend/56981647-903f-4aac-b895-61676f7631ed/workflows/scripts/rearm-prereqs-gate-wf_def1c63b-f38.js", resumeFromRunId: "wf_def1c63b-f38"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(15:21:23)*
+
+
+## 🤖 Claude *(15:21:31)*
+
+Progresso do "zerar todos":
+
+**Plano travado:** RBAC → **DEFER** (decisão: defesa-em-profundidade já cobre ~95%). Restam 5 DO_NOW, faço um a um.
+
+**A1+A2 (re-arm prereqs) — implementado, gate rodando** (`wbk5esew5`):
+- A1: gate `TREND_QTY<=0` no Farm Buy (não acumula no ativo que o Trend está segurando) + `loadTrendPosition` publica `TREND_QTY=0` quando flat (pra o gate ser avaliável).
+- A2: RSI do Farm Buy `1m→15m` (alinha com o paper).
+- **Pré-verifiquei o que costuma quebrar:** `TREND_QTY` é escalar (gate sem `.current`), a condição passa no `validateConditions` real (3 símbolos), o id7 é gateado por death-cross (publicar 0 não dispara venda), e as linhas Farm Buy são inativas (UPDATE seguro, fora do BRAIN).
+- Farm Buy **segue inativo** — isto só deixa correto pra quando você religar; **não toca o Farm Sell ativo**.
+
+**Fila restante (após A1+A2):** #9 (qty líquida + bug `q`→`z` no fill handler ativo) → #4 (graceful-shutdown) → #5b (confirm no toggle, frontend).
+
+Quando o gate fechar, corrijo must-fix → deploy (criar monitores 15m + UPDATE das 3 linhas inativas + rebuild) → verifico → commit/push, e sigo pro #9. Te aviso.
+
+## 👤 User *(15:29:00)*
+
+<task-notification>
+<task-id>wbk5esew5</task-id>
+<tool-use-id>toolu_01WgEurwUDuhcFzGo1PrYgqR</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbk5esew5.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Gate QA+TL+critico dos pre-reqs de re-armamento A1 (gate Farm x TREND_QTY) + A2 (RSI 1m-&gt;15m)" completed</summary>
+<result>{"reviews":[{"role":"QA","verdict":"PASS COM RESSALVAS","summary":"Revisão pré-merge das mudanças A1 (gate Farm Buy × TREND_QTY + publish-0 no boot) e A2 (FARM_INTERVAL 1m→15m). As duas mudanças de CÓDIGO estão corretas, fail-safe e bem fundamentadas; verifiquei empiricamente os 4 fatos alegados pelo autor — todos CONFIRMADOS. A suíte de simulação money-path passa 12/12 (sem regressão). O gate &lt;=0 é semanticamente correto, o publish de TREND_QTY=0 tem blast-radius ZERO (único leitor é calcQty, fail-closed em 0), o Farm Sell ATIVO (id10/12/14) não é tocado, o 1m órfão é inócuo e a condição nova passa no validateConditions REAL nos 3 símbolos. As ressalvas são todas operacionais/de plano de deploy (não bugs de código): divergência script×DB-vivo, falta de validação automatizada da condição UPDATEada, e dois edge-cases latentes herdados. Pronto para merge do diff; o deploy exige disciplina manual nos passos (b)/(c). VEREDITO POR MUDANÇA — A1: PASS · A2: PASS · Plano de deploy: PASS COM RESSALVAS.","findings":[{"severity":"LOW","mustFix":false,"title":"A1 — gate TREND_QTY&lt;=0 + publish-0 no boot: CORRETO e fail-safe (confirmado empiricamente)","detail":"VEREDITO A1: PASS. Validei os 4 fatos: (1) TREND_QTY é escalar cru — beholder.updateMemory:1002 só barra undefined/null; 0 (número, sem .toJSON/.get) é gravado em MEMORY[key]; getTrendPosition retorna {qty:0} number quando flat → o gate é MEMORY['&lt;sym&gt;:TREND_QTY']&lt;=0 SEM .current (correto). (2) validateConditions REAL (regex byte-idêntica em automationsController.js:13) ACEITA a condição nova nos 3 símbolos — testei. (3) id7 (Trend Sell) é gateado por TREND_CROSS_1h==='death' (setup-trend.js), TREND_QTY NÃO está nos seus indexes/conditions → publicar 0 não entra no findAutomations da id7; e mesmo se entrasse, calcQty:243 (`!trendQty||trendQty&lt;=0` → throw) falha-fechado igual a ausente. (4) ensureAutomation é idempotente-por-nome (retorna cedo se existe). Semântica do gate verificada em Node: 0&lt;=0=true (compra liberada quando Trend flat), 2&lt;=0=false (bloqueia enquanto golden segura), undefined&lt;=0=false (mas isChecked:896 barra undefined antes do eval → Farm Buy nunca avalia sem TREND_QTY presente = fail-safe na direção certa). invertCondition só mira a cláusula RSI ('current') → o anti-empilhamento edge-trigger é preservado (eval final: RSI.current&lt;35 &amp;&amp; REGIME!=bear &amp;&amp; REGIME!=trend &amp;&amp; TREND_QTY&lt;=0 &amp;&amp; RSI.previous&gt;35). Boot: loadTrendPosition (init:869) roda ANTES dos monitores, com executeAutomations=false (não dispara nada). updateTrendPosition já publicava 0 pós-venda → o publish-0 no boot é consistente, sem semântica nova em runtime."},{"severity":"LOW","mustFix":false,"title":"A2 — FARM_INTERVAL 1m→15m: alinhamento legítimo com o paper, sem efeito colateral","detail":"VEREDITO A2: PASS. RSI_KEY_SUFFIX vira RSI_14_15m; o monitor CANDLES 15m publica index 'RSI_14' com interval '15m' → parseMemoryKey gera '&lt;sym&gt;:RSI_14_15m', batendo exatamente com a condition. A trilha paper FARMNL (setup-paper-levers.js) já usa RSI_14_15m&lt;35 fora de bear/trend, então o A2 genuinamente alinha o Farm Buy live com a track validada (40/40 em paper) — não é regressão, é o fix pretendido. O Farm Sell usa BOOK/LAST_ORDER (não RSI) → 100% imune ao troco de intervalo. Monitores CANDLES têm unique(type,symbol,interval), então 15m e 1m coexistem (sem 409); ensureMonitor cria o 15m e o 1m fica órfão mas inócuo (nenhuma automação ATIVA lê RSI_14_1m). Confirmado claim (e)."},{"severity":"MEDIUM","mustFix":false,"title":"Plano de deploy: divergência script×DB-vivo exige UPDATE manual (passo c) — footgun de manutenção, não bug","detail":"VEREDITO plano: PASS COM RESSALVAS. ensureAutomation NÃO atualiza linha existente (retorna cedo por nome) → re-rodar setup-farm.js NÃO aplica a condição nova às 3 linhas Farm Buy id9/11/13 já existentes; o passo (c) UPDATE manual no DB é OBRIGATÓRIO e está corretamente no plano. Risco: após um make reset-db, setup-farm.js cria as linhas JÁ corretas (15m+TREND_QTY), mas no DB VIVO de hoje as linhas seguem com a condição antiga até o UPDATE manual — duas fontes da verdade temporariamente divergentes. CI não valida condição de automação runtime (CI = migrate+seed+agent --check), logo a única validação da condição UPDATEada é o validateConditions (que confirmei OK) + runtime. RECOMENDAÇÃO: (i) no passo (c), incluir os 3 índices na ordem documentada ('&lt;sym&gt;:RSI_14_15m,&lt;sym&gt;:REGIME,&lt;sym&gt;:TREND_QTY') e o UPDATE só nas linhas BUY (id9/11/13) — NÃO tocar id10/12/14 (Farm Sell ATIVO); (ii) após o UPDATE, fazer um GET na automação e rodar validateConditions sobre o valor persistido antes de qualquer start; (iii) como são INATIVAS (fora do BRAIN), o UPDATE é seguro e não afeta nada vivo. O restart (passo d) faz loadTrendPosition publicar TREND_QTY=0 e o app-em subscrever o 15m — ordem correta."},{"severity":"LOW","mustFix":false,"title":"Farm Sell ATIVO (id10/12/14) intocado — confirmado","detail":"Nenhuma das mudanças mexe no Farm Sell: o diff só altera buyCond/buyIndexes e o FARM_INTERVAL (que afeta só o RSI da compra). loadFarmSellingLocks/loadFarmPositions/FARM_DCA/FARM_SELLING não dependem de TREND_QTY. O publish de TREND_QTY=0 não tem leitor além de calcQty (varri src/jobs, src/services, src/controllers, paperEngine — só beholder.calcQty lê TREND_QTY). dailyCapJob/computeEquity NÃO leem TREND_QTY. Blast-radius do publish-0 = exatamente habilitar o gate do Farm Buy; zero efeito em qualquer caminho vivo. Sim suite 12/12 OK pós-diff."},{"severity":"LOW","mustFix":false,"title":"Edge-case latente (herdado): Farm×Trend co-localizados na MESMA carteira — o gate evita ACUMULAR, mas não a venda cruzada","detail":"O gate &lt;=0 impede o Farm de COMPRAR enquanto o Trend segura (bom, evita colisão de entrada). Porém Farm e Trend continuam na MESMA carteira do ativo: se houver posição Farm aberta (FARM_DCA&gt;0) e o Trend ABRIR um golden depois (TREND_QTY passa a &gt;0), o gate só bloqueia COMPRAS novas do Farm — a venda no-loss do Farm (FARM_QTY, capada na carteira) e a venda do Trend (TREND_QTY, capada na carteira) podem competir pelo mesmo saldo base num death/no-loss simultâneo. calcQty capa em asset (anti-oversell), então não vende mais do que existe, mas a ATRIBUIÇÃO de qual lote saiu pode ficar ambígua (FARM_DCA/TREND_QTY derivam de orders por nome de automação, não do saldo). Não é introduzido por este diff (é a arquitetura de carteira compartilhada) e o gate REDUZ a chance ao serializar entradas; mencionado só para o registro. Hoje Trend está PARADO (canary FARM-ONLY), então inerte agora."},{"severity":"NIT","mustFix":false,"title":"Edge-case at-least-once no boot (herdado, documentado): irrelevante para este gate","detail":"loadTrendPosition recomputa TREND_QTY do banco no boot (idempotente, fonte = orders). O comentário do código já cobre a segurança via edge-detection do regimeJob (restart com posição aberta escreve 'none', não 'death'). Para o gate do Farm Buy, publicar 0 ou a qty real é sempre seguro: 0 libera a compra (Trend flat), &gt;0 bloqueia (Trend segurando) — em ambos os casos a decisão está alinhada à verdade do banco. Sem ação necessária."}]},{"role":"TL","verdict":"APPROVE COM SUGESTÕES (condicionado a 2 must-fix no plano de deploy — nenhum no código)","summary":"Mudança pequena, bem-escopada e reversível para RE-ARMAR o Farm Buy (hoje INATIVO) com coordenação de carteira contra o Trend. O código está correto: o gate TREND_QTY&lt;=0 é semanticamente certo, publicar TREND_QTY=0 no boot não quebra nenhum leitor (id7 é gateado por death-cross + calcQty falha-fechado em 0), a condição nova passa no validateConditions real nos 3 símbolos (testei), e NADA toca o Farm Sell ATIVO (id10/12/14) nem o money-path vivo. Os pontos frágeis são todos de PLANO DE DEPLOY, não de código: o monitor 1m fica órfão ATIVO (não inócuo de runtime) e há ordem implícita boot×UPDATE a respeitar. Risco de blast radius baixo dado 
+... (truncated 14717 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbk5esew5.output)</result>
+<usage><agent_count>3</agent_count><subagent_tokens>255935</subagent_tokens><tool_uses>94</tool_uses><duration_ms>462031</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(15:29:05)*
+
+
+## 🤖 Claude *(15:29:06)*
+
+Gate A1+A2: **QA=PASS · TL=APPROVE** (condicionado a 2 must-fix **no plano de deploy, nenhum no código**). Deixa eu ver o crítico + os must-fix exatos:
+
+## 🤖 Claude *(15:29:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbk5esew5.output'))\nprint('LOG:', d.get('logs'))\nres=d['result']\ncr=[r for r in res['reviews'] if r['role']=='CRITICO'][0]\nprint('CRITICO =>', cr['verdict']); print(cr['summary'][:500])\nprint('--- achados cr\u00edtico ---')\nfor f in cr.get('findings',[]):\n    print(f\\\"  ({f['severity']}){' MUSTFIX' if f.get('mustFix') else ''} {f['title']}\\\")\nprint('=== MUST-FIX agregado:', len(res.get('mustFix',[])),'===')\nfor m in res.get('mustFix',[]):\n    print('*',m['from'],m['severity'],'-',m['title']); print('  ',m['detail'][:600])\n\"",
+  "description": "Read critic + must-fix for A1+A2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LOG: ['Vereditos: QA=PASS COM RESSALVAS · TL=APPROVE COM SUGESTÕES (condicionado a 2 must-fix no plano de deploy — nenhum no código) · CRITICO=APROVADO COM RESSALVAS — nenhum bug que dispare ordem errada ou quebre o boot/Farm Sell ativo; o código de A1/A2 está correto. Mas o gate A1 é, no topology atual, um NO-OP (proteção zero) e o plano de deploy tem 2 riscos de processo + lacuna de teste. · must-fix=3']
+> CRITICO => APROVADO COM RESSALVAS — nenhum bug que dispare ordem errada ou quebre o boot/Farm Sell ativo; o código de A1/A2 está correto. Mas o gate A1 é, no topology atual, um NO-OP (proteção zero) e o plano de deploy tem 2 riscos de processo + lacuna de teste.
+> Auditei A1 (gate Farm Buy × TREND_QTY + publicar TREND_QTY=0 sempre no boot) e A2 (RSI 1m→15m) contra beholder.js (updateMemory/findAutomations/evalDecision/invertCondition/calcQty), app-em.js (loadTrendPosition/updateTrendPosition/ordem de boot), regimeJob.js, automationsController.js (validateConditions + start/grupo) e ordersRepository.getTrendPosition. Rodei a suíte de sim (12/12 OK) e testes Node pontuais do regex + semântica de eval + invertCondition.
+> 
+> CONFIRMEI as 4 premissas do autor: (1
+> --- achados crítico ---
+>   (HIGH) Gate A1 (TREND_QTY<=0) é NO-OP no topology atual — proteção zero contra a colisão que diz prevenir
+>   (MEDIUM) MUSTFIX Plano de deploy usa UPDATE raw no DB → BYPASSA validateConditions
+>   (MEDIUM) setup-farm.js Farm Sell está STALE vs produção; editar este arquivo aprofunda a divergência do reset-db
+>   (MEDIUM) Sem cobertura de sim p/ o novo gate A1 (money-path novo sem teste determinístico)
+>   (LOW) Monitor 1m órfão NÃO é totalmente inerte — flowJob lê RSI_14_1m
+>   (NIT) Risco latente (não-aplicável hoje): findAutomations wildcard-suffix-match
+> === MUST-FIX agregado: 3 ===
+> * TL MEDIUM - Monitor CANDLES 1m fica órfão ATIVO — DESATIVAR no deploy, não deixar "inócuo"
+>    Confirmei que a unicidade do 409 em insertMonitor é por (type, symbol, interval) (monitorsRepository.js:12). Logo o POST do monitor 15m retorna 201 e cria um monitor NOVO; o monitor 1m CANDLES pré-existente continua isActive=1 e órfão. Não é "inócuo": ele segue subscrevendo o candleStream 1m e recalculando RSI_14_1m a cada tick (custo de stream/CPU + um índice morto em MEMORY). Inócuo só para o TRADING (nenhuma automação lê RSI_14_1m após o UPDATE). MUST-FIX do plano: no passo (b), além de criar o 15m, faça PATCH isActive=false no monitor 1m de LTC/BNB/ADA (ou delete). Caso contrário acumula l
+> * TL MEDIUM - Ordem do deploy: o UPDATE do DB precisa preceder/coincidir com o restart, senão janela com índice TREND_QTY ausente
+>    O plano lista (c) UPDATE das linhas Farm Buy ANTES de (d) restart — correto, mantenha essa ordem e torne-a explícita como pré-condição. Detalhe: as 3 linhas são INATIVAS (não estão no BRAIN), então a janela é benigna HOJE; mas se o dono ativar o Farm Buy logo após o UPDATE e ANTES do restart que dispara loadTrendPosition, a chave <sym>:TREND_QTY pode estar ausente → isChecked=false → Farm Buy não avalia (fail-safe, não compra errado). Não é perigoso (falha fechado), mas é a diferença entre "correto" e "silenciosamente inerte". MUST-FIX operacional: garantir restart (loadTrendPosition publica 0
+> * CRITICO MEDIUM - Plano de deploy usa UPDATE raw no DB → BYPASSA validateConditions
+>    validateConditions só roda no controller (insertAutomation:165 / updateAutomation:232). O passo (c) do plano (UPDATE direto das 3 linhas Farm Buy no DB) NÃO passa por essa validação, e applyAutomationActive→updateBrain (na ativação futura) também não valida — uma condition malformada entraria no BRAIN e só estouraria no eval (Function(...) throw → catch do evalDecision → alerta Telegram autofail, mas a automação fica inerte/quebrada). O autor testou a string à mão (OK), mas o PROCESSO é frágil. Faça o UPDATE via PATCH /automations/:id (passa pelo updateAutomation → valida) em vez de SQL cru. C
+> ```
+
+## 🤖 Claude *(15:29:20)*
+
+
+## 🤖 Claude *(15:29:20)*
+
+O crítico levantou um **HIGH** crucial: *"o gate A1 é NO-OP no topology atual"*. Preciso entender por quê antes de deployar algo inútil. Lendo o detalhe completo:
+
+## 🤖 Claude *(15:29:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrux-tradeux/56981647-903f-4aac-b895-61676f7631ed/tasks/wbk5esew5.output'))['result']\ncr=[r for r in d['reviews'] if r['role']=='CRITICO'][0]\nfor f in cr['findings']:\n    if f['severity'] in ('HIGH','LOW') and ('NO-OP' in f['title'] or 'flowJob' in f['title']):\n        print('### ('+f['severity']+') '+f['title'])\n        print(f['detail']); print()\n\"",
+  "description": "Read critic HIGH (no-op) + flowJob finding detail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### (HIGH) Gate A1 (TREND_QTY<=0) é NO-OP no topology atual — proteção zero contra a colisão que diz prevenir
+> setup-trend.js opera UM símbolo só (TREND_SYMBOL, default BTCUSDT). Não existem automações 'Trend %' p/ LTC/BNB/ADA. getTrendPosition('LTCUSDT'/'BNBUSDT'/'ADAUSDT') faz early-return {qty:0} (ordersRepository.js:330: `if (!trendIds.length) return {qty:0}`). Logo, p/ as alts do Farm, TREND_QTY é PERMANENTEMENTE 0 e o gate `<=0` é SEMPRE true. A 'colisão de carteiras Farm×Trend no mesmo ativo' que o A1 declara evitar NÃO PODE OCORRER hoje — o Trend nunca segura posição em alt. O gate só passa a ter efeito SE/QUANDO rodarem setup-trend com TREND_SYMBOL=<alt>. Não é bug (é future-proofing correto), mas a justificativa do diff superdimensiona o ganho: hoje adiciona índice/publish/complexidade por proteção inexistente. Recomendo: ou documentar explicitamente que é dormant até Trend-em-alt, ou adiar A1 até o Trend operar alts. (BTCUSDT, sim, tem Trend — mas BTC não está na lista FARM_SYMBOLS, então também não há Farm Buy de BTC p/ gatear.)
+> 
+> ### (LOW) Monitor 1m órfão NÃO é totalmente inerte — flowJob lê RSI_14_1m
+> O plano mantém o monitor CANDLES 1m ATIVO ('órfão mas inócuo'). De fato, p/ money-path é inócuo (nenhuma automação ativa indexa RSI_14_1m após A2). MAS flowJob.js:89 faz beholder.getMemory(symbol,'RSI_14_1m') p/ o log de calibração flow-capitulation. Enquanto o 1m ficar ativo, segue funcionando. Risco: se um operador 'limpar' e DESATIVAR o 1m das alts (tentação natural ao ver dois CANDLES por símbolo), esse log de calibração morre silenciosamente p/ LTC/BNB/ADA. Documentar 'NÃO desativar o monitor 1m das alts (flowJob o lê)' evita o tiro no pé. (Premissa do plano de manter ativo: correta.)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
