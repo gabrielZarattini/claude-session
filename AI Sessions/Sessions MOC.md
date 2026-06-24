@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1351
-> * **Sessões do Claude**: 1309
+> * **Total de Sessões Registradas**: 1355
+> * **Sessões do Claude**: 1313
 > * **Sessões do Gemini**: 42
 
 ---
@@ -67,15 +67,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-adb234d3d56fd0c57]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-acef8a2e0f0a2f0a5]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-ac5565bc6d7d6fed5]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-ac2820e0c68754cc2]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-ac01f5e1f2e756ad7]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-aaedba3456ba8564b]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-a913225e95c499ecf]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-a784c23abe4dabf05]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-a689d83d3547c6f1a]]` - *2026-06-24*
-*   `[[2026-06-24 - agent-a2c797e4511477233]]` - *2026-06-24*
-*   `[[2026-06-24 - agent-a1fa4731488d1b4d6]]` - *2026-06-24*
-*   *... e mais 1311 sessões nessa categoria.*
+*   *... e mais 1315 sessões nessa categoria.*
 
 ---
 
@@ -270,15 +270,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-adb234d3d56fd0c57]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-acef8a2e0f0a2f0a5]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-ac5565bc6d7d6fed5]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-ac2820e0c68754cc2]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-ac01f5e1f2e756ad7]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-aaedba3456ba8564b]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a913225e95c499ecf]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a784c23abe4dabf05]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a689d83d3547c6f1a]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a4d5f6271158b27a8]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a2c797e4511477233]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a1fa4731488d1b4d6]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a1f01340586277558]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a14b361a0fc014c35]]` (ClaudeSessions)
 *   `[[2026-06-24 - Próximos passos do projeto]]` (ClaudeSessions)
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` (ClaudeSessions)
 *   `[[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]` (ClaudeSessions)

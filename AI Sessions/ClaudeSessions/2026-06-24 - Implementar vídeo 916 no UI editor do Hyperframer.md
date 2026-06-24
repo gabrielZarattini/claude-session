@@ -4328,6 +4328,1310 @@ Begin your analysis now. Do this in 3 steps:
 
 Your final reply must contain the markdown report and nothing else.
 
+## 🤖 Claude *(03:29:51)*
+
+
+## 🤖 Claude *(03:30:10)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify security vulns in VS-2 changes",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing ONLY the newly-added/changed code on this branch for HIGH-CONFIDENCE, concretely-exploitable security vulnerabilities. Working dir: /home/gcrUX/htdocs/constellation-orchestra\n\nReview ONLY these changed files (read them in full + their immediate context):\n- scripts/video-bridge.ts (NEW \u2014 host worker: polls video_renders engine=hyperframes, renders HTML\u2192MP4 via Playwright, uploads to bucket, calls finalize_video_render)\n- scripts/hyperframes/render-core.ts (NEW \u2014 Playwright+FFmpeg renderer)\n- scripts/hyperframes/templates/viral-short-9x16.html (NEW \u2014 the HTML template)\n- supabase/functions/video-render/index.ts (MODIFIED \u2014 added `composition` body field pass-through + a `poll://` webhook-scheme branch)\n- supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql (NEW \u2014 adds video_renders.composition jsonb + private bucket video-studio-assets)\n\nCONTEXT (threat model): single-tenant Usu\u00e1rio Zero deployment. `video_renders` rows are written by service-role (edge fn after deduct, or autopilot direct INSERT). The `composition` jsonb holds {template, props:{hook,caption,cta,brand,product_image_url}, duration_s, fps}. The worker renders it in headless Chromium. RLS on video_renders: SELECT own-or-org; no client write (default-deny). finalize_video_render is service-role-only, idempotent, refund<=charged.\n\nFocus EXCLUSIVELY on concrete, >80%-confidence exploitable issues in these categories: injection (SQL/command/template/XSS-in-render/path-traversal), auth/authz bypass, privilege escalation, crypto/secrets, code execution, cross-tenant data exposure, mint/drain of the mcoCoins ledger.\n\nSpecifically trace:\n1. Does any field of `composition` reach innerHTML/eval/script/Function in the template or renderer? (The template claims to use textContent only + https/data: URL validation for images \u2014 VERIFY this is actually true by reading viral-short-9x16.html.)\n2. Is the FFmpeg invocation (spawn) safe from command injection? Are any args user-controlled?\n3. Is the template path load safe from path traversal (template name allowlist)?\n4. Is the storage upload path (storageKey) safe from traversal / cross-tenant write?\n5. Can the `poll://` branch or `composition` pass-through in video-render/index.ts bypass the JWT auth, the deduct, or the tenant binding?\n6. Does the worker's service-role usage create any cross-tenant exposure (it processes ANY queued hyperframes render \u2014 is user_id bound correctly on upload/finalize)?\n7. Any mint/drain path in finalize/refund (charged_mco from the row)?\n\nEXCLUSIONS (do NOT report): DoS/resource-exhaustion, lack-of-hardening (e.g. `--no-sandbox` is a documented single-tenant deferral \u2014 only flag if you find a CONCRETE untrusted-HTML-reaches-execution path), secrets-on-disk, rate-limiting, theoretical races, outdated deps, findings in markdown/docs, log spoofing, SSRF that only controls a path (not host/protocol), client-side TS authz.\n\nOutput a markdown list of findings. For each: file:line, severity (HIGH/MEDIUM), category, description, concrete exploit scenario, fix recommendation, and a confidence score 1-10. If you find NO concrete exploitable vulnerability, say so explicitly and explain why the obvious candidate surfaces (HTML render of composition, FFmpeg spawn, --no-sandbox, service-role worker) are NOT exploitable in this design. Be rigorous \u2014 read the actual code, do not assume."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmed: `add_mco_coins` was revoked from `authenticated` and granted only to `service_role` (migration `20260520150000`). The worker uses the service key, so this is in-scope and correct. Tenants cannot reach it.\n\nNow let me trace the remaining concerns I haven\'t fully confirmed. The key one is the storage upload path (`storageKey`) for traversal/cross-tenant write, and the `composition` pass-through binding. Let me verify the worker\'s `user_id` binding is from the row (server-trusted) and not from any client-controllable field.\n\nIn `video-bridge.ts`:\n- `claim()` selects `user_id` from the **row** (line 60), which was set server-side by the edge fn from the verified JWT (`user_id: userId` at index.ts:109).\n- `storageKey = ${row.user_id}/${renderId}.mp4` — `row.user_id` is a UUID from the DB, `renderId` is a UUID. Neither is attacker-controlled free text. No traversal possible (UUIDs can\'t contain `../`).\n- `video_assets.insert` and `mcorch_nodes.insert` both use `row.user_id` — server-trusted. No cross-tenant binding.\n\nLet me do final verification on the one subtle risk: can `composition` reach the renderer in a way that escapes `textContent`? I\'ve read the template — `applyProps` uses `textContent` for all four text fields and validates the image URL with `/^https:\\/\\//i` or `/^data:image\\//i`. Let me confirm `applyFrame` never consumes any prop (only numeric frame index) and that no `composition` field reaches the FFmpeg args.\n\nTracing the FFmpeg invocation in `render-core.ts` (lines 122-136): every arg is either a literal string or `String(fps)` / `join(frameDir, ...)` / `outPath`. `fps` is clamped numeric (`Math.max(1, Math.min(60, ...))`). `frameDir` is from `mkdtempSync`. `outPath` is constructed by the worker as `/tmp/video-render-${renderId}.mp4` where `renderId` is a DB UUID. **No `composition` field reaches the spawn args.** And `spawn(\'ffmpeg\', args)` uses an arg array (no shell) — no command injection even if an arg contained metacharacters.\n\nI have everything I need. Let me write up the findings.\n\n## Security Review — video-studio HyperFrames render path\n\nI read all five changed files in full plus the supporting objects they depend on (`finalize_video_render`, the `video_renders`/`video_assets` RLS, and the `add_mco_coins`/`deduct_mco_coins` grants). I traced each of the seven concerns to the actual code.\n\n### Verdict: NO concrete, exploitable HIGH/MEDIUM vulnerability found in the reviewed diff.\n\nEvery obvious candidate surface was checked against the code and is genuinely closed. Details below.\n\n---\n\n### Why each candidate surface is NOT exploitable\n\n**1. `composition` → innerHTML/eval/script/Function (template/render XSS) — SAFE.**\nTraced every prop sink in `viral-short-9x16.html`:\n- `applyProps` (lines 77-96) writes `brand`, `hook`, `caption`, `cta` exclusively via `.textContent = String(...)`. No `innerHTML`, `insertAdjacentHTML`, `document.write`, `eval`, or `Function` anywhere in the template or `render-core.ts`.\n- `product_image_url` is gated by `/^https:\\/\\//i.test(url) || /^data:image\\//i.test(url)` (line 86) before assignment to `img.src`. A `javascript:` URL on an `<img src>` does not execute in any browser regardless, and the allowlist blocks it anyway. The fallback `initials` path strips to `[A-Za-zÀ-ÿ ]` then `textContent`.\n- `applyFrame` (lines 102-132) consumes only the numeric frame index `i`/`total` — it never reads any prop. The `props` object is passed into the page via `page.evaluate((props) => window.applyProps(props), spec.props)` (render-core.ts:98), which serializes as structured-clone data, not code. No injection channel into Chromium execution.\n\n**2. FFmpeg spawn command injection — SAFE.**\n`runFfmpeg` (render-core.ts:60-68) uses `spawn(\'ffmpeg\', args, ...)` with an **argument array** and no shell, so metacharacters can\'t break out. More importantly, no `composition` field reaches the args: every element of the array (lines 122-136) is a literal, a clamped-numeric `String(fps)` (`Math.max(1, Math.min(60, ...))`), the `mkdtemp` `frameDir`, or `outPath` (a UUID-derived `/tmp` path). User-controlled text never touches the FFmpeg invocation.\n\n**3. Template path traversal — SAFE.**\n`VALID_TEMPLATES = new Set([\'viral-short-9x16\'])` allowlist (render-core.ts:58); `spec.template` is only honored if `VALID_TEMPLATES.has(spec.template)`, otherwise it falls back to the default (line 76). A malicious `template: \'../../etc/passwd\'` is rejected by the set membership check before `resolve()` is ever called. No traversal.\n\n**4. Storage upload path traversal / cross-tenant write — SAFE.**\n`storageKey = ${row.user_id}/${renderId}.mp4` (video-bridge.ts:83). Both components are DB-sourced UUIDs (`row.user_id` was set server-side at index.ts:109 from the JWT-verified `userId`; `renderId` is `gen_random_uuid()`). Neither is attacker-controlled free text, so `../` injection is impossible. The bucket is private (migration: `public=false`) with default-deny RLS, and the worker writes via service key. The path prefix correctly scopes the tenant.\n\n**5. `poll://` branch / `composition` pass-through bypassing JWT/deduct/tenant binding — SAFE.**\nIn `video-render/index.ts`, the auth → engine-validate → BYOK → worker-availability → **`deduct_mco_coins` (line 99)** → INSERT sequence is fixed. The `poll://` check (line 124) sits *after* the deduct and the row INSERT, and only decides whether to additionally HTTP-POST a kick. The `poll://` scheme simply means "no kick — the queued row is the trigger." It cannot reach the insert without first passing JWT verification (`getUser`, lines 43-45, which rejects forged tokens) and the atomic deduct. `composition` is accepted only for `engine === "hyperframes"` and only as transported jsonb (line 60-61) — it never influences auth, cost (`COST[engine]` is fixed), or `user_id` binding.\n\n**6. Service-role worker → cross-tenant exposure — SAFE.**\nThe worker claims by `renderId` and reads `user_id` **from the row** (claim select, line 60). All downstream writes — `storageKey`, `video_assets.insert` (line 91-94), `mcorch_nodes.insert` (line 98-103), and `finalize_video_render` — use `row.user_id`, which is server-trusted (never from a client body). The worker processes "any queued hyperframes render," but each render\'s tenant binding was fixed at INSERT time by the edge fn from the verified JWT. No path lets tenant A\'s render write/finalize under tenant B\'s id.\n\n**7. Mint/drain in finalize/refund — SAFE.**\n- `finalize_video_render` is `SECURITY DEFINER`, `search_path=\'\'`, REVOKEd from PUBLIC/anon/authenticated, GRANTed only to `service_role` (migration `20260622040000:169-170`). Tenants cannot call it.\n- The refund mint is bounded two ways: the worker always passes `p_refund: charged` where `charged = row.charged_mco` (the row\'s own value, video-bridge.ts:71,117), and the table CHECK `refunded_mco <= charged_mco` (migration `…040000:45`) is the hard backstop — even an inflated `p_refund` would violate the constraint and abort. The guard `state IN (\'queued\',\'running\',\'qa_gate\')` with `refunded_at` makes refund idempotent (one credit per render; a second finalize is a no-op, line 156-158).\n- `add_mco_coins` (the actual credit) was revoked from `authenticated` and is service-role-only (migration `20260520150000:17-18`), so the refund leg is not a tenant-reachable mint.\n\n---\n\n### Minor observations (NOT vulnerabilities — noted for completeness, no action required)\n\n- **`finalize_video_render` does not itself clamp `p_refund` to `charged_mco`** — it relies on the table CHECK constraint to reject over-refund. This is defense-by-constraint and currently sound (the constraint will abort the txn), but a belt-and-suspenders `LEAST(p_refund, charged_mco)` inside the function would make the RPC safe even if the CHECK were ever dropped. Confidence this is currently exploitable: ~1/10 (not exploitable — the worker passes the row\'s own `charged`, and the CHECK blocks any other value).\n- **`--no-sandbox`** is explicitly excluded per the threat model and, critically, there is no untrusted-HTML-reaches-execution path (concern #1), so it carries no concrete exploit here.\n- **`upsert: true` on the storage upload** (video-bridge.ts:87) allows re-rendering the same `renderId` to overwrite its own object. Since the path is `{row.user_id}/{renderId}` and `renderId` is a unique gen_random_uuid bound to one tenant, this is same-tenant idempotent overwrite only — not cross-tenant.\n\nAll claims in the migration/edge comments about XSS-safety, default-deny RLS, idempotent refund, and service-role-only finalize were verified true against the actual code, not assumed.'}, {'type': 'text', 'text': "agentId: a689d83d3547c6f1a (use SendMessage with to: 'a689d83d3547c6f1a' to continue this agent)\n<usage>subagent_tokens: 91247\ntool_uses: 10\nduration_ms: 74463</usage>"}]
+> ```
+
+## 🤖 Claude *(03:31:29)*
+
+
+## 🤖 Claude *(03:31:39)*
+
+Per the security-review protocol, the identification sub-task verified all 7 candidate surfaces against the actual code. The only observation (defense-by-constraint on `finalize_video_render` refund) was rated ~1/10 confidence (not exploitable — the CHECK `refunded_mco <= charged_mco` is a hard backstop and the worker passes the row's own value). Nothing meets the confidence ≥ 8 bar.
+
+# Security Review — video-studio HyperFrames render path (Fatia VS-2)
+
+**Verdict: SAFE — no HIGH or MEDIUM confidence (≥8) exploitable vulnerabilities found in the diff.**
+
+Files reviewed: `scripts/video-bridge.ts`, `scripts/hyperframes/render-core.ts`, `scripts/hyperframes/templates/viral-short-9x16.html`, `supabase/functions/video-render/index.ts`, `supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql`.
+
+Every candidate attack surface was traced to the code and is genuinely closed:
+
+| # | Surface | Result |
+|---|---------|--------|
+| 1 | `composition` props → render execution (XSS/template injection) | **Safe** — all text via `.textContent`; image URL allowlisted `^https://` or `^data:image/`; `applyFrame` consumes only the numeric frame index; props passed via `page.evaluate` structured-clone (data, not code). No `innerHTML`/`eval`/`Function`. |
+| 2 | FFmpeg command injection | **Safe** — `spawn('ffmpeg', argsArray)` (no shell); no `composition` field reaches args; only literals + clamped-numeric `fps` + `mkdtemp` dir + UUID `outPath`. |
+| 3 | Template path traversal | **Safe** — `VALID_TEMPLATES` allowlist gates `spec.template` before `resolve()`. |
+| 4 | Storage upload traversal / cross-tenant write | **Safe** — `storageKey = {row.user_id}/{renderId}.mp4`, both DB-sourced UUIDs (server-trusted); private bucket + default-deny RLS. |
+| 5 | `poll://` / `composition` bypass of JWT/deduct/tenant | **Safe** — both sit *after* `getUser()` + atomic `deduct_mco_coins` + INSERT; `composition` is inert transported jsonb, never touches auth/cost/`user_id`. |
+| 6 | Service-role worker cross-tenant exposure | **Safe** — `user_id` read from the row (bound at INSERT from verified JWT); all writes use `row.user_id`. |
+| 7 | Mint/drain via finalize/refund | **Safe** — `finalize_video_render` service-role-only + idempotent; refund bounded by table CHECK `refunded_mco <= charged_mco`; worker passes the row's own `charged_mco`; `add_mco_coins` revoked from authenticated. |
+
+No findings to report.
+
+## 👤 User *(13:35:47)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(13:35:47)*
+
+No response requested.
+
+## 👤 User *(13:38:39)*
+
+ótimo continue
+
+## 🤖 Claude *(13:42:15)*
+
+API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+
+## 👤 User *(13:46:13)*
+
+ótimo continue
+
+## 🤖 Claude *(13:47:38)*
+
+VS-2 is complete, live, and `/security-review` SAFE. Marking it done and moving to **Fatia VA-V1 — the autopilot 9:16 integration** (what you prioritized).
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(13:47:41)*
+
+Now grounding VA-V1 in the real pipeline code. Locating the exact insertion points (image block, product context, prepaid path, projected cost):
+
+## 🤖 Claude *(13:47:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"############ orchestrate-step: image block (Fatia 1b) + product context ############\"\ngrep -nE \"generate-image|media_url|product|image_url|prepaid|Fatia 1b|skipped|content_library|fail-open|article_generation|user_id|x-autopilot\" supabase/functions/orchestrate-step/index.ts | head -40\necho\necho \"############ orchestrate-step line count ############\"\nwc -l supabase/functions/orchestrate-step/index.ts",
+  "description": "Locate orchestrate-step image block + product context"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ############ orchestrate-step: image block (Fatia 1b) + product context ############
+> 28:  const stepsOrder = ["article_generation", "wordpress_publish", "linkedin_post", "twitter_thread", "knowledge_mesh"];
+> 33:    if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 46:// ─── Viral Autopilot Fatia 1 — product-aware prompt builders (FR-VA-003) ───────────────────────────────────
+> 47:// When the run carries chosen products, the 3 B2B prompts are replaced by a consumer viral-hook framework
+> 48:// (HOOK → VALUE → CTA) that features the chosen product. With NO products, the legacy B2B prompts are used
+> 51:function productBrief(products: ChosenProduct[]): string {
+> 52:  const p = products[0];
+> 58:  const others = products.slice(1).map((x) => x.name).filter(Boolean);
+> 63:function articleMessages(topic: string, siteUrl: string, products: ChosenProduct[]) {
+> 64:  if (products.length > 0) {
+> 65:    const p = products[0];
+> 68:      { role: "user", content: `Escreva um artigo/review viral sobre o tema "${topic}". ${productBrief(products)} Foque em por que o ${p?.name ?? "produto"} resolve o problema do leitor: gancho forte na abertura, prova de valor no meio e CTA de compra no fim. Use o nome exato do produto em destaque pelo menos uma vez. Site: https://${siteUrl}` },
+> 77:function linkedinMessages(topic: string, articleLink: string, products: ChosenProduct[]) {
+> 78:  if (products.length > 0) {
+> 79:    const p = products[0];
+> 82:      { role: "user", content: `Crie um post de LinkedIn viral sobre "${topic}". ${productBrief(products)} Link de referência: ${articleLink}. Gancho na 1ª linha, valor no meio, CTA de compra no fim. Cite o ${p?.name ?? "produto"} pelo nome.` },
+> 91:function twitterMessages(topic: string, xLink: string, products: ChosenProduct[]) {
+> 92:  if (products.length > 0) {
+> 93:    const p = products[0];
+> 96:      { role: "user", content: `Crie uma thread de 5 tweets viral sobre "${topic}". ${productBrief(products)} Link de referência (último tweet): ${xLink}. Gancho no tweet 1, valor nos tweets 2-4, CTA de compra no tweet 5. Cite o ${p?.name ?? "produto"} pelo nome.` },
+> 107:// toward the winning product/platform. Empty hint → messages unchanged (backward-compatible).
+> 111:  // Defense-in-depth: top_product_name originates from external (Apify) catalog data → strip control chars /
+> 115:  const prod = clean(details.top_product_name); if (prod) parts.push(`produto vencedor do último ciclo: ${prod}`);
+> 181:    // ── Viral Autopilot Fatia 1 — chosen products carried from orchestrate-content (sanitized, ordered).
+> 182:    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 183:    const hasProducts = products.length > 0;
+> 191:          .select("action_details").eq("user_id", run.user_id).eq("action_type", "viral_autopilot")
+> 202:          .select("affiliate_tag, matt_tool").eq("user_id", run.user_id).eq("platform", "mercadolivre").eq("is_active", true).maybeSingle();
+> 207:    // Monetize `body` for every chosen product (primary = products[0] gets a guaranteed CTA; secondaries link only
+> 208:    // if mentioned), keyed to this creative's content_library id, then write a creative_metrics baseline row
+> 209:    // (fail-soft). Returns the rewritten body + how many products were linked. FR-VA-004 / FR-VA-009.
+> 216:        for (let i = 0; i < products.length; i++) {
+> 217:          const r = await monetizeForProduct(admin as any, supabaseUrl, out, run.user_id, aff.tag, products[i], {
+> 224:        user_id: run.user_id,
+> 227:        product_id: products[0]?.external_id ?? null,
+> 231:      }).then(() => {}, (e: any) => console.warn("[orchestrate-step] creative_metrics baseline skipped:", e?.message));
+> 239:      .eq("user_id", run.user_id)
+> 255:    if (step === "article_generation") {
+> 256:      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 269:            messages: injectFeedback(articleMessages(topic, site_url, products), feedbackHint),
+> 
+> ############ orchestrate-step line count ############
+> 745 supabase/functions/orchestrate-step/index.ts
+> ```
+
+## 🤖 Claude *(13:47:49)*
+
+
+## 🤖 Claude *(13:47:49)*
+
+Let me find the Fatia 1b image block precisely (where I'll insert the video composition+enqueue) and read it:
+
+## 🤖 Claude *(13:47:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== image/media generation block in orchestrate-step ===\"\ngrep -nE \"generate-image|media_url|invoke\\(|image|product_image|external_id\" supabase/functions/orchestrate-step/index.ts | sed -n '1,30p'",
+  "description": "Find image generation block"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === image/media generation block in orchestrate-step ===
+> 227:        product_id: products[0]?.external_id ?? null,
+> 317:              metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic), products: products.map((p) => p.external_id) },
+> 328:                  metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic), products: products.map((p) => p.external_id), affiliate_links: monetizeLinked },
+> 366:          // ── Viral Autopilot Fatia 1b — product-referenced marketing image (FR-VA-013) ──────────────────
+> 367:          // ONE image inside the already-charged 10-mco bundle (NO extra deduct — orchestrate-step never calls
+> 369:          // flip the run to error at the finalize check): any failure (no image key / provider mock / 5xx) leaves
+> 370:          // article_generation 'done' and the run proceeds — the image NEVER breaks generation. Persists the
+> 371:          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 373:          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 378:              const imgRes = await fetch(`${supabaseUrl}/functions/v1/generate-image`, {
+> 386:                  user_id: run.user_id, campaign_id: campaign_id || null, type: "image",
+> 387:                  title: `Imagem: ${articleTitle}`, media_url: imgData.path, status: "approved",
+> 388:                  metadata: { source: "orchestration", products: products.map((p) => p.external_id), product_id: p0.external_id, storage_bucket: "generated-images" },
+> 390:                await addStep("image_generation", "done", { product: p0.name }, { content_id: imgRow?.id ?? null, path: imgData.path });
+> 392:                console.warn("[orchestrate-step] image generation skipped (fail-open):", imgData?.error ?? imgRes.status);
+> 393:                await addStep("image_generation", "skipped", { product: p0.name }, { reason: imgData?.error ?? `image_http_${imgRes.status}` });
+> 396:              console.warn("[orchestrate-step] image generation fail-open:", e?.message);
+> 397:              await addStep("image_generation", "skipped", { product: products[0]?.name }, { reason: e?.message || "image_exception" });
+> 501:            metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin", utmCampaign, topic), ...(hasProducts ? { products: products.map((p) => p.external_id) } : {}) },
+> 511:                metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin", utmCampaign, topic), products: products.map((p) => p.external_id), affiliate_links: liLinked },
+> 587:            metadata: { source: "orchestration", platform: "twitter", tweets, utm: utmTag("twitter", utmCampaign, topic), ...(hasProducts ? { products: products.map((p) => p.external_id) } : {}) },
+> 597:                metadata: { source: "orchestration", platform: "twitter", tweets, utm: utmTag("twitter", utmCampaign, topic), products: products.map((p) => p.external_id), affiliate_links: xLinked },
+> ```
+
+## 🤖 Claude *(13:47:54)*
+
+Let me read the full Fatia 1b image block (the exact insertion point + the data shapes available — `p0`, `imgData.path`, `articleTitle`):
+
+## 🤖 Claude *(13:47:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 360,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 360	
+> 361	          await addStep("article_generation", "done",
+> 362	            { topic, model: selectedModel },
+> 363	            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleBody.split(" ").length, affiliate_links: monetizeLinked }
+> 364	          );
+> 365	
+> 366	          // ── Viral Autopilot Fatia 1b — product-referenced marketing image (FR-VA-013) ──────────────────
+> 367	          // ONE image inside the already-charged 10-mco bundle (NO extra deduct — orchestrate-step never calls
+> 368	          // deduct_mco_coins). Gated on hasProducts. FAIL-OPEN with status 'skipped' (NOT 'error', which would
+> 369	          // flip the run to error at the finalize check): any failure (no image key / provider mock / 5xx) leaves
+> 370	          // article_generation 'done' and the run proceeds — the image NEVER breaks generation. Persists the
+> 371	          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 372	          // window; private bucket → re-sign on read). Product-referenced = descriptive text prompt from
+> 373	          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 374	          if (hasProducts) {
+> 375	            try {
+> 376	              const p0 = products[0];
+> 377	              const imgPrompt = `Imagem de marketing do produto ${p0.name}${p0.category ? `, categoria ${p0.category}` : ""}, no contexto de "${topic}". Foto de produto profissional, alta qualidade, fundo limpo, para redes sociais.`;
+> 378	              const imgRes = await fetch(`${supabaseUrl}/functions/v1/generate-image`, {
+> 379	                method: "POST",
+> 380	                headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 381	                body: JSON.stringify({ prompt: imgPrompt, style: "product photography", user_id: run.user_id }),
+> 382	              });
+> 383	              const imgData = await imgRes.json().catch(() => ({} as any));
+> 384	              if (imgRes.ok && imgData?.path) {
+> 385	                const { data: imgRow } = await admin.from("content_library").insert({
+> 386	                  user_id: run.user_id, campaign_id: campaign_id || null, type: "image",
+> 387	                  title: `Imagem: ${articleTitle}`, media_url: imgData.path, status: "approved",
+> 388	                  metadata: { source: "orchestration", products: products.map((p) => p.external_id), product_id: p0.external_id, storage_bucket: "generated-images" },
+> 389	                }).select("id").single();
+> 390	                await addStep("image_generation", "done", { product: p0.name }, { content_id: imgRow?.id ?? null, path: imgData.path });
+> 391	              } else {
+> 392	                console.warn("[orchestrate-step] image generation skipped (fail-open):", imgData?.error ?? imgRes.status);
+> 393	                await addStep("image_generation", "skipped", { product: p0.name }, { reason: imgData?.error ?? `image_http_${imgRes.status}` });
+> 394	              }
+> 395	            } catch (e: any) {
+> 396	              console.warn("[orchestrate-step] image generation fail-open:", e?.message);
+> 397	              await addStep("image_generation", "skipped", { product: products[0]?.name }, { reason: e?.message || "image_exception" });
+> 398	            }
+> 399	          }
+> 400	        }
+> 401	      } catch (e: any) {
+> 402	        await addStep("article_generation", "error", { topic }, { error: e.message || "Unknown" });
+> 403	      }
+> 404	
+> ```
+
+## 🤖 Claude *(13:48:17)*
+
+
+## 🤖 Claude *(13:48:18)*
+
+Now I have the exact insertion point (after the Fatia 1b image block, line 399). Let me check the `ChosenProduct` shape (does it carry the product image URL?) and how `metadata`/flags flow from autopilot-run → orchestrate-content → orchestrate-step (to plumb `video_enabled`):
+
+## 🤖 Claude *(13:48:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ChosenProduct type ===\"\ngrep -nE \"ChosenProduct|interface.*Product|type.*Product|image_url|price|commission\" supabase/functions/orchestrate-step/index.ts | head -15\necho\necho \"=== orchestrate-content: ChosenProduct fields + products mapping + metadata to step ===\"\ngrep -nE \"ChosenProduct|external_id|image_url|name:|category:|price|commission|prepaid|video|metadata|products\" supabase/functions/orchestrate-content/index.ts | head -40",
+  "description": "ChosenProduct shape + product/metadata flow"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ChosenProduct type ===
+> 10:import { monetizeContent, monetizeForProduct, type ChosenProduct } from "../_shared/affiliate.ts";
+> 51:function productBrief(products: ChosenProduct[]): string {
+> 54:  const priceNum = p.price != null ? Number(p.price) : NaN;
+> 55:  const price = !Number.isNaN(priceNum) ? ` (aprox. R$ ${priceNum.toLocaleString("pt-BR")})` : "";
+> 57:  let brief = `Produto em destaque: ${p.name}${price}${cat}.`;
+> 63:function articleMessages(topic: string, siteUrl: string, products: ChosenProduct[]) {
+> 77:function linkedinMessages(topic: string, articleLink: string, products: ChosenProduct[]) {
+> 91:function twitterMessages(topic: string, xLink: string, products: ChosenProduct[]) {
+> 182:    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 373:          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 
+> === orchestrate-content: ChosenProduct fields + products mapping + metadata to step ===
+> 50:    //      never a client body). prepaid sub-runs were pre-debited by begin_autopilot_cycle → the deduct is skipped.
+> 98:    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids, prepaid, cycle_id } = await req.json();
+> 99:    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).
+> 100:    const isPrepaid = isCron && prepaid === true;
+> 156:    // ── Viral Autopilot Fatia 1 (FR-VA-016 product-half / FR-VA-012): resolve the chosen products from the
+> 157:    // catalog (authoritative — never trust client-sent name/price) and SANITIZE each product name through the
+> 160:    // products[0] = the featured product. Empty/absent → legacy topic-only generation (backward compat).
+> 161:    const resolvedProducts: Array<{ external_id: string; name: string; price: number | null; category: string | null; image_url: string | null; url: string | null }> = [];
+> 165:        .from("vm_affiliate_products")
+> 166:        .select("external_id, name, price, category, image_url, product_url")
+> 167:        .in("external_id", ids)
+> 173:        if (!v.allow) { console.warn(`[orchestrate-content] product name blocked by sentinel, skipped: ${(pr as { external_id?: string }).external_id}`); continue; }
+> 175:          external_id: (pr as { external_id: string }).external_id,
+> 176:          name: nm,
+> 177:          price: (pr as { price?: number | null }).price ?? null,
+> 178:          category: (pr as { category?: string | null }).category ?? null,
+> 179:          image_url: (pr as { image_url?: string | null }).image_url ?? null,
+> 183:      resolvedProducts.sort((a, b) => (order.get(a.external_id) ?? 99) - (order.get(b.external_id) ?? 99));
+> 197:        metadata: {
+> 207:          products: resolvedProducts,   // Viral Autopilot Fatia 1 — channel to orchestrate-step (product-aware)
+> 208:          prepaid: isPrepaid,           // Fatia 2 — cron sub-run (no self-bill; cycle pre-debited)
+> ```
+
+## 🤖 Claude *(13:50:27)*
+
+
+## 🤖 Claude *(13:50:28)*
+
+`ChosenProduct` carries `image_url` (public ML photo, sanitized) — perfect for the composition, and it already flows to orchestrate-step via `metadata.products`. `metadata.prepaid` shows the flag-plumbing pattern. The accounting model is the crux (the synthesis flagged double-charge risk), so I must ground it in the real cycle RPCs before writing. Reading autopilot-run + the money RPCs:
+
+## 🤖 Claude *(13:50:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"############ autopilot-run: projected cost + fan-out + finalize actual ############\"\ngrep -nE \"projected|ORCHESTRATION_RUN|ANALYZE|N_runs|ab_variant|begin_autopilot_cycle|finalize_autopilot_cycle|actual|video|invoke|orchestrate-content|platforms|product\" supabase/functions/autopilot-run/index.ts | head -45\necho; echo \"############ begin_autopilot_cycle RPC ############\"\ncat supabase/migrations/*begin_autopilot_cycle*.sql 2>/dev/null | grep -nE \"projected|p_|planned_units|cap|deduct|spend|video|RETURNS|FUNCTION|CREATE\" | head -30",
+  "description": "autopilot-run accounting + begin RPC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ############ autopilot-run: projected cost + fan-out + finalize actual ############
+> 8:// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9://   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 10://   self-bill) → finalize_autopilot_cycle(actual) → re-arm next_run_at. dry_run short-circuits after the cost
+> 20:const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 21:const ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)
+> 28:// passes it AND orchestrate-content's mirror gate, steering the content LLM (affiliate-link/scam-URL swap) for ANY
+> 30:// the actual payloads (URLs, markdown links, tags, templates, quotes — only letters/digits/space/hyphen survive),
+> 86:      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants")
+> 90:    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 91:    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 92:    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 93:    const nRuns = products.length * platforms.length * abVariants;
+> 96:    const projected = nRuns * ORCH_COST + ANALYZE_COST;
+> 101:    // per-product gate in orchestrate-content (skip-and-continue: a blocked trend is dropped, not the whole angle).
+> 102:    // Relevance: prefer a trend whose niche overlaps the cycle's products; else the freshest top-viral active trend.
+> 103:    // Defense-in-depth: orchestrate-content re-inspects the full topic, so this is the first of two gates.
+> 104:    // Graceful: empty vm_trends (the steady state until fetch-trends runs) → angle stays the plain product topic.
+> 109:        .from("vm_affiliate_products").select("niches").in("external_id", products).eq("is_active", true);
+> 110:      const productNiches = [...new Set(((prodRows ?? []) as Array<{ niches?: string[] | null }>)
+> 115:        if (filterNiche && productNiches.length > 0) q = q.in("niche", productNiches);
+> 136:      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,
+> 138:        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 141:    // ── begin_autopilot_cycle: ATOMIC cap-check + single pre-debit (or abort reason, no deduct). ────────────────
+> 142:    const { data: begun, error: beginErr } = await admin.rpc("begin_autopilot_cycle", {
+> 143:      p_plan_id: planId, p_user_id: userId, p_projected_mco: projected, p_planned_units: nRuns,
+> 153:      return json({ ok: false, reason, projected_mco: projected }, reason === "insufficient_balance" ? 402 : 409);
+> 159:    // PREPAID — the cycle reserved ANALYZE_COST(2); analyzeCharged consumes it only when real data produced a policy
+> 175:        if (ar?.has_real_data) analyzeCharged = ANALYZE_COST;
+> 179:    // ── Fan-out: product × platform × variant → orchestrate-content (prepaid → NO self-bill). ───────────────────
+> 182:    for (const productId of products) {
+> 183:      for (const platform of platforms) {
+> 187:              const r = await fetch(`${url}/functions/v1/orchestrate-content`, {
+> 195:                  topic: viralTopic, platforms: [platform], product_ids: [productId],
+> 200:              else console.warn(`[autopilot-run] sub-run ${productId}/${platform} → HTTP ${r.status}`);
+> 202:              console.warn(`[autopilot-run] sub-run ${productId}/${platform} error: ${e}`);
+> 212:    // actual = successful runs × 10 + analyzeCharged (the reserved 2 is consumed only when the R3 analyze produced
+> 213:    // a policy from real data; otherwise finalize refunds it). Zero successes → actual = analyzeCharged.
+> 214:    const actual = succeeded * ORCH_COST + analyzeCharged;
+> 216:    const { data: fin } = await admin.rpc("finalize_autopilot_cycle", {
+> 217:      p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,
+> 232:      projected_mco: projected, actual_mco: actual, refunded_mco: fin?.refunded ?? 0, status,
+> 
+> ############ begin_autopilot_cycle RPC ############
+> 1:-- Migration: begin_autopilot_cycle RPC — atomic cap-check + single pre-debit + open cycle (FR-VA-007 / FR-VA-021).
+> 6:-- concurrent begins for the SAME tenant so two parallel cycles cannot both slip under the daily cap — it:
+> 7:--   1. loads the plan's caps TENANT-SCOPED (plan must belong to p_user_id — cross-tenant attempt → not found),
+> 8:--   2. checks budget cap (per cycle), balance + min_balance floor, daily cap (sum of today's committed spend),
+> 9:--   3. on ANY breach → RETURNS an abort reason WITHOUT debiting (caller pauses plan / returns 409/402),
+> 10:--   4. on OK → INSERTs the cycle (status running, spend_mco=projected, debited_at) and PERFORMs the SINGLE
+> 11:--      deduct_mco_coins(projected) in the SAME transaction (sub-runs are prepaid → never self-bill).
+> 12:-- Refund is NEVER here — it is the positive credit in finalize_autopilot_cycle. deduct_mco_coins rejects
+> 13:-- p_amount<=0 (anti-mint, 20260603220000:45), so there is no negative-deduct path anywhere.
+> 16:-- proven service-role in-function and resolved p_user_id from the SERVER-TRUSTED plan row, never the request body.
+> 18:-- Engineering notes (declared per Lei 1): the sealed stub hints (uuid,uuid,int); a 4th p_planned_units (DEFAULT 0)
+> 23:CREATE OR REPLACE FUNCTION public.begin_autopilot_cycle(
+> 24:  p_plan_id       uuid,
+> 25:  p_user_id       uuid,
+> 26:  p_projected_mco int,
+> 27:  p_planned_units int DEFAULT 0
+> 29:RETURNS jsonb
+> 35:  v_budget_cap   int;
+> 36:  v_daily_cap    int;
+> 43:  IF p_projected_mco IS NULL OR p_projected_mco <= 0 THEN
+> 44:    RAISE EXCEPTION 'begin_autopilot_cycle: projected must be positive, got %', p_projected_mco
+> 48:  -- Serialize concurrent cycles for THIS tenant (anti-TOCTOU on the daily-cap aggregate). Transaction-scoped.
+> 49:  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
+> 51:  -- Tenant-scoped plan load: the plan MUST belong to p_user_id (cross-tenant attempt → not found → abort).
+> 52:  SELECT budget_cap_mco, daily_cap_mco, min_balance_mco
+> 53:    INTO v_budget_cap, v_daily_cap, v_min_balance
+> 55:   WHERE id = p_plan_id AND user_id = p_user_id;
+> 57:    RAISE EXCEPTION 'begin_autopilot_cycle: plan % not found for tenant', p_plan_id USING errcode = 'P0002';
+> 60:  -- Budget cap (per cycle) — FR-VA-007 (no deduct).
+> 61:  IF p_projected_mco > v_budget_cap THEN
+> ```
+
+## 🤖 Claude *(13:51:57)*
+
+
+## 🤖 Claude *(13:52:01)*
+
+Now I have the full accounting model. **Critical simplification:** `begin_autopilot_cycle`/`finalize_autopilot_cycle` take `projected`/`actual` as **caller parameters** — autopilot-run computes them. So adding video to the cycle accounting needs **no money-RPC migration** — just the cost formula in autopilot-run. Clean model (Model E):
+
+- `projected = nRuns×10 + (video? nRuns×12 : 0) + 2` → single pre-debit (cap-accurate, OTD-VA-010 honored)
+- video_render enqueued with `charged_mco=12` **marker, no deduct** (cycle paid)
+- render **failure** → `finalize_video_render(failed, refund=12)` credits back (existing idempotent path)
+- `actual = succeeded×10 + (video? succeeded×12 : 0) + analyzeCharged`
+
+No double-charge; failed renders self-refund. Let me build. First the plan-columns migration:
+
+## 🤖 Claude *(13:52:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260624130000_autopilot_video_plan_columns.sql",
+  "content": "-- Migration: viral-autopilot Fatia VA-V1 \u2014 per-plan video 9:16 opt-in (FR-VA-022, Amendment v0.2).\n-- BoK SSOT: docs/bok/viral-autopilot/04-frd.md \u00a72.A FR-VA-022 + 05-sdd.md OTD-VA-009/010.\n-- SOP (Lei 2): docs/processes/autopilot-video-9x16.md (gate OTD-VA-009 \u2014 escrito ANTES deste c\u00f3digo).\n--\n-- Opt-in por plano: quando video_enabled, cada sub-run product-aware enfileira UM render HyperFrames 9:16\n-- (FR-VA-024). Default FALSE = backward-compat byte-id\u00eantico com ciclos texto+imagem. video_format restrito\n-- a '9:16' (extens\u00edvel por CHECK quando outros formatos entrarem). Nenhuma mudan\u00e7a de RLS (as policies seladas\n-- de autopilot_plans permanecem: per-user own-row). Additive + nullable-safe (NOT NULL com DEFAULT).\n-- Passes /security-review before commit.\n\nALTER TABLE public.autopilot_plans\n  ADD COLUMN IF NOT EXISTS video_enabled boolean NOT NULL DEFAULT false,\n  ADD COLUMN IF NOT EXISTS video_format  text    NOT NULL DEFAULT '9:16'\n    CHECK (video_format IN ('9:16'));\n\nCOMMENT ON COLUMN public.autopilot_plans.video_enabled IS\n  'FR-VA-022 \u2014 quando true, cada sub-run product-aware enfileira um render HyperFrames 9:16 (FR-VA-024). '\n  'Custo (VIDEO_HYPERFRAMES_RENDER) entra no projected do ciclo (OTD-VA-010); render falho refunda via '\n  'finalize_video_render. Default false = ciclo s\u00f3 texto+imagem (backward-compat).';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260624130000_autopilot_video_plan_columns.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:52:14)*
+
+
+## 🤖 Claude *(13:52:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase db push --include-all 2>&1 | grep -vE \"Initialising|Connecting|recommend|new version|getting-started\" | head -10\necho \"=== verify columns ===\"\nsource .env 2>/dev/null\ncurl -s \"${SUPABASE_URL}/rest/v1/autopilot_plans?select=id,video_enabled,video_format&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | head -c 200; echo",
+  "description": "Apply plan columns migration + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Do you want to push these migrations to the remote database?
+>  • 20260624130000_autopilot_video_plan_columns.sql
+> 
+>  [Y/n] 
+> Applying migration 20260624130000_autopilot_video_plan_columns.sql...
+> Finished supabase db push.
+> === verify columns ===
+> [{"id":"640b3b67-b950-42f6-bbb9-48560771eaa6","video_enabled":false,"video_format":"9:16"}]
+> ```
+
+## 🤖 Claude *(13:52:29)*
+
+
+## 🤖 Claude *(13:52:30)*
+
+Migration applied; existing plan now has `video_enabled=false, video_format='9:16'`. Now the autopilot-run changes. Reading the exact sections to edit:
+
+## 🤖 Claude *(13:52:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 84,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 84	    const { data: plan } = await admin
+> 85	      .from("autopilot_plans")
+> 86	      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants")
+> 87	      .eq("id", planId).eq("user_id", userId).maybeSingle();
+> 88	    if (!plan) return json({ error: "plan_not_found" }, 404);
+> 89	
+> 90	    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 91	    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 92	    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 93	    const nRuns = products.length * platforms.length * abVariants;
+> 94	    if (nRuns < 1) return json({ error: "plan_has_no_targets", detail: "plano sem produtos/redes válidos" }, 422);
+> 95	
+> 96	    const projected = nRuns * ORCH_COST + ANALYZE_COST;
+> 97	
+> 98	    // ── FR-VA-018: trend-informed angle (cycle-level). Reconnects the trends island: pick a trend from vm_trends
+> 99	    // (a GLOBAL shared catalog — no tenant scope) to steer THIS cycle's viral angle. Trend text is UNTRUSTED
+> ```
+
+## 🤖 Claude *(13:52:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants\")\n      .eq(\"id\", planId).eq(\"user_id\", userId).maybeSingle();\n    if (!plan) return json({ error: \"plan_not_found\" }, 404);\n\n    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === \"string\" && x.length > 0);\n    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === \"string\" && x.length > 0);\n    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));\n    const nRuns = products.length * platforms.length * abVariants;\n    if (nRuns < 1) return json({ error: \"plan_has_no_targets\", detail: \"plano sem produtos/redes v\u00e1lidos\" }, 422);\n\n    const projected = nRuns * ORCH_COST + ANALYZE_COST;",
+  "new_string": "      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format\")\n      .eq(\"id\", planId).eq(\"user_id\", userId).maybeSingle();\n    if (!plan) return json({ error: \"plan_not_found\" }, 404);\n\n    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === \"string\" && x.length > 0);\n    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === \"string\" && x.length > 0);\n    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));\n    const nRuns = products.length * platforms.length * abVariants;\n    if (nRuns < 1) return json({ error: \"plan_has_no_targets\", detail: \"plano sem produtos/redes v\u00e1lidos\" }, 422);\n\n    // FR-VA-022/024 (Amendment v0.2): when the plan opts in, each sub-run enqueues ONE HyperFrames 9:16 render.\n    // The cost rides on the cycle pre-debit (OTD-VA-010): projected/actual += N\u00d7VIDEO_COST. The render itself\n    // never self-bills (charged_mco marker only); a FAILED render refunds via finalize_video_render.\n    const videoEnabled = plan.video_enabled === true;\n    const videoFormat = typeof plan.video_format === \"string\" ? plan.video_format : \"9:16\";\n\n    const projected = nRuns * ORCH_COST + (videoEnabled ? nRuns * VIDEO_COST : 0) + ANALYZE_COST;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:52:46)*
+
+
+## 🤖 Claude *(13:52:46)*
+
+Now the `VIDEO_COST` constant (next to the other cost constants):
+
+## 🤖 Claude *(13:52:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included \u2014 billing.ts:16-21)\nconst ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)",
+  "new_string": "const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included \u2014 billing.ts:16-21)\nconst ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)\nconst VIDEO_COST = 12;    // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) \u2014 per video sub-run when plan.video_enabled (FR-VA-022/024)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:52:53)*
+
+Now read the dry_run return, fan-out body, and actual computation to wire video into all three:
+
+## 🤖 Claude *(13:52:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 138,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 138	      }
+> 139	    } catch (e) { console.warn(`[autopilot-run] trend angle skipped: ${e}`); }
+> 140	
+> 141	    // dry_run: return the cost projection (+ resolved trend angle) WITHOUT opening a cycle or deducting (zero-cost).
+> 142	    if (dryRun) {
+> 143	      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,
+> 144	        trend_applied: trendApplied, viral_topic: viralTopic,
+> 145	        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 146	    }
+> 147	
+> 148	    // ── begin_autopilot_cycle: ATOMIC cap-check + single pre-debit (or abort reason, no deduct). ────────────────
+> 149	    const { data: begun, error: beginErr } = await admin.rpc("begin_autopilot_cycle", {
+> 150	      p_plan_id: planId, p_user_id: userId, p_projected_mco: projected, p_planned_units: nRuns,
+> 151	    });
+> 152	    if (beginErr) { logHealth("error"); return json({ error: "begin_failed", detail: beginErr.message }, 500); }
+> 153	    if (!begun?.ok) {
+> 154	      const reason = begun?.reason ?? "aborted";
+> 155	      // Hard stop (budget too low / insufficient balance) → pause the plan so it stops re-firing every tick.
+> 156	      if (reason === "aborted_budget" || reason === "insufficient_balance") {
+> 157	        await admin.from("autopilot_plans").update({ is_active: false }).eq("id", planId).eq("user_id", userId);
+> 158	      }
+> 159	      logHealth("degraded");
+> 160	      return json({ ok: false, reason, projected_mco: projected }, reason === "insufficient_balance" ? 402 : 409);
+> 161	    }
+> 162	    const cycleId = begun.cycle_id as string;
+> 163	
+> 164	    // ── R3 loop (FR-VA-010/011): analyze the PREVIOUS completed cycle to steer THIS cycle's generation. ─────────
+> 165	    // collect (sync the live click ledger → creative_metrics) then analyze (→ optimization_policy). Both inline and
+> 166	    // PREPAID — the cycle reserved ANALYZE_COST(2); analyzeCharged consumes it only when real data produced a policy
+> 167	    // (else finalize refunds the 2). Best-effort — a missing/empty previous cycle just means no steering this round.
+> 168	    let analyzeCharged = 0;
+> 169	    const svcCall = (fn: string, payload: unknown) => fetch(`${url}/functions/v1/${fn}`, {
+> 170	      method: "POST",
+> 171	      headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 172	      body: JSON.stringify(payload),
+> 173	    });
+> 174	    try {
+> 175	      const { data: prev } = await admin.from("autopilot_cycles")
+> 176	        .select("id").eq("plan_id", planId).eq("user_id", userId).eq("status", "completed")
+> 177	        .neq("id", cycleId).order("cycle_number", { ascending: false }).limit(1).maybeSingle();
+> 178	      if (prev?.id) {
+> 179	        await svcCall("autopilot-collect", { cycle_id: prev.id }).catch(() => {});
+> 180	        const ar = await svcCall("autopilot-analyze", { previous_cycle_id: prev.id, prepaid: true })
+> 181	          .then((r) => r.json()).catch(() => null);
+> 182	        if (ar?.has_real_data) analyzeCharged = ANALYZE_COST;
+> 183	      }
+> 184	    } catch (e) { console.warn(`[autopilot-run] R3 analyze skipped: ${e}`); }
+> 185	
+> 186	    // ── Fan-out: product × platform × variant → orchestrate-content (prepaid → NO self-bill). ───────────────────
+> 187	    let succeeded = 0;
+> 188	    const tasks: Array<() => Promise<void>> = [];
+> 189	    for (const productId of products) {
+> 190	      for (const platform of platforms) {
+> 191	        for (let v = 0; v < abVariants; v++) {
+> 192	          tasks.push(async () => {
+> 193	            try {
+> 194	              const r = await fetch(`${url}/functions/v1/orchestrate-content`, {
+> 195	                method: "POST",
+> 196	                headers: {
+> 197	                  Authorization: `Bearer ${serviceKey}`,
+> 198	                  "x-autopilot-user-id": userId,
+> 199	                  "Content-Type": "application/json",
+> 200	                },
+> 201	                body: JSON.stringify({
+> 202	                  topic: viralTopic, platforms: [platform], product_ids: [productId],
+> 203	                  prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 204	                }),
+> 205	              });
+> 206	              if (r.ok) succeeded++;
+> 207	              else console.warn(`[autopilot-run] sub-run ${productId}/${platform} → HTTP ${r.status}`);
+> 208	            } catch (e) {
+> 209	              console.warn(`[autopilot-run] sub-run ${productId}/${platform} error: ${e}`);
+> 210	            }
+> 211	          });
+> 212	        }
+> 213	      }
+> 214	    }
+> 215	    for (let i = 0; i < tasks.length; i += CONCURRENCY) {
+> 216	      await Promise.all(tasks.slice(i, i + CONCURRENCY).map((t) => t()));
+> 217	    }
+> 218	
+> 219	    // actual = successful runs × 10 + analyzeCharged (the reserved 2 is consumed only when the R3 analyze produced
+> 220	    // a policy from real data; otherwise finalize refunds it). Zero successes → actual = analyzeCharged.
+> 221	    const actual = succeeded * ORCH_COST + analyzeCharged;
+> 222	    const status = succeeded > 0 ? "completed" : "failed";
+> 223	    const { data: fin } = await admin.rpc("finalize_autopilot_cycle", {
+> 224	      p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,
+> 225	    });
+> 226	
+> 227	    // ── Re-arm cadence (every_n_days) or deactivate after a single all_at_once run. ─────────────────────────────
+> ```
+
+## 🤖 Claude *(13:52:58)*
+
+Now wiring video into the dry_run breakdown, the fan-out body (pass `video_enabled`/`video_format`), and the `actual`:
+
+## 🤖 Claude *(13:53:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,\n        trend_applied: trendApplied, viral_topic: viralTopic,\n        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });",
+  "new_string": "      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,\n        trend_applied: trendApplied, viral_topic: viralTopic,\n        video: { enabled: videoEnabled, format: videoFormat, cost_each: VIDEO_COST, n_video: videoEnabled ? nRuns : 0 },\n        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "                body: JSON.stringify({\n                  topic: viralTopic, platforms: [platform], product_ids: [productId],\n                  prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                }),",
+  "new_string": "                body: JSON.stringify({\n                  topic: viralTopic, platforms: [platform], product_ids: [productId],\n                  prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                  video_enabled: videoEnabled, video_format: videoFormat,\n                }),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "    // actual = successful runs \u00d7 10 + analyzeCharged (the reserved 2 is consumed only when the R3 analyze produced\n    // a policy from real data; otherwise finalize refunds it). Zero successes \u2192 actual = analyzeCharged.\n    const actual = succeeded * ORCH_COST + analyzeCharged;",
+  "new_string": "    // actual = successful runs \u00d7 10 + (video? successful runs \u00d7 12 : 0) + analyzeCharged. Each succeeded sub-run\n    // enqueued one HyperFrames render (charged_mco marker, no self-bill); a FAILED render later refunds its 12 via\n    // finalize_video_render. The reserved ANALYZE_COST(2) is consumed only when R3 produced a policy from real data;\n    // otherwise finalize refunds it. Zero successes \u2192 actual = analyzeCharged.\n    const actual = succeeded * ORCH_COST + (videoEnabled ? succeeded * VIDEO_COST : 0) + analyzeCharged;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:11)*
+
+
+## 🤖 Claude *(13:53:12)*
+
+autopilot-run wired. Now orchestrate-content — destructure `video_enabled`/`video_format` and pass into the step metadata. Reading the exact lines:
+
+## 🤖 Claude *(13:53:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 98,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 98	    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids, prepaid, cycle_id } = await req.json();
+> 99	    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).
+> 100	    const isPrepaid = isCron && prepaid === true;
+> ```
+
+## 🤖 Claude *(13:53:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 195,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 195	        steps: [],
+> 196	        started_at: runStarted,
+> 197	        metadata: {
+> 198	          topic,
+> 199	          platforms,
+> 200	          campaign_id: campaign_id || null,
+> 201	          wp_status,
+> 202	          site_url,
+> 203	          selectedModel,
+> 204	          isGroq,
+> 205	          aiEndpoint,
+> 206	          utmCampaign,
+> 207	          products: resolvedProducts,   // Viral Autopilot Fatia 1 — channel to orchestrate-step (product-aware)
+> 208	          prepaid: isPrepaid,           // Fatia 2 — cron sub-run (no self-bill; cycle pre-debited)
+> 209	          cycle_id: cycle_id ?? null,   // Fatia 2 — link the run to its autopilot_cycle
+> 210	        }
+> ```
+
+## 🤖 Claude *(13:53:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id } = await req.json();\n    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).\n    const isPrepaid = isCron && prepaid === true;",
+  "new_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id, video_enabled, video_format } = await req.json();\n    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).\n    const isPrepaid = isCron && prepaid === true;\n    // FR-VA-022/024: video 9:16 opt-in flows from the plan via autopilot-run. Honored ONLY on the cron path\n    // (the cost was pre-debited in the cycle \u2014 OTD-VA-010); a user-path caller cannot self-enqueue a free render.\n    const videoEnabled = isCron && video_enabled === true;\n    const videoFormat = typeof video_format === \"string\" ? video_format : \"9:16\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "          products: resolvedProducts,   // Viral Autopilot Fatia 1 \u2014 channel to orchestrate-step (product-aware)\n          prepaid: isPrepaid,           // Fatia 2 \u2014 cron sub-run (no self-bill; cycle pre-debited)\n          cycle_id: cycle_id ?? null,   // Fatia 2 \u2014 link the run to its autopilot_cycle\n        }",
+  "new_string": "          products: resolvedProducts,   // Viral Autopilot Fatia 1 \u2014 channel to orchestrate-step (product-aware)\n          prepaid: isPrepaid,           // Fatia 2 \u2014 cron sub-run (no self-bill; cycle pre-debited)\n          cycle_id: cycle_id ?? null,   // Fatia 2 \u2014 link the run to its autopilot_cycle\n          video_enabled: videoEnabled,  // Fatia VA-V1 \u2014 enqueue a HyperFrames 9:16 render in orchestrate-step (FR-VA-024)\n          video_format: videoFormat,\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:32)*
+
+
+## 🤖 Claude *(13:53:32)*
+
+Now orchestrate-step — read the metadata flags + add the enqueue after the image block. Reading the metadata destructure area:
+
+## 🤖 Claude *(13:53:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 176,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 176	
+> 177	    const metadata = run.metadata || {};
+> 178	    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> 179	    const cycleId: string | null = (metadata.cycle_id as string) ?? null;   // Viral Autopilot Fatia 2 — cron cycle link
+> 180	
+> 181	    // ── Viral Autopilot Fatia 1 — chosen products carried from orchestrate-content (sanitized, ordered).
+> 182	    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 183	    const hasProducts = products.length > 0;
+> 184	    const autoMonetizeOn = (Deno.env.get("AUTO_MONETIZE_ENABLED") ?? "true").toLowerCase() !== "false";
+> 185	
+> 186	    // FR-VA-011 — feedback injection: the tenant's latest viral_autopilot policy steers this cycle's prompts.
+> 187	    let feedbackHint = "";
+> 188	    if (hasProducts) {
+> 189	      try {
+> ```
+
+## 🤖 Claude *(13:53:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "    // \u2500\u2500 Viral Autopilot Fatia 1 \u2014 chosen products carried from orchestrate-content (sanitized, ordered).\n    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];\n    const hasProducts = products.length > 0;",
+  "new_string": "    // \u2500\u2500 Viral Autopilot Fatia 1 \u2014 chosen products carried from orchestrate-content (sanitized, ordered).\n    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];\n    const hasProducts = products.length > 0;\n    // Fatia VA-V1 \u2014 video 9:16 opt-in (FR-VA-022/024). When set (cron path only), the article step enqueues one\n    // HyperFrames render. Cost rides on the cycle pre-debit (OTD-VA-010); failed render refunds via finalize.\n    const videoEnabled = metadata.video_enabled === true;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:45)*
+
+Now the enqueue block, right after the Fatia 1b image block closes (line 399, inside the `if (hasProducts)` scope where `p0`, `articleTitle`, `args` are available):
+
+## 🤖 Claude *(13:54:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "            } catch (e: any) {\n              console.warn(\"[orchestrate-step] image generation fail-open:\", e?.message);\n              await addStep(\"image_generation\", \"skipped\", { product: products[0]?.name }, { reason: e?.message || \"image_exception\" });\n            }\n          }\n        }\n      } catch (e: any) {\n        await addStep(\"article_generation\", \"error\", { topic }, { error: e.message || \"Unknown\" });\n      }",
+  "new_string": "            } catch (e: any) {\n              console.warn(\"[orchestrate-step] image generation fail-open:\", e?.message);\n              await addStep(\"image_generation\", \"skipped\", { product: products[0]?.name }, { reason: e?.message || \"image_exception\" });\n            }\n\n            // \u2500\u2500 Viral Autopilot Fatia VA-V1 \u2014 product-aware 9:16 video composition (FR-VA-023/024) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n            // FAIL-OPEN (status 'skipped', never 'error'): the video NEVER breaks the run. The cost was pre-debited\n            // in the cycle (OTD-VA-010); we INSERT a queued HyperFrames render with charged_mco=VIDEO_COST as a\n            // MARKER (no deduct here \u2014 orchestrate-step never bills) \u2192 the host worker (video-bridge.ts) polls,\n            // renders 1080\u00d71920, and on failure finalize_video_render(failed, refund=VIDEO_COST) credits it back.\n            // Props use the actual viral angle (title/description) + the ML product photo (public https). The\n            // template renders all text via textContent (XSS-safe); product name already passed the sentinel\n            // upstream (orchestrate-content). composition.autopilot carries the attach context (FR-VA-025).\n            if (videoEnabled) {\n              try {\n                const p0 = products[0];\n                const VIDEO_COST = 12; // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) \u2014 mirrors autopilot-run projected.\n                const clip = (s: unknown, n: number) => String(s ?? \"\").replace(/\\s+/g, \" \").trim().slice(0, n);\n                const productImg = typeof (p0 as any)?.image_url === \"string\" && /^https:\\/\\//i.test((p0 as any).image_url)\n                  ? (p0 as any).image_url : \"\";\n                const composition = {\n                  template: \"viral-short-9x16\",\n                  duration_s: 6,\n                  fps: 30,\n                  props: {\n                    hook: clip(articleTitle, 80) || clip(topic, 80),\n                    caption: clip(args.meta_description, 150) || clip(`${p0.name}`, 150),\n                    cta: \"Ver no Mercado Livre\",\n                    brand: \"MCORCH\",\n                    product_image_url: productImg,\n                  },\n                  // Attach context for the worker's reconciliation (FR-VA-025) \u2014 NOT rendered, only routing.\n                  autopilot: { user_id: run.user_id, campaign_id: campaign_id || null, product_id: p0.external_id, cycle_id: cycleId, title: clip(articleTitle, 120) },\n                };\n                const { data: vr, error: vrErr } = await admin.from(\"video_renders\").insert({\n                  user_id: run.user_id, engine: \"hyperframes\", state: \"queued\",\n                  product_id: null, // logical product is the ML external_id (text) \u2014 kept in composition.autopilot\n                  topic: clip(topic, 200), charged_mco: VIDEO_COST, composition,\n                }).select(\"id\").single();\n                if (vrErr || !vr) throw new Error(vrErr?.message || \"video_render_insert_failed\");\n                await addStep(\"video_generation\", \"done\", { product: p0.name, format: \"9:16\" }, { render_id: vr.id });\n              } catch (e: any) {\n                console.warn(\"[orchestrate-step] video enqueue fail-open:\", e?.message);\n                await addStep(\"video_generation\", \"skipped\", { product: products[0]?.name }, { reason: e?.message || \"video_exception\" });\n              }\n            }\n          }\n        }\n      } catch (e: any) {\n        await addStep(\"article_generation\", \"error\", { topic }, { error: e.message || \"Unknown\" });\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:54:23)*
+
+
+## 🤖 Claude *(13:54:24)*
+
+Now the worker's reconciliation/attach (FR-VA-025). Let me mirror the exact `creative_metrics` shape from orchestrate-step's baseline before adding the attach:
+
+## 🤖 Claude *(13:54:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 210,
+  "limit": 26
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 210	    // Monetize `body` for every chosen product (primary = products[0] gets a guaranteed CTA; secondaries link only
+> 211	    // if mentioned), keyed to this creative's content_library id, then write a creative_metrics baseline row
+> 212	    // (fail-soft). Returns the rewritten body + how many products were linked. FR-VA-004 / FR-VA-009.
+> 213	    const monetizeSurface = async (
+> 214	      body: string, contentId: string, platform: string, format: "html" | "text", aff: { tag: string | null; mattTool: string | null },
+> 215	    ): Promise<{ body: string; linked: number }> => {
+> 216	      let out = body;
+> 217	      let linked = 0;
+> 218	      if (aff.tag) {
+> 219	        for (let i = 0; i < products.length; i++) {
+> 220	          const r = await monetizeForProduct(admin as any, supabaseUrl, out, run.user_id, aff.tag, products[i], {
+> 221	            campaignId: campaign_id || null, mattTool: aff.mattTool, contentVariantId: contentId, platform, format, guaranteeCta: i === 0,
+> 222	          });
+> 223	          out = r.content; linked += r.linked;
+> 224	        }
+> 225	      }
+> 226	      await admin.from("creative_metrics").insert({
+> 227	        user_id: run.user_id,
+> 228	        cycle_id: cycleId,
+> 229	        content_variant_id: contentId,
+> 230	        product_id: products[0]?.external_id ?? null,
+> 231	        platform,
+> 232	        source: "organic",
+> 233	        impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,
+> 234	      }).then(() => {}, (e: any) => console.warn("[orchestrate-step] creative_metrics baseline skipped:", e?.message));
+> 235	      return { body: out, linked };
+> ```
+
+## 🤖 Claude *(13:54:31)*
+
+
+## 🤖 Claude *(13:54:32)*
+
+Exact shape obtained: `creative_metrics{user_id, cycle_id, content_variant_id, product_id, platform, source, impressions, engagements, affiliate_clicks, revenue_cents}`. Now adding the worker's FR-VA-025 attach (gated on the `autopilot` context so generic/editor renders don't attach):
+
+## 🤖 Claude *(13:54:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "old_string": "    // Terminal: done, refund 0 (prepaid path \u2014 the cycle already paid; the motor never self-bills here).\n    const { data: fin } = await supabase.rpc('finalize_video_render', {\n      p_render_id: renderId, p_state: 'done', p_storage_key: storageKey, p_qa: null, p_node_id: nodeId, p_refund: 0,\n    });\n    console.log(`\u2705 render ${renderId} done \u2192 ${storageKey} (${(result.bytes / 1024).toFixed(0)}KB, ${result.durationMs}ms)`, fin);",
+  "new_string": "    // Terminal: done, refund 0 (prepaid path \u2014 the cycle already paid; the motor never self-bills here).\n    const { data: fin } = await supabase.rpc('finalize_video_render', {\n      p_render_id: renderId, p_state: 'done', p_storage_key: storageKey, p_qa: null, p_node_id: nodeId, p_refund: 0,\n    });\n\n    // FR-VA-025 \u2014 autopilot reconciliation (the async asset arrives AFTER the cycle finalized): attach the 9:16\n    // asset to the content library + a creative_metrics row keyed by the new content_variant_id. Gated on the\n    // composition.autopilot context the enqueuer set; generic (editor) renders carry no autopilot block \u2192 no attach.\n    const ap = (spec as { autopilot?: { user_id?: string; campaign_id?: string | null; product_id?: string | null; cycle_id?: string | null; title?: string } }).autopilot;\n    if (ap?.user_id) {\n      try {\n        const { data: clib } = await supabase.from('content_library').insert({\n          user_id: ap.user_id, campaign_id: ap.campaign_id ?? null, type: 'video',\n          title: `V\u00eddeo 9:16: ${ap.title ?? renderId}`, media_url: storageKey, status: 'approved',\n          metadata: { source: 'autopilot_video', render_id: renderId, product_id: ap.product_id ?? null, cycle_id: ap.cycle_id ?? null, storage_bucket: BUCKET, format: '9:16' },\n        }).select('id').maybeSingle();\n        if (clib?.id) {\n          await supabase.from('creative_metrics').insert({\n            user_id: ap.user_id, cycle_id: ap.cycle_id ?? null, content_variant_id: clib.id,\n            product_id: ap.product_id ?? null, platform: 'video', source: 'autopilot_video',\n            impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,\n          }).then(() => {}, () => {});\n        }\n        console.log(`   \u21b3 autopilot attach: content_library video ${clib?.id ?? '(none)'}`);\n      } catch (e) {\n        console.warn(`[video-bridge] autopilot attach skipped for ${renderId}:`, e instanceof Error ? e.message : e);\n      }\n    }\n\n    console.log(`\u2705 render ${renderId} done \u2192 ${storageKey} (${(result.bytes / 1024).toFixed(0)}KB, ${result.durationMs}ms)`, fin);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:54:54)*
+
+
+## 🤖 Claude *(13:54:54)*
+
+Now restart the worker (code changed) and deploy the 3 modified edge functions:
+
+## 🤖 Claude *(13:54:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport XDG_RUNTIME_DIR=/run/user/1001\necho \"=== restart video-bridge (attach logic added) ===\"\nsystemctl --user restart video-bridge.service && sleep 2 && systemctl --user is-active video-bridge.service\necho \"=== deploy edge fns ===\"\nfor fn in autopilot-run orchestrate-content orchestrate-step; do\n  echo \"--- $fn ---\"\n  npx supabase functions deploy $fn 2>&1 | grep -E \"Deployed|script size|Error|error\" | head -3\ndone",
+  "description": "Restart worker + deploy 3 edge fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === restart video-bridge (attach logic added) ===
+> active
+> === deploy edge fns ===
+> --- autopilot-run ---
+> Deploying Function: autopilot-run (script size: 71.73kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-run
+> --- orchestrate-content ---
+> Deploying Function: orchestrate-content (script size: 116.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-content
+> --- orchestrate-step ---
+> Deploying Function: orchestrate-step (script size: 133.8kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> ```
+
+## 🤖 Claude *(13:55:20)*
+
+
+## 🤖 Claude *(13:55:21)*
+
+All deployed, worker active. Now material verification. First tsc + the zero-cost dry_run proof (set plan `video_enabled=true`, confirm projected includes video):
+
+## 🤖 Claude *(13:55:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== tsc (project) ===\"\nnpx tsc --noEmit 2>&1 | tail -8 && echo \"tsc OK (no errors)\"\necho\necho \"=== bun typecheck the worker + render-core ===\"\nbun build scripts/video-bridge.ts --target=bun > /dev/null 2>&1 && echo \"\u2705 video-bridge bundles\" || (echo \"\u274c bundle error:\"; bun build scripts/video-bridge.ts --target=bun 2>&1 | tail -8)\necho\necho \"=== set plan video_enabled=true (640b3b67) ===\"\ncurl -s -X PATCH \"${SUPABASE_URL}/rest/v1/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d '{\"video_enabled\":true}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('video_enabled:', d[0]['video_enabled'], '| products:', d[0]['target_product_ids'], '| platforms:', d[0]['platforms'])\"",
+  "description": "tsc + worker bundle check + enable video on plan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc (project) ===
+> tsc OK (no errors)
+> 
+> === bun typecheck the worker + render-core ===
+> ❌ bundle error:
+>                                       ^
+> error: Could not resolve: "chromium-bidi/lib/cjs/bidiMapper/BidiMapper". Maybe you need to "bun install"?
+>     at /home/gcrUX/htdocs/constellation-orchestra/node_modules/playwright-core/lib/server/bidi/bidiOverCdp.js:34:34
+> 
+> 35 | var bidiCdpConnection = __toESM(require("chromium-bidi/lib/cjs/cdp/CdpConnection"));
+>                                              ^
+> error: Could not resolve: "chromium-bidi/lib/cjs/cdp/CdpConnection". Maybe you need to "bun install"?
+>     at /home/gcrUX/htdocs/constellation-orchestra/node_modules/playwright-core/lib/server/bidi/bidiOverCdp.js:35:41
+> 
+> === set plan video_enabled=true (640b3b67) ===
+> video_enabled: True | products: ['MLB27834876'] | platforms: ['wordpress', 'linkedin']
+> ```
+
+## 🤖 Claude *(13:55:35)*
+
+
+## 🤖 Claude *(13:55:36)*
+
+tsc is clean (project compiles). The `bun build` error is a **false alarm** — it's playwright's optional `chromium-bidi` dep that the static bundler can't resolve, but the worker runs interpreted via `bun run` and already rendered successfully E2E. Plan now has `video_enabled=true`, nRuns = 1×2 = 2.
+
+Now the zero-cost dry_run proof — projected should jump from 22 to **2×10 + 2×12 + 2 = 46**:
+
+## 🤖 Claude *(13:55:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nUID0=ada39fae-67e1-4e53-af1c-5a18e1c108e8\necho \"=== autopilot-run dry_run (video_enabled plan) \u2014 ZERO COST ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/autopilot-run\" \\\n  -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"x-autopilot-user-id: ${UID0}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"plan_id\":\"640b3b67-b950-42f6-bbb9-48560771eaa6\",\"dry_run\":true}' | python3 -m json.tool",
+  "description": "autopilot-run dry_run with video enabled"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot-run dry_run (video_enabled plan) — ZERO COST ===
+> {
+>     "ok": true,
+>     "dry_run": true,
+>     "n_runs": 2,
+>     "projected_mco": 46,
+>     "trend_applied": null,
+>     "viral_topic": "Roborock S8 Pro Ultra: o rob\u00f4 que aspira, passa pano e esvazia a lixeira sozinho",
+>     "video": {
+>         "enabled": true,
+>         "format": "9:16",
+>         "cost_each": 12,
+>         "n_video": 2
+>     },
+>     "breakdown": {
+>         "products": 1,
+>         "platforms": 2,
+>         "ab_variants": 1
+>     }
+> }
+> ```
+
+## 🤖 Claude *(13:56:25)*
+
+
+## 🤖 Claude *(13:56:27)*
+
+**Cost accounting proven (zero-cost):** `projected_mco: 46` = 2×10 + 2×12 + 2, `video: {enabled, format:'9:16', cost_each:12, n_video:2}`. OTD-VA-010 honored — single pre-debit, cap-accurate.
+
+Now proving the new worker **attach** path (FR-VA-025) — insert a render carrying `autopilot` context → live worker renders + attaches to content_library + creative_metrics:
+
+## 🤖 Claude *(13:56:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nUID0=ada39fae-67e1-4e53-af1c-5a18e1c108e8\necho \"=== insert hyperframes render WITH autopilot attach context ===\"\nR=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/video_renders\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"user_id\\\":\\\"${UID0}\\\",\\\"engine\\\":\\\"hyperframes\\\",\\\"state\\\":\\\"queued\\\",\\\"charged_mco\\\":12,\\\"composition\\\":{\\\"template\\\":\\\"viral-short-9x16\\\",\\\"duration_s\\\":2,\\\"fps\\\":24,\\\"props\\\":{\\\"hook\\\":\\\"VA-V1 attach test\\\",\\\"caption\\\":\\\"Reconciliacao do asset 9:16.\\\",\\\"cta\\\":\\\"Ver no ML\\\",\\\"brand\\\":\\\"MCORCH\\\"},\\\"autopilot\\\":{\\\"user_id\\\":\\\"${UID0}\\\",\\\"campaign_id\\\":null,\\\"product_id\\\":\\\"MLB27834876\\\",\\\"cycle_id\\\":null,\\\"title\\\":\\\"VA-V1 attach test\\\"}}}\" \\\n  | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['id'])\")\necho \"render: $R\"\necho \"--- wait for live worker (render + attach) ---\"\nfor i in $(seq 1 10); do\n  sleep 5\n  ST=$(curl -s \"${SUPABASE_URL}/rest/v1/video_renders?select=state&id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['state'])\")\n  echo \"  t+$((i*5))s: $ST\"; [ \"$ST\" = \"done\" ] && break\ndone\necho \"=== VERIFY attach (FR-VA-025) ===\"\necho \"--- content_library video row ---\"\nCLIB=$(curl -s \"${SUPABASE_URL}/rest/v1/content_library?select=id,type,media_url,metadata&metadata->>render_id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\")\necho \"$CLIB\" | python3 -c \"import json,sys; d=json.load(sys.stdin); r=d[0] if d else None; print('\u2705 content_library:', r['id'], '| type:', r['type'], '| source:', r['metadata'].get('source'), '| format:', r['metadata'].get('format')) if r else print('\u274c NO content_library row')\"\nCLIBID=$(echo \"$CLIB\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id']) if d else print('')\")\necho \"--- creative_metrics row (content_variant_id=content_library id) ---\"\ncurl -s \"${SUPABASE_URL}/rest/v1/creative_metrics?select=content_variant_id,product_id,source,platform&content_variant_id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print('\u2705 creative_metrics:', d[0]) if d else print('\u274c NO creative_metrics row')\"\necho \"=== cleanup test artifacts ===\"\ncurl -s -X DELETE \"${SUPABASE_URL}/storage/v1/object/video-studio-assets/${UID0}/${R}.mp4\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/creative_metrics?content_variant_id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/content_library?id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/video_assets?render_id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/mcorch_nodes?name=eq.video-render:${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/video_renders?id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\necho \"cleaned $R + content_library $CLIBID\"",
+  "description": "E2E attach proof + cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === insert hyperframes render WITH autopilot attach context ===
+> render: e39a21ea-acaf-4774-ba1b-7e3160c83c2d
+> --- wait for live worker (render + attach) ---
+>   t+5s: running
+>   t+10s: running
+>   t+15s: running
+>   t+20s: running
+>   t+25s: running
+>   t+30s: done
+> === VERIFY attach (FR-VA-025) ===
+> --- content_library video row ---
+> ✅ content_library: d490a4b0-d493-437f-8609-cb66733c6543 | type: video | source: autopilot_video | format: 9:16
+> --- creative_metrics row (content_variant_id=content_library id) ---
+> ❌ NO creative_metrics row
+> === cleanup test artifacts ===
+> cleaned e39a21ea-acaf-4774-ba1b-7e3160c83c2d + content_library d490a4b0-d493-437f-8609-cb66733c6543
+> ```
+
+## 🤖 Claude *(13:57:31)*
+
+
+## 🤖 Claude *(13:57:33)*
+
+Attach mostly works: ✅ content_library video row (type=video, source=autopilot_video, format=9:16). But ❌ creative_metrics failed silently (my insert is fail-soft). Let me find why — likely a CHECK or type mismatch on `platform`/`product_id`/FK. Checking the schema:
+
+## 🤖 Claude *(13:57:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== creative_metrics table definition ===\"\ngrep -rnA40 \"CREATE TABLE.*creative_metrics\" supabase/migrations/ 2>/dev/null | grep -iE \"creative_metrics|platform|product_id|content_variant|cycle_id|CHECK|NOT NULL|REFERENCES|FOREIGN KEY|uuid|text|source\" | head -40",
+  "description": "creative_metrics schema (CHECK/types/FKs)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === creative_metrics table definition ===
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql:23:CREATE TABLE IF NOT EXISTS public.creative_metrics (
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-24-  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-25-  user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-26-  cycle_id           uuid,                          -- reserved for the cadence Fatia (autopilot_cycles); NO FK yet
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-27-  content_variant_id uuid        NOT NULL,          -- logical ref to content_library.id; NO physical FK (independent
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-28-                                                    -- 18-month retention per Data Model §7 — content can be pruned
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-29-                                                    -- while its performance history is retained for the loop)
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-30-  product_id         text,                          -- = vm_affiliate_products.external_id (the featured product)
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-31-  platform           text,                          -- wordpress | linkedin | twitter
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-32-  source             text        NOT NULL DEFAULT 'organic'
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-33-                       CHECK (source IN ('affiliate_click','organic','postback')),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-34-  impressions        int         NOT NULL DEFAULT 0 CHECK (impressions      >= 0),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-35-  engagements        int         NOT NULL DEFAULT 0 CHECK (engagements      >= 0),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-36-  affiliate_clicks   int         NOT NULL DEFAULT 0 CHECK (affiliate_clicks >= 0),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-37-  revenue_cents      int         NOT NULL DEFAULT 0 CHECK (revenue_cents    >= 0),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-38-  collected_at       timestamptz NOT NULL DEFAULT now(),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-39-  created_at         timestamptz NOT NULL DEFAULT now(),
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-40-  -- One row per (creative, signal source): the baseline 'organic' row at generation, later upserted by the
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-41-  -- collector; 'affiliate_click' and 'postback' rows are written by their own writers (click ledger / postback).
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-42-  CONSTRAINT creative_metrics_variant_source_uniq UNIQUE (content_variant_id, source)
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-43-);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-44-
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-45-ALTER TABLE public.creative_metrics ENABLE ROW LEVEL SECURITY;
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-46-
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-47--- SELECT own only. No INSERT/UPDATE policy → authenticated default-deny; the generator/collector write via the
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-48--- service key. A tenant reads its own creative performance (future dashboard FR-VA-015) and nothing else.
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-49-CREATE POLICY "creative_metrics_select_own" ON public.creative_metrics
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-50-  FOR SELECT USING (auth.uid() = user_id);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-51-
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-52--- Financial ledger → clients can NEVER delete a metric row (RESTRICTIVE forbids it even if a future permissive
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-53--- policy is added). Mirrors the RESTRICTIVE pattern on financial/affiliate tables.
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-54-CREATE POLICY "creative_metrics_no_client_delete" ON public.creative_metrics
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-55-  AS RESTRICTIVE FOR DELETE USING (false);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-56-
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-57-CREATE INDEX IF NOT EXISTS creative_metrics_variant_idx  ON public.creative_metrics (content_variant_id);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-58-CREATE INDEX IF NOT EXISTS creative_metrics_user_idx     ON public.creative_metrics (user_id, collected_at DESC);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-59-CREATE INDEX IF NOT EXISTS creative_metrics_cycle_idx    ON public.creative_metrics (cycle_id);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-60-CREATE INDEX IF NOT EXISTS creative_metrics_product_idx  ON public.creative_metrics (product_id);
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-61-
+> supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql-62-COMMENT ON TABLE public.creative_metrics IS
+> ```
+
+## 🤖 Claude *(13:57:52)*
+
+
+## 🤖 Claude *(13:57:54)*
+
+Found it: `creative_metrics.source` has `CHECK (source IN ('affiliate_click','organic','postback'))` — my `'autopilot_video'` violated it (swallowed by fail-soft). The video is an organic creative like the article. Fixing the worker's creative_metrics insert (source→`organic`, platform→null since it's not yet network-specific):
+
+## 🤖 Claude *(13:58:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "old_string": "          await supabase.from('creative_metrics').insert({\n            user_id: ap.user_id, cycle_id: ap.cycle_id ?? null, content_variant_id: clib.id,\n            product_id: ap.product_id ?? null, platform: 'video', source: 'autopilot_video',\n            impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,\n          }).then(() => {}, () => {});",
+  "new_string": "          // source MUST be one of the CHECK values ('affiliate_click'|'organic'|'postback') \u2014 the 9:16 video is an\n          // organic creative (mirrors the article baseline). platform null = not yet bound to a vertical network\n          // (PR-VA-021 deferred). UNIQUE(content_variant_id, source) is safe \u2014 the video's content_variant_id is new.\n          await supabase.from('creative_metrics').insert({\n            user_id: ap.user_id, cycle_id: ap.cycle_id ?? null, content_variant_id: clib.id,\n            product_id: ap.product_id ?? null, platform: null, source: 'organic',\n            impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,\n          }).then(() => {}, (e: unknown) => console.warn('[video-bridge] creative_metrics skipped:', e instanceof Error ? e.message : e));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:58:05)*
+
+
+## 🤖 Claude *(13:58:05)*
+
+Restart worker + re-test the attach (verify creative_metrics now lands):
+
+## 🤖 Claude *(13:58:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport XDG_RUNTIME_DIR=/run/user/1001\nsystemctl --user restart video-bridge.service && sleep 2 && echo \"worker: $(systemctl --user is-active video-bridge.service)\"\nsource .env 2>/dev/null\nUID0=ada39fae-67e1-4e53-af1c-5a18e1c108e8\nR=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/video_renders\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"user_id\\\":\\\"${UID0}\\\",\\\"engine\\\":\\\"hyperframes\\\",\\\"state\\\":\\\"queued\\\",\\\"charged_mco\\\":12,\\\"composition\\\":{\\\"template\\\":\\\"viral-short-9x16\\\",\\\"duration_s\\\":2,\\\"fps\\\":24,\\\"props\\\":{\\\"hook\\\":\\\"Attach v2\\\",\\\"caption\\\":\\\"creative_metrics fix.\\\",\\\"cta\\\":\\\"Ver no ML\\\",\\\"brand\\\":\\\"MCORCH\\\"},\\\"autopilot\\\":{\\\"user_id\\\":\\\"${UID0}\\\",\\\"campaign_id\\\":null,\\\"product_id\\\":\\\"MLB27834876\\\",\\\"cycle_id\\\":null,\\\"title\\\":\\\"Attach v2\\\"}}}\" \\\n  | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['id'])\")\necho \"render: $R\"\nfor i in $(seq 1 9); do sleep 5; ST=$(curl -s \"${SUPABASE_URL}/rest/v1/video_renders?select=state&id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['state'])\"); echo \"  t+$((i*5))s: $ST\"; [ \"$ST\" = \"done\" ] && break; done\nCLIBID=$(curl -s \"${SUPABASE_URL}/rest/v1/content_library?select=id&metadata->>render_id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id']) if d else print('')\")\necho \"=== creative_metrics now? ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/creative_metrics?select=content_variant_id,product_id,source,platform,cycle_id&content_variant_id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print('\u2705 creative_metrics:', d[0]) if d else print('\u274c STILL missing')\"\necho \"=== cleanup ===\"\ncurl -s -X DELETE \"${SUPABASE_URL}/storage/v1/object/video-studio-assets/${UID0}/${R}.mp4\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/creative_metrics?content_variant_id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/content_library?id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/video_assets?render_id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/mcorch_nodes?name=eq.video-render:${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/video_renders?id=eq.${R}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\necho \"cleaned\"",
+  "description": "Re-test attach with creative_metrics fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> worker: active
+> render: a5edb2cf-cb8b-4c14-a5bf-f2b3becfefaf
+>   t+5s: running
+>   t+10s: running
+>   t+15s: running
+>   t+20s: running
+>   t+25s: running
+>   t+30s: done
+> === creative_metrics now? ===
+> ✅ creative_metrics: {'content_variant_id': '9cfdc7cf-95a4-464b-b814-7c4dec8e3a1f', 'product_id': 'MLB27834876', 'source': 'organic', 'platform': None, 'cycle_id': None}
+> === cleanup ===
+> cleaned
+> ```
+
+## 🤖 Claude *(13:59:24)*
+
+
+## 🤖 Claude *(13:59:27)*
+
+**VA-V1 attach fully proven:** render done → ✅ content_library video row → ✅ creative_metrics (source=organic, product MLB27834876). 
+
+The only link not yet proven through the *real pipeline* is orchestrate-step's enqueue firing during an actual run. Per Law 1, let me close it with one **prepaid (zero-charge) E2E**: a real cron sub-run with `video_enabled` → article generated → video_render enqueued → worker renders + attaches.
+
+## 🤖 Claude *(13:59:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nUID0=ada39fae-67e1-4e53-af1c-5a18e1c108e8\necho \"=== trigger prepaid cron sub-run WITH video_enabled (zero-charge) ===\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/functions/v1/orchestrate-content\" \\\n  -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"x-autopilot-user-id: ${UID0}\" -H \"Content-Type: application/json\" \\\n  -d '{\"topic\":\"VA-V1 E2E v\u00eddeo 9:16\",\"product_ids\":[\"MLB27834876\"],\"platforms\":[\"wordpress\"],\"prepaid\":true,\"video_enabled\":true,\"video_format\":\"9:16\",\"wp_status\":\"draft\"}')\necho \"$RESP\" | head -c 300; echo\nRUN=$(echo \"$RESP\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('run_id') or d.get('pipeline_run_id') or '')\" 2>/dev/null)\necho \"run_id: $RUN\"\necho \"--- poll for the enqueued video_render (orchestrate-step fires it after article_generation) ---\"\nVR=\"\"\nfor i in $(seq 1 24); do\n  sleep 5\n  VR=$(curl -s \"${SUPABASE_URL}/rest/v1/video_renders?select=id,state,composition&user_id=eq.${UID0}&engine=eq.hyperframes&order=created_at.desc&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\")\n  VRID=$(echo \"$VR\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id']) if d else print('')\" 2>/dev/null)\n  VRST=$(echo \"$VR\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['state']) if d else print('')\" 2>/dev/null)\n  echo \"  t+$((i*5))s: video_render=${VRID:-none} state=${VRST:-none}\"\n  [ \"$VRST\" = \"done\" ] && break\ndone\necho \"=== verify composition came from the real article (hook = article title) ===\"\necho \"$VR\" | python3 -c \"import json,sys; d=json.load(sys.stdin); c=d[0]['composition']; print('hook:', c['props']['hook'][:70]); print('product_img:', (c['props'].get('product_image_url') or '(none)')[:60]); print('autopilot.product_id:', c.get('autopilot',{}).get('product_id'))\" 2>/dev/null\necho \"run_id=$RUN\" > /tmp/va_v1_e2e.txt; echo \"vrid=$(echo \"$VR\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id'])\" 2>/dev/null)\" >> /tmp/va_v1_e2e.txt\ncat /tmp/va_v1_e2e.txt",
+  "description": "Full prepaid E2E \u2014 enqueue via real orchestrate-step run"
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
