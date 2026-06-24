@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 48
-> * **Total de Sessões**: 1331
+> * **Total de Sessões**: 1340
 
 ---
 
@@ -71,8 +71,17 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-24 - agent-afc2e692afc422cc0]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-adb234d3d56fd0c57]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-aaedba3456ba8564b]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-a784c23abe4dabf05]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-a2c797e4511477233]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - Próximos passos do projeto]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - Analisar mudanças recentes e contato]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-23 - agent-afe8da4908bc6253f]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` (ClaudeSessions) - *2026-06-23*
 *   `[[2026-06-23 - agent-add3c88d55b9c16ff]]` (ClaudeSessions) - *2026-06-23*

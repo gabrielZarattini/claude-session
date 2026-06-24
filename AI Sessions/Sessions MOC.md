@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1336
-> * **Sessões do Claude**: 1294
+> * **Total de Sessões Registradas**: 1345
+> * **Sessões do Claude**: 1303
 > * **Sessões do Gemini**: 42
 
 ---
@@ -63,19 +63,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-24 - agent-afc2e692afc422cc0]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-adb234d3d56fd0c57]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-aaedba3456ba8564b]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-a784c23abe4dabf05]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` - *2026-06-24*
+*   `[[2026-06-24 - agent-a2c797e4511477233]]` - *2026-06-24*
 *   `[[2026-06-24 - Próximos passos do projeto]]` - *2026-06-24*
+*   `[[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]` - *2026-06-24*
+*   `[[2026-06-24 - Analisar mudanças recentes e contato]]` - *2026-06-24*
 *   `[[2026-06-23 - agent-afe8da4908bc6253f]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-add3c88d55b9c16ff]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-ad712f9ef0400f04b]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-acdc444197d387c70]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-ac88e66c748ac7f49]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-abebbcac649b3cd15]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-aad6b67109fa66375]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-a98f6a48601b6a832]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-a7a685781cec36e94]]` - *2026-06-23*
-*   *... e mais 1296 sessões nessa categoria.*
+*   *... e mais 1305 sessões nessa categoria.*
 
 ---
 
@@ -266,8 +266,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-24 - agent-afc2e692afc422cc0]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-adb234d3d56fd0c57]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-aaedba3456ba8564b]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a784c23abe4dabf05]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a2c797e4511477233]]` (ClaudeSessions)
 *   `[[2026-06-24 - Próximos passos do projeto]]` (ClaudeSessions)
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` (ClaudeSessions)
+*   `[[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]` (ClaudeSessions)
+*   `[[2026-06-24 - Analisar mudanças recentes e contato]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-afe8da4908bc6253f]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-add3c88d55b9c16ff]]` (ClaudeSessions)
