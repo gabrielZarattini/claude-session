@@ -9085,5 +9085,5 @@ Sessão selada. 🤝
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-23 - agent-afe8da4908bc6253f]]
-> * **Próxima Sessão**: [[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]
+> * **Próxima Sessão**: [[2026-06-24 - Analisar paper e oportunidades de trading]]
 %% --- TIMELINE END --- %%

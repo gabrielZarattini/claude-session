@@ -10433,6 +10433,6 @@ Sessão selada, Maestro. Esta sessão fechou dois arcos sobre o vídeo 9:16 que 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-24 - Analisar mudanças recentes e contato]]
+> * **Sessão Anterior**: [[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com]]
 > * **Próxima Sessão**: [[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]
 %% --- TIMELINE END --- %%

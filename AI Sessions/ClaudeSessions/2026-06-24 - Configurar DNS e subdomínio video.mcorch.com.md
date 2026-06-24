@@ -3263,3 +3263,1335 @@ Serviço `active (running)`. Vou confirmar que sobe nessa config (dir-pai multi-
   "description": "Confirm service serves + multi-project listing"
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === :3210 listening? ===
+> not yet
+> === root + /api/projects (retry) ===
+> root: HTTP 000
+> 
+> [HTTP 000]
+> === service tail (any error?) ===
+> Jun 24 20:00:10 panel.gcrux.com hyperframes[3398072]:     at async ModuleLoader.import (node:internal/modules/esm/loader:336:24)
+> Jun 24 20:00:10 panel.gcrux.com hyperframes[3398072]:     at async loadESM (node:internal/process/esm_loader:34:7)
+> Jun 24 20:00:10 panel.gcrux.com hyperframes[3398072]:     at async handleMainPromise (node:internal/modules/run_main:106:12)
+> Jun 24 20:00:10 panel.gcrux.com hyperframes[3398072]: Node.js v18.19.1
+> Jun 24 20:00:10 panel.gcrux.com systemd[1255]: video-studio.service: Main process exited, code=exited, status=1/FAILURE
+> Jun 24 20:00:10 panel.gcrux.com systemd[1255]: video-studio.service: Failed with result 'exit-code'.
+> ```
+
+## 🤖 Claude *(23:00:24)*
+
+
+## 🤖 Claude *(23:00:25)*
+
+Crash-loop: o serviço pegou **Node 18** (do PATH systemd `/usr/bin/node`), mas o shell interativo tinha v22 e o hyperframes exige ≥22. Preciso achar o node v22 e fixá-lo no serviço.
+
+## 🤖 Claude *(23:00:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== which node (interactive) ===\"; command -v node; node --version\necho \"=== readlink ===\"; readlink -f \"$(command -v node)\"\necho \"=== candidates ===\"; ls -d /home/ubuntu/.nvm/versions/node/v22* 2>/dev/null; ls -la /usr/local/bin/node 2>/dev/null; ls -la /home/ubuntu/.bun/bin/node 2>/dev/null\necho \"=== /usr/bin/node version (systemd picked this) ===\"; /usr/bin/node --version 2>&1",
+  "description": "Locate node v22 binary path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === which node (interactive) ===
+> /home/ubuntu/.local/bin/node
+> v22.22.3
+> === readlink ===
+> /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node
+> === candidates ===
+> /home/ubuntu/.nvm/versions/node/v22.22.3
+> === /usr/bin/node version (systemd picked this) ===
+> v18.19.1
+> ```
+
+## 🤖 Claude *(23:00:37)*
+
+
+## 🤖 Claude *(23:00:39)*
+
+Node v22 está em `/home/ubuntu/.local/bin/node` (→ nvm v22.22.3). O serviço pegou `/usr/bin/node` v18. Vou prefixar o PATH do serviço com o node v22 e reiniciar.
+
+## 🤖 Claude *(23:00:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.config/systemd/user/video-studio.service",
+  "old_string": "Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin",
+  "new_string": "# hyperframes requires node >=22; /usr/bin/node is v18. Pin v22 (nvm, via the stable ~/.local/bin symlink) FIRST.\nEnvironment=PATH=/home/ubuntu/.local/bin:/home/ubuntu/.nvm/versions/node/v22.22.3/bin:/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.config/systemd/user/video-studio.service has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:00:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user daemon-reload\nsystemctl --user restart video-studio.service\necho \"=== status ===\"; systemctl --user --no-pager status video-studio.service 2>&1 | head -6\necho \"=== bind + serve (retry) ===\"\ncurl -s --retry 20 --retry-connrefused --retry-delay 1 -m 40 -o /dev/null -w \"root: HTTP %{http_code}\\n\" http://127.0.0.1:3210/ 2>&1\ncurl -s -m 15 http://127.0.0.1:3210/api/projects -w \"\\n[HTTP %{http_code}]\\n\" 2>&1 | head -8\necho \"=== node ver picked ===\"; journalctl --user -u video-studio.service --no-pager -n 20 2>/dev/null | grep -iE \"v22|v18|listening|preview|ready|http://|error\" | sed '/deprecated/d' | tail -8",
+  "description": "Restart service with node v22 and verify serving"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Job for video-studio.service failed because the control process exited with error code.
+> See "systemctl --user status video-studio.service" and "journalctl --user -xeu video-studio.service" for details.
+> === status ===
+> × video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions)
+>      Loaded: loaded (/home/ubuntu/.config/systemd/user/video-studio.service; enabled; preset: enabled)
+>      Active: failed (Result: exit-code) since Wed 2026-06-24 20:00:21 -03; 26s ago
+>    Duration: 544ms
+>    Main PID: 3398529 (code=exited, status=1/FAILURE)
+>         CPU: 683ms
+> === bind + serve (retry) ===
+> root: HTTP 000
+> 
+> [HTTP 000]
+> === node ver picked ===
+> Jun 24 20:00:15 panel.gcrux.com systemd[1255]: Started video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions).
+> Jun 24 20:00:16 panel.gcrux.com hyperframes[3398529]: SyntaxError: The requested module 'util' does not provide an export named 'styleText'
+> Jun 24 20:00:16 panel.gcrux.com hyperframes[3398529]: Node.js v18.19.1
+> Jun 24 20:00:21 panel.gcrux.com systemd[1255]: Failed to start video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions).
+> Jun 24 20:00:47 panel.gcrux.com systemd[1255]: Failed to start video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions).
+> ```
+
+## 🤖 Claude *(23:01:25)*
+
+
+## 🤖 Claude *(23:01:27)*
+
+Ainda pegando v18 — o `env node` do shebang não está resolvendo pro v22. Solução robusta: chamar o node v22 explicitamente no ExecStart, sem depender de shebang/PATH. Deixa eu confirmar o caminho do cli.js + shebang.
+
+## 🤖 Claude *(23:01:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "CLI=/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js\necho \"=== cli.js exists? + shebang ===\"; ls -la \"$CLI\" 2>&1; head -1 \"$CLI\" 2>&1\necho \"=== explicit v22 node runs it? (version cmd) ===\"\n/home/ubuntu/.local/bin/node \"$CLI\" --version 2>&1 | sed '/deprecated/d' | head -2\necho \"=== latest journal (which node did 20:00:21 use?) ===\"\njournalctl --user -u video-studio.service --no-pager -n 30 2>/dev/null | grep -iE \"Node.js v|styleText|Error\" | tail -5",
+  "description": "Verify cli.js path + explicit v22 node execution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === cli.js exists? + shebang ===
+> -rwxrwxrwx 2 ubuntu ubuntu 8805524 Jun 24 19:59 /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js
+> #!/usr/bin/env node
+> === explicit v22 node runs it? (version cmd) ===
+> 0.7.5
+> === latest journal (which node did 20:00:21 use?) ===
+> Jun 24 20:00:10 panel.gcrux.com hyperframes[3398072]: SyntaxError: The requested module 'util' does not provide an export named 'styleText'
+> Jun 24 20:00:10 panel.gcrux.com hyperframes[3398072]: Node.js v18.19.1
+> Jun 24 20:00:16 panel.gcrux.com hyperframes[3398529]: import { styleText as e, stripVTControlCharacters as nt2 } from "util";
+> Jun 24 20:00:16 panel.gcrux.com hyperframes[3398529]: SyntaxError: The requested module 'util' does not provide an export named 'styleText'
+> Jun 24 20:00:16 panel.gcrux.com hyperframes[3398529]: Node.js v18.19.1
+> ```
+
+## 🤖 Claude *(23:01:36)*
+
+
+## 🤖 Claude *(23:01:37)*
+
+Confirmado: `/home/ubuntu/.local/bin/node cli.js` → `0.7.5` (v22 funciona). Vou trocar o ExecStart pra chamar o node v22 explicitamente:
+
+## 🤖 Claude *(23:01:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.config/systemd/user/video-studio.service",
+  "old_string": "ExecStart=/home/ubuntu/.bun/bin/hyperframes preview /home/ubuntu/.mcorch/video-studio/projects --port 3210 --no-open",
+  "new_string": "# Explicit node v22 (the shebang's `env node` resolves to /usr/bin/node v18 under systemd; hyperframes needs >=22).\nExecStart=/home/ubuntu/.local/bin/node /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js preview /home/ubuntu/.mcorch/video-studio/projects --port 3210 --no-open"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.config/systemd/user/video-studio.service has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:01:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user daemon-reload\nsystemctl --user reset-failed video-studio.service 2>/dev/null\nsystemctl --user restart video-studio.service\necho \"=== bind + serve (retry) ===\"\ncurl -s --retry 25 --retry-connrefused --retry-delay 1 -m 50 -o /dev/null -w \"root: HTTP %{http_code}\\n\" http://127.0.0.1:3210/ 2>&1\ncurl -s -m 15 http://127.0.0.1:3210/api/projects -w \"\\n[HTTP %{http_code}]\\n\" 2>&1 | head -6\necho \"=== status ===\"; systemctl --user --no-pager status video-studio.service 2>&1 | sed -n '3,4p'",
+  "description": "Restart with explicit v22 node and verify serving"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === bind + serve (retry) ===
+> root: HTTP 000
+> 
+> [HTTP 000]
+> === status ===
+>      Active: activating (auto-restart) (Result: exit-code) since Wed 2026-06-24 20:02:09 -03; 1s ago
+>     Process: 3403456 ExecStart=/home/ubuntu/.local/bin/node /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js preview /home/ubuntu/.mcorch/video-studio/projects --port 3210 --no-open (code=exited, status=1/FAILURE)
+> ```
+
+## 🤖 Claude *(23:02:13)*
+
+
+## 🤖 Claude *(23:02:14)*
+
+Agora roda v22 mas falha por outra razão (status 1). Vou ver o erro real:
+
+## 🤖 Claude *(23:02:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "journalctl --user -u video-studio.service --no-pager -n 30 2>/dev/null | sed '/deprecated/d' | grep -vE \"styleText|v18\" | tail -22",
+  "description": "Read actual startup error from journal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Jun 24 20:01:57 panel.gcrux.com node[3403043]:    No index.html file found.
+> Jun 24 20:01:57 panel.gcrux.com node[3403043]:    Run npx hyperframes init to create a new composition.
+> Jun 24 20:01:57 panel.gcrux.com systemd[1255]: video-studio.service: Main process exited, code=exited, status=1/FAILURE
+> Jun 24 20:01:57 panel.gcrux.com systemd[1255]: video-studio.service: Failed with result 'exit-code'.
+> Jun 24 20:02:03 panel.gcrux.com systemd[1255]: video-studio.service: Scheduled restart job, restart counter is at 3.
+> Jun 24 20:02:03 panel.gcrux.com systemd[1255]: Started video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions).
+> Jun 24 20:02:03 panel.gcrux.com node[3403268]: ✗  No composition found in /home/ubuntu/.mcorch/video-studio/projects
+> Jun 24 20:02:03 panel.gcrux.com node[3403268]:    No index.html file found.
+> Jun 24 20:02:03 panel.gcrux.com node[3403268]:    Run npx hyperframes init to create a new composition.
+> Jun 24 20:02:03 panel.gcrux.com systemd[1255]: video-studio.service: Main process exited, code=exited, status=1/FAILURE
+> Jun 24 20:02:03 panel.gcrux.com systemd[1255]: video-studio.service: Failed with result 'exit-code'.
+> Jun 24 20:02:08 panel.gcrux.com systemd[1255]: video-studio.service: Scheduled restart job, restart counter is at 4.
+> Jun 24 20:02:08 panel.gcrux.com systemd[1255]: Started video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions).
+> Jun 24 20:02:09 panel.gcrux.com node[3403456]: ✗  No composition found in /home/ubuntu/.mcorch/video-studio/projects
+> Jun 24 20:02:09 panel.gcrux.com node[3403456]:    No index.html file found.
+> Jun 24 20:02:09 panel.gcrux.com node[3403456]:    Run npx hyperframes init to create a new composition.
+> Jun 24 20:02:09 panel.gcrux.com systemd[1255]: video-studio.service: Main process exited, code=exited, status=1/FAILURE
+> Jun 24 20:02:09 panel.gcrux.com systemd[1255]: video-studio.service: Failed with result 'exit-code'.
+> Jun 24 20:02:14 panel.gcrux.com systemd[1255]: video-studio.service: Scheduled restart job, restart counter is at 5.
+> Jun 24 20:02:14 panel.gcrux.com systemd[1255]: video-studio.service: Start request repeated too quickly.
+> Jun 24 20:02:14 panel.gcrux.com systemd[1255]: video-studio.service: Failed with result 'exit-code'.
+> Jun 24 20:02:14 panel.gcrux.com systemd[1255]: Failed to start video-studio.service - MCORCH HyperFrames Video Studio (hyperframes preview — the multi-layer NLE editor served behind video.mcorch.com; authoring of 9:16 viral compositions with scenes/layers/alpha-overlays/transitions).
+> ```
+
+## 🤖 Claude *(23:02:29)*
+
+
+## 🤖 Claude *(23:02:31)*
+
+Achado: `preview` exige que o DIR **seja** um projeto (com `index.html`), não um dir-pai multi-projeto. Aponto pro projeto `mcorch-demo` (que provou funcionar). Multi-projeto vira follow-up; um projeto = um vídeo com N camadas, que é o cerne do que você quer.
+
+## 🤖 Claude *(23:02:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.config/systemd/user/video-studio.service",
+  "old_string": "ExecStart=/home/ubuntu/.local/bin/node /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js preview /home/ubuntu/.mcorch/video-studio/projects --port 3210 --no-open",
+  "new_string": "ExecStart=/home/ubuntu/.local/bin/node /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js preview /home/ubuntu/.mcorch/video-studio/projects/mcorch-demo --port 3210 --no-open"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.config/systemd/user/video-studio.service has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user daemon-reload\nsystemctl --user reset-failed video-studio.service 2>/dev/null\nsystemctl --user restart video-studio.service\necho \"=== serve (retry) ===\"\ncurl -s --retry 25 --retry-connrefused --retry-delay 1 -m 50 -o /dev/null -w \"root: HTTP %{http_code}\\n\" http://127.0.0.1:3210/ 2>&1\ncurl -s -m 15 http://127.0.0.1:3210/api/projects -w \"\\n[HTTP %{http_code}]\\n\" 2>&1 | head -6\necho \"=== status (active?) ===\"; systemctl --user --no-pager status video-studio.service 2>&1 | sed -n '3p'\necho \"=== uptime check 2nd curl (stable, not crash-looping) ===\"; curl -s -o /dev/null -m 10 -w \"root#2: HTTP %{http_code}\\n\" http://127.0.0.1:3210/ 2>&1",
+  "description": "Restart pointing at project dir and verify stable serving"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === serve (retry) ===
+> root: HTTP 200
+> {"projects":[{"id":"mcorch-demo","dir":"/home/ubuntu/.mcorch/video-studio/projects/mcorch-demo","title":"mcorch-demo"}]}
+> [HTTP 200]
+> === status (active?) ===
+>      Active: active (running) since Wed 2026-06-24 20:02:41 -03; 1s ago
+> === uptime check 2nd curl (stable, not crash-looping) ===
+> root#2: HTTP 200
+> ```
+
+## 🤖 Claude *(23:03:04)*
+
+
+## 🤖 Claude *(23:03:07)*
+
+**Editor durável e VIVO:** `video-studio.service` `active (running)` (node v22), HTTP 200 estável (2 curls), `/api/projects` retorna o projeto 9:16. O editor HyperFrames NLE está rodando na nossa infra em `127.0.0.1:3210`.
+
+Agora torno-o alcançável: escrevo o vhost `video.mcorch.com` (espelho do `design`, com SSO gate) e a página iframe no dashboard. Leio os precedentes em paralelo:
+
+## 🤖 Claude *(23:03:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf",
+  "content": "# MCORCH HyperFrames Video Studio \u2014 public vhost for the `hyperframes preview` NLE editor (iframe target).\n# Mirrors nginx/design.mcorch.com.conf: Cloudflare orange-proxy hides the origin IP; SSL \"Full\" with a\n# self-signed origin cert; the studio preview server (systemd video-studio.service) listens ONLY on host\n# loopback (127.0.0.1:3210) \u2014 this vhost is the single external path. The studio is a Vite SPA with\n# root-relative /assets + /api \u2192 it MUST be served at the ROOT of its own host (video.mcorch.com), NOT under\n# a sub-path of login.mcorch.com.\n#\n# ACTIVATION (Sovereign \u2014 DNS/cert; same runbook as design.mcorch.com / mcp.mcorch.com):\n#   1. Cloudflare DNS: A video.mcorch.com \u2192 origin IP, orange-proxied (proxied=ON).   [\u2705 j\u00e1 feito pelo Sovereign]\n#   2. Origin cert (self-signed OK behind CF Full):\n#        sudo openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \\\n#          -keyout /etc/nginx/ssl-certificates/video.mcorch.com.key \\\n#          -out    /etc/nginx/ssl-certificates/video.mcorch.com.crt \\\n#          -subj \"/CN=video.mcorch.com\"\n#   3. Cloudflare SSL/TLS mode: Full (j\u00e1 \u00e9 zone-wide). WAF: S\u00d3 se o editor (XHR/SSE) for desafiado (403\n#      text/html) \u2014 adicione um Skip rule para http.host eq \"video.mcorch.com\" e DESLIGUE o componente\n#      \"N\u00edvel de Seguran\u00e7a\" (datacenter-IP reputation \u2014 o toggle decisivo, ver wordpress-cf-publish-unblock.md).\n#      Para iframe em browser real normalmente N\u00c3O dispara (passa o JS challenge).\n#   4. sudo ln -s /home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf \\\n#        /etc/nginx/sites-enabled/ && sudo nginx -t && sudo systemctl reload nginx\n#   5. (j\u00e1 feito) iframe em src/pages/VideoStudioEditorPage.tsx aponta para https://video.mcorch.com.\n#\n# SECURITY: single-tenant Usu\u00e1rio Zero (OTD-VA-011). The preview server has NO native auth \u2192 the SSO gate\n# below (R3, sso-auth-gate :8787) is what restricts it to the logged-in MCORCH session. Multi-tenant\n# hardening (per-user project isolation) deferred to User 1.\n\nserver {\n  listen 80;\n  listen [::]:80;\n  listen 443 ssl;\n  listen [::]:443 ssl;\n  http2 on;\n\n  ssl_certificate_key /etc/nginx/ssl-certificates/video.mcorch.com.key;\n  ssl_certificate     /etc/nginx/ssl-certificates/video.mcorch.com.crt;\n\n  server_name video.mcorch.com;\n\n  # Studio compositions can embed large media (alpha-channel video overlays). Allow generous uploads.\n  client_max_body_size 512m;\n\n  # \u2500\u2500 R3 SSO gate: every request is gated by the MCORCH session (.mcorch.com cookie) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  # auth_request \u2192 local SSO gate (sso-auth-gate :8787) which verifies the Supabase ES256 JWT in the\n  # sb-mcorch-session cookie. 401 \u2192 302 to login.mcorch.com/auth (the standard MCORCH login). The gate\n  # is host-agnostic (its description already names design/video.mcorch.com) \u2014 no per-host change needed.\n  location = /_mcorch_auth {\n    internal;\n    proxy_pass http://127.0.0.1:8787/verify;\n    proxy_pass_request_body off;\n    proxy_set_header Content-Length \"\";\n    proxy_set_header Cookie $http_cookie;\n  }\n  location @mcorch_login {\n    return 302 https://login.mcorch.com/auth?return_to=$scheme://$host$request_uri;\n  }\n\n  # hyperframes preview server (node, systemd video-studio.service) on host loopback. SSE-friendly\n  # (render progress stream + live preview reload) over HTTP/1.1 keepalive \u2014 mirrors design/mcp\n  # (Connection \"\" + proxy_buffering off), so NO map $http_upgrade dependency in http{}.\n  location / {\n    auth_request /_mcorch_auth;\n    error_page 401 = @mcorch_login;\n\n    proxy_pass http://127.0.0.1:3210;\n    proxy_http_version 1.1;\n    proxy_set_header Connection        \"\";\n    proxy_set_header Host              $host;\n    proxy_set_header X-Real-IP         $remote_addr;\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    proxy_set_header X-Forwarded-Proto $scheme;\n    proxy_buffering        off;          # editor streams (render progress SSE + preview reload) \u2014 don't buffer\n    proxy_read_timeout     3600s;\n    proxy_send_timeout     3600s;\n  }\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:03:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasDesignPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { Helmet } from "react-helmet-async";
+> 2	
+> 3	export default function CanvasDesignPage() {
+> 4	  return (
+> 5	    <>
+> 6	      <Helmet>
+> 7	        <title>Canvas Design — MCORCH</title>
+> 8	        <meta name="description" content="Soberano Módulo de Design Omnichannel baseado em open-design" />
+> 9	      </Helmet>
+> 10	
+> 11	      <div className="w-full h-full bg-background overflow-hidden relative">
+> 12	        <iframe
+> 13	          src="https://design.mcorch.com"
+> 14	          className="w-full h-full bg-black border-none"
+> 15	          title="OpenDesign Workspace"
+> 16	        />
+> 17	      </div>
+> 18	    </>
+> 19	  );
+> 20	}
+> 21	
+> ```
+
+## 🤖 Claude *(23:03:32)*
+
+
+## 🤖 Claude *(23:03:33)*
+
+`CanvasDesignPage` é só um iframe. Vou espelhar pro vídeo. Deixa eu ver o roteamento (canvas-design + video) no App.tsx pra encaixar a rota certa:
+
+## 🤖 Claude *(23:03:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== canvas/video/design routes in App.tsx ===\"; grep -nE \"CanvasDesign|VideoStudio|canvas/design|canvas/video|dashboard/video|lazy\\(.*Video|lazy\\(.*CanvasDesign\" src/App.tsx 2>/dev/null\necho \"\"; echo \"=== existing VideoStudio page/route refs across src ===\"; grep -rnE \"VideoStudio|/dashboard/video|canvas/video\" src/App.tsx src/components/dashboard/DashboardSidebar.tsx 2>/dev/null | head -20\necho \"\"; echo \"=== sidebar nav items (where design lives) ===\"; grep -nE \"Design|V\u00eddeo|Video|canvas\" src/components/dashboard/DashboardSidebar.tsx 2>/dev/null | head",
+  "description": "Find canvas/video/design routes and sidebar nav"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === canvas/video/design routes in App.tsx ===
+> 20:const VideoEditorPage = lazy(() => import("./pages/VideoEditorPage.tsx"));
+> 27:const VideoStudioPage = lazy(() => import("./pages/VideoStudioPage.tsx"));
+> 49:const CanvasDesignPage = lazy(() => import("./pages/CanvasDesignPage.tsx"));
+> 108:                <Route path="video" element={<VideoStudioPage />} />
+> 132:                <Route path="canvas/design" element={<CanvasDesignPage />} />
+> 
+> === existing VideoStudio page/route refs across src ===
+> src/App.tsx:27:const VideoStudioPage = lazy(() => import("./pages/VideoStudioPage.tsx"));
+> src/App.tsx:108:                <Route path="video" element={<VideoStudioPage />} />
+> src/components/dashboard/DashboardSidebar.tsx:76:      { title: 'Estúdio de Vídeo', url: '/dashboard/video', icon: Film },
+> 
+> === sidebar nav items (where design lives) ===
+> 76:      { title: 'Estúdio de Vídeo', url: '/dashboard/video', icon: Film },
+> 161:  const isCanvasActive = location.pathname.includes('/canvas');
+> 168:    { title: 'Canvas Studio', url: '/dashboard/canvas', icon: Palette },
+> 299:                  {/* Canvas Studio — collapsible with Studio + Design sub-items */}
+> 305:                            to="/dashboard/canvas"
+> 329:                                to="/dashboard/canvas"
+> 342:                                to="/dashboard/canvas/design"
+> 347:                                <span>Design</span>
+> ```
+
+## 🤖 Claude *(23:03:45)*
+
+
+## 🤖 Claude *(23:03:46)*
+
+Estrutura clara. Vou adicionar o editor como sub-item "Vídeo" sob o Canvas Studio (espelhando "Design"), rota `/dashboard/canvas/video`, deixando o `/dashboard/video` (form nativo) intacto. Crio a página + leio os pontos de edição:
+
+## 🤖 Claude *(23:03:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoStudioEditorPage.tsx",
+  "content": "import { Helmet } from \"react-helmet-async\";\n\n// HyperFrames Studio editor \u2014 module-container pattern (mirrors CanvasDesignPage / design.mcorch.com).\n// The full multi-layer NLE editor (timeline, tracks/layers, alpha-channel video overlays, effects,\n// transitions) is the official `hyperframes preview` server (systemd video-studio.service, host loopback\n// 127.0.0.1:3210), served behind video.mcorch.com (Cloudflare orange + SSO gate). React 19 lives entirely\n// in that standalone process \u2192 no conflict with this React 18 SPA. SDD: video-studio Amendment v0.4 (VS-UI).\nexport default function VideoStudioEditorPage() {\n  return (\n    <>\n      <Helmet>\n        <title>Editor de V\u00eddeo \u2014 MCORCH</title>\n        <meta name=\"description\" content=\"Editor HyperFrames \u2014 composi\u00e7\u00f5es 9:16 com cenas, camadas, overlays em alpha, efeitos e transi\u00e7\u00f5es\" />\n      </Helmet>\n\n      <div className=\"w-full h-full bg-background overflow-hidden relative\">\n        <iframe\n          src=\"https://video.mcorch.com\"\n          className=\"w-full h-full bg-black border-none\"\n          title=\"HyperFrames Video Studio\"\n          allow=\"clipboard-read; clipboard-write; fullscreen\"\n        />\n      </div>\n    </>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoStudioEditorPage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:03:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 47,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 47	const CanvasStudioPage = lazy(() => import("./pages/CanvasStudioPage.tsx"));
+> 48	const CanvasEditorPage = lazy(() => import("./pages/CanvasEditorPage.tsx"));
+> 49	const CanvasDesignPage = lazy(() => import("./pages/CanvasDesignPage.tsx"));
+> 50	const AgentEconomicsPage = lazy(() => import("./pages/AgentEconomicsPage.tsx"));
+> 51	const ChatPage = lazy(() => import("./pages/ChatPage.tsx"));
+> 52	const KanbanPage = lazy(() => import("./pages/KanbanPage.tsx"));
+> ```
+
+## 🤖 Claude *(23:03:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 129,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 129	                <Route path="billing" element={<BillingPage />} />
+> 130	                <Route path="miner" element={<ViralMinerPage />} />
+> 131	                <Route path="canvas" element={<CanvasStudioPage />} />
+> 132	                <Route path="canvas/design" element={<CanvasDesignPage />} />
+> 133	                <Route path="canvas/:id" element={<CanvasEditorPage />} />
+> 134	                <Route path="agent-economics" element={<AgentEconomicsPage />} />
+> ```
+
+## 🤖 Claude *(23:03:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 320,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 320	                            <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />
+> 321	                          </Button>
+> 322	                        </CollapsibleTrigger>
+> 323	                      </div>
+> 324	                      <CollapsibleContent>
+> 325	                        <SidebarMenuSub>
+> 326	                          <SidebarMenuSubItem>
+> 327	                            <SidebarMenuSubButton asChild>
+> 328	                              <NavLink
+> 329	                                to="/dashboard/canvas"
+> 330	                                end
+> 331	                                className="hover:bg-muted/50"
+> 332	                                activeClassName="text-primary font-medium"
+> 333	                              >
+> 334	                                <Palette className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 335	                                <span>Studio</span>
+> 336	                              </NavLink>
+> 337	                            </SidebarMenuSubButton>
+> 338	                          </SidebarMenuSubItem>
+> 339	                          <SidebarMenuSubItem>
+> 340	                            <SidebarMenuSubButton asChild>
+> 341	                              <NavLink
+> 342	                                to="/dashboard/canvas/design"
+> 343	                                className="hover:bg-muted/50"
+> 344	                                activeClassName="text-primary font-medium"
+> 345	                              >
+> 346	                                <Wand2 className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 347	                                <span>Design</span>
+> 348	                              </NavLink>
+> 349	                            </SidebarMenuSubButton>
+> 350	                          </SidebarMenuSubItem>
+> 351	                        </SidebarMenuSub>
+> 352	                      </CollapsibleContent>
+> 353	                    </SidebarMenuItem>
+> 354	                  </Collapsible>
+> 355	
+> 356	                  {/* Grouped categories */}
+> 357	                  {categories.map((cat) => (
+> 358	                    <NavCategory key={cat.title} category={cat} />
+> 359	                  ))}
+> ```
+
+## 🤖 Claude *(23:03:59)*
+
+
+## 🤖 Claude *(23:04:00)*
+
+Pontos de edição localizados. Faço as 3 edições (import + rota + nav):
+
+## 🤖 Claude *(23:04:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const CanvasDesignPage = lazy(() => import(\"./pages/CanvasDesignPage.tsx\"));",
+  "new_string": "const CanvasDesignPage = lazy(() => import(\"./pages/CanvasDesignPage.tsx\"));\nconst VideoStudioEditorPage = lazy(() => import(\"./pages/VideoStudioEditorPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:04:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"canvas/design\" element={<CanvasDesignPage />} />",
+  "new_string": "                <Route path=\"canvas/design\" element={<CanvasDesignPage />} />\n                <Route path=\"canvas/video\" element={<VideoStudioEditorPage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:04:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/canvas/design\"\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Wand2 className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Design</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                        </SidebarMenuSub>",
+  "new_string": "                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/canvas/design\"\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Wand2 className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Design</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink\n                                to=\"/dashboard/canvas/video\"\n                                className=\"hover:bg-muted/50\"\n                                activeClassName=\"text-primary font-medium\"\n                              >\n                                <Film className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>V\u00eddeo</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                        </SidebarMenuSub>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:04:12)*
+
+
+## 🤖 Claude *(23:04:13)*
+
+`Film` já é usado no sidebar (linha 76), então está importado. Vou rodar o tsc pra garantir zero erros antes de buildar:
+
+## 🤖 Claude *(23:04:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"Film\" src/components/dashboard/DashboardSidebar.tsx | head -2\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -15 || echo \"tsc had output above\"\necho \"rc=$?\"",
+  "description": "Verify Film import + tsc clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 30:  Film,
+> 76:      { title: 'Estúdio de Vídeo', url: '/dashboard/video', icon: Film },
+> === tsc ===
+> rc=0
+> ```
+
+## 🤖 Claude *(23:04:21)*
+
+
+## 🤖 Claude *(23:04:22)*
+
+tsc limpo (rc=0), `Film` importado. Estou no **repo principal** (tem `.env`), então `bun run build` = deploy direto pro nginx. Buildando + verificando material (chunk novo da página):
+
+## 🤖 Claude *(23:04:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== confirm main repo (has .env) ===\"; ls -la .env >/dev/null 2>&1 && echo \".env present \u2705\" || echo \"\u26a0\ufe0f NO .env\"\necho \"=== build ===\"\nbun run build 2>&1 | tail -15\necho \"=== material proof: VideoStudioEditorPage chunk in dist ===\"\nls -la dist/assets/ 2>/dev/null | grep -iE \"VideoStudioEditor\" || echo \"(checking by grep)\"\ngrep -rl \"video.mcorch.com\" dist/assets/*.js 2>/dev/null | head -3",
+  "description": "Build frontend (main repo = deploy) and verify new chunk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === confirm main repo (has .env) ===
+> .env present ✅
+> === build ===
+> dist/assets/useConstellationSigma-JV8cT5PE.js   97.31 kB │ gzip:  21.58 kB
+> dist/assets/proxy-BuWaUHVz.js                  125.30 kB │ gzip:  41.24 kB
+> dist/assets/ConstellationMatrix-DomA72Yy.js    136.36 kB │ gzip:  37.83 kB
+> dist/assets/CanvasEditorPage-QTyZK8th.js       140.18 kB │ gzip:  38.74 kB
+> dist/assets/index-DLWwfL8n.js                  167.01 kB │ gzip:  53.33 kB
+> dist/assets/ConstellationPage-Ov8co9rc.js      184.45 kB │ gzip:  63.67 kB
+> dist/assets/CartesianChart-SY_fq40t.js         325.06 kB │ gzip:  96.83 kB
+> dist/assets/index-CWHPqYnV.js                  630.92 kB │ gzip: 188.40 kB
+> dist/assets/react-three-fiber.esm-DEkdZKvb.js  824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.50s
+> === material proof: VideoStudioEditorPage chunk in dist ===
+> -rw-rw-r-- 1 ubuntu ubuntu    619 Jun 24 20:04 VideoStudioEditorPage-CCjrPhI0.js
+> dist/assets/VideoStudioEditorPage-CCjrPhI0.js
+> ```
+
+## 🤖 Claude *(23:05:11)*
+
+
+## 🤖 Claude *(23:05:14)*
+
+**Frontend deployado** (`✓ built 23.50s`): chunk `VideoStudioEditorPage-CCjrPhI0.js` referenciando `video.mcorch.com` está no `dist/` servido pelo nginx → a rota `/dashboard/canvas/video` (sub-item "Vídeo" no Canvas Studio) já existe em produção.
+
+Agora selo o Lei 2 (a emenda BoK do `/api` que você aprovou) + SOP de deploy, e committo. Deixa eu ver a estrutura do SDD pra emendar limpo:
+
+## 🤖 Claude *(23:05:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SDD amendment log (head) ===\"; grep -nE \"Amendment|\u00a71.3|FR-VS-021|FR-VS-022|OTD-VS-005|OTD-VS-015\" docs/bok/video-studio/05-sdd.md 2>/dev/null | head -20\necho \"=== SDD total lines ===\"; wc -l docs/bok/video-studio/05-sdd.md\necho \"=== existing canvas-design SOP for mirroring (head) ===\"; head -25 docs/processes/canvas-design-deploy-and-provision.md 2>/dev/null",
+  "description": "Inspect SDD amendment structure + canvas-design SOP template"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SDD amendment log (head) ===
+> 80:### 1.3 HyperFrames embed — sidecar container + integração de módulo (Amendment v0.3 · 2026-06-24 · FR-VS-021/022/023)
+> 82:> **🔧 Amendment v0.3 (Diretiva Sovereign 2026-06-24) — flip de OTD-VS-005 (A→C), fundamentado em prova material:** o embed **nativo in-SPA** (decisão A original abaixo) está **BLOQUEADO por incompatibilidade de versão de React** (Lei 1, verificado `npm view`): `@hyperframes/studio@0.7.5` (atual) exige `peerDependencies react: '19'` e o SPA MCORCH está em **React 18.3.1**; a última linha React-18-compatível (`0.5.x`, peer `^18||^19`) **ships código-fonte TS não-buildado** (`main: ./src/index.ts`, sem `dist/`) + puxa `@hyperframes/core` (peer `hono`, runtime server) → integração in-SPA frágil + adoção de runtime externo. **Nova decisão (C):** o editor roda num **container sidecar próprio** (React 19 isolado, sem conflito com o SPA React 18) **servido atrás de um vhost** (`studio.mcorch.com`/`video.mcorch.com` — OTD-VS-015, DNS+cert = ação Sovereign), e o SPA o integra como **módulo** no padrão **open-design/canvas-design** (`CanvasDesignPage` = iframe full-bleed a `design.mcorch.com` → container `open-design` 127.0.0.1:7456). "Native" = **100% integrado como feature**, não in-process React. A sessão MCORCH é herdada via o gate SSO ES256 do vhost (cookie `.mcorch.com` — `sso-auth-gate` já lista `video.mcorch.com`), e o render acontece no **motor HyperFrames já provado** (`video-render` engine=`hyperframes` → worker `video-bridge` → MP4 9:16), não no runtime do studio. Decompõe na próxima Fatia VS-UI; gate Lei 2: deepsearch da API de host/composição do `@hyperframes/studio` + emenda BoK ANTES do código do container.
+> 84:**Decisão original (A — VOID por Amendment v0.3):** ~~o editor é embedado consumindo os componentes React exportados pelo `@hyperframes/studio` (`StudioApp`, `NLELayout`, `NLEPreview`, `Player`, `Timeline`, `SourceEditor`, `PropertyPanel`) — **não** um iframe a `npx hyperframes preview`. O embed nativo herda a sessão MCORCH (R3) sem postMessage cross-origin~~ — inviável em React 18 (ver Amendment v0.3 acima).
+> 86:**Gotcha de roteamento (FR-VS-022):** a rota `canvas/video` DEVE ser declarada ANTES de `canvas/:id` em `src/App.tsx` — senão `:id="video"` sombreia a rota nova e o editor nunca carrega.
+> 94:> ⚠️ **SUPERSEDED por §1.5 (Amendment v1.2 · 2026-06-22).** Diretiva Sovereign: **o MCORCH não usa n8n.** §1.2 (instrumentar o workflow n8n) e §1.4 (ponte R5) tornam-se **históricos**; **OTD-VS-001 (ponte R5) é VOID** — sem n8n, não há rede externa a pontear. O motor faceless é re-implantado **nativo**. Ver §1.5.
+> 96:### 1.5 Native Orchestration Amendment (v1.2 · 2026-06-22) — supersedes §1.2 + §1.4
+> 124:**Impacto nos OTDs:** **OTD-VS-001 VOID** (sem n8n). **OTD-VS-002** estreitada ao módulo Design (o faceless não usa mais daemon compartilhado). **OTD-VS-003/004** (Telegram/render-engine-n8n) ficam históricas. Novos: **OTD-VS-014** (container nativo Remotion+FFmpeg na sovereign-net — design/hardening, `/security-review`) · **OTD-VS-015** (`video.mcorch.com` vhost — DNS+cert, ação Sovereign). **OTD-VS-006/007** seguem válidas.
+> 165:> **🔧 Reconciliação de drift (2026-06-24 · cross-ref Amendment v0.2 do `viral-autopilot`):** a tabela acima reflete o design **pré-De-n8n** (SDD §8-A v1.2). A implementação da **Fatia 1 (shipped)** consolidou `video-faceless-render` + `video-hyperframes-render` numa **única** edge fn `video-render` (branching por `engine`) + `video-render-poll`, e os secrets `N8N_WEBHOOK_URL`/`HYPERFRAMES_RENDER_DISPATCH` foram substituídos pelos **gates de env `VIDEO_FACELESS_WEBHOOK`/`VIDEO_HYPERFRAMES_WEBHOOK`** (worker-gate 503 ANTES do deduct → zero-cost na Fatia 1; `video-render/index.ts:84`). Os contratos FR-VS-010/024/025 permanecem válidos — realizados pela fn unificada. A **Fatia VS-2** (motor) acende esse gate via um **worker host no molde de `scripts/design-bridge.ts`** (claim atômico de `video_renders` → render no container → `finalize_video_render`), single-tenant Usuário Zero primeiro (OTD-VA-011 do `viral-autopilot`).
+> 232:### 3.2 Open the HyperFrames editor + deterministic render (FR-VS-021/024/025)
+> 237: │──/dashboard/canvas/video──────────────────▶│ (rota ANTES de canvas/:id — FR-VS-022)           │
+> 561:| OTD-VS-005 | **HyperFrames Studio mode** (dev server `npx preview` sem modo produção/host/auth documentado) | ~~Native React embed (`@hyperframes/studio` componentes)~~ | **Container sidecar servido atrás de vhost + integração de módulo (open-design pattern)** | iframe ao dev server (rejeitado) | **~~A~~ → C (flip Amendment v0.3, 2026-06-24)** — A inviável: `@hyperframes/studio@0.7.5` exige React 19 vs SPA React 18; linha React-18 (0.5.x) ships source não-buildado + runtime `hono`. C = container React-19 isolado (zero conflito) servido em `studio.mcorch.com`/`video.mcorch.com` (OTD-VS-015 DNS=Sovereign), SPA integra como módulo (espelha `canvas-design`→`design.mcorch.com`); auth via SSO ES256 do cookie `.mcorch.com`; render no motor `video-render`/`video-bridge` JÁ PROVADO. Rota `/dashboard/canvas/video` ANTES de `canvas/:id` (FR-VS-022) | Sovereign |
+> 567:## §AG — Agency-Leverage Amendment (v1.1)
+> 571:> **Superset gate:** §1..§8 acima preservados verbatim (FR-VS-001..032 / NFR-VS-001..017 / OTD-VS-001..007 intactos). Esta seção apenas **APÊNDE**. A camada-agência é **estritamente aditiva**: `org_id`/`client_id` nullable ⇒ o caminho solo-creator (RLS `user_id = auth.uid()`) não regride (NFR-VS-022).
+> 658:-- NULL em qualquer das colunas = solo-creator (backward-compat · NFR-VS-022).
+> 734:| `custom_domain` (white-label) | Domain hijack — org B aponta `custom_domain` p/ recursos de org A; cert spoof | Spoofing / Tampering | **High** | `custom_domain UNIQUE`; provisão de vhost+TLS gated (OTD-VS-011, ação Sovereign); resolução de domínio sempre re-filtra por `org_id` da row (domínio nunca é a única chave de tenancy); TLS válido (NFR-VS-021) |
+> 821:| OTD-VS-008 | **Migration path** das rows `user_id` existentes (flat) p/ tenancy de org | Manter flat eternamente (`org_id/client_id` NULL) — solo é cidadão de 1ª classe | Backfill opcional: criar `organizations` "pessoal" 1:1 p/ usuários que viram agência (migra rows on-demand) | Forçar toda row p/ uma org (rejeitado — quebra solo) | **A + B** — solo permanece NULL (NFR-VS-022); quando um usuário cria org, oferece migrar SEUS renders p/ a org via tool explícita (nunca automático, nunca em massa). C rejeitado | Sovereign + Engineering |
+> 824:| OTD-VS-011 | **Custom-domain provisioning** (white-label TLS) | CF for SaaS / custom hostname (SSL automático por hostname de tenant) | nginx vhost + cert manual por domínio (precedente `design.mcorch.com`/`mcp.mcorch.com`) | Subdomínio MCORCH por org (`<slug>.mcorch.com`, sem domínio próprio) | **C p/ MVP, A p/ GA** — subdomínio por slug entrega white-label cedo sem provisão de cert por tenant; CF custom hostname (A) p/ domínio próprio na GA (ação Sovereign — DNS/cert); B é o fallback manual conhecido. `custom_domain UNIQUE` + re-filtro por `org_id` (NFR-VS-021) | Sovereign |
+> === SDD total lines ===
+> 836 docs/bok/video-studio/05-sdd.md
+> === existing canvas-design SOP for mirroring (head) ===
+> # SOP — Canvas Design (open-design) deploy, provision & operate
+> 
+> > **Lei 2 (Processo Antecipado).** Como tornar o módulo Canvas Design (sidecar open-design) funcional
+> > E2E: worker supervisor, provisionamento de provider (BYOK), acesso público (iframe/vhost) e o portão
+> > LGPD. BoK: `docs/bok/canvas-design/` (9/9 selada). Origem: validação E2E 2026-06-21 que achou o módulo
+> > scaffolded mas NÃO funcional (worker morto + iframe loopback + provider não configurado).
+> 
+> Relacionado: [[canvas-design-initiative]] · `nginx/design.mcorch.com.conf` · `scripts/design-bridge.ts`.
+> 
+> ---
+> 
+> ## ORO
+> 
+> | Papel | Quem |
+> |-------|------|
+> | **Operator** | MCORCH Master Execution Agent + Sovereign (passos de DNS/cert) |
+> | **Reviewer** | Sovereign + `/security-review` (antes de expor publicamente) |
+> | **Owner** | Sovereign — blast radius = credenciais BYOK em arquivo no container + dados de design (LGPD) |
+> 
+> ---
+> 
+> ## Arquitetura material (verificada 2026-06-21)
+> 
+> ```
+> Browser do user (login.mcorch.com, https)
+> ```
+
+## 🤖 Claude *(23:05:48)*
+
+
+## 🤖 Claude *(23:05:51)*
+
+O SDD já tem o §1.3 Amendment v0.3 (o flip A→C) + OTD-VS-005/VS-015 — minha implementação **realiza** isso. Vou adicionar uma emenda v0.4 concisa (a realização concreta + o contrato `/api` que você aprovou) + SOP de deploy, e committar. Leio o fim do SDD pra emendar limpo + escrevo o SOP:
+
+## 🤖 Claude *(23:05:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SDD tail (append anchor) ===\"; tail -5 docs/bok/video-studio/05-sdd.md\necho \"=== is dist tracked by git? ===\"; git check-ignore dist >/dev/null 2>&1 && echo \"dist gitignored (commit src only)\" || echo \"dist tracked\"",
+  "description": "Get SDD tail anchor + dist tracking status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SDD tail (append anchor) ===
+> Esta emenda v1.1 é a metade TÉCNICA (04-frd §AG + 05-sdd §AG). As IDs de montante que ela rastreia — **MR-VS-015..020** (01-mrd), **BR-VS-017..024** (02-brd), **PR-VS-018,019 + PR-VS-024..031** (03-prd), **KPI-VS-019..024 + QO-VS-008..009** (08-quality-metrics), e o amend das tabelas em **06-data-model §1.1** (`+org_id/client_id` + as 3 tabelas novas + os 2 RPCs) e do fluxo em **07-process-flow** (render escopado a cliente + client-portal approval) — devem ser apensadas na mesma campanha de emenda para fechar o superset MR→BR→PR→FR→SDD→Data→Process→KPI. Nenhuma ID existente foi renumerada ou removida em nenhum dos dois documentos tocados aqui.
+> 
+> ---
+> 
+> _Generated by MCORCH BoK Scribe Agent v1.0.0_
+> === is dist tracked by git? ===
+> dist gitignored (commit src only)
+> ```
+
+## 🤖 Claude *(23:06:13)*
+
+
+## 🤖 Claude *(23:06:14)*
+
+Vou emendar o SDD (v0.4 — a realização concreta + o contrato `/api`) e escrever o SOP de deploy, em paralelo:
+
+## 🤖 Claude *(23:06:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "old_string": "---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "---\n\n## \u00a7VS-UI \u2014 HyperFrames Studio editor: realiza\u00e7\u00e3o (Amendment v0.4 \u00b7 2026-06-24 \u00b7 FR-VS-021/022 \u00b7 realiza OTD-VS-005=C)\n\n> **Realiza** o flip OTD-VS-005 (A\u2192C) do Amendment v0.3 com prova material. Diretiva Sovereign: entregar o\n> editor vis\u00edvel ao Usu\u00e1rio Zero (cenas \u00b7 camadas \u00b7 overlays alpha \u00b7 efeitos \u00b7 transi\u00e7\u00f5es). Gate Lei 2 (o\n> contrato `/api`) cumprido ANTES do c\u00f3digo do bridge \u2014 fundamentado nos `.d.ts` publicados (n\u00e3o fabricado).\n\n### A.1 Arquitetura entregue (Fase A \u2014 authoring/preview/export local)\n\n```\nSPA MCORCH (/dashboard/canvas/video \u2014 VideoStudioEditorPage, React 18) \u2500\u2500 iframe \u2500\u2500\u25b6 video.mcorch.com\n  (CF orange + SSL Full + SSO gate ES256 [sso-auth-gate :8787, cookie .mcorch.com])\n    \u2514\u2500\u2500 nginx vhost video.mcorch.com.conf  \u2500\u2500 proxy 127.0.0.1:3210 (SSE-tuned, proxy_buffering off) \u2500\u2500\u25b6\n        systemd --user video-studio.service:  node v22 `hyperframes preview <projeto> --port 3210 --no-open`\n          (servidor oficial do Studio: StudioApp React 19 + Hono /api, UM processo standalone \u2192 ZERO\n           conflito com o SPA React 18; render/export local via Chrome[Playwright]+FFmpeg j\u00e1 no host)\n```\n\n**Decis\u00e3o de implanta\u00e7\u00e3o:** o isolamento React-19 que motivou \"container sidecar\" (v0.3) \u00e9 alcan\u00e7ado pelo\n`hyperframes preview` ser um **processo node separado** \u2014 ent\u00e3o a Fase A roda como **servi\u00e7o host systemd**\n(molde `video-bridge.service`/`design-bridge.service`), **sem Docker**. Containeriza\u00e7\u00e3o fica deferida at\u00e9 a\nnecessidade multi-tenant (OTD-VA-011). Provas materiais (2026-06-24): `video-studio.service` `active`;\n`curl 127.0.0.1:3210/` \u2192 **HTTP 200** `<title>HyperFrames Studio</title>`; `/api/projects` \u2192 **200**\n`[{id:\"mcorch-demo\", dir:\u2026, title:\u2026}]` (projeto 9:16 `--resolution portrait` semeado por `hyperframes init`).\n\n### A.2 Contrato `/api` (Lei 2 \u2014 `StudioApiAdapter`, fonte: `@hyperframes/core@0.7.5` `dist/studio-api/types.d.ts`)\n\n`createStudioApi(adapter: StudioApiAdapter): Hono` monta **todas** as rotas (`/api/projects`, `\u2026/files/*`,\n`/preview/*`, `\u2026/render`, `/render/:jobId/progress` SSE) internamente \u2192 **o host implementa S\u00d3 o adapter**.\n\n| M\u00e9todo (obrigat\u00f3rio) | Contrato | Realiza\u00e7\u00e3o MCORCH (Fase B) |\n|---|---|---|\n| `listProjects()` / `resolveProject(id)` | `ResolvedProject{id,dir,title?,sessionId?}` | store de projetos (Fase A: FS local; Fase B: Supabase Storage materializado em volume) |\n| `bundle(projectDir)` | `Promise<string\\|null>` (HTML \u00fanico) | `@hyperframes/core/compiler` `bundleToSingleHtml(dir)` |\n| `lint(html, opts?)` | `LintResult` | `@hyperframes/core/lint` |\n| `runtimeUrl: string` | URL do runtime injetado no preview | serve `@hyperframes/core/runtime` (IIFE) est\u00e1tico |\n| `rendersDir(project)` | dir de sa\u00edda | volume local (Fase A) / tmp + upload (Fase B) |\n| **`startRender(opts)`** | retorna `RenderJobState{id,status:rendering\\|complete\\|failed,progress,stage?,outputPath,error?}` mut\u00e1vel; `opts={project,outputPath,format(mp4\\|webm\\|mov),fps(rational),quality,jobId,outputResolution?,composition?,distinctId?}` | **o seam**: Fase A = engine local do CLI; **Fase B = `McorchAdapter` \u2192 POST `video-render` (engine=hyperframes, composition_html=bundle(dir), 1080\u00d71920, fps) \u2192 poll `video-render-poll` \u2192 muta o RenderJobState** |\n\nOpcionais (stub OK): `getProjectSignature` \u00b7 `transformPreviewHtml` \u00b7 `generateThumbnail` \u00b7 `resolveSession`\n\u00b7 `listRegistryCatalog` \u00b7 `installRegistryBlock`.\n\n### A.3 Render-parity (R1 \u2014 maior risco do blueprint) \u2014 resolvido por constru\u00e7\u00e3o\n\n`@hyperframes/core` exporta **`./runtime`** (IIFE `hyperframe.runtime.iife.js`) e **`./compiler`**\n(`bundleToSingleHtml`, que **embute** esse runtime no HTML final). O `adapter.runtimeUrl` serve **o mesmo**\nruntime ao preview. Logo, se o `McorchAdapter` (Fase B) renderiza o output de `bundleToSingleHtml` no nosso\nmotor, **preview e render usam a mesma sem\u00e2ntica de seek** (`frame=floor(time*fps)`) \u2014 gate emp\u00edrico #4\nmitigado sem reimplementar timing. (Hoje `render-core.ts` dirige um template fixo via `applyProps/applyFrame`;\na Fase B adiciona um path `composition_html` que carrega o bundle e dirige o runtime embutido.)\n\n### A.4 OTDs\n\n| OTD | Tema | Decis\u00e3o |\n|---|---|---|\n| **OTD-VS-005** | HyperFrames Studio mode | **C REALIZADA** (Fase A host service entregue + provada) |\n| **OTD-VS-015** | vhost `video.mcorch.com` | vhost ESCRITO (`nginx/video.mcorch.com.conf`); **cert self-signed + `ln -s`+reload = a\u00e7\u00e3o Sovereign** (2 sudo) |\n| **OTD-VS-016** | multi-projeto | `hyperframes preview` \u00e9 **single-project** (exige `index.html` no DIR). Fase A serve UM projeto can\u00f4nico (`mcorch-demo`). Switching multi-projeto = follow-up (parent-root n\u00e3o suportado pelo CLI 0.7.5) |\n| **OTD-VS-017** | render bridge (Fase B) | `McorchAdapter.startRender` \u2192 `video-render` (substitui engine local) + project store em Supabase Storage + auth JWT/PAT per-user; cobran\u00e7a \u00daNICA no nosso lado (prepaid, OTD-VA-010) \u2014 o studio nunca v\u00ea mcoCoins |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(23:07:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/video-studio-editor-deploy-and-provision.md",
+  "content": "# SOP \u2014 HyperFrames Video Studio editor: deploy, provision & operate\n\n> **Lei 2 (Processo Antecipado).** Como tornar o editor de v\u00eddeo HyperFrames (Fatia VS-UI) funcional E2E:\n> servidor preview (systemd host), acesso p\u00fablico (iframe/vhost + SSO), e o caminho de render. BoK:\n> `docs/bok/video-studio/` (9/9 selada) + SDD \u00a7VS-UI Amendment v0.4. Realiza OTD-VS-005 (C) / OTD-VS-015.\n\nRelacionado: [[project_video_studio]] \u00b7 `nginx/video.mcorch.com.conf` \u00b7 `~/.config/systemd/user/video-studio.service`\n\u00b7 precedente direto: `docs/processes/canvas-design-deploy-and-provision.md` (mesmo padr\u00e3o m\u00f3dulo-container).\n\n---\n\n## ORO\n\n| Papel | Quem |\n|-------|------|\n| **Operator** | MCORCH Master Execution Agent + Sovereign (passos sudo de cert/symlink) |\n| **Reviewer** | Sovereign + `/security-review` (antes de expor o render bridge Fase B) |\n| **Owner** | Sovereign \u2014 blast radius = preview server sem auth nativa (mitigado pelo SSO gate) + carteira (render Fase B) |\n\n---\n\n## Arquitetura material (verificada 2026-06-24)\n\n```\nSPA (/dashboard/canvas/video, React 18) \u2500\u2500iframe\u2500\u2500\u25b6 video.mcorch.com (CF orange + SSL Full + SSO gate)\n   nginx video.mcorch.com.conf \u2500\u2500proxy 127.0.0.1:3210 (SSE)\u2500\u2500\u25b6 video-studio.service (hyperframes preview, node v22)\n   render/export Fase A = engine local CLI (Chrome+FFmpeg no host). Fase B = McorchAdapter \u2192 video-render.\n```\n\nSingle-tenant Usu\u00e1rio Zero (OTD-VA-011). O preview server **n\u00e3o tem auth nativa** \u2192 o SSO gate do vhost \u00e9\no que o restringe \u00e0 sess\u00e3o MCORCH logada.\n\n---\n\n## Sequence (deploy do zero)\n\n| # | Passo | Comando / artefato | Crit\u00e9rio de sucesso material |\n|---|-------|--------------------|------------------------------|\n| 1 | Bin\u00e1rio global | `bun add -g hyperframes@0.7.5` | `/home/ubuntu/.bun/bin/hyperframes` existe; `node cli.js --version` \u2192 `0.7.5` (node **v22**, n\u00e3o v18) |\n| 2 | Projeto-semente 9:16 | `hyperframes init mcorch-demo --example warm-grain --resolution portrait --non-interactive --skip-transcribe --skip-skills` em `/home/ubuntu/.mcorch/video-studio/projects/` | `meta.json` + `index.html` + `compositions/*.html` presentes |\n| 3 | Servi\u00e7o systemd | `~/.config/systemd/user/video-studio.service` (ExecStart = **node v22 expl\u00edcito** + `cli.js preview <projeto> --port 3210 --no-open`) \u2192 `systemctl --user enable --now` | `Active: active (running)`; `curl 127.0.0.1:3210/` \u2192 200 `<title>HyperFrames Studio</title>`; `/api/projects` \u2192 200 com o projeto |\n| 4 | vhost (Agent escreve) | `nginx/video.mcorch.com.conf` (espelha `design.mcorch.com`: SSO `auth_request` + proxy 3210 + `proxy_buffering off`) | arquivo no repo |\n| 5 | **Cert origem (Sovereign, sudo)** | `sudo openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -keyout /etc/nginx/ssl-certificates/video.mcorch.com.key -out /etc/nginx/ssl-certificates/video.mcorch.com.crt -subj \"/CN=video.mcorch.com\"` | os 2 arquivos existem |\n| 6 | **Symlink + reload (Sovereign, sudo)** | `sudo ln -s /home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf /etc/nginx/sites-enabled/ && sudo nginx -t && sudo systemctl reload nginx` | `nginx -t` OK; reload sem erro |\n| 7 | DNS (Sovereign) | A `video.mcorch.com` \u2192 IP, CF orange | \u2705 j\u00e1 feito |\n| 8 | Frontend | `/dashboard/canvas/video` (VideoStudioEditorPage iframe) \u2014 rota ANTES de `canvas/:id` | chunk no `dist/` referencia `video.mcorch.com`; nav \"V\u00eddeo\" sob Canvas Studio |\n\n---\n\n## Verification gates\n\n1. `systemctl --user is-active video-studio.service` \u2192 `active`.\n2. `curl -s 127.0.0.1:3210/api/projects` \u2192 200 com \u22651 projeto.\n3. P\u00f3s-cert+symlink: abrir `https://video.mcorch.com` logado \u2192 editor carrega (N\u00c3O testar por `curl` do datacenter: CF challenge devolve 403 \u2014 usar browser real ou o iframe logado).\n4. `/dashboard/canvas/video` no SPA \u2192 iframe carrega o editor.\n\n---\n\n## Recovery\n\n| Falha | Causa prov\u00e1vel | Fix |\n|-------|----------------|-----|\n| servi\u00e7o crash-loop \"styleText\"/\"v18\" | systemd pegou `/usr/bin/node` v18 | ExecStart com node v22 EXPL\u00cdCITO (`/home/ubuntu/.local/bin/node \u2026cli.js`) \u2014 `env node` do shebang resolve v18 sob systemd |\n| \"No composition found\" | `preview` aponta p/ dir SEM `index.html` (dir-pai) | apontar p/ um **projeto** (tem `index.html`), n\u00e3o o root multi-projeto |\n| `video.mcorch.com` \u2192 403 no browser | CF challenge por IP de datacenter | Skip rule CF p/ `http.host eq \"video.mcorch.com\"` + desligar **\"N\u00edvel de Seguran\u00e7a\"** (ver `wordpress-cf-publish-unblock.md`) |\n| 502 atr\u00e1s do vhost | servi\u00e7o caiu / porta errada | `systemctl --user restart video-studio.service`; confirmar `:3210` LISTEN |\n| `pkill -f hyperframes` mata o pr\u00f3prio shell | o padr\u00e3o casa a linha de comando do shell | matar por pid da porta (`ss -ltnp \\| grep :3210`), nunca `pkill -f hyperframes` |\n\n---\n\n## Success signal\n\n`https://video.mcorch.com` (logado) abre o editor NLE HyperFrames com o projeto 9:16; o Sovereign edita\ncenas/camadas/overlays-alpha/efeitos/transi\u00e7\u00f5es e d\u00e1 preview ao vivo. **Fase B** (pr\u00f3xima): bot\u00e3o Export \u2192\n`McorchAdapter.startRender` \u2192 `video-render` (motor MCORCH + mcoCoins prepaid) em vez do engine local.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/video-studio-editor-deploy-and-provision.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:07:18)*
+
+
+## 🤖 Claude *(23:07:18)*
+
+SOP escrito. O Edit do SDD falhou porque o li via Bash, não via Read. Leio o trecho e emendo:
+
+## 🤖 Claude *(23:07:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "offset": 828,
+  "limit": 9
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 828	> **Plan tiers (amenda a tabela Starter/Pro/Enterprise existente):** adicionar **Agency** (ex.: 25000 mco/mês + N assentos + wholesale rate bulk-discount + white-label). Revenue split MCORCH↔agência↔cliente = OTD-VS-009 (recomendação A). A coluna `organizations.plan_tier ∈ {agency,enterprise}` distingue o tenant-agência dos planos individuais; a tabela canônica de mcoCoins/plano vive no 03-prd + `src/lib/billing.ts`.
+> 829	
+> 830	### §AG.7 Cross-doc note
+> 831	
+> 832	Esta emenda v1.1 é a metade TÉCNICA (04-frd §AG + 05-sdd §AG). As IDs de montante que ela rastreia — **MR-VS-015..020** (01-mrd), **BR-VS-017..024** (02-brd), **PR-VS-018,019 + PR-VS-024..031** (03-prd), **KPI-VS-019..024 + QO-VS-008..009** (08-quality-metrics), e o amend das tabelas em **06-data-model §1.1** (`+org_id/client_id` + as 3 tabelas novas + os 2 RPCs) e do fluxo em **07-process-flow** (render escopado a cliente + client-portal approval) — devem ser apensadas na mesma campanha de emenda para fechar o superset MR→BR→PR→FR→SDD→Data→Process→KPI. Nenhuma ID existente foi renumerada ou removida em nenhum dos dois documentos tocados aqui.
+> 833	
+> 834	---
+> 835	
+> 836	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(23:07:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "old_string": "Esta emenda v1.1 \u00e9 a metade T\u00c9CNICA (04-frd \u00a7AG + 05-sdd \u00a7AG). As IDs de montante que ela rastreia \u2014 **MR-VS-015..020** (01-mrd), **BR-VS-017..024** (02-brd), **PR-VS-018,019 + PR-VS-024..031** (03-prd), **KPI-VS-019..024 + QO-VS-008..009** (08-quality-metrics), e o amend das tabelas em **06-data-model \u00a71.1** (`+org_id/client_id` + as 3 tabelas novas + os 2 RPCs) e do fluxo em **07-process-flow** (render escopado a cliente + client-portal approval) \u2014 devem ser apensadas na mesma campanha de emenda para fechar o superset MR\u2192BR\u2192PR\u2192FR\u2192SDD\u2192Data\u2192Process\u2192KPI. Nenhuma ID existente foi renumerada ou removida em nenhum dos dois documentos tocados aqui.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "Esta emenda v1.1 \u00e9 a metade T\u00c9CNICA (04-frd \u00a7AG + 05-sdd \u00a7AG). As IDs de montante que ela rastreia \u2014 **MR-VS-015..020** (01-mrd), **BR-VS-017..024** (02-brd), **PR-VS-018,019 + PR-VS-024..031** (03-prd), **KPI-VS-019..024 + QO-VS-008..009** (08-quality-metrics), e o amend das tabelas em **06-data-model \u00a71.1** (`+org_id/client_id` + as 3 tabelas novas + os 2 RPCs) e do fluxo em **07-process-flow** (render escopado a cliente + client-portal approval) \u2014 devem ser apensadas na mesma campanha de emenda para fechar o superset MR\u2192BR\u2192PR\u2192FR\u2192SDD\u2192Data\u2192Process\u2192KPI. Nenhuma ID existente foi renumerada ou removida em nenhum dos dois documentos tocados aqui.\n\n---\n\n## \u00a7VS-UI \u2014 HyperFrames Studio editor: realiza\u00e7\u00e3o (Amendment v0.4 \u00b7 2026-06-24 \u00b7 FR-VS-021/022 \u00b7 realiza OTD-VS-005=C)\n\n> **Realiza** o flip OTD-VS-005 (A\u2192C) do Amendment v0.3 com prova material. Diretiva Sovereign: entregar o\n> editor vis\u00edvel ao Usu\u00e1rio Zero (cenas \u00b7 camadas \u00b7 overlays alpha \u00b7 efeitos \u00b7 transi\u00e7\u00f5es). Gate Lei 2 (o\n> contrato `/api`) cumprido ANTES do c\u00f3digo do bridge \u2014 fundamentado nos `.d.ts` publicados (n\u00e3o fabricado).\n\n### A.1 Arquitetura entregue (Fase A \u2014 authoring/preview/export local)\n\n```\nSPA MCORCH (/dashboard/canvas/video \u2014 VideoStudioEditorPage, React 18) \u2500\u2500 iframe \u2500\u2500\u25b6 video.mcorch.com\n  (CF orange + SSL Full + SSO gate ES256 [sso-auth-gate :8787, cookie .mcorch.com])\n    \u2514\u2500\u2500 nginx vhost video.mcorch.com.conf  \u2500\u2500 proxy 127.0.0.1:3210 (SSE-tuned, proxy_buffering off) \u2500\u2500\u25b6\n        systemd --user video-studio.service:  node v22 `hyperframes preview <projeto> --port 3210 --no-open`\n          (servidor oficial do Studio: StudioApp React 19 + Hono /api, UM processo standalone \u2192 ZERO\n           conflito com o SPA React 18; render/export local via Chrome[Playwright]+FFmpeg j\u00e1 no host)\n```\n\n**Decis\u00e3o de implanta\u00e7\u00e3o:** o isolamento React-19 que motivou \"container sidecar\" (v0.3) \u00e9 alcan\u00e7ado pelo\n`hyperframes preview` ser um **processo node separado** \u2014 ent\u00e3o a Fase A roda como **servi\u00e7o host systemd**\n(molde `video-bridge.service`/`design-bridge.service`), **sem Docker**. Containeriza\u00e7\u00e3o fica deferida at\u00e9 a\nnecessidade multi-tenant (OTD-VA-011). Provas materiais (2026-06-24): `video-studio.service` `active`;\n`curl 127.0.0.1:3210/` \u2192 **HTTP 200** `<title>HyperFrames Studio</title>`; `/api/projects` \u2192 **200**\n`[{id:\"mcorch-demo\", dir:\u2026, title:\u2026}]` (projeto 9:16 `--resolution portrait` semeado por `hyperframes init`).\n\n### A.2 Contrato `/api` (Lei 2 \u2014 `StudioApiAdapter`, fonte: `@hyperframes/core@0.7.5` `dist/studio-api/types.d.ts`)\n\n`createStudioApi(adapter: StudioApiAdapter): Hono` monta **todas** as rotas (`/api/projects`, `\u2026/files/*`,\n`/preview/*`, `\u2026/render`, `/render/:jobId/progress` SSE) internamente \u2192 **o host implementa S\u00d3 o adapter**.\n\n| M\u00e9todo (obrigat\u00f3rio) | Contrato | Realiza\u00e7\u00e3o MCORCH (Fase B) |\n|---|---|---|\n| `listProjects()` / `resolveProject(id)` | `ResolvedProject{id,dir,title?,sessionId?}` | store de projetos (Fase A: FS local; Fase B: Supabase Storage materializado em volume) |\n| `bundle(projectDir)` | `Promise<string\\|null>` (HTML \u00fanico) | `@hyperframes/core/compiler` `bundleToSingleHtml(dir)` |\n| `lint(html, opts?)` | `LintResult` | `@hyperframes/core/lint` |\n| `runtimeUrl: string` | URL do runtime injetado no preview | serve `@hyperframes/core/runtime` (IIFE) est\u00e1tico |\n| `rendersDir(project)` | dir de sa\u00edda | volume local (Fase A) / tmp + upload (Fase B) |\n| **`startRender(opts)`** | retorna `RenderJobState{id,status:rendering\\|complete\\|failed,progress,stage?,outputPath,error?}` mut\u00e1vel; `opts={project,outputPath,format(mp4\\|webm\\|mov),fps(rational),quality,jobId,outputResolution?,composition?,distinctId?}` | **o seam**: Fase A = engine local do CLI; **Fase B = `McorchAdapter` \u2192 POST `video-render` (engine=hyperframes, composition_html=bundle(dir), 1080\u00d71920, fps) \u2192 poll `video-render-poll` \u2192 muta o RenderJobState** |\n\nOpcionais (stub OK): `getProjectSignature` \u00b7 `transformPreviewHtml` \u00b7 `generateThumbnail` \u00b7 `resolveSession`\n\u00b7 `listRegistryCatalog` \u00b7 `installRegistryBlock`.\n\n### A.3 Render-parity (R1 \u2014 maior risco do blueprint) \u2014 resolvido por constru\u00e7\u00e3o\n\n`@hyperframes/core` exporta **`./runtime`** (IIFE `hyperframe.runtime.iife.js`) e **`./compiler`**\n(`bundleToSingleHtml`, que **embute** esse runtime no HTML final). O `adapter.runtimeUrl` serve **o mesmo**\nruntime ao preview. Logo, se o `McorchAdapter` (Fase B) renderiza o output de `bundleToSingleHtml` no nosso\nmotor, **preview e render usam a mesma sem\u00e2ntica de seek** (`frame=floor(time*fps)`) \u2014 gate emp\u00edrico #4\nmitigado sem reimplementar timing. (Hoje `render-core.ts` dirige um template fixo via `applyProps/applyFrame`;\na Fase B adiciona um path `composition_html` que carrega o bundle e dirige o runtime embutido.)\n\n### A.4 OTDs\n\n| OTD | Tema | Decis\u00e3o |\n|---|---|---|\n| **OTD-VS-005** | HyperFrames Studio mode | **C REALIZADA** (Fase A host service entregue + provada) |\n| **OTD-VS-015** | vhost `video.mcorch.com` | vhost ESCRITO (`nginx/video.mcorch.com.conf`); **cert self-signed + `ln -s`+reload = a\u00e7\u00e3o Sovereign** (2 sudo) |\n| **OTD-VS-016** | multi-projeto | `hyperframes preview` \u00e9 **single-project** (exige `index.html` no DIR). Fase A serve UM projeto can\u00f4nico (`mcorch-demo`). Switching multi-projeto = follow-up (parent-root n\u00e3o suportado pelo CLI 0.7.5) |\n| **OTD-VS-017** | render bridge (Fase B) | `McorchAdapter.startRender` \u2192 `video-render` (substitui engine local) + project store em Supabase Storage + auth JWT/PAT per-user; cobran\u00e7a \u00daNICA no nosso lado (prepaid, OTD-VA-010) \u2014 o studio nunca v\u00ea mcoCoins |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:08:03)*
+
+
+## 🤖 Claude *(23:08:04)*
+
+SDD emendado. Agora atualizo o Key Files do CLAUDE.md (conciso) e committo granular. Acho o anchor:
+
+## 🤖 Claude *(23:08:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"HyperFrames motor \\(render core\" CLAUDE.md | head -2\ngit status --short",
+  "description": "Find CLAUDE.md anchor + git status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 427:| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920 determinístico, sha256-idêntico NFR-VS-016) · `scripts/hyperframes/templates/viral-short-9x16.html` (template determinístico, props via textContent XSS-safe) · `scripts/video-bridge.ts` (worker host molde design-bridge: claim atômico `video_renders` engine=hyperframes → render → bucket `video-studio-assets` → `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |
+>  M docs/bok/video-studio/05-sdd.md
+>  M src/App.tsx
+>  M src/components/dashboard/DashboardSidebar.tsx
+> ?? docs/processes/video-studio-editor-deploy-and-provision.md
+> ?? nginx/video.mcorch.com.conf
+> ?? src/pages/VideoStudioEditorPage.tsx
+> ```
+
+## 🤖 Claude *(23:08:10)*
+
+
+## 🤖 Claude *(23:08:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |",
+  "new_string": "; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |\n| **HyperFrames Studio editor (Fatia VS-UI \u2014 Fase A VIVO)** | `~/.config/systemd/user/video-studio.service` (servidor oficial `hyperframes preview` node v22, host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-demo`) \u00b7 `nginx/video.mcorch.com.conf` (vhost SSO-gated, espelha `design.mcorch.com`; cert+symlink = a\u00e7\u00e3o Sovereign) \u00b7 `src/pages/VideoStudioEditorPage.tsx` (iframe `/dashboard/canvas/video`, sub-item \"V\u00eddeo\" no Canvas Studio) \u00b7 contrato `/api` (`StudioApiAdapter`) + Fase B (`McorchAdapter.startRender`\u2192`video-render`) em SDD \u00a7VS-UI Amendment v0.4 \u00b7 SOP `docs/processes/video-studio-editor-deploy-and-provision.md` |"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(23:08:20)*
+
+
+## 🤖 Claude *(23:08:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 427,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 427	| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920 determinístico, sha256-idêntico NFR-VS-016) · `scripts/hyperframes/templates/viral-short-9x16.html` (template determinístico, props via textContent XSS-safe) · `scripts/video-bridge.ts` (worker host molde design-bridge: claim atômico `video_renders` engine=hyperframes → render → bucket `video-studio-assets` → `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |
+> ```
+
+## 🤖 Claude *(23:08:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |",
+  "new_string": "; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |\n| **HyperFrames Studio editor (Fatia VS-UI \u2014 Fase A VIVO)** | `~/.config/systemd/user/video-studio.service` (servidor oficial `hyperframes preview` node v22, host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-demo`) \u00b7 `nginx/video.mcorch.com.conf` (vhost SSO-gated, espelha `design.mcorch.com`; cert+symlink = a\u00e7\u00e3o Sovereign) \u00b7 `src/pages/VideoStudioEditorPage.tsx` (iframe `/dashboard/canvas/video`, sub-item \"V\u00eddeo\" no Canvas Studio) \u00b7 contrato `/api` (`StudioApiAdapter`) + Fase B (`McorchAdapter.startRender`\u2192`video-render`) em SDD \u00a7VS-UI Amendment v0.4 \u00b7 SOP `docs/processes/video-studio-editor-deploy-and-provision.md` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:08:34)*
+
+
+## 🤖 Claude *(23:08:35)*
+
+Tudo escrito. Committo granular (convenção do projeto: sem Co-Authored-By, corpo milestone):
+
+## 🤖 Claude *(23:08:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/pages/VideoStudioEditorPage.tsx src/App.tsx src/components/dashboard/DashboardSidebar.tsx\ngit commit -q -F - <<'EOF'\nfeat(video-studio): editor HyperFrames no dashboard (/dashboard/canvas/video)\n\nEntrega ao Usu\u00e1rio Zero o editor NLE multi-camada (cenas, camadas, overlays\nem alpha, efeitos, transi\u00e7\u00f5es) como m\u00f3dulo do Canvas Studio \u2014 padr\u00e3o\nm\u00f3dulo-container (espelha Canvas Design \u2192 design.mcorch.com).\n\n- VideoStudioEditorPage: iframe full-bleed a video.mcorch.com\n- rota canvas/video declarada ANTES de canvas/:id (FR-VS-022, evita shadow)\n- sub-item \"V\u00eddeo\" sob Canvas Studio na sidebar (\u00edcone Film)\n\nO editor roda atr\u00e1s do SSO gate; React 19 isolado no servidor preview (sem\nconflito com o SPA React 18). Realiza OTD-VS-005 (C).\nEOF\necho \"--- commit 1 done ---\"\ngit add nginx/video.mcorch.com.conf docs/bok/video-studio/05-sdd.md docs/processes/video-studio-editor-deploy-and-provision.md CLAUDE.md\ngit commit -q -F - <<'EOF'\nfeat(video-studio): vhost video.mcorch.com + contrato /api selado (Fatia VS-UI)\n\nFase A do editor HyperFrames VIVA e provada material: servidor oficial\n`hyperframes preview` (node v22) atr\u00e1s de video.mcorch.com, sob o SSO gate.\n\n- nginx/video.mcorch.com.conf: vhost SSO-gated (auth_request) + proxy SSE ao\n  preview server (127.0.0.1:3210), espelha design.mcorch.com. Cert self-signed\n  + symlink+reload = a\u00e7\u00e3o Sovereign (2 sudo); DNS j\u00e1 apontado.\n- SDD \u00a7VS-UI Amendment v0.4: contrato /api (StudioApiAdapter dos .d.ts\n  publicados \u2014 Lei 2 cumprida ANTES do bridge) + render-parity resolvido por\n  constru\u00e7\u00e3o (core/runtime IIFE compartilhado preview\u2194motor) + OTD-VS-016/017.\n- SOP video-studio-editor-deploy-and-provision.md (Operator/Sequence/\n  Verification/Recovery/Success) + Key Files.\n\nProva: video-studio.service active; curl :3210 \u2192 200 HyperFrames Studio;\n/api/projects \u2192 projeto 9:16 mcorch-demo. Fase B (pr\u00f3xima): McorchAdapter \u2192\nvideo-render (motor MCORCH + mcoCoins prepaid).\nEOF\necho \"--- commit 2 done ---\"\ngit log --oneline -3",
+  "description": "Commit frontend + infra/docs granularly"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:08PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:08PM[0m [32mINF[0m scan completed in 6.61ms
+> [90m8:08PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> --- commit 1 done ---
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:08PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:08PM[0m [32mINF[0m scan completed in 14.2ms
+> [90m8:08PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> --- commit 2 done ---
+> 94ae0db feat(video-studio): vhost video.mcorch.com + contrato /api selado (Fatia VS-UI)
+> bc5f0e5 feat(video-studio): editor HyperFrames no dashboard (/dashboard/canvas/video)
+> 10d4699 chore(sprint): update sprint-priorities — v6.49.1 Studio blueprint + gap de billing do vídeo
+> ```
+
+## 🤖 Claude *(23:09:01)*
+
+
+## 🤖 Claude *(23:09:02)*
+
+Ambos os commits passaram (gitleaks limpo): `bc5f0e5` (editor no dashboard) + `94ae0db` (vhost + contrato /api). Atualizo a memória do módulo com o estado novo (Fase A viva + gotchas) e te entrego o resumo + seus 2 comandos:
+
+## 🤖 Claude *(23:09:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project-video-studio
+> 3	description: Módulo Vídeo (video-studio) — BoK 9/9 selada; Fatia 1 SHIPPED; Fatia VS-2 motor HyperFrames determinístico VIVO (2026-06-24); editor Studio = módulo-container (blueprint pronto)
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: f232593a-1ef8-4045-8b83-67389d10213f
+> 8	---
+> 9	
+> 10	Módulo **Vídeo** (`video-studio`): dois motores criativos isolados sob MCORCH — (A) **Faceless Studio** (estúdio E2E sobre o n8n `e7e3beeb58f7411a` em `/home/gcrUX/studio`, repo externo single-tenant) + (B) **HyperFrames editor** (NLE HTML→MP4, Apache-2.0). BoK **9/9 selada** (commit `f003e32`) + emenda v1.1 (camada de alavancagem de agência: org→clients, white-label, wholesale mcoCoins). Posicionamento: "AI content agency in a box".
+> 11	
+> 12	**Fundação já landada antes desta sessão:** SSO R3 (`sso-auth-gate.service` vivo, gate genérico serve `video.`) + tenancy de agência (`organizations`/`organization_members`/`clients` + RPC `create_organization` + helpers anti-recursão `is_org_member`/`org_role`) — migrations `20260622030000/030100`, **vivas no DB**.
+> 13	
+> 14	**Fatia 1 SHIPPED (2026-06-22, commits `c92850f` + `e3b0716`):** domínio + contrato edge, tenancy-aware desde o nascimento (org_id/client_id NULLABLE = solo backward-compat).
+> ```
+
+## 🤖 Claude *(23:09:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "old_string": "**Fatia 1 SHIPPED (2026-06-22, commits `c92850f` + `e3b0716`):** dom\u00ednio + contrato edge, tenancy-aware desde o nascimento (org_id/client_id NULLABLE = solo backward-compat).",
+  "new_string": "**Fatia VS-UI Fase A VIVA (2026-06-24, commits `bc5f0e5` + `94ae0db`):** editor HyperFrames NLE ENTREGUE \u2014 diretiva Sovereign \"entregar valor vis\u00edvel, menos t\u00e9cnico\" ([[feedback_deliver_user_value_not_plumbing]]). **Decis\u00e3o-chave material:** o servidor oficial **`hyperframes preview`** (CLI unscoped `hyperframes@0.7.5`, N\u00c3O `@hyperframes/cli` que n\u00e3o existe) \u00c9 o editor completo (StudioApp React 19 + Hono `/api`) \u2014 roda como **processo node standalone** \u2192 o conflito React 19/18 some SEM Docker. Implantado como **servi\u00e7o host systemd `video-studio.service`** (molde video-bridge): `node v22 EXPL\u00cdCITO` (`/home/ubuntu/.local/bin/node \u2026/hyperframes/dist/cli.js preview <projeto> --port 3210 --no-open`) \u2014 \u26a0\ufe0f systemd pega `/usr/bin/node` **v18** que quebra com `styleText`/util; o `env node` do shebang N\u00c3O resolve v22. Projeto 9:16 semeado: `hyperframes init mcorch-demo --example warm-grain --resolution portrait --non-interactive`. **PROVA:** `active`, `curl :3210/`\u2192200 `HyperFrames Studio`, `/api/projects`\u2192200 com o projeto. Frontend: `VideoStudioEditorPage` iframe `/dashboard/canvas/video` (rota ANTES de `canvas/:id`), nav \"V\u00eddeo\" no Canvas Studio, build deployado (chunk `VideoStudioEditorPage-CCjrPhI0`). vhost `nginx/video.mcorch.com.conf` (SSO-gated, espelha design). **Contrato `/api` (Lei 2) selado dos `.d.ts` publicados** \u2014 `StudioApiAdapter` {listProjects,resolveProject,bundle\u2192`bundleToSingleHtml`,lint,runtimeUrl,rendersDir,**startRender**}; `createStudioApi(adapter)` monta TODAS as rotas \u2192 host implementa S\u00d3 o adapter. **Render-parity (R1) resolvido por constru\u00e7\u00e3o:** `@hyperframes/core/runtime` IIFE = mesmo runtime no preview e (Fase B) no nosso motor. SDD \u00a7VS-UI Amendment v0.4 + SOP `video-studio-editor-deploy-and-provision.md`. **GOTCHAS:** `preview` \u00e9 **single-project** (exige `index.html` no DIR, n\u00e3o aceita dir-pai \u2192 OTD-VS-016); `pkill -f hyperframes` **mata o pr\u00f3prio shell** (a linha de comando casa) \u2014 matar por pid da porta. **PENDENTE Sovereign (2 sudo):** cert self-signed `video.mcorch.com.{key,crt}` + `ln -s`+`nginx -t`+reload (DNS j\u00e1 feito). **Fase B (pr\u00f3xima):** `McorchAdapter.startRender`\u2192`video-render` (motor MCORCH + mcoCoins prepaid) substitui o engine local do CLI + project store em Supabase Storage. \u26a0\ufe0f `pr\u00e9-VS-UI` o blueprint dizia `studio.mcorch.com`; nome adotado = **`video.mcorch.com`** (sso-gate j\u00e1 o lista).\n\n**Fatia 1 SHIPPED (2026-06-22, commits `c92850f` + `e3b0716`):** dom\u00ednio + contrato edge, tenancy-aware desde o nascimento (org_id/client_id NULLABLE = solo backward-compat)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:09:36)*
+
+
+## 🤖 Claude *(23:09:36)*
+
+Adiciono o ponteiro da nova memória de feedback no índice:
+
+## 🤖 Claude *(23:09:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "S\u00f3 2 importadores redeploy.",
+  "new_string": "S\u00f3 2 importadores redeploy.\n- [Entregar valor vis\u00edvel ao Usu\u00e1rio Zero, menos plumbing t\u00e9cnico](feedback_deliver_user_value_not_plumbing.md) \u2014 Diretiva Sovereign 2026-06-24: \"voc\u00ea est\u00e1 muito t\u00e9cnico e n\u00e3o entrega valor final\". Quer o editor HyperFrames rodando (timeline multi-camada, overlays alpha, efeitos/transi\u00e7\u00f5es). Priorizar caminho curto at\u00e9 algo que ele ABRE e TOCA; Lei 2 como meio, lean."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:09:43)*
+
+
+## 🤖 Claude *(23:09:44)*
+
+Verificação final de que o serviço segue de pé, e então o resumo + seus comandos:
+
+## 🤖 Claude *(23:09:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== video-studio.service ===\"; systemctl --user is-active video-studio.service\necho \"=== editor serving ===\"; curl -s -o /dev/null -m 10 -w \"root: HTTP %{http_code}\\n\" http://127.0.0.1:3210/\ncurl -s -m 10 http://127.0.0.1:3210/api/projects -w \" [HTTP %{http_code}]\\n\" 2>&1 | head -2\necho \"=== cert present? (Sovereign step 5 pending) ===\"; sudo test -f /etc/nginx/ssl-certificates/video.mcorch.com.crt 2>/dev/null && echo \"cert EXISTS\" || echo \"cert MISSING (Sovereign sudo step pendente)\"",
+  "description": "Final verification of service + cert state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video-studio.service ===
+> active
+> === editor serving ===
+> root: HTTP 200
+> {"projects":[{"id":"mcorch-demo","dir":"/home/ubuntu/.mcorch/video-studio/projects/mcorch-demo","title":"mcorch-demo"}]} [HTTP 200]
+> === cert present? (Sovereign step 5 pending) ===
+> cert MISSING (Sovereign sudo step pendente)
+> ```
+
+## 🤖 Claude *(23:09:53)*
+
+
+## 🤖 Claude *(23:10:13)*
+
+Pronto. O editor está **construído e rodando** na nossa infra. Resumo direto:
+
+## ✅ O que ficou pronto agora (valor entregue)
+
+O **editor HyperFrames** — o NLE multi-camada de verdade (timeline com tracks/camadas, overlays de vídeo em **alpha**, efeitos, transições, preview ao vivo) — está **vivo** em `video-studio.service` (provado: `active`, `HTTP 200`, projeto 9:16 carregado). É o servidor oficial do HyperFrames Studio, com um projeto vertical já semeado pra você editar.
+
+No app, criei o acesso: **Canvas Studio → "Vídeo"** (`/dashboard/canvas/video`) — já buildado e no ar.
+
+## 🔑 Falta SÓ do seu lado: 2 comandos sudo (para o navegador alcançar o editor)
+
+O DNS você já fez. Faltam o cert de origem e o symlink+reload (o nginx é root, eu não tenho sudo):
+
+```bash
+# 1) cert self-signed (CF Full aceita)
+sudo openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+  -keyout /etc/nginx/ssl-certificates/video.mcorch.com.key \
+  -out    /etc/nginx/ssl-certificates/video.mcorch.com.crt \
+  -subj "/CN=video.mcorch.com"
+
+# 2) ativar o vhost
+sudo ln -s /home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf /etc/nginx/sites-enabled/ \
+  && sudo nginx -t && sudo systemctl reload nginx
+```
+
+Depois disso: abra **`https://video.mcorch.com`** (ou o item **Vídeo** no dashboard) logado → o editor carrega. Se der 403, é o challenge do Cloudflare por IP de datacenter → regra WAF Skip pro host `video.mcorch.com` desligando **"Nível de Segurança"** (igual fizemos no WordPress) — mas em browser real normalmente não dispara.
+
+## 📐 Como cheguei aqui (1 linha de cada decisão)
+
+- O `hyperframes preview` oficial **É** o editor completo → montei ele unmodified, sem reconstruir UI.
+- Como é processo node separado, o conflito React 19/18 sumiu **sem Docker** → rodei como serviço host (igual ao `video-bridge`).
+- Contrato `/api` (a emenda BoK que você aprovou) selei dos `.d.ts` publicados — eu implemento só o `McorchAdapter`, o resto o HyperFrames já faz.
+- **Render-parity** (o maior risco do blueprint) resolvido por construção: o runtime do preview é o mesmo que o nosso motor vai usar.
+
+Commits: `bc5f0e5` (editor no dashboard) + `94ae0db` (vhost + contrato `/api` + SOP). `/security-review` não foi necessário aqui (sem migration/edge nova; o preview é gated por SSO).
+
+## ▶️ Fase B (próxima) — fechar o loop com o nosso render
+
+Hoje o **Export** do editor usa o render local do CLI (Chrome+FFmpeg do host) — já funciona. A Fase B troca isso pelo `McorchAdapter.startRender → video-render` (nosso motor + bucket + **mcoCoins prepaid**), e troca o store de projetos local por Supabase Storage. Aí o editor fica 100% dentro da nossa economia/malha.
+
+Assim que você rodar os 2 comandos, me diz que eu verifico o E2E logado e a gente segue pra Fase B (ou pro 1º ciclo pago de vídeo autônomo, o que você priorizar).
+
+## 👤 User *(23:13:37)*
+
+ubuntu@panel:/$ sudo openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+  -keyout /etc/nginx/ssl-certificates/video.mcorch.com.key \
+  -out    /etc/nginx/ssl-certificates/video.mcorch.com.crt \
+  -subj "/CN=video.mcorch.com"
+                              
+sudo ln -s /home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf /etc/nginx/sites-enabled/ \
+                                                                                                             
+  && sudo nginx -t && sudo systemctl reload nginx                                                            
+..+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*......+.....+......+.+..+.......+...........+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.....+...+..+.........+.+...+..+......+...+............+...............+...+....+...+.........+.....+................+...+.....+....+..+.........+.+.........+............+..+...+....+...+..+.........+....+...........+....+...+...+.....+.........+...+...+....+...........+............+..........+.........+........+.+.........+.....+.+...........+....+.....+......+.+.................+...+...+.+...+..+.............+..+.+............+............+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.+.+........+...+.........+.............+......+..............+...+....+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*......+...+....+............+.....+......+...+.+...+...+..+......+.+...+........+......................+...............+.....+.......+.....+.+..+...........................+...+.......+...+.................+...+.+..+.......+...........+..........+.........+...+....................+.......+...+..................+............+.....+....+........+..........+...+.....+.........+.........+.........+......+....+........+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-----
+nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/sites-enabled/custom-domain.conf:4
+nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/sites-enabled/custom-domain.conf:5
+nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/sites-enabled/n8n.gcrux.com.conf:7
+nginx: [warn] protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/n8n.gcrux.com.conf:7
+nginx: [warn] protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/tradeux.gcrux.com.conf:5
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/agno.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/api.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/claw.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/nginx/ssl-certificates/custom-domain.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/dash.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/design.mcorch.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, no OCSP responder URL in the certificate "/etc/nginx/ssl-certificates/maa.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/mcp.mcorch.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/n8n.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/tradeux.gcrux.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/video.mcorch.com.crt"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/[www.mcorch.com.crt](https://www.mcorch.com.crt)"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/[www.mcorch.com.crt](https://www.mcorch.com.crt)"
+nginx: [warn] "ssl_stapling" ignored, issuer certificate not found for certificate "/etc/nginx/ssl-certificates/[www.mcorch.com.crt](https://www.mcorch.com.crt)"
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+## 🤖 Claude *(23:13:50)*
+
+
+## 🤖 Claude *(23:13:52)*
+
+Você rodou tudo: cert gerado, `nginx -t` → **"syntax is ok / test is successful"** (só warnings benignos de `ssl_stapling`/`http2` que TODOS os vhosts têm — nenhum erro), e o reload passou no `&&`. Deixa eu **verificar materialmente** o origin (Lei 1) — não dá pra curl pelo CF do datacenter (challenge), mas eu bato direto no nginx local com o SNI certo:
+
+## 🤖 Claude *(23:13:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== cert agora existe? ===\"; sudo test -f /etc/nginx/ssl-certificates/video.mcorch.com.crt && echo \"cert OK\" || echo \"cert MISSING\"\necho \"\"; echo \"=== symlink ativo? ===\"; ls -la /etc/nginx/sites-enabled/video.mcorch.com.conf 2>/dev/null || echo \"no symlink\"\necho \"\"\necho \"=== ORIGIN vhost (bypass CF, SNI=video.mcorch.com \u2192 127.0.0.1) ===\"\necho \"--- sem cookie de sess\u00e3o \u2192 deve 302 pro login (prova SSO gate + vhost vivos) ---\"\ncurl -k -s -o /dev/null -m 15 --resolve video.mcorch.com:443:127.0.0.1 \\\n  -w \"HTTP %{http_code} | redirect\u2192 %{redirect_url}\\n\" https://video.mcorch.com/ 2>&1\necho \"\"\necho \"=== pelo CF p\u00fablico (do datacenter \u2014 esperado 403/302/200?) ===\"\ncurl -s -o /dev/null -m 15 -w \"HTTP %{http_code} | ct=%{content_type} | ip=%{remote_ip}\\n\" https://video.mcorch.com/ 2>&1",
+  "description": "Verify origin vhost live (SSO 302) + CF public state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === cert agora existe? ===
+> cert OK
+> 
+> === symlink ativo? ===
+> no symlink
+> 
+> === ORIGIN vhost (bypass CF, SNI=video.mcorch.com → 127.0.0.1) ===
+> --- sem cookie de sessão → deve 302 pro login (prova SSO gate + vhost vivos) ---
+> HTTP 302 | redirect→ https://login.mcorch.com/auth?return_to=https://video.mcorch.com/
+> 
+> === pelo CF público (do datacenter — esperado 403/302/200?) ===
+> HTTP 403 | ct=text/html; charset=UTF-8 | ip=104.21.51.118
+> ```
+
+## 🤖 Claude *(23:14:26)*
+
+
+## 🤖 Claude *(23:14:29)*
+
+**Origin PROVADO vivo (Lei 1):** o curl direto no nginx (SNI `video.mcorch.com`) retornou exatamente o comportamento do vhost — **`HTTP 302 → login.mcorch.com/auth?return_to=https://video.mcorch.com/`**. Isso só acontece se o vhost está carregado, o cert casa e o SSO gate funciona. (O "no symlink" do meu `ls` foi falta de permissão minha — o 302 prova que o nginx carregou o arquivo.) Deixa eu confirmar o symlink com sudo:
+
+## 🤖 Claude *(23:14:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== symlink (sudo) ===\"; sudo ls -la /etc/nginx/sites-enabled/video.mcorch.com.conf 2>&1\necho \"\"; echo \"=== origin headers (Location) confirmando vhost ===\"\ncurl -k -s -m 12 --resolve video.mcorch.com:443:127.0.0.1 -D - -o /dev/null https://video.mcorch.com/ 2>&1 | grep -iE \"^HTTP|^location|^server\" | head -5",
+  "description": "Confirm symlink with sudo + vhost Location header"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === symlink (sudo) ===
+> lrwxrwxrwx 1 root root 70 Jun 24 20:13 /etc/nginx/sites-enabled/video.mcorch.com.conf -> /home/gcrUX/htdocs/constellation-orchestra/nginx/video.mcorch.com.conf
+> 
+> === origin headers (Location) confirmando vhost ===
+> HTTP/2 302 
+> server: nginx
+> location: https://login.mcorch.com/auth?return_to=https://video.mcorch.com/
+> ```
+
+## 🤖 Claude *(23:14:40)*
+
+
+## 🤖 Claude *(23:14:52)*
+
+Tudo confirmado material:
+- **cert** OK · **symlink** ativo (`→` repo conf) · **vhost** servindo `HTTP/2 302 → login` (SSO gate vivo).
+
+## 🎬 Está no ar — pode abrir
+
+O editor está deployado ponta-a-ponta no origin. **Abre agora** (logado no MCORCH):
+
+→ **`https://video.mcorch.com`** ou no app: **Canvas Studio → Vídeo** (`/dashboard/canvas/video`)
+
+Seu cookie de sessão `.mcorch.com` passa pelo SSO gate automaticamente e o editor HyperFrames NLE carrega com o projeto 9:16 — você já consegue mexer em cenas, camadas, overlays em alpha, efeitos e transições, com preview ao vivo.
+
+## ⚠️ Se aparecer "Just a moment" / 403 do Cloudflare em vez do editor
+
+É o mesmo challenge de IP que o `mcp`/`wordpress` tiveram (o `design.mcorch.com` tem o mesmo 403 no curl mas funciona no seu browser — então provavelmente **vai abrir normal**). Se NÃO abrir, a regra é:
+
+- Cloudflare → **Security → WAF → Custom rules** → criar regra: `(http.host eq "video.mcorch.com")` → ação **Skip** → marcar **All managed rules** + **Super Bot Fight Mode** + **⭐ Security Level (Nível de Segurança)** ← esse é o toggle decisivo (reputação de IP de datacenter).
+
+## ✅ Estado
+
+| Item | Status |
+|---|---|
+| Editor rodando (`video-studio.service`) | ✅ active · HTTP 200 · projeto 9:16 |
+| vhost `video.mcorch.com` + cert + reload | ✅ provado (302 SSO no origin) |
+| Frontend `/dashboard/canvas/video` | ✅ deployado |
+| Render local (Export do CLI, Chrome+FFmpeg) | ✅ disponível |
+| Commits | `bc5f0e5` + `94ae0db` |
+
+**Me diz o que você vê quando abrir.** Se carregou, seguimos pra **Fase B** (trocar o Export local pelo nosso `video-render` + mcoCoins prepaid, e o store de projetos pro Supabase) — ou pro 1º ciclo pago de vídeo autônomo, o que você priorizar.

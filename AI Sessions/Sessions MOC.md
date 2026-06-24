@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1379
-> * **Sessões do Claude**: 1337
+> * **Total de Sessões Registradas**: 1386
+> * **Sessões do Claude**: 1344
 > * **Sessões do Gemini**: 42
 
 ---
@@ -41,6 +41,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Orchestration & Agent System (MCORCH/Constellation)
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` - *2026-06-24*
+*   `[[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-24*
 *   `[[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]` - *2026-06-23*
 *   `[[2026-05-27 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-27*
 *   `[[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-26*
@@ -75,7 +76,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-ac8a507bdbc7014d3]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-ac5565bc6d7d6fed5]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-ac2820e0c68754cc2]]` - *2026-06-24*
-*   *... e mais 1339 sessões nessa categoria.*
+*   *... e mais 1345 sessões nessa categoria.*
 
 ---
 
@@ -279,6 +280,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-ac5565bc6d7d6fed5]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-ac2820e0c68754cc2]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-ac01f5e1f2e756ad7]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-abe8e2e4bce7b48e4]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-ab5f55665cd7a5f99]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-aaedba3456ba8564b]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a99a50ba21a3b3eb9]]` (ClaudeSessions)
@@ -291,6 +293,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-a72152bec3007654a]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a689d83d3547c6f1a]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a64dee7a3018ff242]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a4d5f6271158b27a8]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a4adc66fa429f3a83]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a461ab54293d06188]]` (ClaudeSessions)
@@ -302,14 +305,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - agent-a2465b17f22c1c057]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a23124ea09d4b0b20]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a2028a72dde4c74eb]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a1ff93102a8c6fa89]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a1fa4731488d1b4d6]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a1f01340586277558]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a16549b9e02a92ff3]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a15ac0a057a6faf9f]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-a14b361a0fc014c35]]` (ClaudeSessions)
+*   `[[2026-06-24 - agent-a07d49eb979c634f9]]` (ClaudeSessions)
 *   `[[2026-06-24 - ada015e6-a810-46e1-9d5e-d09047bb5fad]]` (ClaudeSessions)
 *   `[[2026-06-24 - Próximos passos do projeto]]` (ClaudeSessions)
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` (ClaudeSessions)
 *   `[[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]` (ClaudeSessions)
+*   `[[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com]]` (ClaudeSessions)
+*   `[[2026-06-24 - Analisar paper e oportunidades de trading]]` (ClaudeSessions)
 *   `[[2026-06-24 - Analisar mudanças recentes e contato]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-afe8da4908bc6253f]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` (ClaudeSessions)
