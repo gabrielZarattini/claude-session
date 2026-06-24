@@ -67,3 +67,10 @@ Mapa canal→plataforma (espelha `campaign-run`): `content`→`[wordpress]` · `
 ## ORO
 
 - **Operator:** tenant (humano) no painel HITL · **Reviewer:** o policy engine + re-validação server-side + transition guard (DB) + `/security-review` da migration · **Owner:** Sovereign (blast radius = ação outward + gasto real de mcoCoins disparados pós-aprovação; mitigado pela re-validação fail-closed, pela transition guard service-role-only, pelo gate HITL humano e pelos billing/consent gates dos alvos).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
