@@ -3,7 +3,7 @@
 > **Lei 2 (Processo Antecipado) + OTD-VM-004 (FECHÁVEL 2026-06-15).** Espelha `docs/processes/mcoin-cost-calibration.md`.
 > Sela a unit economics das tools do `vision-mcp` no modelo **4×-floor** com custo real **fonteado por provider** (deepsearch verificado adversarialmente). Calibrar **antes** de rodar a 1ª transação econômica (a lição do flywheel: nunca cobrar a preço inventado).
 
-## Modelo (idêntico ao [[mcoin-cost-calibration|mcoin-cost-calibration]])
+## Modelo (idêntico ao mcoin-cost-calibration)
 
 ```
 mco(tool) = ceil( custo_usd_real(tool) / $0.018 × 4 ) = ceil( custo_usd_real / $0.0045 )
@@ -47,10 +47,3 @@ Tabela datada no SDD §4.2/§5.1 + este SOP + `segment` cost-aware implementado 
 
 ---
 _Anticorpo de OTD-VM-004. Espelha `mcoin-cost-calibration.md`. Gate research 2026-06-15 (workflow `wf_0040a939-232`)._
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

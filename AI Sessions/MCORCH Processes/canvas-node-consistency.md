@@ -84,10 +84,3 @@ herdado de `canvas-video-async-execution.md`).
 monetização real após validação. Estratégia: imagens consistentes via **Nano Banana (OpenRouter,
 centavos)**; Higgsfield DoP (9 cr) só no passo de **vídeo**. Alvo de teste: 3 produtos × 1 vídeo DoP
 = 27 cr, preservando margem.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
