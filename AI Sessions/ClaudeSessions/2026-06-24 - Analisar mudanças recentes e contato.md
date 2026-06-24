@@ -6245,6 +6245,969 @@ O crítico levantou um **HIGH** crucial: *"o gate A1 é NO-OP no topology atual"
 > O plano mantém o monitor CANDLES 1m ATIVO ('órfão mas inócuo'). De fato, p/ money-path é inócuo (nenhuma automação ativa indexa RSI_14_1m após A2). MAS flowJob.js:89 faz beholder.getMemory(symbol,'RSI_14_1m') p/ o log de calibração flow-capitulation. Enquanto o 1m ficar ativo, segue funcionando. Risco: se um operador 'limpar' e DESATIVAR o 1m das alts (tentação natural ao ver dois CANDLES por símbolo), esse log de calibração morre silenciosamente p/ LTC/BNB/ADA. Documentar 'NÃO desativar o monitor 1m das alts (flowJob o lê)' evita o tiro no pé. (Premissa do plano de manter ativo: correta.)
 > ```
 
+## 🤖 Claude *(15:30:54)*
+
+
+## 🤖 Claude *(15:31:02)*
+
+Dois achados importantes que **se contradizem** entre revisores — vou resolver:
+
+1. **HIGH (crítico): o gate A1 é NO-OP hoje** — `setup-trend.js` só opera BTCUSDT; não há Trend para LTC/BNB/ADA, então `getTrendPosition(alt)` é sempre `{qty:0}` → gate sempre `true`. **Não é bug** — é future-proofing correto (a colisão só existe quando Trend operar um símbolo do Farm). Como sua meta é *"deixar pronto pra re-arm"*, **procede**, mas vou **documentar a dormância** (sem vender proteção inexistente).
+2. **Conflito TL×crítico sobre o monitor 1m:** TL diz "desativar o 1m órfão"; crítico achou que **`flowJob.js:89` LÊ `RSI_14_1m`** → desativar mataria o log de calibração do flow. **Crítico vence** → mantenho o 1m ATIVO (não é órfão).
+
+**Must-fix do deploy (3):** (a) manter 1m ativo [resolvido acima]; (b) UPDATE via **PATCH /automations/:id** (passa pelo `validateConditions`), não SQL cru; (c) ordem UPDATE→restart. Vou incorporar tudo no deploy.
+
+Deixa eu adicionar a nota de dormância + achar o endpoint PATCH + olhar a sim-suite (o crítico pediu cobertura):
+
+## 🤖 Claude *(15:31:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== endpoint de update de automa\u00e7\u00e3o (router) ===\"\ngrep -rnE \"automations\" src/routers/*.js 2>/dev/null | grep -iE \"patch|put|update|:id\" | head\necho\necho \"=== updateAutomation valida + comportamento p/ inativa ===\"\ngrep -nA12 \"function updateAutomation\" src/controllers/automationsController.js | head -16\necho\necho \"=== sim suite: arquivos + algum testa condition/validateConditions? ===\"\nls scripts/sim/ 2>/dev/null\ngrep -rlE \"validateConditions|TREND_QTY|buyCond|conditions\" scripts/sim/ 2>/dev/null",
+  "description": "Find PATCH endpoint + updateAutomation + sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === endpoint de update de automação (router) ===
+> src/routers/automationsRouter.js:9:router.get('/:id', automationsController.getAutomation);
+> src/routers/automationsRouter.js:11:router.delete('/:id', automationsController.deleteAutomation);
+> src/routers/automationsRouter.js:15:router.patch('/:id', automationsController.updateAutomation);
+> src/routers/automationsRouter.js:19:router.post('/:id/start', automationsController.startAutomation);
+> src/routers/automationsRouter.js:21:router.post('/:id/stop', automationsController.stopAutomation);
+> 
+> === updateAutomation valida + comportamento p/ inativa ===
+> 226:async function updateAutomation(req, res, next) {
+> 227-    const id = req.params.id;
+> 228-    const newAutomation = req.body;
+> 229-
+> 230-    const { quantity, levels } = req.query;
+> 231-
+> 232-    if (!validateConditions(newAutomation.conditions) && !newAutomation.schedule)
+> 233-        return res.status(400).json('You need to have at least one condition per automation!');
+> 234-
+> 235-    if (!newAutomation.actions || !newAutomation.actions.length)
+> 236-        return res.status(400).json('You need to have at least one action per automation!');
+> 237-
+> 238-    const isGrid = newAutomation.actions[0].type === actionsRepository.actionTypes.GRID;
+> 
+> === sim suite: arquivos + algum testa condition/validateConditions? ===
+> calcQty.test.js
+> crypto.test.js
+> dailyCap.test.js
+> earnRedeemDryRun.test.js
+> earnRedeem.test.js
+> farmSellBoot.test.js
+> farmTriggers.test.js
+> feeCalc.test.js
+> integration.test.js
+> riskGuard.test.js
+> run.js
+> stepUpGuard.test.js
+> withdrawGuard.test.js
+> scripts/sim/farmTriggers.test.js
+> scripts/sim/calcQty.test.js
+> ```
+
+## 🤖 Claude *(15:31:19)*
+
+
+## 🤖 Claude *(15:31:20)*
+
+`farmTriggers.test.js` já existe — é o lugar natural pro teste do gate A1 (resolve a ressalva do crítico). E PATCH `/:id` valida conditions + exige actions (mando o body completo). Deixa eu ler o teste pra adicionar no mesmo padrão:
+
+## 🤖 Claude *(15:31:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/farmTriggers.test.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Suíte de SIMULAÇÃO — GATILHO no-loss do Farm/Harvester (beholder.shouldntInvert + invertCondition + a mesma
+> 4	 * montagem do evalCondition de evalDecision:890-895). Prova o fix fb932a1: a venda no-loss do Farm é LEVEL-trigger
+> 5	 * (dispara ENQUANTO bestBid>alvo), NÃO edge — porque o lote FARM_DCA nasce ACIMA do alvo cost*1.012 e nunca há
+> 6	 * cruzamento fresco (foi o bug AO VIVO 2026-06-21: a id10 LTC ficou presa, 0 vendas). O Trend (TREND_QTY/SMA)
+> 7	 * MANTÉM o edge-trigger (só dispara no cruzamento) — senão venderia no range inteiro.
+> 8	 *
+> 9	 * Puro Node, ZERO rede/ordem: só exercita as funções PURAS + avalia a string de condição contra um MEMORY local.
+> 10	 * NUNCA chama placeOrder/doAction/evalDecision (que tocariam a Binance) — testa o GATILHO, não o despacho.
+> 11	 */
+> 12	process.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';
+> 13	
+> 14	const beholder = require('../../src/beholder');
+> 15	const { shouldntInvert, invertCondition } = beholder;
+> 16	
+> 17	let passed = 0, failed = 0;
+> 18	function checkTrue(name, cond) { if (cond) passed++; else { failed++; console.error(`  ✗ ${name}`); } }
+> 19	function check(name, actual, expected) { const ok = String(actual) === String(expected); if (ok) passed++; else { failed++; console.error(`  ✗ ${name}: got ${actual} exp ${expected}`); } }
+> 20	
+> 21	// Automações de exemplo (shape mínimo que shouldntInvert lê: actions[0].type, .orderTemplate.quantity, conditions).
+> 22	const farmSell = { name: 'Farm Sell LTCUSDT', conditions: "MEMORY['LTCUSDT:BOOK'].current.bestBid>44.528", actions: [{ type: 'ORDER', orderTemplate: { quantity: 'FARM_QTY' } }] };
+> 23	const harvestSell = { name: 'Harvest Sell BTCUSDT', conditions: "MEMORY['BTCUSDT:BOOK'].current.bestBid>65000 && HARVEST_SELLING", actions: [{ type: 'ORDER', orderTemplate: { quantity: 'HARVEST_QTY' } }] };
+> 24	const trendSell = { name: 'Trend Sell LTCUSDT SMA50/200', conditions: "MEMORY['LTCUSDT:SMA_1h_50']<MEMORY['LTCUSDT:SMA_1h_200']", actions: [{ type: 'ORDER', orderTemplate: { quantity: 'TREND_QTY' } }] };
+> 25	const gridAuto = { name: 'Grid BTCUSDT', conditions: 'true', actions: [{ type: 'GRID' }] };
+> 26	
+> 27	// (1) shouldntInvert — quem vira LEVEL-trigger (true) vs quem MANTÉM o edge-trigger (false).
+> 28	checkTrue('FARM_QTY sell → LEVEL-trigger (fix fb932a1)', shouldntInvert(farmSell, 'LTCUSDT:BOOK') === true);
+> 29	checkTrue('HARVEST_SELLING na condição → LEVEL-trigger', shouldntInvert(harvestSell, 'BTCUSDT:BOOK') === true);
+> 30	checkTrue('GRID → LEVEL-trigger', shouldntInvert(gridAuto, 'BTCUSDT:BOOK') === true);
+> 31	checkTrue('Trend SMA (TREND_QTY) → MANTÉM edge-trigger', shouldntInvert(trendSell, 'LTCUSDT:SMA_1h_50') === false);
+> 32	checkTrue(':LAST_ORDER memoryKey → LEVEL-trigger', shouldntInvert(trendSell, 'LTCUSDT:LAST_ORDER') === true);
+> 33	
+> 34	// (2) invertCondition — monta o 'previous<alvo' do double-check (exatamente o que o edge-trigger ANEXA).
+> 35	check('invertCondition de "current>x" vira "previous<x"',
+> 36	    invertCondition('LTCUSDT:BOOK', "MEMORY['LTCUSDT:BOOK'].current.bestBid>44.528"),
+> 37	    "MEMORY['LTCUSDT:BOOK'].previous.bestBid<44.528");
+> 38	
+> 39	// (3) Comportamento de DISPARO — mesma montagem do evalDecision:890-891, avaliada contra um MEMORY local.
+> 40	//     fires() reproduz fielmente: evalCondition = conditions + (shouldntInvert ? '' : ' && ' + invertCondition).
+> 41	function fires(automation, memoryKey, MEM) {
+> 42	    const inv = shouldntInvert(automation, memoryKey) ? '' : invertCondition(memoryKey, automation.conditions);
+> 43	    const evalCondition = automation.conditions + (inv ? ' && ' + inv : '');
+> 44	    return Function('MEMORY', 'return ' + evalCondition)(MEM);
+> 45	}
+> 46	
+> 47	// Cenário CRÍTICO (o estado que mantinha o Farm preso): bestBid ACIMA do alvo, SEM cruzamento fresco
+> 48	// (previous TAMBÉM acima). alvo no-loss = cost 44.00 × 1.012 = 44.528.
+> 49	const MEM_NOCROSS = { 'LTCUSDT:BOOK': { current: { bestBid: 44.60 }, previous: { bestBid: 44.55 } } };
+> 50	checkTrue('Farm DISPARA no nível (bestBid>alvo) mesmo sem cruzamento fresco', fires(farmSell, 'LTCUSDT:BOOK', MEM_NOCROSS) === true);
+> 51	
+> 52	// Mesmíssimo estado, mas como Trend (edge-trigger): NÃO dispara sem cruzamento fresco (previous também > alvo).
+> 53	const trendLevelStyle = { name: 'Trend Sell (edge demo)', conditions: "MEMORY['LTCUSDT:BOOK'].current.bestBid>44.528", actions: [{ type: 'ORDER', orderTemplate: { quantity: 'TREND_QTY' } }] };
+> 54	checkTrue('Trend NÃO dispara sem cruzamento fresco (edge preservado)', fires(trendLevelStyle, 'LTCUSDT:BOOK', MEM_NOCROSS) === false);
+> 55	
+> 56	// bestBid ABAIXO do alvo → ninguém dispara (nem level nem edge): o no-loss nunca vende no prejuízo.
+> 57	const MEM_BELOW = { 'LTCUSDT:BOOK': { current: { bestBid: 44.40 }, previous: { bestBid: 44.55 } } };
+> 58	checkTrue('Farm NÃO dispara abaixo do alvo (no-loss)', fires(farmSell, 'LTCUSDT:BOOK', MEM_BELOW) === false);
+> 59	
+> 60	console.log(`\nfarmTriggers.test.js: ${passed} passed, ${failed} failed`);
+> 61	process.exit(failed ? 1 : 0);
+> 62	
+> ```
+
+## 🤖 Claude *(15:32:13)*
+
+
+## 🤖 Claude *(15:32:14)*
+
+`farmTriggers.test.js` tem o helper `fires()` que reproduz o eval real — perfeito pro teste do gate A1. Vou adicionar o teste + a nota de dormância, rodar a sim-suite, e então deployar:
+
+## 🤖 Claude *(15:32:32)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/patch_rearm2.py",
+  "content": "import io\ndef patch(path, edits):\n    s = io.open(path, encoding=\"utf-8\").read()\n    for old, new in edits:\n        assert s.count(old) == 1, f\"[{path}] \u00e2ncora n\u00e3o \u00fanica ({s.count(old)}x): {old[:60]!r}\"\n        s = s.replace(old, new)\n    io.open(path, \"w\", encoding=\"utf-8\").write(s)\n    print(\"patched\", path)\n\n# (1) setup-farm.js \u2014 nota de DORM\u00c2NCIA do gate A1 (cr\u00edtico: NO-OP at\u00e9 o Trend operar um s\u00edmbolo do Farm)\npatch(\"/home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js\", [\n    (\"    // #A1: gate TREND_QTY<=0 \u2192 o Farm N\u00c3O acumula no mesmo ativo enquanto o Trend (golden) est\u00e1 segurando posi\u00e7\u00e3o\\n    // (evita colis\u00e3o de carteiras Farm\u00d7Trend). loadTrendPosition publica TREND_QTY=0 quando flat \u2192 gate avali\u00e1vel.\",\n     \"    // #A1: gate TREND_QTY<=0 \u2192 o Farm N\u00c3O acumula no mesmo ativo enquanto o Trend (golden) est\u00e1 segurando posi\u00e7\u00e3o\\n\"\n     \"    // (evita colis\u00e3o de carteiras Farm\u00d7Trend). loadTrendPosition publica TREND_QTY=0 quando flat \u2192 gate avali\u00e1vel.\\n\"\n     \"    // DORMANTE HOJE: o setup-trend opera s\u00f3 BTCUSDT (que n\u00e3o est\u00e1 em FARM_SYMBOLS) \u2192 p/ as alts TREND_QTY \u00e9 sempre 0\\n\"\n     \"    // e o gate \u00e9 no-op. S\u00f3 passa a PROTEGER quando rodarem setup-trend com TREND_SYMBOL=<alt do Farm>. \u00c9 pr\u00e9-req\\n\"\n     \"    // de re-armamento: deixa o Farm Buy CORRETO de antem\u00e3o, sem custo (calcQty \u00e9 o \u00fanico leitor de TREND_QTY).\"),\n])\n\n# (2) farmTriggers.test.js \u2014 cobertura do gate A1 (ressalva do cr\u00edtico: money-path novo sem teste determin\u00edstico)\npatch(\"/home/gcrux-tradeux/tradeux/backend/scripts/sim/farmTriggers.test.js\", [\n    (\"console.log(`\\\\nfarmTriggers.test.js: ${passed} passed, ${failed} failed`);\",\n     \"// (4) GATE A1 \u2014 Farm Buy \u00d7 TREND_QTY (coordena\u00e7\u00e3o Farm\u00d7Trend; condi\u00e7\u00e3o = a gerada pelo setup-farm.js: 15m + gate).\\n\"\n     \"//     Farm Buy \u00e9 edge-trigger no RSI (quantity MIN_NOTIONAL \u2192 shouldntInvert=false): fires() anexa o previous-dip.\\n\"\n     \"const farmBuy = { name: 'Farm Buy LTCUSDT', conditions: \\\"MEMORY['LTCUSDT:RSI_14_15m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend' && MEMORY['LTCUSDT:TREND_QTY']<=0\\\", actions: [{ type: 'ORDER', orderTemplate: { quantity: 'MIN_NOTIONAL' } }] };\\n\"\n     \"checkTrue('Farm Buy \u00e9 edge-trigger no RSI (MIN_NOTIONAL)', shouldntInvert(farmBuy, 'LTCUSDT:RSI_14_15m') === false);\\n\"\n     \"const dip = { current: 30, previous: 40 }; // dip FRESCO de RSI (cruzou p/ baixo de 35)\\n\"\n     \"function memFarm(trendQty, regime, rsi) { return { 'LTCUSDT:RSI_14_15m': rsi || dip, 'LTCUSDT:REGIME': regime || 'bull', 'LTCUSDT:TREND_QTY': trendQty }; }\\n\"\n     \"checkTrue('Farm Buy DISPARA com Trend flat (TREND_QTY=0) + dip + fora de bear/trend', fires(farmBuy, 'LTCUSDT:RSI_14_15m', memFarm(0)) === true);\\n\"\n     \"checkTrue('GATE A1: Farm Buy N\u00c3O dispara enquanto Trend segura (TREND_QTY=2)', fires(farmBuy, 'LTCUSDT:RSI_14_15m', memFarm(2)) === false);\\n\"\n     \"checkTrue('Farm Buy N\u00c3O dispara com TREND_QTY ausente (undefined<=0=false \u2192 por isso loadTrendPosition publica 0)', fires(farmBuy, 'LTCUSDT:RSI_14_15m', { 'LTCUSDT:RSI_14_15m': dip, 'LTCUSDT:REGIME': 'bull' }) === false);\\n\"\n     \"checkTrue('Farm Buy N\u00c3O dispara sem dip (RSI.current>=35)', fires(farmBuy, 'LTCUSDT:RSI_14_15m', memFarm(0, 'bull', { current: 50, previous: 60 })) === false);\\n\"\n     \"checkTrue('Farm Buy N\u00c3O dispara em trend (gate de regime)', fires(farmBuy, 'LTCUSDT:RSI_14_15m', memFarm(0, 'trend')) === false);\\n\"\n     \"checkTrue('Farm Buy N\u00c3O dispara em bear', fires(farmBuy, 'LTCUSDT:RSI_14_15m', memFarm(0, 'bear')) === false);\\n\\n\"\n     \"console.log(`\\\\nfarmTriggers.test.js: ${passed} passed, ${failed} failed`);\"),\n])\nprint(\"OK\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/patch_rearm2.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:32:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\npython3 /tmp/patch_rearm2.py\nnode --check /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js && echo \"OK setup-farm.js\"\nnode --check /home/gcrux-tradeux/tradeux/backend/scripts/sim/farmTriggers.test.js && echo \"OK farmTriggers.test.js\"\necho \"=== roda a sim-suite money-path inteira ===\"\nnode scripts/sim/run.js 2>&1 | tail -20'",
+  "description": "Apply patch + run full sim suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> patched /home/gcrux-tradeux/tradeux/backend/scripts/setup-farm.js
+> patched /home/gcrux-tradeux/tradeux/backend/scripts/sim/farmTriggers.test.js
+> OK
+> OK setup-farm.js
+> OK farmTriggers.test.js
+> === roda a sim-suite money-path inteira ===
+> 
+> feeCalc.test.js: 11 passed, 0 failed
+> 
+> === sim/integration.test.js ===
+> 
+> integration.test.js: 24 passed, 0 failed
+> 
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 53 passed, 0 failed
+> 
+> === sim/stepUpGuard.test.js ===
+> 
+> stepUpGuard.test.js: 21 passed, 0 failed
+> 
+> === sim/withdrawGuard.test.js ===
+> 
+> withdrawGuard.test.js: 13 passed, 0 failed
+> 
+> sim suite: 12/12 arquivos OK.
+> ```
+
+## 🤖 Claude *(15:32:55)*
+
+
+## 🤖 Claude *(15:32:57)*
+
+Sim-suite **12/12 OK** (inclui meus testes novos do gate). Deixa eu confirmar explicitamente que as 7 asserções novas do gate passaram (o edge-trigger do RSI é sutil):
+
+## 🤖 Claude *(15:32:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nnode scripts/sim/farmTriggers.test.js 2>&1 | tail -5",
+  "description": "Run farmTriggers test standalone"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> farmTriggers.test.js: 16 passed, 0 failed
+> ```
+
+## 🤖 Claude *(15:33:31)*
+
+
+## 🤖 Claude *(15:33:34)*
+
+**16/16** no farmTriggers (9→16, +7 do gate, todas passam — o edge-trigger do RSI confirmado). Código A1+A2 completo, gated (APPROVE×3 + must-fixes do deploy resolvidos), sim-testado.
+
+Agora o **deploy** (plano corrigido: PATCH não-SQL, manter 1m ativo, criar 15m, restart). Primeiro inspeciono as automações Farm Buy vivas pra montar o PATCH preservando os campos:
+
+## 🤖 Claude *(15:33:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\nTOKEN=$(curl -s -m5 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\necho \"$TOKEN\" > /tmp/.tkn\necho \"=== Farm Buy automations (vivas) ===\"\ncurl -s -m8 \"http://127.0.0.1:8090/api/automations\" -H \"Authorization: $TOKEN\" | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nauto = d if isinstance(d,list) else d.get(\\\"rows\\\",d.get(\\\"automations\\\",[]))\nfor a in auto:\n    if a.get(\\\"name\\\",\\\"\\\").startswith(\\\"Farm Buy\\\"):\n        print(json.dumps({k:a.get(k) for k in [\\\"id\\\",\\\"name\\\",\\\"symbol\\\",\\\"isActive\\\",\\\"indexes\\\",\\\"conditions\\\"]}))\n\"\necho \"=== monitors CANDLES existentes (1m/15m?) ===\"\ncurl -s -m8 \"http://127.0.0.1:8090/api/monitors\" -H \"Authorization: $TOKEN\" | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nmon = d if isinstance(d,list) else d.get(\\\"rows\\\",d.get(\\\"monitors\\\",[]))\nfor m in mon:\n    if m.get(\\\"type\\\")==\\\"CANDLES\\\" and m.get(\\\"symbol\\\") in (\\\"LTCUSDT\\\",\\\"BNBUSDT\\\",\\\"ADAUSDT\\\"):\n        print(m.get(\\\"id\\\"),m.get(\\\"symbol\\\"),m.get(\\\"interval\\\"),\\\"active=\\\"+str(m.get(\\\"isActive\\\")),\\\"idx=\\\"+str(m.get(\\\"indexes\\\")))\n\"\n'",
+  "description": "Inspect live Farm Buy automations + CANDLES monitors"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Farm Buy automations (vivas) ===
+> === monitors CANDLES existentes (1m/15m?) ===
+> 10 ADAUSDT 1m active=True idx=RSI_14
+> 14 ADAUSDT 15m active=True idx=RSI_14
+> 9 BNBUSDT 1m active=True idx=RSI_14
+> 13 BNBUSDT 15m active=True idx=RSI_14
+> 8 LTCUSDT 1m active=True idx=RSI_14
+> ```
+
+## 🤖 Claude *(15:33:58)*
+
+
+## 🤖 Claude *(15:34:00)*
+
+Dois achados: (1) os monitores **15m JÁ EXISTEM** pra ADA (id14) e BNB (id13) — só falta o **LTC 15m** (LTC só tem 1m/id8). (2) a query de automações veio vazia (shape diferente). Deixa eu inspecionar o shape do `/automations`:
+
+## 🤖 Claude *(15:34:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\nTOKEN=$(cat /tmp/.tkn)\necho \"=== raw shape /automations ===\"\ncurl -s -m8 \"http://127.0.0.1:8090/api/automations\" -H \"Authorization: $TOKEN\" | head -c 400\necho\necho \"=== tenta /automations/LTCUSDT (por s\u00edmbolo?) ===\"\ncurl -s -m8 \"http://127.0.0.1:8090/api/automations/LTCUSDT\" -H \"Authorization: $TOKEN\" | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nprint(\\\"type:\\\",type(d).__name__)\nauto = d if isinstance(d,list) else d.get(\\\"rows\\\",[])\nfor a in (auto or []):\n    print(a.get(\\\"id\\\"),a.get(\\\"name\\\"),\\\"active=\\\"+str(a.get(\\\"isActive\\\")))\n\" 2>&1 | head",
+  "description": "Debug automations endpoint shape"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> /bin/bash: eval: line 14: unexpected EOF while looking for matching `''
+> ```
+
+## 🤖 Claude *(15:34:11)*
+
+
+## 🤖 Claude *(15:34:11)*
+
+O inline quebrou no quoting de novo. Vou escrever um script Python (sem inline) pra inspecionar:
+
+## 🤖 Claude *(15:34:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngrep -nE \"router\\.(get|post)\\(\" backend/src/routers/automationsRouter.js | head",
+  "description": "List automations router routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 6:router.get('/groups', automationsController.getAutomationGroups);
+> 7:router.post('/groups/:group/:action', automationsController.setAutomationGroup);
+> 9:router.get('/:id', automationsController.getAutomation);
+> 13:router.get('/', automationsController.getAutomations);
+> 17:router.post('/', automationsController.insertAutomation);
+> 19:router.post('/:id/start', automationsController.startAutomation);
+> 21:router.post('/:id/stop', automationsController.stopAutomation);
+> ```
+
+## 🤖 Claude *(15:34:22)*
+
+
+## 🤖 Claude *(15:34:23)*
+
+`GET /` lista. Vou escrever um script de deploy (com DRY) pra inspecionar + aplicar de forma controlada:
+
+## 🤖 Claude *(15:34:40)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/rearm_deploy.py",
+  "content": "import json, os, sys, urllib.request\n\nBASE = \"http://127.0.0.1:8090/api\"\nDRY = os.environ.get(\"APPLY\") != \"1\"\nEM = os.environ[\"DEFAULT_SETTINGS_EMAIL\"]; PW = os.environ[\"DEFAULT_SETTINGS_PWD\"]\n\ndef req(method, path, token=None, body=None):\n    data = json.dumps(body).encode() if body is not None else None\n    r = urllib.request.Request(BASE + path, data=data, method=method)\n    r.add_header(\"Content-Type\", \"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=10) as resp:\n            raw = resp.read().decode()\n            return resp.status, (json.loads(raw) if raw else None)\n    except urllib.error.HTTPError as e:\n        return e.code, e.read().decode()[:200]\n\nst, tok = req(\"POST\", \"/login\", None, {\"email\": EM, \"password\": PW})\ntoken = tok.get(\"token\")\nassert token, f\"login fail {st}\"\n\nst, autos = req(\"GET\", \"/automations\", token)\nrows = autos if isinstance(autos, list) else (autos.get(\"rows\") or autos.get(\"automations\") or [])\nprint(f\"# /automations -> {st}, {len(rows)} linhas\")\nfarmbuys = [a for a in rows if str(a.get(\"name\",\"\")).startswith(\"Farm Buy\")]\nprint(f\"# Farm Buy encontradas: {len(farmbuys)}\")\n\nNEWCOND = lambda s: (f\"MEMORY['{s}:RSI_14_15m'].current<35 && MEMORY['{s}:REGIME']!=='bear' \"\n                     f\"&& MEMORY['{s}:REGIME']!=='trend' && MEMORY['{s}:TREND_QTY']<=0\")\nNEWIDX = lambda s: f\"{s}:RSI_14_15m,{s}:REGIME,{s}:TREND_QTY\"\n\nfor a in farmbuys:\n    s = a[\"symbol\"]; aid = a[\"id\"]\n    print(f\"\\n## {a['name']} (id {aid}, isActive={a.get('isActive')})\")\n    print(f\"  cond ATUAL: {a.get('conditions')}\")\n    print(f\"  idx  ATUAL: {a.get('indexes')}\")\n    print(f\"  cond NOVA : {NEWCOND(s)}\")\n    print(f\"  idx  NOVA : {NEWIDX(s)}\")\n    if a.get(\"isActive\"):\n        print(\"  !! ATIVA \u2014 N\u00c3O vou alterar (seguran\u00e7a). Pular.\"); continue\n    # GET corpo completo p/ preservar campos no PATCH\n    st, full = req(\"GET\", f\"/automations/{aid}\", token)\n    body = dict(full)\n    body[\"conditions\"] = NEWCOND(s)\n    body[\"indexes\"] = NEWIDX(s)\n    # normaliza actions p/ o shape que o PATCH espera (type + orderTemplateId)\n    acts = body.get(\"actions\") or []\n    if acts and \"orderTemplateId\" not in acts[0]:\n        ot = acts[0].get(\"orderTemplate\") or {}\n        if ot.get(\"id\"): acts[0][\"orderTemplateId\"] = ot[\"id\"]\n    if DRY:\n        print(f\"  [DRY] PATCH /automations/{aid} (cond+idx)\")\n    else:\n        st, resp = req(\"PATCH\", f\"/automations/{aid}\", token, body)\n        print(f\"  PATCH -> {st} {str(resp)[:120]}\")\n\n# LTC 15m monitor (ADA/BNB j\u00e1 t\u00eam)\nst, mons = req(\"GET\", \"/monitors\", token)\nmrows = mons if isinstance(mons, list) else (mons.get(\"rows\") or mons.get(\"monitors\") or [])\nhas_ltc15 = any(m.get(\"type\")==\"CANDLES\" and m.get(\"symbol\")==\"LTCUSDT\" and m.get(\"interval\")==\"15m\" for m in mrows)\nprint(f\"\\n## LTC 15m monitor existe? {has_ltc15}\")\nif not has_ltc15:\n    if DRY:\n        print(\"  [DRY] POST /monitors CANDLES LTCUSDT 15m RSI_14 (ativo)\")\n    else:\n        st, resp = req(\"POST\", \"/monitors\", token, {\"type\":\"CANDLES\",\"symbol\":\"LTCUSDT\",\"interval\":\"15m\",\"indexes\":\"RSI_14\",\"isActive\":True,\"isSystemMon\":False,\"broadcastLabel\":None,\"logs\":False})\n        print(f\"  POST monitor -> {st} {str(resp)[:120]}\")\nprint(\"\\nMODO:\", \"DRY (nada aplicado)\" if DRY else \"APLICADO\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/rearm_deploy.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:34:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\npython3 /tmp/rearm_deploy.py'",
+  "description": "DRY run of re-arm deploy (inspect + plan)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # /automations -> 200, 10 linhas
+> # Farm Buy encontradas: 0
+> 
+> ## LTC 15m monitor existe? False
+>   [DRY] POST /monitors CANDLES LTCUSDT 15m RSI_14 (ativo)
+> 
+> MODO: DRY (nada aplicado)
+> ```
+
+## 🤖 Claude *(15:34:53)*
+
+
+## 🤖 Claude *(15:34:54)*
+
+0 automações "Farm Buy" entre as 10 — os nomes devem ser outros (ou as compras foram removidas, não só desativadas). Deixa eu listar todas as 10:
+
+## 🤖 Claude *(15:34:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\npython3 -c \"\nimport json,urllib.request,os\nBASE=\\\"http://127.0.0.1:8090/api\\\"\ndef req(m,p,t=None,b=None):\n    import urllib.error\n    data=json.dumps(b).encode() if b is not None else None\n    r=urllib.request.Request(BASE+p,data=data,method=m); r.add_header(\\\"Content-Type\\\",\\\"application/json\\\")\n    if t: r.add_header(\\\"Authorization\\\",t)\n    with urllib.request.urlopen(r,timeout=10) as resp: return json.loads(resp.read().decode())\ntok=req(\\\"POST\\\",\\\"/login\\\",b={\\\"email\\\":os.environ[\\\"DEFAULT_SETTINGS_EMAIL\\\"],\\\"password\\\":os.environ[\\\"DEFAULT_SETTINGS_PWD\\\"]})[\\\"token\\\"]\nautos=req(\\\"GET\\\",\\\"/automations\\\",tok)\nrows=autos if isinstance(autos,list) else (autos.get(\\\"rows\\\") or [])\nfor a in rows:\n    print(a.get(\\\"id\\\"), \\\"|\\\", a.get(\\\"name\\\"), \\\"| active=\\\"+str(a.get(\\\"isActive\\\")), \\\"| sym=\\\"+str(a.get(\\\"symbol\\\")))\n\"'",
+  "description": "List all 10 live automations"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 54 | [PAPER] Consistencia Buy ADAUSDT | active=True | sym=ADAUSDT
+> 55 | [PAPER] Consistencia Sell ADAUSDT | active=True | sym=ADAUSDT
+> 82 | [PAPER] Farmnl Buy ADAUSDT | active=True | sym=ADAUSDT
+> 83 | [PAPER] Farmnl Sell ADAUSDT | active=True | sym=ADAUSDT
+> 56 | [PAPER] Macro Buy ADAUSDT | active=True | sym=ADAUSDT
+> 57 | [PAPER] Macro Sell ADAUSDT | active=True | sym=ADAUSDT
+> 66 | [PAPER] Mr15 Buy ADAUSDT | active=True | sym=ADAUSDT
+> 67 | [PAPER] Mr15 Sell ADAUSDT | active=True | sym=ADAUSDT
+> 80 | [PAPER] Slopegate Buy ADAUSDT | active=True | sym=ADAUSDT
+> 81 | [PAPER] Slopegate Sell ADAUSDT | active=True | sym=ADAUSDT
+> ```
+
+## 🤖 Claude *(15:35:09)*
+
+
+## 🤖 Claude *(15:35:11)*
+
+O `/automations` é **paginado** (10/página — peguei só a página 1, toda `[PAPER]` de ADA). Vou consultar o banco direto pra achar as linhas Farm Buy/Sell reais (read-only, via backend node):
+
+## 🤖 Claude *(15:35:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ndocker exec tradeux-backend-1 node -e \"\nconst db=require(\\\"/app/src/db\\\");\n(async()=>{ try{\n const r=await db.query(\\\"SELECT id,name,symbol,isActive,indexes,conditions FROM automations WHERE name LIKE \\x27Farm %\\x27 OR name LIKE \\x27Trend %\\x27 ORDER BY name\\\");\n const rows=r[0]||r;\n for(const a of rows){ console.log(a.id,\\\"|\\\",a.name,\\\"| active=\\\"+a.isActive,\\\"| idx=\\\"+a.indexes); console.log(\\\"      cond:\\\",a.conditions); }\n console.log(\\\"total:\\\",rows.length);\n }catch(e){console.log(\\\"ERR\\\",e.message);} process.exit(0); })();\n\" 2>&1 | tail -30'",
+  "description": "Query Farm/Trend automations directly from DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 13 | Farm Buy ADAUSDT | active=0 | idx=ADAUSDT:RSI_14_1m,ADAUSDT:REGIME
+>       cond: MEMORY['ADAUSDT:RSI_14_1m'].current<35 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend'
+> 11 | Farm Buy BNBUSDT | active=0 | idx=BNBUSDT:RSI_14_1m,BNBUSDT:REGIME
+>       cond: MEMORY['BNBUSDT:RSI_14_1m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend'
+> 9 | Farm Buy LTCUSDT | active=0 | idx=LTCUSDT:RSI_14_1m,LTCUSDT:REGIME
+>       cond: MEMORY['LTCUSDT:RSI_14_1m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend'
+> 14 | Farm Sell ADAUSDT | active=1 | idx=ADAUSDT:BOOK,ADAUSDT:FARM_DCA
+>       cond: MEMORY['ADAUSDT:FARM_DCA'].qty>0 && MEMORY['ADAUSDT:BOOK'].current.bestBid>MEMORY['ADAUSDT:FARM_DCA'].cost*1.0120
+> 12 | Farm Sell BNBUSDT | active=1 | idx=BNBUSDT:BOOK,BNBUSDT:FARM_DCA
+>       cond: MEMORY['BNBUSDT:FARM_DCA'].qty>0 && MEMORY['BNBUSDT:BOOK'].current.bestBid>MEMORY['BNBUSDT:FARM_DCA'].cost*1.0120
+> 10 | Farm Sell LTCUSDT | active=1 | idx=LTCUSDT:BOOK,LTCUSDT:FARM_DCA
+>       cond: MEMORY['LTCUSDT:FARM_DCA'].qty>0 && MEMORY['LTCUSDT:BOOK'].current.bestBid>MEMORY['LTCUSDT:FARM_DCA'].cost*1.0120
+> 19 | Trend Buy ADAUSDT SMA50/200 | active=0 | idx=ADAUSDT:TREND_CROSS_1h,ADAUSDT:REGIME
+>       cond: MEMORY['ADAUSDT:TREND_CROSS_1h']==='golden' && MEMORY['ADAUSDT:REGIME']!=='bear'
+> 17 | Trend Buy BNBUSDT SMA50/200 | active=0 | idx=BNBUSDT:TREND_CROSS_1h,BNBUSDT:REGIME
+>       cond: MEMORY['BNBUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BNBUSDT:REGIME']!=='bear'
+> 6 | Trend Buy BTCUSDT SMA50/200 | active=0 | idx=BTCUSDT:TREND_CROSS_1h,BTCUSDT:REGIME
+>       cond: MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear'
+> 15 | Trend Buy LTCUSDT SMA50/200 | active=0 | idx=LTCUSDT:TREND_CROSS_1h,LTCUSDT:REGIME
+>       cond: MEMORY['LTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['LTCUSDT:REGIME']!=='bear'
+> 20 | Trend Sell ADAUSDT SMA50/200 | active=0 | idx=ADAUSDT:TREND_CROSS_1h
+>       cond: MEMORY['ADAUSDT:TREND_CROSS_1h']==='death'
+> 18 | Trend Sell BNBUSDT SMA50/200 | active=0 | idx=BNBUSDT:TREND_CROSS_1h
+>       cond: MEMORY['BNBUSDT:TREND_CROSS_1h']==='death'
+> 7 | Trend Sell BTCUSDT SMA50/200 | active=0 | idx=BTCUSDT:TREND_CROSS_1h
+>       cond: MEMORY['BTCUSDT:TREND_CROSS_1h']==='death'
+> 16 | Trend Sell LTCUSDT SMA50/200 | active=0 | idx=LTCUSDT:TREND_CROSS_1h
+>       cond: MEMORY['LTCUSDT:TREND_CROSS_1h']==='death'
+> total: 14
+> ```
+
+## 🤖 Claude *(15:35:41)*
+
+
+## 🤖 Claude *(15:35:45)*
+
+**Achado importante que CONTRADIZ o crítico:** o DB tem automações **Trend para LTC/BNB/ADA** (id15/17/19 Buy, 16/18/20 Sell — todas inativas), não só BTC. Então o gate A1 **não é no-op permanente** — quando você re-armar Trend+Farm nas alts (que existem!), a colisão é real e o gate protege. A1 está mais justificado do que o crítico achou (ele leu o default do `setup-trend`, não o DB vivo).
+
+IDs reais: Farm Buy = **9 (LTC), 11 (BNB), 13 (ADA)** (inativas); Farm Sell 10/12/14 (ativas, não toco). Monitores 15m: ADA/BNB já têm, **falta só o LTC**. Corrijo o script de deploy pros IDs certos e rodo DRY:
+
+## 🤖 Claude *(15:35:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/rearm_deploy.py",
+  "content": "import json, os, urllib.request, urllib.error\n\nBASE = \"http://127.0.0.1:8090/api\"\nDRY = os.environ.get(\"APPLY\") != \"1\"\nEM = os.environ[\"DEFAULT_SETTINGS_EMAIL\"]; PW = os.environ[\"DEFAULT_SETTINGS_PWD\"]\nFARM_BUY_IDS = [9, 11, 13]   # LTC, BNB, ADA (Farm Sell 10/12/14 ATIVAS \u2014 N\u00c3O tocar)\n\ndef req(method, path, token=None, body=None):\n    data = json.dumps(body).encode() if body is not None else None\n    r = urllib.request.Request(BASE + path, data=data, method=method)\n    r.add_header(\"Content-Type\", \"application/json\")\n    if token: r.add_header(\"Authorization\", token)\n    try:\n        with urllib.request.urlopen(r, timeout=10) as resp:\n            raw = resp.read().decode(); return resp.status, (json.loads(raw) if raw else None)\n    except urllib.error.HTTPError as e:\n        return e.code, e.read().decode()[:300]\n\ntoken = req(\"POST\", \"/login\", None, {\"email\": EM, \"password\": PW})[1][\"token\"]\nNEWCOND = lambda s: (f\"MEMORY['{s}:RSI_14_15m'].current<35 && MEMORY['{s}:REGIME']!=='bear' \"\n                     f\"&& MEMORY['{s}:REGIME']!=='trend' && MEMORY['{s}:TREND_QTY']<=0\")\nNEWIDX = lambda s: f\"{s}:RSI_14_15m,{s}:REGIME,{s}:TREND_QTY\"\n\nfor aid in FARM_BUY_IDS:\n    st, full = req(\"GET\", f\"/automations/{aid}\", token)\n    if st != 200: print(f\"id {aid}: GET {st} {full}\"); continue\n    s = full[\"symbol\"]; name = full[\"name\"]\n    assert name.startswith(\"Farm Buy\"), f\"id {aid} n\u00e3o \u00e9 Farm Buy ({name})\"\n    assert not full.get(\"isActive\"), f\"id {aid} ATIVA \u2014 abortar\"\n    print(f\"\\n## {name} (id {aid}, active={full.get('isActive')})\")\n    print(f\"  cond {full.get('conditions')}  ->  {NEWCOND(s)}\")\n    print(f\"  idx  {full.get('indexes')}  ->  {NEWIDX(s)}\")\n    body = dict(full)\n    body[\"conditions\"] = NEWCOND(s); body[\"indexes\"] = NEWIDX(s)\n    acts = body.get(\"actions\") or []\n    if acts and \"orderTemplateId\" not in acts[0]:\n        ot = acts[0].get(\"orderTemplate\") or {}\n        if ot.get(\"id\"): acts[0][\"orderTemplateId\"] = ot[\"id\"]\n    if DRY:\n        print(f\"  [DRY] PATCH /automations/{aid}\")\n    else:\n        st, resp = req(\"PATCH\", f\"/automations/{aid}\", token, body)\n        print(f\"  PATCH -> {st} {str(resp)[:140]}\")\n        st2, chk = req(\"GET\", f\"/automations/{aid}\", token)   # read-back\n        print(f\"  read-back cond OK? {chk.get('conditions')==NEWCOND(s)} | idx OK? {chk.get('indexes')==NEWIDX(s)} | active={chk.get('isActive')}\")\n\n# LTC 15m monitor (ADA/BNB j\u00e1 t\u00eam)\nst, mons = req(\"GET\", \"/monitors\", token)\nmrows = mons if isinstance(mons, list) else (mons.get(\"rows\") or mons.get(\"monitors\") or [])\nhas_ltc15 = any(m.get(\"type\")==\"CANDLES\" and m.get(\"symbol\")==\"LTCUSDT\" and m.get(\"interval\")==\"15m\" for m in mrows)\nprint(f\"\\n## LTC 15m monitor existe? {has_ltc15}\")\nif not has_ltc15:\n    if DRY: print(\"  [DRY] POST /monitors CANDLES LTCUSDT 15m RSI_14 (ativo)\")\n    else:\n        st, resp = req(\"POST\", \"/monitors\", token, {\"type\":\"CANDLES\",\"symbol\":\"LTCUSDT\",\"interval\":\"15m\",\"indexes\":\"RSI_14\",\"isActive\":True,\"isSystemMon\":False,\"broadcastLabel\":None,\"logs\":False})\n        print(f\"  POST monitor -> {st} {str(resp)[:140]}\")\nprint(\"\\nMODO:\", \"DRY (nada aplicado)\" if DRY else \"APLICADO\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /tmp/rearm_deploy.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:36:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\npython3 /tmp/rearm_deploy.py'",
+  "description": "DRY run corrected re-arm deploy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ## Farm Buy LTCUSDT (id 9, active=False)
+>   cond MEMORY['LTCUSDT:RSI_14_1m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend'  ->  MEMORY['LTCUSDT:RSI_14_15m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend' && MEMORY['LTCUSDT:TREND_QTY']<=0
+>   idx  LTCUSDT:RSI_14_1m,LTCUSDT:REGIME  ->  LTCUSDT:RSI_14_15m,LTCUSDT:REGIME,LTCUSDT:TREND_QTY
+>   [DRY] PATCH /automations/9
+> 
+> ## Farm Buy BNBUSDT (id 11, active=False)
+>   cond MEMORY['BNBUSDT:RSI_14_1m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend'  ->  MEMORY['BNBUSDT:RSI_14_15m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend' && MEMORY['BNBUSDT:TREND_QTY']<=0
+>   idx  BNBUSDT:RSI_14_1m,BNBUSDT:REGIME  ->  BNBUSDT:RSI_14_15m,BNBUSDT:REGIME,BNBUSDT:TREND_QTY
+>   [DRY] PATCH /automations/11
+> 
+> ## Farm Buy ADAUSDT (id 13, active=False)
+>   cond MEMORY['ADAUSDT:RSI_14_1m'].current<35 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend'  ->  MEMORY['ADAUSDT:RSI_14_15m'].current<35 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend' && MEMORY['ADAUSDT:TREND_QTY']<=0
+>   idx  ADAUSDT:RSI_14_1m,ADAUSDT:REGIME  ->  ADAUSDT:RSI_14_15m,ADAUSDT:REGIME,ADAUSDT:TREND_QTY
+>   [DRY] PATCH /automations/13
+> 
+> ## LTC 15m monitor existe? False
+>   [DRY] POST /monitors CANDLES LTCUSDT 15m RSI_14 (ativo)
+> 
+> MODO: DRY (nada aplicado)
+> ```
+
+## 🤖 Claude *(15:36:13)*
+
+
+## 🤖 Claude *(15:36:14)*
+
+DRY correto. Aplicando (PATCH via API → passa pelo `validateConditions`; cria LTC 15m). Snapshot HALT antes:
+
+## 🤖 Claude *(15:36:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\nTOKEN=$(cat /tmp/.tkn 2>/dev/null)\nTOKEN=$(curl -s -m5 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\necho \"HALT antes:\"; curl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\" halted=\\\",d[\\\"halted\\\"],\\\"sources=\\\",d.get(\\\"sources\\\"))\"\necho \"=== APLICANDO ===\"\nAPPLY=1 python3 /tmp/rearm_deploy.py'",
+  "description": "Apply PATCH + create LTC 15m monitor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HALT antes:
+>  halted= False sources= []
+> === APLICANDO ===
+> 
+> ## Farm Buy LTCUSDT (id 9, active=False)
+>   cond MEMORY['LTCUSDT:RSI_14_1m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend'  ->  MEMORY['LTCUSDT:RSI_14_15m'].current<35 && MEMORY['LTCUSDT:REGIME']!=='bear' && MEMORY['LTCUSDT:REGIME']!=='trend' && MEMORY['LTCUSDT:TREND_QTY']<=0
+>   idx  LTCUSDT:RSI_14_1m,LTCUSDT:REGIME  ->  LTCUSDT:RSI_14_15m,LTCUSDT:REGIME,LTCUSDT:TREND_QTY
+>   PATCH -> 200 {'id': 9, 'name': 'Farm Buy LTCUSDT', 'symbol': 'LTCUSDT', 'indexes': 'LTCUSDT:RSI_14_15m,LTCUSDT:REGIME,LTCUSDT:TREND_QTY', 'conditions': "
+>   read-back cond OK? True | idx OK? True | active=False
+> 
+> ## Farm Buy BNBUSDT (id 11, active=False)
+>   cond MEMORY['BNBUSDT:RSI_14_1m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend'  ->  MEMORY['BNBUSDT:RSI_14_15m'].current<35 && MEMORY['BNBUSDT:REGIME']!=='bear' && MEMORY['BNBUSDT:REGIME']!=='trend' && MEMORY['BNBUSDT:TREND_QTY']<=0
+>   idx  BNBUSDT:RSI_14_1m,BNBUSDT:REGIME  ->  BNBUSDT:RSI_14_15m,BNBUSDT:REGIME,BNBUSDT:TREND_QTY
+>   PATCH -> 200 {'id': 11, 'name': 'Farm Buy BNBUSDT', 'symbol': 'BNBUSDT', 'indexes': 'BNBUSDT:RSI_14_15m,BNBUSDT:REGIME,BNBUSDT:TREND_QTY', 'conditions': 
+>   read-back cond OK? True | idx OK? True | active=False
+> 
+> ## Farm Buy ADAUSDT (id 13, active=False)
+>   cond MEMORY['ADAUSDT:RSI_14_1m'].current<35 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend'  ->  MEMORY['ADAUSDT:RSI_14_15m'].current<35 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend' && MEMORY['ADAUSDT:TREND_QTY']<=0
+>   idx  ADAUSDT:RSI_14_1m,ADAUSDT:REGIME  ->  ADAUSDT:RSI_14_15m,ADAUSDT:REGIME,ADAUSDT:TREND_QTY
+>   PATCH -> 200 {'id': 13, 'name': 'Farm Buy ADAUSDT', 'symbol': 'ADAUSDT', 'indexes': 'ADAUSDT:RSI_14_15m,ADAUSDT:REGIME,ADAUSDT:TREND_QTY', 'conditions': 
+>   read-back cond OK? True | idx OK? True | active=False
+> 
+> ## LTC 15m monitor existe? False
+>   POST monitor -> 409 Already exists a monitor with these params.
+> 
+> MODO: APLICADO
+> ```
+
+## 🤖 Claude *(15:36:53)*
+
+
+## 🤖 Claude *(15:36:56)*
+
+PATCHes aplicados (3 Farm Buy → 15m + gate `TREND_QTY<=0`, read-back confirma, seguem **inativas**). O LTC 15m monitor **já existia** (409 — a lista anterior estava paginada; os 3 símbolos têm 15m). Só falta deployar o `loadTrendPosition` novo (publica `TREND_QTY=0` no flat). Rebuild+recreate:
+
+## 🤖 Claude *(15:36:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose up -d --build backend 2>&1 | tail -3\necho \"=== aguarda boot ===\"\ntimeout 70 docker logs -f tradeux-backend-1 2>&1 | grep -m1 \"Agent Heartbeat job iniciado\" >/dev/null && echo \"boot OK\"'",
+  "description": "Rebuild+recreate backend",
+  "timeout": 320000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === aguarda boot ===
+> ```
+
+## 🤖 Claude *(15:38:18)*
+
+
+## 🤖 Claude *(15:38:18)*
+
+(O wait falhou só porque o log do job vai pro `system.log`, não stdout — me confundi de novo.) Container "Started". Verificando boot + HALT + Farm Buy + TREND_QTY:
+
+## 🤖 Claude *(15:38:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\nset -a; source .env 2>/dev/null; set +a\necho \"=== boot no system.log ===\"\ndocker exec tradeux-backend-1 sh -lc \"grep -iE \\\"App is running|invariante de ambiente|Heartbeat job iniciado|Boot falhou\\\" /app/logs/system.log | tail -4\"\necho \"=== HALT + Farm Sell ainda ativo? ===\"\nTOKEN=$(curl -s -m6 -X POST http://127.0.0.1:8090/api/login -H \"Content-Type: application/json\" -d \"{\\\"email\\\":\\\"$DEFAULT_SETTINGS_EMAIL\\\",\\\"password\\\":\\\"$DEFAULT_SETTINGS_PWD\\\"}\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get(\\\"token\\\",\\\"\\\"))\")\ncurl -s -m5 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(\\\" halted=\\\",d[\\\"halted\\\"],\\\"| sources=\\\",d.get(\\\"sources\\\"))\"\necho \"=== Farm Buy (inativas+novas cond) e Farm Sell (ativas) no DB ===\"\ndocker exec tradeux-backend-1 node -e \"\nconst db=require(\\\"/app/src/db\\\");\n(async()=>{const r=await db.query(\\\"SELECT id,name,isActive,indexes FROM automations WHERE name LIKE \\x27Farm %\\x27 ORDER BY name\\\");for(const a of (r[0]||r))console.log(a.id,a.name,\\\"active=\\\"+a.isActive,\\\"|\\\",a.indexes);process.exit(0);})();\n\" 2>&1 | tail -8'",
+  "description": "Verify boot + HALT + Farm automations state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot no system.log ===
+> info: 2026-06-24T14:21:12.867Z - App is running at 3001
+> info: 2026-06-24T15:37:04.785Z - [BOOT] invariante de ambiente OK (mainnet: api+stream <=> useTestnet).
+> info: 2026-06-24T15:37:04.893Z - Agent Heartbeat job iniciado (checa a cada 300000ms; declara parado após 1800000ms sem cycle_end). Read-only (tail-scan), notifica só na transição.
+> info: 2026-06-24T15:37:04.930Z - App is running at 3001
+> === HALT + Farm Sell ainda ativo? ===
+>  halted= False | sources= []
+> === Farm Buy (inativas+novas cond) e Farm Sell (ativas) no DB ===
+> 13 Farm Buy ADAUSDT active=0 | ADAUSDT:RSI_14_15m,ADAUSDT:REGIME,ADAUSDT:TREND_QTY
+> 11 Farm Buy BNBUSDT active=0 | BNBUSDT:RSI_14_15m,BNBUSDT:REGIME,BNBUSDT:TREND_QTY
+> 9 Farm Buy LTCUSDT active=0 | LTCUSDT:RSI_14_15m,LTCUSDT:REGIME,LTCUSDT:TREND_QTY
+> 14 Farm Sell ADAUSDT active=1 | ADAUSDT:BOOK,ADAUSDT:FARM_DCA
+> 12 Farm Sell BNBUSDT active=1 | BNBUSDT:BOOK,BNBUSDT:FARM_DCA
+> 10 Farm Sell LTCUSDT active=1 | LTCUSDT:BOOK,LTCUSDT:FARM_DCA
+> ```
+
+## 🤖 Claude *(15:39:01)*
+
+
+## 🤖 Claude *(15:39:03)*
+
+**Deploy A1+A2 verificado:**
+- Boot limpo (env-invariante OK, heartbeat OK, App em 3001, 15:37).
+- **HALT intacto** (`halted=false`), **Farm Sell ativo e intocado** (id10/12/14, `BOOK,FARM_DCA`).
+- **Farm Buy id9/11/13: inativas, indexes = `RSI_14_15m,REGIME,TREND_QTY`** ✓ (prontas pra re-arm).
+
+Commit + push:
+
+## 🤖 Claude *(15:39:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cat > /tmp/rearm_msg.txt <<\"EOF\"\nfeat(rearm): pre-reqs de re-armamento Farm \u2014 gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)\n\nPrepara o Farm Buy (hoje INATIVO) p/ quando o dono religar Trend+Farm nas alts, sem virar prioridade\ndepois. Farm Buy/Trend das alts (LTC/BNB/ADA) coexistem no DB (inativos).\n\nA1 \u2014 coordenacao Farm x Trend (evita colisao de carteiras no mesmo ativo):\n- setup-farm.js: buyCond += \"&& MEMORY['<sym>:TREND_QTY']<=0\"; indexes += TREND_QTY.\n- app-em.js loadTrendPosition: publica TREND_QTY SEMPRE (inclusive 0 quando flat) \u2014 antes pulava qty<=0;\n  sem isso o gate (undefined<=0=false) bloquearia o Farm Buy enquanto o Trend nunca operou.\n  (updateTrendPosition ja publicava 0 pos-venda; id7 e gateado por death-cross, nao por TREND_QTY.)\n\nA2 \u2014 alinha o RSI do Farm Buy live (1m) com o paper (15m): setup-farm.js FARM_INTERVAL default 1m->15m.\n\nGate QA+TL+critico: APPROVE x3 (code); must-fixes eram de PLANO DE DEPLOY (UPDATE via PATCH p/ validar,\nmanter o monitor 1m que o flowJob le, ordem UPDATE->restart) \u2014 todos incorporados. O \"gate no-op\" do critico\nveio de ler o default do setup-trend (BTC); o DB VIVO tem Trend p/ as alts -> o gate TEM valor.\nsim/farmTriggers.test.js +7 asserts do gate (16/16). Deploy ao vivo: 3 Farm Buy (id9/11/13, INATIVAS)\nPATCHadas p/ 15m+gate via API (validateConditions OK, read-back OK); 15m monitors ja existiam; Farm Sell\n(id10/12/14, ATIVO) intocado; HALT/equity intactos. Pos reset-db o seed corrige sozinho (cria ja certo).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nEOF\ncd /home/gcrux-tradeux/tradeux\ngit add backend/scripts/setup-farm.js backend/src/app-em.js backend/scripts/sim/farmTriggers.test.js\ngit commit -F /tmp/rearm_msg.txt 2>&1 | tail -2\ngit -c safe.directory=\"*\" push origin master 2>&1 | tail -3\nsudo chown -R gcrux-tradeux:gcrux-tradeux .git\nstat -c \".git owner: %U:%G\" .git\ngit -c safe.directory=\"*\" log --oneline -1'",
+  "description": "Commit + push A1+A2"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> /bin/bash: line 30: sym: No such file or directory
+> ```
+
+## 🤖 Claude *(15:39:27)*
+
+
+## 🤖 Claude *(15:39:28)*
+
+O heredoc quebrou de novo (`<sym>` virou redirect). Vou escrever a mensagem via Write e commitar limpo:
+
+## 🤖 Claude *(15:39:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/rearm_msg.txt",
+  "content": "feat(rearm): pre-reqs de re-armamento Farm \u2014 gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)\n\nPrepara o Farm Buy (hoje INATIVO) p/ quando o dono religar Trend+Farm nas alts, sem virar prioridade\ndepois. Farm Buy/Trend das alts (LTC/BNB/ADA) coexistem no DB (inativos).\n\nA1 \u2014 coordenacao Farm x Trend (evita colisao de carteiras no mesmo ativo):\n- setup-farm.js: buyCond += gate TREND_QTY menor-ou-igual 0; indexes += TREND_QTY.\n- app-em.js loadTrendPosition: publica TREND_QTY SEMPRE (inclusive 0 quando flat) \u2014 antes pulava qty<=0;\n  sem isso o gate (undefined<=0=false) bloquearia o Farm Buy enquanto o Trend nunca operou.\n  (updateTrendPosition ja publicava 0 pos-venda; id7 e gateado por death-cross, nao por TREND_QTY.)\n\nA2 \u2014 alinha o RSI do Farm Buy live (1m) com o paper (15m): setup-farm.js FARM_INTERVAL default 1m->15m.\n\nGate QA+TL+critico: APPROVE x3 (code); must-fixes eram de PLANO DE DEPLOY (UPDATE via PATCH p/ validar,\nmanter o monitor 1m que o flowJob le, ordem UPDATE->restart) \u2014 todos incorporados. O \"gate no-op\" do critico\nveio de ler o default do setup-trend (BTC); o DB VIVO tem Trend p/ as alts, entao o gate TEM valor.\nsim/farmTriggers.test.js +7 asserts do gate (16/16). Deploy ao vivo: 3 Farm Buy (id9/11/13, INATIVAS)\nPATCHadas p/ 15m+gate via API (validateConditions OK, read-back OK); 15m monitors ja existiam; Farm Sell\n(id10/12/14, ATIVO) intocado; HALT/equity intactos. Pos reset-db o seed corrige sozinho (cria ja certo).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/rearm_msg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:39:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ngit add backend/scripts/setup-farm.js backend/src/app-em.js backend/scripts/sim/farmTriggers.test.js\ngit commit -F /tmp/rearm_msg.txt 2>&1 | tail -2\ngit show --stat --oneline HEAD | head -6'",
+  "description": "Commit A1+A2 as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master f21549b] feat(rearm): pre-reqs de re-armamento Farm — gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)
+>  3 files changed, 29 insertions(+), 9 deletions(-)
+> f21549b feat(rearm): pre-reqs de re-armamento Farm — gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)
+>  backend/scripts/setup-farm.js            | 13 +++++++++----
+>  backend/scripts/sim/farmTriggers.test.js | 13 +++++++++++++
+>  backend/src/app-em.js                    | 12 +++++++-----
+>  3 files changed, 29 insertions(+), 9 deletions(-)
+> ```
+
+## 🤖 Claude *(15:39:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ngit -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo chown -R gcrux-tradeux:gcrux-tradeux .git\nstat -c \".git owner: %U:%G\" .git\ngit -c safe.directory='*' log --oneline -5",
+  "description": "Push A1+A2 + restore ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    8b5c5d9..f21549b  master -> master
+> .git owner: gcrux-tradeux:gcrux-tradeux
+> f21549b feat(rearm): pre-reqs de re-armamento Farm — gate Farm x TREND_QTY (A1) + RSI 1m->15m (A2)
+> 8b5c5d9 docs(env): documenta os params de risco/operacionais faltantes no backend/.env.example
+> 7140726 feat(safety): invariante de ambiente no boot (design-review #5a) — HALT se apiUrl/streamUrl x useTestnet divergirem
+> 00b560e feat(agent): retenção do journal — trim atômico por bytes (anti-crescimento ilimitado)
+> e7afb72 feat(ops): agentHeartbeatJob — alerta Telegram de outage silenciosa do agente LLM
+> ```
+
+## 🤖 Claude *(15:40:05)*
+
+
+## 🤖 Claude *(15:40:10)*
+
+**A1+A2 (re-arm prereqs) ✅ DONE** — `vivo==master==origin==f21549b`. Sua prioridade ("deixar certo pra re-arm") entregue: Farm Buy pronto (gate Trend + RSI 15m), inativo, sim-testado 16/16, HALT/Farm Sell intactos.
+
+**Progresso do "zerar todos":**
+| Item | Status |
+|---|---|
+| RBAC | DEFER (decidido) |
+| **A1+A2 re-arm** | ✅ deployado (`f21549b`) |
+| **#9** qty líquida + bug `q`→`z` | ▶️ começando agora |
+| #4 graceful-shutdown | fila |
+| #5b confirm toggle (frontend) | fila |
+
+Começando o **#9** — é o que tem **bug real no fill handler ATIVO** (`executionData.q`=último lote vs `.z`=cumulativo → qty errada em ordem multi-fill/iceberg). Lendo o código exato do fill handler + os 2 outros pontos (syncOrder, placeOrder):
+
+## 🤖 Claude *(15:40:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/app-em.js",
+  "offset": 545,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 545	        orderId: executionData.i,
+> 546	        clientOrderId: executionData.X === orderStatus.CANCELED ? executionData.C : executionData.c,
+> 547	        side: executionData.S,
+> 548	        type: executionData.o,
+> 549	        status: executionData.X,
+> 550	        isMaker: executionData.m,
+> 551	        transactTime: executionData.T
+> 552	    }
+> 553	
+> 554	    if (order.status === orderStatus.FILLED) {
+> 555	        const quoteAmount = parseFloat(executionData.Z);
+> 556	        order.avgPrice = quoteAmount / parseFloat(executionData.z);
+> 557	        order.commission = executionData.n;
+> 558	        order.commissionAsset = executionData.N;
+> 559	        order.quantity = executionData.q;
+> 560	        // net fee-inclusive ciente do lado (taxa em QUALQUER asset → USDT); fail-safe a preço frio.
+> 561	        order.net = require('./utils/feeCalc').computeNet({
+> 562	            side: executionData.S, cummQuote: quoteAmount, commission: parseFloat(order.commission),
+> 563	            commissionAsset: executionData.N, symbol: order.symbol, avgPrice: order.avgPrice
+> 564	        }).net;
+> 565	    }
+> 566	
+> 567	    if (order.status === orderStatus.REJECTED) order.obs = executionData.r;
+> 568	
+> 569	    setTimeout(async () => {
+> 570	        try {
+> 571	            const updatedOrder = await ordersRepository.updateOrderByOrderId(order.orderId, order.clientOrderId, order);
+> 572	            if (updatedOrder) {
+> 573	
+> 574	                notifyOrderUpdate(order);
+> 575	                // Telegram pro dono (pedido: notificar todas as ordens). Best-effort + dedup interno
+> 576	                // por orderId+status (reports re-entregues não duplicam; MARKET já notificada no insert
+> 577	                // não re-notifica aqui). Síncrona e não-lançante — não atrasa nem quebra o caminho quente.
+> 578	                telegramNotify.notifyOrder(updatedOrder.get({ plain: true }));
+> 579	
+> 580	                const orderCopy = getLightOrder(updatedOrder.get({ plain: true }));
+> 581	                const results = await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy);
+> 582	                if (results) results.map(r => sendMessage({ notification: r }));
+> 583	
+> 584	                await updateTrendPosition(updatedOrder.get({ plain: true }));
+> 585	                // z = qty executada CUMULATIVA do executionReport (autoritativa p/ a reconciliação
+> 586	                // partial→cancel da venda do harvester; a ordem persistida não guarda executedQty).
+> 587	                await updateHarvestPosition(updatedOrder.get({ plain: true }), executionData.z);
+> 588	                await updateFarmPosition(updatedOrder.get({ plain: true }));
+> 589	
+> ```
+
+## 🤖 Claude *(15:41:18)*
+
+
+## 🤖 Claude *(15:41:22)*
+
+Confirmado o bug em [app-em.js:559](backend/src/app-em.js:559): `order.quantity = executionData.q` (qty do PEDIDO) enquanto o `avgPrice` usa `executionData.z` (cumulativo filled) — **inconsistente** (qty×avgPrice ≠ Z em ordem multi-fill). Antes de implementar o #9, preciso resolver **a interação com o custo-base** (a spec assume que `getFarmPosition` recomputa cost=quote/qty; se usar o `avgPrice` armazenado, mudar qty pra líquida sub-contaria o investido). Lendo `getFarmPosition`:
+
+## 🤖 Claude *(15:41:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\ngrep -nA22 \"function getFarmPosition\" repositories/ordersRepository.js | head -28",
+  "description": "Read getFarmPosition cost-basis computation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 257:async function getFarmPosition(symbol) {
+> 258-    const settings = await settingsRepository.getDefaultSettings();
+> 259-    const isTestnet = settings.useTestnet;
+> 260-
+> 261-    // Escopa o bucket DCA às automações do FARM deste símbolo. O Trend Following compra o MESMO ativo na
+> 262-    // MESMA carteira; sem este filtro o FARM_DCA somaria também os BUYs do Trend → a venda no-loss do Farm
+> 263-    // (FARM_QTY) venderia/dumparia a posição do Trend junto (bug P0). E a SELL do Trend (death cross) não
+> 264-    // deve re-basear a janela do Farm. Por isso lastSell e os buys são filtrados pelas automações 'Farm %'.
+> 265-    const farmAutos = await automationModel.findAll({
+> 266-        where: { symbol, name: { [Sequelize.Op.like]: 'Farm %' } },
+> 267-        attributes: ['id'],
+> 268-        raw: true
+> 269-    });
+> 270-    const farmIds = farmAutos.map(a => a.id);
+> 271-    if (!farmIds.length) return { qty: 0, cost: 0 };
+> 272-
+> 273-    const lastSell = await orderModel.findOne({
+> 274-        where: {
+> 275-            symbol,
+> 276-            side: 'SELL',
+> 277-            status: orderStatus.FILLED,
+> 278-            isTestnet,
+> 279-            automationId: { [Sequelize.Op.in]: farmIds }
+> ```
+
+## 🤖 Claude *(15:41:32)*
+
+
+## 🤖 Claude *(15:41:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/src\nsed -n '280,325p' repositories/ordersRepository.js",
+  "description": "Read rest of getFarmPosition (qty/cost math)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>         },
+>         order: [['id', 'DESC']]
+>     });
+> 
+>     const whereClause = {
+>         symbol,
+>         side: 'BUY',
+>         status: orderStatus.FILLED,
+>         isTestnet,
+>         automationId: { [Sequelize.Op.in]: farmIds }
+>     };
+>     if (lastSell) {
+>         whereClause.id = { [Sequelize.Op.gt]: lastSell.id };
+>     }
+> 
+>     const buys = await orderModel.findAll({
+>         where: whereClause,
+>         order: [['id', 'ASC']]
+>     });
+> 
+>     let totalQty = 0;
+>     let totalCost = 0;
+>     for (const buy of buys) {
+>         const qty = parseFloat(buy.quantity);
+>         const avgPrice = parseFloat(buy.avgPrice);
+>         if (Number.isFinite(qty) && qty > 0 && Number.isFinite(avgPrice) && avgPrice > 0) {
+>             totalQty += qty;
+>             totalCost += qty * avgPrice;
+>         }
+>     }
+> 
+>     const cost = totalQty > 0 ? (totalCost / totalQty) : 0;
+>     return { qty: totalQty, cost };
+> }
+> 
+> // Posição do Trend Following por símbolo: soma as BUYs FILLED das automações 'Trend %' desde a última SELL
+> // FILLED 'Trend %' (espelho EXATO de getFarmPosition, escopado por name LIKE 'Trend %'). Derivar do banco torna
+> // TREND_QTY IDEMPOTENTE (sem accumulator volátil → mata o double-count pós-restart) e PERSISTENTE (o boot
+> // recomputa via loadTrendPosition → a posição do golden não orfana). cost = custo médio p/ rastreio (o death
+> // vende a qty inteira; calcQty do SELL usa só a qty).
+> async function getTrendPosition(symbol) {
+>     const settings = await settingsRepository.getDefaultSettings();
+>     const isTestnet = settings.useTestnet;
+> 
+>     const trendAutos = await automationModel.findAll({
+>         where: { symbol, name: { [Sequelize.Op.like]: 'Trend %' } },
+> ```
+
+## 🤖 Claude *(15:42:18)*
+
+
+## 🤖 Claude *(15:42:30)*
+
+Achado importante no #9: li o `getFarmPosition` ([ordersRepository.js:300-312](backend/src/repositories/ordersRepository.js:300)) e a premissa da spec está **parcialmente errada**. O `cost` (gatilho no-loss) é a **média ponderada do `avgPrice`** (bruto), não `quote/qty`. Então gravar qty líquida de fee **NÃO torna o custo-base "realista"** como a spec afirmou — o `cost` fica igual; muda só o `FARM_DCA.qty` (que já é capado na carteira pelo `calcQty`). Ou seja, **#9 é genuinamente dust** (o design-review já o classificou LOW).
+
+O que **é** real no #9: a inconsistência `quantity=q` (pedido) vs `avgPrice` usando `z` (filled cumulativo) — em [app-em.js:559](backend/src/app-em.js:559). Para ordem totalmente preenchida `q==z` (sem efeito hoje), mas é correção de consistência legítima.
+
+---
+
+Estou num **checkpoint natural** depois de um turn muito longo e produtivo. Entregue e no ar:
+
+| Commit | Item |
+|---|---|
+| `f21549b` | **A1+A2 re-arm prereqs** (sua prioridade) ✅ |
+| `8b5c5d9` | `.env.example` params de risco ✅ |
+| `7140726` | **#5a invariante de ambiente** ✅ |
+| `00b560e` | retenção do journal ✅ |
+| `e7afb72` | watchdog do agente ✅ |
+
+**`vivo==master==origin==f21549b`** · HALT/equity ($149,40)/Farm Sell intactos o tempo todo.
+
+**Fila restante:** #9 (faço o fix de consistência `q→z` + qty-líquida via helper compartilhado pra formalmente zerar o H2 — dust, mas zera o item), #4 (graceful-shutdown), #5b (confirm no toggle/frontend).
+
+Como o #9 acabou se revelando dust (e toca o fill handler **ativo**), quer que eu:
+1. **Continue e zere os 3** (#9 só o fix `q→z` + qty-líquida, depois #4 e #5b) — minha recomendação pra cumprir "zerar todos"; ou
+2. **Pare aqui** (os de alto valor já foram; #9/#4/#5b são LOW/defesa-em-profundidade)?
+
+## 👤 User *(17:00:18)*
+
+1
+
 ---
 
 %% --- PROJECT METADATA START --- %%
