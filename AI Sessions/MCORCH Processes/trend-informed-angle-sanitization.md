@@ -106,14 +106,22 @@ G1–G3 are **zero-cost** (dry_run + throwaway trend rows, deleted after). Prove
 
 ## Residual risk (declared) + deferred hardening
 
-The **shared** Cyber-Sentinel (`_shared/sentinel.ts` `INJECTION_PATTERNS`) is **English-only / score≥2** — a pt-BR
-injection passes it. FR-VA-018 closes the exposure **for the trend path** via the trend-specific charset+verb gate
-above (proven by G1). But the same shared-sentinel gap affects **every** caller that gates a pt-BR topic
-(`orchestrate-content:113`, `intent-execute`, etc.). **OTD-VA-018-SENTINEL-PTBR (deferred to the security arc):** add
-pt-BR injection patterns to the shared `INJECTION_PATTERNS`, with false-positive testing against legitimate Portuguese
-marketing copy (the product's own output language) before rollout — it is system-wide, so it must not over-block real
-content. Until then, untrusted-source→prompt paths MUST carry their own source-specific gate (this SOP's pattern),
-not rely on the shared sentinel alone.
+**OTD-VA-018-SENTINEL-PTBR — ✅ RESOLVED 2026-06-23.** The **shared** Cyber-Sentinel (`_shared/sentinel.ts`
+`INJECTION_PATTERNS`) WAS English-only / score≥2 — a pt-BR injection scored 0 and passed it. Now **7 pt-BR injection
+families (f1..f7)** mirror the English families with the same phrase-level specificity, so the score≥2 threshold still
+tolerates a lone trigger in benign copy. **Tuned to 0 true false positives** against a real pt-BR marketing corpus
+(58 legit samples incl. adversarially-generated trope-traps "esqueça tudo o que você sabe", "ignore os sistemas
+tradicionais", "revele os segredos do home office", "modo livre do drone", "atua como o sistema nervoso" — all score
+≤1; the only 2 adversarial strings blocked literally contain "mostre o prompt do sistema" / "modo desenvolvedor
+ativado" = genuine injection phrases, not real content). Proven LIVE: a chained pt-BR injection → `orchestrate-content`
+→ **403 `prompt_injection_suspected` score=2** (pre-billing); English unchanged (regression 403 confirmed).
+**Scope (acknowledged, by design — same as English):** the sentinel is lexical TRIAGE — a **single-intent** injection
+(lone exfil / role-override / billing phrase) scores ≤1 and PASSES (English `reveal system prompt` alone also passes),
+and **beyond-triage** vectors (affiliate-link swap, char-spacing obfuscation "I g n o r e", novel role-override
+"você é o assistente") are not caught by a regex triage in either language. The layered defense for those remains:
+(a) **source-specific gates** (this SOP's `sanitizeTrendTitle` strips URLs/markdown + rejects override verbs — the
+cross-tenant global-source vector), (b) the score≥2 precision design, (c) the economic gate (`deduct_mco_coins`).
+Tuning harness + corpus: `/tmp/sentinel-ptbr-test.ts` + adversarial workflow `wf_0459e1c1` (FP-hunter + bypass-hunter).
 
 ---
 

@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1334
-> * **Sessões do Claude**: 1292
+> * **Total de Sessões Registradas**: 1336
+> * **Sessões do Claude**: 1294
 > * **Sessões do Gemini**: 42
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` - *2026-06-24*
 *   `[[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]` - *2026-06-23*
 *   `[[2026-05-27 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-27*
 *   `[[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-26*
@@ -62,6 +63,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-24 - Próximos passos do projeto]]` - *2026-06-24*
 *   `[[2026-06-23 - agent-afe8da4908bc6253f]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-add3c88d55b9c16ff]]` - *2026-06-23*
@@ -73,8 +75,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-23 - agent-a98f6a48601b6a832]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-a84ff6550cbc9f5e1]]` - *2026-06-23*
 *   `[[2026-06-23 - agent-a7a685781cec36e94]]` - *2026-06-23*
-*   `[[2026-06-23 - agent-a42de3151cf8aaafb]]` - *2026-06-23*
-*   *... e mais 1295 sessões nessa categoria.*
+*   *... e mais 1296 sessões nessa categoria.*
 
 ---
 
@@ -265,6 +266,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-24 - Próximos passos do projeto]]` (ClaudeSessions)
+*   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-afe8da4908bc6253f]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-af1bcc5d008dba1ef]]` (ClaudeSessions)
 *   `[[2026-06-23 - agent-add3c88d55b9c16ff]]` (ClaudeSessions)

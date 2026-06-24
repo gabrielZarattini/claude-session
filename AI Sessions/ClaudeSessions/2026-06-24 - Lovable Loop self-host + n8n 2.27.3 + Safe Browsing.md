@@ -65,3 +65,16 @@ session_id: cowork-2026-06-24-selfhost-migration
 
 ---
 *Breadcrumb Cowork 2026-06-24. Projeto: [[Agente Lovable Browser]].*
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-23 - agent-afe8da4908bc6253f]]
+> * **Próxima Sessão**: [[2026-06-24 - Próximos passos do projeto]]
+%% --- TIMELINE END --- %%
