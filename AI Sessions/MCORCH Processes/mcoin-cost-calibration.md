@@ -97,17 +97,10 @@ A OTD fechou validando-os; o único furo genuíno era `IMAGE_GENERATION` (3 → 
 
 **Verificação:** primitivo provado por `scripts/qa/smoke-aeo-refund.ts` (deduct→add→balance restaurado; guarda rejeita negativo) + unit `_shared/billing.test.ts`. O gatilho de falha de persistência **não é forçável** por input (valores clampados/validados) → a fiação é coberta por unit + code review, não por falha forçada (honestidade Lei 1).
 
-**Gap fechado (OTD-INTENT-DISPATCH-REFUND):** `orchestrate-content` agora estorna os 10 se a criação de `pipeline_runs` falhar OU se o kick do 1º passo (`async_orchestrate_step`) retornar erro pós-débito — `charged`/`chargedUser`/`runId` hoisted, refund no `catch` (cliente service-role fresco) + marca o run `error` para não deixar um "running" fantasma. `nurture-dispatch` aplica o mesmo a um envio Resend **failed** (touch não-entregue → net-zero; `gated` **não** é falha → sem refund). A falha pós-débito não é forçável por input nesses dois (insert/kick raramente falham) → fiação por unit (`_shared/billing.test.ts`) + code review, happy-path provado no E2E pago (Lei 1, mesma honestidade do [[aeo-audit|aeo-audit]]).
+**Gap fechado (OTD-INTENT-DISPATCH-REFUND):** `orchestrate-content` agora estorna os 10 se a criação de `pipeline_runs` falhar OU se o kick do 1º passo (`async_orchestrate_step`) retornar erro pós-débito — `charged`/`chargedUser`/`runId` hoisted, refund no `catch` (cliente service-role fresco) + marca o run `error` para não deixar um "running" fantasma. `nurture-dispatch` aplica o mesmo a um envio Resend **failed** (touch não-entregue → net-zero; `gated` **não** é falha → sem refund). A falha pós-débito não é forçável por input nesses dois (insert/kick raramente falham) → fiação por unit (`_shared/billing.test.ts`) + code review, happy-path provado no E2E pago (Lei 1, mesma honestidade do aeo-audit).
 
 ## Decisões abertas (pricing — Sovereign)
 
 - **Desconto de volume** (Enterprise a 1/3 do Starter) é o que comprime a margem para o piso de $0.018 — revisar se quiser
   mais folga em todos os planos. Fora do escopo da calibração de custo (é decisão de pricing de plano).
 - **FX dinâmico:** hoje premissa fixa R$5.5; se quiser, ancorar num oracle de câmbio e recomputar `USD_PER_MCO_FLOOR`.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
