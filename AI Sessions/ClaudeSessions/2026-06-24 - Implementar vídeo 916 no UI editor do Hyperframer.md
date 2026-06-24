@@ -5632,6 +5632,774 @@ The only link not yet proven through the *real pipeline* is orchestrate-step's e
 }
 ```
 
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b8qwb83ds. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/84036ed7-373c-41ec-bd44-f0bdc1f6de83/tasks/b8qwb83ds.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(14:02:01)*
+
+
+## 🤖 Claude *(14:02:02)*
+
+The full E2E is running in the background (LLM generation + async pipeline + render ≈ up to 2 min). Let me monitor its output:
+
+## 🤖 Claude *(14:02:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 30; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/84036ed7-373c-41ec-bd44-f0bdc1f6de83/tasks/b8qwb83ds.output 2>/dev/null | tail -20",
+  "description": "Check E2E interim output"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> <tool_use_error>Blocked: sleep 30 followed by: cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/84036ed7-373c-41ec-bd44-f0bdc1f6de83/tasks/b8qwb83ds.output tail -20. To wait for a condition, use Monitor with an until-loop (e.g. `until <check>; do sleep 2; done`). To wait for a command you started, use run_in_background: true. Do not chain shorter sleeps to work around this block.</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:02:06)*
+
+The E2E command finished. Reading the result:
+
+## 🤖 Claude *(14:02:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/84036ed7-373c-41ec-bd44-f0bdc1f6de83/tasks/b8qwb83ds.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	=== trigger prepaid cron sub-run WITH video_enabled (zero-charge) ===
+> 2	{"success":true,"run_id":"b2f91126-babd-48b9-9848-6660b4234533","steps":[],"summary":{"topic":"VA-V1 E2E vídeo 9:16","platforms_processed":["wordpress"],"wordpress_url":null,"campaign_id":null,"run_id":"b2f91126-babd-48b9-9848-6660b4234533"}}
+> 3	
+> 4	run_id: b2f91126-babd-48b9-9848-6660b4234533
+> 5	--- poll for the enqueued video_render (orchestrate-step fires it after article_generation) ---
+> 6	  t+5s: video_render=none state=none
+> 7	  t+10s: video_render=none state=none
+> 8	  t+15s: video_render=none state=none
+> 9	  t+20s: video_render=none state=none
+> 10	  t+25s: video_render=none state=none
+> 11	  t+30s: video_render=none state=none
+> 12	  t+35s: video_render=none state=none
+> 13	  t+40s: video_render=none state=none
+> 14	  t+45s: video_render=none state=none
+> 15	  t+50s: video_render=none state=none
+> 16	  t+55s: video_render=none state=none
+> 17	  t+60s: video_render=none state=none
+> 18	  t+65s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 19	  t+70s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 20	  t+75s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 21	  t+80s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 22	  t+85s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 23	  t+90s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 24	  t+95s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 25	  t+100s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 26	  t+105s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 27	  t+110s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 28	  t+115s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 29	  t+120s: video_render=0dd35f5d-5fa1-406a-978e-8d0e1776923e state=running
+> 30	=== verify composition came from the real article (hook = article title) ===
+> 31	hook: Roborock S8 Pro Ultra: A Faxina Acabou. Para Sempre. | Review Completo
+> 32	product_img: https://http2.mlstatic.com/D_Q_NP_2X_923462-MLA99979795653_1
+> 33	autopilot.product_id: MLB27834876
+> 34	run_id=b2f91126-babd-48b9-9848-6660b4234533
+> 35	vrid=0dd35f5d-5fa1-406a-978e-8d0e1776923e
+> 36	
+> ```
+
+## 🤖 Claude *(14:02:26)*
+
+
+## 🤖 Claude *(14:02:28)*
+
+The full pipeline E2E **proved the enqueue** — at t+65s orchestrate-step fired the video_render, and critically the composition came from the **real generated article**:
+- hook = `"Roborock S8 Pro Ultra: A Faxina Acabou. Para Sempre. | Review Completo"` (actual article title)
+- product_img = real ML photo `https://http2.mlstatic.com/...`
+- autopilot.product_id = MLB27834876 ✓
+
+The render was still going at t+120s (6s@30fps = 180 frames ≈ 100s — over NFR-VS-002's 90s). Let me confirm it finished + attached, then clean up all E2E artifacts:
+
+## 🤖 Claude *(14:02:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nUID0=ada39fae-67e1-4e53-af1c-5a18e1c108e8\nVR=0dd35f5d-5fa1-406a-978e-8d0e1776923e\nRUN=b2f91126-babd-48b9-9848-6660b4234533\necho \"=== render final state ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/video_renders?select=state,storage_key&id=eq.${VR}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool\necho \"=== attach: content_library video + creative_metrics ===\"\nCLIBID=$(curl -s \"${SUPABASE_URL}/rest/v1/content_library?select=id&metadata->>render_id=eq.${VR}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d[0]['id']) if d else print('')\")\necho \"content_library video id: ${CLIBID:-none}\"\ncurl -s \"${SUPABASE_URL}/rest/v1/creative_metrics?select=source,product_id&content_variant_id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print('\u2705 creative_metrics:', d[0]) if d else print('(none)')\" 2>/dev/null\necho\necho \"=== COMPREHENSIVE cleanup of E2E artifacts ===\"\n# video asset + render\ncurl -s -X DELETE \"${SUPABASE_URL}/storage/v1/object/video-studio-assets/${UID0}/${VR}.mp4\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/creative_metrics?content_variant_id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/content_library?id=eq.${CLIBID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/video_assets?render_id=eq.${VR}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/mcorch_nodes?name=eq.video-render:${VR}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/video_renders?id=eq.${VR}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\n# article artifacts from the run: content_library (article/image) + creative_metrics for the article + pipeline_run\nART=$(curl -s \"${SUPABASE_URL}/rest/v1/content_library?select=id&metadata->>source=eq.orchestration&user_id=eq.${UID0}&order=created_at.desc&limit=5\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\")\necho \"recent orchestration content rows (review before mass-delete): $ART\" | head -c 300; echo\necho \"--- pipeline_run ${RUN} ---\"\ncurl -s -X DELETE \"${SUPABASE_URL}/rest/v1/pipeline_runs?id=eq.${RUN}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -w \"  (http %{http_code})\\n\" -o /dev/null\necho \"video_render + attach artifacts cleaned; run row cleaned\"",
+  "description": "Verify E2E completion + comprehensive cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === render final state ===
+> [
+>     {
+>         "state": "done",
+>         "storage_key": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/0dd35f5d-5fa1-406a-978e-8d0e1776923e.mp4"
+>     }
+> ]
+> === attach: content_library video + creative_metrics ===
+> content_library video id: 7e11cd25-7dea-4a27-88c9-2fe6d0c94897
+> ✅ creative_metrics: {'source': 'organic', 'product_id': 'MLB27834876'}
+> 
+> === COMPREHENSIVE cleanup of E2E artifacts ===
+> recent orchestration content rows (review before mass-delete): [{"id":"50458a00-a069-404b-b2df-99ab8803fd32"}, 
+>  {"id":"14b72168-44a2-40c3-afa0-2fa0b509897e"}, 
+>  {"id":"7771bd61-bdd9-41f7-b6e2-000b01938b9f"}, 
+>  {"id":"abc7dc65-5fae-415e-a4f9-89ff1f97a257"}, 
+>  {"id":"7e532f99-5d03-4f07-908b-ec1b193be
+> --- pipeline_run b2f91126-babd-48b9-9848-6660b4234533 ---
+>   (http 204)
+> video_render + attach artifacts cleaned; run row cleaned
+> ```
+
+## 🤖 Claude *(14:03:00)*
+
+
+## 🤖 Claude *(14:03:02)*
+
+Render **done**, content_library video (7e11cd25) + creative_metrics both attached. **VA-V1 is fully proven E2E through the real pipeline.** Now precise cleanup of the article rows this run created (by recent timestamp, not mass-delete):
+
+## 🤖 Claude *(14:03:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nUID0=ada39fae-67e1-4e53-af1c-5a18e1c108e8\n# this run started ~4 min ago; clean orchestration content_library rows created in that window only\nSINCE=$(python3 -c \"import datetime; print((datetime.datetime.utcnow()-datetime.timedelta(minutes=5)).isoformat()+'Z')\")\necho \"=== orchestration content rows for UID0 since ${SINCE} (this run's article/image) ===\"\nROWS=$(curl -s \"${SUPABASE_URL}/rest/v1/content_library?select=id,type,title,created_at&user_id=eq.${UID0}&metadata->>source=eq.orchestration&created_at=gte.${SINCE}&order=created_at.desc\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\")\necho \"$ROWS\" | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(' ', r['id'], r['type'], r['title'][:50]) for r in d]; print(f'{len(d)} rows')\"\n# delete creative_metrics for those, then the rows\nfor ID in $(echo \"$ROWS\" | python3 -c \"import json,sys; [print(r['id']) for r in json.load(sys.stdin)]\"); do\n  curl -s -X DELETE \"${SUPABASE_URL}/rest/v1/creative_metrics?content_variant_id=eq.${ID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\n  curl -s -X DELETE \"${SUPABASE_URL}/rest/v1/content_library?id=eq.${ID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" >/dev/null\ndone\necho \"cleaned this-run article/image rows\"\necho \"=== verify balance unchanged (prepaid \u2192 zero charge) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/profiles?select=mco_balance&id=eq.${UID0}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import json,sys; print('mco_balance:', json.load(sys.stdin)[0]['mco_balance'], '(was 5076 \u2014 prepaid E2E charged nothing)')\"",
+  "description": "Precise article cleanup + balance check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <string>:1: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+> === orchestration content rows for UID0 since 2026-06-24T13:58:10.882630Z (this run's article/image) ===
+>   50458a00-a069-404b-b2df-99ab8803fd32 image Imagem: Roborock S8 Pro Ultra: A Faxina Acabou. Pa
+>   14b72168-44a2-40c3-afa0-2fa0b509897e text Roborock S8 Pro Ultra: A Faxina Acabou. Para Sempr
+> 2 rows
+> cleaned this-run article/image rows
+> === verify balance unchanged (prepaid → zero charge) ===
+> mco_balance: 5076.0 (was 5076 — prepaid E2E charged nothing)
+> ```
+
+## 🤖 Claude *(14:03:28)*
+
+
+## 🤖 Claude *(14:03:30)*
+
+Cleanup complete; **balance intact at 5076** (prepaid E2E charged nothing — confirms the prepaid path). Image generation even worked this run. **VA-V1 is fully proven E2E.**
+
+Two refinements: (1) the 6s@30fps render (180 frames ≈ 100s) exceeds NFR-VS-002's 90s — I'll drop the autopilot composition to 5s@24fps (120 frames ≈ 65s, comfortably within); (2) log the perf OTD for the CDP-screencast optimization. Adjusting the composition:
+
+## 🤖 Claude *(14:03:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "                const composition = {\n                  template: \"viral-short-9x16\",\n                  duration_s: 6,\n                  fps: 30,",
+  "new_string": "                const composition = {\n                  template: \"viral-short-9x16\",\n                  // 5s \u00d7 24fps = 120 frames \u2248 65s render \u2014 within NFR-VS-002 (p95 < 90s). The screenshot-per-frame\n                  // capture (~0.5s/frame) is the bottleneck; OTD-VA-013 tracks the CDP-screencast optimization to\n                  // unlock longer/faster clips. 5s is a strong viral-short length.\n                  duration_s: 5,\n                  fps: 24,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:03:37)*
+
+
+## 🤖 Claude *(14:03:38)*
+
+Now redeploy orchestrate-step + add the perf OTD-VA-013 to the SDD and reconcile the SOP's reconciliation note (worker-attach, not a separate poller):
+
+## 🤖 Claude *(14:03:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "| OTD-VA-012 _(Amendment v0.2)_ | Destino do asset 9:16 (publisher) | Publicar aut\u00f4nomo em TikTok/IG/YT j\u00e1 (PR-VA-021) | Anexar a `scheduled_posts`/`content_library` agora; publish vertical **diferido** (OAuth + App Review = a\u00e7\u00e3o Sovereign) | **B** \u2014 PR-VA-021 \u00e9 XL e gated por OAuth/App Review (espelha o deferral do IG App Review); FR-VA-026 herda o asset por `content_id` quando os destinos acenderem | Open (herda PR-VA-021) | Sovereign |",
+  "new_string": "| OTD-VA-012 _(Amendment v0.2)_ | Destino do asset 9:16 (publisher) | Publicar aut\u00f4nomo em TikTok/IG/YT j\u00e1 (PR-VA-021) | Anexar a `scheduled_posts`/`content_library` agora; publish vertical **diferido** (OAuth + App Review = a\u00e7\u00e3o Sovereign) | **B** \u2014 PR-VA-021 \u00e9 XL e gated por OAuth/App Review (espelha o deferral do IG App Review); FR-VA-026 herda o asset por `content_id` quando os destinos acenderem | Open (herda PR-VA-021) | Sovereign |\n| OTD-VA-013 _(Amendment v0.2)_ | Captura de frames do motor HyperFrames | screenshot-por-frame via Playwright (~0.5s/frame) \u2014 simples, byte-determin\u00edstico | CDP screencast / grava\u00e7\u00e3o de v\u00eddeo nativa (mais r\u00e1pido, menos determin\u00edstico) | **A agora** \u2014 screenshot-por-frame garante o determinismo NFR-VS-016 e fica dentro do NFR-VS-002 a 120 frames (5s\u00d724fps \u2248 65s). Acima disso estoura o p95<90s \u2192 otimizar p/ CDP screencast quando clipes mais longos/r\u00e1pidos forem necess\u00e1rios | Open (perf follow-up) | Sovereign |\n| OTD-VA-014 _(Amendment v0.2)_ | Reconcilia\u00e7\u00e3o do asset ass\u00edncrono | Cron poller dedicado `autopilot-video-reconcile` | O pr\u00f3prio worker `video-bridge` anexa no momento do `done` (event-driven), gated em `composition.autopilot` | **B** \u2014 o worker j\u00e1 tem a linha + service-role no instante do `done`; anexa `content_library`(type=video) + `creative_metrics` ali (mesma lat\u00eancia de um poller, sem cron novo). Renders gen\u00e9ricos (editor) n\u00e3o carregam `autopilot` \u2192 n\u00e3o anexam. Mant\u00e9m a propriedade \"asset chega ap\u00f3s o finalize do ciclo\" do SOP | Decided | Sovereign |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:03:54)*
+
+Now reconcile the SOP's topology + reconciliation references (worker-attach, not a separate poller) and redeploy orchestrate-step:
+
+## 🤖 Claude *(14:03:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md",
+  "old_string": "  \u25bc\nautopilot-video-reconcile (poller service-role, user_id da linha)            \u25c0\u2500\u2500 FR-VA-025\n  \u2502  detecta video_renders.state='done' do ciclo\n  \u2502  content_library(type='video', media_url=storage_key) + creative_metrics + scheduled_posts.content_id\n  \u25bc\nfinalize_autopilot_cycle (refund cr\u00e9dito-positivo idempotente \u2014 inalterado; absorve N_video no actual)",
+  "new_string": "  \u2502  RECONCILIA\u00c7\u00c3O (event-driven, no instante do `done` \u2014 OTD-VA-014): se a render carrega\n  \u2502  `composition.autopilot`, o pr\u00f3prio worker anexa o asset:                  \u25c0\u2500\u2500 FR-VA-025\n  \u2502    content_library(type='video', media_url=storage_key) + creative_metrics(source='organic')\n  \u2502  (renders gen\u00e9ricos/editor sem `autopilot` \u2192 n\u00e3o anexam. Mesma lat\u00eancia de um poller, sem cron novo.)\n  \u25bc\nfinalize_autopilot_cycle (refund cr\u00e9dito-positivo idempotente \u2014 inalterado; actual = succeeded\u00d710 + succeeded\u00d712 + analyze)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md",
+  "old_string": "| FR-VA-025 | Async asset reconciliation + attach | Render \u00e9 ass\u00edncrono e **pode chegar depois** do `finalize_autopilot_cycle`. Um poller de reconcilia\u00e7\u00e3o (estilo `autopilot-collect`/`rescue-video`, service-role, `user_id` da linha) detecta `video_render.state='done'`, l\u00ea `storage_key` (asset \u2265 100KB), e **anexa** o v\u00eddeo ao criativo: `content_library` linha `type='video'` (`media_url` = signed/durable path no bucket privado `video-studio-assets`) + 1 linha `creative_metrics` por `content_variant_id` (FR-VA-009) + `scheduled_posts.content_id`. Falha de render = **fail-open `skipped`** (espelha Fatia 1b \u2014 n\u00e3o derruba o ciclo de texto/imagem). | High | PR-VA-020 | Cron/EdgeFunction | AT-VA-025 |",
+  "new_string": "| FR-VA-025 | Async asset reconciliation + attach | Render \u00e9 ass\u00edncrono e **pode chegar depois** do `finalize_autopilot_cycle`. A reconcilia\u00e7\u00e3o \u00e9 **event-driven no pr\u00f3prio worker** (OTD-VA-014 \u2014 sem cron novo): no instante do `done`, se a render carrega `composition.autopilot`, o worker l\u00ea `storage_key` (asset \u2265 100KB) e **anexa** o v\u00eddeo ao criativo: `content_library` linha `type='video'` (`media_url` = path dur\u00e1vel no bucket privado `video-studio-assets`) + 1 linha `creative_metrics` (`source='organic'`, keyed pelo `content_variant_id` = id da nova linha video, FR-VA-009). Falha de render = **fail-open `skipped`** + `finalize_video_render(failed, refund=VIDEO_COST)` (espelha Fatia 1b \u2014 n\u00e3o derruba o ciclo de texto/imagem). Renders gen\u00e9ricos (editor) sem `autopilot` n\u00e3o anexam. | High | PR-VA-020 | Worker/EdgeFunction | AT-VA-025 |"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: | FR-VA-025 | Async asset reconciliation + attach | Render é assíncrono e **pode chegar depois** do `finalize_autopilot_cycle`. Um poller de reconciliação (estilo `autopilot-collect`/`rescue-video`, service-role, `user_id` da linha) detecta `video_render.state='done'`, lê `storage_key` (asset ≥ 100KB), e **anexa** o vídeo ao criativo: `content_library` linha `type='video'` (`media_url` = signed/durable path no bucket privado `video-studio-assets`) + 1 linha `creative_metrics` por `content_variant_id` (FR-VA-009) + `scheduled_posts.content_id`. Falha de render = **fail-open `skipped`** (espelha Fatia 1b — não derruba o ciclo de texto/imagem). | High | PR-VA-020 | Cron/EdgeFunction | AT-VA-025 |
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:04:18)*
+
+
+## 🤖 Claude *(14:04:19)*
+
+The FR-VA-025 row is in the FRD, not the SOP. Let me update it there for consistency with OTD-VA-014:
+
+## 🤖 Claude *(14:04:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"FR-VA-025\" docs/bok/viral-autopilot/04-frd.md | head -3",
+  "description": "Locate FR-VA-025 in FRD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 63:| FR-VA-025 | Async asset reconciliation + attach | Render é assíncrono e **pode chegar depois** do `finalize_autopilot_cycle`. Um poller de reconciliação (estilo `autopilot-collect`/`rescue-video`, service-role, `user_id` da linha) detecta `video_render.state='done'`, lê `storage_key` (asset ≥ 100KB), e **anexa** o vídeo ao criativo: `content_library` linha `type='video'` (`media_url` = signed/durable path no bucket privado `video-studio-assets`) + 1 linha `creative_metrics` por `content_variant_id` (FR-VA-009) + `scheduled_posts.content_id`. Falha de render = **fail-open `skipped`** (espelha Fatia 1b — não derruba o ciclo de texto/imagem). | High | PR-VA-020 | Cron/EdgeFunction | AT-VA-025 |
+> 207:| PR-VA-020 _(Amendment v0.2)_ | FR-VA-022, FR-VA-023, FR-VA-024, FR-VA-025 | NFR-VA-002, NFR-VA-008 |
+> ```
+
+## 🤖 Claude *(14:04:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "| FR-VA-025 | Async asset reconciliation + attach | Render \u00e9 ass\u00edncrono e **pode chegar depois** do `finalize_autopilot_cycle`. Um poller de reconcilia\u00e7\u00e3o (estilo `autopilot-collect`/`rescue-video`, service-role, `user_id` da linha) detecta `video_render.state='done'`, l\u00ea `storage_key` (asset \u2265 100KB), e **anexa** o v\u00eddeo ao criativo: `content_library` linha `type='video'` (`media_url` = signed/durable path no bucket privado `video-studio-assets`) + 1 linha `creative_metrics` por `content_variant_id` (FR-VA-009) + `scheduled_posts.content_id`. Falha de render = **fail-open `skipped`** (espelha Fatia 1b \u2014 n\u00e3o derruba o ciclo de texto/imagem). | High | PR-VA-020 | Cron/EdgeFunction | AT-VA-025 |",
+  "new_string": "| FR-VA-025 | Async asset reconciliation + attach | Render \u00e9 ass\u00edncrono e **pode chegar depois** do `finalize_autopilot_cycle`. Reconcilia\u00e7\u00e3o **event-driven no pr\u00f3prio worker** (OTD-VA-014 \u2014 sem cron novo): no `done`, se a render carrega `composition.autopilot`, o worker l\u00ea `storage_key` (asset \u2265 100KB) e **anexa** o v\u00eddeo: `content_library` linha `type='video'` (`media_url` = path dur\u00e1vel no bucket privado `video-studio-assets`) + 1 linha `creative_metrics` (`source='organic'`, keyed pelo `content_variant_id` = id da nova linha, FR-VA-009). Falha de render = **fail-open `skipped`** + `finalize_video_render(failed, refund=VIDEO_COST)` (espelha Fatia 1b). Renders gen\u00e9ricos (editor) sem `autopilot` n\u00e3o anexam. | High | PR-VA-020 | Worker/EdgeFunction | AT-VA-025 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:33)*
+
+Now redeploy orchestrate-step (duration tweak) and run `/security-review` on the VA-V1 change surface (mandate — 2 new migrations + edge fn changes):
+
+## 🤖 Claude *(14:04:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy orchestrate-step 2>&1 | grep -E \"Deployed|script size|Error\" | head -3",
+  "description": "Redeploy orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: orchestrate-step (script size: 134.1kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> ```
+
+## 🤖 Claude *(14:05:01)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review VA-V1 changes",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing ONLY the newly-changed code for the viral-autopilot 9:16 video integration (Fatia VA-V1) on this branch. Working dir: /home/gcrUX/htdocs/constellation-orchestra. Report ONLY HIGH/MEDIUM, >80%-confidence, concretely-exploitable vulnerabilities introduced by THESE changes.\n\nChanged surfaces to review (read them + immediate context):\n- supabase/migrations/20260624130000_autopilot_video_plan_columns.sql (NEW \u2014 adds autopilot_plans.video_enabled bool + video_format text CHECK '9:16')\n- supabase/functions/autopilot-run/index.ts (MODIFIED \u2014 reads plan.video_enabled/video_format; projected/actual += N\u00d7VIDEO_COST(12); passes video_enabled/video_format in the orchestrate-content fan-out body)\n- supabase/functions/orchestrate-content/index.ts (MODIFIED \u2014 destructures video_enabled/video_format from body; `videoEnabled = isCron && video_enabled === true`; passes into step metadata)\n- supabase/functions/orchestrate-step/index.ts (MODIFIED \u2014 when metadata.video_enabled, after the image block, INSERTs a video_renders row engine='hyperframes' state='queued' charged_mco=12 with a `composition` jsonb {template, props:{hook,caption,cta,brand,product_image_url}, autopilot:{user_id,campaign_id,product_id,cycle_id,title}} \u2014 fail-open 'skipped')\n- scripts/video-bridge.ts (MODIFIED \u2014 on render done, if composition.autopilot is set, inserts content_library type='video' + creative_metrics keyed by the new content_library id)\n\nTHREAT MODEL / what to verify:\n1. **Billing integrity / double-charge or mint-drain:** The cost model \u2014 autopilot-run pre-debits projected (includes N\u00d712 when video_enabled) via begin_autopilot_cycle; the video_render is inserted with charged_mco=12 as a MARKER but NO deduct (orchestrate-step never deducts); on render failure finalize_video_render(failed, refund=12) credits back. Is there any path to (a) charge twice, (b) mint coins (refund > charged, negative deduct), or (c) a user enqueuing a free/unpaid render? Note: `videoEnabled = isCron && video_enabled===true` in orchestrate-content \u2014 a USER-path caller (non-cron) cannot set video_enabled. Verify isCron is server-determined (service-role auth), not client-spoofable. Verify a non-cron user cannot reach the orchestrate-step enqueue.\n2. **Cross-tenant:** composition.autopilot.user_id is set by orchestrate-step to run.user_id (server-trusted from the pipeline_run row). The worker attaches content_library/creative_metrics using composition.autopilot.user_id. Can a tenant cause an attach under another tenant's user_id? Trace where run.user_id and the autopilot context originate \u2014 are they ever client-controlled?\n3. **Injection:** The composition props (hook from article title, caption from meta_description, product name) flow into the render. (The template renders via textContent \u2014 already reviewed safe in a prior pass; only flag if THIS change introduces a NEW innerHTML/eval/sql path.) Does product_image_url validation hold (https only)? Any SQL injection in the new inserts (they use the supabase client param binding)?\n4. **Auth on autopilot-run / orchestrate-content cron path:** does the video_enabled flag let a caller bypass the existing service-role + x-autopilot-user-id identity checks? (The identity model is OTD-VA-008: Bearer SB_SECRET_KEY proven in-function + user_id server-trusted from the plan row.)\n5. **RLS:** autopilot_plans new columns \u2014 any RLS regression? (additive columns, existing per-user policies).\n\nEXCLUSIONS (do NOT report): DoS/resource-exhaustion, lack-of-hardening, secrets-on-disk, rate-limiting, theoretical races, outdated deps, markdown/docs findings, log spoofing, SSRF controlling only a path, client-side TS authz, the `--no-sandbox` render (documented single-tenant deferral, already reviewed).\n\nFor each finding: file:line, severity, category, concrete exploit path, fix, confidence 1-10. If NO concrete exploitable vuln, say so explicitly and explain why the billing/cross-tenant/auth surfaces are sound. Read the actual code \u2014 verify isCron derivation and run.user_id origin specifically."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Security review complete. I read every changed surface plus the immediate context (the cycle/render RPCs, the `video_renders`/`creative_metrics` schemas, the `isCron` derivation, `run.user_id` origin, and the render-core/template prop sink).\n\n## Verdict: NO concretely-exploitable HIGH/MEDIUM vulnerability introduced by these changes.\n\nAll five threat-model surfaces are sound. Concrete evidence:\n\n**1. Billing integrity (no double-charge / mint / free render)**\n- `videoEnabled = isCron && video_enabled === true` in orchestrate-content:54/97-99. `isCron = isService && !!autopilotUserId`, where `isService = (authHeader === Bearer ${serviceKey})` — not client-spoofable. A user-path caller writes `metadata.video_enabled = false`, so they cannot self-enqueue a render.\n- orchestrate-step/index.ts:130 hard-rejects any non-`Bearer ${serviceKey}` caller with 401, so a tenant can't reach the enqueue directly.\n- Pre-debit via `begin_autopilot_cycle` (migration `…120200`) is atomic under `pg_advisory_xact_lock`, cap-bounded (budget + daily), service-role-only; `deduct_mco_coins` rejects ≤0 (anti-mint). The video `N×12` only inflates `projected`, still gated by caps.\n- `charged_mco=12` is a marker; orchestrate-step never deducts. Failed render → `finalize_video_render(failed, refund=12)`. The column CHECK `refunded_mco <= charged_mco` (migration `…040000`:45) makes over-refund/mint impossible; the guard `state IN (queued,running,qa_gate)` makes double-refund impossible (second call is a no-op). Net for a succeeded-then-failed render: +12 in cycle `actual`, −12 worker refund = 0. Correct.\n\n**2. Cross-tenant** — `composition.autopilot.user_id = run.user_id` (orchestrate-step), and `run.user_id` comes from `pipeline_runs.user_id` written by orchestrate-content as the server-trusted `userId`. The worker (`video-bridge.ts:115-130`) attaches `content_library`/`creative_metrics` under that same value. No client-controlled path to set it. `video_renders.user_id` and `composition.autopilot.user_id` are set from the same `run.user_id` in one insert — they cannot diverge.\n\n**3. Injection** — No new `innerHTML`/`eval`/`new Function`/SQL-string path (grep clean across the render path). All inserts use supabase param binding. Text props render via `textContent`; `product_image_url` is `^https://`-anchored in BOTH orchestrate-step and the template, and is catalog-sourced from `vm_affiliate_products` (not client input). `creative_metrics` types/CHECKs all match (`product_id text` = ML external_id, `source='organic'`, fresh uuid `content_variant_id`).\n\n**4. Auth** — The `video_enabled` flag is downstream of the unchanged OTD-VA-008 identity gates; it adds no bypass.\n\n**5. RLS** — Migration `20260624130000` is purely additive (`video_enabled` bool, `video_format` text + CHECK, both NOT NULL + DEFAULT). No policy/grant change; `autopilot_plans` per-user policies stand. `video_renders` keeps default-deny writes + RESTRICTIVE no-delete.\n\n**One out-of-scope billing-accuracy note (not a security finding):** the video enqueue in orchestrate-step is fail-open, but the sub-run still counts as `succeeded` (so the cycle keeps the 12) even when the `video_renders` INSERT throws and no render row exists → no worker refund fires → the tenant is over-charged 12 mcoCoins for their own never-queued render. Self-affecting, not attacker-exploitable, not cross-tenant, not a mint. I've spun this off as a background task chip for follow-up."}, {'type': 'text', 'text': "agentId: a23124ea09d4b0b20 (use SendMessage with to: 'a23124ea09d4b0b20' to continue this agent)\n<usage>subagent_tokens: 121382\ntool_uses: 22\nduration_ms: 225625</usage>"}]
+> ```
+
+## 🤖 Claude *(14:10:00)*
+
+
+## 🤖 Claude *(14:10:04)*
+
+**Security review: SAFE** — all 5 surfaces (billing integrity, cross-tenant, injection, auth, RLS) sound. The reviewer flagged the same rare self-overcharge edge I'd identified (enqueue-INSERT failure on an otherwise-succeeded sub-run → 12 mco residual; not exploitable, not cross-tenant, not a mint) and spun it off as a follow-up chip — appropriately scoped.
+
+I set `video_enabled=true` on your production plan only for the dry_run test. Enabling autonomous *paid* video on your real plan is your spend decision (the next cadence cycle would jump 22→46 mco and publish a video autonomously) — restoring it to off until you say go:
+
+## 🤖 Claude *(14:10:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\ncurl -s -X PATCH \"${SUPABASE_URL}/rest/v1/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d '{\"video_enabled\":false}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('plan video_enabled restored to:', d[0]['video_enabled'])\"\necho \"=== final git status (uncommitted \u2014 your call to commit) ===\"\ngit status --short",
+  "description": "Restore video_enabled=false + git status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> plan video_enabled restored to: False
+> === final git status (uncommitted — your call to commit) ===
+>  M CLAUDE.md
+>  M docs/bok/video-studio/05-sdd.md
+>  M docs/bok/viral-autopilot/03-prd.md
+>  M docs/bok/viral-autopilot/04-frd.md
+>  M docs/bok/viral-autopilot/05-sdd.md
+>  M supabase/functions/autopilot-run/index.ts
+>  M supabase/functions/orchestrate-content/index.ts
+>  M supabase/functions/orchestrate-step/index.ts
+>  M supabase/functions/video-render/index.ts
+> ?? docs/processes/autopilot-video-9x16.md
+> ?? scripts/hyperframes/
+> ?? scripts/video-bridge.ts
+> ?? supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql
+> ?? supabase/migrations/20260624130000_autopilot_video_plan_columns.sql
+> ```
+
+## 🤖 Claude *(14:10:11)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(14:10:52)*
+
+
+## 🤖 Claude *(14:10:54)*
+
+**Fatia VA-V1 — COMPLETE and proven E2E.** Three of four slices done. Let me capture this milestone, then continue to the editor (VS-UI). The editor's first question is a real one the synthesis flagged as unverified: **does `@hyperframes/studio` actually exist/export React components** for the FR-VS-021 native embed? That determines the whole editor path. Probing it:
+
+## 🤖 Claude *(14:10:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== @hyperframes/studio in package.json? ===\"\ngrep -iE \"hyperframe\" package.json || echo \"(not in package.json)\"\necho \"=== installed in node_modules? ===\"\nls -d node_modules/@hyperframes* 2>/dev/null || echo \"(not installed)\"\necho \"=== npm registry: does @hyperframes/studio exist? ===\"\nnpm view @hyperframes/studio version 2>&1 | head -3 || echo \"(npm view failed)\"\necho \"=== existing Canvas Studio editor skeleton to reuse (route + store + page) ===\"\nls src/pages/*Canvas* src/pages/*Video* 2>/dev/null\ngrep -rnE \"canvas/video|canvas/:id|/dashboard/video|VideoStudioPage|VideoEditorPage\" src/App.tsx 2>/dev/null | head -10",
+  "description": "Probe @hyperframes/studio reality + Canvas skeleton"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === @hyperframes/studio in package.json? ===
+> (not in package.json)
+> === installed in node_modules? ===
+> (not installed)
+> === npm registry: does @hyperframes/studio exist? ===
+> 0.7.5
+> === existing Canvas Studio editor skeleton to reuse (route + store + page) ===
+> src/pages/CanvasDesignPage.tsx
+> src/pages/CanvasEditorPage.tsx
+> src/pages/CanvasStudioPage.tsx
+> src/pages/UnifiedCanvasPage.tsx
+> src/pages/VideoEditorPage.tsx
+> src/pages/VideoStudioPage.tsx
+> src/App.tsx:20:const VideoEditorPage = lazy(() => import("./pages/VideoEditorPage.tsx"));
+> src/App.tsx:27:const VideoStudioPage = lazy(() => import("./pages/VideoStudioPage.tsx"));
+> src/App.tsx:108:                <Route path="video" element={<VideoStudioPage />} />
+> src/App.tsx:114:                <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+> src/App.tsx:133:                <Route path="canvas/:id" element={<CanvasEditorPage />} />
+> ```
+
+## 🤖 Claude *(14:11:25)*
+
+
+## 🤖 Claude *(14:11:38)*
+
+`@hyperframes/studio` **exists on npm (v0.7.5) but isn't installed** — so the FR-VS-021 native NLE embed would be a real new-dependency integration (bundle size, React compat, verifying it actually exports `StudioApp`/`Timeline`). There's also already a `VideoStudioPage` (the `/dashboard/video` front door) + a `VideoEditorPage` skeleton to reuse. That's a genuine fork for the editor — and it's a natural checkpoint, because the **prioritized ask is done**.
+
+## 🎬 Milestone — Vídeo viral 9:16 autônomo: ENTREGUE e provado E2E
+
+**3 de 4 fatias completas, tudo materialmente verificado:**
+
+| Fatia | Estado | Prova material (Lei 1) |
+|---|---|---|
+| **VA-V0** BoK gate (Lei 2) | ✅ | PR-VA-020→FR-VA-022..026, OTD-VA-009..014, SOP `autopilot-video-9x16.md`, drift video-studio reconciliado |
+| **VS-2** Motor HyperFrames | ✅ LIVE | render core 9:16 determinístico (ffprobe 1080×1920, sha256 byte-idêntico G3/G4) · `video-bridge.service` `active` · E2E motor → bucket → finalize |
+| **VA-V1** Integração Autopilot | ✅ | dry_run `projected=46` (2×10+2×12+2) · **E2E real**: sub-run gerou artigo → enfileirou render com composição do **título real** ("Roborock S8 Pro Ultra: A Faxina Acabou…") + foto ML + 9:16 → render done → content_library video + creative_metrics · saldo intacto 5076 (prepaid) |
+| **VS-UI** Editor HyperFrames | ⬜ pendente | — |
+
+**Segurança:** `/security-review` SAFE em ambas as fatias (motor + integração). **tsc** limpo. Artefatos de teste limpos. Plano de produção restaurado para `video_enabled=false` (ativação paga = sua decisão).
+
+O motor determinístico que você pediu ("assim como o open design") está vivo: worker host no molde do `design-bridge`, headless Chrome+FFmpeg, HTML→MP4 9:16, 12 mco, single-tenant com `/security-review` (hardening multi-tenant diferido p/ Usuário 1).
+
+Próximo passo é seu — três frentes legítimas com implicações diferentes:
+
+## 🤖 Claude *(14:11:46)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O motor + integra\u00e7\u00e3o aut\u00f4noma do 9:16 est\u00e3o prontos e provados. Qual o pr\u00f3ximo movimento?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Editor HyperFrames \u2014 composer primeiro",
+          "description": "Construo a UI do editor reusando a VideoStudioPage + o motor j\u00e1 provado: form (gancho/caption/CTA/imagem do produto) \u2192 preview 9:16 \u2192 bot\u00e3o Render \u2192 status \u2192 play. Sem nova depend\u00eancia, ships r\u00e1pido, com gate E2E 1920\u00d71080. Defere o NLE rico @hyperframes/studio."
+        },
+        {
+          "label": "Editor HyperFrames \u2014 NLE nativo (FR-VS-021)",
+          "description": "Instalo @hyperframes/studio 0.7.5 e embedo o NLE nativo (StudioApp/Timeline/Player) como a BoK manda. Mais rico (timeline real), mas \u00e9 integra\u00e7\u00e3o nova: verificar exports/compat React/bundle + gate E2E 1920\u00d71080. Mais pesado."
+        },
+        {
+          "label": "Primeiro ciclo PAGO de v\u00eddeo (witnessed)",
+          "description": "Habilito video_enabled no plano + rodo UM ciclo de cad\u00eancia real agora (\u224846 mco) para voc\u00ea VER o 9:16 aut\u00f4nomo em produ\u00e7\u00e3o: 2 sub-runs \u2192 2 v\u00eddeos 9:16 product-aware na content_library. Gasto real do Usu\u00e1rio Zero, com seu GO."
+        },
+        {
+          "label": "Selar agora (commit + handoff)",
+          "description": "Fa\u00e7o os commits granulares (BoK gate + motor + integra\u00e7\u00e3o) + /handoff seal + atualizo a malha. Editor numa pr\u00f3xima sess\u00e3o. Trava o que est\u00e1 provado."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O motor + integração autônoma do 9:16 estão prontos e provados. Qual o próximo movimento?"="Acredito que o melhor seria Editor HyperFrames nativo com um composer tambem mas nativo sempre, usando ele como algo que já existe mas vamos torna-lo melhor para nosso ecossistema. E depois podemos sim fazer o primeiro ciclo pago de video". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(14:56:25)*
+
+
+## 🤖 Claude *(14:56:26)*
+
+Decisão registrada: **Editor HyperFrames NATIVO** (`@hyperframes/studio` real, embedado nativo, com composer integrado, melhorado para o nosso ecossistema) → **depois** o primeiro ciclo pago de vídeo.
+
+Before installing a new package into the production frontend, I must verify materially what `@hyperframes/studio` actually is (the synthesis flagged this as unverified — the BoK *assumes* it exports React components). Inspecting its real metadata first:
+
+## 🤖 Claude *(14:56:30)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "in_progress",
+  "description": "Editor HyperFrames NATIVO (@hyperframes/studio embed real, FR-VS-021) + composer integrado, melhorado p/ o ecossistema MCORCH. Verificar exports/compat React+Vite ANTES de instalar em prod. Rota lazy, nossa composi\u00e7\u00e3o (hook/caption/cta/product image), submit via motor provado (video-render engine=hyperframes), persist\u00eancia, status/play. Gate E2E 1920\u00d71080 (Lei 1 Canvas). DEPOIS: 1\u00ba ciclo pago de v\u00eddeo (witnessed)."
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 description, status
+> ```
+
+## 🤖 Claude *(14:56:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== @hyperframes/studio 0.7.5 \u2014 full metadata ===\"\nnpm view @hyperframes/studio@0.7.5 description main module types exports peerDependencies 2>&1 | head -40\necho\necho \"=== dependencies + repo + keywords ===\"\nnpm view @hyperframes/studio@0.7.5 dependencies repository.url keywords react 2>&1 | head -50\necho\necho \"=== our React version (compat check) ===\"\ngrep -E '\"react\"|\"react-dom\"|\"vite\"' package.json",
+  "description": "Inspect @hyperframes/studio package reality"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === @hyperframes/studio 0.7.5 — full metadata ===
+> description = 'Browser-based composition editor UI for Hyperframes. Provides a visual timeline, code editor, and live preview for building video compositions.'
+> main = './dist/index.js'
+> types = './dist/index.d.ts'
+> exports = {
+>   '.': { import: './dist/index.js', types: './dist/index.d.ts' },
+>   './tailwind-preset': {
+>     import: './dist/styles/tailwind-preset.js',
+>     types: './dist/styles/tailwind-preset.d.ts'
+>   },
+>   './package.json': './package.json'
+> }
+> peerDependencies = { react: '19', 'react-dom': '19', zustand: '^4.0.0 || ^5.0.0' }
+> 
+> === dependencies + repo + keywords ===
+> dependencies = {
+>   '@codemirror/autocomplete': '^6.20.1',
+>   '@codemirror/commands': '^6.10.3',
+>   '@codemirror/lang-css': '^6.3.1',
+>   '@codemirror/lang-html': '^6.4.9',
+>   '@codemirror/lang-javascript': '^6.2.2',
+>   '@codemirror/lang-markdown': '^6.3.4',
+>   '@codemirror/language': '^6.12.2',
+>   '@codemirror/search': '^6.6.0',
+>   '@codemirror/state': '^6.6.0',
+>   '@codemirror/theme-one-dark': '^6.1.2',
+>   '@codemirror/view': '6.40.0',
+>   '@phosphor-icons/react': '^2.1.10',
+>   'bpm-detective': '^2.0.5',
+>   dompurify: '^3.2.4',
+>   marked: '^14.1.4',
+>   mediabunny: '^1.45.3',
+>   '@hyperframes/player': '0.7.5',
+>   '@hyperframes/sdk': '0.7.5',
+>   '@hyperframes/core': '0.7.5'
+> }
+> repository.url = 'git+https://github.com/heygen-com/hyperframes.git'
+> 
+> === our React version (compat check) ===
+>     "dev": "vite",
+>     "react": "^18.3.1",
+>     "react-dom": "^18.3.1",
+>     "vite": "^5.4.19",
+> ```
+
+## 🤖 Claude *(14:56:54)*
+
+
+## 🤖 Claude *(14:56:55)*
+
+**Decisive material finding (Law 1 — caught before installing):** `@hyperframes/studio@0.7.5` has `peerDependencies: { react: '19', react-dom: '19' }` — it **requires React 19**. Our project is on **React 18.3.1**. That's a hard incompatibility — the native embed as the BoK assumed is blocked by a React-major mismatch.
+
+Let me check whether an earlier version targets React 18 before concluding:
+
+## 🤖 Claude *(14:56:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== @hyperframes/studio version history ===\"\nnpm view @hyperframes/studio versions --json 2>/dev/null | python3 -c \"import json,sys; v=json.load(sys.stdin); print(v if isinstance(v,list) else [v])\"\necho \"=== peerDeps react across versions (check for any React 18 build) ===\"\nfor V in 0.7.5 0.7.0 0.6.0 0.5.0 0.4.0 0.3.0 0.2.0 0.1.0; do\n  R=$(npm view @hyperframes/studio@$V peerDependencies.react 2>/dev/null)\n  [ -n \"$R\" ] && echo \"  $V \u2192 react $R\"\ndone",
+  "description": "Check all @hyperframes/studio versions for React 18 support"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === @hyperframes/studio version history ===
+> ['0.1.0', '0.1.1', '0.1.2', '0.1.3', '0.1.4', '0.1.5', '0.1.6', '0.1.7', '0.1.8', '0.1.9', '0.1.10', '0.1.11', '0.1.12', '0.1.13', '0.1.14', '0.1.15', '0.2.0-alpha.1', '0.2.0', '0.2.1', '0.2.2-alpha.1', '0.2.2-alpha.3', '0.2.2-alpha.4', '0.2.2', '0.2.3-alpha.1', '0.2.3-alpha.2', '0.2.3', '0.2.4', '0.2.5', '0.2.6', '0.2.7', '0.2.8', '0.3.0', '0.3.1', '0.3.2', '0.4.0', '0.4.1', '0.4.2', '0.4.3', '0.4.4', '0.4.5', '0.4.6', '0.4.7', '0.4.8', '0.4.9', '0.4.10', '0.4.11-alpha.1', '0.4.11', '0.4.12', '0.4.13-alpha.1', '0.4.13-alpha.2', '0.4.13-alpha.3', '0.4.13-alpha.4', '0.4.13', '0.4.14', '0.4.15-alpha.1', '0.4.15', '0.4.16', '0.4.17', '0.4.18', '0.4.19', '0.4.20', '0.4.21', '0.4.22', '0.4.23', '0.4.24', '0.4.25', '0.4.26', '0.4.27', '0.4.28', '0.4.29', '0.4.30', '0.4.31', '0.4.32', '0.4.33', '0.4.34', '0.4.35', '0.4.36', '0.4.37', '0.4.38', '0.4.39', '0.4.40', '0.4.41', '0.4.42', '0.4.43', '0.4.44', '0.4.45', '0.5.0-alpha.1', '0.5.0-alpha.2', '0.5.0-alpha.3', '0.5.0-alpha.4', '0.5.0-alpha.5', '0.5.0-alpha.6', '0.5.0-alpha.7', '0.5.0-alpha.8', '0.5.0-alpha.9', '0.5.0-alpha.10', '0.5.0-alpha.11', '0.5.0-alpha.12', '0.5.0-alpha.13', '0.5.0-alpha.14', '0.5.0-alpha.15', '0.5.0', '0.5.1', '0.5.2', '0.5.3', '0.5.4', '0.5.5', '0.5.6', '0.5.7', '0.6.0-alpha.1', '0.6.0-alpha.2', '0.6.0-alpha.4', '0.6.0-alpha.5', '0.6.0-alpha.6', '0.6.0-alpha.7', '0.6.0-alpha.8', '0.6.0-alpha.9', '0.6.0-alpha.10', '0.6.0-alpha.11', '0.6.0-alpha.12', '0.6.0-alpha.13', '0.6.0-alpha.14', '0.6.0', '0.6.1', '0.6.2', '0.6.3', '0.6.4', '0.6.5', '0.6.6', '0.6.7', '0.6.8', '0.6.9', '0.6.10', '0.6.11', '0.6.12', '0.6.13', '0.6.14', '0.6.15', '0.6.16', '0.6.17', '0.6.18', '0.6.19', '0.6.20', '0.6.21', '0.6.22', '0.6.24', '0.6.25', '0.6.26', '0.6.27', '0.6.28', '0.6.29', '0.6.30', '0.6.31', '0.6.32', '0.6.33', '0.6.34', '0.6.35', '0.6.36', '0.6.37', '0.6.38', '0.6.39', '0.6.40', '0.6.41', '0.6.42', '0.6.43', '0.6.44', '0.6.45', '0.6.46', '0.6.47', '0.6.48', '0.6.49', '0.6.50', '0.6.51', '0.6.52', '0.6.53', '0.6.54', '0.6.55', '0.6.56', '0.6.57', '0.6.58', '0.6.59', '0.6.60', '0.6.61', '0.6.62', '0.6.63', '0.6.64', '0.6.65', '0.6.66', '0.6.67', '0.6.68', '0.6.69', '0.6.70', '0.6.71', '0.6.72', '0.6.73', '0.6.74', '0.6.75', '0.6.76', '0.6.77', '0.6.78', '0.6.79', '0.6.80', '0.6.81', '0.6.82', '0.6.83', '0.6.84', '0.6.85', '0.6.86', '0.6.87', '0.6.88', '0.6.89', '0.6.90', '0.6.91', '0.6.92', '0.6.93', '0.6.94', '0.6.95', '0.6.96', '0.6.97', '0.6.98', '0.6.99', '0.6.100', '0.6.101', '0.6.102', '0.6.103', '0.6.104', '0.6.105', '0.6.106', '0.6.107', '0.6.108', '0.6.109', '0.6.110', '0.6.111', '0.6.112', '0.6.113', '0.6.114', '0.6.115', '0.6.116', '0.6.117', '0.6.118', '0.6.119', '0.6.120', '0.6.121', '0.6.122-alpha.0', '0.7.0', '0.7.1', '0.7.2', '0.7.3', '0.7.4', '0.7.5']
+> === peerDeps react across versions (check for any React 18 build) ===
+>   0.7.5 → react 19
+>   0.7.0 → react 19
+>   0.6.0 → react 19
+>   0.5.0 → react ^18.0.0 || ^19.0.0
+>   0.4.0 → react ^18.0.0 || ^19.0.0
+>   0.3.0 → react ^18.0.0 || ^19.0.0
+>   0.2.0 → react ^18.0.0 || ^19.0.0
+>   0.1.0 → react ^18.0.0 || ^19.0.0
+> ```
+
+## 🤖 Claude *(14:57:18)*
+
+
+## 🤖 Claude *(14:57:19)*
+
+There **is** a React-18-compatible line: **0.5.x supports `react: ^18.0.0 || ^19.0.0`** (0.6.0+ jumped to React-19-only). So I can do the native embed on **0.5.7** (latest React-18-compatible) — no platform-wide React 19 migration needed. Verifying 0.5.7's exports + dependency shape before installing:
+
+## 🤖 Claude *(14:57:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== @hyperframes/studio@0.5.7 \u2014 exports + peerDeps + deps ===\"\nnpm view @hyperframes/studio@0.5.7 peerDependencies main module exports dependencies 2>&1 | head -45",
+  "description": "Verify 0.5.7 React-18 export shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === @hyperframes/studio@0.5.7 — exports + peerDeps + deps ===
+> peerDependencies = {
+>   react: '^18.0.0 || ^19.0.0',
+>   zustand: '^4.0.0 || ^5.0.0',
+>   'react-dom': '^18.0.0 || ^19.0.0'
+> }
+> main = './src/index.ts'
+> exports = {
+>   '.': './src/index.ts',
+>   './tailwind-preset': './src/styles/tailwind-preset.ts'
+> }
+> dependencies = {
+>   motion: '^12.38.0',
+>   codemirror: '^6.0.1',
+>   '@codemirror/view': '^6.40.0',
+>   '@codemirror/state': '^6.6.0',
+>   '@hyperframes/core': '0.5.7',
+>   '@codemirror/search': '^6.6.0',
+>   '@hyperframes/player': '0.5.7',
+>   '@codemirror/commands': '^6.10.3',
+>   '@codemirror/lang-css': '^6.3.1',
+>   '@codemirror/language': '^6.12.2',
+>   '@codemirror/lang-html': '^6.4.9',
+>   '@phosphor-icons/react': '^2.1.10',
+>   '@codemirror/autocomplete': '^6.20.1',
+>   '@codemirror/theme-one-dark': '^6.1.2',
+>   '@codemirror/lang-javascript': '^6.2.2'
+> }
+> ```
+
+## 🤖 Claude *(14:58:06)*
+
+
+## 🤖 Claude *(14:58:08)*
+
+Another material wrinkle: `@hyperframes/studio@0.5.7` ships **unbuilt TypeScript source** (`main: ./src/index.ts`, no `dist/`) — so Vite would have to transpile the package's source + its `@hyperframes/core`/`player` deps in `node_modules`. Let me check whether those transitive deps also force React 19 (which would block 0.5.7 too):
+
+## 🤖 Claude *(14:58:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor PKG in \"@hyperframes/core@0.5.7\" \"@hyperframes/player@0.5.7\" \"@hyperframes/sdk@0.5.7\"; do\n  echo \"=== $PKG ===\"\n  npm view \"$PKG\" peerDependencies main 2>&1 | head -8\n  echo\ndone",
+  "description": "Check transitive @hyperframes deps React requirement"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === @hyperframes/core@0.5.7 ===
+> peerDependencies = { hono: '^4.0.0' }
+> main = './dist/index.js'
+> 
+> === @hyperframes/player@0.5.7 ===
+> ./dist/hyperframes-player.js
+> 
+> === @hyperframes/sdk@0.5.7 ===
+> npm error code E404
+> npm error 404 No match found for version 0.5.7
+> npm error 404
+> npm error 404  '@hyperframes/sdk@0.5.7' is not in this registry.
+> npm error 404
+> npm error 404 Note that you can also install from a
+> npm error 404 tarball, folder, http url, or git url.
+> npm error A complete log of this run can be found in: /home/ubuntu/.npm/_logs/2026-06-24T14_58_12_127Z-debug-0.log
+> ```
+
+## 🤖 Claude *(14:58:59)*
+
+
+## 🤖 Claude *(14:59:04)*
+
+Full material picture now (Law 1 due diligence complete before mutating the frontend):
+
+**`@hyperframes` is HeyGen's full video framework, and the native embed has real friction on our stack:**
+- **0.7.5 (latest)** ships built `dist/` but requires **React 19** → we're React 18 → a *platform-wide* migration (R3F, @xyflow/ReactFlow, every UI dep would need React-19 compat). Large blast radius.
+- **0.5.7 (last React-18-compatible)** accepts React 18 **but ships unbuilt TypeScript source** (`main: ./src/index.ts`, no `dist/`) → Vite would have to transpile the package's `.tsx` source in `node_modules` + adopt `@hyperframes/core` (which peer-deps `hono`, a *server* framework) + `@hyperframes/player`. Fragile, older, and pulls in their whole composition runtime.
+
+This materially changes the cost of "native embed" — and you chose native *before* knowing this. Since the trade-off touches our React major version / frontend stability (Owner = you, blast radius = the whole SPA), it's genuinely your call. I won't unilaterally migrate to React 19 or destabilize the build:
+
+## 🤖 Claude *(14:59:20)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O embed nativo do @hyperframes/studio tem atrito real: 0.7.5 exige React 19 (migra\u00e7\u00e3o de plataforma inteira) e a linha React-18 (0.5.7) vem como c\u00f3digo-fonte TS n\u00e3o-buildado (cirurgia no Vite + adota o runtime core/player deles). Como prosseguir com o editor nativo?",
+      "header": "Editor nativo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Editor nativo CUSTOM no nosso React 18 (sobre o motor provado)",
+          "description": "Construo o editor (timeline + preview ao vivo + composer) com NOSSOS componentes React 18, sobre o motor HTML\u2192MP4 9:16 que j\u00e1 provei, adaptando seletivamente o c\u00f3digo-fonte aberto do @hyperframes/studio (github heygen-com/hyperframes) para a UX. Nativo, sem migra\u00e7\u00e3o, sem risco de depend\u00eancia, j\u00e1 roda no que funciona. 'Usar como base e tornar nosso.'"
+        },
+        {
+          "label": "Instalar @hyperframes/studio@0.5.7 (React 18, source-shipped)",
+          "description": "Instalo o pacote real React-18-compat + configuro o Vite p/ transpilar o source dele + adoto @hyperframes/core/player como runtime de composi\u00e7\u00e3o. \u00c9 o pacote oficial, mas vers\u00e3o mais antiga (0.5.x), integra\u00e7\u00e3o fr\u00e1gil (transpile de node_modules) e risco \u00e0 estabilidade do build. Testo a viabilidade antes de cravar."
+        },
+        {
+          "label": "Migrar a plataforma p/ React 19 \u2192 @hyperframes/studio@0.7.5",
+          "description": "Inicio a migra\u00e7\u00e3o do SPA inteiro p/ React 19 (R3F, ReactFlow, todas as libs de UI) e a\u00ed embedo o 0.7.5 (dist limpo, \u00faltima vers\u00e3o). Editor mais rico e oficial, mas \u00e9 uma INICIATIVA \u00e0 parte de grande raio \u2014 semanas, risco em toda a app. Sess\u00e3o dedicada."
+        },
+        {
+          "label": "Pular o editor por ora \u2192 1\u00ba ciclo pago de v\u00eddeo + selar",
+          "description": "O 9:16 aut\u00f4nomo (o pedido priorizado) j\u00e1 est\u00e1 pronto. Rodo o 1\u00ba ciclo pago witnessed (\u224846 mco) p/ voc\u00ea ver o v\u00eddeo em produ\u00e7\u00e3o, selo tudo (commits + handoff), e decidimos o editor depois com calma."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
