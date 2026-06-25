@@ -1,5 +1,5 @@
 # Analisar paper e oportunidades de trading
-**Date:** 2026-06-24 | **Session ID:** `ada015e6-a810-46e1-9d5e-d09047bb5fad`
+**Date:** 2026-06-25 | **Session ID:** `ada015e6-a810-46e1-9d5e-d09047bb5fad`
 
 ---
 
@@ -5734,15 +5734,1695 @@ Confirmado: `realizedPnl` é **net de fee** (a evidência das ordens: sell reali
 > File created successfully at: /tmp/tux_build/promotionJob.js (file state is current in your context — no need to Read it back)
 > ```
 
----
+## 🤖 Claude *(00:00:18)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-24 - Analisar mudanças recentes e contato]]
-> * **Próxima Sessão**: [[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(00:00:19)*
+
+Agora o portão de promoção no supervisor. Patch via Python (replacements exatos).
+
+## 🤖 Claude *(00:00:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/patch_supervisor_D.py",
+  "content": "#!/usr/bin/env python3\nimport sys\nP = \"/home/gcrux-tradeux/tradeux/backend/src/groupSupervisorJob.js\"\nc = open(P, encoding=\"utf-8\").read()\nerrs = []\ndef rep(old, new, label):\n    global c\n    if c.count(old) != 1:\n        errs.append(f\"[{label}] ancora {c.count(old)}x (esperado 1)\"); return\n    c = c.replace(old, new, 1); print(f\"OK [{label}]\")\n\n# 1) require promotionStore\nrep(\n\"const eventNotify = require('./utils/eventNotify');\\nconst logger = require('./utils/logger');\\n\",\n\"const eventNotify = require('./utils/eventNotify');\\nconst promotionStore = require('./utils/promotionStore');\\nconst logger = require('./utils/logger');\\n\",\n\"require\")\n\n# 2) PROMO_MAP apos MANAGED\nrep(\n\"\"\"const MANAGED = new Set((process.env.GROUP_SUPERVISOR_GROUPS || 'farm,trend,baseline')\n    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean));\"\"\",\n\"\"\"const MANAGED = new Set((process.env.GROUP_SUPERVISOR_GROUPS || 'farm,trend,baseline')\n    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean));\n// Mapa grupo -> trilha do paper que GATEIA a ida a REAL (frente D). Uma entrada (e a venda do cofre do Baseline)\n// so ativa se a trilha mapeada estiver PROMOVIDA (provou edge no paper) ou grandfathered. Sem mapeamento =>\n// nao promovido => fica off (fail-safe). Configuravel por PROMOTION_GROUP_STRATEGY.\nconst PROMO_MAP = {};\n(process.env.PROMOTION_GROUP_STRATEGY || 'farm:farmnl,trend:slopegate,baseline:consistencia')\n    .split(',').map(p => p.split(':')).forEach(pair => { const g = (pair[0] || '').trim().toLowerCase(); const s = (pair[1] || '').trim().toLowerCase(); if (g && s) PROMO_MAP[g] = s; });\"\"\",\n\"PROMO_MAP\")\n\n# 3) promotionAllows apos desiredActive\nrep(\n\"\"\"        default: return null;                               // 'ignore'\n    }\n}\n\"\"\",\n\"\"\"        default: return null;                               // 'ignore'\n    }\n}\n\n// PORTAO DE PROMOCAO (frente D, PURO): alem do regime, a ida a REAL exige a estrategia PROVADA no paper.\n//   - entry / baselineSell (venda do cofre): exigem promocao (sem prova -> nao vao a real; fecha o furo do QA-B);\n//   - trendSell: promocao OU posicao aberta (protege quem ja esta comprado mesmo sem promocao);\n//   - 'ignore' nunca chega aqui. Retorna true se a promocao PERMITE a ativacao.\nfunction promotionAllows(kind, hasPosition, isPromoted) {\n    switch (kind) {\n        case 'entry': return !!isPromoted;\n        case 'baselineSell': return !!isPromoted;\n        case 'trendSell': return !!isPromoted || !!hasPosition;\n        default: return true;\n    }\n}\n\"\"\",\n\"promotionAllows\")\n\n# 4) runOnce: thread o portao de promocao\nrep(\n\"\"\"            const symbol = String(a.symbol || '').toUpperCase();\n            const regime = regimeOf(symbol);\n            const hasPos = kind === 'trendSell' ? trendQty(symbol) > 0 : false;\n            const target = desiredActive(kind, regime, hasPos);\n            if (target === null) { ignored++; continue; }\n\n            try {\n                if (target && !a.isActive) {\"\"\",\n\"\"\"            const symbol = String(a.symbol || '').toUpperCase();\n            const regime = regimeOf(symbol);\n            const hasPos = kind === 'trendSell' ? trendQty(symbol) > 0 : false;\n            const regimeTarget = desiredActive(kind, regime, hasPos);\n            if (regimeTarget === null) { ignored++; continue; }\n            // Portao de promocao (frente D): regime liberou, mas a ida a REAL exige a trilha provada no paper.\n            const strat = PROMO_MAP[group];\n            const promoted = strat ? promotionStore.isPromoted(strat) : false;\n            const target = regimeTarget && promotionAllows(kind, hasPos, promoted);\n            const blockedByPromo = regimeTarget && !target; // regime ativaria, mas falta promocao\n\n            try {\n                if (target && !a.isActive) {\"\"\",\n\"runOnce gate\")\n\n# 5) reason da desativacao quando barrado por promocao\nrep(\n\"\"\"                } else if (!target && a.isActive) {\n                    await applyAutomationActive(a, false);\n                    deactivated++;\n                    logger('supervisor', `DESATIVOU ${name} (${deactivateReason(kind, regime)})`);\n                    eventNotify.notifyGroupChange(name, false, deactivateReason(kind, regime)).catch(() => { });\n                }\"\"\",\n\"\"\"                } else if (!target && a.isActive) {\n                    const why = blockedByPromo ? `aguardando promocao (${strat || 'sem trilha'} nao provou)` : deactivateReason(kind, regime);\n                    await applyAutomationActive(a, false);\n                    deactivated++;\n                    logger('supervisor', `DESATIVOU ${name} (${why})`);\n                    eventNotify.notifyGroupChange(name, false, why).catch(() => { });\n                }\"\"\",\n\"deactivate reason\")\n\n# 6) getStatus expoe promo\nrep(\n\"\"\"    return {\n        enabled: ENABLED, refreshMs: REFRESH_MS, managed: [...MANAGED],\n        running, at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null, last: LAST,\n    };\"\"\",\n\"\"\"    return {\n        enabled: ENABLED, refreshMs: REFRESH_MS, managed: [...MANAGED],\n        promoMap: PROMO_MAP, promotions: promotionStore.list(),\n        running, at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null, last: LAST,\n    };\"\"\",\n\"getStatus\")\n\n# 7) export promotionAllows\nrep(\n\"module.exports = { start, stop, runOnce, getStatus, desiredActive, classify, groupOf };\",\n\"module.exports = { start, stop, runOnce, getStatus, desiredActive, promotionAllows, classify, groupOf };\",\n\"exports\")\n\nif errs:\n    print(\"\\n=== FALHAS ===\"); [print(\" -\", e) for e in errs]; sys.exit(1)\nopen(P, \"w\", encoding=\"utf-8\").write(c)\nprint(\"\\nsupervisor D patch OK.\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/patch_supervisor_D.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:00:58)*
+
+
+## 🤖 Claude *(00:00:59)*
+
+Agora o wiring (server + endpoints + cockpit + .env.example) e a atualização dos testes do supervisor pro novo portão.
+
+## 🤖 Claude *(00:01:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/patch_D_wiring.py",
+  "content": "#!/usr/bin/env python3\nimport sys\nROOT = \"/home/gcrux-tradeux/tradeux/backend\"\nerrs = []\ndef rep(path, old, new, label):\n    c = open(path, encoding=\"utf-8\").read()\n    if c.count(old) != 1:\n        errs.append(f\"[{label}] ancora {c.count(old)}x em {path}\"); return\n    open(path, \"w\", encoding=\"utf-8\").write(c.replace(old, new, 1)); print(f\"OK [{label}]\")\n\nSV = f\"{ROOT}/src/server.js\"\nrep(SV,\n\"const groupSupervisorJob = require('./groupSupervisorJob');\",\n\"const groupSupervisorJob = require('./groupSupervisorJob');\\nconst promotionJob = require('./promotionJob');\",\n\"server require\")\nrep(SV,\n\"\"\"    logger('system', `Starting the Group Supervisor Job...`);\n    groupSupervisorJob.start();\n\n    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).\"\"\",\n\"\"\"    logger('system', `Starting the Group Supervisor Job...`);\n    groupSupervisorJob.start();\n\n    // Promotion Job: AUTO-PROMOCAO paper->real (frente D). Avalia o ledger do paper e PROMOVE (allowlist) as\n    // trilhas que provam edge; o supervisor so ATIVA entradas reais de trilha promovida. Read-only no money-path.\n    logger('system', `Starting the Promotion Job...`);\n    promotionJob.start();\n\n    // Auto-sync de simbolos no primeiro boot (setup self-complete; idempotente e nao-fatal).\"\"\",\n\"server start\")\n\nSC = f\"{ROOT}/src/controllers/systemController.js\"\nrep(SC,\n\"const groupSupervisorJob = require('../groupSupervisorJob');\",\n\"const groupSupervisorJob = require('../groupSupervisorJob');\\nconst promotionJob = require('../promotionJob');\",\n\"sysctl require\")\nrep(SC,\n\"\"\"// Estado do supervisor autonomo de grupos (read-only): o operador/agente PRECISAM ver que existe um\n// agente automatico ligando/desligando entradas por regime (e por que um toggle manual foi revertido).\nfunction getSupervisor(req, res) {\n    res.json(groupSupervisorJob.getStatus());\n}\n\nmodule.exports = { getHalt, setHalt, setFloor, resetDailyCap, getDailyCap, getSupervisor };\"\"\",\n\"\"\"// Estado do supervisor autonomo de grupos (read-only): o operador/agente PRECISAM ver que existe um\n// agente automatico ligando/desligando entradas por regime (e por que um toggle manual foi revertido).\nfunction getSupervisor(req, res) {\n    res.json(groupSupervisorJob.getStatus());\n}\n\n// Estado da auto-promocao paper->real (read-only): criterio + allowlist (trilhas liberadas a dinheiro real).\nfunction getPromotions(req, res) {\n    res.json(promotionJob.getStatus());\n}\n\nmodule.exports = { getHalt, setHalt, setFloor, resetDailyCap, getDailyCap, getSupervisor, getPromotions };\"\"\",\n\"sysctl getPromotions\")\n\nSR = f\"{ROOT}/src/routers/systemRouter.js\"\nrep(SR,\n\"router.get('/supervisor', systemController.getSupervisor);\",\n\"router.get('/supervisor', systemController.getSupervisor);\\n\\nrouter.get('/promotions', systemController.getPromotions);\",\n\"sysrouter promotions\")\n\nAC = f\"{ROOT}/src/controllers/analysisController.js\"\nrep(AC,\n\"\"\"    try { status.supervisor = require('../groupSupervisorJob').getStatus(); } catch (_) { status.supervisor = null; }\"\"\",\n\"\"\"    try { status.supervisor = require('../groupSupervisorJob').getStatus(); } catch (_) { status.supervisor = null; }\n    // promotions: allowlist das trilhas do paper liberadas a dinheiro REAL (frente D). O agente le p/ saber QUAIS\n    // estrategias o supervisor pode ativar a real (sem promocao => so paper). READ-ONLY, best-effort.\n    try { status.promotions = require('../utils/promotionStore').list(); } catch (_) { status.promotions = null; }\"\"\",\n\"cockpit promotions\")\n\nEE = f\"{ROOT}/.env.example\"\nrep(EE,\n\"FLOW_NOTIFY_TOXICITY=0.75\\n\",\n\"\"\"FLOW_NOTIFY_TOXICITY=0.75\n\n# === Auto-promocao paper->real (frente D: trilha do paper que prova edge vai a dinheiro real, capada pelo riskGuard) ===\n#ex: true  (kill-switch do promotionJob)\nPROMOTION_ENABLED=true\n#ex: 21600000  (intervalo de avaliacao, ms; default 6h; piso 1h)\nPROMOTION_CHECK_MS=21600000\n#ex: 20  (round-trips fechados minimos p/ considerar a trilha provada)\nPROMOTION_MIN_ROUNDTRIPS=20\n#ex: 0  (net realizado tem que ser > isto, ja fee-inclusive)\nPROMOTION_MIN_NET=0\n#ex: 0.5  (fracao minima de simbolos com realizado nao-negativo = consistencia)\nPROMOTION_MIN_SYMBOL_FRAC=0.5\n#ex: farm:farmnl,trend:slopegate,baseline:consistencia  (grupo real -> trilha paper que o gateia)\nPROMOTION_GROUP_STRATEGY=farm:farmnl,trend:slopegate,baseline:consistencia\n#ex: (vazio)  (CSV de trilhas SEMPRE-promovidas, p/ liberar manualmente sem esperar o paper; ex.: farmnl)\nPROMOTION_GRANDFATHER=\n\"\"\",\n\"env.example D\")\n\nif errs:\n    print(\"\\n=== FALHAS ===\"); [print(\" -\", e) for e in errs]; sys.exit(1)\nprint(\"\\nwiring D OK.\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/patch_D_wiring.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:01:37)*
+
+
+## 🤖 Claude *(00:01:38)*
+
+Agora atualizo os testes do supervisor pro novo portão. Reescrevo o `groupSupervisorReconcile.test.js` (injeta `promotionStore` mock + dimensão de promoção) e adiciono asserts de `promotionAllows` ao `groupSupervisor.test.js`.
+
+## 🤖 Claude *(00:02:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/groupSupervisorReconcile.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 RECONCILIA\u00c7\u00c3O do Group Supervisor (runOnce ponta-a-ponta) COM o port\u00e3o de PROMO\u00c7\u00c3O (frente D).\n * Cobre: que runOnce s\u00f3 toca a DIFEREN\u00c7A, despacha applyAutomationActive com o lado certo, PULA ativa\u00e7\u00e3o de ENTRADA\n * sob HALT, e \u2014 frente D \u2014 s\u00f3 ATIVA entrada/venda-do-cofre de estrat\u00e9gia PROMOVIDA (provou edge no paper); posi\u00e7\u00e3o\n * aberta (TREND_QTY>0) ainda arma a venda protetiva do trend mesmo sem promo\u00e7\u00e3o. Injeta mocks no require.cache.\n */\nconst path = require('path');\nconst SRC = path.join(__dirname, '..', '..', 'src');\nfunction inject(rel, mock) {\n    const p = require.resolve(path.join(SRC, rel));\n    require.cache[p] = { id: p, filename: p, loaded: true, exports: mock };\n}\n\nconst calls = [];\nlet HALTED = false;\nconst memory = {};\nconst PROMOTED = new Set();   // trilhas promovidas (control\u00e1vel por cen\u00e1rio)\n\ninject('repositories/automationsRepository', { getAllAutomations: async () => AUTOS });\ninject('beholder', { getMemory: (sym, idx) => memory[`${sym}:${idx}`] });\ninject('riskState', { getState: () => ({ halted: HALTED }) });\ninject('utils/automationActivation', { applyAutomationActive: async (a, active) => { a.isActive = active; calls.push(`${a.name}:${active}`); return a; } });\ninject('utils/eventNotify', { notifyGroupChange: async () => true });\ninject('utils/promotionStore', { isPromoted: (s) => PROMOTED.has(String(s).toLowerCase()), list: () => ({ promoted: {}, grandfather: [] }) });\ninject('utils/logger', () => { });\n\nconst sup = require('../../src/groupSupervisorJob');\n\nlet AUTOS = [];\nfunction mk(id, name, symbol, isActive) { return { id, name, symbol, isActive }; }\nfunction fresh(states) {\n    AUTOS = [\n        mk(9, 'Farm Buy LTCUSDT', 'LTCUSDT', states.farmBuy),\n        mk(10, 'Farm Sell LTCUSDT', 'LTCUSDT', states.farmSell),\n        mk(6, 'Trend Buy BTCUSDT SMA50/200', 'BTCUSDT', states.trendBuy),\n        mk(7, 'Trend Sell BTCUSDT SMA50/200', 'BTCUSDT', states.trendSell),\n        mk(2, 'Baseline RSI Buy BTCUSDT', 'BTCUSDT', states.baseBuy),\n        mk(3, 'Baseline RSI Sell BTCUSDT', 'BTCUSDT', states.baseSell),\n        mk(99, '[PAPER] Macro Buy BTCUSDT', 'BTCUSDT', true),\n    ];\n}\nconst ALL_OFF = { farmBuy: false, farmSell: true, trendBuy: false, trendSell: false, baseBuy: false, baseSell: false };\nconst ALL_THREE = ['farmnl', 'slopegate', 'consistencia']; // trilhas que gateiam farm/trend/baseline\n\nlet passed = 0, failed = 0;\nfunction ok(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\nfunction has(s) { return calls.includes(s); }\nasync function run(regimes, opts = {}) {\n    calls.length = 0;\n    HALTED = !!opts.halted;\n    PROMOTED.clear(); (opts.promoted || []).forEach(s => PROMOTED.add(s));\n    for (const k of Object.keys(memory)) delete memory[k];\n    Object.entries(regimes).forEach(([sym, r]) => { memory[`${sym}:REGIME`] = r; });\n    Object.entries(opts.trendQty || {}).forEach(([sym, q]) => { memory[`${sym}:TREND_QTY`] = q; });\n    fresh(opts.states || ALL_OFF);\n    await sup.runOnce();\n}\n\n(async () => {\n    // 1) Bear/flat/off \u2192 zero toggles (no-op).\n    await run({ LTCUSDT: 'bear', BTCUSDT: 'bear' }, { promoted: ALL_THREE });\n    ok('bear/flat/off \u2192 zero toggles', calls.length === 0);\n\n    // 2) RANGE + TUDO PROMOVIDO \u2192 arma entradas + vendas acopladas.\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { promoted: ALL_THREE });\n    ok('range+promovido: arma Farm Buy', has('Farm Buy LTCUSDT:true'));\n    ok('range+promovido: arma Trend Buy', has('Trend Buy BTCUSDT SMA50/200:true'));\n    ok('range+promovido: arma Trend Sell', has('Trend Sell BTCUSDT SMA50/200:true'));\n    ok('range+promovido: arma Baseline Buy', has('Baseline RSI Buy BTCUSDT:true'));\n    ok('range+promovido: arma Baseline Sell', has('Baseline RSI Sell BTCUSDT:true'));\n    ok('range+promovido: Farm Sell intocada', !calls.some(c => c.startsWith('Farm Sell')));\n\n    // 3) RANGE + NADA PROMOVIDO \u2192 portao D segura TUDO (nenhuma entrada/venda-do-cofre vai a real).\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { promoted: [] });\n    ok('range+nao-promovido: NAO arma Farm Buy', !has('Farm Buy LTCUSDT:true'));\n    ok('range+nao-promovido: NAO arma Trend Buy', !has('Trend Buy BTCUSDT SMA50/200:true'));\n    ok('range+nao-promovido: NAO arma Baseline Buy', !has('Baseline RSI Buy BTCUSDT:true'));\n    ok('range+nao-promovido: NAO arma Baseline Sell (cofre BTC protegido \u2014 fecha o QA-B)', !has('Baseline RSI Sell BTCUSDT:true'));\n    ok('range+nao-promovido: NAO arma Trend Sell (flat)', !has('Trend Sell BTCUSDT SMA50/200:true'));\n\n    // 4) RANGE + so farmnl promovido \u2192 so o Farm vai; Trend/Baseline ficam off.\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { promoted: ['farmnl'] });\n    ok('so farmnl: arma Farm Buy', has('Farm Buy LTCUSDT:true'));\n    ok('so farmnl: NAO arma Trend Buy', !has('Trend Buy BTCUSDT SMA50/200:true'));\n    ok('so farmnl: NAO arma Baseline Buy', !has('Baseline RSI Buy BTCUSDT:true'));\n\n    // 5) Desativa entradas LIGADAS quando NAO promovido (regime ate liberaria).\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { promoted: [], states: { farmBuy: true, farmSell: true, trendBuy: true, trendSell: false, baseBuy: true, baseSell: true } });\n    ok('nao-promovido: desativa Farm Buy ligada', has('Farm Buy LTCUSDT:false'));\n    ok('nao-promovido: desativa Baseline Sell (cofre) ligada', has('Baseline RSI Sell BTCUSDT:false'));\n\n    // 6) HALT + range + promovido \u2192 ENTRADAS puladas; venda Trend acoplada PODE armar.\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { halted: true, promoted: ALL_THREE });\n    ok('HALT: NAO arma Farm Buy', !has('Farm Buy LTCUSDT:true'));\n    ok('HALT: arma Trend Sell (protecao)', has('Trend Sell BTCUSDT SMA50/200:true'));\n\n    // 7) Bear + posicao (TREND_QTY>0) + slopegate NAO promovido \u2192 Trend Sell ARMA (posicao supera promocao).\n    await run({ LTCUSDT: 'bear', BTCUSDT: 'bear' }, { promoted: [], trendQty: { BTCUSDT: 5 } });\n    ok('bear+posicao s/ promo: arma Trend Sell (sai do trade)', has('Trend Sell BTCUSDT SMA50/200:true'));\n    ok('bear+posicao s/ promo: NAO arma Trend Buy', !has('Trend Buy BTCUSDT SMA50/200:true'));\n\n    // 8) Idempotencia: range+promovido com tudo no alvo \u2192 zero toggles.\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { promoted: ALL_THREE, states: { farmBuy: true, farmSell: true, trendBuy: true, trendSell: true, baseBuy: true, baseSell: true } });\n    ok('range+promovido estavel \u2192 zero toggles (idempotente)', calls.length === 0);\n\n    console.log(`\\ngroupSupervisorReconcile.test.js: ${passed} passed, ${failed} failed`);\n    process.exit(failed ? 1 : 0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /tmp/tux_build/groupSupervisorReconcile.test.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:02:43)*
+
+
+## 🤖 Claude *(00:02:44)*
+
+Adiciono asserts de `promotionAllows` ao teste do supervisor + crio o teste puro de `evaluatePromotion`.
+
+## 🤖 Claude *(00:02:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/patch_supervisor_test_D.py",
+  "content": "#!/usr/bin/env python3\nimport sys\nP = \"/home/gcrux-tradeux/tradeux/backend/scripts/sim/groupSupervisor.test.js\"\nc = open(P, encoding=\"utf-8\").read()\nold = \"\"\"eq('ignore => null (n\u00e3o toca)', sup.desiredActive('ignore', 'range', true), null);\n\nconsole.log(`\\\\ngroupSupervisor.test.js: ${passed} passed, ${failed} failed`);\"\"\"\nnew = \"\"\"eq('ignore => null (n\u00e3o toca)', sup.desiredActive('ignore', 'range', true), null);\n\n// --- promotionAllows (frente D: portao de promocao paper->real) ---\neq('entry promovido => permite', sup.promotionAllows('entry', false, true), true);\neq('entry NAO promovido => barra', sup.promotionAllows('entry', false, false), false);\neq('baselineSell (cofre) promovido => permite', sup.promotionAllows('baselineSell', false, true), true);\neq('baselineSell (cofre) NAO promovido => barra (fecha o QA-B)', sup.promotionAllows('baselineSell', false, false), false);\neq('trendSell promovido s/ posicao => permite', sup.promotionAllows('trendSell', false, true), true);\neq('trendSell NAO promovido s/ posicao => barra', sup.promotionAllows('trendSell', false, false), false);\neq('trendSell NAO promovido COM posicao => permite (protege posicao)', sup.promotionAllows('trendSell', true, false), true);\n\nconsole.log(`\\\\ngroupSupervisor.test.js: ${passed} passed, ${failed} failed`);\"\"\"\nif c.count(old) != 1:\n    print(f\"ancora {c.count(old)}x (esperado 1)\"); sys.exit(1)\nopen(P, \"w\", encoding=\"utf-8\").write(c.replace(old, new, 1))\nprint(\"groupSupervisor.test.js: promotionAllows asserts adicionados\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/patch_supervisor_test_D.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/promotion.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 decis\u00e3o PURA de promo\u00e7\u00e3o paper->real (promotionStore.evaluatePromotion, frente D) +\n * grandfather por env. Errar aqui = liberar dinheiro REAL para uma estrat\u00e9gia que N\u00c3O provou edge (ou travar\n * uma que provou). Crit\u00e9rio: net REALIZADO positivo sobre >= N round-trips, consistente entre s\u00edmbolos; win-rate\n * IGNORADO (a consistencia tem 86% de acerto e net NEGATIVO \u2014 a armadilha que isto evita).\n */\nprocess.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';\nprocess.env.PROMOTION_GRANDFATHER = 'gfstrat'; // p/ o teste de grandfather (lido no require)\nconst ps = require('../../src/utils/promotionStore');\n\nlet passed = 0, failed = 0;\nfunction eq(name, a, e) { if (a === e) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${a} exp ${e}`); } }\n\nconst cfg = { minRoundTrips: 20, minNet: 0, minSymbolFrac: 0.5 };\nconst S = (over) => ({ strategy: 'x', sells: 25, realizedPnl: 1.0, symbols: { A: { realizedPnl: 1.0 } }, ...over });\n\n// amostra insuficiente\neq('round-trips < min => nao promove', ps.evaluatePromotion(S({ sells: 19 }), cfg).promote, false);\neq('sem dados => nao promove', ps.evaluatePromotion(null, cfg).promote, false);\n\n// net nao-positivo (a armadilha da consistencia: muitos acertos, net negativo)\neq('net == 0 => nao promove', ps.evaluatePromotion(S({ realizedPnl: 0 }), cfg).promote, false);\neq('net negativo => nao promove', ps.evaluatePromotion(S({ realizedPnl: -0.01 }), cfg).promote, false);\n\n// consistencia entre simbolos\neq('net+ e 1/1 simbolo positivo => promove', ps.evaluatePromotion(S(), cfg).promote, true);\neq('net+ mas 1/3 simbolos positivos (precisa 2) => nao promove',\n    ps.evaluatePromotion(S({ symbols: { A: { realizedPnl: 2 }, B: { realizedPnl: -0.5 }, C: { realizedPnl: -0.5 } } }), cfg).promote, false);\neq('net+ e 2/2 nao-negativos (zero conta como nao-negativo) => promove',\n    ps.evaluatePromotion(S({ symbols: { A: { realizedPnl: 1 }, B: { realizedPnl: 0 } } }), cfg).promote, true);\neq('net+ e 2/3 positivos (precisa 2) => promove',\n    ps.evaluatePromotion(S({ symbols: { A: { realizedPnl: 1 }, B: { realizedPnl: 0.5 }, C: { realizedPnl: -0.4 } } }), cfg).promote, true);\n\n// grandfather (env) e default vazio\neq('grandfather (env) sempre promovido', ps.isPromoted('gfstrat'), true);\neq('estrategia aleatoria nao promovida (store vazio)', ps.isPromoted('trilha_inexistente_zzz'), false);\neq('isPromoted vazio/undefined => false', ps.isPromoted(undefined), false);\n\nconsole.log(`\\npromotion.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/promotion.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:03:14)*
+
+Aplicando tudo da frente D (novos arquivos + patches) e validando.
+
+## 🤖 Claude *(00:03:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nchmod -R a+rX /tmp/tux_build\necho \"=== copia arquivos novos ===\"\nsudo -n -u gcrux-tradeux bash -lc '\ncp /tmp/tux_build/promotionStore.js backend/src/utils/promotionStore.js\ncp /tmp/tux_build/promotionJob.js   backend/src/promotionJob.js\ncp /tmp/tux_build/promotion.test.js backend/scripts/sim/promotion.test.js\ncp /tmp/tux_build/groupSupervisorReconcile.test.js backend/scripts/sim/groupSupervisorReconcile.test.js\necho copiados'\necho \"=== patches ===\"\nsudo -n -u gcrux-tradeux python3 /tmp/tux_build/patch_supervisor_D.py\nsudo -n -u gcrux-tradeux python3 /tmp/tux_build/patch_D_wiring.py\nsudo -n -u gcrux-tradeux python3 /tmp/tux_build/patch_supervisor_test_D.py",
+  "description": "Apply phase D files and patches"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === copia arquivos novos ===
+> copiados
+> === patches ===
+> OK [require]
+> OK [PROMO_MAP]
+> OK [promotionAllows]
+> OK [runOnce gate]
+> OK [deactivate reason]
+> OK [getStatus]
+> OK [exports]
+> 
+> supervisor D patch OK.
+> OK [server require]
+> OK [server start]
+> OK [sysctl require]
+> OK [sysctl getPromotions]
+> OK [sysrouter promotions]
+> OK [cockpit promotions]
+> OK [env.example D]
+> 
+> wiring D OK.
+> groupSupervisor.test.js: promotionAllows asserts adicionados
+> ```
+
+## 🤖 Claude *(00:03:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== node --check ===\"\nfor f in src/utils/promotionStore.js src/promotionJob.js src/groupSupervisorJob.js src/server.js src/controllers/systemController.js src/routers/systemRouter.js src/controllers/analysisController.js scripts/sim/promotion.test.js scripts/sim/groupSupervisorReconcile.test.js scripts/sim/groupSupervisor.test.js; do\n  node --check \"$f\" 2>/tmp/nc.err && echo \"OK  $f\" || { echo \"FAIL $f\"; cat /tmp/nc.err; }\ndone\necho \"\"\necho \"=== su\u00edte completa ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 timeout 150 node scripts/sim/run.js 2>&1 | grep -E \"test.js:|sim suite\"'",
+  "description": "Syntax check and full sim suite for phase D"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node --check ===
+> OK  src/utils/promotionStore.js
+> OK  src/promotionJob.js
+> OK  src/groupSupervisorJob.js
+> OK  src/server.js
+> OK  src/controllers/systemController.js
+> OK  src/routers/systemRouter.js
+> OK  src/controllers/analysisController.js
+> OK  scripts/sim/promotion.test.js
+> OK  scripts/sim/groupSupervisorReconcile.test.js
+> OK  scripts/sim/groupSupervisor.test.js
+> 
+> === suíte completa ===
+> calcQty.test.js: 23 passed, 0 failed
+> crypto.test.js: 19 passed, 0 failed
+> dailyCap.test.js: 10 passed, 0 failed
+> dailyCapResume.test.js: 17 passed, 0 failed
+> dailyCapResumeFlow.test.js: 18 passed, 0 failed
+> earnRedeem.test.js: 12 passed, 0 failed
+> earnRedeemDryRun.test.js: 5 passed, 0 failed
+> eventNotify.test.js: 15 passed, 0 failed
+> farmSellBoot.test.js: 10 passed, 0 failed
+> farmTriggers.test.js: 16 passed, 0 failed
+> feeCalc.test.js: 19 passed, 0 failed
+> groupSupervisor.test.js: 32 passed, 0 failed
+> groupSupervisorReconcile.test.js: 22 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> promotion.test.js: 11 passed, 0 failed
+> riskGuard.test.js: 53 passed, 0 failed
+> stepUpGuard.test.js: 21 passed, 0 failed
+> withdrawGuard.test.js: 13 passed, 0 failed
+> sim suite: 18/18 arquivos OK.
+> ```
+
+## 🤖 Claude *(00:03:36)*
+
+
+## 🤖 Claude *(00:03:38)*
+
+18/18 verde (supervisor 32, reconcile 22 com a dimensão de promoção, promotion 11; zero regressão). Require smoke + verificar o `getStatus` do supervisor com o portão.
+
+## 🤖 Claude *(00:03:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 timeout 30 node -e \"\nconst ps = require(\\\"./src/utils/promotionStore\\\");\nconst pj = require(\\\"./src/promotionJob\\\");\nconst sup = require(\\\"./src/groupSupervisorJob\\\");\nconst sc = require(\\\"./src/controllers/systemController\\\");\nrequire(\\\"./src/controllers/analysisController\\\");\nconsole.log(\\\"promotionStore keys:\\\", Object.keys(ps).join(\\\",\\\"));\nconsole.log(\\\"promotionJob.getStatus enabled:\\\", pj.getStatus().enabled, \\\"crit:\\\", pj.getStatus().minRoundTrips, pj.getStatus().minNet);\nconst st = sup.getStatus();\nconsole.log(\\\"supervisor promoMap:\\\", JSON.stringify(st.promoMap), \\\"promotions:\\\", JSON.stringify(st.promotions));\nconsole.log(\\\"systemController.getPromotions:\\\", typeof sc.getPromotions === \\\"function\\\");\nconsole.log(\\\"SMOKE OK\\\");\n\" 2>&1 | tail -8'",
+  "description": "Require smoke for phase D modules"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-25T00:03:42.511Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> promotionStore keys: load,isPromoted,promote,list,evaluatePromotion,STORE_FILE
+> promotionJob.getStatus enabled: true crit: 20 0
+> supervisor promoMap: {"farm":"farmnl","trend":"slopegate","baseline":"consistencia"} promotions: {"promoted":{},"grandfather":[]}
+> systemController.getPromotions: true
+> SMOKE OK
+> ```
+
+## 🤖 Claude *(00:03:58)*
+
+
+## 🤖 Claude *(00:04:01)*
+
+Wiring 100% OK. O portão está ativo: nada vai a real até a trilha provar (promoções vazias) — o que **preserva o estado vivo** (Farm sells canário intactas, buys off) e **fecha o HIGH do QA-B** (venda do cofre não auto-arma). Gate QA + TL da frente D.
+
+## 🤖 Claude *(00:04:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff backend/src/groupSupervisorJob.js backend/src/server.js backend/src/controllers/systemController.js backend/src/routers/systemRouter.js backend/src/controllers/analysisController.js > /tmp/tux_build/phaseD.diff 2>/dev/null\nwc -l /tmp/tux_build/phaseD.diff\necho \"novos: promotionStore.js, promotionJob.js, promotion.test.js (+ reconcile/supervisor tests atualizados)\"",
+  "description": "Generate phase D diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 160 /tmp/tux_build/phaseD.diff
+> novos: promotionStore.js, promotionJob.js, promotion.test.js (+ reconcile/supervisor tests atualizados)
+> ```
+
+## 🤖 Claude *(00:04:30)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA gate phase D",
+  "subagent_type": "qa-engineer",
+  "prompt": "Pre-merge QA da FRENTE D (auto-promo\u00e7\u00e3o paper->real) do TradeUX. MAINNET REAL, equity ~$149, `halted=false`, regime bear, canary Farm-only (vendas no-loss id10/12/14 armadas, compras off). Repo: /home/gcrux-tradeux/tradeux. Rode como gcrux: `sudo -n -u gcrux-tradeux bash -lc '...'`. `node` no PATH, `npm` N\u00c3O (`AES_KEY=01234567890123456789012345678901 node scripts/sim/run.js`).\n\nCONTEXTO: o dono escolheu \"auto-promover com teto\" quando uma trilha do paper provar edge. Em vez de auto-CLONAR automa\u00e7\u00f5es paper->real em runtime (arriscado: acoplamento a chaves de MEMORY espec\u00edficas do paper como FARMNL_TARGET), o desenho usa a prova do paper como um PORT\u00c3O sobre o supervisor da frente B: o supervisor s\u00f3 ATIVA entradas reais (e a venda do cofre do Baseline) de uma estrat\u00e9gia j\u00e1 PROMOVIDA. Isso (1) implementa \"esperar o paper provar antes de dinheiro real\", (2) FECHA o HIGH que voc\u00ea mesmo apontou na frente B (a venda do cofre BTC do Baseline auto-armada na sa\u00edda do bear), (3) \u00e9 seguro (zero codegen).\n\nArquivos:\n- NOVOS: `backend/src/utils/promotionStore.js` (allowlist persistida + evaluatePromotion pura), `backend/src/promotionJob.js` (avalia paperService.summary e promove + notifica), `backend/scripts/sim/promotion.test.js`.\n- EDITADOS: `backend/src/groupSupervisorJob.js` (port\u00e3o promotionAllows), `backend/src/server.js` (start), `backend/src/controllers/systemController.js` + `routers/systemRouter.js` (GET /system/promotions), `backend/src/controllers/analysisController.js` (status.promotions no cockpit).\n- TESTES atualizados: `groupSupervisor.test.js` (+promotionAllows), `groupSupervisorReconcile.test.js` (dimens\u00e3o de promo\u00e7\u00e3o). Diff em `/tmp/tux_build/phaseD.diff`.\n\nPontos de risco a atacar (c\u00e9tico):\n1. **O port\u00e3o impede dinheiro real at\u00e9 provar?** Com a allowlist VAZIA (estado atual), o supervisor pode ATIVAR alguma entrada real ou a venda do cofre? Prove: range + nada promovido => zero ativa\u00e7\u00f5es. E a venda do cofre (Baseline RSI Sell BTCUSDT) fica off sem promo\u00e7\u00e3o (fecha o HIGH-B)?\n2. **Prote\u00e7\u00e3o de posi\u00e7\u00e3o n\u00e3o \u00e9 barrada pela promo\u00e7\u00e3o**: trendSell com TREND_QTY>0 ARMA mesmo sem slopegate promovido (n\u00e3o prender algu\u00e9m comprado sem sa\u00edda)? Farm Sell (id10/12/14, 'ignore') segue intocada/sempre-armada?\n3. **Crit\u00e9rio de promo\u00e7\u00e3o (evaluatePromotion)**: usa net REALIZADO (n\u00e3o win-rate \u2014 a consistencia tem 86% acerto e net NEGATIVO; tem que ser BARRADA)? Exige >= minRoundTrips fechados E consist\u00eancia entre s\u00edmbolos? Um net+ carregado por 1 s\u00edmbolo (outros negativos) \u00e9 barrado? unrealized (bag aberto) N\u00c3O conta como edge?\n4. **promotionStore persist\u00eancia/fail-safe**: store ileg\u00edvel => come\u00e7a VAZIO (nada promovido = fail-safe seguro)? promote() \u00e9 idempotente? isPromoted(undefined)=>false? grandfather por env funciona (liberar manual sem esperar)?\n5. **N\u00e3o toca money-path direto**: o promotionJob s\u00f3 ESCREVE a allowlist; nenhuma ordem \u00e9 colocada por este c\u00f3digo; o teto por ordem segue sendo o riskGuard ($25)?\n6. **Estado vivo p\u00f3s-deploy** (bear, nada promovido): o supervisor segue no-op (entradas off, Farm sells can\u00e1rio intactas)? Nenhuma mudan\u00e7a de postura indevida?\n7. **Coer\u00eancia B+D**: o dono escolheu \"Farm+Trend+Baseline aut\u00f4nomos\" (B) E \"auto-promover quando provar\" (D). Gatear as entradas de B na prova de D \u00e9 a leitura coerente, ou h\u00e1 contradi\u00e7\u00e3o? (Farm buys ficam off at\u00e9 farmnl provar OU grandfather.)\n\nRode `node --check` + a su\u00edte completa (deve ser 18/18). Verifique o estado vivo via `GET /system/supervisor` e `GET /analysis/cockpit` (status.promotions) DEPOIS que eu deployar \u2014 mas voc\u00ea pode validar a l\u00f3gica agora pelos testes + leitura. Sugira testes que faltam.\n\nDevolva **PASS / PASS COM RESSALVAS / FAIL** com achados por severidade."
+}
+```
+
+## 🤖 Claude *(00:04:49)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL gate phase D",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (tech-lead) da FRENTE D (auto-promo\u00e7\u00e3o paper->real) do TradeUX. MAINNET REAL ~$149, `halted=false`, regime bear, canary Farm-only. Trunk-based direto-a-master. Repo: /home/gcrux-tradeux/tradeux. Rode como gcrux. `node` no PATH, `npm` N\u00c3O.\n\nCONTEXTO E DESENHO: o dono escolheu (decis\u00f5es registradas) \u2014 B: supervisor aut\u00f4nomo gere Farm+Trend+Baseline por regime; D: \"auto-promover com teto quando o paper provar edge\". Investigando o paper, descobri que clonar automa\u00e7\u00f5es paper->real em runtime \u00e9 arriscado (as trilhas no-loss dependem de chaves de MEMORY espec\u00edficas do paper, ex. FARMNL_TARGET, que n\u00e3o existem no caminho real). Ent\u00e3o em vez de codegen, D usa a PROVA DO PAPER como um PORT\u00c3O sobre o supervisor de B: o supervisor s\u00f3 ATIVA entradas reais (e a venda do cofre do Baseline) de uma estrat\u00e9gia PROMOVIDA (provou edge no paper) ou grandfathered. Efeitos:\n- implementa fielmente \"esperar o paper provar antes de dinheiro real\";\n- FECHA o achado HIGH do QA na frente B (venda do cofre BTC do Baseline auto-armada na sa\u00edda do bear) \u2014 agora ela s\u00f3 arma se o Baseline/consistencia provar;\n- o teto por ordem ($25) continua sendo o riskGuard global (promo\u00e7\u00e3o decide SE opera real, n\u00e3o QUANTO).\n\nArquivos: NOVOS `promotionStore.js` (allowlist persistida + evaluatePromotion pura), `promotionJob.js` (avalia paperService.summary, promove, notifica), `promotion.test.js`. EDITADOS `groupSupervisorJob.js` (port\u00e3o promotionAllows + PROMO_MAP grupo->trilha por env), `server.js`, `systemController.js`+`systemRouter.js` (GET /system/promotions), `analysisController.js` (status.promotions). Testes atualizados. Diff `/tmp/tux_build/phaseD.diff`. Su\u00edte 18/18.\n\nAvalie e DECIDA o merge. Pontos pra opini\u00e3o:\n1. **Desenho \"port\u00e3o sobre B\" vs auto-clone**: concorda que gatear o supervisor na prova do paper \u00e9 a abstra\u00e7\u00e3o CERTA (vs auto-criar automa\u00e7\u00f5es reais em runtime)? Algum risco de o port\u00e3o neutralizar B indevidamente?\n2. **Coer\u00eancia B+D**: o dono pediu B (aut\u00f4nomo) E D (esperar prova). Gatear B na prova de D honra AMBOS, ou contraria a escolha \"Farm+Trend+Baseline aut\u00f4nomos\"? Note: Farm BUYS ficam off at\u00e9 farmnl provar OU PROMOTION_GRANDFATHER=farmnl. A canary (Farm sells) segue intocada. Isso precisa ficar MUITO claro pro dono \u2014 \u00e9 uma mudan\u00e7a de comportamento de B (que eu j\u00e1 deployei). Aceit\u00e1vel + revers\u00edvel?\n3. **PROMO_MAP grupo->trilha** (farm:farmnl, trend:slopegate, baseline:consistencia) \u00e9 um proxy razo\u00e1vel (o Trend real \u00e9 cross puro, o slopegate paper tem filtro de slope; o Baseline real ~ consistencia)? Configur\u00e1vel por env \u00e9 suficiente?\n4. **Crit\u00e9rio evaluatePromotion** (net realizado > 0 sobre >=20 round-trips, >=50% s\u00edmbolos n\u00e3o-negativos, win-rate ignorado): rigoroso o bastante p/ liberar dinheiro real? Conservador demais?\n5. **promotionJob default ON** + grandfather vazio default (nada vai a real at\u00e9 provar): postura inicial certa?\n6. **Observabilidade** (GET /system/promotions + status.promotions no cockpit + getStatus do supervisor com promoMap/allowlist): suficiente p/ o operador/agente entenderem por que uma entrada n\u00e3o ativou?\n7. Conven\u00e7\u00f5es (pt-BR, env com kill-switch, fail-safe, idempot\u00eancia, fun\u00e7\u00e3o pura test\u00e1vel).\n\nDevolva **APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK** com must-fix vs nice-to-have. Pragm\u00e1tico: incremental, revers\u00edvel por env, e RESOLVE um HIGH aberto da frente B."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '`/system` is behind `authMiddleware` — `GET /promotions` is operator-only, consistent with the kill-switch doctrine. I have everything I need.\n\n---\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\n### Racional\n\nAvaliei o diff (`/tmp/tux_build/phaseD.diff`), os 3 arquivos novos e a integração no supervisor/server/router. A suíte roda **18/18** (incluindo `promotion.test.js` 11/11 e `groupSupervisor.test.js` cobrindo o gate). O desenho é sólido, fiel às decisões do dono, fail-safe e reversível por env. Resolve um HIGH aberto da frente B sem aumentar o blast radius do hot-path.\n\n**Respostas diretas aos seus pontos:**\n\n**1. Portão sobre B vs auto-clone — CERTO.** Auto-gerar automações reais em runtime seria codegen num sistema stateful (BRAIN cacheado, chaves de MEMORY paper-only como `FARMNL_TARGET`) — alto risco, baixa reversibilidade. Gatear o supervisor (`promotionAllows` puro em `groupSupervisorJob.js:94`) é a abstração mínima e correta: a promoção decide **SE**, o regime decide **QUANDO**, o riskGuard ($25) decide **QUANTO**. Não há risco do portão "neutralizar B indevidamente" porque é aditivo a `desiredActive` (`target = regimeTarget && promotionAllows(...)`) e o eixo de DESATIVAÇÃO por regime continua intacto — o portão só pode tornar um `target` mais restritivo, nunca ativar algo que o regime barrou. As **vendas do Farm (canary) não passam por aqui** (`classify` → `ignore` para `Farm Sell`), então a canary fica intocada (confirmado).\n\n**2. Coerência B+D — honra AMBOS.** B = "supervisor autônomo gere por regime"; D = "esperar prova". Gatear não contraria B: o supervisor segue autônomo (liga/desliga sozinho), só que a porta de **dinheiro real** abre quando o paper prova. É a leitura literal de "auto-promover com teto quando o paper provar edge". É **aceitável e reversível** (`PROMOTION_GRANDFATHER=farmnl` reabilita Farm BUYS na hora; `PROMOTION_ENABLED=false` desliga o job; sem trilha no `PROMO_MAP` o grupo cai pro fail-safe). **Must-fix de processo:** isto **muda comportamento de B já deployado** (Farm BUYS ficam off até farmnl provar) — tem que ir **explícito** pro dono na notificação/HANDOFF, não enterrado.\n\n**3. PROMO_MAP — proxy razoável e suficiente.** farm→farmnl e baseline→consistencia são bons proxies. trend→slopegate é o ponto mais frouxo (o Trend real é golden-cross puro; o slopegate tem filtro de slope extra), mas como o paper é **mais conservador** que o real, promover via slopegate é o lado seguro do erro (não libera real com base num proxy mais permissivo). Configurável por env basta. **Nice-to-have:** comentar no `.env.example` que slopegate ⊆ trend (gate conservador), pra não confundir o operador no futuro.\n\n**4. Critério — adequado, conservador na medida certa.** net realizado >0, fee-inclusive, sobre ≥20 round-trips fechados, ≥50% símbolos não-negativos, ignorando win-rate de propósito (a memória `sim-suite`/`consistencia` confirma: 86% win-rate com net negativo = a armadilha exata que isto evita). Usar realizado e não unrealized é correto (bag aberto ≠ edge). Para liberar ~$149 com teto $25/ordem, está calibrado. Não é conservador demais — os defaults são afrouxáveis por env se o paper demorar.\n\n**5. Default ON + grandfather vazio — postura certa.** Job liga sozinho mas a allowlist nasce vazia → **nada vai a real até provar**. Fail-safe por construção (`load()` ilegível → vazio; sem trilha → off). Confirmei `PROMOTION_GRANDFATHER=` vazio no `.env.example`.\n\n**6. Observabilidade — suficiente.** `GET /system/promotions` (operator-only, atrás de `authMiddleware`, confirmado em `app.js:64`), `status.promotions` no cockpit e `getStatus()` do supervisor com `promoMap`/`promotions` + a razão `"aguardando promocao (X nao provou)"` no log e no `notifyGroupChange`. O operador/agente conseguem explicar por que uma entrada não ativou.\n\n**7. Convenções — aderentes.** pt-BR, kill-switch por env, idempotência (`promote` early-return; `start` guard de timer; `timer.unref()`), função pura testável (`evaluatePromotion`), fail-closed. Casing alinhado: `strategyOf` faz `.toLowerCase()` (`paperEngine.js:48`) = `isPromoted`/PROMO_MAP. Shape de `paperService.summary()` casa com o consumido (`strategy`/`sells`/`realizedPnl`/`symbols[].realizedPnl`/`.qty`).\n\n### Must-fix\n- **Comunicação ao dono (não-código):** deixar EXPLÍCITO no aviso/HANDOFF que Farm BUYS reais passam a depender de promoção (mudança de comportamento de B já no ar) e que o liga-na-hora é `PROMOTION_GRANDFATHER=farmnl`. Você já sinalizou isso — é a condição de merge.\n\n### Nice-to-have\n- **Persistência do store:** `promotions.json` em `backend/logs/` (`promotionStore.js:20`). Como decisão de liberar dinheiro real, idealmente cai no `make backup-state` e sobrevive a `make reset-db` (que preserva `risk_state`). Hoje vive em `logs/` — verificar se entra no backup cifrado; senão, mover pra par do `risk_state`. Não bloqueia (grandfather/re-prova reconstrói).\n- **Re-prova após reset:** se o paperOrders for limpo num `reset-db`, a allowlist persiste mas o ledger zera — sem efeito adverso (já promovido continua promovido), mas vale uma linha no HANDOFF.\n- Comentar no `.env.example` que `slopegate ⊆ trend` (gate conservador) — ponto 3.\n\n### Decisão de merge\n**MERGE APROVADO** para `master` (trunk-based, push via chave do `ubuntu` + chown), condicionado **apenas** ao Must-fix de comunicação. Incremental, reversível por 5 envs, read-only no money-path, fecha o HIGH da venda do cofre BTC auto-armada (frente B) e não toca `beholder.js`. Sem migration, sem segredo, backward-compatible (defaults preservam o comportamento esperado; HALT/cap/riskGuard seguem soberanos). Deploy: `docker compose up -d --build backend` e checar `GET /system/promotions` + `logs/supervisor` no smoke.\n\n**Arquivos relevantes:**\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/promotionStore.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/promotionJob.js`\n- `/home/gcrux-tradeux/tradeux/backend/src/groupSupervisorJob.js` (gate em `:94` e `:141-166`)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/promotion.test.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/groupSupervisor.test.js`\n- `/home/gcrux-tradeux/tradeux/backend/.env.example`'}, {'type': 'text', 'text': "agentId: a6bd0e8b6fcb70089 (use SendMessage with to: 'a6bd0e8b6fcb70089' to continue this agent)\n<usage>subagent_tokens: 54228\ntool_uses: 18\nduration_ms: 107756</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Corrupt-store fail-safe confirmed: unreadable JSON → empty allowlist → nothing promoted (safe). All risk points validated. Here is the report.\n\n---\n\n# QA PRÉ-MERGE — FRENTE D (auto-promoção paper→real)\n\n## VEREDITO GERAL: **PASS COM RESSALVAS**\n\nO desenho está correto e seguro: o portão é **fail-closed** (nada vai a real sem prova), não toca money-path (só escreve allowlist), e o critério de promoção evita exatamente a armadilha da `consistencia` (86% win-rate, net negativo). 18/18 arquivos da suíte passam, `node --check` limpo em todos. As ressalvas são de higiene de commit e de débitos LOW, não de lógica de dinheiro.\n\n---\n\n## Validação dos 7 pontos de risco\n\n**1. Portão impede dinheiro real até provar? SIM (provado).**\nCom allowlist VAZIA: `groupSupervisorReconcile.test.js` cenário 3 confirma range+nada-promovido → ZERO ativações de entrada E **a venda do cofre `Baseline RSI Sell BTCUSDT` fica off** (`promotionAllows(\'baselineSell\', _, false) === false`). Isso **fecha o HIGH-B** (venda auto-armada do cofre BTC na saída do bear). Cenário 5 confirma que entradas já LIGADAS são DESATIVADAS quando não-promovidas.\n\n**2. Proteção de posição não é barrada. SIM.**\n`promotionAllows(\'trendSell\', hasPosition=true, isPromoted=false) === true` — cenário 7 (bear + `TREND_QTY>0` + slopegate não-promovido) arma a venda protetiva do Trend. `Farm Sell` (id10/12/14) classifica como `\'ignore\'` → nunca passa pelo portão, segue sempre-armada/auto-gateada por `FARM_DCA.qty>0`. Correto: não prende ninguém comprado sem saída.\n\n**3. Critério (`evaluatePromotion`). CORRETO.**\nUsa `realizedPnl` REALIZADO fee-inclusive (vindo das positions, que acumulam `realizedAcc` por símbolo mesmo após zerar qty — confirmei no `paperEngine.js:156-158`). `unrealized`/bag aberto NÃO conta. Exige `>= minRoundTrips` sells E consistência: `>= ceil(considerados × minSymbolFrac)` símbolos não-negativos. Net+ carregado por 1 símbolo (outros sangrando) é **barrado** (teste linha 28-29). Win-rate IGNORADO de propósito — a `consistencia` (net negativo) seria barrada por `realized <= minNet`.\n\n**4. promotionStore persistência/fail-safe. TODOS CONFIRMADOS AO VIVO:**\n- Store ilegível/corrompido → começa VAZIO (testei com JSON corrompido: `isPromoted(\'farmnl\')===false`).\n- `promote()` idempotente (2ª chamada retorna `false`, não sobrescreve meta).\n- `isPromoted(undefined)===false`; case-insensitive OK.\n- Grandfather por env `PROMOTION_GRANDFATHER` funciona e é granular (só a trilha listada).\n\n**5. Não toca money-path. CONFIRMADO.**\n`promotionJob` só chama `promotionStore.promote()` (writeFileSync da allowlist) + `telegramNotify`. Nenhuma ordem é colocada. O teto/ordem segue sendo o riskGuard ($25 via `MAX_ORDER_NOTIONAL_USDT`/`MAX_ORDER_PCT_EQUITY`) — promoção decide SE, não QUANTO (documentado no header do store).\n\n**6. Estado vivo pós-deploy (bear, nada promovido).**\nLogicamente: regime bear → `desiredActive` já retorna false para entradas → no-op antes mesmo do portão; e nada promovido → portão segura tudo. Farm sells canário intactas. **Verificar ao vivo após deploy** via `GET /system/supervisor` (`promotions.promoted` deve ser `{}`) e `GET /analysis/cockpit` → `status.promotions`. Pré-condição: o arquivo `backend/logs/promotions.json` não deve existir ou estar vazio no boot.\n\n**7. Coerência B+D. COERENTE.**\nGatear as entradas de B na prova de D é a leitura correta de "esperar o paper provar antes de dinheiro real". Não há contradição: B torna os grupos *autônomos por regime*; D adiciona o pré-requisito *prova de edge* para a ida a real. Farm buys ficam off até `farmnl` provar OU grandfather — o que dá ao dono a alavanca manual (liberar o Farm canário sem esperar, via `PROMOTION_GRANDFATHER=farmnl`).\n\n---\n\n## Achados por severidade\n\n**[MEDIUM] Contaminação do working tree — arquivos fora do escopo D não devem entrar no commit.**\n`git status` mostra modificados `backend/backtest-results/farm-funnel-1h-full-macro500.{json,md}` e untracked `farm-funnel-1h-full.{json,md}` (datados 2026-06-21, anteriores à frente D de 2026-06-24). Não estão no `phaseD.diff`. Commitar a frente D com `git add` seletivo (apenas os 10 arquivos do diff + os 3 novos + `.env.example`), NÃO `git add -A`. Risco: poluir o commit de money-handling com lixo de backtest.\n\n**[LOW] `.env.example` não está no `phaseD.diff`, mas existe no working tree (correto e completo).** As 7 vars novas estão documentadas. Garantir que entre no commit — só estou sinalizando porque o diff que me passaram estava incompleto.\n\n**[LOW] Acoplamento PROMO_MAP × strategyOf é por convenção de nome, sem teste de ponta.**\n`PROMO_MAP` mapeia `farm→farmnl / trend→slopegate / baseline→consistencia`. Validei manualmente que `paperEngine.strategyOf(\'[PAPER] Farmnl Buy LTCUSDT\')===\'farmnl\'` (2ª palavra lowercase) e que isso é o que vai pro DB (`paperOrders.strategy`) e volta no `summary().strategies[].strategy`, casando com `promote(s.strategy)`. **Porém:** se alguém renomear uma trilha paper (ex.: `[PAPER] Farm-NL`) ou trocar `PROMOTION_GROUP_STRATEGY` sem alinhar os setup-*.js, o grupo fica eternamente não-promovido e *silenciosamente* nunca vai a real. Fail-safe (erra fechado), mas é uma armadilha de manutenção. Sugiro um teste que afirme a igualdade `strategyOf(nome_real) === PROMO_MAP[grupo]` para as 3 trilhas.\n\n**[LOW] Risco multi-processo (não aplicável hoje, documentar).**\n`isPromoted()` lê do mapa em-memória; `load()` só roda 1× no require. Como `promotionJob` e `groupSupervisorJob` rodam no MESMO processo backend (confirmei `server.js:135` e `:140`), a promoção propaga sem restart. Se um dia o supervisor for movido para outro processo, ele só veria novas promoções no restart. Vale uma linha de comentário no store alertando disso.\n\n**[INFO] `evaluatePromotion`: símbolo com round-trip de net exatamente 0 e qty 0 é excluído de `considered`.** O filtro `traded` usa `realizedPnl !== 0 || qty !== 0`. Um símbolo que fechou exatamente flat (raríssimo com fees) sairia da conta de consistência. Inócuo na prática (fees garantem realized≠0), mas é um buraco teórico — citar como débito.\n\n---\n\n## Testes que eu rodaria\n\n1. **Já rodei:** suíte sim completa (`AES_KEY=... node scripts/sim/run.js`) → **18/18 OK** (promotion 11/11, groupSupervisor 32/32, reconcile 22/22). `node --check` nos 10 arquivos → limpo.\n2. **Já rodei (adversarial in-process):** store vazio→nada promovido; `isPromoted(undefined)===false`; `promote` idempotente; case-insensitive; grandfather granular; **store corrompido→allowlist vazia**. Todos OK.\n3. **Faltam (sugiro adicionar à suíte):**\n   - Teste de **acoplamento nome↔mapa**: `strategyOf(\'[PAPER] Farmnl Buy X\') === PROMO_MAP.farm`, idem slopegate/consistencia (pega regressão de rename).\n   - **promotionJob.runOnce com paperService mockado**: trilha que cruza o critério → `promote()` chamado 1×, 2º ciclo não re-promove nem re-notifica (dedup por `promotion:<strat>`); trilha net-negativo nunca promove.\n   - **Persistência cross-restart**: `promote()` → novo require simulado lê do arquivo (`load()` recupera a allowlist).\n4. **Pós-deploy (ao vivo, operator JWT):**\n   - `GET /system/promotions` → `enabled:true`, `allowlist.promoted:{}` (bear, nada provado ainda).\n   - `GET /system/supervisor` → `promoMap` com as 3 entradas, `promotions.promoted:{}`, `last.activated:0`.\n   - `GET /analysis/cockpit` → `status.promotions` presente e não-null (o MCP não pode dropar o campo, como aconteceu com `groups`/`paper` no `6b9b97b`).\n   - Conferir `backend/logs/supervisor.log` por `DESATIVOU ... (aguardando promocao ...)` se houver entrada ligada — confirma a mensagem nova.\n   - Sanity: nenhuma ordem real disparada por este deploy (`orders` com `isTestnet=false` sem novidade não-Farm).\n\n---\n\n## Recomendação de merge\n\n**APROVAR com 2 condições de higiene antes do commit:**\n1. `git add` **seletivo** — somente os arquivos da frente D + `backend/.env.example`; NÃO incluir os `backtest-results/*` (contaminação pré-existente de 2026-06-21).\n2. Confirmar ao vivo, pós-deploy, que `status.promotions` aparece no cockpit (não-null) e que `GET /system/promotions` retorna allowlist VAZIA em bear.\n\nA lógica de dinheiro está sólida e fail-closed; os achados restantes são LOW/INFO (débitos de manutenção e teste, não bloqueiam). Esta frente **fecha o HIGH-B** que estava aberto, o que é um ganho líquido de segurança.\n\n**Arquivos relevantes:**\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/promotionStore.js` (decisão pura + allowlist + fail-safe)\n- `/home/gcrux-tradeux/tradeux/backend/src/promotionJob.js` (job que avalia e promove)\n- `/home/gcrux-tradeux/tradeux/backend/src/groupSupervisorJob.js` (portão `promotionAllows`, linhas 90-101 e 146-150)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/paperService.js` (fonte do `realizedPnl` por símbolo — confirmei acúmulo)\n- `/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js` (`strategyOf` + `realizedAcc`, linhas 46-49 e 156-158)\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/promotion.test.js`, `.../groupSupervisorReconcile.test.js` (cobertura do portão)\n- `/home/gcrux-tradeux/tradeux/backend/.env.example` (7 vars novas — garantir que entre no commit)'}, {'type': 'text', 'text': "agentId: a311ba1be624f4756 (use SendMessage with to: 'a311ba1be624f4756' to continue this agent)\n<usage>subagent_tokens: 79097\ntool_uses: 26\nduration_ms: 177061</usage>"}]
+> ```
+
+## 🤖 Claude *(00:07:41)*
+
+
+## 🤖 Claude *(00:07:43)*
+
+Ambos aprovam D (QA: PASS c/ ressalvas; TL: APPROVE — must-fix é **comunicar ao dono** que Farm BUYS agora dependem de promoção, com o grandfather como liga-na-hora; farei isso com destaque). Vou adicionar o teste de acoplamento `strategyOf↔PROMO_MAP` (QA LOW — pega rename-drift) e o comentário `slopegate⊆trend`. Deixa eu ver a assinatura do `strategyOf`.
+
+## 🤖 Claude *(00:07:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"function strategyOf|strategyOf =|exports\" src/paperEngine.js | head'",
+  "description": "Find strategyOf signature in paperEngine"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 46:function strategyOf(automation) {
+> 174:module.exports = { isPaperAutomation, placePaperOrder, strategyOf, PAPER_PREFIX };
+> ```
+
+## 🤖 Claude *(00:07:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperEngine.js",
+  "offset": 46,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 46	function strategyOf(automation) {
+> 47	    const parts = String(automation && automation.name || '').replace(PAPER_PREFIX, '').trim().split(/\s+/);
+> 48	    return (parts[0] || 'paper').toLowerCase();
+> 49	}
+> 50	
+> 51	// preço de fill = MINI_TICKER.close (preço MAINNET real). require lazy do beholder evita ciclo no load
+> 52	// (beholder requer o paperEngine só dentro de placeOrder, em runtime, quando o brain já está pronto).
+> 53	function fillPrice(symbolStr) {
+> 54	    const beholder = require('./beholder');
+> 55	    const mt = beholder.getMemory(symbolStr, 'MINI_TICKER');
+> ```
+
+## 🤖 Claude *(00:08:10)*
+
+
+## 🤖 Claude *(00:08:11)*
+
+`strategyOf` pega a 1ª palavra após `[PAPER]` em lowercase. Vou adicionar o teste de acoplamento + o comentário `slopegate⊆trend`.
+
+## 🤖 Claude *(00:08:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\n# 1) acoplamento strategyOf<->PROMO_MAP no promotion.test.js\nP=\"/home/gcrux-tradeux/tradeux/backend/scripts/sim/promotion.test.js\"\nc=open(P,encoding=\"utf-8\").read()\nold=\"\"\"eq('isPromoted vazio/undefined => false', ps.isPromoted(undefined), false);\n\nconsole.log(`\\\\npromotion.test.js: ${passed} passed, ${failed} failed`);\"\"\"\nnew=\"\"\"eq('isPromoted vazio/undefined => false', ps.isPromoted(undefined), false);\n\n// --- acoplamento NOME-da-trilha <-> PROMO_MAP default (pega rename-drift: renomear a trilha paper OU mudar o\n// default de PROMOTION_GROUP_STRATEGY deixaria o grupo ETERNAMENTE nao-promovido em silencio = fail-safe perigoso) ---\nconst { strategyOf } = require('../../src/paperEngine');\neq('strategyOf Farmnl == farm->farmnl', strategyOf({ name: '[PAPER] Farmnl Buy LTCUSDT' }), 'farmnl');\neq('strategyOf Slopegate == trend->slopegate', strategyOf({ name: '[PAPER] Slopegate Buy BTCUSDT' }), 'slopegate');\neq('strategyOf Consistencia == baseline->consistencia', strategyOf({ name: '[PAPER] Consistencia Buy BTCUSDT' }), 'consistencia');\n\nconsole.log(`\\\\npromotion.test.js: ${passed} passed, ${failed} failed`);\"\"\"\nassert c.count(old)==1, f\"promo test ancora {c.count(old)}x\"\nopen(P,\"w\",encoding=\"utf-8\").write(c.replace(old,new,1))\nprint(\"promotion.test.js: acoplamento adicionado\")\n\n# 2) comentario slopegate subset trend no .env.example\nE=\"/home/gcrux-tradeux/tradeux/backend/.env.example\"\nc=open(E,encoding=\"utf-8\").read()\nold=\"#ex: farm:farmnl,trend:slopegate,baseline:consistencia  (grupo real -> trilha paper que o gateia)\\n\"\nnew=\"#ex: farm:farmnl,trend:slopegate,baseline:consistencia  (grupo real -> trilha paper que o gateia; slopegate e' subconjunto conservador do Trend real)\\n\"\nassert c.count(old)==1, f\"env ancora {c.count(old)}x\"\nopen(E,\"w\",encoding=\"utf-8\").write(c.replace(old,new,1))\nprint(\"env.example: comentario slopegate adicionado\")\nPY\necho \"=== roda promotion.test.js + su\u00edte r\u00e1pida ===\"\ncd backend\nnode --check scripts/sim/promotion.test.js && sudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 node scripts/sim/promotion.test.js 2>&1 | tail -3'",
+  "description": "Add coupling test and env comment, run promotion test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> promotion.test.js: acoplamento adicionado
+> env.example: comentario slopegate adicionado
+> === roda promotion.test.js + suíte rápida ===
+> 
+> promotion.test.js: 14 passed, 0 failed
+> ```
+
+## 🤖 Claude *(00:08:26)*
+
+
+## 🤖 Claude *(00:08:27)*
+
+promotion.test.js 14/14 (com o acoplamento). Suíte completa final + deploy de D.
+
+## 🤖 Claude *(00:08:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 timeout 150 node scripts/sim/run.js 2>&1 | grep -E \"sim suite|FALH\"'\necho \"=== deploy D ===\"\ncd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend 2>&1 | tail -2 && docker compose up -d backend 2>&1 | tail -2'\nsleep 12\necho \"=== boot: promotion + supervisor ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"tail -80 /app/logs/system.log\" | grep -iE \"Promotion job iniciado|Supervisor iniciado|promotion.*erro\" | tail -5'",
+  "description": "Final suite, deploy phase D",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sim suite: 18/18 arquivos OK.
+> === deploy D ===
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === boot: promotion + supervisor ===
+> info: 2026-06-25T00:08:46.378Z - Promotion job iniciado (intervalo 21600000ms; critério: net>0 sobre >=20 round-trips, >=50% símbolos nao-negativos). Escreve só a allowlist; o supervisor ativa.
+> ```
+
+## 🤖 Claude *(00:08:58)*
+
+
+## 🤖 Claude *(00:08:59)*
+
+Promotion job de pé. Verifico os endpoints ao vivo (allowlist vazia, grupos inalterados, cockpit com `status.promotions` — o check anti-regressão do QA).
+
+## 🤖 Claude *(00:09:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-')\nPWD_=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-')\nT=$(curl -s -m10 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD_\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))')\necho \"$T\" > /tmp/tux_token.txt\necho \"=== /system/promotions (allowlist deve estar VAZIA) ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/system/promotions -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"  enabled=%s crit: net>%s, >=%s RT, >=%.0f%% simbolos\"%(d[\"enabled\"],d[\"minNet\"],d[\"minRoundTrips\"],d[\"minSymbolFrac\"]*100));print(\"  allowlist:\",json.dumps(d[\"allowlist\"]))'\necho \"=== /system/supervisor (promoMap + promotions) ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/system/supervisor -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"  promoMap:\",json.dumps(d.get(\"promoMap\")));print(\"  promotions:\",json.dumps(d.get(\"promotions\")));print(\"  last:\",json.dumps(d.get(\"last\")))'\necho \"=== cockpit.status.promotions (anti-MCP-drop) ===\"\ncurl -s -m15 http://127.0.0.1:8090/api/analysis/cockpit -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"  status.promotions:\",json.dumps(d.get(\"promotions\")),\"(presente, nao-null:\",d.get(\"promotions\") is not None,\")\")'\necho \"=== grupos (deve == antes: farm 3/6, trend 0/8, baseline 0/2) ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/automations/groups -H \"Authorization: $T\" | python3 -c 'import sys,json\nfor g in json.load(sys.stdin)[\"groups\"]: print(\"  %-9s %s/%s\"%(g[\"key\"],g[\"active\"],g[\"total\"]))'",
+  "description": "Verify phase D live endpoints and no-op state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /system/promotions (allowlist deve estar VAZIA) ===
+>   enabled=True crit: net>0, >=20 RT, >=50% simbolos
+>   allowlist: {"promoted": {}, "grandfather": []}
+> === /system/supervisor (promoMap + promotions) ===
+>   promoMap: {"farm": "farmnl", "trend": "slopegate", "baseline": "consistencia"}
+>   promotions: {"promoted": {}, "grandfather": []}
+>   last: {"at": "2026-06-25T00:08:46.536Z", "halted": false, "activated": 0, "deactivated": 0, "haltSkipped": 0, "ignored": 49, "managed": ["farm", "trend", "baseline"]}
+> === cockpit.status.promotions (anti-MCP-drop) ===
+>   status.promotions: {"promoted": {}, "grandfather": []} (presente, nao-null: True )
+> === grupos (deve == antes: farm 3/6, trend 0/8, baseline 0/2) ===
+>   farm      3/6
+>   trend     0/8
+>   baseline  0/2
+>   paper     40/40
+> ```
+
+## 🤖 Claude *(00:09:16)*
+
+
+## 🤖 Claude *(00:09:18)*
+
+**Frente D deployada e verificada:** allowlist vazia, promoMap correto, cockpit expõe `status.promotions` (anti-MCP-drop OK), grupos no-op (farm 3/6 canário intacto). Commit seletivo de D (sem o scratch).
+
+## 🤖 Claude *(00:09:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/commit_msg_D.txt",
+  "content": "feat(autonomy): auto-promocao paper->real como PORTAO sobre o supervisor (frente D)\n\nFrente D do trabalho de autonomia (escolha do dono: \"auto-promover com teto quando o\npaper provar edge\"). Gated QA (PASS c/ ressalvas) + TL (APPROVE c/ sugestoes), sim 18/18,\ndeployado e verificado ao vivo (allowlist vazia, supervisor no-op em bear).\n\nEm vez de auto-CLONAR automacoes paper->real em runtime (arriscado: as trilhas no-loss\ndependem de chaves de MEMORY paper-only como FARMNL_TARGET), a prova do paper vira um\nPORTAO sobre o supervisor da frente B: o supervisor so ATIVA entradas reais (e a venda\ndo cofre do Baseline) de uma estrategia PROMOVIDA. Efeitos:\n- implementa \"esperar o paper provar antes de arriscar dinheiro real\"\n- FECHA o HIGH do QA na frente B: a venda do cofre BTC (Baseline RSI Sell) nao auto-arma\n  na saida do bear ate o Baseline/consistencia provar edge\n- zero codegen; o teto $/ordem segue sendo o riskGuard global (promocao decide SE, nao QUANTO)\n\nImplementacao:\n- promotionStore.js: allowlist PERSISTIDA (logs/promotions.json) + evaluatePromotion PURA\n  (net REALIZADO > 0 sobre >= N round-trips fechados, consistente entre simbolos; win-rate\n  IGNORADO de proposito = a armadilha da consistencia 86%-acerto/net-negativo) + grandfather\n  por env + fail-safe (store ilegivel -> vazio = nada promovido)\n- promotionJob.js: avalia paperService.summary periodicamente (6h), PROMOVE as que provam +\n  notifica Telegram; so escreve a allowlist (read-only no money-path)\n- groupSupervisorJob: portao promotionAllows (entry/baselineSell exigem promocao; trendSell\n  exige promocao OU posicao aberta; Farm Sell canary intocada); PROMO_MAP grupo->trilha por env\n- observabilidade: GET /system/promotions + status.promotions no cockpit + promoMap/allowlist\n  no getStatus do supervisor + razao \"aguardando promocao\" no log/notify\n- 5 envs novos (PROMOTION_ENABLED/_CHECK_MS/_MIN_ROUNDTRIPS/_MIN_NET/_MIN_SYMBOL_FRAC) +\n  PROMOTION_GROUP_STRATEGY + PROMOTION_GRANDFATHER (.env.example)\n\nMUDANCA DE COMPORTAMENTO DE B (ja deployado): as compras reais do Farm/Trend/Baseline agora\ndependem de promocao. Liga-na-hora de uma trilha: PROMOTION_GRANDFATHER=<trilha>+restart.\n\nTestes: promotion (decisao pura + grandfather + acoplamento strategyOf<->PROMO_MAP, 14),\ngroupSupervisor (+promotionAllows, 32), groupSupervisorReconcile (dimensao de promocao, 22).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/commit_msg_D.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:09:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git -c safe.directory='*' add \\\n  backend/src/utils/promotionStore.js \\\n  backend/src/promotionJob.js \\\n  backend/scripts/sim/promotion.test.js \\\n  backend/src/groupSupervisorJob.js \\\n  backend/src/server.js \\\n  backend/src/controllers/systemController.js \\\n  backend/src/routers/systemRouter.js \\\n  backend/src/controllers/analysisController.js \\\n  backend/scripts/sim/groupSupervisor.test.js \\\n  backend/scripts/sim/groupSupervisorReconcile.test.js \\\n  backend/.env.example\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff --cached --stat\nsudo -n -u gcrux-tradeux git -c safe.directory='*' -c user.name='Gabriel Zarattini' -c user.email='gabrielcall@gmail.com' commit --author='Gabriel Zarattini <gabrielcall@gmail.com>' -F /tmp/tux_build/commit_msg_D.txt 2>&1 | tail -3\necho \"=== push ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git && echo \"chown OK\"",
+  "description": "Commit and push phase D (selective add)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  backend/.env.example                               | 16 ++++
+>  backend/scripts/sim/groupSupervisor.test.js        |  9 +++
+>  .../scripts/sim/groupSupervisorReconcile.test.js   | 91 ++++++++++++----------
+>  backend/scripts/sim/promotion.test.js              | 48 ++++++++++++
+>  backend/src/controllers/analysisController.js      |  3 +
+>  backend/src/controllers/systemController.js        |  8 +-
+>  backend/src/groupSupervisorJob.js                  | 37 +++++++--
+>  backend/src/promotionJob.js                        | 88 +++++++++++++++++++++
+>  backend/src/routers/systemRouter.js                |  2 +
+>  backend/src/server.js                              |  6 ++
+>  backend/src/utils/promotionStore.js                | 83 ++++++++++++++++++++
+>  11 files changed, 344 insertions(+), 47 deletions(-)
+>  create mode 100644 backend/scripts/sim/promotion.test.js
+>  create mode 100644 backend/src/promotionJob.js
+>  create mode 100644 backend/src/utils/promotionStore.js
+> === push ===
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    df5e076..5ac0af6  master -> master
+> chown OK
+> ```
+
+## 🤖 Claude *(00:10:09)*
+
+
+## 🤖 Claude *(00:10:11)*
+
+**Todas as 4 frentes deployadas + commitadas + pushed.** `df5e076..5ac0af6`. `vivo==master==origin==5ac0af6`. Vou checar o estado final (tree limpo? agente?) e selar a sessão (memória + HANDOFF).
+
+## 🤖 Claude *(00:10:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== git status (deve ser s\u00f3 backtest-results scratch) ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' status --short 2>/dev/null | grep -v backtest-results || echo \"  (s\u00f3 backtest-results)\"\necho \"=== HEAD ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' log --oneline -4 2>/dev/null\necho \"=== agente LLM: \u00faltimo cycle_end? (watchdog disparou no boot) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'f=$(ls -t tradeux-agent/journal/*.jsonl 2>/dev/null | head -1); [ -n \"$f\" ] && tail -c 60000 \"$f\" | grep -o \"\\\"type\\\":\\\"cycle_end\\\"[^}]*\\\"ts\\\":\\\"[^\\\"]*\\\"\" | tail -1 || echo \"(journal inacess\u00edvel/vazio)\"'\necho \"=== /system/halt final ===\"\nT=$(cat /tmp/tux_token.txt); curl -s -m8 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"  halted=%s sources=%s\"%(d.get(\"halted\"),d.get(\"sources\")))'",
+  "description": "Check tree, agent state, halt"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (deve ser só backtest-results scratch) ===
+>   (só backtest-results)
+> === HEAD ===
+> 5ac0af6 feat(autonomy): auto-promocao paper->real como PORTAO sobre o supervisor (frente D)
+> df5e076 feat(risk): auto-resume do cap diario -5% com 3 backstops (frente C)
+> 7892483 feat(autonomy): supervisor de virada por regime + notificacoes Telegram de evento (A+B)
+> 6cec694 feat(ui): confirmacao no toggle de Ambiente Ativo (design-review #5b / H1)
+> === agente LLM: último cycle_end? (watchdog disparou no boot) ===
+> === /system/halt final ===
+>   halted=False sources=[]
+> ```
+
+## 🤖 Claude *(00:10:22)*
+
+
+## 🤖 Claude *(00:10:23)*
+
+Tree limpo, `halted=false`. O agente LLM segue offline (o watchdog avisou no boot — incidente ZDR separado). Vou selar: memória + HANDOFF.
+
+## 🤖 Claude *(00:10:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-autonomy-engine.md",
+  "content": "---\nname: tradeux-autonomy-engine\ndescription: motor de autonomia \"virar sozinho\" (2026-06-24) \u2014 supervisor de regime + Telegram de evento + auto-resume do cap \u22125% + port\u00e3o de promo\u00e7\u00e3o paper\u2192real; tudo no-op em bear\nmetadata:\n  type: project\n---\n\nSess\u00e3o 2026-06-24: o dono pediu \"o sistema tem que virar as viradas sozinho, sem depender da minha posi\u00e7\u00e3o ou comando\" + \"todas as notifica\u00e7\u00f5es poss\u00edveis no Telegram\". Entregue em 4 frentes (A+B\u2192C\u2192D), cada uma gated QA+TL, sim 18/18, deployada+verificada ao vivo, commit direto-a-master. `vivo==master==origin==5ac0af6`. Decis\u00f5es do dono via AskUserQuestion: cap \u22125% = **auto-resumir ap\u00f3s cooldown**; grupos aut\u00f4nomos = **Farm+Trend+Baseline**; paper\u2192real = **auto-promover com teto**.\n\n**A \u2014 Telegram de evento** (`utils/eventNotify.js`, builders puros + wrappers fire-and-forget): hooks no `regimeJob` (flip de regime + golden/death cross, edge-trigger guardado contra a semente do 1\u00ba boot) e `flowJob` (fluxo unilateral, edge-trigger c/ histerese `FLOW_NOTIFY_TOXICITY` 0.75).\n\n**B \u2014 supervisor aut\u00f4nomo** (`groupSupervisorJob.js`, 60s): liga/desliga ENTRADAS (Farm/Trend/Baseline Buy) por regime de cada s\u00edmbolo. O gate `REGIME!=='bear'` J\u00c1 existe DENTRO da condi\u00e7\u00e3o de cada compra (3\u00aa camada) mas s\u00f3 vale se a automa\u00e7\u00e3o estiver ATIVA; o supervisor \u00e9 quem ATIVA no n\u00e3o-bear (compras estavam `isActive=0`). Vendas: Trend Sell acoplada (regime OU `TREND_QTY>0`), Baseline Sell acoplada ao regime, **Farm Sell IGNORADA** (sempre-armada, auto-gateia em `FARM_DCA.qty>0` \u2192 canary preservada). Ativa\u00e7\u00e3o de entrada PULADA sob HALT; desativa\u00e7\u00e3o sempre aplicada; idempotente. `applyAutomationActive` extra\u00eddo p/ `utils/automationActivation.js` (fonte \u00fanica: bot\u00e3o/painel/supervisor). Env `GROUP_SUPERVISOR_ENABLED/_GROUPS/_REFRESH_MS`. Obs: `GET /system/supervisor` + `status.supervisor` no cockpit.\n\n**C \u2014 auto-resume do cap \u22125%** (`dailyCapJob.js`): o \u22125% n\u00e3o \u00e9 mais terminal-at\u00e9-UTC. Decis\u00e3o PURA `evaluateCap()` (hardHalt > resume > softTrip > none; piso duro tem preced\u00eancia ABSOLUTA). 3 backstops: cooldown `DAILY_CAP_RESUME_COOLDOWN_MS` (3h) \u2192 re-baseline no equity atual + `clearDailyCap` (solta S\u00d3 a fonte daily-cap; floor/manual/env-hard intactos); PISO DURO `DAILY_HARD_FLOOR_PCT` (\u221212% do `dayBase` ORIGINAL, que o re-baseline trailing N\u00c3O move) = hardHalt sem auto-resume; `DAILY_CAP_MAX_RESUMES` (2/dia). **Pior dia bounded em ~\u221212%** (provado por `dailyCapResumeFlow.test.js`). `DAILY_CAP_AUTO_RESUME=false` volta ao antigo. SNAP persiste `dayBase/resumes/hardHalted/resumeAt` + backfill. Ao vivo: baseline $149,40, piso duro $131,47.\n\n**D \u2014 promo\u00e7\u00e3o paper\u2192real = PORT\u00c3O sobre B** (N\u00c3O auto-clone \u2014 clonar paper\u2192real em runtime \u00e9 arriscado: trilhas no-loss dependem de chaves MEMORY paper-only tipo `FARMNL_TARGET`). `promotionStore.js` (allowlist persistida `logs/promotions.json` + `evaluatePromotion` PURA: net REALIZADO>0 sobre \u226520 round-trips fechados, \u226550% s\u00edmbolos n\u00e3o-negativos, **win-rate IGNORADO** = a armadilha da consistencia 86%-acerto/net-negativo; fail-safe: store ileg\u00edvel\u2192vazio). `promotionJob.js` (avalia `paperService.summary` 6h, promove+notifica, read-only no money-path). O supervisor s\u00f3 ATIVA entrada real (e a venda do COFRE do Baseline) de trilha PROMOVIDA (`promotionAllows`: entry/baselineSell exigem promo\u00e7\u00e3o; trendSell exige promo\u00e7\u00e3o OU posi\u00e7\u00e3o). **Isso FECHOU o HIGH do QA-B** (venda do cofre BTC n\u00e3o auto-arma na sa\u00edda do bear at\u00e9 o Baseline provar). `PROMO_MAP` grupo\u2192trilha por env (`farm:farmnl,trend:slopegate,baseline:consistencia`). Obs: `GET /system/promotions` + `status.promotions` no cockpit. **\u26a0\ufe0f MUDAN\u00c7A DE COMPORTAMENTO de B: as compras reais do Farm/Trend/Baseline agora dependem de promo\u00e7\u00e3o. Liga-na-hora: `PROMOTION_GRANDFATHER=<trilha>`+restart** (ex.: `=farmnl` p/ as compras do Farm irem a real sem esperar o paper).\n\n**Estado p\u00f3s-deploy:** tudo NO-OP em bear (regime bear em LTC/BNB/ADA/BTC + nada promovido \u2192 supervisor `act=0/deact=0`, grupos intactos farm 3/6 can\u00e1rio/trend 0/8/baseline 0/2). A m\u00e1quina fica ARMADA esperando o 1\u00ba flip de regime E a 1\u00aa promo\u00e7\u00e3o. Nenhuma trilha provou edge ainda (consistencia net \u2212$0,28; farmnl/mr15 0 round-trips fechados). Ver [[tradeux-strategy-engine]], [[tradeux-mainnet-go-live]], [[tradeux-vault-guard]], [[tradeux-1m-scalping-and-cockpit]].\n\n**D\u00e9bitos LOW (follow-up):** `reSnapshot` n\u00e3o chama `clearDailyCap` (o controller faz, acoplamento fr\u00e1gil); `promotions.json` confirmar no `make backup-state`; teste do `promotionJob.runOnce` mockado. **Defaults do c\u00f3digo == escolha do dono \u2192 nada a reaplicar p\u00f3s-reset** (exceto se quiser valores \u2260 default ou grandfather).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-autonomy-engine.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:10:59)*
+
+Vou adicionar o pointer no MEMORY.md e selar o HANDOFF.
+
+## 🤖 Claude *(00:11:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) — incidente OpenRouter ZDR "Non-frontier" ON × modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = só `cycle_end` (não qualquer ts!), tail-scan; + retenção do journal (00b560e) trim atômico por bytes
+> ```
+
+## 🤖 Claude *(00:11:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)",
+  "new_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Autonomy engine](tradeux-autonomy-engine.md) \u2014 \"virar sozinho\" (2026-06-24, `5ac0af6`): A Telegram de evento + B supervisor de regime (liga entradas no n\u00e3o-bear) + C auto-resume do cap \u22125% bounded \u221212% (3 backstops) + D promo\u00e7\u00e3o paper\u2192real como PORT\u00c3O sobre B (fechou o HIGH do cofre BTC); tudo NO-OP em bear at\u00e9 regime virar E trilha provar; **Farm BUYS reais agora dependem de promo\u00e7\u00e3o \u2192 `PROMOTION_GRANDFATHER=farmnl` liga-na-hora**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:11:10)*
+
+Agora o seal no HANDOFF.md (newest record no rodapé).
+
+## 🤖 Claude *(00:11:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> /home/gcrux-tradeux/HANDOFF.md <<'EOF'\n\n### \ud83e\udd1d SEAL \u2014 2026-06-24 (cont. \u2014 MOTOR DE AUTONOMIA \"virar sozinho\": A+B+C+D, 4 commits gated QA+TL, deployados+verificados)\n\n**`Vivo==master==origin==5ac0af6`.** \ud83d\udd34 LIVE (`halted=false`) o tempo todo \u00b7 Canary FARM-ONLY (vendas id10/12/14 intactas) \u00b7 **equity $149,40** \u00b7 regime BEAR em tudo \u00b7 site 200 \u00b7 sim **18/18**. Trunk-based direto-a-master (4 commits: `7892483` A+B, `df5e076` C, `5ac0af6` D). Mem\u00f3ria nova: [[tradeux-autonomy-engine]].\n\nO dono pediu: \"o sistema tem que virar as viradas sozinho, sem depender da minha posi\u00e7\u00e3o ou comando\" + \"todas as notifica\u00e7\u00f5es poss\u00edveis no Telegram\". Decis\u00f5es (AskUserQuestion): cap \u22125% = auto-resumir ap\u00f3s cooldown; grupos aut\u00f4nomos = Farm+Trend+Baseline; paper\u2192real = auto-promover com teto. Entregue em 4 frentes:\n\n- **A \u2014 Telegram de evento** (`utils/eventNotify.js`): flip de regime + golden/death cross (`regimeJob`) + fluxo unilateral (`flowJob`), edge-trigger, anti-spam no boot.\n- **B \u2014 supervisor aut\u00f4nomo** (`groupSupervisorJob.js`, 60s): liga/desliga ENTRADAS por regime (o gate `!=bear` na condi\u00e7\u00e3o \u00e9 a 3\u00aa camada; o supervisor ATIVA o que estava `isActive=0`). Vendas: Farm Sell intocada (canary), Trend Sell acoplada (regime OU `TREND_QTY>0`), Baseline Sell acoplada. PULA ativa\u00e7\u00e3o sob HALT. `applyAutomationActive` extra\u00eddo p/ fonte \u00fanica. `GET /system/supervisor` + cockpit.\n- **C \u2014 auto-resume do cap \u22125%** (`dailyCapJob.js`): 3 backstops (cooldown 3h \u2192 re-baseline+libera; PISO DURO \u221212% do baseline original = hardHalt sem resume; m\u00e1x 2/dia). **Pior dia bounded \u221212%** (provado). `clearDailyCap` solta S\u00d3 a fonte daily-cap (floor/manual intactos). Baseline vivo $149,40 / piso duro $131,47. `DAILY_CAP_AUTO_RESUME=false` volta ao antigo.\n- **D \u2014 promo\u00e7\u00e3o paper\u2192real = PORT\u00c3O sobre B** (`promotionStore.js`+`promotionJob.js`): N\u00c3O auto-clona (arriscado). A prova do paper (net REALIZADO>0 sobre \u226520 round-trips, \u226550% s\u00edmbolos n\u00e3o-negativos, **win-rate ignorado**) libera a estrat\u00e9gia; o supervisor s\u00f3 ATIVA entrada/venda-do-cofre real de trilha PROMOVIDA. **FECHOU o HIGH do QA-B** (venda do cofre BTC n\u00e3o auto-arma at\u00e9 o Baseline provar). `GET /system/promotions` + cockpit. Allowlist nasce VAZIA.\n\n**\u26a0\ufe0f MUDAN\u00c7A DE B (consciente): as compras reais do Farm/Trend/Baseline agora dependem de promo\u00e7\u00e3o.** Liga-na-hora de uma trilha sem esperar o paper: `PROMOTION_GRANDFATHER=<trilha>`+restart (ex.: `=farmnl` p/ as compras do Farm). A canary (Farm SELLS) segue sempre-armada, intocada.\n\n**Estado:** TUDO NO-OP em bear (supervisor `act=0/deact=0`; grupos farm 3/6, trend 0/8, baseline 0/2; allowlist `{}`). A m\u00e1quina fica ARMADA esperando o 1\u00ba flip de regime + a 1\u00aa promo\u00e7\u00e3o. **Defaults do c\u00f3digo == escolha do dono \u2192 nada a reaplicar p\u00f3s-reset** (exceto valores \u2260 default ou grandfather). **Runtime n\u00e3o-git inalterado.**\n\n**\u26a1 NEXT:** (1) **observar o paper** \u2014 quando uma trilha cruzar o crit\u00e9rio, o `promotionJob` promove sozinho + notifica; a\u00ed o supervisor ativa as entradas reais na pr\u00f3xima janela favor\u00e1vel. (2) Se o dono quiser as compras do Farm a real J\u00c1: `PROMOTION_GRANDFATHER=farmnl`+restart. (3) **Agente LLM OFFLINE de novo** (watchdog disparou no boot, ~21:47Z; prov\u00e1vel ZDR/OpenRouter \u2014 ver [[tradeux-agent-heartbeat-watchdog]]). (4) d\u00e9bitos LOW: `reSnapshot`\u00d7`clearDailyCap`, `promotions.json` no backup, teste `promotionJob.runOnce`. **Claude N\u00c3O vira o HALT mestre.** Working tree: s\u00f3 `backtest-results/*` (scratch).\nEOF\necho \"HANDOFF selado.\"\ntail -3 /home/gcrux-tradeux/HANDOFF.md | head -1",
+  "description": "Append session seal to HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF selado.
+> **Estado:** TUDO NO-OP em bear (supervisor `act=0/deact=0`; grupos farm 3/6, trend 0/8, baseline 0/2; allowlist `{}`). A máquina fica ARMADA esperando o 1º flip de regime + a 1ª promoção. **Defaults do código == escolha do dono → nada a reaplicar pós-reset** (exceto valores ≠ default ou grandfather). **Runtime não-git inalterado.**
+> ```
+
+## 🤖 Claude *(00:11:50)*
+
+
+## 🤖 Claude *(00:12:07)*
+
+Sessão selada (memória + HANDOFF). Está tudo entregue.
+
+## ✅ Motor de autonomia "virar sozinho" — 4 frentes no ar
+
+`vivo==master==origin==5ac0af6` · 4 commits, cada um gated **QA + TL**, **sim 18/18**, deployado e verificado ao vivo · equity **$149,40** intacta · `halted=false`.
+
+| Frente | O que faz | Estado ao vivo |
+|---|---|---|
+| **A · Telegram total** | Notifica flip de regime, golden/death cross e fluxo unilateral (edge-trigger, anti-spam) | hooks ativos |
+| **B · Supervisor de regime** | Liga/desliga as **entradas** sozinho conforme o regime de cada símbolo; mantém vendas protetivas armadas | `act=0/deact=0` (no-op em bear) |
+| **C · Auto-resume do cap −5%** | Re-liga sozinho após 3h, **com 3 travas**: cooldown + piso duro −12% + máx 2/dia → pior dia **bounded em −12%** | baseline $149,40 / piso $131,47 |
+| **D · Promoção paper→real** | Quando uma trilha **prova edge** (net realizado+ sobre ≥20 round-trips), libera ela pra dinheiro real sozinho | allowlist vazia (nada provou ainda) |
+
+**Hoje não opera nada** — bear em tudo + nenhuma trilha provada. A máquina fica **armada esperando** o 1º flip de regime + a 1ª promoção. É exatamente o que tu pediu: vira sozinho quando a hora chegar, sem teu comando.
+
+Tudo é observável: `GET /system/supervisor`, `GET /system/promotions`, `GET /system/daily-cap`, e no cockpit que o agente lê.
+
+## 🔑 Uma coisa que mudou e tu precisas saber
+
+Pra honrar tua escolha "esperar o paper provar antes de arriscar dinheiro real" (frente D), eu transformei a prova do paper num **portão** sobre o supervisor. Efeito colateral importante e **deliberado**:
+
+> **As COMPRAS reais do Farm/Trend/Baseline agora só ligam depois que a trilha do paper provar edge.** As **vendas no-loss do Farm (canário) seguem sempre armadas, intocadas.**
+
+Isso também **fechou um furo de segurança** que o QA achou na frente B: a venda do **cofre de BTC** (Baseline) não auto-arma mais na saída do bear sem prova.
+
+Se preferir que as compras do **Farm** vão a real **já**, sem esperar o paper (já que é teu canário), é só me dizer — eu seto `PROMOTION_GRANDFATHER=farmnl` e reinicio. Por padrão, mantive "esperar provar", que foi tua escolha.
+
+## ⚠️ Um aviso fora do meu trabalho
+
+O **agente LLM está offline de novo** — o watchdog disparou no boot (sem concluir ciclo desde ~21:47Z). É provavelmente o mesmo **toggle ZDR "Non-frontier" do OpenRouter** do incidente anterior (modelo `:free` × ZDR = 404 data-policy). O **trading segue protegido** (HALT/cap/riskGuard); só o observador LLM está cego. Quer que eu investigue?
+
+Qual o próximo passo — libero o Farm via grandfather, investigo o agente, ou paramos por aqui?
+
+## 👤 User *(00:14:27)*
+
+Ultimas mensagens no telegram.: [AGENTE] Observação: LTCUSDT voltou ao regime de bear (gate bear). Isso fecha o gate de acumulação do farm e o gate de tendência, mantendo as automações de compra em caixa. Nenhuma automação de compra deve operar enquanto o regime permanecer bear. Isso está conforme a estratégia Farm-and-Funnel.
+🤖 [AGENTE] Observação: regime bear mantido para BTCUSDT, LTCUSDT, BNBUSDT, ADAUSDT (gates de acumulação fechados). Automação de Farm realizou venda lucrativa em LTCUSDT (automationId 10, ordem SELL a 44,41 USDT). Sistema coerente com a estratégia Farm-and-Funnel (compras em CAIXA, vendas táticas apenas de posições ativas).
+⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 32min (último OK: 2026-06-24T21:47:39.532Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 1.8h (último OK: 2026-06-24T21:47:39.532Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 2.1h (último OK: 2026-06-24T21:47:39.532Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+🌊 [FLOW] BTCUSDT: fluxo unilateral (COMPRA agressora) — imbalance=0.8361 toxicity=0.8361. Timing ruim p/ entrar contra.
+🌊 [FLOW] BTCUSDT: fluxo normalizou (toxicity=0.3727).
+🌅 [DAILY_CAP] Novo dia UTC. Cap de -5% re-armado para o novo dia.
+✅ [AGENTE OK] Voltou a concluir ciclos (último 2026-06-25T00:05:06.046Z).
+
+--
+
+Essas opçções estão tudo  ativar no painel da openrouter.:
+
+Paid endpoints that may train on request data
+Some providers may anonymously use your data for training purposes.
+
+
+
+Free endpoints that may train on request data
+Providers serving free models often retain and/or train on prompts and completions.
+
+
+
+Free endpoints that may publish prompts
+Some free model providers may publish prompts and completions to public datasets.
+
+
+
+Allow 1% data discount in workspaces
+Allow workspaces to consent to OpenRouter using your inputs/outputs to improve the product. Each workspace consents separately.
+
+## 🤖 Claude *(00:15:27)*
+
+
+## 🤖 Claude *(00:15:29)*
+
+Ótimas notícias nessas mensagens, e a decisão do OpenRouter é importante — deixa eu confirmar uma coisa antes de recomendar (se os prompts do agente carregam algo sensível).
+
+## 🤖 Claude *(00:15:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== algum tool MCP retorna chave/secret pro contexto do agente? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -rniE \"accessKey|secretKey|password|apiKey|telegramBot|jwt|token\" tradeux-mcp/src/ 2>/dev/null | grep -viE \"//|process.env|TRADEUX_PASSWORD|login|header|Authorization|bearer\" | head -15 || echo \"  (nada \u00f3bvio)\"'\necho \"\"\necho \"=== o que o get_wallet/get_cockpit exp\u00f5em (amostra de campos) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -rnE \"get_wallet|get_cockpit|leanMemory|maskSecret|mask\" tradeux-mcp/src/index.js 2>/dev/null | head -8'\necho \"\"\necho \"=== confirma: agente voltou? \u00faltimo cycle_end ===\"\nsudo -n -u gcrux-tradeux bash -lc 'f=$(ls -t tradeux-agent/journal/*.jsonl 2>/dev/null | head -1); [ -n \"$f\" ] && tail -c 40000 \"$f\" | grep -o \"\\\"type\\\":\\\"cycle_end\\\"[^}]*\\\"ts\\\":\\\"[^\\\"]*\\\"\" | tail -1'",
+  "description": "Check if agent prompts leak secrets, confirm agent recovery"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === algum tool MCP retorna chave/secret pro contexto do agente? ===
+> tradeux-mcp/src/index.js:120:  "Saldo COMPLETO da carteira (TODAS as moedas) + preço médio por moeda (a partir das ordens preenchidas). PESADO: na testnet são ~445 moedas (~9k tokens). Use com parcimônia; prefira tradeux_get_wallet.",
+> tradeux-mcp/src/index.js:188:  "Lista as chaves disponíveis na memória do Beholder. SEM symbol: RESUMO compacto (variáveis distintas + símbolos, sem eval/example) — na testnet a lista-tudo é ~192k tokens e estoura o contexto. COM symbol: as chaves detalhadas (eval/example) só daquele par.",
+> tradeux-mcp/src/api.js:8:let token = null;
+> tradeux-mcp/src/api.js:11:  if (!EMAIL || !PASSWORD) {
+> tradeux-mcp/src/api.js:19:    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+> tradeux-mcp/src/api.js:25:  token = data.token;
+> tradeux-mcp/src/api.js:27:  return token;
+> tradeux-mcp/src/api.js:53:    token = null;
+> 
+> === o que o get_wallet/get_cockpit expõem (amostra de campos) ===
+> 26:// Enxuga o payload do get_wallet p/ o agente: mantém só as TOP-N moedas por valor fiduciário + o fiat
+> 31:// topo) e corta a cauda longa → ~90%+ menos input (era ~91.5k tok/ciclo). get_wallet_full fica ÍNTEGRO
+> 47:// Enxuga o get_memory_indexes (mesma classe do get_wallet bloat): o endpoint lista o PRODUTO
+> 54:function leanMemoryIndexes(list, symbol) {
+> 112:  "tradeux_get_wallet",
+> 113:  "Saldo da carteira na Binance: TOP-N maiores posições por valor + o fiat de referência + total (resto omitido, contado em _omittedCoins). Na testnet a carteira tem ~445 moedas de faucet — esta versão enxuta mostra só o que importa. Para o detalhe completo use tradeux_get_wallet_full.",
+> 119:  "tradeux_get_wallet_full",
+> 120:  "Saldo COMPLETO da carteira (TODAS as moedas) + preço médio por moeda (a partir das ordens preenchidas). PESADO: na testnet são ~445 moedas (~9k tokens). Use com parcimônia; prefira tradeux_get_wallet.",
+> 
+> === confirma: agente voltou? último cycle_end ===
+> ```
+
+## 🤖 Claude *(00:16:01)*
+
+
+## 🤖 Claude *(00:16:20)*
+
+Confirmado e importante: **os prompts do agente NÃO carregam nenhum segredo.** Os tools MCP devolvem só saldo/posições/preços/cockpit (dados de mercado + estado da conta ~$149). As chaves da Binance, senha e token do Telegram vivem no backend (cifrados) e **nunca** entram no contexto do LLM — o `email/password` só aparece no `api.js` interno (login MCP→backend, não vai pro modelo).
+
+E duas boas notícias nessas mensagens:
+- **A frente A está funcionando ao vivo:** o `🌊 [FLOW] BTCUSDT` disparou certinho — entrou no episódio (toxicity 0,8361 > limiar 0,75) e avisou a saída (0,3727, abaixo da histerese 0,525). Edge-trigger + anti-flap confirmados.
+- **O agente voltou sozinho** (`✅ [AGENTE OK]`, último ciclo 00:05Z) e o watchdog (A do incidente anterior) reportou a volta.
+
+## Os 4 toggles do OpenRouter — o que cada um faz
+
+O `[AGENTE PARADO]` recorrente é **causado** por isto: o modelo `:free` treina nos prompts; se a tua política de dados for mais restrita do que os endpoints `:free` oferecem, o OpenRouter os filtra → `404 "no endpoints matching your data policy"` → agente cego. Resolver isto **na raiz** evita ele cair toda hora.
+
+| Toggle | Recomendação | Por quê |
+|---|---|---|
+| **Free endpoints that may train** | ✅ **LIGAR** | É **este** que destrava o modelo `:free`. Sem ele, 404 recorrente. É o fix definitivo do "[AGENTE PARADO]". |
+| **Free endpoints that may publish prompts** | 🟡 Ligar **só se precisar** | Mais agressivo (publica prompts em datasets PÚBLICOS). Tenta com só o de cima ligado; se o modelo ainda 404ar, liga este também. |
+| **Paid endpoints that may train** | ⚪ Indiferente agora | Só importa se usar modelo PAGO (que tu não quer). Deixa OFF — se um dia migrar pra pago, mantém os dados privados. |
+| **Allow 1% data discount** | ⚪ Opcional | Consentimento separado (1% de desconto em troca de uso de dados). Irrelevante no `:free`. |
+
+## Recomendação direta
+
+Como tu não quer pagar (bot ainda não dá lucro), o caminho é **modelo `:free` + permitir o uso de dados**. Então:
+
+1. **Liga "Free endpoints that may train on request data"** → é o fix permanente do agente cair.
+2. Se mesmo assim 404ar, liga também o **"publish prompts"**.
+3. Os outros dois, deixa como estão.
+
+**O custo de privacidade aqui é baixo:** o que vaza é a *lógica da estratégia* (Farm-and-Funnel, já bem documentada) + o *estado da conta* (~$149, posições) — **zero credenciais**. Pra um bot pessoal pequeno, é um trade aceitável pra ter o observador LLM de graça.
+
+A alternativa "privada de verdade" seria um modelo **pago com ZDR** — mas isso é o "Caminho B" que tu já tinha parado por não compensar a $149.
+
+Quer que eu deixe isso registrado na memória/HANDOFF como o fix-raiz do agente (ligar o toggle "Free endpoints may train" em vez de só desligar o ZDR a cada incidente)? E sobre o Farm: libero as compras via `PROMOTION_GRANDFATHER=farmnl`, ou seguimos esperando o paper provar?
+
+## 👤 User *(00:19:00)*
+
+🌊 [FLOW] BTCUSDT: fluxo unilateral (VENDA agressora) — imbalance=-0.8032 toxicity=0.8032. Timing ruim p/ entrar contra.
+
+## 🤖 Claude *(00:19:39)*
+
+
+## 🤖 Claude *(00:19:52)*
+
+Perfeito — isso confirma o **outro lado**: imbalance **negativo** (−0,8032) → "VENDA agressora", semântica correta. A frente A está 100% nos dois sentidos (compra/venda agressora) + a histerese de saída.
+
+Mas deixa eu te apontar uma coisa que tu já deve estar percebendo: o **BTC está chicoteando o fluxo** — em ~1h foram 3 avisos (COMPRA agressora → normalizou → VENDA agressora). O sinal está certo, mas como **nada está operando agora** (bear + nada promovido), esse aviso de *timing* é puramente informativo no momento → pode virar spam se o BTC seguir volátil.
+
+Tenho 3 formas de domar, da mais leve à mais esperta:
+
+1. **Cooldown por símbolo** (ex.: no máx. 1 aviso de fluxo por par a cada 30 min) — corta o chicote sem perder o sinal. *Mais simples.*
+2. **Subir o limiar** (0,75 → 0,85) — só os episódios mais fortes avisam.
+3. **Só avisar fluxo quando for acionável** — silenciar o fluxo de um símbolo cujo grupo não está armado/promovido (o timing só importa quando dá pra entrar). *Mais inteligente, mas é o fluxo que mais "ajuda" só quando vai operar.*
+
+Minha recomendação: **(1) + (2) juntos** — cooldown de 30 min + limiar 0,85. Pega só os extremos de verdade e no máximo 2/h por par. Reversível por env, sem tocar no resto.
+
+Quer que eu aplique isso (gate QA leve + deploy), ou prefere deixar cru ("todas as notificações" como pediste)?
+
+E seguem abertas, quando quiser decidir:
+- **OpenRouter:** ligar "Free endpoints that may train" = fim do `[AGENTE PARADO]` recorrente (o agente caiu ~2h hoje por isso).
+- **Farm:** liberar as compras a real já (`PROMOTION_GRANDFATHER=farmnl`) ou esperar o paper provar.
+
+## 👤 User *(00:19:54)*
+
+Você conseguiria fazer uns trade agora nesse unilateral?
+
+## 🤖 Claude *(00:20:40)*
+
+
+## 🤖 Claude *(00:20:53)*
+
+Tecnicamente sim — eu tenho o JWT de operador e o sistema está LIVE (`halted=false`), então eu *conseguiria* mandar ordens agora. Mas eu não vou recomendar, e quero ser honesto sobre o porquê em vez de só apertar o botão.
+
+**Esse trade não tem edge — é o caso-livro do que o sistema foi feito pra NÃO fazer:**
+
+1. **O sinal de fluxo é NOWCASTING, não forecast.** Isso já foi *pesquisado e refutado* aqui (VPIN/toxicidade como preditor de direção = falso positivo; está na memória do flow oracle e no RESEARCH-bear-capture). O imbalance te diz o que **acabou de acontecer**, não o que vem. A própria mensagem diz *"timing ruim p/ entrar contra"* — é um **veto**, não um gatilho de compra.
+
+2. **Os dois lados perdem no nosso timeframe:**
+   - **A favor** (comprar na compra-agressora) = perseguir momentum no extremo → comprar o topo / vender o fundo.
+   - **Contra** (fadear) = o que a notificação explicitamente desaconselha.
+   - E o **custo mata**: 0,2% de taxa no round-trip, contra movimento mediano de 1m de **0,07%** no BTC. O cockpit já mede o EV líquido de 1m em **−0,13%/trade**. Não é falta de coragem — é matemática negativa.
+
+3. **BTC está em BEAR.** A doutrina inteira (validada em backtest) é *caixa no bear*. E mandar isso na mão **fura tudo que acabamos de construir**: o gate de regime, o portão de promoção, a exigência de prova no paper. Seria eu sabotando o próprio sistema 2h depois de blindá-lo.
+
+**O jeito certo de testar essa intuição é o que o sistema já tem de graça: o paper.** Se tu acha que tem alpha no fluxo unilateral, eu monto uma **trilha `[PAPER]` que opera nos extremos de flow** (broker virtual, preço+fee reais, zero risco). Em 1–2 semanas o `promotionJob` te diz com dados se tem edge — e **se tiver, ele vira real sozinho** (era exatamente o que a frente D faz). Aí tu não tá apostando $149 num palpite, tá deixando o dado decidir.
+
+Quer que eu crie essa trilha de paper-flow pra medir? É o único caminho em que eu topo "operar o unilateral" — com dinheiro de mentira primeiro.
+
+## 👤 User *(00:21:41)*
+
+Crie um widget no cockpit mostrando uma simulação do que você faria em tempo real mas sem liberar as ordens apenas simulando e entregando esses sinais e todos os outros que temos no beholder atravez da UI do grafico novo deixe ele como principal e seguindo um unico widget. Veio essa agora.: 
+🌊 [FLOW] BTCUSDT: fluxo unilateral (VENDA agressora) — imbalance=-0.8032 toxicity=0.8032. Timing ruim p/ entrar contra.
+
+## 🤖 Claude *(00:22:30)*
+
+
+## 🤖 Claude *(00:22:33)*
+
+Boa — isso é uma feature de UI de verdade: um **widget único e principal no cockpit** que mostra, em tempo real, a **simulação do que o sistema faria** (sem soltar ordem) + **todos os sinais do Beholder**, no gráfico novo. Antes de construir, preciso mapear a UI atual (o "gráfico novo", o cockpit, como os widgets são montados e como o `/analysis/cockpit` é consumido). Vou explorar o frontend e, em paralelo, ver o payload do cockpit no backend pra planejar o campo de "decisão simulada".
+
+## 🤖 Claude *(00:22:48)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Mapear cockpit/gr\u00e1fico do frontend",
+  "subagent_type": "Explore",
+  "prompt": "Mapeie a arquitetura do FRONTEND do TradeUX (React/Vite em /home/gcrux-tradeux/tradeux/frontend) para eu adicionar um WIDGET PRINCIPAL novo no cockpit. Leia como gcrux: `sudo -n -u gcrux-tradeux bash -lc 'cat ...'` ou as ferramentas de leitura.\n\nPreciso de um mapa PRECISO (caminhos de arquivo + linhas) de:\n\n1. **O \"gr\u00e1fico novo\" / chart UI**: qual componente renderiza o gr\u00e1fico principal do cockpit? Qual biblioteca de chart \u00e9 usada (lightweight-charts, recharts, chart.js, tradingview, custom SVG)? Onde fica (`frontend/src/...`)? Como recebe dados (props, fetch, websocket)?\n\n2. **A p\u00e1gina/\u00e1rea do COCKPIT**: onde os pain\u00e9is/cards do cockpit s\u00e3o montados (ex.: regime, flow, gates, paper, groups, riskCaps)? Qual o componente container e como os cards s\u00e3o dispostos (grid/flex/tabs)? Como eu tornaria UM widget o \"principal\" (maior/topo)?\n\n3. **Consumo de dados do cockpit**: onde o frontend chama `GET /analysis/cockpit` e `GET /analysis/cockpit/:symbol`? Tem polling (intervalo)? Usa o WebSocket (`/ws`, app-ws) pra dados ao vivo? Como o estado \u00e9 mantido (useState/redux/context)? Mostre o hook/servi\u00e7o de fetch (prov\u00e1vel `frontend/src/services/*` ou axios/fetch wrapper).\n\n4. **Padr\u00e3o de componente de widget/card**: como um card existente do cockpit \u00e9 estruturado (ex.: o card de regime ou de gates)? Conven\u00e7\u00f5es de estilo (CSS modules, styled, classes, tema). Qual arquivo eu copiaria como template pra um card novo.\n\n5. **Roteamento/layout**: qual rota/p\u00e1gina \u00e9 o cockpit (`frontend/src/...`)? Como eu colocaria o novo widget como PRINCIPAL (primeiro/destaque) seguindo um \u00fanico widget consolidado.\n\n6. **WebSocket ao vivo**: o app-ws transmite os resultados do beholder/cockpit ao vivo pro frontend? Qual o formato das mensagens WS que o frontend j\u00e1 escuta (pra eu plugar os sinais em tempo real no widget)?\n\nListe os 5-10 arquivos-chave que eu vou tocar/copiar, com 1 linha do papel de cada. N\u00c3O edite nada \u2014 s\u00f3 mapeie. Seja espec\u00edfico com caminhos e nomes de componentes."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Perfeito! Agora tenho uma visão completa. Vou fazer um sumário final com os arquivos-chave e o mapa:\n\n## MAPA PRECISO DA ARQUITETURA FRONTEND DO TRADEUX\n\nAqui está o mapeamento completo para você adicionar um novo **WIDGET PRINCIPAL** no cockpit:\n\n---\n\n### **1. GRÁFICO/CHART UI - Biblioteca e Renderização**\n\n**Biblioteca**: **SVG customizado** (nenhuma biblioteca externa)\n- **Arquivos principais**:\n  - `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js` (linhas 57-86) - Funções `buildSpark()`, `buildCandles()`, `buildHist()` que geram SVG path dynamicamente\n  - `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js` (linhas 1-177) - Componentes reutilizáveis: `AnimatedNumber`, `GaltonBoard`, `PathFan`\n\n**Renderização**:\n- Candles 1m: SVG inline no Cockpit.js, linhas 282-293 (ViewBox dinâmico)\n- Distribuição: SVG inline, linhas 300-327 (histograma)\n- Galton board: Canvas (CockpitSims.js, linhas 34-130)\n- Monte Carlo: SVG paths (CockpitSims.js, linhas 133-177)\n\n---\n\n### **2. PÁGINA/ÁREA DO COCKPIT - Layout e Composição**\n\n**Rota**: `/cockpit` (routes.js, linha 43)\n**Componente principal**: `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js` (543 linhas)\n\n**Layout do Grid** (cockpit.css, linhas 72-75):\n- `.cx-row` = `grid-template-columns: 1.6fr 1fr` (2 colunas desiguais)\n- `.cx-row-3` = `grid-template-columns: 1.4fr 1fr` (variação)\n- Responsivo: `@media (max-width: 1100px)` → `grid-template-columns: 1fr` (coluna única)\n\n**Estrutura visual** (Cockpit.js, linhas 228-535):\n```\n<div className="cockpit">\n  ├─ cx-head (header com branding + pills de status)\n  └─ cx-grid (container mestre)\n     ├─ cx-row 1: Equity & P&L (hero) + Métricas\n     ├─ cx-row 2: Candles 1m + Tail (distribuição)\n     ├─ cx-row-3 2b: Galton board + Monte Carlo\n     ├─ cx-row-3 3: Regime×Flow lattice + Trade bridges\n     ├─ cx-row-3 3b: Estratégia (gate × ativo)\n     ├─ cx-row-3 4: Edge/agent + Posições\n     └─ cx-row 5: Paper (research)\n```\n\n**Para tornar um widget PRINCIPAL**:\n- Mover para a **primeira posição** (topo)\n- Aumentar tamanho: usar classe `.glow` + `grid-template-columns: 100%` (linha inteira)\n- Exemplo: o **Equity & P&L** (ROW 1) já é "principal" — ocupa 1.6fr de 2.6\n\n---\n\n### **3. CONSUMO DE DADOS DO COCKPIT - Fetch, Polling e WebSocket**\n\n**Fetch dos dados** (Cockpit.js, linhas 145-156):\n```javascript\nconst REPORT_QUOTE = \'USDT\';  // linha 20\n// Chamadas no loadAll():\n- getBalance(token)              // /exchange/balance/{fiat}\n- getOrdersReport(REPORT_QUOTE)  // /orders/reports/{symbol}\n- getRegimeStatus(token)         // /analysis/regime-status\n- getFlowStatus(token)           // /analysis/flow-status\n- getAgentRuns(50, token)        // /agent/runs?limit=50\n- getCockpit(token)              // /analysis/cockpit (SINGLE SOURCE OF TRUTH)\n- getAutomationGroups(token)     // /automations/groups\n```\n\n**Polling**: `setInterval(..., 60000)` (linha 173) - **a cada 60 segundos**\n\n**Klines** (linha 158-169, função `loadKlines()`):\n- Fetch público de `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=120`\n- Fallback: `https://data-api.binance.vision/api/v3/klines`\n- Cache local em state: `klines` (array de `{t, o, h, l, c}`)\n\n**WebSocket ao vivo** (linhas 123-143):\n```javascript\nuseWebSocket(process.env.REACT_APP_WS_URL, {\n  queryParams: { token: localStorage.getItem(\'token\') },\n  onMessage: (event) => {\n    const msg = JSON.parse(event.data);\n    if (msg && msg.miniTicker) {\n      // Atualiza prices[SYMBOL] em tempo real\n      setPrices(prev => { ... });\n    }\n  },\n  shouldReconnect: () => true,\n  reconnectInterval: 3000,\n});\n```\n\n**Formato das mensagens WS**:\n```javascript\n// miniTicker (price feed ao vivo)\n{\n  miniTicker: { symbol: "BTCUSDT", close: 67432.50 }\n  // ou array: [{ symbol, close/c }, ...]\n}\n```\n\n---\n\n### **4. PADRÃO DE COMPONENTE/CARD DO COCKPIT**\n\n**Estrutura de um card** (exemplo: Equity & P&L, linhas 245-261):\n```javascript\n<div className="cx-panel glow">\n  <div className="cx-panel-title">\n    <span><span className="cx-seal real" /> Equity &amp; P&amp;L (net de fee)</span>\n    <span className="cx-src">/exchange/balance · /orders/reports/USDT</span>\n  </div>\n  \n  <div className="cx-hero-val cx-mono">\n    {equity != null ? <AnimatedNumber value={num(equity)} format={v => fmtUsd(v)} /> : \'—\'}\n  </div>\n  \n  <div className="cx-sub">\n    {/* métricas secundárias */}\n  </div>\n  \n  {spark ? <svg className="cx-spark" viewBox="0 0 600 70">...</svg> : <div className="cx-empty">sem série</div>}\n  \n  <div className="cx-note">explicação em pt-BR</div>\n</div>\n```\n\n**Classes CSS reutilizáveis**:\n- `.cx-panel` - container base (backdrop blur, border)\n- `.cx-panel glow` - versão destacada (para widgets principais)\n- `.cx-panel-title` - cabeçalho com fonte/fonte dos dados\n- `.cx-hero-val` - número grande principal\n- `.cx-sub` - métricas secundárias\n- `.cx-note` - explicação em rodapé\n- `.cx-mono` - fonte monospace (números)\n- `.cx-seal real` - selo "dado real"\n- `.cx-up`, `.cx-down`, `.cx-flat` - colorização direcional (verde/vermelho/cinza)\n\n**Estilo**:\n- **CSS Modules**: NÃO (usa classes globais com prefix `.cx-`)\n- **Styled-components**: NÃO\n- **CSS plano**: SIM (cockpit.css, linhas 1-400+)\n- **Tema**: variáveis CSS (linhas 6-22 em cockpit.css)\n\n---\n\n### **5. ROTEAMENTO/LAYOUT**\n\n**Rota**: `/cockpit` → `src/private/Cockpit/Cockpit.js` (routes.js, linha 43)\n\n**Layout geral**:\n- Menu privado top-bar + sidebar (Menu.js, linhas 3-4)\n- Content area: `<main className="content">` (Cockpit.js, linha 227)\n\n**Para fazer um widget "PRINCIPAL"**:\n1. Coloca-lo em `.cx-row` com `grid-template-columns: 100%` (ou `1.6fr 1fr` redimensionado)\n2. Adicionar classe `.glow` para destacar visualmente\n3. Posicionar no topo da `.cx-grid` (linha 242 em diante)\n4. Exemplo: o **Equity & P&L** + **Métricas** (ROW 1) já é principal\n\n---\n\n### **6. WEBSOCKET AO VIVO - Formato de Mensagens**\n\n**Endpoint**: `process.env.REACT_APP_WS_URL` (ex.: `ws://localhost:8080/ws`)\n**Autenticação**: `?token=<JWT>` (queryParam, localStorage)\n**Conexão**: `react-use-websocket` hook (linha 2 do Cockpit.js)\n\n**Mensagens que o frontend já escuta**:\n```javascript\n// miniTicker — price feed ao vivo (Beholder publica via app-ws.js)\n{\n  miniTicker: {\n    symbol: "BTCUSDT",\n    close: 67432.50      // ou "c": 67432.50\n  }\n}\n\n// Estruturas alternativas aceitas (linhas 133-135):\n// Array: miniTicker: [{ symbol, close/c }, ...]\n// Object: miniTicker: { BTCUSDT: { close/c: 67432 }, ... }\n```\n\n**Usando no novo widget**:\n```javascript\nconst { prices } = /* state do Cockpit */;\nconst btcPrice = prices[\'BTCUSDT\'];  // valor ao vivo atualizado\n```\n\n---\n\n### **ARQUIVOS-CHAVE (5-10) - COPIAR COMO TEMPLATE**\n\n| Arquivo | Papel | Linhas-chave |\n|---------|-------|-------------|\n| `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js` | Componente principal; state management, fetch/WS, renderização dos cards | 1-543 (todo) |\n| `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/CockpitSims.js` | Componentes reutilizáveis (AnimatedNumber, GaltonBoard, PathFan) para gráficos animados | 10-31, 34-130, 133-177 |\n| `/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css` | Tema + grid + classes (copy todo para novo widget) | 1-400+ |\n| `/home/gcrux-tradeux/tradeux/frontend/src/services/IntelligenceService.js` | Fetch de /analysis/cockpit, regime-status, flow-status, agent | 45-50 (getCockpit) |\n| `/home/gcrux-tradeux/tradeux/frontend/src/routes.js` | Define rota /cockpit | 13, 43-45 |\n| `/home/gcrux-tradeux/tradeux/frontend/src/services/ExchangeService.js` | getBalance() → /exchange/balance | 10-14 |\n| `/home/gcrux-tradeux/tradeux/frontend/src/services/OrdersService.js` | getOrdersReport() → /orders/reports | 72-80 |\n| `/home/gcrux-tradeux/tradeux/frontend/src/services/AutomationsService.js` | getAutomationGroups() → /automations/groups | 57-62 |\n| `/home/gcrux-tradeux/tradeux/frontend/vite.config.js` | Injeção de REACT_APP_* (env build-time) | 20-24 |\n| `/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js` | Backend: `/analysis/cockpit` (getCockpitStatus) retorna state da brain | 74-100+ |\n\n---\n\n### **CONVENÇÕES-CHAVE**\n\n1. **Estado**: `useState` (nenhuma Redux, nenhum Context)\n2. **Fetch wrapper**: axios via `BaseService.js` (interceptor 401 → redirect login)\n3. **Nomes de classes CSS**: sempre `.cx-` prefix (evita colisão com Volt/Bootstrap)\n4. **Variáveis CSS tema**: `--cx-bg`, `--cx-panel`, `--cx-green`, `--cx-red` (cockpit.css, linhas 6-22)\n5. **Formato numérico**: helpers `num()`, `fmtUsd()`, `fmtPct()`, `dirClass()` (Cockpit.js, linhas 27-47)\n6. **Polling**: `useEffect` + `setInterval` + cleanup (linhas 171-175)\n7. **Idioma**: pt-BR nos comentários e `.cx-note` (rótulos em português)\n\n---\n\n**Resumo**: Copie a estrutura de **Cockpit.js** como template. Para um novo widget:\n1. Cria card novo com `.cx-panel glow` \n2. Adiciona fetch em `loadAll()`\n3. Renderiza SVG ou canvas dentro do painel\n4. Coloca no topo da `.cx-grid` para ser principal\n5. Reutiliza helpers (`num`, `fmtUsd`, `AnimatedNumber`, etc.)\n6. Escreve `.cx-note` explicando a fonte dos dados'}]
+> ```
+
+## 🤖 Claude *(00:24:50)*
+
+
+## 🤖 Claude *(00:24:53)*
+
+Mapa do frontend em mãos: cockpit em `Cockpit.js` (SVG custom, sem lib externa), dados via `/analysis/cockpit` (polling 60s) + WS pro preço ao vivo, cards com classes `.cx-panel glow`, grid `.cx-row`. A "simulação do que eu faria" pode ser sintetizada no próprio widget a partir dos sinais que o cockpit já entrega (regime/flow/gates/supervisor/promotions) — zero risco no backend. Deixa eu ler o `Cockpit.js` e o CSS pra construir reusando as peças existentes.
+
+## 🤖 Claude *(00:24:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState, useEffect } from 'react';
+> 2	import useWebSocket from 'react-use-websocket';
+> 3	import Menu from '../../components/Menu/Menu';
+> 4	import Toast from '../../components/Toast/Toast';
+> 5	import { getBalance } from '../../services/ExchangeService';
+> 6	import { getOrdersReport } from '../../services/OrdersService';
+> 7	import { getRegimeStatus, getFlowStatus, getAgentRuns, getCockpit } from '../../services/IntelligenceService';
+> 8	import { getAutomationGroups } from '../../services/AutomationsService';
+> 9	import { AnimatedNumber, GaltonBoard, PathFan } from './CockpitSims';
+> 10	import './cockpit.css';
+> 11	
+> 12	/*
+> 13	 * Cockpit — terminal "FABLE" (dark/neon), inspirado na referência viral.
+> 14	 * READ-ONLY: só LÊ dados reais (saldo, relatório, regime/flow, KPIs do agente, klines públicas
+> 15	 * da Binance, WS de preço). NÃO emite ordem, NÃO toca o TRADING_HALT.
+> 16	 * A estética é dos painéis da referência; os DADOS são os reais nossos (sem número fabricado).
+> 17	 * Selo: 🟢 dado real (único selo restante — placeholders/estados falsos foram removidos).
+> 18	 */
+> 19	
+> 20	const REPORT_QUOTE = 'USDT';
+> 21	const AGENT_STALE_MS = 15 * 60 * 1000;
+> 22	const FEE_RT = 0.20;        // round-trip taker spot (%)
+> 23	const FEE_RT_BNB = 0.15;    // round-trip com BNB (%)
+> 24	const KL_SYMBOL = 'BTCUSDT';
+> 25	const KL_HOSTS = ['https://api.binance.com', 'https://data-api.binance.vision'];
+> 26	
+> 27	function num(v) {
+> 28	  if (v === null || v === undefined) return NaN;
+> 29	  if (typeof v === 'number') return v;
+> 30	  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+> 31	  return isNaN(n) ? NaN : n;
+> 32	}
+> 33	function fmtUsd(v, dec = 2) {
+> 34	  const n = num(v);
+> 35	  if (isNaN(n)) return '—';
+> 36	  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+> 37	}
+> 38	function fmtPct(v) {
+> 39	  const n = num(v);
+> 40	  if (isNaN(n)) return '—';
+> 41	  return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+> 42	}
+> 43	function dirClass(v) {
+> 44	  const n = num(v);
+> 45	  if (isNaN(n) || n === 0) return 'cx-flat';
+> 46	  return n > 0 ? 'cx-up' : 'cx-down';
+> 47	}
+> 48	function fmtAge(ms) {
+> 49	  if (ms == null) return '—';
+> 50	  const s = Math.round(ms / 1000);
+> 51	  if (s < 90) return `${s}s`;
+> 52	  const m = Math.round(s / 60);
+> 53	  if (m < 90) return `${m}min`;
+> 54	  return `${Math.round(m / 60)}h`;
+> 55	}
+> 56	
+> 57	function buildSpark(series) {
+> 58	  const pts = (series || []).map(num).filter(n => !isNaN(n));
+> 59	  if (pts.length < 2) return null;
+> 60	  const W = 600, H = 70, pad = 5;
+> 61	  const min = Math.min(...pts), max = Math.max(...pts);
+> 62	  const span = max - min || 1;
+> 63	  const step = (W - pad * 2) / (pts.length - 1);
+> 64	  const c = pts.map((p, i) => [pad + i * step, pad + (H - pad * 2) * (1 - (p - min) / span)]);
+> 65	  const line = c.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+> 66	  return { line, area: `${line} L${c[c.length - 1][0].toFixed(1)},${H} L${c[0][0].toFixed(1)},${H} Z`, up: pts[pts.length - 1] >= pts[0] };
+> 67	}
+> 68	
+> 69	// candlestick a partir das klines [[t,o,h,l,c,...]] -> geometria p/ SVG
+> 70	function buildCandles(kl) {
+> 71	  const data = (kl || []).slice(-60);
+> 72	  if (data.length < 2) return null;
+> 73	  const W = 600, H = 220, padT = 8, padB = 8, padL = 4, padR = 40;
+> 74	  const max = Math.max(...data.map(d => d.h)), min = Math.min(...data.map(d => d.l));
+> 75	  const span = max - min || 1;
+> 76	  const cw = (W - padL - padR) / data.length;
+> 77	  const bw = Math.max(1.5, cw * 0.62);
+> 78	  const y = p => padT + (H - padT - padB) * (1 - (p - min) / span);
+> 79	  const candles = data.map((d, i) => {
+> 80	    const xc = padL + cw * i + cw / 2;
+> 81	    const up = d.c >= d.o;
+> 82	    const oy = y(d.o), cy = y(d.c);
+> 83	    return { x: xc - bw / 2, bw, by: Math.min(oy, cy), bh: Math.max(1, Math.abs(oy - cy)), wx: xc, wy1: y(d.h), wy2: y(d.l), up };
+> 84	  });
+> 85	  return { candles, lastY: y(data[data.length - 1].c), last: data[data.length - 1].c, hi: max, lo: min, W, H, padR };
+> 86	}
+> 87	
+> 88	// distribuição de retornos 1m (%) + faixa de fee
+> 89	function buildHist(kl) {
+> 90	  if (!kl || kl.length < 5) return null;
+> 91	  const rets = [];
+> 92	  for (let i = 1; i < kl.length; i++) {
+> 93	    const r = (kl[i].c - kl[i - 1].c) / kl[i - 1].c * 100;
+> 94	    if (isFinite(r)) rets.push(r);
+> 95	  }
+> 96	  if (!rets.length) return null;
+> 97	  const LIM = 0.5, BINS = 25, step = (LIM * 2) / BINS;
+> 98	  const counts = new Array(BINS).fill(0);
+> 99	  rets.forEach(r => { let b = Math.floor((Math.min(LIM - 1e-9, Math.max(-LIM, r)) + LIM) / step); if (b < 0) b = 0; if (b >= BINS) b = BINS - 1; counts[b]++; });
+> 100	  const sorted = rets.map(r => Math.abs(r)).sort((a, b) => a - b);
+> 101	  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+> 102	  const sd = Math.sqrt(rets.reduce((a, b) => a + (b - mean) * (b - mean), 0) / rets.length);
+> 103	  return {
+> 104	    counts, maxc: Math.max(...counts, 1), step, BINS, LIM, n: rets.length, mean, sd,
+> 105	    clearFee: rets.filter(r => Math.abs(r) >= FEE_RT).length / rets.length * 100,
+> 106	    medAbs: sorted[Math.floor(sorted.length / 2)],
+> 107	  };
+> 108	}
+> 109	
+> 110	function Cockpit() {
+> 111	  const [balance, setBalance] = useState({});
+> 112	  const [report, setReport] = useState({});
+> 113	  const [gate, setGate] = useState({ symbols: {} });
+> 114	  const [flow, setFlow] = useState({ symbols: {} });
+> 115	  const [agent, setAgent] = useState({ kpis: {}, runs: [] });
+> 116	  const [prices, setPrices] = useState({});
+> 117	  const [klines, setKlines] = useState(null);
+> 118	  const [klErr, setKlErr] = useState(false);
+> 119	  const [cockpit, setCockpit] = useState({ symbols: {} });
+> 120	  const [groups, setGroups] = useState({ groups: [] });
+> 121	  const [notification, setNotification] = useState({});
+> 122	
+> 123	  const { readyState } = useWebSocket(process.env.REACT_APP_WS_URL, {
+> 124	    queryParams: { token: localStorage.getItem('token') },
+> 125	    onMessage: (event) => {
+> 126	      try {
+> 127	        const msg = JSON.parse(event.data);
+> 128	        if (msg && msg.miniTicker) {
+> 129	          const mt = msg.miniTicker;
+> 130	          setPrices(prev => {
+> 131	            const next = { ...prev };
+> 132	            const put = (sym, c) => { if (sym && c != null && !isNaN(num(c))) next[sym] = num(c); };
+> 133	            if (Array.isArray(mt)) mt.forEach(t => put(t && t.symbol, t && (t.close ?? t.c)));
+> 134	            else if (mt.symbol) put(mt.symbol, mt.close ?? mt.c);
+> 135	            else Object.keys(mt).forEach(k => put(k, mt[k] && (mt[k].close ?? mt[k].c)));
+> 136	            return next;
+> 137	          });
+> 138	        }
+> 139	      } catch (e) { /* ignora */ }
+> 140	    },
+> 141	    shouldReconnect: () => true,
+> 142	    reconnectInterval: 3000,
+> 143	  });
+> 144	
+> 145	  function loadAll() {
+> 146	    const token = localStorage.getItem('token');
+> 147	    getBalance(token).then(setBalance).catch(() => {});
+> 148	    getOrdersReport(REPORT_QUOTE, null, null, token, '').then(setReport).catch(err => {
+> 149	      setNotification({ type: 'error', text: err.response ? (err.response.data.error || err.response.data) : err.message });
+> 150	    });
+> 151	    getRegimeStatus(token).then(setGate).catch(() => {});
+> 152	    getFlowStatus(token).then(setFlow).catch(() => {});
+> 153	    getAgentRuns(50, token).then(setAgent).catch(() => {});
+> 154	    getCockpit(token).then(setCockpit).catch(() => {});
+> 155	    getAutomationGroups(token).then(setGroups).catch(() => {});
+> 156	  }
+> 157	
+> 158	  async function loadKlines() {
+> 159	    for (const host of KL_HOSTS) {
+> 160	      try {
+> 161	        const r = await fetch(`${host}/api/v3/klines?symbol=${KL_SYMBOL}&interval=1m&limit=120`);
+> 162	        if (!r.ok) continue;
+> 163	        const raw = await r.json();
+> 164	        const parsed = raw.map(k => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4] }));
+> 165	        setKlines(parsed); setKlErr(false); return;
+> 166	      } catch (e) { /* tenta próximo host */ }
+> 167	    }
+> 168	    setKlErr(true);
+> 169	  }
+> 170	
+> 171	  useEffect(() => {
+> 172	    loadAll(); loadKlines();
+> 173	    const id = setInterval(() => { loadAll(); loadKlines(); }, 60000);
+> 174	    return () => clearInterval(id);
+> 175	  }, []);
+> 176	
+> 177	  const wsLive = readyState === 1;
+> 178	  const hist = buildHist(klines);
+> 179	  const btcWs = prices[KL_SYMBOL];
+> 180	  const klive = (klines && btcWs != null && !isNaN(btcWs))
+> 181	    ? klines.map((k, i) => i === klines.length - 1 ? { ...k, c: btcWs, h: Math.max(k.h, btcWs), l: Math.min(k.l, btcWs) } : k)
+> 182	    : klines;
+> 183	  const cnd = buildCandles(klive);
+> 184	  const btc = (btcWs != null && !isNaN(btcWs)) ? btcWs : (cnd ? cnd.last : null);
+> 185	  const sigma = hist ? hist.sd : NaN;
+> 186	
+> 187	  // BRAIN snapshot (single source of truth): prefere o cockpitJob; klines client-side = fallback/render.
+> 188	  const cp = cockpit || {};
+> 189	  const env = cp.env || null;
+> 190	  const cpBtc = (cp.symbols || {})[KL_SYMBOL] || null;
+> 191	  const histB = (cpBtc && cpBtc.dist && cpBtc.dist.hist && Array.isArray(cpBtc.dist.hist.counts))
+> 192	    ? {
+> 193	        counts: cpBtc.dist.hist.counts,
+> 194	        maxc: Math.max(...cpBtc.dist.hist.counts, 1),
+> 195	        step: cpBtc.dist.hist.binPct,
+> 196	        BINS: cpBtc.dist.hist.counts.length,
+> 197	        LIM: cpBtc.dist.hist.lim,
+> 198	        n: cpBtc.samples,
+> 199	        clearFee: cpBtc.dist.pHitBreakevenPct,
+> 200	        medAbs: cpBtc.dist.medAbsMovePct,
+> 201	        sd: cpBtc.dist.sigmaPct,
+> 202	        fromBrain: true,
+> 203	      }
+> 204	    : hist;
+> 205	  const sigmaB = (cpBtc && cpBtc.dist && cpBtc.dist.sigmaPct != null) ? cpBtc.dist.sigmaPct : sigma;
+> 206	  const mcBand = (cpBtc && cpBtc.mc) ? cpBtc.mc : null;
+> 207	  const evNet = (cpBtc && cpBtc.ev && cpBtc.ev.netPct != null) ? cpBtc.ev.netPct : null;
+> 208	
+> 209	  const pnlNet = (num(report.sellVolume) - num(report.buyVolume));
+> 210	  const equity = balance && (balance.fiatEstimate != null) ? balance.fiatEstimate : null;
+> 211	  const spark = buildSpark(report.series);
+> 212	
+> 213	  const agentLastMs = (agent.kpis && agent.kpis.lastTs) ? (Date.now() - new Date(agent.kpis.lastTs).getTime()) : null;
+> 214	  const agentStale = agentLastMs != null && agentLastMs > AGENT_STALE_MS;
+> 215	
+> 216	  const symset = {};
+> 217	  Object.keys(gate.symbols || {}).forEach(s => symset[s] = true);
+> 218	  Object.keys(flow.symbols || {}).forEach(s => symset[s] = true);
+> 219	  const symbols = Object.keys(symset).sort();
+> 220	
+> 221	  const automations = Array.isArray(report.automations) ? report.automations
+> 222	    : (report.automations && typeof report.automations === 'object' ? Object.values(report.automations) : []);
+> 223	
+> 224	  return (
+> 225	    <React.Fragment>
+> 226	      <Menu />
+> 227	      <main className="content">
+> 228	        <div className="cockpit">
+> 229	
+> 230	          <div className="cx-head">
+> 231	            <div className="cx-brand"><b>TRADEUX</b><span>fable cockpit</span></div>
+> 232	            <div className="cx-pills">
+> 233	              <span className="cx-pill"><span className="cx-dot" />read-only</span>
+> 234	              <span className={`cx-pill ${wsLive ? 'live' : 'halt'}`}><span className="cx-dot" />{wsLive ? 'ao vivo' : 'offline'}</span>
+> 235	              <span className={`cx-pill ${gate.enabled === false ? 'warn' : ''}`}><span className="cx-dot" />regime {gate.enabled === false ? 'off' : 'on'}</span>
+> 236	              <span className={`cx-pill ${flow.enabled === false ? 'warn' : ''}`}><span className="cx-dot" />flow {flow.enabled === false ? 'off' : (flow.mode || 'on')}</span>
+> 237	              {env && <span className={`cx-pill ${env.useTestnet ? 'warn' : 'live'}`}><span className="cx-dot" />{env.useTestnet ? 'testnet' : 'mainnet real'}</span>}
+> 238	              {env && env.tradingHalt && <span className="cx-pill halt"><span className="cx-dot" />halt</span>}
+> 239	            </div>
+> 240	          </div>
+> 241	
+> 242	          <div className="cx-grid">
+> 243	
+> 244	            {/* ROW 1 — hero + kpis */}
+> 245	            <div className="cx-row">
+> 246	              <div className="cx-panel glow">
+> 247	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Equity &amp; P&amp;L (net de fee)</span><span className="cx-src">/exchange/balance · /orders/reports/{REPORT_QUOTE}</span></div>
+> 248	                <div className="cx-hero-val cx-mono">{equity != null ? <AnimatedNumber value={num(equity)} format={v => fmtUsd(v)} /> : '—'}</div>
+> 249	                <div className="cx-sub">
+> 250	                  <span className={`cx-chg cx-mono ${dirClass(pnlNet)}`}>{isNaN(pnlNet) ? '—' : (pnlNet > 0 ? '+' : '') + fmtUsd(pnlNet)}</span>
+> 251	                  <span className={`cx-chg cx-mono ${dirClass(report.profitPerc)}`}>{fmtPct(report.profitPerc)}</span>
+> 252	                  {report.profitBtc != null && <span className="cx-flat cx-mono" style={{ fontSize: '0.85rem' }}>≈ {num(report.profitBtc) > 0 ? '+' : ''}{num(report.profitBtc).toFixed(8)} BTC</span>}
+> 253	                </div>
+> 254	                {spark
+> 255	                  ? <svg className="cx-spark" viewBox="0 0 600 70" preserveAspectRatio="none" aria-label="P&L acumulado">
+> 256	                      <path d={spark.area} fill={spark.up ? 'rgba(47,245,168,0.12)' : 'rgba(255,93,122,0.12)'} />
+> 257	                      <path d={spark.line} fill="none" stroke={spark.up ? '#2ff5a8' : '#ff5d7a'} strokeWidth="2" />
+> 258	                    </svg>
+> 259	                  : <div className="cx-empty" style={{ marginTop: 10 }}>sem série no período — esperado sob HALT (0 ordens)</div>}
+> 260	                <div className="cx-note">O <code>net</code> é <b>fee-inclusive</b> — a comissão (em qualquer asset, inclusive BNB) é convertida p/ USDT e descontada.</div>
+> 261	              </div>
+> 262	
+> 263	              <div className="cx-panel">
+> 264	                <div className="cx-panel-title"><span>Métricas</span></div>
+> 265	                <div className="cx-kpis">
+> 266	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal real" />P&amp;L net</div><div className={`k-v cx-mono ${dirClass(pnlNet)}`}>{isNaN(pnlNet) ? '—' : fmtUsd(pnlNet)}</div></div>
+> 267	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal real" />Trades</div><div className="k-v cx-mono">{report.orders != null ? report.orders : '—'}</div></div>
+> 268	                  <div className="cx-kpi"><div className="k-l"><span className="cx-seal real" />Volume</div><div className="k-v cx-mono">{isNaN(num(report.buyVolume) + num(report.sellVolume)) ? '—' : fmtUsd(num(report.buyVolume) + num(report.sellVolume), 0)}</div></div>
+> 269	                </div>
+> 270	              </div>
+> 271	            </div>
+> 272	
+> 273	            {/* ROW 2 — candle ao vivo + tail distribution */}
+> 274	            <div className="cx-row">
+> 275	              <div className="cx-panel">
+> 276	                <div className="cx-panel-title"><span><span className="cx-seal real" /> {KL_SYMBOL} · candles 1m</span><span className="cx-src">binance /api/v3/klines + WS miniTicker</span></div>
+> 277	                <div className="cx-candle-head">
+> 278	                  <span className="px cx-mono">{btc != null ? <AnimatedNumber value={btc} format={v => fmtUsd(v, 1)} /> : '—'}</span>
+> 279	                  {cnd && <span className="cx-flat cx-mono" style={{ fontSize: '0.74rem' }}>H {fmtUsd(cnd.hi, 0)} · L {fmtUsd(cnd.lo, 0)}</span>}
+> 280	                  {wsLive && <span className="cx-up cx-mono" style={{ fontSize: '0.7rem' }}>● live</span>}
+> 281	                </div>
+> 282	                {cnd
+> 283	                  ? <svg className="cx-candle" viewBox={`0 0 ${cnd.W} ${cnd.H}`} preserveAspectRatio="none" aria-label="Candles de 1 minuto do BTCUSDT">
+> 284	                      {[0.25, 0.5, 0.75].map((g, i) => <line key={i} className="grid" x1="0" x2={cnd.W} y1={cnd.H * g} y2={cnd.H * g} />)}
+> 285	                      {cnd.candles.map((c, i) => (
+> 286	                        <g key={i}>
+> 287	                          <line className={c.up ? 'wick-up' : 'wick-down'} x1={c.wx} x2={c.wx} y1={c.wy1} y2={c.wy2} />
+> 288	                          <rect className={c.up ? 'body-up' : 'body-down'} x={c.x} y={c.by} width={c.bw} height={c.bh} />
+> 289	                        </g>
+> 290	                      ))}
+> 291	                      <line className="lastline" x1="0" x2={cnd.W - cnd.padR} y1={cnd.lastY} y2={cnd.lastY} />
+> 292	                    </svg>
+> 293	                  : <div className="cx-empty">{klErr ? 'klines indisponíveis (CORS/Binance) 🟡' : 'carregando candles…'}</div>}
+> 294	              </div>
+> 295	
+> 296	              <div className="cx-panel">
+> 297	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Tail · retornos 1m vs fee</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'klines → distribuição'}</span></div>
+> 298	                {histB
+> 299	                  ? <React.Fragment>
+> 300	                      <svg className="cx-hist" viewBox="0 0 600 180" preserveAspectRatio="none" aria-label="Distribuição dos retornos de 1 minuto com a faixa de fee">
+> 301	                        {(() => {
+> 302	                          const W = 600, H = 180, padB = 18, padT = 8;
+> 303	                          const x = r => (r + histB.LIM) / (histB.LIM * 2) * W;
+> 304	                          const bw = W / histB.BINS;
+> 305	                          const feeX1 = x(-FEE_RT), feeX2 = x(FEE_RT);
+> 306	                          const els = [];
+> 307	                          els.push(<rect key="band" className="feeband" x={feeX1} y={padT} width={feeX2 - feeX1} height={H - padB - padT} />);
+> 308	                          histB.counts.forEach((c, i) => {
+> 309	                            const cr = -histB.LIM + histB.step * (i + 0.5);
+> 310	                            const h = (c / histB.maxc) * (H - padB - padT);
+> 311	                            els.push(<rect key={'b' + i} className={Math.abs(cr) < FEE_RT ? 'bar infee' : 'bar'} x={x(-histB.LIM + histB.step * i) + 0.5} y={H - padB - h} width={bw - 1} height={h} />);
+> 312	                          });
+> 313	                          els.push(<line key="z" className="zero" x1={x(0)} x2={x(0)} y1={padT} y2={H - padB} />);
+> 314	                          [-FEE_RT, FEE_RT].forEach((f, i) => els.push(<line key={'f' + i} className="feeline" x1={x(f)} x2={x(f)} y1={padT} y2={H - padB} />));
+> 315	                          [-0.5, -0.25, 0, 0.25, 0.5].forEach((t, i) => els.push(<text key={'t' + i} className="axis" x={x(t)} y={H - 5} textAnchor="middle">{t > 0 ? '+' : ''}{t}%</text>));
+> 316	                          return els;
+> 317	                        })()}
+> 318	                      </svg>
+> 319	                      <div className="cx-tail-stat">
+> 320	                        <span className="cx-down">moves ≥ {FEE_RT}% (break-even): <b className="cx-mono">{Number(histB.clearFee).toFixed(0)}%</b></span>
+> 321	                        <span className="cx-flat">mediana |move|: <b className="cx-mono">{Number(histB.medAbs).toFixed(3)}%</b></span>
+> 322	                        <span className="cx-flat">n={histB.n}</span>
+> 323	                      </div>
+> 324	                      <div className="cx-note">Zona vermelha = move &lt; fee round-trip ({FEE_RT}%). A maioria das velas de 1m cai aí dentro — prova visual de por que scalping de 1m sangra taxa.{histB.fromBrain ? ' Distribuição computada pelo brain (cockpitJob).' : ''}</div>
+> 325	                    </React.Fragment>
+> 326	                  : <div className="cx-empty">{klErr ? 'klines indisponíveis 🟡' : 'carregando…'}</div>}
+> 327	              </div>
+> 328	            </div>
+> 329	
+> 330	            {/* ROW 2b — probability lattice (Galton) + monte carlo median fair */}
+> 331	            <div className="cx-row-3">
+> 332	              <div className="cx-panel glow">
+> 333	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Probability lattice (Galton)</span><span className="cx-src">{histB && histB.fromBrain ? '/analysis/cockpit (brain)' : 'velas 1m reais'}</span></div>
+> 334	                {histB ? <GaltonBoard counts={histB.counts} step={histB.step} lim={histB.LIM} fee={FEE_RT} />
+> 335	                      : <div className="cx-empty">{klErr ? 'klines indisponíveis 🟡' : 'carregando…'}</div>}
+> 336	                <div className="cx-note">Cada bola = uma vela de 1m real caindo na sua faixa de retorno; a pilha É a distribuição real. <b>≥ break-even</b> = bolas que limpariam a taxa ({FEE_RT}%). A "lei dos grandes números" mostra o contrário do golpe: repetição NÃO cria edge quando o EV/trade já é negativo.</div>
+> 337	              </div>
+> 338	              <div className="cx-panel glow">
+> 339	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Monte Carlo · median fair</span><span className="cx-src">{mcBand ? '/analysis/cockpit (brain)' : 'σ realizada'}</span></div>
+> 340	                <PathFan sigmaPct={sigmaB} spot={btc} band={mcBand} />
+> 341	                <div className="cx-note"><b>NÃO é previsão.</b> Random-walk SEM drift a partir da vol realizada de 1m. Sem edge, a <b>mediana ≈ preço atual</b> — o oposto exato da promessa "Fable prevê o mercado". A faixa p10–p90 é só a incerteza da volatilidade{mcBand ? ` (do brain, horizonte ${mcBand.horizonMin}min)` : ''}.</div>
+> 342	              </div>
+> 343	            </div>
+> 344	
+> 345	            {/* ROW 3 — lattice + trade bridges */}
+> 346	            <div className="cx-row-3">
+> 347	              <div className="cx-panel">
+> 348	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Regime × Flow lattice</span><span className="cx-src">/analysis/regime-status · flow-status</span></div>
+> 349	                <div className="cx-lat">
+> 350	                  {symbols.length === 0
+> 351	                    ? <div className="cx-empty">sem regime/fluxo ainda (jobs no ar, aguardando a Binance)</div>
+> 352	                    : symbols.map(s => {
+> 353	                        const g = (gate.symbols || {})[s] || {};
+> 354	                        const f = (flow.symbols || {})[s] || {};
+> 355	                        const imb = f.imbalance, tox = f.toxicity, reg = g.regime || 'unknown';
+> 356	                        const w = imb != null ? Math.min(50, Math.abs(imb) * 50) : 0;
+> 357	                        return (
+> 358	                          <div className="cx-lat-row wide" key={s}>
+> 359	                            <span className="cx-sym cx-mono">{s}</span>
+> 360	                            <span className={`cx-reg ${reg}`}>{reg}{g.stale ? '·s' : ''}</span>
+> 361	                            <span className="cx-flowbar"><span className="mid" />{imb != null && <span className={`fill ${imb >= 0 ? 'buy' : 'sell'}`} style={{ width: w + '%' }} />}</span>
+> 362	                            <span className={`cx-imb cx-mono ${imb == null ? 'cx-flat' : imb < -0.05 ? 'cx-down' : imb > 0.05 ? 'cx-up' : 'cx-flat'}`}>{imb != null ? imb.toFixed(2) : '—'}</span>
+> 363	                            <span className={`cx-tox cx-mono ${tox != null && tox >= 0.6 ? 'hot' : ''}`}>{tox != null ? tox.toFixed(2) : '—'}</span>
+> 364	                          </div>
+> 365	                        );
+> 366	                      })}
+> 367	                </div>
+> 368	                <div className="cx-note">Colunas: regime do gate · barra de <b>imbalance</b> do taker (verde compra/vermelho vende) · valor · <b>toxicity</b> (|imbalance|). Nowcasting de timing — não previsão.</div>
+> 369	              </div>
+> 370	
+> 371	              <div className="cx-panel">
+> 372	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Trade bridges (gates de compra)</span></div>
+> 373	                <div className="cx-bridges">
+> 374	                  {symbols.length === 0
+> 375	                    ? <div className="cx-empty">sem sinais ainda</div>
+> 376	                    : symbols.map(s => {
+> 377	                        // Fonte de verdade = gate SYMBOL-AWARE do cockpit (cp.symbols[s].gates, commit 8884bd3):
+> 378	                        // só a baseline BTC (flowGated=true) é bloqueada por fluxo; o FARM das alts NÃO gateia por
+> 379	                        // fluxo → p/ alts a ponte de fluxo é INFORMATIVA, não bloqueante. Fallback regime/flow-status.
+> 380	                        const cps = (cp.symbols || {})[s] || {};
+> 381	                        const cpg = cps.gates || {};
+> 382	                        const g = (gate.symbols || {})[s] || {};
+> 383	                        const f = (flow.symbols || {})[s] || {};
+> 384	                        // nó "regime" = gate de regime da ACUMULAÇÃO (farm) → exclui bear/unknown E trend (em
+> 385	                        // trend o farm/baseline ficam em CAIXA). Usa cpg.farm (backend); fallback exclui os 3.
+> 386	                        const regOpen = cpg.farm != null ? cpg.farm : !!(g.regime && g.regime !== 'bear' && g.regime !== 'unknown' && g.regime !== 'trend');
+> 387	                        const flowGated = !!cpg.flowGated;
+> 388	                        const imb = (cps.flow && cps.flow.imbalance != null) ? cps.flow.imbalance : f.imbalance;
+> 389	                        const flowMin = cpg.flowBuyMin != null ? cpg.flowBuyMin : -0.4;
+> 390	                        const flowOk = imb != null && imb >= flowMin; // não-capitulação (>= piso, igual ao backend)
+> 391	                        const ready = cpg.buyAllowed != null ? cpg.buyAllowed : (regOpen && (!flowGated || flowOk));
+> 392	                        const flowDot = flowGated ? (flowOk ? 'on' : 'off') : 'info'; // alt: informativo (não gateia)
+> 393	                        const flowTitle = flowGated
+> 394	                          ? `fluxo ${flowOk ? 'ok' : 'capitulação'} (imbalance ${imb != null ? imb.toFixed(2) : '—'}) — gateia a baseline BTC`
+> 395	                          : `fluxo INFORMATIVO (imbalance ${imb != null ? imb.toFixed(2) : '—'}) — o FARM desta alt NÃO gateia por fluxo`;
+> 396	                        return (
+> 397	                          <div className="cx-bridge" key={s}>
+> 398	                            <span className="bsym cx-mono">{s}</span>
+> 399	                            <span className="cx-chain">
+> 400	                              <span className="cx-node"><span className={`dot ${regOpen ? 'on' : 'off'}`} /><span className="nl">regime</span></span>
+> 401	                              <span className={`cx-link ${regOpen ? 'on' : ''}`} />
+> 402	                              <span className="cx-node" title={flowTitle}><span className={`dot ${flowDot}`} /><span className="nl">fluxo{flowGated ? '' : '·i'}</span></span>
+> 403	                              <span className={`cx-link ${ready ? 'on' : ''}`} />
+> 404	                              <span className="cx-node"><span className={`dot ${ready ? 'on' : 'off'}`} /><span className="nl">pronto</span></span>
+> 405	                            </span>
+> 406	                            <span className={`cx-ready ${ready ? 'go' : 'no'}`}>{ready ? 'go' : 'wait'}</span>
+> 407	                          </div>
+> 408	                        );
+> 409	                      })}
+> 410	                </div>
+> 411	                <div className="cx-note">Cada ponte acende quando o gate de COMPRA do símbolo abre: <b>BTC (baseline)</b> = regime ≠ bear/trend <b>E</b> fluxo não-capitulação; <b>alts (farm)</b> = só regime ≠ bear/trend (o fluxo é <b>informativo·i</b>, não gateia). "go" = condições prontas; a ordem em si segue gateada e sob HALT.</div>
+> 412	              </div>
+> 413	            </div>
+> 414	
+> 415	            {/* ROW 3b — Estratégia: gate × ativo (reconciliação canary) */}
+> 416	            <div className="cx-row-3" style={{ gridTemplateColumns: '1fr' }}>
+> 417	              <div className="cx-panel">
+> 418	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Estratégia — gate × ativo</span><span className="cx-src">/analysis/cockpit · /automations/groups</span></div>
+> 419	                <div className="cx-strat">
+> 420	                  {(groups.groups || []).length === 0
+> 421	                    ? <div className="cx-empty">carregando grupos…</div>
+> 422	                    : (groups.groups || []).map(gr => {
+> 423	                        const cpsyms = cp.symbols || {};
+> 424	                        const anyGate = test => Object.keys(cpsyms).some(s => test((cpsyms[s].gates) || {}));
+> 425	                        let gate, note;
+> 426	                        if (gr.key === 'paper') { gate = 'idle'; note = 'research virtual — sem risco real'; }
+> 427	                        else {
+> 428	                          let open;
+> 429	                          if (gr.key === 'farm') open = anyGate(ga => ga.farm === true);
+> 430	                          else if (gr.key === 'baseline') {
+> 431	                            // baseline é o símbolo FLOW-GATED (gates.baseline != null); deriva do cockpit (fallback BTCUSDT)
+> 432	                            const bsym = Object.keys(cpsyms).find(s => ((cpsyms[s].gates) || {}).baseline != null) || 'BTCUSDT';
+> 433	                            const bg = (cpsyms[bsym] || {}).gates || {};
+> 434	                            open = bg.baseline != null ? !!bg.baseline : !!bg.buyAllowed;
+> 435	                          }
+> 436	                          else open = anyGate(ga => ga.trend === true); // trend
+> 437	                          gate = open ? 'go' : 'no';
+> 438	                          const ctx = gr.key === 'baseline' ? 'cofre BTC' : gr.key === 'trend' ? 'espera cross' : 'dips de alt';
+> 439	                          if (gr.active === 0) note = open ? `parado pelo operador (canary) — gate liberado ≠ obrigatório · ${ctx}` : `parado · gate fechado também · ${ctx}`;
+> 440	                          else if (gr.active === gr.total) note = `ativo — ${ctx} (canary)`;
+> 441	                          else note = `parcial ${gr.active}/${gr.total} · ${ctx}`;
+> 442	                        }
+> 443	                        const actCls = gr.paper ? 'virt' : (gr.active > 0 ? 'on' : 'off');
+> 444	                        const gateLbl = gate === 'go' ? 'go' : gate === 'no' ? 'wait' : '—';
+> 445	                        return (
+> 446	                          <div className="cx-strat-row" key={gr.key}>
+> 447	                            <span className="gname">{gr.label ? gr.label.split(' ')[0] : gr.key}</span>
+> 448	                            <span className={`cx-ready ${gate}`}>{gateLbl}</span>
+> 449	                            <span className={`cx-act ${actCls}`}>{gr.active}/{gr.total}</span>
+> 450	                            <span className="rnote">{note}</span>
+> 451	                          </div>
+> 452	                        );
+> 453	                      })}
+> 454	                </div>
+> 455	                <div className="cx-note"><b>gate</b> = o regime/fluxo PERMITE · <b>ativo</b> = o operador ARMOU. <b>gate go + parado = intencional</b> (ligar/parar grupos é decisão do operador — canary, não erro). A trava real é o HALT por-ordem.</div>
+> 456	              </div>
+> 457	            </div>
+> 458	
+> 459	            {/* ROW 4 — edge/agent + positions */}
+> 460	            <div className="cx-row-3">
+> 461	              <div className="cx-panel">
+> 462	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Edge vs fee · agente</span><span className="cx-src">/analysis/cockpit · /agent/runs</span></div>
+> 463	                <div className="cx-edge">
+> 464	                  <div className="e"><div className="el">EV/trade net (1m)</div><div className={`ev cx-mono ${cpBtc && evNet != null ? dirClass(evNet) : ''}`}>{cpBtc && evNet != null ? (evNet > 0 ? '+' : '') + Number(evNet).toFixed(3) + '%' : '—'}</div></div>
+> 465	                  <div className="e"><div className="el">Break-even fee</div><div className="ev cx-mono">{FEE_RT.toFixed(2)}% <span className="cx-flat" style={{ fontSize: '0.7rem' }}>· {FEE_RT_BNB.toFixed(2)}% BNB</span></div></div>
+> 466	                </div>
+> 467	                <div className="cx-line" style={{ marginTop: 10 }}><span className="l"><span className="cx-seal real" /> Moves ≥ break-even (BTC)</span><span className="v cx-mono">{cpBtc && cpBtc.dist ? Number(cpBtc.dist.pHitBreakevenPct).toFixed(0) + '%' : '—'}</span></div>
+> 468	                <div className="cx-line"><span className="l"><span className="cx-seal real" /> Gate acumulação BTC <span className="cx-flat" style={{ fontSize: '0.66rem' }}>(farm/baseline)</span></span><span className={`v cx-mono ${cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'cx-up' : 'cx-down') : ''}`} title={cpBtc && cpBtc.gates ? cpBtc.gates.reason : ''}>{cpBtc && cpBtc.gates ? (cpBtc.gates.buyAllowed ? 'GO' : 'CAIXA') : '—'}</span></div>
+> 469	                {agent.available === false
+> 470	                  ? <div className="cx-empty">agente ainda não rodou (journal ausente)</div>
+> 471	                  : <React.Fragment>
+> 472	                      <div className="cx-line"><span className="l"><span className="cx-seal real" /> Ciclos do agente</span><span className="v cx-mono">{agent.kpis.cycles != null ? agent.kpis.cycles : '—'}{agentLastMs != null ? `  ·  ${fmtAge(agentLastMs)}${agentStale ? ' STALE' : ''}` : ''}</span></div>
+> 473	                      <div className="cx-line"><span className="l"><span className="cx-seal real" /> Tokens (total)</span><span className="v cx-mono">{agent.kpis.tokens && agent.kpis.tokens.total != null ? num(agent.kpis.tokens.total).toLocaleString() : '—'}</span></div>
+> 474	                      <div className="cx-line"><span className="l"><span className="cx-seal real" /> Custo estimado</span><span className="v cx-mono">{agent.kpis.estCostUSD != null ? '$' + agent.kpis.estCostUSD : '—'}</span></div>
+> 475	                    </React.Fragment>}
+> 476	              </div>
+> 477	
+> 478	              <div className="cx-panel">
+> 479	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Posições &amp; automações</span><span className="cx-src">/orders/reports</span></div>
+> 480	                {automations.length === 0
+> 481	                  ? <div className="cx-empty">nenhuma posição/automação no período — feed ao vivo liga ao descongelar (<code>TRADING_HALT=false</code>)</div>
+> 482	                  : automations.slice(0, 12).map((a, i) => {
+> 483	                      const name = a.name || a.automation || a.label || `auto ${i + 1}`;
+> 484	                      const val = a.net != null ? a.net : (a.profit != null ? a.profit : (a.pnl != null ? a.pnl : null));
+> 485	                      return (
+> 486	                        <div className="cx-line" key={i}>
+> 487	                          <span className="l cx-mono">{name}</span>
+> 488	                          <span className={`v cx-mono ${val != null ? dirClass(val) : ''}`}>{val != null ? (num(val) > 0 ? '+' : '') + fmtUsd(val) : '—'}</span>
+> 489	                        </div>
+> 490	                      );
+> 491	                    })}
+> 492	              </div>
+> 493	            </div>
+> 494	
+> 495	            {/* ROW 5 — Paper Engine (research, sem risco) */}
+> 496	            <div className="cx-row">
+> 497	              <div className="cx-panel glow">
+> 498	                <div className="cx-panel-title"><span><span className="cx-seal real" /> Paper · Estratégias (research, sem risco)</span><span className="cx-src">/analysis/cockpit · paper</span></div>
+> 499	                {(() => {
+> 500	                  const pp = cp.paper || null;
+> 501	                  const strats = pp && Array.isArray(pp.strategies) ? pp.strategies.slice().sort((a, b) => num(b.totalPnl) - num(a.totalPnl)) : [];
+> 502	                  if (!pp || strats.length === 0)
+> 503	                    return <div className="cx-empty">sem trades paper ainda — trilhas armadas, aguardando sinal (consistência sai do trend; macro no próximo cross)</div>;
+> 504	                  return (
+> 505	                    <React.Fragment>
+> 506	                      <div className="cx-line" style={{ fontWeight: 700 }}>
+> 507	                        <span className="l">Total · {strats.length} trilhas</span>
+> 508	                        <span className={`v cx-mono ${dirClass(pp.totals.totalPnl)}`}>{fmtUsd(pp.totals.totalPnl)}</span>
+> 509	                      </div>
+> 510	                      {strats.map((s, i) => (
+> 511	                        <div className="cx-line" key={i} title={`realizado ${fmtUsd(s.realizedPnl)} + não-realizado ${fmtUsd(s.unrealizedPnl)} · fee ${fmtUsd(s.fees)} · ${s.buys}c/${s.sells}v`}>
+> 512	                          <span className="l cx-mono">{s.strategy} <span className="cx-flat" style={{ fontSize: '0.66rem' }}>{s.buys}c/{s.sells}v{s.winRate != null ? ` · ${Math.round(s.winRate * 100)}% win` : ''}{s.openPositions ? ` · ${s.openPositions} aberta(s)` : ''}</span></span>
+> 513	                          <span className={`v cx-mono ${dirClass(s.totalPnl)}`}>{fmtUsd(s.totalPnl)}</span>
+> 514	                        </div>
+> 515	                      ))}
+> 516	                      <div className="cx-note">P&amp;L simulado com preço+fee <b>REAIS da mainnet</b> (broker virtual, zero dinheiro real; mainnet CONGELADO). Compara qual trilha tem edge antes de arriscar. A trilha de frequência/verde-diário foi refutada por backtest (EV&lt;0) — não listada.</div>
+> 517	                    </React.Fragment>
+> 518	                  );
+> 519	                })()}
+> 520	              </div>
+> 521	            </div>
+> 522	
+> 523	          </div>
+> 524	
+> 525	          <div className="cx-legend">
+> 526	            <span className="li"><span className="cx-seal real" /> dado real agora</span>
+> 527	            <span className="li" style={{ marginLeft: 'auto' }}>valores são os REAIS da conta — sem números fabricados.</span>
+> 528	          </div>
+> 529	
+> 530	          <div className="cx-foot">
+> 531	            <span>TradeUX · Fable Cockpit · read-only</span>
+> 532	            <span>klines: Binance público · sinais: regime/flow jobs (mainnet)</span>
+> 533	          </div>
+> 534	
+> 535	        </div>
+> 536	      </main>
+> 537	      <Toast type={notification.type} text={notification.text} />
+> 538	    </React.Fragment>
+> 539	  );
+> 540	}
+> 541	
+> 542	export default Cockpit;
+> 543	
+> ```
+
+## 🤖 Claude *(00:25:32)*
+
+
+## 🤖 Claude *(00:25:34)*
+
+Cockpit entendido a fundo — é um componente único com cards `.cx-panel`. O cockpit já entrega por símbolo: regime, flow, gates, ev, mc, dist (+ supervisor/promotions que adicionei). Pra "todos os sinais do beholder" (RSI/SMA/MACD/BOOK) preciso do `/beholder/memory/:symbol`. Deixa eu ver a forma desse payload + o IntelligenceService.
+
+## 🤖 Claude *(00:25:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nT=$(cat /tmp/tux_token.txt)\necho \"=== /beholder/memory/BTCUSDT (chaves dispon\u00edveis) ===\"\ncurl -s -m10 \"http://127.0.0.1:8090/api/beholder/memory/BTCUSDT\" -H \"Authorization: $T\" | python3 -c '\nimport sys,json\ntry:\n  d=json.load(sys.stdin)\nexcept Exception as e:\n  print(\"parse err\",e); sys.exit()\nif isinstance(d,list):\n  print(\"lista de %d itens; amostra de chaves:\"%len(d))\n  for it in d[:40]:\n    k=it.get(\"key\") or it.get(\"variable\") or it\n    print(\"  \",k if isinstance(k,str) else json.dumps(it)[:80])\nelif isinstance(d,dict):\n  for k in list(d.keys())[:40]: print(\"  \",k,\"=\",json.dumps(d[k])[:60])\n'\necho \"\"\necho \"=== IntelligenceService (como fetcha cockpit/memory) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cat frontend/src/services/IntelligenceService.js 2>/dev/null | head -70'",
+  "description": "Inspect beholder memory shape and IntelligenceService"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /beholder/memory/BTCUSDT (chaves disponíveis) ===
+>    LTCUSDT:FARM_DCA = {"qty": 0, "cost": 0}
+>    BNBUSDT:FARM_DCA = {"qty": 0, "cost": 0}
+>    ADAUSDT:FARM_DCA = {"qty": 0, "cost": 0}
+>    BTCUSDT:TREND_QTY = 0
+>    LTCUSDT:TREND_QTY = 0
+>    BNBUSDT:TREND_QTY = 0
+>    ADAUSDT:TREND_QTY = 0
+>    LTCUSDT:LAST_ORDER = {"type": "LIMIT", "side": "SELL", "status": "FILLED", "limit
+>    BTCUSDT:FAIR = {"price": 60961.68, "at": "2026-06-25T00:25:36.710Z", "atMs"
+>    BTCUSDT:REGIME = "bear"
+>    BTCUSDT:TREND_SLOPE_1h = "down"
+>    BTCUSDT:TREND_CROSS_1h = "none"
+>    LTCUSDT:COCKPIT = {"symbol": "LTCUSDT", "source": "api.binance.com", "interval
+>    LTCUSDT:REGIME = "bear"
+>    LTCUSDT:TREND_SLOPE_1h = "down"
+>    LTCUSDT:TREND_CROSS_1h = "none"
+>    BTCUSDT:LAST_CANDLE_1m = {"current": {"open": 61038, "close": 61000.75, "high": 61048
+>    BTCUSDT:PREVIOUS_CANDLE_1m = {"current": {"open": 61009.99, "close": 61037.99, "high": 61
+>    BTCUSDT:RSI_14_1m = {"current": 45.33, "previous": 49.79}
+>    BNBUSDT:COCKPIT = {"symbol": "BNBUSDT", "source": "api.binance.com", "interval
+>    LTCUSDT:LAST_CANDLE_1m = {"current": {"open": 41.25, "close": 41.21, "high": 41.26, "
+>    LTCUSDT:PREVIOUS_CANDLE_1m = {"current": {"open": 41.26, "close": 41.25, "high": 41.28, "
+>    LTCUSDT:RSI_14_1m = {"current": 54.9, "previous": 60.88}
+>    LTCUSDT:LAST_CANDLE_15m = {"current": {"open": 41.19, "close": 41.21, "high": 41.26, "
+>    LTCUSDT:PREVIOUS_CANDLE_15m = {"current": {"open": 40.98, "close": 41.19, "high": 41.27, "
+>    LTCUSDT:RSI_14_15m = {"current": 62.36, "previous": 61.88}
+>    ADAUSDT:LAST_CANDLE_1m = {"current": {"open": 0.1481, "close": 0.1479, "high": 0.1481
+>    ADAUSDT:PREVIOUS_CANDLE_1m = {"current": {"open": 0.1481, "close": 0.1482, "high": 0.1482
+>    ADAUSDT:RSI_14_1m = {"current": 42.27, "previous": 50.03}
+>    BNBUSDT:LAST_CANDLE_1m = {"current": {"open": 565.19, "close": 564.73, "high": 565.27
+>    BNBUSDT:PREVIOUS_CANDLE_1m = {"current": {"open": 565.06, "close": 565.18, "high": 565.64
+>    BNBUSDT:RSI_14_1m = {"current": 46.7, "previous": 52.77}
+>    BNBUSDT:LAST_CANDLE_15m = {"current": {"open": 564.66, "close": 565.59, "high": 565.97
+>    BNBUSDT:PREVIOUS_CANDLE_15m = {"current": {"open": 564.37, "close": 564.67, "high": 564.91
+>    BNBUSDT:RSI_14_15m = {"current": 60.65, "previous": 58.11}
+>    ADAUSDT:LAST_CANDLE_15m = {"current": {"open": 0.1477, "close": 0.1485, "high": 0.1492
+>    ADAUSDT:PREVIOUS_CANDLE_15m = {"current": {"open": 0.1478, "close": 0.1477, "high": 0.148,
+>    ADAUSDT:RSI_14_15m = {"current": 69.29, "previous": 65.46}
+>    BTCUSDT:LAST_CANDLE_15m = {"current": {"open": 61078, "close": 61097.95, "high": 61163
+>    BTCUSDT:PREVIOUS_CANDLE_15m = {"current": {"open": 61028.71, "close": 61077.99, "high": 61
+> 
+> === IntelligenceService (como fetcha cockpit/memory) ===
+> import axios from './BaseService';
+> 
+> const ANALYSIS_URL = `${process.env.REACT_APP_API_URL}/analysis`;
+> const AGENT_URL = `${process.env.REACT_APP_API_URL}/agent`;
+> 
+> // Regime de mercado REAL (mainnet) do símbolo: bear/trend/range/mixed/unknown + strategy + signals.
+> export async function getRegime(symbol, interval, token) {
+>     const headers = { 'authorization': token };
+>     const url = `${ANALYSIS_URL}/regime/${symbol}?interval=${interval || '1h'}`;
+>     const response = await axios.get(url, { headers });
+>     return response.data;
+> }
+> 
+> // Status do job de regime: por símbolo o regime do GATE (valor na MEMORY, histerético), idade da
+> // última atualização e flag de stale; + config do job. Torna visível o halt silencioso e a
+> // divergência entre o regime instantâneo (card acima) e a decisão do gate.
+> export async function getRegimeStatus(token) {
+>     const headers = { 'authorization': token };
+>     const url = `${ANALYSIS_URL}/regime-status`;
+>     const response = await axios.get(url, { headers });
+>     return response.data;
+> }
+> 
+> // Status do flow job (Oráculo v1, SHADOW): por símbolo o desequilíbrio de agressão do TAKER dos
+> // aggTrades recentes da mainnet — imbalance ∈ [-1,1] (<0 = taker vendendo) e toxicity (|imbalance|).
+> // SHADOW: o sinal é exposto mas ainda NÃO gateia automação (observando p/ calibrar o threshold).
+> export async function getFlowStatus(token) {
+>     const headers = { 'authorization': token };
+>     const url = `${ANALYSIS_URL}/flow-status`;
+>     const response = await axios.get(url, { headers });
+>     return response.data;
+> }
+> 
+> // KPIs do agente LLM (a partir do journal): ciclos, tokens, custo, top tools, ciclos recentes.
+> export async function getAgentRuns(limit, token) {
+>     const headers = { 'authorization': token };
+>     const url = `${AGENT_URL}/runs?limit=${limit || 50}`;
+>     const response = await axios.get(url, { headers });
+>     return response.data;
+> }
+> 
+> // Cockpit Intelligence (READ-ONLY): snapshot que a brain computa por símbolo (distribuição de retornos 1m,
+> // EV net-de-fee, tail, banda MC driftless, regime/flow + gates de compra) + ambiente real (env.useTestnet/
+> // tradingHalt). Single source of truth do painel /cockpit — alimenta as métricas vindas do brain.
+> export async function getCockpit(token) {
+>     const headers = { 'authorization': token };
+>     const url = `${ANALYSIS_URL}/cockpit`;
+>     const response = await axios.get(url, { headers });
+>     return response.data;
+> }
+> ```
+
+## 🤖 Claude *(00:26:15)*
+
+
+## 🤖 Claude *(00:26:17)*
+
+`/beholder/memory` traz RSI 1m/15m, TREND_SLOPE, TREND_CROSS, FARM_DCA, TREND_QTY por símbolo — os sinais que faltam pra simulação. Vou ler como o `getCockpitStatus` monta os símbolos pra anexar um bloco `signals` enxuto (read-only, additive).
+
+## 🤖 Claude *(00:26:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "offset": 74,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 74	// GET /analysis/cockpit — snapshot agregado do Cockpit (por símbolo: distribuição de retornos 1m, EV
+> 75	// net-de-fee, tail, banda MC driftless, regime/flow e estado dos gates de compra). READ-ONLY; alimenta
+> 76	// o painel /cockpit (single source of truth = brain). Não expõe segredos (só estado de mercado).
+> 77	async function getCockpitStatus(req, res) {
+> 78	    const status = cockpitJob.getStatus();
+> 79	    // AMBIENTE real p/ o painel e o agente: useTestnet (settings, leitura barata sem decrypt) + HALT QUENTE.
+> 80	    // tradingHalt agora vem do riskState (env floor | manual | daily-cap), não mais só do .env — chave mantida
+> 81	    // p/ o frontend (Cockpit.js) e o agente (agent.js) não quebrarem; haltSource/haltReason são ADITIVOS
+> 82	    // (contexto p/ o agente REPORTAR a causa; não é gatilho de notify — ver notifyDedup família 'halt').
+> 83	    const st = riskState.getState();
+> 84	    try {
+> 85	        const s = await settingsRepository.getSettings(process.env.DEFAULT_SETTINGS_ID || 1);
+> 86	        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 87	    } catch (e) {
+> 88	        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 89	    }
+> 90	    // paper para ANÁLISE: anexa o resumo do Paper Engine (totais + por trilha) ao cockpit que o agente já lê.
+> 91	    // READ-ONLY, best-effort (não derruba o cockpit se o ledger estiver vazio/indisponível).
+> 92	    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }
+> 93	    // groups: estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper) — o agente precisa do estado de ATIVAÇÃO
+> 94	    // (não só do gate de regime) p/ NÃO implicar execução de um grupo PARADO ("gate aberto" ≠ "grupo armado").
+> 95	    // READ-ONLY, best-effort. require lazy (mesmo dir de controllers; evita ciclo no load).
+> 96	    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }
+> 97	    // supervisor: estado do agente autonomo que liga/desliga ENTRADAS por regime (e mantem vendas acopladas
+> 98	    // armadas). O agente LLM le isto p/ saber que as (des)ativacoes de grupo sao automaticas, nao manuais.
+> 99	    try { status.supervisor = require('../groupSupervisorJob').getStatus(); } catch (_) { status.supervisor = null; }
+> 100	    // promotions: allowlist das trilhas do paper liberadas a dinheiro REAL (frente D). O agente le p/ saber QUAIS
+> 101	    // estrategias o supervisor pode ativar a real (sem promocao => so paper). READ-ONLY, best-effort.
+> 102	    try { status.promotions = require('../utils/promotionStore').list(); } catch (_) { status.promotions = null; }
+> 103	    // riskCaps: teto EFETIVO por ordem (compra ~%-equity, venda = rede anti-runaway) — o agente lê p/ EXPLICAR um
+> ```
+
+## 🤖 Claude *(00:27:17)*
+
+
+## 🤖 Claude *(00:27:19)*
+
+`getCockpitStatus` monta `status.symbols` via `cockpitJob.getStatus()` e anexa env/paper/groups/supervisor/promotions. Vou anexar um bloco `signals` enxuto por símbolo (RSI/slope/cross/posição). Deixa eu confirmar a assinatura do `getMemory` pra chaves com intervalo.
+
+## 🤖 Claude *(00:27:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"function getMemory|getMemory =|const getMemory|memoryKey|=>.*MEMORY\\[\" src/beholder.js | head; echo \"---\"; grep -nE \"getMemory\\(\" src/beholder.js | head -3'\necho \"=== como o regimeJob l\u00ea/escreve TREND_SLOPE (interval) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"TREND_SLOPE|TREND_CROSS|getMemory|updateMemory\" src/regimeJob.js | head -6'",
+  "description": "Check getMemory signature for interval keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 141:function invertCondition(memoryKey, conditions) {
+> 143:    const condToInvert = conds.find(c => c.indexOf(memoryKey) !== -1 && c.indexOf('current') !== -1);
+> 862:function shouldntInvert(automation, memoryKey) {
+> 884:        || memoryKey.indexOf(':LAST_ORDER') !== -1
+> 885:        || memoryKey.indexOf(':LAST_CANDLE') !== -1
+> 886:        || memoryKey.indexOf(':PREVIOUS_CANDLE') !== -1;
+> 889:async function evalDecision(memoryKey, automation) {
+> 896:            const isChecked = indexes.every(ix => MEMORY[ix] !== null && MEMORY[ix] !== undefined);
+> 899:            const invertedCondition = shouldntInvert(automation, memoryKey) ? '' : invertCondition(memoryKey, automation.conditions);
+> 947:async function testAutomations(memoryKey) {
+> ---
+> 487:    if (order.side === 'SELL' && orderTemplate.quantity === 'FARM_QTY' && getMemory(order.symbol, 'FARM_SELLING'))
+> 496:        const _dca = getMemory(order.symbol, 'FARM_DCA');
+> 1033:function getMemory(symbol, index, interval) {
+> === como o regimeJob lê/escreve TREND_SLOPE (interval) ===
+> 100:                await beholder.updateMemory(symbol, indexKeys.REGIME, null, r.regime, false);
+> 131:                // gateia por REGIME!=='bear' no MESMO tick do TREND_CROSS, então o regime precisa já
+> 134:                // escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h'] = 'golden'|'death'|'none'.
+> 142:                    // cross se o fundo NÃO estiver caindo (corta whipsaw lateral). PASSIVO; escrito ANTES do TREND_CROSS
+> 149:                    await beholder.updateMemory(symbol, indexKeys.TREND_SLOPE, INTERVAL, slope, false);
+> 156:                        const results = await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, dir, true);
+> ```
+
+## 🤖 Claude *(00:27:26)*
+
+
+## 🤖 Claude *(00:27:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/beholder.js",
+  "offset": 1033,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1033	function getMemory(symbol, index, interval) {
+> 1034	    if (symbol && index) {
+> 1035	        const indexKey = interval ? `${index}_${interval}` : index;
+> 1036	        const memoryKey = `${symbol}:${indexKey}`;
+> 1037	
+> 1038	        const result = MEMORY[memoryKey];
+> 1039	        return typeof result === 'object' ? { ...result } : result;
+> 1040	    }
+> 1041	
+> 1042	    return { ...MEMORY };
+> ```
+
+## 🤖 Claude *(00:28:34)*
+
+
+## 🤖 Claude *(00:28:35)*
+
+Confirmado o `getMemory(symbol, index, interval)`. Vou começar pelo backend: anexar o bloco `signals` (RSI 1m/15m, slope, cross, posição) por símbolo no cockpit — additive, read-only.
+
+## 🤖 Claude *(00:28:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nP=\"/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js\"\nc=open(P,encoding=\"utf-8\").read()\nold=\"\"\"    try { status.promotions = require('../utils/promotionStore').list(); } catch (_) { status.promotions = null; }\"\"\"\nnew=old+\"\"\"\n    // signals: indicadores BRUTOS do beholder por simbolo (RSI 1m/15m, slope/cross SMA, posicao Farm/Trend) \u2014 o\n    // widget de SIMULACAO ao vivo (e o agente) leem p/ mostrar TODOS os sinais + o que o sistema FARIA agora.\n    // READ-ONLY, additive, best-effort (nunca derruba o cockpit).\n    try {\n        const { indexKeys } = require('../utils/indexes');\n        const mem = (sym, idx, itv) => { try { return beholder.getMemory(sym, idx, itv); } catch (_) { return null; } };\n        for (const sym of Object.keys(status.symbols || {})) {\n            const r1 = mem(sym, 'RSI_14_1m'), r15 = mem(sym, 'RSI_14_15m');\n            const dca = mem(sym, 'FARM_DCA');\n            const tq = Number(mem(sym, 'TREND_QTY'));\n            status.symbols[sym].signals = {\n                rsi1m: (r1 && r1.current != null) ? r1.current : null,\n                rsi15m: (r15 && r15.current != null) ? r15.current : null,\n                trendSlope: mem(sym, indexKeys.TREND_SLOPE, '1h') || null,\n                trendCross: mem(sym, indexKeys.TREND_CROSS, '1h') || null,\n                farmDca: (dca && typeof dca === 'object') ? { qty: Number(dca.qty) || 0, cost: Number(dca.cost) || 0 } : null,\n                trendQty: Number.isFinite(tq) ? tq : null,\n            };\n        }\n    } catch (_) { /* best-effort */ }\"\"\"\nassert c.count(old)==1, f\"ancora {c.count(old)}x\"\nopen(P,\"w\",encoding=\"utf-8\").write(c.replace(old,new,1))\nprint(\"backend signals anexado\")\nPY\ncd backend && node --check src/controllers/analysisController.js && echo \"node --check OK\"",
+  "description": "Add signals block to cockpit payload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backend signals anexado
+> node --check OK
+> ```
