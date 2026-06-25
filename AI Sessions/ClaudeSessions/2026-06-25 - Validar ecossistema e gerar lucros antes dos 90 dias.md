@@ -11473,3 +11473,317 @@ Quando (1) estiver feito, eu provo um **Reel real publicado** ponta-a-ponta.
 ---
 
 **Próximo passo (força total):** **Fatia 3 — faceless long-form nativo** (a receita do n8n de 51s, `.claude/context/faceless-pipeline-reference`), que fecha as 4 fatias do ecossistema. Quer que eu comece a Fatia 3 agora, ou prefere que eu pare aqui pra você executar as ações pendentes (conectar Meta / CF / links) e a gente prova os fluxos reais na próxima?
+
+## 👤 User *(22:39:16)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(22:39:16)*
+
+No response requested.
+
+## 👤 User *(22:55:12)*
+
+1. Em https://login.mcorch.com/dashboard/settings preciso que tenha um link para abrir um modal ou popup de conecxão direta com o facebook certo? Dando ja as oções pois não sei onde consigo as chaves, verifique corretamente se já não existe um api ou mcp para facilitar nosso cominho aqui de autenticação e integração com a meta.
+2. Não sei como fazer isso estou com o cloudflare aberto aqui no meu googlechrome 
+3. Pronto adicionei os dois pois a TV https://www.mercadolivre.com.br/smart-tv-75-8k-neo-qled-mini-led-samsung-qn75qn900b/up/MLBU3980641251?matt_word=caga6077534&utm_source=gcrux_orchestrator&utm_medium=content_mesh&utm_campaign=highticket_smarthome_q3&utm_content=fcfa1362-8026-47f3-b8c0-13c463bc2efc não esta mais disponível.
+4. Sim ja esta sem o logo heygen obrigado.
+
+## 🤖 Claude *(22:56:02)*
+
+
+## 🤖 Claude *(22:56:03)*
+
+Quatro pontos recebidos. Deixa eu responder cada um — começando pela investigação material (Lei 1) do que já existe pra conexão Meta, do que você adicionou nos links, e do status da TV:
+
+## 🤖 Claude *(22:56:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1) Meta connect: j\u00e1 existe OAuth flow ou s\u00f3 paste manual de token? ===\"\ngrep -rlnE \"MetaConfigCard|meta_config|connectMeta|facebook.com/dialog|graph.facebook.*oauth|FACEBOOK_APP_ID|META_APP_ID|long_lived\" src/ supabase/functions/ 2>/dev/null | head\necho \"--- MetaConfigCard current UX ---\"\ngrep -nE \"long_lived|token|Conectar|Connect|oauth|dialog|input|Textarea|paste|App ID\" src/components/settings/MetaConfigCard.tsx 2>/dev/null | head -20\necho \"\"\necho \"=== existe edge fn de meta oauth? ===\"\nls supabase/functions/ | grep -iE \"meta|facebook|oauth|social-auth\" 2>/dev/null",
+  "description": "Investigate Meta connect flow + OAuth wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1) Meta connect: já existe OAuth flow ou só paste manual de token? ===
+> src/integrations/supabase/types.ts
+> src/pages/SettingsPage.tsx
+> src/lib/meta.ts
+> src/test/meta.test.ts
+> src/components/settings/MetaConfigCard.tsx
+> src/hooks/useMetaConfig.ts
+> supabase/functions/refresh-social-token/index.ts
+> supabase/functions/nurture-dispatch/index.ts
+> supabase/functions/publish-meta/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> --- MetaConfigCard current UX ---
+> 4:import { Input } from "@/components/ui/input";
+> 21:    long_lived_token: "",
+> 25:    page_access_token: "",
+> 26:    token_expires_at: "",
+> 30:  // Populate non-secret fields from status (token fields stay empty — write-only).
+> 36:      token_expires_at: status.token_expires_at ? status.token_expires_at.slice(0, 10) : "",
+> 41:    if (!form.long_lived_token.trim()) {
+> 42:      toast.error("Cole o token de longa duração da Meta antes de salvar.");
+> 47:        long_lived_token: form.long_lived_token.trim(),
+> 51:        page_access_token: form.page_access_token.trim() || undefined,
+> 52:        token_expires_at: form.token_expires_at ? new Date(form.token_expires_at).toISOString() : undefined,
+> 55:      setForm((p) => ({ ...p, long_lived_token: "", page_access_token: "" }));
+> 84:          Cole o <strong>token de longa duração</strong> (60 dias) gerado no Graph API Explorer / Business Suite.
+> 92:              Token expirado ou revogado. Gere um novo token de longa duração e cole abaixo para reconectar.
+> 104:              <Label htmlFor="meta_long_lived_token">Token de Longa Duração (User Token)</Label>
+> 106:                id="meta_long_lived_token" name="meta_long_lived_token" type="password"
+> 109:                value={form.long_lived_token}
+> 110:                onChange={(e) => setForm((p) => ({ ...p, long_lived_token: e.target.value }))}
+> 133:              <Label htmlFor="meta_token_expires">Expiração do Token (opcional)</Label>
+> 135:                id="meta_token_expires" name="meta_token_expires" type="date"
+> 
+> === existe edge fn de meta oauth? ===
+> publish-meta
+> social-auth-callback
+> social-auth-init
+> sync-meta-ads
+> ```
+
+## 🤖 Claude *(22:56:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env 2>/dev/null\nSB_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; KEY=\"${SB_SECRET_KEY}\"\nU0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== 3) O que voc\u00ea adicionou em affiliate_config.metadata.shortlinks ===\"\ncurl -s \"$SB_URL/rest/v1/affiliate_config?user_id=eq.$U0&select=metadata\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(json.dumps(d[0]['metadata'].get('shortlinks',{}),ensure_ascii=False,indent=1) if d else 'none')\" 2>/dev/null\necho \"\"\necho \"=== TV product status (MLB4699602679 / MLBU3980641251) \u2014 dispon\u00edvel? ===\"\ncurl -s \"$SB_URL/rest/v1/vm_affiliate_products?select=external_id,title,is_active,price&or=(external_id.eq.MLB4699602679,external_id.eq.MLBU3980641251)\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(' ',x['external_id'],'active=',x['is_active'],x.get('title','')[:40]) for x in d]\" 2>/dev/null",
+  "description": "Check added shortlinks + TV product status"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> === 3) O que você adicionou em affiliate_config.metadata.shortlinks ===
+> {
+>  "MLB27834876": "https://meli.la/2gh13Sw",
+>  "MLB32642694": "https://meli.la/15TrwDk"
+> }
+> 
+> === TV product status (MLB4699602679 / MLBU3980641251) — disponível? ===
+> ```
+
+## 🤖 Claude *(22:56:37)*
+
+
+## 🤖 Claude *(22:56:40)*
+
+Material findings:
+- **Você adicionou o link assinado do Family Hub** (`MLB32642694` → meli.la/15TrwDk) ✅ — agora **2 de 3 produtos** são sale-attributable (Roborock + Family Hub). A TV não entrou (está indisponível).
+- **Existe infra de OAuth:** `social-auth-init` + `social-auth-callback`. A questão é se já cobre Facebook/Meta com os escopos de publish. O card atual é só **paste manual** de token (o que você não sabe gerar).
+
+Let me check if the OAuth flow already supports Facebook, handle the unavailable TV, and backfill the Family Hub link:
+
+## 🤖 Claude *(22:56:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== social-auth-init: suporta facebook/meta + escopos de publish? ===\"\ngrep -nE \"facebook|meta|instagram|provider|scope|client_id|APP_ID|dialog/oauth|graph.facebook|pages_|business_management|instagram_content_publish\" supabase/functions/social-auth-init/index.ts 2>/dev/null | head -25",
+  "description": "Check social-auth-init Facebook support"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === social-auth-init: suporta facebook/meta + escopos de publish? ===
+> 11:const INSTAGRAM_AUTH_URL = "https://api.instagram.com/oauth/authorize";
+> 68:      const scopes = "openid profile email w_member_social";
+> 69:      authUrl = `${LINKEDIN_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scopes)}`;
+> 71:    } else if (platform === "instagram" || platform === "facebook") {
+> 72:      const appId = Deno.env.get("INSTAGRAM_APP_ID");
+> 79:      const scopes = "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_messages";
+> 80:      authUrl = `${INSTAGRAM_AUTH_URL}?client_id=${appId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scopes)}&response_type=code`;
+> 92:      const scopes = "tweet.read tweet.write users.read offline.access";
+> 93:      authUrl = `${TWITTER_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scopes)}&code_challenge=${codeChallenge}&code_challenge_method=plain`;
+> ```
+
+## 🤖 Claude *(22:56:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env 2>/dev/null\nSB_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; KEY=\"${SB_SECRET_KEY}\"\nU0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== TV product (re-query, single) ===\"\ncurl -s \"$SB_URL/rest/v1/vm_affiliate_products?external_id=eq.MLB4699602679&select=external_id,title,is_active\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool 2>/dev/null\necho \"=== Family Hub affiliate_links (backfill p/ meli.la/15TrwDk) ===\"\ncurl -s -o /dev/null -w \"PATCH family hub links \u2192 HTTP %{http_code}\\n\" -X PATCH \\\n  \"$SB_URL/rest/v1/affiliate_links?user_id=eq.$U0&product_id=eq.MLB32642694&short_url=like.https://www.mercadolivre*\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" \\\n  -d '{\"short_url\":\"https://meli.la/15TrwDk\",\"original_url\":\"https://meli.la/15TrwDk\"}'\necho \"=== Deactivate the unavailable TV so the autopilot won't target a dead product ===\"\ncurl -s -o /dev/null -w \"PATCH TV is_active=false \u2192 HTTP %{http_code}\\n\" -X PATCH \\\n  \"$SB_URL/rest/v1/vm_affiliate_products?external_id=eq.MLB4699602679\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" \\\n  -d '{\"is_active\":false}'",
+  "description": "TV status + Family Hub backfill + deactivate TV"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TV product (re-query, single) ===
+> {
+>     "code": "42703",
+>     "details": null,
+>     "hint": null,
+>     "message": "column vm_affiliate_products.title does not exist"
+> }
+> === Family Hub affiliate_links (backfill p/ meli.la/15TrwDk) ===
+> PATCH family hub links → HTTP 204
+> === Deactivate the unavailable TV so the autopilot won't target a dead product ===
+> PATCH TV is_active=false → HTTP 204
+> ```
+
+## 🤖 Claude *(22:57:51)*
+
+
+## 🤖 Claude *(22:57:55)*
+
+Material progress on your 4 points:
+- **TV indisponível → desativada** (`is_active=false`, HTTP 204) — o Autopilot não vai mais mirar o produto morto.
+- **Family Hub backfillado** pro link assinado `meli.la/15TrwDk` (HTTP 204) — agora **2/3 produtos sale-attributable** (Roborock + Family Hub). 
+- **White-label** ✅ confirmado, valeu.
+
+Sobre **Meta connect**: existe OAuth (`social-auth-init/callback`) mas o path Facebook/Instagram dele popula `social_accounts` (básico), **não** o `meta_config` que o publish-meta precisa (token long-lived + página FB + IG Business). Deixa eu ver o callback pra decidir o caminho mais barato pro "Conectar com Facebook" de 1 clique:
+
+## 🤖 Claude *(22:57:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== social-auth-callback: facebook/meta token exchange + o que popula ===\"\ngrep -nE \"facebook|meta_config|instagram|pages|business_account|long.lived|access_token|exchange|graph.facebook|me/accounts|social_accounts|upsert|insert\" supabase/functions/social-auth-callback/index.ts 2>/dev/null | head -30\necho \"\"\necho \"=== como o useMetaConfig SALVA o meta_config (edge fn / view / rpc)? ===\"\ngrep -nE \"meta_config|invoke|upsert|insert|rpc|from\\(\" src/hooks/useMetaConfig.ts 2>/dev/null | head -15",
+  "description": "Read social-auth-callback meta handling + meta_config save path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === social-auth-callback: facebook/meta token exchange + o que popula ===
+> 43:    // so social_accounts can never be written for an attacker-chosen tenant (cross-tenant account-linking).
+> 85:      if (!tokenRes.ok) throw new Error(tokenData.error_description || "LinkedIn token exchange failed");
+> 87:      accessToken = tokenData.access_token;
+> 99:    } else if (platform === "instagram" || platform === "facebook") {
+> 104:      const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
+> 116:      if (!tokenRes.ok || tokenData.error_type) throw new Error(tokenData.error_message || "Instagram token exchange failed");
+> 118:      const shortToken = tokenData.access_token;
+> 121:      // Exchange for long-lived token (60 days)
+> 123:        `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${appSecret}&access_token=${shortToken}`
+> 126:      accessToken = longData.access_token || shortToken;
+> 128:      scopes = ["instagram_business_basic", "instagram_business_content_publish"];
+> 131:      const meRes = await fetch(`https://graph.instagram.com/v21.0/me?fields=username,name&access_token=${accessToken}`);
+> 156:      if (!tokenRes.ok) throw new Error(tokenData.error_description || tokenData.detail || "Twitter token exchange failed");
+> 158:      accessToken = tokenData.access_token;
+> 181:      .from("social_accounts")
+> 182:      .upsert(
+> 186:          access_token: accessToken,
+> 198:      console.error("DB upsert error:", dbError);
+> 199:      await supabase.from("social_accounts").insert({
+> 202:        access_token: accessToken,
+> 
+> === como o useMetaConfig SALVA o meta_config (edge fn / view / rpc)? ===
+> 15: * Per-user Meta credentials (meta_config). BYOK model — mirrors useAffiliateConfig.
+> 21:  // meta_config is not in the generated Database types yet (added by migration 20260530210000);
+> 26:    queryKey: ['meta_config', user?.id],
+> 29:        .from('meta_config')
+> 39:  const upsertConfig = useMutation({
+> 57:          .from('meta_config')
+> 63:          .from('meta_config')
+> 64:          .insert({ user_id: user!.id, ...writable });
+> 69:      queryClient.invalidateQueries({ queryKey: ['meta_config', user?.id] });
+> 78:      const { error } = await db.rpc('disconnect_meta');
+> 82:      queryClient.invalidateQueries({ queryKey: ['meta_config', user?.id] });
+> 89:    upsertConfig,
+> ```
+
+## 🤖 Claude *(22:58:31)*
+
+
+## 🤖 Claude *(22:58:32)*
+
+The existing Instagram path uses **Instagram Business Login** (`instagram_business_content_publish` scope → `social_accounts`) — a simpler one-click path than the manual token. And memory says you already have an **"App MCORCH-IG em modo desenvolvimento"**. Let me check if the app keys are configured + whether there's already a connect button:
+
+## 🤖 Claude *(22:58:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Meta/Instagram app keys configured? (env names only, not values) ===\"\ngrep -oE \"INSTAGRAM_APP_ID|INSTAGRAM_APP_SECRET|META_APP_ID|META_APP_SECRET|FACEBOOK_APP_ID\" .env 2>/dev/null | sort -u || echo \"(none in .env)\"\necho \"\"\necho \"=== existing 'Connect Instagram/Facebook' button in the UI? ===\"\ngrep -rlnE \"social-auth-init|Conectar.*Instagram|Conectar.*Facebook|connectSocial|social-auth\" src/ 2>/dev/null | head\necho \"--- where social connect is triggered ---\"\ngrep -rnE \"social-auth-init|invoke\\(.social\" src/ 2>/dev/null | head -5\necho \"\"\necho \"=== Settings page: which cards are mounted? ===\"\ngrep -nE \"Card|Meta|Social|Affiliate|WordPress|import\" src/pages/SettingsPage.tsx 2>/dev/null | grep -iE \"card|connectors\" | head",
+  "description": "Check Meta app keys + existing connect button + settings cards"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Meta/Instagram app keys configured? (env names only, not values) ===
+> 
+> === existing 'Connect Instagram/Facebook' button in the UI? ===
+> src/pages/SocialCallback.tsx
+> src/hooks/useSocialAccounts.ts
+> --- where social connect is triggered ---
+> src/pages/SocialCallback.tsx:45:        const { data, error: fnError } = await supabase.functions.invoke('social-auth-callback', {
+> src/hooks/useSocialAccounts.ts:50:    const { data, error } = await supabase.functions.invoke('social-auth-init', {
+> 
+> === Settings page: which cards are mounted? ===
+> 6:import { MetaConfigCard } from "@/components/settings/MetaConfigCard";
+> 7:import { McpConnectorsCard } from "@/components/settings/McpConnectorsCard";
+> 10:import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+> 231:      <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
+> 232:        <CardHeader>
+> 233:          <CardTitle className="flex items-center gap-2 text-primary">
+> 236:          </CardTitle>
+> 237:          <CardDescription>
+> 240:          </CardDescription>
+> 241:        </CardHeader>
+> ```
+
+## 🤖 Claude *(22:59:49)*
+
+
+## 🤖 Claude *(22:59:51)*
+
+The picture is genuinely tangled (Meta has two API paths + two tables). Let me check the decisive fact: is your **already-connected Instagram** (`social_accounts`, is_active=true) actually publish-capable, and via which path — so I point the Reel button at the right place instead of the empty `meta_config`:
+
+## 🤖 Claude *(22:59:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== publish-social IG path (which API + token) ===\"\ngrep -nE \"instagram|graph.facebook|graph.instagram|platform_user_id|media_type|REELS|video|image_url|/media|access_token\" supabase/functions/publish-social/index.ts 2>/dev/null | sed -n '1,25p'\necho \"\"\nsource .env 2>/dev/null\nSB_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"; KEY=\"${SB_SECRET_KEY}\"\necho \"=== connected IG token: scopes + platform_user_id (publish-ready?) ===\"\ncurl -s \"$SB_URL/rest/v1/decrypted_social_accounts?platform=eq.instagram&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=platform_user_id,platform_username,scopes,token_expires_at,is_active\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(' user_id=',x.get('platform_user_id'),'| user=',x.get('platform_username'),'| scopes=',x.get('scopes'),'| active=',x.get('is_active'),'| exp=',x.get('token_expires_at')) for x in d] if isinstance(d,list) else print(d)\" 2>/dev/null",
+  "description": "Check publish-social IG path + connected IG token readiness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publish-social IG path (which API + token) ===
+> 83:    // Refresh token if expired, then re-fetch account to get the new access_token
+> 100:      // re-fetch to get the updated access_token
+> 103:        .select("access_token, refresh_token, token_expires_at")
+> 107:        account.access_token = refreshedAccount.access_token;
+> 118:          Authorization: `Bearer ${account.access_token}`,
+> 123:          author: `urn:li:person:${account.platform_user_id}`,
+> 140:    } else if (platform === "instagram") {
+> 141:      const igAccountId = account.platform_user_id;
+> 143:        `https://graph.facebook.com/v19.0/${igAccountId}/media`,
+> 149:            image_url: content.image_url,
+> 150:            access_token: account.access_token,
+> 161:        `https://graph.facebook.com/v19.0/${igAccountId}/media_publish`,
+> 167:            access_token: account.access_token,
+> 178:      const pageId = account.platform_user_id;
+> 180:        `https://graph.facebook.com/v19.0/${pageId}/feed`,
+> 186:            access_token: account.access_token,
+> 200:          Authorization: `Bearer ${account.access_token}`,
+> 
+> === connected IG token: scopes + platform_user_id (publish-ready?) ===
+>  user_id= 26558143600461172 | user= magicorch | scopes= ['instagram_business_basic', 'instagram_business_content_publish'] | active= True | exp= 2026-07-03T14:27:27.199+00:00
+> ```
