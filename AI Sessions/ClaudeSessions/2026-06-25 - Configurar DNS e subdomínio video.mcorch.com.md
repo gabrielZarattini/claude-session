@@ -10151,5 +10151,5 @@ Quando voltar, recomendo abrir pela **Fatia 2 (vídeo→Meta Reels)** — a prim
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-25 - Analisar paper e oportunidades de trading]]
-> * **Próxima Sessão**: [[2026-06-25 - agent-a13726355cd60b416]]
+> * **Próxima Sessão**: [[2026-06-25 - Validar ecossistema e gerar lucros antes dos 90 dias]]
 %% --- TIMELINE END --- %%
