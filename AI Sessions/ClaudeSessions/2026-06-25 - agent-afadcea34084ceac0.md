@@ -453,3 +453,15 @@ The harness is wrapping my input in a `raw`/`len` envelope. I need to pass the a
 ## 🤖 Claude *(00:59:23)*
 
 Let me write the structured object as proper JSON fields. I'll keep prose tighter to avoid any control-character issues and pass it as a clean object.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - agent-aebc560e7f259586d]]
+%% --- TIMELINE END --- %%

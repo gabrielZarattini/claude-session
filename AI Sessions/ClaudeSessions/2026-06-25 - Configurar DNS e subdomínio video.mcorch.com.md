@@ -5368,3 +5368,2360 @@ Adiantando o que **já está provado material** sobre o bug enquanto o resto map
 **O bug (root-cause confirmado):** o projeto `63d406fe` tem `vm_canvas_projects.graph = {nodes: [], edges: []}` — o grafo foi **salvo vazio**, `updated_at` de hoje (quando você abriu). Os **assets sobrevivem** porque ficam em tabela separada (`vm_canvas_executions`, 4 execuções). O padrão é uma **race de load/save**: ao abrir, o ReactFlow inicializa vazio → o save debounced grava `[]` no DB **antes** dos nós carregarem → sobrescreve. O fix é um guard simples (não salvar até o grafo hidratar / não sobrescrever um grafo não-vazio com vazio). O workflow vai confirmar a linha exata e dizer se dá pra reconstruir os nós perdidos a partir dos assets.
 
 Sobre a sua visão maior (o ponto mais importante): a resposta que estou montando gira em torno de um **registro canônico de assets** — uma "barra de assets" compartilhada que todo módulo escreve e lê (OpenDesign, HyperFrames, Canvas Studio, pipeline de conteúdo), com proveniência (`parent_asset_id`), pra um asset de um virar insumo do outro nos dois sentidos, e daí fluir pras redes. Vou trazer isso aterrado nos buckets/tabelas que já existem (reuso, não reinvenção), com o caminho mais curto até a **primeira saída real numa rede social**. Já volto.
+
+## 👤 User *(01:02:29)*
+
+<task-notification>
+<task-id>w56fbqp60</task-id>
+<tool-use-id>toolu_01JtGyXWV3MGgUnztahMLeKa</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f89447ed-b201-43c6-854d-dd580cb8996c/tasks/w56fbqp60.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Map Canvas Studio vs Orquestra + ecosystem asset interop + root-cause the empty-canvas bug, then synthesize a recommendation + blueprint" completed</summary>
+<result>{"maps":[{"surface":"canvas-persistence-and-bug","findings":["RACE CONDITION CONFIRMED: In src/pages/CanvasEditorPage.tsx:86-195, the useEffect hook that loads a project runs asynchronously, but useAutoSave (instantiated at line 238 via src/hooks/useAutoSave.ts:16-84) subscribes to Zustand store changes IMMEDIATELY. The store initializes with empty arrays (src/store/useCanvasStore.ts:62-68: nodes: [], edges: []), and useAutoSave's dependency array (line 65: [projectId, nodes, edges, viewport, pipelineMode, lanes, styleSettings]) triggers a save whenever ANY of these change.","EXACT MECHANISM — Three debounces create the race: (1) Zustand's temporal handleSet in src/store/useCanvasStore.ts:147-152 debounces for 500ms before updating the store snapshot. (2) useAutoSave debounces for 3000ms (AUTOSAVE_DEBOUNCE_MS at src/hooks/useAutoSave.ts:8) before flushing to DB via useSaveCanvasGraph. (3) The cleanup timeout at CanvasEditorPage.tsx:193 clears undo history 600ms after initialize() is called. ISSUE: If a user opens a project, the initialize() call at line 185 executes, but before project.graph has fully hydrated into store.nodes, any Zustand state mutation (or initial render of CanvasShell) can trigger useAutoSave's effect. The empty nodes array [] is what gets saved first.","SPECIFIC RACE WINDOW: (Timeline in milliseconds from project load start) At T=0ms, project loaded with graph={nodes:[...], edges:[...]} from DB. At T=0-10ms, initialize() called (line 185) which calls set() in Zustand, queuing a state update. At T=1-500ms, Zundo's debounce (handleSet) is active; store snapshot not yet committed. At T=50-100ms (CONCURRENT), CanvasShell renders with useAutoSave hook. If any reactive dependency changes (including the initial store subscription), useAutoSave's effect fires (line 54-65). At T=100-500ms, useAutoSave's first setTimeout (line 61) waits AUTOSAVE_DEBOUNCE_MS=3000ms. At T=500ms, Zundo handleSet fires: does store.nodes still have the loaded nodes? Only if Zustand's set() from initialize() completed BEFORE useAutoSave subscribed. If not, store.nodes is still [] from initial state (line 62). At T=3100ms, useAutoSave flushes flush.current() (line 62) calling saveGraph.mutateAsync() which writes {nodes:[], edges:[]} to vm_canvas_projects.graph in DB.","WHY ASSETS SURVIVE: vm_canvas_assets and vm_canvas_executions are separate tables (not joined to graph). The Assets tab queries vm_canvas_executions (useCanvasExecutions at CanvasEditorPage.tsx:79, useCanvasStudio.ts:264-286) which is NOT affected by the graph save. The execution records still have output_url and other metadata, so they display correctly even though the graph is empty.","MISSING GUARD: There is NO check in useSaveCanvasGraph (src/hooks/useCanvasStudio.ts:151-173) or useAutoSave to prevent writing an empty graph over a non-empty one. The mutation at line 163-166 blindly updates vm_canvas_projects.graph = graph without validating that nodes.length &gt; 0 or that the save isn't overwriting a richer state. Additionally, there is NO flag to disable auto-save during the hydration window.","ROOT HYPOTHESIS CONFIRMED by code inspection: When a project with existing nodes opens, useAutoSave's dependency array can fire BEFORE Zustand's initialize() has fully committed the nodes to store state. The 500ms Zundo debounce can interfere with the timing. If initialize() sets nodes but the store hasn't published them to React subscribers by the time useAutoSave checks (via useCanvasStore((s) =&gt; s.nodes) at line 17), it reads the initial [] and saves that empty array 3 seconds later. The 600ms undo-clear (line 193) is meant to clean temporal history, but it happens AFTER the initial state has already been saved by useAutoSave."],"files":["src/store/useCanvasStore.ts:58-80 (initialize function with empty defaults)","src/store/useCanvasStore.ts:134-140 (getPersistedGraph method — returns what is saved)","src/store/useCanvasStore.ts:147-152 (Zundo handleSet debounce — 500ms)","src/pages/CanvasEditorPage.tsx:86-195 (useEffect that loads project and initializes store)","src/pages/CanvasEditorPage.tsx:193 (600ms timeout to clear undo history)","src/hooks/useAutoSave.ts:8 (AUTOSAVE_DEBOUNCE_MS = 3000)","src/hooks/useAutoSave.ts:16-84 (useAutoSave hook with dependency array that triggers on nodes/edges change)","src/hooks/useAutoSave.ts:54-65 (effect that sets up debounce for auto-save)","src/hooks/useCanvasStudio.ts:151-173 (useSaveCanvasGraph mutation with NO empty-graph guard)","supabase/migrations/20260514040200_viralmind_canvas_studio.sql:9 (vm_canvas_projects.graph default and structure)"],"risks":["SEVERITY: HIGH — Data loss of canvas nodes for any project opened when auto-save races ahead of hydration. The bug is intermittent because it depends on timing: if the user's device is slow, or if React batches renders, the window widens. Fast devices may not hit the race.","DATA RECOVERY: For the buggy project (63d406fe-8357-4b90-b1ac-9ef2c0c2a975), the nodes ARE UNRECOVERABLE from the current schema. vm_canvas_executions has no back-link to reconstruct the node graph structure (no edges, no node positions, no node labels). The execution records prove THAT work happened, but not the visual graph topology.","REGRESSION RISK: Any future change to useAutoSave's dependency array or Zundo's debounce timing could re-trigger or hide this race condition.","ATOMIC UPDATE MISSING: There is no transaction to ensure that if auto-save fires, it only saves a non-empty graph or rolls back to the previous non-empty state."],"recommendation":"MINIMAL FIXES (in priority order): (1) Add a guard in useSaveCanvasGraph (src/hooks/useCanvasStudio.ts:151-173): check if graph.nodes.length === 0 AND the DB row already has nodes — if so, reject or warn. (2) Add a hydration-complete flag: in CanvasEditorPage.tsx, set a ref like const hydrated = useRef(false) immediately after initialize() returns, then in useAutoSave, check hydrated.current before allowing the first save. (3) Move the auto-save setup to AFTER the temporal undo-clear timeout (600ms) so the store state is definitely committed. (4) Or: disable auto-save entirely until initialize() resolves and the store has confirmed the nodes are present via a selector check. For the lost nodes in this project: restore from a recent backup if available, or add a recovery RPC that reconstructs the graph from vm_canvas_executions and vm_canvas_assets metadata (label, position, connections inferred from input_asset_id chains)."},{"surface":"orquestra-vs-canvas-fit","findings":["Canvas Studio (useCanvasStore + vm_canvas_projects.graph) is purpose-built for visual node pipelines: generateImage → imageToVideo with reference threading, seed-locking, and persistent execution tracking (vm_canvas_assets, vm_canvas_executions). It has proven handle contracts (input_prompt/output_image; input_image/output_video), idempotent graph seeding, and tight integration with canvas-execute edge function.","Orquestra (Visual Orchestrator, useOrchestrationStore) is designed for multi-agent content orchestration (trigger→agents→quality gate→publish), with fixed node types (TriggerNode, AgentNode, SceneNode, QualityGateNode, PublishNode) mapped to Supabase orchestrate-content edge function. It tracks coin costs and stability scores per node, but lacks the visual output persistence model and reference-threading architecture that Canvas has.","HyperFrames (video.mcorch.com) is an iframe'd standalone NLE with React 19 on 127.0.0.1:3210 — it is NOT integrated bidirectionally with either surface yet. Current VideoEditorPage is a simple iframe wrapper (no postMessage, no asset marshalling). VideoStudioPage handles standalone faceless + HyperFrames render submission via useVideoRender hook (fire-and-forget to video-render edge fn).","For a design-to-video workflow (script→scenes→layers→render→publish), the stages are: (1) Design input/brief, (2) Scene composition (character + layout), (3) Layer assembly (overlay
+... (truncated 41711 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f89447ed-b201-43c6-854d-dd580cb8996c/tasks/w56fbqp60.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>364886</subagent_tokens><tool_uses>131</tool_uses><duration_ms>626654</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:02:32)*
+
+
+## 🤖 Claude *(01:02:32)*
+
+Workflow fechou (5 agentes, 131 tool-uses). Vou extrair a síntese completa:
+
+## 🤖 Claude *(01:02:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f89447ed-b201-43c6-854d-dd580cb8996c/tasks/w56fbqp60.output | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\ns=d['result']['synth']\ndef line(t): print(t)\nline('========== BUG FIX ==========')\nbf=s['bug_fix']\nline('ROOT CAUSE: '+bf['root_cause'])\nline('')\nline('FIX: '+bf['fix'])\nline('')\nline('RECOVERABLE: '+bf['recoverable'])\nline('')\nline('========== SURFACE RECOMMENDATION ==========')\nsr=s['surface_recommendation']\nline('CHOICE: '+sr['choice'])\nline('WHY: '+sr['why'])\nline('STAGES:')\nfor x in sr['stages']: line('  - '+x)\nline('')\nline('========== INTEROP BLUEPRINT ==========')\nib=s['interop_blueprint']\nline('REGISTRY: '+ib['registry'])\nline('')\nline('BIDIRECTIONAL FLOWS:')\nfor x in ib['bidirectional_flows']: line('  - '+x)\nline('')\nline('REUSES EXISTING:')\nfor x in ib['reuses_existing']: line('  - '+x)\nline('')\nline('========== PHASED PLAN ==========')\nfor i,x in enumerate(s['phased_plan'],1): line(f'  {i}. {x}')\nline('')\nline('========== BOK GATE ==========')\nline(s['bok_gate'])\nline('')\nline('========== OPEN DECISIONS ==========')\nfor x in s['open_decisions']: line('  - '+x)\n\"",
+  "description": "Extract full synthesis from workflow output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ========== BUG FIX ==========
+> ROOT CAUSE: Race between async project hydration and the auto-save subscription. CanvasEditorPage.tsx:185 calls store.initialize(project.graph), but useAutoSave subscribes to nodes/edges on mount (useAutoSave.ts:17-22) and flushes 3000ms after any dep change. Store boots empty (useCanvasStore.ts:62-68); Zundo 500ms debounce (useCanvasStore.ts:147-152) delays the committed snapshot. If the first reactive change fires before initialize() publishes loaded nodes to subscribers, flush.current() reads getPersistedGraph()={nodes:[]} and overwrites the rich DB row. useSaveCanvasGraph (useCanvasStudio.ts:151-173) has NO empty-graph guard; the firstRun ref (useAutoSave.ts:56-59) only skips effect run #1, not the hydration-window writes. Exactly matches 63d406fe: graph={nodes:[]}, updated_at today, while assets survive in vm_canvas_executions (separate table, untouched by the graph save).
+> 
+> FIX: Two layered minimal guards. PRIORITY (ship first): empty-graph guard in useSaveCanvasGraph at src/hooks/useCanvasStudio.ts:163-166 -- reject the persist when incoming graph.nodes.length===0 AND the existing DB row already has nodes.length>0 (read-before-write, ideally a guarded SECURITY DEFINER RPC save_canvas_graph doing the check atomically). This alone stops ALL future loss regardless of client timing. SECOND: replace the firstRun ref in src/hooks/useAutoSave.ts with an explicit `enabled` flag that CanvasEditorPage sets true only AFTER initialize() resolves and the 600ms undo-clear timeout (CanvasEditorPage.tsx:193) fires; gate the effect at useAutoSave.ts:55 on it so no save can fire during hydration.
+> 
+> RECOVERABLE: YES, partially and high-value -- the 'unrecoverable' verdict in one surface map is WRONG. vm_canvas_executions (migration 20260514040200, lines 48-71) stores node_id (the exact ReactFlow node id string), node_type, prompt/negative_prompt, provider, model, output_url, and the input_asset_id->output_asset_id lineage chain. A one-shot recovery RPC can rebuild each node (id + type + prompt + output_url from the success rows) and INFER edges from the input/output asset chain. ONLY node x/y positions are unrecoverable (they lived solely in the lost graph jsonb) -- apply an auto-layout (dagre/ELK) on rebuild. Topology, content, and outputs ARE recoverable for 63d406fe.
+> 
+> ========== SURFACE RECOMMENDATION ==========
+> CHOICE: Hybrid -- Canvas Studio is the creative authoring home; Orquestra is the optional downstream publish/quality-gate run. Build the video-maker AS a Canvas Studio extension that hands off to the LIVE HyperFrames editor (video.mcorch.com) and only routes to Orquestra for multi-platform publish.
+> WHY: Canvas Studio already owns the visual-content primitives the flow needs: typed nodes, reference threading + seed-lock for consistency, persistent outputs (vm_canvas_assets/executions), and a proven image->video bridge via canvas-execute. Orquestra has ZERO visual-authoring primitives (fixed agent/trigger/publish node types) -- forcing scene composition into AgentNodes fights its orchestration purpose. Conversely Canvas has no quality-gate/multi-platform publish opinion, which is exactly Orquestra's strength. So: author + render in Canvas, publish via Orquestra. Pure-Canvas muddies its content focus with publish logic; pure-Orquestra can't author. Loose coupling (Canvas is source of truth, Orquestra publish is a separate run) lets the user re-edit the design after a failed publish without losing the graph.
+> STAGES:
+>   - 1. Objective/Brief -- pick goal (channel + product/affiliate) on a Trigger/Brief node; this seeds the angle (reuse FR-VA-018 trend-informed angle).
+>   - 2. Script/Copy -- generate hook/caption/CTA via generate-content (the HyperFrames viral-short-9x16 props: hook, caption, cta, brand).
+>   - 3. Design assets -- generateImage / sceneCompose nodes (Nano Banana via OpenRouter Gemini) with reference+seed for product-consistent visuals; can pull an existing OpenDesign image as the base.
+>   - 4. Video composition (HyperFrames) -- new ExportScene node serializes {layers, product_image_url, props, duration, fps, template} into the HyperFrames input schema; VideoRender node postMessages it into the video.mcorch.com iframe (or calls video-render edge fn).
+>   - 5. Render -- HyperFrames render-core (Playwright+FFmpeg, deterministic 1080x1920 MP4) finalizes via finalize_video_render; output written to video-studio-assets + a vm_canvas_executions/asset row so it lands back on the Canvas graph.
+>   - 6. Publish -- attach ML affiliate link (monetizeForProduct), then route the MP4 to social: Meta Reels first (publish-meta /media media_type=VIDEO), TikTok/YouTube Shorts deferred to Tier 2. Optional Orquestra QualityGate (duration/codec/size) + PublishNode for branching.
+> 
+> ========== INTEROP BLUEPRINT ==========
+> REGISTRY: New canonical table public.creative_assets (the asset spine of the ecosystem). Columns: id uuid pk; user_id uuid (RLS auth.uid()=user_id, FOR ALL); kind text CHECK (image|video|audio|design|article|layout|template); storage_bucket text; storage_key text; mime_type, file_size_bytes, width, height, duration_seconds; parent_asset_id uuid -> creative_assets(id) (provenance/lineage); source_module text (canvas-studio|hyperframes|open-design|content-pipeline|generate-image); source_job_id text (polymorphic: execution_id|render_id|design_job_id|operation_id); mesh_node_id uuid -> mcorch_nodes(id); provider, model, prompt; metadata jsonb; tags text[]; is_favorite bool; created_at. Indexes: (user_id), (kind), (parent_asset_id), (source_module, source_job_id), (mesh_node_id). It is a thin REGISTRY/index over existing storage -- bytes stay in their current buckets; modules dual-write during transition. provenance = parent_asset_id chain + mesh_node_id, giving the Sovereign end-to-end 'design -> remix -> video -> post -> engagement' visibility.
+> 
+> BIDIRECTIONAL FLOWS:
+>   - OpenDesign image -> Canvas Studio base layer: design-bridge writes creative_assets(kind=design); Canvas asset-picker queries kind in (design,image) and threads it as the reference image into generateImage/sceneCompose.
+>   - Canvas image -> HyperFrames layer: canvas-execute writes creative_assets(kind=image); HyperFrames ExportScene pulls kind=image from canvas-studio/open-design as product_image_url / overlay layers.
+>   - HyperFrames render -> Content pipeline + social publish: video-bridge writes creative_assets(kind=video) and auto-attaches to content_library.media_url + a scheduled_post so the 9:16 MP4 reaches Meta Reels (closes the current video->social orphan gap).
+>   - Content pipeline article image -> Canvas/HyperFrames reuse: generate-image registers kind=image (durable, not just an ephemeral signed URL) so it is reusable instead of regenerated.
+>   - Any module -> Knowledge Mesh: every creative_assets row links mesh_node_id, so HyperFrames/Canvas can ask the mesh 'fetch my recent product images for remix' and revenue attribution can trace which creative drove a click.
+> 
+> REUSES EXISTING:
+>   - REUSE buckets: canvas-assets, video-studio-assets, generated-images, public/canvas-design -- creative_assets only POINTS at them (storage_bucket/storage_key), no data migration.
+>   - REUSE tables: vm_canvas_assets, video_assets, design_artifact_refs, content_library.media_url -- kept as-is; modules dual-write to creative_assets (optional nullable creative_asset_id back-ref for traceability).
+>   - REUSE mcorch_nodes for mesh/provenance (add nullable asset_id + the already-code-used user_id column missing from schema).
+>   - NET-NEW: only creative_assets (+ its indexes/RLS) and a scheduled_post video back-link (content_library.video_render_id nullable FK) to wire video->social.
+> 
+> ========== PHASED PLAN ==========
+>   1. P0 (today, data integrity): ship the empty-graph guard in useSaveCanvasGraph + run the recovery RPC to rebuild 63d406fe nodes from vm_canvas_executions with auto-layout. Stops the bleeding and restores the lost work. Then add the useAutoSave hydration gate.
+>   2. P1 (SHORTEST PATH to first real social output): wire the EXISTING HyperFrames render -> social. Add content_library.video_render_id + a scheduled_post for video, and extend publish-meta to accept video_url (Meta Reels /media media_type=VIDEO). This produces a real 9:16 video on Instagram/Facebook using assets the ecosystem already generates -- tangible win, minimal surface.
+>   3. P2 (creative flow MVP): build the Canvas Studio ExportScene + VideoRender node types that postMessage into the live video.mcorch.com iframe and write the render back as a vm_canvas_execution/asset. Now the objective->script->design->video->render path is one canvas.
+>   4. P3 (interop spine): create creative_assets registry; dual-write from canvas-execute, video-bridge, design-bridge, generate-image, orchestrate-content. Unlocks the first bidirectional flow (OpenDesign image -> Canvas base; Canvas image -> HyperFrames layer).
+>   5. P4 (full ecosystem + provenance): asset-picker UI across modules reading creative_assets; mesh_node_id + parent_asset_id provenance for the Sovereign's end-to-end flow view; Orquestra QualityGate/Publish branch.
+>   6. P5 (deferred, Tier 2/3): TikTok + YouTube Shorts OAuth + publish-tiktok/publish-youtube-shorts (the highest-velocity 9:16 channels), per existing Usuario-1 deferral.
+> 
+> ========== BOK GATE ==========
+> "YES -- two amendments, no new suite. (1) AMEND video-studio BoK (FRD Amendment, the active VS-UI slice) to cover the Canvas-hosted video-maker flow: the ExportScene/VideoRender node contract, the HyperFrames postMessage handoff schema, and video->social publish (Meta Reels). This is a new orchestrated flow + iframe integration contract, so it exceeds the single-file-bugfix exemption and must be documented before code. (2) AMEND canvas-design / mcorch-constellation BoK for the creative_assets canonical registry (new table = new migration = /security-review + cross-tenant RLS), since it is a cross-module architectural change spanning Canvas, HyperFrames, OpenDesign and content-pipeline. EXEMPT (no BoK gate): the P0 bug fix (empty-graph guard + hydration gate + recovery RPC) -- single-file bug patch scoped to an existing documented feature; ship immediately."
+> 
+> ========== OPEN DECISIONS ==========
+>   - Recovery of 63d406fe: authorize the rebuild RPC (nodes from vm_canvas_executions, edges inferred from input/output asset chain, auto-layout positions) -- accept that x/y positions are reconstructed, not original?
+>   - Video-maker home: confirm the Hybrid (Canvas authors + HyperFrames renders + Orquestra/Meta publishes) over a pure-Canvas or pure-Orquestra build.
+>   - First social channel for the P1 win: Meta Reels (Instagram/Facebook -- already wired credentials) vs waiting for TikTok/YouTube Shorts (need new OAuth, Usuario-1 deferral). Recommend Meta Reels now.
+>   - creative_assets rollout: dual-write transition (both old + new tables) vs a hard cut -- and whether content_library.media_url gains a creative_asset_id back-ref.
+>   - Single-tenant gate: HyperFrames + video-bridge are User-0 single-tenant (FMEA-VS-001 multi-tenant hardening deferred). Keep the video-maker User-0-only for the first ship, or pull multi-tenant hardening forward?
+>   - BoK sequencing vs first win: ship P1 (video->Meta Reels) under the FRD amendment in-flight, or seal the video-studio FRD amendment fully before any P1 code?
+> ```
+
+## 🤖 Claude *(01:03:15)*
+
+
+## 🤖 Claude *(01:03:17)*
+
+Síntese completa e decisiva. Antes de te apresentar a recomendação, vou **estancar o bug agora** (P0 — é bug-fix de arquivo único, isento de BoK gate) porque ele causa **perda de dados em qualquer projeto** que você abre. Leio os 3 arquivos do mecanismo:
+
+## 🤖 Claude *(01:03:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutoSave.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useRef, useState } from "react";
+> 2	import { useCanvasStore } from "@/store/useCanvasStore";
+> 3	import { useSaveCanvasGraph } from "@/hooks/useCanvasStudio";
+> 4	
+> 5	export type AutoSaveStatus = "idle" | "pending" | "saving" | "saved" | "error";
+> 6	
+> 7	/** Debounce window between last edit and persistence (ms). */
+> 8	const AUTOSAVE_DEBOUNCE_MS = 3_000;
+> 9	
+> 10	/**
+> 11	 * Debounced auto-save: persists the canvas graph ~1 min after the last
+> 12	 * change, and flushes immediately on tab hide / unmount so a pending edit
+> 13	 * is never dropped. pipelineMode / lanes / styleSettings ride inside the
+> 14	 * graph jsonb blob — no separate settings write.
+> 15	 */
+> 16	export function useAutoSave(projectId: string | null) {
+> 17	  const nodes = useCanvasStore((s) => s.nodes);
+> 18	  const edges = useCanvasStore((s) => s.edges);
+> 19	  const viewport = useCanvasStore((s) => s.viewport);
+> 20	  const pipelineMode = useCanvasStore((s) => s.pipelineMode);
+> 21	  const lanes = useCanvasStore((s) => s.lanes);
+> 22	  const styleSettings = useCanvasStore((s) => s.styleSettings);
+> 23	  const saveGraph = useSaveCanvasGraph();
+> 24	
+> 25	  const [status, setStatus] = useState<AutoSaveStatus>("idle");
+> 26	  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+> 27	  const firstRun = useRef(true);
+> 28	
+> 29	  // Reassigned every render so it always closes over the latest mutation.
+> 30	  const flush = useRef(async () => {});
+> 31	  flush.current = async () => {
+> 32	    if (!projectId) return;
+> 33	    setStatus("saving");
+> 34	    try {
+> 35	      const state = useCanvasStore.getState();
+> 36	      await saveGraph.mutateAsync({
+> 37	        projectId,
+> 38	        graph: state.getPersistedGraph(),
+> 39	        viewport: state.viewport,
+> 40	      });
+> 41	      setStatus("saved");
+> 42	      setLastSaved(new Date());
+> 43	    } catch (e) {
+> 44	      console.error("[autoSave] failed", e);
+> 45	      setStatus("error");
+> 46	    }
+> 47	  };
+> 48	
+> 49	  /** Force a save immediately, bypassing the debounce. */
+> 50	  const saveNow = async () => {
+> 51	    await flush.current();
+> 52	  };
+> 53	
+> 54	  useEffect(() => {
+> 55	    if (!projectId) return;
+> 56	    if (firstRun.current) {
+> 57	      firstRun.current = false;
+> 58	      return;
+> 59	    }
+> 60	    setStatus("pending");
+> 61	    const t = setTimeout(() => {
+> 62	      flush.current();
+> 63	    }, AUTOSAVE_DEBOUNCE_MS);
+> 64	    return () => clearTimeout(t);
+> 65	  }, [projectId, nodes, edges, viewport, pipelineMode, lanes, styleSettings]);
+> 66	
+> 67	  // Flush on tab hide / unmount so the 1-minute window can't drop edits.
+> 68	  useEffect(() => {
+> 69	    if (!projectId) return;
+> 70	    const onHide = () => {
+> 71	      if (document.visibilityState === "hidden") flush.current();
+> 72	    };
+> 73	    const onPageHide = () => flush.current();
+> 74	    document.addEventListener("visibilitychange", onHide);
+> 75	    window.addEventListener("pagehide", onPageHide);
+> 76	    return () => {
+> 77	      document.removeEventListener("visibilitychange", onHide);
+> 78	      window.removeEventListener("pagehide", onPageHide);
+> 79	      flush.current();
+> 80	    };
+> 81	  }, [projectId]);
+> 82	
+> 83	  return { status, lastSaved, saveNow };
+> 84	}
+> 85	
+> ```
+
+## 🤖 Claude *(01:03:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts",
+  "offset": 148,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 148	  });
+> 149	}
+> 150	
+> 151	export function useSaveCanvasGraph() {
+> 152	  const queryClient = useQueryClient();
+> 153	
+> 154	  return useMutation({
+> 155	    mutationFn: async ({ projectId, graph, viewport }: {
+> 156	      projectId: string;
+> 157	      graph: PersistedCanvasGraph;
+> 158	      viewport?: { x: number; y: number; zoom: number };
+> 159	    }) => {
+> 160	      const updateData: any = { graph };
+> 161	      if (viewport) updateData.viewport = viewport;
+> 162	
+> 163	      const { error } = await supabase
+> 164	        .from("vm_canvas_projects")
+> 165	        .update(updateData)
+> 166	        .eq("id", projectId);
+> 167	      if (error) throw error;
+> 168	    },
+> 169	    onSuccess: (_, vars) => {
+> 170	      queryClient.invalidateQueries({ queryKey: ["vm-canvas-project", vars.projectId] });
+> 171	    },
+> 172	  });
+> 173	}
+> 174	
+> 175	export function useDeleteCanvasProject() {
+> 176	  const queryClient = useQueryClient();
+> 177	
+> ```
+
+## 🤖 Claude *(01:03:53)*
+
+
+## 🤖 Claude *(01:03:56)*
+
+Mecanismo claro: o `firstRun` do `useAutoSave` só pula a 1ª execução do efeito — não cobre a janela de hidratação, e o flush de `pagehide`/unmount pode gravar o estado vazio. O fix mais robusto e de menor risco (single-file, sem migration, isento de BoK gate): **guard de "não sobrescrever grafo não-vazio com vazio"** no save — estanca a perda em QUALQUER projeto, independente do timing.
+
+## 🤖 Claude *(01:04:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts",
+  "old_string": "    mutationFn: async ({ projectId, graph, viewport }: {\n      projectId: string;\n      graph: PersistedCanvasGraph;\n      viewport?: { x: number; y: number; zoom: number };\n    }) => {\n      const updateData: any = { graph };\n      if (viewport) updateData.viewport = viewport;\n\n      const { error } = await supabase\n        .from(\"vm_canvas_projects\")\n        .update(updateData)\n        .eq(\"id\", projectId);\n      if (error) throw error;\n    },",
+  "new_string": "    mutationFn: async ({ projectId, graph, viewport }: {\n      projectId: string;\n      graph: PersistedCanvasGraph;\n      viewport?: { x: number; y: number; zoom: number };\n    }) => {\n      // Hydration-race guard (data-loss fix): NEVER overwrite a non-empty saved graph with an empty one.\n      // useAutoSave can flush (debounce / pagehide / unmount) BEFORE initialize() hydrates the store, so the\n      // empty boot state {nodes:[]} would clobber a rich DB row \u2192 all canvas nodes lost (assets survive in\n      // vm_canvas_executions, which is why the project still shows assets but no nodes). When the incoming\n      // graph is empty, read-before-write and skip the clobber (viewport-only updates still persist).\n      if (graph.nodes.length === 0) {\n        const { data: existing } = await supabase\n          .from(\"vm_canvas_projects\")\n          .select(\"graph\")\n          .eq(\"id\", projectId)\n          .maybeSingle();\n        const existingNodes = (existing?.graph as PersistedCanvasGraph | null)?.nodes ?? [];\n        if (existingNodes.length > 0) {\n          console.warn(\n            `[saveCanvasGraph] blocked empty-graph overwrite of ${existingNodes.length}-node project ${projectId} (hydration race)`,\n          );\n          if (viewport) {\n            await supabase.from(\"vm_canvas_projects\").update({ viewport }).eq(\"id\", projectId);\n          }\n          return;\n        }\n      }\n\n      const updateData: any = { graph };\n      if (viewport) updateData.viewport = viewport;\n\n      const { error } = await supabase\n        .from(\"vm_canvas_projects\")\n        .update(updateData)\n        .eq(\"id\", projectId);\n      if (error) throw error;\n    },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:08)*
+
+
+## 🤖 Claude *(01:04:08)*
+
+Guard aplicado. tsc + build (deploy):
+
+## 🤖 Claude *(01:04:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -6; echo \"tsc rc=$?\"\necho \"=== build ===\"; bun run build 2>&1 | tail -3\ngit add src/hooks/useCanvasStudio.ts\ngit commit -q -F - <<'EOF'\nfix(canvas): guard contra sobrescrita de grafo n\u00e3o-vazio por vazio (perda de n\u00f3s)\n\nBug: projetos do Canvas Studio abriam com 0 n\u00f3s (grafo salvo vazio), embora os\nassets sobrevivessem em vm_canvas_executions. Causa: race entre a hidrata\u00e7\u00e3o\nass\u00edncrona do projeto (initialize) e o useAutoSave, que dava flush do estado\ninicial vazio {nodes:[]} antes dos n\u00f3s carregarem, sobrescrevendo o DB.\n\nFix de menor risco (single-file): no useSaveCanvasGraph, quando o grafo de\nentrada \u00e9 vazio, l\u00ea o DB antes de gravar e BLOQUEIA a sobrescrita se a linha j\u00e1\ntem n\u00f3s (viewport ainda persiste). Estanca a perda em qualquer projeto,\nindependente do timing do cliente.\nEOF\ngit log --oneline -1 2>&1 | tail -1",
+  "description": "tsc + build + commit canvas guard fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc rc=0
+> === build ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.56s
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:04PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:04PM[0m [32mINF[0m scan completed in 5.69ms
+> [90m10:04PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.05 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 6fa6370 fix(canvas): guard contra sobrescrita de grafo não-vazio por vazio (perda de nós)
+> ```
+
+## 🤖 Claude *(01:05:15)*
+
+
+## 🤖 Claude *(01:05:35)*
+
+✅ **Bug estancado** — guard shipado (`6fa6370`, tsc 0, build ✓, deployado). Agora nenhum projeto perde nós: se o save vier vazio e o DB já tem nós, ele **bloqueia a sobrescrita**. E uma correção importante do que eu disse antes: **seu projeto perdido É recuperável** — `vm_canvas_executions` guarda `node_id`, tipo, prompts, output e a cadeia de assets (input→output), então dá pra reconstruir os nós e inferir as conexões; só as posições x/y se perderam (auto-layout resolve).
+
+Agora, respondendo as três coisas que você levantou:
+
+## 1. Canvas Studio **ou** Orquestra? → **Híbrido** (cada um no que é bom)
+
+Não é um ou outro — é **cada um na sua força**, fracamente acoplados:
+
+- **Canvas Studio = a casa de autoria.** Já tem os primitivos visuais que o video-maker precisa: nós tipados, *reference threading* + seed-lock (consistência do produto), saídas persistidas, e a ponte imagem→vídeo. A Orquestra **não tem** primitivos de autoria visual (os nós dela são agente/trigger/publish) — forçar composição de cena ali briga com o propósito dela.
+- **HyperFrames = o motor de render** (já vivo, `video.mcorch.com`).
+- **Orquestra/Meta = a saída** (quality-gate + publish multi-plataforma) — a força dela.
+
+**Fluxo:** Objetivo → Roteiro/Copy → Assets de design → Composição no HyperFrames → Render → Publicar. Autora no Canvas, renderiza no HyperFrames, publica via Meta/Orquestra.
+
+## 2. "O poder das saídas" (sua visão maior) → uma **espinha de assets compartilhada**
+
+O que destrava o bidirecional é um **registro canônico `creative_assets`** — uma tabela fina que **só aponta** pros buckets que já existem (sem migrar bytes); todo módulo escreve e lê dela, com **proveniência** (`parent_asset_id` + `mesh_node_id`):
+
+```
+creative_assets: id · user_id(RLS) · kind(image|video|design|audio|article)
+   · storage_bucket · storage_key · source_module · parent_asset_id · mesh_node_id · metadata
+```
+
+Aí os fluxos que você descreveu viram reais, nos dois sentidos:
+- **OpenDesign → Canvas** (imagem do design vira base/referência)
+- **Canvas → HyperFrames** (imagem product-aware vira camada/overlay do vídeo)
+- **HyperFrames → redes** (o MP4 9:16 anexa no post e vai pro Meta Reels) ← **isso fecha o buraco atual de vídeo→social**
+- **qualquer módulo → Knowledge Mesh** (proveniência + atribuição de receita)
+
+## 3. Caminho mais curto até a **primeira saída real numa rede**
+
+O motor de vídeo 9:16 já existe; o gap é só o último elo: **HyperFrames render → Meta Reels** (`content_library.video_render_id` + estender `publish-meta` p/ `media_type=VIDEO`). É a vitória tangível mais barata — um Reels real de Instagram/Facebook com asset que o ecossistema já gera. TikTok/YouTube Shorts ficam pra Tier 2 (OAuth/App Review, já diferidos).
+
+---
+
+**Sobre o Lei 2 (Master Protocol):** o fix do bug foi isento (patch de 1 arquivo). Mas P1+ (vídeo→social, nós do video-maker, e a tabela `creative_assets`) são **flows novos + migration** → preciso **emendar a BoK** (video-studio FRD + a tabela na canvas-design/constellation) **antes** de codar. Eu faço isso enxuto.
+
+Três decisões suas pra eu seguir:
+
+## 🤖 Claude *(01:05:46)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Confirma a arquitetura H\u00cdBRIDA pro video-maker (Canvas Studio autora + HyperFrames renderiza + Meta/Orquestra publica)?",
+      "header": "Arquitetura",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim \u2014 H\u00edbrido",
+          "description": "Canvas \u00e9 a fonte da verdade da autoria; HyperFrames \u00e9 o motor; publish via Meta Reels (e Orquestra como quality-gate opcional). Acoplamento solto: re-editar o design depois de um publish falho n\u00e3o perde o grafo."
+        },
+        {
+          "label": "S\u00f3 Canvas Studio",
+          "description": "Concentra autoria + publish no Canvas. Mais simples de navegar, mas mistura l\u00f3gica de publish no m\u00f3dulo de conte\u00fado."
+        },
+        {
+          "label": "S\u00f3 Orquestra",
+          "description": "Tudo no Visual Orchestrator. N\u00e3o recomendado: a Orquestra n\u00e3o tem primitivos de autoria visual (cenas/camadas)."
+        }
+      ]
+    },
+    {
+      "question": "Qual o pr\u00f3ximo passo a construir (cada um exige uma emenda BoK enxuta antes do c\u00f3digo)?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "P1 \u2014 Primeira sa\u00edda real (HyperFrames 9:16 \u2192 Meta Reels)",
+          "description": "Caminho mais curto at\u00e9 um v\u00eddeo REAL numa rede. Estende publish-meta p/ v\u00eddeo + liga o render do HyperFrames ao post. Vit\u00f3ria tang\u00edvel, superf\u00edcie m\u00ednima."
+        },
+        {
+          "label": "P2 \u2014 Fluxo video-maker no Canvas",
+          "description": "N\u00f3s ExportScene/VideoRender no Canvas que conversam com o iframe do HyperFrames (postMessage) e gravam o render de volta no grafo. O fluxo objetivo\u2192v\u00eddeo numa tela s\u00f3."
+        },
+        {
+          "label": "P3 \u2014 Espinha de assets (creative_assets)",
+          "description": "A funda\u00e7\u00e3o do bidirecional: tabela can\u00f4nica + dual-write dos m\u00f3dulos. Destrava OpenDesign\u2194Canvas\u2194HyperFrames reusando assets um do outro."
+        }
+      ]
+    },
+    {
+      "question": "Recuperar o projeto perdido 63d406fe (reconstruir os n\u00f3s a partir das execu\u00e7\u00f5es)?",
+      "header": "Recuperar projeto",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim \u2014 reconstruir",
+          "description": "RPC de recovery rebuilda os n\u00f3s (id+tipo+prompt+output das execu\u00e7\u00f5es) e infere conex\u00f5es pela cadeia de assets. Posi\u00e7\u00f5es x/y s\u00e3o auto-organizadas (n\u00e3o as originais \u2014 essas se perderam)."
+        },
+        {
+          "label": "N\u00e3o \u2014 deixa pra l\u00e1",
+          "description": "Era um projeto de teste (QA Vision Gate); os assets seguem acess\u00edveis na aba Assets. Pula a recovery."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Confirma a arquitetura HÍBRIDA pro video-maker (Canvas Studio autora + HyperFrames renderiza + Meta/Orquestra publica)?"="Sim hibrido, e tem que ser bidirecional, pois eu posso gerar conteudo no canvas studio como um video mais a maior capacidade do hyperframes é usar o FFmpg para criar conteúdos grandes, nos meus testes com o n8n chegou a criar videos de 51 segundos.: {
+>   "nodes": [
+>     {
+>       "parameters": {},
+>       "id": "manualTrigger",
+>       "name": "Manual Trigger",
+>       "type": "n8n-nodes-base.manualTrigger",
+>       "typeVersion": 1,
+>       "position": [
+>         128,
+>         880
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "operation": "write",
+>         "fileName": "=/home/node/.n8n/assets/scene{{ $('Loop Over Scenes1').item.json.scene }}.png",
+>         "options": {}
+>       },
+>       "id": "edd47de4-7aee-4a9a-a08d-a8afbbb98f06",
+>       "name": "Write Image",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         1216,
+>         1216
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "method": "POST",
+>         "url": "https://openbmb-voxcpm-demo.hf.space/gradio_api/call/generate",
+>         "sendBody": true,
+>         "specifyBody": "json",
+>         "jsonBody": "={\n  \"data\": [\n    \"{{ $('Loop Over Scenes1').item.json.narration }}\",\n    \"Confident, warm male narrator. Calm, steady documentary tone. Even energy and a natural, measured pace throughout. Clear and engaging, never robotic or rushed.\",\n    { \"path\": \"http://gcrux.com/uxnai-voice-n8n.wav\", \"meta\": { \"_type\": \"gradio.FileData\" } },\n    false,\n    \"\",\n    2.5,\n    false,\n    true\n  ]\n}",
+>         "options": {}
+>       },
+>       "id": "f7e456ad-1ad1-427f-a788-87c4e3caf7a9",
+>       "name": "VoxCPM - Kickoff",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         1392,
+>         1216
+>       ],
+>       "retryOnFail": true,
+>       "maxTries": 5,
+>       "waitBetweenTries": 8000
+>     },
+>     {
+>       "parameters": {
+>         "url": "=https://openbmb-voxcpm-demo.hf.space/gradio_api/call/generate/{{ $json.event_id }}",
+>         "options": {
+>           "response": {
+>             "response": {
+>               "responseFormat": "text"
+>             }
+>           },
+>           "timeout": 180000
+>         }
+>       },
+>       "id": "be57a2b9-a901-41bb-ade1-8fd70fb5e25c",
+>       "name": "VoxCPM - Result",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         1568,
+>         1216
+>       ],
+>       "retryOnFail": true,
+>       "maxTries": 5,
+>       "waitBetweenTries": 8000
+>     },
+>     {
+>       "parameters": {
+>         "jsCode": "// Extrai a URL do audio do stream SSE do Gradio\nlet body = $json.data || $json.body || JSON.stringify($json);\nif (typeof body !== 'string') body = JSON.stringify(body);\nconst lines = body.split('\\n').filter(l => l.startsWith('data:'));\nlet url = null;\nfor (let i = lines.length - 1; i >= 0; i--) {\n  try {\n    const payload = JSON.parse(lines[i].replace(/^data:\\s*/, ''));\n    const f = Array.isArray(payload) ? payload[0] : payload;\n    if (f && (f.url || f.path)) { url = f.url || f.path; break; }\n  } catch (e) {}\n}\nreturn [{ json: { audio_url: url, scene: $('Loop Over Scenes1').item.json.scene } }];"
+>       },
+>       "id": "2cff7140-6020-4670-82fa-e03b8d3d49b1",
+>       "name": "Parse Audio URL",
+>       "type": "n8n-nodes-base.code",
+>       "typeVersion": 2,
+>       "position": [
+>         1744,
+>         1216
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "url": "={{ $json.audio_url }}",
+>         "options": {
+>           "response": {
+>             "response": {
+>               "responseFormat": "file"
+>             }
+>           }
+>         }
+>       },
+>       "id": "fce63771-379e-4f15-b07c-6e73815c2be8",
+>       "name": "Download Audio",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         1936,
+>         1216
+>       ],
+>       "retryOnFail": true,
+>       "maxTries": 4,
+>       "waitBetweenTries": 5000
+>     },
+>     {
+>       "parameters": {
+>         "operation": "write",
+>         "fileName": "=/home/node/.n8n/assets/scene{{ $('Loop Over Scenes1').item.json.scene }}.wav",
+>         "options": {}
+>       },
+>       "id": "94e8a600-856b-4af3-9fb8-aa1546a86e23",
+>       "name": "Write Audio",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         2112,
+>         1216
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "method": "POST",
+>         "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAMAo6JZ0ETs_izqJlZc8k4ckWePGd4ztY",
+>         "sendBody": true,
+>         "specifyBody": "json",
+>         "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are the Creative Director of an educational faceless YouTube channel about AI and everyday life. Write a video about {{ $json.topic || 'AI agents doing your job' }}. Return ONLY valid JSON: an array of 4 scenes. Each scene has fields: scene (number), narration (1-3 sentences, English), image_prompt (cinematic, 16:9), ambience (exactly ONE of: waves, wind, birds, city, forest, rain, keyboard, ambient -- pick keyboard when the scene is about work, jobs, coding, productivity or AI agents; waves/wind/birds/forest/rain for nature; city for urban; ambient as neutral fallback), and hud (a very short on-screen info caption for this scene -- a key stat, year, or term, max 5 words, plain text, or empty string if none). No markdown.\"\n    }]\n  }]\n}",
+>         "options": {}
+>       },
+>       "id": "6fb680e8-0033-42eb-834c-5550e216674e",
+>       "name": "Gemini - Generate Scenes1",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         352,
+>         880
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "jsCode": "const raw = $json.candidates[0].content.parts[0].text;\nconst clean = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(clean);\nconst scenes = Array.isArray(parsed) ? parsed : (parsed.scenes || []);\nreturn scenes.map(s => ({ json: s }));"
+>       },
+>       "id": "cf2d2c93-0c56-4cf4-bdac-aeb61f28a51e",
+>       "name": "Parse Scenes1",
+>       "type": "n8n-nodes-base.code",
+>       "typeVersion": 2,
+>       "position": [
+>         544,
+>         880
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "options": {}
+>       },
+>       "id": "387dd23b-6e1f-4ee4-827d-4fc6b3ecdddb",
+>       "name": "Loop Over Scenes1",
+>       "type": "n8n-nodes-base.splitInBatches",
+>       "typeVersion": 3,
+>       "position": [
+>         752,
+>         880
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "url": "=https://image.pollinations.ai/prompt/{{ encodeURIComponent($('Loop Over Scenes1').item.json.image_prompt) }}?width=1920&height=1080&nologo=true",
+>         "options": {
+>           "response": {
+>             "response": {
+>               "responseFormat": "file"
+>             }
+>           }
+>         }
+>       },
+>       "id": "e61fecb1-57c4-408d-b298-8241e20567a3",
+>       "name": "Pollinations - Image1",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         1024,
+>         1216
+>       ],
+>       "retryOnFail": true,
+>       "maxTries": 4,
+>       "waitBetweenTries": 5000
+>     },
+>     {
+>       "parameters": {
+>         "command": "=sh /home/node/.n8n/assets/composite.sh {{ $('Loop Over Scenes1').item.json.scene }} {{ $('Loop Over Scenes1').item.json.ambience }} {{ Math.ceil(parseFloat($('Probe Scene Audio').item.json.stdout)) }}"
+>       },
+>       "id": "5daa5b93-f198-46c1-a810-2dc516f97ec3",
+>       "name": "FFmpeg - Animate Scene1",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         1792,
+>         1456
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "command": "cd /home/node/.n8n/assets && ls scene[0-9].mp4 | sort -V | sed \"s/^/file '/;s/$/'/\" > list.txt && ffmpeg -y -f concat -safe 0 -i list.txt -c:v libx264 -crf 20 -preset medium -c:a aac -b:a 192k -movflags +faststart base.mp4"
+>       },
+>       "id": "7ace5e09-0b46-4ea0-ac0e-8f11c855719f",
+>       "name": "FFmpeg - Concat Final1",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         944,
+>         752
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "fileSelector": "/home/node/.n8n/assets/final.mp4",
+>         "options": {}
+>       },
+>       "id": "7ec34b1c-17ae-4142-8bc4-863be89bc648",
+>       "name": "Read Final Video",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         2144,
+>         976
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "method": "POST",
+>         "url": "=https://api.telegram.org/bot8756996304:AAFG3tvKemz575FVDVbaRT-oA9v7Ld0A96Q/sendVideo",
+>         "sendBody": true,
+>         "contentType": "multipart-form-data",
+>         "bodyParameters": {
+>           "parameters": [
+>             {
+>               "name": "chat_id",
+>               "value": "5835174772"
+>             },
+>             {
+>               "name": "caption",
+>               "value": "={{ $('QA - Parse').item.json.caption }}"
+>             },
+>             {
+>               "parameterType": "formBinaryData",
+>               "name": "video",
+>               "inputDataFieldName": "data"
+>             }
+>           ]
+>         },
+>         "options": {}
+>       },
+>       "id": "edc8a421-89e6-4841-8a8e-d64a8774c53f",
+>       "name": "Telegram - Send Video",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         2400,
+>         976
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "command": "cd /home/node/.n8n/assets && for f in $(ls scene*.wav | sort -V); do d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 \"$f\"); echo \"$f|$d\"; done"
+>       },
+>       "name": "Get Scene Durations",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         1136,
+>         752
+>       ],
+>       "id": "75c042d1-9f38-4ecb-b95c-b3c6645cbdf3"
+>     },
+>     {
+>       "parameters": {
+>         "jsCode": "const out = $json.stdout || '';\nconst durs = out.trim().split('\\n').filter(Boolean).map(l => {\n  const [f, d] = l.split('|');\n  const m = f.match(/scene(\\d+)/);\n  return { scene: m ? parseInt(m[1]) : 0, dur: parseFloat(d) || 3 };\n}).sort((a, b) => a.scene - b.scene);\nconst scenes = $('Parse Scenes1').all().map(i => i.json);\nconst narr = {}, hud = {};\nscenes.forEach(s => { narr[s.scene] = (s.narration || '').trim(); hud[s.scene] = (s.hud || '').trim(); });\nconst p = (n, l = 2) => String(n).padStart(l, '0');\nconst at = (t) => { const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=Math.floor(t%60),cs=Math.round((t-Math.floor(t))*100); return h+':'+p(m)+':'+p(s)+'.'+p(cs); };\nconst st = (t) => { const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=Math.floor(t%60),ms=Math.round((t-Math.floor(t))*1000); return p(h)+':'+p(m)+':'+p(s)+','+p(ms,3); };\nconst head = `[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Cap,DejaVu Sans,54,&H0000D7FF,&H00FFFFFF,&H00000000,&H96000000,1,0,0,0,100,100,0,0,3,3,1,2,90,90,100,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;\nlet events = '', hsrt = '', hi = 1, t = 0;\nfor (const d of durs) {\n  const words = (narr[d.scene] || '').split(/\\s+/).filter(Boolean);\n  const per = 6, lines = [];\n  for (let i=0;i<words.length;i+=per) lines.push(words.slice(i,i+per));\n  const nLines = Math.max(lines.length,1), lineDur = d.dur / nLines;\n  let lt = t;\n  for (const ln of lines) {\n    const wcs = Math.max(Math.round((lineDur / Math.max(ln.length,1)) * 100), 1);\n    const text = ln.map(w => '{\\\\k' + wcs + '}' + w + ' ').join('').trim();\n    events += 'Dialogue: 0,' + at(lt) + ',' + at(lt + lineDur) + ',Cap,,0,0,0,,' + text + '\\n';\n    lt += lineDur;\n  }\n  const h = hud[d.scene];\n  if (h) { hsrt += hi + '\\n' + st(t + 0.3) + ' --> ' + st(t + Math.max(d.dur - 0.3, 0.5)) + '\\n' + h + '\\n\\n'; hi++; }\n  t += d.dur;\n}\nif (!hsrt) hsrt = '1\\n00:00:00,000 --> 00:00:00,100\\n \\n\\n';\nconst ass = head + events;\nconst b64 = (s) => Buffer.from(s, 'utf8').toString('base64');\nreturn [{ json: { ass_lines: events.split('\\n').length - 1 }, binary: {\n  captions: { data: b64(ass), mimeType: 'text/x-ass', fileName: 'captions.ass' },\n  hud: { data: b64(hsrt), mimeType: 'text/plain', fileName: 'hud.srt' }\n}}];"
+>       },
+>       "name": "Build SRT",
+>       "type": "n8n-nodes-base.code",
+>       "typeVersion": 2,
+>       "position": [
+>         1312,
+>         752
+>       ],
+>       "id": "65289e71-c39e-48f7-85c9-35981d6a4a57"
+>     },
+>     {
+>       "parameters": {
+>         "operation": "write",
+>         "fileName": "/home/node/.n8n/assets/captions.ass",
+>         "dataPropertyName": "captions",
+>         "options": {}
+>       },
+>       "name": "Write Captions",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         1520,
+>         752
+>       ],
+>       "id": "e57c7966-4f11-4faf-a10c-0b884e760464"
+>     },
+>     {
+>       "parameters": {
+>         "operation": "write",
+>         "fileName": "/home/node/.n8n/assets/hud.srt",
+>         "dataPropertyName": "hud",
+>         "options": {}
+>       },
+>       "name": "Write HUD",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         1744,
+>         752
+>       ],
+>       "id": "3065cec1-0c79-4f82-bf1b-aa350f9f2c01"
+>     },
+>     {
+>       "parameters": {
+>         "command": "ffmpeg -y -i /home/node/.n8n/assets/base.mp4 -filter_complex \"[0:v]eq=contrast=1.08:saturation=1.12:brightness=0.012,vignette=PI/5[vout]\" -map \"[vout]\" -map 0:a -c:v libx264 -crf 20 -preset medium -c:a aac -b:a 192k -movflags +faststart -shortest /home/node/.n8n/assets/final.mp4"
+>       },
+>       "name": "FFmpeg - Polish",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         1952,
+>         752
+>       ],
+>       "id": "c0668ff3-97d9-49a5-be99-83c46df308c7"
+>     },
+>     {
+>       "parameters": {
+>         "executeOnce": false,
+>         "command": "cd /home/node/.n8n/assets && D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 final.mp4) && ffmpeg -y -i final.mp4 -vf \"fps=12/${D},scale=480:-1,tile=3x4\" -frames:v 1 qa_sheet.jpg && echo done"
+>       },
+>       "id": "3dee8266-5174-45e3-9cff-590760fd85c6",
+>       "name": "QA - Contact Sheet",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         2160,
+>         752
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "fileSelector": "/home/node/.n8n/assets/qa_sheet.jpg",
+>         "options": {}
+>       },
+>       "id": "8a0c931b-a9a8-4641-b0cb-252a63182c30",
+>       "name": "QA - Read Sheet",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         1136,
+>         976
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "jsCode": "const buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst img = buf.toString('base64');\nconst scenes = $('Parse Scenes1').all().map(function(i){return i.json;});\nconst script = scenes.map(function(s){return 'Scene ' + s.scene + ': ' + s.narration + ' [HUD: ' + (s.hud||'-') + ']';}).join('\\n');\nconst text = \"You are a SENIOR MOTION-DESIGN & VFX CRITIC and REFERENCE-CLONER / TREND-SETTER for the faceless YouTube channel \\\"AI and Peoples\\\". Your taste is calibrated to award-level work: Territory Studio (sci-fi FUI/HUD), Ash Thorp, BUCK, ManvsMachine, Motion Awards / FITC tier. You judge as if curating for a festival reel.\\n\\nTARGET REFERENCE STYLE: premium dark-mode sci-fi FUI/HUD + neon aurora line-art, brand gold accent (#F5C542) over near-black, kinetic typography, Territory-Studio-grade restraint. BRAND: gold + near-black, clean type, lower-third + corner brackets, logo safe-zones. RETENTION GOAL: hook holds the first 2 seconds.\\n\\nINPUT: a contact sheet of frames sampled across the FINAL rendered video, plus the script.\\n\\nJOB:\\n1. CLONE THE REFERENCE: judge how closely the candidate hits the target look (color, grade, FUI/HUD language, line weight, glow/bloom discipline, grain, compositing), not just \\\"is it pretty\\\".\\n2. SCORE 7 DIMENSIONS, each 0-10, with concrete on-screen evidence: style_match, motion_quality_easing (natural eases, overshoot/settle, no linear robotic moves), typographic_hierarchy (clear primary/secondary, legible at thumbnail, kinetic with intent), compositing_lightwrap (does the HUD sit INSIDE the scene? light-wrap, grain match; penalize sticker-on-glass), restraint (negative space, no glow/particle soup), pacing_retention (2s hook, beat mapping, loopability), brand_consistency (gold/type/safe-zones).\\n3. DETECT \\\"AI-SLOP\\\" TELLS, flag each with severity + fix: morphing/melting edges, warped hands/eyes/text, gibberish fake-UI glyphs, physics breaks, plastic skin, temporal shimmer, generic teal-orange default aesthetics.\\n4. OUTPUT ACTIONABLE FIXES ranked by priority, each with a concrete parameter/technique hint a junior could execute (e.g. \\\"add 6px light-wrap + 4% grain on HUD layer\\\", \\\"easeOutExpo lower-third 0.35s\\\", \\\"reduce i2v guidance to 1.2 to kill morphing\\\").\\n5. GIVE ONE TREND-FORWARD SUGGESTION (2025-2026 motion/VFX trends) to push it from competent to shortlist-worthy: why_now + how_to_apply. Be specific.\\n\\nTONE: blunt, specific, evidence-based. No flattery.\\n\\nOUTPUT: return ONLY this JSON object, no markdown, no prose outside JSON:\\n{\\\"verdict\\\":\\\"PASS|REVISE|REJECT\\\",\\\"overall_score\\\":0,\\\"award_readiness\\\":\\\"student|broadcast|award-shortlist|award-winning\\\",\\\"reference_style_target\\\":\\\"AI and Peoples sci-fi FUI/HUD\\\",\\\"scores\\\":{\\\"style_match\\\":{\\\"score\\\":0,\\\"weight\\\":0.20,\\\"notes\\\":\\\"\\\"},\\\"motion_quality_easing\\\":{\\\"score\\\":0,\\\"weight\\\":0.18,\\\"notes\\\":\\\"\\\"},\\\"typographic_hierarchy\\\":{\\\"score\\\":0,\\\"weight\\\":0.14,\\\"notes\\\":\\\"\\\"},\\\"compositing_lightwrap\\\":{\\\"score\\\":0,\\\"weight\\\":0.16,\\\"notes\\\":\\\"\\\"},\\\"restraint\\\":{\\\"score\\\":0,\\\"weight\\\":0.10,\\\"notes\\\":\\\"\\\"},\\\"pacing_retention\\\":{\\\"score\\\":0,\\\"weight\\\":0.12,\\\"notes\\\":\\\"\\\"},\\\"brand_consistency\\\":{\\\"score\\\":0,\\\"weight\\\":0.10,\\\"notes\\\":\\\"\\\"}},\\\"ai_slop_flags\\\":[{\\\"tell\\\":\\\"\\\",\\\"severity\\\":\\\"low|med|high\\\",\\\"fix\\\":\\\"\\\"}],\\\"actionable_fixes\\\":[{\\\"priority\\\":1,\\\"area\\\":\\\"\\\",\\\"problem\\\":\\\"\\\",\\\"fix\\\":\\\"\\\",\\\"param_hint\\\":\\\"\\\"}],\\\"trend_forward_suggestion\\\":{\\\"trend\\\":\\\"\\\",\\\"why_now\\\":\\\"\\\",\\\"how_to_apply\\\":\\\"\\\"},\\\"one_line_summary\\\":\\\"\\\"}\\nScoring: overall_score = weighted sum * 10 (0-100). <60 REJECT, 60-79 REVISE, >=80 PASS.\" + '\\n\\nSCRIPT:\\n' + script;\nconst body = { contents: [ { parts: [ { text: text }, { inline_data: { mime_type: 'image/jpeg', data: img } } ] } ] };\nreturn [{ json: { script: script, body: body } }];"
+>       },
+>       "id": "c905ad17-570b-4bee-8f15-f52bbef6cea7",
+>       "name": "QA - Prepare",
+>       "type": "n8n-nodes-base.code",
+>       "typeVersion": 2,
+>       "position": [
+>         1392,
+>         976
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "method": "POST",
+>         "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAMAo6JZ0ETs_izqJlZc8k4ckWePGd4ztY",
+>         "sendBody": true,
+>         "specifyBody": "json",
+>         "jsonBody": "={{ JSON.stringify($json.body) }}",
+>         "options": {}
+>       },
+>       "id": "07f8b628-e5cb-4b5c-ad1c-d819564b9abd",
+>       "name": "QA - Vision",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         1632,
+>         976
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "jsCode": "const raw = $json.candidates[0].content.parts[0].text;\nconst clean = raw.replace(/```json|```/g, '').trim();\nlet q; try { q = JSON.parse(clean); } catch (e) { q = { verdict:'REVISE', overall_score:0, award_readiness:'?', one_line_summary:'QA parse error', actionable_fixes:[] }; }\nconst fixes = (q.actionable_fixes||[]).slice(0,3).map(function(f){return '- ' + (f.area||f.priority||'') + ': ' + (f.fix||'');}).join('\\n');\nconst caption = 'AI and Peoples - QA (award critic)\\nVerdict: ' + (q.verdict||'?') + ' | ' + (q.overall_score||'?') + '/100 | ' + (q.award_readiness||'') + '\\n' + (q.one_line_summary||'') + (fixes ? ('\\nTop fixes:\\n'+fixes) : '');\nreturn [{ json: { caption: caption.slice(0,1000), qa: q } }];"
+>       },
+>       "id": "349ffd86-87d5-4684-90af-9cb0b5ce107b",
+>       "name": "QA - Parse",
+>       "type": "n8n-nodes-base.code",
+>       "typeVersion": 2,
+>       "position": [
+>         1872,
+>         976
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "command": "=ffprobe -v error -show_entries format=duration -of csv=p=0 /home/node/.n8n/assets/scene{{ $('Loop Over Scenes1').item.json.scene }}.wav"
+>       },
+>       "id": "1c89786e-0f21-490b-9789-b3631f3eff39",
+>       "name": "Probe Scene Audio",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         2304,
+>         1216
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "method": "POST",
+>         "url": "http://remotion-render:8088/render",
+>         "sendBody": true,
+>         "specifyBody": "json",
+>         "jsonBody": "={{ JSON.stringify($json) }}",
+>         "options": {
+>           "response": {
+>             "response": {
+>               "responseFormat": "file"
+>             }
+>           },
+>           "timeout": 240000
+>         }
+>       },
+>       "id": "19c77ff0-3089-48c1-8eee-3917a56b40c6",
+>       "name": "Render HUD",
+>       "type": "n8n-nodes-base.httpRequest",
+>       "typeVersion": 4.2,
+>       "position": [
+>         1200,
+>         1456
+>       ],
+>       "retryOnFail": true,
+>       "maxTries": 4,
+>       "waitBetweenTries": 6000
+>     },
+>     {
+>       "parameters": {
+>         "operation": "write",
+>         "fileName": "=/home/node/.n8n/assets/hud{{ $('Loop Over Scenes1').item.json.scene }}.mov",
+>         "options": {}
+>       },
+>       "id": "90c0c521-eaaa-42e8-a072-5e0a129ff77d",
+>       "name": "Write Scene HUD",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         1392,
+>         1456
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "jsCode": "const buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst audioB64 = buf.toString('base64');\nconst secs = parseFloat($('Probe Scene Audio').item.json.stdout) || 5;\nconst sc = $('Loop Over Scenes1').item.json;\nreturn [{ json: {\n  composition: 'SceneOverlay',\n  codec: 'prores',\n  durationInFrames: Math.min(Math.ceil(secs * 30), 600),\n  props: {\n    audioSrc: 'data:audio/wav;base64,' + audioB64,\n    hudLabel: 'THE FUTURE OF WORK',\n    hudTitle: String(sc.hud || ''),\n    hudStat: '',\n    captionText: String(sc.narration || sc.hud || ''),\n    accent: '#F5C542'\n  }\n} }];"
+>       },
+>       "id": "73e73ca2-7ab1-434d-94e2-2808e944321b",
+>       "name": "Build HUD Body",
+>       "type": "n8n-nodes-base.code",
+>       "typeVersion": 2,
+>       "position": [
+>         1008,
+>         1456
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "fileSelector": "=/home/node/.n8n/assets/scene{{ $('Loop Over Scenes1').item.json.scene }}.wav",
+>         "options": {}
+>       },
+>       "id": "aa7ea215-3fdf-4507-9d3a-76b94ad3382a",
+>       "name": "Read Scene Audio",
+>       "type": "n8n-nodes-base.readWriteFile",
+>       "typeVersion": 1,
+>       "position": [
+>         2480,
+>         1216
+>       ]
+>     },
+>     {
+>       "parameters": {
+>         "command": "=node /home/node/.n8n/assets/ltx.js {{ $('Loop Over Scenes1').item.json.scene }}"
+>       },
+>       "id": "c0e4dd11-80de-499d-9781-5f354715caeb",
+>       "name": "LTX i2v",
+>       "type": "n8n-nodes-base.executeCommand",
+>       "typeVersion": 1,
+>       "position": [
+>         1600,
+>         1456
+>       ],
+>       "continueOnFail": true
+>     }
+>   ],
+>   "connections": {
+>     "Manual Trigger": {
+>       "main": [
+>         [
+>           {
+>             "node": "Gemini - Generate Scenes1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Write Image": {
+>       "main": [
+>         [
+>           {
+>             "node": "VoxCPM - Kickoff",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "VoxCPM - Kickoff": {
+>       "main": [
+>         [
+>           {
+>             "node": "VoxCPM - Result",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "VoxCPM - Result": {
+>       "main": [
+>         [
+>           {
+>             "node": "Parse Audio URL",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Parse Audio URL": {
+>       "main": [
+>         [
+>           {
+>             "node": "Download Audio",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Download Audio": {
+>       "main": [
+>         [
+>           {
+>             "node": "Write Audio",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Write Audio": {
+>       "main": [
+>         [
+>           {
+>             "node": "Probe Scene Audio",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Gemini - Generate Scenes1": {
+>       "main": [
+>         [
+>           {
+>             "node": "Parse Scenes1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Parse Scenes1": {
+>       "main": [
+>         [
+>           {
+>             "node": "Loop Over Scenes1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Loop Over Scenes1": {
+>       "main": [
+>         [
+>           {
+>             "node": "FFmpeg - Concat Final1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ],
+>         [
+>           {
+>             "node": "Pollinations - Image1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Pollinations - Image1": {
+>       "main": [
+>         [
+>           {
+>             "node": "Write Image",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "FFmpeg - Animate Scene1": {
+>       "main": [
+>         [
+>           {
+>             "node": "Loop Over Scenes1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "FFmpeg - Concat Final1": {
+>       "main": [
+>         [
+>           {
+>             "node": "Get Scene Durations",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Read Final Video": {
+>       "main": [
+>         [
+>           {
+>             "node": "Telegram - Send Video",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Get Scene Durations": {
+>       "main": [
+>         [
+>           {
+>             "node": "Build SRT",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Build SRT": {
+>       "main": [
+>         [
+>           {
+>             "node": "Write Captions",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Write Captions": {
+>       "main": [
+>         [
+>           {
+>             "node": "Write HUD",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Write HUD": {
+>       "main": [
+>         [
+>           {
+>             "node": "FFmpeg - Polish",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "FFmpeg - Polish": {
+>       "main": [
+>         [
+>           {
+>             "node": "QA - Contact Sheet",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "QA - Contact Sheet": {
+>       "main": [
+>         [
+>           {
+>             "node": "QA - Read Sheet",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "QA - Read Sheet": {
+>       "main": [
+>         [
+>           {
+>             "node": "QA - Prepare",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "QA - Prepare": {
+>       "main": [
+>         [
+>           {
+>             "node": "QA - Vision",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "QA - Vision": {
+>       "main": [
+>         [
+>           {
+>             "node": "QA - Parse",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "QA - Parse": {
+>       "main": [
+>         [
+>           {
+>             "node": "Read Final Video",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Probe Scene Audio": {
+>       "main": [
+>         [
+>           {
+>             "node": "Read Scene Audio",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Render HUD": {
+>       "main": [
+>         [
+>           {
+>             "node": "Write Scene HUD",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Write Scene HUD": {
+>       "main": [
+>         [
+>           {
+>             "node": "LTX i2v",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Build HUD Body": {
+>       "main": [
+>         [
+>           {
+>             "node": "Render HUD",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "Read Scene Audio": {
+>       "main": [
+>         [
+>           {
+>             "node": "Build HUD Body",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     },
+>     "LTX i2v": {
+>       "main": [
+>         [
+>           {
+>             "node": "FFmpeg - Animate Scene1",
+>             "type": "main",
+>             "index": 0
+>           }
+>         ]
+>       ]
+>     }
+>   },
+>   "pinData": {},
+>   "meta": {
+>     "instanceId": "cb6f76de626f1571e4f4ca48291f696a61715bffa822b0b6686c75ad90b62828"
+>   }
+> }", "Qual o próximo passo a construir (cada um exige uma emenda BoK enxuta antes do código)?"="Todos decida qual a melhor ordem para isso", "Recuperar o projeto perdido 63d406fe (reconstruir os nós a partir das execuções)?"="Sim — reconstruir". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:10:32)*
+
+
+## 🤖 Claude *(01:10:40)*
+
+O Sovereign confirmou: **Híbrido bidirecional**, ordem por minha conta, e **recuperar 63d406fe**. E me deu ouro: o **pipeline n8n faceless real** que faz vídeos de 51s (Gemini cenas → Pollinations imagens → VoxCPM voz → LTX i2v → Remotion HUD → FFmpeg compõe/concatena/poliza → QA Vision → Telegram). Essa é a receita que o faceless nativo deve reproduzir.
+
+⚠️ **Primeiro, segurança (dever de cuidado):** o JSON que você colou tem **credenciais vivas** — uma **chave Gemini** (`AIza…4ztY`, 2×) e um **token de bot do Telegram** (`8756…96Q`) + chat_id. Eles agora estão no log desta conversa. **Recomendo rotacionar ambos** (gerar nova chave Gemini no AI Studio + `/revoke` + novo token no @BotFather). Vou salvar a receita **redatada** (sem os segredos) como referência do faceless nativo — nunca commito segredo.
+
+Deixa eu primeiro investigar a recuperação do 63d406fe (schema real das execuções + um grafo-template):
+
+## 🤖 Claude *(01:10:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\nPID=\"63d406fe-8357-4b90-b1ac-9ef2c0c2a975\"\necho \"=== vm_canvas_executions for 63d406fe (full columns) ===\"\ncurl -s \"$URL/rest/v1/vm_canvas_executions?project_id=eq.$PID&select=*&order=created_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n | python3 -c \"\nimport json,sys\nrows=json.load(sys.stdin)\nif isinstance(rows,dict): print('ERR:', rows); sys.exit()\nprint(f'{len(rows)} executions')\nif rows:\n    print('columns:', list(rows[0].keys()))\n    for r in rows:\n        keep={k:v for k,v in r.items() if k in ('id','node_id','node_type','status','prompt','provider','model','input_asset_id','output_asset_id','output_url','created_at')}\n        print(json.dumps(keep, ensure_ascii=False)[:400])\n\"\necho \"\"\necho \"=== a NON-EMPTY project graph as node-shape template ===\"\ncurl -s \"$URL/rest/v1/vm_canvas_projects?graph->nodes=not.is.null&select=id,name,graph&limit=20\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n | python3 -c \"\nimport json,sys\nrows=json.load(sys.stdin)\nbest=None\nfor r in rows:\n    g=r.get('graph') or {}\n    n=g.get('nodes') or []\n    if len(n)>0 and (best is None or len(n)>len(best[1].get('nodes',[]))):\n        best=(r['id'],g,r.get('name'))\nif not best: print('no non-empty graph found'); sys.exit()\nprint('template project:', best[2], best[0], '| nodes:', len(best[1].get('nodes',[])), 'edges:', len(best[1].get('edges',[])))\ng=best[1]\nprint('--- node[0] shape ---'); print(json.dumps(g['nodes'][0], ensure_ascii=False)[:600])\nif g.get('edges'): print('--- edge[0] shape ---'); print(json.dumps(g['edges'][0], ensure_ascii=False)[:300])\n\"",
+  "description": "Inspect executions for recovery + a template graph shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vm_canvas_executions for 63d406fe (full columns) ===
+> 3 executions
+> columns: ['id', 'project_id', 'user_id', 'node_id', 'node_type', 'provider', 'model', 'prompt', 'negative_prompt', 'parameters', 'input_asset_id', 'output_asset_id', 'output_url', 'credits_charged', 'status', 'error_message', 'execution_time_ms', 'queued_at', 'started_at', 'completed_at', 'created_at', 'operation_id', 'webhook_token', 'response_payload', 'webhook_received_at']
+> {"id": "e871ceee-6e57-49dd-8ecc-60a5b8d54ed9", "node_id": "n_frame_inicial", "node_type": "generate_image", "provider": "openrouter", "model": "google/gemini-2.5-flash-image", "prompt": "A sleek matte-black smartwatch with a vivid orange silicone strap and a circular AMOLED display, resting on a smooth light-grey concrete surface. Soft diffused studio lighting, shallow depth of field, premium prod
+> {"id": "ef0c0ba1-f900-45bd-b71e-d0e07b39834e", "node_id": "n_frame_final", "node_type": "generate_image", "provider": "openrouter", "model": "google/gemini-2.5-flash-image", "prompt": "The same matte-black smartwatch with a vivid orange silicone strap and circular AMOLED display, now worn on the wrist of a runner mid-stride on a city street at golden hour. Dynamic motion blur in the background, ph
+> {"id": "594f56fb-0395-4aa3-af88-70233ba0925f", "node_id": "n_video_dop", "node_type": "generate_video", "provider": "higgsfield", "model": "dop-standard", "prompt": "Smooth cinematic camera orbit around the smartwatch, subtle parallax, the vivid orange strap catching the light, premium product reveal.", "input_asset_id": "0a01980e-7387-40a7-bb87-44b27324034e", "output_asset_id": null, "output_url"
+> 
+> === a NON-EMPTY project graph as node-shape template ===
+> template project: #02 - Mood board 5 lanes - 5 mundos 880b5eba-b41c-490d-8cab-1058def85bc9 | nodes: 29 edges: 23
+> --- node[0] shape ---
+> {"id": "n_gce9gbpd", "data": {"kind": "generateImage", "seed": 364421443, "label": "Personagem", "output": {"imageUrl": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/43e8ede4-6739-4324-a9a4-048b53b466a8.png", "generatedAt": "2026-05-24T03:35:42.043367+00:00"}, "prompt": "Personagem close-up, luz magenta e ciano, 9:16", "status": "success", "modelId": "soul-720p-x1", "controls": {"hdr": 0.5, "sharpness": 0.8, "creativity": 0.7, "fractality": 0.3, "resemblance": 0.3}, "fixedSeed": true, "aspectRatio": "9:16", "negativePrompt
+> --- edge[0] shape ---
+> {"id": "e_n_gce9gbpd_n_4622ediu_iiym", "source": "n_gce9gbpd", "target": "n_4622ediu", "sourceHandle": "output_image", "targetHandle": "input_prompt"}
+> ```
+
+## 🤖 Claude *(01:11:21)*
+
+
+## 🤖 Claude *(01:11:23)*
+
+Tenho os dados da recuperação: 3 execuções (`n_frame_inicial`/`n_frame_final` = generate_image, `n_video_dop` = generate_video, com `input_asset_id` ligando vídeo→frame). E o shape do nó (template). Preciso do shape COMPLETO de um nó (type/position/data) pra reconstruir um grafo ReactFlow válido:
+
+## 🤖 Claude *(01:11:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nKEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\necho \"=== ONE full node (type/position/data keys) from template ===\"\ncurl -s \"$URL/rest/v1/vm_canvas_projects?id=eq.880b5eba-b41c-490d-8cab-1058def85bc9&select=graph\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n | python3 -c \"\nimport json,sys\ng=json.load(sys.stdin)[0]['graph']\nn=g['nodes']\n# find a generateImage and a generateVideo node\ndef find(kind):\n    for x in n:\n        if (x.get('data') or {}).get('kind')==kind: return x\n    return None\ngi=find('generateImage'); gv=find('generateVideo')\nprint('node top-level keys:', list(n[0].keys()))\nprint('')\nprint('=== generateImage node (full) ===')\nprint(json.dumps(gi, ensure_ascii=False, indent=1)[:1400] if gi else 'none')\nprint('')\nprint('=== generateVideo node data.kind + keys ===')\nif gv: print('kind:', gv['data'].get('kind'), '| type:', gv.get('type'), '| data keys:', list(gv['data'].keys()))\nelse: print('no generateVideo in template')\n\"\necho \"\"\necho \"=== 63d406fe: match video.input_asset_id to a frame's output_asset_id ===\"\ncurl -s \"$URL/rest/v1/vm_canvas_executions?project_id=eq.63d406fe-8357-4b90-b1ac-9ef2c0c2a975&select=node_id,node_type,output_asset_id,input_asset_id,output_url,prompt,parameters\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n | python3 -c \"\nimport json,sys\nrows=json.load(sys.stdin)\nfor r in rows:\n    print(f\\\"{r['node_id']} ({r['node_type']}): out_asset={r.get('output_asset_id')} in_asset={r.get('input_asset_id')} url={(r.get('output_url') or '')[:60]}\\\")\n\"",
+  "description": "Get full node shape + asset-id matching for edges"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ONE full node (type/position/data keys) from template ===
+> node top-level keys: ['id', 'data', 'type', 'dragging', 'measured', 'position', 'selected']
+> 
+> === generateImage node (full) ===
+> {
+>  "id": "n_gce9gbpd",
+>  "data": {
+>   "kind": "generateImage",
+>   "seed": 364421443,
+>   "label": "Personagem",
+>   "output": {
+>    "imageUrl": "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/43e8ede4-6739-4324-a9a4-048b53b466a8.png",
+>    "generatedAt": "2026-05-24T03:35:42.043367+00:00"
+>   },
+>   "prompt": "Personagem close-up, luz magenta e ciano, 9:16",
+>   "status": "success",
+>   "modelId": "soul-720p-x1",
+>   "controls": {
+>    "hdr": 0.5,
+>    "sharpness": 0.8,
+>    "creativity": 0.7,
+>    "fractality": 0.3,
+>    "resemblance": 0.3
+>   },
+>   "fixedSeed": true,
+>   "aspectRatio": "9:16",
+>   "negativePrompt": ""
+>  },
+>  "type": "generateImage",
+>  "dragging": false,
+>  "measured": {
+>   "width": 260,
+>   "height": 334
+>  },
+>  "position": {
+>   "x": 0,
+>   "y": 0
+>  },
+>  "selected": false
+> }
+> 
+> === generateVideo node data.kind + keys ===
+> no generateVideo in template
+> 
+> === 63d406fe: match video.input_asset_id to a frame's output_asset_id ===
+> n_frame_inicial (generate_image): out_asset=0a01980e-7387-40a7-bb87-44b27324034e in_asset=None url=https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/p
+> n_frame_final (generate_image): out_asset=b2964768-4030-405e-9659-6942a834eb4d in_asset=None url=https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/p
+> n_video_dop (generate_video): out_asset=None in_asset=0a01980e-7387-40a7-bb87-44b27324034e url=https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/s
+> ```
+
+## 🤖 Claude *(01:11:57)*
+
+
+## 🤖 Claude *(01:11:59)*
+
+Tenho tudo pra reconstruir fielmente: nós `{id,type,position,data}` + a aresta (`n_frame_inicial.output_asset 0a01980e` = `n_video_dop.input_asset` → frame→vídeo). Vou reconstruir o grafo e gravar (PATCH), depois reler pra provar nós>0:
+
+## 🤖 Claude *(01:12:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nexport REC_KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; export REC_URL=\"${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"\npython3 - <<'PY'\nimport json, os, urllib.request\nKEY=os.environ['REC_KEY']; URL=os.environ['REC_URL']; PID=\"63d406fe-8357-4b90-b1ac-9ef2c0c2a975\"\ndef req(method, path, body=None):\n    r=urllib.request.Request(URL+path, data=(json.dumps(body).encode() if body is not None else None), method=method,\n        headers={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\",\"Prefer\":\"return=representation\"})\n    return urllib.request.urlopen(r).read().decode()\n\nex=json.loads(req(\"GET\", f\"/rest/v1/vm_canvas_executions?project_id=eq.{PID}&select=*&order=created_at\"))\nKIND={\"generate_image\":\"generateImage\",\"generate_video\":\"generateVideo\"}\nnodes=[]; out_by_asset={}\nfor i,e in enumerate(ex):\n    if e.get(\"status\")!=\"success\" and not e.get(\"output_url\"): \n        pass\n    kind=KIND.get(e[\"node_type\"], e[\"node_type\"])\n    out={}\n    if kind==\"generateImage\" and e.get(\"output_url\"): out={\"imageUrl\":e[\"output_url\"],\"generatedAt\":e.get(\"completed_at\")}\n    if kind==\"generateVideo\" and e.get(\"output_url\"): out={\"videoUrl\":e[\"output_url\"],\"generatedAt\":e.get(\"completed_at\")}\n    data={\"kind\":kind,\"label\":e[\"node_id\"].replace(\"n_\",\"\").replace(\"_\",\" \").title(),\"prompt\":e.get(\"prompt\") or \"\",\n          \"status\":\"success\" if e.get(\"output_url\") else (e.get(\"status\") or \"idle\"),\"output\":out}\n    if e.get(\"model\"): data[\"modelId\"]=e[\"model\"]\n    if e.get(\"negative_prompt\"): data[\"negativePrompt\"]=e[\"negative_prompt\"]\n    nodes.append({\"id\":e[\"node_id\"],\"type\":kind,\"position\":{\"x\":i*340,\"y\":0},\"data\":data,\"measured\":{\"width\":260,\"height\":334}})\n    if e.get(\"output_asset_id\"): out_by_asset[e[\"output_asset_id\"]]=e[\"node_id\"]\n\nedges=[]\nfor e in ex:\n    src_asset=e.get(\"input_asset_id\")\n    if src_asset and src_asset in out_by_asset:\n        s=out_by_asset[src_asset]; t=e[\"node_id\"]\n        edges.append({\"id\":f\"e_{s}_{t}\",\"source\":s,\"target\":t,\"sourceHandle\":\"output_image\",\"targetHandle\":\"input_image\"})\n\n# preserve existing non-node graph settings\ncur=json.loads(req(\"GET\", f\"/rest/v1/vm_canvas_projects?id=eq.{PID}&select=graph\"))[0][\"graph\"] or {}\ngraph={\"nodes\":nodes,\"edges\":edges,\n       \"lanes\":cur.get(\"lanes\",[]),\"pipelineMode\":cur.get(\"pipelineMode\",False),\n       \"styleSettings\":cur.get(\"styleSettings\",{\"mood\":\"\",\"palette\":[],\"stylePreset\":\"none\"})}\nres=req(\"PATCH\", f\"/rest/v1/vm_canvas_projects?id=eq.{PID}\", {\"graph\":graph})\nprint(\"PATCH ok. rebuilt nodes:\", len(nodes), \"edges:\", len(edges))\nfor n in nodes: print(f\"  + {n['id']} ({n['type']}) out={'yes' if n['data']['output'] else 'no'}\")\nfor e in edges: print(f\"  \u2192 edge {e['source']} -> {e['target']}\")\n# verify by re-read\nchk=json.loads(req(\"GET\", f\"/rest/v1/vm_canvas_projects?id=eq.{PID}&select=graph\"))[0][\"graph\"]\nprint(\"VERIFY: graph now has\", len(chk[\"nodes\"]), \"nodes,\", len(chk[\"edges\"]), \"edges\")\nPY",
+  "description": "Reconstruct + write 63d406fe graph from executions, verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> PATCH ok. rebuilt nodes: 3 edges: 1
+>   + n_frame_inicial (generateImage) out=yes
+>   + n_frame_final (generateImage) out=yes
+>   + n_video_dop (generateVideo) out=yes
+>   → edge n_frame_inicial -> n_video_dop
+> VERIFY: graph now has 3 nodes, 1 edges
+> ```
+
+## 🤖 Claude *(01:13:00)*
+
+
+## 🤖 Claude *(01:13:03)*
+
+✅ **Projeto 63d406fe RECUPERADO** (material): 3 nós reconstruídos das execuções (`n_frame_inicial`/`n_frame_final` = imagens do smartwatch, `n_video_dop` = vídeo DoP) + 1 aresta (frame→vídeo, da linhagem de assets). VERIFY: o grafo agora tem **3 nós, 1 aresta**. Reabra o projeto (Ctrl+Shift+R) — os nós voltaram (posições auto-organizadas; as x/y originais eram as únicas coisas irrecuperáveis).
+
+Agora salvo a sua receita faceless (distilada + **redatada** — sem os segredos) como fonte do faceless nativo:
+
+## 🤖 Claude *(01:13:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/faceless-pipeline-reference-2026-06-25.md",
+  "content": "# Faceless long-form video pipeline \u2014 proven recipe (reference for the NATIVE build)\n\n> Source: the Sovereign's working **n8n** faceless workflow (produced **51-second** videos in his tests),\n> shared 2026-06-25. This is the SPEC the native MCORCH faceless engine must reproduce (De-n8n mandate \u2014\n> \"o MCORCH n\u00e3o usa n8n\"). Maps to `video-render` **engine=\"faceless\"** (125 mco, worker currently 503-gated)\n> + the Canvas\u2194HyperFrames hybrid (Sovereign directive: bidirectional; FFmpeg = long-form capability).\n>\n> \u26a0\ufe0f The original JSON contained LIVE secrets (a Gemini API key \u00d72 + a Telegram bot token + chat_id) \u2014 those\n> are REDACTED here and were flagged for rotation. Never commit them.\n\n## Pipeline stages (per the n8n graph)\n\n1. **Scene script (Gemini 2.5 Flash)** \u2192 returns JSON array of 4 scenes; each: `{scene, narration (1-3 sentences),\n   image_prompt (cinematic 16:9), ambience (one of waves|wind|birds|city|forest|rain|keyboard|ambient),\n   hud (\u22645-word on-screen caption)}`. Creative-director system prompt, faceless educational channel angle.\n2. **Per-scene image (Pollinations)** \u2192 `image.pollinations.ai/prompt/<enc(image_prompt)>?width=1920&height=1080&nologo=true`.\n3. **Per-scene narration (VoxCPM HF Space)** \u2192 `openbmb-voxcpm-demo.hf.space/gradio_api/call/generate`, SSE result\n   parsed for the audio URL; voice prompt = \"Confident, warm male narrator\u2026 documentary tone\". Download \u2192 `scene<N>.wav`.\n4. **Probe audio duration** (`ffprobe` on the .wav) \u2192 drives each scene's frame count / clip length.\n5. **Per-scene animation (LTX i2v)** \u2192 `node ltx.js <scene>` animates the still image \u2192 motion clip (image-to-video).\n6. **Per-scene HUD overlay (Remotion)** \u2192 POST `remotion-render:8088/render` composition `SceneOverlay` codec=prores\n   (alpha .mov), props `{audioSrc, hudLabel, hudTitle, hudStat, captionText, accent:#F5C542}` \u2014 sci-fi FUI/HUD.\n7. **Composite scene (FFmpeg)** \u2192 `composite.sh <scene> <ambience> <dur>` layers image/clip + audio + HUD + ambience \u2192 `scene<N>.mp4`.\n8. **Concat (FFmpeg)** \u2192 `ls scene[0-9].mp4 | sort -V | \u2026 concat -c:v libx264 -crf 20 -preset medium -c:a aac -b:a 192k -movflags +faststart base.mp4`.\n9. **Captions + HUD tracks** \u2192 JS builds **ASS karaoke** (`{\\kNN}` per word, DejaVu Sans 54, gold #F5C542) from\n   narration + per-scene durations, and a **HUD .srt** from the `hud` fields.\n10. **Polish (FFmpeg)** \u2192 `eq=contrast=1.08:saturation=1.12:brightness=0.012,vignette=PI/5` \u2192 `final.mp4`.\n11. **QA vision gate (Gemini 2.5 Flash, multimodal)** \u2192 builds a **contact sheet** (`fps=12/D,scale=480,tile=3x4`),\n    sends it + script to a **senior motion-design award-critic** prompt (7 weighted dims: style_match, motion/easing,\n    typography, compositing/light-wrap, restraint, pacing/retention, brand) \u2192 verdict PASS|REVISE|REJECT + score/100\n    + ai-slop flags + ranked fixes + one trend-forward suggestion. (This is the same spirit as our Vision QA gate.)\n12. **Deliver** \u2192 Telegram `sendVideo` with the QA caption. (Native: \u2192 social publish per objective.)\n\n## Native mapping (what to build under engine=faceless)\n\n| n8n leg | Native MCORCH |\n|---|---|\n| Gemini scenes / QA vision | per-user BYOK `google_api_key` (Vision MCP / our gemini path) \u2014 NOT a hardcoded key |\n| Pollinations image | `generate-image` (already routes OpenRouter Gemini image) \u2192 writes asset |\n| VoxCPM voice | faceless voice leg (HF Space or local) \u2014 voice-consent gate FR-VS-032 |\n| LTX i2v / Remotion HUD | our render-core (Playwright+FFmpeg) + HyperFrames compositions (the HUD = a HyperFrames layer) |\n| FFmpeg composite/concat/polish | render-core / a faceless worker (FFmpeg already on host) \u2014 the **long-form** capability |\n| ASS karaoke + HUD srt | deterministic caption builder (port the JS) |\n| Telegram deliver | `publish-meta` / `publish-social` per objective |\n\nEvery produced asset (scene image, scene audio, scene clip, final mp4) \u2192 the **`creative_assets`** registry\n(provenance via `parent_asset_id`) so Canvas Studio and HyperFrames can reuse each other's outputs bidirectionally.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/faceless-pipeline-reference-2026-06-25.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:13:35)*
+
+
+## 🤖 Claude *(01:13:36)*
+
+Committo a referência (redatada) + registro a ordem decidida na memória:
+
+## 🤖 Claude *(01:13:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/faceless-pipeline-reference-2026-06-25.md\ngit commit -q -F - <<'EOF'\ndocs(video-studio): refer\u00eancia do pipeline faceless 51s (fonte do build nativo)\n\nRecipe destilada (redatada \u2014 sem segredos) do workflow n8n provado do Sovereign\nque gerava v\u00eddeos de 51s: Gemini cenas \u2192 Pollinations imagens \u2192 VoxCPM voz \u2192\nLTX i2v \u2192 Remotion HUD \u2192 FFmpeg comp\u00f5e/concatena/poliza \u2192 QA Vision cr\u00edtico \u2192\ndeliver. Mapeia para engine=faceless (worker 503-gated) + creative_assets +\no h\u00edbrido Canvas\u2194HyperFrames. De-n8n: reproduzir nativo.\nEOF\ngit log --oneline -3 2>&1 | grep -E \"faceless|canvas|recover\" | head -3",
+  "description": "Commit faceless reference doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:13PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:13PM[0m [32mINF[0m scan completed in 7.99ms
+> [90m10:13PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> e1610f2 docs(video-studio): referência do pipeline faceless 51s (fonte do build nativo)
+> 6fa6370 fix(canvas): guard contra sobrescrita de grafo não-vazio por vazio (perda de nós)
+> ```
+
+## 🤖 Claude *(01:13:56)*
+
+
+## 🤖 Claude *(01:13:56)*
+
+Committed `e1610f2` (gitleaks limpo — sem segredos). Registro o programa + a ordem decidida na memória:
+
+## 🤖 Claude *(01:14:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_creative_ecosystem_program.md",
+  "content": "---\nname: project-creative-ecosystem-program\ndescription: Programa do ecossistema criativo bidirecional (Canvas Studio + HyperFrames + OpenDesign + content pipeline \u2192 social) \u2014 arquitetura h\u00edbrida + creative_assets spine + faceless nativo; ordem de 4 fatias decidida\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-06-25 (depois do editor HyperFrames vivo): montar o \"design video maker\" e o **poder das sa\u00eddas** \u2014 cada m\u00f3dulo (OpenDesign, HyperFrames, Canvas Studio, pipeline de conte\u00fado) usando assets um do outro **BIDIRECIONAL**, fluindo pras redes sociais por objetivo. Decis\u00e3o: **h\u00edbrido** (Canvas autora \u00b7 HyperFrames renderiza [FFmpeg = long-form, ele fez 51s no n8n] \u00b7 Meta/Orquestra publica). Sovereign disse \"fa\u00e7a todos, decida a ordem\". Fundamentado em workflow de 5 agentes (`wf_99e82c92`, s\u00edntese no output da task).\n\n**ORDEM DECIDIDA (cada fatia = emenda BoK enxuta Lei 2 \u2192 /security-review \u2192 c\u00f3digo \u2192 smoke \u2192 seal):**\n1. **`creative_assets` spine** \u2014 tabela can\u00f4nica fina (s\u00f3 APONTA pros buckets existentes `canvas-assets`/`video-studio-assets`/`generated-images`/`public`; sem migrar bytes): `{id, user_id(RLS), kind(image|video|audio|design|article), storage_bucket, storage_key, source_module, parent_asset_id(proveni\u00eancia), mesh_node_id, metadata}`. Dual-write de canvas-execute/video-bridge/design-bridge/generate-image/orchestrate-content. \u00c9 o keystone do bidirecional. Vis\u00edvel via asset-picker. Emenda BoK canvas-design/constellation.\n2. **v\u00eddeo\u2192Meta Reels** \u2014 primeira sa\u00edda REAL numa rede (usa o motor 9:16 que j\u00e1 existe + a spine): `content_library.video_render_id` + estende `publish-meta` p/ `media_type=VIDEO`. TikTok/YT Shorts diferidos (OAuth Tier 2).\n3. **faceless long-form nativo** \u2014 reproduz o pipeline n8n provado do Sovereign (51s) sob `video-render` engine=faceless (worker 503-gated). Receita destilada: `.claude/context/faceless-pipeline-reference-2026-06-25.md` (Gemini cenas \u2192 Pollinations img \u2192 VoxCPM voz \u2192 LTX i2v \u2192 Remotion HUD \u2192 FFmpeg comp\u00f5e/concatena/poliza \u2192 QA Vision cr\u00edtico). Escreve cada asset de cena na spine. Emenda video-studio FRD.\n4. **Canvas\u2194HyperFrames bidirectional nodes** \u2014 ExportScene/VideoRender no Canvas (postMessage ao iframe video.mcorch.com) + asset-picker lendo creative_assets \u2192 fluxo objetivo\u2192v\u00eddeo numa tela.\n\n**Entregue nesta sess\u00e3o (2026-06-25):** (a) **bug de perda de n\u00f3s do Canvas FIXADO** (commit `6fa6370`) \u2014 race load/save: o `useAutoSave` dava flush do estado vazio `{nodes:[]}` antes da hidrata\u00e7\u00e3o \u2192 guard no `useSaveCanvasGraph` que BLOQUEIA sobrescrever grafo n\u00e3o-vazio com vazio (l\u00ea-antes-de-gravar). (b) **projeto `63d406fe` RECUPERADO** \u2014 reconstru\u00eddo das `vm_canvas_executions` (3 n\u00f3s + 1 aresta de linhagem; posi\u00e7\u00f5es auto-layout, x/y originais perdidas). Mecanismo do node-shape ReactFlow: `{id,type,position,data{kind,label,prompt,output{imageUrl|videoUrl},status,modelId}}`, edge `{source,target,sourceHandle:output_image,targetHandle:input_image}`.\n\n**\u26a0\ufe0f SEGURAN\u00c7A:** o n8n que o Sovereign colou tinha **chave Gemini viva** (`AIza\u20264ztY`) + **token de bot Telegram** (`8756\u202696Q`) + chat_id \u2014 recomendei ROTACIONAR ambos (est\u00e3o no log da conversa). Nunca commitar; a refer\u00eancia salva \u00e9 redatada. Faceless nativo l\u00ea BYOK `google_api_key` per-user, nunca chave hardcoded ([[reference_byok_gemini_column]]).\n\nRelacionado: [[project_video_studio]] (Fatia VS-UI editor vivo) \u00b7 [[project_creative_layer_validation]] (Vision QA gate) \u00b7 [[feedback_deliver_user_value_not_plumbing]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_creative_ecosystem_program.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:14:25)*
+
+
+## 🤖 Claude *(01:14:25)*
+
+Adiciono o ponteiro no índice:
+
+## 🤖 Claude *(01:14:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "Lei 2 como meio, lean.",
+  "new_string": "Lei 2 como meio, lean.\n- [Programa do ecossistema criativo bidirecional (Canvas+HyperFrames+OpenDesign\u2192social)](project_creative_ecosystem_program.md) \u2014 Diretiva Sovereign 2026-06-25: h\u00edbrido bidirecional + `creative_assets` spine + faceless nativo (receita n8n 51s). Ordem decidida de 4 fatias. Nesta sess\u00e3o: bug de perda de n\u00f3s do Canvas fixado (`6fa6370`) + projeto `63d406fe` recuperado. \u26a0\ufe0f rotacionar chave Gemini + token Telegram do n8n colado."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:14:37)*
+
+
+## 🤖 Claude *(01:14:37)*
+
+Tudo registrado. Marco o novo capítulo e fecho com a ordem decidida:
+
+## 🤖 Claude *(01:14:39)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Ecossistema criativo bidirecional",
+  "summary": "H\u00edbrido Canvas+HyperFrames+OpenDesign\u2192social; bug de n\u00f3s do Canvas fixado + 63d406fe recuperado; ordem de 4 fatias decidida (creative_assets spine \u2192 Meta Reels \u2192 faceless nativo \u2192 n\u00f3s bidirecionais)"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Ecossistema criativo bidirecional". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(01:14:55)*
+
+Feito nesta rodada — tudo material, deployado, commitado:
+
+| Entrega | Prova |
+|---|---|
+| 🐛 **Bug de perda de nós FIXADO** | guard `6fa6370` — não sobrescreve grafo não-vazio com vazio (lê-antes-de-grava). Vale pra **todo** projeto. |
+| ♻️ **Projeto `63d406fe` recuperado** | 3 nós + 1 aresta reconstruídos das execuções (VERIFY: 3 nós, 1 aresta). Reabra com Ctrl+Shift+R. |
+| 📄 **Receita faceless 51s salva** | `faceless-pipeline-reference-2026-06-25.md` (redatada) — fonte do faceless nativo (`e1610f2`). |
+| 🔐 **Alerta de segurança** | rotacione a **chave Gemini** + o **token Telegram** do n8n que você colou. |
+
+## A ordem que decidi (você mandou eu decidir)
+
+Híbrido **bidirecional** confirmado. Cada fatia abre com uma emenda BoK enxuta (Lei 2) → código → seal:
+
+1. **`creative_assets` (a espinha)** — o keystone do bidirecional. Tabela fina que **só aponta** pros buckets que já existem; todo módulo escreve/lê dela com proveniência. Sem ela, OpenDesign↔Canvas↔HyperFrames são gambiarra ponto-a-ponto. Visível via asset-picker. **← começo por aqui.**
+2. **vídeo → Meta Reels** — primeira saída REAL numa rede, usando o motor 9:16 que já existe + a espinha. Vitória tangível.
+3. **faceless long-form nativo** — sua receita de 51s reproduzida nativa (engine=faceless), escrevendo cada cena na espinha. A capacidade grande (FFmpeg, multi-cena).
+4. **nós Canvas↔HyperFrames** — ExportScene/VideoRender no Canvas conversando com o iframe do editor; o fluxo objetivo→vídeo numa tela.
+
+**Racional:** a espinha primeiro porque é o que você pediu como núcleo ("o poder das saídas, bidirecional") e tudo reusa ela; depois uma vitória social rápida; depois o motor faceless; por fim a UI polida.
+
+**Próximo passo concreto:** abro a **Fatia 1** — emenda BoK da `creative_assets` + a migration (com `/security-review`, RLS tenant-scoped) + dual-write de um módulo pra provar o fluxo. Quer que eu já dispare a Fatia 1 agora, ou prefere revisar a forma da tabela `creative_assets` antes?
+
+## 👤 User *(01:19:59)*
+
+ótimo continue então e faça tudo temos ainda 55% de contexto para aproveitar aqui nessa sessão
+
+## 🤖 Claude *(01:20:37)*
+
+
+## 🤖 Claude *(01:20:39)*
+
+GO recebido — executando o programa completo, começando pela **Fatia 1 (creative_assets spine)**. Vou usar o budget com fatias verificadas. Primeiro aterro nas convenções (uma migration recente de RPC + uma de CREATE TABLE com RLS) pra casar o padrão:
+
+## 🤖 Claude *(01:20:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migrations tail (timestamp convention) ===\"; ls supabase/migrations/ | tail -6\necho \"\"; echo \"=== RPC service-role pattern (refund migration) ===\"; sed -n '1,60p' supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql 2>/dev/null | grep -nE \"CREATE OR REPLACE FUNCTION|SECURITY DEFINER|search_path|REVOKE|GRANT|auth.role|service_role|RAISE EXCEPTION\" | head -20\necho \"\"; echo \"=== a recent CREATE TABLE + RLS pattern (creative_metrics?) ===\"; grep -rl \"CREATE TABLE\" supabase/migrations/2026062*.sql 2>/dev/null | tail -3",
+  "description": "Inspect migration conventions for RPC + RLS table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrations tail (timestamp convention) ===
+> 20260622040000_video_studio_renders_and_assets.sql
+> 20260622210000_user_api_keys_rapidapi_channel.sql
+> 20260623040000_viral_autopilot_cadence_cron.sql
+> 20260624120000_video_studio_composition_and_bucket.sql
+> 20260624130000_autopilot_video_plan_columns.sql
+> 20260624140000_autopilot_video_enqueue_refund.sql
+> 
+> === RPC service-role pattern (refund migration) ===
+> 31:-- SELECT own only; NO insert/update policy ⇒ default-deny (the RPC writes via SECURITY DEFINER / service-role).
+> 50:CREATE OR REPLACE FUNCTION public.refund_autopilot_video_enqueue(
+> 58:SECURITY DEFINER
+> 59:SET search_path = ''
+> 
+> === a recent CREATE TABLE + RLS pattern (creative_metrics?) ===
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql
+> supabase/migrations/20260620120000_viral_autopilot_plans.sql
+> ```
+
+## 🤖 Claude *(01:20:46)*
+
+
+## 🤖 Claude *(01:20:47)*
+
+Leio o `video_assets` (tabela de asset com RLS — molde perfeito) + o RPC service-role completo:
+
+## 🤖 Claude *(01:20:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: video-studio Fatia 1 — domain foundation (video_renders + video_assets + finalize/refund RPC).
+> 2	-- BoK SSOT: docs/bok/video-studio/06-data-model.md (§2.1 video_renders, §2.4 video_assets, §3 RLS/index plan)
+> 3	--           + 04-frd.md (FR-VS-009/010/011/014/024/026/030) + 05-sdd.md (§2.6 New DB Objects).
+> 4	-- Anticipated process (Lei 2): docs/bok/video-studio/07-process-flow.md PROC-VS-001/004 (charge-at-entry + refund).
+> 5	--
+> 6	-- SCOPE (slice 1 — foundation + edge contract; render engine deferred to slice 2):
+> 7	--   • video_renders — render state machine + atomic charged/refunded ledger, poll-able, tenancy-aware from birth
+> 8	--     (org_id/client_id NULLABLE: NULL = solo creator v0.1, byte-identical backward-compat; set = agency §AG).
+> 9	--   • video_assets — material artifact manifest (Storage object + node_id) = the erasure unit (FR-VS-030).
+> 10	--   • finalize_video_render — the ONLY terminal+refund authority (service-role), mirrors finalize_vision_job
+> 11	--     (20260615160000): atomic guard `state IN (queued,running,qa_gate)` ⇒ first finalizer wins, idempotent,
+> 12	--     never money-without-guard nor double-refund.
+> 13	--
+> 14	-- TENANCY MODEL (FMEA-VS-020 — cross-tenant isolation is the v1.1 top RPN; /security-review gated):
+> 15	--   SELECT = own row OR (agency) a row of an org the caller is an active member of (public.is_org_member, the
+> 16	--   anti-recursion SECURITY DEFINER helper from 20260622030000). NO INSERT/UPDATE policy for authenticated ⇒
+> 17	--   default-deny writes: the edge fn (video-render) is the ONLY writer, via the service key, AFTER deduct_mco_coins.
+> 18	--   A tenant therefore can NEVER forge a render row (bypassing the charge) nor mutate one (zeroing its charge /
+> 19	--   faking 'done' to read another tenant's asset). Mirrors vision_jobs (20260615160000) + lead_core tenancy.
+> 20	--   video_renders carries a RESTRICTIVE no-delete (financial ledger family: creative_metrics / autopilot_cycles).
+> 21	--
+> 22	-- project_id is uuid WITHOUT FK (there is no `projects` table — project_id is text/uuid tenant tag elsewhere;
+> 23	-- mirrors vision_jobs:19). The (org_id, client_id) composite FK → clients(org_id, id) is NOT VALID (no backfill
+> 24	-- scan; existing/solo rows have NULLs ⇒ MATCH SIMPLE skips the FK) and proves a render's client truly belongs to
+> 25	-- the stated org. CHECK keeps client_id from being set without an org.
+> 26	
+> 27	-- ─────────────────────────────────────────────────────────────────────────────
+> 28	-- 1. video_renders — render state machine + atomic ledger (FR-VS-009/010/011/014/024/026)
+> 29	-- ─────────────────────────────────────────────────────────────────────────────
+> 30	CREATE TABLE IF NOT EXISTS public.video_renders (
+> 31	  id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),    -- = render_id (returned in 202; poll-able)
+> 32	  user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 33	  org_id        uuid        REFERENCES public.organizations(id) ON DELETE CASCADE,  -- NULL = solo creator (§AG opt-in)
+> 34	  client_id     uuid,                                                 -- agency cost-center; FK is composite (below)
+> 35	  project_id    uuid,                                                 -- optional tenant project tag (no projects table)
+> 36	  engine        text        NOT NULL CHECK (engine IN ('faceless','hyperframes')),
+> 37	  state         text        NOT NULL DEFAULT 'queued'
+> 38	                  CHECK (state IN ('queued','running','qa_gate','done','qa_failed','failed')),
+> 39	  product_id    uuid,                                                 -- product-aware (FR-VS-017); logical, no FK (prunable)
+> 40	  topic         text,                                                 -- free topic when no product
+> 41	  template_id   uuid,                                                 -- HyperFrames reuse (FR-VS-024); logical until templates land
+> 42	  legs          jsonb       NOT NULL DEFAULT '[]'::jsonb,             -- per-leg status (script/image/voice/motion/overlay/composite/qa)
+> 43	  qa            jsonb,                                                -- { consistent, confidence } from the VLM gate (FR-VS-019/020)
+> 44	  charged_mco   int         NOT NULL DEFAULT 0 CHECK (charged_mco >= 0),
+> 45	  refunded_mco  int         NOT NULL DEFAULT 0 CHECK (refunded_mco >= 0 AND refunded_mco <= charged_mco),
+> 46	  refunded_at   timestamptz,                                          -- idempotency guard (refund 1×/render — PROC-VS-004)
+> 47	  storage_key   text,                                                 -- set at `done`; object ≥100KB (Lei 1 proof)
+> 48	  voice_consent boolean     NOT NULL DEFAULT false,                   -- required for identifiable voice cloning (FR-VS-032)
+> 49	  node_id       uuid,                                                 -- mesh observation (FR-VS-026); logical → mcorch_nodes.id
+> 50	  expires_at    timestamptz NOT NULL DEFAULT (now() + interval '24 hours'),  -- poll retention ≥24h
+> 51	  created_at    timestamptz NOT NULL DEFAULT now(),
+> 52	  updated_at    timestamptz NOT NULL DEFAULT now(),
+> 53	  CONSTRAINT video_renders_client_needs_org CHECK (client_id IS NULL OR org_id IS NOT NULL),
+> 54	  CONSTRAINT video_renders_client_fk FOREIGN KEY (org_id, client_id)
+> 55	    REFERENCES public.clients(org_id, id) ON DELETE SET NULL NOT VALID
+> 56	);
+> 57	
+> 58	ALTER TABLE public.video_renders ENABLE ROW LEVEL SECURITY;
+> 59	
+> 60	-- SELECT: own row, OR an agency row whose org the caller actively belongs to (anti-recursion helper).
+> 61	CREATE POLICY "video_renders_select_own_or_org" ON public.video_renders
+> 62	  FOR SELECT USING (
+> 63	    auth.uid() = user_id
+> 64	    OR (org_id IS NOT NULL AND public.is_org_member(org_id))
+> 65	  );
+> 66	
+> 67	-- No INSERT/UPDATE policy for authenticated ⇒ default-deny: the edge fn writes via the service key AFTER the
+> 68	-- atomic deduct. RESTRICTIVE no-delete: the financial ledger is never client-deletable (service-role erasure only).
+> 69	CREATE POLICY "video_renders_no_client_delete" ON public.video_renders
+> 70	  AS RESTRICTIVE FOR DELETE USING (false);
+> 71	
+> 72	CREATE INDEX IF NOT EXISTS video_renders_user_state_idx   ON public.video_renders (user_id, state);
+> 73	CREATE INDEX IF NOT EXISTS video_renders_user_created_idx ON public.video_renders (user_id, created_at DESC);
+> 74	CREATE INDEX IF NOT EXISTS video_renders_org_idx          ON public.video_renders (org_id) WHERE org_id IS NOT NULL;
+> 75	CREATE INDEX IF NOT EXISTS video_renders_expires_idx      ON public.video_renders (expires_at);
+> 76	
+> 77	CREATE TRIGGER tr_update_video_renders_updated_at
+> 78	  BEFORE UPDATE ON public.video_renders
+> 79	  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 80	
+> 81	COMMENT ON TABLE public.video_renders IS
+> 82	  'video-studio render state machine (FR-VS-009/014/024). queued→running→qa_gate→done|qa_failed|failed; atomic '
+> 83	  'charged/refunded ledger (refunded_mco<=charged_mco, refunded_at idempotency). SELECT own-or-org-member RLS; '
+> 84	  'edge fn writes via service key after deduct; RESTRICTIVE no client delete. org_id/client_id NULL = solo (§AG opt-in).';
+> 85	
+> 86	-- ─────────────────────────────────────────────────────────────────────────────
+> 87	-- 2. video_assets — material artifact manifest = the erasure unit (FR-VS-030/031)
+> 88	-- ─────────────────────────────────────────────────────────────────────────────
+> 89	CREATE TABLE IF NOT EXISTS public.video_assets (
+> 90	  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+> 91	  user_id         uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 92	  render_id       uuid        NOT NULL REFERENCES public.video_renders(id) ON DELETE CASCADE,
+> 93	  kind            text        NOT NULL CHECK (kind IN ('video','image','audio')),
+> 94	  storage_key     text        NOT NULL,                              -- object in private bucket video-studio-assets
+> 95	  node_id         uuid,                                              -- derived mesh node (FR-VS-026); logical
+> 96	  bytes           bigint      CHECK (bytes IS NULL OR bytes >= 0),   -- material size (video ≥100KB) — Lei 1
+> 97	  retention_until timestamptz,                                       -- LGPD retention clock (Art. 16)
+> 98	  created_at      timestamptz NOT NULL DEFAULT now()
+> 99	);
+> 100	
+> 101	ALTER TABLE public.video_assets ENABLE ROW LEVEL SECURITY;
+> 102	
+> 103	-- SELECT own only (the asset row is tenant-bound via user_id; org members read assets through the render join in
+> 104	-- the app layer when agency surfaces land). No write policy ⇒ service-role writes only (same billing-integrity rule).
+> 105	CREATE POLICY "video_assets_select_own" ON public.video_assets
+> 106	  FOR SELECT USING (auth.uid() = user_id);
+> 107	
+> 108	CREATE INDEX IF NOT EXISTS video_assets_render_idx    ON public.video_assets (render_id);
+> 109	CREATE INDEX IF NOT EXISTS video_assets_user_idx      ON public.video_assets (user_id);
+> 110	CREATE INDEX IF NOT EXISTS video_assets_retention_idx ON public.video_assets (retention_until);
+> 111	
+> 112	COMMENT ON TABLE public.video_assets IS
+> 113	  'video-studio material artifact manifest (FR-VS-030). Storage object + node_id = atomic erasure unit. '
+> 114	  'SELECT-own RLS; service-role writes. bytes>=100KB enforced app-side before render reaches done (Lei 1).';
+> 115	
+> 116	-- ─────────────────────────────────────────────────────────────────────────────
+> 117	-- 3. finalize_video_render — atomic terminal + refund authority (FR-VS-011 · mirrors finalize_vision_job)
+> 118	--    Closes the /security-review HIGH class (charge-without-value + refund/guard atomicity). The ONLY way a
+> 119	--    render goes terminal. Guard `state IN (queued,running,qa_gate)` ⇒ the FIRST finalizer wins (worker OR a
+> 120	--    future poll lazy-reconcile OR a sweep); a second call on an already-terminal render is a no-op (no double
+> 121	--    refund). The video_renders guard write AND the balance credit (add_mco_coins) commit in ONE transaction.
+> 122	--    service_role-only (the worker/edge calls it via SB_SECRET_KEY; tenants never reach it). FMEA-011 reviewed.
+> 123	-- ─────────────────────────────────────────────────────────────────────────────
+> 124	CREATE OR REPLACE FUNCTION public.finalize_video_render(
+> 125	  p_render_id   uuid,
+> 126	  p_state       text,
+> 127	  p_storage_key text,    -- NULL keeps existing (set on success)
+> 128	  p_qa          jsonb,   -- NULL keeps existing (VLM verdict)
+> 129	  p_node_id     uuid,    -- NULL keeps existing (mesh observation)
+> 130	  p_refund      int      -- refund to credit (0 = none, e.g. 'done'); must be <= charged_mco
+> 131	)
+> 132	RETURNS jsonb
+> 133	LANGUAGE plpgsql
+> 134	SECURITY DEFINER
+> 135	SET search_path = ''
+> 136	AS $$
+> 137	DECLARE
+> 138	  v_uid uuid;
+> 139	BEGIN
+> 140	  IF p_state NOT IN ('done','qa_failed','failed') THEN
+> 141	    RAISE EXCEPTION 'finalize_video_render: terminal state required, got %', p_state USING errcode = '22023';
+> 142	  END IF;
+> 143	
+> 144	  -- Claim + finalize a NON-TERMINAL render exactly once.
+> 145	  UPDATE public.video_renders
+> 146	     SET state        = p_state,
+> 147	         storage_key  = COALESCE(p_storage_key, storage_key),
+> 148	         qa           = COALESCE(p_qa, qa),
+> 149	         node_id      = COALESCE(p_node_id, node_id),
+> 150	         refunded_mco = CASE WHEN p_refund > 0 THEN p_refund ELSE refunded_mco END,
+> 151	         refunded_at  = CASE WHEN p_refund > 0 THEN now()    ELSE refunded_at END
+> 152	   WHERE id = p_render_id
+> 153	     AND state IN ('queued','running','qa_gate')
+> 154	   RETURNING user_id INTO v_uid;
+> 155	
+> 156	  IF v_uid IS NULL THEN
+> 157	    RETURN jsonb_build_object('finalized', false);   -- already terminal → no-op (no double refund)
+> 158	  END IF;
+> 159	
+> 160	  IF p_refund > 0 THEN
+> 161	    PERFORM public.add_mco_coins(v_uid, p_refund);
+> 162	    RETURN jsonb_build_object('finalized', true, 'refunded', p_refund);
+> 163	  END IF;
+> 164	
+> 165	  RETURN jsonb_build_object('finalized', true, 'refunded', 0);
+> 166	END;
+> 167	$$;
+> 168	
+> 169	REVOKE ALL ON FUNCTION public.finalize_video_render(uuid, text, text, jsonb, uuid, int) FROM PUBLIC, anon, authenticated;
+> 170	GRANT EXECUTE ON FUNCTION public.finalize_video_render(uuid, text, text, jsonb, uuid, int) TO service_role;
+> 171	
+> ```
+
+## 🤖 Claude *(01:20:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql",
+  "offset": 50,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 50	CREATE OR REPLACE FUNCTION public.refund_autopilot_video_enqueue(
+> 51	  p_run_id   uuid,
+> 52	  p_cycle_id uuid,
+> 53	  p_user_id  uuid,
+> 54	  p_amount   int
+> 55	)
+> 56	RETURNS jsonb
+> 57	LANGUAGE plpgsql
+> 58	SECURITY DEFINER
+> 59	SET search_path = ''
+> 60	AS $$
+> 61	DECLARE
+> 62	  v_rows int;
+> 63	BEGIN
+> 64	  IF p_run_id IS NULL OR p_user_id IS NULL THEN
+> 65	    RAISE EXCEPTION 'refund_autopilot_video_enqueue: run_id and user_id required' USING errcode = '22023';
+> 66	  END IF;
+> 67	  -- Anti-mint: positive, bounded credit only (the table CHECK is the hard backstop; this is the early guard).
+> 68	  IF p_amount IS NULL OR p_amount <= 0 OR p_amount > 100 THEN
+> 69	    RAISE EXCEPTION 'refund_autopilot_video_enqueue: amount must be in (0,100], got %', p_amount USING errcode = '22023';
+> 70	  END IF;
+> 71	
+> 72	  -- Idempotency anchor: one credit per run. ON CONFLICT → no-op (already refunded).
+> 73	  INSERT INTO public.autopilot_video_refunds (run_id, cycle_id, user_id, amount)
+> 74	    VALUES (p_run_id, p_cycle_id, p_user_id, p_amount)
+> 75	    ON CONFLICT (run_id) DO NOTHING;
+> 76	  GET DIAGNOSTICS v_rows = ROW_COUNT;
+> 77	
+> 78	  IF v_rows > 0 THEN
+> 79	    PERFORM public.add_mco_coins(p_user_id, p_amount);   -- positive credit (anti-mint: never a negative deduct)
+> 80	    RETURN jsonb_build_object('refunded', true, 'amount', p_amount);
+> 81	  END IF;
+> 82	
+> 83	  RETURN jsonb_build_object('refunded', false);   -- already refunded for this run → idempotent no-op
+> 84	END;
+> 85	$$;
+> 86	
+> 87	REVOKE ALL ON FUNCTION public.refund_autopilot_video_enqueue(uuid, uuid, uuid, int) FROM PUBLIC, anon, authenticated;
+> 88	GRANT EXECUTE ON FUNCTION public.refund_autopilot_video_enqueue(uuid, uuid, uuid, int) TO service_role;
+> 89	
+> ```
+
+## 🤖 Claude *(01:21:42)*
+
+
+## 🤖 Claude *(01:21:44)*
+
+Convenções claras (RLS own-or-org, default-deny writes, RPC `SECURITY DEFINER search_path='' service_role-only`, idempotência ON CONFLICT). Escrevo a migration da `creative_assets` (a espinha) + o SOP Lei 2:
+
+## 🤖 Claude *(01:22:23)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260625120000_creative_assets_registry.sql",
+  "content": "-- Migration: creative_assets \u2014 the canonical ecosystem ASSET REGISTRY (bidirectional interop spine).\n-- BoK SSOT: docs/processes/creative-assets-registry.md (Lei 2 anticipated process) + the creative-ecosystem\n--           program (project_creative_ecosystem_program). Realizes the Sovereign directive 2026-06-25:\n--           \"o poder das sa\u00eddas\" \u2014 each module (canvas-studio / hyperframes / open-design / content-pipeline /\n--           generate-image / faceless) writes & reads each other's assets, bidirectionally, with provenance.\n--\n-- DESIGN: a THIN registry/index over EXISTING storage \u2014 bytes stay in their current buckets (canvas-assets,\n--   video-studio-assets, generated-images, public). This table only POINTS at them (storage_bucket+storage_key)\n--   and adds: kind, provenance (parent_asset_id chain + mesh_node_id), source attribution, and curation. No data\n--   migration; producers DUAL-WRITE a row on success (fail-soft \u2014 never break the producer if registration fails).\n--\n-- TENANCY (mirrors video_renders 20260622040000): SELECT = own row OR an agency row whose org the caller actively\n--   belongs to (public.is_org_member anti-recursion helper). NO INSERT/UPDATE policy for authenticated \u21d2 default-deny\n--   writes: register_creative_asset (SECURITY DEFINER, service-role-only) is the ONLY writer. DELETE own allowed\n--   (the registry row; Storage object cleanup is a separate Storage-API concern). org_id NULL = solo creator (\u00a7AG).\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 1. creative_assets \u2014 the asset spine\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.creative_assets (\n  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id          uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  org_id           uuid        REFERENCES public.organizations(id) ON DELETE CASCADE,  -- NULL = solo (\u00a7AG opt-in)\n  kind             text        NOT NULL CHECK (kind IN ('image','video','audio','design','article','template')),\n  storage_bucket   text        NOT NULL,   -- existing bucket: canvas-assets | video-studio-assets | generated-images | public\n  storage_key      text        NOT NULL,   -- object path inside the bucket\n  is_public        boolean     NOT NULL DEFAULT false,  -- public bucket (public URL) vs private (signed URL at read)\n  mime_type        text,\n  file_size_bytes  bigint      CHECK (file_size_bytes IS NULL OR file_size_bytes >= 0),\n  width            int,\n  height           int,\n  duration_seconds numeric     CHECK (duration_seconds IS NULL OR duration_seconds >= 0),\n  parent_asset_id  uuid        REFERENCES public.creative_assets(id) ON DELETE SET NULL,  -- provenance/lineage\n  source_module    text        NOT NULL CHECK (source_module IN\n                     ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless')),\n  source_job_id    text,        -- polymorphic origin: execution_id | render_id | design_job_id | operation_id\n  mesh_node_id     uuid,        -- mcorch_nodes.id (logical, no FK \u2014 the mesh is multi-tenant, prunable)\n  provider         text,\n  model            text,\n  prompt           text,\n  title            text,\n  tags             text[]      NOT NULL DEFAULT '{}',\n  is_favorite      boolean     NOT NULL DEFAULT false,\n  metadata         jsonb       NOT NULL DEFAULT '{}'::jsonb,\n  created_at       timestamptz NOT NULL DEFAULT now(),\n  updated_at       timestamptz NOT NULL DEFAULT now(),\n  -- One Storage object = one asset row (idempotency anchor for dual-write ON CONFLICT).\n  CONSTRAINT creative_assets_uq_object UNIQUE (storage_bucket, storage_key)\n);\n\nALTER TABLE public.creative_assets ENABLE ROW LEVEL SECURITY;\n\n-- SELECT: own, OR an agency row whose org the caller actively belongs to (anti-recursion helper).\nCREATE POLICY \"creative_assets_select_own_or_org\" ON public.creative_assets\n  FOR SELECT USING (\n    auth.uid() = user_id\n    OR (org_id IS NOT NULL AND public.is_org_member(org_id))\n  );\n\n-- DELETE own (a user can remove their own asset from the registry). No INSERT/UPDATE policy \u21d2 default-deny:\n-- register_creative_asset (service-role) is the only writer, so source_module/user_id can never be forged.\nCREATE POLICY \"creative_assets_delete_own\" ON public.creative_assets\n  FOR DELETE USING (auth.uid() = user_id);\n\nCREATE INDEX IF NOT EXISTS creative_assets_user_kind_idx   ON public.creative_assets (user_id, kind, created_at DESC);\nCREATE INDEX IF NOT EXISTS creative_assets_user_created_idx ON public.creative_assets (user_id, created_at DESC);\nCREATE INDEX IF NOT EXISTS creative_assets_parent_idx      ON public.creative_assets (parent_asset_id) WHERE parent_asset_id IS NOT NULL;\nCREATE INDEX IF NOT EXISTS creative_assets_source_idx      ON public.creative_assets (source_module, source_job_id);\nCREATE INDEX IF NOT EXISTS creative_assets_mesh_idx        ON public.creative_assets (mesh_node_id) WHERE mesh_node_id IS NOT NULL;\nCREATE INDEX IF NOT EXISTS creative_assets_org_idx         ON public.creative_assets (org_id) WHERE org_id IS NOT NULL;\n\nCREATE TRIGGER tr_update_creative_assets_updated_at\n  BEFORE UPDATE ON public.creative_assets\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\nCOMMENT ON TABLE public.creative_assets IS\n  'Canonical ecosystem asset registry (bidirectional interop spine). Thin index over existing buckets \u2014 bytes stay '\n  'put; modules dual-write. provenance = parent_asset_id chain + mesh_node_id. SELECT own-or-org RLS; DELETE own; '\n  'writes via register_creative_asset (service-role). One Storage object = one row (UNIQUE bucket+key).';\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 2. register_creative_asset \u2014 the ONLY writer (SECURITY DEFINER, service-role-only, idempotent)\n--    Producers (canvas-execute, video-bridge, generate-image, design-bridge, orchestrate-content) call this\n--    FAIL-SOFT on success. ON CONFLICT (object) refreshes mutable metadata without forging identity.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.register_creative_asset(\n  p_user_id          uuid,\n  p_kind             text,\n  p_storage_bucket   text,\n  p_storage_key      text,\n  p_source_module    text,\n  p_source_job_id    text     DEFAULT NULL,\n  p_is_public        boolean  DEFAULT false,\n  p_mime_type        text     DEFAULT NULL,\n  p_file_size_bytes  bigint   DEFAULT NULL,\n  p_width            int      DEFAULT NULL,\n  p_height           int      DEFAULT NULL,\n  p_duration_seconds numeric  DEFAULT NULL,\n  p_parent_asset_id  uuid     DEFAULT NULL,\n  p_mesh_node_id     uuid     DEFAULT NULL,\n  p_provider         text     DEFAULT NULL,\n  p_model            text     DEFAULT NULL,\n  p_prompt           text     DEFAULT NULL,\n  p_title            text     DEFAULT NULL,\n  p_org_id           uuid     DEFAULT NULL,\n  p_tags             text[]   DEFAULT '{}',\n  p_metadata         jsonb    DEFAULT '{}'::jsonb\n)\nRETURNS uuid\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_id uuid;\nBEGIN\n  IF p_user_id IS NULL OR p_storage_bucket IS NULL OR p_storage_key IS NULL THEN\n    RAISE EXCEPTION 'register_creative_asset: user_id, storage_bucket, storage_key required' USING errcode = '22023';\n  END IF;\n  IF p_kind NOT IN ('image','video','audio','design','article','template') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid kind %', p_kind USING errcode = '22023';\n  END IF;\n  IF p_source_module NOT IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid source_module %', p_source_module USING errcode = '22023';\n  END IF;\n\n  INSERT INTO public.creative_assets (\n    user_id, org_id, kind, storage_bucket, storage_key, is_public, mime_type, file_size_bytes,\n    width, height, duration_seconds, parent_asset_id, source_module, source_job_id, mesh_node_id,\n    provider, model, prompt, title, tags, metadata\n  ) VALUES (\n    p_user_id, p_org_id, p_kind, p_storage_bucket, p_storage_key, p_is_public, p_mime_type, p_file_size_bytes,\n    p_width, p_height, p_duration_seconds, p_parent_asset_id, p_source_module, p_source_job_id, p_mesh_node_id,\n    p_provider, p_model, p_prompt, p_title, COALESCE(p_tags, '{}'), COALESCE(p_metadata, '{}'::jsonb)\n  )\n  ON CONFLICT (storage_bucket, storage_key) DO UPDATE SET\n    -- Refresh mutable descriptors only; NEVER reassign user_id (tenant) or source_module (provenance integrity).\n    kind            = EXCLUDED.kind,\n    mime_type       = COALESCE(EXCLUDED.mime_type, public.creative_assets.mime_type),\n    file_size_bytes = COALESCE(EXCLUDED.file_size_bytes, public.creative_assets.file_size_bytes),\n    width           = COALESCE(EXCLUDED.width, public.creative_assets.width),\n    height          = COALESCE(EXCLUDED.height, public.creative_assets.height),\n    duration_seconds= COALESCE(EXCLUDED.duration_seconds, public.creative_assets.duration_seconds),\n    parent_asset_id = COALESCE(EXCLUDED.parent_asset_id, public.creative_assets.parent_asset_id),\n    mesh_node_id    = COALESCE(EXCLUDED.mesh_node_id, public.creative_assets.mesh_node_id),\n    title           = COALESCE(EXCLUDED.title, public.creative_assets.title),\n    metadata        = public.creative_assets.metadata || EXCLUDED.metadata,\n    updated_at      = now()\n  WHERE public.creative_assets.user_id = EXCLUDED.user_id   -- never let one tenant's object overwrite another's row\n  RETURNING id INTO v_id;\n\n  RETURN v_id;\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260625120000_creative_assets_registry.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:22:27)*
+
+
+## 🤖 Claude *(01:22:28)*
+
+Migration escrita. Agora o SOP Lei 2 (enxuto) + `/security-review` na migration:
+
+## 🤖 Claude *(01:22:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/creative-assets-registry.md",
+  "content": "# SOP \u2014 creative_assets registry (bidirectional asset interop spine)\n\n> **Lei 2 (Processo Antecipado).** Como cada m\u00f3dulo do ecossistema (canvas-studio \u00b7 hyperframes \u00b7 open-design \u00b7\n> content-pipeline \u00b7 generate-image \u00b7 faceless) **registra e reusa** assets uns dos outros, bidirecional, com\n> proveni\u00eancia. Fatia 1 do [[project_creative_ecosystem_program]]. Migration `20260625120000_creative_assets_registry.sql`.\n\nRelacionado: `supabase/functions/canvas-execute` \u00b7 `scripts/video-bridge.ts` \u00b7 `supabase/functions/generate-image` \u00b7\n`scripts/design-bridge.ts` \u00b7 buckets `canvas-assets`/`video-studio-assets`/`generated-images`/`public`.\n\n## ORO\n| Papel | Quem |\n|-------|------|\n| Operator | MCORCH Master Execution Agent (dual-write nos produtores) |\n| Reviewer | Sovereign + `/security-review` (migration cross-tenant) |\n| Owner | Sovereign \u2014 blast radius = \u00edndice de assets per-tenant (RLS own-or-org) |\n\n## Contrato (a tabela = \u00edndice fino sobre os buckets que j\u00e1 existem)\n`creative_assets {id, user_id(RLS), org_id?, kind(image|video|audio|design|article|template), storage_bucket,\nstorage_key, is_public, mime_type, file_size_bytes, width, height, duration_seconds, parent_asset_id(proveni\u00eancia),\nsource_module, source_job_id, mesh_node_id, provider, model, prompt, title, tags[], is_favorite, metadata}`.\n**Um objeto de Storage = uma linha** (UNIQUE bucket+key). Bytes N\u00c3O migram \u2014 a linha s\u00f3 aponta.\n\n## Sequence\n| # | Passo | Crit\u00e9rio material |\n|---|-------|-------------------|\n| 1 | Migration aplicada (tabela + RLS + `register_creative_asset`) | `/security-review` SAFE \u00b7 tabela existe no DB live |\n| 2 | **Dual-write fail-soft** em cada produtor: no caminho de sucesso, chamar `register_creative_asset` via service-role. NUNCA quebrar o produtor se o registro falhar (try/catch silencioso + telemetria) | a linha aparece em creative_assets ap\u00f3s uma gera\u00e7\u00e3o real |\n| 3 | Asset-picker l\u00ea `creative_assets` por `kind` (own-or-org RLS) | o picker mostra assets de OUTRO m\u00f3dulo |\n\n## Verification gates\n1. `register_creative_asset` \u00e9 service-role-only (anon/authenticated \u2192 permission denied).\n2. RLS: tenant A n\u00e3o v\u00ea asset de tenant B (cross-tenant SELECT = 0 linhas).\n3. Idempot\u00eancia: 2 registros do MESMO objeto \u2192 1 linha (ON CONFLICT refresh).\n4. Produtor real (ex.: video-bridge no finalize) grava a linha sem quebrar o render.\n\n## Recovery\n| Falha | Fix |\n|-------|-----|\n| dual-write lan\u00e7a e quebra o produtor | envolver em try/catch fail-soft; o asset j\u00e1 est\u00e1 no bucket \u2014 registro \u00e9 best-effort |\n| ON CONFLICT sobrescreve tenant errado | guard `WHERE user_id = EXCLUDED.user_id` no DO UPDATE (j\u00e1 no RPC) |\n| asset privado sem preview no picker | `is_public=false` \u2192 o cliente pede signed URL; p\u00fablico \u2192 URL direta |\n\n## Success signal\nUm asset gerado no Canvas Studio aparece no asset-picker do editor HyperFrames (e vice-versa), com a cadeia de\nproveni\u00eancia (`parent_asset_id`) vis\u00edvel \u2014 o bidirecional do \"poder das sa\u00eddas\".\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/creative-assets-registry.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:22:53)*
+
+
+## 🤖 Claude *(01:22:54)*
+
+SOP escrito. Rodo `/security-review` na migration (regra do CLAUDE.md — toda migration passa antes do commit):
+
+## 🤖 Claude *(01:22:56)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review",
+  "args": "Focus on the new migration supabase/migrations/20260625120000_creative_assets_registry.sql \u2014 the creative_assets table + register_creative_asset RPC. Check: cross-tenant isolation (RLS own-or-org), the ON CONFLICT DO UPDATE tenant guard, service-role-only RPC grants, search_path, and any mint/forge vector."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(01:22:56)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 6 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/creative-assets-registry.md
+	supabase/migrations/20260625120000_creative_assets_registry.sql
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+FILES MODIFIED:
+
+```
+.claude/context/faceless-pipeline-reference-2026-06-25.md
+CLAUDE.md
+docs/bok/video-studio/05-sdd.md
+docs/processes/video-studio-editor-deploy-and-provision.md
+nginx/video.mcorch.com.conf
+src/App.tsx
+src/components/dashboard/DashboardSidebar.tsx
+src/hooks/useCanvasStudio.ts
+src/pages/Auth.tsx
+src/pages/VideoStudioEditorPage.tsx
+```
+
+COMMITS:
+
+```
+commit e1610f2dbdbe79605b9cf8365e1e30b4206cf762
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 24 22:13:41 2026 -0300
+
+    docs(video-studio): referência do pipeline faceless 51s (fonte do build nativo)
+    
+    Recipe destilada (redatada — sem segredos) do workflow n8n provado do Sovereign
+    que gerava vídeos de 51s: Gemini cenas → Pollinations imagens → VoxCPM voz →
+    LTX i2v → Remotion HUD → FFmpeg compõe/concatena/poliza → QA Vision crítico →
+    deliver. Mapeia para engine=faceless (worker 503-gated) + creative_assets +
+    o híbrido Canvas↔HyperFrames. De-n8n: reproduzir nativo.
+
+commit 6fa6370290e6cc27d852471e577b27a51b0a28d3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 24 22:04:39 2026 -0300
+
+    fix(canvas): guard contra sobrescrita de grafo não-vazio por vazio (perda de nós)
+    
+    Bug: projetos do Canvas Studio abriam com 0 nós (grafo salvo vazio), embora os
+    assets sobrevivessem em vm_canvas_executions. Causa: race entre a hidratação
+    assíncrona do projeto (initialize) e o useAutoSave, que dava flush do estado
+    inicial vazio {nodes:[]} antes dos nós carregarem, sobrescrevendo o DB.
+    
+    Fix de menor risco (single-file): no useSaveCanvasGraph, quando o grafo de
+    entrada é vazio, lê o DB antes de gravar e BLOQUEIA a sobrescrita se a linha já
+    tem nós (viewport ainda persiste). Estanca a perda em qualquer projeto,
+    independente do timing do cliente.
+
+commit a99216d337706337f79576ddc4106fa3ef01a435
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 24 21:24:45 2026 -0300
+
+    feat(auth): esconder aba Cadastrar por padrão (só Entrar); ?devLogin libera tudo
+    
+    Estende o gate ?devLogin ao cadastro: sem o param, /auth mostra só a aba
+    "Entrar" (email+senha, coluna única). O cadastro público fica fechado.
+    
+    - sem param: só "Entrar" (login email/senha); sem Cadastrar, sem Google/Apple
+    - com ?devLogin: reaparecem a aba "Cadastrar" + o botão Google (acesso total)
+    
+    Gate temporário — reverter quando o cadastro for reaberto ao público.
+
+commit b577b9684e35f961675fb543a352655d22e57dc3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 24 21:15:19 2026 -0300
+
+    feat(auth): esconder login social por padrão, liberar Google via ?devLogin
+    
+    Diretiva Sovereign: remover temporariamente os botões Google/Apple da tela de
+    login para o público, mantendo um caminho de teste para o Usuário Zero.
+    
+    - sem param: /auth mostra só email/senha (Google e Apple ocultos, sem "ou")
+    - com ?devLogin: reaparece o botão "Continuar com Google" (gabrielcall@gmail.com)
+    - Apple removido por ora (não re-exposto pelo devLogin)
+    
+    Gate temporário — reverter quando o login social for reabilitado para todos.
+
+commit 94ae0dbd98fb3a49ee318ba9615b783b2b95dc84
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 24 20:08:48 2026 -0300
+
+    feat(video-studio): vhost video.mcorch.com + contrato /api selado (Fatia VS-UI)
+    
+    Fase A do editor HyperFrames VIVA e provada material: servidor oficial
+    `hyperframes preview` (node v22) atrás de video.mcorch.com, sob o SSO gate.
+    
+    - nginx/video.mcorch.com.conf: vhost SSO-gated (auth_request) + proxy SSE ao
+      preview server (127.0.0.1:3210), espelha design.mcorch.com. Cert self-signed
+      + symlink+reload = ação Sovereign (2 sudo); DNS já apontado.
+    - SDD §VS-UI Amendment v0.4: contrato /api (StudioApiAdapter dos .d.ts
+      publicados — Lei 2 cumprida ANTES do bridge) + render-parity resolvido por
+      construção (core/runtime IIFE compartilhado preview↔motor) + OTD-VS-016/017.
+    - SOP video-studio-editor-deploy-and-provision.md (Operator/Sequence/
+      Verification/Recovery/Success) + Key Files.
+    
+    Prova: video-studio.service active; curl :3210 → 200 HyperFrames Studio;
+    /api/projects → projeto 9:16 mcorch-demo. Fase B (próxima): McorchAdapter →
+    video-render (motor MCORCH + mcoCoins prepaid).
+
+commit bc5f0e5b747b7c5e6ee404d7c389d368cd1ca908
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jun 24 20:08:47 2026 -0300
+
+    feat(video-studio): editor HyperFrames no dashboard (/dashboard/canvas/video)
+    
+    Entrega ao Usuário Zero o editor NLE multi-camada (cenas, camadas, overlays
+    em alpha, efeitos, transições) como módulo do Canvas Studio — padrão
+    módulo-container (espelha Canvas Design → design.mcorch.com).
+    
+    - VideoStudioEditorPage: iframe full-bleed a video.mcorch.com
+    - rota canvas/video declarada ANTES de canvas/:id (FR-VS-022, evita shadow)
+    - sub-item "Vídeo" sob Canvas Studio na sidebar (ícone Film)
+    
+    O editor roda atrás do SSO gate; React 19 isolado no servidor preview (sem
+    conflito com o SPA React 18). Realiza OTD-VS-005 (C).
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (34.9KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f89447ed-b201-43c6-854d-dd580cb8996c/tool-results/b2h2fvwzo.txt
+
+Preview (first 2KB):
+diff --git a/.claude/context/faceless-pipeline-reference-2026-06-25.md b/.claude/context/faceless-pipeline-reference-2026-06-25.md
+new file mode 100644
+index 0000000..4bd24af
+--- /dev/null
++++ b/.claude/context/faceless-pipeline-reference-2026-06-25.md
+@@ -0,0 +1,47 @@
++# Faceless long-form video pipeline — proven recipe (reference for the NATIVE build)
++
++> Source: the Sovereign's working **n8n** faceless workflow (produced **51-second** videos in his tests),
++> shared 2026-06-25. This is the SPEC the native MCORCH faceless engine must reproduce (De-n8n mandate —
++> "o MCORCH não usa n8n"). Maps to `video-render` **engine="faceless"** (125 mco, worker currently 503-gated)
++> + the Canvas↔HyperFrames hybrid (Sovereign directive: bidirectional; FFmpeg = long-form capability).
++>
++> ⚠️ The original JSON contained LIVE secrets (a Gemini API key ×2 + a Telegram bot token + chat_id) — those
++> are REDACTED here and were flagged for rotation. Never commit them.
++
++## Pipeline stages (per the n8n graph)
++
++1. **Scene script (Gemini 2.5 Flash)** → returns JSON array of 4 scenes; each: `{scene, narration (1-3 sentences),
++   image_prompt (cinematic 16:9), ambience (one of waves|wind|birds|city|forest|rain|keyboard|ambient),
++   hud (≤5-word on-screen caption)}`. Creative-director system prompt, faceless educational channel angle.
++2. **Per-scene image (Pollinations)** → `image.pollinations.ai/prompt/<enc(image_prompt)>?width=1920&height=1080&nologo=true`.
++3. **Per-scene narration (VoxCPM HF Space)** → `openbmb-voxcpm-demo.hf.space/gradio_api/call/generate`, SSE result
++   parsed for the audio URL; voice prompt = "Confident, warm male narrator… documentary tone". Download → `scene<N>.wav`.
++4. **Probe audio duration** (`ffprobe` on the .wav) → drives each scene's frame count / clip length.
++5. **Per-scene animation (LTX i2v)** → `node ltx.js <scene>` animates the still image → motion clip (image-to-video).
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(01:23:21)*
+
+
+## 🤖 Claude *(01:23:34)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify vulns in creative_assets migration",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing ONE new migration in a multi-tenant Supabase (Postgres + RLS) app. Read it and find HIGH-CONFIDENCE security vulnerabilities NEWLY introduced. Only flag issues where you're >80% confident of real exploitability.\n\nFILE TO REVIEW: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260625120000_creative_assets_registry.sql\n\nCONTEXT to compare against (the established secure pattern this mirrors):\n- /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql (the table+RLS+finalize RPC pattern)\n- The codebase rule: SECURITY DEFINER functions with p_user_id must be service-role-only OR auth.uid()-guarded; RLS default-deny on writes; search_path=''; cross-tenant isolation is the top risk (FMEA-011).\n\nEXAMINE specifically:\n1. Cross-tenant isolation: can tenant A read/modify/overwrite tenant B's creative_assets row? Check the RLS SELECT/DELETE policies and the register_creative_asset ON CONFLICT DO UPDATE ... WHERE user_id = EXCLUDED.user_id guard.\n2. register_creative_asset privilege: is it REVOKE'd from anon/authenticated and GRANT'd only to service_role? Can a tenant call it directly to forge an asset row (wrong user_id, forged source_module/provenance)?\n3. search_path='' + all refs schema-qualified (public.*)?\n4. Any mint/forge/privilege-escalation vector via the RPC params (parent_asset_id pointing at another tenant's asset? mesh_node_id? org_id forging agency membership?).\n5. The UNIQUE (storage_bucket, storage_key) + ON CONFLICT: can a tenant cause a cross-tenant overwrite or info leak?\n\nDo NOT report: DOS, rate-limiting, theoretical races, missing hardening, documentation issues, client-side concerns, secrets-on-disk. Only concrete, exploitable vulns.\n\nFor each finding output: file:line, severity (HIGH/MEDIUM), category, description, exploit scenario, fix, and a confidence score 1-10. If you find NO real vulnerabilities (the migration follows the secure pattern), say so explicitly and explain why each examined vector is safe. Read-only: do not write files or run mutating commands."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "I now have everything I need to assess all five examined vectors against the verified, established secure pattern.\n\n## Security review complete — NO new HIGH/MEDIUM vulnerabilities found\n\nThe migration `20260625120000_creative_assets_registry.sql` faithfully mirrors the verified-secure `video_renders` pattern (`20260622040000`) and the codebase RLS/RPC conventions. Each examined vector is concretely safe:\n\n### Vector 1 — Cross-tenant read/modify/overwrite: SAFE\n- **SELECT** (`:54-58`): `auth.uid() = user_id OR (org_id IS NOT NULL AND public.is_org_member(org_id))`. I verified `is_org_member` (`20260622030000:65-71`) is a `SECURITY DEFINER STABLE` helper that checks `organization_members` for `user_id = auth.uid() AND seat_active`. So org reads require *active membership* in the row's own org — no path to read an arbitrary tenant's solo row (`org_id IS NULL` short-circuits the OR; for solo rows only the owner matches).\n- **DELETE** (`:62-63`): `auth.uid() = user_id` — own rows only.\n- **No INSERT/UPDATE policy** ⇒ default-deny writes for `authenticated`. A tenant cannot insert/update directly, so `user_id`/`source_module`/`provenance` can never be client-forged via PostgREST.\n\n### Vector 2 — `register_creative_asset` privilege: SAFE\n`:156-157` does exactly the required `REVOKE ALL ... FROM PUBLIC, anon, authenticated` then `GRANT EXECUTE ... TO service_role`. The full argument-type signature in the REVOKE/GRANT matches the function definition, so it targets the right overload (no leftover PUBLIC grant on a phantom signature). A tenant has no execute path; only the service-role producers (canvas-execute, video-bridge, etc.) can write. Forging a wrong `user_id`/`source_module`/`provenance` is therefore not reachable from a tenant.\n\n### Vector 3 — `search_path='' + schema qualification`: SAFE\n`:112` sets `SET search_path = ''`. Every object reference inside the body is schema-qualified: `public.creative_assets` in the INSERT, the `ON CONFLICT DO UPDATE` SET clause (`public.creative_assets.mime_type`, etc.), and the `WHERE public.creative_assets.user_id` guard. `gen_random_uuid`/`now` are resolved via the table defaults, not the function body. No unqualified resolution to hijack.\n\n### Vector 4 — Mint/forge via RPC params: SAFE (and not tenant-reachable anyway)\nBecause the RPC is service-role-only (Vector 2), none of these params are attacker-controlled from a tenant session. Even assuming a malicious caller:\n- `parent_asset_id` / `mesh_node_id` are stored as plain references (no FK enforcement for mesh; `parent_asset_id` FK is `ON DELETE SET NULL`). They are *descriptive lineage pointers*, not access-grant keys — pointing `parent_asset_id` at another tenant's asset id does not grant any read of that asset (SELECT RLS is evaluated per-row on `user_id`/`org_id`, independent of lineage). No privilege escalation.\n- `org_id` is written verbatim, but it does not *create* membership — reads still gate through `is_org_member`, which checks the real `organization_members` table. Stamping a foreign `org_id` would, if anything, *remove* the asset from the writer's own visibility (org members of that org could see it), but that requires service-role and is not a tenant-exploitable mint.\n- No coin/balance mutation exists in this RPC (unlike `finalize_video_render`), so there is no economic mint surface.\n\n### Vector 5 — `UNIQUE (storage_bucket, storage_key)` + `ON CONFLICT`: SAFE\nThis is the strongest part of the design. `:149` adds `WHERE public.creative_assets.user_id = EXCLUDED.user_id` to the `ON CONFLICT DO UPDATE`. So when a dual-write collides on an existing `(bucket, key)` row owned by tenant A, an update attempting `user_id = tenant B` (EXCLUDED) fails the WHERE predicate → the UPDATE is skipped, `RETURNING` yields no row, and `v_id` is `NULL`. The function returns `NULL` rather than overwriting A's row. The SET clause also deliberately omits `user_id` and `source_module`, so tenant identity and provenance are immutable on conflict. No cross-tenant overwrite and no info leak (the function returns only the conflicting row's `id`, and only when the guard passes — i.e., same tenant).\n\nOne benign behavioral note (not a vulnerability, not reported as such): on a genuine cross-tenant bucket+key collision the function returns `NULL` silently, which the producers treat fail-soft. That's a robustness/observability characteristic, not an exploitable security flaw — and bucket+key collisions across tenants are not normally reachable since storage keys are tenant-namespaced by the producers.\n\n---\n\n**Verdict:** The migration follows the established secure pattern exactly — default-deny writes, service-role-only SECURITY DEFINER writer, `search_path=''` with full `public.*` qualification, membership-gated org reads via the anti-recursion helper, own-only delete, and an explicit `user_id`-guarded ON CONFLICT that blocks cross-tenant overwrite. No HIGH or MEDIUM findings at the >80% confidence bar.\n\nFiles reviewed:\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260625120000_creative_assets_registry.sql` (target)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql` (pattern baseline)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622030000_video_studio_org_tenancy.sql` (`is_org_member` helper — confirmed membership-scoped)"}, {'type': 'text', 'text': "agentId: a4408a5da0e428834 (use SendMessage with to: 'a4408a5da0e428834' to continue this agent)\n<usage>subagent_tokens: 79656\ntool_uses: 5\nduration_ms: 45277</usage>"}]
+> ```
+
+## 🤖 Claude *(01:24:23)*
+
+
+## 🤖 Claude *(01:24:34)*
+
+# Security Review — `creative_assets` registry migration
+
+**Verdict: SAFE — no HIGH or MEDIUM findings at the ≥8 confidence bar.**
+
+The new migration `supabase/migrations/20260625120000_creative_assets_registry.sql` faithfully mirrors the established secure pattern (`video_renders` / `finalize_video_render`, `20260622040000`) and the codebase's multi-tenant RLS/RPC conventions. All five examined vectors are concretely safe:
+
+| Vector | Result | Evidence |
+|---|---|---|
+| Cross-tenant read/modify/overwrite | **SAFE** | SELECT = `auth.uid()=user_id OR (org_id IS NOT NULL AND public.is_org_member(org_id))` (org reads require *active* membership via the anti-recursion helper; solo rows owner-only). DELETE own-only. No INSERT/UPDATE policy ⇒ default-deny writes (`user_id`/`source_module`/provenance never client-forgeable). |
+| `register_creative_asset` privilege | **SAFE** | `REVOKE ALL FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE TO service_role` with the full arg signature. No tenant execute path; only service-role producers write. |
+| `search_path='' ` + qualification | **SAFE** | `SET search_path=''`; every reference schema-qualified (`public.creative_assets`, `public.is_org_member`). No hijackable resolution. |
+| Mint/forge via RPC params | **SAFE** | Service-role-only ⇒ params not tenant-controlled. `parent_asset_id`/`mesh_node_id` are descriptive lineage pointers (SELECT RLS evaluates per-row on `user_id`/`org_id`, independent of lineage — no read grant). No coin/balance surface in this RPC. |
+| `UNIQUE(bucket,key)` + `ON CONFLICT` | **SAFE** | `DO UPDATE ... WHERE creative_assets.user_id = EXCLUDED.user_id` blocks cross-tenant overwrite (mismatch → no update, returns NULL). SET omits `user_id`/`source_module` ⇒ identity + provenance immutable on conflict. |
+
+The other branch changes are non-security or client-side-only (the `?devLogin` auth gating is UX visibility, not an access control — real auth is server-side Supabase + RLS; the canvas empty-graph guard is client-side data-integrity; the nginx vhost is the documented SSO-gated module-container pattern).
+
+No false-positive filtering pass was needed — the identification phase surfaced zero findings above the reporting threshold.
