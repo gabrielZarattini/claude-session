@@ -1,4 +1,4 @@
-# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
+# Analisar paper e oportunidades de trading
 **Date:** 2026-06-25 | **Session ID:** `f965becb-771d-4ea9-83a1-920d453257be`
 
 ---
@@ -9195,16 +9195,3 @@ Adicionei as **linhas SMA 20 (azul) / SMA 50 (laranja)** sobre os candles — co
 **Como começar agora:** dá o refresh, e da próxima vez que tu "ver" um movimento (tipo o de hoje), **clica o botão em vez de só me contar** — assim a gente acumula o teu track. Em ~15-20 calls o placar diz se tu tem mão. Essa é a única pergunta que o backtest deixou em aberto, e é a que está nas tuas mãos.
 
 Quer que eu empilhe os outros sinais no gráfico (Bollinger/MACD/volume/flow) agora, ou deixamos tu começar a registrar e a gente itera?
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
-
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-25 - 1744ad7a-f93b-4937-aa35-6a9d5b11b1c2]]
-> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
-%% --- TIMELINE END --- %%
