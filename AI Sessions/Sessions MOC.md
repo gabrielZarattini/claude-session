@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1401
-> * **Sessões do Claude**: 1359
+> * **Total de Sessões Registradas**: 1407
+> * **Sessões do Claude**: 1365
 > * **Sessões do Gemini**: 42
 
 ---
@@ -69,15 +69,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-25 - agent-aebc560e7f259586d]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-adc74488baf8727f4]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-ace9169b4e9fffad6]]` - *2026-06-25*
+*   `[[2026-06-25 - agent-acabf0ff996f80f75]]` - *2026-06-25*
+*   `[[2026-06-25 - agent-ab3e7348f65f28fc1]]` - *2026-06-25*
+*   `[[2026-06-25 - agent-a7dcbe97d13c4c8dd]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a6efc682bd7a6258e]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a6bd0e8b6fcb70089]]` - *2026-06-25*
+*   `[[2026-06-25 - agent-a547082d15073aed0]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a445be35d74b28143]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a4408a5da0e428834]]` - *2026-06-25*
-*   `[[2026-06-25 - agent-a311ba1be624f4756]]` - *2026-06-25*
-*   `[[2026-06-25 - Analisar paper e oportunidades de trading]]` - *2026-06-25*
-*   `[[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]` - *2026-06-24*
-*   `[[2026-06-24 - agent-afd072653464441b2]]` - *2026-06-24*
-*   *... e mais 1359 sessões nessa categoria.*
+*   *... e mais 1365 sessões nessa categoria.*
 
 ---
 
@@ -272,13 +272,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-25 - agent-aebc560e7f259586d]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-adc74488baf8727f4]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-ace9169b4e9fffad6]]` (ClaudeSessions)
+*   `[[2026-06-25 - agent-acabf0ff996f80f75]]` (ClaudeSessions)
+*   `[[2026-06-25 - agent-ab3e7348f65f28fc1]]` (ClaudeSessions)
+*   `[[2026-06-25 - agent-a7dcbe97d13c4c8dd]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a6efc682bd7a6258e]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a6bd0e8b6fcb70089]]` (ClaudeSessions)
+*   `[[2026-06-25 - agent-a547082d15073aed0]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a445be35d74b28143]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a4408a5da0e428834]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a311ba1be624f4756]]` (ClaudeSessions)
+*   `[[2026-06-25 - agent-a13726355cd60b416]]` (ClaudeSessions)
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` (ClaudeSessions)
 *   `[[2026-06-25 - Analisar paper e oportunidades de trading]]` (ClaudeSessions)
+*   `[[2026-06-25 - 1744ad7a-f93b-4937-aa35-6a9d5b11b1c2]]` (ClaudeSessions)
 *   `[[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-afd072653464441b2]]` (ClaudeSessions)
 *   `[[2026-06-24 - agent-afc2e692afc422cc0]]` (ClaudeSessions)

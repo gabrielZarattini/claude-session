@@ -1,4 +1,4 @@
-# Analisar paper e oportunidades de trading
+# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
 **Date:** 2026-06-25 | **Session ID:** `f965becb-771d-4ea9-83a1-920d453257be`
 
 ---
@@ -8949,3 +8949,16 @@ O backtest **refutou o INDICADOR, não o teu OLHO.** O RSI mecânico não tem al
 - **Se não bater** → a gente para de gastar energia nisso, com paz de espírito (e foi barato descobrir).
 
 Quer que eu **ligue o registro das tuas previsões** agora? É montar uma "trilha discricionária do operador" — tu chama, eu fixo e pontuo, e em 1-2 semanas a gente tem a resposta da única pergunta que ainda vale a pena. É a aposta certa: nas tuas mãos, não no RSI.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - 1744ad7a-f93b-4937-aa35-6a9d5b11b1c2]]
+> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
+%% --- TIMELINE END --- %%

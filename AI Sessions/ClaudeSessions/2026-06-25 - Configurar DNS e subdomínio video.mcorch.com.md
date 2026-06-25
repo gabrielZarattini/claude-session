@@ -1,4 +1,4 @@
-# Configurar DNS e subdomínio video.mcorch.com
+# [[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com|Configurar DNS e subdomínio video.mcorch.com]]
 **Date:** 2026-06-25 | **Session ID:** `f89447ed-b201-43c6-854d-dd580cb8996c`
 
 ---
@@ -358,7 +358,7 @@ Worktree clean, zero TS errors, all containers healthy. Now reading HANDOFF (rea
 > 36	### Survival Laws Self-audit
 > 37	```
 > 38	Law 1 (Materiality): ✅ Billing fix provado pelo smoke 8/8 contra os RPCs REAIS (begin/finalize_autopilot_cycle + refund_autopilot_video_enqueue) na sequência real — net debit medido por SELECT do saldo. Achado material: orchestrate-content é async (steps:[] imediato) → inviabiliza a Option 1, decidiu o design. Blueprint: cada claim carrega a URL/arquivo lido @ commit pinado (não fabricado). Fase 5c mecânica abaixo.
-> 39	Law 2 (Process): ✅ O fix é bug-fix em feature documentada (OTD-VA-010, SOP autopilot-video-9x16 já existia) → isento de BoK gate; mesmo assim documentei a nota de fechamento + corrigi o recovery path do SOP (que estava factualmente errado). Blueprint = anticipated-process da Fatia VS-UI (Lei 2 do próximo código de UI).
+> 39	Law 2 (Process): ✅ O fix é bug-fix em feature documentada (OTD-VA-010, SOP [[autopilot-video-9x16|autopilot-video-9x16]] já existia) → isento de BoK gate; mesmo assim documentei a nota de fechamento + corrigi o recovery path do SOP (que estava factualmente errado). Blueprint = anticipated-process da Fatia VS-UI (Lei 2 do próximo código de UI).
 > 40	Law 3 (Pruning): ✅ Sessão de continuação enxuta (2 arcos); deepsearch rodou como subagent (resultado por path, não recarregado no contexto). Probes de billing por output verificado neste turno.
 > 41	Law 4 (ORO): ✅ Triplet declarado; diretivo do Sovereign nomeou o gap + as 2 opções de fix; /security-review independente como Reviewer.
 > 42	```
@@ -390,7 +390,7 @@ Worktree clean, zero TS errors, all containers healthy. Now reading HANDOFF (rea
 > 68	### Survival Laws Self-audit
 > 69	```
 > 70	Law 1 (Materiality): ✅ Tudo provado NESTE arco — motor via ffprobe+sha256 (arquivos reais); integração via dry_run+E2E real (artigo/render/biblioteca via SELECT) + saldo intacto; React-19-incompat via `npm view` ANTES de instalar (evitou quebrar o build às cegas). Fase 5c mecânica abaixo.
-> 71	Law 2 (Process): ✅ BoK gate ANTES do código: FRD/SDD Amendment v0.2 + SOP autopilot-video-9x16.md ANTES da Fatia VA-V1; flip OTD-VS-005 documentado ANTES de qualquer código de editor (deepsearch é o próximo gate). Workflow de mapeamento pré-código pegou o conflito React 19/18.
+> 71	Law 2 (Process): ✅ BoK gate ANTES do código: FRD/SDD Amendment v0.2 + SOP [[autopilot-video-9x16|autopilot-video-9x16]].md ANTES da Fatia VA-V1; flip OTD-VS-005 documentado ANTES de qualquer código de editor (deepsearch é o próximo gate). Workflow de mapeamento pré-código pegou o conflito React 19/18.
 > ```
 
 ## 🤖 Claude *(22:23:03)*
@@ -10140,3 +10140,16 @@ Seal completo — tudo no remote (`2584dd8..46607dc`, 0 ahead). **Phase 8 — re
 Sessão selada, Maestro. Foi um arco grande e produtivo: o **editor HyperFrames está vivo e tocável** (`video.mcorch.com`), o **bug que comia os nós do Canvas está estancado** (e seu projeto recuperado), e a **espinha bidirecional `creative_assets` está de pé** com 73 assets reais já visíveis na nova Biblioteca de Assets — a fundação do "poder das saídas" que você pediu.
 
 Quando voltar, recomendo abrir pela **Fatia 2 (vídeo→Meta Reels)** — a primeira saída real numa rede — com a janela cheia. E não esqueça de **rotacionar aquelas duas credenciais** do n8n. 🤝
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - Analisar paper e oportunidades de trading]]
+> * **Próxima Sessão**: [[2026-06-25 - agent-a13726355cd60b416]]
+%% --- TIMELINE END --- %%
