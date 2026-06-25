@@ -1,4 +1,4 @@
-# Analisar paper e oportunidades de trading
+# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
 **Date:** 2026-06-25 | **Session ID:** `f965becb-771d-4ea9-83a1-920d453257be`
 
 ---
@@ -8571,3 +8571,16 @@ E o golpe final: mesmo os **81%** "cai um pouco" **não é tradeável** — o mo
 **É exatamente por isso que a gente grava.** Teu olho fez o pattern-match; o dado separou o que é real (pullback) do que é ilusão (sobrevenda). 
 
 ⏱️ O **sampler ao vivo** está pontuando ESTA instância (preço + RSI a cada 60s por ~14min). Quando fechar eu te trago o veredito real: caiu nos 5min? o RSI chegou a <35? Minha aposta, baseada nos 27 casos: **cai um pouco sim, RSI no fundo não.** Já te aviso.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]
+> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
+%% --- TIMELINE END --- %%
