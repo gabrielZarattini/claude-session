@@ -8443,3 +8443,131 @@ E um veredito automático: **~50% de acerto + retorno ~0 = sem edge (ruído)**; 
 Meu palpite (da pesquisa): o fluxo é **concorrente, não preditivo** — ele *mede* a subida enquanto ela acontece, não anuncia a próxima. Então minha aposta é que vai dar **~50% / retorno ~0 = ruído**. **Mas agora não preciso te pedir pra acreditar em mim** — o painel vai provar com o teu próprio dado. Se eu estiver errado e aparecer edge de verdade, melhor ainda: a gente **monta uma trilha `[PAPER]` desse padrão** e o motor de promoção (frente D) leva ela a real sozinho. O loop fecha.
 
 Deixo rodando coletando. Quando tiver amostra (algumas horas), me chama que a gente lê os números juntos — ou eu já te aviso se algum padrão cruzar o limiar de edge.
+
+## 👤 User *(01:56:31)*
+
+Podemos ver agora mesmo veja claramente eu prevejo que daqui uns 5 minutos no maximo vai começar a cair novamente o valor fazedo com que a RSI bata na linha de suporte em baixo.
+
+## 🤖 Claude *(01:58:25)*
+
+
+## 🤖 Claude *(01:58:28)*
+
+O dono fez uma **previsão ao vivo** (RSI 65, BTC acabou de subir forte → ele prevê queda em ~5min levando o RSI pra banda de sobrevenda). Isso é ouro pro método "deixa o dado decidir": vou **fixar a previsão com timestamp**, dar a **base-rate histórica** desse setup, e **gravar o desfecho ao vivo** pra a gente pontuar. Deixa eu montar.
+
+## 🤖 Claude *(01:58:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/baserate.py",
+  "content": "# -*- coding: utf-8 -*-\n# Snapshot do AGORA + base-rate historica da previsao do dono:\n# \"RSI acabou de subir (>~60 apos alta); em ~5min cai e o RSI bate na banda de sobrevenda\".\nimport json, urllib.request, datetime\n\ndef klines(limit):\n    for host in ['https://api.binance.com', 'https://data-api.binance.vision']:\n        try:\n            r = urllib.request.urlopen(host + f'/api/v3/klines?symbol=BTCUSDT&interval=1m&limit={limit}', timeout=10)\n            return json.load(r)\n        except Exception:\n            continue\n    return None\n\ndef rsi_series(closes, p=14):\n    out = [None]*len(closes)\n    if len(closes) < p+1: return out\n    g=l=0.0\n    for i in range(1,p+1):\n        d=closes[i]-closes[i-1]\n        if d>=0: g+=d\n        else: l-=d\n    ag,al=g/p,l/p\n    out[p]=100.0 if al==0 else 100-100/(1+ag/al)\n    for i in range(p+1,len(closes)):\n        d=closes[i]-closes[i-1]; gg=d if d>0 else 0.0; ll=-d if d<0 else 0.0\n        ag=(ag*(p-1)+gg)/p; al=(al*(p-1)+ll)/p\n        out[i]=100.0 if al==0 else 100-100/(1+ag/al)\n    return out\n\nraw = klines(1000)\nif not raw:\n    print(\"klines indisponiveis\"); raise SystemExit(1)\ncloses=[float(k[4]) for k in raw]\nrsis=rsi_series(closes)\n\n# --- AGORA ---\nnow_px=closes[-1]; now_rsi=rsis[-1]\nts=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')\nprint(f\"=== SNAPSHOT AGORA ({ts}) ===\")\nprint(f\"BTC px={now_px:.1f}  RSI(14,1m)={now_rsi:.1f}\")\nprint(f\"ultimas 6 velas (close): \" + \" -> \".join(f\"{c:.0f}\" for c in closes[-6:]))\nprint(f\"ultimos 6 RSI: \" + \" -> \".join(f\"{r:.0f}\" for r in rsis[-6:] if r is not None))\n\n# --- BASE-RATE do setup: RSI cruza p/ CIMA de 60 (subiu); janela futura de 15 velas ---\nHZ=15; CROSS=60.0; OS=35.0\nsetups=0; hit_os=0; fell5=0; fwd15=[]; min_rsi_list=[]\nfor i in range(15, len(closes)-HZ):\n    if rsis[i] is None or rsis[i-1] is None: continue\n    if rsis[i] >= CROSS and rsis[i-1] < CROSS:   # cruzou p/ cima de 60 = \"RSI acabou de subir\"\n        setups+=1\n        win_px=closes[i+1:i+1+HZ]; win_rsi=[x for x in rsis[i+1:i+1+HZ] if x is not None]\n        mn_rsi=min(win_rsi) if win_rsi else rsis[i]\n        min_rsi_list.append(mn_rsi)\n        if mn_rsi < OS: hit_os+=1\n        # caiu nos proximos 5min? (min preco das proximas 5 velas < preco do setup)\n        if min(closes[i+1:i+6]) < closes[i]: fell5+=1\n        fwd15.append((closes[i+HZ]-closes[i])/closes[i]*100)\n\nprint(f\"\\n=== BASE-RATE (1000 velas 1m, setup = RSI cruza >60) ===\")\nif setups:\n    import statistics as st\n    print(f\"setups analogos ao de agora: n={setups}\")\n    print(f\"P(RSI bate sobrevenda <{OS:.0f} em 15min) = {hit_os/setups*100:.0f}%  ({hit_os}/{setups})\")\n    print(f\"P(preco CAI em ate 5min)             = {fell5/setups*100:.0f}%  ({fell5}/{setups})\")\n    print(f\"RSI minimo medio na janela           = {st.mean(min_rsi_list):.1f}\")\n    print(f\"retorno medio em +15min apos o setup = {st.mean(fwd15):+.3f}%  (mediana {st.median(fwd15):+.3f}%)\")\nelse:\n    print(\"sem setups analogos suficientes na janela.\")\nprint(\"\\n(previsao do dono FIXADA p/ pontuar com o sampler ao vivo: /tmp/tux_pred.log)\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/baserate.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:59:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/sampler.py",
+  "content": "# -*- coding: utf-8 -*-\n# Sampler ao vivo: grava BTC px + RSI(14,1m) a cada 60s por ~14min p/ PONTUAR a previsao do dono\n# (\"cai em 5min, RSI bate na banda de sobrevenda\"). Self-contained (binance publico, sem auth).\nimport time, json, urllib.request, datetime\n\ndef klines():\n    for host in ['https://api.binance.com', 'https://data-api.binance.vision']:\n        try:\n            r = urllib.request.urlopen(host + '/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30', timeout=8)\n            return [float(k[4]) for k in json.load(r)]\n        except Exception:\n            continue\n    return None\n\ndef rsi(cl, p=14):\n    if len(cl) < p+1: return None\n    g=l=0.0\n    for i in range(1,p+1):\n        d=cl[i]-cl[i-1]\n        if d>=0: g+=d\n        else: l-=d\n    ag,al=g/p,l/p\n    v=100.0 if al==0 else 100-100/(1+ag/al)\n    for i in range(p+1,len(cl)):\n        d=cl[i]-cl[i-1]; gg=d if d>0 else 0.0; ll=-d if d<0 else 0.0\n        ag=(ag*(p-1)+gg)/p; al=(al*(p-1)+ll)/p\n        v=100.0 if al==0 else 100-100/(1+ag/al)\n    return v\n\nout=open('/tmp/tux_pred.log','w')\nrows=[]\nN=15\nfor t in range(N):\n    cl=klines()\n    if cl:\n        px=cl[-1]; rv=rsi(cl)\n        ts=datetime.datetime.utcnow().strftime('%H:%M:%S')\n        out.write(f\"t+{t}min {ts}  px={px:.1f}  rsi={rv:.1f}\\n\"); out.flush()\n        rows.append((t,px,rv))\n    if t < N-1:\n        time.sleep(60)\n\nout.write(\"\\n=== VEREDITO ===\\n\")\nif rows:\n    import statistics as st\n    px0=rows[0][1]; rsi0=rows[0][2]\n    pxs=[r[1] for r in rows]; rsis=[r[2] for r in rows]\n    mn_px=min(pxs); mn_rsi=min(rsis)\n    # caiu nos primeiros 5 min?\n    first5=[r[1] for r in rows if r[0]<=5]\n    fell5 = (min(first5) < px0) if first5 else False\n    drop5_pct = (min(first5)-px0)/px0*100 if first5 else 0.0\n    out.write(f\"inicio: px={px0:.1f} rsi={rsi0:.1f}\\n\")\n    out.write(f\"fim:    px={pxs[-1]:.1f} rsi={rsis[-1]:.1f}\\n\")\n    out.write(f\"min na janela: px={mn_px:.1f} ({(mn_px-px0)/px0*100:+.2f}%)  rsi_min={mn_rsi:.1f}\\n\")\n    out.write(f\"PREVISAO 'cai em 5min': {'ACERTOU' if fell5 else 'ERROU'} (drop max em 5min = {drop5_pct:+.2f}%)\\n\")\n    out.write(f\"PREVISAO 'RSI bate sobrevenda': RSI<35 {'SIM' if mn_rsi<35 else 'NAO'} | RSI<30 {'SIM' if mn_rsi<30 else 'NAO'} (rsi_min={mn_rsi:.1f})\\n\")\nout.close()\nprint(\"sampler concluido\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/sampler.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:59:06)*
+
+Agora capturo o snapshot + base-rate (síncrono) e disparo o sampler ao vivo em background (~14min).
+
+## 🤖 Claude *(01:59:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/tux_build && python3 baserate.py",
+  "description": "Snapshot now + historical base-rate of the prediction"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /tmp/tux_build/baserate.py:39: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+>   ts=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+> === SNAPSHOT AGORA (2026-06-25 01:59:08 UTC) ===
+> BTC px=60902.0  RSI(14,1m)=51.6
+> ultimas 6 velas (close): 60944 -> 60976 -> 60972 -> 60944 -> 60898 -> 60902
+> ultimos 6 RSI: 64 -> 68 -> 67 -> 60 -> 51 -> 52
+> 
+> === BASE-RATE (1000 velas 1m, setup = RSI cruza >60) ===
+> setups analogos ao de agora: n=27
+> P(RSI bate sobrevenda <35 em 15min) = 0%  (0/27)
+> P(preco CAI em ate 5min)             = 81%  (22/27)
+> RSI minimo medio na janela           = 50.3
+> retorno medio em +15min apos o setup = +0.157%  (mediana +0.061%)
+> 
+> (previsao do dono FIXADA p/ pontuar com o sampler ao vivo: /tmp/tux_pred.log)
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(01:59:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/tux_build && python3 sampler.py",
+  "description": "Live sampler scoring the prediction (~14min)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bd3hxd50e. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/bd3hxd50e.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(01:59:35)*
+
+
+## 🤖 Claude *(01:59:51)*
+
+Capturei o agora + a **base-rate histórica** desse exato setup. E o dado é revelador — me deixa te mostrar antes mesmo do sampler fechar:
+
+## 📸 Snapshot (01:59 UTC)
+- BTC **$60.902**, RSI **51,6**.
+- Olha a sequência recente do RSI: **64 → 68 → 67 → 60 → 51 → 52**. **O RSI já bateu o topo (68) e já desceu pra ~52.** E o preço: 60.976 → 60.900. Ou seja: **a queda que tu previu JÁ começou** (suave) — tu acertou o *timing* do início.
+
+## 📊 Base-rate: teu setup nas últimas 1000 velas (27 casos análogos = RSI cruzando >60)
+
+| Tua previsão | O que o histórico diz |
+|---|---|
+| **"vai começar a cair"** | ✅ **81%** (22/27) — pullback nos 5min é o normal. **Tu tá certo aqui.** |
+| **"RSI bate na banda de sobrevenda (baixo)"** | ❌ **0%** (0/27) — **nunca** aconteceu. O RSI recua pra ~**50** em média, não pra <35. |
+| retorno médio +15min | **+0,157%** (mediana +0,06%) — depois do pico ele tende a *drift levemente pra CIMA*, não desabar. |
+
+## A leitura honesta
+
+Tu tem **bom olho na metade**: depois de um spike, um repuxo pra baixo é quase certo (81%). Mas a parte forte — "**o RSI vai bater lá embaixo na sobrevenda**" — é **historicamente 0%** nesse tape. O olho vê "subiu demais, vai desabar"; o dado diz "recua um tiquinho até o RSI ~50 e depois costuma voltar a subir". A crise de sobrevenda que tu imagina **não vem** depois de um spike de alta — ela vem depois de uma *queda sustentada*.
+
+E o golpe final: mesmo os **81%** "cai um pouco" **não é tradeável** — o movimento é minúsculo e o drift de 15min é até **positivo**. Não há o que colher aí (além da taxa que te come).
+
+**É exatamente por isso que a gente grava.** Teu olho fez o pattern-match; o dado separou o que é real (pullback) do que é ilusão (sobrevenda). 
+
+⏱️ O **sampler ao vivo** está pontuando ESTA instância (preço + RSI a cada 60s por ~14min). Quando fechar eu te trago o veredito real: caiu nos 5min? o RSI chegou a <35? Minha aposta, baseada nos 27 casos: **cai um pouco sim, RSI no fundo não.** Já te aviso.

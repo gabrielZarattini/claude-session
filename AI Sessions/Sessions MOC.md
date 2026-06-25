@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1400
-> * **Sessões do Claude**: 1358
+> * **Total de Sessões Registradas**: 1401
+> * **Sessões do Claude**: 1359
 > * **Sessões do Gemini**: 42
 
 ---
@@ -72,12 +72,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-25 - agent-a6efc682bd7a6258e]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a6bd0e8b6fcb70089]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a445be35d74b28143]]` - *2026-06-25*
+*   `[[2026-06-25 - agent-a4408a5da0e428834]]` - *2026-06-25*
 *   `[[2026-06-25 - agent-a311ba1be624f4756]]` - *2026-06-25*
 *   `[[2026-06-25 - Analisar paper e oportunidades de trading]]` - *2026-06-25*
 *   `[[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]` - *2026-06-24*
 *   `[[2026-06-24 - agent-afd072653464441b2]]` - *2026-06-24*
-*   `[[2026-06-24 - agent-afc2e692afc422cc0]]` - *2026-06-24*
-*   *... e mais 1358 sessões nessa categoria.*
+*   *... e mais 1359 sessões nessa categoria.*
 
 ---
 
@@ -275,6 +275,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-25 - agent-a6efc682bd7a6258e]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a6bd0e8b6fcb70089]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a445be35d74b28143]]` (ClaudeSessions)
+*   `[[2026-06-25 - agent-a4408a5da0e428834]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-a311ba1be624f4756]]` (ClaudeSessions)
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` (ClaudeSessions)
 *   `[[2026-06-25 - Analisar paper e oportunidades de trading]]` (ClaudeSessions)

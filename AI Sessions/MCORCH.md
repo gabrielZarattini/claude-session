@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 50
-> * **Total de Sessões**: 1395
+> * **Total de Processos**: 51
+> * **Total de Sessões**: 1396
 
 ---
 
@@ -34,6 +34,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[canvas-video-async-execution]]` - *Processo*
 *   `[[constellation-economic-activation]]` - *Processo*
 *   `[[content-asset-history]]` - *Processo*
+*   `[[creative-assets-registry]]` - *Processo*
 *   `[[creative-qa-vision-gate]]` - *Processo*
 *   `[[credential-disconnect-clear]]` - *Processo*
 *   `[[deepsearch-blueprint]]` - *Processo*
@@ -80,6 +81,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-25 - agent-a6efc682bd7a6258e]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - agent-a6bd0e8b6fcb70089]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - agent-a445be35d74b28143]]` (ClaudeSessions) - *2026-06-25*
+*   `[[2026-06-25 - agent-a4408a5da0e428834]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - agent-a311ba1be624f4756]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - Analisar paper e oportunidades de trading]]` (ClaudeSessions) - *2026-06-25*
