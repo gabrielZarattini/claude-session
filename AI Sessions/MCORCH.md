@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 49
-> * **Total de Sessões**: 1381
+> * **Total de Processos**: 50
+> * **Total de Sessões**: 1383
 
 ---
 
@@ -57,6 +57,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
 *   `[[trend-informed-angle-sanitization]]` - *Processo*
 *   `[[trends-credential-resolution]]` - *Processo*
+*   `[[video-studio-editor-deploy-and-provision]]` - *Processo*
 *   `[[viral-autopilot-product-aware-monetization]]` - *Processo*
 *   `[[vision-mcp-billing-credential-resolution]]` - *Processo*
 *   `[[vision-mcp-connector-install]]` - *Processo*
@@ -77,6 +78,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-24 - agent-af12bd364bb46d7a7]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-aeed9604aa8fe590f]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-aed0dc10773cd4f2c]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-ae75e46017b2b3c6c]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-adb234d3d56fd0c57]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-ad91a95de07000ac3]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-ad124f5a0f9818d79]]` (ClaudeSessions) - *2026-06-24*
@@ -99,6 +101,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-24 - agent-a6a94ae17ca9dd238]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-a689d83d3547c6f1a]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-a64dee7a3018ff242]]` (ClaudeSessions) - *2026-06-24*
+*   `[[2026-06-24 - agent-a5dd3231ff82b1913]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-a4d5f6271158b27a8]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-a4adc66fa429f3a83]]` (ClaudeSessions) - *2026-06-24*
 *   `[[2026-06-24 - agent-a461ab54293d06188]]` (ClaudeSessions) - *2026-06-24*

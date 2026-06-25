@@ -4012,3 +4012,1724 @@ Wiring 100% resolvido. Antes de deployar, vou pelo gate QA + TL (modelo do proje
 > ```
 > [{'type': 'text', 'text': 'Tudo verificado. Tenho o quadro completo para a decisão.\n\n---\n\n## REVIEW — Frente A+B (Autonomia de virada) · TradeUX\n\nContexto confirmado ao vivo: MAINNET REAL, equity ~$149, `halted=false`, regime `bear` em tudo, canary Farm-only. Suíte de simulação **14/14 verde** (incl. os 2 testes novos: `groupSupervisor` 25/25, `eventNotify` 15/15). Sem ciclo de require, sintaxe OK, paths/índices/regexes batem com a convenção real (`Farm Buy <SYM>`, `Trend Sell <SYM>`, `Baseline RSI Buy/Sell <SYM>`).\n\n### Frente A — `eventNotify.js` + hooks (regime flip / cross / fluxo)\n**VEREDITO: APPROVE**\n\nRacional: builders puros + wrappers fire-and-forget que nunca lançam, hooks via `require(...).fn().catch(()=>{})` no padrão idêntico ao que o `flowJob`/`regimeJob` já usam. Edge-trigger correto em todos os 3: regime só notifica em transição real e **guarda o 1º boot** (`if (prevRegime !== undefined)`, com `prevRegime` capturado SÍNCRONO antes de `LAST[symbol]` ser sobrescrito — o hazard de microtask foi tratado, linha 107). Fluxo tem histerese própria (`NOTIFY_TOXICITY=0.75` entra / `×0.7` sai) com `Set` EXTREME por símbolo = anti-flap. Zero toque em money-path. Reversível (basta não notificar). Blast radius nulo.\n\n- Must-fix: nenhum.\n- Nice-to-have: o `eventNotify` não passa por `notifyDedup` (a dedup-por-assunto do `64752f0`); aqui a dedup é estrutural (edge-trigger), então é aceitável — mas em flap de regime na fronteira da histerese pode haver ruído. Acompanhar; não bloqueia.\n\n### Frente B — `groupSupervisorJob.js` + extração `automationActivation.js`\n**VEREDITO: APPROVE COM SUGESTÕES**\n\n**1. Extração de `applyAutomationActive` (sua pergunta nº1):** abstração CERTA. O util não depende do controller (só `beholder`/`agenda`/`logger`), o controller e o job dependem do util — inversão de camada na direção correta, **sem ciclo** (confirmei: `beholder.js`/`agenda.js` não requerem de volta). Alternativa "job requer o controller" seria pior (puxaria `req/res`, `db`, OCO-cancel para dentro de um job). Corpo movido **byte-idêntico** (difeei as duas versões). Os 3 call sites do controller (start/stop por id + painel de grupos) usam o import. Aprovado sem ressalva.\n\n**2. Autoridade sobre toggle manual (nº2):** é o comportamento CORRETO para o que o dono pediu ("vira sozinho, sem comando") e está bem documentado no cabeçalho + tem escape por env (`GROUP_SUPERVISOR_ENABLED`, `GROUP_SUPERVISOR_GROUPS`, `_REFRESH_MS`). A mudança de modelo mental é real e precisa ser visível (ver must-fix de observabilidade abaixo) — mas é aceitável.\n\n**3. Assimetria Farm Sell `ignore` / Trend Sell acoplada / Baseline Sell só-regime (nº3):** justificável e bem raciocinada. Cada venda é tratada pela melhor chave de auto-gating que ela TEM: Farm Sell auto-gateia em `FARM_DCA.qty>0` (sempre-armada intocada, preserva a doutrina); Trend Sell tem `TREND_QTY` em MEMORY (confirmei que é escrita via `updateMemory(...,null,...)` em `app-em.js` e lida certo pelo `getMemory(sym,\'TREND_QTY\')`) → `regime!=bear OU qty>0` é o correto (não te deixa preso comprado sem venda protetiva na virada pro bear). Baseline não tem chave de posição → acopla só ao regime. A assimetria reflete a realidade dos dados, não inconsistência. O débito (Baseline Sell off em não-bear→bear pode rejeitar 1 ordem RSI>75 sobre cofre vazio) é **aceitável como follow-up**: ordem rejeitada é barulho, não perda de dinheiro.\n\n**4. Postura no 1º deploy (nº4):** segura. Bear em tudo → entradas ficam off (desativação sempre aplicada), Trend Sell flat+bear → off. Nenhuma compra armada. Mudança de estado conservadora.\n\n**5. Interação com HALT (nº5):** coerente com a doutrina. Ativação de ENTRADA pulada sob HALT (`kind===\'entry\' && halted → skip`, com log 1×/episódio anti-spam); desativação sempre aplicada (desarmar é sempre seguro); vendas protetivas podem armar sob HALT mas o guard por-ordem bloqueia execução. O supervisor **nunca toca no `riskState`/HALT mestre** — usa o util que não mexe no floor. Correto.\n\n**6. Convenções (nº6):** seguidas — comentários pt-BR, kill-switch por env com pisos saneados (`REFRESH_MS>=15000`), `timer.unref()`, `running` trava re-entrância, skip-on-error por automação (um falho não derruba o ciclo), idempotência (só age na diferença), `start()` idempotente.\n\n#### Must-fix\n- **Observabilidade do supervisor não está exposta.** `getStatus()` existe e é exportado, mas — diferente do `dailyCapJob.getStatus()`, que o `systemController` serve — **não está plugado em nenhuma rota nem no cockpit**. Num sistema onde o supervisor agora é quem liga/desliga entradas (e pode reverter um toggle manual do dono em 60s), o operador e o agente LLM PRECISAM enxergar o estado dele. O HANDOFF/memória batem nisso (a doutrina "GATE≠ATIVO" e o `status.groups` que o agente lê). Sem isso, o dono liga uma entrada, ela some, e ele não tem onde ver o porquê. Pequeno: 1 linha no `systemController` (espelhar o padrão do dailyCap) e/ou um campo no cockpit. **Condição de merge.**\n\n#### Nice-to-have\n- Documentar `GROUP_SUPERVISOR_ENABLED` / `_GROUPS` / `_REFRESH_MS` e `FLOW_NOTIFY_TOXICITY` no `backend/.env.example` (hoje ausentes — confirmei). Coerente com o commit `8b5c5d9` que padronizou isso.\n- O comentário do `groupSupervisor.test.js` diz "puro: require é barato" — na prática requer o job → puxa `riskState`/`crypto`/`settingsRepository` (precisa `AES_KEY`, que o runner injeta). Funciona, mas o comentário engana. Ajuste cosmético.\n- Débito do Baseline Sell (rejeição de 1 ordem) registrado como follow-up consciente.\n\n---\n\n## Decisão de merge\n\n**APROVAR A+B com 1 condição.** Mudança incremental, bem-escopada, reversível por env, em cima de proteções já em camadas (gate de regime DENTRO da condição = 3ª camada, riskGuard, cap −5%, teto $25/ordem, HALT). Money-path não é tocado: o supervisor só liga/desliga `isActive`; nenhuma ordem nova é colocada por este código.\n\n- **Ordem:** subir A e B juntos (B depende dos hooks de notificação de A para os toggles do supervisor; e a extração do util é pré-req de B).\n- **Condição (must-fix antes do deploy):** expor `groupSupervisorJob.getStatus()` via `systemController` (e idealmente no cockpit) — o operador tem que ver que existe um agente autônomo mexendo nos toggles e por quê.\n- **Guarda operacional do 1º deploy:** como hoje está tudo `bear`, o supervisor vai apenas **garantir entradas off** + Trend Sell off (flat) — estado inócuo. Recomendo subir com `GROUP_SUPERVISOR_GROUPS=farm` (ou manter os 3, dado que bear neutraliza tudo) e validar o 1º ciclo em `logs/supervisor.log` antes de confiar nas 3 viradas. A virada real (bear→não-bear) é o primeiro teste com consequência — observar com o `getStatus` exposto.\n- Frentes **C (auto-resume do cap −5%)** e **D (auto-promoção paper→real)** seguem fora de escopo, como o dono definiu.\n\nArquivos relevantes: `/home/gcrux-tradeux/tradeux/backend/src/groupSupervisorJob.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/automationActivation.js`, `/home/gcrux-tradeux/tradeux/backend/src/utils/eventNotify.js`, `/home/gcrux-tradeux/tradeux/backend/src/regimeJob.js`, `/home/gcrux-tradeux/tradeux/backend/src/flowJob.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js`, `/home/gcrux-tradeux/tradeux/backend/src/server.js`, `/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js` (o must-fix entra aqui), testes em `/home/gcrux-tradeux/tradeux/backend/scripts/sim/`.'}, {'type': 'text', 'text': "agentId: a5dd3231ff82b1913 (use SendMessage with to: 'a5dd3231ff82b1913' to continue this agent)\n<usage>subagent_tokens: 80662\ntool_uses: 23\nduration_ms: 161925</usage>"}]
 > ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '`getAllAutomations` returns Sequelize instances with relations included (`actions`/`orderTemplates`), so `applyAutomationActive` can call `.save()`, `.get({plain:true})`, and `beholder.updateBrain` gets the full plain object with actions. This matches exactly how the existing group-panel `setAutomationGroup` uses it (same `getAllAutomations` + `applyAutomationActive` loop). Behavior parity confirmed.\n\nI have a complete, grounded picture. Compiling the report.\n\n---\n\n# QA Pré-Merge — Frente A+B (notificações de evento + supervisor autônomo)\n\nContexto verificado ao vivo: 4 containers up, **todos os símbolos `bear` (não-stale)**, `halted` indeterminado mas o supervisor é no-op em bear de qualquer jeito, **`.env` sem `GROUP_SUPERVISOR_*` / `REGIME_JOB_ENABLED` / `FLOW_NOTIFY_*` → tudo nos defaults do código** (logo `GROUP_SUPERVISOR_ENABLED` cai em `\'true\'`: o supervisor SOBE no próximo deploy).\n\n## Validações que rodei\n- `node --check` nos 9 arquivos tocados: **todos OK**.\n- Suíte de sim (`node scripts/sim/run.js`): **14/14 arquivos**, incluindo os 2 novos (`eventNotify.test.js` 15/15, `groupSupervisor.test.js` 25/25). Nenhuma regressão nas 12 pré-existentes.\n- Extração de `applyAutomationActive`: confronto do diff — corpo **byte-idêntico** (só o comentário mudou). `startAutomation`/`stopAutomation`/`setAutomationGroup` e o supervisor importam a MESMA função de `utils/automationActivation.js`. Sem require circular (testei as duas ordens de carga; controller e job carregam limpos).\n- **Require sem efeito colateral**: `require(\'./groupSupervisorJob\')` e `require(\'./controllers/automationsController\')` NÃO iniciam timer (`getStatus().running=false`, `at=null`); o timer só nasce em `start()`.\n- **Harness adversarial** simulando `runOnce()` contra um espelho do DB vivo (mock de repo/`getMemory`/`riskState`), 4 cenários: bear/flat, range/flat, range/HALTED, bear+TREND_QTY>0.\n\n## Achados\n\n### [HIGH] Supervisor auto-arma a VENDA DO COFRE BTC em não-bear, removendo o gate humano do Canary FARM-ONLY\nDefault `GROUP_SUPERVISOR_GROUPS=\'farm,trend,baseline\'`. Quando `BTCUSDT:REGIME` virar `range`/`mixed`, o supervisor ATIVA `Baseline RSI Sell BTCUSDT` (id3, condition `RSI_1m>75 && REGIME!==\'trend\'` — **sem gate de bear, vende o cofre**) e `Trend Sell BTCUSDT` (id7). Confirmei no harness: em `range` ele chama `applyAutomationActive` em `Baseline RSI Sell BTCUSDT:true` e `Trend Sell BTCUSDT:true`. A trava de SELL-BTC é **só no MCP** — o boundary do backend (`exchange.js:assertWithinRisk`, SELL) cobre apenas HALT + rede anti-runaway 3×equity, **sem proteção de cofre**. Hoje o operador mantém Trend/Baseline PARADOS de propósito (postura Canary); o supervisor passa por cima dessa postura de forma autônoma na 1ª saída do bear. Isto é exatamente o risco que o HANDOFF já marca para o painel de grupos ("grupo `baseline` inclui venda do COFRE BTC coberta só por HALT/riskGuard"), agora **sem o clique humano**.\n- Mitigação recomendada (escolher 1, antes do merge): (a) default `GROUP_SUPERVISOR_GROUPS=\'farm\'` (alinha com Canary FARM-ONLY — Trend/Baseline entram quando o dono quiser); ou (b) excluir explicitamente os SELLs de símbolo-cofre do escopo do supervisor (não auto-armar `Baseline RSI Sell BTCUSDT`/`Trend Sell BTCUSDT`); ou (c) portar a trava de cofre pro backend (`assertWithinRisk` SELL) — fecha o furo na raiz e destrava o supervisor com segurança.\n\n### [MEDIUM] Supervisor briga com a operação manual (auto-revert em até REFRESH_MS)\nComo reconcilia por diferença a cada 60s, se o operador START manual de uma ENTRADA num símbolo em bear (ex.: observar um Trend Buy), o próximo ciclo a DESATIVA. E vice-versa: um STOP manual de uma venda acoplada com posição aberta é re-armado. É o comportamento "autônomo" pedido, mas é uma mudança de contrato: **o painel/botão deixam de ser a palavra final** nos grupos geridos. Não é bug, é design — mas precisa estar explícito pro dono (e o kill-switch `GROUP_SUPERVISOR_ENABLED=false` documentado como o jeito de retomar controle manual). Sugiro registrar no HANDOFF.\n\n### [LOW] `mixed` é tratado como plenamente tradeável\n`desiredActive(\'entry\',\'mixed\')=true` arma TODAS as entradas (inclui Baseline Buy + Trend Buy do BTC), enquanto o `regimeHint` diz "entradas seletivas". As conditions ainda gateiam (3ª camada), então não compra indevido, mas a postura efetiva em `mixed` é "tudo armado". Consistente com o gate, só sinalizo a divergência semântica.\n\n### [LOW] Anti-spam de notificação no boot pós-restart com posição/flip\nAs guardas estão corretas: flip só com `prevRegime!==undefined`, cross só com `prev!==undefined`, flow edge-trigger com histerese `NOTIFY_EXIT=0.7×NOTIFY_TOXICITY`. `notify()` é defensiva (telegram não configurado → `return false`, nunca lança) e os call sites usam `.catch(()=>{})` + os wrappers têm try/catch — **uma notificação jamais derruba o job** (confirmado). Resíduo mínimo: num restart o supervisor pode emitir um lote de `notifyGroupChange` ao reconciliar o estado-alvo (não é transição de mercado, é reconciliação de boot). Inócuo, mas pode gerar burst de Telegram no 1º ciclo pós-deploy em não-bear.\n\n## Pontos de risco do pedido — veredito item a item\n1. **Extração byte-idêntica / caminho compartilhado / require**: OK. Idêntico; 3 caminhos compartilham a função; sem ciclo.\n2. **Segurança do `desiredActive`**: OK. Nunca arma entrada em `bear`/`unknown`/`undefined`; trendSell arma com `TREND_QTY>0` mesmo em bear; entrada PULADA sob HALT (harness: `haltSkipped=3`, sells armam); desativação sempre aplicada; idempotente (só age na diferença — harness: bear/flat = 0 mutações).\n3. **Postura no 1º deploy (bear/flat/halted=false — estado VIVO)**: **no-op total**. Não ativa Trend Sell (premissa do prompt incorreta: em bear+flat trendSell=off), não dispara ordem (TREND_CROSS atual=`none`, condição quer `death`), entradas off, Farm Sell ignorada (fica isActive=1). Zero ordens agora. O risco só aparece quando o BTC SAIR do bear (achado HIGH).\n4. **Anti-spam / não-derruba-job**: OK (ver LOW acima).\n5. **Leitura de MEMORY**: OK. `regimeOf` lê `<sym>:REGIME` (chave casa: regimeJob escreve com `interval=null`), `trendQty` lê `<sym>:TREND_QTY` (idem). Defensivos contra NaN/undefined/throw (try/catch → undefined/0).\n6. **Cobertura de teste**: boa nos puros, **lacunas no caminho com efeito** (ver abaixo).\n\n## Testes que eu rodaria (faltam)\n- **Integração `runOnce()` com repo mockado** (o que fiz no harness, mas como `.test.js` no CI): assert de 0 mutações em bear; assert do conjunto EXATO de toggles em range/mixed; assert de `haltSkipped` e de que NENHUM `entry` é ativado sob HALT enquanto sells acopladas são.\n- **Teste do furo do cofre**: com o supervisor ativando `Baseline RSI Sell BTCUSDT` e RSI>75, provar que o backend não barra a SELL-BTC (regressão para o achado HIGH — se a mitigação (c) for escolhida, vira teste verde).\n- **Idempotência multi-ciclo**: rodar `runOnce()` 2× seguidas no mesmo regime → 2º ciclo = 0 toggles.\n- **Re-entrância**: `applyAutomationActive` lento (promessa pendente) + 2º `runOnce()` → segundo retorna sem reprocessar (`running=true`).\n- **`[PAPER]` nunca entra no escopo**: assert `groupOf(\'[PAPER] Macro Buy BTCUSDT\')===null` (já confirmei manualmente; bom travar em teste, é o que impede o supervisor de tocar paper).\n- Smoke vivo pós-deploy: `GET /analysis/regime-status` ainda bear → conferir `logs/supervisor.log` mostra `activated:0` e Telegram silencioso.\n\n## Recomendação de merge\n**PASS COM RESSALVAS** — código limpo, extração fiel, jobs blindados contra throw, e **no-op seguro no estado vivo (bear)**. Mas NÃO mergear com o default atual sem resolver o **HIGH**: o supervisor, com `GROUP_SUPERVISOR_GROUPS=\'farm,trend,baseline\'`, auto-armará a venda do cofre BTC na 1ª saída do bear, sem cobertura de cofre no backend e por cima da postura Canary FARM-ONLY do dono. \n\nMerge recomendado após UMA das três: (a) default do escopo = `farm` apenas, ou (b) excluir SELLs de símbolo-cofre do supervisor, ou (c) portar a trava de cofre pro `assertWithinRisk`. Eu preferiria (c) (fecha a raiz e ainda protege o painel manual e o agente-fora-do-MCP) ou, como mínimo pragmático para o Canary, (a). Registrar no HANDOFF a mudança de contrato manual×autônomo (MEDIUM) e o kill-switch `GROUP_SUPERVISOR_ENABLED=false`.\n\nArquivos-chave para o autor revisar:\n- `/home/gcrux-tradeux/tradeux/backend/src/groupSupervisorJob.js` (escopo default `MANAGED`, linhas 41-42; regra trendSell/baselineSell 73-81)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/exchange.js` (assertWithinRisk SELL, linhas 87-101 — onde faltaria a trava de cofre)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/automationsController.js` (condition viva da id3 `Baseline RSI Sell BTCUSDT`, sem gate de bear)\n- `/home/gcrux-tradeux/tradeux/backend/src/utils/automationActivation.js` e `/home/gcrux-tradeux/tradeux/backend/src/utils/eventNotify.js` (sem ressalvas)'}, {'type': 'text', 'text': "agentId: ae75e46017b2b3c6c (use SendMessage with to: 'ae75e46017b2b3c6c' to continue this agent)\n<usage>subagent_tokens: 102444\ntool_uses: 40\nduration_ms: 325741</usage>"}]
+> ```
+
+## 🤖 Claude *(23:32:50)*
+
+
+## 🤖 Claude *(23:32:56)*
+
+Os dois gates voltaram fortes e fundamentados. Síntese dos must-fix:
+
+- **TL (APPROVE c/ 1 condição):** expor `groupSupervisorJob.getStatus()` via `systemController` + cockpit (o operador/agente precisam VER o supervisor autônomo). Nice-to-have: `.env.example`, comentário do teste, débito do Baseline Sell.
+- **QA (PASS c/ ressalvas):** **[HIGH]** ao SAIR do bear, o supervisor auto-arma a venda do **cofre BTC** (`Baseline RSI Sell`/`Trend Sell BTCUSDT`) por cima da postura Canary, sem trava de cofre no backend (só no MCP). [MED] briga c/ toggle manual (by design). Correção importante do QA: em bear+flat o 1º deploy é **no-op total** (Trend Sell fica off em bear+flat — minha premissa estava errada). Sugere testes de integração.
+
+Vou aplicar os must-fix. Primeiro leio o `systemController` e o ponto do cockpit pra plugar a observabilidade.
+
+## 🤖 Claude *(23:32:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== systemController: como exp\u00f5e dailyCap/jobs ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"dailyCap|getStatus|Job|require|module.exports|router|function \" src/controllers/systemController.js 2>/dev/null | head -40'\necho \"\"\necho \"=== systemRouter rotas ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cat src/routers/systemRouter.js 2>/dev/null'",
+  "description": "Inspect systemController and router for status wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === systemController: como expõe dailyCap/jobs ===
+> 1:const riskState = require('../riskState');
+> 2:const dailyCapJob = require('../dailyCapJob');
+> 9:function getHalt(req, res) {
+> 15:function setHalt(req, res) {
+> 28:function setFloor(req, res) {
+> 43:async function resetDailyCap(req, res) {
+> 45:    const snap = await dailyCapJob.reSnapshot();     // re-baseline pode falhar a preço frio
+> 50:function getDailyCap(req, res) {
+> 51:    res.json(dailyCapJob.getStatus());
+> 54:module.exports = { getHalt, setHalt, setFloor, resetDailyCap, getDailyCap };
+> 
+> === systemRouter rotas ===
+> const express = require('express');
+> const router = express.Router();
+> const systemController = require('../controllers/systemController');
+> 
+> // /system — controle operacional do kill-switch quente + cap diário. OPERATOR-ONLY (montado atrás do
+> // authMiddleware no app.js). Sem MCP write tool: o agente LLM não flipa o HALT (doutrina).
+> 
+> router.get('/halt', systemController.getHalt);
+> 
+> router.post('/halt', systemController.setHalt);
+> 
+> router.post('/floor', systemController.setFloor);
+> 
+> router.get('/daily-cap', systemController.getDailyCap);
+> 
+> router.post('/daily-cap/reset', systemController.resetDailyCap);
+> 
+> module.exports = router;
+> ```
+
+## 🤖 Claude *(23:33:02)*
+
+
+## 🤖 Claude *(23:33:03)*
+
+Vou plugar a observabilidade em 3 lugares: `systemController` (rota `/system/supervisor`), `systemRouter`, e o cockpit (`status.supervisor`, p/ o agente ver). Deixa eu ver onde o cockpit monta `status.groups`.
+
+## 🤖 Claude *(23:33:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"getCockpitStatus|status\\.|groups|computeAutomationGroups|require\\(|res.json\" src/controllers/analysisController.js 2>/dev/null | grep -iE \"cockpit|groups|status|require\" | head -40'",
+  "description": "Find cockpit status assembly point"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1:const { getRegime: getRegimeData } = require('../utils/regimeService');
+> 2:const { getFlow: getFlowData } = require('../utils/flowService');
+> 3:const regimeJob = require('../regimeJob');
+> 4:const flowJob = require('../flowJob');
+> 5:const cockpitJob = require('../cockpitJob');
+> 6:const beholder = require('../beholder');
+> 7:const { indexKeys } = require('../utils/indexes');
+> 8:const settingsRepository = require('../repositories/settingsRepository');
+> 9:const riskState = require('../riskState');
+> 10:const paperRepository = require('../repositories/paperRepository');
+> 11:const paperService = require('../utils/paperService');
+> 51:    res.json(regimeJob.getStatus());
+> 71:    res.json(flowJob.getStatus());
+> 77:async function getCockpitStatus(req, res) {
+> 86:        status.env = { useTestnet: !!(s && s.useTestnet), tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 88:        status.env = { useTestnet: null, tradingHalt: st.halted, haltSource: st.source || null, haltReason: st.reason || null };
+> 92:    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }
+> 93:    // groups: estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper) — o agente precisa do estado de ATIVAÇÃO
+> 96:    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }
+> 100:    try { status.riskCaps = require('../utils/exchange').getEffectiveCaps(); } catch (_) { status.riskCaps = null; }
+> 101:    res.json(status);
+> 112:    res.json(cockpitJob.freshen(symbol, snap));
+> 133:module.exports = { getRegime, getRegimeStatus, getFlow, getFlowStatus, getCockpitStatus, getCockpit, getPaper };
+> ```
+
+## 🤖 Claude *(23:33:08)*
+
+Vou ver as linhas exatas 92-100 do cockpit pra inserir `status.supervisor` no padrão existente.
+
+## 🤖 Claude *(23:33:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/controllers/analysisController.js",
+  "offset": 92,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 92	    try { status.paper = await paperService.summary(); } catch (_) { status.paper = null; }
+> 93	    // groups: estado ATIVO por grupo lógico (Farm/Trend/Baseline/Paper) — o agente precisa do estado de ATIVAÇÃO
+> 94	    // (não só do gate de regime) p/ NÃO implicar execução de um grupo PARADO ("gate aberto" ≠ "grupo armado").
+> 95	    // READ-ONLY, best-effort. require lazy (mesmo dir de controllers; evita ciclo no load).
+> 96	    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }
+> 97	    // riskCaps: teto EFETIVO por ordem (compra ~%-equity, venda = rede anti-runaway) — o agente lê p/ EXPLICAR um
+> 98	    // capamento ("a compra foi capada em ~$30") em vez de inferir anomalia. READ-ONLY, best-effort, mesmas consts
+> 99	    // que o assertWithinRisk impõe (DRY). require lazy (utils/exchange é factory; .getEffectiveCaps é estático).
+> 100	    try { status.riskCaps = require('../utils/exchange').getEffectiveCaps(); } catch (_) { status.riskCaps = null; }
+> 101	    res.json(status);
+> ```
+
+## 🤖 Claude *(23:34:06)*
+
+
+## 🤖 Claude *(23:34:09)*
+
+Observabilidade confirmada. Vou: (1) expor `getStatus()` do supervisor via `/system/supervisor` + cockpit (`status.supervisor`), (2) adicionar teste de integração do `runOnce` (cobre o wiring que o QA apontou), (3) `.env.example` + comentário do teste. Os defaults do código já batem com a escolha do dono (farm,trend,baseline), então **nada a setar no `.env`** (zero reaplicação pós-reset). Deixa eu ver o `.env.example`.
+
+## 🤖 Claude *(23:34:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"REGIME_JOB_ENABLED|FLOW_JOB_ENABLED|FLOW_LOG|DAILY_CAP|FASE4|FUNNEL_JOB\" backend/.env.example 2>/dev/null | head'",
+  "description": "Find job env vars section in .env.example"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 117:DAILY_CAP_ENABLED=true
+> 119:DAILY_CAP_CHECK_MS=60000
+> 121:DAILY_CAP_COLD_ALERT_MS=900000
+> 123:DAILY_CAP_IGNORE_ASSETS=
+> 153:REGIME_JOB_ENABLED=true
+> 173:FUNNEL_JOB_ENABLED=true
+> ```
+
+## 🤖 Claude *(23:34:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/.env.example",
+  "offset": 153,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 153	REGIME_JOB_ENABLED=true
+> 154	#ex: 1h  (timeframe das klines do regime)
+> 155	REGIME_INTERVAL=1h
+> 156	#ex: 300000  (intervalo de refresh (ms))
+> 157	REGIME_REFRESH_MS=300000
+> 158	
+> 159	# === Paper/Shadow Engine (broker VIRTUAL roteado por prefixo [PAPER] no name; preco+fee MAINNET reais, NAO toca Binance) ===
+> 160	#ex: 20  (USDT por compra simulada das trilhas paper)
+> 161	PAPER_BUY_USDT=20
+> 162	#ex: 0.001  (taxa simulada (0,1%) aplicada aos fills paper)
+> 163	PAPER_FEE_RATE=0.001
+> 164	#ex: 1.012  (gatilho de venda no-loss das trilhas paper: preco > custo x este fator)
+> 165	PAPER_NOLOSS_PROFIT=1.012
+> 166	#ex: farmnl  (CSV das trilhas que usam a logica no-loss no paper)
+> 167	PAPER_NOLOSS_STRATEGIES=farmnl
+> 168	#ex: 5  (slippage simulado em bps aplicado aos fills paper)
+> 169	PAPER_SLIPPAGE_BPS=5
+> 170	
+> 171	# === Funil — knobs adicionais (alem de FUNNEL_LIVE_BUY/BASELINE/MAX_BUY acima) ===
+> 172	#ex: true  (liga o funnelJob (shadow/observacao); a COMPRA real ainda exige FUNNEL_LIVE_BUY=true)
+> 173	FUNNEL_JOB_ENABLED=true
+> 174	#ex: 10  (USDT minimo p/ considerar escoar pro BTC)
+> ```
+
+## 🤖 Claude *(23:34:17)*
+
+
+## 🤖 Claude *(23:34:17)*
+
+Agora o segundo patch (observabilidade + `.env.example` + comentário do teste).
+
+## 🤖 Claude *(23:34:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/patch2.py",
+  "content": "#!/usr/bin/env python3\nimport sys\nROOT = \"/home/gcrux-tradeux/tradeux/backend\"\nerrors = []\n\ndef patch(path, old, new, label):\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        content = f.read()\n    n = content.count(old)\n    if n != 1:\n        errors.append(f\"[{label}] ancora {n}x (esperado 1) em {path}\")\n        return\n    with open(path, \"w\", encoding=\"utf-8\") as f:\n        f.write(content.replace(old, new, 1))\n    print(f\"OK [{label}]\")\n\n# ---- systemController: require + getSupervisor + export ----\nSC = f\"{ROOT}/src/controllers/systemController.js\"\npatch(SC,\n\"\"\"const dailyCapJob = require('../dailyCapJob');\"\"\",\n\"\"\"const dailyCapJob = require('../dailyCapJob');\nconst groupSupervisorJob = require('../groupSupervisorJob');\"\"\",\n\"sysctl require\")\n\npatch(SC,\n\"\"\"function getDailyCap(req, res) {\n    res.json(dailyCapJob.getStatus());\n}\n\nmodule.exports = { getHalt, setHalt, setFloor, resetDailyCap, getDailyCap };\"\"\",\n\"\"\"function getDailyCap(req, res) {\n    res.json(dailyCapJob.getStatus());\n}\n\n// Estado do supervisor autonomo de grupos (read-only): o operador/agente PRECISAM ver que existe um\n// agente automatico ligando/desligando entradas por regime (e por que um toggle manual foi revertido).\nfunction getSupervisor(req, res) {\n    res.json(groupSupervisorJob.getStatus());\n}\n\nmodule.exports = { getHalt, setHalt, setFloor, resetDailyCap, getDailyCap, getSupervisor };\"\"\",\n\"sysctl getSupervisor\")\n\n# ---- systemRouter: rota ----\nSR = f\"{ROOT}/src/routers/systemRouter.js\"\npatch(SR,\n\"\"\"router.get('/daily-cap', systemController.getDailyCap);\"\"\",\n\"\"\"router.get('/daily-cap', systemController.getDailyCap);\n\nrouter.get('/supervisor', systemController.getSupervisor);\"\"\",\n\"sysrouter supervisor\")\n\n# ---- cockpit: status.supervisor (o agente le p/ doutrina GATE != ATIVO) ----\nAC = f\"{ROOT}/src/controllers/analysisController.js\"\npatch(AC,\n\"\"\"    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }\"\"\",\n\"\"\"    try { status.groups = await require('./automationsController').computeAutomationGroups(); } catch (_) { status.groups = null; }\n    // supervisor: estado do agente autonomo que liga/desliga ENTRADAS por regime (e mantem vendas acopladas\n    // armadas). O agente LLM le isto p/ saber que as (des)ativacoes de grupo sao automaticas, nao manuais.\n    try { status.supervisor = require('../groupSupervisorJob').getStatus(); } catch (_) { status.supervisor = null; }\"\"\",\n\"cockpit supervisor\")\n\n# ---- fix comentario enganoso do teste ----\nGT = f\"{ROOT}/scripts/sim/groupSupervisor.test.js\"\npatch(GT,\n\"\"\" * Puro: s\u00f3 requer o m\u00f3dulo do job (require \u00e9 barato \u2014 n\u00e3o inicia timer nem toca rede/DB).\"\"\",\n\"\"\" * Requer o m\u00f3dulo do job (puxa riskState/settings/crypto via cadeia \u2192 o runner injeta AES_KEY); o require\n * N\u00c3O inicia timer nem toca rede/DB (start() \u00e9 expl\u00edcito). Testa as fun\u00e7\u00f5es puras desacopladas.\"\"\",\n\"test comment\")\n\n# ---- .env.example: documenta supervisor + flow-notify ----\nEE = f\"{ROOT}/.env.example\"\npatch(EE,\n\"\"\"#ex: 300000  (intervalo de refresh (ms))\nREGIME_REFRESH_MS=300000\n\"\"\",\n\"\"\"#ex: 300000  (intervalo de refresh (ms))\nREGIME_REFRESH_MS=300000\n\n# === Group Supervisor \u2014 AUTONOMIA DE VIRADA (liga/desliga ENTRADAS por regime, sem comando do operador) ===\n#ex: true  (kill-switch do supervisor; false = retoma controle 100% manual dos grupos)\nGROUP_SUPERVISOR_ENABLED=true\n#ex: farm,trend,baseline  (grupos sob gestao autonoma; CSV. 'farm' so = canary no-loss)\nGROUP_SUPERVISOR_GROUPS=farm,trend,baseline\n#ex: 60000  (cadencia da reconciliacao (ms); piso 15s)\nGROUP_SUPERVISOR_REFRESH_MS=60000\n#ex: 0.75  (Telegram: limiar de toxicity p/ avisar fluxo unilateral do taker; histerese de saida 0.7x)\nFLOW_NOTIFY_TOXICITY=0.75\n\"\"\",\n\"env.example supervisor\")\n\nif errors:\n    print(\"\\n=== FALHAS ===\")\n    for e in errors: print(\" -\", e)\n    sys.exit(1)\nprint(\"\\npatch2 OK.\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/patch2.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:34:56)*
+
+
+## 🤖 Claude *(23:34:57)*
+
+Agora o teste de integração do `runOnce` (cobre o wiring: dispatch real, skip sob HALT, idempotência) via injeção no require.cache.
+
+## 🤖 Claude *(23:35:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/groupSupervisorReconcile.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 RECONCILIA\u00c7\u00c3O do Group Supervisor (runOnce ponta-a-ponta).\n * Cobre o WIRING que o desiredActive puro n\u00e3o cobre: que runOnce s\u00f3 toca a DIFEREN\u00c7A, despacha\n * applyAutomationActive com o lado certo, PULA ativa\u00e7\u00e3o de ENTRADA sob HALT (mas arma as vendas),\n * ignora Farm Sell / [PAPER], e \u00e9 idempotente. Injeta mocks no require.cache ANTES de carregar o job\n * (mesmo padr\u00e3o do integration.test.js) \u2014 sem rede/DB/Binance.\n */\nconst path = require('path');\nconst SRC = path.join(__dirname, '..', '..', 'src');\nfunction inject(rel, mock) {\n    const p = require.resolve(path.join(SRC, rel));\n    require.cache[p] = { id: p, filename: p, loaded: true, exports: mock };\n}\n\nconst calls = [];            // `${name}:${active}` de cada applyAutomationActive despachado\nlet HALTED = false;\nconst memory = {};           // MEMORY['<sym>:<idx>']\n\ninject('repositories/automationsRepository', { getAllAutomations: async () => AUTOS });\ninject('beholder', { getMemory: (sym, idx) => memory[`${sym}:${idx}`] });\ninject('riskState', { getState: () => ({ halted: HALTED }) });\ninject('utils/automationActivation', { applyAutomationActive: async (a, active) => { a.isActive = active; calls.push(`${a.name}:${active}`); return a; } });\ninject('utils/eventNotify', { notifyGroupChange: async () => true });\ninject('utils/logger', () => { });\n\nconst sup = require('../../src/groupSupervisorJob');\n\n// --- automa\u00e7\u00f5es-espelho (isActive mut\u00e1vel) ---\nlet AUTOS = [];\nfunction mk(id, name, symbol, isActive) { return { id, name, symbol, isActive }; }\nfunction fresh(states) {\n    AUTOS = [\n        mk(9, 'Farm Buy LTCUSDT', 'LTCUSDT', states.farmBuy),\n        mk(10, 'Farm Sell LTCUSDT', 'LTCUSDT', states.farmSell),\n        mk(6, 'Trend Buy BTCUSDT SMA50/200', 'BTCUSDT', states.trendBuy),\n        mk(7, 'Trend Sell BTCUSDT SMA50/200', 'BTCUSDT', states.trendSell),\n        mk(2, 'Baseline RSI Buy BTCUSDT', 'BTCUSDT', states.baseBuy),\n        mk(3, 'Baseline RSI Sell BTCUSDT', 'BTCUSDT', states.baseSell),\n        mk(99, '[PAPER] Macro Buy BTCUSDT', 'BTCUSDT', true), // nunca tocada\n    ];\n}\nconst ALL_OFF = { farmBuy: false, farmSell: true, trendBuy: false, trendSell: false, baseBuy: false, baseSell: false };\n\nlet passed = 0, failed = 0;\nfunction ok(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\nfunction has(s) { return calls.includes(s); }\nasync function run(regimes, opts = {}) {\n    calls.length = 0;\n    HALTED = !!opts.halted;\n    for (const k of Object.keys(memory)) delete memory[k];\n    Object.entries(regimes).forEach(([sym, r]) => { memory[`${sym}:REGIME`] = r; });\n    Object.entries(opts.trendQty || {}).forEach(([sym, q]) => { memory[`${sym}:TREND_QTY`] = q; });\n    fresh(opts.states || ALL_OFF);\n    await sup.runOnce();\n}\n\n(async () => {\n    // 1) Bear em tudo, flat, tudo off \u2192 NENHUM toggle (no-op idempotente).\n    await run({ LTCUSDT: 'bear', BTCUSDT: 'bear' });\n    ok('bear/flat/off \u2192 zero toggles', calls.length === 0);\n\n    // 2) Bear em tudo, mas entradas+vendas acopladas LIGADAS \u2192 desativa todas (Farm Sell intocada).\n    await run({ LTCUSDT: 'bear', BTCUSDT: 'bear' }, { states: { farmBuy: true, farmSell: true, trendBuy: true, trendSell: true, baseBuy: true, baseSell: true } });\n    ok('bear: desativa Farm Buy', has('Farm Buy LTCUSDT:false'));\n    ok('bear: desativa Trend Buy', has('Trend Buy BTCUSDT SMA50/200:false'));\n    ok('bear: desativa Trend Sell (flat)', has('Trend Sell BTCUSDT SMA50/200:false'));\n    ok('bear: desativa Baseline Buy', has('Baseline RSI Buy BTCUSDT:false'));\n    ok('bear: desativa Baseline Sell', has('Baseline RSI Sell BTCUSDT:false'));\n    ok('bear: NUNCA toca Farm Sell', !calls.some(c => c.startsWith('Farm Sell')));\n    ok('bear: NUNCA toca [PAPER]', !calls.some(c => c.includes('[PAPER]')));\n\n    // 3) Range em tudo, flat, tudo off, sem HALT \u2192 arma entradas + vendas acopladas.\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' });\n    ok('range: arma Farm Buy', has('Farm Buy LTCUSDT:true'));\n    ok('range: arma Trend Buy', has('Trend Buy BTCUSDT SMA50/200:true'));\n    ok('range: arma Trend Sell', has('Trend Sell BTCUSDT SMA50/200:true'));\n    ok('range: arma Baseline Buy', has('Baseline RSI Buy BTCUSDT:true'));\n    ok('range: arma Baseline Sell', has('Baseline RSI Sell BTCUSDT:true'));\n    ok('range: Farm Sell intocada', !calls.some(c => c.startsWith('Farm Sell')));\n\n    // 4) Range mas HALTED \u2192 ENTRADAS puladas; vendas (Trend/Baseline Sell) PODEM armar (guard bloqueia execu\u00e7\u00e3o).\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { halted: true });\n    ok('HALT: N\u00c3O arma Farm Buy', !has('Farm Buy LTCUSDT:true'));\n    ok('HALT: N\u00c3O arma Trend Buy', !has('Trend Buy BTCUSDT SMA50/200:true'));\n    ok('HALT: N\u00c3O arma Baseline Buy', !has('Baseline RSI Buy BTCUSDT:true'));\n    ok('HALT: arma Trend Sell (prote\u00e7\u00e3o)', has('Trend Sell BTCUSDT SMA50/200:true'));\n\n    // 5) Bear, mas BTC tem TREND_QTY>0 \u2192 Trend Sell BTC fica ARMADA (sair do trade), entradas off.\n    await run({ LTCUSDT: 'bear', BTCUSDT: 'bear' }, { trendQty: { BTCUSDT: 5 } });\n    ok('bear+posi\u00e7\u00e3o: arma Trend Sell BTC', has('Trend Sell BTCUSDT SMA50/200:true'));\n    ok('bear+posi\u00e7\u00e3o: N\u00c3O arma Trend Buy', !has('Trend Buy BTCUSDT SMA50/200:true'));\n\n    // 6) Idempot\u00eancia: range com tudo J\u00c1 no estado-alvo \u2192 zero toggles.\n    await run({ LTCUSDT: 'range', BTCUSDT: 'range' }, { states: { farmBuy: true, farmSell: true, trendBuy: true, trendSell: true, baseBuy: true, baseSell: true } });\n    ok('range est\u00e1vel \u2192 zero toggles (idempotente)', calls.length === 0);\n\n    console.log(`\\ngroupSupervisorReconcile.test.js: ${passed} passed, ${failed} failed`);\n    process.exit(failed ? 1 : 0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/groupSupervisorReconcile.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:35:28)*
+
+Aplicando patch2 + copiando o teste de reconciliação, depois re-rodo `node --check` e a suíte completa.
+
+## 🤖 Claude *(23:35:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nchmod -R a+rX /tmp/tux_build\nsudo -n -u gcrux-tradeux bash -lc 'cp /tmp/tux_build/groupSupervisorReconcile.test.js backend/scripts/sim/groupSupervisorReconcile.test.js && echo \"teste copiado.\"'\necho \"=== patch2 ===\"\nsudo -n -u gcrux-tradeux python3 /tmp/tux_build/patch2.py\necho \"\"\necho \"=== node --check arquivos do patch2 ===\"\ncd backend\nfor f in src/controllers/systemController.js src/routers/systemRouter.js src/controllers/analysisController.js scripts/sim/groupSupervisorReconcile.test.js; do\n  if node --check \"$f\" 2>/tmp/nc.err; then echo \"OK  $f\"; else echo \"FAIL $f\"; cat /tmp/nc.err; fi\ndone",
+  "description": "Apply patch2, copy reconcile test, syntax check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> teste copiado.
+> === patch2 ===
+> OK [sysctl require]
+> OK [sysctl getSupervisor]
+> OK [sysrouter supervisor]
+> OK [cockpit supervisor]
+> OK [test comment]
+> OK [env.example supervisor]
+> 
+> patch2 OK.
+> 
+> === node --check arquivos do patch2 ===
+> OK  src/controllers/systemController.js
+> OK  src/routers/systemRouter.js
+> OK  src/controllers/analysisController.js
+> OK  scripts/sim/groupSupervisorReconcile.test.js
+> ```
+
+## 🤖 Claude *(23:35:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 timeout 120 node scripts/sim/run.js 2>&1 | tail -25'",
+  "description": "Run full sim suite after patch2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-24T23:35:41.960Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> 
+> groupSupervisor.test.js: 25 passed, 0 failed
+> 
+> === sim/groupSupervisorReconcile.test.js ===
+> 
+> groupSupervisorReconcile.test.js: 21 passed, 0 failed
+> 
+> === sim/integration.test.js ===
+> 
+> integration.test.js: 24 passed, 0 failed
+> 
+> === sim/riskGuard.test.js ===
+> 
+> riskGuard.test.js: 53 passed, 0 failed
+> 
+> === sim/stepUpGuard.test.js ===
+> 
+> stepUpGuard.test.js: 21 passed, 0 failed
+> 
+> === sim/withdrawGuard.test.js ===
+> 
+> withdrawGuard.test.js: 13 passed, 0 failed
+> 
+> sim suite: 15/15 arquivos OK.
+> ```
+
+## 🤖 Claude *(23:35:52)*
+
+
+## 🤖 Claude *(23:35:53)*
+
+15/15 (reconcile 21/21, cobrindo HALT-skip + idempotência). Smoke final de require nos controllers tocados, depois deploy.
+
+## 🤖 Claude *(23:35:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 timeout 30 node -e \"\nconst sc = require(\\\"./src/controllers/systemController\\\");\nconst ac = require(\\\"./src/controllers/analysisController\\\");\nconsole.log(\\\"systemController.getSupervisor:\\\", typeof sc.getSupervisor === \\\"function\\\");\nconsole.log(\\\"analysisController.getCockpitStatus:\\\", typeof ac.getCockpitStatus === \\\"function\\\");\nconsole.log(\\\"SMOKE OK\\\");\n\" 2>&1 | tail -6'",
+  "description": "Require smoke for system+analysis controllers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> info: 2026-06-24T23:35:56.095Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> systemController.getSupervisor: true
+> analysisController.getCockpitStatus: true
+> SMOKE OK
+> ```
+
+## 🤖 Claude *(23:36:11)*
+
+
+## 🤖 Claude *(23:36:12)*
+
+Wiring resolve. Vou capturar o estado vivo pré-deploy (pra comparar), depois rebuild + restart do backend.
+
+## 🤖 Claude *(23:36:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nT=$(cat /tmp/tux_token.txt)\necho \"=== PR\u00c9-DEPLOY: halt + grupos ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"halted=\",d[\"halted\"],\"sources=\",d[\"sources\"])'\ncurl -s -m10 http://127.0.0.1:8090/api/automations/groups -H \"Authorization: $T\" | python3 -c 'import sys,json;[print(g[\"key\"],g[\"active\"],\"/\",g[\"total\"]) for g in json.load(sys.stdin)[\"groups\"]]'\necho \"\"\necho \"=== ownership dos arquivos tocados (deve ser gcrux) ===\"\nls -l backend/src/groupSupervisorJob.js backend/src/utils/eventNotify.js backend/src/utils/automationActivation.js backend/src/regimeJob.js backend/src/controllers/automationsController.js 2>/dev/null | awk '{print $3, $4, $9}'",
+  "description": "Capture pre-deploy live state and ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PRÉ-DEPLOY: halt + grupos ===
+> Traceback (most recent call last):
+>   File "<string>", line 1, in <module>
+> TypeError: string indices must be integers, not 'str'
+> Traceback (most recent call last):
+>   File "<string>", line 1, in <module>
+> TypeError: string indices must be integers, not 'str'
+> 
+> === ownership dos arquivos tocados (deve ser gcrux) ===
+> gcrux-tradeux gcrux-tradeux backend/src/controllers/automationsController.js
+> gcrux-tradeux gcrux-tradeux backend/src/groupSupervisorJob.js
+> gcrux-tradeux gcrux-tradeux backend/src/regimeJob.js
+> gcrux-tradeux gcrux-tradeux backend/src/utils/automationActivation.js
+> gcrux-tradeux gcrux-tradeux backend/src/utils/eventNotify.js
+> ```
+
+## 🤖 Claude *(23:36:21)*
+
+
+## 🤖 Claude *(23:36:22)*
+
+Ownership OK (gcrux). O token expirou — re-login e re-captura.
+
+## 🤖 Claude *(23:36:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-')\nPWD_=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-')\nT=$(curl -s -m10 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD_\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))')\necho \"$T\" > /tmp/tux_token.txt\necho \"=== PR\u00c9-DEPLOY ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"halted=%s sources=%s\"%(d.get(\"halted\"),d.get(\"sources\")))'\ncurl -s -m10 http://127.0.0.1:8090/api/automations/groups -H \"Authorization: $T\" | python3 -c 'import sys,json\nfor g in json.load(sys.stdin)[\"groups\"]: print(\"  %-9s %s/%s\"%(g[\"key\"],g[\"active\"],g[\"total\"]))'",
+  "description": "Re-login and capture pre-deploy state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PRÉ-DEPLOY ===
+> halted=False sources=[]
+>   farm      3/6
+>   trend     0/8
+>   baseline  0/2
+>   paper     40/40
+> ```
+
+## 🤖 Claude *(23:36:33)*
+
+
+## 🤖 Claude *(23:36:35)*
+
+Pré-deploy: `halted=false`, farm 3/6 (vendas Farm), trend 0/8, baseline 0/2. Em bear, o supervisor deve ser **no-op** (entradas já off, Trend/Baseline Sell off em bear+flat, Farm Sell intocada). Vou rebuildar + reiniciar o backend.
+
+## 🤖 Claude *(23:36:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend 2>&1 | tail -8'",
+  "description": "Build backend image",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #13 writing image sha256:fd5679d416f842148b2681f55557fedfd01b51e52bea59a5f60fdaf54a3bece0
+> #13 writing image sha256:fd5679d416f842148b2681f55557fedfd01b51e52bea59a5f60fdaf54a3bece0 done
+> #13 naming to docker.io/library/tradeux-backend done
+> #13 DONE 1.3s
+> 
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built
+> ```
+
+## 🤖 Claude *(23:36:42)*
+
+Build OK. Agora restart do backend e verificação ao vivo.
+
+## 🤖 Claude *(23:36:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose up -d backend 2>&1 | tail -5'\necho \"=== aguardando boot ===\"\nsleep 12\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps backend 2>&1 | tail -3'\necho \"=== boot logs (supervisor + jobs) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"tail -40 /app/logs/system.log 2>/dev/null\" | grep -iE \"supervisor|regime job|flow job|boot|started|halt\" | tail -20'",
+  "description": "Restart backend and check boot logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-backend-1 Recreated 
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === aguardando boot ===
+> NAME                IMAGE             COMMAND                  SERVICE   CREATED          STATUS          PORTS
+> tradeux-backend-1   tradeux-backend   "docker-entrypoint.s…"   backend   14 seconds ago   Up 12 seconds   3001/tcp
+> === boot logs (supervisor + jobs) ===
+> info: 2026-06-24T23:36:50.163Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> info: 2026-06-24T23:36:50.342Z - [BOOT] invariante de ambiente OK (mainnet: api+stream <=> useTestnet).
+> info: 2026-06-24T23:36:50.504Z - Starting the Regime Job...
+> info: 2026-06-24T23:36:50.504Z - Starting the Flow Job (shadow)...
+> info: 2026-06-24T23:36:50.521Z - ⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 1.8h (último OK: 2026-06-24T21:47:39.532Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+> info: 2026-06-24T23:36:50.522Z - Starting the Group Supervisor Job...
+> info: 2026-06-24T23:36:50.814Z - FARM_DCA[LTCUSDT] carregado no boot: qty=0, cost=0
+> info: 2026-06-24T23:36:50.819Z - FARM_DCA[BNBUSDT] carregado no boot: qty=0, cost=0
+> info: 2026-06-24T23:36:50.826Z - FARM_DCA[ADAUSDT] carregado no boot: qty=0, cost=0
+> ```
+
+## 🤖 Claude *(23:37:06)*
+
+
+## 🤖 Claude *(23:37:09)*
+
+Backend de pé, supervisor iniciado. (Nota: disparou o `[AGENTE PARADO]` — o watchdog do agente LLM detectou que ele está offline de novo há 1.8h; é o ZDR/OpenRouter do incidente anterior, separado disso aqui — te aviso no fim.) Vou verificar o estado vivo: grupos inalterados (no-op em bear), supervisor.log, e os novos endpoints.
+
+## 🤖 Claude *(23:37:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-')\nPWD_=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-')\nT=$(curl -s -m10 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD_\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))')\necho \"$T\" > /tmp/tux_token.txt\necho \"=== /system/supervisor (NOVO endpoint) ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/system/supervisor -H \"Authorization: $T\" | python3 -m json.tool\necho \"\"\necho \"=== grupos P\u00d3S-deploy (deve == pr\u00e9: farm 3/6, trend 0/8, baseline 0/2) ===\"\ncurl -s -m10 http://127.0.0.1:8090/api/automations/groups -H \"Authorization: $T\" | python3 -c 'import sys,json\nfor g in json.load(sys.stdin)[\"groups\"]: print(\"  %-9s %s/%s\"%(g[\"key\"],g[\"active\"],g[\"total\"]))'\necho \"\"\necho \"=== supervisor.log (1\u00aa reconcilia\u00e7\u00e3o) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"cat /app/logs/supervisor.log 2>/dev/null\" | tail -10'",
+  "description": "Verify supervisor endpoint, groups unchanged, supervisor log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /system/supervisor (NOVO endpoint) ===
+> {
+>     "enabled": true,
+>     "refreshMs": 60000,
+>     "managed": [
+>         "farm",
+>         "trend",
+>         "baseline"
+>     ],
+>     "running": false,
+>     "at": "2026-06-24T23:36:50.741Z",
+>     "ageMs": 24854,
+>     "last": {
+>         "at": "2026-06-24T23:36:50.741Z",
+>         "halted": false,
+>         "activated": 0,
+>         "deactivated": 0,
+>         "haltSkipped": 0,
+>         "ignored": 49,
+>         "managed": [
+>             "farm",
+>             "trend",
+>             "baseline"
+>         ]
+>     }
+> }
+> 
+> === grupos PÓS-deploy (deve == pré: farm 3/6, trend 0/8, baseline 0/2) ===
+>   farm      3/6
+>   trend     0/8
+>   baseline  0/2
+>   paper     40/40
+> 
+> === supervisor.log (1ª reconciliação) ===
+> info: 2026-06-24T23:36:50.523Z - Group Supervisor iniciado (intervalo 60000ms; grupos: farm, trend, baseline).
+> ```
+
+## 🤖 Claude *(23:37:33)*
+
+
+## 🤖 Claude *(23:37:35)*
+
+No-op limpo: `activated:0, deactivated:0`, grupos inalterados (farm 3/6, trend 0/8, baseline 0/2). A 1ª reconciliação rodou no boot antes do REGIME popular. Vou esperar o 2º ciclo (REGIME=bear já populado) pra confirmar que segue no-op, e checar o cockpit.
+
+## 🤖 Claude *(23:37:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nT=$(cat /tmp/tux_token.txt)\necho \"=== cockpit.supervisor (o agente l\u00ea) ===\"\ncurl -s -m15 http://127.0.0.1:8090/api/analysis/cockpit -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(json.dumps(d.get(\"supervisor\"),indent=2))'\necho \"\"\necho \"=== aguardando 2\u00ba ciclo do supervisor (REGIME=bear populado) ===\"\n# espera passar do pr\u00f3ximo tick de 60s\nsudo -n -u gcrux-tradeux bash -lc '\nfor i in $(seq 1 12); do\n  sleep 5\n  last=$(docker exec tradeux-backend-1 sh -c \"cat /app/logs/supervisor.log 2>/dev/null\" | tail -1)\n  cyc=$(curl -s -m8 http://127.0.0.1:8090/api/system/supervisor -H \"Authorization: '\"$T\"'\" | python3 -c \"import sys,json;d=json.load(sys.stdin);l=d.get(\\\"last\\\") or {};print(\\\"age=%ss act=%s deact=%s ignored=%s\\\"%(round((d.get(\\\"ageMs\\\") or 0)/1000),l.get(\\\"activated\\\"),l.get(\\\"deactivated\\\"),l.get(\\\"ignored\\\")))\" 2>/dev/null)\n  echo \"t+${i}x5s :: $cyc\"\n  # se a idade resetou (<10s), um novo ciclo rodou\n  echo \"$cyc\" | grep -qE \"age=[0-9]s |age=[0-9] \" && break\ndone'\necho \"\"\necho \"=== erros do supervisor? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"cat /app/logs/supervisor.log 2>/dev/null\" | grep -iE \"erro|falha|fail\" | tail -5 || echo \"(sem erros)\"'",
+  "description": "Check cockpit.supervisor and wait for 2nd reconcile cycle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === cockpit.supervisor (o agente lê) ===
+> {
+>   "enabled": true,
+>   "refreshMs": 60000,
+>   "managed": [
+>     "farm",
+>     "trend",
+>     "baseline"
+>   ],
+>   "running": false,
+>   "at": "2026-06-24T23:36:50.741Z",
+>   "ageMs": 53041,
+>   "last": {
+>     "at": "2026-06-24T23:36:50.741Z",
+>     "halted": false,
+>     "activated": 0,
+>     "deactivated": 0,
+>     "haltSkipped": 0,
+>     "ignored": 49,
+>     "managed": [
+>       "farm",
+>       "trend",
+>       "baseline"
+>     ]
+>   }
+> }
+> 
+> === aguardando 2º ciclo do supervisor (REGIME=bear populado) ===
+> t+1x5s :: age=58s act=0 deact=0 ignored=49
+> t+2x5s :: age=3s act=0 deact=0 ignored=49
+> 
+> === erros do supervisor? ===
+> ```
+
+## 🤖 Claude *(23:38:20)*
+
+
+## 🤖 Claude *(23:38:22)*
+
+2º ciclo rodou com REGIME=bear populado: **ainda `act=0 deact=0`** — no-op confirmado, sem erros, grupos intactos. Cockpit expõe `status.supervisor`. **A+B está deployado e verificado.**
+
+Agora commit. Deixa eu ver o remote e o padrão de push.
+
+## 🤖 Claude *(23:38:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== remote ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' remote -v 2>/dev/null | head -2 | sed -E 's#(https://)[^@]*@#\\1<token>@#'\necho \"=== \u00faltimo commit (autor) ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' log -1 --format='%h %an <%ae> %s' 2>/dev/null\necho \"=== branch atual ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' branch --show-current 2>/dev/null",
+  "description": "Check remote, last commit author, branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === remote ===
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> === último commit (autor) ===
+> 6cec694 Gabriel Zarattini <gabrielcall@gmail.com> feat(ui): confirmacao no toggle de Ambiente Ativo (design-review #5b / H1)
+> === branch atual ===
+> master
+> ```
+
+## 🤖 Claude *(23:38:47)*
+
+
+## 🤖 Claude *(23:38:49)*
+
+Remote é SSH (só a chave do ubuntu empurra). Vou commitar como gcrux (ownership limpo) e dar push como ubuntu, depois `chown` do `.git`. Stage só dos meus arquivos (não o scratch `backtest-results`).
+
+## 🤖 Claude *(23:38:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/commit_msg.txt",
+  "content": "feat(autonomy): supervisor de virada por regime + notificacoes Telegram de evento (A+B)\n\nFrente A+B do trabalho de autonomia (pedido do dono: o sistema vira sozinho, sem\ncomando). Gated QA (PASS c/ ressalvas) + TL (APPROVE c/ 1 condicao), sim 15/15,\ndeployado e verificado ao vivo (no-op em bear: act=0/deact=0, grupos intactos).\n\nA - notificacoes Telegram de evento (utils/eventNotify.js, builders puros):\n- flip de regime + golden/death cross (hooks no regimeJob; edge-trigger guardado\n  contra a semente do 1o boot via prevRegime!==undefined / prev!==undefined)\n- fluxo unilateral do taker (hook no flowJob; edge-trigger c/ histerese NOTIFY_EXIT)\n\nB - supervisor autonomo de grupos (groupSupervisorJob.js):\n- liga/desliga as ENTRADAS (Farm/Trend/Baseline Buy) conforme o REGIME de cada\n  simbolo. O gate REGIME!=='bear' ja existe DENTRO da condicao (3a camada de\n  seguranca); o supervisor e quem ATIVA as entradas no nao-bear p/ o gate runtime\n  agir (hoje estao isActive=0). Em bear: desativa.\n- vendas acopladas: Trend Sell ativo se regime!=bear OU TREND_QTY>0; Baseline Sell\n  acoplado ao regime; Farm Sell INTOCADA (sempre armada, auto-gateada em qty>0)\n- ativacao de ENTRADA pulada sob HALT (nao arma compra com o floor up); desativacao\n  sempre aplicada; reconciliacao idempotente (so age na diferenca)\n- extrai applyAutomationActive p/ utils/automationActivation.js (fonte unica,\n  reusada pelo botao por-linha, painel de grupos e supervisor; byte-identico)\n- observabilidade (must-fix do TL): GET /system/supervisor + status.supervisor no\n  cockpit (o agente LLM le p/ a doutrina GATE!=ATIVO)\n- kill-switch/escopo por env: GROUP_SUPERVISOR_ENABLED/_GROUPS/_REFRESH_MS,\n  FLOW_NOTIFY_TOXICITY (documentados no .env.example; defaults == escolha do dono)\n\nTestes de sim: groupSupervisor (decisao pura, 25 asserts), groupSupervisorReconcile\n(wiring/HALT-skip/idempotencia, 21), eventNotify (builders, 15).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/commit_msg.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:39:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git -c safe.directory='*' add \\\n  backend/src/utils/eventNotify.js \\\n  backend/src/utils/automationActivation.js \\\n  backend/src/groupSupervisorJob.js \\\n  backend/scripts/sim/eventNotify.test.js \\\n  backend/scripts/sim/groupSupervisor.test.js \\\n  backend/scripts/sim/groupSupervisorReconcile.test.js \\\n  backend/src/regimeJob.js \\\n  backend/src/flowJob.js \\\n  backend/src/controllers/automationsController.js \\\n  backend/src/controllers/systemController.js \\\n  backend/src/routers/systemRouter.js \\\n  backend/src/controllers/analysisController.js \\\n  backend/src/server.js \\\n  backend/.env.example\necho \"=== staged ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff --cached --stat\necho \"=== commit (autor = dono) ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' -c user.name='Gabriel Zarattini' -c user.email='gabrielcall@gmail.com' commit --author='Gabriel Zarattini <gabrielcall@gmail.com>' -F /tmp/tux_build/commit_msg.txt 2>&1 | tail -5",
+  "description": "Stage my files and commit as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === staged ===
+>  backend/.env.example                               |  10 ++
+>  backend/scripts/sim/eventNotify.test.js            |  38 +++++
+>  backend/scripts/sim/groupSupervisor.test.js        |  52 ++++++
+>  .../scripts/sim/groupSupervisorReconcile.test.js   | 100 +++++++++++
+>  backend/src/controllers/analysisController.js      |   3 +
+>  backend/src/controllers/automationsController.js   |  31 +---
+>  backend/src/controllers/systemController.js        |   9 +-
+>  backend/src/flowJob.js                             |  14 ++
+>  backend/src/groupSupervisorJob.js                  | 185 +++++++++++++++++++++
+>  backend/src/regimeJob.js                           |   5 +
+>  backend/src/routers/systemRouter.js                |   2 +
+>  backend/src/server.js                              |   7 +
+>  backend/src/utils/automationActivation.js          |  39 +++++
+>  backend/src/utils/eventNotify.js                   |  63 +++++++
+>  14 files changed, 530 insertions(+), 28 deletions(-)
+> === commit (autor = dono) ===
+>  create mode 100644 backend/scripts/sim/groupSupervisor.test.js
+>  create mode 100644 backend/scripts/sim/groupSupervisorReconcile.test.js
+>  create mode 100644 backend/src/groupSupervisorJob.js
+>  create mode 100644 backend/src/utils/automationActivation.js
+>  create mode 100644 backend/src/utils/eventNotify.js
+> ```
+
+## 🤖 Claude *(23:39:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== HEAD ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' log -1 --format='%h %s' 2>/dev/null\necho \"=== push (como ubuntu \u2014 tem a chave SSH) ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -6\necho \"=== chown .git de volta p/ gcrux (git-as-ubuntu envenena o owner) ===\"\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git 2>&1 && echo \"chown OK\"\necho \"=== confirma sync ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' status -sb 2>/dev/null | head -3",
+  "description": "Push as ubuntu and fix .git ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HEAD ===
+> 7892483 feat(autonomy): supervisor de virada por regime + notificacoes Telegram de evento (A+B)
+> === push (como ubuntu — tem a chave SSH) ===
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    6cec694..7892483  master -> master
+> === chown .git de volta p/ gcrux (git-as-ubuntu envenena o owner) ===
+> chown OK
+> === confirma sync ===
+> ## master...origin/master
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ```
+
+## 🤖 Claude *(23:39:53)*
+
+
+## 🤖 Claude *(23:39:55)*
+
+**A+B fechado:** `6cec694..7892483` em origin, working tree limpo (só o scratch), deploy verificado. `vivo==master==origin==7892483`.
+
+Agora **Frente C — auto-resume do cap −5% com os 3 backstops**. Deixa eu ler o `riskState` pra ver a API exata do HALT.
+
+## 🤖 Claude *(23:39:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/riskState.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// === riskState — FONTE ÚNICA DE VERDADE do kill-switch (HALT) ===
+> 4	//
+> 5	// O guard (utils/exchange.js) chama isHalted() POR ORDEM (HALT QUENTE). Fontes EMPILHÁVEIS (basta UMA p/ travar tudo):
+> 6	//   env-hard  → override ABSOLUTO derivado de process.env.TRADING_HALT_HARD no boot. NÃO é flipável em runtime
+> 7	//               (só `.env` + restart). É a trava "à prova de clique" — quando você quer o sistema travado de
+> 8	//               verdade, imune ao botão da UI. Default OFF.
+> 9	//   floor     → PISO OPERACIONAL de ir-ao-vivo, PERSISTIDO (risk_state.json), controlado pelo OPERADOR via UI
+> 10	//               (POST /system/floor), QUENTE (sem restart) e sobrevive a restart. SEED no 1º boot:
+> 11	//               process.env.TRADING_HALT (compat com o antigo "env floor"). Depois de persistido o OPERADOR é a
+> 12	//               autoridade — o env TRADING_HALT vira só semente (use o botão TRAVAR, ou TRADING_HALT_HARD, p/ travar).
+> 13	//   manual    → kill-switch quente do operador / pânico (POST /system/halt). Persistido; sobrevive a restart.
+> 14	//   daily-cap → disparado pelo dailyCapJob no drawdown de equity do dia. Persistido; AUTO-EXPIRA na virada UTC.
+> 15	//
+> 16	// SEM dependência do app (só fs/path/logger) → exchange.js requer este módulo top-level sem ciclo. FAIL-CLOSED:
+> 17	// disco ilegível → floor LIGADO (trava); isHalted() lançar → o guard lança = ordem bloqueada (direção segura).
+> 18	//
+> 19	// ⚠️ MUDANÇA DE POSTURA (2026-06-19): o "env floor" antigo (TRADING_HALT, OR permanente, só .env+restart) virou um
+> 20	// PISO PERSISTIDO controlável pela UI (a quente). TRADING_HALT agora só SEMENTE o floor no 1º boot; pra travar
+> 21	// "à prova de clique" use TRADING_HALT_HARD=true no .env. Botão de liberar (UI) é bloqueado se env-hard estiver on.
+> 22	
+> 23	const fs = require('fs');
+> 24	const path = require('path');
+> 25	const logger = require('./utils/logger');
+> 26	
+> 27	const STATE_FILE = path.resolve(__dirname, '..', 'logs', 'risk_state.json');
+> 28	
+> 29	// env-hard: override absoluto (só .env+restart). env-seed: semente do floor no 1º boot (compat com o antigo env floor).
+> 30	const ENV_HALT_HARD = process.env.TRADING_HALT_HARD === 'true';
+> 31	const ENV_FLOOR_SEED = process.env.TRADING_HALT === 'true';
+> 32	
+> 33	// Estado mutável das fontes QUENTES (persistidas). env-hard NÃO entra aqui (não é persistido nem flipável).
+> 34	let floor = { on: ENV_FLOOR_SEED, reason: ENV_FLOOR_SEED ? 'TRADING_HALT (semente env, 1º boot)' : null, since: null };
+> 35	let manual = { on: false, reason: null, since: null };
+> 36	let dailyCap = { on: false, reason: null, since: null, day: null };
+> 37	// env-mismatch: invariante de ambiente (apiUrl-derivado != useTestnet). NAO persistido — recomputado a cada
+> 38	// boot pelo server.js (settings corrigidas -> restart re-avalia). Fail-closed: ON enquanto incoerente.
+> 39	let envMismatch = { on: false, reason: null, since: null };
+> 40	
+> 41	// Equity tradeable QUENTE — publicado pelo dailyCapJob a cada ciclo `valued` (~60s, mark-to-market, fail-safe).
+> 42	// Lido SÍNCRONO pelo guard (utils/exchange.assertWithinRisk) p/ dimensionar o %-teto de COMPRA. NÃO persistido
+> 43	// (recomputado em <=60s no boot) e NÃO entra no isHalted() — é só um número p/ o teto. value=null até o 1º cálculo
+> 44	// válido; equity ausente/velho faz o guard degradar p/ o teto absoluto (direção segura).
+> 45	let equitySnap = { value: null, at: null };
+> 46	function setEquity(v) {
+> 47	    const n = parseFloat(v);
+> 48	    if (Number.isFinite(n) && n > 0) equitySnap = { value: n, at: Date.now() };
+> 49	}
+> 50	function getEquity() { return { value: equitySnap.value, at: equitySnap.at }; }
+> 51	
+> 52	// Chave de dia UTC YYYY-MM-DD (NÃO getUTCDate() — evita aliasing dia-do-mês na virada de mês).
+> 53	function dayKeyUTC(d) {
+> 54	    return (d || new Date()).toISOString().slice(0, 10);
+> 55	}
+> 56	
+> 57	function persist() {
+> 58	    try {
+> 59	        const dir = path.dirname(STATE_FILE);
+> 60	        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+> 61	        fs.writeFileSync(STATE_FILE, JSON.stringify({ floor, manual, dailyCap }), 'utf8');
+> 62	    } catch (e) {
+> 63	        logger('system', `[riskState] falha ao persistir ${STATE_FILE}: ${e.message}`);
+> 64	    }
+> 65	}
+> 66	
+> 67	// Carrega o estado quente do disco no boot. floor PERSISTIDO vence a semente do env (autoridade do operador após o
+> 68	// 1º flip); ausente → mantém a semente. manual re-arma como estava; dailyCap só se for do MESMO dia UTC.
+> 69	function loadFromDisk() {
+> 70	    try {
+> 71	        if (!fs.existsSync(STATE_FILE)) return;
+> 72	        const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+> 73	        if (raw && raw.floor && typeof raw.floor.on === 'boolean') floor = raw.floor;
+> 74	        if (raw && raw.manual && typeof raw.manual.on === 'boolean') manual = raw.manual;
+> 75	        if (raw && raw.dailyCap && typeof raw.dailyCap.on === 'boolean') {
+> 76	            if (raw.dailyCap.on && raw.dailyCap.day === dayKeyUTC()) dailyCap = raw.dailyCap;
+> 77	            else dailyCap = { on: false, reason: null, since: null, day: null }; // dia diferente → expira
+> 78	        }
+> 79	    } catch (e) {
+> 80	        // FAIL-CLOSED: disco ilegível → trava pelo floor (não libera no escuro). manual/cap zerados.
+> 81	        logger('system', `[riskState] estado em disco ilegível (${e.message}) — FAIL-CLOSED (floor LIGADO).`);
+> 82	        floor = { on: true, reason: 'fail-safe (estado em disco ilegível)', since: null };
+> 83	        manual = { on: false, reason: null, since: null };
+> 84	        dailyCap = { on: false, reason: null, since: null, day: null };
+> 85	    }
+> 86	}
+> 87	
+> 88	// HALT efetivo: qualquer fonte ligada trava. dailyCap só conta no DIA em que foi armado.
+> 89	function isHalted() {
+> 90	    return ENV_HALT_HARD || envMismatch.on || floor.on || manual.on || (dailyCap.on && dailyCap.day === dayKeyUTC());
+> 91	}
+> 92	
+> 93	// Estado completo p/ reporte (cockpit/agent/endpoint/painel). `source`/`reason` resolvem por PRECEDÊNCIA
+> 94	// (env-hard > floor > manual > daily-cap) p/ rotular a causa dominante; `sources` lista TODAS as ativas.
+> 95	function getState() {
+> 96	    const today = dayKeyUTC();
+> 97	    const capActive = dailyCap.on && dailyCap.day === today;
+> 98	    const sources = [];
+> 99	    if (ENV_HALT_HARD) sources.push('env-hard');
+> 100	    if (envMismatch.on) sources.push('env-mismatch');
+> 101	    if (floor.on) sources.push('floor');
+> 102	    if (manual.on) sources.push('manual');
+> 103	    if (capActive) sources.push('daily-cap');
+> 104	
+> 105	    let source = null, reason = null, since = null;
+> 106	    if (ENV_HALT_HARD) { source = 'env-hard'; reason = 'TRADING_HALT_HARD (env, absoluto)'; since = null; }
+> 107	    else if (envMismatch.on) { source = 'env-mismatch'; reason = envMismatch.reason || 'apiUrl x useTestnet dessincronizados'; since = envMismatch.since; }
+> 108	    else if (floor.on) { source = 'floor'; reason = floor.reason || 'piso operacional'; since = floor.since; }
+> 109	    else if (manual.on) { source = 'manual'; reason = manual.reason || 'operador'; since = manual.since; }
+> 110	    else if (capActive) { source = 'daily-cap'; reason = dailyCap.reason || 'daily-loss-cap'; since = dailyCap.since; }
+> 111	
+> 112	    return {
+> 113	        halted: isHalted(),
+> 114	        envHard: ENV_HALT_HARD,
+> 115	        envMismatch: { ...envMismatch },
+> 116	        floor: { ...floor },
+> 117	        manual: { ...manual },
+> 118	        dailyCap: { ...dailyCap, active: capActive },
+> 119	        sources, source, reason, since,
+> 120	    };
+> 121	}
+> 122	
+> 123	// Liga/desliga o PISO OPERACIONAL (persistido, quente). on=true TRAVA; on=false LIBERA (ir ao vivo c/ dinheiro
+> 124	// real). NÃO toca env-hard nem manual/daily-cap. Retorna true se mudou. O bloqueio por env-hard é responsabilidade
+> 125	// do chamador (systemController recusa liberar se envHard) — aqui setFloor(false) só mexe na fonte floor.
+> 126	function setFloor(on, reason) {
+> 127	    on = !!on;
+> 128	    if (floor.on === on) return false;
+> 129	    floor = on ? { on: true, reason: reason || 'operador', since: new Date().toISOString() }
+> 130	               : { on: false, reason: null, since: null };
+> 131	    persist();
+> 132	    logger('system', `[riskState] FLOOR ${on ? 'LIGADO (trava)' : 'DESLIGADO (trading liberado)'}${on && reason ? ` (${reason})` : ''}.`);
+> 133	    return true;
+> 134	}
+> 135	
+> 136	// Liga/desliga uma fonte QUENTE. source ∈ {'manual','daily-cap'}. Retorna `true` se MUDOU. NUNCA toca floor/env.
+> 137	function setHalt(on, reason, source) {
+> 138	    on = !!on;
+> 139	    if (source === 'manual') {
+> 140	        if (manual.on === on) return false;
+> 141	        manual = on ? { on: true, reason: reason || 'operador', since: new Date().toISOString() }
+> 142	                    : { on: false, reason: null, since: null };
+> 143	        persist();
+> 144	        logger('system', `[riskState] manual HALT ${on ? 'LIGADO' : 'desligado'}${on && reason ? ` (${reason})` : ''}.`);
+> 145	        return true;
+> 146	    }
+> 147	    if (source === 'daily-cap') {
+> 148	        const today = dayKeyUTC();
+> 149	        if (on) {
+> 150	            if (dailyCap.on && dailyCap.day === today) return false; // já armado hoje → não re-notifica
+> 151	            dailyCap = { on: true, reason: reason || 'daily-loss-cap', since: new Date().toISOString(), day: today };
+> 152	            persist();
+> 153	            logger('system', `[riskState] daily-cap HALT ARMADO (${dailyCap.reason}).`);
+> 154	            return true;
+> 155	        }
+> 156	        return clearDailyCap();
+> 157	    }
+> 158	    throw new Error(`[riskState] setHalt: source inválida '${source}' (use 'manual' ou 'daily-cap').`);
+> 159	}
+> 160	
+> 161	// Zera SÓ a fonte daily-cap (rollover de dia e reset do operador). Nunca toca floor/env/manual.
+> 162	function clearDailyCap() {
+> 163	    if (!dailyCap.on) return false;
+> 164	    dailyCap = { on: false, reason: null, since: null, day: null };
+> 165	    persist();
+> 166	    logger('system', `[riskState] daily-cap HALT limpo (re-armado p/ o dia).`);
+> 167	    return true;
+> 168	}
+> 169	
+> 170	// Dia em que o daily-cap está armado (null se não armado) — o dailyCapJob usa p/ saber se já disparou hoje.
+> 171	function getDailyCapDay() {
+> 172	    return dailyCap.on ? dailyCap.day : null;
+> 173	}
+> 174	
+> 175	// Liga/desliga o HALT de invariante de ambiente (apiUrl-derivado != useTestnet). Chamado SO pelo boot do
+> 176	// server.js (nao-persistido; recomputado a cada boot). Retorna true se mudou.
+> 177	function setEnvMismatch(on, reason) {
+> 178	    on = !!on;
+> 179	    if (envMismatch.on === on) return false;
+> 180	    envMismatch = on ? { on: true, reason: reason || 'apiUrl x useTestnet dessincronizados', since: new Date().toISOString() }
+> 181	                     : { on: false, reason: null, since: null };
+> 182	    logger('system', `[riskState] env-mismatch HALT ${on ? `LIGADO (${envMismatch.reason})` : 'desligado'}.`);
+> 183	    return true;
+> 184	}
+> 185	
+> 186	// Seed no LOAD do módulo (try/catch já dentro de loadFromDisk; fail-closed).
+> 187	loadFromDisk();
+> 188	logger('system', `[riskState] inicializado — env-hard=${ENV_HALT_HARD} · floor=${floor.on} · manual=${manual.on} · daily-cap=${dailyCap.on}${dailyCap.on ? ` (${dailyCap.day})` : ''} · halted=${isHalted()}.`);
+> 189	
+> 190	module.exports = { dayKeyUTC, isHalted, getState, setFloor, setHalt, clearDailyCap, getDailyCapDay, setEquity, getEquity, setEnvMismatch };
+> 191	
+> ```
+
+## 🤖 Claude *(23:42:13)*
+
+
+## 🤖 Claude *(23:42:14)*
+
+Entendi a mecânica do `riskState` (daily-cap é fonte persistida, auto-expira no rollover UTC; `clearDailyCap()` só solta essa fonte, preserva floor/manual). Vou reescrever o `dailyCapJob` com o auto-resume + os 3 backstops, extraindo uma função PURA `evaluateCap` (testável, padrão do projeto). Escrevo o arquivo completo.
+
+## 🤖 Claude *(23:42:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCap.test.js",
+  "offset": 1,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	/*
+> 3	 * Suíte de SIMULAÇÃO — CIRCUIT-BREAKER de perda diária (dailyCapJob.checkCap): o -5% de drawdown de equity que
+> 4	 * ARMA o HALT (bloqueia TODAS as ordens). Cada caso é uma SITUAÇÃO money-path: baseline do dia, o LIMIAR exato,
+> 5	 * o disparo, o unwrap LD* do Simple Earn (fix c6d0853 — anti-HALT-falso) e o fail-safe de preço frio.
+> 6	 *
+> 7	 * Puro Node + assert manual. ZERO rede: injeta fakes de exchange.balance / beholder.getMemory / settingsRepository /
+> 8	 * riskState / telegram / logger no require.cache ANTES de requerer o dailyCapJob, e dirige checkCap() com fixtures.
+> 9	 * (O snapshot persiste em backend/logs/daily_cap_snapshot.json — gitignored, host-only, NÃO o volume do container.)
+> 10	 */
+> 11	process.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';
+> 12	const path = require('path');
+> 13	const SRC = path.resolve(__dirname, '../../src');
+> 14	
+> 15	function injectModule(absPath, exportsObj) {
+> 16	    const resolved = require.resolve(absPath);
+> 17	    require.cache[resolved] = { id: resolved, filename: resolved, loaded: true, exports: exportsObj };
+> 18	}
+> 19	
+> 20	// --- estado controlável pelas fixtures ---
+> 21	let BAL = {};                 // saldo Binance fake: { COIN: { available, onOrder } }
+> 22	let PRICES = {};              // MINI_TICKER fake: { 'LTCUSDT': 44, ... }
+> 23	let haltCalls = [];           // captura riskState.setHalt(on,reason,source)
+> 24	const DAY = '2026-06-21';
+> 25	
+> 26	const fakeExchange = (settings) => ({ balance: async () => BAL });
+> 27	const fakeBeholder = { getMemory: (symbol, key) => (key === 'MINI_TICKER' && PRICES[symbol] != null ? { close: PRICES[symbol] } : undefined) };
+> 28	const fakeSettings = { getDefaultSettings: async () => ({ id: 1, accessKey: 'k', secretKey: 's', apiUrl: 'https://api.binance.com/api', streamUrl: 'wss://x' }) };
+> 29	let lastEquityPub = null;     // captura riskState.setEquity(v) — o dailyCapJob publica o equity quente p/ o %-teto
+> 30	const fakeRiskState = {
+> ```
+
+## 🤖 Claude *(23:42:24)*
+
+
+## 🤖 Claude *(23:42:25)*
+
+O harness do `dailyCap.test.js` já injeta fakes. Vou exportar `evaluateCap` (pura) e escrever um teste dedicado da matriz de decisão. Primeiro o `dailyCapJob.js` completo com auto-resume + backstops.
+
+## 🤖 Claude *(23:43:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/dailyCapJob.js",
+  "content": "'use strict';\n\n// === dailyCapJob \u2014 CIRCUIT-BREAKER de perda di\u00e1ria (-5%) por DRAWDOWN DE EQUITY ===\n//\n// Tira um snapshot do equity TOTAL da conta (USDT livre + valor de mercado de TODAS as posi\u00e7\u00f5es) na\n// virada de dia UTC e, a cada ciclo, compara o equity atual com esse snapshot. Se o equity cair >= o teto\n// (default 5%), ARMA o HALT via riskState (fonte 'daily-cap') \u2192 o guard do exchange.js passa a bloquear\n// QUALQUER ordem (BUY/SELL/OCO).\n//\n// === AUTO-RESUME (frente C \u2014 escolha do dono: \"auto-resumir ap\u00f3s cooldown\") com 3 BACKSTOPS ===\n// O -5% N\u00c3O \u00e9 mais terminal-at\u00e9-UTC: ap\u00f3s o disparo, espera um COOLDOWN e ent\u00e3o RE-BASELINE no equity atual\n// e LIBERA o cap sozinho (clearDailyCap s\u00f3 solta a fonte daily-cap; floor/manual/env-hard permanecem). Para\n// que \"auto-resumir\" n\u00e3o vire espiral de perda, tr\u00eas travas o limitam:\n//   (1) COOLDOWN  (DAILY_CAP_RESUME_COOLDOWN_MS, default 3h) antes de religar;\n//   (2) PISO DURO (DAILY_HARD_FLOOR_PCT, default -12% do baseline ORIGINAL do dia): abaixo dele, HALT SEM\n//       auto-resume (s\u00f3 manual / virada UTC) \u2014 o disjuntor do disjuntor;\n//   (3) M\u00c1X. de auto-resumes/dia (DAILY_CAP_MAX_RESUMES, default 2): esgotado, vira manual.\n// Com isso um dia ruim custa no M\u00c1XIMO ~-12% e para de vez. DAILY_CAP_AUTO_RESUME=false volta ao comportamento\n// antigo (terminal-at\u00e9-UTC). A decis\u00e3o \u00e9 uma fun\u00e7\u00e3o PURA (evaluateCap) \u2014 testada na su\u00edte de sim.\n//\n// \u26a0\ufe0f ESCOPO = BLOQUEIA TUDO (decis\u00e3o do dono): durante um halt por -5%, venda PROTETIVA (death cross/stop)\n// TAMB\u00c9M \u00e9 bloqueada. N\u00e3o h\u00e1 de-risking autom\u00e1tico sob o cap.\n//\n// Por que drawdown de equity e N\u00c3O o cash-flow (sellNet-buyNet do dailyProfitJob): cash-flow falsa-dispara\n// em dia de ACUMULA\u00c7\u00c3O (comprar sem vender conta como \"perda\" sem ser). Equity mark-to-market \u00e9 robusto.\n//\n// FAIL-SAFE (seguran\u00e7a money-path): se o equity n\u00e3o puder ser AVALIADO (pre\u00e7o frio/ausente de alguma moeda\n// com saldo), N\u00c3O dispara, N\u00c3O faz snapshot e N\u00c3O auto-resume \u2014 espera o MINI_TICKER esquentar.\n\nconst beholder = require('./beholder');\nconst settingsRepository = require('./repositories/settingsRepository');\nconst riskState = require('./riskState');\nconst logger = require('./utils/logger');\nconst fs = require('fs');\nconst path = require('path');\n\nconst ENABLED = (process.env.DAILY_CAP_ENABLED || 'true') === 'true';\nconst _pct = parseFloat(process.env.DAILY_LOSS_CAP_PCT || '0.05');\nconst CAP_PCT = Number.isFinite(_pct) && _pct > 0 && _pct < 1 ? _pct : 0.05; // fra\u00e7\u00e3o (0.05 = -5%)\nconst _ms = parseInt(process.env.DAILY_CAP_CHECK_MS || '60000', 10);\nconst CHECK_MS = Number.isFinite(_ms) && _ms >= 15000 ? _ms : 60000; // piso 15s\nconst _coldMs = parseInt(process.env.DAILY_CAP_COLD_ALERT_MS || '900000', 10);\nconst COLD_ALERT_MS = Number.isFinite(_coldMs) && _coldMs > 0 ? _coldMs : 900000; // 15min: alarme anti-sil\u00eancio\n\n// --- Auto-resume (frente C) ---\nconst AUTO_RESUME = (process.env.DAILY_CAP_AUTO_RESUME || 'true') !== 'false';\nconst _cool = parseInt(process.env.DAILY_CAP_RESUME_COOLDOWN_MS || '10800000', 10);\nconst RESUME_COOLDOWN_MS = Number.isFinite(_cool) && _cool >= 60000 ? _cool : 10800000; // 3h, piso 60s\nconst _hard = parseFloat(process.env.DAILY_HARD_FLOOR_PCT || '0.12');\nconst HARD_PCT = Number.isFinite(_hard) && _hard > CAP_PCT && _hard < 1 ? _hard : 0.12; // > soft cap, < 100%\nconst _maxr = parseInt(process.env.DAILY_CAP_MAX_RESUMES || '2', 10);\nconst MAX_RESUMES = Number.isFinite(_maxr) && _maxr >= 0 ? _maxr : 2;\n\nconst QUOTE = 'USDT';\nconst STABLES = new Set(['USDT', 'USDC', 'BUSD', 'FDUSD', 'TUSD', 'DAI']); // valem ~$1 (a par com USDT)\n// Assets que o operador isenta do equity (sem par <coin>USDT que esquente: Earn/Locked 'LD*', leveraged tokens,\n// dust de moeda BTC-only). Sem isen\u00e7\u00e3o, um asset assim deixaria o cap em fail-safe PERMANENTE. CSV, default vazio.\nconst IGNORE_ASSETS = new Set((process.env.DAILY_CAP_IGNORE_ASSETS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean));\n// Bases que o sistema ACOMPANHA (par <base>USDT com ticker quente). Earn dessas (LD<base>) sem pre\u00e7o moment\u00e2neo =\n// ativo REAL temporariamente frio \u2192 fail-safe (espera); LD de qualquer OUTRA base = dust de Earn sem par \u2192 ignora.\n// Deriva do mesmo REGIME_SYMBOLS do regimeJob/cockpit. Nasceu do incidente do auto-subscribe (LTC spot \u2192 LDLTC).\nconst TRACKED_BASES = new Set(\n    (process.env.REGIME_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT')\n        .split(',').map(s => s.trim().toUpperCase().replace(/USDT$/, '')).filter(Boolean)\n);\nconst SNAP_FILE = path.resolve(__dirname, '..', 'logs', 'daily_cap_snapshot.json');\n\nlet timer = null;\nlet running = false;\nlet SNAP = null;          // { day, equity (baseline ROLANTE do soft cap), dayBase (baseline ORIGINAL p/ o piso duro),\n                          //   resumes, hardHalted, resumeAt (ms|null), at } \u2014 persistido\nlet LAST = null;          // \u00faltimo c\u00e1lculo de equity p/ observabilidade\nlet AT = null;            // ts do \u00faltimo ciclo\nlet COLD_LOGGED = false;  // p/ logar a indisponibilidade 1x por epis\u00f3dio (anti-spam)\nlet COLD_SINCE = null;    // ts do in\u00edcio do epis\u00f3dio de indisponibilidade (p/ o alarme anti-sil\u00eancio)\nlet COLD_ALERTED = false; // alarme de prote\u00e7\u00e3o-inativa j\u00e1 enviado neste epis\u00f3dio\n\n// Backfill defensivo de campos novos (snapshots gravados antes da frente C). dayBase ausente => usa equity.\nfunction normalizeSnap(s) {\n    if (!s) return s;\n    if (typeof s.dayBase !== 'number') s.dayBase = s.equity;\n    if (typeof s.resumes !== 'number') s.resumes = 0;\n    if (typeof s.hardHalted !== 'boolean') s.hardHalted = false;\n    if (!('resumeAt' in s)) s.resumeAt = null;\n    return s;\n}\n\nfunction loadSnap() {\n    try {\n        if (fs.existsSync(SNAP_FILE)) {\n            const raw = JSON.parse(fs.readFileSync(SNAP_FILE, 'utf8'));\n            if (raw && typeof raw.equity === 'number' && raw.day) SNAP = normalizeSnap(raw);\n        }\n    } catch (e) {\n        logger('system', `[dailyCap] snapshot em disco ileg\u00edvel (${e.message}) \u2014 recome\u00e7ando baseline.`);\n        SNAP = null;\n    }\n}\n\nfunction saveSnap() {\n    try {\n        const dir = path.dirname(SNAP_FILE);\n        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });\n        fs.writeFileSync(SNAP_FILE, JSON.stringify(SNAP), 'utf8');\n    } catch (e) {\n        logger('system', `[dailyCap] falha ao persistir ${SNAP_FILE}: ${e.message}`);\n    }\n}\n\n// Pre\u00e7o de uma moeda em USDT via MINI_TICKER (mesmo feed que o funnelJob/refPrice usam; sem rede). null se frio.\nfunction priceOf(coin) {\n    try {\n        const mt = beholder.getMemory(`${coin}${QUOTE}`, 'MINI_TICKER');\n        const p = mt && (mt.close ?? mt.current ?? mt.c ?? mt.lastPrice);\n        const n = parseFloat(p);\n        return Number.isFinite(n) && n > 0 ? n : null;\n    } catch (e) { return null; }\n}\n\n// Equity TOTAL em USDT: USDT/stables a par + (available+onOrder) de cada moeda \u00d7 pre\u00e7o. Se ALGUMA moeda com\n// saldo positivo estiver com pre\u00e7o frio, marca valued:false (fail-safe \u2014 o chamador N\u00c3O dispara nem snapshota).\n// Retorna { valued, equity, usdtFree, cold:[...], settings } ou { valued:false, error } se saldo indispon\u00edvel.\nasync function computeEquity() {\n    const settings = await settingsRepository.getDefaultSettings(); // j\u00e1 vem DESCRIPTOGRAFADO (incl. id)\n    if (!settings || !settings.id) return { valued: false, error: 'sem settings default' };\n    const exchange = require('./utils/exchange')(settings);\n    const bal = await exchange.balance();\n    if (!bal) return { valued: false, error: 'saldo indispon\u00edvel', settings };\n\n    let equity = 0;\n    let usdtFree = 0;\n    const cold = [];\n    const ignored = [];\n    for (const [coin, b] of Object.entries(bal)) {\n        const qty = (parseFloat(b.available) || 0) + (parseFloat(b.onOrder) || 0);\n        if (qty <= 0) continue;\n        if (coin === QUOTE) { usdtFree = parseFloat(b.available) || 0; equity += qty; continue; }\n        if (STABLES.has(coin)) { equity += qty; continue; }        // outras stables ~ $1\n        if (IGNORE_ASSETS.has(coin)) { ignored.push(coin); continue; } // isento expl\u00edcito pelo operador\n        const px = priceOf(coin);\n        if (px == null) {\n            // 'LD'+ativo = wrapper do Binance Simple Earn (LDLTC = LTC em Earn, LDUSDC = USDC em Earn...). Tem valor\n            // REAL e resgat\u00e1vel \u2192 marca a mercado pelo ativo SUBJACENTE (strip 'LD'). Sem isto, um saldo que a Binance\n            // AUTO-SUBSCREVE no Earn some do equity e dispara o cap por falso drawdown (incidente 2026-06-20: LTC\u2192LDLTC,\n            // equity $148\u2192$109 \u2192 HALT falso). length>3 preserva spot real como LDO.\n            if (coin.startsWith('LD') && coin.length > 3) {\n                const under = coin.slice(2);                            // LDLTC -> LTC, LDUSDC -> USDC\n                if (STABLES.has(under)) { equity += qty; continue; }    // Earn de stable ~ $1\n                const upx = priceOf(under);\n                if (upx != null) { equity += qty * upx; continue; }     // Earn de cripto com pre\u00e7o \u2192 conta a mercado\n                if (TRACKED_BASES.has(under)) { cold.push(coin); continue; } // Earn de ativo REAL frio \u2192 fail-safe\n                ignored.push(coin); continue;                           // dust de Earn sem par \u2192 fora do equity, n\u00e3o bloqueia\n            }\n            cold.push(coin); continue;                              // pre\u00e7o frio REAL \u2192 fail-safe (n\u00e3o avalia)\n        }\n        equity += qty * px;\n    }\n    const valued = cold.length === 0;\n    return { valued, equity, usdtFree, cold, ignored, settings };\n}\n\n// DECIS\u00c3O PURA do cap (sem efeitos colaterais) \u2014 test\u00e1vel na su\u00edte de sim. Ordena os backstops:\n//   1) PISO DURO primeiro (ultimate): equity <= dayBase\u00d7(1-hardPct) \u2192 'hardHalt' (NUNCA auto-resume).\n//   2) AUTO-RESUME: cap armado + cooldown vencido + dentro do limite + n\u00e3o-hardHalted \u2192 'resume'.\n//   3) SOFT cap: equity <= equity-baseline-rolante\u00d7(1-capPct) \u2192 'softTrip' (+canResume).\n//   4) sen\u00e3o 'none'. snap=null \u2192 'none'.\nfunction evaluateCap(snap, equity, nowMs, cfg) {\n    if (!snap) return { action: 'none' };\n    const hardFloor = snap.dayBase * (1 - cfg.hardPct);\n    if (equity <= hardFloor) return { action: 'hardHalt', hardFloor };\n    if (cfg.autoResume && cfg.capActive && !snap.hardHalted && snap.resumeAt && nowMs >= snap.resumeAt && snap.resumes < cfg.maxResumes)\n        return { action: 'resume' };\n    const softFloor = snap.equity * (1 - cfg.capPct);\n    if (equity <= softFloor) return { action: 'softTrip', softFloor, canResume: !!(cfg.autoResume && snap.resumes < cfg.maxResumes) };\n    return { action: 'none' };\n}\n\nasync function notify(settings, msg) {\n    try { await require('./utils/telegram')(settings, msg); } catch (e) { /* best-effort */ }\n}\n\nasync function checkCap() {\n    if (running) return;\n    running = true;\n    try {\n        const today = riskState.dayKeyUTC();\n        const eq = await computeEquity();\n        AT = Date.now();\n        LAST = { at: new Date(AT).toISOString(), valued: eq.valued, equity: eq.valued ? eq.equity : null, cold: eq.cold || null, ignored: eq.ignored || null, error: eq.error || null };\n\n        // 1) Rollover de dia UTC: re-arma a prote\u00e7\u00e3o (limpa o cap do dia anterior) e for\u00e7a re-baseline.\n        if (SNAP && SNAP.day !== today) {\n            riskState.clearDailyCap();\n            const prev = SNAP;\n            SNAP = null;\n            logger('system', `[dailyCap] virada de dia UTC (${prev.day} \u2192 ${today}); cap re-armado, re-baseline.`);\n            await notify(eq.settings, `\ud83c\udf05 [DAILY_CAP] Novo dia UTC. Cap de -${(CAP_PCT * 100).toFixed(0)}% re-armado para o novo dia.`);\n        }\n\n        // 2) Fail-safe: equity n\u00e3o avali\u00e1vel \u2192 n\u00e3o snapshota, n\u00e3o dispara, n\u00e3o auto-resume (espera o pre\u00e7o esquentar).\n        if (!eq.valued) {\n            const why = eq.error || `pre\u00e7os frios: ${(eq.cold || []).join(', ')}`;\n            if (!COLD_LOGGED) {\n                COLD_LOGGED = true;\n                COLD_SINCE = AT;\n                logger('system', `[dailyCap] equity N\u00c3O-avali\u00e1vel (${why}) \u2014 cap N\u00c3O avaliado neste ciclo (fail-safe).`);\n            }\n            // Alarme ANTI-SIL\u00caNCIO: se a prote\u00e7\u00e3o ficar inavali\u00e1vel por muito tempo (default 15min), AVISA o dono.\n            if (!COLD_ALERTED && COLD_SINCE && (AT - COLD_SINCE) >= COLD_ALERT_MS) {\n                COLD_ALERTED = true;\n                const mins = Math.round((AT - COLD_SINCE) / 60000);\n                logger('system', `[dailyCap] \u26a0\ufe0f equity inavali\u00e1vel h\u00e1 ~${mins}min \u2014 cap de -${(CAP_PCT * 100).toFixed(0)}% INATIVO (${why}).`);\n                await notify(eq.settings, `\u26a0\ufe0f [DAILY_CAP] Prote\u00e7\u00e3o de -${(CAP_PCT * 100).toFixed(0)}% INATIVA h\u00e1 ~${mins}min: n\u00e3o consigo avaliar o equity (${why}). Verifique monitores/pre\u00e7os ou isente o asset via DAILY_CAP_IGNORE_ASSETS.`);\n            }\n            return;\n        }\n        if (COLD_LOGGED) { COLD_LOGGED = false; COLD_SINCE = null; COLD_ALERTED = false; logger('system', `[dailyCap] equity avali\u00e1vel novamente ($${eq.equity.toFixed(2)}).`); }\n\n        // Publica o equity QUENTE p/ o %-teto de COMPRA (utils/exchange.assertWithinRisk). S\u00f3 em ciclo `valued`.\n        // \u26a0\ufe0f N\u00c3O mover p/ ACIMA do early-return do fail-safe: publicaria equity de c\u00e1lculo incompleto.\n        riskState.setEquity(eq.equity);\n\n        // 3) Baseline do dia ausente (boot mid-day ou p\u00f3s-rollover): snapshota AGORA e encerra o ciclo.\n        if (!SNAP || SNAP.day !== today) {\n            SNAP = { day: today, equity: eq.equity, dayBase: eq.equity, resumes: 0, hardHalted: false, resumeAt: null, at: new Date().toISOString() };\n            saveSnap();\n            logger('system', `[dailyCap] baseline do dia ${today} = $${eq.equity.toFixed(2)} (USDT livre $${eq.usdtFree.toFixed(2)}).`);\n            return;\n        }\n\n        // 4) Decis\u00e3o (pura) + aplica\u00e7\u00e3o dos efeitos.\n        const capActive = riskState.getState().dailyCap.active;\n        const dec = evaluateCap(SNAP, eq.equity, Date.now(), {\n            capPct: CAP_PCT, hardPct: HARD_PCT, cooldownMs: RESUME_COOLDOWN_MS,\n            maxResumes: MAX_RESUMES, autoResume: AUTO_RESUME, capActive,\n        });\n\n        if (dec.action === 'resume') {\n            // AUTO-RESUME: re-baseline no equity atual (o pr\u00f3ximo -5% mede daqui = trailing) e LIBERA o cap.\n            SNAP.resumes += 1;\n            SNAP.equity = eq.equity;\n            SNAP.resumeAt = null;\n            saveSnap();\n            riskState.clearDailyCap();\n            const hardFloor = SNAP.dayBase * (1 - HARD_PCT);\n            logger('system', `[dailyCap] \u25b6\ufe0f AUTO-RESUME ${SNAP.resumes}/${MAX_RESUMES} \u2014 re-baseline $${eq.equity.toFixed(2)}; cap liberado.`);\n            await notify(eq.settings,\n                `\u25b6\ufe0f [DAILY_CAP] Auto-resume ${SNAP.resumes}/${MAX_RESUMES} ap\u00f3s cooldown.\\n` +\n                `Novo baseline $${eq.equity.toFixed(2)} (pr\u00f3ximo -${(CAP_PCT * 100).toFixed(0)}% mede daqui).\\n` +\n                `Piso duro do dia: $${hardFloor.toFixed(2)} (-${(HARD_PCT * 100).toFixed(0)}% do baseline do dia $${SNAP.dayBase.toFixed(2)}) \u2014 abaixo dele N\u00c3O re-liga sozinho.`);\n            return;\n        }\n\n        if (dec.action === 'hardHalt') {\n            // PISO DURO: HALT SEM auto-resume (s\u00f3 manual / virada UTC). Notifica 1x na transi\u00e7\u00e3o soft\u2192hard.\n            const ddPct = ((eq.equity / SNAP.dayBase) - 1) * 100;\n            const reason = `daily-HARD-floor -${(HARD_PCT * 100).toFixed(0)}% (equity $${eq.equity.toFixed(2)} <= piso duro $${dec.hardFloor.toFixed(2)}; baseline do dia $${SNAP.dayBase.toFixed(2)}, dd ${ddPct.toFixed(2)}%)`;\n            riskState.setHalt(true, reason, 'daily-cap'); // garante armado (idempotente)\n            if (!SNAP.hardHalted) {\n                SNAP.hardHalted = true; SNAP.resumeAt = null; saveSnap();\n                logger('system', `[dailyCap] \u26d4 PISO DURO \u2014 ${reason}. HALT SEM auto-resume.`);\n                await notify(eq.settings,\n                    `\u26d4 [DAILY_CAP] PISO DURO de -${(HARD_PCT * 100).toFixed(0)}% atingido!\\n` +\n                    `Equity $${eq.equity.toFixed(2)} (baseline do dia $${SNAP.dayBase.toFixed(2)}, ${ddPct.toFixed(2)}%).\\n` +\n                    `\ud83d\udeab HALT travado: N\u00c3O re-liga sozinho. Interven\u00e7\u00e3o manual (/system/halt ou /system/daily-cap/reset) ou virada de dia UTC.`);\n            }\n            return;\n        }\n\n        if (dec.action === 'softTrip') {\n            const ddPct = ((eq.equity / SNAP.equity) - 1) * 100;\n            const reason = `daily-loss-cap -${(CAP_PCT * 100).toFixed(0)}% (equity $${eq.equity.toFixed(2)} <= piso $${dec.softFloor.toFixed(2)}; baseline $${SNAP.equity.toFixed(2)}, dd ${ddPct.toFixed(2)}%)`;\n            const tripped = riskState.setHalt(true, reason, 'daily-cap');\n            if (tripped) {\n                // Agenda (ou nega) o auto-resume conforme os backstops.\n                let resumeLine;\n                if (dec.canResume) {\n                    SNAP.resumeAt = Date.now() + RESUME_COOLDOWN_MS;\n                    saveSnap();\n                    resumeLine = `Auto-resume ${SNAP.resumes + 1}/${MAX_RESUMES} em ~${(RESUME_COOLDOWN_MS / 3600000).toFixed(1)}h (re-baseline no equity de ent\u00e3o).`;\n                } else {\n                    SNAP.resumeAt = null; saveSnap();\n                    resumeLine = AUTO_RESUME\n                        ? `Limite de ${MAX_RESUMES} auto-resumes do dia esgotado \u2014 N\u00c3O re-liga sozinho (manual/UTC).`\n                        : `Auto-resume DESLIGADO \u2014 manual/UTC.`;\n                }\n                logger('system', `[dailyCap] \ud83d\uded1 CAP DISPARADO \u2014 ${reason}. HALT ativo. ${resumeLine}`);\n                await notify(eq.settings,\n                    `\ud83d\uded1 [DAILY_CAP] Cap di\u00e1rio de -${(CAP_PCT * 100).toFixed(0)}% ATINGIDO!\\n` +\n                    `Equity $${eq.equity.toFixed(2)} (baseline $${SNAP.equity.toFixed(2)}, ${ddPct.toFixed(2)}%).\\n` +\n                    `\ud83d\udeab HALT ativo: TODAS as ordens bloqueadas (inclusive venda protetiva).\\n` +\n                    resumeLine);\n            }\n        }\n    } catch (err) {\n        logger('system', `[dailyCap] erro no ciclo: ${err.message}`);\n    } finally {\n        running = false;\n    }\n}\n\n// Re-snapshot for\u00e7ado (usado pelo reset do operador): re-baseline com o equity atual + ZERA os backstops do dia\n// (resumes/hardHalted/resumeAt) \u2192 reset manual = lousa limpa. N\u00e3o dispara nada. Retorna { ok, snapshot, reason }.\nasync function reSnapshot() {\n    if (running) return { ok: false, reason: 'ciclo do cap em andamento \u2014 tente de novo em instantes', snapshot: SNAP };\n    running = true; // serializa com checkCap (evita race na escrita de SNAP)\n    try {\n        const eq = await computeEquity();\n        if (!eq.valued) return { ok: false, reason: eq.error || `pre\u00e7os frios: ${(eq.cold || []).join(', ')}`, snapshot: SNAP };\n        riskState.setEquity(eq.equity); // re-baseline manual tamb\u00e9m atualiza o equity quente do %-teto\n        SNAP = { day: riskState.dayKeyUTC(), equity: eq.equity, dayBase: eq.equity, resumes: 0, hardHalted: false, resumeAt: null, at: new Date().toISOString() };\n        saveSnap();\n        logger('system', `[dailyCap] re-baseline manual = $${eq.equity.toFixed(2)} (${SNAP.day}); backstops do dia zerados.`);\n        return { ok: true, snapshot: SNAP };\n    } catch (err) {\n        return { ok: false, reason: err.message, snapshot: SNAP };\n    } finally {\n        running = false;\n    }\n}\n\nfunction start() {\n    if (!ENABLED) { logger('system', '[dailyCap] DESABILITADO (DAILY_CAP_ENABLED=false).'); return; }\n    if (timer) return; // idempotente\n    loadSnap();\n    checkCap(); // primeira passada no boot (prov\u00e1vel fail-safe se MINI_TICKER ainda frio \u2014 esperado)\n    timer = setInterval(checkCap, CHECK_MS);\n    if (timer.unref) timer.unref();\n    logger('system', `[dailyCap] iniciado \u2014 teto -${(CAP_PCT * 100).toFixed(0)}% sobre o equity do dia (intervalo ${CHECK_MS}ms)` +\n        `${AUTO_RESUME ? `; auto-resume ON (cooldown ${(RESUME_COOLDOWN_MS / 3600000).toFixed(1)}h, piso duro -${(HARD_PCT * 100).toFixed(0)}%, m\u00e1x ${MAX_RESUMES}/dia)` : '; auto-resume OFF (terminal-at\u00e9-UTC)'}.`);\n}\n\nfunction stop() {\n    if (timer) { clearInterval(timer); timer = null; }\n    running = false;\n}\n\nfunction getStatus() {\n    const st = riskState.getState();\n    return {\n        enabled: ENABLED, capPct: CAP_PCT, checkMs: CHECK_MS,\n        snapshot: SNAP, last: LAST,\n        floor: SNAP ? SNAP.equity * (1 - CAP_PCT) : null,\n        // auto-resume (frente C)\n        autoResume: AUTO_RESUME, resumeCooldownMs: RESUME_COOLDOWN_MS, maxResumes: MAX_RESUMES, hardPct: HARD_PCT,\n        dayBase: SNAP ? SNAP.dayBase : null,\n        hardFloor: SNAP ? SNAP.dayBase * (1 - HARD_PCT) : null,\n        resumes: SNAP ? SNAP.resumes : 0,\n        resumeAt: SNAP && SNAP.resumeAt ? new Date(SNAP.resumeAt).toISOString() : null,\n        hardHalted: SNAP ? !!SNAP.hardHalted : false,\n        tripped: st.dailyCap, halted: st.halted, haltSource: st.source,\n        running, at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null,\n    };\n}\n\nmodule.exports = { start, stop, checkCap, reSnapshot, getStatus, evaluateCap };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/dailyCapJob.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:15)*
+
+
+## 🤖 Claude *(23:44:16)*
+
+Agora o teste da matriz de decisão pura `evaluateCap`.
+
+## 🤖 Claude *(23:44:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/dailyCapResume.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 decis\u00e3o PURA do auto-resume do cap di\u00e1rio (dailyCapJob.evaluateCap, frente C).\n * Cobre a matriz dos 3 backstops: PISO DURO (preced\u00eancia absoluta), AUTO-RESUME (cooldown/limite/hard),\n * SOFT cap (+canResume). Errar aqui = re-ligar o trading sozinho abaixo do piso de seguran\u00e7a, ou nunca\n * re-ligar. Puro: s\u00f3 a fun\u00e7\u00e3o (require do job \u00e9 barato \u2014 n\u00e3o inicia timer/rede; AES_KEY injetado pelo runner).\n */\nprocess.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';\nconst { evaluateCap } = require('../../src/dailyCapJob');\n\nlet passed = 0, failed = 0;\nfunction eq(name, actual, expected) { if (actual === expected) passed++; else { failed++; console.error(`  \u2717 ${name}: got ${actual} exp ${expected}`); } }\n\n// baseline: equity-rolante=100, dayBase=100 \u2192 softFloor=95 (-5%), hardFloor=88 (-12%)\nconst base = { equity: 100, dayBase: 100, resumes: 0, hardHalted: false, resumeAt: null };\nconst cfg = (o = {}) => ({ capPct: 0.05, hardPct: 0.12, cooldownMs: 10800000, maxResumes: 2, autoResume: true, capActive: false, ...o });\n\n// --- none ---\neq('snap null => none', evaluateCap(null, 100, 0, cfg()).action, 'none');\neq('equity acima do soft => none', evaluateCap({ ...base }, 96, 0, cfg()).action, 'none');\n\n// --- soft trip ---\neq('equity == softFloor => softTrip', evaluateCap({ ...base }, 95, 0, cfg()).action, 'softTrip');\neq('equity abaixo do soft (acima do hard) => softTrip', evaluateCap({ ...base }, 94, 0, cfg()).action, 'softTrip');\neq('softTrip canResume true (resumes<max, autoResume on)', evaluateCap({ ...base }, 94, 0, cfg()).canResume, true);\neq('softTrip canResume false (resumes==max)', evaluateCap({ ...base, resumes: 2 }, 94, 0, cfg()).canResume, false);\neq('softTrip canResume false (autoResume off)', evaluateCap({ ...base }, 94, 0, cfg({ autoResume: false })).canResume, false);\n\n// --- hard floor (preced\u00eancia absoluta) ---\neq('equity == hardFloor => hardHalt', evaluateCap({ ...base }, 88, 0, cfg()).action, 'hardHalt');\neq('equity abaixo do hard => hardHalt', evaluateCap({ ...base }, 80, 0, cfg()).action, 'hardHalt');\n// hard mede do dayBase ORIGINAL mesmo com baseline rolante mais baixo (p\u00f3s re-baseline)\neq('hard mede do dayBase (baseline rolante baixo nao muda o piso duro)', evaluateCap({ equity: 90, dayBase: 100, resumes: 1, hardHalted: false, resumeAt: null }, 87, 0, cfg()).action, 'hardHalt');\n\n// --- auto-resume ---\nconst pend = { ...base, resumeAt: 1000 }; // cooldown agendado\neq('resume: capAtivo + cooldown vencido + dentro do limite', evaluateCap({ ...pend }, 96, 2000, cfg({ capActive: true })).action, 'resume');\neq('NAO resume: cap inativo', evaluateCap({ ...pend }, 96, 2000, cfg({ capActive: false })).action, 'none');\neq('NAO resume: cooldown ainda no futuro', evaluateCap({ ...pend }, 96, 500, cfg({ capActive: true })).action, 'none');\neq('NAO resume: limite de resumes esgotado', evaluateCap({ ...pend, resumes: 2 }, 96, 2000, cfg({ capActive: true })).action, 'none');\neq('NAO resume: hardHalted travado', evaluateCap({ ...pend, hardHalted: true }, 96, 2000, cfg({ capActive: true })).action, 'none');\neq('NAO resume: autoResume desligado', evaluateCap({ ...pend }, 96, 2000, cfg({ capActive: true, autoResume: false })).action, 'none');\n// preced\u00eancia: cooldown vencido MAS abaixo do piso duro => hardHalt, nunca resume\neq('hardHalt vence o resume quando abaixo do piso duro', evaluateCap({ ...pend }, 80, 2000, cfg({ capActive: true })).action, 'hardHalt');\n\nconsole.log(`\\ndailyCapResume.test.js: ${passed} passed, ${failed} failed`);\nprocess.exit(failed ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/dailyCapResume.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:38)*
+
+Aplicando a frente C: copio o `dailyCapJob.js` + teste, documento o `.env.example`, e valido (sintaxe + suíte completa, incluindo o `dailyCap.test.js` existente pra garantir zero regressão).
+
+## 🤖 Claude *(23:44:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/patch3.py",
+  "content": "#!/usr/bin/env python3\nimport sys\nEE = \"/home/gcrux-tradeux/tradeux/backend/.env.example\"\nwith open(EE, \"r\", encoding=\"utf-8\") as f:\n    c = f.read()\nold = \"DAILY_CAP_IGNORE_ASSETS=\\n\"\nnew = (\"DAILY_CAP_IGNORE_ASSETS=\\n\"\n       \"#ex: true  (frente C: -5% NAO e mais terminal-ate-UTC; re-baseline+libera apos cooldown. false = comportamento antigo)\\n\"\n       \"DAILY_CAP_AUTO_RESUME=true\\n\"\n       \"#ex: 10800000  (cooldown antes do auto-resume, ms; default 3h; piso 60s)\\n\"\n       \"DAILY_CAP_RESUME_COOLDOWN_MS=10800000\\n\"\n       \"#ex: 0.12  (PISO DURO do dia: abaixo de -12% do baseline original NAO re-liga sozinho; > DAILY_LOSS_CAP_PCT, < 1)\\n\"\n       \"DAILY_HARD_FLOOR_PCT=0.12\\n\"\n       \"#ex: 2  (maximo de auto-resumes por dia UTC; esgotado = manual/UTC)\\n\"\n       \"DAILY_CAP_MAX_RESUMES=2\\n\")\nif c.count(old) != 1:\n    print(f\"ancora DAILY_CAP_IGNORE_ASSETS {c.count(old)}x (esperado 1)\"); sys.exit(1)\nwith open(EE, \"w\", encoding=\"utf-8\") as f:\n    f.write(c.replace(old, new, 1))\nprint(\"env.example C OK\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/patch3.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nchmod -R a+rX /tmp/tux_build\nsudo -n -u gcrux-tradeux bash -lc '\ncp /tmp/tux_build/dailyCapJob.js          backend/src/dailyCapJob.js\ncp /tmp/tux_build/dailyCapResume.test.js  backend/scripts/sim/dailyCapResume.test.js\necho \"copiados.\"'\nsudo -n -u gcrux-tradeux python3 /tmp/tux_build/patch3.py\necho \"\"\necho \"=== node --check ===\"\ncd backend\nnode --check src/dailyCapJob.js && echo \"OK dailyCapJob\" || echo \"FAIL dailyCapJob\"\nnode --check scripts/sim/dailyCapResume.test.js && echo \"OK test\" || echo \"FAIL test\"\necho \"\"\necho \"=== su\u00edte completa (foco: dailyCap + dailyCapResume) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 timeout 120 node scripts/sim/run.js 2>&1 | grep -E \"test.js:|sim suite\" '",
+  "description": "Apply phase C, syntax check, run full sim"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> copiados.
+> env.example C OK
+> 
+> === node --check ===
+> OK dailyCapJob
+> OK test
+> 
+> === suíte completa (foco: dailyCap + dailyCapResume) ===
+> calcQty.test.js: 23 passed, 0 failed
+> crypto.test.js: 19 passed, 0 failed
+> dailyCap.test.js: 10 passed, 0 failed
+> dailyCapResume.test.js: 17 passed, 0 failed
+> earnRedeem.test.js: 12 passed, 0 failed
+> earnRedeemDryRun.test.js: 5 passed, 0 failed
+> eventNotify.test.js: 15 passed, 0 failed
+> farmSellBoot.test.js: 10 passed, 0 failed
+> farmTriggers.test.js: 16 passed, 0 failed
+> feeCalc.test.js: 19 passed, 0 failed
+> groupSupervisor.test.js: 25 passed, 0 failed
+> groupSupervisorReconcile.test.js: 21 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 53 passed, 0 failed
+> stepUpGuard.test.js: 21 passed, 0 failed
+> withdrawGuard.test.js: 13 passed, 0 failed
+> sim suite: 16/16 arquivos OK.
+> ```
+
+## 🤖 Claude *(23:45:11)*
+
+
+## 🤖 Claude *(23:45:13)*
+
+16/16 verde — `dailyCap.test.js` (10) intacto (zero regressão na lógica existente), `dailyCapResume.test.js` 17/17. Frente C é mudança de **proteção money-path**, então gate QA + TL antes de deployar. Gero o diff e lanço os dois.
+
+## 🤖 Claude *(23:45:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff backend/src/dailyCapJob.js > /tmp/tux_build/phaseC.diff 2>/dev/null\nwc -l /tmp/tux_build/phaseC.diff\necho \"(novo teste: backend/scripts/sim/dailyCapResume.test.js)\"",
+  "description": "Generate phase C diff for review"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 268 /tmp/tux_build/phaseC.diff
+> (novo teste: backend/scripts/sim/dailyCapResume.test.js)
+> ```
+
+## 🤖 Claude *(23:45:49)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA gate phase C",
+  "subagent_type": "qa-engineer",
+  "prompt": "Pre-merge QA de uma mudan\u00e7a no CIRCUIT-BREAKER de perda di\u00e1ria do TradeUX (money-path cr\u00edtico). Sistema MAINNET REAL, equity ~$149, `halted=false`, regime bear. Repo: /home/gcrux-tradeux/tradeux. Rode como gcrux: `sudo -n -u gcrux-tradeux bash -lc '...'`. `node` no PATH, `npm` N\u00c3O (`AES_KEY=01234567890123456789012345678901 node scripts/sim/run.js`).\n\nFRENTE C de um trabalho de autonomia aprovado pelo dono. O dono escolheu explicitamente: o kill-switch de \u22125% N\u00c3O deve mais ser terminal-at\u00e9-UTC \u2014 deve **auto-resumir ap\u00f3s cooldown**. Como engenheiro adicionei 3 backstops para isso n\u00e3o virar espiral de perda.\n\nArquivo reescrito: `backend/src/dailyCapJob.js` (diff em `/tmp/tux_build/phaseC.diff`). Novo teste: `backend/scripts/sim/dailyCapResume.test.js`. O `dailyCap.test.js` existente (computeEquity/LD*/fail-safe) deve seguir 100% verde (zero regress\u00e3o).\n\nO que mudou:\n- **AUTO-RESUME**: ao disparar o \u22125%, agenda `resumeAt = now + cooldown`; quando vence, RE-BASELINE no equity atual (`SNAP.equity = equity`) e `riskState.clearDailyCap()` (libera s\u00f3 a fonte daily-cap; floor/manual/env-hard permanecem). Default ON (`DAILY_CAP_AUTO_RESUME`).\n- **Backstop 1 \u2014 cooldown** `DAILY_CAP_RESUME_COOLDOWN_MS` (3h).\n- **Backstop 2 \u2014 PISO DURO** `DAILY_HARD_FLOOR_PCT` (\u221212% do `SNAP.dayBase` = baseline ORIGINAL do dia, que o re-baseline N\u00c3O move): abaixo dele, `hardHalt` SEM auto-resume (manual/UTC).\n- **Backstop 3 \u2014 `DAILY_CAP_MAX_RESUMES`** (2/dia).\n- Decis\u00e3o isolada na fun\u00e7\u00e3o PURA `evaluateCap(snap, equity, nowMs, cfg)` \u2192 'resume'|'hardHalt'|'softTrip'|'none'. `checkCap` aplica os efeitos.\n- `SNAP` agora persiste `dayBase/resumes/hardHalted/resumeAt`; `normalizeSnap` faz backfill de snapshots antigos; `reSnapshot` (reset do operador) zera os backstops.\n\nPontos de risco a atacar (c\u00e9tico, money-path):\n1. **Ordem dos backstops em `evaluateCap`**: o PISO DURO tem preced\u00eancia ABSOLUTA (mesmo com cooldown vencido, se equity <= hardFloor \u2192 hardHalt, NUNCA resume)? Prove com o teste.\n2. **Limite efetivo de perda**: com cooldown 3h, m\u00e1x 2 resumes, soft \u22125% (trailing re-baseline) e piso duro \u221212%, qual \u00e9 a PIOR perda poss\u00edvel num dia? O re-baseline trailing + os 2 resumes N\u00c3O conseguem furar o \u221212%? Calcule a sequ\u00eancia de disparos (trip1 \u22125%, resume, trip2, resume, trip3...) e confirme que o piso duro corta antes.\n3. **Re-baseline trailing**: ap\u00f3s resume, `SNAP.equity` vira o equity atual (mais baixo). O pr\u00f3ximo soft \u22125% mede daqui (ladeira abaixo). Isso est\u00e1 bounded pelos backstops? O `dayBase` (piso duro) permanece o ORIGINAL?\n4. **Persist\u00eancia/restart**: `SNAP` persiste os campos novos? Um restart DURANTE um cap-halt com resume agendado: o `loadSnap`/`normalizeSnap` recupera `resumeAt/resumes/hardHalted`? Se um snapshot ANTIGO (sem os campos) for lido, o backfill \u00e9 seguro (n\u00e3o dispara/n\u00e3o resume indevido)?\n4b. **N\u00e3o re-trip imediato**: no ciclo do resume, ap\u00f3s re-baseline + clearDailyCap, o `return` impede re-avaliar o soft no mesmo ciclo? E no PR\u00d3XIMO ciclo, equity\u2248novo-baseline \u2192 n\u00e3o re-dispara?\n5. **Intera\u00e7\u00e3o com riskState**: `clearDailyCap()` solta S\u00d3 a fonte daily-cap (floor/manual/env-hard intactos)? O auto-resume jamais libera um HALT que o dono p\u00f4s manualmente (floor/manual)?\n6. **Idempot\u00eancia/notify**: hard-halt notifica 1x na transi\u00e7\u00e3o soft\u2192hard (`!SNAP.hardHalted`)? O soft-trip s\u00f3 agenda/notifica quando `tripped` (rec\u00e9m-armado)?\n7. **Backward-compat**: `DAILY_CAP_AUTO_RESUME=false` \u2192 comportamento ANTIGO (terminal-at\u00e9-UTC)? O rollover UTC ainda re-arma/re-baseline?\n8. **Default ON \u00e9 seguro?** Auto-resume default ligado enfraquece o breaker \u2014 \u00e9 a escolha expl\u00edcita do dono, mas avalie se os backstops o tornam aceit\u00e1vel.\n\nRode `node --check` + a su\u00edte. Verifique se `getStatus()` exp\u00f5e os campos novos (o endpoint /system/daily-cap serve isso). Sugira casos de teste que faltam (ex.: sequ\u00eancia multi-trip que prova o limite de \u221212%; restart com snapshot antigo).\n\nDevolva **PASS / PASS COM RESSALVAS / FAIL** com achados por severidade e os testes concretos a rodar."
+}
+```
+
+## 🤖 Claude *(23:46:09)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL gate phase C",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de merge (tech-lead) de uma mudan\u00e7a no CIRCUIT-BREAKER de perda di\u00e1ria do TradeUX (money-path cr\u00edtico, em MAINNET REAL com ~$149). `halted=false`, regime bear. Trunk-based direto-a-master; gates QA+TL = a revis\u00e3o. Repo: /home/gcrux-tradeux/tradeux. Rode como gcrux. `node` no PATH, `npm` N\u00c3O.\n\nFRENTE C de um trabalho de autonomia. **O dono escolheu explicitamente** (decis\u00e3o registrada via pergunta): o kill-switch de \u22125% deve **auto-resumir ap\u00f3s cooldown** (em vez de ficar terminal at\u00e9 a virada de dia UTC). Como o engenheiro respons\u00e1vel, eu honrei a escolha MAS blindei com 3 backstops para auto-resume n\u00e3o virar espiral de perda.\n\nArquivo: `backend/src/dailyCapJob.js` reescrito (diff `/tmp/tux_build/phaseC.diff`). Novo teste `backend/scripts/sim/dailyCapResume.test.js` (17 asserts, matriz de decis\u00e3o pura). `dailyCap.test.js` existente segue verde.\n\nDesenho:\n- `evaluateCap()` PURA decide: hardHalt (piso duro \u221212% do baseline ORIGINAL, preced\u00eancia absoluta) > resume (cooldown 3h vencido + \u22642/dia) > softTrip (\u22125% do baseline ROLANTE, trailing) > none. `checkCap` aplica.\n- Auto-resume re-baseline no equity atual + `riskState.clearDailyCap()` (solta s\u00f3 a fonte daily-cap; floor/manual/env-hard preservados).\n- Env: `DAILY_CAP_AUTO_RESUME` (default true), `DAILY_CAP_RESUME_COOLDOWN_MS` (3h), `DAILY_HARD_FLOOR_PCT` (0.12), `DAILY_CAP_MAX_RESUMES` (2). Documentados no `.env.example`.\n- `SNAP` persiste os campos novos; backfill de snapshots antigos; `reSnapshot` (reset do operador) zera os backstops.\n\nAvalie design/risco/manutenibilidade e DECIDA o merge. Pontos pra opini\u00e3o:\n1. **Default `DAILY_CAP_AUTO_RESUME=true`** (em vez de exigir opt-in): \u00e9 a escolha expl\u00edcita do dono e sobrevive a reset-db (default do c\u00f3digo). Mas enfraquece o breaker. Os 3 backstops (3h / \u221212% / 2\u00d7) tornam o default-ON defens\u00e1vel, ou voc\u00ea exigiria opt-in expl\u00edcito no .env?\n2. **Sem\u00e2ntica do re-baseline trailing** (ap\u00f3s resume, o \u22125% passa a medir do equity mais baixo) vs alternativa \"n\u00e3o re-basear, exigir recupera\u00e7\u00e3o\". A escolhida \u00e9 razo\u00e1vel e bem-bounded pelo piso duro? H\u00e1 um modo de falha pior?\n3. **Fun\u00e7\u00e3o pura `evaluateCap` + `checkCap` fino**: a separa\u00e7\u00e3o est\u00e1 limpa e test\u00e1vel? A ordem dos backstops \u00e9 a certa (hardHalt antes de resume)?\n4. **Persist\u00eancia dos backstops no SNAP** (mesmo arquivo do snapshot do cap) + backfill: aceit\u00e1vel, ou merecia estrutura separada? Risco no restart durante cooldown?\n5. **Doutrina**: o auto-resume jamais desfaz floor/manual/env-hard (s\u00f3 a fonte daily-cap). Coerente com \"o sistema/Claude n\u00e3o desfaz o HALT MESTRE do dono\"? O piso duro como \"disjuntor do disjuntor\" \u00e9 a salvaguarda certa?\n6. Conven\u00e7\u00f5es (pt-BR, env com pisos saneados, fail-safe preservado, idempot\u00eancia) seguidas? O comportamento antigo (terminal-at\u00e9-UTC) \u00e9 recuper\u00e1vel por env?\n\nDevolva **APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK** com must-fix vs nice-to-have e justificativa. Pragm\u00e1tico: incremental, revers\u00edvel por env, mas \u00e9 o circuit-breaker \u2014 rigor no limite de perda do dia."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'This confirms the key safety property: even in the worst-case spiral (2 resumes consumed, rolling baseline at 90.25), the hard floor at 88 takes precedence and cuts BEFORE the now-unreachable soft floor at 85.74. The hard floor as "disjuntor do disjuntor" correctly bounds total daily loss to ~12% regardless of resume trailing. The design is well-bounded.\n\nI have everything I need. Let me do a final confirmation on the worst-case loss math (the comment claims "no máximo ~-12%") and check that the `clearDailyCap` on resume properly resets the `setHalt` "already armed today" short-circuit so a re-trip can re-notify.\n\nThe `resume` path calls `riskState.clearDailyCap()` which sets `dailyCap.on=false`, so the next `softTrip`\'s `setHalt(true,...,\'daily-cap\')` returns `tripped=true` and re-notifies. Correct re-arm cycle confirmed.\n\n---\n\n# REVIEW — Auto-resume do circuit-breaker de perda diária (frente C)\n\n**Contexto verificado:** MAINNET real `halted=false`, equity ~$149, regime bear, money-path crítico. Suíte de sim **16/16 arquivos OK** (incl. `dailyCapResume.test.js` 17/17 e `dailyCap.test.js` 10/10 ainda verde). Diff aplicado limpo no working tree de `master` (`7892483`); sem contaminação cruzada nos arquivos de código (os `backtest-results/*` modificados são ruído não relacionado — **não incluir no commit desta frente**).\n\n## VEREDITO: APPROVE COM SUGESTÕES\n\nMudança incremental, reversível por env (`DAILY_CAP_AUTO_RESUME=false` → comportamento antigo terminal-até-UTC, idempotente), bem testada e com a propriedade de segurança central **provada**: a perda diária permanece bounded por ~12% mesmo no pior caso de trailing. Honra a decisão explícita do dono sem deixar o breaker virar espiral. Não há must-fix bloqueante; as sugestões abaixo são endurecimentos baratos.\n\n### Respostas aos 6 pontos\n\n1. **Default `AUTO_RESUME=true`** — Defensável. Os 3 backstops (cooldown 3h + piso duro −12% do `dayBase` ORIGINAL + máx 2/dia) transformam o pior dia em **~−12% e para de vez**. Verifiquei o cenário-espiral em runtime: após 2 resumes (baseline rolante 90.25), o softFloor cai para 85.74 — abaixo do hardFloor 88 — e o **hard floor corta ANTES** (precedência absoluta). Logo o default-ON não enfraquece o teto de perda do DIA, só a granularidade. É a escolha do dono e sobrevive a reset-db. **Aceito o default-ON.**\n\n2. **Re-baseline trailing** — Razoável e bem-bounded pelo piso duro (que mede do `dayBase` imutável, não do rolante). O modo de falha "pior" seria o trailing perpetuar perdas pequenas-mas-frequentes dentro da banda; está coberto pelo `MAX_RESUMES`. A alternativa "exigir recuperação" seria mais conservadora porém poderia manter o sistema fora do mercado num repique — fora do que o dono pediu. OK.\n\n3. **`evaluateCap` pura + `checkCap` fino** — Separação limpa e testável; ordem dos backstops **correta** (hardHalt > resume > softTrip > none). Exportar só a função pura para o teste foi a decisão certa. Aplaudo.\n\n4. **Persistência no `SNAP` + backfill** — Aceitável; não merece estrutura separada (é o mesmo domínio/lifecycle do snapshot do dia). `normalizeSnap` cobre snapshots pré-frente-C. **Restart durante cooldown:** `resumeAt` (epoch absoluto) persiste e `loadSnap` o restaura → o cooldown não "reinicia" no boot; correto e fail-safe (boot frio cai no fail-safe até o ticker esquentar, sem auto-resume). Sem risco material aqui.\n\n5. **Doutrina** — Coerente. `clearDailyCap()` solta **só** a fonte `daily-cap`; floor/manual/env-hard/env-mismatch ficam intactos (confirmado no `riskState`). O auto-resume jamais desfaz o HALT MESTRE do dono. O piso duro como "disjuntor do disjuntor" é a salvaguarda certa, e o `resetDailyCap` do operador zera `hardHalted` → o dono sempre recupera de um hard-halt sem esperar UTC. Doutrina respeitada.\n\n6. **Convenções** — pt-BR ✅; envs com pisos saneados (`cooldown>=60s`, `HARD_PCT>CAP_PCT && <1`, `maxResumes>=0`) ✅; fail-safe preservado e ESTENDIDO ("não auto-resume no escuro") ✅; idempotência (`setHalt` no hardHalt + flag `hardHalted`) ✅; comportamento antigo recuperável por env ✅. **Os 4 envs ESTÃO documentados** — em `backend/.env.example` (junto dos outros `DAILY_CAP_*`), não no `.env.example` raiz; a claim procede.\n\n### Must-fix\n- **Nenhum bloqueante.**\n\n### Nice-to-have (não bloqueiam o merge)\n- **`HARD_PCT` inválido cai para 0.12 silenciosamente, ignorando o `CAP_PCT` do operador.** Se alguém setar `DAILY_LOSS_CAP_PCT=0.15` (soft > 12%) sem ajustar o hard, o saneamento `_hard > CAP_PCT` falha e `HARD_PCT` vira 0.12 — ficando **abaixo** do soft. Resultado: o hard dispara antes do soft (degrada para "terminal a −12%", o que ainda é seguro), mas a config fica incoerente em silêncio. Sugiro **logar um warning** quando o env de hard for rejeitado por não ser `> CAP_PCT`. Hoje o pior caso é seguro, então é só higiene.\n- **Runtime não-git:** lembrar de registrar no HANDOFF que esses 4 envs precisam ser reaplicados pós-`make nuke` se o operador quiser valores ≠ default (o default-ON do código já cobre o caso "esqueci de setar").\n- **`backtest-results/*` no working tree:** não fazem parte desta frente — manter fora do commit.\n\n## Decisão de merge\n**MERGE — APROVADO**, em commit único com **apenas** `backend/src/dailyCapJob.js` + `backend/scripts/sim/dailyCapResume.test.js` + `backend/.env.example`. **Excluir** os `backend/backtest-results/*` (ruído não relacionado).\n\n**Condições (todas já satisfeitas):** suíte `npm run test:sim` verde (16/16, confirmado), `dailyCap.test.js` legado verde (confirmado), reversível por `DAILY_CAP_AUTO_RESUME=false`.\n\n**Pós-merge (operacional, não bloqueia):** como estamos LIVE com dinheiro real, sugiro **deploy com `DAILY_CAP_AUTO_RESUME=true` (default) e observar 1 ciclo de cooldown real** antes de confiar cegamente — ou, se preferir conservadorismo no primeiro deploy, subir com `DAILY_CAP_AUTO_RESUME=false` e flipar a quente depois (o env é lido no boot, então flip exige restart do backend). Decisão do dono; o código está pronto para ambos.\n\nArquivos relevantes:\n- `/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js`\n- `/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCapResume.test.js`\n- `/home/gcrux-tradeux/tradeux/backend/.env.example`\n- `/home/gcrux-tradeux/tradeux/backend/src/riskState.js` (contrato `clearDailyCap`/`setHalt`/`getState` — inalterado, compatível)\n- `/home/gcrux-tradeux/tradeux/backend/src/controllers/systemController.js` (escape-hatch manual do hard-floor — inalterado, funciona)'}, {'type': 'text', 'text': "agentId: a7e4fbcce0e1e0761 (use SendMessage with to: 'a7e4fbcce0e1e0761' to continue this agent)\n<usage>subagent_tokens: 64845\ntool_uses: 22\nduration_ms: 128740</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The `.floor` references in the frontend `Settings.js` are `halt.floor.on` (from `riskState.getState()`, the `/system/halt` endpoint) — unrelated to `getStatus().floor` (the soft-cap floor number). No frontend consumer reads the daily-cap `getStatus()` fields directly, so the renamed/added fields don\'t break any UI. The git state confirms this is the legitimate Phase C change (modified `dailyCapJob.js` + new `dailyCapResume.test.js`), tree based on `7892483`, no cross-session contamination.\n\nI have everything I need. Final verification that `node --check` already passed on all three files and the full suite is 16/16 green. Here is my report.\n\n---\n\n# QA Pré-merge — Circuit-breaker de perda diária com AUTO-RESUME (Frente C)\n\n**Arquivos:** `/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js` (reescrito), `/home/gcrux-tradeux/tradeux/backend/scripts/sim/dailyCapResume.test.js` (novo)\n**Sintaxe:** `node --check` PASS nos 3 arquivos. **Suíte:** `16/16 arquivos OK` — `dailyCapResume` 17/17, `dailyCap` (existente) **10/10 sem regressão**, demais intactos.\n\n## VEREDITO: PASS COM RESSALVAS\n\nA lógica está sólida, os 3 backstops fecham o money-path e o limite de −12% é **mecanicamente comprovado**. As ressalvas são de **cobertura de teste** e **uma assimetria de persistência entre dois arquivos**, não bugs no caminho avaliado.\n\n---\n\n### Pontos de risco — resultado da auditoria\n\n**1. Precedência do PISO DURO — CONFIRMADO (provado).** `evaluateCap` checa `hardFloor` ANTES de tudo (linha 169-170). Mesmo com `resumeAt` vencido, `capActive=true` e dentro do limite, se `equity <= dayBase×(1-hardPct)` → `hardHalt`, **nunca** `resume`. Casos no teste: linhas 30-33, 44 (`hardHalt vence o resume quando abaixo do piso duro`). Verifiquei adversarialmente: equity 80 com resume agendado → `hardHalt`. **OK.**\n\n**2. Pior perda do dia — BOUNDED em −12% (sequência simulada).** Rodei a ladeira completa: trip1 (100→95, −5%) → resume1 → trip2 (95→90.25, −5% do rolante) → resume2 (resumes=2) → próxima queda bate o `hardFloor=88` e `hardHalt` dispara com precedência. O terceiro soft-trip **não consegue** resume (resumes esgotados E precedência do hard). O trailing re-baseline NÃO fura o −12% porque `dayBase` permanece o ORIGINAL (100). **Pior caso = −12%, terminal.** OK.\n\n**3. Re-baseline trailing — bounded, `dayBase` imutável.** `SNAP.equity` vira o equity atual no resume (linha 241); `SNAP.dayBase` **nunca** é reescrito fora de rollover/reSnapshot. `getStatus().hardFloor` sempre mede do `dayBase`. Confirmado no teste linha 33. **OK.**\n\n**4. Persistência/restart — OK com RESSALVA (ver MÉDIA abaixo).** `normalizeSnap` faz backfill seguro de snapshot antigo (`dayBase=equity`, `resumes=0`, `hardHalted=false`, `resumeAt=null`) → não dispara nem resume indevido (provado: snap antigo + `capActive=true` sem `resumeAt` → `none`). `loadSnap` recupera os campos novos. **Importante:** o `resume` exige `cfg.capActive` (de `riskState.getState().dailyCap.active`), que vem de OUTRO arquivo (`risk_state.json`). Se o cap NÃO foi recuperado (dia diferente, ou fail-closed por disco ilegível), `capActive=false` → não resume → seguro. **OK, mas há um buraco de coerência inter-arquivo (MÉDIA #1).**\n\n**4b. Não re-trip imediato — OK.** No ciclo do resume há `return` (linha 251) após `clearDailyCap`. No próximo ciclo, `equity ≈ novo baseline` → `softFloor = equity×0.95` → `none` (provado: equity==baseline e equity 92 acima do soft → `none`). **OK.**\n\n**5. Interação com riskState — OK.** `clearDailyCap()` (riskState.js:162) zera SÓ `dailyCap`, nunca toca `floor`/`manual`/`env-hard`. O auto-resume só chama `clearDailyCap`, jamais libera um HALT manual/floor do dono. `isHalted()` continua OR de todas as fontes. **OK — o auto-resume não pode reabrir um congelamento do operador.**\n\n**6. Idempotência/notify — OK.** Hard-halt notifica 1× via guard `!SNAP.hardHalted` (linha 259); `setHalt` é idempotente. Soft-trip notifica/agenda só quando `tripped` (recém-armado, linha 274) — provado: 1 notif na transição. Após resume, `clearDailyCap` permite que o próximo soft-trip re-arme e re-agende `resumeAt` corretamente (`tripped` volta a `true`). **OK.**\n\n**7. Backward-compat — OK.** `DAILY_CAP_AUTO_RESUME=false` → `canResume=false` sempre, `resumeAt` nunca agendado, e mesmo com `resumeAt` legado em disco a guarda `cfg.autoResume` no `evaluateCap` (linha 171) bloqueia o resume → comportamento terminal-até-UTC. Rollover UTC (linha 192-198) continua re-armando/re-baseline independente do flag. **OK.**\n\n**8. Default ON — aceitável dado os backstops.** Enfraquece o breaker de −5%→−12% efetivo, mas é escolha explícita do dono e os 3 backstops o tornam bounded e auditável (`getStatus` expõe tudo; endpoint `GET /system/daily-cap` serve os campos novos — confirmado). Aceitável.\n\n---\n\n### Achados por severidade\n\n**[MÉDIA #1 — coerência inter-arquivo no restart]** `SNAP` (`daily_cap_snapshot.json`) e o estado do cap (`risk_state.json`) são DOIS arquivos persistidos independentes. Cenário: cap armado + `resumeAt` agendado, restart, **`risk_state.json` corrompe** → `riskState` cai em fail-closed (floor ON, dailyCap zerado) mas `SNAP.resumeAt` persiste. Resultado é SEGURO na direção certa (não resume, pois `capActive=false`), porém o `resumeAt` fica órfão no SNAP e o `getStatus()` mostra um `resumeAt` que nunca vai disparar — observabilidade enganosa. Não bloqueia o merge (fail-safe correto), mas documente que `resumeAt` só é honrado se o cap estiver de fato ativo no riskState.\n\n**[MÉDIA #2 — `reSnapshot` não limpa o riskState]** `reSnapshot()` (usado pelo reset do operador) re-baseline o SNAP e zera backstops, mas **NÃO** chama `clearDailyCap()` — quem limpa é o `resetDailyCap` controller (systemController.js:45, `clearDailyCap` ANTES de `reSnapshot`). Está correto pela composição atual, mas é um acoplamento frágil: se algum caller futuro chamar `reSnapshot()` direto (sem o controller), o cap fica armado com baseline novo. Pré-existente, mas a frente C aumentou a superfície. Considere mover o `clearDailyCap` para dentro de `reSnapshot`.\n\n**[BAIXA #1 — gap soft-floor abaixo do hard-floor pós-resume2]** Após resume2, `rollBase=90.25` → `softFloor=85.74`, que é ABAIXO do `hardFloor=88`. Entre 88 e 90.25 o sistema dá `none` (acima do soft rolante); abaixo de 88 o hard captura primeiro. Não é furo (o hard sempre corta antes do soft inalcançável), mas significa que o **3º soft-trip de fato nunca arma** nesse regime — o hard floor é o único gatilho efetivo após resumes esgotados. Comportamento correto, apenas não-óbvio; vale um comentário.\n\n**[BAIXA #2 — `cooldownMs` no cfg é dead param em `evaluateCap`]** `evaluateCap` recebe `cfg.cooldownMs` mas não o usa (o cooldown está embutido no `resumeAt` pré-calculado). Inofensivo; remova do cfg ou documente que o agendamento é responsabilidade do `checkCap`.\n\n---\n\n### Testes que eu rodaria (faltando na suíte)\n\n1. **Sequência multi-trip que prova o −12% via `checkCap` (não só `evaluateCap`):** dirigir o `checkCap` com riskState fake stateful + `Date.now` injetável (ou cooldown mínimo + fake timer), provando trip1→resume1→trip2→resume2→hardHalt na ladeira. Hoje o limite de −12% está provado por mim manualmente mas **não há asserção automatizada** do caminho de efeitos completo. **Esse é o teste mais importante que falta.**\n2. **Restart com snapshot antigo (sem campos) + cap ativo no riskState:** carregar `daily_cap_snapshot.json` legado via `loadSnap`, com `risk_state.json` indicando cap armado do mesmo dia, e provar que NÃO resume indevidamente (sem `resumeAt`).\n3. **Restart durante cap-halt com `resumeAt` no passado:** `loadSnap` recupera `resumeAt` vencido + riskState recupera dailyCap → primeiro `checkCap` pós-boot deve `resume` (cooldown já venceu). Provar o caminho de boot.\n4. **`reSnapshot` durante `hardHalted=true`:** confirmar que zera `hardHalted/resumes/resumeAt` (lousa limpa) e que o controller limpa o cap.\n5. **Notify idempotente no hard-halt:** dois ciclos consecutivos abaixo do hard floor → 1 notificação só (guard `!SNAP.hardHalted`).\n6. **Borda `hardPct <= capPct` no env:** validar que `HARD_PCT` cai no default 0.12 se alguém setar `DAILY_HARD_FLOOR_PCT=0.03` (a guarda `_hard > CAP_PCT` existe — bom — mas não há teste).\n\n---\n\n### Recomendação de merge\n\n**APROVAR para merge** com as 2 ressalvas MÉDIA como follow-up não-bloqueante. A lógica do money-path está correta, os backstops são bounded e provados, zero regressão na suíte existente, `getStatus()` expõe todos os campos novos e o endpoint `GET /system/daily-cap` os serve. **Condição forte:** antes de confiar no auto-resume em produção (mainnet, equity real ~$149), adicionar o **teste #1** (sequência multi-trip via `checkCap` provando o −12%) — é a única lacuna entre "lógica pura provada" e "caminho de efeitos provado" num breaker que agora **re-liga trading sozinho com dinheiro real**. Dado o estado LIVE (`halted=false`, regime bear), eu mergearia o código e o teste atual já, e abriria o teste #1 como item imediato de hardening.'}, {'type': 'text', 'text': "agentId: afd072653464441b2 (use SendMessage with to: 'afd072653464441b2' to continue this agent)\n<usage>subagent_tokens: 85161\ntool_uses: 19\nduration_ms: 228418</usage>"}]
+> ```
+
+## 🤖 Claude *(23:50:48)*
+
+
+## 🤖 Claude *(23:50:51)*
+
+Ambos aprovam C (TL: APPROVE c/ sugestões, sem must-fix; QA: PASS c/ ressalvas, sem bug bloqueante, **−12% provado**). A pedido mais forte do QA: o **teste de fluxo multi-trip via `checkCap`** (provar o limite −12% pelo caminho de efeitos, não só pela função pura). É um breaker que re-liga trading real — vou adicionar. Também o warning de `HARD_PCT` inválido (TL).
+
+Primeiro o patch do warning:
+
+## 🤖 Claude *(23:50:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\np=\"/home/gcrux-tradeux/tradeux/backend/src/dailyCapJob.js\"\nc=open(p,encoding=\"utf-8\").read()\nold=\"const MAX_RESUMES = Number.isFinite(_maxr) && _maxr >= 0 ? _maxr : 2;\\n\"\nnew=old+(\"// Higiene: se o operador setou um piso duro <= cap soft (incoerente), cai no default e AVISA (nao silencioso).\\n\"\n         \"if (process.env.DAILY_HARD_FLOOR_PCT && !(Number.isFinite(_hard) && _hard > CAP_PCT && _hard < 1))\\n\"\n         \"    logger('system', `[dailyCap] DAILY_HARD_FLOOR_PCT='${process.env.DAILY_HARD_FLOOR_PCT}' invalido (precisa ser > DAILY_LOSS_CAP_PCT=${CAP_PCT} e < 1) \u2014 usando piso duro default 0.12.`);\\n\")\nassert c.count(old)==1, f\"ancora {c.count(old)}x\"\nopen(p,\"w\",encoding=\"utf-8\").write(c.replace(old,new,1))\nprint(\"warning HARD_PCT adicionado\")\nPY\nnode --check backend/src/dailyCapJob.js && echo \"node --check OK\"",
+  "description": "Add HARD_PCT invalid warning"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> warning HARD_PCT adicionado
+> node --check OK
+> ```
+
+## 🤖 Claude *(23:51:26)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/dailyCapResumeFlow.test.js",
+  "content": "'use strict';\n/*\n * Su\u00edte de SIMULA\u00c7\u00c3O \u2014 FLUXO multi-trip do auto-resume (dailyCapJob.checkCap ponta-a-ponta, frente C).\n * Prova a propriedade de seguran\u00e7a CENTRAL pelo CAMINHO DE EFEITOS (n\u00e3o s\u00f3 pela fun\u00e7\u00e3o pura): mesmo na\n * pior espiral (2 auto-resumes com baseline rolante caindo), a perda do dia para de vez em ~-12% pelo PISO DURO.\n * Dirige checkCap() com riskState fake STATEFUL (rastreia a fonte daily-cap + clearDailyCap) e Date.now mockado\n * p/ vencer o cooldown sem dormir. Injeta tudo no require.cache ANTES de requerer o job (padr\u00e3o do dailyCap.test.js).\n */\nprocess.env.AES_KEY = process.env.AES_KEY || '01234567890123456789012345678901';\nprocess.env.DAILY_CAP_RESUME_COOLDOWN_MS = '3600000'; // 1h (vencido via Date.now mock)\nprocess.env.DAILY_CAP_MAX_RESUMES = '2';\nprocess.env.DAILY_HARD_FLOOR_PCT = '0.12';\nprocess.env.DAILY_LOSS_CAP_PCT = '0.05';\n\nconst path = require('path');\nconst SRC = path.resolve(__dirname, '../../src');\nfunction inject(abs, exp) { const r = require.resolve(abs); require.cache[r] = { id: r, filename: r, loaded: true, exports: exp }; }\n\nconst DAY = '2026-06-24';\nlet EQUITY = 100;\nlet NOW = 0;\nconst realNow = Date.now;\nDate.now = () => NOW;\n\n// riskState fake STATEFUL: s\u00f3 a fonte daily-cap importa aqui (floor/manual ausentes).\nlet capOn = false, capDay = null, hotEquity = null;\nconst riskFake = {\n    dayKeyUTC: () => DAY,\n    getState: () => ({ dailyCap: { on: capOn, day: capDay, active: capOn && capDay === DAY }, halted: capOn, floor: { on: false }, manual: { on: false }, source: capOn ? 'daily-cap' : null }),\n    setHalt: (on, reason, source) => {\n        if (source !== 'daily-cap') return false;\n        if (on) { if (capOn && capDay === DAY) return false; capOn = true; capDay = DAY; return true; }\n        if (capOn) { capOn = false; capDay = null; return true; } return false;\n    },\n    clearDailyCap: () => { if (capOn) { capOn = false; capDay = null; return true; } return false; },\n    setEquity: (v) => { hotEquity = v; },\n};\n\ninject(path.join(SRC, 'repositories/settingsRepository'), { getDefaultSettings: async () => ({ id: 1, accessKey: 'k', secretKey: 's', apiUrl: 'https://api.binance.com/api', streamUrl: 'wss://x' }) });\ninject(path.join(SRC, 'utils/exchange'), () => ({ balance: async () => ({ USDT: { available: String(EQUITY), onOrder: '0' } }) }));\ninject(path.join(SRC, 'beholder'), { getMemory: () => undefined });\ninject(path.join(SRC, 'riskState'), riskFake);\ninject(path.join(SRC, 'utils/telegram'), async () => { });\ninject(path.join(SRC, 'utils/logger'), () => { });\n\nconst job = require('../../src/dailyCapJob');\n\nlet passed = 0, failed = 0;\nfunction ok(name, cond) { if (cond) passed++; else { failed++; console.error(`  \u2717 ${name}`); } }\nconst COOL = 3600000;\nconst st = () => job.getStatus();\n\n(async () => {\n    // baseline do dia = 100 (dayBase=100 \u2192 hardFloor=88)\n    EQUITY = 100; NOW = 1000; await job.checkCap();\n    ok('baseline criado em 100', st().snapshot && st().snapshot.equity === 100 && st().dayBase === 100);\n    ok('hardFloor = 88', Math.abs(st().hardFloor - 88) < 1e-9);\n    ok('nao halted no baseline', !riskFake.getState().halted);\n\n    // trip 1: equity 94 (<= 95) \u2192 arma + agenda resume\n    EQUITY = 94; NOW = 2000; await job.checkCap();\n    ok('trip1 \u2192 halted', riskFake.getState().halted);\n    ok('trip1 \u2192 resumeAt agendado', !!st().resumeAt && st().resumes === 0);\n\n    // cooldown ainda nao venceu \u2192 NAO resume\n    NOW = 2000 + COOL - 1; await job.checkCap();\n    ok('pre-cooldown \u2192 segue halted', riskFake.getState().halted);\n\n    // cooldown venceu \u2192 resume 1 (re-baseline 94, libera)\n    NOW = 2000 + COOL + 1; await job.checkCap();\n    ok('resume1 \u2192 NAO halted', !riskFake.getState().halted);\n    ok('resume1 \u2192 resumes=1, re-baseline 94', st().resumes === 1 && st().snapshot.equity === 94);\n    ok('resume1 \u2192 dayBase intacto (100) e hardFloor 88', st().dayBase === 100 && Math.abs(st().hardFloor - 88) < 1e-9);\n\n    // trip 2: equity 89 (<= 94*0.95=89.3) \u2192 re-arma\n    EQUITY = 89; NOW += 1000; await job.checkCap();\n    ok('trip2 \u2192 halted de novo', riskFake.getState().halted);\n    ok('trip2 \u2192 resumeAt agendado, resumes ainda 1', !!st().resumeAt && st().resumes === 1);\n\n    // cooldown \u2192 resume 2 (esgota o limite)\n    NOW += COOL + 1; await job.checkCap();\n    ok('resume2 \u2192 NAO halted, resumes=2', !riskFake.getState().halted && st().resumes === 2);\n\n    // queda abaixo do PISO DURO (equity 87 <= 88) \u2192 hardHalt, SEM auto-resume\n    EQUITY = 87; NOW += 1000; await job.checkCap();\n    ok('hardHalt \u2192 halted', riskFake.getState().halted);\n    ok('hardHalt \u2192 flag hardHalted', st().hardHalted === true);\n    ok('hardHalt \u2192 resumeAt nulo (nao reagenda)', st().resumeAt === null);\n\n    // muito depois do cooldown, ainda abaixo do piso \u2192 NUNCA re-liga sozinho\n    NOW += COOL * 5; EQUITY = 87; await job.checkCap();\n    ok('pos-hardHalt: NAO auto-resume mesmo com cooldown vencido', riskFake.getState().halted);\n    ok('pos-hardHalt: resumes nao passou de 2 (limite respeitado)', st().resumes === 2);\n\n    // PROPRIEDADE CENTRAL: o menor equity que algum dia RE-LIGOU foi 89 (>88); nunca religou abaixo do piso duro.\n    ok('INVARIANTE: nunca auto-resumiu abaixo do piso duro (-12%)', 89 > st().hardFloor);\n\n    Date.now = realNow;\n    console.log(`\\ndailyCapResumeFlow.test.js: ${passed} passed, ${failed} failed`);\n    process.exit(failed ? 1 : 0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/dailyCapResumeFlow.test.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:51:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nchmod -R a+rX /tmp/tux_build\nsudo -n -u gcrux-tradeux bash -lc 'cp /tmp/tux_build/dailyCapResumeFlow.test.js backend/scripts/sim/dailyCapResumeFlow.test.js && echo copiado'\ncd backend\nnode --check scripts/sim/dailyCapResumeFlow.test.js && echo \"node --check OK\"\necho \"\"\necho \"=== isolado: o teste de fluxo ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && AES_KEY=01234567890123456789012345678901 timeout 30 node scripts/sim/dailyCapResumeFlow.test.js 2>&1 | tail -25'",
+  "description": "Run the multi-trip flow test in isolation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> copiado
+> node --check OK
+> 
+> === isolado: o teste de fluxo ===
+> 
+> dailyCapResumeFlow.test.js: 18 passed, 0 failed
+> ```
+
+## 🤖 Claude *(23:51:36)*
+
+
+## 🤖 Claude *(23:51:37)*
+
+Teste de fluxo 18/18 — o limite −12% provado pelo caminho de efeitos completo. Suíte completa (cada teste roda em processo isolado, então o env do flow não vaza):
+
+## 🤖 Claude *(23:51:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'AES_KEY=01234567890123456789012345678901 timeout 150 node scripts/sim/run.js 2>&1 | grep -E \"test.js:|sim suite\"'",
+  "description": "Full sim suite after flow test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> calcQty.test.js: 23 passed, 0 failed
+> crypto.test.js: 19 passed, 0 failed
+> dailyCap.test.js: 10 passed, 0 failed
+> dailyCapResume.test.js: 17 passed, 0 failed
+> dailyCapResumeFlow.test.js: 18 passed, 0 failed
+> earnRedeem.test.js: 12 passed, 0 failed
+> earnRedeemDryRun.test.js: 5 passed, 0 failed
+> eventNotify.test.js: 15 passed, 0 failed
+> farmSellBoot.test.js: 10 passed, 0 failed
+> farmTriggers.test.js: 16 passed, 0 failed
+> feeCalc.test.js: 19 passed, 0 failed
+> groupSupervisor.test.js: 25 passed, 0 failed
+> groupSupervisorReconcile.test.js: 21 passed, 0 failed
+> integration.test.js: 24 passed, 0 failed
+> riskGuard.test.js: 53 passed, 0 failed
+> stepUpGuard.test.js: 21 passed, 0 failed
+> withdrawGuard.test.js: 13 passed, 0 failed
+> sim suite: 17/17 arquivos OK.
+> ```
+
+## 🤖 Claude *(23:51:51)*
+
+
+## 🤖 Claude *(23:51:52)*
+
+17/17 verde, zero regressão. Deploy da frente C (build + restart) e verificação do endpoint `/system/daily-cap` com os campos de auto-resume.
+
+## 🤖 Claude *(23:51:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend 2>&1 | tail -3 && docker compose up -d backend 2>&1 | tail -3'\nsleep 12\necho \"=== boot log do dailyCap (deve dizer auto-resume ON) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"tail -60 /app/logs/system.log\" | grep -iE \"dailyCap.*iniciado|auto-resume|supervisor iniciado\" | tail -5'",
+  "description": "Build, restart, check dailyCap boot log",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #14 resolving provenance for metadata file
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === boot log do dailyCap (deve dizer auto-resume ON) ===
+> info: 2026-06-24T23:36:50.512Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms).
+> info: 2026-06-24T23:52:01.863Z - [dailyCap] iniciado — teto -5% sobre o equity do dia (intervalo 60000ms); auto-resume ON (cooldown 3.0h, piso duro -12%, máx 2/dia).
+> ```
+
+## 🤖 Claude *(23:52:14)*
+
+
+## 🤖 Claude *(23:52:14)*
+
+Auto-resume ON no boot. Verifico o endpoint `/system/daily-cap` com os campos novos.
+
+## 🤖 Claude *(23:52:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-')\nPWD_=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-')\nT=$(curl -s -m10 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD_\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))')\necho \"$T\" > /tmp/tux_token.txt\ncurl -s -m10 http://127.0.0.1:8090/api/system/daily-cap -H \"Authorization: $T\" | python3 -c '\nimport sys,json\nd=json.load(sys.stdin)\nkeys=[\"enabled\",\"capPct\",\"autoResume\",\"resumeCooldownMs\",\"maxResumes\",\"hardPct\",\"dayBase\",\"hardFloor\",\"resumes\",\"resumeAt\",\"hardHalted\",\"tripped\",\"halted\"]\nfor k in keys: print(\"  %-18s = %s\"%(k,d.get(k)))\nprint(\"  snapshot.equity   =\", (d.get(\"snapshot\") or {}).get(\"equity\"))'",
+  "description": "Verify daily-cap endpoint new fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   enabled            = True
+>   capPct             = 0.05
+>   autoResume         = True
+>   resumeCooldownMs   = 10800000
+>   maxResumes         = 2
+>   hardPct            = 0.12
+>   dayBase            = 149.3980240116958
+>   hardFloor          = 131.4702611302923
+>   resumes            = 0
+>   resumeAt           = None
+>   hardHalted         = False
+>   tripped            = {'on': False, 'reason': None, 'since': None, 'day': None, 'active': False}
+>   halted             = False
+>   snapshot.equity   = 149.3980240116958
+> ```
+
+## 🤖 Claude *(23:52:25)*
+
+
+## 🤖 Claude *(23:52:26)*
+
+**Frente C deployada e verificada:** auto-resume ON, baseline $149,40, piso duro $131,47 (−12%), cooldown 3h, máx 2/dia. Commit (só os arquivos de C).
+
+## 🤖 Claude *(23:52:39)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/commit_msg_C.txt",
+  "content": "feat(risk): auto-resume do cap diario -5% com 3 backstops (frente C)\n\nFrente C do trabalho de autonomia (escolha explicita do dono: o kill-switch de -5%\ndeve AUTO-RESUMIR apos cooldown em vez de ficar terminal-ate-UTC). Gated QA (PASS c/\nressalvas) + TL (APPROVE c/ sugestoes), sim 17/17, deployado e verificado ao vivo.\n\nO -5% nao e mais terminal: ao disparar, agenda resumeAt; vencido o cooldown,\nre-baseline no equity atual + riskState.clearDailyCap() (solta SO a fonte daily-cap;\nfloor/manual/env-hard permanecem). Para nao virar espiral, 3 backstops:\n- (1) cooldown DAILY_CAP_RESUME_COOLDOWN_MS (3h) antes de religar\n- (2) PISO DURO DAILY_HARD_FLOOR_PCT (-12% do baseline ORIGINAL do dia, que o\n  re-baseline trailing NAO move): abaixo dele = hardHalt SEM auto-resume (manual/UTC)\n- (3) DAILY_CAP_MAX_RESUMES (2/dia)\nResultado: um dia ruim custa no MAXIMO ~-12% e para de vez (provado por teste de fluxo).\n\nImplementacao:\n- decisao isolada na funcao PURA evaluateCap() (hardHalt > resume > softTrip > none;\n  piso duro tem precedencia ABSOLUTA), checkCap aplica os efeitos\n- SNAP persiste dayBase/resumes/hardHalted/resumeAt; normalizeSnap faz backfill de\n  snapshots antigos; reSnapshot (reset do operador) zera os backstops\n- DAILY_CAP_AUTO_RESUME (default true; =false volta ao comportamento antigo)\n- warning se DAILY_HARD_FLOOR_PCT <= DAILY_LOSS_CAP_PCT (cai no default, nao silencioso)\n- getStatus expoe autoResume/hardFloor/dayBase/resumes/resumeAt/hardHalted (servido\n  por GET /system/daily-cap)\n\nTestes: dailyCapResume (matriz de decisao pura, 17), dailyCapResumeFlow (fluxo\nmulti-trip via checkCap provando o limite de -12% pelo caminho de efeitos, 18);\ndailyCap.test.js existente segue verde (10, zero regressao).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/commit_msg_C.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:52:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git -c safe.directory='*' add \\\n  backend/src/dailyCapJob.js \\\n  backend/scripts/sim/dailyCapResume.test.js \\\n  backend/scripts/sim/dailyCapResumeFlow.test.js \\\n  backend/.env.example\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff --cached --stat\nsudo -n -u gcrux-tradeux git -c safe.directory='*' -c user.name='Gabriel Zarattini' -c user.email='gabrielcall@gmail.com' commit --author='Gabriel Zarattini <gabrielcall@gmail.com>' -F /tmp/tux_build/commit_msg_C.txt 2>&1 | tail -3\necho \"=== push (ubuntu) ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git && echo \"chown OK\"",
+  "description": "Commit and push phase C"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  backend/.env.example                           |   8 ++
+>  backend/scripts/sim/dailyCapResume.test.js     |  47 ++++++++
+>  backend/scripts/sim/dailyCapResumeFlow.test.js | 101 ++++++++++++++++
+>  backend/src/dailyCapJob.js                     | 155 ++++++++++++++++++++-----
+>  4 files changed, 285 insertions(+), 26 deletions(-)
+>  4 files changed, 285 insertions(+), 26 deletions(-)
+>  create mode 100644 backend/scripts/sim/dailyCapResume.test.js
+>  create mode 100644 backend/scripts/sim/dailyCapResumeFlow.test.js
+> === push (ubuntu) ===
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    7892483..df5e076  master -> master
+> chown OK
+> ```
+
+## 🤖 Claude *(23:53:46)*
+
+
+## 🤖 Claude *(23:53:48)*
+
+**Frente C fechada:** `7892483..df5e076` em origin. `vivo==master==origin==df5e076`.
+
+Agora **Frente D — auto-promoção paper→real com teto**, a mais complexa. Preciso entender a estrutura do paper antes de desenhar: como as trilhas mapeiam pra automações reais, o que o `paperReviewJob`/`paperService` expõem.
+
+## 🤖 Claude *(23:53:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/paperReviewJob.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// Paper Review Job — revisão PERIÓDICA (diária) do ledger do Paper Engine. Quando uma trilha cruza um MARCO de
+> 4	// round-trips fechados, notifica o dono no Telegram com o veredito preliminar (candidata / fraca / amostra
+> 5	// inicial). É a "aprovação delegada" automatizada: o Claude define o critério, este job vigia e avisa quando há
+> 6	// amostra pra decidir. PASSIVO e READ-ONLY: lê paperService.summary() (totais + por trilha), NÃO toca money-path,
+> 7	// NÃO emite ordem. Silencioso quando não há novidade (só notifica num marco NOVO, com dedup).
+> 8	//
+> 9	// Env:
+> 10	//   PAPER_REVIEW_ENABLED   (default 'true')              — kill-switch
+> 11	//   PAPER_REVIEW_MS        (default 86400000 = 24h)      — intervalo (piso 1h)
+> 12	//   PAPER_REVIEW_MIN_TRADES(default 15)                  — round-trips p/ o veredito sair de "amostra inicial"
+> 13	
+> 14	const telegramNotify = require('./utils/telegramNotify');
+> 15	const paperService = require('./utils/paperService');
+> 16	const logger = require('./utils/logger');
+> 17	const fs = require('fs');
+> 18	const path = require('path');
+> 19	
+> 20	const ENABLED = (process.env.PAPER_REVIEW_ENABLED || 'true') !== 'false';
+> 21	const _ms = parseInt(process.env.PAPER_REVIEW_MS || String(24 * 60 * 60 * 1000), 10);
+> 22	const REVIEW_MS = Number.isFinite(_ms) && _ms >= 60 * 60 * 1000 ? _ms : 24 * 60 * 60 * 1000; // piso 1h
+> 23	const _min = parseInt(process.env.PAPER_REVIEW_MIN_TRADES || '15', 10);
+> 24	const MIN_TRADES = Number.isFinite(_min) && _min > 0 ? _min : 15;
+> 25	const TIERS = [5, 15, 30, 60, 120];                       // marcos de round-trips fechados (sells)
+> 26	const STATE_FILE = path.join(process.cwd(), 'logs', 'paper_review_state.json');
+> 27	
+> 28	let timer = null;
+> 29	let running = false;
+> 30	let lastTier = {};                                        // strategy -> maior marco já notificado (persistido)
+> 31	try { lastTier = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) || {}; } catch (_) { lastTier = {}; }
+> 32	function persist() { try { fs.writeFileSync(STATE_FILE, JSON.stringify(lastTier), 'utf8'); } catch (_) { /* best-effort */ } }
+> 33	
+> 34	function tierOf(n) { let t = 0; for (const x of TIERS) if (n >= x) t = x; return t; }
+> 35	function fmt(n) { const v = parseFloat(n) || 0; return (v >= 0 ? '+$' : '-$') + Math.abs(v).toFixed(2); }
+> 36	
+> 37	async function runOnce() {
+> 38	    if (running) return;
+> 39	    running = true;
+> 40	    try {
+> 41	        const sum = await paperService.summary();
+> 42	        if (!sum || !Array.isArray(sum.strategies) || !sum.strategies.length) return; // silencioso: sem trades paper
+> 43	
+> 44	        for (const s of sum.strategies) {
+> 45	            const rt = s.sells || 0;                       // round-trips FECHADOS (vendas)
+> 46	            const tier = tierOf(rt);
+> 47	            if (tier > 0 && tier > (lastTier[s.strategy] || 0)) {
+> 48	                lastTier[s.strategy] = tier;
+> 49	                persist();
+> 50	                const ready = rt >= MIN_TRADES;
+> 51	                const verdict = !ready
+> 52	                    ? 'amostra inicial (aguardando mais round-trips p/ veredito)'
+> 53	                    : s.totalPnl > 0
+> 54	                        ? 'CANDIDATA a aprovação (net POSITIVO após fee+slippage reais)'
+> 55	                        : 'FRACA (net negativo) — candidata a descartar';
+> 56	                const win = s.winRate != null ? ` · win ${Math.round(s.winRate * 100)}%` : '';
+> 57	                const msg = `📝 [PAPER-REVIEW] trilha "${s.strategy}": ${rt} round-trips${win} · net ${fmt(s.totalPnl)} (realizado ${fmt(s.realizedPnl)} + aberto ${fmt(s.unrealizedPnl)}) → ${verdict}`;
+> 58	                await telegramNotify.notify(msg, `paper-review:${s.strategy}:${tier}`);
+> 59	                logger('system', msg);
+> 60	            }
+> 61	        }
+> 62	    } catch (err) {
+> 63	        logger('system', `[paper-review] erro: ${err.message}`);
+> 64	    } finally {
+> 65	        running = false;
+> 66	    }
+> 67	}
+> 68	
+> 69	function start() {
+> 70	    if (!ENABLED) { logger('system', 'Paper Review job DESABILITADO (PAPER_REVIEW_ENABLED=false).'); return; }
+> 71	    if (timer) return; // idempotente
+> 72	    runOnce(); // baseline imediato no boot (silencioso se sem trades; dedup persistido evita re-notificar marcos)
+> 73	    timer = setInterval(runOnce, REVIEW_MS);
+> 74	    if (timer.unref) timer.unref();
+> 75	    logger('system', `Paper Review job iniciado (intervalo ${REVIEW_MS}ms; veredito a partir de ${MIN_TRADES} round-trips). Read-only, notifica só em marco novo.`);
+> 76	}
+> 77	
+> 78	function stop() { if (timer) { clearInterval(timer); timer = null; } running = false; }
+> 79	
+> 80	module.exports = { start, stop, runOnce };
+> 81	
+> ```
+
+## 🤖 Claude *(23:54:40)*
+
+
+## 🤖 Claude *(23:54:42)*
+
+O `paperReviewJob` já avalia por trilha (round-trips, PnL, veredito) e notifica — mas é read-only. Para D preciso entender o mecanismo de execução do paper e se há contraparte real. Deixa eu investigar a fundo.
+
+## 🤖 Claude *(23:54:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\necho \"=== paperService.summary: estrutura ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -nE \"function summary|strategy|realizedPnl|sells|buys|winRate|return |module.exports\" src/utils/paperService.js 2>/dev/null | head -30'\necho \"\"\necho \"=== como [PAPER] roteia pro broker virtual (ponto de decis\u00e3o) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -rnE \"\\[PAPER\\]|isPaper|paperBroker|startsWith\\(.\\[PAPER\" src/beholder.js src/app-em.js src/utils/paperService.js 2>/dev/null | head -15'\necho \"\"\necho \"=== setup das trilhas paper: nomes/strategies ===\"\nsudo -n -u gcrux-tradeux bash -lc 'ls scripts/ | grep -iE \"paper|setup\"; echo \"---\"; grep -rhnE \"strategy|\\[PAPER\\]|name:\" scripts/setup-paper*.js 2>/dev/null | head -20'",
+  "description": "Investigate paper engine routing and structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === paperService.summary: estrutura ===
+> 8:async function summary() {
+> 17:    const ensure = s => (byStrategy[s] = byStrategy[s] || { strategy: s, realizedPnl: 0, unrealizedPnl: 0, openPositions: 0, fees: 0, buys: 0, sells: 0, wins: 0, symbols: {} });
+> 20:        const s = ensure(p.strategy);
+> 22:        const realized = parseFloat(p.realizedPnl) || 0;
+> 23:        s.realizedPnl += realized;
+> 31:        s.unrealizedPnl += unrealized;
+> 32:        s.symbols[p.symbol] = { qty, avgCost: parseFloat(p.avgCost) || 0, realizedPnl: realized, unrealizedPnl: unrealized };
+> 36:        const s = ensure(o.strategy);
+> 38:        if (o.side === 'BUY') s.buys += 1;
+> 39:        else if (o.side === 'SELL') { s.sells += 1; if ((parseFloat(o.realizedPnl) || 0) > 0) s.wins += 1; }
+> 44:        totalPnl: s.realizedPnl + s.unrealizedPnl,
+> 45:        winRate: s.sells > 0 ? s.wins / s.sells : null,
+> 49:        realizedPnl: a.realizedPnl + s.realizedPnl,
+> 50:        unrealizedPnl: a.unrealizedPnl + s.unrealizedPnl,
+> 53:    }), { realizedPnl: 0, unrealizedPnl: 0, totalPnl: 0, fees: 0 });
+> 55:    return { totals, strategies, feeRate: parseFloat(process.env.PAPER_FEE_RATE || '0.001') };
+> 58:module.exports = { summary };
+> 
+> === como [PAPER] roteia pro broker virtual (ponto de decisão) ===
+> src/beholder.js:453:    // === PAPER (Fatia 1 — Motor de Estratégias): automações com prefixo "[PAPER]" no name roteiam p/ o ledger
+> src/beholder.js:458:    if (require('./paperEngine').isPaperAutomation(automation))
+> src/beholder.js:461:    // item (f) — guarda FAIL-CLOSED (pré-req do flip): um template/automação com prefixo [PAPER] que chegue ao
+> src/beholder.js:462:    // caminho REAL (ex.: automação renomeada perdendo o prefixo, mas o orderTemplate ainda é [PAPER]) é RECUSADO
+> src/beholder.js:881:        // execução (bestBid>alvo + slippage). Gateado por [PAPER]+'_TARGET' na condition → à prova de colisão com
+> src/beholder.js:883:        || (automation.name && automation.name.startsWith('[PAPER]') && automation.conditions && automation.conditions.indexOf('_TARGET') !== -1)
+> src/beholder.js:937:        // 1 alerta por automação por episódio, estável à variação de err.message, sem spam a cada vela. [PAPER] é
+> src/beholder.js:941:        if (!automation.name || !automation.name.startsWith('[PAPER]'))
+> src/app-em.js:845:        // Resultados de automação [PAPER] (motor VIRTUAL de research) NÃO devem alertar o dono por PUSH — são ruído
+> src/app-em.js:846:        // por vela ('[PAPER] ... sem posição — venda ignorada', '[PAPER] SELL ... P&L'). Continuam no broadcast WS
+> src/app-em.js:848:        const isPaperNoise = json.notification && typeof json.notification.text === 'string' && json.notification.text.startsWith('[PAPER]');
+> src/app-em.js:849:        if (json.notification && !isPaperNoise) {
+> 
+> === setup das trilhas paper: nomes/strategies ===
+> setup-farm.js
+> setup-flow-gate.js
+> setup-grid.js
+> setup-harvester.js
+> setup-paper-levers.js
+> setup-paper-mr15.js
+> setup-paper-trilhas.js
+> setup-trend.js
+> ---
+> 3: * Setup IDEMPOTENTE das trilhas PAPER dos slices 2 e 3 do paper-validate (alavancas da pesquisa). Tudo [PAPER]
+> 80:    const sgBuy = await ensureTemplate(token, symbol, `[PAPER] Slopegate Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');
+> 82:    const sgSell = await ensureTemplate(token, symbol, `[PAPER] Slopegate Sell ${symbol}`, 'SELL', 'MAX_WALLET');
+> 85:    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Slopegate Buy ${symbol}`, sgBuyCond, `${K('TREND_CROSS_1h')},${K('TREND_SLOPE_1h')},${K('REGIME')}`, sgBuy.id));
+> 87:    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Slopegate Sell ${symbol}`, sgSellCond, `${K('TREND_CROSS_1h')}`, sgSell.id));
+> 90:    const fBuy = await ensureTemplate(token, symbol, `[PAPER] Farmnl Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');
+> 92:    const fSell = await ensureTemplate(token, symbol, `[PAPER] Farmnl Sell ${symbol}`, 'SELL', 'MAX_WALLET');
+> 95:    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Farmnl Buy ${symbol}`, fBuyCond, `${K(FARM_RSI_KEY)},${K('REGIME')}`, fBuy.id));
+> 100:    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Farmnl Sell ${symbol}`, fSellCond, `${K('BOOK')},${K('FARMNL_TARGET')}`, fSell.id));
+> 109:    console.log(`\n${DRY ? 'DRY-RUN OK.' : 'PRONTO — automações [PAPER] Slopegate/Farmnl INATIVAS.'}`);
+> 5: * do Farm real — esse vem no Slice 3, via extensão do paperEngine). Comparável direto com "[PAPER] Consistencia" (1m).
+> 10: * Tudo [PAPER] → roteado p/ o broker VIRTUAL (preço+fee MAINNET reais, SEM Binance, SEM cofre, sob HALT). 2ª palavra
+> 11: * do name = TRILHA (paperEngine.strategyOf): "[PAPER] Mr15 Buy LTCUSDT" -> "mr15". Idempotente (find-by-name/409).
+> 78:    const buy = await ensureTemplate(token, symbol, `[PAPER] Mr15 Buy ${symbol}`, 'BUY', 'MIN_NOTIONAL');
+> 80:    const sell = await ensureTemplate(token, symbol, `[PAPER] Mr15 Sell ${symbol}`, 'SELL', 'MAX_WALLET');
+> 84:    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Mr15 Buy ${symbol}`, buyCond, `${K(RSI_KEY)},${K('REGIME')}`, buy.id));
+> 86:    console.log('- ' + await ensureAutomation(token, symbol, `[PAPER] Mr15 Sell ${symbol}`, sellCond, `${K(RSI_KEY)}`, sell.id));
+> 95:    console.log(`\n${DRY ? 'DRY-RUN OK.' : 'PRONTO — monitores 15m ATIVOS, automações [PAPER] Mr15 INATIVAS.'}`);
+> 96:    console.log(`Para ATIVAR: start nas automações [PAPER] Mr15 (paperEngine roteia p/ o ledger virtual). P&L em GET /analysis/paper. Mainnet CONGELADO.`);
+> 4: * com prefixo "[PAPER]" (roteador → paperEngine, broker virtual, preço+fee MAINNET reais, SEM risco, sob HALT):
+> ```
+
+## 🤖 Claude *(23:58:23)*
+
+
+## 🤖 Claude *(23:58:29)*
+
+O paper é claro agora: automação `[PAPER]` roteia pro broker virtual pelo prefixo do nome; a 2ª palavra = estratégia (`farmnl`/`mr15`/`slopegate`/`consistencia`). As estratégias reais (Farm/Trend/Baseline) **já existem e já são geridas pelo supervisor (B)** — clonar paper→real em runtime é arriscado (acoplamento a chaves de MEMORY específicas do paper, ex. `FARMNL_TARGET`).
+
+Isso revela o desenho **coerente** de D: em vez de auto-clonar, a **prova do paper vira um PORTÃO** sobre as entradas do supervisor. Isso (1) implementa fielmente "esperar o paper provar antes de dinheiro real", (2) **resolve o HIGH do QA na frente B** (a venda do cofre BTC não auto-arma até o baseline provar edge), e (3) é seguro (sem codegen). Deixa eu confirmar a estrutura do `paperService.summary` e desenhar.
+
+## 🤖 Claude *(23:58:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/backend/src/utils/paperService.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	'use strict';
+> 2	
+> 3	// Resumo do ledger do Paper Engine — FONTE ÚNICA usada pelo endpoint GET /analysis/paper E pelo cockpit
+> 4	// (status.paper, p/ o agente LER via tradeux_get_cockpit). Por trilha: realizado (round-trips) + não-realizado
+> 5	// (posição aberta marcada ao MINI_TICKER mainnet) + fee paga + win-rate; mais os totais agregados. READ-ONLY.
+> 6	const paperRepository = require('../repositories/paperRepository');
+> 7	
+> 8	async function summary() {
+> 9	    const beholder = require('../beholder');        // lazy: evita ciclo no load
+> 10	    const { indexKeys } = require('./indexes');
+> 11	    const [positions, orders] = await Promise.all([
+> 12	        paperRepository.getAllPositions(),
+> 13	        paperRepository.getOrders(1000),
+> 14	    ]);
+> 15	
+> 16	    const byStrategy = {};
+> 17	    const ensure = s => (byStrategy[s] = byStrategy[s] || { strategy: s, realizedPnl: 0, unrealizedPnl: 0, openPositions: 0, fees: 0, buys: 0, sells: 0, wins: 0, symbols: {} });
+> 18	
+> 19	    for (const p of positions) {
+> 20	        const s = ensure(p.strategy);
+> 21	        const qty = parseFloat(p.qty) || 0;
+> 22	        const realized = parseFloat(p.realizedPnl) || 0;
+> 23	        s.realizedPnl += realized;
+> 24	        let unrealized = 0;
+> 25	        if (qty > 0) {
+> 26	            const mt = beholder.getMemory(p.symbol, indexKeys.MINI_TICKER);
+> 27	            const px = mt && parseFloat(mt.close);
+> 28	            if (Number.isFinite(px) && px > 0) unrealized = qty * px - qty * (parseFloat(p.avgCost) || 0);
+> 29	            s.openPositions += 1;
+> 30	        }
+> 31	        s.unrealizedPnl += unrealized;
+> 32	        s.symbols[p.symbol] = { qty, avgCost: parseFloat(p.avgCost) || 0, realizedPnl: realized, unrealizedPnl: unrealized };
+> 33	    }
+> 34	
+> 35	    for (const o of orders) {
+> 36	        const s = ensure(o.strategy);
+> 37	        s.fees += parseFloat(o.fee) || 0;
+> 38	        if (o.side === 'BUY') s.buys += 1;
+> 39	        else if (o.side === 'SELL') { s.sells += 1; if ((parseFloat(o.realizedPnl) || 0) > 0) s.wins += 1; }
+> 40	    }
+> 41	
+> 42	    const strategies = Object.values(byStrategy).map(s => ({
+> 43	        ...s,
+> 44	        totalPnl: s.realizedPnl + s.unrealizedPnl,
+> 45	        winRate: s.sells > 0 ? s.wins / s.sells : null,
+> 46	    }));
+> 47	
+> 48	    const totals = strategies.reduce((a, s) => ({
+> 49	        realizedPnl: a.realizedPnl + s.realizedPnl,
+> 50	        unrealizedPnl: a.unrealizedPnl + s.unrealizedPnl,
+> 51	        totalPnl: a.totalPnl + s.totalPnl,
+> 52	        fees: a.fees + s.fees,
+> 53	    }), { realizedPnl: 0, unrealizedPnl: 0, totalPnl: 0, fees: 0 });
+> 54	
+> 55	    return { totals, strategies, feeRate: parseFloat(process.env.PAPER_FEE_RATE || '0.001') };
+> 56	}
+> 57	
+> 58	module.exports = { summary };
+> 59	
+> ```
+
+## 🤖 Claude *(23:58:53)*
+
+
+## 🤖 Claude *(23:58:56)*
+
+Confirmado: `realizedPnl` é **net de fee** (a evidência das ordens: sell realizedPnl −0,42 já inclui a taxa) — uso direto como critério. Vou construir D: `promotionStore` (allowlist + `evaluatePromotion` pura), `promotionJob` (avalia+promove+notifica), e o **portão de promoção no supervisor** (entradas e venda-do-cofre só ligam com a estratégia provada). Escrevendo os arquivos novos.
+
+## 🤖 Claude *(23:59:16)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/promotionStore.js",
+  "content": "'use strict';\n/*\n * promotionStore \u2014 allowlist PERSISTIDA das estrat\u00e9gias do paper PROMOVIDAS a dinheiro REAL (frente D).\n *\n * Uma trilha do paper entra aqui quando PROVA edge (evaluatePromotion). O groupSupervisorJob consulta\n * isPromoted(estrat\u00e9gia-do-grupo) p/ s\u00f3 ATIVAR entradas reais de uma estrat\u00e9gia j\u00e1 provada \u2192 implementa a\n * escolha do dono (\"esperar o paper provar antes de arriscar dinheiro real\") E fecha o furo apontado no QA da\n * frente B (a venda do COFRE BTC do Baseline n\u00e3o auto-arma at\u00e9 o Baseline provar edge).\n *\n * GRANDFATHER por env (PROMOTION_GRANDFATHER, CSV de estrat\u00e9gias sempre-promovidas) p/ o dono liberar uma trilha\n * manualmente (ex.: o Farm can\u00e1rio) sem esperar o paper. Default VAZIO = nada vai a real at\u00e9 provar.\n *\n * O teto por ordem ($25) N\u00c3O \u00e9 imposto aqui \u2014 \u00e9 o riskGuard global (MAX_ORDER_NOTIONAL_USDT / MAX_ORDER_PCT_EQUITY)\n * que capa toda compra, promovida ou n\u00e3o. Promo\u00e7\u00e3o s\u00f3 decide SE a estrat\u00e9gia pode operar real, n\u00e3o QUANTO.\n */\nconst fs = require('fs');\nconst path = require('path');\nconst logger = require('./logger');\n\nconst STORE_FILE = path.resolve(__dirname, '..', '..', 'logs', 'promotions.json');\nconst GRANDFATHER = new Set((process.env.PROMOTION_GRANDFATHER || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));\n\nlet promoted = {}; // estrat\u00e9gia(lowercase) -> { at, sells, realizedPnl }\n\nfunction load() {\n    try {\n        if (fs.existsSync(STORE_FILE)) {\n            const r = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'));\n            if (r && r.promoted && typeof r.promoted === 'object') promoted = r.promoted;\n        }\n    } catch (e) {\n        logger('system', `[promotion] store ileg\u00edvel (${e.message}) \u2014 come\u00e7ando vazio (fail-safe: nada promovido).`);\n        promoted = {};\n    }\n}\nfunction save() {\n    try {\n        const d = path.dirname(STORE_FILE);\n        if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });\n        fs.writeFileSync(STORE_FILE, JSON.stringify({ promoted }), 'utf8');\n    } catch (e) { logger('system', `[promotion] falha ao persistir ${STORE_FILE}: ${e.message}`); }\n}\nload();\n\nfunction isPromoted(strategy) {\n    if (!strategy) return false;\n    const s = String(strategy).toLowerCase();\n    return GRANDFATHER.has(s) || !!promoted[s];\n}\n\nfunction promote(strategy, meta) {\n    if (!strategy) return false;\n    const s = String(strategy).toLowerCase();\n    if (promoted[s]) return false; // j\u00e1 promovida (idempotente)\n    promoted[s] = { at: new Date().toISOString(), ...(meta || {}) };\n    save();\n    return true;\n}\n\nfunction list() { return { promoted: { ...promoted }, grandfather: [...GRANDFATHER] }; }\n\n// DECIS\u00c3O PURA (test\u00e1vel): a trilha PROVOU edge? Crit\u00e9rio (escolha do dono + li\u00e7\u00e3o da consistencia):\n//   - net REALIZADO positivo (realizedPnl J\u00c1 \u00e9 fee-inclusive) \u2014 N\u00c3O usa unrealized (bag aberto \u2260 edge provado);\n//   - sobre >= minRoundTrips round-trips FECHADOS (sells) \u2014 amostra suficiente;\n//   - CONSISTENTE entre s\u00edmbolos: >= ceil(considerados \u00d7 minSymbolFrac) s\u00edmbolos com realizado N\u00c3O-negativo\n//     (mata o caso \"net+ s\u00f3 porque 1 s\u00edmbolo carregou enquanto os outros sangraram\").\n//   - win-rate \u00e9 IGNORADO de prop\u00f3sito: a consistencia tem 86% de acerto e \u00e9 NEGATIVA (a armadilha).\nfunction evaluatePromotion(s, cfg) {\n    if (!s) return { promote: false, reason: 'sem dados' };\n    const rt = s.sells || 0;\n    if (rt < cfg.minRoundTrips) return { promote: false, reason: `amostra insuficiente (${rt}/${cfg.minRoundTrips} round-trips)` };\n    const realized = parseFloat(s.realizedPnl) || 0;\n    if (realized <= cfg.minNet) return { promote: false, reason: `net realizado nao-positivo (${realized.toFixed(4)} <= ${cfg.minNet})` };\n    const syms = Object.values(s.symbols || {});\n    const traded = syms.filter(x => (parseFloat(x.realizedPnl) || 0) !== 0 || (parseFloat(x.qty) || 0) !== 0);\n    const considered = traded.length || 1;\n    const positive = traded.filter(x => (parseFloat(x.realizedPnl) || 0) >= 0).length;\n    const need = Math.ceil(considered * cfg.minSymbolFrac);\n    if (positive < need) return { promote: false, reason: `inconsistente entre simbolos (${positive}/${considered} nao-negativos, precisa ${need})` };\n    return { promote: true, reason: `net realizado +${realized.toFixed(2)} sobre ${rt} round-trips; ${positive}/${considered} simbolos nao-negativos` };\n}\n\nmodule.exports = { load, isPromoted, promote, list, evaluatePromotion, STORE_FILE };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/promotionStore.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:59:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/promotionJob.js",
+  "content": "'use strict';\n/*\n * promotionJob \u2014 AUTO-PROMO\u00c7\u00c3O paper \u2192 real (frente D, escolha do dono: \"auto-promover com teto\").\n *\n * Avalia periodicamente o ledger do paper (paperService.summary) e PROMOVE (allowlist persistida) cada trilha\n * que prova edge (promotionStore.evaluatePromotion: net realizado positivo sobre >= N round-trips, consistente\n * entre s\u00edmbolos). Naturalmente 1 por vez (cada trilha cruza o crit\u00e9rio em momentos diferentes). Notifica o dono.\n *\n * N\u00c3O toca money-path direto: s\u00f3 ESCREVE a allowlist. Quem ATIVA as entradas reais \u00e9 o groupSupervisorJob, que\n * consulta isPromoted() \u2014 e o teto por ordem ($25) \u00e9 o riskGuard global. Assim \"promover\" = liberar a estrat\u00e9gia\n * a ir a real; o regime + o supervisor decidem QUANDO, e o riskGuard decide QUANTO.\n *\n * Env:\n *   PROMOTION_ENABLED        (default 'true')\n *   PROMOTION_CHECK_MS       (default 21600000 = 6h; piso 1h)\n *   PROMOTION_MIN_ROUNDTRIPS (default 20)\n *   PROMOTION_MIN_NET        (default 0)     \u2014 net realizado tem que ser > isto\n *   PROMOTION_MIN_SYMBOL_FRAC(default 0.5)   \u2014 fra\u00e7\u00e3o m\u00ednima de s\u00edmbolos com realizado n\u00e3o-negativo\n */\nconst paperService = require('./utils/paperService');\nconst promotionStore = require('./utils/promotionStore');\nconst telegramNotify = require('./utils/telegramNotify');\nconst logger = require('./utils/logger');\n\nconst ENABLED = (process.env.PROMOTION_ENABLED || 'true') !== 'false';\nconst _ms = parseInt(process.env.PROMOTION_CHECK_MS || '21600000', 10);\nconst CHECK_MS = Number.isFinite(_ms) && _ms >= 3600000 ? _ms : 21600000; // 6h, piso 1h\nconst _rt = parseInt(process.env.PROMOTION_MIN_ROUNDTRIPS || '20', 10);\nconst MIN_RT = Number.isFinite(_rt) && _rt > 0 ? _rt : 20;\nconst _net = parseFloat(process.env.PROMOTION_MIN_NET || '0');\nconst MIN_NET = Number.isFinite(_net) ? _net : 0;\nconst _frac = parseFloat(process.env.PROMOTION_MIN_SYMBOL_FRAC || '0.5');\nconst MIN_SYM_FRAC = Number.isFinite(_frac) && _frac >= 0 && _frac <= 1 ? _frac : 0.5;\n\nlet timer = null;\nlet running = false;\nlet LAST = null, AT = null;\n\nconst cfg = () => ({ minRoundTrips: MIN_RT, minNet: MIN_NET, minSymbolFrac: MIN_SYM_FRAC });\n\nasync function runOnce() {\n    if (!ENABLED || running) return;\n    running = true;\n    try {\n        const sum = await paperService.summary();\n        const strategies = (sum && Array.isArray(sum.strategies)) ? sum.strategies : [];\n        let promotedNow = 0;\n        for (const s of strategies) {\n            if (promotionStore.isPromoted(s.strategy)) continue; // j\u00e1 liberada\n            const dec = promotionStore.evaluatePromotion(s, cfg());\n            if (!dec.promote) continue;\n            if (promotionStore.promote(s.strategy, { sells: s.sells, realizedPnl: s.realizedPnl })) {\n                promotedNow += 1;\n                const msg = `\ud83c\udf93 [PROMO\u00c7\u00c3O] Trilha \"${s.strategy}\" PROVOU edge no paper \u2192 LIBERADA p/ dinheiro REAL (${dec.reason}). ` +\n                    `As entradas reais ativam na pr\u00f3xima janela de regime favor\u00e1vel (teto $/ordem do riskGuard; o HALT/cap seguem valendo).`;\n                logger('system', msg);\n                await telegramNotify.notify(msg, `promotion:${String(s.strategy).toLowerCase()}`);\n            }\n        }\n        AT = Date.now();\n        LAST = { at: new Date(AT).toISOString(), evaluated: strategies.length, promotedNow, allowlist: promotionStore.list() };\n    } catch (err) {\n        logger('system', `[promotion] erro no ciclo: ${err.message}`);\n    } finally {\n        running = false;\n    }\n}\n\nfunction start() {\n    if (!ENABLED) { logger('system', 'Promotion job DESABILITADO (PROMOTION_ENABLED=false).'); return; }\n    if (timer) return; // idempotente\n    runOnce(); // baseline imediato no boot\n    timer = setInterval(runOnce, CHECK_MS);\n    if (timer.unref) timer.unref();\n    logger('system', `Promotion job iniciado (intervalo ${CHECK_MS}ms; crit\u00e9rio: net>${MIN_NET} sobre >=${MIN_RT} round-trips, >=${Math.round(MIN_SYM_FRAC * 100)}% s\u00edmbolos nao-negativos). Escreve s\u00f3 a allowlist; o supervisor ativa.`);\n}\n\nfunction stop() { if (timer) { clearInterval(timer); timer = null; } running = false; }\n\nfunction getStatus() {\n    return {\n        enabled: ENABLED, checkMs: CHECK_MS, minRoundTrips: MIN_RT, minNet: MIN_NET, minSymbolFrac: MIN_SYM_FRAC,\n        running, at: AT ? new Date(AT).toISOString() : null, ageMs: AT ? Date.now() - AT : null,\n        allowlist: promotionStore.list(), last: LAST,\n    };\n}\n\nmodule.exports = { start, stop, runOnce, getStatus };\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/promotionJob.js (file state is current in your context — no need to Read it back)
+> ```

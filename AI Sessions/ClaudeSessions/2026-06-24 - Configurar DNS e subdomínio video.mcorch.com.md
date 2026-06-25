@@ -358,7 +358,7 @@ Worktree clean, zero TS errors, all containers healthy. Now reading HANDOFF (rea
 > 36	### Survival Laws Self-audit
 > 37	```
 > 38	Law 1 (Materiality): ✅ Billing fix provado pelo smoke 8/8 contra os RPCs REAIS (begin/finalize_autopilot_cycle + refund_autopilot_video_enqueue) na sequência real — net debit medido por SELECT do saldo. Achado material: orchestrate-content é async (steps:[] imediato) → inviabiliza a Option 1, decidiu o design. Blueprint: cada claim carrega a URL/arquivo lido @ commit pinado (não fabricado). Fase 5c mecânica abaixo.
-> 39	Law 2 (Process): ✅ O fix é bug-fix em feature documentada (OTD-VA-010, SOP autopilot-video-9x16 já existia) → isento de BoK gate; mesmo assim documentei a nota de fechamento + corrigi o recovery path do SOP (que estava factualmente errado). Blueprint = anticipated-process da Fatia VS-UI (Lei 2 do próximo código de UI).
+> 39	Law 2 (Process): ✅ O fix é bug-fix em feature documentada (OTD-VA-010, SOP [[autopilot-video-9x16|autopilot-video-9x16]] já existia) → isento de BoK gate; mesmo assim documentei a nota de fechamento + corrigi o recovery path do SOP (que estava factualmente errado). Blueprint = anticipated-process da Fatia VS-UI (Lei 2 do próximo código de UI).
 > 40	Law 3 (Pruning): ✅ Sessão de continuação enxuta (2 arcos); deepsearch rodou como subagent (resultado por path, não recarregado no contexto). Probes de billing por output verificado neste turno.
 > 41	Law 4 (ORO): ✅ Triplet declarado; diretivo do Sovereign nomeou o gap + as 2 opções de fix; /security-review independente como Reviewer.
 > 42	```
@@ -390,7 +390,7 @@ Worktree clean, zero TS errors, all containers healthy. Now reading HANDOFF (rea
 > 68	### Survival Laws Self-audit
 > 69	```
 > 70	Law 1 (Materiality): ✅ Tudo provado NESTE arco — motor via ffprobe+sha256 (arquivos reais); integração via dry_run+E2E real (artigo/render/biblioteca via SELECT) + saldo intacto; React-19-incompat via `npm view` ANTES de instalar (evitou quebrar o build às cegas). Fase 5c mecânica abaixo.
-> 71	Law 2 (Process): ✅ BoK gate ANTES do código: FRD/SDD Amendment v0.2 + SOP autopilot-video-9x16.md ANTES da Fatia VA-V1; flip OTD-VS-005 documentado ANTES de qualquer código de editor (deepsearch é o próximo gate). Workflow de mapeamento pré-código pegou o conflito React 19/18.
+> 71	Law 2 (Process): ✅ BoK gate ANTES do código: FRD/SDD Amendment v0.2 + SOP [[autopilot-video-9x16|autopilot-video-9x16]].md ANTES da Fatia VA-V1; flip OTD-VS-005 documentado ANTES de qualquer código de editor (deepsearch é o próximo gate). Workflow de mapeamento pré-código pegou o conflito React 19/18.
 > ```
 
 ## 🤖 Claude *(22:23:03)*
@@ -4595,3 +4595,16 @@ Seu cookie de sessão `.mcorch.com` passa pelo SSO gate automaticamente e o edit
 | Commits | `bc5f0e5` + `94ae0db` |
 
 **Me diz o que você vê quando abrir.** Se carregou, seguimos pra **Fase B** (trocar o Export local pelo nosso `video-render` + mcoCoins prepaid, e o store de projetos pro Supabase) — ou pro 1º ciclo pago de vídeo autônomo, o que você priorizar.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-24 - Analisar paper e oportunidades de trading]]
+> * **Próxima Sessão**: [[2026-06-24 - Implementar vídeo 916 no UI editor do Hyperframer]]
+%% --- TIMELINE END --- %%
