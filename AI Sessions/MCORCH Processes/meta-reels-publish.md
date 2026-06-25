@@ -1,9 +1,17 @@
 # SOP — Publicar vídeo do ecossistema como Reel (Meta IG + FB)
 
 > Lei 2 (Processo Antecipado). Fatia 2 do ecossistema criativo bidirecional: a saída do Studio/Canvas
-> (vídeo 9:16) vira **distribuição real** (IG Reel + FB video). Estende `publish-meta` (BoK meta-api).
-> Débito de emenda BoK: **FR-META-REELS** a selar na suíte `docs/bok/meta-api/` (override consciente —
-> diretiva Sovereign "comece a Fatia 2 agora").
+> (vídeo 9:16) vira **distribuição real** (IG Reel + FB video). Débito de emenda BoK: **FR-META-REELS** a
+> selar na suíte `docs/bok/meta-api/` (override consciente — diretiva Sovereign "comece a Fatia 2 agora").
+
+> ✅ **CAMINHO QUE FUNCIONA (provado E2E 2026-06-25 — Reel real `instagram.com/reel/DaBtVAQkiuz`):**
+> **`publish-social` plataforma `instagram`** usando a conexão **Instagram Business Login** que JÁ existe em
+> `social_accounts` (`instagram_business_content_publish`, conta MEDIA_CREATOR/Business). Publica via
+> **`graph.instagram.com`** — **NÃO precisa de `meta_config`/token manual nem Facebook Page**.
+> ⚠️ **Trap material:** o `platform_user_id` guardado no `social_accounts` é um id app-scoped que o endpoint de
+> publish **rejeita** (code 100 / subcode 33). O id correto vem de **`GET graph.instagram.com/me?fields=user_id`**
+> (resolvido em runtime no `publish-social`). O `publish-meta` + `meta_config` abaixo é o caminho ALTERNATIVO
+> (Facebook Page / Graph API) para quando houver Page conectada — não é o caminho do IG Business Login.
 
 ## Operator
 Hoje: o Usuário Zero (ou Usuário 00 operando) abre a **Biblioteca de Assets** (`/dashboard/canvas/assets`),

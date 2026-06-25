@@ -348,7 +348,7 @@ TypeScript clean (no output = zero errors). Now reading the key context files in
 > 40	### Survival Laws Self-audit
 > 41	```
 > 42	Law 1 (Materiality): ✅ Tudo provado neste turno — editor via curl 200 + screenshot Sovereign; spine via smoke 5/5 contra os RPCs REAIS + backfill com count real (73); recovery por re-read do grafo; deploys por size/HTTP. Achado material (Management API bane Python-urllib 1010) corrigiu o apply. Fase 5c mecânica abaixo.
-> 43	Law 2 (Process): ✅ Editor: contrato /api selado dos .d.ts ANTES do código (SDD Amendment v0.4) + SOP deploy. Spine: SOP creative-assets-registry.md ANTES do código + /security-review da migration. Bug fix isento (single-file). Recovery = restauração de dado de feature documentada.
+> 43	Law 2 (Process): ✅ Editor: contrato /api selado dos .d.ts ANTES do código (SDD Amendment v0.4) + SOP deploy. Spine: SOP [[creative-assets-registry|creative-assets-registry]].md ANTES do código + /security-review da migration. Bug fix isento (single-file). Recovery = restauração de dado de feature documentada.
 > 44	Law 3 (Pruning): ✅ Sessão longa com workflows como subagentes (resultado por path, não recarregado). Referência faceless redatada salva (não recarregada).
 > 45	Law 4 (ORO): ✅ Triplet declarado; 3 decisões soberanas via AskUserQuestion; /security-review independente como Reviewer.
 > 46	```
@@ -11787,3 +11787,16 @@ The picture is genuinely tangled (Meta has two API paths + two tables). Let me c
 > === connected IG token: scopes + platform_user_id (publish-ready?) ===
 >  user_id= 26558143600461172 | user= magicorch | scopes= ['instagram_business_basic', 'instagram_business_content_publish'] | active= True | exp= 2026-07-03T14:27:27.199+00:00
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
+> * **Próxima Sessão**: [[2026-06-25 - agent-a11ea711912f7b89c]]
+%% --- TIMELINE END --- %%
