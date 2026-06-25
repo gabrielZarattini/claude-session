@@ -1,4 +1,4 @@
-# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
+# Analisar paper e oportunidades de trading
 **Date:** 2026-06-25 | **Session ID:** `f965becb-771d-4ea9-83a1-920d453257be`
 
 ---
@@ -8572,15 +8572,380 @@ E o golpe final: mesmo os **81%** "cai um pouco" **não é tradeável** — o mo
 
 ⏱️ O **sampler ao vivo** está pontuando ESTA instância (preço + RSI a cada 60s por ~14min). Quando fechar eu te trago o veredito real: caiu nos 5min? o RSI chegou a <35? Minha aposta, baseada nos 27 casos: **cai um pouco sim, RSI no fundo não.** Já te aviso.
 
----
+## 👤 User *(02:06:48)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+ótimo entendi realmente não vi nenhum sinal de venda somente de compra e o flow acabou de anunciar a normalização
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-24 - f89447ed-b201-43c6-854d-dd580cb8996c]]
-> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(02:07:12)*
+
+
+## 🤖 Claude *(02:07:18)*
+
+Isso mesmo — e repara que a tua observação **fecha a história toda de forma coerente**:
+
+- **Nenhum ▼ de venda** porque o RSI topou em **68**, parou **antes dos 70** (a linha de sobrecompra). Sem cruzar 70, não tem sinal de venda — bate certinho.
+- **Só ▲ de compra** (vazados) = foram os *dips* onde o RSI tocou a sobrevenda; o sistema marcaria a compra mas fica em **CAIXA** (bear).
+- **Flow COMPRA agressora → normalizou** = a agressão compradora que *empurrou* o spike se esgotou. Ela **descreveu** a subida e acabou junto com ela — exatamente o "concorrente, não preditivo".
+
+O gráfico te contou uma história **honesta e consistente**: compra agressiva sobe o preço → RSI sobe até ~68 → agressão se esgota → recua um pouco. Sem venda, sem sobrevenda, sem edge escondido. Teu olho leu a estrutura certa; o que faltava era separar "o que vejo" de "o que dá pra ganhar".
+
+Deixa eu dar uma espiada no sampler ao vivo pra te trazer onde está agora:
+
+## 🤖 Claude *(02:07:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/bd3hxd50e.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/tmp/tux_build/sampler.py:37: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+> 2	  ts=datetime.datetime.utcnow().strftime('%H:%M:%S')
+> 3	
+> ```
+
+## 🤖 Claude *(02:07:26)*
+
+
+## 🤖 Claude *(02:07:27)*
+
+O sampler grava os pontos num arquivo à parte. Deixa eu ler:
+
+## 🤖 Claude *(02:07:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/tux_pred.log 2>/dev/null || echo \"(ainda sem amostras gravadas)\"",
+  "description": "Read live sampler log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> t+0min 01:59:08  px=60902.0  rsi=50.8
+> t+1min 02:00:08  px=60901.7  rsi=49.6
+> t+2min 02:01:09  px=60900.0  rsi=48.9
+> t+3min 02:02:09  px=60910.0  rsi=51.8
+> t+4min 02:03:09  px=60930.0  rsi=56.7
+> t+5min 02:04:09  px=60962.0  rsi=59.1
+> t+6min 02:05:10  px=60892.0  rsi=48.4
+> t+7min 02:06:10  px=60892.0  rsi=47.7
+> t+8min 02:07:10  px=60889.2  rsi=47.6
+> ```
+
+## 🤖 Claude *(02:07:46)*
+
+
+## 🤖 Claude *(02:07:55)*
+
+Olha o sampler ao vivo confirmando em tempo real (8 de 14 min):
+
+```
+t+0  01:59  px=60.902  rsi=50.8   ← início (tua previsão)
+t+1         px=60.902  rsi=49.6
+t+2         px=60.900  rsi=48.9
+t+3         px=60.910  rsi=51.8
+t+4         px=60.930  rsi=56.7
+t+5  02:04  px=60.962  rsi=59.1   ← 5min depois: SUBIU, não caiu
+t+6         px=60.892  rsi=48.4
+t+7         px=60.892  rsi=47.7
+t+8         px=60.889  rsi=47.6
+```
+
+O que o tape fez nos primeiros 8 min:
+- **"Cai em 5 min"** → no minuto 5 estava **$60.962, mais ALTO** que o início ($60.902). Caiu só *depois*, e migalha (−0,02%). A previsão de queda em 5min **não pegou** — ele chopou de lado e até subiu um pouco antes.
+- **"RSI na sobrevenda"** → o RSI ficou preso entre **47 e 59**, mínimo **47,6**. Nem perto dos 35. **Exatamente o que os 27 casos diziam (0%).**
+
+É o retrato perfeito do ponto: o olho vê "esticou, vai desabar"; o tape faz um chop chato em torno do RSI 50 e segue. O método pegou isso **antes** (base-rate) e está **confirmando ao vivo**.
+
+Faltam ~6 min pro veredito final do sampler — te trago fechado quando completar, mas a direção já tá dada. E o melhor: agora tu tem a **ferramenta** pra fazer isso com qualquer leitura tua — fixa, mede, e o dado responde. 🎯
+
+## 👤 User *(02:13:12)*
+
+<task-notification>
+<task-id>bd3hxd50e</task-id>
+<tool-use-id>toolu_01NUCpE1oYoZBXAjtiG2UyF9</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/bd3hxd50e.output</output-file>
+<status>completed</status>
+<summary>Background command "Live sampler scoring the prediction (~14min)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(02:13:16)*
+
+
+## 🤖 Claude *(02:13:16)*
+
+O sampler fechou — vou pegar o veredito final.
+
+## 🤖 Claude *(02:13:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/tux_pred.log",
+  "description": "Read final sampler verdict"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> t+0min 01:59:08  px=60902.0  rsi=50.8
+> t+1min 02:00:08  px=60901.7  rsi=49.6
+> t+2min 02:01:09  px=60900.0  rsi=48.9
+> t+3min 02:02:09  px=60910.0  rsi=51.8
+> t+4min 02:03:09  px=60930.0  rsi=56.7
+> t+5min 02:04:09  px=60962.0  rsi=59.1
+> t+6min 02:05:10  px=60892.0  rsi=48.4
+> t+7min 02:06:10  px=60892.0  rsi=47.7
+> t+8min 02:07:10  px=60889.2  rsi=47.6
+> t+9min 02:08:11  px=60881.1  rsi=46.4
+> t+10min 02:09:11  px=60868.0  rsi=45.9
+> t+11min 02:10:11  px=60852.1  rsi=45.5
+> t+12min 02:11:11  px=60820.0  rsi=40.3
+> t+13min 02:12:12  px=60810.0  rsi=39.3
+> t+14min 02:13:12  px=60734.3  rsi=32.0
+> 
+> === VEREDITO ===
+> inicio: px=60902.0 rsi=50.8
+> fim:    px=60734.3 rsi=32.0
+> min na janela: px=60734.3 (-0.28%)  rsi_min=32.0
+> PREVISAO 'cai em 5min': ACERTOU (drop max em 5min = -0.00%)
+> PREVISAO 'RSI bate sobrevenda': RSI<35 SIM | RSI<30 NAO (rsi_min=32.0)
+> ```
+
+## 🤖 Claude *(02:14:06)*
+
+
+## 🤖 Claude *(02:14:23)*
+
+O sampler fechou — e eu preciso ser **honesto contigo**, porque o resultado foi contra a minha confiança:
+
+```
+t+0   01:59  $60.902  rsi 50.8   ← tua previsão
+...    (chop ~5min)
+t+5   02:04  $60.962  rsi 59.1
+t+6   02:05  $60.892  rsi 48.4   ← começou a cair aqui
+t+10  02:09  $60.868  rsi 45.9
+t+12  02:11  $60.820  rsi 40.3
+t+14  02:13  $60.734  rsi 32.0   ← FIM
+```
+
+## Placar da tua previsão — tu acertou o que importa
+
+| Tua call | Resultado real |
+|---|---|
+| **"vai cair"** | ✅ **caiu −0,28%** ($60.902 → $60.734) — queda real, não migalha |
+| **"RSI bate na sobrevenda em baixo"** | ✅ **RSI foi a 32,0** (< 35, dentro da banda de sobrevenda) |
+| **"em 5 min max"** | ⚠️ só essa errou — a queda começou no ~min 6 e o RSI só tocou o fundo no min 14 |
+
+**Tu estava certo na direção E no alvo do RSI.** Só o cronômetro foi ~3x mais lento.
+
+## E eu estava confiante demais
+
+Eu me apoiei na base-rate (0/27 chegando na sobrevenda) pra duvidar da tua call — e **o mercado te deu razão**. O erro da minha medição: a janela da base-rate era curta (15 velas a partir do cruzamento >60, que já tinha rolado uns 5min antes do meu t+0), então ela **cortou cedo** e perdeu exatamente esse movimento mais lento. Tua leitura pegou um padrão que o meu corte estatístico não capturou. Crédito teu.
+
+## O ponto que MUDA agora
+
+Uma call certa pode ser sorte — mas **se o teu olho fizer isso de novo e de novo, isso é edge de verdade** e vale ouro. É literalmente pra isso que a gente construiu o gravador. Proposta:
+
+**Eu registro as TUAS previsões** como uma "trilha discricionária" — toda vez que tu chamar um movimento, eu fixo (preço/RSI/flow/hora) e pontuo o desfecho automático. Depois de ~10-20 calls, o dado diz se tu bate o acaso. Se bater, a gente **tenta sistematizar o teu padrão** numa trilha de paper, e o motor de promoção leva a real.
+
+A única ressalva que segura de pé: mesmo essa call certa, **−0,28% no spot é difícil de monetizar** (não dá pra shortar, 0,2% de taxa no round-trip) — mas isso é sobre *instrumento/execução*, não sobre tua leitura estar errada. Ela não estava.
+
+Quer que eu ligue o **registro das tuas previsões**? É começar a medir se tu tem mão pra isso — e eu adoraria descobrir que tem.
+
+## 👤 User *(02:47:35)*
+
+Sim aconteceu denovo mas não sei se tem um padrão aqui me ajdue a analisar.
+
+## 🤖 Claude *(02:49:07)*
+
+
+## 🤖 Claude *(02:49:11)*
+
+Esse é o pedido certo na hora certa — em vez de "achismo", vou **testar com rigor se existe edge** no padrão que tu tá lendo (reversão de 1m: estica → reverte). Como tu pediu pra analisar de verdade, vou rodar uma **bateria de backtests em paralelo** (grade de RSI, reversão por tempo, estatística de mean-reversion, e o teu padrão exato spike→reversão), tudo líquido de taxa, com uma etapa de **verificação adversarial** pra não nos enganarmos. Deixa eu disparar.
+
+## 🤖 Claude *(02:50:02)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'btc-1m-reversion-edge',\n  description: 'Backtest rigoroso: o padrao de reversao de 1m do BTC (RSI/mean-reversion) tem edge tradeavel?',\n  phases: [\n    { title: 'Backtest', detail: '4 analises em paralelo sobre klines 1m do BTC' },\n    { title: 'Verify', detail: 'verificacao adversarial + sintese do veredito' },\n  ],\n}\n\nconst DATA = `DADOS: busque klines 1m do BTCUSDT da Binance PUBLICA via python3 (urllib). Host primario https://api.binance.com, fallback https://data-api.binance.vision. Endpoint /api/v3/klines?symbol=BTCUSDT&interval=1m&limit=1000. PAGINE para >= 3000 velas (~2 dias): busque 1000, depois use endTime=<menor openTime - 1> p/ buscar as 1000 anteriores, repita 3x; concatene em ordem cronologica. close = float(k[4]). Se a rede falhar nos dois hosts, reporte dataN=0 e note o erro.`\nconst RSI = `RSI: use Wilder (14) classico sobre os closes. NAO use look-ahead: o sinal e calculado no FECHAMENTO da vela i; a execucao (compra/venda) ocorre no FECHAMENTO da vela i+1 (proxima barra). FEE: 0.1% por lado = 0.2% round-trip, descontado de cada trade. Spot LONG-ONLY (NAO existe short). Reporte sempre dataN (numero de velas) e a metodologia exata que usou.`\n\nphase('Backtest')\n\nconst GRID = {\n  type: 'object', additionalProperties: false,\n  required: ['dataN', 'configs', 'anyNetPositive', 'best', 'note'],\n  properties: {\n    dataN: { type: 'integer' },\n    configs: { type: 'array', items: { type: 'object', additionalProperties: false,\n      required: ['buyTh', 'sellTh', 'trades', 'winPct', 'grossEvBps', 'netEvBps', 'totalNetPct'],\n      properties: { buyTh: { type: 'number' }, sellTh: { type: 'number' }, trades: { type: 'integer' }, winPct: { type: 'number' }, grossEvBps: { type: 'number' }, netEvBps: { type: 'number' }, totalNetPct: { type: 'number' } } } },\n    anyNetPositive: { type: 'boolean' },\n    best: { type: 'string' },\n    note: { type: 'string' },\n  },\n}\nconst TIMEEXIT = {\n  type: 'object', additionalProperties: false,\n  required: ['dataN', 'configs', 'anyNetPositive', 'note'],\n  properties: {\n    dataN: { type: 'integer' },\n    configs: { type: 'array', items: { type: 'object', additionalProperties: false,\n      required: ['exitMin', 'trades', 'winPct', 'netEvBps', 'totalNetPct'],\n      properties: { exitMin: { type: 'integer' }, trades: { type: 'integer' }, winPct: { type: 'number' }, netEvBps: { type: 'number' }, totalNetPct: { type: 'number' } } } },\n    anyNetPositive: { type: 'boolean' },\n    note: { type: 'string' },\n  },\n}\nconst STATS = {\n  type: 'object', additionalProperties: false,\n  required: ['dataN', 'autocorrLag1', 'varianceRatios', 'halfLifeMin', 'verdict', 'note'],\n  properties: {\n    dataN: { type: 'integer' },\n    autocorrLag1: { type: 'number' },\n    varianceRatios: { type: 'object', additionalProperties: false, required: ['q2', 'q5', 'q10', 'q30'], properties: { q2: { type: 'number' }, q5: { type: 'number' }, q10: { type: 'number' }, q30: { type: 'number' } } },\n    halfLifeMin: { type: ['number', 'null'] },\n    verdict: { type: 'string', enum: ['mean-reverting', 'random-walk', 'trending'] },\n    note: { type: 'string' },\n  },\n}\nconst SPIKE = {\n  type: 'object', additionalProperties: false,\n  required: ['dataN', 'setups', 'pRevertDown30m', 'medianMinToOversold', 'medianMovePctTopToBottom', 'longOnlyNetEvBps', 'note'],\n  properties: {\n    dataN: { type: 'integer' },\n    setups: { type: 'integer' },\n    pRevertDown30m: { type: 'number' },\n    medianMinToOversold: { type: ['number', 'null'] },\n    medianMovePctTopToBottom: { type: 'number' },\n    longOnlyNetEvBps: { type: 'number' },\n    note: { type: 'string' },\n  },\n}\n\nconst results = await parallel([\n  () => agent(`Backtest de REVERSAO por RSI (long-only spot, BTC 1m). ${DATA} ${RSI}\nESTRATEGIA: COMPRA quando RSI(14,1m) cruza p/ BAIXO de buyTh; VENDE quando RSI cruza p/ CIMA de sellTh (1 posicao por vez; ignora novo sinal de compra se ja comprado). Rode a GRADE buyTh em {25,30,35} x sellTh em {50,55,65,70} (12 configs). Para cada config: numero de trades (round-trips fechados), win% (trades com retorno liquido>0), grossEvBps (retorno medio por trade em basis points ANTES da fee), netEvBps (DEPOIS de 20bps round-trip), totalNetPct (retorno composto liquido no periodo). anyNetPositive=true se ALGUMA config tem netEvBps>0 com >=15 trades. best = string descrevendo a melhor config. Seja honesto: provavel que a fee mate tudo.`, { label: 'rsi-grid', phase: 'Backtest', schema: GRID }),\n\n  () => agent(`Backtest de reversao com SAIDA POR TEMPO (long-only spot, BTC 1m). ${DATA} ${RSI}\nESTRATEGIA: COMPRA quando RSI(14,1m)<30 (sobrevenda); SAI apos exatamente N minutos (N em {5,10,15,30}), no fechamento da vela. 1 posicao por vez. Para cada N: trades, win%, netEvBps (apos 20bps), totalNetPct. anyNetPositive = alguma N com netEvBps>0 e >=15 trades. note: compare com o \"melhor caso teorico\" (se saisse no pico favoravel da janela) p/ mostrar quanto de edge existiria SEM o problema de timing de saida.`, { label: 'time-exit', phase: 'Backtest', schema: TIMEEXIT }),\n\n  () => agent(`ESTATISTICA de mean-reversion dos retornos de 1m do BTC (sem backtest de estrategia). ${DATA}\nCompute sobre os log-retornos de 1m: (1) autocorrelacao no lag 1 (autocorrLag1) \u2014 negativa = reversao, ~0 = random walk, positiva = momentum; (2) variance ratio VR(q)=Var(retorno de q periodos)/(q*Var(retorno de 1) ) para q em {2,5,10,30} (VR<1 = reversao, ~1 = random walk, >1 = trending); (3) half-life de reversao via AR(1) nos retornos ou no log-preco (halfLifeMin em minutos; null se nao reverte). verdict: 'mean-reverting' se autocorrLag1 claramente <0 e VR<1; 'random-walk' se ~0/~1; 'trending' se >0/>1. note: explique o que isso significa p/ a viabilidade de uma estrategia de reversao de 1m.`, { label: 'reversion-stats', phase: 'Backtest', schema: STATS }),\n\n  () => agent(`Formalize e teste o PADRAO DO OPERADOR no BTC 1m: \"depois que o preco estica pra cima (RSI sobe), ele reverte pra baixo ate o RSI bater a sobrevenda\". ${DATA} ${RSI}\nSETUP: toda vez que o RSI(14,1m) cruza p/ CIMA de 60. Para cada setup, olhe os proximos 30 min: (a) o preco CAI (faz minima abaixo do preco do setup) dentro de 30m? -> pRevertDown30m = fracao dos setups; (b) tempo mediano (min) ate o RSI cair <35 (medianMinToOversold; null se tipicamente nao chega); (c) movimento mediano % do TOPO (preco no/apos o setup) ate o FUNDO subsequente em 30m (medianMovePctTopToBottom, negativo); (d) longOnlyNetEvBps: um trade long-only \"compra quando RSI<35 apos um setup desses, vende quando RSI volta >50\", retorno medio liquido em bps apos 20bps de fee. setups = n de setups. note: a queda e real mas e MONETIZAVEL no spot long-only apos fee? E o tamanho do movimento vs os 20bps de custo?`, { label: 'owner-pattern', phase: 'Backtest', schema: SPIKE }),\n])\n\nphase('Verify')\n\nconst VERDICT = {\n  type: 'object', additionalProperties: false,\n  required: ['tradeable', 'verdict', 'confidence', 'keyFindings', 'methodologyFlags', 'recommendation'],\n  properties: {\n    tradeable: { type: 'boolean' },\n    verdict: { type: 'string' },\n    confidence: { type: 'string', enum: ['baixa', 'media', 'alta'] },\n    keyFindings: { type: 'array', items: { type: 'string' } },\n    methodologyFlags: { type: 'array', items: { type: 'string' } },\n    recommendation: { type: 'string' },\n  },\n}\n\nconst synth = await agent(`Voce e um quant CETICO revisando 4 backtests do padrao de REVERSAO de 1m do BTC (long-only spot, fee 20bps round-trip) p/ decidir se ha EDGE TRADEAVEL real. Os 4 resultados (JSON):\n\nRSI-GRID: ${JSON.stringify((results[0] && results[0]) || null)}\nTIME-EXIT: ${JSON.stringify((results[1] && results[1]) || null)}\nREVERSION-STATS: ${JSON.stringify((results[2] && results[2]) || null)}\nOWNER-PATTERN: ${JSON.stringify((results[3] && results[3]) || null)}\n\nAvalie ADVERSARIALMENTE: (1) algum backtest mostra netEvBps>0 com amostra decente, ou a fee de 20bps mata tudo? (2) a estatistica (autocorr/VR/half-life) confirma ou contradiz a existencia de reversao explravel? (3) FLAGS de metodologia: look-ahead (sinal x execucao), overfitting (a \"melhor\" config da grade pode ser ruido in-sample), realismo da fee, a restricao long-only (nao da p/ shortar o lado de cima do padrao), amostra pequena/curta. (4) O padrao do operador (queda real apos spike) e estatisticamente presente MAS monetizavel? \ntradeable = ha edge liquido positivo robusto (nao 1 config de sorte). verdict = 1-2 frases diretas em pt-BR. keyFindings = 3-5 bullets com os NUMEROS. methodologyFlags = ressalvas/vieses. recommendation = o proximo passo honesto (ex.: testar em paper como trilha; ou nao perseguir; ou coletar mais as calls do operador p/ ver se a leitura DISCRICIONARIA dele bate o acaso mesmo sem edge mecanico no RSI).`, { label: 'synthesis', phase: 'Verify', schema: VERDICT })\n\nreturn { backtests: results, synthesis: synth }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: whdwsusm5
+> Summary: Backtest rigoroso: o padrao de reversao de 1m do BTC (RSI/mean-reversion) tem edge tradeavel?
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/subagents/workflows/wf_843099ce-3cc
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/workflows/scripts/btc-1m-reversion-edge-wf_843099ce-3cc.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/workflows/scripts/btc-1m-reversion-edge-wf_843099ce-3cc.js"} to iterate without resending the script.)
+> Run ID: wf_843099ce-3cc
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/workflows/scripts/btc-1m-reversion-edge-wf_843099ce-3cc.js", resumeFromRunId: "wf_843099ce-3cc"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(02:50:17)*
+
+
+## 🤖 Claude *(02:50:34)*
+
+Disparei uma **bateria de backtests em paralelo** sobre ~2 dias de velas 1m reais do BTC (rodando em background, te aviso quando fechar). Enquanto roda, deixa eu te dar o mapa do que estou medindo e a forma honesta de pensar nisso.
+
+## O que os 4 backtests testam (tudo líquido de taxa, spot long-only)
+
+1. **Grade de RSI** — comprar sobrevenda (RSI<25/30/35) e vender sobrecompra (RSI>50/55/65/70), todas as combinações. *Alguma* dá lucro líquido, ou a taxa de 0,2% come tudo?
+2. **Saída por tempo** — comprar RSI<30 e segurar 5/10/15/30min. O simples "compra o dip e espera" tem edge?
+3. **Estatística de reversão** — autocorrelação + variance-ratio + half-life. A pergunta de fundo: **o BTC de 1m realmente reverte, ou é random-walk?** Isso decide se *existe* padrão pra explorar.
+4. **Teu padrão exato** — depois do spike (RSI cruza >60), com que frequência reverte, quanto cai, e se a queda é **monetizável** no spot.
+
+Depois, um **quant cético** revisa tudo (look-ahead, overfitting da "melhor" config, realismo da taxa, a trava de não-poder-shortar) e dá o veredito.
+
+## Como vou ler o resultado — 3 perguntas SEPARADAS
+
+Isso é o pulo do gato, porque "tem padrão?" se quebra em três:
+
+| Pergunta | O que provavelmente o dado dirá |
+|---|---|
+| **O padrão EXISTE?** (reversão estatística) | Provável **sim** — BTC 1m tem alguma reversão (a queda que tu viu é real). |
+| **É TRADEÁVEL no spot?** | Provável **não** — o movimento é pequeno (−0,28% no teu caso) e a taxa (0,2%) + não-poder-shortar o lado de cima matam o EV. |
+| **A TUA leitura discricionária tem edge?** | **Aberto** — essa é a única que pode te surpreender. |
+
+Esse terceiro ponto é o importante: **mesmo que o RSI mecânico não tenha edge, o teu olho pode estar juntando contexto que o RSI sozinho não vê** (o formato do spike, o flow, o tape). São coisas diferentes. O backtest responde a 1 e 2; só **registrar as tuas calls ao longo do tempo** responde a 3 — e foi por isso que eu te ofereci ligar o registro das tuas previsões.
+
+Te trago os números assim que o backtest fechar. Aí a gente decide com fato: ou tem algo mecânico (vira trilha de paper → promoção), ou o valor está na tua leitura (a gente mede ela), ou é ruído honesto (e a gente não persegue).
+
+## 👤 User *(02:53:29)*
+
+<task-notification>
+<task-id>whdwsusm5</task-id>
+<tool-use-id>toolu_01ANz6tGMGmAz3r8K3bnuRxM</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/whdwsusm5.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Backtest rigoroso: o padrao de reversao de 1m do BTC (RSI/mean-reversion) tem edge tradeavel?" completed</summary>
+<result>{"backtests":[{"dataN":3000,"configs":[{"buyTh":25,"sellTh":50,"trades":16,"winPct":25,"grossEvBps":-4.06,"netEvBps":-24.06,"totalNetPct":-3.7916},{"buyTh":25,"sellTh":55,"trades":12,"winPct":25,"grossEvBps":-26.86,"netEvBps":-46.86,"totalNetPct":-5.509},{"buyTh":25,"sellTh":65,"trades":8,"winPct":37.5,"grossEvBps":-59.15,"netEvBps":-79.15,"totalNetPct":-6.2534},{"buyTh":25,"sellTh":70,"trades":7,"winPct":42.86,"grossEvBps":-71.73,"netEvBps":-91.73,"totalNetPct":-6.353},{"buyTh":30,"sellTh":50,"trades":22,"winPct":27.27,"grossEvBps":-9.65,"netEvBps":-29.65,"totalNetPct":-6.3397},{"buyTh":30,"sellTh":55,"trades":18,"winPct":27.78,"grossEvBps":-21.34,"netEvBps":-41.34,"totalNetPct":-7.2242},{"buyTh":30,"sellTh":65,"trades":12,"winPct":16.67,"grossEvBps":-41.97,"netEvBps":-61.97,"totalNetPct":-7.2945},{"buyTh":30,"sellTh":70,"trades":8,"winPct":25,"grossEvBps":-73.38,"netEvBps":-93.38,"totalNetPct":-7.3383},{"buyTh":35,"sellTh":50,"trades":38,"winPct":10.53,"grossEvBps":-7.76,"netEvBps":-27.76,"totalNetPct":-10.0414},{"buyTh":35,"sellTh":55,"trades":31,"winPct":16.13,"grossEvBps":-13.47,"netEvBps":-33.47,"totalNetPct":-9.9148},{"buyTh":35,"sellTh":65,"trades":18,"winPct":27.78,"grossEvBps":-27.99,"netEvBps":-47.99,"totalNetPct":-8.4063},{"buyTh":35,"sellTh":70,"trades":13,"winPct":53.85,"grossEvBps":-34.06,"netEvBps":-54.06,"totalNetPct":-6.9344}],"anyNetPositive":false,"best":"buyTh=25 / sellTh=50 — least-bad das 12 configs (netEvBps -24.06, 16 trades, win 25.0%, totalNet -3.79%). Mesmo assim NEGATIVA: a fee nao e o problema principal, grossEvBps ja e -4.06 bps (perde antes da taxa).","note":"Backtest REVERSAO RSI long-only spot BTCUSDT 1m, dataN=3000 velas (~50h, 3 paginas x1000 paginadas por endTime via api.binance.com). RSI Wilder(14) classico sobre closes. SEM look-ahead: sinal no fechamento da vela i, execucao no fechamento de i+1. Fee 0.1%/lado = 0.2% round-trip (20bps) descontado por trade. Grade 3x4 = 12 configs (buyTh{25,30,35} x sellTh{50,55,65,70}); compra no cruzamento p/ baixo de buyTh, vende no cruzamento p/ cima de sellTh, 1 posicao por vez. RESULTADO: TODAS as 12 configs sao netEvBps&lt;0 -&gt; anyNetPositive=FALSE. Pior: TODAS tambem tem grossEvBps&lt;0, ou seja a estrategia ja perde ANTES da fee (a reversao por RSI nao tem edge nesta janela; a fee de 20bps so aprofunda). totalNetPct de -3.8% a -10.0% no periodo. win% baixo (10-54%). Veredito: NAO operar; resultado consistente com a doutrina do MEMORY de que scalping/reversao 1m em BTC e refutado por backtest. Ressalva honesta: amostra curta (~2 dias, 1 regime de mercado) e n de trades pequeno (7-38) -&gt; baixa significancia estatistica, mas o sinal e claramente nao-positivo."},{"dataN":4000,"configs":[{"exitMin":5,"trades":65,"winPct":12.31,"netEvBps":-20.49,"totalNetPct":-12.49},{"exitMin":10,"trades":49,"winPct":8.16,"netEvBps":-25.22,"totalNetPct":-11.65},{"exitMin":15,"trades":46,"winPct":15.22,"netEvBps":-27.17,"totalNetPct":-11.78},{"exitMin":30,"trades":33,"winPct":15.15,"netEvBps":-31.54,"totalNetPct":-9.92}],"anyNetPositive":false,"note":"METODOLOGIA: 4000 velas 1m do BTCUSDT (Binance api.binance.com, paginado 4x1000 via endTime=menorOpenTime-1, dedup por openTime + ordem cronologica). Janela ~2,77 dias (firstOpen 1782115860000 -&gt; lastOpen 1782355800000). RSI Wilder(14) classico sobre closes (k[4]). SEM look-ahead: sinal RSI&lt;30 no FECHAMENTO da vela i; COMPRA no fechamento de i+1; SAIDA no fechamento de i+1+N. 1 posicao por vez (proximo sinal so apos a barra de saida). Fee 0.1%/lado = 20bps round-trip descontado de cada trade. netEvBps = media liquida por trade; totalNetPct = composto. RESULTADO: TODAS as 4 saidas dao EV NEGATIVO (-20 a -32 bps/trade) com win% baixissimo (8-15%), e nenhuma satisfaz netEvBps&gt;0 =&gt; anyNetPositive=FALSE. COMPARACAO COM MELHOR CASO TEORICO (saida no pico favoravel da janela, ja liquido de 20bps): 5m=-9.78, 10m=-6.37, 15m=-2.26, 30m=+0.21 bps. CONCLUSAO CRITICA: o 'best case' tambem e ~0 ou NEGATIVO em todas as janelas curtas. Isso significa que NAO existe edge sendo desperdicada por mau timing de saida -- o sinal RSI&lt;30 1m simplesmente nao antecipa reversao lucrativa neste periodo. Mesmo um oraculo que saisse no topo da janela mal cobriria os 20bps de fee. O problema NAO e timing de saida; e a ausencia de alpha no sinal de entrada apos custos. AVISO: amostra de 1 unica janela de ~2,8 dias (regime especifico, datas de teste em 2026); resultado nao generaliza sem multiplas janelas/regimes. Confirma a doutrina ja existente no MEMORY de que scalping 1m foi REFUTADO (-0.14% a -0.23%/trade).\""},{"dataN":3999,"autocorrLag1":-0.0433,"varianceRatios":{"q2":0.9569,"q5":0.912,"q10":0.896,"q30":1.0052},"halfLifeMin":2592.12,"verdict":"random-walk","note":"Amostra: 3999 log-retornos de 1m do BTCUSDT (mainnet api.binance.com, ~2,8 dias, 4 páginas de 1000 concatenadas em ordem cronológica). RESULTADO: autocorrelação no lag 1 = -0.043 (levemente negativa, mas pequena); VR(2)=0.957, VR(5)=0.912, VR(10)=0.896, VR(30)=1.005 (abaixo de 1 nos horizontes curtos, voltando a ~1 em 30m); AR(1) no log-preço dá phi=0.9997 → half-life ~2592 min (~1,8 dia), ou seja efetivamente NÃO reverte no nível de preço. INTERPRETAÇÃO: há um traço fraco de reversão de altíssima frequência (microestrutura/bid-ask bounce) — o lag-1 negativo e VR&lt;1 em 2-10m são a assinatura clássica disso — mas o sinal é fraco (|ac1|&lt;0.05) e dissipa-se em ~30m (VR≈1). Classifico como random-walk porque a reversão não é claramente forte nem persistente. VIABILIDADE DE ESTRATÉGIA DE REVERSÃO 1m: o edge estatístico bruto (~4% de autocorrelação negativa) é menor que o custo de fricção. Com taxa Binance ~0,1% por lado (~0,2% round-trip) + slippage + spread, o ganho esperado por trade fica largamente NEGATIVO — coerente com o backtest de 1m scalping do projeto (REFUTADO, -0,14% a -0,23%/trade). A reversão que existe é capturável só por market-making (postar limit, capturar o spread/rebate), não por estratégia que cruza o spread. Recomendação: NÃO construir reversão de 1m taker-side; o sinal é artefato de microestrutura, não alpha negociável."},{"dataN":4000,"setups":160,"pRevertDown30m":0.9875,"medianMinToOversold":null,"medianMovePctTopToBottom":-0.1732,"longOnlyNetEvBps":-22.3676,"note":"METODOLOGIA: 4000 velas 1m BTCUSDT da Binance publica (api.binance.com OK, sem precisar de fallback), paginadas para tras em 4 paginas de 1000 via endTime=menorOpenTime-1, concatenadas em ordem cronologica (~2,78 dias, span 3999 min). RSI Wilder(14) classico sobre closes. SEM look-ahead: sinal no fechamento da vela i, execucao no fechamento de i+1. Fee 20bps round-trip (0,1%/lado). Spot LONG-ONLY (sem short). SETUP = RSI cruza p/ CIMA de 60 (prev&lt;60 e atual&gt;=60): 160 setups, todos com janela de 30m usavel. RESULTADOS: (a) pRevertDown30m=0,9875 — 158/160 setups fazem minima abaixo do preco do setup em 30m, MAS isso e quase tautologico no 1m (qualquer close de referencia e quase sempre perfurado por algum low em 30 barras por puro ruido). (b) medianMinToOversold=null: so 26,9% dos setups chegam a RSI&lt;35 em 30m (&lt;50% threshold) -&gt; tipicamente NAO atinge sobrevenda. (c) medianMovePctTopToBottom=-0,17% (mediana do drawdown topo-&gt;fundo em 30m, apenas ~17 bps). (d) longOnlyNetEvBps=-22,37 bps em 42 trades reais (compra qdo RSI&lt;35 pos-setup, vende qdo RSI&gt;50, ambos exec em i+1, -20bps fee). VEREDITO: a queda e REAL mas NAO e monetizavel no spot long-only. O movimento mediano (~17 bps) e MENOR que o custo de 20 bps round-trip, e a estrategia long-only de fato perde ~22 bps/trade liquido. O padrao do operador descreve um ruido de reversao genuino porem economicamente nulo apos fee no spot — confirma a linha das memorias (1m scalping REFUTADO, EV&lt;0 liquido). NAO construir modulo sobre este padrao."}],"synthesis":{"tradeable":false,"verdict":"Nao ha edge tradeavel. As 12 configs do RSI-GRID e as 4 do TIME-EXIT sao TODAS netEvBps&lt;0, e o RSI-GRID perde ANTES da fee (grossEvBps&lt;0 em tod
+... (truncated 3898 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/whdwsusm5.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>181041</subagent_tokens><tool_uses>14</tool_uses><duration_ms>206205</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(02:54:05)*
+
+
+## 🤖 Claude *(02:54:05)*
+
+O backtest fechou — **4 ângulos independentes + verificação adversarial, todos convergindo.** Deixa eu ler a síntese completa.
+
+## 🤖 Claude *(02:54:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c '\nimport json\nd=json.load(open(\"/tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/whdwsusm5.output\"))\ns=d[\"synthesis\"]\nprint(\"=== SINTESE ===\")\nprint(\"tradeable:\",s[\"tradeable\"],\" confidence:\",s[\"confidence\"])\nprint(\"\\nverdict:\",s[\"verdict\"])\nprint(\"\\nkeyFindings:\")\nfor k in s[\"keyFindings\"]: print(\"  -\",k)\nprint(\"\\nmethodologyFlags:\")\nfor k in s[\"methodologyFlags\"]: print(\"  -\",k)\nprint(\"\\nrecommendation:\",s[\"recommendation\"])\n'",
+  "description": "Read full synthesis verdict"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<string>", line 4, in <module>
+> KeyError: 'synthesis'
+> ```
+
+## 🤖 Claude *(02:54:18)*
+
+
+## 🤖 Claude *(02:54:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c '\nimport json\nd=json.load(open(\"/tmp/claude-1001/-home-gcrux-tradeux/f965becb-771d-4ea9-83a1-920d453257be/tasks/whdwsusm5.output\"))\nprint(\"top keys:\", list(d.keys()) if isinstance(d,dict) else type(d))\n# encontra o synthesis\ndef find(o,path=\"\"):\n    if isinstance(o,dict):\n        if \"tradeable\" in o: return o\n        for k,v in o.items():\n            r=find(v,path+\"/\"+k)\n            if r: return r\n    if isinstance(o,list):\n        for i,v in enumerate(o):\n            r=find(v,path+f\"[{i}]\")\n            if r: return r\n    return None\ns=find(d)\nif s:\n    print(\"\\n=== SINTESE ===\")\n    print(\"tradeable:\",s.get(\"tradeable\"),\"| confidence:\",s.get(\"confidence\"))\n    print(\"\\nverdict:\",s.get(\"verdict\"))\n    print(\"\\nkeyFindings:\")\n    for k in s.get(\"keyFindings\",[]): print(\"  -\",k)\n    print(\"\\nmethodologyFlags:\")\n    for k in s.get(\"methodologyFlags\",[]): print(\"  -\",k)\n    print(\"\\nrecommendation:\",s.get(\"recommendation\"))\nelse:\n    print(\"synthesis nao achado; dump parcial:\")\n    print(json.dumps(d,ensure_ascii=False)[:1500])\n'",
+  "description": "Find and print synthesis verdict"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> top keys: ['summary', 'agentCount', 'logs', 'result']
+> 
+> === SINTESE ===
+> tradeable: False | confidence: alta
+> 
+> verdict: Nao ha edge tradeavel. As 12 configs do RSI-GRID e as 4 do TIME-EXIT sao TODAS netEvBps<0, e o RSI-GRID perde ANTES da fee (grossEvBps<0 em todas) — a reversao de 1m por RSI nao tem alpha no spot long-only; nao operar.
+> 
+> keyFindings:
+>   - RSI-GRID: 0/12 configs com netEvBps>0; a 'melhor' (buy25/sell50) ainda da -24.06 bps net e -4.06 bps GROSS — perde antes mesmo dos 20bps de fee, logo a fee nao e a causa raiz, e ausencia de sinal.
+>   - TIME-EXIT: 0/4 saidas positivas (-20.5 a -31.5 bps/trade, win 8-15%); e o oraculo de saida perfeita ainda da -9.78/-6.37/-2.26 bps em 5/10/15m e so +0.21 bps em 30m — nem com previsao perfeita cobre a fee, prova que o furo e na ENTRADA, nao no timing de saida.
+>   - REVERSION-STATS: autocorr lag1 = -0.0433 (|<0.05|, fraco), VR(2/5/10)=0.957/0.912/0.896 (leve reversao 2-10m) mas VR(30)=1.005 (dissipa ate 30m) e half-life de preco ~1.8 dia (=2592 min) -> classificado random-walk; o tenue sinal e bid-ask bounce de microestrutura, capturavel so por market-making (postar limit), nao por taker que cruza o spread.
+>   - OWNER-PATTERN: a queda pos-spike e REAL (158/160 perfuram em 30m) mas economicamente nula — movimento mediano topo->fundo = 17.32 bps < 20 bps de fee (deficit -2.68 bps), so 26.9% atingem RSI<35, e a estrategia long-only real perde -22.37 bps/trade em 42 trades; o autor ja sinaliza que o 98.75% e quase-tautologico no 1m.
+>   - Consistencia: 16+ especificacoes testadas em 3-4 angulos independentes (grid, time-exit, estatistica de serie, padrao do operador), ZERO positivas — coerente com a doutrina do MEMORY (1m scalping/reversao REFUTADO, -0.14% a -0.23%/trade).
+> 
+> methodologyFlags:
+>   - Amostra pequena e curta: ~2.8 dias / 3000-4000 velas, UM unico regime de mercado e datas de 2026; n de trades baixo (7-65 por config) -> baixa significancia estatistica. O resultado NEGATIVO e robusto, mas nao generaliza para outros regimes sem multiplas janelas/ano.
+>   - Multiple-testing/overfitting: a 'melhor' config da grade (buy25/sell50) e least-bad in-sample e poderia ser ruido — mas como TODAS sao negativas, o risco aqui e o oposto do usual (nao ha config de sorte positiva para inflar); o vies de selecao nao muda o veredito.
+>   - Look-ahead: corretamente evitado em todos (sinal no close de i, execucao no close de i+1) — metodologia limpa nesse ponto.
+>   - Realismo da fee: 20 bps round-trip e razoavel para taker, mas os 4 estudos NAO modelam slippage nem spread/half-tick adicionais (REVERSION-STATS menciona mas nao desconta) -> o EV real seria AINDA pior, reforcando o 'nao'.
+>   - Restricao long-only: o padrao tem um lado de cima (spike) que so seria monetizavel via SHORT/futures; no spot so da pra capturar a perna de baixo, que e justamente a que rende <fee. Vies estrutural que limita por desenho — mas o MEMORY ja refutou construir short (futures, falso-positivo no ciclo).
+>   - Risco de tautologia explicito no OWNER-PATTERN (pRevertDown30m=0.9875): qualquer close de referencia e perfurado por algum low em 30 barras por puro ruido; o autor reconhece — bom ceticismo, mas significa que essa metrica nao deve embasar decisao.
+> 
+> recommendation: NAO perseguir reversao 1m mecanica via RSI taker-side no spot long-only — esta refutada por 4 angulos convergentes e a perda e pre-fee, nao um problema de custo ajustavel. Proximos passos honestos, em ordem: (1) encerrar a linha mecanica de entrada-RSI-1m (nao gastar mais ciclos); (2) se ainda houver curiosidade, o UNICO caminho com base estatistica e market-making (postar limit p/ capturar o spread/rebate que o VR<1 de 2-10m sugere) — porem isso e um modulo novo, nao a estrategia testada, e exige estudo de fill/queue, fora do escopo atual sob HALT; (3) para validar a tese do OPERADOR (leitura discricionaria), coletar as calls reais dele timestampadas e comparar contra o acaso — se a leitura humana bater o RSI mecanico, o alpha estaria na discricao, nao no indicador, e ai sim valeria um Paper Engine track; sem isso, NAO construir modulo. Em nenhum cenario abrir trilha de capital real.
+> ```
+
+## 🤖 Claude *(02:54:54)*
+
+
+## 🤖 Claude *(02:55:17)*
+
+O resultado é **unânime e de alta confiança** — 4 ângulos independentes + revisão cética, **16+ especificações testadas, ZERO positivas.** Vou ser reto contigo porque tu mereceu rigor, não conforto:
+
+## Veredito: **não há edge tradeável** na reversão de 1m (confiança alta)
+
+| Ângulo | Resultado |
+|---|---|
+| **Grade RSI** (12 configs) | 0/12 positivas. A "melhor" perde −24 bps/trade — e **perde −4 bps ANTES da taxa**. |
+| **Saída por tempo** (5/10/15/30min) | 0/4 positivas. **Nem um oráculo** que saísse no topo perfeito cobriria a taxa. |
+| **Estatística** | autocorrelação −0,04 (fraquíssima), reversão dissipa em 30min → **random-walk**. |
+| **Teu padrão** (spike→reversão) | a queda é real, mas o movimento mediano é **17 bps < 20 bps de taxa**. |
+
+## O detalhe que mata a ideia
+
+Não é "a taxa come o lucro". É pior e mais honesto: **a estratégia perde ANTES da taxa.** O sinal de RSI 1m simplesmente **não antecipa** reversão lucrativa — mesmo prevendo a saída perfeita, o movimento é pequeno demais. O furo é na **entrada**, não no timing.
+
+## Onde a reversão REALMENTE vive (e por que tu não alcança)
+
+Existe sim um tracinho de reversão de altíssima frequência — mas é **bid-ask bounce de microestrutura**, e ela só é capturável por **market-making** (postar ordem limite e *ganhar* o spread). Quem **cruza o spread** (taker, que é como tu opera) paga justamente o que o market-maker embolsa. É um jogo diferente — e fora de escopo agora.
+
+## Sobre as TUAS calls que acertaram
+
+Aqui está a reconciliação honesta: o teu padrão **reverte pra sobrevenda em só 27% das vezes**. As duas que a gente viu ao vivo caíram nesses 27% — o que *parece* um padrão, mas o dado diz que **não é confiável** (e mesmo quando acontece, os 17 bps não pagam os 20 de taxa). Eu fui **confiante demais** dizendo "0%" na base-rate curta; a verdade é "27%, e mesmo assim não dá dinheiro". As duas coisas são ruins pra tese mecânica.
+
+**Ressalva justa:** foram ~2,8 dias / 1 regime. Não é a palavra final pra *todo* mercado. Mas o negativo é robusto **e a teoria confirma** (microestrutura), e os vieses só pioram (não modelei slippage; long-only não shorta o lado de cima). Então: não muda o "não".
+
+## A ÚNICA porta que continua aberta — e ela é tua
+
+O backtest **refutou o INDICADOR, não o teu OLHO.** O RSI mecânico não tem alpha — mas a tua leitura discricionária pode estar juntando contexto (formato do spike, flow, tape) que o RSI sozinho não vê. **A gente não sabe ainda.** O jeito de descobrir é o que eu te ofereci: **registrar as tuas calls com timestamp e pontuar o desfecho automático**. Depois de ~15-20 calls, o dado diz se o teu olho bate o acaso.
+
+- **Se bater** → o alpha está na tua discrição, e a gente sistematiza num paper track (e o motor de promoção leva a real).
+- **Se não bater** → a gente para de gastar energia nisso, com paz de espírito (e foi barato descobrir).
+
+Quer que eu **ligue o registro das tuas previsões** agora? É montar uma "trilha discricionária do operador" — tu chama, eu fixo e pontuo, e em 1-2 semanas a gente tem a resposta da única pergunta que ainda vale a pena. É a aposta certa: nas tuas mãos, não no RSI.
