@@ -7426,3 +7426,496 @@ Confirmado o `getMemory(symbol, index, interval)`. Vou começar pelo backend: an
 > backend signals anexado
 > node --check OK
 > ```
+
+## 🤖 Claude *(00:30:23)*
+
+
+## 🤖 Claude *(00:30:24)*
+
+Backend `signals` anexado e compila. Agora o widget no frontend — a parte grande. Vou escrever o `simDecision` (síntese read-only do que o sistema faria), o seletor de símbolo, o widget principal no topo, e fazer o cockpit inteiro seguir o símbolo selecionado.
+
+## 🤖 Claude *(00:31:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/patch_cockpit_widget.py",
+  "content": "#!/usr/bin/env python3\nimport sys\nP = \"/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js\"\nc = open(P, encoding=\"utf-8\").read()\nerrs = []\ndef rep(old, new, label):\n    global c\n    if c.count(old) != 1:\n        errs.append(f\"[{label}] ancora {c.count(old)}x (esperado 1)\"); return\n    c = c.replace(old, new, 1); print(f\"OK [{label}]\")\n\n# 1) simDecision antes de function Cockpit()\nrep(\"function Cockpit() {\",\n\"\"\"// Decisao SIMULADA (read-only): o que o sistema FARIA agora p/ o simbolo, dado os sinais reais do beholder.\n// Sintetiza regime + flow + RSI + gates + promocao (frente D) + HALT. NAO envia ordem \u2014 so a leitura do que\n// aconteceria. Espelha o gate das condicoes + o portao de promocao do groupSupervisorJob.\nfunction simDecision(sym, cp) {\n  const s = (cp.symbols || {})[sym] || {};\n  const g = s.gates || {}, sig = s.signals || {}, fl = s.flow || {};\n  const env = cp.env || {};\n  const promoted = (cp.promotions && cp.promotions.promoted) || {};\n  const grand = (cp.promotions && cp.promotions.grandfather) || [];\n  const isAlt = sym !== 'BTCUSDT';\n  const strat = isAlt ? 'farmnl' : 'consistencia';      // trilha do paper que gateia (espelha PROMO_MAP do supervisor)\n  const isPromoted = !!promoted[strat] || grand.indexOf(strat) !== -1;\n  const reg = g.regime || 'unknown';\n  const imb = fl.imbalance, tox = fl.toxicity;\n  const flowSide = imb != null ? (imb < 0 ? 'venda agressora' : 'compra agressora') : null;\n  const dcaQty = (sig.farmDca && sig.farmDca.qty) ? sig.farmDca.qty : 0;\n  const tq = sig.trendQty || 0;\n  const rsi = isAlt ? sig.rsi15m : sig.rsi1m;\n  const trig = isAlt ? 35 : 25;\n  const sx = sym.replace('USDT', '');\n\n  if (env.tradingHalt)\n    return { act: 'BLOQUEADO', cls: 'halt', head: 'HALT ativo', reason: `kill-switch${env.haltSource ? ' (' + env.haltSource + ')' : ''} \u2014 nenhuma ordem sai, nem compra nem venda.` };\n  if (dcaQty > 0) {\n    const cost = sig.farmDca.cost, tgt = cost ? cost * 1.012 : null;\n    return { act: 'VENDERIA', cls: 'sell', head: `saida no-loss do Farm ${sx}`, reason: `tenho ${dcaQty} em carteira (custo ${cost ? cost.toFixed(4) : '\u2014'}); a venda dispara quando o bestBid passar de ${tgt ? tgt.toFixed(4) : 'custo x1.012'} (lucro ja pos-fee).` };\n  }\n  if (tq > 0)\n    return { act: 'SEGURO\u00b7TREND', cls: 'sell', head: 'posicao de trend aberta', reason: `${tq} em carteira; sairia no death cross (venda protetiva armada).` };\n  if (reg === 'bear' || reg === 'unknown')\n    return { act: 'CAIXA', cls: 'hold', head: 'acumular em caixa', reason: `regime ${reg}: a doutrina e nao comprar no bear. Eu compraria quando ${sx} sair do bear E a trilha \"${strat}\" provar edge no paper.` };\n  if (!isPromoted)\n    return { act: 'AGUARDANDO PROVA', cls: 'wait', head: `regime ${reg} liberou, falta prova`, reason: `a trilha \"${strat}\" ainda nao provou edge no paper -> a entrada REAL fica travada (frente D). No paper ela ja operaria. Liberar na hora: PROMOTION_GRANDFATHER=${strat}.` };\n  const flowGated = !!g.flowGated, flowOk = g.flowOk !== false;\n  if (rsi != null && rsi < trig && (!flowGated || flowOk))\n    return { act: 'COMPRARIA AGORA', cls: 'buy', head: `dip em ${sx}`, reason: `RSI ${isAlt ? '15m' : '1m'}=${rsi.toFixed(1)} < ${trig} (gatilho) + regime ${reg} + trilha provada + gate aberto.${tox != null && tox >= 0.6 ? ` AT. ${flowSide} (tox ${tox.toFixed(2)}) \u2014 timing apertado.` : ''} (ordem NAO liberada \u2014 simulacao.)` };\n  if (flowGated && !flowOk)\n    return { act: 'ESPERANDO TIMING', cls: 'wait', head: 'gate aberto, fluxo veta', reason: `${flowSide} forte (toxicity ${tox != null ? tox.toFixed(2) : '\u2014'}) \u2014 nao compro contra a agressao agora.` };\n  return { act: 'PRONTO\u00b7AGUARDA DIP', cls: 'ready', head: `armado em ${sx}`, reason: `regime ${reg} + trilha provada + gate aberto. Espero o RSI ${isAlt ? '15m' : '1m'} cair < ${trig} (agora ${rsi != null ? rsi.toFixed(1) : '\u2014'}).` };\n}\n\nfunction Cockpit() {\"\"\", \"simDecision\")\n\n# 2) state selSym\nrep(\"  const [groups, setGroups] = useState({ groups: [] });\",\n\"  const [groups, setGroups] = useState({ groups: [] });\\n  const [selSym, setSelSym] = useState(KL_SYMBOL);  // simbolo do widget de simulacao (dirige tambem o candle/dist)\",\n\"state selSym\")\n\n# 3) loadKlines(sym)\nrep(\"\"\"  async function loadKlines() {\n    for (const host of KL_HOSTS) {\n      try {\n        const r = await fetch(`${host}/api/v3/klines?symbol=${KL_SYMBOL}&interval=1m&limit=120`);\"\"\",\n\"\"\"  async function loadKlines(sym) {\n    for (const host of KL_HOSTS) {\n      try {\n        const r = await fetch(`${host}/api/v3/klines?symbol=${sym}&interval=1m&limit=120`);\"\"\",\n\"loadKlines param\")\n\n# 4) useEffect split (klines segue selSym)\nrep(\"\"\"  useEffect(() => {\n    loadAll(); loadKlines();\n    const id = setInterval(() => { loadAll(); loadKlines(); }, 60000);\n    return () => clearInterval(id);\n  }, []);\"\"\",\n\"\"\"  useEffect(() => {\n    loadAll();\n    const id = setInterval(loadAll, 60000);\n    return () => clearInterval(id);\n  }, []);\n  useEffect(() => {\n    loadKlines(selSym);\n    const id = setInterval(() => loadKlines(selSym), 60000);\n    return () => clearInterval(id);\n  }, [selSym]);\"\"\",\n\"useEffect split\")\n\n# 5) fontes btcWs/cpBtc seguem selSym (mantem os nomes p/ minimo churn no render)\nrep(\"  const btcWs = prices[KL_SYMBOL];\",\n\"  const btcWs = prices[selSym];  // preco ao vivo do simbolo selecionado (nome mantido p/ o resto do render)\",\n\"btcWs source\")\nrep(\"  const cpBtc = (cp.symbols || {})[KL_SYMBOL] || null;\",\n\"  const cpBtc = (cp.symbols || {})[selSym] || null;  // dados do brain p/ o simbolo selecionado\",\n\"cpBtc source\")\n\n# 6) titulo do candle segue selSym\nrep(\"<span className=\\\"cx-seal real\\\" /> {KL_SYMBOL} \u00b7 candles 1m</span>\",\n\"<span className=\\\"cx-seal real\\\" /> {selSym} \u00b7 candles 1m</span>\",\n\"candle title\")\n\n# 7) widget principal no topo do grid\nrep(\"\"\"          <div className=\"cx-grid\">\n\n            {/* ROW 1 \u2014 hero + kpis */}\"\"\",\n\"\"\"          <div className=\"cx-grid\">\n\n            {/* ROW 0 \u2014 SIMULACAO AO VIVO (widget principal): o que o sistema FARIA agora, sem soltar ordem */}\n            <div className=\"cx-row\" style={{ gridTemplateColumns: '1fr' }}>\n              <div className=\"cx-panel glow cx-sim\">\n                <div className=\"cx-panel-title\">\n                  <span><span className=\"cx-seal real\" /> Simulacao ao vivo \u2014 o que eu faria <span className=\"cx-flat\" style={{ fontSize: '0.7rem' }}>(sem soltar ordem)</span></span>\n                  <span className=\"cx-src\">/analysis/cockpit \u00b7 beholder memory</span>\n                </div>\n                <div className=\"cx-symtabs\">\n                  {symbols.length === 0 ? <span className=\"cx-empty\">sem simbolos ainda</span> :\n                    symbols.map(s => <button key={s} className={`cx-symtab ${s === selSym ? 'on' : ''}`} onClick={() => setSelSym(s)}>{s.replace('USDT', '')}</button>)}\n                </div>\n                <div className=\"cx-sim-grid\">\n                  <div className=\"cx-sim-chart\">\n                    <div className=\"cx-candle-head\">\n                      <span className=\"px cx-mono\">{btc != null ? <AnimatedNumber value={btc} format={v => fmtUsd(v, btc < 5 ? 4 : 1)} /> : '\u2014'}</span>\n                      {cnd && <span className=\"cx-flat cx-mono\" style={{ fontSize: '0.72rem' }}>H {fmtUsd(cnd.hi, cnd.hi < 5 ? 4 : 0)} \u00b7 L {fmtUsd(cnd.lo, cnd.lo < 5 ? 4 : 0)}</span>}\n                      {wsLive && <span className=\"cx-up cx-mono\" style={{ fontSize: '0.7rem' }}>\u25cf live</span>}\n                    </div>\n                    {cnd\n                      ? <svg className=\"cx-candle\" viewBox={`0 0 ${cnd.W} ${cnd.H}`} preserveAspectRatio=\"none\" aria-label={`Candles de 1 minuto do ${selSym}`}>\n                          {[0.25, 0.5, 0.75].map((gg, i) => <line key={i} className=\"grid\" x1=\"0\" x2={cnd.W} y1={cnd.H * gg} y2={cnd.H * gg} />)}\n                          {cnd.candles.map((cc, i) => (<g key={i}><line className={cc.up ? 'wick-up' : 'wick-down'} x1={cc.wx} x2={cc.wx} y1={cc.wy1} y2={cc.wy2} /><rect className={cc.up ? 'body-up' : 'body-down'} x={cc.x} y={cc.by} width={cc.bw} height={cc.bh} /></g>))}\n                          <line className=\"lastline\" x1=\"0\" x2={cnd.W - cnd.padR} y1={cnd.lastY} y2={cnd.lastY} />\n                        </svg>\n                      : <div className=\"cx-empty\">{klErr ? 'klines indisponiveis (CORS/Binance) \ud83d\udfe1' : 'carregando candles\u2026'}</div>}\n                  </div>\n                  <div className=\"cx-sim-signals\">\n                    {(() => {\n                      const s = (cp.symbols || {})[selSym] || {};\n                      const g = s.gates || {}, sig = s.signals || {}, fl = s.flow || {};\n                      const reg = g.regime || 'unknown';\n                      const ev = (s.ev && s.ev.netPct != null) ? s.ev.netPct : null;\n                      const imb = fl.imbalance, tox = fl.toxicity;\n                      const w = imb != null ? Math.min(50, Math.abs(imb) * 50) : 0;\n                      const dca = sig.farmDca, q = dca && dca.qty ? dca.qty : 0, tq = sig.trendQty || 0;\n                      return (<React.Fragment>\n                        <div className=\"cx-sig\"><span className=\"sl\">Regime</span><span className=\"sv\"><span className={`cx-reg ${reg}`}>{reg}</span></span></div>\n                        <div className=\"cx-sig\"><span className=\"sl\">Fluxo (taker)</span><span className=\"sv\">\n                          <span className=\"cx-flowbar sim\"><span className=\"mid\" />{imb != null && <span className={`fill ${imb >= 0 ? 'buy' : 'sell'}`} style={{ width: w + '%' }} />}</span>\n                          <span className={`cx-mono ${imb == null ? 'cx-flat' : imb < -0.05 ? 'cx-down' : imb > 0.05 ? 'cx-up' : 'cx-flat'}`} style={{ marginLeft: 6 }}>{imb != null ? imb.toFixed(2) : '\u2014'}</span>\n                          <span className={`cx-mono ${tox != null && tox >= 0.6 ? 'cx-down' : 'cx-flat'}`} style={{ marginLeft: 6, fontSize: '0.7rem' }}>tox {tox != null ? tox.toFixed(2) : '\u2014'}</span>\n                        </span></div>\n                        <div className=\"cx-sig\"><span className=\"sl\">RSI 1m / 15m</span><span className=\"sv cx-mono\">\n                          <span className={sig.rsi1m != null ? (sig.rsi1m < 35 ? 'cx-up' : sig.rsi1m > 70 ? 'cx-down' : 'cx-flat') : 'cx-flat'}>{sig.rsi1m != null ? sig.rsi1m.toFixed(1) : '\u2014'}</span>\n                          {' / '}\n                          <span className={sig.rsi15m != null ? (sig.rsi15m < 35 ? 'cx-up' : sig.rsi15m > 70 ? 'cx-down' : 'cx-flat') : 'cx-flat'}>{sig.rsi15m != null ? sig.rsi15m.toFixed(1) : '\u2014'}</span>\n                        </span></div>\n                        <div className=\"cx-sig\"><span className=\"sl\">SMA 50/200</span><span className=\"sv cx-flat\" style={{ fontSize: '0.74rem' }}>{sig.trendCross && sig.trendCross !== 'none' ? sig.trendCross.toUpperCase() : 'sem cross'} \u00b7 slope {sig.trendSlope || '\u2014'}</span></div>\n                        <div className=\"cx-sig\"><span className=\"sl\">EV net 1m</span><span className={`sv cx-mono ${ev != null ? dirClass(ev) : 'cx-flat'}`}>{ev != null ? (ev > 0 ? '+' : '') + ev.toFixed(3) + '%' : '\u2014'}</span></div>\n                        <div className=\"cx-sig\"><span className=\"sl\">Gate compra</span><span className={`sv cx-mono ${g.buyAllowed ? 'cx-up' : 'cx-down'}`}>{g.buyAllowed ? 'GO' : 'CAIXA'}</span></div>\n                        <div className=\"cx-sig\"><span className=\"sl\">Posicao</span><span className=\"sv cx-mono\">{q > 0 ? `Farm ${q}` : tq > 0 ? `Trend ${tq}` : 'flat'}</span></div>\n                      </React.Fragment>);\n                    })()}\n                  </div>\n                </div>\n                {(() => { const d = simDecision(selSym, cp); return (\n                  <div className={`cx-decision ${d.cls}`}>\n                    <span className=\"cx-dec-act\">{d.act}</span>\n                    <span className=\"cx-dec-body\"><b>{d.head}</b> \u2014 {d.reason}</span>\n                  </div>); })()}\n                <div className=\"cx-note\"><b>Simulacao read-only:</b> mostra a decisao que o sistema tomaria AGORA com os sinais reais do beholder \u2014 <b>nenhuma ordem e enviada</b>. A execucao real segue gateada por regime, prova do paper (frente D), riskGuard e HALT.</div>\n              </div>\n            </div>\n\n            {/* ROW 1 \u2014 hero + kpis */}\"\"\",\n\"widget principal\")\n\nif errs:\n    print(\"\\\\n=== FALHAS ===\"); [print(\" -\", e) for e in errs]; sys.exit(1)\nopen(P, \"w\", encoding=\"utf-8\").write(c)\nprint(\"\\\\nCockpit.js widget OK.\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/patch_cockpit_widget.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:31:17)*
+
+
+## 🤖 Claude *(00:31:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 /tmp/tux_build/patch_cockpit_widget.py\necho \"=== append CSS ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cat >> frontend/src/private/Cockpit/cockpit.css <<'\"'\"'CSS'\"'\"'\n\n/* === Simulacao ao vivo (widget principal \u2014 frente UI) === */\n.cx-sim .cx-symtabs { display:flex; gap:6px; margin:2px 0 12px; flex-wrap:wrap; }\n.cx-symtab { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); color:#8aa2b8; border-radius:8px; padding:4px 13px; font:600 0.78rem/1 ui-monospace,SFMono-Regular,monospace; cursor:pointer; transition:all .15s; }\n.cx-symtab:hover { background:rgba(255,255,255,0.08); color:#cde; }\n.cx-symtab.on { background:rgba(47,245,168,0.14); border-color:#2ff5a8; color:#2ff5a8; }\n.cx-sim-grid { display:grid; grid-template-columns:1.55fr 1fr; gap:18px; align-items:start; }\n@media (max-width:1100px){ .cx-sim-grid { grid-template-columns:1fr; } }\n.cx-sim-signals { display:flex; flex-direction:column; gap:7px; padding-top:2px; }\n.cx-sig { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 9px; background:rgba(255,255,255,0.025); border-radius:7px; font-size:0.8rem; min-height:30px; }\n.cx-sig .sl { color:#8aa2b8; white-space:nowrap; }\n.cx-sig .sv { font-weight:600; text-align:right; }\n.cx-flowbar.sim { display:inline-flex; width:84px; vertical-align:middle; }\n.cx-decision { display:flex; align-items:center; gap:13px; margin-top:13px; padding:12px 15px; border-radius:11px; border-left:4px solid #7a8aa0; background:rgba(255,255,255,0.035); }\n.cx-dec-act { font:800 0.84rem/1.1 ui-monospace,SFMono-Regular,monospace; letter-spacing:0.4px; white-space:nowrap; color:#9fb0c4; }\n.cx-dec-body { font-size:0.82rem; color:#cdd9e6; line-height:1.4; }\n.cx-decision.buy { border-color:#2ff5a8; background:rgba(47,245,168,0.08); } .cx-decision.buy .cx-dec-act{ color:#2ff5a8; }\n.cx-decision.sell { border-color:#ffd24a; background:rgba(255,210,74,0.08); } .cx-decision.sell .cx-dec-act{ color:#ffd24a; }\n.cx-decision.wait { border-color:#f0a35e; } .cx-decision.wait .cx-dec-act{ color:#f0a35e; }\n.cx-decision.ready { border-color:#5ec8f0; } .cx-decision.ready .cx-dec-act{ color:#5ec8f0; }\n.cx-decision.hold { border-color:#7a8aa0; } .cx-decision.hold .cx-dec-act{ color:#9fb0c4; }\n.cx-decision.halt { border-color:#ff5d7a; background:rgba(255,93,122,0.08); } .cx-decision.halt .cx-dec-act{ color:#ff5d7a; }\nCSS\necho \"CSS anexado\"'",
+  "description": "Apply Cockpit.js patch and append CSS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK [simDecision]
+> OK [state selSym]
+> OK [loadKlines param]
+> OK [useEffect split]
+> OK [btcWs source]
+> OK [cpBtc source]
+> OK [candle title]
+> OK [widget principal]
+> \nCockpit.js widget OK.
+> === append CSS ===
+> CSS anexado
+> ```
+
+## 🤖 Claude *(00:31:37)*
+
+
+## 🤖 Claude *(00:31:38)*
+
+Patches aplicados. Vou buildar a imagem do frontend (o `vite build` dentro do build é o gate de compilação).
+
+## 🤖 Claude *(00:31:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build frontend 2>&1 | tail -20'",
+  "description": "Build frontend image (vite compile check)",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #13 4.810 npm notice To update run: npm install -g npm@11.17.0
+> #13 4.810 npm notice
+> #13 DONE 4.9s
+> 
+> #14 [stage-1 2/3] COPY nginx.conf /etc/nginx/conf.d/default.conf
+> #14 CACHED
+> 
+> #15 [stage-1 3/3] COPY --from=build /app/build /usr/share/nginx/html
+> #15 DONE 0.3s
+> 
+> #16 exporting to image
+> #16 exporting layers
+> #16 exporting layers 0.2s done
+> #16 writing image sha256:1c3796720250d6f44f3d000e0b591db6ef049d6a16458a8d7e3657acfae1ea6a done
+> #16 naming to docker.io/library/tradeux-frontend done
+> #16 DONE 0.2s
+> 
+> #17 resolving provenance for metadata file
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built
+> ```
+
+## 🤖 Claude *(00:31:50)*
+
+
+## 🤖 Claude *(00:31:51)*
+
+Frontend compilou. Preciso deployar o backend (pelo bloco `signals`) e o frontend (pelo widget). Rebuild do backend + restart de ambos.
+
+## 🤖 Claude *(00:31:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build backend 2>&1 | tail -2 && docker compose up -d backend frontend 2>&1 | tail -4'\nsleep 12\necho \"=== stack ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps 2>&1 | tail -5'\necho \"=== cockpit.symbols[BTCUSDT].signals (novo bloco) ===\"\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-')\nPWD_=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-')\nT=$(curl -s -m10 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD_\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))')\necho \"$T\" > /tmp/tux_token.txt\ncurl -s -m15 http://127.0.0.1:8090/api/analysis/cockpit -H \"Authorization: $T\" | python3 -c 'import sys,json;d=json.load(sys.stdin);s=d[\"symbols\"][\"BTCUSDT\"];print(\"  signals:\",json.dumps(s.get(\"signals\")));print(\"  gates.buyAllowed:\",s.get(\"gates\",{}).get(\"buyAllowed\"),\"regime:\",s.get(\"gates\",{}).get(\"regime\"))'",
+  "description": "Deploy backend+frontend, verify signals payload",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #14 DONE 0.0s
+>  Image tradeux-backend Built 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started 
+> === stack ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED          STATUS                PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      11 hours ago     Up 11 hours           
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    14 seconds ago   Up 12 seconds         3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         3 weeks ago      Up 9 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   13 seconds ago   Up 12 seconds         127.0.0.1:8090->80/tcp
+> === cockpit.symbols[BTCUSDT].signals (novo bloco) ===
+>   signals: {"rsi1m": 41.54, "rsi15m": 54.57, "trendSlope": "down", "trendCross": "none", "farmDca": null, "trendQty": 0}
+>   gates.buyAllowed: False regime: bear
+> ```
+
+## 🤖 Claude *(00:32:24)*
+
+
+## 🤖 Claude *(00:32:25)*
+
+Backend deployado com `signals` (RSI 41.54/54.57, slope down). Frontend de pé. Vou confirmar que o site serve e que o bundle deployado contém o widget novo.
+
+## 🤖 Claude *(00:32:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== site HTTP ===\"\ncurl -s -m8 -o /dev/null -w \"  https://tradeux.gcrux.com -> %{http_code}\\n\" https://tradeux.gcrux.com/\ncurl -s -m8 -o /dev/null -w \"  local :8090 -> %{http_code}\\n\" http://127.0.0.1:8090/\necho \"=== o bundle JS deployado cont\u00e9m o widget? (grep no container) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-frontend-1 sh -c \"grep -l \\\"Simulacao ao vivo\\\" /usr/share/nginx/html/assets/*.js 2>/dev/null | head -1 && echo FOUND || echo NOTFOUND; grep -o \\\"cx-decision\\\" /usr/share/nginx/html/assets/*.js 2>/dev/null | head -1\"'",
+  "description": "Verify site serves and bundle contains the new widget"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === site HTTP ===
+>   https://tradeux.gcrux.com -> 200
+>   local :8090 -> 200
+> === o bundle JS deployado contém o widget? (grep no container) ===
+> /usr/share/nginx/html/assets/index-CX4wP2Ef.js
+> FOUND
+> cx-decision
+> ```
+
+## 🤖 Claude *(00:33:11)*
+
+
+## 🤖 Claude *(00:33:12)*
+
+Site 200, bundle deployado contém o widget. Como o cockpit inteiro agora segue o símbolo selecionado, vou corrigir 2 rótulos "(BTC)" no painel de edge que ficariam enganosos pra alts, e rebuildar.
+
+## 🤖 Claude *(00:33:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nP=\"/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js\"\nc=open(P,encoding=\"utf-8\").read()\nn=0\na=\"Moves \u2265 break-even (BTC)\"\nb=\"Moves \u2265 break-even ({selSym.replace('USDT','')})\"\nif a in c: c=c.replace(a,b,1); n+=1\na2=\"Gate acumula\u00e7\u00e3o BTC \"\nb2=\"Gate acumula\u00e7\u00e3o {selSym.replace('USDT','')} \"\nif a2 in c: c=c.replace(a2,b2,1); n+=1\nopen(P,\"w\",encoding=\"utf-8\").write(c)\nprint(f\"r\u00f3tulos corrigidos: {n}/2\")\nPY\necho \"=== rebuild frontend + redeploy ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build frontend 2>&1 | tail -2 && docker compose up -d frontend 2>&1 | tail -2'",
+  "description": "Fix BTC labels to follow selSym, rebuild frontend",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> rótulos corrigidos: 2/2
+> === rebuild frontend + redeploy ===
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(00:33:29)*
+
+
+## 🤖 Claude *(00:33:30)*
+
+Ambos rótulos corrigidos, frontend rebuildado. Commit do widget (backend signals + frontend).
+
+## 🤖 Claude *(00:33:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/tux_build/commit_msg_widget.txt",
+  "content": "feat(cockpit): widget principal \"Simulacao ao vivo\" \u2014 o que o sistema faria, sem soltar ordem\n\nPedido do dono: um widget no cockpit mostrando, em tempo real, a SIMULACAO do que o\nsistema faria (sem liberar ordem) + todos os sinais do beholder, no grafico, como widget\nprincipal e consolidado.\n\n- BACKEND (read-only, additive): getCockpitStatus anexa `signals` por simbolo (RSI 1m/15m,\n  TREND_SLOPE, TREND_CROSS, FARM_DCA, TREND_QTY) lidos da MEMORY do beholder. best-effort,\n  nao toca money-path; o agente tambem passa a ver os sinais brutos.\n- FRONTEND (Cockpit.js): novo widget PRINCIPAL no topo do grid:\n  - seletor de simbolo (BTC/LTC/BNB/ADA) que dirige o widget E os paineis per-simbolo\n    (candle/dist/galton/MC/edge) \u2014 o cockpit inteiro fica symbol-aware\n  - grafico de candle 1m do simbolo selecionado (SVG, preco ao vivo via WS)\n  - painel de sinais consolidado: regime, fluxo (imbalance+toxicity), RSI 1m/15m, SMA cross/\n    slope, EV net 1m, gate de compra, posicao\n  - BANNER de DECISAO simulada (simDecision, puro): o que o sistema faria AGORA \u2014 CAIXA /\n    AGUARDANDO PROVA / COMPRARIA / VENDERIA / ESPERANDO TIMING / BLOQUEADO \u2014 com o motivo,\n    espelhando o gate de regime + o portao de promocao (frente D) + HALT. NENHUMA ordem e\n    enviada (read-only).\n- CSS: .cx-sim / .cx-symtabs / .cx-sim-grid / .cx-sig / .cx-decision (variantes por acao).\n\nDeployado (backend+frontend rebuild); cockpit serve 200, bundle contem o widget, signals\nfluindo (BTC RSI 41.5/54.6, slope down). Nenhuma mudanca de money-path.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/tux_build/commit_msg_widget.txt (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux git -c safe.directory='*' add \\\n  backend/src/controllers/analysisController.js \\\n  frontend/src/private/Cockpit/Cockpit.js \\\n  frontend/src/private/Cockpit/cockpit.css\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff --cached --stat\nsudo -n -u gcrux-tradeux git -c safe.directory='*' -c user.name='Gabriel Zarattini' -c user.email='gabrielcall@gmail.com' commit --author='Gabriel Zarattini <gabrielcall@gmail.com>' -F /tmp/tux_build/commit_msg_widget.txt 2>&1 | tail -2\necho \"=== push ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -3\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git && echo \"chown OK\"",
+  "description": "Commit and push the cockpit widget"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  backend/src/controllers/analysisController.js |  20 ++++
+>  frontend/src/private/Cockpit/Cockpit.js       | 129 ++++++++++++++++++++++++--
+>  frontend/src/private/Cockpit/cockpit.css      |  22 +++++
+>  3 files changed, 162 insertions(+), 9 deletions(-)
+> [master 7cc8258] feat(cockpit): widget principal "Simulacao ao vivo" — o que o sistema faria, sem soltar ordem
+>  3 files changed, 162 insertions(+), 9 deletions(-)
+> === push ===
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    5ac0af6..7cc8258  master -> master
+> chown OK
+> ```
+
+## 🤖 Claude *(00:34:15)*
+
+
+## 🤖 Claude *(00:34:28)*
+
+Pronto — deployado e no ar. `5ac0af6..7cc8258` em origin.
+
+## 🖥️ Widget "Simulação ao vivo" no cockpit
+
+Dá um **hard-refresh** no cockpit (`Ctrl+Shift+R` — é um bundle novo) e ele aparece **no topo, como widget principal**:
+
+- **Seletor de símbolo** (BTC/LTC/BNB/ADA) — clica e o widget **e o cockpit inteiro** passam a seguir aquele par.
+- **Gráfico de candle 1m** do símbolo, com preço ao vivo (WS).
+- **Painel de sinais consolidado** — todos os do beholder num lugar: regime, fluxo (imbalance + toxicity), **RSI 1m/15m**, SMA cross/slope, EV net 1m, gate de compra, posição.
+- **Banner de DECISÃO simulada** — em destaque, o que o sistema **faria agora**, com o motivo:
+  - `CAIXA` (HOLD) · `AGUARDANDO PROVA` · `COMPRARIA AGORA` · `VENDERIA` · `ESPERANDO TIMING` · `BLOQUEADO`
+  - **Nenhuma ordem é enviada** — é leitura pura dos sinais reais, espelhando o gate de regime + o portão de promoção (frente D) + HALT.
+
+**Com o estado de agora**, o que tu vai ver no BTC:
+- Regime **bear**, RSI 1m **41,5**, fluxo com a **venda agressora** que tá vindo no Telegram (barra vermelha + tox alto), gate **CAIXA**.
+- Decisão: **`CAIXA — acumular em caixa`** · *"regime bear: a doutrina é não comprar no bear. Compraria quando o BTC sair do bear E a trilha consistencia provar edge no paper."*
+
+É exatamente a "simulação do que eu faria no unilateral" que tu pediu — sem arriscar $1.
+
+**Onde mexi:** backend anexou um bloco `signals` por símbolo no `/analysis/cockpit` (read-only, o agente também lê agora); frontend ganhou o widget + seletor + a função `simDecision`. Zero money-path.
+
+Quer que eu **adicione algum sinal** que falta (MACD, Bollinger, book/spread, a banda Monte Carlo dentro do widget) ou ajuste o visual? E seguem abertas, quando quiser: **ligar o toggle "Free endpoints" do OpenRouter** (fim do agente caindo) e **`PROMOTION_GRANDFATHER=farmnl`** (compras do Farm a real já).
+
+## 👤 User *(00:40:36)*
+
+não seria melhor ter algo completo com o https://s.tradingview.com/widgetembed/?hideideas=1&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en#%7B%22symbol%22%3A%22BINANCE%3ABTCUSDT%22%2C%22frameElementId%22%3A%22tradingview_c034f%22%2C%22interval%22%3A%221%22%2C%22hide_side_toolbar%22%3A%220%22%2C%22allow_symbol_change%22%3A%221%22%2C%22save_image%22%3A%221%22%2C%22details%22%3A%221%22%2C%22studies%22%3A%22RSI%40tv-basicstudies%22%2C%22theme%22%3A%22dark%22%2C%22style%22%3A%221%22%2C%22timezone%22%3A%22Etc%2FUTC%22%2C%22withdateranges%22%3A%221%22%2C%22studies_overrides%22%3A%22%7B%7D%22%2C%22utm_source%22%3A%22tradeux.gcrux.com%22%2C%22utm_medium%22%3A%22widget%22%2C%22utm_campaign%22%3A%22chart%22%2C%22utm_term%22%3A%22BINANCE%3ABTCUSDT%22%2C%22page-uri%22%3A%22tradeux.gcrux.com%2Fdashboard%22%7D que ja temos de iframe em https://tradeux.gcrux.com/dashboard
+
+## 🤖 Claude *(00:41:10)*
+
+
+## 🤖 Claude *(00:41:12)*
+
+Boa ideia — o TradingView embed é um gráfico completo (RSI, troca de símbolo, ferramentas) muito melhor que meu SVG, e tu já tem ele no dashboard, então CSP/iframe já estão liberados. Vou trocar o gráfico do widget pelo iframe do TradingView, mantendo o painel de sinais + o banner de decisão. Deixa eu ver como o dashboard embute o iframe pra copiar o padrão.
+
+## 🤖 Claude *(00:41:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend\necho \"=== onde o dashboard usa o iframe TradingView ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -rln \"tradingview\\|widgetembed\\|s.tradingview\" src/ 2>/dev/null'\necho \"---\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -rn \"tradingview\\|widgetembed\\|iframe\" src/ 2>/dev/null | grep -iE \"iframe|tradingview|widgetembed\" | head -10'\necho \"\"\necho \"=== CSP/headers do nginx (permite frame de tradingview?) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'grep -rniE \"content-security|frame-src|frame-ancestors|X-Frame\" nginx.conf ../nginx* 2>/dev/null | head || echo \"(sem CSP expl\u00edcito no nginx.conf do front)\"'",
+  "description": "Find existing TradingView iframe pattern and CSP"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde o dashboard usa o iframe TradingView ===
+> src/private/Dashboard/CandleChart.js
+> ---
+> src/private/Dashboard/CandleChart.js:31:            container_id: "tradingview_d34df"
+> src/private/Dashboard/CandleChart.js:42:                            <div className="tradingview-widget-container">
+> src/private/Dashboard/CandleChart.js:43:                                <div id="tradingview_d34df" className="divTradingView"></div>
+> 
+> === CSP/headers do nginx (permite frame de tradingview?) ===
+> ```
+
+## 🤖 Claude *(00:41:21)*
+
+
+## 🤖 Claude *(00:41:22)*
+
+Existe um `CandleChart.js` no Dashboard que já usa o TradingView. Deixa eu ler o padrão exato pra reusar.
+
+## 🤖 Claude *(00:41:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Dashboard/CandleChart.js"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import React, { useState, useMemo, useEffect } from 'react';
+> 2	import './Dashboard.css';
+> 3	
+> 4	/**
+> 5	 * props:
+> 6	 * - symbol
+> 7	 */
+> 8	function CandleChart(props) {
+> 9	
+> 10	    // eslint-disable-next-line
+> 11	    const [widget, setWidget] = useState({});
+> 12	
+> 13	    useEffect(() => {
+> 14	        const w = new window.TradingView.widget({
+> 15	            symbol: "BINANCE:" + props.symbol,
+> 16	            autosize: true,
+> 17	            interval: "1",
+> 18	            timezone: "Etc/UTC",
+> 19	            theme: "dark",
+> 20	            style: "1",
+> 21	            locale: "en",
+> 22	            toolbar_bg: "#f1f3f6",
+> 23	            enable_publishing: false,
+> 24	            allow_symbol_change: true,
+> 25	            details: true,
+> 26	            withdateranges: true,
+> 27	            hide_side_toolbar: false,
+> 28	            studies: [
+> 29	                "RSI@tv-basicstudies"
+> 30	            ],
+> 31	            container_id: "tradingview_d34df"
+> 32	        });
+> 33	        setWidget(w);
+> 34	    }, [props.symbol])
+> 35	
+> 36	    const widgetHtml = useMemo(() => {
+> 37	        return (
+> 38	            <div className="row">
+> 39	                <div className="col-12 mb-4">
+> 40	                    <div className="card cardDark border-0 shadow" style={{height: 480}}>
+> 41	                        <div className="card-body p-2" >
+> 42	                            <div className="tradingview-widget-container">
+> 43	                                <div id="tradingview_d34df" className="divTradingView"></div>
+> 44	                            </div>
+> 45	                        </div>
+> 46	                    </div>
+> 47	                </div>
+> 48	            </div>
+> 49	        )
+> 50	    }, [props.symbol])
+> 51	
+> 52	    return widgetHtml;
+> 53	}
+> 54	
+> 55	export default CandleChart;
+> ```
+
+## 🤖 Claude *(00:42:10)*
+
+
+## 🤖 Claude *(00:42:12)*
+
+`CandleChart.js` usa o `window.TradingView.widget` (script global, só carregado no dashboard). Pro cockpit vou usar o **iframe `widgetembed`** que tu colou — auto-contido, sem depender do script global, e seguindo o seletor de símbolo. Troco o SVG do widget pelo iframe, mantendo sinais + decisão.
+
+## 🤖 Claude *(00:42:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux python3 - <<'PY'\nP=\"/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js\"\nc=open(P,encoding=\"utf-8\").read()\nerrs=[]\ndef rep(old,new,label):\n    global c\n    if c.count(old)!=1: errs.append(f\"[{label}] {c.count(old)}x\"); return\n    c=c.replace(old,new,1); print(\"OK\",label)\n\n# 1) helper tvSrc antes de simDecision\nrep(\"// Decisao SIMULADA (read-only):\",\n\"\"\"// Monta a URL do iframe widgetembed do TradingView p/ o simbolo (BINANCE:SYM), 1m, RSI, dark \u2014 mesmo embed\n// ja usado no /dashboard. Auto-contido (nao depende do script global window.TradingView do dashboard).\nfunction tvSrc(sym) {\n  const cfg = {\n    symbol: 'BINANCE:' + sym, interval: '1', hide_side_toolbar: '0', allow_symbol_change: '1',\n    save_image: '1', details: '1', studies: 'RSI@tv-basicstudies', theme: 'dark', style: '1',\n    timezone: 'Etc/UTC', withdateranges: '1', locale: 'en',\n  };\n  return 'https://s.tradingview.com/widgetembed/?hideideas=1&locale=en#' + encodeURIComponent(JSON.stringify(cfg));\n}\n\n// Decisao SIMULADA (read-only):\"\"\",\"tvSrc\")\n\n# 2) troca o SVG do widget pelo iframe TradingView\nrep(\"\"\"                  <div className=\"cx-sim-chart\">\n                    <div className=\"cx-candle-head\">\n                      <span className=\"px cx-mono\">{btc != null ? <AnimatedNumber value={btc} format={v => fmtUsd(v, btc < 5 ? 4 : 1)} /> : '\u2014'}</span>\n                      {cnd && <span className=\"cx-flat cx-mono\" style={{ fontSize: '0.72rem' }}>H {fmtUsd(cnd.hi, cnd.hi < 5 ? 4 : 0)} \u00b7 L {fmtUsd(cnd.lo, cnd.lo < 5 ? 4 : 0)}</span>}\n                      {wsLive && <span className=\"cx-up cx-mono\" style={{ fontSize: '0.7rem' }}>\u25cf live</span>}\n                    </div>\n                    {cnd\n                      ? <svg className=\"cx-candle\" viewBox={`0 0 ${cnd.W} ${cnd.H}`} preserveAspectRatio=\"none\" aria-label={`Candles de 1 minuto do ${selSym}`}>\n                          {[0.25, 0.5, 0.75].map((gg, i) => <line key={i} className=\"grid\" x1=\"0\" x2={cnd.W} y1={cnd.H * gg} y2={cnd.H * gg} />)}\n                          {cnd.candles.map((cc, i) => (<g key={i}><line className={cc.up ? 'wick-up' : 'wick-down'} x1={cc.wx} x2={cc.wx} y1={cc.wy1} y2={cc.wy2} /><rect className={cc.up ? 'body-up' : 'body-down'} x={cc.x} y={cc.by} width={cc.bw} height={cc.bh} /></g>))}\n                          <line className=\"lastline\" x1=\"0\" x2={cnd.W - cnd.padR} y1={cnd.lastY} y2={cnd.lastY} />\n                        </svg>\n                      : <div className=\"cx-empty\">{klErr ? 'klines indisponiveis (CORS/Binance) \ud83d\udfe1' : 'carregando candles\u2026'}</div>}\n                  </div>\"\"\",\n\"\"\"                  <div className=\"cx-sim-chart\">\n                    <iframe key={selSym} title={`TradingView ${selSym}`} src={tvSrc(selSym)} className=\"cx-tv\" allowFullScreen />\n                  </div>\"\"\",\"iframe\")\n\nif errs: print(\"FALHAS\",errs); raise SystemExit(1)\nopen(P,\"w\",encoding=\"utf-8\").write(c)\nprint(\"Cockpit.js iframe OK\")\nPY\necho \"=== CSS do chart/iframe ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cat >> frontend/src/private/Cockpit/cockpit.css <<'\"'\"'CSS'\"'\"'\n.cx-sim-chart { height:460px; border-radius:8px; overflow:hidden; background:#0c0e14; }\n.cx-tv { width:100%; height:100%; border:0; display:block; }\n.cx-sim-grid { align-items:stretch; }\n@media (max-width:1100px){ .cx-sim-chart { height:360px; } }\nCSS\necho \"ok\"'\necho \"=== rebuild + redeploy frontend ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose build frontend 2>&1 | tail -3 && docker compose up -d frontend 2>&1 | tail -2'",
+  "description": "Swap SVG for TradingView iframe, rebuild frontend",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK tvSrc
+> OK iframe
+> Cockpit.js iframe OK
+> === CSS do chart/iframe ===
+> ok
+> === rebuild + redeploy frontend ===
+> #17 resolving provenance for metadata file
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built 
+>  Container tradeux-frontend-1 Starting 
+>  Container tradeux-frontend-1 Started
+> ```
+
+## 🤖 Claude *(00:42:55)*
+
+
+## 🤖 Claude *(00:42:56)*
+
+Frontend rebuildado com o iframe. Vou confirmar que o bundle tem o embed e o site serve, depois commitar.
+
+## 🤖 Claude *(00:43:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\ncurl -s -m8 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/\necho \"=== bundle tem o widgetembed do TradingView? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-frontend-1 sh -c \"grep -o \\\"s.tradingview.com/widgetembed\\\" /usr/share/nginx/html/assets/*.js 2>/dev/null | head -1 && echo FOUND || echo NOTFOUND\"'\necho \"=== commit ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' add frontend/src/private/Cockpit/Cockpit.js frontend/src/private/Cockpit/cockpit.css\nsudo -n -u gcrux-tradeux git -c safe.directory='*' -c user.name='Gabriel Zarattini' -c user.email='gabrielcall@gmail.com' commit --author='Gabriel Zarattini <gabrielcall@gmail.com>' -m \"feat(cockpit): grafico do widget de simulacao = embed TradingView (BINANCE:SYM, 1m+RSI, segue o seletor)\n\nTroca o candle SVG custom do widget principal pelo iframe widgetembed do TradingView (mesmo\nembed do /dashboard, auto-contido), seguindo o seletor de simbolo. Mantem o painel de sinais\ndo beholder + o banner de decisao simulada ao lado. Grafico completo (RSI, ferramentas, troca\nde simbolo) sem depender do script global window.TradingView.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | tail -2\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -2\nsudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git && echo \"chown OK\"",
+  "description": "Verify iframe in bundle, commit and push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> site -> 200
+> === bundle tem o widgetembed do TradingView? ===
+> s.tradingview.com/widgetembed
+> FOUND
+> === commit ===
+> [master b711a21] feat(cockpit): grafico do widget de simulacao = embed TradingView (BINANCE:SYM, 1m+RSI, segue o seletor)
+>  2 files changed, 16 insertions(+), 12 deletions(-)
+> To github.com:gabrielZarattini/tradeux.git
+>    7cc8258..b711a21  master -> master
+> chown OK
+> ```
+
+## 🤖 Claude *(00:43:21)*
+
+
+## 🤖 Claude *(00:43:30)*
+
+Pronto — `7cc8258..b711a21` em origin, site 200, bundle com o embed do TradingView.
+
+## ✅ Widget agora com o gráfico completo do TradingView
+
+Dá um **hard-refresh** (`Ctrl+Shift+R`) no cockpit. O widget principal "Simulação ao vivo" agora tem:
+
+- **À esquerda:** o **gráfico TradingView completo** (`BINANCE:<símbolo>`, 1m, com RSI, ferramentas, troca de símbolo, date ranges) — o mesmo embed do teu `/dashboard`, mas **seguindo o seletor** de símbolo do widget.
+- **À direita:** o **painel de sinais do beholder** consolidado (regime, fluxo, RSI 1m/15m, SMA cross/slope, EV net, gate, posição).
+- **Embaixo:** o **banner de decisão simulada** — o que o sistema faria agora, sem soltar ordem.
+
+Clicou numa aba (BTC/LTC/BNB/ADA) → o gráfico TradingView, os sinais e a decisão **trocam juntos**.
+
+Usei o **iframe `widgetembed`** (auto-contido, igual ao link que tu colou) em vez do script global `window.TradingView` do dashboard — assim funciona no cockpit sem depender de o script estar carregado lá.
+
+**Confere e me diz:**
+1. O gráfico TradingView **carrega** aí? (Se aparecer em branco, é restrição de embed e eu troco pro método do script `window.TradingView` que o dashboard já usa.)
+2. O **layout** tá bom (gráfico grande à esquerda + sinais/decisão à direita), ou quer o gráfico full-width no topo e os sinais numa faixa embaixo?
+
+E seguem na fila quando quiser: o toggle **"Free endpoints" do OpenRouter** (fim do agente caindo) e o **`PROMOTION_GRANDFATHER=farmnl`** (compras do Farm a real já).
+
+## 👤 User *(00:50:49)*
+
+🌊 [FLOW] BTCUSDT: fluxo unilateral (VENDA agressora) — imbalance=-0.8032 toxicity=0.8032. Timing ruim p/ entrar contra.
+🌊 [FLOW] BTCUSDT: fluxo normalizou (toxicity=0.4732).
+🌊 [FLOW] BTCUSDT: fluxo unilateral (VENDA agressora) — imbalance=-0.7765 toxicity=0.7765. Timing ruim p/ entrar contra.
+🌊 [FLOW] BTCUSDT: fluxo normalizou (toxicity=0.3719).
+🌊 [FLOW] BTCUSDT: fluxo unilateral (COMPRA agressora) — imbalance=0.8216 toxicity=0.8216. Timing ruim p/ entrar contra.
+
+## 👤 User *(00:51:10)*
+
+[Request interrupted by user]

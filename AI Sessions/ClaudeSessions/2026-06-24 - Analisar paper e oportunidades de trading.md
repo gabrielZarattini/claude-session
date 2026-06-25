@@ -1,4 +1,4 @@
-# Analisar paper e oportunidades de trading
+# [[2026-06-25 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
 **Date:** 2026-06-24 | **Session ID:** `ada015e6-a810-46e1-9d5e-d09047bb5fad`
 
 ---

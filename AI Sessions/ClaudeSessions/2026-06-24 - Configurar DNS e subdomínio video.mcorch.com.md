@@ -1,4 +1,4 @@
-# Configurar DNS e subdomínio video.mcorch.com
+# [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com|Configurar DNS e subdomínio video.mcorch.com]]
 **Date:** 2026-06-24 | **Session ID:** `f89447ed-b201-43c6-854d-dd580cb8996c`
 
 ---
