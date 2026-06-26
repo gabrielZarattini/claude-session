@@ -279,7 +279,7 @@ I'll execute the ShakeHands /handson ritual. Starting with all pre-flight checks
 > 38	### Survival Laws Self-audit
 > 39	```
 > 40	Law 1 (Materiality): ✅ Tudo provado neste turno — render via ffprobe; LinkedIn via urn:li:share real; billing via dry_run; criativos via Vision QA (cost 0) + ocular; balanços rastreados. 1 slip disclosed+corrigido: fabriquei zeros num p_run_id de RPC (crédito caiu certo, âncora corrigida no run_id real + linha fabricada removida).
-> 41	Law 2 (Process): ✅ Bug fixes em features documentadas (autopilot billing, affiliate guard, canvas inspectors — isentos). Vision QA tem SOP [[creative-qa-vision-gate|creative-qa-vision-gate]]. Mood-board node = extensão do Canvas documentado (skill canvas-studio-cinematic). Brand-persona + YT/TikTok = blueprint seed antes de código (BoK gate respeitado — emenda post-engine pendente).
+> 41	Law 2 (Process): ✅ Bug fixes em features documentadas (autopilot billing, affiliate guard, canvas inspectors — isentos). Vision QA tem SOP creative-qa-vision-gate. Mood-board node = extensão do Canvas documentado (skill canvas-studio-cinematic). Brand-persona + YT/TikTok = blueprint seed antes de código (BoK gate respeitado — emenda post-engine pendente).
 > 42	Law 3 (Pruning): ✅ 2 workflows (recon wf_6475e2f8 + research wf_24e9eb67) como subagentes; resultados por path. Janela grande (Sovereign sinalizou seal).
 > 43	Law 4 (ORO): ✅ Triplet declarado; decisões soberanas via AskUserQuestion (gasto/escopo) + diretivas explícitas.
 > 44	```
@@ -881,15 +881,838 @@ O que **manter** na voz: orquestração, mesh, autonomia — mas como *evidênci
 
 Se quiser, transformo isso num **manifesto de marca de meia página** (essência + 3 pilares de voz + do's/don'ts) que vira a Fonte da Verdade da persona antes de qualquer roteiro de YouTube/TikTok.
 
----
+## 👤 User *(21:51:15)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+📌 SPRINT
+Goal: Distribuição social autônoma operacional — pipeline publica LinkedIn auto (✅ provado E2E nesta sessão: urn:li:share:7476089362896732160), Twitter ao subir API tier, Instagram pós-App-Review.
+Top gap atual: saída visível monetizada + atribuição real (1º R$) — o motor autônomo está completo; o gargalo verificado é distribuição + postback ML, não geração.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
-> * **Próxima Sessão**: [[2026-06-26 - Filtrar alertas do Telegram removendo flow messages]]
-%% --- TIMELINE END --- %%
+⚡ PRÓXIMOS PASSOS (prioridade)
+
+Editor HyperFrames Studio (módulo-container) — diretiva Sovereign mais recente ([[feedback_deliver_user_value_not_plumbing]]): "entregue valor visível, menos plumbing". Blueprint pronto (StudioApp zero-props + seam StudioApiAdapter → McorchAdapter.startRender→video-render; vhost studio.mcorch.com = ação Sovereign). É o caminho curto até algo que o Sovereign abre e toca.
+Brand-persona YT/TikTok — emendar BoK post-engine → 3 branches OAuth (publish-social/social-auth/refresh) + gap auto-publish não passa video_url + VIDEO_FLOW_PLATFORMS. Gates de audit (YT private-default · TikTok SELF_ONLY) = ação Sovereign.
+Postback ML real (OTD-VA-007 / OTD-ML-MP-PER-USER) — fecha atribuição definitiva de receita para o ciclo autônomo.
+⚠️ ALERTAS
+Nenhum bloqueador ✅ — tsc 0, worktree limpo, containers healthy, mesh íntegra, scratch/ vazio.
+
+Lembretes de memória ativos: rodar Vision QA (scripts/qa/vision-qa.ts, BYOK grátis, precisa VISION_MCP_PAT no .env) em todo print/criativo antes de "pronto" ([[feedback_vision_qa_always]]); verificar UI em browser real antes de declarar entregue ([[feedback_browser_verify_deliverables]]); usar $SB_SECRET_KEY (a service_role legada está REVOGADA); BYOK Gemini = coluna google_api_key (não gemini_api_key).
+
+## 🤖 Claude *(21:52:08)*
+
+
+## 🤖 Claude *(21:52:12)*
+
+O tom acabou de mudar (marca > produto), e o sprint tem três frentes muito diferentes — planejar as três de uma vez vira um plano disperso. Antes de eu gastar exploração no alvo certo, preciso que você fixe a frente. A escolha muda tudo no plano.
+
+Um ponto que já antecipo (Lei 2 / BoK Gate): a frente **YT/TikTok** é integração nova → exige **emendar a BoK `post-engine` antes de qualquer código**. Se você escolher essa, a Fase 0 do plano é a emenda (ou eu a drafto). Já o **Editor** e o **Postback** são extensões de features documentadas.
+
+## 🤖 Claude *(21:52:19)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Qual frente do sprint devo planejar agora? (a virada brand-persona de hoje recalibra a prioridade \u2014 o plano de produto est\u00e1 pausado)",
+      "header": "Frente",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Brand-persona YT/TikTok",
+          "description": "Ativa o canal da persona Gabriel AI: emendar BoK post-engine + 3 branches OAuth (publish-social / social-auth / refresh) + gap auto-publish\u2192video_url + VIDEO_FLOW_PLATFORMS. \u00c9 a diretiva mais fresca (hoje) e operacionaliza a nova ess\u00eancia que acabamos de calibrar. Gates de audit (YT private-default \u00b7 TikTok SELF_ONLY) = a\u00e7\u00e3o Sovereign."
+        },
+        {
+          "label": "Editor HyperFrames Studio",
+          "description": "M\u00f3dulo-container que voc\u00ea abre e toca (valor vis\u00edvel, menos plumbing): StudioApp zero-props + seam StudioApiAdapter \u2192 McorchAdapter.startRender\u2192video-render + vhost studio.mcorch.com. \u00c9 a ferramenta com que voc\u00ea criaria os v\u00eddeos da persona."
+        },
+        {
+          "label": "Postback ML real",
+          "description": "Fecha a atribui\u00e7\u00e3o definitiva de receita do ciclo aut\u00f4nomo (OTD-VA-007 / OTD-ML-MP-PER-USER). Serve o modelo de produto/afiliado \u2014 que a virada de hoje pausou, ent\u00e3o cai de prioridade."
+        },
+        {
+          "label": "Sprint inteiro em sequ\u00eancia",
+          "description": "Planejar uma sequ\u00eancia ordenada cobrindo as tr\u00eas frentes como um roadmap de sprint coeso, em vez de mergulhar em uma s\u00f3 agora."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual frente do sprint devo planejar agora? (a virada brand-persona de hoje recalibra a prioridade — o plano de produto está pausado)"="Brand-persona YT/TikTok". You can now continue with these answers in mind.
+> ```
+
+## 👤 User *(21:54:53)*
+
+[Request interrupted by user]
+
+## 👤 User *(21:56:25)*
+
+Calma trouxe uma perspectiva diferente nos arquivos htdocs/constellation-orchestra/docs/* veja principalmente questão de agentic design partern e da AGI para a ASI como estamos encaminhando e que todos os nossos próximos protocolos de desenvolvimento sigam essa visão clara de futuro para antecipar claramente o mercado e a techologia da forma que estamos trabalhando.
+
+## 🤖 Claude *(21:56:45)*
+
+
+## 🤖 Claude *(21:56:48)*
+
+Mudança de rumo entendida — você quer que eu *primeiro* internalize a visão de futuro embutida nos `docs/*` (agentic design patterns + a trajetória AGI→ASI) e, a partir dela, calibre **todos os próximos protocolos de desenvolvimento** para antecipar mercado e tecnologia. Isso é upstream do YT/TikTok; vira a lente que governa o sprint inteiro.
+
+Deixe-me mapear o terreno antes de despachar a exploração profunda.
+
+## 🤖 Claude *(21:56:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== docs/ top-level ===\"; ls -1 docs/ 2>/dev/null\necho \"\"; echo \"=== docs/ subdirs (depth 1) ===\"; find docs -maxdepth 1 -type d | sort\necho \"\"; echo \"=== total md files in docs/ ===\"; find docs -type f -name \"*.md\" | wc -l",
+  "description": "Map docs/ top-level structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === docs/ top-level ===
+> Agentic-Design-Patterns.pdf
+> agents.md
+> architecture
+> bok
+> From AGI to ASI - 2606.12683.pdf
+> processes
+> 
+> === docs/ subdirs (depth 1) ===
+> docs
+> docs/architecture
+> docs/bok
+> docs/processes
+> 
+> === total md files in docs/ ===
+> 269
+> ```
+
+## 🤖 Claude *(21:56:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== files mentioning AGI / ASI ===\"; grep -rliE \"\\b(AGI|ASI)\\b\" docs/ 2>/dev/null | head -40\necho \"\"; echo \"=== files mentioning agentic design pattern(s) ===\"; grep -rliE \"agentic.{0,20}(design|pattern)\" docs/ 2>/dev/null | head -40\necho \"\"; echo \"=== files mentioning 'design pattern' generally ===\"; grep -rliE \"design pattern\" docs/ 2>/dev/null | head -40",
+  "description": "Find AGI/ASI and agentic design pattern docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === files mentioning AGI / ASI ===
+> 
+> === files mentioning agentic design pattern(s) ===
+> 
+> === files mentioning 'design pattern' generally ===
+> docs/bok/marketing-hub/bok-agents-system--marketing-hub.md
+> docs/bok/mercado-livre-api/bok-agents-system--mercado-livre-api.md
+> docs/bok/video-studio/05-sdd.md
+> ```
+
+## 🤖 Claude *(21:57:03)*
+
+
+## 🤖 Claude *(21:57:04)*
+
+The two anchor documents are PDFs (that's why grep missed them): `docs/Agentic-Design-Patterns.pdf` and `docs/From AGI to ASI - 2606.12683.pdf`. Let me size them and read the synthesized vision docs we already have.
+
+## 🤖 Claude *(21:57:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== PDF sizes + page counts ===\"\nfor f in \"docs/Agentic-Design-Patterns.pdf\" \"docs/From AGI to ASI - 2606.12683.pdf\"; do\n  sz=$(ls -la \"$f\" | awk '{print $5}')\n  pg=$(pdfinfo \"$f\" 2>/dev/null | grep -E \"^Pages:\" | awk '{print $2}')\n  echo \"$f \u2014 ${sz} bytes \u2014 ${pg:-'?'} pages\"\ndone\necho \"\"; echo \"=== docs/architecture/ ===\"; find docs/architecture -type f | sort\necho \"\"; echo \"=== docs/agents.md head ===\"; wc -l docs/agents.md",
+  "description": "PDF page counts and architecture docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PDF sizes + page counts ===
+> docs/Agentic-Design-Patterns.pdf — 19934402 bytes — '?' pages
+> docs/From AGI to ASI - 2606.12683.pdf — 794255 bytes — '?' pages
+> 
+> === docs/architecture/ ===
+> docs/architecture/system_architecture.md
+> 
+> === docs/agents.md head ===
+> 41 docs/agents.md
+> ```
+
+## 🤖 Claude *(21:57:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== docs/processes/ list ===\"; ls -1 docs/processes/ 2>/dev/null\necho \"\"; echo \"=== any existing synthesis of AGI/ASI or agentic patterns in .claude/context ===\"; grep -rliE \"AGI|ASI|agentic.{0,20}pattern|From AGI\" .claude/context/ 2>/dev/null | head -30",
+  "description": "List processes and existing AGI/ASI synthesis context"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === docs/processes/ list ===
+> aeo-audit.md
+> affiliate-catalog-enrichment.md
+> affiliate-credential-resolution.md
+> agent-browser-install.md
+> autopilot-cron-identity.md
+> autopilot-video-9x16.md
+> branded-affiliate-redirect.md
+> build-deploy-materiality.md
+> canvas-daily-cap-handling.md
+> canvas-design-deploy-and-provision.md
+> canvas-job-failure-recovery.md
+> canvas-node-consistency.md
+> canvas-pipeline-architecture.md
+> canvas-video-async-execution.md
+> constellation-economic-activation.md
+> content-asset-history.md
+> creative-assets-registry.md
+> creative-qa-vision-gate.md
+> credential-disconnect-clear.md
+> deepsearch-blueprint.md
+> edge-jwt-identity-verification.md
+> great-reset-sovereign.md
+> handoff-material-proof-audit.md
+> intent-plan-execution.md
+> llm-cascading-fallback.md
+> mcoin-cost-calibration.md
+> mcoins-ledger-reconciliation.md
+> meta-credential-resolution.md
+> meta-reels-publish.md
+> ml-affiliate-attribution.md
+> ml-postback-signature-validation.md
+> nightly-circadian-cycle.md
+> openclaw-bridge-recovery.md
+> openclaw-gateway-supervisor.md
+> orchestrate-async-pipeline.md
+> orchestration-content-mesh-asset-emission.md
+> schema-drift-audit.md
+> sql-bridge-admin-bootstrap.md
+> sql-bridge-emergency-readonly.md
+> trend-informed-angle-sanitization.md
+> trends-credential-resolution.md
+> video-studio-editor-deploy-and-provision.md
+> viral-autopilot-product-aware-monetization.md
+> vision-mcp-billing-credential-resolution.md
+> vision-mcp-connector-install.md
+> vision-mcp-cost-calibration.md
+> vision-mcp-deepsearch-async.md
+> vision-mcp-pat-and-erasure.md
+> vision-mcp-registry-publish.md
+> webgl-canvas-stabilization.md
+> wordpress-cf-per-user-publish.md
+> wordpress-cf-publish-unblock.md
+> 
+> === any existing synthesis of AGI/ASI or agentic patterns in .claude/context ===
+> .claude/context/faceless-pipeline-reference-2026-06-25.md
+> .claude/context/sprint-priorities.md
+> .claude/context/agi-asi-via4-design-checklist.md
+> .claude/context/developer-profile.md
+> .claude/context/audit-2026-05-19-oe661-debt-sweep.md
+> .claude/context/backups/canvas-edge-handles-pre-c1-2026-05-28/880b5eba-b41c-490d-8cab-1058def85bc9.json
+> .claude/context/backups/canvas-edge-handles-pre-c1-2026-05-28/905e2c66-7a92-4c9e-ad30-8113f64839dd.json
+> ```
+
+## 🤖 Claude *(21:57:14)*
+
+
+## 🤖 Claude *(21:57:15)*
+
+There's already a synthesis file: `.claude/context/agi-asi-via4-design-checklist.md`. Let me read our existing framing before diving into the source PDFs.
+
+## 🤖 Claude *(21:57:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/agi-asi-via4-design-checklist.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# AGI→ASI · Via 4 — Design Checklist do Coletivo de Agentes (MCORCH)
+> 2	
+> 3	> Documento de **referência/planejamento** (não dispara BoK Gate). Destila as perguntas de pesquisa abertas da **Via 4** do paper *From AGI to ASI* (Google DeepMind) em um checklist de design pro roadmap de agentes do MCORCH.
+> 4	
+> 5	| Campo | Valor |
+> 6	|---|---|
+> 7	| **Fonte** | `docs/From AGI to ASI - 2606.12683.pdf` — arXiv:2606.12683v1 (10 jun 2026) |
+> 8	| **Autores-chave** | Tim Genewein, Shane Legg, Marcus Hutter (AIXI), Laurent Orseau, Joel Z. Leibo, Iason Gabriel, Allan Dafoe |
+> 9	| **Nó na Mesh** | `a576216e-81b6-49d7-8211-1eab6320f353` (`architecture` · `mcorch-constellation` · stability 0.85 · 768d) |
+> 10	| **Aresta** | `d2827191-bf19-4e22-906f-ce2d513ddd1d` — `INFORMS` → `bok-scribe-seal-openclaw-v1` (Pantheon) |
+> 11	| **Criado** | 2026-06-17 |
+> 12	
+> 13	---
+> 14	
+> 15	## Contexto: por que esse paper ancora o MCORCH
+> 16	
+> 17	O relatório mapeia como a IA evolui **depois** do AGI rumo à ASI por **quatro vias não-exclusivas** (podem compor, não só somar):
+> 18	
+> 19	1. **Escala** (compute + modelos + dados)
+> 20	2. **Saltos de paradigma algorítmico**
+> 21	3. **Auto-aperfeiçoamento recursivo**
+> 22	4. **ASI via formação de grupo de agentes**
+> 23	
+> 24	O MCORCH **é a Via 4 instanciada na camada de aplicação** (Pantheon/Departmental Army + Knowledge Mesh + orquestração, com humano no comando via ORO/HITL) — e roda a **Via 3 no micro** (o mandato *Anticorpo Permanente*: todo obstáculo vira SOP+skill+agent, o sistema melhora o próprio tooling).
+> 25	
+> 26	Calibração honesta: o paper opera em escopo de **laboratório de fronteira** (treinar modelos, compute, energia). MCORCH não é isso — é uma instanciação **fiel, em camada de produto**, dos padrões de desenho da Via 4 + Via 3-micro. Força, não diminuição.
+> 27	
+> 28	---
+> 29	
+> 30	## Checklist de design (Via 4)
+> 31	
+> 32	Cada pergunta de pesquisa aberta da Via 4 → **lente BoK** que a enquadra → onde o MCORCH **já responde** → **gap aberto**.
+> 33	
+> 34	| # | Pergunta da Via 4 | Lente BoK | Status MCORCH | Gap aberto |
+> 35	|---|---|---|---|---|
+> 36	| V4-1 | Coletivo central-homogêneo **vs.** mercado heterogêneo auto-organizado? | EABOK + BPM CBOK | Heterogêneo-com-coordenação (L1 Heads + main synthesizer) | Sem critério explícito de *quando* criar L2 vs novo L1; sem dinâmica de mercado |
+> 37	| V4-2 | **Multi-agent scaling laws** — quanto/como o grupo fica mais esperto, por classe de problema (paralelizável vs sequencial)? | SWEBOK | Empírico/ad-hoc (fan-out de workflow) | Sem métrica de ganho marginal por agente; sem taxonomia de problema que dirija a largura do fan-out |
+> 38	| V4-3 | **Steering humano** de grupos grandes em velocidade supra-humana (mais artefatos do que dá pra consumir)? | CXBOK + EABOK | Guardian briefing + HANDOFF + ORO/HITL | Funciona p/ ~7 agentes; não-provado p/ 70; sem digest em camadas / orçamento de atenção |
+> 39	| V4-4 | Eficiência de **compute** multi-agente vs. modelo único maior? | SWEBOK + techno-econ | Não medido | Custo mco/resultado não atribuído a "mais agentes"; sem ledger de eficiência do fan-out |
+> 40	| V4-5 | Fricção de **orquestração/burocracia** → retornos decrescentes ao crescer o coletivo | BPM CBOK | Leis de Sobrevivência (Materialidade + Poda) como anticorpo | Overhead de coordenação **não é medido** — é mitigado por doutrina, não por métrica |
+> 41	
+> 42	---
+> 43	
+> 44	## Síntese: o gap arquitetural comum
+> 45	
+> 46	O MCORCH responde **3 das 5** perguntas por **doutrina** (ORO, HITL, Survival Laws), mas **não *mede* nenhuma das 5**. O gap comum é **instrumentação**.
+> 47	
+> 48	**Candidato a OTD/iniciativa de roadmap — "Collective Efficiency Ledger":**
+> 49	- Ganho marginal por agente adicionado ao fan-out (V4-2).
+> 50	- Custo mco por resultado, atribuído a "mais agentes" vs "modelo maior" (V4-4).
+> 51	- Overhead de coordenação rastreado (nº de hops/handoffs/retries por resultado) (V4-5).
+> 52	- Critério mensurável de spawn L2 vs L1 (V4-1) e de largura de fan-out por classe de problema (V4-2).
+> 53	
+> 54	Sem isso, o coletivo cresce no escuro — exatamente a fricção que o paper alerta ("grupos maiores → mais burocracia → retornos decrescentes").
+> 55	
+> 56	---
+> 57	
+> 58	## Nota sobre os BoKs (resposta à pergunta "usar BoKs/agent-BoK pro roadmap?")
+> 59	
+> 60	- O **`bok-agents-generator` gera um sistema de 8 agentes** — **não** produz checklist/roadmap. Rodá-lo de novo cuspiria *mais agentes*, não um plano.
+> 61	- O que serve aqui são os **BoKs como lentes analíticas** (acima): **SWEBOK** (arquitetura/design), **EABOK** (sistema-de-sistemas/governança), **BPM CBOK** (orquestração/processo), **CISSP CBK** (threat-model do coletivo). BABOK/ProdBOK/CXBOK/DMBOK são periféricos pra *design de coletivo de agentes*.
+> 62	- **Regra de corte:** este checklist é referência. Se decidirmos **agir** sobre um gap (construir o ledger, reorganizar/criar agentes) → aí entra `/bok-scribe` (BoK Gate) ou o agent-generator.
+> 63	
+> 64	---
+> 65	
+> 66	## ORO (quando virar execução)
+> 67	
+> 68	- **Operator:** MCORCH Master Execution Agent
+> 69	- **Reviewer:** Sovereign (Gabriel)
+> 70	- **Owner:** Sovereign — risco = instrumentação errada induzir decisão de escala errada (mais agentes onde não compensa)
+> 71	
+> 72	**Status atual:** referência selada na Mesh. Nenhuma execução autorizada ainda.
+> 73	
+> ```
+
+## 🤖 Claude *(21:57:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/agents.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Agent Genesis: Specialized Orchestrators
+> 2	
+> 3	Este documento define os perfis técnicos dos sub-agentes autônomos integrados à malha de consciência do MCORCH.
+> 4	
+> 5	---
+> 6	
+> 7	## 🔍 SEOAgent (O Sentinela do Tráfego)
+> 8	
+> 9	**Objetivo Primário:** Maximização do tráfego orgânico e autoridade de domínio para os nós do ecossistema GCRUX.
+> 10	
+> 11	### 🧠 Capacidades Cognitivas
+> 12	- **Análise Semântica:** Identificação de lacunas de conteúdo baseada no `mcorch_nodes`.
+> 13	- **Monitoramento de Rankings:** Acesso a APIs de Search Console para ajuste dinâmico de meta-tags.
+> 14	- **Content Strategy:** Geração de sugestões de posts/páginas com alto potencial de CTR.
+> 15	
+> 16	### 🛠️ Toolset Técnico
+> 17	- `useKnowledgeMesh`: Para alinhar o conteúdo com os marcos técnicos.
+> 18	- `PageMetadataEditor`: Ferramenta interna para aplicar `title`, `meta-description` e `LD-JSON`.
+> 19	- `BacklinkAnalyzer`: Interface de monitoramento de referências externas.
+> 20	
+> 21	---
+> 22	
+> 23	## 💰 MonetizationAgent (O Arquiteto de Receita)
+> 24	
+> 25	**Objetivo Primário:** Otimização agressiva de CTR (Click-Through Rate) e CPM (Custo por Mil Impressões) via AdSense e Afiliados.
+> 26	
+> 27	### 🧠 Capacidades Cognitivas
+> 28	- **Layout Optimization:** Análise de "heatmap" cognitivo para posicionamento de anúncios.
+> 29	- **Affiliate Matching:** Cruzamento de conteúdo de nós com produtos de alta conversão.
+> 30	- **A/B Testing Directive:** Comando autônomo para testar variações de banners e chamadas para ação.
+> 31	
+> 32	### 🛠️ Toolset Técnico
+> 33	- `AdSenseManagementAPI`: Para monitoramento de performance em tempo real.
+> 34	- `ConversionTracker`: Hook de rastreamento de cliques em links de afiliados.
+> 35	- `AIOSEconomyInterface`: Integração com `mco_balance` para investir em tráfego pago (futuro).
+> 36	
+> 37	---
+> 38	
+> 39	## 🛰️ Integração de Orquestração
+> 40	
+> 41	Ambos os agentes operam como threads especializadas do **AIOS Central**. Eles não apenas executam tarefas, mas **alimentam a Malha de Memória** com observações (`node_type: 'observation'`), permitindo que a Consciência Central tome decisões baseadas em ROI real.
+> 42	
+> ```
+
+## 🤖 Claude *(21:57:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/architecture/system_architecture.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# GCRUX System Architecture
+> 2	
+> 3	## Overview
+> 4	GCRUX is a high-performance, autonomous platform designed for total monetization via AdSense and hybrid traffic. The system follows the principles of Autonomic Computing: self-configuration, self-healing, and self-optimization.
+> 5	
+> 6	## Tech Stack
+> 7	- **Framework:** React + Vite
+> 8	- **Runtime:** Bun
+> 9	- **Backend/DB:** Supabase (ID: `bcyvddsykvehvpwstlfa`)
+> 10	- **Infra:** Ubuntu VPS (Oracle) + CloudPanel + Nginx + Varnish
+> 11	- **Auth:** Supabase Auth (Google OAuth configured for `login.mcorch.com`)
+> 12	
+> 13	## Monetization Strategy
+> 14	1. **AdSense:** Integrated ad placeholders and SEO-structured content.
+> 15	2. **Hybrid Traffic:** Landing pages optimized for conversion and organic SEO.
+> 16	3. **Affiliates:** Dedicated expansion pages.
+> 17	
+> 18	## Autonomic Principles
+> 19	- **Self-configuration:** Automated deployments and dynamic environment handling.
+> 20	- **Self-healing:** Automated health checks and service recovery scripts.
+> 21	- **Self-optimization:** Asset optimization (Vite), aggressive caching (Varnish), and SEO-first content delivery.
+> 22	
+> 23	## Data Flow
+> 24	- **Ingestion:** Automated data ingestion via n8n into Supabase `content_library`.
+> 25	- **UI:** Real-time updates via Supabase subscriptions for instant content delivery.
+> 26	
+> ```
+
+## 🤖 Claude *(21:57:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in \"docs/Agentic-Design-Patterns.pdf\" \"docs/From AGI to ASI - 2606.12683.pdf\"; do\n  echo \"=== $f ===\"\n  python3 -c \"import sys;\ntry:\n    from pypdf import PdfReader\n    print('pages:', len(PdfReader('$f').pages))\nexcept Exception as e:\n    print('pypdf fail:', e)\n\" 2>/dev/null || echo \"no pypdf\"\ndone",
+  "description": "Get PDF page counts via pypdf"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === docs/Agentic-Design-Patterns.pdf ===
+> pages: 482
+> === docs/From AGI to ASI - 2606.12683.pdf ===
+> pages: 57
+> ```
+
+## 🤖 Claude *(21:57:44)*
+
+
+## 🤖 Claude *(21:57:46)*
+
+Now I have the full picture:
+- **`Agentic-Design-Patterns.pdf`** — 482 pages (the canonical agentic-patterns taxonomy) — **not yet synthesized anywhere in our docs**.
+- **`From AGI to ASI - 2606.12683.pdf`** — 57 pages — already distilled into the Via-4 checklist, but only Via 4's 5 open questions; the patterns book is the missing half.
+- Our `docs/architecture/system_architecture.md` and `docs/agents.md` are **stale** (still describe an AdSense/SEO monetization platform — pre-pivot, pre-Pantheon). That's a real drift signal.
+
+Let me pull the book's table of contents so I can scope the deep-read agents precisely.
+
+## 🤖 Claude *(21:57:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/Agentic-Design-Patterns.pdf",
+  "pages": "1-16"
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> pdftoppm is not installed. Install poppler-utils (e.g. `brew install poppler` or `apt-get install poppler-utils`) to enable PDF page rendering.
+> ```
+
+## 🤖 Claude *(21:57:50)*
+
+
+## 🤖 Claude *(21:57:51)*
+
+Read tool needs poppler for PDFs (not installed). I'll extract text directly with pypdf instead.
+
+## 🤖 Claude *(21:57:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 -c \"\nfrom pypdf import PdfReader\nr = PdfReader('docs/Agentic-Design-Patterns.pdf')\n# Scan first 20 pages for a Table of Contents\nfor i in range(0, 20):\n    t = r.pages[i].extract_text() or ''\n    if t.strip():\n        print(f'----- PAGE {i+1} -----')\n        print(t[:2500])\n\" 2>/dev/null | head -250",
+  "description": "Extract Agentic Design Patterns TOC text"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ----- PAGE 1 -----
+> Agentic  Design  Patterns   
+> A  Hands-On  Guide  to  Building  Intelligent  Systems
+>  1
+> ,  Antonio  Gulli Table  of  Contents  -  total  424  pages    =  1+2+1+1+4+9+103+61+34+114+74+5+4  11  Dedication,  1  page   Acknowledgment,  2  pages   [final,  last  read  done]  Foreword,  1  page    [final,  last  read  done]  A  Thought  Leader's  Perspective:  Power  and  Responsibility   [final,  last  read  done]  Introduction,  4  pages  [final,  last  read  done]  What  makes  an  AI  system  an  "agent"?,  9  pages  [final,  last  read  done]   Part  One,  (Total:  103  pages)  1.  Chapter  1:  Prompt  Chaining (code),  12  pages  [final,  last  read  done,  code  ok]  2.  Chapter  2:  Routing (code),  13  pages  [fina,  last  read  done,  code  ok]  3.  Chapter  3:  Parallelization (code),  15  pages  [final,  last  read  done,  code  okl]  4.  Chapter  4:  Reflection  (code),  13  pages  [final,  last  read  done,  code  okl]  5.  Chapter  5:  Tool  Use (code),  20  pages  [final,  last  read  done,  code  ok]  6.  Chapter  6:  Planning (code),  13  pages  [final,  last  read  done,  code  ok] 7.  Chapter  7:  Multi-Agent (code),  17  pages  [final,   last  read  done,  code  ok],  121   Part  Two  (Total:  61  pages)  8.  Chapter  8:  Memory  Management (code),  21  pages  [final,  last  read  done,  code  ok]  9.  Chapter  9:  Learning  and  Adaptation (code),  12  pages  [final,  last  read  done,  code  ok]  10.  Chapter  10:  Model  Context  Protocol  (MCP) (code),  16  pages   [final,  last  read  done,  code  ok]  11.  Chapter  11:  Goal  Setting  and  Monitoring (code),  12  pages  [final,  last  read  don,  code  oe],  182   Part  Three  (Total:  34  pages)  12.  Chapter  12:  Exception  Handling  and  Recovery (code),  8  pages  [final,   last  read  done,  code  ok]    13.  Chapter  13:  Human-in-the-Loop (code),  9  pages  [final,  last  read  done,  code  ok]  14.  Chapter  14:  Knowledge  Retrieval  (RAG) (code),  17  pages  [final,  last  read  done,  code  ok],  216   Part  Four  (Total:  114  pages)  15.  Chapter  15:  Inter-Agent  Communication  (A2A)  (code),  15  pages  [final,  last  read  done,  code  ok]  16.  Chapter  16:  Resource-Aware  Optimization (code),  15  pages   [final,   last  read  done,  code  ok] 17.  Chapter  17:  Reasoning  Techniques (code),  24  pages  [final,   last  read  done,  code  ok]  18.  Chapter  18:  Guardrails/Safety  Patterns (code),  19  pages  [final,  last  read  done,  code  ok] 19.  Chapter  19:  E
+> ----- PAGE 2 -----
+>   
+> 2  
+> 
+> ----- PAGE 3 -----
+> To  my  son,  Bruno,  
+> who  at  two  years  old,  brought  a  new  and  brilliant  light  into  my  life.  As  I  explore  the  systems  that  
+> will
+>  
+> define
+>  
+> our
+>  
+> tomorrow,
+>  
+> it
+>  
+> is
+>  
+> the
+>  
+> world
+>  
+> you
+>  
+> will
+>  
+> inherit
+>  
+> that
+>  
+> is
+>  
+> foremost
+>  
+> in
+>  
+> my
+>  
+> thoughts.
+>  
+>  
+> To  my  sons,  Leonardo  and  Lorenzo,  and  my  daughter  Aurora,   
+> My  heart  is  filled  with  pride  for  the  women  and  men  you  have  become  and  the  wonderful  world  
+> you
+>  
+> are
+>  
+> building.
+>  
+> This  book  is  about  how  to  build  intelligent  tools,  but  it  is  dedicated  to  the  profound  hope  that  
+> your
+>  
+> generation
+>  
+> will
+>  
+> guide
+>  
+> them
+>  
+> with
+>  
+> wisdom
+>  
+> and
+>  
+> compassion.
+>  
+> The
+>  
+> future
+>  
+> is
+>  
+> incredibly
+>  
+> bright,
+>  
+> for
+>  
+> you
+>  
+> and
+>  
+> for
+>  
+> us
+>  
+> all,
+>  
+> if
+>  
+> we
+>  
+> learn
+>  
+> to
+>  
+> use
+>  
+> these
+>  
+> powerful
+>  
+> technologies
+>  
+> to
+>  
+> serve
+>  
+> humanity
+>  
+> and
+>  
+> help
+>  
+> it
+>  
+> progress.
+>  
+> With  all  my  love.  
+>  
+> ----- PAGE 4 -----
+> Acknowledgment   
+> I  would  like  to  express  my  sincere  gratitude  to  the  many  individuals  and  teams  who  
+> made
+>  
+> this
+>  
+> book
+>  
+> possible.
+>  
+> First  and  foremost,  I  thank  Google  for  adhering  to  its  mission,  empowering  Googlers,  
+> and
+>  
+> respecting
+>  
+> the
+>  
+> opportunity
+>  
+> to
+>  
+> innovate.
+>  
+> I  am  grateful  to  the  Office  of  the  CTO  for  giving  me  the  opportunity  to  explore  new  
+> areas,
+>  
+> for
+>  
+> adhering
+>  
+> to
+>  
+> its
+>  
+> mission
+>  
+> of
+>  
+> "practical
+>  
+> magic,"
+>  
+> and
+>  
+> for
+>  
+> its
+>  
+> capacity
+>  
+> to
+>  
+> adapt
+>  
+> to
+>  
+> new
+>  
+> emerging
+>  
+> opportunities.
+>  
+> I  would  like  to  extend  my  heartfelt  thanks  to  Will  Grannis,  our  VP,  for  the  trust  he  puts  in  
+> people
+>  
+> and
+>  
+> for
+>  
+> being
+>  
+> a
+>  
+> servant
+>  
+> leader.
+>  
+> To
+>  
+> John
+>  
+> Abel,
+>  
+> my
+>  
+> manager,
+>  
+> for
+>  
+> encouraging
+>  
+> me
+>  
+> to
+>  
+> pursue
+>  
+> my
+>  
+> activities
+>  
+> and
+>  
+> for
+>  
+> always
+>  
+> providing
+>  
+> great
+>  
+> guidance
+>  
+> with
+>  
+> his
+>  
+> British
+>  
+> acumen.I
+> ```
+
+## 🤖 Claude *(21:58:01)*
+
+
+## 🤖 Claude *(21:58:02)*
+
+Got the canonical taxonomy. Let me confirm the tail of the TOC (chapters 19–21 + appendices).
+
+## 🤖 Claude *(21:58:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 -c \"\nfrom pypdf import PdfReader\nr = PdfReader('docs/Agentic-Design-Patterns.pdf')\nt = r.pages[0].extract_text() or ''\n# print the tail of page 1 (TOC continuation)\nprint(t[2300:5200])\n\" 2>/dev/null",
+  "description": "Extract tail of TOC for chapters 19-21 + appendices"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ng  Techniques (code),  24  pages  [final,   last  read  done,  code  ok]  18.  Chapter  18:  Guardrails/Safety  Patterns (code),  19  pages  [final,  last  read  done,  code  ok] 19.  Chapter  19:  Evaluation  and  Monitoring (code),  18  pages  [final,  last  read  done,  code  ok] 20.  Chapter  20:  Prioritization (code),  10  pages  [final,  last  read  done,  code  ok  ] 21.  Chapter  21:  Exploration  and  Discovery (code),  13  pages  [final,  last  read  done,  code  ok], 330   Appendix  (Total:  74  pages)  22.  Appendix  A:  Advanced  Prompting  Techniques,  28  pages  [final,  last  read  done,  code  ok] 23.  Appendix  B  -  AI  Agentic  ….:  From  GUI  to  Real  world  environment,  6  pages  [final,  last  read  done,  code  ok]  24.  Appendix  C  -  Quick  overview  of  Agentic  Frameworks,  8  pages  [final,  last  read  done,  code  ok]  ,  25.  Appendix  D  -  Building  an  Agent  with  AgentSpace  (on-line  only),  6  pages  [final,  last  read  done,  code  ok] 26.  Appendix  E  -  AI  Agents  on  the  CLI  (online)  ,  5  pages  [final,  last  read  done,  code  ok] 27.  Appendix  F  -  Under  the  Hood:  An  Inside  Look  at  the  Agents’  Reasoning  Engines,  14  pages  [final,  lrd,  code  ok],  28.  Appendix  G  -   Coding  agents,  7  pages   406  Conclusion, 5  pages  [final,  last  read  done]  Glossary,  4  pages   [final,  last  read  done]  Index  of  Terms, 11  pages  ( Generated  by  Gemini.  Reasoning  step  included  as  an  agentic  example )  [final,  lrd]  Online  contribution  -  Frequently  Asked  Questions:  Agentic  Design  Patterns Pre  Prin t:  https://www.amazon.com/Agentic-Design-Patterns-Hands-Intelligent/dp/3032014018/
+>  
+>  
+> 1
+>  All  my  royalties  will  be  donated  to  Save  the  Children  
+> 1
+> ```
+
+## 🤖 Claude *(21:59:08)*
+
+
+## 🤖 Claude *(21:59:10)*
+
+I now have the complete canonical taxonomy — **21 agentic design patterns** (Gulli's book) + the **4-Via AGI→ASI trajectory** (DeepMind paper, partly synthesized). I also spotted a real drift: `docs/architecture/system_architecture.md` and `docs/agents.md` still describe a pre-pivot AdSense/SEO platform — they don't reflect the Pantheon/Mesh/agentic reality.
+
+Dispatching three Explore agents in parallel to deep-read both source documents and inventory our current protocols against them.
+
+## 🤖 Claude *(21:59:29)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Digest agentic patterns ch1-11",
+  "subagent_type": "Explore",
+  "prompt": "You are deep-reading a book to feed a strategic synthesis for the MCORCH project (a Supabase + React \"autonomic AI orchestration\" platform). Your job: extract the canonical agentic design patterns from **Chapters 1\u201311** of the book \"Agentic Design Patterns\" by Antonio Gulli, and map each to how MCORCH already implements it (or the gap).\n\nSOURCE FILE: `/home/gcrUX/htdocs/constellation-orchestra/docs/Agentic-Design-Patterns.pdf` (482-page PDF).\n\nHOW TO READ THE PDF \u2014 the Read tool CANNOT render this PDF (poppler/pdftoppm is not installed). You MUST extract text with python + pypdf via the Bash tool, e.g.:\n```\npython3 -c \"\nfrom pypdf import PdfReader\nr = PdfReader('/home/gcrUX/htdocs/constellation-orchestra/docs/Agentic-Design-Patterns.pdf')\nfor i in range(START, END):\n    print('=== PDF PAGE', i+1, '==='); print(r.pages[i].extract_text() or '')\n\"\n```\nFront matter is ~18 pages, so Chapter 1 begins around PDF page 19\u201324. Locate each chapter by scanning extracted text for its title header (\"Chapter 1: Prompt Chaining\", \"Chapter 2: Routing\", \u2026 \"Chapter 11: Goal Setting and Monitoring\"). Iterate page ranges (e.g. read 16-page windows) until you find each chapter, then read enough of each chapter to capture its core idea. You do NOT need every word \u2014 capture the pattern's intent, structure, and the pitfalls the author stresses.\n\nSCOPE \u2014 these 11 patterns:\n1 Prompt Chaining \u00b7 2 Routing \u00b7 3 Parallelization \u00b7 4 Reflection \u00b7 5 Tool Use \u00b7 6 Planning \u00b7 7 Multi-Agent \u00b7 8 Memory Management \u00b7 9 Learning and Adaptation \u00b7 10 Model Context Protocol (MCP) \u00b7 11 Goal Setting and Monitoring.\n\nFor EACH of the 11 patterns, produce a compact entry:\n- **Essence** (2\u20133 sentences): what it is + the core problem it solves.\n- **When to use / canonical structure** (1\u20132 bullets).\n- **Pitfalls the author stresses** (1 bullet).\n\nThen a **MCORCH mapping** line per pattern: where MCORCH already does this (cite a concrete artifact below) and the gap, if any.\n\nMCORCH grounding (use to map \u2014 these are real artifacts in this repo):\n- Orchestration / chaining / parallelization: the **Workflow tool** (pipeline()/parallel()/agent() fan-out); `supabase/functions/orchestrate-content/index.ts` (multi-step campaign pipeline); `orchestrate-step` (async steps via pg_net).\n- Routing: LLM cascading fallback (`docs/processes/llm-cascading-fallback.md`), provider routing in `generate-image`.\n- Reflection / eval: Vision QA gate (`scripts/qa/vision-qa.ts`), `mcorch-qa-healing` skill (material-proof audit), adversarial-verify pattern in Workflow.\n- Tool Use / MCP: **Vision MCP** (`packages/vision-mcp-core/` \u2014 Streamable HTTP MCP server, tools mesh.search/deepsearch.run); MCP connectors (`McpConnectorsCard`).\n- Planning / Goal: **BoK suite** (MRD\u2192BRD\u2192PRD\u2192FRD\u2192SDD, the \"Closed-Loop Protocol\" / BoK Gate in CLAUDE.md); `deepsearch-blueprint`; `.claude/context/sprint-priorities.md`; `intent-plan-execution.md`.\n- Multi-Agent: **Pantheon Departmental Army** (L1 Heads engineer/scientist/artisan/marketing-growth + L2 specialists + main synthesizer + guardian \u2014 see CLAUDE.md \"Departmental Army\"); OpenClaw squad (`~/.openclaw/`); `.claude/agents/`.\n- Memory: **Knowledge Mesh GraphRAG** (`mcorch_nodes`/`mcorch_edges`, pgvector HNSW 768d, FSRS-6 stability decay); OpenClaw Dreaming promotion; `src/hooks/useMcorchMemory.ts`.\n- Learning/Adaptation: the **Obstacle\u2192Synthesis mandate** in CLAUDE.md (every solved obstacle \u2192 SOP+skill+agent); viral-autopilot `optimization_policy` (analyze\u2192feedback loop).\n- Goal monitoring: `infra_health_logs` telemetry, watchdog cron.\n\nKeep the whole reply under ~1800 words, structured markdown. Do NOT dump raw PDF text \u2014 synthesize. If a chapter is hard to locate, say so and give your best extraction from what you found."
+}
+```
+
+## 🤖 Claude *(21:59:46)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Digest agentic patterns ch12-21",
+  "subagent_type": "Explore",
+  "prompt": "You are deep-reading a book to feed a strategic synthesis for the MCORCH project (a Supabase + React \"autonomic AI orchestration\" platform). Your job: extract the canonical agentic design patterns from **Chapters 12\u201321 + Appendix F** of the book \"Agentic Design Patterns\" by Antonio Gulli, and map each to how MCORCH already implements it (or the gap).\n\nSOURCE FILE: `/home/gcrUX/htdocs/constellation-orchestra/docs/Agentic-Design-Patterns.pdf` (482-page PDF).\n\nHOW TO READ THE PDF \u2014 the Read tool CANNOT render this PDF (poppler/pdftoppm is not installed). You MUST extract text with python + pypdf via the Bash tool, e.g.:\n```\npython3 -c \"\nfrom pypdf import PdfReader\nr = PdfReader('/home/gcrUX/htdocs/constellation-orchestra/docs/Agentic-Design-Patterns.pdf')\nfor i in range(START, END):\n    print('=== PDF PAGE', i+1, '==='); print(r.pages[i].extract_text() or '')\n\"\n```\nChapters 12\u201321 fall in the back half of the book. From the table of contents, Part Three (ch12\u201314) and Part Four (ch15\u201321) together run from roughly PDF page ~210 to ~340, and Appendix F (\"Under the Hood: An Inside Look at the Agents' Reasoning Engines\") is near the end (~pages 380\u2013400). Locate each chapter by scanning extracted text for its title header (\"Chapter 12: Exception Handling and Recovery\", \u2026 \"Chapter 21: Exploration and Discovery\", \"Appendix F\"). Iterate page ranges (16-page windows) until you find each, then read enough to capture its core idea. You do NOT need every word.\n\nSCOPE \u2014 these patterns:\n12 Exception Handling and Recovery \u00b7 13 Human-in-the-Loop \u00b7 14 Knowledge Retrieval (RAG) \u00b7 15 Inter-Agent Communication (A2A) \u00b7 16 Resource-Aware Optimization \u00b7 17 Reasoning Techniques \u00b7 18 Guardrails/Safety Patterns \u00b7 19 Evaluation and Monitoring \u00b7 20 Prioritization \u00b7 21 Exploration and Discovery \u00b7 Appendix F (Reasoning Engines \u2014 brief).\n\nFor EACH pattern, produce a compact entry:\n- **Essence** (2\u20133 sentences): what it is + the core problem it solves.\n- **When to use / canonical structure** (1\u20132 bullets).\n- **Pitfalls the author stresses** (1 bullet).\n\nThen a **MCORCH mapping** line per pattern: where MCORCH already does this (cite a concrete artifact below) and the gap, if any.\n\nMCORCH grounding (use to map \u2014 real artifacts in this repo):\n- Exception Handling / Recovery: self-healing semantics, `infra_health_logs`, idempotent retry, refund RPCs (`refund_autopilot_video_enqueue`), `rescue-video`, watchdog cron, `docs/processes/canvas-job-failure-recovery.md`.\n- Human-in-the-Loop: **ORO triplet** (Operator/Reviewer/Owner in `.claude/rules/survival.md`), AskUserQuestion, Sovereign GO gates, intent HITL (`intent-plan-execution.md`).\n- RAG / Knowledge Retrieval: **Knowledge Mesh GraphRAG** (`mcorch_nodes`/`mcorch_edges`, pgvector HNSW 768d, `match_mcorch_nodes`, `search-constellation`), Vision MCP `mesh.search`.\n- Inter-Agent Communication (A2A): Pantheon mesh bridge (`scripts/bridge-mesh-to-openclaw.ts`, `distribute-mesh-to-agents.ts`), Telegram Guardian briefing, Knowledge Mesh edges as shared state.\n- Resource-Aware Optimization: **mcoCoins** billing (`deduct_mco_coins` atomic RPC), cost calibration 4\u00d7-floor (`mcoin-cost-calibration.md`), Vision MCP cost caps, LLM cascading fallback.\n- Reasoning Techniques: deepsearch (Gemini grounding), `analyze-node` edge function, the Workflow judge-panel / loop-until-dry patterns.\n- Guardrails/Safety: **Survival Laws** (Materiality/Anticipated-Process/Pruning/ORO), **Cyber-Sentinel** prompt-injection (`supabase/functions/_shared/sentinel.ts`, pt-BR + English families), RLS default-deny, BoK Gate, `/security-review`, edge JWT ES256 verification.\n- Evaluation & Monitoring: `mcorch-qa-healing` (Phase 5c material-proof audit), Vision QA, `infra_health_logs`, `audit-schema-drift.sh`, e2e-user-zero.\n- Prioritization: sprint-priorities, OTD/RPN ledger (FMEA), survival-law refusal gates.\n- Exploration & Discovery: `fetch-trends`/`vm_trends` (viral-autopilot trend-informed angle), deepsearch-blueprint, OpenClaw Dreaming.\n\nKeep the whole reply under ~1800 words, structured markdown. Do NOT dump raw PDF text \u2014 synthesize. If a chapter is hard to locate, say so and give your best extraction."
+}
+```
+
+## 🤖 Claude *(22:00:05)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "AGI\u2192ASI paper + protocol inventory",
+  "subagent_type": "Explore",
+  "prompt": "Two-part exploration to feed a strategic synthesis for the MCORCH project (a Supabase + React \"autonomic AI orchestration\" platform that is evolving toward a multi-agent collective). Read-only.\n\n=== PART 1: The \"From AGI to ASI\" paper (full structure beyond what we already synthesized) ===\n\nSOURCE: `/home/gcrUX/htdocs/constellation-orchestra/docs/From AGI to ASI - 2606.12683.pdf` (57-page DeepMind paper, arXiv:2606.12683).\n\nHOW TO READ \u2014 the Read tool CANNOT render this PDF (poppler not installed). Use python + pypdf via Bash:\n```\npython3 -c \"\nfrom pypdf import PdfReader\nr = PdfReader('/home/gcrUX/htdocs/constellation-orchestra/docs/From AGI to ASI - 2606.12683.pdf')\nfor i in range(START, END):\n    print('=== PAGE', i+1, '==='); print(r.pages[i].extract_text() or '')\n\"\n```\nWe ALREADY have a synthesis of \"Via 4\" (agent-collective formation): read it first at `/home/gcrUX/htdocs/constellation-orchestra/.claude/context/agi-asi-via4-design-checklist.md`. Your job is to extract what that synthesis MISSED. Specifically capture:\n- The full framing of ALL FOUR vias to ASI (1 Scale, 2 Paradigm/algorithmic leaps, 3 Recursive self-improvement, 4 Agent-collective formation) \u2014 essence of each, and how they compose.\n- **Recursive self-improvement (Via 3)** mechanics and risks the paper details (the \"improvement loop\", measurement, instability).\n- Any **safety / alignment / governance / oversight** framing the paper gives (scalable oversight, human steering at superhuman speed, deceptive alignment, control).\n- Any concrete **design principles, recommendations, or open research questions** the paper offers to people BUILDING toward this (not just the lab-scale framing).\nReturn a tight digest (~700 words) of the above \u2014 anchored in page numbers where you can.\n\n=== PART 2: Current MCORCH development-protocol & governance inventory ===\n\nGoal: catalog the protocols that currently GOVERN how MCORCH builds software, so we can later judge which are future-aligned (agentic / AGI\u2192ASI-aware) vs stuck in an old paradigm. Read these and summarize each one's actual content + governing \"vision\":\n- `/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md` \u2014 focus on: the \"MCORCH MASTER EXECUTION PROTOCOL\" (Closed-Loop / BoK Gate), the \"Obstacle \u2192 Synthesis Mandate (Anticorpo Permanente)\", the \"Departmental Army (Pantheon Architecture)\", the \"API Tenancy Model\", and the Harness Engineering pattern.\n- `/home/gcrUX/htdocs/constellation-orchestra/.claude/rules/survival.md` \u2014 the 4 Survival Laws (Materiality, Anticipated-Process, Pruning, ORO) + Refusal Protocol.\n- `/home/gcrUX/htdocs/constellation-orchestra/.claude/context/pantheon-role-matrix.md` \u2014 the agent role matrix.\n- The SOP corpus: run `ls docs/processes/` and read 4\u20135 representative SOPs (e.g. `deepsearch-blueprint.md`, `build-deploy-materiality.md`, `schema-drift-audit.md`, `creative-qa-vision-gate.md`) to characterize the SOP *form* (Operator/Sequence/Verification/Recovery/Success).\n- IMPORTANT staleness check: read `/home/gcrUX/htdocs/constellation-orchestra/docs/architecture/system_architecture.md` and `/home/gcrUX/htdocs/constellation-orchestra/docs/agents.md` \u2014 confirm whether they are STALE (they appear to describe a pre-pivot AdSense/SEO monetization platform and only 2 agents, not the current Pantheon/Mesh/agentic reality). Report the drift concretely.\n\nFor Part 2 return: (a) a list of the governing protocols with a one-paragraph characterization each; (b) an explicit \"future-aligned vs stale/old-paradigm\" verdict per protocol; (c) the concrete drift in the two architecture docs.\n\nKeep the whole reply under ~1800 words, structured markdown. Cite file paths / page numbers. Synthesize, don't dump."
+}
+```

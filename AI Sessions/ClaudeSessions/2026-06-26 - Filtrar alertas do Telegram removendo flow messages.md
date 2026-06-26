@@ -2401,15 +2401,1068 @@ Sobre o gate **QA+TL** formal: para um diff de ~19 linhas de toggle de notifica�
 
 **Recomendo seguir direto pro commit+push.** Dou o go? (ou: "roda o QA+TL antes" / "comita e sela tudo")
 
----
+## 👤 User *(21:41:07)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 31min (último OK: 2026-06-26T18:40:52.402Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+🌊 [FLOW] BTCUSDT: fluxo unilateral (COMPRA agressora) — imbalance=0.7755 toxicity=0.7755. Timing ruim p/ entrar contra.
+🌊 [FLOW] BTCUSDT: fluxo normalizou (toxicity=0.0345).
+⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 69min (último OK: 2026-06-26T18:40:52.402Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+🔔 [TESTE] Canal Telegram OK. Este é o ping de verificação — o gatilho de FLIP DE REGIME (aviso do bull) chega por aqui. As mensagens [FLOW] foram silenciadas; o resto segue ativo.
+⚠️ [AGENTE PARADO] Nenhum ciclo concluído há 1.9h (último OK: 2026-06-26T18:40:52.402Z). LLM provavelmente offline ou travado (ex.: OpenRouter 404 data-policy/ZDR, ou ciclo wedgeado). O trading segue PROTEGIDO (HALT/cap/riskGuard); o OBSERVADOR está cego até religar.
+--
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-26 - Clarificar essência e tom do MCORCH]]
-> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
-%% --- TIMELINE END --- %%
+As mensagens de flow parou de chegar então acho que agora esta ok. Pode continuar com as recomendações e tambem os alertas identificados
+
+## 🤖 Claude *(21:42:47)*
+
+
+## 🤖 Claude *(21:42:52)*
+
+Perfeito — confirmações importantes nessas mensagens:
+- ✅ **`[FLOW]` parou** depois do deploy (as 2 que chegaram eram pré-deploy).
+- ✅ **O ping `🔔 [TESTE]` chegou** → canal do gatilho do bull confirmado vivo.
+
+E um detalhe que essas mensagens revelam: o **`[AGENTE PARADO]` disparou 3× pro MESMO outage** (todos com "último OK: 18:40:52"). Não é o agente piscando — **foi cada um dos meus 2 restarts do backend** re-detectando o outage em curso (o watchdog guarda o estado em memória → restart zera → re-alerta). Volto nisso já. Primeiro a recomendação: commit.
+
+Vou commitar como gcrux (preserva o `.git`), escopo só nos 2 arquivos versionados:
+
+## 🤖 Claude *(21:42:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cat > /home/gcrux-tradeux/.commitmsg <<\"MSGEOF\"\nchore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED\n\nFluxo extremo do taker era ~95% do ruido no Telegram e o dono nao decide\nnada com ele. Gate FLOW_NOTIFY_ENABLED (default true, retrocompat) envolve\nSO a chamada notifyFlowExtreme no flowJob; o sinal segue computado, logado e\ngateando a id2 (timing). [REGIME]/[CROSS]/[SUPERVISOR]/ordens/agente intactos.\n.env.example documenta a flag.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nMSGEOF\ncd /home/gcrux-tradeux/tradeux\ngit -c safe.directory=\"*\" add backend/src/flowJob.js .env.example\ngit -c safe.directory=\"*\" commit -F /home/gcrux-tradeux/.commitmsg\nrm -f /home/gcrux-tradeux/.commitmsg\necho \"=== HEAD ===\"; git -c safe.directory=\"*\" log --oneline -2\necho \"=== status ===\"; git -c safe.directory=\"*\" status -sb 2>&1 | grep -v \"Permission denied\\|could not open\" | head -3'",
+  "description": "Commit FLOW gate as gcrux, scoped to 2 files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 701b7e7] chore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED
+>  2 files changed, 19 insertions(+), 6 deletions(-)
+> === HEAD ===
+> 701b7e7 chore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED
+> 023aa00 feat(cockpit): registro das previsoes do operador + placar + SMA no grafico
+> === status ===
+> ## master...origin/master [ahead 1]
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ```
+
+## 🤖 Claude *(21:43:01)*
+
+
+## 🤖 Claude *(21:43:02)*
+
+Commit `701b7e7` criado (ahead 1; o scratch `backtest-results/*` ficou de fora, correto). Agora o push — precisa ser como **ubuntu** (a chave SSH é só dele), depois `chown` do `.git` de volta:
+
+## 🤖 Claude *(21:43:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && git -c safe.directory='*' push origin master 2>&1 | tail -8; echo \"EXIT=$?\"",
+  "description": "Push to origin master as ubuntu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    023aa00..701b7e7  master -> master
+> EXIT=0
+> ```
+
+## 🤖 Claude *(21:43:08)*
+
+
+## 🤖 Claude *(21:43:09)*
+
+Push OK: `023aa00..701b7e7 master -> master`. Agora o `chown` do `.git` de volta pra gcrux (o push como ubuntu envenena o owner) e verificação final:
+
+## 🤖 Claude *(21:43:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git && echo \"chown .git OK\"\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== owner .git ===\"; ls -ld .git | awk \"{print \\$3\\\":\\\"\\$4}\"\necho \"=== sincronia com origin ===\"; git -c safe.directory=\"*\" status -sb 2>&1 | grep -v \"Permission denied\\|could not open\" | head -1\necho \"=== HEAD local == origin? ===\"; git -c safe.directory=\"*\" log --oneline -1 origin/master'",
+  "description": "Chown .git back and verify sync with origin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chown .git OK
+> === owner .git ===
+> gcrux-tradeux:gcrux-tradeux
+> === sincronia com origin ===
+> ## master...origin/master
+> === HEAD local == origin? ===
+> 701b7e7 chore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED
+> ```
+
+## 🤖 Claude *(21:44:32)*
+
+
+## 🤖 Claude *(21:44:34)*
+
+Push completo e verificado: **vivo == master == origin == `701b7e7`**, `.git` de volta pra gcrux, em sincronia. Os 17 "vulnerabilities" do dependabot são pré-existentes (não do meu diff).
+
+Agora os **alertas identificados** — deixa eu ler as memórias relevantes pra registrar o que mudou e te dar o status honesto do agente.
+
+## 🤖 Claude *(21:44:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-heartbeat-watchdog.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 2 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-agent-heartbeat-watchdog
+> 3	description: incidente OpenRouter ZDR (modelo :free → 404 data-policy) + watchdog agentHeartbeatJob que alerta Telegram na outage silenciosa do agente
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: bfc0415e-06c2-47d3-b24b-faed681e9ad3
+> 8	---
+> 9	
+> 10	**Incidente (2026-06-23 02:44 → 2026-06-24 03:10, ~24h):** o agente LLM (serviço supervisionado no compose, modelo `OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free` em `tradeux-agent/.env`) caiu em TODO ciclo com `OpenRouter 404: "No endpoints available matching your guardrail restrictions and data policy"`. **Causa-raiz (NÃO está no repo — é setting da conta OpenRouter):** em `openrouter.ai/settings/privacy`, o toggle **Zero Data Retention → "Non-frontier" = ON** força todo request non-frontier a só rotear por endpoints ZDR; modelo `:free` **não tem endpoint ZDR** (é grátis porque retém/treina) → nenhum endpoint casa → 404. **Fix (1 clique, $0): DESLIGAR "Non-frontier" no ZDR** (o dono flipou ~03:08 → 0 × 404 desde 03:10, agente voltou). Alternativa: manter ZDR estrito e trocar p/ modelo PAGO com ZDR (custa ~7M tokens/dia = ~25k/ciclo × ~288). O `:free` é LENTO (~12 min/ciclo com ~20 rounds). A outage foi SILENCIOSA: o agente não consegue se reportar morto; trading seguiu protegido (camada Beholder é independente — ver [[tradeux-mainnet-go-live]]).
+> 11	
+> 12	**Watchdog entregue (`e7afb72`, 2026-06-24, gate QA+TL+crítico em 2 rodadas):** `backend/src/agentHeartbeatJob.js` — job READ-ONLY que lê o journal e notifica o dono no Telegram (`telegramNotify`, dedup) **1× quando o agente para** e **1× quando volta**. Registrado no `server.js` após o `paperReviewJob`. Defaults zero-config; kill-switch `AGENT_HEARTBEAT_ENABLED`; teto `AGENT_HEARTBEAT_STALE_MS` (default **30min**, piso 2min); `AGENT_HEARTBEAT_MS` (checa a cada 5min). Passivo: não toca money-path/ordem/HALT.
+> 13	
+> 14	**Gotcha DURÁVEL do journal (pego pelo crítico adversarial como BLOCKER):** `record()` (`tradeux-agent/src/journal.js`) carimba `ts` fresco em **TODO** tipo de record — `cycle_end`, `tool_call` E `cycle_aborted` — não só em `cycle_end`. Logo o batimento tem que filtrar **`type === 'cycle_end'`** (único sinal de ciclo CONCLUÍDO); contar "qualquer ts" dá **falso-negativo** (um ciclo que conecta, faz tool_calls e depois trava deixa ts fresco → falso "OK"). Validado ao vivo: durante a outage o journal tinha `tool_call` de 03:12 com último `cycle_end` em 02:39 (24h). **Perf:** o journal cresce SEM rotação → o job lê só a **CAUDA (~1MB)** via `fs.readSync` (full-read só no fallback raro de outage prolongada), senão um `readFileSync`+`split` síncrono bloquearia o event loop do backend ~250ms a cada 5min (cai p/ ~6ms).
+> 15	
+> 16	**Rotação do journal RESOLVIDA (`00b560e`, 2026-06-24, gate APPROVE×3 + re-check adversarial):** `tradeux-agent/src/journal.js` ganhou `maybeTrim()` ao fim de `record()` — quando o arquivo passa de `TRADEUX_AGENT_JOURNAL_TRIM_BYTES` (default 20MB, piso 2MB), reescreve mantendo os últimos `TRADEUX_AGENT_JOURNAL_KEEP_BYTES` (default 12MB, piso 1MB) **line-aligned**, via **temp+rename atômico** (o backend `:ro` nunca lê pela metade). **Cap por BYTES, não linhas** (gotcha do gate): KEEP é forçado a `≤80% do trigger` → re-trim-loop é IMPOSSÍVEL mesmo com linhas grandes (records de tool_call com I/O gordo). 12MB cobre todos os leitores (janela de 5000 linhas do /agent/runs, ~5 notify_owner do dedup, centenas de cycle_end p/ o baseline do watchdog). Escritor único = só o agente (backend é `:ro`) → sem race de escrita; rename atômico no Linux. **Deploy fez `38,5MB→12,6MB` ao vivo (8854 linhas, 0 corrompidas/0 U+FFFD)**; o histórico foi arquivado 1× num `gzip` (`tradeux-agent/journal-archive/`, gitignored) ANTES — escolha do dono: "arquivar 1× e aparar". UTF-8/emoji do journal preservado (leio até EOF=`\n`, descarto só a 1ª linha parcial).
+> 17	
+> 18	Como checar o agente ao vivo: `GET /api/agent/runs` traz `kpis.lastTs` (último record QUALQUER, não filtra cycle_end!); pra o estado real, `docker logs tradeux-agent-1` (falhas de ciclo vão pro stdout) + tail do journal em `tradeux-agent/journal/tradeux-agent.jsonl`. Ver [[tradeux-agent-token-economics]] e [[tradeux-logger-per-category-files]] (logs de boot do backend vão pro ARQUIVO `logs/system.log`, NÃO pro `docker logs`).
+> 19	
+> ```
+
+## 🤖 Claude *(21:44:39)*
+
+
+## 🤖 Claude *(21:44:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-telegram-notifications.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 9 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-telegram-notifications
+> 3	description: "Telegram FUNCIONANDO (causa raiz: chatId era o username do bot); telegramNotify util + notificação de todas as ordens + canal one-way do agente (tradeux_notify_owner)"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 7f56bfa3-b8ee-4915-b4c6-31b9694bde1b
+> 8	---
+> 9	
+> 10	**Incidente do chatId (2026-06-10, RESOLVIDO):** o Telegram nunca funcionou porque `settings.telegramChat` estava `@beholderTGbot` (o username do PRÓPRIO bot — a UI não valida) em vez do ID numérico do dono `5835174772` → `403: the bot can't send messages to the bot`. Fix via `PATCH /api/settings` (NÃO SQL direto: `settingsRepository` CACHEIA settings e só `updateSettings` limpa o cache). Gotcha da API: header é `Authorization: <token>` CRU, sem `Bearer`. Bot: @beholderTGbot; token nas settings (id=1).
+> 11	
+> 12	**Stack de notificações (commit `c3463ac`, gates QA+TL ok):**
+> 13	- `backend/src/utils/telegramNotify.js` — `notify(msg, dedupKey)` best-effort (NUNCA lança), Telegraf singleton (recria se token mudar), dedup FIFO cap 200, token REDIGIDO nos logs de erro. `notifyOrder(order)` p/ status NEW/FILLED/REJECTED/EXPIRED (dedupKey `order:<id>:<status>` — MARKET inserida já-FILLED não duplica com o stream); **CANCELED é silencioso de propósito** (renovações do harvester/OCO = ruído).
+> 14	- Hooks em TODOS os pontos: `beholder.placeOrder`, OCO por perna, `ordersController.placeOrder`, `app-em.processExecutionData` (caminho quente — fire-and-forget) e `processListStatusData`.
+> 15	- `POST /agent/notify` (auth, cap 1500, prefixo "🤖 [AGENTE] ") + tool MCP `tradeux_notify_owner` (readTool NÃO-gated por ALLOW_TRADING de propósito — pedir aprovação importa mais com escrita travada) + guardrail no SYSTEM_PROMPT (one-way, máx 1-2/ciclo, caminho conservador após notificar).
+> 16	
+> 17	**Why:** pedido do dono — notificar todas as ordens + agentes solicitarem aprovação/ajuda pelo Telegram; e o aviso "[FASE4] Saída do BEAR" do armador ([[tradeux-farm-funnel-backtest]]) depende do Telegram funcionar.
+> 18	
+> 19	**How to apply:** p/ notificar algo novo, use `telegramNotify.notify()` (não `utils/telegram.js`, que lança e instancia Telegraf por chamada — esse é só p/ eventos raros tipo funnelJob). Follow-ups não-bloqueantes: rate-limit server-side no /agent/notify; `{sent:false}` devolver `reason`; resposta DO dono (two-way) não existe — é épico futuro (polling/webhook).
+> 20	
+> 21	**Incidente do spam do agente (2026-06-10, RESOLVIDO em `12ceabe`):** o agente mandou 6 falso-positivos parafraseados sobre a venda do harvester em bear (não conhecia o módulo) + 2 em inglês. Causa raiz dupla: prompt desatualizado E zero memória entre ciclos ("não repita" era impossível). Fix: doutrina POR MÓDULO no SYSTEM_PROMPT (cofre nunca; harvester=no-loss garantido; **trend id7 zera no death cross INDEPENDENTE do P&L — corte de perda é DESENHADO, whipsaw no prejuízo é correto** — gates QA+TL pegaram que a versão "id7 sempre com lucro" era FALSA e plantava o próximo falso-positivo); guardrail pt-BR obrigatório; `buildKickoff()` injeta as últimas 5 notificações do journal (memória anti-repetição; SYSTEM_PROMPT segue estável p/ cache); cap mecânico `MAX_NOTIFY_PER_CYCLE=2` no runCycle. Regressão ao vivo: ciclo --once com os 6 alertas injetados = 0 re-notificações + resumo pt-BR. **Regra do dono "só vende BTC com lucro" é literal SÓ pro harvester; gate de lucro na id7 seria mudança de estratégia (segurar trend perdedor) — refutada pelo backtest, NÃO fazer via prompt.**
+> 22	
+> 23	**Dedup por ASSUNTO em CÓDIGO (2026-06-16, commit `64752f0`, QA-PASS-c/ressalvas + TL-APPROVE + red-team; deployado+verificado no container 15/0):** o cap 2/ciclo + histórico no kickoff + doutrina no prompt **dependem do modelo obedecer** e o `:free` reformula o MESMO alerta entre ciclos e fura (observado: HALT e divergência cockpit×oráculo repetidos — ver [[tradeux-1m-scalping-and-cockpit]]). Camada de código INDEPENDENTE do prompt: `tradeux-agent/src/notifyDedup.js` (puro/testável) `findDuplicateTopic(message, recent, {threshold})` — normaliza (sem acento/pontuação, mantém dígitos, canoniza sinônimos PT/EN incl. **família HALT toda → `halt`**), chave de tópico = **vocabulário de domínio ∪ tickers ∪ transições direcionais** ("de X para Y"→"X>Y"), **Jaccard ≥ 0.6**. Guards anti-falso-positivo (na dúvida NÃO suprime): símbolos distintos (ticker por **SUFIXO** `*usdt/usdc/busd` — pega alt nova fora da allowlist, red-team B6 CRÍTICO), transição inversa (whipsaw), **marcador de evento inédito** (cross/saída-de-bear/prejuízo/erro/-1013/aprovação) força ALLOW. Wiring em `agent.js`: roda **ANTES do cap** (suprimido NÃO consome o cap), histórico = journal `recentOwnerNotifications` (janela 6h, filtra `!isError` → suprimidas não viram âncora-fantasma) + enviadas no ciclo (`sentThisCycle`); suprimida volta como `isError` "notificação SUPRIMIDA"; **kill-switch + limiares por env** (`TRADEUX_NOTIFY_DEDUP_ENABLED/THRESHOLD/RECENT/WINDOW_MS`). Self-test `test/notifyDedup.test.mjs` (15 casos: mensagens REAIS do Telegram = dups + eventos novos = passam) **wired no CI** (job integration, `npm test`). **Limitação conhecida (red-team B7):** re-ocorrência da MESMA transição (2º trend>range real) pode ser suprimida — distinguir exige sinal do chamador, não do texto. Observação-only, fora do money-path, HALT intacto.
+> 24	
+> 25	**Doutrina anti-ruído consolidada (2026-06-16, `37ed4b1`, QA-PASS+TL-APPROVE):** as regras anti-falso-positivo do SYSTEM_PROMPT (que vinham coladas em 3-4 bullets, repetindo ~3x "cockpit lê as MESMAS chaves MEMORY / não é fonte paralela") foram extraídas pra **UM bloco rotulado `DIVERGÊNCIAS ESPERADAS`** em `agent.js` (6 itens: histerese de regime→.gate.regime; fluxo eixo IDADE/`flow.ageSec`; fluxo eixo MAGNITUDE/|imbalance|<0,2=ruído; EV≤0 a 1m; HALT inalterado; buyGate mixed=correto) + ponteiros nos bullets de AMBIENTE/cockpit/COERÊNCIA/NOTIFICAR. **É AQUI que mora a lista de "o que NÃO reportar/notificar" — adicionar regra nova = mais um item no bloco, NÃO colar inline de novo.** Pure reorg de texto, zero mudança de comportamento.
+> 26	
+> ```
+
+## 🤖 Claude *(21:45:04)*
+
+
+## 🤖 Claude *(21:45:05)*
+
+Vou registrar as mudanças duráveis na memória (pra não se perderem num reset), depois te dou o status final + a decisão sobre o último rough edge.
+
+## 🤖 Claude *(21:45:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-telegram-notifications.md",
+  "old_string": "**Doutrina anti-ru\u00eddo consolidada (2026-06-16, `37ed4b1`, QA-PASS+TL-APPROVE):** as regras anti-falso-positivo do SYSTEM_PROMPT (que vinham coladas em 3-4 bullets, repetindo ~3x \"cockpit l\u00ea as MESMAS chaves MEMORY / n\u00e3o \u00e9 fonte paralela\") foram extra\u00eddas pra **UM bloco rotulado `DIVERG\u00caNCIAS ESPERADAS`** em `agent.js` (6 itens: histerese de regime\u2192.gate.regime; fluxo eixo IDADE/`flow.ageSec`; fluxo eixo MAGNITUDE/|imbalance|<0,2=ru\u00eddo; EV\u22640 a 1m; HALT inalterado; buyGate mixed=correto) + ponteiros nos bullets de AMBIENTE/cockpit/COER\u00caNCIA/NOTIFICAR. **\u00c9 AQUI que mora a lista de \"o que N\u00c3O reportar/notificar\" \u2014 adicionar regra nova = mais um item no bloco, N\u00c3O colar inline de novo.** Pure reorg de texto, zero mudan\u00e7a de comportamento.",
+  "new_string": "**Doutrina anti-ru\u00eddo consolidada (2026-06-16, `37ed4b1`, QA-PASS+TL-APPROVE):** as regras anti-falso-positivo do SYSTEM_PROMPT (que vinham coladas em 3-4 bullets, repetindo ~3x \"cockpit l\u00ea as MESMAS chaves MEMORY / n\u00e3o \u00e9 fonte paralela\") foram extra\u00eddas pra **UM bloco rotulado `DIVERG\u00caNCIAS ESPERADAS`** em `agent.js` (6 itens: histerese de regime\u2192.gate.regime; fluxo eixo IDADE/`flow.ageSec`; fluxo eixo MAGNITUDE/|imbalance|<0,2=ru\u00eddo; EV\u22640 a 1m; HALT inalterado; buyGate mixed=correto) + ponteiros nos bullets de AMBIENTE/cockpit/COER\u00caNCIA/NOTIFICAR. **\u00c9 AQUI que mora a lista de \"o que N\u00c3O reportar/notificar\" \u2014 adicionar regra nova = mais um item no bloco, N\u00c3O colar inline de novo.** Pure reorg de texto, zero mudan\u00e7a de comportamento.\n\n**`[FLOW]` SILENCIADO no Telegram (2026-06-26, `701b7e7`, gate de auto-revis\u00e3o + sim 19/19, push direto-a-master):** o dono n\u00e3o decide nada com o fluxo extremo do taker e era **~95% do ru\u00eddo** que ele recebia. Gate `FLOW_NOTIFY_ENABLED` (default `true` retrocompat; **`=false` no `.env` runtime N\u00c3O-git \u2192 reaplicar p\u00f3s reset-db**) envolve S\u00d3 as 2 chamadas `notifyFlowExtreme` no `flowJob.js` (~linha 96); o **sinal de fluxo segue COMPUTADO + logado em `flow.log` + gateando a id2** (timing/nowcasting \u2014 n\u00e3o-forecast). `[REGIME]`/`[CROSS]`/`[SUPERVISOR]`/ordens/automa\u00e7\u00e3o-falhou/ambiente/saque/agente/paper INTACTOS (todos edge-trigger/raros \u2192 o resto J\u00c1 \u00e9 \"s\u00f3 os importantes\"). Prova de boot no `flow.log`: \"Flow job iniciado SHADOW (... notif Telegram OFF)\". **Ping de teste do canal:** `docker exec tradeux-backend-1 node -e \"require('/app/src/utils/telegramNotify').notify('...').then(r=>console.log(r))\"` (retorna true/false; confirmado `true` 2026-06-26). Ver [[tradeux-agent-heartbeat-watchdog]] p/ o reajuste de cad\u00eancia do agente (que tamb\u00e9m espa\u00e7a o `[AGENTE]` 3\u00d7)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-telegram-notifications.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:45:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-heartbeat-watchdog.md",
+  "old_string": "Como checar o agente ao vivo: `GET /api/agent/runs` traz `kpis.lastTs` (\u00faltimo record QUALQUER, n\u00e3o filtra cycle_end!); pra o estado real, `docker logs tradeux-agent-1` (falhas de ciclo v\u00e3o pro stdout) + tail do journal em `tradeux-agent/journal/tradeux-agent.jsonl`. Ver [[tradeux-agent-token-economics]] e [[tradeux-logger-per-category-files]] (logs de boot do backend v\u00e3o pro ARQUIVO `logs/system.log`, N\u00c3O pro `docker logs`).",
+  "new_string": "Como checar o agente ao vivo: `GET /api/agent/runs` traz `kpis.lastTs` (\u00faltimo record QUALQUER, n\u00e3o filtra cycle_end!); pra o estado real, `docker logs tradeux-agent-1` (falhas de ciclo v\u00e3o pro stdout) + tail do journal em `tradeux-agent/journal/tradeux-agent.jsonl`. Ver [[tradeux-agent-token-economics]] e [[tradeux-logger-per-category-files]] (logs de boot do backend v\u00e3o pro ARQUIVO `logs/system.log`, N\u00c3O pro `docker logs`).\n\n**Incidente #2 \u2014 429 de COTA (2026-06-26, N\u00c3O \u00e9 o ZDR do #1):** o agente parou de novo, mas o `docker logs` mostrou `OpenRouter 429: \"Rate limit exceeded: free-models-per-day-high-balance\"` (`X-RateLimit-Remaining: 0`, limite **2000 req/dia** do modelo `:free`, reset 00:00 UTC). \u26a0\ufe0f **N\u00c3O confundir com o 404 ZDR \u2014 o toggle ZDR N\u00c3O resolve 429.** Causa: a 5min (`TRADEUX_AGENT_INTERVAL=300000`, 288 ciclos/dia \u00d7 ~7 req/ciclo m\u00e9dio \u2248 2016) estoura a cota perto do fim do dia. **Fix = reajuste de cad\u00eancia p/ caber na cota (runtime N\u00c3O-git em `tradeux-agent/.env` \u2192 reaplicar p\u00f3s reset):** `TRADEUX_AGENT_INTERVAL=900000` (15min \u2192 ~96 ciclos \u00d7 ~7 \u2248 672/dia, 34% da cota) + `TRADEUX_AGENT_MAX_ROUNDS` 20\u2192**10** (teto por ciclo \u2192 pior caso 96\u00d711 \u2248 1056/dia, ainda < 2000). Efeito colateral bom: `[AGENTE]` cai ~3\u00d7 (15min). Auto-recupera sozinho no reset 00:00 UTC. (O modelo `:free` \u00e9 LENTO ~12min/ciclo \u2014 o INTERVAL \u00e9 sleep P\u00d3S-ciclo, sem sobreposi\u00e7\u00e3o \u2192 per\u00edodo real \u2248 exec + interval.)\n\n**Watchdog STALE 30\u219245min (2026-06-26, `AGENT_HEARTBEAT_STALE_MS=2700000` no `.env` do BACKEND, runtime N\u00c3O-git):** com 15min de sleep p\u00f3s-ciclo + `:free` ~12min/ciclo, o per\u00edodo real entre `cycle_end` \u00e9 ~27min \u2192 o limiar de 30min daria **alarme falso**. 45min mant\u00e9m margem e ainda pega outage real (no 429 os ciclos falham R\u00c1PIDO \u2192 `cycle_end` congela \u2192 alarma em 45min). Prova de boot: \"Agent Heartbeat job iniciado (... declara parado ap\u00f3s 2700000ms ...)\".\n\n**Rough edge (LOW, ABERTO):** o `[AGENTE PARADO]` **RE-DISPARA a cada RESTART do backend durante um outage em curso** \u2014 `alerted`/`staleSince` (do `agentHeartbeatJob`) e `sentKeys` (do `telegramNotify`) s\u00e3o EM-MEM\u00d3RIA \u2192 restart zera \u2192 re-detecta o MESMO outage com `staleSince=Date.now()` novo (dedupKey novo `agent-stale:<staleSince>`) \u2192 re-alerta. Visto **3\u00d7 num \u00fanico outage** por causa de 2 restarts meus (FLOW + watchdog). N\u00c3O \u00e9 o agente piscando. Fix proposto = PERSISTIR o estado `alerted`+identidade-do-outage (\u00faltimo `cycle_end`) em `/app/logs` (espelhar o `tokenBlacklist` do [[tradeux-design-fixes-2026-06-22]]) e suprimir re-fire do mesmo outage no boot. DEFERIDO: s\u00f3 morde em restart-durante-outage, e deployar o fix exige um restart que re-dispara 1\u00d7 antes de persistir."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-agent-heartbeat-watchdog.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:46:08)*
+
+
+## 🤖 Claude *(21:46:21)*
+
+Memórias atualizadas ([[tradeux-telegram-notifications]] + [[tradeux-agent-heartbeat-watchdog]]). Status consolidado:
+
+## ✅ Recomendações — feito
+- **Push direto-a-master:** `vivo == master == origin == 701b7e7`, `.git` re-chowned pra gcrux, em sincronia. Só o gate do `[FLOW]` + `.env.example` (o scratch ficou fora).
+- **FLOW silenciado + ping confirmado** (você viu chegar) + **agente reajustado** (15min/10 rounds) + **watchdog 45min**.
+
+## 🤖 Alertas identificados — resolvidos + 1 debt
+
+**O `[AGENTE PARADO]` 3× foi falso-alarme de restart, não o agente piscando.** Cada um dos meus 2 restarts do backend zerou o estado em-memória do watchdog → ele re-detectou o **mesmo** outage (todos "último OK: 18:40:52"). 
+
+**Status real do agente:** está em **429 de cota** (modelo `:free`, 2000 req/dia esgotada) — **não é o ZDR**. Ele **auto-recupera sozinho no reset 00:00 UTC (~3h)** e aí roda na nova cadência de 15min sem estourar de novo. Daqui até lá: **silêncio** (o watchdog não re-dispara sem outro restart), e na volta você recebe **1** alerta de "recuperado".
+
+**Rough edge identificado (LOW, deixei como débito):** o `[AGENTE PARADO]` re-dispara a cada restart do backend durante um outage. O fix é **persistir o estado `alerted` em `/app/logs`** (espelhando o `tokenBlacklist`). **Recomendo deferir** — só morde em restart-durante-outage, e pra deployar o fix eu teria que reiniciar o backend (que dispararia o alerta mais uma vez, ironicamente), com o agente já prestes a voltar sozinho. Registrei na memória.
+
+## ⚡ Próximo
+Tudo pronto e versionado. Falta só **selar** (`/handoff`) pra gravar no HANDOFF.md as mudanças **runtime não-git** (`FLOW_NOTIFY_ENABLED=false`, `AGENT_HEARTBEAT_STALE_MS=2700000`, `INTERVAL=900000`/`MAX_ROUNDS=10`) — senão se perdem num reset-db.
+
+Quer que eu **sele agora**? (Opcional, e **não recomendo**: dá pra trazer o agente de volta antes das 3h trocando pra outro modelo `:free` — mas arrisca o 404 ZDR e o agente vale ~zero parado no bear; melhor deixar recuperar sozinho.)
+
+## 👤 User *(21:46:43)*
+
+ótimo se não identificar nenhuma oportunidade com todos os dados que temos pode fazer o handoff
+
+## 🤖 Claude *(21:47:32)*
+
+
+## 🤖 Claude *(21:47:35)*
+
+Faz sentido — antes de selar, vou fazer uma varredura honesta de **todos os dados vivos** que o sistema acumulou em busca de qualquer oportunidade real (não inventada). O lugar certo é o **paper engine** (as 3 trilhas rodando = o mecanismo desenhado pra achar edge), além de regime/flow/signal-recorder/placar do operador. Deixa eu confirmar as rotas e autenticar.
+
+## 🤖 Claude *(21:47:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== rotas relevantes ===\"\ngrep -rnE \"router\\.(get|post)\\(.(/paper|/promotions|/cockpit|/analysis|/runs)\" backend/src/routers 2>/dev/null | head -30\necho \"--- arquivos de log de pesquisa ---\"\ndocker exec tradeux-backend-1 sh -c \"ls -la /app/logs/ 2>/dev/null | grep -iE \\\"paper|signal|call|promot|daily_cap\\\"\" 2>/dev/null\n'",
+  "description": "Find paper/promotions/cockpit routes and research log files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas relevantes ===
+> backend/src/routers/beholderRouter.js:15:router.get('/analysis', beholderController.getAnalysisIndexes);
+> backend/src/routers/systemRouter.js:18:router.get('/promotions', systemController.getPromotions);
+> backend/src/routers/analysisRouter.js:13:router.get('/cockpit', analysisController.getCockpitStatus);
+> backend/src/routers/analysisRouter.js:15:router.get('/cockpit/:symbol', analysisController.getCockpit);
+> backend/src/routers/analysisRouter.js:17:router.get('/paper', analysisController.getPaper);
+> backend/src/routers/agentRouter.js:5:router.get('/runs', agentController.getRuns);
+> --- arquivos de log de pesquisa ---
+> -rw-r--r--    1 root     root           156 Jun 26 00:00 daily_cap_snapshot.json
+> -rw-r--r--    1 root     root            18 Jun 21 22:37 paper_review_state.json
+> -rw-r--r--    1 root     root        236350 Jun 26 21:46 signal_journal.jsonl
+> -rw-r--r--    1 root     root        105162 Jun 26 00:26 signal_journal.jsonl.bak-preclean
+> -rw-r--r--    1 root     root         52922 Jun 26 21:43 signals.log
+> ```
+
+## 🤖 Claude *(21:47:58)*
+
+
+## 🤖 Claude *(21:47:59)*
+
+Rotas confirmadas. `signal_journal.jsonl` está fresco (21:46). Vou autenticar e puxar paper + promotions + cockpit (regime/flow):
+
+## 🤖 Claude *(21:48:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux python3 - <<'PYEOF'\nimport json, urllib.request, urllib.error\nBASE=\"http://127.0.0.1:8090/api\"\nenv={}\nfor line in open(\"/home/gcrux-tradeux/tradeux/.env\"):\n    line=line.strip()\n    if line.startswith(\"DEFAULT_SETTINGS_EMAIL=\"): env[\"email\"]=line.split(\"=\",1)[1]\n    if line.startswith(\"DEFAULT_SETTINGS_PWD=\"): env[\"pwd\"]=line.split(\"=\",1)[1]\n\ndef call(path, token=None, data=None, method=\"GET\"):\n    body=json.dumps(data).encode() if data is not None else None\n    req=urllib.request.Request(BASE+path, data=body, method=method)\n    if data is not None: req.add_header(\"Content-Type\",\"application/json\")\n    if token: req.add_header(\"Authorization\", token)\n    try:\n        return json.load(urllib.request.urlopen(req, timeout=12))\n    except urllib.error.HTTPError as e:\n        return {\"_HTTPERROR\": e.code, \"_body\": e.read().decode()[:300]}\n\nlogin=call(\"/login\", data={\"email\":env.get(\"email\"),\"password\":env.get(\"pwd\")}, method=\"POST\")\ntok=login.get(\"token\") or login.get(\"accessToken\") or \"\"\nprint(\"LOGIN token_len=\", len(tok), \"\" if tok else f\"resp={str(login)[:300]}\")\nif not tok: raise SystemExit\n\npaper=call(\"/analysis/paper\", tok)\nprint(\"\\n=== PAPER (resumo) ===\")\nprint(json.dumps(paper, indent=1, ensure_ascii=False)[:3500])\n\npromo=call(\"/system/promotions\", tok)\nprint(\"\\n=== PROMOTIONS ===\")\nprint(json.dumps(promo, indent=1, ensure_ascii=False)[:1500])\nPYEOF",
+  "description": "Login and query paper + promotions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> LOGIN token_len= 137 
+> 
+> === PAPER (resumo) ===
+> {
+>  "generatedAt": "2026-06-26T21:48:05.318Z",
+>  "note": "Paper/Shadow: preço MINI_TICKER mainnet real + fee real; sem Binance; mainnet congelado.",
+>  "totals": {
+>   "realizedPnl": -1.6040159967190313,
+>   "unrealizedPnl": -1.1748903167799973,
+>   "totalPnl": -2.7789063134990286,
+>   "fees": 0.33748232254905
+>  },
+>  "strategies": [
+>   {
+>    "strategy": "consistencia",
+>    "realizedPnl": -0.279873953629032,
+>    "unrealizedPnl": 0,
+>    "openPositions": 0,
+>    "fees": 0.27887721267904997,
+>    "buys": 7,
+>    "sells": 7,
+>    "wins": 6,
+>    "symbols": {
+>     "BTCUSDT": {
+>      "qty": 0,
+>      "avgCost": 0,
+>      "realizedPnl": 0.014334053650955525,
+>      "unrealizedPnl": 0
+>     },
+>     "LTCUSDT": {
+>      "qty": 0,
+>      "avgCost": 0,
+>      "realizedPnl": -0.2942080072799875,
+>      "unrealizedPnl": 0
+>     }
+>    },
+>    "totalPnl": -0.279873953629032,
+>    "winRate": 0.8571428571428571
+>   },
+>   {
+>    "strategy": "farmnl",
+>    "realizedPnl": 0,
+>    "unrealizedPnl": -1.1748903167799973,
+>    "openPositions": 1,
+>    "fees": 0.01996353678,
+>    "buys": 1,
+>    "sells": 0,
+>    "wins": 0,
+>    "symbols": {
+>     "LTCUSDT": {
+>      "qty": 0.449,
+>      "avgCost": 44.506682219999995,
+>      "realizedPnl": 0,
+>      "unrealizedPnl": -1.1748903167799973
+>     }
+>    },
+>    "totalPnl": -1.1748903167799973,
+>    "winRate": null
+>   },
+>   {
+>    "strategy": "mr15",
+>    "realizedPnl": -1.3241420430899993,
+>    "unrealizedPnl": 0,
+>    "openPositions": 0,
+>    "fees": 0.03864157309,
+>    "buys": 1,
+>    "sells": 1,
+>    "wins": 0,
+>    "symbols": {
+>     "LTCUSDT": {
+>      "qty": 0,
+>      "avgCost": 0,
+>      "realizedPnl": -1.3241420430899993,
+>      "unrealizedPnl": 0
+>     }
+>    },
+>    "totalPnl": -1.3241420430899993,
+>    "winRate": 0
+>   }
+>  ],
+>  "feeRate": 0.001,
+>  "recentOrders": [
+>   {
+>    "id": 19,
+>    "automationId": 63,
+>    "strategy": "mr15",
+>    "symbol": "LTCUSDT",
+>    "side": "SELL",
+>    "type": "MARKET",
+>    "qty": 0.449,
+>    "price": 41.59919,
+>    "fee": 0.01867803631,
+>    "net": 18.65935827369,
+>    "realizedPnl": -1.3241420430899993,
+>    "createdAt": "2026-06-25T05:00:00.000Z",
+>    "updatedAt": "2026-06-25T05:00:00.000Z"
+>   },
+>   {
+>    "id": 18,
+>    "automationId": 47,
+>    "strategy": "consistencia",
+>    "symbol": "LTCUSDT",
+>    "side": "SELL",
+>    "type": "MARKET",
+>    "qty": 0.449,
+>    "price": 43.608185000000006,
+>    "fee": 0.019580075065000004,
+>    "net": 19.560494989935002,
+>    "realizedPnl": -0.42300532684499714,
+>    "createdAt": "2026-06-23T11:21:00.000Z",
+>    "updatedAt": "2026-06-23T11:21:00.000Z"
+>   },
+>   {
+>    "id": 17,
+>    "automationId": 46,
+>    "strategy": "consistencia",
+>    "symbol": "LTCUSDT",
+>    "side": "BUY",
+>    "type": "MARKET",
+>    "qty": 0.449,
+>    "price": 44.462219999999995,
+>    "fee": 0.01996353678,
+>    "net": 19.98350031678,
+>    "realizedPnl": null,
+>    "createdAt": "2026-06-23T00:28:00.000Z",
+>    "updatedAt": "2026-06-23T00:28:00.000Z"
+>   },
+>   {
+>    "id": 16,
+>    "automationId": 47,
+>    "strategy": "consistencia",
+>    "symbol": "LTCUSDT",
+>    "side": "SELL",
+>    "type": "MARKET",
+>    "qty": 0.449,
+>    "price": 44.647665,
+>    "fee": 0.020046801585000003,
+>    "net": 20.026754783415,
+>    "realizedPnl": 0.043254466635001876,
+>    "createdAt": "2026-06-22T23:28:00.000Z",
+>    "updatedAt": "2026-06-22T23:28:00.000Z"
+>   },
+>   {
+>    "id": 15,
+>    "automationId": 46,
+>    "strategy": "consistencia",
+>    "symbol": "LTCUSDT",
+>    "side": "BUY",
+>    "type": "MARKET",
+>    "qty": 0.449,
+>    "price": 44.462219999999995,
+>    "fee": 0.01996353678,
+>    "net": 19.98350031678,
+>    "realizedPnl": null,
+>    "createdAt": "2026-06-22T22:30:00.000Z",
+>    "updatedAt": "2026-06-22T22:30:00.000Z"
+>   },
+>   {
+>    "id": 14,
+>    "
+> 
+> === PROMOTIONS ===
+> {
+>  "enabled": true,
+>  "checkMs": 21600000,
+>  "minRoundTrips": 20,
+>  "minNet": 0,
+>  "minSymbolFrac": 0.5,
+>  "running": false,
+>  "at": "2026-06-26T20:33:33.213Z",
+>  "ageMs": 4472110,
+>  "allowlist": {
+>   "promoted": {},
+>   "grandfather": []
+>  },
+>  "last": {
+>   "at": "2026-06-26T20:33:33.213Z",
+>   "evaluated": 3,
+>   "promotedNow": 0,
+>   "allowlist": {
+>    "promoted": {},
+>    "grandfather": []
+>   }
+>  }
+> }
+> ```
+
+## 🤖 Claude *(21:48:31)*
+
+
+## 🤖 Claude *(21:48:32)*
+
+Esse é o dado decisivo. Deixa eu confirmar regime/flow atuais (um flip de bear seria *a* oportunidade) e agregar o signal-recorder antes de concluir:
+
+## 🤖 Claude *(21:48:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux python3 - <<'PYEOF'\nimport json, urllib.request, urllib.error, collections\nBASE=\"http://127.0.0.1:8090/api\"\nenv={}\nfor line in open(\"/home/gcrux-tradeux/tradeux/.env\"):\n    line=line.strip()\n    if line.startswith(\"DEFAULT_SETTINGS_EMAIL=\"): env[\"email\"]=line.split(\"=\",1)[1]\n    if line.startswith(\"DEFAULT_SETTINGS_PWD=\"): env[\"pwd\"]=line.split(\"=\",1)[1]\ndef call(path, token=None, data=None, method=\"GET\"):\n    body=json.dumps(data).encode() if data is not None else None\n    req=urllib.request.Request(BASE+path, data=body, method=method)\n    if data is not None: req.add_header(\"Content-Type\",\"application/json\")\n    if token: req.add_header(\"Authorization\", token)\n    try: return json.load(urllib.request.urlopen(req, timeout=12))\n    except urllib.error.HTTPError as e: return {\"_ERR\":e.code,\"_b\":e.read().decode()[:200]}\ntok=call(\"/login\", data={\"email\":env.get(\"email\"),\"password\":env.get(\"pwd\")}, method=\"POST\").get(\"token\",\"\")\nck=call(\"/analysis/cockpit\", tok)\nprint(\"=== REGIME / FLOW por simbolo ===\")\nsyms=ck.get(\"symbols\") or ck.get(\"cockpit\") or {}\nif isinstance(syms,dict):\n    for s,v in syms.items():\n        reg=(v.get(\"regime\") or {}); fl=(v.get(\"flow\") or {})\n        print(f\"  {s}: regime={reg.get('regime') or reg} flow_imb={fl.get('imbalance')} tox={fl.get('toxicity')}\")\nelse:\n    # fallback: print top-level keys\n    print(\"  keys:\", list(ck.keys())[:20])\n    print(json.dumps(ck, ensure_ascii=False)[:800])\nPYEOF\necho \"\"\necho \"=== SIGNAL RECORDER: hit-rate por tipo (signal_journal.jsonl) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"cat /app/logs/signal_journal.jsonl 2>/dev/null\"' | python3 - <<'PYEOF'\nimport sys, json, collections\nagg=collections.defaultdict(lambda:[0,0,0.0])  # type -> [n, hits@10, sumRet10]\nn=0\nfor line in sys.stdin:\n    line=line.strip()\n    if not line: continue\n    try: r=json.loads(line)\n    except: continue\n    n+=1\n    t=r.get(\"type\") or r.get(\"signal\") or r.get(\"kind\") or \"?\"\n    # tenta achar retorno @10min e hit\n    ret=None\n    for k in (\"ret10\",\"r10\",\"return10\",\"ret_10m\",\"outcome10\"):\n        if isinstance(r.get(k),(int,float)): ret=r[k]; break\n    o=r.get(\"outcomes\") or r.get(\"returns\") or {}\n    if ret is None and isinstance(o,dict):\n        for k in (\"10\",\"10m\",\"t10\",\"p10\"):\n            if isinstance(o.get(k),(int,float)): ret=o[k]; break\n    a=agg[t]; a[0]+=1\n    if isinstance(ret,(int,float)):\n        a[2]+=ret\n        if ret>0: a[1]+=1\nprint(f\"  total records: {n}\")\nfor t,(cnt,hits,sr) in sorted(agg.items(), key=lambda x:-x[1][0]):\n    avg = sr/cnt if cnt else 0\n    hr = hits/cnt if cnt else 0\n    print(f\"  {t:28s} n={cnt:4d}  hit@10={hr:5.1%}  avgRet@10={avg:+.4f}\")\nPYEOF",
+  "description": "Query regime/flow and aggregate signal recorder hit-rates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === REGIME / FLOW por simbolo ===
+> Traceback (most recent call last):
+>   File "<stdin>", line 22, in <module>
+> AttributeError: 'str' object has no attribute 'get'
+> 
+> === SIGNAL RECORDER: hit-rate por tipo (signal_journal.jsonl) ===
+>   total records: 0
+> ```
+
+## 🤖 Claude *(21:49:01)*
+
+
+## 🤖 Claude *(21:49:03)*
+
+Dois bugs meus: o heredoc do python comeu o stdin do pipe (journal não chegou), e a estrutura do cockpit é diferente. Deixa eu corrigir — copio o journal pra um arquivo e inspeciono o schema real + dump do cockpit:
+
+## 🤖 Claude *(21:49:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ndocker exec tradeux-backend-1 sh -c \"cat /app/logs/signal_journal.jsonl\" > /tmp/sigj.jsonl 2>/dev/null\necho \"journal linhas: $(wc -l < /tmp/sigj.jsonl)\"\necho \"--- 2 amostras do schema ---\"\nhead -2 /tmp/sigj.jsonl\n'",
+  "description": "Copy signal journal to temp and show schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> journal linhas: 482
+> --- 2 amostras do schema ---
+> {"id":1,"ts":1782352443317,"symbol":"BTCUSDT","type":"flow_buy","side":"buy","entryPrice":60948.78,"ctx":{"price":60948.78,"rsi1m":65,"rsi15m":50.65,"imbalance":0.8444,"toxicity":0.8444,"regime":"bear"},"horizons":{"1":{"ret":-0.00006891032109251555,"dirRet":-0.00006891032109251555},"5":{"ret":-0.0008257753477592455,"dirRet":-0.0008257753477592455},"10":{"ret":0.0002825323164795286,"dirRet":0.0002825323164795286},"15":{"ret":-0.0012249629935167893,"dirRet":-0.0012249629935167893}},"closed":true}
+> {"id":2,"ts":1782352623318,"symbol":"BNBUSDT","type":"rsi_overbought","side":"sell","entryPrice":566.65,"ctx":{"price":566.65,"rsi1m":73.79,"rsi15m":58.41,"imbalance":0.5441,"toxicity":0.5441,"regime":"bear"},"horizons":{"1":{"ret":-0.000511779758228119,"dirRet":0.000511779758228119},"5":{"ret":-0.0009000264713667889,"dirRet":0.0009000264713667889},"10":{"ret":-0.000370599135268548,"dirRet":0.000370599135268548},"15":{"ret":-0.0013588634959851439,"dirRet":0.0013588634959851439}},"closed":true}
+> ```
+
+## 🤖 Claude *(21:49:17)*
+
+
+## 🤖 Claude *(21:49:19)*
+
+Schema claro: `horizons.N.dirRet` = retorno na direção que o sinal previu (>0 = acertou). Agora agrego direito (lendo do arquivo) + dump do regime:
+
+## 🤖 Claude *(21:49:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux python3 - <<'PYEOF'\nimport json, urllib.request, urllib.error, collections\n# ---------- SIGNAL JOURNAL (do arquivo, sem stdin) ----------\nFEE_RT=0.002  # round-trip ~0.2% (2x 0.1%)\nagg=collections.defaultdict(lambda: {\"n\":0,\"hit10\":0,\"sum10\":0.0,\"sum5\":0.0,\"sum15\":0.0})\ntot=0\nfor line in open(\"/tmp/sigj.jsonl\"):\n    line=line.strip()\n    if not line: continue\n    try: r=json.loads(line)\n    except: continue\n    if not r.get(\"closed\"): continue\n    tot+=1\n    t=r.get(\"type\",\"?\"); h=r.get(\"horizons\",{})\n    d10=(h.get(\"10\") or {}).get(\"dirRet\"); d5=(h.get(\"5\") or {}).get(\"dirRet\"); d15=(h.get(\"15\") or {}).get(\"dirRet\")\n    a=agg[t]; a[\"n\"]+=1\n    if isinstance(d10,(int,float)):\n        a[\"sum10\"]+=d10\n        if d10>0: a[\"hit10\"]+=1\n    if isinstance(d5,(int,float)): a[\"sum5\"]+=d5\n    if isinstance(d15,(int,float)): a[\"sum15\"]+=d15\nprint(f\"=== SIGNAL RECORDER ({tot} sinais fechados) \u2014 dirRet>0 = acertou dire\u00e7\u00e3o; precisa bater {FEE_RT:.1%} (fee round-trip) ===\")\nprint(f\"  {'tipo':22s} {'n':>4s} {'hit@10':>7s} {'avg@5':>9s} {'avg@10':>9s} {'avg@15':>9s}  veredito\")\nfor t,a in sorted(agg.items(), key=lambda x:-x[1]['n']):\n    n=a['n']; hr=a['hit10']/n if n else 0\n    a5=a['sum5']/n; a10=a['sum10']/n; a15=a['sum15']/n\n    best=max(a5,a10,a15)\n    verd = \"EDGE?\" if best>FEE_RT else (\"~0\" if best>0 else \"neg\")\n    print(f\"  {t:22s} {n:4d} {hr:7.1%} {a5:+9.4f} {a10:+9.4f} {a15:+9.4f}  {verd}\")\n\n# ---------- REGIME ----------\nBASE=\"http://127.0.0.1:8090/api\"\nenv={}\nfor line in open(\"/home/gcrux-tradeux/tradeux/.env\"):\n    line=line.strip()\n    if line.startswith(\"DEFAULT_SETTINGS_EMAIL=\"): env[\"email\"]=line.split(\"=\",1)[1]\n    if line.startswith(\"DEFAULT_SETTINGS_PWD=\"): env[\"pwd\"]=line.split(\"=\",1)[1]\ndef call(path, token=None, data=None, method=\"GET\"):\n    body=json.dumps(data).encode() if data is not None else None\n    req=urllib.request.Request(BASE+path, data=body, method=method)\n    if data is not None: req.add_header(\"Content-Type\",\"application/json\")\n    if token: req.add_header(\"Authorization\", token)\n    try: return json.load(urllib.request.urlopen(req, timeout=12))\n    except urllib.error.HTTPError as e: return {\"_ERR\":e.code}\ntok=call(\"/login\", data={\"email\":env.get(\"email\"),\"password\":env.get(\"pwd\")}, method=\"POST\").get(\"token\",\"\")\nck=call(\"/analysis/cockpit\", tok)\nprint(\"\\n=== REGIME atual (top-level keys:\", list(ck.keys())[:12],\") ===\")\n# procura regime em qualquer estrutura\nimport re\ndef find_regimes(o, path=\"\"):\n    out=[]\n    if isinstance(o,dict):\n        if \"regime\" in o and isinstance(o.get(\"regime\"),str): out.append((path, o[\"regime\"]))\n        for k,v in o.items(): out+=find_regimes(v, f\"{path}.{k}\")\n    elif isinstance(o,list):\n        for i,v in enumerate(o): out+=find_regimes(v, f\"{path}[{i}]\")\n    return out\nrs=find_regimes(ck)\nseen=set()\nfor p,r in rs:\n    sym=next((s for s in (\"BTCUSDT\",\"LTCUSDT\",\"BNBUSDT\",\"ADAUSDT\") if s in p), p)\n    key=(sym,r)\n    if key in seen: continue\n    seen.add(key)\n    print(f\"  {sym:10s} -> {r}\")\nPYEOF",
+  "description": "Aggregate signal recorder dirRet and dump regimes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SIGNAL RECORDER (482 sinais fechados) — dirRet>0 = acertou direção; precisa bater 0.2% (fee round-trip) ===
+>   tipo                      n  hit@10     avg@5    avg@10    avg@15  veredito
+>   rsi_oversold            238   49.6%   -0.0001   -0.0003   -0.0000  neg
+>   rsi_overbought          155   48.4%   -0.0002   -0.0001   -0.0006  neg
+>   flow_sell                45   37.8%   +0.0000   -0.0004   -0.0000  ~0
+>   flow_buy                 42   45.2%   +0.0000   -0.0007   -0.0009  ~0
+>   op_up                     2   50.0%   +0.0003   +0.0023   +0.0022  EDGE?
+> 
+> === REGIME atual (top-level keys: ['enabled', 'refreshMs', 'lookback', 'breakevenPct', 'flowBuyMin', 'running', 'symbols', 'env', 'paper', 'groups', 'supervisor', 'promotions'] ) ===
+>   LTCUSDT    -> bear
+>   BNBUSDT    -> bear
+>   ADAUSDT    -> bear
+>   BTCUSDT    -> bear
+>   .patterns.recent[0].ctx -> bear
+>   .patterns.recent[1].ctx -> bear
+>   .patterns.recent[2].ctx -> bear
+>   .patterns.recent[3].ctx -> bear
+>   .patterns.recent[4].ctx -> bear
+>   .patterns.recent[5].ctx -> bear
+>   .patterns.recent[6].ctx -> bear
+>   .patterns.recent[7].ctx -> bear
+> ```
+
+## 🤖 Claude *(21:50:05)*
+
+
+## 🤖 Claude *(21:50:18)*
+
+Varredura completa. Resultado **honesto e convergente — nenhuma oportunidade**:
+
+## 🔍 Scan de oportunidade (todos os dados vivos)
+
+**1. Regime:** `bear` em **tudo** (BTC/LTC/BNB/ADA) — sem flip. O gatilho do bull não disparou. Sem alta pra capturar.
+
+**2. Paper engine** (o mecanismo desenhado pra achar edge) — **todas as 3 trilhas no vermelho**, nenhuma promovível:
+| Trilha | net realizado | obs |
+|---|---|---|
+| `consistencia` | **−0,28** | 85,7% win-rate **mas net negativo** — a armadilha clássica: ganhos pequenos, taxa (0,28) come tudo. Win-rate alto ≠ edge. |
+| `mr15` | **−1,32** | comprou faca caindo (RSI<35 no downtrend), saída 15m cortou no prejuízo |
+| `farmnl` | **−1,17** (não-realiz.) | segurando saco submerso de LTC; "no-loss" = nunca realiza a perda, capital preso |
+
+Promotions: `{}` — o `promotionJob` corretamente não promoveu nada (ninguém tem os 20 round-trips nem net>0).
+
+**3. Signal recorder** (482 sinais fechados, métrica `dirRet` = acertou a direção?):
+| sinal | n | hit@10 | avg@10 | veredito |
+|---|---|---|---|---|
+| `rsi_oversold` | 238 | 49,6% | −0,03% | **cara-ou-coroa, negativo** |
+| `rsi_overbought` | 155 | 48,4% | −0,01% | **cara-ou-coroa, negativo** |
+| `flow_buy/sell` | 87 | ~41% | <0 | **sem edge** |
+| `op_up` (sua leitura) | **2** | — | +0,23% | n=2 = ruído estatístico (1 era meu teste) |
+
+Nenhum sinal automático bate sequer o zero, quanto mais os 0,2% de fee round-trip. Confirma de forma **independente** tudo que já foi refutado.
+
+## ✅ Conclusão
+**Zero oportunidade acionável.** Todos os dados apontam pro mesmo lugar: a $149 no bear não há edge — a tese de **parquear como combustível e esperar o flip de regime** está certa e validada pelos dados. Exatamente a hora de selar e ficar armado-esperando.
+
+Procedendo com o handoff:
+
+## 🤖 Claude *(21:50:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "rm -f /tmp/sigj.jsonl 2>/dev/null; echo \"scratch limpo\"",
+  "description": "Clean up temp file"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scratch limpo
+> ```
+
+## 🤖 Claude *(21:50:22)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(21:50:22)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(21:50:42)*
+
+
+## 🤖 Claude *(21:50:45)*
+
+Ritual de seal carregado. Nota importante: este projeto é **trunk-based direto-a-master** (não PR — ver todos os SEALs anteriores e [[tradeux-orchestration-model]]), e o código desta sessão **já foi commitado+pushado** (`701b7e7`) com o seu go. Então PHASE 2/5 já estão feitas; o foco do seal é registrar a sessão. Pré-flight + secret-scan:
+
+## 🤖 Claude *(21:50:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== STATUS ===\"\ngit -c safe.directory='*' status --short 2>&1 | grep -v \"Permission denied\\|could not open\"\necho \"=== DIFF HEAD --stat (working tree vs HEAD) ===\"\ngit -c safe.directory='*' diff HEAD --stat 2>&1 | grep -v \"Permission denied\\|could not open\"\necho \"=== SECRET SCAN (diff HEAD + ultimo commit pushado) ===\"\n{ git -c safe.directory='*' diff HEAD; git -c safe.directory='*' show 701b7e7; } \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\necho \">>> secret-scan: $([ $? -eq 0 ] && echo 'rodou')  (vazio acima = LIMPO)\"\necho \"=== origin sync ===\"\ngit -c safe.directory='*' log --oneline -1 origin/master",
+  "description": "Handoff pre-flight: status, diff, secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STATUS ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> === DIFF HEAD --stat (working tree vs HEAD) ===
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  backups/.gitignore                                 |   4 -
+>  3 files changed, 273 insertions(+), 277 deletions(-)
+> === SECRET SCAN (diff HEAD + ultimo commit pushado) ===
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> >>> secret-scan: rodou  (vazio acima = LIMPO)
+> === origin sync ===
+> 701b7e7 chore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED
+> ```
+
+## 🤖 Claude *(21:51:03)*
+
+
+## 🤖 Claude *(21:51:05)*
+
+Secret-scan **limpo** (só os warnings de permissão do `backups/`, falso-positivo conhecido); working tree = só scratch; `origin/master == 701b7e7`. Nada novo pra commitar. Agora atualizo o `HANDOFF.md` — deixa eu ler o header atual pra refrescá-lo:
+
+## 🤖 Claude *(21:51:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "offset": 1,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-24** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`)** · **Canary FARM-ONLY** (vendas no-loss id10/12/14 — **AGORA FUNCIONAM**; compras off) · **SESSÃO 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** → `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE→LEVEL-trigger = 1ª saída no-loss do Farm a EXECUTAR no mainnet)** → **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA→0, equity **$149,39**) · ⚠️ **runtime não-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25→50` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` · proteções: cap diário −5%, teto **$50/ordem**, Farm $25/símbolo, riskGuard, pânico, painel de grupos · Meta: **realista ≈ flat com ~$149** · Vivo==master==origin==**`6cec694`** (re-revisão de design 2026-06-22 **100% ZERADA** — só RBAC=DEFER; agente caiu por toggle ZDR do OpenRouter e VOLTOU; ver SEAL 2026-06-24 no rodapé)
+> 6	
+> 7	> 🟢 **ATUALIZAÇÃO 2026-06-21 (cont. — MARATONA 2): suíte de simulação money-path + D3 deployado + paper-validate das 3 alavancas.** Estado segue **🔴 LIVE (`halted=false`), Canary FARM-ONLY**, equity ~$149, HALT intacto o tempo todo. 7 commits (todos gate QA+TL, CI verde, 2 deploys de backend): **(1) SUÍTE DE SIMULAÇÃO** (`backend/scripts/sim/`, 6 arquivos, **90 asserts**, no CI) — achou+corrigiu **3 bugs REAIS latentes**: `getStableConversion` não-exportada (taxa BNB sumia do P&L → `854bab5` estava INERTE), `placeOrder:551` precedência (erro virava `undefined` no Telegram), `placeOrder:573` `order.type` (stopPrice não persistia). **(2) D3 DEPLOYADO** (`5c83c31`): `tradeux_get_cockpit` traz `status.groups` (ATIVO por grupo) + doutrina GATE≠ATIVO (agente para de dizer "aguardando golden cross p/ comprar" com grupo parado; valida no próx. ciclo pós-429). **(3) PAPER-VALIDATE: 3 alavancas LIVE em paper** (grupo paper **40/40**): MR15 (mean-reversion 15m), Slopegate (trend só entra se `TREND_SLOPE_1h!='down'` — sinal novo no regimeJob), Farmnl (Farm no-loss REAL: paperEngine publica `FARMNL_TARGET`=custo×1.012). **Vivo==master==origin==`2c55fe0`.** ⚠️ trilhas paper são RUNTIME — reaplicar pós-`make nuke`: `setup-paper-mr15.js` + `setup-paper-levers.js`.
+> 8	
+> ```
+
+## 🤖 Claude *(21:51:58)*
+
+
+## 🤖 Claude *(21:51:59)*
+
+Secret-scan limpo, origin sincronizado. Atualizo o `HANDOFF.md` — header (data) + a SEAL completa no rodapé:
+
+## 🤖 Claude *(21:52:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-24** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`)** \u00b7 **Canary FARM-ONLY**",
+  "new_string": "> Updated: **2026-06-26** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`) \u00b7 PARADO-MAS-ARMADO** (capital parqueado como combust\u00edvel do bull; regime BEAR \u2192 supervisor NO-OP) \u00b7 `Vivo==master==origin==701b7e7` \u00b7 \u26a0\ufe0f runtime n\u00e3o-git desta sess\u00e3o: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000`; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` \u00b7 ver SEAL 2026-06-26 no rodap\u00e9 \u00b7 *(linha hist\u00f3rica abaixo)* \u00b7 **Canary FARM-ONLY**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:52:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "**Expectativa honesta:** \"maior lucro poss\u00edvel\" em $149 = capturar o % do ciclo (trend deu +22% no bull dos backtests), **n\u00e3o** uma fortuna \u2014 o capital \u00e9 a restri\u00e7\u00e3o que manda.",
+  "new_string": "**Expectativa honesta:** \"maior lucro poss\u00edvel\" em $149 = capturar o % do ciclo (trend deu +22% no bull dos backtests), **n\u00e3o** uma fortuna \u2014 o capital \u00e9 a restri\u00e7\u00e3o que manda.\n\n### \ud83e\udd1d SEAL \u2014 2026-06-26 (RU\u00cdDO DO TELEGRAM: `[FLOW]` silenciado + agente reajustado p/ caber na cota + watchdog recalibrado + scan de oportunidade = ZERO edge)\n\n**`Vivo==master==origin==701b7e7`** (1 commit `chore(notify)`, gate de auto-revis\u00e3o + sim **19/19** + secret-scan limpo, push direto-a-master). \ud83d\udd34 LIVE (`halted=false`) o tempo todo \u00b7 **PARADO-MAS-ARMADO** (regime BEAR em tudo \u2192 supervisor NO-OP, Canary FARM-ONLY) \u00b7 **equity $149,40 intacta** \u00b7 site 200 \u00b7 4 containers up. Sess\u00e3o = limpeza de ru\u00eddo de notifica\u00e7\u00e3o + diagn\u00f3stico do agente + varredura de oportunidade ANTES de selar (pedido do dono); **ZERO money-path tocado**.\n\n**(1) `[FLOW]` SILENCIADO no Telegram (`701b7e7`):** o dono n\u00e3o decide nada com o fluxo extremo do taker e era **~95% do ru\u00eddo** que ele recebia. Gate `FLOW_NOTIFY_ENABLED` (default `true` retrocompat; **`=false` no `.env` runtime**) envolve S\u00d3 as 2 chamadas `notifyFlowExtreme` no `flowJob.js` (~L96); o **sinal segue COMPUTADO + logado em `flow.log` + gateando a id2** (timing/nowcasting). Prova de boot: \"Flow job iniciado SHADOW (... notif Telegram OFF)\". `.env.example` documenta. `[REGIME]`/`[CROSS]`/`[SUPERVISOR]`/ordens/automa\u00e7\u00e3o-falhou/ambiente/saque/agente/paper **INTACTOS** (todos edge-trigger/raros \u2192 o resto J\u00c1 \u00e9 \"s\u00f3 os importantes\"). **Ping de teste do canal enviado (`enviado: true`) e o dono CONFIRMOU o recebimento \u2192 canal do gatilho do bull VIVO.** Ver [[tradeux-telegram-notifications]].\n\n**(2) AGENTE \u2014 incidente #2 = 429 de COTA (N\u00c3O \u00e9 o ZDR do #1):** `docker logs` mostrou `OpenRouter 429 \"free-models-per-day\"` (limite **2000 req/dia** do `:free`, reset 00:00 UTC). \u26a0\ufe0f o toggle ZDR N\u00c3O resolve 429. Reajuste de cad\u00eancia p/ caber na cota (runtime N\u00c3O-git em `tradeux-agent/.env`): `TRADEUX_AGENT_INTERVAL` 5\u2192**15min** (~672 req/dia, 34% da cota) + `TRADEUX_AGENT_MAX_ROUNDS` 20\u2192**10** (teto/ciclo). Auto-recupera no reset 00:00 UTC; throttle impede recorr\u00eancia; `[AGENTE]` cai ~3\u00d7. **Watchdog STALE 30\u219245min** (`AGENT_HEARTBEAT_STALE_MS=2700000` no `.env` do backend) porque 15min sleep-p\u00f3s-ciclo + `:free` ~12min/ciclo = per\u00edodo ~27min \u2192 30min daria **alarme falso**. **D\u00e9bito LOW aberto:** `[AGENTE PARADO]` re-dispara a cada RESTART do backend durante outage (estado em-mem\u00f3ria) \u2014 visto **3\u00d7** por 2 restarts meus, N\u00c3O \u00e9 o agente piscando; fix = persistir `alerted` em `/app/logs` (espelhar `tokenBlacklist`, deferido). Ver [[tradeux-agent-heartbeat-watchdog]].\n\n**(3) SCAN DE OPORTUNIDADE (todos os dados vivos, pedido do dono antes de selar) = ZERO edge acion\u00e1vel:** (a) regime **BEAR em tudo** (BTC/LTC/BNB/ADA, sem flip); (b) **paper engine no vermelho** (`GET /analysis/paper`, total \u2212$2,78): `consistencia` \u2212$0,28 (**85,7% win-rate MAS net<0** = a armadilha do win-rate alto sem edge; fee come tudo), `mr15` \u2212$1,32 (RSI<35 = faca caindo no downtrend), `farmnl` \u2212$1,17 n\u00e3o-realiz. (saco submerso de LTC, no-loss = nunca realiza); **promotions `{}`** (ningu\u00e9m tem os 20 round-trips nem net>0 \u2192 `promotionJob` corretamente n\u00e3o promoveu); (c) **signal recorder (482 sinais fechados, m\u00e9trica `dirRet`)** \u2014 `rsi_oversold`/`overbought` ~49% hit@10 (cara-ou-coroa) com avg dirRet **NEGATIVO** em todo horizonte, `flow_buy/sell` sem edge, `op_up` n=2 (ru\u00eddo estat\u00edstico, 1 era teste meu). **Nenhum sinal bate sequer o zero, quanto mais os 0,2% de fee round-trip \u2192 confirma de forma INDEPENDENTE tudo j\u00e1 refutado; a tese parqueado-como-combust\u00edvel est\u00e1 data-validada.**\n\n**\u26a0\ufe0f RUNTIME n\u00e3o-git desta sess\u00e3o (reaplicar p\u00f3s reset-db):** `.env`: `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000`. `tradeux-agent/.env`: `TRADEUX_AGENT_INTERVAL=900000` + `TRADEUX_AGENT_MAX_ROUNDS=10`. (`HANDOFF.md` est\u00e1 fora do repo \u2192 n\u00e3o versionado; mudan\u00e7as de c\u00f3digo j\u00e1 em `origin/master`.)\n\n**\u26a1 NEXT (inalterado no fundo):** (1) **gatilho de re-engajar = alerta Telegram de FLIP DE REGIME** (canal confirmado vivo nesta sess\u00e3o) \u2192 ao receber, confirmar que \u00e9 real (n\u00e3o whipsaw) e `PROMOTION_GRANDFATHER=slopegate` [+farmnl/consistencia] + restart pra armar as compras reais do bull. (2) Agente auto-recupera 00:00 UTC na nova cad\u00eancia. (3) D\u00e9bitos LOW: persistir estado do watchdog (re-fire on restart); multi-fill commission sub-descontada (pr\u00e9-existente). **Claude N\u00c3O vira o HALT nem clica LIGAR sozinho.** Working tree: s\u00f3 `backtest-results/*` (scratch regener\u00e1vel). **Mem\u00f3rias atualizadas:** [[tradeux-telegram-notifications]] (FLOW gate + ping recipe), [[tradeux-agent-heartbeat-watchdog]] (incidente #2 429 + throttle + watchdog 45min + re-fire debt)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:52:56)*
+
+
+## 🤖 Claude *(21:52:57)*
+
+HANDOFF.md selado. Agora refresco as duas linhas do índice `MEMORY.md` pra refletir o que mudou (o índice é carregado a cada sessão):
+
+## 🤖 Claude *(21:52:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"Agent heartbeat watchdog|Telegram notifications\" /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "description": "Find index lines to update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7:- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) — incidente OpenRouter ZDR "Non-frontier" ON × modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = só `cycle_end` (não qualquer ts!), tail-scan; + retenção do journal (00b560e) trim atômico por bytes
+> 29:- [Telegram notifications](tradeux-telegram-notifications.md) — Telegram FUNCIONA (causa raiz era chatId=username do bot → fix via PATCH /settings, cache!); telegramNotify util (c3463ac): TODAS as ordens notificam (NEW/FILLED/REJECTED/EXPIRED; CANCELED silencioso) + POST /agent/notify + tool MCP tradeux_notify_owner (one-way, não-gated); **agente recalibrado (12ceabe): doutrina por módulo (id7 corta perda POR DESENHO!), pt-BR obrigatório, kickoff injeta histórico anti-spam + cap 2/ciclo**; **dedup por ASSUNTO em CÓDIGO (`64752f0`, notifyDedup.js, Jaccard+guards, self-test no CI) + doutrina anti-ruído consolidada no bloco `DIVERGÊNCIAS ESPERADAS` do prompt (`37ed4b1`/`0b1554d`) — É AQUI que mora "o que NÃO reportar/notificar"**
+> ```
+
+## 🤖 Claude *(21:53:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) \u2014 incidente OpenRouter ZDR \"Non-frontier\" ON \u00d7 modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = s\u00f3 `cycle_end` (n\u00e3o qualquer ts!), tail-scan; + reten\u00e7\u00e3o do journal (00b560e) trim at\u00f4mico por bytes",
+  "new_string": "- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) \u2014 incidente OpenRouter ZDR \"Non-frontier\" ON \u00d7 modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = s\u00f3 `cycle_end` (n\u00e3o qualquer ts!), tail-scan; + reten\u00e7\u00e3o do journal (00b560e) trim at\u00f4mico por bytes; **incidente #2 (2026-06-26) = 429 de COTA (\u2260ZDR! `free-models-per-day` 2000/dia) \u2192 agente afrouxado p/ 15min/10-rounds p/ caber na cota + watchdog STALE 30\u219245min (per\u00edodo real ~27min); d\u00e9bito LOW: `[AGENTE PARADO]` RE-DISPARA a cada restart do backend durante outage (estado em-mem\u00f3ria)**"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(21:53:11)*
+
+
+## 🤖 Claude *(21:53:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 7,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 7	- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) — incidente OpenRouter ZDR "Non-frontier" ON × modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = só `cycle_end` (não qualquer ts!), tail-scan; + retenção do journal (00b560e) trim atômico por bytes
+> ```
+
+## 🤖 Claude *(21:53:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) \u2014 incidente OpenRouter ZDR \"Non-frontier\" ON \u00d7 modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = s\u00f3 `cycle_end` (n\u00e3o qualquer ts!), tail-scan; + reten\u00e7\u00e3o do journal (00b560e) trim at\u00f4mico por bytes",
+  "new_string": "- [Agent heartbeat watchdog](tradeux-agent-heartbeat-watchdog.md) \u2014 incidente OpenRouter ZDR \"Non-frontier\" ON \u00d7 modelo :free = 404 data-policy (fix: desligar toggle); watchdog agentHeartbeatJob (e7afb72) alerta Telegram na outage silenciosa; batimento = s\u00f3 `cycle_end` (n\u00e3o qualquer ts!), tail-scan; + reten\u00e7\u00e3o do journal (00b560e) trim at\u00f4mico por bytes; **incidente #2 (2026-06-26) = 429 de COTA (\u2260ZDR! `free-models-per-day` 2000/dia) \u2192 agente afrouxado p/ 15min/10-rounds p/ caber na cota + watchdog STALE 30\u219245min (per\u00edodo real ~27min); d\u00e9bito LOW: `[AGENTE PARADO]` RE-DISPARA a cada restart do backend durante outage (estado em-mem\u00f3ria)**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:53:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "offset": 29,
+  "limit": 1
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 29	- [Telegram notifications](tradeux-telegram-notifications.md) — Telegram FUNCIONA (causa raiz era chatId=username do bot → fix via PATCH /settings, cache!); telegramNotify util (c3463ac): TODAS as ordens notificam (NEW/FILLED/REJECTED/EXPIRED; CANCELED silencioso) + POST /agent/notify + tool MCP tradeux_notify_owner (one-way, não-gated); **agente recalibrado (12ceabe): doutrina por módulo (id7 corta perda POR DESENHO!), pt-BR obrigatório, kickoff injeta histórico anti-spam + cap 2/ciclo**; **dedup por ASSUNTO em CÓDIGO (`64752f0`, notifyDedup.js, Jaccard+guards, self-test no CI) + doutrina anti-ruído consolidada no bloco `DIVERGÊNCIAS ESPERADAS` do prompt (`37ed4b1`/`0b1554d`) — É AQUI que mora "o que NÃO reportar/notificar"**
+> ```
+
+## 🤖 Claude *(21:53:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "dedup por ASSUNTO em C\u00d3DIGO (`64752f0`, notifyDedup.js, Jaccard+guards, self-test no CI) + doutrina anti-ru\u00eddo consolidada no bloco `DIVERG\u00caNCIAS ESPERADAS` do prompt (`37ed4b1`/`0b1554d`) \u2014 \u00c9 AQUI que mora \"o que N\u00c3O reportar/notificar\"**",
+  "new_string": "dedup por ASSUNTO em C\u00d3DIGO (`64752f0`, notifyDedup.js, Jaccard+guards, self-test no CI) + doutrina anti-ru\u00eddo consolidada no bloco `DIVERG\u00caNCIAS ESPERADAS` do prompt (`37ed4b1`/`0b1554d`) \u2014 \u00c9 AQUI que mora \"o que N\u00c3O reportar/notificar\"**; **`[FLOW]` SILENCIADO (2026-06-26, `701b7e7`, `FLOW_NOTIFY_ENABLED=false` runtime) = era ~95% do ru\u00eddo; sinal segue computado/gateando id2, s\u00f3 o Telegram cala; resto (REGIME/CROSS/ordens/risco) intacto = j\u00e1 \"s\u00f3 os importantes\"; ping de teste do canal via `docker exec ... node -e telegramNotify.notify`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:53:40)*
+
+
+## 🤖 Claude *(21:53:40)*
+
+Índice e memórias atualizados. Verificação final antes de fechar (containers, ownership, sincronia):
+
+## 🤖 Claude *(21:53:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== containers ===\"\nsudo -n -u gcrux-tradeux bash -lc 'docker compose ps --format \"table {{.Name}}\\t{{.Status}}\"'\necho \"=== ownership (repo files tocados + .git devem ser gcrux) ===\"\nls -l /home/gcrux-tradeux/tradeux/backend/src/flowJob.js /home/gcrux-tradeux/tradeux/.env.example | awk '{print $3\":\"$4, $NF}'\nls -ld /home/gcrux-tradeux/tradeux/.git | awk '{print $3\":\"$4, $NF}'\necho \"=== sincronia ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" status -sb 2>&1 | grep \"##\"'\necho \"=== site ===\"\ncurl -s -m5 -o /dev/null -w \"HTTP %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Final handoff verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up About an hour
+> tradeux-backend-1    Up About an hour
+> tradeux-db-1         Up 11 days (healthy)
+> tradeux-frontend-1   Up 43 hours
+> === ownership (repo files tocados + .git devem ser gcrux) ===
+> gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/backend/src/flowJob.js
+> gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.env.example
+> gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git
+> === sincronia ===
+> ## master...origin/master
+> === site ===
+> HTTP 200
+> ```
+
+## 🤖 Claude *(21:53:50)*
+
+
+## 🤖 Claude *(21:54:03)*
+
+Sessão selada — zero estado órfão. Tudo verificado: 4 containers up, ownership gcrux, `master == origin/master`, site 200.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-26
+───────────────────────────────────────────────────
+Commits     : 1 (chore(notify))  |  master (trunk-based, sem PR)
+              701b7e7 — silencia [FLOW] via FLOW_NOTIFY_ENABLED
+HANDOFF.md  : ✅ atualizado (header + SEAL 2026-06-26)
+Memory      : 2 arquivos (telegram-notifications, agent-heartbeat-watchdog)
+              + 2 linhas do índice MEMORY.md
+PRs abertos : nenhum (cada commit já em origin/master)
+Push        : ✅ origin sincronizado (701b7e7) — código já no master;
+              runtime .env é não-git (registrado no HANDOFF p/ reaplicar)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+### O que ficou registrado pra próxima sessão
+- **Estado:** 🔴 LIVE (`halted=false`) · **PARADO-MAS-ARMADO** · equity **$149,40** · regime BEAR → supervisor NO-OP.
+- **Entregue:** `[FLOW]` silenciado (commit), agente reajustado p/ caber na cota (15min/10-rounds, runtime), watchdog 30→45min, ping do canal confirmado vivo pelo dono.
+- **Scan de oportunidade = ZERO edge** (paper −$2,78, 482 sinais cara-ou-coroa, regime bear) → tese parqueado-como-combustível **data-validada**.
+- **Gatilho de re-engajar:** alerta Telegram de **flip de regime** (canal vivo) → grandfather/promover `slopegate` pro bull.
+- **Runtime não-git a reaplicar pós reset-db:** `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` (`.env`); `INTERVAL=900000` + `MAX_ROUNDS=10` (`tradeux-agent/.env`).
+- **Débito LOW novo:** `[AGENTE PARADO]` re-dispara em restart-durante-outage (persistir estado do watchdog).
+- **Heads-up:** o agente segue em 429 até ~00:00 UTC, aí auto-recupera na nova cadência. Tudo protegido (HALT/cap/riskGuard).
+
+Pode fechar tranquilo. 🤝
