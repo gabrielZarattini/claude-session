@@ -13030,5 +13030,6 @@ The bell is functional — panel opens with the real notifications (Reel publica
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-25 - agent-afadcea34084ceac0]]
+> * **Sessão Anterior**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
+> * **Próxima Sessão**: [[2026-06-26 - agent-a268e7bdfbdc74649]]
 %% --- TIMELINE END --- %%

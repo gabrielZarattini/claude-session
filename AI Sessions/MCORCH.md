@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 52
-> * **Total de Sessões**: 1409
+> * **Total de Sessões**: 1419
 
 ---
 
@@ -75,7 +75,17 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-26 - agent-ab0cae1b935d2e571]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-aab0587a4189f8a0f]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-aa9d859dec14d4b51]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-a9b3f105a5cbc0a9f]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-a7d4fb81c4339755f]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-a7c82e4d9b1ef706b]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-a4638d96368b7a56b]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - agent-a268e7bdfbdc74649]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - Implementar E2E UI testing em browser real]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-25 - agent-afadcea34084ceac0]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - agent-aebc560e7f259586d]]` (ClaudeSessions) - *2026-06-25*
 *   `[[2026-06-25 - agent-adc74488baf8727f4]]` (ClaudeSessions) - *2026-06-25*
