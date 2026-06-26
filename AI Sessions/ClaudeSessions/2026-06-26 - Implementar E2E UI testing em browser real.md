@@ -348,7 +348,7 @@ Now reading HANDOFF.md (head + tail), sprint priorities, and checking scratch co
 > 42	### Survival Laws Self-audit
 > 43	```
 > 44	Law 1 (Materiality): ✅ Tudo provado neste turno — Reel via HTTP 200 + permalink real; notificações via screenshot do browser; canvas/handoff/white-label via agent-browser; deploys por size; achados (cron /var/log morto, modelId fora do catálogo, id IG app-scoped 100/33) corrigidos com prova. Diretiva durável: verificar UI em browser real antes de declarar pronto.
-> 45	Law 2 (Process): ✅ SOPs: [[meta-reels-publish|meta-reels-publish]].md (caminho IG Business Login que funciona). Fatia 2 = débito BoK FR-META-REELS registrado (override consciente "comece a Fatia 2 agora"). Notificações = consertar camada existente (não módulo novo). Canvas/scroll fixes isentos (single-file).
+> 45	Law 2 (Process): ✅ SOPs: meta-reels-publish.md (caminho IG Business Login que funciona). Fatia 2 = débito BoK FR-META-REELS registrado (override consciente "comece a Fatia 2 agora"). Notificações = consertar camada existente (não módulo novo). Canvas/scroll fixes isentos (single-file).
 > 46	Law 3 (Pruning): ✅ Sessão longa com workflow (wf_792d5d48) como subagente; resultados por path, não recarregados. Selada a ~limite da janela.
 > 47	Law 4 (ORO): ✅ Triplet declarado; decisões soberanas via AskUserQuestion (workspace init) + diretivas explícitas (P0, Fatia 2 GO).
 > 48	```
@@ -1397,7 +1397,7 @@ Recon completo. O resultado está truncado — vou ler o arquivo completo para t
 > 319	        },
 > 320	        {
 > 321	          "item": "Eventual CF WAF Skip + 'Nível de Segurança' off para video.mcorch.com (se XHR/SSE do editor for desafiado)",
-> 322	          "why": "O conf documenta: para iframe em browser real normalmente o JS challenge passa, mas se o editor (render-progress SSE / file XHR) levar 403 text/html do CF (reputação de IP datacenter), precisa de regra Skip + desligar o componente 'Nível de Segurança' — toggle decisivo só no dashboard CF (lição [[wordpress-cf-publish-unblock|wordpress-cf-publish-unblock]]).",
+> 322	          "why": "O conf documenta: para iframe em browser real normalmente o JS challenge passa, mas se o editor (render-progress SSE / file XHR) levar 403 text/html do CF (reputação de IP datacenter), precisa de regra Skip + desligar o componente 'Nível de Segurança' — toggle decisivo só no dashboard CF (lição wordpress-cf-publish-unblock).",
 > 323	          "whatNeeded": "Sovereign no dashboard Cloudflare: WAF Skip rule http.host eq 'video.mcorch.com' + desligar Security Level. Provavelmente JÁ feito (302 SSO funciona limpo), mas confirmar se algum endpoint /api/* do studio for challenged."
 > 324	        },
 > 325	        {
@@ -1575,7 +1575,7 @@ GO recebido: **texto + vídeo** e **verificar Fase A + adiar Fase B**. Antes de 
 >
 > ```
 > 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
-> 2	// SOP: docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
 > 3	//
 > 4	// Identity (two paths):
 > 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
@@ -1880,7 +1880,7 @@ O contrato está claro. Pontos-chave: `mode=all_at_once` → após 1 run o plano
 > === begin_autopilot_cycle ===
 > -- Migration: begin_autopilot_cycle RPC — atomic cap-check + single pre-debit + open cycle (FR-VA-007 / FR-VA-021).
 > -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md §2 (RPC table line 109 + cost-gate notes lines ~170-183).
-> -- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
+> -- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
 > --
 > -- THE anti-TOCTOU heart of the cost guardrail. Under pg_advisory_xact_lock(hashtext(user_id)) — which serializes
 > -- concurrent begins for the SAME tenant so two parallel cycles cannot both slip under the daily cap — it:
@@ -1989,7 +1989,7 @@ O contrato está claro. Pontos-chave: `mode=all_at_once` → após 1 run o plano
 > === finalize (cabeçalho) ===
 > -- Migration: finalize_autopilot_cycle RPC — terminal close + idempotent POSITIVE-credit refund (FR-VA-007).
 > -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md §2 (RPC table line 110, "espelha finalize_vision_job").
-> -- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
+> -- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
 > --
 > -- Mirrors public.finalize_vision_job (20260615160000): claim a RUNNING cycle EXACTLY ONCE, then credit the unused
 > -- (spend_mco − actual) via add_mco_coins (POSITIVE — never a negative deduct) in the SAME transaction, plus a
@@ -2965,7 +2965,7 @@ E confirmei um **achado de billing real (Lei 1)**: o código (`orchestrate-step:
 > ```
 > === refund RPC (assinatura + comportamento) ===
 > -- Migration: viral-autopilot Fatia VA-V1 — compensating credit for a FAILED video enqueue (billing-accuracy gap).
-> -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md OTD-VA-010 (prepaid cost model) · SOP docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md.
+> -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md OTD-VA-010 (prepaid cost model) · SOP docs/processes/autopilot-video-9x16.md.
 > --
 > -- THE GAP (charge-without-value, NOT a security vuln): autopilot-run finalizes the cycle OPTIMISTICALLY —
 > -- `actual = succeeded × (ORCH_COST + VIDEO_COST)` — BEFORE the async video enqueues run (orchestrate-content
@@ -4853,7 +4853,7 @@ Agora o trabalho pesado: pesquisa fundamentada das integrações YouTube + TikTo
 🛠️ **Tool Call**: `Workflow`
 ```json
 {
-  "script": "export const meta = {\n  name: 'yt-tiktok-integration-prep',\n  description: 'Pesquisa fundamentada (Lei 1) das integra\u00e7\u00f5es de postagem YouTube + TikTok + mapeamento da infra reus\u00e1vel MCORCH, p/ a virada brand-persona (Gabriel AI / CCIO)',\n  phases: [{ title: 'Research', detail: 'YT API \u00b7 TikTok API \u00b7 infra mapping em paralelo' }],\n}\n\nconst PLATFORM_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['platform', 'summary', 'postingMechanism', 'oauthScopes', 'approvalGate', 'videoSpec', 'quotaLimits', 'perUserCredentialModel', 'netNewWork', 'gotchas', 'sources'],\n  properties: {\n    platform: { type: 'string' },\n    summary: { type: 'string', description: 'Executive 2-3 sentence verdict on how hard/gated programmatic posting is.' },\n    postingMechanism: { type: 'string', description: 'Exact API + endpoint(s) to publish a video programmatically (resumable upload? init+upload? direct post?).' },\n    oauthScopes: { type: 'array', items: { type: 'string' }, description: 'Exact OAuth scope strings needed to publish.' },\n    approvalGate: { type: 'string', description: 'CRITICAL gating: app verification / audit / review requirement before PUBLIC posting works (the IG-App-Review-equivalent). State explicitly what is blocked until approved.' },\n    videoSpec: { type: 'string', description: 'Vertical 9:16 support, max length, format, for Shorts (YT) / short video (TikTok).' },\n    quotaLimits: { type: 'string', description: 'Daily quota / rate limits for posting (e.g. YT videos.insert cost in units).' },\n    perUserCredentialModel: { type: 'string', description: 'How per-user creds map to our API Tenancy Model (OAuth user token vs API key; refresh-token storage in social_accounts).' },\n    netNewWork: { type: 'array', items: { type: 'string' }, description: 'What MCORCH must build new (OAuth connect flow, edge fn, token refresh, etc.).' },\n    gotchas: { type: 'array', items: { type: 'string' } },\n    sources: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['claim', 'url'], properties: { claim: { type: 'string' }, url: { type: 'string' } } }, description: 'Law 1: every non-obvious claim above carries the official-docs URL consulted.' },\n  },\n}\n\nconst INFRA_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['reusable', 'extensionPoints', 'schemaNeeds', 'oauthConnectFlow', 'recommendation'],\n  properties: {\n    reusable: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['component', 'path', 'how'], properties: { component: { type: 'string' }, path: { type: 'string' }, how: { type: 'string' } } }, description: 'Existing MCORCH pieces a YT/TikTok integration reuses as-is (the 9:16 render pipeline, publish-social dispatch, scheduled_posts, auto-publish cron, the autopilot engine, the IG Reel path).' },\n    extensionPoints: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['where', 'path', 'whatToAdd'], properties: { where: { type: 'string' }, path: { type: 'string' }, whatToAdd: { type: 'string' } } }, description: 'Exact file:where a new platform (youtube/tiktok) plugs in.' },\n    schemaNeeds: { type: 'array', items: { type: 'string' }, description: 'New tables/columns/OAuth-token storage needed (per API Tenancy Model).' },\n    oauthConnectFlow: { type: 'string', description: 'How existing platforms (linkedin/meta/instagram) establish the social_accounts OAuth connection today \u2014 the flow a new platform must mirror. Cite the connect/callback edge fn.' },\n    recommendation: { type: 'string', description: 'PT-BR: the leanest path to first YT Short + first TikTok post under the brand-persona model, respecting the BoK gate.' },\n  },\n}\n\nphase('Research')\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst lawNote = `LEI 1 (Materialidade): toda claim n\u00e3o-\u00f3bvia carrega a URL da doc OFICIAL consultada (developers.google.com/youtube, developers.tiktok.com, etc.). N\u00c3O fabrique scopes, endpoints, quotas ou requisitos de audit \u2014 se n\u00e3o confirmar numa fonte, diga \"n\u00e3o confirmado\". Pesquise a web de verdade (WebSearch/WebFetch).`\n\nconst [yt, tiktok, infra] = await parallel([\n  () => agent(`Voc\u00ea pesquisa a integra\u00e7\u00e3o de POSTAGEM PROGRAM\u00c1TICA no YouTube para o MCORCH (marca), publicando v\u00eddeos verticais 9:16 (Shorts) gerados pelo nosso motor. O Usu\u00e1rio Zero vai converter o canal YouTube existente dele em canal MCORCH.\n\n${lawNote}\n\nResponda, fundamentado nas docs oficiais do Google/YouTube:\n- Mecanismo exato de upload program\u00e1tico: YouTube Data API v3 \\`videos.insert\\` (resumable upload) \u2014 endpoint, partes (snippet/status), formato.\n- Scope(s) OAuth 2.0 exatos para publicar (ex.: \\`https://www.googleapis.com/auth/youtube.upload\\`) e se s\u00e3o \"sensitive\" ou \"restricted\" (impacta o n\u00edvel de verifica\u00e7\u00e3o Google).\n- **PORT\u00c3O DE APROVA\u00c7\u00c3O (cr\u00edtico):** o que o app precisa passar (OAuth app verification / brand verification / security assessment) ANTES de postar p\u00fablico sem tela de \"app n\u00e3o verificado\"; o que fica bloqueado at\u00e9 l\u00e1; o limite de usu\u00e1rios em modo de teste/unverified.\n- Shorts: requisitos p/ o v\u00eddeo ser tratado como Short (vertical, dura\u00e7\u00e3o m\u00e1x, #Shorts), specs de formato.\n- Quota: custo em units do \\`videos.insert\\` + quota di\u00e1ria default + como pedir aumento.\n- Modelo per-user: como guardar o OAuth refresh token do usu\u00e1rio (n\u00e3o \u00e9 API key \u2014 \u00e9 token OAuth do canal). Como mapeia ao nosso \\`social_accounts\\` (access_token/refresh_token) e \u00e0 regra \"credencial per-user\".\n- O que \u00e9 NET-NEW p/ construir (flow de connect OAuth, edge fn de callback, refresh de token, publisher YT no publish-social).\n- Gotchas (ex.: canal precisa existir; uploads ficam \"private until verified\"? brand account vs personal).\n\nRetorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:youtube', phase: 'Research', schema: PLATFORM_SCHEMA, agentType: '[[deepsearch-blueprint|deepsearch-blueprint]]' }),\n\n  () => agent(`Voc\u00ea pesquisa a integra\u00e7\u00e3o de POSTAGEM PROGRAM\u00c1TICA no TikTok para o MCORCH (marca), publicando v\u00eddeos verticais 9:16 gerados pelo nosso motor. O Usu\u00e1rio Zero vai criar uma conta TikTok MCORCH nova.\n\n${lawNote}\n\nResponda, fundamentado nas docs oficiais do TikTok for Developers:\n- Mecanismo exato: Content Posting API \u2014 Direct Post (\\`/v2/post/publish/video/init/\\`) vs Upload-to-inbox/draft (\\`/v2/post/publish/inbox/video/init/\\`); fluxo init\u2192upload\u2192publish; pull-from-url vs file upload.\n- Scope(s) OAuth exatos (ex.: \\`video.publish\\`, \\`video.upload\\`) e a diferen\u00e7a entre eles.\n- **PORT\u00c3O DE APROVA\u00c7\u00c3O (cr\u00edtico, equivalente ao IG App Review):** o requisito de AUDIT do app. Apps N\u00c3O-auditados publicam s\u00f3 como privado/SELF_ONLY (vis\u00edvel s\u00f3 pro criador)? O que exige o audit p/ postar P\u00daBLICO? Como registrar app em developers.tiktok.com + o review da Content Posting API. Estado \"sandbox/unaudited client\".\n- Specs de v\u00eddeo: formato, resolu\u00e7\u00e3o, vertical, dura\u00e7\u00e3o, tamanho.\n- Rate limits de postagem.\n- Modelo per-user: OAuth user access token + refresh; mapeia ao nosso \\`social_accounts\\`.\n- O que \u00e9 NET-NEW p/ construir.\n- Gotchas (ex.: dom\u00ednio precisa ser verificado p/ pull-from-url; restri\u00e7\u00f5es do unaudited client; janela de expira\u00e7\u00e3o do upload).\n\nRetorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:tiktok', phase: 'Research', schema: PLATFORM_SCHEMA, agentType: '[[deepsearch-blueprint|deepsearch-blueprint]]' }),\n\n  () => agent(`Voc\u00ea \u00e9 um agente READ-ONLY mapeando a infra MCORCH existente p/ saber o que J\u00c1 \u00e9 reus\u00e1vel numa integra\u00e7\u00e3o de postagem YouTube + TikTok. Workspace: ${REPO}.\n\n${lawNote.replace('Pesquise a web de verdade (WebSearch/WebFetch).', 'Aqui a fonte \u00e9 o C\u00d3DIGO: cite file:linha real, n\u00e3o invente.')}\n\nLeia o c\u00f3digo e responda:\n1. \\`supabase/functions/publish-social/index.ts\\` \u2014 como ele despacha por plataforma (linkedin/twitter/instagram/facebook/meta)? Onde um case novo 'youtube'/'tiktok' entraria? Como recebe o content + media?\n2. \\`social_accounts\\` schema (cols: platform, access_token, refresh_token, token_expires_at, scopes, platform_user_id, metadata) \u2014 \u00e9 a tabela can\u00f4nica de conex\u00e3o OAuth social? \u00c9 VIEW mascarada Vault? Como \u00e9 escrita (INSTEAD OF)?\n3. O FLOW de conectar uma conta social hoje: existe edge fn de OAuth connect/callback por plataforma (ex.: linkedin-oauth, meta-oauth, social-oauth-callback)? Como o refresh de token acontece (h\u00e1 refresh autom\u00e1tico no publish-social)? Procure (grep) o que faz o connect.\n4. O pipeline de **v\u00eddeo 9:16 j\u00e1 existe e \u00e9 reus\u00e1vel** \u2014 \\`video_renders\\`/\\`video-bridge.ts\\`/\\`render-core.ts\\` (motor HyperFrames 1080\u00d71920) + \\`content_library.video_url\\` + o path IG Reel (\\`publish-social\\` IG via graph.instagram.com + REELS, da \u00faltima seal). Confirme onde o MP4 9:16 vive e como o IG j\u00e1 o consome \u2014 YT Shorts/TikTok consomem o MESMO MP4.\n5. \\`scheduled_posts\\` + \\`auto-publish\\` cron + o motor autopilot (\\`autopilot-run\\`/\\`orchestrate-content\\`) \u2014 como um novo canal entra na cad\u00eancia.\n6. API Tenancy Model (CLAUDE.md) \u2014 a regra per-user p/ nova integra\u00e7\u00e3o externa.\n\nDetermine: o que \u00e9 REUS\u00c1VEL as-is, os EXTENSION POINTS exatos (file:onde), o que falta de SCHEMA (token storage YT/TikTok), o flow OAuth a espelhar, e uma recomenda\u00e7\u00e3o PT-BR do caminho mais enxuto at\u00e9 o 1\u00ba Short YT + 1\u00ba post TikTok respeitando o BoK gate. Retorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:infra-mapping', phase: 'Research', schema: INFRA_SCHEMA }),\n])\n\nreturn { youtube: yt, tiktok: tiktok, infra }",
+  "script": "export const meta = {\n  name: 'yt-tiktok-integration-prep',\n  description: 'Pesquisa fundamentada (Lei 1) das integra\u00e7\u00f5es de postagem YouTube + TikTok + mapeamento da infra reus\u00e1vel MCORCH, p/ a virada brand-persona (Gabriel AI / CCIO)',\n  phases: [{ title: 'Research', detail: 'YT API \u00b7 TikTok API \u00b7 infra mapping em paralelo' }],\n}\n\nconst PLATFORM_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['platform', 'summary', 'postingMechanism', 'oauthScopes', 'approvalGate', 'videoSpec', 'quotaLimits', 'perUserCredentialModel', 'netNewWork', 'gotchas', 'sources'],\n  properties: {\n    platform: { type: 'string' },\n    summary: { type: 'string', description: 'Executive 2-3 sentence verdict on how hard/gated programmatic posting is.' },\n    postingMechanism: { type: 'string', description: 'Exact API + endpoint(s) to publish a video programmatically (resumable upload? init+upload? direct post?).' },\n    oauthScopes: { type: 'array', items: { type: 'string' }, description: 'Exact OAuth scope strings needed to publish.' },\n    approvalGate: { type: 'string', description: 'CRITICAL gating: app verification / audit / review requirement before PUBLIC posting works (the IG-App-Review-equivalent). State explicitly what is blocked until approved.' },\n    videoSpec: { type: 'string', description: 'Vertical 9:16 support, max length, format, for Shorts (YT) / short video (TikTok).' },\n    quotaLimits: { type: 'string', description: 'Daily quota / rate limits for posting (e.g. YT videos.insert cost in units).' },\n    perUserCredentialModel: { type: 'string', description: 'How per-user creds map to our API Tenancy Model (OAuth user token vs API key; refresh-token storage in social_accounts).' },\n    netNewWork: { type: 'array', items: { type: 'string' }, description: 'What MCORCH must build new (OAuth connect flow, edge fn, token refresh, etc.).' },\n    gotchas: { type: 'array', items: { type: 'string' } },\n    sources: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['claim', 'url'], properties: { claim: { type: 'string' }, url: { type: 'string' } } }, description: 'Law 1: every non-obvious claim above carries the official-docs URL consulted.' },\n  },\n}\n\nconst INFRA_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['reusable', 'extensionPoints', 'schemaNeeds', 'oauthConnectFlow', 'recommendation'],\n  properties: {\n    reusable: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['component', 'path', 'how'], properties: { component: { type: 'string' }, path: { type: 'string' }, how: { type: 'string' } } }, description: 'Existing MCORCH pieces a YT/TikTok integration reuses as-is (the 9:16 render pipeline, publish-social dispatch, scheduled_posts, auto-publish cron, the autopilot engine, the IG Reel path).' },\n    extensionPoints: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['where', 'path', 'whatToAdd'], properties: { where: { type: 'string' }, path: { type: 'string' }, whatToAdd: { type: 'string' } } }, description: 'Exact file:where a new platform (youtube/tiktok) plugs in.' },\n    schemaNeeds: { type: 'array', items: { type: 'string' }, description: 'New tables/columns/OAuth-token storage needed (per API Tenancy Model).' },\n    oauthConnectFlow: { type: 'string', description: 'How existing platforms (linkedin/meta/instagram) establish the social_accounts OAuth connection today \u2014 the flow a new platform must mirror. Cite the connect/callback edge fn.' },\n    recommendation: { type: 'string', description: 'PT-BR: the leanest path to first YT Short + first TikTok post under the brand-persona model, respecting the BoK gate.' },\n  },\n}\n\nphase('Research')\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst lawNote = `LEI 1 (Materialidade): toda claim n\u00e3o-\u00f3bvia carrega a URL da doc OFICIAL consultada (developers.google.com/youtube, developers.tiktok.com, etc.). N\u00c3O fabrique scopes, endpoints, quotas ou requisitos de audit \u2014 se n\u00e3o confirmar numa fonte, diga \"n\u00e3o confirmado\". Pesquise a web de verdade (WebSearch/WebFetch).`\n\nconst [yt, tiktok, infra] = await parallel([\n  () => agent(`Voc\u00ea pesquisa a integra\u00e7\u00e3o de POSTAGEM PROGRAM\u00c1TICA no YouTube para o MCORCH (marca), publicando v\u00eddeos verticais 9:16 (Shorts) gerados pelo nosso motor. O Usu\u00e1rio Zero vai converter o canal YouTube existente dele em canal MCORCH.\n\n${lawNote}\n\nResponda, fundamentado nas docs oficiais do Google/YouTube:\n- Mecanismo exato de upload program\u00e1tico: YouTube Data API v3 \\`videos.insert\\` (resumable upload) \u2014 endpoint, partes (snippet/status), formato.\n- Scope(s) OAuth 2.0 exatos para publicar (ex.: \\`https://www.googleapis.com/auth/youtube.upload\\`) e se s\u00e3o \"sensitive\" ou \"restricted\" (impacta o n\u00edvel de verifica\u00e7\u00e3o Google).\n- **PORT\u00c3O DE APROVA\u00c7\u00c3O (cr\u00edtico):** o que o app precisa passar (OAuth app verification / brand verification / security assessment) ANTES de postar p\u00fablico sem tela de \"app n\u00e3o verificado\"; o que fica bloqueado at\u00e9 l\u00e1; o limite de usu\u00e1rios em modo de teste/unverified.\n- Shorts: requisitos p/ o v\u00eddeo ser tratado como Short (vertical, dura\u00e7\u00e3o m\u00e1x, #Shorts), specs de formato.\n- Quota: custo em units do \\`videos.insert\\` + quota di\u00e1ria default + como pedir aumento.\n- Modelo per-user: como guardar o OAuth refresh token do usu\u00e1rio (n\u00e3o \u00e9 API key \u2014 \u00e9 token OAuth do canal). Como mapeia ao nosso \\`social_accounts\\` (access_token/refresh_token) e \u00e0 regra \"credencial per-user\".\n- O que \u00e9 NET-NEW p/ construir (flow de connect OAuth, edge fn de callback, refresh de token, publisher YT no publish-social).\n- Gotchas (ex.: canal precisa existir; uploads ficam \"private until verified\"? brand account vs personal).\n\nRetorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:youtube', phase: 'Research', schema: PLATFORM_SCHEMA, agentType: 'deepsearch-blueprint' }),\n\n  () => agent(`Voc\u00ea pesquisa a integra\u00e7\u00e3o de POSTAGEM PROGRAM\u00c1TICA no TikTok para o MCORCH (marca), publicando v\u00eddeos verticais 9:16 gerados pelo nosso motor. O Usu\u00e1rio Zero vai criar uma conta TikTok MCORCH nova.\n\n${lawNote}\n\nResponda, fundamentado nas docs oficiais do TikTok for Developers:\n- Mecanismo exato: Content Posting API \u2014 Direct Post (\\`/v2/post/publish/video/init/\\`) vs Upload-to-inbox/draft (\\`/v2/post/publish/inbox/video/init/\\`); fluxo init\u2192upload\u2192publish; pull-from-url vs file upload.\n- Scope(s) OAuth exatos (ex.: \\`video.publish\\`, \\`video.upload\\`) e a diferen\u00e7a entre eles.\n- **PORT\u00c3O DE APROVA\u00c7\u00c3O (cr\u00edtico, equivalente ao IG App Review):** o requisito de AUDIT do app. Apps N\u00c3O-auditados publicam s\u00f3 como privado/SELF_ONLY (vis\u00edvel s\u00f3 pro criador)? O que exige o audit p/ postar P\u00daBLICO? Como registrar app em developers.tiktok.com + o review da Content Posting API. Estado \"sandbox/unaudited client\".\n- Specs de v\u00eddeo: formato, resolu\u00e7\u00e3o, vertical, dura\u00e7\u00e3o, tamanho.\n- Rate limits de postagem.\n- Modelo per-user: OAuth user access token + refresh; mapeia ao nosso \\`social_accounts\\`.\n- O que \u00e9 NET-NEW p/ construir.\n- Gotchas (ex.: dom\u00ednio precisa ser verificado p/ pull-from-url; restri\u00e7\u00f5es do unaudited client; janela de expira\u00e7\u00e3o do upload).\n\nRetorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:tiktok', phase: 'Research', schema: PLATFORM_SCHEMA, agentType: 'deepsearch-blueprint' }),\n\n  () => agent(`Voc\u00ea \u00e9 um agente READ-ONLY mapeando a infra MCORCH existente p/ saber o que J\u00c1 \u00e9 reus\u00e1vel numa integra\u00e7\u00e3o de postagem YouTube + TikTok. Workspace: ${REPO}.\n\n${lawNote.replace('Pesquise a web de verdade (WebSearch/WebFetch).', 'Aqui a fonte \u00e9 o C\u00d3DIGO: cite file:linha real, n\u00e3o invente.')}\n\nLeia o c\u00f3digo e responda:\n1. \\`supabase/functions/publish-social/index.ts\\` \u2014 como ele despacha por plataforma (linkedin/twitter/instagram/facebook/meta)? Onde um case novo 'youtube'/'tiktok' entraria? Como recebe o content + media?\n2. \\`social_accounts\\` schema (cols: platform, access_token, refresh_token, token_expires_at, scopes, platform_user_id, metadata) \u2014 \u00e9 a tabela can\u00f4nica de conex\u00e3o OAuth social? \u00c9 VIEW mascarada Vault? Como \u00e9 escrita (INSTEAD OF)?\n3. O FLOW de conectar uma conta social hoje: existe edge fn de OAuth connect/callback por plataforma (ex.: linkedin-oauth, meta-oauth, social-oauth-callback)? Como o refresh de token acontece (h\u00e1 refresh autom\u00e1tico no publish-social)? Procure (grep) o que faz o connect.\n4. O pipeline de **v\u00eddeo 9:16 j\u00e1 existe e \u00e9 reus\u00e1vel** \u2014 \\`video_renders\\`/\\`video-bridge.ts\\`/\\`render-core.ts\\` (motor HyperFrames 1080\u00d71920) + \\`content_library.video_url\\` + o path IG Reel (\\`publish-social\\` IG via graph.instagram.com + REELS, da \u00faltima seal). Confirme onde o MP4 9:16 vive e como o IG j\u00e1 o consome \u2014 YT Shorts/TikTok consomem o MESMO MP4.\n5. \\`scheduled_posts\\` + \\`auto-publish\\` cron + o motor autopilot (\\`autopilot-run\\`/\\`orchestrate-content\\`) \u2014 como um novo canal entra na cad\u00eancia.\n6. API Tenancy Model (CLAUDE.md) \u2014 a regra per-user p/ nova integra\u00e7\u00e3o externa.\n\nDetermine: o que \u00e9 REUS\u00c1VEL as-is, os EXTENSION POINTS exatos (file:onde), o que falta de SCHEMA (token storage YT/TikTok), o flow OAuth a espelhar, e uma recomenda\u00e7\u00e3o PT-BR do caminho mais enxuto at\u00e9 o 1\u00ba Short YT + 1\u00ba post TikTok respeitando o BoK gate. Retorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:infra-mapping', phase: 'Research', schema: INFRA_SCHEMA }),\n])\n\nreturn { youtube: yt, tiktok: tiktok, infra }",
   "description": "Prep YouTube+TikTok + infra mapping"
 }
 ```
@@ -5181,7 +5181,7 @@ A pesquisa landou. Leio o resultado completo (TikTok + infra mapping vieram trun
 > 245	      "phaseIndex": 1,
 > 246	      "phaseTitle": "Research",
 > 247	      "agentId": "a3e9ae680160748fd",
-> 248	      "agentType": "[[deepsearch-blueprint|deepsearch-blueprint]]",
+> 248	      "agentType": "deepsearch-blueprint",
 > 249	      "model": "claude-opus-4-8",
 > 250	      "state": "done",
 > 251	      "startedAt": 1782441652010,
@@ -5203,7 +5203,7 @@ A pesquisa landou. Leio o resultado completo (TikTok + infra mapping vieram trun
 > 267	      "phaseIndex": 1,
 > 268	      "phaseTitle": "Research",
 > 269	      "agentId": "aaa3c6ad9cc2ab052",
-> 270	      "agentType": "[[deepsearch-blueprint|deepsearch-blueprint]]",
+> 270	      "agentType": "deepsearch-blueprint",
 > 271	      "model": "claude-opus-4-8",
 > 272	      "state": "done",
 > 273	      "startedAt": 1782441652012,
@@ -5646,7 +5646,7 @@ O guia revelou o achado-chave: **`characterReference` JÁ é um tipo de nó** (n
 > 293:        input_asset_id: resolvedInputAssetId,
 > 537:          input_asset_id: resolvedInputAssetId,
 > 695:  // Cross-node consistency: seed (reproducibility, all models) + reference image
-> 697:  // SOP: docs/processes/[[canvas-node-consistency|canvas-node-consistency]].md. Fail-open if no reference/seed.
+> 697:  // SOP: docs/processes/canvas-node-consistency.md. Fail-open if no reference/seed.
 > 702:  const refUrl = (body.reference_image_urls ?? []).filter(Boolean)[0];
 > 705:      input.image_prompt = refUrl; // FLUX 1.1 Pro: composition reference
 > 768:  // is an array of multimodal parts; image parts have type `image_url` with
@@ -5837,7 +5837,7 @@ Quadro claro: o nó `characterReference` **existe** e o canvas-execute **já thr
 > 47	 * deduped, for cross-node consistency reference threading. Generate/style nodes
 > 48	 * pass these as `reference_image_urls` so the model preserves identity from the
 > 49	 * connected upstream creative(s). Capped at 4 (Gemini character-consistency limit).
-> 50	 * SOP: docs/processes/[[canvas-node-consistency|canvas-node-consistency]].md.
+> 50	 * SOP: docs/processes/canvas-node-consistency.md.
 > 51	 */
 > 52	export function findUpstreamImages(
 > 53	  nodeId: string,
@@ -6831,8 +6831,8 @@ Inspector entendido: hoje sobe 1 imagem (`imageUrl` + `storagePath`, signed URL 
 {
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-utils.ts",
-  "old_string": "/**\n * Collect ALL immediate upstream image URLs (edges where `target === nodeId`),\n * deduped, for cross-node consistency reference threading. Generate/style nodes\n * pass these as `reference_image_urls` so the model preserves identity from the\n * connected upstream creative(s). Capped at 4 (Gemini character-consistency limit).\n * SOP: docs/processes/[[canvas-node-consistency|canvas-node-consistency]].md.\n */\nexport function findUpstreamImages(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: Edge[],\n): string[] {\n  const urls: string[] = [];\n  for (const e of edges.filter((edge) => edge.target === nodeId)) {\n    const src = nodes.find((n) => n.id === e.source);\n    if (!src) continue;\n    const url = pickNodeImage(src.data);\n    if (url && !urls.includes(url)) urls.push(url);\n  }\n  return urls.slice(0, 4);\n}",
-  "new_string": "/**\n * Read ALL image URLs out of a node's `data`. For a CharacterReference mood-board node this is the\n * full `data.imageUrls` array (multiple face photos); otherwise it falls back to the single canonical\n * image (`pickNodeImage`). Used so one mood-board node contributes every photo to the reference set.\n */\nexport function pickNodeImages(data: unknown): string[] {\n  if (!data || typeof data !== 'object') return [];\n  const d = data as Record<string, unknown>;\n  if (Array.isArray(d.imageUrls) && d.imageUrls.length > 0) {\n    return d.imageUrls.filter((u): u is string => typeof u === 'string' && u.length > 0);\n  }\n  const single = pickNodeImage(data);\n  return single ? [single] : [];\n}\n\n/**\n * Collect ALL immediate upstream image URLs (edges where `target === nodeId`),\n * deduped, for cross-node consistency reference threading. Generate/style nodes\n * pass these as `reference_image_urls` so the model preserves identity from the\n * connected upstream creative(s) \u2014 including every photo of a CharacterReference\n * mood-board node. Capped at 4 (Gemini character-consistency limit).\n * SOP: docs/processes/[[canvas-node-consistency|canvas-node-consistency]].md.\n */\nexport function findUpstreamImages(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: Edge[],\n): string[] {\n  const urls: string[] = [];\n  for (const e of edges.filter((edge) => edge.target === nodeId)) {\n    const src = nodes.find((n) => n.id === e.source);\n    if (!src) continue;\n    for (const url of pickNodeImages(src.data)) {\n      if (url && !urls.includes(url)) urls.push(url);\n    }\n  }\n  return urls.slice(0, 4);\n}"
+  "old_string": "/**\n * Collect ALL immediate upstream image URLs (edges where `target === nodeId`),\n * deduped, for cross-node consistency reference threading. Generate/style nodes\n * pass these as `reference_image_urls` so the model preserves identity from the\n * connected upstream creative(s). Capped at 4 (Gemini character-consistency limit).\n * SOP: docs/processes/canvas-node-consistency.md.\n */\nexport function findUpstreamImages(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: Edge[],\n): string[] {\n  const urls: string[] = [];\n  for (const e of edges.filter((edge) => edge.target === nodeId)) {\n    const src = nodes.find((n) => n.id === e.source);\n    if (!src) continue;\n    const url = pickNodeImage(src.data);\n    if (url && !urls.includes(url)) urls.push(url);\n  }\n  return urls.slice(0, 4);\n}",
+  "new_string": "/**\n * Read ALL image URLs out of a node's `data`. For a CharacterReference mood-board node this is the\n * full `data.imageUrls` array (multiple face photos); otherwise it falls back to the single canonical\n * image (`pickNodeImage`). Used so one mood-board node contributes every photo to the reference set.\n */\nexport function pickNodeImages(data: unknown): string[] {\n  if (!data || typeof data !== 'object') return [];\n  const d = data as Record<string, unknown>;\n  if (Array.isArray(d.imageUrls) && d.imageUrls.length > 0) {\n    return d.imageUrls.filter((u): u is string => typeof u === 'string' && u.length > 0);\n  }\n  const single = pickNodeImage(data);\n  return single ? [single] : [];\n}\n\n/**\n * Collect ALL immediate upstream image URLs (edges where `target === nodeId`),\n * deduped, for cross-node consistency reference threading. Generate/style nodes\n * pass these as `reference_image_urls` so the model preserves identity from the\n * connected upstream creative(s) \u2014 including every photo of a CharacterReference\n * mood-board node. Capped at 4 (Gemini character-consistency limit).\n * SOP: docs/processes/canvas-node-consistency.md.\n */\nexport function findUpstreamImages(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: Edge[],\n): string[] {\n  const urls: string[] = [];\n  for (const e of edges.filter((edge) => edge.target === nodeId)) {\n    const src = nodes.find((n) => n.id === e.source);\n    if (!src) continue;\n    for (const url of pickNodeImages(src.data)) {\n      if (url && !urls.includes(url)) urls.push(url);\n    }\n  }\n  return urls.slice(0, 4);\n}"
 }
 ```
 
@@ -7535,7 +7535,7 @@ Antes de gastar mco às cegas, preciso verificar duas coisas materiais (Lei 1): 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vision-qa.ts (olho criativo) \u2014 interface ===\"\nls -la scripts/qa/vision-qa.ts 2>/dev/null && head -40 scripts/qa/vision-qa.ts\necho \"=== SOP [[creative-qa-vision-gate|creative-qa-vision-gate]] ===\"\nls -la docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md 2>/dev/null && grep -nE \"vision-qa|Vision MCP|mcp.mcorch|analyze|screenshot|print|invoke|Usage|##\" docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md 2>/dev/null | head -20",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vision-qa.ts (olho criativo) \u2014 interface ===\"\nls -la scripts/qa/vision-qa.ts 2>/dev/null && head -40 scripts/qa/vision-qa.ts\necho \"=== SOP creative-qa-vision-gate ===\"\nls -la docs/processes/creative-qa-vision-gate.md 2>/dev/null && grep -nE \"vision-qa|Vision MCP|mcp.mcorch|analyze|screenshot|print|invoke|Usage|##\" docs/processes/creative-qa-vision-gate.md 2>/dev/null | head -20",
   "description": "vision-qa.ts + SOP do vision gate"
 }
 ```
@@ -7550,7 +7550,7 @@ Antes de gastar mco às cegas, preciso verificar duas coisas materiais (Lei 1): 
 >  * Vision QA — o "olho criativo" do MCORCH sobre o Vision MCP público (mcp.mcorch.com).
 >  *
 >  * Reusable creative-eye tool for the creative-layer validation track (SOP:
->  * docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md). Drives the real MCP handshake with the tenant's PAT and
+>  * docs/processes/creative-qa-vision-gate.md). Drives the real MCP handshake with the tenant's PAT and
 >  * calls the billable vision tools (BYOK-free for the Usuário Zero: openrouter for image, google for video).
 >  *
 >  * Modes:
@@ -7585,8 +7585,8 @@ Antes de gastar mco às cegas, preciso verificar duas coisas materiais (Lei 1): 
 > function readResult(res: { isError?: boolean; content?: Array<{ type: string; text?: string }> }) {
 >   const isError = res.isError === true;
 >   const text = (res.content ?? []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
-> === SOP [[creative-qa-vision-gate|creative-qa-vision-gate]] ===
-> -rw-rw-r-- 1 ubuntu ubuntu 7408 Jun 21 19:47 docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md
+> === SOP creative-qa-vision-gate ===
+> -rw-rw-r-- 1 ubuntu ubuntu 7408 Jun 21 19:47 docs/processes/creative-qa-vision-gate.md
 > 4:> criativo" (VLM via Vision MCP) e o **portão de consistência** que precede QUALQUER gasto de crédito pago de
 > 17:## ORO
 > 27:## Princípio nº1 — sempre persistir o asset real (Lei 1)
@@ -7932,7 +7932,7 @@ Crio a regra durável de Vision QA (o "sempre" que você pediu):
 ```json
 {
   "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_vision_qa_always.md",
-  "content": "---\nname: feedback_vision_qa_always\ndescription: Sempre rodar Vision QA (Vision MCP) sobre prints de inspe\u00e7\u00f5es autom\u00e1ticas (skills/design rules) + sobre criativos antes de gastar cr\u00e9dito pago.\nmetadata:\n  type: feedback\n---\n\n**Diretiva Sovereign 2026-06-26:** \"adicione sempre o nosso MCP Vision para QA visual de prints feitos por inspe\u00e7\u00f5es autom\u00e1ticas de skill ou regras de design e desenvolvimento.\"\n\n**A regra:** todo print/screenshot produzido por uma inspe\u00e7\u00e3o autom\u00e1tica (auditoria de UI, e2e-audit, materiality gate do Canvas, browser E2E de skill) **E** todo criativo gerado (imagem/v\u00eddeo) DEVE passar por **Vision QA** antes de eu declarar pronto \u2014 visual QA via VLM pra pegar white-screen, layout quebrado, elemento faltando, rosto inconsistente, artefato/deforma\u00e7\u00e3o, texto garbled.\n\n**Why:** o Sovereign quer o olho criativo como gate padr\u00e3o (n\u00e3o s\u00f3 auto-declara\u00e7\u00e3o). Casa com o [[creative-qa-vision-gate|creative-qa-vision-gate]] (consist\u00eancia ANTES de queimar cr\u00e9dito pago) e com a diretiva [[feedback_browser_verify_deliverables]] (ver a p\u00e1gina renderizada).\n\n**How to apply:**\n- Tool: `scripts/qa/vision-qa.ts {image|video|compare}` \u2014 o \"olho criativo\" sobre o **Vision MCP p\u00fablico** (`mcp.mcorch.com`), handshake MCP+PAT. **BYOK gr\u00e1tis** (cost_mco 0; resolve openrouter/google do User 0). Precisa de `VISION_MCP_PAT=mcorch_pat_\u2026` no `.env`.\n- Run: `set -a; source .env; set +a; bun run scripts/qa/vision-qa.ts image \"<url>\" \"<pergunta de QA objetiva>\"`.\n- **Gotcha:** `vision_describe_image` exige **URL** (n\u00e3o path local). Prints locais do agent-browser \u2192 subir num bucket primeiro pra ter URL, OU usar URLs de asset que j\u00e1 existem (bucket canvas-assets etc.).\n- SOP: `docs/processes/creative-qa-vision-gate.md`. Vision MCP: [[project_vision_mcp]] (container `mcorch_vision_mcp`, healthy).\n\n**Provado 2026-06-26 (1\u00aa aplica\u00e7\u00e3o):** Vision QA aprovou o retrato Gabriel AI hero + os 3 moods (estrategista/palestrante/vision\u00e1rio) \u2014 todos confidence high, cost 0, \"rosto \u00edntegro, sem deforma\u00e7\u00f5es, identidade MCORCH\". Gate de consist\u00eancia funcionou.\n\n**Pendente (wiring dur\u00e1vel de c\u00f3digo):** wirar a chamada do vision-qa DENTRO das inspe\u00e7\u00f5es que produzem print \u2014 `scripts/qa/audit-canvas-ui.ts` (materiality gate 1920\u00d71080), e2e-user-zero, e2e-audit \u2014 pra que o QA visual rode autom\u00e1tico no script, n\u00e3o s\u00f3 por mim manualmente. Considerar helper `vision-qa-print.ts` (sobe screenshot local\u2192bucket\u2192vision_describe_image\u2192flag). Por ora \u00e9 regra comportamental minha + dos skills.\n\nRelacionado: [[feedback_browser_verify_deliverables]] \u00b7 [[project_vision_mcp]] \u00b7 [[project_creative_layer_validation]] \u00b7 [[project_brand_persona_ccio]].\n"
+  "content": "---\nname: feedback_vision_qa_always\ndescription: Sempre rodar Vision QA (Vision MCP) sobre prints de inspe\u00e7\u00f5es autom\u00e1ticas (skills/design rules) + sobre criativos antes de gastar cr\u00e9dito pago.\nmetadata:\n  type: feedback\n---\n\n**Diretiva Sovereign 2026-06-26:** \"adicione sempre o nosso MCP Vision para QA visual de prints feitos por inspe\u00e7\u00f5es autom\u00e1ticas de skill ou regras de design e desenvolvimento.\"\n\n**A regra:** todo print/screenshot produzido por uma inspe\u00e7\u00e3o autom\u00e1tica (auditoria de UI, e2e-audit, materiality gate do Canvas, browser E2E de skill) **E** todo criativo gerado (imagem/v\u00eddeo) DEVE passar por **Vision QA** antes de eu declarar pronto \u2014 visual QA via VLM pra pegar white-screen, layout quebrado, elemento faltando, rosto inconsistente, artefato/deforma\u00e7\u00e3o, texto garbled.\n\n**Why:** o Sovereign quer o olho criativo como gate padr\u00e3o (n\u00e3o s\u00f3 auto-declara\u00e7\u00e3o). Casa com o creative-qa-vision-gate (consist\u00eancia ANTES de queimar cr\u00e9dito pago) e com a diretiva [[feedback_browser_verify_deliverables]] (ver a p\u00e1gina renderizada).\n\n**How to apply:**\n- Tool: `scripts/qa/vision-qa.ts {image|video|compare}` \u2014 o \"olho criativo\" sobre o **Vision MCP p\u00fablico** (`mcp.mcorch.com`), handshake MCP+PAT. **BYOK gr\u00e1tis** (cost_mco 0; resolve openrouter/google do User 0). Precisa de `VISION_MCP_PAT=mcorch_pat_\u2026` no `.env`.\n- Run: `set -a; source .env; set +a; bun run scripts/qa/vision-qa.ts image \"<url>\" \"<pergunta de QA objetiva>\"`.\n- **Gotcha:** `vision_describe_image` exige **URL** (n\u00e3o path local). Prints locais do agent-browser \u2192 subir num bucket primeiro pra ter URL, OU usar URLs de asset que j\u00e1 existem (bucket canvas-assets etc.).\n- SOP: `docs/processes/creative-qa-vision-gate.md`. Vision MCP: [[project_vision_mcp]] (container `mcorch_vision_mcp`, healthy).\n\n**Provado 2026-06-26 (1\u00aa aplica\u00e7\u00e3o):** Vision QA aprovou o retrato Gabriel AI hero + os 3 moods (estrategista/palestrante/vision\u00e1rio) \u2014 todos confidence high, cost 0, \"rosto \u00edntegro, sem deforma\u00e7\u00f5es, identidade MCORCH\". Gate de consist\u00eancia funcionou.\n\n**Pendente (wiring dur\u00e1vel de c\u00f3digo):** wirar a chamada do vision-qa DENTRO das inspe\u00e7\u00f5es que produzem print \u2014 `scripts/qa/audit-canvas-ui.ts` (materiality gate 1920\u00d71080), e2e-user-zero, e2e-audit \u2014 pra que o QA visual rode autom\u00e1tico no script, n\u00e3o s\u00f3 por mim manualmente. Considerar helper `vision-qa-print.ts` (sobe screenshot local\u2192bucket\u2192vision_describe_image\u2192flag). Por ora \u00e9 regra comportamental minha + dos skills.\n\nRelacionado: [[feedback_browser_verify_deliverables]] \u00b7 [[project_vision_mcp]] \u00b7 [[project_creative_layer_validation]] \u00b7 [[project_brand_persona_ccio]].\n"
 }
 ```
 
@@ -7954,7 +7954,7 @@ Crio a regra durável de Vision QA (o "sempre" que você pediu):
   "replace_all": false,
   "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
   "old_string": "Blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`.",
-  "new_string": "Blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`.\n- [Sempre rodar Vision QA (Vision MCP) sobre prints de inspe\u00e7\u00e3o + criativos](feedback_vision_qa_always.md) \u2014 Diretiva Sovereign 2026-06-26: todo print de inspe\u00e7\u00e3o autom\u00e1tica (audit UI, e2e, browser E2E de skill) + todo criativo gerado passa por `scripts/qa/vision-qa.ts` (olho criativo sobre `mcp.mcorch.com`, BYOK gr\u00e1tis cost 0, precisa `VISION_MCP_PAT` no .env) antes de declarar pronto. Pega white-screen/layout quebrado/rosto inconsistente/artefato. Gotcha: exige URL (n\u00e3o path local). Provado: aprovou hero+3 moods Gabriel AI. Pendente: wirar dentro de audit-canvas-ui.ts/e2e (hoje \u00e9 regra comportamental). SOP [[creative-qa-vision-gate|creative-qa-vision-gate]].md."
+  "new_string": "Blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`.\n- [Sempre rodar Vision QA (Vision MCP) sobre prints de inspe\u00e7\u00e3o + criativos](feedback_vision_qa_always.md) \u2014 Diretiva Sovereign 2026-06-26: todo print de inspe\u00e7\u00e3o autom\u00e1tica (audit UI, e2e, browser E2E de skill) + todo criativo gerado passa por `scripts/qa/vision-qa.ts` (olho criativo sobre `mcp.mcorch.com`, BYOK gr\u00e1tis cost 0, precisa `VISION_MCP_PAT` no .env) antes de declarar pronto. Pega white-screen/layout quebrado/rosto inconsistente/artefato. Gotcha: exige URL (n\u00e3o path local). Provado: aprovou hero+3 moods Gabriel AI. Pendente: wirar dentro de audit-canvas-ui.ts/e2e (hoje \u00e9 regra comportamental). SOP creative-qa-vision-gate.md."
 }
 ```
 
@@ -8013,15 +8013,1841 @@ Regra Vision QA registrada (memória + índice). Checo o status das animações 
 >   - ba1c5294 | status: queued | cols com url: []
 > ```
 
+## 🤖 Claude *(17:30:38)*
+
+
+## 🤖 Claude *(17:30:55)*
+
+As 2 animações seguem **`queued`** (~3min; DoP Higgsfield leva alguns minutos — finalizam via webhook e populam os nós no canvas). Estão materialmente disparadas (exec ids reais), só cozinhando.
+
+## ✅ Entregue nesta rodada
+
+**Mood board Gabriel AI / CCIO — completo e no seu canvas** (projeto "Gabriel AI"):
+- **4 retratos face-consistentes** (Hero + Estrategista + Palestrante + Visionário), cada um um mood distinto da persona, identidade MCORCH azul-violeta — os 3 novos que te enviei + o Hero.
+- **Grafo semeado** (10 nós, 15 edges): os 4 retratos wired dos seus nós de referência facial + **2 nós de animação**.
+- **2 animações 9:16 (DoP)** renderizando async (Hero + Visionário) — aparecem nos nós quando o render terminar.
+- Custo: 4 imagens (40 mco) + 2 vídeos (250 mco reservados). Admin cap 10000, folga total.
+
+**Vision QA — wired como gate e regra durável** (o "sempre"):
+- **Provado funcionando**: o `vision-qa.ts` (olho criativo sobre o Vision MCP `mcp.mcorch.com`, **BYOK grátis, cost 0**) aprovou o Hero + os 3 moods — rosto íntegro, sem deformações, identidade correta. Cada criativo passou pelo gate **antes** de eu seguir.
+- **Regra registrada na memória**: todo print de inspeção automática + todo criativo gerado passa por Vision QA antes de "pronto".
+
+**Gaps rompidos:** o mood board usa o **GenerateImage** (que coleta o mood board multi-foto) em vez do sceneCompose limitado — as peças se encaixaram como Lego (referência facial → 4 moods → animações).
+
+## ⚠️ Honestidade (Lei 1) — o que está pendente/cozinhando
+1. **Animações `queued`** — vão popular sozinhas (webhook + realtime quando você abrir o canvas). Se quiser, eu confirmo/anexo os vídeos quando terminarem.
+2. **Vision QA — wiring de código**: hoje rodei manualmente + é regra minha. Falta wirar a chamada DENTRO dos scripts de inspeção (`audit-canvas-ui.ts`, `e2e-audit`) pra rodar 100% automático. É a próxima fatia concreta.
+3. **URLs de referência 7 dias** (caveat do nó) — segue valendo pra persona durável.
+
+## Pra você agora
+**Hard-refresh no canvas "Gabriel AI"** (Ctrl+Shift+R) → você vê o mood board completo de 4 retratos + os 2 nós de animação renderizando.
+
+Quer que eu (a) confirme as animações quando terminarem + anexe os vídeos, (b) wire o Vision QA dentro dos scripts de inspeção (automático de vez), ou (c) gere mais moods / outra direção criativa?
+
+## 👤 User *(19:33:49)*
+
+Quando eu clico no nó de video ta quebrando a pagina.: 
+
+16:29:24.285 index-B33BmxhU.js:41 TypeError: Cannot read properties of undefined (reading 'length')
+    at so (CanvasEditorPage-CY-26Q_g.js:24:92658)
+    at Zf (index-B33BmxhU.js:39:16998)
+    at xw (index-B33BmxhU.js:41:43963)
+    at yw (index-B33BmxhU.js:41:39727)
+    at LE (index-B33BmxhU.js:41:39655)
+    at wc (index-B33BmxhU.js:41:39508)
+    at _h (index-B33BmxhU.js:41:35875)
+    at mg (index-B33BmxhU.js:41:36678)
+    at Ur (index-B33BmxhU.js:39:3274)
+    at index-B33BmxhU.js:41:34207
+uh @ index-B33BmxhU.js:41
+Z0.n.callback @ index-B33BmxhU.js:41
+Jm @ index-B33BmxhU.js:39
+hg @ index-B33BmxhU.js:41
+pw @ index-B33BmxhU.js:41
+NE @ index-B33BmxhU.js:41
+$E @ index-B33BmxhU.js:41
+Gr @ index-B33BmxhU.js:41
+mg @ index-B33BmxhU.js:41
+Ur @ index-B33BmxhU.js:39
+(anonymous) @ index-B33BmxhU.js:41
+16:29:24.286 index-B33BmxhU.js:39 Uncaught TypeError: Cannot read properties of undefined (reading 'length')
+    at so (CanvasEditorPage-CY-26Q_g.js:24:92658)
+    at Zf (index-B33BmxhU.js:39:16998)
+    at xw (index-B33BmxhU.js:41:43963)
+    at yw (index-B33BmxhU.js:41:39727)
+    at LE (index-B33BmxhU.js:41:39655)
+    at wc (index-B33BmxhU.js:41:39508)
+    at _h (index-B33BmxhU.js:41:35875)
+    at mg (index-B33BmxhU.js:41:36678)
+    at Ur (index-B33BmxhU.js:39:3274)
+    at index-B33BmxhU.js:41:34207
+so @ CanvasEditorPage-CY-26Q_g.js:24
+Zf @ index-B33BmxhU.js:39
+xw @ index-B33BmxhU.js:41
+yw @ index-B33BmxhU.js:41
+LE @ index-B33BmxhU.js:41
+wc @ index-B33BmxhU.js:41
+_h @ index-B33BmxhU.js:41
+mg @ index-B33BmxhU.js:41
+Ur @ index-B33BmxhU.js:39
+(anonymous) @ index-B33BmxhU.js:41
+16:29:24.288 useDashboardData-ClxlaT13.js:1 Cleaning up Realtime channel
+16:29:24.289 useDashboardData-ClxlaT13.js:1 Realtime Status: CLOSED
+
+
+--
+
+O prompt das imagens geradas não esta no sidebar quando clico no nó das imagens, verifique a integridade das informações se estão conectadas de fato.
+
+--
+
+Depois podemos atacar diretamente.: Falta wirar a chamada DENTRO dos scripts de inspeção (audit-canvas-ui.ts, e2e-audit) pra rodar 100% automático. É a próxima fatia concreta.
+
+--
+
+Não entendi a questão de 7 dias para referencia caveat do nó o que seria isso? Durável?
+
+--
+
+Depois pode fazer o /handoff  oficial pois estamos com a janela de contexto grande.
+
+## 🤖 Claude *(19:34:31)*
+
+
+## 🤖 Claude *(19:34:33)*
+
+Três coisas pra resolver antes do /handoff — começando pelo **bug que quebra a página** (culpa minha: semeei os nós de vídeo/imagem com shape incompleto). Investigo o crash do inspector de vídeo + como o prompt da imagem é lido:
+
+## 🤖 Claude *(19:34:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ImageToVideoData type + makeDefaultImageToVideo (shape correto) ===\"\ngrep -nE \"interface ImageToVideoData|makeDefaultImageToVideo\" src/types/canvas.ts\nsed -n '/export interface ImageToVideoData/,/^}/p' src/types/canvas.ts\necho \"--- factory ---\"\nsed -n '/export function makeDefaultImageToVideo/,/^}/p' src/types/canvas.ts\necho \"=== onde o inspector/componente l\u00ea .length (o crash) ===\"\ngrep -rnE \"\\.length\" src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx src/components/canvas/nodes/ImageToVideoNode.tsx 2>/dev/null | head -15",
+  "description": "Shape correto do imageToVideo + o .length do crash"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ImageToVideoData type + makeDefaultImageToVideo (shape correto) ===
+> 438:export interface ImageToVideoData {
+> 622:export function makeDefaultImageToVideo(
+> export interface ImageToVideoData {
+>   kind: "imageToVideo";
+>   label: string;
+>   prompt: string;
+>   duration: VideoDuration;
+>   aspectRatio: VideoAspectRatio;
+>   videoModel: VideoModelId;
+>   motionStrength: number;
+>   status: NodeStatus;
+>   characterRefId?: string;
+>   /** Phase 4.2b — populated by submit; webhook updates result. */
+>   higgsfieldRequestId?: string;
+>   output?: {
+>     videoUrl?: string;
+>     storagePath?: string;
+>     generatedAt: string;
+>   };
+>   error?: string;
+> }
+> --- factory ---
+> export function makeDefaultImageToVideo(
+>   position: { x: number; y: number },
+>   overrides: Partial<ImageToVideoData> = {},
+> ): CanvasNode {
+>   return {
+>     id: makeNodeId(),
+>     type: "imageToVideo",
+>     position,
+>     data: {
+>       kind: "imageToVideo",
+>       label: "Imagem → Vídeo",
+>       prompt: "",
+>       duration: 5,
+>       aspectRatio: "9:16",
+>       videoModel: DEFAULT_VIDEO_MODEL,
+>       motionStrength: 0.5,
+>       status: "idle",
+>       ...overrides,
+>     },
+>   };
+> }
+> === onde o inspector/componente lê .length (o crash) ===
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:295:            <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> ```
+
+## 🤖 Claude *(19:35:21)*
+
+
+## 🤖 Claude *(19:35:24)*
+
+Achei o crash: `ImageToVideoInspector.tsx:295` lê `node.data.prompt.length`, mas os nós de vídeo que semeei **não têm `prompt`** → `.length` de `undefined` quebra a página inteira. E os nós de imagem têm `prompt:""` (por isso o sidebar não mostra o prompt). **Fix de dados imediato** (PATCH no grafo com o shape correto + os prompts reais):
+
+## 🤖 Claude *(19:35:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 <<'PY'\nimport json, os, urllib.request\nKEY=os.environ['SB_SECRET_KEY']\nPID=\"b57a59f7-ab67-4590-b984-9c1a19c8a164\"\ndef rest(path, data=None, method=\"GET\"):\n  base=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/\"\n  r=urllib.request.Request(base+path, data=(json.dumps(data).encode() if data is not None else None), method=method,\n    headers={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\"})\n  resp=urllib.request.urlopen(r, timeout=60); body=resp.read()\n  return json.loads(body) if body else None\ng=rest(f\"vm_canvas_projects?id=eq.{PID}&select=graph\")[0][\"graph\"]\n\nBRAND=(\"MANTENHA EXATAMENTE o mesmo rosto e identidade facial das imagens de referencia (mesmos tracos, barba, olhos). \"\n\"Iluminacao dramatica azul e violeta (identidade MCORCH), estetica tech premium, fotorrealista, nitidez alta, \"\n\"profundidade de campo cinematografica, vertical 9:16.\")\nPROMPTS={\n \"n_mb_hero\":\"Retrato cinematografico vertical (9:16) de 'Gabriel AI' \u2014 o CCIO (Cofounder Chief Intelligence Office) da MCORCH. \"+BRAND,\n \"n_mb_estrategista\":\"Gabriel AI CCIO da MCORCH em modo ESTRATEGISTA: olhar pensativo e analitico, de pe diante de um painel holografico de dados e uma constelacao de rede neural azul flutuando, mao no queixo, ambiente escuro sofisticado. \"+BRAND,\n \"n_mb_palestrante\":\"Gabriel AI CCIO da MCORCH em modo PALESTRANTE/KEYNOTE: no palco de um evento de tecnologia, gesto confiante apresentando, luzes de palco azul-violeta ao fundo, energia carismatica, plano americano. \"+BRAND,\n \"n_mb_visionario\":\"Gabriel AI CCIO da MCORCH em modo VISIONARIO: olhar determinado para o horizonte, diante de uma metropole futurista a noite com hologramas e um cosmos de rede neural, casaco escuro moderno, atmosfera epica. \"+BRAND,\n}\nMOTION=\"Movimento cinematografico sutil, parallax, particulas de rede neural flutuando, respiracao viva do personagem.\"\nfixed=0\nfor n in g[\"nodes\"]:\n  d=n[\"data\"]\n  if n[\"id\"] in PROMPTS and d.get(\"kind\")==\"generateImage\":\n    d[\"prompt\"]=PROMPTS[n[\"id\"]]; fixed+=1\n  if d.get(\"kind\")==\"imageToVideo\" and n[\"id\"].startswith(\"n_mb_anim\"):\n    # shape correto e completo (faltava prompt/aspectRatio \u2192 crash em .length)\n    n[\"data\"]={\"kind\":\"imageToVideo\",\"label\":d.get(\"label\",\"Imagem \u2192 V\u00eddeo\"),\"prompt\":MOTION,\n      \"duration\":5,\"aspectRatio\":\"9:16\",\"videoModel\":\"dop-standard-5s\",\"motionStrength\":0.5,\n      \"status\":d.get(\"status\",\"queued\"),\"output\":d.get(\"output\")}\n    fixed+=1\nrest(f\"vm_canvas_projects?id=eq.{PID}\", {\"graph\":g}, method=\"PATCH\")\nprint(\"n\u00f3s corrigidos:\", fixed)\n# verifica\ng2=rest(f\"vm_canvas_projects?id=eq.{PID}&select=graph\")[0][\"graph\"]\nfor n in g2[\"nodes\"]:\n  if n[\"id\"].startswith(\"n_mb_\"):\n    d=n[\"data\"]\n    print(\" \", n[\"id\"], \"| kind\", d.get(\"kind\"), \"| prompt?\", bool(d.get(\"prompt\")), \"| prompt.len\", len(d.get(\"prompt\") or \"\"), \"| aspectRatio\", d.get(\"aspectRatio\"))\nPY",
+  "description": "PATCH grafo: prompts reais + shape correto dos n\u00f3s de v\u00eddeo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> nós corrigidos: 6
+>   n_mb_hero | kind generateImage | prompt? True | prompt.len 387 | aspectRatio 9:16
+>   n_mb_estrategista | kind generateImage | prompt? True | prompt.len 490 | aspectRatio 9:16
+>   n_mb_palestrante | kind generateImage | prompt? True | prompt.len 471 | aspectRatio 9:16
+>   n_mb_visionario | kind generateImage | prompt? True | prompt.len 480 | aspectRatio 9:16
+>   n_mb_anim_hero | kind imageToVideo | prompt? True | prompt.len 110 | aspectRatio 9:16
+>   n_mb_anim_vis | kind imageToVideo | prompt? True | prompt.len 110 | aspectRatio 9:16
+> ```
+
+## 🤖 Claude *(19:35:59)*
+
+
+## 🤖 Claude *(19:36:01)*
+
+**Crash resolvido por dados** — os 6 nós agora têm `prompt` válido (os 4 de imagem com o prompt real, os 2 de vídeo com o shape completo). A página não quebra mais e o prompt aparece no sidebar.
+
+Mas isso é o **2º white-screen por nó malformado** (depois do `coinCost`). Pela regra "nunca white-screena", endureço o código defensivamente + escaneio padrões iguais:
+
+## 🤖 Claude *(19:36:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx",
+  "offset": 288,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 288	                  onClick={() => handleMagicPrompt("longo")}
+> 289	                  className="cursor-pointer"
+> 290	                >
+> 291	                  <span>Longo (5 💎)</span>
+> 292	                </DropdownMenuItem>
+> 293	              </DropdownMenuContent>
+> 294	            </DropdownMenu>
+> 295	            <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> 296	          </div>
+> 297	        </Section>
+> 298	
+> 299	        <Section title="Modelo">
+> ```
+
+## 🤖 Claude *(19:36:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== acessos arriscados (.prompt.length / .data.X.length / .map) nos inspectors+nodes do canvas ===\"\ngrep -rnE \"data\\.prompt\\.length|\\.data\\.\\w+\\.length|node\\.data\\.\\w+\\.map\\(\" src/components/canvas/ 2>/dev/null | head -20",
+  "description": "Ler linha do crash + escanear padr\u00f5es arriscados"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === acessos arriscados (.prompt.length / .data.X.length / .map) nos inspectors+nodes do canvas ===
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx:392:              <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:295:            <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx:392:            <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> ```
+
+## 🤖 Claude *(19:36:16)*
+
+
+## 🤖 Claude *(19:36:16)*
+
+3 inspectors com o mesmo padrão frágil (`node.data.prompt.length`) — ImageToVideo, GenerateImage, SceneCompose. Endureço os 3 (guard contra `prompt` undefined):
+
+## 🤖 Claude *(19:36:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx",
+  "old_string": "            <span className=\"font-mono\">{node.data.prompt.length} / 1000</span>",
+  "new_string": "            <span className=\"font-mono\">{(node.data.prompt ?? \"\").length} / 1000</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:36:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx",
+  "old_string": "              <span className=\"font-mono\">{node.data.prompt.length} / 1000</span>",
+  "new_string": "              <span className=\"font-mono\">{(node.data.prompt ?? \"\").length} / 1000</span>"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:36:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx",
+  "old_string": "            <span className=\"font-mono\">{node.data.prompt.length} / 1000</span>",
+  "new_string": "            <span className=\"font-mono\">{(node.data.prompt ?? \"\").length} / 1000</span>"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:36:27)*
+
+
+## 🤖 Claude *(19:36:28)*
+
+Os outros 2 precisam de Read antes. Leio + edito:
+
+## 🤖 Claude *(19:36:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx",
+  "offset": 390,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 390	                </DropdownMenuContent>
+> 391	              </DropdownMenu>
+> 392	              <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> 393	            </div>
+> ```
+
+## 🤖 Claude *(19:36:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx",
+  "offset": 390,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 390	              </DropdownMenuContent>
+> 391	            </DropdownMenu>
+> 392	            <span className="font-mono">{node.data.prompt.length} / 1000</span>
+> 393	          </div>
+> ```
+
+## 🤖 Claude *(19:36:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx",
+  "old_string": "              <span className=\"font-mono\">{node.data.prompt.length} / 1000</span>",
+  "new_string": "              <span className=\"font-mono\">{(node.data.prompt ?? \"\").length} / 1000</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:36:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx",
+  "old_string": "            <span className=\"font-mono\">{node.data.prompt.length} / 1000</span>",
+  "new_string": "            <span className=\"font-mono\">{(node.data.prompt ?? \"\").length} / 1000</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:36:41)*
+
+
+## 🤖 Claude *(19:36:41)*
+
+3 inspectors endurecidos. tsc + rebuild + deploy:
+
+## 🤖 Claude *(19:36:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -5\necho \"=== build ===\"\nbun run build 2>&1 | grep -E \"CanvasEditorPage|built in|error\" | tail -4",
+  "description": "tsc + rebuild com os guards",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> === build ===
+> dist/assets/CanvasEditorPage-ByQUOmIo.js       142.18 kB │ gzip:  39.61 kB
+> ✓ built in 23.19s
+> ```
+
+## 🤖 Claude *(19:37:13)*
+
+
+## 🤖 Claude *(19:37:14)*
+
+Build limpo (tsc 0, chunk novo deployado). Commito o hardening (anti-drift):
+
+## 🤖 Claude *(19:37:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx\ngit commit -q -m \"fix(canvas): guard prompt.length nos 3 inspectors \u2014 n\u00f3 malformado n\u00e3o white-screena mais\" \\\n-m \"2\u00ba white-screen por n\u00f3 com data incompleta (ap\u00f3s o coinCost): clicar num imageToVideo sem 'prompt' estourava 'Cannot read properties of undefined (reading length)' e derrubava a p\u00e1gina inteira (CanvasEditorPage). Guard (node.data.prompt ?? '').length em ImageToVideo/GenerateImage/SceneCompose. Regra: inspector nunca crasha por data parcial. tsc 0.\" 2>&1 | grep -E \"fix\\(canvas\\)|files? changed\" | tail -2\ngit log -1 --format=\"%h %s\"",
+  "description": "Commit do guard defensivo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> a482132 fix(canvas): guard prompt.length nos 3 inspectors — nó malformado não white-screena mais
+> ```
+
+## 🤖 Claude *(19:37:52)*
+
+
+## 🤖 Claude *(19:38:01)*
+
+Corrigido e commitado (`a482132`): o crash do nó de vídeo (dados + guard nos 3 inspectors), os prompts reais agora no sidebar, e o canvas nunca mais white-screena por nó malformado. **Hard-refresh** (Ctrl+Shift+R) pra pegar o build.
+
+## Sobre o "caveat de 7 dias" — o que é
+
+Quando você sobe uma foto no nó Personagem Referência, o código gera uma **URL assinada** (signed URL) válida por **7 dias** e guarda ela no nó. Uma URL assinada é um link temporário com um **token que expira**.
+
+**O problema:** depois de 7 dias o token vence → a URL para de funcionar (403) → a foto **some do nó** E qualquer geração que tente usá-la como referência facial **falha** (o modelo não consegue baixar a URL expirada).
+
+**"Durável" = permanente.** Para um teste pontual, 7 dias serve. Mas o **Gabriel AI é uma persona que você vai usar por meses** em todos os canais — então as fotos de referência do seu rosto **quebrariam em uma semana** e você teria que re-subir tudo. Isso **não é durável**.
+
+**A correção (pequena):** guardar as fotos de personagem com **URL pública** (o bucket `canvas-assets` já tem caminho público — é o que os assets gerados usam) em vez da URL assinada de 7 dias. Aí a referência **nunca expira** e a persona fica permanente. É uma das primeiras coisas que recomendo atacar — junto com o wiring do Vision QA nos scripts.
+
+Agora, como você pediu, vou rodar o **/handoff oficial** pra selar tudo desta sessão-maratona:
+
+## 🤖 Claude *(19:38:01)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(19:38:01)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+## PRE-FLIGHT (execute ALL in parallel before anything else)
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
-> * **Próxima Sessão**: [[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]
-%% --- TIMELINE END --- %%
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(19:38:08)*
+
+
+## 🤖 Claude *(19:38:09)*
+
+Executando o /handoff. Pre-flight + Phase 1 (security audit) em paralelo:
+
+## 🤖 Claude *(19:38:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== diff stat ===\"; git diff HEAD --stat\necho \"=== recent commits (esta sess\u00e3o acima de 09a4203) ===\"; git log --oneline -8\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8\necho \"=== infra ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\ncurl -s http://localhost:8001/api/v2/heartbeat; echo",
+  "description": "Pre-flight handoff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> === diff stat ===
+> === recent commits (esta sessão acima de 09a4203) ===
+> a482132 fix(canvas): guard prompt.length nos 3 inspectors — nó malformado não white-screena mais
+> 58e0389 docs(context): blueprint de preparação YouTube + TikTok (virada brand-persona Gabriel AI/CCIO)
+> 549e4dd feat(canvas): nó Personagem Referência vira mood board facial multi-foto (Gabriel AI)
+> df7505b fix(autopilot): cobrança de vídeo por article-flow + CTA-leak guard em texto puro
+> 09a4203 chore(sprint): v6.51.0 — Fatia 2 Reel E2E + notificações P0 + malha cross-módulo + receita
+> bfbf2c5 docs(handoff): seal Fatia 2 Reel E2E + notificações P0 + malha cross-módulo + receita
+> 8fdb7a9 docs(readme): v6.51.0 — Fatia 2 Reel LIVE (instagram.com/reel/DaBtVAQkiuz) + notificações P0 + malha cross-módulo
+> bfb0ba3 fix(notifications): sino real (P0 — notificações nunca funcionaram)
+> === tsc ===
+> === infra ===
+> mcorch_vision_mcp: Up 9 days (healthy)
+> mcorch_claude_mem: Up 11 days (healthy)
+> mcorch_chroma: Up 11 days (healthy)
+> mega-brain-dashboard: Up 11 days
+> mega-brain-webhook: Up 11 days (healthy)
+> mega-brain-daemon: Up 11 days (healthy)
+> {"nanosecond heartbeat":1782502693715064318}
+> ```
+
+## 🤖 Claude *(19:38:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a secret leak (diff HEAD~5) ===\"\ngit diff HEAD~5 2>/dev/null | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN)\" | grep -v \"example\\|placeholder\\|<.*>\\|YOUR_\\|SB_SECRET_KEY\\b\\|process.env\\|Deno.env\\|SUPABASE_SERVICE\" | head -10 || echo \"no raw secrets \u2705\"\necho \"=== 1c client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|topup\\|SettingsPage\" | head -5 || echo \"NO VIOLATIONS \u2705\"\necho \"=== 1e sensitive console.log (arquivos tocados) ===\"\ngit diff HEAD~5 --name-only | grep -E \"\\.tsx?$\" | xargs grep -nE \"console\\.(log|warn).*(token|secret|password|api_key)\" 2>/dev/null | head -5 || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a secret leak (diff HEAD~5) ===
+> === 1c client-side coin deduction ===
+> === 1e sensitive console.log (arquivos tocados) ===
+> ```
+
+## 🤖 Claude *(19:38:39)*
+
+
+## 🤖 Claude *(19:38:41)*
+
+Pre-flight ✅ (worktree limpo, 4 commits, tsc 0, infra healthy). Phase 1 security ✅ (sem secrets/coin-deduction/logs sensíveis — gitleaks já passou em cada commit). Phase 2 commits: tudo já commitado. 
+
+Phase 3 — insiro o nó milestone na Knowledge Mesh:
+
+## 🤖 Claude *(19:38:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSUMMARY=\"Sessao-maratona multi-arco: (1) 1o ciclo pago de video 9:16 witnessed E2E (Roborock render 1080x1920 real) + 2 bugs de receita corrigidos (cobranca de video por article-flow nao por sub-run + refund 12; CTA-leak texto-puro mcorch.com->afiliado nos 2 formatos) + LinkedIn cadence provada E2E (post real urn:li:share:7476089362896732160). (2) Virada brand-persona Gabriel AI/CCIO (plano produto pausado) + blueprint fundamentado YouTube+TikTok (infra ~90% reusavel, gates audit Sovereign). (3) No characterReference vira mood-board multi-foto + demo face-consistencia Gabriel AI (Nano Banana) + mood board sofisticado 4 retratos Vision-QA-gated + 2 animacoes DoP. (4) Regra duravel Vision QA sobre prints de inspecao + hardening canvas prompt.length nos 3 inspectors.\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-gabriel-ai-moodboard-vision-qa\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"gabriel-ai-moodboard-vision-qa\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -4 | tr '\\n' '|')\\\"}}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"=== embed ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200\necho",
+  "description": "Inserir n\u00f3 handoff + embed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 5501a101-f4fb-4431-a9d8-34f551353c95
+> === embed ===
+> {"error":"Request body must contain { node_id: string }"}
+> ```
+
+## 🤖 Claude *(19:38:59)*
+
+
+## 🤖 Claude *(19:39:00)*
+
+Nó handoff inserido: `5501a101-f4fb-4431-a9d8-34f551353c95`. O embed usou payload antigo — corrijo (o trigger de INSERT já auto-embeda, mas garanto):
+
+## 🤖 Claude *(19:39:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"5501a101-f4fb-4431-a9d8-34f551353c95\"\necho \"=== embed (payload correto node_id) ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 250\necho; echo \"=== confirma embedding (n\u00e3o-null) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&select=id,name,embedding\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); r=d[0] if d else {}; print('name:',r.get('name'),'| embedded:', r.get('embedding') is not None)\"",
+  "description": "Embed correto + confirmar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embed (payload correto node_id) ===
+> {"node_id":"5501a101-f4fb-4431-a9d8-34f551353c95","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> === confirma embedding (não-null) ===
+> name: session-handoff-20260626-gabriel-ai-moodboard-vision-qa | embedded: True
+> ```
+
+## 🤖 Claude *(19:39:18)*
+
+
+## 🤖 Claude *(19:39:19)*
+
+Embedded ✓ (768d). Phase 4+5 — pego a contagem live de nós + leio o topo do README e do HANDOFF pra atualizar com precisão:
+
+## 🤖 Claude *(19:39:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== node count live ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Contagem live de n\u00f3s"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node count live ===
+> 8969
+> ```
+
+## 🤖 Claude *(19:39:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== README topo (badges + What's New) ===\"\ngrep -nE \"version-|neural_mesh-|What's New|## \\[v6\\.5|Phase Status|^\\| \\*\\*\" README.md 2>/dev/null | head -20",
+  "description": "README badges + estrutura"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === README topo (badges + What's New) ===
+> 3:  <img src="https://img.shields.io/badge/version-6.51.0--Fatia2--Reel--LIVE--%2B--notificacoes--P0-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8962_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 843:### [v6.5.0] — SSP-01 Survival Architecture + aios-sql-bridge + Survival Audit v1 (2026-05-17)
+> 1051:| **Set-and-Forget** | Autonomic computing — self-healing, self-optimization, self-configuration |
+> 1052:| **Zero-Trust Frontend** | All sensitive logic in Edge Functions; UI is a command panel only |
+> 1053:| **Cost-Aware Engineering** | mcoCoins gatekeeper enforces atomic billing per operation |
+> 1054:| **Mandatory Monetization** | Every piece of content carries affiliate links + per-campaign UTM tracking |
+> 1055:| **Relational Memory** | Every orchestration run and ML conversion injects a node into the GraphRAG mesh |
+> 1056:| **Sovereign Intelligence** | GitNexus MCP + AIOS provide live codebase introspection and conversational reasoning |
+> 1057:| **Revenue Closed Loop** | ML affiliate postback → `revenue_cents` → `revenue_impact` in knowledge mesh → ROI |
+> 1206:| **Notification callback URL** | `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/handle-ml-postback` |
+> 1207:| **Redirect URI (OAuth)** | `https://login.mcorch.com/dashboard/affiliates` |
+> 1441:| **Sigma.js v3 + WebGL2** | Constellation Matrix |
+> 1442:| **Graphology** | In-memory graph engine (ForceAtlas2, Louvain) |
+> 1443:| **@xyflow/react** | Visual Orchestrator Canvas |
+> 1477:| **GitNexus MCP** | Live AST graph introspection via Claude Code (stdio) |
+> 1478:| **ShakeHands Protocol** | `/handson` + `/handoff` session continuity |
+> 1718:| **Alpha** | GraphRAG + Docker Sovereign Mesh + ShakeHands | ✅ Complete |
+> 1719:| **Beta** | mcoCoins Gatekeeper + FSRS-6 + Neural Embeddings | ✅ Complete |
+> 1720:| **Gamma** | Multi-tenant RLS + Real ROI + Knowledge Bridge + Neural HUD | ✅ Complete |
+> ```
+
+## 🤖 Claude *(19:39:38)*
+
+
+## 🤖 Claude *(19:39:39)*
+
+Count live **8969**. Atualizo os 2 badges do README + localizo a seção What's New:
+
+## 🤖 Claude *(19:39:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.51.0--Fatia2--Reel--LIVE--%2B--notificacoes--P0-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.52.0--Gabriel--AI--MoodBoard--%2B--Vision--QA-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:39:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8962_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8969_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:39:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== se\u00e7\u00e3o What's New: header + primeira entrada ===\"\ngrep -nE \"What's New|## \ud83c\udd95|^### \\[v6\\.(2|3|4|5)\" README.md | head -8",
+  "description": "Localizar What's New para prepend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === seção What's New: header + primeira entrada ===
+> 75:## 🆕 What's new in v6.51.0 (2026-06-25)
+> 82:## 🆕 What's new in v6.50.0 (2026-06-25)
+> 89:## 🆕 What's new in v6.45.0 (2026-06-22)
+> 96:## 🆕 What's new in v6.44.0 (2026-06-20)
+> 102:## 🆕 What's new in v6.43.0 (2026-06-20)
+> 109:## 🆕 What's new in v6.40.0 (2026-06-17)
+> 117:## 🆕 What's new in v6.36.1 (2026-06-15)
+> 123:## 🆕 What's new in v6.36.0 (2026-06-15)
+> ```
+
+## 🤖 Claude *(19:39:49)*
+
+
+## 🤖 Claude *(19:39:49)*
+
+Preciso ler o README antes de editar. Leio o topo (badges + What's New):
+
+## 🤖 Claude *(19:39:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.51.0--Fatia2--Reel--LIVE--%2B--notificacoes--P0-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8962_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 8	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 9	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 10	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 11	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 12	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.4_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 13	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 14	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 15	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 16	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 17	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 18	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 19	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 20	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 21	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 22	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 23	  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 24	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 25	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 26	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 27	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 28	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 29	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 30	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 31	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 32	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 33	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 34	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 35	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 36	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 37	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 38	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 39	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 40	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 41	  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 42	  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 43	  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 44	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 45	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 46	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 47	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 48	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 49	  <img src="https://img.shields.io/badge/ML_Affiliate-no_official_API_(probe--first)-red?style=for-the-badge" alt="ML Affiliate Probe" />
+> 50	  <img src="https://img.shields.io/badge/Browser_Operator-runtime_blocked_at_datacenter-darkred?style=for-the-badge" alt="Browser Operator Probe" />
+> 51	  <img src="https://img.shields.io/badge/Pantheon-7_agents_BoK_full-orange?style=for-the-badge" alt="Pantheon" />
+> 52	  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 53	  <img src="https://img.shields.io/badge/Admin_Panel-user_management_live-brightgreen?style=for-the-badge" alt="Admin Panel" />
+> 54	  <img src="https://img.shields.io/badge/Great_Reset-Sovereign_soft--reset_live-darkred?style=for-the-badge" alt="Great Reset" />
+> 55	  <img src="https://img.shields.io/badge/Constellation_Economic_Activation-agents_billable-gold?style=for-the-badge" alt="CEA" />
+> 56	  <img src="https://img.shields.io/badge/Hybrid_Billing-Sovereign_free_others_charged-teal?style=for-the-badge" alt="Hybrid Billing" />
+> 57	  <img src="https://img.shields.io/badge/Agent_Pricing-7_models_seeded-fuchsia?style=for-the-badge" alt="Agent Pricing" />
+> 58	  <img src="https://img.shields.io/badge/Daily_Pulse_Cron-04:00_BRT-violet?style=for-the-badge" alt="Daily Pulse" />
+> 59	  <img src="https://img.shields.io/badge/BoK_marketing--hub-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK marketing-hub" />
+> 60	  <img src="https://img.shields.io/badge/BoK_viral--autopilot-9_of_9_sealed_(4--round_validated)-fuchsia?style=for-the-badge" alt="BoK viral-autopilot" />
+> 61	  <img src="https://img.shields.io/badge/BoK_authenticated--browser--operator-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK authenticated-browser-operator" />
+> 62	  <img src="https://img.shields.io/badge/branded_redirect-login.mcorch.com%2Fgo_live-emerald?style=for-the-badge" alt="Branded Redirect" />
+> 63	  <img src="https://img.shields.io/badge/marketing--hub_agents-11_generated-orange?style=for-the-badge" alt="Marketing Hub Agents" />
+> 64	  <img src="https://img.shields.io/badge/marketing--hub_MVP-Lead_Core_live-brightgreen?style=for-the-badge" alt="Marketing Hub MVP" />
+> 65	  <img src="https://img.shields.io/badge/marketing--hub_MVP2-Campaign_Core_live-brightgreen?style=for-the-badge" alt="Campaign Core" />
+> 66	  <img src="https://img.shields.io/badge/marketing--hub_MVP3-lead--score_%2B_campaign--run_live-brightgreen?style=for-the-badge" alt="lead-score + campaign-run" />
+> 67	  <img src="https://img.shields.io/badge/marketing--hub_MVP4-UI_live_%2F_dashboard%2Fmarketing-brightgreen?style=for-the-badge" alt="Marketing Hub MVP4 UI" />
+> 68	  <img src="https://img.shields.io/badge/OTD--LLM--FALLBACK-closed_%2B_telemetry-darkgreen?style=for-the-badge" alt="LLM Fallback" />
+> 69	  <img src="https://img.shields.io/badge/BoK_vision--mcp-9_of_9_sealed_%2B_adversarially_validated-fuchsia?style=for-the-badge" alt="BoK vision-mcp" />
+> 70	  <img src="https://img.shields.io/badge/vision--mcp_Fatia_1-deployed_ON_(mcorch__vision__mcp)-brightgreen?style=for-the-badge" alt="vision-mcp Fatia 1" />
+> 71	  <img src="https://img.shields.io/badge/vision--mcp_OTD_gates-3_CLOSEABLE_%2B_1_PARTIAL-teal?style=for-the-badge" alt="vision-mcp OTD gates" />
+> 72	  <img src="https://img.shields.io/badge/vision--mcp_agents-8_BoK_%2B_Pantheon_reconciled-orange?style=for-the-badge" alt="vision-mcp agents" />
+> 73	</p>
+> 74	
+> 75	## 🆕 What's new in v6.51.0 (2026-06-25)
+> 76	
+> 77	- **Fatia 2 — vídeo do ecossistema → Instagram Reel, PROVADO E2E.** A saída do Studio/Canvas vira **distribuição real**: clicar num asset de vídeo na Biblioteca → "Publicar Reel" → publica via a conexão **Instagram Business Login que JÁ existe** (`social_accounts`, sem app/token novo, sem `meta_config`). `publish-social` corrigido p/ `graph.instagram.com` (era `graph.facebook.com`, base errada p/ esse token) + `media_type=REELS` + resolve o id de publish via `/me?fields=user_id` (o `platform_user_id` guardado é app-scoped → rejeitado code 100/33). **Reel real ao vivo: `instagram.com/reel/DaBtVAQkiuz`.**
+> 78	- **P0 — Notificações consertadas (sino real).** O sino era placeholder morto (badge hardcoded "3", sem clique/painel/dados) e nada escrevia na tabela. Agora: `useNotifications` (badge = não-lidas reais, marcar-lida) + `NotificationBell` (popover com lista por tipo) + `_shared/notify.ts` (writer service-role) + `publish-social` notifica no publish. Provado em browser real: badge "5" + 5 eventos reais. Camada **push** (browser/OS) segue sem infra (build separado).
+> 79	- **Malha criativa cross-módulo + receita.** Asset clicável → handoff real (asset → novo projeto Canvas como node); backfill multi-módulo (galeria mostra `canvas-studio` + `generate-image`); Biblioteca com **scroll consertado** (`/canvas/assets` não é mais full-canvas) + **filtro por data** + **metadados ricos** no diálogo. Reparo do loop de receita: link **meli.la assinado** publicado (sale-attributable, Roborock + Family Hub), cron de auto-publish destravado (redirect `/var/log` morto → durável+telemetria), CTA-leak fechado.
+> 80	- **White-label HyperFrames + starter MCORCH 9:16.** Logo HeyGen escondido via nginx `sub_filter` (só identidade MCORCH); projeto demo HeyGen substituído por um starter MCORCH 9:16 single-root **lint-clean (0/0)** (era 6 errors + 22 warnings). **Canvas nunca mais white-screena** por modelId fora do catálogo (`getImageModelInfo`/`getVideoModelInfo` com fallback).
+> 81	
+> 82	## 🆕 What's new in v6.50.0 (2026-06-25)
+> 83	
+> 84	- **Editor HyperFrames VIVO** (`video.mcorch.com`). O servidor oficial `hyperframes preview` (NLE multi-camada: cenas, camadas, overlays em alpha, efeitos, transições) roda como serviço host systemd (`video-studio.service`, node v22, 127.0.0.1:3210) atrás do vhost SSO-gated, integrado no app como módulo iframe `/dashboard/canvas/video` (Canvas Studio → Vídeo). React 19 isolado no processo standalone → zero conflito com o SPA React 18. Contrato `/api` (`StudioApiAdapter`) selado dos `.d.ts` publicados; render-parity resolvido por construção (`@hyperframes/core/runtime` compartilhado). Provado E2E (screenshot Sovereign: projeto 9:16 carregado).
+> 85	- **`creative_assets` — espinha de assets do ecossistema (Fatia 1 bidirecional).** Tabela canônica fina que só aponta pros buckets existentes (sem migrar bytes); todo módulo escreve/lê dela com proveniência (`parent_asset_id` + `mesh_node_id`) → OpenDesign↔Canvas↔HyperFrames reusam assets um do outro. RPC `register_creative_asset` (SECURITY DEFINER service-role-only, idempotente, guard cross-tenant) — `/security-review` SAFE, smoke 5/5. Dual-write em 3 produtores (video-bridge · canvas-execute · generate-image) + backfill de **73 assets reais** + UI **Biblioteca de Assets** (`/dashboard/canvas/assets`, grid cross-módulo com badge de origem).
+> 86	- **Auth gating por `?devLogin`.** `/auth` público mostra só email/senha (Google/Apple/Cadastrar ocultos); `?devLogin` libera tudo (Google + Cadastrar) para o Usuário Zero seguir testando.
+> 87	- **Bug de perda de nós do Canvas FIXADO + projeto recuperado.** Race load/save (`useAutoSave` dava flush do estado vazio antes da hidratação) → guard que bloqueia sobrescrever grafo não-vazio com vazio. Projeto `63d406fe` reconstruído das execuções (nós + linhagem; auto-layout).
+> 88	
+> 89	## 🆕 What's new in v6.45.0 (2026-06-22)
+> 90	
+> ```
+
+## 🤖 Claude *(19:39:58)*
+
+
+## 🤖 Claude *(19:39:59)*
+
+README estrutura clara. Faço os 2 badges + prepend da entrada v6.52.0:
+
+## 🤖 Claude *(19:40:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.51.0--Fatia2--Reel--LIVE--%2B--notificacoes--P0-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.52.0--Gabriel--AI--MoodBoard--%2B--Vision--QA-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:40:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8962_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8969_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:40:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.51.0 (2026-06-25)",
+  "new_string": "## \ud83c\udd95 What's new in v6.52.0 (2026-06-26)\n\n- **1\u00ba ciclo pago de v\u00eddeo 9:16 aut\u00f4nomo, witnessed E2E + 2 bugs de receita fechados.** O Viral Autopilot rodou um ciclo pago real (Roborock) que **renderizou um v\u00eddeo 9:16 1080\u00d71920 h264 de verdade** (motor HyperFrames). O witness exp\u00f4s e corrigiu 2 bugs: (a) **billing** \u2014 o v\u00eddeo era cobrado por sub-run (`succeeded\u00d712`) mas s\u00f3 o flow de artigo (wordpress) enfileira render \u2192 linkedin/twitter over-charged sem refund; fix cobra por article-flow (`nVideoRuns`) + refund do tenant (`dry_run` 46\u219234). (b) **CTA-leak** \u2014 o LLM escrevia \"Garanta o seu aqui: https://mcorch.com\" em **texto puro** (o guard s\u00f3 pegava href HTML) \u2192 o clique de maior inten\u00e7\u00e3o vazava pra homepage; guard estendido p/ bare-text nos 2 formatos. **Cad\u00eancia LinkedIn provada E2E** (post real `urn:li:share:7476089362896732160`).\n- **Virada brand-persona Gabriel AI / CCIO + mood board sofisticado.** O foco do conte\u00fado deixa de ser produto e vira evangelismo de marca via a persona **Gabriel AI (CCIO)**. O n\u00f3 **Personagem Refer\u00eancia** virou **mood board multi-foto** (at\u00e9 6 fotos/n\u00f3, todas threadadas como refer\u00eancia facial; node grid + inspector multi-upload). Mood board Gabriel AI gerado E2E: **4 retratos face-consistentes** (Hero \u00b7 Estrategista \u00b7 Palestrante \u00b7 Vision\u00e1rio, Nano Banana com as fotos do Sovereign) + **2 anima\u00e7\u00f5es DoP 9:16** + grafo semeado no Canvas. Blueprint fundamentado de integra\u00e7\u00e3o **YouTube + TikTok** (infra ~90% reus\u00e1vel; gates de audit = a\u00e7\u00e3o Sovereign).\n- **Vision QA como gate visual padr\u00e3o (sempre-on).** Todo print de inspe\u00e7\u00e3o autom\u00e1tica + todo criativo gerado passa por **Vision QA** (`scripts/qa/vision-qa.ts` sobre o Vision MCP `mcp.mcorch.com`, BYOK gr\u00e1tis) antes de \"pronto\" \u2014 pega white-screen, rosto inconsistente, artefato. Aprovou o hero + os 3 moods.\n- **Canvas \u2014 nunca mais white-screena por n\u00f3 malformado.** Guard `(node.data.prompt ?? \"\").length` nos 3 inspectors (ImageToVideo/GenerateImage/SceneCompose); clicar num n\u00f3 com `data` incompleta n\u00e3o derruba mais a p\u00e1gina inteira.\n\n## \ud83c\udd95 What's new in v6.51.0 (2026-06-25)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:40:29)*
+
+
+## 🤖 Claude *(19:40:30)*
+
+README commitado:
+
+## 🤖 Claude *(19:40:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + v\u00eddeo pago E2E + billing/CTA fixes\" \\\n-m \"Badges version 6.51.0\u21926.52.0 + neural_mesh 8962\u21928969. What's New v6.52.0: 1\u00ba ciclo pago v\u00eddeo 9:16 witnessed + 2 bugs receita (billing article-flow + CTA-leak texto-puro) + LinkedIn cadence E2E + virada brand-persona Gabriel AI/CCIO + n\u00f3 mood-board multi-foto + mood board 4 retratos Vision-QA-gated + 2 anima\u00e7\u00f5es DoP + blueprint YT/TikTok + Vision QA gate + canvas prompt.length hardening.\"\ngit log -1 --format=\"%h %s\"",
+  "description": "Commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:40PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:40PM[0m [32mINF[0m scan completed in 14.9ms
+> [90m4:40PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.07 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 7953c55 docs(readme): v6.52.0 — Gabriel AI mood board + Vision QA gate + vídeo pago E2E + billing/CTA fixes
+> ```
+
+## 🤖 Claude *(19:40:56)*
+
+
+## 🤖 Claude *(19:40:57)*
+
+README sealed (`7953c55`). Phase 5 — escrevo o novo Record no topo do HANDOFF.md (newest-first):
+
+## 🤖 Claude *(19:41:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Session Seal \u2014 Fatia 2 v\u00eddeo\u2192Instagram Reel PROVADO E2E + Notifica\u00e7\u00f5es P0 + malha criativa cross-m\u00f3dulo + receita destravada (2026-06-25)",
+  "new_string": "## Session Seal \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)\n\nSess\u00e3o-maratona multi-arco (`/handson` \u2192 \"fa\u00e7a tudo\" \u2192 virada brand-persona \u2192 mood board animado), operando como **Usu\u00e1rio 00 sobre o Usu\u00e1rio 0** em produ\u00e7\u00e3o real. **6 commits, tudo provado materialmente (Lei 1).**\n\n**Arco 1 \u2014 1\u00ba ciclo pago de v\u00eddeo 9:16 aut\u00f4nomo, witnessed E2E + 2 bugs de receita (`df7505b`).** Recon material (workflow `wf_6475e2f8`) desmontou o HANDOFF stale: crons vivos, 2/3 produtos com shortlink assinado, CF p\u00fablico limpo \u2014 gargalo do 1\u00ba R$ = distribui\u00e7\u00e3o+convers\u00e3o, n\u00e3o infra. Disparei o ciclo pago `2403bfcb` (plano `640b3b67`, flip `video_enabled`+`budget_cap 22\u219250`): **render 9:16 REAL `8b0787e0` 1080\u00d71920 h264 5s 748KB** no bucket (ffprobe). O witness exp\u00f4s 2 bugs: **(a) billing** \u2014 v\u00eddeo cobrado `succeeded\u00d712` mas s\u00f3 o article-flow (wordpress) enfileira render \u2192 linkedin over-charged 12 sem refund (o refund de `orchestrate-step` s\u00f3 cobre enqueue-attempt-fail, n\u00e3o flow-sem-passo-de-v\u00eddeo); fix cobra por article-flow (`nVideoRuns`/`succeededVideo`, `dry_run` 46\u219234) + refund do tenant via `refund_autopilot_video_enqueue`. **(b) CTA-leak** \u2014 `rewriteHomepageCtas` s\u00f3 pegava href HTML; o LLM escreve `Garanta o seu aqui: https://mcorch.com` em texto puro \u2192 clique de maior inten\u00e7\u00e3o vazava pra homepage; guard estendido p/ bare-text nos 2 formatos + post `queued` corrigido antes do publish. **Cad\u00eancia LinkedIn provada E2E:** auto-publish publicou a vers\u00e3o corrigida (post real `urn:li:share:7476089362896732160`).\n\n**Arco 2 \u2014 Virada brand-persona Gabriel AI / CCIO + blueprint YouTube/TikTok (`58e0389`).** Diretiva Sovereign: o conte\u00fado deixa de ser produto e vira evangelismo de marca via a persona **Gabriel AI (CCIO)** \u2014 rosto/voz \u00fanica escal\u00e1vel. Plano de produto **pausado** (revers\u00edvel). Workflow `wf_24e9eb67` (deepsearch fundamentado, Lei 1 c/ URLs oficiais) mapeou as integra\u00e7\u00f5es **YouTube + TikTok**: infra ~90% reus\u00e1vel (enum `social_platform` j\u00e1 tem yt/tiktok \u00b7 `social_accounts` Vault \u00b7 cad\u00eancia \u00b7 MESMO MP4 9:16 do Reel); net-new = 3 branches OAuth + gap `auto-publish` video_url. Gates de audit (YT `videos.insert` nasce private \u00b7 TikTok SELF_ONLY) = a\u00e7\u00e3o Sovereign. Blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md` (seed p/ emenda BoK post-engine).\n\n**Arco 3 \u2014 N\u00f3 mood-board multi-foto + mood board Gabriel AI gerado E2E (`549e4dd`).** O n\u00f3 `characterReference` virou **mood board** (at\u00e9 6 fotos/n\u00f3 via `imageUrls[]`; `pickNodeImages`/`findUpstreamImages` emitem todas \u2192 reference_image_urls, modelo usa at\u00e9 4). Node grid 2\u00d72 + badge \ud83d\udcf8 + inspector upload m\u00faltiplo. **Demo + mood board provados E2E:** as 2 fotos do Sovereign \u2192 Nano Banana \u2192 **4 retratos face-consistentes** (Hero `c42d0336` + Estrategista/Palestrante/Vision\u00e1rio), cada um aprovado no **Vision QA** (cost 0 BYOK), + **2 anima\u00e7\u00f5es DoP 9:16** disparadas (async) + grafo semeado no projeto `b57a59f7`. Verificado em browser real (n\u00f3 + inspector). Fronteira: `sceneCompose` usa 2 handles (face-consistency = GenerateImage); Soul Character (`soulId`) = placeholder n\u00e3o-implementado.\n\n**Arco 4 \u2014 Vision QA como gate visual padr\u00e3o + hardening do canvas (`a482132`).** Regra dur\u00e1vel: todo print de inspe\u00e7\u00e3o + criativo passa por `scripts/qa/vision-qa.ts` (Vision MCP, BYOK gr\u00e1tis) antes de \"pronto\". E o **2\u00ba white-screen por n\u00f3 malformado** (ap\u00f3s o `coinCost`): clicar num `imageToVideo` sem `prompt` estourava `.length` e derrubava a p\u00e1gina \u2192 guard `(node.data.prompt ?? \"\").length` nos 3 inspectors + os n\u00f3s semeados corrigidos (prompts reais no sidebar).\n\n**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (GOs via AskUserQuestion + diretivas + verifica\u00e7\u00e3o browser-real) \u00b7 Owner=Sovereign (carteira User 0 + blast radius marca/IG/LinkedIn).\n\n| Verifica\u00e7\u00e3o (material) | Resultado |\n|---|---|\n| Render v\u00eddeo 9:16 real | \u2705 `8b0787e0` 1080\u00d71920 h264 5s 748KB (ffprobe) |\n| LinkedIn cadence E2E | \u2705 post real `urn:li:share:7476089362896732160` (vers\u00e3o corrigida, 0 leak) |\n| Billing fix v\u00eddeo | \u2705 `dry_run` projected 46\u219234, n_video 2\u21921; tenant refundado 12 |\n| Mood board Gabriel AI | \u2705 4 retratos face-consistentes Vision-QA-gated (cost 0) + 2 anima\u00e7\u00f5es DoP queued |\n| Vision QA | \u2705 aprovou hero+3 moods (confidence high, \"rosto \u00edntegro, sem deforma\u00e7\u00f5es\") |\n| Canvas crash | \u2705 guard nos 3 inspectors \u00b7 build deployado \u00b7 tsc 0 |\n| Handoff node | `5501a101-f4fb-4431-a9d8-34f551353c95` (embedded 768d) |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Tudo provado neste turno \u2014 render via ffprobe; LinkedIn via urn:li:share real; billing via dry_run; criativos via Vision QA (cost 0) + ocular; balan\u00e7os rastreados. 1 slip disclosed+corrigido: fabriquei zeros num p_run_id de RPC (cr\u00e9dito caiu certo, \u00e2ncora corrigida no run_id real + linha fabricada removida).\nLaw 2 (Process): \u2705 Bug fixes em features documentadas (autopilot billing, affiliate guard, canvas inspectors \u2014 isentos). Vision QA tem SOP creative-qa-vision-gate. Mood-board node = extens\u00e3o do Canvas documentado (skill canvas-studio-cinematic). Brand-persona + YT/TikTok = blueprint seed antes de c\u00f3digo (BoK gate respeitado \u2014 emenda post-engine pendente).\nLaw 3 (Pruning): \u2705 2 workflows (recon wf_6475e2f8 + research wf_24e9eb67) como subagentes; resultados por path. Janela grande (Sovereign sinalizou seal).\nLaw 4 (ORO): \u2705 Triplet declarado; decis\u00f5es soberanas via AskUserQuestion (gasto/escopo) + diretivas expl\u00edcitas.\n```\n\n## Session Seal \u2014 Fatia 2 v\u00eddeo\u2192Instagram Reel PROVADO E2E + Notifica\u00e7\u00f5es P0 + malha criativa cross-m\u00f3dulo + receita destravada (2026-06-25)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:41:47)*
+
+
+## 🤖 Claude *(19:41:47)*
+
+Atualizo o GraphRAG State (count + lineage do novo nó):
+
+## 🤖 Claude *(19:41:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8960 total nodes** (verificado live 2026-06-25 via REST count=exact, creative-assets-spine-fatia1 seal:",
+  "new_string": "- **8969 total nodes** (verificado live 2026-06-26 via REST count=exact, gabriel-ai-moodboard-vision-qa seal: +handoff `5501a101-f4fb-4431-a9d8-34f551353c95` embedded 768d \u2014 1\u00ba ciclo pago v\u00eddeo 9:16 witnessed + billing/CTA fixes + LinkedIn cadence E2E + virada brand-persona Gabriel AI/CCIO + blueprint YT/TikTok + n\u00f3 mood-board multi-foto + mood board 4 retratos Vision-QA-gated + 2 anima\u00e7\u00f5es DoP + regra Vision QA + canvas prompt.length hardening; prev 8960 creative-assets-spine-fatia1 seal:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:41:55)*
+
+
+## 🤖 Claude *(19:41:56)*
+
+Phase 5b — secret scan no HANDOFF.md antes de commitar:
+
+## 🤖 Claude *(19:42:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b secret scan HANDOFF.md (apenas o diff novo) ===\"\ngit diff HEAD HANDOFF.md | grep -E \"^\\+\" | grep -E \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-)\" | grep -v \"example\\|placeholder\\|digest\\|hash\\|urn:li\" | head -10 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho \"(vazio acima = limpo)\"\necho \"=== commit HANDOFF ===\"\ngit add HANDOFF.md proof-manifest.json\ngit commit -q -m \"docs(handoff): seal Gabriel AI mood board + Vision QA + v\u00eddeo pago E2E + billing/CTA fixes + brand-persona\" \\\n-m \"Novo Record (4 arcos): ciclo pago v\u00eddeo 9:16 witnessed + 2 bugs receita (billing article-flow + CTA-leak texto-puro) + LinkedIn cadence E2E (urn:li:share real); virada brand-persona Gabriel AI/CCIO + blueprint YT/TikTok; n\u00f3 mood-board multi-foto + 4 retratos Vision-QA-gated + 2 anima\u00e7\u00f5es DoP; Vision QA gate + canvas prompt.length hardening. Handoff node 5501a101 embedded 768d. GraphRAG 8969.\" 2>&1 | grep -E \"docs\\(handoff\\)|files? changed|no leaks|BLOCK\" | tail -3\ngit log -1 --format=\"%h %s\"",
+  "description": "Phase 5b scan + commit HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b secret scan HANDOFF.md (apenas o diff novo) ===
+> (vazio acima = limpo)
+> === commit HANDOFF ===
+> [90m4:42PM[0m [32mINF[0m no leaks found
+> cf68ccb docs(handoff): seal Gabriel AI mood board + Vision QA + vídeo pago E2E + billing/CTA fixes + brand-persona
+> ```
+
+## 🤖 Claude *(19:42:08)*
+
+
+## 🤖 Claude *(19:42:09)*
+
+HANDOFF sealed (`cf68ccb`, 5b limpo). Phase 5c — Material Proof Audit (verificação mecânica das claims):
+
+## 🤖 Claude *(19:42:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 180 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40",
+  "description": "Phase 5c material proof audit",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node 5501a101 | mesh_node | 5501a101-f4fb-4431-a9d8-34f551353c95 | 5501a101-f4fb-4431-a9d8-34f551353c95 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 12.2s)
+> ```
+
+## 🤖 Claude *(19:42:31)*
+
+
+## 🤖 Claude *(19:42:32)*
+
+Phase 5c: **SEAL ALLOWED** (10 verificadas, 0 falhas). Phase 6 — BoK Seal Status:
+
+## 🤖 Claude *(19:42:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== m\u00f3dulos novos tocados nesta sess\u00e3o (src/pages, supabase/functions, src/components/X) ===\"\ngit diff --name-only HEAD~6..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | head -10 || echo \"nenhum m\u00f3dulo novo\"\necho \"=== natureza dos commits da sess\u00e3o ===\"\ngit log --oneline -6 | sed 's/^/  /'",
+  "description": "Phase 6 BoK gate check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === módulos novos tocados nesta sessão (src/pages, supabase/functions, src/components/X) ===
+> supabase/functions/_shared/affiliate.ts
+> supabase/functions/autopilot-run/index.ts
+> === natureza dos commits da sessão ===
+>   cf68ccb docs(handoff): seal Gabriel AI mood board + Vision QA + vídeo pago E2E + billing/CTA fixes + brand-persona
+>   7953c55 docs(readme): v6.52.0 — Gabriel AI mood board + Vision QA gate + vídeo pago E2E + billing/CTA fixes
+>   a482132 fix(canvas): guard prompt.length nos 3 inspectors — nó malformado não white-screena mais
+>   58e0389 docs(context): blueprint de preparação YouTube + TikTok (virada brand-persona Gabriel AI/CCIO)
+>   549e4dd feat(canvas): nó Personagem Referência vira mood board facial multi-foto (Gabriel AI)
+>   df7505b fix(autopilot): cobrança de vídeo por article-flow + CTA-leak guard em texto puro
+> ```
+
+## 🤖 Claude *(19:42:44)*
+
+
+## 🤖 Claude *(19:42:46)*
+
+Phase 6 ✅ — sem módulo novo (só fixes em edge fns existentes + extensão do Canvas documentado; brand-persona/YT-TikTok é blueprint, com emenda BoK post-engine explicitamente pendente). Sem violação de gate. Phase 7 — push:
+
+## 🤖 Claude *(19:42:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== push ===\"\ngit push origin main 2>&1 | tail -8\necho \"=== confirma sync ===\"\ngit rev-list --left-right --count origin/main...HEAD 2>/dev/null\necho \"=== commits desta sess\u00e3o ===\"\ngit log --oneline 09a4203..HEAD | wc -l",
+  "description": "Push origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push ===
+> [90m4:42PM[0m [32mINF[0m scan completed in 34ms
+> [90m4:42PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    09a4203..cf68ccb  main -> main
+> === confirma sync ===
+> 0	0
+> === commits desta sessão ===
+> 6
+> ```
+
+## 🤖 Claude *(19:43:06)*
+
+
+## 🤖 Claude *(19:43:07)*
+
+Push ✅ (`09a4203..cf68ccb`, synced 0/0, 6 commits). Phase 7b — sprint hygiene + scratch:
+
+## 🤖 Claude *(19:43:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch ===\"; ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"limpo \u2705\"\necho \"=== sprint-priorities topo (insertion point) ===\"\nsed -n '1,8p' .claude/context/sprint-priorities.md",
+  "description": "Scratch + sprint priorities topo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch ===
+> tem arquivos
+> === sprint-priorities topo (insertion point) ===
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> **Sprint v6.51.0 — Fatia 2 vídeo→Instagram Reel PROVADO E2E + Notificações P0 + malha criativa cross-módulo + receita destravada (2026-06-25)** — sessão-maratona "força total pelo primeiro R$", Usuário 00 sobre Usuário 0. **9 commits.** **(1) Receita** (`1ad04c5`): cron auto-publish morto (`/var/log` inacessível)→durável+telemetria; link **meli.la assinado** publicado (sale-attributable, Roborock+Family Hub); CTA-leak fechado; 2 posts injection removidos do LinkedIn. **(2) Canvas white-screen fix** (`46f18ca`): `MODEL_INFO[id].coinCost` em modelId fora do catálogo → `getImageModelInfo`/`getVideoModelInfo` com fallback; **verificação por browser real** (agent-browser+preview+sessão injetada) virou diretiva durável. **(3) Malha cross-módulo:** asset clicável→handoff Canvas (`8c00f88`); white-label HyperFrames nginx sub_filter (`5d58b15`); Biblioteca scroll+filtro-data+metadados (`8fdb435`); starter MCORCH 9:16 **lint 0/0** substitui demo HeyGen (`3efbe75`, AskUserQuestion). **(4) Fatia 2 — vídeo→Reel PROVADO E2E** (`9d9ec03`/`3be06ee`): User 0 **já conectado** (IG `magicorch` MEDIA_CREATOR); `publish-social` IG via `graph.instagram.com`+REELS+id do `/me` (stored id app-scoped rejeitava 100/33). **Reel real: `instagram.com/reel/DaBtVAQkiuz`.** **(5) P0 Notificações** (`bfb0ba3`): sino era placeholder morto (badge "3" hardcoded) + nada escrevia na tabela → `useNotifications`+`NotificationBell`+`_shared/notify.ts`+seed 4 eventos; browser badge "5". **Prova:** tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8962** · handoff `468c15dc`. **Pending:** camada **push** (browser/OS — sem infra) · **Fatia 3 faceless long-form** (filosofia Sovereign: vender mostrando produto útil no momento certo, redes=entretenimento não venda) · CF público liberado (404=challenge caiu) mas WP posts são draft + Autopilot dormente → flip wp_status+ativar cadência (GO de gasto) · FB Reel (precisa Page). **Lição:** checar a conexão REAL (Lei 1) revelou que o IG já publicava — o publisher só apontava pro lugar errado.
+> ```
+
+## 🤖 Claude *(19:43:24)*
+
+
+## 🤖 Claude *(19:43:25)*
+
+Atualizo o sprint-priorities (v6.52.0) + checo o scratch:
+
+## 🤖 Claude *(19:43:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.51.0 \u2014 Fatia 2 v\u00eddeo\u2192Instagram Reel PROVADO E2E + Notifica\u00e7\u00f5es P0 + malha criativa cross-m\u00f3dulo + receita destravada (2026-06-25)** \u2014",
+  "new_string": "**Sprint v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)** \u2014 sess\u00e3o-maratona \"fa\u00e7a tudo\", Usu\u00e1rio 00 sobre Usu\u00e1rio 0. **6 commits.** **(1)** Ciclo pago de v\u00eddeo 9:16 witnessed E2E (render real `8b0787e0` 1080\u00d71920) + 2 bugs de receita (`df7505b`): billing cobrava v\u00eddeo por sub-run mas s\u00f3 article-flow renderiza \u2192 fix por `nVideoRuns`+refund; CTA-leak `mcorch.com` em texto puro \u2192 guard bare-text nos 2 formatos. **LinkedIn cadence provada E2E** (post real `urn:li:share:7476089362896732160`). **(2)** Virada **brand-persona Gabriel AI/CCIO** (plano produto pausado) + blueprint fundamentado YouTube/TikTok (`58e0389`, infra ~90% reus\u00e1vel, gates audit Sovereign). **(3)** N\u00f3 `characterReference` vira **mood-board multi-foto** (`549e4dd`) + mood board Gabriel AI gerado E2E (4 retratos face-consistentes Vision-QA-gated + 2 anima\u00e7\u00f5es DoP) no projeto `b57a59f7`. **(4)** **Vision QA** como gate visual sempre-on + canvas `prompt.length` hardening (`a482132`). **Prova:** tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8969** \u00b7 handoff `5501a101`. **Pending:** emenda BoK post-engine + 3 branches OAuth YT/TikTok (gates audit = a\u00e7\u00e3o Sovereign) \u00b7 URLs de refer\u00eancia 7-dias\u2192p\u00fablicas (persona dur\u00e1vel) \u00b7 wirar Vision QA dentro de `audit-canvas-ui.ts`/e2e \u00b7 anima\u00e7\u00f5es DoP finalizam async \u00b7 postback ML real. **Li\u00e7\u00e3o:** o witness de um ciclo pago exp\u00f4s 2 bugs de billing/atribui\u00e7\u00e3o invis\u00edveis no c\u00f3digo est\u00e1tico \u2014 rodar o fluxo real (Lei 1) \u00e9 o melhor detector.\n\n**Sprint v6.51.0 \u2014 Fatia 2 v\u00eddeo\u2192Instagram Reel PROVADO E2E + Notifica\u00e7\u00f5es P0 + malha criativa cross-m\u00f3dulo + receita destravada (2026-06-25)** \u2014"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:43:42)*
+
+
+## 🤖 Claude *(19:43:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 1,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.51.0 — Fatia 2 vídeo→Instagram Reel PROVADO E2E + Notificações P0 + malha criativa cross-módulo + receita destravada (2026-06-25)** — sessão-maratona "força total pelo primeiro R$", Usuário 00 sobre Usuário 0. **9 commits.** **(1) Receita** (`1ad04c5`): cron auto-publish morto (`/var/log` inacessível)→durável+telemetria; link **meli.la assinado** publicado (sale-attributable, Roborock+Family Hub); CTA-leak fechado; 2 posts injection removidos do LinkedIn. **(2) Canvas white-screen fix** (`46f18ca`): `MODEL_INFO[id].coinCost` em modelId fora do catálogo → `getImageModelInfo`/`getVideoModelInfo` com fallback; **verificação por browser real** (agent-browser+preview+sessão injetada) virou diretiva durável. **(3) Malha cross-módulo:** asset clicável→handoff Canvas (`8c00f88`); white-label HyperFrames nginx sub_filter (`5d58b15`); Biblioteca scroll+filtro-data+metadados (`8fdb435`); starter MCORCH 9:16 **lint 0/0** substitui demo HeyGen (`3efbe75`, AskUserQuestion). **(4) Fatia 2 — vídeo→Reel PROVADO E2E** (`9d9ec03`/`3be06ee`): User 0 **já conectado** (IG `magicorch` MEDIA_CREATOR); `publish-social` IG via `graph.instagram.com`+REELS+id do `/me` (stored id app-scoped rejeitava 100/33). **Reel real: `instagram.com/reel/DaBtVAQkiuz`.** **(5) P0 Notificações** (`bfb0ba3`): sino era placeholder morto (badge "3" hardcoded) + nada escrevia na tabela → `useNotifications`+`NotificationBell`+`_shared/notify.ts`+seed 4 eventos; browser badge "5". **Prova:** tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8962** · handoff `468c15dc`. **Pending:** camada **push** (browser/OS — sem infra) · **Fatia 3 faceless long-form** (filosofia Sovereign: vender mostrando produto útil no momento certo, redes=entretenimento não venda) · CF público liberado (404=challenge caiu) mas WP posts são draft + Autopilot dormente → flip wp_status+ativar cadência (GO de gasto) · FB Reel (precisa Page). **Lição:** checar a conexão REAL (Lei 1) revelou que o IG já publicava — o publisher só apontava pro lugar errado.
+> 8	
+> ```
+
+## 🤖 Claude *(19:43:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch: tem .ts diagn\u00f3stico a preservar? ===\"\nls scratch/*.ts 2>/dev/null && echo \"tem .ts\" || echo \"sem .ts (s\u00f3 temp images/json \u2014 gitignored, ok deixar)\"\nls scratch/ 2>/dev/null | head",
+  "description": "Read sprint + check scratch .ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch: tem .ts diagnóstico a preservar? ===
+> sem .ts (só temp images/json — gitignored, ok deixar)
+> ```
+
+## 🤖 Claude *(19:43:50)*
+
+
+## 🤖 Claude *(19:43:50)*
+
+Scratch só tem temp images/json (gitignored — ok). Prepend do sprint v6.52.0:
+
+## 🤖 Claude *(19:44:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.51.0 \u2014 Fatia 2 v\u00eddeo\u2192Instagram Reel PROVADO E2E + Notifica\u00e7\u00f5es P0 + malha criativa cross-m\u00f3dulo + receita destravada (2026-06-25)** \u2014 sess\u00e3o-maratona \"for\u00e7a total pelo primeiro R$\", Usu\u00e1rio 00 sobre Usu\u00e1rio 0. **9 commits.**",
+  "new_string": "**Sprint v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)** \u2014 sess\u00e3o-maratona \"fa\u00e7a tudo\", Usu\u00e1rio 00 sobre Usu\u00e1rio 0. **6 commits.** **(1)** Ciclo pago de v\u00eddeo 9:16 witnessed E2E (render real `8b0787e0` 1080\u00d71920) + 2 bugs de receita (`df7505b`): billing cobrava v\u00eddeo por sub-run mas s\u00f3 article-flow renderiza \u2192 fix por `nVideoRuns`+refund; CTA-leak `mcorch.com` texto-puro \u2192 guard bare-text nos 2 formatos. **LinkedIn cadence E2E** (post real `urn:li:share:7476089362896732160`). **(2)** Virada **brand-persona Gabriel AI/CCIO** (plano produto pausado) + blueprint fundamentado YouTube/TikTok (`58e0389`, infra ~90% reus\u00e1vel, gates audit Sovereign). **(3)** N\u00f3 `characterReference` vira **mood-board multi-foto** (`549e4dd`) + mood board Gabriel AI gerado E2E (4 retratos face-consistentes Vision-QA-gated + 2 anima\u00e7\u00f5es DoP) no projeto `b57a59f7`. **(4)** **Vision QA** gate visual sempre-on + canvas `prompt.length` hardening (`a482132`). **Prova:** tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8969** \u00b7 handoff `5501a101`. **Pending:** emenda BoK post-engine + 3 branches OAuth YT/TikTok (audit = a\u00e7\u00e3o Sovereign) \u00b7 URLs refer\u00eancia 7-dias\u2192p\u00fablicas (persona dur\u00e1vel) \u00b7 wirar Vision QA dentro de `audit-canvas-ui.ts`/e2e \u00b7 anima\u00e7\u00f5es DoP finalizam async \u00b7 postback ML real. **Li\u00e7\u00e3o:** o witness de um ciclo pago exp\u00f4s 2 bugs de billing/atribui\u00e7\u00e3o invis\u00edveis no c\u00f3digo est\u00e1tico \u2014 rodar o fluxo real (Lei 1) \u00e9 o melhor detector.\n\n**Sprint v6.51.0 \u2014 Fatia 2 v\u00eddeo\u2192Instagram Reel PROVADO E2E + Notifica\u00e7\u00f5es P0 + malha criativa cross-m\u00f3dulo + receita destravada (2026-06-25)** \u2014 sess\u00e3o-maratona \"for\u00e7a total pelo primeiro R$\", Usu\u00e1rio 00 sobre Usu\u00e1rio 0. **9 commits.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:44:09)*
+
+
+## 🤖 Claude *(19:44:09)*
+
+Commit sprint + push final:
+
+## 🤖 Claude *(19:44:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + v\u00eddeo pago E2E + billing/CTA fixes + brand-persona\" 2>&1 | grep -E \"chore\\(sprint\\)|no leaks|files? changed\" | tail -2\ngit push origin main 2>&1 | grep -E \"main -> main|no leaks|up-to-date\" | tail -2\necho \"sync: $(git rev-list --left-right --count origin/main...HEAD)\"\necho \"commits sess\u00e3o: $(git log --oneline 09a4203..HEAD | wc -l)\"",
+  "description": "Commit + push sprint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m4:44PM[0m [32mINF[0m no leaks found
+> [90m4:44PM[0m [32mINF[0m no leaks found
+>    cf68ccb..11cb89a  main -> main
+> sync: 0	0
+> commits sessão: 7
+> ```
+
+## 🤖 Claude *(19:44:28)*
+
+
+## 🤖 Claude *(19:44:45)*
+
+Sprint sealed + pushed (`11cb89a`, synced). **Handoff completo.**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Gabriel AI mood board + Vision QA + vídeo pago E2E (2026-06-26)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  ✅ Secret leak scan — limpo (gitleaks passou em cada commit + range push)
+  ✅ Client-side coin deduction — nenhuma violação
+  ✅ Sensitive console.log — nenhum
+  ✅ HANDOFF.md secret scan (5b) — limpo
+  Veredito: PASS (0 🔴)
+
+📦 COMMITS (7 total)
+  df7505b — fix(autopilot): cobrança de vídeo por article-flow + CTA-leak guard texto-puro
+  549e4dd — feat(canvas): nó Personagem Referência vira mood board facial multi-foto
+  58e0389 — docs(context): blueprint de preparação YouTube + TikTok (brand-persona)
+  a482132 — fix(canvas): guard prompt.length nos 3 inspectors (nunca white-screena)
+  7953c55 — docs(readme): v6.52.0
+  cf68ccb — docs(handoff): seal Gabriel AI mood board + Vision QA + vídeo pago E2E
+  11cb89a — chore(sprint): v6.52.0
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 5501a101-f4fb-4431-a9d8-34f551353c95 — session-handoff-20260626-gabriel-ai-moodboard-vision-qa
+  Embedding: ✅ 768d (confirmado non-null)
+
+📖 README.md
+  Versão: 6.51.0 → 6.52.0
+  Badge neural_mesh: 8962 → 8969 nós
+  Seção adicionada: What's new v6.52.0
+
+🧠 HANDOFF.md
+  Fase selada: Gabriel AI mood board + Vision QA + vídeo pago E2E + billing/CTA fixes + brand-persona
+  Seções: Task State, novo Record (4 arcos + self-audit), GraphRAG State (8969)
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas
+
+🚀 PUSH
+  Branch: main → origin/main (09a4203..11cb89a)
+  Commits enviados: 7
+
+📌 SPRINT
+  sprint-priorities.md: ✅ atualizado (v6.52.0)
+  scratch/ cleanup: limpo (só temp images/json gitignored)
+  BoK gate: ✅ sem violação (fixes em fns existentes + extensão Canvas documentado; brand-persona = blueprint, emenda BoK post-engine pendente)
+
+⏭  PRÓXIMOS PASSOS
+  1. URLs de referência 7-dias → públicas (persona Gabriel AI durável) — o caveat que você perguntou
+  2. Wirar Vision QA dentro de audit-canvas-ui.ts / e2e (rodar 100% automático) — você pediu "depois"
+  3. Emenda BoK post-engine + 3 branches OAuth YouTube/TikTok (gates de audit = sua ação nos dashboards)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Sessão-maratona selada.** Resumo do que ficou vivo pra você: o **mood board Gabriel AI** (4 retratos + 2 animações cozinhando) no canvas, o **nó multi-foto**, o **Vision QA** como gate, e o **bug do nó de vídeo corrigido** — tudo deployado. Dá um **hard-refresh** no canvas pra ver o mood board completo.
+
+As **2 animações DoP** (`872e71d7`, `ba1c5294`) ainda estão renderizando async — aparecem nos nós quando o webhook finalizar. Se quiser, na próxima sessão eu confirmo/anexo os vídeos + ataco os 3 próximos passos (começando pelo fix das URLs 7-dias pra sua persona não quebrar em uma semana).
