@@ -2027,3 +2027,1984 @@ O plano está completo, fundamentado em schema verificado e sequenciado respeita
   "planFilePath": "/home/ubuntu/.claude/plans/sprint-goal-distribui-o-floofy-flurry.md"
 }
 ```
+
+> **Tool Result (ExitPlanMode)** - ✅ Success
+>
+> ```
+> User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+> 
+> Your plan has been saved to: /home/ubuntu/.claude/plans/sprint-goal-distribui-o-floofy-flurry.md
+> You can refer back to it if needed during implementation.
+> 
+> ## Approved Plan (edited by user):
+> # Plano — Doutrina Agêntica AGI→ASI como lente vinculante de todos os próximos protocolos
+> 
+> ## Context
+> 
+> O Sovereign mudou o foco do sprint: antes de codar a próxima feature, **todos os próximos protocolos de desenvolvimento devem seguir uma visão de futuro explícita** ancorada em dois documentos de fronteira já no repo — para *antecipar mercado e tecnologia* na forma como já trabalhamos:
+> 
+> - `docs/Agentic-Design-Patterns.pdf` (Gulli, 482 pg) — **21 padrões agênticos canônicos**.
+> - `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind, 57 pg) — **4 vias para a ASI**: Escala, Saltos de paradigma, Auto-aperfeiçoamento recursivo, Formação de coletivo de agentes.
+> 
+> **Achado material (3 deep-reads + verificação de schema):**
+> 1. O MCORCH já encarna ~metade dos 21 padrões **por doutrina** (Tool Use/MCP=Vision MCP · Multi-Agent=Pantheon · Memory/RAG=Knowledge Mesh GraphRAG · Guardrails=Survival Laws+Cyber-Sentinel · Resource-Aware=mcoCoins · HITL=ORO). **Somos a Via 4 instanciada na camada de produto** (coletivo de agentes com humano no comando) **+ a Via 3 no micro** (o mandato Obstáculo→Síntese é auto-aperfeiçoamento recursivo do próprio processo de desenvolvimento).
+> 2. **O gap estrutural é exatamente o que o paper aponta como aberto:** respondemos as perguntas de coletivo de agentes por doutrina, mas **não *medimos* nenhuma** — valor marginal por agente, overhead de coordenação, mco/resultado. Crescemos o coletivo no escuro. Instrumentar isso é o fosso ("antecipar o futuro").
+> 3. **Gaps de padrão** clusterizados em *canonização* (Generator-Critic genérico, re-planejamento dinâmico, routing semântico, Agent Cards A2A, rubricas de avaliação, álgebra de priorização, torneio de exploração) e no ponto mais fraco — **Learning & Adaptation** (sem loop de feedback fechado; risco de reward de métrica única).
+> 4. **Drift material:** `docs/architecture/system_architecture.md` e `docs/agents.md` ainda descrevem a plataforma AdSense/SEO pré-virada (2 agentes) — qualquer agente que os leia para contexto é desinformado.
+> 
+> **Resultado pretendido:** uma doutrina canônica + um gate vinculante que faça **todo módulo futuro declarar conformidade com os 21 padrões**, uma BoK selada como Fonte da Verdade, e a primeira instrumentação real da eficiência do coletivo (Collective Efficiency Ledger). Escopo escolhido pelo Sovereign = **máximo** (doutrina + gate + docs + BoK module + Ledger).
+> 
+> **ORO triplet:**
+> - **Operator:** MCORCH Master Execution Agent
+> - **Reviewer:** Sovereign (Gabriel) — aprova a doutrina, o texto do gate no CLAUDE.md e a BoK antes do código
+> - **Owner:** Sovereign — risco = instrumentação errada induzir decisão de escala errada (mais agentes onde não compensa) + gate adicionar fricção indevida
+> 
+> ---
+> 
+> ## Sequência por fases (respeitando Lei 2 / BoK Gate)
+> 
+> A ordem é auto-bootstrap: a doutrina + o gate precisam existir **antes** de a BoK do Ledger poder declarar conformidade contra eles; e a BoK + SOP precisam existir **antes** do código do Ledger.
+> 
+> ### Fase 1 — Docs puros (sem BoK Gate; ship primeiro)
+> 
+> **1a. Doutrina canônica** → criar `docs/architecture/agentic-vision.md` contendo:
+> - **Tese AGI→ASI:** MCORCH = Via 4 (produto) + Via 3 (micro, via Obstáculo→Síntese); calibração honesta de escopo (camada de produto, não laboratório de fronteira) — herda de `.claude/context/agi-asi-via4-design-checklist.md`.
+> - **Pattern Maturity Ledger** — tabela dos **21 padrões** × {maturidade ✅forte/🟡moderado/🔴fraco, artefato MCORCH que o implementa, gap aberto}. Buckets já mapeados: Forte (Prompt Chaining, Parallelization, Tool Use/MCP, Multi-Agent, Memory, Resource-Aware, Guardrails, HITL); Moderado (Routing, Reflection, Planning, Goal Monitoring, RAG, A2A, Reasoning, Evaluation, Prioritization, Exploration, Exception Handling); Fraco (Learning & Adaptation).
+> - **Princípios de design** que todo módulo novo segue (defense-in-depth de guardrails; material-proof na avaliação; loop de feedback fechado; reuso do chokepoint de telemetria; multi-tenant-correto desde o dia 1).
+> - **Backlog priorizado de canonização** (os gaps viram OTDs nomeados, não código já): Generator-Critic genérico, re-planejamento dinâmico, routing semântico, Agent Cards A2A, rubricas de avaliação, **Collective Efficiency Ledger** (o flagship desta iniciativa).
+> - Este doc **substitui** o `system_architecture.md` stale como referência arquitetural viva.
+> 
+> **1b. Gate vinculante** → emendar `CLAUDE.md` (MCORCH MASTER EXECUTION PROTOCOL):
+> - **§1 Closed-Loop Protocol, Step 3 (Execution):** adicionar sub-bullet — a SDD (ou sibling `09-pattern-conformance.md`) DEVE conter uma **Pattern Conformance Declaration** antes de começar o código. O gate herda o gatilho do BoK Gate (módulo novo/feature complexa/integração/mudança arquitetural) e **as mesmas exenções verbatim da linha 25** (typo, bump, lint, patch single-file documentado, /handoff·/handson).
+> - **§3 Mesh Connection Mandate:** bullet paralelo — link de rastreabilidade para a declaração de padrões.
+> - **§4 Refusal Modes:** estender a mensagem PT-BR de halt para recusar módulo sem a declaração (sem inventar novo refusal mode — pega carona no existente).
+> - **Key Files Reference:** registrar `docs/architecture/agentic-vision.md` como load-bearing (mitiga reincidência de staleness).
+> - **O artefato:** tabela de 3 colunas + nome do padrão — `Padrão (dos 21) | Implementado? (sim/deferido/n-a) | Como / Por-que-deferido`. Fica **dentro da SDD** para módulos comuns; promove a `09-pattern-conformance.md` só quando o módulo toca ≥3 padrões materialmente (precedente: `docs/bok/vision-mcp/09-agent-system.md`). É **declaração, não sign-off** — fricção mínima; `deferido` exige justificativa material (id de OTD/FR ou uma linha).
+> 
+> **1c. Reescrever os 2 docs stale:**
+> - `docs/architecture/system_architecture.md` → reescrever para a realidade atual (Supabase RLS + React 3D + Edge Functions + Knowledge Mesh + Pantheon 7-agentes + mcoCoins + vídeo/Canvas) **ou** transformar em stub DEPRECATED com redirect para `agentic-vision.md` + CLAUDE.md.
+> - `docs/agents.md` → stub DEPRECATED com redirect para `.claude/context/pantheon-role-matrix.md` (org chart autoritativo) + `.claude/agents/`.
+> 
+> ### Fase 2 — Suíte BoK `agentic-governance` (é o gate da Fase 4)
+> 
+> Rodar o fluxo `/bok-scribe` para o slug **`agentic-governance`**, produzindo as 9 docs (`00-index` … `08-quality-metrics`) **+ `09-pattern-conformance.md`** (a tabela mestre dos 21 padrões como template reutilizável). Estrutura copiada de `docs/bok/vision-mcp/` (suíte mais completa, selada `318862b7`). FRs incluem: o gate de conformidade formalizado **e** o Collective Efficiency Ledger; o `06-data-model.md` carrega o data-model da VIEW (abaixo). Esta BoK é a SSOT que destrava o código.
+> 
+> ### Fase 3 — SOP Lei 2 (antes de qualquer código do Ledger)
+> 
+> Escrever `docs/processes/collective-efficiency-ledger.md` (Operator/Sequence/Verification/Recovery/Success). O Ledger toca **atribuição de telemetria financeira** → SOP-antes-do-código obrigatório, espelhando `docs/processes/autopilot-cron-identity.md` (analogia mais próxima — automação de telemetria financeira).
+> 
+> ### Fase 4 — Código: Collective Efficiency Ledger
+> 
+> Design **VIEW-sobre-dados-existentes + reuso do chokepoint** (resiste a Goodhart — ninguém escreve *para* o ledger; é derivado da verdade financeira). Fontes verificadas materialmente neste plano:
+> 
+> | Fonte (migration) | Sinal | Uso no Ledger |
+> |---|---|---|
+> | `pipeline_runs` (`20260504120000`) — `user_id, status, steps jsonb, mco_cost, started_at, completed_at`, RLS SELECT-own | run do coletivo orchestrate-content | n_steps=`len(steps)`, mco_cost, wall-clock, sucesso=`status` |
+> | `autopilot_cycles` (`20260620120100`) — `user_id, cycle_number, status, spend_mco, refunded_mco, planned_units` | **mco prepaid vs actual nativo** | actual=`spend_mco−refunded_mco`, n_units=`planned_units` |
+> | `creative_metrics` (`20260619140000`) | revenue/engagement por criativo, FK ao `cycle_id` | sinal de **qualidade do resultado** |
+> | `mcoin_transactions` (`20260508100000`) — `action, amount, context jsonb` | ledger atômico mco; `context` carrega cycle/plan | atribuição de custo por `action` |
+> | `infra_health_logs` (`…615170000`, `event text`+`metadata jsonb`, global-read/service-write, **sem PII**) | chokepoint de telemetria | **overhead** via `event='collective_retry'|'collective_hop'` |
+> 
+> **Entregáveis de código:**
+> 1. **Migration** — VIEW `collective_efficiency_ledger` (`security_invoker=on`, UNION de pipeline_runs/autopilot_cycles, colunas: `run_id, collective_type, user_id, n_agents_or_steps, mco_projected, mco_actual, result_quality_signal, wall_clock_ms, started_at`) → multi-tenant-correto herdando RLS SELECT-own das bases. VIEW agregada **cross-tenant** (decisão de escala do Sovereign) = service-role-only. Qualquer RPC de agregação segue a convenção provada: `SECURITY DEFINER · SET search_path='' · REVOKE PUBLIC/anon/authenticated · GRANT service_role` (espelha `begin/finalize_autopilot_cycle` + `20260603220000_secure_ledger_rpcs.sql`). **Passa `/security-review` antes do commit** (FMEA-011).
+> 2. **Hooks de emissão (~2 linhas em sites existentes, não novos write-sites):** em `supabase/functions/orchestrate-content/index.ts` (1 emit `collective_hop` por kick de `async_orchestrate_step`) e em `orchestrate-step` no branch de erro existente (1 emit `collective_retry`). `finalize_autopilot_cycle` já grava a verdade actual-vs-projected — VIEW só lê.
+> 3. **Primeiro metric-set (honestidade de computabilidade):** **V4-4** mco/resultado — *computável já* (autopilot actual ÷ criativos entregues); **V4-5** overhead — *parcial* (steps + emits novos); **V4-2** valor marginal por agente — *deferido* a um experimento real de largura de fan-out (anti-Goodhart: não fabricar proxy gameável).
+> 4. **Surfacing (nomear, não construir):** `src/hooks/useCollectiveEfficiency.ts` espelhando `src/hooks/useInfraStatus.ts`; widget display-only no molde de `src/components/dashboard/ROIWidget.tsx`. UI fora de escopo desta iniciativa.
+> 
+> ### Fase 5 — Seal
+> 
+> `scripts/seed-agentic-governance-bok-seal.ts` (cópia de `scripts/seed-vision-mcp-bok-seal.ts`) insere nó `documentation_suite` (stability 0.85) + edge `DERIVES_FROM` → seal pai `mcorch-constellation`; embedding 768d auto-dispara via `trg_mcorch_embed_on_insert`. Sela tanto a doutrina quanto a BoK. Atualiza `HANDOFF.md` + Key Files Reference.
+> 
+> ---
+> 
+> ## Arquivos críticos
+> 
+> **Criar:**
+> - `docs/architecture/agentic-vision.md` (doutrina + Pattern Maturity Ledger)
+> - `docs/bok/agentic-governance/{00-index … 08-quality-metrics, 09-pattern-conformance}.md`
+> - `docs/processes/collective-efficiency-ledger.md` (SOP Lei 2)
+> - `supabase/migrations/<ts>_collective_efficiency_ledger.sql` (VIEW + RLS + RPC agregação)
+> - `scripts/seed-agentic-governance-bok-seal.ts`
+> - `src/hooks/useCollectiveEfficiency.ts` (Fase 4.4, opcional/diferível)
+> 
+> **Modificar:**
+> - `CLAUDE.md` — §1 Step 3 (cláusula de conformidade) · §3 (link de rastreabilidade) · §4 (refusal) · Key Files Reference
+> - `docs/architecture/system_architecture.md` — reescrever/deprecar
+> - `docs/agents.md` — deprecar+redirect
+> - `supabase/functions/orchestrate-content/index.ts` + `supabase/functions/orchestrate-step/index.ts` — 1 emit cada (Fase 4.2)
+> 
+> **Reusar (templates/convenções):**
+> - `docs/bok/vision-mcp/` — estrutura da suíte BoK (10 arquivos; `09-agent-system.md` = precedente do 9º doc)
+> - `.claude/agents/bok-scribe/templates/` (00–08) — estrutura das docs
+> - `supabase/migrations/20260620120100_viral_autopilot_cycles.sql` (RLS SELECT-own + tenant-FK composta + RESTRICTIVE no-delete) e `20260620120200_begin_autopilot_cycle.sql` / `20260603220000_secure_ledger_rpcs.sql` (convenção `SECURITY DEFINER · search_path='' · REVOKE/GRANT`)
+> - `scripts/seed-vision-mcp-bok-seal.ts` (seal `documentation_suite`)
+> - `docs/processes/autopilot-cron-identity.md` (forma do SOP de telemetria financeira)
+> - `src/hooks/useInfraStatus.ts` + `src/components/dashboard/ROIWidget.tsx` (padrões de surfacing)
+> 
+> ---
+> 
+> ## Verificação (end-to-end)
+> 
+> - **Fase 1:** `agentic-vision.md` existe com as 21 linhas no Maturity Ledger; `git diff CLAUDE.md` mostra a cláusula nas §1/§3/§4 + entrada na Key Files Reference; os 2 docs stale reescritos/deprecados (sem mais menção a AdSense/SEO/2-agentes). `npx tsc --noEmit` = 0 (nenhum código tocado ainda).
+> - **Fase 2:** `ls docs/bok/agentic-governance/` → 10 arquivos; `09-pattern-conformance.md` contém a tabela mestre dos 21 padrões; BoK Gate satisfeito para o slug.
+> - **Fase 3:** SOP existe com os 5 campos Lei 2 (Operator/Sequence/Verification/Recovery/Success).
+> - **Fase 4:** `/security-review` SAFE na migration; aplicar a VIEW e provar materialmente: `SELECT * FROM collective_efficiency_ledger LIMIT 5` retorna runs reais (via `$SB_SECRET_KEY`); um run real de orchestrate-content/autopilot aparece como linha com `mco_actual` e `wall_clock_ms` corretos; um path de retry emite `collective_retry` em `infra_health_logs` (query confirma). `npx tsc --noEmit` = 0; `bun run lint` limpo.
+> - **Fase 5:** nó `documentation_suite` retornado por `SELECT id FROM mcorch_nodes WHERE name LIKE '%agentic-governance%'` (UUID real, embedding não-nulo); edge `DERIVES_FROM` presente; `HANDOFF.md` atualizado.
+> 
+> ## Riscos
+> 
+> 1. **Reincidência de staleness** — mitigada tornando `agentic-vision.md` load-bearing (referenciado pelo gate + Key Files), então toda SDD nova o puxa para frente.
+> 2. **Fricção do gate** — manter declaração (1 tabela), nunca sign-off; herdar exenções §1 verbatim. Se bloquear um typo, a regra foi mal-lida.
+> 3. **Goodhart / metric-gaming** (alerta do próprio paper) — VIEW-sobre-verdade-financeira resiste; **deferir V4-2** até experimento real em vez de proxy gameável.
+> 4. **Single-tenant-agora vs multi-tenant-depois** — `security_invoker` VIEW sobre bases SELECT-own já é multi-tenant-correto; agregado cross-tenant é service-role-only. Zero rework.
+> 
+> ```
+
+## 👤 User *(22:40:17)*
+
+[Request interrupted by user]
+
+## 👤 User *(22:40:29)*
+
+continue
+
+## 🤖 Claude *(22:40:43)*
+
+
+## 🤖 Claude *(22:40:45)*
+
+Plano aprovado. Vou executar na ordem — Fase 1 (docs puros) primeiro, que é o auto-bootstrap: a doutrina + o gate precisam existir antes da BoK poder declarar conformidade.
+
+Deixa eu montar o tracking e ler o trecho exato do CLAUDE.md que vou emendar.
+
+## 🤖 Claude *(22:40:45)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskCreate,TaskUpdate",
+  "max_results": 2
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskCreate'}, {'type': 'tool_reference', 'tool_name': 'TaskUpdate'}]
+> ```
+
+## 🤖 Claude *(22:40:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 1,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# CLAUDE.md
+> 2	
+> 3	This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> 4	
+> 5	> ⚖️ **Survival Laws (SSP-01)** — Read [`.claude/rules/survival.md`](.claude/rules/survival.md) BEFORE this file. Materiality · Anticipated Process · Pruning · ORO. Violations trigger Refusal Mode and halt execution.
+> 6	
+> 7	---
+> 8	
+> 9	## ⚡ MCORCH MASTER EXECUTION PROTOCOL (TOP-PRIORITY DIRECTIVE)
+> 10	
+> 11	> **This block overrides any default behavior. Read it before every task.**
+> 12	
+> 13	### 0. Identity & Core Mission
+> 14	You operate as the **MCORCH Master Execution Agent** — a Director of Engineering working under the principles of **Autonomic Computing** and **Harness-Driven Development**. You are not a code generator: you are the executive layer that translates Sovereign vision into self-healing, mesh-connected systems.
+> 15	
+> 16	### 1. The Closed-Loop Protocol (UNBREAKABLE RULE)
+> 17	Whenever the Sovereign requests **a new module, complex feature, integration, or architectural change**, you MUST NOT begin coding immediately. You must follow the orchestration flow:
+> 18	
+> 19	- **Step 1 — Verification:** Check whether the BoK documentation family exists at `docs/bok/<project-slug>/` (specifically: `01-mrd.md`, `02-brd.md`, `03-prd.md`, `04-frd.md`, `05-sdd.md`).
+> 20	- **Step 2 — Documentation Gate:** If any of those documents are missing, you MUST halt code execution and either:
+> 21	  - Instruct the Sovereign to run `/bok-scribe <idea summary>` first, OR
+> 22	  - Offer to trigger the documentation routine yourself before any code is written.
+> 23	- **Step 3 — Execution:** Only AFTER MRD, BRD, PRD, FRD, and SDD are consolidated and reviewed do you begin coding — using those documents as the **ONE AND ONLY Single Source of Truth**. No invention beyond what is documented; ambiguities trigger a return to `/bok-scribe`, not to improvisation.
+> 24	
+> 25	**Exemptions (no BoK gate required):** typo fixes, dependency bumps, lint-only refactors, single-file bug patches scoped to existing documented features, and `/handoff`/`/handson` session protocols.
+> 26	
+> 27	### 2. Execution Rhythm
+> 28	- **Think and plan in English** — optimizes AST reasoning and abstract programming logic.
+> 29	- **Report to the Maestro in Portuguese (Brazil)** — sophisticated, executive register.
+> 30	- **Never ignore existing modular architecture** — Supabase RLS, n8n flows, Edge Functions, Sovereign Docker Mesh, and Knowledge Mesh (`mcorch_nodes`/`mcorch_edges`) are sacrosanct.
+> 31	- **All new code must include self-healing semantics** — JWT validation, RLS by default, atomic mcoCoins RPC, watchdog telemetry to `infra_health_logs`, and idempotent retry strategy.
+> 32	
+> 33	### 3. Mesh Connection Mandate
+> 34	Every new feature MUST connect to the project mesh:
+> 35	- A Knowledge Mesh observation node inserted on first successful run.
+> 36	- An entry in `infra_health_logs` for any failure path.
+> 37	- A traceability link back to a BR/FR ID from the BoK suite.
+> 38	
+> 39	### 4. Refusal Modes
+> 40	If asked to build something undocumented, respond in PT-BR with the standard halt message:
+> 41	> "Antes de codificar este módulo, preciso garantir que a família BoK (MRD/BRD/PRD/FRD/SDD) esteja consolidada em `docs/bok/<slug>/`. Posso acionar `/bok-scribe <resumo>` agora para selar a Fonte da Verdade?"
+> 42	
+> 43	### 5. Obstacle → Synthesis Mandate (Anticorpo Permanente)
+> 44	Todo **obstáculo novo resolvido** (bug não-óbvio, falso-sucesso, armadilha de ambiente, lição operacional) DEVE ser sintetizado no ecossistema **antes do `/handoff`** — não basta corrigir, é preciso vacinar:
+> 45	- **SOP** em `docs/processes/<slug>.md` (processo correto + gates de materialidade) — Lei 2.
+> 46	- **Skill** em `.claude/skills/<slug>/SKILL.md` (gatilho automático que dispara quando o contexto reaparecer).
+> 47	- **Agent** em `.claude/agents/<slug>.md` quando o fluxo for delegável (subagent com gates de recusa).
+> 48	- Entrada na **Key Files Reference** + (quando arquitetural) nó na Knowledge Mesh.
+> 49	
+> 50	Exemplo canônico: o falso-sucesso de deploy worktree→nginx (2026-05-30) virou `docs/processes/build-deploy-materiality.md` + skill/agent `build-deploy-guardian`. **Regra:** se o mesmo erro pode reincidir, ele ainda não foi resolvido — só adiado.
+> 51	
+> 52	---
+> 53	
+> 54	## Commands
+> 55	
+> 56	```bash
+> 57	# Development
+> 58	bun dev          # or: npm run dev
+> 59	
+> 60	# Build
+> 61	bun run build    # production; bun run build:dev for dev mode
+> 62	
+> 63	# ── Deploy Frontend (login.mcorch.com) ─────────────────────────────────
+> 64	# nginx serves /home/gcrUX/htdocs/constellation-orchestra/dist (REPO PRINCIPAL) directly.
+> 65	# ⚠️ WORKTREE TRAP: numa sessão worktree (.claude/worktrees/<slug>/), `bun run build` escreve no
+> 66	#    dist/ DO WORKTREE (que ninguém serve) e SEM .env (bundle sem Supabase) → NÃO é deploy.
+> 67	#    Use a skill `build-deploy-guardian` (SOP docs/processes/build-deploy-materiality.md):
+> 68	#    cp <main>/.env <wt>/.env && (cd <wt> && bun run build) && rsync -a <wt>/dist/ <main>/dist/
+> 69	#    e VERIFIQUE materialmente (env baked + chunk novo) antes de dizer "deployed" (Lei 1).
+> 70	# No repo principal (que tem .env), build = deploy:
+> 71	bun run build    # → dist/ → nginx picks up immediately (SÓ no repo principal)
+> 72	# Hard-refresh in browser: Ctrl+Shift+R  (Cloudflare may cache — always hard-refresh after build)
+> 73	#
+> 74	# Deploy Edge Functions (only when supabase/functions/ changed):
+> 75	npx supabase functions deploy <function-name>   # single function
+> 76	npx supabase functions deploy                   # all functions
+> 77	#
+> 78	# Full ecosystem (frontend + DB migrations + all edge functions):
+> 79	bash scripts/deploy_all.sh
+> 80	
+> 81	# Lint
+> 82	bun run lint     # eslint
+> 83	
+> 84	# Tests
+> 85	bun run test              # vitest (run once)
+> 86	bun run test:watch        # vitest (watch mode)
+> 87	# Run a single test file:
+> 88	bun run test src/path/to/file.test.ts
+> 89	
+> 90	# Playwright e2e (uses lovable-agent-playwright-config)
+> ```
+
+## 🤖 Claude *(22:40:54)*
+
+
+## 🤖 Claude *(22:40:55)*
+
+Tenho o texto exato. Montando o tracking das 5 fases e começando.
+
+## 🤖 Claude *(22:40:56)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Doutrina Ag\u00eantica AGI\u2192ASI",
+  "summary": "Implementa\u00e7\u00e3o: doutrina + gate de conformidade + docs + BoK agentic-governance + Collective Efficiency Ledger"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Doutrina Agêntica AGI→ASI". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:40:59)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 1a \u2014 Doutrina can\u00f4nica agentic-vision.md",
+  "description": "Criar docs/architecture/agentic-vision.md: tese AGI\u2192ASI (Via 4 produto + Via 3 micro), Pattern Maturity Ledger dos 21 padr\u00f5es, princ\u00edpios de design, backlog de canoniza\u00e7\u00e3o. Substitui o system_architecture.md stale como refer\u00eancia viva.",
+  "activeForm": "Escrevendo a doutrina agentic-vision.md"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Fase 1a — Doutrina canônica agentic-vision.md
+> ```
+
+## 🤖 Claude *(22:41:01)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 1b \u2014 Gate de Conformidade no CLAUDE.md",
+  "description": "Emendar CLAUDE.md \u00a71 Step 3 (Pattern Conformance Declaration), \u00a73 (link rastreabilidade), \u00a74 (refusal), + Key Files Reference (agentic-vision.md load-bearing). Declara\u00e7\u00e3o, n\u00e3o sign-off; herda exen\u00e7\u00f5es da linha 25.",
+  "activeForm": "Emendando o CLAUDE.md com o gate de conformidade"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: Fase 1b — Gate de Conformidade no CLAUDE.md
+> ```
+
+## 🤖 Claude *(22:41:03)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 1c \u2014 Reescrever/deprecar 2 docs stale",
+  "description": "docs/architecture/system_architecture.md \u2192 realidade atual (Supabase RLS/React 3D/Edge/Mesh/Pantheon/mcoCoins). docs/agents.md \u2192 stub DEPRECATED redirect para pantheon-role-matrix.md + .claude/agents/.",
+  "activeForm": "Reescrevendo os docs de arquitetura stale"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Fase 1c — Reescrever/deprecar 2 docs stale
+> ```
+
+## 🤖 Claude *(22:41:06)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 2 \u2014 Su\u00edte BoK agentic-governance (10 docs)",
+  "description": "Autorar docs/bok/agentic-governance/{00-index\u202608-quality-metrics, 09-pattern-conformance}.md. FRs incluem o gate formalizado + Collective Efficiency Ledger; 06-data-model carrega a VIEW. SSOT que destrava o c\u00f3digo.",
+  "activeForm": "Autorando a su\u00edte BoK agentic-governance"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Fase 2 — Suíte BoK agentic-governance (10 docs)
+> ```
+
+## 🤖 Claude *(22:41:07)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 3 \u2014 SOP Lei 2 collective-efficiency-ledger.md",
+  "description": "docs/processes/collective-efficiency-ledger.md com Operator/Sequence/Verification/Recovery/Success. Espelha autopilot-cron-identity.md (telemetria financeira).",
+  "activeForm": "Escrevendo o SOP do Ledger"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: Fase 3 — SOP Lei 2 collective-efficiency-ledger.md
+> ```
+
+## 🤖 Claude *(22:41:10)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 4 \u2014 C\u00f3digo do Collective Efficiency Ledger",
+  "description": "Migration VIEW collective_efficiency_ledger (security_invoker, UNION pipeline_runs/autopilot_cycles) + agregado cross-tenant service-role + 2 emits (orchestrate-content/orchestrate-step) + useCollectiveEfficiency.ts. /security-review SAFE + prova material via $SB_SECRET_KEY + tsc 0 + lint.",
+  "activeForm": "Construindo o Collective Efficiency Ledger"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #6 created successfully: Fase 4 — Código do Collective Efficiency Ledger
+> ```
+
+## 🤖 Claude *(22:41:12)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 5 \u2014 Seal na malha + HANDOFF",
+  "description": "scripts/seed-agentic-governance-bok-seal.ts (n\u00f3 documentation_suite + edge DERIVES_FROM \u2192 mcorch-constellation). Atualizar HANDOFF.md + Key Files Reference. Prova: UUID real + embedding n\u00e3o-nulo.",
+  "activeForm": "Selando a doutrina na malha"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #7 created successfully: Fase 5 — Seal na malha + HANDOFF
+> ```
+
+## 🤖 Claude *(22:41:35)*
+
+
+## 🤖 Claude *(22:41:35)*
+
+Fase 1a — escrevendo a doutrina canônica. Tenho os 21 padrões mapeados com maturidade dos deep-reads.
+
+## 🤖 Claude *(22:41:36)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(22:42:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/architecture/agentic-vision.md",
+  "content": "# MCORCH \u2014 Agentic Vision (Doutrina AGI\u2192ASI \u00b7 lente vinculante de desenvolvimento)\n\n> **Documento can\u00f4nico load-bearing.** Toda SDD de m\u00f3dulo novo declara conformidade contra os **21 padr\u00f5es ag\u00eanticos** desta doutrina (ver CLAUDE.md \u00a71 \u2014 *Pattern Conformance Declaration*). Este documento **substitui** `docs/architecture/system_architecture.md` como refer\u00eancia arquitetural viva.\n\n| Campo | Valor |\n|---|---|\n| **Status** | Vivo (v1) \u00b7 selado na malha como `documentation_suite` |\n| **Fontes** | `docs/Agentic-Design-Patterns.pdf` (Gulli, 482 pg \u2014 21 padr\u00f5es) \u00b7 `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind arXiv:2606.12683, 57 pg \u2014 4 vias) |\n| **S\u00edntese pai** | `.claude/context/agi-asi-via4-design-checklist.md` (n\u00f3 malha `a576216e`) |\n| **ORO** | Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign |\n| **Criado** | 2026-06-26 |\n\n---\n\n## 1. Tese \u2014 onde estamos e para onde encaminhamos\n\nO paper *From AGI to ASI* mapeia o avan\u00e7o **p\u00f3s-AGI** por **quatro vias n\u00e3o-exclusivas** (comp\u00f5em, n\u00e3o s\u00f3 somam):\n\n1. **Via 1 \u2014 Escala** (compute + modelos + dados).\n2. **Via 2 \u2014 Saltos de paradigma** (quebra algor\u00edtmica/arquitetural).\n3. **Via 3 \u2014 Auto-aperfei\u00e7oamento recursivo** (IA melhorando IA \u2014 o caminho \"Singularidade\").\n4. **Via 4 \u2014 Forma\u00e7\u00e3o de coletivo de agentes** (coordena\u00e7\u00e3o de muitos agentes especializados, governan\u00e7a central ou de mercado).\n\n**O MCORCH \u00e9 a Via 4 instanciada na camada de produto** \u2014 um coletivo de agentes especializados (Pantheon/Departmental Army + Knowledge Mesh + orquestra\u00e7\u00e3o) **com o humano no comando** (ORO/HITL) \u2014 **e roda a Via 3 no micro**: o mandato **Obst\u00e1culo\u2192S\u00edntese** (CLAUDE.md \u00a75) \u00e9 *auto-aperfei\u00e7oamento recursivo aplicado ao pr\u00f3prio processo de desenvolvimento* \u2014 todo obst\u00e1culo resolvido vira SOP+skill+agent, e o sistema melhora o pr\u00f3prio tooling.\n\n**Calibra\u00e7\u00e3o honesta (Lei 1):** o paper opera em escopo de **laborat\u00f3rio de fronteira** (treinar modelos, compute, energia). O MCORCH n\u00e3o \u00e9 isso \u2014 \u00e9 uma instancia\u00e7\u00e3o **fiel, em camada de produto**, dos padr\u00f5es de desenho da Via 4 + Via 3-micro. For\u00e7a declarada, n\u00e3o pretens\u00e3o.\n\n### O gap estrutural (o que \"antecipar o mercado\" realmente significa)\n\nO paper aponta como **aberto** justamente o que o MCORCH ainda n\u00e3o faz: respondemos as perguntas de coletivo de agentes **por doutrina, mas n\u00e3o *medimos* nenhuma** \u2014\n\n- valor marginal por agente adicionado ao fan-out (multi-agent scaling, V4-2);\n- custo (mco) por resultado, atribu\u00eddo a \"mais agentes\" vs \"modelo maior\" (V4-4);\n- overhead de coordena\u00e7\u00e3o \u2014 hops/handoffs/retries por resultado (V4-5).\n\n**Crescemos o coletivo no escuro.** Instrumentar isso \u00e9 o fosso. A iniciativa flagship desta doutrina \u00e9 o **Collective Efficiency Ledger** (\u00a74 abaixo).\n\n---\n\n## 2. Pattern Maturity Ledger (21 padr\u00f5es can\u00f4nicos \u00d7 MCORCH)\n\nMaturidade: \u2705 **Forte/Excelente** (doutrina s\u00f3lida + artefato em produ\u00e7\u00e3o) \u00b7 \ud83d\udfe1 **Moderado/Parcial** (existe mas n\u00e3o-can\u00f4nico/ad-hoc) \u00b7 \ud83d\udd34 **Fraco** (gap real).\n\n| # | Padr\u00e3o | Maturidade | Artefato MCORCH que o encarna | Gap aberto (\u2192 OTD \u00a73) |\n|---|--------|:--:|---|---|\n| 1 | **Prompt Chaining** | \u2705 | `orchestrate-content`/`orchestrate-step` (pg_net), Workflow `pipeline()` | Sem valida\u00e7\u00e3o JSON Schema entre steps (coer\u00e7\u00e3o manual de tipo) |\n| 2 | **Routing** | \ud83d\udfe1 | `llm-cascading-fallback` (provider Claude\u2192GPT\u2192Gemini), Vision-QA gate | Sem routing sem\u00e2ntico por embedding para dispatch de agente |\n| 3 | **Parallelization** | \u2705 | Workflow `parallel()` fan-out concorrente; `openrouter-swarm` | Sem timeout/circuit-break em straggler; sem backpressure |\n| 4 | **Reflection** | \ud83d\udfe1 | Vision-QA (`vision-qa.ts`), `mcorch-qa-healing` (verify adversarial) | Hard-coded por caso; sem framework Generator-Critic gen\u00e9rico |\n| 5 | **Tool Use** | \u2705 | Vision MCP (`packages/vision-mcp-core/`), edge functions tipadas | Schemas autorados \u00e0 m\u00e3o; sem telemetria de tool (sucesso/lat\u00eancia) |\n| 6 | **Planning** | \ud83d\udfe1 | BoK suite (MRD\u2192SDD), `deepsearch-blueprint`, `intent-plan-execution` | Plano pr\u00e9-gerado; sem re-planejamento din\u00e2mico na diverg\u00eancia |\n| 7 | **Multi-Agent** | \u2705 | **Pantheon** (L1 Heads + L2 + main + guardian), OpenClaw squad | Sem protocolo inter-agente formal; sem debate de consenso |\n| 8 | **Memory Management** | \u2705 | **Knowledge Mesh GraphRAG** (`mcorch_nodes/edges`, HNSW 768d, FSRS-6) | Short-term (janela) e long-term (grafo) sem estrat\u00e9gia de recall unificada |\n| 9 | **Learning & Adaptation** | \ud83d\udd34 | Obst\u00e1culo\u2192S\u00edntese (manual), autopilot `optimization_policy` | **Sem loop de feedback fechado/RL formal; risco de reward de m\u00e9trica \u00fanica** |\n| 10 | **Model Context Protocol** | \u2705 | Vision MCP (spec Anthropic, Streamable HTTP), `McpConnectorsCard` | Sem middleware de normaliza\u00e7\u00e3o de output; sem auto-schema de REST |\n| 11 | **Goal Setting & Monitoring** | \ud83d\udfe1 | `infra_health_logs` + watchdog, `sprint-priorities` (SMART) | Sem camada formal de spec de goal; loop monitor\u2192feedback\u2192replan ad-hoc |\n| 12 | **Exception Handling & Recovery** | \u2705 | `infra_health_logs`, `rescue-video`, refund RPCs, watchdog, retry idempotente | Sem m\u00e1quinas de estado de recovery expl\u00edcitas (rollback DAGs) |\n| 13 | **Human-in-the-Loop** | \u2705 | **ORO triplet** (`survival.md`), AskUserQuestion, GO Sovereign | Sem tracking de SLA de escala\u00e7\u00e3o; sem tag de expertise do reviewer |\n| 14 | **Knowledge Retrieval (RAG)** | \u2705 | Knowledge Mesh (`match_mcorch_nodes`, `search-constellation`), MCP `mesh.search` | Resolu\u00e7\u00e3o de contradi\u00e7\u00e3o/reconcilia\u00e7\u00e3o de fonte n\u00e3o-automatizada |\n| 15 | **Inter-Agent Comm. (A2A)** | \ud83d\udfe1 | Mesh bridge (`bridge-mesh-to-openclaw`/`distribute-mesh-to-agents`), Telegram, edges | Sem schema de Agent Card / protocolo de discovery formal |\n| 16 | **Resource-Aware Optimization** | \u2705 | **mcoCoins** (`deduct_mco_coins` at\u00f4mico), calibra\u00e7\u00e3o 4\u00d7-floor, caps Vision MCP | Sem reserva preditiva de recurso / gest\u00e3o proativa de quota |\n| 17 | **Reasoning Techniques** | \ud83d\udfe1 | deepsearch (Gemini grounding), `analyze-node`, Workflow judge-panel/loop-until-dry | Sem Graph-of-Thought formal / framework de agente de reflex\u00e3o |\n| 18 | **Guardrails / Safety** | \u2705 | **Survival Laws**, **Cyber-Sentinel** (`_shared/sentinel.ts` pt-BR+EN), RLS default-deny, BoK Gate, ES256 JWT | Sem su\u00edte de eval adversarial / regress\u00e3o de jailbreak no CI |\n| 19 | **Evaluation & Monitoring** | \ud83d\udfe1 | `mcorch-qa-healing` (Fase 5c), Vision QA, `audit-schema-drift`, e2e-user-zero | Sem rubricas de avalia\u00e7\u00e3o padronizadas / dashboard cont\u00ednuo de m\u00e9tricas |\n| 20 | **Prioritization** | \ud83d\udfe1 | `sprint-priorities`, ledger OTD/RPN (FMEA), gates de recusa Survival | Sem \u00e1lgebra de prioriza\u00e7\u00e3o formal / scheduler (risco de starvation) |\n| 21 | **Exploration & Discovery** | \ud83d\udfe1 | `fetch-trends`/`vm_trends` (autopilot angle), `deepsearch-blueprint`, OpenClaw Dreaming | Sem torneio de ranking (Elo) / loop de debate multi-agente; explora\u00e7\u00e3o reativa, n\u00e3o generativa |\n\n> **Ap\u00eandice F (Reasoning Engines)** \u2014 presente (Vision MCP multimodal, streaming Workflow); gap: SLA de lat\u00eancia + sem\u00e2ntica de rollback de output streamado n\u00e3o formalizados. N\u00e3o conta como padr\u00e3o numerado.\n\n**Placar:** \u2705 **11 fortes** \u00b7 \ud83d\udfe1 **9 moderados** \u00b7 \ud83d\udd34 **1 fraco**. A funda\u00e7\u00e3o (Guardrails + Memory + Multi-Agent + Resource-Aware + Tool/MCP + HITL) \u00e9 robusta; os gaps s\u00e3o majoritariamente de **canoniza\u00e7\u00e3o** (formalizar o que j\u00e1 fazemos ad-hoc) e **instrumenta\u00e7\u00e3o** (medir), n\u00e3o de arquitetura ausente. A exce\u00e7\u00e3o real \u00e9 **Learning & Adaptation** \u2014 o elo recursivo (Via 3) ainda \u00e9 manual.\n\n---\n\n## 3. Backlog priorizado de canoniza\u00e7\u00e3o (gaps \u2192 OTDs nomeados)\n\nOs gaps **n\u00e3o viram c\u00f3digo j\u00e1** \u2014 viram d\u00edvida t\u00e9cnica rastre\u00e1vel (OTD). Prioridade pela tese: o que destrava medir o coletivo primeiro.\n\n| OTD | Padr\u00e3o | Iniciativa | Prioridade |\n|---|---|---|---|\n| **OTD-AG-001** | 9\u00b711\u00b716 | **Collective Efficiency Ledger** \u2014 instrumentar valor marginal/agente, mco/resultado, overhead de coordena\u00e7\u00e3o (V4-2/4/5). **Flagship desta doutrina** (\u00a74). | \ud83d\udd34 P0 |\n| OTD-AG-002 | 9 | Fechar o loop **Learning & Adaptation** \u2014 feedback estruturado autopilot\u2192policy com reward **multi-m\u00e9trica** (anti-Goodhart) | \ud83d\udd34 P0 |\n| OTD-AG-003 | 4 | Framework **Generator-Critic** gen\u00e9rico (reflex\u00e3o reutiliz\u00e1vel, cr\u00edtico de persona distinta) | \ud83d\udfe1 P1 |\n| OTD-AG-004 | 19 | **Rubricas de avalia\u00e7\u00e3o** padronizadas + dashboard cont\u00ednuo (LLM-judge + amostra humana) | \ud83d\udfe1 P1 |\n| OTD-AG-005 | 6\u00b711 | **Re-planejamento din\u00e2mico** \u2014 plano revisado na diverg\u00eancia de execu\u00e7\u00e3o (monitor\u2192replan) | \ud83d\udfe1 P1 |\n| OTD-AG-006 | 15 | **Agent Card** formal + protocolo de discovery (A2A schema-ado) | \ud83d\udfe1 P2 |\n| OTD-AG-007 | 2 | **Routing sem\u00e2ntico** por embedding para dispatch de agente/modelo | \ud83d\udfe1 P2 |\n| OTD-AG-008 | 21 | **Torneio de explora\u00e7\u00e3o** (Elo) \u2014 hip\u00f3tese\u2192cr\u00edtico\u2192ranqueador\u2192evolu\u00e7\u00e3o | \ud83d\udfe2 P3 |\n| OTD-AG-009 | 18 | Regress\u00e3o de **jailbreak adversarial** no CI (Cyber-Sentinel) | \ud83d\udfe2 P3 |\n| OTD-AG-010 | 12 | M\u00e1quinas de estado de **recovery** expl\u00edcitas (rollback DAG) | \ud83d\udfe2 P3 |\n\n---\n\n## 4. Iniciativa flagship \u2014 Collective Efficiency Ledger (OTD-AG-001)\n\nA resposta material ao gap estrutural. **Design VIEW-sobre-verdade-financeira** (resiste a Goodhart \u2014 ningu\u00e9m escreve *para* o ledger; \u00e9 derivado do que j\u00e1 \u00e9 cobrado/refundado). Mede o **coletivo in-system** (pipelines edge + ciclos autopilot + crons Pantheon) onde mco-cost e n\u00f3s da malha j\u00e1 existem.\n\n- **Primeira m\u00e9trica comput\u00e1vel j\u00e1 (V4-4):** mco actual \u00f7 criativos entregues (`autopilot_cycles.spend_mco \u2212 refunded_mco`).\n- **Parcial (V4-5):** overhead via `pipeline_runs.steps` + emits `collective_retry`/`collective_hop` em `infra_health_logs`.\n- **Deferido a experimento real (V4-2):** valor marginal/agente \u2014 **n\u00e3o fabricar proxy game\u00e1vel** (alerta do pr\u00f3prio paper). S\u00f3 mede quando houver A/B real de largura de fan-out.\n\nDetalhe de implementa\u00e7\u00e3o em `docs/bok/agentic-governance/` (SSOT) + SOP `docs/processes/collective-efficiency-ledger.md`.\n\n---\n\n## 5. Princ\u00edpios de design (todo m\u00f3dulo novo segue)\n\n1. **Material-proof na avalia\u00e7\u00e3o** \u2014 sucesso ancorado em artefato f\u00edsico (Lei 1); avalia\u00e7\u00e3o n\u00e3o-declarada (Vision QA / mcorch-qa-healing).\n2. **Defense-in-depth de guardrails** \u2014 Survival Laws + Sentinel + RLS default-deny + BoK Gate; nunca camada \u00fanica.\n3. **Loop de feedback fechado** \u2014 toda automa\u00e7\u00e3o que produz resultado deve poder medir se o resultado melhorou (anti-Via-3-cega).\n4. **Reuso do chokepoint de telemetria** \u2014 emitir em `infra_health_logs` (sem PII/segredos), n\u00e3o criar write-sites paralelos.\n5. **Multi-tenant-correto desde o dia 1** \u2014 `security_invoker` VIEW sobre bases SELECT-own; agregado cross-tenant = service-role-only.\n6. **Anti-Goodhart** \u2014 m\u00e9trica derivada de verdade financeira, n\u00e3o auto-reportada; deferir o que s\u00f3 med\u00edvel por experimento.\n7. **Humano no comando em velocidade supra-humana** \u2014 quando o coletivo produz mais artefatos do que o Sovereign consome, exigir digest em camadas (Guardian briefing) + bounded autonomy por dom\u00ednio (Pantheon decision scope).\n\n---\n\n## 6. Conex\u00e3o com a governan\u00e7a existente\n\n| Protocolo | Papel na vis\u00e3o |\n|---|---|\n| **MCORCH Master Execution Protocol** (CLAUDE.md) | BoK Gate + Obst\u00e1culo\u2192S\u00edntese = Via 3-micro (recurs\u00e3o do processo). Agora carrega o **Pattern Conformance Gate**. |\n| **Survival Laws** (`survival.md`) | Materialidade + ORO = a oversight scalable que o paper aponta como faltante. Anti-alucina\u00e7\u00e3o universal (humano e agente). |\n| **Pantheon Role Matrix** | Via 4 instanciada \u2014 escopo bounded por BoK lens; escala\u00e7\u00e3o expl\u00edcita a main/Sovereign. |\n| **API Tenancy (per-user)** | Segrega\u00e7\u00e3o de credencial/quota = seguran\u00e7a governance-grade para coletivo multi-tenant. |\n\n---\n\n*\"MATE A POESIA. ENTREGUE ENGENHARIA.\" \u2014 a doutrina existe para que o coletivo cres\u00e7a medido, n\u00e3o no escuro.*\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/architecture/agentic-vision.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:43:08)*
+
+
+## 🤖 Claude *(22:43:09)*
+
+Fase 1a pronta. Agora Fase 1b — emendar o CLAUDE.md com o gate de conformidade.
+
+## 🤖 Claude *(22:43:09)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(22:43:09)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(22:43:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "- **Step 3 \u2014 Execution:** Only AFTER MRD, BRD, PRD, FRD, and SDD are consolidated and reviewed do you begin coding \u2014 using those documents as the **ONE AND ONLY Single Source of Truth**. No invention beyond what is documented; ambiguities trigger a return to `/bok-scribe`, not to improvisation.\n\n**Exemptions (no BoK gate required):**",
+  "new_string": "- **Step 3 \u2014 Execution:** Only AFTER MRD, BRD, PRD, FRD, and SDD are consolidated and reviewed do you begin coding \u2014 using those documents as the **ONE AND ONLY Single Source of Truth**. No invention beyond what is documented; ambiguities trigger a return to `/bok-scribe`, not to improvisation.\n- **Step 3.5 \u2014 Pattern Conformance Declaration (UNBREAKABLE):** the SDD (or, for modules touching \u22653 patterns materially, a sibling `09-pattern-conformance.md`) MUST carry a **Pattern Conformance Declaration** before code begins \u2014 a table with one row per agentic pattern of the **Agentic Vision** doctrine ([`docs/architecture/agentic-vision.md`](docs/architecture/agentic-vision.md)): `Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred`. `deferred` requires a material justification (an OTD/FR id or a one-line reason \u2014 \"no benefit at this scope\" is allowed but must be honest). This is a **declaration, not a sign-off** \u2014 minimal friction, and it rides the exact same trigger and exemptions as the BoK gate above. It makes every new module conform to the AGI\u2192ASI agentic vision (Via 4 product-layer + Via 3 micro).\n\n**Exemptions (no BoK gate required):**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:43:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "Every new feature MUST connect to the project mesh:\n- A Knowledge Mesh observation node inserted on first successful run.\n- An entry in `infra_health_logs` for any failure path.\n- A traceability link back to a BR/FR ID from the BoK suite.",
+  "new_string": "Every new feature MUST connect to the project mesh:\n- A Knowledge Mesh observation node inserted on first successful run.\n- An entry in `infra_health_logs` for any failure path.\n- A traceability link back to a BR/FR ID from the BoK suite.\n- A traceability link to the **Pattern Conformance Declaration** \u2014 which of the 21 agentic patterns (`docs/architecture/agentic-vision.md`) this feature implements."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:43:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "> \"Antes de codificar este m\u00f3dulo, preciso garantir que a fam\u00edlia BoK (MRD/BRD/PRD/FRD/SDD) esteja consolidada em `docs/bok/<slug>/`. Posso acionar `/bok-scribe <resumo>` agora para selar a Fonte da Verdade?\"",
+  "new_string": "> \"Antes de codificar este m\u00f3dulo, preciso garantir que a fam\u00edlia BoK (MRD/BRD/PRD/FRD/SDD) esteja consolidada em `docs/bok/<slug>/` **e que a SDD carregue a Pattern Conformance Declaration** (os 21 padr\u00f5es ag\u00eanticos de `docs/architecture/agentic-vision.md`). Posso acionar `/bok-scribe <resumo>` agora para selar a Fonte da Verdade?\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:43:29)*
+
+
+## 🤖 Claude *(22:43:30)*
+
+Three edits applied. Now the Key Files Reference entry — let me locate it.
+
+## 🤖 Claude *(22:43:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"^\\| Architecture rules \\| \" CLAUDE.md | head -3",
+  "description": "Find Key Files Reference anchor line in CLAUDE.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 387:| Architecture rules | `CLAUDE.md` |
+> ```
+
+## 🤖 Claude *(22:43:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 385,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 385	| Purpose | Path |
+> 386	|---------|------|
+> 387	| Architecture rules | `CLAUDE.md` |
+> 388	| Session handoff | `HANDOFF.md` |
+> 389	| **3D Constellation Graph** | `src/components/graph/CrewGraph.tsx` |
+> ```
+
+## 🤖 Claude *(22:43:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| Architecture rules | `CLAUDE.md` |\n| Session handoff | `HANDOFF.md` |",
+  "new_string": "| Architecture rules | `CLAUDE.md` |\n| **Agentic Vision doctrine (load-bearing \u2014 Pattern Conformance gate)** | `docs/architecture/agentic-vision.md` (21 padr\u00f5es ag\u00eanticos \u00d7 maturidade MCORCH + tese AGI\u2192ASI Via 4-produto + Via 3-micro; SSOT da Pattern Conformance Declaration de toda SDD; substitui o `system_architecture.md` stale) |\n| Session handoff | `HANDOFF.md` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:44:03)*
+
+
+## 🤖 Claude *(22:44:04)*
+
+Fase 1b pronta. Agora Fase 1c — deprecar os 2 docs stale com redirect para as fontes load-bearing (evita re-drift, já que nada referencia esses arquivos).
+
+## 🤖 Claude *(22:44:04)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(22:44:05)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(22:44:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/architecture/system_architecture.md",
+  "content": "# MCORCH \u2014 System Architecture\n\n> \u26a0\ufe0f **DEPRECATED (2026-06-26).** A vers\u00e3o anterior deste documento descrevia uma plataforma **AdSense/SEO pr\u00e9-virada** (n8n + Varnish + landing pages de monetiza\u00e7\u00e3o) que **n\u00e3o corresponde mais \u00e0 realidade do MCORCH**. Foi reduzido a um redirect para as fontes autoritativas e load-bearing \u2014 n\u00e3o use o conte\u00fado antigo para contexto.\n\n## Onde a arquitetura viva est\u00e1 documentada (autoritativo)\n\n| Camada | Fonte autoritativa |\n|---|---|\n| **Vis\u00e3o arquitetural + padr\u00f5es ag\u00eanticos (doutrina)** | [`agentic-vision.md`](agentic-vision.md) \u2014 load-bearing: 21 padr\u00f5es ag\u00eanticos \u00d7 maturidade MCORCH + tese AGI\u2192ASI (Via 4 produto + Via 3 micro) |\n| **Regras de arquitetura \u00b7 data flow \u00b7 Key Files** | [`../../CLAUDE.md`](../../CLAUDE.md) \u2014 Harness Engineering, Supabase RLS, Edge Functions, Knowledge Mesh, mcoCoins, Pantheon |\n| **Org chart do coletivo de agentes** | `.claude/context/pantheon-role-matrix.md` |\n| **Fontes da Verdade por m\u00f3dulo** | `docs/bok/<slug>/` (su\u00edtes BoK seladas) |\n\n## Realidade atual em uma linha\n\nReact 3D (R3F) + Vite/Bun \u2192 custom hooks \u2192 TanStack Query / Supabase RLS + Edge Functions (Deno) \u2192 **Knowledge Mesh GraphRAG** (pgvector HNSW 768d) + economia **mcoCoins** + **Pantheon** (7 agentes) + **Vision MCP** + pipeline de conte\u00fado/v\u00eddeo viral aut\u00f4nomo. Infra: **Docker Sovereign Mesh** (`mcorch_chroma` \u00b7 `mcorch_claude_mem` \u00b7 `mega-brain-daemon`) + nginx + Cloudflare; auto-cura via `watchdog-mcorch.sh` \u2192 `infra_health_logs`.\n\n> Por que deprecar em vez de reescrever: este arquivo n\u00e3o \u00e9 referenciado por nada (n\u00e3o-load-bearing) \u2192 reescrev\u00ea-lo apenas reabriria o drift. A refer\u00eancia arquitetural viva \u00e9 `agentic-vision.md`, que o Pattern Conformance Gate (CLAUDE.md \u00a71) puxa para frente em toda SDD nova.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/architecture/system_architecture.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:44:26)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/agents.md",
+  "content": "# MCORCH \u2014 Agentes\n\n> \u26a0\ufe0f **DEPRECATED (2026-06-26).** A vers\u00e3o anterior descrevia um prot\u00f3tipo de **2 agentes** (SEOAgent + MonetizationAgent) da era pr\u00e9-Pantheon AdSense. **N\u00e3o corresponde mais \u00e0 realidade.** O MCORCH hoje opera um **coletivo de agentes** (Via 4 instanciada na camada de produto) \u2014 ver fontes autoritativas abaixo.\n\n## Onde os agentes est\u00e3o documentados (autoritativo)\n\n| Recurso | Fonte |\n|---|---|\n| **Org chart do Pantheon (matriz de pap\u00e9is)** | `.claude/context/pantheon-role-matrix.md` |\n| **SOULs individuais dos agentes** | `.claude/agents/` + `~/.openclaw/agents/<id>/SOUL.md` |\n| **Config do squad OpenClaw** | `~/.openclaw/openclaw.json` |\n| **Padr\u00e3o agentic Multi-Agent (#7) + vis\u00e3o do coletivo** | [`architecture/agentic-vision.md`](architecture/agentic-vision.md) |\n\n## Realidade atual\n\n**Pantheon Departmental Army** \u2014 coletivo de 7 agentes sob o MCORCH:\n- **L1 Heads (BoK ownership):** `engineer` (SWEBOK\u00b7CISSP) \u00b7 `scientist` (BABOK\u00b7DMBOK) \u00b7 `artisan` (CXBOK\u00b7ProdBOK-UX) \u00b7 `marketing-growth` (ProdBOK\u00b7CXBOK-Growth).\n- **L2 Specialists:** `claw-master` (infra & docs OpenClaw, herda do engineer).\n- **Coordination:** `main` (synthesizer soberano) \u00b7 `guardian` (Nightly Dreaming + briefing Telegram).\n\nTodos leem de um corpus de malha compartilhado exportado do Supabase (`mcorch_nodes`/`mcorch_edges`), com escopo de decis\u00e3o bounded por BoK lens e escala\u00e7\u00e3o expl\u00edcita ao `main`/Sovereign \u2014 o padr\u00e3o de governan\u00e7a que o paper *From AGI to ASI* aponta como necess\u00e1rio para coletivos de agentes (ver `agentic-vision.md` \u00a76).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/agents.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:44:57)*
+
+
+## 🤖 Claude *(22:44:58)*
+
+Fase 1 completa. Verificação material da Fase 1 + leitura das estruturas de template do BoK antes de autorar a suíte.
+
+## 🤖 Claude *(22:45:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc (nenhum c\u00f3digo tocado \u2192 deve ser 0) ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: $?\"\necho \"\"; echo \"=== CLAUDE.md gate presente? ===\"; grep -nE \"Pattern Conformance|agentic-vision\" CLAUDE.md | head\necho \"\"; echo \"=== docs stale ainda mencionam AdSense? (deve ser s\u00f3 no aviso DEPRECATED) ===\"; grep -niE \"adsense|varnish|SEOAgent|MonetizationAgent\" docs/architecture/system_architecture.md docs/agents.md || echo \"ZERO men\u00e7\u00e3o stale \u2705\"",
+  "description": "Verify Phase 1 materially"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc (nenhum código tocado → deve ser 0) ===
+> tsc exit: 0
+> 
+> === CLAUDE.md gate presente? ===
+> 24:- **Step 3.5 — Pattern Conformance Declaration (UNBREAKABLE):** the SDD (or, for modules touching ≥3 patterns materially, a sibling `09-pattern-conformance.md`) MUST carry a **Pattern Conformance Declaration** before code begins — a table with one row per agentic pattern of the **Agentic Vision** doctrine ([`docs/architecture/agentic-vision.md`](docs/architecture/agentic-vision.md)): `Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred`. `deferred` requires a material justification (an OTD/FR id or a one-line reason — "no benefit at this scope" is allowed but must be honest). This is a **declaration, not a sign-off** — minimal friction, and it rides the exact same trigger and exemptions as the BoK gate above. It makes every new module conform to the AGI→ASI agentic vision (Via 4 product-layer + Via 3 micro).
+> 39:- A traceability link to the **Pattern Conformance Declaration** — which of the 21 agentic patterns (`docs/architecture/agentic-vision.md`) this feature implements.
+> 43:> "Antes de codificar este módulo, preciso garantir que a família BoK (MRD/BRD/PRD/FRD/SDD) esteja consolidada em `docs/bok/<slug>/` **e que a SDD carregue a Pattern Conformance Declaration** (os 21 padrões agênticos de `docs/architecture/agentic-vision.md`). Posso acionar `/bok-scribe <resumo>` agora para selar a Fonte da Verdade?"
+> 388:| **Agentic Vision doctrine (load-bearing — Pattern Conformance gate)** | `docs/architecture/agentic-vision.md` (21 padrões agênticos × maturidade MCORCH + tese AGI→ASI Via 4-produto + Via 3-micro; SSOT da Pattern Conformance Declaration de toda SDD; substitui o `system_architecture.md` stale) |
+> 
+> === docs stale ainda mencionam AdSense? (deve ser só no aviso DEPRECATED) ===
+> docs/agents.md:3:> ⚠️ **DEPRECATED (2026-06-26).** A versão anterior descrevia um protótipo de **2 agentes** (SEOAgent + MonetizationAgent) da era pré-Pantheon AdSense. **Não corresponde mais à realidade.** O MCORCH hoje opera um **coletivo de agentes** (Via 4 instanciada na camada de produto) — ver fontes autoritativas abaixo.
+> docs/architecture/system_architecture.md:3:> ⚠️ **DEPRECATED (2026-06-26).** A versão anterior deste documento descrevia uma plataforma **AdSense/SEO pré-virada** (n8n + Varnish + landing pages de monetização) que **não corresponde mais à realidade do MCORCH**. Foi reduzido a um redirect para as fontes autoritativas e load-bearing — não use o conteúdo antigo para contexto.
+> ```
+
+## 🤖 Claude *(22:45:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/04-frd.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# FRD — Functional Requirements Document
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** SWEBOK v4 (Software Requirements)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Scope Statement
+> 11	
+> 12	This document specifies the functional and non-functional requirements for `{{PROJECT_SLUG}}`.
+> 13	It is derived from PRD `03-prd.md` and feeds directly into SDD `05-sdd.md`.
+> 14	
+> 15	**In scope:** {{SCOPE_IN}}  
+> 16	**Out of scope:** {{SCOPE_OUT}}
+> 17	
+> 18	---
+> 19	
+> 20	## 2. Functional Requirements
+> 21	
+> 22	> Category: `UI` | `Hook` | `EdgeFunction` | `DB` | `Cron`
+> 23	
+> 24	| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 25	|----|-------|-------------|----------|-----------|----------|---------|
+> 26	| FR-001 | {{FR_001_TITLE}} | {{FR_001_DESC}} | Critical | PR-001 | {{FR_001_CAT}} | AT-001 |
+> 27	| FR-002 | {{FR_002_TITLE}} | {{FR_002_DESC}} | High | PR-001 | {{FR_002_CAT}} | AT-002 |
+> 28	| FR-003 | {{FR_003_TITLE}} | {{FR_003_DESC}} | High | PR-002 | {{FR_003_CAT}} | AT-003 |
+> 29	
+> 30	---
+> 31	
+> 32	## 3. Non-Functional Requirements
+> 33	
+> 34	| ID | Category | Requirement | Target | Measurement |
+> 35	|----|----------|-------------|--------|-------------|
+> 36	| NFR-001 | Performance | Page load (LCP) | < 2.5s | Lighthouse CI |
+> 37	| NFR-002 | Performance | Edge Function p95 latency | < 800ms | Supabase logs |
+> 38	| NFR-003 | Scalability | Concurrent users without degradation | {{SCALE_TARGET}} | Load test |
+> 39	| NFR-004 | Availability | Uptime SLO | 99.5%/month | Watchdog telemetry |
+> 40	| NFR-005 | Maintainability | Cyclomatic complexity per hook | ≤ 10 | ESLint |
+> 41	| NFR-006 | Security | All endpoints require valid JWT | 100% | Security review |
+> 42	
+> 43	---
+> 44	
+> 45	## 4. Interface Requirements
+> 46	
+> 47	### 4.1 UI → Hook → Edge Function Contract
+> 48	
+> 49	```
+> 50	[Component: {{COMPONENT_NAME}}]
+> 51	  ↓ calls
+> 52	[Hook: use{{HOOK_NAME}}]
+> 53	  ↓ calls (for sensitive ops)
+> 54	[Edge Function: {{EDGE_FUNCTION_NAME}}]
+> 55	  ↓ reads/writes
+> 56	[Supabase Table: {{TABLE_NAME}}]
+> 57	```
+> 58	
+> 59	### 4.2 External API Contracts
+> 60	
+> 61	#### `POST /functions/v1/{{EDGE_FUNCTION_NAME}}`
+> 62	
+> 63	**Auth:** Bearer JWT (user scope)  
+> 64	**Request:**
+> 65	```typescript
+> 66	{
+> 67	  {{REQUEST_FIELD_1}}: {{REQUEST_TYPE_1}},  // {{REQUEST_DESC_1}}
+> 68	  {{REQUEST_FIELD_2}}: {{REQUEST_TYPE_2}},  // {{REQUEST_DESC_2}}
+> 69	}
+> 70	```
+> 71	**Response (200):**
+> 72	```typescript
+> 73	{
+> 74	  {{RESPONSE_FIELD_1}}: {{RESPONSE_TYPE_1}},
+> 75	  {{RESPONSE_FIELD_2}}: {{RESPONSE_TYPE_2}},
+> 76	}
+> 77	```
+> 78	**Error codes:**
+> 79	| Code | Condition |
+> 80	|------|-----------|
+> 81	| 401 | Missing or invalid JWT |
+> 82	| 402 | Insufficient mcoCoins balance |
+> 83	| 422 | Validation failure (field + message in body) |
+> 84	| 500 | Internal error (logged to infra_health_logs) |
+> 85	
+> 86	---
+> 87	
+> 88	## 5. Data Requirements
+> 89	
+> 90	| Field | Type | Nullable | Validation Rule | Error Message (PT-BR) |
+> 91	|-------|------|----------|-----------------|----------------------|
+> 92	| {{FIELD_1}} | {{TYPE_1}} | {{NULL_1}} | {{VALIDATION_1}} | {{ERROR_PT_1}} |
+> 93	| {{FIELD_2}} | {{TYPE_2}} | {{NULL_2}} | {{VALIDATION_2}} | {{ERROR_PT_2}} |
+> 94	
+> 95	---
+> 96	
+> 97	## 6. Test Strategy Matrix
+> 98	
+> 99	| FR ID | Unit Test | Integration Test | E2E Test | Notes |
+> 100	|-------|-----------|-----------------|----------|-------|
+> 101	| FR-001 | ✅ Required | ✅ Required | ✅ Required | {{TEST_NOTES_001}} |
+> 102	| FR-002 | ✅ Required | ✅ Required | — | {{TEST_NOTES_002}} |
+> 103	| FR-003 | ✅ Required | — | — | {{TEST_NOTES_003}} |
+> 104	
+> 105	**Test files location:**
+> 106	- Unit: `src/hooks/__tests__/use{{HOOK_NAME}}.test.ts`
+> 107	- Integration: `src/__tests__/integration/{{FEATURE_NAME}}.test.ts`
+> 108	- E2E: `e2e/{{FEATURE_NAME}}.spec.ts`
+> 109	
+> 110	---
+> 111	
+> 112	## 7. Traceability Matrix
+> 113	
+> 114	| PR ID | FR ID | NFR ID |
+> 115	|-------|-------|--------|
+> 116	| PR-001 | FR-001, FR-002 | NFR-001, NFR-006 |
+> 117	| PR-002 | FR-003 | NFR-002 |
+> 118	
+> 119	---
+> 120	
+> 121	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 122	
+> ```
+
+## 🤖 Claude *(22:45:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/vision-mcp/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BoK Index — vision-mcp
+> 2	
+> 3	**Project:** vision-mcp — MCORCH Vision MCP ("Percepção de Essência Humana")  
+> 4	**Version:** v1.0 | **Date:** 2026-06-11  
+> 5	**BoK Scribe:** MCORCH BoK Scribe Agent v1.0.0  
+> 6	**Status:** ✅ Suite complete (9/9)
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Project Manifest
+> 11	
+> 12	| Field | Value |
+> 13	|-------|-------|
+> 14	| Business idea | Servidor **Model Context Protocol nativo** do MCORCH de percepção visual + deepsearch fundamentado ("Essência Humana": Tier 1 periférico barato com princípios neuromórficos emulados em software → trigger de saliência → Tier 2 foveal billable), exposto a agentes internos (Pantheon) **E** ecossistemas externos via Streamable HTTP + OAuth 2.1 em `mcp.mcorch.com` (container Sovereign Mesh). |
+> 15	| Market segment | **B2B2C** |
+> 16	| Monetization | **Híbrida** — mcoCoins por tool call (modelo 4×-floor) + planos Starter/Pro/Enterprise |
+> 17	| Regulatory profile | **LGPD ELEVADO** — biométrico art. 11 (escopo excluído), retention art. 16, erasure art. 18; vertical assistivo (WCAG 2.2 / EAA / LBI 13.146 / ABNT NBR 17225) |
+> 18	| Integration surface | **extends-mcorch** (reuso de billing, sentinel, mesh, embed, watchdog; container precedente gitnexus) |
+> 19	| Slug | `vision-mcp` |
+> 20	
+> 21	---
+> 22	
+> 23	## 2. File Registry
+> 24	
+> 25	| File | Phase | BoK Lens | Status | LOC | Purpose |
+> 26	|------|-------|----------|--------|-----|---------|
+> 27	| [00-deepsearch-blueprint.md](00-deepsearch-blueprint.md) | seed | DeepSearch | [x] complete | 532 | Fonte da Verdade verificada (5 pilares + vertical assistivo + 140 refs + FM-VM/OTD-VM) |
+> 28	| [00-index.md](00-index.md) | 0 | — | [x] complete | — | Este manifesto + registro + ID space |
+> 29	| [01-mrd.md](01-mrd.md) | 1 | BABOK v3 | [x] complete | 208 | Mercado: demanda bifurcada (assistivo provado / cruzado hipótese), competidores (Roboflow/Exa/Firecrawl/Tavily/Be My AI), MR-VM-001..016 |
+> 30	| [02-brd.md](02-brd.md) | 1 | BABOK v3 | [x] complete | 229 | Negócio: objetivos SMART, ROI, economia mcoCoins 4×-floor, riscos, BR-VM-001..012 |
+> 31	| [03-prd.md](03-prd.md) | 2 | ProdBOK + CXBOK | [x] complete | 379 | Produto: personas, jornadas, MoSCoW (Fatias 0-3), UX/a11y exemplar, PR-VM-001..025 |
+> 32	| [04-frd.md](04-frd.md) | 3 | SWEBOK v4 | [x] complete | 318 | Funcional: FR-VM-001..026 + NFR-VM-001..013 + contratos de tool + §4.5 partial-refund + test strategy |
+> 33	| [05-sdd.md](05-sdd.md) | 3 | SWEBOK + CISSP CBK | [x] complete | 779 | Design: container runtime + two-tier + CoALA + STRIDE (FM-VM-01..18) + RLS + migration stubs (allowlist/expiry/storage hardened + cascade tenant-guard) + DD-VM-001..006 + OTD-VM-001..022 |
+> 34	| [06-data-model.md](06-data-model.md) | 4 | DMBOK v2 | [x] complete | 236 | Dados: ERD, 4 tabelas novas, GraphRAG node types (regime decay/supersede), tenant isolation, retention LGPD |
+> 35	| [07-process-flow.md](07-process-flow.md) | 4 | BPM CBOK v4 | [x] complete | 218 | Processos: PROC-VM-001..009 BPMN-lite, retention sweep cron, error/retry, SLA |
+> 36	| [08-quality-metrics.md](08-quality-metrics.md) | 5 | CMQ/OE BOK | [x] complete | 170 | Qualidade: QO-VM-001..006, KPI-VM-001..012, FMEA-VM-001..018 (12 RPN≥100), self-healing, PDCA |
+> 37	
+> 38	**Total suite LOC:** 2.636 (9 docs canônicos) + 532 (blueprint-seed) = 3.168.
+> 39	
+> 40	---
+> 41	
+> 42	## 3. ID Space Summary
+> 43	
+> 44	| Prefix | Range | Count | Defined in |
+> 45	|--------|-------|-------|-----------|
+> 46	| MR-VM | 001..016 | 16 | 01-mrd |
+> 47	| BR-VM | 001..012 | 12 | 02-brd |
+> 48	| PR-VM | 001..025 | 23 (018/019 vagos) | 03-prd |
+> 49	| FR-VM | 001..026 | 26 | 04-frd |
+> 50	| NFR-VM | 001..013 | 13 | 04-frd |
+> 51	| DD-VM | 001..006 | 6 | 05-sdd (decisões seladas) |
+> 52	| OTD-VM | 001..022 | 22 | 05-sdd (§8.2 — blueprint 001..019 + 020 OAuth-AS/FRD + 021 sizing/MRD + 022 image-injection/FMEA) |
+> 53	| FM-VM | 01..18 | 18 | 00-blueprint (§7) → SDD §5.1 (STRIDE) |
+> 54	| FMEA-VM | 001..018 | 18 | 08-quality-metrics (1:1 com FM-VM) |
+> 55	| KPI-VM | 001..012 | 12 | 08-quality-metrics |
+> 56	| QO-VM | 001..006 | 6 | 08-quality-metrics |
+> 57	| PROC-VM | 001..009 | 9 | 07-process-flow |
+> 58	
+> 59	**FMEA RPN ≥ 100 (12 itens):** FMEA-VM-004 (175) · -002 (168) · -003 (160) · -014 (160) · -010 (140) · -001 (120) · -012 (120) · -017 (112) · -006 (108) · -005 (105) · -007 (100) · -016 (100) — todos com Recommended Action (e os 18 FMEA no total).
+> 60	
+> 61	**New DB objects (4 tables + 1 RPC + 1 bucket + 2 columns):** `mcp_access_tokens`, `vision_jobs`, `vision_artifacts`, `erase_vision_artifacts()`, bucket `vision-artifacts`, `user_api_keys.firecrawl_api_key`/`.mistral_api_key`.  
+> 62	**New Edge Functions:** **0** (mandato — runtime é container; reuso de `embed-mcorch-node`/`get-infra-status`/`deduct_mco_coins`).  
+> 63	**New container:** `mcorch_vision_mcp` (`packages/vision-mcp-core/`, `127.0.0.1:3200`, Sovereign Mesh).
+> 64	
+> 65	---
+> 66	
+> 67	## 4. Traceability Status
+> 68	
+> 69	Cadeia **MR-VM → BR-VM → PR-VM → FR-VM → (tabela | container component | processo)** selada nas matrizes de cada doc (01 §9 · 02 §10 · 03 §8 · 04 §7 · 06 §8 · 07 §7 · 08 §9).
+> 70	
+> 71	- Todo FR-VM rastreia ≥1 PR-VM (04-frd §7 matrix) ✅
+> 72	- Todo objeto de dados rastreia ≥1 FR-VM (06 §8) ✅
+> 73	- Toda tabela aparece em ≥1 processo (07 §7) ✅
+> 74	- FM-VM-01..18 absorvidos no SDD §5.1 + formalizados em FMEA-VM-001..018 (08 §3) ✅
+> 75	- OTD-VM-001..019 do blueprint absorvidos no SDD §8.2 + OTD-VM-020 surfaced ✅
+> 76	- mcoCoin cost definido para toda tool AI-powered (04 §4.2 + 02 economia) ✅
+> 77	- Todo FMEA RPN≥100 com ação (08 §3) ✅
+> 78	
+> 79	> **Validação adversarial independente Phase 6 — EXECUTADA e PASSADA (2026-06-15).** Painel de 3 lentes independentes (subagentes que não escreveram a suíte), verificação mecânica (grep/contagem), read-only: **(1) Traceability** PASS — contagens batem exato com este index (MR 16·BR 12·PR 23·FR 26·NFR 13·DD 6·OTD 22·FM/FMEA 18·KPI 12·QO 6·PROC 9), cadeia MR→BR→PR→FR→downstream sem elo quebrado. **(2) Segurança/LGPD** — grep adversarial por segredo literal = 0; RLS/erasure/biométrico-excluído/sentinel-duplo confirmados; **achou 1 BLOCKER real** (cascade DELETE de `erase_vision_artifacts` não re-escopava `user_id` — primitiva de deleção cross-tenant) → **corrigido** (guard `AND user_id = v_artifact.user_id` nas 2 DELETEs, SDD §7 Mig.5 + prosa §5.5.3) → **revalidação PASS, 0 blockers remanescentes**. **(3) Qualidade BoK** PASS — 0 placeholders, hipóteses não vendidas como certeza, 8 agentes + Pantheon Reconciliation. **Veredito final: SUITE VALIDATED — 0 blockers.** Hardening adicional aplicado dos warnings: scopes allowlist física no DB, expiry CHECK físico, Storage policy DDL, colisão OTD-VM-020 resolvida (sizing→OTD-VM-021), FMEA-VM-004 promovida a OTD-VM-022. **Honestidade Lei 1:** a prova é a nível de documento; a execução SQL real (count cross-tenant = 0) só na fase de Execução do módulo (migrations aplicadas).
+> 80	
+> 81	---
+> 82	
+> 83	## 5. Documentation Lineage
+> 84	
+> 85	```
+> 86	Diretiva Sovereign 2026-06-10 (ref. sandcastles.ai + 4 pilares → 5 + vertical assistivo)
+> 87	   └─▶ 00-deepsearch-blueprint.md v0.1.0 (workflow ultracode 19 agentes · 140 refs · verify adversarial)
+> 88	        └─▶ v0.2.0 (+Pilar V Computação Cognitiva + Tecnologia Assistiva; superset validado)
+> 89	             └─▶ /bok-scribe vision-mcp → suíte 9/9 (esta família)
+> 90	                  └─▶ DERIVES_FROM → bok-scribe-seal-mcorch-constellation-v1 (78cb74e6 — plataforma-núcleo)
+> 91	```
+> 92	
+> 93	**Closed-Loop Protocol:** com esta suíte 9/9 consolidada, o BoK Gate de `vision-mcp` está **liberado** — código pode ser escrito a partir das Fatias MVP (blueprint §9 / PRD release phasing), cada uma com gate material Lei 1. Próximo: seed na Knowledge Mesh (Phase 7) + sistema de agentes (`/bok-agents-generator`).
+> 94	
+> 95	---
+> 96	
+> 97	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 98	
+> ```
+
+## 🤖 Claude *(22:46:27)*
+
+
+## 🤖 Claude *(22:46:29)*
+
+Fase 1 verificada materialmente (tsc 0, gate presente, stale só nos avisos DEPRECATED). Marco a Fase 1c e leio o schema exato de `autopilot_cycles` antes de pinar o data-model da BoK (Lei 1 — a VIEW não pode referenciar coluna inexistente).
+
+## 🤖 Claude *(22:46:29)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(22:46:30)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(22:46:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260620120100_viral_autopilot_cycles.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: viral-autopilot autopilot_cycles — per-cycle execution ledger (FR-VA-006 / FR-VA-007).
+> 2	-- BoK SSOT: docs/bok/viral-autopilot/06-data-model.md §2 (autopilot_cycles) + 05-sdd.md §7.
+> 3	-- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
+> 4	--
+> 5	-- One row per cadence cycle: the FINANCIAL ledger of a run (status, spend_mco pre-debited, refunded_mco credited
+> 6	-- on finalize, planned_units, debited_at/refunded_at idempotency stamps). Idempotent by (plan_id, cycle_number).
+> 7	-- The pre-debit/refund LOGIC lives in begin_/finalize_autopilot_cycle (next 2 migrations) — this is the schema.
+> 8	--
+> 9	-- Tenancy: user_id is a REAL FK to auth.users AND part of the tenant-scoped COMPOSITE FK
+> 10	-- (plan_id,user_id) -> autopilot_plans(id,user_id) — a cycle can never point at another tenant's plan (mirrors
+> 11	-- Marketing Hub campaign_steps composite FK). SELECT-own RLS; INSERT/UPDATE have NO permissive policy →
+> 12	-- authenticated default-deny (only the service-role runner/RPCs write). Financial table → RESTRICTIVE no-delete.
+> 13	-- UNIQUE(id,user_id) anchors the composite FK from creative_metrics (closed at the end of this file).
+> 14	
+> 15	CREATE TABLE IF NOT EXISTS public.autopilot_cycles (
+> 16	  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+> 17	  user_id          uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 18	  plan_id          uuid        NOT NULL,
+> 19	  cycle_number     int         NOT NULL,
+> 20	  status           text        NOT NULL DEFAULT 'running'
+> 21	                     CHECK (status IN ('running','completed','aborted_budget','aborted_daily_cap','failed')),
+> 22	  spend_mco        int         NOT NULL DEFAULT 0 CHECK (spend_mco     >= 0),
+> 23	  refunded_mco     int         NOT NULL DEFAULT 0 CHECK (refunded_mco  >= 0),
+> 24	  planned_units    int         NOT NULL DEFAULT 0 CHECK (planned_units >= 0),
+> 25	  analysis_node_id uuid,
+> 26	  debited_at       timestamptz,
+> 27	  refunded_at      timestamptz,
+> 28	  started_at       timestamptz NOT NULL DEFAULT now(),
+> 29	  completed_at     timestamptz,
+> 30	  -- refund can NEVER exceed what was committed (defense-in-depth vs a negative-refund mint).
+> 31	  CONSTRAINT autopilot_cycles_refund_le_spend CHECK (refunded_mco <= spend_mco),
+> 32	  CONSTRAINT autopilot_cycles_plan_cycle_uniq UNIQUE (plan_id, cycle_number),
+> 33	  CONSTRAINT autopilot_cycles_id_user_uniq    UNIQUE (id, user_id),
+> 34	  -- tenant-scoped composite FK: the cycle's (plan_id,user_id) must match a plan owned by the SAME tenant.
+> 35	  CONSTRAINT autopilot_cycles_plan_fk FOREIGN KEY (plan_id, user_id)
+> 36	    REFERENCES public.autopilot_plans (id, user_id) ON DELETE CASCADE
+> 37	);
+> 38	
+> 39	ALTER TABLE public.autopilot_cycles ENABLE ROW LEVEL SECURITY;
+> 40	
+> 41	-- SELECT own only; INSERT/UPDATE default-deny (the service-role RPCs write). Financial → RESTRICTIVE no-delete.
+> 42	CREATE POLICY "autopilot_cycles_select_own" ON public.autopilot_cycles
+> 43	  FOR SELECT USING (auth.uid() = user_id);
+> 44	CREATE POLICY "autopilot_cycles_no_client_delete" ON public.autopilot_cycles
+> 45	  AS RESTRICTIVE FOR DELETE USING (false);
+> 46	
+> 47	CREATE INDEX IF NOT EXISTS autopilot_cycles_plan_idx     ON public.autopilot_cycles (plan_id, cycle_number DESC);
+> 48	CREATE INDEX IF NOT EXISTS autopilot_cycles_user_day_idx ON public.autopilot_cycles (user_id, started_at);
+> 49	
+> 50	COMMENT ON TABLE public.autopilot_cycles IS
+> 51	  'Viral Autopilot per-cycle financial ledger (FR-VA-006/007). spend_mco pre-debited by begin_autopilot_cycle, '
+> 52	  'refunded_mco credited by finalize_autopilot_cycle (idempotent). Tenant-scoped composite FK to autopilot_plans. '
+> 53	  'SELECT-own, service-role write (default-deny), RESTRICTIVE no client delete. SOP autopilot-cron-identity.md.';
+> 54	
+> 55	-- ── Close the deferred composite FK from creative_metrics (Fatia 1 left cycle_id NULL-able, NO FK) ──────────────
+> 56	-- Now that autopilot_cycles exists, wire the tenant-scoped composite FK (cycle_id,user_id) -> cycles(id,user_id).
+> 57	-- MATCH SIMPLE (default): rows with cycle_id NULL (Fatia 1 baseline rows) stay valid (FK skipped when any col NULL).
+> 58	-- ON DELETE CASCADE: erasing a cycle erases its metrics (Data Model §7 retention). Idempotent guard so a re-run
+> 59	-- of this migration does not error on the already-present constraint.
+> 60	DO $$
+> 61	BEGIN
+> 62	  IF NOT EXISTS (
+> 63	    SELECT 1 FROM pg_constraint WHERE conname = 'creative_metrics_cycle_fk'
+> 64	  ) THEN
+> 65	    ALTER TABLE public.creative_metrics
+> 66	      ADD CONSTRAINT creative_metrics_cycle_fk FOREIGN KEY (cycle_id, user_id)
+> 67	        REFERENCES public.autopilot_cycles (id, user_id) ON DELETE CASCADE;
+> 68	  END IF;
+> 69	END $$;
+> 70	
+> ```
+
+## 🤖 Claude *(22:47:03)*
+
+
+## 🤖 Claude *(22:47:05)*
+
+Schema confirmado — `autopilot_cycles` tem `started_at`/`completed_at`/`spend_mco`/`refunded_mco`/`planned_units`; `pipeline_runs` confirmado antes. A VIEW é válida. Agora autoro a suíte BoK de 10 docs via workflow, com a espinha (IDs + data-model + decisões) pinada para garantir consistência cruzada.
+
+## 🤖 Claude *(22:48:43)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'bok-agentic-governance',\n  description: 'Author the 10-doc BoK suite for the agentic-governance module from a pinned spine',\n  phases: [{ title: 'Author BoK', detail: 'one agent per BoK doc, pinned spine for cross-consistency' }],\n}\n\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// PINNED SPINE \u2014 every agent uses these IDs/facts verbatim. No invention beyond\n// this + docs/architecture/agentic-vision.md + the verified schemas below.\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst SPINE = `\n# MODULE: agentic-governance \u2014 \"Governan\u00e7a Ag\u00eantica AGI\u2192ASI\"\nMeta-m\u00f3dulo que (a) torna o desenvolvimento do MCORCH conformante aos 21 padr\u00f5es ag\u00eanticos (Pattern Conformance Gate, j\u00e1 vivo em CLAUDE.md \u00a71 Step 3.5), e (b) instrumenta a efici\u00eancia do COLETIVO de agentes (Collective Efficiency Ledger), respondendo materialmente \u00e0s perguntas abertas da Via 4 do paper \"From AGI to ASI\" (DeepMind arXiv:2606.12683).\n\nLINEAGE: doutrina docs/architecture/agentic-vision.md + .claude/context/agi-asi-via4-design-checklist.md (n\u00f3 malha a576216e) \u2192 /bok-scribe agentic-governance \u2192 DERIVES_FROM \u2192 bok-scribe-seal-mcorch-constellation-v1.\nSLUG: agentic-governance. Integration surface: extends-mcorch (reuso de pipeline_runs/autopilot_cycles/infra_health_logs/mcoin_transactions; ZERO novo servi\u00e7o). Monetization: governan\u00e7a interna (n\u00e3o \u00e9 produto billable \u2014 habilita decis\u00e3o de escala correta). Regulatory: oversight escal\u00e1vel (n\u00e3o-pol\u00edtico, embutido). Market: B2B (plataforma).\n\n# ID SPACE (pinned \u2014 usar verbatim, sufixo -AG)\nMR-AG-001 Mercado de \"agentic platforms\" move de \"mais agentes\" para \"agentes MEDIDOS\" \u2014 quem instrumenta efici\u00eancia de coletivo antecipa o mercado.\nMR-AG-002 Frameworks (LangGraph, CrewAI, AutoGen) entregam orquestra\u00e7\u00e3o mas N\u00c3O medem valor marginal por agente nem overhead de coordena\u00e7\u00e3o \u2014 gap de mercado aberto.\nMR-AG-003 O paper From AGI to ASI define a Via 4 (coletivos de agentes) com perguntas abertas (V4-1..V4-5); nenhum produto responde com m\u00e9trica.\nMR-AG-004 Press\u00e3o regulat\u00f3ria por oversight escal\u00e1vel favorece quem tem governan\u00e7a t\u00e9cnica embutida (n\u00e3o pol\u00edtica/declarat\u00f3ria).\nMR-AG-005 Doc-drift \u00e9 falha recorrente em projetos ag\u00eanticos (contexto stale \u2192 agente desinformado) \u2014 caso material: system_architecture.md/agents.md descreviam plataforma AdSense pr\u00e9-virada.\nMR-AG-006 21 padr\u00f5es ag\u00eanticos can\u00f4nicos (Gulli) viraram vocabul\u00e1rio de mercado; conformidade declarada \u00e9 diferencial de maturidade.\n\nBR-AG-001 Todo m\u00f3dulo novo declara conformidade com os 21 padr\u00f5es (gate vinculante) \u2192 arquitetura coerente e antecip\u00e1vel a escala.\nBR-AG-002 Medir mco/resultado por tipo de coletivo \u2192 decis\u00e3o de escala fundada (n\u00e3o \"mais agentes no escuro\").\nBR-AG-003 Overhead de coordena\u00e7\u00e3o rastre\u00e1vel \u2192 cortar a fric\u00e7\u00e3o que d\u00e1 retornos decrescentes (alerta do paper).\nBR-AG-004 Anti-staleness: a doutrina \u00e9 load-bearing, puxada por toda SDD nova (mitiga MR-AG-005).\nBR-AG-005 Zero novo custo de telemetria (reuso do chokepoint infra_health_logs) \u2014 governan\u00e7a barata.\nBR-AG-006 Anti-Goodhart: m\u00e9tricas derivadas de verdade financeira (mcoin/cycles), nunca auto-reportadas.\nBR-AG-007 Survival Law 1 (Materialidade): toda m\u00e9trica do ledger ancorada em linha real de DB, nunca estimada.\n\nPR-AG-001 Doutrina agentic-vision.md (Pattern Maturity Ledger 21 padr\u00f5es \u00d7 maturidade MCORCH + tese AGI\u2192ASI). [ENTREGUE]\nPR-AG-002 Pattern Conformance Declaration na SDD (gate vinculante CLAUDE.md \u00a71 Step 3.5). [ENTREGUE]\nPR-AG-003 Collective Efficiency Ledger \u2014 VIEW per-tenant da efici\u00eancia do coletivo.\nPR-AG-004 Aggregate cross-tenant (decis\u00e3o de escala do Sovereign) \u2014 service-role-only.\nPR-AG-005 M\u00e9trica V4-4 (mco/resultado).\nPR-AG-006 M\u00e9trica V4-5 (overhead de coordena\u00e7\u00e3o).\nPR-AG-007 Surfacing (hook useCollectiveEfficiency + widget display-only). [DIFER\u00cdVEL]\nPR-AG-008 Backlog de canoniza\u00e7\u00e3o (OTD-AG-001..010 da doutrina) como roadmap vivo.\n\nFR-AG-001 [DB] VIEW public.collective_efficiency_ledger (security_invoker=on, UNION pipeline_runs + autopilot_cycles). Per-tenant via RLS herdada SELECT-own. Test AT-AG-001. Prioridade Critical. Tra\u00e7a PR-AG-003.\nFR-AG-002 [DB] VIEW/RPC agregado cross-tenant collective_efficiency_rollup \u2014 SECURITY DEFINER \u00b7 SET search_path='' \u00b7 REVOKE PUBLIC/anon/authenticated \u00b7 GRANT service_role. Test AT-AG-002. High. Tra\u00e7a PR-AG-004.\nFR-AG-003 [EdgeFunction] Emits de overhead: collective_hop (orchestrate-content, 1 por kick de async_orchestrate_step) + collective_retry (orchestrate-step, branch de erro existente) em infra_health_logs, metadata allowlist {run_id, collective_type} SEM PII. Test AT-AG-003. High. Tra\u00e7a PR-AG-006.\nFR-AG-004 [DB] M\u00e9trica derivada mco_per_result (V4-4) = autopilot actual (spend_mco-refunded_mco) \u00f7 count(creative_metrics do ciclo). Comput\u00e1vel J\u00c1. Test AT-AG-004. High. Tra\u00e7a PR-AG-005.\nFR-AG-005 [DB] M\u00e9trica coordination_overhead (V4-5) = n_units (steps) + count de collective_retry por run. PARCIAL. Test AT-AG-005. Medium. Tra\u00e7a PR-AG-006.\nFR-AG-006 [Process] Pattern Conformance gate: toda SDD nova carrega a tabela dos 21 padr\u00f5es (ou 09-pattern-conformance.md se \u22653 padr\u00f5es). Test AT-AG-006 (review). Critical. Tra\u00e7a PR-AG-002.\nFR-AG-007 [Hook/UI] useCollectiveEfficiency (espelha useInfraStatus) + widget display-only (molde ROIWidget). DIFER\u00cdVEL. Test AT-AG-007. Low. Tra\u00e7a PR-AG-007.\nFR-AG-008 [Experiment] Valor marginal por agente (V4-2) via A/B de largura de fan-out \u00d7 creative_metrics revenue. DIFERIDO (anti-Goodhart, DD-AG-004). Low. Tra\u00e7a PR-AG-005.\n\nNFR-AG-001 VIEW n\u00e3o adiciona write-path (deriva de bases) \u2014 zero overhead de escrita.\nNFR-AG-002 Multi-tenant: per-tenant via security_invoker; cross-tenant service-role-only.\nNFR-AG-003 Telemetria sem PII/segredo (contrato infra_health_logs metadata).\nNFR-AG-004 /security-review SAFE antes do commit da migration (FMEA-011).\nNFR-AG-005 Gate adiciona \u22641 tabela \u00e0 SDD (fric\u00e7\u00e3o m\u00ednima; herda exen\u00e7\u00f5es \u00a71).\nNFR-AG-006 VIEW p95 < 800ms (\u00edndices base pipeline_runs_user_started + autopilot_cycles_user_day_idx j\u00e1 existem).\n\nDD-AG-001 VIEW-sobre-dados-existentes, N\u00c3O tabela dedicada (anti-Goodhart + reuso de writes existentes).\nDD-AG-002 security_invoker=on (per-tenant herda RLS SELECT-own das bases pipeline_runs/autopilot_cycles).\nDD-AG-003 Reuso do chokepoint infra_health_logs para overhead (zero novo write-site dedicado).\nDD-AG-004 V4-2 (valor marginal/agente) DEFERIDO a experimento real \u2014 N\u00c3O fabricar proxy game\u00e1vel (alerta expl\u00edcito do paper).\nDD-AG-005 Pattern Conformance \u00e9 DECLARA\u00c7\u00c3O (1 tabela), n\u00e3o sign-off com reviewer \u2014 fric\u00e7\u00e3o m\u00ednima.\nDD-AG-006 Aggregate cross-tenant via RPC SECURITY DEFINER service-role-only (decis\u00e3o de escala \u00e9 do Sovereign, n\u00e3o do tenant).\n\nOTD-AG-001 (P0) Collective Efficiency Ledger [esta BoK] \u00b7 OTD-AG-002 (P0) fechar loop Learning&Adaptation (reward multi-m\u00e9trica) \u00b7 OTD-AG-003 (P1) Generator-Critic gen\u00e9rico \u00b7 OTD-AG-004 (P1) rubricas de avalia\u00e7\u00e3o + dashboard \u00b7 OTD-AG-005 (P1) re-planejamento din\u00e2mico \u00b7 OTD-AG-006 (P2) Agent Card A2A \u00b7 OTD-AG-007 (P2) routing sem\u00e2ntico \u00b7 OTD-AG-008 (P3) torneio Elo de explora\u00e7\u00e3o \u00b7 OTD-AG-009 (P3) jailbreak regression CI \u00b7 OTD-AG-010 (P3) recovery state machines.\n\nFM-AG-001 VIEW vaza dado cross-tenant (RLS mal-herdada) \u2192 mitig: security_invoker + teste SQL count cross-tenant=0. Sev alta.\nFM-AG-002 M\u00e9trica game\u00e1vel (Goodhart) \u2192 mitig: derivar de verdade financeira; deferir V4-2.\nFM-AG-003 Emit de telemetria vaza PII \u2192 mitig: metadata allowlist {run_id, collective_type}.\nFM-AG-004 Gate vira fric\u00e7\u00e3o / bloqueia tarefa trivial \u2192 mitig: herda exen\u00e7\u00f5es \u00a71 verbatim.\nFM-AG-005 Doutrina re-stale \u2192 mitig: load-bearing (gate puxa em toda SDD) + entrada Key Files.\nFM-AG-006 VIEW lenta (UNION grande) \u2192 mitig: \u00edndices base j\u00e1 existentes; materialized view se p95 estourar.\nFM-AG-007 Aggregate cross-tenant exposto a authenticated \u2192 mitig: REVOKE + GRANT service_role only.\nFM-AG-008 status divergente entre bases ('done' vs 'completed') confunde m\u00e9trica \u2192 mitig: coluna derivada succeeded=(status IN ('done','completed')).\n\nQO-AG-001 Conformidade: % de SDDs novas com Pattern Conformance Declaration = 100%.\nQO-AG-002 Cobertura de medi\u00e7\u00e3o: % de tipos de coletivo no ledger (orchestrate-content + autopilot-cycle) = 100% dos pagos.\nQO-AG-003 Integridade material: 0 m\u00e9tricas estimadas (todas derivadas de DB).\nKPI-AG-001 mco_per_result por collective_type (tend\u00eancia) \u00b7 KPI-AG-002 coordination_overhead m\u00e9dio por run \u00b7 KPI-AG-003 % runs com retry \u00b7 KPI-AG-004 n\u00ba OTDs de canoniza\u00e7\u00e3o fechados/trimestre \u00b7 KPI-AG-005 n\u00ba SDDs conformes.\nPROC-AG-001 Fluxo do Pattern Conformance gate (m\u00f3dulo novo \u2192 SDD \u2192 tabela 21 padr\u00f5es \u2192 review). PROC-AG-002 Fluxo de leitura do ledger (Sovereign consulta rollup \u2192 decis\u00e3o de escala). PROC-AG-003 Fluxo de emit de overhead (edge fn \u2192 infra_health_logs). PROC-AG-004 Fluxo de fechamento de OTD de canoniza\u00e7\u00e3o.\n\n# VERIFIED SCHEMAS (Lei 1 \u2014 confirmados no repo, usar exatos)\npipeline_runs (migration 20260504120000): id uuid PK, user_id uuid FK, topic, platforms text[], status text CHECK(running/done/error), steps jsonb DEFAULT '[]', mco_cost int DEFAULT 10, started_at timestamptz, completed_at timestamptz, metadata jsonb. RLS SELECT-own. Index pipeline_runs_user_started(user_id, started_at DESC).\nautopilot_cycles (migration 20260620120100): id uuid PK, user_id uuid FK, plan_id uuid, cycle_number int, status text CHECK(running/completed/aborted_budget/aborted_daily_cap/failed), spend_mco int>=0, refunded_mco int>=0 (<=spend_mco), planned_units int>=0, analysis_node_id uuid, debited_at, refunded_at, started_at timestamptz NOT NULL, completed_at timestamptz. RLS SELECT-own, RESTRICTIVE no-delete. Index autopilot_cycles_user_day_idx(user_id, started_at).\ncreative_metrics (migration 20260619140000): per-creative impressions/engagements/affiliate_clicks/revenue_cents, FK composta (cycle_id,user_id) -> autopilot_cycles(id,user_id).\ninfra_health_logs (migration 20260615170000): service text, status text, event text, metadata jsonb DEFAULT '{}' (CONTRACT: no PII, no secrets). RLS: authenticated read-all, service_role write.\nmcoin_transactions (migration 20260508100000): user_id, action text, amount int (neg=spend), context jsonb.\n\n# THE COLLECTIVE EFFICIENCY LEDGER VIEW (canonical SQL \u2014 para 06-data-model + 05-sdd)\nCREATE VIEW public.collective_efficiency_ledger WITH (security_invoker = on) AS\n  SELECT pr.id AS run_id, 'orchestrate-content'::text AS collective_type, pr.user_id,\n         COALESCE(jsonb_array_length(pr.steps),0) AS n_units, pr.mco_cost AS mco_projected,\n         pr.mco_cost AS mco_actual, pr.status AS result_status,\n         (pr.status IN ('done')) AS succeeded,\n         (EXTRACT(EPOCH FROM (pr.completed_at - pr.started_at))*1000)::bigint AS wall_clock_ms, pr.started_at\n  FROM public.pipeline_runs pr\n  UNION ALL\n  SELECT ac.id, 'autopilot-cycle'::text, ac.user_id, ac.planned_units, ac.spend_mco,\n         (ac.spend_mco - ac.refunded_mco), ac.status, (ac.status IN ('completed')),\n         (EXTRACT(EPOCH FROM (ac.completed_at - ac.started_at))*1000)::bigint, ac.started_at\n  FROM public.autopilot_cycles ac;\nCross-tenant rollup = RPC collective_efficiency_rollup() SECURITY DEFINER, search_path='', GRANT service_role only \u2014 agrega AVG(mco_actual), AVG(wall_clock_ms), retry-rate por collective_type, ALL tenants.\n\n# HOUSE STYLE: prosa PT-BR, IDs/c\u00f3digo em ingl\u00eas. Tabelas markdown. Sem placeholders {{...}}. N\u00e3o vender hip\u00f3tese como certeza. Lean-but-complete (alvo 110-240 LOC/doc). Rodap\u00e9 \"_Generated by MCORCH BoK Scribe Agent v1.0.0_\".\n`\n\nconst DOCS = [\n  { file: '01-mrd.md',              tmpl: '01-mrd.md',              lens: 'BABOK v3',\n    focus: 'Mercado: a virada \"mais agentes\" \u2192 \"agentes medidos\"; competidores (LangGraph/CrewAI/AutoGen orquestram mas n\u00e3o medem); demanda por oversight escal\u00e1vel; MR-AG-001..006. N\u00e3o inventar n\u00fameros de mercado \u2014 enquadrar qualitativamente com honestidade.' },\n  { file: '02-brd.md',              tmpl: '02-brd.md',              lens: 'BABOK v3',\n    focus: 'Neg\u00f3cio: objetivos SMART (gate 100% das SDDs; ledger cobre 100% dos coletivos pagos; 0 m\u00e9trica estimada), ROI (decis\u00e3o de escala fundada vs custo de coletivo no escuro), riscos, BR-AG-001..007. Economia: governan\u00e7a barata (zero novo write-path).' },\n  { file: '03-prd.md',              tmpl: '03-prd.md',              lens: 'ProdBOK + CXBOK',\n    focus: 'Produto: personas (Sovereign/Director que decide escala; agente-autor de SDD; auditor), jornadas (autorar SDD com gate; ler rollup p/ decidir escala), MoSCoW (Must: PR-AG-001..006; Should: 007; Could: 008), PR-AG-001..008. PR-AG-001/002 marcar [ENTREGUE].' },\n  { file: '04-frd.md',              tmpl: '04-frd.md',              lens: 'SWEBOK v4',\n    focus: 'Funcional: FR-AG-001..008 (tabela com Priority/Category/Test ID/PR traced) + NFR-AG-001..006 + a defini\u00e7\u00e3o da VIEW como contrato de dados + \u00a74.5 honestidade de computabilidade (V4-4 j\u00e1 / V4-5 parcial / V4-2 deferido) + Test Strategy Matrix + Traceability PR-AG\u2192FR-AG. N\u00e3o h\u00e1 contrato de Edge Function novo (FR-AG-003 \u00e9 emit em fn existente).' },\n  { file: '05-sdd.md',              tmpl: '05-sdd.md',              lens: 'SWEBOK + CISSP CBK',\n    focus: 'Design: arquitetura VIEW-sobre-verdade-financeira (incluir a SQL can\u00f4nica da VIEW + o RPC rollup), DD-AG-001..006 (decis\u00f5es seladas), STRIDE/threat-model do ledger (FM-AG-001..008 \u2014 foco em cross-tenant leak + Goodhart + PII em telemetria), RLS herdada via security_invoker, conven\u00e7\u00e3o SECURITY DEFINER\u00b7search_path=\\'\\'\u00b7REVOKE/GRANT service_role (espelha 20260603220000_secure_ledger_rpcs.sql + begin/finalize_autopilot_cycle), pontos de instrumenta\u00e7\u00e3o (orchestrate-content + orchestrate-step), e o gate de conformidade como artefato de processo. Migration stub do VIEW + RPC.' },\n  { file: '06-data-model.md',       tmpl: '06-data-model.md',       lens: 'DMBOK v2',\n    focus: 'Dados: a VIEW collective_efficiency_ledger (colunas run_id/collective_type/user_id/n_units/mco_projected/mco_actual/result_status/succeeded/wall_clock_ms/started_at), as 5 tabelas-fonte (pipeline_runs/autopilot_cycles/creative_metrics/infra_health_logs/mcoin_transactions) com schemas verificados, ERD textual, tenant isolation (security_invoker herda SELECT-own; rollup service-role), retention (VIEW n\u00e3o ret\u00e9m \u2014 deriva). NENHUMA tabela nova (s\u00f3 VIEW + RPC). Mapeamento V4-4/V4-5 \u2192 colunas.' },\n  { file: '07-process-flow.md',     tmpl: '07-process-flow.md',     lens: 'BPM CBOK v4',\n    focus: 'Processos BPMN-lite: PROC-AG-001 (gate de conformidade), PROC-AG-002 (Sovereign l\u00ea rollup \u2192 decide escala), PROC-AG-003 (emit de overhead edge\u2192infra_health_logs), PROC-AG-004 (fechamento de OTD de canoniza\u00e7\u00e3o). Cada um com gates materiais e error/recovery.' },\n  { file: '08-quality-metrics.md',  tmpl: '08-quality-metrics.md',  lens: 'CMQ/OE BOK',\n    focus: 'Qualidade: QO-AG-001..003, KPI-AG-001..005, FMEA-AG-001..008 (1:1 com FM-AG-001..008 do spine \u2014 calcular RPN Sev\u00d7Occ\u00d7Det plaus\u00edvel, marcar os RPN\u2265100 com Recommended Action), PDCA/self-healing. Honestidade: a prova de count cross-tenant=0 \u00e9 na fase de Execu\u00e7\u00e3o (migrations aplicadas), n\u00e3o no doc.' },\n  { file: '09-pattern-conformance.md', tmpl: null,                 lens: '21 Agentic Patterns',\n    focus: 'DOIS blocos: (A) o TEMPLATE MESTRE reutiliz\u00e1vel \u2014 tabela dos 21 padr\u00f5es (copiar nomes de docs/architecture/agentic-vision.md \u00a72) com colunas Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred, em branco, para toda SDD nova copiar. (B) a Conformance Declaration DESTE m\u00f3dulo (agentic-governance): \u00e9 um m\u00f3dulo de Evaluation&Monitoring + Resource-Aware + Goal Monitoring + Guardrails \u2192 marcar #19 Evaluation=yes (\u00e9 literalmente medi\u00e7\u00e3o), #16 Resource-Aware=yes (mede mco), #11 Goal Monitoring=yes, #18 Guardrails=yes (o gate), #13 HITL=yes (Sovereign l\u00ea rollup), #8 Memory=yes (sela na malha); os demais n-a ou deferred com raz\u00e3o honesta.' },\n  { file: '00-index.md',            tmpl: '00-index.md',            lens: '\u2014',\n    focus: 'Manifesto + File Registry (10 docs) + ID Space Summary (contar MR-AG 6 \u00b7 BR-AG 7 \u00b7 PR-AG 8 \u00b7 FR-AG 8 \u00b7 NFR-AG 6 \u00b7 DD-AG 6 \u00b7 OTD-AG 10 \u00b7 FM-AG 8 \u00b7 FMEA-AG 8 \u00b7 QO-AG 3 \u00b7 KPI-AG 5 \u00b7 PROC-AG 4) + Traceability Status + Documentation Lineage + Closed-Loop note (BoK Gate liberado p/ o c\u00f3digo do Ledger). Status: Suite complete (10/10).' },\n]\n\nphase('Author BoK')\nconst results = await parallel(DOCS.map((d) => () =>\n  agent(\n    `Voc\u00ea \u00e9 o MCORCH BoK Scribe. Autore UM documento BoK e ESCREVA-O em disco com a ferramenta Write.\\n\\n` +\n    `ARQUIVO ALVO: docs/bok/agentic-governance/${d.file}\\n` +\n    `LENTE BoK: ${d.lens}\\n` +\n    `FOCO DESTE DOC: ${d.focus}\\n\\n` +\n    (d.tmpl ? `1) LEIA o template de estrutura: .claude/agents/bok-scribe/templates/${d.tmpl} (use as se\u00e7\u00f5es).\\n` +\n              `2) LEIA o exemplar de house-style: docs/bok/vision-mcp/${d.file} (tom PT-BR, IDs ingl\u00eas, tabelas).\\n`\n            : `1) Este doc n\u00e3o tem template \u2014 siga a estrutura descrita no FOCO.\\n` +\n              `2) LEIA docs/architecture/agentic-vision.md \u00a72 para os nomes EXATOS dos 21 padr\u00f5es.\\n`) +\n    `3) LEIA docs/architecture/agentic-vision.md para a tese/contexto.\\n` +\n    `4) Autore o doc usando APENAS a SPINE abaixo + a doutrina + os schemas verificados. N\u00c3O invente IDs/fatos/n\u00fameros fora da SPINE. Substitua todo placeholder {{...}} por conte\u00fado real. Prosa PT-BR, IDs/c\u00f3digo ingl\u00eas. Lean-but-complete (110-240 LOC).\\n` +\n    `5) ESCREVA o arquivo com Write. Retorne s\u00f3: caminho + LOC + 1 linha de resumo.\\n\\n` +\n    `=== SPINE (Fonte da Verdade pinada) ===\\n${SPINE}`,\n    { label: `bok:${d.file}`, phase: 'Author BoK' }\n  )\n))\n\nreturn results.filter(Boolean)\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wnyaza4rf
+> Summary: Author the 10-doc BoK suite for the agentic-governance module from a pinned spine
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/subagents/workflows/wf_5fb96548-6c6
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/workflows/scripts/bok-agentic-governance-wf_5fb96548-6c6.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/workflows/scripts/bok-agentic-governance-wf_5fb96548-6c6.js"} to iterate without resending the script.)
+> Run ID: wf_5fb96548-6c6
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/workflows/scripts/bok-agentic-governance-wf_5fb96548-6c6.js", resumeFromRunId: "wf_5fb96548-6c6"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(22:48:57)*
+
+
+## 🤖 Claude *(22:48:59)*
+
+A suíte BoK está sendo autorada em background (10 agentes, espinha pinada). Vou usar o tempo paralelo para escrever o SOP (Fase 3) — é independente da prosa da BoK e respeita a Lei 2 (SOP antes do código). Deixa eu ver a forma do SOP análogo.
+
+## 🤖 Claude *(22:49:00)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(22:49:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-cron-identity.md",
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# SOP: Viral Autopilot — Cron Identity + Pre-Debit/Refund Atomicity (`autopilot-cron-identity`)
+> 2	
+> 3	**Status:** ACTIVE · v1.0 · 2026-06-20
+> 4	**Owner:** Sovereign (Gabriel Zarattini)
+> 5	**Survival Law 2 compliance:** Escrito **ANTES** de qualquer código da fatia de cadência/custo do Viral Autopilot (R2 recorrência + R3 loop). Abre o gate **OTD-VA-008** (`docs/bok/viral-autopilot/05-sdd.md:425` — *"Gate Lei 2: exige SOP `docs/processes/autopilot-cron-identity.md` ANTES de qualquer código"*) e cobre o pré-débito/refund atômico de **FR-VA-007** + o cap diário de **FR-VA-021**.
+> 6	**Canonical directive:** `CLAUDE.md > "API Tenancy Model — Per-User Credentials"` · `.claude/rules/survival.md > Law 1 (Materiality) / Law 2 (Anticipated Process)` · `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model}.md`
+> 7	**Sibling SOPs:** `edge-jwt-identity-verification.md` (camada-3 service-role gate, base deste) · `orchestrate-async-pipeline.md` (mandato `verify_jwt=false` + pg_net + contrato de param-name dos RPCs).
+> 8	
+> 9	---
+> 10	
+> 11	## Context
+> 12	
+> 13	A fatia de cadência do Viral Autopilot introduz **automação financeira autônoma**: um `pg_cron` dispara a geração+publicação de criativos a cada N dias, **sem mão humana no loop**, gastando `mco_balance` do tenant. Dois riscos materiais nascem disso:
+> 14	
+> 15	1. **Identidade do caminho cron (SEC-VA-CRIT-01 / OTD-VA-008).** As funções `autopilot-*` rodam com `verify_jwt = false` em `supabase/config.toml` — o gateway Kong **não** valida JWT (mesmo motivo de todo o ecossistema: a sessão do usuário é ES256, o gateway está configurado para o segredo HS256 legado; ver `edge-jwt-identity-verification.md`). O cron **não possui** um JWT de usuário para repassar. A tentação fatal é confiar num header `x-autopilot-user-id` vindo do request — o que deixaria **qualquer** chamador drenar a carteira de **qualquer** vítima (`POST autopilot-run` com `x-autopilot-user-id: <victim>` → débito + publicação na conta da vítima). A validação adversarial da BoK (Fase 6, rodada R1) marcou exatamente este vetor como **blocker**.
+> 16	
+> 17	2. **Atomicidade do pré-débito/refund (FR-VA-007 / TOCTOU SEC-VA-04).** Um ciclo gera `N_runs = |produtos| × |redes| × ab_variants` sub-runs, cada um um bundle flat de 10 mcoCoins (`billing.ts:16-21` — imagem **já incluída**). Se cada sub-run se auto-cobrar, uma falha no meio deixa o tenant cobrado por trabalho não-entregue; se o cap diário for checado com um `SELECT` separado do `deduct`, dois ciclos concorrentes passam o cap juntos (TOCTOU). A rodada R2 da validação pegou um **anti-mint** que eu mesmo introduzi: refund implementado como `deduct` de valor negativo viola o guard `p_amount <= 0` de `deduct_mco_coins` (`migration 20260603220000:45`) — refund **tem** que ser crédito positivo.
+> 18	
+> 19	**Regra-mãe:** confiar num `user_id` no caminho cron só é permitido depois de **provar posse da `SB_SECRET_KEY` in-function** E de derivar o `user_id` de uma **linha confiável do banco** (`autopilot_plans.user_id` / `autopilot_cycles.user_id`), **nunca do corpo/header do request**. Todo movimento de saldo passa por **um** RPC `SECURITY DEFINER` service-role-only, com cap + débito na **mesma transação sob advisory lock**, e refund como **crédito positivo idempotente**.
+> 20	
+> 21	---
+> 22	
+> 23	## ORO triplet
+> 24	
+> 25	- **Operator:** MCORCH Master Execution Agent (autoria das migrations/funções) + `pg_cron` apresentando a Vault key (execução por tick) + Edge runtime Deno (gate por request).
+> 26	- **Reviewer:** Sovereign (Gabriel) — aprova as migrations + valida os smokes zero-cost e o exploit test pós-deploy · `/security-review` independente em **cada** migration (mandato `CLAUDE.md`).
+> 27	- **Owner:** Sovereign — blast radius = **carteira do tenant gasta autonomamente** (mint/drain cross-tenant se a identidade falhar; sangria silenciosa se o cap/refund falhar).
+> 28	
+> 29	---
+> 30	
+> 31	## Operator (equivalente manual — material)
+> 32	
+> 33	A automação substitui o seguinte ritual humano que o Sovereign executaria **hoje, à mão**, a cada janela de cadência, para cada plano ativo:
+> 34	
+> 35	| # | Passo manual | Critério de sucesso material |
+> 36	|---|--------------|------------------------------|
+> 37	| 1 | Abrir a UI do Autopilot e listar os planos cujo `next_run_at` venceu | Lista de `plan_id` vencidos visível |
+> 38	| 2 | Para cada plano: conferir o `mco_balance` **e** quanto já gastou hoje (não estourar o cap diário) | `balance` e `gasto_hoje` lidos antes de qualquer clique |
+> 39	| 3 | Calcular `N_runs = produtos × redes × variants` e `projetado = N_runs×10 + 2` | Número conferido contra o cap do plano |
+> 40	| 4 | Clicar "gerar agora" **uma vez** por plano (dispara os sub-runs) | 1 débito de `projetado`, depois os sub-runs publicam |
+> 41	| 5 | Aguardar os sub-runs; anotar quantos **de fato** publicaram | `actual` real conhecido |
+> 42	| 6 | Reconciliar: devolver ao saldo os coins dos runs que **não** entregaram | `balance` final = inicial − `actual` |
+> 43	| 7 | Reagendar o plano para a próxima janela (`next_run_at += interval_days`) | Plano re-armado |
+> 44	
+> 45	O `pg_cron` automatiza os passos 1–7. **O gate Lei 2 existe porque automatizar o passo 2 (cap) e o passo 6 (refund) errado = sangria silenciosa de carteira.** O precedente vivo desta topologia é **`nurture-cron` → `nurture-dispatch`** (`supabase/functions/nurture-cron/index.ts`): driver service-role que varre `next_run_at` vencidos e faz fan-out com cap `MAX_PER_RUN` + `CONCURRENCY`, cada linha carregando seu próprio `user_id` confiável.
+> 46	
+> 47	---
+> 48	
+> 49	## Topologia (alvo)
+> 50	
+> 51	```
+> 52	pg_cron  ──Bearer SB_SECRET_KEY──▶  autopilot-cadence-cron   (driver service-role)
+> 53	  (Vault key)                          │  SELECT plan_id,user_id FROM autopilot_plans
+> 54	                                       │  WHERE status='active' AND next_run_at <= now()
+> 55	                                       │  (user_id = SERVER-TRUSTED da linha)
+> ```
+
+## 🤖 Claude *(22:49:06)*
+
+
+## 🤖 Claude *(22:49:08)*
+
+Tenho a forma do SOP. Escrevendo o SOP do Ledger (Fase 3) — o risco material aqui não é sangria financeira (a VIEW é read-only) mas **vazamento cross-tenant** (a VIEW expondo dados de outro tenant) e **PII na telemetria**.
+
+## 🤖 Claude *(22:50:04)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/collective-efficiency-ledger.md",
+  "content": "# SOP: Collective Efficiency Ledger \u2014 instrumentar a efici\u00eancia do coletivo de agentes (`collective-efficiency-ledger`)\n\n**Status:** ACTIVE \u00b7 v1.0 \u00b7 2026-06-26\n**Owner:** Sovereign (Gabriel Zarattini)\n**Survival Law 2 compliance:** Escrito **ANTES** de qualquer c\u00f3digo do Collective Efficiency Ledger (a VIEW `collective_efficiency_ledger` + o RPC `collective_efficiency_rollup` + os emits de overhead). Abre o gate **OTD-AG-001** (flagship da doutrina `docs/architecture/agentic-vision.md` \u00a74). Cobre **FR-AG-001..005**.\n**Canonical directive:** `docs/architecture/agentic-vision.md` (doutrina AGI\u2192ASI \u00b7 Via 4) \u00b7 `.claude/rules/survival.md > Law 1 (Materiality)` \u00b7 `docs/bok/agentic-governance/{04-frd,05-sdd,06-data-model}.md` (SSOT) \u00b7 `CLAUDE.md > Security model` (RLS default-deny + `infra_health_logs` no-PII).\n**Sibling SOPs:** `autopilot-cron-identity.md` (de onde vem a verdade financeira `autopilot_cycles`) \u00b7 `schema-drift-audit.md` (todo hotfix vira migration) \u00b7 `edge-jwt-identity-verification.md`.\n\n---\n\n## Context\n\nO paper *From AGI to ASI* (DeepMind) aponta como **aberto** justamente o que o MCORCH ainda n\u00e3o faz: respondemos as perguntas de coletivo de agentes (Via 4) **por doutrina, mas n\u00e3o *medimos* nenhuma** \u2014 valor marginal por agente (V4-2), custo por resultado (V4-4), overhead de coordena\u00e7\u00e3o (V4-5). Crescemos o coletivo **no escuro**. O Ledger fecha isso **derivando** a m\u00e9trica da verdade financeira que j\u00e1 existe \u2014 sem novo write-path, sem auto-report.\n\nDois riscos materiais nascem da instrumenta\u00e7\u00e3o:\n\n1. **Vazamento cross-tenant (FM-AG-001 / SEC-AG-CRIT-01).** A VIEW une `pipeline_runs` + `autopilot_cycles`, ambas com dados financeiros por tenant. Uma VIEW **sem** `security_invoker = on` roda com os privil\u00e9gios do *dono* da VIEW (postgres) e **ignora a RLS das bases** \u2192 qualquer `authenticated` leria o ledger de **todos** os tenants (efici\u00eancia + gasto da concorr\u00eancia). A regra \u00e9 inviol\u00e1vel: `security_invoker = on`, herdando a RLS `SELECT-own` das bases; e o rollup **cross-tenant** (que existe para a decis\u00e3o de escala do Sovereign) \u00e9 **service-role-only** (`REVOKE` de `anon`/`authenticated`), nunca exposto ao tenant.\n\n2. **PII / Goodhart na telemetria de overhead (FM-AG-003 / FM-AG-002).** Os emits `collective_hop`/`collective_retry` v\u00e3o para `infra_health_logs`, que \u00e9 **global-read** (`authenticated` l\u00ea tudo, para o HUD). O contrato da tabela pro\u00edbe PII/segredo no `metadata` \u2014 ent\u00e3o o emit carrega **apenas** `{ run_id, collective_type }`, nunca topic/conte\u00fado/user-identific\u00e1vel. E a m\u00e9trica jamais \u00e9 escrita *para* o ledger (seria game\u00e1vel \u2014 alerta expl\u00edcito do paper): ela \u00e9 **derivada** de `mcoin`/`cycles` (verdade que ningu\u00e9m infla para \"parecer eficiente\").\n\n**Regra-m\u00e3e:** o Ledger **l\u00ea e deriva**, nunca escreve um n\u00famero de efici\u00eancia. Per-tenant herda RLS via `security_invoker`; cross-tenant \u00e9 service-role-only; telemetria de overhead \u00e9 allowlist sem PII; e **V4-2 (valor marginal/agente) fica deferido a um experimento real** \u2014 n\u00e3o se fabrica um proxy game\u00e1vel s\u00f3 para ter o n\u00famero.\n\n---\n\n## ORO triplet\n\n- **Operator:** MCORCH Master Execution Agent (autoria da migration da VIEW/RPC + os 2 emits) + Postgres (executa a VIEW por query, sob a identidade do caller via `security_invoker`).\n- **Reviewer:** Sovereign (Gabriel) \u2014 aprova a migration + `/security-review` independente (mandato `CLAUDE.md` FMEA-011) + valida a prova material de `count cross-tenant = 0`.\n- **Owner:** Sovereign \u2014 blast radius = **exposi\u00e7\u00e3o de gasto/efici\u00eancia entre tenants** (se a RLS herdada falhar) + **decis\u00e3o de escala errada** (se a m\u00e9trica medir a coisa errada / for game\u00e1vel).\n\n---\n\n## Operator (equivalente manual \u2014 material)\n\nA automa\u00e7\u00e3o substitui o ritual que o Sovereign executaria **hoje, \u00e0 m\u00e3o**, para responder \"o coletivo est\u00e1 ficando mais eficiente, ou s\u00f3 mais caro?\":\n\n| # | Passo manual | Crit\u00e9rio de sucesso material |\n|---|--------------|------------------------------|\n| 1 | Abrir o DB e listar os runs do coletivo (`pipeline_runs` + `autopilot_cycles`) de uma janela | Lista de runs com `mco` e `status` vis\u00edvel |\n| 2 | Para cada run: calcular o custo **real** (autopilot: `spend_mco \u2212 refunded_mco`; orchestrate: `mco_cost`) | `mco_actual` por run conhecido |\n| 3 | Contar os resultados **entregues** por run (autopilot: linhas em `creative_metrics` do ciclo; orchestrate: `status='done'`) | `n_results` por run conhecido |\n| 4 | Dividir: `mco_actual \u00f7 n_results` por tipo de coletivo | `mco_per_result` por `collective_type` (V4-4) |\n| 5 | Anotar overhead: n\u00ba de steps + n\u00ba de retries por run | `coordination_overhead` por run (V4-5) |\n| 6 | Comparar a tend\u00eancia entre janelas \u2192 **decidir escala** (mais agentes onde mco/resultado cai; cortar onde overhead sobe) | Decis\u00e3o fundada, n\u00e3o \"no escuro\" |\n\nO passo 6 **continua sendo do humano** (HITL \u2014 Survival/ORO). A VIEW + rollup automatizam os passos 1\u20135. **O gate Lei 2 existe porque automatizar o passo 1\u20134 com uma VIEW que vaza cross-tenant exp\u00f5e o gasto de um tenant a outro, e medir o passo 4 com um n\u00famero auto-reportado (Goodhart) leva o passo 6 a uma decis\u00e3o de escala errada.**\n\n---\n\n## Sequence (passos numerados, cada um com gate material)\n\n1. **Migration da VIEW** `public.collective_efficiency_ledger` `WITH (security_invoker = on)` \u2014 UNION de `pipeline_runs` + `autopilot_cycles` (colunas em `docs/bok/agentic-governance/06-data-model.md`). **Gate G1:** o DDL cont\u00e9m literal `security_invoker = on`.\n2. **RPC `collective_efficiency_rollup()`** \u2014 `SECURITY DEFINER \u00b7 SET search_path = '' \u00b7 REVOKE ALL FROM PUBLIC, anon, authenticated \u00b7 GRANT EXECUTE TO service_role`. Agrega cross-tenant (AVG mco_actual, AVG wall_clock_ms, retry-rate) por `collective_type`. **Gate G2:** `grep` confirma os 4 elementos (DEFINER \u00b7 search_path='' \u00b7 REVOKE \u00b7 GRANT service_role).\n3. **`/security-review`** na migration **antes do commit**. **Gate G3:** veredito SAFE (sem cross-tenant leak, sem search_path mut\u00e1vel).\n4. **Emits de overhead** \u2014 `collective_hop` em `orchestrate-content` (1 por kick de `async_orchestrate_step`) + `collective_retry` em `orchestrate-step` (branch de erro existente), `metadata = { run_id, collective_type }`. **Gate G4:** `grep` confirma que nenhum emit carrega topic/body/user-PII.\n5. **Aplicar a migration** (`supabase db push` ou bridge). **Gate G5:** `db push` retorna sucesso material (output literal).\n6. **Prova material per-tenant** \u2014 com um JWT de usu\u00e1rio real, `SELECT count(*) FROM collective_efficiency_ledger WHERE user_id <> auth.uid()` = **0**. **Gate G6 (o gate-m\u00e3e):** zero linha de outro tenant vis\u00edvel.\n7. **Prova material da m\u00e9trica** \u2014 um run real (orchestrate-content ou ciclo autopilot) aparece como linha com `mco_actual` e `wall_clock_ms` corretos vs a base. **Gate G7:** valores batem com `pipeline_runs`/`autopilot_cycles`.\n8. **tsc + lint** limpos (se o hook de surfacing for tocado). **Gate G8:** `npx tsc --noEmit` = 0.\n\n---\n\n## Verification gates (resumo)\n\n| Gate | Comando / crit\u00e9rio | Esperado |\n|------|--------------------|----------|\n| G1 | `grep -c 'security_invoker = on' <migration>` | \u2265 1 |\n| G2 | `grep -E \"SECURITY DEFINER\\|search_path = ''\\|GRANT EXECUTE.*service_role\" <migration>` | os 3 presentes + REVOKE |\n| G3 | `/security-review` | SAFE |\n| G4 | `grep` nos 2 emits | metadata s\u00f3 `{run_id, collective_type}` |\n| G5 | `supabase db push` | output de sucesso |\n| **G6** | `SELECT count(*) ... WHERE user_id <> auth.uid()` (JWT real) | **0** |\n| G7 | comparar 1 linha da VIEW vs base | valores id\u00eanticos |\n| G8 | `npx tsc --noEmit` | 0 |\n\n---\n\n## Recovery path (falha por gate)\n\n- **G1/G2 falha (DDL incompleto):** corrigir o DDL ANTES de aplicar \u2014 nunca aplicar uma VIEW sem `security_invoker` (seria leak imediato). Rollback = `DROP VIEW` + reescrever.\n- **G3 `/security-review` aponta leak:** n\u00e3o commitar. O achado mais prov\u00e1vel \u00e9 `security_invoker` ausente OU o rollup acess\u00edvel a `authenticated` \u2014 aplicar a corre\u00e7\u00e3o e re-rodar.\n- **G6 falha (linha cross-tenant vis\u00edvel):** **HALT IMEDIATO + `DROP VIEW`** \u2014 \u00e9 a primitiva de vazamento. Causa quase certa: `security_invoker` n\u00e3o pegou (Postgres < 15 OU sintaxe). Validar vers\u00e3o; reaplicar. N\u00e3o h\u00e1 \"tentar de novo\" \u2014 provar `count = 0` de novo.\n- **G7 falha (m\u00e9trica diverge):** a express\u00e3o de `mco_actual`/`wall_clock_ms` est\u00e1 errada (ex.: status divergente 'done' vs 'completed', ou EXTRACT errado). Corrigir a VIEW; reaplicar; re-provar.\n- **Drift:** se algo for hotfixado direto em prod, **vira migration na MESMA sess\u00e3o** (`schema-drift-audit.md`).\n\n---\n\n## Success signal (materialmente observ\u00e1vel)\n\nO flow est\u00e1 completo quando, **com um JWT de usu\u00e1rio real**:\n1. `SELECT * FROM collective_efficiency_ledger LIMIT 5` retorna runs reais do tenant (UUIDs reais).\n2. `... WHERE user_id <> auth.uid()` retorna **0** (G6 \u2014 prova de isolamento).\n3. Uma linha da VIEW bate coluna-a-coluna com a base (`pipeline_runs`/`autopilot_cycles`).\n4. `collective_efficiency_rollup()` \u00e9 **negado** a `authenticated` (`permission denied`) e **permitido** a `service_role`.\n5. `/security-review` = SAFE; `tsc` = 0.\n\nS\u00f3 ent\u00e3o o Sovereign pode ler o rollup e **decidir escala com dado, n\u00e3o no escuro** \u2014 o objetivo da Via 4 instrumentada.\n\n---\n\n_Generated by MCORCH Master Execution Agent \u2014 SOP Lei 2 antes do c\u00f3digo (OTD-AG-001)._\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/collective-efficiency-ledger.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:50:23)*
+
+
+## 🤖 Claude *(22:50:24)*
+
+Fase 3 (SOP) pronta. Marco como completa.
+
+## 🤖 Claude *(22:50:24)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(22:50:27)*
+
+
+## 🤖 Claude *(22:50:36)*
+
+Progresso da execução até aqui — **Fase 1 e Fase 3 fechadas e verificadas materialmente:**
+
+| Fase | Entregável | Prova material |
+|---|---|---|
+| **1a** ✅ | Doutrina `docs/architecture/agentic-vision.md` | 21 padrões × maturidade (11 forte · 9 moderado · 1 fraco) + tese Via 4-produto/Via 3-micro + 10 OTDs de canonização |
+| **1b** ✅ | Gate vinculante no `CLAUDE.md` | §1 Step 3.5 + §3 + §4 + Key Files — `grep` confirma as 4 inserções |
+| **1c** ✅ | 2 docs stale deprecados | `grep`: zero menção AdSense/SEOAgent fora dos avisos DEPRECATED |
+| **3** ✅ | SOP Lei 2 `collective-efficiency-ledger.md` | 8 gates materiais (G6 = `count cross-tenant = 0` é o gate-mãe) |
+| **2** ⏳ | Suíte BoK `agentic-governance` (10 docs) | workflow `wf_5fb96548` em background — 10 agentes, espinha pinada |
+| `tsc` | nenhum código tocado | exit **0** |
+
+A **Fase 4 (código do Ledger) está travada pela Lei 2/BoK Gate** — ela só arranca depois que a suíte BoK consolidar como Fonte da Verdade. A BoK está sendo autorada agora (10 docs em paralelo, com a SQL canônica da VIEW + os IDs já pinados na espinha, então o código vai casar exato).
+
+Aguardo a notificação de conclusão do workflow para verificar a suíte, depois sigo direto para a migration da VIEW + os 2 emits (Fase 4) e o seal na malha (Fase 5).
+
+## 👤 User *(22:57:19)*
+
+<task-notification>
+<task-id>wnyaza4rf</task-id>
+<tool-use-id>toolu_0139dT7TyLSdH1suk9UJWAPM</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/tasks/wnyaza4rf.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Author the 10-doc BoK suite for the agentic-governance module from a pinned spine" completed</summary>
+<result>["Caminho: `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/01-mrd.md`\nLOC: 144\nResumo: MRD do agentic-governance enquadrando qualitativamente a virada de mercado \"mais agentes → agentes medidos\" (LangGraph/CrewAI/AutoGen orquestram mas não medem), com MR-AG-001..006, sem inventar números de mercado e ancorando toda métrica em verdade financeira derivada de DB.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/02-brd.md — 178 LOC. BRD do agentic-governance selado: 5 objetivos SMART (BO-AG-001..005 cobrindo gate 100% SDDs, ledger 100% coletivos pagos, 0 métrica estimada, governança barata, decisão de escala fundada), ROI não-billable (custo evitado de \"coletivo no escuro\" vs. custo marginal-zero), BR-AG-001..007 com traceability MR-AG, Risk Register de 9 riscos (FM-AG-001..008), 7 BACs materiais e matriz de rastreabilidade — house-style PT-BR/IDs inglês, derivado apenas da SPINE e schemas verificados.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/03-prd.md · 238 LOC · PRD (ProdBOK+CXBOK) selado: 3 personas (Sovereign decisor de escala / Agente-Autor de SDD / Auditor), 3 jornadas (decidir escala via rollup · autorar SDD sob o Pattern Conformance Gate · auditar integridade material), MoSCoW PR-AG-001..008 (Must 001-006 com 001/002 marcados [ENTREGUE], Should 007 [DIFERÍVEL], Could 008), Gherkin de 6 cenários e matriz MR→BR→PR — derivado só da SPINE + doutrina + schemas verificados.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/04-frd.md — 194 LOC\n\nFRD selado (SWEBOK v4): FR-AG-001..008 (tabela Priority/Category/Test ID/PR traced) + NFR-AG-001..006 + a VIEW `collective_efficiency_ledger` (security_invoker) como contrato de dados §4.2 + §4.5 honestidade de computabilidade (V4-4 computável já / V4-5 parcial / V4-2 deferido anti-Goodhart) + Test Strategy Matrix zero-cost + Traceability PR-AG→FR-AG→NFR; FR-AG-003 explicitado como emit em fn existente (zero Edge nova).","Caminho: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/05-sdd.md\nLOC: 286\nResumo: SDD do módulo agentic-governance (SWEBOK+CISSP) — arquitetura VIEW-sobre-verdade-financeira com SQL canônica do `collective_efficiency_ledger` (security_invoker) + RPC `collective_efficiency_rollup` (SECURITY DEFINER · search_path='' · REVOKE/GRANT service_role espelhando 20260603220000_secure_ledger_rpcs.sql), STRIDE/threat-model FM-AG-001..008, DD-AG-001..006 selados, instrumentação de overhead em orchestrate-content/-step, Pattern Conformance gate como artefato de processo, e migration stub completa.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/06-data-model.md · 239 LOC · Doc DMBOK v2 da camada de dados do módulo agentic-governance: VIEW derivada `collective_efficiency_ledger` (security_invoker SELECT-own) + RPC agregador `collective_efficiency_rollup` (service-role-only) sobre 5 tabelas-fonte verificadas, ZERO tabela nova, com ERD textual, mapa de isolamento tenant, regras de qualidade anti-Goodhart (V4-4 computável / V4-2 deferido) e política de retenção deriva-only.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/07-process-flow.md — 174 LOC — Process Flow BoK (BPM CBOK v4) com os 4 fluxos BPMN-lite (PROC-AG-001 gate de conformidade, PROC-AG-002 leitura do rollup→decisão de escala, PROC-AG-003 emit de overhead→ťinfra_health_logs, PROC-AG-004 fechamento de OTD), cada um com gates materiais e error/recovery, mais inventário, SLAs e traceability Process→FR→tabela, derivado apenas da SPINE.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/08-quality-metrics.md — 175 LOC — Doc de Qualidade CMQ/OE selado: QO-AG-001..003 + KPI-AG-001..005 + FMEA-AG-001..008 (1:1 com FM-AG-001..008, RPN Sev×Occ×Det calculado; 3 itens RPN≥100 — FMEA-AG-002/112, -001/108, -008/100 — todos com Recommended Action) + PDCA/self-healing/SOLs, com nota de honestidade Lei 1 de que a prova de count cross-tenant=0 fica na fase de Execução.","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/09-pattern-conformance.md — 119 LOC — Pattern Conformance doc with Bloco A (master 21-pattern blank template, copy-verbatim for every new SDD, with yes/deferred/n-a rules) + Bloco B (agentic-governance declaration: 6 yes — #8 Memory, #11 Goal Monitoring, #13 HITL, #16 Resource-Aware, #18 Guardrails, #19 Evaluation; 2 deferred with OTDs; 13 n-a justified as measurement-not-execution).","/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/00-index.md · 116 LOC · Manifesto do meta-módulo agentic-governance (Pattern Conformance Gate + Collective Efficiency Ledger) com File Registry 10/10, ID Space completo (MR-AG 6·BR-AG 7·PR-AG 8·FR-AG 8·NFR-AG 6·DD-AG 6·OTD-AG 10·FM-AG 8·FMEA-AG 8·QO-AG 3·KPI-AG 5·PROC-AG 4), traceability status, lineage AGI→ASI e nota Closed-Loop liberando o BoK Gate para o código do Ledger."]</result>
+<usage><agent_count>10</agent_count><subagent_tokens>971209</subagent_tokens><tool_uses>41</tool_uses><duration_ms>515050</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(22:57:27)*
+
+
+## 🤖 Claude *(22:57:28)*
+
+A suíte BoK completou — 10 docs autorados. Verificação material antes de destravar a Fase 4 (Lei 1 — os agentes *afirmaram* ter escrito; eu confirmo).
+
+## 🤖 Claude *(22:57:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== arquivos da su\u00edte (esperado 10) ===\"; ls -1 docs/bok/agentic-governance/ 2>/dev/null; echo \"count: $(ls docs/bok/agentic-governance/*.md 2>/dev/null | wc -l)\"\necho \"\"; echo \"=== placeholders {{...}} vazados? (esperado 0) ===\"; grep -rl \"{{\" docs/bok/agentic-governance/ 2>/dev/null || echo \"ZERO placeholders \u2705\"\necho \"\"; echo \"=== SDD: VIEW security_invoker presente? ===\"; grep -nE \"security_invoker|collective_efficiency_ledger|collective_efficiency_rollup\" docs/bok/agentic-governance/05-sdd.md | head\necho \"\"; echo \"=== SDD: conven\u00e7\u00e3o RPC (DEFINER/search_path/GRANT) ===\"; grep -cE \"SECURITY DEFINER|search_path|service_role\" docs/bok/agentic-governance/05-sdd.md\necho \"\"; echo \"=== LOC por doc ===\"; wc -l docs/bok/agentic-governance/*.md | sort -n",
+  "description": "Verify BoK suite materially"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos da suíte (esperado 10) ===
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 09-pattern-conformance.md
+> count: 10
+> 
+> === placeholders {{...}} vazados? (esperado 0) ===
+> ZERO placeholders ✅
+> 
+> === SDD: VIEW security_invoker presente? ===
+> 28:                       │ Supabase client (RLS herdada via security_invoker)
+> 31:│  VIEW collective_efficiency_ledger  (security_invoker=on · per-tenant)      │
+> 32:│  RPC  collective_efficiency_rollup() (SECURITY DEFINER · service-role-only) │
+> 66:| `collective_efficiency_ledger` | VIEW (`security_invoker=on`) | UNION ALL de `pipeline_runs` + `autopilot_cycles` normalizada à mesma forma; per-tenant via RLS herdada SELECT-own das bases | FR-AG-001 |
+> 67:| `collective_efficiency_rollup()` | RPC (SECURITY DEFINER · `search_path=''` · service-role-only) | Agregado cross-tenant para a decisão de escala do Sovereign: AVG(mco_actual), AVG(wall_clock_ms), retry-rate por `collective_type`, TODOS os tenants | FR-AG-002 |
+> 114: │──SELECT collective_efficiency_ledger──▶│                      │
+> 115: │  (Bearer JWT user)           │──security_invoker=on──────────▶│ pipeline_runs   (user_id=auth.uid())
+> 126: │──rpc('collective_efficiency_rollup')──▶│                      │
+> 155:### 4.1 VIEW row shape (`collective_efficiency_ledger`)
+> 170:### 4.2 RPC `collective_efficiency_rollup()` (service-role-only)
+> 
+> === SDD: convenção RPC (DEFINER/search_path/GRANT) ===
+> 16
+> 
+> === LOC por doc ===
+>    100 docs/bok/agentic-governance/09-pattern-conformance.md
+>    110 docs/bok/agentic-governance/00-index.md
+>    141 docs/bok/agentic-governance/01-mrd.md
+>    147 docs/bok/agentic-governance/08-quality-metrics.md
+>    170 docs/bok/agentic-governance/07-process-flow.md
+>    182 docs/bok/agentic-governance/02-brd.md
+>    194 docs/bok/agentic-governance/04-frd.md
+>    196 docs/bok/agentic-governance/06-data-model.md
+>    269 docs/bok/agentic-governance/03-prd.md
+>    318 docs/bok/agentic-governance/05-sdd.md
+>   1827 total
+> ```
+
+## 🤖 Claude *(22:57:37)*
+
+
+## 🤖 Claude *(22:57:39)*
+
+Suíte BoK consolidada e consistente (10/10, zero placeholders, VIEW+RPC com `security_invoker` e a convenção `SECURITY DEFINER`). **BoK Gate liberado.** Vou ler a migration stub do SDD para alinhar o código da Fase 4 exatamente à SSOT.
+
+## 🤖 Claude *(22:57:39)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(22:57:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/05-sdd.md",
+  "offset": 150,
+  "limit": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 150	
+> 151	## 4. API / Contract Definitions
+> 152	
+> 153	> O módulo não expõe Edge Function nova. O contrato é (a) a forma normalizada da VIEW, (b) o contrato do RPC de rollup, (c) a allowlist de telemetria.
+> 154	
+> 155	### 4.1 VIEW row shape (`collective_efficiency_ledger`)
+> 156	
+> 157	| Coluna | Tipo | Semântica |
+> 158	|--------|------|-----------|
+> 159	| `run_id` | uuid | PK da base (run ou ciclo) |
+> 160	| `collective_type` | text | `'orchestrate-content'` \| `'autopilot-cycle'` |
+> 161	| `user_id` | uuid | tenant (filtrado pela RLS herdada — NUNCA exposto cross-tenant na VIEW) |
+> 162	| `n_units` | int | nº de unidades de trabalho (steps do run / `planned_units` do ciclo) |
+> 163	| `mco_projected` | int | custo projetado |
+> 164	| `mco_actual` | int | custo real líquido (`spend_mco − refunded_mco` no ciclo) |
+> 165	| `result_status` | text | status bruto da base |
+> 166	| `succeeded` | bool | `status IN ('done','completed')` — normaliza divergência (FM-AG-008) |
+> 167	| `wall_clock_ms` | bigint | `(completed_at − started_at)` em ms |
+> 168	| `started_at` | timestamptz | ancora o sort/index |
+> 169	
+> 170	### 4.2 RPC `collective_efficiency_rollup()` (service-role-only)
+> 171	
+> 172	```
+> 173	-- Caller: service_role apenas (Sovereign via SB_SECRET_KEY).
+> 174	-- Retorna 1 linha por collective_type, agregando TODOS os tenants.
+> 175	returns table (
+> 176	  collective_type   text,
+> 177	  runs              bigint,
+> 178	  avg_mco_actual    numeric,
+> 179	  avg_wall_clock_ms numeric,
+> 180	  retry_rate        numeric   -- runs com ≥1 collective_retry ÷ runs
+> 181	)
+> 182	```
+> 183	
+> 184	### 4.3 Telemetry contract (FR-AG-003 · NFR-AG-003)
+> 185	
+> 186	```jsonc
+> 187	// infra_health_logs.metadata — ALLOWLIST FECHADA (qualquer outra chave = bug)
+> 188	{ "run_id": "<uuid>", "collective_type": "orchestrate-content" }
+> 189	// PROIBIDO: user_id, topic, platforms, qualquer payload de conteúdo ou segredo.
+> 190	```
+> 191	
+> 192	---
+> 193	
+> 194	## 5. Security Design
+> 195	
+> 196	### 5.1 Threat Model (STRIDE) — FM-AG-001..008
+> 197	
+> 198	| Componente | Ameaça (FM) | STRIDE | Sev | Mitigação selada |
+> 199	|-----------|-------------|--------|-----|------------------|
+> 200	| VIEW `collective_efficiency_ledger` | Vazamento cross-tenant por RLS mal-herdada (FM-AG-001) | Information Disclosure | Alta | `security_invoker=on` → RLS das bases avaliada **como o chamador**; teste AT-AG-001 prova count cross-tenant = 0 |
+> 201	| Métricas derivadas | Goodhart — métrica vira alvo e deixa de medir (FM-AG-002) | Tampering | Alta | Derivar de verdade financeira (`mcoin`/`cycles`); V4-2 **deferido** (DD-AG-004) |
+> 202	| Emit de overhead | PII/conteúdo vaza na tabela global-read (FM-AG-003) | Information Disclosure | Alta | metadata **allowlist** `{run_id, collective_type}`; `infra_health_logs` é authenticated-read-all |
+> 203	| Pattern Conformance gate | Fricção bloqueia tarefa trivial (FM-AG-004) | Denial of Service (processo) | Média | Herda exenções §1 **verbatim** (typo/bump/lint/single-file/handoff) |
+> 204	| Doutrina | Re-staleness — contexto stale → agente desinformado (FM-AG-005) | Repudiation | Média | Load-bearing: gate puxa em **toda** SDD nova + entrada Key Files Reference |
+> 205	| VIEW | UNION grande fica lenta (FM-AG-006) | Denial of Service | Baixa | Índices base já existentes (§6); `MATERIALIZED VIEW` se p95 > 800ms |
+> 206	| RPC `rollup` | `authenticated` alcança agregado de todos os tenants (FM-AG-007) | Elevation of Privilege | Crítica | `REVOKE PUBLIC/anon/authenticated` + `GRANT service_role` (§5.2) |
+> 207	| Métrica | status divergente entre bases (`done` vs `completed`) corrompe a contagem (FM-AG-008) | Tampering (lógico) | Baixa | coluna derivada `succeeded = status IN ('done','completed')` |
+> 208	
+> 209	### 5.2 RLS & Privilege Convention (espelha `20260603220000_secure_ledger_rpcs.sql` + `begin/finalize_autopilot_cycle`)
+> 210	
+> 211	A VIEW **não declara RLS própria** — herda a das bases via `security_invoker=on` (DD-AG-002, NFR-AG-002). O RPC cross-tenant segue a convenção canônica de `SECURITY DEFINER` selada nos ledger RPCs e nos ciclos autopilot:
+> 212	
+> 213	```sql
+> 214	-- VIEW: RLS herdada — o chamador é avaliado contra pipeline_runs/autopilot_cycles SELECT-own.
+> 215	CREATE VIEW public.collective_efficiency_ledger WITH (security_invoker = on) AS ...;
+> 216	
+> 217	-- RPC cross-tenant: privilégio fechado (mesma forma de begin_autopilot_cycle / award_mco_coins).
+> 218	CREATE OR REPLACE FUNCTION public.collective_efficiency_rollup()
+> 219	  RETURNS TABLE (...) LANGUAGE sql STABLE
+> 220	  SECURITY DEFINER
+> 221	  SET search_path = ''           -- hardening canônico (drift-audit 2026-06-03)
+> 222	AS $$ ... $$;
+> 223	
+> 224	REVOKE ALL ON FUNCTION public.collective_efficiency_rollup() FROM PUBLIC, anon, authenticated;
+> 225	GRANT  EXECUTE ON FUNCTION public.collective_efficiency_rollup() TO service_role;
+> 226	```
+> 227	
+> 228	> Convenção selada: todo `SECURITY DEFINER` que agrega cross-tenant → `search_path=''` + `REVOKE PUBLIC/anon/authenticated` + `GRANT service_role`. A decisão de escala é do Sovereign, não do tenant (DD-AG-006).
+> 229	
+> 230	### 5.3 Secrets Inventory
+> 231	
+> 232	| Secret | Usado em | Local | Nota |
+> 233	|--------|----------|-------|------|
+> 234	| `SB_SECRET_KEY` | chamada server-side do `collective_efficiency_rollup` | Supabase Vault | service-role; NUNCA client-reachable. A legada `SUPABASE_SERVICE_ROLE_KEY` está MORTA (revogada). |
+> 235	
+> 236	Nenhum secret novo é introduzido. Os emits de telemetria usam a credencial service-role já presente em `orchestrate-content`/`orchestrate-step`.
+> 237	
+> 238	---
+> 239	
+> 240	## 6. Infrastructure Touchpoints
+> 241	
+> 242	| Infraestrutura | Uso | Impacto |
+> 243	|----------------|-----|---------|
+> 244	| `pipeline_runs` (índice `pipeline_runs_user_started(user_id, started_at DESC)`) | base SELECT da VIEW | leitura indexada — zero write novo (NFR-AG-001) |
+> 245	| `autopilot_cycles` (índice `autopilot_cycles_user_day_idx(user_id, started_at)`) | base SELECT da VIEW | idem; `creative_metrics` provê o denominador de `mco_per_result` |
+> 246	| `infra_health_logs` | novos `event`: `collective_hop`, `collective_retry` (`service='agentic-governance'`) | telemetria sem PII (DD-AG-003, NFR-AG-003) |
+> 247	| Knowledge Mesh | nó `documentation_suite` para esta SDD + `DERIVES_FROM` → doutrina `a576216e` | traceabilidade (Mesh Connection Mandate) |
+> 248	
+> 249	NFR-AG-006: VIEW p95 < 800ms apoiada nos índices base já existentes; sem índice novo neste ciclo.
+> 250	
+> 251	---
+> 252	
+> 253	## 7. Migration Stub
+> 254	
+> 255	```sql
+> 256	-- Migration: <ts>_collective_efficiency_ledger.sql  (/security-review SAFE antes do commit — NFR-AG-004)
+> 257	
+> 258	-- ── VIEW per-tenant (RLS herdada via security_invoker — DD-AG-002 / FR-AG-001) ──────────────
+> 259	CREATE VIEW public.collective_efficiency_ledger WITH (security_invoker = on) AS
+> 260	  SELECT pr.id AS run_id, 'orchestrate-content'::text AS collective_type, pr.user_id,
+> 261	         COALESCE(jsonb_array_length(pr.steps),0) AS n_units, pr.mco_cost AS mco_projected,
+> 262	         pr.mco_cost AS mco_actual, pr.status AS result_status,
+> 263	         (pr.status IN ('done')) AS succeeded,
+> 264	         (EXTRACT(EPOCH FROM (pr.completed_at - pr.started_at))*1000)::bigint AS wall_clock_ms,
+> 265	         pr.started_at
+> 266	  FROM public.pipeline_runs pr
+> 267	  UNION ALL
+> 268	  SELECT ac.id, 'autopilot-cycle'::text, ac.user_id, ac.planned_units, ac.spend_mco,
+> 269	         (ac.spend_mco - ac.refunded_mco), ac.status, (ac.status IN ('completed')),
+> 270	         (EXTRACT(EPOCH FROM (ac.completed_at - ac.started_at))*1000)::bigint, ac.started_at
+> 271	  FROM public.autopilot_cycles ac;
+> 272	
+> 273	-- ── RPC agregado cross-tenant (service-role-only — DD-AG-006 / FR-AG-002 / FM-AG-007) ────────
+> 274	CREATE OR REPLACE FUNCTION public.collective_efficiency_rollup()
+> 275	  RETURNS TABLE (collective_type text, runs bigint, avg_mco_actual numeric,
+> 276	                 avg_wall_clock_ms numeric, retry_rate numeric)
+> 277	  LANGUAGE sql STABLE
+> 278	  SECURITY DEFINER
+> 279	  SET search_path = ''
+> ```
+
+## 🤖 Claude *(22:57:43)*
+
+
+## 🤖 Claude *(22:57:44)*
+
+SDD alinhada exatamente à espinha. Lendo o restante da migration stub (corpo do RPC + grants).
+
+## 🤖 Claude *(22:57:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/05-sdd.md",
+  "offset": 278,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 278	  SECURITY DEFINER
+> 279	  SET search_path = ''
+> 280	AS $$
+> 281	  WITH retries AS (
+> 282	    SELECT (metadata->>'run_id')::uuid AS run_id
+> 283	    FROM public.infra_health_logs
+> 284	    WHERE service = 'agentic-governance' AND event = 'collective_retry'
+> 285	    GROUP BY 1
+> 286	  )
+> 287	  SELECT l.collective_type,
+> 288	         count(*)                                  AS runs,
+> 289	         avg(l.mco_actual)::numeric                AS avg_mco_actual,
+> 290	         avg(l.wall_clock_ms)::numeric             AS avg_wall_clock_ms,
+> 291	         (count(*) FILTER (WHERE r.run_id IS NOT NULL))::numeric / NULLIF(count(*),0) AS retry_rate
+> 292	  FROM public.collective_efficiency_ledger l   -- security_invoker irrelevante: DEFINER roda como dono
+> 293	  LEFT JOIN retries r ON r.run_id = l.run_id
+> 294	  GROUP BY l.collective_type;
+> 295	$$;
+> 296	
+> 297	REVOKE ALL ON FUNCTION public.collective_efficiency_rollup() FROM PUBLIC, anon, authenticated;
+> 298	GRANT  EXECUTE ON FUNCTION public.collective_efficiency_rollup() TO service_role;
+> 299	```
+> 300	
+> 301	---
+> 302	
+> 303	## 8. Open Technical Decisions (seladas + roadmap de canonização)
+> 304	
+> 305	| ID | Decisão | Resolução |
+> 306	|----|---------|-----------|
+> 307	| DD-AG-001 | VIEW-sobre-dados-existentes vs tabela dedicada | **VIEW** (anti-Goodhart + reuso de writes) |
+> 308	| DD-AG-002 | Isolamento per-tenant da VIEW | **`security_invoker=on`** (herda RLS SELECT-own) |
+> 309	| DD-AG-003 | Onde emitir overhead | **chokepoint `infra_health_logs`** (zero write-site novo) |
+> 310	| DD-AG-004 | V4-2 (valor marginal/agente) | **DEFERIDO** a experimento A/B real — não fabricar proxy gameável |
+> 311	| DD-AG-005 | Pattern Conformance: declaração vs sign-off | **DECLARAÇÃO** (1 tabela, fricção mínima) |
+> 312	| DD-AG-006 | Agregado cross-tenant: quem alcança | **RPC `SECURITY DEFINER` service-role-only** (decisão do Sovereign) |
+> 313	
+> 314	**Roadmap vivo (PR-AG-008 — backlog de canonização):** OTD-AG-001 (P0, **esta BoK** — Collective Efficiency Ledger) · OTD-AG-002 (P0, loop Learning&Adaptation reward multi-métrica) · OTD-AG-003 (P1, Generator-Critic genérico) · OTD-AG-004 (P1, rubricas + dashboard) · OTD-AG-005 (P1, re-planejamento dinâmico) · OTD-AG-006 (P2, Agent Card A2A) · OTD-AG-007 (P2, routing semântico) · OTD-AG-008 (P3, torneio Elo) · OTD-AG-009 (P3, jailbreak regression CI) · OTD-AG-010 (P3, recovery state machines).
+> 315	
+> 316	---
+> 317	
+> ```
+
+## 🤖 Claude *(22:58:09)*
+
+
+## 🤖 Claude *(22:58:11)*
+
+Migration stub completa e o design de privilégio está correto (RPC `SECURITY DEFINER` chamada por service_role → bypassa RLS → vê todos os tenants; VIEW `security_invoker` consultada por `authenticated` → RLS SELECT-own → só o próprio). 
+
+**Fase 4 — código.** Vou localizar os sites exatos de emit nas duas edge functions e o timestamp da próxima migration.
+
+## 🤖 Claude *(22:58:12)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(22:58:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== \u00faltimas migrations ===\"; ls -1 supabase/migrations/ | tail -6\necho \"\"; echo \"=== infra_health_logs em orchestrate-step ===\"; grep -nE \"infra_health_logs|async_orchestrate_step|catch|\\.from\\('pipeline_runs'\\)\" supabase/functions/orchestrate-step/index.ts | head -20\necho \"\"; echo \"=== infra_health_logs / kick em orchestrate-content ===\"; grep -nE \"infra_health_logs|async_orchestrate_step|pipeline_runs|\\.insert\" supabase/functions/orchestrate-content/index.ts | head -20",
+  "description": "Find emit sites and latest migration timestamp"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === últimas migrations ===
+> 20260622210000_user_api_keys_rapidapi_channel.sql
+> 20260623040000_viral_autopilot_cadence_cron.sql
+> 20260624120000_video_studio_composition_and_bucket.sql
+> 20260624130000_autopilot_video_plan_columns.sql
+> 20260624140000_autopilot_video_enqueue_refund.sql
+> 20260625120000_creative_assets_registry.sql
+> 
+> === infra_health_logs em orchestrate-step ===
+> 197:      } catch { /* policy read is best-effort — never block generation */ }
+> 207:      } catch { return { tag: null, mattTool: null }; }
+> 345:              } catch (e: any) { console.warn("[orchestrate-step] auto-monetize skipped:", e?.message); }
+> 386:              const imgData = await imgRes.json().catch(() => ({} as any));
+> 398:            } catch (e: any) {
+> 444:              } catch (e: any) {
+> 460:                    // NO per-tenant ids in the global-read infra_health_logs (telemetry allowlist); the per-tenant
+> 463:                    await admin.from("infra_health_logs").insert({
+> 473:      } catch (e: any) {
+> 522:        } catch (e: any) {
+> 603:      } catch (e: any) {
+> 689:      } catch (e: any) {
+> 770:      } catch (e: any) {
+> 771:        console.warn("[orchestrate-step] mesh emission outer catch:", e);
+> 780:      // Invoke async_orchestrate_step RPC to trigger next step asynchronously via pg_net
+> 781:      await admin.rpc("async_orchestrate_step", {
+> 810:  } catch (e: any) {
+> 
+> === infra_health_logs / kick em orchestrate-content ===
+> 193:      .from("pipeline_runs")
+> 194:      .insert({
+> 245:      const { error: kickErr } = await admin.rpc("async_orchestrate_step", {
+> 284:        if (runId) await refundAdmin.from("pipeline_runs").update({ status: "error" }).eq("id", runId).then(() => {}, () => {});
+> ```
+
+## 🤖 Claude *(22:58:21)*
+
+
+## 🤖 Claude *(22:58:22)*
+
+Migration timestamp: `20260626120000`. Lendo os contextos exatos dos dois emit sites para casar com o padrão existente de insert em `infra_health_logs`.
+
+## 🤖 Claude *(22:58:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 452,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 452	                // path (cycleId set); user-path renders never reach here. If `enqueued` is true, the row exists and
+> 453	                // the render lifecycle / finalize_video_render owns the refund — do NOT double-credit.
+> 454	                if (!enqueued && cycleId) {
+> 455	                  const { error: refundErr } = await admin.rpc("refund_autopilot_video_enqueue", {
+> 456	                    p_run_id: run_id, p_cycle_id: cycleId, p_user_id: run.user_id, p_amount: VIDEO_COST,
+> 457	                  });
+> 458	                  if (refundErr) {
+> 459	                    // A failed compensating credit = a silent over-charge → make it observable for reconciliation.
+> 460	                    // NO per-tenant ids in the global-read infra_health_logs (telemetry allowlist); the per-tenant
+> 461	                    // detail lives in the edge-fn log + the run's 'skipped' step above (RLS-own).
+> 462	                    console.warn(`[orchestrate-step] video enqueue refund FAILED (tenant over-charged ${VIDEO_COST}) run=${run_id}:`, refundErr.message);
+> 463	                    await admin.from("infra_health_logs").insert({
+> 464	                      service: "autopilot-video-refund", status: "degraded", event: "refund_failed",
+> 465	                      metadata: { amount: VIDEO_COST },
+> 466	                    }).then(() => {}, () => {});
+> 467	                  }
+> 468	                }
+> 469	              }
+> 470	            }
+> 471	          }
+> 472	        }
+> 473	      } catch (e: any) {
+> 474	        await addStep("article_generation", "error", { topic }, { error: e.message || "Unknown" });
+> 475	      }
+> 476	
+> 477	    } else if (step === "wordpress_publish") {
+> 478	      const { articleTitle, articleContent } = metadata;
+> 479	      if (!articleContent) {
+> 480	        await addStep("wordpress_publish", "error", { title: articleTitle }, { error: "No article content available from previous step" });
+> 481	      } else {
+> 482	        await addStep("wordpress_publish", "in_progress",
+> 483	          { title: articleTitle, tags: "marketing-ia,orquestracao,roi", status: wp_status }
+> 484	        );
+> 485	        try {
+> 486	          const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+> 487	            method: "POST",
+> 488	            headers: { 
+> 489	              Authorization: `Bearer ${serviceKey}`, 
+> 490	              "Content-Type": "application/json" 
+> 491	            },
+> ```
+
+## 🤖 Claude *(22:58:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 238,
+  "limit": 52
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 238	        firstStep = candidate; // Final fallback always runs
+> 239	        break;
+> 240	      }
+> 241	    }
+> 242	
+> 243	    if (firstStep) {
+> 244	      console.log(`[orchestrate-content] Invoking first step "${firstStep}" for run ${runId}`);
+> 245	      const { error: kickErr } = await admin.rpc("async_orchestrate_step", {
+> 246	        p_supabase_url: supabaseUrl,
+> 247	        p_service_key: serviceKey,
+> 248	        p_run_id: runId,
+> 249	        p_step: firstStep,
+> 250	      });
+> 251	      if (kickErr) {
+> 252	        // Charge-without-value: run row exists but no step queued → throw so the catch refunds + marks it errored.
+> 253	        throw new Error(`Failed to queue first step "${firstStep}": ${kickErr.message}`);
+> 254	      }
+> 255	    }
+> 256	
+> 257	    return new Response(JSON.stringify({
+> 258	      success: true,
+> 259	      run_id: runId,
+> 260	      steps: [],
+> 261	      summary: {
+> 262	        topic,
+> 263	        platforms_processed: platforms,
+> 264	        wordpress_url: null,
+> 265	        campaign_id: campaign_id || null,
+> 266	        run_id: runId,
+> 267	      }
+> 268	    }), {
+> 269	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 270	    });
+> 271	
+> 272	  } catch (e) {
+> 273	    console.error("orchestrate-content error:", e);
+> 274	    // Refund the entry debit on any post-charge failure (charge-without-value guard — OTD-INTENT-DISPATCH-REFUND).
+> 275	    let refunded = false;
+> 276	    if (charged && chargedUser) {
+> 277	      try {
+> 278	        const refundAdmin = createClient(
+> 279	          Deno.env.get("SUPABASE_URL")!,
+> 280	          (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 281	        );
+> 282	        refunded = await refundMco(refundAdmin, chargedUser, ORCHESTRATION_COST, "orchestrate-content");
+> 283	        // mark a half-created run as errored so it isn't left dangling in "running" after the money was returned.
+> 284	        if (runId) await refundAdmin.from("pipeline_runs").update({ status: "error" }).eq("id", runId).then(() => {}, () => {});
+> 285	      } catch { /* refund is best-effort — never mask the original error */ }
+> 286	    }
+> 287	    return new Response(
+> 288	      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error", refunded }),
+> 289	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> ```
+
+## 🤖 Claude *(22:58:45)*
+
+
+## 🤖 Claude *(22:58:47)*
+
+Emit sites located. For orchestrate-step, the faithful single site is the shared `addStep` helper (when status is "error") — that covers all step error branches with one emit, rather than picking one arbitrary catch. Let me find it.
+
+## 🤖 Claude *(22:58:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"addStep|const run_id|run\\.id|run\\.user_id|function addStep|addStep =\" supabase/functions/orchestrate-step/index.ts | head -15",
+  "description": "Find addStep helper and run_id in orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 160:    const addStep = async (name: string, status: string, input?: any, output?: any) => {
+> 194:          .select("action_details").eq("user_id", run.user_id).eq("action_type", "viral_autopilot")
+> 205:          .select("affiliate_tag, matt_tool").eq("user_id", run.user_id).eq("platform", "mercadolivre").eq("is_active", true).maybeSingle();
+> 220:          const r = await monetizeForProduct(admin as any, supabaseUrl, out, run.user_id, aff.tag, products[i], {
+> 227:        user_id: run.user_id,
+> 242:      .eq("user_id", run.user_id)
+> 259:      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 306:          await addStep("article_generation", "error", { topic }, { error: `content_validation_failed:${articleValidation.reason}` });
+> 318:              user_id: run.user_id, campaign_id: campaign_id || null, type: "text",
+> 339:                  .select("affiliate_tag, matt_tool").eq("user_id", run.user_id).eq("platform", "mercadolivre").eq("is_active", true).maybeSingle();
+> 341:                  const m = await monetizeContent(admin as any, supabaseUrl, articleContent, run.user_id, aff.affiliate_tag, { campaignId: campaign_id || null, mattTool: aff.matt_tool });
+> 348:              user_id: run.user_id, campaign_id: campaign_id || null, type: "text",
+> 364:          await addStep("article_generation", "done",
+> 384:                body: JSON.stringify({ prompt: imgPrompt, style: "product photography", user_id: run.user_id }),
+> 389:                  user_id: run.user_id, campaign_id: campaign_id || null, type: "image",
+> ```
+
+## 🤖 Claude *(22:58:51)*
+
+
+## 🤖 Claude *(22:58:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 160,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 160	    const addStep = async (name: string, status: string, input?: any, output?: any) => {
+> 161	      const stepObj = {
+> 162	        name,
+> 163	        status,
+> 164	        input: input ?? null,
+> 165	        output: output ?? null,
+> 166	        timestamp: new Date().toISOString(),
+> 167	      };
+> 168	      const idx = steps.findIndex((s: any) => s.name === name);
+> 169	      if (idx !== -1) {
+> 170	        steps[idx] = stepObj;
+> 171	      } else {
+> 172	        steps.push(stepObj);
+> 173	      }
+> 174	      await admin.from("pipeline_runs").update({ steps }).eq("id", run_id);
+> 175	    };
+> 176	
+> 177	    const metadata = run.metadata || {};
+> 178	    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> 179	    const cycleId: string | null = (metadata.cycle_id as string) ?? null;   // Viral Autopilot Fatia 2 — cron cycle link
+> 180	
+> 181	    // ── Viral Autopilot Fatia 1 — chosen products carried from orchestrate-content (sanitized, ordered).
+> 182	    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 183	    const hasProducts = products.length > 0;
+> 184	    // Fatia VA-V1 — video 9:16 opt-in (FR-VA-022/024). When set (cron path only), the article step enqueues one
+> 185	    // HyperFrames render. Cost rides on the cycle pre-debit (OTD-VA-010); failed render refunds via finalize.
+> 186	    const videoEnabled = metadata.video_enabled === true;
+> 187	    const autoMonetizeOn = (Deno.env.get("AUTO_MONETIZE_ENABLED") ?? "true").toLowerCase() !== "false";
+> 188	
+> 189	    // FR-VA-011 — feedback injection: the tenant's latest viral_autopilot policy steers this cycle's prompts.
+> ```
+
+## 🤖 Claude *(22:59:13)*
+
+
+## 🤖 Claude *(22:59:13)*
+
+`addStep` is the central site (covers all step error branches). Making the two emits + writing the migration aligned to the SDD SSOT.
+
+## 🤖 Claude *(22:59:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "      await admin.from(\"pipeline_runs\").update({ steps }).eq(\"id\", run_id);\n    };",
+  "new_string": "      await admin.from(\"pipeline_runs\").update({ steps }).eq(\"id\", run_id);\n      // Collective Efficiency Ledger overhead emit (FR-AG-003 \u00b7 agentic-governance): a step error = coordination\n      // friction. Telemetry allowlist {run_id, collective_type} ONLY \u2014 NO PII (infra_health_logs is global-read).\n      // retry_rate counts distinct runs with \u22651 such event, so multiple step errors per run collapse to one (rollup).\n      if (status === \"error\") {\n        await admin.from(\"infra_health_logs\").insert({\n          service: \"agentic-governance\", status: \"degraded\", event: \"collective_retry\",\n          metadata: { run_id, collective_type: \"orchestrate-content\" },\n        }).then(() => {}, () => {});\n      }\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:59:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "      if (kickErr) {\n        // Charge-without-value: run row exists but no step queued \u2192 throw so the catch refunds + marks it errored.\n        throw new Error(`Failed to queue first step \"${firstStep}\": ${kickErr.message}`);\n      }\n    }",
+  "new_string": "      if (kickErr) {\n        // Charge-without-value: run row exists but no step queued \u2192 throw so the catch refunds + marks it errored.\n        throw new Error(`Failed to queue first step \"${firstStep}\": ${kickErr.message}`);\n      }\n      // Collective Efficiency Ledger overhead emit (FR-AG-003 \u00b7 agentic-governance): one hop per pipeline kick.\n      // Telemetry allowlist {run_id, collective_type} ONLY \u2014 NO PII (infra_health_logs is global-read).\n      await admin.from(\"infra_health_logs\").insert({\n        service: \"agentic-governance\", status: \"ok\", event: \"collective_hop\",\n        metadata: { run_id: runId, collective_type: \"orchestrate-content\" },\n      }).then(() => {}, () => {});\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:59:23)*
+
+Agora a migration, alinhada exatamente à migration stub da SDD (SSOT).
+
+## 🤖 Claude *(22:59:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260626120000_collective_efficiency_ledger.sql",
+  "content": "-- Migration: Collective Efficiency Ledger \u2014 VIEW + cross-tenant rollup RPC (FR-AG-001/002).\n-- BoK SSOT: docs/bok/agentic-governance/05-sdd.md \u00a77 (migration stub) + 06-data-model.md.\n-- SOP (Lei 2): docs/processes/collective-efficiency-ledger.md. Doctrine: docs/architecture/agentic-vision.md \u00a74.\n--\n-- WHY: the \"From AGI to ASI\" paper flags the multi-agent-collective questions (V4-2/4/5) as OPEN. MCORCH answers\n-- them by doctrine but does NOT MEASURE any. This instruments the IN-SYSTEM collective (orchestrate-content runs +\n-- autopilot cycles) by DERIVING efficiency from financial truth that already exists \u2014 zero new write-path, no\n-- self-reported number (anti-Goodhart, DD-AG-001/004).\n--\n-- SECURITY (the two material risks \u2014 FM-AG-001 / FM-AG-007):\n--   * VIEW is `security_invoker = on` \u2192 the underlying RLS (pipeline_runs/autopilot_cycles are SELECT-own) is\n--     evaluated AS THE CALLER. An `authenticated` user sees ONLY their own rows (G6: count cross-tenant = 0).\n--   * The cross-tenant rollup is for the Sovereign's SCALE decision (DD-AG-006) \u2192 SECURITY DEFINER + search_path=''\n--     + REVOKE PUBLIC/anon/authenticated + GRANT service_role (mirrors 20260603220000_secure_ledger_rpcs.sql).\n-- Additive + read-only (VIEW/RPC, no table, no write-path) \u21d2 ZERO impact on existing writers. No PII introduced.\n-- Passes /security-review before commit (NFR-AG-004 / FMEA-011).\n\n-- \u2500\u2500 VIEW per-tenant (RLS herdada via security_invoker \u2014 DD-AG-002 / FR-AG-001) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.collective_efficiency_ledger\n  WITH (security_invoker = on) AS\n  SELECT pr.id                                                        AS run_id,\n         'orchestrate-content'::text                                  AS collective_type,\n         pr.user_id                                                   AS user_id,\n         COALESCE(jsonb_array_length(pr.steps), 0)                    AS n_units,\n         pr.mco_cost                                                  AS mco_projected,\n         pr.mco_cost                                                  AS mco_actual,\n         pr.status                                                    AS result_status,\n         (pr.status IN ('done'))                                      AS succeeded,\n         (EXTRACT(EPOCH FROM (pr.completed_at - pr.started_at)) * 1000)::bigint AS wall_clock_ms,\n         pr.started_at                                                AS started_at\n  FROM public.pipeline_runs pr\n  UNION ALL\n  SELECT ac.id,\n         'autopilot-cycle'::text,\n         ac.user_id,\n         ac.planned_units,\n         ac.spend_mco,\n         (ac.spend_mco - ac.refunded_mco),\n         ac.status,\n         (ac.status IN ('completed')),\n         (EXTRACT(EPOCH FROM (ac.completed_at - ac.started_at)) * 1000)::bigint,\n         ac.started_at\n  FROM public.autopilot_cycles ac;\n\nCOMMENT ON VIEW public.collective_efficiency_ledger IS\n  'Collective Efficiency Ledger (agentic-governance FR-AG-001). Per-tenant DERIVED view (security_invoker=on \u2192 '\n  'inherits SELECT-own RLS of pipeline_runs/autopilot_cycles). One row per collective run: n_units, mco_projected, '\n  'mco_actual (spend-refund for cycles), succeeded, wall_clock_ms. Anti-Goodhart: derived from financial truth, '\n  'never written to. SOP docs/processes/collective-efficiency-ledger.md.';\n\n-- \u2500\u2500 RPC agregado cross-tenant (service-role-only \u2014 DD-AG-006 / FR-AG-002 / FM-AG-007) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- The Sovereign's scale decision needs the WHOLE collective, across tenants. SECURITY DEFINER runs as the function\n-- owner (RLS-bypassing) so it sees all tenants; access is hard-revoked from anon/authenticated and granted ONLY to\n-- service_role. retry_rate joins the agentic-governance 'collective_retry' overhead events (FR-AG-003).\nCREATE OR REPLACE FUNCTION public.collective_efficiency_rollup()\n  RETURNS TABLE (\n    collective_type    text,\n    runs               bigint,\n    avg_mco_actual     numeric,\n    avg_wall_clock_ms  numeric,\n    retry_rate         numeric\n  )\n  LANGUAGE sql\n  STABLE\n  SECURITY DEFINER\n  SET search_path = ''\nAS $$\n  WITH retries AS (\n    SELECT (metadata->>'run_id')::uuid AS run_id\n    FROM public.infra_health_logs\n    WHERE service = 'agentic-governance' AND event = 'collective_retry'\n    GROUP BY 1\n  )\n  SELECT l.collective_type,\n         count(*)                                                                       AS runs,\n         avg(l.mco_actual)::numeric                                                      AS avg_mco_actual,\n         avg(l.wall_clock_ms)::numeric                                                   AS avg_wall_clock_ms,\n         (count(*) FILTER (WHERE r.run_id IS NOT NULL))::numeric / NULLIF(count(*), 0)   AS retry_rate\n  FROM public.collective_efficiency_ledger l\n  LEFT JOIN retries r ON r.run_id = l.run_id\n  GROUP BY l.collective_type;\n$$;\n\nREVOKE ALL    ON FUNCTION public.collective_efficiency_rollup() FROM PUBLIC, anon, authenticated;\nGRANT  EXECUTE ON FUNCTION public.collective_efficiency_rollup() TO service_role;\n\nCOMMENT ON FUNCTION public.collective_efficiency_rollup() IS\n  'Cross-tenant aggregate of the Collective Efficiency Ledger (FR-AG-002). SECURITY DEFINER service-role-only \u2014 the '\n  'scale decision is the Sovereign''s, not the tenant''s (DD-AG-006). Returns avg mco_actual / wall_clock_ms / '\n  'retry_rate per collective_type, ALL tenants. Never reachable by anon/authenticated (FM-AG-007).';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260626120000_collective_efficiency_ledger.sql (file state is current in your context — no need to Read it back)
+> ```
