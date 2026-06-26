@@ -2400,3 +2400,16 @@ SO a chamada notifyFlowExtreme; sinal segue computado/logado/gateando a id2.
 Sobre o gate **QA+TL** formal: para um diff de ~19 linhas de toggle de notificação (sem money-path, reversível por env), eu julgo **opcional** — já fiz a auto-revisão contra o mesmo checklist. Mas se quiser a disciplina completa, rodo qa-engineer + tech-lead em paralelo antes (custo baixo).
 
 **Recomendo seguir direto pro commit+push.** Dou o go? (ou: "roda o QA+TL antes" / "comita e sela tudo")
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-26 - Clarificar essência e tom do MCORCH]]
+> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
+%% --- TIMELINE END --- %%
