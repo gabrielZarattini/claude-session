@@ -1,4 +1,4 @@
-# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
+# Analisar paper e oportunidades de trading
 **Date:** 2026-06-25 | **Session ID:** `f965becb-771d-4ea9-83a1-920d453257be`
 
 ---
@@ -9196,15 +9196,230 @@ Adicionei as **linhas SMA 20 (azul) / SMA 50 (laranja)** sobre os candles — co
 
 Quer que eu empilhe os outros sinais no gráfico (Bollinger/MACD/volume/flow) agora, ou deixamos tu começar a registrar e a gente itera?
 
----
+## 👤 User *(23:54:44)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-25 - 1744ad7a-f93b-4937-aa35-6a9d5b11b1c2]]
-> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
-%% --- TIMELINE END --- %%
+## 👤 User *(23:54:44)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(23:55:11)*
+
+
+## 🤖 Claude *(23:55:13)*
+
+Executando o ritual `/handoff`. Nota: o modelo do projeto é **trunk-based direto-a-master** (memória [[tradeux-orchestration-model]]) e eu já commitei+pushei cada fase desta sessão à medida que entregava — então o working tree já deve estar limpo e o master sincronizado. Vou adaptar: verificar estado, secret-scan do range da sessão, atualizar HANDOFF.md + memória.
+
+## 🤖 Claude *(23:55:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== status (deve ser s\u00f3 backtest scratch) ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' status --short 2>/dev/null | grep -v \"backtest-results\" || echo \"  (s\u00f3 backtest-results / limpo)\"\necho \"=== HEAD + range da sess\u00e3o ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' log --oneline 6cec694..HEAD 2>/dev/null\necho \"=== sincronizado com origin? ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' status -sb 2>/dev/null | head -1\necho \"\"\necho \"=== PHASE 1 \u2014 SECRET SCAN do range da sess\u00e3o (BLOQUEIA o seal) ===\"\nsudo -n -u gcrux-tradeux git -c safe.directory='*' diff 6cec694..HEAD \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head || echo \"  \u2705 LIMPO \u2014 nenhum segredo no range\"\necho \"=== stack ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps 2>/dev/null | tail -5'",
+  "description": "Handoff pre-flight + secret scan of session range"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status (deve ser só backtest scratch) ===
+>   (só backtest-results / limpo)
+> === HEAD + range da sessão ===
+> 023aa00 feat(cockpit): registro das previsoes do operador + placar + SMA no grafico
+> 4f14527 feat(research): gravador de sinais->desfecho (shadow) + painel — mede se fluxo/RSI tem edge
+> 21ec9af feat(cockpit): sub-grafico RSI(14) + marcadores explicados — deixa CLARO o porque de cada execucao simulada
+> 760cc02 feat(cockpit): execucoes SIMULADAS marcadas na vela (volta ao candle proprio + marcadores RSI)
+> b711a21 feat(cockpit): grafico do widget de simulacao = embed TradingView (BINANCE:SYM, 1m+RSI, segue o seletor)
+> 7cc8258 feat(cockpit): widget principal "Simulacao ao vivo" — o que o sistema faria, sem soltar ordem
+> 5ac0af6 feat(autonomy): auto-promocao paper->real como PORTAO sobre o supervisor (frente D)
+> df5e076 feat(risk): auto-resume do cap diario -5% com 3 backstops (frente C)
+> 7892483 feat(autonomy): supervisor de virada por regime + notificacoes Telegram de evento (A+B)
+> === sincronizado com origin? ===
+> ## master...origin/master
+> 
+> === PHASE 1 — SECRET SCAN do range da sessão (BLOQUEIA o seal) ===
+> === stack ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED        STATUS                 PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      34 hours ago   Up 34 hours            
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    21 hours ago   Up 21 hours            3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         3 weeks ago    Up 10 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   21 hours ago   Up 21 hours            127.0.0.1:8090->80/tcp
+> ```
+
+## 🤖 Claude *(23:56:27)*
+
+
+## 🤖 Claude *(23:56:30)*
+
+Pré-flight limpo: working tree só com o scratch `backtest-results`, **secret-scan do range LIMPO** (saída vazia = sem segredos), `master==origin/master`, stack 4/4 up (e o conteúdo servido é o novo — verifiquei os bundles ao longo da sessão). 
+
+**Sobre branch/PR:** o projeto é trunk-based direto-a-master (memória) e eu já commitei+pushei cada uma das 9 frentes à medida que entregava — então NÃO crio branch/PR retroativo; o master já está sincronizado. Resta selar HANDOFF.md + memória.
+
+Primeiro a memória do que foi durável nesta sessão:
+
+## 🤖 Claude *(23:56:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-cockpit-sim-recorder.md",
+  "content": "---\nname: tradeux-cockpit-sim-recorder\ndescription: cockpit de simula\u00e7\u00e3o read-only (widget) + gravador sinal\u2192desfecho + experimento das previs\u00f5es do operador; revers\u00e3o de 1m REFUTADA por backtest 4-\u00e2ngulos\nmetadata:\n  type: project\n---\n\nSess\u00e3o 2026-06-25 (cont. da autonomia [[tradeux-autonomy-engine]]): thread de UI/pesquisa READ-ONLY no `/cockpit` (zero money-path). `vivo==master==origin==023aa00`.\n\n**Widget principal \"Simula\u00e7\u00e3o ao vivo\"** (frontend `Cockpit/Cockpit.js`+`cockpit.css`): seletor de s\u00edmbolo (BTC/LTC/BNB/ADA dirige o cockpit inteiro) + candle SVG pr\u00f3prio + **RSI(14) sub-pane** (faixas sobrevenda/sobrecompra) + **marcadores de execu\u00e7\u00e3o simulada** na vela (\u25b2 compra/\u25bc venda nos cruzamentos de RSI; **vazado = sinal mas em CAIXA/gated**, s\u00f3lido = executaria) + **SMA20/50** + painel de sinais (regime/flow/RSI/SMA/EV/gate/posi\u00e7\u00e3o) + **banner `simDecision`** (o que o sistema FARIA agora, sem ordem). Backend anexa `signals` por s\u00edmbolo no `/analysis/cockpit` (RSI 1m/15m, slope, cross, FARM_DCA, TREND_QTY). **Tentei o iframe do TradingView (`widgetembed`, igual ao `/dashboard/CandleChart.js`) mas \u00e9 3rd-party \u2192 n\u00e3o d\u00e1 p/ desenhar sinais em cima; voltei ao SVG pr\u00f3prio.**\n\n**`signalRecorderJob.js`** (READ-ONLY, no boot): detecta eventos (fluxo extremo, RSI cross) \u2192 grava contexto + **retorno DIRECIONAL** em +1/5/10/15min \u2192 agrega hit-rate por tipo \u2192 persiste `logs/signal_journal.jsonl` (replay no boot reconstr\u00f3i STATS). Servido em `status.patterns` do cockpit + painel \"Padr\u00f5es registrados\".\n\n**Experimento da LEITURA do operador** (o ponto-chave): `POST /analysis/call {symbol,direction}` \u2192 `recordCall` grava uma previs\u00e3o `op_up`/`op_down` e pontua no mesmo pipeline. UI = bot\u00f5es \"vai SUBIR/CAIR\" no widget + painel \"Minhas previs\u00f5es \u2014 placar\" (acerto @10min **vs 50% do acaso**). **Pergunta em aberto: a leitura discricion\u00e1ria do dono tem edge?** >55% consistente sobre ~15-20 calls \u2192 sistematizar num paper track (\u2192 promo\u00e7\u00e3o \u2192 real). \u26a0\ufe0f h\u00e1 1 call de TESTE minha (\"BTC down\", smoke) no placer \u2014 desconsiderar.\n\n**REVERS\u00c3O DE 1m REFUTADA rigorosamente** (workflow `wf_843099ce`, 4 \u00e2ngulos + verifica\u00e7\u00e3o adversarial, ~3-4k velas, sem look-ahead, fee 20bps): RSI-grid **0/12** net+ (perde **ANTES da fee** = sem alpha, n\u00e3o \u00e9 custo); time-exit 0/4 (at\u00e9 or\u00e1culo de sa\u00edda perfeita ~0); estat\u00edstica = **random-walk** (autocorr lag1 \u22120,04, VR<1 em 2-10m mas dissipa em 30m; o tra\u00e7o de revers\u00e3o \u00e9 **bid-ask bounce de microestrutura, captur\u00e1vel S\u00d3 por market-making/postar limit, N\u00c3O por taker que cruza o spread**); padr\u00e3o do dono (spike\u2192revers\u00e3o) real mas movimento mediano **17 bps < 20 bps de fee** + s\u00f3 27% chegam \u00e0 sobrevenda. **Veredito: sem edge trade\u00e1vel taker-side no spot \u2014 refor\u00e7a a doutrina 1m-scalping REFUTADO** ([[tradeux-1m-scalping-and-cockpit]]). \u00danico n\u00e3o-testado = a leitura humana (da\u00ed o registro de calls). Relat\u00f3rio no journal do workflow.\n\n**FLUXO confirmado NOWCASTING n\u00e3o-forecast ao vivo:** o dono fez previs\u00f5es; um sampler de 14min pontuou \u2014 a queda+RSI chegaram mas mais devagar que \"5min\" e n\u00e3o-monetiz\u00e1vel. Frente A (notifica\u00e7\u00f5es de evento) est\u00e1 **funcionando ao vivo** (flow extremo dispara/normaliza no Telegram, edge-trigger+histerese OK).\n\n**Gotcha DUR\u00c1VEL:** `bash` heredoc com aspas **corrompe literais de string JSX** (`'1fr'` \u2192 lixo `'\"'\"'`) \u2192 patchar JSX via **Write+arquivo python** (`str.replace` exato), NUNCA heredoc. Frontend deploy = `docker compose build frontend && up -d frontend` (REACT_APP_* s\u00e3o build-time, bundle baked).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-cockpit-sim-recorder.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:57:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Autonomy engine](tradeux-autonomy-engine.md) \u2014 \"virar sozinho\" (2026-06-24, `5ac0af6`): A Telegram de evento + B supervisor de regime (liga entradas no n\u00e3o-bear) + C auto-resume do cap \u22125% bounded \u221212% (3 backstops) + D promo\u00e7\u00e3o paper\u2192real como PORT\u00c3O sobre B (fechou o HIGH do cofre BTC); tudo NO-OP em bear at\u00e9 regime virar E trilha provar; **Farm BUYS reais agora dependem de promo\u00e7\u00e3o \u2192 `PROMOTION_GRANDFATHER=farmnl` liga-na-hora**",
+  "new_string": "- [Autonomy engine](tradeux-autonomy-engine.md) \u2014 \"virar sozinho\" (2026-06-24, `5ac0af6`): A Telegram de evento + B supervisor de regime (liga entradas no n\u00e3o-bear) + C auto-resume do cap \u22125% bounded \u221212% (3 backstops) + D promo\u00e7\u00e3o paper\u2192real como PORT\u00c3O sobre B (fechou o HIGH do cofre BTC); tudo NO-OP em bear at\u00e9 regime virar E trilha provar; **Farm BUYS reais agora dependem de promo\u00e7\u00e3o \u2192 `PROMOTION_GRANDFATHER=farmnl` liga-na-hora**\n- [Cockpit sim + recorder](tradeux-cockpit-sim-recorder.md) \u2014 UI read-only (2026-06-25, `023aa00`): widget \"Simula\u00e7\u00e3o ao vivo\" (candle SVG+RSI pane+marcadores+SMA+`simDecision`), `signalRecorderJob` (sinal\u2192desfecho, journal), **experimento das previs\u00f5es do operador** (`POST /analysis/call`+placar, mede se o olho do dono bate o acaso); **revers\u00e3o 1m REFUTADA por backtest 4-\u00e2ngulos** (sem edge taker-side, microestrutura=s\u00f3 market-making); gotcha: heredoc-com-aspas corrompe JSX\u2192usar Write+python"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:57:16)*
+
+
+## 🤖 Claude *(23:57:16)*
+
+Memória + índice atualizados. Agora o Session Record no HANDOFF.md:
+
+## 🤖 Claude *(23:57:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> /home/gcrux-tradeux/HANDOFF.md <<'EOF'\n\n### \ud83e\udd1d SEAL \u2014 2026-06-25 (COCKPIT DE SIMULA\u00c7\u00c3O + EXPERIMENTO DA LEITURA + revers\u00e3o 1m REFUTADA \u2014 6 commits UI/pesquisa, todos READ-ONLY)\n\n**`Vivo==master==origin==023aa00`.** \ud83d\udd34 LIVE (`halted=false`) o tempo todo \u00b7 Canary FARM-ONLY \u00b7 **equity $149,40 intacta** \u00b7 site 200 \u00b7 4 containers up \u00b7 secret-scan do range `6cec694..023aa00` LIMPO. Trunk-based direto-a-master (commits j\u00e1 em origin; SEM PR). Esta sess\u00e3o = a frente de UI/pesquisa **em cima** do motor de autonomia A-D (selado acima); **ZERO money-path tocado**.\n\nMem\u00f3ria nova: [[tradeux-cockpit-sim-recorder]].\n\n- **Widget \"Simula\u00e7\u00e3o ao vivo\"** no `/cockpit` (`7cc8258`\u2192`760cc02`\u2192`21ec9af`): seletor de s\u00edmbolo + candle SVG pr\u00f3prio + RSI(14) sub-pane + **marcadores de execu\u00e7\u00e3o simulada na vela** (\u25b2/\u25bc nos cruzamentos de RSI; vazado=em CAIXA/gated, s\u00f3lido=executaria) + SMA20/50 + painel de sinais + banner `simDecision` (\"o que eu faria agora, sem ordem\"). Backend anexa `signals` por s\u00edmbolo no `/analysis/cockpit`. (Tentei iframe TradingView; \u00e9 3rd-party \u2192 n\u00e3o d\u00e1 p/ anotar \u2192 voltei ao SVG.)\n- **`signalRecorderJob`** (`4f14527`): grava sinal\u2192desfecho (fluxo extremo/RSI cross) + retorno direcional em +1/5/10/15min + hit-rate por tipo, persiste `logs/signal_journal.jsonl`. Painel \"Padr\u00f5es registrados\".\n- **EXPERIMENTO da leitura do operador** (`023aa00`): `POST /analysis/call` + bot\u00f5es \"vai SUBIR/CAIR\" + placar \"Minhas previs\u00f5es\" (acerto @10min vs 50% acaso). **Pergunta em aberto: o olho do dono tem edge?** >55% consistente \u2192 vira paper track. \u26a0\ufe0f tem 1 call de teste minha no placar (desconsiderar).\n- **REVERS\u00c3O de 1m REFUTADA** (workflow `wf_843099ce`, 4 \u00e2ngulos + c\u00e9tico): RSI-grid 0/12 net+ (perde ANTES da fee), random-walk (microestrutura = s\u00f3 market-making, n\u00e3o taker), padr\u00e3o do dono real mas 17bps<20bps de fee. Refor\u00e7a a doutrina 1m-scalping. \u00danico n\u00e3o-testado = a leitura humana.\n\n**\u26a1 NEXT:** (1) **o dono come\u00e7a a registrar as previs\u00f5es dele** (clicar SUBIR/CAIR quando \"v\u00ea\" um movimento) \u2192 em ~15-20 calls o placar diz se h\u00e1 edge na discri\u00e7\u00e3o. (2) Empilhar mais sinais no gr\u00e1fico se ele quiser: **Bollinger/MACD(sub-pane)/volume/marcadores de flow na vela** (oferecido, n\u00e3o-constru\u00eddo). (3) Decis\u00f5es macro do dono ainda abertas: **OpenRouter** \u2014 ligar \"Free endpoints that may train\" mata o `[AGENTE PARADO]` recorrente na raiz (vs desligar o ZDR a cada incidente); **`PROMOTION_GRANDFATHER=farmnl`** se quiser as compras do Farm a real j\u00e1. (4) d\u00e9bitos LOW do motor A-D (ver SEAL anterior). **Claude N\u00c3O vira o HALT.** Working tree: s\u00f3 `backtest-results/*` (scratch). **Stack `ps` mostra \"Up 21h\" mas o conte\u00fado servido \u00e9 o novo \u2014 verificado via grep nos bundles + `POST /call` retornando estado fresco (id:1).**\nEOF\necho \"HANDOFF selado.\"\necho \"=== verifica\u00e7\u00e3o final: tree limpo + sync ===\"\nsudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status -sb 2>/dev/null | head -1\necho \"mem\u00f3rias:\"; ls /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/*.md | wc -l",
+  "description": "Append HANDOFF session record, verify sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF selado.
+> === verificação final: tree limpo + sync ===
+> ## master...origin/master
+> memórias:
+> 33
+> ```
+
+## 🤖 Claude *(23:57:55)*
+
+
+## 🤖 Claude *(23:58:05)*
+
+Tudo selado, zero estado órfão.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-25
+───────────────────────────────────────────────────
+Commits     : 9 (feat(autonomy)×2 · feat(risk) · feat(cockpit)×5 · feat(research))
+              Branch: master (trunk-based, sem PR — já em origin)
+HANDOFF.md  : ✅ atualizado (2 SEALs: motor A-D + cockpit/experimento)
+Memory      : 2 novos (tradeux-autonomy-engine, tradeux-cockpit-sim-recorder) + índice
+PRs abertos : nenhum (modelo trunk-based; 9 commits já no master/origin)
+Push        : ✅ origin sincronizado (master==origin/master)
+Secret-scan : ✅ LIMPO (range 6cec694..023aa00)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**O que ficou pronto e no ar (tudo verificado ao vivo):**
+- 🤖 **Motor de autonomia A→B→C→D** — o sistema vira sozinho (supervisor de regime + auto-resume do cap −5% bounded em −12% + promoção paper→real como portão). NO-OP em bear, armado esperando. Gated QA+TL, sim 19/19.
+- 🖥️ **Cockpit de simulação** — widget "o que eu faria" (candle + RSI pane + marcadores + SMA + decisão), gravador sinal→desfecho, e o **experimento das tuas previsões** (botões SUBIR/CAIR + placar vs acaso).
+- 🔬 **Reversão de 1m refutada com rigor** (4 ângulos) — sem edge taker-side; a única porta aberta é a **tua leitura**, que agora dá pra medir.
+
+**Pendências do dono (pra próxima):** registrar as previsões pra o placar encher · ligar o toggle "Free endpoints" do OpenRouter (mata o agente caindo na raiz) · `PROMOTION_GRANDFATHER=farmnl` se quiser Farm-buys reais já · mais sinais no gráfico (Bollinger/MACD/volume/flow) se quiser.
+
+Sessão fechada. 🤝
