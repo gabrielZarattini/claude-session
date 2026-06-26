@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1430
-> * **Sessões do Claude**: 1388
+> * **Total de Sessões Registradas**: 1431
+> * **Sessões do Claude**: 1389
 > * **Sessões do Gemini**: 42
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` - *2026-06-26*
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-25*
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` - *2026-06-24*
 *   `[[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-24*
@@ -283,6 +284,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions)
 *   `[[2026-06-26 - Implementar E2E UI testing em browser real]]` (ClaudeSessions)
 *   `[[2026-06-26 - Filtrar alertas do Telegram removendo flow messages]]` (ClaudeSessions)
+*   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions)
 *   `[[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]` (ClaudeSessions)
 *   `[[2026-06-26 - 2252460c-95ca-468a-9776-e3ef63ca5efb]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-afadcea34084ceac0]]` (ClaudeSessions)

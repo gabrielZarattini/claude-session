@@ -1837,5 +1837,5 @@ Uma observação pra fechar com honestidade: aquele **ping de teste do Telegram*
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-26 - 2252460c-95ca-468a-9776-e3ef63ca5efb]]
-> * **Próxima Sessão**: [[2026-06-26 - Filtrar alertas do Telegram removendo flow messages]]
+> * **Próxima Sessão**: [[2026-06-26 - Clarificar essência e tom do MCORCH]]
 %% --- TIMELINE END --- %%

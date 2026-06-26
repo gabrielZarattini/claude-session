@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 52
-> * **Total de Sessões**: 1425
+> * **Total de Sessões**: 1426
 
 ---
 
@@ -90,6 +90,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-26 - Implementar E2E UI testing em browser real]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-26 - Filtrar alertas do Telegram removendo flow messages]]` (ClaudeSessions) - *2026-06-26*
+*   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-26 - 2252460c-95ca-468a-9776-e3ef63ca5efb]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-25 - agent-afadcea34084ceac0]]` (ClaudeSessions) - *2026-06-25*

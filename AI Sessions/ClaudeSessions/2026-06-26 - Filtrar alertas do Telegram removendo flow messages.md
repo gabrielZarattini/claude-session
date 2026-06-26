@@ -1902,15 +1902,501 @@ Desta vez **não foi ZDR/404** — é **429 de cota**: `free-models-per-day` esg
 }
 ```
 
----
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O agente caiu por estourar a cota diária do modelo grátis (2000 req/dia no intervalo de 5min), não por ZDR. Como tratar o 'batimento do agente'?"="faça as contas de quantas notificações cabem nessa cota e reajusta para ser somente as mais importantes.". You can now continue with these answers in mind.
+> ```
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+## 🤖 Claude *(20:31:34)*
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
-> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
-%% --- TIMELINE END --- %%
+
+## 🤖 Claude *(20:31:41)*
+
+O dono escolheu "faça as contas e reajusta para somente as mais importantes." 
+
+Primeiro um ponto pra alinhar o modelo mental: **essa cota de 2000/dia é de chamadas LLM do agente no OpenRouter, não de notificações Telegram** (Telegram não tem esse teto aqui). Mas as duas coisas estão ligadas: cada ciclo do agente gasta cota **e** gera as observações `[AGENTE]`. Então mexer na **cadência do agente** resolve os dois — fica dentro da cota *e* espaça as notificações pras "mais importantes". Vou fazer as contas e reajustar exatamente isso.
+
+## 🧮 As contas
+
+- **Cota:** 2000 req/dia (modelo `:free`).
+- **Custo por ciclo:** 1 (inicial) + rounds de tool. Observado: 4 rounds = 5 req. Média empírica (2000 ÷ 288 ciclos do intervalo de 5min) ≈ **7 req/ciclo**.
+- **A 5min** (atual): 288 ciclos/dia × ~7 = **~2016 → estoura** (foi o que rolou; 75× hoje).
+- **A 15min:** 96 ciclos/dia × ~7 = **~672/dia** (34% da cota — folga enorme).
+- **+ cap de rounds 20→10:** limita o pior ciclo a 11 req → mesmo no teto, 96 × 11 = **1056/dia, ainda < 2000**.
+
+**Resultado:** agente vivo 24/7 dentro da cota grátis, e `[AGENTE]` cai de a-cada-5min → a-cada-15min (**−66% de ruído**), sobrando só as observações espaçadas/importantes.
+
+Aplicando agora:
+
+## 🤖 Claude *(20:31:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== antes ===\"; grep -nE \"TRADEUX_AGENT_INTERVAL|TRADEUX_AGENT_MAX_ROUNDS\" tradeux-agent/.env || echo \"(sem MAX_ROUNDS no .env)\"\nls -l tradeux-agent/.env'",
+  "description": "Inspect agent .env before edit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === antes ===
+> 16:TRADEUX_AGENT_INTERVAL=300000
+> 17:TRADEUX_AGENT_MAX_ROUNDS=20
+> -rw------- 1 gcrux-tradeux gcrux-tradeux 691 Jun  8 17:31 tradeux-agent/.env
+> ```
+
+## 🤖 Claude *(20:31:48)*
+
+
+## 🤖 Claude *(20:31:48)*
+
+Ambos já estão no `.env` (gcrux-only). Vou editar via `python3` como gcrux (preserva ownership) — replace exato.
+
+## 🤖 Claude *(20:31:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux python3 -c \"\np='/home/gcrux-tradeux/tradeux/tradeux-agent/.env'\ns=open(p).read()\nassert 'TRADEUX_AGENT_INTERVAL=300000' in s and 'TRADEUX_AGENT_MAX_ROUNDS=20' in s, 'padrao nao encontrado'\ns=s.replace('TRADEUX_AGENT_INTERVAL=300000','TRADEUX_AGENT_INTERVAL=900000')\ns=s.replace('TRADEUX_AGENT_MAX_ROUNDS=20','TRADEUX_AGENT_MAX_ROUNDS=10')\nopen(p,'w').write(s)\nprint('ok')\n\"\nsudo -n -u gcrux-tradeux bash -lc 'echo \"=== depois ===\"; grep -nE \"TRADEUX_AGENT_INTERVAL|TRADEUX_AGENT_MAX_ROUNDS\" /home/gcrux-tradeux/tradeux/tradeux-agent/.env; ls -l /home/gcrux-tradeux/tradeux/tradeux-agent/.env'",
+  "description": "Edit agent interval and max rounds, verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ok
+> === depois ===
+> 16:TRADEUX_AGENT_INTERVAL=900000
+> 17:TRADEUX_AGENT_MAX_ROUNDS=10
+> -rw------- 1 gcrux-tradeux gcrux-tradeux 691 Jun 26 17:31 /home/gcrux-tradeux/tradeux/tradeux-agent/.env
+> ```
+
+## 🤖 Claude *(20:32:00)*
+
+
+## 🤖 Claude *(20:32:01)*
+
+Config aplicada (ownership preservado). Restart do agente pra carregar o novo `.env`:
+
+## 🤖 Claude *(20:32:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose up -d agent 2>&1 | tail -4\necho \"=== env no container ===\"\ndocker exec tradeux-agent-1 sh -c \"printenv | grep -E \\\"TRADEUX_AGENT_INTERVAL|TRADEUX_AGENT_MAX_ROUNDS\\\"\"\necho \"=== ps ===\"\ndocker compose ps --format \"table {{.Name}}\\t{{.Status}}\" 2>/dev/null | grep agent\n'",
+  "description": "Restart agent and verify new env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Container tradeux-db-1 Waiting 
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-agent-1 Starting 
+>  Container tradeux-agent-1 Started 
+> === env no container ===
+> TRADEUX_AGENT_MAX_ROUNDS=10
+> TRADEUX_AGENT_INTERVAL=900000
+> === ps ===
+> tradeux-agent-1      Up Less than a second
+> ```
+
+## 🤖 Claude *(20:32:24)*
+
+
+## 🤖 Claude *(20:32:26)*
+
+Agente reiniciado com 15min + 10 rounds. Mas tem um detalhe que preciso checar pra não criar ruído novo: o modelo `:free` é **lento (~12min/ciclo)**, e o watchdog `[AGENTE PARADO]` tem um limiar de stale. Se o intervalo for sleep-pós-ciclo, 15min+12min pode encostar no limiar e gerar alarme falso. Deixa eu verificar a mecânica.
+
+## 🤖 Claude *(20:32:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== como o INTERVAL \u00e9 aplicado (loop do agente) ===\"\ngrep -nE \"AGENT_INTERVAL|setTimeout|setInterval|sleep|await new Promise\" tradeux-agent/src/index.js | head -20\necho \"\"\necho \"=== watchdog: limiar de stale ===\"\ngrep -nE \"STALE|stale|30|MIN|threshold|AGENT_STALE|process.env\" backend/src/agentHeartbeatJob.js | head -20\n'",
+  "description": "Check interval application and watchdog stale threshold"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como o INTERVAL é aplicado (loop do agente) ===
+> 7://   node src/index.js            # roda em loop no intervalo TRADEUX_AGENT_INTERVAL
+> 13://   TRADEUX_AGENT_INTERVAL   ms entre ciclos no modo loop (default 300000 = 5min)
+> 22:const INTERVAL = Number(process.env.TRADEUX_AGENT_INTERVAL || 300000);
+> 75:    timer = setTimeout(async () => {
+> 
+> === watchdog: limiar de stale ===
+> 26://   AGENT_HEARTBEAT_MS       (default 300000 = 5min)    — intervalo de checagem (piso 60s)
+> 27://   AGENT_HEARTBEAT_STALE_MS (default 1800000 = 30min)  — idade do último cycle_end p/ declarar parado (piso 2min)
+> 34:const ENABLED = (process.env.AGENT_HEARTBEAT_ENABLED || 'true') !== 'false';
+> 35:const JOURNAL = process.env.AGENT_JOURNAL_PATH || '/journal/tradeux-agent.jsonl';
+> 37:const _ms = parseInt(process.env.AGENT_HEARTBEAT_MS || String(5 * 60 * 1000), 10);
+> 39:const _stale = parseInt(process.env.AGENT_HEARTBEAT_STALE_MS || String(30 * 60 * 1000), 10);
+> 40:const STALE_MS = Number.isFinite(_stale) && _stale >= 2 * 60 * 1000 ? _stale : 30 * 60 * 1000; // piso 2min
+> 47:let staleSince = null;      // ms epoch em que detectamos a parada (compõe a dedupKey de cada outage distinta)
+> 113:        if (age > STALE_MS && !alerted) {
+> 115:            staleSince = Date.now();
+> 120:            telegramNotify.notify(msg, `agent-stale:${staleSince}`);
+> 122:        } else if (age <= STALE_MS && alerted) {
+> 126:            telegramNotify.notify(msg, `agent-recover:${staleSince}`);
+> 128:            staleSince = null;
+> 143:    logger('system', `Agent Heartbeat job iniciado (checa a cada ${CHECK_MS}ms; declara parado após ${STALE_MS}ms sem cycle_end). Read-only (tail-scan), notifica só na transição.`);
+> ```
+
+## 🤖 Claude *(20:32:31)*
+
+
+## 🤖 Claude *(20:32:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/tradeux-agent/src/index.js",
+  "offset": 60,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	
+> 61	  await tick();
+> 62	
+> 63	  if (ONCE) {
+> 64	    await mcp.close();
+> 65	    log("Modo --once: concluído.");
+> 66	    return;
+> 67	  }
+> 68	
+> 69	  log(`Entrando em loop a cada ${INTERVAL}ms. Ctrl+C para sair.`);
+> 70	  let stopped = false;
+> 71	  let timer;
+> 72	  // Auto-agendamento: só agenda o próximo ciclo depois que o atual termina (sem sobreposição).
+> 73	  const schedule = () => {
+> 74	    if (stopped) return;
+> 75	    timer = setTimeout(async () => {
+> 76	      await tick();
+> 77	      schedule();
+> 78	    }, INTERVAL);
+> 79	  };
+> 80	  schedule();
+> 81	
+> 82	  const shutdown = async () => {
+> 83	    stopped = true;
+> 84	    clearTimeout(timer);
+> 85	    await mcp.close().catch(() => {});
+> 86	    log("Encerrado.");
+> 87	    process.exit(0);
+> 88	  };
+> 89	  process.on("SIGINT", shutdown);
+> ```
+
+## 🤖 Claude *(20:32:58)*
+
+
+## 🤖 Claude *(20:33:01)*
+
+Isso confirma o risco: o intervalo é **sleep pós-ciclo** (linha 72: "só agenda o próximo depois que o atual termina"). Com o modelo `:free` lento (~12min/ciclo) + 15min de sleep = **~27min entre `cycle_end`**, e o watchdog declara parado em **30min** → margem de só 3min → **alarme falso `[AGENTE PARADO]` garantido**.
+
+Preciso subir o limiar do watchdog pra acompanhar a nova cadência. Conta: período pior-caso ≈ ~15min execução + 15min sleep = 30min → limiar em **45min** (2.7M ms) dá margem e ainda pega outage real (no 429 os ciclos falham rápido → `cycle_end` congela → alarma em 45min). Adicionando no `.env` do backend:
+
+## 🤖 Claude *(20:33:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ngrep -q \"AGENT_HEARTBEAT_STALE_MS\" /home/gcrux-tradeux/tradeux/.env && echo \"JA EXISTE\" || cat >> /home/gcrux-tradeux/tradeux/.env <<\"EOF\"\n\n# ---------- Watchdog do agente (heartbeat) ----------\n# Idade do ultimo cycle_end p/ declarar [AGENTE PARADO]. Subido 30->45min porque o agente agora roda\n# a cada 15min (sleep pos-ciclo) + modelo :free lento (~12min/ciclo) => periodo ~27min; 30min daria\n# alarme FALSO. 45min mantem margem e ainda pega outage real (no 429 os ciclos falham rapido).\nAGENT_HEARTBEAT_STALE_MS=2700000\nEOF\necho \"=== .env (tail) ===\"; tail -5 /home/gcrux-tradeux/tradeux/.env'",
+  "description": "Add watchdog stale threshold to backend .env"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .env (tail) ===
+> # ---------- Watchdog do agente (heartbeat) ----------
+> # Idade do ultimo cycle_end p/ declarar [AGENTE PARADO]. Subido 30->45min porque o agente agora roda
+> # a cada 15min (sleep pos-ciclo) + modelo :free lento (~12min/ciclo) => periodo ~27min; 30min daria
+> # alarme FALSO. 45min mantem margem e ainda pega outage real (no 429 os ciclos falham rapido).
+> AGENT_HEARTBEAT_STALE_MS=2700000
+> ```
+
+## 🤖 Claude *(20:33:24)*
+
+
+## 🤖 Claude *(20:33:24)*
+
+Restart do backend (sem rebuild — só `.env` mudou) pra carregar o novo limiar, e confirmar na prova de boot:
+
+## 🤖 Claude *(20:33:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\ndocker compose up -d backend 2>&1 | tail -3\necho \"=== aguarda boot e checa watchdog ===\"\n'\n# pequena espera ativa via docker at\u00e9 o log aparecer (sem sleep em foreground)\nfor i in $(seq 1 15); do\n  line=$(sudo -n -u gcrux-tradeux bash -lc 'docker exec tradeux-backend-1 sh -c \"grep -h \\\"Agent Heartbeat job iniciado\\\" /app/logs/system.log 2>/dev/null | tail -1\"' 2>/dev/null)\n  [ -n \"$line\" ] && { echo \"$line\"; break; }\n  docker exec tradeux-backend-1 true 2>/dev/null\ndone\n[ -z \"$line\" ] && echo \"(log do watchdog ainda nao apareceu)\"",
+  "description": "Restart backend and verify watchdog threshold"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+>  Container tradeux-db-1 Healthy 
+>  Container tradeux-backend-1 Starting 
+>  Container tradeux-backend-1 Started 
+> === aguarda boot e checa watchdog ===
+> info: 2026-06-26T19:49:40.131Z - Agent Heartbeat job iniciado (checa a cada 300000ms; declara parado após 1800000ms sem cycle_end). Read-only (tail-scan), notifica só na transição.
+> ```
+
+## 🤖 Claude *(20:33:41)*
+
+
+## 🤖 Claude *(20:33:42)*
+
+O log mostrado é o do boot **anterior** (19:49:40, 30min) — o `system.log` persiste no volume e o novo boot ainda não escreveu a linha do watchdog. Deixa eu confirmar a env no container novo e pegar a linha mais recente:
+
+## 🤖 Claude *(20:33:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\necho \"=== env no container novo ===\"\ndocker exec tradeux-backend-1 sh -c \"printenv AGENT_HEARTBEAT_STALE_MS\"\necho \"=== uptime do backend ===\"\ndocker compose -f /home/gcrux-tradeux/tradeux/docker-compose.yml ps --format \"table {{.Name}}\\t{{.Status}}\" 2>/dev/null | grep backend\necho \"=== ultimas 2 linhas do watchdog no log ===\"\ndocker exec tradeux-backend-1 sh -c \"grep -h \\\"Agent Heartbeat job iniciado\\\" /app/logs/system.log 2>/dev/null | tail -2\"\n'",
+  "description": "Confirm env var loaded and latest watchdog log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === env no container novo ===
+> 2700000
+> === uptime do backend ===
+> tradeux-backend-1    Up 16 seconds
+> === ultimas 2 linhas do watchdog no log ===
+> info: 2026-06-26T19:49:40.131Z - Agent Heartbeat job iniciado (checa a cada 300000ms; declara parado após 1800000ms sem cycle_end). Read-only (tail-scan), notifica só na transição.
+> info: 2026-06-26T20:33:33.036Z - Agent Heartbeat job iniciado (checa a cada 300000ms; declara parado após 2700000ms sem cycle_end). Read-only (tail-scan), notifica só na transição.
+> ```
+
+## 🤖 Claude *(20:33:56)*
+
+
+## 🤖 Claude *(20:33:57)*
+
+Confirmado: boot novo (20:33:33) declara parado após **2700000ms = 45min**, e a env carregou. Deixa eu fazer um smoke final consolidado pra garantir que o estado PARADO-MAS-ARMADO seguiu intacto após os restarts.
+
+## 🤖 Claude *(20:34:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\necho \"=== riskState (boot mais recente) ===\"\ndocker exec tradeux-backend-1 sh -c \"grep -h riskState /app/logs/system.log 2>/dev/null | tail -1\"\necho \"=== flow notif (boot mais recente) ===\"\ndocker exec tradeux-backend-1 sh -c \"grep -h \\\"Flow job iniciado\\\" /app/logs/system.log 2>/dev/null | tail -1\"\necho \"=== containers ===\"\ndocker compose -f /home/gcrux-tradeux/tradeux/docker-compose.yml ps --format \"table {{.Name}}\\t{{.Status}}\" 2>/dev/null\n'\ncurl -s -m5 -o /dev/null -w \"site -> %{http_code}\\n\" https://tradeux.gcrux.com/",
+  "description": "Final consolidated smoke check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === riskState (boot mais recente) ===
+> info: 2026-06-26T20:33:32.776Z - [riskState] inicializado — env-hard=false · floor=false · manual=false · daily-cap=false · halted=false.
+> === flow notif (boot mais recente) ===
+> === containers ===
+> NAME                 STATUS
+> tradeux-agent-1      Up About a minute
+> tradeux-backend-1    Up 30 seconds
+> tradeux-db-1         Up 11 days (healthy)
+> tradeux-frontend-1   Up 41 hours
+> site -> 200
+> ```
+
+## 🤖 Claude *(20:34:09)*
+
+
+## 🤖 Claude *(20:34:11)*
+
+riskState `halted=false` preservado — estado PARADO-MAS-ARMADO intacto. A linha do flow veio vazia só porque o `flowJob` loga em `flow.log` (não `system.log`). Confirmação final rápida do FLOW no container atual:
+
+## 🤖 Claude *(20:34:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\necho \"FLOW_NOTIFY_ENABLED no container = $(docker exec tradeux-backend-1 printenv FLOW_NOTIFY_ENABLED)\"\necho \"--- flow.log (boot mais recente) ---\"\ndocker exec tradeux-backend-1 sh -c \"grep -h \\\"Flow job iniciado\\\" /app/logs/flow.log 2>/dev/null | tail -1\"\n'",
+  "description": "Confirm FLOW gate in current container"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> FLOW_NOTIFY_ENABLED no container = false
+> --- flow.log (boot mais recente) ---
+> info: 2026-06-26T20:33:33.020Z - Flow job iniciado SHADOW (intervalo 30000ms; log de toxicidade >= 0.6; notif Telegram OFF). Ainda NÃO gateia automação.
+> ```
+
+## 🤖 Claude *(20:34:33)*
+
+
+## 🤖 Claude *(20:34:50)*
+
+Tudo verificado e no ar. Fechei os três itens — FLOW, agente e ping — e ajustei a cadência do agente "fazendo as contas" pra caber na cota e deixar só o essencial.
+
+## ✅ Entregue nesta rodada
+
+**1. `[FLOW]` silenciado** — gate `FLOW_NOTIFY_ENABLED=false`. Boot confirma `notif Telegram OFF`. O sinal segue computado/logado/gateando a id2; só o aviso calou.
+
+**2. Ping de teste no Telegram** — enviado, `enviado: true`. Era ~95% do seu ruído que sumiu; este canal (o do **flip de regime = gatilho do bull**) está vivo. Confirma só quando puder que chegou aí. 🔔
+
+**3. Agente — contas feitas e cadência reajustada** (a causa era **429 de cota**, não ZDR):
+
+| Parâmetro | Antes | Agora | Conta |
+|---|---|---|---|
+| Intervalo | 5min | **15min** | 96 ciclos/dia × ~7 req ≈ **672/dia** (34% da cota de 2000) |
+| Tool rounds (teto) | 20 | **10** | pior caso 11 req/ciclo → mesmo no teto, **1056/dia < 2000** |
+| Watchdog stale | 30min | **45min** | período real ~27min (15min sleep + ~12min do `:free`) → 30min daria **alarme falso**; 45min evita e ainda pega outage real |
+
+**Efeito líquido:** o agente fica **vivo 24/7 dentro da cota grátis** (sem pagar), e as observações `[AGENTE]` caem de a-cada-5min → a-cada-15min (**−66%**). Ele ainda vai dar 429 até a cota resetar (**~00:00 UTC, ~3,5h**); a partir daí roda na nova cadência sem estourar.
+
+## 📋 Sobre "os alertas todos → só os mais importantes"
+Depois do FLOW (alto volume) + `[AGENTE]` (espaçado 3×), o que sobra é **tudo edge-trigger/evento e raro**: `[REGIME]`/`[CROSS]` (gatilhos do bull), ordens (✅/🛑), falha de automação, ambiente incoerente, saque, paper/promoção. Na prática **já são "só os mais importantes"**. Se quiser cortar mais algum (ex.: as próprias observações `[AGENTE]`, ou os `[CROSS]`), me diz qual.
+
+## ⚠️ Pendências
+- **Não comitei** (você não pediu). Versionado modificado: [flowJob.js](backend/src/flowJob.js) + `.env.example`. Runtime **não-git** (reaplicar num reset-db): `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` no `.env`, e `INTERVAL=900000`/`MAX_ROUNDS=10` no `tradeux-agent/.env`.
+- Stack 4/4 up, site 200, `halted=false` (parqueado intacto).
+
+Quer que eu **comite (direto-a-master) + sele no `/handoff`** pra registrar essas mudanças runtime antes que se percam? Posso fazer os dois agora.
+
+## 👤 User *(20:57:56)*
+
+tem mais algo para revisar ou verificar antes de comitar e fazer o push?
+
+## 🤖 Claude *(20:58:29)*
+
+
+## 🤖 Claude *(20:58:31)*
+
+Boa pergunta — antes de tocar o `.git` (que é live e direto-a-master) vale fechar a diligência. Deixa eu levantar exatamente o que entra, a procedência, e varrer segredos. Tudo como gcrux pra não envenenar o owner do `.git`.
+
+## 🤖 Claude *(20:58:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== STATUS COMPLETO (o que esta sujo) ===\"\ngit -c safe.directory=\"*\" status --short 2>&1 | grep -v \"Permission denied\\|could not open\"\necho \"\"\necho \"=== O QUE VOU COMITAR (so estes 2 arquivos versionados) ===\"\ngit -c safe.directory=\"*\" diff --stat -- backend/src/flowJob.js .env.example\necho \"\"\necho \"=== OWNERSHIP dos arquivos tocados (devem ser gcrux) ===\"\nls -l backend/src/flowJob.js .env.example\necho \"\"\necho \"=== SECRET-SCAN no diff (procura chaves/tokens/segredos) ===\"\ngit -c safe.directory=\"*\" diff -- backend/src/flowJob.js .env.example | grep -iE \"api[_-]?key|secret|token|password|passphrase|AES_KEY|JWT|[0-9a-f]{32,}|BINANCE|bearer\" && echo \">>> ACHOU PADRAO SUSPEITO <<<\" || echo \"LIMPO (nenhum padrao de segredo no diff)\"\n'",
+  "description": "Pre-commit inspection: status, scope, ownership, secret-scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === STATUS COMPLETO (o que esta sujo) ===
+>  M .env.example
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+>  M backend/src/flowJob.js
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> 
+> === O QUE VOU COMITAR (so estes 2 arquivos versionados) ===
+>  .env.example           |  6 ++++++
+>  backend/src/flowJob.js | 19 +++++++++++++------
+>  2 files changed, 19 insertions(+), 6 deletions(-)
+> 
+> === OWNERSHIP dos arquivos tocados (devem ser gcrux) ===
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 9128 Jun 26 16:47 backend/src/flowJob.js
+> -rw-rw-r-- 1 gcrux-tradeux gcrux-tradeux 4770 Jun 26 16:48 .env.example
+> 
+> === SECRET-SCAN no diff (procura chaves/tokens/segredos) ===
+> LIMPO (nenhum padrao de segredo no diff)
+> ```
+
+## 🤖 Claude *(20:59:31)*
+
+
+## 🤖 Claude *(20:59:33)*
+
+Inspeção limpa: escopo são só os 2 arquivos (o `backtest-results/*` é scratch — fica de fora via `git add` seletivo), ownership gcrux, e **secret-scan limpo**. Agora o pré-flight que realmente importa antes de um push direto-a-master: **em que branch estou, o remote, e o caminho de push** (que tem aquele detalhe da chave SSH só-do-ubuntu).
+
+## 🤖 Claude *(20:59:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux\necho \"=== BRANCH atual ===\"; git -c safe.directory=\"*\" rev-parse --abbrev-ref HEAD\necho \"=== HEAD local vs descricao ===\"; git -c safe.directory=\"*\" log --oneline -1\necho \"=== REMOTE ===\"; git -c safe.directory=\"*\" remote -v\necho \"=== AHEAD/BEHIND origin ===\"; git -c safe.directory=\"*\" status -sb 2>&1 | head -1\necho \"=== owner do .git (deve ser gcrux) ===\"; ls -ld .git | awk \"{print \\$3\\\":\\\"\\$4}\"\n'",
+  "description": "Check branch, remote, ahead/behind, .git ownership"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BRANCH atual ===
+> master
+> === HEAD local vs descricao ===
+> 023aa00 feat(cockpit): registro das previsoes do operador + placar + SMA no grafico
+> === REMOTE ===
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> === AHEAD/BEHIND origin ===
+> ## master...origin/master
+> === owner do .git (deve ser gcrux) ===
+> gcrux-tradeux:gcrux-tradeux
+> ```
+
+## 🤖 Claude *(21:00:09)*
+
+
+## 🤖 Claude *(21:00:22)*
+
+Pré-flight completo — **nada bloqueando**. Resumo do que verifiquei:
+
+| Check | Resultado |
+|---|---|
+| Escopo do commit | só [flowJob.js](backend/src/flowJob.js) + `.env.example` (+19/−6). O `backtest-results/*` scratch fica de fora via `git add` seletivo |
+| Secret-scan do diff | ✅ limpo |
+| Ownership (arquivos + `.git`) | ✅ gcrux-tradeux |
+| Sintaxe + testes | ✅ `node --check` + suíte de sim **19/19** |
+| Branch / base | ✅ `master`, em sincronia com `origin/master` (HEAD `023aa00`, sem commits órfãos) |
+| Auto-revisão de risco | ✅ gate envolve **só** `notifyFlowExtreme` (MEMORY/id2/log SHADOW/capitulação **fora** do gate); default `true` = retrocompat; `EXTREME` set sem estado órfão; sem impacto em migration/frontend/agent-CI |
+
+**Dois pontos que você deve saber (não são bloqueios):**
+
+1. **O commit é estreito — só o gate do `[FLOW]` + doc.** As mudanças do agente (intervalo 15min, rounds 10, watchdog 45min) e o `FLOW_NOTIFY_ENABLED=false` são **runtime `.env` (gitignored)** → não vão pro git. Elas precisam ser registradas no **HANDOFF** (no `/handoff`) pra não se perderem num reset-db. Vou garantir isso ao selar.
+
+2. **Push é SSH** (`git@github.com:gabrielZarattini/...`) e a chave é **só do ubuntu** (gcrux não tem). Então a dança é: commit como gcrux → push como ubuntu → `chown .git` de volta pra gcrux (o gotcha conhecido). Já mapeado.
+
+**Mensagem de commit que vou usar:**
+```
+chore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED
+
+Fluxo extremo do taker era ~95% do ruido no Telegram e o dono nao decide
+nada com ele. Gate FLOW_NOTIFY_ENABLED (default true, retrocompat) envolve
+SO a chamada notifyFlowExtreme; sinal segue computado/logado/gateando a id2.
+[REGIME]/[CROSS]/[SUPERVISOR]/ordens/agente intactos. .env.example documenta.
+```
+
+Sobre o gate **QA+TL** formal: para um diff de ~19 linhas de toggle de notificação (sem money-path, reversível por env), eu julgo **opcional** — já fiz a auto-revisão contra o mesmo checklist. Mas se quiser a disciplina completa, rodo qa-engineer + tech-lead em paralelo antes (custo baixo).
+
+**Recomendo seguir direto pro commit+push.** Dou o go? (ou: "roda o QA+TL antes" / "comita e sela tudo")
