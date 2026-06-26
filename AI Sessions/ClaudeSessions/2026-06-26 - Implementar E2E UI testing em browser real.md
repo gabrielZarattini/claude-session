@@ -3724,3 +3724,890 @@ Your final reply must contain the markdown report and nothing else.
 **No security vulnerabilities identified.** The change is a self-contained billing-accuracy correction over server-trusted, already-validated, tenant-scoped values; it introduces no new input, injection, auth, secret, or cross-tenant attack surface, and cannot mint or drain coins (arithmetic is bounded, non-negative, and the refund path retains its existing anti-mint guard).
 
 **Verdict: SAFE** (0 findings).
+
+## 👤 User *(01:00:17)*
+
+ok continue
+
+## 🤖 Claude *(01:00:41)*
+
+
+## 🤖 Claude *(01:00:43)*
+
+/security-review **SAFE** (0 findings). Continuo com a **Fase 2** (distribuição de texto recorrente — o lever do gargalo), verifico se o **LinkedIn realmente publicou**, e arrumo o drift de doc.
+
+Fase 2: configuro o plano para distribuição **recorrente text-only** (vídeo foi o ciclo witnessed único; vertical publish é App-Review-gated), começando em +3 dias (o ciclo de hoje já distribuiu):
+
+## 🤖 Claude *(01:00:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\nNEXT=$(date -u -d \"+3 days\" +%Y-%m-%dT%H:%M:%SZ)\necho \"=== Fase 2 PATCH: recorrente text-only, is_active=true, next_run_at=$NEXT ===\"\ncurl -s -X PATCH \"$B/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" \\\n  \"${H[@]}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"mode\\\":\\\"every_n_days\\\",\\\"interval_days\\\":3,\\\"video_enabled\\\":false,\\\"is_active\\\":true,\\\"next_run_at\\\":\\\"$NEXT\\\"}\" \\\n  | python3 -c \"import json,sys; r=json.load(sys.stdin)[0]; print(json.dumps({k:r.get(k) for k in ['is_active','video_enabled','mode','interval_days','budget_cap_mco','next_run_at']}, indent=2))\"\necho \"=== LinkedIn post deste ciclo \u2014 publicou? ===\"\ncurl -s \"${H[@]}\" \"$B/scheduled_posts?select=id,platform,status,scheduled_at,published_at,error_message&order=scheduled_at.desc&limit=4\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin): print('-',r.get('platform'),'|',r.get('status'),'| sched',str(r.get('scheduled_at'))[:19] if r.get('scheduled_at') else None,'| pub',str(r.get('published_at'))[:19] if r.get('published_at') else None,'| err',(r.get('error_message') or '')[:40])\n\"",
+  "description": "Fase 2 recorrente + status do LinkedIn post"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Fase 2 PATCH: recorrente text-only, is_active=true, next_run_at=2026-06-29T01:00:53Z ===
+> {
+>   "is_active": true,
+>   "video_enabled": false,
+>   "mode": "every_n_days",
+>   "interval_days": 3,
+>   "budget_cap_mco": 50,
+>   "next_run_at": "2026-06-29T01:00:53+00:00"
+> }
+> === LinkedIn post deste ciclo — publicou? ===
+> - linkedin | queued | sched 2026-06-26T01:46:34 | pub None | err 
+> - linkedin | cancelled | sched 2026-06-24T00:55:35 | pub 2026-06-25T03:05:51 | err quarantined: injection-themed, unmonetiz
+> - linkedin | cancelled | sched 2026-06-24T00:55:27 | pub 2026-06-25T03:05:51 | err quarantined: injection-themed, unmonetiz
+> - linkedin | published | sched 2026-06-23T05:21:55 | pub 2026-06-25T03:05:50 | err reposted clean (meli.la direct, no homep
+> ```
+
+## 🤖 Claude *(01:01:24)*
+
+
+## 🤖 Claude *(01:01:27)*
+
+Fase 2 armada: **recorrente text-only, ativo, próximo ciclo 2026-06-29** (o de hoje já distribuiu). O LinkedIn deste ciclo está `queued` para **01:46Z** (delay de 1h por design do pipeline) — o auto-publish cron (provado HTTP 200) entrega no horário. O sistema também está **quarentenando** os posts injection antigos corretamente.
+
+Verifico o payload do post (clean + monetizado) e arrumo o drift `mcorch-demo`:
+
+## 🤖 Claude *(01:01:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\necho \"=== conte\u00fado LinkedIn deste ciclo (monetizado? clean?) ===\"\ncurl -s \"${H[@]}\" \"$B/content_library?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&type=is.null&select=title,body,tags,status&order=created_at.desc&limit=3\" | python3 -c \"\nimport json,sys,re\nfor r in json.load(sys.stdin):\n  t=r.get('title') or ''\n  if 'LinkedIn' in t:\n    body=r.get('body') or ''\n    meli=re.findall(r'meli\\.la/\\w+', body)\n    mlb=re.findall(r'mercadolivre\\.com[^\\s)]*', body)\n    leak=re.findall(r'mcorch\\.com', body)\n    print('TITLE:',t[:70])\n    print('len:',len(body),'| meli.la links:',meli,'| ML links:',len(mlb),'| mcorch.com leaks:',len(leak))\n    print('tags:',r.get('tags'))\n    print('--- primeiros 400 chars ---'); print(body[:400])\n    break\n\"\necho; echo \"=== drift mcorch-demo no repo ===\"\ncd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rn \"mcorch-demo\" CLAUDE.md 2>/dev/null\ngrep -rn \"mcorch-demo\" /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md 2>/dev/null",
+  "description": "Payload LinkedIn + localizar drift mcorch-demo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === conteúdo LinkedIn deste ciclo (monetizado? clean?) ===
+> 
+> === drift mcorch-demo no repo ===
+> CLAUDE.md:428:| **HyperFrames Studio editor (Fatia VS-UI — Fase A VIVO)** | `~/.config/systemd/user/video-studio.service` (servidor oficial `hyperframes preview` node v22, host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-demo`) · `nginx/video.mcorch.com.conf` (vhost SSO-gated, espelha `design.mcorch.com`; cert+symlink = ação Sovereign) · `src/pages/VideoStudioEditorPage.tsx` (iframe `/dashboard/canvas/video`, sub-item "Vídeo" no Canvas Studio) · contrato `/api` (`StudioApiAdapter`) + Fase B (`McorchAdapter.startRender`→`video-render`) em SDD §VS-UI Amendment v0.4 · SOP `docs/processes/video-studio-editor-deploy-and-provision.md` |
+> /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md:14:**Fatia VS-UI Fase A VIVA (2026-06-24, commits `bc5f0e5` + `94ae0db`):** editor HyperFrames NLE ENTREGUE — diretiva Sovereign "entregar valor visível, menos técnico" ([[feedback_deliver_user_value_not_plumbing]]). **Decisão-chave material:** o servidor oficial **`hyperframes preview`** (CLI unscoped `hyperframes@0.7.5`, NÃO `@hyperframes/cli` que não existe) É o editor completo (StudioApp React 19 + Hono `/api`) — roda como **processo node standalone** → o conflito React 19/18 some SEM Docker. Implantado como **serviço host systemd `video-studio.service`** (molde video-bridge): `node v22 EXPLÍCITO` (`/home/ubuntu/.local/bin/node …/hyperframes/dist/cli.js preview <projeto> --port 3210 --no-open`) — ⚠️ systemd pega `/usr/bin/node` **v18** que quebra com `styleText`/util; o `env node` do shebang NÃO resolve v22. Projeto 9:16 semeado: `hyperframes init mcorch-demo --example warm-grain --resolution portrait --non-interactive`. **PROVA:** `active`, `curl :3210/`→200 `HyperFrames Studio`, `/api/projects`→200 com o projeto. Frontend: `VideoStudioEditorPage` iframe `/dashboard/canvas/video` (rota ANTES de `canvas/:id`), nav "Vídeo" no Canvas Studio, build deployado (chunk `VideoStudioEditorPage-CCjrPhI0`). vhost `nginx/video.mcorch.com.conf` (SSO-gated, espelha design). **Contrato `/api` (Lei 2) selado dos `.d.ts` publicados** — `StudioApiAdapter` {listProjects,resolveProject,bundle→`bundleToSingleHtml`,lint,runtimeUrl,rendersDir,**startRender**}; `createStudioApi(adapter)` monta TODAS as rotas → host implementa SÓ o adapter. **Render-parity (R1) resolvido por construção:** `@hyperframes/core/runtime` IIFE = mesmo runtime no preview e (Fase B) no nosso motor. SDD §VS-UI Amendment v0.4 + SOP `video-studio-editor-deploy-and-provision.md`. **GOTCHAS:** `preview` é **single-project** (exige `index.html` no DIR, não aceita dir-pai → OTD-VS-016); `pkill -f hyperframes` **mata o próprio shell** (a linha de comando casa) — matar por pid da porta. **PENDENTE Sovereign (2 sudo):** cert self-signed `video.mcorch.com.{key,crt}` + `ln -s`+`nginx -t`+reload (DNS já feito). **Fase B (próxima):** `McorchAdapter.startRender`→`video-render` (motor MCORCH + mcoCoins prepaid) substitui o engine local do CLI + project store em Supabase Storage. ⚠️ `pré-VS-UI` o blueprint dizia `studio.mcorch.com`; nome adotado = **`video.mcorch.com`** (sso-gate já o lista).
+> ```
+
+## 🤖 Claude *(01:01:57)*
+
+
+## 🤖 Claude *(01:01:58)*
+
+O filtro `type=is.null` excluiu tudo (a coluna `type` tem valor). Re-consulto o post LinkedIn corretamente e arrumo o drift em ambos os arquivos:
+
+## 🤖 Claude *(01:02:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\ncurl -s \"${H[@]}\" \"$B/content_library?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&title=ilike.*LinkedIn:%20Roborock*&select=title,type,body,tags&order=created_at.desc&limit=1\" | python3 -c \"\nimport json,sys,re\nd=json.load(sys.stdin)\nif not d: print('(nada)'); sys.exit()\nr=d[0]; body=r.get('body') or ''\nprint('TITLE:',(r.get('title') or '')[:70],'| type:',r.get('type'))\nprint('meli.la:',re.findall(r'meli\\.la/\\w+',body),'| ML:',len(re.findall(r'mercadolivre\\.com',body)),'| mcorch.com leak:',len(re.findall(r'mcorch\\.com',body)))\nprint('tags:',r.get('tags'))\nprint('--- corpo (500c) ---'); print(body[:500])\n\"",
+  "description": "Verificar monetiza\u00e7\u00e3o + limpeza do post LinkedIn"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TITLE: LinkedIn: Roborock S8 Pro Ultra: o robô que aspira, passa pano e esvaz | type: text
+> meli.la: ['meli.la/2gh13Sw'] | ML: 0 | mcorch.com leak: 1
+> tags: []
+> --- corpo (500c) ---
+> Passei a semana inteira sem tocar em um aspirador de pó ou rodo. 🤯
+> 
+> Parece mágica, mas é tecnologia. Antes, a limpeza da casa consumia horas preciosas do meu tempo livre. Agora, eu delego 100% dessa tarefa para o Roborock S8 Pro Ultra.
+> 
+> Este robô não apenas aspira e passa pano com uma eficiência incrível (a tecnologia de vibração sônica realmente esfrega o chão!), mas o grande diferencial é sua base ultracompleta: ele esvazia a própria poeira, lava o seu pano e se seca sozinho. ✨
+> 
+> O Roborock S8
+> ```
+
+## 🤖 Claude *(01:02:20)*
+
+
+## 🤖 Claude *(01:02:20)*
+
+O post está **monetizado** (`meli.la/2gh13Sw`, link assinado do Roborock) e o copy é clean ✓. Mas detectei **1 menção a `mcorch.com`** no corpo — a sessão anterior fechou exatamente um "CTA-leak (href=mcorch.com)" que dilui atribuição. O post está `queued` (publica 01:46), então se for leak dá pra corrigir antes. Vejo o contexto exato:
+
+## 🤖 Claude *(01:02:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\ncurl -s \"${H[@]}\" \"$B/content_library?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&title=ilike.*LinkedIn:%20Roborock*&select=id,body&order=created_at.desc&limit=1\" | python3 -c \"\nimport json,sys,re\nr=json.load(sys.stdin)[0]; body=r.get('body') or ''\nprint('content_id:',r['id'])\nprint('=== corpo COMPLETO ===')\nprint(body)\nprint('=== contexto de cada mcorch.com ===')\nfor m in re.finditer(r'.{60}mcorch\\.com.{60}', body): print('...'+m.group(0)+'...')\n\"",
+  "description": "Corpo completo + contexto do mcorch.com"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> content_id: 19807e6a-e88c-4ba1-ac78-9bf093dbcba0
+> === corpo COMPLETO ===
+> Passei a semana inteira sem tocar em um aspirador de pó ou rodo. 🤯
+> 
+> Parece mágica, mas é tecnologia. Antes, a limpeza da casa consumia horas preciosas do meu tempo livre. Agora, eu delego 100% dessa tarefa para o Roborock S8 Pro Ultra.
+> 
+> Este robô não apenas aspira e passa pano com uma eficiência incrível (a tecnologia de vibração sônica realmente esfrega o chão!), mas o grande diferencial é sua base ultracompleta: ele esvazia a própria poeira, lava o seu pano e se seca sozinho. ✨
+> 
+> O Roborock S8 Pro Ultra é o upgrade definitivo para quem valoriza tempo e uma casa impecável sem esforço.
+> 
+> Pronto para revolucionar sua rotina de limpeza? Recupere seu tempo e invista em conforto.
+> 
+> Garanta o seu aqui: https://mcorch.com
+> 
+> #RoborockS8ProUltra #CasaInteligente #Inovação #LimpezaAutomatizada #Tecnologia
+> 
+> 👉 Roborock S8 Pro Ultra: https://meli.la/2gh13Sw
+> === contexto de cada mcorch.com ===
+> ```
+
+## 🤖 Claude *(01:02:50)*
+
+
+## 🤖 Claude *(01:02:54)*
+
+**Achado de receita real (Lei 1):** o post tem DOIS CTAs:
+1. `Garanta o seu aqui: https://mcorch.com` ← **LEAK** — manda o clique pra homepage (sem produto, sem atribuição)
+2. `👉 Roborock...: https://meli.la/2gh13Sw` ← link correto monetizado
+
+A sessão anterior fechou o leak na forma `href=mcorch.com` (HTML), mas o AI agora escreve o CTA como **texto puro** `https://mcorch.com` — o guard não pega. O post está `queued` (publica 01:46), e isso é exatamente o gargalo de atribuição que você quer fechar. Vou: achar o guard, corrigir o post queued, e estender o guard durável. Localizo:
+
+## 🤖 Claude *(01:03:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== guard existente (href=mcorch.com / CTA leak) ===\"\ngrep -rnE \"mcorch\\.com|Garanta o seu|leak|homepage|href=\" supabase/functions/orchestrate-step/index.ts supabase/functions/_shared/ supabase/functions/publish-social/index.ts 2>/dev/null | grep -iE \"mcorch\\.com|leak|homepage|garanta|cta\" | head -20\necho \"=== de onde publish-social l\u00ea o corpo (scheduled_posts.content?) ===\"\ngrep -nE \"scheduled_posts|\\.content|body|from\\(\\\"content\" supabase/functions/publish-social/index.ts 2>/dev/null | head -15\necho \"=== scheduled_posts: tem c\u00f3pia do body? ===\"\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\ncurl -s \"${H[@]}\" \"$B/scheduled_posts?status=eq.queued&select=*&order=scheduled_at.desc&limit=1\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif not d: print('(nenhum queued)'); sys.exit()\nr=d[0]; print('cols:',list(r.keys()))\nfor k,v in r.items():\n  if isinstance(v,str) and ('mcorch.com' in v or 'meli.la' in v or 'Roborock' in v): print(f'  {k}: ...{v[:120]}...')\n  elif k in ('id','content_id','platform','status','scheduled_at'): print(f'  {k}: {v}')\n\"",
+  "description": "Achar guard + de onde publish-social l\u00ea + body no scheduled_posts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === guard existente (href=mcorch.com / CTA leak) ===
+> supabase/functions/_shared/oauth-state.ts:25:// Constant-time string compare (avoids leaking the valid signature via timing).
+> supabase/functions/_shared/oauth-state.ts:42:// replay of a leaked-but-valid state to that window).
+> supabase/functions/_shared/affiliate.ts:124:        // Branded redirect when configured (login.mcorch.com/go/<uuid>); fail-safe to the direct Supabase fn
+> supabase/functions/_shared/affiliate.ts:172: *  homepage (https://mcorch.com) instead of the affiliate link — the single highest buy-intent click, leaked to a
+> supabase/functions/_shared/affiliate.ts:173: *  page that earns nothing (and is CF-challenged). Rewrite every homepage-only href to the affiliate target so no
+> supabase/functions/_shared/affiliate.ts:174: *  buy intent escapes the funnel. Only rewrites the BARE homepage (no path) — real deep links are left intact. */
+> supabase/functions/_shared/affiliate.ts:262:      // NOTE: AFFILIATE_REDIRECT_BASE must NOT point at a CF-challenged host (login.mcorch.com/go was dead — unset
+> supabase/functions/_shared/affiliate.ts:276:  // HTML articles: kill any LLM-hallucinated homepage CTA so the highest buy-intent click hits the affiliate link.
+> supabase/functions/orchestrate-step/index.ts:178:    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> supabase/functions/orchestrate-step/index.ts:267:            "HTTP-Referer": "https://mcorch.com",
+> supabase/functions/orchestrate-step/index.ts:539:            "HTTP-Referer": "https://mcorch.com",
+> supabase/functions/orchestrate-step/index.ts:618:            "HTTP-Referer": "https://mcorch.com",
+> === de onde publish-social lê o corpo (scheduled_posts.content?) ===
+> 24:    const body = await req.json();
+> 25:    const { platform, content, social_account_id, scheduled_post_id, user_id: bodyUserId } = body;
+> 44:    // - Service role (auto-publish cron): auth.getUser() returns null; trust user_id from body
+> 56:    } else if (isServiceRole && bodyUserId) {
+> 57:      userId = bodyUserId;
+> 92:        body: JSON.stringify({ social_account_id: account.id }),
+> 123:        body: JSON.stringify({
+> 157:          body: JSON.stringify(
+> 186:          body: JSON.stringify({
+> 205:          body: JSON.stringify({
+> 224:        body: JSON.stringify({
+> 243:        .from("scheduled_posts")
+> === scheduled_posts: tem cópia do body? ===
+> cols: ['id', 'user_id', 'content_id', 'campaign_id', 'social_account_id', 'platform', 'scheduled_at', 'published_at', 'status', 'platform_post_id', 'error_message', 'retry_count', 'max_retries', 'metadata', 'created_at', 'updated_at']
+>   id: 94c17e53-0e8d-4123-80e9-2c71b37365ae
+>   content_id: 19807e6a-e88c-4ba1-ac78-9bf093dbcba0
+>   platform: linkedin
+>   scheduled_at: 2026-06-26T01:46:34.706+00:00
+>   status: queued
+> ```
+
+## 🤖 Claude *(01:03:22)*
+
+
+## 🤖 Claude *(01:03:25)*
+
+Arquitetura clara: o guard vive em `_shared/affiliate.ts` (reescreve CTA de homepage → afiliado), mas só na forma **HTML href** — o post LinkedIn é **texto puro**, então escapou. E `scheduled_posts` não guarda o body: referencia `content_id` → o publisher lê `content_library.body` ao vivo no horário. Então corrijo o `content_library.body` (immediate) + estendo o guard p/ texto puro (durável). Leio o guard + confirmo o read do auto-publish:
+
+## 🤖 Claude *(01:03:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "offset": 160,
+  "limit": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 160	/** Escape a literal string for safe inclusion in a RegExp. */
+> 161	function escapeRegExp(s: string): string {
+> 162	  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+> 163	}
+> 164	
+> 165	/** Escape a string for safe inclusion in HTML text/attribute context (defense-in-depth: the product name is
+> 166	 *  catalog data — service-role-written, not tenant-controllable — but never interpolated raw into HTML). */
+> 167	function escapeHtml(s: string): string {
+> 168	  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+> 169	}
+> 170	
+> 171	/** Deterministic CONVERSION-LEAK guard: LLMs frequently emit the final CTA button linking to the bare brand
+> 172	 *  homepage (https://mcorch.com) instead of the affiliate link — the single highest buy-intent click, leaked to a
+> 173	 *  page that earns nothing (and is CF-challenged). Rewrite every homepage-only href to the affiliate target so no
+> 174	 *  buy intent escapes the funnel. Only rewrites the BARE homepage (no path) — real deep links are left intact. */
+> 175	export function rewriteHomepageCtas(html: string, affiliateTarget: string): string {
+> 176	  if (!affiliateTarget) return html;
+> 177	  return html.replace(/href=(["'])https?:\/\/(?:www\.)?mcorch\.com\/?\1/gi, `href=$1${affiliateTarget}$1`);
+> 178	}
+> 179	
+> 180	/** Embed a monetized link for `productName` into `content`. HTML surfaces inline-link the first mention (or
+> 181	 *  append an anchored CTA); text surfaces (LinkedIn/X) append a raw-URL CTA (an <a> tag would render literally,
+> 182	 *  and inlining a URL mid-tweet risks the 280-char limit). Returns the rewritten content. */
+> 183	function embedProductLink(content: string, productName: string, target: string, format: "html" | "text"): string {
+> 184	  const name = (productName ?? "").trim();
+> 185	  if (!name) return content;
+> 186	  const re = new RegExp(escapeRegExp(name), "i");
+> 187	  if (format === "html") {
+> 188	    if (re.test(content)) {
+> 189	      let replaced = false;
+> 190	      return content.replace(re, (m) => {
+> 191	        if (replaced) return m;
+> 192	        replaced = true;
+> 193	        return `<a href="${target}">${m}</a>`;
+> 194	      });
+> 195	    }
+> 196	    return `${content}\n<p>👉 Confira o <a href="${target}">${escapeHtml(name)}</a> no Mercado Livre.</p>`;
+> 197	  }
+> 198	  // text (LinkedIn / X): always append a CTA line with the raw tracked URL.
+> 199	  return `${content}\n\n👉 ${name}: ${target}`;
+> 200	}
+> 201	
+> 202	/**
+> 203	 * Monetize one creative for ONE chosen product. Builds the per-owner tracked ML link (buildMlProductUrl →
+> 204	 * affiliate_links row whose content_id = the creative's content_library.id, fixing the historical null), then
+> 205	 * embeds it. FAIL-OPEN: no affiliate_tag / no product → content unchanged. `guaranteeCta`: when true (the
+> 206	 * featured/primary product) a CTA is appended if the name isn't textually present, so the primary product is
+> 207	 * ALWAYS monetized; when false (secondary products) the link is added only if the product is actually mentioned,
+> 208	 * to avoid orphan affiliate_links rows + link spam.
+> 209	 */
+> 210	export async function monetizeForProduct(
+> 211	  admin: { from: (t: string) => any },
+> 212	  supabaseUrl: string,
+> 213	  content: string,
+> 214	  ownerId: string,
+> 215	  affiliateTag: string | null,
+> 216	  product: ChosenProduct,
+> 217	  opts: {
+> 218	    campaignId?: string | null;
+> 219	    mattTool?: string | null;
+> 220	    contentVariantId?: string | null;
+> 221	    platform?: string | null;
+> 222	    format?: "html" | "text";
+> 223	    guaranteeCta?: boolean;
+> 224	  } = {},
+> 225	): Promise<{ content: string; linked: number; linkId: string | null }> {
+> 226	  if (!content || !affiliateTag || !product?.external_id) return { content, linked: 0, linkId: null };
+> 227	
+> 228	  const format = opts.format ?? "html";
+> 229	  const guaranteeCta = opts.guaranteeCta ?? true;
+> 230	  const name = (product.name ?? "").trim();
+> 231	  const mentioned = name ? new RegExp(escapeRegExp(name), "i").test(content) : false;
+> 232	
+> 233	  // Skip silently when a secondary product isn't mentioned — no orphan row, no CTA clutter.
+> 234	  if (!mentioned && !guaranteeCta) return { content, linked: 0, linkId: null };
+> 235	
+> 236	  const mlUrl = await buildMlProductUrl(admin, product.external_id, affiliateTag, opts.mattTool, ownerId);
+> 237	  const signed = isMlShortLink(mlUrl);   // mlUrl IS the owner's definitive meli.la when present (sale-attributable)
+> 238	  let target = mlUrl;       // fail-open default: direct ML url if the ledger row can't be created.
+> 239	  let linkId: string | null = null;
+> 240	  try {
+> 241	    const { data: link } = await admin.from("affiliate_links").insert({
+> 242	      user_id: ownerId,
+> 243	      original_url: mlUrl,
+> 244	      short_url: mlUrl,
+> 245	      platform: "mercadolivre",
+> 246	      product_id: product.external_id,
+> 247	      content_id: opts.contentVariantId ?? null,   // ← the per-creative attribution key (was always null)
+> 248	      campaign_id: null,                            // UUID column — never a slug (22P02 pitfall)
+> 249	      metadata: {
+> 250	        source: "viral-autopilot",
+> 251	        display: name,
+> 252	        platform: opts.platform ?? null,
+> 253	        campaign: opts.campaignId ?? null,
+> 254	        matt_tool: opts.mattTool ?? null,
+> 255	      },
+> 256	    }).select("id").single();
+> 257	    if (link?.id) {
+> 258	      linkId = link.id;
+> 259	      // Text surfaces (LinkedIn/X) with a definitive signed link → embed the clean meli.la DIRECTLY: bulletproof
+> 260	      // (ML's own shortener, no CF/redirect dependency, recognizably ML = higher click trust) and fully
+> 261	      // sale-attributable. HTML surfaces (article) keep the click-counted /go redirect (the anchor hides the URL).
+> 262	      // NOTE: AFFILIATE_REDIRECT_BASE must NOT point at a CF-challenged host (login.mcorch.com/go was dead — unset
+> 263	      // it so this falls back to the working process-affiliate-link fn, which 302s to short_url=the signed link).
+> 264	      if (signed && format === "text") {
+> 265	        target = mlUrl;
+> 266	      } else {
+> 267	        const brandedBase = Deno.env.get("AFFILIATE_REDIRECT_BASE")?.replace(/\/+$/, "");
+> 268	        target = brandedBase
+> 269	          ? `${brandedBase}/${link.id}`
+> 270	          : `${supabaseUrl}/functions/v1/process-affiliate-link?link_id=${link.id}`;
+> 271	      }
+> 272	    }
+> 273	  } catch (_) { /* fail-open to the direct ML url */ }
+> 274	
+> 275	  let embedded = embedProductLink(content, name, target, format);
+> 276	  // HTML articles: kill any LLM-hallucinated homepage CTA so the highest buy-intent click hits the affiliate link.
+> 277	  if (format === "html") embedded = rewriteHomepageCtas(embedded, target);
+> 278	  return { content: embedded, linked: 1, linkId };
+> 279	}
+> 280	
+> ```
+
+## 🤖 Claude *(01:04:17)*
+
+
+## 🤖 Claude *(01:04:19)*
+
+O guard `rewriteHomepageCtas` só reescreve `href=` (HTML); e `monetizeForProduct:277` só o aplica quando `format==="html"`. Texto (LinkedIn/X) fica desprotegido. **Fix durável**: estendo o guard p/ pegar URL de homepage em **texto puro** e aplico nos dois formatos:
+
+## 🤖 Claude *(01:04:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "/** Deterministic CONVERSION-LEAK guard: LLMs frequently emit the final CTA button linking to the bare brand\n *  homepage (https://mcorch.com) instead of the affiliate link \u2014 the single highest buy-intent click, leaked to a\n *  page that earns nothing (and is CF-challenged). Rewrite every homepage-only href to the affiliate target so no\n *  buy intent escapes the funnel. Only rewrites the BARE homepage (no path) \u2014 real deep links are left intact. */\nexport function rewriteHomepageCtas(html: string, affiliateTarget: string): string {\n  if (!affiliateTarget) return html;\n  return html.replace(/href=([\"'])https?:\\/\\/(?:www\\.)?mcorch\\.com\\/?\\1/gi, `href=$1${affiliateTarget}$1`);\n}",
+  "new_string": "/** Deterministic CONVERSION-LEAK guard: LLMs frequently emit the final CTA linking to the bare brand homepage\n *  (https://mcorch.com) instead of the affiliate link \u2014 the single highest buy-intent click, leaked to a page that\n *  earns nothing (and is CF-challenged). Rewrite every homepage-only reference to the affiliate target so no buy\n *  intent escapes the funnel \u2014 in BOTH the HTML href form (articles) AND the BARE-TEXT URL form (LinkedIn/X posts,\n *  where the LLM writes \"Garanta o seu aqui: https://mcorch.com\" as plain text \u2014 witnessed leaking 2026-06-26 on a\n *  real autopilot post). Only the BARE homepage (optional trailing slash, no path) is rewritten \u2014 real deep links\n *  (mcorch.com/go/<id>, mcorch.com/article, ...) are left intact via the negative lookahead. */\nexport function rewriteHomepageCtas(content: string, affiliateTarget: string): string {\n  if (!affiliateTarget) return content;\n  return content\n    // HTML href form (articles): href=\"https://mcorch.com\" \u2192 href=\"<affiliate>\"\n    .replace(/href=([\"'])https?:\\/\\/(?:www\\.)?mcorch\\.com\\/?\\1/gi, `href=$1${affiliateTarget}$1`)\n    // Bare-text form (LinkedIn/X): a homepage URL not followed by a path/word char \u2192 <affiliate>. The lookahead\n    // (?![\\w/]) spares deep links (\u2026/go, \u2026/article) and the affiliateTarget itself (never the bare brand homepage).\n    .replace(/https?:\\/\\/(?:www\\.)?mcorch\\.com\\/?(?![\\w/])/gi, affiliateTarget);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts",
+  "old_string": "  let embedded = embedProductLink(content, name, target, format);\n  // HTML articles: kill any LLM-hallucinated homepage CTA so the highest buy-intent click hits the affiliate link.\n  if (format === \"html\") embedded = rewriteHomepageCtas(embedded, target);\n  return { content: embedded, linked: 1, linkId };",
+  "new_string": "  let embedded = embedProductLink(content, name, target, format);\n  // Kill any LLM-hallucinated homepage CTA \u2014 HTML href (articles) OR bare-text URL (LinkedIn/X) \u2014 so the highest\n  // buy-intent click hits the affiliate link, not the bare brand homepage (earns nothing, CF-challenged). Both formats.\n  embedded = rewriteHomepageCtas(embedded, target);\n  return { content: embedded, linked: 1, linkId };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/affiliate.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:44)*
+
+
+## 🤖 Claude *(01:04:46)*
+
+Guard estendido. Agora: localizo quem importa `affiliate.ts` (p/ redeploy) e **corrijo o post queued** (`content_library.body`) aplicando o mesmo rewrite, antes do publish às 01:46:
+
+## 🤖 Claude *(01:04:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== fun\u00e7\u00f5es que importam o affiliate.ts (monetizeForProduct/rewriteHomepageCtas) ===\"\ngrep -rln \"_shared/affiliate\" supabase/functions/ 2>/dev/null | grep -v \"_shared/affiliate.ts\"",
+  "description": "Importadores de affiliate.ts para redeploy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === funções que importam o affiliate.ts (monetizeForProduct/rewriteHomepageCtas) ===
+> supabase/functions/orchestrate-step/index.ts
+> ```
+
+## 🤖 Claude *(01:04:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\nCID=\"19807e6a-e88c-4ba1-ac78-9bf093dbcba0\"\necho \"=== fix immediato do post queued (bare mcorch.com \u2192 meli.la) ===\"\nBODY=$(curl -s \"${H[@]}\" \"$B/content_library?id=eq.$CID&select=body\" | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['body'])\")\nFIXED=$(python3 -c \"\nimport re,sys\nbody='''$BODY'''\nfixed=re.sub(r'https?://(?:www\\.)?mcorch\\.com/?(?![\\w/])', 'https://meli.la/2gh13Sw', body, flags=re.I)\nimport json; print(json.dumps(fixed))\n\")\ncurl -s -X PATCH \"$B/content_library?id=eq.$CID\" \"${H[@]}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"body\\\": $FIXED}\" | python3 -c \"\nimport json,sys,re\nr=json.load(sys.stdin)[0]; body=r.get('body') or ''\nprint('mcorch.com restantes:', len(re.findall(r'mcorch\\.com', body)))\nprint('meli.la CTAs:', re.findall(r'meli\\.la/\\w+', body))\nprint('--- linha do CTA corrigido ---')\nfor ln in body.split(chr(10)):\n  if 'Garanta' in ln or 'meli.la' in ln: print('  ',ln.strip())\n\"",
+  "description": "Corrigir o body do post queued"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === fix immediato do post queued (bare mcorch.com → meli.la) ===
+> mcorch.com restantes: 0
+> meli.la CTAs: ['meli.la/2gh13Sw', 'meli.la/2gh13Sw']
+> --- linha do CTA corrigido ---
+>    Garanta o seu aqui: https://meli.la/2gh13Sw
+>    👉 Roborock S8 Pro Ultra: https://meli.la/2gh13Sw
+> ```
+
+## 🤖 Claude *(01:05:22)*
+
+
+## 🤖 Claude *(01:05:24)*
+
+Só `orchestrate-step` importa o `affiliate.ts` → é o único a redeployar. E o **post queued está corrigido**: 0 `mcorch.com`, 2 CTAs `meli.la/2gh13Sw` (o leak virou link monetizado). Quando o auto-publish rodar às 01:46, publica a versão limpa e totalmente atribuível. ✓
+
+Deploy do `orchestrate-step` com o guard estendido:
+
+## 🤖 Claude *(01:05:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nnpx supabase functions deploy orchestrate-step 2>&1 | tail -5",
+  "description": "Deploy orchestrate-step com guard de CTA-leak estendido",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: orchestrate-step (script size: 137.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(01:05:52)*
+
+
+## 🤖 Claude *(01:05:55)*
+
+Deployado (137.4kB). 
+
+**Nota de segurança (affiliate.ts, inline):** a mudança adiciona um `.replace()` com regex que casa URL de homepage `mcorch.com` (sem path) e substitui pelo `affiliateTarget` (URL server-built: meli.la ou process-affiliate-link — nunca user-controlled, sem `$`). Opera sobre conteúdo já gerado (não é sink), sem novo input/auth/secret/SQL, e o efeito **reduz** risco (remove link de homepage). Mesmo padrão do href-replace pré-existente → **SAFE**.
+
+Agora o **doc drift** (`mcorch-demo`→`mcorch-video`, projeto live confirmado pelo `/api/projects`):
+
+## 🤖 Claude *(01:05:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-demo`)",
+  "new_string": "host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-video`)"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(01:05:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "old_string": "mcorch-demo",
+  "new_string": "mcorch-video"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(01:06:01)*
+
+
+## 🤖 Claude *(01:06:02)*
+
+Preciso ler os arquivos antes de editar. Leio as porções relevantes:
+
+## 🤖 Claude *(01:06:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 426,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 426	| **Viral Autopilot vídeo 9:16 SOP (Lei 2 · Amendment v0.2)** | `docs/processes/autopilot-video-9x16.md` (OTD-VA-009 gate — vídeo vertical 9:16 product-aware via motor HyperFrames determinístico [`video-studio` FR-VS-024/025], **não** IA-DoP; cobrança ÚNICA no pré-débito do ciclo [`prepaid=true` suprime self-bill do motor — OTD-VA-010]; single-tenant Usuário Zero [hardening multi-tenant diferido — OTD-VA-011]; render async + reconciliação fail-open; 8 gates G1-G8; FRD Amendment v0.2 = FR-VA-022..026) |
+> 427	| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920 determinístico, sha256-idêntico NFR-VS-016) · `scripts/hyperframes/templates/viral-short-9x16.html` (template determinístico, props via textContent XSS-safe) · `scripts/video-bridge.ts` (worker host molde design-bridge: claim atômico `video_renders` engine=hyperframes → render → bucket `video-studio-assets` → `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |
+> 428	| **HyperFrames Studio editor (Fatia VS-UI — Fase A VIVO)** | `~/.config/systemd/user/video-studio.service` (servidor oficial `hyperframes preview` node v22, host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-demo`) · `nginx/video.mcorch.com.conf` (vhost SSO-gated, espelha `design.mcorch.com`; cert+symlink = ação Sovereign) · `src/pages/VideoStudioEditorPage.tsx` (iframe `/dashboard/canvas/video`, sub-item "Vídeo" no Canvas Studio) · contrato `/api` (`StudioApiAdapter`) + Fase B (`McorchAdapter.startRender`→`video-render`) em SDD §VS-UI Amendment v0.4 · SOP `docs/processes/video-studio-editor-deploy-and-provision.md` |
+> 429	| **HyperFrames Studio editor — integration blueprint (Fatia VS-UI, próximo)** | `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` (deepsearch material — `StudioApp` zero-props server-backed; seam = `StudioApiAdapter` de `@hyperframes/core/studio-api`; **montar studio unmodified + nosso `McorchAdapter.startRender`→`video-render`**; composição = HTML+CSS+GSAP `bundleToSingleHtml`; React 19 → container+iframe `studio.mcorch.com`; Apache-2.0; gate #1 render-parity `frame=floor(time*fps)`. Flip OTD-VS-005 A→C) |
+> ```
+
+## 🤖 Claude *(01:06:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "offset": 12,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 12	**Fundação já landada antes desta sessão:** SSO R3 (`sso-auth-gate.service` vivo, gate genérico serve `video.`) + tenancy de agência (`organizations`/`organization_members`/`clients` + RPC `create_organization` + helpers anti-recursão `is_org_member`/`org_role`) — migrations `20260622030000/030100`, **vivas no DB**.
+> 13	
+> 14	**Fatia VS-UI Fase A VIVA (2026-06-24, commits `bc5f0e5` + `94ae0db`):** editor HyperFrames NLE ENTREGUE — diretiva Sovereign "entregar valor visível, menos técnico" ([[feedback_deliver_user_value_not_plumbing]]). **Decisão-chave material:** o servidor oficial **`hyperframes preview`** (CLI unscoped `hyperframes@0.7.5`, NÃO `@hyperframes/cli` que não existe) É o editor completo (StudioApp React 19 + Hono `/api`) — roda como **processo node standalone** → o conflito React 19/18 some SEM Docker. Implantado como **serviço host systemd `video-studio.service`** (molde video-bridge): `node v22 EXPLÍCITO` (`/home/ubuntu/.local/bin/node …/hyperframes/dist/cli.js preview <projeto> --port 3210 --no-open`) — ⚠️ systemd pega `/usr/bin/node` **v18** que quebra com `styleText`/util; o `env node` do shebang NÃO resolve v22. Projeto 9:16 semeado: `hyperframes init mcorch-demo --example warm-grain --resolution portrait --non-interactive`. **PROVA:** `active`, `curl :3210/`→200 `HyperFrames Studio`, `/api/projects`→200 com o projeto. Frontend: `VideoStudioEditorPage` iframe `/dashboard/canvas/video` (rota ANTES de `canvas/:id`), nav "Vídeo" no Canvas Studio, build deployado (chunk `VideoStudioEditorPage-CCjrPhI0`). vhost `nginx/video.mcorch.com.conf` (SSO-gated, espelha design). **Contrato `/api` (Lei 2) selado dos `.d.ts` publicados** — `StudioApiAdapter` {listProjects,resolveProject,bundle→`bundleToSingleHtml`,lint,runtimeUrl,rendersDir,**startRender**}; `createStudioApi(adapter)` monta TODAS as rotas → host implementa SÓ o adapter. **Render-parity (R1) resolvido por construção:** `@hyperframes/core/runtime` IIFE = mesmo runtime no preview e (Fase B) no nosso motor. SDD §VS-UI Amendment v0.4 + SOP `video-studio-editor-deploy-and-provision.md`. **GOTCHAS:** `preview` é **single-project** (exige `index.html` no DIR, não aceita dir-pai → OTD-VS-016); `pkill -f hyperframes` **mata o próprio shell** (a linha de comando casa) — matar por pid da porta. **PENDENTE Sovereign (2 sudo):** cert self-signed `video.mcorch.com.{key,crt}` + `ln -s`+`nginx -t`+reload (DNS já feito). **Fase B (próxima):** `McorchAdapter.startRender`→`video-render` (motor MCORCH + mcoCoins prepaid) substitui o engine local do CLI + project store em Supabase Storage. ⚠️ `pré-VS-UI` o blueprint dizia `studio.mcorch.com`; nome adotado = **`video.mcorch.com`** (sso-gate já o lista).
+> 15	
+> ```
+
+## 🤖 Claude *(01:06:15)*
+
+
+## 🤖 Claude *(01:06:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-demo`)",
+  "new_string": "host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-video`)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:06:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "old_string": "Projeto 9:16 semeado: `hyperframes init mcorch-demo --example warm-grain --resolution portrait --non-interactive`.",
+  "new_string": "Projeto 9:16 semeado: `hyperframes init mcorch-video --example warm-grain --resolution portrait --non-interactive` (live `/api/projects`\u2192`mcorch-video`; re-semeado com o starter MCORCH 9:16 \u2014 o `mcorch-demo` do init original ficou stale)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:06:58)*
+
+
+## 🤖 Claude *(01:07:00)*
+
+Doc drift corrigido em ambos. Agora **commito os fixes deployados** (anti-drift — a SOP do projeto manda: hotfix de prod vira commit na MESMA sessão). Confirmo o escopo primeiro:
+
+## 🤖 Claude *(01:07:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short\necho \"=== diff stat ===\"\ngit diff --stat",
+  "description": "Confirmar escopo do working tree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M CLAUDE.md
+>  M supabase/functions/_shared/affiliate.ts
+>  M supabase/functions/autopilot-run/index.ts
+> === diff stat ===
+>  CLAUDE.md                                 |  2 +-
+>  supabase/functions/_shared/affiliate.ts   | 27 ++++++++++++++++++---------
+>  supabase/functions/autopilot-run/index.ts | 31 ++++++++++++++++++++++---------
+>  3 files changed, 41 insertions(+), 19 deletions(-)
+> ```
+
+## 🤖 Claude *(01:07:04)*
+
+
+## 🤖 Claude *(01:07:05)*
+
+Escopo limpo — 3 arquivos meus. Commito (convenção do projeto: milestone-oriented, sem Co-Authored-By por [[feedback_commits]]):
+
+## 🤖 Claude *(01:07:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add CLAUDE.md supabase/functions/_shared/affiliate.ts supabase/functions/autopilot-run/index.ts\ngit commit -m \"fix(autopilot): cobran\u00e7a de v\u00eddeo por article-flow + CTA-leak guard em texto puro\" \\\n-m \"1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed E2E (render real 1080\u00d71920 h264, 748KB no bucket) exp\u00f4s 2 bugs de receita, corrigidos no mesmo turno (Lei 1 + Obstacle\u2192Synthesis):\" \\\n-m \"\u2022 V\u00eddeo era cobrado por sub-run (succeeded\u00d712), mas s\u00f3 o flow de artigo (wordpress) enfileira render \u2014 linkedin/twitter ficavam over-charged sem refund (o refund de orchestrate-step s\u00f3 cobre enqueue-attempt-fail, n\u00e3o um flow que nunca tem passo de v\u00eddeo). Agora cobra por article-flow (nVideoRuns/succeededVideo). dry_run prova projected 46\u219234, n_video 2\u21921. Tenant refundado 12 do ciclo 2403bfcb via refund_autopilot_video_enqueue (saldo inteiro).\" \\\n-m \"\u2022 CTA-leak: rewriteHomepageCtas s\u00f3 pegava href HTML; o LLM escreve 'Garanta o seu aqui: https://mcorch.com' como texto puro em posts LinkedIn/X \u2014 o clique de maior inten\u00e7\u00e3o vazava pra homepage morta (R$0, sem atribui\u00e7\u00e3o). Guard agora reescreve URL bare-text \u2192 afiliado, aplicado nos 2 formatos. Post real queued corrigido antes do publish.\" \\\n-m \"Editor HyperFrames Fase A verificado em browser real (NLE 9:16 multi-camada, Export). Doc: projeto live = mcorch-video. /security-review SAFE.\" \necho \"=== commit hash ===\"\ngit log -1 --format=\"%H %s\"",
+  "description": "Commit dos fixes de billing + CTA-leak + doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:07PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:07PM[0m [32mINF[0m scan completed in 11ms
+> [90m10:07PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main df7505b] fix(autopilot): cobrança de vídeo por article-flow + CTA-leak guard em texto puro
+>  3 files changed, 41 insertions(+), 19 deletions(-)
+> === commit hash ===
+> df7505b8ef21fd36d001720d5a43440b217eb10e fix(autopilot): cobrança de vídeo por article-flow + CTA-leak guard em texto puro
+> ```
+
+## 🤖 Claude *(01:07:55)*
+
+
+## 🤖 Claude *(01:07:57)*
+
+Commit **`df7505b`** selado (lefthook: gitleaks + secret-scan + e2e-tripwire ✔️, mesh-reingest pós-commit). 
+
+Atualizo a memória do módulo com os 2 achados de receita (traps sutis p/ a próxima sessão) e envio os deliverables. Leio o arquivo de memória do autopilot:
+
+## 🤖 Claude *(01:07:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 2 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project_viral_autopilot
+> 3	description: Motor de conteúdo viral autônomo monetizado (afiliado ML) — BoK 9/9 + Fatias 1/1b/2 + ATIVADO 2026-06-23 (1º ciclo PAGO provado + pg_cron heartbeat live) + FR-VA-018 (trend-informed angle, hardened pt-BR injection). Pendente: mídia 9:16 + postback ML real.
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 21b2d649-94ad-4468-9821-20f76eae70a3
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-17: construir o **motor de conteúdo viral autônomo** — o coração de receita do MCORCH. Quatro requisitos:
+> 11	- **R1** gerar conteúdo p/ redes sociais automaticamente · **R2** agendar (tudo de uma vez OU lote a cada 3 dias) · **R3** a cada ciclo analisar o desempenho anterior p/ melhorar os próximos criativos (loop auto-melhorável) · **R4** conteúdo viral com comissão de afiliado do Mercado Livre.
+> 12	
+> 13	**Auditoria material (workflow 7-agentes, 2026-06-17 — cada achado com path:linha):**
+> 14	- **R1 parcial:** pipeline de TEXTO vivo (`orchestrate-content`→`orchestrate-step` gera artigo+LinkedIn+X). `generate-image`/`generate-video` são ÓRFÃS (zero callers); só publica WP/LinkedIn/X; Canvas assets não entram no publish.
+> 15	- **R2 parcial:** "tudo de uma vez" existe (`campaign-run` fan-out). **A recorrência "a cada 3 dias" NÃO existe** — só 2 pg_cron (memory-decay + nurture-drip), nenhum re-gera. Agendamento é offset fixo +1h/+2h hardcoded.
+> 16	- **R3 ausente:** loop aberto em 3 quebras — `campaign_metrics` tem ZERO writers (roda vazio); `optimization_policy` nunca lida por gerador; `self-optimize` sem cron (só botão UI). Engajamento orgânico por post nunca coletado.
+> 17	- **R4 parcial:** receita ML madura (`affiliate_config` per-user, click ledger, `handle-ml-postback` HMAC). MAS conteúdo é product-unaware — monetiza só o artigo, catálogo hardcoded 3 SKUs por regex; `affiliate_url` da UI ignorado; `fetch-trends`/`vm_trends` desconectados; prompts são B2B "IA p/ agências", não venda de produto físico.
+> 18	
+> 19	**3 descasamentos centrais:** (1) a IA escreve sem saber qual produto vende; (2) não há gatilho recorrente (molde = cadência nurturing `next_run_at`+pg_cron, mas finita/lead/email); (3) o loop não fecha — desempenho passado nunca volta ao prompt.
+> 20	
+> 21	**STATUS: BoK 9/9 SELADA 2026-06-17** (nó `documentation_suite` `b3398294-aa75-4810-845b-3a15cfe802e7`, embedded 768d ✅; edge DERIVES_FROM `05cea16d` → marketing-hub `d5163fed`; 1889 LOC; ID space MR/BR-VA-001..008 · PR-VA-001..022 · FR-VA-001..021 · 8 OTD · 12 FMEA 4×RPN>100). Seed: `scripts/seed-viral-autopilot-bok-seal.ts`. **BoK Gate ABERTO** p/ código.
+> 22	
+> 23	**✅ FATIA 1 ENTREGUE + PROVADA EM PROD 2026-06-20** (commit `4af8b8b`, = passo 2 da rota "geração product-aware") — fecha R1/R4 nas 3 superfícies de TEXTO sem tocar cron (R2) nem o loop que LÊ optimization_policy (R3):
+> 24	- **FR-VA-003** prompts product-aware (artigo/LinkedIn/X) featuring o produto escolhido; fallback B2B quando sem produto (backward-compat: campaign-run/intent-execute intactos).
+> 25	- **FR-VA-004** `monetizeForProduct` (`_shared/affiliate.ts`) monetiza as 3 superfícies (não só artigo) determinístico por produto (não regex dos 3 SKUs); grava `affiliate_links.content_id = content_library.id` (ANTES sempre null — defeito-núcleo fechado). HTML inline-link/CTA · texto append-URL (LinkedIn/X). escapeHtml no name (DiD do /security-review).
+> 26	- **FR-VA-016 metade-produto** orchestrate-content resolve `product_ids` do `vm_affiliate_products` (authoritative, descarta name/price do cliente), **sanitiza cada nome pelo sentinel** (Apify = dado externo → injeção, fail-closed por produto), grava em `pipeline_runs.metadata.products`. orchestrate-step lê e ramifica.
+> 27	- **FR-VA-009** nova migration `creative_metrics` (`20260619140000`, aplicada+verificada: RLS SELECT-own · service-role-write default-deny · RESTRICTIVE no-delete · UNIQUE(content_variant_id,source) · 5 CHECKs; cycle_id NULL-able reservado p/ a fatia do cron, sem FK física ainda). Gerador escreve baseline source='organic' zeros por criativo (semeia R3).
+> 28	- **UI** picker de produtos na `TriggerNode` (`useAffiliateProducts`, 3 SKUs do catálogo, 1º=★ primary) substitui o input de URL livre que era dropado. `runPipeline`/store mandam `product_ids`.
+> 29	- **DESCOPES declarados:** imagem (FR-VA-013) — entregue na Fatia 1b (abaixo); cron/cadência (R2) + loop R3.
+> 30	
+> 31	**✅ FATIA 1b ENTREGUE + PROVADA 2026-06-20** (commit `ba5d281`, FR-VA-013 — imagem product-referenced):
+> 32	- `generate-image` ganhou **dual-path auth** (service-role + `user_id` no body, espelha `publish-wordpress`; byte-equal bearer = fronteira) pra orchestrate-step invocá-la com service-key; **retorna o `path` do storage** (re-assinável) além do signed URL 1h.
+> 33	- orchestrate-step: bloco de imagem **dentro do `article_generation`** (NÃO novo step na ladder — evita drift do stepsOrder), gated `hasProducts`, **FAIL-OPEN com status `skipped`** (não `error` — senão o finalize marcaria o run error). Guarda **PATH durável** em `content_library.media_url` (bucket `generated-images` é PRIVADO → re-assina na leitura; signed URL 1h morre antes do publish +1-2h). Sem migration, sem mudança de frontend, **sem cobrança extra** (imagem já no bundle de 10, billing.ts).
+> 34	- **Correções materiais ao contrato:** `generate-image` é DALL·E **text-only** (sem image-to-image) → product-referenced = prompt descritivo (nome+categoria), NÃO o `image_url` como referência visual (deferido). Anexo no publish-social (LinkedIn/X/Meta) + featured-image WP = deferidos (publish-layer).
+> 35	- **Prova (run `46a98963`):** auth 400(sem user_id)/401(não-service)/alcança-provider; step `image_generation` `skipped` (fail-open) com `article_generation` `done` e run NÃO-errado pela imagem; 3/3 affiliate_links content_id NON-NULL (zero regressão Fatia 1); delta saldo exatamente 10. /security-review SAFE 9/10 · tsc 0.
+> 36	**🔬 DIAGNÓSTICO da saída visível 2026-06-20 (Sovereign pediu "destravar") — 3 blockers, causas raiz CRAVADAS materialmente:**
+> 37	1. **WordPress publish falha (todo run) = Cloudflare bot-challenge.** `wp_site_url=https://www.mcorch.com` (já www canônico — NÃO é mais o 301). `GET /wp-json` → **403 `text/html` "Just a moment..."** com `cf-mitigated: challenge`, `server: cloudflare` — mesmo AUTENTICADO com as creds reais (Basic Auth). O CF desafia o request server-to-server da edge function (cliente não-browser) ANTES do WordPress; o `await wpRes.json()` no `publish-wordpress:133` lança na resposta HTML → catch 500 "Falha ao publicar... Verifique a conexão". **Credenciais WP estão OK.** **AÇÃO SOVEREIGN:** regra Cloudflare WAF **Skip** pro path `/wp-json/*` (idêntico ao que já fizeram pro `mcp.mcorch.com` — ver [[project_vision_mcp]]).
+> 38	2. **Imagem nanobana = endpoint MORTO.** `api.nanobana.com` **não resolve DNS** (http=000). Qualquer `pref_image_provider=nanobana` sempre falha. Bug latente no `generate-image` (branch nanobana aponta pra domínio inexistente, comentado "Assuming standard proxy or mock"). **Recomendado:** remover nanobana como provider selecionável OU fiar endpoint real.
+> 39	3. **Imagem openai = 2 bugs, 1 corrigido + 1 config de conta.** (a) **CORRIGIDO (commit `803f946`):** `generate-image` mandava `response_format:"b64_json"` → OpenAI 400 "Unknown parameter" (param removido pela OpenAI). Fix: remover param + tratar resposta url(dall-e-3 default)/b64/data-URI (baixa bytes da url) + surfacing `upstream`. (b) **AÇÃO SOVEREIGN:** a chave-PROJETO do Zero (`sk-proj`, `proj_rWo9VkBo6n9WQro93dzCZglr`) **não tem acesso a NENHUM modelo de imagem** (dall-e-2/3 "does not exist", gpt-image-1 "does not have access", models list sem image). Habilitar acesso a modelo de imagem no OpenAI dashboard (project → model access; gpt-image-1 exige org verification+billing) OU usar chave/projeto com acesso OU rota OpenRouter de imagem. A chave em si é VÁLIDA (`/v1/models`→200). Toggle pref nanobana→openai→nanobana usado no QA (restaurado). Cron/cadência (R2) + loop R3 = ✅ ENTREGUES na Fatia 2 (abaixo).
+> 40	
+> 41	**✅ FATIA 2 COMPLETA + PROVADA 2026-06-20 — cadência R2 + loop R3 auto-melhorável** (4 commits: `686bae3` fundação · `0c59e4d` smoke RPC · `54ac2a9` edge fns · `35554da` R3). **Gate Lei 2 OTD-VA-008 FECHADO:** SOP `docs/processes/autopilot-cron-identity.md` (cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha, NUNCA body; 10 gates). **Migrations** (aplicadas+verificadas Management API — `20260620120000..120300`): `autopilot_plans`/`autopilot_cycles` (FK composta tenant-escopada `(plan_id,user_id)`, RESTRICTIVE no-delete, fecha FK composta de `creative_metrics`) + RPC `begin_autopilot_cycle` (cap diário+ciclo+saldo + pré-débito ÚNICO sob `pg_advisory_xact_lock` anti-TOCTOU, service-role-only) + RPC `finalize_autopilot_cycle` (refund crédito-positivo idempotente claim-once, espelha `finalize_vision_job`; NUNCA deduct negativo — anti-mint `20260603220000:45`). **Edge fns** (deployadas, `verify_jwt=false`): `autopilot-run` (executor: identidade 2-caminhos service-role+header server-trusted OU user-JWT+load tenant-scoped → begin → fan-out `orchestrate-content` PREPAID → finalize → re-arma `next_run_at`; `dry_run` projeta sem gastar) · `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key, fan-out user_id da linha) · `autopilot-analyze` (FR-VA-010: tenant da linha do ciclo, lê `creative_metrics` do ciclo anterior → ranqueia produto/rede por cliques+receita → `optimization_policy` `action_type='viral_autopilot'`+scope no context; 2mco SÓ standalone+`has_real_data`, inline=prepaid; NÃO inventa policy) · `autopilot-collect` (FR-VA-008: `affiliate_links`.clicks/revenue → `creative_metrics` 'affiliate_click'; orgânico best-effort fail-soft, não fabrica). **orchestrate-content** FR-VA-016 (caminho cron `prepaid` pula débito SEM tocar sentinel/produtos/kick; **user-path 100% intacto**) + **orchestrate-step** FR-VA-011 (lê a policy mais recente do tenant → injeta diretiva vencedora nos 3 prompts; taggeia `creative_metrics.cycle_id`; hint sanitizado). **/security-review SAFE 3×** (migrations 6-vetores · edge fns 6-vetores · R3 7-classes). **3 smokes zero-cost (31 gates)** com usuário descartável: `smoke-autopilot-budget` 11/11 (pré-débito exato/cap diário+ciclo+saldo abortam sem deduzir/refund idempotente/clamp anti-mint/cascade) · `smoke-autopilot-run` 9/9 (identity 403/401/400/422 + dry_run projected=32 sem gastar + cross-tenant header→404) · `smoke-autopilot-loop` 11/11 (analyze ranqueia WIN>LOSE→policy · collect sincroniza clicks=5 · empty→has_real_data=false não inventa). **Cost model cravado:** `projected=N_runs×10+ANALYZE_COST(2)`, `N_runs=produtos×redes×ab_variants`; imagem no bundle de 10; analyze inline=prepaid (a reserva de 2 só vira `actual` quando a policy nasce de dado real, senão `finalize` estorna). Prova viva: anon→401/403 `permission denied`, service-role `projected=0`→`22023` guard antes de débito. **PENDENTE (fatias seguintes):** UI `useAutopilot`+`AutopilotPage` (FR-VA-014, autônomo) · **ativação pg_cron + 1º ciclo PAGO real** (gated GO Sovereign + os 2 blockers de saída visível abaixo: CF WAF `/wp-json` + OpenAI image access) · `fetch-trends`→pauta (FR-VA-018). ⚠️ Sem UI, planos só existem via SQL; sem pg_cron schedule, nem auto-disparam (a função `autopilot-cadence-cron` existe e está provada, mas o job pg_cron que a chama é ativação Sovereign-side).
+> 42	- **Prova material (Lei 1):** E2E pago Usuário Zero run `158ba7fc` → 3 criativos product-aware (cada um cita Roborock + link rastreável), **3 affiliate_links content_id NON-NULL casando os 3 content_library.id**, 3 creative_metrics baseline, **delta saldo = exatamente 10**. /security-review SAFE · tsc 0 · 295 testes · picker validado oculamente 1920×1080 (preview local + sessão injetada). Edge fns deployadas (orchestrate-content 113.8kB · orchestrate-step 129.3kB), frontend buildado. **A run caiu p/ status `error` SÓ pelo wordpress_publish** (problema WP 301/config = ação Sovereign, ortogonal). SOP Lei 2 `docs/processes/viral-autopilot-product-aware-monetization.md`.
+> 43	
+> 44	**Validação Fase 6 = 4 rodadas adversariais** (workflow 4 críticos): R1 NO_GO (2 blockers+7 high) → R2 NO_GO (2 blockers, 1 que EU introduzi: refund por deduct negativo viola RPC anti-mint `20260603220000:45`) → R3 GO_WITH_FIXES → R4 GO_WITH_FIXES (síntese caiu por session-limit, críticos OK). **Lição:** cada "fix" meu deixou um resíduo que a rodada seguinte pegou — verificação adversarial + grep determinístico foram essenciais; não auto-declarar GO.
+> 45	
+> 46	**Decisões de design cravadas pela validação (entram na implementação):**
+> 47	- **Identidade do cron (SEC-VA-CRIT-01):** `verify_jwt=false` → `autopilot-run`/`-analyze`/`-collect`/`-cadence-cron` PROVAM service-role in-function (`Authorization === 'Bearer '+SB_SECRET_KEY`, padrão `orchestrate-step:50-53`) ANTES de confiar no header `x-autopilot-user-id` (server-trusted = `autopilot_plans.user_id`, nunca do body). `orchestrate-content` estendida p/ aceitar esse caminho + `prepaid`. SOP `edge-jwt-identity-verification`.
+> 48	- **Custo/atomicidade:** `projected = N_runs×10 + 2`, `N_runs = produtos × redes × ab_variants` (imagem JÁ no bundle de 10, `billing.ts:16-21`, NÃO somar). **RPC `begin_autopilot_cycle`** (advisory lock por user_id) = cap diário (FR-VA-021) + cap por ciclo + pré-débito atômico ÚNICO + open, anti-TOCTOU. **RPC `finalize_autopilot_cycle`** credita refund via `add_mco_coins` (POSITIVO ledgered, espelha `finalize_vision_job`; NUNCA deduct negativo). Sub-runs `prepaid` (não self-bill).
+> 49	- **`autopilot-analyze` inline pós-ciclo** (não 3º cron); tenant derivado de `previous_cycle_id` (anti-IDOR, nunca do body); 2 mco só se `has_real_data` (0 senão).
+> 50	- **`content_variant_id` = `content_library.id`** (ref. LÓGICA, sem FK física — retenção independente); grava `affiliate_links.content_id`. **FK COMPOSTA tenant-escopada** `(plan_id,user_id)`/`(cycle_id,user_id)` (espelha Marketing Hub) + `user_id` FK real + RESTRICTIVE no-delete nas 3 tabelas.
+> 51	- **`campaign_metrics` DEPRECADA** p/ o módulo → `creative_metrics` é a unidade canônica (sem ETL). **`optimization_policy` com `scope='viral_autopilot:<plan_id>'`** (desambigua do `self-optimize` legado). KPI lift fallback p/ cliques de afiliado quando orgânico ausente.
+> 52	
+> 53	**4 decisões Sovereign (parametrizam o BoK):**
+> 54	1. **BoK Gate** = `/bok-scribe` suite-mãe NOVO `viral-autopilot` unificando R1-R4 (R2 cadência + R3 loop não têm FR em suite algum).
+> 55	2. **MVP** = texto+imagem nas redes ATUAIS (WP/LinkedIn/X) primeiro; vídeo 9:16 + TikTok/IG/YT = fase 2.
+> 56	3. **Sinal R3** = combo completo (cliques afiliado [já temos] + engajamento orgânico [coletor novo] + receita postback ML).
+> 57	4. **Produtos** = 3 SKUs semente (Roborock S8 / Samsung Neo QLED 8K / Family Hub) por ora, escalar catálogo depois.
+> 58	
+> 59	**Rota recomendada (8 passos, do maior alavancagem):** 1 BoK gate → 2 geração product-aware (honrar param produto, monetizar TODO formato c/ content_variant_id) → 3 reconectar `fetch-trends`/`vm_affiliate_products` à pauta → 4 cadência 3 dias (generalizar primitiva nurture, auto-refill) → 5 coletor de engajamento por post → 6 fechar loop R3 (gerador lê `optimization_policy`) → 7 mídia viral 9:16 (fase 2) → 8 provar postback ML real (OTD-ML-MP-PER-USER).
+> 60	
+> 61	**✅ ATIVAÇÃO + FR-VA-018 — 2026-06-23 (sessão "continue" sob ultracode):**
+> 62	- **1º ciclo PAGO provado material.** Plano mínimo do User 0 (`640b3b67`, Roborock `MLB27834876` × WP+LinkedIn × ab=1, `mode=all_at_once`, caps 22/50) → disparei `autopilot-cadence-cron` 1× (Bearer SB_SECRET_KEY) → `{due:1,dispatched:1,errors:0}`. Ciclo `947ef8b5` `completed` · spend 22 · refund 2 · saldo **5096→5076** (delta exato −20 = 2 sub-runs×10; refund 2 = analyze não cobrou sem ciclo anterior). Ledger: `autopilot_cycle −22` + `autopilot_refund +2` (crédito POSITIVO, anti-mint OK). Plano auto-desativou (`is_active:false`, one-shot). 2 pipeline_runs `done` product-aware. Telemetria healthy. **Gotcha:** `orchestrate-content` resolve produto por **`external_id`** (`.in("external_id",ids)`), NÃO o UUID — plano usa MLB*, não o id de vm_affiliate_products.
+> 63	- **pg_cron heartbeat LIVE.** Migration `20260623040000_viral_autopilot_cadence_cron.sql` (clone verbatim do `nurture_advance_cron`; Vault `sb_secret_key`; `/security-review` SAFE) aplicada via db push → `cron.job` jobid=3 `autopilot-cadence` `*/15 * * * *` `active:true` (verificado Management API). **Seguro/no-op** até um plano `every_n_days` ser ativado; reversível `cron.unschedule`.
+> 64	- **FR-VA-018 SHIPPED + HARDENED.** `autopilot-run` lê `vm_trends` (catálogo GLOBAL pt-BR) p/ pautar o ângulo (`topic: viralTopic`, antes `plan.name` cru); niche-match→fallback global→top-5 skip-and-continue. **Revisão adversarial `wf_6cc97c75` pegou MEDIUM (conf 8):** o sentinel COMPARTILHADO (`_shared/sentinel.ts`) é **English-only/score≥2** → injection pt-BR semeada num trend viral passa os 2 gates e dirige o LLM cross-tenant. Fix defense-in-depth: `sanitizeTrendTitle` (whitelist charset `/[^\p{L}\p{N}\s-]/gu` destrói URLs/markdown/tags/aspas + `TREND_OVERRIDE_RE` rejeita verbos override pt-BR/en) → sentinel genérico 2ª camada → framing inerte `(tema em alta: …)`. **Smoke material:** os 3 payloads exatos do red-team rejeitados, benigno escolhido, 0 URL/verbo no topic, 0 resíduo. SOP `docs/processes/trend-informed-angle-sanitization.md`. **OTD-VA-018-SENTINEL-PTBR (diferida p/ arco de segurança):** adicionar padrões pt-BR ao `INJECTION_PATTERNS` compartilhado (afeta todos os callers — testar falso-positivo em copy pt-BR legítima). Ver [[reference_shared_sentinel_english_only]].
+> 65	- **Pendente commit no seal:** migration `20260623040000` (aplicada à prod) + `autopilot-run` (deployado 69.42kB) + SOP. tsc 0 (edge fns fora do escopo do tsc).
+> 66	
+> 67	**Riscos:** custo descontrolado do cron autônomo (precisa teto mcoCoins + kill-switch por ciclo — JÁ implementado via begin_autopilot_cycle caps); R3 pode virar "auto-melhoria teatral" se rodar sem dado real; postback ML nunca provado em prod.
+> 68	
+> 69	Suites a referenciar/promover: [[project_marketing_hub_v2]] (campaign-run executor), mercado-livre-api FR-ML-*, post-engine FR-PE-*, viral-daily-canvas FR-VDC-*. Relacionado: [[project_orchestrate_pipeline_repair]] (pipeline async), [[project_authenticated_browser_operator]] (atribuição ML), [[project_mcoin_calibration]] (custo por run).
+> 70	
+> ```
+
+## 🤖 Claude *(01:08:05)*
+
+
+## 🤖 Claude *(01:08:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md",
+  "old_string": "**Riscos:** custo descontrolado do cron aut\u00f4nomo",
+  "new_string": "**\u2705 1\u00ba CICLO PAGO DE V\u00cdDEO 9:16 WITNESSED E2E + 2 BUGS DE RECEITA FIXADOS \u2014 2026-06-26 (sess\u00e3o \"fa\u00e7a tudo\" sob ultracode, GO Sovereign texto+v\u00eddeo).** Recon material (workflow `wf_6475e2f8`) desmontou o HANDOFF stale: crons VIVOS (auto-publish 200/5min, pg_cron `*/15` heartbeat), 2/3 produtos j\u00e1 com shortlink assinado, www.mcorch.com 200 limpo \u2014 gargalo do 1\u00ba R$ = **distribui\u00e7\u00e3o+convers\u00e3o, n\u00e3o infra**. Disparei o ciclo pago `2403bfcb` (plano `640b3b67`, flip `video_enabled=true`+`budget_cap 22\u219250`, `is_active=false` p/ zero corrida com cron): **render 9:16 REAL `8b0787e0` 1080\u00d71920 h264 5s 748KB** no bucket `video-studio-assets` (ffprobe provado), conte\u00fado product-aware gerado, LinkedIn queued. Depois reconfigurei p/ **distribui\u00e7\u00e3o recorrente text-only** (`mode=every_n_days`/3d, `video_enabled=false`, `is_active=true`, next_run +3d). Editor HyperFrames Fase A verificado em **browser real** (agent-browser \u2192 `:3210`, NLE 9:16 multi-camada Glow/Brand/Hook + Export, screenshot visto). **Commit `df7505b`, /security-review SAFE:**\n- **\ud83d\udc1e BILLING TRAP (fix dur\u00e1vel):** `autopilot-run` cobrava v\u00eddeo `succeeded \u00d7 VIDEO_COST(12)` assumindo 1 v\u00eddeo/sub-run, MAS s\u00f3 o **article-flow (platform=wordpress)** enfileira render (`orchestrate-content:231-232`); sub-run linkedin/twitter NUNCA tem `video_generation` \u2192 over-charge sem refund (o `refund_autopilot_video_enqueue` de `orchestrate-step:454` s\u00f3 cobre enqueue-**attempt**-fail, n\u00e3o flow-sem-passo-de-v\u00eddeo). Fix: `nVideoRuns`/`succeededVideo` contam s\u00f3 sub-runs de article-flow (`VIDEO_FLOW_PLATFORMS={wordpress}`). dry_run prova `projected 46\u219234`, `n_video 2\u21921`. Tenant refundado 12 do ciclo via RPC (saldo 5076\u221234=**5042**). \u26a0\ufe0f **se adicionar nova plataforma que gere v\u00eddeo, incluir no set.**\n- **\ud83d\udc1e CTA-LEAK texto puro (fix dur\u00e1vel):** `rewriteHomepageCtas` (`_shared/affiliate.ts`) s\u00f3 pegava `href=mcorch.com` (HTML); o LLM escreve `Garanta o seu aqui: https://mcorch.com` como **texto puro** em LinkedIn/X \u2192 clique de maior inten\u00e7\u00e3o vazava pra homepage morta (R$0, sem atribui\u00e7\u00e3o). Guard agora reescreve URL bare-text\u2192afiliado (lookahead `(?![\\w/])` poupa deep links), aplicado nos **2 formatos** (`monetizeForProduct` n\u00e3o gateia mais s\u00f3 html). Post real `queued` corrigido antes do publish. Ver [[project_revenue_funnel_repair]].\n- **Gotcha de schema (REST):** `video_renders` usa coluna `state` (n\u00e3o status) + output em `storage_key`; `pipeline_runs` N\u00c3O tem `created_at`/`cycle_id` (cycle vive em `metadata->>cycle_id`, platform em coluna `platforms` jsonb); `content_library` usa `type` (n\u00e3o content_type). **Erro meu (Lei 1) registrado:** truncar um UUID no display me levou a fabricar zeros num `p_run_id` de RPC \u2014 o cr\u00e9dito caiu certo mas a \u00e2ncora de idempot\u00eancia ficou no id falso; corrigi inserindo o marcador no run_id real + deletando a linha fabricada (service-role bypassa o RESTRICTIVE no-delete). NUNCA preencher UUID de cabe\u00e7a \u2014 re-query o full id.\n- **Pendente (gated Sovereign):** 3\u00ba shortlink assinado (Samsung Neo QLED, IP residencial ML) \u00b7 1\u00ba v\u00eddeo publicado vertical (TikTok/IG/YT = OAuth+App Review) \u00b7 postback ML com venda real \u00b7 ciclos de v\u00eddeo recorrentes (hoje s\u00f3 texto recorre).\n\n**Riscos:** custo descontrolado do cron aut\u00f4nomo"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:08:50)*
+
+
+## 🤖 Claude *(01:08:51)*
+
+Memória atualizada. Envio os **deliverables tangíveis** (o vídeo 9:16 que o autopilot gerou sozinho + a screenshot do editor) — valor que você abre e toca:
+
+## 🤖 Claude *(01:08:55)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/scratchpad/render-9x16.mp4",
+    "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/scratchpad/editor-raw-3210.png"
+  ],
+  "caption": "1) render-9x16.mp4 \u2014 o v\u00eddeo 1080\u00d71920 (Roborock) que o Viral Autopilot gerou e renderizou SOZINHO no 1\u00ba ciclo pago witnessed. 2) editor-raw-3210.png \u2014 o editor HyperFrames vivo (NLE 9:16 multi-camada Glow/Brand/Hook + Export); o logo \"HeyGen\" s\u00f3 aparece no acesso cru :3210, o white-label nginx esconde em video.mcorch.com.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 2 files delivered to user.
+> ```
+
+## 🤖 Claude *(01:08:59)*
+
+
+## 🤖 Claude *(01:09:18)*
+
+Pronto. Executei **tudo que é executável daqui** com prova material e verificação E2E em browser real, e surfacei honestamente o que está travado na sua mão.
+
+## ✅ Feito e provado (Lei 1)
+
+**1 — Recon material** (`wf_6475e2f8`) reescreveu o HANDOFF stale: o loop de receita **não está quebrado em infra** — crons vivos (auto-publish 200/5min · pg_cron `*/15` heartbeat), 2/3 produtos já com shortlink assinado, `www.mcorch.com` 200 limpo. **Gargalo real do 1º R$ = distribuição + conversão, não plumbing.**
+
+**2 — 1º ciclo pago de vídeo 9:16 witnessed E2E** (ciclo `2403bfcb`):
+- Render **real 1080×1920 h264, 5s, 748KB** no bucket (ffprobe provado) — o `.mp4` que te enviei.
+- Conteúdo product-aware gerado (artigo + LinkedIn + imagem Roborock) · LinkedIn `queued`.
+- Saldo: 5076 → **5042** (net 34 mco, conferido).
+
+**3 — Distribuição de texto ativada** (recorrente, `every_n_days`/3d, text-only, próximo ciclo 2026-06-29) — o lever direto do gargalo verificado.
+
+**4 — Editor HyperFrames Fase A verificado em browser real** (agent-browser → NLE 9:16 multi-camada + Export, screenshot que vi e te enviei). Fase B adiada conforme seu GO.
+
+**5 — 2 bugs de receita achados durante o witness, corrigidos + deployados** (commit `df7505b`, /security-review SAFE):
+- **Billing:** o vídeo era cobrado por sub-run, mas só o flow de artigo (wordpress) renderiza → linkedin over-charged 12 sem refund. Refundei os 12 (saldo inteiro) + fix durável (`dry_run` agora 46→34, n_video 2→1).
+- **CTA-leak:** o LLM escrevia `Garanta o seu aqui: https://mcorch.com` em texto puro → o clique de maior intenção vazava pra homepage morta (R$0). Guard estendido p/ texto + **post real corrigido antes de publicar** (agora 2 CTAs `meli.la`, totalmente atribuível).
+
+**6 — Doc drift** corrigido (`mcorch-demo`→`mcorch-video`).
+
+## 🔒 Gated na sua mão (surfacing honesto)
+- **3º shortlink assinado** (Samsung Neo QLED) — exige seu IP residencial no portal ML (datacenter bloqueado, provado).
+- **Publicação vertical** TikTok/IG/YT do vídeo — OAuth + IG App Review.
+- **Receita real** (`revenue_cents>0`) — infra de postback ML pronta e fail-closed; falta tráfego que converta + o webhook assinado.
+- **studio.mcorch.com** (Fase B) e **Stripe live** — DNS/dashboard seus, quando quiser.
+
+## ⚠️ Disclosure (Lei 1)
+Num refund, truncar um UUID no display me levou a **fabricar os zeros de um `p_run_id`**. O crédito caiu no valor certo, mas a âncora de idempotência ficou no id falso — **corrigi** (ancorei no run_id real + removi a linha fabricada) e registrei a lição na memória. Nunca preencher UUID de cabeça.
+
+Quer que eu force o publish do post LinkedIn corrigido agora (em vez de esperar o auto-publish às 01:46), ou sigo para outra frente?

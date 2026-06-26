@@ -1455,3 +1455,16 @@ Me diz só uma coisa: **os $149 ficam parados como bilhete do próximo bull, ou 
 ## 👤 User *(00:59:56)*
 
 Vamos deixar ele para combustivel e quando virar o mercado tentamos fazer o maior lucro possivel.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - agent-afadcea34084ceac0]]
+> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
+%% --- TIMELINE END --- %%

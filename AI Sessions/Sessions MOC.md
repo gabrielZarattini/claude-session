@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1424
-> * **Sessões do Claude**: 1382
+> * **Total de Sessões Registradas**: 1425
+> * **Sessões do Claude**: 1383
 > * **Sessões do Gemini**: 42
 
 ---
@@ -65,6 +65,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-ab0cae1b935d2e571]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-aab0587a4189f8a0f]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-aa9d859dec14d4b51]]` - *2026-06-26*
@@ -76,8 +77,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]` - *2026-06-26*
 *   `[[2026-06-26 - Implementar E2E UI testing em browser real]]` - *2026-06-26*
 *   `[[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]` - *2026-06-26*
-*   `[[2026-06-25 - agent-afadcea34084ceac0]]` - *2026-06-25*
-*   *... e mais 1382 sessões nessa categoria.*
+*   *... e mais 1383 sessões nessa categoria.*
 
 ---
 
@@ -268,6 +268,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-ab0cae1b935d2e571]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aab0587a4189f8a0f]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aa9d859dec14d4b51]]` (ClaudeSessions)
