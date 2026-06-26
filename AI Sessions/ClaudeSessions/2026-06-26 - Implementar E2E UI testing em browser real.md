@@ -348,7 +348,7 @@ Now reading HANDOFF.md (head + tail), sprint priorities, and checking scratch co
 > 42	### Survival Laws Self-audit
 > 43	```
 > 44	Law 1 (Materiality): ✅ Tudo provado neste turno — Reel via HTTP 200 + permalink real; notificações via screenshot do browser; canvas/handoff/white-label via agent-browser; deploys por size; achados (cron /var/log morto, modelId fora do catálogo, id IG app-scoped 100/33) corrigidos com prova. Diretiva durável: verificar UI em browser real antes de declarar pronto.
-> 45	Law 2 (Process): ✅ SOPs: meta-reels-publish.md (caminho IG Business Login que funciona). Fatia 2 = débito BoK FR-META-REELS registrado (override consciente "comece a Fatia 2 agora"). Notificações = consertar camada existente (não módulo novo). Canvas/scroll fixes isentos (single-file).
+> 45	Law 2 (Process): ✅ SOPs: [[meta-reels-publish|meta-reels-publish]].md (caminho IG Business Login que funciona). Fatia 2 = débito BoK FR-META-REELS registrado (override consciente "comece a Fatia 2 agora"). Notificações = consertar camada existente (não módulo novo). Canvas/scroll fixes isentos (single-file).
 > 46	Law 3 (Pruning): ✅ Sessão longa com workflow (wf_792d5d48) como subagente; resultados por path, não recarregados. Selada a ~limite da janela.
 > 47	Law 4 (ORO): ✅ Triplet declarado; decisões soberanas via AskUserQuestion (workspace init) + diretivas explícitas (P0, Fatia 2 GO).
 > 48	```
@@ -1397,7 +1397,7 @@ Recon completo. O resultado está truncado — vou ler o arquivo completo para t
 > 319	        },
 > 320	        {
 > 321	          "item": "Eventual CF WAF Skip + 'Nível de Segurança' off para video.mcorch.com (se XHR/SSE do editor for desafiado)",
-> 322	          "why": "O conf documenta: para iframe em browser real normalmente o JS challenge passa, mas se o editor (render-progress SSE / file XHR) levar 403 text/html do CF (reputação de IP datacenter), precisa de regra Skip + desligar o componente 'Nível de Segurança' — toggle decisivo só no dashboard CF (lição wordpress-cf-publish-unblock).",
+> 322	          "why": "O conf documenta: para iframe em browser real normalmente o JS challenge passa, mas se o editor (render-progress SSE / file XHR) levar 403 text/html do CF (reputação de IP datacenter), precisa de regra Skip + desligar o componente 'Nível de Segurança' — toggle decisivo só no dashboard CF (lição [[wordpress-cf-publish-unblock|wordpress-cf-publish-unblock]]).",
 > 323	          "whatNeeded": "Sovereign no dashboard Cloudflare: WAF Skip rule http.host eq 'video.mcorch.com' + desligar Security Level. Provavelmente JÁ feito (302 SSO funciona limpo), mas confirmar se algum endpoint /api/* do studio for challenged."
 > 324	        },
 > 325	        {
@@ -1575,7 +1575,7 @@ GO recebido: **texto + vídeo** e **verificar Fase A + adiar Fase B**. Antes de 
 >
 > ```
 > 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
-> 2	// SOP: docs/processes/autopilot-cron-identity.md.
+> 2	// SOP: docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
 > 3	//
 > 4	// Identity (two paths):
 > 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
@@ -1880,7 +1880,7 @@ O contrato está claro. Pontos-chave: `mode=all_at_once` → após 1 run o plano
 > === begin_autopilot_cycle ===
 > -- Migration: begin_autopilot_cycle RPC — atomic cap-check + single pre-debit + open cycle (FR-VA-007 / FR-VA-021).
 > -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md §2 (RPC table line 109 + cost-gate notes lines ~170-183).
-> -- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
+> -- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
 > --
 > -- THE anti-TOCTOU heart of the cost guardrail. Under pg_advisory_xact_lock(hashtext(user_id)) — which serializes
 > -- concurrent begins for the SAME tenant so two parallel cycles cannot both slip under the daily cap — it:
@@ -1989,7 +1989,7 @@ O contrato está claro. Pontos-chave: `mode=all_at_once` → após 1 run o plano
 > === finalize (cabeçalho) ===
 > -- Migration: finalize_autopilot_cycle RPC — terminal close + idempotent POSITIVE-credit refund (FR-VA-007).
 > -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md §2 (RPC table line 110, "espelha finalize_vision_job").
-> -- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
+> -- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
 > --
 > -- Mirrors public.finalize_vision_job (20260615160000): claim a RUNNING cycle EXACTLY ONCE, then credit the unused
 > -- (spend_mco − actual) via add_mco_coins (POSITIVE — never a negative deduct) in the SAME transaction, plus a
@@ -2965,7 +2965,7 @@ E confirmei um **achado de billing real (Lei 1)**: o código (`orchestrate-step:
 > ```
 > === refund RPC (assinatura + comportamento) ===
 > -- Migration: viral-autopilot Fatia VA-V1 — compensating credit for a FAILED video enqueue (billing-accuracy gap).
-> -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md OTD-VA-010 (prepaid cost model) · SOP docs/processes/autopilot-video-9x16.md.
+> -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md OTD-VA-010 (prepaid cost model) · SOP docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md.
 > --
 > -- THE GAP (charge-without-value, NOT a security vuln): autopilot-run finalizes the cycle OPTIMISTICALLY —
 > -- `actual = succeeded × (ORCH_COST + VIDEO_COST)` — BEFORE the async video enqueues run (orchestrate-content
@@ -4792,3 +4792,16 @@ O token LinkedIn expira **2026-07-03**. Os ciclos de 06-29 e 07-02 publicam norm
 **Veredito: a cadência de conteúdo no LinkedIn está pronta e provada com um post real monetizado e sem leak.** 
 
 Podemos avançar. Quer que eu (a) confirme/implemente o auto-refresh do token LinkedIn, (b) ataque a próxima frente de receita (3º link assinado / postback ML real), ou (c) outra direção?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
+> * **Próxima Sessão**: [[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]
+%% --- TIMELINE END --- %%

@@ -1826,3 +1826,16 @@ Push        : N/A (sem código novo; HEAD==origin==023aa00)
 Estado limpo, zero órfão. O sistema dorme seguro no bear e te chama no Telegram quando o mercado virar.
 
 Uma observação pra fechar com honestidade: aquele **ping de teste do Telegram** que ofereci ficou em aberto — é a única verificação que garante que o gatilho de "voltar quando virar" realmente funciona. Se quiser, me chama numa próxima e eu disparo em 10s. Por ora, está tudo selado. Bom trabalho hoje. 🤝
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - agent-afadcea34084ceac0]]
+> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
+%% --- TIMELINE END --- %%
