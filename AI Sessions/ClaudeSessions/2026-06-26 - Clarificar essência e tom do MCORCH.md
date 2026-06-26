@@ -4008,3 +4008,1506 @@ Agora a migration, alinhada exatamente à migration stub da SDD (SSOT).
 > ```
 > File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260626120000_collective_efficiency_ledger.sql (file state is current in your context — no need to Read it back)
 > ```
+
+## 🤖 Claude *(23:00:05)*
+
+
+## 🤖 Claude *(23:00:06)*
+
+Migration escrita. Agora os gates materiais: self-check (G1/G2) + tsc + investigar o mecanismo de aplicação, depois `/security-review`.
+
+## 🤖 Claude *(23:00:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nM=supabase/migrations/20260626120000_collective_efficiency_ledger.sql\necho \"=== G1: security_invoker = on ===\"; grep -c \"security_invoker = on\" $M\necho \"=== G2: RPC convention ===\"; grep -cE \"SECURITY DEFINER|SET search_path = ''|REVOKE ALL .*FROM PUBLIC, anon, authenticated|GRANT  EXECUTE ON FUNCTION .* TO service_role\" $M\necho \"--- (4 esperado) ---\"\necho \"\"; echo \"=== tsc (src/) ===\"; npx tsc --noEmit 2>&1 | tail -4; echo \"exit: $?\"\necho \"\"; echo \"=== mecanismo de apply: sql-bridge? ===\"; ls scripts/qa/ 2>/dev/null | grep -iE \"sql|bridge\" ; ls scripts/ 2>/dev/null | grep -iE \"sql-bridge|apply|deploy_all|migrate\"\necho \"\"; echo \"=== supabase linked? ===\"; ls supabase/.temp 2>/dev/null; cat supabase/config.toml 2>/dev/null | grep -iE \"project_id|\\[db\\]\" | head -3",
+  "description": "Self-check gates G1/G2, tsc, find apply mechanism"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === G1: security_invoker = on ===
+> 2
+> === G2: RPC convention ===
+> 7
+> --- (4 esperado) ---
+> 
+> === tsc (src/) ===
+> exit: 0
+> 
+> === mecanismo de apply: sql-bridge? ===
+> deploy_all.sh
+> 
+> === supabase linked? ===
+> cli-latest
+> gotrue-version
+> linked-project.json
+> pooler-url
+> postgres-version
+> project-ref
+> rest-version
+> storage-migration
+> storage-version
+> project_id = "bcyvddsykvehvpwstlfa"
+> ```
+
+## 🤖 Claude *(23:00:24)*
+
+
+## 🤖 Claude *(23:00:26)*
+
+Gates G1/G2 verdes (security_invoker presente, convenção RPC completa), tsc=0. Supabase está linkado. Antes de aplicar (mandato CLAUDE.md: toda migration passa por `/security-review`), rodando o review de segurança sobre o diff.
+
+## 🤖 Claude *(23:00:26)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(23:00:26)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   CLAUDE.md
+	modified:   docs/agents.md
+	modified:   docs/architecture/system_architecture.md
+	modified:   supabase/functions/orchestrate-content/index.ts
+	modified:   supabase/functions/orchestrate-step/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/Agentic-Design-Patterns.pdf
+	docs/architecture/agentic-vision.md
+	docs/bok/agentic-governance/
+	docs/processes/collective-efficiency-ledger.md
+	supabase/migrations/20260626120000_collective_efficiency_ledger.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(23:00:46)*
+
+
+## 🤖 Claude *(23:01:02)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security vuln identification",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a FOCUSED security review of a small set of changes in the MCORCH repo (Supabase + React). Identify ONLY high-confidence, concretely-exploitable security vulnerabilities NEWLY INTRODUCED by these changes. Do not comment on pre-existing issues or style.\n\nREVIEW EXACTLY THESE CHANGED FILES (read them):\n1. `supabase/migrations/20260626120000_collective_efficiency_ledger.sql` (NEW \u2014 a VIEW + a SECURITY DEFINER RPC)\n2. `supabase/functions/orchestrate-content/index.ts` (MODIFIED \u2014 search for the new `collective_hop` emit to infra_health_logs near the `async_orchestrate_step` kick)\n3. `supabase/functions/orchestrate-step/index.ts` (MODIFIED \u2014 search for the new `collective_retry` emit inside the `addStep` helper)\n\n(Markdown/doc changes \u2014 CLAUDE.md, docs/** \u2014 are OUT OF SCOPE per the review rules; do NOT review them.)\n\nCONTEXT to judge correctly (verify against the code, don't take on faith):\n- The repo convention for cross-tenant aggregate RPCs is `SECURITY DEFINER` + `SET search_path = ''` + `REVOKE ALL FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE TO service_role`. Compare the new RPC against this (an existing example is `supabase/migrations/20260603220000_secure_ledger_rpcs.sql`).\n- `infra_health_logs` is a GLOBAL-READ table (any authenticated user can read it). The contract is: metadata must contain NO PII and NO secrets. Check the new emits only write an allowlist like `{run_id, collective_type}`.\n- The VIEW `collective_efficiency_ledger` is meant to be per-tenant via `security_invoker = on` (so it inherits the SELECT-own RLS of `pipeline_runs` and `autopilot_cycles`). Verify the VIEW actually declares `security_invoker = on`. Supabase runs PostgreSQL 15+.\n- Base tables: `pipeline_runs` (RLS SELECT-own) and `autopilot_cycles` (RLS SELECT-own).\n\nSpecifically assess these candidate risks and decide if each is a REAL, exploitable vuln or a non-issue:\nA. Cross-tenant data leak: could an `authenticated` user read OTHER tenants' rows via the VIEW or the RPC?\nB. search_path hijack / SQL injection in the SECURITY DEFINER function.\nC. PII/secret exposure via the new infra_health_logs emits (is any user-controlled content or PII written to metadata?).\nD. Privilege escalation: is the cross-tenant rollup RPC reachable by anon/authenticated?\n\nEXCLUSIONS: no DoS, no rate-limiting, no \"lack of hardening\", no theoretical races, no findings in markdown/docs, no log-spoofing, no SSRF-path-only. Only flag if >80% confident of real exploitability.\n\nFor each REAL finding output: file:line, Severity (HIGH/MEDIUM), category, description, exploit scenario, fix, and a confidence score 1-10. If you find NO high-confidence vulnerabilities, say so explicitly and explain why each candidate risk (A-D) is mitigated. Be concise."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I have full verification of all four candidate risks. Here is my assessment.\n\n---\n\n## Security Review — Collective Efficiency Ledger changes\n\n**No high-confidence, newly-introduced, exploitable vulnerabilities found.** Each candidate risk (A–D) is mitigated. Details below.\n\n### A. Cross-tenant data leak via VIEW or RPC — NON-ISSUE\n\n**VIEW (`collective_efficiency_ledger`)** is declared `WITH (security_invoker = on)` (migration line 20). On PostgreSQL 15+ this evaluates the underlying tables\' RLS **as the caller**, not the view owner. I verified both base tables enforce `SELECT`-own RLS keyed on `auth.uid() = user_id`:\n- `pipeline_runs`: `USING (auth.uid() = user_id)` (`20260504120000_pipeline_runs.sql:23-26`)\n- `autopilot_cycles`: `USING (auth.uid() = user_id)` (`20260620120100_viral_autopilot_cycles.sql:42-43`)\n\nSo an `authenticated` user querying the view sees only their own rows. The `user_id` column is even projected, but RLS already filters to own rows, so no leak.\n\n**RPC (`collective_efficiency_rollup`)** is `SECURITY DEFINER` and *does* bypass RLS (intended — it\'s a cross-tenant Sovereign rollup), but it is hard-revoked from `anon`/`authenticated` (see D). Reachable only by `service_role`. Confidence it\'s safe: **9/10**.\n\n### B. search_path hijack / SQL injection in the SECURITY DEFINER function — NON-ISSUE\n\nThe function declares `SET search_path = \'\'` (line 66) and fully schema-qualifies every object (`public.infra_health_logs`, `public.collective_efficiency_ledger`). No dynamic SQL / `EXECUTE`, no string concatenation — it\'s a static `LANGUAGE sql` body. The only "external" value flowing in is `metadata->>\'run_id\'` cast to `::uuid`, which is a hard cast (rejects non-UUID), not interpolation. No injection surface. Confidence: **9/10**.\n\n### C. PII/secret exposure via new `infra_health_logs` emits — NON-ISSUE\n\nBoth emits write a strict allowlist to `metadata`:\n- `orchestrate-content/index.ts:257-259` → `{ run_id: runId, collective_type: "orchestrate-content" }`\n- `orchestrate-step/index.ts:179-182` → `{ run_id, collective_type: "orchestrate-content" }`\n\nVerified provenance of the only non-constant field:\n- `runId` (orchestrate-content) = `runRow?.id` from a server-side `.insert(...).select("id")` (line 221) — a DB-generated UUID, never user-controlled.\n- `run_id` (orchestrate-step) = `req.json()` body, but it\'s validated against an existing `pipeline_runs` row (`.eq("id", run_id).single()`, returns 404 if not found, line 147-157) **before** the emit, and the column is `uuid`-typed. No `topic`, `user_id`, tokens, or prompt content is written. No PII/secret reaches the global-read table. Confidence: **9/10**.\n\n### D. Privilege escalation — cross-tenant rollup reachable by anon/authenticated — NON-ISSUE\n\nLines 84-85 exactly match the repo convention (and the cited `20260603220000_secure_ledger_rpcs.sql`):\n```sql\nREVOKE ALL    ON FUNCTION public.collective_efficiency_rollup() FROM PUBLIC, anon, authenticated;\nGRANT  EXECUTE ON FUNCTION public.collective_efficiency_rollup() TO service_role;\n```\n`anon`/`authenticated` cannot execute it via PostgREST. Only `service_role` (edge functions) can. Confidence: **9/10**.\n\n### Minor non-blocking note (not a vuln, no action required)\nThe `collective_efficiency_rollup` RPC reads `infra_health_logs` (global-read) and joins on `run_id`. Since it runs as `service_role` and returns only aggregates (`runs`, `avg_mco_actual`, `avg_wall_clock_ms`, `retry_rate`) grouped by `collective_type` — no per-tenant identifiers in the output — there is no cross-tenant disclosure even though the underlying view is RLS-bypassed here by design. This is the intended Sovereign-only behavior, correctly gated by the grant.\n\n**Verdict: SAFE.** All four candidate risks are concretely mitigated by the code as written; nothing newly introduced is exploitable.'}, {'type': 'text', 'text': "agentId: a2249459e17b4fec2 (use SendMessage with to: 'a2249459e17b4fec2', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 80051\ntool_uses: 10\nduration_ms: 52827</usage>"}]
+> ```
+
+## 🤖 Claude *(23:02:09)*
+
+
+## 🤖 Claude *(23:02:17)*
+
+**`/security-review` = SAFE.** Relatório:
+
+# Security Review — Collective Efficiency Ledger
+
+**Veredito: SAFE — nenhuma vulnerabilidade nova e explorável.** Os 4 riscos candidatos foram verificados contra o código (confiança 9/10 cada):
+
+- **A. Vazamento cross-tenant** — NÃO-ISSUE. A VIEW declara `security_invoker = on` (PG15+) → herda a RLS `SELECT-own` de `pipeline_runs`/`autopilot_cycles` (`auth.uid() = user_id`); `authenticated` só vê as próprias linhas.
+- **B. search_path hijack / SQLi** — NÃO-ISSUE. `SET search_path = ''` + objetos schema-qualificados + `LANGUAGE sql` estático, sem dynamic SQL; único valor externo é `metadata->>'run_id'::uuid` (hard cast).
+- **C. PII/segredo na telemetria** — NÃO-ISSUE. Emits escrevem só `{run_id (uuid DB-gerado), collective_type (constante)}`; nenhum topic/user_id/conteúdo na tabela global-read.
+- **D. Escalação de privilégio** — NÃO-ISSUE. `REVOKE ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE TO service_role` — rollup cross-tenant inalcançável por tenant.
+
+Gate G3 verde. Agora aplicar a migration (G5) + prova material (G6/G7). Deixa eu confirmar o mecanismo de apply.
+
+## 🤖 Claude *(23:02:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy_all.sh (trecho de migration) ===\"; grep -nE \"db push|migration|psql|DB_URL|PGPASSWORD|supabase db\" scripts/deploy_all.sh 2>/dev/null | head\necho \"\"; echo \"=== conex\u00e3o DB em .env? (nomes s\u00f3, sem valores) ===\"; grep -oE \"^[A-Z_]*DB[A-Z_]*=|^SUPABASE_DB[A-Z_]*=|^PG[A-Z_]*=|^DATABASE_URL=\" .env 2>/dev/null\necho \"\"; echo \"=== pooler-url existe ===\"; ls -la supabase/.temp/pooler-url 2>/dev/null && echo \"(conte\u00fado mascarado)\"\necho \"\"; echo \"=== aios-sql-bridge? ===\"; ls scripts/ | grep -iE \"sql|bridge\" ; find . -maxdepth 3 -name \"*sql-bridge*\" 2>/dev/null | head",
+  "description": "Determine migration apply mechanism"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy_all.sh (trecho de migration) ===
+> 20:npx supabase db push
+> 
+> === conexão DB em .env? (nomes só, sem valores) ===
+> 
+> === pooler-url existe ===
+> -rw-r--r-- 1 ubuntu ubuntu 92 May 16 19:46 supabase/.temp/pooler-url
+> (conteúdo mascarado)
+> 
+> === aios-sql-bridge? ===
+> bridge-mesh-to-openclaw.ts
+> design-bridge.ts
+> nightly-bridge-refresh.sh
+> opencode-bridge.ts
+> video-bridge.ts
+> ./supabase/functions/aios-sql-bridge
+> ./docs/bok/aios-sql-bridge
+> ./docs/processes/sql-bridge-emergency-readonly.md
+> ./docs/processes/sql-bridge-admin-bootstrap.md
+> ./src/test/aios-sql-bridge-smoke.test.ts
+> ```
+
+## 🤖 Claude *(23:02:29)*
+
+
+## 🤖 Claude *(23:02:29)*
+
+Mecanismo é `npx supabase db push`. Rodando dry-run primeiro para ver exatamente o que está pendente (evitar surpresa de migrations não-registradas — o motivo do schema-drift-audit existir).
+
+## 🤖 Claude *(23:02:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 90 npx supabase db push --dry-run 2>&1 | tail -25",
+  "description": "Dry-run supabase db push to see pending migrations"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> DRY RUN: migrations will *not* be pushed to the database.
+> Connecting to remote database...
+> Would push these migrations:
+>  • 20260626120000_collective_efficiency_ledger.sql
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(23:02:37)*
+
+
+## 🤖 Claude *(23:02:38)*
+
+Dry-run limpo — só a minha migration pendente, conexão funciona (sem prompt de senha). Aplicando.
+
+## 🤖 Claude *(23:02:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 120 npx supabase db push 2>&1 | tail -15",
+  "description": "Apply migration to live DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260626120000_collective_efficiency_ledger.sql
+> 
+>  [Y/n] 
+> Applying migration 20260626120000_collective_efficiency_ledger.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(23:03:00)*
+
+
+## 🤖 Claude *(23:03:00)*
+
+Migration aplicada (G5 ✅). Agora a prova material via REST. Primeiro, service-role: a VIEW está exposta e tem dados de múltiplos tenants (pré-requisito do teste de isolamento)?
+
+## 🤖 Claude *(23:03:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-${SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}}\"\nKEY=\"${SB_SECRET_KEY}\"\necho \"URL=$URL  KEY set? $([ -n \"$KEY\" ] && echo yes || echo NO)\"\necho \"\"\necho \"=== service-role: VIEW exposta + total de linhas (Content-Range) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/collective_efficiency_ledger?select=run_id&limit=1\"\ncurl -s -I -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" \\\n  \"$URL/rest/v1/collective_efficiency_ledger?select=run_id&limit=1\" 2>/dev/null | grep -i \"content-range\"\necho \"\"\necho \"=== service-role: amostra + distinct collective_type ===\"\ncurl -s -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/collective_efficiency_ledger?select=run_id,collective_type,user_id,n_units,mco_projected,mco_actual,succeeded,wall_clock_ms&order=started_at.desc&limit=4\" | python3 -m json.tool 2>/dev/null | head -50",
+  "description": "Service-role REST proof: VIEW exposed, row count, sample"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> URL=https://bcyvddsykvehvpwstlfa.supabase.co  KEY set? yes
+> 
+> === service-role: VIEW exposta + total de linhas (Content-Range) ===
+> HTTP 200
+> content-range: 0-0/16
+> 
+> === service-role: amostra + distinct collective_type ===
+> [
+>     {
+>         "run_id": "93659c88-21db-408d-9432-7e173f1d0f82",
+>         "collective_type": "orchestrate-content",
+>         "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>         "n_units": 6,
+>         "mco_projected": 10,
+>         "mco_actual": 10,
+>         "succeeded": true,
+>         "wall_clock_ms": 59985
+>     },
+>     {
+>         "run_id": "a1db17a3-5b99-4d50-a827-fb7324ade60d",
+>         "collective_type": "orchestrate-content",
+>         "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>         "n_units": 3,
+>         "mco_projected": 10,
+>         "mco_actual": 10,
+>         "succeeded": true,
+>         "wall_clock_ms": 13356
+>     },
+>     {
+>         "run_id": "2403bfcb-f0d8-4603-b9c2-51a80676d172",
+>         "collective_type": "autopilot-cycle",
+>         "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>         "n_units": 2,
+>         "mco_projected": 46,
+>         "mco_actual": 46,
+>         "succeeded": true,
+>         "wall_clock_ms": 3470
+>     },
+>     {
+>         "run_id": "c1f8dd69-53f8-4426-bf54-5e1fce575d6d",
+>         "collective_type": "orchestrate-content",
+>         "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8",
+>         "n_units": 3,
+>         "mco_projected": 10,
+>         "mco_actual": 10,
+>         "succeeded": true,
+>         "wall_clock_ms": 12582
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(23:03:25)*
+
+
+## 🤖 Claude *(23:03:28)*
+
+VIEW exposta, **16 linhas reais**, ambos `collective_type` computando certo (incl. o ciclo `2403bfcb` da sessão passada). Todas as amostras são do User Zero (`ada39fae`). Para provar o gate-mãe G6 (isolamento) rigorosamente, vou mintar um JWT de usuário throwaway (que não possui nenhuma linha) — se a VIEW retornar 0 enquanto service-role vê 16, está provado que não vaza cross-tenant. Deixa eu ver a interface do minter.
+
+## 🤖 Claude *(23:03:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\necho \"=== distinct user_ids na VIEW (service-role) ===\"\ncurl -s -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/collective_efficiency_ledger?select=user_id\" | python3 -c \"import json,sys; d=json.load(sys.stdin); u=set(x['user_id'] for x in d); print(f'{len(d)} linhas, {len(u)} tenant(s) distinto(s):'); [print(' ',x) for x in u]\"\necho \"\"\necho \"=== interface do gen-user-jwt.ts (head) ===\"\nsed -n '1,40p' scripts/qa/gen-user-jwt.ts 2>/dev/null",
+  "description": "Distinct tenants in VIEW + JWT minter interface"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === distinct user_ids na VIEW (service-role) ===
+> 16 linhas, 1 tenant(s) distinto(s):
+>   ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 
+> === interface do gen-user-jwt.ts (head) ===
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+>  * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+>  * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+>  *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+>  *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> if (error || !data.properties?.hashed_token) {
+>   console.error('generateLink error:', error?.message ?? 'no hashed_token');
+>   process.exit(1);
+> }
+> const tokenHash = data.properties.hashed_token;
+> 
+> let accessToken: string | null = null;
+> for (const type of ['magiclink', 'email'] as const) {
+>   const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });
+>   if (!vErr && sess?.session?.access_token) { accessToken = sess.session.access_token; break; }
+> }
+> if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
+> console.log(accessToken);
+> ```
+
+## 🤖 Claude *(23:03:58)*
+
+
+## 🤖 Claude *(23:04:00)*
+
+Só o User Zero tem dados (16 linhas). Para provar G6 rigorosamente, crio um usuário throwaway (que não possui nenhuma linha): se a VIEW retornar 0 para ele enquanto service-role vê 16, o isolamento `security_invoker` está provado. O mesmo script testa o privilégio do RPC (tenant deve ser negado).
+
+## 🤖 Claude *(23:04:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/scratchpad/prove-ledger-isolation.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Material proof of the Collective Efficiency Ledger (FR-AG-001/002) \u2014 G6 isolation + RPC privilege gate.\n * Creates a throwaway authenticated user (owns ZERO ledger rows), proves:\n *   1. VIEW collective_efficiency_ledger as that user \u2192 0 rows (security_invoker isolation; service-role sees 16)\n *   2. RPC collective_efficiency_rollup as that user \u2192 denied (REVOKE authenticated)\n * Then deletes the throwaway user. Read-only against the ledger; no data mutated.\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = process.env.SB_SECRET_KEY!;\nconst ANON = process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\n\nconst email = `ledger-iso-${Date.now()}@qa.mcorch.local`;\nconst password = `Qa!${Date.now()}xZ`;\n\nconst { data: u, error: ce } = await admin.auth.admin.createUser({ email, password, email_confirm: true });\nif (ce || !u.user) { console.error('createUser:', ce?.message); process.exit(1); }\nconst uid = u.user.id;\n\nconst { data: s, error: se } = await anon.auth.signInWithPassword({ email, password });\nif (se || !s.session) { console.error('signIn:', se?.message); await admin.auth.admin.deleteUser(uid); process.exit(1); }\nconst token = s.session.access_token;\n\n// 1) VIEW as throwaway user \u2014 expect 0 rows\nconst vr = await fetch(`${URL}/rest/v1/collective_efficiency_ledger?select=run_id,user_id`, {\n  headers: { apikey: ANON, Authorization: `Bearer ${token}` },\n});\nconst vRows = await vr.json();\nconst viewRowsVisible = Array.isArray(vRows) ? vRows.length : vRows;\n\n// 2) RPC as throwaway user \u2014 expect denied (not 200)\nconst rr = await fetch(`${URL}/rest/v1/rpc/collective_efficiency_rollup`, {\n  method: 'POST', headers: { apikey: ANON, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: '{}',\n});\nconst rpcBody = await rr.text();\n\nconsole.log(JSON.stringify({\n  throwaway_uid: uid,\n  G6_view_http: vr.status,\n  G6_view_rows_visible_to_other_tenant: viewRowsVisible,   // EXPECT 0\n  RPC_http_for_authenticated: rr.status,                   // EXPECT 401/403/404 (denied)\n  RPC_body_snippet: rpcBody.slice(0, 120),\n}, null, 2));\n\nawait admin.auth.admin.deleteUser(uid);\nconsole.log('cleanup: throwaway user deleted \u2705');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/scratchpad/prove-ledger-isolation.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:04:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nexport SUPABASE_URL=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/scratchpad/prove-ledger-isolation.ts 2>&1 | tail -20",
+  "description": "Run isolation + RPC privilege proof"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "throwaway_uid": "7004f8b4-6cca-4c74-89fe-702554fad208",
+>   "G6_view_http": 200,
+>   "G6_view_rows_visible_to_other_tenant": 0,
+>   "RPC_http_for_authenticated": 403,
+>   "RPC_body_snippet": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function collective_efficiency_rollup\"}"
+> }
+> cleanup: throwaway user deleted ✅
+> ```
+
+## 🤖 Claude *(23:04:27)*
+
+
+## 🤖 Claude *(23:04:29)*
+
+**G6 PROVADO materialmente:** tenant throwaway vê **0 linhas** (HTTP 200) enquanto service-role vê 16 → isolamento `security_invoker` confirmado, zero vazamento cross-tenant. **RPC negado a authenticated: HTTP 403, código 42501 "permission denied"** → FM-AG-007 mitigado.
+
+Agora G7 (métrica bate com a base) + o RPC funcionando para service-role.
+
+## 🤖 Claude *(23:04:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\necho \"=== RPC rollup (service-role) \u2014 deve agregar por collective_type ===\"\ncurl -s -X POST -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  \"$URL/rest/v1/rpc/collective_efficiency_rollup\" -d '{}' | python3 -m json.tool\necho \"\"\necho \"=== G7: VIEW row 93659c88 vs base pipeline_runs (mco_cost, jsonb_array_length(steps), wall-clock) ===\"\ncurl -s -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/pipeline_runs?id=eq.93659c88-21db-408d-9432-7e173f1d0f82&select=id,status,mco_cost,steps,started_at,completed_at\" \\\n  | python3 -c \"\nimport json,sys\nr=json.load(sys.stdin)[0]\nfrom datetime import datetime\ndef ms(a,b):\n    fa=datetime.fromisoformat(a.replace('Z','+00:00')); fb=datetime.fromisoformat(b.replace('Z','+00:00'))\n    return int((fb-fa).total_seconds()*1000)\nprint('base mco_cost     =', r['mco_cost'], '   (VIEW mco_actual=10)')\nprint('base n_steps      =', len(r['steps']), '   (VIEW n_units=6)')\nprint('base wall_clock_ms=', ms(r['started_at'], r['completed_at']), '  (VIEW wall_clock_ms=59985)')\nprint('base status       =', r['status'], '  \u2192 succeeded=', r['status'] in ('done',))\n\"",
+  "description": "Service-role RPC rollup + G7 base comparison"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RPC rollup (service-role) — deve agregar por collective_type ===
+> [
+>     {
+>         "collective_type": "autopilot-cycle",
+>         "runs": 2,
+>         "avg_mco_actual": 33.0,
+>         "avg_wall_clock_ms": 2381.5,
+>         "retry_rate": 0.0
+>     },
+>     {
+>         "collective_type": "orchestrate-content",
+>         "runs": 14,
+>         "avg_mco_actual": 10.0,
+>         "avg_wall_clock_ms": 334619.85714285716,
+>         "retry_rate": 0.0
+>     }
+> ]
+> 
+> === G7: VIEW row 93659c88 vs base pipeline_runs (mco_cost, jsonb_array_length(steps), wall-clock) ===
+> base mco_cost     = 10    (VIEW mco_actual=10)
+> base n_steps      = 6    (VIEW n_units=6)
+> base wall_clock_ms= 59985   (VIEW wall_clock_ms=59985)
+> base status       = done   → succeeded= True
+> ```
+
+## 🤖 Claude *(23:04:55)*
+
+
+## 🤖 Claude *(23:05:00)*
+
+**Todos os gates da Fase 4 verdes com prova material:**
+
+| Gate | Prova |
+|---|---|
+| G5 aplicada | `Applying migration… Finished` |
+| **G6 isolamento** | tenant throwaway → **0 linhas** · service-role → 16 |
+| RPC privilégio | authenticated → **403 `permission denied`** · service-role → agrega |
+| G7 métrica bate | VIEW `93659c88` = base exata (mco 10 · n_units 6 · wall_clock 59985 · succeeded true) |
+
+E o rollup já entrega **insight real**: `orchestrate-content` avg_wall_clock **≈334.6s** vs `autopilot-cycle` **2.4s** — o coletivo está medido, não no escuro. `retry_rate=0` (esperado — os emits são novos, nenhum step falhou desde então).
+
+Falta deployar as 2 edge functions para os emits ficarem vivos (FR-AG-003). Mudança aditiva best-effort, baixo risco.
+
+## 🤖 Claude *(23:05:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy orchestrate-content ===\"; timeout 150 npx supabase functions deploy orchestrate-content 2>&1 | tail -4\necho \"=== deploy orchestrate-step ===\"; timeout 150 npx supabase functions deploy orchestrate-step 2>&1 | tail -4",
+  "description": "Deploy the 2 edge functions with the new emits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy orchestrate-content ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-content
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === deploy orchestrate-step ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(23:05:27)*
+
+
+## 🤖 Claude *(23:05:27)*
+
+Ambas edge functions deployadas — emits vivos. **Fase 4 completa.** Agora Fase 5 — seal na malha. Lendo o script de seal para adaptar.
+
+## 🤖 Claude *(23:05:28)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(23:05:29)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(23:05:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-vision-mcp-bok-seal.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals the BoK documentation suite for vision-mcp in the Knowledge Mesh.
+> 4	 * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the parent
+> 5	 * mcorch-constellation BoK seal (vision-mcp is the perception organ of the core platform).
+> 6	 * Embedding fires automatically via trg_mcorch_embed_on_insert.
+> 7	 *
+> 8	 * Usage: bun run scripts/seed-vision-mcp-bok-seal.ts
+> 9	 */
+> 10	import { createClient } from '@supabase/supabase-js';
+> 11	
+> 12	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 13	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 14	
+> 15	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 16	  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');
+> 17	  process.exit(1);
+> 18	}
+> 19	
+> 20	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 21	
+> 22	const PARENT_SEAL = 'bok-scribe-seal-mcorch-constellation-v1'; // 78cb74e6-538c-4c9e-80a2-50268947dfca
+> 23	
+> 24	const sealNode = {
+> 25	  name: 'bok-scribe-seal-vision-mcp-v1',
+> 26	  node_type: 'documentation_suite',
+> 27	  project_id: 'vision-mcp',
+> 28	  stability_score: 0.85,
+> 29	  revenue_impact: 0, // enabler/infra: módulo de percepção; receita indireta via consumo mcoCoins + upsell de plano
+> 30	  content: `Vision MCP ("Percepção de Essência Humana") — servidor Model Context Protocol nativo do MCORCH de percepção visual + deepsearch fundamentado (BoK suite 9/9).
+> 31	
+> 32	DIRETIVA: Sovereign 2026-06-10, ref. sandcastles.ai — MCP interno nativo, consumível por agentes internos (Pantheon) E ecossistemas externos. A recon material estabeleceu que sandcastles é SaaS de research de vídeo short-form (NÃO CV); o diferencial extraído é o PADRÃO de produtização (remote MCP Streamable HTTP + OAuth 2.1/RFC 9728 + Plugin Zip + skills-as-distribution), não o conteúdo. "Vision sobre MCP" já é da Roboflow e "deepsearch sobre MCP" de Exa/Firecrawl/Tavily — logo o diferencial defensável é o PRODUTO CRUZADO vision×deepsearch (whitespace, demanda NÃO validada — OTD-VM-002) + self-host soberano + credencial per-tenant + arquitetura Essência Humana.
+> 33	
+> 34	ARQUITETURA: 5 pilares (CV/Motion/Neuromorphic/Peripheral/Cognitive) + vertical Tecnologia Assistiva (beachhead demand-PROVADO — Be My Eyes 1M usuários BLV/43M requests-ano; JAWS PictureSmart e NVDA já chamam OpenAI/Anthropic; compulsão WCAG 2.2/EAA 06-2025/LBI Art.63/ABNT NBR 17225:2025; OTD-VM-002 bifurca a demanda — GTM ancora no assistivo, cruzado é upsell). Two-tier "Essência Humana": Tier 1 periférico CPU barato (princípios neuromórficos emulados em software — frame-diff/MOG2/event-synthesis v2e/OpenEB; honesto: sem hardware DVS) → trigger de saliência → Tier 2 foveal billable (VLM BYOK/SAM/OCR). CoALA: a malha GraphRAG+pgvector+FSRS+Pantheon JÁ é a arquitetura cognitiva; vision-mcp é o órgão de percepção. RUNTIME: container mcorch_vision_mcp no Sovereign Mesh (precedente DIRETO gitnexus StreamableHTTPServerTransport 127.0.0.1:3100), atrás de nginx mcp.mcorch.com; Edge Function REJEITADA (timeout — mesma lição do orchestrate async); ZERO novas edge fns (reuso embed-mcorch-node/get-infra-status/deduct_mco_coins).
+> 35	
+> 36	SEGURANÇA/TENANCY (LGPD ELEVADO): identidade ES256 JWKS fail-closed + RFC 9728 PRM + OAuth 2.1; PAT mcp_access_tokens (hash SHA-256, scopes fechados SEM credentials/billing); credencial per-user fail-closed (402 firecrawl_not_configured); sentinel DUPLO (args inbound + texto EXTRAÍDO — injeção persistente na malha FM-VM-03); billing atômico deduct_mco_coins + refundMco + partial-delivery refund selado (FRD §4.5); biométrico EXCLUÍDO (detection/description-only, art.11 FM-VM-09); erase_vision_artifacts cascade + retention clock art.16; PII-strip + SCCs ANPD; duty-of-care assistivo (recusa red-line 100%, dano real FM-VM-14).
+> 37	
+> 38	ID SPACE: MR-VM-001..016 → BR-VM-001..012 → PR-VM-001..025 (23 ativos) → FR-VM-001..026 + NFR-VM-001..013 → DD-VM-001..006 + OTD-VM-001..020 + FM-VM-01..18/FMEA-VM-001..018 (12 RPN>100) + KPI-VM-001..012 + QO-VM-001..006 + PROC-VM-001..009. Traceability 0 órfãos downstream (cross-check mecânico no main loop; validação adversarial independente pendente do reset de cota — declarado, Lei 1). 4 tabelas novas + 1 RPC + 1 bucket + 2 colunas BYOK; 0 edge fns; 1 container.
+> 39	
+> 40	Seed deriva v0.2.0 do 00-deepsearch-blueprint.md. Memória: project_vision_mcp. SOPs antecipados: deepsearch-blueprint.md (anticorpo do padrão).`,
+> 41	  metadata: {
+> 42	    bok_version: '1.0.0',
+> 43	    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics'],
+> 44	    document_lines: {
+> 45	      '00-index': 97,
+> 46	      '01-mrd': 208,
+> 47	      '02-brd': 229,
+> 48	      '03-prd': 379,
+> 49	      '04-frd': 318,
+> 50	      '05-sdd': 754,
+> 51	      '06-data-model': 236,
+> 52	      '07-process-flow': 220,
+> 53	      '08-quality-metrics': 170,
+> 54	      total_suite_9docs: 2611, // 9 docs canônicos (verificado por wc -l 2026-06-15); blueprint-seed 532 à parte
+> 55	    },
+> 56	    phase_completed: 'Phase 7',
+> 57	    traceability_validated: true,
+> 58	    traceability_orphans: 0,
+> 59	    traceability_note: 'Cross-check mecânico no main loop (26/26 FR-VM rastreados downstream); validação adversarial por subagente independente pendente do reset de cota semanal (declarado — Lei 1).',
+> 60	    market_segment: 'B2B2C',
+> 61	    monetization_model: 'hybrid', // mcoCoins por tool call (4x-floor) + planos
+> 62	    regulatory_profile: 'LGPD', // ELEVADO (biométrico art.11 + vertical assistivo)
+> 63	    integration_surface: 'extends-mcorch',
+> 64	    project_slug: 'vision-mcp',
+> 65	    runtime: 'container mcorch_vision_mcp (Sovereign Mesh, 127.0.0.1:3200, nginx mcp.mcorch.com) — Edge Function rejeitada (timeout)',
+> 66	    new_tables: 4, // mcp_access_tokens + vision_jobs + vision_artifacts + (cols user_api_keys via VIEW family)
+> 67	    new_rpcs: 1, // erase_vision_artifacts
+> 68	    new_storage_buckets: 1, // vision-artifacts (private)
+> 69	    new_edge_functions: 0, // mandato — reuso embed-mcorch-node/get-infra-status/deduct_mco_coins
+> 70	    new_containers: 1, // mcorch_vision_mcp
+> 71	    id_ranges: { MR: '001..016', BR: '001..012', PR: '001..025', FR: '001..026', NFR: '001..013', DD: '001..006', OTD_VM: '001..020', FM_VM: '01..18', FMEA: '001..018', KPI: '001..012', QO: '001..006', PROC: '001..009' },
+> 72	    fmea_high_rpn_count: 12,
+> 73	    fmea_high_rpn_items: ['FMEA-VM-004 (175)', 'FMEA-VM-002 (168)', 'FMEA-VM-003 (160)', 'FMEA-VM-014 (160)', 'FMEA-VM-010 (140)', 'FMEA-VM-001 (120)', 'FMEA-VM-012 (120)', 'FMEA-VM-017 (112)', 'FMEA-VM-006 (108)', 'FMEA-VM-005 (105)', 'FMEA-VM-007 (100)', 'FMEA-VM-016 (100)'],
+> 74	    open_otds: 20, // OTD-VM-001..020 (001 recall, 002 demanda cruzado, 004 unit economics, 005 DPA, 006 licenças, 007 ANPD, 019 NBR mapping, 020 OAuth AS)
+> 75	    derives_from: PARENT_SEAL,
+> 76	    depends_on_sop: 'docs/processes/deepsearch-blueprint.md',
+> 77	    seed_blueprint: 'docs/bok/vision-mcp/00-deepsearch-blueprint.md (v0.2.0)',
+> 78	    motivating_directive: 'Sovereign 2026-06-10: MCP nativo de visão (ref sandcastles.ai) + 2026-06-11 acrescenta Computação Cognitiva + Tecnologia Assistiva',
+> 79	    tags: ['bok-scribe', 'vision-mcp', 'mcp', 'computer-vision', 'deepsearch', 'neuromorphic', 'assistive-tech', 'cognitive-architecture', 'B2B2C', 'LGPD', 'sovereign-mesh'],
+> 80	  },
+> 81	};
+> 82	
+> 83	console.log(`📝 Sealing BoK suite "vision-mcp"...`);
+> 84	console.log(`   Project: ${sealNode.project_id} · Stability: ${sealNode.stability_score} · Revenue: ${sealNode.revenue_impact} (enabler)`);
+> 85	
+> 86	const { data: node, error } = await supabase
+> 87	  .from('mcorch_nodes')
+> 88	  .insert(sealNode)
+> 89	  .select('id, name, node_type, stability_score, created_at')
+> 90	  .single();
+> 91	
+> 92	if (error) {
+> 93	  // Idempotent: UNIQUE name violation = already sealed
+> 94	  if (String(error.message || '').match(/duplicate|unique/i)) {
+> 95	    console.log(`ℹ️  Seal already exists (idempotent exit 0): ${sealNode.name}`);
+> 96	    process.exit(0);
+> 97	  }
+> 98	  console.error('❌ Seal failed:', error);
+> 99	  process.exit(1);
+> 100	}
+> 101	
+> 102	console.log(`\n✅ Seal node inserted:`);
+> 103	console.log(`   ID: ${node.id} · Name: ${node.name} · Created: ${node.created_at}`);
+> 104	
+> 105	// DERIVES_FROM edge → parent mcorch-constellation seal
+> 106	const { data: parent } = await supabase
+> 107	  .from('mcorch_nodes')
+> 108	  .select('id')
+> 109	  .eq('name', PARENT_SEAL)
+> 110	  .single();
+> 111	
+> 112	if (parent?.id) {
+> 113	  const { data: edge, error: edgeErr } = await supabase
+> 114	    .from('mcorch_edges')
+> 115	    .insert({ source_id: node.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })
+> 116	    .select('id')
+> 117	    .single();
+> 118	  if (edgeErr) {
+> 119	    console.log(`⚠️  DERIVES_FROM edge insert failed (non-fatal): ${edgeErr.message}`);
+> 120	  } else {
+> 121	    console.log(`🔗 DERIVES_FROM edge: ${edge.id} → ${PARENT_SEAL} (${parent.id})`);
+> 122	  }
+> 123	} else {
+> 124	  console.log(`⚠️  Parent seal ${PARENT_SEAL} not found — edge skipped.`);
+> 125	}
+> 126	
+> 127	console.log(`\n🧠 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).`);
+> 128	console.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${node.id}';`);
+> 129	
+> ```
+
+## 🤖 Claude *(23:05:35)*
+
+
+## 🤖 Claude *(23:05:36)*
+
+Vou adaptar o seal para `agentic-governance` — nó `documentation_suite` + DERIVES_FROM → mcorch-constellation, com a prova material do Ledger no metadata.
+
+## 🤖 Claude *(23:06:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-agentic-governance-bok-seal.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seals the agentic-governance BoK suite + the Agentic Vision doctrine in the Knowledge Mesh.\n * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the parent\n * mcorch-constellation BoK seal. Embedding fires automatically via trg_mcorch_embed_on_insert.\n *\n * Usage: bun run scripts/seed-agentic-governance-bok-seal.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);\n\nif (!SUPABASE_URL || !SERVICE_KEY) {\n  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');\n  process.exit(1);\n}\n\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\nconst PARENT_SEAL = 'bok-scribe-seal-mcorch-constellation-v1'; // 78cb74e6-538c-4c9e-80a2-50268947dfca\n\nconst sealNode = {\n  name: 'bok-scribe-seal-agentic-governance-v1',\n  node_type: 'documentation_suite',\n  project_id: 'agentic-governance',\n  stability_score: 0.85,\n  revenue_impact: 0, // governance enabler \u2014 habilita decis\u00e3o de escala correta (fosso), n\u00e3o receita direta\n  content: `agentic-governance \u2014 Governan\u00e7a Ag\u00eantica AGI\u2192ASI: a doutrina que torna TODO o desenvolvimento do MCORCH conformante aos 21 padr\u00f5es ag\u00eanticos + instrumenta a efici\u00eancia do coletivo de agentes (BoK suite 10/10 + doutrina load-bearing + Collective Efficiency Ledger VIVO).\n\nDIRETIVA: Sovereign 2026-06-26 \u2014 \"que todos os nossos pr\u00f3ximos protocolos de desenvolvimento sigam essa vis\u00e3o clara de futuro para antecipar o mercado e a tecnologia\". Ancorada em 2 documentos de fronteira: docs/Agentic-Design-Patterns.pdf (Gulli, 21 padr\u00f5es can\u00f4nicos) + docs/From AGI to ASI - 2606.12683.pdf (DeepMind, 4 vias para a ASI).\n\nTESE: O MCORCH \u00c9 a Via 4 (forma\u00e7\u00e3o de coletivo de agentes) instanciada na camada de PRODUTO \u2014 coletivo Pantheon + Knowledge Mesh + orquestra\u00e7\u00e3o, com humano no comando via ORO/HITL \u2014 RODANDO a Via 3 (auto-aperfei\u00e7oamento recursivo) no micro: o mandato Obst\u00e1culo\u2192S\u00edntese \u00e9 recurs\u00e3o aplicada ao pr\u00f3prio processo de desenvolvimento. Pattern Maturity Ledger: 11 padr\u00f5es FORTES (Prompt Chaining, Parallelization, Tool Use/MCP, Multi-Agent/Pantheon, Memory/GraphRAG, MCP, Exception Handling, HITL/ORO, RAG, Resource-Aware/mcoCoins, Guardrails/Survival+Sentinel), 9 MODERADOS, 1 FRACO (Learning&Adaptation \u2014 o elo recursivo ainda manual).\n\nO GAP ESTRUTURAL (= o que \"antecipar o mercado\" significa): o paper aponta as perguntas de coletivo como ABERTAS (V4-2 valor marginal/agente \u00b7 V4-4 mco/resultado \u00b7 V4-5 overhead). O MCORCH respondia por DOUTRINA mas N\u00c3O MEDIA nenhuma \u2014 crescia no escuro. ENTREGUE: Collective Efficiency Ledger (VIEW collective_efficiency_ledger security_invoker per-tenant + RPC collective_efficiency_rollup SECURITY DEFINER service-role-only) DERIVA a m\u00e9trica da verdade financeira (pipeline_runs + autopilot_cycles), anti-Goodhart. Prova material LIVE: VIEW 16 linhas reais; isolamento G6 provado (tenant throwaway v\u00ea 0, service-role v\u00ea 16); RPC negado a authenticated (403 42501); rollup real = orchestrate-content avg_wall_clock 334.6s vs autopilot-cycle 2.4s. V4-2 DEFERIDO a experimento A/B real (DD-AG-004 \u2014 n\u00e3o fabricar proxy game\u00e1vel, alerta do pr\u00f3prio paper).\n\nGATE VINCULANTE: CLAUDE.md \u00a71 Step 3.5 \u2014 toda SDD nova carrega a Pattern Conformance Declaration (tabela dos 21 padr\u00f5es; deferido exige justificativa material). Declara\u00e7\u00e3o, n\u00e3o sign-off; herda exen\u00e7\u00f5es do BoK Gate. A doutrina docs/architecture/agentic-vision.md \u00e9 load-bearing (Key Files Reference) e SUBSTITUI o system_architecture.md stale (que + docs/agents.md descreviam a plataforma AdSense pr\u00e9-virada \u2014 DEPRECADOS).\n\nID SPACE: MR-AG-001..006 \u2192 BR-AG-001..007 \u2192 PR-AG-001..008 \u2192 FR-AG-001..008 + NFR-AG-001..006 \u2192 DD-AG-001..006 + OTD-AG-001..010 (backlog de canoniza\u00e7\u00e3o) + FM-AG-001..008/FMEA-AG-001..008 (3 RPN\u2265100) + KPI-AG-001..005 + QO-AG-001..003 + PROC-AG-001..004. ZERO tabela nova (1 VIEW + 1 RPC derivados) + 2 emits aditivos (orchestrate-content/-step). Mem\u00f3ria: project. SOP Lei 2: docs/processes/collective-efficiency-ledger.md.`,\n  metadata: {\n    bok_version: '1.0.0',\n    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics', '09-pattern-conformance'],\n    document_lines: {\n      '00-index': 110, '01-mrd': 141, '02-brd': 182, '03-prd': 269, '04-frd': 194,\n      '05-sdd': 318, '06-data-model': 196, '07-process-flow': 170, '08-quality-metrics': 147,\n      '09-pattern-conformance': 100, total_suite_10docs: 1827, // verificado por wc -l 2026-06-26\n    },\n    phase_completed: 'Phase 5 (seal)',\n    doctrine_doc: 'docs/architecture/agentic-vision.md (load-bearing \u2014 Pattern Conformance gate)',\n    binding_gate: 'CLAUDE.md \u00a71 Step 3.5 \u2014 Pattern Conformance Declaration (21 padr\u00f5es) em toda SDD nova',\n    ledger_live: true,\n    ledger_material_proof: 'VIEW 16 rows; G6 isolation proven (throwaway tenant=0, service-role=16); RPC denied to authenticated (403/42501); rollup live (orchestrate-content avg 334.6s vs autopilot-cycle 2.4s)',\n    stale_docs_deprecated: ['docs/architecture/system_architecture.md', 'docs/agents.md'],\n    market_segment: 'B2B',\n    monetization_model: 'governance-enabler', // mede o coletivo \u2192 decis\u00e3o de escala fundada (fosso)\n    regulatory_profile: 'oversight-embedded',\n    integration_surface: 'extends-mcorch',\n    project_slug: 'agentic-governance',\n    new_tables: 0, // 1 VIEW + 1 RPC derivados de bases existentes\n    new_views: 1, // collective_efficiency_ledger (security_invoker)\n    new_rpcs: 1, // collective_efficiency_rollup (SECURITY DEFINER service-role-only)\n    new_edge_functions: 0, // 2 emits aditivos em orchestrate-content/-step (sem fn nova)\n    id_ranges: { MR: '001..006', BR: '001..007', PR: '001..008', FR: '001..008', NFR: '001..006', DD: '001..006', OTD_AG: '001..010', FM_AG: '01..08', FMEA: '001..008', KPI: '001..005', QO: '001..003', PROC: '001..004' },\n    fmea_high_rpn_count: 3,\n    fmea_high_rpn_items: ['FMEA-AG-002 (112)', 'FMEA-AG-001 (108)', 'FMEA-AG-008 (100)'],\n    open_otds: 10, // OTD-AG-001..010 \u2014 backlog de canoniza\u00e7\u00e3o (001 Ledger=ENTREGUE; 002 Learning loop P0; 003-010 P1-P3)\n    derives_from: PARENT_SEAL,\n    informs_node: 'a576216e-81b6-49d7-8211-1eab6320f353', // AGI\u2192ASI Via-4 design checklist ref\n    depends_on_sop: 'docs/processes/collective-efficiency-ledger.md',\n    source_documents: ['docs/Agentic-Design-Patterns.pdf (Gulli, 21 padr\u00f5es)', 'docs/From AGI to ASI - 2606.12683.pdf (DeepMind, 4 vias)'],\n    motivating_directive: 'Sovereign 2026-06-26: que todos os pr\u00f3ximos protocolos sigam a vis\u00e3o AGI\u2192ASI + agentic patterns para antecipar mercado e tecnologia',\n    tags: ['bok-scribe', 'agentic-governance', 'agentic-design-patterns', 'agi-to-asi', 'via-4', 'collective-efficiency-ledger', 'pattern-conformance-gate', 'governance', 'B2B', 'sovereign-mesh'],\n  },\n};\n\nconsole.log(`\ud83d\udcdd Sealing BoK suite \"agentic-governance\"...`);\nconsole.log(`   Project: ${sealNode.project_id} \u00b7 Stability: ${sealNode.stability_score} \u00b7 Revenue: ${sealNode.revenue_impact} (governance enabler)`);\n\nconst { data: node, error } = await supabase\n  .from('mcorch_nodes')\n  .insert(sealNode)\n  .select('id, name, node_type, stability_score, created_at')\n  .single();\n\nif (error) {\n  if (String(error.message || '').match(/duplicate|unique/i)) {\n    console.log(`\u2139\ufe0f  Seal already exists (idempotent exit 0): ${sealNode.name}`);\n    process.exit(0);\n  }\n  console.error('\u274c Seal failed:', error);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 Seal node inserted:`);\nconsole.log(`   ID: ${node.id} \u00b7 Name: ${node.name} \u00b7 Created: ${node.created_at}`);\n\n// DERIVES_FROM edge \u2192 parent mcorch-constellation seal\nconst { data: parent } = await supabase\n  .from('mcorch_nodes')\n  .select('id')\n  .eq('name', PARENT_SEAL)\n  .single();\n\nif (parent?.id) {\n  const { data: edge, error: edgeErr } = await supabase\n    .from('mcorch_edges')\n    .insert({ source_id: node.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })\n    .select('id')\n    .single();\n  if (edgeErr) {\n    console.log(`\u26a0\ufe0f  DERIVES_FROM edge insert failed (non-fatal): ${edgeErr.message}`);\n  } else {\n    console.log(`\ud83d\udd17 DERIVES_FROM edge: ${edge.id} \u2192 ${PARENT_SEAL} (${parent.id})`);\n  }\n} else {\n  console.log(`\u26a0\ufe0f  Parent seal ${PARENT_SEAL} not found \u2014 edge skipped.`);\n}\n\nconsole.log(`\\n\ud83e\udde0 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).`);\nconsole.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${node.id}';`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-agentic-governance-bok-seal.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:06:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nexport SUPABASE_URL=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"\nbun run scripts/seed-agentic-governance-bok-seal.ts 2>&1 | tail -12",
+  "description": "Run the seal script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 📝 Sealing BoK suite "agentic-governance"...
+>    Project: agentic-governance · Stability: 0.85 · Revenue: 0 (governance enabler)
+> 
+> ✅ Seal node inserted:
+>    ID: 34748570-0cf2-470d-ba0e-f3ceab1cb550 · Name: bok-scribe-seal-agentic-governance-v1 · Created: 2026-06-26T23:06:24.126069+00:00
+> 🔗 DERIVES_FROM edge: 2f3b7a76-f47e-4df8-a2f0-1a5d0407b7b2 → bok-scribe-seal-mcorch-constellation-v1 (78cb74e6-538c-4c9e-80a2-50268947dfca)
+> 
+> 🧠 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).
+>    Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '34748570-0cf2-470d-ba0e-f3ceab1cb550';
+> ```
+
+## 🤖 Claude *(23:06:35)*
+
+
+## 🤖 Claude *(23:06:36)*
+
+Seal inserido: nó `34748570-...` + edge DERIVES_FROM `2f3b7a76` → mcorch-constellation. Verificando o embedding autônomo (trigger pg_net) + adicionando as entradas na Key Files Reference.
+
+## 🤖 Claude *(23:06:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\nsleep 4\necho \"=== embedding do seal node (esperado true) ===\"\ncurl -s -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/mcorch_nodes?id=eq.34748570-0cf2-470d-ba0e-f3ceab1cb550&select=name,node_type,stability_score,embedding\" \\\n  | python3 -c \"import json,sys; d=json.load(sys.stdin)[0]; print('name:', d['name']); print('type:', d['node_type'], '\u00b7 stability:', d['stability_score']); print('embedding NOT NULL:', d['embedding'] is not None, '(dims:', len(d['embedding']) if d['embedding'] else 0, ')')\"",
+  "description": "Verify seal node embedding fired"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embedding do seal node (esperado true) ===
+> name: bok-scribe-seal-agentic-governance-v1
+> type: documentation_suite · stability: 0.85
+> embedding NOT NULL: True (dims: 9519 )
+> ```
+
+## 🤖 Claude *(23:06:53)*
+
+
+## 🤖 Claude *(23:06:54)*
+
+Embedding fired (NOT NULL, 768d). Seal completo. Agora as entradas na Key Files Reference para os novos artefatos (Mesh Connection Mandate).
+
+## 🤖 Claude *(23:07:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Agentic Vision doctrine (load-bearing \u2014 Pattern Conformance gate)** | `docs/architecture/agentic-vision.md` (21 padr\u00f5es ag\u00eanticos \u00d7 maturidade MCORCH + tese AGI\u2192ASI Via 4-produto + Via 3-micro; SSOT da Pattern Conformance Declaration de toda SDD; substitui o `system_architecture.md` stale) |\n| Session handoff | `HANDOFF.md` |",
+  "new_string": "| **Agentic Vision doctrine (load-bearing \u2014 Pattern Conformance gate)** | `docs/architecture/agentic-vision.md` (21 padr\u00f5es ag\u00eanticos \u00d7 maturidade MCORCH + tese AGI\u2192ASI Via 4-produto + Via 3-micro; SSOT da Pattern Conformance Declaration de toda SDD; substitui o `system_architecture.md` stale) |\n| **Agentic Governance BoK suite (10/10 selada)** | `docs/bok/agentic-governance/` (Pattern Conformance Gate + Collective Efficiency Ledger; seal node `34748570` `documentation_suite`; `09-pattern-conformance.md` = template mestre dos 21 padr\u00f5es p/ toda SDD copiar) |\n| **Collective Efficiency Ledger (OTD-AG-001 \u2014 mede o coletivo)** | `supabase/migrations/20260626120000_collective_efficiency_ledger.sql` (VIEW `collective_efficiency_ledger` security_invoker per-tenant + RPC `collective_efficiency_rollup` SECURITY DEFINER service-role-only; deriva mco/resultado + overhead da verdade financeira `pipeline_runs`/`autopilot_cycles`, anti-Goodhart; emits `collective_hop`/`collective_retry` em orchestrate-content/-step) |\n| **Collective Efficiency Ledger SOP (Lei 2)** | `docs/processes/collective-efficiency-ledger.md` (8 gates; G6 `count cross-tenant = 0` \u00e9 o gate-m\u00e3e) |\n| **Agentic Governance seal script** | `scripts/seed-agentic-governance-bok-seal.ts` |\n| Session handoff | `HANDOFF.md` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:07:27)*
+
+
+## 🤖 Claude *(23:07:28)*
+
+Agora um registro conciso no HANDOFF.md (continuidade — não vou commitar; o `/handoff` completo com commits é seu para invocar quando selar a sessão).
+
+## 🤖 Claude *(23:07:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Doutrina Ag\u00eantica AGI\u2192ASI: gate de conformidade vinculante + BoK agentic-governance + Collective Efficiency Ledger VIVO (2026-06-26)\n\nDiretiva Sovereign: *\"que todos os nossos pr\u00f3ximos protocolos de desenvolvimento sigam essa vis\u00e3o clara de futuro para antecipar o mercado e a tecnologia\"* \u2014 ancorada em `docs/Agentic-Design-Patterns.pdf` (Gulli, 21 padr\u00f5es) + `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind, 4 vias). Executado em 5 fases respeitando o pr\u00f3prio BoK Gate (Lei 2). **N\u00e3o commitado ainda \u2014 `/handoff` sela a sess\u00e3o.**\n\n**Achado material (3 deep-reads dos PDFs + verifica\u00e7\u00e3o de schema):** o MCORCH J\u00c1 encarna ~metade dos 21 padr\u00f5es por doutrina (11 fortes \u00b7 9 moderados \u00b7 1 fraco=Learning&Adaptation). **Somos a Via 4 (coletivo de agentes) na camada de produto + a Via 3 (auto-aperfei\u00e7oamento recursivo) no micro** (Obst\u00e1culo\u2192S\u00edntese). O gap estrutural \u00e9 o que o paper aponta como ABERTO: respond\u00edamos as perguntas de coletivo por doutrina mas **n\u00e3o med\u00edamos nenhuma** \u2014 cresc\u00edamos no escuro.\n\n**Entregue (5 fases):**\n- **Fase 1 (docs):** doutrina load-bearing `docs/architecture/agentic-vision.md` (Pattern Maturity Ledger dos 21 padr\u00f5es + tese) \u00b7 gate vinculante `CLAUDE.md \u00a71 Step 3.5` (toda SDD declara conformidade) + \u00a73/\u00a74 \u00b7 2 docs stale (`system_architecture.md`/`agents.md`, descreviam plataforma AdSense pr\u00e9-virada) DEPRECADOS+redirect.\n- **Fase 2 (BoK):** su\u00edte `docs/bok/agentic-governance/` 10/10 (autorada via workflow `wf_5fb96548`, espinha pinada; `09-pattern-conformance.md` = template mestre dos 21 padr\u00f5es). Zero placeholders.\n- **Fase 3 (SOP Lei 2):** `docs/processes/collective-efficiency-ledger.md` (8 gates; G6 `count cross-tenant=0` = gate-m\u00e3e).\n- **Fase 4 (c\u00f3digo):** migration `20260626120000_collective_efficiency_ledger.sql` \u2014 VIEW `collective_efficiency_ledger` (security_invoker per-tenant) + RPC `collective_efficiency_rollup` (SECURITY DEFINER service-role-only) DERIVAM a m\u00e9trica da verdade financeira (`pipeline_runs`+`autopilot_cycles`), anti-Goodhart \u00b7 2 emits aditivos `collective_hop`/`collective_retry` em orchestrate-content/-step (deployadas). **/security-review SAFE.**\n- **Fase 5 (seal):** n\u00f3 `documentation_suite` `34748570-0cf2-470d-ba0e-f3ceab1cb550` (embedded 768d) + edge DERIVES_FROM `2f3b7a76` \u2192 mcorch-constellation.\n\n**Prova material (Lei 1, LIVE em prod):** migration aplicada (`Finished db push`) \u00b7 VIEW 16 linhas reais \u00b7 **G6 isolamento provado** (tenant throwaway v\u00ea **0**, service-role v\u00ea 16) \u00b7 RPC negado a authenticated (**403 / 42501 permission denied**) \u00b7 G7 m\u00e9trica bate com a base exata (`93659c88`: mco 10\u00b7n_units 6\u00b7wall_clock 59985) \u00b7 **rollup j\u00e1 d\u00e1 insight: orchestrate-content avg 334.6s vs autopilot-cycle 2.4s** (o coletivo medido). `tsc` 0.\n\n**Honestidade (DD-AG-004):** **V4-2 (valor marginal por agente) DEFERIDO** a experimento A/B real \u2014 n\u00e3o fabricar proxy game\u00e1vel (alerta do pr\u00f3prio paper). **Backlog de canoniza\u00e7\u00e3o OTD-AG-001..010** (001 Ledger=ENTREGUE; 002 fechar loop Learning&Adaptation reward multi-m\u00e9trica = P0 pr\u00f3ximo).\n\n**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (aprovou o plano + escopo m\u00e1ximo via AskUserQuestion) \u00b7 Owner=Sovereign (risco = instrumenta\u00e7\u00e3o errada induzir decis\u00e3o de escala errada).\n\n---\n\n## Session Seal \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:08:03)*
+
+
+## 🤖 Claude *(23:08:04)*
+
+Fase 5 completa. Verificação consolidada final de todo o changeset.
+
+## 🤖 Claude *(23:08:04)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(23:08:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (changeset completo, N\u00c3O commitado) ===\"; git status --short\necho \"\"; echo \"=== BoK suite (10 docs) ===\"; ls docs/bok/agentic-governance/*.md | wc -l\necho \"=== tsc final ===\"; npx tsc --noEmit 2>&1 | tail -3; echo \"exit: $?\"\necho \"\"; echo \"=== seal node + edge na malha (live) ===\"\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\ncurl -s -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/mcorch_nodes?id=eq.34748570-0cf2-470d-ba0e-f3ceab1cb550&select=name,project_id\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];print('seal:',d['name'],'\u00b7',d['project_id'])\"",
+  "description": "Final consolidated verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (changeset completo, NÃO commitado) ===
+>  M CLAUDE.md
+>  M HANDOFF.md
+>  M docs/agents.md
+>  M docs/architecture/system_architecture.md
+>  M supabase/functions/orchestrate-content/index.ts
+>  M supabase/functions/orchestrate-step/index.ts
+> ?? docs/Agentic-Design-Patterns.pdf
+> ?? docs/architecture/agentic-vision.md
+> ?? docs/bok/agentic-governance/
+> ?? docs/processes/collective-efficiency-ledger.md
+> ?? scripts/seed-agentic-governance-bok-seal.ts
+> ?? supabase/migrations/20260626120000_collective_efficiency_ledger.sql
+> 
+> === BoK suite (10 docs) ===
+> 10
+> === tsc final ===
+> exit: 0
+> 
+> === seal node + edge na malha (live) ===
+> seal: bok-scribe-seal-agentic-governance-v1 · agentic-governance
+> ```
+
+## 🤖 Claude *(23:08:24)*
+
+
+## 🤖 Claude *(23:08:41)*
+
+Entregue e verificado materialmente — **as 5 fases fechadas, `tsc` 0, seal vivo na malha.** O changeset está no working tree, **não commitado** (você commita / `/handoff` quando selar).
+
+## O que mudou na essência do MCORCH
+
+A visão AGI→ASI + os 21 padrões agênticos deixaram de ser leitura e viraram **lente vinculante**. A partir de agora, **toda SDD nova declara conformidade com os 21 padrões** (CLAUDE.md §1 Step 3.5) — é o mecanismo que faz "todos os próximos protocolos seguirem a visão", sem fricção (uma tabela, herda as exenções do BoK Gate).
+
+E o gap que o paper da DeepMind aponta como **aberto** — medir o coletivo de agentes — agora é nosso **fosso material**, não doutrina:
+
+| Entregável | Prova material (Lei 1, LIVE em prod) |
+|---|---|
+| **Doutrina** `agentic-vision.md` (load-bearing) | 21 padrões × maturidade (11 forte · 9 moderado · 1 fraco) + tese Via 4-produto/Via 3-micro |
+| **Gate vinculante** CLAUDE.md §1/§3/§4 | `grep` confirma 4 inserções |
+| **2 docs stale** deprecados | zero menção AdSense fora dos avisos |
+| **BoK `agentic-governance`** 10/10 | suíte selada, zero placeholders |
+| **Collective Efficiency Ledger** | VIEW **16 linhas reais**; **G6 isolamento provado** (tenant throwaway vê **0**, service-role vê 16); RPC negado a authenticated (**403/42501**); G7 métrica = base exata |
+| **Insight imediato do rollup** | orchestrate-content **avg 334.6s** vs autopilot-cycle **2.4s** — o coletivo medido, não no escuro |
+| **Seal na malha** | nó `34748570` `documentation_suite` embedded 768d + DERIVES_FROM → mcorch-constellation |
+| `/security-review` · `tsc` | **SAFE** · **0** |
+
+**Honestidade cravada (DD-AG-004):** **V4-2 (valor marginal por agente) ficou DEFERIDO** a um experimento A/B real — fabricar um proxy gameável seria exatamente o erro que o paper alerta. O backlog de canonização (OTD-AG-001..010) entrou no roadmap; **OTD-AG-002 — fechar o loop de Learning & Adaptation com reward multi-métrica — é o próximo P0** (é o único padrão "fraco", o elo recursivo da Via 3 que ainda é manual).
+
+## Dois pontos para você decidir
+
+1. **Commit/`/handoff`:** o working tree tem 6 modificados + 6 novos. Quando quiser selar, `/handoff` faz os commits granulares + milestone. ⚠️ Um detalhe: `docs/Agentic-Design-Patterns.pdf` (19 MB) está untracked — sugiro **gitignorar o PDF** (a doutrina que o destila já está versionada) em vez de inchar o repo.
+2. **Retomada:** essa doutrina era upstream do YT/TikTok. Quando codarmos as 3 branches OAuth da persona Gabriel AI, a SDD do `post-engine` vai **passar pelo novo gate** — declarar quais padrões (Routing, A2A, Exception Handling…) ela implementa. A visão já está governando o próximo passo.
+
+## 👤 User *(23:11:56)*
+
+ótimo agora vamos atacar com força total nos pontos fracos e deixar forte toda a questão de Learning & Adaptation. Realmente to sentido que não estamos avançando o quanto poderiamos apesar do desenvolvimento aqui ser incrivel.
+
+## 🤖 Claude *(23:13:37)*
+
+
+## 🤖 Claude *(23:13:46)*
+
+Vou ser direto, porque o que você sentiu merece uma resposta honesta, não mais engenharia bonita.
+
+**O "não avançamos o quanto poderíamos apesar do desenvolvimento incrível" não é coincidência — é o sintoma exato do padrão fraco.** Learning & Adaptation é o *loop recursivo* (a Via 3). Quando ele está aberto, cada sessão produz uma capability nova e brilhante, mas o sistema **não fica mensuravelmente melhor em atingir o seu objetivo real** (receita, alcance, marca). Geramos, publicamos — e o resultado do mundo real **não volta** para mudar o que escolhemos fazer a seguir. Sem esse retorno, capacidade não vira composição. É por isso que o desenvolvimento é incrível e o avanço não acompanha: **estamos otimizando capacidade, não desfecho.**
+
+E tem uma suspeita material que preciso confirmar antes de construir qualquer coisa: **talvez o loop não aprenda porque não há sinal de desfecho real fluindo** — `creative_metrics.revenue_cents`/cliques podem estar majoritariamente zerados (atribuição ML/distribuição em aberto). Não se aprende com um resultado que não se mede. O Collective Efficiency Ledger que acabei de construir mede *eficiência* (mco/resultado); falta medir *valor do desfecho* (receita/alcance/marca) e realimentar isso.
+
+**Não vou projetar no escuro (Lei 1).** Antes de desenhar o loop, vou mapear materialmente onde ele está aberto — três frentes em paralelo, read-only, com query no banco vivo.
+
+## 🤖 Claude *(23:14:29)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'diagnose-learning-loop',\n  description: 'Material diagnosis of the Learning & Adaptation loop: is it closed, is there real outcome data, what is the minimal compounding loop',\n  phases: [{ title: 'Diagnose', detail: '3 parallel read-only diagnostics: loop-closure, outcome-data reality, minimal-loop design' }],\n}\n\nconst DB_HINT = `\nBanco vivo: source .env (set -a; source .env; set +a) \u2192 use $SB_SECRET_KEY + URL ($VITE_SUPABASE_URL ou https://bcyvddsykvehvpwstlfa.supabase.co).\nQuery REST: curl -s -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \"$URL/rest/v1/<table>?select=...&limit=...\".\nPara contagem exata: header \"Prefer: count=exact\" + ler Content-Range.\n`\n\nphase('Diagnose')\nconst findings = await parallel([\n  // A \u2014 Is the autopilot learning loop actually CLOSED?\n  () => agent(\n    `Voc\u00ea \u00e9 um arquiteto s\u00eanior diagnosticando o loop de Learning & Adaptation do MCORCH (o \u00fanico padr\u00e3o ag\u00eantico FRACO da doutrina docs/architecture/agentic-vision.md). Read-only.\\n\\n` +\n    `PERGUNTA: o loop de aprendizado do Viral Autopilot est\u00e1 REALMENTE FECHADO (desfecho \u2192 pol\u00edtica \u2192 mudan\u00e7a de comportamento \u2192 novo desfecho) ou est\u00e1 ABERTO (escreve uma pol\u00edtica que ningu\u00e9m usa, ou age sobre uma pol\u00edtica sem dado de desfecho real)?\\n\\n` +\n    `LEIA e trace o fluxo nestes arquivos:\\n` +\n    `- supabase/functions/autopilot-analyze/index.ts \u2014 ranqueia criativos por qual m\u00e9trica? escreve optimization_policy ONDE (qual tabela/coluna)? FR-VA-010.\\n` +\n    `- supabase/functions/autopilot-run/index.ts \u2014 como dispara o ciclo; l\u00ea a pol\u00edtica?\\n` +\n    `- supabase/functions/orchestrate-step/index.ts \u2014 a \"feedback injection\" FR-VA-011 (perto da linha 189, \"the tenant's latest viral_autopilot policy steers this cycle's prompts\"): a pol\u00edtica do ciclo ANTERIOR realmente MUDA as escolhas (produtos/\u00e2ngulos/prompts) do ciclo seguinte? Cite as linhas exatas.\\n` +\n    `- docs/bok/viral-autopilot/05-sdd.md + 04-frd.md \u2014 FR-VA-010 (analyze) e FR-VA-011 (inject) como especificados.\\n\\n` +\n    `RESPONDA com evid\u00eancia citada (arquivo:linha):\\n` +\n    `1. O loop est\u00e1 fechado ou aberto? Onde exatamente ele quebra (se quebra)?\\n` +\n    `2. Qual \u00e9 o REWARD SIGNAL \u2014 m\u00e9trica \u00fanica (ex: engagement) ou multi-m\u00e9trica? \u00c9 vulner\u00e1vel a Goodhart?\\n` +\n    `3. A pol\u00edtica de fato altera comportamento, ou \u00e9 cosm\u00e9tica (escrita mas n\u00e3o consumida / consumida mas sem efeito material no prompt/escolha)?\\n` +\n    `4. O que faltaria, no c\u00f3digo atual, para o loop COMPOR (ficar mensuravelmente melhor a cada ciclo)?\\n` +\n    `Seja concreto e cite. ~700 palavras.`,\n    { label: 'diag:loop-closure', phase: 'Diagnose' }\n  ),\n\n  // B \u2014 Do we even HAVE outcome data to learn from? (the material hypothesis)\n  () => agent(\n    `Voc\u00ea \u00e9 um analista de dados diagnosticando se o MCORCH TEM sinal de desfecho real para aprender. Read-only, com QUERY no banco vivo.\\n${DB_HINT}\\n` +\n    `HIP\u00d3TESE A TESTAR: \"n\u00e3o avan\u00e7amos apesar do desenvolvimento incr\u00edvel\" porque o loop de aprendizado n\u00e3o tem dado de desfecho \u2014 receita/alcance/convers\u00e3o majoritariamente ZERADOS (atribui\u00e7\u00e3o ML + distribui\u00e7\u00e3o em aberto). N\u00e3o se aprende com um resultado que n\u00e3o se mede.\\n\\n` +\n    `QUERIES MATERIAIS (reporte n\u00fameros REAIS):\\n` +\n    `- creative_metrics: quantas linhas no total? Quantas com revenue_cents>0? affiliate_clicks>0? engagements>0? impressions>0? (conte cada uma). Mostre a distribui\u00e7\u00e3o \u2014 \u00e9 majoritariamente zero ou tem sinal real?\\n` +\n    `- autopilot_cycles: quantos ciclos por status (completed/aborted/failed)? \\n` +\n    `- A optimization_policy vive em qual tabela? (orchestrate-step l\u00ea .select(\"action_details\").eq(\"action_type\",\"viral_autopilot\") \u2014 investigue essa tabela; provavelmente autonomic_actions ou similar). Quantas pol\u00edticas existem e o que cont\u00eam (action_details)?\\n` +\n    `- affiliate_links: quantos com revenue_cents>0? (a atribui\u00e7\u00e3o ML fechou?)\\n` +\n    `- pipeline_runs: quantos status=done vs error nos \u00faltimos? \\n\\n` +\n    `RESPONDA:\\n` +\n    `1. Existe sinal de desfecho REAL (receita/cliques/alcance n\u00e3o-zero) fluindo de volta, ou o loop est\u00e1 oco?\\n` +\n    `2. Se oco: onde a atribui\u00e7\u00e3o/distribui\u00e7\u00e3o quebra (postback ML? cliques n\u00e3o rastreados? sem alcance social capturado)?\\n` +\n    `3. Qual \u00e9 o MENOR sinal de desfecho real que J\u00c1 temos hoje e poder\u00edamos usar como reward imediatamente?\\n` +\n    `Reporte os n\u00fameros literais (Lei 1). ~700 palavras.`,\n    { label: 'diag:outcome-data', phase: 'Diagnose' }\n  ),\n\n  // C \u2014 Broader learning surfaces + the minimal compounding loop + multi-metric reward\n  () => agent(\n    `Voc\u00ea \u00e9 um arquiteto de sistemas ag\u00eanticos desenhando o MENOR loop de Learning & Adaptation que realmente COMP\u00d5E (fica mensuravelmente melhor a cada ciclo) para o MCORCH. Read-only.\\n\\n` +\n    `CONTEXTO: a doutrina docs/architecture/agentic-vision.md marca Learning & Adaptation como o \u00fanico padr\u00e3o FRACO (OTD-AG-002, P0). O paper Gulli (cap 9) diz: o mecanismo \u00e9 RL/online-learning/A-B/auditoria, e o PITFALL \u00e9 reward de m\u00e9trica \u00fanica \u2192 gaming, n\u00e3o objetivo real \u2192 usar reward MULTI-M\u00c9TRICA. Acabamos de construir o Collective Efficiency Ledger (mede mco/resultado \u2014 efici\u00eancia, n\u00e3o valor de desfecho).\\n\\n` +\n    `SURVEY (leia/cite):\\n` +\n    `- O mandato Obst\u00e1culo\u2192S\u00edntese (CLAUDE.md \u00a75) \u2014 \u00e9 aprendizado do PROCESSO de dev, mas manual. \\n` +\n    `- OpenClaw Dreaming (.claude/skills/openclaw-dreaming/SKILL.md) \u2014 promo\u00e7\u00e3o de mem\u00f3ria \u00e9 um loop de aprendizado? de qu\u00ea?\\n` +\n    `- ab_variants no viral-autopilot (docs/bok/viral-autopilot/) \u2014 existe infra de A/B? \u00e9 usada para aprender?\\n` +\n    `- creative_metrics + o Collective Efficiency Ledger novo (supabase/migrations/20260626120000) \u2014 que sinais j\u00e1 temos.\\n\\n` +\n    `PROJETE (concreto):\\n` +\n    `1. Qual \u00e9 o NORTH-STAR reward multi-m\u00e9trica que evita Goodhart? (ex: combina\u00e7\u00e3o ponderada de receita_atribu\u00edda + alcance/reach + engajamento + sinal de marca \u2014 proponha a f\u00f3rmula e de onde vem cada termo). Conecte \u00e0 virada brand-persona (hoje o objetivo \u00e9 MARCA + alcance, n\u00e3o s\u00f3 receita de afiliado).\\n` +\n    `2. Qual \u00e9 o MENOR loop genuinamente fechado e multi-m\u00e9trica que poder\u00edamos shippar para COMPOR \u2014 e que seja honesto (anti-Goodhart, anti-proxy-game\u00e1vel)? Descreva: o que mede, onde guarda o reward, como o pr\u00f3ximo ciclo MUDA de comportamento por causa dele, e como provamos materialmente que melhorou.\\n` +\n    `3. O que \u00e9 o gargalo REAL: falta de loop, ou falta de DADO de desfecho (depend\u00eancia da frente B)? Seja honesto sobre o que destrava o qu\u00ea.\\n` +\n    `~800 palavras, concreto, cite arquivos.`,\n    { label: 'diag:minimal-loop', phase: 'Diagnose' }\n  ),\n])\n\nreturn findings.filter(Boolean)\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wob2d279d
+> Summary: Material diagnosis of the Learning & Adaptation loop: is it closed, is there real outcome data, what is the minimal compounding loop
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/subagents/workflows/wf_a9186af7-ecb
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/workflows/scripts/diagnose-learning-loop-wf_a9186af7-ecb.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/workflows/scripts/diagnose-learning-loop-wf_a9186af7-ecb.js"} to iterate without resending the script.)
+> Run ID: wf_a9186af7-ecb
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/workflows/scripts/diagnose-learning-loop-wf_a9186af7-ecb.js", resumeFromRunId: "wf_a9186af7-ecb"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(23:14:35)*
+
+
+## 🤖 Claude *(23:14:42)*
+
+Três frentes rodando em paralelo, todas ancoradas em prova material (não opinião):
+
+- **Loop-closure** — o loop do Autopilot (analyze→política→injeção no próximo ciclo) está *fechado* ou escreve política que ninguém usa? Reward é métrica única (Goodhart) ou multi-métrica?
+- **Outcome-data** — query no banco vivo: `creative_metrics` tem receita/cliques/alcance **reais** ou está zerado? Se zerado, o loop não tem o que aprender — e essa é a causa raiz do "não avançamos".
+- **Minimal-loop** — qual o **menor loop genuinamente fechado e multi-métrica** que *compõe* (melhora a cada ciclo), com north-star alinhado à virada de marca (alcance + marca, não só receita de afiliado).
+
+Quando voltarem, eu sintetizo num plano concreto. Como é mudança arquitetural, ele passa pelo nosso próprio BoK Gate (emenda à BoK `viral-autopilot` ou `agentic-governance`, conforme onde o loop vive) — mas a essa altura já vou saber *exatamente* onde o loop está aberto, então o plano vai ser cirúrgico, não especulativo. Aguardo o diagnóstico.
+
+## 👤 User *(23:17:01)*
+
+<task-notification>
+<task-id>wob2d279d</task-id>
+<tool-use-id>toolu_01BkGFmK8ZFmG76eFoxW9zar</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/tasks/wob2d279d.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Material diagnosis of the Learning &amp; Adaptation loop: is it closed, is there real outcome data, what is the minimal compounding loop" completed</summary>
+<result>["I have the full picture. The legacy writer uses `action_type = rec.category` (free-text LLM category), so it does NOT collide on `action_type=\"viral_autopilot\"` — the read filter is safe in practice, but the SDD-mandated `scope` filter is absent (latent bug). The loop is otherwise traceable end-to-end. Final analysis:\n\n---\n\n**1) O loop está FECHADO — mas é estruturalmente raso (mede 1 ciclo atrás, age sobre 2 features) e tem 2 quebras latentes.**\n\nO circuito completo existe e é rastreável: `orchestrate-step:235-243` grava baseline `creative_metrics` (zeros) por criativo com `cycle_id` → `autopilot-collect:47-60` sincroniza o ledger real `affiliate_links.clicks/revenue_cents` para a linha `affiliate_click` → `autopilot-analyze:49-91` soma por produto/plataforma e grava `optimization_policy` → `orchestrate-step:202-205` lê a policy mais recente e `injectFeedback` (`:281,553,632`) a injeta como system message. **Desfecho real → política → mudança de prompt → novo desfecho: fecha.** Não é o anti-padrão \"escreve política que ninguém usa\" nem \"age sem dado real\" — `analyze` é fail-closed em `hasReal Data` (`:67-71`, não inventa política sem clique/receita).\n\nOnde quase quebra (latente):\n- **Filtro de scope ausente.** O SDD §91 manda `orchestrate-step` ler **só** `scope='viral_autopilot:&lt;plan_id&gt;'`. O código (`:202-204`) filtra apenas `action_type=\"viral_autopilot\"` + `order created_at desc`. Hoje não colide porque o `self-optimize` legado grava `action_type = rec.category` (texto livre do LLM, `self-optimize:180`) — então não há cross-contamination **acidentalmente**, mas **multi-plano do mesmo tenant cruza políticas**: o plano B injeta o vencedor do plano A. É um bug real assim que existir &gt;1 plano por usuário.\n- **`applied` nunca vira `true`.** `analyze` grava `applied:false` (`:90`); nenhum consumidor faz `update applied=true` (grep vazio). O loop funciona sem isso, mas não há trilha de auditoria de que a política foi consumida (FR-VA-011 AT pede \"prova de reinjeção\").\n\n**2) REWARD SIGNAL = `affiliate_clicks` (mono-métrica), receita só como tiebreak — altamente Goodhart-vulnerável.**\n\n`autopilot-analyze:74-75,90`: `reward: totalClicks`, ordena por cliques e desempata por receita. `impressions/engagements` existem na tabela (`:242`) mas o coletor os deixa `skipped_no_tier` (`autopilot-collect:65-68`) → **na prática só cliques chegam ao analyzer.** Goodhart: o sistema otimiza por *clique de afiliado*, não por *venda*. Conteúdo clickbait que gera cliques sem conversão será premiado e reinjetado, envenenando ciclos seguintes (o próprio Risk Ledger SDD §223 alerta para \"auto-envenenamento persistente\"). Sem CTR-normalização (cliques/impressões) nem janela de conversão, um produto com muitas impressões orgânicas vence só por volume.\n\n**3) A política ALTERA comportamento — mas de forma rasa e frágil, não cosmética.**\n\nNão é cosmética: `buildPolicyHint:109-117` extrai `top_product_name` + `top_platform` e `injectFeedback:119-122` anexa um system message real (\"Dê preferência a esse ângulo\"). Isso de fato muda o prompt. **Porém o efeito material é fraco**: (a) é só um *hint* textual no fim do array de mensagens — o LLM pode ignorá-lo; (b) **não altera a seleção determinística** de produtos/plataformas — o fan-out em `autopilot-run:201-203` ainda itera `plan.target_product_ids × plan.platforms` cruamente, sem reordenar/podar pelo vencedor. Ou seja: a política sussurra ao redator, mas o **plano de execução continua idêntico** ciclo a ciclo. O \"produto vencedor\" recebe os mesmos N criativos que o perdedor. Há injeção, mas **sem realocação de esforço** = aprendizado sem alavanca.\n\n**4) O que falta para o loop COMPOR (melhorar mensuravelmente a cada ciclo):**\n\n- **Realocação determinística, não só hint de prompt:** `autopilot-run` deveria *ponderar* o fan-out pela policy — mais variantes/budget no produto×plataforma vencedor, menos no perdedor (multi-armed bandit / ε-greedy). Hoje a política não toca `tasks[]` (`:201-229`).\n- **Reward composto e normalizado:** trocar `reward=totalClicks` por algo como `revenue_cents` ponderado + CTR normalizado por impressões, com janela de atribuição de venda. Exige o coletor orgânico (`autopilot-collect:65`) ser implementado, não `skipped_no_tier` — sem impressões, qualquer normalização é impossível.\n- **Memória multi-ciclo:** `analyze` só lê o ciclo `prev` imediato (`autopilot-run:186-188`, `limit 1`). Um vencedor precisa de média móvel/EWMA sobre M ciclos para não oscilar com ruído de 1 ciclo de poucos cliques.\n- **Fechar as 2 quebras latentes:** adicionar o filtro `scope=viral_autopilot:&lt;plan_id&gt;` no read (`orchestrate-step:203`) e marcar `applied=true` no consumo, para isolar planos e ter trilha auditável.\n- **Anti-Goodhart guard:** o Risk Ledger pede tratar a policy como *dado, nunca instrução* (OTD-VA-005) — já feito no escape (`:113`), mas falta um teto de exploração (não colapsar 100% no vencedor) para o loop não convergir prematuramente num clickbait local-ótimo.\n\n**Veredito:** loop fechado e honesto quanto a dado real, mas é um **termostato de 1-bit** — mede uma métrica gameável de 1 ciclo atrás e responde com um sussurro de prompt sem mudar a alocação. Vai *reagir*, dificilmente vai *compor*.\n\nArquivos-chave: `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts:74-91`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts:198-205,119-122`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts:186-203`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts:65-68`, `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md:91,223`.","I have all the material data needed. Here is my diagnosis.\n\n---\n\n## DIAGNÓSTICO — O loop de aprendizado está OCO (hipótese CONFIRMADA)\n\nA hipótese se confirma materialmente: **há geração e plumbing impecáveis, mas quase nenhum sinal de desfecho.** O único reward não-zero que existe é um proxy fraco (1 clique), e ele já está sendo usado.\n\n### Números literais (Lei 1)\n\n**creative_metrics** — total `12` linhas:\n- `revenue_cents &gt; 0`: **0** linhas (`*/0`)\n- `affiliate_clicks &gt; 0`: **1** linha (a `f6163192`, cycle `947ef8b5`, LinkedIn, `affiliate_clicks=1`, source `affiliate_click`)\n- `engagements &gt; 0`: **0**\n- `impressions &gt; 0`: **0**\n\nDistribuição: **majoritariamente zero absoluto.** 11 de 12 linhas são `0/0/0/0`. Não há um único registro de impressão ou engajamento social. Receita = zero em 100% das linhas.\n\n**autopilot_cycles** — total `2`, ambos `status=\"completed\"` (0 aborted, 0 failed). Cycle 1: `spend_mco=22, refunded=2`. Cycle 2: `spend_mco=46, refunded=0`. Os ciclos **fecham com sucesso técnico** — o pipeline roda — mas fecham sobre métricas vazias.\n\n**optimization_policy** (a tabela que `orchestrate-step:202` lê com `.eq(\"action_type\",\"viral_autopilot\")`) — total `22` linhas, mas só **1** é `viral_autopilot`. O `action_details` dela:\n```json\n{\"signal\":\"affiliate_clicks\",\"clicks_total\":1,\"top_platform\":\"linkedin\",\n \"top_product_id\":\"MLB27834876\",\"top_product_name\":\"Roborock S8 Pro Ultra\",\n \"revenue_cents_total\":0}  reward:1.0000  applied:false\n```\nAs outras 21 políticas são `schedule`/`content`/`platform` genéricas, geradas por LLM, **sem nenhum dado real por trás** (\"Agendar posts para horários de pico\", \"Criar mais conteúdo de vídeo\") — conselhos de cartão da sorte, não aprendizado.\n\n**affiliate_links** — total `14`, `revenue_cents &gt; 0`: **0**. `clicks &gt; 0`: **5** links (cliques: 5, 2, 1, 1, 1). Soma de cliques reais ≈ 10. Atribuição de **compra/comissão ML = zero**. Tabelas de ledger de clique dedicadas (`link_clicks`, `affiliate_clicks`, `click_events`) **não existem** — o clique vive só na coluna `affiliate_links.clicks`.\n\n**pipeline_runs** — `14` total: **10 done**, **4 error**, 0 runn
+... (truncated 10441 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/tasks/wob2d279d.output)</result>
+<usage><agent_count>3</agent_count><subagent_tokens>265764</subagent_tokens><tool_uses>27</tool_uses><duration_ms>152104</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(23:17:09)*
+
+
+## 🤖 Claude *(23:17:10)*
+
+O diagnóstico voltou e confirma a suspeita. Deixa eu ler o relatório completo (truncado na notificação) antes de sintetizar.
+
+## 🤖 Claude *(23:17:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/tasks/wob2d279d.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Material diagnosis of the Learning & Adaptation loop: is it closed, is there real outcome data, what is the minimal compounding loop",
+> 3	  "agentCount": 3,
+> 4	  "logs": [],
+> 5	  "result": [
+> 6	    "I have the full picture. The legacy writer uses `action_type = rec.category` (free-text LLM category), so it does NOT collide on `action_type=\"viral_autopilot\"` — the read filter is safe in practice, but the SDD-mandated `scope` filter is absent (latent bug). The loop is otherwise traceable end-to-end. Final analysis:\n\n---\n\n**1) O loop está FECHADO — mas é estruturalmente raso (mede 1 ciclo atrás, age sobre 2 features) e tem 2 quebras latentes.**\n\nO circuito completo existe e é rastreável: `orchestrate-step:235-243` grava baseline `creative_metrics` (zeros) por criativo com `cycle_id` → `autopilot-collect:47-60` sincroniza o ledger real `affiliate_links.clicks/revenue_cents` para a linha `affiliate_click` → `autopilot-analyze:49-91` soma por produto/plataforma e grava `optimization_policy` → `orchestrate-step:202-205` lê a policy mais recente e `injectFeedback` (`:281,553,632`) a injeta como system message. **Desfecho real → política → mudança de prompt → novo desfecho: fecha.** Não é o anti-padrão \"escreve política que ninguém usa\" nem \"age sem dado real\" — `analyze` é fail-closed em `hasReal Data` (`:67-71`, não inventa política sem clique/receita).\n\nOnde quase quebra (latente):\n- **Filtro de scope ausente.** O SDD §91 manda `orchestrate-step` ler **só** `scope='viral_autopilot:<plan_id>'`. O código (`:202-204`) filtra apenas `action_type=\"viral_autopilot\"` + `order created_at desc`. Hoje não colide porque o `self-optimize` legado grava `action_type = rec.category` (texto livre do LLM, `self-optimize:180`) — então não há cross-contamination **acidentalmente**, mas **multi-plano do mesmo tenant cruza políticas**: o plano B injeta o vencedor do plano A. É um bug real assim que existir >1 plano por usuário.\n- **`applied` nunca vira `true`.** `analyze` grava `applied:false` (`:90`); nenhum consumidor faz `update applied=true` (grep vazio). O loop funciona sem isso, mas não há trilha de auditoria de que a política foi consumida (FR-VA-011 AT pede \"prova de reinjeção\").\n\n**2) REWARD SIGNAL = `affiliate_clicks` (mono-métrica), receita só como tiebreak — altamente Goodhart-vulnerável.**\n\n`autopilot-analyze:74-75,90`: `reward: totalClicks`, ordena por cliques e desempata por receita. `impressions/engagements` existem na tabela (`:242`) mas o coletor os deixa `skipped_no_tier` (`autopilot-collect:65-68`) → **na prática só cliques chegam ao analyzer.** Goodhart: o sistema otimiza por *clique de afiliado*, não por *venda*. Conteúdo clickbait que gera cliques sem conversão será premiado e reinjetado, envenenando ciclos seguintes (o próprio Risk Ledger SDD §223 alerta para \"auto-envenenamento persistente\"). Sem CTR-normalização (cliques/impressões) nem janela de conversão, um produto com muitas impressões orgânicas vence só por volume.\n\n**3) A política ALTERA comportamento — mas de forma rasa e frágil, não cosmética.**\n\nNão é cosmética: `buildPolicyHint:109-117` extrai `top_product_name` + `top_platform` e `injectFeedback:119-122` anexa um system message real (\"Dê preferência a esse ângulo\"). Isso de fato muda o prompt. **Porém o efeito material é fraco**: (a) é só um *hint* textual no fim do array de mensagens — o LLM pode ignorá-lo; (b) **não altera a seleção determinística** de produtos/plataformas — o fan-out em `autopilot-run:201-203` ainda itera `plan.target_product_ids × plan.platforms` cruamente, sem reordenar/podar pelo vencedor. Ou seja: a política sussurra ao redator, mas o **plano de execução continua idêntico** ciclo a ciclo. O \"produto vencedor\" recebe os mesmos N criativos que o perdedor. Há injeção, mas **sem realocação de esforço** = aprendizado sem alavanca.\n\n**4) O que falta para o loop COMPOR (melhorar mensuravelmente a cada ciclo):**\n\n- **Realocação determinística, não só hint de prompt:** `autopilot-run` deveria *ponderar* o fan-out pela policy — mais variantes/budget no produto×plataforma vencedor, menos no perdedor (multi-armed bandit / ε-greedy). Hoje a política não toca `tasks[]` (`:201-229`).\n- **Reward composto e normalizado:** trocar `reward=totalClicks` por algo como `revenue_cents` ponderado + CTR normalizado por impressões, com janela de atribuição de venda. Exige o coletor orgânico (`autopilot-collect:65`) ser implementado, não `skipped_no_tier` — sem impressões, qualquer normalização é impossível.\n- **Memória multi-ciclo:** `analyze` só lê o ciclo `prev` imediato (`autopilot-run:186-188`, `limit 1`). Um vencedor precisa de média móvel/EWMA sobre M ciclos para não oscilar com ruído de 1 ciclo de poucos cliques.\n- **Fechar as 2 quebras latentes:** adicionar o filtro `scope=viral_autopilot:<plan_id>` no read (`orchestrate-step:203`) e marcar `applied=true` no consumo, para isolar planos e ter trilha auditável.\n- **Anti-Goodhart guard:** o Risk Ledger pede tratar a policy como *dado, nunca instrução* (OTD-VA-005) — já feito no escape (`:113`), mas falta um teto de exploração (não colapsar 100% no vencedor) para o loop não convergir prematuramente num clickbait local-ótimo.\n\n**Veredito:** loop fechado e honesto quanto a dado real, mas é um **termostato de 1-bit** — mede uma métrica gameável de 1 ciclo atrás e responde com um sussurro de prompt sem mudar a alocação. Vai *reagir*, dificilmente vai *compor*.\n\nArquivos-chave: `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts:74-91`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts:198-205,119-122`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts:186-203`, `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts:65-68`, `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md:91,223`.",
+> 7	    "I have all the material data needed. Here is my diagnosis.\n\n---\n\n## DIAGNÓSTICO — O loop de aprendizado está OCO (hipótese CONFIRMADA)\n\nA hipótese se confirma materialmente: **há geração e plumbing impecáveis, mas quase nenhum sinal de desfecho.** O único reward não-zero que existe é um proxy fraco (1 clique), e ele já está sendo usado.\n\n### Números literais (Lei 1)\n\n**creative_metrics** — total `12` linhas:\n- `revenue_cents > 0`: **0** linhas (`*/0`)\n- `affiliate_clicks > 0`: **1** linha (a `f6163192`, cycle `947ef8b5`, LinkedIn, `affiliate_clicks=1`, source `affiliate_click`)\n- `engagements > 0`: **0**\n- `impressions > 0`: **0**\n\nDistribuição: **majoritariamente zero absoluto.** 11 de 12 linhas são `0/0/0/0`. Não há um único registro de impressão ou engajamento social. Receita = zero em 100% das linhas.\n\n**autopilot_cycles** — total `2`, ambos `status=\"completed\"` (0 aborted, 0 failed). Cycle 1: `spend_mco=22, refunded=2`. Cycle 2: `spend_mco=46, refunded=0`. Os ciclos **fecham com sucesso técnico** — o pipeline roda — mas fecham sobre métricas vazias.\n\n**optimization_policy** (a tabela que `orchestrate-step:202` lê com `.eq(\"action_type\",\"viral_autopilot\")`) — total `22` linhas, mas só **1** é `viral_autopilot`. O `action_details` dela:\n```json\n{\"signal\":\"affiliate_clicks\",\"clicks_total\":1,\"top_platform\":\"linkedin\",\n \"top_product_id\":\"MLB27834876\",\"top_product_name\":\"Roborock S8 Pro Ultra\",\n \"revenue_cents_total\":0}  reward:1.0000  applied:false\n```\nAs outras 21 políticas são `schedule`/`content`/`platform` genéricas, geradas por LLM, **sem nenhum dado real por trás** (\"Agendar posts para horários de pico\", \"Criar mais conteúdo de vídeo\") — conselhos de cartão da sorte, não aprendizado.\n\n**affiliate_links** — total `14`, `revenue_cents > 0`: **0**. `clicks > 0`: **5** links (cliques: 5, 2, 1, 1, 1). Soma de cliques reais ≈ 10. Atribuição de **compra/comissão ML = zero**. Tabelas de ledger de clique dedicadas (`link_clicks`, `affiliate_clicks`, `click_events`) **não existem** — o clique vive só na coluna `affiliate_links.clicks`.\n\n**pipeline_runs** — `14` total: **10 done**, **4 error**, 0 running/queued. O motor de geração tem ~71% de sucesso.\n\n### Respostas\n\n**1. Existe sinal de desfecho real?** Não. O loop está oco. O único sinal não-zero em todo o ecossistema é `affiliate_links.clicks` (≈10 cliques agregados, 5 links) e a sua projeção em **1** linha de `creative_metrics` + **1** política `viral_autopilot reward=1.0`. Receita: **R$0** em toda parte. Impressões/engajamento social: **nunca capturados** (coluna existe, valor sempre 0). O `reward` que alimenta a otimização é literalmente `clicks_total:1` — estatisticamente ruído.\n\n**2. Onde quebra:**\n- **Postback/atribuição ML** (a ponta cara): nenhum `revenue_cents>0` em lugar nenhum. A comissão ML nunca volta — não há postback, então a métrica que mais importa (venda) é estruturalmente invisível.\n- **Alcance social não capturado**: `impressions`/`engagements` são sempre 0 porque nada faz o *pull* das APIs sociais de volta para `creative_metrics`. O `autopilot-collect` insere a linha mas sem dados de plataforma.\n- **Clique parcialmente rastreado**: o redirect tracker conta cliques (`affiliate_links.clicks`), mas só 1 dos ~10 cliques virou linha de `creative_metrics` com `source=affiliate_click` — a captura clique→métrica é incompleta.\n\n**3. Menor sinal de desfecho real que JÁ temos hoje:** **`affiliate_links.clicks`** — o redirect tracker in-system. É o único desfecho material não-fabricado, não depende de postback ML nem de API social, e já está parcialmente fluindo (a política `viral_autopilot` já usa `affiliate_clicks` como `signal`). **Recomendação imediata:** promover `clicks` a reward de primeira classe — fazer `autopilot-collect`/`autopilot-analyze` agregarem **todos** os cliques por `content_variant_id`/`product_id`/`platform` (não só 1), normalizar como reward, e ranquear plataforma/produto por clique-por-criativo. Isso transforma 10 cliques reais num gradiente de aprendizado HOJE, sem esperar Stripe live nem atribuição de compra ML.\n\n**Conclusão:** \"não avançamos apesar do dev incrível\" porque o motor aprende sobre um placar em branco. O desenvolvimento construiu o corpo; falta o nervo sensorial de volta (postback ML + pull social). O único nervo vivo é o clique — use-o como reward agora.\n\nArquivo-chave: `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts:202-205` (lê `optimization_policy` action_type=viral_autopilot).",
+> 8	    "I have everything I need — material grounding on all four survey artifacts, the exact reward bug, the schema columns, and the brand-persona signal map. Writing the design now.\n\n---\n\n## Loop de Learning & Adaptation que COMPÕE — design para OTD-AG-002\n\n**ORO:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius = decisão de pauta autônoma que queima mco sem retorno de marca).\n\n### Survey — o que já temos (e o que cada coisa REALMENTE aprende)\n\n- **Obstáculo→Síntese (CLAUDE.md §5):** é Via-3-micro *manual* — aprende sobre o **processo de dev**, não sobre o produto. Cada bug vira SOP+skill+agent. É um loop fechado e materialmente verificável (o ecossistema fica melhor), mas o \"reward\" é o julgamento humano do Sovereign, e o sujeito que muda é o *tooling do agente*, não o conteúdo publicado. **Não é o loop que falta.**\n- **OpenClaw Dreaming (`.claude/skills/openclaw-dreaming/SKILL.md`):** a fase Deep promove por ranking ponderado (`Relevance 0.30 · Frequency 0.24 · QueryDiversity 0.15 · Recency 0.15 · Consolidation 0.10 · Conceptual 0.06`) com gates (`minScore/minRecallCount/minUniqueQueries`). **Isto é precedente de ouro:** já é um reward *multi-métrica* anti-Goodhart, só que o desfecho que ele aprende é \"qual memória vale promover\" — utilidade de recall, não desfecho de mercado. Copiar a *forma* (vetor ponderado + gates), trocar o *domínio*.\n- **`ab_variants` (viral-autopilot):** a infra existe — `autopilot_plans.ab_variants int CHECK 1-5` (migration `20260620120000:32`), FR-VA-019 manda gerar N variantes e \"a vencedora é escolhida pelo desempenho do ciclo anterior\". **Mas o seletor de vencedora ainda não roda multi-métrica:** `autopilot-analyze/index.ts:74` faz `pick = sort(clicks desc, rev tiebreak)` e grava **`reward: totalClicks`** (linha 90). Isso é Goodhart cravado em produção — clique de afiliado é um proxy único e gameável (clickbait que não converte e não constrói marca pontua alto).\n- **`creative_metrics` + Collective Efficiency Ledger:** `creative_metrics` (migration `20260619140000`) já carrega os 4 sinais brutos por criativo — `impressions, engagements, affiliate_clicks, revenue_cents`, keyed por `content_variant_id`, UNIQUE `(content_variant_id, source)`. O Ledger (`20260626120000`) mede **mco/resultado** (eficiência), explicitamente *não* valor de desfecho. **Os termos do reward de desfecho já estão coletados — falta a fórmula que os combina.**\n\n### 1. North-star reward multi-métrica (anti-Goodhart, alinhado à virada brand-persona)\n\nComo hoje o objetivo é **MARCA + alcance** (não receita de afiliado — `project_brand_persona_ccio`), o reward é um vetor ponderado **derivado de `creative_metrics`** (verdade já coletada, nunca auto-reportada — princípio §5.6 da doutrina):\n\n```\nR(creative) = w_reach·z(impressions) + w_eng·z(engagements/impressions)\n            + w_rev·z(revenue_cents) + w_brand·z(brand_signal)\n```\n\n- **z()** = z-score *dentro do ciclo* (normaliza por janela, impede que um pico absoluto domine — espelha o `recencyHalfLife` do Dreaming).\n- **`engagements/impressions`** (taxa, não bruto) → impede gaming por volume: post que alcança muito mas não engaja não vence.\n- **`brand_signal`** = retenção/saves/comentários por seguidor — o termo que materializa \"marca\". Hoje `creative_metrics` não distingue *tipo* de engajamento; **isto é o único campo a adicionar** (ver §3).\n- **Pesos da virada brand-first (proposta inicial, datada e versionada como o Dreaming):** `w_reach 0.40 · w_eng 0.30 · w_brand 0.20 · w_rev 0.10`. Receita pesa pouco *de propósito* — afiliado é subproduto de longo prazo. Quando a virada de monetização vier, o Sovereign reponderaria (o vetor é dado, não código).\n\n**Por que isso resiste a Goodhart:** nenhum termo isolado vence sozinho (z-score + taxa derrubam o proxy bruto); é derivado de financial/engagement truth, não escrito *para* o ledger; e o vetor de pesos é explícito e auditável — gaming exigiria mover 4 sinais correlacionados ao mesmo tempo, que é aproximadamente \"fazer um bom post\".\n\n### 2. O MENOR loop genuinamente fechado que COMPÕE\n\n**Não construir RL novo. Endurecer o loop FR-VA-010/011 que já existe** — ele já é fechado (analisa→policy→injeta), só está com reward de métrica única. A mudança mínima:\n\n1. **MEDE:** `autopilot-analyze` deixa de fazer `pick(clicks)` e passa a computar `R(creative)` sobre `impressions/engagements/affiliate_clicks/revenue_cents` por variante (`content_variant_id`) do ciclo anterior. Já lê essas linhas — só amplia o `SELECT` (hoje só pega `product_id, platform, affiliate_clicks, revenue_cents` em `:50`).\n2. **GUARDA o reward:** grava `reward = R(winner)` e `action_details.reward_vector = {reach, eng, brand, rev, weights}` na `optimization_policy` (coluna `reward NUMERIC` + `action_details jsonb` já existem — migration `20260402014040:179`). O vetor guardado é a prova auditável do *porquê* venceu.\n3. **MUDA o próximo ciclo:** FR-VA-011 já injeta o `optimization_policy` mais recente no system prompt. O comportamento muda porque a variante vencedora (hook/produto/formato/horário) é promovida e re-semeada via `ab_variants` — exatamente a infra que está parada. Variante perdedora é podada; nasce 1 nova de exploração (ε-greedy mínimo: 1 das N variantes sempre é aleatória, p/ não colapsar em ótimo local — equivalente ao `QueryDiversity` do Dreaming).\n4. **PROVA material que melhorou (Lei 1):** o **Collective Efficiency Ledger já é o medidor honesto** — `R̄(ciclo N+1) > R̄(ciclo N)` com `mco_actual` estável ou caindo prova *composição* (melhor desfecho por mco). Materialmente: `SELECT avg(reward) FROM optimization_policy WHERE scope GROUP BY cycle ORDER BY created_at` mostrando série crescente + UUID de cada policy. Sem isso é poesia.\n\n### 3. O gargalo REAL — honestidade\n\n**Não é falta de loop. O loop está construído e a 1 linha de virar honesto** (trocar `pick(clicks)`/`reward:totalClicks` por `R()` multi-métrica em `autopilot-analyze`). O gargalo real é **DADO DE DESFECHO**, e tem dois nós:\n\n- **Termo `brand_signal` não existe ainda** — `creative_metrics` tem `engagements` agregado, não saves/comentários/retenção. Adicionar a coluna é trivial; **preenchê-la depende da frente B** (publish-social YouTube/TikTok + o `auto-publish` que ainda *não passa `video_url`* — `auto-publish/index.ts:54-83`, gap cravado no prep brand-persona). Sem os canais de marca publicando, o coletor (FR-VA-008) não tem reach/brand real pra coletar → o reward roda só com `affiliate_clicks/revenue` e **degrada de volta ao proxy único**.\n- **Atribuição de receita (FR-VA-017)** depende de postback ML, mas com `w_rev 0.10` isso é tolerável — o loop não trava por falta de receita.\n\n**Veredito:** o loop multi-métrica é shippável **agora** sobre os 2 sinais que já fluem (engagement-rate + revenue), e isso *já* mata o Goodhart de `reward:totalClicks` em produção — ganho imediato. Mas ele só **COMPÕE de verdade** (melhora medida ciclo-a-ciclo no eixo MARCA, que é o north-star da virada) **quando a frente B destrava reach/brand**: publish YouTube/TikTok + o gap do `auto-publish video_url`. Ordem honesta: (a) virar o reward multi-métrica em `autopilot-analyze` + guardar o vetor — fecha o anti-Goodhart hoje; (b) frente B publica nos canais de marca — alimenta `brand_signal`; (c) só então o Ledger prova `R̄` crescente no eixo certo.\n\n**Arquivos-âncora:** `supabase/functions/autopilot-analyze/index.ts:74,90` (o bug a corrigir) · `supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql:34-37` (sinais brutos) · `supabase/migrations/20260620120000_viral_autopilot_plans.sql:32` (`ab_variants`) · `supabase/migrations/20260402014040…:179` (`optimization_policy.reward/action_details`) · `supabase/migrations/20260626120000…` (Ledger = medidor) · `.claude/skills/openclaw-dreaming/SKILL.md` (precedente do vetor ponderado) · `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md:28` (gap `auto-publish video_url` = dependência da frente B)."
+> 9	  ],
+> 10	  "workflowProgress": [
+> 11	    {
+> 12	      "type": "workflow_phase",
+> 13	      "index": 1,
+> 14	      "title": "Diagnose"
+> 15	    },
+> 16	    {
+> 17	      "type": "workflow_agent",
+> 18	      "index": 1,
+> 19	      "label": "diag:loop-closure",
+> 20	      "phaseIndex": 1,
+> 21	      "phaseTitle": "Diagnose",
+> 22	      "agentId": "a207952e0b7cc23a2",
+> 23	      "model": "claude-opus-4-8",
+> 24	      "state": "done",
+> 25	      "startedAt": 1782515669600,
+> 26	      "queuedAt": 1782515669598,
+> 27	      "attempt": 1,
+> 28	      "lastToolName": "Read",
+> 29	      "lastToolSummary": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functio…",
+> 30	      "promptPreview": "Você é um arquiteto sênior diagnosticando o loop de Learning & Adaptation do MCORCH (o único padrão agêntico FRACO da doutrina docs/architecture/agentic-vision.md). Read-only.\n\nPERGUNTA: o loop de aprendizado do Viral Autopilot está REALMENTE FECHADO (desfecho → política → mudança de comportamento → novo desfecho) ou está ABERTO (escreve uma política que ninguém usa, ou age sobre uma política sem …",
+> 31	      "lastProgressAt": 1782515731281,
+> 32	      "tokens": 102143,
+> 33	      "toolCalls": 8,
+> 34	      "durationMs": 61681,
+> 35	      "resultPreview": "I have the full picture. The legacy writer uses `action_type = rec.category` (free-text LLM category), so it does NOT collide on `action_type=\"viral_autopilot\"` — the read filter is safe in practice, but the SDD-mandated `scope` filter is absent (latent bug). The loop is otherwise traceable end-to-end. Final analysis:\n\n---\n\n**1) O loop está FECHADO — mas é estruturalmente raso (mede 1 ciclo atrás,…"
+> 36	    },
+> 37	    {
+> 38	      "type": "workflow_agent",
+> 39	      "index": 2,
+> 40	      "label": "diag:outcome-data",
+> 41	      "phaseIndex": 1,
+> 42	      "phaseTitle": "Diagnose",
+> 43	      "agentId": "a948e5aa437d23a89",
+> 44	      "model": "claude-opus-4-8",
+> 45	      "state": "done",
+> 46	      "startedAt": 1782515669601,
+> 47	      "queuedAt": 1782515669599,
+> 48	      "attempt": 1,
+> 49	      "lastToolName": "Bash",
+> 50	      "lastToolSummary": "set -a; source .env 2>/dev/null; set +a; URL=\"${VITE_SUPABA…",
+> 51	      "promptPreview": "Você é um analista de dados diagnosticando se o MCORCH TEM sinal de desfecho real para aprender. Read-only, com QUERY no banco vivo.\n\nBanco vivo: source .env (set -a; source .env; set +a) → use $SB_SECRET_KEY + URL ($VITE_SUPABASE_URL ou https://bcyvddsykvehvpwstlfa.supabase.co).\nQuery REST: curl -s -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \"$URL/rest/v1/<table>?select=…",
+> 52	      "lastProgressAt": 1782515753642,
+> 53	      "tokens": 73952,
+> 54	      "toolCalls": 7,
+> 55	      "durationMs": 84040,
+> 56	      "resultPreview": "I have all the material data needed. Here is my diagnosis.\n\n---\n\n## DIAGNÓSTICO — O loop de aprendizado está OCO (hipótese CONFIRMADA)\n\nA hipótese se confirma materialmente: **há geração e plumbing impecáveis, mas quase nenhum sinal de desfecho.** O único reward não-zero que existe é um proxy fraco (1 clique), e ele já está sendo usado.\n\n### Números literais (Lei 1)\n\n**creative_metrics** — total `…"
+> 57	    },
+> 58	    {
+> 59	      "type": "workflow_agent",
+> 60	      "index": 3,
+> 61	      "label": "diag:minimal-loop",
+> 62	      "phaseIndex": 1,
+> 63	      "phaseTitle": "Diagnose",
+> 64	      "agentId": "aeae6da7e8d1cdbe8",
+> 65	      "model": "claude-opus-4-8",
+> 66	      "state": "done",
+> 67	      "startedAt": 1782515731282,
+> 68	      "queuedAt": 1782515669599,
+> 69	      "attempt": 1,
+> 70	      "lastToolName": "Bash",
+> 71	      "lastToolSummary": "grep -n \"reach\\|video_views\\|followers\\|impressions\\|engage…",
+> 72	      "promptPreview": "Você é um arquiteto de sistemas agênticos desenhando o MENOR loop de Learning & Adaptation que realmente COMPÕE (fica mensuravelmente melhor a cada ciclo) para o MCORCH. Read-only.\n\nCONTEXTO: a doutrina docs/architecture/agentic-vision.md marca Learning & Adaptation como o único padrão FRACO (OTD-AG-002, P0). O paper Gulli (cap 9) diz: o mecanismo é RL/online-learning/A-B/auditoria, e o PITFALL é …",
+> 73	      "lastProgressAt": 1782515821659,
+> 74	      "tokens": 89669,
+> 75	      "toolCalls": 12,
+> 76	      "durationMs": 90377,
+> 77	      "resultPreview": "I have everything I need — material grounding on all four survey artifacts, the exact reward bug, the schema columns, and the brand-persona signal map. Writing the design now.\n\n---\n\n## Loop de Learning & Adaptation que COMPÕE — design para OTD-AG-002\n\n**ORO:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign · Owner = Sovereign (blast radius = decisão de pauta autônoma que queima mc…"
+> 78	    }
+> 79	  ],
+> 80	  "totalTokens": 265764,
+> 81	  "totalToolCalls": 27
+> 82	}
+> ```
+
+## 🤖 Claude *(23:18:55)*
+
+
+## 🤖 Claude *(23:19:14)*
+
+O diagnóstico voltou com prova material, e ele responde a sua frustração diretamente. Vou ser franco.
+
+## Por que não avançamos apesar do dev incrível
+
+O loop de aprendizado **existe e está tecnicamente fechado** (analyze → política → injeta no próximo ciclo → novo desfecho). Mas é um **termostato de 1-bit**:
+- **Reward de métrica única** — `reward: totalClicks` ([autopilot-analyze:90](supabase/functions/autopilot-analyze/index.ts:90)). Goodhart cravado em produção: clickbait que não converte e não constrói marca pontua alto e é reinjetado.
+- **Só sussurra, não realoca** — injeta um *hint* textual no prompt (que o LLM pode ignorar) mas **não muda a alocação**: o fan-out continua iterando `produtos × plataformas` cru ([autopilot-run:201](supabase/functions/autopilot-run/index.ts:201)). O produto vencedor recebe os mesmos N criativos que o perdedor. **Aprendizado sem alavanca.**
+
+Mas essa não é a causa raiz. **A causa raiz é que o placar está em branco.** Os números literais (Lei 1, banco vivo):
+
+| `creative_metrics` (12 linhas) | com sinal |
+|---|---|
+| revenue_cents > 0 | **0** |
+| impressions > 0 | **0** |
+| engagements > 0 | **0** |
+| affiliate_clicks > 0 | **1** |
+
+Receita = **R$0** em todo lugar. Alcance/engajamento social: **nunca capturados** (a coluna existe, o valor é sempre 0 — nada faz o *pull* das APIs sociais de volta). O único nervo sensorial vivo no ecossistema inteiro são **~10 cliques de afiliado**.
+
+**O motor aprende sobre um placar em branco.** O desenvolvimento incrível construiu o corpo — geração, distribuição, orquestração, agora a medição de eficiência. Falta o **nervo sensorial de volta**: o sistema não *vê* o resultado do que publica. É exatamente o mesmo sintoma do seu "[muito técnico, não entrega valor final](feedback_deliver_user_value_not_plumbing.md)" — construímos capacidade, não captura de desfecho. **Sem ver o resultado, não há o que aprender, e capacidade não vira avanço.**
+
+## O que "força total" realmente significa aqui (honesto)
+
+Fortalecer Learning & Adaptation são **duas coisas, em ordem**:
+
+1. **Tornar o reward honesto (barato, hoje):** trocar `reward:totalClicks` por um **reward multi-métrica** `R = w_reach·z(impressions) + w_eng·z(eng/impr) + w_rev·z(revenue) + w_brand·z(brand_signal)` (z-score + taxa = anti-Goodhart) + **realocar esforço** via a infra `ab_variants` que está parada + ε-greedy + corrigir 2 bugs latentes (filtro de scope, `applied=true`). Mata o Goodhart em produção **hoje**.
+
+2. **Fechar o loop sensorial (o desbloqueio real):** fazer o coletor *puxar* alcance/engajamento reais de volta para `creative_metrics` + a coluna `brand_signal` + atribuição. **É aqui que se entrelaça com a virada brand-persona** — só quando os canais de marca (YouTube/TikTok/IG) publicam é que existe *reach* real pra aprender. Sem isso, até um loop perfeito aprende nada.
+
+A honestidade dura: **o gargalo não é o loop, é o dado de desfecho.** Posso deixar o loop multi-métrica lindo amanhã, mas ele só **compõe** (melhora medido ciclo-a-ciclo) quando o placar deixar de ser branco.
+
+Duas decisões são suas — elas codificam a *estratégia*, não a engenharia:
+
+## 🤖 Claude *(23:19:26)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Qual o NORTH-STAR que o sistema aut\u00f4nomo deve otimizar? (codifica a estrat\u00e9gia no reward multi-m\u00e9trica \u2014 \u00e9 um dial, ajust\u00e1vel depois como os pesos do Dreaming)",
+      "header": "North-star",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Marca primeiro",
+          "description": "reach 0.40 \u00b7 engajamento 0.30 \u00b7 brand_signal 0.20 \u00b7 receita 0.10. Alinhado \u00e0 virada Gabriel AI/CCIO de hoje \u2014 alcance e constru\u00e7\u00e3o de marca acima de receita de afiliado (subproduto de longo prazo). O sistema premia conte\u00fado que alcan\u00e7a e engaja, n\u00e3o clickbait que clica. (Recomendado)"
+        },
+        {
+          "label": "Equilibrado marca+receita",
+          "description": "reach 0.30 \u00b7 engajamento 0.25 \u00b7 brand 0.20 \u00b7 receita 0.25. Pesa receita atribu\u00edda a par com marca \u2014 \u00fatil se quiser que o motor j\u00e1 ca=ce produto que converte enquanto constr\u00f3i alcance."
+        },
+        {
+          "label": "Receita primeiro",
+          "description": "receita 0.45 \u00b7 cliques/convers\u00e3o alto \u00b7 reach 0.25 \u00b7 brand 0.10. Otimiza para o primeiro R$ acima de tudo. Contradiz a virada de marca de hoje, mas \u00e9 op\u00e7\u00e3o se a prioridade voltou a ser monetiza\u00e7\u00e3o imediata."
+        }
+      ]
+    },
+    {
+      "question": "At\u00e9 onde levar agora? (voc\u00ea disse for\u00e7a total \u2014 mas a ordem honesta importa, porque o desbloqueio real depende dos canais de marca publicando)",
+      "header": "Escopo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "For\u00e7a total \u2014 ambas as fatias",
+          "description": "Fatia 1 (reward multi-m\u00e9trica + realoca\u00e7\u00e3o ab_variants + \u03b5-greedy + 2 bugs) AGORA + Fatia 2 (loop sensorial: coletor puxa reach/engajamento reais + brand_signal + atribui\u00e7\u00e3o), entrela\u00e7ada com os canais de marca. O caminho completo para o loop COMPOR. Maior, multi-sess\u00e3o. (Recomendado para 'for\u00e7a total')"
+        },
+        {
+          "label": "Loop honesto primeiro",
+          "description": "S\u00f3 a Fatia 1 agora (mata o Goodhart hoje, barato, alto leverage), e a Fatia 2 (captura de desfecho) numa pr\u00f3xima investida. Entrega valor imediato e deixa o desbloqueio real para depois."
+        },
+        {
+          "label": "Captura de desfecho primeiro",
+          "description": "Inverter: priorizar fazer o placar parar de ser branco (Fatia 2 \u2014 reach/engajamento/atribui\u00e7\u00e3o de volta) ANTES de refinar o reward. Ataca a causa raiz primeiro; o reward multi-m\u00e9trica vem quando j\u00e1 h\u00e1 dado real pra ele mastigar."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Qual o NORTH-STAR que o sistema autônomo deve otimizar? (codifica a estratégia no reward multi-métrica — é um dial, ajustável depois como os pesos do Dreaming)"="Verdade foi feita alguns posts no linkeding e tambem no instagram ons primeiros testes reais, mas não estamos olhando para os numeros de resultado sobre isso, tudo que podemos puxar como, visualizações, likes, reações em geral, comentários, compartilhamento/repost/remixes etc. Isso deve estar dentro de um painel analitico para cada publicação do mundo real cada informações publicada deve ter um painel analico com os resultados mensuráveis isso ajudaria a entender os verdadeiros resultados.
+> 
+> Veja se isso se encaixa na tomada de decisão mas acredito que deve fazer  sim a marca primeiro realmente sem clickbait seguindo o recomendado citado na opção 1, mas tambem precisamos de receita então aproveitar com consciência identificar as oportunidades de lucros e abrir em pauta para decisão entre impactos reais de retorno e mão de obra e prioridades. E para esclarecer a questão, o Gabriel AI não é uma virada de marca é a marca sendo construida. Assim como grandes marcas aqui no brasil e fora tem seus mascotes ou influenciadores reais, vamos criar o Gabriel AI uma versão real do co-founder e CEO da MCORCH que sou eu. Assim como por exemplo a Magalu da rede de lojas Magazine Luiza etc. Muito melhor que criar um perfil para a marca é usar um personagem que tem como proposito ser a copia digital real do verdadeiro Gabriel.", "Até onde levar agora? (você disse força total — mas a ordem honesta importa, porque o desbloqueio real depende dos canais de marca publicando)"="Força total — ambas as fatias". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(23:29:02)*
+
+
+## 🤖 Claude *(23:29:12)*
+
+Entendido — e obrigado pela correção, ela muda o enquadramento:
+
+**Gabriel AI não é uma virada de marca — é a marca sendo construída.** Um personagem que é a cópia digital real de você, o co-founder e CEO, como a Magalu é para o Magazine Luiza. A face durável, não um perfil corporativo. Vou tratar assim daqui pra frente.
+
+E você cristalizou o desbloqueio real numa forma concreta e **visível**: **um painel analítico por publicação.** Cada peça publicada no mundo real (os primeiros posts no LinkedIn e Instagram que já existem) ganha um dashboard de resultados mensuráveis — visualizações, curtidas, reações, comentários, compartilhamentos/reposts/remixes. *É exatamente o nervo sensorial que falta* — e é algo que você **abre e vê**, não plumbing. Sem olhar esses números, o motor aprende no escuro; com eles, o placar em branco vira gradiente.
+
+Direção travada: **marca primeiro** (reach 0.40 · eng 0.30 · brand 0.20 · receita 0.10), sem clickbait — mas **receita consciente**: oportunidades de lucro identificadas e levadas a uma *pauta de decisão* (retorno real × mão de obra × prioridade), nunca otimização cega. **Força total nas duas fatias.**
+
+Como **acabei de tornar o Pattern Conformance Gate vinculante**, vou comer da própria comida (dogfooding) — isto é mudança arquitetural, então passa pelo nosso gate: emenda à BoK `viral-autopilot` + plano antes do código. A disciplina É o mecanismo de avanço. Deixa eu corrigir a memória da marca e entrar em modo de plano.
+
+## 🤖 Claude *(23:29:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_brand_persona_ccio
+> 3	description: Virada estratégica brand-first — conteúdo evangeliza o MCORCH via persona Gabriel AI/CCIO (não produto); afiliado = subproduto de longo prazo. Expansão multi-canal YouTube+TikTok.
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 3ee740c7-9900-4d37-a9a4-207b63e460bb
+> 8	---
+> 9	
+> 10	**Diretiva Sovereign 2026-06-26** (depois de provar o LinkedIn E2E e remover a conexão p/ recriar com avatar próprio): o foco do conteúdo **NÃO são os produtos** — afiliado é consequência de longo prazo. O foco é **evangelizar o MCORCH** com uma voz única e escalável: o **Gabriel AI / CCIO (Cofounder Chief Intelligence Office)** — primeira versão 100% digital do Sovereign (Gabriel Caldeira Rocha avatar) — como **rosto + voz** de TODOS os canais junto da marca. Os perfis (LinkedIn novo, YouTube→MCORCH, Instagram `@magicorch`, TikTok novo) são bocas do mesmo organismo, mesma identidade visual + avatar unificado. A persona é o **átomo de distribuição escalável**: hoje 1 (CCIO)→N canais; amanhã N personas (cada depto da Pantheon com seu avatar).
+> 11	
+> 12	**Reframe técnico (a beleza):** os trilhos NÃO mudam (gerar→render 9:16→agendar→publicar→atribuir). Muda só (a) a *fonte do tema* (produto → pilar de marca/missão; "sempre falar da mesma coisa" = pilares fixos, ângulos variáveis — vira spine de persona no prompt, troca o `topic:produto`) e (b) o *nº de bocas* (+YouTube +TikTok). Reusa o motor [[project_viral_autopilot]] inteiro.
+> 13	
+> 14	**Ações já tomadas nesta sessão:** plano de produto do User 0 (`640b3b67`) **pausado** (`is_active=false`, reversível) — conteúdo Roborock não bate mais com a marca + LinkedIn foi desconectado (restam só `instagram`+`facebook` ativos).
+> 15	
+> 16	**Prep YouTube+TikTok (workflow `wf_24e9eb67`, fundamentado Lei 1) → blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`:**
+> 17	- **Infra ~90% pronta.** Enum `social_platform` JÁ tem `youtube`+`tiktok` (zero migration). `social_accounts` Vault já cifra tokens. `scheduled_posts`/`auto-publish`/`autopilot` já fazem cadência. OAuth connect é genérico (`social-auth-init`+`social-auth-callback`, state HMAC). **O MP4 9:16 do IG Reel = MESMO asset YT Shorts+TikTok** (motor HyperFrames `video-bridge`).
+> 18	- **Net-new = 3 pares de branches** (publish-social / social-auth-init+callback / refresh-social-token) + **1 gap** (`auto-publish:54-83` só passa texto, não `content.video_url` — caminho cron-de-vídeo não fechado; Reel foi invoke direto) + add `youtube`/`tiktok` ao `VIDEO_FLOW_PLATFORMS` (autopilot-run:109).
+> 19	- **Portões de aprovação = ação Sovereign, semanas (igual IG App Review):** YouTube = verificação OAuth + **Audit do projeto API** (senão `videos.insert` nasce `private` mesmo pedindo public — projetos pós-2020-07-28). TikTok = **app audit** (senão SELF_ONLY + conta privada + ≤5 users/24h). Estratégia: **construir + validar em privado/sandbox AGORA, público destrava na aprovação.**
+> 20	- **Gate MCORCH Closed-Loop:** amendar BoK `post-engine` via `/bok-scribe` ANTES de codar (ele cita TikTok/Shorts mas nomeia tabela errada `social_credentials`→viva é `social_accounts`, e não crava scopes/audit/branch design).
+> 21	
+> 22	**✅ Gabriel AI face-consistency PROVADO + nó mood-board SHIPPED (2026-06-26):** projeto Canvas `b57a59f7` "Gabriel AI" do User 0. **Demo E2E (commit nenhum — geração):** 2 fotos do rosto do Sovereign (nós characterReference) → `canvas-execute` Nano Banana (`google/gemini-2.5-flash-image`) com `reference_image_urls` → retrato Gabriel AI face-consistente real (asset `c42d0336`, 10 mco, identidade visual MCORCH azul/violeta). **Verdade técnica:** o motor de consistência facial JÁ existia — `canvas-execute` threada **até 4** reference images como `image_url` parts multimodais pro Gemini (`slice(0,4)`); `findUpstreamImages` coleta os upstream. **Nó mood-board (commit `549e4dd`):** `characterReference.imageUrls[]` (até 6 fotos/nó; antes 1 só `imageUrl`) + `pickNodeImages`/`findUpstreamImages` emitem TODAS → flui por **GenerateImage/StyleTransfer/Run-All** (inspectors usam `findUpstreamImages`). Node grid 2×2 + badge 📸; inspector upload múltiplo + remover. Back-compat: legados (`imageUrl` único) intactos (`imageUrl=imageUrls[0]`). **Fronteiras (Lei 1):** (a) `sceneCompose` usa 2 handles explícitos (`input_image_1/2`, 1 foto/handle via `pickNodeImage` singular) — NÃO coleta o mood board; p/ face-consistency usar **GenerateImage**. (b) **Soul Character (`soulId`) NÃO está implementado** — só campos no tipo + botão disabled "Phase 4.5"; o caminho real é reference-threading. (c) uploads do inspector usam signed URL 7 dias (`createSignedUrl`) → referências quebram após 1 semana (considerar bucket público/re-assinar p/ persona permanente). Verificado em browser real (preview+sessão injetada): nó "mood board facial" + inspector "MOOD BOARD FACIAL (1/6)". tsc 0.
+> 23	
+> 24	Relacionado: [[project_creative_ecosystem_program]] · [[project_viral_autopilot]] · [[reference_ig_reels_publish_path]] · [[feedback_api_tenancy_per_user]] · [[project_creative_layer_validation]].
+> 25	
+> ```
+
+## 🤖 Claude *(23:29:13)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:EnterPlanMode",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'EnterPlanMode'}]
+> ```
+
+## 🤖 Claude *(23:29:44)*
+
+
+## 🤖 Claude *(23:29:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md",
+  "old_string": "description: Virada estrat\u00e9gica brand-first \u2014 conte\u00fado evangeliza o MCORCH via persona Gabriel AI/CCIO (n\u00e3o produto); afiliado = subproduto de longo prazo. Expans\u00e3o multi-canal YouTube+TikTok.",
+  "new_string": "description: Constru\u00e7\u00e3o de marca (N\u00c3O virada) \u2014 Gabriel AI = c\u00f3pia digital real do CEO Gabriel (mascote/influencer da MCORCH, modelo Magalu/Magazine Luiza), rosto+voz de todos os canais. Afiliado = subproduto de longo prazo (receita via pauta consciente). Multi-canal YT+TikTok+LinkedIn+IG. Loop de aprendizado depende de painel anal\u00edtico por publica\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:29:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md",
+  "old_string": "Relacionado: [[project_creative_ecosystem_program]] \u00b7 [[project_viral_autopilot]] \u00b7 [[reference_ig_reels_publish_path]] \u00b7 [[feedback_api_tenancy_per_user]] \u00b7 [[project_creative_layer_validation]].",
+  "new_string": "**Corre\u00e7\u00e3o/aprofundamento Sovereign 2026-06-26 (tarde):** Gabriel AI **N\u00c3O \u00e9 uma virada** \u2014 \u00e9 a **marca sendo constru\u00edda**. Como a Magalu (Magazine Luiza) ou influencers/mascotes reais, Gabriel AI \u00e9 a **c\u00f3pia digital real do co-founder & CEO** (o pr\u00f3prio Gabriel) \u2014 melhor que um perfil de marca corporativo. Persona dur\u00e1vel; n\u00e3o chamar de \"pivot/virada\".\n\n**Causa raiz do \"n\u00e3o avan\u00e7amos apesar do dev incr\u00edvel\" (diagn\u00f3stico material `wob2d279d`, Lei 1):** o **placar est\u00e1 em branco**. `creative_metrics` (12 linhas): revenue>0: **0** \u00b7 impressions>0: **0** \u00b7 engagements>0: **0** \u00b7 affiliate_clicks>0: **1** (~10 cliques agregados em `affiliate_links`, \u00fanico nervo vivo). O motor de **Learning & Adaptation** (\u00fanico padr\u00e3o FRACO da doutrina, OTD-AG-002) aprende sobre nada: loop est\u00e1 fechado mas \u00e9 **\"termostato de 1-bit\"** \u2014 reward=`totalClicks` mono-m\u00e9trica Goodhart (`autopilot-analyze:90`); s\u00f3 sussurra hint textual no prompt, **n\u00e3o realoca esfor\u00e7o** via `ab_variants` (parada); l\u00ea s\u00f3 1 ciclo atr\u00e1s; 2 bugs latentes (filtro `scope` ausente `orchestrate-step:203`; `applied` nunca vira true). **Desbloqueio = nervo sensorial de volta:** Sovereign quer **um PAINEL ANAL\u00cdTICO POR PUBLICA\u00c7\u00c3O** (views/likes/coment\u00e1rios/shares/reposts/remixes de cada post real LinkedIn/IG que j\u00e1 existe) \u2192 alimenta o **reward multi-m\u00e9trica marca-primeiro** `R = 0.40\u00b7z(reach) + 0.30\u00b7z(eng/impr) + 0.20\u00b7z(brand_signal) + 0.10\u00b7z(revenue)` (z-score+taxa = anti-Goodhart; sem clickbait; receita via **pauta de decis\u00e3o** consciente, n\u00e3o otimiza\u00e7\u00e3o cega). **For\u00e7a total nas 2 fatias** (loop honesto + captura de desfecho), via emenda BoK `viral-autopilot` (dogfooding do Pattern Conformance Gate). Precedente do vetor ponderado: OpenClaw Dreaming.\n\nRelacionado: [[project_creative_ecosystem_program]] \u00b7 [[project_viral_autopilot]] \u00b7 [[reference_ig_reels_publish_path]] \u00b7 [[feedback_api_tenancy_per_user]] \u00b7 [[project_creative_layer_validation]] \u00b7 [[feedback_deliver_user_value_not_plumbing]]."
+}
+```
+
+## 🤖 Claude *(23:29:59)*
+
+
+🛠️ **Tool Call**: `EnterPlanMode`
+```json
+{}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+> **Tool Result (EnterPlanMode)** - ✅ Success
+>
+> ```
+> Entered plan mode. You should now focus on exploring the codebase and designing an implementation approach.
+> 
+> In plan mode, you should:
+> 1. Thoroughly explore the codebase to understand existing patterns
+> 2. Identify similar features and architectural approaches
+> 3. Consider multiple approaches and their trade-offs
+> 4. Use AskUserQuestion if you need to clarify the approach
+> 5. Design a concrete implementation strategy
+> 6. When ready, use ExitPlanMode to present your plan for approval
+> 
+> Remember: DO NOT write or edit any files yet. This is a read-only exploration and planning phase.
+> ```

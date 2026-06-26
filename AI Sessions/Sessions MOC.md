@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1435
-> * **Sessões do Claude**: 1393
+> * **Total de Sessões Registradas**: 1445
+> * **Sessões do Claude**: 1403
 > * **Sessões do Gemini**: 42
 
 ---
@@ -66,19 +66,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` - *2026-06-26*
+*   `[[2026-06-26 - agent-ad3f1f9dff00e393e]]` - *2026-06-26*
+*   `[[2026-06-26 - agent-acb7554b24176f8fe]]` - *2026-06-26*
+*   `[[2026-06-26 - agent-ac1a4e0559f0f36b9]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-ab0cae1b935d2e571]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-aab0587a4189f8a0f]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-aaa3c6ad9cc2ab052]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-aa9d859dec14d4b51]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-a9b3f105a5cbc0a9f]]` - *2026-06-26*
+*   `[[2026-06-26 - agent-a944c83dc887681db]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-a8efb00aec89c074f]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-a83c9ca82c06c1aed]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-a7d5154c110ef45ce]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-a7d4fb81c4339755f]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-a7c82e4d9b1ef706b]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-a6e3e700d9974b06c]]` - *2026-06-26*
-*   *... e mais 1392 sessões nessa categoria.*
+*   *... e mais 1402 sessões nessa categoria.*
 
 ---
 
@@ -269,21 +269,31 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-ad3f1f9dff00e393e]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-acb7554b24176f8fe]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-ac1a4e0559f0f36b9]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-ab0cae1b935d2e571]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aab0587a4189f8a0f]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aaa3c6ad9cc2ab052]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aa9d859dec14d4b51]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a9b3f105a5cbc0a9f]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-a944c83dc887681db]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a8efb00aec89c074f]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a83c9ca82c06c1aed]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a7d5154c110ef45ce]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a7d4fb81c4339755f]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a7c82e4d9b1ef706b]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a6e3e700d9974b06c]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-a6dea9e51483f30e1]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-a5e9e50ae4c4e2f3d]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-a54e3a9b9a462afcd]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a4f2be14f213d0739]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-a467d64b0c4998068]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a4638d96368b7a56b]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a3e9ae680160748fd]]` (ClaudeSessions)
+*   `[[2026-06-26 - agent-a3e4e5a66a88cd2fd]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-a268e7bdfbdc74649]]` (ClaudeSessions)
 *   `[[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions)
 *   `[[2026-06-26 - Implementar E2E UI testing em browser real]]` (ClaudeSessions)
