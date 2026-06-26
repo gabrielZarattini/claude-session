@@ -464,5 +464,5 @@ Let me write the structured object as proper JSON fields. I'll keep prose tighte
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-25 - agent-aebc560e7f259586d]]
-> * **Próxima Sessão**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
+> * **Próxima Sessão**: [[2026-06-26 - 2252460c-95ca-468a-9776-e3ef63ca5efb]]
 %% --- TIMELINE END --- %%

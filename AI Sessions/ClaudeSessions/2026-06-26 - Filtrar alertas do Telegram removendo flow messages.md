@@ -1901,3 +1901,16 @@ Desta vez **não foi ZDR/404** — é **429 de cota**: `free-models-per-day` esg
   ]
 }
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
+> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
+%% --- TIMELINE END --- %%

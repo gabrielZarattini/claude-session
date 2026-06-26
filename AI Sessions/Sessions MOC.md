@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1428
-> * **Sessões do Claude**: 1386
+> * **Total de Sessões Registradas**: 1430
+> * **Sessões do Claude**: 1388
 > * **Sessões do Gemini**: 42
 
 ---
@@ -77,7 +77,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-26 - agent-a4638d96368b7a56b]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-a3e9ae680160748fd]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-a268e7bdfbdc74649]]` - *2026-06-26*
-*   *... e mais 1386 sessões nessa categoria.*
+*   *... e mais 1388 sessões nessa categoria.*
 
 ---
 
@@ -282,7 +282,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-26 - agent-a268e7bdfbdc74649]]` (ClaudeSessions)
 *   `[[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions)
 *   `[[2026-06-26 - Implementar E2E UI testing em browser real]]` (ClaudeSessions)
+*   `[[2026-06-26 - Filtrar alertas do Telegram removendo flow messages]]` (ClaudeSessions)
 *   `[[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]` (ClaudeSessions)
+*   `[[2026-06-26 - 2252460c-95ca-468a-9776-e3ef63ca5efb]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-afadcea34084ceac0]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-aebc560e7f259586d]]` (ClaudeSessions)
 *   `[[2026-06-25 - agent-adc74488baf8727f4]]` (ClaudeSessions)

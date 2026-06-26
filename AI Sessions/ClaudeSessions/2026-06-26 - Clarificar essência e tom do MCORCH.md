@@ -1,4 +1,4 @@
-# Session 2252460c-95ca-468a-9776-e3ef63ca5efb
+# Clarificar essência e tom do MCORCH
 **Date:** 2026-06-26 | **Session ID:** `2252460c-95ca-468a-9776-e3ef63ca5efb`
 
 ---
@@ -279,7 +279,7 @@ I'll execute the ShakeHands /handson ritual. Starting with all pre-flight checks
 > 38	### Survival Laws Self-audit
 > 39	```
 > 40	Law 1 (Materiality): ✅ Tudo provado neste turno — render via ffprobe; LinkedIn via urn:li:share real; billing via dry_run; criativos via Vision QA (cost 0) + ocular; balanços rastreados. 1 slip disclosed+corrigido: fabriquei zeros num p_run_id de RPC (crédito caiu certo, âncora corrigida no run_id real + linha fabricada removida).
-> 41	Law 2 (Process): ✅ Bug fixes em features documentadas (autopilot billing, affiliate guard, canvas inspectors — isentos). Vision QA tem SOP [[creative-qa-vision-gate|creative-qa-vision-gate]]. Mood-board node = extensão do Canvas documentado (skill canvas-studio-cinematic). Brand-persona + YT/TikTok = blueprint seed antes de código (BoK gate respeitado — emenda post-engine pendente).
+> 41	Law 2 (Process): ✅ Bug fixes em features documentadas (autopilot billing, affiliate guard, canvas inspectors — isentos). Vision QA tem SOP creative-qa-vision-gate. Mood-board node = extensão do Canvas documentado (skill canvas-studio-cinematic). Brand-persona + YT/TikTok = blueprint seed antes de código (BoK gate respeitado — emenda post-engine pendente).
 > 42	Law 3 (Pruning): ✅ 2 workflows (recon wf_6475e2f8 + research wf_24e9eb67) como subagentes; resultados por path. Janela grande (Sovereign sinalizou seal).
 > 43	Law 4 (ORO): ✅ Triplet declarado; decisões soberanas via AskUserQuestion (gasto/escopo) + diretivas explícitas.
 > 44	```
@@ -853,15 +853,30 @@ Lembretes de memória ativos: rodar **Vision QA** (`scripts/qa/vision-qa.ts`, BY
   Pronto para trabalhar. Aguardando direção.
 ═══════════════════════════════════════════════════════════
 
----
+## 👤 User *(20:29:15)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+Não só nesse conxto. Em uma frase: o que é o MCORCH agora?
+O tom mudou para dores humanas. O produto continua sendo orquestração de IA? Me dê a nova essência em uma linha para eu calibrar a voz.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-25 - agent-afadcea34084ceac0]]
-> * **Próxima Sessão**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(20:29:45)*
+
+
+## 🤖 Claude *(20:29:57)*
+
+Sim — orquestração de IA continua sendo o **motor**. O que mudou não foi a máquina; foi de quem ela é máquina. A essência saiu de "nós orquestramos IA" para o que essa orquestração *liberta* no humano.
+
+A nova essência em uma linha:
+
+> **O MCORCH devolve a um criador sozinho o tempo, a paz e a presença que ele perdeu tentando ser uma empresa inteira.**
+
+A IA é o como; **deixar de ser a empresa inteira** é o quê. A constelação assume o trabalho de um time; você volta a ser gente.
+
+Para calibrar a voz, três níveis da mesma essência:
+
+- **Promessa (institucional):** "Você não precisa mais ser a empresa inteira."
+- **Dor (gancho humano):** o esgotamento de quem faz tudo sozinho — criar, vender, distribuir, sustentar — e nunca desliga.
+- **Mecanismo (prova, quando precisar ancorar):** uma constelação de agentes que gera, distribui e atende **enquanto você vive** — autônoma, auto-curável, que não morre em 6 meses.
+
+O que **manter** na voz: orquestração, mesh, autonomia — mas como *evidência*, nunca como manchete. O que **cortar**: liderar pela tecnologia. A persona Gabriel AI / CCIO não vende IA; ela testemunha o alívio de quem parou de carregar tudo sozinho. Paz e vitalidade são a métrica — não só ARR ([[feedback_paz_e_vitalidade]]).
+
+Se quiser, transformo isso num **manifesto de marca de meia página** (essência + 3 pilares de voz + do's/don'ts) que vira a Fonte da Verdade da persona antes de qualquer roteiro de YouTube/TikTok.
