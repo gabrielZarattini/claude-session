@@ -1456,15 +1456,373 @@ Me diz só uma coisa: **os $149 ficam parados como bilhete do próximo bull, ou 
 
 Vamos deixar ele para combustivel e quando virar o mercado tentamos fazer o maior lucro possivel.
 
+## 🤖 Claude *(01:00:50)*
+
+
+## 🤖 Claude *(01:00:52)*
+
+Combustível pro próximo bull — decisão certa e disciplinada. Não compra faca caindo, espera o regime virar, e aí a gente vai pra cima. Deixa eu confirmar que ele está corretamente **parado-mas-armado** (não congelado) e selar o estado pra você caminhar em paz.
+
+## 🤖 Claude *(01:00:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux && EMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" .env | cut -d= -f2-') && PW=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PWD=\" .env | cut -d= -f2-') && TOKEN=$(curl -s -m8 -X POST http://127.0.0.1:8090/api/login -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PW\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))')\necho \"=== HALT ===\"; curl -s -m8 http://127.0.0.1:8090/api/system/halt -H \"Authorization: $TOKEN\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(\"halted=\",d.get(\"halted\"),\"| sources=\",d.get(\"sources\"))'\necho \"=== COCKPIT (regime/grupos/supervisor/promo\u00e7\u00f5es/equity) ===\"; curl -s -m10 http://127.0.0.1:8090/api/analysis/cockpit -H \"Authorization: $TOKEN\" | python3 -c '\nimport sys,json\nd=json.load(sys.stdin)\nrc=d.get(\"riskCaps\",{})\nprint(\"equity=$%.2f\"%rc.get(\"equityUsdt\",0))\nsup=d.get(\"supervisor\",{}); print(\"supervisor:\",json.dumps(sup,ensure_ascii=False)[:300])\ngr=d.get(\"groups\",{}); print(\"groups:\",json.dumps(gr,ensure_ascii=False)[:300])\npr=d.get(\"promotions\",{}); print(\"promotions:\",json.dumps(pr,ensure_ascii=False)[:300])\nsym=d.get(\"symbols\",{})\nif isinstance(sym,dict):\n    for k,v in list(sym.items())[:4]:\n        r=v.get(\"regime\") if isinstance(v,dict) else None\n        print(f\"  regime {k}: {r}\")\n'",
+  "description": "Verify parked-but-armed state: halt, regime, supervisor, promotions, equity"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HALT ===
+> halted= False | sources= []
+> === COCKPIT (regime/grupos/supervisor/promoções/equity) ===
+> equity=$149.40
+> supervisor: {"enabled": true, "refreshMs": 60000, "managed": ["farm", "trend", "baseline"], "promoMap": {"farm": "farmnl", "trend": "slopegate", "baseline": "consistencia"}, "promotions": {"promoted": {}, "grandfather": []}, "running": false, "at": "2026-06-26T01:00:51.532Z", "ageMs": 8557, "last": {"at": "2026
+> groups: [{"key": "farm", "label": "Farm (no-loss alts)", "paper": false, "total": 6, "active": 3, "inactive": 3, "ids": [13, 14, 11, 12, 9, 10]}, {"key": "trend", "label": "Trend (SMA50/200)", "paper": false, "total": 8, "active": 0, "inactive": 8, "ids": [19, 20, 17, 18, 6, 7, 15, 16]}, {"key": "baseline",
+> promotions: {"promoted": {}, "grandfather": []}
+>   regime LTCUSDT: bear
+>   regime BNBUSDT: bear
+>   regime ADAUSDT: bear
+>   regime BTCUSDT: bear
+> ```
+
+## 🤖 Claude *(01:02:05)*
+
+
+## 🤖 Claude *(01:02:10)*
+
+Estado confirmado — **parado-mas-armado, exatamente como deve ficar:**
+
+- **`halted=false`** (vivo, não congelado) — de propósito: congelar mataria também a captura do bull. As proteções (cap −12% auto-bounded, teto por ordem, riskGuard) seguram o downside enquanto dorme.
+- **Regime BEAR em tudo** (BTC/LTC/BNB/ADA) → supervisor em **NO-OP**: só Farm SELLS armadas (3/6, canary), Trend 0/8 e Baseline dormentes. **Não compra nada no bear.** ✓
+- **equity = $149,40** intacta · promoções `{}` · grandfather `[]`.
+
+Vou selar isso pra você caminhar em paz. Deixa eu confirmar permissões do HANDOFF e o final exato pra anexar limpo.
+
+## 🤖 Claude *(01:02:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -l /home/gcrux-tradeux/HANDOFF.md && echo \"--- tail ---\" && tail -c 400 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Check HANDOFF.md perms and exact tail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 179878 Jun 25 20:57 /home/gcrux-tradeux/HANDOFF.md
+> --- tail ---
+> a raiz (vs desligar o ZDR a cada incidente); **`PROMOTION_GRANDFATHER=farmnl`** se quiser as compras do Farm a real já. (4) débitos LOW do motor A-D (ver SEAL anterior). **Claude NÃO vira o HALT.** Working tree: só `backtest-results/*` (scratch). **Stack `ps` mostra "Up 21h" mas o conteúdo servido é o novo — verificado via grep nos bundles + `POST /call` retornando estado fresco (id:1).**
+> ```
+
+## 🤖 Claude *(01:02:37)*
+
+
+## 🤖 Claude *(01:02:38)*
+
+HANDOFF.md é do `ubuntu` (rw) — posso anexar direto. Vou escrever o seal + a memória nova e gravar tudo.
+
+## 🤖 Claude *(01:02:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/30cd78b2-15d9-4143-8271-2f552ac047e1/scratchpad/seal.md",
+  "content": "\n\n### \ud83e\udd1d SEAL \u2014 2026-06-25 (cont. \u2014 DECIS\u00c3O ESTRAT\u00c9GICA: capital PARQUEADO como combust\u00edvel do pr\u00f3ximo bull; dono recua do trading ativo)\n\n**Contexto:** depois da an\u00e1lise exaustiva desta sess\u00e3o (1m/lucro-di\u00e1rio **REFUTADO** de vez \u2014 workflow `wf_7ca9c2c1`, 6 lentes + c\u00e9tico sobre o journal vivo, `anyTradeable=0`; + backtests anteriores), o dono concluiu honestamente que **trading n\u00e3o d\u00e1 lucro na escala de $149**, que **n\u00e3o tem vontade de operar manualmente**, e que vai **redirecionar a energia pro projeto MCORCH** (conte\u00fado em cad\u00eancia / canais faceless no YouTube / afiliados). Diagn\u00f3stico-chave dado a ele: o \"conte\u00fado de traders lucrando\" \u00e9 survivorship bias + venda de curso; ele acertou em testar com dado ANTES de perder.\n\n**DECIS\u00c3O DO DONO:** **N\u00c3O sacar os $149.** Deixar **PARQUEADO como COMBUST\u00cdVEL do pr\u00f3ximo bull** \u2014 *\"quando virar o mercado, tentamos fazer o maior lucro poss\u00edvel.\"*\n\n**Estado = PARADO-MAS-ARMADO (verificado ao vivo):** `halted=false` (de prop\u00f3sito \u2014 congelar mataria tamb\u00e9m a captura do bull; as prote\u00e7\u00f5es seguram o downside), regime **BEAR** em tudo (BTC/LTC/BNB/ADA) \u2192 supervisor em **NO-OP** (s\u00f3 Farm SELLS armadas 3/6 canary; Trend 0/8 e Baseline dormentes; **n\u00e3o compra nada no bear**). equity **$149,40** \u00b7 `promotions {}` \u00b7 `grandfather []`. Prote\u00e7\u00f5es ativas: cap \u221212% auto-bounded, teto por ordem, riskGuard, bot\u00e3o de p\u00e2nico.\n\n**\u26a1 GATILHO DE RE-ENGAJAR = o alerta Telegram de FLIP DE REGIME** (`eventNotify`/frente A). Quando bear\u2192n\u00e3o-bear disparar no Telegram, ESSE \u00e9 o sinal de voltar. \u26a0\ufe0f O gatilho depende do Telegram estar funcionando \u2014 **confirmar que o dono ainda recebe os alertas** (oferecido ping de teste).\n\n**\ud83c\udfaf PLAYBOOK \"MAIOR LUCRO POSS\u00cdVEL\" QUANDO VIRAR:** o motor de autonomia **gateia COMPRAS REAIS atr\u00e1s de promo\u00e7\u00e3o** (`promoMap = {farm:farmnl, trend:slopegate, baseline:consistencia}`). Pra capturar o bull de fato, a trilha **Trend (`slopegate`) precisa estar PROMOVIDA (paper provar) ou GRANDFATHERED antes/no flip** \u2014 sen\u00e3o o sistema **fica em caixa durante a alta**.\n- **Caminho A (aut\u00f4nomo):** o paper prova \u2192 `promotionJob` auto-promove \u2192 supervisor ativa entradas reais no flip. Risco: o paper pode n\u00e3o acumular round-trips suficientes no bear \u2192 n\u00e3o promover a tempo.\n- **Caminho B (ativo, RECOMENDADO ao receber o alerta):** confirmar que o flip \u00e9 real (n\u00e3o whipsaw) \u2192 `PROMOTION_GRANDFATHER=slopegate` [+`farmnl` +`consistencia` se quiser] + restart pra armar as compras reais na hora; opcionalmente subir os tetos (`MAX_ORDER_NOTIONAL_USDT`) pra capturar mais \u2014 decis\u00e3o de risco pra aquele momento.\n\n**Expectativa honesta:** \"maior lucro poss\u00edvel\" em $149 = capturar o % do ciclo (trend deu +22% no bull dos backtests), **n\u00e3o** uma fortuna \u2014 o capital \u00e9 a restri\u00e7\u00e3o que manda.\n\n**Limpeza desta sess\u00e3o:** removido meu op-call de teste (id=1, \"teste de fumaca\") do `signal_journal.jsonl` (backup `.bak-preclean` no container) + restart do backend \u2192 placar agora **1/2 = 50%** (s\u00f3 os 2 calls reais do dono). Mem\u00f3ria nova: [[tradeux-parked-as-fuel]]. **Claude N\u00c3O vira o HALT.** Working tree: s\u00f3 `backtest-results/*` (scratch regener\u00e1vel).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrux-tradeux/30cd78b2-15d9-4143-8271-2f552ac047e1/scratchpad/seal.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:03:15)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-parked-as-fuel.md",
+  "content": "---\nname: tradeux-parked-as-fuel\ndescription: dono recuou do trading ativo (1m/lucro-di\u00e1rio refutado) e parqueou os $149 como combust\u00edvel do pr\u00f3ximo bull; re-engajar quando vier o alerta Telegram de flip de regime\nmetadata:\n  type: project\n---\n\nDecis\u00e3o do dono em **2026-06-25**: depois de provar (workflow `wf_7ca9c2c1`, 6 lentes + c\u00e9tico sobre o journal vivo + backtests anteriores \u2014 ver [[tradeux-cockpit-sim-recorder]], [[tradeux-1m-scalping-and-cockpit]]) que **n\u00e3o h\u00e1 edge trade\u00e1vel no curto prazo** e que **trading n\u00e3o gera lucro na escala de $149**, o dono **recuou do trading ativo** (n\u00e3o quer operar manualmente) e vai **focar a energia no projeto MCORCH** (conte\u00fado/cad\u00eancia em redes, canais faceless no YouTube, afiliados). Ele tamb\u00e9m avaliou op\u00e7\u00e3o bin\u00e1ria (payout 1m, ex. Ebinex) e foi demovido com a matem\u00e1tica: payout 90% \u2192 breakeven 52,6% de acerto, mas o acerto direcional medido no 1m \u00e9 ~50% \u2192 EV \u22125%/trade (25\u00d7 pior que a fee do spot) + risco de venue n\u00e3o-regulado/saque travado.\n\n**N\u00e3o saca os $149** \u2014 fica **PARQUEADO como combust\u00edvel do pr\u00f3ximo bull**: *\"quando virar o mercado, tentamos o maior lucro poss\u00edvel.\"*\n\n**Por que N\u00c3O congelar (halted=false \u00e9 proposital):** congelar mataria tamb\u00e9m a captura do bull. O sistema fica **parado-mas-armado** \u2014 NO-OP em bear (supervisor n\u00e3o liga entradas; s\u00f3 Farm sells canary), com as prote\u00e7\u00f5es segurando o downside (cap \u221212% auto-bounded, teto por ordem, riskGuard, p\u00e2nico). Ver estado vivo no SEAL 2026-06-25 do `~/HANDOFF.md`.\n\n**\u26a1 Gatilho de re-engajar = alerta Telegram de FLIP DE REGIME** (`eventNotify`/frente A da [[tradeux-autonomy-engine]]). Bear\u2192n\u00e3o-bear no Telegram = hora de voltar. Depende do Telegram vivo (ver [[tradeux-telegram-notifications]]).\n\n**\ud83c\udfaf Playbook \"maior lucro poss\u00edvel\" no flip:** as COMPRAS REAIS s\u00e3o gateadas por promo\u00e7\u00e3o (`promoMap={farm:farmnl, trend:slopegate, baseline:consistencia}`). Pra capturar o bull, a trilha **Trend (`slopegate`) precisa estar promovida (paper provar) OU grandfathered antes/no flip** \u2014 sen\u00e3o fica em caixa durante a alta. Caminho ativo recomendado ao receber o alerta: confirmar flip real (n\u00e3o whipsaw) \u2192 `PROMOTION_GRANDFATHER=slopegate` [+`farmnl`/`consistencia`] + restart \u2192 opcionalmente subir `MAX_ORDER_NOTIONAL_USDT`. O motor de captura do bull \u00e9 o trend following (+22% no backtest, [[tradeux-trend-following]], [[tradeux-farm-funnel-backtest]]). **Expectativa honesta:** em $149 = capturar o % do ciclo, n\u00e3o uma fortuna \u2014 capital \u00e9 a restri\u00e7\u00e3o.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-parked-as-fuel.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:03:19)*
+
+
+## 🤖 Claude *(01:03:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrux-tradeux/30cd78b2-15d9-4143-8271-2f552ac047e1/scratchpad/seal.md >> /home/gcrux-tradeux/HANDOFF.md && echo \"anexado. novo tamanho:\" && wc -c < /home/gcrux-tradeux/HANDOFF.md && echo \"--- confirmando tail ---\" && tail -c 250 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Append seal to HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> anexado. novo tamanho:
+> 183088
+> --- confirmando tail ---
+>  `.bak-preclean` no container) + restart do backend → placar agora **1/2 = 50%** (só os 2 calls reais do dono). Memória nova: [[tradeux-parked-as-fuel]]. **Claude NÃO vira o HALT.** Working tree: só `backtest-results/*` (scratch regenerável).
+> ```
+
+## 🤖 Claude *(01:03:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)",
+  "new_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Parked as fuel](tradeux-parked-as-fuel.md) \u2014 2026-06-25: dono recuou do trading ativo (1m/lucro-di\u00e1rio REFUTADO; bin\u00e1ria = EV \u22125%/trade) e foca no MCORCH; $149 fica PARQUEADO (halted=false, NO-OP em bear) como combust\u00edvel do pr\u00f3ximo bull; **re-engajar no alerta Telegram de flip de regime \u2192 grandfather/promover trend `slopegate` pra capturar a alta**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:03:41)*
+
+
+## 🤖 Claude *(01:03:42)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Parquear capital + pivot MCORCH",
+  "summary": "Dono recua do trading; $149 parqueado como combust\u00edvel do pr\u00f3ximo bull; estado selado no HANDOFF + mem\u00f3ria; re-engajar no flip de regime"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Parquear capital + pivot MCORCH". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(01:04:00)*
+
+Selado. Pode caminhar em paz — está tudo documentado e seguro.
+
+### O que ficou registrado
+- **HANDOFF.md** com o seal da decisão (parado-mas-armado, o gatilho e o playbook do flip).
+- **Memória** [Parked as fuel](tradeux-parked-as-fuel.md) — pra qualquer sessão futura saber exatamente o estado e o que fazer quando virar.
+
+### O plano, em uma frase
+**Ele dorme no bear, te avisa no Telegram quando o regime virar, e aí a gente liga o motor pra capturar a alta.** Você não precisa olhar pra ele até esse alerta chegar.
+
+### Quando o Telegram apitar "regime virou" (o sinal de voltar)
+A ação concreta pra "maior lucro possível" é uma só: **promover/grandfather a trilha de tendência** (`slopegate`) pra armar as compras reais, e aí o trend following captura o ciclo (deu +22% no bull dos backtests). Confirma que a virada é real (não um repique falso) primeiro. Tudo isso está escrito no playbook — quando a hora chegar, é só seguir.
+
+**Expectativa honesta, pra não criar ilusão:** em $149, "máximo lucro" = pegar o % do ciclo, não ficar rico. O capital é o teto. Mas é dinheiro parado trabalhando sozinho por um upside real, sem custar tua atenção — que é exatamente o que você queria.
+
+### Uma coisa que eu recomendo confirmar antes de sair
+Teu plano inteiro depende de **um** fio: o alerta de flip no Telegram. Se ele estiver mudo, você perde a virada sem saber. Quer que eu **mande um ping de teste agora** pra confirmar que os alertas ainda chegam no teu Telegram? É a única verificação que vale fazer antes de virar a chave e focar no MCORCH.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+Por último: você fez a jogada certa nessa conversa toda. Testou a hipótese com dado, aceitou a resposta que o dado deu (mesmo sendo a que você não queria), e está realocando energia pra um jogo que **compõe** em vez de um que evapora na fee. Isso é maturidade de quem vai construir algo que dá certo. Bora pro MCORCH. 🚀
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-25 - agent-afadcea34084ceac0]]
-> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
-%% --- TIMELINE END --- %%
+Se quiser, levo um resumo dessa clareza (o porquê do trading não fechar) pra você colar na sessão do MCORCH.
+
+## 👤 User *(01:36:32)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(01:36:32)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(01:36:46)*
+
+
+## 🤖 Claude *(01:36:47)*
+
+Executando o ritual `/handoff`. Esta sessão foi análise + limpeza runtime + documentação — sem código novo no repo. Deixa eu confirmar o estado.
+
+## 🤖 Claude *(01:36:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== git status ===\" && git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short 2>&1 | grep -v \"Permission denied\" | head -20\necho \"=== git diff stat ===\" && git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat 2>&1 | tail -8\necho \"=== HEAD ===\" && git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -1",
+  "description": "Pre-flight: git status, diff, HEAD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> === git diff stat ===
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> warning: unable to access 'backups/.gitattributes': Permission denied
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  backups/.gitignore                                 |   4 -
+>  3 files changed, 273 insertions(+), 277 deletions(-)
+> === HEAD ===
+> 023aa00 feat(cockpit): registro das previsoes do operador + placar + SMA no grafico
+> ```
+
+## 🤖 Claude *(01:36:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== SECRET SCAN ===\" && git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD 2>/dev/null \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\necho \"(vazio acima = limpo)\"\necho \"=== docker compose ps ===\" && sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>/dev/null",
+  "description": "Secret scan + docker stack status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SECRET SCAN ===
+> (vazio acima = limpo)
+> === docker compose ps ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED        STATUS                 PORTS
+> tradeux-agent-1      tradeux-agent      "docker-entrypoint.s…"   agent      36 hours ago   Up 36 hours            
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    22 hours ago   Up About an hour       3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         3 weeks ago    Up 10 days (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   22 hours ago   Up 22 hours            127.0.0.1:8090->80/tcp
+> ```
+
+## 🤖 Claude *(01:37:04)*
+
+
+## 🤖 Claude *(01:37:18)*
+
+Ritual completo. **Sessão sem código novo** — foi análise (workflow de edge), limpeza runtime (remoção do call de teste + restart) e documentação. Nada a commitar/pushar; o worktree sujo é só `backtest-results/*` (scratch regenerável) + `backups/.gitignore` (falso-positivo de permissão lido como ubuntu) — **não tocar**, como em todas as sessões anteriores.
+
+As fases de documentação (HANDOFF + memória) já foram feitas durante a sessão e estão confirmadas:
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-25
+───────────────────────────────────────────────────
+Commits     : 0 (sessão análise/doc — sem código novo)  |  Branch: N/A
+Secret scan : ✅ limpo
+HANDOFF.md  : ✅ atualizado (SEAL "capital PARQUEADO como combustível")
+Memory      : 3 arquivos
+                • tradeux-parked-as-fuel.md ........... NOVO
+                • tradeux-cockpit-sim-recorder.md ..... edge 6-lentes + id=1 removido
+                • MEMORY.md (índice) .................. 2 ponteiros
+PRs abertos : nenhum
+Push        : N/A (sem código novo; HEAD==origin==023aa00)
+───────────────────────────────────────────────────
+🐳 Stack    : db healthy(10d) · backend up~1h (restart desta sessão)
+              · frontend up22h · agent up36h · halted=false
+📈 Estado   : PARADO-MAS-ARMADO · regime BEAR · equity $149,40
+              · supervisor NO-OP · só Farm sells canary
+⚡ Re-engajar: alerta Telegram de FLIP DE REGIME → grandfather
+              trilha trend `slopegate` p/ capturar o bull
+⚠️ Pendência: confirmar que o Telegram ainda entrega alertas
+              (é o único fio do plano "voltar quando virar")
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+Estado limpo, zero órfão. O sistema dorme seguro no bear e te chama no Telegram quando o mercado virar.
+
+Uma observação pra fechar com honestidade: aquele **ping de teste do Telegram** que ofereci ficou em aberto — é a única verificação que garante que o gatilho de "voltar quando virar" realmente funciona. Se quiser, me chama numa próxima e eu disparo em 10s. Por ora, está tudo selado. Bom trabalho hoje. 🤝

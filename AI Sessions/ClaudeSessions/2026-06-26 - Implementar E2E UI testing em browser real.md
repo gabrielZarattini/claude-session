@@ -4611,3 +4611,184 @@ Pronto. Executei **tudo que é executável daqui** com prova material e verifica
 Num refund, truncar um UUID no display me levou a **fabricar os zeros de um `p_run_id`**. O crédito caiu no valor certo, mas a âncora de idempotência ficou no id falso — **corrigi** (ancorei no run_id real + removi a linha fabricada) e registrei a lição na memória. Nunca preencher UUID de cabeça.
 
 Quer que eu force o publish do post LinkedIn corrigido agora (em vez de esperar o auto-publish às 01:46), ou sigo para outra frente?
+
+## 👤 User *(01:56:58)*
+
+Altere o agendamento para ser no próximos dois minutos para ser mais rapido e valida se realmente esta pronto para cadencia de conteudo no linkedin tambem, e depois podemos avançar
+
+## 🤖 Claude *(01:57:23)*
+
+
+## 🤖 Claude *(01:57:25)*
+
+O post `queued` já está corrigido (2 CTAs `meli.la`, 0 leak). Para publicar em ~2min e validar a cadência LinkedIn de ponta a ponta, vou: adiantar o `scheduled_at`, descobrir o que o auto-publish cron chama, e disparar manualmente p/ testemunhar o publish real (mais rápido + sob controle). Primeiro o recon do path + estado da conta LinkedIn:
+
+## 🤖 Claude *(01:57:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== hora atual UTC ===\"; date -u +%Y-%m-%dT%H:%M:%SZ\necho \"=== o que o auto-publish-cron.sh chama? ===\"\ncat scripts/auto-publish-cron.sh 2>/dev/null | grep -vE \"^\\s*#\" | grep -iE \"curl|functions/v1|invoke|POST|http\" | head -10\necho \"=== social_accounts LinkedIn do User 0 (conectado/v\u00e1lido?) ===\"\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\ncurl -s \"${H[@]}\" \"$B/social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.linkedin&select=id,platform,account_name,is_active,token_expires_at,created_at\" | python3 -m json.tool",
+  "description": "Hora + auto-publish path + conta LinkedIn"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === hora atual UTC ===
+> 2026-06-26T01:57:31Z
+> === o que o auto-publish-cron.sh chama? ===
+> RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+>     "${SUPABASE_URL}/functions/v1/auto-publish" \
+> HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+> echo "[${DATE}] auto-publish → HTTP ${HTTP_CODE} — ${BODY}"
+> if [ "${HTTP_CODE}" = "200" ]; then HEALTH="healthy"; else HEALTH="error"; fi
+> curl -s -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+>     -d "{\"service\":\"auto-publish-cron\",\"status\":\"${HEALTH}\",\"event\":\"cron_tick\",\"metadata\":{\"http\":\"${HTTP_CODE}\"}}" > /dev/null 2>&1
+> === social_accounts LinkedIn do User 0 (conectado/válido?) ===
+> {
+>     "code": "42703",
+>     "details": null,
+>     "hint": null,
+>     "message": "column social_accounts.account_name does not exist"
+> }
+> ```
+
+## 🤖 Claude *(01:57:44)*
+
+
+## 🤖 Claude *(01:57:46)*
+
+Já são **01:57Z** — o post estava agendado p/ 01:46, então **já está vencido** (não preciso adiantar). A questão é se o cron já publicou. Checo o status + a conta LinkedIn (colunas certas):
+
+## 🤖 Claude *(01:57:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\necho \"=== status do post 94c17e53 (j\u00e1 publicou?) ===\"\ncurl -s \"${H[@]}\" \"$B/scheduled_posts?id=eq.94c17e53-0e8d-4123-80e9-2c71b37365ae&select=id,platform,status,scheduled_at,published_at,platform_post_id,error_message,retry_count\" | python3 -m json.tool\necho \"=== social_accounts LinkedIn (cols certas) ===\"\ncurl -s \"${H[@]}\" \"$B/social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.linkedin&select=*\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint('rows',len(d) if isinstance(d,list) else d)\nfor r in (d if isinstance(d,list) else []):\n  print('cols:',list(r.keys()))\n  print({k:(str(v)[:40] if not isinstance(v,bool) else v) for k,v in r.items() if k in ('id','platform','is_active','token_expires_at','account_label','account_username','external_id','scopes','created_at')})\n\"",
+  "description": "Status do post + conta LinkedIn detalhada"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status do post 94c17e53 (já publicou?) ===
+> [
+>     {
+>         "id": "94c17e53-0e8d-4123-80e9-2c71b37365ae",
+>         "platform": "linkedin",
+>         "status": "published",
+>         "scheduled_at": "2026-06-26T01:46:34.706+00:00",
+>         "published_at": "2026-06-26T01:50:03.395+00:00",
+>         "platform_post_id": "urn:li:share:7476089362896732160",
+>         "error_message": null,
+>         "retry_count": 0
+>     }
+> ]
+> === social_accounts LinkedIn (cols certas) ===
+> rows 1
+> cols: ['id', 'user_id', 'platform', 'platform_user_id', 'platform_username', 'access_token', 'refresh_token', 'token_expires_at', 'scopes', 'is_active', 'metadata', 'created_at', 'updated_at']
+> {'id': '931386ca-3c73-4a5f-b43b-517093004598', 'platform': 'linkedin', 'token_expires_at': '2026-07-03T03:40:14.327+00:00', 'scopes': "['email,openid,profile,w_member_social']", 'is_active': True, 'created_at': '2026-05-04T03:40:15.466505+00:00'}
+> ```
+
+## 🤖 Claude *(01:58:23)*
+
+
+## 🤖 Claude *(01:58:26)*
+
+**O post JÁ publicou no LinkedIn real!** 🎉
+- status: **published** · published_at **01:50:03Z** (o tick `*/5` das 01:50 pegou o post vencido)
+- **platform_post_id: `urn:li:share:7476089362896732160`** — share URN real do LinkedIn
+- conta LinkedIn: `is_active=true`, token válido até **2026-07-03**, scope `w_member_social` ✓
+
+A cadência funcionou ponta a ponta. Crítico (Lei 1): preciso provar que o que publicou foi a versão **corrigida** (sem leak) — eu corrigi o body às 00:56, o publish foi 01:50. Confirmo que o `auto-publish` lê `content_library.body` ao vivo (não snapshot) + re-verifico o body:
+
+## 🤖 Claude *(01:58:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\necho \"=== auto-publish: de onde l\u00ea o content que manda pro publish-social? ===\"\ngrep -nE \"content_library|\\.content|body|content_id|invoke|publish-social|from\\(\" supabase/functions/auto-publish/index.ts 2>/dev/null | head -20",
+  "description": "Confirmar que auto-publish l\u00ea content_library ao vivo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === auto-publish: de onde lê o content que manda pro publish-social? ===
+> 22:      .from("scheduled_posts")
+> 49:          .from("scheduled_posts")
+> 53:        // Get the content body if content_id exists
+> 55:        if (post.content_id) {
+> 57:            .from("content_library")
+> 58:            .select("body, title")
+> 59:            .eq("id", post.content_id)
+> 61:          contentText = content?.body || content?.title || "";
+> 68:        // Call publish-social
+> 70:          `${Deno.env.get("SUPABASE_URL")}/functions/v1/publish-social`,
+> 77:            body: JSON.stringify({
+> 95:            .from("scheduled_posts")
+> 108:          .from("scheduled_posts")
+> ```
+
+## 🤖 Claude *(01:58:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\necho \"=== body publicado (content_library 19807e6a) \u2014 ainda corrigido? ===\"\ncurl -s \"${H[@]}\" \"$B/content_library?id=eq.19807e6a-e88c-4ba1-ac78-9bf093dbcba0&select=body,updated_at\" | python3 -c \"\nimport json,sys,re\nr=json.load(sys.stdin)[0]; b=r.get('body') or ''\nprint('updated_at:',r.get('updated_at'))\nprint('mcorch.com leaks:',len(re.findall(r'mcorch\\.com',b)),'| meli.la:',re.findall(r'meli\\.la/\\w+',b))\nprint('--- CTAs ---')\nfor ln in b.split(chr(10)):\n  if 'Garanta' in ln or 'meli.la' in ln: print('  ',ln.strip())\n\"\necho \"=== URL p\u00fablica do post ===\"\necho \"https://www.linkedin.com/feed/update/urn:li:share:7476089362896732160\"",
+  "description": "Re-verificar body corrigido + URL do post"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === body publicado (content_library 19807e6a) — ainda corrigido? ===
+> updated_at: 2026-06-26T01:04:56.161029+00:00
+> mcorch.com leaks: 0 | meli.la: ['meli.la/2gh13Sw', 'meli.la/2gh13Sw']
+> --- CTAs ---
+>    Garanta o seu aqui: https://meli.la/2gh13Sw
+>    👉 Roborock S8 Pro Ultra: https://meli.la/2gh13Sw
+> === URL pública do post ===
+> https://www.linkedin.com/feed/update/urn:li:share:7476089362896732160
+> ```
+
+## 🤖 Claude *(01:59:09)*
+
+
+## 🤖 Claude *(01:59:21)*
+
+Validação **completa e positiva** — e a melhor parte: **não precisei mexer no agendamento**. O post estava vencido (agendado 01:46, agora 01:57) e o tick do auto-publish das **01:50:03 já publicou sozinho**.
+
+## ✅ Cadência LinkedIn provada ponta a ponta (Lei 1)
+
+**O post está LIVE no LinkedIn real:**
+- `platform_post_id`: **`urn:li:share:7476089362896732160`** (share URN devolvido pela API do LinkedIn no POST 201 — prova material de publicação)
+- `status: published` · `published_at: 01:50:03Z` · `error: null` · `retry: 0`
+- 🔗 https://www.linkedin.com/feed/update/urn:li:share:7476089362896732160
+
+**Publicou a versão CORRIGIDA** (timing à prova de bala):
+- Corrigi o `content_library.body` às **01:04:56Z** → publish às **01:50:03Z** (45min depois)
+- `auto-publish` lê `content_library.body` **ao vivo** no horário (linhas 57-61: `select(body).eq(id, content_id)`), não snapshot → leu a versão limpa
+- Body confirmado agora: **0 leaks `mcorch.com`**, **2 CTAs `meli.la/2gh13Sw`** (signed, sale-attributable). O leak nunca foi ao ar (a correção entrou antes do post ficar "due").
+
+**Conta LinkedIn pronta para cadência:**
+- `is_active: true` · token válido até **2026-07-03** · scope `w_member_social` ✓
+
+**O caminho inteiro está vivo:** plano recorrente (every 3d, ativo) → `orchestrate-content` → `content_library` → `scheduled_posts` → cron `auto-publish` (*/5, HTTP 200) → `publish-social` → **share real no LinkedIn**. Próximo ciclo automático: **2026-06-29**.
+
+## ⚠️ 1 nota de atenção
+O token LinkedIn expira **2026-07-03**. Os ciclos de 06-29 e 07-02 publicam normais; depois disso precisa refresh (há `refresh_token` salvo — vale confirmar se o `publish-social` faz refresh automático antes de virar dependência de longo prazo).
+
+**Veredito: a cadência de conteúdo no LinkedIn está pronta e provada com um post real monetizado e sem leak.** 
+
+Podemos avançar. Quer que eu (a) confirme/implemente o auto-refresh do token LinkedIn, (b) ataque a próxima frente de receita (3º link assinado / postback ML real), ou (c) outra direção?
