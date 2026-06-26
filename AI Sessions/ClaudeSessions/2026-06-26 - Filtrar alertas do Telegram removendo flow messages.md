@@ -3466,3 +3466,16 @@ Push        : ✅ origin sincronizado (701b7e7) — código já no master;
 - **Heads-up:** o agente segue em 429 até ~00:00 UTC, aí auto-recupera na nova cadência. Tudo protegido (HALT/cap/riskGuard).
 
 Pode fechar tranquilo. 🤝
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-26 - Clarificar essência e tom do MCORCH]]
+> * **Próxima Sessão**: [[2026-06-26 - Implementar E2E UI testing em browser real]]
+%% --- TIMELINE END --- %%
