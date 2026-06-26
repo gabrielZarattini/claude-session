@@ -348,7 +348,7 @@ Now reading HANDOFF.md (head + tail), sprint priorities, and checking scratch co
 > 42	### Survival Laws Self-audit
 > 43	```
 > 44	Law 1 (Materiality): ✅ Tudo provado neste turno — Reel via HTTP 200 + permalink real; notificações via screenshot do browser; canvas/handoff/white-label via agent-browser; deploys por size; achados (cron /var/log morto, modelId fora do catálogo, id IG app-scoped 100/33) corrigidos com prova. Diretiva durável: verificar UI em browser real antes de declarar pronto.
-> 45	Law 2 (Process): ✅ SOPs: [[meta-reels-publish|meta-reels-publish]].md (caminho IG Business Login que funciona). Fatia 2 = débito BoK FR-META-REELS registrado (override consciente "comece a Fatia 2 agora"). Notificações = consertar camada existente (não módulo novo). Canvas/scroll fixes isentos (single-file).
+> 45	Law 2 (Process): ✅ SOPs: meta-reels-publish.md (caminho IG Business Login que funciona). Fatia 2 = débito BoK FR-META-REELS registrado (override consciente "comece a Fatia 2 agora"). Notificações = consertar camada existente (não módulo novo). Canvas/scroll fixes isentos (single-file).
 > 46	Law 3 (Pruning): ✅ Sessão longa com workflow (wf_792d5d48) como subagente; resultados por path, não recarregados. Selada a ~limite da janela.
 > 47	Law 4 (ORO): ✅ Triplet declarado; decisões soberanas via AskUserQuestion (workspace init) + diretivas explícitas (P0, Fatia 2 GO).
 > 48	```
@@ -1397,7 +1397,7 @@ Recon completo. O resultado está truncado — vou ler o arquivo completo para t
 > 319	        },
 > 320	        {
 > 321	          "item": "Eventual CF WAF Skip + 'Nível de Segurança' off para video.mcorch.com (se XHR/SSE do editor for desafiado)",
-> 322	          "why": "O conf documenta: para iframe em browser real normalmente o JS challenge passa, mas se o editor (render-progress SSE / file XHR) levar 403 text/html do CF (reputação de IP datacenter), precisa de regra Skip + desligar o componente 'Nível de Segurança' — toggle decisivo só no dashboard CF (lição [[wordpress-cf-publish-unblock|wordpress-cf-publish-unblock]]).",
+> 322	          "why": "O conf documenta: para iframe em browser real normalmente o JS challenge passa, mas se o editor (render-progress SSE / file XHR) levar 403 text/html do CF (reputação de IP datacenter), precisa de regra Skip + desligar o componente 'Nível de Segurança' — toggle decisivo só no dashboard CF (lição wordpress-cf-publish-unblock).",
 > 323	          "whatNeeded": "Sovereign no dashboard Cloudflare: WAF Skip rule http.host eq 'video.mcorch.com' + desligar Security Level. Provavelmente JÁ feito (302 SSO funciona limpo), mas confirmar se algum endpoint /api/* do studio for challenged."
 > 324	        },
 > 325	        {
@@ -1575,7 +1575,7 @@ GO recebido: **texto + vídeo** e **verificar Fase A + adiar Fase B**. Antes de 
 >
 > ```
 > 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
-> 2	// SOP: docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
 > 3	//
 > 4	// Identity (two paths):
 > 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
@@ -1880,7 +1880,7 @@ O contrato está claro. Pontos-chave: `mode=all_at_once` → após 1 run o plano
 > === begin_autopilot_cycle ===
 > -- Migration: begin_autopilot_cycle RPC — atomic cap-check + single pre-debit + open cycle (FR-VA-007 / FR-VA-021).
 > -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md §2 (RPC table line 109 + cost-gate notes lines ~170-183).
-> -- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
+> -- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
 > --
 > -- THE anti-TOCTOU heart of the cost guardrail. Under pg_advisory_xact_lock(hashtext(user_id)) — which serializes
 > -- concurrent begins for the SAME tenant so two parallel cycles cannot both slip under the daily cap — it:
@@ -1989,7 +1989,7 @@ O contrato está claro. Pontos-chave: `mode=all_at_once` → após 1 run o plano
 > === finalize (cabeçalho) ===
 > -- Migration: finalize_autopilot_cycle RPC — terminal close + idempotent POSITIVE-credit refund (FR-VA-007).
 > -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md §2 (RPC table line 110, "espelha finalize_vision_job").
-> -- SOP (Lei 2): docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md.
+> -- SOP (Lei 2): docs/processes/autopilot-cron-identity.md.
 > --
 > -- Mirrors public.finalize_vision_job (20260615160000): claim a RUNNING cycle EXACTLY ONCE, then credit the unused
 > -- (spend_mco − actual) via add_mco_coins (POSITIVE — never a negative deduct) in the SAME transaction, plus a
@@ -2965,7 +2965,7 @@ E confirmei um **achado de billing real (Lei 1)**: o código (`orchestrate-step:
 > ```
 > === refund RPC (assinatura + comportamento) ===
 > -- Migration: viral-autopilot Fatia VA-V1 — compensating credit for a FAILED video enqueue (billing-accuracy gap).
-> -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md OTD-VA-010 (prepaid cost model) · SOP docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md.
+> -- BoK SSOT: docs/bok/viral-autopilot/05-sdd.md OTD-VA-010 (prepaid cost model) · SOP docs/processes/autopilot-video-9x16.md.
 > --
 > -- THE GAP (charge-without-value, NOT a security vuln): autopilot-run finalizes the cycle OPTIMISTICALLY —
 > -- `actual = succeeded × (ORCH_COST + VIDEO_COST)` — BEFORE the async video enqueues run (orchestrate-content
@@ -4793,15 +4793,1265 @@ O token LinkedIn expira **2026-07-03**. Os ciclos de 06-29 e 07-02 publicam norm
 
 Podemos avançar. Quer que eu (a) confirme/implemente o auto-refresh do token LinkedIn, (b) ataque a próxima frente de receita (3º link assinado / postback ML real), ou (c) outra direção?
 
+## 👤 User *(02:36:47)*
+
+Ok vamos lá postou realmente vi os post no meu linkedin, realmente funciona, mas acabei de remover para criar um linkedin novo com um avatar meu, assim podemos aplicar desde já sinclibs em avatares meu, o Perfil vai ser meu mas na verdade a primeira verção minha 100% Digital, ou seja vai ser o Gabriel AI... uma coisa que eu fiquei na duvida, esses produtos não são o foco dos conteúdos são consequencia a longo prazo. Vamos criar perfis para falar sempre da mesma coisa, mas agora estou vendo algo escalavel por exemplo o usuário 0 pode querer divulgar o próprio mcorch mas como fazer isso? Usar redes sociais com a mesma identidade visual? Ou usar o mesmo avatar para divulgar com uma pessoa real? Na verdade a minha versão (eu Gabriel Caldeira Rocha avatar) seria o CCIO - Cofounder Chef Inteligence Office do mcorch, representando todos os canais de comunicação junto com a própria marca. 
+
+Então vamos começar trabalhar no nosso Mcorch, vou criar agora o linkedin e modificar o youtube tambem, pois instagram já temos e vou criar agora tambem o tiktok. Enquanto isso você faz o que faz de melhor  com essas informações e já se prepara tambem para as novas conexões integração que vamos fazer para postar no youtube e tiktok tambem. O youtube ja temos vou transformar em mcorch tambem.
+
+## 🤖 Claude *(02:39:20)*
+
+
+## 🤖 Claude *(02:39:29)*
+
+Entendi — e isso é uma virada estratégica importante, não um detalhe. Deixa eu refletir o que captei pra confirmarmos o mesmo mapa, e já agir:
+
+**A visão que li:** o foco do conteúdo **não são os produtos** (afiliado = consequência de longo prazo). O foco é o **MCORCH** evangelizado por uma identidade única e escalável — o **Gabriel AI / CCIO (Cofounder Chief Intelligence Office)**, sua primeira versão 100% digital, que fala *sempre da mesma coisa* (a marca/missão) e representa **todos os canais** junto da marca. Os perfis (LinkedIn novo, YouTube→MCORCH, Instagram, TikTok novo) viram **bocas do mesmo organismo**, com a mesma identidade visual + o avatar como rosto unificado.
+
+Duas consequências operacionais imediatas do que você acabou de fazer, mais o trabalho de preparação:
+
+**1) Você removeu a conexão LinkedIn** → o plano recorrente de autopilot (produto Roborock, próximo ciclo 06-29) vai (a) publicar conteúdo *fora da nova estratégia* e (b) falhar a perna LinkedIn até reconectar. Verifico e **pauso o plano** (reversível) — ele não combina mais com a direção de marca.
+
+**2) Preparação YouTube + TikTok** — vou pesquisar a fundo (fundamentado, Lei 1) as integrações de postagem que faltam, mapear o que já é reusável da nossa infra, e te entregar um blueprint de preparação.
+
+Executo as duas coisas em paralelo agora:
+
+## 🤖 Claude *(02:39:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nB=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH=(-H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\necho \"=== social_accounts do User 0 (LinkedIn ainda l\u00e1? quais redes?) ===\"\ncurl -s \"${H[@]}\" \"$B/social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=platform,is_active,platform_username,token_expires_at\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint('rows',len(d) if isinstance(d,list) else d)\nfor r in (d if isinstance(d,list) else []): print('-',r.get('platform'),'| active',r.get('is_active'),'| user',r.get('platform_username'),'| exp',str(r.get('token_expires_at'))[:10])\n\"\necho \"=== pausar o plano de produto (revers\u00edvel) ===\"\ncurl -s -X PATCH \"$B/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" \\\n  \"${H[@]}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"is_active\":false}' | python3 -c \"import json,sys; r=json.load(sys.stdin)[0]; print('plano',r['id'][:8],'is_active agora:',r['is_active'],'| video',r['video_enabled'],'| mode',r['mode'])\"",
+  "description": "Verificar redes conectadas + pausar plano de produto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === social_accounts do User 0 (LinkedIn ainda lá? quais redes?) ===
+> rows 2
+> - instagram | active True | user magicorch | exp 2026-07-03
+> - facebook | active True | user rochagabrielcall | exp 2026-07-15
+> === pausar o plano de produto (reversível) ===
+> plano 640b3b67 is_active agora: False | video False | mode every_n_days
+> ```
+
+## 🤖 Claude *(02:39:57)*
+
+
+## 🤖 Claude *(02:39:59)*
+
+LinkedIn confirmadamente removido (restam só `instagram@magicorch` + `facebook`). **Plano de produto pausado** (reversível) — não bate mais com a direção de marca.
+
+Agora o trabalho pesado: pesquisa fundamentada das integrações YouTube + TikTok + mapeamento do que já temos reusável. Lanço o workflow (Lei 1 — cada claim com URL):
+
+## 🤖 Claude *(02:40:51)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'yt-tiktok-integration-prep',\n  description: 'Pesquisa fundamentada (Lei 1) das integra\u00e7\u00f5es de postagem YouTube + TikTok + mapeamento da infra reus\u00e1vel MCORCH, p/ a virada brand-persona (Gabriel AI / CCIO)',\n  phases: [{ title: 'Research', detail: 'YT API \u00b7 TikTok API \u00b7 infra mapping em paralelo' }],\n}\n\nconst PLATFORM_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['platform', 'summary', 'postingMechanism', 'oauthScopes', 'approvalGate', 'videoSpec', 'quotaLimits', 'perUserCredentialModel', 'netNewWork', 'gotchas', 'sources'],\n  properties: {\n    platform: { type: 'string' },\n    summary: { type: 'string', description: 'Executive 2-3 sentence verdict on how hard/gated programmatic posting is.' },\n    postingMechanism: { type: 'string', description: 'Exact API + endpoint(s) to publish a video programmatically (resumable upload? init+upload? direct post?).' },\n    oauthScopes: { type: 'array', items: { type: 'string' }, description: 'Exact OAuth scope strings needed to publish.' },\n    approvalGate: { type: 'string', description: 'CRITICAL gating: app verification / audit / review requirement before PUBLIC posting works (the IG-App-Review-equivalent). State explicitly what is blocked until approved.' },\n    videoSpec: { type: 'string', description: 'Vertical 9:16 support, max length, format, for Shorts (YT) / short video (TikTok).' },\n    quotaLimits: { type: 'string', description: 'Daily quota / rate limits for posting (e.g. YT videos.insert cost in units).' },\n    perUserCredentialModel: { type: 'string', description: 'How per-user creds map to our API Tenancy Model (OAuth user token vs API key; refresh-token storage in social_accounts).' },\n    netNewWork: { type: 'array', items: { type: 'string' }, description: 'What MCORCH must build new (OAuth connect flow, edge fn, token refresh, etc.).' },\n    gotchas: { type: 'array', items: { type: 'string' } },\n    sources: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['claim', 'url'], properties: { claim: { type: 'string' }, url: { type: 'string' } } }, description: 'Law 1: every non-obvious claim above carries the official-docs URL consulted.' },\n  },\n}\n\nconst INFRA_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['reusable', 'extensionPoints', 'schemaNeeds', 'oauthConnectFlow', 'recommendation'],\n  properties: {\n    reusable: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['component', 'path', 'how'], properties: { component: { type: 'string' }, path: { type: 'string' }, how: { type: 'string' } } }, description: 'Existing MCORCH pieces a YT/TikTok integration reuses as-is (the 9:16 render pipeline, publish-social dispatch, scheduled_posts, auto-publish cron, the autopilot engine, the IG Reel path).' },\n    extensionPoints: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['where', 'path', 'whatToAdd'], properties: { where: { type: 'string' }, path: { type: 'string' }, whatToAdd: { type: 'string' } } }, description: 'Exact file:where a new platform (youtube/tiktok) plugs in.' },\n    schemaNeeds: { type: 'array', items: { type: 'string' }, description: 'New tables/columns/OAuth-token storage needed (per API Tenancy Model).' },\n    oauthConnectFlow: { type: 'string', description: 'How existing platforms (linkedin/meta/instagram) establish the social_accounts OAuth connection today \u2014 the flow a new platform must mirror. Cite the connect/callback edge fn.' },\n    recommendation: { type: 'string', description: 'PT-BR: the leanest path to first YT Short + first TikTok post under the brand-persona model, respecting the BoK gate.' },\n  },\n}\n\nphase('Research')\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst lawNote = `LEI 1 (Materialidade): toda claim n\u00e3o-\u00f3bvia carrega a URL da doc OFICIAL consultada (developers.google.com/youtube, developers.tiktok.com, etc.). N\u00c3O fabrique scopes, endpoints, quotas ou requisitos de audit \u2014 se n\u00e3o confirmar numa fonte, diga \"n\u00e3o confirmado\". Pesquise a web de verdade (WebSearch/WebFetch).`\n\nconst [yt, tiktok, infra] = await parallel([\n  () => agent(`Voc\u00ea pesquisa a integra\u00e7\u00e3o de POSTAGEM PROGRAM\u00c1TICA no YouTube para o MCORCH (marca), publicando v\u00eddeos verticais 9:16 (Shorts) gerados pelo nosso motor. O Usu\u00e1rio Zero vai converter o canal YouTube existente dele em canal MCORCH.\n\n${lawNote}\n\nResponda, fundamentado nas docs oficiais do Google/YouTube:\n- Mecanismo exato de upload program\u00e1tico: YouTube Data API v3 \\`videos.insert\\` (resumable upload) \u2014 endpoint, partes (snippet/status), formato.\n- Scope(s) OAuth 2.0 exatos para publicar (ex.: \\`https://www.googleapis.com/auth/youtube.upload\\`) e se s\u00e3o \"sensitive\" ou \"restricted\" (impacta o n\u00edvel de verifica\u00e7\u00e3o Google).\n- **PORT\u00c3O DE APROVA\u00c7\u00c3O (cr\u00edtico):** o que o app precisa passar (OAuth app verification / brand verification / security assessment) ANTES de postar p\u00fablico sem tela de \"app n\u00e3o verificado\"; o que fica bloqueado at\u00e9 l\u00e1; o limite de usu\u00e1rios em modo de teste/unverified.\n- Shorts: requisitos p/ o v\u00eddeo ser tratado como Short (vertical, dura\u00e7\u00e3o m\u00e1x, #Shorts), specs de formato.\n- Quota: custo em units do \\`videos.insert\\` + quota di\u00e1ria default + como pedir aumento.\n- Modelo per-user: como guardar o OAuth refresh token do usu\u00e1rio (n\u00e3o \u00e9 API key \u2014 \u00e9 token OAuth do canal). Como mapeia ao nosso \\`social_accounts\\` (access_token/refresh_token) e \u00e0 regra \"credencial per-user\".\n- O que \u00e9 NET-NEW p/ construir (flow de connect OAuth, edge fn de callback, refresh de token, publisher YT no publish-social).\n- Gotchas (ex.: canal precisa existir; uploads ficam \"private until verified\"? brand account vs personal).\n\nRetorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:youtube', phase: 'Research', schema: PLATFORM_SCHEMA, agentType: 'deepsearch-blueprint' }),\n\n  () => agent(`Voc\u00ea pesquisa a integra\u00e7\u00e3o de POSTAGEM PROGRAM\u00c1TICA no TikTok para o MCORCH (marca), publicando v\u00eddeos verticais 9:16 gerados pelo nosso motor. O Usu\u00e1rio Zero vai criar uma conta TikTok MCORCH nova.\n\n${lawNote}\n\nResponda, fundamentado nas docs oficiais do TikTok for Developers:\n- Mecanismo exato: Content Posting API \u2014 Direct Post (\\`/v2/post/publish/video/init/\\`) vs Upload-to-inbox/draft (\\`/v2/post/publish/inbox/video/init/\\`); fluxo init\u2192upload\u2192publish; pull-from-url vs file upload.\n- Scope(s) OAuth exatos (ex.: \\`video.publish\\`, \\`video.upload\\`) e a diferen\u00e7a entre eles.\n- **PORT\u00c3O DE APROVA\u00c7\u00c3O (cr\u00edtico, equivalente ao IG App Review):** o requisito de AUDIT do app. Apps N\u00c3O-auditados publicam s\u00f3 como privado/SELF_ONLY (vis\u00edvel s\u00f3 pro criador)? O que exige o audit p/ postar P\u00daBLICO? Como registrar app em developers.tiktok.com + o review da Content Posting API. Estado \"sandbox/unaudited client\".\n- Specs de v\u00eddeo: formato, resolu\u00e7\u00e3o, vertical, dura\u00e7\u00e3o, tamanho.\n- Rate limits de postagem.\n- Modelo per-user: OAuth user access token + refresh; mapeia ao nosso \\`social_accounts\\`.\n- O que \u00e9 NET-NEW p/ construir.\n- Gotchas (ex.: dom\u00ednio precisa ser verificado p/ pull-from-url; restri\u00e7\u00f5es do unaudited client; janela de expira\u00e7\u00e3o do upload).\n\nRetorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:tiktok', phase: 'Research', schema: PLATFORM_SCHEMA, agentType: 'deepsearch-blueprint' }),\n\n  () => agent(`Voc\u00ea \u00e9 um agente READ-ONLY mapeando a infra MCORCH existente p/ saber o que J\u00c1 \u00e9 reus\u00e1vel numa integra\u00e7\u00e3o de postagem YouTube + TikTok. Workspace: ${REPO}.\n\n${lawNote.replace('Pesquise a web de verdade (WebSearch/WebFetch).', 'Aqui a fonte \u00e9 o C\u00d3DIGO: cite file:linha real, n\u00e3o invente.')}\n\nLeia o c\u00f3digo e responda:\n1. \\`supabase/functions/publish-social/index.ts\\` \u2014 como ele despacha por plataforma (linkedin/twitter/instagram/facebook/meta)? Onde um case novo 'youtube'/'tiktok' entraria? Como recebe o content + media?\n2. \\`social_accounts\\` schema (cols: platform, access_token, refresh_token, token_expires_at, scopes, platform_user_id, metadata) \u2014 \u00e9 a tabela can\u00f4nica de conex\u00e3o OAuth social? \u00c9 VIEW mascarada Vault? Como \u00e9 escrita (INSTEAD OF)?\n3. O FLOW de conectar uma conta social hoje: existe edge fn de OAuth connect/callback por plataforma (ex.: linkedin-oauth, meta-oauth, social-oauth-callback)? Como o refresh de token acontece (h\u00e1 refresh autom\u00e1tico no publish-social)? Procure (grep) o que faz o connect.\n4. O pipeline de **v\u00eddeo 9:16 j\u00e1 existe e \u00e9 reus\u00e1vel** \u2014 \\`video_renders\\`/\\`video-bridge.ts\\`/\\`render-core.ts\\` (motor HyperFrames 1080\u00d71920) + \\`content_library.video_url\\` + o path IG Reel (\\`publish-social\\` IG via graph.instagram.com + REELS, da \u00faltima seal). Confirme onde o MP4 9:16 vive e como o IG j\u00e1 o consome \u2014 YT Shorts/TikTok consomem o MESMO MP4.\n5. \\`scheduled_posts\\` + \\`auto-publish\\` cron + o motor autopilot (\\`autopilot-run\\`/\\`orchestrate-content\\`) \u2014 como um novo canal entra na cad\u00eancia.\n6. API Tenancy Model (CLAUDE.md) \u2014 a regra per-user p/ nova integra\u00e7\u00e3o externa.\n\nDetermine: o que \u00e9 REUS\u00c1VEL as-is, os EXTENSION POINTS exatos (file:onde), o que falta de SCHEMA (token storage YT/TikTok), o flow OAuth a espelhar, e uma recomenda\u00e7\u00e3o PT-BR do caminho mais enxuto at\u00e9 o 1\u00ba Short YT + 1\u00ba post TikTok respeitando o BoK gate. Retorne S\u00d3 o objeto estruturado.`,\n    { label: 'research:infra-mapping', phase: 'Research', schema: INFRA_SCHEMA }),\n])\n\nreturn { youtube: yt, tiktok: tiktok, infra }",
+  "description": "Prep YouTube+TikTok + infra mapping"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wl80m3ii6
+> Summary: Pesquisa fundamentada (Lei 1) das integrações de postagem YouTube + TikTok + mapeamento da infra reusável MCORCH, p/ a virada brand-persona (Gabriel AI / CCIO)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/subagents/workflows/wf_24e9eb67-c2d
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/workflows/scripts/yt-tiktok-integration-prep-wf_24e9eb67-c2d.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/workflows/scripts/yt-tiktok-integration-prep-wf_24e9eb67-c2d.js"} to iterate without resending the script.)
+> Run ID: wf_24e9eb67-c2d
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/workflows/scripts/yt-tiktok-integration-prep-wf_24e9eb67-c2d.js", resumeFromRunId: "wf_24e9eb67-c2d"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(02:41:17)*
+
+
+## 🤖 Claude *(02:41:39)*
+
+Workflow de pesquisa rodando em background (`wf_24e9eb67`). Enquanto ele lança e você cria as contas, adianto a **parte que é minha** — a síntese estratégica do modelo (não depende da pesquisa de API):
+
+## O modelo que estou desenhando — "Gabriel AI / CCIO" como sistema operacional de marca
+
+**A virada-chave que você fez:** o conteúdo deixa de ser *catálogo de produto* e vira *evangelismo de marca com voz própria*. Isso muda a arquitetura de forma elegante — porque **os trilhos que já construímos não mudam**, só muda **o que a persona diz** e **quantas bocas ela tem**:
+
+```
+ANTES (product-first):  produto → "compre X" → afiliado          (focus errado)
+AGORA (brand-first):    CCIO/Gabriel AI → missão MCORCH → audiência → (afiliado = subproduto de longo prazo)
+```
+
+**A persona como unidade escalável.** Respondendo direto à sua dúvida ("mesma identidade visual? ou mesmo avatar com pessoa real?") — minha recomendação é a terceira via que você mesmo nomeou: **o avatar Gabriel Caldeira Rocha = CCIO é o rosto + a voz única**, e a **identidade visual do MCORCH é o corpo**. A persona é o que escala: hoje 1 persona (CCIO) → N canais; amanhã N personas (cada "departamento" do MCORCH com seu avatar-porta-voz, já que vocês têm a Pantheon de agentes). O avatar não é decoração — é o **átomo de distribuição**.
+
+**O que isso exige tecnicamente (3 camadas):**
+1. **Spine de persona** — um "perfil de voz" do CCIO (pilares de conteúdo, tom, missão, do/don't) que substitui o `topic: produto` como semente do prompt. *Sempre fala da mesma coisa* = pilares fixos, ângulos variáveis.
+2. **Mesmo motor, novo combustível** — `orchestrate-content` + render 9:16 + `scheduled_posts` + auto-publish **continuam idênticos**; troco a fonte do tema (produto → pilar de marca) e o afiliado vira opcional/contextual, não o CTA principal.
+3. **Novas bocas (YT + TikTok)** — é o que o workflow está pesquisando: o **mesmo MP4 9:16** que o IG já consome serve YouTube Shorts e TikTok; falta o flow OAuth + publisher por canal.
+
+**Nota de protocolo (MCORCH Closed-Loop):** isso é grande o suficiente — nova direção de conteúdo + 2 integrações externas — para **passar pelo BoK gate antes do código** (não vou shipar publisher YT/TikTok sem isso). O workflow de pesquisa que lancei vira exatamente a **semente fundamentada** desse BoK (`/bok-scribe` ou emenda do viral-autopilot).
+
+**Uma decisão que vai ser sua** quando eu voltar com a pesquisa: o gargalo de ambos (YouTube OAuth verification + **TikTok app audit**) é o equivalente do IG App Review — apps não-auditados só postam privado/restrito. Então a sequência realista provavelmente é: **construir os publishers + flow OAuth agora, validar em modo privado/sandbox, e o "público de verdade" destrava com a aprovação** (ação sua nos dashboards). Confirmo isso com fonte oficial quando a pesquisa landar.
+
+Pode seguir criando o LinkedIn novo + convertendo o YouTube + criando o TikTok — quando o workflow terminar eu volto com o **blueprint de preparação** completo (endpoints, scopes, portões de aprovação, extension points exatos na nossa infra, e o caminho mais enxuto até o 1º Short + 1º TikTok). Te aviso assim que landar.
+
+## 👤 User *(02:47:11)*
+
+<task-notification>
+<task-id>wl80m3ii6</task-id>
+<tool-use-id>toolu_01Y1U4cDqFLTXJH4obXgobwy</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/tasks/wl80m3ii6.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Pesquisa fundamentada (Lei 1) das integrações de postagem YouTube + TikTok + mapeamento da infra reusável MCORCH, p/ a virada brand-persona (Gabriel AI / CCIO)" completed</summary>
+<result>{"youtube":{"platform":"YouTube (Shorts) — YouTube Data API v3","summary":"Postar Shorts programaticamente no YouTube é tecnicamente direto (um único `videos.insert` resumable, custo de quota baixo), mas FORTEMENTE GATEADO por dois portões de aprovação Google que travam o caminho público: (1) o app OAuth precisa passar pela verificação Google (scopes sensíveis → demo video + Trust&amp;Safety review), e (2) — decisivo — todo vídeo enviado via `videos.insert` por um projeto de API NÃO-AUDITADO criado após 28-jul-2020 é forçado a `privacyStatus=private`, independente do que pedirmos, até o projeto passar pela \"Audit and Quota Extension\". Em modo Testing (sem verificação) o app fica limitado a 100 test users e os refresh tokens expiram em 7 dias — inviável para produção. Verdict: construção da integração é leve; o gargalo real é processo/aprovação Google, semanas de lead time e ação Sovereign.","postingMechanism":"Upload programático = YouTube Data API v3 `videos.insert` via protocolo RESUMABLE em 2 fases. Fase 1 (iniciar sessão): `POST https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&amp;part=snippet,status` com headers `Authorization: Bearer &lt;access_token&gt;`, `Content-Type: application/json; charset=UTF-8`, `X-Upload-Content-Length: &lt;bytes do MP4&gt;`, `X-Upload-Content-Type: video/*`; body JSON = recurso video com `snippet` (title, description, tags, categoryId) e `status` (privacyStatus, selfDeclaredMadeForKids). Resposta 200 OK devolve header `Location:` com a session URI (contém `upload_id`). Fase 2 (enviar bytes): `PUT &lt;session URI&gt;` com `Content-Type: video/*` e o binário do MP4 no body; sucesso = `201 Created` retornando o recurso video com o `id` do vídeo. O `part` na resposta inclui as propriedades pedidas (snippet/status). Não há \"direct post\" separado — Shorts e vídeos longos usam o MESMO endpoint; o que define Short é o formato do arquivo (ver videoSpec).","oauthScopes":["https://www.googleapis.com/auth/youtube.upload","https://www.googleapis.com/auth/youtube.force-ssl (alternativo, mais amplo — permite ver/editar/excluir vídeos; útil se formos também atualizar metadata/excluir, mas amplia a superfície de verificação)"],"approvalGate":"DOIS portões Google bloqueiam postagem PÚBLICA, e são independentes:\n\n(A) VERIFICAÇÃO DO APP OAuth (consent screen). `youtube.upload` é um scope que dá acesso a dados privados do usuário → exige verificação Google antes de publicar o consent screen \"In Production\" sem a tela vermelha \"Google hasn't verified this app\". A submissão exige: justificativa do scope + VÍDEO DEMO mostrando o fluxo de consent e o uso do scope no app + review da equipe Trust &amp; Safety (prazo oficial declarado até ~10 dias, na prática mais). Sem isso: app fica em \"Testing\", LIMITADO A 100 test users e com refresh tokens que EXPIRAM EM 7 DIAS — inviável p/ produção contínua.\n\n(B) AUDIT DO PROJETO DE API (gate específico do YouTube, MAIS restritivo e o que realmente bloqueia o produto). Citação oficial do doc `videos.insert`: \"All videos uploaded via the videos.insert endpoint from unverified API projects created after 28 July 2020 will be restricted to private viewing mode.\" Ou seja, mesmo passando o (A) e mandando `privacyStatus: public`, o YouTube SOBRESCREVE para `private` até o projeto passar pela \"YouTube API Services - Audit and Quota Extension\" (preencher o formulário; a equipe de API Services do YouTube faz o audit de compliance com os ToS).\n\nBLOQUEADO até ambos: postagem PÚBLICA (e qualquer aumento de quota além do default). Enquanto não auditado, dá pra subir vídeos mas eles NASCEM PRIVADOS — não servem ao objetivo de distribuição. Não há requisito de \"brand verification\" distinto confirmado nos docs; o gate é o audit do projeto + verificação OAuth.","videoSpec":"Não existe flag \"isShort\" na API. O YouTube classifica como Short automaticamente quando o arquivo enviado é VERTICAL (aspect ratio 9:16 ou quadrado/mais alto que largo) E duração ≤ 3 minutos (180s; limite subiu de 60s em 15-out-2024). 9:16 vertical é totalmente suportado — recomendado 1080×1920 px (Shorts limitados a upload 1080p). Formato recomendado: MP4 (H.264 + AAC). Adicionar `#Shorts` no title/description é prática reforçadora mas não-obrigatória pela API (a detecção é por formato+duração). Nosso motor HyperFrames já produz MP4 9:16 1080×1920 determinístico → casa nativamente com a spec de Short, sem reencode.","quotaLimits":"Custo de `videos.insert`: ATENÇÃO À MUDANÇA RECENTE — historicamente documentado como ~1600 units/chamada; a Revision History do YouTube Data API (entrada 04-dez-2025) reduziu o custo de upload. A \"Quota Calculator\" oficial atual (`determine_quota_cost`) lista `videos.insert` com custo de 1 unit no bucket \"Video Uploads\". PORÉM existe um BUCKET SEPARADO \"Video Uploads\" com cap próprio: a alocação default por projeto é 100 search.list/dia + 100 videos.insert/dia + 10.000 units/dia para todo o resto. Logo, o limitante prático de uploads é o cap de ~100 uploads/dia (bucket dedicado), não os 10.000 units gerais. Aumento: preencher a \"YouTube API Services - Audit and Quota Extension Form\" (mesmo formulário do audit de compliance); a equipe de API Services do YouTube avalia. ⚠️ O número exato de units de `videos.insert` está em transição (1600→reduzido) — confirmar na Quota Calculator no momento da implementação; aqui há divergência entre guias e doc oficial.","perUserCredentialModel":"É credencial OAuth do CANAL do usuário (NÃO uma API key). Fluxo: o app MCORCH (um único OAuth client Google) leva o Usuário Zero por authorization code flow com `access_type=offline` + `prompt=consent` (necessário porque o refresh_token só é retornado na primeira autorização — `prompt=consent` força reemissão), recebendo um refresh_token de longa duração ESPECÍFICO daquele canal. Mapeia 1:1 ao nosso modelo existente `social_accounts`/`social_credentials` (já tem `access_token`, `refresh_token`, `expires_at`, colunas token REVOKED a nível de RLS, como LinkedIn/Twitter/IG). Plataforma = 'youtube', `user_id = auth.uid()`. Conforme API Tenancy Model: cada usuário conecta o PRÓPRIO canal → refresh token per-user no Vault (cifrado, igual aos demais tokens sociais); o OAuth client_id/client_secret do app é infra de sistema (env, não per-user). Em produção (app verificado), o refresh token não expira por tempo (só por revogação/6 meses de inatividade) — diferente do modo Testing (expira em 7 dias).","netNewWork":["Connect flow OAuth Google/YouTube: novo edge fn de início (`youtube-oauth-start`) que gera a URL de authorization (`https://accounts.google.com/o/oauth2/v2/auth` com client_id, scope=youtube.upload, access_type=offline, prompt=consent, state CSRF, redirect_uri).","Edge fn de callback (`youtube-oauth-callback`) que troca o `code` no token endpoint `https://oauth2.googleapis.com/token` (grant_type=authorization_code) e persiste access_token + refresh_token + expires_at em `social_accounts` platform='youtube' via Vault cifrado, escopado por auth.uid().","Token refresh helper: refresh proativo via `https://oauth2.googleapis.com/token` (grant_type=refresh_token) quando expires_at vencido — access tokens Google duram ~1h; reutilizar padrão dos outros providers sociais.","Publisher YouTube dentro de `publish-social` (ou novo `publish-youtube`): resolver refresh token per-user → access token → `videos.insert` resumable 2-fase (init POST + PUT bytes), com video_url do bucket privado baixado/streamed; gravar mesh observation node + infra_health_logs (service='youtube').","UI Settings→Connectors: card 'Conectar canal YouTube' que dispara o OAuth flow e mostra estado conectado/desconectado + disconnect RPC que revoga o segredo Vault órfão (espelhar `disconnect_social`).","SOP Lei 2 `docs/processes/youtube-credential-resolution.md` ANTES de qualquer código (per-user fail-closed, igual aos SOPs meta/trends).","Operacional (ação Sovereign, não-código): publicar consent screen + submeter verificação OAuth
+... (truncated 29658 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/tasks/wl80m3ii6.output)</result>
+<usage><agent_count>3</agent_count><subagent_tokens>225605</subagent_tokens><tool_uses>55</tool_uses><duration_ms>379611</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(02:47:14)*
+
+
+## 🤖 Claude *(02:47:15)*
+
+A pesquisa landou. Leio o resultado completo (TikTok + infra mapping vieram truncados):
+
+## 🤖 Claude *(02:47:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3ee740c7-9900-4d37-a9a4-207b63e460bb/tasks/wl80m3ii6.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Pesquisa fundamentada (Lei 1) das integrações de postagem YouTube + TikTok + mapeamento da infra reusável MCORCH, p/ a virada brand-persona (Gabriel AI / CCIO)",
+> 3	  "agentCount": 3,
+> 4	  "logs": [],
+> 5	  "result": {
+> 6	    "youtube": {
+> 7	      "platform": "YouTube (Shorts) — YouTube Data API v3",
+> 8	      "summary": "Postar Shorts programaticamente no YouTube é tecnicamente direto (um único `videos.insert` resumable, custo de quota baixo), mas FORTEMENTE GATEADO por dois portões de aprovação Google que travam o caminho público: (1) o app OAuth precisa passar pela verificação Google (scopes sensíveis → demo video + Trust&Safety review), e (2) — decisivo — todo vídeo enviado via `videos.insert` por um projeto de API NÃO-AUDITADO criado após 28-jul-2020 é forçado a `privacyStatus=private`, independente do que pedirmos, até o projeto passar pela \"Audit and Quota Extension\". Em modo Testing (sem verificação) o app fica limitado a 100 test users e os refresh tokens expiram em 7 dias — inviável para produção. Verdict: construção da integração é leve; o gargalo real é processo/aprovação Google, semanas de lead time e ação Sovereign.",
+> 9	      "postingMechanism": "Upload programático = YouTube Data API v3 `videos.insert` via protocolo RESUMABLE em 2 fases. Fase 1 (iniciar sessão): `POST https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status` com headers `Authorization: Bearer <access_token>`, `Content-Type: application/json; charset=UTF-8`, `X-Upload-Content-Length: <bytes do MP4>`, `X-Upload-Content-Type: video/*`; body JSON = recurso video com `snippet` (title, description, tags, categoryId) e `status` (privacyStatus, selfDeclaredMadeForKids). Resposta 200 OK devolve header `Location:` com a session URI (contém `upload_id`). Fase 2 (enviar bytes): `PUT <session URI>` com `Content-Type: video/*` e o binário do MP4 no body; sucesso = `201 Created` retornando o recurso video com o `id` do vídeo. O `part` na resposta inclui as propriedades pedidas (snippet/status). Não há \"direct post\" separado — Shorts e vídeos longos usam o MESMO endpoint; o que define Short é o formato do arquivo (ver videoSpec).",
+> 10	      "oauthScopes": [
+> 11	        "https://www.googleapis.com/auth/youtube.upload",
+> 12	        "https://www.googleapis.com/auth/youtube.force-ssl (alternativo, mais amplo — permite ver/editar/excluir vídeos; útil se formos também atualizar metadata/excluir, mas amplia a superfície de verificação)"
+> 13	      ],
+> 14	      "approvalGate": "DOIS portões Google bloqueiam postagem PÚBLICA, e são independentes:\n\n(A) VERIFICAÇÃO DO APP OAuth (consent screen). `youtube.upload` é um scope que dá acesso a dados privados do usuário → exige verificação Google antes de publicar o consent screen \"In Production\" sem a tela vermelha \"Google hasn't verified this app\". A submissão exige: justificativa do scope + VÍDEO DEMO mostrando o fluxo de consent e o uso do scope no app + review da equipe Trust & Safety (prazo oficial declarado até ~10 dias, na prática mais). Sem isso: app fica em \"Testing\", LIMITADO A 100 test users e com refresh tokens que EXPIRAM EM 7 DIAS — inviável p/ produção contínua.\n\n(B) AUDIT DO PROJETO DE API (gate específico do YouTube, MAIS restritivo e o que realmente bloqueia o produto). Citação oficial do doc `videos.insert`: \"All videos uploaded via the videos.insert endpoint from unverified API projects created after 28 July 2020 will be restricted to private viewing mode.\" Ou seja, mesmo passando o (A) e mandando `privacyStatus: public`, o YouTube SOBRESCREVE para `private` até o projeto passar pela \"YouTube API Services - Audit and Quota Extension\" (preencher o formulário; a equipe de API Services do YouTube faz o audit de compliance com os ToS).\n\nBLOQUEADO até ambos: postagem PÚBLICA (e qualquer aumento de quota além do default). Enquanto não auditado, dá pra subir vídeos mas eles NASCEM PRIVADOS — não servem ao objetivo de distribuição. Não há requisito de \"brand verification\" distinto confirmado nos docs; o gate é o audit do projeto + verificação OAuth.",
+> 15	      "videoSpec": "Não existe flag \"isShort\" na API. O YouTube classifica como Short automaticamente quando o arquivo enviado é VERTICAL (aspect ratio 9:16 ou quadrado/mais alto que largo) E duração ≤ 3 minutos (180s; limite subiu de 60s em 15-out-2024). 9:16 vertical é totalmente suportado — recomendado 1080×1920 px (Shorts limitados a upload 1080p). Formato recomendado: MP4 (H.264 + AAC). Adicionar `#Shorts` no title/description é prática reforçadora mas não-obrigatória pela API (a detecção é por formato+duração). Nosso motor HyperFrames já produz MP4 9:16 1080×1920 determinístico → casa nativamente com a spec de Short, sem reencode.",
+> 16	      "quotaLimits": "Custo de `videos.insert`: ATENÇÃO À MUDANÇA RECENTE — historicamente documentado como ~1600 units/chamada; a Revision History do YouTube Data API (entrada 04-dez-2025) reduziu o custo de upload. A \"Quota Calculator\" oficial atual (`determine_quota_cost`) lista `videos.insert` com custo de 1 unit no bucket \"Video Uploads\". PORÉM existe um BUCKET SEPARADO \"Video Uploads\" com cap próprio: a alocação default por projeto é 100 search.list/dia + 100 videos.insert/dia + 10.000 units/dia para todo o resto. Logo, o limitante prático de uploads é o cap de ~100 uploads/dia (bucket dedicado), não os 10.000 units gerais. Aumento: preencher a \"YouTube API Services - Audit and Quota Extension Form\" (mesmo formulário do audit de compliance); a equipe de API Services do YouTube avalia. ⚠️ O número exato de units de `videos.insert` está em transição (1600→reduzido) — confirmar na Quota Calculator no momento da implementação; aqui há divergência entre guias e doc oficial.",
+> 17	      "perUserCredentialModel": "É credencial OAuth do CANAL do usuário (NÃO uma API key). Fluxo: o app MCORCH (um único OAuth client Google) leva o Usuário Zero por authorization code flow com `access_type=offline` + `prompt=consent` (necessário porque o refresh_token só é retornado na primeira autorização — `prompt=consent` força reemissão), recebendo um refresh_token de longa duração ESPECÍFICO daquele canal. Mapeia 1:1 ao nosso modelo existente `social_accounts`/`social_credentials` (já tem `access_token`, `refresh_token`, `expires_at`, colunas token REVOKED a nível de RLS, como LinkedIn/Twitter/IG). Plataforma = 'youtube', `user_id = auth.uid()`. Conforme API Tenancy Model: cada usuário conecta o PRÓPRIO canal → refresh token per-user no Vault (cifrado, igual aos demais tokens sociais); o OAuth client_id/client_secret do app é infra de sistema (env, não per-user). Em produção (app verificado), o refresh token não expira por tempo (só por revogação/6 meses de inatividade) — diferente do modo Testing (expira em 7 dias).",
+> 18	      "netNewWork": [
+> 19	        "Connect flow OAuth Google/YouTube: novo edge fn de início (`youtube-oauth-start`) que gera a URL de authorization (`https://accounts.google.com/o/oauth2/v2/auth` com client_id, scope=youtube.upload, access_type=offline, prompt=consent, state CSRF, redirect_uri).",
+> 20	        "Edge fn de callback (`youtube-oauth-callback`) que troca o `code` no token endpoint `https://oauth2.googleapis.com/token` (grant_type=authorization_code) e persiste access_token + refresh_token + expires_at em `social_accounts` platform='youtube' via Vault cifrado, escopado por auth.uid().",
+> 21	        "Token refresh helper: refresh proativo via `https://oauth2.googleapis.com/token` (grant_type=refresh_token) quando expires_at vencido — access tokens Google duram ~1h; reutilizar padrão dos outros providers sociais.",
+> 22	        "Publisher YouTube dentro de `publish-social` (ou novo `publish-youtube`): resolver refresh token per-user → access token → `videos.insert` resumable 2-fase (init POST + PUT bytes), com video_url do bucket privado baixado/streamed; gravar mesh observation node + infra_health_logs (service='youtube').",
+> 23	        "UI Settings→Connectors: card 'Conectar canal YouTube' que dispara o OAuth flow e mostra estado conectado/desconectado + disconnect RPC que revoga o segredo Vault órfão (espelhar `disconnect_social`).",
+> 24	        "SOP Lei 2 `docs/processes/youtube-credential-resolution.md` ANTES de qualquer código (per-user fail-closed, igual aos SOPs meta/trends).",
+> 25	        "Operacional (ação Sovereign, não-código): publicar consent screen + submeter verificação OAuth (demo video) + submeter o YouTube Audit & Quota Extension Form."
+> 26	      ],
+> 27	      "gotchas": [
+> 28	        "DECISIVO: vídeos nascem PRIVADOS até o projeto de API passar pelo audit (regra dos projetos pós-28-jul-2020). Mandar privacyStatus=public NÃO adianta antes do audit — o YouTube sobrescreve. Sem audit aprovado, a integração não entrega distribuição pública.",
+> 29	        "Modo Testing (app OAuth não-verificado): refresh tokens EXPIRAM EM 7 DIAS e máximo 100 test users — quebra o autopilot contínuo. Produção (verificado) é obrigatória p/ refresh token durável.",
+> 30	        "refresh_token só vem na PRIMEIRA autorização — sem `prompt=consent` no connect flow, reconexões não retornam refresh_token e o publisher quebra silenciosamente depois de 1h.",
+> 31	        "O canal precisa EXISTIR no momento do upload — uma conta Google sem canal YouTube criado falha; o Usuário Zero precisa ter o canal ativo antes de conectar.",
+> 32	        "Brand Account vs canal pessoal: se o canal MCORCH for um Brand Account, o usuário que autoriza precisa ter permissão (owner/manager) sobre aquele Brand Account; o OAuth consent lista os canais elegíveis — confirmar que o canal-alvo aparece. (não há doc oficial citada classificando isto como bloqueio formal — tratar como verificação operacional).",
+> 33	        "Custo de quota de videos.insert está EM TRANSIÇÃO (1600 units histórico → reduzido na revisão de dez-2025; Quota Calculator atual mostra 1 unit no bucket Video Uploads). NÃO hardcodar o número — ler a Quota Calculator na hora de dimensionar.",
+> 34	        "Classificação sensitive-vs-restricted de youtube.upload NÃO foi crisply confirmada num enumerado oficial nesta pesquisa: é certo que exige verificação (demo video + Trust&Safety); se for tratado como restricted, adiciona security assessment anual de terceiro independente. Confirmar a categoria exata no submit do consent screen (o Console mostra a classificação por scope).",
+> 35	        "Quota e audit compartilham o MESMO formulário (Audit and Quota Extension) — o audit de compliance destrava tanto o public-upload quanto o aumento de quota."
+> 36	      ],
+> 37	      "sources": [
+> 38	        {
+> 39	          "claim": "videos.insert usa resumable upload em POST para /upload/youtube/v3/videos com part=snippet,status; resposta 200 devolve Location com session URI; PUT dos bytes retorna 201 Created",
+> 40	          "url": "https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol"
+> 41	        },
+> 42	        {
+> 43	          "claim": "Endpoint videos.insert, lista de valores do part (snippet/status/contentDetails/...), e a regra de que uploads de projetos não-verificados criados após 28-jul-2020 são restritos a private",
+> 44	          "url": "https://developers.google.com/youtube/v3/docs/videos/insert"
+> 45	        },
+> 46	        {
+> 47	          "claim": "Scope youtube.upload (e youtube.force-ssl) requerido; custo videos.insert listado e bucket Video Uploads",
+> 48	          "url": "https://developers.google.com/youtube/v3/determine_quota_cost"
+> 49	        },
+> 50	        {
+> 51	          "claim": "Audit de compliance via 'YouTube API Services - Audit and Quota Extension Form' para aumento de quota e compliance com ToS",
+> 52	          "url": "https://developers.google.com/youtube/v3/guides/quota_and_compliance_audits"
+> 53	        },
+> 54	        {
+> 55	          "claim": "Scopes sensíveis exigem justificativa + vídeo demo + review da equipe Trust & Safety (até ~10 dias)",
+> 56	          "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification"
+> 57	        },
+> 58	        {
+> 59	          "claim": "Scopes restricted exigem security assessment anual de terceiro independente aprovado pelo Google quando dados trafegam por servidor",
+> 60	          "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification"
+> 61	        },
+> 62	        {
+> 63	          "claim": "App OAuth em Testing limitado a 100 test users; refresh tokens em Testing expiram em 7 dias; em produção não expiram salvo revogação/inatividade ~6 meses",
+> 64	          "url": "https://developers.google.com/identity/protocols/oauth2"
+> 65	        },
+> 66	        {
+> 67	          "claim": "access_type=offline + prompt=consent necessários p/ refresh token; refresh_token só retornado na primeira autorização; token endpoint https://oauth2.googleapis.com/token; auth endpoint https://accounts.google.com/o/oauth2/v2/auth",
+> 68	          "url": "https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps"
+> 69	        },
+> 70	        {
+> 71	          "claim": "Short = vertical 9:16 (recomendado 1080×1920) até 3 minutos (limite subiu de 60s em 15-out-2024); MP4 H.264/AAC; não há flag isShort na API",
+> 72	          "url": "https://support.google.com/youtube/answer/10059070"
+> 73	        }
+> 74	      ]
+> 75	    },
+> 76	    "tiktok": {
+> 77	      "platform": "TikTok (Content Posting API — TikTok for Developers / TT4D)",
+> 78	      "summary": "Postagem programática de vídeo no TikTok é tecnicamente direta (init→upload-ou-pull→publish via REST sobre open.tiktokapis.com), mas FORTEMENTE GATED por um audit do API client — equivalente funcional ao IG App Review. Antes do audit aprovado, todo Direct Post é forçado a SELF_ONLY (visível só pro próprio criador) E a conta precisa estar privada no momento da postagem, com teto de 5 usuários por janela de 24h: ou seja, sem audit, o MCORCH não publica NADA público. O modelo per-user (OAuth user access token de 24h + refresh de 365d + open_id) mapeia limpo no nosso social_accounts; o net-new principal é o fluxo OAuth do TikTok + chunked upload + token refresh + verificação de domínio para PULL_FROM_URL.",
+> 79	      "postingMechanism": "Dois fluxos REST sobre host https://open.tiktokapis.com. (A) DIRECT POST (publica direto no perfil, server-side, sem ação do usuário no app): POST /v2/post/publish/video/init/ — corpo post_info{privacy_level (obrigatório), title (≤2200 UTF-16 runes), disable_duet/disable_stitch/disable_comment, video_cover_timestamp_ms, brand_content_toggle, brand_organic_toggle, is_aigc} + source_info{source}. (B) UPLOAD-TO-INBOX/DRAFT (vai pra caixa de entrada; o usuário tem que clicar a notificação e finalizar editando manualmente no app TikTok): POST /v2/post/publish/inbox/video/init/. Em AMBOS, source = \"PULL_FROM_URL\" (passa video_url de domínio verificado — TikTok puxa o arquivo async) OU \"FILE_UPLOAD\" (passa video_size, chunk_size, total_chunk_count → recebe upload_url → PUT do(s) chunk(s) SEQUENCIAL(is)). Para Direct Post é OBRIGATÓRIO antes chamar POST /v2/post/publish/creator_info/query/ pra obter as privacy_level options válidas + restrições/feature toggles do criador (UX guideline mandatória; o privacy_level enviado precisa bater com uma das opções retornadas). Status de processamento: retorna publish_id; faz-se poll via /v2/post/publish/status/fetch/.",
+> 80	      "oauthScopes": [
+> 81	        "video.publish",
+> 82	        "video.upload"
+> 83	      ],
+> 84	      "approvalGate": "CRÍTICO — bloqueante, equivalente ao IG App Review. O app é registrado em developers.tiktok.com (TT4D), adiciona o produto \"Content Posting API\" com a configuração \"Direct Post\" habilitada, e o API client precisa passar por um AUDIT de compliance com os Terms of Service do TikTok. BLOQUEADO até o audit ser aprovado: (1) só é possível postar em SELF_ONLY (viewership privada, visível apenas pro próprio criador) — citação oficial: \"Unaudited API Clients can only post contents in SELF_ONLY viewership\"; (2) \"All user accounts using the API client to post must be set to private at the time of posting\" — a conta TikTok do MCORCH precisa estar PRIVADA no momento de cada post; (3) teto de \"up to 5 users to post in a 24 hour window\". Em estado unaudited/sandbox, o init de Direct Post com privacy_level público retorna erro unaudited_client_can_only_post_to_private_accounts. O audit é o que LIBERA postar com PUBLIC_TO_EVERYONE (público de verdade). Caminho pós-audit relatado por terceiros (não-oficial): ~2–4 semanas de review. Net: para uma conta-marca MCORCH postar Shorts públicos automaticamente, o audit é pré-requisito inegociável.",
+> 85	      "videoSpec": "Vertical 9:16 suportado (TikTok é vertical-nativo; não há restrição de aspect-ratio documentada — qualquer dimensão entre os limites é aceita, e 1080×1920 cai dentro). Formatos: MP4 (recomendado), MOV, WebM. Codecs: H.264 (recomendado), H.265, VP8, VP9. Resolução: mínimo 360px e máximo 4096px em ambas as dimensões (1080×1920 OK). Frame rate: 23–60 FPS (nosso motor a 30fps OK). Duração: 3 min para todos os criadores, alguns até 5/10 min (máx via API = 10 min). Tamanho máximo do arquivo: 4 GB. Para FILE_UPLOAD: chunk ≥5 MB e ≤64 MB (o último chunk pode exceder chunk_size até 128 MB), de 1 a 1000 chunks, enviados sequencialmente. O upload de Shorts curtos 9:16 do nosso motor (1080×1920, MP4/H.264, <100MB) cabe folgado em 1 chunk via FILE_UPLOAD ou direto via PULL_FROM_URL.",
+> 86	      "quotaLimits": "\"Each user access_token is limited to 6 requests per minute\" (rate limit por user access token nos endpoints de publish, ex.: video/init). Caps de criador relatados (não 100% confirmados na doc consultada, tratar como ⚠️): teto diário ~15 posts/dia por conta de criador. Para clients UNAUDITED, somam-se: SELF_ONLY forçado + conta privada obrigatória + ≤5 usuários por janela de 24h. Não há um custo-em-unidades por vídeo como o YouTube videos.insert (1600 units); o limite do TikTok é por requests/minuto por token + caps de criador.",
+> 87	      "perUserCredentialModel": "OAuth user access token per-tenant, mapeia direto no nosso API Tenancy Model / tabela social_accounts. Fluxo: Login Kit OAuth (authorization_code) no host https://open.tiktokapis.com/v2/oauth/token/ → retorna access_token (expires_in=86400s / 24h), refresh_token (refresh_expires_in=31536000s / 365 dias) e open_id (identificador único do usuário TikTok, partner-facing, usado nas chamadas subsequentes). Persistir em social_accounts: access_token + refresh_token + expires_at (now+24h) + um campo provider_user_id = open_id (+ scope concedido). Refresh: chamar /v2/oauth/token/ com grant_type=refresh_token (client_key + client_secret + refresh_token) sem reautorização do usuário; se o refresh_token expirar (365d de inatividade ou revogação pelo usuário nas settings do TikTok) → refazer o OAuth completo. As credenciais access_token/refresh_token devem entrar com column-level REVOKE + Vault (mesmo padrão do meta_config/social_accounts existentes).",
+> 88	      "netNewWork": [
+> 89	        "Fluxo OAuth do TikTok (Login Kit) — connect flow no /dashboard/settings (ou page dedicada): redirect pra autorização TikTok com scope=video.publish, callback que troca code→token em /v2/oauth/token/ e grava em social_accounts (access_token, refresh_token, expires_at, open_id).",
+> 90	        "Edge function publish-tiktok (espelha publish-meta/publish-social): chama creator_info/query → video/init (Direct Post) → upload chunks ou pull-from-url → poll status/fetch; resolve credencial per-user fail-closed; mesh observation node + infra_health_logs em cada path.",
+> 91	        "Token refresh automático: helper que detecta access_token perto de expirar (24h) e chama grant_type=refresh_token antes de publicar — sem isso o publish falha silenciosamente após 1 dia.",
+> 92	        "Chunked upload client (FILE_UPLOAD): PUT sequencial dos chunks no upload_url com Content-Range correto; OU caminho PULL_FROM_URL exige que o video_url seja servido de domínio verificado nosso.",
+> 93	        "Verificação de domínio/URL-prefix no TT4D (Manage URL properties) para habilitar PULL_FROM_URL a partir do nosso bucket/CDN público — senão só FILE_UPLOAD funciona.",
+> 94	        "Registro do app no TT4D + submissão do AUDIT do Content Posting API (ação Sovereign, igual ao IG App Review) — gate pra qualquer post público.",
+> 95	        "Coluna/migration social_accounts pra TikTok (provider='tiktok', open_id, scope) + UI de connect/disconnect + RPC disconnect_tiktok que revoga segredo no Vault (espelha disconnect_meta/disconnect_social)."
+> 96	      ],
+> 97	      "gotchas": [
+> 98	        "GATE DE AUDIT é o bloqueador real: sem audit aprovado todo post é SELF_ONLY (só o criador vê) E a conta MCORCH precisa estar PRIVADA no momento do post — útil só pra QA/integration test, inútil pra distribuição pública. O audit é o equivalente do IG App Review e é ação Sovereign.",
+> 99	        "PULL_FROM_URL exige verificação de propriedade do domínio: 'The supplied URL must be under the path of a domain or URL prefix API Clients have ownership on', verificado pelo fluxo Manage URL properties na Manage Apps page do TT4D. Bucket privado com signed URL aleatória NÃO passa — precisa ser path de domínio verificado. Senão, cair em FILE_UPLOAD.",
+> 100	        "upload_url (FILE_UPLOAD) expira em 1 hora após emissão — render+upload têm que caber nessa janela.",
+> 101	        "creator_info/query é OBRIGATÓRIO antes de Direct Post e o privacy_level enviado tem que ser uma das opções que ele retorna; mandar valor fora da lista falha. Em client unaudited, a única opção válida é SELF_ONLY.",
+> 102	        "access_token expira em 24h — sem refresh automático (grant_type=refresh_token), o autopilot quebra silenciosamente no dia seguinte (mesmo padrão do 'integration keeps breaking' relatado por terceiros).",
+> 103	        "Rate limit de 6 requests/min por user access_token: creator_info/query + video/init + poll de status consomem desse mesmo orçamento; espaçar as chamadas.",
+> 104	        "Upload-to-inbox (/inbox/video/init/) NÃO é postagem autônoma — exige o usuário clicar a notificação e finalizar editando no app TikTok; não serve pro autopilot. Só Direct Post é server-side end-to-end.",
+> 105	        "open_id é o identificador per-user a guardar (não username/nickname, que mudam) — usar como provider_user_id no social_accounts.",
+> 106	        "⚠️ Cap de ~15 posts/dia por criador relatado em fontes não-oficiais; não confirmado byte-a-byte na doc consultada — validar antes de calibrar cadência alta do autopilot."
+> 107	      ],
+> 108	      "sources": [
+> 109	        {
+> 110	          "claim": "Direct Post endpoint /v2/post/publish/video/init/, scope video.publish, post_info/source_info, PULL_FROM_URL vs FILE_UPLOAD, privacy_level enum, unaudited→private, 6 req/min",
+> 111	          "url": "https://developers.tiktok.com/doc/content-posting-api-reference-direct-post"
+> 112	        },
+> 113	        {
+> 114	          "claim": "Upload-to-inbox endpoint /v2/post/publish/inbox/video/init/ usa scope video.upload; fluxo de draft exige usuário finalizar no app; publish_id; upload_url expira em 1h",
+> 115	          "url": "https://developers.tiktok.com/doc/content-posting-api-reference-upload-video"
+> 116	        },
+> 117	        {
+> 118	          "claim": "Audit requirement: conteúdo de unaudited clients restrito a private; domain verification para PULL_FROM_URL; diferença Direct Post vs inbox",
+> 119	          "url": "https://developers.tiktok.com/doc/content-posting-api-get-started"
+> 120	        },
+> 121	        {
+> 122	          "claim": "Especificações de vídeo: MP4/MOV/WebM, H.264/H.265/VP8/VP9, 360–4096px, 23–60 FPS, máx 4GB, chunks 5–64MB (último até 128MB), 1–1000 chunks, upload_url expira em 1h",
+> 123	          "url": "https://developers.tiktok.com/doc/content-posting-api-media-transfer-guide"
+> 124	        },
+> 125	        {
+> 126	          "claim": "Unaudited client: SELF_ONLY viewership, conta privada no momento do post, até 5 usuários por janela de 24h; domain/URL-prefix ownership verificado via Manage URL properties",
+> 127	          "url": "https://developers.tiktok.com/doc/content-sharing-guidelines"
+> 128	        },
+> 129	        {
+> 130	          "claim": "OAuth: access_token expires_in 86400s (24h), refresh_token refresh_expires_in 31536000s (365d), token endpoint /v2/oauth/token/, grant_type authorization_code e refresh_token, open_id",
+> 131	          "url": "https://developers.tiktok.com/doc/oauth-user-access-token-management"
+> 132	        },
+> 133	        {
+> 134	          "claim": "Creator info query /v2/post/publish/creator_info/query/ obrigatório antes do Direct Post (UX guideline)",
+> 135	          "url": "https://developers.tiktok.com/doc/content-posting-api-get-started"
+> 136	        }
+> 137	      ]
+> 138	    },
+> 139	    "infra": {
+> 140	      "reusable": [
+> 141	        {
+> 142	          "component": "publish-social dispatch (despachante por plataforma)",
+> 143	          "path": "supabase/functions/publish-social/index.ts:115-239",
+> 144	          "how": "Estrutura if/else-if por `platform` (linkedin / instagram / facebook / twitter), com fallback final `else` HTTP 400 \"Publishing to ${platform} not yet supported\" (linha 234-238). Já faz: resolve conta via `decrypted_social_accounts` por user_id+platform+is_active (linha 65-74), refresh automático de token expirado via `refresh-social-token` + re-fetch (linha 85-111), update de `scheduled_posts` (status/published_at/platform_post_id, linha 241-250), e notificação in-app `notify()` (linha 254-260). Tudo isso é reusado as-is por youtube/tiktok — só falta o branch de upload."
+> 145	        },
+> 146	        {
+> 147	          "component": "Pipeline de vídeo 9:16 (motor HyperFrames) — o MESMO MP4 que o IG Reel consome",
+> 148	          "path": "scripts/video-bridge.ts:43,107-156 + scripts/hyperframes/render-core.ts",
+> 149	          "how": "Worker systemd faz claim atômico de `video_renders` (engine='hyperframes'), renderiza 1080×1920 MP4 determinístico, faz upload pro bucket PRIVADO `video-studio-assets` (BUCKET, linha 43), e quando há `composition.autopilot` insere em `content_library` (type='video', media_url=storage_key, linha 135-139) + `creative_assets` (register_creative_asset, linha 114) + `creative_metrics` (linha 144). YT Shorts e TikTok consomem ESTE mesmo MP4 9:16 — nenhum render novo necessário."
+> 150	        },
+> 151	        {
+> 152	          "component": "IG Reel publish path (template direto p/ YT Shorts/TikTok)",
+> 153	          "path": "supabase/functions/publish-social/index.ts:141-196",
+> 154	          "how": "O branch `instagram` já implementa o padrão de vídeo-vertical completo que YT/TikTok espelham: recebe `content.video_url` (público), cria container REELS, faz POLLING de transcode assíncrono (status FINISHED/ERROR, linha 171-179) e depois publica. YT Shorts e TikTok são fluxos resumable-upload + status-poll análogos — a forma do código (criar→poll→publicar→devolver result.id) é diretamente reaproveitável."
+> 155	        },
+> 156	        {
+> 157	          "component": "social_accounts (tabela canônica de conexão OAuth) + Vault",
+> 158	          "path": "supabase/migrations/20260601000000_credential_encryption.sql:55-90,369-384,456-487",
+> 159	          "how": "`social_accounts` é VIEW security_invoker mascarada (access_token/refresh_token → '••••') sobre `social_accounts_table`; trigger BEFORE encripta tokens no Vault (linha 70/79); INSTEAD OF mapeia insert/update/delete de volta com COALESCE-guard que preserva o token cifrado quando o valor é a máscara (linha 476-477). YT/TikTok reusam a MESMA tabela e o MESMO mecanismo de cifragem — só inserem com platform='youtube'/'tiktok'. `decrypted_social_accounts` é a view que as edge fns leem o token real."
+> 160	        },
+> 161	        {
+> 162	          "component": "OAuth connect/callback genérico (social-auth-init + social-auth-callback)",
+> 163	          "path": "supabase/functions/social-auth-init/index.ts:58-100 + supabase/functions/social-auth-callback/index.ts:69-210",
+> 164	          "how": "`social-auth-init` monta a authorize-URL por plataforma com state assinado HMAC (signState, fail-closed cross-tenant); `social-auth-callback` (GET sem JWT) verifica o HMAC (verifyState, janela 10min), troca code→token, busca o perfil e faz UPSERT em `social_accounts` por onConflict 'user_id,platform' (linha 180-195). A mecânica de state/upsert é 100% reusável; só faltam os blocos `else if (platform==='youtube'/'tiktok')` nos dois arquivos."
+> 165	        },
+> 166	        {
+> 167	          "component": "refresh-social-token (renovação automática per-plataforma)",
+> 168	          "path": "supabase/functions/refresh-social-token/index.ts:69-138",
+> 169	          "how": "Já chamado automaticamente pelo publish-social quando token_expires_at < now. Tem if/else-if por plataforma com fallback 400 (linha 133-137). YT (refresh_token Google, offline access) e TikTok (refresh_token rotativo) entram como branches novos — o resto (ownership check, update do social_accounts, persistência do novo refresh_token) é reusado."
+> 170	        },
+> 171	        {
+> 172	          "component": "scheduled_posts + auto-publish cron (cadência)",
+> 173	          "path": "supabase/functions/auto-publish/index.ts:20-118 + supabase/migrations/20260402014040_*.sql:158",
+> 174	          "how": "Cron varre `scheduled_posts` status='queued' & scheduled_at<=now, e despacha cada um pra `publish-social` (passa platform/content/social_account_id/user_id, com retry_count/max_retries e backoff, linha 69-104). `scheduled_posts.platform` é o enum `social_platform` que JÁ contém 'youtube' e 'tiktok'. Um novo canal não exige mudança no cron — basta inserir linhas com platform='youtube'/'tiktok'."
+> 175	        },
+> 176	        {
+> 177	          "component": "Motor autopilot (autopilot-run → orchestrate-content)",
+> 178	          "path": "supabase/functions/autopilot-run/index.ts:92-221",
+> 179	          "how": "Fan-out N_runs = products × `plan.platforms` × ab_variants; itera `for (const platform of platforms)` e chama orchestrate-content por plataforma (linha 202-216), com pré-débito/refund atômico (begin/finalize_autopilot_cycle). Adicionar 'youtube'/'tiktok' a `autopilot_plans.platforms` já os inclui no fan-out — o billing e o ciclo são reusados."
+> 180	        },
+> 181	        {
+> 182	          "component": "Enum social_platform (sem ALTER TYPE necessário)",
+> 183	          "path": "supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:12",
+> 184	          "how": "CREATE TYPE social_platform AS ENUM ('linkedin','instagram','facebook','twitter','tiktok','youtube','pinterest','wordpress') — 'tiktok' e 'youtube' JÁ são valores válidos do enum. Nenhuma migration de enum é necessária para social_accounts nem scheduled_posts."
+> 185	        }
+> 186	      ],
+> 187	      "extensionPoints": [
+> 188	        {
+> 189	          "where": "Novo branch de publicação `else if (platform === 'youtube')` e `else if (platform === 'tiktok')` ANTES do fallback else (linha 234)",
+> 190	          "path": "supabase/functions/publish-social/index.ts:233",
+> 191	          "whatToAdd": "YouTube: usar `account.access_token` (Google OAuth) para YouTube Data API v3 videos.insert (resumable upload do MP4 9:16; snippet.title/description + status.privacyStatus). TikTok: Content Posting API (PULL_FROM_URL com o video_url público OU FILE_UPLOAD multipart) + poll de publish_id status. Espelhar o padrão IG REELS (criar→poll→devolver result.id) que já está em :141-196. content.video_url vem do MP4 9:16. ⚠️ Endpoints/scopes/limites de quota exatos do YouTube Data API e do TikTok Content Posting API NÃO confirmados no código — exigem consulta a developers.google.com/youtube/v3 e developers.tiktok.com antes de implementar (Lei 1)."
+> 192	        },
+> 193	        {
+> 194	          "where": "Novos branches OAuth no init",
+> 195	          "path": "supabase/functions/social-auth-init/index.ts:95",
+> 196	          "whatToAdd": "`else if (platform === 'youtube')`: authorize-URL do Google (accounts.google.com/o/oauth2/v2/auth, access_type=offline, prompt=consent p/ refresh_token; scope youtube.upload — escopo exato não confirmado, ver doc oficial). `else if (platform === 'tiktok')`: authorize-URL do TikTok (www.tiktok.com/v2/auth/authorize, scope video.publish/video.upload — não confirmado). Reusa signState/callbackUrl já presentes. Ler GOOGLE/YOUTUBE e TIKTOK client_id de env OU (preferível, ver schemaNeeds) de tabela per-user."
+> 197	        },
+> 198	        {
+> 199	          "where": "Novos branches de troca code→token + fetch de perfil no callback",
+> 200	          "path": "supabase/functions/social-auth-callback/index.ts:171",
+> 201	          "whatToAdd": "`else if (platform === 'youtube')`: POST oauth2.googleapis.com/token; channel id/title via youtube.channels.list (mine=true) → platform_user_id/platform_username. `else if (platform === 'tiktok')`: POST open.tiktokapis.com/v2/oauth/token; open_id/display_name via user/info → platform_user_id/platform_username. O upsert em social_accounts (linha 180-195) já serve."
+> 202	        },
+> 203	        {
+> 204	          "where": "Novos branches de refresh",
+> 205	          "path": "supabase/functions/refresh-social-token/index.ts:133",
+> 206	          "whatToAdd": "`else if (platform === 'youtube')`: grant_type=refresh_token no oauth2.googleapis.com/token. `else if (platform === 'tiktok')`: refresh rotativo no open.tiktokapis.com/v2/oauth/token (persistir o novo refresh_token, como já é feito p/ twitter na linha 127-132)."
+> 207	        },
+> 208	        {
+> 209	          "where": "Lista de plataformas com fluxo de vídeo (p/ o autopilot enfileirar render e cobrar correto)",
+> 210	          "path": "supabase/functions/autopilot-run/index.ts:109",
+> 211	          "whatToAdd": "Hoje `VIDEO_FLOW_PLATFORMS = new Set(['wordpress'])`. Adicionar 'youtube' e 'tiktok' aqui faz o ciclo do autopilot enfileirar o render 9:16 e contar o custo de vídeo para essas plataformas (FR-VA-022/024). A reconciliação FR-VA-025 do video-bridge (:129-154) já anexa o MP4 ao content_library quando há composition.autopilot."
+> 212	        },
+> 213	        {
+> 214	          "where": "UI de conexão — adicionar os botões Conectar YouTube / Conectar TikTok",
+> 215	          "path": "src/hooks/useSocialAccounts.ts:49 + src/pages/SocialAccountsPage.tsx",
+> 216	          "whatToAdd": "`initiateOAuth(platform)` já é genérico (invoca social-auth-init com redirect_uri `${origin}/social/callback`); basta a SocialAccountsPage oferecer os cards 'youtube'/'tiktok'. O tipo SocialPlatform já vem do enum gerado, que inclui ambos."
+> 217	        },
+> 218	        {
+> 219	          "where": "gap do cron de vídeo: auto-publish NÃO passa video_url",
+> 220	          "path": "supabase/functions/auto-publish/index.ts:54-83",
+> 221	          "whatToAdd": "auto-publish hoje monta `content` só com texto (content_library.body/title, linha 54-62) e NÃO inclui content.video_url. Para Shorts/TikTok agendados via cron, este ponto precisa resolver o MP4 9:16 (content_library media_url no bucket privado video-studio-assets → URL PÚBLICA assinada/temporária, pois IG/TikTok PULL_FROM_URL exige URL pública) e passá-lo como content.video_url no body do publish-social. O Reel E2E provado foi via invoke DIRETO de publish-social com video_url público — o caminho cron-agendado de vídeo ainda não está fechado."
+> 222	        }
+> 223	      ],
+> 224	      "schemaNeeds": [
+> 225	        "NENHUMA mudança no enum social_platform: 'youtube' e 'tiktok' já existem (migration 20260402014040:12).",
+> 226	        "NENHUMA tabela nova de token: social_accounts (VIEW Vault sobre social_accounts_table) + decrypted_social_accounts já armazenam access_token/refresh_token/token_expires_at/scopes/platform_user_id/metadata cifrados — YT/TikTok inserem com platform='youtube'/'tiktok' e reusam o trigger de cifragem (migration 20260601000000:55-90). scheduled_posts também já aceita o enum.",
+> 227	        "Credenciais de APP per-user (API Tenancy Model): hoje os client_id/secret de OAuth social vêm de env GLOBAL (LINKEDIN_CLIENT_ID, INSTAGRAM_APP_ID, TWITTER_CLIENT_ID em social-auth-init:61/72/83). Para YT/TikTok em conformidade per-user, idealmente adicionar colunas em uma tabela <service>_config per-user (ex.: youtube_config/tiktok_config com app_id/client_secret cifrados + RLS auth.uid()=user_id + UNIQUE por user_id+platform), espelhando affiliate_config/meta_config. Env global vira fallback restrito (tenant-zero/onboarding). Para o Usuário Zero (single-tenant), começar com env é aceitável como override consciente com SLA.",
+> 228	        "Drift de doc a corrigir: o BoK post-engine (05-sdd.md:31, 04-frd.md:20) nomeia uma tabela `social_credentials` que NÃO é a implementada — a canônica viva é `social_accounts`. A emenda do BoK (ver recommendation) deve reconciliar o nome p/ social_accounts.",
+> 229	        "Opcional p/ analytics (FR-PE-004 do BoK): nenhuma coluna nova obrigatória; creative_metrics já existe e o video-bridge já cria linhas. Métricas YT/TikTok (views/likes) caberiam em creative_metrics/campaign_metrics existentes."
+> 230	      ],
+> 231	      "oauthConnectFlow": "O flow OAuth social existente (linkedin/instagram/facebook/twitter) que YT/TikTok devem espelhar tem 2 edge fns. (1) CONNECT — `social-auth-init` (supabase/functions/social-auth-init/index.ts): exige JWT do usuário (auth.getUser, :34), assina um state HMAC-SHA256 com SB_SECRET_KEY contendo {userId, platform, redirect_uri, ts} (signState, :56 — é a ÚNICA prova de qual tenant iniciou, já que o callback não tem JWT), monta a authorize-URL por plataforma (:60-100) e devolve {url} pro front abrir. (2) CALLBACK — `social-auth-callback` (supabase/functions/social-auth-callback/index.ts): recebe GET sem JWT do provedor, verifyState fail-closed com janela de 10min (:46-52 — rejeita state forjado/expirado, fecha account-linking cross-tenant), troca code→token por plataforma (:69-173), busca perfil (platform_user_id/username), e faz UPSERT em `social_accounts` por onConflict 'user_id,platform' com is_active=true (:180-195); o trigger Vault cifra os tokens no insert. O front dispara tudo via `useSocialAccounts.initiateOAuth(platform)` (src/hooks/useSocialAccounts.ts:49-51) que invoca social-auth-init com redirect_uri `${origin}/social/callback`. YouTube (Google OAuth, access_type=offline+prompt=consent p/ ganhar refresh_token) e TikTok (open.tiktokapis.com, refresh_token rotativo) entram como novos branches nesses MESMOS 2 arquivos + um branch de refresh em refresh-social-token — sem novo edge fn de OAuth, sem nova tabela de token.",
+> 232	      "recommendation": "Caminho mais enxuto até o 1º Short YT + 1º post TikTok, respeitando o BoK gate (CLAUDE.md §1):\n\nPASSO 0 — Destravar o gate (Lei 2 + Master Protocol). A família BoK `docs/bok/post-engine/` está 5/5 presente e JÁ cita TikTok/Shorts/Reels/X, mas (a) nomeia a tabela errada (`social_credentials` em vez da viva `social_accounts`) e (b) NÃO especifica scopes OAuth, requisitos de audit (YouTube exige verificação de app p/ youtube.upload; TikTok exige app approval p/ video.publish — NÃO confirmados no código, exigem developers.google.com/youtube e developers.tiktok.com), nem o design dos branches de publish. Isso é ambiguidade → emenda BoK via `/bok-scribe` antes de codar (não improvisar). Reconciliar `social_credentials`→`social_accounts` no FRD/SDD.\n\nPASSO 1 — Reaproveitar 100% do esqueleto. Zero schema novo: enum já tem youtube/tiktok; social_accounts/decrypted_social_accounts já guardam token cifrado; scheduled_posts/auto-publish/autopilot já fazem cadência. O trabalho real é só 3 pares de branches: publish-social (upload), social-auth-init + social-auth-callback (connect), refresh-social-token (refresh).\n\nPASSO 2 — Fatiar fino (probe-first, single-tenant Usuário Zero):\n• Fatia A — TikTok primeiro (menor atrito de audit p/ sandbox/self-post): branch OAuth + branch publish via Content Posting API consumindo o MP4 9:16 que o video-bridge JÁ gera (mesmo asset do Reel). Provar E2E com 1 post real (Lei 1: precisa do video_url PÚBLICO — resolver URL assinada do bucket privado video-studio-assets, como foi feito no Reel).\n• Fatia B — YouTube Shorts: branch Google OAuth (offline+consent) + youtube.videos.insert resumable do mesmo MP4 (título/descrição; #Shorts no metadata). PrivacyPolicy já declara publicação no YouTube (ajuda o audit do Google).\n• Fatia C — entrar na cadência: adicionar 'youtube'/'tiktok' a VIDEO_FLOW_PLATFORMS (autopilot-run:109) e fechar o gap do auto-publish que hoje não passa content.video_url (auto-publish:54-83).\n\nPASSO 3 — Per-user (API Tenancy Model): para o Usuário Zero, usar app credentials de env como override consciente com SLA é aceitável; mas registrar a dívida e planejar youtube_config/tiktok_config per-user (espelho de meta_config/affiliate_config) antes do Usuário 1.\n\nResumo: o ecossistema já tem render 9:16, storage, fan-out, cadência, billing e o padrão Reel — falta APENAS o transporte de upload de 2 plataformas + 3 branches OAuth. Selar a emenda BoK destrava ~1 fatia de código por plataforma."
+> 233	    }
+> 234	  },
+> 235	  "workflowProgress": [
+> 236	    {
+> 237	      "type": "workflow_phase",
+> 238	      "index": 1,
+> 239	      "title": "Research"
+> 240	    },
+> 241	    {
+> 242	      "type": "workflow_agent",
+> 243	      "index": 1,
+> 244	      "label": "research:youtube",
+> 245	      "phaseIndex": 1,
+> 246	      "phaseTitle": "Research",
+> 247	      "agentId": "a3e9ae680160748fd",
+> 248	      "agentType": "deepsearch-blueprint",
+> 249	      "model": "claude-opus-4-8",
+> 250	      "state": "done",
+> 251	      "startedAt": 1782441652010,
+> 252	      "queuedAt": 1782441651972,
+> 253	      "attempt": 1,
+> 254	      "lastToolName": "StructuredOutput",
+> 255	      "lastToolSummary": "YouTube (Shorts) — YouTube Data API v3",
+> 256	      "promptPreview": "Você pesquisa a integração de POSTAGEM PROGRAMÁTICA no YouTube para o MCORCH (marca), publicando vídeos verticais 9:16 (Shorts) gerados pelo nosso motor. O Usuário Zero vai converter o canal YouTube existente dele em canal MCORCH.\n\nLEI 1 (Materialidade): toda claim não-óbvia carrega a URL da doc OFICIAL consultada (developers.google.com/youtube, developers.tiktok.com, etc.). NÃO fabrique scopes, e…",
+> 257	      "lastProgressAt": 1782441832315,
+> 258	      "tokens": 61581,
+> 259	      "toolCalls": 16,
+> 260	      "durationMs": 180305,
+> 261	      "resultPreview": "{\"platform\":\"YouTube (Shorts) — YouTube Data API v3\",\"summary\":\"Postar Shorts programaticamente no YouTube é tecnicamente direto (um único `videos.insert` resumable, custo de quota baixo), mas FORTEMENTE GATEADO por dois portões de aprovação Google que travam o caminho público: (1) o app OAuth precisa passar pela verificação Google (scopes sensíveis → demo video + Trust&Safety review), e (2) — dec…"
+> 262	    },
+> 263	    {
+> 264	      "type": "workflow_agent",
+> 265	      "index": 2,
+> 266	      "label": "research:tiktok",
+> 267	      "phaseIndex": 1,
+> 268	      "phaseTitle": "Research",
+> 269	      "agentId": "aaa3c6ad9cc2ab052",
+> 270	      "agentType": "deepsearch-blueprint",
+> 271	      "model": "claude-opus-4-8",
+> 272	      "state": "done",
+> 273	      "startedAt": 1782441652012,
+> 274	      "queuedAt": 1782441651972,
+> 275	      "attempt": 1,
+> 276	      "lastToolName": "StructuredOutput",
+> 277	      "lastToolSummary": "TikTok (Content Posting API — TikTok for Developers / TT4D)",
+> 278	      "promptPreview": "Você pesquisa a integração de POSTAGEM PROGRAMÁTICA no TikTok para o MCORCH (marca), publicando vídeos verticais 9:16 gerados pelo nosso motor. O Usuário Zero vai criar uma conta TikTok MCORCH nova.\n\nLEI 1 (Materialidade): toda claim não-óbvia carrega a URL da doc OFICIAL consultada (developers.google.com/youtube, developers.tiktok.com, etc.). NÃO fabrique scopes, endpoints, quotas ou requisitos d…",
+> 279	      "lastProgressAt": 1782441840519,
+> 280	      "tokens": 56471,
+> 281	      "toolCalls": 12,
+> 282	      "durationMs": 188507,
+> 283	      "resultPreview": "{\"platform\":\"TikTok (Content Posting API — TikTok for Developers / TT4D)\",\"summary\":\"Postagem programática de vídeo no TikTok é tecnicamente direta (init→upload-ou-pull→publish via REST sobre open.tiktokapis.com), mas FORTEMENTE GATED por um audit do API client — equivalente funcional ao IG App Review. Antes do audit aprovado, todo Direct Post é forçado a SELF_ONLY (visível só pro próprio criador)…"
+> 284	    },
+> 285	    {
+> 286	      "type": "workflow_agent",
+> 287	      "index": 3,
+> 288	      "label": "research:infra-mapping",
+> 289	      "phaseIndex": 1,
+> 290	      "phaseTitle": "Research",
+> 291	      "agentId": "a4f2be14f213d0739",
+> 292	      "model": "claude-opus-4-8",
+> 293	      "state": "done",
+> 294	      "startedAt": 1782441832352,
+> 295	      "queuedAt": 1782441651972,
+> 296	      "attempt": 1,
+> 297	      "lastToolName": "StructuredOutput",
+> 298	      "lastToolSummary": "O flow OAuth social existente (linkedin/instagram/facebook/…",
+> 299	      "promptPreview": "Você é um agente READ-ONLY mapeando a infra MCORCH existente p/ saber o que JÁ é reusável numa integração de postagem YouTube + TikTok. Workspace: /home/gcrUX/htdocs/constellation-orchestra.\n\nLEI 1 (Materialidade): toda claim não-óbvia carrega a URL da doc OFICIAL consultada (developers.google.com/youtube, developers.tiktok.com, etc.). NÃO fabrique scopes, endpoints, quotas ou requisitos de audit …",
+> 300	      "lastProgressAt": 1782442031545,
+> 301	      "tokens": 107553,
+> 302	      "toolCalls": 27,
+> 303	      "durationMs": 199192,
+> 304	      "resultPreview": "{\"reusable\":[{\"component\":\"publish-social dispatch (despachante por plataforma)\",\"path\":\"supabase/functions/publish-social/index.ts:115-239\",\"how\":\"Estrutura if/else-if por `platform` (linkedin / instagram / facebook / twitter), com fallback final `else` HTTP 400 \\\"Publishing to ${platform} not yet supported\\\" (linha 234-238). Já faz: resolve conta via `decrypted_social_accounts` por user_id+platf…"
+> 305	    }
+> 306	  ],
+> 307	  "totalTokens": 225605,
+> 308	  "totalToolCalls": 55
+> 309	}
+> ```
+
+## 🤖 Claude *(02:48:03)*
+
+
+## 🤖 Claude *(02:48:04)*
+
+A pesquisa landou rica e fundamentada (cada claim com URL oficial). A notícia é **muito boa**: a infra já está ~90% pronta. Vou consolidar tudo num blueprint de preparação (o seed do BoK) e te dar o veredito.
+
+Escrevo o blueprint:
+
+## 🤖 Claude *(02:49:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md",
+  "content": "# YouTube + TikTok \u2014 Blueprint de Prepara\u00e7\u00e3o (virada brand-persona / Gabriel AI CCIO)\n\n> **Data:** 2026-06-26 \u00b7 **Origem:** diretiva Sovereign (virada de product-first \u2192 brand-first; Gabriel AI = CCIO como rosto/voz unificada de todos os canais) + workflow de pesquisa fundamentada `wf_24e9eb67` (3 agentes, Lei 1 \u2014 cada claim com URL oficial).\n> **Status:** PREPARA\u00c7\u00c3O. Nenhum c\u00f3digo de publisher YT/TikTok escrito ainda. **Gate MCORCH Closed-Loop:** amendar o BoK `post-engine` (`/bok-scribe`) ANTES de codar.\n\n---\n\n## 0. Reframe estrat\u00e9gico (o \"o qu\u00ea\")\n\nO conte\u00fado deixa de ser cat\u00e1logo de produto e vira **evangelismo de marca com voz pr\u00f3pria**. O **Gabriel AI / CCIO (Cofounder Chief Intelligence Office)** \u2014 primeira vers\u00e3o 100% digital do Sovereign \u2014 \u00e9 o **rosto + a voz \u00fanica**; a identidade visual do MCORCH \u00e9 o corpo. A persona \u00e9 o \u00e1tomo de distribui\u00e7\u00e3o escal\u00e1vel: hoje 1 persona \u2192 N canais; amanh\u00e3 N personas (cada \"departamento\" da Pantheon com seu avatar-porta-voz).\n\n**Implica\u00e7\u00e3o t\u00e9cnica decisiva:** os trilhos (gerar \u2192 render 9:16 \u2192 agendar \u2192 publicar \u2192 atribuir) **n\u00e3o mudam**. Muda (a) a *fonte do tema* (produto \u2192 pilar de marca/miss\u00e3o) e (b) o *n\u00famero de bocas* (+ YouTube, + TikTok). Afiliado vira subproduto contextual de longo prazo, n\u00e3o o CTA principal.\n\n---\n\n## 1. Veredito de prontid\u00e3o da infra (o achado central)\n\n**~90% j\u00e1 existe e \u00e9 reus\u00e1vel as-is.** O `social_platform` enum **j\u00e1 cont\u00e9m `youtube` e `tiktok`** (migration `20260402014040:12`) \u2014 zero migration de enum. `social_accounts` (VIEW Vault mascarada) j\u00e1 cifra access/refresh token. `scheduled_posts` + `auto-publish` cron + motor `autopilot-run` j\u00e1 fazem a cad\u00eancia. O OAuth connect \u00e9 **gen\u00e9rico** (`social-auth-init` + `social-auth-callback`, state HMAC). O **MP4 9:16 que o IG Reel consome \u00e9 o MESMO** que YT Shorts e TikTok consomem (motor HyperFrames `video-bridge.ts` \u2192 bucket `video-studio-assets`).\n\n**Net-new = s\u00f3 3 pares de branches + 1 gap + 1 ajuste:**\n\n| Componente | Arquivo | O que adicionar |\n|---|---|---|\n| Publisher | `publish-social/index.ts:233` (antes do fallback) | `else if (platform==='youtube')` (videos.insert resumable) \u00b7 `else if (platform==='tiktok')` (Content Posting API) \u2014 espelhar o padr\u00e3o IG REELS criar\u2192poll\u2192publicar (`:141-196`) |\n| OAuth init | `social-auth-init/index.ts:95` | branch Google (offline+consent) \u00b7 branch TikTok |\n| OAuth callback | `social-auth-callback/index.ts:171` | troca code\u2192token + fetch perfil (channel id / open_id) \u00b7 upsert j\u00e1 serve |\n| Refresh | `refresh-social-token/index.ts:133` | branch Google \u00b7 branch TikTok (refresh rotativo) |\n| **Gap real** | `auto-publish/index.ts:54-83` | hoje s\u00f3 passa **texto**; p/ Shorts/TikTok agendados precisa resolver o MP4 9:16 (bucket privado \u2192 **URL p\u00fablica/assinada**) e passar `content.video_url`. O Reel E2E foi invoke DIRETO; o caminho cron-de-v\u00eddeo ainda n\u00e3o est\u00e1 fechado. |\n| Cad\u00eancia+billing | `autopilot-run/index.ts:109` | adicionar `'youtube'`/`'tiktok'` ao `VIDEO_FLOW_PLATFORMS` \u2192 o ciclo enfileira render 9:16 e cobra v\u00eddeo p/ esses canais (FR-VA-022/024) |\n| UI | `SocialAccountsPage.tsx` + `useSocialAccounts.ts:49` | `initiateOAuth(platform)` j\u00e1 \u00e9 gen\u00e9rico \u2014 s\u00f3 faltam os cards YouTube/TikTok |\n\n**Schema:** NENHUMA tabela nova de token; NENHUMA migration de enum. (\u00danico schema novo recomendado: `youtube_config`/`tiktok_config` per-user p/ app credentials, espelhando `meta_config`/`affiliate_config` \u2014 difer\u00edvel p/ depois do Usu\u00e1rio Zero, env como override consciente com SLA.)\n\n---\n\n## 2. YouTube Shorts \u2014 fatos fundamentados (Lei 1)\n\n- **Mecanismo:** YouTube Data API v3 `videos.insert` **resumable** (2 fases: `POST /upload/youtube/v3/videos?uploadType=resumable&part=snippet,status` \u2192 `Location` session URI \u2192 `PUT` bytes \u2192 `201`). N\u00e3o h\u00e1 \"direct post\" separado; **Short = formato** (vertical 9:16, \u22643min). Nosso MP4 1080\u00d71920 casa nativo, sem reencode. [docs/youtube/v3/guides/using_resumable_upload_protocol \u00b7 /docs/videos/insert \u00b7 support.google.com/youtube/answer/10059070]\n- **Scope:** `https://www.googleapis.com/auth/youtube.upload`. [identity/protocols/oauth2/.../sensitive-scope-verification]\n- **\ud83d\udea7 2 port\u00f5es (ambos bloqueiam P\u00daBLICO):**\n  - **(A) Verifica\u00e7\u00e3o do app OAuth** \u2014 `youtube.upload` \u00e9 sens\u00edvel \u2192 justificativa + **v\u00eddeo demo** + review Trust&Safety. Sem isso, app fica \"Testing\": **100 users + refresh token expira em 7 dias** (invi\u00e1vel p/ autopilot cont\u00ednuo).\n  - **(B) Audit do projeto de API (decisivo)** \u2014 cita\u00e7\u00e3o oficial: *\"All videos uploaded via the videos.insert endpoint from unverified API projects created after 28 July 2020 will be restricted to private viewing mode.\"* Ou seja, **mesmo mandando `public`, o YouTube sobrescreve p/ `private`** at\u00e9 passar o \"Audit and Quota Extension Form\". [docs/videos/insert \u00b7 guides/quota_and_compliance_audits]\n- **Quota:** bucket dedicado \"Video Uploads\" ~100 uploads/dia default (custo em units em transi\u00e7\u00e3o 1600\u2192reduzido em dez-2025 \u2014 ler a Quota Calculator na hora). [docs/youtube/v3/determine_quota_cost]\n- **Per-user:** OAuth refresh token do canal (N\u00c3O API key); `access_type=offline` + `prompt=consent` (refresh_token s\u00f3 vem na 1\u00aa autoriza\u00e7\u00e3o). Em produ\u00e7\u00e3o (verificado) n\u00e3o expira por tempo. \u2192 `social_accounts` platform='youtube'. [guides/auth/server-side-web-apps]\n- **Gotchas:** v\u00eddeos nascem privados at\u00e9 o audit; canal precisa existir no upload; Brand Account exige permiss\u00e3o owner/manager; classifica\u00e7\u00e3o sensitive-vs-restricted de `youtube.upload` confirmar no submit (se restricted \u2192 security assessment anual).\n\n## 3. TikTok \u2014 fatos fundamentados (Lei 1)\n\n- **Mecanismo:** Content Posting API sobre `open.tiktokapis.com`. **Direct Post** (server-side, aut\u00f4nomo): `creator_info/query` (obrigat\u00f3rio) \u2192 `/v2/post/publish/video/init/` \u2192 `PULL_FROM_URL` ou `FILE_UPLOAD` (chunked) \u2192 poll `status/fetch`. *Upload-to-inbox* (`/inbox/...`) exige o usu\u00e1rio finalizar no app \u2192 **n\u00e3o serve p/ autopilot**. [doc/content-posting-api-reference-direct-post \u00b7 .../get-started]\n- **Scopes:** `video.publish` (direct post), `video.upload` (draft).\n- **\ud83d\udea7 Port\u00e3o de audit (= IG App Review):** registrar app em developers.tiktok.com + audit do Content Posting API. **Sem audit:** todo post \u00e9 **SELF_ONLY** (s\u00f3 o criador v\u00ea) + **conta precisa estar PRIVADA** no momento do post + \u22645 users/24h. Audit libera `PUBLIC_TO_EVERYONE`. *A\u00e7\u00e3o Sovereign, ~2-4 semanas (terceiros).* [doc/content-sharing-guidelines]\n- **V\u00eddeo:** MP4 H.264 vertical OK (360\u20134096px, 23\u201360fps, \u22644GB). Nosso 1080\u00d71920/30fps/<100MB cabe em 1 chunk ou PULL_FROM_URL. [doc/content-posting-api-media-transfer-guide]\n- **Per-user:** OAuth access_token **24h** + refresh_token **365d** + `open_id` (guardar como `platform_user_id`). \u2192 `social_accounts` platform='tiktok'. [doc/oauth-user-access-token-management]\n- **Gotchas:** `PULL_FROM_URL` exige **dom\u00ednio verificado** (signed URL aleat\u00f3ria de bucket privado N\u00c3O passa \u2192 usar FILE_UPLOAD ou servir de dom\u00ednio pr\u00f3prio); `upload_url` expira em 1h; `access_token` expira em 24h (refresh autom\u00e1tico obrigat\u00f3rio sen\u00e3o quebra no dia seguinte); rate 6 req/min por token; cap ~15 posts/dia/criador (n\u00e3o-oficial, validar).\n\n---\n\n## 4. Caminho recomendado (fatias finas, probe-first, single-tenant Usu\u00e1rio Zero)\n\n**PASSO 0 \u2014 Gate BoK (obrigat\u00f3rio antes de c\u00f3digo).** `docs/bok/post-engine/` (5/5) j\u00e1 cita TikTok/Shorts/Reels, MAS (a) nomeia tabela errada `social_credentials` (a viva \u00e9 `social_accounts`) e (b) n\u00e3o especifica scopes/audit/design dos branches. \u2192 **emenda via `/bok-scribe`** reconciliando o nome + cravando scopes, gates de audit e o design publish/oauth deste blueprint como Fonte da Verdade.\n\n**PASSO 1 \u2014 Fatia A \u00b7 TikTok primeiro** (menor atrito p/ provar E2E em sandbox/self-post): branch OAuth + branch publish (Direct Post) consumindo o MP4 9:16 que o `video-bridge` J\u00c1 gera. Provar 1 post real (SELF_ONLY at\u00e9 audit) com `video_url` p\u00fablico resolvido do bucket privado (como no Reel).\n\n**PASSO 2 \u2014 Fatia B \u00b7 YouTube Shorts:** branch Google OAuth (offline+consent) + `videos.insert` resumable do mesmo MP4. Nasce `private` at\u00e9 o audit \u2014 v\u00e1lido p/ provar o transporte E2E.\n\n**PASSO 3 \u2014 Fatia C \u00b7 Cad\u00eancia:** `'youtube'`/`'tiktok'` no `VIDEO_FLOW_PLATFORMS` + **fechar o gap do `auto-publish`** (resolver/assinar o MP4 9:16 e passar `content.video_url`). Isso fecha o caminho cron-de-v\u00eddeo p/ TODOS os canais (incl. IG Reel agendado, hoje s\u00f3 provado por invoke direto).\n\n**PASSO 4 \u2014 Spine de persona (CCIO):** trocar a semente do prompt de `topic: produto` por um perfil de voz do CCIO (pilares fixos, \u00e2ngulos vari\u00e1veis) \u2014 onde \"sempre falar da mesma coisa\" vira engenharia. (Pode ser fatia pr\u00f3pria ou parte da emenda BoK.)\n\n---\n\n## 5. A\u00e7\u00f5es Sovereign (gated, fora do c\u00f3digo \u2014 lead time de semanas)\n\n| A\u00e7\u00e3o | Plataforma | Destrava |\n|---|---|---|\n| Criar canal YouTube MCORCH (converter o existente) | YouTube | pr\u00e9-requisito do upload |\n| OAuth app verification (Google Cloud) \u2014 consent screen + demo video | YouTube | tira a tela vermelha / Testing |\n| **YouTube API Services Audit & Quota Extension Form** | YouTube | **v\u00eddeos p\u00fablicos** (sen\u00e3o nascem privados) |\n| Criar app em developers.tiktok.com + Content Posting API \"Direct Post\" | TikTok | conex\u00e3o |\n| **TikTok app audit** | TikTok | **posts p\u00fablicos** (sen\u00e3o SELF_ONLY/privado) |\n| (TikTok) verificar dom\u00ednio p/ PULL_FROM_URL OU aceitar FILE_UPLOAD | TikTok | pull-from-url |\n\n**Estrat\u00e9gia realista:** construir os publishers + OAuth AGORA, validar E2E em **privado/sandbox** (TikTok SELF_ONLY, YT private), e o **p\u00fablico destrava com a aprova\u00e7\u00e3o** (igual ao caminho IG App Review). O c\u00f3digo n\u00e3o bloqueia; o audit, sim.\n\n---\n\n## 6. Fontes (Lei 1) \u2014 ver `wf_24e9eb67` para a lista completa por claim\nYouTube: developers.google.com/youtube/v3/{guides/using_resumable_upload_protocol, docs/videos/insert, determine_quota_cost, guides/quota_and_compliance_audits, guides/auth/server-side-web-apps} \u00b7 identity/protocols/oauth2/production-readiness/{sensitive,restricted}-scope-verification \u00b7 support.google.com/youtube/answer/10059070.\nTikTok: developers.tiktok.com/doc/{content-posting-api-reference-direct-post, -upload-video, -get-started, -media-transfer-guide, content-sharing-guidelines, oauth-user-access-token-management}.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:49:24)*
+
+
+## 🤖 Claude *(02:49:25)*
+
+Blueprint selado. Registro a virada estratégica na memória (diretiva durável) e te dou o veredito.
+
+## 🤖 Claude *(02:49:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md",
+  "content": "---\nname: project_brand_persona_ccio\ndescription: Virada estrat\u00e9gica brand-first \u2014 conte\u00fado evangeliza o MCORCH via persona Gabriel AI/CCIO (n\u00e3o produto); afiliado = subproduto de longo prazo. Expans\u00e3o multi-canal YouTube+TikTok.\nmetadata:\n  type: project\n---\n\n**Diretiva Sovereign 2026-06-26** (depois de provar o LinkedIn E2E e remover a conex\u00e3o p/ recriar com avatar pr\u00f3prio): o foco do conte\u00fado **N\u00c3O s\u00e3o os produtos** \u2014 afiliado \u00e9 consequ\u00eancia de longo prazo. O foco \u00e9 **evangelizar o MCORCH** com uma voz \u00fanica e escal\u00e1vel: o **Gabriel AI / CCIO (Cofounder Chief Intelligence Office)** \u2014 primeira vers\u00e3o 100% digital do Sovereign (Gabriel Caldeira Rocha avatar) \u2014 como **rosto + voz** de TODOS os canais junto da marca. Os perfis (LinkedIn novo, YouTube\u2192MCORCH, Instagram `@magicorch`, TikTok novo) s\u00e3o bocas do mesmo organismo, mesma identidade visual + avatar unificado. A persona \u00e9 o **\u00e1tomo de distribui\u00e7\u00e3o escal\u00e1vel**: hoje 1 (CCIO)\u2192N canais; amanh\u00e3 N personas (cada depto da Pantheon com seu avatar).\n\n**Reframe t\u00e9cnico (a beleza):** os trilhos N\u00c3O mudam (gerar\u2192render 9:16\u2192agendar\u2192publicar\u2192atribuir). Muda s\u00f3 (a) a *fonte do tema* (produto \u2192 pilar de marca/miss\u00e3o; \"sempre falar da mesma coisa\" = pilares fixos, \u00e2ngulos vari\u00e1veis \u2014 vira spine de persona no prompt, troca o `topic:produto`) e (b) o *n\u00ba de bocas* (+YouTube +TikTok). Reusa o motor [[project_viral_autopilot]] inteiro.\n\n**A\u00e7\u00f5es j\u00e1 tomadas nesta sess\u00e3o:** plano de produto do User 0 (`640b3b67`) **pausado** (`is_active=false`, revers\u00edvel) \u2014 conte\u00fado Roborock n\u00e3o bate mais com a marca + LinkedIn foi desconectado (restam s\u00f3 `instagram`+`facebook` ativos).\n\n**Prep YouTube+TikTok (workflow `wf_24e9eb67`, fundamentado Lei 1) \u2192 blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`:**\n- **Infra ~90% pronta.** Enum `social_platform` J\u00c1 tem `youtube`+`tiktok` (zero migration). `social_accounts` Vault j\u00e1 cifra tokens. `scheduled_posts`/`auto-publish`/`autopilot` j\u00e1 fazem cad\u00eancia. OAuth connect \u00e9 gen\u00e9rico (`social-auth-init`+`social-auth-callback`, state HMAC). **O MP4 9:16 do IG Reel = MESMO asset YT Shorts+TikTok** (motor HyperFrames `video-bridge`).\n- **Net-new = 3 pares de branches** (publish-social / social-auth-init+callback / refresh-social-token) + **1 gap** (`auto-publish:54-83` s\u00f3 passa texto, n\u00e3o `content.video_url` \u2014 caminho cron-de-v\u00eddeo n\u00e3o fechado; Reel foi invoke direto) + add `youtube`/`tiktok` ao `VIDEO_FLOW_PLATFORMS` (autopilot-run:109).\n- **Port\u00f5es de aprova\u00e7\u00e3o = a\u00e7\u00e3o Sovereign, semanas (igual IG App Review):** YouTube = verifica\u00e7\u00e3o OAuth + **Audit do projeto API** (sen\u00e3o `videos.insert` nasce `private` mesmo pedindo public \u2014 projetos p\u00f3s-2020-07-28). TikTok = **app audit** (sen\u00e3o SELF_ONLY + conta privada + \u22645 users/24h). Estrat\u00e9gia: **construir + validar em privado/sandbox AGORA, p\u00fablico destrava na aprova\u00e7\u00e3o.**\n- **Gate MCORCH Closed-Loop:** amendar BoK `post-engine` via `/bok-scribe` ANTES de codar (ele cita TikTok/Shorts mas nomeia tabela errada `social_credentials`\u2192viva \u00e9 `social_accounts`, e n\u00e3o crava scopes/audit/branch design).\n\nRelacionado: [[project_creative_ecosystem_program]] \u00b7 [[project_viral_autopilot]] \u00b7 [[reference_ig_reels_publish_path]] \u00b7 [[feedback_api_tenancy_per_user]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:49:59)*
+
+
+## 🤖 Claude *(02:50:01)*
+
+Adiciono a entrada no índice de memória (perto das relacionadas). Leio o topo do índice p/ ancorar:
+
+## 🤖 Claude *(02:50:01)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "offset": 1,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Módulo Vídeo (video-studio) — BoK 9/9; Fatia 1 SHIPPED; **motor HyperFrames VIVO (2026-06-24)**; editor Studio = módulo-container (blueprint pronto)](project_video_studio.md) — faceless studio (nativo De-n8n) + HyperFrames sob MCORCH. **Fatia VS-2 motor HyperFrames VIVO** (commit `39f8001`): `scripts/hyperframes/render-core.ts` Playwright+FFmpeg→MP4 9:16 1080×1920 **sha256-idêntico** (NFR-VS-016) + worker `scripts/video-bridge.ts` (molde design-bridge: claim atômico `video_renders` engine=hyperframes→render→bucket privado `video-studio-assets`→`finalize_video_render`; systemd `video-bridge.service` active) + migration `20260624120000` (composition jsonb+bucket) + edge `video-render` transporte `poll://`. Single-tenant User 0 (hardening multi-tenant FMEA-VS-001 diferido). Consumido pelo [[project_viral_autopilot]] (vídeo 9:16 autônomo). /security-review SAFE. **Editor = Fatia VS-UI (próximo):** flip OTD-VS-005 A→C módulo-container (embed in-SPA inviável — `@hyperframes/studio@0.7.5` exige React 19 vs SPA React 18, prova `npm view`); blueprint material `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` (StudioApp **zero-props** server-backed; seam `StudioApiAdapter`; nosso `McorchAdapter.startRender`→`video-render`; vhost `studio.mcorch.com`=ação Sovereign; **gate #1 render-parity `frame=floor(time*fps)`**; Apache-2.0). Faceless nativo ainda a construir. ⚠️ doc drift `gemini_api_key`→`google_api_key` ([[reference_byok_gemini_column]]).
+> 4	- [BYOK Gemini = coluna `google_api_key` (gemini_api_key NÃO existe — drift BoK/CLAUDE.md)](reference_byok_gemini_column.md) — 2026-06-22: pego pelo smoke do video-render (402 falso). `select=gemini_api_key`→42703. Toda integração Gemini per-user lê `decrypted_user_api_keys.google_api_key` (canvas-execute confirma). Confie no DB live, não no doc.
+> 5	- [Cyber-Sentinel compartilhado — paridade pt-BR adicionada (OTD-VA-018 fechada)](reference_shared_sentinel_english_only.md) — 2026-06-23: `inspectPrompt` (`_shared/sentinel.ts`) era English-only (injection pt-BR pontuava 0). Agora 7 famílias pt-BR (f1-f7) espelham o inglês, **0 FP real** (58 amostras, armadilhas-trope adversariais); live 403 `score=2`. É TRIAGE score≥2: single-intent + beyond-triage passam por design (= inglês) → fonte-não-confiável→prompt ainda exige gate próprio (`sanitizeTrendTitle`). CUIDADO tunar: "revele os segredos"/"esqueça as instruções"/"modo livre"/"atua como desenvolvedor" são tropes legítimas. Só 2 importadores redeploy.
+> 6	- [Entregar valor visível ao Usuário Zero, menos plumbing técnico](feedback_deliver_user_value_not_plumbing.md) — Diretiva Sovereign 2026-06-24: "você está muito técnico e não entrega valor final". Quer o editor HyperFrames rodando (timeline multi-camada, overlays alpha, efeitos/transições). Priorizar caminho curto até algo que ele ABRE e TOCA; Lei 2 como meio, lean.
+> 7	- [Programa do ecossistema criativo bidirecional (Canvas+HyperFrames+OpenDesign→social)](project_creative_ecosystem_program.md) — Diretiva Sovereign 2026-06-25: híbrido bidirecional + `creative_assets` spine + faceless nativo (receita n8n 51s). Ordem decidida de 4 fatias. Nesta sessão: bug de perda de nós do Canvas fixado (`6fa6370`) + projeto `63d406fe` recuperado. ⚠️ rotacionar chave Gemini + token Telegram do n8n colado.
+> 8	- [Força total autônoma para o primeiro R$ real antes dos 90 dias](feedback_full_force_revenue_autonomy.md) — Diretiva Sovereign 2026-06-25: operar como Usuário 00 sobre o Usuário 0, executar a trilha autônoma SEM esperar resposta. Gargalo real verificado = distribuição+atribuição (NÃO geração); R$0/11 links/10 cliques. Lei 1 acima de tudo; surfacing honesto do Sovereign-gated (navegador residencial ML, Twitter Basic, IG App Review, Stripe live).
+> 9	- [Reparo do loop de receita — distribuição destravada + link assinado meli.la publicado + CTA leak fechado](project_revenue_funnel_repair.md) — 2026-06-25 commit `1ad04c5`: cron auto-publish estava MORTO (redirect /var/log inacessível) → durável+telemetria; `buildMlProductUrl` agora publica o meli.la assinado (sale-attributable) que estava parado no DB; `login.mcorch.com/go` CF-morto → unset AFFILIATE_REDIRECT_BASE; 2 posts injection removidos do LinkedIn (204), 1 post limpo monetizado VIVO. **Trilha Sovereign: (A) ativar pg_cron+is_active, (B) limpar CF público www.mcorch.com, (C) links assinados dos outros 2 produtos (IP residencial).**
+> 10	- [IG Reels publica pela conexão existente via graph.instagram.com + id do /me (não meta_config)](reference_ig_reels_publish_path.md) — 2026-06-25 Fatia 2 PROVADA E2E (Reel real `instagram.com/reel/DaBtVAQkiuz`): User 0 já conectado (`magicorch` MEDIA_CREATOR, scope publish). `publish-social` IG via `graph.instagram.com` (não facebook.com) + REELS + id do `/me?fields=user_id` (o `platform_user_id` guardado é app-scoped → rejeita code 100/33). Sem app/token/meta_config novo. video_url tem que ser pública.
+> ```
+
+## 🤖 Claude *(02:50:12)*
+
+
+## 🤖 Claude *(02:50:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [For\u00e7a total aut\u00f4noma para o primeiro R$ real antes dos 90 dias](feedback_full_force_revenue_autonomy.md) \u2014",
+  "new_string": "- [Virada brand-first \u2014 persona Gabriel AI/CCIO evangeliza o MCORCH (n\u00e3o produto); +YouTube +TikTok](project_brand_persona_ccio.md) \u2014 Diretiva Sovereign 2026-06-26: foco = marca via persona \u00fanica escal\u00e1vel (avatar CCIO = rosto de todos os canais), produto/afiliado = subproduto de longo prazo. Reusa o motor [[project_viral_autopilot]] (trilhos n\u00e3o mudam; muda fonte do tema + n\u00ba de bocas). Infra ~90% pronta (enum social_platform j\u00e1 tem yt/tiktok \u00b7 social_accounts Vault \u00b7 cad\u00eancia \u00b7 MESMO MP4 9:16 do Reel); net-new = 3 branches (publish-social/social-auth-init+callback/refresh) + gap `auto-publish` n\u00e3o passa video_url + add VIDEO_FLOW_PLATFORMS. Gates audit YT (videos.insert nasce private) + TikTok (SELF_ONLY) = a\u00e7\u00e3o Sovereign. Plano produto PAUSADO. Amendar BoK post-engine antes de codar. Blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`.\n- [For\u00e7a total aut\u00f4noma para o primeiro R$ real antes dos 90 dias](feedback_full_force_revenue_autonomy.md) \u2014"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:50:39)*
+
+
+## 🤖 Claude *(02:50:57)*
+
+Pronto — blueprint selado (`.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`) e memória atualizada. Veredito da preparação:
+
+## 🎯 Notícia central: a infra já está ~90% pronta
+
+O que eu temia ser "construir 2 integrações do zero" **não é** — porque você já construiu os trilhos certos:
+
+- O **mesmo MP4 9:16** que o Reel publicou é o que YouTube Shorts e TikTok consomem (motor HyperFrames). **Zero render novo.**
+- O enum `social_platform` **já contém `youtube` e `tiktok`** → zero migration.
+- `social_accounts` (Vault cifrado), o OAuth connect genérico (`social-auth-init`+`callback` com state HMAC), o refresh de token, `scheduled_posts`, o cron `auto-publish` e o motor `autopilot` — **tudo reusável as-is**.
+
+**Net-new é pequeno:** 3 pares de branches (publish · oauth-init+callback · refresh) + 1 gap real (o `auto-publish` hoje só passa texto, não `content.video_url` — o caminho cron-de-vídeo nunca foi fechado; o Reel foi invoke direto) + adicionar `youtube`/`tiktok` ao `VIDEO_FLOW_PLATFORMS`.
+
+## 🚧 O gargalo real é aprovação, não código (fundamentado, Lei 1)
+
+Ambas as plataformas têm um **portão de audit = o equivalente do IG App Review**, e é **ação sua nos dashboards** (semanas de lead time):
+
+| | Portão | Sem aprovação |
+|---|---|---|
+| **YouTube** | Verificação OAuth + **Audit do projeto de API** | `videos.insert` de projeto não-auditado (pós-2020) **nasce `private`** mesmo pedindo `public` — citação oficial |
+| **TikTok** | **App audit** do Content Posting API | todo post é **SELF_ONLY** + conta precisa estar **privada** + ≤5 users/24h |
+
+**Estratégia honesta:** dá pra **construir os publishers + OAuth agora e provar E2E em privado/sandbox**; o **público de verdade destrava quando as aprovações saírem** (igual ao caminho do IG). O código não trava — o audit, sim.
+
+## 📋 Próximo passo (gate MCORCH Closed-Loop)
+
+Antes de codar publisher: **amendar o BoK `post-engine`** — ele já cita TikTok/Shorts, mas (a) nomeia a tabela errada (`social_credentials` → a viva é `social_accounts`) e (b) não crava scopes/audit/design dos branches. Este blueprint é a Fonte da Verdade fundamentada pra essa emenda.
+
+## Implicações pras contas que você está criando agora
+- **YouTube:** o canal precisa existir antes de conectar; depois eu preparo o OAuth, mas o público depende do Audit (você submete).
+- **TikTok:** conta nova + app audit; a conta fica privada até a aprovação.
+- **Persona CCIO:** a "spine de voz" (pilares fixos, ângulos variáveis = "sempre falar da mesma coisa") é a camada que troca o `topic:produto` — é onde a sua identidade vira engenharia.
+
+**Como quer avançar?** Eu recomendo: (1) eu disparo a **emenda do BoK post-engine** (`/bok-scribe`, não depende das contas) cravando scopes/audit/branches + a spine da persona CCIO; (2) você termina de criar as contas + registra os apps (Google Cloud / TikTok dev). Aí codamos fatia-a-fatia (TikTok primeiro, menor atrito). Quer que eu já inicie a emenda do BoK enquanto você cria as contas?
+
+## 👤 User *(02:50:58)*
+
+Precisamos adicionar tambem um nó no canvas studio, para sinclibs criar meu avatar, por exemplo criar o projeto ja subi duas fotos no nó Personagem referencia, e minha ideia é ter 3 nós desses com fotos minhas para criar moods boards para ter melhor referencia e consistencia com meu rosto nos resultados de Gabriel AI.
+
+## 🤖 Claude *(02:51:48)*
+
+
+## 🤖 Claude *(02:51:49)*
+
+Isso conecta direto na camada de consistência do Canvas Studio — e é o coração da persona Gabriel AI (rosto consistente). Antes de propor/construir, vou operar pelo guia autoritativo do Canvas Studio (shape exato dos nós, Handle ids, persistência, modelo de consistência) e verificar o que já existe.
+
+## 🤖 Claude *(02:51:52)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "canvas-studio-cinematic",
+  "args": "Adicionar um n\u00f3 \"Personagem Refer\u00eancia\" (character/face reference) que aceita m\u00faltiplas fotos do rosto do usu\u00e1rio (Gabriel), permitindo ~3 n\u00f3s desses como mood board de refer\u00eancia facial, encadeados downstream para consist\u00eancia de rosto nas gera\u00e7\u00f5es da persona Gabriel AI. Preciso saber: (1) j\u00e1 existe um n\u00f3 de refer\u00eancia de imagem/personagem hoje? qual o shape/Handle ids? (2) o modelo de consist\u00eancia (findUpstreamImages/reference threading/seed) e se canvas-execute (Nano Banana/Higgsfield) suporta m\u00faltiplas imagens de refer\u00eancia facial; (3) como persistir m\u00faltiplas fotos uploadadas num n\u00f3."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: canvas-studio-cinematic
+> ```
+
+## 👤 User *(02:51:52)*
+
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/canvas-studio-cinematic
+
+# Skill: canvas-studio-cinematic — Pipeline de Creatives Consistentes
+
+Produção de conteúdo visual **consistente** numa cadeia de nós conectados (mesmo
+produto/personagem/estilo persistindo de uma geração à seguinte) para monetização afiliada.
+
+**SOPs autoritativas:**
+- `docs/processes/canvas-node-consistency.md` (reference threading + seed lock + graph seeding v1.1)
+- `docs/processes/canvas-video-async-execution.md` (vídeo Higgsfield async + webhook)
+- `docs/processes/canvas-pipeline-architecture.md` (arquitetura do canvas)
+
+**Validação técnica:** `.claude/context/canvas-consistency-validation-2026-05-29.md`
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+## ⚠️ Verdade fundamental nº1 — o grafo vive no servidor
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-26 - Análise de oportunidades de ganho nas últimas velas]]
-> * **Próxima Sessão**: [[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias]]
-%% --- TIMELINE END --- %%
+O grafo de nós/edges de um projeto Canvas é persistido em **`vm_canvas_projects.graph`** (jsonb),
+não só em localStorage. Um projeto com `graph.nodes = []` **abre em branco no painel**, mesmo
+que existam assets em `vm_canvas_assets`. Assets têm `node_id`, mas isso **não** materializa nós —
+o nó só aparece se estiver no `graph`.
+
+**Pitfall histórico (corrigido em v1.1):** `scripts/canvas-campaign-build.ts` gerava assets mas
+deixava `graph.nodes=[]` → as 3 campanhas (Roborock/Samsung/Family Hub) abriam vazias. O fix:
+`buildCampaignGraph()` + `persistGraph()` escrevem o grafo com as imagens já geradas anexadas.
+
+## ⚠️ Verdade fundamental nº2 — o nó renderiza pela `data.output`, não por lookup
+
+Um nó exibe sua imagem/vídeo via **`data.output.imageUrl`** / **`data.output.videoUrl`** embutido
+no próprio nó — NÃO por query de `vm_canvas_assets` por `node_id`. Ao semear um grafo a partir de
+assets existentes, copie a URL do asset para `data.output.{imageUrl|videoUrl}`.
+
+---
+
+## Shape exato de um nó ReactFlow (mirror de projeto real)
+
+```jsonc
+{
+  "id": "n_<slug>",                    // estável; pode ser readable (n_roborock_s8_base)
+  "type": "generateImage",             // = data.kind ("generateImage" | "imageToVideo" | "characterReference" | "sceneCompose" | "styleTransfer")
+  "position": { "x": 40, "y": 140 },   // free-form; pipelineMode=false evita math de lanes
+  "data": {
+    "kind": "generateImage",
+    "label": "Base",
+    "modelId": "openrouter-gemini-image",   // DEFAULT_IMAGE_MODEL (Nano Banana). Vídeo: "dop-standard-5s"
+    "prompt": "<prompt>",
+    "negativePrompt": "",
+    "aspectRatio": "16:9",
+    "controls": { "creativity": 0.7, "resemblance": 0.3, "hdr": 0.5, "fractality": 0.3, "sharpness": 0.8 },
+    "seed": 123456789, "fixedSeed": true,    // seed travado = consistência entre gerações
+    "status": "success",                     // "idle" | "running" | "success" | "error"
+    "inheritStyle": false,
+    "output": { "imageUrl": "<asset public_url>", "generatedAt": "<ISO>" }
+  }
+}
+```
+
+ImageToVideo: `data.kind="imageToVideo"`, `videoModel:"dop-standard-5s"`, `duration:5`,
+`motionStrength:0.5`, `output.videoUrl`.
+
+Factories canônicas em `src/types/canvas.ts`: `makeDefaultGenerateImage()`, `makeDefaultImageToVideo()`, etc.
+
+### Handle ids (críticos — edge não renderiza com handle errado)
+| Nó | target (entrada) | source (saída) |
+|----|------------------|----------------|
+| generateImage | `input_prompt` | `output_image` |
+| imageToVideo | `input_image` | `output_video` |
+| characterReference | — | `output` |
+| sceneCompose | `input_layout` | `output_scene` |
+| styleTransfer | `input_content_image` / `input_style_image` | `output_styled` |
+
+Edge: `{ id, type:"pipeline", source, target, sourceHandle, targetHandle }`.
+Ex.: base→variação = `output_image`→`input_prompt`; variação→vídeo = `output_image`→`input_image`.
+
+### Graph object (top-level)
+`{ nodes, edges, lanes, pipelineMode, styleSettings }`. Ao atualizar, preserve
+`lanes`/`styleSettings` (spread do graph atual) e use `pipelineMode:false` para layout livre.
+
+---
+
+## Consistência (reference threading + seed lock)
+
+Para o mesmo produto persistir entre gerações:
+1. **Seed travado** (`fixedSeed:true`, mesmo `seed`) em toda a cadeia.
+2. **Reference image** — passe `reference_image_urls: [<upstream output_url>]` no payload do
+   `canvas-execute` do nó downstream (a imagem upstream entra como referência, não só texto).
+
+`canvas-execute` payload:
+```jsonc
+{ "project_id", "node_id", "node_type": "generate_image" | "image_to_video",
+  "provider": "openrouter" | "higgsfield", "model": "google/gemini-2.5-flash-image" | "dop-standard",
+  "prompt", "reference_image_urls": ["..."], "input_asset_url": "...",
+  "parameters": { "seed", "aspect_ratio": "16:9", "duration": 5, "motion_strength": 0.5 } }
+```
+
+Imagem = síncrona (retorna `output_url`). Vídeo Higgsfield = **async** (`status:"queued"` + webhook
+finaliza + debita só após upload OK). Ver `canvas-video-async-execution.md`.
+
+---
+
+## Modelos & custo
+- **Imagem barata (validação):** `openrouter` / `google/gemini-2.5-flash-image` (Nano Banana, ~10 mco).
+- **Vídeo:** `higgsfield` / `dop-standard` (DoP Standard 5s, 125 mco). Whitelist enforced front+back.
+- Débito atômico via RPC `deduct_mco_coins` (nunca client-side). Daily cap 100 mco/24h por user.
+
+---
+
+## Campaign builder (per-produto, idempotente)
+```bash
+bun run scripts/canvas-campaign-build.ts <roborock_s8|samsung_neo_qled_8k|family_hub> [--video]
+```
+- Auth como Sovereign via magiclink OTP (`admin.auth.admin.generateLink` + `verifyOtp`).
+- Phase A: base + variação consistente (Nano Banana). `--video` = Phase B (DoP, 9 cr Higgsfield).
+- **Idempotente:** `findExistingAsset()` reusa assets → re-rodar = zero gasto.
+- **Sempre semeia o grafo** (`buildCampaignGraph` + `persistGraph`) → projeto abre com o pipeline visível.
+
+## Materiality gate (Lei 1)
+Qualquer alteração no Canvas Studio exige `bun run scripts/qa/audit-canvas-ui.ts` (status 0 +
+screenshot 1920x1080) — ver `survival.md`. E re-rodar `/e2e-audit` se UI mudou.
+
+## Pitfalls
+- ❌ Script que gera assets sem escrever `graph` → projeto em branco.
+- ❌ Nó sem `data.output.imageUrl` → não renderiza a imagem.
+- ❌ Handle id errado no edge → conexão não desenha.
+- ❌ `pnpm` na raiz do repo (move pacotes bun para `node_modules/.ignored/`).
+- ❌ Buildar no worktree sem `.env` → bundle sem VITE env (Supabase não conecta). Build com env + servir no `dist/` do repo principal.
+
+## Key files
+| Propósito | Path |
+|-----------|------|
+| Tipos + factories de nós | `src/types/canvas.ts` |
+| Canvas store (zundo) | `src/store/useCanvasStore.ts` |
+| Editor page | `src/pages/CanvasEditorPage.tsx` |
+| Studio hook (load/save graph) | `src/hooks/useCanvasStudio.ts` |
+| Node components (Handles) | `src/components/canvas/nodes/` |
+| Edge function | `supabase/functions/canvas-execute/index.ts` |
+| Vídeo async webhook | `supabase/functions/higgsfield-webhook/index.ts` |
+| Realtime jobs hook | `src/hooks/useCanvasJobsRealtime.ts` |
+| Campaign builder | `scripts/canvas-campaign-build.ts` |
+| Upstream image collector | `src/lib/canvas-utils.ts` → `findUpstreamImages()` |
+
+
+ARGUMENTS: Adicionar um nó "Personagem Referência" (character/face reference) que aceita múltiplas fotos do rosto do usuário (Gabriel), permitindo ~3 nós desses como mood board de referência facial, encadeados downstream para consistência de rosto nas gerações da persona Gabriel AI. Preciso saber: (1) já existe um nó de referência de imagem/personagem hoje? qual o shape/Handle ids? (2) o modelo de consistência (findUpstreamImages/reference threading/seed) e se canvas-execute (Nano Banana/Higgsfield) suporta múltiplas imagens de referência facial; (3) como persistir múltiplas fotos uploadadas num nó.
+
+## 🤖 Claude *(02:52:05)*
+
+
+## 🤖 Claude *(02:52:07)*
+
+O guia revelou o achado-chave: **`characterReference` JÁ é um tipo de nó** (no enum `data.kind` + Handle table: `source: "output"`, sem input). Então o nó "Personagem Referência" que você usou já existe. A questão agora é o que ele suporta hoje (múltiplas fotos? threading downstream? multi-imagem no canvas-execute). Investigo o código real:
+
+## 🤖 Claude *(02:52:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1) characterReference no types/canvas.ts (factory + shape) ===\"\ngrep -nE \"characterReference|CharacterReference|makeDefaultCharacter|referenceImages|imageUrls|character\" src/types/canvas.ts | head -25\necho \"=== 2) componente do n\u00f3 characterReference ===\"\nls src/components/canvas/nodes/ | grep -iE \"character|reference\"\necho \"=== 3) findUpstreamImages (collector) ===\"\ngrep -nE \"characterReference|output|imageUrl|reference|kind\" src/lib/canvas-utils.ts | head -25",
+  "description": "characterReference: factory, componente, collector"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1) characterReference no types/canvas.ts (factory + shape) ===
+> 5: * viralmind-builder (GenerateImage · CharacterReference · SceneCompose ·
+> 21:  | "characterReference"
+> 383:export interface CharacterReferenceData {
+> 384:  kind: "characterReference";
+> 386:  characterName: string;
+> 407:  /** Smart Inheritance — id do nó characterReference upstream. */
+> 408:  characterRefId?: string;
+> 424:  characterRefId?: string;
+> 442:  characterRefId?: string;
+> 455:  | CharacterReferenceData
+> 556:export function makeDefaultCharacterReference(
+> 558:  overrides: Partial<CharacterReferenceData> = {},
+> 562:    type: "characterReference",
+> 565:      kind: "characterReference",
+> 567:      characterName: "",
+> 769:    case "characterReference":
+> 770:      // CharacterReference doesn't trigger canvas-execute by itself —
+> 783:export function isCharacterReference(data: CanvasNodeData): data is CharacterReferenceData {
+> 784:  return data.kind === "characterReference";
+> 807:    case "characterReference":
+> === 2) componente do nó characterReference ===
+> CharacterReferenceNode.tsx
+> === 3) findUpstreamImages (collector) ===
+> 6: * output shape (`data.output.imageUrl` / `imageDataUrl`) plus the legacy
+> 7: * `data.imageUrl` field used by CharacterReference uploads.
+> 15:  const out = d.output as { imageUrl?: string; imageDataUrl?: string } | undefined;
+> 16:  if (out?.imageUrl) return out.imageUrl;
+> 18:  if (typeof d.imageUrl === 'string') return d.imageUrl;
+> 47: * deduped, for cross-node consistency reference threading. Generate/style nodes
+> 48: * pass these as `reference_image_urls` so the model preserves identity from the
+> ```
+
+## 🤖 Claude *(02:52:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== canvas-execute: como trata reference_image_urls (single vs array) + multi-imagem pro modelo ===\"\ngrep -nE \"reference_image_urls|reference|characterReference|character_reference|inlineData|image_url|parts|contents|input_asset\" supabase/functions/canvas-execute/index.ts | head -30",
+  "description": "canvas-execute: threading de reference images + multi-imagem"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === canvas-execute: como trata reference_image_urls (single vs array) + multi-imagem pro modelo ===
+> 54:// a clearer error than the downstream "no image_url" symptom.
+> 85:  input_asset_url?: string;
+> 86:  input_asset_id?: string;
+> 91:  // as reference images, + a locked seed propagated across the connected graph.
+> 93:  reference_image_urls?: string[];
+> 260:    if (body.input_asset_id) {
+> 261:      resolvedInputAssetId = body.input_asset_id;
+> 262:    } else if (body.input_asset_url) {
+> 266:        .eq("public_url", body.input_asset_url)
+> 293:        input_asset_id: resolvedInputAssetId,
+> 537:          input_asset_id: resolvedInputAssetId,
+> 695:  // Cross-node consistency: seed (reproducibility, all models) + reference image
+> 697:  // SOP: docs/processes/canvas-node-consistency.md. Fail-open if no reference/seed.
+> 702:  const refUrl = (body.reference_image_urls ?? []).filter(Boolean)[0];
+> 705:      input.image_prompt = refUrl; // FLUX 1.1 Pro: composition reference
+> 768:  // is an array of multimodal parts; image parts have type `image_url` with
+> 769:  // `image_url.url` carrying the asset URL.
+> 772:  // Cross-node consistency: attach upstream reference images as image_url parts.
+> 774:  // image_url.url takes both https (preferred — bucket URLs) and data: URIs.
+> 775:  // Fail-open: no references → plain text content (current behavior, zero regression).
+> 776:  const refUrls = (body.reference_image_urls ?? []).filter(Boolean).slice(0, 4);
+> 781:        ...refUrls.map((url) => ({ type: "image_url", image_url: { url } })),
+> 810:  //   2. message.content = [{type:'text',text:...}, {type:'image_url', image_url:{url:'data:...' | 'https://...'}}]
+> 817:      if (part?.type === "image_url" && part?.image_url?.url) {
+> 818:        const u = String(part.image_url.url);
+> 837:      } else if (first.image_url?.url) {
+> 838:        u = String(first.image_url.url);
+> 860:    throw new Error(`OpenRouter: resposta multimodal sem image_url. Response keys: ${Object.keys(data || {})}. Message keys: ${Object.keys(message || {})}. Raw response: ${JSON.stringify(data).slice(0, 400)}`);
+> 912:    // upstream connected references so compose preserves identity automatically.
+> 913:    const refs = (body.reference_image_urls ?? []).filter(Boolean);
+> ```
+
+## 🤖 Claude *(02:52:40)*
+
+
+## 🤖 Claude *(02:52:43)*
+
+Quadro claro: o nó `characterReference` **existe** e o canvas-execute **já threada até 4 imagens de referência** pro Gemini/Nano Banana (`slice(0,4)`, multimodal `image_url` parts) — `findUpstreamImages` coleta os outputs upstream incl. o `data.imageUrl` legado do CharacterReference. O provável gap pra sua visão é: o nó hoje guarda **1 foto só**, não um array (mood board). Confirmo o shape exato + o componente de upload + o collector:
+
+## 🤖 Claude *(02:52:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 383,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 383	export interface CharacterReferenceData {
+> 384	  kind: "characterReference";
+> 385	  label: string;
+> 386	  characterName: string;
+> 387	  imageUrl?: string;
+> 388	  storagePath?: string;
+> 389	  /** Higgsfield Soul Character id (Phase 4.5 — registro real). */
+> 390	  soulId?: string;
+> 391	  soulIdStatus?: "idle" | "registering" | "ready" | "failed";
+> 392	  soulIdError?: string;
+> 393	  status: NodeStatus;
+> 394	  error?: string;
+> 395	}
+> 396	
+> 397	export interface SceneComposeData {
+> 398	  kind: "sceneCompose";
+> 399	  label: string;
+> 400	  prompt: string;
+> 401	  aspectRatio: AspectRatio;
+> 402	  modelId: ImageModelId;
+> 403	  /** mcoCoins estimados — derivado de MODEL_INFO[modelId]. */
+> 404	  cost: number;
+> 405	  status: NodeStatus;
+> 406	  inheritStyle?: boolean;
+> 407	  /** Smart Inheritance — id do nó characterReference upstream. */
+> 408	  characterRefId?: string;
+> 409	  output?: {
+> 410	    imageUrl?: string;
+> 411	    storagePath?: string;
+> 412	    generatedAt: string;
+> 413	  };
+> 414	  error?: string;
+> 415	}
+> 416	
+> 417	export interface StyleTransferData {
+> 418	  kind: "styleTransfer";
+> 419	  label: string;
+> 420	  strength: number;
+> 421	  cost: number;
+> 422	  presetId: StyleTransferPresetId;
+> ```
+
+## 🤖 Claude *(02:52:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 556,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 556	export function makeDefaultCharacterReference(
+> 557	  position: { x: number; y: number },
+> 558	  overrides: Partial<CharacterReferenceData> = {},
+> 559	): CanvasNode {
+> 560	  return {
+> 561	    id: makeNodeId(),
+> 562	    type: "characterReference",
+> 563	    position,
+> 564	    data: {
+> 565	      kind: "characterReference",
+> 566	      label: "Personagem",
+> 567	      characterName: "",
+> 568	      status: "idle",
+> 569	      ...overrides,
+> 570	    },
+> 571	  };
+> 572	}
+> 573	
+> 574	export function makeDefaultSceneCompose(
+> 575	  position: { x: number; y: number },
+> 576	  overrides: Partial<SceneComposeData> = {},
+> 577	): CanvasNode {
+> 578	  const modelId = overrides.modelId ?? "openrouter-gemini-image";
+> 579	  return {
+> 580	    id: makeNodeId(),
+> 581	    type: "sceneCompose",
+> 582	    position,
+> 583	    data: {
+> ```
+
+## 🤖 Claude *(02:52:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-utils.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { Edge } from '@xyflow/react';
+> 2	import type { CanvasNode } from '@/types/canvas';
+> 3	
+> 4	/**
+> 5	 * Read an image URL out of a node's `data` payload. Looks at the canonical
+> 6	 * output shape (`data.output.imageUrl` / `imageDataUrl`) plus the legacy
+> 7	 * `data.imageUrl` field used by CharacterReference uploads.
+> 8	 *
+> 9	 * Centralized in Phase 4.2c so ImageToVideoNode, ImageToVideoInspector,
+> 10	 * and CanvasEditorPage.handleRunAll share the exact same resolution rule.
+> 11	 */
+> 12	export function pickNodeImage(data: unknown): string | undefined {
+> 13	  if (!data || typeof data !== 'object') return undefined;
+> 14	  const d = data as Record<string, unknown>;
+> 15	  const out = d.output as { imageUrl?: string; imageDataUrl?: string } | undefined;
+> 16	  if (out?.imageUrl) return out.imageUrl;
+> 17	  if (out?.imageDataUrl) return out.imageDataUrl;
+> 18	  if (typeof d.imageUrl === 'string') return d.imageUrl;
+> 19	  return undefined;
+> 20	}
+> 21	
+> 22	/**
+> 23	 * Walk the immediate upstream nodes (edges where `target === nodeId`) and
+> 24	 * return the first usable image URL. One hop only — matches the existing
+> 25	 * inspector/node behavior; deep BFS is not needed for the current canvas
+> 26	 * topology (image-to-video has a single image source).
+> 27	 */
+> 28	export function findUpstreamImage(
+> 29	  nodeId: string,
+> 30	  nodes: CanvasNode[],
+> 31	  edges: Edge[],
+> 32	): string | undefined {
+> 33	  const upstreamIds = edges
+> 34	    .filter((e) => e.target === nodeId)
+> 35	    .map((e) => e.source);
+> 36	  for (const id of upstreamIds) {
+> 37	    const src = nodes.find((n) => n.id === id);
+> 38	    if (!src) continue;
+> 39	    const url = pickNodeImage(src.data);
+> 40	    if (url) return url;
+> 41	  }
+> 42	  return undefined;
+> 43	}
+> 44	
+> 45	/**
+> 46	 * Collect ALL immediate upstream image URLs (edges where `target === nodeId`),
+> 47	 * deduped, for cross-node consistency reference threading. Generate/style nodes
+> 48	 * pass these as `reference_image_urls` so the model preserves identity from the
+> 49	 * connected upstream creative(s). Capped at 4 (Gemini character-consistency limit).
+> 50	 * SOP: docs/processes/canvas-node-consistency.md.
+> 51	 */
+> 52	export function findUpstreamImages(
+> 53	  nodeId: string,
+> 54	  nodes: CanvasNode[],
+> 55	  edges: Edge[],
+> 56	): string[] {
+> 57	  const urls: string[] = [];
+> 58	  for (const e of edges.filter((edge) => edge.target === nodeId)) {
+> 59	    const src = nodes.find((n) => n.id === e.source);
+> 60	    if (!src) continue;
+> 61	    const url = pickNodeImage(src.data);
+> 62	    if (url && !urls.includes(url)) urls.push(url);
+> 63	  }
+> 64	  return urls.slice(0, 4);
+> 65	}
+> 66	
+> 67	/**
+> 68	 * Find the asset URL connected to a specific target handle of a node.
+> 69	 */
+> 70	export function findUpstreamHandleAsset(
+> 71	  nodeId: string,
+> 72	  targetHandle: string,
+> 73	  nodes: CanvasNode[],
+> 74	  edges: Edge[],
+> 75	): string | undefined {
+> 76	  const edge = edges.find((e) => e.target === nodeId && e.targetHandle === targetHandle);
+> 77	  if (!edge) return undefined;
+> 78	  const src = nodes.find((n) => n.id === edge.source);
+> 79	  if (!src) return undefined;
+> 80	  return pickNodeImage(src.data);
+> 81	}
+> 82	
+> ```
+
+## 🤖 Claude *(02:53:37)*
+
+
+## 🤖 Claude *(02:53:38)*
+
+Agora tenho o gap exato. Vejo o componente de upload + como as fotos persistem antes de propor:
+
+## 🤖 Claude *(02:53:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/CharacterReferenceNode.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { User } from "lucide-react";
+> 4	import { cn } from "@/lib/utils";
+> 5	import { type CharacterReferenceData } from "@/types/canvas";
+> 6	
+> 7	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 8	
+> 9	export const CharacterReferenceNode = memo(function CharacterReferenceNode({ data, selected }: NodeProps) {
+> 10	  const d = data as unknown as CharacterReferenceData;
+> 11	  return (
+> 12	    <div
+> 13	      className={cn(
+> 14	        "w-[220px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all",
+> 15	        selected ? "border-accent ring-2 ring-accent/30" : "border-border",
+> 16	      )}
+> 17	    >
+> 18	      <Handle type="source" position={Position.Right} id="output" className={HANDLE_CLASS} />
+> 19	      <header className="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
+> 20	        <User className="h-3 w-3 text-secondary" />
+> 21	        <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 22	      </header>
+> 23	      <div className="aspect-square w-full bg-muted/40">
+> 24	        {d.imageUrl ? (
+> 25	          <img
+> 26	            src={d.imageUrl}
+> 27	            alt={d.characterName}
+> 28	            className="h-full w-full object-cover"
+> 29	            draggable={false}
+> 30	          />
+> 31	        ) : (
+> 32	          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+> 33	            Sem imagem
+> 34	          </div>
+> 35	        )}
+> 36	      </div>
+> 37	      <div className="px-2.5 py-1.5">
+> 38	        <div className="truncate text-[11px] font-medium">
+> 39	          {d.characterName || <span className="italic opacity-60">Sem nome</span>}
+> 40	        </div>
+> 41	        <div className="font-mono text-[9px] text-muted-foreground">0 💎 · referência</div>
+> 42	      </div>
+> 43	    </div>
+> 44	  );
+> 45	});
+> 46	
+> ```
+
+## 🤖 Claude *(02:54:08)*
+
+
+## 🤖 Claude *(02:54:11)*
+
+O componente confirma o gap: o nó renderiza **1 `imageUrl` só** (não array). Mas há um achado mais importante no próprio tipo — `soulId` / `soulIdStatus` ("**Higgsfield Soul Character** id — Phase 4.5 — registro real"). Isso é um caminho de **identidade travada** (registrar o rosto como personagem nomeado), potencialmente mais forte que reference-threading ad-hoc pra uma persona persistente. Verifico se está implementado + onde acontece o upload:
+
+## 🤖 Claude *(02:54:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Soul Character: registro implementado? (soulId / register-soul / higgsfield soul) ===\"\ngrep -rnE \"soulId|register.?soul|soul.?character|registerSoul|/soul|character_id|higgsfield.*character\" src/ supabase/functions/ scripts/ 2>/dev/null | grep -iv \"node_modules\" | head -25\necho \"=== upload das fotos: onde acontece (inspector)? ===\"\ngrep -rlnE \"characterReference|CharacterReference|imageUrl.*upload|upload.*character|storagePath\" src/components/canvas/ src/hooks/ 2>/dev/null | head; echo \"---\"\ngrep -rnE \"\\.upload\\(|from\\(.*storage|canvas-assets|character.*upload|handleUpload|uploadImage\" src/components/canvas/inspectors/ 2>/dev/null | head -15",
+  "description": "Soul Character impl + mecanismo de upload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Soul Character: registro implementado? (soulId / register-soul / higgsfield soul) ===
+> src/types/canvas.ts:50: * `higgsfield/soul-<res>-<batch>` (see CREDIT_COSTS in canvas-execute).
+> src/types/canvas.ts:390:  soulId?: string;
+> src/types/canvas.ts:391:  soulIdStatus?: "idle" | "registering" | "ready" | "failed";
+> src/types/canvas.ts:392:  soulIdError?: string;
+> supabase/functions/canvas-execute/index.ts:27:  "higgsfield/soul-720p-1": 20,   // 1.5 hf credits ≈ $0.09
+> supabase/functions/canvas-execute/index.ts:28:  "higgsfield/soul-720p-4": 26,   // 2.0 hf credits ≈ $0.13
+> supabase/functions/canvas-execute/index.ts:29:  "higgsfield/soul-1080p-1": 40,  // 3.0 hf credits ≈ $0.19
+> supabase/functions/canvas-execute/index.ts:30:  "higgsfield/soul-1080p-4": 65,  // 5.0 hf credits ≈ $0.31
+> supabase/functions/canvas-execute/index.ts:73:  return `higgsfield/soul-${res}-${batch}`;
+> supabase/functions/canvas-execute/index.ts:901:    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> supabase/functions/canvas-execute/index.ts:902:    : `${BASE_URL}/higgsfield-ai/soul/standard`;
+> scripts/scrape-openclaw-docs.ts:80:  { url: 'https://docs.openclaw.ai/pt-BR/concepts/soul.md', section: 'bonus' },
+> === upload das fotos: onde acontece (inspector)? ===
+> src/components/canvas/nodes/CharacterReferenceNode.tsx
+> src/components/canvas/RightPanel/index.tsx
+> src/components/canvas/RightPanel/inspectors/StyleTransferInspector.tsx
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx
+> src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx
+> src/components/canvas/RightPanel/shared.tsx
+> src/components/canvas/RightPanel/inspectors/CharacterReferenceInspector.tsx
+> src/hooks/useCanvasPipeline.ts
+> ---
+> ```
+
+## 🤖 Claude *(02:55:32)*
+
+
+## 🤖 Claude *(02:55:42)*
+
+Investigação completa — e o quadro é melhor do que parece, com um caveat honesto. Deixa eu te dar o mapa real antes de construir:
+
+## O que já existe (e o que falta)
+
+**O nó `characterReference` já existe** e a **consistência de rosto já está cabeada**: `canvas-execute` threada **até 4 fotos de referência** pro modelo (Nano Banana/Gemini) como imagens multimodais, via `findUpstreamImages`. Ou seja — **"3 nós com suas fotos → rosto consistente do Gabriel AI" já funciona hoje** (1 foto por nó, teto de 4 fotos no total que o modelo recebe).
+
+**O gap pra sua visão exata (mood board):** o nó hoje guarda **1 foto só** (`imageUrl`), não um array. As "2 fotos num nó" que você subiu → só 1 é usada. Pra virar mood-board de verdade, preciso fazer o nó segurar **2-4 fotos** + o collector emitir todas.
+
+**Caveat de honestidade (Lei 1):** o caminho mais forte de "travar identidade" — registrar seu rosto como **Higgsfield Soul Character** (`soulId`) — está **declarado no tipo mas NÃO implementado** (é aspiração da Phase 4.5; só os campos existem). O que funciona de verdade hoje é o **reference-threading** (suas fotos → modelo a cada geração). É real e entrega consistência — só não é um "lock" registrado. Dá pra construir o Soul registration depois se você quiser identidade ainda mais cravada.
+
+**Teto técnico:** o modelo recebe no máx **4 fotos de referência** (limite de consistência do Gemini). Então o ideal é **3-4 fotos do seu rosto em ângulos diferentes** (frontal, 3/4, perfil) — mais que isso não ajuda o modelo.
+
+Há uma escolha de produto que muda o que eu construo + se gasto mco agora:
+
+## 🤖 Claude *(02:55:52)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como avan\u00e7ar com a refer\u00eancia facial do Gabriel AI? (o motor de consist\u00eancia j\u00e1 existe; a escolha \u00e9 sobre o n\u00f3 mood-board e ver funcionando)",
+      "header": "Avatar / face ref",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Os dois: demonstrar agora + construir o n\u00f3 (recomendado)",
+          "description": "Acho seu projeto + as fotos que voc\u00ea subiu, gero 1 imagem do Gabriel AI face-consistente AGORA (Nano Banana, ~10 mco) pra voc\u00ea VER funcionando, E depois construo o n\u00f3 mood-board multi-foto (2-4 fotos por n\u00f3, todas threadadas). Valor vis\u00edvel imediato + sua vis\u00e3o entregue."
+        },
+        {
+          "label": "S\u00f3 construir o n\u00f3 mood-board",
+          "description": "Upgrade do characterReference p/ segurar 2-4 fotos por n\u00f3 + emitir todas no threading. Sua vis\u00e3o exata, sem gastar mco em demo agora. (Canvas UI change \u2192 passa pelo gate de auditoria 1920\u00d71080 + E2E browser antes de declarar pronto.)"
+        },
+        {
+          "label": "S\u00f3 demonstrar com o que j\u00e1 existe",
+          "description": "Sem build: monto/uso v\u00e1rios n\u00f3s de 1 foto (suas fotos) \u2192 1 gera\u00e7\u00e3o face-consistente pra voc\u00ea ver o resultado j\u00e1. O n\u00f3 mood-board fica pra depois."
+        }
+      ]
+    },
+    {
+      "question": "Qualidade x custo da gera\u00e7\u00e3o do rosto (pode mudar depois)",
+      "header": "Modelo do rosto",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Nano Banana (Gemini) \u2014 barato, validar (recomendado)",
+          "description": "~10 mco/imagem. Boa preserva\u00e7\u00e3o de identidade a partir das refs. Ideal pra validar a consist\u00eancia do rosto antes de gastar mais. Escala p/ premium depois."
+        },
+        {
+          "label": "Higgsfield Soul \u2014 fotorrealismo premium",
+          "description": "40-65 mco/imagem (soul-1080p). Endpoint `compose` suporta refer\u00eancia de personagem. Mais caro, mais fotorreal\u00edstico \u2014 pra conte\u00fado hero do Gabriel AI."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como avançar com a referência facial do Gabriel AI? (o motor de consistência já existe; a escolha é sobre o nó mood-board e ver funcionando)"="Os dois: demonstrar agora + construir o nó (recomendado)", "Qualidade x custo da geração do rosto (pode mudar depois)"="Nano Banana (Gemini) — barato, validar (recomendado)". You can now continue with these answers in mind.
+> ```
