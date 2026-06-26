@@ -1,4 +1,4 @@
-# Analisar paper e oportunidades de trading
+# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
 **Date:** 2026-06-25 | **Session ID:** `f965becb-771d-4ea9-83a1-920d453257be`
 
 ---
@@ -9423,3 +9423,16 @@ Secret-scan : ✅ LIMPO (range 6cec694..023aa00)
 **Pendências do dono (pra próxima):** registrar as previsões pra o placar encher · ligar o toggle "Free endpoints" do OpenRouter (mata o agente caindo na raiz) · `PROMOTION_GRANDFATHER=farmnl` se quiser Farm-buys reais já · mais sinais no gráfico (Bollinger/MACD/volume/flow) se quiser.
 
 Sessão fechada. 🤝
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - 1744ad7a-f93b-4937-aa35-6a9d5b11b1c2]]
+> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
+%% --- TIMELINE END --- %%

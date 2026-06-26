@@ -1,4 +1,4 @@
-# Validar ecossistema e gerar lucros antes dos 90 dias
+# [[2026-06-26 - Validar ecossistema e gerar lucros antes dos 90 dias|Validar ecossistema e gerar lucros antes dos 90 dias]]
 **Date:** 2026-06-25 | **Session ID:** `79ebc368-936c-430e-a2a6-a66c1873000d`
 
 ---
