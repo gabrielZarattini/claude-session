@@ -10156,6 +10156,914 @@ Commit 1 ✅ (a60e101). **Commit 2 — Collective Efficiency Ledger + BoK agenti
 >  create mode 100644 supabase/migrations/20260626120000_collective_efficiency_ledger.sql
 > ```
 
+## 🤖 Claude *(03:30:12)*
+
+
+## 🤖 Claude *(03:30:12)*
+
+Commit 2 ✅. **Commit 3 — emenda BoK v0.3 + nervo sensorial (publication_metrics + coletor).**
+
+## 🤖 Claude *(03:30:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/viral-autopilot/04-frd.md docs/bok/viral-autopilot/05-sdd.md docs/bok/viral-autopilot/06-data-model.md docs/bok/viral-autopilot/09-pattern-conformance.md docs/processes/[[publication-metrics-collection|publication-metrics-collection]].md supabase/migrations/20260626130000_publication_metrics.sql supabase/functions/collect-publication-metrics/ supabase/config.toml\ngit commit -m \"feat(autopilot): nervo sensorial \u2014 publication_metrics + coletor por publica\u00e7\u00e3o (FR-VA-027/028)\n\nDiagn\u00f3stico material: o loop de aprendizado aprendia sobre um placar em branco\n(creative_metrics impressions/engagements sempre 0 \u2014 nada puxava o desfecho social).\nEmenda BoK viral-autopilot v0.3 (FR-VA-027..031 + 09-pattern-conformance + SOP Lei 2).\nNova tabela publication_metrics (time-series, RLS SELECT-own, G6 provado) + coletor\ncollect-publication-metrics que puxa insights IG/FB per-user, FAIL-SOFT por plataforma\n(LinkedIn pessoal = clicks-only; nunca fabrica \u2014 Lei 1). Link fix meta_posts.content_id.\" 2>&1 | tail -6",
+  "description": "Commit 3: viral-autopilot v0.3 + publication_metrics + collector"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 1371094] feat(autopilot): nervo sensorial — publication_metrics + coletor por publicação (FR-VA-027/028)
+>  8 files changed, 388 insertions(+)
+>  create mode 100644 docs/bok/viral-autopilot/09-pattern-conformance.md
+>  create mode 100644 docs/processes/[[publication-metrics-collection|publication-metrics-collection]].md
+>  create mode 100644 supabase/functions/collect-publication-metrics/index.ts
+>  create mode 100644 supabase/migrations/20260626130000_publication_metrics.sql
+> ```
+
+## 🤖 Claude *(03:30:24)*
+
+
+## 🤖 Claude *(03:30:25)*
+
+Commit 3 ✅ (1371094). **Commit 4 — o loop honesto (reward multi-métrica + realocação + bugs).**
+
+## 🤖 Claude *(03:30:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/autopilot-analyze/index.ts supabase/functions/autopilot-run/index.ts supabase/functions/orchestrate-step/index.ts\ngit commit -m \"feat(autopilot): loop que COMP\u00d5E \u2014 reward multi-m\u00e9trica brand-first + realoca\u00e7\u00e3o \u03b5-greedy\n\nMata o reward totalClicks (Goodhart) \u2014 autopilot-analyze passa a computar\nR = 0.40\u00b7reach + 0.30\u00b7eng_rate + 0.20\u00b7brand + 0.10\u00b7revenue (z-score, anti-Goodhart),\ndegradando HONESTAMENTE para o sinal de afiliado quando n\u00e3o h\u00e1 dado social (modo\nfallback gravado no reward_vector, nunca fabrica). autopilot-run realoca o fan-out pela\npolicy (vencedor +1 variante, \u03b5-greedy floor, budget-neutral) \u2014 a pol\u00edtica agora move o\ntasks[], n\u00e3o s\u00f3 sussurra. orchestrate-step: read da policy filtrado por scope=plan_id\n(plano B n\u00e3o injeta vencedor do A) + applied=true (trilha audit\u00e1vel) + emit\ncollective_retry para o Ledger. Provado: policy 7d9856d0 reward 0.9 modo fallback.\" 2>&1 | tail -5",
+  "description": "Commit 4: reward loop + reallocation + bug fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 47474ac] feat(autopilot): loop que COMPÕE — reward multi-métrica brand-first + realocação ε-greedy
+>  3 files changed, 152 insertions(+), 54 deletions(-)
+> ```
+
+## 🤖 Claude *(03:30:39)*
+
+
+## 🤖 Claude *(03:30:39)*
+
+Commit 4 ✅ (47474ac). **Commit 5 — painel por publicação + matar o demo.**
+
+## 🤖 Claude *(03:30:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/hooks/usePublicationMetrics.ts src/components/dashboard/PublicationMetricsPanel.tsx src/pages/AnalyticsPage.tsx\ngit commit -m \"feat(analytics): painel por publica\u00e7\u00e3o + matar o fallback demo (n\u00fameros honestos)\n\nO Sovereign reportou que o analytics mostrava dados de demonstra\u00e7\u00e3o (12.400 impress\u00f5es\nfalsas) em vez do resultado real \u2014 exatamente o que mina o aprendizado. Nova aba 'Por\nPublica\u00e7\u00e3o' (usePublicationMetrics + PublicationMetricsPanel, Recharts time-series) que\nmostra o n\u00famero REAL coletado ou 'sem dados ainda', NUNCA demo. E o DEMO_METRICS/POSTS/\nCAMPAIGNS da Vis\u00e3o Geral foi removido \u2014 vazio agora exibe zero honesto + banner 'sem\ndados reais ainda'. Verificado em browser real (estado honesto, sem o 12.400).\" 2>&1 | tail -5",
+  "description": "Commit 5: analytics panel + demo-kill"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> [main b6abff1] feat(analytics): painel por publicação + matar o fallback demo (números honestos)
+>  3 files changed, 192 insertions(+), 39 deletions(-)
+>  create mode 100644 src/components/dashboard/PublicationMetricsPanel.tsx
+>  create mode 100644 src/hooks/usePublicationMetrics.ts
+> ```
+
+## 🤖 Claude *(03:30:57)*
+
+
+## 🤖 Claude *(03:30:58)*
+
+5 commits de feature ✅. **Fase 3 — Knowledge Mesh Milestone** (antes do README, pra contagem incluir o nó).
+
+## 🤖 Claude *(03:31:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\nCOMMITS=$(git log --oneline -6 | tr '\\n' '|')\nNODE=$(curl -s -X POST \"$URL/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-agentic-governance-learning-loop\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] Doutrina Ag\u00eantica AGI\u2192ASI (21 padr\u00f5es + 4 vias) + Pattern Conformance gate vinculante no CLAUDE.md + Collective Efficiency Ledger VIVO (VIEW security_invoker + RPC service-role; G6 isolamento provado, mede mco/resultado anti-Goodhart). Learning & Adaptation (\u00fanico padr\u00e3o fraco) atacado: nervo sensorial (publication_metrics time-series + coletor fail-soft IG/FB + painel 'Por Publica\u00e7\u00e3o' browser-provado) + reward multi-m\u00e9trica brand-first R=0.40reach+0.30eng+0.20brand+0.10rev (mata totalClicks Goodhart, degrada honesto, prova policy 7d9856d0 reward 0.9) + realoca\u00e7\u00e3o \u03b5-greedy budget-neutral + 2 bugs do loop fechados. Higiene: zeramento dos perfis sociais antigos (LinkedIn+Twitter, backup revers\u00edvel) + demo-kill no analytics (vazio = zero honesto). Perfis da marca: Gabriel AI (LinkedIn/FB), @gabrielOrchAI (X). 5 commits feature.\\\",\n    \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null,\n    \\\"metadata\\\": { \\\"session\\\": \\\"agentic-governance-learning-loop\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"${COMMITS}\\\" }\n  }\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"=== embed ===\"\ncurl -s -X POST \"$URL/functions/v1/embed-mcorch-node\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d.get('success', d))\" 2>/dev/null || echo \"embed response non-json\"",
+  "description": "Insert handoff milestone node + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 326949f1-9430-4c49-8095-f86f269187a7
+> === embed ===
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> ```
+
+## 🤖 Claude *(03:31:21)*
+
+
+## 🤖 Claude *(03:31:22)*
+
+Nó inserido: `326949f1`. O embed precisa de `{node_id}` (formato diferente). Retentando + confirmando.
+
+## 🤖 Claude *(03:31:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\nNID=\"326949f1-9430-4c49-8095-f86f269187a7\"\ncurl -s -X POST \"$URL/functions/v1/embed-mcorch-node\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\": \\\"${NID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('embed:', d.get('success', d))\" 2>/dev/null || echo \"non-json\"\nsleep 3\necho \"=== confirmar embedding NOT NULL ===\"\ncurl -s -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" \\\n  \"$URL/rest/v1/mcorch_nodes?id=eq.$NID&select=embedding\" | python3 -c \"import sys,json; d=json.load(sys.stdin)[0]; print('embedding NOT NULL:', d['embedding'] is not None)\"",
+  "description": "Retry embed with correct format + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> embed: {'node_id': '326949f1-9430-4c49-8095-f86f269187a7', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small', 'provider': 'openrouter', 'stitched': 0}
+> === confirmar embedding NOT NULL ===
+> embedding NOT NULL: True
+> ```
+
+## 🤖 Claude *(03:31:41)*
+
+
+## 🤖 Claude *(03:31:42)*
+
+Embedding ✅ (768d). Nó selado `326949f1`. **Fase 4 — README.** Contagem live + topo do README.
+
+## 🤖 Claude *(03:31:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\necho \"=== node count live ===\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'\necho \"=== README badges + version (head) ===\"; sed -n '1,30p' README.md\necho \"=== What's New marker ===\"; grep -nE \"What's New|## \\[v6\\.5|### \\[v6\\.5\" README.md | head -3",
+  "description": "Live node count + README head"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node count live ===
+> 8971
+> 
+> 
+> === README badges + version (head) ===
+> <p align="center">
+>   <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+>   <img src="https://img.shields.io/badge/version-6.52.0--Gabriel--AI--MoodBoard--%2B--Vision--QA-blueviolet?style=for-the-badge" alt="Version" />
+>   <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+>   <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+>   <img src="https://img.shields.io/badge/neural_mesh-8969_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+>   <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+>   <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+>   <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+>   <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+>   <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+>   <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.4_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+>   <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+>   <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+>   <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+>   <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+>   <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+>   <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+>   <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+>   <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+>   <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+>   <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+>   <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+>   <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+>   <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+>   <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+>   <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+>   <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+>   <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+>   <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> === What's New marker ===
+> 850:### [v6.5.0] — SSP-01 Survival Architecture + aios-sql-bridge + Survival Audit v1 (2026-05-17)
+> ```
+
+## 🤖 Claude *(03:32:04)*
+
+
+## 🤖 Claude *(03:32:06)*
+
+Count = **8971** (8969 +2: seal agentic-governance + este handoff). README v6.52.0 → v6.53.0. Achando o ponto de inserção do What's New + fazendo os edits de badge.
+
+## 🤖 Claude *(03:32:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== entradas What's New mais recentes ===\"; grep -nE \"^### \\[v6\\.5[0-9]\" README.md | head -5\necho \"=== primeira linha ap\u00f3s o t\u00edtulo What's New ===\"; grep -nE \"What's New|## .*Novidades|## \ud83c\udd95\" README.md | head -2",
+  "description": "Find latest What's New entries"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === entradas What's New mais recentes ===
+> === primeira linha após o título What's New ===
+> 75:## 🆕 What's new in v6.52.0 (2026-06-26)
+> 82:## 🆕 What's new in v6.51.0 (2026-06-25)
+> ```
+
+## 🤖 Claude *(03:32:19)*
+
+
+## 🤖 Claude *(03:32:19)*
+
+What's New format encontrado (linha 75). Lendo a estrutura pra prepender a entrada v6.53.0.
+
+## 🤖 Claude *(03:32:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 73,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 73	</p>
+> 74	
+> 75	## 🆕 What's new in v6.52.0 (2026-06-26)
+> 76	
+> 77	- **1º ciclo pago de vídeo 9:16 autônomo, witnessed E2E + 2 bugs de receita fechados.** O Viral Autopilot rodou um ciclo pago real (Roborock) que **renderizou um vídeo 9:16 1080×1920 h264 de verdade** (motor HyperFrames). O witness expôs e corrigiu 2 bugs: (a) **billing** — o vídeo era cobrado por sub-run (`succeeded×12`) mas só o flow de artigo (wordpress) enfileira render → linkedin/twitter over-charged sem refund; fix cobra por article-flow (`nVideoRuns`) + refund do tenant (`dry_run` 46→34). (b) **CTA-leak** — o LLM escrevia "Garanta o seu aqui: https://mcorch.com" em **texto puro** (o guard só pegava href HTML) → o clique de maior intenção vazava pra homepage; guard estendido p/ bare-text nos 2 formatos. **Cadência LinkedIn provada E2E** (post real `urn:li:share:7476089362896732160`).
+> 78	- **Virada brand-persona Gabriel AI / CCIO + mood board sofisticado.** O foco do conteúdo deixa de ser produto e vira evangelismo de marca via a persona **Gabriel AI (CCIO)**. O nó **Personagem Referência** virou **mood board multi-foto** (até 6 fotos/nó, todas threadadas como referência facial; node grid + inspector multi-upload). Mood board Gabriel AI gerado E2E: **4 retratos face-consistentes** (Hero · Estrategista · Palestrante · Visionário, Nano Banana com as fotos do Sovereign) + **2 animações DoP 9:16** + grafo semeado no Canvas. Blueprint fundamentado de integração **YouTube + TikTok** (infra ~90% reusável; gates de audit = ação Sovereign).
+> 79	- **Vision QA como gate visual padrão (sempre-on).** Todo print de inspeção automática + todo criativo gerado passa por **Vision QA** (`scripts/qa/vision-qa.ts` sobre o Vision MCP `mcp.mcorch.com`, BYOK grátis) antes de "pronto" — pega white-screen, rosto inconsistente, artefato. Aprovou o hero + os 3 moods.
+> 80	- **Canvas — nunca mais white-screena por nó malformado.** Guard `(node.data.prompt ?? "").length` nos 3 inspectors (ImageToVideo/GenerateImage/SceneCompose); clicar num nó com `data` incompleta não derruba mais a página inteira.
+> 81	
+> 82	## 🆕 What's new in v6.51.0 (2026-06-25)
+> 83	
+> 84	- **Fatia 2 — vídeo do ecossistema → Instagram Reel, PROVADO E2E.** A saída do Studio/Canvas vira **distribuição real**: clicar num asset de vídeo na Biblioteca → "Publicar Reel" → publica via a conexão **Instagram Business Login que JÁ existe** (`social_accounts`, sem app/token novo, sem `meta_config`). `publish-social` corrigido p/ `graph.instagram.com` (era `graph.facebook.com`, base errada p/ esse token) + `media_type=REELS` + resolve o id de publish via `/me?fields=user_id` (o `platform_user_id` guardado é app-scoped → rejeitado code 100/33). **Reel real ao vivo: `instagram.com/reel/DaBtVAQkiuz`.**
+> ```
+
+## 🤖 Claude *(03:32:45)*
+
+
+## 🤖 Claude *(03:32:45)*
+
+Inserindo a entrada v6.53.0 + atualizando badges.
+
+## 🤖 Claude *(03:32:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.52.0 (2026-06-26)",
+  "new_string": "## \ud83c\udd95 What's new in v6.53.0 (2026-06-27)\n\n- **Doutrina Ag\u00eantica AGI\u2192ASI + Pattern Conformance gate vinculante.** Os 21 padr\u00f5es ag\u00eanticos (Gulli) + as 4 vias para a ASI (DeepMind) viraram a lente que governa todo desenvolvimento futuro. `docs/architecture/agentic-vision.md` \u00e9 a refer\u00eancia arquitetural viva (Pattern Maturity Ledger: 11 fortes \u00b7 9 moderados \u00b7 1 fraco); o `CLAUDE.md \u00a71` ganha o gate \u2014 **toda SDD nova declara conformidade com os 21 padr\u00f5es**. BoK `agentic-governance` 10/10 selada (n\u00f3 `34748570`).\n- **Collective Efficiency Ledger \u2014 medir o coletivo, n\u00e3o no escuro.** O paper aponta as perguntas de coletivo de agentes (V4-2/4/5) como abertas; respond\u00edamos por doutrina mas **n\u00e3o med\u00edamos nenhuma**. VIEW `collective_efficiency_ledger` (security_invoker per-tenant) + RPC service-role DERIVAM mco/resultado + overhead da verdade financeira (anti-Goodhart). **G6 isolamento provado** (tenant throwaway v\u00ea 0); rollup real: orchestrate-content avg **334s** vs autopilot-cycle **2.4s**.\n- **Learning & Adaptation (o \u00fanico padr\u00e3o fraco) atacado \u2014 o loop que COMP\u00d5E.** Diagn\u00f3stico material: o motor aprendia sobre um **placar em branco**. Nervo sensorial: `publication_metrics` (time-series) + coletor fail-soft IG/FB + painel **\"Por Publica\u00e7\u00e3o\"** (n\u00famero real ou \"sem dados ainda\", **nunca demo**, browser-provado). Reward multi-m\u00e9trica brand-first `R=0.40\u00b7reach+0.30\u00b7eng+0.20\u00b7brand+0.10\u00b7rev` mata o `totalClicks` Goodhart (degrada honesto \u2014 prova policy reward 0.9 modo fallback). Realoca\u00e7\u00e3o \u03b5-greedy budget-neutral: **a pol\u00edtica agora move o fan-out, n\u00e3o s\u00f3 sussurra**.\n- **Analytics honesto + perfis da marca limpos.** O fallback **demo** (n\u00fameros falsos 12.400) foi removido \u2014 vazio = zero honesto. Perfis sociais antigos zerados (LinkedIn + Twitter, backup revers\u00edvel) p/ as contas da marca come\u00e7arem do zero: **Gabriel AI** (LinkedIn/FB) \u00b7 **@gabrielOrchAI** (X).\n\n## \ud83c\udd95 What's new in v6.52.0 (2026-06-26)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:32:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.52.0--Gabriel--AI--MoodBoard--%2B--Vision--QA-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.53.0--Agentic--Governance--%2B--Learning--Loop-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:32:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8969_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8971_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />\n  <img src=\"https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge\" alt=\"Agentic Vision\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:33:06)*
+
+
+## 🤖 Claude *(03:33:07)*
+
+README atualizado (v6.53.0, mesh 8971, novo badge). Commitando o README.
+
+## 🤖 Claude *(03:33:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -m \"docs(readme): v6.53.0 \u2014 Agentic Governance + Collective Efficiency Ledger + Learning Loop\n\nBadges: vers\u00e3o 6.52.0\u21926.53.0, neural_mesh 8969\u21928971, novo badge Agentic Vision (21\npadr\u00f5es + Collective Ledger). What's New: doutrina AGI\u2192ASI + gate vinculante, o Ledger\nque mede o coletivo, o nervo sensorial + reward brand-first do loop de aprendizado, e o\nanalytics honesto com perfis da marca limpos.\" 2>&1 | tail -4",
+  "description": "Commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 08e5ee3] docs(readme): v6.53.0 — Agentic Governance + Collective Efficiency Ledger + Learning Loop
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> ```
+
+## 🤖 Claude *(03:33:27)*
+
+
+## 🤖 Claude *(03:33:28)*
+
+README ✅ (08e5ee3). **Fase 5 — HANDOFF.md.** Já tenho um registro parcial (agentic-governance); vou expandi-lo para cobrir a sessão inteira. Lendo o registro atual.
+
+## 🤖 Claude *(03:33:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 12,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 12	## Task State
+> 13	
+> 14	## Session Seal — Doutrina Agêntica AGI→ASI: gate de conformidade vinculante + BoK agentic-governance + Collective Efficiency Ledger VIVO (2026-06-26)
+> 15	
+> 16	Diretiva Sovereign: *"que todos os nossos próximos protocolos de desenvolvimento sigam essa visão clara de futuro para antecipar o mercado e a tecnologia"* — ancorada em `docs/Agentic-Design-Patterns.pdf` (Gulli, 21 padrões) + `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind, 4 vias). Executado em 5 fases respeitando o próprio BoK Gate (Lei 2). **Não commitado ainda — `/handoff` sela a sessão.**
+> 17	
+> 18	**Achado material (3 deep-reads dos PDFs + verificação de schema):** o MCORCH JÁ encarna ~metade dos 21 padrões por doutrina (11 fortes · 9 moderados · 1 fraco=Learning&Adaptation). **Somos a Via 4 (coletivo de agentes) na camada de produto + a Via 3 (auto-aperfeiçoamento recursivo) no micro** (Obstáculo→Síntese). O gap estrutural é o que o paper aponta como ABERTO: respondíamos as perguntas de coletivo por doutrina mas **não medíamos nenhuma** — crescíamos no escuro.
+> 19	
+> 20	**Entregue (5 fases):**
+> 21	- **Fase 1 (docs):** doutrina load-bearing `docs/architecture/agentic-vision.md` (Pattern Maturity Ledger dos 21 padrões + tese) · gate vinculante `CLAUDE.md §1 Step 3.5` (toda SDD declara conformidade) + §3/§4 · 2 docs stale (`system_architecture.md`/`agents.md`, descreviam plataforma AdSense pré-virada) DEPRECADOS+redirect.
+> 22	- **Fase 2 (BoK):** suíte `docs/bok/agentic-governance/` 10/10 (autorada via workflow `wf_5fb96548`, espinha pinada; `09-pattern-conformance.md` = template mestre dos 21 padrões). Zero placeholders.
+> 23	- **Fase 3 (SOP Lei 2):** `docs/processes/collective-efficiency-ledger.md` (8 gates; G6 `count cross-tenant=0` = gate-mãe).
+> 24	- **Fase 4 (código):** migration `20260626120000_collective_efficiency_ledger.sql` — VIEW `collective_efficiency_ledger` (security_invoker per-tenant) + RPC `collective_efficiency_rollup` (SECURITY DEFINER service-role-only) DERIVAM a métrica da verdade financeira (`pipeline_runs`+`autopilot_cycles`), anti-Goodhart · 2 emits aditivos `collective_hop`/`collective_retry` em orchestrate-content/-step (deployadas). **/security-review SAFE.**
+> 25	- **Fase 5 (seal):** nó `documentation_suite` `34748570-0cf2-470d-ba0e-f3ceab1cb550` (embedded 768d) + edge DERIVES_FROM `2f3b7a76` → mcorch-constellation.
+> 26	
+> 27	**Prova material (Lei 1, LIVE em prod):** migration aplicada (`Finished db push`) · VIEW 16 linhas reais · **G6 isolamento provado** (tenant throwaway vê **0**, service-role vê 16) · RPC negado a authenticated (**403 / 42501 permission denied**) · G7 métrica bate com a base exata (`93659c88`: mco 10·n_units 6·wall_clock 59985) · **rollup já dá insight: orchestrate-content avg 334.6s vs autopilot-cycle 2.4s** (o coletivo medido). `tsc` 0.
+> 28	
+> 29	**Honestidade (DD-AG-004):** **V4-2 (valor marginal por agente) DEFERIDO** a experimento A/B real — não fabricar proxy gameável (alerta do próprio paper). **Backlog de canonização OTD-AG-001..010** (001 Ledger=ENTREGUE; 002 fechar loop Learning&Adaptation reward multi-métrica = P0 próximo).
+> 30	
+> 31	**ORO:** Operator=MCORCH Master Execution Agent · Reviewer=Sovereign (aprovou o plano + escopo máximo via AskUserQuestion) · Owner=Sovereign (risco = instrumentação errada induzir decisão de escala errada).
+> 32	
+> 33	---
+> ```
+
+## 🤖 Claude *(03:34:09)*
+
+
+## 🤖 Claude *(03:34:09)*
+
+Vou pegar os hashes exatos dos commits antes de escrever a tabela no HANDOFF.
+
+## 🤖 Claude *(03:34:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit log --oneline -7 --format=\"%h %s\" | sed 's/feat(/feat(/'",
+  "description": "Get exact commit hashes for HANDOFF table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 08e5ee3 docs(readme): v6.53.0 — Agentic Governance + Collective Efficiency Ledger + Learning Loop
+> b6abff1 feat(analytics): painel por publicação + matar o fallback demo (números honestos)
+> 47474ac feat(autopilot): loop que COMPÕE — reward multi-métrica brand-first + realocação ε-greedy
+> 1371094 feat(autopilot): nervo sensorial — publication_metrics + coletor por publicação (FR-VA-027/028)
+> 81210ab feat(ledger): Collective Efficiency Ledger — medir o coletivo, não no escuro (OTD-AG-001)
+> a60e101 feat(governance): doutrina Agêntica AGI→ASI + Pattern Conformance gate vinculante
+> 11cb89a chore(sprint): v6.52.0 — Gabriel AI mood board + Vision QA gate + vídeo pago E2E + billing/CTA fixes + brand-persona
+> ```
+
+## 🤖 Claude *(03:34:20)*
+
+
+## 🤖 Claude *(03:34:21)*
+
+6 commits: a60e101 · 81210ab · 1371094 · 47474ac · b6abff1 · 08e5ee3. Atualizando o HANDOFF (título + arcos 2/3 + tabela de commits).
+
+## 🤖 Claude *(03:34:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Session Seal \u2014 Doutrina Ag\u00eantica AGI\u2192ASI: gate de conformidade vinculante + BoK agentic-governance + Collective Efficiency Ledger VIVO (2026-06-26)\n\nDiretiva Sovereign: *\"que todos os nossos pr\u00f3ximos protocolos de desenvolvimento sigam essa vis\u00e3o clara de futuro para antecipar o mercado e a tecnologia\"* \u2014 ancorada em `docs/Agentic-Design-Patterns.pdf` (Gulli, 21 padr\u00f5es) + `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind, 4 vias). Executado em 5 fases respeitando o pr\u00f3prio BoK Gate (Lei 2). **N\u00e3o commitado ainda \u2014 `/handoff` sela a sess\u00e3o.**",
+  "new_string": "## Session Seal \u2014 Doutrina Ag\u00eantica AGI\u2192ASI + Learning & Adaptation: gate vinculante \u00b7 Collective Efficiency Ledger \u00b7 nervo sensorial + reward brand-first \u00b7 analytics honesto (2026-06-27)\n\nSess\u00e3o-maratona multi-arco. **Arco 1** \u2014 Diretiva Sovereign: *\"que todos os nossos pr\u00f3ximos protocolos de desenvolvimento sigam essa vis\u00e3o clara de futuro para antecipar o mercado e a tecnologia\"* \u2014 ancorada em `docs/Agentic-Design-Patterns.pdf` (Gulli, 21 padr\u00f5es) + `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind, 4 vias). **Arco 2** \u2014 atacar o \u00fanico padr\u00e3o FRACO (Learning & Adaptation). **Arco 3** \u2014 analytics honesto + perfis da marca limpos. 6 commits, tudo provado materialmente (Lei 1)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:34:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (aprovou o plano + escopo m\u00e1ximo via AskUserQuestion) \u00b7 Owner=Sovereign (risco = instrumenta\u00e7\u00e3o errada induzir decis\u00e3o de escala errada).\n\n---",
+  "new_string": "**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (aprovou o plano + escopo m\u00e1ximo via AskUserQuestion) \u00b7 Owner=Sovereign (risco = instrumenta\u00e7\u00e3o errada induzir decis\u00e3o de escala errada).\n\n### Arco 2 \u2014 Learning & Adaptation: o loop que COMP\u00d5E (OTD-AG-002 \u00b7 emenda BoK viral-autopilot v0.3)\n\n**Diagn\u00f3stico material (`wob2d279d`):** o motor aprendia sobre um **placar em branco** \u2014 `creative_metrics` impressions/engagements sempre 0; reward = `totalClicks` mono-m\u00e9trica (Goodhart, `autopilot-analyze:90`); a pol\u00edtica s\u00f3 sussurrava um hint, n\u00e3o realocava esfor\u00e7o (`ab_variants` parada); 2 bugs latentes. **Causa raiz do \"n\u00e3o avan\u00e7amos apesar do dev incr\u00edvel\".**\n\n**Fatia A \u2014 nervo sensorial:** BoK viral-autopilot v0.3 (FR-VA-027..031 + `09-pattern-conformance` + SOP Lei 2 `publication-metrics-collection.md`) \u00b7 migration `20260626130000_publication_metrics.sql` (time-series, RLS SELECT-own, **G6 provado** \u2014 throwaway v\u00ea 0; + `meta_posts.content_id` link fix) \u00b7 edge `collect-publication-metrics` (insights IG/FB per-user, **fail-soft** por plataforma, nunca fabrica \u2014 provado: 2 posts LinkedIn \u2192 skip honesto) \u00b7 painel **\"Por Publica\u00e7\u00e3o\"** (`usePublicationMetrics`+`PublicationMetricsPanel`) **verificado em browser real** (estado honesto, nunca demo).\n\n**Fatia B \u2014 o loop honesto:** `autopilot-analyze` reward multi-m\u00e9trica brand-first `R=0.40\u00b7reach+0.30\u00b7eng+0.20\u00b7brand+0.10\u00b7rev` (z-score anti-Goodhart, degrada honesto \u2014 **prova policy `7d9856d0` reward 0.9 modo fallback**) \u00b7 `autopilot-run` realoca\u00e7\u00e3o \u03b5-greedy budget-neutral (a pol\u00edtica move o `tasks[]`, n\u00e3o s\u00f3 sussurra) \u00b7 `orchestrate-step` read filtrado por scope=plan_id + `applied=true`. **Diferidos:** V4-2 (valor marginal/agente) \u00b7 B4 EWMA \u00b7 B5 pauta de receita.\n\n### Arco 3 \u2014 Analytics honesto + perfis da marca limpos\n\n**Demo-kill:** o fallback `DEMO_METRICS` (12.400 impress\u00f5es falsas) da `AnalyticsPage` foi removido \u2014 vazio = **zero honesto + banner \"sem dados reais ainda\"** (browser-provado). **Zeramento dos perfis sociais antigos** (LinkedIn 6 posts + 5 m\u00e9tricas \u00b7 Twitter 2+2, backup revers\u00edvel) p/ as contas da marca come\u00e7arem do zero: **Gabriel AI** (LinkedIn ativo \u00b7 FB `gabrielorchai`) \u00b7 **@gabrielOrchAI** (X/twitter). TikTok/YouTube/Pinterest j\u00e1 estavam 0 (n\u00e3o conectados). Res\u00edduo inerte: 5 `creative_metrics` WordPress all-zero (limpeza ofertada, pendente da palavra do Sovereign).\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `a60e101` | feat(governance): doutrina Ag\u00eantica AGI\u2192ASI + Pattern Conformance gate vinculante |\n| `81210ab` | feat(ledger): Collective Efficiency Ledger + BoK agentic-governance 10/10 + seal `34748570` |\n| `1371094` | feat(autopilot): nervo sensorial \u2014 publication_metrics + coletor (BoK v0.3) |\n| `47474ac` | feat(autopilot): loop que COMP\u00d5E \u2014 reward multi-m\u00e9trica + realoca\u00e7\u00e3o \u03b5-greedy + bug fixes |\n| `b6abff1` | feat(analytics): painel \"Por Publica\u00e7\u00e3o\" + matar o fallback demo |\n| `08e5ee3` | docs(readme): v6.53.0 |\n\n**Mesh seal:** handoff node `326949f1-9430-4c49-8095-f86f269187a7` (embedded 768d). Mesh **8971 n\u00f3s**.\n\n**Pr\u00f3ximo (o unlock do payoff vis\u00edvel):** reconectar o **Instagram com escopo `instagram_business_manage_insights`** (hoje `magicorch` s\u00f3 tem publish) \u2192 o coletor grava reach/likes reais \u2192 o painel se enche \u2192 o reward flipa de `fallback` para `brand_first_multimetric` \u2192 o loop **comp\u00f5e** (`R\u0304(N+1)>R\u0304(N)` via o Ledger).\n\n---"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:34:55)*
+
+
+## 🤖 Claude *(03:34:55)*
+
+HANDOFF atualizado. **Fase 5b — secret scan no HANDOFF.md antes de commitar.**
+
+## 🤖 Claude *(03:35:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credenciais reais no HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-)\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\\|hash\" | head -5 || echo \"  NO CREDENTIALS \u2705\"\necho \"=== 5b-2 Google API keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -3 || echo \"  NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3 inline assignments ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|uuid\\|[0-9a-f-]\\{36\\}\" | head -3 || echo \"  NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b: HANDOFF.md secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credenciais reais no HANDOFF.md ===
+> === 5b-2 Google API keys ===
+> === 5b-3 inline assignments ===
+> 1144:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 7758:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 7760:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(03:35:09)*
+
+
+## 🤖 Claude *(03:35:10)*
+
+**Fase 5b PASS** ✅ — sem credenciais. Os 3 matches de 5b-3 são strings pré-existentes do project-slug `'mcorch-constellation'` (não secret), em registros antigos, não no meu. Commitando o HANDOFF.
+
+## 🤖 Claude *(03:35:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -m \"docs(handoff): seal Agentic Governance + Learning Loop + analytics honesto + perfis da marca limpos\n\nSela a sess\u00e3o-maratona: doutrina AGI\u2192ASI + gate vinculante + Collective Efficiency\nLedger (Arco 1) \u00b7 Learning & Adaptation atacado \u2014 nervo sensorial (publication_metrics\n+ coletor + painel) + reward multi-m\u00e9trica brand-first + realoca\u00e7\u00e3o \u03b5-greedy (Arco 2) \u00b7\nanalytics honesto (demo-kill) + zeramento dos perfis sociais antigos (Arco 3). Handoff\nnode 326949f1; mesh 8971. Pr\u00f3ximo: re-OAuth IG insights destrava o payoff vis\u00edvel.\" 2>&1 | tail -4",
+  "description": "Commit HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main f486a8a] docs(handoff): seal Agentic Governance + Learning Loop + analytics honesto + perfis da marca limpos
+>  1 file changed, 46 insertions(+)
+> ```
+
+## 🤖 Claude *(03:35:21)*
+
+
+## 🤖 Claude *(03:35:22)*
+
+HANDOFF ✅ (f486a8a). **Fase 5c — Material Proof Audit.**
+
+## 🤖 Claude *(03:35:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls scripts/qa/run-audit.ts 2>/dev/null && echo \"audit script exists\" || echo \"NO run-audit.ts\"\nset -a; source .env 2>/dev/null; set +a\nexport SUPABASE_URL=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"\ntimeout 180 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/run-audit.ts
+> audit script exists
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node 326949f1 | mesh_node | 326949f1-9430-4c49-8095-f86f269187a7 | 326949f1-9430-4c49-8095-f86f269187a7 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 12.0s)
+> ```
+
+## 🤖 Claude *(03:35:47)*
+
+
+## 🤖 Claude *(03:35:48)*
+
+**Fase 5c: SEAL ALLOWED** ✅ (10 verificadas · 0 skip · 0 falhas — inclui o handoff node `326949f1` + 295 testes passando). **Fase 6 — BoK Seal Status.**
+
+## 🤖 Claude *(03:35:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== BoK suites completeness ===\"\nfor slug in agentic-governance viral-autopilot; do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete (9 docs)\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho \"=== mesh seal nodes documentation_suite (agentic-governance) ===\"\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-https://bcyvddsykvehvpwstlfa.supabase.co}\"; KEY=\"${SB_SECRET_KEY}\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&name=like.*agentic-governance*&select=name,stability_score\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import sys,json; [print('  \ud83c\udf10',n['name'],n['stability_score']) for n in json.load(sys.stdin)]\" 2>/dev/null",
+  "description": "Phase 6 BoK seal status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BoK suites completeness ===
+> ✅ agentic-governance — BoK complete (9 docs)
+> ✅ viral-autopilot — BoK complete (9 docs)
+> === mesh seal nodes documentation_suite (agentic-governance) ===
+>   🌐 bok-scribe-seal-agentic-governance-v1 0.836324060073456
+> ```
+
+## 🤖 Claude *(03:36:02)*
+
+
+## 🤖 Claude *(03:36:04)*
+
+**Fase 6 ✅** — agentic-governance e viral-autopilot BoK completas (9 docs cada + 09-pattern-conformance); seal node presente. Todo trabalho de módulo tem BoK selada. **Fase 7 — Push.**
+
+## 🤖 Claude *(03:36:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -8\necho \"=== confirmar sincronia ===\"; git status -sb | head -1; git log --oneline -1 origin/main 2>/dev/null",
+  "description": "Phase 7: push to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m12:36AM[0m [32mINF[0m scan completed in 97.9ms
+> [90m12:36AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.16 seconds)
+> ✔️ gitleaks-range (0.16 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    11cb89a..f486a8a  main -> main
+> === confirmar sincronia ===
+> ## main...origin/main
+> f486a8a docs(handoff): seal Agentic Governance + Learning Loop + analytics honesto + perfis da marca limpos
+> ```
+
+## 🤖 Claude *(03:36:21)*
+
+
+## 🤖 Claude *(03:36:21)*
+
+**Push ✅** — gitleaks limpo, `11cb89a..f486a8a` → origin/main (sincronizado). 7 commits enviados. **Fase 7b — Sprint & higiene.**
+
+## 🤖 Claude *(03:36:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== repo scratch/ ===\"; ls -la scratch/ 2>/dev/null | tail -n +4 | head || echo \"vazio\"\necho \"=== .ts em scratch? ===\"; ls scratch/*.ts 2>/dev/null && echo \"tem .ts \u2192 mover\" || echo \"nenhum .ts \u2705\"\necho \"=== sprint-priorities head ===\"; sed -n '1,8p' .claude/context/sprint-priorities.md\necho \"=== proof-manifest.json (gerado p/ 5c \u2014 limpar?) ===\"; ls proof-manifest.json 2>/dev/null && cat proof-manifest.json",
+  "description": "Phase 7b: scratch + sprint-priorities + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === repo scratch/ ===
+> === .ts em scratch? ===
+> nenhum .ts ✅
+> === sprint-priorities head ===
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> **Sprint v6.52.0 — Gabriel AI mood board + Vision QA gate + 1º ciclo pago de vídeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)** — sessão-maratona "faça tudo", Usuário 00 sobre Usuário 0. **6 commits.** **(1)** Ciclo pago de vídeo 9:16 witnessed E2E (render real `8b0787e0` 1080×1920) + 2 bugs de receita (`df7505b`): billing cobrava vídeo por sub-run mas só article-flow renderiza → fix por `nVideoRuns`+refund; CTA-leak `mcorch.com` texto-puro → guard bare-text nos 2 formatos. **LinkedIn cadence E2E** (post real `urn:li:share:7476089362896732160`). **(2)** Virada **brand-persona Gabriel AI/CCIO** (plano produto pausado) + blueprint fundamentado YouTube/TikTok (`58e0389`, infra ~90% reusável, gates audit Sovereign). **(3)** Nó `characterReference` vira **mood-board multi-foto** (`549e4dd`) + mood board Gabriel AI gerado E2E (4 retratos face-consistentes Vision-QA-gated + 2 animações DoP) no projeto `b57a59f7`. **(4)** **Vision QA** gate visual sempre-on + canvas `prompt.length` hardening (`a482132`). **Prova:** tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8969** · handoff `5501a101`. **Pending:** emenda BoK post-engine + 3 branches OAuth YT/TikTok (audit = ação Sovereign) · URLs referência 7-dias→públicas (persona durável) · wirar Vision QA dentro de `audit-canvas-ui.ts`/e2e · animações DoP finalizam async · postback ML real. **Lição:** o witness de um ciclo pago expôs 2 bugs de billing/atribuição invisíveis no código estático — rodar o fluxo real (Lei 1) é o melhor detector.
+> 
+> === proof-manifest.json (gerado p/ 5c — limpar?) ===
+> proof-manifest.json
+> {"handoffNodeId": "326949f1-9430-4c49-8095-f86f269187a7"}
+> ```
+
+## 🤖 Claude *(03:36:51)*
+
+
+## 🤖 Claude *(03:36:52)*
+
+Repo `scratch/` vazio ✅. Atualizo o sprint-priorities (entrada v6.53.0) + removo o `proof-manifest.json` transiente.
+
+## 🤖 Claude *(03:37:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)**",
+  "new_string": "**Sprint v6.53.0 \u2014 Doutrina Ag\u00eantica AGI\u2192ASI + Learning & Adaptation + analytics honesto (2026-06-27)** \u2014 sess\u00e3o-maratona multi-arco. **7 commits.** **(1)** Doutrina `agentic-vision.md` (21 padr\u00f5es \u00d7 maturidade + tese Via 4-produto/Via 3-micro) + **Pattern Conformance gate vinculante** no CLAUDE.md \u00a71 (toda SDD declara conformidade) + BoK `agentic-governance` 10/10 (seal `34748570`) + 2 docs stale deprecados. **(2)** **Collective Efficiency Ledger** (`81210ab`) \u2014 VIEW security_invoker + RPC service-role medem mco/resultado anti-Goodhart (G6 isolamento provado; rollup real 334s vs 2.4s). **(3)** **Learning & Adaptation** (o \u00fanico padr\u00e3o fraco) atacado: nervo sensorial (`publication_metrics` + coletor fail-soft IG/FB + painel \"Por Publica\u00e7\u00e3o\" browser-provado) + reward multi-m\u00e9trica brand-first (mata `totalClicks` Goodhart, prova policy `7d9856d0`) + realoca\u00e7\u00e3o \u03b5-greedy (`1371094`/`47474ac`). **(4)** Analytics honesto \u2014 demo-kill (`b6abff1`) + zeramento dos perfis sociais antigos (perfis da marca **Gabriel AI**/**@gabrielOrchAI** come\u00e7am do zero). **Prova:** tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8971** \u00b7 handoff `326949f1`. **Pending:** re-OAuth IG insights (destrava o payoff vis\u00edvel) \u00b7 B4 EWMA \u00b7 B5 pauta de receita \u00b7 V4-2 experimento \u00b7 postback ML \u00b7 emenda BoK post-engine (YT/TikTok). **Li\u00e7\u00e3o:** \"n\u00e3o avan\u00e7amos apesar do dev incr\u00edvel\" = o motor aprendia sobre **placar em branco**; medir o desfecho real \u00e9 o que faz capacidade virar avan\u00e7o.\n\n**Sprint v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)**"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:37:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json && echo \"proof-manifest.json removido (transiente)\"\ngit add .claude/context/sprint-priorities.md\ngit commit -m \"chore(sprint): v6.53.0 \u2014 Agentic Governance + Learning Loop + analytics honesto + perfis da marca limpos\" 2>&1 | tail -3\necho \"=== push final ===\"; git push origin main 2>&1 | tail -4",
+  "description": "Remove proof-manifest, commit sprint, push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> proof-manifest.json removido (transiente)
+> 	deleted:    proof-manifest.json
+> 
+> no changes added to commit (use "git add" and/or "git commit -a")
+> === push final ===
+> │  gitleaks-range (skip) no matching push files
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> Everything up-to-date
+> ```
+
+## 🤖 Claude *(03:37:23)*
+
+
+## 🤖 Claude *(03:37:24)*
+
+O Edit precisa de Read prévio (li via sed) e o `proof-manifest.json` era rastreado. Corrigindo: Read do sprint + restaurar o manifest.
+
+## 🤖 Claude *(03:37:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 7,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 7	**Sprint v6.52.0 — Gabriel AI mood board + Vision QA gate + 1º ciclo pago de vídeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)** — sessão-maratona "faça tudo", Usuário 00 sobre Usuário 0. **6 commits.** **(1)** Ciclo pago de vídeo 9:16 witnessed E2E (render real `8b0787e0` 1080×1920) + 2 bugs de receita (`df7505b`): billing cobrava vídeo por sub-run mas só article-flow renderiza → fix por `nVideoRuns`+refund; CTA-leak `mcorch.com` texto-puro → guard bare-text nos 2 formatos. **LinkedIn cadence E2E** (post real `urn:li:share:7476089362896732160`). **(2)** Virada **brand-persona Gabriel AI/CCIO** (plano produto pausado) + blueprint fundamentado YouTube/TikTok (`58e0389`, infra ~90% reusável, gates audit Sovereign). **(3)** Nó `characterReference` vira **mood-board multi-foto** (`549e4dd`) + mood board Gabriel AI gerado E2E (4 retratos face-consistentes Vision-QA-gated + 2 animações DoP) no projeto `b57a59f7`. **(4)** **Vision QA** gate visual sempre-on + canvas `prompt.length` hardening (`a482132`). **Prova:** tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8969** · handoff `5501a101`. **Pending:** emenda BoK post-engine + 3 branches OAuth YT/TikTok (audit = ação Sovereign) · URLs referência 7-dias→públicas (persona durável) · wirar Vision QA dentro de `audit-canvas-ui.ts`/e2e · animações DoP finalizam async · postback ML real. **Lição:** o witness de um ciclo pago expôs 2 bugs de billing/atribuição invisíveis no código estático — rodar o fluxo real (Lei 1) é o melhor detector.
+> 8	
+> 9	**Sprint v6.51.0 — Fatia 2 vídeo→Instagram Reel PROVADO E2E + Notificações P0 + malha criativa cross-módulo + receita destravada (2026-06-25)** — sessão-maratona "força total pelo primeiro R$", Usuário 00 sobre Usuário 0. **9 commits.** **(1) Receita** (`1ad04c5`): cron auto-publish morto (`/var/log` inacessível)→durável+telemetria; link **meli.la assinado** publicado (sale-attributable, Roborock+Family Hub); CTA-leak fechado; 2 posts injection removidos do LinkedIn. **(2) Canvas white-screen fix** (`46f18ca`): `MODEL_INFO[id].coinCost` em modelId fora do catálogo → `getImageModelInfo`/`getVideoModelInfo` com fallback; **verificação por browser real** (agent-browser+preview+sessão injetada) virou diretiva durável. **(3) Malha cross-módulo:** asset clicável→handoff Canvas (`8c00f88`); white-label HyperFrames nginx sub_filter (`5d58b15`); Biblioteca scroll+filtro-data+metadados (`8fdb435`); starter MCORCH 9:16 **lint 0/0** substitui demo HeyGen (`3efbe75`, AskUserQuestion). **(4) Fatia 2 — vídeo→Reel PROVADO E2E** (`9d9ec03`/`3be06ee`): User 0 **já conectado** (IG `magicorch` MEDIA_CREATOR); `publish-social` IG via `graph.instagram.com`+REELS+id do `/me` (stored id app-scoped rejeitava 100/33). **Reel real: `instagram.com/reel/DaBtVAQkiuz`.** **(5) P0 Notificações** (`bfb0ba3`): sino era placeholder morto (badge "3" hardcoded) + nada escrevia na tabela → `useNotifications`+`NotificationBell`+`_shared/notify.ts`+seed 4 eventos; browser badge "5". **Prova:** tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8962** · handoff `468c15dc`. **Pending:** camada **push** (browser/OS — sem infra) · **Fatia 3 faceless long-form** (filosofia Sovereign: vender mostrando produto útil no momento certo, redes=entretenimento não venda) · CF público liberado (404=challenge caiu) mas WP posts são draft + Autopilot dormente → flip wp_status+ativar cadência (GO de gasto) · FB Reel (precisa Page). **Lição:** checar a conexão REAL (Lei 1) revelou que o IG já publicava — o publisher só apontava pro lugar errado.
+> ```
+
+## 🤖 Claude *(03:37:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit checkout proof-manifest.json 2>&1 && echo \"proof-manifest restaurado (tree limpo)\" || echo \"checkout falhou\"",
+  "description": "Restore proof-manifest.json to clean tree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Updated 1 path from the index
+> proof-manifest restaurado (tree limpo)
+> ```
+
+## 🤖 Claude *(03:37:35)*
+
+
+## 🤖 Claude *(03:37:35)*
+
+`proof-manifest` restaurado. Agora o Edit do sprint (já lido) + commit + push final.
+
+## 🤖 Claude *(03:37:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)** \u2014 sess\u00e3o-maratona \"fa\u00e7a tudo\"",
+  "new_string": "**Sprint v6.53.0 \u2014 Doutrina Ag\u00eantica AGI\u2192ASI + Learning & Adaptation + analytics honesto (2026-06-27)** \u2014 sess\u00e3o-maratona multi-arco. **7 commits.** **(1)** Doutrina `agentic-vision.md` (21 padr\u00f5es \u00d7 maturidade + tese Via 4-produto/Via 3-micro) + **Pattern Conformance gate vinculante** no CLAUDE.md \u00a71 + BoK `agentic-governance` 10/10 (seal `34748570`) + 2 docs stale deprecados. **(2)** **Collective Efficiency Ledger** (`81210ab`) \u2014 VIEW security_invoker + RPC service-role medem mco/resultado anti-Goodhart (G6 isolamento provado; rollup real 334s vs 2.4s). **(3)** **Learning & Adaptation** (o \u00fanico padr\u00e3o fraco) atacado: nervo sensorial (`publication_metrics` + coletor fail-soft IG/FB + painel \"Por Publica\u00e7\u00e3o\" browser-provado) + reward multi-m\u00e9trica brand-first (mata `totalClicks` Goodhart, prova policy `7d9856d0`) + realoca\u00e7\u00e3o \u03b5-greedy (`1371094`/`47474ac`). **(4)** Analytics honesto \u2014 demo-kill (`b6abff1`) + zeramento dos perfis sociais antigos (marca **Gabriel AI**/**@gabrielOrchAI** come\u00e7am do zero). **Prova:** tsc 0 \u00b7 gitleaks limpo \u00b7 Phase 5c **SEAL ALLOWED** (10) \u00b7 mesh **8971** \u00b7 handoff `326949f1`. **Pending:** re-OAuth IG insights (destrava o payoff vis\u00edvel) \u00b7 B4 EWMA \u00b7 B5 pauta de receita \u00b7 V4-2 experimento \u00b7 postback ML \u00b7 emenda BoK post-engine (YT/TikTok). **Li\u00e7\u00e3o:** \"n\u00e3o avan\u00e7amos apesar do dev incr\u00edvel\" = o motor aprendia sobre **placar em branco**; medir o desfecho real \u00e9 o que faz capacidade virar avan\u00e7o.\n\n**Sprint v6.52.0 \u2014 Gabriel AI mood board + Vision QA gate + 1\u00ba ciclo pago de v\u00eddeo 9:16 witnessed + billing/CTA fixes + virada brand-persona (2026-06-26)** \u2014 sess\u00e3o-maratona \"fa\u00e7a tudo\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:37:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -m \"chore(sprint): v6.53.0 \u2014 Agentic Governance + Learning Loop + analytics honesto\" 2>&1 | tail -3\ngit push origin main 2>&1 | tail -4\necho \"=== sync final ===\"; git status -sb | head -1",
+  "description": "Commit sprint-priorities + final push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 2d8e46d] chore(sprint): v6.53.0 — Agentic Governance + Learning Loop + analytics honesto
+>  1 file changed, 2 insertions(+)
+> summary: (done in 0.09 seconds)
+> ✔️ gitleaks-range (0.09 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    f486a8a..2d8e46d  main -> main
+> === sync final ===
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(03:38:09)*
+
+
+## 🤖 Claude *(03:38:10)*
+
+Tudo selado e sincronizado. Marcando a task final.
+
+## 🤖 Claude *(03:38:10)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "15",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #15 status
+> ```
+
+## 🤖 Claude *(03:38:36)*
+
+**Fase 8 — Relatório final**
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Doutrina Agêntica AGI→ASI + Learning & Adaptation (2026-06-27)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  Secret leak scan (diff) ............... ✅ PASS
+  Client-side coin deduction ............ ✅ PASS
+  Sensitive console.log ................. ✅ PASS (só test file pré-existente)
+  Edge fn service-role gate (collector) . ✅ PASS
+  gitleaks (pre-push) ................... ✅ no leaks found
+
+📦 COMMITS (8 total)
+  a60e101 — feat(governance): doutrina AGI→ASI + Pattern Conformance gate
+  81210ab — feat(ledger): Collective Efficiency Ledger + BoK agentic-governance
+  1371094 — feat(autopilot): nervo sensorial — publication_metrics + coletor
+  47474ac — feat(autopilot): loop que COMPÕE — reward multi-métrica + ε-greedy
+  b6abff1 — feat(analytics): painel "Por Publicação" + matar o demo
+  08e5ee3 — docs(readme): v6.53.0
+  f486a8a — docs(handoff): seal completo
+  2d8e46d — chore(sprint): v6.53.0
+
+⬡ KNOWLEDGE MESH
+  Handoff node: 326949f1-9430-4c49-8095-f86f269187a7 ✅
+  Embedding: ✅ 768d · Mesh: 8971 nós
+  BoK seal: bok-scribe-seal-agentic-governance-v1 (0.84)
+
+📖 README.md
+  Versão: 6.52.0 → 6.53.0 · neural_mesh: 8969 → 8971 nós
+  Novo badge: Agentic Vision (21 patterns + Collective Ledger)
+
+🧠 HANDOFF.md
+  Fase selada: Agentic Governance + Learning Loop (3 arcos) + commit table
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas · 295 testes
+
+📚 BoK (Fase 6)
+  ✅ agentic-governance — 9 docs + 09-pattern-conformance
+  ✅ viral-autopilot — 9 docs + 09-pattern-conformance (v0.3)
+
+🚀 PUSH
+  main → origin/main (f486a8a → 2d8e46d) · sincronizado
+
+📌 SPRINT / HIGIENE
+  sprint-priorities.md: ✅ v6.53.0 · scratch/: ✅ limpo · proof-manifest: ✅ restaurado
+
+⏭  PRÓXIMOS PASSOS
+  1. Re-OAuth Instagram c/ escopo insights → destrava o painel + flipa o reward p/ brand_first (o payoff visível)
+  2. B4 EWMA multi-ciclo · B5 pauta de receita HITL · publish-meta.content_id
+  3. Emenda BoK post-engine → 3 branches OAuth YouTube/TikTok (audit = ação Sovereign)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+A sessão-maratona está selada. O fio condutor: você sentiu que **não avançávamos apesar do dev incrível** — diagnosticamos materialmente que o motor aprendia sobre um **placar em branco**, construímos o **nervo sensorial** (medir o desfecho real, painel honesto) e o **loop que compõe** (reward brand-first anti-Goodhart), e limpamos os perfis pra marca **Gabriel AI / @gabrielOrchAI** começar do zero. Tudo ancorado na doutrina AGI→ASI que agora **governa todo desenvolvimento futuro** (o gate vinculante).
+
+O unlock está na sua mão: reconectar o IG com escopo de insights — e o painel se enche de números reais, o reward sai do modo `fallback`, e o coletivo passa a **compor de verdade**.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -10166,4 +11074,5 @@ Commit 1 ✅ (a60e101). **Commit 2 — Collective Efficiency Ledger + BoK agenti
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-26 - agent-aeae6da7e8d1cdbe8]]
+> * **Próxima Sessão**: [[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]
 %% --- TIMELINE END --- %%
