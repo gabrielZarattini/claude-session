@@ -423,3 +423,16 @@ The overall thrust is correct (both barriers are real and both block an autonomo
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - agent-aa49f5a8aeab5dcf6]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-aa861d65065e30004]]
+%% --- TIMELINE END --- %%
