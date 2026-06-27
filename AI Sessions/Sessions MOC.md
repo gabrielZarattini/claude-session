@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1454
-> * **Sessões do Claude**: 1412
+> * **Total de Sessões Registradas**: 1463
+> * **Sessões do Claude**: 1421
 > * **Sessões do Gemini**: 42
 
 ---
@@ -67,19 +67,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-27 - agent-aecae924c0d5976b7]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-ae6d905f0ad159302]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-aa49f5a8aeab5dcf6]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-a794563cb3a57ec8e]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-a6e16ad97cf1a032b]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-a44ccef947c4698bf]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-a076059e49f1ba5a7]]` - *2026-06-27*
+*   `[[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]` - *2026-06-27*
 *   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` - *2026-06-26*
 *   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-ae65a1167b8128494]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-ad3f1f9dff00e393e]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-acb7554b24176f8fe]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-ac1a4e0559f0f36b9]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-ab0cae1b935d2e571]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-aae039e40598b7613]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-aab0587a4189f8a0f]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-aaa3c6ad9cc2ab052]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-aa9d859dec14d4b51]]` - *2026-06-26*
-*   *... e mais 1410 sessões nessa categoria.*
+*   *... e mais 1419 sessões nessa categoria.*
 
 ---
 
@@ -270,6 +270,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-27 - agent-aecae924c0d5976b7]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-ae6d905f0ad159302]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-aa49f5a8aeab5dcf6]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a794563cb3a57ec8e]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a6e16ad97cf1a032b]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a44ccef947c4698bf]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a076059e49f1ba5a7]]` (ClaudeSessions)
+*   `[[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]` (ClaudeSessions)
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` (ClaudeSessions)

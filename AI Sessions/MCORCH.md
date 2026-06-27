@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 54
-> * **Total de Sessões**: 1449
+> * **Total de Sessões**: 1458
 
 ---
 
@@ -77,6 +77,15 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-06-27 - agent-aecae924c0d5976b7]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-ae6d905f0ad159302]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-aa49f5a8aeab5dcf6]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a794563cb3a57ec8e]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a6e16ad97cf1a032b]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a44ccef947c4698bf]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a076059e49f1ba5a7]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` (ClaudeSessions) - *2026-06-26*
 *   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` (ClaudeSessions) - *2026-06-26*

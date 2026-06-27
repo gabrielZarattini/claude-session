@@ -1872,3 +1872,16 @@ Síntese excelente e exaustiva. Deixa-me checar rapidamente as verificações ad
 >     - TRIAL SANDBOX-PIN URL RESOLVABILITY: Lei 1 materiality gap — under Trial, even the pin's own URL is creator-only/sandbox, so the autonomous run cannot produce a
 >     - BUSINESS-ACCOUNT / DEVELOPER-TERMS as a SOVEREIGN IDENTITY ACTION: Like TikTok/YouTube, creating the Pinterest BUSINESS account, accepting Developer ToS, and ow
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-a076059e49f1ba5a7]]
+%% --- TIMELINE END --- %%
