@@ -6376,3 +6376,16 @@ Re-smoke ✅ (402, rename OK). Nó `311a55b1-fb7b-410f-9582-625fb4721619` inseri
 > === live node count (exact) for README badge ===
 > 8973
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
+%% --- TIMELINE END --- %%
