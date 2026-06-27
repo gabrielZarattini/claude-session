@@ -2297,15 +2297,80 @@ Retomo nesta ordem (decisões cravadas: **3 em paralelo**; credenciais **per-use
 
 Os 4 arquivos novos (2 blueprints/playbook + memória) estão no working tree, **não commitados** — é sua chamada se quer que eu commite agora ou só quando o código pousar. Me dá o sinal quando os apps estiverem de pé. 🚀
 
----
+## 👤 User *(15:26:56)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+ótimo continue faça na order que precisar e se quiser usar força total delegue a outros agents com força total
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
-> * **Próxima Sessão**: [[2026-06-27 - agent-a076059e49f1ba5a7]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(15:29:03)*
+
+
+## 🤖 Claude *(15:29:11)*
+
+O **GO de força total** sobrescreve o HOLD anterior — você quer que eu construa agora, na ordem que o protocolo exige. Vou ser transparente sobre a materialidade (Lei 1): sem os apps registrados eu **construo + verifico estaticamente** (tsc, security-review, deploy fail-closed), mas o **E2E real de OAuth/publish só prova quando você trouxer as credenciais** — e o público, com os audits. Nada disso me impede de deixar tudo code-complete e revisado agora.
+
+Ordem do protocolo: **PASSO 0 (gate BoK) → migrations → branches OAuth+publishers → cadência/auto-publish → UI → verify.** Nada de código pode nascer antes do gate. Disparo o PASSO 0 com força total e, em paralelo, faço o scout dos templates que vou precisar para a fase de código.
+
+Uma decisão de engenharia que tomo já (melhora o blueprint): em vez de 3 tabelas `*_config` quase idênticas, uma única **`social_app_config(user_id, platform UNIQUE, client_id, client_secret[Vault], scopes, metadata)`** — DRY, espelha o padrão do `affiliate_config`, uma migration só.
+
+## 🤖 Claude *(15:29:12)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Social connect: build",
+  "summary": "Implementar TikTok/YouTube/Pinterest \u2014 PASSO 0 (BoK gate) \u2192 migrations \u2192 OAuth+publishers \u2192 cad\u00eancia \u2192 UI"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Social connect: build". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(15:29:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== docs/bok/post-engine/ ===\"; ls -1 docs/bok/post-engine/\necho \"\"; echo \"=== existing credential-resolution SOPs (templates) ===\"; ls -1 docs/processes/ | grep -iE \"credential|meta|affiliate|social\"\necho \"\"; echo \"=== meta_config migration (encryption/INSTEAD OF template) ===\"; ls -1 supabase/migrations/ | grep -iE \"meta_api|credential_encryption|vault_upsert|instead_of|affiliate_config|meta_social\"",
+  "description": "Scout BoK + SOP + migration templates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === docs/bok/post-engine/ ===
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 
+> === existing credential-resolution SOPs (templates) ===
+> affiliate-catalog-enrichment.md
+> affiliate-credential-resolution.md
+> branded-affiliate-redirect.md
+> credential-disconnect-clear.md
+> meta-credential-resolution.md
+> meta-reels-publish.md
+> ml-affiliate-attribution.md
+> trends-credential-resolution.md
+> vision-mcp-billing-credential-resolution.md
+> 
+> === meta_config migration (encryption/INSTEAD OF template) ===
+> 20260530210000_meta_api_foundation.sql
+> 20260601000000_credential_encryption.sql
+> 20260601000500_fix_meta_config_instead_of_trigger.sql
+> 20260602130000_fix_user_api_keys_instead_of_double_fire.sql
+> 20260602140000_vault_upsert_secret_idempotent_encrypt.sql
+> 20260602150000_meta_social_instead_of_tenant_guard.sql
+> 20260602160000_meta_social_disconnect_rpc.sql
+> ```
