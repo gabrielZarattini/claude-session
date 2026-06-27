@@ -838,3 +838,15 @@ R(creative) = w_reach·z(impressions) + w_eng·z(engagements/impressions)
 **Veredito:** o loop multi-métrica é shippável **agora** sobre os 2 sinais que já fluem (engagement-rate + revenue), e isso *já* mata o Goodhart de `reward:totalClicks` em produção — ganho imediato. Mas ele só **COMPÕE de verdade** (melhora medida ciclo-a-ciclo no eixo MARCA, que é o north-star da virada) **quando a frente B destrava reach/brand**: publish YouTube/TikTok + o gap do `auto-publish video_url`. Ordem honesta: (a) virar o reward multi-métrica em `autopilot-analyze` + guardar o vetor — fecha o anti-Goodhart hoje; (b) frente B publica nos canais de marca — alimenta `brand_signal`; (c) só então o Ledger prova `R̄` crescente no eixo certo.
 
 **Arquivos-âncora:** `supabase/functions/autopilot-analyze/index.ts:74,90` (o bug a corrigir) · `supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql:34-37` (sinais brutos) · `supabase/migrations/20260620120000_viral_autopilot_plans.sql:32` (`ab_variants`) · `supabase/migrations/20260402014040…:179` (`optimization_policy.reward/action_details`) · `supabase/migrations/20260626120000…` (Ledger = medidor) · `.claude/skills/openclaw-dreaming/SKILL.md` (precedente do vetor ponderado) · `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md:28` (gap `auto-publish video_url` = dependência da frente B).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-26 - agent-ae7fd6b938e8d3c6f]]
+%% --- TIMELINE END --- %%

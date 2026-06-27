@@ -5511,3 +5511,1269 @@ Como **acabei de tornar o Pattern Conformance Gate vinculante**, vou comer da pr
 > 
 > Remember: DO NOT write or edit any files yet. This is a read-only exploration and planning phase.
 > ```
+
+## 🤖 Claude *(23:30:25)*
+
+
+## 🤖 Claude *(23:30:26)*
+
+Em modo de plano. O diagnóstico já mapeou a Fatia 1 (o loop). Preciso explorar a Fatia 2 — a captura de desfecho e o painel analítico por publicação — antes de fechar o plano. Três Explore agents em paralelo.
+
+## 🤖 Claude *(23:30:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Post-ID capture + publish\u2192creative link",
+  "subagent_type": "Explore",
+  "prompt": "Read-only exploration for a plan: the MCORCH needs to attach REAL social metrics (views/likes/comments/shares/reposts) to each published post, so it needs to know the platform POST ID of every publication and link it back to the creative that produced it.\n\nTRACE and report (cite file:line):\n1. **publish-social** (`supabase/functions/publish-social/index.ts`) and **publish-meta** (`supabase/functions/publish-meta/index.ts`): when a post is published to LinkedIn / Instagram / Facebook, is the returned platform POST ID stored? Where (which table + column)? E.g. LinkedIn returns `urn:li:share:...`, Instagram returns a media id. Look at `meta_posts`, `social_posts`, `scheduled_posts`, `social_accounts`, `content_library`. Quote the insert/update that persists (or fails to persist) the post id.\n2. **The link creative \u2192 published post.** A creative lives in `content_library` and has a `content_variant_id` that keys `creative_metrics` (see migration `20260619140000_viral_autopilot_creative_metrics.sql`). When that creative is published, how does the published post (and its platform id) tie back to the `content_variant_id` / `content_library.id` / `creative_metrics` row? Is there a column linking them? If the link is missing, say exactly where it breaks.\n3. **scheduled_posts / auto-publish path** (`supabase/functions/auto-publish/index.ts`): the cron publish path \u2014 does it record the post id + which content it published? \n4. **meta_posts schema** (migration `20260530210000_meta_api_foundation.sql` or similar) and **social_posts/scheduled_posts schema** \u2014 list the columns relevant to: platform, post/media id, content link, user_id, created_at.\n\nGOAL of the report: a clear map of \"given a real published post, can we (a) get its platform id and (b) know which creative/content_variant it is\" \u2014 and the exact gaps that must be filled for per-publication analytics to attach. Be concrete, cite schemas. ~1000 words max."
+}
+```
+
+## 🤖 Claude *(23:30:51)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Social metrics APIs reachable now",
+  "subagent_type": "Explore",
+  "prompt": "Read-only exploration for a plan: the MCORCH wants to PULL real engagement metrics (views, likes, comments, shares/reposts/remixes, reach, impressions) for each published post on LinkedIn and Instagram, using the connections the Usu\u00e1rio Zero ALREADY has. Report what's reachable today and the gaps.\n\nINVESTIGATE (cite file:line + the credential tables):\n1. **Instagram metrics.** The User Zero is connected as `magicorch` (MEDIA_CREATOR, scope `instagram_business_content_publish`) \u2014 see `docs/processes/meta-reels-publish.md` and memory `reference_ig_reels_publish_path`. Look at how `publish-social`/`publish-meta` call `graph.instagram.com` / Graph API and where the token comes from (`meta_config`, `social_accounts` \u2014 the Vault-encrypted token columns). Then determine: can we call the **IG media insights** endpoint (likes/comments/shares/saves/reach/impressions/plays for a media id) with the SAME token/connection? What scope would that need (e.g. `instagram_business_manage_insights` / `instagram_manage_insights`) and do we have it? Quote the token-resolution code in the publish function.\n2. **LinkedIn metrics.** How does the LinkedIn publish work (`publish-social` LinkedIn branch) \u2014 token source (`social_accounts`/`social_credentials`), the share/UGC post API. Then: which API gives a post's social metrics (likes/comments/reposts/impressions) \u2014 `socialActions`, `organizationalEntityShareStatistics`, or the member share \u2014 and what scope/permission does it need vs what we have? Be honest about LinkedIn's known restrictions on personal-profile post analytics.\n3. **autopilot-collect** (`supabase/functions/autopilot-collect/index.ts`): it currently writes `creative_metrics` rows but leaves impressions/engagements as `skipped_no_tier` (around line 65). Quote that code \u2014 what does it actually collect today (the `affiliate_links.clicks/revenue_cents` sync) and where would a real social-metrics PULL slot in?\n4. **Credential resolution pattern**: how do edge functions resolve per-user social tokens (the `decrypted_*` Vault views, `meta_config`, `social_accounts`)? Cite the canonical lookup.\n\nGOAL: a per-platform table of {metric available? \u00b7 which API endpoint \u00b7 token/scope source \u00b7 gap to fill}. Be honest where a platform won't give metrics for personal posts (Lei 1 \u2014 don't claim an API works if the scope/permission isn't there). ~1100 words max."
+}
+```
+
+## 🤖 Claude *(23:31:03)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Analytics panel UI + metrics schema",
+  "subagent_type": "Explore",
+  "prompt": "Read-only exploration for a plan: the MCORCH will build a **per-publication analytics panel** \u2014 every real-world publication (LinkedIn/Instagram post) gets a dashboard of measurable results (views, likes, comments, shares, reposts/remixes). I need the existing UI/data patterns to reuse and the right schema shape.\n\nINVESTIGATE and report (cite file:line):\n1. **Existing dashboard/analytics surfaces to reuse:** read `src/components/dashboard/ROIWidget.tsx` (real ROI widget \u2014 what does it read?), `src/hooks/useAgentActivity.ts`, `src/hooks/useInfraStatus.ts`, and the dashboard pages under `src/pages/` (e.g. a Dashboard/Analytics/ContentLibrary page). What's the canonical Harness pattern (hook \u2192 TanStack Query \u2192 display-only component) and which widget is the closest template for a metrics panel?\n2. **Where published content is shown to the user today:** find the page/component that lists the user's published posts or content (e.g. `ContentLibraryPage`, `src/pages/*`, a content library hook). This is where the per-publication analytics panel would attach. Cite it.\n3. **creative_metrics schema enrichment:** read migration `20260619140000_viral_autopilot_creative_metrics.sql` \u2014 exact columns (impressions, engagements, affiliate_clicks, revenue_cents, content_variant_id, source, UNIQUE constraint). For per-publication multi-metric analytics (views/likes/comments/shares/reposts/saves), is it better to (a) enrich `creative_metrics` with more columns, or (b) add a new per-publication metrics table (e.g. `publication_metrics` keyed by post id + platform + snapshot time for time-series)? Note: metrics evolve over time (a post gains likes for days) \u2192 time-series snapshots matter. Report the tradeoff with the existing schema in mind.\n4. **Charting/viz libs available:** grep package.json + src for any charting lib already used (recharts, visx, d3, nivo, tremor) so the panel reuses what's there. Cite.\n5. **Realtime/refresh patterns:** how do existing widgets refresh (TanStack staleTime, Supabase realtime subscriptions)? Cite an example.\n\nGOAL: name the exact hook+component templates to clone for the analytics panel, the page to attach it to, the charting lib to use, and a recommendation on enrich-creative_metrics vs new-publication_metrics-table (with time-series in mind). ~1100 words max."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Perfect! Now I have all the information I need. Let me compile the report.\n\n## Investigation Summary: Per-Publication Analytics Panel Architecture\n\nBased on a thorough codebase exploration, here are the concrete patterns and recommendations for building the per-publication analytics panel:\n\n---\n\n### 1. **Canonical Hook→Query→Component Pattern**\n\n**Best template to clone:** `useAgentActivity()` (file:line **src/hooks/useAgentActivity.ts:74-136**)\n\nThis hook exemplifies the Harness pattern:\n- Uses `useQuery` from TanStack Query with explicit `queryKey`, `queryFn`, and lifecycle options\n- Configures `staleTime: 8_000` and `refetchInterval: 12_000` for polling-driven dashboards (pauses on tab hidden)\n- Transforms raw Supabase rows into domain-specific LogEntry objects\n- Enables query conditionally on auth (`enabled: !!user`)\n\n**For the publication metrics panel, create `usePublicationMetrics()`:**\n```\nqueryKey: [\'publication_metrics\', user?.id, platform?, dateRange?]\nstaleTime: 15_000 (metrics update less frequently than agent execs)\nrefetchInterval: 60_000 (poll every minute for live-ish engagement data)\n```\n\n**Display component template:** Clone `ROIWidget()` (file:line **src/components/dashboard/ROIWidget.tsx:17-104**)\n- Uses `Card` + `CardHeader` + `CardContent` (shadcn/ui primitives)\n- Fetches data directly in component with `useEffect` (not a hook—for non-critical single-purpose widgets)\n- Renders stat icons + values in a compact 2-column grid\n- Handles loading state with `Skeleton`\n\n---\n\n### 2. **Where to Attach the Analytics Panel**\n\n**Two primary attachment points:**\n\n**Option A: `ContentLibraryPage` (file:line src/pages/ContentLibraryPage.tsx:215+)** — Reuse\n- This is **the inventory page** where users manage drafts, approved, and published content\n- Already lists individual content items in a grid (line 1417–1579)\n- **Ideal for:** Clicking a published post → drawer/modal expands with per-post metrics\n- Schema: `content_library.id` (aka `content_variant_id` in `creative_metrics`)\n\n**Option B: New "Published Posts" dashboard page** — If MCORCH emphasizes social presence\n- Add route `/dashboard/publications` or `/dashboard/social-feed`\n- Fetch `scheduled_posts WHERE status = \'published\'` (file:line src/pages/AnalyticsPage.tsx:98)\n- Render a table/card list, each row clickable to expand inline analytics\n\n**Recommended:** Attach to **ContentLibraryPage** (Option A) — it\'s the content hub; metrics are a detail view.\n\n---\n\n### 3. **Creative Metrics Schema: Enrich vs. New Table**\n\nRead migration: **file:line src/supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql:1-67**\n\n**Current schema:**\n- `creative_metrics` is keyed by `(content_variant_id, source)` where source ∈ {\'organic\', \'affiliate_click\', \'postback\'}\n- Columns: `impressions`, `engagements`, `affiliate_clicks`, `revenue_cents`, `collected_at`, `platform`\n- **One row per creative per source type** — aggregated snapshot, no time-series yet\n\n**Analysis:**\n\nFor a **per-publication analytics dashboard** (views/likes/comments/shares/reposts/saves), you face a tradeoff:\n\n**(A) Enrich `creative_metrics` with platform-specific fields:**\n- Add columns: `likes INT`, `comments INT`, `shares INT`, `reposts INT`, `saves INT`, `external_post_id TEXT`\n- PRO: Single table, simpler joins\n- CON: Violates normalization (organic, affiliate_click, postback sources have different semantics for these fields); unclear which source row to use for UI display\n- CON: No time-series — you only have one snapshot per creative per source, not engagement over time\n\n**(B) Create dedicated `publication_metrics` table (RECOMMENDED for time-series):**\n```sql\nCREATE TABLE publication_metrics (\n  id uuid PRIMARY KEY,\n  user_id uuid NOT NULL,\n  content_variant_id uuid NOT NULL,    -- posts from content_library\n  platform text NOT NULL,              -- linkedin, instagram, twitter, etc.\n  external_post_id text,               -- platform\'s native post ID\n  \n  views int, likes int, comments int, shares int, reposts int, saves int,\n  \n  snapshot_at timestamptz NOT NULL,    -- KEY: time-series snapshot\n  collected_at timestamptz DEFAULT now(),\n  \n  UNIQUE(content_variant_id, platform, snapshot_at)  -- one metric snapshot per post per platform per hour/day\n);\n```\n\n**Recommendation: Go with (B) — new `publication_metrics` table**\n- Metrics evolve over days/weeks (a post gains likes for a month)\n- `snapshot_at` enables charting engagement growth over time (hour-by-hour, day-by-day)\n- Avoids polluting the affiliate-focused `creative_metrics` schema\n- Follows the principle of separate concerns: `creative_metrics` = revenue loop; `publication_metrics` = social performance\n- Future analyzer (FR-VA-010) can cross-correlate: *which creatives drove both engagement AND affiliate clicks*?\n\n**Collector strategy:** Write one row per content per platform per collection window (e.g., daily at 6 AM UTC + on-demand polls). Index on `(content_variant_id, platform, snapshot_at DESC)` for fast time-series queries.\n\n---\n\n### 4. **Charting Library**\n\n**In use:** **Recharts** (`"recharts": "^3.8.1"` per package.json)\n\n**Evidence:** \n- **AnalyticsPage** (file:line src/pages/AnalyticsPage.tsx:18) imports and renders `<BarChart>`, `<AreaChart>`, `<PieChart>` with `ResponsiveContainer`\n- **DashboardHome** (file:line src/pages/DashboardHome.tsx:53–62) also uses recharts for engagement timeline\n- No D3, Visx, Nivo, or Tremor imports found in src/\n\n**Reuse pattern for the publication metrics panel:**\n- `<LineChart>` with dual-axis: likes/comments on left Y, views/impressions on right Y (to show engagement % of reach)\n- `<BarChart>` to compare multi-platform performance (platform names on X, stacked bars for likes + shares + reposts)\n- `<Legend>` and `<Tooltip>` with custom labels (pt-BR locale aware, same as AnalyticsPage)\n\n---\n\n### 5. **Realtime/Refresh Patterns**\n\n**Pattern in `useAgentActivity()` (file:line src/hooks/useAgentActivity.ts:92–95):**\n```tsx\nrefetchInterval: 12_000,    // poll every 12s for cron-driven execs\nstaleTime: 8_000,           // mark stale after 8s; refetch in background on focus\n```\n\n**Pattern in `usePipelineHistory()` (seen in grep):**\n```tsx\nstaleTime: 10_000,\nrefetchInterval: (query) => { /* dynamic interval */ }\n```\n\n**For publication metrics:**\n- Use **polling** (`refetchInterval: 60_000`), NOT Supabase realtime subscriptions\n  - Social platform APIs batch-push metrics on their own cadence (Instagram: hourly; Twitter: real-time but rate-limited)\n  - A 1-minute poll is overly aggressive; **60s is sufficient** for quasi-real-time feel\n- No realtime subscriptions detected in the codebase; polling is the norm for read-heavy dashboards\n- **Stale time:** `staleTime: 45_000` (data is "fresh" for 45s, refetch if older)\n\n---\n\n### Summary: Implementation Roadmap\n\n| Component | Template/File | Reasoning |\n|-----------|---------------|-----------|\n| Hook | `usePublicationMetrics()` (clone `useAgentActivity`) | Polling + TanStack Query pattern |\n| Display | `PublicationMetricsWidget` (clone `ROIWidget`) | Card-based, stat-focused layout |\n| Page Attachment | `ContentLibraryPage` detail drawer | Single source of truth for content |\n| Chart Lib | **Recharts** (already in deps) | LineChart + BarChart for time-series engagement |\n| Schema | `publication_metrics` (new table) | Time-series snapshots for engagement growth |\n| Refresh | `refetchInterval: 60_000` + `staleTime: 45_000` | Platform cadence-aware polling |\n\n**Exact hook signature to implement:**\n```tsx\nfunction usePublicationMetrics(\n  contentVariantId?: string,\n  platform?: string,\n  dateRange?: { from: Date; to: Date }\n): {\n  data: PublicationMetric[],\n  isLoading: boolean,\n  error: Error | null,\n  refetch: () => void\n}\n```\n\n**Exact component signature:**\n```tsx\nfunction PublicationMetricsPanel({ \n  contentVariantId: string, \n  postTitle: string \n}) {\n  const { data, isLoading } = usePublicationMetrics(contentVariantId);\n  return (\n    <Card>\n      <CardHeader>Métricas: {postTitle}</CardHeader>\n      <CardContent>\n        <LineChart data={data} /> {/* views + likes over time */}\n        <BarChart data={platformComparison} /> {/* cross-platform */}\n        {/* stat tiles: total views, engagement rate, top source */}\n      </CardContent>\n    </Card>\n  );\n}\n```\n\nThis architecture aligns with the existing Harness patterns, reuses proven UI widgets, and avoids schema pollution by keeping social metrics separate from affiliate revenue tracking.'}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Perfect! Now I have all the information I need. Let me compile the comprehensive report.\n\n---\n\n## TRACE REPORT: Platform POST ID Persistence & Creative Attribution Link\n\n### EXECUTIVE SUMMARY\n\nThe MCORCH publishing pipeline **successfully persists platform POST IDs** (LinkedIn share URNs, Instagram media IDs, Facebook post IDs, Twitter tweet IDs) but **the link from published posts back to the creative (`content_variant_id` / `content_library.id`) is broken at the scheduled_posts level**. This breaks per-publication analytics attachment. The `meta_posts` table partially solves this for Meta (Instagram/Facebook) via optional `campaign_id`, but **neither table has a direct `content_id`/`content_variant_id` column**, meaning given a real published post, you cannot trace it to its source creative without manual campaign-level deduction.\n\n---\n\n### 1. PLATFORM POST ID PERSISTENCE (publishing-social & publish-meta)\n\nBoth functions **successfully capture and store** platform POST IDs:\n\n#### **publish-social** (`/supabase/functions/publish-social/index.ts:241-250`)\n```typescript\nif (scheduled_post_id) {\n  await adminClient\n    .from("scheduled_posts")\n    .update({\n      status: "published",\n      published_at: new Date().toISOString(),\n      platform_post_id: result.id || result.data?.id || result["X-RestLi-Id"],  // ← POST ID PERSISTED\n    })\n    .eq("id", scheduled_post_id);\n}\n```\n\n**Where it\'s stored:**\n- **Table:** `scheduled_posts` (migration `20260402014040`)\n- **Column:** `platform_post_id` (TEXT, nullable)\n- **Platform ID formats:**\n  - LinkedIn: `result["X-RestLi-Id"]` (URN format: `urn:li:share:...`)\n  - Instagram/Facebook: `result.id` (numeric media ID)\n  - Twitter: `result.data?.id` (tweet ID)\n\n#### **publish-meta** (`/supabase/functions/publish-meta/index.ts:197-206`)\n```typescript\nawait admin.from("meta_posts").insert({\n  user_id: userId,\n  campaign_id: campaign_id ?? null,\n  platform: target,\n  meta_post_id: metaPostId,              // ← POST ID PERSISTED\n  post_url: postUrl,\n  caption,\n  media_url: video_url ?? image_url ?? null,\n  status: "published",\n});\n```\n\n**Where it\'s stored:**\n- **Table:** `meta_posts` (migration `20260530210000`)\n- **Column:** `meta_post_id` (TEXT, NOT NULL)\n- **Scope:** Instagram Business + Facebook Page only (Meta Graph API native)\n- **Additional metadata:** `post_url` populated (e.g., `https://www.instagram.com/reel/{id}`)\n\n---\n\n### 2. THE BROKEN LINK: Creative → Published Post\n\n#### **The Problem**\n\nNeither `scheduled_posts` nor `meta_posts` has a column linking back to `content_variant_id` (the creative\'s canonical key in `creative_metrics`). Given a published post by ID, you **cannot directly query which creative generated it**.\n\n#### **scheduled_posts Schema** (`20260402014040:158-175`)\n```sql\nCREATE TABLE public.scheduled_posts (\n  id UUID PRIMARY KEY,\n  user_id UUID,\n  content_id UUID REFERENCES public.content_library(id),  -- ← EXISTS but...\n  campaign_id UUID,\n  social_account_id UUID,\n  platform social_platform,\n  scheduled_at TIMESTAMPTZ,\n  published_at TIMESTAMPTZ,\n  status post_status,\n  platform_post_id TEXT,                                  -- ← POST ID HERE\n  error_message TEXT,\n  retry_count INTEGER,\n  max_retries INTEGER,\n  metadata JSONB,\n  created_at TIMESTAMPTZ,\n  updated_at TIMESTAMPTZ\n);\n```\n\n**The catch:** `content_id` exists and references `content_library`, BUT:\n1. It\'s written **before** publishing (when a post is scheduled), **not after** the platform assigns the POST ID.\n2. `content_id` can be NULL (posts can be created without a template).\n3. No index on `(platform_post_id)` for reverse lookups (platform ID → creative).\n4. **No `content_variant_id` column** — creative metrics uses `content_variant_id` (= `content_library.id`), so there\'s terminology mismatch but they are the same.\n\n#### **meta_posts Schema** (`20260530210000:63-85`)\n```sql\nCREATE TABLE IF NOT EXISTS public.meta_posts (\n  id UUID PRIMARY KEY,\n  user_id UUID,\n  campaign_id UUID,\n  platform TEXT,                          -- \'instagram\' | \'facebook\'\n  meta_post_id TEXT NOT NULL,             -- ← POST ID\n  post_url TEXT,\n  caption TEXT,\n  media_url TEXT,\n  status TEXT,\n  error_message TEXT,\n  created_at TIMESTAMPTZ\n);\n```\n\n**The catch:** `campaign_id` is present but **no `content_id` / `content_variant_id`**. A post is tied to a campaign at best, not to the individual creative.\n\n#### **Terminology Mismatch**\n\n- `creative_metrics` (FR-VA-009) keys on **`content_variant_id`** (= `content_library.id`)\n- `scheduled_posts` has **`content_id`** (also = `content_library.id`)\n- `meta_posts` has **neither** — only `campaign_id`\n\nThis means:\n- For LinkedIn/Twitter posts: `scheduled_posts.platform_post_id` → `scheduled_posts.content_id` → `creative_metrics.content_variant_id` ✓ (possible but two joins)\n- For Meta posts: `meta_posts.meta_post_id` → only `campaign_id` ✗ (cannot reach creative_metrics without campaign-level deduction)\n\n---\n\n### 3. AUTO-PUBLISH PATH (`/supabase/functions/auto-publish/index.ts:53-85`)\n\n#### **Current Behavior**\n\n```typescript\n// Line 53-62: Fetch content_library body if content_id exists\nif (post.content_id) {\n  const { data: content } = await adminClient\n    .from("content_library")\n    .select("body, title")\n    .eq("id", post.content_id)\n    .single();\n  contentText = content?.body || content?.title || "";\n}\n\n// Line 68-85: Call publish-social with scheduled_post_id (which has content_id)\nconst publishRes = await fetch(\n  `${Deno.env.get("SUPABASE_URL")}/functions/v1/publish-social`,\n  {\n    method: "POST",\n    headers: { ... },\n    body: JSON.stringify({\n      platform: post.platform,\n      content: contentText,\n      social_account_id: post.social_account_id,\n      scheduled_post_id: post.id,         // ← PASSED\n      user_id: post.user_id,\n    }),\n  }\n);\n```\n\n**Why this doesn\'t solve the link:**\n1. `auto-publish` passes `scheduled_post_id` to `publish-social`.\n2. `publish-social` uses this to **update** `scheduled_posts.platform_post_id` (line 247).\n3. The `content_id` is already in `scheduled_posts` at schedule time (from the UI).\n4. **But** `publish-social` doesn\'t inspect or forward `scheduled_posts.content_id` to any metrics or tracking table.\n\n**For Meta posts (publish-meta):** auto-publish doesn\'t call it directly. There\'s no cron/auto path for Meta publishing in the current codebase.\n\n---\n\n### 4. KNOWLEDGE MESH OBSERVATION (Partial Mitigation)\n\n`publish-meta` creates an MCORCH node observation (line 209-224):\n\n```typescript\nconst { data: obsNode } = await admin.from("mcorch_nodes").insert({\n  name: `post:${target}:${metaPostId}`,\n  node_type: "observation",\n  metadata: { platform: target, meta_post_id: metaPostId, campaign_id, event: "meta_publish" },\n  user_id: userId,\n}).select("id").single();\n\nif (obsNode && content_node_id) {\n  await admin.from("mcorch_edges").insert({\n    source_id: obsNode.id,\n    target_id: content_node_id,              // ← EDGE TO CONTENT NODE\n    relation_type: "observes",\n    weight: 1.0,\n  });\n}\n```\n\n**Limitations:**\n- Requires `content_node_id` parameter passed to `publish-meta` (not passed by auto-publish).\n- Only for Meta; `publish-social` does **not** create this observation link.\n- Graph traversal is slower than a direct column lookup for metrics attachment.\n\n---\n\n### 5. SCHEMA SUMMARY: CRITICAL COLUMNS\n\n| Table | Columns Relevant to Analytics Link | Gap |\n|-------|-------------------------------------|-----|\n| `social_accounts` | `user_id, platform, platform_user_id, is_active, created_at` | None (auth layer) |\n| `scheduled_posts` | `user_id, content_id, campaign_id, platform, platform_post_id, published_at, created_at` | No `content_variant_id`; no reverse index on `platform_post_id` |\n| `meta_posts` | `user_id, campaign_id, platform, meta_post_id, post_url, status, created_at` | **No `content_id` / `content_variant_id`** |\n| `creative_metrics` | `user_id, content_variant_id, platform, source, impressions, engagements, affiliate_clicks, revenue_cents, created_at` | Expects `content_variant_id`; no `platform_post_id` / `meta_post_id` |\n\n---\n\n### 6. THE EXACT GAPS (ACTIONABLE)\n\n#### **Gap 1: No content reference in meta_posts**\n- **Location:** `meta_posts` table (migration `20260530210000`)\n- **Missing column:** `content_id UUID REFERENCES public.content_library(id) ON DELETE SET NULL`\n- **Impact:** Given a Meta published post, you cannot directly query the creative that produced it.\n\n#### **Gap 2: Reverse lookup index missing**\n- **Location:** `scheduled_posts` table\n- **Missing index:** `CREATE INDEX idx_scheduled_posts_platform_post_id ON scheduled_posts (platform_post_id)` (for LinkedIn/Twitter/Facebook posts via publish-social)\n- **Impact:** Slow reverse lookup (platform ID → scheduled post).\n\n#### **Gap 3: publish-social does not link platform_post_id to creative_metrics**\n- **Location:** `/supabase/functions/publish-social/index.ts:241-250`\n- **Current behavior:** Only updates `scheduled_posts.platform_post_id`; stops there.\n- **Missing:** No row inserted into `creative_metrics` noting the publication (would seed impressions=0 if not already created by generator).\n- **Impact:** Metrics attachment cannot backfill per-post analytics from the publish event.\n\n#### **Gap 4: publish-meta does not persist content_id**\n- **Location:** `/supabase/functions/publish-meta/index.ts:197-206`\n- **Current behavior:** Inserts into `meta_posts` with `campaign_id` but no creative reference.\n- **Missing:** Should accept and persist `content_id` parameter (like `content_node_id` exists for the mesh).\n- **Impact:** No traceability from published Meta post → creative.\n\n#### **Gap 5: auto-publish → publish-meta link is missing**\n- **Location:** `/supabase/functions/auto-publish/index.ts` and publishing layer\n- **Current behavior:** `auto-publish` only calls `publish-social`, not `publish-meta`.\n- **Missing:** No cron path to publish via Meta for scheduled posts routed to Instagram/Facebook.\n- **Impact:** Scheduled Meta posts do not publish via cron; only manual frontend publishes work.\n\n---\n\n### 7. QUERY PATH: FROM PUBLISHED POST TO CREATIVE TODAY\n\n**For LinkedIn/Twitter (via publish-social → scheduled_posts):**\n```sql\n-- Forward: creative → platform post\nSELECT sp.platform_post_id\nFROM scheduled_posts sp\nWHERE sp.content_id = $content_id\n  AND sp.platform = $platform\n  AND sp.status = \'published\'\nORDER BY sp.published_at DESC;\n\n-- Reverse: platform post → creative\nSELECT sp.content_id, cl.title, cm.impressions\nFROM scheduled_posts sp\nLEFT JOIN content_library cl ON sp.content_id = cl.id\nLEFT JOIN creative_metrics cm ON cl.id = cm.content_variant_id\nWHERE sp.platform_post_id = $platform_post_id;\n```\n\n**For Instagram/Facebook (via publish-meta → meta_posts):**\n```sql\n-- Forward: creative → platform post (requires campaign detour)\nSELECT mp.meta_post_id, mp.post_url\nFROM meta_posts mp\nWHERE mp.campaign_id = (SELECT campaign_id FROM content_library WHERE id = $content_id)\n  AND mp.platform = \'instagram\'\n  AND mp.status = \'published\'\nORDER BY mp.created_at DESC;\n\n-- Reverse: platform post → creative (IMPOSSIBLE WITHOUT MANUAL STEPS)\nSELECT mp.* FROM meta_posts mp WHERE mp.meta_post_id = $meta_post_id;\n-- Result: meta_post_id, post_url, campaign_id, but NO creative link\n```\n\n---\n\n### CONCLUSION\n\nThe platform **captures POST IDs correctly** but **fails to link them to creatives**. To enable per-publication analytics:\n\n1. **Add `content_id` to `meta_posts`** — required to trace Meta posts → creative → metrics.\n2. **Ensure `publish-social` and `publish-meta` receive `content_id` / `content_node_id`** — pass it through the publish request body from the UI or auto-publish.\n3. **Consider a unified `published_posts` view** — or at minimum, normalize the schema (rename `content_id` to `content_variant_id` for clarity).\n4. **Add the reverse index** — `idx_scheduled_posts_platform_post_id` for fast lookups.\n5. **Implement the auto-publish → Meta path** — cron-based publishing to Instagram/Facebook scheduled posts.\n\n**Data model footprint:** Three weeks to implement, ~50 LOC changes. Medium confidence on platform API stability (LinkedIn, Instagram, Facebook, Twitter all stable for the past 18 months per internal QA logs).'}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Excellent. Now I have all the pieces. Let me compile the comprehensive report.\n\n## Engagement Metrics Pull Plan: Credential & API Audit\n\nBased on the codebase analysis, here is what\'s reachable today and the gaps for pulling real engagement metrics (views, likes, comments, shares, reach, impressions) per published post on Instagram and LinkedIn using User Zero\'s existing connections.\n\n### 1. Instagram Metrics (via Meta Graph API)\n\n**Connection Status:** User Zero is connected as `magicorch` with `instagram_business_content_publish` scope (MEDIA_CREATOR, Business account).\n\n**Token Resolution** (`publish-social:141-148` + `decrypted_social_accounts` view):\n- Token lives in `social_accounts_table.access_token` (Vault-encrypted UUID, decrypted via `vault.decrypted_secrets` LEFT JOIN in `decrypted_social_accounts` view).\n- Edge function retrieves token via `adminClient.from("decrypted_social_accounts").select("*")...eq("platform","instagram")...single()` (line 66-74).\n- Runtime resolution at publish time: `POST /me?fields=user_id&access_token={token}` fetches the content-publishing account ID (line 148), since stored `platform_user_id` can be app-scoped and rejected by the media endpoint (docs/processes/meta-reels-publish.md line 11-12).\n\n**Available Metrics Endpoint:** `GET /v21.0/{media-id}?fields=insights.metric(...)`  \n**Supported Insight Metrics (per IG Business API v21.0):** `impressions`, `engagement`, `reach`, `saved`, `video_views`, `likes`, `comments`, `shares`, `plays`, `taps_back`, `taps_forward`.\n\n**Scope Requirement:** The token *already has* `instagram_business_content_publish`; however, **to read media insights, the scope must include** `instagram_business_manage_insights` (or the older `instagram_manage_insights` on personal profiles, which User Zero does not have—they are a MEDIA_CREATOR Business account). **Gap 1:** The current scope stored in `social_accounts.scopes` (text[]) is not verified to include `instagram_business_manage_insights`. Publish-social does not check this (no scope validation).\n\n**What Works Today:** Publish via `graph.instagram.com/{ig_id}/media` and `graph.instagram.com/{ig_id}/media_publish` ✓ (proven E2E 2026-06-25).  \n**What\'s Blocked:** Cannot read media insights without re-OAuth with `instagram_business_manage_insights` scope. **No code path exists** to pull these metrics.\n\n**Citation:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts:141-163`; `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql:564-581` (decrypted_social_accounts view).\n\n---\n\n### 2. LinkedIn Metrics\n\n**Connection Status:** User Zero has LinkedIn OAuth via `social_accounts` (platform=\'linkedin\'); token source same as Instagram (Vault-encrypted in `social_accounts_table.access_token`).\n\n**Publish Token Resolution** (`publish-social:115-139`):\n- Token fetched from `decrypted_social_accounts`, called via `POST https://api.linkedin.com/v2/ugcPosts` (UGC User-Generated Content API).\n- Publish author: `urn:li:person:{platform_user_id}` (line 124).\n- No scope validation.\n\n**Available Metrics Endpoints for Personal Posts:**\n1. **`POST /me/shares` / `GET /shares?{filters}`:** Returns owned shares (posts) but does **not** return engagement metrics. Legacy; mostly replaced.\n2. **`GET /socialMetadata?ids=urn%3Ali%3Aactivity%3A{activity_id}`:** Meta API—returns share counts, comment counts, like counts (legacy, v1 deprecated).\n3. **`GET /v2/shares/{share_id}/socialActions`:** Returns array of social-action URNs (likes, comments, reposts) by member URN. **Limited:** pagination is poor; does NOT aggregate counts, only lists member reactions. **Must enumerate** to count.\n4. **`GET /v2/organizationalEntityShareStatistics`:** Organization-only endpoint. **Does not apply** to personal/member posts—requires org context (LinkedIn company page, not personal profile).\n\n**Scope Reality:** LinkedIn\'s personal-profile post analytics are **severely restricted** compared to Meta/IG:\n- Personal posts (via `ugcPosts` / share URN `urn:li:activity:...`) are **not subject to the same insights tier** as IG Business.\n- The `socialActions` endpoint can be queried but requires enumerating individual reactions (no direct "total likes" field).\n- LinkedIn does **not** expose `impressions` or `reach` for personal posts via any public v2 API. These exist only in the **LinkedIn Profile/Dashboard UI** (proprietary, not API-exposed).\n- **Scope Required:** `r_liteprofile_member` + `r_basicprofile` (or their newer v2 equivalents) to read shares/socialActions. Publish (`ugcPost`) uses `w_member_social`. **Unclear if current scope allows READ of socialActions**—publish token is read-only insufficient.\n\n**What Works Today:** `POST ugcPosts` publishes text/content ✓ (line 116-139).  \n**What\'s Blocked:** Cannot reliably GET impressions/reach (API-blocked, personal posts). `socialActions` endpoint returns member URNs only, not aggregates—no "likes_count" field exists. **Lei 1 Honest:** LinkedIn\'s platform will NOT give metrics for personal-profile posts via the public API. The honest answer is: **impressions and reach are unavailable; engagement (likes/comments/shares) require enumerating individual actions (not real-time, not scalable).**\n\n**Citation:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts:115-139`; LinkedIn API v2 documentation (no direct code cite—no insights pull exists).\n\n---\n\n### 3. Autopilot-Collect Current State\n\n**File:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts:1-72`\n\n**What It Collects Today:**\n- **Affiliate Click Ledger** (line 45-62): Syncs `affiliate_links.clicks` + `affiliate_links.revenue_cents` into `creative_metrics` rows (source=\'affiliate_click\', upserted per content_variant_id).\n- **Baseline Organic Row:** Writes one `source=\'organic\'` row per creative at generation time (orchestrate-step, service-role)—zero values as seed.\n\n**What\'s Skipped** (Line 65-68):\n```\n// Organic engagement insights (impressions/likes/shares) — best-effort, tier-gated; not implemented for the\n// MVP networks here. Left as a fail-soft no-op rather than fabricated data (Lei 1). FR-VA-008 enhancement slice.\n...\nreturn json({ ok: true, creatives: creatives.length, updated, organic: "skipped_no_tier" });\n```\n\n**Gap in Creative Metrics Table** (`creative_metrics` schema line 23-43 of 20260619140000 migration):\n- Columns exist: `impressions`, `engagements` (both int ≥ 0, default 0).\n- No code populates these; they remain 0 (or would be 0 if a metrics pull existed).\n- Unique constraint on (content_variant_id, source) means one \'organic\' row can be upserted repeatedly; an \'insights\' or \'platform_insights\' source could be a separate row.\n\n**Credential Pattern (same as publish):**\n- Identity derived from `autopilot_cycles.user_id` (service-role-only, line 33-36).\n- Would use `decrypted_social_accounts` or `decrypted_meta_config` (not yet called).\n- Tenant isolation: service role reads per-user tokens; no cross-tenant leak.\n\n**Where Metrics Pull Slot In:** After the affiliate click sync (line 62), before the health log insert (line 67), a new loop would query each platform\'s insights API and upsert `source=\'platform_insights\'` rows. **Blocked by:** (1) IG needs `instagram_business_manage_insights` scope; (2) LinkedIn has no reliable impressions API; (3) no error handling for tier-gated / permission-denied responses.\n\n**Citation:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-collect/index.ts:1-72` (lines 65-68 the key "skipped" signal); `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql:23-42` (schema).\n\n---\n\n### 4. Credential Resolution Pattern (Canonical)\n\n**Per-User Token Lookup (service-role only):**\n\n```typescript\n// From publish-social:65-74\nconst { data: accounts, error } = await adminClient\n  .from("decrypted_social_accounts")\n  .select("*")\n  .eq("user_id", userId)\n  .eq("platform", platform)\n  .eq("is_active", true)\n  .limit(1).single();\n```\n\n**View Definition** (`decrypted_social_accounts`, line 564-581 of encryption migration):\n```sql\nCREATE OR REPLACE VIEW public.decrypted_social_accounts AS\nSELECT \n  sa.id, sa.user_id, sa.platform, sa.platform_user_id, sa.platform_username,\n  COALESCE(s_access.decrypted_secret, sa.access_token) AS access_token,  -- Vault LEFT JOIN\n  COALESCE(s_refresh.decrypted_secret, sa.refresh_token) AS refresh_token,\n  sa.token_expires_at, sa.scopes, sa.is_active, sa.metadata, ...\nFROM public.social_accounts_table sa\nLEFT JOIN vault.decrypted_secrets s_access ON sa.access_token ~ \'^[0-9a-f-]{36}$\' AND s_access.id = sa.access_token::uuid\nLEFT JOIN vault.decrypted_secrets s_refresh ON sa.refresh_token ~ \'^[0-9a-f-]{36}$\' AND s_refresh.id = sa.refresh_token::uuid;\n```\n\n**For Meta (`meta_config` / `decrypted_meta_config:543-561`):**\n```sql\nCOALESCE(s_token.decrypted_secret, mc.long_lived_token) AS long_lived_token,\nCOALESCE(s_pages.decrypted_secret::jsonb, mc.pages) AS pages,\nFROM public.meta_config_table mc\nLEFT JOIN vault.decrypted_secrets s_token ON ... mc.long_lived_token::uuid\nLEFT JOIN vault.decrypted_secrets s_pages ON ... (mc.pages#>>\'{}\')::uuid;\n```\n\n**Pattern:** Base table stores UUID reference (Vault secret ID); view JOINs to `vault.decrypted_secrets` to materialize the real token. Service-role reads decrypted view; clients never see plaintext (masked as `••••••••••••`).\n\n**Citation:** `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql:564-581` (decrypted_social_accounts); line 543-561 (decrypted_meta_config).\n\n---\n\n## Platform-by-Platform Metrics Availability Table\n\n| **Platform** | **Metric Available?** | **Endpoint** | **Token/Scope Source** | **Gap** |\n|---|---|---|---|---|\n| **Instagram** | Partial | `GET /v21.0/{media-id}?fields=insights.metric(impressions,engagement,reach,likes,comments,shares,saved,video_views)` | `decrypted_social_accounts.access_token` + `instagram_business_content_publish` scope stored in `scopes[]` | **Missing scope:** current token has *publish* only; must include `instagram_business_manage_insights` for *read*. Re-OAuth required. No scope validation in code. |\n| **LinkedIn (Personal Post)** | No (Honest Lei 1) | `GET /v2/socialActions?{post_urn}` (enumerates, no totals) | `decrypted_social_accounts.access_token` + publish scope `w_member_social` | **Impressions/reach blocked by platform:** LinkedIn does NOT expose these for personal posts via v2 API. Engagement (likes/comments) available but only as member-URN list, not aggregates. No API field for count. Unscalable. |\n| **Facebook Page** | Yes (if configured) | `GET /{page-id}/insights?metric=page_impressions,page_engaged_users,page_post_engagements` | `decrypted_meta_config.long_lived_token` + page token in `pages[]` | Token available; endpoint available; **no collector code**. Would slot into autopilot-collect post-affiliate sync. |\n\n---\n\n## Summary: Reachable Today & Gaps\n\n- **IG metrics:** Reachable *if* scope re-granted. Current connection is publish-only. Endpoint (`media_insights`) is stable; needs in-scope access.\n- **LinkedIn metrics:** Unreachable. Platform does not expose impressions/reach; engagement is enumerator-only (no count API).\n- **Autopilot-collect:** Ready for *structure* (creative_metrics table has columns); no code exists to pull from either platform. Skipped by design (Lei 1—fail-soft, no fabrication).\n- **Credential layer:** Canonical and proven. Per-user token resolution via `decrypted_*` views + Vault works for both publishing and (proposed) metrics reading.\n\nThe honest path forward: **IG + FB (Meta)** can be integrated with scope + endpoint additions. **LinkedIn** cannot deliver reliable impressions or aggregated engagement; only personal-profile post enumeration is possible (Lei 1: don\'t claim an API metric if the platform won\'t give it).'}]
+> ```
+
+## 🤖 Claude *(23:33:44)*
+
+
+## 🤖 Claude *(23:33:52)*
+
+Phase 1 exploração completa — e ela revela uma verdade importante e honesta que vai moldar o plano:
+
+- **Captura de post-id funciona** (`scheduled_posts.platform_post_id` + `meta_posts.meta_post_id`); o link creative→post existe para o caminho publish-social (`scheduled_posts.content_id`), falta em `meta_posts`.
+- **Métricas por plataforma (Lei 1, honesto):** **Instagram** dá tudo (views/likes/comentários/shares/saves/reach) — mas precisa de **re-OAuth com escopo `instagram_business_manage_insights`** (hoje só temos publish). **LinkedIn pessoal NÃO expõe** impressões/alcance/engajamento agregado via API (bloqueio de plataforma — só clique via nosso próprio tracker). **Facebook Page** dá. **YouTube/TikTok** (a expansão de marca) são os **mais ricos** — o que entrelaça lindamente: os canais da persona são também a melhor fonte de dado.
+- **UI:** já existe `AnalyticsPage` + Recharts; clonar `useAgentActivity`+`ROIWidget`; tabela nova `publication_metrics` com `snapshot_at` (time-series, porque métrica cresce com o tempo).
+
+Deixa eu ler os 2 arquivos-âncora (o ponto de attach + o código exato do reward) para o plano ser cirúrgico.
+
+## 🤖 Claude *(23:33:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "offset": 40,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	    // Tenant + plan DERIVED from the trusted cycle row (never the body).
+> 41	    const { data: cyc } = await admin.from("autopilot_cycles").select("user_id, plan_id").eq("id", prevCycleId).maybeSingle();
+> 42	    if (!cyc) return json({ error: "cycle_not_found" }, 404);
+> 43	    const userId = cyc.user_id as string;
+> 44	    const planId = cyc.plan_id as string;
+> 45	
+> 46	    // Read the cycle's per-creative metrics. creative_metrics is the unified table (FR-VA-009): the baseline
+> 47	    // 'organic' rows are zeros; the 'affiliate_click'/'postback' rows are populated by autopilot-collect from the
+> 48	    // live ledger. Sum the real signal by product (external_id) + platform — baselines contribute 0 (no double count).
+> 49	    const { data: metrics } = await admin.from("creative_metrics")
+> 50	      .select("product_id, platform, affiliate_clicks, revenue_cents")
+> 51	      .eq("cycle_id", prevCycleId).eq("user_id", userId);
+> 52	    const rows = (metrics ?? []) as Array<{ product_id: string | null; platform: string | null; affiliate_clicks: number | null; revenue_cents: number | null }>;
+> 53	
+> 54	    const byProduct = new Map<string, { clicks: number; rev: number }>();
+> 55	    const byPlatform = new Map<string, { clicks: number; rev: number }>();
+> 56	    const bump = (m: Map<string, { clicks: number; rev: number }>, k: string | null, clicks: number, rev: number) => {
+> 57	      if (!k) return; const e = m.get(k) ?? { clicks: 0, rev: 0 }; e.clicks += clicks; e.rev += rev; m.set(k, e);
+> 58	    };
+> 59	    let totalClicks = 0, totalRev = 0;
+> 60	    for (const r of rows) {
+> 61	      const clicks = Number(r.affiliate_clicks ?? 0), rev = Number(r.revenue_cents ?? 0);
+> 62	      bump(byProduct, r.product_id, clicks, rev);
+> 63	      bump(byPlatform, r.platform, clicks, rev);
+> 64	      totalClicks += clicks; totalRev += rev;
+> 65	    }
+> 66	
+> 67	    const hasRealData = totalClicks > 0 || totalRev > 0;
+> 68	    if (!hasRealData) {
+> 69	      logEvent("autopilot_analyze_empty");
+> 70	      return json({ ok: true, has_real_data: false, charged: 0 });
+> 71	    }
+> 72	
+> 73	    // Pick the winner: most clicks, revenue as tiebreak.
+> 74	    const pick = (m: Map<string, { clicks: number; rev: number }>) =>
+> 75	      [...m.entries()].sort((a, b) => (b[1].clicks - a[1].clicks) || (b[1].rev - a[1].rev))[0]?.[0] ?? null;
+> 76	    const topProductId = pick(byProduct);
+> 77	    const topPlatform = pick(byPlatform);
+> 78	    let topProductName: string | null = null;
+> 79	    if (topProductId) {
+> 80	      const { data: p } = await admin.from("vm_affiliate_products").select("name").eq("external_id", topProductId).maybeSingle();
+> 81	      topProductName = (p as { name?: string } | null)?.name ?? null;
+> 82	    }
+> 83	
+> 84	    const actionDetails = {
+> 85	      top_product_id: topProductId, top_product_name: topProductName, top_platform: topPlatform,
+> 86	      signal: "affiliate_clicks", clicks_total: totalClicks, revenue_cents_total: totalRev,
+> 87	    };
+> 88	    const { data: pol } = await admin.from("optimization_policy").insert({
+> 89	      user_id: userId, action_type: "viral_autopilot", action_details: actionDetails,
+> 90	      reward: totalClicks, context: { scope: `viral_autopilot:${planId}`, plan_id: planId, cycle_id: prevCycleId }, applied: false,
+> 91	    }).select("id").single();
+> 92	
+> 93	    // Self-bill ONLY on the standalone path; the inline (prepaid) path was pre-reserved by the cycle.
+> 94	    let charged = 0;
+> 95	    if (!prepaid) {
+> 96	      const { error: dErr } = await admin.rpc("deduct_mco_coins", {
+> 97	        p_user_id: userId, p_amount: ANALYZE_COST, p_action: "autopilot_analyze", p_context: { cycle_id: prevCycleId },
+> 98	      });
+> 99	      if (dErr) return json({ error: "insufficient_balance", detail: dErr.message }, 402);
+> ```
+
+## 🤖 Claude *(23:33:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AnalyticsPage.tsx",
+  "offset": 1,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState, useEffect, useMemo } from "react";
+> 2	import { useAuth } from "@/hooks/useAuth";
+> 3	import { supabase } from "@/integrations/supabase/client";
+> 4	import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+> 5	import { Badge } from "@/components/ui/badge";
+> 6	import { Skeleton } from "@/components/ui/skeleton";
+> 7	import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+> 8	import {
+> 9	  Select,
+> 10	  SelectContent,
+> 11	  SelectItem,
+> 12	  SelectTrigger,
+> 13	  SelectValue,
+> 14	} from "@/components/ui/select";
+> 15	import {
+> 16	  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+> 17	  ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Legend,
+> 18	} from "recharts";
+> 19	import {
+> 20	  BarChart3, Eye, MousePointerClick, Heart, TrendingUp,
+> 21	  DollarSign, Target, Info, GitCompareArrows,
+> 22	} from "lucide-react";
+> 23	
+> 24	const PLATFORM_COLORS: Record<string, string> = {
+> 25	  linkedin: "hsl(210, 80%, 55%)", instagram: "hsl(330, 70%, 55%)",
+> 26	  facebook: "hsl(220, 60%, 50%)", twitter: "hsl(200, 80%, 55%)",
+> 27	  tiktok: "hsl(170, 60%, 45%)", youtube: "hsl(0, 80%, 55%)",
+> 28	  pinterest: "hsl(0, 65%, 48%)", wordpress: "hsl(205, 65%, 45%)",
+> 29	};
+> 30	
+> 31	const PERIOD_OPTIONS = [
+> 32	  { value: "7", label: "Últimos 7 dias" },
+> 33	  { value: "30", label: "Últimos 30 dias" },
+> 34	  { value: "90", label: "Últimos 90 dias" },
+> 35	];
+> 36	
+> 37	const DEMO_METRICS = [
+> 38	  { platform: "instagram", impressions: 12400, clicks: 620, engagements: 1850, ctr: 5.0, spend_cents: 15000, conversions: 42, measured_at: "", campaign_id: "demo-a" },
+> 39	  { platform: "facebook", impressions: 8200, clicks: 410, engagements: 980, ctr: 5.0, spend_cents: 12000, conversions: 28, measured_at: "", campaign_id: "demo-a" },
+> 40	  { platform: "linkedin", impressions: 4500, clicks: 315, engagements: 540, ctr: 7.0, spend_cents: 8000, conversions: 18, measured_at: "", campaign_id: "demo-b" },
+> 41	  { platform: "twitter", impressions: 6800, clicks: 204, engagements: 720, ctr: 3.0, spend_cents: 5000, conversions: 12, measured_at: "", campaign_id: "demo-b" },
+> 42	  { platform: "tiktok", impressions: 18000, clicks: 900, engagements: 3200, ctr: 5.0, spend_cents: 10000, conversions: 35, measured_at: "", campaign_id: "demo-a" },
+> 43	];
+> 44	
+> 45	const DEMO_CAMPAIGNS = [
+> 46	  { id: "demo-a", name: "Campanha Demo Alpha" },
+> 47	  { id: "demo-b", name: "Campanha Demo Beta" },
+> 48	];
+> 49	
+> 50	function generateDemoTimeline() {
+> 51	  const data = [];
+> 52	  for (let i = 6; i >= 0; i--) {
+> 53	    const d = new Date(); d.setDate(d.getDate() - i);
+> 54	    data.push({ date: d.toISOString().slice(0, 10), posts: Math.floor(Math.random() * 5) + 1 });
+> 55	  }
+> 56	  return data;
+> 57	}
+> 58	
+> 59	const DEMO_POSTS = [
+> 60	  { platform: "instagram", published_at: new Date().toISOString(), status: "published" },
+> 61	  { platform: "facebook", published_at: new Date().toISOString(), status: "published" },
+> 62	  { platform: "linkedin", published_at: null, status: "queued" },
+> 63	  { platform: "twitter", published_at: new Date().toISOString(), status: "published" },
+> 64	  { platform: "tiktok", published_at: null, status: "failed" },
+> 65	];
+> 66	
+> 67	interface MetricsData {
+> 68	  platform: string | null; impressions: number | null; clicks: number | null;
+> 69	  engagements: number | null; ctr: number | null; spend_cents?: number | null;
+> 70	  conversions?: number | null; measured_at: string; campaign_id?: string;
+> 71	}
+> 72	
+> 73	interface PostData { platform: string; published_at: string | null; status: string; }
+> 74	interface CampaignRef { id: string; name: string; }
+> 75	
+> 76	export default function AnalyticsPage() {
+> 77	  const { user } = useAuth();
+> 78	  const [period, setPeriod] = useState("30");
+> 79	  const [platformFilter, setPlatformFilter] = useState("all");
+> 80	  const [metrics, setMetrics] = useState<MetricsData[]>([]);
+> 81	  const [posts, setPosts] = useState<PostData[]>([]);
+> 82	  const [campaigns, setCampaigns] = useState<CampaignRef[]>([]);
+> 83	  const [loading, setLoading] = useState(true);
+> 84	
+> 85	  // Comparison state
+> 86	  const [campA, setCampA] = useState("");
+> 87	  const [campB, setCampB] = useState("");
+> 88	
+> 89	  useEffect(() => {
+> 90	    if (!user) return;
+> 91	    const fetchData = async () => {
+> 92	      setLoading(true);
+> 93	      const since = new Date(); since.setDate(since.getDate() - parseInt(period));
+> 94	      const [metricsRes, postsRes, campaignsRes] = await Promise.all([
+> 95	        supabase.from("campaign_metrics")
+> 96	          .select("platform, impressions, clicks, engagements, ctr, spend_cents, conversions, measured_at, campaign_id")
+> 97	          .eq("user_id", user.id).gte("measured_at", since.toISOString()).order("measured_at", { ascending: true }),
+> 98	        supabase.from("scheduled_posts").select("platform, published_at, status")
+> 99	          .eq("user_id", user.id).gte("created_at", since.toISOString()),
+> 100	        supabase.from("campaigns").select("id, name").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(50),
+> 101	      ]);
+> 102	      setMetrics((metricsRes.data as MetricsData[]) || []);
+> 103	      setPosts((postsRes.data as PostData[]) || []);
+> 104	      setCampaigns((campaignsRes.data as CampaignRef[]) || []);
+> 105	      setLoading(false);
+> 106	    };
+> 107	    fetchData();
+> 108	  }, [user, period]);
+> 109	
+> 110	  const isDemo = metrics.length === 0 && posts.length === 0;
+> 111	  const activeMetrics = isDemo ? DEMO_METRICS : metrics;
+> 112	  const activePosts = isDemo ? DEMO_POSTS : posts;
+> 113	  const activeCampaigns = isDemo ? DEMO_CAMPAIGNS : campaigns;
+> 114	
+> 115	  const filtered = platformFilter === "all" ? activeMetrics : activeMetrics.filter((m) => m.platform === platformFilter);
+> 116	
+> 117	  const totalImpressions = filtered.reduce((s, m) => s + (m.impressions || 0), 0);
+> 118	  const totalClicks = filtered.reduce((s, m) => s + (m.clicks || 0), 0);
+> 119	  const totalEngagements = filtered.reduce((s, m) => s + (m.engagements || 0), 0);
+> 120	  const avgCTR = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
+> ```
+
+## 🤖 Claude *(23:34:29)*
+
+
+## 🤖 Claude *(23:34:33)*
+
+Two sharp findings that shape the plan:
+
+1. **autopilot-analyze** already writes `context.scope = viral_autopilot:${planId}` (line 90) — so the scope bug is purely on the **read** side (`orchestrate-step:203` filters by `action_type` only). And the SELECT (line 50) pulls *only* `affiliate_clicks, revenue_cents` — it doesn't even read `impressions/engagements`. The reward is `totalClicks`. Confirmed.
+2. **AnalyticsPage already exists but shows FAKE demo data** — it reads `campaign_metrics` (empty) and falls back to `DEMO_METRICS` (12.400 impressões inventadas, line 37/110). *Isso é parte do "não olhamos os números reais": a página de analytics mostra números demo, não o resultado real dos posts.* The per-publication panel must show **real data or honest "sem dados ainda"**, never fake.
+
+I have everything. Writing the plan.
+
+## 🤖 Claude *(23:35:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/plans/sprint-goal-distribui-o-floofy-flurry.md",
+  "content": "# Plano \u2014 Fechar o nervo sensorial: painel anal\u00edtico por publica\u00e7\u00e3o + loop de aprendizado que COMP\u00d5E (OTD-AG-002)\n\n## Context\n\n**Diretiva Sovereign 2026-06-26:** atacar com for\u00e7a total o \u00fanico padr\u00e3o ag\u00eantico FRACO da doutrina \u2014 **Learning & Adaptation** \u2014 e o desconforto real: *\"n\u00e3o avan\u00e7amos o quanto poder\u00edamos apesar do desenvolvimento incr\u00edvel\"*.\n\n**Diagn\u00f3stico material (workflow `wob2d279d`, Lei 1):** o loop de aprendizado do Autopilot est\u00e1 tecnicamente fechado, mas \u00e9 um **\"termostato de 1-bit\"** sobre um **placar em branco**:\n- `creative_metrics` (12 linhas): revenue>0: **0** \u00b7 impressions>0: **0** \u00b7 engagements>0: **0** \u00b7 affiliate_clicks>0: **1** (~10 cliques agregados, \u00fanico nervo vivo).\n- Reward = `totalClicks` mono-m\u00e9trica (Goodhart) \u2014 [autopilot-analyze:73-90](supabase/functions/autopilot-analyze/index.ts:73); o SELECT nem l\u00ea impressions/engagements ([:50](supabase/functions/autopilot-analyze/index.ts:50)).\n- S\u00f3 sussurra um *hint* no prompt; **n\u00e3o realoca esfor\u00e7o** (fan-out itera produtos\u00d7plataformas cru, [autopilot-run:201](supabase/functions/autopilot-run/index.ts:201)); a infra `ab_variants` est\u00e1 parada.\n- 2 bugs latentes: read sem filtro de `scope` ([orchestrate-step:203](supabase/functions/orchestrate-step/index.ts:203) \u2014 o write J\u00c1 grava `scope=viral_autopilot:<plan_id>`); `applied` nunca vira `true`.\n- E a `AnalyticsPage` existente mostra **DEMO falso** quando vazia ([AnalyticsPage.tsx:37,110](src/pages/AnalyticsPage.tsx:37)) \u2014 n\u00e3o olhamos n\u00fameros reais porque os n\u00fameros exibidos s\u00e3o inventados.\n\n**O motor aprende sobre nada.** O dev construiu o corpo; falta o **nervo sensorial de volta**: o sistema n\u00e3o *v\u00ea* o resultado do que publica. Causa raiz do \"n\u00e3o avan\u00e7amos\".\n\n**O que o Sovereign quer (cristalizado):** um **painel anal\u00edtico por publica\u00e7\u00e3o** \u2014 cada post real (LinkedIn/IG que j\u00e1 existem) com views/likes/coment\u00e1rios/shares/reposts/remixes mensur\u00e1veis \u2014 que alimenta um **reward multi-m\u00e9trica marca-primeiro** (Gabriel AI = a marca **sendo constru\u00edda**, c\u00f3pia digital do CEO, modelo Magalu \u2014 n\u00e3o uma \"virada\"). Receita entra **consciente**, via pauta de decis\u00e3o, n\u00e3o otimiza\u00e7\u00e3o cega. **For\u00e7a total nas 2 fatias.**\n\n**North-star travado (dial ajust\u00e1vel, como os pesos do Dreaming):** `R = 0.40\u00b7z(reach) + 0.30\u00b7z(eng/impr) + 0.20\u00b7z(brand_signal) + 0.10\u00b7z(revenue)` \u2014 z-score + taxa = anti-Goodhart; sem clickbait.\n\n**ORO:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (aprova BoK + pesos + verifica painel em browser real) \u00b7 Owner = Sovereign (blast radius = decis\u00e3o de pauta aut\u00f4noma que gasta mco sem retorno de marca).\n\n**Dogfooding (Lei 2 / Pattern Conformance Gate rec\u00e9m-instalado):** isto \u00e9 arquitetural \u2192 **emenda \u00e0 BoK `viral-autopilot` ANTES do c\u00f3digo** + Pattern Conformance Declaration. A disciplina \u00c9 o mecanismo de avan\u00e7o.\n\n---\n\n## Verdade honesta de plataforma (Lei 1 \u2014 molda o sequenciamento)\n\n| Plataforma | M\u00e9trica de desfecho dispon\u00edvel? | Como | Depend\u00eancia |\n|---|---|---|---|\n| **Instagram** | \u2705 Tudo (reach/impr/likes/comments/shares/saves/views) | `GET /{media-id}?fields=insights...` (mesma conex\u00e3o `magicorch`) | **Re-OAuth com escopo `instagram_business_manage_insights`** (hoje s\u00f3 `..._content_publish`) = **a\u00e7\u00e3o Sovereign** |\n| **Facebook Page** | \u2705 (page insights) | `/{page-id}/insights` via `meta_config` | token de p\u00e1gina configurado |\n| **LinkedIn (perfil pessoal)** | \u274c Bloqueio de plataforma (sem impress\u00f5es/alcance; engajamento s\u00f3 lista de URNs, n\u00e3o agregado) | \u2014 | s\u00f3 **clique** (nosso redirect tracker). Para m\u00e9tricas reais \u2192 **LinkedIn Company Page** do Gabriel AI (`organizationalEntityShareStatistics`) = a\u00e7\u00e3o Sovereign estrat\u00e9gica |\n| **YouTube / TikTok** | \u2705\u2705 Os mais ricos (views/likes/comments/shares) | Data/Analytics API | chegam com a expans\u00e3o de canais da persona (frente B) \u2014 **o melhor dado vem dos canais da marca** |\n\n**Princ\u00edpio:** o coletor \u00e9 **fail-soft por plataforma** \u2014 puxa o que cada uma d\u00e1, registra `skipped_no_scope`/`unsupported_platform` no resto (nunca fabrica \u2014 Lei 1). O painel mostra dado real ou \"sem dados ainda\", **nunca demo**.\n\n---\n\n## Sequ\u00eancia (for\u00e7a total, mas valor-vis\u00edvel primeiro)\n\n### Fase 0 \u2014 Emenda BoK `viral-autopilot` + SOP (dogfood do gate)\n\n- Emendar `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model}.md` com **FR-VA-027..031** (abaixo) + **Pattern Conformance Declaration** (toca \u22653 padr\u00f5es \u2192 `09-pattern-conformance.md`): #9 Learning&Adaptation (yes \u2014 \u00e9 o objeto), #19 Evaluation&Monitoring (yes \u2014 painel), #11 Goal Monitoring (yes \u2014 reward), #16 Resource-Aware (yes \u2014 pauta de receita consciente), #13 HITL (yes \u2014 pauta de decis\u00e3o). Amendment v0.3.\n- **SOP Lei 2** `docs/processes/publication-metrics-collection.md` (resolu\u00e7\u00e3o de token per-user social + fail-soft por plataforma + sem-fabrica\u00e7\u00e3o) \u2014 espelha `meta-credential-resolution.md`/`trends-credential-resolution.md`.\n\n### Fatia A \u2014 Nervo sensorial + painel por publica\u00e7\u00e3o (o valor vis\u00edvel, PRIMEIRO)\n\n**A1. Migration `publication_metrics`** (tabela nova, time-series \u2014 DD: m\u00e9trica cresce com o tempo):\n```\npublication_metrics(id, user_id, content_variant_id\u2192content_library, platform, external_post_id,\n  views, likes, comments, shares, reposts, saves, reach, impressions,\n  snapshot_at timestamptz, collected_at, UNIQUE(content_variant_id, platform, snapshot_at))\n```\nRLS **SELECT-own** + service-role write (espelha `creative_metrics`/`autopilot_cycles`). \u00cdndice `(content_variant_id, platform, snapshot_at DESC)`. **+ link fix:** `ALTER TABLE meta_posts ADD content_id` + \u00edndice reverso em `scheduled_posts(platform_post_id)` (o caminho publish-social j\u00e1 liga via `scheduled_posts.content_id`). `/security-review` antes do commit.\n\n**A2. Coletor `collect-publication-metrics`** (edge fn nova OU estende `autopilot-collect:65` `skipped_no_tier`): resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG + FB** por `external_post_id`, grava snapshot em `publication_metrics`. Fail-soft por plataforma (LinkedIn\u2192clicks-only honesto; YT/TikTok\u2192quando a frente B existir). Cron di\u00e1rio + on-demand. Telemetria `infra_health_logs` (sem PII).\n\n**A3. Painel anal\u00edtico por publica\u00e7\u00e3o** (Harness pattern \u2014 o entreg\u00e1vel que o Sovereign **abre e v\u00ea**):\n- Hook `usePublicationMetrics(contentVariantId?, platform?, range?)` \u2014 clona [useAgentActivity.ts](src/hooks/useAgentActivity.ts) (TanStack, `staleTime 45_000`, `refetchInterval 60_000`).\n- Componente `PublicationMetricsPanel` \u2014 clona [ROIWidget.tsx](src/components/dashboard/ROIWidget.tsx); **Recharts** (j\u00e1 em deps) `LineChart` time-series (views/likes ao longo do tempo) + stat tiles + compara\u00e7\u00e3o por plataforma. **Dado real ou \"sem dados ainda\" \u2014 mata o DEMO falso** da AnalyticsPage.\n- Attach: drawer de detalhe por post em [ContentLibraryPage.tsx](src/pages/ContentLibraryPage.tsx) (hub de conte\u00fado) + alimentar a `AnalyticsPage` com dado real de `publication_metrics` (substituir/gatear o fallback demo).\n\n### Fatia B \u2014 O loop honesto que COMP\u00d5E (consome o dado da Fatia A)\n\n**B1. Reward multi-m\u00e9trica `R()`** em `autopilot-analyze`: ampliar o SELECT ([:50](supabase/functions/autopilot-analyze/index.ts:50)) para `impressions, engagements` + `JOIN publication_metrics` por criativo; computar `R = w_reach\u00b7z(reach) + w_eng\u00b7z(eng/impr) + w_brand\u00b7z(brand_signal) + w_rev\u00b7z(revenue)` (z-score dentro do ciclo). Trocar `pick(clicks)`/`reward:totalClicks` por `pick(R)`/`reward:R(winner)`; gravar `action_details.reward_vector = {reach,eng,brand,rev,weights}` (prova audit\u00e1vel). Pesos brand-first default, configur\u00e1veis por plano (dado, n\u00e3o c\u00f3digo). `brand_signal` = saves+coment\u00e1rios+shares por alcance (derivado; coluna em `publication_metrics`).\n\n**B2. Realoca\u00e7\u00e3o de esfor\u00e7o** em `autopilot-run` ([:201](supabase/functions/autopilot-run/index.ts:201)): ponderar o fan-out pela policy \u2014 mais variantes ao produto\u00d7plataforma vencedor, podar perdedor, **\u03b5-greedy** (1 das N variantes sempre explora\u00e7\u00e3o aleat\u00f3ria, anti-\u00f3timo-local \u2014 espelha `QueryDiversity` do Dreaming). Usa `autopilot_plans.ab_variants`. **A pol\u00edtica passa a mexer em `tasks[]`, n\u00e3o s\u00f3 no prompt.**\n\n**B3. Fechar os 2 bugs latentes:** filtro `scope=viral_autopilot:<plan_id>` no read ([orchestrate-step:203](supabase/functions/orchestrate-step/index.ts:203)); `update applied=true` no consumo (trilha audit\u00e1vel FR-VA-011 AT). **B4. EWMA multi-ciclo:** `analyze` l\u00ea os \u00faltimos M ciclos (n\u00e3o s\u00f3 1, [autopilot-run:186](supabase/functions/autopilot-run/index.ts:186)) \u2014 m\u00e9dia m\u00f3vel para o vencedor n\u00e3o oscilar com ru\u00eddo.\n\n**B5. Pauta de receita consciente (FR-VA-031, HITL \u2014 v1 fino):** superf\u00edcie que lista criativos de alto engajamento como **candidatos a monetiza\u00e7\u00e3o** para decis\u00e3o do Sovereign (retorno \u00d7 esfor\u00e7o \u00d7 prioridade) \u2014 se\u00e7\u00e3o no painel, n\u00e3o otimiza\u00e7\u00e3o autom\u00e1tica.\n\n### Fase Seal\nEmenda BoK selada na malha (`documentation_suite` update ou novo n\u00f3) + HANDOFF + Key Files. Prova material de cada FR.\n\n---\n\n## FRs novos (BoK amendment v0.3)\n\n| FR | Categoria | Descri\u00e7\u00e3o |\n|---|---|---|\n| FR-VA-027 | DB+UI | `publication_metrics` (time-series) + painel anal\u00edtico por publica\u00e7\u00e3o (real, anti-demo) |\n| FR-VA-028 | EdgeFn | `collect-publication-metrics` \u2014 pull IG/FB insights per-user, fail-soft por plataforma |\n| FR-VA-029 | EdgeFn | Reward multi-m\u00e9trica `R()` brand-first em `autopilot-analyze` + `reward_vector` audit\u00e1vel |\n| FR-VA-030 | EdgeFn | Realoca\u00e7\u00e3o de esfor\u00e7o (ab_variants + \u03b5-greedy) em `autopilot-run` |\n| FR-VA-031 | UI/HITL | Pauta de oportunidades de receita (decis\u00e3o humana consciente) |\n| (fix) | EdgeFn | scope-filtered read + `applied=true` + EWMA multi-ciclo |\n\n---\n\n## Arquivos cr\u00edticos\n\n**Criar:** `supabase/migrations/<ts>_publication_metrics.sql` (+ meta_posts.content_id + \u00edndice) \u00b7 `supabase/functions/collect-publication-metrics/index.ts` \u00b7 `src/hooks/usePublicationMetrics.ts` \u00b7 `src/components/dashboard/PublicationMetricsPanel.tsx` \u00b7 `docs/processes/publication-metrics-collection.md` (SOP) \u00b7 emendas em `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model,09-pattern-conformance}.md`.\n\n**Modificar:** `supabase/functions/autopilot-analyze/index.ts` (reward R) \u00b7 `autopilot-run/index.ts` (realoca\u00e7\u00e3o + EWMA) \u00b7 `orchestrate-step/index.ts` (scope read + applied) \u00b7 `supabase/functions/publish-meta/index.ts` (persistir content_id) \u00b7 `src/pages/ContentLibraryPage.tsx` (attach painel) \u00b7 `src/pages/AnalyticsPage.tsx` (dado real, matar demo).\n\n**Reusar:** `decrypted_social_accounts`/`decrypted_meta_config` (resolu\u00e7\u00e3o de token, `20260601000000_credential_encryption.sql`) \u00b7 `useAgentActivity.ts`+`ROIWidget.tsx` (templates Harness) \u00b7 Recharts (deps) \u00b7 `.claude/skills/openclaw-dreaming/SKILL.md` (precedente do vetor ponderado + \u03b5/diversity) \u00b7 `autopilot-collect/index.ts:65` (slot do pull) \u00b7 conven\u00e7\u00e3o RLS/migration de `creative_metrics`/`autopilot_cycles`.\n\n---\n\n## Verifica\u00e7\u00e3o (end-to-end, Lei 1)\n\n- **Fase 0:** BoK emendada (FR-VA-027..031 + 09-pattern-conformance) \u00b7 SOP com 5 campos Lei 2 \u00b7 `npx tsc` 0.\n- **Fatia A:** `/security-review` SAFE na migration; `publication_metrics` RLS provada (G6 isolamento: tenant throwaway v\u00ea 0); coletor puxa **insights reais de IG** (ap\u00f3s re-OAuth) de um post `external_post_id` real \u2192 linha em `publication_metrics` com views/likes N\u00c3O-zero (ou `skipped_no_scope` honesto se a re-auth n\u00e3o feita); **painel renderizado em browser real** ([feedback_browser_verify_deliverables]) mostrando os n\u00fameros reais dos posts existentes (ou \"sem dados ainda\" \u2014 nunca demo) + **Vision QA** no print ([feedback_vision_qa_always]).\n- **Fatia B:** reward `R()` computado sobre dado real (n\u00e3o `totalClicks`); `optimization_policy.action_details.reward_vector` gravado; `scope` filtrado no read (provar: 2 planos do mesmo tenant n\u00e3o cruzam pol\u00edtica); `applied=true` no consumo; realoca\u00e7\u00e3o muda `tasks[]` (vencedor recebe mais variantes); **prova de composi\u00e7\u00e3o** via Collective Efficiency Ledger: `R\u0304(ciclo N+1) > R\u0304(ciclo N)` com `mco_actual` est\u00e1vel.\n- `bun run lint` limpo \u00b7 tsc 0.\n\n## Depend\u00eancias = a\u00e7\u00f5es Sovereign (flagged, N\u00c3O bloqueiam o build \u2014 coletor \u00e9 fail-soft)\n\n1. **Re-OAuth Instagram** com escopo `instagram_business_manage_insights` \u2192 destrava m\u00e9tricas reais de IG (sem isso, IG = `skipped_no_scope`).\n2. **(estrat\u00e9gico) LinkedIn Company Page** do Gabriel AI \u2192 destrava m\u00e9tricas de LinkedIn (perfil pessoal \u00e9 click-only por bloqueio de plataforma).\n3. **Canais YouTube/TikTok** (frente B brand-persona) \u2192 a fonte de dado mais rica; quando landarem, o coletor ganha os melhores sinais.\n\n## Riscos\n1. **Goodhart** \u2014 mitigado: z-score+taxa, vetor multi-m\u00e9trica derivado de verdade, V4-2 (valor marginal/agente) segue deferido (DD-AG-004).\n2. **Placar segue magro** se as a\u00e7\u00f5es Sovereign (re-OAuth IG) n\u00e3o acontecerem \u2014 o loop roda fail-soft sobre clicks+IG, **degrada honestamente**, n\u00e3o fabrica. A composi\u00e7\u00e3o plena no eixo MARCA depende dos canais publicando.\n3. **Cota de API social** (rate limit do pull) \u2014 snapshot di\u00e1rio + on-demand com backoff; telemetria de degrada\u00e7\u00e3o.\n4. **Escopo grande** \u2014 multi-sess\u00e3o; sequ\u00eancia entrega o painel vis\u00edvel (Fatia A) antes do loop (Fatia B).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/sprint-goal-distribui-o-floofy-flurry.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:36:03)*
+
+
+## 🤖 Claude *(23:36:11)*
+
+Plano completo e gravado. A espinha, honesta e sequenciada para o valor visível primeiro:
+
+- **Fatia A (o que você abre e vê):** tabela `publication_metrics` time-series + coletor que **puxa os números reais** dos seus posts IG/FB + o **painel analítico por publicação** (dado real ou "sem dados ainda" — mata o demo falso que a AnalyticsPage mostra hoje).
+- **Fatia B (o loop que compõe):** reward multi-métrica marca-primeiro `R()` substituindo o `totalClicks` Goodhart + **realocação real de esforço** (ab_variants + ε-greedy, a política passa a mexer no fan-out, não só sussurrar) + os 2 bugs latentes + EWMA multi-ciclo.
+- **Honestidade Lei 1 embutida:** IG dá tudo (após você reconectar com escopo de insights), LinkedIn pessoal é bloqueio de plataforma (só clique — ou Company Page do Gabriel AI), e **YouTube/TikTok serão a fonte mais rica** — o que reforça que os canais da persona são também o melhor dado. O coletor é fail-soft: nunca fabrica.
+- **Dogfooding:** emenda à BoK `viral-autopilot` + Pattern Conformance antes do código.
+
+Três dependências são ações suas (reconectar IG, Company Page, canais YT/TikTok) — mas **não bloqueiam o build**, o coletor degrada honestamente.
+
+## 🤖 Claude *(23:36:14)*
+
+
+🛠️ **Tool Call**: `ExitPlanMode`
+```json
+{
+  "allowedPrompts": [
+    {
+      "tool": "Bash",
+      "prompt": "run /security-review on the new publication_metrics migration before commit"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "apply the supabase migration and prove publication_metrics RLS isolation via $SB_SECRET_KEY + a throwaway user"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "deploy the edge functions (collect-publication-metrics, autopilot-analyze, autopilot-run, orchestrate-step, publish-meta)"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run npx tsc --noEmit and bun run lint"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "build the dist, run a local vite preview with an injected session, and browser-verify the publication analytics panel via agent-browser"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run scripts/qa/vision-qa.ts on the panel screenshot"
+    },
+    {
+      "tool": "Bash",
+      "prompt": "run the viral-autopilot BoK amendment seal seed script and verify the mesh node via REST"
+    }
+  ],
+  "plan": "# Plano \u2014 Fechar o nervo sensorial: painel anal\u00edtico por publica\u00e7\u00e3o + loop de aprendizado que COMP\u00d5E (OTD-AG-002)\n\n## Context\n\n**Diretiva Sovereign 2026-06-26:** atacar com for\u00e7a total o \u00fanico padr\u00e3o ag\u00eantico FRACO da doutrina \u2014 **Learning & Adaptation** \u2014 e o desconforto real: *\"n\u00e3o avan\u00e7amos o quanto poder\u00edamos apesar do desenvolvimento incr\u00edvel\"*.\n\n**Diagn\u00f3stico material (workflow `wob2d279d`, Lei 1):** o loop de aprendizado do Autopilot est\u00e1 tecnicamente fechado, mas \u00e9 um **\"termostato de 1-bit\"** sobre um **placar em branco**:\n- `creative_metrics` (12 linhas): revenue>0: **0** \u00b7 impressions>0: **0** \u00b7 engagements>0: **0** \u00b7 affiliate_clicks>0: **1** (~10 cliques agregados, \u00fanico nervo vivo).\n- Reward = `totalClicks` mono-m\u00e9trica (Goodhart) \u2014 [autopilot-analyze:73-90](supabase/functions/autopilot-analyze/index.ts:73); o SELECT nem l\u00ea impressions/engagements ([:50](supabase/functions/autopilot-analyze/index.ts:50)).\n- S\u00f3 sussurra um *hint* no prompt; **n\u00e3o realoca esfor\u00e7o** (fan-out itera produtos\u00d7plataformas cru, [autopilot-run:201](supabase/functions/autopilot-run/index.ts:201)); a infra `ab_variants` est\u00e1 parada.\n- 2 bugs latentes: read sem filtro de `scope` ([orchestrate-step:203](supabase/functions/orchestrate-step/index.ts:203) \u2014 o write J\u00c1 grava `scope=viral_autopilot:<plan_id>`); `applied` nunca vira `true`.\n- E a `AnalyticsPage` existente mostra **DEMO falso** quando vazia ([AnalyticsPage.tsx:37,110](src/pages/AnalyticsPage.tsx:37)) \u2014 n\u00e3o olhamos n\u00fameros reais porque os n\u00fameros exibidos s\u00e3o inventados.\n\n**O motor aprende sobre nada.** O dev construiu o corpo; falta o **nervo sensorial de volta**: o sistema n\u00e3o *v\u00ea* o resultado do que publica. Causa raiz do \"n\u00e3o avan\u00e7amos\".\n\n**O que o Sovereign quer (cristalizado):** um **painel anal\u00edtico por publica\u00e7\u00e3o** \u2014 cada post real (LinkedIn/IG que j\u00e1 existem) com views/likes/coment\u00e1rios/shares/reposts/remixes mensur\u00e1veis \u2014 que alimenta um **reward multi-m\u00e9trica marca-primeiro** (Gabriel AI = a marca **sendo constru\u00edda**, c\u00f3pia digital do CEO, modelo Magalu \u2014 n\u00e3o uma \"virada\"). Receita entra **consciente**, via pauta de decis\u00e3o, n\u00e3o otimiza\u00e7\u00e3o cega. **For\u00e7a total nas 2 fatias.**\n\n**North-star travado (dial ajust\u00e1vel, como os pesos do Dreaming):** `R = 0.40\u00b7z(reach) + 0.30\u00b7z(eng/impr) + 0.20\u00b7z(brand_signal) + 0.10\u00b7z(revenue)` \u2014 z-score + taxa = anti-Goodhart; sem clickbait.\n\n**ORO:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (aprova BoK + pesos + verifica painel em browser real) \u00b7 Owner = Sovereign (blast radius = decis\u00e3o de pauta aut\u00f4noma que gasta mco sem retorno de marca).\n\n**Dogfooding (Lei 2 / Pattern Conformance Gate rec\u00e9m-instalado):** isto \u00e9 arquitetural \u2192 **emenda \u00e0 BoK `viral-autopilot` ANTES do c\u00f3digo** + Pattern Conformance Declaration. A disciplina \u00c9 o mecanismo de avan\u00e7o.\n\n---\n\n## Verdade honesta de plataforma (Lei 1 \u2014 molda o sequenciamento)\n\n| Plataforma | M\u00e9trica de desfecho dispon\u00edvel? | Como | Depend\u00eancia |\n|---|---|---|---|\n| **Instagram** | \u2705 Tudo (reach/impr/likes/comments/shares/saves/views) | `GET /{media-id}?fields=insights...` (mesma conex\u00e3o `magicorch`) | **Re-OAuth com escopo `instagram_business_manage_insights`** (hoje s\u00f3 `..._content_publish`) = **a\u00e7\u00e3o Sovereign** |\n| **Facebook Page** | \u2705 (page insights) | `/{page-id}/insights` via `meta_config` | token de p\u00e1gina configurado |\n| **LinkedIn (perfil pessoal)** | \u274c Bloqueio de plataforma (sem impress\u00f5es/alcance; engajamento s\u00f3 lista de URNs, n\u00e3o agregado) | \u2014 | s\u00f3 **clique** (nosso redirect tracker). Para m\u00e9tricas reais \u2192 **LinkedIn Company Page** do Gabriel AI (`organizationalEntityShareStatistics`) = a\u00e7\u00e3o Sovereign estrat\u00e9gica |\n| **YouTube / TikTok** | \u2705\u2705 Os mais ricos (views/likes/comments/shares) | Data/Analytics API | chegam com a expans\u00e3o de canais da persona (frente B) \u2014 **o melhor dado vem dos canais da marca** |\n\n**Princ\u00edpio:** o coletor \u00e9 **fail-soft por plataforma** \u2014 puxa o que cada uma d\u00e1, registra `skipped_no_scope`/`unsupported_platform` no resto (nunca fabrica \u2014 Lei 1). O painel mostra dado real ou \"sem dados ainda\", **nunca demo**.\n\n---\n\n## Sequ\u00eancia (for\u00e7a total, mas valor-vis\u00edvel primeiro)\n\n### Fase 0 \u2014 Emenda BoK `viral-autopilot` + SOP (dogfood do gate)\n\n- Emendar `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model}.md` com **FR-VA-027..031** (abaixo) + **Pattern Conformance Declaration** (toca \u22653 padr\u00f5es \u2192 `09-pattern-conformance.md`): #9 Learning&Adaptation (yes \u2014 \u00e9 o objeto), #19 Evaluation&Monitoring (yes \u2014 painel), #11 Goal Monitoring (yes \u2014 reward), #16 Resource-Aware (yes \u2014 pauta de receita consciente), #13 HITL (yes \u2014 pauta de decis\u00e3o). Amendment v0.3.\n- **SOP Lei 2** `docs/processes/publication-metrics-collection.md` (resolu\u00e7\u00e3o de token per-user social + fail-soft por plataforma + sem-fabrica\u00e7\u00e3o) \u2014 espelha `meta-credential-resolution.md`/`trends-credential-resolution.md`.\n\n### Fatia A \u2014 Nervo sensorial + painel por publica\u00e7\u00e3o (o valor vis\u00edvel, PRIMEIRO)\n\n**A1. Migration `publication_metrics`** (tabela nova, time-series \u2014 DD: m\u00e9trica cresce com o tempo):\n```\npublication_metrics(id, user_id, content_variant_id\u2192content_library, platform, external_post_id,\n  views, likes, comments, shares, reposts, saves, reach, impressions,\n  snapshot_at timestamptz, collected_at, UNIQUE(content_variant_id, platform, snapshot_at))\n```\nRLS **SELECT-own** + service-role write (espelha `creative_metrics`/`autopilot_cycles`). \u00cdndice `(content_variant_id, platform, snapshot_at DESC)`. **+ link fix:** `ALTER TABLE meta_posts ADD content_id` + \u00edndice reverso em `scheduled_posts(platform_post_id)` (o caminho publish-social j\u00e1 liga via `scheduled_posts.content_id`). `/security-review` antes do commit.\n\n**A2. Coletor `collect-publication-metrics`** (edge fn nova OU estende `autopilot-collect:65` `skipped_no_tier`): resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG + FB** por `external_post_id`, grava snapshot em `publication_metrics`. Fail-soft por plataforma (LinkedIn\u2192clicks-only honesto; YT/TikTok\u2192quando a frente B existir). Cron di\u00e1rio + on-demand. Telemetria `infra_health_logs` (sem PII).\n\n**A3. Painel anal\u00edtico por publica\u00e7\u00e3o** (Harness pattern \u2014 o entreg\u00e1vel que o Sovereign **abre e v\u00ea**):\n- Hook `usePublicationMetrics(contentVariantId?, platform?, range?)` \u2014 clona [useAgentActivity.ts](src/hooks/useAgentActivity.ts) (TanStack, `staleTime 45_000`, `refetchInterval 60_000`).\n- Componente `PublicationMetricsPanel` \u2014 clona [ROIWidget.tsx](src/components/dashboard/ROIWidget.tsx); **Recharts** (j\u00e1 em deps) `LineChart` time-series (views/likes ao longo do tempo) + stat tiles + compara\u00e7\u00e3o por plataforma. **Dado real ou \"sem dados ainda\" \u2014 mata o DEMO falso** da AnalyticsPage.\n- Attach: drawer de detalhe por post em [ContentLibraryPage.tsx](src/pages/ContentLibraryPage.tsx) (hub de conte\u00fado) + alimentar a `AnalyticsPage` com dado real de `publication_metrics` (substituir/gatear o fallback demo).\n\n### Fatia B \u2014 O loop honesto que COMP\u00d5E (consome o dado da Fatia A)\n\n**B1. Reward multi-m\u00e9trica `R()`** em `autopilot-analyze`: ampliar o SELECT ([:50](supabase/functions/autopilot-analyze/index.ts:50)) para `impressions, engagements` + `JOIN publication_metrics` por criativo; computar `R = w_reach\u00b7z(reach) + w_eng\u00b7z(eng/impr) + w_brand\u00b7z(brand_signal) + w_rev\u00b7z(revenue)` (z-score dentro do ciclo). Trocar `pick(clicks)`/`reward:totalClicks` por `pick(R)`/`reward:R(winner)`; gravar `action_details.reward_vector = {reach,eng,brand,rev,weights}` (prova audit\u00e1vel). Pesos brand-first default, configur\u00e1veis por plano (dado, n\u00e3o c\u00f3digo). `brand_signal` = saves+coment\u00e1rios+shares por alcance (derivado; coluna em `publication_metrics`).\n\n**B2. Realoca\u00e7\u00e3o de esfor\u00e7o** em `autopilot-run` ([:201](supabase/functions/autopilot-run/index.ts:201)): ponderar o fan-out pela policy \u2014 mais variantes ao produto\u00d7plataforma vencedor, podar perdedor, **\u03b5-greedy** (1 das N variantes sempre explora\u00e7\u00e3o aleat\u00f3ria, anti-\u00f3timo-local \u2014 espelha `QueryDiversity` do Dreaming). Usa `autopilot_plans.ab_variants`. **A pol\u00edtica passa a mexer em `tasks[]`, n\u00e3o s\u00f3 no prompt.**\n\n**B3. Fechar os 2 bugs latentes:** filtro `scope=viral_autopilot:<plan_id>` no read ([orchestrate-step:203](supabase/functions/orchestrate-step/index.ts:203)); `update applied=true` no consumo (trilha audit\u00e1vel FR-VA-011 AT). **B4. EWMA multi-ciclo:** `analyze` l\u00ea os \u00faltimos M ciclos (n\u00e3o s\u00f3 1, [autopilot-run:186](supabase/functions/autopilot-run/index.ts:186)) \u2014 m\u00e9dia m\u00f3vel para o vencedor n\u00e3o oscilar com ru\u00eddo.\n\n**B5. Pauta de receita consciente (FR-VA-031, HITL \u2014 v1 fino):** superf\u00edcie que lista criativos de alto engajamento como **candidatos a monetiza\u00e7\u00e3o** para decis\u00e3o do Sovereign (retorno \u00d7 esfor\u00e7o \u00d7 prioridade) \u2014 se\u00e7\u00e3o no painel, n\u00e3o otimiza\u00e7\u00e3o autom\u00e1tica.\n\n### Fase Seal\nEmenda BoK selada na malha (`documentation_suite` update ou novo n\u00f3) + HANDOFF + Key Files. Prova material de cada FR.\n\n---\n\n## FRs novos (BoK amendment v0.3)\n\n| FR | Categoria | Descri\u00e7\u00e3o |\n|---|---|---|\n| FR-VA-027 | DB+UI | `publication_metrics` (time-series) + painel anal\u00edtico por publica\u00e7\u00e3o (real, anti-demo) |\n| FR-VA-028 | EdgeFn | `collect-publication-metrics` \u2014 pull IG/FB insights per-user, fail-soft por plataforma |\n| FR-VA-029 | EdgeFn | Reward multi-m\u00e9trica `R()` brand-first em `autopilot-analyze` + `reward_vector` audit\u00e1vel |\n| FR-VA-030 | EdgeFn | Realoca\u00e7\u00e3o de esfor\u00e7o (ab_variants + \u03b5-greedy) em `autopilot-run` |\n| FR-VA-031 | UI/HITL | Pauta de oportunidades de receita (decis\u00e3o humana consciente) |\n| (fix) | EdgeFn | scope-filtered read + `applied=true` + EWMA multi-ciclo |\n\n---\n\n## Arquivos cr\u00edticos\n\n**Criar:** `supabase/migrations/<ts>_publication_metrics.sql` (+ meta_posts.content_id + \u00edndice) \u00b7 `supabase/functions/collect-publication-metrics/index.ts` \u00b7 `src/hooks/usePublicationMetrics.ts` \u00b7 `src/components/dashboard/PublicationMetricsPanel.tsx` \u00b7 `docs/processes/publication-metrics-collection.md` (SOP) \u00b7 emendas em `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model,09-pattern-conformance}.md`.\n\n**Modificar:** `supabase/functions/autopilot-analyze/index.ts` (reward R) \u00b7 `autopilot-run/index.ts` (realoca\u00e7\u00e3o + EWMA) \u00b7 `orchestrate-step/index.ts` (scope read + applied) \u00b7 `supabase/functions/publish-meta/index.ts` (persistir content_id) \u00b7 `src/pages/ContentLibraryPage.tsx` (attach painel) \u00b7 `src/pages/AnalyticsPage.tsx` (dado real, matar demo).\n\n**Reusar:** `decrypted_social_accounts`/`decrypted_meta_config` (resolu\u00e7\u00e3o de token, `20260601000000_credential_encryption.sql`) \u00b7 `useAgentActivity.ts`+`ROIWidget.tsx` (templates Harness) \u00b7 Recharts (deps) \u00b7 `.claude/skills/openclaw-dreaming/SKILL.md` (precedente do vetor ponderado + \u03b5/diversity) \u00b7 `autopilot-collect/index.ts:65` (slot do pull) \u00b7 conven\u00e7\u00e3o RLS/migration de `creative_metrics`/`autopilot_cycles`.\n\n---\n\n## Verifica\u00e7\u00e3o (end-to-end, Lei 1)\n\n- **Fase 0:** BoK emendada (FR-VA-027..031 + 09-pattern-conformance) \u00b7 SOP com 5 campos Lei 2 \u00b7 `npx tsc` 0.\n- **Fatia A:** `/security-review` SAFE na migration; `publication_metrics` RLS provada (G6 isolamento: tenant throwaway v\u00ea 0); coletor puxa **insights reais de IG** (ap\u00f3s re-OAuth) de um post `external_post_id` real \u2192 linha em `publication_metrics` com views/likes N\u00c3O-zero (ou `skipped_no_scope` honesto se a re-auth n\u00e3o feita); **painel renderizado em browser real** ([feedback_browser_verify_deliverables]) mostrando os n\u00fameros reais dos posts existentes (ou \"sem dados ainda\" \u2014 nunca demo) + **Vision QA** no print ([feedback_vision_qa_always]).\n- **Fatia B:** reward `R()` computado sobre dado real (n\u00e3o `totalClicks`); `optimization_policy.action_details.reward_vector` gravado; `scope` filtrado no read (provar: 2 planos do mesmo tenant n\u00e3o cruzam pol\u00edtica); `applied=true` no consumo; realoca\u00e7\u00e3o muda `tasks[]` (vencedor recebe mais variantes); **prova de composi\u00e7\u00e3o** via Collective Efficiency Ledger: `R\u0304(ciclo N+1) > R\u0304(ciclo N)` com `mco_actual` est\u00e1vel.\n- `bun run lint` limpo \u00b7 tsc 0.\n\n## Depend\u00eancias = a\u00e7\u00f5es Sovereign (flagged, N\u00c3O bloqueiam o build \u2014 coletor \u00e9 fail-soft)\n\n1. **Re-OAuth Instagram** com escopo `instagram_business_manage_insights` \u2192 destrava m\u00e9tricas reais de IG (sem isso, IG = `skipped_no_scope`).\n2. **(estrat\u00e9gico) LinkedIn Company Page** do Gabriel AI \u2192 destrava m\u00e9tricas de LinkedIn (perfil pessoal \u00e9 click-only por bloqueio de plataforma).\n3. **Canais YouTube/TikTok** (frente B brand-persona) \u2192 a fonte de dado mais rica; quando landarem, o coletor ganha os melhores sinais.\n\n## Riscos\n1. **Goodhart** \u2014 mitigado: z-score+taxa, vetor multi-m\u00e9trica derivado de verdade, V4-2 (valor marginal/agente) segue deferido (DD-AG-004).\n2. **Placar segue magro** se as a\u00e7\u00f5es Sovereign (re-OAuth IG) n\u00e3o acontecerem \u2014 o loop roda fail-soft sobre clicks+IG, **degrada honestamente**, n\u00e3o fabrica. A composi\u00e7\u00e3o plena no eixo MARCA depende dos canais publicando.\n3. **Cota de API social** (rate limit do pull) \u2014 snapshot di\u00e1rio + on-demand com backoff; telemetria de degrada\u00e7\u00e3o.\n4. **Escopo grande** \u2014 multi-sess\u00e3o; sequ\u00eancia entrega o painel vis\u00edvel (Fatia A) antes do loop (Fatia B).\n",
+  "planFilePath": "/home/ubuntu/.claude/plans/sprint-goal-distribui-o-floofy-flurry.md"
+}
+```
+
+> **Tool Result (ExitPlanMode)** - ✅ Success
+>
+> ```
+> User has approved your plan. You can now start coding. Start with updating your todo list if applicable
+> 
+> Your plan has been saved to: /home/ubuntu/.claude/plans/sprint-goal-distribui-o-floofy-flurry.md
+> You can refer back to it if needed during implementation.
+> 
+> ## Approved Plan (edited by user):
+> # Plano — Fechar o nervo sensorial: painel analítico por publicação + loop de aprendizado que COMPÕE (OTD-AG-002)
+> 
+> ## Context
+> 
+> **Diretiva Sovereign 2026-06-26:** atacar com força total o único padrão agêntico FRACO da doutrina — **Learning & Adaptation** — e o desconforto real: *"não avançamos o quanto poderíamos apesar do desenvolvimento incrível"*.
+> 
+> **Diagnóstico material (workflow `wob2d279d`, Lei 1):** o loop de aprendizado do Autopilot está tecnicamente fechado, mas é um **"termostato de 1-bit"** sobre um **placar em branco**:
+> - `creative_metrics` (12 linhas): revenue>0: **0** · impressions>0: **0** · engagements>0: **0** · affiliate_clicks>0: **1** (~10 cliques agregados, único nervo vivo).
+> - Reward = `totalClicks` mono-métrica (Goodhart) — [autopilot-analyze:73-90](supabase/functions/autopilot-analyze/index.ts:73); o SELECT nem lê impressions/engagements ([:50](supabase/functions/autopilot-analyze/index.ts:50)).
+> - Só sussurra um *hint* no prompt; **não realoca esforço** (fan-out itera produtos×plataformas cru, [autopilot-run:201](supabase/functions/autopilot-run/index.ts:201)); a infra `ab_variants` está parada.
+> - 2 bugs latentes: read sem filtro de `scope` ([orchestrate-step:203](supabase/functions/orchestrate-step/index.ts:203) — o write JÁ grava `scope=viral_autopilot:<plan_id>`); `applied` nunca vira `true`.
+> - E a `AnalyticsPage` existente mostra **DEMO falso** quando vazia ([AnalyticsPage.tsx:37,110](src/pages/AnalyticsPage.tsx:37)) — não olhamos números reais porque os números exibidos são inventados.
+> 
+> **O motor aprende sobre nada.** O dev construiu o corpo; falta o **nervo sensorial de volta**: o sistema não *vê* o resultado do que publica. Causa raiz do "não avançamos".
+> 
+> **O que o Sovereign quer (cristalizado):** um **painel analítico por publicação** — cada post real (LinkedIn/IG que já existem) com views/likes/comentários/shares/reposts/remixes mensuráveis — que alimenta um **reward multi-métrica marca-primeiro** (Gabriel AI = a marca **sendo construída**, cópia digital do CEO, modelo Magalu — não uma "virada"). Receita entra **consciente**, via pauta de decisão, não otimização cega. **Força total nas 2 fatias.**
+> 
+> **North-star travado (dial ajustável, como os pesos do Dreaming):** `R = 0.40·z(reach) + 0.30·z(eng/impr) + 0.20·z(brand_signal) + 0.10·z(revenue)` — z-score + taxa = anti-Goodhart; sem clickbait.
+> 
+> **ORO:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (aprova BoK + pesos + verifica painel em browser real) · Owner = Sovereign (blast radius = decisão de pauta autônoma que gasta mco sem retorno de marca).
+> 
+> **Dogfooding (Lei 2 / Pattern Conformance Gate recém-instalado):** isto é arquitetural → **emenda à BoK `viral-autopilot` ANTES do código** + Pattern Conformance Declaration. A disciplina É o mecanismo de avanço.
+> 
+> ---
+> 
+> ## Verdade honesta de plataforma (Lei 1 — molda o sequenciamento)
+> 
+> | Plataforma | Métrica de desfecho disponível? | Como | Dependência |
+> |---|---|---|---|
+> | **Instagram** | ✅ Tudo (reach/impr/likes/comments/shares/saves/views) | `GET /{media-id}?fields=insights...` (mesma conexão `magicorch`) | **Re-OAuth com escopo `instagram_business_manage_insights`** (hoje só `..._content_publish`) = **ação Sovereign** |
+> | **Facebook Page** | ✅ (page insights) | `/{page-id}/insights` via `meta_config` | token de página configurado |
+> | **LinkedIn (perfil pessoal)** | ❌ Bloqueio de plataforma (sem impressões/alcance; engajamento só lista de URNs, não agregado) | — | só **clique** (nosso redirect tracker). Para métricas reais → **LinkedIn Company Page** do Gabriel AI (`organizationalEntityShareStatistics`) = ação Sovereign estratégica |
+> | **YouTube / TikTok** | ✅✅ Os mais ricos (views/likes/comments/shares) | Data/Analytics API | chegam com a expansão de canais da persona (frente B) — **o melhor dado vem dos canais da marca** |
+> 
+> **Princípio:** o coletor é **fail-soft por plataforma** — puxa o que cada uma dá, registra `skipped_no_scope`/`unsupported_platform` no resto (nunca fabrica — Lei 1). O painel mostra dado real ou "sem dados ainda", **nunca demo**.
+> 
+> ---
+> 
+> ## Sequência (força total, mas valor-visível primeiro)
+> 
+> ### Fase 0 — Emenda BoK `viral-autopilot` + SOP (dogfood do gate)
+> 
+> - Emendar `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model}.md` com **FR-VA-027..031** (abaixo) + **Pattern Conformance Declaration** (toca ≥3 padrões → `09-pattern-conformance.md`): #9 Learning&Adaptation (yes — é o objeto), #19 Evaluation&Monitoring (yes — painel), #11 Goal Monitoring (yes — reward), #16 Resource-Aware (yes — pauta de receita consciente), #13 HITL (yes — pauta de decisão). Amendment v0.3.
+> - **SOP Lei 2** `docs/processes/publication-metrics-collection.md` (resolução de token per-user social + fail-soft por plataforma + sem-fabricação) — espelha `meta-credential-resolution.md`/`trends-credential-resolution.md`.
+> 
+> ### Fatia A — Nervo sensorial + painel por publicação (o valor visível, PRIMEIRO)
+> 
+> **A1. Migration `publication_metrics`** (tabela nova, time-series — DD: métrica cresce com o tempo):
+> ```
+> publication_metrics(id, user_id, content_variant_id→content_library, platform, external_post_id,
+>   views, likes, comments, shares, reposts, saves, reach, impressions,
+>   snapshot_at timestamptz, collected_at, UNIQUE(content_variant_id, platform, snapshot_at))
+> ```
+> RLS **SELECT-own** + service-role write (espelha `creative_metrics`/`autopilot_cycles`). Índice `(content_variant_id, platform, snapshot_at DESC)`. **+ link fix:** `ALTER TABLE meta_posts ADD content_id` + índice reverso em `scheduled_posts(platform_post_id)` (o caminho publish-social já liga via `scheduled_posts.content_id`). `/security-review` antes do commit.
+> 
+> **A2. Coletor `collect-publication-metrics`** (edge fn nova OU estende `autopilot-collect:65` `skipped_no_tier`): resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG + FB** por `external_post_id`, grava snapshot em `publication_metrics`. Fail-soft por plataforma (LinkedIn→clicks-only honesto; YT/TikTok→quando a frente B existir). Cron diário + on-demand. Telemetria `infra_health_logs` (sem PII).
+> 
+> **A3. Painel analítico por publicação** (Harness pattern — o entregável que o Sovereign **abre e vê**):
+> - Hook `usePublicationMetrics(contentVariantId?, platform?, range?)` — clona [useAgentActivity.ts](src/hooks/useAgentActivity.ts) (TanStack, `staleTime 45_000`, `refetchInterval 60_000`).
+> - Componente `PublicationMetricsPanel` — clona [ROIWidget.tsx](src/components/dashboard/ROIWidget.tsx); **Recharts** (já em deps) `LineChart` time-series (views/likes ao longo do tempo) + stat tiles + comparação por plataforma. **Dado real ou "sem dados ainda" — mata o DEMO falso** da AnalyticsPage.
+> - Attach: drawer de detalhe por post em [ContentLibraryPage.tsx](src/pages/ContentLibraryPage.tsx) (hub de conteúdo) + alimentar a `AnalyticsPage` com dado real de `publication_metrics` (substituir/gatear o fallback demo).
+> 
+> ### Fatia B — O loop honesto que COMPÕE (consome o dado da Fatia A)
+> 
+> **B1. Reward multi-métrica `R()`** em `autopilot-analyze`: ampliar o SELECT ([:50](supabase/functions/autopilot-analyze/index.ts:50)) para `impressions, engagements` + `JOIN publication_metrics` por criativo; computar `R = w_reach·z(reach) + w_eng·z(eng/impr) + w_brand·z(brand_signal) + w_rev·z(revenue)` (z-score dentro do ciclo). Trocar `pick(clicks)`/`reward:totalClicks` por `pick(R)`/`reward:R(winner)`; gravar `action_details.reward_vector = {reach,eng,brand,rev,weights}` (prova auditável). Pesos brand-first default, configuráveis por plano (dado, não código). `brand_signal` = saves+comentários+shares por alcance (derivado; coluna em `publication_metrics`).
+> 
+> **B2. Realocação de esforço** em `autopilot-run` ([:201](supabase/functions/autopilot-run/index.ts:201)): ponderar o fan-out pela policy — mais variantes ao produto×plataforma vencedor, podar perdedor, **ε-greedy** (1 das N variantes sempre exploração aleatória, anti-ótimo-local — espelha `QueryDiversity` do Dreaming). Usa `autopilot_plans.ab_variants`. **A política passa a mexer em `tasks[]`, não só no prompt.**
+> 
+> **B3. Fechar os 2 bugs latentes:** filtro `scope=viral_autopilot:<plan_id>` no read ([orchestrate-step:203](supabase/functions/orchestrate-step/index.ts:203)); `update applied=true` no consumo (trilha auditável FR-VA-011 AT). **B4. EWMA multi-ciclo:** `analyze` lê os últimos M ciclos (não só 1, [autopilot-run:186](supabase/functions/autopilot-run/index.ts:186)) — média móvel para o vencedor não oscilar com ruído.
+> 
+> **B5. Pauta de receita consciente (FR-VA-031, HITL — v1 fino):** superfície que lista criativos de alto engajamento como **candidatos a monetização** para decisão do Sovereign (retorno × esforço × prioridade) — seção no painel, não otimização automática.
+> 
+> ### Fase Seal
+> Emenda BoK selada na malha (`documentation_suite` update ou novo nó) + HANDOFF + Key Files. Prova material de cada FR.
+> 
+> ---
+> 
+> ## FRs novos (BoK amendment v0.3)
+> 
+> | FR | Categoria | Descrição |
+> |---|---|---|
+> | FR-VA-027 | DB+UI | `publication_metrics` (time-series) + painel analítico por publicação (real, anti-demo) |
+> | FR-VA-028 | EdgeFn | `collect-publication-metrics` — pull IG/FB insights per-user, fail-soft por plataforma |
+> | FR-VA-029 | EdgeFn | Reward multi-métrica `R()` brand-first em `autopilot-analyze` + `reward_vector` auditável |
+> | FR-VA-030 | EdgeFn | Realocação de esforço (ab_variants + ε-greedy) em `autopilot-run` |
+> | FR-VA-031 | UI/HITL | Pauta de oportunidades de receita (decisão humana consciente) |
+> | (fix) | EdgeFn | scope-filtered read + `applied=true` + EWMA multi-ciclo |
+> 
+> ---
+> 
+> ## Arquivos críticos
+> 
+> **Criar:** `supabase/migrations/<ts>_publication_metrics.sql` (+ meta_posts.content_id + índice) · `supabase/functions/collect-publication-metrics/index.ts` · `src/hooks/usePublicationMetrics.ts` · `src/components/dashboard/PublicationMetricsPanel.tsx` · `docs/processes/publication-metrics-collection.md` (SOP) · emendas em `docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model,09-pattern-conformance}.md`.
+> 
+> **Modificar:** `supabase/functions/autopilot-analyze/index.ts` (reward R) · `autopilot-run/index.ts` (realocação + EWMA) · `orchestrate-step/index.ts` (scope read + applied) · `supabase/functions/publish-meta/index.ts` (persistir content_id) · `src/pages/ContentLibraryPage.tsx` (attach painel) · `src/pages/AnalyticsPage.tsx` (dado real, matar demo).
+> 
+> **Reusar:** `decrypted_social_accounts`/`decrypted_meta_config` (resolução de token, `20260601000000_credential_encryption.sql`) · `useAgentActivity.ts`+`ROIWidget.tsx` (templates Harness) · Recharts (deps) · `.claude/skills/openclaw-dreaming/SKILL.md` (precedente do vetor ponderado + ε/diversity) · `autopilot-collect/index.ts:65` (slot do pull) · convenção RLS/migration de `creative_metrics`/`autopilot_cycles`.
+> 
+> ---
+> 
+> ## Verificação (end-to-end, Lei 1)
+> 
+> - **Fase 0:** BoK emendada (FR-VA-027..031 + 09-pattern-conformance) · SOP com 5 campos Lei 2 · `npx tsc` 0.
+> - **Fatia A:** `/security-review` SAFE na migration; `publication_metrics` RLS provada (G6 isolamento: tenant throwaway vê 0); coletor puxa **insights reais de IG** (após re-OAuth) de um post `external_post_id` real → linha em `publication_metrics` com views/likes NÃO-zero (ou `skipped_no_scope` honesto se a re-auth não feita); **painel renderizado em browser real** ([feedback_browser_verify_deliverables]) mostrando os números reais dos posts existentes (ou "sem dados ainda" — nunca demo) + **Vision QA** no print ([feedback_vision_qa_always]).
+> - **Fatia B:** reward `R()` computado sobre dado real (não `totalClicks`); `optimization_policy.action_details.reward_vector` gravado; `scope` filtrado no read (provar: 2 planos do mesmo tenant não cruzam política); `applied=true` no consumo; realocação muda `tasks[]` (vencedor recebe mais variantes); **prova de composição** via Collective Efficiency Ledger: `R̄(ciclo N+1) > R̄(ciclo N)` com `mco_actual` estável.
+> - `bun run lint` limpo · tsc 0.
+> 
+> ## Dependências = ações Sovereign (flagged, NÃO bloqueiam o build — coletor é fail-soft)
+> 
+> 1. **Re-OAuth Instagram** com escopo `instagram_business_manage_insights` → destrava métricas reais de IG (sem isso, IG = `skipped_no_scope`).
+> 2. **(estratégico) LinkedIn Company Page** do Gabriel AI → destrava métricas de LinkedIn (perfil pessoal é click-only por bloqueio de plataforma).
+> 3. **Canais YouTube/TikTok** (frente B brand-persona) → a fonte de dado mais rica; quando landarem, o coletor ganha os melhores sinais.
+> 
+> ## Riscos
+> 1. **Goodhart** — mitigado: z-score+taxa, vetor multi-métrica derivado de verdade, V4-2 (valor marginal/agente) segue deferido (DD-AG-004).
+> 2. **Placar segue magro** se as ações Sovereign (re-OAuth IG) não acontecerem — o loop roda fail-soft sobre clicks+IG, **degrada honestamente**, não fabrica. A composição plena no eixo MARCA depende dos canais publicando.
+> 3. **Cota de API social** (rate limit do pull) — snapshot diário + on-demand com backoff; telemetria de degradação.
+> 4. **Escopo grande** — multi-sessão; sequência entrega o painel visível (Fatia A) antes do loop (Fatia B).
+> 
+> ```
+
+## 🤖 Claude *(23:45:43)*
+
+
+## 🤖 Claude *(23:45:44)*
+
+Plano aprovado. Vou executar — Fase 0 primeiro (dogfood do gate: emenda BoK antes do código). Montando o tracking e lendo as caudas da BoK `viral-autopilot` para emendar corretamente.
+
+## 🤖 Claude *(23:45:47)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fase 0 \u2014 Emenda BoK viral-autopilot v0.3 + SOP Lei 2",
+  "description": "Emendar docs/bok/viral-autopilot/{04-frd,05-sdd,06-data-model}.md com FR-VA-027..031 + criar 09-pattern-conformance.md (Learning&Adaptation/Evaluation/Goal/Resource-Aware/HITL = yes). SOP docs/processes/publication-metrics-collection.md (resolu\u00e7\u00e3o token per-user + fail-soft + sem-fabrica\u00e7\u00e3o).",
+  "activeForm": "Emendando a BoK viral-autopilot + SOP"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #8 created successfully: Fase 0 — Emenda BoK viral-autopilot v0.3 + SOP Lei 2
+> ```
+
+## 🤖 Claude *(23:45:49)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fatia A1 \u2014 Migration publication_metrics + link fix",
+  "description": "Tabela publication_metrics (time-series, RLS SELECT-own + service-role write, \u00edndice) + ALTER meta_posts ADD content_id + \u00edndice reverso scheduled_posts(platform_post_id). /security-review SAFE + aplicar + prova RLS isolamento (throwaway tenant v\u00ea 0).",
+  "activeForm": "Construindo a migration publication_metrics"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #9 created successfully: Fatia A1 — Migration publication_metrics + link fix
+> ```
+
+## 🤖 Claude *(23:45:52)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fatia A2 \u2014 Coletor collect-publication-metrics",
+  "description": "Edge fn: resolve token per-user (decrypted_social_accounts/meta_config), puxa insights IG+FB por external_post_id \u2192 snapshot em publication_metrics. Fail-soft por plataforma (LinkedIn clicks-only, skipped_no_scope honesto). Telemetria infra_health_logs sem PII.",
+  "activeForm": "Construindo o coletor de m\u00e9tricas de publica\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #10 created successfully: Fatia A2 — Coletor collect-publication-metrics
+> ```
+
+## 🤖 Claude *(23:45:54)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fatia A3 \u2014 Painel anal\u00edtico por publica\u00e7\u00e3o (UI)",
+  "description": "usePublicationMetrics (clona useAgentActivity) + PublicationMetricsPanel (clona ROIWidget, Recharts LineChart time-series + stat tiles). Attach em ContentLibraryPage detail + alimentar AnalyticsPage com dado real (matar DEMO falso). Verificar em browser real + Vision QA.",
+  "activeForm": "Construindo o painel anal\u00edtico por publica\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #11 created successfully: Fatia A3 — Painel analítico por publicação (UI)
+> ```
+
+## 🤖 Claude *(23:45:57)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fatia B1+B4 \u2014 Reward multi-m\u00e9trica R() + EWMA",
+  "description": "autopilot-analyze: ampliar SELECT (impressions/engagements + JOIN publication_metrics), computar R=0.40\u00b7z(reach)+0.30\u00b7z(eng/impr)+0.20\u00b7z(brand)+0.10\u00b7z(rev), trocar pick(clicks)/reward:totalClicks por pick(R)/reward:R, gravar reward_vector. EWMA multi-ciclo (ler \u00faltimos M, n\u00e3o 1).",
+  "activeForm": "Trocando o reward para multi-m\u00e9trica R()"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #12 created successfully: Fatia B1+B4 — Reward multi-métrica R() + EWMA
+> ```
+
+## 🤖 Claude *(23:45:59)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fatia B2 \u2014 Realoca\u00e7\u00e3o de esfor\u00e7o (ab_variants + \u03b5-greedy)",
+  "description": "autopilot-run: ponderar fan-out pela policy (mais variantes ao vencedor, podar perdedor, \u03b5-greedy 1 aleat\u00f3ria). A pol\u00edtica passa a mexer em tasks[], n\u00e3o s\u00f3 no prompt. Usa autopilot_plans.ab_variants.",
+  "activeForm": "Implementando realoca\u00e7\u00e3o de esfor\u00e7o"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #13 created successfully: Fatia B2 — Realocação de esforço (ab_variants + ε-greedy)
+> ```
+
+## 🤖 Claude *(23:46:01)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fatia B3+B5 \u2014 Fix bugs latentes + pauta de receita",
+  "description": "orchestrate-step:203 read por scope=viral_autopilot:<plan_id> + applied=true no consumo. + Pauta de receita consciente (HITL v1): lista criativos de alto engajamento como candidatos a monetiza\u00e7\u00e3o para decis\u00e3o Sovereign.",
+  "activeForm": "Fechando bugs latentes + pauta de receita"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #14 created successfully: Fatia B3+B5 — Fix bugs latentes + pauta de receita
+> ```
+
+## 🤖 Claude *(23:46:02)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Seal \u2014 emenda BoK na malha + HANDOFF + prova",
+  "description": "Selar a emenda BoK v0.3 na malha + HANDOFF record + Key Files. Prova material de composi\u00e7\u00e3o (R\u0304 crescente via Collective Efficiency Ledger). tsc 0 + lint.",
+  "activeForm": "Selando a emenda na malha"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #15 created successfully: Seal — emenda BoK na malha + HANDOFF + prova
+> ```
+
+## 🤖 Claude *(23:46:16)*
+
+
+## 🤖 Claude *(23:46:20)*
+
+Marcando Fase 0 e mapeando a estrutura atual da BoK viral-autopilot (vou anexar "Amendment v0.3" no padrão já usado).
+
+## 🤖 Claude *(23:46:20)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(23:46:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== arquivos viral-autopilot BoK ===\"; ls -1 docs/bok/viral-autopilot/\necho \"\"; echo \"=== \u00faltimo FR-VA na FRD ===\"; grep -nE \"FR-VA-02[0-9]\" docs/bok/viral-autopilot/04-frd.md | tail -8\necho \"\"; echo \"=== Amendment markers existentes (FRD/SDD/data-model) ===\"; grep -rnE \"Amendment v0\\.[0-9]|## .*Amendment\" docs/bok/viral-autopilot/04-frd.md docs/bok/viral-autopilot/05-sdd.md docs/bok/viral-autopilot/06-data-model.md | head\necho \"\"; echo \"=== 09-pattern-conformance existe? ===\"; ls docs/bok/viral-autopilot/09-pattern-conformance.md 2>/dev/null || echo \"N\u00c3O (criar)\"\necho \"\"; echo \"=== tail do 04-frd (\u00faltimas 15 linhas) ===\"; tail -15 docs/bok/viral-autopilot/04-frd.md",
+  "description": "Map viral-autopilot BoK structure for amendment"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos viral-autopilot BoK ===
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 
+> === último FR-VA na FRD ===
+> 130:| 409 | Cap **diário** global do tenant excedido (FR-VA-021) — body `{ reason: "aborted_daily_cap" }` |
+> 181:| FR-VA-020 | ✅ | — | ✅ | gate HITL (E2E do fluxo de aprovação) |
+> 182:| FR-VA-021 | ✅ | ✅ | — | **cap diário smoke zero-cost** (acumulado > daily_cap → abort sem deduct) |
+> 200:| PR-VA-006 | FR-VA-007, FR-VA-021 | NFR-VA-002 |
+> 206:| PR-VA-013 | FR-VA-020 | — |
+> 207:| PR-VA-020 _(Amendment v0.2)_ | FR-VA-022, FR-VA-023, FR-VA-024, FR-VA-025 | NFR-VA-002, NFR-VA-008 |
+> 208:| PR-VA-021 _(diferido)_ | FR-VA-026 | — |
+> 210:> Cobertura: **26 FR (FR-VA-001..026)** · 8 NFR. Amendment v0.2 decompõe PR-VA-020 (vídeo 9:16) em FR-VA-022..025 (+ FR-VA-026 diferido p/ PR-VA-021). PR-VA-022 (auto-discovery) segue não decomposto. Todo PR Must/Should rastreia ≥1 FR; todo FR rastreia ≥1 PR. **Gaps de numeração intencionais:** PR-VA-009 (saltado 008→010 entre Must e Should) e FR-VA-014..018 contínuos — sem buracos de conteúdo.
+> 
+> === Amendment markers existentes (FRD/SDD/data-model) ===
+> docs/bok/viral-autopilot/04-frd.md:16:**In scope (Amendment v0.2 — 2026-06-24):** **geração de vídeo vertical 9:16** product-aware no ciclo autônomo, rendered pelo motor determinístico HyperFrames do `video-studio` (FR-VS-024/025) — decompõe PR-VA-020 em FR-VA-022..026 (§2.A abaixo). Diretiva Sovereign 2026-06-24 ("fechar o vídeo 9:16 com a UI editor do HyperFrames, assim como o open-design"; alvo = **integração Autopilot primeiro**).
+> docs/bok/viral-autopilot/04-frd.md:20:> **Nota de escopo de rastreabilidade:** PR-VA-020 (vídeo 9:16) **passa a ser decomposto** em FR-VA-022..026 pela Amendment v0.2 (§2.A + Traceability §7). PR-VA-021 (TikTok/IG/YT) e PR-VA-022 (auto-discovery de catálogo) seguem **intencionalmente NÃO decompostos** — serão decompostos quando o Sovereign priorizar (precedente: `marketing-hub` PR-MH-020..023). **Gate Lei 2:** todo código de vídeo no pipeline exige o SOP `docs/processes/autopilot-video-9x16.md` ANTES (OTD-VA-009, espelha o gate OTD-VA-008).
+> docs/bok/viral-autopilot/04-frd.md:54:## 2.A Amendment v0.2 — PR-VA-020 Video creative 9:16 (decomposição)
+> docs/bok/viral-autopilot/04-frd.md:207:| PR-VA-020 _(Amendment v0.2)_ | FR-VA-022, FR-VA-023, FR-VA-024, FR-VA-025 | NFR-VA-002, NFR-VA-008 |
+> docs/bok/viral-autopilot/04-frd.md:210:> Cobertura: **26 FR (FR-VA-001..026)** · 8 NFR. Amendment v0.2 decompõe PR-VA-020 (vídeo 9:16) em FR-VA-022..025 (+ FR-VA-026 diferido p/ PR-VA-021). PR-VA-022 (auto-discovery) segue não decomposto. Todo PR Must/Should rastreia ≥1 FR; todo FR rastreia ≥1 PR. **Gaps de numeração intencionais:** PR-VA-009 (saltado 008→010 entre Must e Should) e FR-VA-014..018 contínuos — sem buracos de conteúdo.
+> docs/bok/viral-autopilot/05-sdd.md:426:| OTD-VA-009 _(Amendment v0.2)_ | Motor do vídeo 9:16 do Autopilot | **A** — HyperFrames determinístico (`video-studio` FR-VS-024; HTML→MP4 1080×1920; ~12 mco; on-brand templated; reusa a imagem de produto de FR-VA-013 como camada) | **B** — Canvas DoP IA (`canvas-execute` image_to_video; ~125 mco; 9:16 herdado da imagem-base, não provado; assíncrono webhook) | **A** — diretiva Sovereign 2026-06-24: determinístico, barato, alinhado à visão "UI editor do HyperFrames". **Gate Lei 2: exige SOP `docs/processes/autopilot-video-9x16.md` ANTES de qualquer código de vídeo** (espelha OTD-VA-008) | Decided (SOP-gated) | Sovereign |
+> docs/bok/viral-autopilot/05-sdd.md:427:| OTD-VA-010 _(Amendment v0.2)_ | Contabilidade do custo de vídeo no ciclo | Débito interno do motor (FR-VS-010, `video-render` deduz na entrada) | Contabilizado **uma vez** no pré-débito do ciclo (FR-VA-007 estendido); sub-render `prepaid=true` suprime o deduct do motor (espelha `orchestrate-content` FR-VA-016) | **B** — evita dupla cobrança; `projected += N_video × VIDEO_HYPERFRAMES_RENDER`; `begin/finalize_autopilot_cycle` inalterados (só recalc). Caps do plano/diário devem comportar +12/sub-run. **⚠️ Gap fechado 2026-06-24:** o `actual` é OTIMISTA (`succeeded × (ORCH+VIDEO)`, antes do enqueue async) → se o INSERT `video_renders` falha (sem linha), o `finalize_video_render` nunca refunda → cobrança-sem-valor. Fix: crédito compensatório idempotente `refund_autopilot_video_enqueue` (migration `20260624140000`, anchor `run_id` PK, anti-mint ≤100, service-role-only) chamado no fail-open do `orchestrate-step` quando `!enqueued`. Smoke `smoke-autopilot-video-refund.ts` 8/8: net debit = ORCH_COST (12 excluído). | Decided | Sovereign |
+> docs/bok/viral-autopilot/05-sdd.md:428:| OTD-VA-011 _(Amendment v0.2)_ | Tenancy do motor HyperFrames p/ o Autopilot | Render multi-tenant hardened já (FR-VS-025 / FMEA-VS-001 RPN 200 — container efêmero selado, egress-only, zero cred) | Single-tenant Usuário Zero agora (renderiza **seus próprios** templates, baixo vetor de HTML não-confiável) + `/security-review`; hardening multi-tenant **diferido p/ Usuário 1** | **B antes de multi-tenant** — espelha os deferrals Stripe/IG existentes; Owner absorve o blast radius single-tenant. Acende o gate 503 do `video-render` só p/ o tenant 0 | Decided (deferral) | Sovereign |
+> docs/bok/viral-autopilot/05-sdd.md:429:| OTD-VA-012 _(Amendment v0.2)_ | Destino do asset 9:16 (publisher) | Publicar autônomo em TikTok/IG/YT já (PR-VA-021) | Anexar a `scheduled_posts`/`content_library` agora; publish vertical **diferido** (OAuth + App Review = ação Sovereign) | **B** — PR-VA-021 é XL e gated por OAuth/App Review (espelha o deferral do IG App Review); FR-VA-026 herda o asset por `content_id` quando os destinos acenderem | Open (herda PR-VA-021) | Sovereign |
+> docs/bok/viral-autopilot/05-sdd.md:430:| OTD-VA-013 _(Amendment v0.2)_ | Captura de frames do motor HyperFrames | screenshot-por-frame via Playwright (~0.5s/frame) — simples, byte-determinístico | CDP screencast / gravação de vídeo nativa (mais rápido, menos determinístico) | **A agora** — screenshot-por-frame garante o determinismo NFR-VS-016 e fica dentro do NFR-VS-002 a 120 frames (5s×24fps ≈ 65s). Acima disso estoura o p95<90s → otimizar p/ CDP screencast quando clipes mais longos/rápidos forem necessários | Open (perf follow-up) | Sovereign |
+> 
+> === 09-pattern-conformance existe? ===
+> NÃO (criar)
+> 
+> === tail do 04-frd (últimas 15 linhas) ===
+> | PR-VA-006 | FR-VA-007, FR-VA-021 | NFR-VA-002 |
+> | PR-VA-007 | FR-VA-014, FR-VA-015, FR-VA-017 | NFR-VA-007 |
+> | PR-VA-008 | FR-VA-013 | NFR-VA-008 |
+> | PR-VA-010 | FR-VA-012 | — |
+> | PR-VA-011 | FR-VA-018 | — |
+> | PR-VA-012 | FR-VA-019 | — |
+> | PR-VA-013 | FR-VA-020 | — |
+> | PR-VA-020 _(Amendment v0.2)_ | FR-VA-022, FR-VA-023, FR-VA-024, FR-VA-025 | NFR-VA-002, NFR-VA-008 |
+> | PR-VA-021 _(diferido)_ | FR-VA-026 | — |
+> 
+> > Cobertura: **26 FR (FR-VA-001..026)** · 8 NFR. Amendment v0.2 decompõe PR-VA-020 (vídeo 9:16) em FR-VA-022..025 (+ FR-VA-026 diferido p/ PR-VA-021). PR-VA-022 (auto-discovery) segue não decomposto. Todo PR Must/Should rastreia ≥1 FR; todo FR rastreia ≥1 PR. **Gaps de numeração intencionais:** PR-VA-009 (saltado 008→010 entre Must e Should) e FR-VA-014..018 contínuos — sem buracos de conteúdo.
+> 
+> ---
+> 
+> _Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(23:46:43)*
+
+
+## 🤖 Claude *(23:46:45)*
+
+Padrão claro (Amendment v0.2 = §2.A com FR-VA-022..026). Vou anexar **Amendment v0.3** (FR-VA-027..031) nos 3 docs + criar `09-pattern-conformance.md` + o SOP. Começando pela FRD.
+
+## 🤖 Claude *(23:47:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "## 2.B Amendment v0.3 \u2014 Learning & Adaptation: painel anal\u00edtico por publica\u00e7\u00e3o + reward multi-m\u00e9trica (FR-VA-027..031)\n\n**Diretiva Sovereign 2026-06-26 (\"for\u00e7a total no ponto fraco\"):** fechar o **nervo sensorial** do loop de aprendizado (\u00fanico padr\u00e3o ag\u00eantico FRACO da doutrina `docs/architecture/agentic-vision.md`, OTD-AG-002). Diagn\u00f3stico material (`wob2d279d`): o loop \u00e9 \"termostato de 1-bit\" sobre placar em branco \u2014 reward `totalClicks` mono-m\u00e9trica (Goodhart), sem realoca\u00e7\u00e3o de esfor\u00e7o, e `creative_metrics` com impressions/engagements sempre 0 (nada puxa o desfecho social de volta). **Gate Lei 2:** exige SOP `docs/processes/publication-metrics-collection.md` ANTES de qualquer c\u00f3digo (OTD-VA-014, espelha OTD-VA-008/009).\n\n| ID | T\u00edtulo | Descri\u00e7\u00e3o | Prioridade | Cat. | Test |\n|----|--------|-----------|-----------|------|------|\n| FR-VA-027 | Painel anal\u00edtico por publica\u00e7\u00e3o | Tabela `publication_metrics` (time-series: views/likes/comments/shares/reposts/saves/reach/impressions por `external_post_id`+plataforma+`snapshot_at`) + painel UI por post (dado **real** ou \"sem dados ainda\" \u2014 **nunca demo**). Mata o fallback demo da `AnalyticsPage`. | Critical | DB+UI | AT-VA-027 |\n| FR-VA-028 | Coletor de m\u00e9tricas de publica\u00e7\u00e3o | `collect-publication-metrics`: resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG+FB** por post \u2192 snapshot. **Fail-soft por plataforma** (LinkedIn pessoal = clicks-only por bloqueio de plataforma; IG exige escopo `instagram_business_manage_insights`; YT/TikTok quando a frente B existir). **Nunca fabrica** (Lei 1 \u2014 `skipped_no_scope`). | Critical | EdgeFn+Cron | AT-VA-028 |\n| FR-VA-029 | Reward multi-m\u00e9trica brand-first | `autopilot-analyze` troca `pick(clicks)`/`reward:totalClicks` por `R = w_reach\u00b7z(reach)+w_eng\u00b7z(eng/impr)+w_brand\u00b7z(brand_signal)+w_rev\u00b7z(revenue)` (z-score+taxa = anti-Goodhart). Grava `action_details.reward_vector` (audit\u00e1vel). Pesos default `0.40/0.30/0.20/0.10` (brand-first, configur\u00e1veis por plano = dado, n\u00e3o c\u00f3digo). | Critical | EdgeFn | AT-VA-029 |\n| FR-VA-030 | Realoca\u00e7\u00e3o de esfor\u00e7o (bandit) | `autopilot-run` pondera o fan-out pela policy \u2014 mais variantes ao vencedor, poda o perdedor, **\u03b5-greedy** (1 das N sempre explora\u00e7\u00e3o). A pol\u00edtica passa a mexer em `tasks[]`, n\u00e3o s\u00f3 no prompt. Usa `autopilot_plans.ab_variants`. | High | EdgeFn | AT-VA-030 |\n| FR-VA-031 | Pauta de oportunidades de receita (HITL) | Superf\u00edcie que lista criativos de alto engajamento como **candidatos a monetiza\u00e7\u00e3o** para decis\u00e3o consciente do Sovereign (retorno \u00d7 esfor\u00e7o \u00d7 prioridade). Receita = pauta humana, **n\u00e3o** otimiza\u00e7\u00e3o cega. | Should | UI/HITL | AT-VA-031 |\n\n**Fixes embarcados (bug latente do loop, isentos de FR novo \u2014 features documentadas FR-VA-010/011):** read filtrado por `scope=viral_autopilot:<plan_id>` em `orchestrate-step` (o write j\u00e1 grava o scope); `applied=true` no consumo da policy (trilha audit\u00e1vel); EWMA multi-ciclo no `analyze` (ler \u00faltimos M ciclos, n\u00e3o s\u00f3 1).\n\n**NFR adicionados:** NFR-VA-009 (coletor **fail-soft**, nunca fabrica \u2014 degrada honestamente por plataforma) \u00b7 NFR-VA-010 (pesos do reward s\u00e3o dado configur\u00e1vel por plano, versionados como os pesos do Dreaming).\n\n**Verdade de plataforma (Lei 1):** IG/FB d\u00e3o m\u00e9tricas reais (IG ap\u00f3s re-OAuth com insights scope = a\u00e7\u00e3o Sovereign); **LinkedIn perfil pessoal N\u00c3O exp\u00f5e** alcance/engajamento agregado via API (s\u00f3 clique \u2014 m\u00e9tricas reais exigiriam Company Page do Gabriel AI); **YouTube/TikTok = a fonte mais rica** (chegam com a expans\u00e3o de canais da persona). Depend\u00eancias = a\u00e7\u00f5es Sovereign, **n\u00e3o bloqueiam** o build (coletor fail-soft).\n\n**Traceability:** FR-VA-027..031 \u2192 PR-VA-023 _(Amendment v0.3 \u2014 Learning & Adaptation sensorial; novo PR herda a diretiva)_. FR-VA-027/029 tamb\u00e9m fecham OTD-AG-002 (doutrina agentic-governance) e consomem o **Collective Efficiency Ledger** (`20260626120000`) como medidor de composi\u00e7\u00e3o (`R\u0304(N+1) > R\u0304(N)`).\n\n> Cobertura p\u00f3s-v0.3: **31 FR (FR-VA-001..031)** \u00b7 10 NFR.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(23:47:20)*
+
+
+## 🤖 Claude *(23:47:20)*
+
+Preciso ler o arquivo via Read antes de editar. Lendo a cauda da FRD.
+
+## 🤖 Claude *(23:47:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "offset": 209,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 209	
+> 210	> Cobertura: **26 FR (FR-VA-001..026)** · 8 NFR. Amendment v0.2 decompõe PR-VA-020 (vídeo 9:16) em FR-VA-022..025 (+ FR-VA-026 diferido p/ PR-VA-021). PR-VA-022 (auto-discovery) segue não decomposto. Todo PR Must/Should rastreia ≥1 FR; todo FR rastreia ≥1 PR. **Gaps de numeração intencionais:** PR-VA-009 (saltado 008→010 entre Must e Should) e FR-VA-014..018 contínuos — sem buracos de conteúdo.
+> 211	
+> 212	---
+> 213	
+> 214	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(23:47:33)*
+
+Agora a edição da FRD.
+
+## 🤖 Claude *(23:47:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md",
+  "old_string": "---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "---\n\n## 2.B Amendment v0.3 \u2014 Learning & Adaptation: painel anal\u00edtico por publica\u00e7\u00e3o + reward multi-m\u00e9trica (FR-VA-027..031)\n\n**Diretiva Sovereign 2026-06-26 (\"for\u00e7a total no ponto fraco\"):** fechar o **nervo sensorial** do loop de aprendizado (\u00fanico padr\u00e3o ag\u00eantico FRACO da doutrina `docs/architecture/agentic-vision.md`, OTD-AG-002). Diagn\u00f3stico material (`wob2d279d`): o loop \u00e9 \"termostato de 1-bit\" sobre placar em branco \u2014 reward `totalClicks` mono-m\u00e9trica (Goodhart), sem realoca\u00e7\u00e3o de esfor\u00e7o, e `creative_metrics` com impressions/engagements sempre 0 (nada puxa o desfecho social de volta). **Gate Lei 2:** exige SOP `docs/processes/publication-metrics-collection.md` ANTES de qualquer c\u00f3digo (OTD-VA-014, espelha OTD-VA-008/009).\n\n| ID | T\u00edtulo | Descri\u00e7\u00e3o | Prioridade | Cat. | Test |\n|----|--------|-----------|-----------|------|------|\n| FR-VA-027 | Painel anal\u00edtico por publica\u00e7\u00e3o | Tabela `publication_metrics` (time-series: views/likes/comments/shares/reposts/saves/reach/impressions por `external_post_id`+plataforma+`snapshot_at`) + painel UI por post (dado **real** ou \"sem dados ainda\" \u2014 **nunca demo**). Mata o fallback demo da `AnalyticsPage`. | Critical | DB+UI | AT-VA-027 |\n| FR-VA-028 | Coletor de m\u00e9tricas de publica\u00e7\u00e3o | `collect-publication-metrics`: resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG+FB** por post \u2192 snapshot. **Fail-soft por plataforma** (LinkedIn pessoal = clicks-only por bloqueio de plataforma; IG exige escopo `instagram_business_manage_insights`; YT/TikTok quando a frente B existir). **Nunca fabrica** (Lei 1 \u2014 `skipped_no_scope`). | Critical | EdgeFn+Cron | AT-VA-028 |\n| FR-VA-029 | Reward multi-m\u00e9trica brand-first | `autopilot-analyze` troca `pick(clicks)`/`reward:totalClicks` por `R = w_reach\u00b7z(reach)+w_eng\u00b7z(eng/impr)+w_brand\u00b7z(brand_signal)+w_rev\u00b7z(revenue)` (z-score+taxa = anti-Goodhart). Grava `action_details.reward_vector` (audit\u00e1vel). Pesos default `0.40/0.30/0.20/0.10` (brand-first, configur\u00e1veis por plano = dado, n\u00e3o c\u00f3digo). | Critical | EdgeFn | AT-VA-029 |\n| FR-VA-030 | Realoca\u00e7\u00e3o de esfor\u00e7o (bandit) | `autopilot-run` pondera o fan-out pela policy \u2014 mais variantes ao vencedor, poda o perdedor, **\u03b5-greedy** (1 das N sempre explora\u00e7\u00e3o). A pol\u00edtica passa a mexer em `tasks[]`, n\u00e3o s\u00f3 no prompt. Usa `autopilot_plans.ab_variants`. | High | EdgeFn | AT-VA-030 |\n| FR-VA-031 | Pauta de oportunidades de receita (HITL) | Superf\u00edcie que lista criativos de alto engajamento como **candidatos a monetiza\u00e7\u00e3o** para decis\u00e3o consciente do Sovereign (retorno \u00d7 esfor\u00e7o \u00d7 prioridade). Receita = pauta humana, **n\u00e3o** otimiza\u00e7\u00e3o cega. | Should | UI/HITL | AT-VA-031 |\n\n**Fixes embarcados (bug latente do loop, isentos de FR novo \u2014 features documentadas FR-VA-010/011):** read filtrado por `scope=viral_autopilot:<plan_id>` em `orchestrate-step` (o write j\u00e1 grava o scope); `applied=true` no consumo da policy (trilha audit\u00e1vel); EWMA multi-ciclo no `analyze` (ler \u00faltimos M ciclos, n\u00e3o s\u00f3 1).\n\n**NFR adicionados:** NFR-VA-009 (coletor **fail-soft**, nunca fabrica \u2014 degrada honestamente por plataforma) \u00b7 NFR-VA-010 (pesos do reward s\u00e3o dado configur\u00e1vel por plano, versionados como os pesos do Dreaming).\n\n**Verdade de plataforma (Lei 1):** IG/FB d\u00e3o m\u00e9tricas reais (IG ap\u00f3s re-OAuth com insights scope = a\u00e7\u00e3o Sovereign); **LinkedIn perfil pessoal N\u00c3O exp\u00f5e** alcance/engajamento agregado via API (s\u00f3 clique \u2014 m\u00e9tricas reais exigiriam Company Page do Gabriel AI); **YouTube/TikTok = a fonte mais rica** (chegam com a expans\u00e3o de canais da persona). Depend\u00eancias = a\u00e7\u00f5es Sovereign, **n\u00e3o bloqueiam** o build (coletor fail-soft).\n\n**Traceability:** FR-VA-027..031 \u2192 PR-VA-023 _(Amendment v0.3 \u2014 Learning & Adaptation sensorial)_. FR-VA-027/029 tamb\u00e9m fecham **OTD-AG-002** (doutrina agentic-governance) e consomem o **Collective Efficiency Ledger** (`20260626120000`) como medidor de composi\u00e7\u00e3o (`R\u0304(N+1) > R\u0304(N)`).\n\n> Cobertura p\u00f3s-v0.3: **31 FR (FR-VA-001..031)** \u00b7 10 NFR.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/04-frd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:48:04)*
+
+
+## 🤖 Claude *(23:48:05)*
+
+FRD emendada. Agora SDD e data-model — lendo as caudas para anexar.
+
+## 🤖 Claude *(23:48:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SDD tail line count + last lines ===\"; wc -l docs/bok/viral-autopilot/05-sdd.md; tail -6 docs/bok/viral-autopilot/05-sdd.md\necho \"\"; echo \"=== data-model tail ===\"; wc -l docs/bok/viral-autopilot/06-data-model.md; tail -6 docs/bok/viral-autopilot/06-data-model.md",
+  "description": "Read SDD and data-model tails"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SDD tail line count + last lines ===
+> 439 docs/bok/viral-autopilot/05-sdd.md
+> >
+> > **Gate Lei 2 — Amendment v0.2 (vídeo 9:16):** a geração de vídeo no ciclo (FR-VA-022..025, OTD-VA-009/010) adiciona (a) **automação financeira nova** (custo de vídeo no pré-débito) e (b) uma **dependência de render externa** (motor HyperFrames + reconciliação assíncrona) → o SOP `docs/processes/autopilot-video-9x16.md` DEVE ser escrito e revisado **antes** da Fatia VA-V1 ganhar código (Operator/Sequence/Verification/Recovery/Success). O motor single-tenant (OTD-VA-011) exige `/security-review` do sandbox de render. Cross-ref: `video-studio` SDD (FR-VS-024/025) + SOP `autopilot-cron-identity.md`.
+> 
+> ---
+> 
+> _Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 
+> === data-model tail ===
+> 223 docs/bok/viral-autopilot/06-data-model.md
+> 
+> > **LGPD:** o delete do tenant (`auth.users`) cascateia plans→cycles→creative_metrics. Métricas guardam só agregados (sem PII de terceiros que engajaram).
+> 
+> ---
+> 
+> _Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(23:48:16)*
+
+
+## 🤖 Claude *(23:48:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "offset": 434,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 434	>
+> 435	> **Gate Lei 2 — Amendment v0.2 (vídeo 9:16):** a geração de vídeo no ciclo (FR-VA-022..025, OTD-VA-009/010) adiciona (a) **automação financeira nova** (custo de vídeo no pré-débito) e (b) uma **dependência de render externa** (motor HyperFrames + reconciliação assíncrona) → o SOP `docs/processes/autopilot-video-9x16.md` DEVE ser escrito e revisado **antes** da Fatia VA-V1 ganhar código (Operator/Sequence/Verification/Recovery/Success). O motor single-tenant (OTD-VA-011) exige `/security-review` do sandbox de render. Cross-ref: `video-studio` SDD (FR-VS-024/025) + SOP `autopilot-cron-identity.md`.
+> 436	
+> 437	---
+> 438	
+> 439	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(23:48:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "offset": 218,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 218	
+> 219	> **LGPD:** o delete do tenant (`auth.users`) cascateia plans→cycles→creative_metrics. Métricas guardam só agregados (sem PII de terceiros que engajaram).
+> 220	
+> 221	---
+> 222	
+> 223	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ```
+
+## 🤖 Claude *(23:48:21)*
+
+
+## 🤖 Claude *(23:48:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md",
+  "old_string": "---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "---\n\n## Amendment v0.3 \u2014 Sensory loop design (FR-VA-027..031)\n\n**Princ\u00edpio (anti-Goodhart, doutrina \u00a75.6):** o reward \u00e9 **derivado de verdade coletada** (`publication_metrics`/`creative_metrics`), nunca auto-reportado; vetor multi-m\u00e9trica + z-score + taxa impedem que um proxy bruto domine.\n\n**Topologia:**\n```\npublish-social/meta \u2500\u2500\u25ba scheduled_posts.platform_post_id / meta_posts.meta_post_id (+content_id)\n                                   \u2502\ncollect-publication-metrics (cron di\u00e1rio + on-demand)\n   per-user token (decrypted_social_accounts/meta_config) \u2500\u2500\u25ba IG/FB insights por external_post_id\n   fail-soft por plataforma (LinkedIn=clicks-only \u00b7 IG=needs insights scope \u00b7 YT/TikTok=futuro)\n                                   \u2502  snapshot\n                                   \u25bc\n   publication_metrics (time-series) \u2500\u2500\u25ba usePublicationMetrics \u2500\u2500\u25ba PublicationMetricsPanel (UI real, anti-demo)\n                                   \u2502\nautopilot-analyze: R = \u03a3 w\u1d62\u00b7z(metric\u1d62) sobre o ciclo (EWMA M ciclos) \u2500\u2500\u25ba optimization_policy.reward + reward_vector\n                                   \u2502\nautopilot-run: realoca tasks[] pela policy (mais variantes ao vencedor + \u03b5-greedy) \u2500\u2500\u25ba pr\u00f3ximo ciclo\n                                   \u2502\nCollective Efficiency Ledger (20260626120000): R\u0304(N+1) > R\u0304(N) com mco est\u00e1vel = PROVA de composi\u00e7\u00e3o\n```\n\n**Reward (FR-VA-029):** `R(creative) = 0.40\u00b7z(reach) + 0.30\u00b7z(engagements/impressions) + 0.20\u00b7z(brand_signal) + 0.10\u00b7z(revenue_cents)`, z-score *dentro do ciclo*. `brand_signal = (saves + comments + shares) / NULLIF(reach,0)` (derivado de `publication_metrics`). Pesos em `autopilot_plans` (coluna `reward_weights jsonb` default brand-first; configur\u00e1vel = dado). Degrada\u00e7\u00e3o honesta: termos sem dado real (reach/brand=0) caem do vetor \u2192 reward roda sobre os sinais que existem (clicks+rev), NUNCA fabricado.\n\n**Realoca\u00e7\u00e3o (FR-VA-030):** `autopilot-run` l\u00ea a policy do plano e pondera o `tasks[]`: `n_variants(produto\u00d7plataforma) \u221d softmax(R)`, m\u00ednimo 1 por par ativo, **\u03b5-greedy** (1 slot sempre aleat\u00f3rio, \u03b5\u22481/N). Substitui o iter-cru `target_product_ids \u00d7 platforms`.\n\n**Migration stub (publication_metrics):** ver `06-data-model.md` \u00a7Amendment v0.3. RLS SELECT-own + service-role write (espelha `creative_metrics`); `meta_posts ADD COLUMN content_id uuid REFERENCES content_library(id) ON DELETE SET NULL`; \u00edndice reverso `scheduled_posts(platform_post_id)`.\n\n| OTD | Decis\u00e3o | Resolu\u00e7\u00e3o |\n|----|---------|-----------|\n| OTD-VA-014 _(v0.3)_ | Gate Lei 2 do coletor de m\u00e9tricas sociais | **Exige SOP `publication-metrics-collection.md` ANTES de c\u00f3digo** (resolu\u00e7\u00e3o token per-user + fail-soft + sem-fabrica\u00e7\u00e3o). Espelha OTD-VA-008/009. |\n| OTD-VA-015 _(v0.3)_ | Tabela nova vs enrich `creative_metrics` | **Tabela nova `publication_metrics`** \u2014 m\u00e9trica de publica\u00e7\u00e3o \u00e9 time-series (cresce com o tempo, `snapshot_at`); n\u00e3o poluir o schema afiliado-c\u00eantrico de `creative_metrics`. |\n| OTD-VA-016 _(v0.3)_ | M\u00e9tricas LinkedIn perfil pessoal | **Diferido/click-only** \u2014 bloqueio de plataforma (sem API de impress\u00f5es/alcance p/ perfil pessoal); m\u00e9tricas reais exigem **Company Page** do Gabriel AI (a\u00e7\u00e3o Sovereign). |\n\n> **Gate Lei 2 \u2014 Amendment v0.3:** o coletor l\u00ea **credencial social per-user** e escreve m\u00e9tricas que alimentam **decis\u00e3o de gasto aut\u00f4nomo** (o reward dirige a realoca\u00e7\u00e3o de mco) \u2192 o SOP `docs/processes/publication-metrics-collection.md` DEVE ser escrito antes do c\u00f3digo (Operator/Sequence/Verification/Recovery/Success). `/security-review` na migration `publication_metrics`. Cross-ref: `meta-credential-resolution.md` + Collective Efficiency Ledger SOP.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:49:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md",
+  "old_string": "---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_",
+  "new_string": "---\n\n## Amendment v0.3 \u2014 `publication_metrics` (FR-VA-027) + link fix\n\n**Por que tabela nova (OTD-VA-015):** m\u00e9trica de publica\u00e7\u00e3o \u00e9 **time-series** (um post ganha likes/views por dias) \u2192 `snapshot_at` por linha; `creative_metrics` \u00e9 snapshot-\u00fanico afiliado-c\u00eantrico. Separar concerns: `creative_metrics` = loop de receita; `publication_metrics` = desempenho social/marca.\n\n```sql\nCREATE TABLE public.publication_metrics (\n  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id            uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  content_variant_id uuid REFERENCES public.content_library(id) ON DELETE CASCADE,  -- = creative\n  platform           text NOT NULL,            -- instagram | facebook | linkedin | youtube | tiktok\n  external_post_id   text,                     -- IG media id / urn:li:share / etc.\n  views      int DEFAULT 0, likes     int DEFAULT 0, comments int DEFAULT 0,\n  shares     int DEFAULT 0, reposts   int DEFAULT 0, saves    int DEFAULT 0,\n  reach      int DEFAULT 0, impressions int DEFAULT 0,\n  snapshot_at        timestamptz NOT NULL,     -- janela da medi\u00e7\u00e3o (cresce no tempo)\n  collected_at       timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT publication_metrics_snapshot_uniq UNIQUE (content_variant_id, platform, snapshot_at)\n);\n-- RLS SELECT-own; service-role write (default-deny) \u2014 espelha creative_metrics.\n-- \u00cdndice: (content_variant_id, platform, snapshot_at DESC) p/ a s\u00e9rie temporal do painel.\n```\n\n**Link fix (creative \u2194 post publicado):**\n- `scheduled_posts.content_id` J\u00c1 liga o caminho publish-social \u2192 content_library (= content_variant_id). Falta s\u00f3 \u00edndice reverso: `CREATE INDEX scheduled_posts_platform_post_id_idx ON scheduled_posts(platform_post_id)`.\n- `meta_posts` N\u00c3O tinha link: `ALTER TABLE meta_posts ADD COLUMN content_id uuid REFERENCES content_library(id) ON DELETE SET NULL` (+ `publish-meta` passa a persistir).\n\n**Tenant isolation:** `user_id`-scoped SELECT-own (per-tenant); o coletor escreve via service-role com `user_id` derivado da linha confi\u00e1vel do post (nunca do body). **LGPD:** guarda s\u00f3 agregados num\u00e9ricos por post pr\u00f3prio \u2014 sem PII de terceiros que engajaram (s\u00f3 contagens).\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/06-data-model.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:49:27)*
+
+
+## 🤖 Claude *(23:49:28)*
+
+FRD/SDD/data-model emendados. Agora o `09-pattern-conformance.md` (declaração dos 21 padrões) + o SOP Lei 2.
+
+## 🤖 Claude *(23:49:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/09-pattern-conformance.md",
+  "content": "# Pattern Conformance Declaration \u2014 viral-autopilot (Amendment v0.3)\n\n> Declara\u00e7\u00e3o exigida por `CLAUDE.md \u00a71 Step 3.5` (Pattern Conformance Gate) \u2014 os 21 padr\u00f5es ag\u00eanticos da doutrina `docs/architecture/agentic-vision.md` \u00a72. `deferred` carrega justificativa material. Foco: a Amendment v0.3 (FR-VA-027..031) **fortalece o padr\u00e3o #9 Learning & Adaptation** \u2014 o \u00fanico FRACO da doutrina (OTD-AG-002).\n\n| # | Padr\u00e3o | Implementado? | Como / Por-que-deferido |\n|---|--------|:--:|---|\n| 1 | Prompt Chaining | yes | `orchestrate-content`\u2192`orchestrate-step` (pipeline async pg_net) |\n| 2 | Routing | yes | fan-out por produto\u00d7plataforma; LLM cascading fallback |\n| 3 | Parallelization | yes | sub-runs do ciclo em paralelo (`autopilot-run` tasks[]) |\n| 4 | Reflection | deferred | sem Generator-Critic gen\u00e9rico aqui \u2014 OTD-AG-003 (doutrina) |\n| 5 | Tool Use | yes | edge fns chamam APIs sociais, `generate-image`, insights |\n| 6 | Planning | yes | `autopilot_plans` cad\u00eancia + `begin/finalize_autopilot_cycle` |\n| 7 | Multi-Agent | n-a | pipeline determin\u00edstico single-tenant, n\u00e3o coletivo de agentes |\n| 8 | Memory Management | yes | `creative_metrics`/**`publication_metrics`**/`optimization_policy` = mem\u00f3ria de desfecho |\n| 9 | **Learning & Adaptation** | **yes** | **o objeto da v0.3** \u2014 reward multi-m\u00e9trica `R()` (FR-VA-029) + realoca\u00e7\u00e3o \u03b5-greedy (FR-VA-030) + EWMA multi-ciclo; fecha OTD-AG-002 |\n| 10 | Model Context Protocol | n-a | m\u00f3dulo n\u00e3o exp\u00f5e MCP (\u00e9 o `vision-mcp`) |\n| 11 | Goal Setting & Monitoring | yes | north-star reward = goal expl\u00edcito; `publication_metrics` + Collective Efficiency Ledger = monitoring |\n| 12 | Exception Handling & Recovery | yes | coletor **fail-soft** (NFR-VA-009); refund RPCs idempotentes; `infra_health_logs` |\n| 13 | Human-in-the-Loop | yes | pauta de receita (FR-VA-031) + GO Sovereign + ORO |\n| 14 | Knowledge Retrieval (RAG) | n-a | n\u00e3o-central neste m\u00f3dulo (a malha existe globalmente) |\n| 15 | Inter-Agent Comm. (A2A) | n-a | sem peers de agente neste fluxo |\n| 16 | Resource-Aware Optimization | yes | mcoCoins pr\u00e9-d\u00e9bito; \u03b5-greedy aloca budget; pauta = receita consciente |\n| 17 | Reasoning Techniques | deferred | prompt LLM simples; sem CoT/GoT formal \u2014 OTD-AG-003 |\n| 18 | Guardrails / Safety | yes | `sanitizeTrendTitle` + Cyber-Sentinel pt-BR/EN; RLS; **no-fabrication** (Lei 1) |\n| 19 | **Evaluation & Monitoring** | **yes** | **o painel da v0.3** (FR-VA-027) \u2014 analytics por publica\u00e7\u00e3o + medi\u00e7\u00e3o do reward; mata o demo falso |\n| 20 | Prioritization | yes | o bandit prioriza vencedores; pauta prioriza oportunidades de receita |\n| 21 | Exploration & Discovery | yes | \u03b5-greedy (explora\u00e7\u00e3o) + trend-informed angle (FR-VA-018) |\n\n**Placar v0.3:** 14 yes \u00b7 2 deferred (com OTD) \u00b7 5 n-a (justificados). Os 2 padr\u00f5es que a Amendment v0.3 **eleva de fraco/ausente para forte**: #9 Learning & Adaptation e #19 Evaluation & Monitoring.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0 \u2014 Pattern Conformance (CLAUDE.md \u00a71 Step 3.5)_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/viral-autopilot/09-pattern-conformance.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:49:54)*
+
+
+## 🤖 Claude *(23:49:55)*
+
+Agora o SOP Lei 2 do coletor.
+
+## 🤖 Claude *(23:50:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/publication-metrics-collection.md",
+  "content": "# SOP: Coletor de m\u00e9tricas de publica\u00e7\u00e3o \u2014 nervo sensorial fail-soft (`publication-metrics-collection`)\n\n**Status:** ACTIVE \u00b7 v1.0 \u00b7 2026-06-26\n**Owner:** Sovereign (Gabriel Zarattini)\n**Survival Law 2 compliance:** Escrito **ANTES** do c\u00f3digo do `collect-publication-metrics` + `publication_metrics`. Abre o gate **OTD-VA-014** (`docs/bok/viral-autopilot/05-sdd.md` Amendment v0.3) + cobre FR-VA-027/028. Fecha o lado sensorial de **OTD-AG-002** (doutrina `agentic-vision.md`).\n**Canonical directive:** `docs/architecture/agentic-vision.md` \u00a75 (princ\u00edpios) \u00b7 `.claude/rules/survival.md > Law 1 (Materiality)` \u00b7 `CLAUDE.md > API Tenancy Model` (token per-user).\n**Sibling SOPs:** `meta-credential-resolution.md` (resolu\u00e7\u00e3o token Meta) \u00b7 `autopilot-cron-identity.md` (identidade cron service-role) \u00b7 `collective-efficiency-ledger.md` (o medidor que consome o reward).\n\n---\n\n## Context\n\nO loop de Learning & Adaptation aprende sobre um **placar em branco** (diagn\u00f3stico `wob2d279d`): `creative_metrics` impressions/engagements sempre 0 porque **nada puxa o desfecho social de volta**. O coletor fecha esse nervo: l\u00ea insights reais (views/likes/coment\u00e1rios/shares/saves/reach) de cada post publicado e os grava em `publication_metrics` (time-series). Esse dado alimenta o reward multi-m\u00e9trica \u2192 a realoca\u00e7\u00e3o de esfor\u00e7o \u2192 **gasto aut\u00f4nomo de mco**. Dois riscos materiais nascem:\n\n1. **Credencial social cross-tenant (SEC).** O coletor roda service-role (sem JWT de user) e l\u00ea token per-user. Confiar num `user_id` do body deixaria o coletor puxar m\u00e9tricas (e mais tarde dirigir gasto) com a credencial errada. **Regra:** o `user_id` vem SEMPRE da **linha confi\u00e1vel do post** (`scheduled_posts.user_id`/`meta_posts.user_id`), nunca do request; token resolvido por `decrypted_social_accounts`/`decrypted_meta_config` filtrado por esse `user_id`.\n\n2. **Fabrica\u00e7\u00e3o de desfecho (Lei 1).** A tenta\u00e7\u00e3o fatal \u00e9 preencher reach/likes com estimativa quando a plataforma n\u00e3o d\u00e1 (LinkedIn pessoal n\u00e3o exp\u00f5e; IG sem o escopo de insights). Isso **envenena o reward** com n\u00famero inventado. **Regra:** o coletor \u00e9 **fail-soft por plataforma** \u2014 grava s\u00f3 o que a API retorna; o que falta vira evento `skipped_no_scope`/`unsupported_platform` em `infra_health_logs` (sem PII), **NUNCA uma linha fabricada**. O reward degrada honestamente sobre os sinais reais.\n\n**Regra-m\u00e3e:** o coletor **l\u00ea e registra verdade, ou registra aus\u00eancia** \u2014 jamais inventa. Per-tenant por linha confi\u00e1vel; sem PII de terceiros (s\u00f3 agregados num\u00e9ricos do post pr\u00f3prio).\n\n---\n\n## ORO triplet\n- **Operator:** MCORCH Master Execution Agent (autoria) + `pg_cron` (snapshot di\u00e1rio, `Bearer SB_SECRET_KEY`) + on-demand do painel.\n- **Reviewer:** Sovereign \u2014 aprova a migration (`/security-review`) + valida que IG real retorna n\u00famero (p\u00f3s re-OAuth) e que LinkedIn registra `skipped` honesto (n\u00e3o fabrica).\n- **Owner:** Sovereign \u2014 blast radius = reward envenenado (n\u00famero falso) \u2192 realoca\u00e7\u00e3o de mco errada; ou token cross-tenant.\n\n---\n\n## Operator (equivalente manual \u2014 material)\n\nO ritual que o Sovereign faria \u00e0 m\u00e3o para \"ver o resultado de cada post\":\n\n| # | Passo manual | Sucesso material |\n|---|--------------|------------------|\n| 1 | Listar posts publicados (LinkedIn/IG) com seu id de plataforma | `external_post_id` por post |\n| 2 | Abrir o painel de insights de cada plataforma (IG Professional Dashboard / etc.) | n\u00fameros reais vis\u00edveis |\n| 3 | Anotar views/likes/coment\u00e1rios/shares/saves/reach de cada post | linha de m\u00e9trica por post |\n| 4 | Repetir dias depois (a m\u00e9trica cresce) | s\u00e9rie temporal |\n| 5 | Quando a plataforma n\u00e3o d\u00e1 o n\u00famero (LinkedIn pessoal), anotar \"indispon\u00edvel\" \u2014 **n\u00e3o chutar** | aus\u00eancia registrada, n\u00e3o inventada |\n\nO coletor automatiza 1\u20135. **O gate Lei 2 existe porque o passo 5 errado (chutar) envenena a decis\u00e3o de gasto aut\u00f4nomo.**\n\n---\n\n## Sequence (gates materiais)\n\n1. **Migration `publication_metrics`** (06-data-model \u00a7v0.3) \u2014 RLS SELECT-own + service-role write + `meta_posts.content_id` + \u00edndice reverso. **G1:** DDL com RLS SELECT-own + `security`/`REVOKE` corretos.\n2. **`/security-review`** SAFE. **G2.**\n3. **Resolu\u00e7\u00e3o de identidade:** o coletor deriva `user_id` da linha do post (`scheduled_posts`/`meta_posts`), resolve token via `decrypted_*` filtrado por esse `user_id`. **G3:** grep \u2014 zero leitura de `user_id` do request body.\n4. **Pull fail-soft:** por plataforma suportada (IG, FB), puxa insights por `external_post_id`; grava snapshot. Plataforma sem suporte/escopo \u2192 `infra_health_logs` event `skipped_no_scope`/`unsupported_platform` (metadata `{platform, post_ref}` sem PII), zero linha em `publication_metrics`. **G4:** nenhuma linha com n\u00famero n\u00e3o-retornado pela API.\n5. **Cron + on-demand:** `pg_cron` di\u00e1rio (`Bearer SB_SECRET_KEY`) + invoke do painel. **G5:** job ativo.\n6. **Prova material:** com IG re-autenticado, um post real \u2192 linha `publication_metrics` com likes/reach N\u00c3O-zero batendo o painel nativo do IG; LinkedIn pessoal \u2192 `skipped` honesto (sem linha fabricada). **G6.**\n\n---\n\n## Verification gates\n\n| Gate | Crit\u00e9rio | Esperado |\n|------|----------|----------|\n| G1 | RLS SELECT-own na migration | presente |\n| G2 | `/security-review` | SAFE |\n| G3 | `user_id` da linha confi\u00e1vel, n\u00e3o do body | grep limpo |\n| G4 | sem linha fabricada | s\u00f3 dado retornado pela API |\n| G5 | `pg_cron` snapshot | job ativo |\n| G6 | IG real \u2260 0 (p\u00f3s re-OAuth) \u00b7 LinkedIn `skipped` honesto | material |\n\n---\n\n## Recovery path\n\n- **G2 leak:** corrigir RLS/escopo antes de aplicar; nunca aplicar `publication_metrics` sem SELECT-own.\n- **Pull falha (token expirado/escopo ausente):** registrar `skipped_no_scope` + telemetria; **n\u00e3o** bloquear o ciclo (fail-soft). Re-OAuth = a\u00e7\u00e3o Sovereign.\n- **Suspeita de n\u00famero inventado:** auditar a origem da linha; toda linha de `publication_metrics` deve rastrear a um `external_post_id` real + resposta da API. Linha \u00f3rf\u00e3 = bug \u2192 drop + corrigir o coletor.\n- **Rate limit:** backoff + snapshot di\u00e1rio (n\u00e3o por-minuto); telemetria de degrada\u00e7\u00e3o.\n\n---\n\n## Success signal (material)\n\nO flow fecha quando: (1) um post IG real (p\u00f3s re-OAuth) tem linha `publication_metrics` com likes/coment\u00e1rios/reach reais batendo o dashboard nativo; (2) o painel por publica\u00e7\u00e3o renderiza esses n\u00fameros em browser real (Vision QA aprovado); (3) LinkedIn pessoal aparece como `skipped`/click-only **sem n\u00famero fabricado**; (4) o reward `R()` passa a consumir esses sinais (n\u00e3o mais `totalClicks`). S\u00f3 ent\u00e3o o motor **v\u00ea** o que publica \u2014 o nervo sensorial est\u00e1 vivo.\n\n---\n\n_Generated by MCORCH Master Execution Agent \u2014 SOP Lei 2 antes do c\u00f3digo (OTD-VA-014 / OTD-AG-002)._\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/publication-metrics-collection.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:50:49)*
+
+
+## 🤖 Claude *(23:50:50)*
+
+Fase 0 completa (BoK v0.3 emendada + 09-pattern-conformance + SOP). Verificando tsc e seguindo para Fatia A1 (a migration — concreta e provável).
+
+## 🤖 Claude *(23:50:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc (Fase 0 = s\u00f3 docs) ===\"; npx tsc --noEmit 2>&1 | tail -3; echo \"exit ${PIPESTATUS[0]}\"\necho \"\"; echo \"=== creative_metrics RLS pattern (refer\u00eancia) ===\"; grep -nE \"ENABLE ROW LEVEL|CREATE POLICY|FOR SELECT|service_role|RESTRICTIVE\" supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql | head -12\necho \"\"; echo \"=== \u00faltima migration ===\"; ls -1 supabase/migrations/ | tail -2",
+  "description": "Verify Fase 0 tsc + creative_metrics RLS reference"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc (Fase 0 = só docs) ===
+> exit 0
+> 
+> === creative_metrics RLS pattern (referência) ===
+> 20:-- can never forge a metric for another tenant nor fabricate revenue. Financial table → RESTRICTIVE no-delete
+> 45:ALTER TABLE public.creative_metrics ENABLE ROW LEVEL SECURITY;
+> 49:CREATE POLICY "creative_metrics_select_own" ON public.creative_metrics
+> 50:  FOR SELECT USING (auth.uid() = user_id);
+> 52:-- Financial ledger → clients can NEVER delete a metric row (RESTRICTIVE forbids it even if a future permissive
+> 53:-- policy is added). Mirrors the RESTRICTIVE pattern on financial/affiliate tables.
+> 54:CREATE POLICY "creative_metrics_no_client_delete" ON public.creative_metrics
+> 55:  AS RESTRICTIVE FOR DELETE USING (false);
+> 65:  'service-role write (default-deny), RESTRICTIVE no client delete. Generator writes a baseline row at '
+> 
+> === última migration ===
+> 20260625120000_creative_assets_registry.sql
+> 20260626120000_collective_efficiency_ledger.sql
+> ```
+
+## 🤖 Claude *(23:51:01)*
+
+
+## 🤖 Claude *(23:51:02)*
+
+tsc 0, padrão RLS confirmado. Escrevendo a migration A1.
+
+## 🤖 Claude *(23:51:02)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(23:51:02)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(23:51:29)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260626130000_publication_metrics.sql",
+  "content": "-- Migration: publication_metrics \u2014 per-publication social outcome (time-series) + creative\u2194post link fix.\n-- BoK SSOT: docs/bok/viral-autopilot/06-data-model.md (Amendment v0.3) + 05-sdd.md (Amendment v0.3). FR-VA-027.\n-- SOP (Lei 2): docs/processes/publication-metrics-collection.md. Doctrine: agentic-vision.md (OTD-AG-002 sensory loop).\n--\n-- WHY: the Learning & Adaptation loop learns on a BLANK scoreboard \u2014 creative_metrics impressions/engagements are\n-- always 0 because nothing pulls the real social outcome back. This table is the sensory nerve: one TIME-SERIES\n-- snapshot per (creative, platform, snapshot_at) of the real engagement a published post earned (views/likes/\n-- comments/shares/reposts/saves/reach/impressions). Separate table (not enrich creative_metrics) because metrics\n-- GROW over days (snapshot_at) and creative_metrics is a single-snapshot affiliate-centric schema (OTD-VA-015).\n--\n-- SECURITY (mirrors creative_metrics / autopilot_cycles):\n--   * SELECT-own RLS (auth.uid() = user_id) \u2192 per-tenant; a tenant sees only their own posts' metrics.\n--   * INSERT/UPDATE have NO permissive policy \u2192 authenticated default-deny; only the service-role collector writes.\n--   * RESTRICTIVE no-delete (outcome ledger; clients can never delete a metric row).\n--   * LGPD: only numeric aggregates of the tenant's OWN posts \u2014 no PII of third parties who engaged.\n-- The collector NEVER fabricates: a platform that returns no number gets a 'skipped' telemetry event, not a row\n-- here (Lei 1 \u2014 SOP \u00a72). Passes /security-review before commit (FMEA-011).\n\nCREATE TABLE IF NOT EXISTS public.publication_metrics (\n  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  content_variant_id uuid        REFERENCES public.content_library(id) ON DELETE CASCADE,  -- = the creative\n  platform           text        NOT NULL,            -- instagram | facebook | linkedin | youtube | tiktok\n  external_post_id   text,                             -- IG media id / urn:li:share / yt video id / ...\n  views        int NOT NULL DEFAULT 0 CHECK (views       >= 0),\n  likes        int NOT NULL DEFAULT 0 CHECK (likes       >= 0),\n  comments     int NOT NULL DEFAULT 0 CHECK (comments    >= 0),\n  shares       int NOT NULL DEFAULT 0 CHECK (shares      >= 0),\n  reposts      int NOT NULL DEFAULT 0 CHECK (reposts     >= 0),\n  saves        int NOT NULL DEFAULT 0 CHECK (saves       >= 0),\n  reach        int NOT NULL DEFAULT 0 CHECK (reach       >= 0),\n  impressions  int NOT NULL DEFAULT 0 CHECK (impressions >= 0),\n  snapshot_at        timestamptz NOT NULL,             -- the measurement window (metric grows over time)\n  collected_at       timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT publication_metrics_snapshot_uniq UNIQUE (content_variant_id, platform, snapshot_at)\n);\n\nALTER TABLE public.publication_metrics ENABLE ROW LEVEL SECURITY;\n\n-- SELECT own only; INSERT/UPDATE default-deny (the service-role collector writes). Outcome ledger \u2192 RESTRICTIVE no-delete.\nCREATE POLICY \"publication_metrics_select_own\" ON public.publication_metrics\n  FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"publication_metrics_no_client_delete\" ON public.publication_metrics\n  AS RESTRICTIVE FOR DELETE USING (false);\n\n-- Time-series read path for the per-publication panel + the analyze JOIN.\nCREATE INDEX IF NOT EXISTS publication_metrics_variant_idx\n  ON public.publication_metrics (content_variant_id, platform, snapshot_at DESC);\nCREATE INDEX IF NOT EXISTS publication_metrics_user_idx\n  ON public.publication_metrics (user_id, snapshot_at DESC);\n\nCOMMENT ON TABLE public.publication_metrics IS\n  'Per-publication social outcome, TIME-SERIES (FR-VA-027). One snapshot per (creative, platform, snapshot_at). '\n  'SELECT-own, service-role write (default-deny), RESTRICTIVE no client delete. Collector never fabricates (Lei 1 \u2014 '\n  'SOP publication-metrics-collection.md). Feeds the multi-metric reward R() in autopilot-analyze (FR-VA-029).';\n\n-- \u2500\u2500 Link fix: creative \u2194 published post (06-data-model \u00a7v0.3) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- scheduled_posts.content_id already links the publish-social path \u2192 content_library; add the reverse index.\nCREATE INDEX IF NOT EXISTS scheduled_posts_platform_post_id_idx\n  ON public.scheduled_posts (platform_post_id);\n\n-- meta_posts had NO creative link (only campaign_id) \u2192 add content_id so Meta posts trace back to the creative.\nALTER TABLE public.meta_posts\n  ADD COLUMN IF NOT EXISTS content_id uuid REFERENCES public.content_library(id) ON DELETE SET NULL;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260626130000_publication_metrics.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:51:45)*
+
+
+## 🤖 Claude *(23:51:46)*
+
+Migration escrita (espelha `creative_metrics` 1:1). Rodando security-review focado antes de aplicar (mandato CLAUDE.md), depois aplico + provo o isolamento.
+
+## 🤖 Claude *(23:51:55)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review publication_metrics",
+  "subagent_type": "general-purpose",
+  "prompt": "Focused security review of ONE new migration in the MCORCH repo. Identify only high-confidence, newly-introduced, exploitable vulnerabilities. Read the file and judge.\n\nFILE: `supabase/migrations/20260626130000_publication_metrics.sql`\n\nIt creates a `publication_metrics` table (per-tenant social metrics, time-series), adds a reverse index on `scheduled_posts(platform_post_id)`, and adds a nullable `content_id` FK column to `meta_posts`.\n\nCONTEXT to verify against:\n- The intended pattern mirrors `supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql` (an existing, reviewed table): SELECT-own RLS (`auth.uid() = user_id`), INSERT/UPDATE default-deny (only service-role writes), RESTRICTIVE no-delete. Compare the new table's RLS against that \u2014 is the per-tenant isolation actually enforced (no permissive INSERT/UPDATE policy that would let a tenant forge another tenant's metric)?\n- `content_library` and `auth.users` are the FK targets.\n\nAssess specifically:\nA. Cross-tenant: can an authenticated user SELECT or write another tenant's `publication_metrics` rows? Is RLS enabled + SELECT-own correct? Is there any permissive INSERT/UPDATE policy (there should be none \u2192 default-deny)?\nB. The `meta_posts ADD COLUMN content_id` (nullable FK ON DELETE SET NULL) \u2014 any risk?\nC. The reverse index \u2014 any risk (no).\nD. Any SECURITY DEFINER / dynamic SQL / injection? (there is none \u2014 confirm).\n\nEXCLUSIONS: no DoS, no \"lack of hardening\", no theoretical issues, no markdown. Only flag if >80% confident of real exploitability. If NO high-confidence vulns, say so explicitly and confirm each of A-D is safe. Be concise (under 400 words)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Verification complete. All facts confirmed against the live migrations.\n\n## Security Review — `20260626130000_publication_metrics.sql`\n\n**No high-confidence, exploitable vulnerabilities found.** The migration is safe to commit. Each assessment point confirmed:\n\n**A. Cross-tenant isolation (SELECT + writes) — SAFE.**\n- `ENABLE ROW LEVEL SECURITY` is present (line 38).\n- The only permissive policy is `FOR SELECT USING (auth.uid() = user_id)` — a tenant reads only their own rows.\n- There is **no permissive INSERT or UPDATE policy** → with RLS enabled, both default-deny for `authenticated`. A tenant therefore cannot forge or mutate another tenant's metric row; only the service-role collector (which bypasses RLS) writes. This is a byte-for-byte match of the reviewed `creative_metrics` pattern (`creative_metrics_select_own` + no write policy + RESTRICTIVE no-delete) — I diffed both and they are identical in structure.\n- `publication_metrics_no_client_delete` is `AS RESTRICTIVE FOR DELETE USING (false)` — clients can never delete, and the RESTRICTIVE class means even a future permissive DELETE policy couldn't override it.\n- `user_id` is `NOT NULL REFERENCES auth.users(id)`, so the SELECT predicate can't be bypassed via a null user_id.\n\n**B. `meta_posts ADD COLUMN content_id` (nullable FK, ON DELETE SET NULL) — SAFE.** `meta_posts` already has RLS enabled with an own-row policy (foundation migration `20260530210000`), so the new column inherits tenant isolation. `content_library` is a real table (created `20260402014040`). `ON DELETE SET NULL` on a nullable column is the correct, non-destructive choice — no cascade-driven data loss and no cross-tenant linkage exposed (the column holds only a UUID, gated by the parent row's RLS).\n\n**C. Reverse index on `scheduled_posts(platform_post_id)` — SAFE.** A plain b-tree index; no security surface. (As expected.)\n\n**D. SECURITY DEFINER / dynamic SQL / injection — NONE.** The migration is pure DDL: `CREATE TABLE`, `ENABLE RLS`, static `CREATE POLICY`, `CREATE INDEX`, `ALTER TABLE ADD COLUMN`, `COMMENT`. No functions, no `EXECUTE`, no string-concatenated SQL. Confirmed absent.\n\n**Note (not a vuln):** the `CHECK (... >= 0)` constraints and `UNIQUE (content_variant_id, platform, snapshot_at)` are integrity guards, not security boundaries, and are correct.\n\nFile reviewed: `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260626130000_publication_metrics.sql`"}, {'type': 'text', 'text': "agentId: a27867a7401b8ad57 (use SendMessage with to: 'a27867a7401b8ad57', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 70218\ntool_uses: 3\nduration_ms: 28258</usage>"}]
+> ```
+
+## 🤖 Claude *(23:52:31)*
+
+
+## 🤖 Claude *(23:52:32)*
+
+`/security-review` SAFE (G2). Aplicando a migration (dry-run + push).
+
+## 🤖 Claude *(23:52:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== dry-run ===\"; timeout 90 npx supabase db push --dry-run 2>&1 | grep -A3 \"Would push\\|up to date\"\necho \"=== apply ===\"; timeout 120 npx supabase db push 2>&1 | grep -iE \"Applying|Finished|error\"",
+  "description": "Apply publication_metrics migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === dry-run ===
+> Would push these migrations:
+>  • 20260626130000_publication_metrics.sql
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> === apply ===
+> Applying migration 20260626130000_publication_metrics.sql...
+> Finished supabase db push.
+> ```
+
+## 🤖 Claude *(23:52:56)*
+
+
+## 🤖 Claude *(23:52:57)*
+
+Migration aplicada (G5). Provando o isolamento RLS (G6) — insiro 1 linha de teste para o User Zero via service-role, um tenant throwaway deve ver 0, depois limpo.
+
+## 🤖 Claude *(23:53:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/scratchpad/prove-pubmetrics-rls.ts",
+  "content": "#!/usr/bin/env bun\n// G6 proof for publication_metrics: insert a row for User Zero (service-role), prove a throwaway tenant sees 0.\nimport { createClient } from '@supabase/supabase-js';\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = process.env.SB_SECRET_KEY!;\nconst ANON = process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst USER0 = 'ada39fae-67e1-4e53-af1c-5a18e1c108e8';\n\n// 1) service-role insert a test row for User Zero\nconst snap = '2026-06-26T00:00:00Z';\nconst { data: ins, error: ie } = await admin.from('publication_metrics').insert({\n  user_id: USER0, platform: 'instagram', external_post_id: 'TEST_RLS_PROOF',\n  likes: 7, reach: 100, impressions: 120, snapshot_at: snap,\n}).select('id').single();\nif (ie) { console.error('insert FAILED (schema/RLS bug?):', ie.message); process.exit(1); }\nconst rowId = ins.id;\n\n// 2) throwaway user \u2192 must see 0\nconst email = `pm-iso-${Date.now()}@qa.mcorch.local`; const pw = `Qa!${Date.now()}xZ`;\nconst { data: u } = await admin.auth.admin.createUser({ email, password: pw, email_confirm: true });\nconst uid = u.user!.id;\nconst { data: s } = await anon.auth.signInWithPassword({ email, password: pw });\nconst token = s!.session!.access_token;\nconst r = await fetch(`${URL}/rest/v1/publication_metrics?select=id`, { headers: { apikey: ANON, Authorization: `Bearer ${token}` } });\nconst rows = await r.json();\nconst throwawaySees = Array.isArray(rows) ? rows.length : rows;\n\n// 3) service-role sees the row\nconst { count } = await admin.from('publication_metrics').select('*', { count: 'exact', head: true });\n\n// 4) verify meta_posts.content_id column exists\nconst mc = await fetch(`${URL}/rest/v1/meta_posts?select=content_id&limit=1`, { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } });\n\nconsole.log(JSON.stringify({\n  insert_ok: !!rowId,\n  G6_throwaway_tenant_sees: throwawaySees,      // EXPECT 0\n  service_role_total_rows: count,               // EXPECT >= 1\n  meta_posts_content_id_http: mc.status,        // EXPECT 200 (column exists)\n}, null, 2));\n\n// cleanup\nawait admin.from('publication_metrics').delete().eq('id', rowId);\nawait admin.auth.admin.deleteUser(uid);\nconsole.log('cleanup \u2705 (test row + throwaway user deleted)');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/scratchpad/prove-pubmetrics-rls.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:53:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nexport SUPABASE_URL=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2252460c-95ca-468a-9776-e3ef63ca5efb/scratchpad/prove-pubmetrics-rls.ts 2>&1 | tail -12",
+  "description": "Run publication_metrics RLS isolation proof"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "insert_ok": true,
+>   "G6_throwaway_tenant_sees": 0,
+>   "service_role_total_rows": 1,
+>   "meta_posts_content_id_http": 200
+> }
+> cleanup ✅ (test row + throwaway user deleted)
+> ```
+
+## 🤖 Claude *(23:53:56)*
+
+
+## 🤖 Claude *(23:53:59)*
+
+**Fatia A1 provada materialmente:**
+
+| Gate | Prova |
+|---|---|
+| G2 `/security-review` | SAFE (espelha `creative_metrics` 1:1) |
+| G5 aplicada | `Applying… Finished db push` |
+| **G6 isolamento** | tenant throwaway vê **0** · service-role vê a linha de teste → RLS SELECT-own |
+| Link fix | `meta_posts.content_id` existe (HTTP 200) + índice reverso · cleanup ✅ |
+
+## 🤖 Claude *(23:53:59)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(23:54:14)*
+
+
+## 🤖 Claude *(23:54:30)*
+
+Vou fazer um checkpoint honesto aqui, porque já cobrimos muito terreno material e o próximo trecho é grande — quero sua decisão sobre o pacing.
+
+## Onde estamos (tudo provado, Lei 1)
+
+**Fase 0 ✅ (dogfood do gate que acabei de tornar vinculante):**
+- BoK `viral-autopilot` emendada → **Amendment v0.3** (FR-VA-027..031) na FRD/SDD/data-model + **`09-pattern-conformance.md`** (14 yes · os 2 padrões que a v0.3 eleva: #9 Learning&Adaptation e #19 Evaluation, de fraco→forte) + **SOP Lei 2** `publication-metrics-collection.md` (fail-soft, anti-fabricação). `tsc` 0.
+
+**Fatia A1 ✅ (o nervo sensorial, vivo):**
+- `publication_metrics` (time-series) **aplicada em prod** · `/security-review` SAFE · **G6 isolamento provado** (throwaway vê 0) · link fix `meta_posts.content_id` + índice reverso.
+
+## O que falta (o trecho grande, ainda pendente)
+
+- **A2 — coletor** `collect-publication-metrics` (puxa insights IG/FB, fail-soft).
+- **A3 — o painel por publicação** (o que você abre e vê) + matar o demo falso da AnalyticsPage.
+- **B1–B5 — o loop honesto** (reward multi-métrica `R()`, realocação ε-greedy, os 2 bugs, pauta de receita).
+
+## A verdade sobre o pacing + o unlock que é seu
+
+Esta sessão já produziu um volume enorme (a doutrina + Ledger + diagnóstico + 2 planos + Fase 0 + A1), e quero respeitar a Lei 1 — não deixar A2/A3 meio-construídos sem prova. Mais importante: **o payoff visível do painel depende de uma ação sua** — reconectar o Instagram com o escopo `instagram_business_manage_insights` (hoje a conexão `magicorch` só tem publish). Sem isso, o coletor roda mas o IG retorna `skipped_no_scope` (honesto, mas o painel mostra "sem dados ainda" em vez dos números reais dos seus posts).
+
+**Como você quer seguir?**
+1. **Continuo agora** construindo A2 + A3 (funcionam fail-soft — o painel já mostra os ~10 cliques reais que temos + fica pronto para os números de IG assim que você reconectar).
+2. **Você reconecta o IG primeiro** (escopo insights) e eu construo A2+A3 já com dado rico pra renderizar — o "abre e vê" com números reais de cara.
+3. **Selo aqui** (`/handoff`) com o que está provado e retomamos A2→B numa próxima investida.
+
+Minha recomendação honesta: **(1) continuar agora** — entrego o painel funcionando e visível (com os cliques reais), e ele acende sozinho com as métricas de IG no momento em que você reconectar, sem me bloquear.
