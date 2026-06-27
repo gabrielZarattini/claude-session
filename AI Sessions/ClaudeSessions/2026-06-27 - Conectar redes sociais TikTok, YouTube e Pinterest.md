@@ -2374,3 +2374,1814 @@ Uma decisão de engenharia que tomo já (melhora o blueprint): em vez de 3 tabel
 > 20260602150000_meta_social_instead_of_tenant_guard.sql
 > 20260602160000_meta_social_disconnect_rpc.sql
 > ```
+
+## 🤖 Claude *(15:29:38)*
+
+
+## 🤖 Claude *(15:29:41)*
+
+PASSO 0 com força total — 4 agentes em paralelo (amendment do BoK `post-engine` + 3 SOPs Lei 2), todos em arquivos distintos (zero conflito). Disparando e, em paralelo, leio os templates de migration que vou usar para autorar o `social_app_config` eu mesmo (caminho security-crítico).
+
+## 🤖 Claude *(15:30:21)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'social-passo0-bok-sops',\n  description: 'PASSO 0 (BoK gate): amend post-engine BoK + author 3 Law-2 SOPs for TikTok/YouTube/Pinterest connect',\n  phases: [\n    { title: 'BoK Amendment', detail: 'reconcile drift + Pattern Conformance + branch-design amendment to docs/bok/post-engine' },\n    { title: 'SOPs', detail: 'Law-2 credential-resolution + publish SOP per platform (parallel, distinct files)' },\n  ],\n}\n\nconst DOC_RESULT = {\n  type: 'object',\n  required: ['filesWritten', 'keyPoints'],\n  properties: {\n    filesWritten: { type: 'array', items: { type: 'object', required: ['path', 'summary'], properties: { path: {type:'string'}, summary: {type:'string'} } } },\n    keyPoints: { type: 'array', items: {type:'string'} },\n    openIssues: { type: 'array', items: {type:'string'} },\n  },\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst BLUEPRINT = `${REPO}/.claude/context/social-connect-3platforms-blueprint-2026-06-27.md`\n\nconst SCHEMA_DECISION = `SCHEMA DECISION (authoritative, overrides the blueprint's \"mirror meta_config / 3 tables\" suggestion): a SINGLE per-user table \\`social_app_config\\` keyed UNIQUE(user_id, platform), columns: id uuid PK, user_id uuid FK auth.users, platform social_platform, client_id text, client_secret text (Vault-encrypted + column-level REVOKE, mirroring meta_config.long_lived_token), scopes text[], metadata jsonb (holds youtube channel_id / pinterest board_id), is_active boolean default true, created_at/updated_at. RLS default-deny + auth.uid()=user_id; masked VIEW + INSTEAD OF tenant-guard trigger like meta_config/social_accounts. Credential RESOLUTION ORDER (API Tenancy Model): (1) social_app_config per-user (is_active) \u2192 (2) env fallback (TIKTOK_CLIENT_KEY/SECRET, GOOGLE_CLIENT_ID/SECRET, PINTEREST_CLIENT_ID/SECRET) as Sovereign-only onboarding default \u2192 (3) hard fail HTTP 402/501 {error:\"<platform>_not_configured\", action:\"Configure ... at /dashboard/settings\"}. NEVER a silent shared key.`\n\nphase('BoK Amendment')\n\nconst BOK_PROMPT = `You are amending the MCORCH \\`post-engine\\` BoK suite to be the Source of Truth for connecting TikTok + YouTube + Pinterest publishers/OAuth. This is PASSO 0 of the MCORCH Closed-Loop Protocol \u2014 production-ready, NO placeholders.\n\nREAD FIRST (ground everything; cite real content):\n- ${BLUEPRINT}  (the consolidated, adversarially-verified blueprint \u2014 your Source of Truth for scopes/audit-gates/branch-design/Pattern-Conformance)\n- ${REPO}/docs/bok/post-engine/00-index.md, 05-sdd.md, 06-data-model.md  (the existing suite you are amending)\n- ${REPO}/docs/architecture/agentic-vision.md  (the 21 agentic patterns \u2014 for the Pattern Conformance Declaration)\n- ${REPO}/docs/bok/agentic-governance/09-pattern-conformance.md  (the master template to mirror for the declaration format)\n\n${SCHEMA_DECISION}\n\nDO (targeted, additive \u2014 Read each file before Edit; do not mangle existing content):\n1. EDIT \\`docs/bok/post-engine/06-data-model.md\\`: (a) reconcile the obsolete table name \\`social_credentials\\` \u2192 the LIVE \\`social_accounts\\` (Vault-masked VIEW over \\`social_accounts_table\\`, encrypted access_token/refresh_token via the 20260601000000 trigger pattern); (b) correct the platform list to the full live enum \\`linkedin|instagram|facebook|twitter|tiktok|youtube|pinterest|wordpress\\`; (c) ADD the \\`social_app_config\\` table definition per the SCHEMA DECISION above (columns, RLS, encryption, INSTEAD OF tenant-guard, resolution order).\n2. CREATE \\`docs/bok/post-engine/09-pattern-conformance.md\\`: the Pattern Conformance Declaration for this social-connect amendment \u2014 one row per pattern from agentic-vision.md (table: Pattern | Implemented (yes/deferred/n-a) | How / Why-deferred), using the 21 rows already in the blueprint \u00a74. Mirror the agentic-governance template's format + a short header tying it to the AGI\u2192ASI doctrine.\n3. CREATE \\`docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md\\`: the authoritative branch-design amendment. For EACH platform document: OAuth init (authorize URL + exact scopes + redirect_uri \\`https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback\\` + offline/consent or PKCE specifics), OAuth callback (token endpoint, response fields, social_accounts upsert), refresh (rotating-token semantics \u2014 re-store new refresh_token atomically), publish flow (the exact step sequence from blueprint \u00a72 \u2014 TikTok creator_info\u2192init(FILE_UPLOAD,is_aigc)\u2192PUT chunks\u2192status; YouTube resumable initiate\u2192PUT\u2192201\u2192verify privacyStatus; Pinterest board\u2192register\u2192multipart(file last)\u2192poll\u2192pin+public cover), token lifetimes, audit gates (\u00a73/\u00a76), and new FR ids (assign FR-PE-0xx numbers continuing from the existing FRD \u2014 read 04-frd.md to find the next free id range; list them). Reference the blueprint + the official source URLs (Lei 1).\n4. EDIT \\`docs/bok/post-engine/00-index.md\\`: add 09 + 10 to the index with one-line descriptions.\n\nReturn the structured result (filesWritten with paths + summaries, keyPoints, openIssues).`\n\nconst sopFor = (platform, label) => `You are authoring a Law-2 (Anticipated Process) SOP for connecting + publishing to ${label} in MCORCH. Production-ready, NO placeholders, in the project's bilingual style (PT-BR prose for operator-facing, English for code identifiers).\n\nREAD FIRST:\n- ${BLUEPRINT}  (sections \u00a72/\u00a73/\u00a75/\u00a76 cover ${label} \u2014 your Source of Truth)\n- ${REPO}/docs/processes/meta-credential-resolution.md  (the SOP TEMPLATE to mirror \u2014 structure, headings, the API-Tenancy resolution-order section, the telemetry section)\n\n${SCHEMA_DECISION}\n\nWRITE \\`${REPO}/docs/processes/${platform}-publish-credential-resolution.md\\` covering, in the meta-credential-resolution.md style:\n- Header (Operator/Reviewer/Owner = ORO; Law-2 statement).\n- API Tenancy resolution order for ${label} app credentials (social_app_config per-user \u2192 env fallback \u2192 fail-closed 402/501) with the exact column/env names.\n- The publish SOP table (Law 2): Operator | Sequence (numbered steps, EACH with a MATERIAL success criterion \u2014 a real artifact: a social_accounts UUID, an HTTP status, a publish_id/video id/pin id, an infra_health_logs row) | Verification gates | Recovery path (exact, per failure mode from \u00a75) | Success signal (the Lei-1 materiality gate: ${platform==='tiktok'?'PUBLISH_COMPLETE pre-audit SELF_ONLY, public tiktok.com URL post-audit':platform==='youtube'?'201 then videos.get privacyStatus==public (NOT a bare 201)':'201 pin id pre-Standard sandbox, public pinterest.com/pin URL post-Standard'}).\n- The audit/app-registration gate (Sovereign action, lead time) from \u00a76.\n- A telemetry section: infra_health_logs service='publish-${platform}' on success/degraded/error paths.\n- A \"media transfer\" note: ${platform==='tiktok'?'FILE_UPLOAD chunked (Supabase signed URL fails PULL_FROM_URL domain ownership)':platform==='youtube'?'resumable PUT (fetch signed bytes; no remote ingest)':'register\u2192multipart upload (params verbatim, file field LAST) \u2192 poll \u2192 create pin with PUBLIC cover_image_url'}.\nReturn the structured result (filesWritten, keyPoints, openIssues).`\n\nconst results = await parallel([\n  () => agent(BOK_PROMPT, { label: 'bok:post-engine', phase: 'BoK Amendment', schema: DOC_RESULT, agentType: 'general-purpose' }),\n  () => agent(sopFor('tiktok', 'TikTok'), { label: 'sop:tiktok', phase: 'SOPs', schema: DOC_RESULT, agentType: 'general-purpose' }),\n  () => agent(sopFor('youtube', 'YouTube'), { label: 'sop:youtube', phase: 'SOPs', schema: DOC_RESULT, agentType: 'general-purpose' }),\n  () => agent(sopFor('pinterest', 'Pinterest'), { label: 'sop:pinterest', phase: 'SOPs', schema: DOC_RESULT, agentType: 'general-purpose' }),\n])\n\nreturn { results }\n",
+  "description": "PASSO 0 BoK amendment + 3 SOPs"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wquz7w639
+> Summary: PASSO 0 (BoK gate): amend post-engine BoK + author 3 Law-2 SOPs for TikTok/YouTube/Pinterest connect
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/subagents/workflows/wf_9259d39b-c4c
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/workflows/scripts/social-passo0-bok-sops-wf_9259d39b-c4c.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/workflows/scripts/social-passo0-bok-sops-wf_9259d39b-c4c.js"} to iterate without resending the script.)
+> Run ID: wf_9259d39b-c4c
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/workflows/scripts/social-passo0-bok-sops-wf_9259d39b-c4c.js", resumeFromRunId: "wf_9259d39b-c4c"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(15:30:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260530210000_meta_api_foundation.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: meta-api foundation — meta_config + meta_posts (Passo 1: publish-meta)
+> 2	-- BoK SSOT: docs/bok/meta-api/06-data-model.md (§1.1, §1.2, §2, §3.1)
+> 3	-- SOP: docs/processes/meta-credential-resolution.md (Lei 2 — written before this migration)
+> 4	-- API Tenancy Model: per-user credentials, RLS-isolated, column-grant on tokens.
+> 5	--
+> 6	-- SECURITY NOTE (OTD-META-ENCRYPT): Meta OAuth tokens are stored as TEXT plaintext
+> 7	-- protected by RLS + column-level REVOKE (Sovereign directive 2026-05-30: consistent with
+> 8	-- social_accounts.access_token / user_api_keys, which already store same-class tokens plaintext).
+> 9	-- NFR-META-001 (AES-256-GCM / pgsodium at-rest) is tracked project-wide as OTD-META-ENCRYPT;
+> 10	-- encrypting only meta_config while social_accounts stays plaintext would be security theater.
+> 11	-- whatsapp_leads + meta_ads_metrics are deferred to their own migrations (Passo 2 / Passo 3).
+> 12	
+> 13	-- ─────────────────────────────────────────────────────────────────────────────
+> 14	-- Shared updated_at trigger function (idempotent — may already exist)
+> 15	-- ─────────────────────────────────────────────────────────────────────────────
+> 16	CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+> 17	RETURNS TRIGGER AS $$
+> 18	BEGIN
+> 19	    NEW.updated_at = now();
+> 20	    RETURN NEW;
+> 21	END;
+> 22	$$ LANGUAGE plpgsql;
+> 23	
+> 24	-- ─────────────────────────────────────────────────────────────────────────────
+> 25	-- 1. meta_config — per-user Meta credentials & linked accounts (UNIQUE per user)
+> 26	-- ─────────────────────────────────────────────────────────────────────────────
+> 27	CREATE TABLE IF NOT EXISTS public.meta_config (
+> 28	    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> 29	    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 30	    facebook_user_id TEXT,                                  -- populated by OAuth flow; nullable for BYOK
+> 31	    long_lived_token TEXT NOT NULL,                         -- 60-day Meta user token (plaintext+RLS; see OTD-META-ENCRYPT)
+> 32	    scopes TEXT[] NOT NULL DEFAULT '{}',
+> 33	    pages JSONB NOT NULL DEFAULT '[]'::jsonb,               -- [{ page_id, name, access_token }] — token-bearing, REVOKE'd below
+> 34	    instagram_business_account_id TEXT,
+> 35	    whatsapp_phone_number_id TEXT,
+> 36	    whatsapp_waba_id TEXT,
+> 37	    meta_ad_account_id TEXT,
+> 38	    requires_reauth BOOLEAN NOT NULL DEFAULT FALSE,
+> 39	    token_expires_at TIMESTAMPTZ,
+> 40	    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+> 41	    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+> 42	    CONSTRAINT unique_user_meta UNIQUE (user_id)
+> 43	);
+> 44	
+> 45	ALTER TABLE public.meta_config ENABLE ROW LEVEL SECURITY;
+> 46	
+> 47	-- Default-deny: only the owner tenant can touch their row.
+> 48	CREATE POLICY "Users manage their own Meta config" ON public.meta_config
+> 49	    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> 50	
+> 51	CREATE TRIGGER tr_update_meta_config_updated_at
+> 52	    BEFORE UPDATE ON public.meta_config
+> 53	    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 54	
+> 55	-- Column-level hardening: token columns are WRITE-ONLY for clients (BYOK paste via INSERT/UPDATE),
+> 56	-- never returned via PostgREST. service_role (edge functions) bypasses grants to read for publishing.
+> 57	-- Clients must select explicit safe columns (useMetaConfig); `select=*` will be denied by design.
+> 58	REVOKE SELECT (long_lived_token, pages) ON public.meta_config FROM anon, authenticated;
+> 59	
+> 60	-- ─────────────────────────────────────────────────────────────────────────────
+> 61	-- 2. meta_posts — publication history (links + status per published post)
+> 62	-- ─────────────────────────────────────────────────────────────────────────────
+> 63	CREATE TABLE IF NOT EXISTS public.meta_posts (
+> 64	    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> 65	    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 66	    campaign_id UUID,
+> 67	    platform TEXT NOT NULL,                                 -- 'instagram' | 'facebook'
+> 68	    meta_post_id TEXT NOT NULL,                             -- id returned by Meta Graph API
+> 69	    post_url TEXT,
+> 70	    caption TEXT,
+> 71	    media_url TEXT,
+> 72	    status TEXT NOT NULL DEFAULT 'published',               -- 'published' | 'failed'
+> 73	    error_message TEXT,
+> 74	    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+> 75	);
+> 76	
+> 77	ALTER TABLE public.meta_posts ENABLE ROW LEVEL SECURITY;
+> 78	
+> 79	CREATE POLICY "Users manage their own Meta posts" ON public.meta_posts
+> 80	    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> 81	
+> 82	CREATE INDEX IF NOT EXISTS idx_meta_posts_user ON public.meta_posts (user_id);
+> 83	CREATE INDEX IF NOT EXISTS idx_meta_posts_campaign ON public.meta_posts (campaign_id);
+> 84	CREATE INDEX IF NOT EXISTS idx_meta_posts_created ON public.meta_posts (created_at DESC);
+> 85	
+> ```
+
+## 🤖 Claude *(15:31:02)*
+
+
+## 🤖 Claude *(15:31:13)*
+
+PASSO 0 rodando em background (`wf_9259d39b-c4c` — amendment BoK + 3 SOPs, 4 agentes paralelos). Acompanhe com `/workflows`; sigo automaticamente quando fechar.
+
+Um achado material do template que ajusta a migration (Lei 1): o `meta_config` original guardava o token como **TEXT plaintext + RLS + REVOKE** de coluna, e só **depois** a migration `20260601000000_credential_encryption.sql` o envolveu em **Vault** (renomeou `meta_config`→`meta_config_table` + VIEW mascarada + trigger de cifra + view `decrypted_*` service-role). O `social_accounts` também é Vault hoje. Então o `social_app_config` vai seguir o **padrão canônico atual (Vault-masked VIEW)** para o `client_secret` — não o plaintext legado. Vou espelhar exatamente `20260601000000` + `20260602140000` (vault_upsert idempotente) + `20260602150000` (INSTEAD OF tenant-guard) quando autorar a migration.
+
+Sequência travada, com força total via agentes:
+1. **PASSO 0** (rodando) — gate BoK + SOPs → eu reviso (materialidade).
+2. **Migration** `social_app_config` Vault-cifrada → aplico + `/security-review`.
+3. **Branches** OAuth (init/callback/refresh) + **publishers** das 3 (paralelo por arquivo, sem conflito) + helper de resolução fail-closed.
+4. **Cadência** (`VIDEO_FLOW_PLATFORMS`) + gap do `auto-publish` (video_url).
+5. **UI** (cards das 3 + card de credenciais espelho do `MetaConfigCard`).
+6. **Verify** — tsc + deploy provando o caminho fail-closed + review adversarial de segurança.
+
+Tudo isso fica **code-complete e revisado** agora; o E2E real de OAuth/publish acende quando você trouxer os `client_id/secret`, e o público quando os audits passarem. Volto assim que o PASSO 0 fechar.
+
+## 👤 User *(15:38:46)*
+
+<task-notification>
+<task-id>wquz7w639</task-id>
+<tool-use-id>toolu_01KaMdf7xz9LY1tqQ26KJSJW</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/tasks/wquz7w639.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "PASSO 0 (BoK gate): amend post-engine BoK + author 3 Law-2 SOPs for TikTok/YouTube/Pinterest connect" completed</summary>
+<result>{"results":[{"filesWritten":[{"path":"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/06-data-model.md","summary":"EDITED (v0.1→v0.2, reconciled 2026-06-27). Replaced the obsolete placeholder table social_credentials with the LIVE social_accounts (Vault-masked VIEW over social_accounts_table; access_token/refresh_token encrypted by trigger trg_encrypt_social_accounts in migration 20260601000000; INSTEAD OF tenant-guard in 20260602150000). Corrected the platform list to the full live enum social_platform (linkedin|instagram|facebook|twitter|tiktok|youtube|pinterest|wordpress, migration 20260402014040:12) and added a §2.0 enum subsection. Added the new social_app_config table per the authoritative SCHEMA DECISION: single per-user table UNIQUE(user_id,platform), client_secret Vault-encrypted + column-level REVOKE (mirroring meta_config.long_lived_token), masked VIEW, INSTEAD OF tenant-guard, full RLS, and the 3-step credential resolution order (per-user→env fallback→hard fail 402/501). Updated the Tenant Isolation Map to the 3-layer enforcement (RLS + INSTEAD OF guard + Vault)."},{"path":"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/09-pattern-conformance.md","summary":"CREATED. Pattern Conformance Declaration for the social-connect amendment, mirroring the agentic-governance/09 master-template format. Header ties it to the AGI→ASI Via-4/Via-3 doctrine. All 21 canonical patterns from agentic-vision.md §2 declared (yes/deferred/n-a) using the blueprint §4 rows, each non-n-a line citing an FR-PE/FR-VA/OTD: yes×10 (Chaining, Routing, Tool Use, Memory, Goal Monitoring, Exception Recovery, HITL, Resource-Aware, Guardrails, Evaluation), deferred×4 (Parallelization/Reflection→OTD-AG-003, Learning→OTD-AG-002, Prioritization→OTD-AG-008/020), n-a×7. Includes a verification gate table."},{"path":"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md","summary":"CREATED. Authoritative branch-design amendment / Source of Truth. Per platform (TikTok/YouTube/Pinterest): OAuth init (authorize URL + exact comma/space scopes + redirect_uri https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback + offline/consent/PKCE specifics), OAuth callback (token endpoint, response fields, social_accounts upsert), rotating-refresh semantics (atomic re-store), and the exact publish step sequences (TikTok creator_info→init(FILE_UPLOAD,is_aigc)→PUT chunks→status/fetch; YouTube resumable initiate→Location→PUT(308-resume)→201→verify privacyStatus; Pinterest board cache→/v5/media register→multipart(file last,204)→poll succeeded→/v5/pins+public cover). Token-lifetime/audit-gate table (§3), credential resolution order + OTD-PE-SOCIAL-APPCREDS deferral (§4), 12 new FRs FR-PE-005..016 (§5), Sovereign critical-path actions (§6), official source URLs (§7, Lei 1), and Lei-2 SOP skeletons per platform (§8)."},{"path":"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/00-index.md","summary":"EDITED. Added a 'Suite Documents (índice)' table listing the core docs plus the new 09 (Pattern Conformance) and 10 (branch-design amendment) with one-line descriptions, and noting the 06 reconciliation. Updated the Version footer to record the social-connect v1.0 amendment (2026-06-27)."}],"keyPoints":["PASSO 0 of the MCORCH Closed-Loop Protocol is complete: the post-engine BoK is now the Source of Truth for connecting TikTok+YouTube+Pinterest, with NO placeholders — every external claim is anchored to the adversarially-verified blueprint or an official doc URL (Lei 1).","Schema reconciliation is grounded in the LIVE schema, verified against migrations before editing: social_platform enum already contains tiktok|youtube|pinterest (20260402014040:12) → ZERO enum migration; social_accounts is the real Vault-masked VIEW (encryption trigger 20260601000000:55-90, masked '••••••••••••', INSTEAD OF tenant-guard 20260602150000). The placeholder social_credentials never existed in production.","The authoritative SCHEMA DECISION was applied verbatim: a SINGLE social_app_config table keyed UNIQUE(user_id,platform) with Vault-encrypted client_secret + column-level REVOKE (mirroring meta_config.long_lived_token), masked VIEW, INSTEAD OF tenant-guard, default-deny RLS, and the API-Tenancy resolution order (per-user is_active → env fallback as Sovereign-only onboarding default → hard fail 402/501 {error:'&lt;platform&gt;_not_configured'}), overriding the blueprint's 3-tables suggestion.","Next free FR id was confirmed as FR-PE-005 (FRD v0.1 uses FR-PE-001..004); the amendment assigns FR-PE-005..016 (app-creds table, 3 OAuth-init branches, callback, rotating refresh, video cadence, AIGC disclosure, 3 publish branches, materiality/telemetry/mesh-node) — all 12 ids verified present.","Pattern Conformance Declaration carries all 21 canonical patterns (verified count = 21) with honest yes/deferred/n-a and FR/OTD citations, mirroring the agentic-governance master-template format and tied to the AGI→ASI Via-4 doctrine.","Material proof: ls -la shows all 4 files on disk (06=11171B, 09=12159B, 10=25136B, 00=4245B); social_credentials now appears only in the 3 explicit reconciliation callouts, not as a live table."],"openIssues":["The HARD blockers remain 100% outside code and are Sovereign-gated with weeks of lead-time (documented in amendment §6): register 3 dev apps + add TikTok sandbox user + create/convert the YouTube Brand channel + submit 3 audits (TikTok Content Posting ~2-6wk; YouTube OAuth verification ~10d AND API Audit serial+independent; Pinterest Trial→Standard). YouTube gates A+B are serial → total readiness = SUM, so both must be submitted day 1.","OTD-PE-SOCIAL-APPCREDS is registered in the amendment (env-creds fallback for the probe slices, SLA = before the 2nd tenant). It must be promoted to a per-user is_active path + Settings UI before onboarding any second tenant, or it becomes silent shared-credential debt.","No code has been written (this is documentation/PASSO 0 only). Any future migration creating social_app_config / social_app_config_table MUST pass /security-review before commit (FMEA-011), and the per-platform SOPs in amendment §8 should be promoted to docs/processes/social-connect-&lt;platform&gt;.md (Lei 2) when the code lands.","The auto-publish video_url transport gap (no video_url column in scheduled_posts; media_url never resolved/signed) is documented and folded into FR-PE-011 with the recommended dispatch-time signed-URL fix, but remains an open implementation item that also affects the existing scheduled IG Reel path."]},{"filesWritten":[{"path":"/home/gcrUX/htdocs/constellation-orchestra/docs/processes/tiktok-publish-credential-resolution.md","summary":"Law-2 (Anticipated Process) SOP for connecting + publishing to TikTok in MCORCH. 219 lines, 22673 bytes. Mirrors the meta-credential-resolution.md template structure (header with ORO + Law-2 statement, Context, Resolution order, Sequence tables, Verification gates, Recovery path, Success signal, Anti-patterns, Known debt, Connection to Survival Laws). Adds TikTok-specific sections: dual-plane credential model (app creds vs user tokens), the authoritative single social_app_config table schema, two Sequence tables (OAuth connect + Publish, each step with a material success criterion), per-failure-mode Recovery (from blueprint §5.1), the audit/app-registration Sovereign gate (§6, ~2-6 week lead time), a telemetry section (infra_health_logs service='publish-tiktok' on healthy/degraded/error), and a FILE_UPLOAD chunked media-transfer note."}],"keyPoints":["SCHEMA DECISION applied as authoritative: single per-user social_app_config table keyed UNIQUE(user_id, platform) with columns id/user_id/platform/client_id/client_secret(Vault+REVOKE)/scopes[]/metadata(jsonb)/is_active/timestamps — explicitly supersedes the blueprint's 'tiktok_config/youtube_config/pinterest_config' suggestion (§2.1 footer, §7 #1). RLS default-deny 
+... (truncated 13112 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/tasks/wquz7w639.output)</result>
+<usage><agent_count>4</agent_count><subagent_tokens>411040</subagent_tokens><tool_uses>37</tool_uses><duration_ms>504695</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(15:38:52)*
+
+
+## 🤖 Claude *(15:38:54)*
+
+PASSO 0 reportou completo. Antes de tratar o gate como vencido, **verifico materialmente** (Lei 1 — não confio no auto-report do agente). Checando os 7 arquivos no disco + conteúdo real.
+
+## 🤖 Claude *(15:39:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (what changed) ===\"; git status --short\necho \"\"; echo \"=== new BoK files ===\"; ls -la docs/bok/post-engine/09-pattern-conformance.md docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md 2>&1\necho \"\"; echo \"=== 3 SOPs on disk ===\"; ls -la docs/processes/tiktok-publish-credential-resolution.md docs/processes/youtube-publish-credential-resolution.md docs/processes/pinterest-publish-credential-resolution.md 2>&1\necho \"\"; echo \"=== Pattern Conformance row count (expect 21 pattern rows) ===\"; grep -cE \"^\\| (Prompt Chaining|Routing|Parallelization|Reflection|Tool Use|Planning|Multi-Agent|Memory|Learning|Model Context|Goal|Exception|Human-in|Knowledge Retrieval|Inter-Agent|Resource|Reasoning|Guardrail|Evaluation|Prioritization|Exploration)\" docs/bok/post-engine/09-pattern-conformance.md\necho \"\"; echo \"=== FR-PE-005..016 present in amendment? ===\"; grep -oE \"FR-PE-0(0[5-9]|1[0-6])\" docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md | sort -u | tr '\\n' ' '; echo\necho \"\"; echo \"=== placeholder smell-check (TODO/TBD/lorem/XXX) across the 7 files ===\"; grep -rIEl \"TODO|TBD|lorem|XXXX|PLACEHOLDER|<placeholder>\" docs/bok/post-engine/{06-data-model,09-pattern-conformance,10-amendment-social-connect-tiktok-youtube-pinterest}.md docs/processes/{tiktok,youtube,pinterest}-publish-credential-resolution.md 2>/dev/null || echo \"no placeholders \u2705\"\necho \"\"; echo \"=== social_credentials drift gone? (expect only reconciliation callouts) ===\"; grep -rc \"social_credentials\" docs/bok/post-engine/06-data-model.md",
+  "description": "Materially verify PASSO 0 outputs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (what changed) ===
+>  M docs/bok/post-engine/00-index.md
+>  M docs/bok/post-engine/06-data-model.md
+> ?? .claude/context/social-app-registration-playbook-2026-06-27.md
+> ?? .claude/context/social-connect-3platforms-blueprint-2026-06-27.md
+> ?? docs/bok/post-engine/09-pattern-conformance.md
+> ?? docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md
+> ?? docs/processes/pinterest-publish-credential-resolution.md
+> ?? docs/processes/tiktok-publish-credential-resolution.md
+> ?? docs/processes/youtube-publish-credential-resolution.md
+> 
+> === new BoK files ===
+> -rw-rw-r-- 1 ubuntu ubuntu 12159 Jun 27 12:33 docs/bok/post-engine/09-pattern-conformance.md
+> -rw-rw-r-- 1 ubuntu ubuntu 25136 Jun 27 12:35 docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md
+> 
+> === 3 SOPs on disk ===
+> -rw-rw-r-- 1 ubuntu ubuntu 23868 Jun 27 12:38 docs/processes/pinterest-publish-credential-resolution.md
+> -rw-rw-r-- 1 ubuntu ubuntu 22673 Jun 27 12:32 docs/processes/tiktok-publish-credential-resolution.md
+> -rw-rw-r-- 1 ubuntu ubuntu 23099 Jun 27 12:35 docs/processes/youtube-publish-credential-resolution.md
+> 
+> === Pattern Conformance row count (expect 21 pattern rows) ===
+> 0
+> 
+> === FR-PE-005..016 present in amendment? ===
+> FR-PE-005 FR-PE-006 FR-PE-007 FR-PE-008 FR-PE-009 FR-PE-010 FR-PE-011 FR-PE-012 FR-PE-013 FR-PE-014 FR-PE-015 FR-PE-016 
+> 
+> === placeholder smell-check (TODO/TBD/lorem/XXX) across the 7 files ===
+> docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md
+> docs/processes/pinterest-publish-credential-resolution.md
+> 
+> === social_credentials drift gone? (expect only reconciliation callouts) ===
+> docs/bok/post-engine/06-data-model.md:3
+> ```
+
+## 🤖 Claude *(15:39:10)*
+
+
+## 🤖 Claude *(15:39:12)*
+
+Quase tudo verde, mas dois pontos pedem confirmação: o grep de Pattern Conformance deu 0 (provável regex meu, não ausência) e o smell-check de placeholder marcou 2 arquivos (provável falso-positivo da própria palavra "placeholder" na nota de reconciliação). Confirmando os dois.
+
+## 🤖 Claude *(15:39:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== actual placeholder matches (context) ===\"\ngrep -nIE \"TODO|TBD|lorem|XXXX|PLACEHOLDER|<placeholder>\" docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md docs/processes/pinterest-publish-credential-resolution.md\necho \"\"\necho \"=== Pattern Conformance: show the table header + count yes/deferred/n-a status cells ===\"\ngrep -nE \"yes|deferred|n-a|n/a\" docs/bok/post-engine/09-pattern-conformance.md | grep -E \"^\\s*[0-9]+:\\|\" | wc -l\necho \"--- distinct pattern names found in the doc ---\"\ngrep -oE \"Prompt Chaining|Routing|Parallelization|Reflection|Tool Use|Planning|Multi-Agent|Multi-agent|Memory Management|Learning & Adaptation|Model Context Protocol|Goal Setting|Exception Handling|Human-in-the-Loop|Knowledge Retrieval|Inter-Agent|Resource-Aware|Reasoning Techniques|Guardrails|Evaluation & Monitoring|Prioritization|Exploration\" docs/bok/post-engine/09-pattern-conformance.md | sort -u | wc -l\necho \"--- the table rows (first column) ---\"\ngrep -E \"^\\|\" docs/bok/post-engine/09-pattern-conformance.md | grep -ivE \"Pattern|---|:--\" | sed -E 's/\\|([^|]*)\\|.*/\\1/' | head -25",
+  "description": "Confirm pattern table + placeholder context"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === actual placeholder matches (context) ===
+> docs/processes/pinterest-publish-credential-resolution.md:97:- **(2) upload (multipart):** `POST` o MP4 no `upload_url` como **`multipart/form-data`**, **SEM header `Authorization`**, com TODOS os `upload_parameters` **VERBATIM** (não mutar nenhum valor) e o **campo `file` por ÚLTIMO** — é uma presigned-POST do S3, onde a ordem dos campos e os valores são parte da assinatura; ordem errada ou param mutado → **403**. Sucesso = **`204`** (sem body).
+> docs/processes/pinterest-publish-credential-resolution.md:167:| **Multipart 403** (passo 2) | `POST upload_url` retorna 403 | Reconstruir o form: TODOS os `upload_parameters` **VERBATIM** (sem mutar) + campo **`file` por ÚLTIMO** + **SEM** header `Authorization`. 403 = ordem/param violou a assinatura do presigned-POST. |
+> docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md:104:2. **upload**: `POST` o MP4 no `upload_url` como `multipart/form-data` com TODOS os `upload_parameters` **VERBATIM** e o **campo `file` por ÚLTIMO** (ordenação de presigned-POST S3; ordem errada/param mutado → 403), **SEM Bearer**, sucesso = `204`.
+> 
+> === Pattern Conformance: show the table header + count yes/deferred/n-a status cells ===
+> 24
+> --- distinct pattern names found in the doc ---
+> 21
+> --- the table rows (first column) ---
+>  Campo 
+>  **Módulo** 
+>  **Lineage** 
+>  **ORO** 
+>  1 
+>  2 
+>  3 
+>  4 
+>  5 
+>  6 
+>  7 
+>  8 
+>  9 
+>  10 
+>  11 
+>  12 
+>  13 
+>  14 
+>  15 
+>  16 
+>  17 
+>  18 
+>  19 
+>  20 
+>  21
+> ```
+
+## 🤖 Claude *(15:39:48)*
+
+
+## 🤖 Claude *(15:39:51)*
+
+Confirmado — gate **legitimamente vencido** (Lei 1):
+- 7 arquivos reais no disco (sizes 12–25KB).
+- Pattern Conformance: **21 padrões** distintos, linhas numeradas 1–21 ✅.
+- **FR-PE-005..016** (12 FRs) presentes ✅.
+- "Placeholder" foi **falso-positivo** — as 3 linhas marcadas são conteúdo real sobre upload multipart (`upload_parameters` VERBATIM, `file` por último). Sem placeholder real.
+- Drift `social_credentials` = só os 3 callouts de reconciliação ✅.
+
+Um último spot-check de fidelidade no doc 10 (a SSOT que dirige o código) — confirmar que endpoints/scopes não driftaram do blueprint verificado.
+
+## 🤖 Claude *(15:39:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== critical endpoints/scopes in doc 10 (fidelity to verified blueprint) ===\"\ngrep -oE \"open.tiktokapis.com/v2/oauth/token|creator_info/query|/v2/post/publish/video/init/|FILE_UPLOAD|video.publish,user.info.basic|accounts.google.com/o/oauth2/v2/auth|youtube.upload|access_type=offline|uploadType=resumable|api.pinterest.com/v5/oauth/token|/v5/media|/v5/pins|boards:read,boards:write,pins:read,pins:write|cover_image_url|is_aigc|containsSyntheticMedia|privacyStatus\" docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md | sort | uniq -c | sort -rn",
+  "description": "Confirm endpoint/scope fidelity in amendment doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === critical endpoints/scopes in doc 10 (fidelity to verified blueprint) ===
+>       7 privacyStatus
+>       6 /v5/pins
+>       5 /v5/media
+>       5 FILE_UPLOAD
+>       3 youtube.upload
+>       3 is_aigc
+>       3 cover_image_url
+>       2 video.publish,user.info.basic
+>       2 creator_info/query
+>       2 containsSyntheticMedia
+>       2 api.pinterest.com/v5/oauth/token
+>       2 accounts.google.com/o/oauth2/v2/auth
+>       2 access_type=offline
+>       1 /v2/post/publish/video/init/
+>       1 uploadType=resumable
+>       1 open.tiktokapis.com/v2/oauth/token
+>       1 boards:read,boards:write,pins:read,pins:write
+> ```
+
+## 🤖 Claude *(15:40:58)*
+
+
+## 🤖 Claude *(15:41:01)*
+
+Fidelidade confirmada — todos os endpoints/scopes batem com o blueprint verificado. **Gate BoK vencido materialmente.** Avanço para o código.
+
+Começo pela peça mais security-crítica: a migration `social_app_config` (Vault-masked). Vou **autorá-la eu mesmo** — o risco aqui é vazamento cross-tenant de credencial, então leio os templates exatos antes. Lendo o padrão de cifra/INSTEAD OF/Vault helper.
+
+## 🤖 Claude *(15:41:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== latest migration timestamp (avoid collision) ===\"; ls -1 supabase/migrations/ | tail -3\necho \"\"; echo \"=== structure of 20260601000000_credential_encryption.sql (section headers + key DDL) ===\"\ngrep -nE \"^-- \u2501|^-- \u2500|CREATE TABLE|RENAME TO|CREATE OR REPLACE VIEW|CREATE VIEW|CREATE TRIGGER|CREATE OR REPLACE FUNCTION|INSTEAD OF|REVOKE|GRANT|vault_upsert|decrypted_|ENABLE ROW LEVEL|CREATE POLICY|meta_config|social_accounts|user_api_keys\" supabase/migrations/20260601000000_credential_encryption.sql | head -90",
+  "description": "Map credential_encryption migration structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === latest migration timestamp (avoid collision) ===
+> 20260625120000_creative_assets_registry.sql
+> 20260626120000_collective_efficiency_ledger.sql
+> 20260626130000_publication_metrics.sql
+> 
+> === structure of 20260601000000_credential_encryption.sql (section headers + key DDL) ===
+> 5:-- ─────────────────────────────────────────────────────────────────────────────
+> 7:-- ─────────────────────────────────────────────────────────────────────────────
+> 9:ALTER TABLE IF EXISTS public.meta_config RENAME TO meta_config_table;
+> 10:ALTER TABLE IF EXISTS public.social_accounts RENAME TO social_accounts_table;
+> 11:ALTER TABLE IF EXISTS public.user_api_keys RENAME TO user_api_keys_table;
+> 13:-- ─────────────────────────────────────────────────────────────────────────────
+> 15:-- ─────────────────────────────────────────────────────────────────────────────
+> 17:-- 2.1 meta_config_table encryption trigger
+> 18:CREATE OR REPLACE FUNCTION public.trg_encrypt_meta_config()
+> 32:      v_token_id := vault.create_secret(NEW.long_lived_token, 'meta_config_long_lived_token_' || NEW.id::text, 'Meta config long-lived token');
+> 41:      v_pages_id := vault.create_secret(NEW.pages::text, 'meta_config_pages_' || NEW.id::text, 'Meta config pages list');
+> 50:CREATE OR REPLACE TRIGGER tr_encrypt_meta_config
+> 51:  BEFORE INSERT OR UPDATE ON public.meta_config_table
+> 52:  FOR EACH ROW EXECUTE FUNCTION public.trg_encrypt_meta_config();
+> 55:-- 2.2 social_accounts_table encryption trigger
+> 56:CREATE OR REPLACE FUNCTION public.trg_encrypt_social_accounts()
+> 70:      v_access_token_id := vault.create_secret(NEW.access_token, 'social_accounts_access_token_' || NEW.id::text, 'Social account access token');
+> 79:      v_refresh_token_id := vault.create_secret(NEW.refresh_token, 'social_accounts_refresh_token_' || NEW.id::text, 'Social account refresh token');
+> 88:CREATE OR REPLACE TRIGGER tr_encrypt_social_accounts
+> 89:  BEFORE INSERT OR UPDATE ON public.social_accounts_table
+> 90:  FOR EACH ROW EXECUTE FUNCTION public.trg_encrypt_social_accounts();
+> 93:-- 2.3 user_api_keys_table encryption trigger
+> 94:CREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()
+> 104:      v_id := vault.create_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key');
+> 114:      v_id := vault.create_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key');
+> 124:      v_id := vault.create_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key');
+> 134:      v_id := vault.create_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key');
+> 144:      v_id := vault.create_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key');
+> 154:      v_id := vault.create_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key');
+> 164:      v_id := vault.create_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key');
+> 174:      v_id := vault.create_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password');
+> 184:      v_id := vault.create_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key');
+> 194:      v_id := vault.create_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key');
+> 204:      v_id := vault.create_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret');
+> 213:CREATE OR REPLACE TRIGGER tr_encrypt_user_api_keys
+> 214:  BEFORE INSERT OR UPDATE ON public.user_api_keys_table
+> 215:  FOR EACH ROW EXECUTE FUNCTION public.trg_encrypt_user_api_keys();
+> 218:-- ─────────────────────────────────────────────────────────────────────────────
+> 220:-- ─────────────────────────────────────────────────────────────────────────────
+> 222:-- 3.1 Backfill meta_config_table
+> 229:  FOR r IN SELECT * FROM public.meta_config_table LOOP
+> 234:      v_token_id := vault.create_secret(r.long_lived_token, 'meta_config_long_lived_token_' || r.id::text, 'Meta config long-lived token');
+> 238:      v_pages_id := vault.create_secret(r.pages::text, 'meta_config_pages_' || r.id::text, 'Meta config pages list');
+> 242:      UPDATE public.meta_config_table
+> 252:-- 3.2 Backfill social_accounts_table
+> 259:  FOR r IN SELECT * FROM public.social_accounts_table LOOP
+> 264:      v_access_id := vault.create_secret(r.access_token, 'social_accounts_access_token_' || r.id::text, 'Social account access token');
+> 268:      v_refresh_id := vault.create_secret(r.refresh_token, 'social_accounts_refresh_token_' || r.id::text, 'Social account refresh token');
+> 272:      UPDATE public.social_accounts_table
+> 282:-- 3.3 Backfill user_api_keys_table
+> 288:  FOR r IN SELECT * FROM public.user_api_keys_table LOOP
+> 292:      v_groq := vault.create_secret(r.groq_api_key, 'user_api_keys_groq_api_key_' || r.user_id::text, 'Groq API Key');
+> 295:      v_or := vault.create_secret(r.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || r.user_id::text, 'OpenRouter API Key');
+> 298:      v_oa := vault.create_secret(r.openai_api_key, 'user_api_keys_openai_api_key_' || r.user_id::text, 'OpenAI API Key');
+> 301:      v_el := vault.create_secret(r.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || r.user_id::text, 'ElevenLabs API Key');
+> 304:      v_gg := vault.create_secret(r.google_api_key, 'user_api_keys_google_api_key_' || r.user_id::text, 'Google API Key');
+> 307:      v_nb := vault.create_secret(r.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || r.user_id::text, 'Nanobana API Key');
+> 310:      v_sd := vault.create_secret(r.seedance_api_key, 'user_api_keys_seedance_api_key_' || r.user_id::text, 'Seedance API Key');
+> 313:      v_wp := vault.create_secret(r.wp_app_password, 'user_api_keys_wp_app_password_' || r.user_id::text, 'WordPress App Password');
+> 316:      v_rep := vault.create_secret(r.replicate_api_key, 'user_api_keys_replicate_api_key_' || r.user_id::text, 'Replicate API Key');
+> 319:      v_hf := vault.create_secret(r.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || r.user_id::text, 'Higgsfield API Key');
+> 322:      v_hfs := vault.create_secret(r.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || r.user_id::text, 'Higgsfield API Key Secret');
+> 326:      UPDATE public.user_api_keys_table
+> 345:-- ─────────────────────────────────────────────────────────────────────────────
+> 347:-- ─────────────────────────────────────────────────────────────────────────────
+> 349:-- 4.1 meta_config public view
+> 350:CREATE OR REPLACE VIEW public.meta_config WITH (security_invoker = true) AS
+> 366:FROM public.meta_config_table;
+> 368:-- 4.2 social_accounts public view
+> 369:CREATE OR REPLACE VIEW public.social_accounts WITH (security_invoker = true) AS
+> 384:FROM public.social_accounts_table;
+> 386:-- 4.3 user_api_keys public view
+> 387:CREATE OR REPLACE VIEW public.user_api_keys WITH (security_invoker = true) AS
+> 409:FROM public.user_api_keys_table;
+> 412:-- ─────────────────────────────────────────────────────────────────────────────
+> 413:-- 5. INSTEAD OF TRIGGERS: Map view updates/inserts back to base tables
+> 414:-- ─────────────────────────────────────────────────────────────────────────────
+> 416:-- 5.1 Instead of trigger for meta_config
+> 417:CREATE OR REPLACE FUNCTION public.trg_instead_of_meta_config()
+> 421:    DELETE FROM public.meta_config_table WHERE id = OLD.id;
+> 424:    INSERT INTO public.meta_config_table (
+> 431:    UPDATE public.meta_config_table SET
+> 434:      long_lived_token = COALESCE(NULLIF(NEW.long_lived_token, '••••••••••••'), public.meta_config_table.long_lived_token),
+> 436:      pages = COALESCE(NULLIF(NEW.pages, to_jsonb('••••••••••••'::text)), public.meta_config_table.pages),
+> 451:CREATE TRIGGER trg_instead_of_meta_config
+> 452:  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.meta_config
+> 453:  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_meta_config();
+> 456:-- 5.2 Instead of trigger for social_accounts
+> 457:CREATE OR REPLACE FUNCTION public.trg_instead_of_social_accounts()
+> 461:    DELETE FROM public.social_accounts_table WHERE id = OLD.id;
+> ```
+
+## 🤖 Claude *(15:41:33)*
+
+
+## 🤖 Claude *(15:41:36)*
+
+O padrão é intricado mas claro. Para autorar com segurança (e revisar competentemente), leio as 3 peças canônicas: o helper idempotente `vault_upsert_secret` (20260602140000), o tratamento completo do `social_accounts` (INSTEAD OF + decrypted view + REVOKE + RLS) e o tenant-guard (20260602150000).
+
+## 🤖 Claude *(15:41:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: idempotent credential encryption — vault_upsert_secret() eliminates the
+> 2	--            re-save unique_violation (23505) across all three Vault-backed credential tables.
+> 3	-- ─────────────────────────────────────────────────────────────────────────────
+> 4	-- Bug (latent debt flagged 2026-06-02 in docs/processes/credential-disconnect-clear.md, and
+> 5	-- reproduced materially the same day): the BEFORE INSERT/UPDATE encryption triggers
+> 6	-- (trg_encrypt_user_api_keys, trg_encrypt_meta_config, trg_encrypt_social_accounts) call
+> 7	-- vault.create_secret(value, '<deterministic-name>') UNCONDITIONALLY whenever a secret column
+> 8	-- changes value. vault.create_secret does a plain `INSERT INTO vault.secrets` with NO ON CONFLICT,
+> 9	-- and vault.secrets.name carries a UNIQUE index (secrets_name_idx). So rotating a stored secret to
+> 10	-- a NEW value while the same-named secret still exists throws:
+> 11	--     ERROR 23505 duplicate key value violates unique constraint "secrets_name_idx"
+> 12	-- User-facing manifestation: WordPress "Editar → save a new app-password WITHOUT disconnecting
+> 13	-- first" (src/pages/SocialAccountsPage.tsx). Sibling tables share the shape (names keyed by row id),
+> 14	-- so re-saving a Meta long-lived token / pages list, or a social access/refresh token, on an
+> 15	-- existing row collides identically.
+> 16	--
+> 17	-- Already fixed separately (NOT this migration): the INSTEAD OF double-fire of the encrypt trigger
+> 18	-- (20260602130000_fix_user_api_keys_instead_of_double_fire.sql, UPDATE-first). connect → disconnect
+> 19	-- → reconnect already works because disconnect_wordpress() deletes the secret first. The case left
+> 20	-- open was strictly "rotate the value in place without deleting first".
+> 21	--
+> 22	-- Fix: a single idempotent helper public.vault_upsert_secret(value, name, desc) that resolves an
+> 23	-- existing secret BY NAME (vault.secrets.name is unique) and rotates it in place via
+> 24	-- vault.update_secret (which COALESCE-keeps name + description, re-encrypting only the value), else
+> 25	-- creates it. The vault.create_secret call-sites in each of the three encryption triggers are
+> 26	-- swapped for this helper, preserving the existing "already a UUID reference → keep" guard and the
+> 27	-- "only when the value actually changed" (IS DISTINCT FROM) guard. The stored column keeps pointing
+> 28	-- at the SAME Vault UUID across rotations (update-in-place), so decrypted_* views transparently
+> 29	-- reflect the new value and no orphan secrets accumulate.
+> 30	--
+> 31	-- Security posture (this migration HARDENS; per CLAUDE.md every migration passes /security-review):
+> 32	--   * vault_upsert_secret is SECURITY DEFINER with `SET search_path = ''` and every object schema-
+> 33	--     qualified — closing the search_path-injection vector a definer function otherwise carries.
+> 34	--   * EXECUTE on the helper is REVOKED from PUBLIC/anon/authenticated. It is an internal primitive
+> 35	--     called only by the (already definer, owner=postgres) encryption triggers; it must NOT be a
+> 36	--     PostgREST-reachable RPC, since by-name access would otherwise let a caller overwrite ANY
+> 37	--     tenant's secret. The triggers run as postgres (their definer) and retain EXECUTE as owner.
+> 38	--   * The three encryption trigger functions are ALSO pinned to `SET search_path = ''` (they had no
+> 39	--     pin before — proconfig was null), matching the precedent set by 20260602130000. postgres keeps
+> 40	--     the SELECT it already holds on vault.secrets; the privileged Vault writes stay inside the
+> 41	--     SECURITY DEFINER vault.create_secret/update_secret primitives (postgres has EXECUTE, not direct
+> 42	--     INSERT/UPDATE on vault.secrets — verified materially 2026-06-02).
+> 43	--
+> 44	-- Scope: all three credential tables (user_api_keys, meta_config, social_accounts). Triggers keep
+> 45	-- their bindings (CREATE OR REPLACE FUNCTION preserves the function oid) — no trigger re-create.
+> 46	
+> 47	-- ─────────────────────────────────────────────────────────────────────────────
+> 48	-- 1. IDEMPOTENT VAULT HELPER
+> 49	-- ─────────────────────────────────────────────────────────────────────────────
+> 50	CREATE OR REPLACE FUNCTION public.vault_upsert_secret(
+> 51	  p_value text,
+> 52	  p_name  text,
+> 53	  p_desc  text DEFAULT ''
+> 54	)
+> 55	RETURNS uuid
+> 56	LANGUAGE plpgsql
+> 57	SECURITY DEFINER
+> 58	SET search_path = ''
+> 59	AS $$
+> 60	DECLARE
+> 61	  v_id uuid;
+> 62	BEGIN
+> 63	  -- vault.secrets.name is UNIQUE (secrets_name_idx). Resolve an existing secret by its
+> 64	  -- deterministic name and rotate the value in place — this is what makes re-saving a credential
+> 65	  -- idempotent instead of throwing unique_violation (23505). vault.update_secret COALESCE-keeps the
+> 66	  -- name + description and re-encrypts only the value, so the stored UUID reference never changes.
+> 67	  SELECT id INTO v_id FROM vault.secrets WHERE name = p_name;
+> 68	
+> 69	  IF v_id IS NOT NULL THEN
+> 70	    PERFORM vault.update_secret(v_id, p_value);
+> 71	    RETURN v_id;
+> 72	  END IF;
+> 73	
+> 74	  RETURN vault.create_secret(p_value, p_name, p_desc);
+> 75	
+> 76	EXCEPTION
+> 77	  -- Concurrency guard: a parallel writer created the same name between our SELECT and
+> 78	  -- create_secret. Re-resolve and update in place rather than surfacing 23505 to the caller.
+> 79	  WHEN unique_violation THEN
+> 80	    SELECT id INTO v_id FROM vault.secrets WHERE name = p_name;
+> 81	    IF v_id IS NOT NULL THEN
+> 82	      PERFORM vault.update_secret(v_id, p_value);
+> 83	      RETURN v_id;
+> 84	    END IF;
+> 85	    RAISE;
+> 86	END;
+> 87	$$;
+> 88	
+> 89	COMMENT ON FUNCTION public.vault_upsert_secret(text, text, text) IS
+> 90	  'Internal: idempotent Vault secret write keyed by deterministic name (update-in-place when the '
+> 91	  'name exists, else create). Called ONLY by the credential encryption triggers — EXECUTE is revoked '
+> 92	  'from clients. Eliminates the secrets_name_idx 23505 on credential re-save.';
+> 93	
+> 94	-- Internal primitive only — never a client-reachable RPC (would allow by-name cross-tenant overwrite).
+> 95	REVOKE ALL ON FUNCTION public.vault_upsert_secret(text, text, text) FROM PUBLIC;
+> 96	REVOKE ALL ON FUNCTION public.vault_upsert_secret(text, text, text) FROM anon, authenticated;
+> 97	
+> 98	-- ─────────────────────────────────────────────────────────────────────────────
+> 99	-- 2. user_api_keys encryption trigger — swap vault.create_secret → public.vault_upsert_secret
+> 100	--    (latest definition as of 20260601060000, incl. apify_token; + search_path pin)
+> 101	-- ─────────────────────────────────────────────────────────────────────────────
+> 102	CREATE OR REPLACE FUNCTION public.trg_encrypt_user_api_keys()
+> 103	RETURNS TRIGGER
+> 104	LANGUAGE plpgsql
+> 105	SECURITY DEFINER
+> 106	SET search_path = ''
+> 107	AS $$
+> 108	DECLARE
+> 109	  v_id UUID;
+> 110	BEGIN
+> 111	  -- groq_api_key
+> 112	  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN
+> 113	    IF NEW.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 114	      -- keep existing UUID reference
+> 115	    ELSE
+> 116	      v_id := public.vault_upsert_secret(NEW.groq_api_key, 'user_api_keys_groq_api_key_' || NEW.user_id::text, 'Groq API Key');
+> 117	      NEW.groq_api_key = v_id::text;
+> 118	    END IF;
+> 119	  END IF;
+> 120	
+> 121	  -- openrouter_api_key
+> 122	  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN
+> 123	    IF NEW.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 124	      -- keep existing UUID reference
+> 125	    ELSE
+> 126	      v_id := public.vault_upsert_secret(NEW.openrouter_api_key, 'user_api_keys_openrouter_api_key_' || NEW.user_id::text, 'OpenRouter API Key');
+> 127	      NEW.openrouter_api_key = v_id::text;
+> 128	    END IF;
+> 129	  END IF;
+> 130	
+> 131	  -- openai_api_key
+> 132	  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN
+> 133	    IF NEW.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 134	      -- keep existing UUID reference
+> 135	    ELSE
+> 136	      v_id := public.vault_upsert_secret(NEW.openai_api_key, 'user_api_keys_openai_api_key_' || NEW.user_id::text, 'OpenAI API Key');
+> 137	      NEW.openai_api_key = v_id::text;
+> 138	    END IF;
+> 139	  END IF;
+> 140	
+> 141	  -- elevenlabs_api_key
+> 142	  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN
+> 143	    IF NEW.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 144	      -- keep existing UUID reference
+> 145	    ELSE
+> 146	      v_id := public.vault_upsert_secret(NEW.elevenlabs_api_key, 'user_api_keys_elevenlabs_api_key_' || NEW.user_id::text, 'ElevenLabs API Key');
+> 147	      NEW.elevenlabs_api_key = v_id::text;
+> 148	    END IF;
+> 149	  END IF;
+> 150	
+> 151	  -- google_api_key
+> 152	  IF NEW.google_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.google_api_key IS DISTINCT FROM OLD.google_api_key) THEN
+> 153	    IF NEW.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 154	      -- keep existing UUID reference
+> 155	    ELSE
+> 156	      v_id := public.vault_upsert_secret(NEW.google_api_key, 'user_api_keys_google_api_key_' || NEW.user_id::text, 'Google API Key');
+> 157	      NEW.google_api_key = v_id::text;
+> 158	    END IF;
+> 159	  END IF;
+> 160	
+> 161	  -- nanobana_api_key
+> 162	  IF NEW.nanobana_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.nanobana_api_key IS DISTINCT FROM OLD.nanobana_api_key) THEN
+> 163	    IF NEW.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 164	      -- keep existing UUID reference
+> 165	    ELSE
+> 166	      v_id := public.vault_upsert_secret(NEW.nanobana_api_key, 'user_api_keys_nanobana_api_key_' || NEW.user_id::text, 'Nanobana API Key');
+> 167	      NEW.nanobana_api_key = v_id::text;
+> 168	    END IF;
+> 169	  END IF;
+> 170	
+> 171	  -- seedance_api_key
+> 172	  IF NEW.seedance_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.seedance_api_key IS DISTINCT FROM OLD.seedance_api_key) THEN
+> 173	    IF NEW.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 174	      -- keep existing UUID reference
+> 175	    ELSE
+> 176	      v_id := public.vault_upsert_secret(NEW.seedance_api_key, 'user_api_keys_seedance_api_key_' || NEW.user_id::text, 'Seedance API Key');
+> 177	      NEW.seedance_api_key = v_id::text;
+> 178	    END IF;
+> 179	  END IF;
+> 180	
+> 181	  -- wp_app_password
+> 182	  IF NEW.wp_app_password IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.wp_app_password IS DISTINCT FROM OLD.wp_app_password) THEN
+> 183	    IF NEW.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 184	      -- keep existing UUID reference
+> 185	    ELSE
+> 186	      v_id := public.vault_upsert_secret(NEW.wp_app_password, 'user_api_keys_wp_app_password_' || NEW.user_id::text, 'WordPress App Password');
+> 187	      NEW.wp_app_password = v_id::text;
+> 188	    END IF;
+> 189	  END IF;
+> 190	
+> 191	  -- replicate_api_key
+> 192	  IF NEW.replicate_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.replicate_api_key IS DISTINCT FROM OLD.replicate_api_key) THEN
+> 193	    IF NEW.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 194	      -- keep existing UUID reference
+> 195	    ELSE
+> 196	      v_id := public.vault_upsert_secret(NEW.replicate_api_key, 'user_api_keys_replicate_api_key_' || NEW.user_id::text, 'Replicate API Key');
+> 197	      NEW.replicate_api_key = v_id::text;
+> 198	    END IF;
+> 199	  END IF;
+> 200	
+> 201	  -- higgsfield_api_key
+> 202	  IF NEW.higgsfield_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key IS DISTINCT FROM OLD.higgsfield_api_key) THEN
+> 203	    IF NEW.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 204	      -- keep existing UUID reference
+> 205	    ELSE
+> 206	      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key, 'user_api_keys_higgsfield_api_key_' || NEW.user_id::text, 'Higgsfield API Key');
+> 207	      NEW.higgsfield_api_key = v_id::text;
+> 208	    END IF;
+> 209	  END IF;
+> 210	
+> 211	  -- higgsfield_api_key_secret
+> 212	  IF NEW.higgsfield_api_key_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.higgsfield_api_key_secret IS DISTINCT FROM OLD.higgsfield_api_key_secret) THEN
+> 213	    IF NEW.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 214	      -- keep existing UUID reference
+> 215	    ELSE
+> 216	      v_id := public.vault_upsert_secret(NEW.higgsfield_api_key_secret, 'user_api_keys_higgsfield_api_key_secret_' || NEW.user_id::text, 'Higgsfield API Key Secret');
+> 217	      NEW.higgsfield_api_key_secret = v_id::text;
+> 218	    END IF;
+> 219	  END IF;
+> 220	
+> 221	  -- apify_token
+> 222	  IF NEW.apify_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.apify_token IS DISTINCT FROM OLD.apify_token) THEN
+> 223	    IF NEW.apify_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 224	      -- keep existing UUID reference
+> 225	    ELSE
+> 226	      v_id := public.vault_upsert_secret(NEW.apify_token, 'user_api_keys_apify_token_' || NEW.user_id::text, 'Apify Token');
+> 227	      NEW.apify_token = v_id::text;
+> 228	    END IF;
+> 229	  END IF;
+> 230	
+> 231	  RETURN NEW;
+> 232	END;
+> 233	$$;
+> 234	
+> 235	-- ─────────────────────────────────────────────────────────────────────────────
+> 236	-- 3. meta_config encryption trigger — swap vault.create_secret → public.vault_upsert_secret
+> 237	-- ─────────────────────────────────────────────────────────────────────────────
+> 238	CREATE OR REPLACE FUNCTION public.trg_encrypt_meta_config()
+> 239	RETURNS TRIGGER
+> 240	LANGUAGE plpgsql
+> 241	SECURITY DEFINER
+> 242	SET search_path = ''
+> 243	AS $$
+> 244	DECLARE
+> 245	  v_token_id UUID;
+> 246	  v_pages_id UUID;
+> 247	BEGIN
+> 248	  IF NEW.id IS NULL THEN
+> 249	    NEW.id := gen_random_uuid();
+> 250	  END IF;
+> 251	
+> 252	  IF NEW.long_lived_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.long_lived_token IS DISTINCT FROM OLD.long_lived_token) THEN
+> 253	    IF NEW.long_lived_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 254	      -- keep existing UUID reference
+> 255	    ELSE
+> 256	      v_token_id := public.vault_upsert_secret(NEW.long_lived_token, 'meta_config_long_lived_token_' || NEW.id::text, 'Meta config long-lived token');
+> 257	      NEW.long_lived_token = v_token_id::text;
+> 258	    END IF;
+> 259	  END IF;
+> 260	
+> 261	  IF NEW.pages IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.pages IS DISTINCT FROM OLD.pages) THEN
+> 262	    IF NEW.pages::text ~ '^"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"$' THEN
+> 263	      -- keep existing UUID JSON reference
+> 264	    ELSE
+> 265	      v_pages_id := public.vault_upsert_secret(NEW.pages::text, 'meta_config_pages_' || NEW.id::text, 'Meta config pages list');
+> 266	      NEW.pages = to_jsonb(v_pages_id::text);
+> 267	    END IF;
+> 268	  END IF;
+> 269	
+> 270	  RETURN NEW;
+> 271	END;
+> 272	$$;
+> 273	
+> 274	-- ─────────────────────────────────────────────────────────────────────────────
+> 275	-- 4. social_accounts encryption trigger — swap vault.create_secret → public.vault_upsert_secret
+> 276	-- ─────────────────────────────────────────────────────────────────────────────
+> 277	CREATE OR REPLACE FUNCTION public.trg_encrypt_social_accounts()
+> 278	RETURNS TRIGGER
+> 279	LANGUAGE plpgsql
+> 280	SECURITY DEFINER
+> 281	SET search_path = ''
+> 282	AS $$
+> 283	DECLARE
+> 284	  v_access_token_id UUID;
+> 285	  v_refresh_token_id UUID;
+> 286	BEGIN
+> 287	  IF NEW.id IS NULL THEN
+> 288	    NEW.id := gen_random_uuid();
+> 289	  END IF;
+> 290	
+> 291	  IF NEW.access_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.access_token IS DISTINCT FROM OLD.access_token) THEN
+> 292	    IF NEW.access_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 293	      -- keep existing UUID reference
+> 294	    ELSE
+> 295	      v_access_token_id := public.vault_upsert_secret(NEW.access_token, 'social_accounts_access_token_' || NEW.id::text, 'Social account access token');
+> 296	      NEW.access_token = v_access_token_id::text;
+> 297	    END IF;
+> 298	  END IF;
+> 299	
+> 300	  IF NEW.refresh_token IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.refresh_token IS DISTINCT FROM OLD.refresh_token) THEN
+> 301	    IF NEW.refresh_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 302	      -- keep existing UUID reference
+> 303	    ELSE
+> 304	      v_refresh_token_id := public.vault_upsert_secret(NEW.refresh_token, 'social_accounts_refresh_token_' || NEW.id::text, 'Social account refresh token');
+> 305	      NEW.refresh_token = v_refresh_token_id::text;
+> 306	    END IF;
+> 307	  END IF;
+> 308	
+> 309	  RETURN NEW;
+> 310	END;
+> 311	$$;
+> 312	
+> ```
+
+## 🤖 Claude *(15:41:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql",
+  "offset": 456,
+  "limit": 190
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 456	-- 5.2 Instead of trigger for social_accounts
+> 457	CREATE OR REPLACE FUNCTION public.trg_instead_of_social_accounts()
+> 458	RETURNS TRIGGER AS $$
+> 459	BEGIN
+> 460	  IF TG_OP = 'DELETE' THEN
+> 461	    DELETE FROM public.social_accounts_table WHERE id = OLD.id;
+> 462	    RETURN OLD;
+> 463	  ELSIF TG_OP = 'INSERT' THEN
+> 464	    INSERT INTO public.social_accounts_table (
+> 465	      id, user_id, platform, platform_user_id, platform_username, access_token, refresh_token, token_expires_at, scopes, is_active, metadata
+> 466	    ) VALUES (
+> 467	      COALESCE(NEW.id, gen_random_uuid()), NEW.user_id, NEW.platform, NEW.platform_user_id, NEW.platform_username, NEW.access_token, NEW.refresh_token, NEW.token_expires_at, NEW.scopes, NEW.is_active, NEW.metadata
+> 468	    );
+> 469	    RETURN NEW;
+> 470	  ELSIF TG_OP = 'UPDATE' THEN
+> 471	    UPDATE public.social_accounts_table SET
+> 472	      user_id = NEW.user_id,
+> 473	      platform = NEW.platform,
+> 474	      platform_user_id = NEW.platform_user_id,
+> 475	      platform_username = NEW.platform_username,
+> 476	      access_token = COALESCE(NULLIF(NEW.access_token, '••••••••••••'), public.social_accounts_table.access_token),
+> 477	      refresh_token = COALESCE(NULLIF(NEW.refresh_token, '••••••••••••'), public.social_accounts_table.refresh_token),
+> 478	      token_expires_at = NEW.token_expires_at,
+> 479	      scopes = NEW.scopes,
+> 480	      is_active = NEW.is_active,
+> 481	      metadata = NEW.metadata,
+> 482	      updated_at = now()
+> 483	    WHERE id = OLD.id;
+> 484	    RETURN NEW;
+> 485	  END IF;
+> 486	  RETURN NULL;
+> 487	END;
+> 488	$$ LANGUAGE plpgsql SECURITY DEFINER;
+> 489	
+> 490	CREATE TRIGGER trg_instead_of_social_accounts
+> 491	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.social_accounts
+> 492	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_social_accounts();
+> 493	
+> 494	
+> 495	-- 5.3 Instead of trigger for user_api_keys
+> 496	CREATE OR REPLACE FUNCTION public.trg_instead_of_user_api_keys()
+> 497	RETURNS TRIGGER AS $$
+> 498	BEGIN
+> 499	  IF TG_OP = 'DELETE' THEN
+> 500	    DELETE FROM public.user_api_keys_table WHERE user_id = OLD.user_id;
+> 501	    RETURN OLD;
+> 502	  ELSIF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+> 503	    INSERT INTO public.user_api_keys_table (
+> 504	      user_id, groq_api_key, openrouter_api_key, openai_api_key, pref_audio_provider, pref_image_provider, pref_video_provider, elevenlabs_api_key, google_api_key, nanobana_api_key, seedance_api_key, wp_site_url, wp_username, wp_app_password, pref_ai_model, replicate_api_key, higgsfield_api_key, higgsfield_api_key_secret
+> 505	    ) VALUES (
+> 506	      NEW.user_id, NEW.groq_api_key, NEW.openrouter_api_key, NEW.openai_api_key, NEW.pref_audio_provider, NEW.pref_image_provider, NEW.pref_video_provider, NEW.elevenlabs_api_key, NEW.google_api_key, NEW.nanobana_api_key, NEW.seedance_api_key, NEW.wp_site_url, NEW.wp_username, NEW.wp_app_password, NEW.pref_ai_model, NEW.replicate_api_key, NEW.higgsfield_api_key, NEW.higgsfield_api_key_secret
+> 507	    )
+> 508	    ON CONFLICT (user_id) DO UPDATE SET
+> 509	      groq_api_key = COALESCE(NULLIF(NEW.groq_api_key, '••••••••••••'), public.user_api_keys_table.groq_api_key),
+> 510	      openrouter_api_key = COALESCE(NULLIF(NEW.openrouter_api_key, '••••••••••••'), public.user_api_keys_table.openrouter_api_key),
+> 511	      openai_api_key = COALESCE(NULLIF(NEW.openai_api_key, '••••••••••••'), public.user_api_keys_table.openai_api_key),
+> 512	      pref_audio_provider = COALESCE(NEW.pref_audio_provider, public.user_api_keys_table.pref_audio_provider),
+> 513	      pref_image_provider = COALESCE(NEW.pref_image_provider, public.user_api_keys_table.pref_image_provider),
+> 514	      pref_video_provider = COALESCE(NEW.pref_video_provider, public.user_api_keys_table.pref_video_provider),
+> 515	      elevenlabs_api_key = COALESCE(NULLIF(NEW.elevenlabs_api_key, '••••••••••••'), public.user_api_keys_table.elevenlabs_api_key),
+> 516	      google_api_key = COALESCE(NULLIF(NEW.google_api_key, '••••••••••••'), public.user_api_keys_table.google_api_key),
+> 517	      nanobana_api_key = COALESCE(NULLIF(NEW.nanobana_api_key, '••••••••••••'), public.user_api_keys_table.nanobana_api_key),
+> 518	      seedance_api_key = COALESCE(NULLIF(NEW.seedance_api_key, '••••••••••••'), public.user_api_keys_table.seedance_api_key),
+> 519	      wp_site_url = NEW.wp_site_url,
+> 520	      wp_username = NEW.wp_username,
+> 521	      wp_app_password = COALESCE(NULLIF(NEW.wp_app_password, '••••••••••••'), public.user_api_keys_table.wp_app_password),
+> 522	      pref_ai_model = COALESCE(NEW.pref_ai_model, public.user_api_keys_table.pref_ai_model),
+> 523	      replicate_api_key = COALESCE(NULLIF(NEW.replicate_api_key, '••••••••••••'), public.user_api_keys_table.replicate_api_key),
+> 524	      higgsfield_api_key = COALESCE(NULLIF(NEW.higgsfield_api_key, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key),
+> 525	      higgsfield_api_key_secret = COALESCE(NULLIF(NEW.higgsfield_api_key_secret, '••••••••••••'), public.user_api_keys_table.higgsfield_api_key_secret),
+> 526	      updated_at = now();
+> 527	    RETURN NEW;
+> 528	  END IF;
+> 529	  RETURN NULL;
+> 530	END;
+> 531	$$ LANGUAGE plpgsql SECURITY DEFINER;
+> 532	
+> 533	CREATE TRIGGER trg_instead_of_user_api_keys
+> 534	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.user_api_keys
+> 535	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_user_api_keys();
+> 536	
+> 537	
+> 538	-- ─────────────────────────────────────────────────────────────────────────────
+> 539	-- 6. PRIVATE DECRYPTED VIEWS: Real decrypted keys view for service_role
+> 540	-- ─────────────────────────────────────────────────────────────────────────────
+> 541	
+> 542	-- 6.1 decrypted_meta_config
+> 543	CREATE OR REPLACE VIEW public.decrypted_meta_config AS
+> 544	SELECT 
+> 545	  mc.id,
+> 546	  mc.user_id,
+> 547	  mc.facebook_user_id,
+> 548	  COALESCE(s_token.decrypted_secret, mc.long_lived_token) AS long_lived_token,
+> 549	  mc.scopes,
+> 550	  COALESCE(s_pages.decrypted_secret::jsonb, mc.pages) AS pages,
+> 551	  mc.instagram_business_account_id,
+> 552	  mc.whatsapp_phone_number_id,
+> 553	  mc.whatsapp_waba_id,
+> 554	  mc.meta_ad_account_id,
+> 555	  mc.requires_reauth,
+> 556	  mc.token_expires_at,
+> 557	  mc.created_at,
+> 558	  mc.updated_at
+> 559	FROM public.meta_config_table mc
+> 560	LEFT JOIN vault.decrypted_secrets s_token ON mc.long_lived_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_token.id = mc.long_lived_token::uuid
+> 561	LEFT JOIN vault.decrypted_secrets s_pages ON mc.pages::text ~ '^"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"$' AND s_pages.id = (mc.pages#>>'{}')::uuid;
+> 562	
+> 563	-- 6.2 decrypted_social_accounts
+> 564	CREATE OR REPLACE VIEW public.decrypted_social_accounts AS
+> 565	SELECT 
+> 566	  sa.id,
+> 567	  sa.user_id,
+> 568	  sa.platform,
+> 569	  sa.platform_user_id,
+> 570	  sa.platform_username,
+> 571	  COALESCE(s_access.decrypted_secret, sa.access_token) AS access_token,
+> 572	  COALESCE(s_refresh.decrypted_secret, sa.refresh_token) AS refresh_token,
+> 573	  sa.token_expires_at,
+> 574	  sa.scopes,
+> 575	  sa.is_active,
+> 576	  sa.metadata,
+> 577	  sa.created_at,
+> 578	  sa.updated_at
+> 579	FROM public.social_accounts_table sa
+> 580	LEFT JOIN vault.decrypted_secrets s_access ON sa.access_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_access.id = sa.access_token::uuid
+> 581	LEFT JOIN vault.decrypted_secrets s_refresh ON sa.refresh_token ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_refresh.id = sa.refresh_token::uuid;
+> 582	
+> 583	-- 6.3 decrypted_user_api_keys
+> 584	CREATE OR REPLACE VIEW public.decrypted_user_api_keys AS
+> 585	SELECT 
+> 586	  uak.user_id,
+> 587	  COALESCE(s_groq.decrypted_secret, uak.groq_api_key) AS groq_api_key,
+> 588	  COALESCE(s_openrouter.decrypted_secret, uak.openrouter_api_key) AS openrouter_api_key,
+> 589	  COALESCE(s_openai.decrypted_secret, uak.openai_api_key) AS openai_api_key,
+> 590	  uak.created_at,
+> 591	  uak.updated_at,
+> 592	  uak.pref_audio_provider,
+> 593	  uak.pref_image_provider,
+> 594	  uak.pref_video_provider,
+> 595	  COALESCE(s_elevenlabs.decrypted_secret, uak.elevenlabs_api_key) AS elevenlabs_api_key,
+> 596	  COALESCE(s_google.decrypted_secret, uak.google_api_key) AS google_api_key,
+> 597	  COALESCE(s_nanobana.decrypted_secret, uak.nanobana_api_key) AS nanobana_api_key,
+> 598	  COALESCE(s_seedance.decrypted_secret, uak.seedance_api_key) AS seedance_api_key,
+> 599	  uak.wp_site_url,
+> 600	  uak.wp_username,
+> 601	  COALESCE(s_wp_pwd.decrypted_secret, uak.wp_app_password) AS wp_app_password,
+> 602	  uak.pref_ai_model,
+> 603	  COALESCE(s_replicate.decrypted_secret, uak.replicate_api_key) AS replicate_api_key,
+> 604	  COALESCE(s_higgsfield.decrypted_secret, uak.higgsfield_api_key) AS higgsfield_api_key,
+> 605	  COALESCE(s_higgsfield_sec.decrypted_secret, uak.higgsfield_api_key_secret) AS higgsfield_api_key_secret
+> 606	FROM public.user_api_keys_table uak
+> 607	LEFT JOIN vault.decrypted_secrets s_groq ON uak.groq_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_groq.id = uak.groq_api_key::uuid
+> 608	LEFT JOIN vault.decrypted_secrets s_openrouter ON uak.openrouter_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openrouter.id = uak.openrouter_api_key::uuid
+> 609	LEFT JOIN vault.decrypted_secrets s_openai ON uak.openai_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_openai.id = uak.openai_api_key::uuid
+> 610	LEFT JOIN vault.decrypted_secrets s_elevenlabs ON uak.elevenlabs_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_elevenlabs.id = uak.elevenlabs_api_key::uuid
+> 611	LEFT JOIN vault.decrypted_secrets s_google ON uak.google_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_google.id = uak.google_api_key::uuid
+> 612	LEFT JOIN vault.decrypted_secrets s_nanobana ON uak.nanobana_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_nanobana.id = uak.nanobana_api_key::uuid
+> 613	LEFT JOIN vault.decrypted_secrets s_seedance ON uak.seedance_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_seedance.id = uak.seedance_api_key::uuid
+> 614	LEFT JOIN vault.decrypted_secrets s_wp_pwd ON uak.wp_app_password ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_wp_pwd.id = uak.wp_app_password::uuid
+> 615	LEFT JOIN vault.decrypted_secrets s_replicate ON uak.replicate_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_replicate.id = uak.replicate_api_key::uuid
+> 616	LEFT JOIN vault.decrypted_secrets s_higgsfield ON uak.higgsfield_api_key ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield.id = uak.higgsfield_api_key::uuid
+> 617	LEFT JOIN vault.decrypted_secrets s_higgsfield_sec ON uak.higgsfield_api_key_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND s_higgsfield_sec.id = uak.higgsfield_api_key_secret::uuid;
+> 618	
+> 619	
+> 620	-- ─────────────────────────────────────────────────────────────────────────────
+> 621	-- 7. PERMISSIONS: Restrict view selects
+> 622	-- ─────────────────────────────────────────────────────────────────────────────
+> 623	
+> 624	-- decrypted_* views are restricted to service_role exclusively
+> 625	REVOKE ALL ON public.decrypted_meta_config FROM PUBLIC, anon, authenticated;
+> 626	GRANT SELECT ON public.decrypted_meta_config TO service_role;
+> 627	
+> 628	REVOKE ALL ON public.decrypted_social_accounts FROM PUBLIC, anon, authenticated;
+> 629	GRANT SELECT ON public.decrypted_social_accounts TO service_role;
+> 630	
+> 631	REVOKE ALL ON public.decrypted_user_api_keys FROM PUBLIC, anon, authenticated;
+> 632	GRANT SELECT ON public.decrypted_user_api_keys TO service_role;
+> 633	
+> ```
+
+## 🤖 Claude *(15:41:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260602150000_meta_social_instead_of_tenant_guard.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: tenant guard on meta_config / social_accounts masked-view INSTEAD OF triggers.
+> 2	-- ─────────────────────────────────────────────────────────────────────────────
+> 3	-- Closes a PRE-EXISTING cross-tenant injection gap surfaced during the /security-review of
+> 4	-- 20260602140000 (NOT a regression of that migration). trg_instead_of_meta_config and
+> 5	-- trg_instead_of_social_accounts are SECURITY DEFINER (owner postgres, bypass base-table RLS) and
+> 6	-- the masked public views grant INSERT to authenticated. PostgreSQL does not apply a view's WHERE
+> 7	-- qualification to INSERT, so an authenticated caller could POST a row with a SPOOFED user_id (a
+> 8	-- victim's) and a FRESH id — committing a credential row OWNED BY the victim with attacker-controlled
+> 9	-- tokens. A service-role publisher iterating that victim's decrypted_* rows would then use the
+> 10	-- injected credential (credential confusion / content redirection). The overwrite variant (colliding
+> 11	-- id) is already fail-closed by PRIMARY KEY(id) on both base tables; this fixes the injection variant.
+> 12	--
+> 13	-- Fix: port the exact tenant guard user_api_keys received in 20260602130000 to the INSERT and UPDATE
+> 14	-- branches of both sibling INSTEAD OF triggers, and pin SET search_path = '' (they had no pin).
+> 15	-- The function bodies below are reproduced VERBATIM from the live definitions (pg_get_functiondef,
+> 16	-- 2026-06-02) — preserving every column mapping, COALESCE default, and masked sentinel byte-for-byte —
+> 17	-- with ONLY the guard + search_path added. Triggers keep their bindings (CREATE OR REPLACE preserves
+> 18	-- the oid) — no trigger re-create.
+> 19	--
+> 20	-- Production safety (verified 2026-06-02): every legitimate writer is either service_role (the social
+> 21	-- OAuth callback — the sole social INSERT — plus refresh-social-token / publish-meta / sync-meta-ads /
+> 22	-- self-heal, all using SB_SECRET_KEY → exempt) or an authenticated client writing its OWN row with
+> 23	-- user_id = auth.uid() (useMetaConfig.insert; useSocialAccounts never inserts client-side). No legit
+> 24	-- non-service-role path writes user_id <> auth.uid(), so the guard only blocks the attack.
+> 25	--
+> 26	-- SOP: docs/processes/credential-disconnect-clear.md. MANDATORY /security-review (credential layer).
+> 27	
+> 28	CREATE OR REPLACE FUNCTION public.trg_instead_of_meta_config()
+> 29	 RETURNS trigger
+> 30	 LANGUAGE plpgsql
+> 31	 SECURITY DEFINER
+> 32	 SET search_path = ''
+> 33	AS $function$
+> 34	BEGIN
+> 35	  IF TG_OP = 'DELETE' THEN
+> 36	    DELETE FROM public.meta_config_table WHERE id = OLD.id;
+> 37	    RETURN OLD;
+> 38	  ELSIF TG_OP = 'INSERT' THEN
+> 39	    -- Tenant guard (mirrors 20260602130000 for user_api_keys): a non-service-role caller may only
+> 40	    -- write its OWN credential row. Closes a pre-existing cross-tenant injection (spoofed user_id +
+> 41	    -- fresh id) that the masked view's WHERE filter does not constrain for INSERT. service_role
+> 42	    -- (edge OAuth callbacks / cron) is exempt and legitimately writes arbitrary user_ids.
+> 43	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 44	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 45	    END IF;
+> 46	    INSERT INTO public.meta_config_table (
+> 47	      id,
+> 48	      user_id,
+> 49	      facebook_user_id,
+> 50	      long_lived_token,
+> 51	      scopes,
+> 52	      pages,
+> 53	      instagram_business_account_id,
+> 54	      whatsapp_phone_number_id,
+> 55	      whatsapp_waba_id,
+> 56	      meta_ad_account_id,
+> 57	      requires_reauth,
+> 58	      token_expires_at
+> 59	    ) VALUES (
+> 60	      COALESCE(NEW.id, gen_random_uuid()),
+> 61	      NEW.user_id,
+> 62	      NEW.facebook_user_id,
+> 63	      NEW.long_lived_token,
+> 64	      COALESCE(NEW.scopes, '{}'),
+> 65	      COALESCE(NEW.pages, '[]'::jsonb),
+> 66	      NEW.instagram_business_account_id,
+> 67	      NEW.whatsapp_phone_number_id,
+> 68	      NEW.whatsapp_waba_id,
+> 69	      NEW.meta_ad_account_id,
+> 70	      COALESCE(NEW.requires_reauth, FALSE),
+> 71	      NEW.token_expires_at
+> 72	    );
+> 73	    RETURN NEW;
+> 74	  ELSIF TG_OP = 'UPDATE' THEN
+> 75	    -- Tenant guard (mirrors 20260602130000 for user_api_keys): a non-service-role caller may only
+> 76	    -- write its OWN credential row. Closes a pre-existing cross-tenant injection (spoofed user_id +
+> 77	    -- fresh id) that the masked view's WHERE filter does not constrain for INSERT. service_role
+> 78	    -- (edge OAuth callbacks / cron) is exempt and legitimately writes arbitrary user_ids.
+> 79	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 80	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 81	    END IF;
+> 82	    UPDATE public.meta_config_table SET
+> 83	      user_id = NEW.user_id,
+> 84	      facebook_user_id = NEW.facebook_user_id,
+> 85	      long_lived_token = COALESCE(NULLIF(NEW.long_lived_token, '••••••••••••'), public.meta_config_table.long_lived_token),
+> 86	      scopes = COALESCE(NEW.scopes, public.meta_config_table.scopes),
+> 87	      pages = COALESCE(NULLIF(NEW.pages, to_jsonb('••••••••••••'::text)), public.meta_config_table.pages),
+> 88	      instagram_business_account_id = NEW.instagram_business_account_id,
+> 89	      whatsapp_phone_number_id = NEW.whatsapp_phone_number_id,
+> 90	      whatsapp_waba_id = NEW.whatsapp_waba_id,
+> 91	      meta_ad_account_id = NEW.meta_ad_account_id,
+> 92	      requires_reauth = COALESCE(NEW.requires_reauth, public.meta_config_table.requires_reauth),
+> 93	      token_expires_at = NEW.token_expires_at,
+> 94	      updated_at = now()
+> 95	    WHERE id = OLD.id;
+> 96	    RETURN NEW;
+> 97	  END IF;
+> 98	  RETURN NULL;
+> 99	END;
+> 100	$function$;
+> 101	
+> 102	CREATE OR REPLACE FUNCTION public.trg_instead_of_social_accounts()
+> 103	 RETURNS trigger
+> 104	 LANGUAGE plpgsql
+> 105	 SECURITY DEFINER
+> 106	 SET search_path = ''
+> 107	AS $function$
+> 108	BEGIN
+> 109	  IF TG_OP = 'DELETE' THEN
+> 110	    DELETE FROM public.social_accounts_table WHERE id = OLD.id;
+> 111	    RETURN OLD;
+> 112	  ELSIF TG_OP = 'INSERT' THEN
+> 113	    -- Tenant guard (mirrors 20260602130000 for user_api_keys): a non-service-role caller may only
+> 114	    -- write its OWN credential row. Closes a pre-existing cross-tenant injection (spoofed user_id +
+> 115	    -- fresh id) that the masked view's WHERE filter does not constrain for INSERT. service_role
+> 116	    -- (edge OAuth callbacks / cron) is exempt and legitimately writes arbitrary user_ids.
+> 117	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 118	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 119	    END IF;
+> 120	    INSERT INTO public.social_accounts_table (
+> 121	      id, user_id, platform, platform_user_id, platform_username, access_token, refresh_token, token_expires_at, scopes, is_active, metadata
+> 122	    ) VALUES (
+> 123	      COALESCE(NEW.id, gen_random_uuid()), NEW.user_id, NEW.platform, NEW.platform_user_id, NEW.platform_username, NEW.access_token, NEW.refresh_token, NEW.token_expires_at, NEW.scopes, NEW.is_active, NEW.metadata
+> 124	    );
+> 125	    RETURN NEW;
+> 126	  ELSIF TG_OP = 'UPDATE' THEN
+> 127	    -- Tenant guard (mirrors 20260602130000 for user_api_keys): a non-service-role caller may only
+> 128	    -- write its OWN credential row. Closes a pre-existing cross-tenant injection (spoofed user_id +
+> 129	    -- fresh id) that the masked view's WHERE filter does not constrain for INSERT. service_role
+> 130	    -- (edge OAuth callbacks / cron) is exempt and legitimately writes arbitrary user_ids.
+> 131	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 132	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 133	    END IF;
+> 134	    UPDATE public.social_accounts_table SET
+> 135	      user_id = NEW.user_id,
+> 136	      platform = NEW.platform,
+> 137	      platform_user_id = NEW.platform_user_id,
+> 138	      platform_username = NEW.platform_username,
+> 139	      access_token = COALESCE(NULLIF(NEW.access_token, '••••••••••••'), public.social_accounts_table.access_token),
+> 140	      refresh_token = COALESCE(NULLIF(NEW.refresh_token, '••••••••••••'), public.social_accounts_table.refresh_token),
+> 141	      token_expires_at = NEW.token_expires_at,
+> 142	      scopes = NEW.scopes,
+> 143	      is_active = NEW.is_active,
+> 144	      metadata = NEW.metadata,
+> 145	      updated_at = now()
+> 146	    WHERE id = OLD.id;
+> 147	    RETURN NEW;
+> 148	  END IF;
+> 149	  RETURN NULL;
+> 150	END;
+> 151	$function$;
+> 152	
+> ```
+
+## 🤖 Claude *(15:42:31)*
+
+
+## 🤖 Claude *(15:42:33)*
+
+Tenho o padrão canônico completo (encrypt trigger idempotente via `vault_upsert_secret`, decrypted view service-role, INSTEAD OF com tenant-guard + preservação da máscara). Falta só a sintaxe exata da masked VIEW para espelhar byte-fiel. Lendo a seção 4.
+
+## 🤖 Claude *(15:42:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql",
+  "offset": 345,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 345	-- ─────────────────────────────────────────────────────────────────────────────
+> 346	-- 4. PUBLIC MASKED VIEWS: Security invoker views for client-side compat
+> 347	-- ─────────────────────────────────────────────────────────────────────────────
+> 348	
+> 349	-- 4.1 meta_config public view
+> 350	CREATE OR REPLACE VIEW public.meta_config WITH (security_invoker = true) AS
+> 351	SELECT
+> 352	  id,
+> 353	  user_id,
+> 354	  facebook_user_id,
+> 355	  CASE WHEN long_lived_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS long_lived_token,
+> 356	  scopes,
+> 357	  CASE WHEN pages IS NOT NULL THEN to_jsonb('••••••••••••'::text) ELSE NULL END AS pages,
+> 358	  instagram_business_account_id,
+> 359	  whatsapp_phone_number_id,
+> 360	  whatsapp_waba_id,
+> 361	  meta_ad_account_id,
+> 362	  requires_reauth,
+> 363	  token_expires_at,
+> 364	  created_at,
+> 365	  updated_at
+> 366	FROM public.meta_config_table;
+> 367	
+> 368	-- 4.2 social_accounts public view
+> 369	CREATE OR REPLACE VIEW public.social_accounts WITH (security_invoker = true) AS
+> 370	SELECT
+> 371	  id,
+> 372	  user_id,
+> 373	  platform,
+> 374	  platform_user_id,
+> 375	  platform_username,
+> 376	  CASE WHEN access_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS access_token,
+> 377	  CASE WHEN refresh_token IS NOT NULL THEN '••••••••••••' ELSE NULL END AS refresh_token,
+> 378	  token_expires_at,
+> 379	  scopes,
+> 380	  is_active,
+> 381	  metadata,
+> 382	  created_at,
+> 383	  updated_at
+> 384	FROM public.social_accounts_table;
+> 385	
+> 386	-- 4.3 user_api_keys public view
+> 387	CREATE OR REPLACE VIEW public.user_api_keys WITH (security_invoker = true) AS
+> 388	SELECT
+> 389	  user_id,
+> ```
+
+## 🤖 Claude *(15:43:51)*
+
+
+## 🤖 Claude *(15:43:53)*
+
+Tenho o padrão canônico completo, byte-fiel. Autorando a migration `social_app_config` espelhando exatamente o tratamento Vault do `social_accounts` (encrypt trigger idempotente · masked view security_invoker · decrypted view service-role · INSTEAD OF com tenant-guard 42501 · REVOKE no secret).
+
+## 🤖 Claude *(15:44:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627120000_social_app_config.sql",
+  "content": "-- Migration: social_app_config \u2014 per-user OAuth APP credentials for TikTok / YouTube / Pinterest\n--            (client_id + Vault-encrypted client_secret), keyed UNIQUE(user_id, platform).\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- BoK SSOT: docs/bok/post-engine/06-data-model.md (social_app_config) + 10-amendment-social-connect-*.md (FR-PE-005).\n-- SOPs (Lei 2, written before this migration): docs/processes/{tiktok,youtube,pinterest}-publish-credential-resolution.md.\n-- API Tenancy Model (CLAUDE.md): per-user credentials, RLS-isolated, Vault-encrypted secret, tenant-guarded writes.\n-- Resolution order in edge functions: (1) social_app_config per-user (is_active) \u2192 (2) env fallback\n--   (TIKTOK_CLIENT_KEY/SECRET, GOOGLE_CLIENT_ID/SECRET, PINTEREST_CLIENT_ID/SECRET \u2014 Sovereign-only onboarding\n--   default, OTD-PE-SOCIAL-APPCREDS) \u2192 (3) hard fail 402/501 {error:\"<platform>_not_configured\"}.\n--\n-- This MIRRORS the canonical credential pattern of social_accounts (migrations 20260601000000 +\n-- 20260602140000 idempotent vault_upsert_secret + 20260602150000 tenant guard), reproduced for a NEW\n-- table that is born Vault-encrypted (no plaintext-then-backfill phase):\n--   * client_id is a semi-public OAuth identifier \u2192 stored plaintext, readable.\n--   * client_secret is a secret \u2192 encrypted at-rest in Vault by a BEFORE INSERT/UPDATE trigger; the base\n--     column holds only the Vault secret UUID. Even a direct read of the base table never yields plaintext.\n--   * Masked public VIEW returns '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' for client_secret (security_invoker \u2192 RLS applies).\n--   * decrypted_social_app_config exposes the real secret to service_role ONLY (edge functions).\n--   * INSTEAD OF trigger maps view writes to the base table with the tenant guard (auth.uid()=user_id;\n--     service_role exempt) + mask-preservation, closing the cross-tenant injection that a view's WHERE\n--     does not constrain for INSERT.\n--\n-- Security posture: HARDENS. NO new SECURITY DEFINER RPC reachable by clients. MANDATORY /security-review\n-- (credential layer, FMEA-011). Orphaned-secret revocation on disconnect is a follow-up RPC\n-- (disconnect_social_app_config, mirroring 20260602160000) \u2014 deferred to the Settings-UI slice.\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 1. BASE TABLE \u2014 social_app_config_table (one row per user \u00d7 platform)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.social_app_config_table (\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n    platform public.social_platform NOT NULL,\n    client_id TEXT,                                        -- OAuth client_id / TikTok client_key (semi-public)\n    client_secret TEXT,                                    -- secret \u2192 Vault UUID after trg_encrypt_social_app_config\n    scopes TEXT[] NOT NULL DEFAULT '{}',\n    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,           -- platform extras: youtube channel_id, pinterest board_id, redirect_uri override\n    is_active BOOLEAN NOT NULL DEFAULT TRUE,\n    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),\n    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),\n    CONSTRAINT unique_user_platform_app_config UNIQUE (user_id, platform)\n);\n\nALTER TABLE public.social_app_config_table ENABLE ROW LEVEL SECURITY;\n\n-- Default-deny: only the owner tenant can touch their row (base-table RLS; service_role bypasses).\nCREATE POLICY \"Users manage their own social app config\" ON public.social_app_config_table\n    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\n\nCREATE TRIGGER tr_update_social_app_config_updated_at\n    BEFORE UPDATE ON public.social_app_config_table\n    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\nCREATE INDEX IF NOT EXISTS idx_social_app_config_user ON public.social_app_config_table (user_id);\n\n-- Column-level hardening: the secret column is WRITE-ONLY for clients (BYOK paste via the masked view),\n-- never returned via PostgREST. service_role (edge functions) reads it through decrypted_social_app_config.\n-- Mirrors meta_config.long_lived_token (20260530210000) \u2014 proven compatible with the security_invoker view.\nREVOKE SELECT (client_secret) ON public.social_app_config_table FROM anon, authenticated;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 2. ENCRYPTION TRIGGER \u2014 client_secret \u2192 Vault (idempotent vault_upsert_secret, keyed by row id)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_encrypt_social_app_config()\nRETURNS TRIGGER\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_secret_id UUID;\nBEGIN\n  IF NEW.id IS NULL THEN\n    NEW.id := gen_random_uuid();\n  END IF;\n\n  IF NEW.client_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.client_secret IS DISTINCT FROM OLD.client_secret) THEN\n    IF NEW.client_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n      -- already a Vault UUID reference \u2192 keep\n    ELSE\n      v_secret_id := public.vault_upsert_secret(\n        NEW.client_secret,\n        'social_app_config_client_secret_' || NEW.id::text,\n        'Social app OAuth client secret'\n      );\n      NEW.client_secret = v_secret_id::text;\n    END IF;\n  END IF;\n\n  RETURN NEW;\nEND;\n$$;\n\nCREATE OR REPLACE TRIGGER tr_encrypt_social_app_config\n  BEFORE INSERT OR UPDATE ON public.social_app_config_table\n  FOR EACH ROW EXECUTE FUNCTION public.trg_encrypt_social_app_config();\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 3. PUBLIC MASKED VIEW \u2014 security_invoker (RLS applies); client_secret hidden\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.social_app_config WITH (security_invoker = true) AS\nSELECT\n  id,\n  user_id,\n  platform,\n  client_id,\n  CASE WHEN client_secret IS NOT NULL THEN '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' ELSE NULL END AS client_secret,\n  scopes,\n  metadata,\n  is_active,\n  created_at,\n  updated_at\nFROM public.social_app_config_table;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 4. INSTEAD OF TRIGGER \u2014 map view writes to base table (tenant guard + mask preservation)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_instead_of_social_app_config()\nRETURNS TRIGGER\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nBEGIN\n  IF TG_OP = 'DELETE' THEN\n    DELETE FROM public.social_app_config_table WHERE id = OLD.id;\n    RETURN OLD;\n  ELSIF TG_OP = 'INSERT' THEN\n    -- Tenant guard (mirrors 20260602150000): a non-service-role caller may only write its OWN row.\n    -- Closes the cross-tenant injection (spoofed user_id + fresh id) a view's WHERE does not constrain\n    -- for INSERT. service_role (OAuth callbacks / cron) is exempt.\n    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN\n      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';\n    END IF;\n    INSERT INTO public.social_app_config_table (\n      id, user_id, platform, client_id, client_secret, scopes, metadata, is_active\n    ) VALUES (\n      COALESCE(NEW.id, gen_random_uuid()), NEW.user_id, NEW.platform, NEW.client_id, NEW.client_secret,\n      COALESCE(NEW.scopes, '{}'), COALESCE(NEW.metadata, '{}'::jsonb), COALESCE(NEW.is_active, TRUE)\n    );\n    RETURN NEW;\n  ELSIF TG_OP = 'UPDATE' THEN\n    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN\n      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';\n    END IF;\n    UPDATE public.social_app_config_table SET\n      user_id = NEW.user_id,\n      platform = NEW.platform,\n      client_id = NEW.client_id,\n      -- preserve the stored secret when the client writes back the mask sentinel\n      client_secret = COALESCE(NULLIF(NEW.client_secret, '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), public.social_app_config_table.client_secret),\n      scopes = COALESCE(NEW.scopes, public.social_app_config_table.scopes),\n      metadata = COALESCE(NEW.metadata, public.social_app_config_table.metadata),\n      is_active = COALESCE(NEW.is_active, public.social_app_config_table.is_active),\n      updated_at = now()\n    WHERE id = OLD.id;\n    RETURN NEW;\n  END IF;\n  RETURN NULL;\nEND;\n$$;\n\nCREATE TRIGGER trg_instead_of_social_app_config\n  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.social_app_config\n  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_social_app_config();\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 5. PRIVATE DECRYPTED VIEW \u2014 real client_secret for service_role ONLY (edge functions)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE VIEW public.decrypted_social_app_config AS\nSELECT\n  sac.id,\n  sac.user_id,\n  sac.platform,\n  sac.client_id,\n  COALESCE(s_secret.decrypted_secret, sac.client_secret) AS client_secret,\n  sac.scopes,\n  sac.metadata,\n  sac.is_active,\n  sac.created_at,\n  sac.updated_at\nFROM public.social_app_config_table sac\nLEFT JOIN vault.decrypted_secrets s_secret\n  ON sac.client_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'\n  AND s_secret.id = sac.client_secret::uuid;\n\nREVOKE ALL ON public.decrypted_social_app_config FROM PUBLIC, anon, authenticated;\nGRANT SELECT ON public.decrypted_social_app_config TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627120000_social_app_config.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:44:41)*
+
+
+## 🤖 Claude *(15:44:43)*
+
+Migration autorada. Antes de aplicar em prod, ela **precisa passar no `/security-review`** (regra inquebrável do CLAUDE.md — toda migration nova, FMEA-011). Rodando.
+
+## 🤖 Claude *(15:44:43)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review",
+  "args": "supabase/migrations/20260627120000_social_app_config.sql"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(15:44:43)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   docs/bok/post-engine/00-index.md
+	modified:   docs/bok/post-engine/06-data-model.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.claude/context/social-app-registration-playbook-2026-06-27.md
+	.claude/context/social-connect-3platforms-blueprint-2026-06-27.md
+	docs/bok/post-engine/09-pattern-conformance.md
+	docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md
+	docs/processes/pinterest-publish-credential-resolution.md
+	docs/processes/tiktok-publish-credential-resolution.md
+	docs/processes/youtube-publish-credential-resolution.md
+	supabase/migrations/20260627120000_social_app_config.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(15:44:53)*
+
+
+## 🤖 Claude *(15:45:10)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review of migration",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a focused security review of ONE new Supabase migration. Only flag HIGH-CONFIDENCE (>80%) concretely-exploitable vulnerabilities NEWLY introduced by this file. Do NOT flag documentation, DOS, rate-limiting, or theoretical issues. The credential-layer threat model is cross-tenant data leak (FMEA-011): a tenant reading/writing another tenant's secret, or a secret being exposed to a non-service role.\n\nREVIEW THIS FILE: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627120000_social_app_config.sql\n\nGROUND IT against the canonical sibling patterns it claims to mirror (read these):\n- supabase/migrations/20260601000000_credential_encryption.sql  (masked view security_invoker + decrypted view service-role + INSTEAD OF)\n- supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql  (idempotent encrypt helper + search_path pin)\n- supabase/migrations/20260602150000_meta_social_instead_of_tenant_guard.sql  (the auth.uid() tenant guard on INSTEAD OF INSERT/UPDATE)\n\nCheck specifically, with a verdict + confidence (1-10) each:\n1. Tenant isolation: does the INSTEAD OF INSERT and UPDATE guard against a non-service-role caller writing NEW.user_id <> auth.uid()? Is the base-table RLS default-deny + auth.uid()=user_id? Could an authenticated user read/write another tenant's row or secret?\n2. Secret exposure: is client_secret Vault-encrypted (base column holds only a UUID)? Is the decrypted_social_app_config view REVOKE'd from anon/authenticated and GRANT'd to service_role only? Is the masked view security_invoker (so RLS applies)? Could a client read the plaintext client_secret via the masked view, the base table, or the decrypted view?\n3. SECURITY DEFINER functions: are trg_encrypt_social_app_config and trg_instead_of_social_app_config pinned to SET search_path=''? Is any new SECURITY DEFINER function reachable as a PostgREST RPC by clients (it should NOT be)? Does the encrypt trigger use the idempotent vault_upsert_secret (avoiding the 23505 re-save bug)?\n4. Mask preservation: does the UPDATE branch COALESCE(NULLIF(NEW.client_secret,'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'), base.client_secret) so writing back the mask does not wipe the stored secret?\n5. Any deviation from the sibling pattern that WEAKENS security (missing guard branch, missing REVOKE, wrong role grant, a column that leaks the secret).\n\nReturn a markdown report. For each finding: file:line, severity (HIGH/MEDIUM), category, description, concrete exploit scenario, fix, confidence (1-10). If the migration faithfully mirrors the secure sibling pattern with no new exploitable gap, say so explicitly and list what you verified. Be rigorous but do not invent issues \u2014 this guards real tenant credentials."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "I have all four files. Let me analyze the new migration line-by-line against the canonical patterns.\n\nI've now traced every claim against the sibling patterns. Here is my finding.\n\n---\n\n# Security Review — `20260627120000_social_app_config.sql`\n\n## Verdict: PASS — faithfully mirrors the secure sibling pattern; no new exploitable cross-tenant gap.\n\nThis migration introduces a NEW Vault-encrypted credential table (`social_app_config_table`) with masked view + decrypted view + encryption trigger + INSTEAD OF tenant guard. I checked each of the five threat vectors. All deviations from the siblings are either improvements or security-neutral. No HIGH/MEDIUM-confidence exploitable vulnerability was found.\n\n---\n\n## 1. Tenant Isolation — SECURE (confidence 9/10)\n\n- **Base-table RLS is default-deny + owner-scoped.** `ENABLE ROW LEVEL SECURITY` (line 44) with a single `FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)` policy (lines 47–48). No permissive read policy for other tenants. An authenticated client cannot `SELECT`/`INSERT`/`UPDATE`/`DELETE` another tenant's base-table row.\n- **INSTEAD OF INSERT guard present** (lines 132–134): `IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN RAISE EXCEPTION ... 42501`. Byte-identical to the canonical guard in `20260602150000`. This closes the cross-tenant injection (spoofed `user_id` + fresh `id`) that a view's WHERE does not constrain for INSERT.\n- **INSTEAD OF UPDATE guard present** (lines 143–145): same guard. An attacker cannot flip `NEW.user_id` to a victim on update.\n- **One residual note (not a vuln, matches siblings):** the UPDATE branch locates the row by `WHERE id = OLD.id` (line 156). Because the masked view is `security_invoker`, RLS on the base table restricts which `OLD` rows an authenticated caller can even see, so `OLD.id` can only be the caller's own row. The guard on `NEW.user_id` then prevents re-assigning ownership. This is exactly the sibling behavior — secure.\n\n## 2. Secret Exposure — SECURE (confidence 9/10)\n\n- **`client_secret` is Vault-encrypted; base column holds only a UUID.** The BEFORE INSERT/UPDATE trigger (lines 77–88) replaces the plaintext with the Vault secret UUID via `vault_upsert_secret`. The table is born encrypted — there is no plaintext-then-backfill window (no `DO $$ ... vault.create_secret` backfill block, correctly, since the table is new).\n- **Base column additionally REVOKE'd** (line 59): `REVOKE SELECT (client_secret) ON ...social_app_config_table FROM anon, authenticated`. Even a direct base-table read by a client cannot return the column. This is a hardening *beyond* the original sibling (which relied on the masked view alone).\n- **Masked view is `security_invoker = true`** (line 101) → RLS applies, returns the `'••••••••••••'` sentinel for `client_secret` (line 107). A client reading the view sees only the mask.\n- **Decrypted view is service-role-only** (lines 187–188): `REVOKE ALL ... FROM PUBLIC, anon, authenticated; GRANT SELECT ... TO service_role`. Byte-identical to the sibling pattern. A client cannot reach plaintext via the decrypted view.\n\n  **One subtle correctness point I verified explicitly:** `decrypted_social_app_config` is a plain view (no `security_invoker`), so it executes with the **view owner's** privileges. The owner (postgres/superuser-equivalent) can read `vault.decrypted_secrets`, which is required for decryption to work — and is exactly why the GRANT must be restricted to `service_role`. The REVOKE/GRANT is correct and complete. No `anon`/`authenticated`/`PUBLIC` path to plaintext exists.\n\n## 3. SECURITY DEFINER Functions — SECURE (confidence 9/10)\n\n- **Both trigger functions pin `SET search_path = ''`** — `trg_encrypt_social_app_config` (line 68) and `trg_instead_of_social_app_config` (line 122). Every referenced object is schema-qualified (`public.`, `vault.`, `gen_random_uuid()` is a built-in resolved via the empty path with explicit schema where needed). This closes the search_path-injection vector. This is an improvement over the *original* `20260601000000` triggers (which had no pin) and matches the hardened `20260602140000`/`20260602150000`.\n- **No new client-reachable RPC.** Neither function is a callable RPC — both are trigger functions (`RETURNS TRIGGER`), invoked only by their `CREATE TRIGGER` bindings, never exposed via PostgREST. The only by-name Vault primitive (`vault_upsert_secret`) is the pre-existing helper whose EXECUTE is already revoked from clients in `20260602140000` — this migration does not re-grant it.\n- **Encrypt trigger uses the idempotent `vault_upsert_secret`** (line 81), not raw `vault.create_secret`. This avoids the `23505` re-save bug on secret rotation. Correct.\n- **One real (benign) deviation worth noting:** the encrypt trigger keys the Vault secret name by **row `id`** — `'social_app_config_client_secret_' || NEW.id::text` (line 83) — whereas `user_api_keys` keys by `user_id`. This is actually the *correct* choice here, mirroring `meta_config`/`social_accounts` (which key by `id`), because the table is `UNIQUE(user_id, platform)` — multiple rows per user. Keying by `id` guarantees a unique, collision-free Vault name per row. And because `NEW.id` is assigned before the secret is created (lines 73–75 default it if null), the name is always populated. No cross-row secret collision. Secure.\n\n## 4. Mask Preservation — SECURE (confidence 10/10)\n\n- UPDATE branch (line 151): `client_secret = COALESCE(NULLIF(NEW.client_secret, '••••••••••••'), public.social_app_config_table.client_secret)`. Writing back the mask sentinel resolves `NULLIF(...) = NULL → COALESCE` falls through to the stored Vault UUID. The stored secret is **not** wiped when a client re-saves the masked form. Byte-identical to the sibling. The mask string (12 bullets `••••••••••••`) is consistent across the view's CASE (line 107), the NULLIF (line 151), and the siblings.\n\n## 5. Deviations From the Sibling Pattern — none that weaken security (confidence 8/10)\n\nInventory of every deviation, with a security verdict each:\n\n| Deviation | Verdict |\n|---|---|\n| Base column `REVOKE SELECT (client_secret)` (line 59) | **Hardens** — extra defense not in original sibling. |\n| Vault name keyed by `id` not `user_id` (line 83) | **Neutral/correct** — required by `UNIQUE(user_id, platform)`; matches meta/social siblings. |\n| INSTEAD OF INSERT/UPDATE add `COALESCE` defaults for `scopes`/`metadata`/`is_active` (lines 139, 152–154) | **Neutral** — column-default hygiene, no security impact. |\n| `decrypted_*` view's vault JOIN gated by a UUID-shape regex (lines 184–185) | **Neutral/correct** — same defensive JOIN predicate as the siblings; prevents `::uuid` cast errors on non-UUID values. |\n| No `disconnect_social_app_config` RPC for orphaned-secret revocation | **Not a vuln** — explicitly deferred (line 24–25). Orphaned Vault secrets after a row delete are a cleanup/hygiene concern, not a cross-tenant leak: the secret name is bound to a deleted row's `id`, unreachable by any client (EXECUTE on `vault_upsert_secret` revoked; decrypted view service-role-only). DOS/hygiene, out of scope per the review mandate. |\n\n### Two items I checked and confirmed are NOT exploitable\n\n- **DELETE branch has no explicit tenant guard** (lines 125–127): `DELETE FROM ...table WHERE id = OLD.id`. This is safe and matches all three siblings — `OLD` is supplied by the `security_invoker` masked view, so RLS already restricts an authenticated caller to deleting only rows where `auth.uid() = user_id`. A client cannot present another tenant's `OLD.id`. No guard needed (and the siblings omit it too).\n- **`auth.role()`/`auth.uid()` resolution under `search_path = ''`**: both are called schema-unqualified inside the definer functions (e.g. line 132). This matches `20260602150000` verbatim, which is proven in production (the `auth` helpers are resolved because Supabase installs them such that the bare-name call works in this exact precedent). Since the canonical guard migration uses the identical unqualified form and is live, this is not a new risk introduced here. (Confidence the guard fires: high — it is byte-identical to the deployed sibling.)\n\n---\n\n## Summary\n\nThe migration is a faithful, security-equivalent (and in one respect hardened) reproduction of the canonical Vault-credential pattern. **All five checks pass.** Specifically verified: default-deny owner-scoped RLS; INSERT **and** UPDATE tenant guards present and byte-identical to `20260602150000`; `client_secret` Vault-encrypted with the base column additionally column-REVOKE'd; masked view `security_invoker`; decrypted view REVOKE'd from anon/authenticated and GRANT'd to service_role only; both definer functions pinned to `search_path = ''`; idempotent `vault_upsert_secret` used (no 23505); mask-preservation `COALESCE(NULLIF(...))` correct.\n\nNo HIGH or MEDIUM confidence concretely-exploitable cross-tenant vulnerability newly introduced by this file. The single deferred item (orphaned-secret revocation RPC) is a hygiene concern explicitly acknowledged in the header, not a FMEA-011 leak.\n\n**Recommendation: APPROVE for commit.**"}, {'type': 'text', 'text': "agentId: abad13eb4a666b21d (use SendMessage with to: 'abad13eb4a666b21d', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 107323\ntool_uses: 4\nduration_ms: 53641</usage>"}]
+> ```
+
+## 🤖 Claude *(15:46:44)*
+
+
+## 🤖 Claude *(15:46:50)*
+
+**`/security-review` → SAFE.** A migration espelha fielmente o padrão Vault canônico (ainda endurece com o REVOKE extra no `client_secret`); zero gap cross-tenant novo. Verificado: RLS default-deny owner-scoped · tenant-guard 42501 no INSERT **e** UPDATE (byte-idêntico ao `20260602150000`) · `client_secret` Vault + REVOKE · masked view security_invoker · decrypted view só service_role · ambos definers com `search_path=''` · `vault_upsert_secret` idempotente · preservação da máscara.
+
+# Security Review — `20260627120000_social_app_config.sql`
+**Veredito: SAFE — nenhuma vulnerabilidade HIGH/MEDIUM introduzida.** Reprodução fiel (e num ponto endurecida) do padrão canônico de credencial Vault. Item diferido (RPC de revogação de secret órfão no disconnect) = higiene, não leak FMEA-011.
+
+Agora aplico em prod e **provo materialmente** (Lei 1). Checando o estado linked/pending primeiro.
+
+## 🤖 Claude *(15:46:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase migration list 2>&1 | tail -25",
+  "description": "Check local vs remote migration state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    20260615160000 | 20260615160000 | 2026-06-15 16:00:00 
+>    20260615170000 | 20260615170000 | 2026-06-15 17:00:00 
+>    20260615180000 | 20260615180000 | 2026-06-15 18:00:00 
+>    20260615190000 | 20260615190000 | 2026-06-15 19:00:00 
+>    20260615200000 | 20260615200000 | 2026-06-15 20:00:00 
+>    20260619140000 | 20260619140000 | 2026-06-19 14:00:00 
+>    20260620120000 | 20260620120000 | 2026-06-20 12:00:00 
+>    20260620120100 | 20260620120100 | 2026-06-20 12:01:00 
+>    20260620120200 | 20260620120200 | 2026-06-20 12:02:00 
+>    20260620120300 | 20260620120300 | 2026-06-20 12:03:00 
+>    20260622030000 | 20260622030000 | 2026-06-22 03:00:00 
+>    20260622030100 | 20260622030100 | 2026-06-22 03:01:00 
+>    20260622040000 | 20260622040000 | 2026-06-22 04:00:00 
+>    20260622210000 | 20260622210000 | 2026-06-22 21:00:00 
+>    20260623040000 | 20260623040000 | 2026-06-23 04:00:00 
+>    20260624120000 | 20260624120000 | 2026-06-24 12:00:00 
+>    20260624130000 | 20260624130000 | 2026-06-24 13:00:00 
+>    20260624140000 | 20260624140000 | 2026-06-24 14:00:00 
+>    20260625120000 | 20260625120000 | 2026-06-25 12:00:00 
+>    20260626120000 | 20260626120000 | 2026-06-26 12:00:00 
+>    20260626130000 | 20260626130000 | 2026-06-26 13:00:00 
+>    20260627120000 |                | 2026-06-27 12:00:00 
+> 
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(15:47:05)*
+
+
+## 🤖 Claude *(15:47:05)*
+
+Só a `20260627120000` está pendente (todas as outras já aplicadas), e a conexão remota funciona. Aplicando.
+
+## 🤖 Claude *(15:47:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nprintf 'Y\\n' | npx supabase db push 2>&1 | tail -30",
+  "description": "Apply social_app_config migration to remote"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260627120000_social_app_config.sql
+> 
+>  [Y/n] Y
+> Applying migration 20260627120000_social_app_config.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(15:47:38)*
+
+
+## 🤖 Claude *(15:47:39)*
+
+**Aplicada:** `Finished supabase db push.` Agora a prova material (Lei 1) — verifico round-trip de cifra + máscara + isolamento service-role, inserindo uma linha de teste e limpando depois.
+
+## 🤖 Claude *(15:47:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-${SUPABASE_URL}}\"\nSVC=\"${SB_SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY}}\"\nPUB=\"${SB_PUBLISHABLE_KEY:-${VITE_SUPABASE_PUBLISHABLE_KEY}}\"\necho \"URL set: ${URL:+yes}  SVC set: ${SVC:+yes}  PUB set: ${PUB:+yes}\"\n\n# real user_id (User Zero)\nUID0=$(curl -s \"$URL/rest/v1/profiles?select=id&limit=1\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if d else '')\")\necho \"user_id: $UID0\"\n\necho \"\"; echo \"=== 1. masked view queryable (service) ===\"\ncurl -s -o /dev/null -w \"HTTP %{http_code}\\n\" \"$URL/rest/v1/social_app_config?select=id&limit=1\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\"\n\necho \"=== 2. decrypted view: ANON/publishable must be DENIED ===\"\ncurl -s -w \"\\nHTTP %{http_code}\\n\" \"$URL/rest/v1/decrypted_social_app_config?select=client_secret&limit=1\" -H \"apikey: $PUB\" -H \"Authorization: Bearer $PUB\" | head -3\n\necho \"=== 3. INSERT test row (service, exempt from tenant guard) ===\"\nINS=$(curl -s \"$URL/rest/v1/social_app_config\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID0\\\",\\\"platform\\\":\\\"tiktok\\\",\\\"client_id\\\":\\\"test_client_id_DELETEME\\\",\\\"client_secret\\\":\\\"PLAINTEXT_SECRET_DELETEME_123\\\"}\")\necho \"$INS\" | python3 -c \"import json,sys;d=json.load(sys.stdin);r=d[0] if isinstance(d,list) and d else d;print('masked client_secret =>', repr(r.get('client_secret')) if isinstance(r,dict) else d)\"\n\necho \"=== 4. decrypted view (service) returns PLAINTEXT ===\"\ncurl -s \"$URL/rest/v1/decrypted_social_app_config?platform=eq.tiktok&client_id=eq.test_client_id_DELETEME&select=client_secret\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('decrypted client_secret =>', repr(d[0]['client_secret']) if d else 'EMPTY')\"\n\necho \"=== 5. base table client_secret is a Vault UUID (not plaintext) \u2014 via decrypted view raw is uuid? check masked already proved; cleanup ===\"\ncurl -s -o /dev/null -w \"DELETE HTTP %{http_code}\\n\" -X DELETE \"$URL/rest/v1/social_app_config?platform=eq.tiktok&client_id=eq.test_client_id_DELETEME\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\"\n\necho \"=== 6. confirm gone ===\"\ncurl -s \"$URL/rest/v1/social_app_config?client_id=eq.test_client_id_DELETEME&select=id\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\"",
+  "description": "Material round-trip verification of social_app_config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> URL set: yes  SVC set: yes  PUB set: yes
+> user_id: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 
+> === 1. masked view queryable (service) ===
+> HTTP 200
+> === 2. decrypted view: ANON/publishable must be DENIED ===
+> {"code":"42501","details":null,"hint":null,"message":"permission denied for view decrypted_social_app_config"}
+> HTTP 401
+> === 3. INSERT test row (service, exempt from tenant guard) ===
+> masked client_secret => 'PLAINTEXT_SECRET_DELETEME_123'
+> === 4. decrypted view (service) returns PLAINTEXT ===
+> decrypted client_secret => 'PLAINTEXT_SECRET_DELETEME_123'
+> === 5. base table client_secret is a Vault UUID (not plaintext) — via decrypted view raw is uuid? check masked already proved; cleanup ===
+> DELETE HTTP 204
+> === 6. confirm gone ===
+> []
+> ```
+
+## 🤖 Claude *(15:48:17)*
+
+
+## 🤖 Claude *(15:48:19)*
+
+Atenção — o passo 3 mostrou o **plaintext** na masked view, mas isso é **esperado** com `return=representation` (reflete o `RETURN NEW` do INSTEAD OF, pré-cifra), não prova nada sobre o armazenamento. O teste **decisivo** é ler a coluna crua da **base table** (service-role) — se for um UUID Vault, a cifra disparou. Refaço a verificação corretamente.
+
+## 🤖 Claude *(15:48:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-${SUPABASE_URL}}\"; SVC=\"${SB_SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY}}\"; PUB=\"${SB_PUBLISHABLE_KEY:-${VITE_SUPABASE_PUBLISHABLE_KEY}}\"\nUID0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\necho \"=== INSERT test row ===\"\ncurl -s -o /dev/null -w \"INSERT HTTP %{http_code}\\n\" \"$URL/rest/v1/social_app_config\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID0\\\",\\\"platform\\\":\\\"pinterest\\\",\\\"client_id\\\":\\\"cid_DELETEME\\\",\\\"client_secret\\\":\\\"PLAINTEXT_DELETEME_999\\\"}\"\n\necho \"=== DECISIVE: raw base-table client_secret (service) \u2014 expect Vault UUID, NOT plaintext ===\"\ncurl -s \"$URL/rest/v1/social_app_config_table?platform=eq.pinterest&client_id=eq.cid_DELETEME&select=client_secret\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" \\\n | python3 -c \"import json,sys,re;d=json.load(sys.stdin);v=d[0]['client_secret'] if d else None;u=bool(v and re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\$',v));print(f'raw value => {v!r}  | is_vault_uuid => {u}')\"\n\necho \"=== masked view FRESH SELECT (service) \u2014 expect bullets ===\"\ncurl -s \"$URL/rest/v1/social_app_config?platform=eq.pinterest&client_id=eq.cid_DELETEME&select=client_secret,client_id\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\"\necho \"\"\necho \"=== decrypted view (service) \u2014 expect plaintext back ===\"\ncurl -s \"$URL/rest/v1/decrypted_social_app_config?platform=eq.pinterest&client_id=eq.cid_DELETEME&select=client_secret\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\"\necho \"\"\necho \"=== authenticated/anon cannot read raw secret column (REVOKE) \u2014 expect error/empty ===\"\ncurl -s -w \"\\nHTTP %{http_code}\\n\" \"$URL/rest/v1/social_app_config_table?select=client_secret&limit=1\" -H \"apikey: $PUB\" -H \"Authorization: Bearer $PUB\" | head -2\n\necho \"=== cleanup ===\"\ncurl -s -o /dev/null -w \"DELETE HTTP %{http_code}\\n\" -X DELETE \"$URL/rest/v1/social_app_config?platform=eq.pinterest&client_id=eq.cid_DELETEME\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\"",
+  "description": "Decisive encryption verification via raw base table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === INSERT test row ===
+> INSERT HTTP 201
+> === DECISIVE: raw base-table client_secret (service) — expect Vault UUID, NOT plaintext ===
+> raw value => '55caaf7b-edb2-4828-b599-852dab78e0d2'  | is_vault_uuid => True
+> === masked view FRESH SELECT (service) — expect bullets ===
+> [{"client_secret":"••••••••••••","client_id":"cid_DELETEME"}]
+> === decrypted view (service) — expect plaintext back ===
+> [{"client_secret":"PLAINTEXT_DELETEME_999"}]
+> === authenticated/anon cannot read raw secret column (REVOKE) — expect error/empty ===
+> []
+> HTTP 200
+> === cleanup ===
+> DELETE HTTP 204
+> ```
+
+## 🤖 Claude *(15:49:29)*
+
+
+## 🤖 Claude *(15:49:33)*
+
+**Migration provada materialmente (Lei 1) — todos os portões verdes:**
+- INSERT 201 · **coluna crua da base = `55caaf7b-…-852dab78e0d2` (UUID Vault, não plaintext)** → trigger de cifra disparou ✅
+- masked view fresh → `"••••••••••••"` ✅
+- decrypted view (service) → plaintext de volta ✅
+- decrypted view (anon) → **42501 permission denied** ✅
+- DELETE 204, linha limpa ✅
+
+A fundação está sólida e cifrada. Agora a fase de código das edge functions. Começo pelo **helper de resolução fail-closed** (peça security-crítica — autoro eu mesmo), que as 4 edge functions vão consumir.
+
+## 🤖 Claude *(15:49:50)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts",
+  "content": "// Shared: per-user OAuth APP credential resolution for TikTok / YouTube / Pinterest.\n// API Tenancy Model (CLAUDE.md): resolve credentials per-user first, env fallback as a\n// Sovereign-only onboarding default (OTD-PE-SOCIAL-APPCREDS), hard-fail otherwise \u2014 never a\n// silent shared key. BoK SSOT: docs/bok/post-engine/10-amendment-social-connect-*.md (FR-PE-005..009).\n//\n// Resolution order:\n//   (1) social_app_config per-user (is_active=true) \u2014 read via the service-role decrypted_* view.\n//   (2) env fallback \u2014 TIKTOK_CLIENT_KEY/SECRET \u00b7 GOOGLE_CLIENT_ID/SECRET \u00b7 PINTEREST_CLIENT_ID/SECRET.\n//   (3) SocialAppConfigError(402) {error:\"<platform>_not_configured\", action:\"Configure ... /dashboard/settings\"}.\n//\n// SECURITY: client_secret lives encrypted in Vault; only the service-role decrypted_social_app_config view\n// exposes plaintext. NEVER read the masked public view for the secret (it returns '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022').\n\nimport type { SupabaseClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nexport type SocialAppPlatform = \"tiktok\" | \"youtube\" | \"pinterest\";\n\nexport interface SocialAppCreds {\n  clientId: string;\n  clientSecret: string;\n  scopes: string[] | null;\n  metadata: Record<string, unknown>;\n  source: \"per-user\" | \"env\";\n}\n\nconst ENV_MAP: Record<SocialAppPlatform, { id: string; secret: string; label: string }> = {\n  tiktok: { id: \"TIKTOK_CLIENT_KEY\", secret: \"TIKTOK_CLIENT_SECRET\", label: \"TikTok\" },\n  youtube: { id: \"GOOGLE_CLIENT_ID\", secret: \"GOOGLE_CLIENT_SECRET\", label: \"YouTube\" },\n  pinterest: { id: \"PINTEREST_CLIENT_ID\", secret: \"PINTEREST_CLIENT_SECRET\", label: \"Pinterest\" },\n};\n\n/** Structured fail-closed error \u2192 maps to a 402 JSON body the client can act on. */\nexport class SocialAppConfigError extends Error {\n  readonly httpStatus = 402;\n  readonly body: { error: string; action: string };\n  constructor(platform: string, label: string) {\n    super(`${platform}_not_configured`);\n    this.name = \"SocialAppConfigError\";\n    this.body = {\n      error: `${platform}_not_configured`,\n      action: `Configure suas credenciais de app ${label} em /dashboard/settings`,\n    };\n  }\n}\n\n/**\n * Resolve OAuth app credentials for a platform, scoped to a user.\n * @param supabase a SERVICE-ROLE client (reads the decrypted_social_app_config view).\n * @throws SocialAppConfigError(402) when neither per-user nor env credentials resolve.\n */\nexport async function resolveSocialAppCreds(\n  supabase: SupabaseClient,\n  userId: string,\n  platform: SocialAppPlatform,\n): Promise<SocialAppCreds> {\n  const env = ENV_MAP[platform];\n  if (!env) throw new SocialAppConfigError(platform, platform);\n\n  // (1) per-user\n  if (userId) {\n    const { data, error } = await supabase\n      .from(\"decrypted_social_app_config\")\n      .select(\"client_id, client_secret, scopes, metadata, is_active\")\n      .eq(\"user_id\", userId)\n      .eq(\"platform\", platform)\n      .eq(\"is_active\", true)\n      .maybeSingle();\n\n    if (!error && data && data.client_id && data.client_secret) {\n      return {\n        clientId: String(data.client_id),\n        clientSecret: String(data.client_secret),\n        scopes: (data.scopes as string[] | null) ?? null,\n        metadata: (data.metadata as Record<string, unknown>) ?? {},\n        source: \"per-user\",\n      };\n    }\n  }\n\n  // (2) env fallback (Sovereign-only onboarding default \u2014 OTD-PE-SOCIAL-APPCREDS)\n  const envId = Deno.env.get(env.id);\n  const envSecret = Deno.env.get(env.secret);\n  if (envId && envSecret) {\n    return { clientId: envId, clientSecret: envSecret, scopes: null, metadata: {}, source: \"env\" };\n  }\n\n  // (3) hard fail\n  throw new SocialAppConfigError(platform, env.label);\n}\n\n/** Build a fail-closed Response from a thrown SocialAppConfigError (or rethrow others). */\nexport function socialAppConfigErrorResponse(err: unknown, corsHeaders: Record<string, string>): Response | null {\n  if (err instanceof SocialAppConfigError) {\n    return new Response(JSON.stringify(err.body), {\n      status: err.httpStatus,\n      headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n  }\n  return null;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:50:24)*
+
+
+## 🤖 Claude *(15:50:26)*
+
+Helper fail-closed autorado. Agora a fase de código das edge functions com força total — 5 agentes, **6 arquivos distintos** (zero conflito): os 4 branches OAuth/publisher + a cadência/auto-publish. Cada um lê seu arquivo, espelha os branches existentes, consome o helper, fail-closed. Disparando.
+
+## 🤖 Claude *(15:51:24)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'social-edge-branches',\n  description: 'Add TikTok/YouTube/Pinterest branches to the 4 OAuth/publisher edge fns + cadence/auto-publish video gap (distinct files, parallel)',\n  phases: [{ title: 'Edge branches', detail: 'init \u00b7 callback \u00b7 refresh \u00b7 publish \u00b7 cadence (6 distinct files)' }],\n}\n\nconst RESULT = {\n  type: 'object',\n  required: ['filesEdited', 'branchesAdded', 'selfCheck'],\n  properties: {\n    filesEdited: { type: 'array', items: {type:'string'} },\n    branchesAdded: { type: 'array', items: {type:'string'} },\n    selfCheck: { type: 'string', description: 'how you verified the edit is syntactically sound + did not break existing platform branches' },\n    openIssues: { type: 'array', items: {type:'string'} },\n  },\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst SHARED = `MCORCH social-connect edge code. The BoK gate (PASSO 0) is sealed; this is FR-PE-005..016.\nSSOT (READ before editing \u2014 it has the exact endpoints/payloads/scopes, adversarially verified Lei 1):\n  ${REPO}/docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md\n  ${REPO}/.claude/context/social-connect-3platforms-blueprint-2026-06-27.md  (\u00a72 change-list, \u00a73 facts)\n\nHARD RULES:\n- Read the target file FIRST; mirror the EXACT shape/idioms of the EXISTING platform branches (linkedin/instagram/twitter). Do NOT refactor or touch existing branches \u2014 only ADD the 3 new ones at the documented seam.\n- Deno + TypeScript (esm.sh imports). Language: code/comments ENGLISH; any user-facing string PT-BR.\n- App credentials (client_id/secret) resolve via the shared helper \u2014 NEVER read them ad-hoc:\n    import { resolveSocialAppCreds, SocialAppConfigError, socialAppConfigErrorResponse } from \"../_shared/social-app-config.ts\";\n    const creds = await resolveSocialAppCreds(supabaseServiceRoleClient, userId, \"tiktok\"|\"youtube\"|\"pinterest\"); // {clientId, clientSecret, scopes, metadata}\n  On a thrown SocialAppConfigError, return socialAppConfigErrorResponse(err, corsHeaders) (a 402 JSON) \u2014 FAIL-CLOSED, never fall through to a shared/default key.\n- USER tokens (access/refresh) live in social_accounts (Vault). Read PLAINTEXT tokens ONLY via the service-role view \"decrypted_social_accounts\"; WRITE via the masked \"social_accounts\" view (the INSTEAD OF trigger encrypts). Mirror how the existing code does it in THIS file.\n- Redirect URI for OAuth = the edge callback already built in social-auth-init: \\`\\${SUPABASE_URL}/functions/v1/social-auth-callback\\`. Keep using the existing callbackUrl variable.\n- Materiality (Lei 1): success is NOT a 2xx. Emit infra_health_logs telemetry with service='publish-<platform>' (or 'social-auth-<platform>') on success/degraded/error where the file already emits telemetry; if it doesn't, add a minimal best-effort insert mirroring a sibling edge fn.\n- Return the structured result.`\n\nconst A = (label, file, detail) => () => agent(\n  `${SHARED}\\n\\nYOUR FILE: ${file}\\n\\nTASK: ${detail}`,\n  { label, phase: 'Edge branches', schema: RESULT, agentType: 'general-purpose' }\n)\n\nconst results = await parallel([\n  A('init', `${REPO}/supabase/functions/social-auth-init/index.ts`,\n    `Add 3 branches to the per-platform authorize-URL dispatch (the \\`else\\` fallback ~line 95). For EACH: resolve app creds via the helper (catch SocialAppConfigError \u2192 return the 402), then build the authorize URL exactly per doc 10 \u00a7TikTok/\u00a7YouTube/\u00a7Pinterest:\n- tiktok: https://www.tiktok.com/v2/auth/authorize/ \u2014 client_key=creds.clientId, response_type=code, redirect_uri=callbackUrl, scope=\"video.publish,user.info.basic\" (COMMA-separated), state. (PKCE optional \u2014 skip for parity unless trivial.)\n- youtube: https://accounts.google.com/o/oauth2/v2/auth \u2014 client_id=creds.clientId, redirect_uri=callbackUrl, response_type=code, scope=\"https://www.googleapis.com/auth/youtube.upload\", state, access_type=offline, prompt=consent.\n- pinterest: https://www.pinterest.com/oauth/ \u2014 client_id=creds.clientId, redirect_uri=callbackUrl, response_type=code, scope=\"boards:read,boards:write,pins:read,pins:write,user_accounts:read\", state.\nYou'll need a service-role supabase client + the resolved userId in scope to call the helper \u2014 reuse what the file already has (it already authenticates the user/ userId). If the file lacks a service-role client, create one from SUPABASE_URL + SB_SECRET_KEY (mirror a sibling edge fn). encodeURIComponent every query value as the existing branches do.`),\n\n  A('callback', `${REPO}/supabase/functions/social-auth-callback/index.ts`,\n    `Add 3 branches to the per-platform code\u2192token block (~line 171, after twitter). For EACH: resolve app creds via the helper, exchange the code, fetch identity, and set the variables the existing upsert uses (accessToken, refreshToken, expiresIn, platformUserId, platformUsername, scopes) so the existing social_accounts upsert at ~line 180-195 persists them. Per doc 10:\n- tiktok: POST https://open.tiktokapis.com/v2/oauth/token/ (form: client_key, client_secret, code, grant_type=authorization_code, redirect_uri=callbackUrl). Resp: access_token (expires_in 86400), refresh_token, open_id, scope. platformUserId=open_id.\n- youtube: POST https://oauth2.googleapis.com/token (client_id, client_secret, code, grant_type=authorization_code, redirect_uri=callbackUrl). Resp: access_token (~3600), refresh_token (first-auth only \u2014 if absent, leave refreshToken null, NEVER overwrite with empty), expires_in. Then GET https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true (Bearer access_token) \u2192 channel id \u2192 platformUserId; channel title \u2192 platformUsername. Stash channel_id in the upserted metadata if the upsert supports it.\n- pinterest: POST https://api.pinterest.com/v5/oauth/token (header Authorization: Basic base64(client_id:client_secret); form grant_type=authorization_code, code, redirect_uri=callbackUrl). Resp: access_token (expires_in 2592000), refresh_token (rotating), refresh_token_expires_at. Then GET https://api.pinterest.com/v5/user_account (Bearer) \u2192 username \u2192 platformUsername. Persist refresh_token_expires_at into metadata if available.\nMirror the existing token-exchange error handling (throw on !res.ok with the platform error message).`),\n\n  A('refresh', `${REPO}/supabase/functions/refresh-social-token/index.ts`,\n    `Add 3 branches to the per-platform refresh dispatch (~line 133). For EACH: resolve app creds via the helper, POST the refresh, and persist the new tokens via the file's existing update path (social_accounts masked view). CRITICAL ROTATION: tiktok & pinterest return a NEW refresh_token each time \u2014 you MUST re-store it (do not keep the old one). youtube usually keeps the refresh_token but tolerate a new one and NEVER null an existing one.\n- tiktok: POST https://open.tiktokapis.com/v2/oauth/token/ (client_key, client_secret, grant_type=refresh_token, refresh_token). New access_token (86400) + refresh_token.\n- youtube: POST https://oauth2.googleapis.com/token (client_id, client_secret, grant_type=refresh_token, refresh_token). New access_token (~3600).\n- pinterest: POST https://api.pinterest.com/v5/oauth/token (Basic auth; grant_type=refresh_token, refresh_token). New access_token (2592000) + NEW refresh_token (rotating).\nSet token_expires_at = now + expires_in. Mirror the existing branches' update shape.`),\n\n  A('publish', `${REPO}/supabase/functions/publish-social/index.ts`,\n    `Add 3 branches to the platform dispatch, BEFORE the fallback (~line 233). Mirror the Instagram REELS create\u2192poll\u2192publish shape (~141-196). For EACH, read the user's PLAINTEXT access_token from decrypted_social_accounts (service role) for that platform (mirror how the file resolves the account/token), and resolve app creds via the helper only if the platform's publish needs them (TikTok/Pinterest don't need client_secret to publish with a user token; YouTube doesn't either \u2014 publishing uses the user access_token). The video_url comes from the request payload (content.video_url). Per doc 10:\n- tiktok (Direct Post, FILE_UPLOAD): (1) POST /v2/post/publish/creator_info/query/ \u2192 pick a privacy_level from privacy_level_options. (2) POST /v2/post/publish/video/init/ with post_info{title, privacy_level, is_aigc:true} + source_info{source:'FILE_UPLOAD', video_size, chunk_size, total_chunk_count}. (3) PUT the fetched MP4 bytes to upload_url with Content-Range. (4) poll POST /v2/post/publish/status/fetch/ until PUBLISH_COMPLETE. result.id = publicaly_available_post_id (may be null pre-audit \u2014 that's expected; SELF_ONLY). Add an idempotency note: do not re-init on retry without a guard. Base url https://open.tiktokapis.com, Bearer user access_token.\n- youtube (resumable): (1) POST https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status (Bearer; headers X-Upload-Content-Length, X-Upload-Content-Type=video/mp4; body {snippet:{title,description,categoryId:'22'},status:{privacyStatus:'public',selfDeclaredMadeForKids:false,containsSyntheticMedia:true}}). (2) capture Location session URI. (3) fetch the MP4 bytes from content.video_url and PUT them to the session URI. (4) 201 \u2192 video id = result.id. MATERIALITY: after upload, GET https://www.googleapis.com/youtube/v3/videos?id=<id>&part=status and record the real privacyStatus (do NOT assume public \u2014 unaudited projects force private).\n- pinterest (video pin): (1) ensure board: GET https://api.pinterest.com/v5/boards (use first, or metadata.board_id) else POST https://api.pinterest.com/v5/boards once. (2) POST https://api.pinterest.com/v5/media {media_type:'video'} \u2192 media_id + upload_url + upload_parameters. (3) POST the MP4 to upload_url as multipart/form-data with ALL upload_parameters VERBATIM and the file field LAST, NO Authorization header (expect 204). (4) poll GET https://api.pinterest.com/v5/media/{media_id} until status='succeeded'. (5) POST https://api.pinterest.com/v5/pins {board_id, title, description, media_source:{source_type:'video_id', media_id, cover_image_url:<a public https url \u2014 use content.cover_image_url or content.image_url if present, else the video_url>}} \u2192 201, pin id = result.id. Use exact REST paths /v5/pins, /v5/boards, /v5/media (NOT /create suffixes).\nKeep each branch self-contained; reuse the file's existing helper for fetching the MP4 bytes / signing if present. On any non-2xx, throw mirroring the IG branch's error style.`),\n\n  A('cadence', `${REPO}/supabase/functions/autopilot-run/index.ts (PRIMARY) and ${REPO}/supabase/functions/auto-publish/index.ts (SECONDARY)`,\n    `Two distinct edits:\n1) autopilot-run/index.ts ~line 109: VIDEO_FLOW_PLATFORMS is new Set(['wordpress']). Add 'youtube','tiktok','pinterest' so those product\u00d7platform pairs enqueue the 9:16 render and charge VIDEO_COST. Verify the billing reconciliation at ~lines 111/243 still holds with the larger set (these platforms now count as video runs \u2014 that is the intent, FR-PE-013). Add a one-line comment referencing FR-PE-013.\n2) auto-publish/index.ts ~lines 54-83: today it passes text-only content to publish-social. Close the video transport gap (FR-PE-011): when the scheduled content has a video asset (content_library.media_url for that content_id, a private-bucket path), resolve it to a PUBLIC or long-TTL signed URL (mirror how another edge fn signs video-studio-assets / generated-videos \u2014 find the existing signing helper) and pass it as content.video_url to publish-social. Keep the text path unchanged for non-video posts. Do NOT break the existing IG/LinkedIn text flow. If signing requires a bucket name, infer it from how media_url is stored (read a sibling that resolves media_url).`),\n])\n\nreturn { results }\n",
+  "description": "Edge branches: OAuth + publishers + cadence"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wrl55wb0y
+> Summary: Add TikTok/YouTube/Pinterest branches to the 4 OAuth/publisher edge fns + cadence/auto-publish video gap (distinct files, parallel)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/subagents/workflows/wf_32a916d0-23d
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/workflows/scripts/social-edge-branches-wf_32a916d0-23d.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/workflows/scripts/social-edge-branches-wf_32a916d0-23d.js"} to iterate without resending the script.)
+> Run ID: wf_32a916d0-23d
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/workflows/scripts/social-edge-branches-wf_32a916d0-23d.js", resumeFromRunId: "wf_32a916d0-23d"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(15:51:30)*
+
+
+## 🤖 Claude *(15:51:39)*
+
+Fase de código das edge functions rodando em background (`wf_32a916d0-23d` — 5 agentes, 6 arquivos distintos). Volto para verificar (`deno check`) + deploy quando fechar.
+
+**Progresso material desta sessão (tudo provado, Lei 1):**
+
+| Etapa | Estado | Prova |
+|---|---|---|
+| Pesquisa fundamentada 3 plataformas | ✅ | `wf_b5a35451` — 3 verificadas HIGH |
+| Blueprint consolidado + playbook | ✅ | 2 arquivos no disco |
+| **PASSO 0 — gate BoK** | ✅ | post-engine 06/09/10 + 3 SOPs · 21 padrões · FR-PE-005..016 · sem placeholder |
+| **Migration `social_app_config`** | ✅ **aplicada em prod** | `Finished db push` · coluna crua = UUID Vault `55caaf7b…` · mask `••••` · decrypted só service-role (anon→42501) |
+| `/security-review` | ✅ SAFE | tenant-guard 42501 INSERT+UPDATE · search_path='' · zero gap cross-tenant |
+| Helper fail-closed `_shared/social-app-config.ts` | ✅ | per-user→env→402 |
+| Branches OAuth + publishers + cadência | 🔄 rodando | 6 arquivos |
+
+Em seguida: `deno check` + deploy das edge functions → fase UI (cards das 3 + card de credenciais espelho do `MetaConfigCard`) → tsc + review final. Tudo fica code-complete; o E2E de OAuth/publish acende com suas credenciais, e o público com os audits. Sigo automaticamente quando o workflow fechar.
+
+## 👤 User *(15:58:59)*
+
+<task-notification>
+<task-id>wrl55wb0y</task-id>
+<tool-use-id>toolu_013YSLL46hKdUEchKw8AEx1K</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/tasks/wrl55wb0y.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Add TikTok/YouTube/Pinterest branches to the 4 OAuth/publisher edge fns + cadence/auto-publish video gap (distinct files, parallel)" completed</summary>
+<result>{"results":[{"filesEdited":["/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts"],"branchesAdded":["tiktok","youtube","pinterest"],"selfCheck":"Read target file + both SSOT docs + the shared helper (social-app-config.ts) before editing. Mirrored the sibling social-auth-callback service-role-client idiom (createClient with SB_SECRET_KEY ?? SUPABASE_SERVICE_ROLE_KEY, no JWT) since social-auth-init had no service-role client. Added 3 branches ONLY at the documented seam (between the twitter branch and the preserved else fallback) — verified by grep: linkedin(68)/instagram(79)/twitter(90) UNTOUCHED, tiktok(103)/youtube(123)/pinterest(142) added, else fallback(161) intact. Each branch resolves creds via resolveSocialAppCreds, catches SocialAppConfigError -&gt; returns socialAppConfigErrorResponse (402 fail-closed, rethrows non-config errors). Authorize URLs match doc 10 exactly: tiktok client_key + comma-scope 'video.publish,user.info.basic'; youtube client_id + 'youtube.upload' + access_type=offline + prompt=consent; pinterest client_id + full 'boards:*,pins:*,user_accounts:read' scope. Every query value wrapped in encodeURIComponent, reuses existing callbackUrl + signed state. Brace/paren/backtick balance verified (95/95, 115/115, 18 backticks). deno not installed so no tsc; verified structurally instead.","openIssues":["No deno/tsc available in env — full TypeScript type-check not run; verified via balanced-delimiter count + structural review only.","Telemetry (FR-PE-016 service='publish-&lt;platform&gt;') intentionally NOT added here: social-auth-init emits no infra_health_logs in any existing branch (it only builds the authorize URL), so adding it solely to the 3 new branches would break parity. Per hard rule, mirrored existing branches. The publish-&lt;platform&gt; telemetry surface belongs to publish-social (a separate file, blueprint seam :233).","OTD-PE-SOCIAL-APPCREDS: env-fallback path (Sovereign-only onboarding) is reachable as designed via the shared helper until per-user social_app_config rows exist; promote env-&gt;per-user before onboarding a 2nd tenant."]},{"filesEdited":["/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts"],"branchesAdded":["tiktok","youtube","pinterest"],"selfCheck":"git diff = 142 insertions, 0 deletions → pure-additive, so existing linkedin/instagram/facebook/twitter branches are provably untouched (grep over linkedin.com/instagram.com/api.x.com/graph.instagram in the diff = no +/- hits). The 3 new branches sit exactly at the documented seam (after the twitter branch, before the final unsupported-platform else at ~line 171). Syntax/import-structure validated with `npx esbuild --bundle` → ESBUILD_PARSE_OK (Deno not installed in env; esbuild is the parse-check substitute). The two pre-existing shared lines I added `metadata,` to (the upsert at ~L305 and the fallback insert at ~L322) are behavior-neutral for existing platforms because every existing branch leaves the new `metadata` var at its `{}` default; the social_accounts masked VIEW already exposes a `metadata` jsonb column and its INSTEAD OF encrypt trigger passes metadata through untouched (verified in migrations 20260601000600 + 20260602140000).\"","openIssues":["App credentials resolve via resolveSocialAppCreds (per-user social_app_config → env fallback → 402 fail-closed) but the per-user social_app_config UI + is_active path is OTD-PE-SOCIAL-APPCREDS (deferred until 2nd tenant) — env creds (TIKTOK_CLIENT_KEY/SECRET, GOOGLE_CLIENT_ID/SECRET, PINTEREST_CLIENT_ID/SECRET) must exist in the vault or every connect 402s.","TikTok/Pinterest use platform_user_id = open_id / username respectively; Pinterest v5 user_account has no stable numeric id so platform_user_id falls back to the username (documented blueprint behavior). YouTube channel_id is also stashed in metadata.channel_id for the publish/refresh paths.","Telemetry added as best-effort fire-and-forget infra_health_logs inserts (service='social-auth-&lt;platform&gt;' on success, 'social-auth-callback' degraded on error) mirroring publish-meta's pulse idiom — only service+status columns used (event/metadata columns from 20260615170000 left unused, matching the sibling).","Companion refresh-social-token branches (FR-PE-010, rotating-token re-store) and publish-social branches (FR-PE-013..015) are separate files, out of scope for this task — not modified here.","Not deployed: `npx supabase functions deploy social-auth-callback` is required before this is live (Lei 1 — no deploy was requested/performed)."]},{"filesEdited":["/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/refresh-social-token/index.ts"],"branchesAdded":["tiktok","youtube","pinterest"],"selfCheck":"Mirrored the EXACT idioms of the live siblings before editing: read the SSOT amendment (FR-PE-005..016) + the blueprint §2/§3, the shared helper signature (resolveSocialAppCreds → {clientId, clientSecret}; TikTok uses client_key/client_secret form fields, YouTube client_id/client_secret form fields, Pinterest Basic auth — verbatim from social-auth-callback's already-shipped branches), and the canonical telemetry shape (publish-meta's `pulse(service,status)` best-effort insert on infra_health_logs). Diff is PURELY ADDITIVE: `git diff --stat` = 142 insertions / 0 deletions; a grep over added lines for linkedin/graph.facebook/api.x.com/fb_exchange returns nothing → the 3 existing platform branches (linkedin, instagram|facebook, twitter) are byte-identical and untouched. Branch ladder verified in order at lines 79/100/110/143/178/213 (3 new branches inserted at the documented seam, before the fallback `else`). Brace/paren/bracket balance = 0/0/0 (node counter). All 3 imported symbols referenced (no unused-import lint failure): resolveSocialAppCreds (3 call sites), SocialAppConfigError (instanceof guard in catch), socialAppConfigErrorResponse (catch). `pulse` defined + 3 call sites. ROTATION handled per SSOT: tiktok &amp; pinterest re-store the NEW refresh_token (pinterest also refreshes metadata.refresh_token_expires_at, preserving existing metadata via spread); youtube only re-stores when present and NEVER nulls an existing token. Each branch sets newAccessToken/newExpiresAt consumed by the shared post-branch update (line 266). FAIL-CLOSED: resolveSocialAppCreds throws SocialAppConfigError → caught → returns the structured 402 via socialAppConfigErrorResponse (never falls through to a shared key). token_expires_at = now + expires_in (with documented fallbacks 86400/3600/2592000s). Confirmed against migration 20260601000000 that decrypted_social_accounts exposes user_id + metadata + decrypted refresh_token (the branches read account.user_id / account.metadata via the existing select('*')). USER tokens written through the masked social_accounts view (INSTEAD OF encrypts), reads via decrypted_social_accounts — same as the file's existing twitter rotation path. `deno check` not runnable (deno not installed in env); validation was structural (brace balance + symbol usage + additive-diff proof) rather than a compiler pass.","openIssues":["deno check could not be run (deno binary absent in this environment); recommend `npx supabase functions deploy refresh-social-token` or a local deno check before merge to catch any type edge case.","Telemetry uses service='social-auth-&lt;platform&gt;' for the refresh path (semantically a token-lifecycle/auth op, distinct from publish). The SSOT FR-PE-016 names service='publish-&lt;platform&gt;' for publish paths and the prompt allowed either; if the HUD/Collective Efficiency Ledger keys strictly on 'publish-&lt;platform&gt;', confirm 'social-auth-&lt;platform&gt;' is the desired bucket for refresh successes.","SSOT FR-PE-010 calls for ATOMIC persist of the rotating Pinterest access+refresh pair via advisory-lock (mirroring begin_autopilot_cycle) to avoid lost-update between cron and manual run. This file mirrors the existing twitter patte
+... (truncated 6931 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/tasks/wrl55wb0y.output)</result>
+<usage><agent_count>5</agent_count><subagent_tokens>554725</subagent_tokens><tool_uses>104</tool_uses><duration_ms>454375</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(15:59:06)*
+
+
+## 🤖 Claude *(15:59:08)*
+
+Workflow de código completo (5 agentes, edições aditivas). **Não confio no auto-report** (os agentes não tinham `deno` para type-check) — verifico materialmente. Lendo os 2 resultados truncados + checando diffs e disponibilidade de type-check.
+
+## 🤖 Claude *(15:59:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git diff --stat ===\"; git diff --stat -- supabase/functions/\necho \"\"; echo \"=== deno available? ===\"; which deno 2>/dev/null && deno --version 2>/dev/null | head -1 || echo \"NO deno\"\necho \"\"; echo \"=== publish + cadence agent results (tail of output) ===\"\npython3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/tasks/wrl55wb0y.output'))\nr=d['result']\nif isinstance(r,str): r=json.loads(r)\nfor x in r['results'][3:]:\n    print('FILES:', x.get('filesEdited'))\n    print('BRANCHES:', x.get('branchesAdded'))\n    print('SELFCHECK:', (x.get('selfCheck') or '')[:900])\n    print('OPEN:', x.get('openIssues'))\n    print('\u2500'*60)\n\"",
+  "description": "Diff stat, deno check, publish/cadence results"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git diff --stat ===
+>  supabase/functions/auto-publish/index.ts         |  42 ++-
+>  supabase/functions/autopilot-run/index.ts        |   4 +-
+>  supabase/functions/publish-social/index.ts       | 343 +++++++++++++++++++++++
+>  supabase/functions/refresh-social-token/index.ts | 142 ++++++++++
+>  supabase/functions/social-auth-callback/index.ts | 142 ++++++++++
+>  supabase/functions/social-auth-init/index.ts     |  66 +++++
+>  6 files changed, 737 insertions(+), 2 deletions(-)
+> 
+> === deno available? ===
+> NO deno
+> 
+> === publish + cadence agent results (tail of output) ===
+> FILES: ['/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts']
+> BRANCHES: ['tiktok', 'youtube', 'pinterest']
+> SELFCHECK: Read both SSOT docs (doc 10 amendment + blueprint §2/§3) and the full target file FIRST, then mirrored the existing IG REELS create→poll→publish shape (`:141-196`) without touching any existing branch. Verified: (1) the 4 existing platform endpoints (api.linkedin.com/v2/ugcPosts, graph.instagram.com/v21.0, graph.facebook.com/v19.0, api.x.com/2/tweets) are byte-intact and still dispatch first, with the 3 new branches inserted before the unchanged fallback at line 578; (2) brace/paren balance = 0/0 via node count; (3) `esbuild.transformSync({loader:'ts'})` returned 'ESBUILD TRANSFORM OK — no TS syntax errors' (Deno is not installed on PATH, so a full `deno check` with remote-import resolution was not possible — Cérebro sem mãos on remote type-resolution, but syntax is materially clean). App-cred helper (resolveSocialAppCreds) is correctly NOT called in any publish branch because all three 
+> OPEN: ['Materiality (Lei 1): syntax verified via esbuild only — a full `deno check` (remote esm.sh import + type resolution) could not run because Deno is not on PATH in this environment. Recommend running `npx supabase functions deploy publish-social` (which bundles via Deno) or a local `deno check` before declaring deployed.', "These 3 branches are net-new publish code; runtime E2E is gated behind the Sovereign-side app registrations + audits (doc 10 §6) — no client_id/secret exist yet, so no live publish can be proven until those land. Per doc, pre-audit success = TikTok PUBLISH_COMPLETE (SELF_ONLY, public id null), YouTube 201 with read-back privacyStatus (likely 'private' until Audit), Pinterest 201 pin id (Trial sandbox).", 'Pinterest board_id is cached from `account.metadata?.board_id` on the social_accounts row; the blueprint (§2.3 / doc 10) recommends caching board_id in social_app_config.metadata. Current code reads it from the social account metadata and otherwise resolves the first/created board per-call — acceptable for single-tenant User Zero but the per-run board creation guard relies on metadata being populated. A follow-up could persist the resolved board_id back to avoid a boards-list call each run.', 'Not in scope of this file (flagged in blueprint): the `auto-publish` cron does not yet resolve/sign content_library.media_url → content.video_url (no video_url column on scheduled_posts). All 3 new video branches require content.video_url in the payload; without the auto-publish gap fix (Slice 5), only direct invokes will carry it.']
+> ────────────────────────────────────────────────────────────
+> FILES: ['/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts', '/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts']
+> BRANCHES: ['VIDEO_FLOW_PLATFORMS now includes youtube/tiktok/pinterest (autopilot-run, FR-PE-013)', "auto-publish video_url resolution + long-TTL signing of sibling type='video' content_library row (FR-PE-011)"]
+> SELFCHECK: Read both SSOT docs and the 2 target files first, then mirrored existing idioms (touched NO existing platform branch). Edit 1: extended the Set only; the projected math (videoPlatformCount/nVideoRuns at :110-113) and actual math (succeededVideo/actual at :243/:261) both read the SAME Set, so projected vs actual stay symmetric and the begin/finalize_autopilot_cycle reconciliation holds with the larger set. Added the FR-PE-013 comment. Edit 2: video sibling resolved by scheduled_posts.campaign_id (verified the column exists in migration 20260402014040:162; content_library has campaign_id/media_url/metadata/type/status/created_at); signing mirrors video-bridge.ts (BUCKET 'video-studio-assets' + metadata.storage_bucket); pass-through if already an http(s) URL; bare-string text path is byte-for-byte unchanged when no video resolves; whole block is fail-soft (try/catch → videoUrl stays null). 
+> OPEN: ["BLOCKING for billing correctness before activation: the 9:16 render is enqueued ONLY by the article_generation step (orchestrate-step:434), which orchestrate-content kicks ONLY when platforms.includes('wordpress') (orchestrate-content:231-232). autopilot-run fans out one platform per sub-run (platforms:[pair.platform], :236), so a youtube/tiktok/pinterest sub-run currently resolves firstStep=knowledge_mesh and enqueues NO render. With these platforms now in VIDEO_FLOW_PLATFORMS, projected+actual charge VIDEO_COST for them but no render exists → charge-without-value (the exact bug the :103-108 comment guards against), and finalize_video_render never refunds (no video_renders row). FIX REQUIRED in orchestrate-content/orchestrate-step (out of scope here): extend the video-enqueue gate so youtube/tiktok/pinterest single-platform sub-runs also run the video composition step. Until that lands, do NOT enable plan.video_enabled for plans targeting these new platforms.", 'Sovereign-gated, fully outside code (SSOT §6): 3 app registrations + 3 platform audits (TikTok Content Posting audit ~2-6wk, YouTube OAuth verification ~10d + API Audit/Quota Extension weeks, Pinterest Trial->Standard). Without these no client_id/secret exists and every publish is invisible (TikTok SELF_ONLY / YouTube forced-private / Pinterest sandbox).', 'auto-publish emits no infra_health_logs telemetry today (the file has none); I did not add a publish-<platform> success/error insert because that telemetry belongs in publish-social per FR-PE-016, and adding it to auto-publish would be a behavior the file never had. The video-resolution path is fail-soft (console.warn only). Flagging in case a minimal best-effort insert is wanted here too.']
+> ────────────────────────────────────────────────────────────
+> ```
+
+## 🤖 Claude *(15:59:56)*
+
+
+## 🤖 Claude *(16:00:01)*
+
+Verificação material revela um **achado crítico** (o agente da cadência sinalizou corretamente, Lei 1): adicionar `youtube/tiktok/pinterest` ao `VIDEO_FLOW_PLATFORMS` **introduz um bug de cobrança-sem-valor** — o render 9:16 só é enfileirado pelo passo `article_generation` (gated em `wordpress`), mas o autopilot faz fan-out de 1 plataforma por sub-run; um sub-run dessas plataformas cobra `VIDEO_COST` sem nenhum render existir, e `finalize_video_render` nunca dá refund. Vou **reverter essa linha** (defere até estender o gate de enqueue no orchestrate-content) e manter o resto. Lendo os diffs críticos + resolvendo o type-check.
+
+## 🤖 Claude *(16:00:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== autopilot-run diff (VIDEO_FLOW_PLATFORMS) ===\"; git diff -- supabase/functions/autopilot-run/index.ts\necho \"\"; echo \"=== social-auth-callback: the 2 deletions (metadata shared-line change) ===\"; git diff -- supabase/functions/social-auth-callback/index.ts | grep -nE \"^[-+].*metadata|^@@\" | head -20\necho \"\"; echo \"=== deno anywhere? ===\"; ls -la ~/.deno/bin/deno /usr/local/bin/deno /root/.deno/bin/deno 2>/dev/null; command -v deno || find / -name deno -type f 2>/dev/null | head -3 || echo \"none found\"",
+  "description": "Read autopilot revert target + callback metadata change + deno search"
+}
+```
