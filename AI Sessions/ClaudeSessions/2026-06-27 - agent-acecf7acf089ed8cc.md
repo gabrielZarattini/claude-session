@@ -772,3 +772,16 @@ A note on telemetry (Lei 1 / FR-PE-016): this file (`social-auth-init`) emits no
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - agent-abad13eb4a666b21d]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-ad76503c52ae191d6]]
+%% --- TIMELINE END --- %%

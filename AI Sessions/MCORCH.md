@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 54
-> * **Total de Sessões**: 1458
+> * **Total de Processos**: 57
+> * **Total de Sessões**: 1468
 
 ---
 
@@ -55,10 +55,12 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[openclaw-gateway-supervisor]]` - *Processo*
 *   `[[orchestrate-async-pipeline]]` - *Processo*
 *   `[[orchestration-content-mesh-asset-emission]]` - *Processo*
+*   `[[pinterest-publish-credential-resolution]]` - *Processo*
 *   `[[publication-metrics-collection]]` - *Processo*
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
+*   `[[tiktok-publish-credential-resolution]]` - *Processo*
 *   `[[trend-informed-angle-sanitization]]` - *Processo*
 *   `[[trends-credential-resolution]]` - *Processo*
 *   `[[video-studio-editor-deploy-and-provision]]` - *Processo*
@@ -72,6 +74,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[webgl-canvas-stabilization]]` - *Processo*
 *   `[[wordpress-cf-per-user-publish]]` - *Processo*
 *   `[[wordpress-cf-publish-unblock]]` - *Processo*
+*   `[[youtube-publish-credential-resolution]]` - *Processo*
 
 ---
 
@@ -80,11 +83,21 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-27 - agent-aecae924c0d5976b7]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-ae6d905f0ad159302]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-ad76503c52ae191d6]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-acecf7acf089ed8cc]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-abad13eb4a666b21d]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-aae6369df4902ec90]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-aa861d65065e30004]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-aa49f5a8aeab5dcf6]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a8ef5824e7d3a2f99]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-a794563cb3a57ec8e]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-a6e16ad97cf1a032b]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-a44ccef947c4698bf]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a191dd9319b693ab0]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a17f01fcc5f10c9cf]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a07d583de8479000b]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - agent-a076059e49f1ba5a7]]` (ClaudeSessions) - *2026-06-27*
+*   `[[2026-06-27 - agent-a011adcb2efd37d56]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions) - *2026-06-27*
 *   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` (ClaudeSessions) - *2026-06-26*

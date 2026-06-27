@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1463
-> * **Sessões do Claude**: 1421
+> * **Total de Sessões Registradas**: 1473
+> * **Sessões do Claude**: 1431
 > * **Sessões do Gemini**: 42
 
 ---
@@ -70,16 +70,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-27 - agent-aecae924c0d5976b7]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-ae6d905f0ad159302]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-ad76503c52ae191d6]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-acecf7acf089ed8cc]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-abad13eb4a666b21d]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-aae6369df4902ec90]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-aa861d65065e30004]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-aa49f5a8aeab5dcf6]]` - *2026-06-27*
+*   `[[2026-06-27 - agent-a8ef5824e7d3a2f99]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-a794563cb3a57ec8e]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-a6e16ad97cf1a032b]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-a44ccef947c4698bf]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-a076059e49f1ba5a7]]` - *2026-06-27*
-*   `[[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]` - *2026-06-27*
-*   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` - *2026-06-26*
-*   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` - *2026-06-26*
-*   *... e mais 1419 sessões nessa categoria.*
+*   *... e mais 1429 sessões nessa categoria.*
 
 ---
 
@@ -273,11 +273,21 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-27 - agent-aecae924c0d5976b7]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-ae6d905f0ad159302]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-ad76503c52ae191d6]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-acecf7acf089ed8cc]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-abad13eb4a666b21d]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-aae6369df4902ec90]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-aa861d65065e30004]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-aa49f5a8aeab5dcf6]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a8ef5824e7d3a2f99]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-a794563cb3a57ec8e]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-a6e16ad97cf1a032b]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-a44ccef947c4698bf]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a191dd9319b693ab0]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a17f01fcc5f10c9cf]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a07d583de8479000b]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-a076059e49f1ba5a7]]` (ClaudeSessions)
+*   `[[2026-06-27 - agent-a011adcb2efd37d56]]` (ClaudeSessions)
 *   `[[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]` (ClaudeSessions)
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` (ClaudeSessions)

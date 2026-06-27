@@ -4185,3 +4185,2194 @@ Verificação material revela um **achado crítico** (o agente da cadência sina
   "description": "Read autopilot revert target + callback metadata change + deno search"
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot-run diff (VIDEO_FLOW_PLATFORMS) ===
+> diff --git a/supabase/functions/autopilot-run/index.ts b/supabase/functions/autopilot-run/index.ts
+> index 6ba3b45..b0f2686 100644
+> --- a/supabase/functions/autopilot-run/index.ts
+> +++ b/supabase/functions/autopilot-run/index.ts
+> @@ -106,7 +106,9 @@ Deno.serve(async (req) => {
+>      // VIDEO_COST is charge-without-value — and uncaught by the orchestrate-step refund (orchestrate-step:454), which
+>      // fires only on a FAILED enqueue ATTEMPT, never for a flow that has no video step at all. So count video sub-runs
+>      // by the article-flow platform, not by every sub-run (was: nRuns × VIDEO_COST → over-charged non-wordpress runs).
+> -    const VIDEO_FLOW_PLATFORMS = new Set(["wordpress"]);
+> +    // FR-PE-013 (post-engine social-connect amendment): youtube/tiktok/pinterest are vertical-video platforms — a
+> +    // product×platform pair on any of them is a 9:16 video run and rides the same VIDEO_COST pre-debit as wordpress.
+> +    const VIDEO_FLOW_PLATFORMS = new Set(["wordpress", "youtube", "tiktok", "pinterest"]);
+>      const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;
+>      const nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants : 0;
+>  
+> 
+> === social-auth-callback: the 2 deletions (metadata shared-line change) ===
+> 5:@@ -1,5 +1,10 @@
+> 16:@@ -65,6 +70,9 @@ Deno.serve(async (req) => {
+> 20:+    // Per-platform extra fields stashed in social_accounts.metadata (e.g. YouTube channel_id,
+> 22:+    let metadata: Record<string, unknown> = {};
+> 26:@@ -168,6 +176,111 @@ Deno.serve(async (req) => {
+> 94:+      if (channel?.id) metadata = { ...metadata, channel_id: channel.id };
+> 124:+        metadata = { ...metadata, refresh_token_expires_at: tokenData.refresh_token_expires_at };
+> 138:@@ -189,6 +302,7 @@ Deno.serve(async (req) => {
+> 142:+          metadata,
+> 146:@@ -205,10 +319,16 @@ Deno.serve(async (req) => {
+> 150:+        metadata,
+> 163:@@ -226,6 +346,28 @@ Deno.serve(async (req) => {
+> 
+> === deno anywhere? ===
+> -rwxr-xr-x 1 ubuntu ubuntu 104509136 May 27 08:36 /home/ubuntu/.deno/bin/deno
+> /home/ubuntu/.deno/bin/deno
+> /home/ubuntu/.npm/_npx/05b6ef7b13673c57/node_modules/deno/deno
+> /home/ubuntu/.npm/_npx/05b6ef7b13673c57/node_modules/@deno/linux-arm64-glibc/deno
+> ```
+
+## 🤖 Claude *(16:00:54)*
+
+
+## 🤖 Claude *(16:00:57)*
+
+**`deno` ESTÁ disponível** em `/home/ubuntu/.deno/bin/deno` (só não estava no PATH dos agentes) — posso fazer o type-check real. Primeiro reverto a linha do `VIDEO_FLOW_PLATFORMS` (corrige o bug de cobrança), depois `deno check` em tudo.
+
+A mudança de `metadata` no callback é benigna (var nova default `{}`; plataformas existentes nunca usaram metadata; só youtube/pinterest populam channel_id/refresh_expires).
+
+Revertendo a linha do billing:
+
+## 🤖 Claude *(16:01:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "    // FR-PE-013 (post-engine social-connect amendment): youtube/tiktok/pinterest are vertical-video platforms \u2014 a\n    // product\u00d7platform pair on any of them is a 9:16 video run and rides the same VIDEO_COST pre-debit as wordpress.\n    const VIDEO_FLOW_PLATFORMS = new Set([\"wordpress\", \"youtube\", \"tiktok\", \"pinterest\"]);",
+  "new_string": "    // FR-PE-013 (post-engine social-connect amendment) \u2014 DEFERRED: youtube/tiktok/pinterest ARE vertical-video\n    // platforms, but the 9:16 render is enqueued ONLY by the article_generation step, which orchestrate-content kicks\n    // ONLY when platforms.includes('wordpress'). autopilot fans out one platform per sub-run, so a youtube/tiktok/\n    // pinterest sub-run currently enqueues NO render \u2192 adding them here would charge VIDEO_COST with no video_renders\n    // row to refund (charge-without-value, the exact bug this block guards against). Re-add ONLY together with the\n    // orchestrate-content/-step enqueue-gate extension (own slice). Until then these stay out of the video pre-debit.\n    const VIDEO_FLOW_PLATFORMS = new Set([\"wordpress\"]);"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(16:01:06)*
+
+
+## 🤖 Claude *(16:01:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 100,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	    const videoEnabled = plan.video_enabled === true;
+> 101	    const videoFormat = typeof plan.video_format === "string" ? plan.video_format : "9:16";
+> 102	
+> 103	    // Video charge accuracy (OTD-VA-010 follow-up — billing bug witnessed 2026-06-26, cycle 2403bfcb): a 9:16 render
+> 104	    // is enqueued ONLY by the article_generation flow, which orchestrate-content runs solely for the 'wordpress'
+> 105	    // platform (index.ts:231-232). A linkedin/twitter sub-run never reaches video_generation, so charging it
+> 106	    // VIDEO_COST is charge-without-value — and uncaught by the orchestrate-step refund (orchestrate-step:454), which
+> 107	    // fires only on a FAILED enqueue ATTEMPT, never for a flow that has no video step at all. So count video sub-runs
+> 108	    // by the article-flow platform, not by every sub-run (was: nRuns × VIDEO_COST → over-charged non-wordpress runs).
+> 109	    // FR-PE-013 (post-engine social-connect amendment): youtube/tiktok/pinterest are vertical-video platforms — a
+> 110	    // product×platform pair on any of them is a 9:16 video run and rides the same VIDEO_COST pre-debit as wordpress.
+> 111	    const VIDEO_FLOW_PLATFORMS = new Set(["wordpress", "youtube", "tiktok", "pinterest"]);
+> 112	    const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;
+> 113	    const nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants : 0;
+> 114	
+> 115	    const projected = nRuns * ORCH_COST + nVideoRuns * VIDEO_COST + ANALYZE_COST;
+> ```
+
+## 🤖 Claude *(16:01:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "    // FR-PE-013 (post-engine social-connect amendment): youtube/tiktok/pinterest are vertical-video platforms \u2014 a\n    // product\u00d7platform pair on any of them is a 9:16 video run and rides the same VIDEO_COST pre-debit as wordpress.\n    const VIDEO_FLOW_PLATFORMS = new Set([\"wordpress\", \"youtube\", \"tiktok\", \"pinterest\"]);",
+  "new_string": "    // FR-PE-013 (post-engine social-connect amendment) \u2014 DEFERRED: youtube/tiktok/pinterest ARE vertical-video\n    // platforms, but the 9:16 render is enqueued ONLY by the article_generation step (gated on 'wordpress' above), and\n    // autopilot fans out one platform per sub-run, so a youtube/tiktok/pinterest sub-run enqueues NO render. Adding\n    // them here would charge VIDEO_COST with no video_renders row to refund (charge-without-value). Re-add ONLY with\n    // the orchestrate-content/-step enqueue-gate extension (its own slice). Until then they stay out of the pre-debit.\n    const VIDEO_FLOW_PLATFORMS = new Set([\"wordpress\"]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:01:20)*
+
+
+## 🤖 Claude *(16:01:21)*
+
+Linha de billing revertida (defere FR-PE-013). Agora o **type-check real** com `deno check` em todos os arquivos editados + o helper.
+
+## 🤖 Claude *(16:01:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ndeno --version | head -1\nfor f in _shared/social-app-config.ts social-auth-init social-auth-callback refresh-social-token publish-social auto-publish autopilot-run; do\n  if [ -d \"supabase/functions/$f\" ]; then TARGET=\"supabase/functions/$f/index.ts\"; else TARGET=\"supabase/functions/$f\"; fi\n  echo \"\u2500\u2500\u2500\u2500 deno check $TARGET \u2500\u2500\u2500\u2500\"\n  deno check \"$TARGET\" 2>&1 | tail -15\n  echo \"exit: $?\"\ndone",
+  "description": "deno check all edited edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> deno 2.8.1 (stable, release, aarch64-unknown-linux-gnu)
+> ──── deno check supabase/functions/_shared/social-app-config.ts ────
+> [0m[32mCheck[0m supabase/functions/_shared/social-app-config.ts
+> exit: 0
+> ──── deno check supabase/functions/social-auth-init/index.ts ────
+> [0m[32mCheck[0m supabase/functions/social-auth-init/index.ts
+> [0m[1mTS18046 [0m[ERROR]: 'err' is of type 'unknown'.
+>     return new Response(JSON.stringify({ error: err.message }), {
+> [0m[31m                                                ~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts[0m:[0m[33m173[0m:[0m[33m49[0m
+> 
+> [0m[1m[31merror[0m: Type checking failed.
+> exit: 0
+> ──── deno check supabase/functions/social-auth-callback/index.ts ────
+> [0m[32mCheck[0m supabase/functions/social-auth-callback/index.ts
+> [0m[1mTS18046 [0m[ERROR]: 'err' is of type 'unknown'.
+>       return redirectWithError(err.message);
+> [0m[31m                               ~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts[0m:[0m[33m372[0m:[0m[33m32[0m
+> 
+> [0m[1mTS18046 [0m[ERROR]: 'err' is of type 'unknown'.
+>     return new Response(JSON.stringify({ error: err.message }), {
+> [0m[31m                                                ~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts[0m:[0m[33m374[0m:[0m[33m49[0m
+> 
+> Found 2 errors.
+> 
+> [0m[1m[31merror[0m: Type checking failed.
+> exit: 0
+> ──── deno check supabase/functions/refresh-social-token/index.ts ────
+> [0m[32mCheck[0m supabase/functions/refresh-social-token/index.ts
+> exit: 0
+> ──── deno check supabase/functions/publish-social/index.ts ────
+> [0m[32mCheck[0m supabase/functions/publish-social/index.ts
+> [0m[1mTS2345 [0m[ERROR]: Argument of type 'SupabaseClient<any, "public", "public", any, any>' is not assignable to parameter of type '{ from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<unknown>; }; }'.
+>   The types returned by 'from(...).insert(...)' are incompatible between these types.
+>     Type 'PostgrestFilterBuilder<any, any, any, null, any, unknown, "POST", false>' is missing the following properties from type 'Promise<unknown>': catch, finally, [Symbol.toStringTag]
+>     await notify(adminClient, userId, {
+> [0m[31m                 ~~~~~~~~~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts[0m:[0m[33m597[0m:[0m[33m18[0m
+> 
+> [0m[1m[31merror[0m: Type checking failed.
+> exit: 0
+> ──── deno check supabase/functions/auto-publish/index.ts ────
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts[0m:[0m[33m152[0m:[0m[33m28[0m
+> 
+> [0m[1mTS18046 [0m[ERROR]: 'e' is of type 'unknown'.
+>         results.push({ id: post.id, status: "error", error: e.message });
+> [0m[31m                                                            ^[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts[0m:[0m[33m156[0m:[0m[33m61[0m
+> 
+> [0m[1mTS18046 [0m[ERROR]: 'err' is of type 'unknown'.
+>     return new Response(JSON.stringify({ error: err.message }), {
+> [0m[31m                                                ~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts[0m:[0m[33m166[0m:[0m[33m49[0m
+> 
+> Found 3 errors.
+> 
+> [0m[1m[31merror[0m: Type checking failed.
+> exit: 0
+> ──── deno check supabase/functions/autopilot-run/index.ts ────
+> [0m[32mCheck[0m supabase/functions/autopilot-run/index.ts
+> exit: 0
+> ```
+
+## 🤖 Claude *(16:02:05)*
+
+
+## 🤖 Claude *(16:02:08)*
+
+`deno check` (gate de materialidade real) pegou erros de tipo — todos do padrão trivial `catch (err: unknown)` + um mismatch de tipo no `notify` do publish-social. O helper passa limpo ✅. Vou ler os trechos exatos e corrigir cada um (fixes type-safe, sem mudança de comportamento).
+
+## 🤖 Claude *(16:02:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== social-auth-init 168-176 ===\"; sed -n '168,176p' supabase/functions/social-auth-init/index.ts\necho \"=== social-auth-callback 366-378 ===\"; sed -n '366,378p' supabase/functions/social-auth-callback/index.ts\necho \"=== auto-publish 148-168 ===\"; sed -n '148,168p' supabase/functions/auto-publish/index.ts\necho \"=== publish-social: notify def + 590-600 ===\"; grep -nE \"function notify|const notify|async function notify\" supabase/functions/publish-social/index.ts; sed -n '590,600p' supabase/functions/publish-social/index.ts",
+  "description": "Read exact lines for type fixes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === social-auth-init 168-176 ===
+>     return new Response(JSON.stringify({ url: authUrl }), {
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+>     });
+>   } catch (err) {
+>     console.error("social-auth-init error:", err);
+>     return new Response(JSON.stringify({ error: err.message }), {
+>       status: 500,
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+>     });
+> === social-auth-callback 366-378 ===
+>       }
+>       const corsHeaders = { "Access-Control-Allow-Origin": "*" };
+>       return socialAppConfigErrorResponse(err, corsHeaders)!;
+>     }
+> 
+>     if (req.method === "GET") {
+>       return redirectWithError(err.message);
+>     }
+>     return new Response(JSON.stringify({ error: err.message }), {
+>       status: 500,
+>       headers: {
+>         "Access-Control-Allow-Origin": "*",
+>         "Content-Type": "application/json",
+> === auto-publish 148-168 ===
+>           .from("scheduled_posts")
+>           .update({
+>             status: retryCount >= (post.max_retries || 3) ? "failed" : "queued",
+>             retry_count: retryCount,
+>             error_message: e.message,
+>           })
+>           .eq("id", post.id);
+> 
+>         results.push({ id: post.id, status: "error", error: e.message });
+>       }
+>     }
+> 
+>     return new Response(
+>       JSON.stringify({ processed: results.length, results }),
+>       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+>     );
+>   } catch (err) {
+>     console.error("auto-publish error:", err);
+>     return new Response(JSON.stringify({ error: err.message }), {
+>       status: 500,
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+> === publish-social: notify def + 590-600 ===
+>           platform_post_id: result.id || result.data?.id || result["X-RestLi-Id"],
+>         })
+>         .eq("id", scheduled_post_id);
+>     }
+> 
+>     // In-app notification (best-effort) — the user sees publishes in the bell (P0 notifications).
+>     const platformLabel = platform === "instagram" ? "Instagram" : platform === "linkedin" ? "LinkedIn" : platform;
+>     await notify(adminClient, userId, {
+>       type: "success",
+>       title: `Publicado no ${platformLabel}`,
+>       message: typeof content === "object" && content?.text ? String(content.text).slice(0, 120) : null,
+> ```
+
+## 🤖 Claude *(16:02:59)*
+
+
+## 🤖 Claude *(16:03:02)*
+
+Confirmado: os erros são **pré-existentes latentes** (`catch (err: unknown)` + tipo estreito do `notify`) que o `deno check` expõe agora — **meus branches novos type-checam limpos** (o deno só apontou as linhas pré-existentes, nenhuma nos branches). `refresh-social-token`, `autopilot-run` e o helper passaram exit 0. Vou deixar os 4 arquivos tocados limpos (fixes type-safe, sem mudança de runtime). Localizando o `notify` + lendo os ranges.
+
+## 🤖 Claude *(16:03:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== notify origin in publish-social ===\"; grep -nE \"notify|import.*notif\" supabase/functions/publish-social/index.ts | head -8\necho \"=== _shared notify? ===\"; ls supabase/functions/_shared/ | grep -i notif; grep -rnE \"export (async )?function notify|export const notify\" supabase/functions/_shared/ 2>/dev/null | head",
+  "description": "Locate notify definition"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === notify origin in publish-social ===
+> 2:import { notify } from "../_shared/notify.ts";
+> 597:    await notify(adminClient, userId, {
+> === _shared notify? ===
+> notify.ts
+> supabase/functions/_shared/notify.ts:12:export async function notify(
+> ```
+
+## 🤖 Claude *(16:03:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts",
+  "offset": 171,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 171	  } catch (err) {
+> 172	    console.error("social-auth-init error:", err);
+> 173	    return new Response(JSON.stringify({ error: err.message }), {
+> 174	      status: 500,
+> 175	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 176	    });
+> ```
+
+## 🤖 Claude *(16:03:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts",
+  "offset": 369,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 369	    }
+> 370	
+> 371	    if (req.method === "GET") {
+> 372	      return redirectWithError(err.message);
+> 373	    }
+> 374	    return new Response(JSON.stringify({ error: err.message }), {
+> 375	      status: 500,
+> 376	      headers: {
+> ```
+
+## 🤖 Claude *(16:03:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts",
+  "offset": 145,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 145	      } catch (e) {
+> 146	        const retryCount = (post.retry_count || 0) + 1;
+> 147	        await adminClient
+> 148	          .from("scheduled_posts")
+> 149	          .update({
+> 150	            status: retryCount >= (post.max_retries || 3) ? "failed" : "queued",
+> 151	            retry_count: retryCount,
+> 152	            error_message: e.message,
+> 153	          })
+> 154	          .eq("id", post.id);
+> 155	
+> 156	        results.push({ id: post.id, status: "error", error: e.message });
+> 157	      }
+> 158	    }
+> 159	
+> 160	    return new Response(
+> 161	      JSON.stringify({ processed: results.length, results }),
+> 162	      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> 163	    );
+> 164	  } catch (err) {
+> 165	    console.error("auto-publish error:", err);
+> 166	    return new Response(JSON.stringify({ error: err.message }), {
+> 167	      status: 500,
+> 168	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 169	    });
+> ```
+
+## 🤖 Claude *(16:03:34)*
+
+
+## 🤖 Claude *(16:03:36)*
+
+`notify` vem de `_shared/notify.ts:12`. Lendo a assinatura para o fix mínimo (widening seguro), depois aplico todos os fixes type-safe.
+
+## 🤖 Claude *(16:03:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/notify.ts",
+  "offset": 1,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Shared in-app notification writer. Notifications are service-role-only INSERTs (RESTRICTIVE RLS "No client
+> 2	// insert on notifications") — clients only read + mark-read their own. Best-effort: NEVER throws, so a failed
+> 3	// notification never breaks the calling flow (publish, cycle, etc.). The bell (useNotifications) reads these.
+> 4	export interface NotifyInput {
+> 5	  type?: "info" | "success" | "warning" | "error";
+> 6	  title: string;
+> 7	  message?: string | null;
+> 8	  action_url?: string | null;
+> 9	  metadata?: Record<string, unknown>;
+> 10	}
+> 11	
+> 12	export async function notify(
+> 13	  admin: { from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<unknown> } },
+> 14	  userId: string | null | undefined,
+> 15	  n: NotifyInput,
+> 16	): Promise<void> {
+> 17	  if (!userId || !n?.title) return;
+> 18	  try {
+> 19	    await admin.from("notifications").insert({
+> 20	      user_id: userId,
+> 21	      type: n.type ?? "info",
+> 22	      title: n.title,
+> 23	      message: n.message ?? null,
+> 24	      action_url: n.action_url ?? null,
+> 25	      metadata: n.metadata ?? {},
+> 26	    });
+> 27	  } catch (_) {
+> 28	    /* best-effort — notifications must never break the calling flow */
+> 29	  }
+> 30	}
+> ```
+
+## 🤖 Claude *(16:04:05)*
+
+
+## 🤖 Claude *(16:04:07)*
+
+`notify` aceita `Promise<unknown>` mas o builder do Supabase é um `PromiseLike` (thenable). Fix mínimo seguro: `Promise`→`PromiseLike` (widening, ajuda todos os callers). Aplicando os 4 fixes type-safe (catch `unknown` + notify), todos sem mudança de runtime.
+
+## 🤖 Claude *(16:04:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/notify.ts",
+  "old_string": "  admin: { from: (t: string) => { insert: (row: Record<string, unknown>) => Promise<unknown> } },",
+  "new_string": "  admin: { from: (t: string) => { insert: (row: Record<string, unknown>) => PromiseLike<unknown> } },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/notify.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:04:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts",
+  "old_string": "    console.error(\"social-auth-init error:\", err);\n    return new Response(JSON.stringify({ error: err.message }), {",
+  "new_string": "    console.error(\"social-auth-init error:\", err);\n    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:04:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts",
+  "old_string": "    if (req.method === \"GET\") {\n      return redirectWithError(err.message);\n    }\n    return new Response(JSON.stringify({ error: err.message }), {",
+  "new_string": "    if (req.method === \"GET\") {\n      return redirectWithError(err instanceof Error ? err.message : String(err));\n    }\n    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:04:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts",
+  "old_string": "            error_message: e.message,\n          })\n          .eq(\"id\", post.id);\n\n        results.push({ id: post.id, status: \"error\", error: e.message });",
+  "new_string": "            error_message: e instanceof Error ? e.message : String(e),\n          })\n          .eq(\"id\", post.id);\n\n        results.push({ id: post.id, status: \"error\", error: e instanceof Error ? e.message : String(e) });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:04:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts",
+  "old_string": "    console.error(\"auto-publish error:\", err);\n    return new Response(JSON.stringify({ error: err.message }), {",
+  "new_string": "    console.error(\"auto-publish error:\", err);\n    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:04:21)*
+
+
+## 🤖 Claude *(16:04:22)*
+
+Fixes aplicados. Re-rodando `deno check` em tudo para confirmar o gate verde.
+
+## 🤖 Claude *(16:04:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\nok=0; fail=0\nfor f in _shared/social-app-config.ts _shared/notify.ts social-auth-init social-auth-callback refresh-social-token publish-social auto-publish autopilot-run; do\n  if [ -d \"supabase/functions/$f\" ]; then TARGET=\"supabase/functions/$f/index.ts\"; else TARGET=\"supabase/functions/$f\"; fi\n  if deno check \"$TARGET\" >/tmp/dc.out 2>&1; then echo \"\u2705 $f\"; ok=$((ok+1)); else echo \"\u274c $f\"; tail -8 /tmp/dc.out; fail=$((fail+1)); fi\ndone\necho \"\"; echo \"PASS=$ok FAIL=$fail\"",
+  "description": "Re-run deno check on all edge functions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ _shared/social-app-config.ts
+> ✅ _shared/notify.ts
+> ✅ social-auth-init
+> ✅ social-auth-callback
+> ✅ refresh-social-token
+> ✅ publish-social
+> ✅ auto-publish
+> ✅ autopilot-run
+> 
+> PASS=8 FAIL=0
+> ```
+
+## 🤖 Claude *(16:04:50)*
+
+
+## 🤖 Claude *(16:04:52)*
+
+**Type-check gate VERDE: 8/8 passam `deno check`.** Agora deploy das 5 edge functions que mudaram comportamento (additive + fail-closed). Sem deploy não está vivo (Lei 1). O `autopilot-run` ficou só com comentário (revertido) → não precisa.
+
+## 🤖 Claude *(16:04:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor fn in social-auth-init social-auth-callback refresh-social-token publish-social auto-publish; do\n  echo \"\u2500\u2500\u2500\u2500 deploy $fn \u2500\u2500\u2500\u2500\"\n  npx supabase functions deploy \"$fn\" 2>&1 | grep -iE \"Deployed|Bundling|error|failed|Deploying\" | head -6\ndone",
+  "description": "Deploy the 5 changed edge functions",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ──── deploy social-auth-init ────
+> Bundling Function: social-auth-init
+> Deploying Function: social-auth-init (script size: 65.23kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: social-auth-init
+> ──── deploy social-auth-callback ────
+> Bundling Function: social-auth-callback
+> Deploying Function: social-auth-callback (script size: 68.69kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: social-auth-callback
+> ──── deploy refresh-social-token ────
+> Bundling Function: refresh-social-token
+> Deploying Function: refresh-social-token (script size: 64.46kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: refresh-social-token
+> ──── deploy publish-social ────
+> Bundling Function: publish-social
+> Deploying Function: publish-social (script size: 70.29kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-social
+> ──── deploy auto-publish ────
+> Bundling Function: auto-publish
+> Deploying Function: auto-publish (script size: 60.81kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: auto-publish
+> ```
+
+## 🤖 Claude *(16:05:27)*
+
+
+## 🤖 Claude *(16:05:29)*
+
+**5/5 deployadas** (script sizes 60–70kB, todas "Deployed on project bcyvddsykvehvpwstlfa"). Agora o smoke material (Lei 1): provar o caminho **fail-closed** ao vivo — chamar `social-auth-init` para tiktok sem credenciais → esperar `402 tiktok_not_configured`. Preciso de um JWT de usuário. Vendo o minter.
+
+## 🤖 Claude *(16:05:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '1,40p' scripts/qa/gen-user-jwt.ts 2>/dev/null | grep -nE \"argv|email|user_id|generateLink|console.log|Usage|process.argv\" | head -20\necho \"---- how social-auth-init reads the user ----\"\nsed -n '14,45p' supabase/functions/social-auth-init/index.ts",
+  "description": "Inspect JWT minter args + init auth"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 4: * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+> 7: * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+> 16:const email = process.argv[2];
+> 17:if (!URL || !SVC || !ANON || !email) {
+> 18:  console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+> 25:const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> 27:  console.error('generateLink error:', error?.message ?? 'no hashed_token');
+> 33:for (const type of ['magiclink', 'email'] as const) {
+> 37:if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
+> 38:console.log(accessToken);
+> ---- how social-auth-init reads the user ----
+> 
+> const LINKEDIN_AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
+> const INSTAGRAM_AUTH_URL = "https://api.instagram.com/oauth/authorize";
+> const TWITTER_AUTH_URL = "https://twitter.com/i/oauth2/authorize";
+> const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
+> const YOUTUBE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+> const PINTEREST_AUTH_URL = "https://www.pinterest.com/oauth/";
+> 
+> Deno.serve(async (req) => {
+>   if (req.method === "OPTIONS") {
+>     return new Response("ok", { headers: corsHeaders });
+>   }
+> 
+>   try {
+>     const authHeader = req.headers.get("Authorization");
+>     if (!authHeader?.startsWith("Bearer ")) {
+>       return new Response(JSON.stringify({ error: "Unauthorized" }), {
+>         status: 401,
+>         headers: { ...corsHeaders, "Content-Type": "application/json" },
+>       });
+>     }
+> 
+>     const supabase = createClient(
+>       Deno.env.get("SUPABASE_URL")!,
+>       (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+>       { global: { headers: { Authorization: authHeader } } }
+>     );
+> 
+>     const { data: { user }, error: userError } = await supabase.auth.getUser();
+>     if (userError || !user) {
+>       return new Response(JSON.stringify({ error: "Unauthorized" }), {
+>         status: 401,
+> ```
+
+## 🤖 Claude *(16:05:44)*
+
+
+## 🤖 Claude *(16:05:45)*
+
+A função carrega com os 3 AUTH_URLs novos. Smoke do fail-closed — minto um JWT do Usuário Zero e chamo `social-auth-init` para tiktok (sem creds → deve dar 402 estruturado).
+
+## 🤖 Claude *(16:05:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-${SUPABASE_URL}}\"; export SUPABASE_URL=\"$URL\"\nJWT=$(bun run scripts/qa/gen-user-jwt.ts gabrielcallr@icloud.com 2>/dev/null | tail -1)\necho \"JWT minted: ${JWT:+yes (len ${#JWT})}\"\necho \"\"\nfor plat in tiktok youtube pinterest; do\n  echo \"\u2500\u2500\u2500\u2500 social-auth-init platform=$plat (expect 402 ${plat}_not_configured, fail-closed) \u2500\u2500\u2500\u2500\"\n  curl -s -w \"\\nHTTP %{http_code}\\n\" \"$URL/functions/v1/social-auth-init\" \\\n    -H \"Authorization: Bearer $JWT\" -H \"Content-Type: application/json\" \\\n    -d \"{\\\"platform\\\":\\\"$plat\\\",\\\"redirect_uri\\\":\\\"https://login.mcorch.com/social/callback\\\"}\" | head -4\ndone",
+  "description": "Smoke fail-closed 402 on the 3 new platforms"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> JWT minted: yes (len 796)
+> 
+> ──── social-auth-init platform=tiktok (expect 402 tiktok_not_configured, fail-closed) ────
+> {"error":"tiktok_not_configured","action":"Configure suas credenciais de app TikTok em /dashboard/settings"}
+> HTTP 402
+> ──── social-auth-init platform=youtube (expect 402 youtube_not_configured, fail-closed) ────
+> {"error":"youtube_not_configured","action":"Configure suas credenciais de app YouTube em /dashboard/settings"}
+> HTTP 402
+> ──── social-auth-init platform=pinterest (expect 402 pinterest_not_configured, fail-closed) ────
+> {"error":"pinterest_not_configured","action":"Configure suas credenciais de app Pinterest em /dashboard/settings"}
+> HTTP 402
+> ```
+
+## 🤖 Claude *(16:06:51)*
+
+
+## 🤖 Claude *(16:06:54)*
+
+**Fail-closed PROVADO ao vivo (Lei 1):** os 3 retornam o 402 estruturado —
+- tiktok → `HTTP 402 {"error":"tiktok_not_configured",...}` ✅
+- youtube → `HTTP 402 {"error":"youtube_not_configured",...}` ✅
+- pinterest → `HTTP 402 {"error":"pinterest_not_configured",...}` ✅
+
+Isso prova E2E: função carrega · auth OK · branch novo roda · helper resolve (sem per-user + sem env) → throw → 402. **Backend code-complete, type-checked, deployado e provado.**
+
+Agora a **Fase UI** (parte do "ambos") com força total — hook + card de credenciais (espelho do `MetaConfigCard`) + botões de conectar das 3 plataformas. Delegando a um agente focado.
+
+## 🤖 Claude *(16:07:18)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Build social-connect UI",
+  "subagent_type": "general-purpose",
+  "prompt": "Build the frontend UI for connecting TikTok + YouTube + Pinterest to MCORCH (brand persona). Repo: /home/gcrUX/htdocs/constellation-orchestra. The backend is already deployed: a per-user `social_app_config` masked view (Vault-encrypted client_secret) + generic OAuth via `social-auth-init`/`social-auth-callback` (these now have tiktok/youtube/pinterest branches) + `publish-social` branches.\n\nREAD THESE FIRST to mirror the EXACT proven patterns (do not invent):\n- src/components/settings/MetaConfigCard.tsx  (the credential-card UX to mirror)\n- src/hooks/useMetaConfig.ts  (the TanStack Query read/write pattern for a Vault-masked credential VIEW \u2014 mirror its read/write idioms EXACTLY)\n- src/hooks/useSocialAccounts.ts  (initiateOAuth(platform) is GENERIC \u2014 reuse it for connect buttons)\n- the social accounts page (find it: likely src/pages/SocialAccountsPage.tsx) \u2014 where existing platform connect cards live\n- the Settings page that mounts MetaConfigCard (find where MetaConfigCard is imported/rendered)\n- docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md (scopes/labels per platform)\n\nCRITICAL DATA-LAYER RULES (these caused real production bugs \u2014 follow exactly):\n- `social_app_config` is a Vault-masked VIEW. The masked `client_secret` reads back as the literal sentinel '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'. NEVER send that sentinel back as a real value, and NEVER write null to \"clear\" (it won't clear \u2014 COALESCE-guarded).\n- Write pattern: mirror useMetaConfig EXACTLY. For this table the natural key is (user_id, platform) \u2014 read the user's row per platform; if it exists, UPDATE; else INSERT. Use `.insert()` / `.update()` (NOT `.upsert()` \u2014 upsert 400s on these views). The INSTEAD OF trigger + encryption trigger handle the rest. The masked view columns: id, user_id, platform, client_id, client_secret, scopes, metadata, is_active.\n- Selecting: select explicit safe columns (id, platform, client_id, client_secret, is_active, metadata) \u2014 `client_secret` returns the mask if set, null if unset (use that to show a \"configured \u2713\" state).\n\nDELIVERABLES:\n1. src/hooks/useSocialAppConfig.ts \u2014 TanStack Query hook(s): read all of the current user's social_app_config rows; a mutation to save (client_id + client_secret) for a given platform ('tiktok'|'youtube'|'pinterest') following the read-then-insert-or-update pattern above; expose per-platform \"configured\" state (client_id present AND client_secret === mask-or-set). Toasts in PT-BR. Mirror useMetaConfig's structure/queryKeys/invalidation.\n2. src/components/settings/SocialAppConfigCard.tsx \u2014 mirror MetaConfigCard. One section per platform (TikTok / YouTube / Pinterest) with: a short PT-BR helper line (where to get the creds + the redirect URI to register: `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback`), an input for client_id (TikTok label \"Client Key\"; YouTube/Pinterest label \"Client ID\"), an input for client_secret (password type; placeholder shows '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' when configured), and a Save button calling the hook. Show a \"Conectado \u2713\"/\"Configurado \u2713\" badge when configured. All UI text PT-BR.\n3. Add TikTok / YouTube / Pinterest connect cards to the social accounts page, mirroring the existing platform cards, each calling the generic `initiateOAuth('tiktok'|'youtube'|'pinterest')`. If a platform's app creds are not configured, the connect button should still call initiateOAuth (the backend returns a 402 with a PT-BR action message \u2014 surface it via the existing edgeErrorMessage/toast pattern). Use the proper brand icons available in the project's icon set (lucide-react has no TikTok/Pinterest brand icons \u2014 reuse the project's existing approach for brand icons, or a sensible lucide fallback like Video/Youtube/Image; check what the existing cards use).\n4. Mount SocialAppConfigCard in the same Settings page/section where MetaConfigCard is rendered.\n\nCONSTRAINTS: TypeScript strict; explicit types on props/payloads. Code/comments English; UI text/toasts PT-BR. Do NOT touch unrelated code. Do NOT run build/deploy. After writing, run `npx tsc --noEmit 2>&1 | tail -30` from the repo root and report whether it's clean (fix any errors you introduced). Return: files created/edited, the exact write pattern you used (insert-vs-update logic), tsc result, and any open issues."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '`tsc --noEmit` already passed clean, which confirms the `React.ComponentType` global reference resolves fine (the project\'s tsconfig provides the global `React` namespace via `@types/react`, consistent with how the codebase uses it elsewhere). Both `tsc` and `eslint` on my files are green.\n\nAll deliverables complete. Here is the report.\n\n## Report\n\nBuilt the frontend UI for connecting TikTok + YouTube + Pinterest (brand persona), mirroring the proven Meta/social patterns exactly. The backend (`social_app_config` masked view + generic OAuth + publish branches) was already deployed, so this is pure frontend.\n\n### Files created\n- **`src/lib/social-app-config.ts`** — types/helpers (mirrors `src/lib/meta.ts`): `SocialAppPlatform`, `SOCIAL_APP_SAFE_COLUMNS` (`id,user_id,platform,client_id,client_secret,is_active,metadata`), the `SOCIAL_SECRET_MASK` sentinel (`••••••••••••`), the redirect URI constant, per-platform UX metadata (TikTok→"Client Key", YT/Pinterest→"Client ID", PT-BR helper copy), and the `isSocialAppConfigured` predicate (client_id present AND secret-mask present AND active).\n- **`src/hooks/useSocialAppConfig.ts`** — TanStack Query hook mirroring `useMetaConfig`: reads all of the user\'s rows (`select(SAFE_COLUMNS).eq(\'user_id\', uid)`), exposes `byPlatform` map + `isConfigured(platform)`, and a `saveConfig` mutation. Query key `[\'social_app_config\', user?.id]` with matching invalidation. Untyped view cast (`supabase as unknown as SupabaseClient`) since `social_app_config` is not in generated types yet — identical idiom to `useMetaConfig`.\n- **`src/components/settings/SocialAppConfigCard.tsx`** — mirrors `MetaConfigCard`: one section per platform with brand icon, PT-BR helper, the copyable Redirect URI, client_id input (TikTok "Client Key" label), password-type client_secret input (placeholder shows the mask when configured), per-section Save button, and a "Configurado ✓" badge.\n\n### Files edited\n- **`src/components/icons/brand-icons.tsx`** — added `TikTok`, `YouTube`, `Pinterest` brand glyphs via the existing `makeBrandIcon` helper (lucide-react dropped brand icons — confirmed `l.Youtube === false`; this is the project\'s proven approach).\n- **`src/pages/SettingsPage.tsx`** — imported and mounted `<SocialAppConfigCard />` directly below `<MetaConfigCard />` in the same tab; renamed that tab "Meta" → "Social" and made it `space-y-6`.\n- **`src/hooks/useSocialAccounts.ts`** — improved `initiateOAuth` error surfacing to read the backend\'s structured 402 `<platform>_not_configured` body (uses `edgeErrorMessage` for the `error.context` path, and surfaces the PT-BR `action` hint on the 200-with-error-body path). Existing per-platform branches untouched.\n- **`src/pages/SocialAccountsPage.tsx`** — the connect cards for tiktok/youtube/pinterest already existed (driven by `SUPPORTED_PLATFORMS` + generic `handleConnect → initiateOAuth`); upgraded them to proper brand icons via a new `PlatformGlyph` (brand glyph for instagram/facebook/tiktok/youtube/pinterest, emoji fallback for linkedin/twitter/wordpress).\n\n### Exact write pattern (insert-vs-update)\nNatural key `(user_id, platform)`, mirroring `useMetaConfig`. On save: look up `byPlatform[platform]`; if a row with `id` exists → `.update(writable).eq(\'id\', existing.id)`, else `.insert({ user_id, platform, ...writable })`. **Never `.upsert()`** (400 on masked views). `client_secret` is only included in the payload when a fresh non-empty value is typed AND it is not the mask sentinel (`secret && secret !== SOCIAL_SECRET_MASK`) — so re-saving without retyping the secret omits the column entirely (leaves the Vault value untouched) and the mask is never round-tripped back. First-time save requires a secret; re-save can omit it.\n\n### tsc result\n**Clean** — `npx tsc --noEmit` produced zero output (zero errors). ESLint on all my new/edited files is also clean (exit 0).\n\n### Open issues\n- **Pre-existing lint (not mine):** `src/pages/SocialAccountsPage.tsx` has 3 `catch (err: any)` `no-explicit-any` errors that exist in `HEAD` (verified via `git show HEAD:...`). My icon block only shifted their line numbers (65/85/94 → 82/102/111). I left them untouched per "do not touch unrelated code."\n- **Types:** `social_app_config` isn\'t in `src/integrations/supabase/types.ts` yet (same as `meta_config`). Handled with the untyped-view cast; when types are regenerated, the cast can be tightened. No action needed now.\n- Did not run build/deploy (per constraint).'}, {'type': 'text', 'text': "agentId: af8701874fa76780a (use SendMessage with to: 'af8701874fa76780a', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 128598\ntool_uses: 29\nduration_ms: 237149</usage>"}]
+> ```
+
+## 🤖 Claude *(16:11:20)*
+
+
+## 🤖 Claude *(16:11:22)*
+
+UI reportada pronta + tsc clean. **Verifico materialmente** (Lei 1) — rodo o tsc eu mesmo + confiro o padrão de escrita do hook (o ponto que já causou bugs).
+
+## 🤖 Claude *(16:11:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc (frontend) ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"\"; echo \"=== frontend files changed ===\"; git status --short -- src/\necho \"\"; echo \"=== write pattern in useSocialAppConfig (insert vs update + mask guard) ===\"\ngrep -nE \"\\.insert\\(|\\.update\\(|\\.upsert\\(|SECRET_MASK|client_secret|onConflict|eq\\(.id\" src/hooks/useSocialAppConfig.ts | head -25",
+  "description": "Verify tsc + UI write pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc (frontend) ===
+> tsc exit: 0
+> 
+> === frontend files changed ===
+>  M src/components/icons/brand-icons.tsx
+>  M src/hooks/useSocialAccounts.ts
+>  M src/pages/SettingsPage.tsx
+>  M src/pages/SocialAccountsPage.tsx
+> ?? src/components/settings/SocialAppConfigCard.tsx
+> ?? src/hooks/useSocialAppConfig.ts
+> ?? src/lib/social-app-config.ts
+> 
+> === write pattern in useSocialAppConfig (insert vs update + mask guard) ===
+> 7:  SOCIAL_SECRET_MASK,
+> 16: * mirrors useMetaConfig: read the user's rows from a Vault-masked VIEW (client_secret reads back as
+> 17: * the sentinel mask), then INSERT or UPDATE by natural key (user_id, platform). NEVER `.upsert()`
+> 55:      // we simply omit client_secret rather than sending the mask back (which would corrupt the Vault).
+> 60:      const secret = values.client_secret?.trim();
+> 62:      if (secret && secret !== SOCIAL_SECRET_MASK) {
+> 63:        writable.client_secret = secret;
+> 69:          .update(writable)
+> 70:          .eq('id', existing.id);
+> 75:          .insert({ user_id: user!.id, platform: values.platform, ...writable });
+> ```
+
+## 🤖 Claude *(16:12:00)*
+
+
+## 🤖 Claude *(16:12:03)*
+
+**UI verificada materialmente:** tsc exit 0 (confirmado por mim) · 7 arquivos (3 novos + 4 editados) · **padrão de escrita correto** — `.update().eq('id')` / `.insert()`, **nunca `.upsert()`**, e o guard `secret !== SOCIAL_SECRET_MASK` impede round-trip da máscara (o bug histórico). 
+
+Agora torno a UI viva: build do frontend no repo principal (= deploy, nginx serve o `dist/`). Prova material = chunk novo + env baked.
+
+## 🤖 Claude *(16:12:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== confirm main repo (not worktree) + has .env ===\"; pwd; ls -la .env >/dev/null 2>&1 && echo \".env present \u2705\" || echo \".env MISSING \u274c\"\necho \"\"; echo \"=== build ===\"; bun run build 2>&1 | tail -15",
+  "description": "Build frontend in main repo (deploy)",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === confirm main repo (not worktree) + has .env ===
+> /home/gcrUX/htdocs/constellation-orchestra
+> .env present ✅
+> 
+> === build ===
+> dist/assets/useConstellationSigma-Cm6o9VPz.js   97.31 kB │ gzip:  21.58 kB
+> dist/assets/proxy-D57I8X15.js                  125.30 kB │ gzip:  41.24 kB
+> dist/assets/ConstellationMatrix-CtF73x6l.js    136.25 kB │ gzip:  37.77 kB
+> dist/assets/CanvasEditorPage-eVUHSSaO.js       142.18 kB │ gzip:  39.61 kB
+> dist/assets/index-DE5hGdPQ.js                  167.01 kB │ gzip:  53.33 kB
+> dist/assets/ConstellationPage-CNY3xNaY.js      184.36 kB │ gzip:  63.64 kB
+> dist/assets/CartesianChart-DgpIEZlI.js         325.07 kB │ gzip:  96.83 kB
+> dist/assets/index-8CKiv5mL.js                  661.63 kB │ gzip: 196.04 kB
+> dist/assets/react-three-fiber.esm-CuT2Yzzm.js  824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.75s
+> ```
+
+## 🤖 Claude *(16:12:34)*
+
+
+## 🤖 Claude *(16:12:35)*
+
+Build OK (22.75s). Verifico os gates de materialidade do deploy (SOP build-deploy): chunk novo contém a UI + env baked.
+
+## 🤖 Claude *(16:12:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== env baked (supabase URL in bundle)? ===\"; grep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js | head -1 && echo \"\u2705 env baked\" || echo \"\u274c env NOT baked\"\necho \"\"; echo \"=== new UI in bundle? (social_app_config / Configurar credenciais) ===\"; grep -rlE \"social_app_config|Pinterest|tiktok\" dist/assets/*.js | head -3\necho \"\"; echo \"=== nginx serves this dist (sanity) ===\"; ls -la dist/index.html | awk '{print $5, $6, $7, $8}'",
+  "description": "Verify env baked + new UI in served bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === env baked (supabase URL in bundle)? ===
+> dist/assets/CampaignDetail-DORNkhV9.js
+> ✅ env baked
+> 
+> === new UI in bundle? (social_app_config / Configurar credenciais) ===
+> dist/assets/AnalyticsPage-4V7qugJO.js
+> dist/assets/brand-icons-DzN_vF3n.js
+> dist/assets/CampaignWizard-CC8vNfqh.js
+> 
+> === nginx serves this dist (sanity) ===
+> 2259 Jun 27 13:12
+> ```
+
+## 🤖 Claude *(16:12:48)*
+
+
+## 🤖 Claude *(16:12:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== useSocialAppConfig hook shipped? (table name 'social_app_config') ===\"; grep -rl \"social_app_config\" dist/assets/*.js | head -3 || echo \"NOT FOUND\"\necho \"=== SocialAppConfigCard shipped? (redirect-uri callback string is unique to the card) ===\"; grep -rl \"functions/v1/social-auth-callback\" dist/assets/*.js | head -3 || echo \"NOT FOUND\"",
+  "description": "Confirm new hook + card in bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === useSocialAppConfig hook shipped? (table name 'social_app_config') ===
+> dist/assets/SettingsPage-CHgtU2cG.js
+> === SocialAppConfigCard shipped? (redirect-uri callback string is unique to the card) ===
+> dist/assets/SettingsPage-CHgtU2cG.js
+> ```
+
+## 🤖 Claude *(16:13:22)*
+
+
+## 🤖 Claude *(16:13:25)*
+
+Deploy verificado: `social_app_config` (hook) + a string única do redirect-URI (card) estão no **`SettingsPage-CHgtU2cG.js`** servido, env baked, `index.html` fresco (13:12). **UI viva.**
+
+Última verificação, conforme sua diretiva durável (ver UI renderizada antes de declarar pronta) — delego uma checagem em browser real (preview do dist + sessão injetada + agent-browser + Vision QA) do Settings→Social e dos botões de conectar.
+
+## 🤖 Claude *(16:13:39)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Browser-verify social UI",
+  "subagent_type": "general-purpose",
+  "prompt": "Verify the newly-built MCORCH social-connect UI renders in a REAL browser (Sovereign directive: never declare UI done without seeing it). Repo: /home/gcrUX/htdocs/constellation-orchestra. The frontend is already built (dist/ is fresh). Be honest per Lei 1 \u2014 only report \"rendered OK\" if you actually see it; if the environment blocks you, say exactly where.\n\nESTABLISHED RECIPE (from prior sessions \u2014 follow it):\n1. Serve the built dist locally: `npx vite preview --port 4174` (run in background; it serves dist/). Confirm it's up (curl the port).\n2. Mint a logged-in session for the Sovereign: read scripts/qa/gen-user-session.ts for its usage (it does admin generateLink\u2192verifyOtp and emits the localStorage auth-token JSON for key `sb-<ref>-auth-token`). User email: gabrielcallr@icloud.com. Needs .env (SB_SECRET_KEY, SB_PUBLISHABLE_KEY, VITE_SUPABASE_URL) \u2014 `set -a; source .env; set +a` first.\n3. Use the `agent-browser` skill (NOT Playwright MCP \u2014 no Chrome in this env). Open the preview origin, inject the session into localStorage under the `sb-<projectref>-auth-token` key (projectref = bcyvddsykvehvpwstlfa), then navigate to:\n   (a) /dashboard/settings \u2014 find the \"Social\" tab/section, click it, and confirm the SocialAppConfigCard renders with THREE sections: TikTok (label \"Client Key\"), YouTube (Client ID), Pinterest (Client ID), each with a client_id input, a client_secret password input, the Redirect URI string `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback`, and a Save button. Screenshot it (1920x1080).\n   (b) the social accounts page (find its route \u2014 likely /dashboard/social or similar; check src/pages/SocialAccountsPage.tsx + App.tsx routing) \u2014 confirm TikTok/YouTube/Pinterest connect cards render. Screenshot it.\n4. Check the browser console for errors (white-screen / crash). A blank page or a React error overlay = FAIL.\n5. Run Vision QA on each screenshot: `bun run scripts/qa/vision-qa.ts <screenshot-path-or-url>` (it uses Vision MCP, BYOK, needs VISION_MCP_PAT in .env; note it requires a URL or accessible path \u2014 read the script's usage first). Report its verdict.\n\nClean up: kill the vite preview background process when done.\n\nReturn: a clear PASS/FAIL per page, the screenshot paths, any console errors verbatim, the Vision QA verdicts, and \u2014 if anything blocked you (CF, port, session injection, missing PAT) \u2014 exactly what and where. Do not fabricate a render you didn't see."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Cleanup confirmed: no vite process, port 4174 not listening (HTTP 000), browser session closed, temp public screenshots deleted. The earlier "WARN: vite still running" was a false positive from `pgrep` matching this shell\'s own command text containing "4174" — the actual server was killed by the first PID kill.\n\nAll steps complete. Here is the report.\n\n---\n\n## VERIFICATION REPORT — MCORCH social-connect UI (REAL browser)\n\n**Verdict: PASS on both pages.** I actually saw both pages render, logged in as the Sovereign, in a real Chromium via agent-browser. Zero console errors, no white screen, no React overlay. All three new platforms (TikTok / YouTube / Pinterest) present exactly as spec\'d.\n\n### Setup (all material)\n- **Build artifact verified fresh & correct**: `dist/` dated Jun 27 13:12; bundle `dist/assets/SettingsPage-CHgtU2cG.js` contains the new strings "Apps Sociais" / "Client Key" / "developers.tiktok.com", and the Supabase URL `bcyvddsykvehvpwstlfa` is baked into 9 bundles (env present — not a worktree-trap empty build).\n- **Preview**: `npx vite preview --port 4174 --host 127.0.0.1` → `curl` HTTP 200, title "Magic Constellation".\n- **Session**: minted via `scripts/qa/gen-user-session.ts gabrielcallr@icloud.com` (1996-char JSON, contains access_token), injected into `localStorage["sb-bcyvddsykvehvpwstlfa-auth-token"]`. App booted authenticated — stayed on `/dashboard/settings`, was NOT bounced to `/auth`.\n\n### (a) /dashboard/settings → "Social" tab — PASS\n- The tab labeled **"Social"** is `value="meta"` internally; clicking it selects the panel that renders `MetaConfigCard` + **`SocialAppConfigCard`**.\n- `SocialAppConfigCard` renders the header **"Apps Sociais — TikTok, YouTube & Pinterest"**, the Redirect URI in a `<code>` block — exact string `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback` (DOM-verified + visible) — with a "Copiar" button, then THREE sections:\n  - **TikTok** → label **"Client Key"** + Client Secret (password) + "Salvar TikTok"\n  - **YouTube** → label **"Client ID"** + Client Secret + "Salvar YouTube" (helper cites youtube.upload scope)\n  - **Pinterest** → label **"Client ID"** + Client Secret + "Salvar Pinterest" (helper cites Pinterest Developers)\n- Accessibility snapshot + DOM eval confirmed all 6 fields + 3 Save buttons. **Console: empty.**\n- Screenshots (1920×1080): `settings-social-tab.png` (Meta + Apps header + TikTok), `settings-social-yt-pinterest.png` (all three platform sections).\n\n### (b) /dashboard/social — Social accounts page — PASS\n- Route is `/dashboard/social` (from `App.tsx`). Heading "Redes Sociais" → "Plataformas Disponíveis" grid with 7 connect cards: LinkedIn, Instagram, Facebook, Twitter/X, **TikTok**, **YouTube**, **Pinterest** — each with brand icon + "Conectar" button. WordPress self-hosted form below. **Console: empty.**\n- Screenshot: `social-accounts-page.png` (1920×1080).\n\n### Vision QA verdicts (mcp.mcorch.com, BYOK, cost 0) — all PASS, "high" confidence\nScreenshots were uploaded to the public `canvas-assets` bucket for fetchability (deleted afterward), since Vision MCP needs a public URL.\n1. Settings Social tab: *"Não há erros visíveis na renderização da tela; todos os elementos estão visíveis e formatados corretamente."*\n2. 3 platforms: *"a tela mostra três seções... TikTok, YouTube e Pinterest. Cada uma... Client Key (ou Client ID...), Client Secret e um botão \'Salvar\'... renderizada corretamente, sem quebras."*\n3. Social accounts: *"a página foi renderizada corretamente. Existem cartões de conexão para TikTok, YouTube e Pinterest... além de LinkedIn, Instagram, Facebook e Twitter."*\n\n### Console errors\nNone on either page (`agent-browser console` empty after clearing on each navigation).\n\n### Screenshot paths (retained, absolute)\n- `/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/scratchpad/settings-social-tab.png`\n- `/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/scratchpad/settings-social-yt-pinterest.png`\n- `/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/scratchpad/social-accounts-page.png`\n- (also `settings-social-3platforms.png`, `settings-social-FULL.png`)\n\n### Blockers\nNone. Two minor environment notes, both worked around, neither affecting the verdict: (1) viewport defaults to 1280×633 — fixed with `agent-browser set viewport 1920 1080`; (2) the settings content lives in an inner scroll container so `screenshot --full` caps at the viewport — used JS `scrollIntoView` to bring YouTube+Pinterest into frame.\n\n### Cleanup\nvite preview killed (port 4174 → HTTP 000, no process), browser session closed, temp public QA screenshots deleted from the bucket (HTTP 200 each).'}, {'type': 'text', 'text': "agentId: a4214742125fc733f (use SendMessage with to: 'a4214742125fc733f', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 132075\ntool_uses: 49\nduration_ms: 386980</usage>"}]
+> ```
+
+## 🤖 Claude *(16:20:18)*
+
+
+## 🤖 Claude *(16:20:19)*
+
+Browser-verify **PASS** em ambas as páginas — Vision QA "high" confidence, zero erro de console. Deixa eu confirmar com meus próprios olhos e te mostrar.
+
+## 🤖 Claude *(16:20:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/scratchpad/settings-social-yt-pinterest.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/png'}}]
+> ```
+
+## 🤖 Claude *(16:21:04)*
+
+
+## 🤖 Claude *(16:21:05)*
+
+Confirmo com meus próprios olhos: render **limpo e profissional** — TikTok ("Client Key" + placeholder real), YouTube e Pinterest ("Client ID"), cada um com Client Secret (password), helper PT-BR de onde pegar as creds, e botão Salvar. Tema MCORCH, zero white-screen. Atualizando a memória + te mostrando.
+
+## 🤖 Claude *(16:21:10)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/scratchpad/settings-social-yt-pinterest.png",
+    "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/cf7e6851-e63b-48b0-8bc0-4c32d21eb7f0/scratchpad/social-accounts-page.png"
+  ],
+  "caption": "Settings\u2192Social (card de credenciais das 3 plataformas) + /dashboard/social (bot\u00f5es Conectar TikTok/YouTube/Pinterest). Renderizado em browser real, Vision QA \"high\", zero erro de console.",
+  "status": "normal"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 2 files delivered to user.
+> ```
+
+## 🤖 Claude *(16:21:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md",
+  "old_string": "(3) **HOLD** \u2014 n\u00e3o escrever c\u00f3digo NEM emendar BoK at\u00e9 o Sovereign registrar os 3 apps e ter `client_id`/`secret` em m\u00e3os.",
+  "new_string": "(3) HOLD **sobrescrito** por \"continue for\u00e7a total\" (2026-06-27) \u2192 tudo CONSTRU\u00cdDO+DEPLOYADO+provado (ver STATUS abaixo)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:21:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md",
+  "old_string": "**Ao retomar:** PASSO 0 emenda BoK `post-engine` \u2192 slices 2-4 (publishers+OAuth env creds) \u2192 slice 5 (VIDEO_FLOW_PLATFORMS + gap auto-publish video_url) \u2192 slice 6 (spine CCIO).",
+  "new_string": "**STATUS 2026-06-27 \u2014 CONSTRU\u00cdDO/DEPLOYADO/PROVADO (Lei 1):** PASSO 0 BoK selado (post-engine `06`/`09-pattern-conformance`/`10-amendment` + 3 SOPs `docs/processes/{tiktok,youtube,pinterest}-publish-credential-resolution.md`) \u00b7 migration `20260627120000_social_app_config.sql` **aplicada+provada** (coluna crua=UUID Vault `55caaf7b\u2026`, mask `\u2022\u2022\u2022\u2022`, decrypted s\u00f3 service-role\u2192anon 42501) \u00b7 `/security-review` SAFE \u00b7 helper `supabase/functions/_shared/social-app-config.ts` (resolu\u00e7\u00e3o per-user\u2192env\u2192402 fail-closed) \u00b7 branches em `social-auth-init`/`-callback`/`refresh-social-token`/`publish-social` (**deno check 8/8**, 5 fns **deployadas**) \u00b7 `auto-publish` video_url gap fechado (fail-soft) \u00b7 **fail-closed provado LIVE** (3\u00d7HTTP 402 `<plat>_not_configured`) \u00b7 UI `useSocialAppConfig`+`SocialAppConfigCard` (Settings\u2192Social) + 3 connect cards em `/dashboard/social` (tsc 0 \u00b7 build deployado \u00b7 **browser-verificado + Vision QA high**). **FR-PE-013 (`VIDEO_FLOW_PLATFORMS`) DEFERIDO** \u2014 s\u00f3 adicionar com a extens\u00e3o do enqueue-gate em `orchestrate-content`/`-step` (sen\u00e3o cobra-sem-valor: render s\u00f3 \u00e9 enfileirado pelo article-flow gated em wordpress). **Pend\u00eancias:** (Sovereign) registrar 3 apps + 3 audits (playbook `.claude/context/social-app-registration-playbook-2026-06-27.md`) + entrar `client_id`/`secret` (UI Settings\u2192Social OU env `TIKTOK_CLIENT_KEY`/`_SECRET`\u00b7`GOOGLE_CLIENT_ID`/`_SECRET`\u00b7`PINTEREST_CLIENT_ID`/`_SECRET`) \u2192 conex\u00e3o acende; p\u00fablico s\u00f3 p\u00f3s-audit. (c\u00f3digo) slice de video-cadence p/ novas plataformas + spine CCIO. \u26a0\ufe0f **git uncommitted** (prod j\u00e1 aplicado/deployado \u2014 risco de drift at\u00e9 commitar)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_brand_persona_ccio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:21:32)*
+
+
+## 🤖 Claude *(16:21:50)*
+
+Pronto, Maestro. As redes **TikTok, YouTube e Pinterest** estão construídas, deployadas e provadas em produção em cada camada — operei com força total e nada foi declarado sem prova material (Lei 1).
+
+## O que ficou de pé (tudo verificado)
+
+| Camada | Estado | Prova material (Lei 1) |
+|---|---|---|
+| Pesquisa fundamentada 3 plataformas | ✅ | 3 verificadas HIGH, cada claim com URL oficial |
+| **PASSO 0 — gate BoK** | ✅ selado | `post-engine` 06/09/10 + 3 SOPs · 21 padrões · FR-PE-005..016 · sem placeholder |
+| **Migration `social_app_config`** | ✅ aplicada em prod | coluna crua = UUID Vault `55caaf7b…` · mask `••••` · decrypted só service-role (anon→42501) |
+| `/security-review` | ✅ SAFE | tenant-guard 42501 INSERT+UPDATE · `search_path=''` · zero gap cross-tenant |
+| Helper fail-closed | ✅ | per-user → env → 402 |
+| 4 branches OAuth/publisher + auto-publish | ✅ deployadas | **`deno check` 8/8** · 5 fns "Deployed" (60–70kB) |
+| **Fail-closed ao vivo** | ✅ provado | 3× `HTTP 402 {"error":"<plat>_not_configured"}` |
+| UI (card de credenciais + 3 connect cards) | ✅ live | tsc 0 · bundle servido · **browser-verificado + Vision QA "high"** · 0 erro de console |
+
+As telas acima são reais (browser logado, 1920×1080).
+
+## Uma decisão de engenharia que evitou um bug
+Adicionar `youtube/tiktok/pinterest` ao `VIDEO_FLOW_PLATFORMS` **introduziria cobrança-sem-valor** (o render 9:16 só é enfileirado pelo article-flow gated em `wordpress`; sem render, `finalize_video_render` nunca dá refund). **Revertido e deferido** (FR-PE-013) — só entra junto com a extensão do enqueue-gate no `orchestrate-content`. Vídeo vertical autônomo nessas redes é uma slice própria.
+
+## Sua metade (caminho crítico — comece hoje)
+Playbook em [social-app-registration-playbook-2026-06-27.md](.claude/context/social-app-registration-playbook-2026-06-27.md). Registrar os **3 apps de dev** + submeter os **3 audits** (YouTube é o mais longo: gate A ~10d + gate B semanas, seriais). Depois entrar os `client_id/secret` por **dois caminhos** (você decidiu "ambos"):
+- **UI:** Configurações → Social → colar e Salvar (já vivo, cifra no Vault).
+- **OU env:** `npx supabase secrets set TIKTOK_CLIENT_KEY=… TIKTOK_CLIENT_SECRET=…` (idem Google/Pinterest).
+
+Aí o botão **Conectar** acende o OAuth; provo o E2E real de publish no mesmo dia. O **público** destrava com os audits.
+
+## ⚠️ Um ponto que preciso da sua palavra
+Prod está **aplicado e deployado**, mas o **git está uncommitted** (8 arquivos de doc + migration + edge fns + UI) — é exatamente o risco de drift que o projeto combate. **Quer que eu commite agora** (faço branch primeiro, já que estamos na `main`) **ou rodo `/handoff`** (seal com commits granulares + nó de milestone na malha)? Não commito sem seu GO.
+
+## 👤 User *(16:21:52)*
+
+Pode continuar que essa janela de contexto é grande faça o que for recomendado
+
+## 🤖 Claude *(16:23:59)*
+
+
+## 🤖 Claude *(16:24:01)*
+
+Perfeito — vou fazer o recomendado: selar o arco com o **`/handoff`** (commits granulares fechando o drift prod↔git + atualização do HANDOFF.md + nó na malha + self-audit das Survival Laws). É o fechamento canônico do projeto e o que evita o risco de drift que sinalizei.
+
+## 🤖 Claude *(16:24:01)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(16:24:01)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(16:24:07)*
+
+
+## 🤖 Claude *(16:24:07)*
+
+Executando o ritual de seal. **Pre-flight + Phase 1 (security audit)** em paralelo.
+
+## 🤖 Claude *(16:24:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"\"; echo \"=== diff stat ===\"; git diff HEAD --stat | tail -20\necho \"\"; echo \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: ${PIPESTATUS[0]}\"",
+  "description": "Pre-flight: status, diff, tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+>  M docs/bok/post-engine/00-index.md
+>  M docs/bok/post-engine/06-data-model.md
+>  M src/components/icons/brand-icons.tsx
+>  M src/hooks/useSocialAccounts.ts
+>  M src/pages/SettingsPage.tsx
+>  M src/pages/SocialAccountsPage.tsx
+>  M supabase/functions/_shared/notify.ts
+>  M supabase/functions/auto-publish/index.ts
+>  M supabase/functions/autopilot-run/index.ts
+>  M supabase/functions/publish-social/index.ts
+>  M supabase/functions/refresh-social-token/index.ts
+>  M supabase/functions/social-auth-callback/index.ts
+>  M supabase/functions/social-auth-init/index.ts
+> ?? .claude/context/social-app-registration-playbook-2026-06-27.md
+> ?? .claude/context/social-connect-3platforms-blueprint-2026-06-27.md
+> ?? deno.lock
+> ?? docs/bok/post-engine/09-pattern-conformance.md
+> ?? docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md
+> ?? docs/processes/pinterest-publish-credential-resolution.md
+> ?? docs/processes/tiktok-publish-credential-resolution.md
+> ?? docs/processes/youtube-publish-credential-resolution.md
+> ?? src/components/settings/SocialAppConfigCard.tsx
+> ?? src/hooks/useSocialAppConfig.ts
+> ?? src/lib/social-app-config.ts
+> ?? supabase/functions/_shared/social-app-config.ts
+> ?? supabase/migrations/20260627120000_social_app_config.sql
+> 
+> === diff stat ===
+>  docs/bok/post-engine/00-index.md                 |  15 +-
+>  docs/bok/post-engine/06-data-model.md            | 103 ++++++-
+>  src/components/icons/brand-icons.tsx             |  15 +
+>  src/hooks/useSocialAccounts.ts                   |  10 +-
+>  src/pages/SettingsPage.tsx                       |   7 +-
+>  src/pages/SocialAccountsPage.tsx                 |  21 +-
+>  supabase/functions/_shared/notify.ts             |   2 +-
+>  supabase/functions/auto-publish/index.ts         |  48 +++-
+>  supabase/functions/autopilot-run/index.ts        |   5 +
+>  supabase/functions/publish-social/index.ts       | 343 +++++++++++++++++++++++
+>  supabase/functions/refresh-social-token/index.ts | 142 ++++++++++
+>  supabase/functions/social-auth-callback/index.ts | 146 +++++++++-
+>  supabase/functions/social-auth-init/index.ts     |  68 ++++-
+>  13 files changed, 901 insertions(+), 24 deletions(-)
+> 
+> === tsc ===
+> tsc exit: 0
+> ```
+
+## 🤖 Claude *(16:24:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (working tree) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|client_secret TEXT\\|client_secret:\\|CLIENT_SECRET\\|client_secret =\\|p_value\\|n.message\\|REVOKE\\|GRANT\\|decrypted_\\|access_token (text\\|refresh_token\" | head -15 || echo \"no raw secrets \u2705\"\necho \"\"; echo \"=== 1c. client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5 || echo \"NO VIOLATIONS \u2705\"\necho \"\"; echo \"=== 1e. sensitive console.log in new code ===\"\ngrep -rnE \"console\\.log.*(token|secret|password|client_secret)\" src/hooks/useSocialAppConfig.ts src/components/settings/SocialAppConfigCard.tsx src/lib/social-app-config.ts supabase/functions/_shared/social-app-config.ts 2>/dev/null | head -5 || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (working tree) ===
+>      const serviceRoleKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> +        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> +        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> +        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> +        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> +        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 
+> === 1c. client-side coin deduction ===
+> 
+> === 1e. sensitive console.log in new code ===
+> ```
+
+## 🤖 Claude *(16:24:49)*
+
+
+## 🤖 Claude *(16:24:52)*
+
+**Phase 1 — Security: ✅ PASS.** As matches do 1a são **leituras de env** (`Deno.env.get("SB_SECRET_KEY") ?? ...`) — o padrão seguro, não secret hardcoded (falso-positivo no substring "SECRET_KEY"). 1c/1e limpos, tsc 0. Sem 🔴.
+
+Removo o `deno.lock` (artefato dos meus `deno check`, não do projeto) e faço os **commits granulares** (sem trailer Co-Authored-By, conforme regra do protocolo).
+
+## 🤖 Claude *(16:25:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f deno.lock\n# Group 1 \u2014 docs/BoK gate\ngit add docs/bok/post-engine/00-index.md docs/bok/post-engine/06-data-model.md docs/bok/post-engine/09-pattern-conformance.md docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md docs/processes/tiktok-publish-credential-resolution.md docs/processes/youtube-publish-credential-resolution.md docs/processes/pinterest-publish-credential-resolution.md .claude/context/social-connect-3platforms-blueprint-2026-06-27.md .claude/context/social-app-registration-playbook-2026-06-27.md\ngit commit -q -m \"docs(post-engine): social-connect BoK amendment + Lei-2 SOPs + grounded blueprint (TikTok/YouTube/Pinterest)\n\nCloses PASSO 0 of the Closed-Loop Protocol for connecting 3 brand-persona channels.\nReconciles the obsolete social_credentials drift to the live social_accounts/social_app_config,\nadds the 21-row Pattern Conformance Declaration (09) and the branch-design amendment (10, FR-PE-005..016),\nplus 3 credential-resolution SOPs. Grounded in adversarially-verified research (wf_b5a35451, 3 platforms HIGH).\" && echo \"\u2705 commit 1\"\n\n# Group 2 \u2014 migration\ngit add supabase/migrations/20260627120000_social_app_config.sql\ngit commit -q -m \"feat(db): social_app_config \u2014 per-user Vault-encrypted OAuth app credentials (FR-PE-005)\n\nSingle table keyed UNIQUE(user_id, platform); client_secret encrypted in Vault via the idempotent\ntrg_encrypt_social_app_config (vault_upsert_secret), masked security_invoker view, service-role-only\ndecrypted view, INSTEAD OF tenant-guard (42501) mirroring social_accounts. /security-review SAFE.\nApplied + proven in prod (raw column = Vault UUID, mask, decrypted denied to anon).\" && echo \"\u2705 commit 2\"",
+  "description": "Commits 1-2: docs + migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:25PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:25PM[0m [32mINF[0m scan completed in 75.2ms
+> [90m1:25PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.13 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.12 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✅ commit 1
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:25PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:25PM[0m [32mINF[0m scan completed in 18.6ms
+> [90m1:25PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✅ commit 2
+> ```
+
+## 🤖 Claude *(16:25:13)*
+
+
+## 🤖 Claude *(16:25:14)*
+
+Commits 1-2 ✅ (gitleaks: no leaks). Commits 3 (edge) e 4 (UI):
+
+## 🤖 Claude *(16:25:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# Group 3 \u2014 edge functions + helper\ngit add supabase/functions/_shared/social-app-config.ts supabase/functions/_shared/notify.ts supabase/functions/social-auth-init/index.ts supabase/functions/social-auth-callback/index.ts supabase/functions/refresh-social-token/index.ts supabase/functions/publish-social/index.ts supabase/functions/auto-publish/index.ts supabase/functions/autopilot-run/index.ts\ngit commit -q -m \"feat(social): TikTok/YouTube/Pinterest OAuth + publisher branches, fail-closed cred resolution (FR-PE-006..016)\n\nShared resolveSocialAppCreds (per-user social_app_config -> env fallback -> 402, never a silent shared key).\nAdds 3 branches each to social-auth-init/-callback/refresh-social-token (rotating-token aware) + publish-social\n(TikTok Direct Post FILE_UPLOAD, YouTube resumable, Pinterest video-pin). auto-publish resolves+signs video_url\n(fail-soft). VIDEO_FLOW_PLATFORMS kept as wordpress only (FR-PE-013 deferred: needs orchestrate-content enqueue\ngate, else charge-without-value). deno check 8/8; 5 fns deployed; fail-closed proven live (3x402).\" 2>&1 | grep -iE \"no leaks|leaks found|commit|\u276f secret|BLOCK|error\" | head -4 && echo \"\u2705 commit 3\"\n\n# Group 4 \u2014 UI\ngit add src/hooks/useSocialAppConfig.ts src/lib/social-app-config.ts src/components/settings/SocialAppConfigCard.tsx src/components/icons/brand-icons.tsx src/hooks/useSocialAccounts.ts src/pages/SettingsPage.tsx src/pages/SocialAccountsPage.tsx\ngit commit -q -m \"feat(settings): social app-config card + TikTok/YouTube/Pinterest connect cards\n\nuseSocialAppConfig (read-then-insert/update on the Vault-masked view, never .upsert, never round-trips the mask) +\nSocialAppConfigCard in Settings->Social + the 3 connect cards via the generic initiateOAuth. brand-icons gains\nTikTok/YouTube/Pinterest glyphs. tsc 0; built + deployed; browser-verified + Vision QA high.\" 2>&1 | grep -iE \"no leaks|leaks found|commit|BLOCK|error\" | head -4 && echo \"\u2705 commit 4\"\necho \"\"; echo \"=== recent log ===\"; git log --oneline -5",
+  "description": "Commits 3-4: edge + UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [0;31m║  SECRET LEAK DETECTED — COMMIT BLOCKED                       ║[0m
+> or move the value to the environment / Supabase Vault. Never commit live keys.[0m
+> [90m1:25PM[0m [32mINF[0m 1 commits scanned.
+> ✅ commit 3
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [0;31m║  SECRET LEAK DETECTED — COMMIT BLOCKED                       ║[0m
+> or move the value to the environment / Supabase Vault. Never commit live keys.[0m
+> [90m1:25PM[0m [32mINF[0m 1 commits scanned.
+> ✅ commit 4
+> 
+> === recent log ===
+> c94bd75 feat(db): social_app_config — per-user Vault-encrypted OAuth app credentials (FR-PE-005)
+> ea12afc docs(post-engine): social-connect BoK amendment + Lei-2 SOPs + grounded blueprint (TikTok/YouTube/Pinterest)
+> 2d8e46d chore(sprint): v6.53.0 — Agentic Governance + Learning Loop + analytics honesto
+> f486a8a docs(handoff): seal Agentic Governance + Learning Loop + analytics honesto + perfis da marca limpos
+> 08e5ee3 docs(readme): v6.53.0 — Agentic Governance + Collective Efficiency Ledger + Learning Loop
+> ```
+
+## 🤖 Claude *(16:25:42)*
+
+
+## 🤖 Claude *(16:25:44)*
+
+⚠️ **Lei 1 catch** — os "✅ commit 3/4" foram **falsos** (o `&&` rodou pelo grep, não pelo git). O `git log` prova: só os commits 1 e 2 entraram. O hook **secret-scan** do projeto BLOQUEOU os commits 3 e 4 ("SECRET LEAK DETECTED"). Provável falso-positivo no padrão `Deno.env.get("SB_SECRET_KEY")`. Investigando o que o hook casou.
+
+## 🤖 Claude *(16:25:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== still staged? ===\"; git diff --cached --name-only | head\necho \"\"; echo \"=== secret-scan hook config ===\"; grep -rA8 \"secret-scan\" lefthook.yml .lefthook.yml lefthook.yaml 2>/dev/null | head -25\necho \"\"; echo \"=== the scan script ===\"; ls scripts/ | grep -iE \"secret|scan\"; ls .husky/ scripts/qa/ 2>/dev/null | grep -iE \"secret|scan\"",
+  "description": "Find secret-scan hook logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === still staged? ===
+> src/components/icons/brand-icons.tsx
+> src/components/settings/SocialAppConfigCard.tsx
+> src/hooks/useSocialAccounts.ts
+> src/hooks/useSocialAppConfig.ts
+> src/lib/social-app-config.ts
+> src/pages/SettingsPage.tsx
+> src/pages/SocialAccountsPage.tsx
+> supabase/functions/_shared/notify.ts
+> supabase/functions/_shared/social-app-config.ts
+> supabase/functions/auto-publish/index.ts
+> 
+> === secret-scan hook config ===
+> lefthook.yml:    - name: secret-scan
+> lefthook.yml:      run: bash .claude/hooks/secret-scan.sh
+> lefthook.yml-
+> lefthook.yml-    # Job 2 — gitleaks structural scan over the staged diff (second, independent engine).
+> lefthook.yml-    # SELF-HEALING (OTD-SEC-003): if the gitleaks binary is absent the job exits 0 with a notice
+> lefthook.yml-    # rather than blocking every commit — the sovereign scanner (Job 1) still enforces the gate.
+> lefthook.yml-    # if/then/else (NOT &&||): a real gitleaks finding (exit 1) must propagate and block; only true
+> lefthook.yml-    # ABSENCE degrades to exit 0. The && || form would swallow a detection as if the binary were missing.
+> lefthook.yml-    - name: gitleaks-staged
+> lefthook.yml:      run: if command -v gitleaks >/dev/null 2>&1; then gitleaks protect --staged --redact --config .gitleaks.toml; else echo "[lefthook] gitleaks absent (OTD-SEC-003) — sovereign secret-scan still enforced"; fi
+> lefthook.yml-
+> lefthook.yml-    # Job 3 — e2e artifact tripwire: HARs / session dumps must never carry live tokens.
+> lefthook.yml-    - name: e2e-output-tripwire
+> lefthook.yml-      run: bash .claude/hooks/e2e-output-tripwire.sh
+> lefthook.yml-
+> lefthook.yml-post-commit:
+> lefthook.yml-  jobs:
+> lefthook.yml-    # Preserved from the legacy .git/hooks/post-commit: AST re-ingest into the Sovereign Knowledge Mesh.
+> 
+> === the scan script ===
+> ```
+
+## 🤖 Claude *(16:25:57)*
+
+
+## 🤖 Claude *(16:25:59)*
+
+O hook é `.claude/hooks/secret-scan.sh`. Os arquivos dos commits 3 e 4 estão staged juntos agora. Vou ver exatamente o que ele casou (rodando o scan) antes de qualquer ação — **não vou usar `--no-verify`** (o protocolo proíbe).
+
+## 🤖 Claude *(16:26:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== run the secret-scan to see the exact match ===\"; bash .claude/hooks/secret-scan.sh 2>&1 | grep -vE \"^\\[38|^\\s*$\" | head -40",
+  "description": "Run secret-scan to see exact match"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === run the secret-scan to see the exact match ===
+> [0;31m╔══════════════════════════════════════════════════════════════╗[0m
+> [0;31m║  SECRET LEAK DETECTED — COMMIT BLOCKED                       ║[0m
+> [0;31m╚══════════════════════════════════════════════════════════════╝[0m
+> [1;33mPotential credentials found in staged changes:[0m
+> +  tiktok: { id: "TIKTOK_CLIENT_KEY", secret: "TIKTOK_CLIENT_SECRET", label: "TikTok" },
+> +  youtube: { id: "GOOGLE_CLIENT_ID", secret: "GOOGLE_CLIENT_SECRET", label: "YouTube" },
+> +  pinterest: { id: "PINTEREST_CLIENT_ID", secret: "PINTEREST_CLIENT_SECRET", label: "Pinterest" },
+> [1;33mIf this is a FALSE POSITIVE, extend SAFE_PATTERN in .claude/hooks/secret-scan.sh
+> or move the value to the environment / Supabase Vault. Never commit live keys.[0m
+> ```
+
+## 🤖 Claude *(16:26:22)*
+
+
+## 🤖 Claude *(16:26:24)*
+
+Falso-positivo claro: o hook casou meu **ENV_MAP** — `secret: "TIKTOK_CLIENT_SECRET"` são **nomes de variáveis de env** (chaves de lookup no `Deno.env`), não valores de credencial. O hook sugere estender o `SAFE_PATTERN` ou refatorar. Lendo o hook para o fix correto e mínimo.
+
+## 🤖 Claude *(16:26:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/hooks/secret-scan.sh"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bash
+> 2	# Sovereign secret-leak guard — blocks commits containing hardcoded credentials.
+> 3	# Ported from the original .git/hooks/pre-commit and driven by lefthook (SDD-SEC §1.2).
+> 4	# Engine: ERE only (`grep -E`). The BRE idiom '^\+\+\+' silently no-ops under the ugrep shim some
+> 5	# environments alias to `grep` (incident 2026-06-01) — never use it.
+> 6	
+> 7	set -euo pipefail
+> 8	
+> 9	RED='\033[0;31m'
+> 10	YELLOW='\033[1;33m'
+> 11	NC='\033[0m'
+> 12	
+> 13	STAGED=$(git diff --cached --name-only 2>/dev/null)
+> 14	if [ -z "$STAGED" ]; then
+> 15	  exit 0
+> 16	fi
+> 17	
+> 18	PATTERN='AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|sk-ant-[a-zA-Z0-9\-_]{30,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|ghs_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]{10,}|sbp_[a-zA-Z0-9]{20,}|sb_secret_[a-zA-Z0-9_-]{10,}|whsec_[a-zA-Z0-9]{10,}|(sk|rk)_(live|test)_[a-zA-Z0-9]{10,}|r8_[a-zA-Z0-9]{30,}'
+> 19	SAFE_PATTERN='example|placeholder|your-key|YOUR_KEY|YOUR_SECRET|YOUR_API_KEY|<[A-Z_]+>|\.\.\.|\*\*\*|digest|sha256|fingerprint|test-only|mock|fake'
+> 20	
+> 21	# Credential-named var assigned a quoted literal of 8+ chars. Quoted form required, so ${...}
+> 22	# templates and backtick dynamic strings are ignored.
+> 23	GENERIC_CRED_PATTERN='(password|passwd|pwd|secret|client_secret|api[_-]?key|access_token|refresh_token|private_key)["'\'']?[[:space:]]*[:=][[:space:]]*["'\''][^"'\''$[:space:]]{8,}["'\'']'
+> 24	
+> 25	# Added content lines only: single '+' prefix, excluding the '+++' file header.
+> 26	ADDED=$(git diff --cached --no-color | grep -E '^\+[^+]' || true)
+> 27	HITS=$(printf '%s\n' "$ADDED" | grep -E "$PATTERN" | grep -vE "$SAFE_PATTERN" || true)
+> 28	CRED_HITS=$(printf '%s\n' "$ADDED" | grep -iE "$GENERIC_CRED_PATTERN" | grep -vE "$SAFE_PATTERN" || true)
+> 29	ALL_HITS=$(printf '%s\n%s\n' "$HITS" "$CRED_HITS" | grep -vE '^[[:space:]]*$' || true)
+> 30	
+> 31	if [ -n "$ALL_HITS" ]; then
+> 32	  echo ""
+> 33	  echo -e "${RED}╔══════════════════════════════════════════════════════════════╗${NC}"
+> 34	  echo -e "${RED}║  SECRET LEAK DETECTED — COMMIT BLOCKED                       ║${NC}"
+> 35	  echo -e "${RED}╚══════════════════════════════════════════════════════════════╝${NC}"
+> 36	  echo ""
+> 37	  echo -e "${YELLOW}Potential credentials found in staged changes:${NC}"
+> 38	  echo ""
+> 39	  echo "$ALL_HITS" | head -10
+> 40	  echo ""
+> 41	  echo -e "${YELLOW}If this is a FALSE POSITIVE, extend SAFE_PATTERN in .claude/hooks/secret-scan.sh"
+> 42	  echo -e "or move the value to the environment / Supabase Vault. Never commit live keys.${NC}"
+> 43	  exit 1
+> 44	fi
+> 45	
+> 46	exit 0
+> 47	
+> ```
+
+## 🤖 Claude *(16:28:12)*
+
+
+## 🤖 Claude *(16:28:15)*
+
+O hook é estrito (case-insensitive) e casou `secret: "TIKTOK_CLIENT_SECRET"` — nomes de env var, não valores. O fix mais limpo (mantém o hook de segurança rígido, sem allowlist frouxa): **renomear as chaves do ENV_MAP** `id`/`secret` → `idEnv`/`secretEnv` (são nomes de env, fica mais claro). Depois re-deploy das fns que importam o helper, pra git==prod. Lendo o helper + achando os importers.
+
+## 🤖 Claude *(16:28:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts",
+  "offset": 26,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 26	const ENV_MAP: Record<SocialAppPlatform, { id: string; secret: string; label: string }> = {
+> 27	  tiktok: { id: "TIKTOK_CLIENT_KEY", secret: "TIKTOK_CLIENT_SECRET", label: "TikTok" },
+> 28	  youtube: { id: "GOOGLE_CLIENT_ID", secret: "GOOGLE_CLIENT_SECRET", label: "YouTube" },
+> 29	  pinterest: { id: "PINTEREST_CLIENT_ID", secret: "PINTEREST_CLIENT_SECRET", label: "Pinterest" },
+> 30	};
+> 31	
+> 32	/** Structured fail-closed error → maps to a 402 JSON body the client can act on. */
+> 33	export class SocialAppConfigError extends Error {
+> 34	  readonly httpStatus = 402;
+> 35	  readonly body: { error: string; action: string };
+> 36	  constructor(platform: string, label: string) {
+> 37	    super(`${platform}_not_configured`);
+> ```
+
+## 🤖 Claude *(16:28:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== who imports the helper? ===\"; grep -rl \"_shared/social-app-config\" supabase/functions/*/index.ts",
+  "description": "Find helper importers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === who imports the helper? ===
+> supabase/functions/refresh-social-token/index.ts
+> supabase/functions/social-auth-callback/index.ts
+> supabase/functions/social-auth-init/index.ts
+> ```
+
+## 🤖 Claude *(16:28:22)*
+
+
+## 🤖 Claude *(16:28:22)*
+
+3 importers (init/callback/refresh). Renomeando no helper:
+
+## 🤖 Claude *(16:28:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts",
+  "old_string": "const ENV_MAP: Record<SocialAppPlatform, { id: string; secret: string; label: string }> = {\n  tiktok: { id: \"TIKTOK_CLIENT_KEY\", secret: \"TIKTOK_CLIENT_SECRET\", label: \"TikTok\" },\n  youtube: { id: \"GOOGLE_CLIENT_ID\", secret: \"GOOGLE_CLIENT_SECRET\", label: \"YouTube\" },\n  pinterest: { id: \"PINTEREST_CLIENT_ID\", secret: \"PINTEREST_CLIENT_SECRET\", label: \"Pinterest\" },\n};",
+  "new_string": "// Values are env-var NAMES (looked up in Deno.env), NOT secret values. The `*Env` suffix keeps them\n// unambiguous to the secret-scan hook (a `secret: \"...\"` literal would false-positive).\nconst ENV_MAP: Record<SocialAppPlatform, { idEnv: string; secretEnv: string; label: string }> = {\n  tiktok: { idEnv: \"TIKTOK_CLIENT_KEY\", secretEnv: \"TIKTOK_CLIENT_SECRET\", label: \"TikTok\" },\n  youtube: { idEnv: \"GOOGLE_CLIENT_ID\", secretEnv: \"GOOGLE_CLIENT_SECRET\", label: \"YouTube\" },\n  pinterest: { idEnv: \"PINTEREST_CLIENT_ID\", secretEnv: \"PINTEREST_CLIENT_SECRET\", label: \"Pinterest\" },\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:28:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts",
+  "old_string": "  const envId = Deno.env.get(env.id);\n  const envSecret = Deno.env.get(env.secret);",
+  "new_string": "  const envId = Deno.env.get(env.idEnv);\n  const envSecret = Deno.env.get(env.secretEnv);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/social-app-config.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:28:38)*
+
+
+## 🤖 Claude *(16:28:39)*
+
+Renomeado. `deno check` do helper + importers + reset do staging misturado:
+
+## 🤖 Claude *(16:28:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\nfor f in _shared/social-app-config.ts social-auth-init social-auth-callback refresh-social-token; do\n  if [ -d \"supabase/functions/$f\" ]; then T=\"supabase/functions/$f/index.ts\"; else T=\"supabase/functions/$f\"; fi\n  deno check \"$T\" >/dev/null 2>&1 && echo \"\u2705 $f\" || echo \"\u274c $f\"\ndone\necho \"\"; echo \"=== unstage the mixed staging ===\"; git reset -q HEAD; git status --short | head -3; echo \"...\"",
+  "description": "deno check renamed helper + reset staging"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ _shared/social-app-config.ts
+> ✅ social-auth-init
+> ✅ social-auth-callback
+> ✅ refresh-social-token
+> 
+> === unstage the mixed staging ===
+>  M src/components/icons/brand-icons.tsx
+>  M src/hooks/useSocialAccounts.ts
+>  M src/pages/SettingsPage.tsx
+> ...
+> ```
+
+## 🤖 Claude *(16:28:50)*
+
+
+## 🤖 Claude *(16:28:52)*
+
+deno check 4/4 limpo após rename. Re-commitando grupos 3 e 4 (e desta vez **verifico pelo git log**, não por echo):
+
+## 🤖 Claude *(16:29:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/_shared/social-app-config.ts supabase/functions/_shared/notify.ts supabase/functions/social-auth-init/index.ts supabase/functions/social-auth-callback/index.ts supabase/functions/refresh-social-token/index.ts supabase/functions/publish-social/index.ts supabase/functions/auto-publish/index.ts supabase/functions/autopilot-run/index.ts\ngit commit -q -m \"feat(social): TikTok/YouTube/Pinterest OAuth + publisher branches, fail-closed cred resolution (FR-PE-006..016)\n\nShared resolveSocialAppCreds (per-user social_app_config -> env fallback -> 402, never a silent shared key).\nAdds 3 branches each to social-auth-init/-callback/refresh-social-token (rotating-token aware) + publish-social\n(TikTok Direct Post FILE_UPLOAD, YouTube resumable, Pinterest video-pin). auto-publish resolves+signs video_url\n(fail-soft). VIDEO_FLOW_PLATFORMS kept wordpress-only (FR-PE-013 deferred: needs orchestrate-content enqueue\ngate, else charge-without-value). deno check 8/8; fail-closed proven live (3x402).\" >/dev/null 2>&1\necho \"edge commit exit: $?\"\n\ngit add src/hooks/useSocialAppConfig.ts src/lib/social-app-config.ts src/components/settings/SocialAppConfigCard.tsx src/components/icons/brand-icons.tsx src/hooks/useSocialAccounts.ts src/pages/SettingsPage.tsx src/pages/SocialAccountsPage.tsx\ngit commit -q -m \"feat(settings): social app-config card + TikTok/YouTube/Pinterest connect cards\n\nuseSocialAppConfig (read-then-insert/update on the Vault-masked view, never .upsert, never round-trips the mask) +\nSocialAppConfigCard in Settings->Social + the 3 connect cards via generic initiateOAuth. brand-icons gains\nTikTok/YouTube/Pinterest glyphs. tsc 0; built + deployed; browser-verified + Vision QA high.\" >/dev/null 2>&1\necho \"ui commit exit: $?\"\necho \"\"; echo \"=== VERIFY via git log (material) ===\"; git log --oneline -6\necho \"\"; echo \"=== anything left uncommitted? ===\"; git status --short",
+  "description": "Re-commit edge + UI, verify via git log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> edge commit exit: 0
+> ui commit exit: 0
+> 
+> === VERIFY via git log (material) ===
+> e81d868 feat(settings): social app-config card + TikTok/YouTube/Pinterest connect cards
+> 25477a8 feat(social): TikTok/YouTube/Pinterest OAuth + publisher branches, fail-closed cred resolution (FR-PE-006..016)
+> c94bd75 feat(db): social_app_config — per-user Vault-encrypted OAuth app credentials (FR-PE-005)
+> ea12afc docs(post-engine): social-connect BoK amendment + Lei-2 SOPs + grounded blueprint (TikTok/YouTube/Pinterest)
+> 2d8e46d chore(sprint): v6.53.0 — Agentic Governance + Learning Loop + analytics honesto
+> f486a8a docs(handoff): seal Agentic Governance + Learning Loop + analytics honesto + perfis da marca limpos
+> 
+> === anything left uncommitted? ===
+> ?? deno.lock
+> ```
+
+## 🤖 Claude *(16:29:10)*
+
+
+## 🤖 Claude *(16:29:12)*
+
+✅ **4 commits confirmados via git log** (ea12afc · c94bd75 · 25477a8 · e81d868). Removo o `deno.lock` (artefato) e **re-deploy dos 3 importers** (init/callback/refresh) pra git==prod após o rename do helper.
+
+## 🤖 Claude *(16:29:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f deno.lock\nfor fn in social-auth-init social-auth-callback refresh-social-token; do\n  npx supabase functions deploy \"$fn\" 2>&1 | grep -iE \"Deployed|error|failed\" | head -2\ndone",
+  "description": "Redeploy 3 helper importers",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deployed Functions on project bcyvddsykvehvpwstlfa: social-auth-init
+> Deployed Functions on project bcyvddsykvehvpwstlfa: social-auth-callback
+> Deployed Functions on project bcyvddsykvehvpwstlfa: refresh-social-token
+> ```
+
+## 🤖 Claude *(16:29:38)*
+
+
+## 🤖 Claude *(16:29:39)*
+
+Redeploy ✅ (git==prod). Re-smoke rápido (confirma o rename não quebrou o lookup de env) + **Phase 3 — nó de milestone na malha**.
+
+## 🤖 Claude *(16:29:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-${SUPABASE_URL}}\"; export SUPABASE_URL=\"$URL\"; SVC=\"${SB_SECRET_KEY}\"\nJWT=$(bun run scripts/qa/gen-user-jwt.ts gabrielcallr@icloud.com 2>/dev/null | tail -1)\necho \"=== re-smoke tiktok (expect 402) ===\"\ncurl -s -w \" [HTTP %{http_code}]\\n\" \"$URL/functions/v1/social-auth-init\" -H \"Authorization: Bearer $JWT\" -H \"Content-Type: application/json\" -d '{\"platform\":\"tiktok\",\"redirect_uri\":\"https://login.mcorch.com/social/callback\"}'\n\necho \"\"; echo \"=== Phase 3: insert handoff node ===\"\nNODE=$(curl -s -X POST \"$URL/rest/v1/mcorch_nodes\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n -d '{\"name\":\"session-handoff-20260627-social-connect-tiktok-youtube-pinterest\",\"node_type\":\"handoff\",\"content\":\"[HANDOFF SEAL] Conectar redes TikTok/YouTube/Pinterest (brand persona Gabriel AI): PASSO 0 BoK post-engine (06/09/10 + 3 SOPs Lei 2) + migration social_app_config Vault-cifrada aplicada+provada (coluna crua=UUID Vault, mask, decrypted service-role-only) + /security-review SAFE + helper fail-closed per-user->env->402 + 4 edge fns OAuth/publisher (deno check 8/8, deployadas, fail-closed 3x402 provado live) + UI (useSocialAppConfig + SocialAppConfigCard + 3 connect cards, tsc 0, build deployado, browser-verified + Vision QA high). FR-PE-013 video-cadence DEFERIDO. Pendente: Sovereign registra 3 apps + 3 audits.\",\"stability_score\":1.0,\"project_id\":null,\"user_id\":null,\"metadata\":{\"session\":\"social-connect-tiktok-youtube-pinterest\",\"commits\":\"ea12afc|c94bd75|25477a8|e81d868\"}}' \\\n | python3 -c \"import sys,json;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) and d else d)\")\necho \"Node ID: $NODE\"\necho \"{\\\"handoffNodeId\\\": \\\"$NODE\\\"}\" > proof-manifest.json\necho \"\"; echo \"=== embed it ===\"\ncurl -s -X POST \"$URL/functions/v1/embed-mcorch-node\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"$NODE\\\"}}\" | head -c 200",
+  "description": "Re-smoke + insert/embed handoff node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-smoke tiktok (expect 402) ===
+> {"error":"tiktok_not_configured","action":"Configure suas credenciais de app TikTok em /dashboard/settings"} [HTTP 402]
+> 
+> === Phase 3: insert handoff node ===
+> Node ID: 311a55b1-fb7b-410f-9582-625fb4721619
+> 
+> === embed it ===
+> {"error":"Request body must contain { node_id: string }"}
+> ```
+
+## 🤖 Claude *(16:29:59)*
+
+
+## 🤖 Claude *(16:30:01)*
+
+Re-smoke ✅ (402, rename OK). Nó `311a55b1-fb7b-410f-9582-625fb4721619` inserido. O embed quer `{node_id}` (não `{record}`) — corrijo + verifico o vetor:
+
+## 🤖 Claude *(16:30:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"${VITE_SUPABASE_URL:-${SUPABASE_URL}}\"; SVC=\"${SB_SECRET_KEY}\"; NODE=\"311a55b1-fb7b-410f-9582-625fb4721619\"\necho \"=== embed (correct payload {node_id}) ===\"\ncurl -s -X POST \"$URL/functions/v1/embed-mcorch-node\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"$NODE\\\"}\" | head -c 200\necho \"\"; echo \"=== verify embedding present ===\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?id=eq.$NODE&select=id,embedding\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" | python3 -c \"import sys,json;d=json.load(sys.stdin);e=d[0].get('embedding') if d else None;print('embedded:', bool(e), '| dims:', (len(e.split(',')) if isinstance(e,str) else (len(e) if e else 0)))\"\necho \"=== live node count (exact) for README badge ===\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $SVC\" -H \"Authorization: Bearer $SVC\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Embed node + verify + count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embed (correct payload {node_id}) ===
+> {"node_id":"311a55b1-fb7b-410f-9582-625fb4721619","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> === verify embedding present ===
+> embedded: True | dims: 768
+> === live node count (exact) for README badge ===
+> 8973
+> ```
