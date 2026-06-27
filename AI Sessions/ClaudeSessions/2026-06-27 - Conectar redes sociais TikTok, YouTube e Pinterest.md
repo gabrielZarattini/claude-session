@@ -6377,15 +6377,457 @@ Re-smoke ✅ (402, rename OK). Nó `311a55b1-fb7b-410f-9582-625fb4721619` inseri
 > 8973
 > ```
 
----
+## 🤖 Claude *(16:30:22)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
-> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(16:30:23)*
+
+Nó embedado (768d ✅) · malha **8973 nós**. Continuando o seal — **Phase 4 (README)** + **Phase 5 (HANDOFF.md)**. Lendo o topo do README.
+
+## 🤖 Claude *(16:30:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.53.0--Agentic--Governance--%2B--Learning--Loop-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8971_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 8	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 9	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 10	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 11	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 12	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 13	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.4_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 14	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 15	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 16	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 17	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 18	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 19	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 20	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 21	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 22	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 23	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 24	  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 25	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 26	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 27	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 28	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 29	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 30	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 31	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 32	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 33	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 34	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 35	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 36	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 37	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 38	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 39	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 40	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 41	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 42	  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 43	  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 44	  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 45	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 46	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 47	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 48	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 49	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 50	  <img src="https://img.shields.io/badge/ML_Affiliate-no_official_API_(probe--first)-red?style=for-the-badge" alt="ML Affiliate Probe" />
+> 51	  <img src="https://img.shields.io/badge/Browser_Operator-runtime_blocked_at_datacenter-darkred?style=for-the-badge" alt="Browser Operator Probe" />
+> 52	  <img src="https://img.shields.io/badge/Pantheon-7_agents_BoK_full-orange?style=for-the-badge" alt="Pantheon" />
+> 53	  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 54	  <img src="https://img.shields.io/badge/Admin_Panel-user_management_live-brightgreen?style=for-the-badge" alt="Admin Panel" />
+> 55	  <img src="https://img.shields.io/badge/Great_Reset-Sovereign_soft--reset_live-darkred?style=for-the-badge" alt="Great Reset" />
+> 56	  <img src="https://img.shields.io/badge/Constellation_Economic_Activation-agents_billable-gold?style=for-the-badge" alt="CEA" />
+> 57	  <img src="https://img.shields.io/badge/Hybrid_Billing-Sovereign_free_others_charged-teal?style=for-the-badge" alt="Hybrid Billing" />
+> 58	  <img src="https://img.shields.io/badge/Agent_Pricing-7_models_seeded-fuchsia?style=for-the-badge" alt="Agent Pricing" />
+> 59	  <img src="https://img.shields.io/badge/Daily_Pulse_Cron-04:00_BRT-violet?style=for-the-badge" alt="Daily Pulse" />
+> 60	  <img src="https://img.shields.io/badge/BoK_marketing--hub-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK marketing-hub" />
+> ```
+
+## 🤖 Claude *(16:30:30)*
+
+
+## 🤖 Claude *(16:30:31)*
+
+O README tem badges. Atualizo versão (6.53.0→6.54.0), node count (8971→8973), e adiciono um badge de social-connect.
+
+## 🤖 Claude *(16:30:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.53.0--Agentic--Governance--%2B--Learning--Loop-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.54.0--Social--Connect--TikTok--YouTube--Pinterest-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:30:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8971_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8973_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:30:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge\" alt=\"Viral Autopilot\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge\" alt=\"Viral Autopilot\" />\n  <img src=\"https://img.shields.io/badge/social--connect-TikTok%2FYouTube%2FPinterest_code--complete-brightgreen?style=for-the-badge\" alt=\"Social Connect\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:30:41)*
+
+
+## 🤖 Claude *(16:30:42)*
+
+Agora a seção "What's New" do README. Localizando + prepend.
+
+## 🤖 Claude *(16:30:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"What's New|## \ud83c\udd95|### \\[v6\\.5|Novidades|## Changelog\" README.md | head -8",
+  "description": "Locate What's New section"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 77:## 🆕 What's new in v6.53.0 (2026-06-27)
+> 84:## 🆕 What's new in v6.52.0 (2026-06-26)
+> 91:## 🆕 What's new in v6.51.0 (2026-06-25)
+> 98:## 🆕 What's new in v6.50.0 (2026-06-25)
+> 105:## 🆕 What's new in v6.45.0 (2026-06-22)
+> 112:## 🆕 What's new in v6.44.0 (2026-06-20)
+> 118:## 🆕 What's new in v6.43.0 (2026-06-20)
+> 125:## 🆕 What's new in v6.40.0 (2026-06-17)
+> ```
+
+## 🤖 Claude *(16:30:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 77,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 77	## 🆕 What's new in v6.53.0 (2026-06-27)
+> 78	
+> 79	- **Doutrina Agêntica AGI→ASI + Pattern Conformance gate vinculante.** Os 21 padrões agênticos (Gulli) + as 4 vias para a ASI (DeepMind) viraram a lente que governa todo desenvolvimento futuro. `docs/architecture/agentic-vision.md` é a referência arquitetural viva (Pattern Maturity Ledger: 11 fortes · 9 moderados · 1 fraco); o `CLAUDE.md §1` ganha o gate — **toda SDD nova declara conformidade com os 21 padrões**. BoK `agentic-governance` 10/10 selada (nó `34748570`).
+> 80	- **Collective Efficiency Ledger — medir o coletivo, não no escuro.** O paper aponta as perguntas de coletivo de agentes (V4-2/4/5) como abertas; respondíamos por doutrina mas **não medíamos nenhuma**. VIEW `collective_efficiency_ledger` (security_invoker per-tenant) + RPC service-role DERIVAM mco/resultado + overhead da verdade financeira (anti-Goodhart). **G6 isolamento provado** (tenant throwaway vê 0); rollup real: orchestrate-content avg **334s** vs autopilot-cycle **2.4s**.
+> 81	- **Learning & Adaptation (o único padrão fraco) atacado — o loop que COMPÕE.** Diagnóstico material: o motor aprendia sobre um **placar em branco**. Nervo sensorial: `publication_metrics` (time-series) + coletor fail-soft IG/FB + painel **"Por Publicação"** (número real ou "sem dados ainda", **nunca demo**, browser-provado). Reward multi-métrica brand-first `R=0.40·reach+0.30·eng+0.20·brand+0.10·rev` mata o `totalClicks` Goodhart (degrada honesto — prova policy reward 0.9 modo fallback). Realocação ε-greedy budget-neutral: **a política agora move o fan-out, não só sussurra**.
+> 82	- **Analytics honesto + perfis da marca limpos.** O fallback **demo** (números falsos 12.400) foi removido — vazio = zero honesto. Perfis sociais antigos zerados (LinkedIn + Twitter, backup reversível) p/ as contas da marca começarem do zero: **Gabriel AI** (LinkedIn/FB) · **@gabrielOrchAI** (X).
+> 83	
+> 84	## 🆕 What's new in v6.52.0 (2026-06-26)
+> ```
+
+## 🤖 Claude *(16:31:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.53.0 (2026-06-27)",
+  "new_string": "## \ud83c\udd95 What's new in v6.54.0 (2026-06-27)\n\n- **Conectar redes \u2014 TikTok + YouTube + Pinterest (brand persona Gabriel AI).** A camada de publica\u00e7\u00e3o ganha 3 canais novos sem reinventar os trilhos: o enum `social_platform` j\u00e1 tinha as 3; o MP4 9:16 do HyperFrames \u00e9 o mesmo de Reel/Shorts/TikTok. **PASSO 0 (gate BoK):** emenda `post-engine` (`06`/`09-pattern-conformance` 21 padr\u00f5es/`10-amendment` FR-PE-005..016) + 3 SOPs Lei 2. **Migration `social_app_config`** \u2014 credenciais de app per-user **cifradas no Vault** (masked view security_invoker + decrypted view service-role-only + INSTEAD OF tenant-guard 42501), aplicada+provada (coluna crua = UUID Vault) \u00b7 `/security-review` SAFE. **Helper fail-closed** `resolveSocialAppCreds` (per-user \u2192 env \u2192 402, nunca chave compartilhada silenciosa). **4 edge fns** com branches OAuth+publisher (TikTok Direct Post FILE_UPLOAD \u00b7 YouTube resumable \u00b7 Pinterest video-pin) \u2014 `deno check` 8/8, deployadas, **fail-closed provado ao vivo (3\u00d7402)**. **UI** \u2014 card de credenciais (Settings\u2192Social) + 3 bot\u00f5es Conectar (`/dashboard/social`), tsc 0, build deployado, **browser-verified + Vision QA high**. Pesquisa fundamentada (3 plataformas verificadas HIGH, cada claim com URL oficial). **Pendente (Sovereign):** registrar 3 apps de dev + 3 audits \u2192 conex\u00e3o acende; p\u00fablico p\u00f3s-audit. **Deferido:** v\u00eddeo-cad\u00eancia aut\u00f4noma p/ as novas redes (FR-PE-013, precisa do enqueue-gate do orchestrate-content).\n\n## \ud83c\udd95 What's new in v6.53.0 (2026-06-27)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:31:08)*
+
+
+## 🤖 Claude *(16:31:09)*
+
+README atualizado. Commit do README + **Phase 5 (HANDOFF.md)** — prepend do novo seal record.
+
+## 🤖 Claude *(16:31:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.54.0 \u2014 Social Connect TikTok/YouTube/Pinterest (code-complete + fail-closed proven)\" >/dev/null 2>&1\necho \"readme commit exit: $?\"; git log --oneline -1",
+  "description": "Commit README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> readme commit exit: 0
+> cbe16c8 docs(readme): v6.54.0 — Social Connect TikTok/YouTube/Pinterest (code-complete + fail-closed proven)
+> ```
+
+## 🤖 Claude *(16:31:41)*
+
+
+## 🤖 Claude *(16:31:42)*
+
+README ✅ (cbe16c8). Inserindo o seal record no HANDOFF.md:
+
+## 🤖 Claude *(16:31:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Doutrina Ag\u00eantica AGI\u2192ASI + Learning & Adaptation: gate vinculante",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Conectar redes: TikTok + YouTube + Pinterest (brand persona Gabriel AI) \u2014 BoK gate + Vault app-creds + OAuth/publisher branches + UI (2026-06-27)\n\nDiretiva Sovereign: *\"vamos conectar as redes \u2014 TikTok, YouTube, Pinterest\"* + *\"continue for\u00e7a total\"*. Operado sob o Closed-Loop Protocol: pesquisa fundamentada \u2192 gate BoK \u2192 migration \u2192 edge code \u2192 UI \u2192 seal. Tudo provado materialmente (Lei 1); nada declarado sem prova.\n\n**Achado central:** ~90% da infra j\u00e1 existia (enum `social_platform` j\u00e1 tinha as 3 \u00b7 `social_accounts` Vault \u00b7 OAuth gen\u00e9rico `social-auth-init`/`-callback` \u00b7 MESMO MP4 9:16). Net-new = credenciais de app per-user (Vault) + 3 pares de branches OAuth/publisher + UI. Os blockers duros s\u00e3o 100% **Sovereign-gated** (registrar 3 apps de dev + 3 audits \u2014 sem app n\u00e3o h\u00e1 `client_id`/`secret` \u2192 nenhum OAuth; sem audit o p\u00fablico \u00e9 invis\u00edvel: TikTok SELF_ONLY \u00b7 YouTube forced-private \u00b7 Pinterest sandbox).\n\n| Action | Result |\n|--------|--------|\n| Pesquisa fundamentada (workflow `wf_b5a35451`, 8 agentes, adversarial-verify) | \u2705 3 plataformas verificadas HIGH; blueprint `.claude/context/social-connect-3platforms-blueprint-2026-06-27.md` + playbook `\u2026/social-app-registration-playbook-2026-06-27.md` |\n| PASSO 0 \u2014 gate BoK | \u2705 `post-engine` `06`/`09-pattern-conformance`(21 padr\u00f5es)/`10-amendment`(FR-PE-005..016) + 3 SOPs Lei 2 `docs/processes/{tiktok,youtube,pinterest}-publish-credential-resolution.md` |\n| Migration `20260627120000_social_app_config` | \u2705 aplicada+provada \u2014 coluna crua=UUID Vault `55caaf7b\u2026` \u00b7 masked view `\u2022\u2022\u2022\u2022` \u00b7 decrypted view anon\u2192**42501** \u00b7 `/security-review` SAFE |\n| Helper `supabase/functions/_shared/social-app-config.ts` | \u2705 `resolveSocialAppCreds` per-user\u2192env\u2192**402** fail-closed (nunca chave compartilhada silenciosa) |\n| Branches `social-auth-init`/`-callback`/`refresh-social-token`/`publish-social` + `auto-publish` video_url | \u2705 `deno check` 8/8 \u00b7 deployadas \u00b7 **fail-closed provado LIVE (3\u00d7402)** |\n| `autopilot-run` VIDEO_FLOW_PLATFORMS / FR-PE-013 | \u23f8\ufe0f **DEFERIDO** \u2014 manter `['wordpress']`; adicionar youtube/tiktok/pinterest cobraria VIDEO_COST sem render (charge-without-value) at\u00e9 estender o enqueue-gate de `orchestrate-content`/`-step` |\n| UI `useSocialAppConfig` + `SocialAppConfigCard` (Settings\u2192Social) + 3 connect cards (`/dashboard/social`) | \u2705 tsc 0 \u00b7 build deployado (chunk `SettingsPage-CHgtU2cG.js` + env baked) \u00b7 **browser-verified + Vision QA \"high\"** \u00b7 0 erro de console |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `ea12afc` | docs(post-engine): BoK amendment + SOPs + blueprint |\n| `c94bd75` | feat(db): social_app_config Vault-cifrada (FR-PE-005) |\n| `25477a8` | feat(social): OAuth + publisher branches + helper fail-closed (FR-PE-006..016) |\n| `e81d868` | feat(settings): app-config card + connect cards |\n| `cbe16c8` | docs(readme): v6.54.0 |\n\n**Mesh seal:** handoff node `311a55b1-fb7b-410f-9582-625fb4721619` (embedded 768d). Mesh **8973 n\u00f3s**.\n\n**Pr\u00f3ximo (o unlock):** (Sovereign) registrar TikTok/Google/Pinterest dev apps + submeter 3 audits + entrar `client_id`/`secret` (UI Settings\u2192Social OU env `TIKTOK_CLIENT_KEY`/`_SECRET`\u00b7`GOOGLE_CLIENT_ID`/`_SECRET`\u00b7`PINTEREST_CLIENT_ID`/`_SECRET`) \u2192 o bot\u00e3o Conectar acende o OAuth (provo o publish E2E no mesmo dia); p\u00fablico p\u00f3s-audit. (c\u00f3digo) slice FR-PE-013 video-cadence das novas redes + spine de persona CCIO.\n\n---\n\n## Session Seal \u2014 Doutrina Ag\u00eantica AGI\u2192ASI + Learning & Adaptation: gate vinculante"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:32:13)*
+
+
+## 🤖 Claude *(16:32:14)*
+
+Seal record inserido. Atualizo o contador GraphRAG + rodo **Phase 5b (secret scan no HANDOFF.md)** antes de commitar.
+
+## 🤖 Claude *(16:32:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== GraphRAG count line ===\"; grep -nE \"^\\- \\*\\*89[0-9]{2} total nodes\\*\\*|## GraphRAG State\" HANDOFF.md | head -3\necho \"\"; echo \"=== Phase 5b \u2014 secret scan on HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\\|hash\\|uuid\" | head -5 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\ngrep -nE \"AIza[0-9A-Za-z_-]{35}\" HANDOFF.md | head -3 || echo \"NO GOOGLE KEYS \u2705\"",
+  "description": "Find GraphRAG line + Phase 5b secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GraphRAG count line ===
+> 8267:## GraphRAG State
+> 8269:- **8969 total nodes** (verificado live 2026-06-26 via REST count=exact, gabriel-ai-moodboard-vision-qa seal: +handoff `5501a101-f4fb-4431-a9d8-34f551353c95` embedded 768d — 1º ciclo pago vídeo 9:16 witnessed + billing/CTA fixes + LinkedIn cadence E2E + virada brand-persona Gabriel AI/CCIO + blueprint YT/TikTok + nó mood-board multi-foto + mood board 4 retratos Vision-QA-gated + 2 animações DoP + regra Vision QA + canvas prompt.length hardening; prev 8960 creative-assets-spine-fatia1 seal: +handoff `8eb84bce-f0d5-4463-a79b-9de9ab5892b9` embedded 768d — HyperFrames editor LIVE [video-studio.service + vhost SSO + iframe /dashboard/canvas/video] + auth gating ?devLogin + Canvas hydration-race bug fix + projeto 63d406fe recuperado + creative_assets SPINE [migration+RPC service-role-only, dual-write video-bridge/canvas-execute/generate-image, backfill 73, Biblioteca de Assets UI]; prev 8959 hyperframes-studio-blueprint-and-video-billing-fix seal: +handoff `b42e89f9-3636-4ff0-a86e-674ed479d3c5` embedded 768d via trigger — blueprint de integração do HyperFrames Studio [deepsearch `ae8b94c5`, StudioApp zero-props + seam StudioApiAdapter → módulo-container VS-UI] + fix do gap de billing OTD-VA-010 [crédito compensatório idempotente `refund_autopilot_video_enqueue` migration `20260624140000`, smoke 8/8 net-debit-exclui-12, /security-review SAFE]; prev 8958 video-9x16-motor-and-autopilot seal: +handoff `5e470dff-d7b3-4936-a130-2c34350d56c8` embedded 768d via trigger — vídeo 9:16 autônomo: VS-2 motor HyperFrames determinístico vivo [render-core Playwright+FFmpeg 1080×1920 sha256-idêntico, video-bridge.service, bucket, edge poll://] + VA-V1 integração Autopilot [orchestrate-step enfileira render do ângulo real, custo no pré-débito do ciclo, attach content_library+creative_metrics] + flip editor OTD-VS-005 A→C módulo-container; prev 8954 autopilot-activation-security-hardening seal: +handoff `bc175ac9-e8a8-483b-a32f-4660dd0b90ba` embedded 768d via trigger — 3 arcos: Viral Autopilot ATIVADO [1º ciclo pago `947ef8b5` + pg_cron jobid 3] + FR-VA-018 trend angle hardened + segurança social-auth [state HMAC + webhook IG sig] + paridade pt-BR Cyber-Sentinel OTD-VA-018; prev 8946 alertas-video-fatia1-de-n8n seal: +handoff `bb23b9dc-265e-4338-9709-d320371908b4` embedded 768d — alertas CF/security-drift + Vídeo Fatia 1 [video_renders/video_assets/finalize_video_render + edge video-render/poll] + Fatia 1b UI + emenda BoK SDD v1.2 De-n8n; prev 8935 viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d — cadência R2 (cron + begin/finalize_autopilot_cycle atômicos) + loop R3 (analyze→optimization_policy / collect / feedback-inject) + UI (useAutopilot/AutopilotPage); prev 8934 viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d — Fatias 1 (product-aware + monetização cross-surface + creative_metrics) + 1b (imagem fail-open) + generate-image fix + diagnóstico saída visível; prev 8928 viral-autopilot-bok-seal: +handoff `496ec17c-953e-498c-b18f-e19ef093ad46` embedded 768d + BoK seal `b3398294-aa75-4810-845b-3a15cfe802e7` `documentation_suite` viral-autopilot + DERIVES_FROM edge `05cea16d-b942-409c-9847-1acc693f6ccc` → marketing-hub `d5163fed`; prev 8926 unified-sensorial-canvas-v9 seal: +handoff `5225ff03-5e4d-4599-9c9a-625e2e1806af` embedded 768d + AGI→ASI ref `a576216e` (architecture, edge `INFORMS` `d2827191` → openclaw seal) + AST ingest dos arquivos novos do canvas (CodeNetworkLayer/MemoryNetworkLayer/useUnifiedCanvasStore/useMemoryNetwork); prev 8922 vision-mcp-fatia3-pat-plugin-registry-caps seal: +handoff `c21c53db-cd96-465d-92ba-fc419c0c83e7` embedded 768d — PAT UI + Plugin/Registry + caps; prev 8921 vision-mcp-vhost-live seal: +handoff `0632e1f8-81db-4cc8-bd5e-c5ea8109508d` embedded 768d — OTD-VM-013 fechada; prev 8920 vision-fatia3-pat-erase seal: +handoff `e0695dad-3fc8-4f1e-9973-a40c15aec433` embedded 768d; prev 8918 vision-deepsearch-run-async seal: +handoff `fc0b5efc-9df8-4e03-8544-820caee4ee79` embedded 768d; prev 8917 vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d; prev 8916 vision-mcp-fatia1-deployed seal: +handoff `98fa83d7-3caa-4d23-9f5d-ed040ced9530` embedded 768d; prev 8915 em vision-mcp-bok-9of9 seal: +handoff `b73d141d` + BoK seal `318862b7` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` → mcorch-constellation; prev 8911 em diagnostics-and-continuity +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)
+> 
+> === Phase 5b — secret scan on HANDOFF.md ===
+> ```
+
+## 🤖 Claude *(16:32:31)*
+
+
+## 🤖 Claude *(16:32:32)*
+
+Phase 5b: **HANDOFF.md sem credenciais ✅** (só UUIDs/hashes). Atualizo o contador GraphRAG (8969→8973 + novo nó) e commito.
+
+## 🤖 Claude *(16:32:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8969 total nodes** (verificado live 2026-06-26 via REST count=exact, gabriel-ai-moodboard-vision-qa seal: +handoff `5501a101-f4fb-4431-a9d8-34f551353c95` embedded 768d",
+  "new_string": "- **8973 total nodes** (verificado live 2026-06-27 via REST count=exact, social-connect-tiktok-youtube-pinterest seal: +handoff `311a55b1-fb7b-410f-9582-625fb4721619` embedded 768d \u2014 conectar redes TikTok/YouTube/Pinterest: gate BoK post-engine + migration social_app_config Vault-cifrada aplicada/provada + helper fail-closed + 4 edge fns OAuth/publisher [deno 8/8, deployadas, 3\u00d7402 live] + UI browser-verified Vision-QA-high; FR-PE-013 video-cadence deferido; prev 8969 gabriel-ai-moodboard-vision-qa seal: +handoff `5501a101-f4fb-4431-a9d8-34f551353c95` embedded 768d"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:32:43)*
+
+
+## 🤖 Claude *(16:32:43)*
+
+HANDOFF commit + **Phase 5c (material proof audit)**:
+
+## 🤖 Claude *(16:32:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal social-connect TikTok/YouTube/Pinterest \u2014 BoK gate + Vault app-creds + OAuth/publisher branches + UI\" >/dev/null 2>&1\necho \"handoff commit exit: $?\"; git log --oneline -1\necho \"\"; echo \"=== Phase 5c \u2014 material proof audit ===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40",
+  "description": "Commit HANDOFF + Phase 5c audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> handoff commit exit: 0
+> 9fc3020 docs(handoff): seal social-connect TikTok/YouTube/Pinterest — BoK gate + Vault app-creds + OAuth/publisher branches + UI
+> 
+> === Phase 5c — material proof audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node 311a55b1 | mesh_node | 311a55b1-fb7b-410f-9582-625fb4721619 | 311a55b1-fb7b-410f-9582-625fb4721619 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 24.8s)
+> ```
+
+## 🤖 Claude *(16:33:27)*
+
+
+## 🤖 Claude *(16:33:29)*
+
+**Phase 5c: `SEAL ALLOWED`** — 10 verificadas · 0 falhas (nó `311a55b1` + commits + suite 295 passed). **Phase 6 (BoK) + Phase 7 (push):**
+
+## 🤖 Claude *(16:33:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Phase 6: post-engine BoK (the module this session amended) ===\"\nreq=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); miss=()\nfor d in \"${req[@]}\"; do [ -f \"docs/bok/post-engine/$d.md\" ] || miss+=(\"$d\"); done\n[ ${#miss[@]} -eq 0 ] && echo \"\u2705 post-engine \u2014 BoK complete (+ 09-pattern-conformance + 10-amendment this session)\" || echo \"\u26a0\ufe0f missing: ${miss[*]}\"\necho \"Note: no NEW module/page created (edge fn branches + migration + UI components only) \u2192 no new BoK required.\"\necho \"\"; echo \"=== Phase 7: push ===\"\ngit push origin main 2>&1 | tail -6",
+  "description": "Phase 6 BoK check + Phase 7 push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 6: post-engine BoK (the module this session amended) ===
+> ✅ post-engine — BoK complete (+ 09-pattern-conformance + 10-amendment this session)
+> Note: no NEW module/page created (edge fn branches + migration + UI components only) → no new BoK required.
+> 
+> === Phase 7: push ===
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.21 seconds)
+> ✔️ gitleaks-range (0.21 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2d8e46d..9fc3020  main -> main
+> ```
+
+## 🤖 Claude *(16:33:54)*
+
+
+## 🤖 Claude *(16:34:16)*
+
+**Push ✅** (`2d8e46d..9fc3020 main -> main`, gitleaks-range passou). BoK post-engine completo, sem módulo novo sem BoK. Scratch já estava limpo. Selo completo.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Conectar redes TikTok/YouTube/Pinterest (2026-06-27)
+═══════════════════════════════════════════════════════════
+```
+
+🔐 **SEGURANÇA**
+&nbsp;&nbsp;Phase 1: ✅ PASS (matches do 1a = leituras `Deno.env.get` — falso-positivo no substring `SECRET_KEY`) · 1c/1e limpos
+&nbsp;&nbsp;**Defesa em profundidade funcionou:** o hook `secret-scan` BLOQUEOU os commits 3/4 por `secret: "TIKTOK_CLIENT_SECRET"` (nomes de env, falso-positivo) → refatorei p/ `idEnv`/`secretEnv` (sem afrouxar o hook) + redeployei os 3 importers
+&nbsp;&nbsp;Phase 5b (HANDOFF.md): ✅ sem credenciais · gitleaks: no leaks em todos os commits
+
+📦 **COMMITS (6 · pushed)**
+&nbsp;&nbsp;`ea12afc` docs(post-engine) · `c94bd75` feat(db) · `25477a8` feat(social) · `e81d868` feat(settings) · `cbe16c8` docs(readme) · `9fc3020` docs(handoff)
+
+⬡ **KNOWLEDGE MESH**
+&nbsp;&nbsp;Handoff node `311a55b1-fb7b-410f-9582-625fb4721619` — embedded 768d ✅ · Mesh **8973 nós**
+
+📖 **README.md** — v6.53.0 → **v6.54.0** · badge neural_mesh 8971 → **8973** · +badge social-connect · entrada What's New
+
+📋 **PROVA MATERIAL (Phase 5c)** — Veredito: **SEAL ALLOWED** · 10 verificadas · 0 skipped · **0 falhas**
+
+🚀 **PUSH** — `main → origin/main` · 6 commits (`2d8e46d..9fc3020`)
+
+⚖️ **SURVIVAL LAWS SELF-AUDIT**
+&nbsp;&nbsp;**Lei 1 (Materialidade):** toda claim de SUCCESS ancorada (round-trip Vault, `deno check` 8/8, **3×402 live**, browser+Vision QA, contadores via REST). Peguei e corrigi meus próprios `✅ commit` falsos (verifiquei via `git log`, não por echo). Zero fabricação.
+&nbsp;&nbsp;**Lei 2 (Processo):** 3 SOPs + emenda BoK escritos ANTES do código (PASSO 0). ✅
+&nbsp;&nbsp;**Lei 3 (Poda):** usei a janela grande (diretiva Sovereign); selei na conclusão natural do arco (itens acionáveis esgotados — resto é Sovereign-gated). Leitura pesada delegada a agentes p/ manter o main-loop enxuto.
+&nbsp;&nbsp;**Lei 4 (ORO):** declarado no início (Operator=MCORCH Agent · Reviewer/Owner=Sovereign).
+
+⏭ **PRÓXIMOS PASSOS**
+&nbsp;&nbsp;1. **(Você — caminho crítico)** Registrar os 3 apps de dev (TikTok/Google/Pinterest) + submeter os 3 audits → playbook em [social-app-registration-playbook-2026-06-27.md](.claude/context/social-app-registration-playbook-2026-06-27.md). Depois entrar `client_id/secret` (Settings→Social **ou** env secrets) → o botão Conectar acende e eu provo o publish E2E no mesmo dia.
+&nbsp;&nbsp;2. **(Código, deferido)** Slice FR-PE-013 — vídeo-cadência autônoma das novas redes (estender o enqueue-gate do `orchestrate-content` p/ não cobrar-sem-valor).
+&nbsp;&nbsp;3. **(Código)** Spine de persona CCIO (trocar a semente do prompt produto→voz da marca).
+
+```
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Maestro, as três redes estão **construídas, deployadas, provadas e seladas em produção**, com git == prod (sem drift). A bola está com você: registre os apps e submeta os audits — é a única coisa que separa o Gabriel AI de publicar autonomamente em TikTok, YouTube e Pinterest. Quando voltar com as credenciais, eu acendo a conexão e provo o primeiro publish real. 🚀
