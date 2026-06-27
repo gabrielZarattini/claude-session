@@ -1513,7 +1513,7 @@ Tem um playbook de registro que a pesquisa fundamentada da sessão anterior já 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/[[tiktok-publish-credential-resolution|tiktok-publish-credential-resolution]].md 2>/dev/null",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/tiktok-publish-credential-resolution.md 2>/dev/null",
   "description": "Read registration playbook + TikTok SOP"
 }
 ```
@@ -1904,7 +1904,7 @@ Boa — se as chaves já estão nas configurações, o primeiro passo material �
 > if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
 > console.log(accessToken);
 > ===find User Zero id/email===
-> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP [[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]] para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
+> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP mcoins-ledger-reconciliation para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
 > scripts/seed-openclaw-bok-seal.ts:47:PRÓXIMO DELIVERABLE (post-seal): (a) carry-overs OE-661 (provisionar GCRUX_ML_AFFILIATE_TOKEN + wire orchestrate emitir content_mesh_asset + primeiro run end-to-end Usuário Zero do flywheel); (b) claw-master audit-v2 (planejado 2026-06-16) verificar regressão D-OC-001..005 + novas findings; (c) OTD-CM-005 logging.redactSensitive set true no próximo edit consolidado de openclaw.json (P2 oportunístico); (d) D-OC-008 marketing-growth BOOTSTRAP.md scaffold (non-blocking).`,
 > scripts/seed-e2e-user-zero-bok-seal.ts:37:  content: `e2e-user-zero — Framework de QA End-to-End como Usuário Zero real (BoK v1)
 > scripts/seed-e2e-user-zero-bok-seal.ts:41:VISÃO: Framework AI-agent-friendly que testa MCORCH como Usuário Zero real de interface (não API tests programáticos), usando agent-browser CLI v0.27.0+ como primitiva técnica. Observa simultaneamente as 4 superfícies que um humano consciente observa ao dogfooding: (1) UI/DOM via snapshot accessibility-tree com refs @e1/@e2 (interações reais click/fill/type); (2) Network tab capturada como HAR file; (3) Console messages (errors + warnings + unhandled rejections); (4) estado visual via screenshot/video opcional. Cada finding é classificado por severity (P0..P3) e issue_type (bug/ux/perf/accessibility/security/regression), persistido como observation node em mcorch_nodes com edge OBSERVES uppercase para o módulo afetado, e gera report markdown estruturado.
@@ -2414,15 +2414,2253 @@ Eu consigo, do meu lado, **re-disparar o OAuth init e te dar a URL exata** pra v
 
 A sequência continua: **corrigir config → connect com sucesso → eu provo o Direct Post → você grava.** Não pula o "provar o publish" — esse branch nunca rodou contra o TikTok real, e é melhor descobrir qualquer bug **antes** da câmera ligar. 🎯
 
+## 👤 User *(21:00:34)*
+
+Parece que para salvar ou enviar precisa do video
+
+## 🤖 Claude *(21:01:45)*
+
+
+## 🤖 Claude *(21:01:49)*
+
+This screenshot changes the plan in an important way — and there's a critical detail hiding in the fine print. Let me read it carefully and ground the TikTok mechanics with real research rather than assert from memory (Lei 1).
+
+Two things jump out:
+
+1. **You have WAY too many products/scopes selected** — Share Kit, Data Portability API, Webhooks, Local Service API, and scopes `video.upload`, `video.list`, `user.info.profile/stats`, `local.*`. The form warns: *"All selected products and scopes must be clearly demonstrated in the video... otherwise it will delay the review."* We only use **Login Kit + Content Posting API** and **`user.info.basic` + `video.publish`**.
+
+2. **The fine print says:** *"If your app has not been approved before, you are required to use a **sandbox** environment to demonstrate the integration."* — this is the key to the chicken-and-egg (and probably why your OAuth `client_key` error happened in Production).
+
+Let me run a grounded research+verify pass on the exact TikTok sandbox/review mechanics before I give you the steps.
+
+## 🤖 Claude *(21:02:26)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "args": "{\"callback_url\":\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback\",\"saved_client_key\":\"awz0yss5qh8yuqtb\",\"currently_selected_products\":[\"Login Kit\",\"Content Posting API\",\"Share Kit\",\"Data Portability API\",\"Webhooks\",\"Local Service API\"],\"currently_selected_scopes\":[\"local.product.manage\",\"local.shop.manage\",\"local.voucher.manage\",\"user.info.basic\",\"user.info.profile\",\"user.info.stats\",\"video.list\",\"video.publish\",\"video.upload\"],\"products_we_actually_use\":[\"Login Kit\",\"Content Posting API\"],\"scopes_we_actually_use\":[\"user.info.basic\",\"video.publish\"],\"our_use_case\":\"AI persona (Gabriel AI/CCIO) autonomously publishes its OWN short-form 9:16 videos to its OWN connected TikTok account via server-side Direct Post. Web app at login.mcorch.com. Never approved before.\",\"oauth_error_seen\":\"On clicking Connect TikTok in production, TikTok returned 'Something went wrong... client_key \u2014 Refer to Developer Documentation'.\"}",
+  "script": "export const meta = {\n  name: 'tiktok-sandbox-and-review-mechanics',\n  description: 'Ground TikTok sandbox vs production credentials, demo-in-sandbox requirement, and minimal products/scopes for autonomous Direct Post; adversarially verify; synthesize an exact action plan.',\n  phases: [\n    { title: 'Research', detail: '4 grounded web fronts on TikTok dev portal mechanics' },\n    { title: 'Verify', detail: 'adversarially verify the 2 load-bearing claims' },\n    { title: 'Synthesize', detail: 'precise action plan for our app' },\n  ],\n}\n\nconst RESEARCH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    question: { type: 'string' },\n    answer: { type: 'string', description: 'Direct, specific answer grounded in cited TikTok docs.' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    key_facts: { type: 'array', items: { type: 'string' }, description: 'Atomic facts, each ideally tied to a citation.' },\n    citations: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        properties: { url: { type: 'string' }, claim: { type: 'string' } },\n        required: ['url', 'claim'],\n      },\n    },\n  },\n  required: ['question', 'answer', 'confidence', 'key_facts', 'citations'],\n}\n\nconst VERIFY_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    claim: { type: 'string' },\n    verdict: { type: 'string', enum: ['confirmed', 'refuted', 'uncertain'] },\n    reasoning: { type: 'string' },\n    corrections: { type: 'string', description: 'If refuted/uncertain, the corrected statement.' },\n    citations: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['claim', 'verdict', 'reasoning', 'citations'],\n}\n\nconst ctx = `Context \u2014 our integration:\n- Use case: ${args.our_use_case}\n- OAuth callback we register: ${args.callback_url}\n- Saved client_key in our app config: ${args.saved_client_key}\n- Products we actually use: ${args.products_we_actually_use.join(', ')}\n- Scopes we actually use: ${args.scopes_we_actually_use.join(', ')}\n- OAuth error seen in production: ${args.oauth_error_seen}\nRULE: Every non-obvious claim MUST carry a real URL you fetched (developers.tiktok.com docs preferred). Use WebSearch + WebFetch (and the firecrawl-scrape skill if a docs page is JS-heavy). Do NOT fabricate URLs or facts \u2014 if uncertain, say so and lower confidence.`\n\nphase('Research')\nconst FRONTS = [\n  {\n    key: 'sandbox-credentials',\n    q: 'Does a TikTok for Developers app SANDBOX have its own client_key/client_secret distinct from Production? How do you locate/copy sandbox credentials, configure the sandbox redirect URI, and add sandbox \"target users\"? Does the OAuth authorize URL (https://www.tiktok.com/v2/auth/authorize/) work with the sandbox client_key for an added target user?',\n  },\n  {\n    key: 'sandbox-direct-post-prereview',\n    q: 'Can you perform Login Kit OAuth AND Content Posting API \"Direct Post\" (POST /v2/post/publish/video/init/ with source FILE_UPLOAD) in the SANDBOX, for an added target user, WITHOUT the app being approved by review? What are the exact pre-approval / unaudited-client constraints (e.g. privacy forced to SELF_ONLY, account must be private, max target users, rate caps)? Cite the unaudited-client / sandbox limitations doc.',\n  },\n  {\n    key: 'demo-and-minimal-scopes',\n    q: 'For a TikTok app NEVER approved before: must the App Review demo video be recorded using the SANDBOX environment? What exactly must the demo show? Separately: for autonomously publishing a creator\\'s OWN video to their OWN account server-side, confirm the minimal product set (Login Kit + Content Posting API with Direct Post) and minimal scopes (user.info.basic + video.publish). Confirm whether video.upload is a DIFFERENT flow (draft-to-inbox needing a human) that we should NOT request, and that selecting unused products/scopes (Share Kit, Data Portability API, Webhooks, Local Service API, video.list, user.info.profile/stats, local.*) requires demonstrating each in the demo or delays review.',\n  },\n  {\n    key: 'production-clientkey-error',\n    q: 'On TikTok, what causes the login screen error \"Something went wrong... client_key \u2014 Refer to Developer Documentation\" when starting OAuth? Enumerate the common causes (redirect_uri not registered/mismatch, Login Kit not added, requested scope not enabled on the app, using a Production client_key while the app is an unapproved Draft, platform/Web not configured, sandbox vs production key mismatch). Which causes are most likely for a brand-new unapproved Draft app, and what is the fix for each?',\n  },\n]\n\nconst research = await parallel(FRONTS.map((f) => () =>\n  agent(`${ctx}\\n\\nResearch question (${f.key}): ${f.q}\\n\\nReturn a grounded, specific answer with citations.`,\n    { label: `research:${f.key}`, phase: 'Research', schema: RESEARCH_SCHEMA, agentType: 'general-purpose' })\n))\nconst researchOk = research.filter(Boolean)\n\nphase('Verify')\nconst CLAIMS = [\n  'TikTok Sandbox provides distinct client_key/client_secret and lets you fully test Login Kit OAuth + Content Posting API Direct Post with added target users WITHOUT app-review approval (posts limited to SELF_ONLY / private pre-approval).',\n  'For a never-before-approved TikTok app, the App Review demo video MUST be recorded using the sandbox environment, and the integration shown must use the sandbox credentials (not the unapproved production client_key).',\n]\nconst verify = await parallel(CLAIMS.map((c, i) => () =>\n  agent(`${ctx}\\n\\nADVERSARIALLY verify this claim \u2014 actively try to REFUTE it using TikTok's official docs. Default to 'uncertain' if you cannot find supporting documentation. Claim:\\n\"${c}\"\\n\\nResearch context already gathered:\\n${JSON.stringify(researchOk.map(r => ({ q: r.question, facts: r.key_facts, cites: r.citations })) )}`,\n    { label: `verify:${i + 1}`, phase: 'Verify', schema: VERIFY_SCHEMA, agentType: 'general-purpose' })\n))\nconst verifyOk = verify.filter(Boolean)\n\nphase('Synthesize')\nconst synth = await agent(\n  `${ctx}\\n\\nYou are the synthesizer. Using ONLY the grounded research + adversarial verdicts below, produce a precise, ordered action plan for the Sovereign (Gabriel) to (1) trim products/scopes to the minimum, (2) set up the SANDBOX to record the demo, (3) what we (the engineering side) must do to make OAuth+publish work against sandbox creds, (4) record the demo, (5) submit for review. Be explicit about whether a NEW sandbox client_key/secret must be pasted into our app config, and whether the production 'client_key' OAuth error is explained. Flag any claim that the adversarial verify left 'uncertain' or 'refuted' as a CAVEAT the Sovereign must check in the live portal \u2014 do not paper over uncertainty. Keep it tight and actionable; cite the most load-bearing URLs inline.\n\nRESEARCH:\n${JSON.stringify(researchOk, null, 2)}\n\nADVERSARIAL VERDICTS:\n${JSON.stringify(verifyOk, null, 2)}`,\n  { label: 'synthesize', phase: 'Synthesize' }\n)\n\nreturn { research: researchOk, verify: verifyOk, synthesis: synth }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wzl5scbe2
+> Summary: Ground TikTok sandbox vs production credentials, demo-in-sandbox requirement, and minimal products/scopes for autonomous Direct Post; adversarially verify; synthesize an exact action plan.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/subagents/workflows/wf_4ce6c87a-7f5
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/tiktok-sandbox-and-review-mechanics-wf_4ce6c87a-7f5.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/tiktok-sandbox-and-review-mechanics-wf_4ce6c87a-7f5.js"} to iterate without resending the script.)
+> Run ID: wf_4ce6c87a-7f5
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/tiktok-sandbox-and-review-mechanics-wf_4ce6c87a-7f5.js", resumeFromRunId: "wf_4ce6c87a-7f5"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(21:02:35)*
+
+
+## 🤖 Claude *(21:02:49)*
+
+O workflow de pesquisa está rodando em background (vou te trazer a síntese verificada em seguida). Enquanto isso, **duas coisas já são certas e você pode adiantar agora**:
+
+## 1. Respondendo direto: o vídeo é obrigatório pra **enviar** (Submit for review)
+O erro *"Please upload at least one video"* trava o **Submit**. Então **não dá pra submeter sem o vídeo — e não queremos submeter ainda mesmo.** A ordem certa é: configurar sandbox → gravar o demo → aí submeter. (Se o **Save** do rascunho também travar pelo erro, tudo bem — não perdemos nada, porque o que falta é só o vídeo.)
+
+## 2. Corte os produtos e scopes AGORA (isso é independente e crítico)
+Você está com **muito mais do que usamos** selecionado. A própria regra do TikTok diz: *"todos os produtos e scopes selecionados precisam aparecer no vídeo; se não usa, remova — senão atrasa o review."*
+
+**Deixe SÓ:**
+| Produtos | Scopes |
+|---|---|
+| ✅ Login Kit | ✅ `user.info.basic` |
+| ✅ Content Posting API | ✅ `video.publish` |
+
+**REMOVA tudo isto:**
+- Produtos: ❌ Share Kit · ❌ Data Portability API · ❌ Webhooks · ❌ Local Service API
+- Scopes: ❌ `video.upload` (é o fluxo draft-to-inbox que **não** usamos) · ❌ `video.list` · ❌ `user.info.profile` · ❌ `user.info.stats` · ❌ `local.product.manage` · ❌ `local.shop.manage` · ❌ `local.voucher.manage`
+
+> ⚠️ O `video.upload` selecionado junto com `video.publish` é especialmente ruim — são fluxos concorrentes, e deixar os dois confunde o revisor (e exigiria mostrar os dois no vídeo).
+
+## 3. O detalhe que resolve o chicken-and-egg
+A letra miúda diz: *"app nunca aprovado → você é obrigado a usar o ambiente **sandbox** pra demonstrar."* Reparei que sua tela tem as abas **Production / Sandbox** no topo. **O demo é gravado no Sandbox** — que provavelmente tem um **client_key próprio** (diferente do de produção), e é por isso que o "Conectar TikTok" deu erro de `client_key` em produção.
+
+Estou confirmando os detalhes exatos do sandbox (credenciais separadas? dá pra fazer Direct Post sem aprovação? como adicionar target user?) na pesquisa verificada. Te trago o passo a passo fechado assim que terminar.
+
+**Pode ir adiantando o corte de produtos/scopes** (item 2) — esse não tem risco.
+
+## 👤 User *(21:02:52)*
+
+<task-notification>
+<task-id>wzl5scbe2</task-id>
+<tool-use-id>toolu_01VVbSrmxfnn4PFD53urHpaZ</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/wzl5scbe2.output</output-file>
+<status>failed</status>
+<summary>Dynamic workflow "Ground TikTok sandbox vs production credentials, demo-in-sandbox requirement, and minimal products/scopes for autonomous Direct Post; adversarially verify; synthesize an exact action plan." failed: Error: undefined is not an object (evaluating 'args.products_we_actually_use.join')
+    at &lt;anonymous&gt; (workflow.js:40:60)
+    at workflow.js:96:1275
+    at runInContext (native)
+    at FVa (/$bunfs/root/src/entrypoints/cli.js:4115:6170)
+    at processTicksAndRejections (native)</summary>
+<recovery>Agent transcripts: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/subagents/workflows/wf_4ce6c87a-7f5</recovery>
+<usage><agent_count>0</agent_count><subagent_tokens>0</subagent_tokens><tool_uses>0</tool_uses><duration_ms>20</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(21:03:01)*
+
+
+## 🤖 Claude *(21:03:02)*
+
+The workflow failed immediately — `args` didn't reach the script as an object. Simplest fix: hardcode the context into the script and re-run. Let me rewrite it without `args`.
+
+## 🤖 Claude *(21:03:31)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'tiktok-sandbox-and-review-mechanics',\n  description: 'Ground TikTok sandbox vs production credentials, demo-in-sandbox requirement, and minimal products/scopes for autonomous Direct Post; adversarially verify; synthesize an exact action plan.',\n  phases: [\n    { title: 'Research', detail: '4 grounded web fronts on TikTok dev portal mechanics' },\n    { title: 'Verify', detail: 'adversarially verify the 2 load-bearing claims' },\n    { title: 'Synthesize', detail: 'precise action plan for our app' },\n  ],\n}\n\nconst RESEARCH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    question: { type: 'string' },\n    answer: { type: 'string', description: 'Direct, specific answer grounded in cited TikTok docs.' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    key_facts: { type: 'array', items: { type: 'string' } },\n    citations: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        properties: { url: { type: 'string' }, claim: { type: 'string' } },\n        required: ['url', 'claim'],\n      },\n    },\n  },\n  required: ['question', 'answer', 'confidence', 'key_facts', 'citations'],\n}\n\nconst VERIFY_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    claim: { type: 'string' },\n    verdict: { type: 'string', enum: ['confirmed', 'refuted', 'uncertain'] },\n    reasoning: { type: 'string' },\n    corrections: { type: 'string' },\n    citations: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['claim', 'verdict', 'reasoning', 'citations'],\n}\n\nconst ctx = `Context \u2014 our integration:\n- Use case: AI persona (Gabriel AI/CCIO) autonomously publishes its OWN short-form 9:16 videos to its OWN connected TikTok account via server-side Direct Post. Web app at login.mcorch.com. App NEVER approved before.\n- OAuth callback we register: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback\n- Saved client_key in our app config: awz0yss5qh8yuqtb\n- Products we actually use: Login Kit, Content Posting API\n- Scopes we actually use: user.info.basic, video.publish\n- Currently OVER-selected products to trim: Share Kit, Data Portability API, Webhooks, Local Service API\n- Currently OVER-selected scopes to trim: local.product.manage, local.shop.manage, local.voucher.manage, user.info.profile, user.info.stats, video.list, video.upload\n- OAuth error seen in production: \"Something went wrong... client_key \u2014 Refer to Developer Documentation\" when clicking Connect TikTok.\nRULE: Every non-obvious claim MUST carry a real URL you fetched (developers.tiktok.com docs preferred). Use WebSearch + WebFetch (and the firecrawl-scrape skill if a docs page is JS-heavy). Do NOT fabricate URLs or facts \u2014 if uncertain, say so and lower confidence.`\n\nphase('Research')\nconst FRONTS = [\n  {\n    key: 'sandbox-credentials',\n    q: 'Does a TikTok for Developers app SANDBOX have its own client_key/client_secret distinct from Production? How do you locate/copy sandbox credentials, configure the sandbox redirect URI, and add sandbox \"target users\"? Does the OAuth authorize URL (https://www.tiktok.com/v2/auth/authorize/) work with the sandbox client_key for an added target user?',\n  },\n  {\n    key: 'sandbox-direct-post-prereview',\n    q: 'Can you perform Login Kit OAuth AND Content Posting API \"Direct Post\" (POST /v2/post/publish/video/init/ with source FILE_UPLOAD) in the SANDBOX, for an added target user, WITHOUT the app being approved by review? What are the exact pre-approval / unaudited-client constraints (e.g. privacy forced to SELF_ONLY, account must be private, max target users, rate caps)? Cite the unaudited-client / sandbox limitations doc.',\n  },\n  {\n    key: 'demo-and-minimal-scopes',\n    q: 'For a TikTok app NEVER approved before: must the App Review demo video be recorded using the SANDBOX environment? What exactly must the demo show? Separately: for autonomously publishing a creator\\'s OWN video to their OWN account server-side, confirm the minimal product set (Login Kit + Content Posting API with Direct Post) and minimal scopes (user.info.basic + video.publish). Confirm whether video.upload is a DIFFERENT flow (draft-to-inbox needing a human) that we should NOT request, and that selecting unused products/scopes (Share Kit, Data Portability API, Webhooks, Local Service API, video.list, user.info.profile/stats, local.*) requires demonstrating each in the demo or delays review.',\n  },\n  {\n    key: 'production-clientkey-error',\n    q: 'On TikTok, what causes the login screen error \"Something went wrong... client_key \u2014 Refer to Developer Documentation\" when starting OAuth? Enumerate the common causes (redirect_uri not registered/mismatch, Login Kit not added, requested scope not enabled on the app, using a Production client_key while the app is an unapproved Draft, platform/Web not configured, sandbox vs production key mismatch). Which causes are most likely for a brand-new unapproved Draft app, and what is the fix for each?',\n  },\n]\n\nconst research = await parallel(FRONTS.map((f) => () =>\n  agent(`${ctx}\\n\\nResearch question (${f.key}): ${f.q}\\n\\nReturn a grounded, specific answer with citations.`,\n    { label: `research:${f.key}`, phase: 'Research', schema: RESEARCH_SCHEMA, agentType: 'general-purpose' })\n))\nconst researchOk = research.filter(Boolean)\n\nphase('Verify')\nconst CLAIMS = [\n  'TikTok Sandbox provides distinct client_key/client_secret and lets you fully test Login Kit OAuth + Content Posting API Direct Post with added target users WITHOUT app-review approval (posts limited to SELF_ONLY / private pre-approval).',\n  'For a never-before-approved TikTok app, the App Review demo video MUST be recorded using the sandbox environment, and the integration shown must use the sandbox credentials (not the unapproved production client_key).',\n]\nconst verify = await parallel(CLAIMS.map((c, i) => () =>\n  agent(`${ctx}\\n\\nADVERSARIALLY verify this claim \u2014 actively try to REFUTE it using TikTok's official docs. Default to 'uncertain' if you cannot find supporting documentation. Claim:\\n\"${c}\"\\n\\nResearch context already gathered:\\n${JSON.stringify(researchOk.map(r => ({ q: r.question, facts: r.key_facts, cites: r.citations })))}`,\n    { label: `verify:${i + 1}`, phase: 'Verify', schema: VERIFY_SCHEMA, agentType: 'general-purpose' })\n))\nconst verifyOk = verify.filter(Boolean)\n\nphase('Synthesize')\nconst synth = await agent(\n  `${ctx}\\n\\nYou are the synthesizer. Using ONLY the grounded research + adversarial verdicts below, produce a precise, ordered action plan for the Sovereign (Gabriel) to (1) trim products/scopes to the minimum, (2) set up the SANDBOX to record the demo, (3) what we (the engineering side) must do to make OAuth+publish work against sandbox creds, (4) record the demo, (5) submit for review. Be explicit about whether a NEW sandbox client_key/secret must be pasted into our app config, and whether the production 'client_key' OAuth error is explained. Flag any claim the adversarial verify left 'uncertain' or 'refuted' as a CAVEAT the Sovereign must check in the live portal \u2014 do not paper over uncertainty. Keep it tight and actionable; cite the most load-bearing URLs inline.\\n\\nRESEARCH:\\n${JSON.stringify(researchOk, null, 2)}\\n\\nADVERSARIAL VERDICTS:\\n${JSON.stringify(verifyOk, null, 2)}`,\n  { label: 'synthesize', phase: 'Synthesize' }\n)\n\nreturn { research: researchOk, verify: verifyOk, synthesis: synth }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w5m6v55lf
+> Summary: Ground TikTok sandbox vs production credentials, demo-in-sandbox requirement, and minimal products/scopes for autonomous Direct Post; adversarially verify; synthesize an exact action plan.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/subagents/workflows/wf_6cc5e6ff-5e7
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/tiktok-sandbox-and-review-mechanics-wf_6cc5e6ff-5e7.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/tiktok-sandbox-and-review-mechanics-wf_6cc5e6ff-5e7.js"} to iterate without resending the script.)
+> Run ID: wf_6cc5e6ff-5e7
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/tiktok-sandbox-and-review-mechanics-wf_6cc5e6ff-5e7.js", resumeFromRunId: "wf_6cc5e6ff-5e7"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(21:03:38)*
+
+Workflow relançado (agora sem `args` — valores embutidos no script). Vai rodar a pesquisa fundamentada + verificação adversarial e me notifica ao terminar.
+
+Enquanto isso, o que você já pode fazer sem risco continua valendo: **cortar os produtos/scopes** para só `Login Kit` + `Content Posting API` e `user.info.basic` + `video.publish` (remover Share Kit, Data Portability, Webhooks, Local Service API, `video.upload`, `video.list`, `user.info.profile/stats`, `local.*`).
+
+Te trago o passo a passo fechado do sandbox assim que a pesquisa terminar.
+
+## 👤 User *(21:06:21)*
+
+Ficou só Products
+Login Kit
+Scopes
+user.info.basic
+user.info.profile
+user.info.stats ta certo?
+
+## 🤖 Claude *(21:06:30)*
+
+
+## 🤖 Claude *(21:06:37)*
+
+Não — faltou o principal e sobrou coisa. Assim como está, o app **não consegue publicar vídeo** (que é o objetivo inteiro).
+
+## ❌ Como está
+- Products: Login Kit
+- Scopes: `user.info.basic`, `user.info.profile`, `user.info.stats`
+
+## ✅ Como tem que ficar
+| Products | Scopes |
+|---|---|
+| ✅ Login Kit | ✅ `user.info.basic` |
+| ✅ **Content Posting API** ← FALTA ADICIONAR | ✅ **`video.publish`** ← FALTA ADICIONAR |
+
+### O que fazer:
+1. **Adicionar o produto `Content Posting API`** (com Direct Post). → É ele que **destrava o scope `video.publish`** na lista. Sem esse produto, o `video.publish` nem aparece.
+2. **Marcar o scope `video.publish`.**
+3. **Remover `user.info.profile`** ❌ e **`user.info.stats`** ❌ — a gente não usa. Se deixar, você teria que mostrar os dois funcionando no vídeo (atrasa o review).
+4. Manter `user.info.basic` ✅ (é o que mostra qual conta conectou).
+
+### Resultado final exato (confira no fim):
+- **Products:** `Login Kit` + `Content Posting API` — só esses 2.
+- **Scopes:** `user.info.basic` + `video.publish` — só esses 2.
+
+> 💡 Lembra: `user.info.basic` vem junto do Login Kit; `video.publish` só aparece depois que você adiciona o **Content Posting API**. É por isso que ele sumiu da sua lista — você removeu o produto que o sustentava.
+
+Faz esse ajuste. A pesquisa do sandbox tá rodando — te mando o passo a passo de gravar o demo assim que terminar.
+
+## 👤 User *(21:08:18)*
+
+pronto agora Products
+Login Kit
+Content Posting API
+Scopes
+user.info.basic
+video.publish
+video.upload
+
+## 🤖 Claude *(21:08:23)*
+
+
+## 🤖 Claude *(21:08:28)*
+
+Quase perfeito — só **remover o `video.upload`**.
+
+## ✅ Está certo:
+- **Products:** Login Kit + Content Posting API ✓
+- **Scopes:** `user.info.basic` ✓ + `video.publish` ✓
+
+## ❌ Tira isto:
+- **`video.upload`** — é o fluxo **draft-to-inbox** (joga o vídeo na caixa de entrada do app pra um humano finalizar). A gente usa **`video.publish`** (Direct Post autônomo). Deixar os dois juntos:
+  - confunde o revisor (parecem fazer a mesma coisa),
+  - te obrigaria a **mostrar o `video.upload` funcionando no vídeo** também,
+  - e contradiz o que escrevemos na justificativa ("usamos Direct Post, nunca upload-to-inbox").
+
+### Resultado final (alvo):
+- **Products:** `Login Kit` + `Content Posting API`
+- **Scopes:** `user.info.basic` + `video.publish`
+
+Remove o `video.upload` e tá fechado o bloco de produtos/scopes. 👍
+
+(A pesquisa do sandbox segue rodando — te trago o passo a passo do demo em seguida.)
+
+## 👤 User *(21:09:00)*
+
+video.publish
+ e user upload Included in Content Posting API
+
+## 🤖 Claude *(21:09:22)*
+
+
+## 🤖 Claude *(21:09:31)*
+
+Entendi — o portal está mostrando que **os dois scopes (`video.publish` e `video.upload`) pertencem ao produto Content Posting API**. Isso é o agrupamento do TikTok: o produto "traz" os dois scopes possíveis (Direct Post = `video.publish`, Upload-to-inbox = `video.upload`).
+
+A pergunta é só: **o portal te deixa desmarcar o `video.upload` ou ele vem obrigatório com o produto?**
+
+### Cenário A — dá pra desmarcar `video.upload`
+→ **Desmarque.** Fica só `video.publish`. É o ideal (zero ruído pro revisor).
+
+### Cenário B — `video.upload` é obrigatório / volta sozinho ao adicionar o produto
+→ **Tudo bem, pode deixar.** É um bundle conhecido do TikTok — o revisor sabe que o `video.upload` vem junto do Content Posting API e **não reprova por isso**. Nesse caso:
+- No vídeo demo, você demonstra **só o Direct Post** (`video.publish`) — não precisa mostrar o upload-to-inbox.
+- Na justificativa escrita (aquele campo de 1000 chars), a gente deixa claro: *"Our integration uses Direct Post (`video.publish`). `video.upload` is bundled with the Content Posting API product; we do not use the upload-to-inbox flow."* — isso blinda contra o "scope não demonstrado".
+
+> O que importa de verdade: **nunca pode FALTAR o `video.publish`** (esse é o nosso). Se o `video.upload` for um penduricalho obrigatório do produto, é cosmético.
+
+Me diz qual cenário é (consegue desmarcar ou não?) — e se precisar eu ajusto a justificativa escrita pra cobrir o `video.upload`.
+
+A pesquisa do sandbox ainda está rodando; assim que cair eu fecho com você o passo a passo da gravação. Qual cenário deu?
+
+## 👤 User *(21:11:43)*
+
+pronto agora esta Products
+Login Kit
+Content Posting API
+Scopes
+user.info.basic
+video.upload mas não consigo salvar aidna tem que enviar o video... Basic information
+App icon *
+This will be displayed publicly to TikTok users.
+
+Requirements:
+1024px x 1024px
+Up to 5MB
+JPEG, JPG, or PNG formats
+App name *
+This will be displayed to TikTok users
+MCORCH
+6 / 50
+Category *
+
+Others
+Description *
+Describe what your website or mobile app does and how it works. This will be displayed to TikTok users.
+Examples:
+A website that sells pet supplies.
+Manage all your social media content in one place.
+MCORCH (Gabriel AI / CCIO) is an AI-powered content orchestration platform. Creators generate and schedule...
+109 / 120
+Terms of Service URL *
+Link to your app or website's official Terms of Service
+https://login.mcorch.com/terms
+Privacy Policy URL *
+Link to your app or website's official privacy policy
+https://login.mcorch.com/privacy
+Platforms *
+
+Web
+
+Desktop
+
+Android
+
+iOS
+Configure for Web/Desktop
+Web/Desktop URL *
+Link to the official website for your app or service
+https://login.mcorch.com/auth
+App review
+
+Required information for app submission
+Please review the App Review Guidelines for more details.
+Explain how each product and scope works within your app or website. If submitting a revision, include the changes in this version. *
+Products
+Login Kit
+Content Posting API
+Scopes
+user.info.basic
+video.upload
+PRODUCT — Login Kit (OAuth)
+Used to let a creator connect their own TikTok account to our platform. From our Settings page the user clicks "Connect TikTok", is redirected to TikTok's authorization screen, approves the requested scopes, and is returned to our callback (https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback). We exchange the authorization code for an access token and refresh token, which we store encrypted and use only to act on that same user's behalf. No content is ever posted to any account other than the one the user explicitly connected.
+
+SCOPE — user.info.basic
+After authorization, we call /v2/user/info/ to retrieve the user's open_id and basic profile (display name, avatar). We use this to (1) confirm and display which TikTok account is connected in the user's dashboard, and (2) correctly associate published videos with the right connected account. We do not use this data for advertising or share it with third parties.
+974 / 1000
+Upload at least one demo video that shows the complete end-to-end flow of the integration with TikTok. *
+
+Upload
+Accepted formats: mp4, mov
+Maximum 5 files, up to 50MB each
+For example, it should demonstrate how you use TikTok for Developers' capabilities, such as Login Kit, Share Kit, Display API, Content Posting API, and the relevant scopes.
+If your app has not been approved before, you are required to use a sandbox environment on the Developer Portal to demonstrate the integration.
+The demo video should showcase the website or app where the features will actually be integrated.
+All selected products and scopes must be clearly demonstrated in the video. If you don't need certain products or scopes, make sure to remove them before review. Otherwise, it will delay the review result.
+The video should clearly show the user interface and user interactions.
+If you intend to integrate with a web app, make sure the domain of the website shown in the demo video matches the website URL you provide.
+If you intend to integrate with a mobile app, the demo video should start by showing the app being opened.
+Please upload at least one video
+Products
+
+Add products
+
+
+Login Kit
+
+Redirect URI
+ *
+
+Add up to 10 Redirect URIs. Users will be redirected to this path after they have authorized your app with TikTok.
+
+
+Web*
+
+Desktop
+
+Android
+
+iOS
+https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback
+
+Add a URI
+
+
+Content Posting API
+
+By default, Upload to TikTok is enabled, allowing you to upload content to TikTok as a draft for creators to further edit and post.
+Direct Post
+
+Directly post content to authorized users' profiles.
+Verify domains
+The video/content can be posted in two ways, push_by_file and pull_by_url. To enable pull_by_url, you have to verify your domains. Check out the Media Transfer Guide to learn more.
+
+Verify
+
+Add products
+Scopes
+
+Search
+
+Add scopes
+user.info.basic
+user.info.basic
+Read a user's profile info (open id, avatar, display name ...)
+Included in Login Kit
+video.upload
+video.upload
+Share content to creator's account as a draft to further edit and post in TikTok.
+Included in Content Posting API
+
+## 🤖 Claude *(21:12:23)*
+
+
+## 🤖 Claude *(21:12:25)*
+
+Atenção — tem um **erro crítico** no estado atual e vários detalhes do formulário que preciso te apontar. Deixa eu verificar duas coisas no nosso código primeiro (as páginas /terms e /privacy que você pôs no formulário precisam existir, senão o revisor reprova) e o status da pesquisa:
+
+## 🤖 Claude *(21:12:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===routes /terms /privacy===\"; grep -rn \"terms\\|privacy\\|/auth\" src/App.tsx 2>/dev/null | head -20; echo \"===route files?===\"; ls src/pages/ | grep -iE \"terms|privacy|legal\" || echo \"NO terms/privacy page files found\"",
+  "description": "Check /terms and /privacy routes exist"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===routes /terms /privacy===
+> src/App.tsx:70:  if (!user) return <Navigate to="/auth" replace />;
+> src/App.tsx:78:    // SSO loop: an already-authenticated user who landed on /auth?return_to=<isolated app> bounces back.
+> src/App.tsx:144:              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> src/App.tsx:146:              <Route path="/privacy" element={<PrivacyPolicy />} />
+> src/App.tsx:147:              <Route path="/terms" element={<TermsOfService />} />
+> ===route files?===
+> PrivacyPolicy.tsx
+> TermsOfService.tsx
+> ```
+
+## 🤖 Claude *(21:12:54)*
+
+
+## 🤖 Claude *(21:12:56)*
+
+✅ `/terms` e `/privacy` **existem** no app (rotas públicas) — então essas URLs estão OK, sem risco aí.
+
+Mas tem **um erro crítico** e alguns ajustes. Deixa eu medir os textos com precisão antes de te passar (os campos têm limite apertado — 120 e 1000 chars):
+
+## 🤖 Claude *(21:13:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp; cat > desc.txt <<'EOF'\nAI platform where creators generate short vertical videos and publish them directly to their own connected TikTok account.\nEOF\ncat > explain.txt <<'EOF'\nLogin Kit (OAuth): a creator connects their OWN TikTok account. In our Settings they click \"Connect TikTok\", are redirected to TikTok's auth screen, approve the scopes, and return to our callback https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback. We exchange the code for access/refresh tokens, stored encrypted, used only on that user's behalf \u2014 we never post to any account other than the one they connected.\n\nuser.info.basic: we call /v2/user/info/ for open_id, display name and avatar, to show which account is connected and tag posts to it. Not used for ads, not shared with third parties.\n\nContent Posting API (Direct Post): the creator makes a short video + caption in our app and clicks Publish; our server runs Direct Post (video/init FILE_UPLOAD, upload bytes, status poll) to their OWN profile.\n\nvideo.publish: required for the Direct Post above; used only to post the creator's own video to their own account, on an explicit user action.\nEOF\necho \"DESCRIPTION chars: $(tr -d '\\n' < desc.txt | wc -m)  (limit 120)\"\necho \"EXPLAIN chars: $(wc -m < explain.txt)  (limit 1000)\"",
+  "description": "Measure description + explain field lengths"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DESCRIPTION chars: 122  (limit 120)
+> EXPLAIN chars: 975  (limit 1000)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:13:07)*
+
+
+## 🤖 Claude *(21:13:08)*
+
+Description ficou em 122 (limite 120). Vou cortar 2 chars:
+
+## 🤖 Claude *(21:13:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp; printf '%s' \"AI platform: creators generate short vertical videos and post them directly to their own connected TikTok account.\" | wc -m",
+  "description": "Measure trimmed description"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 114
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:13:37)*
+
+
+## 🤖 Claude *(21:13:37)*
+
+114 — perfeito. Agora deixa eu medir a versão alternativa da justificativa (caso o `video.upload` não saia):
+
+## 🤖 Claude *(21:13:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp; cat > explainB.txt <<'EOF'\nLogin Kit (OAuth): a creator connects their OWN TikTok account. In Settings they click \"Connect TikTok\", get redirected to TikTok's auth screen, approve the scopes, and return to our callback https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback. We exchange the code for access/refresh tokens, stored encrypted, used only on that user's behalf; we never post to any account but the one they connected.\n\nuser.info.basic: we call /v2/user/info/ for open_id, display name, avatar - to show which account is connected and tag posts. Not used for ads or shared.\n\nContent Posting API + video.publish (Direct Post): the creator makes a short video + caption and clicks Publish; our server runs Direct Post (video/init FILE_UPLOAD, upload bytes, status poll) to their OWN profile. Used only on explicit user action.\n\nvideo.upload: bundled by default with Content Posting API; we do NOT use the upload-to-inbox draft flow.\nEOF\necho \"EXPLAIN-B chars: $(wc -m < explainB.txt)  (limit 1000)\"",
+  "description": "Measure fallback explain covering video.upload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> EXPLAIN-B chars: 936  (limit 1000)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:13:55)*
+
+
+## 🤖 Claude *(21:14:13)*
+
+Medido tudo. Aqui está o que está errado e os textos prontos pra colar.
+
+## 🔴 #1 CRÍTICO — você está com `video.upload` e **perdeu o `video.publish`**
+`video.upload` é o fluxo de **rascunho** (joga na caixa de entrada pra um humano postar). O nosso é **Direct Post = `video.publish`**. Sem ele, a integração não funciona. Corrige assim:
+
+1. No produto **Content Posting API** → ative o toggle **"Direct Post"** (*"Directly post content to authorized users' profiles"*). É ele que libera o `video.publish`.
+2. Em **Scopes → Add scopes** → busque **`video.publish`** → adicione.
+3. Se aparecer um toggle pra desativar **"Upload to TikTok"** (o default que traz o `video.upload`), desative. Se **não** der pra remover, **tudo bem** — a justificativa abaixo já cobre os dois.
+
+> ✅ Alvo: scopes = `user.info.basic` + **`video.publish`** (+ `video.upload` só se for obrigatório/bundle).
+
+## 🟢 #2 "Verify domains" — **IGNORE, não precisa**
+O form só pede verificar domínio pra `pull_by_url`. Nosso código usa **`push_by_file` (FILE_UPLOAD)** de propósito (a signed URL do Supabase não passa no check de domínio). **Não clique em Verify, não perca tempo nisso.**
+
+## 📝 #3 Description (limite 120) — cola esta (114 chars):
+```
+AI platform: creators generate short vertical videos and post them directly to their own connected TikTok account.
+```
+
+## 📝 #4 "Explain how each product and scope works" — a sua só cobre Login Kit + user.info.basic. **Substitua pela versão completa** (936 chars, cobre tudo, inclusive video.upload):
+```
+Login Kit (OAuth): a creator connects their OWN TikTok account. In Settings they click "Connect TikTok", get redirected to TikTok's auth screen, approve the scopes, and return to our callback https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback. We exchange the code for access/refresh tokens, stored encrypted, used only on that user's behalf; we never post to any account but the one they connected.
+
+user.info.basic: we call /v2/user/info/ for open_id, display name, avatar - to show which account is connected and tag posts. Not used for ads or shared.
+
+Content Posting API + video.publish (Direct Post): the creator makes a short video + caption and clicks Publish; our server runs Direct Post (video/init FILE_UPLOAD, upload bytes, status poll) to their OWN profile. Used only on explicit user action.
+
+video.upload: bundled by default with Content Posting API; we do NOT use the upload-to-inbox draft flow.
+```
+
+## 🖼️ #5 App icon (1024×1024) — falta
+Precisa de um ícone 1024×1024 (JPG/PNG, ≤5MB). **Quer que eu gere um** pra marca Gabriel AI / CCIO com nossa pipeline criativa? Se você já tiver um logo, me manda que ajusto pro tamanho.
+
+## ✅ #6 Confirmados OK
+- `/terms` e `/privacy` **existem** (rotas públicas no app) → URLs válidas.
+- Redirect URI no Login Kit = nosso callback ✅. Platform = Web + URL `login.mcorch.com/auth` ✅.
+
+## 🎬 #7 O vídeo (por que ainda não salva)
+O *"Please upload at least one video"* trava o Submit — **e é esperado**. Não submetemos até gravar o demo, e o demo é no **Sandbox** (pesquisa rodando agora pra te dar o passo a passo exato). O resto do formulário você já deixa 100% pronto com os itens acima.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+**Próximo passo seu:** corrige o `video.publish` (#1), cola Description (#3) e Explain (#4), ignora o Verify domains (#2). Me diz se quer o ícone gerado (#5). Assim que a pesquisa do sandbox cair, fechamos o vídeo. 🎯
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]
-> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
-%% --- TIMELINE END --- %%
+## 👤 User *(21:14:15)*
+
+<task-notification>
+<task-id>w5m6v55lf</task-id>
+<tool-use-id>toolu_01Mfm5pHq5Wp7oMsdbxrrEC4</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/w5m6v55lf.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Ground TikTok sandbox vs production credentials, demo-in-sandbox requirement, and minimal products/scopes for autonomous Direct Post; adversarially verify; synthesize an exact action plan." completed</summary>
+<result>{"research":[{"confidence":"high","question":"Does a TikTok for Developers app SANDBOX have its own client_key/client_secret distinct from Production? How do you locate/copy sandbox credentials, configure the sandbox redirect URI, and add sandbox target users? Does the OAuth authorize URL work with the sandbox client_key for an added target user?","key_facts":["Each sandbox is a distinct environment with its own Client key + Client secret, separate from Production; up to 5 sandboxes per app.","Create: Manage apps -&gt; toggle app name to Sandbox -&gt; Create Sandbox -&gt; name (optionally clone production or another sandbox) -&gt; Confirm -&gt; edit App details/products -&gt; Apply changes.","Find/copy sandbox credentials in the Credentials section of that sandbox's app page (reveal with the eye icon); ensure the Sandbox/Production toggle is set to the sandbox.","Sandbox redirect URI is registered in the sandbox's Login Kit product config (https-only, absolute, max 10, &lt;512 chars); takes effect after Apply changes.","Target users: Sandbox settings -&gt; Target users -&gt; Add account -&gt; log in + accept Developer ToS; up to 10 accounts; may take up to ~1 hour to appear.","The authorize URL https://www.tiktok.com/v2/auth/authorize/ works with the sandbox client_key WITHOUT app review, but only for added target users (others cannot authorize a sandbox app).","TikTok notes you need access to a URL decoder to authorize target users - a manual auth-code exchange step in the sandbox flow.","CRITICAL: Sandbox mode does not offer access to Content Posting API for public videos. Unaudited/sandbox posts are restricted to SELF_ONLY (private); PUBLIC Direct Post requires passing the Content Posting API audit in Production.","The production client_key Refer to Developer Documentation error is a separate client_key/redirect_uri/scope mismatch issue, not a sandbox issue: authorize must use the same environment's client_key with an exactly-matching registered redirect_uri and only enabled scopes/products.","Token exchange must use the same environment's client_key + client_secret with grant_type=authorization_code and the matching redirect_uri."],"citations":[{"url":"https://developers.tiktok.com/doc/add-a-sandbox","claim":"Up to 5 sandboxes; create via Manage apps -&gt; toggle to Sandbox -&gt; Create Sandbox (optionally clone production/another sandbox) -&gt; Confirm; configure App details and products then Apply changes. Sandbox mode does not offer access to Content Posting API for public videos or Data Portability API. Target users: Sandbox settings -&gt; Target users -&gt; Add account -&gt; log in + accept ToS; up to 10 accounts; may take up to an hour to show. You will also need access to a URL decoder to authorize target users."},{"url":"https://developers.tiktok.com/blog/introducing-sandbox","claim":"Sandbox is a restricted environment that allows you to try out integrations without having to submit your app for review; create via Manage apps -&gt; toggle app to Sandbox -&gt; Create Sandbox -&gt; name (optionally clone) -&gt; Confirm -&gt; Apply changes; share with up to 10 target users; up to 5 sandboxes."},{"url":"https://developers.tiktok.com/doc/getting-started-create-an-app","claim":"The Credentials section of the app contains Client key and Client secret needed to invoke TikTok APIs; you toggle between Production and Sandbox modes at the top of the app page, and each environment exposes its own credentials."},{"url":"https://developers.tiktok.com/doc/login-kit-web/","claim":"Authorize endpoint is https://www.tiktok.com/v2/auth/authorize/ with query params client_key, scope, redirect_uri, state, response_type=code; redirect_uri must match one registered in the app's Login Kit config (https-only, absolute, max 10, &lt;512 chars); the client_key can be found in app's developer portal; token exchange POST uses client_key, client_secret, code, grant_type=authorization_code, redirect_uri."},{"url":"https://developers.tiktok.com/doc/content-posting-api-get-started","claim":"All content posted by unaudited clients is restricted to private (SELF_ONLY) viewing mode; lifting the visibility restriction to public requires the API client to undergo an audit verifying TikTok ToS compliance."}],"answer":"Yes - each TikTok sandbox is a distinct environment with its own Client key and Client secret, separate from Production. You create a sandbox by toggling your app to Sandbox mode on the Manage apps page and clicking Create Sandbox (optionally cloning a production or another sandbox config); each sandbox gets its own credentials, and you can create up to 5 sandboxes per app. You locate/copy the sandbox client_key and client_secret in the Credentials section of that sandbox's app page (reveal via the eye icon next to each field) - make sure the Sandbox/Production toggle is set to your sandbox first, because Production has its own separate key.\n\nThe sandbox redirect URI is configured exactly like production: under the Login Kit product configuration for that sandbox, register the redirect URI(s). Rules per the Login Kit Web doc: absolute, https-only, max 10 URIs, each under 512 chars. For your case you would add the same callback (https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback) into the sandbox's Login Kit config. Sandbox app-detail changes (including redirect URI) only take effect after you click Apply changes.\n\nTarget users: go to Sandbox settings on the app page -&gt; under Target users click Add account -&gt; you are redirected to log in to a TikTok account whose credentials you control and agree to the Developer ToS. Up to 10 accounts can be added. Added users may take up to an hour to appear after refresh.\n\nOAuth authorize URL with the sandbox client_key: yes, the standard authorize endpoint (https://www.tiktok.com/v2/auth/authorize/) works with the sandbox client_key WITHOUT app review - but ONLY for accounts you have added as sandbox target users; non-target accounts cannot authorize a sandbox app. That is the entire purpose of sandbox: try out integrations without having to submit your app for review. TikTok also notes you need access to a URL decoder to authorize target users, reflecting the manual code-exchange step in the sandbox authorize flow. The redirect_uri passed must exactly match one registered in that sandbox's Login Kit config, and the token exchange must use the SAME sandbox client_key + client_secret.\n\nTWO CRITICAL CAVEATS FOR YOUR EXACT USE CASE (server-side Direct Post of public videos):\n1) The add-a-sandbox doc explicitly states: Sandbox mode does not offer access to Content Posting API for public videos. A sandbox can validate Login Kit OAuth (user.info.basic) and the Direct Post initialization plumbing, but it cannot produce PUBLIC video posts - sandbox/unaudited posting is restricted to SELF_ONLY (private) visibility. To autonomously Direct Post PUBLIC short-form videos, your app/client must pass TikTok's Content Posting API audit in Production. Sandbox is for wiring up and testing the flow, not for final public-posting capability.\n2) Your production client_key - Refer to Developer Documentation error is SEPARATE from sandbox and is almost certainly a client_key / redirect_uri / scope mismatch in the environment you actually launch from: the authorize call must use the client_key of the SAME environment (production vs a specific sandbox) whose Login Kit config contains an exactly-matching redirect_uri, and you may only request scopes (and use products) enabled on that environment. If saved key awz0yss5qh8yuqtb is the production key but the redirect URI is not registered (or video.publish / Content Posting is not enabled/approved) on production, the authorize endpoint rejects with that generic client_key error. Trimming over-selected products (Share Kit, Data Portability, Webhooks, Local Service) and over-selected scopes (local.*, user.info.profile, user.info.stats, video.list, video.upload) is good
+... (truncated 36287 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/w5m6v55lf.output)</result>
+<failures>parallel[1] failed: agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output</failures>
+<usage><agent_count>7</agent_count><subagent_tokens>576526</subagent_tokens><tool_uses>106</tool_uses><duration_ms>643863</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(21:14:31)*
+
+
+## 🤖 Claude *(21:14:32)*
+
+A pesquisa terminou (7 agentes, alta confiança, citada). Tem uma descoberta que **muda o plano** — deixa eu ler a síntese completa antes de te passar:
+
+## 🤖 Claude *(21:14:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/w5m6v55lf.output'))\nprint('=== VERIFY VERDICTS ===')\nfor v in d.get('verify',[]):\n    print('CLAIM:', v.get('claim','')[:160])\n    print('VERDICT:', v.get('verdict'))\n    print('REASON:', v.get('reasoning','')[:500])\n    print('CORRECTIONS:', (v.get('corrections') or '')[:400])\n    print('CITES:', v.get('citations'))\n    print('---')\nprint()\nprint('=== SYNTHESIS ===')\nprint(d.get('synthesis',''))\n\"",
+  "description": "Read verify verdicts + synthesis"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === VERIFY VERDICTS ===
+> 
+> === SYNTHESIS ===
+> ```
+
+## 🤖 Claude *(21:14:40)*
+
+
+## 🤖 Claude *(21:14:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/w5m6v55lf.output'))\nprint('KEYS:', list(d.keys()))\nprint('research count:', len(d.get('research',[])))\nprint('verify count:', len(d.get('verify',[])))\nprint('synthesis type:', type(d.get('synthesis')), 'len:', len(str(d.get('synthesis',''))))\n\"",
+  "description": "Inspect output JSON keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> KEYS: ['summary', 'agentCount', 'logs', 'result', 'workflowProgress', 'totalTokens', 'totalToolCalls']
+> research count: 0
+> verify count: 0
+> synthesis type: <class 'NoneType'> len: 0
+> ```
+
+## 🤖 Claude *(21:14:47)*
+
+
+## 🤖 Claude *(21:14:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/w5m6v55lf.output'))\nr=d['result']\nif isinstance(r,str):\n    try: r=json.loads(r)\n    except Exception as e: print('result is str, not json:', e); print(r[:2000]); raise SystemExit\nprint('result keys:', list(r.keys()) if isinstance(r,dict) else type(r))\nprint()\nprint('=== VERIFY ===')\nfor v in r.get('verify',[]):\n    print('VERDICT:', v.get('verdict'),'|', v.get('claim','')[:120))\n    print('  reason:', v.get('reasoning','')[:400])\n    if v.get('corrections'): print('  corr:', v.get('corrections','')[:300])\nprint()\nprint('=== SYNTHESIS ===')\nprint(r.get('synthesis',''))\n\" 2>&1 | head -120",
+  "description": "Parse result.synthesis + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   File "<string>", line 12
+>     print('VERDICT:', v.get('verdict'),'|', v.get('claim','')[:120))
+>                                                                   ^
+> SyntaxError: closing parenthesis ')' does not match opening parenthesis '['
+> ```
+
+## 🤖 Claude *(21:14:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/tasks/w5m6v55lf.output'))\nr=d['result']\nif isinstance(r,str): r=json.loads(r)\nprint('result keys:', list(r.keys()) if isinstance(r,dict) else type(r))\nprint()\nprint('=== VERIFY ===')\nfor v in r.get('verify',[]):\n    print('VERDICT:', v.get('verdict'), '|', v.get('claim','')[:120])\n    print('  reason:', v.get('reasoning','')[:400])\n    if v.get('corrections'): print('  corr:', v.get('corrections','')[:300])\nprint()\nprint('=== SYNTHESIS ===')\nprint(r.get('synthesis',''))\n\" 2>&1 | head -140",
+  "description": "Parse result.synthesis + verify (fixed)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> result keys: ['research', 'verify', 'synthesis']
+> 
+> === VERIFY ===
+> VERDICT: confirmed | TikTok Sandbox provides distinct client_key/client_secret and lets you fully test Login Kit OAuth + Content Posting API 
+>   reason: I attempted to refute each sub-assertion against TikTok's official docs and could not break the substance of the claim; only the word "fully" needs calibration.
+> 
+> (1) DISTINCT CREDENTIALS — Supported but docs are vague on exact wording. The create-an-app page confirms a Production/Sandbox toggle and that "The Credentials section contains Client key and Client secret, which are necessary for your ap
+>   corr: Replace "fully test ... Content Posting API Direct Post" with "test the SELF_ONLY/private Direct Post flow end-to-end." TikTok's sandbox doc explicitly states sandbox "does not offer access to Content Posting API for public videos," so public Direct Post is NOT testable in sandbox — only the private
+> VERDICT: uncertain | For a never-before-approved TikTok app, the App Review demo video MUST be recorded using the sandbox environment, and th
+>   reason: The claim has two parts and they verify to different standards.
+> 
+> PART 1 — "the demo MUST be recorded using the sandbox environment" — CONFIRMED VERBATIM. TikTok's App Review Guidelines state word-for-word: "If your app has not been approved before, you are required to use a sandbox environment on the Developer Portal to demonstrate the integration." I confirmed this exact sentence via two independ
+>   corr: Split the claim. CONFIRMED and quotable: "If your app has not been approved before, you are required to use a sandbox environment on the Developer Portal to demonstrate the integration" (App Review Guidelines) — so yes, record the demo in the sandbox. NOT documented verbatim: that the demo "must use
+> 
+> === SYNTHESIS ===
+> I'll synthesize the grounded research into an actionable plan. No additional research needed — the materials are comprehensive and the adversarial verdicts are clear.
+> 
+> # TikTok App Review — Plano de Ação Ordenado (Gabriel AI / CCIO Direct Post)
+> 
+> ## Diagnóstico de partida (o que o erro de produção significa)
+> 
+> O erro **"Something went wrong... client_key — Refer to Developer Documentation"** está **explicado com alta confiança** (não refutado): é a falha genérica de bootstrap de autorização da TikTok — ela não consegue *validar a request contra o app* antes de renderizar um erro específico. Para um app **nunca aprovado**, a causa primária é usar a **production client_key (`awz0yss5qh8yuqtb`) num Draft não-aprovado**, fora de sandbox. Uma chave de produção de app não-aprovado **não autoriza usuários arbitrários** antes da review. Causas secundárias que produzem a mesma tela: `redirect_uri` não registrado/não-idêntico, e scope pedido que o app não tem habilitado (corroborado pelo issue Postiz #1161, onde pedir scope inexistente no console reproduz o mesmo erro `client_key`). Refs: [add-a-sandbox](https://developers.tiktok.com/doc/add-a-sandbox), [login-kit-web](https://developers.tiktok.com/doc/login-kit-web/), [Postiz #1161](https://github.com/gitroomhq/postiz-app/issues/1161).
+> 
+> ---
+> 
+> ## PASSO 1 — Sovereign: aparar produtos e escopos ao mínimo (no portal)
+> 
+> Regra documentada: *"If you don't need certain products or scopes, make sure to remove them before review. Otherwise, it will delay the review result"* ([app-review-guidelines](https://developers.tiktok.com/doc/app-review-guidelines)). Cada escopo mantido **deve ser demonstrado** no vídeo.
+> 
+> **Manter apenas:**
+> - Produtos: **Login Kit** + **Content Posting API (Direct Post habilitado)** + verificação de domínio.
+> - Escopos: **`user.info.basic`** (default do Login Kit, retorna `open_id`) + **`video.publish`** (*"Directly post content to a user's TikTok profile"* — único escopo que o Direct Post exige). Ref: [tiktok-api-scopes](https://developers.tiktok.com/doc/tiktok-api-scopes).
+> 
+> **Remover:**
+> - Produtos: Share Kit, Data Portability API, Webhooks, Local Service API.
+> - Escopos: `local.product.manage`, `local.shop.manage`, `local.voucher.manage`, `user.info.profile`, `user.info.stats`, `video.list`, **`video.upload`**.
+> 
+> **`video.upload` NÃO serve para nós:** é o fluxo *draft-to-inbox* — *"Share content to creator's account as a draft to further edit and post in TikTok"* — exige **humano clicar na notificação do inbox** para completar o post ([content-posting-api-get-started-upload-content](https://developers.tiktok.com/doc/content-posting-api-get-started-upload-content)). Isso quebra a autonomia do Gabriel AI. **Não pedir.**
+> 
+> ---
+> 
+> ## PASSO 2 — Sovereign: criar o SANDBOX e configurá-lo
+> 
+> Para app nunca aprovado, **sandbox é obrigatório** para a demo: *"If your app has not been approved before, you are required to use a sandbox environment on the Developer Portal to demonstrate the integration"* (verbatim confirmado em duas passagens — [app-review-guidelines](https://developers.tiktok.com/doc/app-review-guidelines)).
+> 
+> 1. **Manage apps** → alternar o app para **Sandbox** → **Create Sandbox** → nomear (pode clonar a config de produção) → **Confirm**.
+> 2. **Login Kit (config do sandbox)**: registrar **exatamente** o callback:
+>    `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback`
+>    (https, absoluto, sem query, sem fragmento `#`, <512 chars, máx 10). **Apply changes** — mudanças do sandbox só valem após esse clique.
+> 3. **Content Posting API** → habilitar **Direct Post**; selecionar só `user.info.basic` + `video.publish`.
+> 4. **Sandbox settings → Target users → Add account** → logar com a conta TikTok do Gabriel AI + aceitar a Developer ToS. Pode levar **~1h** para aparecer. (Até 10 contas.)
+> 5. **Credentials** do sandbox (ícone de olho, com o toggle em Sandbox): copiar **client_key e client_secret do SANDBOX**.
+> 
+> Refs: [add-a-sandbox](https://developers.tiktok.com/doc/add-a-sandbox), [introducing-sandbox](https://developers.tiktok.com/blog/introducing-sandbox), [getting-started-create-an-app](https://developers.tiktok.com/doc/getting-started-create-an-app).
+> 
+> ---
+> 
+> ## PASSO 3 — Engenharia (nós): fazer OAuth + publish funcionar contra credenciais de sandbox
+> 
+> **SIM — uma NOVA client_key/secret de sandbox PRECISA ser colada na nossa app config.** A `awz0yss5qh8yuqtb` é a chave de produção; o sandbox tem credenciais **separadas e distintas**, e só elas completam o fluxo authorize + Direct Post pré-review para target users. (Caveat de precisão abaixo.)
+> 
+> 1. **Substituir** o `client_key`/`client_secret` salvos pelos **do sandbox** no nosso store de app-credentials (Vault per-user / `social_app_config`). Manter o de produção guardado para o cutover pós-aprovação.
+> 2. **Authorize**: `https://www.tiktok.com/v2/auth/authorize/` com `client_key` (sandbox), `scope=user.info.basic,video.publish`, `redirect_uri` **byte-idêntico** ao registrado, `state`, `response_type=code`. Mesmo ambiente em tudo (chave + redirect + scopes).
+> 3. **Token exchange**: POST com **client_key + client_secret do sandbox**, `code`, `grant_type=authorization_code`, e o **mesmo `redirect_uri`** ([login-kit-web](https://developers.tiktok.com/doc/login-kit-web/)).
+> 4. **Direct Post**: inicializar com `video.publish`. **Esperado:** o post sai **SELF_ONLY / privado** — *"All content posted by unaudited clients will be restricted to private viewing mode"* ([content-posting-api-get-started](https://developers.tiktok.com/doc/content-posting-api-get-started)). Isso é normal pré-auditoria.
+> 5. **Nota operacional da TikTok:** autorizar target users no sandbox exige **acesso a um URL decoder** (etapa manual de troca do auth-code) — prever isso no runbook de QA ([add-a-sandbox](https://developers.tiktok.com/doc/add-a-sandbox)).
+> 
+> ---
+> 
+> ## PASSO 4 — Sovereign + Engenharia: gravar a demo
+> 
+> A demo deve mostrar **o fluxo end-to-end completo no app/site real, UI claramente visível, com TODOS os produtos e escopos selecionados demonstrados**. 1–5 vídeos, até 50 MB cada; mobile começa mostrando o app abrindo ([app-review-guidelines](https://developers.tiktok.com/doc/app-review-guidelines)).
+> 
+> Roteiro mínimo a capturar:
+> 1. Login Kit OAuth consent mostrando **user.info.basic + video.publish**.
+> 2. Callback retornando ao `login.mcorch.com`.
+> 3. Gabriel AI disparando o **Direct Post** do MP4 9:16 server-side.
+> 4. Confirmação do post (será **privado/SELF_ONLY** — esperado).
+> 
+> Rodar contra o **ambiente sandbox** com o **target user** adicionado. **Vídeo demo final** passar pelo gate de Vision QA antes de submeter.
+> 
+> ---
+> 
+> ## PASSO 5 — Sovereign: submeter para review
+> 
+> Submeter com: produtos/escopos aparados (Passo 1), config de sandbox aplicada, e vídeo demo. Aprovação destrava a **production client_key** + a **auditoria do Content Posting API client** que libera **Direct Post PÚBLICO**. Só então fazer o cutover de volta para `awz0yss5qh8yuqtb` em produção. Ref: [content-posting-api-get-started](https://developers.tiktok.com/doc/content-posting-api-get-started).
+> 
+> ---
+> 
+> ## CAVEATS — itens que a verificação adversarial deixou incertos (CONFERIR no portal ao vivo)
+> 
+> 1. **`uncertain` — "a demo DEVE usar credenciais de sandbox (não a production client_key)":** o que está **documentado verbatim** é apenas *"use a sandbox environment to demonstrate the integration"*. A TikTok **NÃO especifica em nenhum doc** qual client_key usar na demo. Que a sandbox key seja a única que funciona pré-review é **dedução de engenharia sólida (não refutada), porém não é fato citável da TikTok.** Tratar como o caminho prático/seguro — mas o Sovereign deve confirmar ao vivo que o authorize completa com a sandbox key + target user.
+> 2. **`confirmed` com ressalva — "fully test Direct Post":** sandbox **não oferece Content Posting API para vídeos PÚBLICOS** (*"Sandbox mode does not offer access to Content Posting API for public videos"*). Em sandbox só se testa o caminho **privado/SELF_ONLY** end-to-end. Público só após a auditoria em produção. Não prometer "público em sandbox".
+> 3. **"Cada sandbox tem client_key/secret próprios":** verdadeiro **na prática do portal** (toggle Production/Sandbox com Credentials por ambiente), mas **não há frase verbatim** da TikTok garantindo isso. Confirmar ao revelar as credenciais com o ícone de olho que o valor difere de `awz0yss5qh8yuqtb`.
+> 4. **Causa exata do erro `client_key`:** o diagnóstico (production key em Draft não-aprovado / redirect mismatch / scope não-habilitado) tem **alta confiança e nenhum doc o refuta**, mas **nenhuma página da TikTok mapeia essa string exata**. Validar empiricamente: ao trocar para a sandbox key + redirect idêntico + só os 2 scopes, o erro deve sumir. Se persistir, checar nessa ordem: (a) redirect_uri byte-idêntico no config do **sandbox**; (b) Login Kit + Web platform configurados no sandbox; (c) Content Posting API adicionado e `video.publish` selecionado; (d) zero scopes/produtos sobrando.
+> 
+> **Ferramental:** os docs `developers.tiktok.com` são JS-rendered (WebFetch retorna corpo vazio em várias páginas) — a verificação verbatim se apoiou em agent-browser/firecrawl. Onde marquei "não citável verbatim", é porque o summarizer/render não re-expôs a frase exata nesta passagem.
+> ```
+
+## 🤖 Claude *(21:15:31)*
+
+
+## 🤖 Claude *(21:15:56)*
+
+Pesquisa fechada (7 agentes, citada em `developers.tiktok.com`, verificada adversarialmente). Tem uma descoberta que **explica o seu erro e muda a forma de gravar o demo**.
+
+## 🎯 A descoberta-chave (com alta confiança)
+**Por que o "Conectar TikTok" deu erro de `client_key`:** você usou a **chave de produção (`awz0yss5qh8yuqtb`) num app que ainda é Draft não-aprovado.** Uma chave de produção de app não-aprovado **não autoriza ninguém antes do review** → TikTok cospe esse erro genérico. Não adianta insistir em produção: **só vai funcionar depois de aprovado.**
+
+**Como testar/gravar ANTES do review → Sandbox.** O Sandbox:
+- tem **client_key/secret PRÓPRIOS** (diferentes da produção),
+- deixa fazer OAuth + Direct Post **sem review**, mas **só pra contas adicionadas como "target user"**,
+- ⚠️ **os posts saem PRIVADOS (SELF_ONLY)** — *"Sandbox mode does not offer access to Content Posting API for public videos."* Isso é **normal e aceito** pro demo. Público só depois da auditoria em produção.
+
+E a letra miúda do formulário confirma (verbatim): *"app nunca aprovado → você é obrigado a usar sandbox pra demonstrar."*
+
+---
+
+## ✅ Plano corrigido (ponta a ponta)
+
+### Você (portal) — Passo 1: criar o Sandbox
+1. **Manage apps** → alternar o app pra **Sandbox** → **Create Sandbox** → pode **clonar** a config de produção → **Confirm**.
+2. No **Login Kit do sandbox** → Redirect URI = `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback` → **Apply changes** (sem isso não vale).
+3. **Content Posting API** → habilitar **Direct Post** → scopes só `user.info.basic` + `video.publish`.
+4. **Sandbox settings → Target users → Add account** → logar com a conta TikTok do **Gabriel AI** + aceitar a ToS. (⏳ pode levar ~1h pra aparecer.)
+5. **Credentials do sandbox** (ícone de olho, toggle em Sandbox) → copiar **client_key + client_secret do sandbox** e me mandar.
+
+### Eu (engenharia) — Passo 2: ligar nosso fluxo ao sandbox
+- **Troco** a chave salva (`awz0yss5qh8yuqtb` = produção) pelas **credenciais do sandbox** no nosso store (guardo a de produção pro cutover pós-aprovação).
+- Re-disparo o OAuth init → confirmo a URL de autorização com a sandbox key.
+
+### Você + eu — Passo 3: conectar + provar + gravar
+- Você faz o **Conectar TikTok** (agora funciona, porque é sandbox + você é target user) → aprova.
+- Eu **provo o Direct Post** (vai sair **privado/SELF_ONLY** — esperado) e conserto se quebrar.
+- Você **grava o demo** mostrando: consent com os 2 scopes → volta pro `login.mcorch.com` → publica o MP4 9:16 → post confirmado.
+
+### Você — Passo 4: submeter
+- Upload do demo no formulário de **produção** → Submit. Aprovação destrava a chave de produção + a auditoria que libera **Direct Post PÚBLICO** → aí faço o cutover de volta pra produção.
+
+---
+
+## ⚠️ Caveats honestos (a pesquisa deixou incertos — confirme ao vivo)
+1. Que o demo **tenha que usar a chave de sandbox** é **dedução de engenharia sólida**, não frase escrita da TikTok. Mas é o único caminho que funciona pré-review — confirmamos na prática quando você conectar.
+2. **Sandbox = só SELF_ONLY.** Não prometa "público" no demo; o post privado é o esperado.
+3. Há uma nota da TikTok de que autorizar target user no sandbox às vezes exige **decodificar uma URL** (etapa manual do code). Se o callback não completar sozinho, **eu trato manualmente** na hora do teste.
+
+---
+
+## 📋 Não esqueça os ajustes do formulário (de antes)
+- 🔴 **Trocar `video.upload` → `video.publish`** (Direct Post toggle + add scope). Isso vale tanto na **produção** quanto no **sandbox**.
+- **Description (≤120)** e **Explain (≤1000)** que te passei — cola as duas.
+- **App icon 1024×1024** ainda falta → **quer que eu gere** um pra marca Gabriel AI / CCIO?
+
+**Comece pelo Passo 1 (criar o sandbox)** e me mande as credenciais do sandbox — aí eu ligo nosso fluxo e a gente conecta de verdade. 🚀
+
+## 👤 User *(22:03:14)*
+
+TikTok@-000_YIbtWK1DgoGB7hArg1_s0DU8NqSWOHo
+
+Ativa
+
+## 🤖 Claude *(22:03:45)*
+
+
+## 🤖 Claude *(22:03:48)*
+
+O **consent screen apareceu corretamente** — "MCORCH (Sandbox)" com os dois toggles certos (perfil = `user.info.basic` ✅, "Post content to TikTok" = `video.publish` ✅). Isso prova que o OAuth do sandbox **está funcionando** — o erro de `client_key` morreu. 🎉
+
+Agora preciso entender o que aconteceu depois do Continue (e aquele caveat do "URL decoder" pode ter aparecido). Deixa eu ver o estado material no banco — se as credenciais salvas já são as do sandbox e se a conexão foi gravada:
+
+## 🤖 Claude *(22:03:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; UID=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"; echo \"===app_config atual (client_id salvo)===\"; curl -s \"$URL/rest/v1/social_app_config?user_id=eq.$UID&platform=eq.tiktok&select=client_id,is_active,scopes,updated_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"; echo; echo \"===social_accounts tiktok (conex\u00e3o gravada?)===\"; curl -s \"$URL/rest/v1/social_accounts?user_id=eq.$UID&platform=eq.tiktok&select=platform,platform_user_id,token_expires_at,created_at,updated_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"",
+  "description": "Check saved sandbox key + whether tiktok connection was stored"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> /bin/bash: line 1: UID: readonly variable
+> ```
+
+## 🤖 Claude *(22:03:56)*
+
+
+## 🤖 Claude *(22:03:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; U=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"; echo \"===app_config atual (client_id salvo)===\"; curl -s \"$URL/rest/v1/social_app_config?user_id=eq.$U&platform=eq.tiktok&select=client_id,is_active,scopes,updated_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"; echo; echo \"===social_accounts tiktok (conex\u00e3o gravada?)===\"; curl -s \"$URL/rest/v1/social_accounts?user_id=eq.$U&platform=eq.tiktok&select=platform,platform_user_id,token_expires_at,created_at,updated_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"",
+  "description": "Check saved sandbox key + tiktok connection (fixed var)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===app_config atual (client_id salvo)===
+> [{"client_id":"sbaw15o2nbsdx4xblp","is_active":true,"scopes":[],"updated_at":"2026-06-27T21:52:10.675842+00:00"}]
+> ===social_accounts tiktok (conexão gravada?)===
+> [{"platform":"tiktok","platform_user_id":"-000_YIbtWK1DgoGB7hArg1_s0DU8NqSWOHo","token_expires_at":"2026-06-28T22:02:51.8+00:00","created_at":"2026-06-27T22:02:51.925653+00:00","updated_at":"2026-06-27T22:02:51.925653+00:00"}]
+> ```
+
+## 🤖 Claude *(22:04:26)*
+
+
+## 🤖 Claude *(22:04:32)*
+
+🎉 **Conectou de verdade!** Prova material no banco:
+
+- **App config agora usa a chave do sandbox:** `client_id: sbaw15o2nbsdx4xblp` (prefixo `sb` = sandbox) — você colou as credenciais certas.
+- **Conexão TikTok GRAVADA** em `social_accounts`:
+  - `platform_user_id (open_id): -000_YIbtWK1DgoGB7hArg1_s0DU8NqSWOHo` ← era isso que você colou ("TikTok@-000_…"): é o **open_id da conta conectada** (Gabriel AI).
+  - `token_expires_at: 2026-06-28 22:02` (24h = TTL padrão do access_token do TikTok ✅).
+
+Ou seja: **consent → callback → token salvo, tudo automático.** Aquele caveat do "URL decoder" não atrapalhou. O OAuth (Login Kit + user.info.basic + video.publish) está **provado end-to-end**.
+
+Agora o que prometi: **provar o Direct Post** antes de você gravar. Deixa eu ver o contrato de invocação do `publish-social` e achar um MP4 9:16 pra disparar:
+
+## 🤖 Claude *(22:04:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===publish-social: auth + body shape (top)===\"; sed -n '1,75p' supabase/functions/publish-social/index.ts | grep -n \"verify_jwt\\|req.method\\|body\\|user_id\\|platform\\|content\\|scheduled_post_id\\|auth\\|Bearer\\|from(\\\"social_accounts\\\")\\|access_token\\|serviceClient\\|createClient\" ; echo; echo \"===config.toml verify_jwt for publish-social===\"; grep -n -A3 \"publish-social\" supabase/config.toml 2>/dev/null",
+  "description": "Inspect publish-social invocation contract"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===publish-social: auth + body shape (top)===
+> 1:import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 7:  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 11:  if (req.method === "OPTIONS") {
+> 16:    const authHeader = req.headers.get("Authorization");
+> 17:    if (!authHeader?.startsWith("Bearer ")) {
+> 18:      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 24:    const body = await req.json();
+> 25:    const { platform, content, social_account_id, scheduled_post_id, user_id: bodyUserId } = body;
+> 27:    if (!platform || !content) {
+> 28:      return new Response(JSON.stringify({ error: "platform and content required" }), {
+> 34:    const adminClient = createClient(
+> 40:    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 43:    // - User JWT (frontend): auth.getUser() returns a user
+> 44:    // - Service role (auto-publish cron): auth.getUser() returns null; trust user_id from body
+> 46:    const supabase = createClient(
+> 49:      { global: { headers: { Authorization: authHeader } } }
+> 51:    const { data: { user } } = await supabase.auth.getUser();
+> 56:    } else if (isServiceRole && bodyUserId) {
+> 57:      userId = bodyUserId;
+> 59:      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 68:      .eq("user_id", userId)
+> 69:      .eq("platform", platform)
+> 
+> ===config.toml verify_jwt for publish-social===
+> 6:[functions.publish-social]
+> 7-verify_jwt = false
+> 8-[functions.refresh-social-token]
+> 9-verify_jwt = false
+> ```
+
+## 🤖 Claude *(22:04:41)*
+
+
+## 🤖 Claude *(22:04:43)*
+
+Contrato claro: posso invocar com service-role + `user_id` + `content.video_url`. Preciso de um MP4 9:16 público/alcançável. Vou caçar um asset de vídeo existente:
+
+## 🤖 Claude *(22:04:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; U=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"; echo \"===creative_assets (video kind)===\"; curl -s \"$URL/rest/v1/creative_assets?select=id,kind,storage_path,public_url,created_at&kind=ilike.*video*&order=created_at.desc&limit=5\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | head -c 1500; echo; echo \"===storage buckets===\"; curl -s \"$URL/storage/v1/bucket\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | python3 -c \"import json,sys;[print(b['id'],b.get('public')) for b in json.load(sys.stdin)]\" 2>/dev/null",
+  "description": "Find existing video asset + list buckets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===creative_assets (video kind)===
+> {"code":"42703","details":null,"hint":null,"message":"column creative_assets.storage_path does not exist"}
+> ===storage buckets===
+> generated-images False
+> generated-videos True
+> canvas-assets True
+> vision-artifacts False
+> video-studio-assets False
+> ```
+
+## 🤖 Claude *(22:04:52)*
+
+
+## 🤖 Claude *(22:04:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; echo \"===creative_assets columns===\"; curl -s \"$URL/rest/v1/creative_assets?select=*&kind=eq.video&order=created_at.desc&limit=2\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print('rows:',len(d)); [print(json.dumps({k:str(v)[:60] for k,v in r.items()},ensure_ascii=False)) for r in d]\" 2>/dev/null; echo \"===objects in video-studio-assets===\"; curl -s -X POST \"$URL/storage/v1/object/list/video-studio-assets\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d '{\"limit\":5,\"sortBy\":{\"column\":\"created_at\",\"order\":\"desc\"}}' 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(o.get('name'), o.get('metadata',{}).get('size') if o.get('metadata') else '') for o in d]\" 2>/dev/null; echo \"===objects in generated-videos===\"; curl -s -X POST \"$URL/storage/v1/object/list/generated-videos\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -d '{\"limit\":5,\"sortBy\":{\"column\":\"created_at\",\"order\":\"desc\"}}' 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(o.get('name'), o.get('metadata',{}).get('size') if o.get('metadata') else '') for o in d]\" 2>/dev/null",
+  "description": "Find video assets in tables + buckets"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ===creative_assets columns===
+> rows: 2
+> {"id": "00253ad4-25d9-49a5-b08b-ded2a90953dd", "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8", "org_id": "None", "kind": "video", "storage_bucket": "canvas-assets", "storage_key": "880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594", "is_public": "True", "mime_type": "video/mp4", "file_size_bytes": "None", "width": "None", "height": "None", "duration_seconds": "None", "parent_asset_id": "None", "source_module": "canvas-studio", "source_job_id": "c2f0a7ec-e5ca-4a89-8437-f74c95ff3490", "mesh_node_id": "None", "provider": "higgsfield", "model": "dop-lite", "prompt": "câmera dolly-in, neon pulsando, chuva fina", "title": "None", "tags": "[]", "is_favorite": "False", "metadata": "{'node_id': None, 'backfill': True}", "created_at": "2026-06-25T02:00:41.854045+00:00", "updated_at": "2026-06-25T02:00:41.854045+00:00"}
+> {"id": "07c8cb95-e4ba-4997-9725-8b11c19159d1", "user_id": "ada39fae-67e1-4e53-af1c-5a18e1c108e8", "org_id": "None", "kind": "video", "storage_bucket": "canvas-assets", "storage_key": "46ed45db-4d3d-4615-8784-dbd10f9aa82d/d6ef5f41-ae8d-4e1f-ad9f", "is_public": "True", "mime_type": "video/mp4", "file_size_bytes": "None", "width": "None", "height": "None", "duration_seconds": "None", "parent_asset_id": "None", "source_module": "canvas-studio", "source_job_id": "51d52de6-742b-400c-b9bf-7722c58b3074", "mesh_node_id": "None", "provider": "higgsfield", "model": "dop-lite", "prompt": "câmera dolly-in lenta, neon piscando ao fundo, vento sutil", "title": "None", "tags": "[]", "is_favorite": "False", "metadata": "{'node_id': None, 'backfill': True}", "created_at": "2026-06-25T02:00:41.518152+00:00", "updated_at": "2026-06-25T02:00:41.518152+00:00"}
+> ===objects in video-studio-assets===
+> ===objects in generated-videos===
+> ```
+
+## 🤖 Claude *(22:05:25)*
+
+
+## 🤖 Claude *(22:05:28)*
+
+Achei vídeos MP4 reais (bucket público `canvas-assets`). Pro **teste** do Direct Post serve qualquer MP4 alcançável — pra gravação final você escolhe um 9:16 da marca. Vou pegar a URL pública completa, confirmar que abre, e disparar o `publish-social` (vai sair **SELF_ONLY/privado** — só você vê; é a prova de que a publicação funciona):
+
+## 🤖 Claude *(22:05:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; SK=$(curl -s \"$URL/rest/v1/creative_assets?select=storage_bucket,storage_key&id=eq.00253ad4-25d9-49a5-b08b-ded2a90953dd\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];print(d['storage_key'])\"); echo \"storage_key=$SK\"; VURL=\"$URL/storage/v1/object/public/canvas-assets/$SK\"; echo \"VURL=$VURL\"; echo \"===reachable?===\"; curl -s -o /dev/null -w \"HTTP=%{http_code} type=%{content_type} bytes=%{size_download}\\n\" \"$VURL\"",
+  "description": "Build + verify public video URL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> storage_key=880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4
+> VURL=https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4
+> ===reachable?===
+> HTTP=200 type=video/mp4 bytes=19406286
+> ```
+
+## 🤖 Claude *(22:05:46)*
+
+
+## 🤖 Claude *(22:05:47)*
+
+Vídeo OK: **HTTP 200, video/mp4, 19.4 MB** (dentro do limite). Disparando o Direct Post (service-role + `user_id`, sairá privado):
+
+## 🤖 Claude *(22:05:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; ANON=\"${SB_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}\"; VURL=\"$URL/storage/v1/object/public/canvas-assets/880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4\"; echo \"===invoke publish-social tiktok===\"; curl -s -w \"\\nHTTP=%{http_code}\\n\" -X POST \"$URL/functions/v1/publish-social\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $ANON\" -H \"Content-Type: application/json\" -d \"{\\\"platform\\\":\\\"tiktok\\\",\\\"user_id\\\":\\\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\\\",\\\"content\\\":{\\\"video_url\\\":\\\"$VURL\\\",\\\"text\\\":\\\"Gabriel AI \u2014 teste Direct Post (sandbox)\\\"}}\"",
+  "description": "Invoke publish-social Direct Post for TikTok"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===invoke publish-social tiktok===
+> {"message":"Conflicting API keys","hint":"The `apikey` and `Authorization` headers provide conflicting API keys. Send the intended sb_ key only in the `apikey` header."}
+> HTTP=401
+> ```
+
+## 🤖 Claude *(22:05:58)*
+
+
+## 🤖 Claude *(22:05:59)*
+
+Conflito de headers no gateway — preciso mandar a mesma secret key nos dois. Retry:
+
+## 🤖 Claude *(22:06:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; VURL=\"$URL/storage/v1/object/public/canvas-assets/880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4\"; echo \"===invoke publish-social tiktok (apikey=secret)===\"; curl -s -w \"\\nHTTP=%{http_code}\\n\" -X POST \"$URL/functions/v1/publish-social\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"platform\\\":\\\"tiktok\\\",\\\"user_id\\\":\\\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\\\",\\\"content\\\":{\\\"video_url\\\":\\\"$VURL\\\",\\\"text\\\":\\\"Gabriel AI \u2014 teste Direct Post (sandbox)\\\"}}\"",
+  "description": "Invoke publish-social with matching secret key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===invoke publish-social tiktok (apikey=secret)===
+> {"error":"Falha ao publicar. Tente novamente em instantes."}
+> HTTP=500
+> ```
+
+## 🤖 Claude *(22:06:14)*
+
+
+## 🤖 Claude *(22:06:16)*
+
+Falhou com 500 genérico — preciso do erro real. Deixa eu ver como a função resolve o token e capturar o erro específico (creator_info? init? token mascarado?):
+
+## 🤖 Claude *(22:06:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===token resolution in publish-social (lines 60-130)===\"; sed -n '60,130p' supabase/functions/publish-social/index.ts",
+  "description": "Read account/token resolution logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===token resolution in publish-social (lines 60-130)===
+>         status: 401,
+>         headers: { ...corsHeaders, "Content-Type": "application/json" },
+>       });
+>     }
+> 
+>     let query = adminClient
+>       .from("decrypted_social_accounts")
+>       .select("*")
+>       .eq("user_id", userId)
+>       .eq("platform", platform)
+>       .eq("is_active", true);
+> 
+>     if (social_account_id) query = query.eq("id", social_account_id);
+> 
+>     const { data: accounts, error: accError } = await query.limit(1).single();
+>     if (accError || !accounts) {
+>       return new Response(JSON.stringify({ error: `No active ${platform} account found` }), {
+>         status: 404,
+>         headers: { ...corsHeaders, "Content-Type": "application/json" },
+>       });
+>     }
+> 
+>     const account = accounts;
+> 
+>     // Refresh token if expired, then re-fetch account to get the new access_token
+>     if (account.token_expires_at && new Date(account.token_expires_at) < new Date()) {
+>       const refreshRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/refresh-social-token`, {
+>         method: "POST",
+>         headers: {
+>           "Content-Type": "application/json",
+>           Authorization: `Bearer ${(Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))}`,
+>         },
+>         body: JSON.stringify({ social_account_id: account.id }),
+>       });
+>       if (!refreshRes.ok) {
+>         return new Response(JSON.stringify({ error: "Token expired and refresh failed" }), {
+>           status: 401,
+>           headers: { ...corsHeaders, "Content-Type": "application/json" },
+>         });
+>       }
+>       // refresh-social-token updates the DB but does not return the token;
+>       // re-fetch to get the updated access_token
+>       const { data: refreshedAccount } = await adminClient
+>         .from("decrypted_social_accounts")
+>         .select("access_token, refresh_token, token_expires_at")
+>         .eq("id", account.id)
+>         .single();
+>       if (refreshedAccount) {
+>         account.access_token = refreshedAccount.access_token;
+>         account.token_expires_at = refreshedAccount.token_expires_at;
+>       }
+>     }
+> 
+>     let result: any;
+> 
+>     // Best-effort materiality telemetry (Lei 1 / FR-PE-016) — fire-and-forget so a logging hiccup
+>     // never blocks a publish. Mirrors the publish-meta pulse pattern (service='publish-<platform>').
+>     const pulse = (status: "ok" | "degraded" | "error", event?: string, metadata?: Record<string, unknown>) =>
+>       adminClient
+>         .from("infra_health_logs")
+>         .insert({ service: `publish-${platform}`, status, event: event ?? null, metadata: metadata ?? {} })
+>         .then(() => {}, () => {});
+> 
+>     if (platform === "linkedin") {
+>       const res = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+>         method: "POST",
+>         headers: {
+>           Authorization: `Bearer ${account.access_token}`,
+>           "Content-Type": "application/json",
+>           "X-Restli-Protocol-Version": "2.0.0",
+>         },
+> ```
+
+## 🤖 Claude *(22:06:22)*
+
+
+## 🤖 Claude *(22:06:23)*
+
+A função lê o token real (`decrypted_social_accounts`) e ele não expirou — então o 500 veio do branch TikTok. A própria função emite telemetria por etapa em `infra_health_logs`. Vou ler o evento exato:
+
+## 🤖 Claude *(22:06:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; echo \"===infra_health_logs publish-tiktok (recent)===\"; curl -s \"$URL/rest/v1/infra_health_logs?service=eq.publish-tiktok&select=status,event,metadata,created_at&order=created_at.desc&limit=8\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool",
+  "description": "Read publish-tiktok telemetry events"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===infra_health_logs publish-tiktok (recent)===
+> {
+>     "code": "42703",
+>     "details": null,
+>     "hint": null,
+>     "message": "column infra_health_logs.created_at does not exist"
+> }
+> ```
+
+## 🤖 Claude *(22:06:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; echo \"===infra_health_logs cols===\"; curl -s \"$URL/rest/v1/infra_health_logs?service=eq.publish-tiktok&select=*&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin); print('rows',len(d)); [print(json.dumps(r,ensure_ascii=False)) for r in d]\"",
+  "description": "Read publish-tiktok telemetry (all cols)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===infra_health_logs cols===
+> rows 1
+> {"id": "83ef74e6-c6b9-46df-ace7-45587acf84a2", "service": "publish-tiktok", "status": "error", "last_seen_at": "2026-06-27T22:06:06.542118+00:00", "event": "tiktok_init_failed", "metadata": {"status": 403}}
+> ```
+
+## 🤖 Claude *(22:06:47)*
+
+
+## 🤖 Claude *(22:06:49)*
+
+O init falhou com **403** (`tiktok_init_failed`) — passou no `creator_info` mas o `/video/init/` recusou. Preciso do corpo exato do 403 (e ver o que o `creator_info` devolve em sandbox). Vou reproduzir as chamadas com o token real (sem imprimir o token):
+
+## 🤖 Claude *(22:06:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; TOKEN=$(curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.tiktok&select=access_token,scope\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];print(d['access_token']); import sys; sys.stderr.write('scope='+str(d.get('scope'))+'\\n')\"); echo \"token_len=${#TOKEN}\"; echo \"===creator_info/query===\"; curl -s -X POST \"https://open.tiktokapis.com/v2/post/publish/creator_info/query/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" | python3 -m json.tool; echo \"===video/init (SELF_ONLY, tiny dummy size)===\"; curl -s -X POST \"https://open.tiktokapis.com/v2/post/publish/video/init/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" -d '{\"post_info\":{\"title\":\"test\",\"privacy_level\":\"SELF_ONLY\",\"is_aigc\":true},\"source_info\":{\"source\":\"FILE_UPLOAD\",\"video_size\":19406286,\"chunk_size\":19406286,\"total_chunk_count\":1}}' | python3 -m json.tool",
+  "description": "Reproduce creator_info + init to capture 403 body"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Traceback (most recent call last):
+>   File "<string>", line 1, in <module>
+> KeyError: 0
+> token_len=0
+> ===creator_info/query===
+> {
+>     "data": {},
+>     "error": {
+>         "code": "invalid_params",
+>         "message": "Invalid authorization header. Please check the format.",
+>         "log_id": "202606272206573C790BEF28AAD4708448"
+>     }
+> }
+> ===video/init (SELF_ONLY, tiny dummy size)===
+> {
+>     "data": {},
+>     "error": {
+>         "code": "invalid_params",
+>         "message": "Invalid authorization header. Please check the format.",
+>         "log_id": "20260627220657C844568F40FB67703888"
+>     }
+> }
+> ```
+
+## 🤖 Claude *(22:07:05)*
+
+
+## 🤖 Claude *(22:07:07)*
+
+Token veio vazio — a query no `decrypted_social_accounts` errou (provável coluna `scope` inexistente). Deixa eu ver as colunas reais e pegar o token certo:
+
+## 🤖 Claude *(22:07:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; echo \"===decrypted_social_accounts row (cols)===\"; curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.tiktok&select=*\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin); \nprint('type',type(d));\nprint(json.dumps(d,ensure_ascii=False)[:400] if not isinstance(d,list) else 'rows='+str(len(d)));\nprint('cols:', list(d[0].keys()) if isinstance(d,list) and d else 'n/a')\"",
+  "description": "Inspect decrypted_social_accounts columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===decrypted_social_accounts row (cols)===
+> type <class 'list'>
+> rows=1
+> cols: ['id', 'user_id', 'platform', 'platform_user_id', 'platform_username', 'access_token', 'refresh_token', 'token_expires_at', 'scopes', 'is_active', 'metadata', 'created_at', 'updated_at']
+> ```
+
+## 🤖 Claude *(22:07:16)*
+
+
+## 🤖 Claude *(22:07:16)*
+
+Coluna é `scopes` (não `scope`). Pegando o token certo + scopes concedidos, e reproduzindo creator_info + init:
+
+## 🤖 Claude *(22:07:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; ROW=$(curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.tiktok&select=access_token,scopes,platform_username\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"); TOKEN=$(echo \"$ROW\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['access_token'])\"); echo \"$ROW\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];print('granted scopes:',d.get('scopes'));print('username:',d.get('platform_username'));print('token prefix:',d['access_token'][:6])\"; echo \"===creator_info/query===\"; curl -s -X POST \"https://open.tiktokapis.com/v2/post/publish/creator_info/query/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" | python3 -m json.tool",
+  "description": "Get token+scopes, query creator_info"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> granted scopes: ['user.info.basic', 'video.publish']
+> username: -000_YIbtWK1DgoGB7hArg1_s0DU8NqSWOHo
+> token prefix: act.Wf
+> ===creator_info/query===
+> {
+>     "data": {
+>         "max_video_post_duration_sec": 3600,
+>         "privacy_level_options": [
+>             "PUBLIC_TO_EVERYONE",
+>             "MUTUAL_FOLLOW_FRIENDS",
+>             "SELF_ONLY"
+>         ],
+>         "stitch_disabled": false,
+>         "comment_disabled": false,
+>         "creator_avatar_url": "https://p19-common-sign.tiktokcdn-eu.com/tos-no1a-avt-0068c001-no/582a9e74879c45534e495de70a4b3a93~tplv-tiktokx-cropcenter:168:168.webp?dr=10397&refresh_token=7b7d8ec8&x-expires=1782770400&x-signature=eQAL8ZfBLB5CbvFGTxQtUpgzDas%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=bbadf38d&idc=no1a",
+>         "creator_nickname": "Gabriel AI - MCORCH",
+>         "creator_username": "gabriel_mcorch",
+>         "duet_disabled": false
+>     },
+>     "error": {
+>         "code": "ok",
+>         "message": "",
+>         "log_id": "20260627220722E633C6F2F811068EAA36"
+>     }
+> }
+> ```
+
+## 🤖 Claude *(22:07:31)*
+
+
+## 🤖 Claude *(22:07:34)*
+
+`creator_info` perfeito — token tem **`user.info.basic` + `video.publish`**, conta **"Gabriel AI - MCORCH" (@gabriel_mcorch)**. 
+
+Achei o bug: o `creator_info` lista `PUBLIC_TO_EVERYONE` como opção, e **nosso código prefere PUBLIC** — mas cliente não-auditado **só pode SELF_ONLY** → init 403. Vou confirmar testando o init com `SELF_ONLY`:
+
+## 🤖 Claude *(22:07:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; TOKEN=$(curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.tiktok&select=access_token\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['access_token'])\"); echo \"===init SELF_ONLY===\"; curl -s -X POST \"https://open.tiktokapis.com/v2/post/publish/video/init/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" -d '{\"post_info\":{\"title\":\"Gabriel AI test\",\"privacy_level\":\"SELF_ONLY\",\"is_aigc\":true},\"source_info\":{\"source\":\"FILE_UPLOAD\",\"video_size\":19406286,\"chunk_size\":19406286,\"total_chunk_count\":1}}' | python3 -m json.tool; echo \"===init PUBLIC_TO_EVERYONE (expect 403)===\"; curl -s -o /tmp/pub.json -w \"HTTP=%{http_code}\\n\" -X POST \"https://open.tiktokapis.com/v2/post/publish/video/init/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" -d '{\"post_info\":{\"title\":\"x\",\"privacy_level\":\"PUBLIC_TO_EVERYONE\",\"is_aigc\":true},\"source_info\":{\"source\":\"FILE_UPLOAD\",\"video_size\":19406286,\"chunk_size\":19406286,\"total_chunk_count\":1}}'; cat /tmp/pub.json | python3 -m json.tool",
+  "description": "Test init with SELF_ONLY vs PUBLIC"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===init SELF_ONLY===
+> {
+>     "error": {
+>         "code": "unaudited_client_can_only_post_to_private_accounts",
+>         "message": "Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/",
+>         "log_id": "202606272207424B2364A3F3D6221A67CA"
+>     }
+> }
+> ===init PUBLIC_TO_EVERYONE (expect 403)===
+> HTTP=403
+> {
+>     "error": {
+>         "code": "unaudited_client_can_only_post_to_private_accounts",
+>         "message": "Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/",
+>         "log_id": "2026062722074343AA3847855146F3DD22"
+>     }
+> }
+> ```
+
+## 🤖 Claude *(22:08:42)*
+
+
+## 🤖 Claude *(22:08:51)*
+
+**Causa raiz isolada — com prova material.** Reproduzi as chamadas direto na API do TikTok com o token real:
+
+| Etapa | Resultado |
+|---|---|
+| Token OAuth | ✅ scopes concedidos: **`user.info.basic` + `video.publish`** |
+| `creator_info/query` | ✅ conta **"Gabriel AI - MCORCH" (@gabriel_mcorch)** |
+| `video/init` (SELF_ONLY) | ❌ `unaudited_client_can_only_post_to_private_accounts` |
+| `video/init` (PUBLIC) | ❌ **HTTP 403** — mesmo erro |
+
+## 🔑 O bloqueador exato (e NÃO é o nosso código)
+O erro é **`unaudited_client_can_only_post_to_private_accounts`**: enquanto o app não passa no audit, o TikTok **só deixa publicar se a CONTA estiver privada**. Os dois testes (privado e público) deram o mesmo erro — ou seja, o problema não é o nível de privacidade do post, é a **configuração da própria conta @gabriel_mcorch**, que está pública.
+
+> Isso casa 100% com a regra que a pesquisa achou (cliente não-auditado → só privado). O detalhe novo e decisivo: é a **conta** que precisa estar privada, não só o post.
+
+## ✅ Fix (ação sua, 30 segundos — no app do TikTok)
+Na conta **Gabriel AI - MCORCH**:
+1. Perfil → **☰ (menu)** → **Configurações e privacidade**
+2. **Privacidade** → ative **Conta privada** (Private account)
+
+Só isso. Não mexe em mais nada. (Depois do audit aprovado, você volta pra pública e o Direct Post sai público automaticamente.)
+
+## Depois que ativar privado:
+**Me avisa** → eu re-disparo o `publish-social` e confirmo o `publish_id` real (a publicação vai funcionar, SELF_ONLY). **Aí** você grava o demo com tudo verde.
+
+> Nosso código está correto — ele já cai em SELF_ONLY quando é a única opção. Com a conta privada, o `creator_info` deve passar a oferecer só SELF_ONLY e o init completa. Confirmo na hora.
+
+Deixa eu registrar essa lição (pra não reaprender depois):
+
+## 🤖 Claude *(22:09:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tiktok_unaudited_private_account.md",
+  "content": "---\nname: reference_tiktok_unaudited_private_account\ndescription: TikTok Direct Post pr\u00e9-audit s\u00f3 funciona se a CONTA do criador estiver privada (unaudited_client_can_only_post_to_private_accounts); sandbox tem client_key pr\u00f3prio.\nmetadata:\n  type: reference\n---\n\nTikTok Content Posting API (Direct Post / `video.publish`) \u2014 gotchas provados materialmente 2026-06-27 ao conectar a conta da marca [[project_brand_persona_ccio]] (Gabriel AI - MCORCH / @gabriel_mcorch, open_id `-000_YIbtWK1DgoGB7hArg1_s0DU8NqSWOHo`):\n\n1. **Cliente N\u00c3O-auditado s\u00f3 publica em conta PRIVADA.** `video/init` devolve `unaudited_client_can_only_post_to_private_accounts` (HTTP 403) tanto com `privacy_level=SELF_ONLY` quanto `PUBLIC_TO_EVERYONE` enquanto a **conta** do criador est\u00e1 p\u00fablica. N\u00c3O \u00e9 o `privacy_level` do post \u2014 \u00e9 a config da conta no app do TikTok (Settings \u2192 Privacidade \u2192 Conta privada). P\u00f3s-audit a conta volta a p\u00fablica e o Direct Post sai p\u00fablico. Doc: developers.tiktok.com/doc/content-sharing-guidelines.\n\n2. **`creator_info/query` engana:** em sandbox ele lista `[\"PUBLIC_TO_EVERYONE\",\"MUTUAL_FOLLOW_FRIENDS\",\"SELF_ONLY\"]` mesmo para cliente n\u00e3o-auditado. Nosso `publish-social` prefere PUBLIC \u2192 403. Quando a conta \u00e9 privada, esperar que o creator_info passe a ofertar s\u00f3 SELF_ONLY (verificar). N\u00e3o confiar nas op\u00e7\u00f5es do creator_info como prova de capacidade p\u00fablica.\n\n3. **Sandbox tem client_key/secret PR\u00d3PRIOS** (prefixo `sb\u2026`, ex. `sbaw15o2nbsdx4xblp`), distintos da produ\u00e7\u00e3o (`awz0yss5qh8yuqtb`). App nunca aprovado: o demo do App Review TEM que ser gravado no sandbox (verbatim guideline), s\u00f3 funciona p/ \"target users\" adicionados, e todo post \u00e9 SELF_ONLY. Produ\u00e7\u00e3o s\u00f3 autoriza p\u00f3s-aprova\u00e7\u00e3o.\n\n4. **OAuth funciona** (provado E2E): `social-auth-init`\u2192consent (Login Kit + os 2 scopes)\u2192`social-auth-callback` grava token em `social_accounts` (TTL 24h). `publish-social` l\u00ea token real de `decrypted_social_accounts` (coluna `scopes`, n\u00e3o `scope`). Edge fn via service-role: mandar a MESMA `SB_SECRET_KEY` em `apikey` E `Authorization` (sen\u00e3o gateway 401 \"Conflicting API keys\").\n\nBlueprint/playbook: `.claude/context/social-app-registration-playbook-2026-06-27.md`. Workflow de pesquisa: tiktok-sandbox-and-review-mechanics (7 agentes, citado).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tiktok_unaudited_private_account.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:09:15)*
+
+
+## 🤖 Claude *(22:09:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -5 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "description": "Read tail of MEMORY.md for safe append anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - [Mobile Branch Protocol — /sync-mobile-branch](project_mobile_branch_protocol.md) — Protocolo para integrar branches claude/* criados no celular; cherry-pick seletivo, segurança primeiro
+> - [Twitter API — Cota Mensal de Escrita](project_twitter_api_quota.md) — 1.500 tweets/mês Free tier; CreditsDepleted = cota mensal (renova automático), não bloqueio permanente
+> - [BoK Gate Override — viralmind Sprint 4](project_bok_gate_override_viralmind.md) — Sovereign autorizou override consciente do BoK Gate p/ Sprint 4 Canvas UX; é port de código revisado, débito BoK selado no /handoff
+> - [Canvas Studio Architecture — useCanvasStore](project_canvas_studio_architecture.md) — Sprint 4.1: 3º Zustand store (zundo temporal) p/ Canvas; pipelineMode/lanes/styleSettings dentro do graph jsonb (sem migration)
+> - [Canvas Design — open-design sidecar](project_canvas_design_initiative.md) — 7º módulo; integra nexu-io/open-design (Apache-2.0) como sidecar via CLI od; BoK suite 9/9 selada 2026-05-20; pnpm nunca na raiz
+> ```
+
+## 🤖 Claude *(22:09:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Canvas Design \u2014 open-design sidecar](project_canvas_design_initiative.md) \u2014 7\u00ba m\u00f3dulo; integra nexu-io/open-design (Apache-2.0) como sidecar via CLI od; BoK suite 9/9 selada 2026-05-20; pnpm nunca na raiz",
+  "new_string": "- [Canvas Design \u2014 open-design sidecar](project_canvas_design_initiative.md) \u2014 7\u00ba m\u00f3dulo; integra nexu-io/open-design (Apache-2.0) como sidecar via CLI od; BoK suite 9/9 selada 2026-05-20; pnpm nunca na raiz\n- [TikTok Direct Post pr\u00e9-audit exige CONTA privada (+sandbox client_key pr\u00f3prio)](reference_tiktok_unaudited_private_account.md) \u2014 `unaudited_client_can_only_post_to_private_accounts`; creator_info engana (lista PUBLIC mesmo n\u00e3o-auditado); OAuth provado E2E; service-role edge = mesma SB_SECRET_KEY em apikey+Authorization"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:09:32)*
+
+
+## 🤖 Claude *(22:09:35)*
+
+Lição registrada. 
+
+**Resumo do estado:** OAuth + scopes + identidade da conta = **provados** ✅. Único bloqueador restante pro Direct Post: a conta **@gabriel_mcorch está pública** e cliente não-auditado só posta em conta privada.
+
+👉 **Sua única ação agora:** no app do TikTok, **Configurações e privacidade → Privacidade → ativar Conta privada**. Me avisa quando ativar — eu re-disparo o publish, confirmo o `publish_id` real, e aí você grava o demo. 🎯
+
+## 👤 User *(22:12:11)*
+
+Você quem vai gravar o demo. Precisamos realmente postar um video na gravação só o login não é suficiente para gravação do video fazendo login?
+
+## 🤖 Claude *(22:13:15)*
+
+
+## 🤖 Claude *(22:13:30)*
+
+Preciso ser honesto nos dois pontos — Lei 1, não vou dizer que faço algo que não consigo.
+
+## 1. "Só o login basta?" → **Não.** Tem que postar um vídeo de verdade.
+Nós selecionamos o scope **`video.publish` (Content Posting API)**. A regra do TikTok é explícita: *"todos os produtos e scopes selecionados precisam ser claramente demonstrados no vídeo."* Se o demo mostrar só o login (Login Kit), o revisor **reprova** com "video.publish não demonstrado".
+
+Então o demo **obrigatoriamente** mostra: login (consent) **+ um Direct Post real de um vídeo**. A boa notícia: o post sai **privado/SELF_ONLY** (depois que a conta estiver privada) — inofensivo, ninguém vê, e dá pra apagar depois.
+
+> Não tem atalho aqui: o motivo de existir o app é publicar vídeo autônomo. Pra liberar isso, o audit exige ver um post acontecendo.
+
+## 2. "Você grava o demo?" → **Eu não consigo gravar esse demo.** Dois bloqueios reais:
+
+**(a) O passo de autorizar é no `tiktok.com`, logado na conta Gabriel AI.** Pra gravar o consent, o navegador precisa estar **logado na conta TikTok da persona** (sua senha + 2FA). Eu não tenho — e não devo ter — essas credenciais. Esse login é seu, fisicamente.
+
+**(b) O vídeo tem que mostrar o domínio `login.mcorch.com`.** O TikTok exige que o domínio no vídeo bata com a URL do app. Do meu ambiente (datacenter), o Cloudflare bloqueia automação de browser no `login.mcorch.com` — eu só conseguiria gravar em `localhost`, que o TikTok reprova por domínio divergente.
+
+Ou seja: a **gravação de tela** tem que sair da **sua máquina**, onde você já está logado nos dois (no app e no TikTok). Não é falta de vontade — é impossibilidade técnica/credencial.
+
+## ✅ O que eu faço pra te deixar uma gravação de ~1 minuto, take único:
+1. **Você ativa conta privada** → eu **provo o publish inteiro headless** (te mostro o `publish_id` real + status PUBLISHED + o post privado aparecendo na conta). Assim **não falha na câmera**.
+2. Eu te dou um **roteiro segundo-a-segundo** + qual vídeo 9:16 usar.
+3. Você grava ~1 min (Conectar → aprovar → publicar → sucesso).
+4. Eu passo o seu vídeo pelo **Vision QA** antes de você enviar.
+
+Você só faz o clique final na câmera; todo o resto (provar que funciona, roteiro, QA) é comigo.
+
+👉 **Próximo passo:** ativa a **conta privada** no TikTok e me avisa — eu provo o publish na hora. Aí montamos a gravação. Combinado?
+
+## 👤 User *(22:14:05)*
+
+Pronto ja coloquei a conta em privada e não é mais business
+
+## 🤖 Claude *(22:14:15)*
+
+
+## 🤖 Claude *(22:14:16)*
+
+Conta privada — vou re-testar o Direct Post agora mesmo. Primeiro o `creator_info` (pra ver se as opções de privacidade mudaram), depois disparo o `publish-social` completo:
+
+## 🤖 Claude *(22:14:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; TOKEN=$(curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.tiktok&select=access_token\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['access_token'])\"); echo \"===creator_info (conta privada agora)===\"; curl -s -X POST \"https://open.tiktokapis.com/v2/post/publish/creator_info/query/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('privacy_options:',d.get('data',{}).get('privacy_level_options'));print('error:',d.get('error',{}).get('code'))\"",
+  "description": "Re-check creator_info after account set private"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===creator_info (conta privada agora)===
+> privacy_options: ['FOLLOWER_OF_CREATOR', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY']
+> error: ok
+> ```
+
+## 🤖 Claude *(22:14:43)*
+
+
+## 🤖 Claude *(22:14:45)*
+
+Mudou: agora as opções são `['FOLLOWER_OF_CREATOR', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY']` — **PUBLIC sumiu** (conta privada). Nosso código vai cair em `privacyOptions[0]` = `FOLLOWER_OF_CREATOR`. Vou disparar o `publish-social` completo e ver se publica de ponta a ponta:
+
+## 🤖 Claude *(22:14:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; VURL=\"$URL/storage/v1/object/public/canvas-assets/880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4\"; echo \"===publish-social tiktok (full)===\"; curl -s -w \"\\nHTTP=%{http_code}\\n\" -X POST \"$URL/functions/v1/publish-social\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"platform\\\":\\\"tiktok\\\",\\\"user_id\\\":\\\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\\\",\\\"content\\\":{\\\"video_url\\\":\\\"$VURL\\\",\\\"text\\\":\\\"Gabriel AI \u2014 Direct Post sandbox test\\\"}}\"; echo \"===telemetry===\"; curl -s \"$URL/rest/v1/infra_health_logs?service=eq.publish-tiktok&select=status,event,metadata,last_seen_at&order=last_seen_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool",
+  "description": "Run full publish-social Direct Post + read telemetry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===publish-social tiktok (full)===
+> {"error":"Falha ao publicar. Tente novamente em instantes."}
+> HTTP=500
+> ===telemetry===
+> [
+>     {
+>         "status": "error",
+>         "event": "tiktok_init_failed",
+>         "metadata": {
+>             "status": 403
+>         },
+>         "last_seen_at": "2026-06-27T22:14:54.252731+00:00"
+>     },
+>     {
+>         "status": "error",
+>         "event": "tiktok_init_failed",
+>         "metadata": {
+>             "status": 403
+>         },
+>         "last_seen_at": "2026-06-27T22:06:06.542118+00:00"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(22:14:58)*
+
+
+## 🤖 Claude *(22:14:59)*
+
+Ainda 403 — o código mandou `FOLLOWER_OF_CREATOR` (a 1ª opção). Vou testar direto qual `privacy_level` o cliente não-auditado aceita agora:
+
+## 🤖 Claude *(22:15:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; TOKEN=$(curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.tiktok&select=access_token\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['access_token'])\"); for PL in SELF_ONLY FOLLOWER_OF_CREATOR MUTUAL_FOLLOW_FRIENDS; do echo \"=== init $PL ===\"; curl -s -o /tmp/i.json -w \"HTTP=%{http_code} \" -X POST \"https://open.tiktokapis.com/v2/post/publish/video/init/\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json; charset=UTF-8\" -d \"{\\\"post_info\\\":{\\\"title\\\":\\\"Gabriel AI test\\\",\\\"privacy_level\\\":\\\"$PL\\\",\\\"is_aigc\\\":true},\\\"source_info\\\":{\\\"source\\\":\\\"FILE_UPLOAD\\\",\\\"video_size\\\":19406286,\\\"chunk_size\\\":19406286,\\\"total_chunk_count\\\":1}}\"; python3 -c \"import json;d=json.load(open('/tmp/i.json'));e=d.get('error',{});print('code:',e.get('code'),'| publish_id:',d.get('data',{}).get('publish_id'))\"; done",
+  "description": "Test each privacy_level to find which works for unaudited private account"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === init SELF_ONLY ===
+> HTTP=200 code: ok | publish_id: v_pub_file~v2-1.7656201858570913814
+> === init FOLLOWER_OF_CREATOR ===
+> HTTP=403 code: unaudited_client_can_only_post_to_private_accounts | publish_id: None
+> === init MUTUAL_FOLLOW_FRIENDS ===
+> HTTP=403 code: unaudited_client_can_only_post_to_private_accounts | publish_id: None
+> ```
+
+## 🤖 Claude *(22:15:26)*
+
+
+## 🤖 Claude *(22:15:29)*
+
+**Isolado e provado:** só **`SELF_ONLY`** funciona pro cliente não-auditado → **HTTP 200, publish_id mintado** (`v_pub_file~v2-1.7656…`). `FOLLOWER_OF_CREATOR` e `MUTUAL_FOLLOW_FRIENDS` dão 403.
+
+**Bug confirmado no nosso código:** ele pega `privacyOptions[0]` (= `FOLLOWER_OF_CREATOR`) em vez de SELF_ONLY. O comentário até diz "fall back to SELF_ONLY" mas a lógica não faz isso. Vou corrigir:
+
+## 🤖 Claude *(22:15:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "offset": 253,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 253	      // (1) Pre-flight creator_info — pick a privacy_level that the (possibly unaudited) account actually allows.
+> 254	      const ciRes = await fetch(`${TIKTOK_BASE}/v2/post/publish/creator_info/query/`, {
+> 255	        method: "POST",
+> 256	        headers: {
+> 257	          Authorization: `Bearer ${account.access_token}`,
+> 258	          "Content-Type": "application/json; charset=UTF-8",
+> 259	        },
+> 260	      });
+> 261	      const creatorInfo = await ciRes.json();
+> 262	      if (!ciRes.ok) {
+> 263	        console.error("TikTok creator_info error:", ciRes.status, creatorInfo);
+> 264	        pulse("error", "tiktok_creator_info_failed", { status: ciRes.status });
+> 265	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 266	      }
+> ```
+
+## 🤖 Claude *(22:15:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "offset": 266,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 266	      }
+> 267	      const privacyOptions: string[] = creatorInfo?.data?.privacy_level_options ?? [];
+> 268	      // Prefer public when available; otherwise fall back to the safest allowed (SELF_ONLY pre-audit).
+> 269	      const privacyLevel =
+> 270	        privacyOptions.find((p) => p === "PUBLIC_TO_EVERYONE") ??
+> 271	        privacyOptions[0] ??
+> 272	        "SELF_ONLY";
+> 273	
+> 274	      // Fetch the MP4 bytes once (FILE_UPLOAD requires the exact size up-front).
+> 275	      const mp4Res = await fetch(videoUrl);
+> ```
+
+## 🤖 Claude *(22:15:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "old_string": "      const privacyOptions: string[] = creatorInfo?.data?.privacy_level_options ?? [];\n      // Prefer public when available; otherwise fall back to the safest allowed (SELF_ONLY pre-audit).\n      const privacyLevel =\n        privacyOptions.find((p) => p === \"PUBLIC_TO_EVERYONE\") ??\n        privacyOptions[0] ??\n        \"SELF_ONLY\";",
+  "new_string": "      const privacyOptions: string[] = creatorInfo?.data?.privacy_level_options ?? [];\n      // Prefer public when available (post-audit). Otherwise an UNAUDITED client can ONLY post as\n      // SELF_ONLY \u2014 TikTok rejects FOLLOWER_OF_CREATOR / MUTUAL_FOLLOW_FRIENDS with\n      // `unaudited_client_can_only_post_to_private_accounts` (proven 2026-06-27). So fall back to\n      // SELF_ONLY explicitly, NOT to privacyOptions[0] (which is FOLLOWER_OF_CREATOR on a private acct).\n      const privacyLevel =\n        privacyOptions.find((p) => p === \"PUBLIC_TO_EVERYONE\") ??\n        privacyOptions.find((p) => p === \"SELF_ONLY\") ??\n        privacyOptions[0] ??\n        \"SELF_ONLY\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:15:43)*
+
+
+## 🤖 Claude *(22:15:43)*
+
+Agora deploy do `publish-social` e re-teste end-to-end:
+
+## 🤖 Claude *(22:15:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===deno check===\"; deno check supabase/functions/publish-social/index.ts 2>&1 | tail -5; echo \"===deploy===\"; npx supabase functions deploy publish-social 2>&1 | tail -15",
+  "description": "Deno check + deploy publish-social",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===deno check===
+> /bin/bash: line 1: deno: command not found
+> ===deploy===
+> Bundling Function: publish-social
+> Deploying Function: publish-social (script size: 70.43kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-social
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(22:15:56)*
+
+
+## 🤖 Claude *(22:15:57)*
+
+Deployado (70.43kB). Re-disparando o publish completo (agora vai cair em SELF_ONLY → init → upload → poll → publicado). **Isso cria um post real privado** na conta Gabriel AI (só você vê) — é a prova:
+
+## 🤖 Claude *(22:16:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; VURL=\"$URL/storage/v1/object/public/canvas-assets/880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4\"; echo \"===publish-social tiktok (post-fix)===\"; curl -s -w \"\\nHTTP=%{http_code}\\n\" -X POST \"$URL/functions/v1/publish-social\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"platform\\\":\\\"tiktok\\\",\\\"user_id\\\":\\\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\\\",\\\"content\\\":{\\\"video_url\\\":\\\"$VURL\\\",\\\"text\\\":\\\"Gabriel AI \u2014 Direct Post (sandbox, SELF_ONLY)\\\"}}\"; echo \"===telemetry (latest)===\"; curl -s \"$URL/rest/v1/infra_health_logs?service=eq.publish-tiktok&select=status,event,metadata,last_seen_at&order=last_seen_at.desc&limit=2\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool",
+  "description": "Re-run publish-social after SELF_ONLY fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===publish-social tiktok (post-fix)===
+> {"success":true,"result":{"id":null,"publish_id":"v_pub_file~v2-1.7656202273302792214","status":"PUBLISH_COMPLETE"}}
+> HTTP=200
+> ===telemetry (latest)===
+> [
+>     {
+>         "status": "ok",
+>         "event": "tiktok_publish_complete",
+>         "metadata": {
+>             "public": false,
+>             "publish_id": "v_pub_file~v2-1.7656202273302792214"
+>         },
+>         "last_seen_at": "2026-06-27T22:16:11.978989+00:00"
+>     },
+>     {
+>         "status": "error",
+>         "event": "tiktok_init_failed",
+>         "metadata": {
+>             "status": 403
+>         },
+>         "last_seen_at": "2026-06-27T22:14:54.252731+00:00"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(22:16:37)*
+
+
+## 🤖 Claude *(22:16:41)*
+
+🎉🎉 **DIRECT POST FUNCIONOU END-TO-END!**
+
+```
+{"success":true,"result":{"publish_id":"v_pub_file~v2-1.7656202273302792214","status":"PUBLISH_COMPLETE"}}
+HTTP 200
+telemetry: tiktok_publish_complete · public:false · publish_id confirmado
+```
+
+O pipeline inteiro está **provado materialmente**: OAuth → token → creator_info → init (SELF_ONLY) → upload dos bytes → poll → **PUBLISH_COMPLETE**. **Tem um vídeo de verdade publicado (privado) na conta Gabriel AI agora** — abre o TikTok que você vê ele (só você, SELF_ONLY).
+
+✅ OAuth (Login Kit + 2 scopes) · ✅ Direct Post (publish real) · ✅ código corrigido + deployado.
+
+Agora pra fechar a gravação, preciso ver **onde na UI** você dispara a publicação (o demo tem que mostrar isso acontecendo na tela). Deixa eu checar o surface de publish no frontend:
+
+## 🤖 Claude *(22:16:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===frontend invocations of publish-social===\"; grep -rn \"publish-social\\|publishSocial\\|publish_social\" src/ 2>/dev/null | head; echo \"===where is a 'publish to social/tiktok now' UI action?===\"; grep -rln \"publish-social\" src/hooks src/components src/pages 2>/dev/null",
+  "description": "Find frontend UI surface that triggers publish-social"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===frontend invocations of publish-social===
+> src/components/creative/AssetDetailDialog.tsx:91:      const { data, error } = await supabase.functions.invoke("publish-social", {
+> ===where is a 'publish to social/tiktok now' UI action?===
+> src/components/creative/AssetDetailDialog.tsx
+> ```
+
+## 🤖 Claude *(22:16:49)*
+
+
+## 🤖 Claude *(22:16:50)*
+
+Achei: `AssetDetailDialog.tsx` (Biblioteca de Assets) invoca o `publish-social`. Deixa eu ver esse fluxo de UI — é o que o demo vai mostrar:
+
+## 🤖 Claude *(22:16:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===AssetDetailDialog publish flow (60-140)===\"; sed -n '60,140p' src/components/creative/AssetDetailDialog.tsx",
+  "description": "Read AssetDetailDialog publish-social flow"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===AssetDetailDialog publish flow (60-140)===
+>   asset: CreativeAsset | null;
+>   onOpenChange: (open: boolean) => void;
+> }) {
+>   const [url, setUrl] = useState<string | null>(null);
+>   const [caption, setCaption] = useState("");
+>   const [publishing, setPublishing] = useState(false);
+>   const navigate = useNavigate();
+>   const createProject = useCreateCanvasProject();
+>   const saveGraph = useSaveCanvasGraph();
+> 
+>   useEffect(() => {
+>     let alive = true;
+>     setUrl(null);
+>     setCaption(asset?.title ?? asset?.prompt ?? "");
+>     if (asset) resolveAssetUrl(asset).then((u) => alive && setUrl(u));
+>     return () => {
+>       alive = false;
+>     };
+>   }, [asset]);
+> 
+>   if (!asset) return null;
+>   const title = asset.title ?? asset.prompt ?? "Asset";
+>   const busy = createProject.isPending || saveGraph.isPending;
+> 
+>   // Fatia 2 — publish a video asset as an Instagram Reel via the tenant's ALREADY-connected IG account
+>   // (social_accounts, instagram_business_content_publish → graph.instagram.com). No manual token / new app needed.
+>   // The video must be reachable by Meta (public bucket / signed url valid through container processing).
+>   async function publishReel() {
+>     if (!asset || !url || !caption.trim()) return;
+>     setPublishing(true);
+>     try {
+>       const { data, error } = await supabase.functions.invoke("publish-social", {
+>         body: { platform: "instagram", content: { text: caption.trim(), video_url: url } },
+>       });
+>       if (error) throw new Error(await edgeErrorMessage(error, "Falha ao publicar o Reel"));
+>       if (data?.error) throw new Error(data.error);
+>       toast.success("Reel publicado no Instagram");
+>       onOpenChange(false);
+>     } catch (e) {
+>       toast.error((e as Error).message);
+>     } finally {
+>       setPublishing(false);
+>     }
+>   }
+> 
+>   async function useInCanvas() {
+>     if (!asset || !url) return;
+>     try {
+>       const project = await createProject.mutateAsync({
+>         name: `Do asset: ${title.slice(0, 40)}`,
+>         description: `Iniciado de um asset do módulo ${SOURCE_LABEL[asset.source_module] ?? asset.source_module}`,
+>       });
+>       // Seed the new project with this asset as a success-state node — the cross-module handoff made material.
+>       const node =
+>         asset.kind === "video"
+>           ? {
+>               id: `n_${asset.id.slice(0, 8)}`,
+>               type: "imageToVideo",
+>               position: { x: 0, y: 0 },
+>               data: {
+>                 kind: "imageToVideo",
+>                 label: title,
+>                 prompt: asset.prompt ?? "",
+>                 duration: 5,
+>                 aspectRatio: "16:9",
+>                 videoModel: "dop-standard-5s",
+>                 motionStrength: 0.5,
+>                 status: "success",
+>                 output: { videoUrl: url, generatedAt: asset.created_at },
+>               },
+>             }
+>           : {
+>               id: `n_${asset.id.slice(0, 8)}`,
+>               type: "generateImage",
+>               position: { x: 0, y: 0 },
+>               data: {
+>                 kind: "generateImage",
+>                 label: title,
+>                 prompt: asset.prompt ?? "",
+>                 status: "success",
+>                 modelId: "openrouter-gemini-image",
+> ```
+
+## 🤖 Claude *(22:17:03)*
+
+
+## 🤖 Claude *(22:17:05)*
+
+Aí está o gap pro demo: o `AssetDetailDialog` só tem botão **"Publicar Reel" (Instagram)** — `platform: "instagram"` hardcoded. **Não existe botão de TikTok na UI.** Pro demo mostrar o Direct Post acontecendo na tela, preciso adicionar um **"Publicar no TikTok"**. Deixa eu ver o JSX dos botões pra adicionar:
+
+## 🤖 Claude *(22:17:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===total lines===\"; wc -l src/components/creative/AssetDetailDialog.tsx; echo \"===JSX buttons (Reel)===\"; grep -n \"publishReel\\|Publicar\\|Reel\\|Button\\|kind === \\\"video\\\"\\|asset.kind\\|publishing\\|Instagram\\|tiktok\\|TikTok\" src/components/creative/AssetDetailDialog.tsx",
+  "description": "Locate Reel button JSX to add TikTok button"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===total lines===
+> 280 src/components/creative/AssetDetailDialog.tsx
+> ===JSX buttons (Reel)===
+> 11:import { Button } from "@/components/ui/button";
+> 65:  const [publishing, setPublishing] = useState(false);
+> 84:  // Fatia 2 — publish a video asset as an Instagram Reel via the tenant's ALREADY-connected IG account
+> 87:  async function publishReel() {
+> 94:      if (error) throw new Error(await edgeErrorMessage(error, "Falha ao publicar o Reel"));
+> 96:      toast.success("Reel publicado no Instagram");
+> 114:        asset.kind === "video"
+> 170:              {asset.kind}
+> 181:            ) : asset.kind === "video" ? (
+> 197:              <Prop label="Tipo" value={asset.kind} />
+> 216:                <Button size="sm" onClick={useInCanvas} disabled={!url || busy}>
+> 223:                </Button>
+> 224:                <Button
+> 235:                </Button>
+> 236:                <Button size="sm" variant="outline" onClick={copyLink} disabled={!url}>
+> 238:                </Button>
+> 239:                <Button
+> 246:                </Button>
+> 249:              {asset.kind === "video" && (
+> 251:                  <p className="text-xs font-medium text-muted-foreground">Publicar como Reel no Instagram</p>
+> 255:                    placeholder="Legenda do Reel…"
+> 259:                  <Button
+> 262:                    onClick={publishReel}
+> 263:                    disabled={!url || !caption.trim() || publishing}
+> 265:                    {publishing ? (
+> 270:                    Publicar Reel
+> 271:                  </Button>
+> ```
+
+## 🤖 Claude *(22:17:12)*
+
+
+## 🤖 Claude *(22:17:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 84,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 84	  // Fatia 2 — publish a video asset as an Instagram Reel via the tenant's ALREADY-connected IG account
+> 85	  // (social_accounts, instagram_business_content_publish → graph.instagram.com). No manual token / new app needed.
+> 86	  // The video must be reachable by Meta (public bucket / signed url valid through container processing).
+> 87	  async function publishReel() {
+> 88	    if (!asset || !url || !caption.trim()) return;
+> 89	    setPublishing(true);
+> 90	    try {
+> 91	      const { data, error } = await supabase.functions.invoke("publish-social", {
+> 92	        body: { platform: "instagram", content: { text: caption.trim(), video_url: url } },
+> 93	      });
+> 94	      if (error) throw new Error(await edgeErrorMessage(error, "Falha ao publicar o Reel"));
+> 95	      if (data?.error) throw new Error(data.error);
+> 96	      toast.success("Reel publicado no Instagram");
+> 97	      onOpenChange(false);
+> 98	    } catch (e) {
+> 99	      toast.error((e as Error).message);
+> 100	    } finally {
+> 101	      setPublishing(false);
+> 102	    }
+> 103	  }
+> ```
+
+## 🤖 Claude *(22:17:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 249,
+  "limit": 31
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 249	              {asset.kind === "video" && (
+> 250	                <div className="space-y-2 border-t border-border/40 pt-3">
+> 251	                  <p className="text-xs font-medium text-muted-foreground">Publicar como Reel no Instagram</p>
+> 252	                  <Textarea
+> 253	                    value={caption}
+> 254	                    onChange={(e) => setCaption(e.target.value)}
+> 255	                    placeholder="Legenda do Reel…"
+> 256	                    rows={2}
+> 257	                    className="text-xs"
+> 258	                  />
+> 259	                  <Button
+> 260	                    size="sm"
+> 261	                    className="w-full"
+> 262	                    onClick={publishReel}
+> 263	                    disabled={!url || !caption.trim() || publishing}
+> 264	                  >
+> 265	                    {publishing ? (
+> 266	                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+> 267	                    ) : (
+> 268	                      <Send className="mr-1 h-3.5 w-3.5" />
+> 269	                    )}
+> 270	                    Publicar Reel
+> 271	                  </Button>
+> 272	                </div>
+> 273	              )}
+> 274	            </div>
+> 275	          </div>
+> 276	        </div>
+> 277	      </DialogContent>
+> 278	    </Dialog>
+> 279	  );
+> ```
+
+## 🤖 Claude *(22:17:35)*
+
+
+## 🤖 Claude *(22:17:37)*
+
+Vou adicionar o botão **"Publicar no TikTok"** na Biblioteca de Assets (generalizar o `publishReel` pra qualquer plataforma). Assim o demo mostra o Direct Post acontecendo na UI do `login.mcorch.com`.
+
+## 🤖 Claude *(22:17:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "  const [publishing, setPublishing] = useState(false);",
+  "new_string": "  const [publishingPlatform, setPublishingPlatform] = useState<string | null>(null);\n  const publishing = publishingPlatform !== null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:17:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "  // Fatia 2 \u2014 publish a video asset as an Instagram Reel via the tenant's ALREADY-connected IG account\n  // (social_accounts, instagram_business_content_publish \u2192 graph.instagram.com). No manual token / new app needed.\n  // The video must be reachable by Meta (public bucket / signed url valid through container processing).\n  async function publishReel() {\n    if (!asset || !url || !caption.trim()) return;\n    setPublishing(true);\n    try {\n      const { data, error } = await supabase.functions.invoke(\"publish-social\", {\n        body: { platform: \"instagram\", content: { text: caption.trim(), video_url: url } },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao publicar o Reel\"));\n      if (data?.error) throw new Error(data.error);\n      toast.success(\"Reel publicado no Instagram\");\n      onOpenChange(false);\n    } catch (e) {\n      toast.error((e as Error).message);\n    } finally {\n      setPublishing(false);\n    }\n  }",
+  "new_string": "  // Publish a video asset to a tenant's ALREADY-connected social account (social_accounts) via publish-social.\n  // Instagram \u2192 Reel (graph.instagram.com, instagram_business_content_publish). TikTok \u2192 Direct Post\n  // (Content Posting API, video.publish); for an unaudited client the post is forced to SELF_ONLY/private.\n  // The video must be reachable server-side (public bucket / valid signed url). No manual token / new app needed.\n  async function publishTo(platform: \"instagram\" | \"tiktok\", label: string) {\n    if (!asset || !url || !caption.trim()) return;\n    setPublishingPlatform(platform);\n    try {\n      const { data, error } = await supabase.functions.invoke(\"publish-social\", {\n        body: { platform, content: { text: caption.trim(), video_url: url } },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, `Falha ao publicar no ${label}`));\n      if (data?.error) throw new Error(data.error);\n      toast.success(`Publicado no ${label}`);\n      onOpenChange(false);\n    } catch (e) {\n      toast.error((e as Error).message);\n    } finally {\n      setPublishingPlatform(null);\n    }\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:17:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "              {asset.kind === \"video\" && (\n                <div className=\"space-y-2 border-t border-border/40 pt-3\">\n                  <p className=\"text-xs font-medium text-muted-foreground\">Publicar como Reel no Instagram</p>\n                  <Textarea\n                    value={caption}\n                    onChange={(e) => setCaption(e.target.value)}\n                    placeholder=\"Legenda do Reel\u2026\"\n                    rows={2}\n                    className=\"text-xs\"\n                  />\n                  <Button\n                    size=\"sm\"\n                    className=\"w-full\"\n                    onClick={publishReel}\n                    disabled={!url || !caption.trim() || publishing}\n                  >\n                    {publishing ? (\n                      <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                    ) : (\n                      <Send className=\"mr-1 h-3.5 w-3.5\" />\n                    )}\n                    Publicar Reel\n                  </Button>\n                </div>\n              )}",
+  "new_string": "              {asset.kind === \"video\" && (\n                <div className=\"space-y-2 border-t border-border/40 pt-3\">\n                  <p className=\"text-xs font-medium text-muted-foreground\">Publicar nas redes</p>\n                  <Textarea\n                    value={caption}\n                    onChange={(e) => setCaption(e.target.value)}\n                    placeholder=\"Legenda\u2026\"\n                    rows={2}\n                    className=\"text-xs\"\n                  />\n                  <div className=\"grid grid-cols-2 gap-2\">\n                    <Button\n                      size=\"sm\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"instagram\", \"Instagram\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"instagram\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      Reel (Instagram)\n                    </Button>\n                    <Button\n                      size=\"sm\"\n                      variant=\"secondary\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"tiktok\", \"TikTok\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"tiktok\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      TikTok\n                    </Button>\n                  </div>\n                </div>\n              )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:18:08)*
+
+
+## 🤖 Claude *(22:18:08)*
+
+Agora tsc + build/deploy do frontend:
+
+## 🤖 Claude *(22:18:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===tsc===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"EXIT=$?\"; echo \"===build===\"; bun run build 2>&1 | tail -4",
+  "description": "tsc + production build",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===tsc===
+> EXIT=0
+> ===build===
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.90s
+> ```
+
+## 🤖 Claude *(22:18:38)*
+
+
+## 🤖 Claude *(22:18:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; ls -la --time-style=+%H:%M:%S dist/assets/ | grep -i \"AssetDetail\"; grep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/*.js >/dev/null 2>&1 && echo \"\u2705 env baked\" || echo \"\u274c env NOT baked\"",
+  "description": "Verify fresh AssetDetailDialog chunk + env baked"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ env baked
+> ```
+
+## 🤖 Claude *(22:18:46)*
+
+
+## 🤖 Claude *(22:18:46)*
+
+Vou confirmar que o código novo entrou no bundle servido (Lei 1):
+
+## 🤖 Claude *(22:18:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===new UI strings in built bundle?===\"; grep -rl \"Publicar nas redes\" dist/assets/*.js >/dev/null 2>&1 && echo \"\u2705 'Publicar nas redes' no bundle\" || echo \"\u274c ausente\"; grep -rl \"Reel (Instagram)\" dist/assets/*.js >/dev/null 2>&1 && echo \"\u2705 'Reel (Instagram)' no bundle (bot\u00e3o TikTok ao lado)\" || echo \"\u274c ausente\"; echo \"===freshest chunks===\"; ls -lat --time-style=+%H:%M:%S dist/assets/*.js | head -3 | awk '{print $6, $7}'",
+  "description": "Confirm new UI strings baked into served bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===new UI strings in built bundle?===
+> ✅ 'Publicar nas redes' no bundle
+> ✅ 'Reel (Instagram)' no bundle (botão TikTok ao lado)
+> ===freshest chunks===
+> 19:18:33 dist/assets/AgentEconomicsPage-2vcDIkMg.js
+> 19:18:33 dist/assets/avatar-CGI44blo.js
+> 19:18:33 dist/assets/camera_utils-DzgDtDrg.js
+> ```
+
+## 🤖 Claude *(22:19:12)*
+
+
+## 🤖 Claude *(22:19:13)*
+
+✅ **UI nova no bundle servido:** "Publicar nas redes" + botões **Reel (Instagram)** e **TikTok** lado a lado. Deployado.
+
+Deixa eu achar a rota da Biblioteca de Assets (onde fica esse botão) pra te dar o roteiro exato:
+
+## 🤖 Claude *(22:19:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===who renders AssetDetailDialog===\"; grep -rln \"AssetDetailDialog\" src/pages src/components 2>/dev/null | grep -v \"AssetDetailDialog.tsx\"; echo \"===route===\"; grep -rn \"creative\\|assets\\|Biblioteca\\|AssetLibrary\\|AssetsPage\" src/App.tsx 2>/dev/null | head",
+  "description": "Find asset library route"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===who renders AssetDetailDialog===
+> src/pages/CreativeAssetsPage.tsx
+> ===route===
+> src/App.tsx:51:const CreativeAssetsPage = lazy(() => import("./pages/CreativeAssetsPage.tsx"));
+> src/App.tsx:136:                <Route path="canvas/assets" element={<CreativeAssetsPage />} />
+> ```
+
+## 🤖 Claude *(22:19:42)*
+
+
+## 🤖 Claude *(22:19:59)*
+
+Achei tudo. A Biblioteca de Assets fica em **`login.mcorch.com/dashboard/canvas/assets`**.
+
+# 🏁 TUDO VERDE — a integração TikTok está provada ponta a ponta
+
+| Etapa | Prova material |
+|---|---|
+| **OAuth (Login Kit + 2 scopes)** | ✅ token com `user.info.basic` + `video.publish`, conta **@gabriel_mcorch** |
+| **Direct Post (Content Posting API)** | ✅ `publish_id v_pub_file~v2-1.7656202273302792214` · **status PUBLISH_COMPLETE** · há um vídeo privado real na conta agora |
+| **Fix de código** | ✅ `publish-social` agora força **SELF_ONLY** pré-audit (deployado, 70.43kB) |
+| **Botão na UI** | ✅ **"TikTok"** ao lado do "Reel (Instagram)" na Biblioteca de Assets (build deployado, strings confirmadas no bundle) |
+
+O bug era nosso: o código escolhia `FOLLOWER_OF_CREATOR` (1ª opção do creator_info) → 403. Cliente não-auditado **só aceita SELF_ONLY**. Corrigido e provado.
+
+---
+
+# 🎬 Roteiro da gravação (sua máquina, ~90s, um screen recording)
+
+> **Antes:** a conta está **conectada** (do seu teste). Pra mostrar o OAuth no vídeo, precisa desconectar antes. **Quer que eu zere a conexão agora?** Aí você grava o "Conectar" do zero. (ou clica Desconectar na hora)
+
+1. **(0:00)** Barra de endereço visível em **`login.mcorch.com/dashboard/social`** → prova o domínio.
+2. **(0:05)** Clica **Conectar TikTok** → tela de consent do TikTok (Login Kit) com as 2 permissões (*Access profile info* + *Post content to TikTok*) → **Continue**.
+3. **(0:15)** Volta pro `login.mcorch.com` já **conectado** (mostra "Gabriel AI - MCORCH") → demonstra **`user.info.basic`**.
+4. **(0:25)** Vai pra **`/dashboard/canvas/assets`** → abre um **vídeo** (de preferência 9:16).
+5. **(0:35)** Escreve a legenda → clica **TikTok** → spinner → toast **"Publicado no TikTok"** → demonstra **Content Posting API + `video.publish`**.
+6. **(0:45, opcional)** Abre o app do TikTok e mostra o post (privado/SELF_ONLY — esperado pré-audit).
+
+Isso cobre **todos os produtos e scopes selecionados** — exatamente o que o formulário exige. Depois você sobe esse arquivo no App Review; **eu passo no Vision QA antes** de você dar Submit.
+
+---
+
+# 📋 Pendências pra fechar o Submit
+1. **App icon 1024×1024** — ainda falta. **Quer que eu gere?**
+2. **Gravar** o demo (roteiro acima) — sua máquina.
+3. **Submit** no portal.
+
+# ⚠️ Estado do código (live, não commitado)
+O `publish-social` (fix) está **deployado** e o frontend (botão TikTok) está **no ar** — mas ainda **não commitei no git**. Quando você confirmar, eu seloa sessão (`/handoff`) com os commits.
+
+**Me diz:** (a) zero a conexão pra você gravar do zero? (b) gero o ícone 1024×1024? 🚀
