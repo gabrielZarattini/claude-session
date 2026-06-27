@@ -1495,3 +1495,16 @@ Não consigo gerar essas credenciais — exigem login no portal de devs do TikTo
 - (c) assim que você registrar o app TikTok e colar as credenciais, eu provo o OAuth + publish E2E no mesmo dia?
 
 Os arquivos estão deployados mas **não commitados** ainda (aguardando seu OK).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
+%% --- TIMELINE END --- %%

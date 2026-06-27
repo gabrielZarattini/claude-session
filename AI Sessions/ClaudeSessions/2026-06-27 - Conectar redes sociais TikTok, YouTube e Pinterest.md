@@ -6831,3 +6831,16 @@ HANDOFF commit + **Phase 5c (material proof audit)**:
 ```
 
 Maestro, as três redes estão **construídas, deployadas, provadas e seladas em produção**, com git == prod (sem drift). A bola está com você: registre os apps e submeta os audits — é a única coisa que separa o Gabriel AI de publicar autonomamente em TikTok, YouTube e Pinterest. Quando voltar com as credenciais, eu acendo a conexão e provo o primeiro publish real. 🚀
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
+> * **Próxima Sessão**: [[2026-06-27 - Corrigir erro de configuração TikTok]]
+%% --- TIMELINE END --- %%
