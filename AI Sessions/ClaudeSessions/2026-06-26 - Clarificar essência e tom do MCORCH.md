@@ -1,4 +1,4 @@
-# Clarificar essência e tom do MCORCH
+# [[2026-06-27 - Clarificar essência e tom do MCORCH|Clarificar essência e tom do MCORCH]]
 **Date:** 2026-06-26 | **Session ID:** `2252460c-95ca-468a-9776-e3ef63ca5efb`
 
 ---

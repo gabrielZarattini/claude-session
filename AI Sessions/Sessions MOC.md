@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1453
-> * **Sessões do Claude**: 1411
+> * **Total de Sessões Registradas**: 1454
+> * **Sessões do Claude**: 1412
 > * **Sessões do Gemini**: 42
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` - *2026-06-27*
 *   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` - *2026-06-26*
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-25*
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` - *2026-06-24*
@@ -269,6 +270,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-aeae6da7e8d1cdbe8]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-ae7fd6b938e8d3c6f]]` (ClaudeSessions)
 *   `[[2026-06-26 - agent-ae7ea93e8dccd4d34]]` (ClaudeSessions)

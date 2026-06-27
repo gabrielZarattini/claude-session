@@ -849,4 +849,5 @@ R(creative) = w_reach·z(impressions) + w_eng·z(engagements/impressions)
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-26 - agent-ae7fd6b938e8d3c6f]]
+> * **Próxima Sessão**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
 %% --- TIMELINE END --- %%
