@@ -2296,3 +2296,16 @@ Retomo nesta ordem (decisões cravadas: **3 em paralelo**; credenciais **per-use
 4. Slice 5 — `VIDEO_FLOW_PLATFORMS` + fechar o gap do `auto-publish` (fecha o cron-de-vídeo de todas, incl. IG Reel agendado).
 
 Os 4 arquivos novos (2 blueprints/playbook + memória) estão no working tree, **não commitados** — é sua chamada se quer que eu commite agora ou só quando o código pousar. Me dá o sinal quando os apps estiverem de pé. 🚀
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - Clarificar essência e tom do MCORCH]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-a076059e49f1ba5a7]]
+%% --- TIMELINE END --- %%
