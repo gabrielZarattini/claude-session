@@ -2195,3 +2195,16 @@ Dois pontos que **só você confirma** (fora do que dá pra ver daqui, como o co
 E o lembrete jurídico do coowork continua valendo: isto é conformidade técnica com os requisitos do Google, não aconselhamento jurídico.
 
 Quer que eu **commite** essa mudança (`fix(legal): privacy policy — Google OAuth Limited Use/AI-training/revocation/security`)? Posso commitar só isso, ou rodar o `/handoff` completo se preferir selar a sessão.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-28 - Corrigir erro de configuração TikTok]]
+> * **Próxima Sessão**: [[2026-06-28 - Implementar reshaper para posts nativos multiplataforma]]
+%% --- TIMELINE END --- %%
