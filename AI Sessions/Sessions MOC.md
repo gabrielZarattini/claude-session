@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1521
-> * **Sessões do Claude**: 1479
+> * **Total de Sessões Registradas**: 1522
+> * **Sessões do Claude**: 1480
 > * **Sessões do Gemini**: 42
 
 ---
@@ -79,7 +79,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-28 - agent-ab3b88a63654e16d1]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-aa4c00f8c564e9bb0]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-a996c5f7bbd8780e2]]` - *2026-06-28*
-*   *... e mais 1477 sessões nessa categoria.*
+*   *... e mais 1478 sessões nessa categoria.*
 
 ---
 
@@ -299,6 +299,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-28 - agent-a21dd13ea292d7b20]]` (ClaudeSessions)
 *   `[[2026-06-28 - agent-a11757ea49b92c757]]` (ClaudeSessions)
 *   `[[2026-06-28 - Implementar reshaper para posts nativos multiplataforma]]` (ClaudeSessions)
+*   `[[2026-06-28 - Corrigir política de privacidade para requisitos Google]]` (ClaudeSessions)
 *   `[[2026-06-28 - Corrigir erro de configuração TikTok]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-afdf1595d8eadc679]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-af8701874fa76780a]]` (ClaudeSessions)
