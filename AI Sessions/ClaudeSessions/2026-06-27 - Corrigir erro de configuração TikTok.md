@@ -1513,7 +1513,7 @@ Tem um playbook de registro que a pesquisa fundamentada da sessão anterior já 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/[[tiktok-publish-credential-resolution|tiktok-publish-credential-resolution]].md 2>/dev/null",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/tiktok-publish-credential-resolution.md 2>/dev/null",
   "description": "Read registration playbook + TikTok SOP"
 }
 ```
@@ -1904,7 +1904,7 @@ Boa — se as chaves já estão nas configurações, o primeiro passo material �
 > if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
 > console.log(accessToken);
 > ===find User Zero id/email===
-> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP [[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]] para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
+> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP mcoins-ledger-reconciliation para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
 > scripts/seed-openclaw-bok-seal.ts:47:PRÓXIMO DELIVERABLE (post-seal): (a) carry-overs OE-661 (provisionar GCRUX_ML_AFFILIATE_TOKEN + wire orchestrate emitir content_mesh_asset + primeiro run end-to-end Usuário Zero do flywheel); (b) claw-master audit-v2 (planejado 2026-06-16) verificar regressão D-OC-001..005 + novas findings; (c) OTD-CM-005 logging.redactSensitive set true no próximo edit consolidado de openclaw.json (P2 oportunístico); (d) D-OC-008 marketing-growth BOOTSTRAP.md scaffold (non-blocking).`,
 > scripts/seed-e2e-user-zero-bok-seal.ts:37:  content: `e2e-user-zero — Framework de QA End-to-End como Usuário Zero real (BoK v1)
 > scripts/seed-e2e-user-zero-bok-seal.ts:41:VISÃO: Framework AI-agent-friendly que testa MCORCH como Usuário Zero real de interface (não API tests programáticos), usando agent-browser CLI v0.27.0+ como primitiva técnica. Observa simultaneamente as 4 superfícies que um humano consciente observa ao dogfooding: (1) UI/DOM via snapshot accessibility-tree com refs @e1/@e2 (interações reais click/fill/type); (2) Network tab capturada como HAR file; (3) Console messages (errors + warnings + unhandled rejections); (4) estado visual via screenshot/video opcional. Cada finding é classificado por severity (P0..P3) e issue_type (bug/ux/perf/accessibility/security/regression), persistido como observation node em mcorch_nodes com edge OBSERVES uppercase para o módulo afetado, e gera report markdown estruturado.
@@ -5223,15 +5223,1100 @@ Projeto não-auditado: o upload retorna **200/criado mas fica SILENCIOSAMENTE pr
 
 **Por onde começar?** Recomendo **YouTube** (canal + Gate C são o caminho crítico). Quer que eu te guie tela a tela na criação do projeto Google agora, ou você já vai abrindo e me traz o Client ID/Secret pra eu acender o OAuth?
 
+## 👤 User *(23:07:50)*
+
+* Casos de uso (selecione pelo menos um)
+
+Criação e programação de Pins
+Publicação de conteúdo no Pinterest
+
+Relatórios
+Coleta de dados da sua conta
+
+Gerenciamento de campanhas de anúncios
+Criar e gerenciar campanhas de anúncios para seus usuários/anunciantes
+
+Aplicativo da pessoa
+Criação de experiências para as pessoas
+
+Outro
+Por favor, especifique
+Leia nossas 
+Diretrizes para desenvolvedores
+ para ver os casos de uso aceitáveis da API do Pinterest
+
+* Público (selecione pelo menos um)
+
+Usuários do Pinterest
+Qualquer pessoa no Pinterest
+
+Criadores de conteúdo
+Pessoas que criam conteúdo para o Pinterest
+
+Anunciantes
+Empresas que veiculam anúncios no Pinterest
+
+Outro
+Por favor, especifique
+
+
+Isso no pinterest dev... como quais eu marco e em outros o que posso colocar?
+
+## 🤖 Claude *(23:08:17)*
+
+
+## 🤖 Claude *(23:08:27)*
+
+Form de criação do app Pinterest — marca o mínimo que bate com o que vamos demonstrar (lição do TikTok: cada opção marcada precisa ser justificada/mostrada, senão atrasa o review).
+
+## ✅ Casos de uso → marque só UM:
+- ✅ **Criação e programação de Pins / Publicação de conteúdo no Pinterest** ← é exatamente o nosso (publicar video pin autônomo).
+
+**NÃO marque:**
+- ❌ Relatórios / Coleta de dados — não coletamos métricas ainda.
+- ❌ Gerenciamento de campanhas de anúncios — não fazemos ads.
+- ❌ Aplicativo da pessoa — não é experiência de consumidor.
+
+## ✅ Público → marque:
+- ✅ **Criadores de conteúdo** ← a persona Gabriel AI cria e publica conteúdo. É o que casa com a demo.
+
+> Só marque **"Usuários do Pinterest"** também SE você planeja deixar qualquer usuário do Pinterest conectar a própria conta no MCORCH (SaaS multi-tenant). Pro foco atual (marca/persona única), **só "Criadores de conteúdo"** é o mais limpo e direto pro review.
+
+**NÃO marque** Anunciantes.
+
+## "Outro / Por favor especifique"
+**Deixe vazio nos dois.** As opções pré-definidas já cobrem o nosso caso — não precisa escrever nada em "Outro". Preencher ali só adiciona ruído pro revisor.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+**Resumo:** Casos de uso = *Criação e programação de Pins / Publicação de conteúdo*. Público = *Criadores de conteúdo*. Outro = vazio.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]
-> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
-%% --- TIMELINE END --- %%
+Segue preenchendo — quando chegar nos campos de **descrição / URLs** (privacy `/privacy`, terms `/terms`) me avisa que te passo os textos prontos, igual fiz no TikTok.
+
+## 👤 User *(23:10:45)*
+
+Acesso Trial pendente enquanto isso podemos ir para o youtube ne?
+
+## 🤖 Claude *(23:10:56)*
+
+
+## 🤖 Claude *(23:11:13)*
+
+Sim! Pinterest Trial fica pendente (revisão ~1 dia útil) — não trava nada. Bora YouTube.
+
+O objetivo imediato é o mesmo do TikTok: chegar no **Client ID + Client Secret** pra eu acender o OAuth. Segue na ordem:
+
+## 1️⃣ Garanta o CANAL primeiro (pré-requisito que silenciosamente quebra tudo)
+Na conta Google do Gabriel AI:
+- Crie um canal **Brand Account** (não o canal pessoal) pra marca **Gabriel AI / CCIO**.
+- **Defina-o como canal padrão** dessa conta Google. (Conta sem canal não recebe upload; e o "channel switching" de terceiros pode autorizar o canal errado — por isso o canal da persona tem que ser o padrão.)
+
+## 2️⃣ Projeto + API (console.cloud.google.com)
+1. Topo → seletor de projeto → **Novo projeto** (nome: `MCORCH` ou `Gabriel AI`).
+2. **APIs e serviços → Biblioteca** → busca **"YouTube Data API v3"** → **Ativar**.
+
+## 3️⃣ Google Auth Platform (ex-"OAuth consent screen" → `console.cloud.google.com/auth/overview` → **Começar**)
+> ⚠️ **Ordem importa:** adicione o **domínio autorizado `mcorch.com` PRIMEIRO**, senão o console rejeita as URLs e o redirect.
+
+- **Branding:**
+  - Domínios autorizados: **`mcorch.com`**
+  - Página inicial: `https://login.mcorch.com/auth`
+  - Política de privacidade: `https://login.mcorch.com/privacy`
+  - Termos de serviço: `https://login.mcorch.com/terms`
+- **Público (Audience):** **External** → em **Test users**, adicione a conta Google do bot (Gabriel AI).
+- **Acesso a dados (Scopes):** adicione **`https://www.googleapis.com/auth/youtube.upload`** (vai cair em "Sensitive scopes" — normal).
+
+## 4️⃣ Criar o OAuth client (`console.cloud.google.com/auth/clients` → **Criar cliente**)
+- **Tipo de aplicativo:** **Aplicativo da Web**
+- **URIs de redirecionamento autorizados → Adicionar URI:**
+  ```
+  https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback
+  ```
+  (match exato, https, sem barra no fim)
+- **Criar** → copie o **Client ID** e o **Client Secret** (o secret só aparece **uma vez** — salva já).
+
+---
+
+## Depois disso:
+1. **Me traga Client ID + Secret** → eu coloco na config (ou env) e acendo o OAuth do YouTube.
+2. **Gate A — Publicar app (Production):** instantâneo, mata a morte do refresh token em 7 dias. Faça assim que criar o client.
+3. **Eu testo o upload headless** (como no TikTok) → se quebrar contra a API real, conserto.
+4. **Você grava o demo** → submete **Gate B** (verificação de scope) + **Gate C** (YouTube API Services Audit — o que libera público). Ambos com vídeo demo.
+
+⚠️ Lembra da armadilha: **antes do Gate C, todo upload sai privado silenciosamente** — então a gente testa/grava com upload privado, e NÃO publica em massa até o Gate C aprovar.
+
+Começa pelo **canal Brand Account** + criar o projeto. Me traz o Client ID/Secret quando tiver (ou manda print de qualquer tela que travar que eu te desencalho). 🚀
+
+## 👤 User *(23:19:13)*
+
+If your app lets users sign in to their accounts using Google, you can improve
+the security of these shared users' accounts by listening and responding to the
+security event notifications provided by the Cross-Account Protection service.
+
+These notifications alert you of major changes to the Google Accounts of your
+users, which can often also have security implications for their accounts with
+your app. For instance, if a user's Google Account were hijacked, it could
+potentially lead to compromise of the user's account with your app through email
+account recovery or the use of single sign-on.
+
+To help you mitigate the risk potential of such events, Google sends your
+service objects called security event tokens. These tokens expose very little
+information---just the type of security event and when it occurred, and the
+identifier of the affected user---but you can use them to take
+appropriate action in response. For example, if a user's Google Account were
+compromised, you could temporarily disable Sign In With Google for that user and
+prevent account recovery emails from being sent to the user's Gmail address.
+
+Cross-Account Protection is based on the
+[RISC standard](https://openid.net/wg/sse/), developed at the
+OpenID Foundation.
+
+> [!IMPORTANT]
+> **Important:** This data is provided under the [Google APIs Terms of
+> Service](https://developers.google.com/terms) and the additional [RISC Terms of Service](https://console.cloud.google.com/tos?id=risc) ("RISC Terms"). These signals may only be used for security, anti-fraud, and session management purposes. Please review and comply with the RISC Terms; failure to do so may result in project suspension or account suspension.
+
+> [!NOTE]
+> **Note:** Cross-Account Protection does not currently send security events for Google Workspace (formerly G Suite) users.
+
+## Overview
+
+To use Cross-Account Protection with your app or service, you must complete the
+following tasks:
+
+1. Set up your project in the API Console.
+
+2. Create an event receiver endpoint, to which Google will send security event
+   tokens. This endpoint is responsible for validating the tokens it receives
+   and then responding to security events in whatever way you choose.
+
+3. Register your endpoint with Google to start receiving security event tokens.
+
+### Prerequisite
+
+You only receive security event tokens for Google users who have granted your
+service permission to access their profile information or email addresses. You
+get this permission by requesting the `profile` or `email` scopes. The newer
+[Sign In With Google](https://developers.google.com/identity/gsi/web) or the legacy
+[Google Sign-in](https://developers.google.com/identity/sign-in/web/sign-in) SDKs request these scopes by default, but
+if you don't use the default settings, or if you access Google's [OpenID
+Connect endpoint](https://developers.google.com/identity/protocols/oauth2/openid-connect) directly, ensure
+you are requesting at least one of these scopes.
+
+## Set up a project in the API Console
+
+Before you can start receiving security event tokens, you must create a service
+account and enable the RISC API in your
+API Console project. You must use the same
+API Console project you use to access
+Google services, such as Google Sign-in, in your app.
+
+To create the service account:
+
+1. Open the [API Console
+   Credentials page](https://console.developers.google.com/apis/credentials?project=_). When prompted, choose the
+   API Console
+   project you use to access Google services in your app.
+
+2. Click **Create credentials \> Service account**.
+
+3. Create a new service account with the RISC Configuration Admin role
+   ([`roles/riscconfigs.admin`](https://cloud.google.com/iam/docs/understanding-roles#riscconfigs.admin))
+   by following
+   [these instructions](https://cloud.google.com/iam/docs/granting-roles-to-service-accounts).
+
+4. Create a key for your newly created service account. Choose the JSON key
+   type and then click **Create**. When the key is created,
+   you will download a JSON file that contains your service account
+   credentials. Keep this file somewhere safe, but also accessible to your
+   event receiver endpoint.
+
+> [!IMPORTANT]
+> **Important:** Service account keys can become a security risk if not managed carefully. Please follow the [best practices](https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys) to secure your service account key.
+
+While you're on your project's Credentials page, also take note of the client
+IDs you use for Sign In With Google or Google Sign-in (legacy). Typically, you have a client ID for each
+platform you support. You will need these client IDs to validate security event
+tokens, as described in the next section.
+
+To enable the RISC API:
+
+1. Open the [RISC API page](https://console.developers.google.com/apis/library/risc.googleapis.com) in the
+   API Console. Make sure the project you use
+   to access Google services is still selected.
+
+2. Read the [RISC Terms](https://console.cloud.google.com/tos?id=risc) and ensure you understand the requirements.
+
+   If you are enabling the API for a project owned by an organization, ensure
+   you are authorized to bind your organization to the RISC Terms.
+3. Click **Enable** only if you consent to the RISC Terms.
+
+## Create an event receiver endpoint
+
+To receive security event notifications from Google, you create an HTTPS endpoint
+that handles HTTPS POST requests. After you register this endpoint (see below),
+Google will begin posting cryptographically signed strings called security event
+tokens to the endpoint. Security event tokens are signed JWTs that contain
+information about a single security-related event.
+
+> [!IMPORTANT]
+> **Important:** Ensure that your endpoint, even during testing, stores the received information in a way that abides by the [RISC Terms of Service](https://console.cloud.google.com/tos?id=risc) and deletes them in a reasonable timeframe.
+
+For each security event token you receive at your endpoint, first validate and
+decode the token, then handle the security event as appropriate for your
+service. It is **essential** to validate the event token before decoding to prevent
+malicious attacks from bad actors. The following sections describe these tasks:
+
+### 1. Decode and validate the security event token
+
+Because security event tokens are a specific kind of JWT, you can use any
+JWT library, such as one listed on [jwt.io](https://jwt.io/), to decode and
+validate them. Whichever library you use, your token validation code must do the
+following:
+
+1. Get the Cross-Account Protection issuer identifier (`issuer`) and signing key certificate URI (`jwks_uri`) from Google's RISC configuration document, which you can find at `https://accounts.google.com/.well-known/risc-configuration`.
+2. Using the JWT library of your choice, get the signing key ID from the header of the security event token.
+3. From Google's signing key certificate document, get the public key with the key ID you got in the previous step. If the document doesn't contain a key with the ID you're looking for, it is likely the security event token is invalid, and your endpoint should return HTTP error 400.
+4. Using the JWT library of your choice, verify the following:
+   - The security event token is signed using the public key you got in the previous step.
+   - The `aud` claim of the token is one of your apps' client IDs.
+   - The `iss` claim of the token matches the issuer identifier you got from the RISC discovery document. Note that you don't need to verify the token's expiration (`exp`) because security event tokens represent historical events and as such, don't expire.
+
+For example:
+
+### Java
+
+Using [java-jwt](https://github.com/auth0/java-jwt)
+and [jwks-rsa-java](https://github.com/auth0/jwks-rsa-java):
+
+    public DecodedJWT validateSecurityEventToken(String token) {
+        DecodedJWT jwt = null;
+        try {
+            // In a real implementation, get these values from
+            // https://accounts.google.com/.well-known/risc-configuration
+            String issuer = "accounts.google.com";
+            String jwksUri = "https://www.googleapis.com/oauth2/v3/certs";
+
+            // Get the ID of the key used to sign the token.
+            DecodedJWT unverifiedJwt = JWT.decode(token);
+            String keyId = unverifiedJwt.getKeyId();
+
+            // Get the public key from Google.
+            JwkProvider googleCerts = new UrlJwkProvider(new URL(jwksUri), null, null);
+            PublicKey publicKey = googleCerts.get(keyId).getPublicKey();
+
+            // Verify and decode the token.
+            Algorithm rsa = Algorithm.RSA256((RSAPublicKey) publicKey, null);
+            JWTVerifier verifier = JWT.require(rsa)
+                    .withIssuer(issuer)
+                    // Get your apps' client IDs from the API console:
+                    // https://console.developers.google.com/apis/credentials?project=_
+                    .withAudience("123456789-abcedfgh.apps.googleusercontent.com",
+                                  "123456789-ijklmnop.apps.googleusercontent.com",
+                                  "123456789-qrstuvwx.apps.googleusercontent.com")
+                    .acceptLeeway(Long.MAX_VALUE)  // Don't check for expiration.
+                    .build();
+            jwt = verifier.verify(token);
+        } catch (JwkException e) {
+            // Key not found. Return HTTP 400.
+        } catch (InvalidClaimException e) {
+
+        } catch (JWTDecodeException exception) {
+            // Malformed token. Return HTTP 400.
+        } catch (MalformedURLException e) {
+            // Invalid JWKS URI.
+        }
+        return jwt;
+    }
+
+### Python
+
+    import json
+    import jwt       # pip install pyjwt
+    import requests  # pip install requests
+
+    def validate_security_token(token, client_ids):
+        # Get Google's RISC configuration.
+        risc_config_uri = 'https://accounts.google.com/.well-known/risc-configuration'
+        risc_config = requests.get(risc_config_uri).json()
+
+        # Get the public key used to sign the token.
+        google_certs = requests.get(risc_config['jwks_uri']).json()
+        jwt_header = jwt.get_unverified_header(token)
+        key_id = jwt_header['kid']
+        public_key = None
+        for key in google_certs['keys']:
+            if key['kid'] == key_id:
+                public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
+        if not public_key:
+            raise Exception('Public key certificate not found.')
+            # In this situation, return HTTP 400
+
+        # Decode the token, validating its signature, audience, and issuer.
+        try:
+            token_data = jwt.decode(token, public_key, algorithms='RS256',
+                                    options={'verify_exp': False},
+                                    audience=client_ids, issuer=risc_config['issuer'])
+        except:
+            raise
+            # Validation failed. Return HTTP 400.
+        return token_data
+
+    # Get your apps' client IDs from the API console:
+    # https://console.developers.google.com/apis/credentials?project=_
+    client_ids = ['123456789-abcedfgh.apps.googleusercontent.com',
+                  '123456789-ijklmnop.apps.googleusercontent.com',
+                  '123456789-qrstuvwx.apps.googleusercontent.com']
+    token_data = validate_security_token(token, client_ids)
+
+If the token is valid and was successfully decoded, return HTTP status 202.
+Then, handle the security event indicated by the token.
+
+### 2. Handle security events
+
+When decoded, a security event token looks like the following example:
+
+    {
+      "iss": "https://accounts.google.com/",
+      "aud": "123456789-abcedfgh.apps.googleusercontent.com",
+      "iat": 1508184845,
+      "jti": "756E69717565206964656E746966696572",
+      "events": {
+        "https://schemas.openid.net/secevent/risc/event-type/account-disabled": {
+          "subject": {
+            "subject_type": "iss-sub",
+            "iss": "https://accounts.google.com/",
+            "sub": "7375626A656374"
+          },
+          "reason": "hijacking"
+        }
+      }
+    }
+
+The `iss` and `aud` claims indicate the issuer of the token (Google) and the
+token's intended recipient (your service). You verified these claims in the
+previous step.
+
+The `jti` claim is a string that identifies a single security event, and is
+unique to the stream. You can use this identifier to track which security events
+you have received.
+
+The `events` claim contains information about the security event the token
+represents. This claim is a mapping from an event type identifier to a `subject`
+claim, which specifies the user this event concerns, and to any additional
+details about the event that might be available.
+
+The `subject` claim identifies a particular user with the user's unique Google
+Account ID (`sub`). This Google Account ID is the same identifier (`sub`) contained
+in the JWT ID tokens issued by the newer Sign In With Google ([Javascript](https://developers.google.com/identity/gsi/web/reference/js-reference#CredentialResponse)
+, [HTML](https://developers.google.com/identity/gsi/web/reference/html-reference#id-token-handler-endpoint)) library, legacy [Google Sign-in](https://developers.google.com/identity/sign-in/web/backend-auth) library, or
+[OpenID Connect](https://developers.google.com/identity/protocols/oauth2/openid-connect#obtainuserinfo). When the `subject_type` of the
+claim is `id_token_claims`, it might also include an `email` field with the
+user's email address.
+
+Use the information in the `events` claim to take appropriate action for the
+event type on the specified user's account.
+
+### OAuth token identifiers
+
+For OAuth events about individual tokens, the [token subject](https://openid.net/specs/oauth-event-types-1_0-01.html#subject-identifier-token) identifier type contains the following fields:
+
+- `token_type`: Only `refresh_token` is supported.
+
+- `token_identifier_alg`: See table below for possible values.
+
+- `token`: See table below.
+
+| **token_identifier_alg** | **token** |
+|---|---|
+| `prefix` | The first 16 characters of the token. |
+| `hash_base64_sha512_sha512` | The double hash of the token using SHA-512. |
+
+If you integrate with these events, it is suggested to index your tokens based
+on these possible values to ensure a quick match when the event is received.
+
+### Supported event types
+
+Cross-Account Protection supports the following types of security events:
+
+| **Event Type** | **Attributes** | **How to Respond** |
+|---|---|---|
+| `https://schemas.openid.net/secevent/risc/event-type/sessions-revoked` |   | **Required**: Re-secure the user's account by ending their currently open sessions. |
+| `https://schemas.openid.net/secevent/oauth/event-type/tokens-revoked` |   | **Required**: If the token is for Google Sign-in, terminate their currently open sessions. Additionally, you may want to suggest to the user to set up an alternate sign-in method. **Suggested**: If the token is for access to other Google APIs, delete any of the user's OAuth tokens you have stored. |
+| `https://schemas.openid.net/secevent/oauth/event-type/token-revoked` | See [OAuth token identifiers](https://developers.google.com/identity/protocols/risc#token_identifiers) section for token identifiers | **Required**: If you store the corresponding refresh token, delete it and request the user to re-consent next time an access token is needed. |
+| `https://schemas.openid.net/secevent/risc/event-type/account-disabled` | `reason=hijacking`, `reason=bulk-account` | **Required** : If the reason the account was disabled was `hijacking`, re-secure the user's account by ending their currently open sessions. **Suggested** : If the reason the account was disabled was `bulk-account`, analyze the user's activity on your service and determine appropriate follow-up actions. **Suggested**: If no reason was provided, disable Google Sign-in for the user and disable account recovery using the email address associated with the user's Google Account (usually, but not necessarily, a Gmail account). Offer the user an alternate sign-in method. |
+| `https://schemas.openid.net/secevent/risc/event-type/account-enabled` |   | **Suggested**: Re-enable Google Sign-in for the user and re-enable account recovery with the user's Google Account email address. |
+| `https://schemas.openid.net/secevent/risc/event-type/account-credential-change-required` |   | **Suggested**: Look out for suspicious activity on your service and take appropriate action. |
+| `https://schemas.openid.net/secevent/risc/event-type/verification` | state=<var translate="no">state</var> | **Suggested**: Log that a test token was received. |
+
+### Duplicated and missed events
+
+Cross-Account Protection will attempt to redeliver events that it believes have
+not been delivered. Therefore, you may sometimes receive the same event
+multiple times. If this could cause repeated actions that inconvenience your
+users, consider using the `jti` claim (which is a unique identifier for an
+event) to de-dup the events. There are external tools like [Google Cloud
+Dataflow](https://cloud.google.com/dataflow/) that may help you to execute
+the de-dup dataflow.
+
+Note that events are delivered with limited retries so if your receiver is down
+for an extended period of time you may permanently miss some events.
+
+## Register your receiver
+
+To begin receiving security events, register your receiver endpoint using the
+RISC API. Calls to the RISC API must be accompanied by an authorization token.
+
+You will receive security events only for the users of your app, so you need to have an OAuth consent screen [configured](https://support.google.com/cloud/answer/6158849)
+in your GCP project as a prerequisite for the steps described below.
+
+### 1. Generate an authorization token
+
+To generate an authorization token for the RISC API, create a JWT with the
+following claims:
+
+```
+{
+  "iss": SERVICE_ACCOUNT_EMAIL,
+  "sub": SERVICE_ACCOUNT_EMAIL,
+  "aud": "https://risc.googleapis.com/google.identity.risc.v1beta.RiscManagementService",
+  "iat": CURRENT_TIME,
+  "exp": CURRENT_TIME + 3600
+}
+```
+
+Sign the JWT using your service account's private key, which you can find in the
+JSON file you downloaded when you created the service account key.
+
+For example:
+
+### Java
+
+Using [java-jwt](https://github.com/auth0/java-jwt) and
+[Google's auth library](https://github.com/googleapis/google-auth-library-java):
+
+    public static String makeBearerToken() {
+        String token = null;
+        try {
+            // Get signing key and client email address.
+            FileInputStream is = new FileInputStream("your-service-account-credentials.json");
+            ServiceAccountCredentials credentials =
+                   (ServiceAccountCredentials) GoogleCredentials.fromStream(is);
+            PrivateKey privateKey = credentials.getPrivateKey();
+            String keyId = credentials.getPrivateKeyId();
+            String clientEmail = credentials.getClientEmail();
+
+            // Token must expire in exactly one hour.
+            Date issuedAt = new Date();
+            Date expiresAt = new Date(issuedAt.getTime() + 3600000);
+
+            // Create signed token.
+            Algorithm rsaKey = Algorithm.RSA256(null, (RSAPrivateKey) privateKey);
+            token = JWT.create()
+                    .withIssuer(clientEmail)
+                    .withSubject(clientEmail)
+                    .withAudience("https://risc.googleapis.com/google.identity.risc.v1beta.RiscManagementService")
+                    .withIssuedAt(issuedAt)
+                    .withExpiresAt(expiresAt)
+                    .withKeyId(keyId)
+                    .sign(rsaKey);
+        } catch (ClassCastException e) {
+            // Credentials file doesn't contain a service account key.
+        } catch (IOException e) {
+            // Credentials file couldn't be loaded.
+        }
+        return token;
+    }
+
+### Python
+
+    import json
+    import time
+
+    import jwt  # pip install pyjwt
+
+    def make_bearer_token(credentials_file):
+        with open(credentials_file) as service_json:
+            service_account = json.load(service_json)
+            issuer = service_account['client_email']
+            subject = service_account['client_email']
+            private_key_id = service_account['private_key_id']
+            private_key = service_account['private_key']
+        issued_at = int(time.time())
+        expires_at = issued_at + 3600
+        payload = {'iss': issuer,
+                   'sub': subject,
+                   'aud': 'https://risc.googleapis.com/google.identity.risc.v1beta.RiscManagementService',
+                   'iat': issued_at,
+                   'exp': expires_at}
+        encoded = jwt.encode(payload, private_key, algorithm='RS256',
+                             headers={'kid': private_key_id})
+        return encoded
+
+    auth_token = make_bearer_token('your-service-account-credentials.json')
+
+This authorization token can be used to make RISC API calls for one hour. When
+the token expires, generate a new one to continue to make RISC API calls.
+
+> [!NOTE]
+> **Note:** Alternatively, you can do [service account authorization with OAuth
+> 2.0](https://developers.google.com/identity/protocols/oauth2/service-account), but the JWT-based approach described above is simpler and doesn't require a network round trip. Should you decide to use service account authorization, see the [Access Token Scopes](https://developers.google.com/identity/protocols/risc#token_scopes) section for scopes you should be requesting.
+
+### 2. Call the RISC stream configuration API
+
+Now that you have an authorization token, you can use the RISC API to configure
+your project's security event stream, including registering your receiver
+endpoint.
+
+To do so, make an HTTPS POST request to `https://risc.googleapis.com/v1beta/stream:update`,
+specifying your receiver endpoint and the [types of security
+events](https://developers.google.com/identity/protocols/risc#supported_event_types) you're interested in:
+
+```
+POST /v1beta/stream:update HTTP/1.1
+Host: risc.googleapis.com
+Authorization: Bearer AUTH_TOKEN
+
+{
+  "delivery": {
+    "delivery_method":
+      "https://schemas.openid.net/secevent/risc/delivery-method/push",
+    "url": RECEIVER_ENDPOINT
+  },
+  "events_requested": [
+    SECURITY_EVENT_TYPES
+  ]
+}
+```
+
+For example:
+
+### Java
+
+    public static void configureEventStream(final String receiverEndpoint,
+                                            final List<String> eventsRequested,
+                                            String authToken) throws IOException {
+        ObjectMapper jsonMapper = new ObjectMapper();
+        String streamConfig = jsonMapper.writeValueAsString(new Object() {
+            public Object delivery = new Object() {
+                public String delivery_method =
+                        "https://schemas.openid.net/secevent/risc/delivery-method/push";
+                public String url = receiverEndpoint;
+            };
+            public List<String> events_requested = eventsRequested;
+        });
+
+        HttpPost updateRequest = new HttpPost("https://risc.googleapis.com/v1beta/stream:update");
+        updateRequest.addHeader("Content-Type", "application/json");
+        updateRequest.addHeader("Authorization", "Bearer " + authToken);
+        updateRequest.setEntity(new StringEntity(streamConfig));
+
+        HttpResponse updateResponse = new DefaultHttpClient().execute(updateRequest);
+        Header[] responseContentTypeHeaders = updateResponse.getHeaders("Content-Type");
+        StatusLine responseStatus = updateResponse.getStatusLine();
+        int statusCode = responseStatus.getStatusCode();
+        HttpEntity entity = updateResponse.getEntity();
+        // Now handle response
+    }
+
+    // ...
+
+    configureEventStream(
+            "https://your-service.example.com/security-event-receiver",
+            Arrays.asList(
+                    "https://schemas.openid.net/secevent/risc/event-type/account-credential-change-required",
+                    "https://schemas.openid.net/secevent/risc/event-type/account-disabled"),
+            authToken);
+
+### Python
+
+    import requests
+
+    def configure_event_stream(auth_token, receiver_endpoint, events_requested):
+        stream_update_endpoint = 'https://risc.googleapis.com/v1beta/stream:update'
+        headers = {'Authorization': 'Bearer {}'.format(auth_token)}
+        stream_cfg = {'delivery': {'delivery_method': 'https://schemas.openid.net/secevent/risc/delivery-method/push',
+                                   'url': receiver_endpoint},
+                      'events_requested': events_requested}
+        response = requests.post(stream_update_endpoint, json=stream_cfg, headers=headers)
+        response.raise_for_status()  # Raise exception for unsuccessful requests
+
+    configure_event_stream(auth_token, 'https://your-service.example.com/security-event-receiver',
+                           ['https://schemas.openid.net/secevent/risc/event-type/account-credential-change-required',
+                            'https://schemas.openid.net/secevent/risc/event-type/account-disabled'])
+
+If the request returns HTTP 200, the event stream was successfully configured
+and your receiver endpoint should start receiving security event tokens. The
+next section describes how you can test your stream configuration and endpoint
+to verify everything is working correctly together.
+
+#### Get and update your current stream configuration
+
+If, in the future, you ever want to modify your stream configuration, you can do
+so by making an authorized GET request to `https://risc.googleapis.com/v1beta/stream` to get the
+current stream configuration, modifying the response body, and then POSTing the
+modified configuration back to `https://risc.googleapis.com/v1beta/stream:update` as described above.
+
+#### Stop and resume the event stream
+
+If you ever need to stop the event stream from Google, make an authorized POST
+request to `https://risc.googleapis.com/v1beta/stream/status:update` with `{ "status": "disabled" }`
+in the request body. While the stream is deactivated, Google doesn't send events
+to your endpoint and doesn't buffer security events when they occur. To
+reenable the event stream, POST `{ "status": "enabled" }` to the same endpoint.
+
+### 3. Optional: Test your stream configuration
+
+You can verify that your stream configuration and receiver endpoint are working
+together correctly by sending a verification token through your event stream.
+This token can contain a unique string that you can use use to verify that the
+token was received at your endpoint. To use this flow, make sure to
+subscribe to https://schemas.openid.net/secevent/risc/event-type/verification
+event type when [registering your receiver](https://developers.google.com/identity/protocols/risc#register_receiver).
+
+To request a verification token, make an authorized HTTPS POST request to
+`https://risc.googleapis.com/v1beta/stream:verify`. In the body of the request, specify some
+identifying string:
+
+```
+{
+  "state": "ANYTHING"
+}
+```
+
+For example:
+
+### Java
+
+    public static void testEventStream(final String stateString,
+                                       String authToken) throws IOException {
+        ObjectMapper jsonMapper = new ObjectMapper();
+        String json = jsonMapper.writeValueAsString(new Object() {
+            public String state = stateString;
+        });
+
+        HttpPost updateRequest = new HttpPost("https://risc.googleapis.com/v1beta/stream:verify");
+        updateRequest.addHeader("Content-Type", "application/json");
+        updateRequest.addHeader("Authorization", "Bearer " + authToken);
+        updateRequest.setEntity(new StringEntity(json));
+
+        HttpResponse updateResponse = new DefaultHttpClient().execute(updateRequest);
+        Header[] responseContentTypeHeaders = updateResponse.getHeaders("Content-Type");
+        StatusLine responseStatus = updateResponse.getStatusLine();
+        int statusCode = responseStatus.getStatusCode();
+        HttpEntity entity = updateResponse.getEntity();
+        // Now handle response
+    }
+
+    // ...
+
+    testEventStream("Test token requested at " + new Date().toString(), authToken);
+
+### Python
+
+    import requests
+    import time
+
+    def test_event_stream(auth_token, nonce):
+        stream_verify_endpoint = 'https://risc.googleapis.com/v1beta/stream:verify'
+        headers = {'Authorization': 'Bearer {}'.format(auth_token)}
+        state = {'state': nonce}
+        response = requests.post(stream_verify_endpoint, json=state, headers=headers)
+        response.raise_for_status()  # Raise exception for unsuccessful requests
+
+    test_event_stream(auth_token, 'Test token requested at {}'.format(time.ctime()))
+
+If the request succeeds, the verification token will be sent to the endpoint you
+registered. Then, for example, if your endpoint handles verification tokens by
+simply logging them, you can examine your logs to confirm the token was
+received.
+
+### Error code reference
+
+The following errors can be returned by the RISC API:
+
+| **Error Code** | **Error Message** | **Suggested Actions** |
+|---|---|---|
+| **400** | Stream configuration must contain <kbd>$fieldname</kbd> field. | Your request to the <kbd>https://risc.googleapis.com/v1beta/stream:update</kbd> endpoint is invalid or cannot be parsed. Please include <kbd>$fieldname</kbd> in your request. |
+| **401** | Unauthorized. | Authorization failed. Be sure you attached an [authorization token](https://developers.google.com/identity/protocols/risc#auth_token) with the request and that the token is valid and hasn't expired. |
+| **403** | The delivery endpoint must be an HTTPS URL. | Your delivery endpoint (i.e. the endpoint you expect RISC events to be delivered to) must be HTTPS. We do not send RISC events to HTTP URLs. |
+| **403** | Existing stream configuration does not have spec-compliant delivery method for RISC. | Your Google Cloud project must already have a RISC configuration. If you are using Firebase and have Google Sign-In enabled, then Firebase will be managing RISC for your project; you will not be able to create a custom configuration. If you are not using Google Sign-In for your Firebase project, please disable it, and then try to update again after an hour. |
+| **403** | Project could not be found. | Make sure you are using the correct service account for the correct project. You may be using a service account associated with a deleted project. Learn [how to see all service accounts associated with a project](https://cloud.google.com/iam/docs/service-accounts-list-edit#listing_service_accounts). |
+| **403** | Service account needs permission to access your RISC configuration | Go to your project's API Console and assign the "RISC Configuration Admin" role ([`roles/riscconfigs.admin`](https://cloud.google.com/iam/docs/understanding-roles#riscconfigs.admin)) to the service account that is making the calls to your project by following [these instructions](https://cloud.google.com/iam/docs/granting-roles-to-service-accounts). |
+| **403** | Stream management APIs should only be called by a service account. | Here's more information on [how you can call Google APIs with a service account](https://developers.google.com/identity/protocols/oauth2/service-account). |
+| **403** | The delivery endpoint does not belong to any of your project's domains. | Every project has a set of [authorized domains.](https://support.google.com/cloud/answer/6158849#authorized-domains) If your delivery endpoint (i.e. the endpoint you expect RISC events to be delivered to) is not hosted on one of them, we require that you add the endpoint's domain to that set. |
+| **403** | To use this API your project must have at least one OAuth client configured. | RISC only works if you build an app that supports [Google Sign In](https://developers.google.com/identity). This connection requires an OAuth client. If your project has no OAuth clients, it's likely that RISC will not be useful for you. Learn more about [Google's use of OAuth for our APIs](https://developers.google.com/identity/protocols/oauth2). |
+| **403** | Unsupported status. Invalid status. | We only support the stream statuses "`enabled`" and "`disabled`" at this time. |
+| **404** | Project has no RISC configuration. Project has no existing RISC configuration, cannot update status. | Call the <kbd>https://risc.googleapis.com/v1beta/stream:update</kbd> endpoint to create a new stream configuration. |
+| **4XX/5XX** | Unable to update status. | Check the detailed error message for more information. |
+
+### Access token scopes
+
+Should you decide to use access tokens for authenticating to the RISC API, these
+are the scopes your application must request:
+
+| **Endpoint** | **Scope** |
+|---|---|
+| `https://risc.googleapis.com/v1beta/stream/status` | `https://www.googleapis.com/auth/risc.status.readonly` OR `https://www.googleapis.com/auth/risc.status.readwrite` |
+| `https://risc.googleapis.com/v1beta/stream/status:update` | `https://www.googleapis.com/auth/risc.status.readwrite` |
+| `https://risc.googleapis.com/v1beta/stream` | `https://www.googleapis.com/auth/risc.configuration.readonly` OR `https://www.googleapis.com/auth/risc.configuration.readwrite` |
+| `https://risc.googleapis.com/v1beta/stream:update` | `https://www.googleapis.com/auth/risc.configuration.readwrite` |
+| `https://risc.googleapis.com/v1beta/stream:verify` | `https://www.googleapis.com/auth/risc.verify` |
+
+## Need Help?
+
+First, check out our [error code reference](https://developers.google.com/identity/protocols/risc#error_codes) section. If you still
+have questions, post them on Stack Overflow with the
+[#SecEvents](https://stackoverflow.com/questions/tagged/SecEvents)
+tag.
+
+--
+
+## 🤖 Claude *(23:19:46)*
+
+
+## 🤖 Claude *(23:20:00)*
+
+Primeiro: **ignore TODO esse texto de RISC / Cross-Account Protection.** Não é pra nós. Isso é uma ferramenta **opcional** de segurança pra apps que usam **"Sign in with Google"** como login dos usuários. Nós **não** usamos login Google — só usamos OAuth pra pegar o scope `youtube.upload` e subir vídeo. RISC é irrelevante pro nosso caso. Pode fechar essa doc.
+
+## 👀 O importante está no print: já existe projeto e cliente
+- ✅ **YouTube Data API v3 ativada** (Status: Ativadas) — esse passo já está feito.
+- Já existe um cliente OAuth **"MCORCH Supabase Auth"** (`874740233059-8jb1...`) — esse é o login Google do app. **NÃO mexa nele** (resetar o secret dele quebraria o login da plataforma).
+
+## ✅ Crie um cliente NOVO e dedicado (o dropdown já está aberto)
+No menu **"+ Criar credenciais"** → clique **"ID do cliente OAuth"**:
+1. **Tipo de aplicativo:** Aplicativo da Web
+2. **Nome:** `MCORCH YouTube Publisher`
+3. **URIs de redirecionamento autorizados → Adicionar URI:**
+   ```
+   https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback
+   ```
+   (match exato, https, sem barra no fim)
+4. **Criar** → copie **Client ID** + **Client Secret** (secret só aparece 1 vez).
+
+> Por que um cliente novo e não reusar o "Supabase Auth": o secret de um cliente existente não dá pra revelar de novo (só resetar) — e resetar quebraria o login do app. Cliente dedicado = limpo e isolado. A verificação/audit é por **projeto**, então os dois clientes compartilham o mesmo status — sem problema.
+
+## ⚠️ Antes (ou depois) de criar: confirme o scope no consent screen
+Como o projeto já tem cliente, o consent screen (Google Auth Platform) já existe. Só falta garantir, em **Tela de permissão OAuth / Google Auth Platform**:
+- **Data Access (Scopes):** adicionar **`https://www.googleapis.com/auth/youtube.upload`**.
+- **Audience → Test users:** adicionar a conta Google do Gabriel AI (o bot).
+- **Branding:** domínio autorizado `mcorch.com` + URLs (`/auth`, `/privacy`, `/terms`) — se ainda não estiverem.
+
+(Se ao criar o cliente ele reclamar de consent screen, é só isso acima.)
+
+---
+
+**Me traz o Client ID + Client Secret** do novo cliente → eu coloco na config e acendo o OAuth do YouTube (testo headless como no TikTok). E lembra do **canal Brand Account** da persona como padrão — sem canal, o upload não tem destino.
+
+## 👤 User *(23:21:00)*
+
+Origens JavaScript autorizadas
+Para usar com solicitações de um navegador
+
+coloco o que?
+
+## 🤖 Claude *(23:21:08)*
+
+
+## 🤖 Claude *(23:21:11)*
+
+**Deixe vazio.** "Origens JavaScript autorizadas" é só pra fluxo no navegador (SDK JS / token implícito). O nosso é **server-side** (o code é trocado por token na nossa edge function) — então **não precisa** preencher nada aí.
+
+Só preencha o campo de baixo, **URIs de redirecionamento autorizados**:
+```
+https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback
+```
+
+Deixa Origens JavaScript em branco → **Criar** → me traz o **Client ID + Client Secret**. 🚀
+
+## 👤 User *(23:22:20)*
+
+Cliente OAuth criado
+O ID do cliente está sempre disponível na guia Clientes da plataforma de autenticação do Google.
+
+O OAuth é limitado a 100 logins de escopo confidencial  até a verificação da tela de consentimento do OAuth. O processo de verificação pode levar vários dias.
+ID do cliente
+874740233059-*********
+
+Não será mais possível acessar ou fazer o download da chave secreta do cliente depois que esta caixa de diálogo for fechada. Copie ou faça o download das informações abaixo e armazene-as em um local seguro.
+Chave secreta do cliente
+GOCSPX-*****
+
+Data da criação
+27 de junho de 2026 20:21:12 GMT-3
+Status
+Ativadas
+
+## 🤖 Claude *(23:22:41)*
+
+
+## 🤖 Claude *(23:22:43)*
+
+Cliente criado! ⚠️ **Copie a Chave Secreta AGORA** — o Google não mostra de novo (só resetar). Salve o **Client ID** + **Client Secret** num lugar seguro já.
+
+Deixa eu confirmar que o card de YouTube existe no Settings (pra você colar igual fez no TikTok):
+
+## 🤖 Claude *(23:22:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===SocialAppConfigCard supports youtube?===\"; grep -n \"youtube\\|pinterest\\|tiktok\\|platform\\|YouTube\\|Pinterest\\|TikTok\\|client_id\\|client_secret\\|PLATFORMS\\|label\" src/components/settings/SocialAppConfigCard.tsx | head -30",
+  "description": "Confirm YouTube supported in SocialAppConfigCard"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===SocialAppConfigCard supports youtube?===
+> 4:  SOCIAL_APP_PLATFORMS,
+> 13:import { Label } from "@/components/ui/label";
+> 16:import { TikTok, YouTube, Pinterest } from "@/components/icons/brand-icons";
+> 19: * Social app credentials (TikTok / YouTube / Pinterest) — BYOK credential card. Display-only:
+> 20: * all state/mutations live in useSocialAppConfig. The client_secret field is write-only (Vault-masked)
+> 21: * — never pre-filled, only the mask placeholder. One section per platform.
+> 22: * SSOT: docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md.
+> 26:  tiktok: TikTok,
+> 27:  youtube: YouTube,
+> 28:  pinterest: Pinterest,
+> 32:  tiktok: "text-foreground",
+> 33:  youtube: "text-red-500",
+> 34:  pinterest: "text-red-600",
+> 38:  platform: SocialAppPlatform;
+> 41:function PlatformSection({ platform }: PlatformSectionProps) {
+> 43:  const meta = SOCIAL_APP_PLATFORM_META[platform];
+> 44:  const row = byPlatform[platform];
+> 45:  const configured = isConfigured(platform);
+> 46:  const Icon = PLATFORM_ICON[platform];
+> 52:  // Populate the non-secret client_id from the stored row (secret stays empty — write-only).
+> 54:    setClientId(row?.client_id ?? "");
+> 55:  }, [row?.client_id]);
+> 70:        platform,
+> 71:        client_id: clientId.trim(),
+> 72:        client_secret: clientSecret.trim() || undefined,
+> 87:          <Icon className={`h-5 w-5 ${PLATFORM_ICON_COLOR[platform]}`} />
+> 100:        <Label htmlFor={`${platform}_client_id`}>{meta.clientIdLabel}</Label>
+> 102:          id={`${platform}_client_id`} name={`${platform}_client_id`} autoComplete="off"
+> 104:          placeholder={platform === "tiktok" ? "awxxxxxxxxxxxxxxxx" : "Cole o " + meta.clientIdLabel}
+> 112:        <Label htmlFor={`${platform}_client_secret`}>Client Secret</Label>
+> ```
+
+## 🤖 Claude *(23:22:53)*
+
+
+## 🤖 Claude *(23:23:01)*
+
+✅ Card de YouTube existe no Settings (mesmo lugar do TikTok). Caminho:
+
+## Agora (você):
+1. **Copie a Chave Secreta JÁ** (não volta a aparecer).
+2. **`login.mcorch.com/dashboard/settings` → Social → card YouTube** → cole:
+   - **Client ID:** `874740233059-...` (o valor completo)
+   - **Client Secret:** `GOCSPX-...`
+   - **Salvar** (vai cifrado no Vault, igual TikTok).
+3. **Me avisa** → eu confirmo a linha no `social_app_config` + disparo o `social-auth-init` do YouTube pra provar que a URL de autorização nasce (sem `youtube_not_configured`).
+
+## Sobre o aviso do Google ("limitado a 100 logins até verificação")
+É o cap do modo **Testing** — irrelevante pra nós (1 persona). Mas pra não morrer o refresh token em 7 dias:
+
+⚠️ **Faça o Gate A agora:** Google Auth Platform → **Audience → "Publicar app" (In production)**. É instantâneo, sem review, e é o que evita o autopilot quebrar a cada 7 dias.
+
+E confirme (se ainda não):
+- **Data Access:** scope `https://www.googleapis.com/auth/youtube.upload` adicionado.
+- **Test users:** a conta Google do bot.
+- **Canal Brand Account** da persona criado + como padrão (destino do upload).
+
+Cola as credenciais no Settings e me chama — aí acendo o OAuth do YouTube. 🚀
+
+## 👤 User *(23:24:07)*
+
+pronto ja coloquei o cliente id e o lcient secret.
+
+## 🤖 Claude *(23:24:15)*
+
+
+## 🤖 Claude *(23:24:16)*
+
+Vou verificar a linha do YouTube no banco + disparar o `social-auth-init` pra provar que a URL de autorização do Google nasce (igual fiz no TikTok):
+
+## 🤖 Claude *(23:24:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; ANON=\"${SB_PUBLISHABLE_KEY:-$VITE_SUPABASE_PUBLISHABLE_KEY}\"; echo \"===social_app_config youtube row===\"; curl -s \"$URL/rest/v1/social_app_config?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.youtube&select=client_id,is_active,updated_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\"; echo; echo \"===mint JWT + call social-auth-init youtube===\"; TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null); curl -s -w \"\\nHTTP=%{http_code}\\n\" -X POST \"$URL/functions/v1/social-auth-init\" -H \"Authorization: Bearer $TOKEN\" -H \"apikey: $ANON\" -H \"Content-Type: application/json\" -d '{\"platform\":\"youtube\",\"redirect_uri\":\"https://login.mcorch.com/social/callback\"}'",
+  "description": "Verify youtube config + social-auth-init authorize URL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===social_app_config youtube row===
+> [{"client_id":"874740233059-b6od7t9t0c8jhgd2kmco51rgk2cpkp93.apps.googleusercontent.com","is_active":true,"updated_at":"2026-06-27T23:23:39.025399+00:00"}]
+> ===mint JWT + call social-auth-init youtube===
+> {"url":"https://accounts.google.com/o/oauth2/v2/auth?client_id=874740233059-b6od7t9t0c8jhgd2kmco51rgk2cpkp93.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbcyvddsykvehvpwstlfa.supabase.co%2Ffunctions%2Fv1%2Fsocial-auth-callback&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.upload&state=eyJ1c2VySWQiOiJhZGEzOWZhZS02N2UxLTRlNTMtYWYxYy01YTE4ZTFjMTA4ZTgiLCJwbGF0Zm9ybSI6InlvdXR1YmUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL2xvZ2luLm1jb3JjaC5jb20vc29jaWFsL2NhbGxiYWNrIiwidHMiOjE3ODI2MDI2NjI4OTF9.NAyuFd-AfJHdUVcZ-xOEFl7Kgk06UbOYDLgfwfuFm-c&access_type=offline&prompt=consent"}
+> HTTP=200
+> ```
+
+## 🤖 Claude *(23:24:41)*
+
+
+## 🤖 Claude *(23:24:50)*
+
+✅ **YouTube configurado e OAuth nasce correto** (Lei 1):
+
+```
+HTTP 200
+url: accounts.google.com/o/oauth2/v2/auth
+  client_id=874740233059-b6od7t9t0c8jhgd2kmco51rgk2cpkp93.apps.googleusercontent.com ✅
+  redirect_uri=…/functions/v1/social-auth-callback ✅
+  scope=youtube.upload ✅
+  access_type=offline & prompt=consent ✅ (garante refresh token)
+```
+
+`youtube_not_configured` morreu. Config salva e resolvendo per-user.
+
+## Próximo passo: conectar (autorizar o OAuth)
+Em **`login.mcorch.com/dashboard/social` → Conectar YouTube** → vai pra tela de consent do Google → autorize com a conta **Gabriel AI** → volta conectado. **Me avisa** → eu testo o upload headless (como no TikTok).
+
+### ⚠️ Antes de clicar, confirme isto (senão a tela do Google bloqueia):
+1. **Consent screen (Google Auth Platform → Data Access):** o scope **`youtube.upload`** está adicionado?
+2. **Audience → Test users:** a conta Google do Gabriel AI está lá? *(Em modo Testing, só test users conseguem autorizar.)* — **OU** você já clicou **"Publicar app" (Production)** no Gate A (aí qualquer conta autoriza, só com o aviso de "app não verificado").
+3. **Canal Brand Account** da persona criado e **como padrão** (é o destino do upload).
+
+Se algum desses faltar, a tela de consent dá "Acesso bloqueado". Confere os 3 e clica **Conectar YouTube** — me avisa quando autorizar. 🚀
+
+## 👤 User *(23:56:42)*
+
+Google hasn’t verified this app
+The app is requesting access to sensitive info in your Google Account. Until the developer (gabrielcall@gmail.com) verifies this app with Google, you shouldn't use it.
+
+Hide Advanced
+Continue only if you understand the risks and trust the developer (gabrielcall@gmail.com).
+
+Go to Magic Constellation (unsafe)
+
+--
+
+
+Então fui ver o scope e temos disponiveis para adicionar sommente essas.:
+
+API
+Escopo
+Descrição voltada para o usuário
+.../auth/userinfo.email	Ver o endereço de e-mail principal da sua Conta do Google
+.../auth/userinfo.profile	Ver suas informações pessoais, inclusive aquelas que você disponibilizou publicamente
+openid	Associar suas informações pessoais a você no Google
+Address Validation API	.../auth/cloud-platform	Ver, editar, configurar e excluir seus dados do Google Cloud e ver o endereço de e-mail da sua Conta do Google.
+Analytics Hub API	.../auth/bigquery	View and manage your data in Google BigQuery and see the email address for your Google Account
+BigQuery API	.../auth/bigquery.readonly	Ver seus dados no Google BigQuery
+BigQuery API	.../auth/cloud-platform.read-only	Ver seus dados nos serviços do Google Cloud e o endereço de e-mail da sua Conta do Google
+BigQuery API	.../auth/devstorage.full_control	Manage your data and permissions in Cloud Storage and see the email address for your Google Account
+BigQuery API	.../auth/devstorage.read_only	Ver seus dados no Armazenamento em nuvem do Google
+BigQuery API	.../auth/devstorage.read_write	Gerenciar seus dados no Cloud Storage e ver o endereço de e-mail da sua Conta do Google
+BigQuery API	.../auth/bigquery.insertdata	Inserir dados no Google BigQuery
+BigQuery Data Transfer API	.../auth/cloudplatformprojects	Manage your Cloud Platform projects
+BigQuery Migration API	.../auth/bigquerymigration	Acessar, editar, configurar e excluir seus dados de migração do Google Cloud BigQuery e consultar o endereço de e-mail da sua Conta do Google
+BigQuery Migration API	.../auth/bigquerymigration.readonly	Acessar seus dados de migração do Google Cloud BigQuery e consultar o endereço de e-mail da sua Conta do Google
+Cloud Dataplex API	.../auth/dataplex.read-write	Ver, editar, configurar e excluir seus dados do Google Cloud Dataplex e consultar o endereço de e-mail da sua Conta do Google
+Cloud Dataplex API	.../auth/dataplex.readonly	Ver seus dados do Google Cloud Dataplex e o e-mail da sua Conta do Google
+Cloud Datastore API	.../auth/datastore	Visualize e gerencie seus dados do Google Cloud Datastore
+Cloud Logging API	.../auth/logging.admin	Administrar dados de registros dos seus projetos
+Cloud Logging API	.../auth/logging.read	Ver dados de registros dos seus projetos
+Cloud Logging API	.../auth/logging.write	Enviar dados de registros dos seus projetos
+Cloud Monitoring API	.../auth/monitoring	Vê e grava dados de monitoramento para todos os seus projetos na nuvem e de APIs do Google e de terceiros
+Cloud Monitoring API	.../auth/monitoring.read	Ver dados de monitoramento de todos os projetos do Google Cloud e de terceiros
+Cloud Monitoring API	.../auth/monitoring.write	Publicar dados de métricas nos seus projetos do Google Cloud
+Cloud Storage API	.../auth/devstorage.write_only	Gerenciar seus dados no Armazenamento em nuvem do Google
+Cloud Trace API	.../auth/trace.readonly	Read Trace data for a project or application
+Cloud Trace API	.../auth/trace.append	Write Trace data for a project or application
+Cloud Vision API	.../auth/cloud-vision	Aplicar modelos de aprendizado de máquina para compreender e rotular imagens
+Maps Grounding Lite API	.../auth/maps-platform.mapstools	Usar o Grounding Lite da Plataforma Google Maps
+Service Management API	.../auth/service.management	Gerenciar a configuração de serviços de APIs do Google
+Service Management API	.../auth/service.management.readonly	Ver sua configuração do serviço da Google API
+Service Management API	.../auth/iam.test	Teste as permissões de gerenciamento de identidade e acesso (IAM)
+Street View Publish API	.../auth/streetviewpublish	Publicar e gerenciar suas fotos em 360º no Google Street View
+YouTube Data API v3	.../auth/youtube.readonly	Visualize sua conta do YouTube
+YouTube Data API v3	.../auth/youtube	Gerenciar sua conta do YouTube
+YouTube Data API v3	.../auth/youtube.force-ssl	Ver, editar e excluir permanentemente vídeos, avaliações, comentários e legendas do YouTube
+YouTube Data API v3	.../auth/youtubepartner	Veja e gerencie seus ativos e conteúdo associado no YouTube
+YouTube Data API v3	.../auth/youtube.upload	Gerencie seus vídeos do YouTube
+YouTube Data API v3	.../auth/youtubepartner-channel-audit	Visualize as informações particulares do seu canal que são relevantes para o processo de auditoria com um parceiro do YouTube
+YouTube Data API v3	.../auth/youtube.channel-memberships.creator	Ver uma lista dos membros ativos do canal, dos níveis deles e de quando se tornaram membros
+YouTube Data API v3	.../auth/youtube.third-party-link.creator	Vincular ao seu canal do YouTube para adicionar, remover e editar as informações dos apps diretamente nele
+YouTube Data API v3	.../auth/youtube.download	Fazer o download dos seus vídeos públicos do YouTube
+
+## 🤖 Claude *(23:57:02)*
+
+
+## 🤖 Claude *(23:57:09)*
+
+Isso é **esperado, não é erro** — é o aviso de app não-verificado (modo Testing). Como **você é o desenvolvedor e dono da conta**, é seguro prosseguir. O Gate B (verificação) remove esse aviso depois; por agora, passar reto é o caminho certo.
+
+## ✅ Pra continuar agora:
+1. Clique em **"Hide Advanced"** (ou Advanced) → depois em **"Go to Magic Constellation (unsafe)"**.
+2. Aí aparece a tela de consent real pedindo **"Gerencie seus vídeos do YouTube"** (`youtube.upload`) → clique **Permitir/Allow**.
+3. Volta pro app conectado → **me avisa** → eu verifico o token + testo o upload headless.
+
+## Sobre os scopes (sua lista confirma o que precisamos)
+O único scope que usamos está lá:
+- ✅ **`.../auth/youtube.upload`** — *"Gerencie seus vídeos do YouTube"*
+
+Garanta que **só esse** está adicionado no **Data Access**. **NÃO** adicione os outros do YouTube (`youtube`, `youtube.readonly`, `youtube.force-ssl`, `youtubepartner`, etc.) — scope a mais = verificação mais difícil e mais coisa pra demonstrar no vídeo. `youtube.upload` sozinho basta pro `videos.insert`.
+
+---
+
+Então: **clica em "Go to Magic Constellation (unsafe)" → Permitir** na próxima tela. Quando voltar conectado, me avisa que eu testo o upload. 🚀
+
+## 👤 User *(23:58:38)*
+
+Como os escopos serão usados?
+
+## 🤖 Claude *(23:58:52)*
+
+
+## 🤖 Claude *(23:58:54)*
+
+Esse campo é a **justificativa do scope** pra verificação do Google (Gate B) — explica como o `youtube.upload` é usado. Tem que ser específico e bater com o que o app faz (igual o TikTok). Deixa eu medir:
+
+## 🤖 Claude *(23:58:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp; cat > ytscope.txt <<'EOF'\nThe youtube.upload scope is used to upload the user's own short-form videos to their own YouTube channel via the YouTube Data API v3 videos.insert endpoint. After the user connects their account through OAuth, our app uploads videos they created on our platform to their channel, on their behalf and at their request. We do not read, modify, or delete any other YouTube data, and we never upload to any channel other than the one the user explicitly authorized.\nEOF\necho \"chars: $(printf '%s' \"$(cat ytscope.txt)\" | wc -m)\"",
+  "description": "Measure youtube.upload justification text"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chars: 461
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(23:59:05)*
+
+461 chars. Cola esta justificativa (EN — preferível pro revisor do Google):
+
+```
+The youtube.upload scope is used to upload the user's own short-form videos to their own YouTube channel via the YouTube Data API v3 videos.insert endpoint. After the user connects their account through OAuth, our app uploads videos they created on our platform to their channel, on their behalf and at their request. We do not read, modify, or delete any other YouTube data, and we never upload to any channel other than the one the user explicitly authorized.
+```
+
+Por que funciona pro review:
+- Nomeia o **scope** (`youtube.upload`), o **endpoint** (`videos.insert`) e o **uso** (subir o vídeo do próprio usuário, no próprio canal, a pedido dele).
+- Deixa explícito o que **NÃO** fazemos (não lê/edita/apaga outros dados, não posta em canal de terceiros) — é o que o revisor procura pra liberar scope sensível.
+
+Se tiver um limite menor de caracteres, a versão curta:
+```
+Used to upload the user's own short videos to their own YouTube channel via YouTube Data API v3 videos.insert, on their behalf after they authorize. No other YouTube data is read or modified; we never upload to a channel the user did not authorize.
+```
+
+---
+
+Depois de salvar a justificativa, volta pro fluxo de **Conectar YouTube** → na tela de aviso clica **"Go to Magic Constellation (unsafe)" → Permitir**. Quando voltar conectado, me avisa que eu testo o upload headless. 🚀
