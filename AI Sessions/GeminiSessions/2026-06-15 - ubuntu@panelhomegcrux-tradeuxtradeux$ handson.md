@@ -3290,4 +3290,5 @@ bash scripts/ci-preflight.sh --only-lint
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-15 - handson]]
+> * **Próxima Sessão**: [[2026-06-28 - handson]]
 %% --- TIMELINE END --- %%
