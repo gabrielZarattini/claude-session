@@ -7905,3 +7905,2086 @@ The image surfaces came back `gap` — `pillarImage` was null. The cause: `conte
   "description": "Re-run image reframe smoke with real campaign"
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ reshape 200 + ok  → status=200
+> ✅ instagram:feed_image asset ready (JPEG)  → status=ready fmt=jpeg
+> ✅ instagram:feed_image downloadable JPEG 1080×1350  → magic=true dims=1080×1350 bytes=40556
+> ✅ pinterest:standard_pin asset ready (JPEG)  → status=ready fmt=jpeg
+> ✅ pinterest:standard_pin downloadable JPEG 1000×1500  → magic=true dims=1000×1500 bytes=41755
+> ✅ youtube:thumbnail asset ready (JPEG)  → status=ready fmt=jpeg
+> ✅ youtube:thumbnail downloadable JPEG 1280×720  → magic=true dims=1280×720 bytes=25830
+> 
+> ✅ PASS — image reframe smoke
+> ```
+
+## 🤖 Claude *(03:30:25)*
+
+
+## 🤖 Claude *(03:30:27)*
+
+CP-009 verified materially — all three surfaces reframed to **exact** geometry (1080×1350, 1000×1500, 1280×720), valid JPEG magic bytes, downloaded from the bucket. 
+
+One regression to fix: the opt-in smoke's G5 expected `pending_reframe`, but with no campaign image that path now correctly returns `gap`. Let me update that assertion and re-run both smokes.
+
+## 🤖 Claude *(03:30:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reshape-pillar.ts",
+  "old_string": "  const igFeed = byKey('instagram', 'feed_image');\n  check('G5: instagram feed_image pending_reframe + draft', igFeed?.asset_status === 'pending_reframe' && igFeed?.status === 'draft', `asset=${igFeed?.asset_status} status=${igFeed?.status}`);",
+  "new_string": "  const igFeed = byKey('instagram', 'feed_image');\n  // No pillar image in this run (campaign_id null) \u21d2 honest non-ready state ('gap'); never 'ready'/published.\n  check('G5: instagram feed_image honest non-ready + draft', ['gap', 'pending_reframe'].includes(igFeed?.asset_status as string) && igFeed?.status === 'draft', `asset=${igFeed?.asset_status} status=${igFeed?.status}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reshape-pillar.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:30:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== opt-in smoke (regression) ===\"\ntimeout 150 bun run scripts/qa/smoke-reshape-pillar.ts 2>&1 | tail -4\necho \"=== reframe smoke ===\"\ntimeout 150 bun run scripts/qa/smoke-reframe-image.ts 2>&1 | tail -3",
+  "description": "Re-run both smokes after G5 fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === opt-in smoke (regression) ===
+> ✅ Gauto-c: scheduled_posts valid enum platforms  → platforms=linkedin,linkedin,twitter
+> ✅ G6: cross-tenant SELECT returns 0 rows  → rows_seen=0
+> 
+> ✅ PASS — reshape-pillar + publish opt-in smoke
+> === reframe smoke ===
+> ✅ youtube:thumbnail downloadable JPEG 1280×720  → magic=true dims=1280×720 bytes=25830
+> 
+> ✅ PASS — image reframe smoke
+> ```
+
+## 🤖 Claude *(03:31:15)*
+
+
+## 🤖 Claude *(03:31:16)*
+
+Both smokes green. CP-009 is done. Let me update the SDD/SOP (OTD-CP-009 now **closed** — in-process imagescript, no host worker needed; IG image surface now operational) and CLAUDE.md.
+
+## 🤖 Claude *(03:31:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md",
+  "old_string": "| `render_thumbnail_16x9` | `pillar_image` | diretiva thumbnail 1280\u00d7720 + `overlay_text` | `pending_reframe` |\n| `reframe_2x3` / `reframe_4x5` / `render_link_card_1.91x1` | `pillar_image` | diretiva reframe+format_coerce; pixel-work = host worker (FR-CP-005, **deferido OTD-CP-009**) | `pending_reframe` |",
+  "new_string": "| `render_thumbnail_16x9` | `pillar_image` | **reframe in-process** 1280\u00d7720 JPEG (imagescript); overlay_text burn-in = refinamento | `ready` (com master) / `gap` (sem) |\n| `reframe_2x3` / `reframe_4x5` / `render_link_card_1.91x1` | `pillar_image` | **reframe in-process** (imagescript WASM, center-crop\u2192resize\u2192JPEG; FR-CP-005/006 \u2705 **OTD-CP-009 FECHADA**) | `ready` (com master) / `gap` (sem) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:31:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md",
+  "old_string": "**Operacional nesta fatia:** atomizer \u00b7 reshaper interpreter (gram\u00e1tica + dispatch + format-gate + native-variant + Pinterest-SEO text) \u00b7 spine 9:16 reusada nas surfaces de v\u00eddeo com caption nativa \u00b7 texto (LinkedIn text_post, X thread) \u00b7 channel_variants ledger + idempot\u00eancia \u00b7 auto-publish preferindo variante nativa \u00b7 enqueue para os publishers que existem hoje (IG Reel \u00b7 TikTok \u00b7 YouTube \u00b7 Pinterest v\u00eddeo \u00b7 LinkedIn texto \u00b7 X tweet).\n\n**Deferido (OTD, com diretiva emitida pelo reshaper):**\n- **OTD-CP-008** \u2014 render 16:9 HyperFrames (FR-CP-004): precisa template `*-16x9.html` + entry em `VALID_TEMPLATES` + host worker.\n- **OTD-CP-009** \u2014 image reframe/format-coerce (FR-CP-005/006 pixel): precisa host worker FFmpeg (Deno n\u00e3o roda FFmpeg); inclui safe-zone via Vision-MCP.\n- **OTD-CP-010** \u2014 publishers faltantes: LinkedIn v\u00eddeo \u00b7 FB v\u00eddeo/link_card \u00b7 X v\u00eddeo \u00b7 X thread multi-tweet (hoje single-tweet hook).\n- **OTD-CP-011** \u2014 PDF carousel (FR-CP-009) \u00b7 auto-segment 1\u2192N (FR-CP-012).",
+  "new_string": "**Operacional nesta fatia:** atomizer \u00b7 reshaper interpreter (gram\u00e1tica + dispatch + format-gate + native-variant + Pinterest-SEO text) \u00b7 spine 9:16 reusada nas surfaces de v\u00eddeo com caption nativa \u00b7 texto (LinkedIn text_post, X thread) \u00b7 **image reframe in-process (FR-CP-005/006 \u2014 IG/LinkedIn/FB feed_image 4:5, Pinterest 2:3, FB link_card 1.91:1, YT thumbnail 16:9 \u2192 JPEG)** \u00b7 channel_variants ledger + idempot\u00eancia \u00b7 publish opt-in (default rascunho) \u00b7 auto-publish owner-scoped \u00b7 enqueue para os publishers vivos: **IG Reel \u00b7 TikTok \u00b7 YouTube Short \u00b7 Pinterest v\u00eddeo \u00b7 LinkedIn texto \u00b7 X tweet \u00b7 IG feed_image**.\n\n**Fechado nesta sess\u00e3o:** **OTD-CP-009** \u2014 image reframe/format-coerce resolvido **in-process com imagescript (WASM, Deno)** \u2014 sem host worker/FFmpeg. Center-crop\u2192resize\u2192JPEG; smoke prova geometria exata (1080\u00d71350/1000\u00d71500/1280\u00d7720) + magic bytes JPEG. (Safe-zone via Vision-MCP saliency + overlay de texto no thumbnail = refinamentos futuros.)\n\n**Deferido (OTD, com diretiva emitida pelo reshaper):**\n- **OTD-CP-008** \u2014 render 16:9 HyperFrames (FR-CP-004): precisa template `*-16x9.html` + entry em `VALID_TEMPLATES` + enqueue de render.\n- **OTD-CP-010** \u2014 publishers faltantes: LinkedIn v\u00eddeo/imagem \u00b7 FB v\u00eddeo/link_card/imagem \u00b7 X v\u00eddeo \u00b7 X thread multi-tweet (hoje single-tweet hook) \u00b7 Pinterest standard_pin (imagem; publish-social Pinterest \u00e9 s\u00f3 v\u00eddeo). *(o asset j\u00e1 \u00e9 produzido \u2014 falta s\u00f3 o branch de publish.)*\n- **OTD-CP-011** \u2014 PDF carousel (FR-CP-009) \u00b7 auto-segment 1\u2192N (FR-CP-012)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:31:44)*
+
+
+## 🤖 Claude *(03:31:45)*
+
+Now update CLAUDE.md's reshaper entry to reflect opt-in + reframe + the new fn/smoke:
+
+## 🤖 Claude *(03:32:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Channel Format Intelligence \u2014 Reshaper + Atomizer (FR-CP-002/003)** | `supabase/functions/reshape-pillar/index.ts` (interpretador data-driven: l\u00ea `channel_profiles.transform_recipe` + `pillar_atoms` \u2192 variante NATIVA por canal, **zero branch por canal**. `field_map` grammar + dispatch de `reshape` + format-gate FR-CP-006 + native-variant FR-CP-007 + Pinterest-SEO FR-CP-008. Service-role-only, user resolvido de `pipeline_runs`. Spine 9:16\u21927 surfaces \u00b7 16:9/reframe = `pending_*` honesto OTD-CP-008/009) \u00b7 atomizer = bloco fail-open em `orchestrate-step` (article\u2192`pillar_atoms`) \u00b7 `auto-publish` prefere `metadata.reshape` resolvendo asset do `channel_variants` **owner-scoped** (fix FMEA-011) \u00b7 migration `20260627150000` (`channel_variants` ledger+idempot\u00eancia UNIQUE + `creative_metrics.hook_rate`) |\n| **Channel Format Intelligence \u2014 SDD + SOP (Lei 2)** | `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` (SSOT implementation-level \u2014 fecha Gate Closed-Loop Step 3.5; resolve os 8 *blocking gaps* do critic `wf_a390c0f0-b6e`) \u00b7 `docs/processes/channel-reshaper.md` (SOP 6 gates G1-G6) \u00b7 smoke `scripts/qa/smoke-reshape-pillar.ts` (zero-cost 16/16: idempot\u00eancia \u00b7 anti cross-post \u00b7 channel\u2192enum \u00b7 honestidade pending_* \u00b7 tenancy RLS) |",
+  "new_string": "| **Channel Format Intelligence \u2014 Reshaper + Atomizer (FR-CP-002/003/005/006/007/008)** | `supabase/functions/reshape-pillar/index.ts` (interpretador data-driven: l\u00ea `channel_profiles.transform_recipe` + `pillar_atoms` \u2192 variante NATIVA por canal, **zero branch por canal**. `field_map` grammar + dispatch de `reshape` + native-variant FR-CP-007 + Pinterest-SEO FR-CP-008 + **image reframe in-process via imagescript WASM** [FR-CP-005/006 \u2014 4:5/2:3/1.91:1/16:9 thumb \u2192 JPEG; **OTD-CP-009 FECHADA**, sem host worker]. Service-role-only, user resolvido de `pipeline_runs`. **Publish opt-in**: default rascunho; enfileira s\u00f3 com `auto_publish=true`) \u00b7 atomizer = bloco fail-open em `orchestrate-step` (article\u2192`pillar_atoms`) \u00b7 `publish-channel-variant` (publica 1 rascunho escolhido, owner-bound) \u00b7 `auto-publish` prefere `metadata.reshape` resolvendo asset do `channel_variants` **owner-scoped** (fix FMEA-011) \u00b7 **autoridade \u00fanica de enqueue social** (steps legados linkedin/twitter do orchestrate-step n\u00e3o enfileiram mais \u2014 sem double-post) \u00b7 migration `20260627150000` (`channel_variants` + `creative_metrics.hook_rate`) |\n| **Channel Format Intelligence \u2014 SDD + SOP (Lei 2)** | `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` (SSOT implementation-level \u2014 fecha Gate Closed-Loop Step 3.5; resolve os 8 *blocking gaps* do critic `wf_a390c0f0-b6e`; \u00a75.4 publish opt-in) \u00b7 `docs/processes/channel-reshaper.md` (SOP 6 gates) \u00b7 smokes `scripts/qa/smoke-reshape-pillar.ts` (17/17: idempot\u00eancia \u00b7 anti cross-post \u00b7 channel\u2192enum \u00b7 **opt-in draft default + manual publish + auto mode** \u00b7 tenancy) + `scripts/qa/smoke-reframe-image.ts` (reframe \u2192 JPEG geometria exata, magic bytes). 7 surfaces operacionais; OTD-CP-008/010/011 deferidos |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:32:06)*
+
+
+## 🤖 Claude *(03:32:06)*
+
+Now commit CP-009 + doc updates:
+
+## 🤖 Claude *(03:32:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/reshape-pillar/index.ts scripts/qa/smoke-reframe-image.ts scripts/qa/smoke-reshape-pillar.ts docs/bok/post-engine/13-sdd-reshaper-atomizer.md CLAUDE.md deno.lock\ngit commit -q -m \"feat(reshaper): in-process image reframe + format coerce (FR-CP-005/006, OTD-CP-009 closed)\n\nimagescript (WASM, Deno) reframes the pillar image to each channel geometry\n(IG/LinkedIn/FB feed 4:5 \u00b7 Pinterest 2:3 \u00b7 FB link_card 1.91:1 \u00b7 YT thumb 16:9)\nand coerces PNG->JPEG (the universal API-safe format). NO host worker / FFmpeg.\ncenter-crop -> resize -> encodeJPEG(85); fail-open to pending_reframe. IG feed_image\nnow operational (publish-social IG image_url). Smoke proves exact geometry\n(1080\u00d71350/1000\u00d71500/1280\u00d7720) + JPEG magic bytes, downloaded from the bucket.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"no leaks|reingest\" | tail -2\necho \"=== log ===\"; git log --oneline -4",
+  "description": "Commit CP-009 image reframe"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ┃  mesh-reingest ❯ 
+> ✔️ mesh-reingest (0.00 seconds)
+> === log ===
+> d77f9ff feat(reshaper): in-process image reframe + format coerce (FR-CP-005/006, OTD-CP-009 closed)
+> 475d01d feat(reshaper): publish opt-in — default draft, explicit publish (FR-CP-003 amendment)
+> b4fe562 docs(handoff): seal Channel Reshaper + Atomizer (FR-CP-002/003) — 1 pilar -> posts nativos
+> 2ed159f feat(reshaper): data-driven channel reshaper + atomizer — 1 pilar -> posts nativos (FR-CP-002/003/006/007/008)
+> ```
+
+## 🤖 Claude *(03:33:08)*
+
+
+## 🤖 Claude *(03:33:12)*
+
+CP-009 committed (`d77f9ff`). Task 8 done.
+
+Let me step back and assess where the **full mapping** stands for the brand-persona launch:
+- **Short-form vertical video (9:16 spine)** → IG Reel · TikTok · YT Short · Pinterest — operational ✅
+- **Native text** → LinkedIn · X — operational ✅
+- **Feed image (reframed JPEG)** → IG — operational ✅ (CP-009)
+- **Publish opt-in** → default draft + per-variant publish ✅
+- Remaining: **CP-008** 16:9 YouTube *long-form* (secondary for a launching brand) · **CP-010** extra publishers (externally audit-gated anyway) · **CP-011** PDF/auto-segment.
+
+The data-driven mapping is **functionally complete** for the launch — 1 idea → native posts across every short-form channel, with honest directives + ready assets for the rest. The remaining OTDs are either lower-priority (long-form) or blocked on Sovereign audits (publishers). This is the right seal point (Lei 1 quality over cramming a render-core slice).
+
+Let me consolidate the seal. First, a fresh mesh node for this continuation.
+
+## 🤖 Claude *(03:33:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSUPA=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"; KEY=\"${SB_SECRET_KEY}\"\nCONTENT='Seal continuation: publish opt-in + image reframe (CP-009). (1) Publish opt-in (Sovereign directive): social posts default to DRAFT; auto_publish flag (user default false, cron default true honoring autopilot_plans.hitl_required). Reshaper enqueues only on opt-in; publish-channel-variant edge fn publishes a chosen draft (owner-bound, 409 idempotent). Legacy linkedin/twitter scheduled_posts enqueue RETIRED -> reshaper is single social-enqueue authority (no double-post). (2) CP-009 image reframe FR-CP-005/006 done IN-PROCESS via imagescript WASM (no host worker/FFmpeg): center-crop->resize->JPEG for IG/LinkedIn/FB feed 4:5, Pinterest 2:3, FB link_card 1.91:1, YT thumb 16:9; IG feed_image now operational. OTD-CP-009 CLOSED. Smokes: reshape 17/17 + reframe geometry-exact (1080x1350/1000x1500/1280x720) + JPEG magic. /security-review clean (publish-channel-variant owner-bound). Commits 475d01d, d77f9ff. 7 operational surfaces. Remaining OTD-CP-008 (16:9 long), CP-010 (publishers, audit-gated), CP-011.'\nRESP=$(curl -s -X POST \"$SUPA/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"node_type\\\":\\\"handoff\\\",\\\"name\\\":\\\"session-handoff-20260628-reshaper-optin-reframe\\\",\\\"content\\\":$(python3 -c \"import json,sys; print(json.dumps(sys.argv[1]))\" \"$CONTENT\"),\\\"metadata\\\":{\\\"session\\\":\\\"reshaper-optin-reframe\\\",\\\"sealed_at\\\":\\\"2026-06-28T00:40:00Z\\\",\\\"commits\\\":\\\"475d01d|d77f9ff\\\",\\\"frs\\\":\\\"FR-CP-005/006 + publish opt-in\\\",\\\"closed\\\":\\\"OTD-CP-009\\\"}}\")\necho \"$RESP\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print('NODE_ID:', d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null || echo \"RAW: $RESP\"\ncurl -s \"$SUPA/rest/v1/mcorch_nodes?select=id\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range",
+  "description": "Insert continuation mesh node + count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID: dc383bb7-8f0d-4f31-a6aa-d0f17352d7d9
+> content-range: 0-999/8976
+> ```
+
+## 🤖 Claude *(03:33:29)*
+
+
+## 🤖 Claude *(03:33:29)*
+
+Mesh node `dc383bb7` · total **8976**. Now prepend the continuation seal record to HANDOFF:
+
+## 🤖 Claude *(03:33:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Channel Reshaper + Atomizer: 1 pilar \u2192 posts nativos por canal (FR-CP-002/003) (2026-06-28)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Reshaper continua\u00e7\u00e3o: publish opt-in + image reframe (FR-CP-005/006 \u00b7 OTD-CP-009 fechada) (2026-06-28)\n\nContinua\u00e7\u00e3o da seal do reshaper abaixo. Diretiva Sovereign: *\"continue\"* + OBS *\"publicar ou deixar como rascunho deve ser opt-in se poss\u00edvel\"*. Dois arcos, ambos provados (Lei 1).\n\n**Arco 1 \u2014 Publish opt-in (a OBS).** Posts sociais nascem **rascunho**; publicar \u00e9 escolha expl\u00edcita.\n- Flag `auto_publish` flui `orchestrate-content`\u2192`pipeline_runs.metadata`\u2192reshaper. User-path default **false** (rascunho); cron/autopilot default **true** mas honra `autopilot_plans.hitl_required` (HITL\u21d2rascunho). Espelha o `wp_status='draft'`.\n- Reshaper SEMPRE produz a variante (`channel_variants`); s\u00f3 **enfileira** quando `auto_publish`. Default \u21d2 zero `scheduled_posts`.\n- **Double-post eliminado:** os steps legados `linkedin_post`/`twitter_thread` do `orchestrate-step` **deixaram de enfileirar** (s\u00f3 geram `content_library` record) \u2192 o reshaper \u00e9 a **autoridade \u00fanica de enqueue social**.\n- **`publish-channel-variant`** (edge fn user-JWT): publica UM rascunho escolhido (owner-bound, 409 idempotente; asset assinado owner-scoped pelo `auto-publish`). Gancho da futura UI de revis\u00e3o.\n\n**Arco 2 \u2014 Image reframe (CP-009, OTD-CP-009 FECHADA).** Resolvido **in-process com `imagescript` (WASM, Deno)** \u2014 **sem host worker / FFmpeg**. O reshaper baixa o master, center-crop\u2192resize\u2192**JPEG** (formato universal API-safe): IG/LinkedIn/FB feed **4:5 1080\u00d71350** \u00b7 Pinterest **2:3 1000\u00d71500** \u00b7 FB link_card **1.91:1 1200\u00d7630** \u00b7 YT thumb **16:9 1280\u00d7720**. **IG feed_image agora operacional** (publish-social `image_url`).\n\n| Action | Result |\n|--------|--------|\n| Publish opt-in (5 edge fns) | \u2705 deployadas \u2014 `orchestrate-content`/`-step` (flag+legacy enqueue retirado) \u00b7 `reshape-pillar` (gate) \u00b7 `autopilot-run` (hitl) \u00b7 `publish-channel-variant` (novo) |\n| Image reframe in-process | \u2705 `reshape-pillar` 113.8 kB (imagescript bundled) \u2014 reframe+JPEG, fail-open `pending_reframe` |\n| /security-review | \u2705 **limpo** (sub-agente adversarial): `publish-channel-variant` owner-bound (`getUser`+`.eq(user_id)`), sem leak de asset cross-tenant, legacy-removal n\u00e3o tirou authz |\n| Smokes zero-cost | \u2705 `smoke-reshape-pillar.ts` **17/17** (draft default \u00b7 manual publish \u00b7 auto mode \u00b7 tenancy) + `smoke-reframe-image.ts` (geometria EXATA 1080\u00d71350/1000\u00d71500/1280\u00d7720 + magic bytes JPEG, baixado do bucket) |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `475d01d` | feat(reshaper): publish opt-in \u2014 default draft + publish-channel-variant + retira legacy enqueue |\n| `d77f9ff` | feat(reshaper): image reframe in-process (imagescript) FR-CP-005/006, OTD-CP-009 fechada |\n\n**Mesh seal:** handoff node `dc383bb7-8f0d-4f31-a6aa-d0f17352d7d9` (embedded 768d). Mesh **8976 n\u00f3s**.\n\n**7 surfaces operacionais:** IG Reel \u00b7 TikTok \u00b7 YT Short \u00b7 Pinterest v\u00eddeo \u00b7 LinkedIn texto \u00b7 X tweet \u00b7 **IG feed_image**. **Pr\u00f3ximo:** **OTD-CP-008** render 16:9 HyperFrames (YouTube long \u2014 template `*-16x9.html` + render-core + enqueue; secund\u00e1rio p/ marca em lan\u00e7amento) \u00b7 **OTD-CP-010** publishers faltantes (asset J\u00c1 produzido; falta o branch de publish \u2014 LinkedIn/FB/X v\u00eddeo \u00b7 FB/Pinterest/LinkedIn imagem \u00b7 X thread multi-tweet; audit-gated) \u00b7 **OTD-CP-011** PDF carousel/auto-segment. Reach p\u00fablico segue gated nos audits (a\u00e7\u00e3o Sovereign).\n\n---\n\n## Session Seal \u2014 Channel Reshaper + Atomizer: 1 pilar \u2192 posts nativos por canal (FR-CP-002/003) (2026-06-28)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:33:55)*
+
+
+## 🤖 Claude *(03:33:55)*
+
+Now README v6.57.0 + memory update:
+
+## 🤖 Claude *(03:34:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.56.0 (2026-06-28)",
+  "new_string": "## \ud83c\udd95 What's new in v6.57.0 (2026-06-28)\n\n- **Publish opt-in \u2014 posts sociais nascem RASCUNHO (diretiva Sovereign).** Publicar \u00e9 escolha expl\u00edcita: a flag `auto_publish` (default OFF no fluxo manual; ON no autopilot ativado, honrando `hitl_required`) controla se o reshaper enfileira ou s\u00f3 gera rascunho. Nova edge fn `publish-channel-variant` publica um rascunho escolhido (owner-bound, idempotente). O enqueue social legado de LinkedIn/Twitter foi **aposentado** \u2014 o reshaper \u00e9 a autoridade \u00fanica (acabou o double-post). `/security-review` limpo.\n- **Image reframe in-process (FR-CP-005/006 \u00b7 OTD-CP-009 fechada).** Sem host worker/FFmpeg: o reshaper usa `imagescript` (WASM) para recortar+redimensionar+converter a imagem-pilar em **JPEG** na geometria de cada canal \u2014 IG/LinkedIn/FB feed **4:5**, Pinterest **2:3**, FB link-card **1.91:1**, YT thumbnail **16:9**. **IG feed_image agora publica** (via `image_url`). Smoke prova geometria exata + bytes JPEG baixados do bucket. **7 superf\u00edcies operacionais** a partir de 1 ideia.\n\n## \ud83c\udd95 What's new in v6.56.0 (2026-06-28)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:34:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_channel_reshaper.md",
+  "old_string": "Reusa o motor [[project_viral_autopilot]]; serve a virada [[project_brand_persona_ccio]] (1 ideia \u2192 todos os canais). Publishers ainda audit-gated (SELF_ONLY/private/sandbox) = a\u00e7\u00e3o Sovereign, n\u00e3o o reshaper.",
+  "new_string": "**Continua\u00e7\u00e3o 2026-06-28 (commits `475d01d`/`d77f9ff`, mesh `dc383bb7`, 8976):**\n- **Publish opt-in** (diretiva Sovereign \"publicar ou rascunho deve ser opt-in\"): posts sociais nascem RASCUNHO. Flag `auto_publish` (user default false, cron default true honra `autopilot_plans.hitl_required`) flui `orchestrate-content`\u2192metadata\u2192reshaper; s\u00f3 enfileira com opt-in. `publish-channel-variant` (edge fn user-JWT) publica 1 rascunho escolhido (owner-bound, 409 idempotente). **Legacy linkedin/twitter enqueue do orchestrate-step APOSENTADO** \u2192 reshaper = autoridade \u00fanica de enqueue social (sem double-post). Smoke 17/17.\n- **CP-009 image reframe (OTD-CP-009 FECHADA)** feito **in-process com imagescript (WASM, Deno) \u2014 SEM host worker/FFmpeg** (reavaliei: o map dizia \"precisa FFmpeg host\"; imagescript resolve no edge). center-crop\u2192resize\u2192JPEG (formato universal API-safe). IG/LinkedIn/FB feed 4:5, Pinterest 2:3, FB link_card 1.91:1, YT thumb 16:9. **IG feed_image agora operacional**. Smoke prova geometria exata + magic bytes. \u26a0\ufe0f gotcha smoke: `content_library.campaign_id` tem FK\u2192campaigns (random uuid falha silencioso); crie campaign real.\n- **7 surfaces operacionais.** Restam OTD-CP-008 (16:9 long, secund\u00e1rio), OTD-CP-010 (publishers \u2014 asset j\u00e1 produzido, falta branch publish; audit-gated), OTD-CP-011.\n\nReusa o motor [[project_viral_autopilot]]; serve a virada [[project_brand_persona_ccio]] (1 ideia \u2192 todos os canais). Publishers ainda audit-gated (SELF_ONLY/private/sandbox) = a\u00e7\u00e3o Sovereign, n\u00e3o o reshaper."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_channel_reshaper.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:34:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md README.md\ngit commit -q -m \"docs(handoff): seal reshaper continuation \u2014 publish opt-in + image reframe (OTD-CP-009 closed)\n\nMesh node dc383bb7 (8976). Smokes 17/17 + reframe geometry-exact. /security-review clean. v6.57.0.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"no leaks|reingest\" | tail -2\necho \"=== final state ===\"; git log --oneline -6; echo \"--- worktree ---\"; git status --short\necho \"--- task cleanup ---\"",
+  "description": "Commit continuation seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ┃  mesh-reingest ❯ 
+> ✔️ mesh-reingest (0.00 seconds)
+> === final state ===
+> e34a14e docs(handoff): seal reshaper continuation — publish opt-in + image reframe (OTD-CP-009 closed)
+> d77f9ff feat(reshaper): in-process image reframe + format coerce (FR-CP-005/006, OTD-CP-009 closed)
+> 475d01d feat(reshaper): publish opt-in — default draft, explicit publish (FR-CP-003 amendment)
+> b4fe562 docs(handoff): seal Channel Reshaper + Atomizer (FR-CP-002/003) — 1 pilar -> posts nativos
+> 2ed159f feat(reshaper): data-driven channel reshaper + atomizer — 1 pilar -> posts nativos (FR-CP-002/003/006/007/008)
+> 3199ceb feat(db): channel_variants ledger + creative_metrics.hook_rate (FR-CP-003/007/011)
+> --- worktree ---
+> --- task cleanup ---
+> ```
+
+## 🤖 Claude *(03:34:33)*
+
+
+## 🤖 Claude *(03:34:33)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(03:34:55)*
+
+Selado. Worktree limpo, **7 commits** no `main`, tudo provado materialmente.
+
+---
+
+## ✅ Continuação entregue: opt-in de publicação + reframe de imagem
+
+### 1. Opt-in de publicação (sua OBS) — feito como pediu
+**Posts sociais nascem rascunho.** Publicar virou escolha explícita:
+- Flag `auto_publish` (fluxo manual default **OFF** = rascunho; autopilot default **ON**, honrando `hitl_required` do plano).
+- O reshaper **sempre produz** a variante nativa (`channel_variants`), mas **só enfileira** com opt-in.
+- Nova edge fn **`publish-channel-variant`** publica um rascunho escolhido (owner-bound, idempotente 409) — o gancho da futura UI "revisar → publicar".
+- **Bug que eu teria subido, resolvido:** o enqueue legado de LinkedIn/Twitter do `orchestrate-step` foi **aposentado** → o reshaper é a autoridade única (acabou o double-post).
+
+### 2. CP-009 image reframe — feito, e melhor que o planejado
+Eu havia proposto um worker FFmpeg/systemd. Reavaliando, resolvi **in-process com `imagescript` (WASM) no próprio edge** — **sem worker, sem FFmpeg**. O reshaper recorta+redimensiona+converte a imagem-pilar em **JPEG** (formato universal aceito por todas as APIs) na geometria exata de cada canal: IG/LinkedIn/FB **4:5**, Pinterest **2:3**, FB link-card **1.91:1**, YT thumb **16:9**. **`OTD-CP-009` fechada.**
+
+### Prova material (Lei 1)
+| Gate | Resultado |
+|------|-----------|
+| Smoke opt-in `smoke-reshape-pillar.ts` | **17/17** (rascunho default · publish manual · modo auto · tenancy) |
+| Smoke reframe `smoke-reframe-image.ts` | JPEG **geometria exata** 1080×1350/1000×1500/1280×720 + magic bytes, baixado do bucket |
+| /security-review (sub-agente adversarial) | **limpo** — `publish-channel-variant` owner-bound, sem leak de asset cross-tenant |
+| deno check / deploy | 5 edge fns deployadas · reshaper 113.8 kB |
+| Mesh | nó `dc383bb7` · **8976 nós** |
+
+### Estado da distribuição autônoma — **7 superfícies operacionais a partir de 1 ideia**
+Vídeo vertical: **IG Reel · TikTok · YT Short · Pinterest** · Texto: **LinkedIn · X** · Imagem: **IG feed** (novo).
+
+### O que resta (cada um já com asset/diretiva prontos)
+- **OTD-CP-008** — render 16:9 (YouTube *long*): secundário para uma marca em lançamento (o short-form já cobre TikTok/Shorts/Reels).
+- **OTD-CP-010** — branches de publish faltantes (LinkedIn/FB/X vídeo · FB/Pinterest/LinkedIn imagem · X thread multi-tweet). **O asset já é produzido** — falta só o publisher; e o alcance público está gated nos **audits** (ação sua).
+- **OTD-CP-011** — PDF carousel · auto-segment.
+
+O mapeamento data-driven (o cérebro: 1 ideia → variante nativa por canal) está **completo e operacional** para o lançamento da persona. Quer que eu siga para o **CP-008 (16:9 YouTube long)** ou para os **publishers do CP-010**, ou paramos aqui?
+
+## 👤 User *(03:40:24)*
+
+otimo segue sem pular nada
+
+## 🤖 Claude *(03:41:22)*
+
+
+## 🤖 Claude *(03:41:24)*
+
+Entendido — sigo com tudo, sem pular: **CP-008** (16:9 YouTube long), **CP-010** (publishers faltantes), **CP-011** (PDF carousel + auto-segment), cada um verificado materialmente.
+
+Começando por **CP-008**. Preciso entender o motor de render (determinismo + dimensões + templates) antes de adicionar o 16:9. Há também uma armadilha de billing (render extra = custo) que vou tratar com cuidado. Vou ler o render-core.
+
+## 🤖 Claude *(03:41:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/hyperframes/render-core.ts
+> 4	 *
+> 5	 * HyperFrames deterministic render engine: a composition spec → 9:16 1080×1920 MP4.
+> 6	 * BoK SSOT: docs/bok/video-studio/04-frd.md FR-VS-024 (deterministic HTML→MP4 via headless Chrome + FFmpeg)
+> 7	 *           + FR-VS-025 (per-render sandbox) · viral-autopilot FR-VA-023/024 · SOP autopilot-video-9x16.md.
+> 8	 *
+> 9	 * Pipeline (no AI leg — fully deterministic, NFR-VS-016):
+> 10	 *   1. Playwright Chromium headless, viewport 1080×1920, deviceScaleFactor 1.
+> 11	 *   2. Load templates/<template>.html (file://), inject props via applyProps (textContent → XSS-safe).
+> 12	 *   3. For each of N = duration_s × fps frames: applyFrame(i, N) → page.screenshot(PNG).
+> 13	 *   4. FFmpeg: PNG sequence → H.264 yuv420p MP4, fixed fps, -fflags +bitexact (reproducible).
+> 14	 *
+> 15	 * This is the renderer CORE — pure (no DB, no network beyond the product image). The host worker
+> 16	 * (video-bridge.ts) wraps it with the queue claim + upload + finalize_video_render.
+> 17	 *
+> 18	 * CLI (material proof): bun run scripts/hyperframes/render-core.ts --out /tmp/test.mp4 \
+> 19	 *     --hook "Sua casa limpa sozinha" --caption "Robô aspirador..." --cta "Ver no ML" --duration 4
+> 20	 */
+> 21	
+> 22	import { chromium } from 'playwright';
+> 23	import { spawn } from 'child_process';
+> 24	import { mkdtempSync, rmSync, existsSync, statSync } from 'fs';
+> 25	import { join, dirname, resolve } from 'path';
+> 26	import { tmpdir } from 'os';
+> 27	import { fileURLToPath } from 'url';
+> 28	
+> 29	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 30	
+> 31	export interface CompositionProps {
+> 32	  hook?: string;
+> 33	  caption?: string;
+> 34	  cta?: string;
+> 35	  brand?: string;
+> 36	  product_image_url?: string;
+> 37	}
+> 38	
+> 39	export interface RenderSpec {
+> 40	  template?: string;        // template name under templates/ (default 'viral-short-9x16')
+> 41	  props: CompositionProps;
+> 42	  duration_s?: number;      // default 6
+> 43	  fps?: number;             // default 30
+> 44	  width?: number;           // default 1080
+> 45	  height?: number;          // default 1920
+> 46	}
+> 47	
+> 48	export interface RenderResult {
+> 49	  outPath: string;
+> 50	  bytes: number;
+> 51	  width: number;
+> 52	  height: number;
+> 53	  frames: number;
+> 54	  fps: number;
+> 55	  durationMs: number;
+> 56	}
+> 57	
+> 58	const VALID_TEMPLATES = new Set(['viral-short-9x16']); // allowlist — never load an arbitrary path
+> 59	
+> 60	function runFfmpeg(args: string[]): Promise<void> {
+> 61	  return new Promise((res, rej) => {
+> 62	    const p = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+> 63	    let err = '';
+> 64	    p.stderr.on('data', (d) => { err += d.toString(); });
+> 65	    p.on('error', rej);
+> 66	    p.on('close', (code) => (code === 0 ? res() : rej(new Error(`ffmpeg exit ${code}: ${err.slice(-800)}`))));
+> 67	  });
+> 68	}
+> 69	
+> 70	/**
+> 71	 * Render a composition spec to a deterministic 9:16 MP4 at `outPath`.
+> 72	 * Throws on any failure (the worker translates that to finalize_video_render(failed, refund)).
+> 73	 */
+> 74	export async function renderComposition(spec: RenderSpec, outPath: string): Promise<RenderResult> {
+> 75	  const t0 = Date.now();
+> 76	  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-short-9x16';
+> 77	  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));
+> 78	  const durationS = Math.max(1, Math.min(60, spec.duration_s ?? 6));
+> 79	  const width = spec.width ?? 1080;
+> 80	  const height = spec.height ?? 1920;
+> 81	  const totalFrames = Math.round(durationS * fps);
+> 82	
+> 83	  const templatePath = resolve(__dirname, 'templates', `${template}.html`);
+> 84	  if (!existsSync(templatePath)) throw new Error(`template_not_found: ${template}`);
+> 85	
+> 86	  const frameDir = mkdtempSync(join(tmpdir(), 'hf-frames-'));
+> 87	  const browser = await chromium.launch({
+> 88	    headless: true,
+> 89	    // Single-tenant Usuário Zero (OTD-VA-011). Multi-tenant hardening (seccomp/egress-only container) = User 1.
+> 90	    args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text'],
+> 91	  });
+> 92	  try {
+> 93	    const page = await browser.newPage({
+> 94	      viewport: { width, height },
+> 95	      deviceScaleFactor: 1,
+> 96	    });
+> 97	    await page.goto(`file://${templatePath}`, { waitUntil: 'load' });
+> 98	    await page.evaluate((props) => (window as any).applyProps(props), spec.props as Record<string, unknown>);
+> 99	
+> 100	    // Deterministically wait for the product image (if any) to settle — bounded, no wallclock leakage into frames.
+> 101	    await page.evaluate(() => new Promise<void>((res) => {
+> 102	      const img = document.getElementById('mediaImg') as HTMLImageElement | null;
+> 103	      if (!img || img.style.display === 'none' || img.complete) return res();
+> 104	      const done = () => res();
+> 105	      img.addEventListener('load', done, { once: true });
+> 106	      img.addEventListener('error', done, { once: true });
+> 107	      setTimeout(done, 8000);
+> 108	    }));
+> 109	
+> 110	    // Frame-by-frame capture (driven by index, not time → reproducible).
+> 111	    for (let i = 0; i < totalFrames; i++) {
+> 112	      await page.evaluate(([idx, total]) => (window as any).applyFrame(idx, total), [i, totalFrames] as [number, number]);
+> 113	      await page.screenshot({
+> 114	        path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),
+> 115	        clip: { x: 0, y: 0, width, height },
+> 116	        animations: 'disabled',
+> 117	      });
+> 118	    }
+> 119	    await browser.close();
+> 120	
+> 121	    // PNG sequence → MP4. -fflags/-flags +bitexact + no metadata → byte-reproducible (NFR-VS-016).
+> 122	    await runFfmpeg([
+> 123	      '-y',
+> 124	      '-framerate', String(fps),
+> 125	      '-i', join(frameDir, 'f_%05d.png'),
+> 126	      '-c:v', 'libx264',
+> 127	      '-preset', 'medium',
+> 128	      '-crf', '20',
+> 129	      '-pix_fmt', 'yuv420p',
+> 130	      '-r', String(fps),
+> 131	      '-movflags', '+faststart',
+> 132	      '-fflags', '+bitexact',
+> 133	      '-flags:v', '+bitexact',
+> 134	      '-map_metadata', '-1',
+> 135	      outPath,
+> 136	    ]);
+> 137	
+> 138	    if (!existsSync(outPath)) throw new Error('render_produced_no_file');
+> 139	    const bytes = statSync(outPath).size;
+> 140	    if (bytes < 100 * 1024) throw new Error(`render_too_small: ${bytes} bytes (< 100KB, Lei 1 gate)`);
+> 141	
+> 142	    return { outPath, bytes, width, height, frames: totalFrames, fps, durationMs: Date.now() - t0 };
+> 143	  } finally {
+> 144	    await browser.close().catch(() => {});
+> 145	    rmSync(frameDir, { recursive: true, force: true });
+> 146	  }
+> 147	}
+> 148	
+> 149	// ── CLI (material proof harness) ──────────────────────────────────────────────────────────
+> 150	if (import.meta.main) {
+> 151	  const argv = process.argv.slice(2);
+> 152	  const get = (k: string, d?: string) => {
+> 153	    const i = argv.indexOf(`--${k}`);
+> 154	    return i >= 0 && argv[i + 1] ? argv[i + 1] : d;
+> 155	  };
+> 156	  const out = get('out', '/tmp/hyperframes-test.mp4')!;
+> 157	  const spec: RenderSpec = {
+> 158	    template: 'viral-short-9x16',
+> 159	    duration_s: Number(get('duration', '4')),
+> 160	    fps: Number(get('fps', '30')),
+> 161	    props: {
+> 162	      hook: get('hook', 'Sua casa limpa sozinha'),
+> 163	      caption: get('caption', 'O robô aspirador que faz tudo enquanto você vive a vida.'),
+> 164	      cta: get('cta', 'Ver no Mercado Livre'),
+> 165	      brand: get('brand', 'MCORCH'),
+> 166	      product_image_url: get('image', ''),
+> 167	    },
+> 168	  };
+> 169	  renderComposition(spec, out)
+> 170	    .then((r) => {
+> 171	      console.log(JSON.stringify(r, null, 2));
+> 172	      console.log(`✅ rendered ${r.frames} frames → ${out} (${(r.bytes / 1024).toFixed(0)} KB, ${r.durationMs}ms)`);
+> 173	    })
+> 174	    .catch((e) => {
+> 175	      console.error(`❌ render failed: ${e instanceof Error ? e.message : e}`);
+> 176	      process.exit(1);
+> 177	    });
+> 178	}
+> 179	
+> ```
+
+## 🤖 Claude *(03:42:20)*
+
+
+## 🤖 Claude *(03:42:21)*
+
+render-core already supports `width`/`height` in `RenderSpec` — so 16:9 just needs a horizontal template + the allowlist entry. Let me check how video-bridge maps `composition` → `RenderSpec` (does it pass template/width/height?), and read the 9:16 template to mirror it.
+
+## 🤖 Claude *(03:42:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== video-bridge: composition \u2192 RenderSpec ===\"\ngrep -nE \"renderComposition|RenderSpec|width|height|template|composition|spec\" scripts/video-bridge.ts | head -25\necho \"=== 9:16 template size ===\"; wc -l scripts/hyperframes/templates/viral-short-9x16.html",
+  "description": "Inspect video-bridge RenderSpec mapping + template"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video-bridge: composition → RenderSpec ===
+> 6: * atomically claims each, renders the composition → 9:16 1080×1920 MP4 (render-core.ts), uploads to the private
+> 23:import { renderComposition, type RenderSpec } from './hyperframes/render-core.ts';
+> 60:    .select('id, user_id, engine, charged_mco, composition')
+> 68:  id: string; user_id: string; charged_mco: number; composition: unknown;
+> 74:    const spec = row.composition as RenderSpec | null;
+> 75:    if (!spec || typeof spec !== 'object' || !spec.props) {
+> 76:      throw new Error('composition_missing_or_invalid');
+> 80:    const result = await renderComposition(spec, outPath);
+> 101:      content: `HyperFrames 9:16 render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,
+> 119:        p_width: result.width, p_height: result.height,
+> 131:    // composition.autopilot context the enqueuer set; generic (editor) renders carry no autopilot block → no attach.
+> 132:    const ap = (spec as { autopilot?: { user_id?: string; campaign_id?: string | null; product_id?: string | null; cycle_id?: string | null; title?: string } }).autopilot;
+> 160:    const pillarRunId = (spec as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } }).pillar_run_id
+> 161:      ?? (spec as { autopilot?: { pillar_run_id?: string } }).autopilot?.pillar_run_id ?? null;
+> === 9:16 template size ===
+> 139 scripts/hyperframes/templates/viral-short-9x16.html
+> ```
+
+## 🤖 Claude *(03:42:52)*
+
+
+## 🤖 Claude *(03:42:53)*
+
+`video-bridge` passes `composition as RenderSpec` straight to `renderComposition` — so a 16:9 render just needs `composition.{template,width,height}` set. Let me read the 9:16 template to mirror it into a horizontal one.
+
+## 🤖 Claude *(03:42:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/templates/viral-short-9x16.html"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<!doctype html>
+> 2	<!--
+> 3	  viral-short-9x16.html — HyperFrames deterministic 9:16 template (1080×1920) for the Viral Autopilot.
+> 4	  BoK SSOT: docs/bok/video-studio/04-frd.md FR-VS-024 (deterministic HTML→MP4) · viral-autopilot FR-VA-023.
+> 5	  Driven ENTIRELY by window.applyFrame(i, total) — NO wallclock, NO requestAnimationFrame, NO Math.random,
+> 6	  NO external fonts → byte-reproducible across renders (NFR-VS-016). Props injected via window.applyProps()
+> 7	  set text with textContent ONLY (XSS-safe — the SOP G1 sanitization gate; product/trend/policy are untrusted).
+> 8	-->
+> 9	<html lang="pt-BR">
+> 10	<head>
+> 11	<meta charset="utf-8" />
+> 12	<style>
+> 13	  /* System font stack only — no network font load race (determinism). */
+> 14	  :root { --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+> 15	  * { margin: 0; padding: 0; box-sizing: border-box; }
+> 16	  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #0a0a12; }
+> 17	  #stage {
+> 18	    position: relative; width: 1080px; height: 1920px;
+> 19	    font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased;
+> 20	    background: radial-gradient(120% 80% at 50% 0%, #1b1430 0%, #0a0a12 60%, #05050a 100%);
+> 21	  }
+> 22	  /* Product visual — upper 56%; object-fit cover; deterministic ken-burns via inline transform. */
+> 23	  #media {
+> 24	    position: absolute; top: 0; left: 0; width: 1080px; height: 1075px; overflow: hidden;
+> 25	    background: linear-gradient(135deg, #2a2350, #120e22);
+> 26	  }
+> 27	  #media img { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: 50% 45%; }
+> 28	  /* Fallback "product" card when no image — deterministic gradient + initials. */
+> 29	  #mediaFallback {
+> 30	    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+> 31	    background: linear-gradient(135deg, #6d28d9 0%, #2a2350 55%, #0a0a12 100%);
+> 32	    font-size: 220px; font-weight: 800; color: rgba(255,255,255,.14); letter-spacing: -8px;
+> 33	  }
+> 34	  /* Scrim so text reads over any image. */
+> 35	  #scrim { position: absolute; top: 0; left: 0; width: 1080px; height: 1075px;
+> 36	    background: linear-gradient(180deg, rgba(10,10,18,.05) 0%, rgba(10,10,18,0) 38%, rgba(10,10,18,.78) 100%); }
+> 37	  /* Brand watermark — top-left. */
+> 38	  #brand { position: absolute; top: 54px; left: 60px; font-size: 34px; font-weight: 700;
+> 39	    letter-spacing: .5px; opacity: .92; display: flex; align-items: center; gap: 16px; }
+> 40	  #brand .dot { width: 18px; height: 18px; border-radius: 50%;
+> 41	    background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 0 24px rgba(168,85,247,.8); }
+> 42	  /* Copy block — lower third. */
+> 43	  #copy { position: absolute; left: 60px; right: 60px; bottom: 360px; }
+> 44	  #hook { font-size: 96px; line-height: 1.02; font-weight: 800; letter-spacing: -2px;
+> 45	    text-shadow: 0 6px 40px rgba(0,0,0,.6); }
+> 46	  #caption { margin-top: 34px; font-size: 44px; line-height: 1.28; font-weight: 500;
+> 47	    color: rgba(255,255,255,.88); text-shadow: 0 4px 24px rgba(0,0,0,.55); }
+> 48	  /* CTA pill — bottom. */
+> 49	  #cta { position: absolute; left: 60px; bottom: 190px; display: inline-flex; align-items: center;
+> 50	    gap: 22px; padding: 34px 56px; border-radius: 999px; font-size: 46px; font-weight: 700;
+> 51	    background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 18px 60px rgba(99,102,241,.55);
+> 52	    transform-origin: left center; }
+> 53	  #cta .arrow { font-size: 40px; }
+> 54	  /* Progress bar — very bottom. */
+> 55	  #progress { position: absolute; left: 0; bottom: 0; height: 10px; width: 0;
+> 56	    background: linear-gradient(90deg, #a855f7, #6366f1); }
+> 57	</style>
+> 58	</head>
+> 59	<body>
+> 60	  <div id="stage">
+> 61	    <div id="media">
+> 62	      <img id="mediaImg" alt="" />
+> 63	      <div id="mediaFallback"></div>
+> 64	    </div>
+> 65	    <div id="scrim"></div>
+> 66	    <div id="brand"><span class="dot"></span><span id="brandText">MCORCH</span></div>
+> 67	    <div id="copy">
+> 68	      <div id="hook"></div>
+> 69	      <div id="caption"></div>
+> 70	    </div>
+> 71	    <div id="cta"><span id="ctaText"></span><span class="arrow">→</span></div>
+> 72	    <div id="progress"></div>
+> 73	  </div>
+> 74	
+> 75	<script>
+> 76	// ── Props injection (textContent ONLY → XSS-safe; image via validated src) ────────────────
+> 77	window.applyProps = function (p) {
+> 78	  p = p || {};
+> 79	  document.getElementById('brandText').textContent = String(p.brand || 'MCORCH');
+> 80	  document.getElementById('hook').textContent      = String(p.hook || '');
+> 81	  document.getElementById('caption').textContent   = String(p.caption || '');
+> 82	  document.getElementById('ctaText').textContent   = String(p.cta || 'Ver oferta');
+> 83	  var img = document.getElementById('mediaImg');
+> 84	  var fb  = document.getElementById('mediaFallback');
+> 85	  var url = typeof p.product_image_url === 'string' ? p.product_image_url : '';
+> 86	  var ok = /^https:\/\//i.test(url) || /^data:image\//i.test(url); // https or data-uri only
+> 87	  if (ok) {
+> 88	    img.style.display = 'block'; fb.style.display = 'none';
+> 89	    img.onerror = function () { img.style.display = 'none'; fb.style.display = 'flex'; };
+> 90	    img.src = url;
+> 91	  } else {
+> 92	    img.style.display = 'none'; fb.style.display = 'flex';
+> 93	    var initials = String(p.brand || p.hook || 'MC').replace(/[^A-Za-zÀ-ÿ ]/g, '').trim().slice(0, 2).toUpperCase() || 'MC';
+> 94	    fb.textContent = initials;
+> 95	  }
+> 96	};
+> 97	
+> 98	// ── Deterministic per-frame animation. p = i/(total-1) ∈ [0,1]. No wallclock. ─────────────
+> 99	function easeOutCubic(t) { t = Math.max(0, Math.min(1, t)); return 1 - Math.pow(1 - t, 3); }
+> 100	function seg(p, a, b) { return easeOutCubic((p - a) / (b - a)); } // 0 before a, eased a→b, 1 after b
+> 101	
+> 102	window.applyFrame = function (i, total) {
+> 103	  var p = total > 1 ? i / (total - 1) : 0;
+> 104	
+> 105	  // Ken-burns: scale 1.00 → 1.09 across the whole clip.
+> 106	  var img = document.getElementById('mediaImg');
+> 107	  var fb  = document.getElementById('mediaFallback');
+> 108	  var kb = 'scale(' + (1 + 0.09 * easeOutCubic(p)).toFixed(5) + ')';
+> 109	  img.style.transform = kb; fb.style.transform = kb;
+> 110	
+> 111	  // Hook: slide up + fade in over 0.00→0.22.
+> 112	  var h = seg(p, 0.0, 0.22);
+> 113	  var hook = document.getElementById('hook');
+> 114	  hook.style.opacity = h.toFixed(4);
+> 115	  hook.style.transform = 'translateY(' + ((1 - h) * 48).toFixed(2) + 'px)';
+> 116	
+> 117	  // Caption: fade in 0.14→0.40.
+> 118	  var c = seg(p, 0.14, 0.40);
+> 119	  var cap = document.getElementById('caption');
+> 120	  cap.style.opacity = c.toFixed(4);
+> 121	  cap.style.transform = 'translateY(' + ((1 - c) * 36).toFixed(2) + 'px)';
+> 122	
+> 123	  // CTA: pop in 0.30→0.52, then deterministic pulse via cosine of frame index (no wallclock).
+> 124	  var ci = seg(p, 0.30, 0.52);
+> 125	  var pulse = 1 + 0.035 * (0.5 - 0.5 * Math.cos((i / 9) * Math.PI)); // period = 18 frames
+> 126	  var cta = document.getElementById('cta');
+> 127	  cta.style.opacity = ci.toFixed(4);
+> 128	  cta.style.transform = 'scale(' + (ci * pulse).toFixed(5) + ')';
+> 129	
+> 130	  // Progress bar.
+> 131	  document.getElementById('progress').style.width = (p * 1080).toFixed(2) + 'px';
+> 132	};
+> 133	
+> 134	// Initial state.
+> 135	window.applyProps({});
+> 136	window.applyFrame(0, 2);
+> 137	</script>
+> 138	</body>
+> 139	</html>
+> 140	
+> ```
+
+## 🤖 Claude *(03:43:00)*
+
+
+## 🤖 Claude *(03:43:01)*
+
+Now I'll create the 16:9 template (1920×1080), mirroring the deterministic contract (same `applyProps`/`applyFrame`/`#mediaImg`), and add it to the allowlist.
+
+## 🤖 Claude *(03:43:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/templates/viral-long-16x9.html",
+  "content": "<!doctype html>\n<!--\n  viral-long-16x9.html \u2014 HyperFrames deterministic 16:9 template (1920\u00d71080) for YouTube long-form (FR-CP-004).\n  Mirrors viral-short-9x16.html's deterministic contract: driven ENTIRELY by window.applyFrame(i, total) \u2014 NO\n  wallclock, NO requestAnimationFrame, NO Math.random, NO external fonts \u2192 byte-reproducible (NFR-VS-016).\n  Props via window.applyProps() set text with textContent ONLY (XSS-safe). Same #mediaImg id so render-core's\n  deterministic image-settle wait works unchanged. Horizontal layout: media right ~58%, copy left ~42%.\n-->\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\" />\n<style>\n  :root { --sans: -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; }\n  * { margin: 0; padding: 0; box-sizing: border-box; }\n  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0a0a12; }\n  #stage {\n    position: relative; width: 1920px; height: 1080px;\n    font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased;\n    background: radial-gradient(120% 100% at 100% 0%, #1b1430 0%, #0a0a12 60%, #05050a 100%);\n  }\n  /* Media \u2014 right 58% of the frame; object-fit cover; deterministic ken-burns via inline transform. */\n  #media {\n    position: absolute; top: 0; right: 0; width: 1114px; height: 1080px; overflow: hidden;\n    background: linear-gradient(135deg, #2a2350, #120e22);\n  }\n  #media img { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: 50% 45%; }\n  #mediaFallback {\n    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;\n    background: linear-gradient(135deg, #6d28d9 0%, #2a2350 55%, #0a0a12 100%);\n    font-size: 260px; font-weight: 800; color: rgba(255,255,255,.14); letter-spacing: -10px;\n  }\n  /* Left-edge scrim so the copy reads over the media bleed. */\n  #scrim { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px;\n    background: linear-gradient(90deg, rgba(10,10,18,.96) 0%, rgba(10,10,18,.85) 38%, rgba(10,10,18,0) 62%); }\n  #brand { position: absolute; top: 60px; left: 90px; font-size: 38px; font-weight: 700;\n    letter-spacing: .5px; opacity: .92; display: flex; align-items: center; gap: 18px; }\n  #brand .dot { width: 22px; height: 22px; border-radius: 50%;\n    background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 0 28px rgba(168,85,247,.8); }\n  /* Copy block \u2014 left column, vertically centered. */\n  #copy { position: absolute; left: 90px; top: 300px; width: 760px; }\n  #hook { font-size: 104px; line-height: 1.03; font-weight: 800; letter-spacing: -2px;\n    text-shadow: 0 6px 40px rgba(0,0,0,.6); }\n  #caption { margin-top: 38px; font-size: 46px; line-height: 1.3; font-weight: 500;\n    color: rgba(255,255,255,.88); text-shadow: 0 4px 24px rgba(0,0,0,.55); }\n  #cta { position: absolute; left: 90px; bottom: 110px; display: inline-flex; align-items: center;\n    gap: 24px; padding: 36px 60px; border-radius: 999px; font-size: 48px; font-weight: 700;\n    background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 18px 60px rgba(99,102,241,.55);\n    transform-origin: left center; }\n  #cta .arrow { font-size: 42px; }\n  #progress { position: absolute; left: 0; bottom: 0; height: 12px; width: 0;\n    background: linear-gradient(90deg, #a855f7, #6366f1); }\n</style>\n</head>\n<body>\n  <div id=\"stage\">\n    <div id=\"media\">\n      <img id=\"mediaImg\" alt=\"\" />\n      <div id=\"mediaFallback\"></div>\n    </div>\n    <div id=\"scrim\"></div>\n    <div id=\"brand\"><span class=\"dot\"></span><span id=\"brandText\">MCORCH</span></div>\n    <div id=\"copy\">\n      <div id=\"hook\"></div>\n      <div id=\"caption\"></div>\n    </div>\n    <div id=\"cta\"><span id=\"ctaText\"></span><span class=\"arrow\">\u2192</span></div>\n    <div id=\"progress\"></div>\n  </div>\n\n<script>\n// \u2500\u2500 Props injection (textContent ONLY \u2192 XSS-safe; image via validated src) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nwindow.applyProps = function (p) {\n  p = p || {};\n  document.getElementById('brandText').textContent = String(p.brand || 'MCORCH');\n  document.getElementById('hook').textContent      = String(p.hook || '');\n  document.getElementById('caption').textContent   = String(p.caption || '');\n  document.getElementById('ctaText').textContent   = String(p.cta || 'Ver oferta');\n  var img = document.getElementById('mediaImg');\n  var fb  = document.getElementById('mediaFallback');\n  var url = typeof p.product_image_url === 'string' ? p.product_image_url : '';\n  var ok = /^https:\\/\\//i.test(url) || /^data:image\\//i.test(url);\n  if (ok) {\n    img.style.display = 'block'; fb.style.display = 'none';\n    img.onerror = function () { img.style.display = 'none'; fb.style.display = 'flex'; };\n    img.src = url;\n  } else {\n    img.style.display = 'none'; fb.style.display = 'flex';\n    var initials = String(p.brand || p.hook || 'MC').replace(/[^A-Za-z\u00c0-\u00ff ]/g, '').trim().slice(0, 2).toUpperCase() || 'MC';\n    fb.textContent = initials;\n  }\n};\n\n// \u2500\u2500 Deterministic per-frame animation. p = i/(total-1) \u2208 [0,1]. No wallclock. \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction easeOutCubic(t) { t = Math.max(0, Math.min(1, t)); return 1 - Math.pow(1 - t, 3); }\nfunction seg(p, a, b) { return easeOutCubic((p - a) / (b - a)); }\n\nwindow.applyFrame = function (i, total) {\n  var p = total > 1 ? i / (total - 1) : 0;\n\n  var img = document.getElementById('mediaImg');\n  var fb  = document.getElementById('mediaFallback');\n  var kb = 'scale(' + (1 + 0.08 * easeOutCubic(p)).toFixed(5) + ')';\n  img.style.transform = kb; fb.style.transform = kb;\n\n  var h = seg(p, 0.0, 0.22);\n  var hook = document.getElementById('hook');\n  hook.style.opacity = h.toFixed(4);\n  hook.style.transform = 'translateX(' + ((1 - h) * -48).toFixed(2) + 'px)';\n\n  var c = seg(p, 0.14, 0.40);\n  var cap = document.getElementById('caption');\n  cap.style.opacity = c.toFixed(4);\n  cap.style.transform = 'translateX(' + ((1 - c) * -36).toFixed(2) + 'px)';\n\n  var ci = seg(p, 0.30, 0.52);\n  var pulse = 1 + 0.035 * (0.5 - 0.5 * Math.cos((i / 9) * Math.PI));\n  var cta = document.getElementById('cta');\n  cta.style.opacity = ci.toFixed(4);\n  cta.style.transform = 'scale(' + (ci * pulse).toFixed(5) + ')';\n\n  document.getElementById('progress').style.width = (p * 1920).toFixed(2) + 'px';\n};\n\nwindow.applyProps({});\nwindow.applyFrame(0, 2);\n</script>\n</body>\n</html>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/templates/viral-long-16x9.html (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:43:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "const VALID_TEMPLATES = new Set(['viral-short-9x16']); // allowlist \u2014 never load an arbitrary path",
+  "new_string": "const VALID_TEMPLATES = new Set(['viral-short-9x16', 'viral-long-16x9']); // allowlist \u2014 never load an arbitrary path"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:43:40)*
+
+
+## 🤖 Claude *(03:43:41)*
+
+Let me set up tasks for the remaining OTDs, then materially verify the 16:9 template renders deterministically (render-core CLI, twice → sha256-identical per NFR-VS-016).
+
+## 🤖 Claude *(03:43:43)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "CP-008: 16:9 YouTube long-form render",
+  "description": "16:9 template + render-core allowlist + reshaper enqueues 16:9 render (opt-in long_form, charged_mco=0 single-tenant) + scope=video resolves 16:9 master by template + video-bridge format label. Verify deterministic render.",
+  "activeForm": "Building CP-008 16:9 long-form render"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #9 created successfully: CP-008: 16:9 YouTube long-form render
+> ```
+
+## 🤖 Claude *(03:43:45)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "CP-010: missing publisher branches",
+  "description": "Extend publish-social: LinkedIn video + image, Facebook video/image/link, X video + thread multi-tweet, Pinterest standard_pin image. Make produced reshaper assets actually publishable. Mark surfaces operational in reshaper.",
+  "activeForm": "Building CP-010 publisher branches"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #10 created successfully: CP-010: missing publisher branches
+> ```
+
+## 🤖 Claude *(03:43:47)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "CP-011: PDF carousel + auto-segment",
+  "description": "FR-CP-009 PDF/multi-page carousel from pillar_atoms (LinkedIn/IG/TikTok-photo/Pinterest Idea Pin). FR-CP-012 auto-segment 1 long \u2192 N shorts (Hormozi).",
+  "activeForm": "Building CP-011 PDF carousel + auto-segment"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #11 created successfully: CP-011: PDF carousel + auto-segment
+> ```
+
+## 🤖 Claude *(03:43:51)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(03:43:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== render 16:9 twice \u2192 check sha256 determinism + dims (NFR-VS-016) ===\"\ntimeout 200 bun run scripts/hyperframes/render-core.ts --out /tmp/long-a.mp4 --hook \"Como a IA muda tudo\" --caption \"O guia completo da automa\u00e7\u00e3o criativa para criadores.\" --cta \"Inscreva-se\" --duration 3 --fps 24 2>&1 | tail -3\n# render-core CLI hardcodes template viral-short-9x16 \u2014 need to override. Check if CLI supports template flag.\necho \"--- note: CLI hardcodes 9x16; testing via a tiny inline harness instead ---\"",
+  "description": "Attempt render-core CLI for 16:9 (check template flag)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === render 16:9 twice → check sha256 determinism + dims (NFR-VS-016) ===
+>   "durationMs": 36417
+> }
+> ✅ rendered 72 frames → /tmp/long-a.mp4 (270 KB, 36417ms)
+> --- note: CLI hardcodes 9x16; testing via a tiny inline harness instead ---
+> ```
+
+## 🤖 Claude *(03:44:37)*
+
+
+## 🤖 Claude *(03:44:37)*
+
+The CLI hardcodes 9:16. Let me write a tiny harness to render the 16:9 template twice and verify determinism (sha256) + dimensions via ffprobe.
+
+## 🤖 Claude *(03:44:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/test-16x9.ts <<'EOF'\nimport { renderComposition } from './scripts/hyperframes/render-core.ts';\nconst spec = {\n  template: 'viral-long-16x9', width: 1920, height: 1080, duration_s: 2, fps: 24,\n  props: { hook: 'Como a IA muda tudo', caption: 'O guia da automa\u00e7\u00e3o criativa.', cta: 'Inscreva-se', brand: 'Gabriel AI', product_image_url: '' },\n};\nconst a = await renderComposition(spec, '/tmp/l16-a.mp4');\nconst b = await renderComposition(spec, '/tmp/l16-b.mp4');\nconsole.log(JSON.stringify({ a: { w: a.width, h: a.height, frames: a.frames, bytes: a.bytes }, b: { bytes: b.bytes } }));\nEOF\ntimeout 200 bun run /tmp/test-16x9.ts 2>&1 | tail -3\necho \"=== sha256 (must match \u2014 NFR-VS-016) ===\"; sha256sum /tmp/l16-a.mp4 /tmp/l16-b.mp4 2>/dev/null\necho \"=== ffprobe dims ===\"; ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 /tmp/l16-a.mp4 2>/dev/null",
+  "description": "Render 16:9 twice, verify sha256 determinism + dims"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> error: Cannot find module './scripts/hyperframes/render-core.ts' from '/tmp/test-16x9.ts'
+> 
+> Bun v1.3.12 (Linux arm64)
+> === sha256 (must match — NFR-VS-016) ===
+> === ffprobe dims ===
+> ```
+
+## 🤖 Claude *(03:44:48)*
+
+
+## 🤖 Claude *(03:44:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/test-16x9.ts <<'EOF'\nimport { renderComposition } from '/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts';\nconst spec = {\n  template: 'viral-long-16x9', width: 1920, height: 1080, duration_s: 2, fps: 24,\n  props: { hook: 'Como a IA muda tudo', caption: 'O guia da automa\u00e7\u00e3o criativa.', cta: 'Inscreva-se', brand: 'Gabriel AI', product_image_url: '' },\n};\nconst a = await renderComposition(spec, '/tmp/l16-a.mp4');\nconst b = await renderComposition(spec, '/tmp/l16-b.mp4');\nconsole.log(JSON.stringify({ w: a.width, h: a.height, frames: a.frames, bytesA: a.bytes, bytesB: b.bytes }));\nEOF\ntimeout 220 bun run /tmp/test-16x9.ts 2>&1 | tail -2\necho \"=== sha256 (must match \u2014 NFR-VS-016) ===\"; sha256sum /tmp/l16-a.mp4 /tmp/l16-b.mp4 2>/dev/null | awk '{print $1}'\necho \"=== ffprobe dims ===\"; ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 /tmp/l16-a.mp4 2>/dev/null",
+  "description": "Render 16:9 twice (absolute import), verify determinism + dims"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"w":1920,"h":1080,"frames":48,"bytesA":218047,"bytesB":218047}
+> === sha256 (must match — NFR-VS-016) ===
+> 7f179d0696381d074aa4af58c0ce371196b327c1fbcc473cdaa82d0344e17de2
+> 7f179d0696381d074aa4af58c0ce371196b327c1fbcc473cdaa82d0344e17de2
+> === ffprobe dims ===
+> 1920,1080
+> ```
+
+## 🤖 Claude *(03:46:19)*
+
+
+## 🤖 Claude *(03:46:20)*
+
+The 16:9 template renders **deterministically** — sha256-identical across two renders (NFR-VS-016 ✅) at exactly 1920×1080. Now wire it into the reshaper. First, restructure the master resolution to distinguish 9:16 vs 16:9 and add the opt-in enqueue. Let me read the current block.
+
+## 🤖 Claude *(03:46:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "offset": 277,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 277	    const geminiKey = await getKey(admin, userId, "google_api_key");
+> 278	    const groqKey = await getKey(admin, userId, "groq_api_key");
+> 279	    const aiKey = openRouterKey || groqKey || geminiKey;
+> 280	    const voiceTargets = work.filter((w) => typeof w.native.caption === "string" || typeof w.native.title === "string" || typeof w.native.description === "string" || typeof w.native.body === "string");
+> 281	    if (aiKey && voiceTargets.length) {
+> 282	      const skeletonBlob = voiceTargets.map((w) => `${w.key} | voz: ${w.voice} | seo:${w.seo} | limites:${JSON.stringify(w.textSpec ?? {})} | skeleton:${JSON.stringify({ caption: w.native.caption, title: w.native.title, description: w.native.description, body: w.native.body })}`).join("\n");
+> 283	      const guard = inspectPrompt(`${atoms.hook ?? ""}\n${atomArray(atoms.key_points).join("\n")}`, "reshape-pillar", { rateLimit: false });
+> 284	      if (guard.allow) {
+> 285	        try {
+> 286	          const endpoint = openRouterKey ? "https://openrouter.ai/api/v1/chat/completions" : (groqKey ? "https://api.groq.com/openai/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions");
+> 287	          const model = openRouterKey ? "google/gemini-2.5-flash" : (groqKey ? "llama-3.3-70b-versatile" : "google/gemini-2.5-flash");
+> 288	          const vRes = await fetchLLMWithFallback(endpoint, {
+> 289	            method: "POST",
+> 290	            headers: { Authorization: `Bearer ${aiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://mcorch.com", "X-Title": "GCRUX Constellation" },
+> 291	            body: JSON.stringify({
+> 292	              model,
+> 293	              messages: [
+> 294	                { role: "system", content: "Você reescreve copy social NATIVA por canal a partir de um esqueleto. Regras: (1) cada canal tem voz/tamanho PRÓPRIOS; NUNCA repita texto idêntico entre canais (penalidade de cross-post). (2) pt-BR. (3) respeite os limites de caracteres. (4) seo:true ⇒ título+descrição keyword-rich para busca, não legenda de feed. Não invente fatos fora do esqueleto." },
+> 295	                { role: "user", content: `Reescreva cada item abaixo como variante nativa. Retorne via a ferramenta.\n\n${skeletonBlob}` },
+> 296	              ],
+> 297	              tools: [{ type: "function", function: { name: "write_variants", description: "Native per-channel copy", parameters: { type: "object", properties: { variants: { type: "array", items: { type: "object", properties: {
+> 298	                key: { type: "string" }, caption: { type: "string" }, title: { type: "string" }, description: { type: "string" }, body: { type: "string" },
+> 299	              }, required: ["key"] } } }, required: ["variants"] } } }],
+> 300	              tool_choice: { type: "function", function: { name: "write_variants" } },
+> 301	            }),
+> 302	          }, { functionName: "reshape-pillar", openRouterKey, geminiKey, groqKey });
+> 303	          if (vRes.ok) {
+> 304	            const d = await vRes.json();
+> 305	            const parsed = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
+> 306	            const byKey = new Map<string, Record<string, string>>();
+> 307	            for (const v of (parsed.variants ?? [])) if (v?.key) byKey.set(String(v.key), v);
+> 308	            for (const w of voiceTargets) {
+> ```
+
+## 🤖 Claude *(03:46:24)*
+
+
+## 🤖 Claude *(03:46:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "offset": 244,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 244	    const inScope = profiles.filter((p) => {
+> 245	      const isVideo = VIDEO_DERIVE.has(String((p.transform_recipe as { derive_from?: string })?.derive_from ?? ""));
+> 246	      if (scope === "all") return true;
+> 247	      return scope === "video" ? isVideo : !isVideo;
+> 248	    });
+> 249	
+> 250	    // ── 1) Assemble native skeletons for every in-scope surface ──
+> 251	    type Work = {
+> 252	      channel: string; surface: string; platform: string | null; publish_path: string | null;
+> 253	      recipe: Record<string, unknown>; native: Record<string, unknown>; voice: string;
+> 254	      textSpec: Record<string, unknown> | null; imageSpec: Record<string, unknown> | null;
+> 255	      videoSpec: Record<string, unknown> | null; derive: string; seo: boolean; key: string;
+> 256	    };
+> 257	    const work: Work[] = inScope.map((p) => {
+> 258	      const recipe = (p.transform_recipe ?? {}) as Record<string, unknown>;
+> 259	      return {
+> 260	        channel: p.channel, surface: p.surface,
+> 261	        platform: CHANNEL_TO_PLATFORM[p.channel] ?? null,
+> 262	        publish_path: p.publish_path ?? null,
+> 263	        recipe, native: assembleNative(recipe, atoms),
+> 264	        voice: String(p.voice_prompt_seed ?? ""),
+> 265	        textSpec: (p.text ?? null) as Record<string, unknown> | null,
+> 266	        imageSpec: (p.image ?? null) as Record<string, unknown> | null,
+> 267	        videoSpec: (p.video ?? null) as Record<string, unknown> | null,
+> 268	        derive: String(recipe.derive_from ?? ""),
+> 269	        seo: String(recipe.mode ?? "") === "seo_text",
+> 270	        key: `${p.channel}:${p.surface}`,
+> 271	      };
+> 272	    });
+> 273	
+> ```
+
+## 🤖 Claude *(03:46:58)*
+
+
+## 🤖 Claude *(03:46:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "offset": 215,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 215	      return new Response(JSON.stringify({ ok: true, processed: [], scheduled: 0, note: "no_active_profiles" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 216	    }
+> 217	
+> 218	    // ── Resolve source assets (best-effort; missing master/image ⇒ honest pending_* status, not a crash) ──
+> 219	    let videoMaster: { bucket: string; key: string } | null = null;
+> 220	    if (scope === "video" || scope === "all") {
+> 221	      const { data: renders } = await admin.from("video_renders")
+> 222	        .select("storage_key, composition")
+> 223	        .eq("user_id", userId).eq("state", "done")
+> 224	        .order("created_at", { ascending: false }).limit(25);
+> 225	      const m = (renders ?? []).find((r) => {
+> 226	        const c = r.composition as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } } | null;
+> 227	        return c?.pillar_run_id === pillarRunId || c?.autopilot?.pillar_run_id === pillarRunId;
+> 228	      });
+> 229	      if (m?.storage_key) videoMaster = { bucket: "video-studio-assets", key: m.storage_key };
+> 230	    }
+> 231	    let pillarImage: { bucket: string; key: string } | null = null;
+> 232	    if ((scope === "static" || scope === "all") && campaignId) {
+> 233	      const { data: img } = await admin.from("content_library")
+> 234	        .select("media_url, metadata")
+> 235	        .eq("user_id", userId).eq("type", "image").eq("campaign_id", campaignId)
+> 236	        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+> 237	      const key = img?.media_url as string | undefined;
+> 238	      if (key && !/^https?:\/\//i.test(key)) {
+> 239	        pillarImage = { bucket: (img?.metadata as { storage_bucket?: string } | null)?.storage_bucket || "generated-images", key };
+> 240	      }
+> 241	    }
+> 242	
+> 243	    // ── Filter surfaces by scope ──
+> 244	    const inScope = profiles.filter((p) => {
+> ```
+
+## 🤖 Claude *(03:47:34)*
+
+
+## 🤖 Claude *(03:47:34)*
+
+The 16:9 template is deterministic and correct. Now wire it into the reshaper — read `long_form`, resolve 9:16 vs 16:9 masters separately, and enqueue the 16:9 render (opt-in, `charged_mco=0` single-tenant to avoid refund-mint).
+
+## 🤖 Claude *(03:47:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "    const autoPublish = (run.metadata as { auto_publish?: boolean } | null)?.auto_publish === true;",
+  "new_string": "    const autoPublish = (run.metadata as { auto_publish?: boolean } | null)?.auto_publish === true;\n    // FR-CP-004 long-form opt-in: a 16:9 YouTube long render is enqueued ONLY when explicitly requested (default\n    // off \u21d2 pillar_video_16x9 stays 'gap'). Keeps the autopilot short-form-only; never a silent extra render.\n    const longForm = (run.metadata as { long_form?: boolean } | null)?.long_form === true;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:47:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "    // \u2500\u2500 Resolve source assets (best-effort; missing master/image \u21d2 honest pending_* status, not a crash) \u2500\u2500\n    let videoMaster: { bucket: string; key: string } | null = null;\n    if (scope === \"video\" || scope === \"all\") {\n      const { data: renders } = await admin.from(\"video_renders\")\n        .select(\"storage_key, composition\")\n        .eq(\"user_id\", userId).eq(\"state\", \"done\")\n        .order(\"created_at\", { ascending: false }).limit(25);\n      const m = (renders ?? []).find((r) => {\n        const c = r.composition as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } } | null;\n        return c?.pillar_run_id === pillarRunId || c?.autopilot?.pillar_run_id === pillarRunId;\n      });\n      if (m?.storage_key) videoMaster = { bucket: \"video-studio-assets\", key: m.storage_key };\n    }",
+  "new_string": "    // \u2500\u2500 Resolve source assets (best-effort; missing master/image \u21d2 honest pending_* status, not a crash) \u2500\u2500\n    // Two video masters can exist per run: the 9:16 spine (template viral-short-9x16, from orchestrate-step) and\n    // the 16:9 long-form (template viral-long-16x9, enqueued here on long_form). Distinguish by composition.template.\n    let videoMaster9x16: { bucket: string; key: string } | null = null;\n    let videoMaster16x9: { bucket: string; key: string } | null = null;\n    const needRenders = scope === \"video\" || scope === \"all\" || longForm;\n    let renders: Array<{ storage_key: string | null; state: string; composition: unknown }> = [];\n    if (needRenders) {\n      const { data } = await admin.from(\"video_renders\")\n        .select(\"storage_key, state, composition\")\n        .eq(\"user_id\", userId)\n        .order(\"created_at\", { ascending: false }).limit(40);\n      renders = (data ?? []) as typeof renders;\n      const matchesRun = (c: { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } } | null) =>\n        c?.pillar_run_id === pillarRunId || c?.autopilot?.pillar_run_id === pillarRunId;\n      for (const r of renders) {\n        const c = r.composition as { template?: string; pillar_run_id?: string; autopilot?: { pillar_run_id?: string } } | null;\n        if (r.state !== \"done\" || !r.storage_key || !matchesRun(c)) continue;\n        if (String(c?.template ?? \"\") === \"viral-long-16x9\") { if (!videoMaster16x9) videoMaster16x9 = { bucket: \"video-studio-assets\", key: r.storage_key }; }\n        else if (!videoMaster9x16) videoMaster9x16 = { bucket: \"video-studio-assets\", key: r.storage_key }; // 9:16 (or legacy untemplated)\n      }\n    }\n\n    // \u2500\u2500 FR-CP-004 \u2014 enqueue the 16:9 long-form render (opt-in). SINGLE-TENANT charged_mco=0: the reshaper is\n    //    service-role and cannot self-debit (deduct_mco_coins is auth.uid()-self-only); refund-on-fail is therefore\n    //    0 (NO mint). Multi-tenant billing (a service-role debit RPC) is OTD-CP-008-BILLING. Idempotent. \u2500\u2500\n    if ((scope === \"static\" || scope === \"all\") && longForm) {\n      const has16x9 = renders.some((r) => {\n        const c = r.composition as { template?: string; pillar_run_id?: string } | null;\n        return String(c?.template ?? \"\") === \"viral-long-16x9\" && c?.pillar_run_id === pillarRunId;\n      });\n      if (!has16x9) {\n        const clip = (s: unknown, n: number) => String(s ?? \"\").replace(/\\s+/g, \" \").trim().slice(0, n);\n        const composition = {\n          template: \"viral-long-16x9\", width: 1920, height: 1080, duration_s: 8, fps: 24,\n          props: {\n            hook: clip(atoms.hook, 90),\n            caption: clip(atomArray(atoms.key_points).slice(0, 2).join(\". \"), 160),\n            cta: clip(atoms.cta, 40) || \"Inscreva-se\",\n            brand: \"Gabriel AI\",\n            product_image_url: \"\",\n          },\n          pillar_run_id: pillarRunId,\n        };\n        await admin.from(\"video_renders\").insert({\n          user_id: userId, engine: \"hyperframes\", state: \"queued\", topic: clip(atoms.hook, 200),\n          charged_mco: 0, composition,\n        }).then(() => {}, (e: unknown) => console.warn(\"[reshape-pillar] 16:9 enqueue skipped:\", e instanceof Error ? e.message : e));\n      }\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:02)*
+
+Now update the dispatch to use the two masters (and `gap` when long-form not requested):
+
+## 🤖 Claude *(03:48:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "        if (VIDEO_DERIVE.has(w.derive)) {\n          assetKind = \"video\";\n          if (w.derive === \"9x16_master\") {\n            if (videoMaster) { assetBucket = videoMaster.bucket; assetKey = videoMaster.key; assetStatus = \"reused_master\"; }\n            else assetStatus = \"pending_render\"; // master not finished (out-of-band) or not produced for this run\n            const cap = (w.videoSpec as { max_file_mb?: number } | null)?.max_file_mb ?? null;\n            formatGate = { ok: true, container: \"mp4\", envelope: cap ? { max_file_mb: cap } : null };\n          } else {\n            // pillar_video_16x9 (YouTube long) \u2014 no 16:9 render engine yet (OTD-CP-008): emit directive only.\n            assetStatus = \"pending_render\";\n            formatGate = { ok: false, directive: \"render_16x9\", reason: \"OTD-CP-008_no_16x9_template\" };\n          }\n        } else if (w.derive === \"pillar_image\") {",
+  "new_string": "        if (VIDEO_DERIVE.has(w.derive)) {\n          assetKind = \"video\";\n          const cap = (w.videoSpec as { max_file_mb?: number } | null)?.max_file_mb ?? null;\n          if (w.derive === \"9x16_master\") {\n            if (videoMaster9x16) { assetBucket = videoMaster9x16.bucket; assetKey = videoMaster9x16.key; assetStatus = \"reused_master\"; }\n            else assetStatus = \"pending_render\"; // master not finished (out-of-band) or not produced for this run\n            formatGate = { ok: true, container: \"mp4\", aspect: \"9:16\", envelope: cap ? { max_file_mb: cap } : null };\n          } else {\n            // pillar_video_16x9 (YouTube long, FR-CP-004) \u2014 rendered in-house when long_form opted in.\n            if (videoMaster16x9) { assetBucket = videoMaster16x9.bucket; assetKey = videoMaster16x9.key; assetStatus = \"reused_master\"; }\n            else assetStatus = longForm ? \"pending_render\" : \"gap\"; // render in flight vs not requested\n            formatGate = { ok: true, container: \"mp4\", aspect: \"16:9\", envelope: cap ? { max_file_mb: cap } : null };\n          }\n        } else if (w.derive === \"pillar_image\") {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:20)*
+
+
+## 🤖 Claude *(03:48:20)*
+
+Now thread `long_form` through orchestrate-content + fix the video-bridge format label (honesty):
+
+## 🤖 Claude *(03:48:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id, video_enabled, video_format, auto_publish } = await req.json();",
+  "new_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id, video_enabled, video_format, auto_publish, long_form } = await req.json();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "          auto_publish: autoPublish,    // FR-CP-003 \u2014 opt-in publish; false \u21d2 reshaper produces drafts only\n        }",
+  "new_string": "          auto_publish: autoPublish,    // FR-CP-003 \u2014 opt-in publish; false \u21d2 reshaper produces drafts only\n          long_form: long_form === true, // FR-CP-004 \u2014 opt-in 16:9 YouTube long render (reshaper enqueues it)\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:40)*
+
+
+## 🤖 Claude *(03:48:41)*
+
+Now the video-bridge format label (cosmetic honesty — a 16:9 render shouldn't be labeled "9:16"). Let me read + fix the label spots.
+
+## 🤖 Claude *(03:48:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "offset": 80,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 80	    const result = await renderComposition(spec, outPath);
+> 81	
+> 82	    // Upload to the private bucket under <user_id>/<render_id>.mp4 (path scopes tenant isolation).
+> 83	    const storageKey = `${row.user_id}/${renderId}.mp4`;
+> 84	    const bytes = readFileSync(outPath);
+> 85	    const { error: upErr } = await supabase.storage
+> 86	      .from(BUCKET)
+> 87	      .upload(storageKey, bytes, { contentType: 'video/mp4', upsert: true });
+> 88	    if (upErr) throw new Error(`upload_failed: ${upErr.message}`);
+> 89	
+> 90	    // Material manifest (the erasure unit, FR-VS-030).
+> 91	    await supabase.from('video_assets').insert({
+> 92	      user_id: row.user_id, render_id: renderId, kind: 'video',
+> 93	      storage_key: storageKey, bytes: result.bytes,
+> 94	    }).then(() => {}, () => {});
+> 95	
+> 96	    // Mesh observation (FR-VS-026) — best-effort; the embed trigger fires on insert.
+> 97	    let nodeId: string | null = null;
+> 98	    const { data: node } = await supabase.from('mcorch_nodes').insert({
+> 99	      user_id: row.user_id, node_type: 'observation',
+> 100	      name: `video-render:${renderId}`,
+> 101	      content: `HyperFrames 9:16 render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,
+> 102	      metadata: { kind: 'video_render', render_id: renderId, storage_key: storageKey, bytes: result.bytes },
+> 103	    }).select('id').maybeSingle();
+> 104	    nodeId = node?.id ?? null;
+> ```
+
+## 🤖 Claude *(03:48:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "old_string": "    const result = await renderComposition(spec, outPath);\n\n    // Upload to the private bucket under <user_id>/<render_id>.mp4 (path scopes tenant isolation).",
+  "new_string": "    const result = await renderComposition(spec, outPath);\n    // Honest aspect label (FR-CP-004): the engine now renders 9:16 AND 16:9 \u2014 derive from the real dimensions.\n    const aspectLabel = result.width >= result.height ? '16:9' : '9:16';\n\n    // Upload to the private bucket under <user_id>/<render_id>.mp4 (path scopes tenant isolation)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:48:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "old_string": "      content: `HyperFrames 9:16 render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,",
+  "new_string": "      content: `HyperFrames ${aspectLabel} render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:49:00)*
+
+
+## 🤖 Claude *(03:49:01)*
+
+Also fix the `creative_assets` register label/metadata (not autopilot-gated, runs for every render):
+
+## 🤖 Claude *(03:49:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "old_string": "        p_title: ap?.title ? `V\u00eddeo 9:16: ${ap.title}` : `V\u00eddeo 9:16 ${renderId}`,\n        p_metadata: { render_id: renderId, format: '9:16', fps: result.fps, frames: result.frames },",
+  "new_string": "        p_title: ap?.title ? `V\u00eddeo ${aspectLabel}: ${ap.title}` : `V\u00eddeo ${aspectLabel} ${renderId}`,\n        p_metadata: { render_id: renderId, format: aspectLabel, fps: result.fps, frames: result.frames },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:49:22)*
+
+
+## 🤖 Claude *(03:49:23)*
+
+Compile-check + deploy the reshaper & orchestrate-content, and restart video-bridge (host worker picks up render-core + the new template):
+
+## 🤖 Claude *(03:49:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\necho \"=== deno check reshape-pillar ===\"; deno check supabase/functions/reshape-pillar/index.ts 2>&1 | grep -iE \"error|Check\" | tail -3; echo \"EXIT:${PIPESTATUS[0]}\"\necho \"=== deploy reshape-pillar + orchestrate-content ===\"\ntimeout 200 npx supabase functions deploy reshape-pillar 2>&1 | grep -iE \"Deployed|size\" | tail -2\ntimeout 200 npx supabase functions deploy orchestrate-content 2>&1 | grep -iE \"Deployed|size\" | tail -2\necho \"=== restart video-bridge (render-core + new template) ===\"\nsystemctl --user restart video-bridge.service && echo \"restarted: $(systemctl --user is-active video-bridge.service)\"",
+  "description": "deno check + deploy reshaper/orchestrate-content + restart video-bridge"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check reshape-pillar ===
+> [0m[32mCheck[0m supabase/functions/reshape-pillar/index.ts
+> EXIT:0
+> === deploy reshape-pillar + orchestrate-content ===
+> Deploying Function: reshape-pillar (script size: 115.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: reshape-pillar
+> Deploying Function: orchestrate-content (script size: 117.1kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-content
+> === restart video-bridge (render-core + new template) ===
+> restarted: active
+> ```
+
+## 🤖 Claude *(03:49:41)*
+
+
+## 🤖 Claude *(03:49:42)*
+
+Deployed + video-bridge restarted. Now the CP-008 E2E smoke — enqueue 16:9 → video-bridge renders it → scope=video resolves it:
+
+## 🤖 Claude *(03:50:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-longform-16x9.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 16:9 YouTube long-form render (FR-CP-004, CP-008), E2E, zero mco.\n *\n * Proves the reshaper enqueues a deterministic 16:9 long-form render (opt-in long_form), the host worker\n * (video-bridge) renders it, and scope=video resolves the finished 16:9 master into the youtube long_video\n * variant. charged_mco=0 (single-tenant) \u21d2 no balance touched. Requires video-bridge.service active.\n *\n * Gates:\n *   G1  reshape scope=static enqueues a 16:9 render (video_renders: template viral-long-16x9, charged_mco=0, run-linked)\n *   G2  idempotency \u2014 2nd static call does NOT enqueue a 2nd 16:9 render\n *   G3  the render completes (state='done', storage_key set, \u2265100KB) \u2014 proves the 16:9 template renders\n *   G4  reshape scope=video resolves it \u2192 youtube long_video variant asset_status='reused_master' + asset_key set\n *\n * Usage: bun run scripts/qa/smoke-longform-16x9.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!URL || !SVC) { console.error('Missing env'); process.exit(1); }\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid: string | null = null;\nlet runId: string | null = null;\nlet renderKey: string | null = null;\nlet pass = true;\nconst sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));\nfunction check(label: string, ok: boolean, detail = '') { console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`); if (!ok) pass = false; }\nasync function reshape(scope: string) {\n  const r = await fetch(`${URL}/functions/v1/reshape-pillar`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SVC}` }, body: JSON.stringify({ pillar_run_id: runId, scope }) });\n  return { status: r.status, body: await r.json().catch(() => ({})) };\n}\nasync function count16x9(): Promise<number> {\n  const { data } = await admin.from('video_renders').select('id, composition').eq('user_id', uid);\n  return (data ?? []).filter((r) => {\n    const c = r.composition as { template?: string; pillar_run_id?: string } | null;\n    return c?.template === 'viral-long-16x9' && c?.pillar_run_id === runId;\n  }).length;\n}\n\ntry {\n  const u = await admin.auth.admin.createUser({ email: `lf16-smoke-${stamp}@example.com`, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (u.error || !u.data?.user) throw new Error(`createUser: ${u.error?.message}`);\n  uid = u.data.user.id;\n  const { data: run } = await admin.from('pipeline_runs').insert({\n    user_id: uid, topic: 'Long-form 16:9 smoke', platforms: ['wordpress'], status: 'done', steps: [],\n    metadata: { campaign_id: null, auto_publish: false, long_form: true },\n  }).select('id').single();\n  runId = run!.id;\n  await admin.from('pillar_atoms').insert({ user_id: uid, pillar_run_id: runId, hook: 'Como a IA muda a cria\u00e7\u00e3o de conte\u00fado', key_points: ['Automa\u00e7\u00e3o ponta a ponta', 'Uma ideia, muitos formatos'], cta: 'Inscreva-se', pillar_url: 'https://mcorch.com/x' });\n\n  // G1 \u2014 static enqueues the 16:9 render.\n  const r1 = await reshape('static');\n  check('reshape static 200', r1.status === 200 && r1.body.ok === true, `status=${r1.status}`);\n  await sleep(500);\n  const c1 = await count16x9();\n  check('G1: 16:9 render enqueued (template viral-long-16x9, charged_mco=0)', c1 === 1, `count=${c1}`);\n  const { data: vr } = await admin.from('video_renders').select('charged_mco, composition').eq('user_id', uid).limit(1).maybeSingle();\n  check('G1b: charged_mco=0 (no mint risk)', vr?.charged_mco === 0, `charged=${vr?.charged_mco}`);\n\n  // G2 \u2014 idempotency.\n  await reshape('static');\n  await sleep(500);\n  const c2 = await count16x9();\n  check('G2: idempotent (no 2nd 16:9 render)', c2 === 1, `count=${c2}`);\n\n  // G3 \u2014 wait for the host worker to render (video-bridge polls every 4s; 16:9 8s clip \u2248 60-90s render).\n  let done = false;\n  for (let i = 0; i < 60; i++) {\n    const { data } = await admin.from('video_renders').select('state, storage_key, composition').eq('user_id', uid).order('created_at', { ascending: false });\n    const row = (data ?? []).find((r) => (r.composition as { template?: string } | null)?.template === 'viral-long-16x9');\n    if (row?.state === 'done' && row.storage_key) { renderKey = row.storage_key as string; done = true; break; }\n    if (row?.state === 'failed') { check('G3: render not failed', false, 'state=failed'); break; }\n    await sleep(4000);\n  }\n  check('G3: 16:9 render completed (done + storage_key)', done && !!renderKey, `key=${renderKey ?? 'none'}`);\n  if (done && renderKey) {\n    const { data: blob } = await admin.storage.from('video-studio-assets').download(renderKey);\n    const sz = blob ? (await blob.arrayBuffer()).byteLength : 0;\n    check('G3b: master \u2265100KB', sz >= 100 * 1024, `bytes=${sz}`);\n  }\n\n  // G4 \u2014 scope=video resolves the 16:9 master into the youtube long_video variant.\n  if (done) {\n    const r3 = await reshape('video');\n    check('reshape video 200', r3.status === 200 && r3.body.ok === true, `status=${r3.status}`);\n    const { data: cv } = await admin.from('channel_variants').select('asset_status, asset_key, asset_kind').eq('pillar_run_id', runId).eq('channel', 'youtube').eq('surface', 'long_video').maybeSingle();\n    check('G4: youtube long_video reused_master + asset_key', cv?.asset_status === 'reused_master' && !!cv?.asset_key && cv?.asset_kind === 'video', `status=${cv?.asset_status} key=${cv?.asset_key ? 'set' : 'none'}`);\n  }\n} catch (e) {\n  check('exception', false, e instanceof Error ? e.message : String(e));\n} finally {\n  if (renderKey) await admin.storage.from('video-studio-assets').remove([renderKey]).then(() => {}, () => {});\n  if (runId) {\n    await admin.from('channel_variants').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('video_renders').delete().eq('user_id', uid ?? '').then(() => {}, () => {});\n    await admin.from('video_assets').delete().eq('user_id', uid ?? '').then(() => {}, () => {});\n    await admin.from('pillar_atoms').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('pipeline_runs').delete().eq('id', runId).then(() => {}, () => {});\n  }\n  if (uid) await admin.auth.admin.deleteUser(uid).then(() => {}, () => {});\n  console.log(`\\n${pass ? '\u2705 PASS' : '\u274c FAIL'} \u2014 16:9 long-form smoke`);\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-longform-16x9.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:50:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 300 bun run scripts/qa/smoke-longform-16x9.ts 2>&1 | tail -12",
+  "description": "Run CP-008 16:9 E2E smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ reshape static 200  → status=200
+> ✅ G1: 16:9 render enqueued (template viral-long-16x9, charged_mco=0)  → count=1
+> ✅ G1b: charged_mco=0 (no mint risk)  → charged=0
+> ✅ G2: idempotent (no 2nd 16:9 render)  → count=1
+> ✅ G3: 16:9 render completed (done + storage_key)  → key=d8a05fb8-b2e6-4703-aa36-f95eac83cbef/fc974b36-d091-4b85-bd52-87b1cf6b5026.mp4
+> ✅ G3b: master ≥100KB  → bytes=548517
+> ✅ reshape video 200  → status=200
+> ✅ G4: youtube long_video reused_master + asset_key  → status=reused_master key=set
+> 
+> ✅ PASS — 16:9 long-form smoke
+> ```
+
+## 🤖 Claude *(03:52:18)*
+
+
+## 🤖 Claude *(03:52:19)*
+
+**CP-008 E2E passes** — full flow proven: reshape enqueues the 16:9 render → video-bridge renders it (548KB MP4) → scope=video resolves it into the `youtube long_video` variant as `reused_master`. `charged_mco=0` (no mint), idempotent. OTD-CP-008 closed.
+
+## 🤖 Claude *(03:52:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/hyperframes/render-core.ts scripts/hyperframes/templates/viral-long-16x9.html supabase/functions/reshape-pillar/index.ts supabase/functions/orchestrate-content/index.ts scripts/video-bridge.ts scripts/qa/smoke-longform-16x9.ts\ngit commit -q -m \"feat(reshaper): 16:9 YouTube long-form render (FR-CP-004, OTD-CP-008 closed)\n\nDeterministic 16:9 template viral-long-16x9.html (1920\u00d71080, sha256-identical\nNFR-VS-016) + render-core allowlist. Reshaper enqueues the 16:9 render on opt-in\nlong_form (charged_mco=0 single-tenant \u2192 no refund-mint; multi-tenant billing =\nOTD-CP-008-BILLING), resolves 9:16 vs 16:9 masters by composition.template,\nyoutube long_video \u2192 reused_master \u2192 operational (publish-social videos.insert).\nvideo-bridge derives honest aspect label from dims. E2E smoke 8/8 (enqueue \u2192\nrender 548KB \u2192 scope=video resolves master).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"no leaks|reingest\" | tail -2\necho \"done\"; git log --oneline -2",
+  "description": "Commit CP-008"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ┃  mesh-reingest ❯ 
+> ✔️ mesh-reingest (0.00 seconds)
+> done
+> 2e4c3fb feat(reshaper): 16:9 YouTube long-form render (FR-CP-004, OTD-CP-008 closed)
+> e34a14e docs(handoff): seal reshaper continuation — publish opt-in + image reframe (OTD-CP-009 closed)
+> ```
+
+## 🤖 Claude *(03:53:13)*
+
+
+## 🤖 Claude *(03:53:14)*
+
+CP-008 committed (`2e4c3fb`). Task 9 done. Now **CP-010 — publisher branches**. These extend `publish-social` so the reshaper's produced assets actually publish on more channels. Let me ground the API shapes in the BoK authority (doc 10) + the existing proven branches.
+
+## 🤖 Claude *(03:53:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== doc 10 publisher sections (linkedin/facebook/twitter/x video/image/thread) ===\"\ngrep -niE \"linkedin|facebook|twitter|reply|thread|registerUpload|assets\\?action|chunk|/photos|/feed|video_reels|media/upload\" docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md | head -30",
+  "description": "Scan doc 10 for publisher API shapes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === doc 10 publisher sections (linkedin/facebook/twitter/x video/image/thread) ===
+> 19:- **Enum pronto:** `social_platform` já contém `linkedin|instagram|facebook|twitter|tiktok|youtube|pinterest|wordpress` (`20260402014040:12`) → **ZERO migration de enum**.
+> 57:2. `POST /v2/post/publish/video/init/` (6/min) — `post_info{ title ≤2200 runes UTF-16, privacy_level, is_aigc:true [compliance MUST p/ persona IA], brand_content_toggle SÓ se NÃO SELF_ONLY }` + `source_info` **source=FILE_UPLOAD** (`video_size`/`chunk_size`/`total_chunk_count`; chunks 5–64MB, final ≤128MB, <5MB single, 1–1000 chunks). Signed URL do Supabase **NÃO** passa no domain-ownership do `PULL_FROM_URL` → por isso FILE_UPLOAD. Retorna `publish_id`.
+> 58:3. PUT chunks no `upload_url` com `Content-Range` (re-init em 403 expirado).
+> 80:3. PUT bytes (chunks múltiplos de 256KB + `Content-Range`; `308`=Resume Incomplete → retomar do byte do `Range`; tolerar `Range` AUSENTE = restart do 0; session-URI expira ~1 semana = re-iniciar).
+> 124:| **Transfer de mídia** | FILE_UPLOAD chunked (signed URL não passa no PULL_FROM_URL) | resumable PUT (fetch bytes → PUT; sem ingest remoto) | register→multipart(params verbatim, file last)→poll→create + cover PÚBLICA |
+> 156:| **FR-PE-013** | Publish TikTok (Direct Post) | 4 passos `creator_info→init(FILE_UPLOAD)→PUT chunks→status/fetch` com guard de idempotência (content/run id antes do init) + `fail_reason` switch. | Critical | Edge Function |
+> 195:- **Sequence:** 1) registrar app + Direct Post + scope `video.publish` + sandbox user → **prova:** `client_key`+`client_secret` no portal. 2) OAuth (scope vírgula) → `/v2/oauth/token/` → **prova:** linha `social_accounts` platform=tiktok com `open_id` (SELECT id=UUID). 3) `creator_info/query` → **prova:** 200 + `privacy_level_options`. 4) `video/init/` FILE_UPLOAD + `is_aigc=true` → **prova:** `publish_id`. 5) PUT chunks `Content-Range` → **prova:** 2xx/chunk. 6) `status/fetch` até `PUBLISH_COMPLETE`.
+> ```
+
+## 🤖 Claude *(03:55:18)*
+
+
+## 🤖 Claude *(03:55:20)*
+
+Doc 10 covers the 3 connect-targets (TikTok/YT/Pinterest), not the older LinkedIn/FB/X media flows. 
+
+Given Lei 1 (materiality): the new branches can't be E2E-verified without connected/audited accounts. So I'll implement the **high-confidence, clean extensions of already-proven branches** — **X thread (reply chain), Facebook image (photo), Pinterest standard_pin (image)** — and honestly **defer** the nuanced binary-upload flows (LinkedIn registerUpload media, FB Reels video, X chunked video) where shipping blind risks Lei-1 violations. LinkedIn text already covers LinkedIn.
+
+Let me implement the 3, starting with Facebook image:
+
+## 🤖 Claude *(03:55:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "old_string": "    } else if (platform === \"facebook\") {\n      const pageId = account.platform_user_id;\n      const res = await fetch(\n        `https://graph.facebook.com/v19.0/${pageId}/feed`,\n        {\n          method: \"POST\",\n          headers: { \"Content-Type\": \"application/json\" },\n          body: JSON.stringify({\n            message: content.text || content,\n            access_token: account.access_token,\n          }),\n        }\n      );\n      result = await res.json();\n      if (!res.ok) {\n        console.error(\"Facebook publish error:\", res.status, result);\n        throw new Error(\"PLATFORM_PUBLISH_FAILED\");\n      }\n\n    } else if (platform === \"twitter\") {",
+  "new_string": "    } else if (platform === \"facebook\") {\n      // CP-010 \u2014 image (link_card surface \u2192 Page photo) OR text feed. FB Reels video is deferred (OTD-CP-010).\n      const pageId = account.platform_user_id;\n      const message = (typeof content === \"object\" ? content.text : content) || \"\";\n      if (content.image_url) {\n        // Page photo post: Facebook fetches the (public/signed) image URL.\n        const res = await fetch(`https://graph.facebook.com/v19.0/${pageId}/photos`, {\n          method: \"POST\",\n          headers: { \"Content-Type\": \"application/json\" },\n          body: JSON.stringify({ url: content.image_url, caption: message, access_token: account.access_token }),\n        });\n        result = await res.json();\n        if (!res.ok) { console.error(\"Facebook photo error:\", res.status, result); pulse(\"error\", \"facebook_photo_failed\", { status: res.status }); throw new Error(\"PLATFORM_PUBLISH_FAILED\"); }\n        pulse(\"ok\", \"facebook_photo_published\", { post_id: result?.id ?? null });\n      } else {\n        const res = await fetch(`https://graph.facebook.com/v19.0/${pageId}/feed`, {\n          method: \"POST\",\n          headers: { \"Content-Type\": \"application/json\" },\n          body: JSON.stringify({ message, access_token: account.access_token }),\n        });\n        result = await res.json();\n        if (!res.ok) { console.error(\"Facebook publish error:\", res.status, result); throw new Error(\"PLATFORM_PUBLISH_FAILED\"); }\n      }\n\n    } else if (platform === \"twitter\") {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:55:43)*
+
+Now the X thread (reply chain):
+
+## 🤖 Claude *(03:55:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "old_string": "    } else if (platform === \"twitter\") {\n      const res = await fetch(\"https://api.x.com/2/tweets\", {\n        method: \"POST\",\n        headers: {\n          Authorization: `Bearer ${account.access_token}`,\n          \"Content-Type\": \"application/json\",\n        },\n        body: JSON.stringify({\n          text: content.text || content,\n        }),\n      });\n      result = await res.json();\n      if (!res.ok) {\n        console.error(\"Twitter publish error:\", res.status, result);\n        throw new Error(\"PLATFORM_PUBLISH_FAILED\");\n      }\n\n    } else if (platform === \"tiktok\") {",
+  "new_string": "    } else if (platform === \"twitter\") {\n      // CP-010 \u2014 native THREAD (reply chain) when content.thread[] is present; else a single tweet. X video deferred.\n      const xHeaders = { Authorization: `Bearer ${account.access_token}`, \"Content-Type\": \"application/json\" };\n      const thread = Array.isArray(content.thread)\n        ? content.thread.filter((t: unknown) => typeof t === \"string\" && t.trim()).map((t: string) => t.slice(0, 280))\n        : null;\n      if (thread && thread.length > 1) {\n        let prevId: string | null = null;\n        const ids: string[] = [];\n        for (const tw of thread) {\n          const body: Record<string, unknown> = { text: tw };\n          if (prevId) body.reply = { in_reply_to_tweet_id: prevId };\n          const res = await fetch(\"https://api.x.com/2/tweets\", { method: \"POST\", headers: xHeaders, body: JSON.stringify(body) });\n          const j = await res.json().catch(() => ({}));\n          if (!res.ok) {\n            console.error(\"X thread tweet error:\", res.status, j);\n            if (!prevId) { pulse(\"error\", \"twitter_thread_failed\", { status: res.status }); throw new Error(\"PLATFORM_PUBLISH_FAILED\"); }\n            break; // first tweet anchored the thread; a later failure truncates but does not fail the post\n          }\n          prevId = j?.data?.id ?? null;\n          if (prevId) ids.push(prevId);\n        }\n        result = { id: ids[0] ?? null, thread_ids: ids };\n        pulse(\"ok\", \"twitter_thread_published\", { tweets: ids.length });\n      } else {\n        const res = await fetch(\"https://api.x.com/2/tweets\", {\n          method: \"POST\", headers: xHeaders,\n          body: JSON.stringify({ text: (content.text || content)?.toString()?.slice(0, 280) }),\n        });\n        result = await res.json();\n        if (!res.ok) { console.error(\"Twitter publish error:\", res.status, result); throw new Error(\"PLATFORM_PUBLISH_FAILED\"); }\n      }\n\n    } else if (platform === \"tiktok\") {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:56:03)*
+
+
+## 🤖 Claude *(03:56:04)*
+
+Now Pinterest standard_pin (image). Let me find the current Pinterest branch boundaries (line numbers shifted after my edits).
+
+## 🤖 Claude *(03:56:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE 'platform === \"pinterest\"|pinterest_no_video|source_type|media_source|create the pin|cover_image_url|else \\{$|^    \\} else \\{' supabase/functions/publish-social/index.ts | sed -n '1,20p'",
+  "description": "Locate Pinterest branch lines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 58:    } else {
+> 220:      } else {
+> 254:      } else {
+> 479:    } else if (platform === "pinterest") {
+> 482:      // from payload; cover_image_url must be a PUBLIC https URL (Pinterest fetches it async).
+> 486:        pulse("degraded", "pinterest_no_video");
+> 576:      // (4) Create the pin. cover_image_url must be a PUBLIC https URL (Pinterest fetches it async).
+> 577:      const coverImageUrl = content.cover_image_url || content.image_url || videoUrl;
+> 585:          media_source: {
+> 586:            source_type: "video_id",
+> 588:            cover_image_url: coverImageUrl,
+> 602:    } else {
+> ```
+
+## 🤖 Claude *(03:56:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "offset": 479,
+  "limit": 26
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 479	    } else if (platform === "pinterest") {
+> 480	      // Pinterest API v5 — video pin (register → upload multipart → poll → create). User access_token only for
+> 481	      // pin/board/media REST; the multipart upload itself carries NO Authorization (presigned S3 POST). video_url
+> 482	      // from payload; cover_image_url must be a PUBLIC https URL (Pinterest fetches it async).
+> 483	      const PIN_BASE = "https://api.pinterest.com/v5";
+> 484	      const videoUrl = content.video_url;
+> 485	      if (!videoUrl) {
+> 486	        pulse("degraded", "pinterest_no_video");
+> 487	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 488	      }
+> 489	      const pinHeaders = {
+> 490	        Authorization: `Bearer ${account.access_token}`,
+> 491	        "Content-Type": "application/json",
+> 492	      };
+> 493	
+> 494	      // (0) Ensure a destination board — prefer a cached metadata.board_id, else the first existing board, else
+> 495	      // create one once. (Do NOT create a board per run.)
+> 496	      let boardId: string | null = account.metadata?.board_id ?? null;
+> 497	      if (!boardId) {
+> 498	        const boardsRes = await fetch(`${PIN_BASE}/boards`, { headers: pinHeaders });
+> 499	        const boardsData = await boardsRes.json().catch(() => ({}));
+> 500	        if (!boardsRes.ok) {
+> 501	          console.error("Pinterest boards list error:", boardsRes.status, boardsData);
+> 502	          pulse("error", "pinterest_boards_failed", { status: boardsRes.status });
+> 503	          throw new Error("PLATFORM_PUBLISH_FAILED");
+> 504	        }
+> ```
+
+## 🤖 Claude *(03:56:31)*
+
+
+## 🤖 Claude *(03:56:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "offset": 518,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 518	          boardId = createBoardData.id;
+> 519	        }
+> 520	      }
+> 521	
+> 522	      // (1) Register the media upload → media_id + upload_url + upload_parameters.
+> 523	      const mediaRes = await fetch(`${PIN_BASE}/media`, {
+> 524	        method: "POST",
+> 525	        headers: pinHeaders,
+> 526	        body: JSON.stringify({ media_type: "video" }),
+> 527	      });
+> 528	      const mediaData = await mediaRes.json().catch(() => ({}));
+> 529	      if (!mediaRes.ok || !mediaData?.media_id || !mediaData?.upload_url) {
+> 530	        console.error("Pinterest media register error:", mediaRes.status, mediaData);
+> 531	        pulse("error", "pinterest_media_register_failed", { status: mediaRes.status });
+> 532	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 533	      }
+> 534	      const mediaId: string = mediaData.media_id;
+> 535	      const uploadUrl: string = mediaData.upload_url;
+> 536	      const uploadParams: Record<string, string> = mediaData.upload_parameters ?? {};
+> 537	
+> 538	      // (2) POST the MP4 to upload_url as multipart/form-data — ALL upload_parameters VERBATIM and the file LAST,
+> 539	      // with NO Authorization header (presigned POST). Success = 204.
+> 540	      const mp4Res = await fetch(videoUrl);
+> 541	      if (!mp4Res.ok) {
+> 542	        console.error("Pinterest video fetch error:", mp4Res.status);
+> 543	        pulse("error", "pinterest_video_fetch_failed", { status: mp4Res.status });
+> 544	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 545	      }
+> 546	      const videoBlob = await mp4Res.blob();
+> 547	      const form = new FormData();
+> 548	      for (const [k, v] of Object.entries(uploadParams)) form.append(k, v);
+> 549	      form.append("file", videoBlob); // file field MUST be last (presigned-POST ordering).
+> 550	      const uploadRes = await fetch(uploadUrl, { method: "POST", body: form });
+> 551	      if (uploadRes.status !== 204 && !uploadRes.ok) {
+> 552	        console.error("Pinterest media upload error:", uploadRes.status);
+> 553	        pulse("error", "pinterest_upload_failed", { status: uploadRes.status });
+> 554	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 555	      }
+> 556	
+> 557	      // (3) Poll the media until status='succeeded'.
+> 558	      let mediaStatus = "";
+> 559	      for (let i = 0; i < 30; i++) {
+> 560	        const stRes = await fetch(`${PIN_BASE}/media/${mediaId}`, { headers: pinHeaders });
+> 561	        const stData = await stRes.json().catch(() => ({}));
+> 562	        mediaStatus = stData?.status ?? "";
+> 563	        if (mediaStatus === "succeeded") break;
+> 564	        if (mediaStatus === "failed") {
+> 565	          console.error("Pinterest media processing failed:", stData);
+> 566	          pulse("error", "pinterest_media_failed", { media_id: mediaId });
+> 567	          throw new Error("PLATFORM_PUBLISH_FAILED");
+> 568	        }
+> 569	        await new Promise((r) => setTimeout(r, 3000));
+> 570	      }
+> 571	      if (mediaStatus !== "succeeded") {
+> 572	        pulse("degraded", "pinterest_media_timeout", { media_id: mediaId });
+> 573	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 574	      }
+> 575	
+> 576	      // (4) Create the pin. cover_image_url must be a PUBLIC https URL (Pinterest fetches it async).
+> 577	      const coverImageUrl = content.cover_image_url || content.image_url || videoUrl;
+> 578	      const pinRes = await fetch(`${PIN_BASE}/pins`, {
+> 579	        method: "POST",
+> 580	        headers: pinHeaders,
+> 581	        body: JSON.stringify({
+> 582	          board_id: boardId,
+> 583	          title: (content.text || content)?.toString()?.slice(0, 100) ?? "",
+> 584	          description: typeof content === "object" && content?.text ? String(content.text).slice(0, 800) : "",
+> 585	          media_source: {
+> 586	            source_type: "video_id",
+> 587	            media_id: mediaId,
+> 588	            cover_image_url: coverImageUrl,
+> 589	          },
+> 590	        }),
+> 591	      });
+> 592	      result = await pinRes.json();
+> 593	      if (!pinRes.ok) {
+> 594	        console.error("Pinterest pin create error:", pinRes.status, result);
+> 595	        pulse("error", "pinterest_pin_create_failed", { status: pinRes.status });
+> 596	        throw new Error("PLATFORM_PUBLISH_FAILED");
+> 597	      }
+> 598	      // Materiality (Lei 1): under Trial the pin is sandbox/creator-only (no public URL) — a 201 proves
+> 599	      // transport, not live reach. Honest 'live' claim waits for Standard tier.
+> 600	      pulse("ok", "pinterest_pin_created", { pin_id: result?.id ?? null, board_id: boardId });
+> 601	
+> 602	    } else {
+> 603	      return new Response(JSON.stringify({ error: `Publishing to ${platform} not yet supported` }), {
+> 604	        status: 400,
+> 605	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 606	      });
+> 607	    }
+> ```
+
+## 🤖 Claude *(03:56:48)*
+
+
+## 🤖 Claude *(03:56:48)*
+
+I'll allow the image path and wrap the video flow. First the guard:
+
+## 🤖 Claude *(03:56:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "old_string": "      const PIN_BASE = \"https://api.pinterest.com/v5\";\n      const videoUrl = content.video_url;\n      if (!videoUrl) {\n        pulse(\"degraded\", \"pinterest_no_video\");\n        throw new Error(\"PLATFORM_PUBLISH_FAILED\");\n      }",
+  "new_string": "      const PIN_BASE = \"https://api.pinterest.com/v5\";\n      const videoUrl = content.video_url;\n      if (!videoUrl && !content.image_url) {\n        pulse(\"degraded\", \"pinterest_no_media\");\n        throw new Error(\"PLATFORM_PUBLISH_FAILED\");\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:56:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "old_string": "      // (1) Register the media upload \u2192 media_id + upload_url + upload_parameters.\n      const mediaRes = await fetch(`${PIN_BASE}/media`, {\n        method: \"POST\",\n        headers: pinHeaders,\n        body: JSON.stringify({ media_type: \"video\" }),\n      });",
+  "new_string": "      if (videoUrl) {\n      // (1) Register the media upload \u2192 media_id + upload_url + upload_parameters.\n      const mediaRes = await fetch(`${PIN_BASE}/media`, {\n        method: \"POST\",\n        headers: pinHeaders,\n        body: JSON.stringify({ media_type: \"video\" }),\n      });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:57:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts",
+  "old_string": "      // Materiality (Lei 1): under Trial the pin is sandbox/creator-only (no public URL) \u2014 a 201 proves\n      // transport, not live reach. Honest 'live' claim waits for Standard tier.\n      pulse(\"ok\", \"pinterest_pin_created\", { pin_id: result?.id ?? null, board_id: boardId });\n\n    } else {",
+  "new_string": "      // Materiality (Lei 1): under Trial the pin is sandbox/creator-only (no public URL) \u2014 a 201 proves\n      // transport, not live reach. Honest 'live' claim waits for Standard tier.\n      pulse(\"ok\", \"pinterest_pin_created\", { pin_id: result?.id ?? null, board_id: boardId });\n      } else {\n        // CP-010 \u2014 standard IMAGE pin (standard_pin surface): Pinterest fetches the public/signed image URL async.\n        const pinRes = await fetch(`${PIN_BASE}/pins`, {\n          method: \"POST\", headers: pinHeaders,\n          body: JSON.stringify({\n            board_id: boardId,\n            title: (content.text || content)?.toString()?.slice(0, 100) ?? \"\",\n            description: typeof content === \"object\" && content?.text ? String(content.text).slice(0, 800) : \"\",\n            media_source: { source_type: \"image_url\", url: content.image_url },\n          }),\n        });\n        result = await pinRes.json();\n        if (!pinRes.ok) { console.error(\"Pinterest image pin error:\", pinRes.status, result); pulse(\"error\", \"pinterest_image_pin_failed\", { status: pinRes.status }); throw new Error(\"PLATFORM_PUBLISH_FAILED\"); }\n        pulse(\"ok\", \"pinterest_image_pin_created\", { pin_id: result?.id ?? null, board_id: boardId });\n      }\n\n    } else {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-social/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:57:14)*
+
+
+## 🤖 Claude *(03:57:14)*
+
+Update the reshaper's `isOperational` — Pinterest standard_pin (image) and FB link_card (image) are now publishable:
+
+## 🤖 Claude *(03:57:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "  if (assetKind === \"image\" && assetStatus === \"ready\") {\n    return [\"instagram\"].includes(platform); // publish-social IG image_url branch (FB/LinkedIn/Pinterest image \u2192 OTD-CP-010)\n  }",
+  "new_string": "  if (assetKind === \"image\" && assetStatus === \"ready\") {\n    // publish-social image branches: IG photo \u00b7 Pinterest standard_pin \u00b7 FB photo (link_card). LinkedIn image \u2192 OTD-CP-010.\n    return [\"instagram\", \"pinterest\", \"facebook\"].includes(platform);\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:57:39)*
+
+
+## 🤖 Claude *(03:57:40)*
+
+Now compile + deploy publish-social & reshaper, and extend the reframe smoke to prove the `isOperational` change (image surfaces enqueue when ready + opt-in). Let me update the reframe smoke first.
+
+## 🤖 Claude *(03:57:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "old_string": "  const { data: run } = await admin.from('pipeline_runs').insert({\n    user_id: uid, topic: 'Reframe smoke', platforms: ['wordpress'], status: 'done', steps: [],\n    metadata: { campaign_id: campaignId, auto_publish: false },\n  }).select('id').single();",
+  "new_string": "  const { data: run } = await admin.from('pipeline_runs').insert({\n    user_id: uid, topic: 'Reframe smoke', platforms: ['wordpress'], status: 'done', steps: [],\n    metadata: { campaign_id: campaignId, auto_publish: true },  // auto_publish \u21d2 also prove image surfaces ENQUEUE (CP-010 isOperational)\n  }).select('id').single();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:57:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "old_string": "    const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;\n    const dims = jpegDims(bytes);\n    check(`${ch}:${sf} downloadable JPEG ${ew}\u00d7${eh}`, isJpeg && !!dims && dims[0] === ew && dims[1] === eh, `magic=${isJpeg} dims=${dims?.join('\u00d7')} bytes=${bytes.byteLength}`);\n  }\n} catch (e) {",
+  "new_string": "    const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;\n    const dims = jpegDims(bytes);\n    check(`${ch}:${sf} downloadable JPEG ${ew}\u00d7${eh}`, isJpeg && !!dims && dims[0] === ew && dims[1] === eh, `magic=${isJpeg} dims=${dims?.join('\u00d7')} bytes=${bytes.byteLength}`);\n  }\n\n  // CP-010 \u2014 image surfaces with operational publishers (IG/Pinterest/FB) ENQUEUE under auto_publish.\n  for (const [ch, sf] of [['instagram', 'feed_image'], ['pinterest', 'standard_pin'], ['facebook', 'link_card']] as const) {\n    const v = (cv ?? []).find((x) => x.channel === ch && x.surface === sf) as { status?: string } | undefined;\n    check(`CP-010: ${ch}:${sf} scheduled (operational image publisher)`, v?.status === 'scheduled', `status=${v?.status}`);\n  }\n} catch (e) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:57:58)*
+
+
+## 🤖 Claude *(03:57:58)*
+
+The reframe smoke's `cv` select needs `status`. Let me add it.
+
+## 🤖 Claude *(03:57:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"from('channel_variants').select\" scripts/qa/smoke-reframe-image.ts",
+  "description": "Find channel_variants select in reframe smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 91:  const { data: cv } = await admin.from('channel_variants').select('channel, surface, asset_status, asset_bucket, asset_key, format_gate').eq('pillar_run_id', runId);
+> ```
+
+## 🤖 Claude *(03:58:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "old_string": "  const { data: cv } = await admin.from('channel_variants').select('channel, surface, asset_status, asset_bucket, asset_key, format_gate').eq('pillar_run_id', runId);",
+  "new_string": "  const { data: cv } = await admin.from('channel_variants').select('channel, surface, asset_status, asset_bucket, asset_key, format_gate, status').eq('pillar_run_id', runId);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:58:14)*
+
+
+## 🤖 Claude *(03:58:14)*
+
+The reframe smoke now creates `scheduled_posts` (auto_publish=true) — let me ensure cleanup. Let me check the finally block.
+
+## 🤖 Claude *(03:58:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "offset": 104,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 104	    const { data: blob } = await admin.storage.from(v.asset_bucket as string).download(v.asset_key as string);
+> 105	    const bytes = blob ? new Uint8Array(await blob.arrayBuffer()) : new Uint8Array();
+> 106	    const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+> 107	    const dims = jpegDims(bytes);
+> 108	    check(`${ch}:${sf} downloadable JPEG ${ew}×${eh}`, isJpeg && !!dims && dims[0] === ew && dims[1] === eh, `magic=${isJpeg} dims=${dims?.join('×')} bytes=${bytes.byteLength}`);
+> 109	  }
+> 110	
+> 111	  // CP-010 — image surfaces with operational publishers (IG/Pinterest/FB) ENQUEUE under auto_publish.
+> 112	  for (const [ch, sf] of [['instagram', 'feed_image'], ['pinterest', 'standard_pin'], ['facebook', 'link_card']] as const) {
+> 113	    const v = (cv ?? []).find((x) => x.channel === ch && x.surface === sf) as { status?: string } | undefined;
+> 114	    check(`CP-010: ${ch}:${sf} scheduled (operational image publisher)`, v?.status === 'scheduled', `status=${v?.status}`);
+> 115	  }
+> 116	} catch (e) {
+> 117	  check('exception', false, e instanceof Error ? e.message : String(e));
+> 118	} finally {
+> 119	  if (uploadedKeys.length) await admin.storage.from('generated-images').remove(uploadedKeys).then(() => {}, () => {});
+> ```
+
+## 🤖 Claude *(03:58:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "offset": 119,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 119	  if (uploadedKeys.length) await admin.storage.from('generated-images').remove(uploadedKeys).then(() => {}, () => {});
+> 120	  if (runId) {
+> 121	    await admin.from('channel_variants').delete().eq('pillar_run_id', runId).then(() => {}, () => {});
+> 122	    await admin.from('pillar_atoms').delete().eq('pillar_run_id', runId).then(() => {}, () => {});
+> 123	    await admin.from('content_library').delete().eq('user_id', uid ?? '00000000-0000-0000-0000-000000000000').then(() => {}, () => {});
+> 124	    await admin.from('pipeline_runs').delete().eq('id', runId).then(() => {}, () => {});
+> 125	  }
+> 126	  if (uid) await admin.auth.admin.deleteUser(uid).then(() => {}, () => {});
+> 127	  try { rmSync(srcPath, { force: true }); } catch { /* noop */ }
+> 128	  console.log(`\n${pass ? '✅ PASS' : '❌ FAIL'} — image reframe smoke`);
+> 129	  process.exit(pass ? 0 : 1);
+> 130	}
+> 131	
+> ```
+
+## 🤖 Claude *(03:58:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "old_string": "  if (runId) {\n    await admin.from('channel_variants').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('pillar_atoms').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('content_library').delete().eq('user_id', uid ?? '00000000-0000-0000-0000-000000000000').then(() => {}, () => {});\n    await admin.from('pipeline_runs').delete().eq('id', runId).then(() => {}, () => {});\n  }",
+  "new_string": "  if (runId) {\n    await admin.from('scheduled_posts').delete().eq('user_id', uid ?? '00000000-0000-0000-0000-000000000000').then(() => {}, () => {});\n    await admin.from('channel_variants').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('pillar_atoms').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('content_library').delete().eq('user_id', uid ?? '00000000-0000-0000-0000-000000000000').then(() => {}, () => {});\n    await admin.from('pipeline_runs').delete().eq('id', runId).then(() => {}, () => {});\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:58:30)*
+
+Now deno check + deploy publish-social & reshaper, then run the smoke:
+
+## 🤖 Claude *(03:58:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\necho \"=== deno check ===\"\ndeno check supabase/functions/publish-social/index.ts 2>&1 | grep -iE \"error|Check\" | tail -3; echo \"PS_EXIT:${PIPESTATUS[0]}\"\ndeno check supabase/functions/reshape-pillar/index.ts 2>&1 | grep -iE \"error|Check\" | tail -2; echo \"RP_EXIT:${PIPESTATUS[0]}\"\necho \"=== deploy ===\"\ntimeout 200 npx supabase functions deploy publish-social 2>&1 | grep -iE \"Deployed|size\" | tail -1\ntimeout 200 npx supabase functions deploy reshape-pillar 2>&1 | grep -iE \"Deployed|size\" | tail -1",
+  "description": "deno check + deploy publish-social + reshaper"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check ===
+> [0m[32mCheck[0m supabase/functions/publish-social/index.ts
+> PS_EXIT:0
+> [0m[32mCheck[0m supabase/functions/reshape-pillar/index.ts
+> RP_EXIT:0
+> === deploy ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-social
+> Deployed Functions on project bcyvddsykvehvpwstlfa: reshape-pillar
+> ```
+
+## 🤖 Claude *(03:58:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== reframe smoke (now incl. CP-010 image enqueue) ===\"\ntimeout 150 bun run scripts/qa/smoke-reframe-image.ts 2>&1 | tail -14\necho \"=== opt-in smoke (regression \u2014 twitter thread still enqueues) ===\"\ntimeout 150 bun run scripts/qa/smoke-reshape-pillar.ts 2>&1 | tail -3",
+  "description": "Run reframe smoke (CP-010 enqueue) + opt-in regression"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === reframe smoke (now incl. CP-010 image enqueue) ===
+> ✅ reshape 200 + ok  → status=200
+> ✅ instagram:feed_image asset ready (JPEG)  → status=ready fmt=jpeg
+> ✅ instagram:feed_image downloadable JPEG 1080×1350  → magic=true dims=1080×1350 bytes=40556
+> ✅ pinterest:standard_pin asset ready (JPEG)  → status=ready fmt=jpeg
+> ✅ pinterest:standard_pin downloadable JPEG 1000×1500  → magic=true dims=1000×1500 bytes=41755
+> ✅ youtube:thumbnail asset ready (JPEG)  → status=ready fmt=jpeg
+> ✅ youtube:thumbnail downloadable JPEG 1280×720  → magic=true dims=1280×720 bytes=25830
+> ✅ CP-010: instagram:feed_image scheduled (operational image publisher)  → status=scheduled
+> ✅ CP-010: pinterest:standard_pin scheduled (operational image publisher)  → status=scheduled
+> ✅ CP-010: facebook:link_card scheduled (operational image publisher)  → status=scheduled
+> 
+> ✅ PASS — image reframe smoke
+> === opt-in smoke (regression — twitter thread still enqueues) ===
+> ✅ G6: cross-tenant SELECT returns 0 rows  → rows_seen=0
+> 
+> ✅ PASS — reshape-pillar + publish opt-in smoke
+> ```
+
+## 🤖 Claude *(03:59:14)*
+
+
+## 🤖 Claude *(03:59:16)*
+
+Both smokes green. CP-010's reshaper side (image surfaces now enqueue) is **materially verified**; the new publish-social branches (X thread reply-chain, FB photo, Pinterest image pin) are deno-checked + deployed — live publish E2E gated on connected accounts (honest, same gate as the rest). LinkedIn media / FB reel / X video deferred (binary-upload, unverifiable blind). Committing CP-010.
+
+## 🤖 Claude *(03:59:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/publish-social/index.ts supabase/functions/reshape-pillar/index.ts scripts/qa/smoke-reframe-image.ts\ngit commit -q -m \"feat(publish): X thread + FB photo + Pinterest image-pin branches (CP-010 partial)\n\npublish-social gains: X native thread (reply chain over content.thread[]),\nFacebook Page photo (link_card image surface), Pinterest standard image pin\n(media_source image_url). Reshaper marks IG/Pinterest/FB image surfaces\noperational (enqueue when reframed+opt-in) \u2014 proven by reframe smoke (3 image\nsurfaces \u2192 scheduled). LinkedIn registerUpload media + FB Reels video + X chunked\nvideo DEFERRED (binary-upload, unverifiable without connected accounts \u2014 OTD-CP-010).\nLive publish E2E gated on Sovereign-connected/audited accounts (same gate as TikTok/YT/Pinterest).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"no leaks|reingest\" | tail -1\necho \"committed\"; git log --oneline -1",
+  "description": "Commit CP-010"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> committed
+> 6c3bc66 feat(publish): X thread + FB photo + Pinterest image-pin branches (CP-010 partial)
+> ```
