@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1494
-> * **Sessões do Claude**: 1452
+> * **Total de Sessões Registradas**: 1510
+> * **Sessões do Claude**: 1468
 > * **Sessões do Gemini**: 42
 
 ---
@@ -68,18 +68,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-28 - agent-af701086aecdaf67f]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-aef77397227eb4a2a]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-ad8e42de72ed0d68a]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-ad5127bc20bfbb04f]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-ad32150d286321d7f]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-accd3f8a9d05d5c6a]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-ab3f942766ac138d3]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-a996c5f7bbd8780e2]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-a959e9f1ba78ebd12]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-a94240a2b4c790f4e]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-a941de155b961c42b]]` - *2026-06-28*
-*   `[[2026-06-28 - Corrigir erro de configuração TikTok]]` - *2026-06-28*
-*   `[[2026-06-27 - agent-afdf1595d8eadc679]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-af8701874fa76780a]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-aecae924c0d5976b7]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-ae6d905f0ad159302]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-ae2bd3418a85dae25]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-ae210702decc3c5c2]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-ae0d1118f0bbb9c97]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-adde14d045660a1a6]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-ad76503c52ae191d6]]` - *2026-06-27*
-*   *... e mais 1450 sessões nessa categoria.*
+*   `[[2026-06-28 - agent-a6d1ec3a15952f133]]` - *2026-06-28*
+*   *... e mais 1466 sessões nessa categoria.*
 
 ---
 
@@ -271,7 +271,23 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-28 - agent-af701086aecdaf67f]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-aef77397227eb4a2a]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-ad8e42de72ed0d68a]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-ad5127bc20bfbb04f]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-ad32150d286321d7f]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-accd3f8a9d05d5c6a]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-ab3f942766ac138d3]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a996c5f7bbd8780e2]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a959e9f1ba78ebd12]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a94240a2b4c790f4e]]` (ClaudeSessions)
 *   `[[2026-06-28 - agent-a941de155b961c42b]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a6d1ec3a15952f133]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a5bca927beb799fe3]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a5a5d1a552427aafe]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a50e12c8fd107b6bb]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a38f39f800a5f608a]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a38891f251d598f5d]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a11757ea49b92c757]]` (ClaudeSessions)
 *   `[[2026-06-28 - Corrigir erro de configuração TikTok]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-afdf1595d8eadc679]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-af8701874fa76780a]]` (ClaudeSessions)
