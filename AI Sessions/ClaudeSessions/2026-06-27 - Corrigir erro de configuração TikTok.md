@@ -1,4 +1,4 @@
-# Corrigir erro de configuração TikTok
+# [[2026-06-28 - Corrigir erro de configuração TikTok|Corrigir erro de configuração TikTok]]
 **Date:** 2026-06-27 | **Session ID:** `f23f934d-28f6-402d-a438-cbc319022dfc`
 
 ---

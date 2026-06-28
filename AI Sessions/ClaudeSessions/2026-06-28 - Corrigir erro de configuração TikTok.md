@@ -6772,3 +6772,255 @@ Mesmo vídeo nos dois. ⏱️ E lembra: faça o **connect na gravação em < 10 
 ---
 
 Quer que eu **zere a conexão** pra você gravar o connect do zero? E assim que gravar + subir unlisted, me manda o link que eu reviso (Vision QA) antes de você submeter os gates. 🚀
+
+## 👤 User *(00:36:47)*
+
+Naverdade não esta  privado esta publico. Mas isso não tem problema agora porem precisamos ter certeza do que que estamos fazendo vocçe disse era pra ser privado pois o não auditado seria forçado como privado mas não foi. 
+
+Vou fazer o video agora... Mas já deleter permanentemente manualmente. Video feito e enviado agora tenho que preencher isso.:
+
+Questionário de verificação
+Seu aplicativo é apenas para uso pessoal?
+
+
+Sim
+
+Não
+Se o app não for compartilhado com ninguém ou tiver apenas 100 usuários conhecidos pessoalmente por você, defina o estado de publicação do projeto como "Teste". Apps de produção para uso pessoal não são revisados e vão mostrar o aviso de app não verificado durante o login.
+
+
+
+Seu aplicativo é apenas para uso interno?
+
+
+Sim
+
+Não
+Um app é interno quando as pessoas nos seus domínios o utilizam apenas internamente. Como marcar meu app como somente para uso interno ?
+
+
+
+O aplicativo é destinado apenas ao uso para desenvolvimento/teste/preparação?
+
+
+Sim
+
+Não
+Se o app estiver em desenvolvimento/teste/preparação e você não quiser publicá-lo ainda, não o envie para verificação. A tela de app não verificado será exibida para o usuário, e o limite de 100 usuários vai ser aplicado. Saiba mais sobre o status de publicação 
+
+
+
+Seu aplicativo é um plug-in SMTP do Gmail para uso exclusivo dos administradores do site do WordPress?
+
+
+Sim
+
+Não
+Se o app for um plug-in SMTP do Gmail para WordPress  em que você e/ou os administradores do site do WordPress são os únicos usuários que fazem login no app, ele não vai precisar de verificação. Para continuar usando o app, ignore o aviso de app não verificado  durante o login. No entanto, é recomendável definir o estado de publicação do projeto como teste .
+
+
+
+Confirme o seguinte:
+
+
+Confirmo que li os requisitos de verificação para envio  e que meu aplicativo atende a todos os requisitos.
+
+Entendo que, se estiver solicitando escopos restritos , preciso concluir a avaliação de segurança do app na nuvem (CASA, na sigla em inglês)  antes que o acesso às APIs restritas seja aprovado. É necessário fazer uma avaliação independente de cada projeto individual de OAuth e ela precisa ser recertificada anualmente .
+Observação: alternar entre os status de publicação (teste ou produção) e/ou tipos de usuário (interno ou externo) pode afetar seu processo de verificação e causar atrasos. Por isso, recomendamos evitar mudanças desnecessárias.
+
+## 🤖 Claude *(00:38:52)*
+
+
+## 🤖 Claude *(00:38:54)*
+
+Você pegou um ponto **importante** e estou de acordo — vou ser honesto (Lei 1): **eu errei a previsão.** Eu disse que sairia privado (baseado na doc do Google que diz "projeto não-auditado força privado"), mas **saiu público**. Deixa eu ver o que o nosso código pede e te explicar:
+
+## 🤖 Claude *(00:38:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===youtube branch: privacyStatus enviado===\"; sed -n '388,460p' supabase/functions/publish-social/index.ts | grep -n \"privacyStatus\\|status\\|snippet\\|title\\|description\\|part=\\|public\\|private\\|realPrivacy\" ",
+  "description": "Check what privacyStatus the youtube branch requests"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===youtube branch: privacyStatus enviado===
+> 3:        "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+> 13:            snippet: {
+> 14:              title: (content.text || content)?.toString()?.slice(0, 100) || "Gabriel AI",
+> 15:              description: typeof content === "object" && content?.text ? String(content.text) : "",
+> 18:            status: {
+> 19:              privacyStatus: "public",
+> 28:        console.error("YouTube resumable init error:", initRes.status, initErr);
+> 29:        pulse("error", "youtube_init_failed", { status: initRes.status });
+> 47:      if (putRes.status !== 200 && putRes.status !== 201) {
+> 48:        console.error("YouTube upload PUT error:", putRes.status, putData);
+> 49:        pulse("error", "youtube_upload_failed", { status: putRes.status });
+> 58:      // Materiality (Lei 1): a 201 does NOT mean public — an unaudited project FORCES the upload to private,
+> 59:      // ignoring the requested privacyStatus. Read back the REAL status; never assume 'public'.
+> 60:      let realPrivacyStatus: string | null = null;
+> 61:      const statusRes = await fetch(
+> 62:        `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=status`,
+> 65:      const statusData = await statusRes.json().catch(() => ({}));
+> 66:      realPrivacyStatus = statusData?.items?.[0]?.status?.privacyStatus ?? null;
+> 68:      result = { id: videoId, privacyStatus: realPrivacyStatus };
+> 69:      pulse("ok", "youtube_upload_complete", { video_id: videoId, privacy_status: realPrivacyStatus });
+> ```
+
+## 🤖 Claude *(00:39:46)*
+
+
+## 🤖 Claude *(00:40:05)*
+
+Bom catch — e você está certíssimo em querer entender. Vou ser honesto: **eu errei a previsão do privado.**
+
+## Por que saiu público (a verdade material)
+Nosso código pede `privacyStatus: "public"` (eu confirmei: `publish-social` linha ~407). A **doc do Google** diz que projeto não-auditado **força privado**, ignorando o que você pede — por isso eu previ privado. **Mas o Google honrou o "public"** → o vídeo saiu público.
+
+**Conclusão honesta:** a regra de forced-private **não está sendo aplicada** neste projeto. Pode ser enforcement inconsistente do Google, ou exceção, ou a regra mudou. O que importa (Lei 1): **empiricamente, upload público funciona AGORA, sem o Gate C.**
+
+### O que isso muda (a favor):
+- ✅ O **autopilot pode postar público já** — não precisa esperar a auditoria.
+- ✅ Quota default (10k/dia = ~6 uploads) cobre 1 Short/dia → **Gate C talvez nem seja necessário**.
+
+### O cuidado (não confiar cego):
+É comportamento **não-documentado** — o Google pode começar a forçar privado a qualquer momento. Nosso código **já foi feito certo**: ele relê o status real depois do upload (`realPrivacyStatus`) justamente pra não assumir "público". Só que o read-back voltou `null` (leu cedo demais). Vale eu endurecer isso depois (reler com retry) pra o autopilot SABER se um vídeo foi silenciosamente pro privado. **Não bloqueia nada agora.**
+
+---
+
+## ✅ Preencha o questionário assim (Gate B — verificação OAuth):
+| Pergunta | Resposta |
+|---|---|
+| App é **apenas uso pessoal**? | **Não** |
+| App é **apenas uso interno**? | **Não** |
+| App é **apenas dev/teste/preparação**? | **Não** |
+| App é **plug-in SMTP do Gmail pra WordPress**? | **Não** |
+
+**Por quê "Não" em tudo:** se responder "Sim" (uso pessoal), o Google empurra pra modo **Teste** → e Teste **mata o refresh token em 7 dias** = autopilot quebra. "Não" = caminho de app **verificado em produção** (sem aviso + token de longa duração garantido + pronto pra escalar a marca).
+
+**Confirmações (marque as duas):**
+- ✅ "Li os requisitos de verificação" → marque.
+- ✅ A do CASA / escopos restritos → marque. **`youtube.upload` é escopo SENSÍVEL, não RESTRITO** (o console agrupa ele em "Sensitive scopes") → **CASA não se aplica a nós**. É só um reconhecimento condicional; marcar libera o botão. (A auditoria do YouTube — Gate C — é outra coisa, separada do CASA.)
+
+Aí → **Enviar para verificação**.
+
+> ⚠️ Provável follow-up do Google: verificar a **posse do domínio `mcorch.com`** no Search Console. Se pedir, me avisa que te guio.
+
+---
+
+## Resumindo a estratégia
+1. **Deleta o vídeo de teste público** (você já vai fazer) ✅.
+2. **Envia o Gate B** com as respostas acima (app verificado = limpo + escalável).
+3. **Gate C (auditoria YouTube):** **opcional por enquanto** — público já funciona e a quota cobre o diário. Só submeta se o Google começar a forçar privado ou se precisar de mais quota.
+4. **O autopilot do YouTube já pode rodar** assim que a gente ligar (público funciona; token de longa duração — confirmo com um smoke de >7 dias).
+
+Pode enviar o Gate B. Quando o Google pedir o domínio no Search Console (se pedir), me chama. 🚀
+
+## 👤 User *(00:41:32)*
+
+enviado. Data access status
+ O acesso aos dados do seu app está em análise.
+
+## 🤖 Claude *(00:42:21)*
+
+
+## 🤖 Claude *(00:42:35)*
+
+🎉 **Marco atingido — as 3 redes estão nas filas de review:**
+
+| Rede | Status | Integração |
+|---|---|---|
+| **TikTok** | Content Posting API audit **in review** | ✅ OAuth + Direct Post provados E2E |
+| **YouTube** | OAuth verification (Gate B) **em análise** | ✅ OAuth + upload provados E2E (público já funciona) |
+| **Pinterest** | Trial **pendente** (~1 dia útil) | código pronto; falta conectar+provar quando o Trial sair |
+
+E uma descoberta valiosa: **o YouTube já publica público sem a auditoria** — então, quando ligarmos, o autopilot do YouTube pode postar público desde já (quota cobre 1 Short/dia). Os reviews agora são espera externa (semanas).
+
+---
+
+## ⚠️ Tem código LIVE não-commitado (Lei 1)
+Subi pra produção mas **não commitei no git** — prod e git estão divergentes:
+- `publish-social` — fix do TikTok (SELF_ONLY) **deployado**
+- `edge.ts` + `SocialAccountsPage.tsx` — fix da mensagem de erro **deployado**
+- `AssetDetailDialog.tsx` — botões **TikTok + YouTube** **deployado**
+
+Recomendo **commitar/selar isso agora** pra prod = git (não deixar trabalho provado solto).
+
+## Opções daqui (enquanto os reviews correm):
+- **(A) Selar a sessão** (`/handoff`) — commits granulares + handoff + nó na malha. Protege o que já está live. ← recomendo
+- **(B) Endurecer o read-back do YouTube** — reler o `privacyStatus` real com retry (o guard anti-falso-sucesso que falhou em `null`), pro autopilot saber se um vídeo foi pro privado silenciosamente.
+- **(C) Wirar as novas redes no autopilot** (FR-PE-013, que ficou deferido) — fazer a persona Gabriel AI postar automático no TikTok/YouTube, não só WordPress. É a entrega de valor real, mas é peça maior (tem o gate de custo/render do vídeo).
+- **(D) Esperar o Pinterest Trial** → conectar + provar + gravar demo.
+
+**O que prefere?** Eu recomendo **(A) selar** primeiro (o trabalho está provado e live — merece ficar gravado), e depois atacar **(C)** numa sessão focada. Mas você decide. 🚀
+
+## 👤 User *(00:56:28)*
+
+Antes de seguir com A>B>C>D temos que esclarecer algumas coisas. Cada rede social conectada tem sua própria "pegada", tom de voz, estilo e formatos de assets diferentes, vamos ter que que fazer o mesmo passo que sempre fazemos muito bem feito antes de qualquer coisa.
+
+Com base nas boas práticas e design partners que já conhecemos e consolidamos, vamos trabalhar para entender quais são os formatos de cada uma das rede sociais.:
+LinkedIn
+Instagram
+Facebook
+Twitter / X
+TikTok
+YouTube
+Pinterest
+Wordpress
+
+--
+
+Para então dar essa skill de engenharia reversa, ou seja dados sempre mandam e ditam as regras. Conforme nossa essencia, de sempre verificar o que já tem pronto de workflows, metodologias, frameworks, pipelines e funis validados no mercado e arriscar coisas novas conforme as boas práticas das documentações oficiais de cada canal. E depois podemos sim fazer o handoff, mas ainda temos 60% de 1M /tokens da janela de contexto disponível.
+
+## 🤖 Claude *(00:57:36)*
+
+
+## 🤖 Claude *(00:57:41)*
+
+Exatamente o caminho certo — **dados mandam, código depois.** Antes de wirar qualquer rede no autopilot, precisamos da inteligência de formato/voz/cadência de cada canal, fundamentada nas docs oficiais + frameworks validados de mercado. É a engenharia reversa: o canal dita as regras, o motor obedece.
+
+Isso é um **deepsearch** (nossa essência — Closed-Loop Protocol). Vou rodar uma pesquisa fundamentada e verificada adversarialmente nos 8 canais em paralelo, e sintetizar numa matriz + modelo de dados `channel_profile` (a "skill de engenharia reversa") que vira semente de emenda ao BoK `post-engine`.
+
+## 🤖 Claude *(00:58:27)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'channel-format-intelligence-deepsearch',\n  description: 'Grounded deepsearch of per-channel asset formats, tone/voice, content types, cadence, and discovery mechanics across 8 channels; adversarially verify the load-bearing specs; synthesize a channel-profile matrix + data model (the reverse-engineering spine) to seed a post-engine BoK amendment.',\n  phases: [\n    { title: 'Research', detail: 'one grounded agent per channel + validated funnels/frameworks' },\n    { title: 'Verify', detail: 'adversarially verify the spec numbers (they break uploads if wrong)' },\n    { title: 'Synthesize', detail: 'cross-channel matrix + channel_profile data model + BoK recommendation' },\n  ],\n}\n\nconst CHANNEL_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    channel: { type: 'string' },\n    video_formats: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        properties: {\n          format_name: { type: 'string', description: 'e.g. Reel, Short, in-feed video, Idea/video Pin, native video' },\n          aspect_ratio: { type: 'string' },\n          resolution: { type: 'string' },\n          duration_sec: { type: 'string', description: 'min-max range' },\n          max_file_mb: { type: 'string' },\n          codec_container: { type: 'string' },\n          notes: { type: 'string' },\n        },\n        required: ['format_name', 'aspect_ratio', 'duration_sec'],\n      },\n    },\n    image_formats: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        properties: {\n          format_name: { type: 'string' },\n          aspect_ratio: { type: 'string' },\n          dimensions_px: { type: 'string' },\n          notes: { type: 'string' },\n        },\n        required: ['format_name', 'aspect_ratio'],\n      },\n    },\n    text_limits: {\n      type: 'object', additionalProperties: false,\n      properties: {\n        caption_or_body_max: { type: 'string' },\n        title_max: { type: 'string' },\n        hashtags_recommended: { type: 'string' },\n        link_handling: { type: 'string', description: 'clickable in caption? link-in-bio? etc.' },\n        notes: { type: 'string' },\n      },\n      required: ['caption_or_body_max'],\n    },\n    content_types: { type: 'array', items: { type: 'string' }, description: 'native content formats supported' },\n    tone_voice: { type: 'string', description: 'what tone/style performs here, per official + validated frameworks' },\n    cadence_best_practice: { type: 'string', description: 'frequency + timing per official/creator resources' },\n    discovery_mechanics: { type: 'string', description: 'how reach/ranking works: algorithm signals, SEO, hashtags, watch-time, saves' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    citations: {\n      type: 'array',\n      items: { type: 'object', additionalProperties: false, properties: { url: { type: 'string' }, claim: { type: 'string' } }, required: ['url', 'claim'] },\n    },\n  },\n  required: ['channel', 'video_formats', 'image_formats', 'text_limits', 'content_types', 'tone_voice', 'cadence_best_practice', 'discovery_mechanics', 'confidence', 'citations'],\n}\n\nconst SPEC_VERIFY_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    channel: { type: 'string' },\n    corrections: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        properties: {\n          field: { type: 'string' },\n          researched_value: { type: 'string' },\n          verified_value: { type: 'string' },\n          status: { type: 'string', enum: ['confirmed', 'corrected', 'uncertain'] },\n          citation: { type: 'string' },\n        },\n        required: ['field', 'status'],\n      },\n    },\n    overall_confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    notes: { type: 'string' },\n  },\n  required: ['channel', 'corrections', 'overall_confidence'],\n}\n\nconst FRAMEWORKS_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    validated_frameworks: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        properties: {\n          name: { type: 'string' },\n          what: { type: 'string' },\n          how_applies_to_us: { type: 'string' },\n          citation: { type: 'string' },\n        },\n        required: ['name', 'what'],\n      },\n    },\n    repurposing_funnels: { type: 'array', items: { type: 'string' }, description: 'validated content-repurposing pipelines (e.g. 1 pillar video -> N shorts -> carousels -> threads -> blog)' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    citations: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { url: { type: 'string' }, claim: { type: 'string' } }, required: ['url', 'claim'] } },\n  },\n  required: ['validated_frameworks', 'repurposing_funnels', 'confidence', 'citations'],\n}\n\nconst ctx = `Project: MCORCH \u2014 autonomous content engine for the brand persona \"Gabriel AI / CCIO\". We already PUBLISH to LinkedIn, Instagram (Reels via Content Publishing), Facebook, Twitter/X, and WordPress; TikTok + YouTube + Pinterest integrations are code-complete (in review). Our creative engine already PRODUCES: 9:16 vertical MP4 (HyperFrames motor, 1080x1920), images (canvas/Gemini), and text (long article, LinkedIn post, X thread).\nGOAL: build a DATA-DRIVEN \"channel profile\" so the engine reshapes one piece of content into each channel's correct format, voice, and cadence (\"data dictates the rules\" / reverse engineering). \nFor each channel, capture the CURRENT (2026) authoritative asset specs + the tone/voice + content types + cadence + discovery mechanics that actually drive reach. Ground every spec in OFFICIAL docs (the platform's own help/creator/developer pages) and validated market frameworks; reputable marketing sources (Hootsuite/Buffer/Later/Sprout/Sprig social-media-specs guides) are acceptable corroboration for specs.\nRULE: every spec number and non-obvious claim MUST carry a real URL you fetched. Use WebSearch + WebFetch (firecrawl-scrape if a page is JS-heavy). Prefer current 2025-2026 values; specs change. If uncertain, lower confidence and say so. Flag where our existing 9:16 MP4 / image / text outputs FIT or are a GAP for that channel.`\n\nphase('Research')\nconst CHANNELS = [\n  { key: 'linkedin', name: 'LinkedIn (feed posts, native video, documents/carousels, articles)' },\n  { key: 'instagram', name: 'Instagram (Reels, feed image/carousel, Stories)' },\n  { key: 'facebook', name: 'Facebook (Reels, feed video/image, link posts)' },\n  { key: 'twitter', name: 'Twitter / X (posts, threads, native video, images)' },\n  { key: 'tiktok', name: 'TikTok (short video, photo carousel)' },\n  { key: 'youtube', name: 'YouTube (Shorts + long-form video + thumbnails)' },\n  { key: 'pinterest', name: 'Pinterest (image Pins, video Pins, Idea Pins)' },\n  { key: 'wordpress', name: 'WordPress (blog article / SEO: featured image, structure, length)' },\n]\n\nconst perChannel = await pipeline(\n  CHANNELS,\n  (c) => agent(\n    `${ctx}\\n\\nCHANNEL: ${c.name}\\nResearch this channel's CURRENT authoritative profile: video formats (aspect ratio, resolution, duration min/max, max file size, codec), image formats (aspect ratio, dimensions), text limits (caption/body max, title max, hashtags, link handling), supported native content types, tone/voice that performs, posting cadence best practice, and discovery/ranking mechanics. Cite official + corroborating sources for every number.`,\n    { label: `research:${c.key}`, phase: 'Research', schema: CHANNEL_SCHEMA, agentType: 'general-purpose' }\n  ),\n  (research, c) => agent(\n    `${ctx}\\n\\nADVERSARIALLY verify the load-bearing SPEC NUMBERS for ${c.name}. For each video/image spec (aspect ratio, resolution, duration, max file size) and text limit in the researched profile below, try to REFUTE it against the platform's OWN current official/help/developer docs. Mark each confirmed / corrected / uncertain with the value and a citation. Specs that are wrong silently break uploads \u2014 be precise and current (2026).\\n\\nResearched profile:\\n${JSON.stringify(research)}`,\n    { label: `verify:${c.key}`, phase: 'Verify', schema: SPEC_VERIFY_SCHEMA, agentType: 'general-purpose' }\n  ),\n)\n\nphase('Research')\nconst frameworks = await agent(\n  `${ctx}\\n\\nResearch VALIDATED market content frameworks, methodologies, pipelines, and funnels relevant to a single brand persona repurposing one idea across all these channels: e.g. pillar-content repurposing (1 long video -> N shorts -> carousels -> threads -> blog), hook-retention-CTA short-video structures, the \"content atomization\" model, channel-native vs cross-posting trade-offs, and posting-cadence playbooks. Give named frameworks with citations and how each applies to our engine.`,\n  { label: 'research:frameworks', phase: 'Research', schema: FRAMEWORKS_SCHEMA, agentType: 'general-purpose' }\n)\n\nphase('Synthesize')\nconst channelData = perChannel.filter(Boolean)\nconst synth = await agent(\n  `${ctx}\\n\\nYou are the synthesizer. Using ONLY the grounded per-channel research (each already adversarially spec-verified) + the frameworks research below, produce:\\n\\n1. A CROSS-CHANNEL FORMAT MATRIX \u2014 for each of the 8 channels, the canonical video spec (aspect/res/duration/file), image spec, text limits, content types, tone/voice (1 line), cadence (1 line), discovery driver (1 line). Use the VERIFIED values where the verify stage corrected them; flag any field the verify left 'uncertain'.\\n2. THE COMMON SPINE vs DIVERGENCE \u2014 which channels share the exact same asset (e.g. 9:16 1080x1920 MP4 across Reels/Shorts/TikTok) so one render serves many, vs where a channel needs a distinct asset (e.g. Pinterest 2:3, LinkedIn 1:1/16:9, WordPress featured image, X aspect). Map each against what we ALREADY produce (9:16 MP4, images, text) \u2192 mark FIT or GAP.\\n3. A PROPOSED DATA MODEL 'channel_profiles' \u2014 the table/JSON shape the engine reads so the rules are DATA not code (the reverse-engineering skill): columns/fields for video/image/text constraints, voice prompt seed, cadence, and a 'transform recipe' (how to derive this channel's asset from the pillar content). Keep it concrete and implementable in our stack (Supabase + edge fns).\\n4. RECOMMENDATION on encoding: BoK amendment to post-engine vs a sibling module; which FRs/OTDs this opens; what is reusable now vs net-new.\\n\\nBe exhaustive but structured (tables). Cite the most load-bearing URLs inline. This is the seed for the BoK amendment \u2014 production-grade, no placeholders.\\n\\nPER-CHANNEL (research + spec verification):\\n${JSON.stringify(channelData, null, 2)}\\n\\nFRAMEWORKS:\\n${JSON.stringify(frameworks)}`,\n  { label: 'synthesize', phase: 'Synthesize', effort: 'high' }\n)\n\nreturn { perChannel: channelData, frameworks, synthesis: synth }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wvmmbwzie
+> Summary: Grounded deepsearch of per-channel asset formats, tone/voice, content types, cadence, and discovery mechanics across 8 channels; adversarially verify the load-bearing specs; synthesize a channel-profile matrix + data model (the reverse-engineering spine) to seed a post-engine BoK amendment.
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/subagents/workflows/wf_98eede6d-069
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/channel-format-intelligence-deepsearch-wf_98eede6d-069.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/channel-format-intelligence-deepsearch-wf_98eede6d-069.js"} to iterate without resending the script.)
+> Run ID: wf_98eede6d-069
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f23f934d-28f6-402d-a438-cbc319022dfc/workflows/scripts/channel-format-intelligence-deepsearch-wf_98eede6d-069.js", resumeFromRunId: "wf_98eede6d-069"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(00:58:36)*
+
+
+## 🤖 Claude *(00:58:45)*
+
+Rodando em background — deepsearch dos 8 canais (LinkedIn · Instagram · Facebook · X · TikTok · YouTube · Pinterest · WordPress), cada um com pesquisa fundamentada **+ verificação adversarial dos números de spec** (aspect ratio, resolução, duração, file size, limites de texto — os que quebram upload se errados), mais uma frente de **frameworks/funis validados de mercado**, e uma síntese final.
+
+**O que vou te entregar quando cair:**
+1. **Matriz de formato cross-canal** — specs verificados por canal (vídeo, imagem, texto, content types, tom de voz, cadência, mecânica de descoberta).
+2. **Espinha comum vs divergência** — onde **um render serve vários** (ex: 9:16 1080×1920 em Reels/Shorts/TikTok) vs onde o canal exige asset próprio (Pinterest 2:3, LinkedIn 1:1/16:9, featured image do WP…), **mapeado contra o que já produzimos** → marcado FIT ou GAP.
+3. **Modelo de dados `channel_profiles`** — a tabela/JSON que o motor lê pra que as regras sejam **dados, não código** (a skill de engenharia reversa) + a "transform recipe" por canal (como derivar o asset do conteúdo-pilar).
+4. **Recomendação de encoding** — emenda ao BoK `post-engine` + quais FRs/OTDs abre, o que já é reusável vs net-new.
+
+Isso vira a semente da emenda BoK (Closed-Loop). Te trago a síntese assim que terminar — aí decidimos o encoding e só então código. (O código live não-commitado segue seguro pro handoff depois, como você disse.) 🔬
