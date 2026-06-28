@@ -1,4 +1,4 @@
-# Corrigir erro de configuração TikTok
+# [[2026-06-27 - Corrigir erro de configuração TikTok|Corrigir erro de configuração TikTok]]
 **Date:** 2026-06-28 | **Session ID:** `f23f934d-28f6-402d-a438-cbc319022dfc`
 
 ---
@@ -1513,7 +1513,7 @@ Tem um playbook de registro que a pesquisa fundamentada da sessão anterior já 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/tiktok-publish-credential-resolution.md 2>/dev/null",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/[[tiktok-publish-credential-resolution|tiktok-publish-credential-resolution]].md 2>/dev/null",
   "description": "Read registration playbook + TikTok SOP"
 }
 ```
@@ -1904,7 +1904,7 @@ Boa — se as chaves já estão nas configurações, o primeiro passo material �
 > if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
 > console.log(accessToken);
 > ===find User Zero id/email===
-> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP mcoins-ledger-reconciliation para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
+> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP [[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]] para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
 > scripts/seed-openclaw-bok-seal.ts:47:PRÓXIMO DELIVERABLE (post-seal): (a) carry-overs OE-661 (provisionar GCRUX_ML_AFFILIATE_TOKEN + wire orchestrate emitir content_mesh_asset + primeiro run end-to-end Usuário Zero do flywheel); (b) claw-master audit-v2 (planejado 2026-06-16) verificar regressão D-OC-001..005 + novas findings; (c) OTD-CM-005 logging.redactSensitive set true no próximo edit consolidado de openclaw.json (P2 oportunístico); (d) D-OC-008 marketing-growth BOOTSTRAP.md scaffold (non-blocking).`,
 > scripts/seed-e2e-user-zero-bok-seal.ts:37:  content: `e2e-user-zero — Framework de QA End-to-End como Usuário Zero real (BoK v1)
 > scripts/seed-e2e-user-zero-bok-seal.ts:41:VISÃO: Framework AI-agent-friendly que testa MCORCH como Usuário Zero real de interface (não API tests programáticos), usando agent-browser CLI v0.27.0+ como primitiva técnica. Observa simultaneamente as 4 superfícies que um humano consciente observa ao dogfooding: (1) UI/DOM via snapshot accessibility-tree com refs @e1/@e2 (interações reais click/fill/type); (2) Network tab capturada como HAR file; (3) Console messages (errors + warnings + unhandled rejections); (4) estado visual via screenshot/video opcional. Cada finding é classificado por severity (P0..P3) e issue_type (bug/ux/perf/accessibility/security/regression), persistido como observation node em mcorch_nodes com edge OBSERVES uppercase para o módulo afetado, e gera report markdown estruturado.
@@ -8515,3 +8515,16 @@ Chegamos a um marco limpo e enorme nesta sessão:
 O próximo (FR-CP-002 atomizer + FR-CP-003 reshaper) é o build grande — fronteira natural de sessão. Selar agora protege a migration aplicada e grava tudo na malha.
 
 **Quer que eu rode o `/handoff`** (commits granulares + HANDOFF.md + nó milestone na malha)? Ou prefere emendar pro FR-CP-003 antes? Eu recomendo **selar**. 🔒
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - agent-afdf1595d8eadc679]]
+> * **Próxima Sessão**: [[2026-06-28 - agent-a11757ea49b92c757]]
+%% --- TIMELINE END --- %%
