@@ -3398,3 +3398,16 @@ Phase 5b ✅ — 5b-1/5b-2 limpos; os matches de 5b-3 são UUIDs documentados e 
 > ---remote---
 > git@github.com:gabrielZarattini/constellation-orchestra.git
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-28 - Corrigir erro de configuração TikTok]]
+> * **Próxima Sessão**: [[2026-06-28 - Implementar reshaper para posts nativos multiplataforma]]
+%% --- TIMELINE END --- %%
