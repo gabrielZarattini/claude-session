@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1492
-> * **Sessões do Claude**: 1450
+> * **Total de Sessões Registradas**: 1494
+> * **Sessões do Claude**: 1452
 > * **Sessões do Gemini**: 42
 
 ---
@@ -67,6 +67,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-28 - agent-af701086aecdaf67f]]` - *2026-06-28*
+*   `[[2026-06-28 - agent-a941de155b961c42b]]` - *2026-06-28*
 *   `[[2026-06-28 - Corrigir erro de configuração TikTok]]` - *2026-06-28*
 *   `[[2026-06-27 - agent-afdf1595d8eadc679]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-af8701874fa76780a]]` - *2026-06-27*
@@ -77,9 +79,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-27 - agent-ae0d1118f0bbb9c97]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-adde14d045660a1a6]]` - *2026-06-27*
 *   `[[2026-06-27 - agent-ad76503c52ae191d6]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-acecf7acf089ed8cc]]` - *2026-06-27*
-*   `[[2026-06-27 - agent-abad13eb4a666b21d]]` - *2026-06-27*
-*   *... e mais 1448 sessões nessa categoria.*
+*   *... e mais 1450 sessões nessa categoria.*
 
 ---
 
@@ -270,6 +270,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-28 - agent-af701086aecdaf67f]]` (ClaudeSessions)
+*   `[[2026-06-28 - agent-a941de155b961c42b]]` (ClaudeSessions)
 *   `[[2026-06-28 - Corrigir erro de configuração TikTok]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-afdf1595d8eadc679]]` (ClaudeSessions)
 *   `[[2026-06-27 - agent-af8701874fa76780a]]` (ClaudeSessions)
