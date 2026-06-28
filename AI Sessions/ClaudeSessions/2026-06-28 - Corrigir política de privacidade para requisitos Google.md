@@ -3399,6 +3399,950 @@ Phase 5b ✅ — 5b-1/5b-2 limpos; os matches de 5b-3 são UUIDs documentados e 
 > git@github.com:gabrielZarattini/constellation-orchestra.git
 > ```
 
+## 🤖 Claude *(14:30:03)*
+
+
+## 🤖 Claude *(14:30:04)*
+
+Push ✅ — `6c30136..1b085aa`, gitleaks limpo, 3 commits no `origin/main`.
+
+**Phase 7b — Hygiene:**
+
+## 🤖 Claude *(14:30:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch/ count ===\"\nls scratch/ 2>/dev/null | wc -l\necho \"=== scratch .ts criados nesta sess\u00e3o? (mtime hoje) ===\"\nfind scratch/ -name \"*.ts\" -newermt \"2026-06-28 11:00\" 2>/dev/null | head || echo \"nenhum desta sess\u00e3o\"\necho \"=== git clean? ===\"\ngit status --short || echo \"clean\"",
+  "description": "Check scratch + working tree clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch/ count ===
+> 0
+> === scratch .ts criados nesta sessão? (mtime hoje) ===
+> === git clean? ===
+> ```
+
+## 🤖 Claude *(14:30:31)*
+
+
+## 🤖 Claude *(14:30:55)*
+
+Tudo limpo — scratch/ vazio, working tree limpo, sem mudança de sprint (tarefa pontual fora do roadmap), sem MCP novo.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Privacy Policy Google OAuth Compliance (2026-06-28)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret leak scan ......... ✅ PASS (sem secrets no diff)
+  1b edge JWT ................. ⏭ N/A (nenhuma edge fn tocada)
+  1c client coin deduction ... ⏭ N/A (nenhum mco_balance tocado)
+  1d RLS bypass .............. ⏭ N/A (nenhum rpc/service_role no src tocado)
+  1e sensitive console.log ... ✅ PASS (matches = strings de teste pré-existentes)
+  5b HANDOFF.md scan ......... ✅ PASS (5b-1/5b-2 limpos; 5b-3 = UUIDs/project_id, não credenciais)
+  gitleaks (pre-commit + push) ✅ no leaks found
+  → Nenhum 🔴
+
+📦 COMMITS (3 total)
+  f40e989 — fix(legal): privacy policy — Google OAuth compliance (Limited Use / AI-training / revocation / security)
+  37eabe0 — docs(readme): v6.58.1 badge + neural_mesh 8982 nodes
+  1b085aa — docs(handoff): seal privacy policy Google OAuth compliance
+
+⬡ KNOWLEDGE MESH
+  Handoff node: d5476bb8-c5ea-4dc4-a3c0-86d1e0895456 — session-handoff-20260628-privacy-policy-google-oauth-compliance
+  Embedding: ✅ 768d (9505 chars, openai/text-embedding-3-small via openrouter)
+
+📖 README.md
+  Versão: 6.58.0 → 6.58.1 (Privacy-Policy-Google-OAuth-Compliance)
+  Badge neural_mesh: 8980 → 8982 nós
+  Seção adicionada: What's new in v6.58.1
+
+🧠 HANDOFF.md
+  Fase selada: Política de Privacidade — conformidade Google OAuth
+  Seções atualizadas: Task State, novo Record (4 lacunas + provas), GraphRAG State (8982)
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas (exit 0)
+
+🚀 PUSH
+  Branch: main → origin/main (6c30136..1b085aa)
+  Commits enviados: 3 · github.com:gabrielZarattini/constellation-orchestra.git
+
+📌 SPRINT
+  sprint-priorities.md: sem mudanças (tarefa pontual fora do roadmap)
+  scratch/ cleanup: limpo ✅ (0 arquivos)
+  MCP docs: ok ✅ (nenhum MCP novo)
+
+📚 BoK GATE
+  N/A — single-file patch a página legal existente (exempção Master Execution Protocol)
+
+⏭  PRÓXIMOS PASSOS
+  1. [Sovereign-side] Confirmar mcorch.com verificado no Search Console + URLs na tela
+     de consentimento OAuth (Google Cloud Console) apontando p/ /privacy e a home.
+  2. [retomar roadmap] Publishers binary-upload (OTD-CP-010): LinkedIn/FB/X vídeo+imagem —
+     asset já produzido, falta o branch (gated em conta conectada/audit).
+  3. [retomar roadmap] Viral Autopilot — 1º ciclo pago de vídeo 9:16 witnessed + postback ML.
+
+🩺 SURVIVAL LAWS SELF-AUDIT
+  Lei 1 (Materialidade): ✅ toda claim de SUCCESS ancorada (tsc exit 0, build 26.76s + 6/6
+    âncoras no chunk servido, render DOM eval + screenshot vista, node d5476bb8 + embedding
+    verificados, Fase 5c SEAL ALLOWED). Sem "cérebro sem mãos".
+  Lei 2 (Processo): ✅ N/A — não é automação nova (edição de texto legal).
+  Lei 3 (Poda): janela longe de 95%; sessão curta e focada, sem necessidade de poda.
+  Lei 4 (ORO): Operator=MCORCH Agent · Reviewer=Sovereign (+ revisão adversarial do texto) ·
+    Owner=Sovereign (risco = rejeição na verificação OAuth do Google).
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada, Maestro. A política de privacidade corrigida está **em produção** (`login.mcorch.com/privacy`) e tudo no `origin/main`. Lembre-se do **hard-refresh (Ctrl+Shift+R)** para furar o cache do Cloudflare.
+
+Um achado que vale guardar para a próxima rodada de verificação OAuth (você está indo para YouTube/Google): a cláusula **vinculante** de IA do Google mora nas políticas *product-specific* (Workspace/Photos), **não** na página umbrella — quem responde só pela umbrella erra. O texto que aplicamos já cobre as duas formulações.
+
+## 👤 User *(18:50:49)*
+
+https://login.mcorch.com/dashboard/admin todo dia parece ter novos acessos, você consegue rastrear como esse usuário conseguiu se cadastrar nessa tela? não tem nome nem empresa esta como viewer.
+
+## 🤖 Claude *(18:51:19)*
+
+
+## 🤖 Claude *(18:51:21)*
+
+Boa — vou rastrear o vetor de cadastro desse usuário. Isso é investigação de segurança: preciso (1) mapear o fluxo de signup no código (signup aberto? qual provider? como vira "viewer"?) e (2) consultar o DB ao vivo para ver materialmente **como** esse usuário específico entrou (provider, metadata, data). Começo com varredura paralela.
+
+## 🤖 Claude *(18:51:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Admin users data source ===\"\ngrep -rn \"Usu\u00e1rios\\|admin.*user\\|listUsers\\|admin_list\\|AdminPage\\|useAdmin\" src/ --include=*.ts --include=*.tsx -l | head\necho \"=== handle_new_user / signup trigger ===\"\ngrep -rln \"handle_new_user\\|on_auth_user_created\\|auth.users\\|raw_user_meta\" supabase/migrations/ | tail -10\necho \"=== viewer role default assignment ===\"\ngrep -rn \"'viewer'\\|\\\"viewer\\\"\\|viewer\" supabase/migrations/ | grep -i \"role\\|insert\\|default\" | head",
+  "description": "Locate admin data source, signup trigger, viewer role assignment"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Admin users data source ===
+> src/App.tsx
+> src/pages/SocialAccountsPage.tsx
+> src/pages/AdminPage.tsx
+> src/pages/SettingsPage.tsx
+> src/components/dashboard/DashboardSidebar.tsx
+> src/components/admin/UserActionsMenu.tsx
+> src/components/admin/SovereignBalancePanel.tsx
+> src/hooks/useAdminData.ts
+> src/hooks/useAdminUserActions.ts
+> === handle_new_user / signup trigger ===
+> supabase/migrations/20260615190000_vision_mcp_artifacts.sql
+> supabase/migrations/20260527012945_agent_metering_minimal.sql
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> supabase/migrations/20260514040300_viralmind_affiliate_radar.sql
+> supabase/migrations/20260620120000_viral_autopilot_plans.sql
+> supabase/migrations/20260504120000_pipeline_runs.sql
+> supabase/migrations/20260531200000_whatsapp_lead_engine.sql
+> supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql
+> supabase/migrations/20260603000000_marketing_hub_lead_core.sql
+> supabase/migrations/20260626130000_publication_metrics.sql
+> === viewer role default assignment ===
+> supabase/migrations/20260622030000_video_studio_org_tenancy.sql:37:  role        text NOT NULL DEFAULT 'editor' CHECK (role IN ('owner','billing_admin','editor','viewer')),
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:7:CREATE TYPE public.app_role AS ENUM ('admin', 'editor', 'viewer');
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:35:  role app_role NOT NULL DEFAULT 'viewer',
+> ```
+
+## 🤖 Claude *(18:51:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Auth/Signup UI ===\"\nls src/pages/ | grep -iE \"auth|login|signup|register\"\necho \"=== signUp / signInWith calls in src ===\"\ngrep -rn \"signUp\\|signInWithOAuth\\|signInWithPassword\\|signInWithOtp\\|provider:\" src/ --include=*.ts --include=*.tsx | head -20",
+  "description": "Find auth/signup UI and methods used"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Auth/Signup UI ===
+> Auth.tsx
+> === signUp / signInWith calls in src ===
+> src/pages/VideoEditorPage.tsx:323:  const fetchProviderModels = useCallback(async (provider: string) => {
+> src/pages/VideoEditorPage.tsx:391:            provider: videoProvider,
+> src/pages/VideoEditorPage.tsx:523:            provider: (content.ai_model || '').split('/')[0] || 'gemini',
+> src/test/canvas-video-async-smoke.test.ts:106:      provider: "higgsfield",
+> src/components/core/AIOSTerminal.tsx:27:  provider: "gemini" | "openrouter" | "vault";
+> src/components/core/AIOSTerminal.tsx:47:    provider: "gemini",
+> src/components/core/AIOSTerminal.tsx:58:    provider: "gemini",
+> src/components/core/AIOSTerminal.tsx:69:    provider: "gemini",
+> src/components/core/AIOSTerminal.tsx:80:    provider: "gemini",
+> src/components/core/AIOSTerminal.tsx:93:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:104:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:117:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:128:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:139:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:150:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:161:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:174:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:187:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:198:    provider: "openrouter",
+> src/components/core/AIOSTerminal.tsx:211:    provider: "openrouter",
+> ```
+
+## 🤖 Claude *(18:51:34)*
+
+Let me read the Auth UI and the role-provisioning trigger to understand the signup vector.
+
+## 🤖 Claude *(18:51:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { useNavigate, useSearchParams } from 'react-router-dom';
+> 3	import { safeReturnTo } from '@/lib/sso-cookie';
+> 4	import { supabase } from '@/integrations/supabase/client';
+> 5	import { Button } from '@/components/ui/button';
+> 6	import { Input } from '@/components/ui/input';
+> 7	import { Label } from '@/components/ui/label';
+> 8	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+> 9	import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+> 10	import { useToast } from '@/hooks/use-toast';
+> 11	import { Loader2, Sparkles } from 'lucide-react';
+> 12	import { Separator } from '@/components/ui/separator';
+> 13	
+> 14	const Auth = () => {
+> 15	  const [loading, setLoading] = useState(false);
+> 16	  const [email, setEmail] = useState('');
+> 17	  const [password, setPassword] = useState('');
+> 18	  const [fullName, setFullName] = useState('');
+> 19	  const navigate = useNavigate();
+> 20	  const { toast } = useToast();
+> 21	  // Social logins (Google/Apple) are hidden by default in production. The Sovereign keeps testing via the
+> 22	  // `?devLogin` URL param, which re-shows the Google button (gabrielcall@gmail.com = Usuário Zero). Apple
+> 23	  // stays removed for now. Temporary gate — remove when social login is re-enabled for all users.
+> 24	  const [searchParams] = useSearchParams();
+> 25	  const devLogin = searchParams.has('devLogin');
+> 26	
+> 27	  const handleLogin = async (e: React.FormEvent) => {
+> 28	    e.preventDefault();
+> 29	    setLoading(true);
+> 30	    const { error } = await supabase.auth.signInWithPassword({ email, password });
+> 31	    setLoading(false);
+> 32	    if (error) {
+> 33	      toast({ title: 'Erro ao entrar', description: error.message, variant: 'destructive' });
+> 34	    } else {
+> 35	      // SSO loop: if we arrived from an isolated app (design/video.mcorch.com) via ?return_to, bounce back.
+> 36	      const rt = safeReturnTo();
+> 37	      if (rt) { window.location.href = rt; } else { navigate('/dashboard'); }
+> 38	    }
+> 39	  };
+> 40	
+> 41	  const handleSignup = async (e: React.FormEvent) => {
+> 42	    e.preventDefault();
+> 43	    setLoading(true);
+> 44	    const { error } = await supabase.auth.signUp({
+> 45	      email,
+> 46	      password,
+> 47	      options: {
+> 48	        data: { full_name: fullName },
+> 49	        emailRedirectTo: window.location.origin,
+> 50	      },
+> 51	    });
+> 52	    setLoading(false);
+> 53	    if (error) {
+> 54	      toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
+> 55	    } else {
+> 56	      toast({
+> 57	        title: 'Cadastro realizado!',
+> 58	        description: 'Verifique seu email para confirmar a conta.',
+> 59	      });
+> 60	    }
+> 61	  };
+> 62	
+> 63	  const handleForgotPassword = async () => {
+> 64	    if (!email) {
+> 65	      toast({ title: 'Informe seu email', variant: 'destructive' });
+> 66	      return;
+> 67	    }
+> 68	    setLoading(true);
+> 69	    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+> 70	      redirectTo: `${window.location.origin}/reset-password`,
+> 71	    });
+> 72	    setLoading(false);
+> 73	    if (error) {
+> 74	      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+> 75	    } else {
+> 76	      toast({ title: 'Email enviado', description: 'Verifique sua caixa de entrada.' });
+> 77	    }
+> 78	  };
+> 79	
+> 80	  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
+> 81	    setLoading(true);
+> 82	    const { error } = await supabase.auth.signInWithOAuth({
+> 83	      provider,
+> 84	      options: {
+> 85	        redirectTo: `${window.location.origin}/dashboard`,
+> 86	      },
+> 87	    });
+> 88	    if (error) {
+> 89	      toast({ title: `Erro ao entrar com ${provider}`, description: error.message, variant: 'destructive' });
+> 90	      setLoading(false);
+> 91	    }
+> 92	  };
+> 93	
+> 94	  return (
+> 95	    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+> 96	      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+> 97	        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+> 98	        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/5 blur-3xl" />
+> 99	      </div>
+> 100	
+> 101	      <Card className="w-full max-w-md glass-panel border-border/50 relative z-10">
+> 102	        <CardHeader className="text-center space-y-2">
+> 103	          <div className="flex items-center justify-center gap-2 mb-2">
+> 104	            <Sparkles className="h-6 w-6 text-primary" />
+> 105	            <CardTitle className="text-2xl font-bold text-gradient-primary" style={{ fontFamily: 'var(--font-heading)' }}>
+> 106	              Magic Constellation
+> 107	            </CardTitle>
+> 108	          </div>
+> 109	          <CardDescription className="text-muted-foreground">
+> 110	            Plataforma de marketing omnichannel com IA
+> 111	          </CardDescription>
+> 112	        </CardHeader>
+> 113	        <CardContent>
+> 114	          <Tabs defaultValue="login" className="w-full">
+> 115	            <TabsList className={`grid w-full ${devLogin ? 'grid-cols-2' : 'grid-cols-1'} bg-secondary`}>
+> 116	              <TabsTrigger value="login">Entrar</TabsTrigger>
+> 117	              {devLogin && <TabsTrigger value="signup">Cadastrar</TabsTrigger>}
+> 118	            </TabsList>
+> 119	
+> 120	            {devLogin && (
+> 121	              <div className="mt-4 space-y-3">
+> 122	                <Button
+> 123	                  type="button"
+> 124	                  variant="outline"
+> 125	                  className="w-full"
+> 126	                  onClick={() => handleOAuthLogin('google')}
+> 127	                  disabled={loading}
+> 128	                >
+> 129	                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+> 130	                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+> 131	                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+> 132	                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+> 133	                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+> 134	                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+> 135	                    </svg>
+> 136	                  )}
+> 137	                  Continuar com Google
+> 138	                </Button>
+> 139	
+> 140	                <div className="relative">
+> 141	                  <Separator />
+> 142	                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+> 143	                    ou
+> 144	                  </span>
+> 145	                </div>
+> 146	              </div>
+> 147	            )}
+> 148	
+> 149	            <TabsContent value="login">
+> 150	              <form onSubmit={handleLogin} className="space-y-4 mt-4">
+> 151	                <div className="space-y-2">
+> 152	                  <Label htmlFor="login-email">Email</Label>
+> 153	                  <Input
+> 154	                    id="login-email"
+> 155	                    type="email"
+> 156	                    placeholder="seu@email.com"
+> 157	                    value={email}
+> 158	                    onChange={(e) => setEmail(e.target.value)}
+> 159	                    required
+> 160	                  />
+> 161	                </div>
+> 162	                <div className="space-y-2">
+> 163	                  <Label htmlFor="login-password">Senha</Label>
+> 164	                  <Input
+> 165	                    id="login-password"
+> 166	                    type="password"
+> 167	                    placeholder="••••••••"
+> 168	                    value={password}
+> 169	                    onChange={(e) => setPassword(e.target.value)}
+> 170	                    required
+> 171	                  />
+> 172	                </div>
+> 173	                <Button type="submit" className="w-full" disabled={loading}>
+> 174	                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+> 175	                  Entrar
+> 176	                </Button>
+> 177	                <button
+> 178	                  type="button"
+> 179	                  onClick={handleForgotPassword}
+> 180	                  className="text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center"
+> 181	                >
+> 182	                  Esqueceu a senha?
+> 183	                </button>
+> 184	              </form>
+> 185	            </TabsContent>
+> 186	
+> 187	            {devLogin && (
+> 188	            <TabsContent value="signup">
+> 189	              <form onSubmit={handleSignup} className="space-y-4 mt-4">
+> 190	                <div className="space-y-2">
+> 191	                  <Label htmlFor="signup-name">Nome completo</Label>
+> 192	                  <Input
+> 193	                    id="signup-name"
+> 194	                    type="text"
+> 195	                    placeholder="Seu nome"
+> 196	                    value={fullName}
+> 197	                    onChange={(e) => setFullName(e.target.value)}
+> 198	                    required
+> 199	                  />
+> 200	                </div>
+> 201	                <div className="space-y-2">
+> 202	                  <Label htmlFor="signup-email">Email</Label>
+> 203	                  <Input
+> 204	                    id="signup-email"
+> 205	                    type="email"
+> 206	                    placeholder="seu@email.com"
+> 207	                    value={email}
+> 208	                    onChange={(e) => setEmail(e.target.value)}
+> 209	                    required
+> 210	                  />
+> 211	                </div>
+> 212	                <div className="space-y-2">
+> 213	                  <Label htmlFor="signup-password">Senha</Label>
+> 214	                  <Input
+> 215	                    id="signup-password"
+> 216	                    type="password"
+> 217	                    placeholder="Mínimo 6 caracteres"
+> 218	                    value={password}
+> 219	                    onChange={(e) => setPassword(e.target.value)}
+> 220	                    required
+> 221	                    minLength={6}
+> 222	                  />
+> 223	                </div>
+> 224	                <Button type="submit" className="w-full" disabled={loading}>
+> 225	                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+> 226	                  Criar conta
+> 227	                </Button>
+> 228	              </form>
+> 229	            </TabsContent>
+> 230	            )}
+> 231	          </Tabs>
+> 232	        </CardContent>
+> 233	      </Card>
+> 234	    </div>
+> 235	  );
+> 236	};
+> 237	
+> 238	export default Auth;
+> 239	
+> ```
+
+## 🤖 Claude *(18:51:49)*
+
+
+## 🤖 Claude *(18:51:53)*
+
+Achado-chave já visível: o signup (aba "Cadastrar") e o botão Google **só aparecem com `?devLogin`** na UI — mas isso é **cosmético**. O backend do Supabase (`supabase.auth.signUp` / `signInWithOAuth`) continua aceitando cadastro de qualquer um que chame a API direto ou acesse `/auth?devLogin`. O gate real é a config de Auth do projeto Supabase. Vou confirmar a fonte de dados do admin + o trigger de provisionamento, e consultar o DB ao vivo para ver **como** esse usuário entrou (provider/confirmação).
+
+## 🤖 Claude *(18:51:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAdminData.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	
+> 5	// #002 fix: single TanStack Query shared across all callers — role doesn't change mid-session
+> 6	export function useIsAdmin() {
+> 7	  const { user, loading: authLoading } = useAuth();
+> 8	
+> 9	  const { data: isAdmin = false, isLoading } = useQuery({
+> 10	    queryKey: ['user-role-admin', user?.id],
+> 11	    queryFn: async () => {
+> 12	      const { data } = await supabase
+> 13	        .from('user_roles')
+> 14	        .select('role')
+> 15	        .eq('user_id', user!.id)
+> 16	        .eq('role', 'admin')
+> 17	        .maybeSingle();
+> 18	      return Boolean(data);
+> 19	    },
+> 20	    enabled: Boolean(user),
+> 21	    staleTime: Infinity,
+> 22	    gcTime: Infinity,
+> 23	  });
+> 24	
+> 25	  // useAuth resolves asynchronously and is per-hook-instance, so `user` is null on the
+> 26	  // first render here. While user is null the role query is disabled, and a disabled
+> 27	  // query reports isLoading=false — which would let AdminPage's `if (!isAdmin)` guard
+> 28	  // redirect before the check ever runs. Stay "loading" until auth has resolved.
+> 29	  return { isAdmin, loading: authLoading || isLoading };
+> 30	}
+> 31	
+> 32	interface AdminData {
+> 33	  profiles: any[];
+> 34	  roles: any[];
+> 35	  subscriptions: any[];
+> 36	  auditLogs: any[];
+> 37	  usageTracking: any[];
+> 38	  loading: boolean;
+> 39	}
+> 40	
+> 41	export function useAdminData(enabled = true): AdminData {
+> 42	  const { user } = useAuth();
+> 43	
+> 44	  const { data, isLoading: loading } = useQuery({
+> 45	    queryKey: ['admin-data', user?.id],
+> 46	    queryFn: async () => {
+> 47	      const [p, r, s, a, u] = await Promise.all([
+> 48	        supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100),
+> 49	        supabase.from('user_roles').select('*'),
+> 50	        supabase
+> 51	          .from('subscriptions')
+> 52	          .select('id, user_id, plan, status, cancel_at_period_end, current_period_start, current_period_end, trial_ends_at, created_at, updated_at')
+> 53	          .order('created_at', { ascending: false })
+> 54	          .limit(100),
+> 55	        supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200),
+> 56	        supabase.from('usage_tracking').select('*').order('created_at', { ascending: false }).limit(200),
+> 57	      ]);
+> 58	      return {
+> 59	        profiles: p.data || [],
+> 60	        roles: r.data || [],
+> 61	        subscriptions: s.data || [],
+> 62	        auditLogs: a.data || [],
+> 63	        usageTracking: u.data || [],
+> 64	      };
+> 65	    },
+> 66	    enabled: Boolean(user) && enabled,
+> 67	    staleTime: 60_000,
+> 68	  });
+> 69	
+> 70	  return {
+> 71	    profiles: data?.profiles ?? [],
+> 72	    roles: data?.roles ?? [],
+> 73	    subscriptions: data?.subscriptions ?? [],
+> 74	    auditLogs: data?.auditLogs ?? [],
+> 75	    usageTracking: data?.usageTracking ?? [],
+> 76	    loading,
+> 77	  };
+> 78	}
+> 79	
+> ```
+
+## 🤖 Claude *(18:52:03)*
+
+
+## 🤖 Claude *(18:52:05)*
+
+O admin lê de `profiles` (criado por trigger no signup). O provider (email/google) mora em `auth.users` — não exposto no painel. Vou consultar a **Admin Auth API** do Supabase (service-role) para ver provider, confirmação e datas de cada usuário, e localizar o trigger de provisionamento.
+
+## 🤖 Claude *(18:52:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== handle_new_user trigger definition ===\"\ngrep -rln \"handle_new_user\\|on_auth_user_created\" supabase/migrations/ | while read f; do echo \"--- $f ---\"; grep -n \"handle_new_user\\|on_auth_user_created\\|app_role\\|user_roles\\|profiles\\|trialing\" \"$f\" | head -15; done 2>/dev/null | head -60",
+  "description": "Find handle_new_user provisioning trigger"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === handle_new_user trigger definition ===
+> --- supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql ---
+> 7:CREATE TYPE public.app_role AS ENUM ('admin', 'editor', 'viewer');
+> 14:CREATE TYPE public.subscription_status AS ENUM ('trialing', 'active', 'past_due', 'canceled', 'unpaid');
+> 17:CREATE TABLE public.profiles (
+> 29:ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+> 32:CREATE TABLE public.user_roles (
+> 35:  role app_role NOT NULL DEFAULT 'viewer',
+> 39:ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+> 48:  status subscription_status NOT NULL DEFAULT 'trialing',
+> 237:CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+> 245:    SELECT 1 FROM public.user_roles
+> 255:CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+> 256:CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+> 257:CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+> 260:CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT USING (auth.uid() = user_id);
+> 261:CREATE POLICY "Admins can manage roles" ON public.user_roles FOR ALL USING (public.has_role(auth.uid(), 'admin'));
+> --- supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql ---
+> 81:-- Update handle_new_user to also seed crew
+> 82:CREATE OR REPLACE FUNCTION public.handle_new_user()
+> 89:  INSERT INTO public.profiles (id, full_name, avatar_url)
+> 96:  INSERT INTO public.user_roles (user_id, role)
+> 103:  VALUES (NEW.id, 'free', 'trialing', now() + INTERVAL '14 days');
+> ```
+
+## 🤖 Claude *(18:52:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== Admin Auth API \u2014 all users (provider, created, confirmed) ===\"\ncurl -s \"${SUPABASE_URL}/auth/v1/admin/users?per_page=50\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" \\\n  -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nus=d.get('users', d if isinstance(d,list) else [])\nprint(f'TOTAL users: {len(us)}')\nprint('---')\nfor u in sorted(us, key=lambda x: x.get('created_at',''), reverse=True):\n    prov=(u.get('app_metadata') or {}).get('provider')\n    provs=(u.get('app_metadata') or {}).get('providers')\n    name=(u.get('user_metadata') or {}).get('full_name') or '\u2014'\n    print(f\\\"{u.get('created_at','?')[:19]} | {u.get('email','?'):35} | prov={prov} {provs} | confirmed={'Y' if u.get('email_confirmed_at') else 'N'} | last_signin={(u.get('last_sign_in_at') or '\u2014')[:19]} | name={name}\\\")\n\" 2>&1 | head -40",
+  "description": "Query Supabase Admin Auth API for all users"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Admin Auth API — all users (provider, created, confirmed) ===
+> TOTAL users: 2
+> ---
+> 2026-06-28T04:05:42 | lf16-smoke-1782619542147@example.com | prov=email ['email'] | confirmed=Y | last_signin=— | name=—
+> 2026-04-17T05:57:46 | gabrielcall@gmail.com               | prov=google ['google'] | confirmed=Y | last_signin=2026-06-28T01:54:23 | name=Gabriel Caldeira
+> ```
+
+## 🤖 Claude *(18:52:39)*
+
+
+## 🤖 Claude *(18:52:40)*
+
+Material encontrado — e a resposta é tranquilizadora. Deixa eu confirmar a origem do padrão e se o signup externo está de fato aberto.
+
+## 🤖 Claude *(18:52:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== quem cria emails *-smoke- / lf16 / @example.com ===\"\ngrep -rn \"smoke-\\|@example.com\\|lf16\\|Date.now().*@\\|createUser\\|admin.createUser\\|generateLink\" scripts/qa/ --include=*.ts -l | head\necho \"--- padr\u00e3o de email throwaway ---\"\ngrep -rEn \"lf16|[\\`'\\\"][a-z0-9-]*smoke[a-z0-9-]*\\\\\\$\\{|@example\\.com|throwaway\" scripts/qa/*.ts | head -20",
+  "description": "Find QA script generating the smoke user email"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quem cria emails *-smoke- / lf16 / @example.com ===
+> scripts/qa/smoke-attribution.ts
+> scripts/qa/smoke-nurture-cron.ts
+> scripts/qa/smoke-vision-analyze-video.ts
+> scripts/qa/smoke-autopilot-run.ts
+> scripts/qa/smoke-campaign-run.ts
+> scripts/qa/smoke-marketing-hub.ts
+> scripts/qa/probe-vision-mcp-fatia2-foundation.ts
+> scripts/qa/smoke-autopilot-budget.ts
+> scripts/qa/smoke-autopilot-video-refund.ts
+> scripts/qa/smoke-nurture.ts
+> --- padrão de email throwaway ---
+> scripts/qa/e2e-vision-mcp-heterogeneous-client.ts:20: * Side effects: 1 throwaway user + 1 node, deleted in finally.
+> scripts/qa/e2e-vision-mcp-heterogeneous-client.ts:136:  console.log(`   throwaway user=${userId} seeded node=${seeded}`);
+> scripts/qa/probe-vision-mcp-protocol-versions.ts:80:  console.log(`\n  (throwaway user ${u.user.id} deleted)`);
+> scripts/qa/e2e-vision-mcp-mesh-search.ts:22: * Side effects: creates 2 throwaway users + 3 nodes, ALL deleted in the finally block (zero residue).
+> scripts/qa/e2e-vision-mcp-mesh-search.ts:65:    user_metadata: { qa_throwaway: true, run: RUN },
+> scripts/qa/probe-vision-mcp-fatia2-foundation.ts:12: *             Tested both ways behaviorally against a throwaway user.
+> scripts/qa/probe-vision-mcp-fatia2-foundation.ts:16: * Side effects: 1 throwaway user, credited then drained, deleted in finally.
+> scripts/qa/probe-vision-mcp-fatia2-foundation.ts:57:  // ── Q2/Q3: billing — create throwaway user, credit, test deduct (service-role vs user-JWT) + refund ──
+> scripts/qa/probe-vision-mcp-fatia2-foundation.ts:78:  console.log(`  credited throwaway to mco_balance=${credited}`);
+> scripts/qa/probe-vision-mcp-adversarial.ts:7: *      A1 control: a valid throwaway-user token WORKS (proves the rig hits a real, working endpoint)
+> scripts/qa/probe-vision-mcp-adversarial.ts:17: * Side effects: 3 throwaway users + 2 nodes, all deleted in finally (zero residue).
+> scripts/qa/smoke-aeo-refund.ts:3: * Smoke — mcoCoins refund-on-failure primitive (OTD-AEO-REFUND). Zero cost (throwaway user + cleanup).
+> scripts/qa/smoke-aeo-refund.ts:30:  const email = `aeo-refund-${stamp}@example.com`, password = `Aa1!${crypto.randomUUID()}`;
+> scripts/qa/smoke-aeo-refund.ts:60:  console.log(`\n🧹 cleanup: ${uids.length} throwaway user(s) + mesh nodes deleted`);
+> scripts/qa/smoke-affiliate-click.ts:3: * Smoke — in-system affiliate click ledger (OTD-ML-CLICKS). Zero cost (throwaway user + cleanup).
+> scripts/qa/smoke-affiliate-click.ts:46:  const email = `aff-click-${stamp}@example.com`, password = `Aa1!${crypto.randomUUID()}`;
+> scripts/qa/smoke-affiliate-click.ts:121:    console.log('   ⏭ G8 skipped — could not mint JWT for throwaway user');
+> scripts/qa/smoke-affiliate-click.ts:139:  console.log(`\n🧹 cleanup: ${uids.length} throwaway user(s) + config + nodes + links deleted`);
+> scripts/qa/smoke-attribution.ts:9: * mirrors useCampaignAttribution's query. All throwaway (deleted in finally). No production data touched.
+> scripts/qa/smoke-attribution.ts:26:  const { data: cu, error: cuErr } = await admin.auth.admin.createUser({ email: `attr-${stamp}@example.com`, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });
+> ```
+
+## 🤖 Claude *(18:52:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== Auth settings p\u00fablicos (anon) \u2014 signup externo est\u00e1 aberto? ===\"\ncurl -s \"${SUPABASE_URL}/auth/v1/settings\" \\\n  -H \"apikey: ${SB_PUBLISHABLE_KEY}\" \\\n  | python3 -c \"\nimport sys,json\nd=json.load(sys.stdin)\nprint('disable_signup     :', d.get('disable_signup'))\nprint('autoconfirm/mailer :', d.get('mailer_autoconfirm'))\nprint('external providers  :', {k:v for k,v in (d.get('external') or {}).items() if v})\n\" 2>&1 | head -20",
+  "description": "Check if external signup is enabled at project level"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Auth settings públicos (anon) — signup externo está aberto? ===
+> disable_signup     : None
+> autoconfirm/mailer : None
+> external providers  : {}
+> ```
+
+## 🤖 Claude *(18:53:00)*
+
+
+## 🤖 Claude *(18:53:02)*
+
+O padrão de throwaway QA está confirmado (`<prefixo>-${timestamp}@example.com` via `admin.createUser({email_confirm:true})`). Mas o endpoint de settings veio ambíguo (`None`) — vou pegar o JSON cru (Lei 1, não concluir de `None`) e achar quem usa o prefixo `lf16`.
+
+## 🤖 Claude *(18:53:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== quem usa prefixo lf16 ===\"\ngrep -rn \"lf16\" scripts/ src/ supabase/ 2>/dev/null | head\necho \"=== raw auth settings (anon) ===\"\nsource .env\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/auth/v1/settings\" -H \"apikey: ${SB_PUBLISHABLE_KEY}\" | python3 -m json.tool 2>&1 | head -40",
+  "description": "Find lf16 source + raw auth settings"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quem usa prefixo lf16 ===
+> scripts/qa/smoke-longform-16x9.ts:43:  const u = await admin.auth.admin.createUser({ email: `lf16-smoke-${stamp}@example.com`, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });
+> === raw auth settings (anon) ===
+> {
+>     "message": "No API key found in request",
+>     "hint": "No `apikey` request header or url param was found."
+> }
+> ```
+
+## 🤖 Claude *(18:53:20)*
+
+
+## 🤖 Claude *(18:53:22)*
+
+Confirmado materialmente. O `lf16-smoke-${stamp}@example.com` é criado por **`scripts/qa/smoke-longform-16x9.ts:43`** — um usuário descartável do smoke do reshaper 16:9. O settings falhou só porque a var publishable não carregou; refazendo com a service key + checando se sobrou mais algum throwaway:
+
+## 🤖 Claude *(18:53:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== raw auth settings (service apikey) ===\"\ncurl -s \"${SUPABASE_URL}/auth/v1/settings\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool 2>&1 | head -45\necho \"\"\necho \"=== cleanup do finally do smoke-longform existe? ===\"\ngrep -n \"finally\\|deleteUser\\|admin.deleteUser\\|cleanup\" scripts/qa/smoke-longform-16x9.ts | head",
+  "description": "Get auth settings + verify smoke cleanup logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === raw auth settings (service apikey) ===
+> {
+>     "external": {
+>         "anonymous_users": false,
+>         "apple": false,
+>         "azure": false,
+>         "bitbucket": false,
+>         "discord": false,
+>         "facebook": false,
+>         "snapchat": false,
+>         "figma": false,
+>         "fly": false,
+>         "github": false,
+>         "gitlab": false,
+>         "google": true,
+>         "keycloak": false,
+>         "kakao": false,
+>         "linkedin": false,
+>         "linkedin_oidc": false,
+>         "notion": false,
+>         "spotify": false,
+>         "slack": false,
+>         "slack_oidc": false,
+>         "workos": false,
+>         "twitch": false,
+>         "twitter": false,
+>         "email": true,
+>         "phone": false,
+>         "zoom": false
+>     },
+>     "disable_signup": false,
+>     "mailer_autoconfirm": false,
+>     "phone_autoconfirm": false,
+>     "sms_provider": "twilio",
+>     "saml_enabled": false,
+>     "saml_private_key_next_configured": true,
+>     "passkeys_enabled": false
+> }
+> 
+> === cleanup do finally do smoke-longform existe? ===
+> 93:} finally {
+> 102:  if (uid) await admin.auth.admin.deleteUser(uid).then(() => {}, () => {});
+> ```
+
+## 🤖 Claude *(18:54:05)*
+
+
+## 🤖 Claude *(18:54:27)*
+
+Rastreei até o fim, com prova material. **Boa notícia: não é invasão — é ruído de QA.** Resumo do que o DB mostra ao vivo:
+
+## Quem é esse usuário "viewer" sem nome
+
+| Campo | Valor (Admin Auth API, ao vivo) |
+|---|---|
+| Email | `lf16-smoke-1782619542147@example.com` |
+| Provider | **email** (criado server-side, não login real) |
+| Criado | `2026-06-28T04:05:42Z` = **01:05 BRT** → bate exatamente com o "28/06/26 01:05" da tela |
+| Nome/empresa | vazios · Role `viewer` · Plano free · Saldo 0 · trialing |
+
+Esse email é gerado por **[scripts/qa/smoke-longform-16x9.ts:43](scripts/qa/smoke-longform-16x9.ts)** — o smoke do render 16:9 (CP-008, que selei ontem). Ele cria um usuário descartável via `admin.auth.admin.createUser({ email_confirm: true })` (chave service-role, **contorna o fluxo de cadastro público**), roda o teste, e deveria apagá-lo no `finally`. **O cleanup vazou** aqui — o `deleteUser` é fire-and-forget e engole o erro (`.then(()=>{}, ()=>{})`), então quando falha ou o script é morto antes do finally, a conta fica órfã.
+
+**Total de usuários reais no projeto agora: 2** — você (`gabrielcall@gmail.com`, Google, admin) e essa conta-fantasma de teste. Não há enxurrada de cadastros externos. O "todo dia parece ter novos acessos" é exatamente isto: cada rodada de smoke deixa um `*-smoke-<timestamp>@example.com` diferente quando o cleanup falha. Como `viewer`/`free`/`trialing`/saldo 0 vêm dos *defaults* do trigger `handle_new_user` (profile + role `viewer` DEFAULT), todo throwaway aparece idêntico ao da tela.
+
+## Porém — há uma porta aberta real que vale travar
+
+Consultei a config de Auth do projeto (ao vivo):
+
+```
+disable_signup: false        ← cadastro externo HABILITADO
+external.google: true        ← Google OAuth ligado (sem confirmação de email)
+external.email: true         ← email/senha (exige confirmação de email)
+mailer_autoconfirm: false
+```
+
+Ou seja: esconder o botão de cadastro atrás de `?devLogin` na UI é **cosmético** — o backend do Supabase aceita signup. Hoje um estranho **consegue** criar conta de verdade, principalmente via **Google** (basta abrir `/auth?devLogin` → "Continuar com Google", ou chamar o endpoint direto) — vira `viewer`/trialing na hora. Pelos dados, **ninguém externo fez isso ainda** (só existe você + o throwaway), mas a porta está destrancada.
+
+## O que recomendo
+
+1. **Limpar a conta-fantasma agora** — deletar `lf16-smoke-...` (é dado de teste inequívoco). Posso fazer via Admin API.
+2. **Endurecer o cleanup dos smokes** — fazer o `deleteUser` do `finally` aguardar/logar falha (e varrer `*-smoke-*@example.com` órfãos), para parar de vazar a cada rodada. Fix de código que eu aplico.
+3. **Travar o cadastro externo** enquanto você opera single-tenant (Usuário Zero) — `disable_signup: true` no **Supabase Dashboard → Authentication → Sign In / Providers** (ação sua no console; o service-role não muda config de projeto). Mantém seu login Google e bloqueia novos. Quando for abrir comercialmente, reativa.
+
+Quer que eu já execute o **#1 (deletar a conta de teste)** e o **#2 (endurecer o smoke)** agora? O **#3** é o cadeado de verdade e fica do seu lado no console — confirma se quer que eu detalhe o passo a passo exato dos cliques.
+
+## 👤 User *(18:57:56)*
+
+preciso identificar isso para remover manualmente, então o nome ou empresa deve ser smoketest ou se for simples, quando terminar o smoketest limpar o usuário automaticamente
+
+## 🤖 Claude *(18:59:21)*
+
+
+## 🤖 Claude *(18:59:26)*
+
+Entendido — você quer que esses usuários de teste sejam **identificáveis** (Nome/Empresa = SMOKETEST) e/ou **auto-limpos** ao fim do smoke. Antes de escolher a abordagem, preciso de 2 fatos materiais: (1) o que o trigger `handle_new_user` copia para `profiles` (a coluna "Empresa" existe e vem de metadata?), e (2) a escala — quantos smokes criam usuário e como.
+
+## 🤖 Claude *(18:59:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== profiles columns ===\"\nsed -n '17,30p' supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql\necho \"\"\necho \"=== handle_new_user (latest definition) ===\"\ngrep -rl \"CREATE OR REPLACE FUNCTION public.handle_new_user\" supabase/migrations/ | sort | tail -1 | xargs -I{} sh -c 'echo \"FILE: {}\"; sed -n \"/handle_new_user/,/\\\\$\\\\$/p\" {} | head -40'",
+  "description": "profiles columns + handle_new_user mapping"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === profiles columns ===
+> CREATE TABLE public.profiles (
+>   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+>   full_name TEXT,
+>   avatar_url TEXT,
+>   company TEXT,
+>   website TEXT,
+>   timezone TEXT DEFAULT 'America/Sao_Paulo',
+>   language TEXT DEFAULT 'pt-BR',
+>   onboarding_completed BOOLEAN DEFAULT FALSE,
+>   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+>   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+> );
+> ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+> 
+> 
+> === handle_new_user (latest definition) ===
+> FILE: supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql
+> -- Update handle_new_user to also seed crew
+> CREATE OR REPLACE FUNCTION public.handle_new_user()
+> RETURNS trigger
+> LANGUAGE plpgsql
+> SECURITY DEFINER
+> SET search_path = 'public'
+> AS $$
+> ```
+
+## 🤖 Claude *(18:59:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== quantos smokes criam usu\u00e1rio (createUser) ===\"\ngrep -rln \"auth.admin.createUser\\|admin.createUser\" scripts/qa/ | wc -l\necho \"=== arquivos + se j\u00e1 t\u00eam metadata/qa_throwaway/full_name ===\"\nfor f in $(grep -rln \"auth.admin.createUser\\|admin.createUser\" scripts/qa/); do\n  has_meta=$(grep -c \"user_metadata\\|full_name\\|qa_throwaway\" \"$f\")\n  has_finally=$(grep -c \"finally\\|deleteUser\" \"$f\")\n  echo \"$(basename $f) | meta_tags=$has_meta | cleanup=$has_finally\"\ndone | head -50",
+  "description": "Count + classify smoke user-creation files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quantos smokes criam usuário (createUser) ===
+> 35
+> === arquivos + se já têm metadata/qa_throwaway/full_name ===
+> smoke-attribution.ts | meta_tags=0 | cleanup=3
+> probe-vision-mcp-fatia2-foundation.ts | meta_tags=0 | cleanup=3
+> smoke-vision-consolidate-reference.ts | meta_tags=0 | cleanup=4
+> smoke-[[aeo-audit|aeo-audit]].ts | meta_tags=0 | cleanup=2
+> smoke-byok-resend.ts | meta_tags=0 | cleanup=2
+> smoke-autopilot-loop.ts | meta_tags=0 | cleanup=2
+> smoke-reframe-image.ts | meta_tags=0 | cleanup=2
+> test-publish-meta-smoke.ts | meta_tags=0 | cleanup=1
+> smoke-campaign-run.ts | meta_tags=0 | cleanup=3
+> smoke-nurture-cron.ts | meta_tags=0 | cleanup=2
+> smoke-intent-orchestrate.ts | meta_tags=0 | cleanup=2
+> smoke-marketing-hub.ts | meta_tags=0 | cleanup=2
+> smoke-autopilot-run.ts | meta_tags=0 | cleanup=2
+> smoke-carousel.ts | meta_tags=0 | cleanup=2
+> smoke-autopilot-budget.ts | meta_tags=0 | cleanup=2
+> probe-vision-mcp-protocol-versions.ts | meta_tags=0 | cleanup=1
+> smoke-nurture.ts | meta_tags=0 | cleanup=2
+> smoke-constellation-v2-router.ts | meta_tags=0 | cleanup=3
+> smoke-deepsearch-scrape.ts | meta_tags=0 | cleanup=4
+> smoke-vision-describe-image.ts | meta_tags=0 | cleanup=4
+> smoke-vision-cost-caps.ts | meta_tags=0 | cleanup=4
+> smoke-aeo-refund.ts | meta_tags=0 | cleanup=2
+> smoke-customer360.ts | meta_tags=0 | cleanup=3
+> smoke-vision-pat-erase.ts | meta_tags=0 | cleanup=4
+> probe-vision-mcp-adversarial.ts | meta_tags=1 | cleanup=4
+> smoke-reshape-pillar.ts | meta_tags=0 | cleanup=3
+> smoke-intent-execute.ts | meta_tags=0 | cleanup=2
+> smoke-deepsearch-run.ts | meta_tags=0 | cleanup=4
+> e2e-vision-mcp-mesh-search.ts | meta_tags=1 | cleanup=3
+> test-sync-meta-ads.ts | meta_tags=0 | cleanup=1
+> test-whatsapp-webhook.ts | meta_tags=0 | cleanup=1
+> e2e-vision-mcp-heterogeneous-client.ts | meta_tags=0 | cleanup=3
+> smoke-affiliate-click.ts | meta_tags=0 | cleanup=2
+> smoke-longform-16x9.ts | meta_tags=0 | cleanup=2
+> smoke-vision-analyze-video.ts | meta_tags=0 | cleanup=4
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
