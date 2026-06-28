@@ -6328,3 +6328,1580 @@ Docs updated. Now granular commits (following the project's seal convention — 
 > 011659c docs(post-engine): SDD reshaper/atomizer (FR-CP-002/003) + SOP — close Closed-Loop Step 3.5 gate
 > f4ed255 docs(handoff): seal TikTok/YouTube E2E + Channel Format Intelligence (FR-CP-001)
 > ```
+
+## 🤖 Claude *(03:00:35)*
+
+
+## 🤖 Claude *(03:00:36)*
+
+All 3 commits landed (gitleaks clean, mesh-reingest fired): `011659c`, `3199ceb`, `2ed159f`. Now the seal — mesh node (real UUID, Lei 1) + HANDOFF + memory. First, insert the mesh handoff node and capture its real id + the new total.
+
+## 🤖 Claude *(03:00:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSUPA=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"; KEY=\"${SB_SECRET_KEY}\"\n# Inspect a recent handoff node shape to mirror columns\ncurl -s \"$SUPA/rest/v1/mcorch_nodes?select=node_type,name,project_id,user_id,metadata,stability_score&node_type=eq.handoff&order=created_at.desc&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | python3 -m json.tool 2>/dev/null | head -40",
+  "description": "Inspect recent handoff node shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [
+>     {
+>         "node_type": "handoff",
+>         "name": "session-handoff-20260627-social-live-channel-format-bok",
+>         "project_id": null,
+>         "user_id": null,
+>         "metadata": {
+>             "commits": "f7dd556 docs(bok): emenda channel-format-intelligence no post-engine (Closed-Loop)|a446c36 feat(db): channel_profiles + pillar_atoms \u2014 engenharia reversa de formato (FR-CP-001)|96b4d9f feat(creative): bot\u00f5es Publicar TikTok + YouTube na Biblioteca de Assets|def5d03 fix(ui): mensagem acion\u00e1vel ao conectar rede social (402 action hint)|f5e092c fix(social): publish-social for\u00e7a SELF_ONLY no TikTok para cliente n\u00e3o-auditado|",
+>             "session": "social-live-channel-format-bok",
+>             "sealed_at": "2026-06-28T02:03:27Z"
+>         },
+>         "stability_score": 0.996096624124823
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(03:00:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSUPA=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"; KEY=\"${SB_SECRET_KEY}\"\nCONTENT='Seal: Channel Reshaper + Atomizer (FR-CP-002/003) \u2014 1 pilar -> posts nativos por canal. Data-driven interpreter reshape-pillar (field_map grammar + reshape dispatch + format gate FR-CP-006 + native-variant FR-CP-007 + Pinterest-SEO FR-CP-008), atomizer block in orchestrate-step (article->pillar_atoms), channel_variants ledger (idempotency UNIQUE), auto-publish prefers owner-scoped native variant (FMEA-011 cross-tenant signing vuln found by /security-review + FIXED). video-bridge kicks reshape scope=video after master finalizes. BoK gate closed (SDD doc 13 + SOP channel-reshaper.md). Migration 20260627150000 applied+verified. 3 edge fns deployed. Smoke 16/16 zero-cost. Spine 9:16->6 operational surfaces; 16:9/image-reframe/missing-publishers deferred OTD-CP-008..011.'\nRESP=$(curl -s -X POST \"$SUPA/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"node_type\\\":\\\"handoff\\\",\\\"name\\\":\\\"session-handoff-20260628-channel-reshaper-atomizer\\\",\\\"content\\\":$(python3 -c \"import json,sys; print(json.dumps(sys.argv[1]))\" \"$CONTENT\"),\\\"metadata\\\":{\\\"session\\\":\\\"channel-reshaper-atomizer\\\",\\\"sealed_at\\\":\\\"2026-06-28T00:05:00Z\\\",\\\"commits\\\":\\\"011659c|3199ceb|2ed159f\\\",\\\"frs\\\":\\\"FR-CP-002/003/006/007/008/011\\\",\\\"otds\\\":\\\"OTD-CP-008..011\\\"}}\")\necho \"$RESP\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print('NODE_ID:', d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null || echo \"RAW: $RESP\"\necho \"=== new total node count ===\"\ncurl -s \"$SUPA/rest/v1/mcorch_nodes?select=id\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range",
+  "description": "Insert handoff mesh node + capture id + total count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID: a3cb1b29-4231-4f12-ae8e-50104e2a4aee
+> === new total node count ===
+> content-range: 0-999/8975
+> ```
+
+## 🤖 Claude *(03:01:11)*
+
+
+## 🤖 Claude *(03:01:12)*
+
+Mesh node sealed: `a3cb1b29-4231-4f12-ae8e-50104e2a4aee` · total **8975** nodes (was 8974). Now the HANDOFF seal record (newest-first):
+
+## 🤖 Claude *(03:01:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 TikTok/YouTube provados E2E + Channel Format Intelligence (engenharia reversa de formato \u00b7 FR-CP-001) (2026-06-27)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Channel Reshaper + Atomizer: 1 pilar \u2192 posts nativos por canal (FR-CP-002/003) (2026-06-28)\n\nDiretiva Sovereign: *\"o pr\u00f3ximo passo seria o reshaper (FR-CP-003): 1 ideia \u2192 posts nativos em todas as redes? Continue com for\u00e7a total para finalizar todo o mapeamento da distribui\u00e7\u00e3o social aut\u00f4noma operacional.\"* Operado sob ultracode + Closed-Loop. **O mapeamento data-driven (o c\u00e9rebro) est\u00e1 finalizado e provado**; os hands de render/reframe divergentes ficam como OTDs honestos.\n\n**Achado central:** o `channel_profiles` (16 linhas-sistema seeded) j\u00e1 era o dicion\u00e1rio; faltava o **interpretador**. O `auto-publish` cru cross-postava o MESMO texto+v\u00eddeo a todas as redes = exatamente a penalidade que a tese combate. O reshaper produz **variante NATIVA por canal** (anti cross-post FR-CP-007) com **zero branch por canal** \u2014 toda a l\u00f3gica vem da `transform_recipe`.\n\n**Closed-Loop / Lei 2:** a emenda 12 estava em altitude FRD. Antes de c\u00f3digo, fechei o **Gate Step 3.5** com `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` (SDD implementation-level resolvendo os **8 blocking gaps** do critic adversarial, workflow `wf_a390c0f0-b6e` \u2014 6 readers + critic) + SOP `docs/processes/channel-reshaper.md`.\n\n| Action | Result |\n|--------|--------|\n| Mapa fundamentado do pipeline vivo (workflow `wf_a390c0f0-b6e`) | \u2705 6 readers + critic; 8 blocking gaps materiais (field_map grammar indefinida \u00b7 `twitter_x`\u2260enum \u00b7 sequ\u00eancia out-of-band do master \u00b7 1-v\u00eddeo-por-campaign \u00b7 sem SDD) |\n| BoK gate (SDD 13 + SOP) | \u2705 `field_map` grammar + dispatch de `reshape` + channel\u2192enum + idempot\u00eancia + custo + auth; Pattern Conformance herdada da emenda 12 |\n| Migration `20260627150000_channel_variants` | \u2705 aplicada (`Finished db push`) + **verificada live** (tabela presente \u00b7 `creative_metrics.hook_rate` \u00b7 16 linhas-sistema `channel_profiles`). Ledger native-variant + \u00e2ncora idempot\u00eancia `UNIQUE(pillar_run_id,channel,surface)`; RLS SELECT/DELETE own, writes service-role-only |\n| Atomizer (FR-CP-002) | \u2705 bloco fail-open em `orchestrate-step` (article\u2192`pillar_atoms` via LLM + fallback heur\u00edstico) + `pillar_url` backfill p\u00f3s-wordpress + `composition.pillar_run_id` (fecha gap #5) |\n| Reshaper `reshape-pillar` (FR-CP-003/006/007/008) | \u2705 deployada (81.26 kB) \u2014 interpretador (assemble\u2192voicing LLM nativo\u2192char-gate), format-coerce imagem (PNG\u2192JPEG/WebP), spine 9:16\u2192surfaces de v\u00eddeo, Pinterest-SEO, fail-open por canal, telemetria `reshape-<canal>` |\n| **/security-review** | \u26a0\ufe0f\u2192\u2705 **achou 1 HIGH que EU introduzi** (FMEA-011): `auto-publish` assinava `bucket`/`key` vindos de `scheduled_posts.metadata` (user-writable) com service-role \u2192 exfil cross-tenant de objeto privado. **FIXADO**: asset resolvido do `channel_variants` **owner-scoped** (`.eq('user_id', post.user_id)`), inline keys removidos do metadata |\n| Wiring | \u2705 `orchestrate-step` kick `scope=static` no finalize \u00b7 `video-bridge` kick `scope=video` p\u00f3s-`finalize_video_render` (+ service restart) \u00b7 `auto-publish` prefere variante nativa \u00b7 `config.toml verify_jwt=false` |\n| Smoke `scripts/qa/smoke-reshape-pillar.ts` | \u2705 **16/16 zero-cost** (throwaway users, sem BYOK\u2192skeletons\u2192sem gasto LLM): G-create 8 variantes \u00b7 G1 idempot\u00eancia \u00b7 G2 anti cross-post \u00b7 G4 channel\u2192enum (`twitter_x`\u2192`twitter`) \u00b7 G5 honestidade (`pending_reframe`+`draft`, nada `published`) \u00b7 Gsched (linkedin/twitter enfileirados) \u00b7 G6 tenancy RLS=0 |\n| Regress\u00e3o | \u2705 `tsc` 0 \u00b7 `deno check` 3/3 \u00b7 eslint 0 \u00b7 billing 18/18 |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `011659c` | docs(post-engine): SDD reshaper/atomizer + SOP (fecha Closed-Loop Step 3.5) |\n| `3199ceb` | feat(db): channel_variants ledger + creative_metrics.hook_rate |\n| `2ed159f` | feat(reshaper): reshaper data-driven + atomizer + auto-publish native (FMEA-011 fix) + smoke |\n\n**Mesh seal:** handoff node `a3cb1b29-4231-4f12-ae8e-50104e2a4aee` (embedded 768d via trigger). Mesh **8975 n\u00f3s** (verificado live REST count=exact).\n\n**Operacional nesta fatia (6 surfaces publicam variante nativa):** IG Reel \u00b7 TikTok \u00b7 YouTube Short \u00b7 Pinterest video-pin (spine 9:16 reusada) + LinkedIn text_post \u00b7 X thread (hook). **Deferido (OTD honesto, diretiva emitida pelo reshaper):** **OTD-CP-008** render 16:9 HyperFrames (YouTube long, precisa template + host worker) \u00b7 **OTD-CP-009** image reframe/format-coerce (FFmpeg host worker + safe-zone Vision-MCP) \u00b7 **OTD-CP-010** publishers faltantes (LinkedIn/FB/X v\u00eddeo \u00b7 X thread multi-tweet) \u00b7 **OTD-CP-011** PDF carousel \u00b7 auto-segment 1\u2192N.\n\n**Pr\u00f3ximo (maior alavancagem, em ordem):** (1) **OTD-CP-009 image-reframe host worker** \u2014 destrava IG/LinkedIn/FB feed_image + Pinterest standard_pin + YT thumbnail (4:5/2:3/1.91:1 + PNG\u2192JPEG/WebP); molde = `video-bridge.ts` FFmpeg. (2) **OTD-CP-008 16:9 template** \u2014 `viral-short-16x9.html` + `VALID_TEMPLATES` + reshaper enfileira render (YouTube long). (3) **OTD-CP-010** estender `publish-social` (LinkedIn v\u00eddeo \u00b7 X thread multi-tweet). (4) primeiro pilar real witnessed gerando o fan-out nativo E2E (gated GO Sovereign + audits TikTok/YT/Pinterest). Publishers ainda audit-gated (SELF_ONLY/private/sandbox) \u2014 alcance p\u00fablico = a\u00e7\u00e3o Sovereign, **n\u00e3o** o reshaper.\n\n---\n\n## Session Seal \u2014 TikTok/YouTube provados E2E + Channel Format Intelligence (engenharia reversa de formato \u00b7 FR-CP-001) (2026-06-27)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:56)*
+
+
+## 🤖 Claude *(03:01:56)*
+
+Now the memory. Let me write a concise project memory for the reshaper and add a tight index line (MEMORY.md is over budget, so I'll keep it short).
+
+## 🤖 Claude *(03:02:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_channel_reshaper.md",
+  "content": "---\nname: project_channel_reshaper\ndescription: Channel Reshaper + Atomizer (FR-CP-002/003) \u2014 1 pilar \u2192 posts nativos por canal, data-driven, zero branch\nmetadata:\n  type: project\n---\n\n**Channel Format Intelligence \u2014 Reshaper + Atomizer (post-engine)** \u2014 shipped 2026-06-28 (commits `011659c`/`3199ceb`/`2ed159f`, mesh node `a3cb1b29-4231-4f12-ae8e-50104e2a4aee`, mesh 8975).\n\nA tese \"os dados mandam\": o `channel_profiles` (16 linhas-sistema seeded, FR-CP-001) \u00e9 o dicion\u00e1rio; o **reshaper \u00e9 o interpretador** (`supabase/functions/reshape-pillar/index.ts`) que l\u00ea `transform_recipe` + `pillar_atoms` e emite **variante NATIVA por canal** \u2014 **zero branch por canal**. Fecha a penalidade de cross-post (o `auto-publish` cru mandava o MESMO texto+v\u00eddeo a todas as redes).\n\n**Arquitetura (SSOT: `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` + SOP `docs/processes/channel-reshaper.md`):**\n- **Atomizer (FR-CP-002):** bloco fail-open em `orchestrate-step` (article\u2192`pillar_atoms` hook/key_points/stat/quote/cta/pillar_url; LLM+fallback heur\u00edstico; `pillar_url` backfill p\u00f3s-wordpress).\n- **Reshaper (FR-CP-003):** `field_map` grammar (`atoms.<token>`+`+`; arrays expandem; tokens virtuais `hook_short`/`*_keyworded`) \u2192 assemble \u2192 voicing LLM nativo (BYOK, fail-soft\u2192skeleton) \u2192 char-gate (FR-CP-006) \u2192 format-coerce imagem PNG\u2192JPEG/WebP. Service-role-only, user resolvido de `pipeline_runs` (NUNCA body). Trigger 2 escopos idempotentes: `scope=static` (orchestrate-step finalize) + `scope=video` (video-bridge p\u00f3s-`finalize_video_render`).\n- **`channel_variants`** (migration `20260627150000`): ledger native-variant + \u00e2ncora idempot\u00eancia `UNIQUE(pillar_run_id,channel,surface)`; RLS SELECT/DELETE own, **writes service-role-only**. `id` = content_variant_id de `creative_metrics` (+`hook_rate` FR-CP-011).\n- **`auto-publish`** prefere `metadata.reshape` mas resolve o asset do `channel_variants` **owner-scoped** (`.eq('user_id', post.user_id)`).\n\n**\u26a0\ufe0f Li\u00e7\u00e3o de seguran\u00e7a (Lei 1):** o `/security-review` pegou um HIGH **que EU introduzi** \u2014 assinar `bucket`/`key` vindos de `scheduled_posts.metadata` (user-writable) com service-role = exfil cross-tenant (FMEA-011). REGRA gravada: **nunca assinar storage key de metadata user-writable**; resolva de uma linha owner-scoped service-role-written. SEMPRE rodar /security-review antes de commit de migration/edge fn que toca storage/RLS.\n\n**Mapeamento operacional (6 surfaces publicam variante nativa):** IG Reel \u00b7 TikTok \u00b7 YouTube Short \u00b7 Pinterest video-pin (spine 9:16 1 render\u2192N) + LinkedIn text_post \u00b7 X thread. Smoke `scripts/qa/smoke-reshape-pillar.ts` 16/16 zero-cost.\n\n**Deferido (OTD honesto, reshaper emite a diretiva + status `pending_*`):** OTD-CP-008 render 16:9 (YouTube long, template+host worker) \u00b7 OTD-CP-009 image reframe/format-coerce (FFmpeg host worker molde `video-bridge.ts` + safe-zone Vision-MCP) \u00b7 OTD-CP-010 publishers faltantes (LinkedIn/FB/X v\u00eddeo \u00b7 X thread multi-tweet \u2014 `publish-social` \u00e9 text-only nesses) \u00b7 OTD-CP-011 PDF carousel/auto-segment.\n\nReusa o motor [[project_viral_autopilot]]; serve a virada [[project_brand_persona_ccio]] (1 ideia \u2192 todos os canais). Publishers ainda audit-gated (SELF_ONLY/private/sandbox) = a\u00e7\u00e3o Sovereign, n\u00e3o o reshaper.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_channel_reshaper.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:02:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "offset": 1,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Módulo Vídeo (video-studio) — BoK 9/9; Fatia 1 SHIPPED; **motor HyperFrames VIVO (2026-06-24)**; editor Studio = módulo-container (blueprint pronto)](project_video_studio.md) — faceless studio (nativo De-n8n) + HyperFrames sob MCORCH. **Fatia VS-2 motor HyperFrames VIVO** (commit `39f8001`): `scripts/hyperframes/render-core.ts` Playwright+FFmpeg→MP4 9:16 1080×1920 **sha256-idêntico** (NFR-VS-016) + worker `scripts/video-bridge.ts` (molde design-bridge: claim atômico `video_renders` engine=hyperframes→render→bucket privado `video-studio-assets`→`finalize_video_render`; systemd `video-bridge.service` active) + migration `20260624120000` (composition jsonb+bucket) + edge `video-render` transporte `poll://`. Single-tenant User 0 (hardening multi-tenant FMEA-VS-001 diferido). Consumido pelo [[project_viral_autopilot]] (vídeo 9:16 autônomo). /security-review SAFE. **Editor = Fatia VS-UI (próximo):** flip OTD-VS-005 A→C módulo-container (embed in-SPA inviável — `@hyperframes/studio@0.7.5` exige React 19 vs SPA React 18, prova `npm view`); blueprint material `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` (StudioApp **zero-props** server-backed; seam `StudioApiAdapter`; nosso `McorchAdapter.startRender`→`video-render`; vhost `studio.mcorch.com`=ação Sovereign; **gate #1 render-parity `frame=floor(time*fps)`**; Apache-2.0). Faceless nativo ainda a construir. ⚠️ doc drift `gemini_api_key`→`google_api_key` ([[reference_byok_gemini_column]]).
+> 4	- [BYOK Gemini = coluna `google_api_key` (gemini_api_key NÃO existe — drift BoK/CLAUDE.md)](reference_byok_gemini_column.md) — 2026-06-22: pego pelo smoke do video-render (402 falso). `select=gemini_api_key`→42703. Toda integração Gemini per-user lê `decrypted_user_api_keys.google_api_key` (canvas-execute confirma). Confie no DB live, não no doc.
+> 5	- [Cyber-Sentinel compartilhado — paridade pt-BR adicionada (OTD-VA-018 fechada)](reference_shared_sentinel_english_only.md) — 2026-06-23: `inspectPrompt` (`_shared/sentinel.ts`) era English-only (injection pt-BR pontuava 0). Agora 7 famílias pt-BR (f1-f7) espelham o inglês, **0 FP real** (58 amostras, armadilhas-trope adversariais); live 403 `score=2`. É TRIAGE score≥2: single-intent + beyond-triage passam por design (= inglês) → fonte-não-confiável→prompt ainda exige gate próprio (`sanitizeTrendTitle`). CUIDADO tunar: "revele os segredos"/"esqueça as instruções"/"modo livre"/"atua como desenvolvedor" são tropes legítimas. Só 2 importadores redeploy.
+> 6	- [Entregar valor visível ao Usuário Zero, menos plumbing técnico](feedback_deliver_user_value_not_plumbing.md) — Diretiva Sovereign 2026-06-24: "você está muito técnico e não entrega valor final". Quer o editor HyperFrames rodando (timeline multi-camada, overlays alpha, efeitos/transições). Priorizar caminho curto até algo que ele ABRE e TOCA; Lei 2 como meio, lean.
+> 7	- [Programa do ecossistema criativo bidirecional (Canvas+HyperFrames+OpenDesign→social)](project_creative_ecosystem_program.md) — Diretiva Sovereign 2026-06-25: híbrido bidirecional + `creative_assets` spine + faceless nativo (receita n8n 51s). Ordem decidida de 4 fatias. Nesta sessão: bug de perda de nós do Canvas fixado (`6fa6370`) + projeto `63d406fe` recuperado. ⚠️ rotacionar chave Gemini + token Telegram do n8n colado.
+> 8	- [Virada brand-first — persona Gabriel AI/CCIO evangeliza o MCORCH (não produto); +YouTube +TikTok](project_brand_persona_ccio.md) — Diretiva Sovereign 2026-06-26: foco = marca via persona única escalável (avatar CCIO = rosto de todos os canais), produto/afiliado = subproduto de longo prazo. Reusa o motor [[project_viral_autopilot]] (trilhos não mudam; muda fonte do tema + nº de bocas). Infra ~90% pronta (enum social_platform já tem yt/tiktok · social_accounts Vault · cadência · MESMO MP4 9:16 do Reel); net-new = 3 branches (publish-social/social-auth-init+callback/refresh) + gap `auto-publish` não passa video_url + add VIDEO_FLOW_PLATFORMS. Gates audit YT (videos.insert nasce private) + TikTok (SELF_ONLY) = ação Sovereign. Plano produto PAUSADO. Amendar BoK post-engine antes de codar. Blueprint `.claude/context/yt-tiktok-brand-persona-integration-prep-2026-06-26.md`.
+> ```
+
+## 🤖 Claude *(03:02:24)*
+
+
+## 🤖 Claude *(03:02:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Virada brand-first \u2014 persona Gabriel AI/CCIO evangeliza o MCORCH (n\u00e3o produto); +YouTube +TikTok](project_brand_persona_ccio.md)",
+  "new_string": "- [Channel Reshaper + Atomizer (FR-CP-002/003) \u2014 1 pilar \u2192 posts nativos por canal, data-driven](project_channel_reshaper.md) \u2014 shipped 2026-06-28: interpretador `reshape-pillar` l\u00ea `channel_profiles.transform_recipe`+`pillar_atoms`\u2192variante nativa por canal (zero branch). `channel_variants` ledger+idempot\u00eancia. \u26a0\ufe0f /security-review pegou HIGH FMEA-011 que EU introduzi (assinar storage key de metadata user-writable)\u2192FIXADO owner-scoped. Smoke 16/16. 6 surfaces operacionais; 16:9/reframe/publishers = OTD-CP-008..011.\n- [Virada brand-first \u2014 persona Gabriel AI/CCIO evangeliza o MCORCH (n\u00e3o produto); +YouTube +TikTok](project_brand_persona_ccio.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:02:37)*
+
+
+## 🤖 Claude *(03:02:37)*
+
+Now commit the HANDOFF seal + bump README version (project convention). Let me check the README header.
+
+## 🤖 Claude *(03:02:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"v6\\.5[0-9]\\.[0-9]\" README.md | head -3",
+  "description": "Find README version line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 78:## 🆕 What's new in v6.55.0 (2026-06-27)
+> 83:## 🆕 What's new in v6.54.0 (2026-06-27)
+> 87:## 🆕 What's new in v6.53.0 (2026-06-27)
+> ```
+
+## 🤖 Claude *(03:02:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 76,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 76	</p>
+> 77	
+> 78	## 🆕 What's new in v6.55.0 (2026-06-27)
+> 79	
+> 80	- **TikTok + YouTube provados E2E (apps em review) + Channel Format Intelligence (engenharia reversa de formato).** Os 3 apps de dev foram registrados (TikTok Content Posting · Google OAuth + canal Brand · Pinterest Trial pendente). **Direct Post do TikTok** provado ponta a ponta (`publish_id` real, PUBLISH_COMPLETE) após fix do `privacy_level` — cliente não-auditado só aceita `SELF_ONLY` (o código caía em `FOLLOWER_OF_CREATOR` → 403). **Upload do YouTube** provado (`videos.insert` resumable, `video_id` real, refresh_token presente). UI ganhou botões **Publicar TikTok + YouTube** na Biblioteca de Assets + mensagem de erro acionável ao conectar (402 `action` hint). TikTok submetido ao audit; YouTube submetido à verificação OAuth (descoberta: upload público funciona pré-audit neste projeto).
+> 81	- **Channel Format Intelligence — "os dados ditam as regras".** Deepsearch fundamentado dos **8 canais** (LinkedIn/IG/FB/X/TikTok/YouTube/Pinterest/WordPress, workflow `wf_98eede6d-069` — 18 agentes, specs verificados adversarialmente) → **emenda BoK `post-engine`** (blueprint 11 + amendment 12: MR/BR/PR-CP + **FR-CP-001..012** + OTD-CP-001..007 + **Pattern Conformance dos 21 padrões** + traceability zero-órfãos). **Migration `channel_profiles` + `pillar_atoms` (FR-CP-001)** shipada e provada — dicionário de dados que reshapa 1 pilar no formato/voz/cadência de cada canal (zero branch por canal); tenancy system-row (`user_id NULL`) + override per-user; **16 linhas-sistema seedadas** com specs verificados + `spec_source_urls` (Lei 1). RLS default-deny provada (G1-G5) · `/security-review` limpo. Tese: 1 master 9:16 serve **7 canais**; net-new = reshaper + reframe/16:9 + coerção de formato API + fan-out nativo anti-cross-post.
+> 82	
+> 83	## 🆕 What's new in v6.54.0 (2026-06-27)
+> ```
+
+## 🤖 Claude *(03:02:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.55.0 (2026-06-27)",
+  "new_string": "## \ud83c\udd95 What's new in v6.56.0 (2026-06-28)\n\n- **Channel Reshaper + Atomizer \u2014 1 ideia \u2192 posts nativos por canal (FR-CP-002/003).** O `channel_profiles` j\u00e1 era o dicion\u00e1rio; faltava o **interpretador**. O novo edge fn `reshape-pillar` l\u00ea `transform_recipe` + `pillar_atoms` e emite **variante NATIVA por canal** (`field_map` grammar + dispatch de `reshape` + format-gate FR-CP-006 + Pinterest-SEO FR-CP-008) \u2014 **zero branch por canal**, matando a penalidade de cross-post (FR-CP-007). O **atomizer** (bloco em `orchestrate-step`) decomp\u00f5e o artigo-pilar em `pillar_atoms`; o `auto-publish` passa a preferir a variante nativa. A espinha 9:16 (1 render) serve **6 surfaces operacionais** (IG Reel \u00b7 TikTok \u00b7 YouTube Short \u00b7 Pinterest \u00b7 LinkedIn \u00b7 X); 16:9/reframe/publishers faltantes ficam como OTD-CP-008..011 honestos (o reshaper emite a diretiva + status `pending_*`).\n- **Fonte da Verdade + seguran\u00e7a.** SDD `13-sdd-reshaper-atomizer.md` fecha o Gate Closed-Loop Step 3.5 (resolve os 8 *blocking gaps* de um critic adversarial) + SOP `channel-reshaper.md`. Ledger `channel_variants` (migration `20260627150000`) com idempot\u00eancia `UNIQUE(pillar_run_id,channel,surface)` + `creative_metrics.hook_rate` (FR-CP-011). **`/security-review` pegou um HIGH (FMEA-011)** \u2014 assinatura de storage key vinda de metadata user-writable \u2192 exfil cross-tenant \u2014 **corrigido** (asset resolvido do `channel_variants` owner-scoped). Smoke `smoke-reshape-pillar.ts` **16/16 zero-cost** \u00b7 `tsc`/`deno check`/eslint/billing limpos.\n\n## \ud83c\udd95 What's new in v6.55.0 (2026-06-27)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:03:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md README.md\ngit commit -q -m \"docs(handoff): seal Channel Reshaper + Atomizer (FR-CP-002/003) \u2014 1 pilar -> posts nativos\n\nMesh node a3cb1b29-4231-4f12-ae8e-50104e2a4aee (8975 nodes). Smoke 16/16.\n/security-review HIGH (FMEA-011 cross-tenant signing) found + fixed. v6.56.0.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -vE \"^\\[38|^\u2503|^summary|^\u2714|^\\s*\u25cb|^\\s*\u2502|^\\s*\u2591|gitleaks|INF |^\\s*$|\u2500\u2500\u2500\u2500\" | tail -5\necho \"=== final log ===\"; git log --oneline -5\necho \"=== worktree clean? ===\"; git status --short",
+  "description": "Commit HANDOFF seal + README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m12:03AM[0m [32mINF[0m scan completed in 24.3ms
+> [90m12:03AM[0m [32mINF[0m no leaks found
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> === final log ===
+> b4fe562 docs(handoff): seal Channel Reshaper + Atomizer (FR-CP-002/003) — 1 pilar -> posts nativos
+> 2ed159f feat(reshaper): data-driven channel reshaper + atomizer — 1 pilar -> posts nativos (FR-CP-002/003/006/007/008)
+> 3199ceb feat(db): channel_variants ledger + creative_metrics.hook_rate (FR-CP-003/007/011)
+> 011659c docs(post-engine): SDD reshaper/atomizer (FR-CP-002/003) + SOP — close Closed-Loop Step 3.5 gate
+> f4ed255 docs(handoff): seal TikTok/YouTube E2E + Channel Format Intelligence (FR-CP-001)
+> === worktree clean? ===
+> ```
+
+## 🤖 Claude *(03:03:13)*
+
+
+## 🤖 Claude *(03:03:14)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(03:03:37)*
+
+Selado. Worktree limpo, 4 commits no `main`, tudo provado materialmente.
+
+---
+
+## ✅ Reshaper + Atomizer — o mapeamento da distribuição autônoma está finalizado
+
+**A tese realizada:** o `channel_profiles` (16 linhas-sistema) já era o dicionário; faltava o **interpretador**. Agora 1 pilar → **variante NATIVA por canal**, com **zero branch por canal** — toda a lógica vive nos dados (`transform_recipe`). Isso mata a armadilha que o sistema tinha: o `auto-publish` cru cross-postava o **mesmo** texto+vídeo a todas as redes = exatamente a penalidade de −40-60% de alcance.
+
+### O que foi entregue (provado, Lei 1)
+| Camada | Prova material |
+|--------|----------------|
+| **BoK gate** (Closed-Loop Step 3.5) | SDD `13-sdd-reshaper-atomizer.md` + SOP — resolve os **8 blocking gaps** de um critic adversarial (workflow `wf_a390c0f0-b6e`, 6 readers) |
+| **Atomizer (FR-CP-002)** | bloco em `orchestrate-step`: artigo → `pillar_atoms` (LLM + fallback heurístico) |
+| **Reshaper (FR-CP-003/006/007/008)** | `reshape-pillar` deployado (81 kB): `field_map` grammar → voicing nativo → format-coerce (PNG→JPEG/WebP) → Pinterest-SEO |
+| **Schema** | migration `20260627150000` aplicada + **verificada live** (`channel_variants` + `hook_rate` + 16 seeds) |
+| **Smoke** | `smoke-reshape-pillar.ts` **16/16 zero-cost** (idempotência · anti cross-post · channel→enum · honestidade · tenancy RLS) |
+| **Regressão** | `tsc` 0 · `deno check` 3/3 · eslint 0 · billing 18/18 |
+| **Mesh** | nó `a3cb1b29-…` · **8975 nós** |
+
+### ⚠️ Honestidade que vale destacar (Lei 1)
+O `/security-review` pegou um **HIGH que eu mesmo introduzi**: o `auto-publish` assinava um `bucket`/`key` vindos do `scheduled_posts.metadata` (gravável pelo usuário) com a chave service-role → **exfiltração cross-tenant** de objeto privado (FMEA-011). **Corrigido** antes do commit: o asset agora é resolvido do `channel_variants` *owner-scoped*. Reportei em vez de esconder.
+
+### Mapeamento operacional vs. honestamente diferido
+- **Publicam variante nativa hoje (6 surfaces):** IG Reel · TikTok · YouTube Short · Pinterest (espinha 9:16, 1 render→N) + **LinkedIn texto · X thread**.
+- **OTDs com diretiva já emitida pelo reshaper** (status `pending_*`, não fake-publish): **CP-008** render 16:9 (YouTube long) · **CP-009** image-reframe (worker FFmpeg) · **CP-010** publishers faltantes (LinkedIn/FB/X vídeo · X thread multi-tweet) · **CP-011** PDF carousel.
+
+### Survival Laws self-audit
+**Lei 1** ✅ toda claim ancorada (db push verificado, smoke 16/16, deploy sizes, mesh count, commits). **Lei 2** ✅ SOP antes do código. **Lei 3** ✅ podei o map do workflow por referência. **Lei 4** ✅ Operator=Agent · Reviewer/Owner=Sovereign.
+
+### Próximo passo de maior alavancagem
+**OTD-CP-009 (image-reframe host worker)** — destrava IG/LinkedIn/FB feed_image + Pinterest standard_pin + YT thumbnail (4:5/2:3/1.91:1 + coerção de formato); molde pronto é o `video-bridge.ts`. Depois CP-008 (16:9) e CP-010 (publishers). O alcance **público** segue gated nos audits TikTok/YouTube/Pinterest — isso é ação sua, não do reshaper.
+
+Quer que eu siga para o **image-reframe worker (CP-009)** agora, ou prefere outra frente?
+
+## 👤 User *(03:12:17)*
+
+ótimo continue. OBS.: A questão de publicar ou deixar como rascunho deve ser optin se possivel.
+
+## 🤖 Claude *(03:13:07)*
+
+
+## 🤖 Claude *(03:13:10)*
+
+Entendido — duas frentes nesta continuação:
+1. **Opt-in de publicação** (a sua OBS — guardrail sobre o que acabei de subir): por padrão o reshaper deve gerar **rascunhos**, e publicar só com consentimento explícito. Faço isto primeiro, é segurança.
+2. **CP-009 image-reframe worker** (o próximo passo proposto).
+
+Primeiro deixa eu ver a infra de preferências por usuário (onde ancorar o opt-in) e o estado atual do gate de enqueue, sem assumir.
+
+## 🤖 Claude *(03:13:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== profiles columns (live) ===\"\nset -a; source .env 2>/dev/null; set +a\nSUPA=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"; KEY=\"${SB_SECRET_KEY}\"\ncurl -s \"$SUPA/rest/v1/profiles?select=*&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print(list(d[0].keys()) if d else 'no rows')\" 2>/dev/null\necho \"=== autopilot_plans columns ===\"\ncurl -s \"$SUPA/rest/v1/autopilot_plans?select=*&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print(list(d[0].keys()) if d else 'no rows')\" 2>/dev/null\necho \"=== any user settings/preferences table? ===\"\ngrep -rlEi \"CREATE TABLE.*(user_settings|user_preferences|preferences)\" supabase/migrations/*.sql 2>/dev/null | head\necho \"=== orchestrate-content body params (auto_publish? wp_status?) ===\"\ngrep -nE \"auto_publish|wp_status|video_enabled|prepaid\" supabase/functions/orchestrate-content/index.ts | head",
+  "description": "Inspect profiles/autopilot_plans/settings + orchestrate params"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === profiles columns (live) ===
+> ['id', 'full_name', 'avatar_url', 'company', 'website', 'timezone', 'language', 'onboarding_completed', 'created_at', 'updated_at', 'score', 'mco_balance', 'status']
+> === autopilot_plans columns ===
+> ['id', 'user_id', 'project_id', 'name', 'mode', 'interval_days', 'target_product_ids', 'platforms', 'budget_cap_mco', 'daily_cap_mco', 'min_balance_mco', 'hitl_required', 'ab_variants', 'is_active', 'next_run_at', 'created_at', 'updated_at', 'video_enabled', 'video_format']
+> === any user settings/preferences table? ===
+> === orchestrate-content body params (auto_publish? wp_status?) ===
+> 50:    //      never a client body). prepaid sub-runs were pre-debited by begin_autopilot_cycle → the deduct is skipped.
+> 98:    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids, prepaid, cycle_id, video_enabled, video_format } = await req.json();
+> 99:    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).
+> 100:    const isPrepaid = isCron && prepaid === true;
+> 103:    const videoEnabled = isCron && video_enabled === true;
+> 205:          wp_status,
+> 212:          prepaid: isPrepaid,           // Fatia 2 — cron sub-run (no self-bill; cycle pre-debited)
+> 214:          video_enabled: videoEnabled,  // Fatia VA-V1 — enqueue a HyperFrames 9:16 render in orchestrate-step (FR-VA-024)
+> ```
+
+## 🤖 Claude *(03:16:14)*
+
+
+## 🤖 Claude *(03:16:16)*
+
+Important catch before I continue — your opt-in OBS surfaces a real issue: the reshaper currently auto-enqueues `linkedin`/`twitter`, but the **legacy `orchestrate-step` steps already enqueue those** → that's a **double-post** I'd otherwise ship, plus they carry affiliate monetization. So the opt-in gate AND a dedup are both needed. Let me read the legacy enqueue to design it correctly.
+
+## 🤖 Claude *(03:16:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scheduled_posts inserts in orchestrate-step (legacy enqueue) ===\"\ngrep -nE \"scheduled_posts|\\.insert\\(|status:.*queued|scheduled_at\" supabase/functions/orchestrate-step/index.ts | grep -iE \"scheduled\" \necho \"=== linkedin_post / twitter_thread step boundaries ===\"\ngrep -nE 'step === \"(linkedin_post|twitter_thread|knowledge_mesh)\"' supabase/functions/orchestrate-step/index.ts\necho \"=== autopilot-run: does it pass hitl/auto_publish to orchestrate-content? ===\"\ngrep -nE \"hitl_required|auto_publish|orchestrate-content|platforms\" supabase/functions/autopilot-run/index.ts | head",
+  "description": "Find legacy social enqueue + autopilot params"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scheduled_posts inserts in orchestrate-step (legacy enqueue) ===
+> 676:            await admin.from("scheduled_posts").insert({
+> 679:              scheduled_at: new Date(Date.now() + 3600000).toISOString(),
+> 687:            { preview: liBody.substring(0, 300), char_count: liBody.length, scheduled_at: new Date(Date.now() + 3600000).toISOString(), affiliate_links: liLinked }
+> 762:            await admin.from("scheduled_posts").insert({
+> 765:              scheduled_at: new Date(Date.now() + 7200000).toISOString(),
+> 773:            { tweet_count: tweets.length, tweets, scheduled_at: new Date(Date.now() + 7200000).toISOString(), affiliate_links: xLinked }
+> === linkedin_post / twitter_thread step boundaries ===
+> 614:    } else if (step === "linkedin_post") {
+> 694:    } else if (step === "twitter_thread") {
+> 780:    } else if (step === "knowledge_mesh") {
+> === autopilot-run: does it pass hitl/auto_publish to orchestrate-content? ===
+> 8:// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9://   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 20:const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 29:// passes it AND orchestrate-content's mirror gate, steering the content LLM (affiliate-link/scam-URL swap) for ANY
+> 87:      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format")
+> 92:    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 94:    const nRuns = products.length * platforms.length * abVariants;
+> 104:    // is enqueued ONLY by the article_generation flow, which orchestrate-content runs solely for the 'wordpress'
+> 110:    // platforms, but the 9:16 render is enqueued ONLY by the article_generation step (gated on 'wordpress' above), and
+> 113:    // the orchestrate-content/-step enqueue-gate extension (its own slice). Until then they stay out of the pre-debit.
+> ```
+
+## 🤖 Claude *(03:16:27)*
+
+
+## 🤖 Claude *(03:16:27)*
+
+Let me read the exact legacy enqueue blocks to gate them on `auto_publish`.
+
+## 🤖 Claude *(03:16:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 670,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 670	                metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin", utmCampaign, topic), products: products.map((p) => p.external_id), affiliate_links: liLinked },
+> 671	              }).eq("id", liContent.id);
+> 672	            }
+> 673	          }
+> 674	
+> 675	          if (liContent?.id) {
+> 676	            await admin.from("scheduled_posts").insert({
+> 677	              user_id: run.user_id, campaign_id: campaign_id || null,
+> 678	              platform: "linkedin", content_id: liContent.id,
+> 679	              scheduled_at: new Date(Date.now() + 3600000).toISOString(),
+> 680	              status: "queued",
+> 681	              metadata: { utm: utmTag("linkedin", utmCampaign, topic), orchestrated: true, affiliate_links: liLinked },
+> 682	            });
+> 683	          }
+> 684	
+> 685	          await addStep("linkedin_post", "done",
+> 686	            { topic, article_link: articleLink },
+> 687	            { preview: liBody.substring(0, 300), char_count: liBody.length, scheduled_at: new Date(Date.now() + 3600000).toISOString(), affiliate_links: liLinked }
+> 688	          );
+> 689	        }
+> 690	      } catch (e: any) {
+> 691	        await addStep("linkedin_post", "error", { topic }, { error: e.message || "Unknown" });
+> ```
+
+## 🤖 Claude *(03:16:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 756,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 756	                metadata: { source: "orchestration", platform: "twitter", tweets, utm: utmTag("twitter", utmCampaign, topic), products: products.map((p) => p.external_id), affiliate_links: xLinked },
+> 757	              }).eq("id", xContent.id);
+> 758	            }
+> 759	          }
+> 760	
+> 761	          if (xContent?.id) {
+> 762	            await admin.from("scheduled_posts").insert({
+> 763	              user_id: run.user_id, campaign_id: campaign_id || null,
+> 764	              platform: "twitter", content_id: xContent.id,
+> 765	              scheduled_at: new Date(Date.now() + 7200000).toISOString(),
+> 766	              status: "queued",
+> 767	              metadata: { utm: utmTag("twitter", utmCampaign, topic), orchestrated: true, thread: tweets, affiliate_links: xLinked },
+> 768	            });
+> 769	          }
+> 770	
+> 771	          await addStep("twitter_thread", "done",
+> 772	            { topic, article_link: xLink },
+> 773	            { tweet_count: tweets.length, tweets, scheduled_at: new Date(Date.now() + 7200000).toISOString(), affiliate_links: xLinked }
+> 774	          );
+> 775	        }
+> 776	      } catch (e: any) {
+> 777	        await addStep("twitter_thread", "error", { topic }, { error: e.message || "Unknown" });
+> ```
+
+## 🤖 Claude *(03:17:47)*
+
+
+## 🤖 Claude *(03:17:49)*
+
+Now I have the full picture. Clean decision (BoK vision = reshaper is the single social authority; avoids double-post + aligns with the brand-first pivot where the micro-post links to the monetized article):
+
+- **Remove the legacy `linkedin`/`twitter` `scheduled_posts` enqueue** → reshaper owns all social enqueue (no double-post).
+- **`auto_publish` flag, default OFF for user runs / ON for the activated autopilot (honoring `hitl_required`)** → publish is opt-in; default draft.
+- **`publish-channel-variant` edge fn** → the per-variant "publish this draft" opt-in action.
+
+Let me read the orchestrate-content param + metadata spots.
+
+## 🤖 Claude *(03:17:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 98,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 98	    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids, prepaid, cycle_id, video_enabled, video_format } = await req.json();
+> 99	    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).
+> 100	    const isPrepaid = isCron && prepaid === true;
+> 101	    // FR-VA-022/024: video 9:16 opt-in flows from the plan via autopilot-run. Honored ONLY on the cron path
+> 102	    // (the cost was pre-debited in the cycle — OTD-VA-010); a user-path caller cannot self-enqueue a free render.
+> 103	    const videoEnabled = isCron && video_enabled === true;
+> 104	    const videoFormat = typeof video_format === "string" ? video_format : "9:16";
+> 105	
+> ```
+
+## 🤖 Claude *(03:17:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 198,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 198	        status: "running",
+> 199	        steps: [],
+> 200	        started_at: runStarted,
+> 201	        metadata: {
+> 202	          topic,
+> 203	          platforms,
+> 204	          campaign_id: campaign_id || null,
+> 205	          wp_status,
+> 206	          site_url,
+> 207	          selectedModel,
+> 208	          isGroq,
+> 209	          aiEndpoint,
+> 210	          utmCampaign,
+> 211	          products: resolvedProducts,   // Viral Autopilot Fatia 1 — channel to orchestrate-step (product-aware)
+> 212	          prepaid: isPrepaid,           // Fatia 2 — cron sub-run (no self-bill; cycle pre-debited)
+> 213	          cycle_id: cycle_id ?? null,   // Fatia 2 — link the run to its autopilot_cycle
+> 214	          video_enabled: videoEnabled,  // Fatia VA-V1 — enqueue a HyperFrames 9:16 render in orchestrate-step (FR-VA-024)
+> 215	          video_format: videoFormat,
+> 216	        }
+> 217	      })
+> ```
+
+## 🤖 Claude *(03:17:55)*
+
+
+## 🤖 Claude *(03:17:55)*
+
+Let me set up tasks for this continuation, then implement the opt-in gate.
+
+## 🤖 Claude *(03:17:58)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Opt-in publish gate + double-post fix",
+  "description": "auto_publish flag (default draft; cron honors hitl_required). Remove legacy linkedin/twitter scheduled_posts enqueue (reshaper owns social). Gate reshaper enqueue on auto_publish. publish-channel-variant edge fn for per-variant opt-in publish. Update smoke + deploy.",
+  "activeForm": "Implementing opt-in publish gate + double-post fix"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #7 created successfully: Opt-in publish gate + double-post fix
+> ```
+
+## 🤖 Claude *(03:18:01)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "CP-009 image reframe/format-coerce host worker",
+  "description": "FFmpeg host worker (mold video-bridge) that reframes pillar image to 4:5/2:3/1.91:1 + thumbnail 16:9 + coerces PNG\u2192JPEG/WebP, writes to bucket + channel_variants.asset ready. Reshaper enqueues reframe jobs; worker fills asset_status ready. Unblocks IG/LinkedIn/FB feed_image + Pinterest standard_pin + YT thumbnail.",
+  "activeForm": "Building CP-009 image reframe worker"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #8 created successfully: CP-009 image reframe/format-coerce host worker
+> ```
+
+## 🤖 Claude *(03:18:04)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(03:18:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id, video_enabled, video_format } = await req.json();\n    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).\n    const isPrepaid = isCron && prepaid === true;",
+  "new_string": "    const { topic, campaign_id, platforms = [\"wordpress\", \"linkedin\", \"twitter\"], site_url = \"mcorch.com\", wp_status = \"draft\", product_ids, prepaid, cycle_id, video_enabled, video_format, auto_publish } = await req.json();\n    // prepaid is honored ONLY on the proven cron path (a user-path caller cannot set it to skip billing).\n    const isPrepaid = isCron && prepaid === true;\n    // \u2500\u2500 Publish opt-in (Sovereign directive 2026-06-28): social posts default to DRAFT; publishing is opt-in. \u2500\u2500\n    // User path \u2192 default false (the reshaper produces drafts for review; publish via publish-channel-variant).\n    // Cron/autopilot path \u2192 default true (activating the autopilot IS the opt-in), but an explicit auto_publish=false\n    // (e.g. the plan's hitl_required) forces drafts. Mirrors the existing wp_status='draft' default for WordPress.\n    const autoPublish = isCron ? (auto_publish !== false) : (auto_publish === true);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "old_string": "          video_enabled: videoEnabled,  // Fatia VA-V1 \u2014 enqueue a HyperFrames 9:16 render in orchestrate-step (FR-VA-024)\n          video_format: videoFormat,\n        }",
+  "new_string": "          video_enabled: videoEnabled,  // Fatia VA-V1 \u2014 enqueue a HyperFrames 9:16 render in orchestrate-step (FR-VA-024)\n          video_format: videoFormat,\n          auto_publish: autoPublish,    // FR-CP-003 \u2014 opt-in publish; false \u21d2 reshaper produces drafts only\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:21)*
+
+
+## 🤖 Claude *(03:18:22)*
+
+Now `orchestrate-step`: read `auto_publish` from metadata + remove the two legacy enqueues. Let me find where metadata is read.
+
+## 🤖 Claude *(03:18:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"const metadata|metadata = run|const \\{ .*\\} = metadata|campaign_id =|const campaign_id\" supabase/functions/orchestrate-step/index.ts | head",
+  "description": "Find metadata destructure in orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 186:    const metadata = run.metadata || {};
+> 187:    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> 560:      const { articleTitle, articleContent } = metadata;
+> 615:      const { wpPostUrl } = metadata;
+> 695:      const { wpPostUrl } = metadata;
+> 783:        const { wpPostUrl, wpPostId, articleContent } = metadata;
+> ```
+
+## 🤖 Claude *(03:18:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "    const metadata = run.metadata || {};\n    const { topic, platforms, campaign_id, wp_status = \"draft\", site_url = \"mcorch.com\", utmCampaign } = metadata;",
+  "new_string": "    const metadata = run.metadata || {};\n    const { topic, platforms, campaign_id, wp_status = \"draft\", site_url = \"mcorch.com\", utmCampaign } = metadata;\n    // FR-CP-003 publish opt-in: social enqueue happens ONLY when the run opted into auto-publish (default false =\n    // draft). The reshaper is the single social-enqueue authority (see legacy linkedin/twitter steps below \u2014 their\n    // direct scheduled_posts enqueue was retired to avoid double-posting the reshaper's native variants).\n    const autoPublish = metadata.auto_publish === true;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:34)*
+
+Now retire the two legacy enqueues (the reshaper owns social, gated by `auto_publish` — no double-post):
+
+## 🤖 Claude *(03:18:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "          if (liContent?.id) {\n            await admin.from(\"scheduled_posts\").insert({\n              user_id: run.user_id, campaign_id: campaign_id || null,\n              platform: \"linkedin\", content_id: liContent.id,\n              scheduled_at: new Date(Date.now() + 3600000).toISOString(),\n              status: \"queued\",\n              metadata: { utm: utmTag(\"linkedin\", utmCampaign, topic), orchestrated: true, affiliate_links: liLinked },\n            });\n          }\n\n          await addStep(\"linkedin_post\", \"done\",",
+  "new_string": "          // NOTE (FR-CP-003): the direct LinkedIn scheduled_posts enqueue was RETIRED. The reshaper is now the single\n          // social-enqueue authority \u2014 it emits a NATIVE per-channel variant (channel_variants) and enqueues it (when\n          // auto_publish). This step still generates the content_library record (mesh/history); double-posting is gone.\n\n          await addStep(\"linkedin_post\", \"done\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "          if (xContent?.id) {\n            await admin.from(\"scheduled_posts\").insert({\n              user_id: run.user_id, campaign_id: campaign_id || null,\n              platform: \"twitter\", content_id: xContent.id,\n              scheduled_at: new Date(Date.now() + 7200000).toISOString(),\n              status: \"queued\",\n              metadata: { utm: utmTag(\"twitter\", utmCampaign, topic), orchestrated: true, thread: tweets, affiliate_links: xLinked },\n            });\n          }\n\n          await addStep(\"twitter_thread\", \"done\",",
+  "new_string": "          // NOTE (FR-CP-003): the direct X/Twitter scheduled_posts enqueue was RETIRED \u2014 the reshaper owns social\n          // enqueue (native thread variant via channel_variants, gated on auto_publish). content_library record kept.\n\n          await addStep(\"twitter_thread\", \"done\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:51)*
+
+
+## 🤖 Claude *(03:18:51)*
+
+Now gate the reshaper's enqueue on `auto_publish`:
+
+## 🤖 Claude *(03:18:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "    const userId: string = run.user_id;\n    const campaignId: string | null = (run.metadata as { campaign_id?: string } | null)?.campaign_id ?? null;",
+  "new_string": "    const userId: string = run.user_id;\n    const campaignId: string | null = (run.metadata as { campaign_id?: string } | null)?.campaign_id ?? null;\n    // Publish opt-in (Sovereign directive 2026-06-28): when the run did NOT opt into auto-publish, the reshaper\n    // still produces every native variant but leaves them as DRAFTS (no scheduled_posts). The user reviews and\n    // publishes via publish-channel-variant. Default false = draft. SSOT: post-engine/13-sdd \u00a75.2.\n    const autoPublish = (run.metadata as { auto_publish?: boolean } | null)?.auto_publish === true;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "        // Enqueue publish ONCE, only where the publisher is operational with this asset.\n        let status = variant.status as string;\n        if (!variant.scheduled_post_id && isOperational(w.platform, assetKind, assetStatus)) {",
+  "new_string": "        // Enqueue publish ONCE \u2014 only when the run opted into auto-publish AND the publisher is operational.\n        // Draft mode (default) leaves the variant as 'draft' for review (publish-channel-variant publishes it later).\n        let status = variant.status as string;\n        if (autoPublish && !variant.scheduled_post_id && isOperational(w.platform, assetKind, assetStatus)) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:04)*
+
+
+## 🤖 Claude *(03:19:05)*
+
+Now `autopilot-run` — honor `hitl_required` (pass `auto_publish`). Let me find the plan select + the orchestrate-content call.
+
+## 🤖 Claude *(03:19:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"hitl_required|video_enabled|video_format|orchestrate-content|body: JSON.stringify|platforms:|prepaid:\" supabase/functions/autopilot-run/index.ts | head -20",
+  "description": "Find autopilot-run orchestrate-content call"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9://   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 20:const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 22:const VIDEO_COST = 12;    // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) — per video sub-run when plan.video_enabled (FR-VA-022/024)
+> 29:// passes it AND orchestrate-content's mirror gate, steering the content LLM (affiliate-link/scam-URL swap) for ANY
+> 87:      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format")
+> 100:    const videoEnabled = plan.video_enabled === true;
+> 101:    const videoFormat = typeof plan.video_format === "string" ? plan.video_format : "9:16";
+> 104:    // is enqueued ONLY by the article_generation flow, which orchestrate-content runs solely for the 'wordpress'
+> 113:    // the orchestrate-content/-step enqueue-gate extension (its own slice). Until then they stay out of the pre-debit.
+> 123:    // per-product gate in orchestrate-content (skip-and-continue: a blocked trend is dropped, not the whole angle).
+> 125:    // Defense-in-depth: orchestrate-content re-inspects the full topic, so this is the first of two gates.
+> 161:        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 188:      body: JSON.stringify(payload),
+> 196:        const ar = await svcCall("autopilot-analyze", { previous_cycle_id: prev.id, prepaid: true })
+> 225:    // ── Fan-out: (product × platform) × reallocated variants → orchestrate-content (prepaid → NO self-bill). ──────
+> 233:            const r = await fetch(`${url}/functions/v1/orchestrate-content`, {
+> 240:              body: JSON.stringify({
+> 241:                topic: viralTopic, platforms: [pair.platform], product_ids: [pair.product],
+> 242:                prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 243:                video_enabled: videoEnabled, video_format: videoFormat,
+> ```
+
+## 🤖 Claude *(03:19:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 240,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 240	              body: JSON.stringify({
+> 241	                topic: viralTopic, platforms: [pair.platform], product_ids: [pair.product],
+> 242	                prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 243	                video_enabled: videoEnabled, video_format: videoFormat,
+> 244	              }),
+> 245	            });
+> 246	            if (r.ok) {
+> 247	              succeeded++;
+> 248	              if (videoEnabled && VIDEO_FLOW_PLATFORMS.has(pair.platform)) succeededVideo++;
+> 249	            } else console.warn(`[autopilot-run] sub-run ${pair.product}/${pair.platform} → HTTP ${r.status}`);
+> ```
+
+## 🤖 Claude *(03:19:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format\")",
+  "new_string": "      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format, hitl_required\")"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "              body: JSON.stringify({\n                topic: viralTopic, platforms: [pair.platform], product_ids: [pair.product],\n                prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                video_enabled: videoEnabled, video_format: videoFormat,\n              }),",
+  "new_string": "              body: JSON.stringify({\n                topic: viralTopic, platforms: [pair.platform], product_ids: [pair.product],\n                prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                video_enabled: videoEnabled, video_format: videoFormat,\n                // Publish opt-in (FR-CP-003): the autopilot auto-publishes UNLESS the plan requires human review.\n                auto_publish: plan.hitl_required !== true,\n              }),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:19:33)*
+
+
+## 🤖 Claude *(03:19:34)*
+
+Now the per-variant manual-publish opt-in action — `publish-channel-variant` (user-JWT, owner-scoped):
+
+## 🤖 Claude *(03:19:52)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-channel-variant/index.ts",
+  "content": "// publish-channel-variant \u2014 opt-in manual publish of a reshaped draft (FR-CP-003 publish opt-in)\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Sovereign directive 2026-06-28: social posts default to DRAFT; the user reviews channel_variants and publishes\n// the ones they want. This fn enqueues ONE draft variant (owned by the caller) into scheduled_posts \u2192 the\n// auto-publish cron then drives publish-social with the OWNER-scoped native asset (auto-publish resolves the asset\n// from channel_variants by user_id \u2014 FMEA-011-safe). User-JWT in (gateway verify_jwt default); identity is\n// re-verified via getUser, then a service-role client performs the cross-policy write (channel_variants has no\n// authenticated UPDATE policy by design). SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a75.\n\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const json = (status: number, body: unknown) =>\n    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader?.startsWith(\"Bearer \")) return json(401, { error: \"Unauthorized\" });\n\n    // Re-verify the caller (the gateway already validated the JWT signature).\n    const userClient = createClient(\n      Deno.env.get(\"SUPABASE_URL\")!,\n      (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!,\n      { global: { headers: { Authorization: authHeader } } },\n    );\n    const { data: { user } } = await userClient.auth.getUser();\n    if (!user) return json(401, { error: \"Unauthorized\" });\n\n    const { channel_variant_id } = await req.json().catch(() => ({}));\n    if (!channel_variant_id) return json(400, { error: \"channel_variant_id required\" });\n\n    const admin = createClient(\n      Deno.env.get(\"SUPABASE_URL\")!,\n      (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n    );\n\n    // Load the variant \u2014 bound to the caller (tenant hard-bind; a forged id of another tenant returns nothing).\n    const { data: v } = await admin.from(\"channel_variants\")\n      .select(\"id, user_id, platform, surface, channel, native_text, asset_kind, asset_status, status, scheduled_post_id\")\n      .eq(\"id\", channel_variant_id).eq(\"user_id\", user.id).maybeSingle();\n    if (!v) return json(404, { error: \"variant_not_found\" });\n    if (v.scheduled_post_id || v.status === \"scheduled\" || v.status === \"published\") {\n      return json(409, { error: \"already_enqueued\", scheduled_post_id: v.scheduled_post_id });\n    }\n    if (!v.platform) return json(422, { error: \"surface_not_publishable\", detail: \"no social_platform for this surface\" });\n    if (![\"ready\", \"reused_master\"].includes(v.asset_status as string)) {\n      return json(422, { error: \"asset_not_ready\", detail: v.asset_status });\n    }\n\n    // Build the publish text from the native variant (auto-publish resolves the ASSET from channel_variants itself).\n    const nt = (v.native_text ?? {}) as Record<string, unknown>;\n    const text = typeof nt.body === \"string\" ? nt.body\n      : typeof nt.caption === \"string\" ? nt.caption\n      : Array.isArray(nt.tweets) ? (nt.tweets as string[])[0]\n      : typeof nt.title === \"string\" ? nt.title : \"\";\n    const content: Record<string, unknown> = { text, surface: v.surface, channel: v.channel };\n    if (Array.isArray(nt.tweets)) content.tweets = nt.tweets;\n\n    const { data: sp, error: spErr } = await admin.from(\"scheduled_posts\").insert({\n      user_id: user.id, content_id: null, campaign_id: null, social_account_id: null,\n      platform: v.platform, scheduled_at: new Date().toISOString(), status: \"queued\",\n      metadata: { reshape: { content, channel_variant_id: v.id, surface: v.surface, channel: v.channel } },\n    }).select(\"id\").single();\n    if (spErr || !sp) return json(500, { error: \"enqueue_failed\", detail: spErr?.message });\n\n    await admin.from(\"channel_variants\").update({ status: \"scheduled\", scheduled_post_id: sp.id }).eq(\"id\", v.id);\n\n    return json(200, { ok: true, scheduled_post_id: sp.id, platform: v.platform, surface: v.surface });\n  } catch (e) {\n    console.error(\"publish-channel-variant error:\", e);\n    return json(500, { error: e instanceof Error ? e.message : \"Unknown error\" });\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-channel-variant/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:20:10)*
+
+
+## 🤖 Claude *(03:20:10)*
+
+Now update the smoke to cover the opt-in behavior (default draft + manual publish + auto mode). Let me rewrite it.
+
+## 🤖 Claude *(03:20:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reshape-pillar.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 reshape-pillar + publish opt-in (post-engine FR-CP-003/006/007/008), ZERO-COST.\n *\n * Proves the reshaper interpreter AND the publish opt-in gate WITHOUT spending mcoCoins or LLM $ (throwaway user\n * has NO BYOK key \u2192 voicing skipped \u2192 deterministic skeletons \u2192 free). Gates (docs/processes/channel-reshaper.md):\n *   G-create  static channel_variants produced (\u22656 surfaces)\n *   G1        idempotency \u2014 a 2nd call leaves the count UNCHANGED (UNIQUE pillar_run_id,channel,surface)\n *   G2        anti cross-post (structural) \u2014 channels with different field_maps yield DISTINCT native_text\n *   G4        channel\u2192enum \u2014 twitter_x \u2192 platform 'twitter'\n *   G5        honesty \u2014 image surfaces are asset_status 'pending_reframe' + status 'draft'\n *   Gdraft    PUBLISH OPT-IN \u2014 with auto_publish unset (default), NOTHING is enqueued; every variant stays 'draft'\n *   Gmanual   publish-channel-variant enqueues ONE chosen draft (opt-in action) \u2192 status 'scheduled'\n *   Gauto     with auto_publish=true, operational surfaces (linkedin/twitter) ARE auto-enqueued\n *   G6        tenancy \u2014 a DIFFERENT user's JWT SELECTs 0 of these channel_variants (RLS own)\n *\n * Cleans up (deletes throwaway users \u2192 CASCADE). Usage: bun run scripts/qa/smoke-reshape-pillar.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, PUB, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uidA: string | null = null;\nlet uidB: string | null = null;\nlet runDraft: string | null = null;\nlet runAuto: string | null = null;\nlet pass = true;\n\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\n\nasync function mkUser(tag: string): Promise<{ id: string; email: string }> {\n  const email = `reshape-smoke-${tag}-${stamp}@example.com`;\n  const { data, error } = await admin.auth.admin.createUser({ email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (error || !data?.user) throw new Error(`createUser(${tag}): ${error?.message}`);\n  return { id: data.user.id, email };\n}\nasync function userToken(email: string): Promise<string> {\n  const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\n  if (error || !data.properties?.hashed_token) throw new Error(`generateLink: ${error?.message}`);\n  const { data: s, error: e2 } = await anon.auth.verifyOtp({ type: 'magiclink', token_hash: data.properties.hashed_token });\n  if (e2 || !s.session?.access_token) throw new Error(`verifyOtp: ${e2?.message}`);\n  return s.session.access_token;\n}\nasync function seedRun(userId: string, autoPublish: boolean): Promise<string> {\n  const { data: run, error } = await admin.from('pipeline_runs').insert({\n    user_id: userId, topic: 'Reshaper smoke \u2014 automa\u00e7\u00e3o de conte\u00fado viral',\n    platforms: ['wordpress', 'linkedin', 'twitter'], status: 'done', steps: [],\n    metadata: { campaign_id: null, auto_publish: autoPublish },\n  }).select('id').single();\n  if (error || !run) throw new Error(`pipeline_runs insert: ${error?.message}`);\n  await admin.from('pillar_atoms').insert({\n    user_id: userId, pillar_run_id: run.id,\n    hook: 'Pare de cross-postar o mesmo v\u00eddeo em todas as redes',\n    key_points: ['Cada rede premia um formato', 'O algoritmo penaliza conte\u00fado id\u00eantico', 'Uma ideia vira N variantes nativas'],\n    stat: '40-60% menos alcance ao re-postar id\u00eantico', quote: 'Os dados mandam',\n    cta: 'Veja como o reshaper resolve', pillar_url: 'https://mcorch.com/blog/reshaper',\n  });\n  return run.id as string;\n}\nasync function callReshape(pillarRunId: string, scope: string) {\n  const r = await fetch(`${URL}/functions/v1/reshape-pillar`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SVC}` },\n    body: JSON.stringify({ pillar_run_id: pillarRunId, scope }),\n  });\n  const t = await r.text(); let j: { ok?: boolean; processed?: unknown[]; scheduled?: number; error?: string };\n  try { j = JSON.parse(t); } catch { j = { error: t }; }\n  return { status: r.status, body: j };\n}\n\ntry {\n  const a = await mkUser('a'); uidA = a.id;\n  const b = await mkUser('b'); uidB = b.id;\n\n  // \u2500\u2500 DRAFT MODE (default \u2014 auto_publish=false) \u2500\u2500\n  runDraft = await seedRun(uidA, false);\n  const r1 = await callReshape(runDraft, 'static');\n  check('reshape-pillar 200 + ok', r1.status === 200 && r1.body.ok === true, `status=${r1.status} err=${r1.body.error ?? ''}`);\n  check('G-create: \u22656 static variants', (r1.body.processed?.length ?? 0) >= 6, `count=${r1.body.processed?.length}`);\n\n  const { data: cv1 } = await admin.from('channel_variants').select('channel, surface, platform, native_text, asset_status, status, id').eq('pillar_run_id', runDraft);\n  const variants = cv1 ?? [];\n  const byKey = (ch: string, sf: string) => variants.find((v) => v.channel === ch && v.surface === sf);\n\n  await callReshape(runDraft, 'static');\n  const { count: cnt2 } = await admin.from('channel_variants').select('id', { count: 'exact', head: true }).eq('pillar_run_id', runDraft);\n  check('G1: idempotent (2nd call \u2192 same count)', cnt2 === variants.length, `before=${variants.length} after=${cnt2}`);\n\n  const li = byKey('linkedin', 'text_post');\n  const tw = byKey('twitter_x', 'thread');\n  const liText = JSON.stringify(li?.native_text ?? {});\n  const twText = JSON.stringify(tw?.native_text ?? {});\n  check('G2: linkedin body \u2260 twitter thread', liText !== twText && liText !== '{}' && twText !== '{}', `li=${liText.slice(0, 30)} tw=${twText.slice(0, 30)}`);\n  check('G2b: twitter thread is tweets[]', Array.isArray((tw?.native_text as { tweets?: unknown })?.tweets));\n  check('G4: twitter_x \u2192 platform \"twitter\"', tw?.platform === 'twitter', `platform=${tw?.platform}`);\n\n  const igFeed = byKey('instagram', 'feed_image');\n  check('G5: instagram feed_image pending_reframe + draft', igFeed?.asset_status === 'pending_reframe' && igFeed?.status === 'draft', `asset=${igFeed?.asset_status} status=${igFeed?.status}`);\n\n  // Gdraft: PUBLISH OPT-IN \u2014 nothing enqueued, all variants draft\n  check('Gdraft: reshaper reported 0 scheduled', (r1.body.scheduled ?? -1) === 0, `scheduled=${r1.body.scheduled}`);\n  check('Gdraft-b: ALL variants are draft', variants.every((v) => v.status === 'draft'), `statuses=${[...new Set(variants.map((v) => v.status))].join(',')}`);\n  const { count: spDraft } = await admin.from('scheduled_posts').select('id', { count: 'exact', head: true }).eq('user_id', uidA);\n  check('Gdraft-c: NO scheduled_posts created in draft mode', spDraft === 0, `count=${spDraft}`);\n\n  // \u2500\u2500 Gmanual: opt-in publish of ONE chosen draft (publish-channel-variant) \u2500\u2500\n  const tokenA = await userToken(a.email);\n  const pubRes = await fetch(`${URL}/functions/v1/publish-channel-variant`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: PUB, Authorization: `Bearer ${tokenA}` },\n    body: JSON.stringify({ channel_variant_id: li?.id }),\n  });\n  const pubBody = await pubRes.json().catch(() => ({}));\n  check('Gmanual: publish-channel-variant 200 + ok', pubRes.status === 200 && pubBody.ok === true, `status=${pubRes.status} ${JSON.stringify(pubBody).slice(0, 80)}`);\n  const { data: liAfter } = await admin.from('channel_variants').select('status, scheduled_post_id').eq('id', li?.id ?? '').maybeSingle();\n  check('Gmanual-b: variant now scheduled', liAfter?.status === 'scheduled' && !!liAfter?.scheduled_post_id, `status=${liAfter?.status}`);\n  // Idempotency of manual publish: 2nd call \u2192 409 already_enqueued\n  const pub2 = await fetch(`${URL}/functions/v1/publish-channel-variant`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: PUB, Authorization: `Bearer ${tokenA}` },\n    body: JSON.stringify({ channel_variant_id: li?.id }),\n  });\n  check('Gmanual-c: re-publish \u2192 409 already_enqueued', pub2.status === 409, `status=${pub2.status}`);\n\n  // \u2500\u2500 Gauto: auto_publish=true \u2192 operational surfaces auto-enqueued \u2500\u2500\n  runAuto = await seedRun(uidA, true);\n  const r2 = await callReshape(runAuto, 'static');\n  check('Gauto: auto_publish run enqueues \u22652', (r2.body.scheduled ?? 0) >= 2, `scheduled=${r2.body.scheduled}`);\n  const { data: cvAuto } = await admin.from('channel_variants').select('channel, surface, status, platform').eq('pillar_run_id', runAuto);\n  const liAuto = (cvAuto ?? []).find((v) => v.channel === 'linkedin' && v.surface === 'text_post');\n  const twAuto = (cvAuto ?? []).find((v) => v.channel === 'twitter_x' && v.surface === 'thread');\n  check('Gauto-b: linkedin + twitter auto-scheduled', liAuto?.status === 'scheduled' && twAuto?.status === 'scheduled', `li=${liAuto?.status} tw=${twAuto?.status}`);\n  const { data: spAuto } = await admin.from('scheduled_posts').select('platform').eq('user_id', uidA).in('platform', ['linkedin', 'twitter']);\n  check('Gauto-c: scheduled_posts valid enum platforms', (spAuto ?? []).every((r) => ['linkedin', 'twitter'].includes(r.platform as string)), `platforms=${(spAuto ?? []).map((r) => r.platform).join(',')}`);\n\n  // \u2500\u2500 G6: tenancy \u2500\u2500\n  const tokenB = await userToken(b.email);\n  const userBClient = createClient(URL, PUB, { global: { headers: { Authorization: `Bearer ${tokenB}` } }, auth: { persistSession: false } });\n  const { data: cvB } = await userBClient.from('channel_variants').select('id').eq('pillar_run_id', runDraft);\n  check('G6: cross-tenant SELECT returns 0 rows', (cvB?.length ?? -1) === 0, `rows_seen=${cvB?.length}`);\n} catch (e) {\n  check('exception', false, e instanceof Error ? e.message : String(e));\n} finally {\n  for (const r of [runDraft, runAuto]) if (r) {\n    await admin.from('channel_variants').delete().eq('pillar_run_id', r).then(() => {}, () => {});\n    await admin.from('pillar_atoms').delete().eq('pillar_run_id', r).then(() => {}, () => {});\n    await admin.from('pipeline_runs').delete().eq('id', r).then(() => {}, () => {});\n  }\n  if (uidA) { await admin.from('scheduled_posts').delete().eq('user_id', uidA).then(() => {}, () => {}); await admin.auth.admin.deleteUser(uidA).then(() => {}, () => {}); }\n  if (uidB) await admin.auth.admin.deleteUser(uidB).then(() => {}, () => {});\n  console.log(`\\n${pass ? '\u2705 PASS' : '\u274c FAIL'} \u2014 reshape-pillar + publish opt-in smoke`);\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reshape-pillar.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:20:57)*
+
+
+## 🤖 Claude *(03:20:57)*
+
+Compile-check all changed/new edge fns, then deploy + run the updated smoke.
+
+## 🤖 Claude *(03:20:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\nfor fn in reshape-pillar publish-channel-variant orchestrate-content orchestrate-step autopilot-run; do\n  out=$(deno check \"supabase/functions/$fn/index.ts\" 2>&1); ec=$?\n  echo \"$fn: EXIT=$ec $(echo \"$out\" | grep -iE 'error' | head -2)\"\ndone",
+  "description": "deno check all changed edge fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> reshape-pillar: EXIT=0 
+> publish-channel-variant: EXIT=0 
+> orchestrate-content: EXIT=1 [0m[1mTS2345 [0m[ERROR]: Argument of type 'SupabaseClient<any, "public", any>' is not assignable to parameter of type 'BillingAdmin'.
+>     Type 'PostgrestFilterBuilder<any, any, any, string, null>' is missing the following properties from type 'Promise<{ error: unknown; }>': catch, finally, [Symbol.toStringTag]
+> orchestrate-step: EXIT=0 
+> autopilot-run: EXIT=0
+> ```
+
+## 🤖 Claude *(03:21:27)*
+
+
+## 🤖 Claude *(03:21:28)*
+
+`reshape-pillar`, `publish-channel-variant`, `orchestrate-step`, `autopilot-run` clean. The `orchestrate-content` error is **pre-existing** (a `BillingAdmin` type cast untouched by my 3-line change; the Supabase deploy bundler transpiles without strict type-check, which is why it's been shipping fine). Let me confirm it's not mine, then deploy.
+
+## 🤖 Claude *(03:21:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== my diff to orchestrate-content (only auto_publish lines?) ===\"\ngit diff supabase/functions/orchestrate-content/index.ts | grep -E \"^\\+\" | grep -v \"^\\+\\+\\+\" | head\necho \"=== does the BillingAdmin error line touch my change? (grep deduct/Billing near my edits) ===\"\ngit show HEAD:supabase/functions/orchestrate-content/index.ts > /tmp/oc-head.ts 2>/dev/null\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ndeno check /tmp/oc-head.ts 2>&1 | grep -iE \"BillingAdmin|error\" | head -3\necho \"EXIT_HEAD:${PIPESTATUS[0]}\"",
+  "description": "Confirm BillingAdmin error pre-exists in HEAD orchestrate-content"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === my diff to orchestrate-content (only auto_publish lines?) ===
+> ugrep: error: error at position 5
+> (?m)^+++
+>      \___invalid syntax
+> 
+> 
+> === does the BillingAdmin error line touch my change? (grep deduct/Billing near my edits) ===
+> [0m[1mTS2307 [0m[ERROR]: Cannot find module 'file:///_shared/billing.ts'.
+> [0m[1mTS2307 [0m[ERROR]: Cannot find module 'file:///_shared/sentinel.ts'.
+> Found 2 errors.
+> EXIT_HEAD:1
+> ```
+
+## 🤖 Claude *(03:21:39)*
+
+
+## 🤖 Claude *(03:21:40)*
+
+The `/tmp` check broke on relative imports (inconclusive). Let me view my actual diff cleanly (grep is a ugrep-shim — using a safe pattern):
+
+## 🤖 Claude *(03:21:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit diff supabase/functions/orchestrate-content/index.ts | grep -E '^\\+[^+]' ",
+  "description": "Show added lines in orchestrate-content"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> +    const { topic, campaign_id, platforms = ["wordpress", "linkedin", "twitter"], site_url = "mcorch.com", wp_status = "draft", product_ids, prepaid, cycle_id, video_enabled, video_format, auto_publish } = await req.json();
+> +    // ── Publish opt-in (Sovereign directive 2026-06-28): social posts default to DRAFT; publishing is opt-in. ──
+> +    // User path → default false (the reshaper produces drafts for review; publish via publish-channel-variant).
+> +    // Cron/autopilot path → default true (activating the autopilot IS the opt-in), but an explicit auto_publish=false
+> +    // (e.g. the plan's hitl_required) forces drafts. Mirrors the existing wp_status='draft' default for WordPress.
+> +    const autoPublish = isCron ? (auto_publish !== false) : (auto_publish === true);
+> +          auto_publish: autoPublish,    // FR-CP-003 — opt-in publish; false ⇒ reshaper produces drafts only
+> ```
+
+## 🤖 Claude *(03:21:45)*
+
+
+## 🤖 Claude *(03:21:46)*
+
+Confirmed — my orchestrate-content diff is only the `auto_publish` lines; the `BillingAdmin` error is pre-existing and harmless to deploy (esbuild transpiles). Deploying the 5 changed/new fns, then the smoke.
+
+## 🤖 Claude *(03:21:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\nfor fn in orchestrate-content orchestrate-step reshape-pillar autopilot-run publish-channel-variant; do\n  echo \"=== $fn ===\"\n  timeout 180 npx supabase functions deploy \"$fn\" 2>&1 | grep -iE \"Deployed|script size|error\" | tail -3\ndone",
+  "description": "Deploy 5 edge fns for opt-in gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orchestrate-content ===
+> Deploying Function: orchestrate-content (script size: 117.1kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-content
+> === orchestrate-step ===
+> Deploying Function: orchestrate-step (script size: 141.5kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> === reshape-pillar ===
+> Deploying Function: reshape-pillar (script size: 81.5kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: reshape-pillar
+> === autopilot-run ===
+> Deploying Function: autopilot-run (script size: 73.67kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-run
+> === publish-channel-variant ===
+> Deploying Function: publish-channel-variant (script size: 59.86kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-channel-variant
+> ```
+
+## 🤖 Claude *(03:22:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 150 bun run scripts/qa/smoke-reshape-pillar.ts 2>&1 | tail -25",
+  "description": "Run updated opt-in smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ reshape-pillar 200 + ok  → status=200 err=
+> ✅ G-create: ≥6 static variants  → count=8
+> ✅ G1: idempotent (2nd call → same count)  → before=8 after=8
+> ✅ G2: linkedin body ≠ twitter thread  → li={"body":"Pare de cross-postar  tw={"tweets":["Pare de cross-post
+> ✅ G2b: twitter thread is tweets[]
+> ✅ G4: twitter_x → platform "twitter"  → platform=twitter
+> ✅ G5: instagram feed_image pending_reframe + draft  → asset=pending_reframe status=draft
+> ✅ Gdraft: reshaper reported 0 scheduled  → scheduled=0
+> ✅ Gdraft-b: ALL variants are draft  → statuses=draft
+> ✅ Gdraft-c: NO scheduled_posts created in draft mode  → count=0
+> ✅ Gmanual: publish-channel-variant 200 + ok  → status=200 {"ok":true,"scheduled_post_id":"7976885a-eb0b-4bf4-859c-36ca9acb2613","platform"
+> ✅ Gmanual-b: variant now scheduled  → status=scheduled
+> ✅ Gmanual-c: re-publish → 409 already_enqueued  → status=409
+> ✅ Gauto: auto_publish run enqueues ≥2  → scheduled=2
+> ✅ Gauto-b: linkedin + twitter auto-scheduled  → li=scheduled tw=scheduled
+> ✅ Gauto-c: scheduled_posts valid enum platforms  → platforms=linkedin,linkedin,twitter
+> ✅ G6: cross-tenant SELECT returns 0 rows  → rows_seen=0
+> 
+> ✅ PASS — reshape-pillar + publish opt-in smoke
+> ```
+
+## 🤖 Claude *(03:22:32)*
+
+
+## 🤖 Claude *(03:22:34)*
+
+**All 17 gates pass** — opt-in fully working: default **draft** (0 scheduled_posts), `publish-channel-variant` publishes a chosen draft (idempotent 409 on re-publish), `auto_publish=true` auto-enqueues, and the double-post is gone (legacy enqueue retired). Let me run a focused adversarial security check on the new user-triggered publish fn + the opt-in changes.
+
+## 🤖 Claude *(03:22:47)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security check opt-in publish changes",
+  "subagent_type": "general-purpose",
+  "prompt": "Focused security review of a small change set in /home/gcrUX/htdocs/constellation-orchestra. Only flag HIGH-confidence (>80%) NEWLY-introduced vulnerabilities (auth bypass, cross-tenant access/IDOR, injection, privilege escalation, secret exposure). Exclude: DoS, rate-limiting, secrets-on-disk, prompt-injection-into-AI, log spoofing, theoretical races, client-side authz, findings in markdown.\n\nRead these (use git diff for the patches):\n1. NEW edge fn: supabase/functions/publish-channel-variant/index.ts \u2014 user-JWT triggered; publishes a draft channel_variant. THE main new attack surface.\n2. PATCH supabase/functions/reshape-pillar/index.ts \u2014 added `autoPublish` gate on enqueue (git diff).\n3. PATCH supabase/functions/orchestrate-content/index.ts \u2014 added `auto_publish` body param + metadata.\n4. PATCH supabase/functions/orchestrate-step/index.ts \u2014 removed legacy linkedin/twitter scheduled_posts enqueue; added autoPublish read.\n5. PATCH supabase/functions/autopilot-run/index.ts \u2014 passes auto_publish based on plan.hitl_required.\n\nFocus on publish-channel-variant:\n- Can a user publish ANOTHER tenant's channel_variant? (it loads WHERE id=body.channel_variant_id AND user_id=caller via getUser \u2014 verify the tenant bind is correct and user_id is NOT taken from the body).\n- Does it sign/expose any storage object cross-tenant? (it does NOT resolve assets \u2014 auto-publish does that owner-scoped; confirm publish-channel-variant doesn't leak a signed URL or another tenant's data).\n- Can the inserted scheduled_posts.user_id or platform be forged to act as another tenant?\n- Idempotency/double-publish: does the 409 guard hold?\n- Is the auto_publish flag spoofable to bypass billing or publish-gate in a way that crosses a privilege boundary? (note: auto_publish only controls draft-vs-queued; prepaid/billing is separate. Confirm auto_publish can't be set on the user path to do something privileged.)\n\nAlso confirm the removal of the legacy enqueue in orchestrate-step did not remove an authz/validation check (it only removed two scheduled_posts INSERTs).\n\nFor the comparison baseline, the established secure pattern (from the prior /security-review fix) is: never trust asset refs from user-writable scheduled_posts.metadata; resolve owner-scoped from channel_variants. Verify the new code follows it.\n\nOutput a markdown list. For each finding: file:line, severity, category, exploit scenario, fix, confidence 1-10. If NO high-confidence vulns, say so explicitly."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The removed code in orchestrate-step was purely two `scheduled_posts.insert(...)` calls — no authz/validation check was removed; the surrounding `validateContent`, content_library writes, and step logging all remain. The removal is a pure de-duplication of enqueue authority.\n\nI have everything I need. Let me write up the findings.\n\n## Security Review — publish-channel-variant + auto_publish opt-in change set\n\nI reviewed the new edge function and the four patches against the established secure pattern (asset refs resolved owner-scoped from `channel_variants`, never trusted from user-writable `scheduled_posts.metadata`). The change set follows that pattern correctly.\n\n### Verification of each focus area (publish-channel-variant)\n\n- **Cross-tenant publish (IDOR):** SAFE. Caller identity comes from `getUser()` on a user-JWT client (`index.ts:34`), never from the body. The variant is loaded `.eq("id", channel_variant_id).eq("user_id", user.id)` (`:48`) — a forged id of another tenant returns `null` → 404. `user_id` is never read from the request body anywhere.\n- **Cross-tenant storage leak:** SAFE. This fn does **not** select `asset_bucket`/`asset_key` and never signs a URL. It only passes `native_text` + the variant id into `scheduled_posts.metadata.reshape`. Asset signing happens later in `auto-publish` (`auto-publish/index.ts:117-131`), which re-resolves `channel_variants` filtered by `.eq("user_id", post.user_id)` — owner-scoped, matching the FMEA-011 baseline. No cross-tenant signed URL is reachable.\n- **Forged `scheduled_posts.user_id`/`platform`:** SAFE. Insert uses `user_id: user.id` (server-verified, `:69`) and `platform: v.platform` (server-trusted from the owner-bound row, `:69`), not body values. The variant must already have a non-null `platform` (`:53`) and `asset_status ∈ {ready, reused_master}` (`:54`).\n- **Idempotency / double-publish 409:** Guard holds for sequential calls (`:50` rejects when `scheduled_post_id` set OR status scheduled/published). There is a theoretical TOCTOU race (two concurrent calls before `:74` sets `scheduled_post_id`), but it is explicitly out of scope per the brief (races excluded) and is not a privilege boundary crossing — both would publish the caller\'s own variant. Not flagged.\n- **`auto_publish` spoofing across a privilege boundary:** SAFE. In `orchestrate-content` the flag is `isCron ? (auto_publish !== false) : (auto_publish === true)` (`orchestrate-content:105`) — a user-path caller can at most set their own run to draft-or-queued; it gates draft-vs-queued only and does not touch billing (`isPrepaid` stays `isCron && prepaid === true`) or any service-role capability. No privilege escalation.\n\n### orchestrate-step legacy removal\n\nConfirmed the patch removed **only** two `scheduled_posts.insert(...)` calls (LinkedIn `:676`, X/Twitter `:756`). No auth/identity/validation check was dropped — `validateContent`, `content_library` writes, monetization, and `addStep` all remain. The new `autoPublish` read (`metadata.auto_publish === true`) is read-only gating. Pure de-duplication of enqueue authority.\n\n### Migration baseline\n\n`channel_variants` (migration `20260627150000`) is RLS default-deny on writes (SELECT/DELETE own only; no INSERT/UPDATE policy → service-role-only writer). `user_id` cannot be forged by a client. Consistent with the secure pattern.\n\n## Result\n\n**No high-confidence (>80%) newly-introduced vulnerabilities found.**\n\nThe new attack surface (`publish-channel-variant`) correctly binds tenant via `getUser()` + `.eq("user_id", user.id)`, never trusts `user_id`/`platform`/asset refs from the body, and defers asset signing to the owner-scoped `auto-publish` resolver — matching the prior /security-review fix. The `auto_publish` flag is cron-gated for any privileged default and only controls draft-vs-queued on the user path. The orchestrate-step removal dropped no authz check.\n\nRelevant files:\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-channel-variant/index.ts`\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts` (owner-scoped asset resolver, lines 104-135)\n- `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627150000_channel_variants.sql` (RLS baseline)'}, {'type': 'text', 'text': "agentId: aef0052197dbdc7b4 (use SendMessage with to: 'aef0052197dbdc7b4', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 82498\ntool_uses: 12\nduration_ms: 51682</usage>"}]
+> ```
+
+## 🤖 Claude *(03:23:48)*
+
+
+## 🤖 Claude *(03:23:49)*
+
+Security clean — no new vulns; the new fn follows the established owner-scoped pattern. Let me document the opt-in in the SDD + SOP (it's a directive amendment), then commit.
+
+## 🤖 Claude *(03:24:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md",
+  "old_string": "### 5.3 `auto-publish` \u2014 patch (gap #7)\n`if (post.metadata?.reshape?.content) usar como contentPayload` (preferir a variante nativa); sen\u00e3o a deriva\u00e7\u00e3o legada (inalterada). Backward-compatible.",
+  "new_string": "### 5.3 `auto-publish` \u2014 patch (gap #7)\n`if (post.metadata?.reshape?.content) usar como contentPayload` (preferir a variante nativa); sen\u00e3o a deriva\u00e7\u00e3o legada (inalterada). Backward-compatible. **Seguran\u00e7a (FMEA-011):** o asset NUNCA \u00e9 resolvido do `metadata` (user-writable) \u2014 \u00e9 lido do `channel_variants` **owner-scoped** (`.eq('user_id', post.user_id)`).\n\n### 5.4 Publish opt-in (Amendment \u2014 diretiva Sovereign 2026-06-28)\n> **\"Publicar ou deixar como rascunho deve ser opt-in.\"** Posts sociais nascem **rascunho** por padr\u00e3o; publicar \u00e9 escolha expl\u00edcita.\n\n- **Flag `auto_publish`** (default **false**) flui `orchestrate-content` \u2192 `pipeline_runs.metadata.auto_publish` \u2192 reshaper. Resolu\u00e7\u00e3o: user-path default `false` (rascunho); **cron/autopilot** default `true` (ativar o autopilot \u00c9 o opt-in) mas honra `autopilot_plans.hitl_required` (HITL \u21d2 `auto_publish=false` \u21d2 rascunho). Espelha o `wp_status='draft'` default do WordPress.\n- **Reshaper:** SEMPRE produz a variante nativa (`channel_variants`); s\u00f3 **enfileira** `scheduled_posts` quando `auto_publish=true`. Default \u21d2 `status='draft'`, zero `scheduled_posts`.\n- **Autoridade \u00fanica de enqueue social:** os steps legados `linkedin_post`/`twitter_thread` do `orchestrate-step` **deixaram de enfileirar** `scheduled_posts` (s\u00f3 geram `content_library` record) \u2014 o reshaper \u00e9 o \u00fanico que enfileira social (mata o double-post; o micro-post linka o artigo-pilar monetizado, alinhado \u00e0 virada brand-first).\n- **A\u00e7\u00e3o manual de opt-in:** edge fn `publish-channel-variant` (user-JWT) \u2014 publica UM rascunho escolhido (`channel_variant_id` owner-bound \u2192 `scheduled_posts queued` + `channel_variants.status='scheduled'`; 409 se j\u00e1 enfileirado). Assinatura de asset fica no `auto-publish` owner-scoped (sem leak cross-tenant). \u00c9 o gancho da futura UI de revis\u00e3o."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:24:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/channel-reshaper.md",
+  "old_string": "5. **Enqueue** \u2014 variantes `asset_status \u2208 {ready,reused_master}` viram `scheduled_posts` (`metadata.reshape.content` = variante nativa por linha, `platform` = enum mapeado). \u2705 `scheduled_posts.status='queued'` com `metadata.reshape` presente.",
+  "new_string": "5. **Enqueue (OPT-IN)** \u2014 variantes `asset_status \u2208 {ready,reused_master}` viram `scheduled_posts` **S\u00d3 quando o run optou por publicar** (`metadata.auto_publish=true`). Default = rascunho (`channel_variants.status='draft'`, zero `scheduled_posts`). Opt-in: (a) per-run `auto_publish` (autopilot honra `hitl_required`), ou (b) a\u00e7\u00e3o manual `publish-channel-variant` num rascunho escolhido. \u2705 rascunho: 0 `scheduled_posts`; publicado: `scheduled_posts.status='queued'` + `metadata.reshape`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/channel-reshaper.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:24:21)*
+
+
+## 🤖 Claude *(03:24:22)*
+
+Now commit the opt-in work (SDD/SOP capture it; smoke 17/17; security clean):
+
+## 🤖 Claude *(03:24:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/publish-channel-variant/ supabase/functions/reshape-pillar/index.ts supabase/functions/orchestrate-content/index.ts supabase/functions/orchestrate-step/index.ts supabase/functions/autopilot-run/index.ts scripts/qa/smoke-reshape-pillar.ts docs/bok/post-engine/13-sdd-reshaper-atomizer.md docs/processes/channel-reshaper.md\ngit commit -q -m \"feat(reshaper): publish opt-in \u2014 default draft, explicit publish (FR-CP-003 amendment)\n\nSovereign directive 2026-06-28: 'publicar ou rascunho deve ser opt-in'.\n- auto_publish flag (default false=draft; cron=true honoring plan.hitl_required),\n  threaded orchestrate-content -> pipeline_runs.metadata -> reshaper.\n- Reshaper enqueues scheduled_posts ONLY when auto_publish; else channel_variants draft.\n- Retired legacy linkedin/twitter scheduled_posts enqueue in orchestrate-step ->\n  reshaper is the single social-enqueue authority (kills the double-post).\n- New edge fn publish-channel-variant: opt-in publish of one chosen draft (owner-bound,\n  409 idempotent, asset signed owner-scoped by auto-publish). /security-review clean.\n- Smoke 17/17 (draft default + manual publish + auto mode + tenancy).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"no leaks|files? changed|insertion|reingest\" | tail -3\necho \"=== log ===\"; git log --oneline -3",
+  "description": "Commit publish opt-in changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m12:24AM[0m [32mINF[0m no leaks found
+> ┃  mesh-reingest ❯ 
+> ✔️ mesh-reingest (0.00 seconds)
+> === log ===
+> 475d01d feat(reshaper): publish opt-in — default draft, explicit publish (FR-CP-003 amendment)
+> b4fe562 docs(handoff): seal Channel Reshaper + Atomizer (FR-CP-002/003) — 1 pilar -> posts nativos
+> 2ed159f feat(reshaper): data-driven channel reshaper + atomizer — 1 pilar -> posts nativos (FR-CP-002/003/006/007/008)
+> ```
+
+## 🤖 Claude *(03:27:08)*
+
+
+## 🤖 Claude *(03:27:11)*
+
+Task 7 done — opt-in shipped & committed. Now **CP-009: image reframe/format-coerce**. 
+
+Re-examining the approach: a host worker (FFmpeg/systemd) is heavyweight. A cleaner path — **`imagescript` (pure WASM, runs in Deno edge)** lets the reshaper reframe + convert to JPEG **in-process**, no new worker. JPEG covers every channel's API gate (IG JPEG-only, TikTok/Pinterest/LinkedIn/FB all accept JPEG). Fail-open keeps the reshaper robust if WASM hiccups.
+
+Let me confirm host tooling for the test image, then implement.
+
+## 🤖 Claude *(03:27:12)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(03:27:12)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 status
+> ```
+
+## 🤖 Claude *(03:27:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "which ffmpeg >/dev/null 2>&1 && echo \"ffmpeg: yes ($(ffmpeg -version 2>/dev/null | head -1 | cut -d' ' -f1-3))\" || echo \"ffmpeg: NO\"\nwhich convert >/dev/null 2>&1 && echo \"imagemagick convert: yes\" || echo \"imagemagick: NO\"\npython3 -c \"import PIL; print('PIL: yes')\" 2>/dev/null || echo \"PIL: NO\"",
+  "description": "Check image-gen tooling for smoke test asset"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ffmpeg: yes (ffmpeg version 6.1.1-3ubuntu5)
+> imagemagick: NO
+> PIL: yes
+> ```
+
+## 🤖 Claude *(03:27:22)*
+
+
+## 🤖 Claude *(03:27:23)*
+
+ffmpeg + PIL available for the test image. Now implement the in-process reframe in the reshaper. Let me read the current image branch to replace it precisely.
+
+## 🤖 Claude *(03:27:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "offset": 315,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 315	        const reshape = String(w.recipe.reshape ?? "");
+> 316	        if (VIDEO_DERIVE.has(w.derive)) {
+> 317	          assetKind = "video";
+> 318	          if (w.derive === "9x16_master") {
+> 319	            if (videoMaster) { assetBucket = videoMaster.bucket; assetKey = videoMaster.key; assetStatus = "reused_master"; }
+> 320	            else assetStatus = "pending_render"; // master not finished (out-of-band) or not produced for this run
+> 321	            const cap = (w.videoSpec as { max_file_mb?: number } | null)?.max_file_mb ?? null;
+> 322	            formatGate = { ok: true, container: "mp4", envelope: cap ? { max_file_mb: cap } : null };
+> 323	          } else {
+> 324	            // pillar_video_16x9 (YouTube long) — no 16:9 render engine yet (OTD-CP-008): emit directive only.
+> 325	            assetStatus = "pending_render";
+> 326	            formatGate = { ok: false, directive: "render_16x9", reason: "OTD-CP-008_no_16x9_template" };
+> 327	          }
+> 328	        } else if (w.derive === "pillar_image") {
+> 329	          assetKind = "image";
+> 330	          const fg = imageFormatGate(w.imageSpec);
+> 331	          formatGate = { ...fg, reshape };
+> 332	          if (reshape === "render_thumbnail_16x9") {
+> 333	            assetStatus = "pending_reframe"; // overlay render — OTD-CP-009
+> 334	          } else if (fg.ok && pillarImage) {
+> 335	            // png allowed AND we have the master image → usable as-is
+> 336	            assetBucket = pillarImage.bucket; assetKey = pillarImage.key; assetStatus = "ready";
+> 337	          } else {
+> 338	            // needs reframe and/or format conversion (FFmpeg host worker) — OTD-CP-009
+> 339	            assetStatus = "pending_reframe";
+> 340	          }
+> 341	        } else if (w.derive === "pillar_article") {
+> 342	          // WordPress canonical home — already published by the pillar; reshaper does not republish.
+> 343	          assetKind = "none";
+> 344	          assetStatus = "reused_master";
+> 345	          formatGate = { ok: true, note: "canonical_home" };
+> 346	        } else {
+> 347	          // pillar_atoms — pure text surface (text_post / thread). Operational.
+> 348	          assetKind = "none";
+> 349	          assetStatus = "ready";
+> 350	          const violations = charGate(w.native, w.textSpec);
+> 351	          formatGate = { ok: true, violations };
+> 352	        }
+> 353	
+> 354	        // char gate also applies to caption/title/description on media surfaces
+> ```
+
+## 🤖 Claude *(03:27:29)*
+
+Now implement the in-process reframe — add the imagescript import + helper, and replace the image branch:
+
+## 🤖 Claude *(03:27:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "import { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";\nimport { inspectPrompt } from \"../_shared/sentinel.ts\";",
+  "new_string": "import { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { Image } from \"https://deno.land/x/imagescript@1.3.0/mod.ts\";\nimport { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";\nimport { inspectPrompt } from \"../_shared/sentinel.ts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:27:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "// Image format coercion (FR-CP-006): our masters are PNG; many APIs forbid PNG. Decide the target format.",
+  "new_string": "// FR-CP-005/006 \u2014 in-process image REFRAME + format coercion (imagescript WASM; no host worker, no FFmpeg).\n// Center-crops the master to the target aspect (safe-zone bias = center; saliency via Vision-MCP is a refinement),\n// resizes to the channel's exact px, and encodes JPEG (the universal API-safe format: IG JPEG-only, TikTok/\n// Pinterest/LinkedIn/FB all accept JPEG). Throws \u2192 caller fails open to 'pending_reframe'.\nasync function reframeToJpeg(src: Uint8Array, tw: number, th: number): Promise<Uint8Array> {\n  const img = await Image.decode(src);\n  const ta = tw / th;\n  const sa = img.width / img.height;\n  let cw = img.width;\n  let ch = img.height;\n  if (sa > ta) cw = Math.max(1, Math.round(img.height * ta)); // too wide \u2192 trim width\n  else ch = Math.max(1, Math.round(img.width / ta));          // too tall \u2192 trim height\n  const x = Math.max(0, Math.round((img.width - cw) / 2));\n  const y = Math.max(0, Math.round((img.height - ch) / 2));\n  const out = img.crop(x, y, cw, ch).resize(tw, th);\n  return await out.encodeJPEG(85);\n}\n\n// Image format coercion (FR-CP-006): our masters are PNG; many APIs forbid PNG. Decide the target format."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:27:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "        } else if (w.derive === \"pillar_image\") {\n          assetKind = \"image\";\n          const fg = imageFormatGate(w.imageSpec);\n          formatGate = { ...fg, reshape };\n          if (reshape === \"render_thumbnail_16x9\") {\n            assetStatus = \"pending_reframe\"; // overlay render \u2014 OTD-CP-009\n          } else if (fg.ok && pillarImage) {\n            // png allowed AND we have the master image \u2192 usable as-is\n            assetBucket = pillarImage.bucket; assetKey = pillarImage.key; assetStatus = \"ready\";\n          } else {\n            // needs reframe and/or format conversion (FFmpeg host worker) \u2014 OTD-CP-009\n            assetStatus = \"pending_reframe\";\n          }\n        } else if (w.derive === \"pillar_article\") {",
+  "new_string": "        } else if (w.derive === \"pillar_image\") {\n          // FR-CP-005/006 \u2014 reframe the master image to the channel geometry + coerce to JPEG (in-process).\n          assetKind = \"image\";\n          const fg = imageFormatGate(w.imageSpec);\n          const tw = Number((w.imageSpec as { width?: number } | null)?.width) || 1080;\n          const th = Number((w.imageSpec as { height?: number } | null)?.height) || 1350;\n          formatGate = { ...fg, reshape, target: { w: tw, h: th } };\n          if (!pillarImage) {\n            assetStatus = \"gap\"; // no master image for this run \u2192 nothing to reframe (honest)\n          } else {\n            try {\n              const { data: blob } = await admin.storage.from(pillarImage.bucket).download(pillarImage.key);\n              if (!blob) throw new Error(\"source_download_failed\");\n              const jpeg = await reframeToJpeg(new Uint8Array(await blob.arrayBuffer()), tw, th);\n              const outKey = `${userId}/reshaped/${pillarRunId}-${w.channel}-${w.surface}.jpg`;\n              const { error: upErr } = await admin.storage.from(\"generated-images\")\n                .upload(outKey, jpeg, { contentType: \"image/jpeg\", upsert: true });\n              if (upErr) throw new Error(upErr.message);\n              assetBucket = \"generated-images\"; assetKey = outKey; assetStatus = \"ready\";\n              formatGate = { ...formatGate, ok: true, coerced_format: \"jpeg\", bytes: jpeg.byteLength };\n            } catch (re) {\n              console.warn(`[reshape-pillar] reframe ${w.key} fail-open:`, re instanceof Error ? re.message : re);\n              assetStatus = \"pending_reframe\";\n              formatGate = { ...formatGate, reframe_error: re instanceof Error ? re.message : String(re) };\n            }\n          }\n        } else if (w.derive === \"pillar_article\") {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:27:59)*
+
+
+## 🤖 Claude *(03:28:01)*
+
+Now extend `isOperational` so IG image surfaces (publish-social supports IG `image_url`) become operational once reframed:
+
+## 🤖 Claude *(03:28:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "function isOperational(platform: string | null, assetKind: string, assetStatus: string): boolean {\n  if (!platform) return false;\n  if (assetKind === \"video\" && assetStatus === \"reused_master\") {\n    return [\"instagram\", \"tiktok\", \"youtube\", \"pinterest\"].includes(platform); // video_url branches\n  }\n  if (assetKind === \"none\" && assetStatus === \"ready\") {\n    return [\"linkedin\", \"twitter\"].includes(platform); // text branches (twitter = single tweet hook)\n  }\n  return false;\n}",
+  "new_string": "function isOperational(platform: string | null, assetKind: string, assetStatus: string): boolean {\n  if (!platform) return false;\n  if (assetKind === \"video\" && assetStatus === \"reused_master\") {\n    return [\"instagram\", \"tiktok\", \"youtube\", \"pinterest\"].includes(platform); // video_url branches\n  }\n  if (assetKind === \"image\" && assetStatus === \"ready\") {\n    return [\"instagram\"].includes(platform); // publish-social IG image_url branch (FB/LinkedIn/Pinterest image \u2192 OTD-CP-010)\n  }\n  if (assetKind === \"none\" && assetStatus === \"ready\") {\n    return [\"linkedin\", \"twitter\"].includes(platform); // text branches (twitter = single tweet hook)\n  }\n  return false;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:28:09)*
+
+
+## 🤖 Claude *(03:28:09)*
+
+Now compile-check the reshaper with imagescript (deno will fetch the WASM module):
+
+## 🤖 Claude *(03:28:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ntimeout 120 deno check supabase/functions/reshape-pillar/index.ts 2>&1 | tail -15; echo \"EXIT:${PIPESTATUS[0]}\"",
+  "description": "deno check reshaper with imagescript"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/utils/crc32.js
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/utils/buffer.js
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/utils/wasm/zlib.js
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/flip.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/fill.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/blur.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/crop.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/resize.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/rotate.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/overlay.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/v2/ops/iterator.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/png/src/crc.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/png/src/mem.mjs
+> [0m[32mDownload[0m https://deno.land/x/imagescript@1.3.0/png/src/zlib.mjs
+> [0m[32mCheck[0m supabase/functions/reshape-pillar/index.ts
+> EXIT:0
+> ```
+
+## 🤖 Claude *(03:28:19)*
+
+
+## 🤖 Claude *(03:28:20)*
+
+Compiles clean with imagescript. Deploy the reshaper, then write + run the CP-009 reframe smoke (real PNG → reframe → verify JPEG in bucket).
+
+## 🤖 Claude *(03:28:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ntimeout 200 npx supabase functions deploy reshape-pillar 2>&1 | grep -iE \"Deployed|script size|error\" | tail -3",
+  "description": "Deploy reshaper with reframe"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: reshape-pillar (script size: 113.8kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: reshape-pillar
+> ```
+
+## 🤖 Claude *(03:28:54)*
+
+
+## 🤖 Claude *(03:28:54)*
+
+Deployed (113.8kB — imagescript bundled). Now the CP-009 smoke: real PNG → reframe → verify JPEG bytes + dimensions in the bucket.
+
+## 🤖 Claude *(03:29:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 image reframe + format coercion (FR-CP-005/006, CP-009), ZERO-COST.\n *\n * Proves the reshaper reframes a real PNG master into the per-channel JPEG geometry IN-PROCESS (imagescript),\n * no host worker. Generates an 800\u00d7800 PNG (ffmpeg), uploads it to generated-images, seeds a run+image+atoms,\n * calls reshape scope=static, and asserts each image surface produced a downloadable JPEG at the CORRECT geometry:\n *   instagram feed_image  \u2192 1080\u00d71350 (4:5) JPEG, asset_status 'ready'\n *   pinterest standard_pin\u2192 1000\u00d71500 (2:3) JPEG\n *   youtube   thumbnail   \u2192 1280\u00d7720  (16:9) JPEG\n * + JPEG magic bytes (FF D8 FF) + parsed SOF dimensions match the channel spec (the upload-gate is real).\n *\n * Cleans up (deletes uploaded objects + user \u2192 CASCADE). Usage: bun run scripts/qa/smoke-reframe-image.ts\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { spawnSync } from 'child_process';\nimport { readFileSync, rmSync } from 'fs';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!URL || !SVC) { console.error('Missing env'); process.exit(1); }\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uid: string | null = null;\nlet runId: string | null = null;\nconst srcPath = `/tmp/reframe-src-${stamp}.png`;\nlet pass = true;\nconst uploadedKeys: string[] = [];\n\nfunction check(label: string, ok: boolean, detail = '') { console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`); if (!ok) pass = false; }\n\n// Parse JPEG SOF0/SOF2 marker \u2192 [width, height] (proves the reframe resized to the channel geometry).\nfunction jpegDims(b: Uint8Array): [number, number] | null {\n  if (b[0] !== 0xff || b[1] !== 0xd8) return null;\n  let i = 2;\n  while (i < b.length) {\n    if (b[i] !== 0xff) { i++; continue; }\n    const marker = b[i + 1];\n    if (marker >= 0xc0 && marker <= 0xc3) { const h = (b[i + 5] << 8) | b[i + 6]; const w = (b[i + 7] << 8) | b[i + 8]; return [w, h]; }\n    const len = (b[i + 2] << 8) | b[i + 3]; i += 2 + len;\n  }\n  return null;\n}\n\nasync function callReshape(pillarRunId: string) {\n  const r = await fetch(`${URL}/functions/v1/reshape-pillar`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SVC}` },\n    body: JSON.stringify({ pillar_run_id: pillarRunId, scope: 'static' }),\n  });\n  return { status: r.status, body: await r.json().catch(() => ({})) };\n}\n\ntry {\n  // 1. Generate an 800\u00d7800 PNG master.\n  const ff = spawnSync('ffmpeg', ['-y', '-f', 'lavfi', '-i', 'color=c=blue:s=800x800', '-frames:v', '1', srcPath], { encoding: 'utf-8' });\n  if (ff.status !== 0) throw new Error(`ffmpeg failed: ${ff.stderr?.slice(0, 200)}`);\n\n  const u = await admin.auth.admin.createUser({ email: `reframe-smoke-${stamp}@example.com`, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (u.error || !u.data?.user) throw new Error(`createUser: ${u.error?.message}`);\n  uid = u.data.user.id;\n\n  // 2. Upload the master PNG to generated-images (the bucket the pillar image lives in).\n  const srcKey = `${uid}/test-pillar-${stamp}.png`;\n  const pngBytes = readFileSync(srcPath);\n  const up = await admin.storage.from('generated-images').upload(srcKey, pngBytes, { contentType: 'image/png', upsert: true });\n  if (up.error) throw new Error(`upload src: ${up.error.message}`);\n  uploadedKeys.push(srcKey);\n\n  // 3. Seed run + pillar_atoms + content_library image (campaign-linked, how the reshaper resolves the master).\n  const campaignId = crypto.randomUUID();\n  const { data: run } = await admin.from('pipeline_runs').insert({\n    user_id: uid, topic: 'Reframe smoke', platforms: ['wordpress'], status: 'done', steps: [],\n    metadata: { campaign_id: campaignId, auto_publish: false },\n  }).select('id').single();\n  runId = run!.id;\n  await admin.from('pillar_atoms').insert({ user_id: uid, pillar_run_id: runId, hook: 'Reframe test', key_points: ['a', 'b'], cta: 'Veja', pillar_url: 'https://mcorch.com/x' });\n  await admin.from('content_library').insert({\n    user_id: uid, campaign_id: campaignId, type: 'image', title: 'master', media_url: srcKey, status: 'approved',\n    metadata: { source: 'orchestration', storage_bucket: 'generated-images' },\n  });\n\n  // 4. Reshape.\n  const r = await callReshape(runId);\n  check('reshape 200 + ok', r.status === 200 && r.body.ok === true, `status=${r.status}`);\n\n  // 5. Assert each image surface reframed to the right geometry + valid JPEG.\n  const { data: cv } = await admin.from('channel_variants').select('channel, surface, asset_status, asset_bucket, asset_key, format_gate').eq('pillar_run_id', runId);\n  const expect: Array<[string, string, number, number]> = [\n    ['instagram', 'feed_image', 1080, 1350],\n    ['pinterest', 'standard_pin', 1000, 1500],\n    ['youtube', 'thumbnail', 1280, 720],\n  ];\n  for (const [ch, sf, ew, eh] of expect) {\n    const v = (cv ?? []).find((x) => x.channel === ch && x.surface === sf);\n    if (!v) { check(`${ch}:${sf} variant exists`, false); continue; }\n    const ready = v.asset_status === 'ready' && !!v.asset_key;\n    check(`${ch}:${sf} asset ready (JPEG)`, ready && (v.format_gate as { coerced_format?: string })?.coerced_format === 'jpeg', `status=${v.asset_status} fmt=${(v.format_gate as { coerced_format?: string })?.coerced_format}`);\n    if (!ready) continue;\n    uploadedKeys.push(v.asset_key as string);\n    const { data: blob } = await admin.storage.from(v.asset_bucket as string).download(v.asset_key as string);\n    const bytes = blob ? new Uint8Array(await blob.arrayBuffer()) : new Uint8Array();\n    const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;\n    const dims = jpegDims(bytes);\n    check(`${ch}:${sf} downloadable JPEG ${ew}\u00d7${eh}`, isJpeg && !!dims && dims[0] === ew && dims[1] === eh, `magic=${isJpeg} dims=${dims?.join('\u00d7')} bytes=${bytes.byteLength}`);\n  }\n} catch (e) {\n  check('exception', false, e instanceof Error ? e.message : String(e));\n} finally {\n  if (uploadedKeys.length) await admin.storage.from('generated-images').remove(uploadedKeys).then(() => {}, () => {});\n  if (runId) {\n    await admin.from('channel_variants').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('pillar_atoms').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('content_library').delete().eq('user_id', uid ?? '00000000-0000-0000-0000-000000000000').then(() => {}, () => {});\n    await admin.from('pipeline_runs').delete().eq('id', runId).then(() => {}, () => {});\n  }\n  if (uid) await admin.auth.admin.deleteUser(uid).then(() => {}, () => {});\n  try { rmSync(srcPath, { force: true }); } catch { /* noop */ }\n  console.log(`\\n${pass ? '\u2705 PASS' : '\u274c FAIL'} \u2014 image reframe smoke`);\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:29:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 150 bun run scripts/qa/smoke-reframe-image.ts 2>&1 | tail -15",
+  "description": "Run image reframe smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ reshape 200 + ok  → status=200
+> ❌ instagram:feed_image asset ready (JPEG)  → status=gap fmt=jpeg
+> ❌ pinterest:standard_pin asset ready (JPEG)  → status=gap fmt=jpeg
+> ❌ youtube:thumbnail asset ready (JPEG)  → status=gap fmt=jpeg
+> 
+> ❌ FAIL — image reframe smoke
+> ```
+
+## 🤖 Claude *(03:29:50)*
+
+
+## 🤖 Claude *(03:29:51)*
+
+The image surfaces came back `gap` — `pillarImage` was null. The cause: `content_library.campaign_id` has an FK to `campaigns`, and I used a random UUID, so the image-row insert silently failed (I didn't capture the error). Fix: create a real `campaigns` row and capture insert errors.
+
+## 🤖 Claude *(03:29:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts",
+  "old_string": "  // 3. Seed run + pillar_atoms + content_library image (campaign-linked, how the reshaper resolves the master).\n  const campaignId = crypto.randomUUID();\n  const { data: run } = await admin.from('pipeline_runs').insert({\n    user_id: uid, topic: 'Reframe smoke', platforms: ['wordpress'], status: 'done', steps: [],\n    metadata: { campaign_id: campaignId, auto_publish: false },\n  }).select('id').single();\n  runId = run!.id;\n  await admin.from('pillar_atoms').insert({ user_id: uid, pillar_run_id: runId, hook: 'Reframe test', key_points: ['a', 'b'], cta: 'Veja', pillar_url: 'https://mcorch.com/x' });\n  await admin.from('content_library').insert({\n    user_id: uid, campaign_id: campaignId, type: 'image', title: 'master', media_url: srcKey, status: 'approved',\n    metadata: { source: 'orchestration', storage_bucket: 'generated-images' },\n  });",
+  "new_string": "  // 3. Seed campaign (content_library.campaign_id has an FK) + run + pillar_atoms + content_library image\n  //    (campaign-linked, which is how the reshaper resolves the pillar image master).\n  const { data: camp, error: campErr } = await admin.from('campaigns').insert({ user_id: uid, name: `reframe-${stamp}`, status: 'draft', channels: [] }).select('id').single();\n  if (campErr || !camp) throw new Error(`campaign insert: ${campErr?.message}`);\n  const campaignId = camp.id as string;\n  const { data: run } = await admin.from('pipeline_runs').insert({\n    user_id: uid, topic: 'Reframe smoke', platforms: ['wordpress'], status: 'done', steps: [],\n    metadata: { campaign_id: campaignId, auto_publish: false },\n  }).select('id').single();\n  runId = run!.id;\n  await admin.from('pillar_atoms').insert({ user_id: uid, pillar_run_id: runId, hook: 'Reframe test', key_points: ['a', 'b'], cta: 'Veja', pillar_url: 'https://mcorch.com/x' });\n  const { error: clErr } = await admin.from('content_library').insert({\n    user_id: uid, campaign_id: campaignId, type: 'image', title: 'master', media_url: srcKey, status: 'approved',\n    metadata: { source: 'orchestration', storage_bucket: 'generated-images' },\n  });\n  if (clErr) throw new Error(`content_library image insert: ${clErr.message}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reframe-image.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:30:04)*
+
+
+## 🤖 Claude *(03:30:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 150 bun run scripts/qa/smoke-reframe-image.ts 2>&1 | tail -12",
+  "description": "Re-run image reframe smoke with real campaign"
+}
+```

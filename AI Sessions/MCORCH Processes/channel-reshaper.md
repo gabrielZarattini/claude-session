@@ -11,7 +11,7 @@
 2. **Backfill pillar_url** — após `wordpress_publish`, UPDATE `pillar_atoms.pillar_url = wpPostUrl`. ✅ `pillar_url IS NOT NULL`.
 3. **Reshape static** — no fim do `knowledge_mesh`, `POST reshape-pillar {pillar_run_id, scope:'static'}`. ✅ linhas em `channel_variants` p/ surfaces `derive_from ∈ {pillar_atoms,pillar_image,pillar_article}` com `native_text` não-vazio e DISTINTO por canal.
 4. **Reshape video** — `video-bridge.ts`, após `finalize_video_render(done)`, `POST reshape-pillar {pillar_run_id, scope:'video'}`. ✅ surfaces de vídeo com `asset_status='reused_master'` + `asset_key` apontando o MP4.
-5. **Enqueue** — variantes `asset_status ∈ {ready,reused_master}` viram `scheduled_posts` (`metadata.reshape.content` = variante nativa por linha, `platform` = enum mapeado). ✅ `scheduled_posts.status='queued'` com `metadata.reshape` presente.
+5. **Enqueue (OPT-IN)** — variantes `asset_status ∈ {ready,reused_master}` viram `scheduled_posts` **SÓ quando o run optou por publicar** (`metadata.auto_publish=true`). Default = rascunho (`channel_variants.status='draft'`, zero `scheduled_posts`). Opt-in: (a) per-run `auto_publish` (autopilot honra `hitl_required`), ou (b) ação manual `publish-channel-variant` num rascunho escolhido. ✅ rascunho: 0 `scheduled_posts`; publicado: `scheduled_posts.status='queued'` + `metadata.reshape`.
 6. **Publish** — `auto-publish` cron drena, prefere `metadata.reshape.content`, chama `publish-social`/`publish-wordpress`. ✅ `scheduled_posts.status='published'` + `platform_post_id`.
 
 ## Verification gates (material)
@@ -33,3 +33,10 @@ A partir de **1 pilar**: `channel_variants` com ≥6 surfaces, `native_text` dis
 
 ## Materiality caveat (Lei 1)
 Publishers audit-gated (TikTok SELF_ONLY · YouTube forced-private pré-Gate-B · Pinterest sandbox) publicam **privado/sandbox** — isso é transporte provado, NÃO alcance público. "Publicado publicamente" só após os audits (ação Sovereign). Reshape ≠ publish: o reshaper prova a **variante nativa**; o alcance é gate separado.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

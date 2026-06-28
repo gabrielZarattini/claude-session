@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 57
-> * **Total de Sessões**: 1513
+> * **Total de Processos**: 58
+> * **Total de Sessões**: 1515
 
 ---
 
@@ -32,6 +32,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[canvas-node-consistency]]` - *Processo*
 *   `[[canvas-pipeline-architecture]]` - *Processo*
 *   `[[canvas-video-async-execution]]` - *Processo*
+*   `[[channel-reshaper]]` - *Processo*
 *   `[[collective-efficiency-ledger]]` - *Processo*
 *   `[[constellation-economic-activation]]` - *Processo*
 *   `[[content-asset-history]]` - *Processo*
@@ -88,6 +89,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-28 - agent-ad32150d286321d7f]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-accd3f8a9d05d5c6a]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-ab3f942766ac138d3]]` (ClaudeSessions) - *2026-06-28*
+*   `[[2026-06-28 - agent-ab3b88a63654e16d1]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-aa4c00f8c564e9bb0]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a996c5f7bbd8780e2]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a959e9f1ba78ebd12]]` (ClaudeSessions) - *2026-06-28*
@@ -101,6 +103,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-06-28 - agent-a38f39f800a5f608a]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a38891f251d598f5d]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a37158665a7b5bbbb]]` (ClaudeSessions) - *2026-06-28*
+*   `[[2026-06-28 - agent-a335113ad7ddb87af]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a2b7433f9f80f4db9]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a21fb0965a75ef935]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-a21dd13ea292d7b20]]` (ClaudeSessions) - *2026-06-28*
