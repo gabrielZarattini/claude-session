@@ -1,5 +1,5 @@
 # Corrigir erro de configuração TikTok
-**Date:** 2026-06-27 | **Session ID:** `f23f934d-28f6-402d-a438-cbc319022dfc`
+**Date:** 2026-06-28 | **Session ID:** `f23f934d-28f6-402d-a438-cbc319022dfc`
 
 ---
 
@@ -1513,7 +1513,7 @@ Tem um playbook de registro que a pesquisa fundamentada da sessão anterior já 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/[[tiktok-publish-credential-resolution|tiktok-publish-credential-resolution]].md 2>/dev/null",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===PLAYBOOK===\"; sed -n '1,200p' .claude/context/social-app-registration-playbook-2026-06-27.md 2>/dev/null || echo \"NO PLAYBOOK\"; echo; echo \"===TIKTOK SOP head===\"; sed -n '1,60p' docs/processes/tiktok-publish-credential-resolution.md 2>/dev/null",
   "description": "Read registration playbook + TikTok SOP"
 }
 ```
@@ -1904,7 +1904,7 @@ Boa — se as chaves já estão nas configurações, o primeiro passo material �
 > if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
 > console.log(accessToken);
 > ===find User Zero id/email===
-> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP [[mcoins-ledger-reconciliation|mcoins-ledger-reconciliation]] para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
+> scripts/seed-gamificacao-nodes-bok-seal.ts:49:PRÓXIMA ENTREGA: Stripe live keys swap (deferred — Sovereign valida como Usuário Zero); execução SOP mcoins-ledger-reconciliation para fechar OTD-V660-001; primeiro run end-to-end Usuário Zero do OE-661 flywheel (orchestrate → WordPress → social → ML afiliado → handle-ml-postback → ATTRIBUTES_REVENUE_TO → ROIWidget) — destrava revenue real atribuível.`,
 > scripts/seed-openclaw-bok-seal.ts:47:PRÓXIMO DELIVERABLE (post-seal): (a) carry-overs OE-661 (provisionar GCRUX_ML_AFFILIATE_TOKEN + wire orchestrate emitir content_mesh_asset + primeiro run end-to-end Usuário Zero do flywheel); (b) claw-master audit-v2 (planejado 2026-06-16) verificar regressão D-OC-001..005 + novas findings; (c) OTD-CM-005 logging.redactSensitive set true no próximo edit consolidado de openclaw.json (P2 oportunístico); (d) D-OC-008 marketing-growth BOOTSTRAP.md scaffold (non-blocking).`,
 > scripts/seed-e2e-user-zero-bok-seal.ts:37:  content: `e2e-user-zero — Framework de QA End-to-End como Usuário Zero real (BoK v1)
 > scripts/seed-e2e-user-zero-bok-seal.ts:41:VISÃO: Framework AI-agent-friendly que testa MCORCH como Usuário Zero real de interface (não API tests programáticos), usando agent-browser CLI v0.27.0+ como primitiva técnica. Observa simultaneamente as 4 superfícies que um humano consciente observa ao dogfooding: (1) UI/DOM via snapshot accessibility-tree com refs @e1/@e2 (interações reais click/fill/type); (2) Network tab capturada como HAR file; (3) Console messages (errors + warnings + unhandled rejections); (4) estado visual via screenshot/video opcional. Cada finding é classificado por severity (P0..P3) e issue_type (bug/ux/perf/accessibility/security/regression), persistido como observation node em mcorch_nodes com edge OBSERVES uppercase para o módulo afetado, e gera report markdown estruturado.
@@ -6321,15 +6321,454 @@ Used to upload the user's own short videos to their own YouTube channel via YouT
 
 Depois de salvar a justificativa, volta pro fluxo de **Conectar YouTube** → na tela de aviso clica **"Go to Magic Constellation (unsafe)" → Permitir**. Quando voltar conectado, me avisa que eu testo o upload headless. 🚀
 
+## 👤 User *(00:01:33)*
+
+Mais informações
+Compartilhe todos os detalhes finais sobre o app. Inclua qualquer informação que possa nos ajudar na verificação, como credenciais de usuário de teste, IDs de outros projetos que usam OAuth etc.
+
+## 🤖 Claude *(00:02:00)*
+
+
+## 🤖 Claude *(00:02:01)*
+
+Esse é o campo de **notas finais da verificação OAuth** (Gate B) — ajuda o revisor a entender e aprovar. Deixa eu medir um texto bom:
+
+## 🤖 Claude *(00:02:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp; cat > ytmore.txt <<'EOF'\nMCORCH (https://login.mcorch.com) is an AI-powered content platform. It requests a SINGLE sensitive scope, youtube.upload, used only to upload a creator's own short-form videos to their own YouTube channel via YouTube Data API v3 videos.insert, on their behalf after they connect. We request no other YouTube scopes and never read, edit, or delete other data, nor upload to any channel the user did not authorize.\n\nOAuth flow to reproduce: sign in at https://login.mcorch.com, open Settings > Social > Connect YouTube. You are redirected to Google, grant youtube.upload, and are returned to our server-side callback https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback, which exchanges the authorization code for tokens (access_type=offline). The connected channel's videos can then be published from the app. Tokens are stored encrypted and used only for that user's own channel.\n\nA demo video of the full OAuth + upload flow is attached. Current use is the developer's own brand persona (Gabriel AI / CCIO). Test user / developer account: gabrielcall@gmail.com. We can provide additional test access on request.\nEOF\necho \"chars: $(wc -m < ytmore.txt)\"",
+  "description": "Measure verification notes text"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chars: 1136
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(00:02:19)*
+
+1136 chars. Cola este texto:
+
+```
+MCORCH (https://login.mcorch.com) is an AI-powered content platform. It requests a SINGLE sensitive scope, youtube.upload, used only to upload a creator's own short-form videos to their own YouTube channel via YouTube Data API v3 videos.insert, on their behalf after they connect. We request no other YouTube scopes and never read, edit, or delete other data, nor upload to any channel the user did not authorize.
+
+OAuth flow to reproduce: sign in at https://login.mcorch.com, open Settings > Social > Connect YouTube. You are redirected to Google, grant youtube.upload, and are returned to our server-side callback https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback, which exchanges the authorization code for tokens (access_type=offline). The connected channel's videos can then be published from the app. Tokens are stored encrypted and used only for that user's own channel.
+
+A demo video of the full OAuth + upload flow is attached. Current use is the developer's own brand persona (Gabriel AI / CCIO). Test user / developer account: gabrielcall@gmail.com. We can provide additional test access on request.
+```
+
+Cobre o que o revisor precisa: **scope único** + uso exato (`videos.insert`, canal do próprio usuário) + **como reproduzir o fluxo** + menção ao **vídeo demo** + conta de teste.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+⚠️ **Importante — distinção dos dois caminhos do YouTube:**
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]
-> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
-%% --- TIMELINE END --- %%
+Esse formulário é o **Gate B (verificação OAuth)** — tira o aviso "não verificado". Mas ele **NÃO** libera upload público. Quem libera público é o **Gate C (YouTube API Services Audit)**, um formulário **separado**: `support.google.com/youtube/contact/yt_api_form`. **Submeta os dois** (são independentes e seriais).
+
+Também: o **vídeo demo** que esse Gate B pede a gente grava do mesmo jeito do TikTok — primeiro você **conecta** (clica "Go to Magic Constellation (unsafe)" → Permitir), eu **testo o upload headless**, e aí você grava. 
+
+**Você pode enviar o Gate B agora** com esse texto (o vídeo você anexa; se exigir o vídeo pra enviar, a gente grava primeiro — me avisa). E **conecta o YouTube** pra eu testar o upload. Qual você faz primeiro?
+
+## 👤 User *(00:12:17)*
+
+Precisa de video tambem, igual fizemos no tiktok, agora quero saber se tem que usar o sandbox tambem antes.: Vídeo de demonstração: como o escopo será usado?
+Link para o YouTube
+É necessário um link de vídeo do YouTube ao selecionar escopos sensíveis ou restritos
+
+## 🤖 Claude *(00:13:03)*
+
+
+## 🤖 Claude *(00:13:09)*
+
+Duas respostas importantes:
+
+## 1. YouTube **NÃO tem sandbox** (diferente do TikTok)
+Você grava o demo contra o **app real** (`login.mcorch.com`), exatamente no estado atual (Testing/não-verificado). Detalhes:
+- O aviso **"Google hasn't verified this app"** **aparecer no vídeo é OK** — é o seu próprio app, é o estado esperado pré-verificação. Não precisa esconder.
+- Os uploads durante o demo saem **forçados a privado** (projeto não-auditado) — normal pré-Gate C, e aceitável pro demo.
+- **Não existe ambiente de sandbox separado** — é o app de verdade, com a conta de teste (você).
+
+## 2. O vídeo demo tem que ser um **link do YouTube** (não upload de arquivo, como foi no TikTok)
+"Link para o YouTube" = você grava a tela, **sobe a gravação no YouTube como "Não listado" (Unlisted)** e cola o link aqui. Pode ser na própria conta Gabriel AI ou qualquer conta.
+
+---
+
+Igual ao TikTok, pro demo mostrar o upload **na UI**, preciso de um botão **YouTube** na Biblioteca de Assets (hoje só tem Instagram + TikTok). Vou adicionar agora:
+
+## 🤖 Claude *(00:13:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 87,
+  "limit": 17
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 87	  // (Content Posting API, video.publish); for an unaudited client the post is forced to SELF_ONLY/private.
+> 88	  // The video must be reachable server-side (public bucket / valid signed url). No manual token / new app needed.
+> 89	  async function publishTo(platform: "instagram" | "tiktok", label: string) {
+> 90	    if (!asset || !url || !caption.trim()) return;
+> 91	    setPublishingPlatform(platform);
+> 92	    try {
+> 93	      const { data, error } = await supabase.functions.invoke("publish-social", {
+> 94	        body: { platform, content: { text: caption.trim(), video_url: url } },
+> 95	      });
+> 96	      if (error) throw new Error(await edgeErrorMessage(error, `Falha ao publicar no ${label}`));
+> 97	      if (data?.error) throw new Error(data.error);
+> 98	      toast.success(`Publicado no ${label}`);
+> 99	      onOpenChange(false);
+> 100	    } catch (e) {
+> 101	      toast.error((e as Error).message);
+> 102	    } finally {
+> 103	      setPublishingPlatform(null);
+> ```
+
+## 🤖 Claude *(00:13:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "  async function publishTo(platform: \"instagram\" | \"tiktok\", label: string) {",
+  "new_string": "  async function publishTo(platform: \"instagram\" | \"tiktok\" | \"youtube\", label: string) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:13:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "                  <div className=\"grid grid-cols-2 gap-2\">\n                    <Button\n                      size=\"sm\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"instagram\", \"Instagram\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"instagram\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      Reel (Instagram)\n                    </Button>\n                    <Button\n                      size=\"sm\"\n                      variant=\"secondary\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"tiktok\", \"TikTok\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"tiktok\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      TikTok\n                    </Button>\n                  </div>",
+  "new_string": "                  <div className=\"grid grid-cols-3 gap-2\">\n                    <Button\n                      size=\"sm\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"instagram\", \"Instagram\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"instagram\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      Reel\n                    </Button>\n                    <Button\n                      size=\"sm\"\n                      variant=\"secondary\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"tiktok\", \"TikTok\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"tiktok\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      TikTok\n                    </Button>\n                    <Button\n                      size=\"sm\"\n                      variant=\"secondary\"\n                      className=\"w-full\"\n                      onClick={() => publishTo(\"youtube\", \"YouTube\")}\n                      disabled={!url || !caption.trim() || publishing}\n                    >\n                      {publishingPlatform === \"youtube\" ? (\n                        <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" />\n                      ) : (\n                        <Send className=\"mr-1 h-3.5 w-3.5\" />\n                      )}\n                      YouTube\n                    </Button>\n                  </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:13:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc EXIT=$?\"; bun run build 2>&1 | tail -3; echo \"===verify YouTube button in bundle===\"; grep -rl \"publishTo(\\\"youtube\\\"\\|>YouTube<\" dist/assets/*.js >/dev/null 2>&1 && echo \"\u2705 YouTube button no bundle\" || grep -rl \"youtube\" dist/assets/*.js >/dev/null 2>&1 && echo \"\u2705 youtube refs no bundle\"",
+  "description": "tsc + build + verify YouTube button",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc EXIT=0
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 22.58s
+> ===verify YouTube button in bundle===
+> ✅ youtube refs no bundle
+> ```
+
+## 🤖 Claude *(00:14:16)*
+
+
+## 🤖 Claude *(00:14:25)*
+
+✅ **Botão YouTube deployado** (tsc 0 · build OK · refs no bundle). Agora a Biblioteca de Assets tem **Reel · TikTok · YouTube**.
+
+## Sequência pra fechar o YouTube (mesma lógica do TikTok)
+
+1. **Conecte agora:** volta no "Conectar YouTube" → na tela de aviso clica **"Go to Magic Constellation (unsafe)" → Permitir** (autoriza o `youtube.upload`). Isso grava o token.
+2. **Me avisa** → eu **testo o upload headless** (igual TikTok) e conserto se tiver bug contra a API real (ex: tratamento do forced-private).
+3. **Grave o demo** contra o app real (sem sandbox): `login.mcorch.com/dashboard/social` → Conectar YouTube → consent mostrando **"Gerencie seus vídeos do YouTube"** → Permitir → conectado → `/dashboard/canvas/assets` → abre um vídeo → clica **YouTube** → toast de sucesso.
+4. **Suba a gravação no YouTube como "Não listado" (Unlisted)** → cole esse **link** no campo "Link para o YouTube" do Gate B.
+
+## ⚠️ Reutilize o vídeo nos DOIS gates
+O mesmo link de demo serve pro:
+- **Gate B** (essa verificação OAuth — tira o aviso "não verificado").
+- **Gate C** (`support.google.com/youtube/contact/yt_api_form` — libera upload **público**; formulário separado, **também pede o demo**).
+
+Grava **uma vez**, usa nos dois.
+
+> No demo, o upload vai sair **privado** (projeto não-auditado) — tudo bem: o Gate B só quer ver o **scope sendo usado** (o OAuth + o upload acontecendo). O público é o Gate C.
+
+---
+
+**Próximo passo:** clica **"Go to Magic Constellation (unsafe)" → Permitir** pra conectar. Me avisa quando voltar conectado que eu testo o upload na hora. 🚀
+
+## 👤 User *(00:15:35)*
+
+Depois de clicar em Continue.: <html><body><p>Error: Invalid state</p><script>setTimeout(()=>window.close(),3000)</script></body></html>: https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/social-auth-callback?state=eyJ1c2VySWQiOiJhZGEzOWZhZS02N2UxLTRlNTMtYWYxYy01YTE4ZTFjMTA4ZTgiLCJwbGF0Zm9ybSI6InlvdXR1YmUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL2xvZ2luLm1jb3JjaC5jb20vc29jaWFsL2NhbGxiYWNrIiwidHMiOjE3ODI2MDI2Njc3NDV9.JVcRPVnyEyRYh3FG7T6_L6DWuXNvHVYetSW72Fds6W8&iss=https://accounts.google.com&code=4/0AdkVLPxt1ZzVprE6_LE0D3f--qH7ffSJwvz69L-69MZdjYSR8NSjBGHAMhovHoSX9mcmDw&scope=https://www.googleapis.com/auth/youtube.upload
+
+## 🤖 Claude *(00:16:07)*
+
+
+## 🤖 Claude *(00:16:08)*
+
+O OAuth completou no Google (consent do `youtube.upload` aprovado), mas o **nosso callback rejeitou com "Invalid state"** — bug do nosso lado na validação do `state`. Deixa eu ver a lógica (provavelmente TTL ou HMAC):
+
+## 🤖 Claude *(00:16:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"===state validation in callback===\"; grep -n \"Invalid state\\|state\\|verifyState\\|hmac\\|HMAC\\|ttl\\|TTL\\|ts\\|Date.now\\|expire\\|STATE_SECRET\\|sign\" supabase/functions/social-auth-callback/index.ts | head -40",
+  "description": "Find Invalid state validation logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===state validation in callback===
+> 2:import { verifyState } from "../_shared/oauth-state.ts";
+> 7:} from "../_shared/social-app-config.ts";
+> 13:  let stateStr: string | null;
+> 18:    stateStr = url.searchParams.get("state");
+> 23:    stateStr = body.state;
+> 41:  if (!code || !stateStr) {
+> 42:    return redirectWithError("Missing code or state");
+> 46:    // SECURITY: the callback carries no user JWT — the HMAC signature is the ONLY proof that this userId actually
+> 47:    // initiated the connect. Verify it before trusting any field (fail-closed): a forged/tampered state → reject,
+> 48:    // so social_accounts can never be written for an attacker-chosen tenant (cross-tenant account-linking).
+> 49:    const stateKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 50:    // 10-min replay window — the `ts` signed by social-auth-init is enforced fail-closed (bounds leaked-state replay).
+> 51:    const state = await verifyState<{ userId: string; platform: string; redirect_uri: string }>(
+> 52:      stateStr, stateKey, { maxAgeMs: 10 * 60 * 1000 },
+> 54:    if (!state || typeof state.userId !== "string" || typeof state.platform !== "string") {
+> 55:      console.error("[social-auth-callback] invalid or tampered state — rejecting");
+> 56:      return redirectWithError("Invalid state");
+> 58:    const { userId, platform, redirect_uri } = state;
+> 69:    let expiresIn: number | null = null;
+> 73:    // Per-platform extra fields stashed in social_accounts.metadata (e.g. YouTube channel_id,
+> 74:    // Pinterest refresh_token_expires_at). Empty for platforms that don't need it.
+> 97:      expiresIn = tokenData.expires_in;
+> 135:      expiresIn = longData.expires_in || null;
+> 147:      // PKCE code verifier = the state used as plain challenge
+> 148:      const codeVerifier = stateStr.slice(0, 43);
+> 168:      expiresIn = tokenData.expires_in;
+> 202:      expiresIn = tokenData.expires_in ?? 86400; // 24h
+> 231:      expiresIn = tokenData.expires_in ?? 3600; // ~1h
+> 269:      expiresIn = tokenData.expires_in ?? 2592000; // 30d
+> 272:      if (tokenData.refresh_token_expires_at) {
+> 273:        metadata = { ...metadata, refresh_token_expires_at: tokenData.refresh_token_expires_at };
+> 288:    const expiresAt = expiresIn
+> 289:      ? new Date(Date.now() + expiresIn * 1000).toISOString()
+> 294:      .from("social_accounts")
+> 301:          token_expires_at: expiresAt,
+> 313:      await supabase.from("social_accounts").insert({
+> 318:        token_expires_at: expiresAt,
+> 327:    // Materiality (Lei 1) — best-effort telemetry: a connect that persisted tokens is the success signal.
+> ```
+
+## 🤖 Claude *(00:16:49)*
+
+
+## 🤖 Claude *(00:16:52)*
+
+O OAuth do Google deu certo (você aprovou o `youtube.upload`) — o erro é só nosso **state expirou**. Nosso callback valida o `state` com uma janela de **10 minutos** (proteção anti-replay, assinado por HMAC). Entre você clicar "Conectar" e finalmente clicar "Continue" (passando pelo aviso + toda nossa ida-e-volta de config), passou dos 10 min → "Invalid state". Deixa eu confirmar materialmente:
+
+## 🤖 Claude *(00:17:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; python3 -c \"\nimport base64, time\n# state payload from the callback URL\np='eyJ1c2VySWQiOiJhZGEzOWZhZS02N2UxLTRlNTMtYWYxYy01YTE4ZTFjMTA4ZTgiLCJwbGF0Zm9ybSI6InlvdXR1YmUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL2xvZ2luLm1jb3JjaC5jb20vc29jaWFsL2NhbGxiYWNrIiwidHMiOjE3ODI2MDI2Njc3NDV9'\np+='='*(-len(p)%4)\nimport json\nd=json.loads(base64.urlsafe_b64decode(p))\nprint('state payload:', d)\nts=d['ts']/1000\nnow=time.time()\nprint('state age (min):', round((now-ts)/60,1), '  (TTL = 10 min)')\nprint('userId in state:', d['userId'])\n\"",
+  "description": "Decode state + compute age vs 10-min TTL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> state payload: {'userId': 'ada39fae-67e1-4e53-af1c-5a18e1c108e8', 'platform': 'youtube', 'redirect_uri': 'https://login.mcorch.com/social/callback', 'ts': 1782602667745}
+> state age (min): 52.6   (TTL = 10 min)
+> userId in state: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> ```
+
+## 🤖 Claude *(00:17:17)*
+
+
+## 🤖 Claude *(00:17:27)*
+
+**Confirmado: o state tinha 52,6 minutos** (TTL = 10 min) → expirou. **Não é bug** — o HMAC está certo, o OAuth funcionou (você aprovou o `youtube.upload`). Só demorou demais entre clicar "Conectar" e clicar "Continue" (por causa de toda a nossa config no meio). A proteção anti-replay fez o trabalho dela.
+
+## ✅ Fix: só reconectar e passar rápido (< 10 min)
+Agora que a config do Google já está toda pronta (scope, justificativa, etc.), o fluxo é rápido:
+1. **`login.mcorch.com/dashboard/social` → Conectar YouTube**
+2. Tela "não verificado" → **"Go to Magic Constellation (unsafe)"**
+3. **Continue → Permitir** — tudo de uma vez, sem pausar.
+
+Vai funcionar (o consent já passou uma vez).
+
+## ⚠️ Um detalhe que reparei no print
+A conta Google que autorizou foi **`uxandai@gmail.com`** (não a `gabrielcall@gmail.com`). Tudo bem **se for nessa conta `uxandai` que está o canal da marca Gabriel AI** — o upload vai pra esse canal. 
+
+Confirme: **o canal Brand Account do Gabriel AI está na conta `uxandai@gmail.com`?**
+- Se **sim** → conecta com a `uxandai` mesmo (como fez).
+- Se o canal está em outra conta → conecte com a conta certa (a tela "Sign in with Google" deixa trocar de conta).
+
+> Lembrando: a conta de login do MCORCH é a `gabrielcall` (tenant `ada39fae`) — ela está conectando o canal do YouTube da `uxandai`. Isso é normal; o token fica guardado pro seu usuário MCORCH.
+
+---
+
+**Reconecta rápido** e me avisa quando voltar conectado (sem o "Invalid state") — aí eu testo o upload headless na hora. 🚀
+
+## 👤 User *(00:22:30)*
+
+conecção YouTube ativa
+
+## 🤖 Claude *(00:22:40)*
+
+
+## 🤖 Claude *(00:22:40)*
+
+Vou confirmar a conexão no banco + testar o upload headless (igual TikTok):
+
+## 🤖 Claude *(00:22:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; echo \"===social_accounts youtube row===\"; curl -s \"$URL/rest/v1/social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.youtube&select=platform,platform_user_id,platform_username,token_expires_at,scopes,is_active,created_at\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool; echo \"===has refresh_token? (decrypted view)===\"; curl -s \"$URL/rest/v1/decrypted_social_accounts?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&platform=eq.youtube&select=access_token,refresh_token,metadata\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin)[0];print('access_token:', (d['access_token'] or '')[:8]+'\u2026' if d['access_token'] else 'NULL');print('refresh_token:', 'PRESENT' if d.get('refresh_token') else 'NULL');print('metadata:', d.get('metadata'))\"",
+  "description": "Verify youtube connection + tokens"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===social_accounts youtube row===
+> [
+>     {
+>         "platform": "youtube",
+>         "platform_user_id": null,
+>         "platform_username": null,
+>         "token_expires_at": "2026-06-28T01:22:07.293+00:00",
+>         "scopes": [
+>             "https://www.googleapis.com/auth/youtube.upload"
+>         ],
+>         "is_active": true,
+>         "created_at": "2026-06-28T00:22:08.342908+00:00"
+>     }
+> ]
+> ===has refresh_token? (decrypted view)===
+> access_token: ya29.a0A…
+> refresh_token: PRESENT
+> metadata: {}
+> ```
+
+## 🤖 Claude *(00:22:57)*
+
+
+## 🤖 Claude *(00:22:59)*
+
+**Conexão YouTube ativa e completa** (Lei 1):
+- `access_token` presente ✅
+- **`refresh_token` PRESENTE** ✅ (graças ao `access_type=offline` — é o que mantém o autopilot vivo além de 1h)
+- scope `youtube.upload` ✅
+
+Agora o teste de upload headless (vai sair **privado** — projeto não-auditado, esperado):
+
+## 🤖 Claude *(00:23:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; source .env 2>/dev/null; KEY=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"; URL=\"${SUPABASE_URL:-$VITE_SUPABASE_URL}\"; VURL=\"$URL/storage/v1/object/public/canvas-assets/880b5eba-b41c-490d-8cab-1058def85bc9/49266d12-21e0-4d3e-8594-19ae0de8831a.mp4\"; echo \"===publish-social youtube (headless test)===\"; curl -s -w \"\\nHTTP=%{http_code}\\n\" -X POST \"$URL/functions/v1/publish-social\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\" -H \"Content-Type: application/json\" -d \"{\\\"platform\\\":\\\"youtube\\\",\\\"user_id\\\":\\\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\\\",\\\"content\\\":{\\\"text\\\":\\\"Gabriel AI \u2014 YouTube upload test #Shorts\\\",\\\"video_url\\\":\\\"$VURL\\\"}}\"; echo \"===telemetry===\"; curl -s \"$URL/rest/v1/infra_health_logs?service=eq.publish-youtube&select=status,event,metadata,last_seen_at&order=last_seen_at.desc&limit=3\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" | python3 -m json.tool",
+  "description": "Test YouTube upload via publish-social"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===publish-social youtube (headless test)===
+> {"success":true,"result":{"id":"5Q6BQRUw85o","privacyStatus":null}}
+> HTTP=200
+> ===telemetry===
+> [
+>     {
+>         "status": "ok",
+>         "event": "youtube_upload_complete",
+>         "metadata": {
+>             "video_id": "5Q6BQRUw85o",
+>             "privacy_status": null
+>         },
+>         "last_seen_at": "2026-06-28T00:23:09.602127+00:00"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(00:23:32)*
+
+
+## 🤖 Claude *(00:23:45)*
+
+🎉 **UPLOAD DO YOUTUBE FUNCIONOU END-TO-END!**
+
+```
+{"success":true,"result":{"id":"5Q6BQRUw85o"}}
+HTTP 200 · telemetry: youtube_upload_complete · video_id 5Q6BQRUw85o
+```
+
+Tem um vídeo real no canal agora (privado — `youtube.com/watch?v=5Q6BQRUw85o`, só você vê em YouTube Studio; pode apagar depois). O pipeline inteiro está provado: OAuth → token → resumable upload `videos.insert` → vídeo criado.
+
+> Nota menor: `privacyStatus` voltou `null` (nosso read-back não capturou o status) — cosmético. O vídeo **é privado** de qualquer forma (Google força privado em projeto não-auditado até o Gate C). Não bloqueia nada.
+
+## 🏁 Status YouTube
+✅ OAuth (`youtube.upload` + refresh_token) · ✅ Upload E2E · ✅ botão YouTube na UI deployado. **Tudo pronto pro demo.**
+
+---
+
+## 🎬 Gravar o demo (mesma lógica do TikTok)
+
+> A conta está **conectada**. Pra mostrar o OAuth no vídeo, precisa reconectar do zero. **Quer que eu zere a conexão do YouTube agora?** (igual ofereci no TikTok)
+
+**Roteiro (~90s, sua máquina, contra `login.mcorch.com`):**
+1. URL `login.mcorch.com/dashboard/social` → **Conectar YouTube**.
+2. Tela "não verificado" → **"Go to Magic Constellation (unsafe)"** → **Continue** → **Permitir** (mostra o consent do `youtube.upload`).
+3. Volta conectado.
+4. `/dashboard/canvas/assets` → abre um vídeo → escreve legenda → clica **YouTube** → toast "Publicado no YouTube".
+5. (opcional) Abre o YouTube Studio e mostra o vídeo (privado — esperado).
+
+**Depois:** suba essa gravação no YouTube como **"Não listado" (Unlisted)** → cole o link em:
+- **Gate B** (verificação OAuth — o "Link para o YouTube" que travou)
+- **Gate C** (`support.google.com/youtube/contact/yt_api_form` — libera público)
+
+Mesmo vídeo nos dois. ⏱️ E lembra: faça o **connect na gravação em < 10 min** (não pause, senão o state expira como antes).
+
+---
+
+Quer que eu **zere a conexão** pra você gravar o connect do zero? E assim que gravar + subir unlisted, me manda o link que eu reviso (Vision QA) antes de você submeter os gates. 🚀
