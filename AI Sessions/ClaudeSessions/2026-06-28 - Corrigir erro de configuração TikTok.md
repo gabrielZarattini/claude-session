@@ -8526,5 +8526,5 @@ O próximo (FR-CP-002 atomizer + FR-CP-003 reshaper) é o build grande — front
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-27 - agent-afdf1595d8eadc679]]
-> * **Próxima Sessão**: [[2026-06-28 - agent-a11757ea49b92c757]]
+> * **Próxima Sessão**: [[2026-06-28 - Implementar reshaper para posts nativos multiplataforma]]
 %% --- TIMELINE END --- %%

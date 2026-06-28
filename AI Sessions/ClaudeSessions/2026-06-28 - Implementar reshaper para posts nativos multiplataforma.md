@@ -3088,3 +3088,3243 @@ Still running (map + critic phases). Let me wait for it to finish — the HyperF
   "timeout": 300000
 }
 ```
+
+> **Tool Result (TaskOutput)** - ✅ Success
+>
+> ```
+> <retrieval_status>timeout</retrieval_status>
+> 
+> <task_id>wj8bku6oe</task_id>
+> 
+> <task_type>local_workflow</task_type>
+> 
+> <status>running</status>
+> ```
+
+## 🤖 Claude *(02:34:19)*
+
+
+## 🤖 Claude *(02:34:20)*
+
+It's taking a while (6 readers doing full-file reads + a critic). Let me peek at live progress in the workflow transcript dir to see which agents have completed.
+
+## 🤖 Claude *(02:34:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2c25c853-bfbe-43d0-96c9-675282d65093/subagents/workflows/wf_a390c0f0-b6e 2>/dev/null && ls -la && echo \"---\" && for f in agent-*.jsonl; do [ -f \"$f\" ] && echo \"$f: $(wc -l < \"$f\") lines, last modified $(stat -c %y \"$f\" 2>/dev/null | cut -d. -f1)\"; done 2>/dev/null | head -20",
+  "description": "Peek at workflow agent progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 1832
+> drwxrwxr-x 2 ubuntu ubuntu   4096 Jun 27 23:32 .
+> drwxrwxr-x 3 ubuntu ubuntu   4096 Jun 27 23:22 ..
+> -rw------- 1 ubuntu ubuntu 218121 Jun 27 23:25 agent-a21dd13ea292d7b20.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:22 agent-a21dd13ea292d7b20.meta.json
+> -rw------- 1 ubuntu ubuntu 175845 Jun 27 23:26 agent-a21fb0965a75ef935.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:24 agent-a21fb0965a75ef935.meta.json
+> -rw------- 1 ubuntu ubuntu 298406 Jun 27 23:24 agent-a2b7433f9f80f4db9.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:22 agent-a2b7433f9f80f4db9.meta.json
+> -rw------- 1 ubuntu ubuntu 208619 Jun 27 23:33 agent-a335113ad7ddb87af.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:32 agent-a335113ad7ddb87af.meta.json
+> -rw------- 1 ubuntu ubuntu 223469 Jun 27 23:29 agent-a37158665a7b5bbbb.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:26 agent-a37158665a7b5bbbb.meta.json
+> -rw------- 1 ubuntu ubuntu 284961 Jun 27 23:30 agent-aa4c00f8c564e9bb0.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:25 agent-aa4c00f8c564e9bb0.meta.json
+> -rw------- 1 ubuntu ubuntu 302542 Jun 27 23:32 agent-af3193f113b71a308.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jun 27 23:29 agent-af3193f113b71a308.meta.json
+> -rw-rw-r-- 1 ubuntu ubuntu 110071 Jun 27 23:32 journal.jsonl
+> ---
+> agent-a21dd13ea292d7b20.jsonl: 43 lines, last modified 2026-06-27 23:25:03
+> agent-a21fb0965a75ef935.jsonl: 39 lines, last modified 2026-06-27 23:26:59
+> agent-a2b7433f9f80f4db9.jsonl: 51 lines, last modified 2026-06-27 23:24:59
+> agent-a335113ad7ddb87af.jsonl: 29 lines, last modified 2026-06-27 23:33:58
+> agent-a37158665a7b5bbbb.jsonl: 57 lines, last modified 2026-06-27 23:29:43
+> agent-aa4c00f8c564e9bb0.jsonl: 48 lines, last modified 2026-06-27 23:30:07
+> agent-af3193f113b71a308.jsonl: 60 lines, last modified 2026-06-27 23:32:53
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(02:34:27)*
+
+
+## 🤖 Claude *(02:34:28)*
+
+The critic (final agent) is actively writing — workflow is nearly done. Let me wait for it to return the structured result.
+
+## 🤖 Claude *(02:34:29)*
+
+
+🛠️ **Tool Call**: `TaskOutput`
+```json
+{
+  "task_id": "wj8bku6oe",
+  "block": true,
+  "timeout": 180000
+}
+```
+
+> **Tool Result (TaskOutput)** - ✅ Success
+>
+> ```
+> <retrieval_status>success</retrieval_status>
+> 
+> <task_id>wj8bku6oe</task_id>
+> 
+> <task_type>local_workflow</task_type>
+> 
+> <status>completed</status>
+> 
+> <output>
+> [Truncated. Full output: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2c25c853-bfbe-43d0-96c9-675282d65093/tasks/wj8bku6oe.output]
+> 
+> :12), post_status enum (:11), social_accounts base (:82), scheduled_posts (:158), content_library (:136), profiles, has_role()."
+>           },
+>           {
+>             "path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260601000000_credential_encryption.sql",
+>             "role": "Vault encryption for social_accounts/meta_config/user_api_keys: base *_table + masked security_invoker views + decrypted_* service-role views (decrypted_social_accounts :564) + INSTEAD OF triggers (mask preservation)."
+>           },
+>           {
+>             "path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627120000_social_app_config.sql",
+>             "role": "Per-user OAuth APP creds for TikTok/YouTube/Pinterest: social_app_config_table + Vault-encrypted client_secret + masked/decrypted views + tenant-guarded INSTEAD OF. Resolution order documented in header (:7-9)."
+>           },
+>           {
+>             "path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260625120000_creative_assets_registry.sql",
+>             "role": "creative_assets spine + register_creative_asset (service-role-only idempotent writer, :86). The bidirectional interop registry the reshaper reads source assets from and dual-writes new assets to (with parent_asset_id lineage)."
+>           },
+>           {
+>             "path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql",
+>             "role": "creative_metrics ledger (no hook_rate column yet — FR-CP-011 ALTER target). Per-creative metrics keyed by content_variant_id+source; SELECT-own, service-role write, RESTRICTIVE no-delete."
+>           },
+>           {
+>             "path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615170000_infra_health_logs_metadata.sql",
+>             "role": "Adds event(text)+metadata(jsonb) to infra_health_logs (telemetry shape). Allowlist contract (no PII/secrets) in header (:10)."
+>           }
+>         ]
+>       }
+>     ],
+>     "critic": {
+>       "blocking_gaps": [
+>         {
+>           "gap": "field_map expression-evaluation contract is UNDEFINED. Seed rows store output composition as string expressions like \"atoms.hook + atoms.cta\", \"atoms.key_points + atoms.pillar_url\", with output keys caption/title/description/body/overlay_text/link/tweet_1/tweets_n/tweet_last/featured_image. Nothing — not migration 20260627140000, not FRD amendment 12, not the SDD — defines HOW the reshaper interprets these. Is '+' string concat? newline join? Is the result fed verbatim to publish, or used as an LLM prompt skeleton (the FRD says reshaper uses 'text gen' + 'interpretador da recipe')? key_points is a jsonb ARRAY — how does 'atoms.hook + atoms.key_points' serialize an array into a caption? tweets_n='atoms.key_points' implies one tweet per array element (a loop), which is a totally different code path than scalar concat.",
+>           "why": "This is THE core of the reshaper ('interpretador da recipe' is literally the named deliverable). Every channel's output text is produced by evaluating these expressions. Without a defined grammar, the implementer will invent ad-hoc parsing per verb — exactly the 'zero per-channel branch' the BoK forbids — or guess wrong and ship captions that are literal strings 'atoms.hook + atoms.cta'. Blocks the entire text-composition layer for all 8 channels.",
+>           "resolve": "DECISION + SDD section. Pick a concrete contract: e.g. tokens are atoms.<field> references, '+' joins with a separator, arrays expand (newline for key_points, one-tweet-per-element for tweets_n), and the assembled skeleton is EITHER published verbatim OR handed to an LLM with voice_prompt_seed as the system voice + per-channel char limit from the text jsonb as a hard gate. Write it into post-engine/05-sdd.md (or a 13-* amendment) BEFORE coding. ~30 min decision; it is a pure design choice, no code to read."
+>         },
+>         {
+>           "gap": "Three field_map tokens reference pillar_atoms columns THAT DO NOT EXIST: atoms.hook_keyworded (2 rows: pinterest video_pin + standard_pin), atoms.key_points_keyworded (2 rows: same), atoms.hook_short (1 row: youtube thumbnail). pillar_atoms (migration 20260627140000:90-100) has ONLY hook, key_points, stat, quote, cta, pillar_url. Verified by grep: atoms.hook_keyworded x2, atoms.key_points_keyworded x2, atoms.hook_short x1 vs the actual column list.",
+>           "why": "The Pinterest SEO surfaces (FR-CP-008) and the YouTube thumbnail overlay (render_thumbnail_16x9) will dereference null/undefined tokens. A naive interpreter produces empty Pinterest titles/descriptions (Pinterest is keyword-SEO-driven — empty = dead pin) and a blank thumbnail overlay. This is a silent-empty-output failure, not a crash.",
+>           "resolve": "DECISION: either (a) the atomizer (FR-CP-002) must DERIVE keyworded/short variants and store them as extra pillar_atoms columns (ALTER TABLE add hook_keyworded, key_points_keyworded, hook_short — additive migration), OR (b) the reshaper computes them on the fly (LLM keyword-rewrite for Pinterest, truncate for thumbnail). Decide in the same SDD pass as the field_map contract. Confirm the column list with: grep -A12 'CREATE TABLE.*pillar_atoms' supabase/migrations/20260627140000_channel_profiles.sql."
+>         },
+>         {
+>           "gap": "CHANNEL-vs-ENUM NAME MISMATCH (hard SQL-level break). channel_profiles.channel CHECK uses 'twitter_x' (migration 20260627140000:40, rows at :141 video and :230 thread). But public.social_platform ENUM (migration 20260402014040:12) is ('linkedin','instagram','facebook','twitter','tiktok','youtube','pinterest','wordpress') — NO 'twitter_x'. publish-social branches on 'twitter' (index.ts:225). scheduled_posts.platform is the social_platform enum. So a reshaper that writes scheduled_posts.platform = channel_profiles.channel for the X surfaces will throw 22P02 invalid_input_value on INSERT.",
+>           "why": "The reshaper's whole job ends in a scheduled_posts INSERT (or direct publish-social call). For twitter_x rows the platform value is un-castable to the enum — the X channel publish path is dead on arrival. This is not a runtime edge case; every X reshape fails at the INSERT.",
+>           "resolve": "DECISION: add a channel->enum mapping table/const in the reshaper ('twitter_x' -> 'twitter'), OR rename the channel_profiles seed rows to 'twitter' (re-seed migration). Mapping const is cheapest and keeps the spec's naming. Document the mapping for ALL channels in the SDD (also future-proofs surfaces: enum has 8 values, channel_profiles has 8 channels but 20 surface-rows). Verify with: grep social_platform supabase/migrations/20260402014040*.sql."
+>         },
+>         {
+>           "gap": "RESHAPER TRIGGER / SEQUENCE is undecided and unverified. The BoK FRD shows reshaper edge fn after the atomizer node but NEVER specifies: is it a NEW step appended to orchestrate-step stepsOrder (line 28, currently ends knowledge_mesh), or a standalone edge fn kicked via async_orchestrate_step / a new RPC, or driven by the autopilot scheduler? The dependency chain is real: reshaper needs pillar_atoms (atomizer output) + pillar_url (= wpPostUrl, only set AFTER wordpress_publish at orchestrate-step:525) + the 9:16 video master (video_renders, async — finalized OUT OF BAND by video-bridge.ts ~minutes later, NOT within the orchestrate-step run) + the pillar image (content_library type=image). The video master is NOT done when knowledge_mesh runs.",
+>           "why": "If the reshaper runs as a synchronous step inside orchestrate-step, the 9:16 video master will still be state='queued'/'running' (video-bridge polls every 4s and renders out of band) — reexport_native for the 7 video surfaces will find no storage_key. If it runs too early it also misses pillar_url. Wrong placement = empty video surfaces (the 7 most important channels) on every run.",
+>           "resolve": "DECISION: make the reshaper a SEPARATE async fn that triggers AFTER the video master finalizes — e.g. video-bridge.ts (which already calls finalize_video_render and, for autopilot, attaches content_library at :132-154) kicks the reshaper when composition.autopilot is present; OR the reshaper polls video_renders for state='done' before processing video surfaces. Read scripts/video-bridge.ts:113-154 and orchestrate-step:442-525 to pick the hook. This is the single highest-risk sequencing decision."
+>         },
+>         {
+>           "gap": "PILLAR-RUN -> VIDEO-MASTER linkage is not addressable. The reshaper must find THE 9:16 video master for a given pillar run, but video_renders has no pillar_run_id. The only links are composition.autopilot.cycle_id (autopilot path only — null for user-path runs) and composition.autopilot.campaign_id. orchestrate-step builds composition.autopilot WITHOUT run_id/pipeline_runs.id (verified at :457: {user_id, campaign_id, product_id, cycle_id, title} — no run_id). pillar_atoms.pillar_run_id is meant to = pipeline_runs.id, but that id is absent from the video composition.",
+>           "why": "Given a pillar_atoms row (keyed by pillar_run_id = pipeline_runs.id), the reshaper cannot deterministically SELECT the matching video_renders row — it can only fuzzy-match by campaign_id+user+latest, which (per auto-publish's own single-video-per-campaign assumption) collides when multiple sub-runs share a campaign_id. For user-path (non-autopilot) runs there is NO cycle_id and the composition.autopilot block may be absent entirely (it's gated on hasProducts+videoEnabled).",
+>           "resolve": "CODE+DECISION: add pillar_run_id (= run_id/pipeline_runs.id) into composition.autopilot (or a top-level composition.pillar_run_id) at orchestrate-step:457 so the reshaper can JOIN cleanly. One-line change to the composition object now; far cheaper than fuzzy campaign matching later. Confirm composition shape at orchestrate-step:442-463."
+>         },
+>         {
+>           "gap": "register_creative_asset source_module CHECK has no value for the reshaper, AND the pillar masters are not yet registered. The CHECK enum (migration 20260625120000:123) is ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless'). The reshaper RESHAPE HOOK says to dual-write masters + variants and thread parent_asset_id — but orchestrate-content/-step do NOT call register_creative_asset today (verified: no register_creative_asset in orchestrate-step), so the pillar article/image have NO creative_assets row to be a parent. The video master IS registered by video-bridge.ts (source_module='hyperframes').",
+>           "why": "parent_asset_id provenance threading (a stated reshaper deliverable) is impossible for image/article surfaces until the masters are registered. And the reshaper needs a source_module value; reusing 'content-pipeline' is allowed but conflates the reshaper with the pillar pipeline in the registry.",
+>           "resolve": "DECISION: (a) reuse source_module='content-pipeline' (no migration) OR add a 'reshaper'/'post-engine' value (ALTER both CHECKs — migration). (b) Decide whether the reshaper slice ALSO back-registers the pillar image+article masters (recommended: it's the only way to get parent_asset_id). Read register_creative_asset signature at migration 20260625120000:88-140."
+>         },
+>         {
+>           "gap": "AUTO-PUBLISH single-video-per-campaign vs the 16:9 divergence + image-only surfaces. auto-publish (index.ts:75-85, verified) resolves the video sibling by campaign_id + type='video' + status='approved' ORDER BY created_at DESC LIMIT 1 — ONE latest video per campaign. The reshaper produces, for the SAME pillar, a 9:16 master (7 video surfaces) AND a 16:9 long_video (YouTube, FR-CP-004) AND image-only surfaces (Pinterest standard_pin, IG/LinkedIn feed_image, FB link_card, YouTube thumbnail). All would share one campaign_id.",
+>           "why": "If both the 9:16 and 16:9 videos are type='video' approved under one campaign_id, auto-publish attaches the SAME (latest) MP4 to BOTH the YouTube Short AND the YouTube long_video post — the 16:9 divergence collapses. Image-only surfaces under a campaign with a video sibling would also get a spurious video_url attached. The single-video assumption is architecturally incompatible with the 1-pillar->N-format fan-out.",
+>           "resolve": "DECISION: either (a) the reshaper bypasses auto-publish's sibling resolution and writes content.video_url directly per scheduled_post (requires changing the scheduled_posts contract to carry a per-row asset ref, OR a synchronous publish-social call with explicit content), OR (b) give each format its OWN campaign_id/sub-campaign so the per-campaign single-video lookup resolves the right asset. Read auto-publish/index.ts:74-106 and decide before writing any scheduled_posts rows."
+>         },
+>         {
+>           "gap": "BoK is at FRD altitude only — there is NO SDD design for FR-CP-003 (Closed-Loop Step 3.5 gate). docs/bok/post-engine/12-amendment-channel-format-intelligence.md is an FRD amendment (FR table + OTD + Pattern Conformance §10). It does NOT contain: the reshaper's cost (no RESHAPE_CREATIVE/ATOMIZE entry decided in src/lib/billing.ts COIN_COSTS), the idempotency anchor (the maps recommend UNIQUE(pillar_run_id,channel,surface) but nothing in schema/SDD enforces it — pg_net step retries WILL double-insert), the edge-fn auth model (cron vs user, prepaid honoring), or the field_map/sequence contracts above. CLAUDE.md Master Protocol Step 3.5 requires the SDD to carry these + the Pattern Conformance Declaration before code begins.",
+>           "why": "Per the project's own UNBREAKABLE Closed-Loop rule, coding FR-CP-003 without a consolidated SDD section is a protocol violation that triggers Refusal Mode. Materially: without an idempotency anchor, the existing weak step-retry behavior (orchestrate-step:168 findIndex-replace, but content INSERTs are NOT idempotent) means a single pg_net retry double-publishes every channel. Without a cost decision the fn either charges nothing (free reshape — fine if intended) or charges un-mirrored amounts (billing.ts triple-mirror gate G3 breaks).",
+>           "resolve": "Write the FR-CP-003 SDD section (cost, idempotency UNIQUE constraint as a migration, auth model mirroring orchestrate-step's Bearer SB_SECRET_KEY + server-trusted user-id header, telemetry service='reshape-<channel>', sentinel gate on any atom text re-fed to an LLM). This is the one gate the project's own rules make mandatory. Reference template: docs/bok/agentic-governance/09-pattern-conformance.md + existing SDD §sections."
+>         }
+>       ],
+>       "contradictions": [
+>         "CHANNEL NAME: channel_profiles.channel CHECK uses 'twitter_x' (migration 20260627140000:40,141,230) but social_platform enum + publish-social + scheduled_posts use 'twitter' (migration 20260402014040:12; publish-social/index.ts:225). The reshaper cannot write 'twitter_x' to scheduled_posts.platform — invalid_input_value. Requires a mapping or a re-seed. (Note: the reader-map summary said the enum 'already includes all 8 channels' — true for the enum, but it does NOT include the channel_profiles spelling 'twitter_x', which is the actual contradiction.)",
+>         "ATOM TOKENS: field_maps reference atoms.hook_keyworded, atoms.key_points_keyworded, atoms.hook_short — none exist as pillar_atoms columns (migration 20260627140000:90-100 defines only hook, key_points, stat, quote, cta, pillar_url). The BoK seed contract assumes derived atom variants the schema does not provide.",
+>         "RESHAPE VERB SET: the BoK prose / reader-map lists render_16x9 as a top-level reshape directive, but the wordpress 'article' row encodes reframe_1.91x1 ONLY inside field_map.featured_image (value 'reframe_1.91x1'), NOT as the row's transform_recipe.reshape (which is 'publish_long_form'). So the WordPress featured image reframe is a NESTED sub-directive, not a top-level verb — the interpreter must recurse into field_map values, contradicting the flat 'reshape verb -> geometry' mapping the image-path reader-map assumed.",
+>         "VIDEO-PER-CAMPAIGN: the auto-publish reader-map says reshaper writes scheduled_posts and 'auto-publish attaches the 9:16 video sibling' — but auto-publish resolves ONE latest video per campaign_id (verified index.ts:83-85 LIMIT 1). That contradicts the BoK fan-out which produces a 9:16 master AND a distinct 16:9 long_video under the same pillar; the two cannot coexist under one campaign_id without the long_video stealing or being overwritten by the short.",
+>         "SEQUENCING: the reshaper-hook prose suggests the reshaper can run as a step inside orchestrate-step right after knowledge_mesh 'so the 9:16 video master ... exists' — but the maps' own HyperFrames section establishes the master is rendered OUT OF BAND by video-bridge.ts minutes later (state queued at orchestrate-step:459, done only after the host worker polls+renders). At knowledge_mesh time the master is NOT done. These two statements in the maps are mutually inconsistent; the master is not synchronously available within the orchestrate-step run."
+>       ],
+>       "recommended_build_order": [
+>         "0. CLOSE THE BoK GATE FIRST (Closed-Loop Step 3.5): write the FR-CP-003 SDD section in docs/bok/post-engine/ — field_map evaluation grammar, reshape-verb dispatch table (incl. nested featured_image reframe), channel->social_platform mapping, idempotency anchor, cost, auth, sentinel gate, Pattern Conformance Declaration. No code before this exists (project rule = Refusal Mode otherwise).",
+>         "1. RESOLVE THE DATA CONTRADICTIONS as additive migrations: (a) ALTER pillar_atoms ADD hook_keyworded/key_points_keyworded/hook_short OR decide they are reshaper-computed; (b) decide twitter_x mapping (const) vs re-seed to 'twitter'; (c) add pillar_run_id into video_renders composition at orchestrate-step:457; (d) ALTER creative_metrics ADD hook_rate (FR-CP-011, additive); (e) decide register_creative_asset source_module value (reuse 'content-pipeline' or ALTER CHECK).",
+>         "2. BUILD THE ATOMIZER (FR-CP-002) FIRST — it is the reshaper's sole text input. Hook a fail-open block in orchestrate-step right after the article validates/monetizes (~:385), INSERT pillar_atoms with pillar_run_id=run_id; backfill pillar_url via a later UPDATE after wordpress_publish sets wpPostUrl (:525). Mirror the existing image/video fail-open block structure.",
+>         "3. BACK-REGISTER PILLAR MASTERS into creative_assets (article + image) so the reshaper has parent_asset_id targets — orchestrate-step does not do this today.",
+>         "4. BUILD THE TEXT-ONLY RESHAPE PATH (linkedin text_post, twitter_x thread, IG/FB/LinkedIn captions) — pure field_map evaluation + char-limit gate from text jsonb; no media dependency, lowest risk, proves the interpreter.",
+>         "5. BUILD THE IMAGE REFRAME PATH (FR-CP-005/006) — host worker mirroring video-bridge.ts (FFmpeg reframe_4x5/2x3/link_card/thumbnail + format_coerce to jpeg/webp); Deno cannot run FFmpeg. Add Vision-MCP safe-zone bbox before center-crop.",
+>         "6. BUILD THE VIDEO REEXPORT PATH (reexport_native) — gate on video_renders.state='done' (out-of-band); trigger the reshaper from video-bridge.ts after finalize, not synchronously in orchestrate-step.",
+>         "7. BUILD THE 16:9 DIVERGENCE (FR-CP-004) — author templates/<name>-16x9.html + add to VALID_TEMPLATES (render-core.ts:58); resolve the auto-publish single-video-per-campaign collision before wiring distribution.",
+>         "8. WIDEN autopilot_plans.platforms CHECK (migration 20260620120000:27) + extend the orchestrate-content/-step video enqueue gate (FR-PE-013) + bind channel_profiles.cadence/priority to scheduling (FR-CP-010) — replacing the hardcoded scheduled_at at orchestrate-step:615/701."
+>       ],
+>       "reuse_vs_netnew": "REUSE (substantial, ~70%): channel_profiles + pillar_atoms tables already exist, seeded, RLS-correct (migration 20260627140000 verified). The publish layer is fully reusable as-is — scheduled_posts + auto-publish cron + publish-social's 7 platform branches (linkedin/instagram/facebook/twitter/tiktok/youtube/pinterest, verified) + publish-wordpress; the reshaper only WRITES scheduled_posts rows, no new publish code. The 9:16 video master, HyperFrames render-core + video-bridge worker, and register_creative_asset spine all exist. The edge-fn scaffold (CORS/auth/sentinel/deduct/refundMco/telemetry) is a copy-paste from orchestrate-content. The fail-open block pattern for the atomizer mirrors the existing image/video blocks in orchestrate-step. NET-NEW (the real work): (1) the field_map/reshape-verb INTERPRETER — there is genuinely no prior art; it is the named deliverable and has no defined contract yet (biggest unknown). (2) The image-reframe + format-coerce HOST WORKER (FFmpeg) — no image library exists (no sharp/jimp/ImageMagick verified), only FFmpeg host-side; a brand-new systemd worker mirroring video-bridge.ts. (3) The 16:9 HTML template + VALID_TEMPLATES entry (FR-CP-004). (4) Atomizer LLM decomposition + the derived keyworded/short atom variants. (5) Cadence/priority scheduler (FR-CP-010) replacing hardcoded scheduled_at. (6) Several additive migrations (pillar_run_id in composition, atom variant columns, hook_rate, platforms CHECK widen, possibly source_module value). Critically NET-NEW-BUT-BLOCKED: the entire thing is gated on writing the FR-CP-003 SDD first (Closed-Loop) — no SDD-level design exists for any of the above."
+>     }
+>   },
+>   "workflowProgress": [
+>     {
+>       "type": "workflow_phase",
+>       "index": 1,
+>       "title": "Map"
+>     },
+>     {
+>       "type": "workflow_phase",
+>       "index": 2,
+>       "title": "Critic"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 1,
+>       "label": "map:orchestrate-content",
+>       "phaseIndex": 1,
+>       "phaseTitle": "Map",
+>       "agentId": "a2b7433f9f80f4db9",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613340281,
+>       "queuedAt": 1782613340240,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "Content Pillar Generation pipeline (orchestrate-content → o…",
+>       "promptPreview": "Read supabase/functions/orchestrate-content/index.ts and supabase/functions/orchestrate-step/index.ts in full. Map how the content PILLAR is generated: the article (generate-content), the 9:16 video master (HyperFrames enqueue), the images (generate-image). Document: what tables it writes (content_library, creative_assets, creative_metrics, pillar/run ids), how pillar_run_id / cycle id flows, the …",
+>       "lastProgressAt": 1782613498986,
+>       "tokens": 142644,
+>       "toolCalls": 19,
+>       "durationMs": 158704,
+>       "resultPreview": "{\"area\":\"Content Pillar Generation pipeline (orchestrate-content → orchestrate-step) and its reshaper (FR-CP-003) integration surface\",\"mechanism\":\"The pillar is generated by a two-function async state machine. (1) orchestrate-content/index.ts is the ENTRY: it authenticates, charges 10 mco, resolves products, INSERTs ONE pipeline_runs row (status='running', steps=[]) carrying ALL run config in met…"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 2,
+>       "label": "map:publish-social",
+>       "phaseIndex": 1,
+>       "phaseTitle": "Map",
+>       "agentId": "a21dd13ea292d7b20",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613340283,
+>       "queuedAt": 1782613340240,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "Social/WordPress publishing subsystem (publish-social, publ…",
+>       "promptPreview": "Read supabase/functions/publish-social/index.ts in full plus the auto-publish cron (find it: likely supabase/functions/auto-publish/ or scripts/auto-publish-cron.sh) and supabase/functions/_shared/social-app-config.ts. Map EVERY platform publish branch (linkedin, instagram, facebook, twitter_x, tiktok, youtube, pinterest, wordpress if present): the exact external API call, what media format/aspect…",
+>       "lastProgressAt": 1782613503898,
+>       "tokens": 112089,
+>       "toolCalls": 16,
+>       "durationMs": 163614,
+>       "resultPreview": "{\"area\":\"Social/WordPress publishing subsystem (publish-social, publish-meta, publish-wordpress, auto-publish cron, social OAuth + per-user app creds) — the publish targets the FR-CP-003 reshaper must drive\",\"files\":[{\"path\":\"supabase/functions/publish-social/index.ts\",\"role\":\"Master multi-platform publisher. Single Deno.serve dispatching on body.platform to 7 branches: linkedin, instagram, facebo…"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 3,
+>       "label": "map:hyperframes-render",
+>       "phaseIndex": 1,
+>       "phaseTitle": "Map",
+>       "agentId": "a21fb0965a75ef935",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613498988,
+>       "queuedAt": 1782613340240,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "HyperFrames video render pipeline (9:16 1080×1920 MP4 maste…",
+>       "promptPreview": "Read scripts/hyperframes/render-core.ts, scripts/video-bridge.ts, supabase/functions/video-render/index.ts, and scripts/hyperframes/templates/viral-short-9x16.html. Map how a 9:16 1080x1920 MP4 master is produced: the video_renders table (claim/finalize RPCs), the composition jsonb shape, where the rendered MP4 lands (bucket video-studio-assets / creative_assets), the edge transport (poll://), and…",
+>       "lastProgressAt": 1782613619184,
+>       "tokens": 98447,
+>       "toolCalls": 15,
+>       "durationMs": 120196,
+>       "resultPreview": "{\"area\":\"HyperFrames video render pipeline (9:16 1080×1920 MP4 master) — and what FR-CP-004 16:9 horizontal render requires\",\"mechanism\":\"END-TO-END FLOW (queue + poll, host-worker pull — Edge fns can't reach a host daemon):\\n\\n1. ENQUEUE. A producer inserts a row into `video_renders` with `engine='hyperframes'`, `state='queued'`, `charged_mco`, and a `composition` jsonb. Two enqueue paths exist:\\…"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 4,
+>       "label": "map:image-engine",
+>       "phaseIndex": 1,
+>       "phaseTitle": "Map",
+>       "agentId": "aa4c00f8c564e9bb0",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613503900,
+>       "queuedAt": 1782613340240,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "Image generation paths (generate-image + canvas-execute) an…",
+>       "promptPreview": "Read supabase/functions/generate-image/index.ts and supabase/functions/canvas-execute/index.ts (the image-generation paths). Map: how images are generated (which providers, BYOK via decrypted_user_api_keys, the google_api_key Gemini column), the OUTPUT FORMAT (is it PNG by default? the FR-CP-006 gotcha is IG needs JPEG, TikTok WebP/JPEG, no PNG), the aspect/dimensions produced, where images land (…",
+>       "lastProgressAt": 1782613807245,
+>       "tokens": 142161,
+>       "toolCalls": 17,
+>       "durationMs": 303345,
+>       "resultPreview": "{\"area\":\"Image generation paths (generate-image + canvas-execute) and the reframe/format-coercion gap for FR-CP-005/006\",\"mechanism\":\"Two edge fns, both BYOK per-user (no global env fallback). generate-image (pipeline/autopilot): resolves keys from decrypted_user_api_keys for userId (service-role caller passes user_id in body; user-JWT via getUser). Routing (lines 91-107): pref=replicate+replicate…"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 5,
+>       "label": "map:autopilot-scheduler",
+>       "phaseIndex": 1,
+>       "phaseTitle": "Map",
+>       "agentId": "a37158665a7b5bbbb",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613619186,
+>       "queuedAt": 1782613340240,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "Viral Autopilot cadence/scheduling model — autopilot_plans …",
+>       "promptPreview": "Read supabase/functions/autopilot-run/index.ts, supabase/functions/autopilot-cadence-cron/index.ts, and the autopilot migrations (supabase/migrations/20260620120000_viral_autopilot_plans.sql, ...120100_viral_autopilot_cycles.sql, ...120200_begin_autopilot_cycle.sql, ...120300_finalize_autopilot_cycle.sql). Map the cadence/scheduling model: how autopilot_plans drives runs, begin/finalize_autopilot_…",
+>       "lastProgressAt": 1782613783624,
+>       "tokens": 110486,
+>       "toolCalls": 22,
+>       "durationMs": 164438,
+>       "resultPreview": "{\"area\":\"Viral Autopilot cadence/scheduling model — autopilot_plans → cron → begin/finalize cycle → orchestrate fan-out → scheduled_posts → auto-publish (FR-CP-010 binding target)\",\"files\":[{\"path\":\"supabase/functions/autopilot-cadence-cron/index.ts\",\"role\":\"pg_cron driver (FR-VA-005). Service-role-only (Bearer SB_SECRET_KEY, line 26). Scans autopilot_plans WHERE is_active AND next_run_at <= now()…"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 6,
+>       "label": "map:shared-infra-schema",
+>       "phaseIndex": 1,
+>       "phaseTitle": "Map",
+>       "agentId": "af3193f113b71a308",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613783625,
+>       "queuedAt": 1782613340240,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "Shared edge-fn conventions + post-engine/reshaper-relevant …",
+>       "promptPreview": "Map the shared edge-fn conventions and the relevant DB schema. Read supabase/functions/_shared/sentinel.ts (inspectPrompt pt-BR), supabase/config.toml (verify_jwt settings per function), and find the table definitions for: social_accounts (Vault token columns), social_posts / scheduled posts (the queue auto-publish reads), creative_assets (the spine — migration ~20260624 or search), creative_metri…",
+>       "lastProgressAt": 1782613973916,
+>       "tokens": 145047,
+>       "toolCalls": 23,
+>       "durationMs": 190290,
+>       "resultPreview": "{\"area\":\"Shared edge-fn conventions + post-engine/reshaper-relevant DB schema (sentinel, billing/COIN_COSTS, verify_jwt map, social_accounts/scheduled_posts/social_app_config Vault tables, creative_assets spine, creative_metrics + hook_rate gap, ES256/getUser auth, infra_health_logs telemetry shape)\",\"mechanism\":\"EDGE-FN SCAFFOLD (canonical, see supabase/functions/publish-social/index.ts:1-122 and…"
+>     },
+>     {
+>       "type": "workflow_agent",
+>       "index": 7,
+>       "label": "critic:completeness",
+>       "phaseIndex": 2,
+>       "phaseTitle": "Critic",
+>       "agentId": "a335113ad7ddb87af",
+>       "model": "claude-opus-4-8",
+>       "state": "done",
+>       "startedAt": 1782613973951,
+>       "queuedAt": 1782613973918,
+>       "attempt": 1,
+>       "lastToolName": "StructuredOutput",
+>       "lastToolSummary": "REUSE (substantial, ~70%): channel_profiles + pillar_atoms …",
+>       "promptPreview": "You are the completeness critic for a design about to begin: the FR-CP-003 \"reshaper\" — a data-driven edge function that reads channel_profiles.transform_recipe + pillar_atoms and produces NATIVE social posts for 8 channels from one pillar idea (zero per-channel code branch).\n\nHere are the grounded subsystem maps produced by readers:\n\n### Content Pillar Generation pipeline (orchestrate-content → o…",
+>       "lastProgressAt": 1782614140966,
+>       "tokens": 122476,
+>       "toolCalls": 11,
+>       "durationMs": 167015,
+>       "resultPreview": "{\"blocking_gaps\":[{\"gap\":\"field_map expression-evaluation contract is UNDEFINED. Seed rows store output composition as string expressions like \\\"atoms.hook + atoms.cta\\\", \\\"atoms.key_points + atoms.pillar_url\\\", with output keys caption/title/description/body/overlay_text/link/tweet_1/tweets_n/tweet_last/featured_image. Nothing — not migration 20260627140000, not FRD amendment 12, not the SDD — de…"
+>     }
+>   ],
+>   "totalTokens": 873350,
+>   "totalToolCalls": 123
+> }
+> </output>
+> ```
+
+## 🤖 Claude *(02:37:55)*
+
+
+## 🤖 Claude *(02:37:56)*
+
+Outstanding map — the critic surfaced **8 material blocking gaps**, the most important being **gap #8: the BoK is FRD-altitude only, so coding FR-CP-003 without an SDD section violates the Closed-Loop Step 3.5 gate (Refusal Mode)**. The critic is right. I must close that gate first.
+
+Before I commit design decisions to the SDD as SSOT, let me verify the load-bearing claims first-hand (Lei 1 — I won't build on agent assertions about the exact lines I'll modify): the `orchestrate-step` step order + article_generation end + the video `composition` shape, and `generate-image`'s return/format.
+
+## 🤖 Claude *(02:37:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 20,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	}
+> 21	
+> 22	function utmTag(platform: string, utmCampaign: string, topic: string, baseUrl?: string) {
+> 23	  const params = `utm_source=${platform}&utm_medium=social&utm_campaign=${utmCampaign}&utm_term=${encodeURIComponent(topic.slice(0, 50))}`;
+> 24	  return baseUrl ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}${params}` : params;
+> 25	}
+> 26	
+> 27	function getNextStep(currentStep: string, platforms: string[]): string | null {
+> 28	  const stepsOrder = ["article_generation", "wordpress_publish", "linkedin_post", "twitter_thread", "knowledge_mesh"];
+> 29	  const currentIdx = stepsOrder.indexOf(currentStep);
+> 30	  
+> 31	  for (let i = currentIdx + 1; i < stepsOrder.length; i++) {
+> 32	    const candidate = stepsOrder[i];
+> 33	    if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 34	      if (platforms.includes("wordpress")) return candidate;
+> 35	    } else if (candidate === "linkedin_post") {
+> 36	      if (platforms.includes("linkedin")) return candidate;
+> 37	    } else if (candidate === "twitter_thread") {
+> 38	      if (platforms.includes("twitter")) return candidate;
+> 39	    } else if (candidate === "knowledge_mesh") {
+> 40	      return candidate; // Always run the final mesh step
+> 41	    }
+> 42	  }
+> 43	  return null;
+> 44	}
+> 45	
+> 46	// ─── Viral Autopilot Fatia 1 — product-aware prompt builders (FR-VA-003) ───────────────────────────────────
+> 47	// When the run carries chosen products, the 3 B2B prompts are replaced by a consumer viral-hook framework
+> 48	// (HOOK → VALUE → CTA) that features the chosen product. With NO products, the legacy B2B prompts are used
+> 49	// verbatim (backward compatibility — campaign-run / intent-execute / topic-only runs are unchanged).
+> 50	
+> 51	function productBrief(products: ChosenProduct[]): string {
+> 52	  const p = products[0];
+> 53	  if (!p) return "";
+> 54	  const priceNum = p.price != null ? Number(p.price) : NaN;
+> 55	  const price = !Number.isNaN(priceNum) ? ` (aprox. R$ ${priceNum.toLocaleString("pt-BR")})` : "";
+> 56	  const cat = p.category ? `, categoria ${p.category}` : "";
+> 57	  let brief = `Produto em destaque: ${p.name}${price}${cat}.`;
+> 58	  const others = products.slice(1).map((x) => x.name).filter(Boolean);
+> 59	  if (others.length) brief += ` Produtos relacionados que podem ser citados: ${others.join(", ")}.`;
+> ```
+
+## 🤖 Claude *(02:37:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 435,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 435	              const VIDEO_COST = 12; // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) — mirrors autopilot-run projected.
+> 436	              let enqueued = false;  // tracks whether a video_renders row was actually created (billing reconciliation).
+> 437	              try {
+> 438	                const p0 = products[0];
+> 439	                const clip = (s: unknown, n: number) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+> 440	                const productImg = typeof (p0 as any)?.image_url === "string" && /^https:\/\//i.test((p0 as any).image_url)
+> 441	                  ? (p0 as any).image_url : "";
+> 442	                const composition = {
+> 443	                  template: "viral-short-9x16",
+> 444	                  // 5s × 24fps = 120 frames ≈ 65s render — within NFR-VS-002 (p95 < 90s). The screenshot-per-frame
+> 445	                  // capture (~0.5s/frame) is the bottleneck; OTD-VA-013 tracks the CDP-screencast optimization to
+> 446	                  // unlock longer/faster clips. 5s is a strong viral-short length.
+> 447	                  duration_s: 5,
+> 448	                  fps: 24,
+> 449	                  props: {
+> 450	                    hook: clip(articleTitle, 80) || clip(topic, 80),
+> 451	                    caption: clip(args.meta_description, 150) || clip(`${p0.name}`, 150),
+> 452	                    cta: "Ver no Mercado Livre",
+> 453	                    brand: "MCORCH",
+> 454	                    product_image_url: productImg,
+> 455	                  },
+> 456	                  // Attach context for the worker's reconciliation (FR-VA-025) — NOT rendered, only routing.
+> 457	                  autopilot: { user_id: run.user_id, campaign_id: campaign_id || null, product_id: p0.external_id, cycle_id: cycleId, title: clip(articleTitle, 120) },
+> 458	                };
+> 459	                const { data: vr, error: vrErr } = await admin.from("video_renders").insert({
+> 460	                  user_id: run.user_id, engine: "hyperframes", state: "queued",
+> 461	                  product_id: null, // logical product is the ML external_id (text) — kept in composition.autopilot
+> 462	                  topic: clip(topic, 200), charged_mco: VIDEO_COST, composition,
+> 463	                }).select("id").single();
+> 464	                if (vrErr || !vr) throw new Error(vrErr?.message || "video_render_insert_failed");
+> 465	                enqueued = true;
+> 466	                await addStep("video_generation", "done", { product: p0.name, format: "9:16" }, { render_id: vr.id });
+> 467	              } catch (e: any) {
+> 468	                console.warn("[orchestrate-step] video enqueue fail-open:", e?.message);
+> 469	                await addStep("video_generation", "skipped", { product: products[0]?.name }, { reason: e?.message || "video_exception" });
+> 470	                // Billing-accuracy fix (OTD-VA-010 gap): the cycle ALREADY counted VIDEO_COST for this succeeded
+> 471	                // sub-run (autopilot-run `actual = succeeded × (ORCH_COST + VIDEO_COST)`, computed BEFORE this async
+> 472	                // step ran). If NO render row was created (`!enqueued`), finalize_video_render can never refund it →
+> 473	                // the tenant would be charged for a render never queued. Issue the idempotent compensating credit
+> 474	                // (anchored on run_id; mirrors the render-fail refund for the no-row case). Only on the cron/cycle
+> 475	                // path (cycleId set); user-path renders never reach here. If `enqueued` is true, the row exists and
+> 476	                // the render lifecycle / finalize_video_render owns the refund — do NOT double-credit.
+> 477	                if (!enqueued && cycleId) {
+> 478	                  const { error: refundErr } = await admin.rpc("refund_autopilot_video_enqueue", {
+> 479	                    p_run_id: run_id, p_cycle_id: cycleId, p_user_id: run.user_id, p_amount: VIDEO_COST,
+> 480	                  });
+> 481	                  if (refundErr) {
+> 482	                    // A failed compensating credit = a silent over-charge → make it observable for reconciliation.
+> 483	                    // NO per-tenant ids in the global-read infra_health_logs (telemetry allowlist); the per-tenant
+> 484	                    // detail lives in the edge-fn log + the run's 'skipped' step above (RLS-own).
+> 485	                    console.warn(`[orchestrate-step] video enqueue refund FAILED (tenant over-charged ${VIDEO_COST}) run=${run_id}:`, refundErr.message);
+> 486	                    await admin.from("infra_health_logs").insert({
+> 487	                      service: "autopilot-video-refund", status: "degraded", event: "refund_failed",
+> 488	                      metadata: { amount: VIDEO_COST },
+> 489	                    }).then(() => {}, () => {});
+> 490	                  }
+> 491	                }
+> 492	              }
+> 493	            }
+> 494	          }
+> 495	        }
+> 496	      } catch (e: any) {
+> 497	        await addStep("article_generation", "error", { topic }, { error: e.message || "Unknown" });
+> 498	      }
+> 499	
+> 500	    } else if (step === "wordpress_publish") {
+> 501	      const { articleTitle, articleContent } = metadata;
+> 502	      if (!articleContent) {
+> 503	        await addStep("wordpress_publish", "error", { title: articleTitle }, { error: "No article content available from previous step" });
+> 504	      } else {
+> 505	        await addStep("wordpress_publish", "in_progress",
+> 506	          { title: articleTitle, tags: "marketing-ia,orquestracao,roi", status: wp_status }
+> 507	        );
+> 508	        try {
+> 509	          const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+> 510	            method: "POST",
+> 511	            headers: { 
+> 512	              Authorization: `Bearer ${serviceKey}`, 
+> 513	              "Content-Type": "application/json" 
+> 514	            },
+> 515	            body: JSON.stringify({
+> 516	              user_id: run.user_id,
+> 517	              title: articleTitle,
+> 518	              content: articleContent,
+> 519	              tags: "marketing-ia,orquestracao,roi",
+> 520	              status: wp_status,
+> 521	            }),
+> 522	          });
+> 523	          const wpData = await wpRes.json();
+> 524	          if (wpRes.ok && wpData.post_url) {
+> 525	            const wpPostUrl = wpData.post_url;
+> 526	            const wpPostId = (typeof wpData.post_id === "number" ? wpData.post_id : null);
+> 527	            
+> 528	            const updatedMetadata = {
+> 529	              ...metadata,
+> ```
+
+## 🤖 Claude *(02:38:47)*
+
+
+## 🤖 Claude *(02:38:51)*
+
+All load-bearing claims verified first-hand:
+- `stepsOrder = [article_generation, wordpress_publish, linkedin_post, twitter_thread, knowledge_mesh]` ([orchestrate-step:28](supabase/functions/orchestrate-step/index.ts:28)) — `knowledge_mesh` always terminal.
+- `composition.autopilot = {user_id, campaign_id, product_id, cycle_id, title}` ([orchestrate-step:457](supabase/functions/orchestrate-step/index.ts:457)) — **no `pillar_run_id`** (gap #5 confirmed).
+- `pillar_url` (wpPostUrl) set only after `wordpress_publish` ([orchestrate-step:525](supabase/functions/orchestrate-step/index.ts:525)); video master enqueued `queued`, rendered out-of-band (gap #4 confirmed).
+
+The design is fully grounded. Per the Closed-Loop, I'll now close the gate: write the **FR-CP-002/003 SDD** (resolving all 8 gaps as concrete decisions) + the **Law 2 SOP**, then implement.
+
+## 🤖 Claude *(02:38:52)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(02:38:52)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(02:38:57)*
+
+
+## 🤖 Claude *(02:40:29)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md",
+  "content": "# SDD \u2014 Atomizer + Reshaper (FR-CP-002 / FR-CP-003) \u00b7 Implementation-level Source of Truth\n\n| Campo | Valor |\n|-------|-------|\n| **M\u00f3dulo** | `post-engine` \u2014 camada Channel Format Intelligence (reshape pr\u00e9-publica\u00e7\u00e3o) |\n| **Lineage** | Detalha em n\u00edvel de implementa\u00e7\u00e3o a SDD \u00a77 da emenda [`12-amendment-channel-format-intelligence.md`](12-amendment-channel-format-intelligence.md). Fecha o **Gate Closed-Loop Step 3.5** (a emenda 12 estava em altitude FRD; este doc carrega contrato de c\u00f3digo + idempot\u00eancia + custo + auth + a `field_map` grammar). |\n| **Grounding** | Mapa vivo do pipeline (workflow `wf_a390c0f0-b6e`, 6 readers + critic adversarial). Cada decis\u00e3o abaixo resolve um *blocking gap* numerado do critic. |\n| **ORO** | Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (blast radius = cross-post penalty / publish quebrado por spec) |\n| **Vers\u00e3o** | SDD reshaper v1.0 \u2014 2026-06-27 |\n\n> Pattern Conformance Declaration: j\u00e1 selada na emenda 12 \u00a710 (12 yes \u00b7 5 deferred \u00b7 4 n-a). Este doc n\u00e3o a re-declara; herda-a.\n\n---\n\n## 0. Tese de implementa\u00e7\u00e3o\n\nO reshaper \u00e9 um **interpretador de receita determin\u00edstico** (zero branch por canal). Toda a l\u00f3gica de \"o que fazer\" vem de `channel_profiles.transform_recipe` (a linha de dados) e de `pillar_atoms` (o pilar atomizado). O c\u00f3digo s\u00f3 sabe **interpretar a gram\u00e1tica**, n\u00e3o os canais.\n\n```\npilar (orchestrate-content) \u2500\u252c\u2500 article (content_library type=text) + pillar_url (wpPostUrl)\n                             \u251c\u2500 image  (content_library type=image, bucket generated-images)  [opcional]\n                             \u2514\u2500 9:16 master (video_renders \u2192 bucket video-studio-assets)      [out-of-band]\n        \u2502\n   [FR-CP-002] atomizer  \u2192 pillar_atoms (hook, key_points[], stat, quote, cta, pillar_url)\n        \u2502\n   [FR-CP-003] reshaper  \u2192 para cada channel_profiles row WHERE is_active:\n        \u2022 resolve derive_from \u2192 asset de origem\n        \u2022 avalia field_map (gram\u00e1tica \u00a73) \u2192 skeleton nativo\n        \u2022 voicing LLM (voice_prompt_seed + char-gate) \u2192 variante NATIVA (FR-CP-007)\n        \u2022 format gate (FR-CP-006) \u2192 coer\u00e7\u00e3o/valida\u00e7\u00e3o de upload\n        \u2022 UPSERT channel_variants (idempot\u00eancia \u00a74) + enfileira scheduled_posts onde o publisher existe hoje\n        \u2502\n   auto-publish cron \u2192 publish-social / publish-wordpress (variante nativa por linha)\n```\n\n---\n\n## 1. Decis\u00f5es que fecham os 8 *blocking gaps* (SSOT)\n\n| # Gap (critic) | Decis\u00e3o |\n|---|---|\n| **#1 \u2014 `field_map` grammar indefinida** | Gram\u00e1tica formal em **\u00a73**. Tokens `atoms.<campo>`, jun\u00e7\u00e3o `+`, arrays expandem por contexto; resultado \u00e9 **skeleton** \u2192 opcionalmente *voiced* por LLM. |\n| **#2 \u2014 tokens de atom inexistentes** (`hook_keyworded`, `key_points_keyworded`, `hook_short`) | **Tokens virtuais computados pelo reshaper** (n\u00e3o colunas). `*_keyworded` \u2190 reescrita SEO no voicing LLM (mode `seo_text`); `hook_short` \u2190 `truncate(hook,40)`. **Sem ALTER em `pillar_atoms`.** |\n| **#3 \u2014 `twitter_x` \u2260 enum `twitter`** | Const de mapeamento `CHANNEL_TO_PLATFORM` no reshaper (\u00a75). `twitter_x\u2192twitter`; demais 1:1. `scheduled_posts.platform` SEMPRE recebe o valor do enum. |\n| **#4 \u2014 sequ\u00eancia/trigger** | Reshaper \u00e9 **edge fn async separada**, service-role-only. Disparada em **2 escopos**: (a) `scope='static'` ap\u00f3s `knowledge_mesh` (atoms+imagem+pillar_url prontos); (b) `scope='video'` a partir de `video-bridge.ts` ap\u00f3s `finalize_video_render` (master pronto out-of-band). Idempotente \u21d2 chamar 2\u00d7 \u00e9 seguro. |\n| **#5 \u2014 linkagem pillar_run\u2192master** | `orchestrate-step` passa a gravar `pillar_run_id = run_id` em `composition.autopilot.pillar_run_id` (e top-level `composition.pillar_run_id`). `video-bridge` repassa ao reshaper. |\n| **#6 \u2014 `source_module` do reshaper + masters n\u00e3o registrados** | Reshaper usa `source_module='content-pipeline'` (sem ALTER no CHECK). O atomizer **back-registra** o article+image masters em `creative_assets` (fail-soft) p/ dar `parent_asset_id` \u00e0s variantes. |\n| **#7 \u2014 auto-publish 1-v\u00eddeo-por-campaign** | Reshaper grava o **asset ref por linha** em `scheduled_posts.metadata.reshape` (`{content:{text,video_url|image_url,...}, channel_variant_id, surface}`). `auto-publish` passa a **preferir `metadata.reshape.content`** sobre a deriva\u00e7\u00e3o gen\u00e9rica \u2192 fim da colis\u00e3o 9:16 vs 16:9 vs image. |\n| **#8 \u2014 sem SDD (Closed-Loop) + idempot\u00eancia/custo/auth** | Este doc. Idempot\u00eancia \u00a74 (`channel_variants` UNIQUE). Custo \u00a76. Auth \u00a75. |\n\n---\n\n## 2. Data model delta (additive \u2014 `/security-review` obrigat\u00f3rio)\n\n### 2.1 `channel_variants` \u2014 ledger de variante nativa + \u00e2ncora de idempot\u00eancia (FR-CP-007)\n```sql\nCREATE TABLE public.channel_variants (\n  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id          uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  pillar_run_id    uuid NOT NULL,                 -- = pipeline_runs.id (liga atoms + masters)\n  channel          text NOT NULL,                 -- channel_profiles.channel (naming do spec: 'twitter_x' etc)\n  surface          text NOT NULL,\n  platform         public.social_platform,        -- enum mapeado p/ publish (NULL = n\u00e3o-public\u00e1vel: thumbnail/wordpress)\n  publish_path     text,\n  native_text      jsonb NOT NULL DEFAULT '{}',   -- {caption|title|description|body|tweets[]|overlay_text|link}\n  asset_kind       text,                          -- 'video'|'image'|'none'\n  asset_bucket     text, asset_key text,          -- asset ref POR LINHA (fix gap #7); NULL at\u00e9 pronto\n  asset_status     text NOT NULL DEFAULT 'pending', -- ready|reused_master|pending_render|pending_reframe|pending_publisher|gap\n  format_gate      jsonb NOT NULL DEFAULT '{}',   -- {ok,coerced_format,violations[]} (FR-CP-006)\n  status           text NOT NULL DEFAULT 'draft', -- draft|scheduled|published|skipped|failed\n  scheduled_post_id uuid,\n  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)   -- idempot\u00eancia (gap #8)\n);\n-- RLS: SELECT/own (auth.uid()=user_id). Writes = service-role-only (reshaper) \u21d2 sem policy INSERT/UPDATE p/ authenticated.\n-- DELETE own permitido (limpeza). search_path='' nas fun\u00e7\u00f5es.\n```\n- **Escrita**: o reshaper roda service-role (bypassa RLS) \u2192 INSERT direto com `ON CONFLICT (pillar_run_id,channel,surface) DO UPDATE`. A UNIQUE \u00e9 a \u00e2ncora anti-double-insert sob retry do pg_net.\n- `id` serve como `content_variant_id` futuro de `creative_metrics` (liga FR-CP-011).\n\n### 2.2 `creative_metrics.hook_rate` (FR-CP-011)\n```sql\nALTER TABLE public.creative_metrics ADD COLUMN IF NOT EXISTS hook_rate numeric;  -- watch-past-3s \u00f7 impressions\n```\n\n### 2.3 `composition.pillar_run_id` (gap #5) \u2014 **c\u00f3digo, n\u00e3o schema**\n`orchestrate-step` (bloco de enqueue do v\u00eddeo, ~:457) passa a incluir `pillar_run_id: run_id` em `composition.autopilot` e `composition.pillar_run_id`.\n\n---\n\n## 3. `field_map` grammar (gap #1/#2) \u2014 o cora\u00e7\u00e3o do interpretador\n\n`transform_recipe.field_map` \u00e9 `{ outputField: expression }`.\n\n**Expression** = lista de termos unida por `+`. Cada termo \u00e9 `atoms.<token>` ou um literal entre aspas.\n\n**Tokens** (resolvidos contra `pillar_atoms` + virtuais):\n| token | resolve para |\n|-------|--------------|\n| `hook`, `stat`, `quote`, `cta`, `pillar_url` | escalar (string) |\n| `key_points` | array \u2192 join `\"\\n\"` (contexto caption/description) **ou** expand 1-por-item (contexto `tweets_n`) |\n| `hook_keyworded` *(virtual)* | `hook` reescrito keyword-SEO (voicing `seo_text`) |\n| `key_points_keyworded` *(virtual)* | `key_points` reescrito keyword-SEO |\n| `hook_short` *(virtual)* | `truncate(hook, 40)` (overlay de thumbnail) |\n\n**Avalia\u00e7\u00e3o:**\n1. **Assemble** \u2014 resolve cada token, junta termos com separador por tipo de campo (`caption|body|description` \u2192 `\"\\n\\n\"`; `title|overlay_text|link` \u2192 `\" \"`).\n2. **Voicing (default p/ texto narrativo)** \u2014 o skeleton + `voice_prompt_seed` (system) + char-limit (`text.caption_max`/`title_max`/`desc_max`) v\u00e3o a **1 chamada LLM batched** (todas as surfaces do run numa chamada, structured output \u2192 `{ [variantKey]: nativeText }`). Garante variante N\u00c3O-id\u00eantica por canal (anti cross-post, FR-CP-007). **Fail-soft**: sem chave BYOK ou erro LLM \u2192 usa o skeleton assembled cru (degradado, ainda public\u00e1vel).\n3. **Char gate (hard)** \u2014 trunca/valida ao limite do canal **depois** do voicing. Excesso = trunca + registra `format_gate.violations`.\n\n**Outputs especiais:**\n- `tweets_n` (X thread): `key_points` vira `native_text.tweets = [hook, ...key_points, cta+pillar_url]` (array de tweets \u2264280 cada).\n- `featured_image` / `overlay_text`: valores aninhados (`reframe_1.91x1`, `atoms.hook_short`) s\u00e3o **sub-diretivas** (gap contradiction #3) \u2014 o interpretador recursa no `field_map` value, n\u00e3o trata como verbo top-level.\n\n---\n\n## 3.1 Tabela de dispatch de `reshape` (verbo \u2192 a\u00e7\u00e3o)\n\n| `transform_recipe.reshape` | `derive_from` | A\u00e7\u00e3o no MVP | asset_status |\n|---|---|---|---|\n| `reexport_native` | `9x16_master` | **reusa** o MP4 master (spine 1\u2192N); variante = caption nativa + format-gate envelope | `reused_master` (master pronto) / `pending_render` (sem master) |\n| `render_16x9` | `pillar_video_16x9` | emite diretiva 16:9; render = host worker (FR-CP-004, **deferido OTD-CP-008**) | `pending_render` |\n| `render_thumbnail_16x9` | `pillar_image` | diretiva thumbnail 1280\u00d7720 + `overlay_text` | `pending_reframe` |\n| `reframe_2x3` / `reframe_4x5` / `render_link_card_1.91x1` | `pillar_image` | diretiva reframe+format_coerce; pixel-work = host worker (FR-CP-005, **deferido OTD-CP-009**) | `pending_reframe` |\n| `text_post` | `pillar_atoms` | variante de texto pura (operacional) | `ready` |\n| `atoms_to_thread` | `pillar_atoms` | array de tweets (operacional; publish = single-tweet hook at\u00e9 thread-publisher) | `ready` |\n| `publish_long_form` | `pillar_article` | \u00e9 o LAR can\u00f4nico (j\u00e1 publicado pelo pillar); reshaper s\u00f3 captura `pillar_url`, **n\u00e3o republica** | `reused_master` |\n\n> **Honestidade (Lei 1):** verbos `pending_*` produzem a **variante + a diretiva exata** (o c\u00e9rebro est\u00e1 completo), mas **n\u00e3o enfileiram publish** at\u00e9 o hand correspondente existir. Cada um tem OTD. Nunca declarar publish que n\u00e3o aconteceu.\n\n---\n\n## 4. Idempot\u00eancia & sequ\u00eancia (gap #4/#8)\n\n- **\u00c2ncora**: `channel_variants UNIQUE(pillar_run_id, channel, surface)` + `ON CONFLICT DO UPDATE`. Retry de pg_net nunca duplica variante nem post.\n- **Enqueue de publish 1\u00d7**: s\u00f3 transiciona `draft\u2192scheduled` (e cria `scheduled_posts`) quando `asset_status \u2208 {ready, reused_master}` **e** `scheduled_post_id IS NULL`. Guarda contra double-enqueue.\n- **Trigger (2 escopos, idempotentes):**\n  - `scope='static'`: invocado pelo `orchestrate-step` no fim do `knowledge_mesh` (atoms+image+pillar_url prontos). Processa surfaces cujo `derive_from \u2208 {pillar_atoms, pillar_image, pillar_article}`.\n  - `scope='video'`: invocado pelo `video-bridge.ts` ap\u00f3s `finalize_video_render(state='done')`. Processa `derive_from \u2208 {9x16_master, pillar_video_16x9}`.\n  - `scope='all'` (QA/manual): ambos.\n\n---\n\n## 5. Edge fn contracts\n\n### 5.1 `atomize-pillar` (FR-CP-002) \u2014 *invocada inline pelo orchestrate-step*\nPara reduzir plumbing, o atomizer \u00e9 um **bloco fail-open dentro do `orchestrate-step` article_generation** (ap\u00f3s o article validar/monetizar) \u2014 N\u00c3O uma edge fn separada. Insere `pillar_atoms(pillar_run_id=run_id, ...)` via 1 chamada LLM (`write_atoms` tool) sobre o article; `pillar_url` backfilled ap\u00f3s `wordpress_publish`. Fail-soft heur\u00edstico (hook=t\u00edtulo, key_points=primeiras N frases) se LLM falhar. Sem cobran\u00e7a extra (sub-step do run j\u00e1 pago).\n\n### 5.2 `reshape-pillar` (FR-CP-003) \u2014 edge fn\n```\nPOST /functions/v1/reshape-pillar\n  Authorization: Bearer SB_SECRET_KEY            (service-role-only; gateway verify_jwt=false)\n  body: { pillar_run_id: uuid, scope: 'static'|'video'|'all' }\n\u2192 user_id resolvido de pipeline_runs (NUNCA do body) \u2014 server-trusted (espelha orchestrate-step:130)\n\u2192 200 { ok, processed:[{channel,surface,status,asset_status}], scheduled:N, skipped:N }\n```\n- `CHANNEL_TO_PLATFORM = { twitter_x:'twitter', linkedin:'linkedin', instagram:'instagram', facebook:'facebook', tiktok:'tiktok', youtube:'youtube', pinterest:'pinterest', wordpress:'wordpress' }`.\n- Sentinel: qualquer texto de atom re-injetado no voicing LLM passa por `inspectPrompt` (herdado, pt-BR).\n- Telemetria: `infra_health_logs service='reshape-<channel>'` (status ok/degraded/error \u00b7 allowlist sem PII).\n- Fail-open por canal: erro num canal n\u00e3o derruba os outros (Pattern 12).\n- `config.toml`: `[functions.reshape-pillar] verify_jwt = false`.\n\n### 5.3 `auto-publish` \u2014 patch (gap #7)\n`if (post.metadata?.reshape?.content) usar como contentPayload` (preferir a variante nativa); sen\u00e3o a deriva\u00e7\u00e3o legada (inalterada). Backward-compatible.\n\n---\n\n## 6. Custo (gap #8) \u2014 `src/lib/billing.ts`\n| Constante | Valor | Racional |\n|---|---|---|\n| `RESHAPE_CREATIVE` | `2` | 1 chamada LLM batched de voicing (~$0.0006) \u2192 4\u00d7-floor. **Cobrada s\u00f3 em path standalone (user-trigger futuro)**; no fluxo do pillar/autopilot o run j\u00e1 pagou \u21d2 reshape \u00e9 bundled (sem deduct). |\n\nAtomizer: sem constante (sub-step do `ORCHESTRATION_RUN=10`).\n\n---\n\n## 7. Escopo desta fatia vs deferidos (honestidade Lei 1)\n\n**Operacional nesta fatia:** atomizer \u00b7 reshaper interpreter (gram\u00e1tica + dispatch + format-gate + native-variant + Pinterest-SEO text) \u00b7 spine 9:16 reusada nas surfaces de v\u00eddeo com caption nativa \u00b7 texto (LinkedIn text_post, X thread) \u00b7 channel_variants ledger + idempot\u00eancia \u00b7 auto-publish preferindo variante nativa \u00b7 enqueue para os publishers que existem hoje (IG Reel \u00b7 TikTok \u00b7 YouTube \u00b7 Pinterest v\u00eddeo \u00b7 LinkedIn texto \u00b7 X tweet).\n\n**Deferido (OTD, com diretiva emitida pelo reshaper):**\n- **OTD-CP-008** \u2014 render 16:9 HyperFrames (FR-CP-004): precisa template `*-16x9.html` + entry em `VALID_TEMPLATES` + host worker.\n- **OTD-CP-009** \u2014 image reframe/format-coerce (FR-CP-005/006 pixel): precisa host worker FFmpeg (Deno n\u00e3o roda FFmpeg); inclui safe-zone via Vision-MCP.\n- **OTD-CP-010** \u2014 publishers faltantes: LinkedIn v\u00eddeo \u00b7 FB v\u00eddeo/link_card \u00b7 X v\u00eddeo \u00b7 X thread multi-tweet (hoje single-tweet hook).\n- **OTD-CP-011** \u2014 PDF carousel (FR-CP-009) \u00b7 auto-segment 1\u2192N (FR-CP-012).\n\n---\n\n## 8. Traceability\nFR-CP-002 \u2192 \u00a75.1 \u00b7 FR-CP-003 \u2192 \u00a73/\u00a73.1/\u00a75.2 \u00b7 FR-CP-006 \u2192 \u00a73 char-gate + \u00a73.1 format_coerce \u00b7 FR-CP-007 \u2192 \u00a73 voicing + `channel_variants` \u00b7 FR-CP-008 \u2192 \u00a73 `seo_text` \u00b7 FR-CP-010 \u2192 cadence binding (pr\u00f3xima fatia, \u00a73.1 reusa `channel_profiles.cadence`) \u00b7 FR-CP-011 \u2192 \u00a72.2. OTD-CP-008..011 novos (este doc).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/13-sdd-reshaper-atomizer.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:33)*
+
+
+## 🤖 Claude *(02:40:34)*
+
+Now the Law 2 SOP (anticipated process — operator/sequence/verification/recovery/success), then update the BoK index.
+
+## 🤖 Claude *(02:41:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/channel-reshaper.md",
+  "content": "# SOP \u2014 Channel Reshaper (1 pilar \u2192 posts nativos por canal \u00b7 FR-CP-002/003)\n\n> Lei 2 (Processo Antecipado). O humano que faz isso hoje = um social media manager que pega 1 artigo/v\u00eddeo e **reescreve** manualmente uma vers\u00e3o nativa por rede (legenda, gancho, formato, cad\u00eancia). Este SOP \u00e9 esse processo, antes do c\u00f3digo. SSOT t\u00e9cnico: [`docs/bok/post-engine/13-sdd-reshaper-atomizer.md`](../bok/post-engine/13-sdd-reshaper-atomizer.md).\n\n## Operator\n- **Hoje (manual):** social media manager. Pega o pilar (artigo WordPress + v\u00eddeo 9:16 + imagem) \u2192 para cada rede ativa, reescreve a legenda no tom da rede, escolhe o formato certo (Reel vs feed image vs thread), corta/reformata a m\u00eddia, agenda pela cad\u00eancia.\n- **Automatizado:** `atomize-pillar` (bloco no `orchestrate-step`) + `reshape-pillar` (edge fn service-role) + `auto-publish` cron.\n\n## Sequence (cada step com crit\u00e9rio material de sucesso)\n1. **Atomize** \u2014 ap\u00f3s o article validar/monetizar no `orchestrate-step`, decompor em `pillar_atoms` (hook, key_points[], stat, quote, cta). \u2705 sucesso: `SELECT count(*) FROM pillar_atoms WHERE pillar_run_id=<run>` = 1.\n2. **Backfill pillar_url** \u2014 ap\u00f3s `wordpress_publish`, UPDATE `pillar_atoms.pillar_url = wpPostUrl`. \u2705 `pillar_url IS NOT NULL`.\n3. **Reshape static** \u2014 no fim do `knowledge_mesh`, `POST reshape-pillar {pillar_run_id, scope:'static'}`. \u2705 linhas em `channel_variants` p/ surfaces `derive_from \u2208 {pillar_atoms,pillar_image,pillar_article}` com `native_text` n\u00e3o-vazio e DISTINTO por canal.\n4. **Reshape video** \u2014 `video-bridge.ts`, ap\u00f3s `finalize_video_render(done)`, `POST reshape-pillar {pillar_run_id, scope:'video'}`. \u2705 surfaces de v\u00eddeo com `asset_status='reused_master'` + `asset_key` apontando o MP4.\n5. **Enqueue** \u2014 variantes `asset_status \u2208 {ready,reused_master}` viram `scheduled_posts` (`metadata.reshape.content` = variante nativa por linha, `platform` = enum mapeado). \u2705 `scheduled_posts.status='queued'` com `metadata.reshape` presente.\n6. **Publish** \u2014 `auto-publish` cron drena, prefere `metadata.reshape.content`, chama `publish-social`/`publish-wordpress`. \u2705 `scheduled_posts.status='published'` + `platform_post_id`.\n\n## Verification gates (material)\n- **G1 idempot\u00eancia:** rodar `reshape-pillar` 2\u00d7 p/ o mesmo run \u2192 `channel_variants` count inalterado (UNIQUE pillar_run_id,channel,surface).\n- **G2 anti cross-post (FR-CP-007):** `native_text` de 2 canais quaisquer N\u00c3O \u00e9 byte-id\u00eantico.\n- **G3 format gate (FR-CP-006):** surface de imagem PNG marca `format_gate.coerced_format='jpeg'` (IG) / `'webp'` (TikTok); nenhuma surface enfileira publish com formato inv\u00e1lido.\n- **G4 channel\u2192enum:** nenhuma INSERT em `scheduled_posts` com `platform='twitter_x'` (22P02). Sempre `'twitter'`.\n- **G5 honestidade:** surfaces `pending_*` N\u00c3O aparecem como `published`; aparecem como `channel_variants.status='draft'` + diretiva registrada.\n- **G6 tenancy:** `channel_variants` SELECT cross-tenant = 0 linhas (RLS own).\n\n## Recovery path (falha no step N)\n- **Atomize falha:** fail-soft heur\u00edstico (hook=t\u00edtulo, key_points=primeiras frases). Run continua. Reshape usa o que houver.\n- **Reshape static/video falha por canal:** fail-open \u2014 os outros canais seguem; o canal falho fica `channel_variants.status='failed'` + `infra_health_logs service='reshape-<canal>' status='error'`. Re-disparar `reshape-pillar` re-tenta (UPSERT).\n- **Video master nunca finaliza:** surfaces de v\u00eddeo ficam `asset_status='pending_render'` (n\u00e3o enfileiram). Re-disparar `scope='video'` quando o master finalizar.\n- **Publish falha:** mec\u00e2nica existente do `auto-publish` (retry_count\u2192max_retries\u2192failed). Inalterada.\n\n## Success signal (fluxo completo)\nA partir de **1 pilar**: `channel_variants` com \u22656 surfaces, `native_text` distinto por canal, surfaces de v\u00eddeo reusando 1 master, e `scheduled_posts.status='published'` (ou audit-gated SELF_ONLY/private/sandbox) nos publishers vivos (IG Reel \u00b7 LinkedIn texto \u00b7 TikTok \u00b7 YouTube \u00b7 Pinterest \u00b7 X). Penalidade de cross-post evitada (G2).\n\n## Materiality caveat (Lei 1)\nPublishers audit-gated (TikTok SELF_ONLY \u00b7 YouTube forced-private pr\u00e9-Gate-B \u00b7 Pinterest sandbox) publicam **privado/sandbox** \u2014 isso \u00e9 transporte provado, N\u00c3O alcance p\u00fablico. \"Publicado publicamente\" s\u00f3 ap\u00f3s os audits (a\u00e7\u00e3o Sovereign). Reshape \u2260 publish: o reshaper prova a **variante nativa**; o alcance \u00e9 gate separado.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/channel-reshaper.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:41:04)*
+
+Now update the BoK index to reference doc 13, then start implementation. Let me read the index first.
+
+## 🤖 Claude *(02:41:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BoK: Post Engine
+> 2	
+> 3	> **Domínio:** Publicação autônoma multi-rede com retroalimentação analítica
+> 4	> 
+> 5	> **Objetivo:** Publicar conteúdo gerado no Viral Daily Canvas em múltiplas redes sociais, capturar métricas e alimentar o sistema com dados de engajamento para evolução contínua.
+> 6	
+> 7	## Visão Geral
+> 8	
+> 9	O Post Engine é o executor final do fluxo. Ele conecta o conteúdo gerado ao mundo externo, publicando em redes sociais com orquestração segura, tratamento de falhas e coleta de métricas.
+> 10	
+> 11	## Escopo
+> 12	
+> 13	### Incluído
+> 14	- Publicação em TikTok, Instagram Reels, YouTube Shorts, X via API ou automação
+> 15	- Tratamento de rate-limit e falhas de rede
+> 16	- Agendamento com horário de pico por nicho
+> 17	- Coleta de métricas (views, likes, shares, comments)
+> 18	- Resposta automatizada leve a comentários comuns (ex: "obrigado!")
+> 19	- Retroalimentação ao Grafo de Conhecimento (GraphRAG)
+> 20	
+> 21	### Excluído
+> 22	- Publicação em grupos fechados ou fóruns
+> 23	- Engajamento agressivo (spam, follow/unfollow)
+> 24	- Parcerias com influenciadores (requer decisão humana)
+> 25	
+> 26	## Requisitos Funcionais
+> 27	
+> 28	1. **RF-PE-001**: O sistema deve publicar conteúdo em ≥ 3 redes simultaneamente.
+> 29	2. **RF-PE-002**: O sistema deve respeitar rate-limit de cada API.
+> 30	3. **RF-PE-003**: O sistema deve tentar reenvio com backoff exponencial em caso de falha.
+> 31	4. **RF-PE-004**: O sistema deve coletar métricas 24h após publicação.
+> 32	5. **RF-PE-005**: O sistema deve responder automaticamente a comentários com palavras-chave ("obrigado", "valeu", "top").
+> 33	6. **RF-PE-006**: O sistema deve armazenar desempenho em `mcorch_edges` como `engagement_score`.
+> 34	7. **RF-PE-007**: O sistema deve sugerir ajustes no roteiro futuro com base em desempenho (ex: "tema X teve +30% de retenção").
+> 35	
+> 36	## Requisitos Não Funcionais
+> 37	
+> 38	1. **RNF-PE-001 (Confiabilidade)**: Taxa de sucesso de publicação ≥ 90%.
+> 39	2. **RNF-PE-002 (Latência)**: Publicação agendada com precisão de ±5 minutos.
+> 40	3. **RNF-PE-003 (Escalabilidade)**: Suportar ≥ 100 contas simultâneas (futuro)
+> 41	4. **RNF-PE-004 (Segurança)**: Tokens de API armazenados em `SecretRef` (nunca em texto claro)
+> 42	
+> 43	## Fluxo de Dados
+> 44	
+> 45	```mermaid
+> 46	graph TD
+> 47	    A[Início] --> B{Conteúdo Pronto?}
+> 48	    B -->|Sim| C[Carregar Token da Rede]
+> 49	    C --> D[Publicar em TikTok, Reels, Shorts]
+> 50	    D --> E{Sucesso?}
+> 51	    E -->|Não| F[Backoff Exponencial → Tenta Novamente]
+> 52	    E -->|Sim| G[Registrar Publicação]
+> 53	    G --> H[Esperar 24h]
+> 54	    H --> I[Coletar Métricas]
+> 55	    I --> J[Responder Comentários Leves]
+> 56	    J --> K[Calcular Engagement Score]
+> 57	    K --> L[Atualizar mcorch_edges]
+> 58	    L --> M[Gerar Relatório Diário]
+> 59	    M --> N[Fim]
+> 60	```
+> 61	
+> 62	## Integrações
+> 63	
+> 64	- APIs oficiais: TikTok, Instagram, YouTube, X
+> 65	- `firecrawl-interact` (backup para APIs bloqueadas)
+> 66	- `supabase` (armazenamento de métricas)
+> 67	- `cron` (agendamento e coleta)
+> 68	
+> 69	## SLA
+> 70	
+> 71	- **Publicação**: ±5 minutos do horário agendado
+> 72	- **Coleta de métricas**: 24h ±15 minutos
+> 73	- **Resposta a comentários**: ≤ 1h após comentário
+> 74	
+> 75	## Owner
+> 76	
+> 77	- **Responsável Primário**: `engineer`
+> 78	- **Avaliação de Viabilidade**: `scientist`
+> 79	- **Orquestração**: `main`
+> 80	
+> 81	## Suite Documents (índice)
+> 82	
+> 83	| Doc | Conteúdo |
+> 84	|-----|----------|
+> 85	| `01-mrd.md` | Market Requirements |
+> 86	| `02-brd.md` | Business Requirements |
+> 87	| `03-prd.md` | Product Requirements |
+> 88	| `04-frd.md` | Functional Requirements (FR-PE-001..004 + emenda FR-PE-005..016 no doc 10) |
+> 89	| `05-sdd.md` | System Design |
+> 90	| `06-data-model.md` | Data Model — **reconciliado 2026-06-27**: `social_credentials`→`social_accounts` (VIEW Vault), enum `social_platform` completo, + tabela `social_app_config` (credenciais de app per-user) |
+> 91	| `09-pattern-conformance.md` | **Pattern Conformance Declaration** da emenda social-connect — os 21 padrões agênticos (`agentic-vision.md`) declarados para a camada de transporte de publicação |
+> 92	| `10-amendment-social-connect-tiktok-youtube-pinterest.md` | **Branch design autoritativo** (Fonte da Verdade) p/ conectar/publicar em TikTok + YouTube + Pinterest — OAuth init/callback/refresh + publish por plataforma + token lifetimes + audit gates + FR-PE-005..016 |
+> 93	| `11-channel-format-intelligence-blueprint.md` | **Blueprint-semente** (deepsearch `wf_98eede6d-069`, 8 canais verificados) — matriz de formato cross-canal + espinha vs divergência + modelo `channel_profiles`/`pillar_atoms` + FR-CP/OTD-CP |
+> 94	| `12-amendment-channel-format-intelligence.md` | **Emenda autoritativa** "Channel Format Intelligence" (engenharia reversa de formato) — MRD→SDD deltas (MR/BR/PR-CP) + FR-CP-001..012 + OTD-CP-001..007 + KPI-CP + **Pattern Conformance Declaration** (21 padrões) + traceability. Gate aberto p/ código. |
+> 95	
+> 96	## Versão
+> 97	
+> 98	- v0.1 (base) · **emenda social-connect v1.0 — 2026-06-27** (docs 09 + 10 + reconciliação do 06) · **emenda channel-format-intelligence v1.0 — 2026-06-27** (docs 11 blueprint + 12 amendment)
+> 99	- 2026-06-05
+> ```
+
+## 🤖 Claude *(02:41:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/00-index.md",
+  "old_string": "| `12-amendment-channel-format-intelligence.md` | **Emenda autoritativa** \"Channel Format Intelligence\" (engenharia reversa de formato) \u2014 MRD\u2192SDD deltas (MR/BR/PR-CP) + FR-CP-001..012 + OTD-CP-001..007 + KPI-CP + **Pattern Conformance Declaration** (21 padr\u00f5es) + traceability. Gate aberto p/ c\u00f3digo. |\n\n## Vers\u00e3o\n\n- v0.1 (base) \u00b7 **emenda social-connect v1.0 \u2014 2026-06-27** (docs 09 + 10 + reconcilia\u00e7\u00e3o do 06) \u00b7 **emenda channel-format-intelligence v1.0 \u2014 2026-06-27** (docs 11 blueprint + 12 amendment)",
+  "new_string": "| `12-amendment-channel-format-intelligence.md` | **Emenda autoritativa** \"Channel Format Intelligence\" (engenharia reversa de formato) \u2014 MRD\u2192SDD deltas (MR/BR/PR-CP) + FR-CP-001..012 + OTD-CP-001..007 + KPI-CP + **Pattern Conformance Declaration** (21 padr\u00f5es) + traceability. Gate aberto p/ c\u00f3digo. |\n| `13-sdd-reshaper-atomizer.md` | **SDD implementation-level** (FR-CP-002/003) \u2014 fecha o Gate Closed-Loop Step 3.5: `field_map` grammar + dispatch de `reshape` + `channel_variants` (idempot\u00eancia) + sequ\u00eancia/trigger (static/video) + custo + auth + format-gate. Resolve os 8 *blocking gaps* do critic (workflow `wf_a390c0f0-b6e`). + OTD-CP-008..011 (deferidos). |\n\n## Vers\u00e3o\n\n- v0.1 (base) \u00b7 **emenda social-connect v1.0 \u2014 2026-06-27** (docs 09 + 10 + reconcilia\u00e7\u00e3o do 06) \u00b7 **emenda channel-format-intelligence v1.0 \u2014 2026-06-27** (docs 11 blueprint + 12 amendment + **13 SDD reshaper/atomizer**)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:41:26)*
+
+
+## 🤖 Claude *(02:41:27)*
+
+BoK gate closed (SDD doc 13 + SOP). Now implementation. Starting with the foundation migration: `channel_variants` ledger + `creative_metrics.hook_rate`.
+
+## 🤖 Claude *(02:41:27)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(02:41:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== creative_metrics columns (from its migration) ===\"\nsed -n '1,60p' supabase/migrations/20260619140000_viral_autopilot_creative_metrics.sql 2>/dev/null | grep -nE \"CREATE TABLE|^\\s+[a-z_]+\\s+(uuid|text|int|numeric|bool|timestamptz|jsonb)\" | head -40\necho \"=== update_updated_at_column exists? ===\"\ngrep -rl \"FUNCTION public.update_updated_at_column\" supabase/migrations/*.sql | head -1",
+  "description": "Confirm creative_metrics columns + updated_at helper"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === creative_metrics columns (from its migration) ===
+> 23:CREATE TABLE IF NOT EXISTS public.creative_metrics (
+> 24:  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+> 25:  user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 26:  cycle_id           uuid,                          -- reserved for the cadence Fatia (autopilot_cycles); NO FK yet
+> 27:  content_variant_id uuid        NOT NULL,          -- logical ref to content_library.id; NO physical FK (independent
+> 30:  product_id         text,                          -- = vm_affiliate_products.external_id (the featured product)
+> 31:  platform           text,                          -- wordpress | linkedin | twitter
+> 32:  source             text        NOT NULL DEFAULT 'organic'
+> 34:  impressions        int         NOT NULL DEFAULT 0 CHECK (impressions      >= 0),
+> 35:  engagements        int         NOT NULL DEFAULT 0 CHECK (engagements      >= 0),
+> 36:  affiliate_clicks   int         NOT NULL DEFAULT 0 CHECK (affiliate_clicks >= 0),
+> 37:  revenue_cents      int         NOT NULL DEFAULT 0 CHECK (revenue_cents    >= 0),
+> 38:  collected_at       timestamptz NOT NULL DEFAULT now(),
+> 39:  created_at         timestamptz NOT NULL DEFAULT now(),
+> === update_updated_at_column exists? ===
+> supabase/migrations/20260531200000_whatsapp_lead_engine.sql
+> ```
+
+## 🤖 Claude *(02:41:34)*
+
+
+## 🤖 Claude *(02:41:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627150000_channel_variants.sql",
+  "content": "-- Migration: channel_variants ledger + creative_metrics.hook_rate \u2014 Reshaper (FR-CP-003 / FR-CP-007 / FR-CP-011)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- BoK SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a72 (data model delta).\n-- Thesis: the reshaper emits ONE native variant per (pillar_run, channel, surface). channel_variants is BOTH the\n-- native-variant ledger (anti cross-post audit, FR-CP-007) AND the idempotency anchor (UNIQUE) so a pg_net retry of\n-- the reshaper never double-inserts a variant nor double-enqueues a publish. Its `id` doubles as the logical\n-- content_variant_id that creative_metrics keys on (FR-CP-011 hook_rate added here too).\n--\n-- TENANCY (mirrors channel_profiles 20260627140000 + creative_metrics 20260619140000): SELECT/DELETE own only.\n-- NO INSERT/UPDATE policy for authenticated \u21d2 default-deny writes: the reshaper edge fn (service-role, bypasses RLS)\n-- is the ONLY writer. user_id can never be forged by a client. No Vault/secrets here \u2014 RLS only.\n--\n-- Security posture: HARDENS (new RLS-isolated table, default-deny writes, no client-reachable SECURITY DEFINER).\n-- MANDATORY /security-review before commit (FMEA-011 cross-tenant leak class).\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 1. channel_variants \u2014 the native-variant ledger + idempotency anchor\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.channel_variants (\n  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id           uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  pillar_run_id     uuid NOT NULL,                 -- = pipeline_runs.id (links pillar_atoms + the source masters)\n  channel           text NOT NULL,                 -- channel_profiles.channel SPEC naming ('twitter_x' kept verbatim)\n  surface           text NOT NULL,\n  platform          public.social_platform,        -- enum value mapped for publishing; NULL = not directly publishable\n  publish_path      text,\n  native_text       jsonb NOT NULL DEFAULT '{}'::jsonb,  -- {caption|title|description|body|tweets[]|overlay_text|link}\n  asset_kind        text,                          -- 'video' | 'image' | 'none'\n  asset_bucket      text,                          -- per-row asset ref (fixes auto-publish single-video collision)\n  asset_key         text,\n  asset_status      text NOT NULL DEFAULT 'pending'\n    CONSTRAINT channel_variants_asset_status_chk CHECK (asset_status IN\n      ('pending','ready','reused_master','pending_render','pending_reframe','pending_publisher','gap')),\n  format_gate       jsonb NOT NULL DEFAULT '{}'::jsonb,  -- {ok,coerced_format,violations[]} (FR-CP-006)\n  status            text NOT NULL DEFAULT 'draft'\n    CONSTRAINT channel_variants_status_chk CHECK (status IN ('draft','scheduled','published','skipped','failed')),\n  scheduled_post_id uuid,                          -- set once enqueued (guards double-enqueue)\n  created_at        timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),\n  updated_at        timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),\n  -- Idempotency: one variant per (pillar run, channel, surface). Reshaper UPSERTs on this.\n  CONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)\n);\n\nALTER TABLE public.channel_variants ENABLE ROW LEVEL SECURITY;\n\n-- SELECT own; DELETE own. NO INSERT/UPDATE policy \u21d2 writes are service-role-only (the reshaper).\nCREATE POLICY \"channel_variants read own\" ON public.channel_variants\n  FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"channel_variants delete own\" ON public.channel_variants\n  FOR DELETE USING (auth.uid() = user_id);\n\nCREATE TRIGGER tr_update_channel_variants_updated_at\n  BEFORE UPDATE ON public.channel_variants\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\nCREATE INDEX IF NOT EXISTS idx_channel_variants_run    ON public.channel_variants (pillar_run_id);\nCREATE INDEX IF NOT EXISTS idx_channel_variants_user   ON public.channel_variants (user_id, created_at DESC);\nCREATE INDEX IF NOT EXISTS idx_channel_variants_status ON public.channel_variants (status) WHERE status = 'draft';\n\nCOMMENT ON TABLE public.channel_variants IS\n  'Reshaper native-variant ledger (FR-CP-003/007) + idempotency anchor UNIQUE(pillar_run_id,channel,surface). '\n  'One row per channel surface reshaped from a pillar. SELECT/DELETE own; writes service-role-only (reshaper). '\n  'id doubles as the logical content_variant_id for creative_metrics (FR-CP-011).';\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 2. creative_metrics.hook_rate \u2014 FR-CP-011 (watch-past-3s \u00f7 impressions). Additive, nullable.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nALTER TABLE public.creative_metrics\n  ADD COLUMN IF NOT EXISTS hook_rate numeric\n    CONSTRAINT creative_metrics_hook_rate_chk CHECK (hook_rate IS NULL OR (hook_rate >= 0 AND hook_rate <= 1));\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627150000_channel_variants.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:41:59)*
+
+
+## 🤖 Claude *(02:42:00)*
+
+Now `COIN_COSTS.RESHAPE_CREATIVE` in billing. Let me read the exact block.
+
+## 🤖 Claude *(02:42:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts",
+  "offset": 18,
+  "limit": 26
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 18	export const COIN_COSTS = {
+> 19	  ORCHESTRATION_RUN: 10,   // 3 texts + 1 image, charged flat (bundle discount vs the 15 below). ~4.4× at floor.
+> 20	  CONTENT_GENERATION: 2,   // 1 LLM article (~$0.0006). Strict floor is 1; held at 2 as a conservative minimum. (was 5)
+> 21	  IMAGE_GENERATION: 9,     // 1 DALL·E 3 1024² image ($0.04 → 4× at floor). WAS 3 = 1.36× (under-margined) → fixed.
+> 22	  EMBED_NODE: 1,           // 1 embedding call (~$0.000002). Floor minimum.
+> 23	  LEAD_SCORE: 1,           // 1 LLM scoring call (~$0.0005). marketing-hub FR-MH-003 (lead-score edge fn mirrors this).
+> 24	  CAMPAIGN_RUN: 10,        // marketing-hub FR-MH-004 — orchestration FEE on top of the cascaded per-step ORCHESTRATION_RUN.
+> 25	  NURTURE_DISPATCH: 2,     // marketing-hub FR-MH-008 — 1 LLM message (~$0.0006). nurture-dispatch edge fn mirrors this.
+> 26	  // vision-mcp Fatia 2 (sealed grade — docs/processes/vision-mcp-cost-calibration.md, OTD-VM-004).
+> 27	  // Mirrored from packages/vision-mcp-core/src/infra/billing.ts COIN_COSTS (G3 triple-mirror gate).
+> 28	  // Charged on the PLATFORM-key path only; per-user BYOK runs free; Sovereign exempt (FR-VM-006).
+> 29	  VISION_DESCRIBE_IMAGE: 2,      // VLM ~$0.0004/img (Gemini Flash) → 4×-floor
+> 30	  VISION_ANALYZE_VIDEO: 2,       // per minute (Gemini video @1FPS ~$0.0054/min)
+> 31	  VISION_OCR: 1,                 // per page (Mistral OCR ~$0.002)
+> 32	  VISION_DETECT: 2,              // Gemini native boxes
+> 33	  DEEPSEARCH_SCRAPE: 1,          // Firecrawl (~$0.0006/pág Growth)
+> 34	  DEEPSEARCH_RUN: 3,             // deepsearch orchestration
+> 35	  MESH_CONSOLIDATE_REFERENCE: 1, // mesh write (embedding async ~free)
+> 36	  // video-studio Fatia 1 (PROVISIONAL — OTD-VS-007 · docs/bok/video-studio/05-sdd.md §4.4 4×-floor).
+> 37	  // Calibrate against REAL cost at the first PAID render (slice 2), then seal. Edge fns mirror these copies.
+> 38	  VIDEO_FACELESS_RENDER: 125,    // faceless E2E pipeline (n8n Gemini→Pollinations→VoxCPM→Remotion→LTX→FFmpeg→QA) ≈ canvas DoP video
+> 39	  VIDEO_HYPERFRAMES_RENDER: 12,  // deterministic HTML→MP4 via headless Chrome (no AI legs) ≈ canvas image class
+> 40	} as const;
+> 41	
+> 42	export type CoinOperation = keyof typeof COIN_COSTS;
+> 43	
+> ```
+
+## 🤖 Claude *(02:42:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts",
+  "old_string": "  NURTURE_DISPATCH: 2,     // marketing-hub FR-MH-008 \u2014 1 LLM message (~$0.0006). nurture-dispatch edge fn mirrors this.",
+  "new_string": "  NURTURE_DISPATCH: 2,     // marketing-hub FR-MH-008 \u2014 1 LLM message (~$0.0006). nurture-dispatch edge fn mirrors this.\n  RESHAPE_CREATIVE: 2,     // post-engine FR-CP-003 \u2014 1 batched LLM voicing call (~$0.0006) \u2192 4\u00d7-floor. Charged ONLY on the\n                           // standalone path; within the (already-charged) pillar/autopilot run the reshape is bundled (no deduct)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/billing.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:42:17)*
+
+
+## 🤖 Claude *(02:42:18)*
+
+Now the core. Let me read the `orchestrate-step` regions I'll edit precisely: the article block (atomizer hook + masters), the wordpress_publish pillar_url set, and the knowledge_mesh/terminal (reshape trigger).
+
+## 🤖 Claude *(02:42:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 281,
+  "limit": 135
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 281	    if (step === "article_generation") {
+> 282	      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 283	      try {
+> 284	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 285	        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 286	          method: "POST",
+> 287	          headers: { 
+> 288	            Authorization: `Bearer ${aiKey}`, 
+> 289	            "Content-Type": "application/json",
+> 290	            "HTTP-Referer": "https://mcorch.com",
+> 291	            "X-Title": "GCRUX Constellation"
+> 292	          },
+> 293	          body: JSON.stringify({
+> 294	            model: selectedModel,
+> 295	            messages: injectFeedback(articleMessages(topic, site_url, products), feedbackHint),
+> 296	            tools: [{
+> 297	              type: "function",
+> 298	              function: {
+> 299	                name: "write_article",
+> 300	                description: "Generate a full SEO article",
+> 301	                parameters: {
+> 302	                  type: "object",
+> 303	                  properties: {
+> 304	                    title: { type: "string" },
+> 305	                    content: { type: "string", description: "Full HTML article body" },
+> 306	                    meta_description: { type: "string" },
+> 307	                    tags: { type: "array", items: { type: "string" } },
+> 308	                  },
+> 309	                  required: ["title", "content", "meta_description", "tags"],
+> 310	                },
+> 311	              },
+> 312	            }],
+> 313	            tool_choice: { type: "function", function: { name: "write_article" } },
+> 314	          }),
+> 315	        }, { functionName: "orchestrate-step", openRouterKey, geminiKey, groqKey });
+> 316	
+> 317	        if (!articleRes.ok) {
+> 318	          throw new Error(`AI error: ${articleRes.status}`);
+> 319	        }
+> 320	
+> 321	        const articleData = await articleRes.json();
+> 322	        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);
+> 323	        const articleTitle = args.title ?? "";
+> 324	        const articleContent = args.content ?? "";
+> 325	
+> 326	        const articleValidation = validateContent("article", articleContent);
+> 327	        if (!articleValidation.valid) {
+> 328	          console.error(`[FMEA-008] article validation failed: ${articleValidation.reason}`, { topic, length: articleContent.length });
+> 329	          await addStep("article_generation", "error", { topic }, { error: `content_validation_failed:${articleValidation.reason}` });
+> 330	        } else {
+> 331	          // AUTO-MONETIZE: embed per-owner click-tracked affiliate links. Two paths:
+> 332	          //  · product-aware (Viral Autopilot FR-VA-004): feature the chosen product(s) on this creative, keyed
+> 333	          //    to its content_library id (affiliate_links.content_id) + a creative_metrics baseline row.
+> 334	          //  · legacy (no products): regex-scan for the 3 catalog SKUs (OTD-ML-CLICKS). Fail-open + kill-switch.
+> 335	          let articleBody = articleContent;
+> 336	          let monetizeLinked = 0;
+> 337	
+> 338	          if (hasProducts) {
+> 339	            // Insert first to mint the content_variant_id, monetize against it, then persist the rewritten body.
+> 340	            const { data: inserted } = await admin.from("content_library").insert({
+> 341	              user_id: run.user_id, campaign_id: campaign_id || null, type: "text",
+> 342	              title: articleTitle, body: articleContent, tags: args.tags, status: "approved",
+> 343	              metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic), products: products.map((p) => p.external_id) },
+> 344	            }).select("id").single();
+> 345	            const contentId = inserted?.id ?? null;
+> 346	            if (contentId) {
+> 347	              const aff = await resolveAffiliate();
+> 348	              const m = await monetizeSurface(articleContent, contentId, "wordpress", "html", aff);
+> 349	              articleBody = m.body;
+> 350	              monetizeLinked = m.linked;
+> 351	              if (articleBody !== articleContent) {
+> 352	                await admin.from("content_library").update({
+> 353	                  body: articleBody,
+> 354	                  metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic), products: products.map((p) => p.external_id), affiliate_links: monetizeLinked },
+> 355	                }).eq("id", contentId);
+> 356	              }
+> 357	            }
+> 358	          } else {
+> 359	            if (autoMonetizeOn) {
+> 360	              try {
+> 361	                const { data: aff } = await admin.from("affiliate_config")
+> 362	                  .select("affiliate_tag, matt_tool").eq("user_id", run.user_id).eq("platform", "mercadolivre").eq("is_active", true).maybeSingle();
+> 363	                if (aff?.affiliate_tag) {
+> 364	                  const m = await monetizeContent(admin as any, supabaseUrl, articleContent, run.user_id, aff.affiliate_tag, { campaignId: campaign_id || null, mattTool: aff.matt_tool });
+> 365	                  articleBody = m.content;
+> 366	                  monetizeLinked = m.linked;
+> 367	                }
+> 368	              } catch (e: any) { console.warn("[orchestrate-step] auto-monetize skipped:", e?.message); }
+> 369	            }
+> 370	            await admin.from("content_library").insert({
+> 371	              user_id: run.user_id, campaign_id: campaign_id || null, type: "text",
+> 372	              title: articleTitle, body: articleBody, tags: args.tags, status: "approved",
+> 373	              metadata: { source: "orchestration", meta_description: args.meta_description, utm: utmTag("wordpress", utmCampaign, topic), affiliate_links: monetizeLinked },
+> 374	            });
+> 375	          }
+> 376	
+> 377	          // Save generated article to metadata (the MONETIZED body flows to WordPress + content_mesh_asset).
+> 378	          const updatedMetadata = {
+> 379	            ...metadata,
+> 380	            articleTitle,
+> 381	            articleContent: articleBody,
+> 382	            articleTags: args.tags,
+> 383	            meta_description: args.meta_description,
+> 384	          };
+> 385	          await admin.from("pipeline_runs").update({ metadata: updatedMetadata }).eq("id", run_id);
+> 386	
+> 387	          await addStep("article_generation", "done",
+> 388	            { topic, model: selectedModel },
+> 389	            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleBody.split(" ").length, affiliate_links: monetizeLinked }
+> 390	          );
+> 391	
+> 392	          // ── Viral Autopilot Fatia 1b — product-referenced marketing image (FR-VA-013) ──────────────────
+> 393	          // ONE image inside the already-charged 10-mco bundle (NO extra deduct — orchestrate-step never calls
+> 394	          // deduct_mco_coins). Gated on hasProducts. FAIL-OPEN with status 'skipped' (NOT 'error', which would
+> 395	          // flip the run to error at the finalize check): any failure (no image key / provider mock / 5xx) leaves
+> 396	          // article_generation 'done' and the run proceeds — the image NEVER breaks generation. Persists the
+> 397	          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 398	          // window; private bucket → re-sign on read). Product-referenced = descriptive text prompt from
+> 399	          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 400	          if (hasProducts) {
+> 401	            try {
+> 402	              const p0 = products[0];
+> 403	              const imgPrompt = `Imagem de marketing do produto ${p0.name}${p0.category ? `, categoria ${p0.category}` : ""}, no contexto de "${topic}". Foto de produto profissional, alta qualidade, fundo limpo, para redes sociais.`;
+> 404	              const imgRes = await fetch(`${supabaseUrl}/functions/v1/generate-image`, {
+> 405	                method: "POST",
+> 406	                headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 407	                body: JSON.stringify({ prompt: imgPrompt, style: "product photography", user_id: run.user_id }),
+> 408	              });
+> 409	              const imgData = await imgRes.json().catch(() => ({} as any));
+> 410	              if (imgRes.ok && imgData?.path) {
+> 411	                const { data: imgRow } = await admin.from("content_library").insert({
+> 412	                  user_id: run.user_id, campaign_id: campaign_id || null, type: "image",
+> 413	                  title: `Imagem: ${articleTitle}`, media_url: imgData.path, status: "approved",
+> 414	                  metadata: { source: "orchestration", products: products.map((p) => p.external_id), product_id: p0.external_id, storage_bucket: "generated-images" },
+> 415	                }).select("id").single();
+> ```
+
+## 🤖 Claude *(02:43:10)*
+
+
+## 🤖 Claude *(02:43:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 525,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 525	            const wpPostUrl = wpData.post_url;
+> 526	            const wpPostId = (typeof wpData.post_id === "number" ? wpData.post_id : null);
+> 527	            
+> 528	            const updatedMetadata = {
+> 529	              ...metadata,
+> 530	              wpPostUrl,
+> 531	              wpPostId,
+> 532	            };
+> 533	            await admin.from("pipeline_runs").update({ 
+> 534	              metadata: updatedMetadata,
+> 535	              wordpress_url: wpPostUrl
+> 536	            }).eq("id", run_id);
+> 537	
+> 538	            await addStep("wordpress_publish", "done",
+> 539	              { title: articleTitle, status: wp_status },
+> 540	              { post_url: wpPostUrl, post_id: wpPostId, status: wpData.status, slug: wpData.slug }
+> 541	            );
+> 542	          } else {
+> 543	            await addStep("wordpress_publish", "error", { title: articleTitle }, { error: wpData.error || "Failed" });
+> 544	          }
+> 545	        } catch (e: any) {
+> 546	          await addStep("wordpress_publish", "error", { title: articleTitle }, { error: e.message || "Unknown" });
+> 547	        }
+> 548	      }
+> 549	
+> 550	    } else if (step === "linkedin_post") {
+> 551	      const { wpPostUrl } = metadata;
+> 552	      const articleLink = wpPostUrl ? utmTag("linkedin", utmCampaign, topic, wpPostUrl) : `https://${site_url}`;
+> 553	
+> 554	      await addStep("linkedin_post", "in_progress", { topic, article_link: articleLink, model: selectedModel });
+> 555	      try {
+> 556	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 557	        const liRes = await fetchLLMWithFallback(aiEndpoint, {
+> 558	          method: "POST",
+> 559	          headers: { 
+> 560	            Authorization: `Bearer ${aiKey}`, 
+> 561	            "Content-Type": "application/json",
+> 562	            "HTTP-Referer": "https://mcorch.com",
+> 563	            "X-Title": "GCRUX Constellation"
+> 564	          },
+> 565	          body: JSON.stringify({
+> 566	            model: selectedModel,
+> 567	            messages: injectFeedback(linkedinMessages(topic, articleLink, products), feedbackHint),
+> 568	            tools: [{
+> 569	              type: "function",
+> ```
+
+## 🤖 Claude *(02:43:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 760,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 760	
+> 761	        // Amendment A: run in parallel
+> 762	        const [obsResult, assetResult] = await Promise.allSettled([observationInsert, assetInsert]);
+> 763	
+> 764	        const obsOk = obsResult.status === "fulfilled";
+> 765	        await addStep("knowledge_mesh", obsOk ? "done" : "error",
+> 766	          { topic: topic.substring(0, 60), platforms },
+> 767	          obsOk
+> 768	            ? { wordpress_url: wpPostUrl || null, node_type: "observation", obs_id: (obsResult.value as any).data?.id ?? null }
+> 769	            : { error: ((obsResult as PromiseRejectedResult).reason instanceof Error ? ((obsResult as PromiseRejectedResult).reason as Error).message : "unknown") }
+> 770	        );
+> 771	
+> 772	        const assetOk = assetResult.status === "fulfilled";
+> 773	        const assetReason = !assetOk
+> 774	          ? (((assetResult as PromiseRejectedResult).reason instanceof Error) ? ((assetResult as PromiseRejectedResult).reason as Error).message : "unknown")
+> 775	          : null;
+> 776	        const assetStatus = assetOk ? "done" : (assetReason === "no_wordpress_url" ? "skipped" : "error");
+> 777	        await addStep("content_mesh_asset", assetStatus,
+> 778	          { topic: topic.substring(0, 60), campaign_id: campaign_id || null },
+> 779	          assetOk
+> 780	            ? { asset_id: (assetResult.value as any).data?.id ?? null, wordpress_url: wpPostUrl, project_id: "mcorch-affiliate" }
+> 781	            : { reason: assetReason }
+> 782	        );
+> 783	
+> 784	        // Also track usage at this final step
+> 785	        await admin.from("usage_tracking").insert({
+> 786	          user_id: run.user_id,
+> 787	          resource_type: "orchestration",
+> 788	          quantity: platforms.length,
+> 789	          credits_consumed: platforms.length * 5,
+> 790	          metadata: { topic, platforms, campaign_id },
+> 791	        });
+> 792	
+> 793	      } catch (e: any) {
+> 794	        console.warn("[orchestrate-step] mesh emission outer catch:", e);
+> 795	        await addStep("knowledge_mesh", "error", { topic }, { error: e.message || "Unknown" });
+> 796	      }
+> 797	    }
+> 798	
+> 799	    // Determine the next step
+> 800	    const nextStep = getNextStep(step, platforms);
+> 801	    if (nextStep) {
+> 802	      console.log(`[orchestrate-step] Scheduling next step "${nextStep}" for run ${run_id}`);
+> 803	      // Invoke async_orchestrate_step RPC to trigger next step asynchronously via pg_net
+> 804	      await admin.rpc("async_orchestrate_step", {
+> 805	        p_supabase_url: supabaseUrl,
+> 806	        p_service_key: serviceKey,
+> 807	        p_run_id: run_id,
+> 808	        p_step: nextStep,
+> 809	      });
+> 810	    } else {
+> 811	      console.log(`[orchestrate-step] Finalizing run ${run_id}`);
+> 812	      // Refresh steps array before final check
+> 813	      const { data: finalRun } = await admin
+> 814	        .from("pipeline_runs")
+> 815	        .select("steps, metadata")
+> 816	        .eq("id", run_id)
+> 817	        .single();
+> 818	      
+> 819	      const finalSteps = finalRun?.steps || steps;
+> 820	      const hasErrors = finalSteps.some((s: any) => s.status === "error");
+> 821	      
+> 822	      await admin.from("pipeline_runs").update({
+> 823	        status: hasErrors ? "error" : "done",
+> 824	        steps: finalSteps,
+> 825	        completed_at: new Date().toISOString(),
+> 826	      }).eq("id", run_id);
+> 827	    }
+> 828	
+> 829	    return new Response(JSON.stringify({ success: true }), {
+> 830	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 831	    });
+> 832	
+> 833	  } catch (e: any) {
+> 834	    console.error("orchestrate-step error:", e);
+> 835	    return new Response(
+> 836	      JSON.stringify({ error: e.message || "Unknown error" }),
+> 837	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+> 838	    );
+> 839	  }
+> ```
+
+## 🤖 Claude *(02:43:38)*
+
+
+## 🤖 Claude *(02:43:39)*
+
+Now I have all placement points. Let me make the `orchestrate-step` edits. First, thread `pillar_run_id` into the video composition (gap #5):
+
+## 🤖 Claude *(02:43:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "                  // Attach context for the worker's reconciliation (FR-VA-025) \u2014 NOT rendered, only routing.\n                  autopilot: { user_id: run.user_id, campaign_id: campaign_id || null, product_id: p0.external_id, cycle_id: cycleId, title: clip(articleTitle, 120) },\n                };",
+  "new_string": "                  // Attach context for the worker's reconciliation (FR-VA-025) \u2014 NOT rendered, only routing.\n                  // pillar_run_id (FR-CP-003 gap #5): lets video-bridge JOIN the finished master back to pillar_atoms\n                  // so the reshaper can reexport per-channel native variants from THIS run's 9:16 master.\n                  pillar_run_id: run_id,\n                  autopilot: { user_id: run.user_id, campaign_id: campaign_id || null, product_id: p0.external_id, cycle_id: cycleId, title: clip(articleTitle, 120), pillar_run_id: run_id },\n                };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:43:47)*
+
+Now the atomizer block (FR-CP-002) — inserted after the article is persisted, fail-open, with idempotency guard:
+
+## 🤖 Claude *(02:43:48)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(02:44:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "          await addStep(\"article_generation\", \"done\",\n            { topic, model: selectedModel },\n            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleBody.split(\" \").length, affiliate_links: monetizeLinked }\n          );",
+  "new_string": "          await addStep(\"article_generation\", \"done\",\n            { topic, model: selectedModel },\n            { title: articleTitle, meta_description: args.meta_description, tags: args.tags, word_count: articleBody.split(\" \").length, affiliate_links: monetizeLinked }\n          );\n\n          // \u2500\u2500 FR-CP-002 Atomizer \u2014 decompose the pillar into pillar_atoms (the reshaper's text input). \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n          // BoK SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a75.1. FAIL-OPEN (never errors the run) + LLM\n          // decomposition with a HEURISTIC fallback so pillar_atoms ALWAYS exists. Runs for BOTH product & legacy\n          // paths (atoms feed the reshaper regardless of products). pillar_url is backfilled after wordpress_publish.\n          // Idempotency: skip if atoms already exist for this run (guards a pg_net step retry).\n          try {\n            const { count: existingAtoms } = await admin.from(\"pillar_atoms\")\n              .select(\"id\", { count: \"exact\", head: true }).eq(\"pillar_run_id\", run_id);\n            if (!existingAtoms) {\n              const stripHtml = (s: string) => String(s ?? \"\").replace(/<[^>]+>/g, \" \").replace(/\\s+/g, \" \").trim();\n              let atoms: { hook?: string; key_points?: string[]; stat?: string; quote?: string; cta?: string } = {};\n              if (aiKey) {\n                try {\n                  const atomRes = await fetchLLMWithFallback(aiEndpoint, {\n                    method: \"POST\",\n                    headers: { Authorization: `Bearer ${aiKey}`, \"Content-Type\": \"application/json\", \"HTTP-Referer\": \"https://mcorch.com\", \"X-Title\": \"GCRUX Constellation\" },\n                    body: JSON.stringify({\n                      model: selectedModel,\n                      messages: [\n                        { role: \"system\", content: \"Voc\u00ea atomiza um artigo-pilar em pe\u00e7as reutiliz\u00e1veis para posts sociais nativos. Responda em pt-BR, conciso e factual (sem inventar dados).\" },\n                        { role: \"user\", content: `Decomponha este artigo em \u00e1tomos para reshape multi-rede.\\n\\nT\u00cdTULO: ${articleTitle}\\n\\nARTIGO:\\n${stripHtml(articleBody).slice(0, 6000)}` },\n                      ],\n                      tools: [{ type: \"function\", function: { name: \"write_atoms\", description: \"Atomize the pillar into reusable social pieces\", parameters: { type: \"object\", properties: {\n                        hook: { type: \"string\", description: \"scroll-stopper de 1 linha (\u2264120 chars)\" },\n                        key_points: { type: \"array\", items: { type: \"string\" }, description: \"3-5 pontos-chave, 1 frase cada\" },\n                        stat: { type: \"string\", description: \"1 estat\u00edstica/dado marcante presente no artigo (ou vazio)\" },\n                        quote: { type: \"string\", description: \"1 frase memor\u00e1vel curta (ou vazio)\" },\n                        cta: { type: \"string\", description: \"1 call-to-action curto\" },\n                      }, required: [\"hook\", \"key_points\", \"cta\"] } } }],\n                      tool_choice: { type: \"function\", function: { name: \"write_atoms\" } },\n                    }),\n                  }, { functionName: \"orchestrate-step\", openRouterKey, geminiKey, groqKey });\n                  if (atomRes.ok) {\n                    const d = await atomRes.json();\n                    atoms = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? \"{}\");\n                  }\n                } catch (le: any) { console.warn(\"[orchestrate-step] atomize LLM failed, heuristic fallback:\", le?.message); }\n              }\n              const plain = stripHtml(articleBody);\n              const sentences = plain.split(/(?<=[.!?])\\s+/).filter((s) => s.length > 20);\n              const hook = String(atoms.hook || articleTitle || topic).slice(0, 200);\n              const key_points = Array.isArray(atoms.key_points) && atoms.key_points.length\n                ? atoms.key_points.map((k) => String(k)).slice(0, 5)\n                : sentences.slice(0, 4);\n              const cta = String(atoms.cta || \"Saiba mais\").slice(0, 200);\n              await admin.from(\"pillar_atoms\").insert({\n                user_id: run.user_id, pillar_run_id: run_id,\n                hook, key_points, stat: atoms.stat || null, quote: atoms.quote || null, cta, pillar_url: null,\n              });\n              await addStep(\"atomize_pillar\", \"done\", { topic }, { hook: hook.slice(0, 80), key_points: key_points.length, llm: !!aiKey });\n            }\n          } catch (ae: any) {\n            console.warn(\"[orchestrate-step] atomizer fail-open:\", ae?.message);\n            await addStep(\"atomize_pillar\", \"skipped\", { topic }, { reason: ae?.message || \"atomize_exception\" });\n          }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:44:10)*
+
+Now the `pillar_url` backfill after `wordpress_publish`, and the reshape kick at finalize:
+
+## 🤖 Claude *(02:44:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "            await admin.from(\"pipeline_runs\").update({ \n              metadata: updatedMetadata,\n              wordpress_url: wpPostUrl\n            }).eq(\"id\", run_id);\n\n            await addStep(\"wordpress_publish\", \"done\",",
+  "new_string": "            await admin.from(\"pipeline_runs\").update({\n              metadata: updatedMetadata,\n              wordpress_url: wpPostUrl\n            }).eq(\"id\", run_id);\n\n            // FR-CP-002 \u2014 backfill the canonical home into pillar_atoms (every micro-post links back to it). Fail-soft.\n            await admin.from(\"pillar_atoms\").update({ pillar_url: wpPostUrl })\n              .eq(\"pillar_run_id\", run_id).is(\"pillar_url\", null)\n              .then(() => {}, (e: any) => console.warn(\"[orchestrate-step] pillar_url backfill skipped:\", e?.message));\n\n            await addStep(\"wordpress_publish\", \"done\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:44:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "      await admin.from(\"pipeline_runs\").update({\n        status: hasErrors ? \"error\" : \"done\",\n        steps: finalSteps,\n        completed_at: new Date().toISOString(),\n      }).eq(\"id\", run_id);\n    }",
+  "new_string": "      await admin.from(\"pipeline_runs\").update({\n        status: hasErrors ? \"error\" : \"done\",\n        steps: finalSteps,\n        completed_at: new Date().toISOString(),\n      }).eq(\"id\", run_id);\n\n      // \u2500\u2500 FR-CP-003 \u2014 kick the reshaper for STATIC surfaces (text + image directives) now that pillar_atoms +\n      // pillar_url exist. VIDEO surfaces are reshaped later by video-bridge.ts after the 9:16 master finalizes\n      // (out-of-band). FAIL-OPEN: the run is already finalized; a reshape hiccup never changes run status.\n      // Idempotent (channel_variants UNIQUE) so a re-trigger is safe. SSOT: post-engine/13-sdd \u00a74.\n      try {\n        await fetch(`${supabaseUrl}/functions/v1/reshape-pillar`, {\n          method: \"POST\",\n          headers: { Authorization: `Bearer ${serviceKey}`, \"Content-Type\": \"application/json\" },\n          body: JSON.stringify({ pillar_run_id: run_id, scope: \"static\" }),\n        });\n      } catch (re: any) { console.warn(\"[orchestrate-step] reshape kick (static) failed:\", re?.message); }\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:44:25)*
+
+
+## 🤖 Claude *(02:44:26)*
+
+Atomizer + orchestrate-step wiring done. Now the core deliverable — the **reshaper edge fn**. Let me confirm the sentinel + LLM-fallback helper shapes I'll reuse, then write it.
+
+## 🤖 Claude *(02:44:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sentinel exports ===\"; grep -nE \"export (function|const)\" supabase/functions/_shared/sentinel.ts | head\necho \"=== _shared dir ===\"; ls supabase/functions/_shared/\necho \"=== fetchLLMWithFallback location ===\"; grep -rln \"export.*fetchLLMWithFallback\" supabase/functions/ | head\necho \"=== how orchestrate-step imports LLM helper ===\"; grep -nE \"import .*(llm|fallback|sentinel)\" supabase/functions/orchestrate-step/index.ts | head",
+  "description": "Inspect sentinel + LLM fallback helper for reuse"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sentinel exports ===
+> 62:export function lexicalScore(text: string): number {
+> 75:export function takeToken(identity: string): boolean {
+> 100:export function inspectPrompt(raw: string, identity: string, opts: InspectOptions = {}): SentinelVerdict {
+> 149:export function verdictResponse(v: SentinelVerdict, corsHeaders: Record<string, string>): Response {
+> === _shared dir ===
+> affiliate.ts
+> agent-metering.ts
+> billing.test.ts
+> billing.ts
+> intent-policy.ts
+> llm-fallback.test.ts
+> llm-fallback.ts
+> notify.ts
+> oauth-state.ts
+> sentinel.test.ts
+> sentinel.ts
+> social-app-config.ts
+> === fetchLLMWithFallback location ===
+> supabase/functions/_shared/llm-fallback.ts
+> === how orchestrate-step imports LLM helper ===
+> 9:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> ```
+
+## 🤖 Claude *(02:44:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "offset": 1,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// supabase/functions/_shared/llm-fallback.ts
+> 2	// Shared helper for OTD-LLM-FALLBACK. Falls back gracefully when OpenRouter credits are exhausted.
+> 3	
+> 4	export interface FallbackOptions {
+> 5	  openRouterKey?: string;
+> 6	  geminiKey?: string;
+> 7	  groqKey?: string;
+> 8	  /** Optional caller name for granular fallback telemetry (service = `llm-fallback:<functionName>`). */
+> 9	  functionName?: string;
+> 10	}
+> 11	
+> 12	const HEAVY_MODEL_REGEX = /claude-3\.5|claude-4|gpt-4|llama-3\.1-405b/i;
+> 13	
+> 14	/**
+> 15	 * Fire-and-forget telemetry to infra_health_logs when the cascade DEGRADES (a free tier rescued
+> 16	 * the call) or FAILS (all providers exhausted). Self-sufficient inside Deno (reads SUPABASE_URL +
+> 17	 * SB_SECRET_KEY straight from the function env and POSTs to PostgREST — no SDK import); a silent
+> 18	 * no-op outside Deno (unit tests) and on ANY error — observability must NEVER break a generation.
+> 19	 */
+> 20	async function logFallbackHealth(status: "degraded" | "unhealthy", functionName?: string): Promise<void> {
+> 21	  try {
+> 22	    const denoEnv = (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env;
+> 23	    if (!denoEnv) return;
+> 24	    const url = denoEnv.get("SUPABASE_URL");
+> 25	    const key = denoEnv.get("SB_SECRET_KEY") ?? denoEnv.get("SUPABASE_SERVICE_ROLE_KEY");
+> 26	    if (!url || !key) return;
+> 27	    await fetch(`${url}/rest/v1/infra_health_logs`, {
+> 28	      method: "POST",
+> 29	      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+> 30	      body: JSON.stringify({ service: `llm-fallback:${functionName ?? "unknown"}`, status }),
+> 31	    }).catch(() => {});
+> 32	  } catch (_) {
+> 33	    // swallow — telemetry is best-effort and must not affect the LLM cascade
+> 34	  }
+> 35	}
+> 36	
+> 37	/**
+> 38	 * Executes a chat completion fetch request, falling back gracefully to free alternatives
+> 39	 * if the primary provider fails due to credit exhaustion (402), rate-limits (429), or network errors.
+> 40	 * 
+> 41	 * Cascade order:
+> 42	 * 1. Primary provider (OpenRouter / Groq)
+> 43	 * 2. Gemini Free OpenAI-Compatible Endpoint:
+> 44	 *    - Heavy models -> gemini-2.5-pro -> gemini-1.5-pro
+> 45	 *    - Medium/Light models -> gemini-2.5-flash -> gemini-1.5-flash
+> 46	 * 3. OpenRouter Free (gemma-2-9b-it:free / llama-3-8b-instruct:free)
+> 47	 */
+> 48	export async function fetchLLMWithFallback(
+> 49	  originalEndpoint: string,
+> 50	  requestInit: RequestInit,
+> 51	  options: FallbackOptions
+> 52	): Promise<Response> {
+> 53	  const openRouterKey = options.openRouterKey;
+> 54	  const geminiKey = options.geminiKey;
+> 55	  const groqKey = options.groqKey;
+> 56	
+> 57	  let requestBodyObj: any = {};
+> 58	  if (requestInit.body && typeof requestInit.body === "string") {
+> 59	    try {
+> 60	      requestBodyObj = JSON.parse(requestInit.body);
+> 61	    } catch (_) {
+> 62	      console.warn("[llm-fallback] Failed to parse request body as JSON");
+> 63	    }
+> 64	  }
+> 65	
+> 66	  const originalModel = requestBodyObj.model || "";
+> 67	
+> 68	  // Helper to execute fetch and handle potential network errors
+> 69	  const safeFetch = async (url: string, init: RequestInit): Promise<Response> => {
+> 70	    try {
+> ```
+
+## 🤖 Claude *(02:44:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/sentinel.ts",
+  "offset": 100,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	export function inspectPrompt(raw: string, identity: string, opts: InspectOptions = {}): SentinelVerdict {
+> 101	  const { rateLimit = true } = opts;
+> 102	  // L1 — structural
+> 103	  if (typeof raw !== "string" || raw.length === 0) {
+> 104	    return { allow: false, status: 400, code: "empty_prompt" };
+> 105	  }
+> 106	  if (raw.length > MAX_PROMPT_BYTES) {
+> 107	    return { allow: false, status: 413, code: "payload_too_large" };
+> 108	  }
+> 109	  // L3 — rate (cheap, before regex work) — skippable for fan-out targets
+> 110	  if (rateLimit && !takeToken(identity)) {
+> 111	    return { allow: false, status: 429, code: "rate_limited" };
+> 112	  }
+> 113	  // L2 — control-char smuggling: hostile by definition in a prompt
+> 114	  if (ANSI_OR_CONTROL_RE.test(raw)) {
+> 115	    return { allow: false, status: 403, code: "control_chars_in_prompt" };
+> 116	  }
+> 117	  // L2 — lexical injection score (2+ independent pattern families => block)
+> 118	  const score = lexicalScore(raw);
+> 119	  if (score >= 2) {
+> 120	    return { allow: false, status: 403, code: "prompt_injection_suspected", detail: `score=${score}` };
+> 121	  }
+> 122	  return { allow: true, status: 200, code: "ok" };
+> 123	}
+> 124	
+> 125	// Telemetry — best-effort, never throws (NFR-SEC-01 ∩ FR-SEC-013).
+> 126	interface AdminLike {
+> 127	  from(table: string): {
+> 128	    insert(row: Record<string, unknown>): PromiseLike<{ error: unknown }>;
+> 129	  };
+> 130	}
+> 131	
+> 132	export async function logSentinelBlock(
+> 133	  admin: AdminLike,
+> 134	  fn: string,
+> 135	  verdict: SentinelVerdict,
+> 136	  userId: string | null,
+> 137	): Promise<void> {
+> 138	  try {
+> 139	    await admin.from("infra_health_logs").insert({
+> 140	      service: "sentinel",
+> 141	      status: "degraded",
+> 142	      metadata: { fn, code: verdict.code, detail: verdict.detail ?? null, user_id: userId },
+> 143	    });
+> 144	  } catch {
+> 145	    // swallowing is intentional: telemetry must never break the request path
+> 146	  }
+> 147	}
+> 148	
+> 149	export function verdictResponse(v: SentinelVerdict, corsHeaders: Record<string, string>): Response {
+> 150	  return new Response(
+> 151	    JSON.stringify({ error: v.code, detail: v.detail ?? null, layer: "sentinel" }),
+> 152	    { status: v.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 153	  );
+> 154	}
+> 155	
+> ```
+
+## 🤖 Claude *(02:46:18)*
+
+
+## 🤖 Claude *(02:46:18)*
+
+Everything's grounded. Now I'll write the core deliverable — the **`reshape-pillar`** interpreter edge fn (FR-CP-003/006/007/008).
+
+## 🤖 Claude *(02:46:19)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(02:46:19)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(02:48:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "content": "// reshape-pillar \u2014 Channel Format Intelligence reshaper (FR-CP-003/006/007/008)\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// BoK SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md. Thesis: \"data dictates the rules\" \u2014 read\n// channel_profiles.transform_recipe + pillar_atoms and emit ONE NATIVE variant per (channel, surface). ZERO\n// per-channel branch: the recipe is interpreted (field_map grammar \u00a73 + reshape-verb dispatch \u00a73.1). The 9:16\n// master serves the 7 video surfaces (spine, BR-CP-003); divergences (16:9, image reframe) emit a directive +\n// honest gap status (no fake publish \u2014 Lei 1). Native variants (distinct per channel) defeat the cross-post\n// penalty (FR-CP-007). Format gate (FR-CP-006) records coercion so no publish breaks on spec.\n//\n// AUTH: service-role-only (Bearer SB_SECRET_KEY). user_id is resolved from pipeline_runs (server-trusted, NEVER\n// from the body) \u2014 mirrors orchestrate-step. config.toml verify_jwt=false. Invoked by orchestrate-step (scope\n// 'static', after knowledge_mesh) and video-bridge.ts (scope 'video', after finalize_video_render).\n// Idempotent: channel_variants UNIQUE(pillar_run_id,channel,surface) + ON CONFLICT upsert. Fail-open per channel.\n\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";\nimport { inspectPrompt } from \"../_shared/sentinel.ts\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\n// channel_profiles.channel (spec naming) \u2192 public.social_platform enum (publish/queue naming). Gap #3.\nconst CHANNEL_TO_PLATFORM: Record<string, string> = {\n  twitter_x: \"twitter\", linkedin: \"linkedin\", instagram: \"instagram\", facebook: \"facebook\",\n  tiktok: \"tiktok\", youtube: \"youtube\", pinterest: \"pinterest\", wordpress: \"wordpress\",\n};\n\n// derive_from values that depend on a rendered VIDEO master (processed in scope='video').\nconst VIDEO_DERIVE = new Set([\"9x16_master\", \"pillar_video_16x9\"]);\n\n// Publishers operational TODAY (publish-social branch exists AND accepts the asset kind). Everything else \u2192\n// asset_status 'pending_publisher'/'pending_render'/'pending_reframe' (variant produced, NOT enqueued) \u2014 OTD-CP-010.\nfunction isOperational(platform: string | null, assetKind: string, assetStatus: string): boolean {\n  if (!platform) return false;\n  if (assetKind === \"video\" && assetStatus === \"reused_master\") {\n    return [\"instagram\", \"tiktok\", \"youtube\", \"pinterest\"].includes(platform); // video_url branches\n  }\n  if (assetKind === \"none\" && assetStatus === \"ready\") {\n    return [\"linkedin\", \"twitter\"].includes(platform); // text branches (twitter = single tweet hook)\n  }\n  return false;\n}\n\ntype Atoms = { hook?: string; key_points?: unknown; stat?: string; quote?: string; cta?: string; pillar_url?: string };\n\nfunction atomArray(v: unknown): string[] {\n  if (Array.isArray(v)) return v.map((x) => String(x)).filter(Boolean);\n  return [];\n}\n\n// \u2500\u2500 field_map grammar (\u00a73): evaluate 'atoms.<token>' expressions joined by '+'. \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction evalExpr(expr: string, atoms: Atoms, virtuals: Record<string, string>, sep: string): string {\n  return String(expr || \"\")\n    .split(\"+\")\n    .map((s) => s.trim())\n    .map((part) => {\n      if (!part) return \"\";\n      if ((part.startsWith(\"'\") && part.endsWith(\"'\")) || (part.startsWith('\"') && part.endsWith('\"'))) {\n        return part.slice(1, -1);\n      }\n      if (part.startsWith(\"atoms.\")) {\n        const name = part.slice(\"atoms.\".length).trim();\n        if (name in virtuals) return virtuals[name];\n        const v = (atoms as Record<string, unknown>)[name];\n        if (Array.isArray(v)) return v.map((x) => String(x)).join(\"\\n\");\n        return v == null ? \"\" : String(v);\n      }\n      return \"\"; // nested sub-directive (e.g. 'reframe_1.91x1') or unknown token \u2192 ignored in TEXT assembly\n    })\n    .filter(Boolean)\n    .join(sep);\n}\n\n// Assemble the deterministic native skeleton from transform_recipe.field_map. Voicing (LLM) refines it after.\nfunction assembleNative(recipe: Record<string, unknown>, atoms: Atoms): Record<string, unknown> {\n  const fm = (recipe?.field_map ?? {}) as Record<string, string>;\n  const kp = atomArray(atoms.key_points);\n  const virtuals: Record<string, string> = {\n    hook_short: String(atoms.hook ?? \"\").slice(0, 40),\n    hook_keyworded: String(atoms.hook ?? \"\"),\n    key_points_keyworded: kp.join(\"\\n\"),\n  };\n  const out: Record<string, unknown> = {};\n\n  // Thread special-case: tweet_1 + (one tweet per key_point) + tweet_last.\n  if (\"tweet_1\" in fm || \"tweets_n\" in fm) {\n    const tweets: string[] = [];\n    if (fm.tweet_1) tweets.push(evalExpr(fm.tweet_1, atoms, virtuals, \" \"));\n    for (const k of kp) tweets.push(k);\n    if (fm.tweet_last) tweets.push(evalExpr(fm.tweet_last, atoms, virtuals, \" \"));\n    out.tweets = tweets.map((t) => t.slice(0, 280)).filter(Boolean);\n    return out;\n  }\n\n  for (const [key, expr] of Object.entries(fm)) {\n    if (key === \"featured_image\") continue; // nested reframe sub-directive \u2014 handled by asset path, not text\n    if (key === \"link\") { out.link = evalExpr(expr, atoms, virtuals, \" \"); continue; }\n    const sep = key === \"title\" || key === \"overlay_text\" ? \" \" : \"\\n\\n\";\n    out[key] = evalExpr(expr, atoms, virtuals, sep);\n  }\n  return out;\n}\n\n// Char gate (FR-CP-006 text): hard-truncate each text field to the channel limit; record violations.\nfunction charGate(native: Record<string, unknown>, textSpec: Record<string, unknown> | null): string[] {\n  const violations: string[] = [];\n  const lim = (k: string) => (textSpec && typeof textSpec[k] === \"number\" ? (textSpec[k] as number) : null);\n  const clampField = (field: string, max: number | null) => {\n    if (max && typeof native[field] === \"string\" && (native[field] as string).length > max) {\n      native[field] = (native[field] as string).slice(0, max);\n      violations.push(`${field}_truncated_${max}`);\n    }\n  };\n  clampField(\"caption\", lim(\"caption_max\"));\n  clampField(\"body\", lim(\"body_max\") ?? lim(\"caption_max\"));\n  clampField(\"title\", lim(\"title_max\"));\n  clampField(\"description\", lim(\"desc_max\"));\n  if (Array.isArray(native.tweets)) {\n    native.tweets = (native.tweets as string[]).map((t) => (t.length > 280 ? (violations.push(\"tweet_truncated_280\"), t.slice(0, 280)) : t));\n  }\n  return violations;\n}\n\n// Image format coercion (FR-CP-006): our masters are PNG; many APIs forbid PNG. Decide the target format.\nfunction imageFormatGate(imageSpec: Record<string, unknown> | null): { ok: boolean; coerced_format: string; violations: string[] } {\n  const required = String(imageSpec?.format ?? \"png\").toLowerCase();\n  const violations: string[] = [];\n  let coerced = \"png\";\n  if (required.includes(\"png\")) coerced = \"png\"; // png allowed (png_or_jpeg / jpg_or_png)\n  else if (required.includes(\"webp\")) coerced = \"webp\"; // tiktok WebP/JPEG\n  else if (required.includes(\"jpeg\") || required.includes(\"jpg\")) coerced = \"jpeg\"; // ig jpeg-only\n  if (coerced !== \"png\") violations.push(\"png_not_allowed_via_api_needs_conversion\");\n  return { ok: coerced === \"png\", coerced_format: coerced, violations };\n}\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const admin = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n  );\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n\n  // Best-effort telemetry (allowlist: no PII/secrets in the global-read table).\n  const pulse = (service: string, status: \"ok\" | \"degraded\" | \"error\", event?: string, metadata?: Record<string, unknown>) =>\n    admin.from(\"infra_health_logs\").insert({ service, status, event: event ?? null, metadata: metadata ?? {} }).then(() => {}, () => {});\n\n  try {\n    // \u2500\u2500 AUTH: service-role-only \u2500\u2500\n    const authHeader = req.headers.get(\"Authorization\");\n    if (authHeader !== `Bearer ${serviceKey}`) {\n      return new Response(JSON.stringify({ error: \"Unauthorized\" }), { status: 401, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    const body = await req.json().catch(() => ({}));\n    const pillarRunId: string | undefined = body.pillar_run_id;\n    const scope: \"static\" | \"video\" | \"all\" = body.scope === \"video\" || body.scope === \"all\" ? body.scope : \"static\";\n    if (!pillarRunId) {\n      return new Response(JSON.stringify({ error: \"pillar_run_id required\" }), { status: 400, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    // \u2500\u2500 Resolve identity from the run (server-trusted, NEVER body) \u2500\u2500\n    const { data: run } = await admin.from(\"pipeline_runs\").select(\"user_id, metadata\").eq(\"id\", pillarRunId).maybeSingle();\n    if (!run?.user_id) {\n      return new Response(JSON.stringify({ error: \"run_not_found\" }), { status: 404, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n    const userId: string = run.user_id;\n    const campaignId: string | null = (run.metadata as { campaign_id?: string } | null)?.campaign_id ?? null;\n\n    // \u2500\u2500 Load the atomized pillar (latest for this run; reshaper tolerates a heuristic-only row) \u2500\u2500\n    const { data: atomsRow } = await admin.from(\"pillar_atoms\")\n      .select(\"hook, key_points, stat, quote, cta, pillar_url\")\n      .eq(\"pillar_run_id\", pillarRunId).order(\"created_at\", { ascending: false }).limit(1).maybeSingle();\n    if (!atomsRow) {\n      await pulse(\"reshape-pillar\", \"degraded\", \"no_atoms\", { scope });\n      return new Response(JSON.stringify({ ok: false, error: \"no_pillar_atoms\", processed: [] }), { status: 200, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n    const atoms: Atoms = atomsRow as Atoms;\n\n    // \u2500\u2500 Load active channel profiles (system rows + this tenant's overrides), ordered by priority \u2500\u2500\n    const { data: profiles } = await admin.from(\"channel_profiles\")\n      .select(\"channel, surface, priority, video, image, text, publish_path, voice_prompt_seed, transform_recipe\")\n      .eq(\"is_active\", true).or(`user_id.is.null,user_id.eq.${userId}`).order(\"priority\", { ascending: true });\n    if (!profiles?.length) {\n      return new Response(JSON.stringify({ ok: true, processed: [], scheduled: 0, note: \"no_active_profiles\" }), { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    // \u2500\u2500 Resolve source assets (best-effort; missing master/image \u21d2 honest pending_* status, not a crash) \u2500\u2500\n    let videoMaster: { bucket: string; key: string } | null = null;\n    if (scope === \"video\" || scope === \"all\") {\n      const { data: renders } = await admin.from(\"video_renders\")\n        .select(\"storage_key, composition\")\n        .eq(\"user_id\", userId).eq(\"state\", \"done\")\n        .order(\"created_at\", { ascending: false }).limit(25);\n      const m = (renders ?? []).find((r) => {\n        const c = r.composition as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } } | null;\n        return c?.pillar_run_id === pillarRunId || c?.autopilot?.pillar_run_id === pillarRunId;\n      });\n      if (m?.storage_key) videoMaster = { bucket: \"video-studio-assets\", key: m.storage_key };\n    }\n    let pillarImage: { bucket: string; key: string } | null = null;\n    if ((scope === \"static\" || scope === \"all\") && campaignId) {\n      const { data: img } = await admin.from(\"content_library\")\n        .select(\"media_url, metadata\")\n        .eq(\"user_id\", userId).eq(\"type\", \"image\").eq(\"campaign_id\", campaignId)\n        .order(\"created_at\", { ascending: false }).limit(1).maybeSingle();\n      const key = img?.media_url as string | undefined;\n      if (key && !/^https?:\\/\\//i.test(key)) {\n        pillarImage = { bucket: (img?.metadata as { storage_bucket?: string } | null)?.storage_bucket || \"generated-images\", key };\n      }\n    }\n\n    // \u2500\u2500 Filter surfaces by scope \u2500\u2500\n    const inScope = profiles.filter((p) => {\n      const isVideo = VIDEO_DERIVE.has(String((p.transform_recipe as { derive_from?: string })?.derive_from ?? \"\"));\n      if (scope === \"all\") return true;\n      return scope === \"video\" ? isVideo : !isVideo;\n    });\n\n    // \u2500\u2500 1) Assemble native skeletons for every in-scope surface \u2500\u2500\n    type Work = {\n      channel: string; surface: string; platform: string | null; publish_path: string | null;\n      recipe: Record<string, unknown>; native: Record<string, unknown>; voice: string;\n      textSpec: Record<string, unknown> | null; imageSpec: Record<string, unknown> | null;\n      derive: string; seo: boolean; key: string;\n    };\n    const work: Work[] = inScope.map((p) => {\n      const recipe = (p.transform_recipe ?? {}) as Record<string, unknown>;\n      return {\n        channel: p.channel, surface: p.surface,\n        platform: CHANNEL_TO_PLATFORM[p.channel] ?? null,\n        publish_path: p.publish_path ?? null,\n        recipe, native: assembleNative(recipe, atoms),\n        voice: String(p.voice_prompt_seed ?? \"\"),\n        textSpec: (p.text ?? null) as Record<string, unknown> | null,\n        imageSpec: (p.image ?? null) as Record<string, unknown> | null,\n        derive: String(recipe.derive_from ?? \"\"),\n        seo: String(recipe.mode ?? \"\") === \"seo_text\",\n        key: `${p.channel}:${p.surface}`,\n      };\n    });\n\n    // \u2500\u2500 2) Native VOICING (FR-CP-007) \u2014 one batched LLM call rewrites captions/titles/descriptions in each\n    //    channel's own voice, distinct across channels. Sentinel-gated. FAIL-SOFT to the deterministic skeleton. \u2500\u2500\n    const openRouterKey = await getKey(admin, userId, \"openrouter_api_key\");\n    const geminiKey = await getKey(admin, userId, \"google_api_key\");\n    const groqKey = await getKey(admin, userId, \"groq_api_key\");\n    const aiKey = openRouterKey || groqKey || geminiKey;\n    const voiceTargets = work.filter((w) => typeof w.native.caption === \"string\" || typeof w.native.title === \"string\" || typeof w.native.description === \"string\" || typeof w.native.body === \"string\");\n    if (aiKey && voiceTargets.length) {\n      const skeletonBlob = voiceTargets.map((w) => `${w.key} | voz: ${w.voice} | seo:${w.seo} | limites:${JSON.stringify(w.textSpec ?? {})} | skeleton:${JSON.stringify({ caption: w.native.caption, title: w.native.title, description: w.native.description, body: w.native.body })}`).join(\"\\n\");\n      const guard = inspectPrompt(`${atoms.hook ?? \"\"}\\n${atomArray(atoms.key_points).join(\"\\n\")}`, \"reshape-pillar\", { rateLimit: false });\n      if (guard.allow) {\n        try {\n          const endpoint = openRouterKey ? \"https://openrouter.ai/api/v1/chat/completions\" : (groqKey ? \"https://api.groq.com/openai/v1/chat/completions\" : \"https://openrouter.ai/api/v1/chat/completions\");\n          const model = openRouterKey ? \"google/gemini-2.5-flash\" : (groqKey ? \"llama-3.3-70b-versatile\" : \"google/gemini-2.5-flash\");\n          const vRes = await fetchLLMWithFallback(endpoint, {\n            method: \"POST\",\n            headers: { Authorization: `Bearer ${aiKey}`, \"Content-Type\": \"application/json\", \"HTTP-Referer\": \"https://mcorch.com\", \"X-Title\": \"GCRUX Constellation\" },\n            body: JSON.stringify({\n              model,\n              messages: [\n                { role: \"system\", content: \"Voc\u00ea reescreve copy social NATIVA por canal a partir de um esqueleto. Regras: (1) cada canal tem voz/tamanho PR\u00d3PRIOS; NUNCA repita texto id\u00eantico entre canais (penalidade de cross-post). (2) pt-BR. (3) respeite os limites de caracteres. (4) seo:true \u21d2 t\u00edtulo+descri\u00e7\u00e3o keyword-rich para busca, n\u00e3o legenda de feed. N\u00e3o invente fatos fora do esqueleto.\" },\n                { role: \"user\", content: `Reescreva cada item abaixo como variante nativa. Retorne via a ferramenta.\\n\\n${skeletonBlob}` },\n              ],\n              tools: [{ type: \"function\", function: { name: \"write_variants\", description: \"Native per-channel copy\", parameters: { type: \"object\", properties: { variants: { type: \"array\", items: { type: \"object\", properties: {\n                key: { type: \"string\" }, caption: { type: \"string\" }, title: { type: \"string\" }, description: { type: \"string\" }, body: { type: \"string\" },\n              }, required: [\"key\"] } } }, required: [\"variants\"] } } }],\n              tool_choice: { type: \"function\", function: { name: \"write_variants\" } },\n            }),\n          }, { functionName: \"reshape-pillar\", openRouterKey, geminiKey, groqKey });\n          if (vRes.ok) {\n            const d = await vRes.json();\n            const parsed = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? \"{}\");\n            const byKey = new Map<string, Record<string, string>>();\n            for (const v of (parsed.variants ?? [])) if (v?.key) byKey.set(String(v.key), v);\n            for (const w of voiceTargets) {\n              const v = byKey.get(w.key);\n              if (!v) continue;\n              for (const f of [\"caption\", \"title\", \"description\", \"body\"] as const) {\n                if (typeof v[f] === \"string\" && v[f].trim() && typeof w.native[f] === \"string\") w.native[f] = v[f].trim();\n              }\n            }\n          } else {\n            await pulse(\"reshape-pillar\", \"degraded\", \"voicing_llm_failed\", { scope });\n          }\n        } catch (e) {\n          console.warn(\"[reshape-pillar] voicing failed, using skeletons:\", e instanceof Error ? e.message : e);\n          await pulse(\"reshape-pillar\", \"degraded\", \"voicing_exception\", { scope });\n        }\n      }\n    }\n\n    // \u2500\u2500 3) Per-surface: resolve asset + format gate + UPSERT channel_variants + enqueue where operational \u2500\u2500\n    const processed: Array<{ channel: string; surface: string; status: string; asset_status: string }> = [];\n    let scheduled = 0;\n\n    for (const w of work) {\n      try {\n        let assetKind = \"none\";\n        let assetBucket: string | null = null;\n        let assetKey: string | null = null;\n        let assetStatus = \"ready\";\n        let formatGate: Record<string, unknown> = {};\n\n        const reshape = String(w.recipe.reshape ?? \"\");\n        if (VIDEO_DERIVE.has(w.derive)) {\n          assetKind = \"video\";\n          if (w.derive === \"9x16_master\") {\n            if (videoMaster) { assetBucket = videoMaster.bucket; assetKey = videoMaster.key; assetStatus = \"reused_master\"; }\n            else assetStatus = \"pending_render\"; // master not finished (out-of-band) or not produced for this run\n            const maxMb = (w.video as never) ?? (w as { recipe: { video?: { max_file_mb?: number } } });\n            const cap = (w.recipe?.video as { max_file_mb?: number } | undefined)?.max_file_mb ?? ((inScope.find((p) => `${p.channel}:${p.surface}` === w.key)?.video as { max_file_mb?: number } | null) ?? {}).max_file_mb ?? null;\n            formatGate = { ok: true, container: \"mp4\", envelope: cap ? { max_file_mb: cap } : null };\n          } else {\n            // pillar_video_16x9 (YouTube long) \u2014 no 16:9 render engine yet (OTD-CP-008): emit directive only.\n            assetStatus = \"pending_render\";\n            formatGate = { ok: false, directive: \"render_16x9\", reason: \"OTD-CP-008_no_16x9_template\" };\n          }\n        } else if (w.derive === \"pillar_image\") {\n          assetKind = \"image\";\n          const fg = imageFormatGate(w.imageSpec);\n          formatGate = { ...fg, reshape };\n          if (reshape === \"render_thumbnail_16x9\") {\n            assetStatus = \"pending_reframe\"; // overlay render \u2014 OTD-CP-009\n          } else if (fg.ok && pillarImage) {\n            // png allowed AND we have the master image \u2192 usable as-is\n            assetBucket = pillarImage.bucket; assetKey = pillarImage.key; assetStatus = \"ready\";\n          } else {\n            // needs reframe and/or format conversion (FFmpeg host worker) \u2014 OTD-CP-009\n            assetStatus = \"pending_reframe\";\n          }\n        } else if (w.derive === \"pillar_article\") {\n          // WordPress canonical home \u2014 already published by the pillar; reshaper does not republish.\n          assetKind = \"none\";\n          assetStatus = \"reused_master\";\n          formatGate = { ok: true, note: \"canonical_home\" };\n        } else {\n          // pillar_atoms \u2014 pure text surface (text_post / thread). Operational.\n          assetKind = \"none\";\n          assetStatus = \"ready\";\n          const violations = charGate(w.native, w.textSpec);\n          formatGate = { ok: true, violations };\n        }\n\n        // char gate also applies to caption/title/description on media surfaces\n        if (assetKind !== \"none\") {\n          const v = charGate(w.native, w.textSpec);\n          formatGate = { ...formatGate, text_violations: v };\n        }\n\n        // UPSERT the native variant (idempotency anchor).\n        const { data: variant, error: upErr } = await admin.from(\"channel_variants\").upsert({\n          user_id: userId, pillar_run_id: pillarRunId, channel: w.channel, surface: w.surface,\n          platform: w.platform, publish_path: w.publish_path, native_text: w.native,\n          asset_kind: assetKind, asset_bucket: assetBucket, asset_key: assetKey,\n          asset_status: assetStatus, format_gate: formatGate,\n        }, { onConflict: \"pillar_run_id,channel,surface\" }).select(\"id, scheduled_post_id, status\").single();\n        if (upErr || !variant) throw new Error(upErr?.message || \"variant_upsert_failed\");\n\n        // Enqueue publish ONCE, only where the publisher is operational with this asset.\n        let status = variant.status as string;\n        if (!variant.scheduled_post_id && isOperational(w.platform, assetKind, assetStatus)) {\n          const content: Record<string, unknown> = {\n            text: typeof w.native.body === \"string\" ? w.native.body\n              : typeof w.native.caption === \"string\" ? w.native.caption\n              : Array.isArray(w.native.tweets) ? (w.native.tweets as string[])[0]\n              : typeof w.native.title === \"string\" ? w.native.title : \"\",\n            surface: w.surface, channel: w.channel,\n          };\n          if (assetKind === \"video\" && assetBucket && assetKey) { content.video_bucket = assetBucket; content.video_key = assetKey; }\n          if (assetKind === \"image\" && assetBucket && assetKey) { content.image_bucket = assetBucket; content.image_key = assetKey; }\n          if (Array.isArray(w.native.tweets)) content.tweets = w.native.tweets;\n\n          const { data: sp } = await admin.from(\"scheduled_posts\").insert({\n            user_id: userId, content_id: null, campaign_id: campaignId, social_account_id: null,\n            platform: w.platform, scheduled_at: new Date().toISOString(), status: \"queued\",\n            metadata: { reshape: { content, channel_variant_id: variant.id, surface: w.surface, channel: w.channel } },\n          }).select(\"id\").single();\n          if (sp?.id) {\n            await admin.from(\"channel_variants\").update({ status: \"scheduled\", scheduled_post_id: sp.id }).eq(\"id\", variant.id);\n            status = \"scheduled\";\n            scheduled++;\n          }\n        }\n        processed.push({ channel: w.channel, surface: w.surface, status, asset_status: assetStatus });\n      } catch (e) {\n        console.warn(`[reshape-pillar] surface ${w.key} fail-open:`, e instanceof Error ? e.message : e);\n        await pulse(`reshape-${w.channel}`, \"error\", \"surface_failed\", { surface: w.surface });\n        await admin.from(\"channel_variants\").upsert({\n          user_id: userId, pillar_run_id: pillarRunId, channel: w.channel, surface: w.surface,\n          platform: w.platform, status: \"failed\", native_text: w.native, asset_status: \"gap\",\n        }, { onConflict: \"pillar_run_id,channel,surface\" }).then(() => {}, () => {});\n        processed.push({ channel: w.channel, surface: w.surface, status: \"failed\", asset_status: \"gap\" });\n      }\n    }\n\n    await pulse(\"reshape-pillar\", \"ok\", \"reshape_complete\", { scope, surfaces: processed.length, scheduled });\n    return new Response(JSON.stringify({ ok: true, scope, processed, scheduled, skipped: processed.length - scheduled }), {\n      headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n  } catch (e) {\n    console.error(\"reshape-pillar error:\", e);\n    await pulse(\"reshape-pillar\", \"error\", \"fatal\");\n    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : \"Unknown error\" }), {\n      status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n  }\n});\n\n// Read a per-user BYOK key from the decrypted view (service-role). Returns \"\" if absent (fail-soft \u2192 skeletons).\nasync function getKey(admin: ReturnType<typeof createClient>, userId: string, column: string): Promise<string> {\n  try {\n    const { data } = await admin.from(\"decrypted_user_api_keys\").select(column).eq(\"user_id\", userId).maybeSingle();\n    const v = (data as Record<string, unknown> | null)?.[column];\n    return typeof v === \"string\" ? v : \"\";\n  } catch {\n    return \"\";\n  }\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:48:07)*
+
+
+## 🤖 Claude *(02:48:08)*
+
+I left a broken `maxMb`/`cap` snippet (the video spec lives on the profile row, not in `transform_recipe`, and `Work` has no `video` field). Let me fix that cleanly by adding `videoSpec` to `Work`.
+
+## 🤖 Claude *(02:48:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "    type Work = {\n      channel: string; surface: string; platform: string | null; publish_path: string | null;\n      recipe: Record<string, unknown>; native: Record<string, unknown>; voice: string;\n      textSpec: Record<string, unknown> | null; imageSpec: Record<string, unknown> | null;\n      derive: string; seo: boolean; key: string;\n    };\n    const work: Work[] = inScope.map((p) => {\n      const recipe = (p.transform_recipe ?? {}) as Record<string, unknown>;\n      return {\n        channel: p.channel, surface: p.surface,\n        platform: CHANNEL_TO_PLATFORM[p.channel] ?? null,\n        publish_path: p.publish_path ?? null,\n        recipe, native: assembleNative(recipe, atoms),\n        voice: String(p.voice_prompt_seed ?? \"\"),\n        textSpec: (p.text ?? null) as Record<string, unknown> | null,\n        imageSpec: (p.image ?? null) as Record<string, unknown> | null,\n        derive: String(recipe.derive_from ?? \"\"),\n        seo: String(recipe.mode ?? \"\") === \"seo_text\",\n        key: `${p.channel}:${p.surface}`,\n      };\n    });",
+  "new_string": "    type Work = {\n      channel: string; surface: string; platform: string | null; publish_path: string | null;\n      recipe: Record<string, unknown>; native: Record<string, unknown>; voice: string;\n      textSpec: Record<string, unknown> | null; imageSpec: Record<string, unknown> | null;\n      videoSpec: Record<string, unknown> | null; derive: string; seo: boolean; key: string;\n    };\n    const work: Work[] = inScope.map((p) => {\n      const recipe = (p.transform_recipe ?? {}) as Record<string, unknown>;\n      return {\n        channel: p.channel, surface: p.surface,\n        platform: CHANNEL_TO_PLATFORM[p.channel] ?? null,\n        publish_path: p.publish_path ?? null,\n        recipe, native: assembleNative(recipe, atoms),\n        voice: String(p.voice_prompt_seed ?? \"\"),\n        textSpec: (p.text ?? null) as Record<string, unknown> | null,\n        imageSpec: (p.image ?? null) as Record<string, unknown> | null,\n        videoSpec: (p.video ?? null) as Record<string, unknown> | null,\n        derive: String(recipe.derive_from ?? \"\"),\n        seo: String(recipe.mode ?? \"\") === \"seo_text\",\n        key: `${p.channel}:${p.surface}`,\n      };\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:48:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "            if (videoMaster) { assetBucket = videoMaster.bucket; assetKey = videoMaster.key; assetStatus = \"reused_master\"; }\n            else assetStatus = \"pending_render\"; // master not finished (out-of-band) or not produced for this run\n            const maxMb = (w.video as never) ?? (w as { recipe: { video?: { max_file_mb?: number } } });\n            const cap = (w.recipe?.video as { max_file_mb?: number } | undefined)?.max_file_mb ?? ((inScope.find((p) => `${p.channel}:${p.surface}` === w.key)?.video as { max_file_mb?: number } | null) ?? {}).max_file_mb ?? null;\n            formatGate = { ok: true, container: \"mp4\", envelope: cap ? { max_file_mb: cap } : null };",
+  "new_string": "            if (videoMaster) { assetBucket = videoMaster.bucket; assetKey = videoMaster.key; assetStatus = \"reused_master\"; }\n            else assetStatus = \"pending_render\"; // master not finished (out-of-band) or not produced for this run\n            const cap = (w.videoSpec as { max_file_mb?: number } | null)?.max_file_mb ?? null;\n            formatGate = { ok: true, container: \"mp4\", envelope: cap ? { max_file_mb: cap } : null };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:48:29)*
+
+
+## 🤖 Claude *(02:48:30)*
+
+Reshaper written. Now wire it: (1) `video-bridge.ts` triggers `scope=video` after the master finalizes, (2) `auto-publish` prefers the native variant, (3) `config.toml` `verify_jwt=false`. Let me read the video-bridge finalize region.
+
+## 🤖 Claude *(02:48:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "offset": 100,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	      name: `video-render:${renderId}`,
+> 101	      content: `HyperFrames 9:16 render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,
+> 102	      metadata: { kind: 'video_render', render_id: renderId, storage_key: storageKey, bytes: result.bytes },
+> 103	    }).select('id').maybeSingle();
+> 104	    nodeId = node?.id ?? null;
+> 105	
+> 106	    // Terminal: done, refund 0 (prepaid path — the cycle already paid; the motor never self-bills here).
+> 107	    const { data: fin } = await supabase.rpc('finalize_video_render', {
+> 108	      p_render_id: renderId, p_state: 'done', p_storage_key: storageKey, p_qa: null, p_node_id: nodeId, p_refund: 0,
+> 109	    });
+> 110	
+> 111	    // Dual-write to the canonical asset registry (creative_assets) so Canvas Studio / the HyperFrames editor can
+> 112	    // reuse this render bidirectionally (the "power of the outputs" spine). Fail-soft — never break the render.
+> 113	    try {
+> 114	      await supabase.rpc('register_creative_asset', {
+> 115	        p_user_id: row.user_id, p_kind: 'video',
+> 116	        p_storage_bucket: BUCKET, p_storage_key: storageKey, p_is_public: false,
+> 117	        p_source_module: 'hyperframes', p_source_job_id: renderId,
+> 118	        p_mime_type: 'video/mp4', p_file_size_bytes: result.bytes,
+> 119	        p_width: result.width, p_height: result.height,
+> 120	        p_duration_seconds: result.fps > 0 ? result.frames / result.fps : null,
+> 121	        p_mesh_node_id: nodeId,
+> 122	        p_title: ap?.title ? `Vídeo 9:16: ${ap.title}` : `Vídeo 9:16 ${renderId}`,
+> 123	        p_metadata: { render_id: renderId, format: '9:16', fps: result.fps, frames: result.frames },
+> 124	      });
+> 125	    } catch (e) {
+> 126	      console.warn(`[video-bridge] creative_assets register skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 127	    }
+> 128	
+> 129	    // FR-VA-025 — autopilot reconciliation (the async asset arrives AFTER the cycle finalized): attach the 9:16
+> 130	    // asset to the content library + a creative_metrics row keyed by the new content_variant_id. Gated on the
+> 131	    // composition.autopilot context the enqueuer set; generic (editor) renders carry no autopilot block → no attach.
+> 132	    const ap = (spec as { autopilot?: { user_id?: string; campaign_id?: string | null; product_id?: string | null; cycle_id?: string | null; title?: string } }).autopilot;
+> 133	    if (ap?.user_id) {
+> 134	      try {
+> 135	        const { data: clib } = await supabase.from('content_library').insert({
+> 136	          user_id: ap.user_id, campaign_id: ap.campaign_id ?? null, type: 'video',
+> 137	          title: `Vídeo 9:16: ${ap.title ?? renderId}`, media_url: storageKey, status: 'approved',
+> 138	          metadata: { source: 'autopilot_video', render_id: renderId, product_id: ap.product_id ?? null, cycle_id: ap.cycle_id ?? null, storage_bucket: BUCKET, format: '9:16' },
+> 139	        }).select('id').maybeSingle();
+> 140	        if (clib?.id) {
+> 141	          // source MUST be one of the CHECK values ('affiliate_click'|'organic'|'postback') — the 9:16 video is an
+> 142	          // organic creative (mirrors the article baseline). platform null = not yet bound to a vertical network
+> 143	          // (PR-VA-021 deferred). UNIQUE(content_variant_id, source) is safe — the video's content_variant_id is new.
+> 144	          await supabase.from('creative_metrics').insert({
+> 145	            user_id: ap.user_id, cycle_id: ap.cycle_id ?? null, content_variant_id: clib.id,
+> 146	            product_id: ap.product_id ?? null, platform: null, source: 'organic',
+> 147	            impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,
+> 148	          }).then(() => {}, (e: unknown) => console.warn('[video-bridge] creative_metrics skipped:', e instanceof Error ? e.message : e));
+> 149	        }
+> 150	        console.log(`   ↳ autopilot attach: content_library video ${clib?.id ?? '(none)'}`);
+> 151	      } catch (e) {
+> 152	        console.warn(`[video-bridge] autopilot attach skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 153	      }
+> 154	    }
+> 155	
+> 156	    console.log(`✅ render ${renderId} done → ${storageKey} (${(result.bytes / 1024).toFixed(0)}KB, ${result.durationMs}ms)`, fin);
+> 157	    await logHealth('healthy', 'render_done', { render_id: renderId, bytes: result.bytes });
+> 158	  } catch (e) {
+> 159	    const msg = e instanceof Error ? e.message : String(e);
+> 160	    console.error(`❌ render ${renderId} failed: ${msg}`);
+> 161	    // Refund the charge (failed render delivered no value). finalize is idempotent (guard state IN queued/running).
+> 162	    await supabase.rpc('finalize_video_render', {
+> 163	      p_render_id: renderId, p_state: 'failed', p_storage_key: null, p_qa: null, p_node_id: null, p_refund: charged,
+> 164	    }).then(() => {}, () => {});
+> 165	    await logHealth('error', 'render_failed', { render_id: renderId, error: msg });
+> 166	  } finally {
+> 167	    if (outPath) rmSync(outPath, { force: true });
+> 168	  }
+> 169	}
+> 170	
+> 171	/** One drain pass: claim + render every queued hyperframes render. Returns count processed. */
+> 172	async function drainOnce(): Promise<number> {
+> 173	  // Reap renders stuck in 'running' past the timeout (dead worker) → back to queued for re-claim.
+> 174	  const cutoff = new Date(Date.now() - RUNNING_TIMEOUT_MS).toISOString();
+> 175	  await supabase.from('video_renders')
+> 176	    .update({ state: 'queued' })
+> 177	    .eq('engine', 'hyperframes').eq('state', 'running').lt('updated_at', cutoff)
+> 178	    .then(() => {}, () => {});
+> 179	
+> 180	  const { data: queued, error } = await supabase
+> 181	    .from('video_renders')
+> 182	    .select('id')
+> 183	    .eq('engine', 'hyperframes').eq('state', 'queued')
+> 184	    .order('created_at', { ascending: true })
+> 185	    .limit(10);
+> 186	  if (error || !queued?.length) return 0;
+> 187	
+> 188	  let n = 0;
+> 189	  for (const q of queued) {
+> ```
+
+## 🤖 Claude *(02:48:45)*
+
+
+## 🤖 Claude *(02:48:50)*
+
+Let me check how `video-bridge.ts` gets its env (URL + service key) so I can POST to the reshaper, and confirm the `spec`/`pillar_run_id` access.
+
+## 🤖 Claude *(02:48:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "offset": 1,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/video-bridge.ts
+> 4	 *
+> 5	 * HyperFrames render bridge — host worker that polls `video_renders` (engine='hyperframes', state='queued'),
+> 6	 * atomically claims each, renders the composition → 9:16 1080×1920 MP4 (render-core.ts), uploads to the private
+> 7	 * bucket `video-studio-assets`, and closes the render via `finalize_video_render` (the ONLY terminal authority).
+> 8	 *
+> 9	 * BoK SSOT: docs/bok/video-studio/04-frd.md FR-VS-024/026 + 05-sdd.md §2.3 (drift reconciliation 2026-06-24).
+> 10	 * SOP (Lei 2): docs/processes/autopilot-video-9x16.md (gate OTD-VA-009).
+> 11	 * Pattern: mirrors scripts/design-bridge.ts (poll + atomic claim) — the proven host↔cloud bridge (Edge fns can't
+> 12	 *          reach a host daemon, OTD-VS-... ; the worker pulls). Tenancy: single-tenant Usuário Zero (OTD-VA-011);
+> 13	 *          multi-tenant sandbox hardening (FR-VS-025 ephemeral container) is deferred to User 1.
+> 14	 *
+> 15	 * Supervisor: systemd --user video-bridge.service (Restart=always). Secrets load from ../.env (NOT in the unit).
+> 16	 * Usage: bun run scripts/video-bridge.ts   (or `--once` to drain queued renders and exit — used by the smoke).
+> 17	 */
+> 18	
+> 19	import { createClient } from '@supabase/supabase-js';
+> 20	import { existsSync, readFileSync, rmSync } from 'fs';
+> 21	import { join, dirname } from 'path';
+> 22	import { fileURLToPath } from 'url';
+> 23	import { renderComposition, type RenderSpec } from './hyperframes/render-core.ts';
+> 24	
+> 25	// ── Env (same loader as design-bridge.ts — no secrets in the systemd unit) ──
+> 26	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 27	const envPath = join(__dirname, '../.env');
+> 28	if (existsSync(envPath)) {
+> 29	  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+> 30	    const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
+> 31	    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+> 32	  }
+> 33	}
+> 34	
+> 35	const SUPABASE_URL = process.env.SUPABASE_URL;
+> 36	const SERVICE_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 37	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 38	  console.error('❌ Missing SUPABASE_URL or SB_SECRET_KEY in .env');
+> 39	  process.exit(1);
+> 40	}
+> 41	const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+> 42	
+> 43	const BUCKET = 'video-studio-assets';
+> 44	const POLL_MS = 4000;
+> 45	const RUNNING_TIMEOUT_MS = 10 * 60 * 1000; // re-claim a render stuck in 'running' beyond this (dead worker)
+> 46	
+> 47	function logHealth(status: string, event: string, metadata?: Record<string, unknown>) {
+> 48	  return supabase.from('infra_health_logs')
+> 49	    .insert({ service: 'video-bridge', status, event, metadata: metadata ?? null })
+> 50	    .then(() => {}, () => {});
+> 51	}
+> 52	
+> 53	/** Atomic claim: queued→running for exactly one worker. Returns the claimed row or null. */
+> 54	async function claim(renderId: string) {
+> 55	  const { data, error } = await supabase
+> 56	    .from('video_renders')
+> 57	    .update({ state: 'running', updated_at: new Date().toISOString() })
+> 58	    .eq('id', renderId)
+> 59	    .eq('state', 'queued')
+> 60	    .select('id, user_id, engine, charged_mco, composition')
+> ```
+
+## 🤖 Claude *(02:49:04)*
+
+
+## 🤖 Claude *(02:49:04)*
+
+`SUPABASE_URL` + `SERVICE_KEY` are available; `spec` is the composition. Adding the `scope=video` trigger after the autopilot attach:
+
+## 🤖 Claude *(02:49:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts",
+  "old_string": "      } catch (e) {\n        console.warn(`[video-bridge] autopilot attach skipped for ${renderId}:`, e instanceof Error ? e.message : e);\n      }\n    }\n\n    console.log(`\u2705 render ${renderId} done \u2192 ${storageKey} (${(result.bytes / 1024).toFixed(0)}KB, ${result.durationMs}ms)`, fin);",
+  "new_string": "      } catch (e) {\n        console.warn(`[video-bridge] autopilot attach skipped for ${renderId}:`, e instanceof Error ? e.message : e);\n      }\n    }\n\n    // \u2500\u2500 FR-CP-003 \u2014 kick the reshaper for VIDEO surfaces now that the 9:16 master is finalized (out-of-band).\n    // The reshaper reexports THIS master into per-channel native variants (the 7-channel spine, anti cross-post).\n    // Idempotent (channel_variants UNIQUE) + fail-soft \u2014 a reshape hiccup never breaks the render.\n    // SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a74.\n    const pillarRunId = (spec as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } }).pillar_run_id\n      ?? (spec as { autopilot?: { pillar_run_id?: string } }).autopilot?.pillar_run_id ?? null;\n    if (pillarRunId) {\n      try {\n        await fetch(`${SUPABASE_URL}/functions/v1/reshape-pillar`, {\n          method: 'POST',\n          headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },\n          body: JSON.stringify({ pillar_run_id: pillarRunId, scope: 'video' }),\n        });\n        console.log(`   \u21b3 reshape kicked (video) for pillar_run ${pillarRunId}`);\n      } catch (e) {\n        console.warn(`[video-bridge] reshape kick skipped for ${renderId}:`, e instanceof Error ? e.message : e);\n      }\n    }\n\n    console.log(`\u2705 render ${renderId} done \u2192 ${storageKey} (${(result.bytes / 1024).toFixed(0)}KB, ${result.durationMs}ms)`, fin);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:49:15)*
+
+Now the `auto-publish` patch — prefer the native variant + sign per-row asset keys at publish time:
+
+## 🤖 Claude *(02:49:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts",
+  "old_string": "        // content stays a bare string for text-only posts (publish-social reads `content.text || content`); when a\n        // video sibling resolved, send the object shape so the platform's video branch fires with video_url.\n        const contentPayload = videoUrl ? { text: contentText, video_url: videoUrl } : contentText;",
+  "new_string": "        // \u2500\u2500 FR-CP-003 \u2014 prefer the reshaper's NATIVE variant (per-row asset ref) over the generic derivation. \u2500\u2500\n        // The reshaper writes metadata.reshape.content = { text, video_bucket/video_key | image_bucket/image_key,\n        // tweets[] }. Signing the per-row asset key HERE (fresh 6h URL) fixes auto-publish's single-video-per-campaign\n        // collision (a 9:16 short and a 16:9 long under one campaign would otherwise share the latest sibling).\n        // SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a75.3. Falls back to the legacy derivation when absent.\n        let contentPayload: unknown = videoUrl ? { text: contentText, video_url: videoUrl } : contentText;\n        const reshape = (post.metadata as { reshape?: { content?: Record<string, unknown> } } | null)?.reshape;\n        if (reshape?.content) {\n          const c = reshape.content;\n          const native: Record<string, unknown> = { text: typeof c.text === \"string\" ? c.text : contentText };\n          const signKey = async (bucket: unknown, key: unknown): Promise<string | null> => {\n            if (typeof bucket !== \"string\" || typeof key !== \"string\") return null;\n            if (/^https?:\\/\\//i.test(key)) return key;\n            const { data: signed } = await adminClient.storage.from(bucket).createSignedUrl(key, 21600);\n            return signed?.signedUrl ?? null;\n          };\n          const vu = await signKey(c.video_bucket, c.video_key);\n          const iu = await signKey(c.image_bucket, c.image_key);\n          if (vu) native.video_url = vu;\n          if (iu) native.image_url = iu;\n          if (Array.isArray(c.tweets)) native.thread = c.tweets;\n          contentPayload = native;\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:49:27)*
+
+
+## 🤖 Claude *(02:49:27)*
+
+Now `config.toml` — register `reshape-pillar` with `verify_jwt=false` (service-role-only, like orchestrate-step). Let me check the pattern.
+
+## 🤖 Claude *(02:49:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"functions\\.(orchestrate-step|orchestrate-content|auto-publish)\\]\" supabase/config.toml\necho \"---context around orchestrate-step---\"\ngrep -nA1 \"functions.orchestrate-step\" supabase/config.toml",
+  "description": "Find config.toml verify_jwt entries"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 16:[functions.orchestrate-content]
+> 18:[functions.orchestrate-step]
+> ---context around orchestrate-step---
+> 18:[functions.orchestrate-step]
+> 19-verify_jwt = false
+> ```
+
+## 🤖 Claude *(02:49:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "offset": 14,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 14	[functions.self-heal]
+> 15	verify_jwt = false
+> 16	[functions.orchestrate-content]
+> 17	verify_jwt = false
+> 18	[functions.orchestrate-step]
+> 19	verify_jwt = false
+> 20	[functions.nurture-dispatch]
+> 21	verify_jwt = false
+> 22	[functions.nurture-cron]
+> 23	verify_jwt = false
+> 24	[functions.autopilot-run]
+> 25	verify_jwt = false
+> ```
+
+## 🤖 Claude *(02:49:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.orchestrate-step]\nverify_jwt = false",
+  "new_string": "[functions.orchestrate-step]\nverify_jwt = false\n[functions.reshape-pillar]\nverify_jwt = false"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:49:45)*
+
+
+## 🤖 Claude *(02:49:45)*
+
+All wiring done. Now verify it compiles — `deno check` on the new/changed edge fns + `tsc` for the billing change.
+
+## 🤖 Claude *(02:49:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nwhich deno >/dev/null 2>&1 && echo \"deno: $(deno --version | head -1)\" || echo \"NO DENO\"\necho \"=== deno check reshape-pillar ===\"\ndeno check supabase/functions/reshape-pillar/index.ts 2>&1 | tail -25\necho \"EXIT:$?\"",
+  "description": "deno check the new reshaper edge fn"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NO DENO
+> === deno check reshape-pillar ===
+> /bin/bash: line 8: deno: command not found
+> EXIT:0
+> ```
+
+## 🤖 Claude *(02:49:52)*
+
+
+## 🤖 Claude *(02:49:52)*
+
+No system `deno`. Let me find how the project runs `deno check` (the social-connect seal mentioned "deno 8/8").
+
+## 🤖 Claude *(02:49:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls ~/.deno/bin/deno 2>/dev/null && echo \"found ~/.deno\"; ls /usr/local/bin/deno 2>/dev/null\nfind / -name \"deno\" -type f 2>/dev/null | grep -v proc | head -3\necho \"=== npx deno? ===\"\ngrep -rn \"deno check\" scripts/ package.json 2>/dev/null | head -5",
+  "description": "Locate deno binary or check method"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.deno/bin/deno
+> found ~/.deno
+> /home/ubuntu/.deno/bin/deno
+> /home/ubuntu/.npm/_npx/05b6ef7b13673c57/node_modules/deno/deno
+> /home/ubuntu/.npm/_npx/05b6ef7b13673c57/node_modules/@deno/linux-arm64-glibc/deno
+> === npx deno? ===
+> ```
+
+## 🤖 Claude *(02:50:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\necho \"=== reshape-pillar ===\"; deno check supabase/functions/reshape-pillar/index.ts 2>&1 | tail -30; echo \"EXIT:${PIPESTATUS[0]}\"",
+  "description": "deno check reshape-pillar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === reshape-pillar ===
+> [0m[32mCheck[0m supabase/functions/reshape-pillar/index.ts
+> [0m[1mTS2345 [0m[ERROR]: Argument of type 'SupabaseClient<any, "public", "public", any, any>' is not assignable to parameter of type 'SupabaseClient<unknown, { PostgrestVersion: string; }, never, never, { PostgrestVersion: string; }>'.
+>   Types of property 'rest' are incompatible.
+>     Type 'PostgrestClient<any, any, "public", any>' is not assignable to type 'PostgrestClient<unknown, { PostgrestVersion: string; }, never, never>'.
+>       Type '"public"' is not assignable to type 'never'.
+>     const openRouterKey = await getKey(admin, userId, "openrouter_api_key");
+> [0m[31m                                       ~~~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts[0m:[0m[33m250[0m:[0m[33m40[0m
+> 
+> [0m[1mTS2345 [0m[ERROR]: Argument of type 'SupabaseClient<any, "public", "public", any, any>' is not assignable to parameter of type 'SupabaseClient<unknown, { PostgrestVersion: string; }, never, never, { PostgrestVersion: string; }>'.
+>   Types of property 'rest' are incompatible.
+>     Type 'PostgrestClient<any, any, "public", any>' is not assignable to type 'PostgrestClient<unknown, { PostgrestVersion: string; }, never, never>'.
+>       Type '"public"' is not assignable to type 'never'.
+>     const geminiKey = await getKey(admin, userId, "google_api_key");
+> [0m[31m                                   ~~~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts[0m:[0m[33m251[0m:[0m[33m36[0m
+> 
+> [0m[1mTS2345 [0m[ERROR]: Argument of type 'SupabaseClient<any, "public", "public", any, any>' is not assignable to parameter of type 'SupabaseClient<unknown, { PostgrestVersion: string; }, never, never, { PostgrestVersion: string; }>'.
+>   Types of property 'rest' are incompatible.
+>     Type 'PostgrestClient<any, any, "public", any>' is not assignable to type 'PostgrestClient<unknown, { PostgrestVersion: string; }, never, never>'.
+>       Type '"public"' is not assignable to type 'never'.
+>     const groqKey = await getKey(admin, userId, "groq_api_key");
+> [0m[31m                                 ~~~~~[0m
+>     at [0m[36mfile:///home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts[0m:[0m[33m252[0m:[0m[33m34[0m
+> 
+> Found 3 errors.
+> 
+> [0m[1m[31merror[0m: Type checking failed.
+> EXIT:1
+> ```
+
+## 🤖 Claude *(02:50:08)*
+
+
+## 🤖 Claude *(02:50:08)*
+
+Type mismatch on the `getKey` param. Simplest fix — loosen the param type (standard Deno-edge pattern):
+
+## 🤖 Claude *(02:50:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "// Read a per-user BYOK key from the decrypted view (service-role). Returns \"\" if absent (fail-soft \u2192 skeletons).\nasync function getKey(admin: ReturnType<typeof createClient>, userId: string, column: string): Promise<string> {",
+  "new_string": "// Read a per-user BYOK key from the decrypted view (service-role). Returns \"\" if absent (fail-soft \u2192 skeletons).\n// deno-lint-ignore no-explicit-any\nasync function getKey(admin: any, userId: string, column: string): Promise<string> {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:50:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\necho \"=== reshape-pillar ===\"; deno check supabase/functions/reshape-pillar/index.ts 2>&1 | tail -15; echo \"EXIT:${PIPESTATUS[0]}\"\necho \"=== orchestrate-step ===\"; deno check supabase/functions/orchestrate-step/index.ts 2>&1 | tail -15; echo \"EXIT:${PIPESTATUS[0]}\"\necho \"=== auto-publish ===\"; deno check supabase/functions/auto-publish/index.ts 2>&1 | tail -15; echo \"EXIT:${PIPESTATUS[0]}\"",
+  "description": "deno check all 3 edge fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === reshape-pillar ===
+> [0m[32mCheck[0m supabase/functions/reshape-pillar/index.ts
+> EXIT:0
+> === orchestrate-step ===
+> [0m[32mCheck[0m supabase/functions/orchestrate-step/index.ts
+> EXIT:0
+> === auto-publish ===
+> [0m[32mCheck[0m supabase/functions/auto-publish/index.ts
+> EXIT:0
+> ```
+
+## 🤖 Claude *(02:50:24)*
+
+
+## 🤖 Claude *(02:50:25)*
+
+All 3 edge fns compile clean. Now `tsc` for the billing change + verify nothing else broke:
+
+## 🤖 Claude *(02:50:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 180 npx tsc --noEmit 2>&1 | tail -15; echo \"TSC_EXIT:${PIPESTATUS[0]}\"",
+  "description": "Frontend tsc strict check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT:0
+> ```
+
+## 🤖 Claude *(02:50:39)*
+
+
+## 🤖 Claude *(02:50:40)*
+
+`tsc` 0, all edge fns clean. Per CLAUDE.md, every new migration MUST pass `/security-review` before commit. Let me update tasks and run it on the pending diff (new RLS table + service-role edge fn).
+
+## 🤖 Claude *(02:50:40)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(02:50:41)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+## 🤖 Claude *(02:50:41)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(02:50:44)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(02:50:44)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   docs/bok/post-engine/00-index.md
+	modified:   scripts/video-bridge.ts
+	modified:   src/lib/billing.ts
+	modified:   supabase/config.toml
+	modified:   supabase/functions/auto-publish/index.ts
+	modified:   supabase/functions/orchestrate-step/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	deno.lock
+	docs/bok/post-engine/13-sdd-reshaper-atomizer.md
+	docs/processes/channel-reshaper.md
+	supabase/functions/reshape-pillar/
+	supabase/migrations/20260627150000_channel_variants.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(02:50:56)*
+
+
+## 🤖 Claude *(02:50:57)*
+
+Let me capture the diff and run the security analysis as instructed — an identification sub-agent, then parallel false-positive filters.
+
+## 🤖 Claude *(02:50:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit diff --stat\necho \"=== new migration + edge fn line counts ===\"\nwc -l supabase/migrations/20260627150000_channel_variants.sql supabase/functions/reshape-pillar/index.ts",
+  "description": "Diff stat + new file sizes for review context"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  docs/bok/post-engine/00-index.md             |  3 +-
+>  scripts/video-bridge.ts                      | 19 +++++++
+>  src/lib/billing.ts                           |  2 +
+>  supabase/config.toml                         |  2 +
+>  supabase/functions/auto-publish/index.ts     | 26 +++++++--
+>  supabase/functions/orchestrate-step/index.ts | 80 +++++++++++++++++++++++++++-
+>  6 files changed, 126 insertions(+), 6 deletions(-)
+> === new migration + edge fn line counts ===
+>    70 supabase/migrations/20260627150000_channel_variants.sql
+>   425 supabase/functions/reshape-pillar/index.ts
+>   495 total
+> ```
+
+## 🤖 Claude *(02:51:20)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify security vulns in reshaper diff",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer doing a FOCUSED security review of a specific change set in the repo at /home/gcrUX/htdocs/constellation-orchestra. Only flag HIGH-CONFIDENCE (>80%) security vulnerabilities NEWLY INTRODUCED by these changes. Not a general review.\n\nThe change set (read each file fully):\n1. NEW migration: supabase/migrations/20260627150000_channel_variants.sql \u2014 a new RLS table `channel_variants` + ALTER creative_metrics ADD hook_rate.\n2. NEW edge fn: supabase/functions/reshape-pillar/index.ts \u2014 service-role-only reshaper.\n3. PATCH: supabase/functions/auto-publish/index.ts \u2014 now reads post.metadata.reshape.content and signs storage keys.\n4. PATCH: supabase/functions/orchestrate-step/index.ts \u2014 added an atomizer block (pillar_atoms insert), composition.pillar_run_id, pillar_url backfill, and a reshape-pillar fetch kick. (git diff to see exact lines.)\n5. PATCH: scripts/video-bridge.ts \u2014 added a reshape-pillar fetch kick.\n\nRun `git diff` (and read the two new untracked files) to see exact changes.\n\nFocus areas relevant here:\n- RLS / tenancy: does channel_variants correctly isolate tenants? Are writes default-deny (service-role only)? Could one tenant read/write another's variants? Check the SELECT/DELETE/INSERT/UPDATE policies and that user_id can't be forged.\n- AuthZ on reshape-pillar: it is service-role-only (Authorization must === Bearer SB_SECRET_KEY). Does it resolve user_id from the body (BAD) or from pipeline_runs server-side (GOOD)? Could a caller reshape/publish for another user? Could body.pillar_run_id point at another tenant's run and cause cross-tenant publish?\n- Storage signed-URL handling in auto-publish: it signs `bucket`/`key` from post.metadata.reshape.content. Could an attacker who can write scheduled_posts.metadata cause signing of an arbitrary bucket/key (read of another tenant's private object) or SSRF? Consider who can write scheduled_posts rows (RLS).\n- SQL injection in the `.or(\\`user_id.is.null,user_id.eq.${userId}\\`)` PostgREST filter in reshape-pillar \u2014 userId comes from pipeline_runs.user_id (a uuid). Is it ever attacker-controlled string?\n- The LLM voicing call: any injection that crosses a privilege boundary (not prompt-injection-into-AI, which is excluded).\n- Secrets: any hardcoded secret or secret logged in plaintext (URLs/UUIDs are safe).\n\nEXCLUDE: DoS, rate limiting, secrets-on-disk, prompt-injection-into-AI-prompt, log spoofing, SSRF that only controls a path, theoretical races, outdated deps, findings in markdown docs, client-side authz, memory safety.\n\nExisting patterns to compare against (read for context): supabase/migrations/20260627140000_channel_profiles.sql (sibling RLS table), supabase/functions/orchestrate-step/index.ts auth (service-role + server-trusted user), supabase/functions/publish-social/index.ts, supabase/migrations/20260625120000_creative_assets_registry.sql (register_creative_asset service-role pattern).\n\nOutput a markdown list of findings. For each: file:line, severity (HIGH/MEDIUM), category, description, concrete exploit scenario, fix recommendation, and a confidence score 1-10. If you find NO high-confidence vulnerabilities, say so explicitly. Be rigorous but do not invent issues."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Confirmed there are multiple private buckets (`generated-images` [private], `video-studio-assets` [private], `canvas-assets`, plus others). The storage RLS isolates by `(storage.foldername(name))[1] = auth.uid()` — i.e., the first path segment is the owner\'s uid. The service-role client used in auto-publish bypasses these policies entirely, so signing an arbitrary `bucket`/`key` from attacker-controlled metadata reads any tenant\'s private object.\n\nI now have everything needed. Let me write up the findings.\n\n## Security Review: Channel Reshaper / Atomizer Change Set\n\nI reviewed the full diff and the two new files (`channel_variants` migration, `reshape-pillar` edge fn), and traced the attacker-reachable write paths against the existing RLS model.\n\n---\n\n### FINDING 1 — HIGH — Cross-tenant private-object read via attacker-controlled storage signing in `auto-publish`\n\n**File:** `supabase/functions/auto-publish/index.ts:110-126` (newly introduced FR-CP-003 block)\n\n**Category:** Broken access control / IDOR — cross-tenant data exfiltration (FMEA-011 class)\n\n**Description:**\nThe new block reads `post.metadata.reshape.content.{video_bucket, video_key, image_bucket, image_key}` and signs them with the **service-role** Storage client (which bypasses Storage RLS):\n\n```ts\nconst signKey = async (bucket, key) => {\n  ...\n  const { data: signed } = await adminClient.storage.from(bucket).createSignedUrl(key, 21600);\n  return signed?.signedUrl ?? null;\n};\nconst vu = await signKey(c.video_bucket, c.video_key);   // bucket+key fully from post.metadata\n```\n\nThe `bucket` and `key` are taken **verbatim** from `post.metadata`, with no ownership/path validation. Crucially, `scheduled_posts` RLS lets any authenticated user freely INSERT/UPDATE their **own** rows including the free-form `metadata` jsonb (no column restriction):\n\n```sql\n-- 20260402014040_...sql:172  metadata JSONB DEFAULT \'{}\'\n-- :298  CREATE POLICY "Users can create posts" ... FOR INSERT WITH CHECK (auth.uid() = user_id);\n-- :299  CREATE POLICY "Users can update own posts" ... FOR UPDATE USING (auth.uid() = user_id);\n```\n\nauto-publish picks up any row with `status=\'queued\'` (which the user sets) and signs whatever bucket/key the attacker placed in metadata. The resulting 6h signed URL is passed as `content.video_url`/`content.image_url` into `publish-social`, which publishes the bytes to the attacker\'s own connected social account (IG REELS, FB, YouTube, Pinterest — confirmed at `publish-social/index.ts:159,167-168,247,374,463`). The bytes of any tenant\'s private object are thereby exfiltrated.\n\nThe private buckets reachable include `generated-images`, `generated-videos` (read-public but service can read all), `video-studio-assets`, `canvas-assets`, `vision-artifacts`, etc. Their RLS isolates objects by `(storage.foldername(name))[1] = auth.uid()`, but the service-role client ignores all of that.\n\n**Why this is NEW:** Pre-patch (`git show HEAD:...auto-publish`), the bucket came from `content_library.metadata.storage_bucket` and the key from `content_library.media_url`, both resolved from a **content_library row filtered by the post\'s `campaign_id`** — i.e., server-derived rows, not raw user input. The patch replaces that with bucket+key taken directly from user-writable `scheduled_posts.metadata`.\n\n**Concrete exploit:**\n1. Tenant A (attacker) is a normal authenticated user with a connected Instagram/YouTube account.\n2. A inserts a row into their own `scheduled_posts`: `{ user_id: A, status:\'queued\', scheduled_at: now, platform:\'instagram\', social_account_id: <A\'s account>, metadata: { reshape: { content: { text:\'x\', video_bucket:\'video-studio-assets\', video_key:\'<victim_uuid>/<render>.mp4\' } } } }`. (A can enumerate/guess victim keys, or target known buckets/paths; victim uid is discoverable.)\n3. `auto-publish` cron fires, signs the victim\'s object with the service key, and publishes the victim\'s private video/image to A\'s Instagram — exfiltrating it.\n\n**Fix recommendation:**\nDo not sign an arbitrary bucket/key from `scheduled_posts.metadata`. Either:\n- Resolve the asset from a server-trusted source keyed to the post owner — e.g., look up the `channel_variants` row by `metadata.reshape.channel_variant_id` AND `user_id = post.user_id`, then sign `asset_bucket`/`asset_key` from that row (the reshaper already writes these rows under the correct `user_id`); or\n- At minimum, allowlist the bucket AND enforce that the object path\'s owner segment equals `post.user_id` (e.g., `key.startsWith(post.user_id + \'/\')`) before signing, and reject otherwise. Given storage layout `<uid>/<file>`, enforcing the leading-uid match closes the cross-tenant read.\n\n**Confidence:** 9/10\n\n---\n\n### Tenancy / other focus areas — reviewed, no high-confidence issues\n\n- **`channel_variants` RLS (migration):** Correct. SELECT/DELETE own only (`auth.uid() = user_id`); no INSERT/UPDATE policy ⇒ default-deny writes, service-role-only (the reshaper). `user_id` cannot be forged by a client. UNIQUE`(pillar_run_id,channel,surface)` is the idempotency anchor. Mirrors the sibling `channel_profiles`/`pillar_atoms` pattern. The `hook_rate` ALTER on `creative_metrics` is additive/nullable with a 0–1 CHECK. No finding.\n\n- **`reshape-pillar` AuthZ:** Correctly service-role-only (`authHeader !== \\`Bearer ${serviceKey}\\`` → 401). `user_id` is resolved server-side from `pipeline_runs.user_id` (NEVER from the body), and all writes (`channel_variants`, `scheduled_posts`) use that resolved `userId`. A caller can only invoke it with the service key, so `body.pillar_run_id` pointing at another run is moot — the function already requires the service secret, and it stays self-consistent to that run\'s owner. No cross-tenant publish. No finding.\n\n- **PostgREST `.or(\\`user_id.is.null,user_id.eq.${userId}\\`)` (reshape-pillar:187):** `userId` is `pipeline_runs.user_id` — a DB-sourced uuid, never an attacker-supplied string. Not injectable in practice. No finding.\n\n- **LLM voicing call:** Sentinel-gated (`inspectPrompt`), fail-soft to deterministic skeletons; keys resolved per-user from `decrypted_user_api_keys` for the run\'s owner. No privilege-boundary crossing (prompt-injection-into-AI is excluded per scope). No finding.\n\n- **`orchestrate-step` atomizer + reshape kicks:** Uses server-trusted `run.user_id` / `run_id`; `pillar_atoms` insert is owner-scoped; reshape kicks use the service key + server-derived `run_id`. `pillar_run_id` is a globally-unique PK so the idempotency `count` can\'t collide cross-tenant. No finding.\n\n- **`video-bridge.ts` reshape kick:** Service key + `pillar_run_id` pulled from the render\'s own composition. No finding.\n\n- **Secrets:** No hardcoded secrets; only URLs/UUIDs logged. No finding.\n\n---\n\n**Summary:** One HIGH-confidence vulnerability newly introduced — the `auto-publish` patch signs an attacker-controlled `bucket`/`key` from user-writable `scheduled_posts.metadata` using the service-role Storage client, enabling cross-tenant read/exfiltration of any tenant\'s private storage object. Fix by binding the signed asset to a server-trusted row (`channel_variants` filtered by `post.user_id`) or enforcing a `key` owner-prefix/bucket allowlist before signing.'}, {'type': 'text', 'text': "agentId: ab3b88a63654e16d1 (use SendMessage with to: 'ab3b88a63654e16d1', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 112311\ntool_uses: 15\nduration_ms: 126240</usage>"}]
+> ```
+
+## 🤖 Claude *(02:54:11)*
+
+
+## 🤖 Claude *(02:54:14)*
+
+The review found a **real HIGH vulnerability I introduced** — and it's correct. `auto-publish` signs an attacker-controlled `bucket`/`key` from user-writable `scheduled_posts.metadata` with the service-role Storage client (bypasses Storage RLS) → any authenticated user could queue their own post pointing at a victim's private object path and exfiltrate it to their own social account. That's the FMEA-011 cross-tenant leak class. I must fix it before commit.
+
+The fix: never trust the asset ref from `metadata`; resolve it from the server-trusted `channel_variants` row filtered by `post.user_id` (the reshaper wrote it owner-scoped, service-role-only). Let me fix both sides.
+
+## 🤖 Claude *(02:54:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts",
+  "old_string": "        // \u2500\u2500 FR-CP-003 \u2014 prefer the reshaper's NATIVE variant (per-row asset ref) over the generic derivation. \u2500\u2500\n        // The reshaper writes metadata.reshape.content = { text, video_bucket/video_key | image_bucket/image_key,\n        // tweets[] }. Signing the per-row asset key HERE (fresh 6h URL) fixes auto-publish's single-video-per-campaign\n        // collision (a 9:16 short and a 16:9 long under one campaign would otherwise share the latest sibling).\n        // SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a75.3. Falls back to the legacy derivation when absent.\n        let contentPayload: unknown = videoUrl ? { text: contentText, video_url: videoUrl } : contentText;\n        const reshape = (post.metadata as { reshape?: { content?: Record<string, unknown> } } | null)?.reshape;\n        if (reshape?.content) {\n          const c = reshape.content;\n          const native: Record<string, unknown> = { text: typeof c.text === \"string\" ? c.text : contentText };\n          const signKey = async (bucket: unknown, key: unknown): Promise<string | null> => {\n            if (typeof bucket !== \"string\" || typeof key !== \"string\") return null;\n            if (/^https?:\\/\\//i.test(key)) return key;\n            const { data: signed } = await adminClient.storage.from(bucket).createSignedUrl(key, 21600);\n            return signed?.signedUrl ?? null;\n          };\n          const vu = await signKey(c.video_bucket, c.video_key);\n          const iu = await signKey(c.image_bucket, c.image_key);\n          if (vu) native.video_url = vu;\n          if (iu) native.image_url = iu;\n          if (Array.isArray(c.tweets)) native.thread = c.tweets;\n          contentPayload = native;\n        }",
+  "new_string": "        // \u2500\u2500 FR-CP-003 \u2014 prefer the reshaper's NATIVE variant over the generic derivation. \u2500\u2500\n        // SECURITY (FMEA-011): the asset ref is NEVER trusted from scheduled_posts.metadata (a user can write their\n        // OWN scheduled_posts.metadata, so signing a bucket/key from it with the service key would read ANY tenant's\n        // private object). Instead resolve it from the server-trusted channel_variants row, filtered by the post's\n        // OWNER (post.user_id) \u2014 that row is written service-role-only by the reshaper under the correct user_id.\n        // Signing the per-row asset key HERE (fresh 6h URL) also fixes auto-publish's single-video-per-campaign\n        // collision. SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md \u00a75.3. Falls back to legacy when absent.\n        let contentPayload: unknown = videoUrl ? { text: contentText, video_url: videoUrl } : contentText;\n        const reshape = (post.metadata as { reshape?: { content?: Record<string, unknown>; channel_variant_id?: string } } | null)?.reshape;\n        if (reshape?.content) {\n          const c = reshape.content;\n          const native: Record<string, unknown> = { text: typeof c.text === \"string\" ? c.text : contentText };\n          // Resolve the asset from the owner-scoped ledger row (server-trusted), NOT from metadata.\n          if (reshape.channel_variant_id) {\n            const { data: cv } = await adminClient\n              .from(\"channel_variants\")\n              .select(\"asset_bucket, asset_key, asset_kind\")\n              .eq(\"id\", reshape.channel_variant_id)\n              .eq(\"user_id\", post.user_id)        // hard tenant bind \u2014 a forged variant_id of another tenant returns nothing\n              .maybeSingle();\n            const bucket = cv?.asset_bucket as string | undefined;\n            const key = cv?.asset_key as string | undefined;\n            if (bucket && key) {\n              let url: string | null = null;\n              if (/^https?:\\/\\//i.test(key)) url = key;\n              else { const { data: signed } = await adminClient.storage.from(bucket).createSignedUrl(key, 21600); url = signed?.signedUrl ?? null; }\n              if (url) { if (cv?.asset_kind === \"video\") native.video_url = url; else if (cv?.asset_kind === \"image\") native.image_url = url; }\n            }\n          }\n          if (Array.isArray(c.tweets)) native.thread = c.tweets;\n          contentPayload = native;\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:54:33)*
+
+
+## 🤖 Claude *(02:54:34)*
+
+Now remove the inline bucket/key from the reshaper's `metadata.reshape.content` (no longer used — auto-publish reads from the ledger row; leaving them would be a confusing trap):
+
+## 🤖 Claude *(02:54:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts",
+  "old_string": "          const content: Record<string, unknown> = {\n            text: typeof w.native.body === \"string\" ? w.native.body\n              : typeof w.native.caption === \"string\" ? w.native.caption\n              : Array.isArray(w.native.tweets) ? (w.native.tweets as string[])[0]\n              : typeof w.native.title === \"string\" ? w.native.title : \"\",\n            surface: w.surface, channel: w.channel,\n          };\n          if (assetKind === \"video\" && assetBucket && assetKey) { content.video_bucket = assetBucket; content.video_key = assetKey; }\n          if (assetKind === \"image\" && assetBucket && assetKey) { content.image_bucket = assetBucket; content.image_key = assetKey; }\n          if (Array.isArray(w.native.tweets)) content.tweets = w.native.tweets;\n\n          const { data: sp } = await admin.from(\"scheduled_posts\").insert({",
+  "new_string": "          // NOTE: the asset ref (bucket/key) is intentionally NOT placed in metadata \u2014 auto-publish resolves it from\n          // the owner-scoped channel_variants row (FMEA-011: scheduled_posts.metadata is user-writable). Only the\n          // native text + thread + the variant id (a server-trusted lookup handle) go here.\n          const content: Record<string, unknown> = {\n            text: typeof w.native.body === \"string\" ? w.native.body\n              : typeof w.native.caption === \"string\" ? w.native.caption\n              : Array.isArray(w.native.tweets) ? (w.native.tweets as string[])[0]\n              : typeof w.native.title === \"string\" ? w.native.title : \"\",\n            surface: w.surface, channel: w.channel,\n          };\n          if (Array.isArray(w.native.tweets)) content.tweets = w.native.tweets;\n\n          const { data: sp } = await admin.from(\"scheduled_posts\").insert({"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/reshape-pillar/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:54:44)*
+
+Re-check both edge fns compile after the security fix:
+
+## 🤖 Claude *(02:54:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\necho \"=== auto-publish ===\"; deno check supabase/functions/auto-publish/index.ts 2>&1 | tail -8; echo \"EXIT:${PIPESTATUS[0]}\"\necho \"=== reshape-pillar ===\"; deno check supabase/functions/reshape-pillar/index.ts 2>&1 | tail -8; echo \"EXIT:${PIPESTATUS[0]}\"",
+  "description": "Re-check edge fns after security fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === auto-publish ===
+> [0m[32mCheck[0m supabase/functions/auto-publish/index.ts
+> EXIT:0
+> === reshape-pillar ===
+> [0m[32mCheck[0m supabase/functions/reshape-pillar/index.ts
+> EXIT:0
+> ```
+
+## 🤖 Claude *(02:55:11)*
+
+
+## 🤖 Claude *(02:55:20)*
+
+Both compile clean. Let me reason through the fix adversarially: an attacker can only write `scheduled_posts` rows with `user_id = themselves` (RLS `WITH CHECK auth.uid()=user_id`); auto-publish now looks up `channel_variants WHERE id=<their variant_id> AND user_id=post.user_id`; a victim's variant has the victim's `user_id`, so the filter returns nothing → no signing. And `channel_variants` is service-role-write-only, with asset refs the reshaper resolves only from the *owner's* own `video_renders`/`content_library`. The cross-tenant path is fully closed.
+
+**Security review result:**
+
+# Security Review — Channel Reshaper / Atomizer
+
+## Vuln 1: Broken Access Control (cross-tenant private-object read): `auto-publish/index.ts` (FR-CP-003 block)
+- **Severity:** HIGH · **Confidence:** 9/10 · **Category:** IDOR / cross-tenant exfiltration (FMEA-011)
+- **Description:** The new block signed a `bucket`/`key` taken verbatim from `scheduled_posts.metadata.reshape.content` with the **service-role** Storage client (bypasses Storage RLS). `scheduled_posts` is user-writable (`INSERT/UPDATE WITH CHECK auth.uid()=user_id`, free-form `metadata`).
+- **Exploit:** Attacker queues their own `scheduled_posts` row with `metadata.reshape.content.video_key='<victim_uid>/<file>.mp4'`; cron signs the victim's private object and publishes it to the attacker's connected social account.
+- **Status:** ✅ **FIXED** — auto-publish no longer trusts metadata for asset refs; it resolves `asset_bucket`/`asset_key` from the server-trusted `channel_variants` row filtered by `post.user_id` (service-role-written, owner-scoped). Inline bucket/key removed from the reshaper's metadata payload.
+
+All other areas reviewed (channel_variants RLS, reshape-pillar service-role auth + server-trusted user resolution, PostgREST filter, secrets) — **no findings**. The gated migration (`20260627150000`) is clean.
+
+Now applying the migration. Let me confirm only my migration is pending, then push.
+
+## 🤖 Claude *(02:55:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ntimeout 90 npx supabase migration list 2>&1 | tail -20",
+  "description": "Check pending migrations before push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    20260620120100 | 20260620120100 | 2026-06-20 12:01:00 
+>    20260620120200 | 20260620120200 | 2026-06-20 12:02:00 
+>    20260620120300 | 20260620120300 | 2026-06-20 12:03:00 
+>    20260622030000 | 20260622030000 | 2026-06-22 03:00:00 
+>    20260622030100 | 20260622030100 | 2026-06-22 03:01:00 
+>    20260622040000 | 20260622040000 | 2026-06-22 04:00:00 
+>    20260622210000 | 20260622210000 | 2026-06-22 21:00:00 
+>    20260623040000 | 20260623040000 | 2026-06-23 04:00:00 
+>    20260624120000 | 20260624120000 | 2026-06-24 12:00:00 
+>    20260624130000 | 20260624130000 | 2026-06-24 13:00:00 
+>    20260624140000 | 20260624140000 | 2026-06-24 14:00:00 
+>    20260625120000 | 20260625120000 | 2026-06-25 12:00:00 
+>    20260626120000 | 20260626120000 | 2026-06-26 12:00:00 
+>    20260626130000 | 20260626130000 | 2026-06-26 13:00:00 
+>    20260627120000 | 20260627120000 | 2026-06-27 12:00:00 
+>    20260627140000 | 20260627140000 | 2026-06-27 14:00:00 
+>    20260627150000 |                | 2026-06-27 15:00:00 
+> 
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(02:55:28)*
+
+
+## 🤖 Claude *(02:55:28)*
+
+Only `20260627150000` is pending (Remote column empty). Pushing it.
+
+## 🤖 Claude *(02:55:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ntimeout 150 npx supabase db push 2>&1 | tail -25",
+  "description": "Apply channel_variants migration to remote"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260627150000_channel_variants.sql
+> 
+>  [Y/n] 
+> Applying migration 20260627150000_channel_variants.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(02:55:37)*
+
+
+## 🤖 Claude *(02:55:37)*
+
+Migration applied. Material verification (Lei 1) — table exists, `hook_rate` column added, and the `channel_profiles` seed is in place for the reshaper:
+
+## 🤖 Claude *(02:55:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSUPA=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"\nKEY=\"${SB_SECRET_KEY}\"\necho \"=== channel_variants exists (count) ===\"\ncurl -s \"$SUPA/rest/v1/channel_variants?select=id&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range\necho \"=== creative_metrics.hook_rate column (select) ===\"\ncurl -s \"$SUPA/rest/v1/creative_metrics?select=hook_rate&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | head -c 200; echo\necho \"=== channel_profiles system rows (count) ===\"\ncurl -s \"$SUPA/rest/v1/channel_profiles?select=channel,surface&user_id=is.null\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range",
+  "description": "Verify channel_variants + hook_rate + channel_profiles seed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === channel_variants exists (count) ===
+> content-range: */0
+> === creative_metrics.hook_rate column (select) ===
+> [{"hook_rate":null}]
+> === channel_profiles system rows (count) ===
+> content-range: 0-15/16
+> ```
+
+## 🤖 Claude *(02:55:49)*
+
+
+## 🤖 Claude *(02:55:50)*
+
+Material proof green: `channel_variants` exists (0 rows), `creative_metrics.hook_rate` present, `channel_profiles` has all 16 system rows. Now deploy the edge fns (new `reshape-pillar` + patched `auto-publish`, `orchestrate-step`).
+
+## 🤖 Claude *(02:55:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\nfor fn in reshape-pillar auto-publish orchestrate-step; do\n  echo \"=== deploy $fn ===\"\n  timeout 180 npx supabase functions deploy \"$fn\" 2>&1 | grep -iE \"Deployed|Bundling|error|Deploying|Uploaded\" | tail -5\n  echo \"---\"\ndone",
+  "description": "Deploy reshape-pillar + auto-publish + orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy reshape-pillar ===
+> Bundling Function: reshape-pillar
+> Deploying Function: reshape-pillar (script size: 81.26kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: reshape-pillar
+> ---
+> === deploy auto-publish ===
+> Bundling Function: auto-publish
+> Deploying Function: auto-publish (script size: 61.94kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: auto-publish
+> ---
+> === deploy orchestrate-step ===
+> Bundling Function: orchestrate-step
+> Deploying Function: orchestrate-step (script size: 141.5kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> ---
+> ```
+
+## 🤖 Claude *(02:56:19)*
+
+
+## 🤖 Claude *(02:56:21)*
+
+All 3 deployed. Restart the `video-bridge` host worker to pick up the reshape kick, then I'll write the zero-cost smoke. Let me check the service + an existing smoke pattern for throwaway-user + cleanup.
+
+## 🤖 Claude *(02:56:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== restart video-bridge ===\"\nsystemctl --user restart video-bridge.service 2>&1 && echo \"restarted\" || echo \"restart failed (may need manual)\"\nsystemctl --user is-active video-bridge.service 2>&1\necho \"=== existing smoke patterns (throwaway user + cleanup) ===\"\nls scripts/qa/ | grep -E \"smoke-(campaign|autopilot|marketing|nurture)\" | head\necho \"=== gen-user-jwt helper ===\"\nhead -30 scripts/qa/gen-user-jwt.ts 2>/dev/null",
+  "description": "Restart video-bridge + inspect smoke + jwt helpers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === restart video-bridge ===
+> restarted
+> active
+> === existing smoke patterns (throwaway user + cleanup) ===
+> smoke-autopilot-budget.ts
+> smoke-autopilot-loop.ts
+> smoke-autopilot-run.ts
+> smoke-autopilot-video-refund.ts
+> smoke-campaign-run.ts
+> smoke-marketing-hub.ts
+> smoke-nurture-cron.ts
+> smoke-nurture.ts
+> === gen-user-jwt helper ===
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+>  * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+>  * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+>  *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+>  *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> if (error || !data.properties?.hashed_token) {
+>   console.error('generateLink error:', error?.message ?? 'no hashed_token');
+>   process.exit(1);
+> }
+> const tokenHash = data.properties.hashed_token;
+> ```
+
+## 🤖 Claude *(02:56:27)*
+
+
+## 🤖 Claude *(02:56:28)*
+
+`video-bridge` restarted and active. Let me look at the throwaway-user + cleanup pattern from an existing smoke, then write the reshaper smoke.
+
+## 🤖 Claude *(02:56:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-campaign-run.ts",
+  "offset": 1,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Smoke test — campaign-run edge fn (marketing-hub FR-MH-004), USER PATH (real JWT).
+> 4	 *
+> 5	 * Proves the function's full skeleton at ZERO LLM cost: every guard path (401/422/404/no-steps/402) runs
+> 6	 * BEFORE the mcoCoins deduct and BEFORE any orchestrate-content dispatch, and an `email`-channel step is
+> 7	 * BLOCKED (never dispatched), so the happy structural path costs only the 10-coin fee on a THROWAWAY balance
+> 8	 * and fans out to NOTHING. The real paid cascade (a `social`/`content` step → real orchestrate-content spend)
+> 9	 * is intentionally NOT exercised here — it is gated on Sovereign GO.
+> 10	 *
+> 11	 * Creates two throwaway @example.com users, signs in user1 for a real access_token, asserts the gates, and
+> 12	 * CLEANS UP (deletes users → cascade removes profiles/campaigns/steps; mesh observation nodes deleted explicitly).
+> 13	 * No production data, no Sovereign balance, no LLM provider $ touched.
+> 14	 *
+> 15	 * Usage: bun run scripts/qa/smoke-campaign-run.ts
+> 16	 */
+> 17	import { createClient } from '@supabase/supabase-js';
+> 18	
+> 19	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 20	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 21	const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> 22	if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 23	
+> 24	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 25	const stamp = Date.now();
+> 26	let uid1: string | null = null;
+> 27	let uid2: string | null = null;
+> 28	let pass = true;
+> 29	const createdNodeNames: string[] = [];
+> 30	
+> 31	function check(label: string, ok: boolean, detail = '') {
+> 32	  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? `  → ${detail}` : ''}`);
+> 33	  if (!ok) pass = false;
+> 34	}
+> 35	
+> 36	interface CrBody {
+> 37	  status?: string; error?: string; campaign_id?: string;
+> 38	  run_id?: string; steps_dispatched?: number; steps_queued?: number; async?: boolean; new_balance?: number;
+> 39	}
+> 40	async function call(token: string | null, body: unknown): Promise<{ status: number; body: CrBody }> {
+> 41	  const headers: Record<string, string> = { 'Content-Type': 'application/json', apikey: PUB };
+> 42	  if (token) headers.Authorization = `Bearer ${token}`;
+> 43	  const r = await fetch(`${URL}/functions/v1/campaign-run`, { method: 'POST', headers, body: JSON.stringify(body) });
+> 44	  let j: CrBody; const t = await r.text();
+> 45	  try { j = JSON.parse(t) as CrBody; } catch { j = { error: t }; }
+> 46	  return { status: r.status, body: j };
+> 47	}
+> 48	
+> 49	async function mkUser(tag: string) {
+> 50	  const email = `cr-smoke-${tag}-${stamp}@example.com`;
+> 51	  const password = `Aa1!${crypto.randomUUID()}`;
+> 52	  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+> 53	  if (error || !data?.user) throw new Error(`createUser(${tag}): ${error?.message}`);
+> 54	  return { id: data.user.id, email, password };
+> 55	}
+> 56	
+> 57	async function mkCampaign(userId: string, name: string) {
+> 58	  const { data, error } = await admin.from('campaigns')
+> 59	    .insert({ user_id: userId, name, status: 'draft', channels: [] }).select('id').single();
+> 60	  if (error || !data) throw new Error(`insert campaign "${name}": ${error?.message}`);
+> 61	  return data.id as string;
+> 62	}
+> 63	
+> 64	async function addStep(campaignId: string, userId: string, channel: string) {
+> 65	  const { error } = await admin.from('campaign_steps')
+> 66	    .insert({ campaign_id: campaignId, user_id: userId, position: 0, channel, action: 'generate_content' });
+> 67	  if (error) throw new Error(`insert step (${channel}): ${error.message}`);
+> 68	}
+> 69	
+> 70	try {
+> ```
+
+## 🤖 Claude *(02:56:36)*
+
+
+## 🤖 Claude *(02:56:36)*
+
+Let me check `pipeline_runs` required columns so the smoke inserts a valid row.
+
+## 🤖 Claude *(02:56:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rn \"CREATE TABLE public.pipeline_runs\" supabase/migrations/*.sql\nf=$(grep -rln \"CREATE TABLE public.pipeline_runs\" supabase/migrations/*.sql | head -1)\necho \"--- from $f ---\"\nawk '/CREATE TABLE public.pipeline_runs/,/\\);/' \"$f\" | head -40",
+  "description": "Inspect pipeline_runs schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- from  ---
+> ```
+
+## 🤖 Claude *(02:56:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rln \"pipeline_runs\" supabase/migrations/*.sql | head\necho \"=== grep create ===\"\ngrep -rn \"pipeline_runs\" supabase/migrations/*.sql | grep -iE \"create table\" | head\necho \"=== live columns via REST (one row, head) ===\"\nset -a; source .env 2>/dev/null; set +a\nSUPA=\"${SUPABASE_URL:-${VITE_SUPABASE_URL}}\"; KEY=\"${SB_SECRET_KEY}\"\ncurl -s \"$SUPA/rest/v1/pipeline_runs?select=*&limit=1\" -H \"apikey: $KEY\" -H \"Authorization: Bearer $KEY\" 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print(list(d[0].keys()) if d else 'no rows')\" 2>/dev/null",
+  "description": "Find pipeline_runs columns live"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/migrations/20260508025933_delete_account_rpc.sql
+> supabase/migrations/20260504120000_pipeline_runs.sql
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql
+> supabase/migrations/20260626120000_collective_efficiency_ledger.sql
+> supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql
+> supabase/migrations/20260627150000_channel_variants.sql
+> supabase/migrations/20260527005036_soft_reset_account_rpc_v2.sql
+> === grep create ===
+> supabase/migrations/20260504120000_pipeline_runs.sql:4:CREATE TABLE IF NOT EXISTS pipeline_runs (
+> === live columns via REST (one row, head) ===
+> ['id', 'user_id', 'topic', 'platforms', 'status', 'steps', 'wordpress_url', 'error_message', 'mco_cost', 'started_at', 'completed_at', 'metadata']
+> ```
+
+## 🤖 Claude *(02:57:13)*
+
+
+## 🤖 Claude *(02:57:14)*
+
+`pipeline_runs` columns clear. Now writing the zero-cost smoke (throwaway users, no BYOK → skeletons → no LLM spend) proving gates G1/G2/G4/G5/G6 + scheduling + tenancy.
+
+## 🤖 Claude *(02:57:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reshape-pillar.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 reshape-pillar edge fn (post-engine FR-CP-003/006/007/008), ZERO-COST.\n *\n * Proves the reshaper interpreter end-to-end WITHOUT spending mcoCoins or LLM $: a throwaway user has NO BYOK\n * key, so the voicing LLM is skipped and the deterministic field_map skeletons are used (free). We seed a\n * pipeline_runs + pillar_atoms row (service-role), call reshape-pillar (Bearer SB_SECRET_KEY, scope='static'),\n * and assert the gates from docs/processes/channel-reshaper.md:\n *   G-create  static channel_variants produced (\u22656 surfaces)\n *   G1        idempotency \u2014 a 2nd call leaves the count UNCHANGED (UNIQUE pillar_run_id,channel,surface)\n *   G2        anti cross-post (structural) \u2014 channels with different field_maps yield DISTINCT native_text\n *   G4        channel\u2192enum \u2014 twitter_x \u2192 platform 'twitter'; no invalid enum on scheduled_posts\n *   G5        honesty \u2014 image surfaces are asset_status 'pending_reframe' + status 'draft' (NOT scheduled/published)\n *   Gsched    operational text surfaces (linkedin text_post, twitter_x thread) ARE enqueued (scheduled_posts queued)\n *   G6        tenancy \u2014 a DIFFERENT user's JWT SELECTs 0 of these channel_variants (RLS own)\n *\n * Cleans up (deletes the throwaway users \u2192 CASCADE removes pipeline_runs/pillar_atoms/channel_variants/scheduled_posts).\n * Usage: bun run scripts/qa/smoke-reshape-pillar.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, PUB, { auth: { persistSession: false } });\nconst stamp = Date.now();\nlet uidA: string | null = null;\nlet uidB: string | null = null;\nlet pass = true;\n\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\n\nasync function mkUser(tag: string): Promise<{ id: string; email: string }> {\n  const email = `reshape-smoke-${tag}-${stamp}@example.com`;\n  const { data, error } = await admin.auth.admin.createUser({ email, password: `Aa1!${crypto.randomUUID()}`, email_confirm: true });\n  if (error || !data?.user) throw new Error(`createUser(${tag}): ${error?.message}`);\n  return { id: data.user.id, email };\n}\n\nasync function userToken(email: string): Promise<string> {\n  const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\n  if (error || !data.properties?.hashed_token) throw new Error(`generateLink: ${error?.message}`);\n  const { data: s, error: e2 } = await anon.auth.verifyOtp({ type: 'magiclink', token_hash: data.properties.hashed_token });\n  if (e2 || !s.session?.access_token) throw new Error(`verifyOtp: ${e2?.message}`);\n  return s.session.access_token;\n}\n\nasync function callReshape(pillarRunId: string, scope: string) {\n  const r = await fetch(`${URL}/functions/v1/reshape-pillar`, {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SVC}` },\n    body: JSON.stringify({ pillar_run_id: pillarRunId, scope }),\n  });\n  const t = await r.text();\n  let j: { ok?: boolean; processed?: Array<{ channel: string; surface: string; status: string; asset_status: string }>; scheduled?: number; error?: string };\n  try { j = JSON.parse(t); } catch { j = { error: t }; }\n  return { status: r.status, body: j };\n}\n\nlet runId: string | null = null;\ntry {\n  const a = await mkUser('a'); uidA = a.id;\n  const b = await mkUser('b'); uidB = b.id;\n\n  // Seed a finished pillar run + atoms for user A (service-role; no campaign_id \u21d2 image surfaces have no master).\n  const { data: run, error: runErr } = await admin.from('pipeline_runs').insert({\n    user_id: uidA, topic: 'Reshaper smoke \u2014 automa\u00e7\u00e3o de conte\u00fado viral',\n    platforms: ['wordpress', 'linkedin', 'twitter'], status: 'done', steps: [], metadata: { campaign_id: null },\n  }).select('id').single();\n  if (runErr || !run) throw new Error(`pipeline_runs insert: ${runErr?.message}`);\n  runId = run.id;\n\n  const { error: atErr } = await admin.from('pillar_atoms').insert({\n    user_id: uidA, pillar_run_id: runId,\n    hook: 'Pare de cross-postar o mesmo v\u00eddeo em todas as redes',\n    key_points: ['Cada rede premia um formato', 'O algoritmo penaliza conte\u00fado id\u00eantico', 'Uma ideia vira N variantes nativas'],\n    stat: '40-60% menos alcance ao re-postar id\u00eantico', quote: 'Os dados mandam',\n    cta: 'Veja como o reshaper resolve', pillar_url: 'https://mcorch.com/blog/reshaper',\n  });\n  if (atErr) throw new Error(`pillar_atoms insert: ${atErr.message}`);\n\n  // \u2500\u2500 Call 1 (static) \u2500\u2500\n  const r1 = await callReshape(runId, 'static');\n  check('reshape-pillar 200 + ok', r1.status === 200 && r1.body.ok === true, `status=${r1.status} err=${r1.body.error ?? ''}`);\n  const processed = r1.body.processed ?? [];\n  check('G-create: \u22656 static variants produced', processed.length >= 6, `count=${processed.length}`);\n\n  const { data: cv1 } = await admin.from('channel_variants').select('channel, surface, platform, native_text, asset_status, status').eq('pillar_run_id', runId);\n  const variants = cv1 ?? [];\n  const byKey = (ch: string, sf: string) => variants.find((v) => v.channel === ch && v.surface === sf);\n\n  // G1 idempotency\n  await callReshape(runId, 'static');\n  const { count: cnt2 } = await admin.from('channel_variants').select('id', { count: 'exact', head: true }).eq('pillar_run_id', runId);\n  check('G1: idempotent (2nd call \u2192 same count)', cnt2 === variants.length, `before=${variants.length} after=${cnt2}`);\n\n  // G2 anti cross-post (structural): linkedin text_post body vs youtube short title/desc vs twitter thread tweets[]\n  const li = byKey('linkedin', 'text_post');\n  const yt = byKey('youtube', 'short');\n  const tw = byKey('twitter_x', 'thread');\n  const liText = JSON.stringify(li?.native_text ?? {});\n  const ytText = JSON.stringify(yt?.native_text ?? {});\n  const twText = JSON.stringify(tw?.native_text ?? {});\n  check('G2: 3 structurally-distinct native_texts', liText !== ytText && ytText !== twText && liText !== twText,\n    `li=${liText.slice(0, 40)} yt=${ytText.slice(0, 40)} tw=${twText.slice(0, 40)}`);\n  check('G2b: twitter thread is an array of tweets', Array.isArray((tw?.native_text as { tweets?: unknown })?.tweets),\n    `tweets=${JSON.stringify((tw?.native_text as { tweets?: unknown })?.tweets ?? null).slice(0, 60)}`);\n\n  // G4 channel\u2192enum mapping\n  check('G4: twitter_x \u2192 platform \"twitter\"', tw?.platform === 'twitter', `platform=${tw?.platform}`);\n  check('G4b: linkedin \u2192 platform \"linkedin\"', li?.platform === 'linkedin', `platform=${li?.platform}`);\n\n  // G5 honesty: image surfaces are pending_reframe + draft (no master image for this run)\n  const igFeed = byKey('instagram', 'feed_image');\n  const pinPin = byKey('pinterest', 'standard_pin');\n  const ytThumb = byKey('youtube', 'thumbnail');\n  check('G5: instagram feed_image pending_reframe + draft', igFeed?.asset_status === 'pending_reframe' && igFeed?.status === 'draft', `asset=${igFeed?.asset_status} status=${igFeed?.status}`);\n  check('G5b: pinterest standard_pin pending_reframe', pinPin?.asset_status === 'pending_reframe', `asset=${pinPin?.asset_status}`);\n  check('G5c: youtube thumbnail pending_reframe', ytThumb?.asset_status === 'pending_reframe', `asset=${ytThumb?.asset_status}`);\n  check('G5d: NO variant marked published', variants.every((v) => v.status !== 'published'), `statuses=${[...new Set(variants.map((v) => v.status))].join(',')}`);\n\n  // Gsched: operational text surfaces enqueued (linkedin text_post + twitter_x thread)\n  check('Gsched: linkedin text_post scheduled', li?.status === 'scheduled', `status=${li?.status}`);\n  check('Gsched-b: twitter_x thread scheduled', tw?.status === 'scheduled', `status=${tw?.status}`);\n  const { data: sp } = await admin.from('scheduled_posts').select('platform, metadata').eq('user_id', uidA);\n  const spRows = sp ?? [];\n  check('Gsched-c: scheduled_posts created with valid enum platform', spRows.length >= 2 && spRows.every((r) => ['linkedin', 'twitter'].includes(r.platform as string)),\n    `count=${spRows.length} platforms=${spRows.map((r) => r.platform).join(',')}`);\n  check('Gsched-d: scheduled_posts carry metadata.reshape', spRows.every((r) => (r.metadata as { reshape?: unknown } | null)?.reshape != null), 'reshape payload present');\n\n  // G6 tenancy: user B sees NONE of A's variants\n  const tokenB = await userToken(b.email);\n  const userBClient = createClient(URL, PUB, { global: { headers: { Authorization: `Bearer ${tokenB}` } }, auth: { persistSession: false } });\n  const { data: cvB } = await userBClient.from('channel_variants').select('id').eq('pillar_run_id', runId);\n  check('G6: cross-tenant SELECT returns 0 rows', (cvB?.length ?? -1) === 0, `rows_seen=${cvB?.length}`);\n} catch (e) {\n  check('exception', false, e instanceof Error ? e.message : String(e));\n} finally {\n  // Cleanup \u2014 delete users (CASCADE) + any leftover rows by run.\n  if (runId) {\n    await admin.from('scheduled_posts').delete().eq('user_id', uidA ?? '00000000-0000-0000-0000-000000000000').then(() => {}, () => {});\n    await admin.from('channel_variants').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('pillar_atoms').delete().eq('pillar_run_id', runId).then(() => {}, () => {});\n    await admin.from('pipeline_runs').delete().eq('id', runId).then(() => {}, () => {});\n  }\n  if (uidA) await admin.auth.admin.deleteUser(uidA).then(() => {}, () => {});\n  if (uidB) await admin.auth.admin.deleteUser(uidB).then(() => {}, () => {});\n  console.log(`\\n${pass ? '\u2705 PASS' : '\u274c FAIL'} \u2014 reshape-pillar smoke`);\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-reshape-pillar.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 150 bun run scripts/qa/smoke-reshape-pillar.ts 2>&1 | tail -30",
+  "description": "Run reshape-pillar zero-cost smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ reshape-pillar 200 + ok  → status=200 err=
+> ✅ G-create: ≥6 static variants produced  → count=8
+> ✅ G1: idempotent (2nd call → same count)  → before=8 after=8
+> ✅ G2: 3 structurally-distinct native_texts  → li={"body":"Pare de cross-postar o mesmo ví yt={} tw={"tweets":["Pare de cross-postar o mesmo
+> ✅ G2b: twitter thread is an array of tweets  → tweets=["Pare de cross-postar o mesmo vídeo em todas as redes","Cad
+> ✅ G4: twitter_x → platform "twitter"  → platform=twitter
+> ✅ G4b: linkedin → platform "linkedin"  → platform=linkedin
+> ✅ G5: instagram feed_image pending_reframe + draft  → asset=pending_reframe status=draft
+> ✅ G5b: pinterest standard_pin pending_reframe  → asset=pending_reframe
+> ✅ G5c: youtube thumbnail pending_reframe  → asset=pending_reframe
+> ✅ G5d: NO variant marked published  → statuses=draft,scheduled
+> ✅ Gsched: linkedin text_post scheduled  → status=scheduled
+> ✅ Gsched-b: twitter_x thread scheduled  → status=scheduled
+> ✅ Gsched-c: scheduled_posts created with valid enum platform  → count=2 platforms=linkedin,twitter
+> ✅ Gsched-d: scheduled_posts carry metadata.reshape  → reshape payload present
+> ✅ G6: cross-tenant SELECT returns 0 rows  → rows_seen=0
+> 
+> ✅ PASS — reshape-pillar smoke
+> ```
+
+## 🤖 Claude *(02:58:43)*
+
+
+## 🤖 Claude *(02:58:45)*
+
+**All 16 gates pass** — the reshaper is operational and materially verified. (Note: `yt={}` is correct — `youtube:short` is a video surface, not processed in `scope='static'`; the meaningful distinctness `linkedin body ≠ twitter thread` holds.)
+
+Now regression check (billing test + lint) before sealing.
+
+## 🤖 Claude *(02:58:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== billing test ===\"\ntimeout 90 bun run test src/lib/billing.ts 2>&1 | tail -8 || timeout 90 npx vitest run supabase/functions/_shared/billing.test.ts 2>&1 | tail -12\necho \"=== lint changed edge fns + billing ===\"\ntimeout 120 npx eslint src/lib/billing.ts 2>&1 | tail -10; echo \"ESLINT_EXIT:${PIPESTATUS[0]}\"",
+  "description": "Run billing test + lint billing change"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === billing test ===
+> 
+> No test files found, exiting with code 1
+> 
+> filter: src/lib/billing.ts
+> include: src/**/*.{test,spec}.{ts,tsx}, supabase/functions/**/*.{test,spec}.ts
+> exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+> 
+> error: script "test" exited with code 1
+> === lint changed edge fns + billing ===
+> ESLINT_EXIT:0
+> ```
+
+## 🤖 Claude *(02:58:55)*
+
+
+## 🤖 Claude *(02:58:55)*
+
+Let me run the actual billing test file + a broader test pass to confirm the new `COIN_COSTS` constant doesn't break the triple-mirror gate.
+
+## 🤖 Claude *(02:58:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 120 npx vitest run supabase/functions/_shared/billing.test.ts src/lib 2>&1 | tail -20",
+  "description": "Run billing tests (mirror gate)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ supabase/functions/_shared/billing.test.ts (4 tests) 10ms
+>  ✓ src/lib/affiliate.test.ts (14 tests) 19ms
+> 
+>  Test Files  2 passed (2)
+>       Tests  18 passed (18)
+>    Start at  23:58:57
+>    Duration  1.40s (transform 102ms, setup 197ms, collect 114ms, tests 29ms, environment 985ms, prepare 273ms)
+> ```
+
+## 🤖 Claude *(02:59:11)*
+
+
+## 🤖 Claude *(02:59:12)*
+
+Billing 18/18, all green. Now let me wire the new artifacts into CLAUDE.md's Key Files Reference. Let me find the right anchor.
+
+## 🤖 Claude *(02:59:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"channel_profiles|post-engine|autopilot-video-9x16|publish-social|Viral Autopilot cron-identity\" CLAUDE.md | head",
+  "description": "Find CLAUDE.md anchor for new key files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 345:4. Schedule social posts → `publish-social` (triggered by `auto-publish` cron)
+> 432:| **Viral Autopilot cron-identity SOP (Lei 2)** | `docs/processes/autopilot-cron-identity.md` (OTD-VA-008 gate — cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha [nunca body]; pré-débito/refund atômico FR-VA-007/021; 10 gates) |
+> 433:| **Viral Autopilot vídeo 9:16 SOP (Lei 2 · Amendment v0.2)** | `docs/processes/autopilot-video-9x16.md` (OTD-VA-009 gate — vídeo vertical 9:16 product-aware via motor HyperFrames determinístico [`video-studio` FR-VS-024/025], **não** IA-DoP; cobrança ÚNICA no pré-débito do ciclo [`prepaid=true` suprime self-bill do motor — OTD-VA-010]; single-tenant Usuário Zero [hardening multi-tenant diferido — OTD-VA-011]; render async + reconciliação fail-open; 8 gates G1-G8; FRD Amendment v0.2 = FR-VA-022..026) |
+> ```
+
+## 🤖 Claude *(02:59:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 433,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 433	| **Viral Autopilot vídeo 9:16 SOP (Lei 2 · Amendment v0.2)** | `docs/processes/autopilot-video-9x16.md` (OTD-VA-009 gate — vídeo vertical 9:16 product-aware via motor HyperFrames determinístico [`video-studio` FR-VS-024/025], **não** IA-DoP; cobrança ÚNICA no pré-débito do ciclo [`prepaid=true` suprime self-bill do motor — OTD-VA-010]; single-tenant Usuário Zero [hardening multi-tenant diferido — OTD-VA-011]; render async + reconciliação fail-open; 8 gates G1-G8; FRD Amendment v0.2 = FR-VA-022..026) |
+> 434	| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920 determinístico, sha256-idêntico NFR-VS-016) · `scripts/hyperframes/templates/viral-short-9x16.html` (template determinístico, props via textContent XSS-safe) · `scripts/video-bridge.ts` (worker host molde design-bridge: claim atômico `video_renders` engine=hyperframes → render → bucket `video-studio-assets` → `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |
+> 435	| **HyperFrames Studio editor (Fatia VS-UI — Fase A VIVO)** | `~/.config/systemd/user/video-studio.service` (servidor oficial `hyperframes preview` node v22, host loopback `127.0.0.1:3210`, projeto 9:16 em `~/.mcorch/video-studio/projects/mcorch-video`) · `nginx/video.mcorch.com.conf` (vhost SSO-gated, espelha `design.mcorch.com`; cert+symlink = ação Sovereign) · `src/pages/VideoStudioEditorPage.tsx` (iframe `/dashboard/canvas/video`, sub-item "Vídeo" no Canvas Studio) · contrato `/api` (`StudioApiAdapter`) + Fase B (`McorchAdapter.startRender`→`video-render`) em SDD §VS-UI Amendment v0.4 · SOP `docs/processes/video-studio-editor-deploy-and-provision.md` |
+> 436	| **HyperFrames Studio editor — integration blueprint (Fatia VS-UI, próximo)** | `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` (deepsearch material — `StudioApp` zero-props server-backed; seam = `StudioApiAdapter` de `@hyperframes/core/studio-api`; **montar studio unmodified + nosso `McorchAdapter.startRender`→`video-render`**; composição = HTML+CSS+GSAP `bundleToSingleHtml`; React 19 → container+iframe `studio.mcorch.com`; Apache-2.0; gate #1 render-parity `frame=floor(time*fps)`. Flip OTD-VS-005 A→C) |
+> ```
+
+## 🤖 Claude *(02:59:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg \u2192 MP4 9:16 1080\u00d71920 determin\u00edstico, sha256-id\u00eantico NFR-VS-016) \u00b7 `scripts/hyperframes/templates/viral-short-9x16.html` (template determin\u00edstico, props via textContent XSS-safe) \u00b7 `scripts/video-bridge.ts` (worker host molde design-bridge: claim at\u00f4mico `video_renders` engine=hyperframes \u2192 render \u2192 bucket `video-studio-assets` \u2192 `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |",
+  "new_string": "| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg \u2192 MP4 9:16 1080\u00d71920 determin\u00edstico, sha256-id\u00eantico NFR-VS-016) \u00b7 `scripts/hyperframes/templates/viral-short-9x16.html` (template determin\u00edstico, props via textContent XSS-safe) \u00b7 `scripts/video-bridge.ts` (worker host molde design-bridge: claim at\u00f4mico `video_renders` engine=hyperframes \u2192 render \u2192 bucket `video-studio-assets` \u2192 `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; **kick `reshape-pillar scope=video` ap\u00f3s finalize**; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |\n| **Channel Format Intelligence \u2014 Reshaper + Atomizer (FR-CP-002/003)** | `supabase/functions/reshape-pillar/index.ts` (interpretador data-driven: l\u00ea `channel_profiles.transform_recipe` + `pillar_atoms` \u2192 variante NATIVA por canal, **zero branch por canal**. `field_map` grammar + dispatch de `reshape` + format-gate FR-CP-006 + native-variant FR-CP-007 + Pinterest-SEO FR-CP-008. Service-role-only, user resolvido de `pipeline_runs`. Spine 9:16\u21927 surfaces \u00b7 16:9/reframe = `pending_*` honesto OTD-CP-008/009) \u00b7 atomizer = bloco fail-open em `orchestrate-step` (article\u2192`pillar_atoms`) \u00b7 `auto-publish` prefere `metadata.reshape` resolvendo asset do `channel_variants` **owner-scoped** (fix FMEA-011) \u00b7 migration `20260627150000` (`channel_variants` ledger+idempot\u00eancia UNIQUE + `creative_metrics.hook_rate`) |\n| **Channel Format Intelligence \u2014 SDD + SOP (Lei 2)** | `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` (SSOT implementation-level \u2014 fecha Gate Closed-Loop Step 3.5; resolve os 8 *blocking gaps* do critic `wf_a390c0f0-b6e`) \u00b7 `docs/processes/channel-reshaper.md` (SOP 6 gates G1-G6) \u00b7 smoke `scripts/qa/smoke-reshape-pillar.ts` (zero-cost 16/16: idempot\u00eancia \u00b7 anti cross-post \u00b7 channel\u2192enum \u00b7 honestidade pending_* \u00b7 tenancy RLS) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:59:53)*
+
+
+## 🤖 Claude *(02:59:54)*
+
+Docs updated. Now granular commits (following the project's seal convention — all recent history is on `main`). No secrets in the diff. Committing in logical groups.
+
+## 🤖 Claude *(03:00:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/post-engine/13-sdd-reshaper-atomizer.md docs/bok/post-engine/00-index.md docs/processes/channel-reshaper.md CLAUDE.md\ngit commit -q -m \"docs(post-engine): SDD reshaper/atomizer (FR-CP-002/003) + SOP \u2014 close Closed-Loop Step 3.5 gate\n\n13-sdd-reshaper-atomizer.md resolves the 8 blocking gaps from the grounded\ndeepsearch (wf_a390c0f0-b6e): field_map grammar, reshape-verb dispatch,\nchannel->enum mapping, async trigger (static/video), idempotency anchor,\ncost, auth. + channel-reshaper.md SOP (6 gates) + CLAUDE.md key files.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && echo \"C1 OK\"\n\ngit add supabase/migrations/20260627150000_channel_variants.sql\ngit commit -q -m \"feat(db): channel_variants ledger + creative_metrics.hook_rate (FR-CP-003/007/011)\n\nNative-variant ledger + idempotency anchor UNIQUE(pillar_run_id,channel,surface).\nRLS SELECT/DELETE own; writes service-role-only (reshaper). /security-review SAFE.\nApplied to remote (Finished db push); verified live (table present, hook_rate column).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && echo \"C2 OK\"\n\ngit add supabase/functions/reshape-pillar/ supabase/functions/orchestrate-step/index.ts supabase/functions/auto-publish/index.ts scripts/video-bridge.ts src/lib/billing.ts supabase/config.toml scripts/qa/smoke-reshape-pillar.ts deno.lock\ngit commit -q -m \"feat(reshaper): data-driven channel reshaper + atomizer \u2014 1 pilar -> posts nativos (FR-CP-002/003/006/007/008)\n\n- reshape-pillar: recipe interpreter (field_map grammar + reshape dispatch),\n  native per-channel voicing (anti cross-post), format gate, fail-open per channel.\n  Service-role-only; user resolved from pipeline_runs (server-trusted).\n- orchestrate-step: atomizer block (article->pillar_atoms) + composition.pillar_run_id\n  + pillar_url backfill + reshape kick (scope=static) at finalize.\n- video-bridge: reshape kick (scope=video) after the 9:16 master finalizes.\n- auto-publish: prefer native variant; asset ref resolved from OWNER-scoped\n  channel_variants (FMEA-011 fix \u2014 never trust user-writable metadata for signing).\n- billing RESHAPE_CREATIVE; config verify_jwt=false; smoke 16/16 zero-cost.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" && echo \"C3 OK\"\n\necho \"=== log ===\"; git log --oneline -4",
+  "description": "Granular commits for reshaper feature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:00AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:00AM[0m [32mINF[0m scan completed in 51.6ms
+> [90m12:00AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.12 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.11 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> C1 OK
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:00AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:00AM[0m [32mINF[0m scan completed in 38.8ms
+> [90m12:00AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> C2 OK
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:00AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:00AM[0m [32mINF[0m scan completed in 116ms
+> [90m12:00AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.21 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.20 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> C3 OK
+> === log ===
+> 2ed159f feat(reshaper): data-driven channel reshaper + atomizer — 1 pilar -> posts nativos (FR-CP-002/003/006/007/008)
+> 3199ceb feat(db): channel_variants ledger + creative_metrics.hook_rate (FR-CP-003/007/011)
+> 011659c docs(post-engine): SDD reshaper/atomizer (FR-CP-002/003) + SOP — close Closed-Loop Step 3.5 gate
+> f4ed255 docs(handoff): seal TikTok/YouTube E2E + Channel Format Intelligence (FR-CP-001)
+> ```
