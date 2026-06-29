@@ -373,3 +373,16 @@ No permissive (`USING (true)`) policies, no `anon` grant. Posture is sound.
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-29 - Finalizar QA do Antigravity com validação senior]]
+> * **Próxima Sessão**: [[2026-06-29 - agent-a1c1aafe02da6a857]]
+%% --- TIMELINE END --- %%

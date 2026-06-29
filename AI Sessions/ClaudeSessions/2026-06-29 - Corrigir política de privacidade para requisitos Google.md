@@ -1,4 +1,4 @@
-# Corrigir política de privacidade para requisitos Google
+# [[2026-06-28 - Corrigir política de privacidade para requisitos Google|Corrigir política de privacidade para requisitos Google]]
 **Date:** 2026-06-29 | **Session ID:** `760b6087-837f-483e-be18-bcfc2f4fc89a`
 
 ---
@@ -4309,7 +4309,7 @@ Entendido — você quer que esses usuários de teste sejam **identificáveis** 
 > smoke-attribution.ts | meta_tags=0 | cleanup=3
 > probe-vision-mcp-fatia2-foundation.ts | meta_tags=0 | cleanup=3
 > smoke-vision-consolidate-reference.ts | meta_tags=0 | cleanup=4
-> smoke-aeo-audit.ts | meta_tags=0 | cleanup=2
+> smoke-[[aeo-audit|aeo-audit]].ts | meta_tags=0 | cleanup=2
 > smoke-byok-resend.ts | meta_tags=0 | cleanup=2
 > smoke-autopilot-loop.ts | meta_tags=0 | cleanup=2
 > smoke-reframe-image.ts | meta_tags=0 | cleanup=2
@@ -4908,7 +4908,7 @@ Agora vou completar a outra ponta do seu pedido — **o nome = SMOKETEST em TODO
 > scripts/qa/probe-vision-mcp-adversarial.ts
 > scripts/qa/probe-vision-mcp-fatia2-foundation.ts
 > scripts/qa/probe-vision-mcp-protocol-versions.ts
-> scripts/qa/smoke-aeo-audit.ts
+> scripts/qa/smoke-[[aeo-audit|aeo-audit]].ts
 > scripts/qa/smoke-aeo-refund.ts
 > scripts/qa/smoke-affiliate-click.ts
 > scripts/qa/smoke-attribution.ts
@@ -4952,7 +4952,7 @@ Agora vou completar a outra ponta do seu pedido — **o nome = SMOKETEST em TODO
 🛠️ **Tool Call**: `Workflow`
 ```json
 {
-  "args": "[\"e2e-vision-mcp-heterogeneous-client.ts\",\"e2e-vision-mcp-mesh-search.ts\",\"probe-vision-mcp-adversarial.ts\",\"probe-vision-mcp-fatia2-foundation.ts\",\"probe-vision-mcp-protocol-versions.ts\",\"smoke-aeo-audit.ts\",\"smoke-aeo-refund.ts\",\"smoke-affiliate-click.ts\",\"smoke-attribution.ts\",\"smoke-autopilot-budget.ts\",\"smoke-autopilot-loop.ts\",\"smoke-autopilot-run.ts\",\"smoke-byok-resend.ts\",\"smoke-campaign-run.ts\",\"smoke-carousel.ts\",\"smoke-constellation-v2-router.ts\",\"smoke-customer360.ts\",\"smoke-deepsearch-run.ts\",\"smoke-deepsearch-scrape.ts\",\"smoke-intent-execute.ts\",\"smoke-intent-orchestrate.ts\",\"smoke-marketing-hub.ts\",\"smoke-nurture-cron.ts\",\"smoke-nurture.ts\",\"smoke-reframe-image.ts\",\"smoke-reshape-pillar.ts\",\"smoke-vision-analyze-video.ts\",\"smoke-vision-consolidate-reference.ts\",\"smoke-vision-cost-caps.ts\",\"smoke-vision-describe-image.ts\",\"smoke-vision-pat-erase.ts\",\"test-publish-meta-smoke.ts\",\"test-sync-meta-ads.ts\",\"test-whatsapp-webhook.ts\"]",
+  "args": "[\"e2e-vision-mcp-heterogeneous-client.ts\",\"e2e-vision-mcp-mesh-search.ts\",\"probe-vision-mcp-adversarial.ts\",\"probe-vision-mcp-fatia2-foundation.ts\",\"probe-vision-mcp-protocol-versions.ts\",\"smoke-[[aeo-audit|aeo-audit]].ts\",\"smoke-aeo-refund.ts\",\"smoke-affiliate-click.ts\",\"smoke-attribution.ts\",\"smoke-autopilot-budget.ts\",\"smoke-autopilot-loop.ts\",\"smoke-autopilot-run.ts\",\"smoke-byok-resend.ts\",\"smoke-campaign-run.ts\",\"smoke-carousel.ts\",\"smoke-constellation-v2-router.ts\",\"smoke-customer360.ts\",\"smoke-deepsearch-run.ts\",\"smoke-deepsearch-scrape.ts\",\"smoke-intent-execute.ts\",\"smoke-intent-orchestrate.ts\",\"smoke-marketing-hub.ts\",\"smoke-nurture-cron.ts\",\"smoke-nurture.ts\",\"smoke-reframe-image.ts\",\"smoke-reshape-pillar.ts\",\"smoke-vision-analyze-video.ts\",\"smoke-vision-consolidate-reference.ts\",\"smoke-vision-cost-caps.ts\",\"smoke-vision-describe-image.ts\",\"smoke-vision-pat-erase.ts\",\"test-publish-meta-smoke.ts\",\"test-sync-meta-ads.ts\",\"test-whatsapp-webhook.ts\"]",
   "script": "export const meta = {\n  name: 'migrate-smokes-to-qa-throwaway-helper',\n  description: 'Migrate QA smoke scripts to the shared throwaway-user helper (SMOKETEST tag + awaited cleanup)',\n  phases: [{ title: 'Migrate', detail: 'one agent per smoke file: rewrite createUser/deleteUser to the helper + verify build' }],\n}\n\nconst files = args\nlog(`Migrating ${files.length} smoke files to scripts/qa/lib/qa-throwaway.ts`)\n\nconst SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    file: { type: 'string' },\n    changed: { type: 'boolean', description: 'true if the file was edited' },\n    builds: { type: 'boolean', description: 'true if `bun build` of the file succeeded after the edit' },\n    users_migrated: { type: 'number', description: 'how many createUser calls were converted' },\n    notes: { type: 'string', description: 'one line: what changed, or why skipped/failed' },\n  },\n  required: ['file', 'changed', 'builds', 'users_migrated', 'notes'],\n}\n\nconst results = await parallel(files.map((f) => () => agent(\n  `Migrate the QA smoke script \\`scripts/qa/${f}\\` to use the shared throwaway-user helper. Repo root: /home/gcrUX/htdocs/constellation-orchestra.\n\nThe helper is \\`scripts/qa/lib/qa-throwaway.ts\\` and exports:\n  createThrowawayUser(admin, prefix, extraMetadata?) => Promise<{ uid, email, password }>\n      // creates a CONFIRMED user tagged user_metadata.full_name='SMOKETEST' + qa_throwaway:true + smoke:prefix\n  deleteThrowawayUser(admin, uid) => Promise<boolean>   // AWAITED, logs on failure, safe in finally\n\nDO EXACTLY THIS, nothing more:\n1. Read scripts/qa/${f}.\n2. Add the import near the other imports (the file lives directly in scripts/qa/, so the path is './lib/qa-throwaway'):\n     import { createThrowawayUser, deleteThrowawayUser } from './lib/qa-throwaway';\n   (Import only the functions actually used after your edit.)\n3. Replace EACH \\`<adminVar>.auth.admin.createUser({ ... })\\` block that mints a throwaway test user with a call to createThrowawayUser. CRITICAL \u2014 preserve behavior:\n   - Use the SAME admin client variable name the file already uses (could be \\`admin\\`, \\`supa\\`, etc.).\n   - Capture uid the same way the file used it (e.g. \\`uid = (await createThrowawayUser(admin, '<slug>')).uid;\\`). Pick <slug> from the file's original email prefix (e.g. email \\`attr-\\${stamp}@example.com\\` => slug 'attr').\n   - If the file LATER uses the user's PASSWORD (e.g. signInWithPassword / minting a user JWT) or the EMAIL, capture them from the returned object and use them \u2014 e.g. \\`const tw = await createThrowawayUser(admin, 'attr'); uid = tw.uid;\\` then use \\`tw.password\\` / \\`tw.email\\` where the old password/email vars were used. Do NOT leave dangling references to the old password/email variables.\n   - If the original createUser passed extra \\`user_metadata\\` (e.g. { qa_throwaway: true, run }), pass that object as the 3rd arg extraMetadata so it is preserved.\n   - If the file creates MULTIPLE throwaway users, convert each with a distinct slug.\n   - Remove now-unused locals (e.g. a \\`const stamp = Date.now()\\` used ONLY for the email; keep it if used elsewhere).\n4. Replace the fire-and-forget cleanup \\`if (uid) await <adminVar>.auth.admin.deleteUser(uid).then(() => {}, () => {});\\` (and any sibling per-user deleteUser) with \\`await deleteThrowawayUser(<adminVar>, uid);\\`. Keep all OTHER cleanup (storage/table deletes) exactly as-is. Keep it inside the existing finally.\n5. Do NOT touch test logic, gates, assertions, or any non-user-creation code.\n6. Verify it still parses/resolves: run\n     cd /home/gcrUX/htdocs/constellation-orchestra && /home/ubuntu/.bun/bin/bun build scripts/qa/${f} --target node > /dev/null\n   If it exits non-zero, read the error, fix your edit, and re-run until it builds. (Do NOT execute the smoke \u2014 that costs money / hits prod; only \\`bun build\\`.)\n\nIf the file's createUser is NOT for a throwaway test user (unexpected), make no changes and report changed=false with a reason.\n\nReturn the structured result. Be precise about users_migrated and whether it builds.`,\n  { phase: 'Migrate', label: `migrate:${f}`, schema: SCHEMA }\n)))\n\nconst ok = results.filter(Boolean)\nconst built = ok.filter((r) => r.builds && r.changed)\nconst failed = ok.filter((r) => r.changed && !r.builds)\nconst skipped = ok.filter((r) => !r.changed)\nreturn {\n  total: files.length,\n  migrated_and_build_ok: built.length,\n  build_failed: failed.map((r) => ({ file: r.file, notes: r.notes })),\n  skipped: skipped.map((r) => ({ file: r.file, notes: r.notes })),\n  per_file: ok.map((r) => ({ file: r.file, changed: r.changed, builds: r.builds, users: r.users_migrated, notes: r.notes })),\n}\n"
 }
 ```
@@ -5130,7 +5130,7 @@ Re-disparando via scriptPath (passando args como array novamente; o script agora
 ```json
 {
   "scriptPath": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/760b6087-837f-483e-be18-bcfc2f4fc89a/workflows/scripts/migrate-smokes-to-qa-throwaway-helper-wf_82735056-2a4.js",
-  "args": "[\"e2e-vision-mcp-heterogeneous-client.ts\",\"e2e-vision-mcp-mesh-search.ts\",\"probe-vision-mcp-adversarial.ts\",\"probe-vision-mcp-fatia2-foundation.ts\",\"probe-vision-mcp-protocol-versions.ts\",\"smoke-aeo-audit.ts\",\"smoke-aeo-refund.ts\",\"smoke-affiliate-click.ts\",\"smoke-attribution.ts\",\"smoke-autopilot-budget.ts\",\"smoke-autopilot-loop.ts\",\"smoke-autopilot-run.ts\",\"smoke-byok-resend.ts\",\"smoke-campaign-run.ts\",\"smoke-carousel.ts\",\"smoke-constellation-v2-router.ts\",\"smoke-customer360.ts\",\"smoke-deepsearch-run.ts\",\"smoke-deepsearch-scrape.ts\",\"smoke-intent-execute.ts\",\"smoke-intent-orchestrate.ts\",\"smoke-marketing-hub.ts\",\"smoke-nurture-cron.ts\",\"smoke-nurture.ts\",\"smoke-reframe-image.ts\",\"smoke-reshape-pillar.ts\",\"smoke-vision-analyze-video.ts\",\"smoke-vision-consolidate-reference.ts\",\"smoke-vision-cost-caps.ts\",\"smoke-vision-describe-image.ts\",\"smoke-vision-pat-erase.ts\",\"test-publish-meta-smoke.ts\",\"test-sync-meta-ads.ts\",\"test-whatsapp-webhook.ts\"]"
+  "args": "[\"e2e-vision-mcp-heterogeneous-client.ts\",\"e2e-vision-mcp-mesh-search.ts\",\"probe-vision-mcp-adversarial.ts\",\"probe-vision-mcp-fatia2-foundation.ts\",\"probe-vision-mcp-protocol-versions.ts\",\"smoke-[[aeo-audit|aeo-audit]].ts\",\"smoke-aeo-refund.ts\",\"smoke-affiliate-click.ts\",\"smoke-attribution.ts\",\"smoke-autopilot-budget.ts\",\"smoke-autopilot-loop.ts\",\"smoke-autopilot-run.ts\",\"smoke-byok-resend.ts\",\"smoke-campaign-run.ts\",\"smoke-carousel.ts\",\"smoke-constellation-v2-router.ts\",\"smoke-customer360.ts\",\"smoke-deepsearch-run.ts\",\"smoke-deepsearch-scrape.ts\",\"smoke-intent-execute.ts\",\"smoke-intent-orchestrate.ts\",\"smoke-marketing-hub.ts\",\"smoke-nurture-cron.ts\",\"smoke-nurture.ts\",\"smoke-reframe-image.ts\",\"smoke-reshape-pillar.ts\",\"smoke-vision-analyze-video.ts\",\"smoke-vision-consolidate-reference.ts\",\"smoke-vision-cost-caps.ts\",\"smoke-vision-describe-image.ts\",\"smoke-vision-pat-erase.ts\",\"test-publish-meta-smoke.ts\",\"test-sync-meta-ads.ts\",\"test-whatsapp-webhook.ts\"]"
 }
 ```
 
@@ -5251,7 +5251,7 @@ Esse "1" é só o **comentário** no meu helper que descreve o anti-pattern anti
 >  M scripts/qa/probe-vision-mcp-adversarial.ts
 >  M scripts/qa/probe-vision-mcp-fatia2-foundation.ts
 >  M scripts/qa/probe-vision-mcp-protocol-versions.ts
->  M scripts/qa/smoke-aeo-audit.ts
+>  M scripts/qa/smoke-[[aeo-audit|aeo-audit]].ts
 >  M scripts/qa/smoke-aeo-refund.ts
 >  M scripts/qa/smoke-affiliate-click.ts
 >  M scripts/qa/smoke-attribution.ts
@@ -5317,7 +5317,7 @@ tsc 0, 38 mudanças (35 smokes + helper + sweep + cron). Antes de commitar, **n�
 > tsconfig.node.json:  "include": ["vite.config.ts"]
 > tsconfig.node.json-}
 > === type-check direcionado (noUnusedLocals + no-undef) nos JWT-minting smokes ===
-> error TS18003: No inputs were found in config file '/tmp/tsc-qa-check.json'. Specified 'include' paths were '["scripts/qa/smoke-campaign-run.ts","scripts/qa/smoke-aeo-audit.ts","scripts/qa/smoke-constellation-v2-router.ts","scripts/qa/e2e-vision-mcp-mesh-search.ts","scripts/qa/probe-vision-mcp-adversarial.ts","scripts/qa/lib/qa-throwaway.ts"]' and 'exclude' paths were '[]'.
+> error TS18003: No inputs were found in config file '/tmp/tsc-qa-check.json'. Specified 'include' paths were '["scripts/qa/smoke-campaign-run.ts","scripts/qa/smoke-[[aeo-audit|aeo-audit]].ts","scripts/qa/smoke-constellation-v2-router.ts","scripts/qa/e2e-vision-mcp-mesh-search.ts","scripts/qa/probe-vision-mcp-adversarial.ts","scripts/qa/lib/qa-throwaway.ts"]' and 'exclude' paths were '[]'.
 > TSC_QA_EXIT=2
 > ```
 
@@ -5586,3 +5586,16 @@ O que está pendente de registro (porque o último `/handoff` desta sessão — 
 Alternativa: **deixar para o próximo seal** absorver isto junto — também é válido, já que o código está seguro.
 
 Quer que eu rode o seal enxuto agora?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-28 - agent-af701086aecdaf67f]]
+> * **Próxima Sessão**: [[2026-06-29 - Finalizar QA do Antigravity com validação senior]]
+%% --- TIMELINE END --- %%

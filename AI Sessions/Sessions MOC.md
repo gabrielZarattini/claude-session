@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1563
-> * **Sessões do Claude**: 1519
+> * **Total de Sessões Registradas**: 1569
+> * **Sessões do Claude**: 1525
 > * **Sessões do Gemini**: 44
 
 ---
@@ -68,18 +68,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-06-29 - handson]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` - *2026-06-29*
+*   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` - *2026-06-29*
+*   `[[2026-06-29 - Corrigir política de privacidade para requisitos Google]]` - *2026-06-29*
 *   `[[2026-06-28 - handson]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-af701086aecdaf67f]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-af3193f113b71a308]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-aef77397227eb4a2a]]` - *2026-06-28*
 *   `[[2026-06-28 - agent-aef0052197dbdc7b4]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-aed251029f012be34]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-ae0a402dc1c35a471]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-adfa93f758986cd1e]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-adeafbf88587d4bb8]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-adb7444b9d0b9cc5e]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-ad927da167abbada0]]` - *2026-06-28*
-*   *... e mais 1519 sessões nessa categoria.*
+*   *... e mais 1525 sessões nessa categoria.*
 
 ---
 
@@ -271,6 +271,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Junho 2026
 *   `[[2026-06-29 - handson]]` (GeminiSessions)
+*   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` (ClaudeSessions)
+*   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` (ClaudeSessions)
+*   `[[2026-06-29 - Corrigir política de privacidade para requisitos Google]]` (ClaudeSessions)
 *   `[[2026-06-28 - handson]]` (GeminiSessions)
 *   `[[2026-06-28 - agent-af701086aecdaf67f]]` (ClaudeSessions)
 *   `[[2026-06-28 - agent-af3193f113b71a308]]` (ClaudeSessions)
