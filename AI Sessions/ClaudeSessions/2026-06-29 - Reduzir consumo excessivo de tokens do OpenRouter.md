@@ -3859,6 +3859,99 @@ Agora rodamos de verdade — **5 símbolos, ~900 dias** (cobre o bull de 2024 + 
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Rodar a mineração real agora? Em quais timeframes? (5 símbolos BTC/ETH/LTC/BNB/ADA, ~900d, horizontes 1/5/10/20/50)"="1h + 15m (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(19:54:39)*
+
+
+## 🤖 Claude *(19:54:41)*
+
+Vou rodar a **corrida real** (1h + 15m, 5 símbolos, 900d, horizontes 1/5/10/20/50) — Fase 1 + Fase 2 em cada timeframe. O fetch do 15m/900d×5 é o trecho mais pesado, então rodo em **background** e te aviso quando fechar:
+
+## 🤖 Claude *(19:54:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc '\ncd /home/gcrux-tradeux/tradeux/backend\nSYMS=BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT\necho \"===== FASE 1 \u2014 1h =====\"\nnode scripts/pattern-discover.js --interval=1h --days=900 --symbols=$SYMS --holdout=0.3 --horizons=1,5,10,20,50 --fdr=0.10 2>&1 | tail -3\necho \"===== FASE 2 \u2014 1h =====\"\nnode scripts/pattern-validate.js --tag=1h-900d --minN=20 2>&1 | tail -2\necho \"===== FASE 1 \u2014 15m =====\"\nnode scripts/pattern-discover.js --interval=15m --days=900 --symbols=$SYMS --holdout=0.3 --horizons=1,5,10,20,50 --fdr=0.10 2>&1 | tail -3\necho \"===== FASE 2 \u2014 15m =====\"\nnode scripts/pattern-validate.js --tag=15m-900d --minN=20 2>&1 | tail -2\necho \"===== FIM =====\"\n'",
+  "description": "Run real mining 1h+15m in background",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bzcxfl3hs. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/tasks/bzcxfl3hs.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(19:54:49)*
+
+
+## 🤖 Claude *(19:54:54)*
+
+🔬 Corrida real **rodando em background** (ID `bzcxfl3hs`):
+
+1. Fase 1 descoberta — **1h**, 900d, 5 símbolos, horizontes 1/5/10/20/50
+2. Fase 2 validação — holdout trancado 1h
+3. Fase 1 descoberta — **15m**, 900d (o fetch mais pesado, ~435 páginas com throttle)
+4. Fase 2 validação — holdout trancado 15m
+
+São poucos minutos (CPU + fetch, zero token). Te aviso assim que fechar com os **dois catálogos + os vereditos OOS** (quais padrões, se algum, sobrevivem à parede e pagam a fee) pra a gente ler juntos. Aí decidimos a "fase mais intensa" (simulações dentro de um motor único) com base no que de fato sobrar.
+
+## 👤 User *(20:00:08)*
+
+<task-notification>
+<task-id>bzcxfl3hs</task-id>
+<tool-use-id>toolu_01A3GDu84jkCCsBPw5FwYhev</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/tasks/bzcxfl3hs.output</output-file>
+<status>completed</status>
+<summary>Background command "Run real mining 1h+15m in background" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(20:00:13)*
+
+
+## 🤖 Claude *(20:00:14)*
+
+A corrida fechou. Lendo os resultados:
+
+## 🤖 Claude *(20:00:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/tasks/bzcxfl3hs.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	===== FASE 1 — 1h =====
+> 2	  ADAUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2025-10-02)
+> 3	
+> 4	Sobreviventes FDR: 92/200. Relatório: backend/backtest-results/pattern-discovery-1h-900d.md
+> 5	===== FASE 2 — 1h =====
+> 6	
+> 7	Veredito: 1/92 confirmam direção · 0 tradeáveis long. Relatório: backend/backtest-results/pattern-validation-1h-900d.md
+> 8	===== FASE 1 — 15m =====
+> 9	  ADAUSDT: 86400 candles → descoberta 60479 | holdout TRANCADO 25921 (corte 2025-10-02)
+> 10	
+> 11	Sobreviventes FDR: 114/200. Relatório: backend/backtest-results/pattern-discovery-15m-900d.md
+> 12	===== FASE 2 — 15m =====
+> 13	
+> 14	Veredito: 3/114 confirmam direção · 0 tradeáveis long. Relatório: backend/backtest-results/pattern-validation-15m-900d.md
+> 15	===== FIM =====
+> 16	
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

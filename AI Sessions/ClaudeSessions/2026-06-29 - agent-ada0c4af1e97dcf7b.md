@@ -1470,3 +1470,16 @@ Arquivos revisados:
 - `/home/gcrux-tradeux/tradeux/backend/scripts/pattern-discover.js`
 - `/home/gcrux-tradeux/tradeux/backend/scripts/pattern-validate.js`
 - `/home/gcrux-tradeux/tradeux/backend/scripts/sim/labkit.test.js`
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-29 - agent-abcb9f74af3bc8f30]]
+> * **Próxima Sessão**: [[2026-06-29 - agent-afa77236707ecd6a8]]
+%% --- TIMELINE END --- %%
