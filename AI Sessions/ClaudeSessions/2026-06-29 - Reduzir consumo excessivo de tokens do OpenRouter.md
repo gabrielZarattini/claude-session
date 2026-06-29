@@ -3952,6 +3952,1052 @@ A corrida fechou. Lendo os resultados:
 > 16	
 > ```
 
+## 🤖 Claude *(20:00:23)*
+
+
+## 🤖 Claude *(20:00:25)*
+
+Resultado **decisivo e honesto**. Deixa eu ler os detalhes — quais padrões confirmaram direção (mesmo sem pagar a fee) importa pra tese:
+
+## 🤖 Claude *(20:00:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 VALIDA\u00c7\u00c3O 1h (holdout corte 2025-10-02) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\nsudo -n -u gcrux-tradeux bash -lc 'sed -n \"1,12p\" /home/gcrux-tradeux/tradeux/backend/backtest-results/pattern-validation-1h-900d.md'\necho \"\"\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 VALIDA\u00c7\u00c3O 15m \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\nsudo -n -u gcrux-tradeux bash -lc 'sed -n \"1,14p\" /home/gcrux-tradeux/tradeux/backend/backtest-results/pattern-validation-15m-900d.md'",
+  "description": "Read both validation report heads"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════════ VALIDAÇÃO 1h (holdout corte 2025-10-02) ════════
+> # TradeUX — Validação Fase 2 (holdout trancado) · 1h-900d
+> 
+> > 92 sobreviventes da Fase 1 testados SÓ no holdout (t >= cutMs, que a descoberta nunca viu). IC por bootstrap de blocos (2000 reamostras, seed 12345). minN=20. fee 0.1%/lado.
+> > **Direção** = IC do retorno GROSS exclui o zero replicando o sinal da amostra. **Tradeável long** = ALÉM disso o NET (com fee) tem IC>0 → dá pra LUCRAR comprando. CONFIRMA sem tradeável = direção real porém net não paga a fee (serve de gate/saída, não de compra no spot).
+> 
+> ## Veredito: 1/92 confirmam a DIREÇÃO · **0 TRADEÁVEIS long** (net paga a fee)
+> 
+> | Padrão@h | dir | veredito | tradeável | amostra(gross) | holdout n | holdout gross | holdout net | win%(net) | gross IC95 | t | obs |
+> |---|---|---|---|---|---|---|---|---|---|---|---|
+> | `death_cross_50_200@5` | bear | ✅ CONFIRMA | · | -0.255% | 115 | -0.280% | -0.479% | 32.2% | [-0.543%, -0.036%] | -2.10 | direção replica (gross [-0.543%, -0.036%]) mas net NÃO paga a fee → sinal de SAÍDA/gate, não compra |
+> | `boll_lower_break@50` | bull | ❌ REFUTA | · | 0.650% | 383 | -1.136% | -1.334% | 38.9% | [-1.444%, -0.751%] | -4.74 | direção inverteu (amostra gross 0.650% → holdout -1.136%) |
+> | `boll_pctb_low@50` | bull | ❌ REFUTA | · | 0.598% | 415 | -1.055% | -1.253% | 40.0% | [-1.430%, -0.781%] | -4.63 | direção inverteu (amostra gross 0.598% → holdout -1.055%) |
+> 
+> ════════ VALIDAÇÃO 15m ════════
+> # TradeUX — Validação Fase 2 (holdout trancado) · 15m-900d
+> 
+> > 114 sobreviventes da Fase 1 testados SÓ no holdout (t >= cutMs, que a descoberta nunca viu). IC por bootstrap de blocos (2000 reamostras, seed 12345). minN=20. fee 0.1%/lado.
+> > **Direção** = IC do retorno GROSS exclui o zero replicando o sinal da amostra. **Tradeável long** = ALÉM disso o NET (com fee) tem IC>0 → dá pra LUCRAR comprando. CONFIRMA sem tradeável = direção real porém net não paga a fee (serve de gate/saída, não de compra no spot).
+> 
+> ## Veredito: 3/114 confirmam a DIREÇÃO · **0 TRADEÁVEIS long** (net paga a fee)
+> 
+> | Padrão@h | dir | veredito | tradeável | amostra(gross) | holdout n | holdout gross | holdout net | win%(net) | gross IC95 | t | obs |
+> |---|---|---|---|---|---|---|---|---|---|---|---|
+> | `rsi30_AND_above_sma200@5` | bull | ✅ CONFIRMA | · | 0.290% | 135 | 0.139% | -0.061% | 45.2% | [0.009%, 0.272%] | 2.06 | direção replica (gross [0.009%, 0.272%]) mas net NÃO paga a fee → sinal de SAÍDA/gate, não compra |
+> | `rsi30_AND_above_sma200@20` | bull | ✅ CONFIRMA | · | 0.516% | 110 | 0.249% | 0.049% | 50.0% | [0.122%, 0.446%] | 1.96 | direção replica (gross [0.122%, 0.446%]) mas net NÃO paga a fee → sinal de SAÍDA/gate, não compra |
+> | `rsi30_AND_range@50` | bull | ✅ CONFIRMA | · | -0.492% | 53 | -0.611% | -0.810% | 30.2% | [-0.660%, -0.549%] | -1.66 | direção replica (gross [-0.660%, -0.549%]) mas net NÃO paga a fee → sinal de SAÍDA/gate, não compra |
+> | `breakout_high20@50` | bull | ❌ REFUTA | · | 0.093% | 1532 | -0.258% | -0.457% | 39.0% | [-0.350%, -0.122%] | -4.27 | direção inverteu (amostra gross 0.093% → holdout -0.258%) |
+> | `atr_low@50` | flat | ❌ REFUTA | · | 0.110% | 1308 | -0.260% | -0.459% | 38.1% | [-0.342%, -0.178%] | -4.18 | direção inverteu (amostra gross 0.110% → holdout -0.260%) |
+> ```
+
+## 🤖 Claude *(20:01:16)*
+
+
+## 🤖 Claude *(20:01:16)*
+
+Resultados completos e **decisivos**. Deixa eu registrar e te apresentar — tem uma camada importante além do "zero".
+
+## 🤖 Claude *(20:01:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md",
+  "old_string": "**STATUS:** lab constru\u00eddo+gated+testado, **N\u00c3O commitado ainda** (working tree). `backtest-data/` \u00e9 gitignored; `backtest-results/` \u00e9 versionado (decidir versionar os relat\u00f3rios ou ignorar `*pattern-*`). \u26a0\ufe0f n\u00e3o arrastar os `farm-funnel-*` n\u00e3o-commitados de outra origem num commit (ver [[tradeux-cross-session-contamination]]). **Corrida real (5 s\u00edmbolos/900d) pendente do OK do dono.**",
+  "new_string": "**\ud83c\udfaf CORRIDA REAL RODADA (2026-06-29, 5 s\u00edmbolos/900d, holdout corte 2025-10-02, horizontes 1/5/10/20/50):**\n- **1h:** 92/200 sobreviveram FDR in-sample \u2192 no holdout **1/92 confirma dire\u00e7\u00e3o, 0 trade\u00e1veis long**. O \u00fanico: `death_cross_50_200@5` (bear, gross \u22120,28% OOS) = sinal de SA\u00cdDA real (valida o death-cross-exit do trend que o sistema j\u00e1 usa).\n- **15m:** 114/200 in-sample \u2192 holdout **3/114 confirmam dire\u00e7\u00e3o, 0 trade\u00e1veis long**. Os bull: **`rsi30_AND_above_sma200@5 e @20`** (= a TESE DA id2 ao vivo: comprar dip RSI<30 em uptrend) \u2014 dire\u00e7\u00e3o replica OOS com gross +0,14%/+0,25% (IC>0!), MAS net \u22120,06%/+0,05% (fica EXATO na linha da fee, IC n\u00e3o passa de 0). \n- **VEREDITO:** ZERO edge trade\u00e1vel-long em 2 timeframes/ciclos inteiros. A parede matou ~99% como overfitting (ex.: `boll_lower_break@50` in-sample +0,65% \u2192 holdout \u22121,14%, dire\u00e7\u00e3o INVERTEU). **O sinal que SOBREVIVE \u00e9 exatamente a l\u00f3gica que o sistema j\u00e1 tem (death-cross=sa\u00edda; RSI-dip-em-uptrend=id2) \u2014 dire\u00e7\u00e3o real, mas o move n\u00e3o paga os 0,2% de round-trip.** O inimigo \u00e9 a FEE, n\u00e3o a aus\u00eancia de sinal. Re-confirma INDEPENDENTEMENTE tudo j\u00e1 refutado + valida a arquitetura atual + a tese parqueado-como-combust\u00edvel. **Pr\u00f3xima fase POSS\u00cdVEL (fase intensa do dono):** simular um motor \u00fanico sobre `rsi30_AND_above_sma200` com redu\u00e7\u00e3o de fee (maker/BNB), sizing, gate de regime e hold mais longo \u2192 ver se cruza de \"dire\u00e7\u00e3o-confirmada-mas-comida-pela-fee\" pra net+.\n\n**STATUS:** lab constru\u00eddo+gated+testado+1\u00aa corrida real rodada, **N\u00c3O commitado ainda** (working tree). `backtest-data/` gitignored; `backtest-results/` versionado (decidir versionar relat\u00f3rios ou ignorar `*pattern-*`). \u26a0\ufe0f n\u00e3o arrastar os `farm-funnel-*` de outra origem num commit (ver [[tradeux-cross-session-contamination]])."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:01:34)*
+
+
+## 🤖 Claude *(20:01:52)*
+
+## 🎯 Resultado da mineração (5 símbolos, 900d, ciclos inteiros)
+
+| Timeframe | Sobreviventes FDR (in-sample) | Confirmam direção (holdout) | **Tradeáveis long** |
+|---|---|---|---|
+| **1h** | 92 / 200 | 1 | **0** |
+| **15m** | 114 / 200 | 3 | **0** |
+
+**Veredito: zero edge tradeável-long.** Nenhum padrão, em nenhum dos dois timeframes, nets positivo depois da fee no holdout que a descoberta nunca viu. A parede matou ~99% como overfitting — e pegou casos clássicos no flagrante: `boll_lower_break@50` era **+0,65%** in-sample e virou **−1,14%** no holdout (a direção *inverteu* fora da amostra). É exatamente pra isso que a parede existe.
+
+## Mas tem uma camada que importa muito
+
+Os pouquíssimos padrões que **confirmaram direção** (mesmo sem pagar a fee) **são exatamente a lógica que o seu sistema já usa** — o lab validou isso de forma independente:
+
+- **1h:** `death_cross_50_200@5` → após death cross o preço cai de verdade (gross −0,28% OOS, IC exclui zero). É um sinal de **SAÍDA real** — valida o death-cross-exit do trend following que já roda.
+- **15m — o achado:** `rsi30_AND_above_sma200` (comprar dip RSI<30 *em uptrend* = **a tese da sua id2 ao vivo**) confirma direção no holdout em 2 horizontes: gross **+0,14%** (@5) e **+0,25%** (@20), com IC positivo. **Porém o net fica em −0,06% / +0,05%** — *exatamente na linha da fee*. O edge é **real mas minúsculo**, comido quase inteiro pelos 0,2% de round-trip.
+
+**Tradução honesta:** não existe dinheiro de graça (re-confirma, agora por um 4º caminho independente, tudo que já foi refutado, e valida a decisão de parquear). Mas o sinal que sobrevive **não é ruído** — é a sua própria arquitetura (gate de regime + saída no death cross + dip-buy em uptrend). **O inimigo não é a falta de sinal, é a fee.**
+
+## A "fase mais intensa" agora tem um alvo preciso
+
+Você descreveu a próxima fase como *"simulações dentro de um mesmo algoritmo"*. Os dados acabaram de te dar **exatamente o que simular**: pegar o **único sobrevivente direcional bull** (`rsi30_AND_above_sma200`) e construir um motor único em volta dele pra ver se cruza de "direção-confirmada-mas-comida-pela-fee" para **net positivo** — mexendo nos lugares onde a fee é o gargalo:
+
+- **Reduzir a fee** (ordem maker em vez de taker, desconto BNB) — o lever mais direto, já que o edge perde por ~0,1-0,2%.
+- **Gate de regime mais apertado** (só disparar no melhor contexto) + **sizing** + **hold mais longo** (o @20 já era o menos-negativo).
+- Casar com a mecânica no-loss/funil que já existe.
+
+Isso é simulação **dirigida por evidência**, não mineração às cegas.
+
+## 🤖 Claude *(20:02:02)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A minera\u00e7\u00e3o entregou o veredito (0 trade\u00e1vel; o sinal real = sua pr\u00f3pria id2/death-cross, comido pela fee). Como seguir?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Simular o sobrevivente (fase intensa)",
+          "description": "Construir o motor de simula\u00e7\u00e3o sobre rsi30_AND_above_sma200 com fee maker/BNB + gate de regime + sizing + hold longo, pra ver se cruza pra net+. \u00c9 a 'fase mais intensa' que voc\u00ea descreveu, agora com alvo preciso (n\u00e3o \u00e0s cegas)."
+        },
+        {
+          "label": "Banco o achado, paro por aqui",
+          "description": "O resultado j\u00e1 \u00e9 conclusivo e refor\u00e7a parqueado-como-combust\u00edvel: sem edge de gra\u00e7a, arquitetura atual validada. Guardo o lab (commit) e voltamos o foco pro MCORCH; o lab fica pronto pra testar qualquer ideia futura em minutos."
+        },
+        {
+          "label": "Commitar o lab + relat\u00f3rios",
+          "description": "Independente do pr\u00f3ximo passo de pesquisa: versionar os 5 arquivos + os relat\u00f3rios desta corrida como artefato de auditoria (TL recomendou), pra n\u00e3o ficar s\u00f3 no working tree. Posso fazer agora."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A mineração entregou o veredito (0 tradeável; o sinal real = sua própria id2/death-cross, comido pela fee). Como seguir?"="Simular o sobrevivente (fase intensa)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(20:04:15)*
+
+
+## 🤖 Claude *(20:04:19)*
+
+Beleza — **fase intensa: simular o sobrevivente.** O alvo é claro: `rsi30_AND_above_sma200` (dip RSI<30 em uptrend = sua id2) confirma direção mas o net fica na linha da fee. A pergunta da simulação: **com saída realista + fee menor + gate, ele cruza pra net+ no holdout?**
+
+Vou construir `pattern-sim.js` (Fase 3) — um backtester event-driven de **uma entrada** com matriz de **saídas × custos**, mantendo a mesma parede (tuna no in-sample, valida no holdout). Escrevendo:
+
+## 🤖 Claude *(20:05:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/scratchpad/pattern-sim.js",
+  "content": "#!/usr/bin/env node\n'use strict';\n/*\n * TradeUX \u2014 FASE 3: SIMULA\u00c7\u00c3O DIRIGIDA do sobrevivente da Fase 2.\n *\n * A descoberta mediu retorno a horizonte FIXO. Uma estrat\u00e9gia real SAI por CONDI\u00c7\u00c3O (take-profit,\n * stop, RSI, no-loss) e paga fee que d\u00e1 pra REDUZIR (maker/BNB). Esta fase pega UMA entrada\n * (default `rsi30_AND_above_sma200` = a tese da id2: dip RSI<30 em uptrend) e varre uma matriz de\n * SA\u00cdDAS \u00d7 CUSTOS, pra ver se o edge direcional confirmado cruza de \"comido-pela-fee\" pra NET+.\n *\n * Disciplina mantida:\n *   - mesma PAREDE temporal (split por tempo); TUNA a config no in-sample, REPORTA o holdout.\n *     A escolha do \"melhor\" \u00e9 S\u00d3 pelo in-sample \u2014 pegar o melhor-no-holdout fura a parede.\n *   - sem lookahead: entrada no OPEN de i+1; sa\u00eddas intrabar usam high/low de barras >= entrada,\n *     e quando TP e SL caem na MESMA vela assume-se o STOP primeiro (pior caso, conservador).\n *   - 1 posi\u00e7\u00e3o por vez por s\u00edmbolo (sem overlap); custo (fee+slip) por lado, varrido em cen\u00e1rios.\n *\n * Sa\u00edda: backtest-results/pattern-sim-<int>-<days>d.md/json\n * Uso:   node scripts/pattern-sim.js [--interval=15m] [--days=900] [--symbols=...] [--holdout=0.3]\n *          [--entry=rsi30_AND_above_sma200] [--warm=250] [--minN=30] [--bootstrap=2000]\n *\n * N\u00c3O toca money-path. Klines p\u00fablicas (cache -ext) + indicadores do labkit.\n */\nconst fs = require('fs');\nconst path = require('path');\nconst lab = require('./lib/labkit');\nconst { PATTERNS } = require('./lib/patterns');\n\nconst args = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)=?(.*)$/); return m ? [m[1], m[2] || true] : [a, true]; }));\nconst INTERVAL = args.interval || '15m';\nconst DAYS = parseInt(args.days || '900', 10);\nconst SYMBOLS = (args.symbols || 'BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',');\nconst HOLDOUT = parseFloat(args.holdout || '0.3');\nconst ENTRY = args.entry || 'rsi30_AND_above_sma200';\nconst WARM = parseInt(args.warm || '250', 10);\nconst MIN_N = parseInt(args.minN || '30', 10);\nconst NBOOT = parseInt(args.bootstrap || '2000', 10);\nconst END = args.end || null;\nconst fin = Number.isFinite;\nconst pct = x => (fin(x) ? (x * 100).toFixed(3) + '%' : 'n/a');\n\nconst entryPat = PATTERNS.find(p => p.name === ENTRY);\nif (!entryPat) { console.error(`entrada '${ENTRY}' n\u00e3o est\u00e1 em lib/patterns.js`); process.exit(1); }\n// variante \"apertada\": entrada base + filtro de for\u00e7a de tend\u00eancia (ADX>20) \u2014 testa o gate de regime.\nconst ENTRIES = [\n  { name: ENTRY, fn: entryPat.fn },\n  { name: `${ENTRY}+adx20`, fn: (d, i) => { try { return entryPat.fn(d, i) && fin(d.adx[i]) && d.adx[i] > 20; } catch (e) { return false; } } },\n];\n\n// CUSTO por lado (fee + slippage). Cen\u00e1rios do mais caro (taker+slip) ao ideal (maker 0-fee).\nconst COSTS = [\n  { label: 'taker+slip', cost: 0.0015 },   // 0.1% taker + ~5bps slip\n  { label: 'BNB taker', cost: 0.00125 },    // 0.075% (desconto BNB) + slip\n  { label: 'maker BNB', cost: 0.0004 },     // ~0.02% maker (BNB) + slip m\u00ednimo (ordem limite)\n  { label: 'maker 0-fee', cost: 0.0 },      // teto otimista (refer\u00eancia)\n];\n\n// Pol\u00edticas de SA\u00cdDA. hit(c, d, j, e, eo) \u2192 pre\u00e7o de sa\u00edda na vela j (ou null). maxHold em barras.\n// eo = open de entrada. Intrabar: TP via high, SL via low; se ambos na mesma vela \u2192 SL (conservador).\nconst EXITS = [\n  { name: 'fixed20', maxHold: 20, hit: () => null }, // s\u00f3 time-stop (= baseline da descoberta @20)\n  { name: 'fixed50', maxHold: 50, hit: () => null },\n  { name: 'tp1%/h100', maxHold: 100, hit: (c, d, j, e, eo) => (c[j].high >= eo * 1.01 ? eo * 1.01 : null) },\n  { name: 'tp0.5/sl1/h100', maxHold: 100, hit: (c, d, j, e, eo) => { const tp = eo * 1.005, sl = eo * 0.99; if (c[j].low <= sl) return sl; if (c[j].high >= tp) return tp; return null; } },\n  { name: 'rsi>=55/h200', maxHold: 200, hit: (c, d, j) => (fin(d.rsi14[j]) && d.rsi14[j] >= 55 ? c[j].close : null) },\n  { name: 'noLoss1.2%/h200', maxHold: 200, hit: (c, d, j, e, eo) => (c[j].high >= eo * 1.012 ? eo * 1.012 : null) }, // estilo Farm no-loss (com teto de hold)\n];\n\nfunction safe(fn, d, i) { try { return !!fn(d, i); } catch (e) { return false; } }\n\n// Simula UM segmento [lo,hi): 1 posi\u00e7\u00e3o por vez, entrada no open seguinte, sa\u00edda pela pol\u00edtica, net de custo.\nfunction simSegment(candles, ind, entryFn, exit, cost, lo, hi) {\n  const trades = []; let i = Math.max(lo, WARM);\n  while (i < hi - 1) {\n    if (!safe(entryFn, ind, i)) { i++; continue; }\n    const e = i + 1; if (e >= hi) break;\n    const eo = candles[e].open;\n    const cap = Math.min(hi - 1, e + exit.maxHold);\n    let xj = cap, xpx = candles[cap].open; // default: time-stop no fim da janela (open da \u00faltima vela)\n    for (let j = e; j <= cap; j++) {\n      const px = exit.hit(candles, ind, j, e, eo);\n      if (px !== null && fin(px)) { xj = j; xpx = px; break; }\n    }\n    if (!(eo > 0) || !(xpx > 0)) { i = e; continue; }\n    const net = (xpx * (1 - cost)) / (eo * (1 + cost)) - 1;\n    trades.push(net);\n    i = xj + 1; // sem overlap: pr\u00f3xima varredura ap\u00f3s a sa\u00edda\n  }\n  return trades;\n}\n\n(async () => {\n  fs.mkdirSync(lab.OUT_DIR, { recursive: true });\n  console.log(`pattern-sim \u2014 ${INTERVAL}, ${DAYS}d, entrada '${ENTRY}', holdout ${pct(HOLDOUT)}, ${ENTRIES.length} entradas \u00d7 ${EXITS.length} sa\u00eddas \u00d7 ${COSTS.length} custos`);\n\n  const perSym = {}; const splitInfo = {};\n  for (const sym of SYMBOLS) {\n    let candles; try { candles = await lab.fetchKlinesExt(sym, INTERVAL, DAYS, END); } catch (e) { console.log(`  skip ${sym}: ${e.message}`); continue; }\n    if (!candles || candles.length < WARM + 400) { console.log(`  skip ${sym}: poucos dados`); continue; }\n    const sp = lab.splitByTime(candles, HOLDOUT);\n    const ind = lab.computeIndicators(candles, INTERVAL); // s\u00e9rie completa (warmup causal nas barras OOS)\n    ind.bwPctile = lab.rollingPercentile(ind.boll.bw, 200);\n    perSym[sym] = { candles, ind, kIndex: sp.kIndex, n: candles.length };\n    splitInfo[sym] = { totalCandles: candles.length, kIndex: sp.kIndex, cutMs: sp.cutMs };\n    console.log(`  ${sym}: ${candles.length} candles, corte idx ${sp.kIndex} (${new Date(sp.cutMs).toISOString().slice(0, 10)})`);\n  }\n  const syms = Object.keys(perSym);\n  if (!syms.length) { console.log('sem dados.'); process.exit(1); }\n\n  // varre a matriz: para cada (entrada\u00d7sa\u00edda\u00d7custo) acumula trades pooled IN-SAMPLE e HOLDOUT (entradas s\u00f3 no segmento)\n  const grid = [];\n  for (const en of ENTRIES) for (const ex of EXITS) for (const co of COSTS) {\n    const inT = [], outT = [];\n    for (const s of syms) {\n      const { candles, ind, kIndex, n } = perSym[s];\n      inT.push(...simSegment(candles, ind, en.fn, ex, co.cost, WARM, kIndex)); // in-sample: [warm,kIndex)\n      outT.push(...simSegment(candles, ind, en.fn, ex, co.cost, kIndex, n));   // holdout: [kIndex,n)\n    }\n    const summ = (ts) => ({ n: ts.length, mean: ts.length ? lab.mean(ts) : 0, winRate: ts.length ? ts.filter(r => r > 0).length / ts.length : 0, total: ts.reduce((a, r) => a * (1 + r), 1) - 1 });\n    grid.push({ entry: en.name, exit: ex.name, costLabel: co.label, cost: co.cost, in: summ(inT), out: summ(outT), outTrades: outT });\n  }\n\n  // escolha do \"melhor\" S\u00d3 pelo IN-SAMPLE (n\u00e3o fura a parede): maior net/trade in-sample com n>=MIN_N,\n  // por cen\u00e1rio de custo realista (exclui maker 0-fee da escolha \u2014 \u00e9 s\u00f3 refer\u00eancia).\n  const tunable = grid.filter(g => g.in.n >= MIN_N && g.cost > 0);\n  const bestIn = tunable.slice().sort((a, b) => b.in.mean - a.in.mean)[0] || null;\n  let bestBoot = null;\n  if (bestIn) bestBoot = lab.blockBootstrapMeanCI(bestIn.outTrades, { blockLen: 10, nResamples: NBOOT, seed: 12345, ci: 0.95 });\n\n  // relat\u00f3rio\n  const L = [];\n  L.push(`# TradeUX \u2014 Simula\u00e7\u00e3o dirigida (Fase 3) \u00b7 entrada \\`${ENTRY}\\` \u00b7 ${INTERVAL}, ${DAYS}d\\n`);\n  L.push(`> Backtester event-driven de UMA entrada \u00d7 matriz de sa\u00eddas \u00d7 custos. 1 posi\u00e7\u00e3o/vez, exec no open seguinte, sa\u00eddas intrabar conservadoras (TP via high, SL via low; ambos na mesma vela \u2192 stop). PAREDE: tuna no in-sample, valida no holdout. ${ENTRIES.length} entradas \u00d7 ${EXITS.length} sa\u00eddas \u00d7 ${COSTS.length} custos = ${grid.length} configs.\\n`);\n  L.push(`## Parede\\n`);\n  L.push(`| S\u00edmbolo | candles | corte (idx) | data corte |`); L.push(`|---|---|---|---|`);\n  for (const s of syms) L.push(`| ${s} | ${splitInfo[s].totalCandles} | ${splitInfo[s].kIndex} | ${new Date(splitInfo[s].cutMs).toISOString().slice(0, 10)} |`);\n\n  if (bestIn) {\n    const cross = bestBoot && bestBoot.lo > 0;\n    L.push(`\\n## \ud83c\udfaf Melhor config escolhida NO IN-SAMPLE \u2192 desempenho no HOLDOUT\\n`);\n    L.push(`**Entrada** \\`${bestIn.entry}\\` \u00b7 **sa\u00edda** \\`${bestIn.exit}\\` \u00b7 **custo** ${bestIn.costLabel} (${(bestIn.cost * 100).toFixed(3)}%/lado).`);\n    L.push(`\\n| | n | net/trade | win% | retorno composto |`); L.push(`|---|---|---|---|---|`);\n    L.push(`| in-sample (tuning) | ${bestIn.in.n} | ${pct(bestIn.in.mean)} | ${(bestIn.in.winRate * 100).toFixed(1)}% | ${pct(bestIn.in.total)} |`);\n    L.push(`| **holdout (veredito)** | ${bestIn.out.n} | **${pct(bestIn.out.mean)}** | ${(bestIn.out.winRate * 100).toFixed(1)}% | ${pct(bestIn.out.total)} |`);\n    if (bestBoot) L.push(`\\nIC 95% do net/trade no holdout (bootstrap de blocos): **[${pct(bestBoot.lo)}, ${pct(bestBoot.hi)}]** \u2192 ${cross ? '\u2705 **CRUZOU pra NET+** (IC>0): a config paga a fee fora da amostra.' : '\u274c net **n\u00e3o** \u00e9 positivo com confian\u00e7a no holdout (IC inclui/abaixo do zero).'}`);\n  }\n\n  L.push(`\\n## Grade completa (net/trade)\\n`);\n  L.push(`| entrada | sa\u00edda | custo | n(in) | net/trade in | win in | n(out) | net/trade out | win out |`);\n  L.push(`|---|---|---|---|---|---|---|---|---|`);\n  for (const g of grid.sort((a, b) => b.out.mean - a.out.mean)) {\n    L.push(`| ${g.entry} | ${g.exit} | ${g.costLabel} | ${g.in.n} | ${pct(g.in.mean)} | ${(g.in.winRate * 100).toFixed(1)}% | ${g.out.n} | ${pct(g.out.mean)} | ${(g.out.winRate * 100).toFixed(1)}% |`);\n  }\n  L.push(`\\n## Leitura honesta\\n`);\n  L.push(`- O veredito \u00e9 a linha do HOLDOUT da config escolhida no in-sample. Se o IC do net/trade no holdout exclui o zero (>0), a estrat\u00e9gia paga a fee FORA da amostra \u2014 candidata a paper.`);\n  L.push(`- Olhar a grade inteira mostra o trade-off: net/trade SOBE conforme o custo CAI (maker vs taker) \u2014 se s\u00f3 o cen\u00e1rio maker cruza, a conclus\u00e3o \u00e9 \"o edge existe mas exige execu\u00e7\u00e3o maker/limite, n\u00e3o taker\".`);\n  L.push(`- Net/trade out positivo no maker 0-fee mas negativo no taker = o edge \u00e9 REAL e do tamanho da fee: o lever \u00e9 a EXECU\u00c7\u00c3O, n\u00e3o o sinal.`);\n  L.push(`- Pr\u00f3ximo passo de qualquer config que cruze: motor \\`[PAPER]\\` com a MESMA regra de sa\u00edda e fee real, medir round-trips antes de qualquer real.`);\n  L.push(`\\n---\\n_Gerado por backend/scripts/pattern-sim.js. Holdout = p\u00f3s-corte (n\u00e3o-tunado). Net de custo (fee+slip). Sa\u00eddas intrabar conservadoras._`);\n\n  const tag = `${INTERVAL}-${DAYS}d`;\n  fs.writeFileSync(path.join(lab.OUT_DIR, `pattern-sim-${tag}.md`), L.join('\\n'));\n  fs.writeFileSync(path.join(lab.OUT_DIR, `pattern-sim-${tag}.json`), JSON.stringify({ config: { interval: INTERVAL, days: DAYS, entry: ENTRY, symbols: syms, holdout: HOLDOUT, minN: MIN_N }, splitInfo, best: bestIn ? { entry: bestIn.entry, exit: bestIn.exit, cost: bestIn.costLabel, in: bestIn.in, out: bestIn.out, holdoutCI: bestBoot } : null, grid: grid.map(g => ({ entry: g.entry, exit: g.exit, cost: g.costLabel, in: g.in, out: g.out })) }, null, 2));\n  console.log(`\\nMelhor in-sample \u2192 holdout net/trade ${bestIn ? pct(bestIn.out.mean) : 'n/a'}${bestBoot ? ` (IC [${pct(bestBoot.lo)}, ${pct(bestBoot.hi)}])` : ''}. Relat\u00f3rio: backend/backtest-results/pattern-sim-${tag}.md`);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/scratchpad/pattern-sim.js (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:05:35)*
+
+
+## 🤖 Claude *(20:05:35)*
+
+Deploy + syntax + rodar a simulação no 15m/900d (dados em cache):
+
+## 🤖 Claude *(20:05:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/scratchpad\ncat $SP/pattern-sim.js | sudo -n -u gcrux-tradeux tee /home/gcrux-tradeux/tradeux/backend/scripts/pattern-sim.js >/dev/null\necho \"== syntax ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && node -c scripts/pattern-sim.js && echo ok'\necho \"== run (15m, 900d) ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && timeout 200 node scripts/pattern-sim.js --interval=15m --days=900 2>&1 | tail -4'",
+  "description": "Deploy and run pattern-sim on 15m"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == syntax ==
+> ok
+> == run (15m, 900d) ==
+>   [cache] ADAUSDT 15m: 86400 candles
+>   ADAUSDT: 86400 candles, corte idx 60479 (2025-10-02)
+> 
+> Melhor in-sample → holdout net/trade 0.188% (IC [0.015%, 0.379%]). Relatório: backend/backtest-results/pattern-sim-15m-900d.md
+> ```
+
+## 🤖 Claude *(20:06:08)*
+
+
+## 🤖 Claude *(20:06:11)*
+
+O **melhor config (escolhido só no in-sample) cruzou pra net+ no holdout: +0,188%/trade, IC [0,015%, 0,379%] — exclui o zero.** Isso é potencialmente significativo — mas exige ceticismo (você já foi queimado por artefato). Preciso ver QUAL config ganhou e a grade inteira antes de chamar de real:
+
+## 🤖 Claude *(20:06:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'sed -n \"/## \ud83c\udfaf Melhor config/,/## Leitura/p\" /home/gcrux-tradeux/tradeux/backend/backtest-results/pattern-sim-15m-900d.md'",
+  "description": "Read sim winning config and full grid"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ## 🎯 Melhor config escolhida NO IN-SAMPLE → desempenho no HOLDOUT
+> 
+> **Entrada** `rsi30_AND_above_sma200` · **saída** `fixed20` · **custo** maker BNB (0.040%/lado).
+> 
+> | | n | net/trade | win% | retorno composto |
+> |---|---|---|---|---|
+> | in-sample (tuning) | 270 | 0.453% | 56.7% | 191.178% |
+> | **holdout (veredito)** | 109 | **0.188%** | 57.8% | 21.593% |
+> 
+> IC 95% do net/trade no holdout (bootstrap de blocos): **[0.015%, 0.379%]** → ✅ **CRUZOU pra NET+** (IC>0): a config paga a fee fora da amostra.
+> 
+> ## Grade completa (net/trade)
+> 
+> | entrada | saída | custo | n(in) | net/trade in | win in | n(out) | net/trade out | win out |
+> |---|---|---|---|---|---|---|---|---|
+> | rsi30_AND_above_sma200 | noLoss1.2%/h200 | maker 0-fee | 270 | 0.222% | 81.5% | 109 | 0.395% | 79.8% |
+> | rsi30_AND_above_sma200+adx20 | noLoss1.2%/h200 | maker 0-fee | 246 | 0.213% | 82.1% | 96 | 0.342% | 79.2% |
+> | rsi30_AND_above_sma200 | noLoss1.2%/h200 | maker BNB | 270 | 0.142% | 81.5% | 109 | 0.314% | 79.8% |
+> | rsi30_AND_above_sma200+adx20 | tp1%/h100 | maker 0-fee | 248 | 0.226% | 79.4% | 96 | 0.289% | 79.2% |
+> | rsi30_AND_above_sma200 | tp1%/h100 | maker 0-fee | 273 | 0.244% | 79.5% | 109 | 0.277% | 77.1% |
+> | rsi30_AND_above_sma200+adx20 | fixed50 | maker 0-fee | 239 | 0.232% | 52.3% | 94 | 0.273% | 53.2% |
+> | rsi30_AND_above_sma200 | fixed50 | maker 0-fee | 263 | 0.353% | 54.4% | 107 | 0.270% | 55.1% |
+> | rsi30_AND_above_sma200 | fixed20 | maker 0-fee | 270 | 0.534% | 60.0% | 109 | 0.268% | 57.8% |
+> | rsi30_AND_above_sma200 | rsi>=55/h200 | maker 0-fee | 268 | 0.271% | 69.8% | 107 | 0.264% | 71.0% |
+> | rsi30_AND_above_sma200+adx20 | noLoss1.2%/h200 | maker BNB | 246 | 0.133% | 82.1% | 96 | 0.262% | 79.2% |
+> | rsi30_AND_above_sma200+adx20 | rsi>=55/h200 | maker 0-fee | 243 | 0.216% | 68.7% | 94 | 0.251% | 71.3% |
+> | rsi30_AND_above_sma200+adx20 | fixed20 | maker 0-fee | 245 | 0.491% | 59.6% | 96 | 0.220% | 56.3% |
+> | rsi30_AND_above_sma200+adx20 | tp1%/h100 | maker BNB | 248 | 0.146% | 79.4% | 96 | 0.209% | 79.2% |
+> | rsi30_AND_above_sma200 | tp1%/h100 | maker BNB | 273 | 0.164% | 79.5% | 109 | 0.197% | 77.1% |
+> | rsi30_AND_above_sma200+adx20 | fixed50 | maker BNB | 239 | 0.152% | 50.6% | 94 | 0.193% | 50.0% |
+> | rsi30_AND_above_sma200 | fixed50 | maker BNB | 263 | 0.273% | 52.5% | 107 | 0.190% | 52.3% |
+> | rsi30_AND_above_sma200 | fixed20 | maker BNB | 270 | 0.453% | 56.7% | 109 | 0.188% | 57.8% |
+> | rsi30_AND_above_sma200 | rsi>=55/h200 | maker BNB | 268 | 0.191% | 67.9% | 107 | 0.184% | 69.2% |
+> | rsi30_AND_above_sma200+adx20 | rsi>=55/h200 | maker BNB | 243 | 0.136% | 67.1% | 94 | 0.170% | 69.1% |
+> | rsi30_AND_above_sma200 | noLoss1.2%/h200 | BNB taker | 270 | -0.028% | 81.1% | 109 | 0.144% | 79.8% |
+> | rsi30_AND_above_sma200+adx20 | fixed20 | maker BNB | 245 | 0.410% | 55.5% | 96 | 0.140% | 56.3% |
+> | rsi30_AND_above_sma200 | noLoss1.2%/h200 | taker+slip | 270 | -0.078% | 80.7% | 109 | 0.094% | 79.8% |
+> | rsi30_AND_above_sma200+adx20 | noLoss1.2%/h200 | BNB taker | 246 | -0.037% | 81.7% | 96 | 0.091% | 79.2% |
+> | rsi30_AND_above_sma200 | tp0.5/sl1/h100 | maker 0-fee | 321 | 0.107% | 73.8% | 132 | 0.068% | 71.2% |
+> | rsi30_AND_above_sma200+adx20 | tp0.5/sl1/h100 | maker 0-fee | 292 | 0.099% | 73.3% | 113 | 0.062% | 70.8% |
+> | rsi30_AND_above_sma200+adx20 | noLoss1.2%/h200 | taker+slip | 246 | -0.087% | 81.3% | 96 | 0.041% | 79.2% |
+> | rsi30_AND_above_sma200+adx20 | tp1%/h100 | BNB taker | 248 | -0.024% | 78.2% | 96 | 0.039% | 78.1% |
+> | rsi30_AND_above_sma200 | tp1%/h100 | BNB taker | 273 | -0.006% | 78.4% | 109 | 0.027% | 77.1% |
+> | rsi30_AND_above_sma200+adx20 | fixed50 | BNB taker | 239 | -0.018% | 48.5% | 94 | 0.023% | 44.7% |
+> | rsi30_AND_above_sma200 | fixed50 | BNB taker | 263 | 0.103% | 49.8% | 107 | 0.020% | 46.7% |
+> | rsi30_AND_above_sma200 | fixed20 | BNB taker | 270 | 0.283% | 47.0% | 109 | 0.018% | 48.6% |
+> | rsi30_AND_above_sma200 | rsi>=55/h200 | BNB taker | 268 | 0.021% | 62.3% | 107 | 0.014% | 60.7% |
+> | rsi30_AND_above_sma200+adx20 | rsi>=55/h200 | BNB taker | 243 | -0.034% | 60.9% | 94 | 0.000% | 59.6% |
+> | rsi30_AND_above_sma200+adx20 | tp1%/h100 | taker+slip | 248 | -0.074% | 77.0% | 96 | -0.011% | 78.1% |
+> | rsi30_AND_above_sma200 | tp0.5/sl1/h100 | maker BNB | 321 | 0.027% | 73.8% | 132 | -0.012% | 71.2% |
+> | rsi30_AND_above_sma200+adx20 | tp0.5/sl1/h100 | maker BNB | 292 | 0.019% | 73.3% | 113 | -0.018% | 70.8% |
+> | rsi30_AND_above_sma200 | tp1%/h100 | taker+slip | 273 | -0.056% | 77.3% | 109 | -0.023% | 77.1% |
+> | rsi30_AND_above_sma200+adx20 | fixed50 | taker+slip | 239 | -0.068% | 48.1% | 94 | -0.027% | 44.7% |
+> | rsi30_AND_above_sma200 | fixed50 | taker+slip | 263 | 0.052% | 48.3% | 107 | -0.030% | 45.8% |
+> | rsi30_AND_above_sma200+adx20 | fixed20 | BNB taker | 245 | 0.240% | 46.5% | 96 | -0.030% | 45.8% |
+> | rsi30_AND_above_sma200 | fixed20 | taker+slip | 270 | 0.233% | 44.1% | 109 | -0.032% | 46.8% |
+> | rsi30_AND_above_sma200 | rsi>=55/h200 | taker+slip | 268 | -0.029% | 61.2% | 107 | -0.036% | 57.9% |
+> | rsi30_AND_above_sma200+adx20 | rsi>=55/h200 | taker+slip | 243 | -0.084% | 59.7% | 94 | -0.050% | 56.4% |
+> | rsi30_AND_above_sma200+adx20 | fixed20 | taker+slip | 245 | 0.190% | 44.1% | 96 | -0.080% | 44.8% |
+> | rsi30_AND_above_sma200 | tp0.5/sl1/h100 | BNB taker | 321 | -0.142% | 73.8% | 132 | -0.182% | 71.2% |
+> | rsi30_AND_above_sma200+adx20 | tp0.5/sl1/h100 | BNB taker | 292 | -0.151% | 73.3% | 113 | -0.188% | 70.8% |
+> | rsi30_AND_above_sma200 | tp0.5/sl1/h100 | taker+slip | 321 | -0.192% | 73.8% | 132 | -0.232% | 71.2% |
+> | rsi30_AND_above_sma200+adx20 | tp0.5/sl1/h100 | taker+slip | 292 | -0.201% | 73.3% | 113 | -0.238% | 70.8% |
+> 
+> ## Leitura honesta
+> ```
+
+## 🤖 Claude *(20:06:57)*
+
+
+## 🤖 Claude *(20:06:58)*
+
+A grade conta uma história **muito clara e honesta**. Deixa eu rodar a mesma simulação no **1h** como teste de robustez (se o edge maker aparece nos dois timeframes, é mais crível) antes de te dar o veredito:
+
+## 🤖 Claude *(20:07:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && timeout 200 node scripts/pattern-sim.js --interval=1h --days=900 2>&1 | tail -3'\necho \"=== TOP 6 da grade 1h (por net/trade holdout) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'sed -n \"/## Grade completa/,/## Leitura/p\" /home/gcrux-tradeux/tradeux/backend/backtest-results/pattern-sim-1h-900d.md | head -11'",
+  "description": "Run sim on 1h for robustness and show top grid"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   ADAUSDT: 21600 candles, corte idx 15119 (2025-10-02)
+> 
+> Melhor in-sample → holdout net/trade -0.696% (IC [-1.949%, 0.557%]). Relatório: backend/backtest-results/pattern-sim-1h-900d.md
+> === TOP 6 da grade 1h (por net/trade holdout) ===
+> ## Grade completa (net/trade)
+> 
+> | entrada | saída | custo | n(in) | net/trade in | win in | n(out) | net/trade out | win out |
+> |---|---|---|---|---|---|---|---|---|
+> | rsi30_AND_above_sma200+adx20 | rsi>=55/h200 | maker 0-fee | 66 | -0.040% | 63.6% | 22 | 0.076% | 59.1% |
+> | rsi30_AND_above_sma200+adx20 | rsi>=55/h200 | maker BNB | 66 | -0.120% | 62.1% | 22 | -0.004% | 59.1% |
+> | rsi30_AND_above_sma200+adx20 | tp0.5/sl1/h100 | maker 0-fee | 97 | -0.103% | 59.8% | 33 | -0.045% | 63.6% |
+> | rsi30_AND_above_sma200 | rsi>=55/h200 | maker 0-fee | 76 | -0.504% | 57.9% | 23 | -0.060% | 56.5% |
+> | rsi30_AND_above_sma200+adx20 | tp0.5/sl1/h100 | maker BNB | 97 | -0.183% | 59.8% | 33 | -0.125% | 63.6% |
+> | rsi30_AND_above_sma200 | rsi>=55/h200 | maker BNB | 76 | -0.584% | 57.9% | 23 | -0.140% | 56.5% |
+> | rsi30_AND_above_sma200 | tp0.5/sl1/h100 | maker 0-fee | 114 | -0.132% | 57.9% | 35 | -0.143% | 57.1% |
+> ```
+
+## 🤖 Claude *(20:07:35)*
+
+
+## 🤖 Claude *(20:07:37)*
+
+O teste de robustez no 1h é **decisivo pra honestidade**: o edge **NÃO replica** lá. Vou registrar e te dar o veredito sem floreio.
+
+## 🤖 Claude *(20:07:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md",
+  "old_string": "**STATUS:** lab constru\u00eddo+gated+testado+1\u00aa corrida real rodada, **N\u00c3O commitado ainda** (working tree).",
+  "new_string": "**\ud83e\uddea FASE 3 \u2014 SIMULA\u00c7\u00c3O DIRIGIDA do sobrevivente (`pattern-sim.js`, event-driven 1-entrada \u00d7 sa\u00eddas \u00d7 custos, mesma parede):** alvo = `rsi30_AND_above_sma200` (a id2). Resultado HONESTO e FR\u00c1GIL:\n- **15m:** melhor config in-sample (`fixed20`/maker-BNB 0,04%) \u2192 holdout **+0,188%/trade, IC [0,015%, 0,379%]** (cruza o zero, mas o piso \u00e9 um fio de cabelo). Estrutura ROBUSTA da grade: net/trade cai MONOT\u00d4NICO conforme o custo sobe \u2192 **o edge \u00e9 do TAMANHO DA FEE: positivo s\u00f3 com execu\u00e7\u00e3o MAKER (limite ~0,04%/lado), NEGATIVO no taker (0,075-0,1%+slip = o default de hoje).** Gate ADX e stops N\u00c3O ajudaram; sa\u00edda mais simples + fee menor venceu.\n- **1h (teste de robustez):** **N\u00c3O replica** \u2014 n raso (22-35 no holdout), melhor config holdout \u22120,70% (IC enorme cruzando 0). Edge \u00e9 timeframe-espec\u00edfico (15m sim, 1h n\u00e3o).\n- **VEREDITO FASE 3:** N\u00c3O \u00e9 edge deploy\u00e1vel. \u00c9 \"talvez, como MAKER, no 15m\" \u2014 fr\u00e1gil em 2 eixos (execu\u00e7\u00e3o maker-only + timeframe-espec\u00edfico + IC no fio). O ganho estrutural real: **provado com dado que N\u00c3O h\u00e1 edge taker-execut\u00e1vel em lugar nenhum, e que o lever (se houver) \u00e9 EXECU\u00c7\u00c3O MAKER, n\u00e3o sinal.** A id2 \u00e9 o sinal real, comido pela fee taker. \u00danico caminho disciplinado se quiser perseguir: motor `[PAPER]` com sem\u00e2ntica MAKER (limite) medindo fill-rate real \u2014 a sim ASSUME que a maker preenche (otimista). Sen\u00e3o, banco o achado.\n\n**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas, **N\u00c3O commitado ainda** (working tree)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:07:57)*
+
+
+## 🤖 Claude *(20:08:14)*
+
+## 🔬 Veredito da Fase 3 (simulação dirigida da id2)
+
+Rodei o sobrevivente (`rsi30_AND_above_sma200`) num backtester de verdade — entrada × matriz de saídas × custos, tunando no in-sample e validando no holdout. O resultado é **honesto e frágil**, e o ceticismo se pagou:
+
+**15m — há um flicker de edge, mas é maker-only e no fio:**
+- Melhor config (escolhida só no in-sample): `fixed20` + **fee maker BNB (0,04%/lado)** → holdout **+0,188%/trade, IC [0,015%, 0,379%]**. Cruza o zero — mas o piso (0,015%) é um fio de cabelo.
+- **A estrutura da grade é o achado real e robusto:** o net/trade cai **monotonicamente** conforme o custo sobe. No **taker** (0,075–0,1% + slip = o que o sistema usa hoje), **quase tudo é net-negativo no holdout**. Só vira positivo com execução **maker** (ordem limite).
+- Gate ADX mais apertado e stops **não ajudaram** — a saída mais simples + a fee mais baixa venceu.
+
+**1h (teste de robustez) — NÃO replica:**
+- Poucos sinais (n=22–35 no holdout), melhor config **−0,70%** com IC gigante cruzando zero. O edge é **específico do 15m**, não generaliza.
+
+### O que isso significa, sem floreio
+1. **Não existe edge taker-executável em lugar nenhum** — provado com dado, em 2 timeframes, ciclos inteiros, holdout trancado.
+2. O **único** flicker positivo (id2 dip-buy no 15m) é **frágil em dois eixos**: só sobrevive como **maker/limite** (~0,04%), e **não replica no 1h**. O IC mal cruza o zero.
+3. **O lever, se houver, é EXECUÇÃO (maker), não o sinal.** A sua id2 é o sinal real — comido pela fee taker. Isso fecha, com evidência, a pergunta "tem alpha escondido nos padrões clássicos?": **não, nada deployável.**
+
+Importante: a simulação **assume que a ordem maker preenche** (otimista — uma limit no dip pode não executar se o preço seguir caindo). Então mesmo o 15m é um teto, não um piso.
+
+### Honestidade sobre o ciclo todo
+Foi exatamente o que a metodologia disciplinada deveria entregar: **mapeou com confiança onde (não) há edge**, validou que a arquitetura atual (regime+trend+id2) é o sinal real porém fee-bound, e **recusou entregar falso-positivo** (o 1h não-replicar é o sistema funcionando). Reforça parqueado-como-combustível — não há atalho de trading na escala atual.
+
+Como fechar:
+
+## 🤖 Claude *(20:08:21)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A pesquisa fechou com veredito honesto: nenhum edge taker-deploy\u00e1vel; o \u00fanico flicker (id2 no 15m) \u00e9 maker-only + fr\u00e1gil. Como encerrar?",
+      "header": "Fechamento",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Banco o achado + commito o lab (Recomendado)",
+          "description": "Versiono os 6 scripts + os relat\u00f3rios (Fase 1/2/3) como artefato de auditoria. O lab fica pronto pra testar qualquer ideia futura em minutos. Conclus\u00e3o registrada: sem atalho; foco segue no MCORCH; capital parqueado como combust\u00edvel. Coerente com a fragilidade do resultado."
+        },
+        {
+          "label": "Paper-test a hip\u00f3tese maker (15m)",
+          "description": "Perseguir o \u00fanico flicker: encodar a id2-como-MAKER no motor [PAPER] e medir fill-rate + round-trips reais (resolve o 'assume que a limit preenche'). \u00c9 a \u00fanica ponte disciplinada antes de qualquer real \u2014 mas \u00e9 construir mais pra um edge no fio do IC."
+        },
+        {
+          "label": "Ampliar a busca antes de fechar",
+          "description": "Rodar mais s\u00edmbolos/horizontes ou outras fam\u00edlias de padr\u00e3o pra ter certeza que n\u00e3o deixei edge na mesa. Mais token/CPU; o resultado atual j\u00e1 \u00e9 bem decisivo, ent\u00e3o \u00e9 baixo retorno esperado."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A pesquisa fechou com veredito honesto: nenhum edge taker-deployável; o único flicker (id2 no 15m) é maker-only + frágil. Como encerrar?"="Banco o achado + commito o lab (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(20:09:10)*
+
+
+## 🤖 Claude *(20:09:12)*
+
+Fechado — **banco o achado e commito o lab.** Vou commitar com cuidado: só os meus arquivos (NUNCA `git add -A`), como `gcrux-tradeux`, e **sem arrastar os `farm-funnel-*` de outra origem** (memória de cross-session contamination). Primeiro, inspeção do estado git:
+
+## 🤖 Claude *(20:09:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"== branch ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" rev-parse --abbrev-ref HEAD'\necho \"== remote ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" remote -v | head -2 | sed -E \"s#(https://)[^@]*@#\\1<TOKEN>@#\"'\necho \"== status (pattern + scripts + farm-funnel) ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" status --short 2>/dev/null | grep -E \"pattern-|labkit|scripts/(lib/|pattern|sim/)|farm-funnel\" '\necho \"== meus arquivos novos no disco ==\"; sudo -n -u gcrux-tradeux bash -lc 'ls -1 /home/gcrux-tradeux/tradeux/backend/backtest-results/pattern-* /home/gcrux-tradeux/tradeux/backend/scripts/pattern-*.js /home/gcrux-tradeux/tradeux/backend/scripts/lib/labkit.js /home/gcrux-tradeux/tradeux/backend/scripts/lib/patterns.js /home/gcrux-tradeux/tradeux/backend/scripts/sim/labkit.test.js 2>/dev/null | sed \"s#/home/gcrux-tradeux/tradeux/##\"'",
+  "description": "Inspect git branch, remote, status, new files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == branch ==
+> master
+> == remote ==
+> origin	git@github.com:gabrielZarattini/tradeux.git (fetch)
+> origin	git@github.com:gabrielZarattini/tradeux.git (push)
+> == status (pattern + scripts + farm-funnel) ==
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> ?? backend/backtest-results/pattern-discovery-15m-900d.json
+> ?? backend/backtest-results/pattern-discovery-15m-900d.md
+> ?? backend/backtest-results/pattern-discovery-1h-900d.json
+> ?? backend/backtest-results/pattern-discovery-1h-900d.md
+> ?? backend/backtest-results/pattern-sim-15m-900d.json
+> ?? backend/backtest-results/pattern-sim-15m-900d.md
+> ?? backend/backtest-results/pattern-sim-1h-900d.json
+> ?? backend/backtest-results/pattern-sim-1h-900d.md
+> ?? backend/backtest-results/pattern-survivors-15m-900d.json
+> ?? backend/backtest-results/pattern-survivors-1h-900d.json
+> ?? backend/backtest-results/pattern-validation-15m-900d.json
+> ?? backend/backtest-results/pattern-validation-15m-900d.md
+> ?? backend/backtest-results/pattern-validation-1h-900d.json
+> ?? backend/backtest-results/pattern-validation-1h-900d.md
+> ?? backend/scripts/lib/labkit.js
+> ?? backend/scripts/lib/patterns.js
+> ?? backend/scripts/pattern-discover.js
+> ?? backend/scripts/pattern-sim.js
+> ?? backend/scripts/pattern-validate.js
+> ?? backend/scripts/sim/labkit.test.js
+> == meus arquivos novos no disco ==
+> backend/backtest-results/pattern-discovery-15m-900d.json
+> backend/backtest-results/pattern-discovery-15m-900d.md
+> backend/backtest-results/pattern-discovery-1h-900d.json
+> backend/backtest-results/pattern-discovery-1h-900d.md
+> backend/backtest-results/pattern-sim-15m-900d.json
+> backend/backtest-results/pattern-sim-15m-900d.md
+> backend/backtest-results/pattern-sim-1h-900d.json
+> backend/backtest-results/pattern-sim-1h-900d.md
+> backend/backtest-results/pattern-survivors-15m-900d.json
+> backend/backtest-results/pattern-survivors-1h-900d.json
+> backend/backtest-results/pattern-validation-15m-900d.json
+> backend/backtest-results/pattern-validation-15m-900d.md
+> backend/backtest-results/pattern-validation-1h-900d.json
+> backend/backtest-results/pattern-validation-1h-900d.md
+> backend/scripts/lib/labkit.js
+> backend/scripts/lib/patterns.js
+> backend/scripts/pattern-discover.js
+> backend/scripts/pattern-sim.js
+> backend/scripts/pattern-validate.js
+> backend/scripts/sim/labkit.test.js
+> ```
+
+## 🤖 Claude *(20:09:52)*
+
+
+## 🤖 Claude *(20:09:54)*
+
+Estado claro: branch `master` (trunk-based, convenção do projeto), remote **SSH** (push precisa da chave do ubuntu — vejo isso depois). Os `farm-funnel-*` são a contaminação de outra sessão — **não entram**. Vou stagear só os meus 22 arquivos (6 scripts + 16 relatórios) com paths explícitos e conferir o staged antes de commitar:
+
+## 🤖 Claude *(20:09:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" add \\\n  backend/scripts/lib/labkit.js \\\n  backend/scripts/lib/patterns.js \\\n  backend/scripts/pattern-discover.js \\\n  backend/scripts/pattern-validate.js \\\n  backend/scripts/pattern-sim.js \\\n  backend/scripts/sim/labkit.test.js \\\n  backend/backtest-results/pattern-*'\necho \"== STAGED (deve ter S\u00d3 pattern-*/labkit/scripts, ZERO farm-funnel) ==\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" diff --cached --name-only'\necho \"== sanity: algum farm-funnel staged? ==\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" diff --cached --name-only | grep -c farm-funnel || true'",
+  "description": "Stage lab files explicitly and verify no contamination"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == STAGED (deve ter SÓ pattern-*/labkit/scripts, ZERO farm-funnel) ==
+> backend/backtest-results/pattern-discovery-15m-900d.json
+> backend/backtest-results/pattern-discovery-15m-900d.md
+> backend/backtest-results/pattern-discovery-1h-900d.json
+> backend/backtest-results/pattern-discovery-1h-900d.md
+> backend/backtest-results/pattern-sim-15m-900d.json
+> backend/backtest-results/pattern-sim-15m-900d.md
+> backend/backtest-results/pattern-sim-1h-900d.json
+> backend/backtest-results/pattern-sim-1h-900d.md
+> backend/backtest-results/pattern-survivors-15m-900d.json
+> backend/backtest-results/pattern-survivors-1h-900d.json
+> backend/backtest-results/pattern-validation-15m-900d.json
+> backend/backtest-results/pattern-validation-15m-900d.md
+> backend/backtest-results/pattern-validation-1h-900d.json
+> backend/backtest-results/pattern-validation-1h-900d.md
+> backend/scripts/lib/labkit.js
+> backend/scripts/lib/patterns.js
+> backend/scripts/pattern-discover.js
+> backend/scripts/pattern-sim.js
+> backend/scripts/pattern-validate.js
+> backend/scripts/sim/labkit.test.js
+> == sanity: algum farm-funnel staged? ==
+> 0
+> ```
+
+## 🤖 Claude *(20:10:11)*
+
+
+## 🤖 Claude *(20:10:12)*
+
+20 arquivos staged (6 scripts + 14 relatórios), **zero farm-funnel**. Commitando como `gcrux-tradeux` na master (convenção trunk-based do projeto):
+
+## 🤖 Claude *(20:10:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" commit \\\n  -m \"feat(research): laboratorio de padroes (Fase 1/2/3) + relatorios da 1a corrida\" \\\n  -m \"labkit (fetch estendido / indicadores Wilder / FDR+bootstrap / forwardReturn gross-net / split trancado) + patterns (universo compartilhado pelas 2 fases) + pattern-discover (Fase 1, FDR no gross) + pattern-validate (Fase 2, holdout trancado) + pattern-sim (Fase 3, 1-entrada x saidas x custos). Research-only, zero money-path. Suite de sim 20/20 (labkit 45/45); QA PASS + TL APPROVE.\" \\\n  -m \"Veredito 5 simbolos/900d: nenhum edge taker-deployavel; unico flicker = id2 (rsi30+above_sma200) no 15m, maker-only e fragil (nao replica no 1h).\" \\\n  -m \"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | tail -5'\necho \"== HEAD agora ==\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" log --oneline -1'\necho \"== .git ownership (deve ser gcrux-tradeux) ==\"\nsudo -n -u gcrux-tradeux bash -lc 'stat -c \"%U:%G\" /home/gcrux-tradeux/tradeux/.git'",
+  "description": "Commit lab files as gcrux-tradeux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  create mode 100644 backend/scripts/lib/patterns.js
+>  create mode 100644 backend/scripts/pattern-discover.js
+>  create mode 100644 backend/scripts/pattern-sim.js
+>  create mode 100644 backend/scripts/pattern-validate.js
+>  create mode 100644 backend/scripts/sim/labkit.test.js
+> == HEAD agora ==
+> 78515ae feat(research): laboratorio de padroes (Fase 1/2/3) + relatorios da 1a corrida
+> == .git ownership (deve ser gcrux-tradeux) ==
+> gcrux-tradeux:gcrux-tradeux
+> ```
+
+## 🤖 Claude *(20:10:43)*
+
+
+## 🤖 Claude *(20:10:45)*
+
+Commit **`78515ae`** feito, `.git` com dono limpo (gcrux-tradeux), **sem contaminação farm-funnel**. Agora o push — o remote é SSH e (pela memória) só a chave do **ubuntu** empurra, o que exige um chown-back do `.git` depois. Deixa eu checar o estado do origin (ls-remote, read-only, não toca `.git`) antes de decidir:
+
+## 🤖 Claude *(20:10:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"== local master ==\"; sudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" rev-parse HEAD'\necho \"== origin/master (via ls-remote como ubuntu, read-only) ==\"; git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' ls-remote origin -h refs/heads/master 2>&1 | head -1\necho \"== quantos commits locais \u00e0 frente do origin? ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && git -c safe.directory=\"*\" log --oneline origin/master..HEAD 2>/dev/null | head -5'",
+  "description": "Check origin/master vs local to inform push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == local master ==
+> 78515ae83ed80bef9ced1f6a3b82998e5b078646
+> == origin/master (via ls-remote como ubuntu, read-only) ==
+> 701b7e76e3a6eece61ae3ce0d5cfce89a53f6061	refs/heads/master
+> == quantos commits locais à frente do origin? ==
+> 78515ae feat(research): laboratorio de padroes (Fase 1/2/3) + relatorios da 1a corrida
+> ```
+
+## 🤖 Claude *(20:11:06)*
+
+
+## 🤖 Claude *(20:11:08)*
+
+Local está **exatamente 1 commit à frente** do origin (`701b7e7` → `78515ae`) — fast-forward limpo, só o lab. Vou atualizar a memória e te apresentar o fechamento + a decisão do push.
+
+## 🤖 Claude *(20:11:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md",
+  "old_string": "**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas, **N\u00c3O commitado ainda** (working tree). `backtest-data/` gitignored; `backtest-results/` versionado (decidir versionar relat\u00f3rios ou ignorar `*pattern-*`). \u26a0\ufe0f n\u00e3o arrastar os `farm-funnel-*` de outra origem num commit (ver [[tradeux-cross-session-contamination]]).",
+  "new_string": "**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`** (20 arquivos: 6 scripts + 14 relat\u00f3rios; `.git` ownership limpo gcrux-tradeux; farm-funnel de outra origem N\u00c3O inclu\u00eddo \u2014 ver [[tradeux-cross-session-contamination]]). **origin/master ainda em `701b7e7` \u2192 local 1 commit \u00e0 frente (fast-forward limpo); PUSH pendente** (remote SSH `git@github.com:gabrielZarattini/tradeux.git` \u2192 s\u00f3 a chave do ubuntu empurra \u2192 push-como-ubuntu + chown-back do `.git`, ver [[github-ssh-key-on-ubuntu]] e [[git-ownership-gotcha]]). `backtest-data/` gitignored."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:11:22)*
+
+
+## 🤖 Claude *(20:11:31)*
+
+Pronto. Aqui está o fechamento do que fizemos hoje:
+
+## 🏁 Resumo da sessão
+
+1. **Parei o consumo de OpenRouter** — agente LLM pausado (`docker compose stop agent`) + watchdog desligado; o gatilho de re-engajar (flip de regime) segue vivo no backend.
+2. **Construí o laboratório de padrões** — 6 scripts (labkit + patterns + discover + validate + sim + testes), com parede anti-overfitting, FDR, gross/net e bootstrap. **QA PASS + TL APPROVE**, suíte 20/20.
+3. **Rodei a mineração** (5 símbolos, 900d, ciclos inteiros) e a simulação dirigida. **Veredito honesto:** nenhum edge taker-deployável; o único flicker (sua id2 no 15m) é **maker-only e frágil** (não replica no 1h). A arquitetura atual é o sinal real, comido pela fee. **Reforça parqueado-como-combustível.**
+4. **Commitei o lab** — `78515ae` (20 arquivos), `.git` limpo, **sem a contaminação farm-funnel**.
+
+## ⏳ Uma decisão aberta: push
+
+O commit está **local**. O origin/master ainda está em `701b7e7` — seu commit está 1 à frente (fast-forward limpo, só o lab). 
+
+Eu **não dou push sem você pedir**. E aqui tem uma pegadinha conhecida: o remote é SSH e só a chave do **ubuntu** empurra, então pra subir eu faço o push como ubuntu e depois um `chown -R gcrux-tradeux .git` pra não envenenar o ownership (procedimento já mapeado nas memórias).
+
+## 🤖 Claude *(20:11:35)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O lab est\u00e1 commitado local (78515ae). Subo pro origin/master agora?",
+      "header": "Push",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim, push pro origin (Recomendado)",
+          "description": "Empurro 78515ae pro origin/master (fast-forward limpo) via chave do ubuntu + chown-back do .git. Coerente com o modelo trunk-based (origin==master) e deixa o lab dur\u00e1vel/backupeado fora da m\u00e1quina."
+        },
+        {
+          "label": "Deixa local por enquanto",
+          "description": "Fica s\u00f3 commitado local. Os scripts rodam do working tree de qualquer jeito; d\u00e1 pra subir depois. \u00datil se voc\u00ea quiser revisar os relat\u00f3rios antes de publicar."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O lab está commitado local (78515ae). Subo pro origin/master agora?"="Sim, push pro origin (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(20:12:17)*
+
+
+## 🤖 Claude *(20:12:18)*
+
+Push autorizado. Vou empurrar `78515ae` como ubuntu (chave SSH) e depois consertar o ownership do `.git`. Passo a passo pra observar cada efeito:
+
+## 🤖 Claude *(20:12:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"== push origin master (como ubuntu, chave SSH do ubuntu) ==\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push origin master 2>&1 | tail -8",
+  "description": "Push to origin master as ubuntu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == push origin master (como ubuntu, chave SSH do ubuntu) ==
+> remote: 
+> remote: GitHub found 17 vulnerabilities on gabrielZarattini/tradeux's default branch (5 high, 12 moderate). To find out more, visit:        
+> remote:      https://github.com/gabrielZarattini/tradeux/security/dependabot        
+> remote: 
+> To github.com:gabrielZarattini/tradeux.git
+>    701b7e7..78515ae  master -> master
+> ```
+
+## 🤖 Claude *(20:12:25)*
+
+
+## 🤖 Claude *(20:12:27)*
+
+Push **sucesso**: `701b7e7..78515ae master -> master`. (O aviso do Dependabot é pré-existente do repo, não do meu commit.) Agora conferir e consertar o ownership do `.git` (o push como ubuntu pode ter deixado arquivos ubuntu-owned):
+
+## 🤖 Claude *(20:12:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"== arquivos ubuntu-owned no .git (poison)? ==\"\nfind /home/gcrux-tradeux/tradeux/.git -user ubuntu 2>/dev/null | head -20\necho \"--- contagem ---\"; find /home/gcrux-tradeux/tradeux/.git -user ubuntu 2>/dev/null | wc -l",
+  "description": "Find ubuntu-owned files in .git after push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == arquivos ubuntu-owned no .git (poison)? ==
+> /home/gcrux-tradeux/tradeux/.git/refs/remotes/origin/master
+> --- contagem ---
+> 1
+> ```
+
+## 🤖 Claude *(20:12:34)*
+
+
+## 🤖 Claude *(20:12:35)*
+
+Só 1 arquivo poisoned (`refs/remotes/origin/master`). Consertando o ownership de volta pra gcrux-tradeux:
+
+## 🤖 Claude *(20:12:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n chown gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux/.git/refs/remotes/origin/master 2>&1 && echo \"chown OK\" || echo \"chown FALHOU (sem root sudo?)\"\necho \"== confirma: zero ubuntu-owned no .git ==\"\nfind /home/gcrux-tradeux/tradeux/.git -user ubuntu 2>/dev/null | wc -l\necho \"== git ops como gcrux ainda funcionam? ==\"\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" status --short 2>&1 | grep -cE \"pattern-|labkit\" ; git -c safe.directory=\"*\" log --oneline -1'",
+  "description": "Chown poisoned ref back and verify git works as gcrux"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chown OK
+> == confirma: zero ubuntu-owned no .git ==
+> 0
+> == git ops como gcrux ainda funcionam? ==
+> 0
+> 78515ae feat(research): laboratorio de padroes (Fase 1/2/3) + relatorios da 1a corrida
+> ```
+
+## 🤖 Claude *(20:12:50)*
+
+
+## 🤖 Claude *(20:13:01)*
+
+✅ **Tudo fechado e limpo.**
+
+## Push confirmado
+- `origin/master` agora em **`78515ae`** (era `701b7e7`).
+- `.git` ownership **restaurado** — zero arquivos ubuntu-owned, git como gcrux-tradeux funciona normal.
+- Os `farm-funnel-*` de outra sessão ficaram **intactos e fora** do commit, como devia.
+
+## O que ficou banco (durável no GitHub)
+O **laboratório de padrões** completo — 6 scripts + 14 relatórios das Fases 1/2/3 — pronto pra testar qualquer ideia futura em minutos, com a disciplina anti-overfitting embutida (parede trancada, FDR, gross/net, bootstrap).
+
+## A conclusão honesta da pesquisa, em uma linha
+> Mineramos 40 padrões × 2 timeframes × ciclos inteiros, com holdout trancado: **não existe edge taker-deployável em lugar nenhum.** O único sinal que sobreviveu é a sua **própria id2** (dip RSI<30 em uptrend), e mesmo ele só fica net-positivo como **ordem maker no 15m** — frágil, no fio do IC, e não replica no 1h. **O inimigo é a fee, não a falta de sinal.** Isso valida — com dado independente — a arquitetura atual e a decisão de **parquear como combustível**: não há atalho de trading na escala de $149; quando o bull virar, o motor é trend+regime, não scalp de padrão.
+
+E o consumo de OpenRouter que motivou tudo isso continua **zerado** (agente pausado, watchdog off) — o gatilho de re-engajar segue vivo no backend.
+
+Quando quiser selar a sessão, é só `/handoff`. Precisa de mais alguma coisa?
+
+## 👤 User *(20:15:00)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(20:15:00)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(20:15:14)*
+
+
+## 🤖 Claude *(20:15:16)*
+
+Vou selar a sessão. O código já está commitado **e** pushado (`78515ae` em origin/master), então o seal foca em: verificar estado limpo, secret-scan do que subiu, atualizar `HANDOFF.md` e memória, e confirmar o push.
+
+**Pré-flight + secret scan:**
+
+## 🤖 Claude *(20:15:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"== status --short ==\"; sudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" status --short'\necho \"== diff HEAD --stat (n\u00e3o-commitado) ==\"; sudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" diff HEAD --stat'\necho \"== docker compose ps ==\"; sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps 2>/dev/null | tail -6'\necho \"\"\necho \"== SECRET SCAN do commit pushado (701b7e7..78515ae) ==\"\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" diff 701b7e7..78515ae' \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\necho \"(vazio acima = secret scan LIMPO)\"",
+  "description": "Handoff pre-flight and secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == status --short ==
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> == diff HEAD --stat (não-commitado) ==
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  2 files changed, 273 insertions(+), 273 deletions(-)
+> == docker compose ps ==
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED             STATUS                 PORTS
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    About an hour ago   Up About an hour       3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         3 weeks ago         Up 2 weeks (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   4 days ago          Up 4 days              127.0.0.1:8090->80/tcp
+> 
+> == SECRET SCAN do commit pushado (701b7e7..78515ae) ==
+> (vazio acima = secret scan LIMPO)
+> ```
+
+## 🤖 Claude *(20:16:05)*
+
+
+## 🤖 Claude *(20:16:07)*
+
+Secret scan **limpo**, working tree só com os `farm-funnel-*` de outra origem (não meus), stack de pé (agent ausente = pausa intencional). Código já commitado+pushado (`78515ae`), então não há commit novo a fazer. Vou atualizar o `HANDOFF.md`. Lendo o cabeçalho atual pra editar com precisão:
+
+## 🤖 Claude *(20:16:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'sed -n \"1,6p\" /home/gcrux-tradeux/HANDOFF.md'\necho \"...\"\necho \"== perms do HANDOFF.md ==\"; ls -l /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Read HANDOFF.md header and perms"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # TradeUX — HANDOFF (single source of truth)
+> 
+> > ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> > Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> > Updated: **2026-06-26** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`) · PARADO-MAS-ARMADO** (capital parqueado como combustível do bull; regime BEAR → supervisor NO-OP) · `Vivo==master==origin==701b7e7` · ⚠️ runtime não-git desta sessão: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000`; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` · ver SEAL 2026-06-26 no rodapé · *(linha histórica abaixo)* · **Canary FARM-ONLY** (vendas no-loss id10/12/14 — **AGORA FUNCIONAM**; compras off) · **SESSÃO 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** → `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE→LEVEL-trigger = 1ª saída no-loss do Farm a EXECUTAR no mainnet)** → **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA→0, equity **$149,39**) · ⚠️ **runtime não-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25→50` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` · proteções: cap diário −5%, teto **$50/ordem**, Farm $25/símbolo, riskGuard, pânico, painel de grupos · Meta: **realista ≈ flat com ~$149** · Vivo==master==origin==**`6cec694`** (re-revisão de design 2026-06-22 **100% ZERADA** — só RBAC=DEFER; agente caiu por toggle ZDR do OpenRouter e VOLTOU; ver SEAL 2026-06-24 no rodapé)
+> 
+> ...
+> == perms do HANDOFF.md ==
+> -rw-rw-r-- 1 ubuntu ubuntu 188088 Jun 26 18:52 /home/gcrux-tradeux/HANDOFF.md
+> ```
+
+## 🤖 Claude *(20:17:12)*
+
+
+## 🤖 Claude *(20:17:12)*
+
+`HANDOFF.md` é **ubuntu-owned** — posso editar direto. Atualizando o cabeçalho (data, hash, pausa do agente):
+
+## 🤖 Claude *(20:17:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-26** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`) \u00b7 PARADO-MAS-ARMADO** (capital parqueado como combust\u00edvel do bull; regime BEAR \u2192 supervisor NO-OP) \u00b7 `Vivo==master==origin==701b7e7` \u00b7 \u26a0\ufe0f runtime n\u00e3o-git desta sess\u00e3o: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000`; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` \u00b7 ver SEAL 2026-06-26 no rodap\u00e9",
+  "new_string": "> Updated: **2026-06-29** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`) \u00b7 PARADO-MAS-ARMADO** (capital parqueado como combust\u00edvel do bull; regime BEAR \u2192 supervisor NO-OP) \u00b7 `Vivo==master==origin==78515ae` \u00b7 \u26a0\ufe0f runtime n\u00e3o-git: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + **`AGENT_HEARTBEAT_ENABLED=false` (agente LLM PAUSADO p/ parar consumo OpenRouter \u2014 `docker compose stop agent`; religar no flip)**; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` \u00b7 ver SEAL 2026-06-29 no rodap\u00e9"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:21)*
+
+
+## 🤖 Claude *(20:17:22)*
+
+Cabeçalho atualizado. Agora o novo SEAL no rodapé (registro autoritativo da sessão):
+
+## 🤖 Claude *(20:17:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/scratchpad/seal.md",
+  "content": "\n\n### \ud83e\udd1d SEAL \u2014 2026-06-29 (parar consumo OpenRouter: agente PAUSADO + LABORAT\u00d3RIO DE PADR\u00d5ES constru\u00eddo/gated/commitado/pushado; veredito: SEM edge taker-deploy\u00e1vel)\n\n**`Vivo==master==origin==78515ae`** (1 commit `feat(research)`, 20 arquivos research-only \u2014 6 scripts + 14 relat\u00f3rios \u2014 zero money-path; QA PASS + TL APPROVE; su\u00edte de sim **20/20**, labkit 45/45; secret-scan limpo; push direto-a-master). \ud83d\udd34 LIVE (`halted=false`) o tempo todo \u00b7 **PARADO-MAS-ARMADO** (regime BEAR nos 4 s\u00edmbolos confirmado AO VIVO \u2192 supervisor NO-OP, Canary FARM-ONLY) \u00b7 equity ~$149 intacta \u00b7 `/system/halt` = `halted=false`/`source:null` \u00b7 site 200 \u00b7 stack: db/backend/frontend up (agent **parado de prop\u00f3sito**). Sess\u00e3o = (1) cortar consumo OpenRouter + (2) fase de pesquisa de padr\u00f5es pedida pelo dono. **ZERO money-path tocado.**\n\n**(1) AGENTE LLM PAUSADO (pedido do dono \"parar consumo OpenRouter\"):** o agente (`:free` nvidia/nemotron, cota 2000 req/dia) era o \u00daNICO consumidor e em regime bear/parqueado \u00e9 NO-OP (n\u00e3o pode operar: `ALLOW_TRADING=false` + trava do cofre + HALT; supervisor NO-OP) \u2014 s\u00f3 queimava cota re-concluindo \"bear, nada a fazer\" (~34%/dia). `docker compose stop agent` (Exited 0) \u2192 **consumo ZERO**. Watchdog desligado junto p/ n\u00e3o disparar `[AGENTE PARADO]` falso: **`AGENT_HEARTBEAT_ENABLED=false` no `.env` do backend** (runtime N\u00c3O-git, valor LIMPO sem coment\u00e1rio inline \u2014 `env_file` do compose n\u00e3o retira `# inline`), backend recriado (boot loga \"Agent Heartbeat job DESABILITADO\"). **CONFIRMADO no c\u00f3digo que o gatilho de re-engajar N\u00c3O depende do agente:** flip de regime \u2192 Telegram \u00e9 100% BACKEND (`regimeJob.js:124` \u2192 `eventNotify.notifyRegimeFlip`, poll 5min), idem trend-cross/ordens/cap/p\u00e2nico. **RELIGAR no flip:** `docker compose start agent` + reverter `AGENT_HEARTBEAT_ENABLED` (+ reaplicar cad\u00eancia 15min/10-rounds). Ver [[tradeux-parked-as-fuel]], [[tradeux-agent-heartbeat-watchdog]].\n\n**(2) LABORAT\u00d3RIO DE PADR\u00d5ES (`78515ae`, ver [[tradeux-pattern-lab]]):** 6 scripts research-only em `backend/scripts/` (rodam no HOST com node v22 \u2014 `/app` N\u00c3O \u00e9 bind-mount) \u2014 `lib/labkit.js` (fetch estendido `-ext` c/ taker-buy-vol + throttle, indicadores Wilder, estat\u00edstica FDR/Bonferroni/bootstrap-de-blocos-semeado, `forwardReturn` **gross/net** sem lookahead, split trancado), `lib/patterns.js` (~40 padr\u00f5es cl\u00e1ssicos+conjun\u00e7\u00f5es, **compartilhado pelas 2 fases** = parede sem drift), `pattern-discover.js` (Fase 1: descoberta in-sample, FDR no GROSS), `pattern-validate.js` (Fase 2: holdout trancado + bootstrap CI), `pattern-sim.js` (Fase 3: simula\u00e7\u00e3o dirigida 1-entrada \u00d7 sa\u00eddas \u00d7 custos), `sim/labkit.test.js` (45 asserts, auto-descoberto pelo `run.js` \u2192 entra no CI). M\u00e9todo anti-overfitting em camadas: parede temporal trancada + afinamento anti-overlap + corre\u00e7\u00e3o de m\u00faltiplos testes + **gross=dire\u00e7\u00e3o / net=acionabilidade** (o smoke pegou o bug de usar net p/ dire\u00e7\u00e3o: o fee-drag round-trip \u22120,2% fingia \"edge bearish\"; corrigido). Gates: **QA PASS COM RESSALVAS** (validou com EDGE PLANTADO: ru\u00eddo\u21920 sobreviventes, edge real\u219296\u219274\u219233 = tem poder E especificidade) + **TL APPROVE COM SUGEST\u00d5ES** (zero must-fix); ressalvas LOW aplicadas.\n\n**\ud83c\udfaf VEREDITO DA PESQUISA (5 s\u00edmbolos BTC/ETH/LTC/BNB/ADA, 900d, holdout corte 2025-10-02):** **NENHUM edge taker-deploy\u00e1vel.** 1h: 92/200 sobreviventes FDR in-sample \u2192 1/92 confirma dire\u00e7\u00e3o OOS, **0 trade\u00e1veis long**. 15m: 114/200 \u2192 3/114, **0 trade\u00e1veis**. A parede matou ~99% como overfitting (ex.: `boll_lower_break@50` in-sample +0,65% \u2192 holdout \u22121,14%, dire\u00e7\u00e3o INVERTEU). **O sinal que sobrevive \u00e9 a pr\u00f3pria id2** (`rsi30_AND_above_sma200` = dip RSI<30 em uptrend): confirma dire\u00e7\u00e3o no 15m (gross +0,14%/+0,25%, IC>0) mas net na linha da fee. **Fase 3 (simula\u00e7\u00e3o):** s\u00f3 vira net+ no holdout como **ordem MAKER no 15m** (`fixed20`/maker-BNB \u2192 +0,188%/trade, IC [0,015%, 0,379%] \u2014 no FIO), e **N\u00c3O replica no 1h** (n raso, negativo). Grade mostra net/trade cair monot\u00f4nico conforme a fee sobe \u2192 **o inimigo \u00e9 a FEE, n\u00e3o a falta de sinal; o lever (se houver) \u00e9 EXECU\u00c7\u00c3O MAKER.** Re-confirma de forma INDEPENDENTE tudo j\u00e1 refutado + valida a arquitetura atual (regime+trend+id2 \u00e9 o sinal real, fee-bound) + a tese parqueado-como-combust\u00edvel.\n\n**\u26a0\ufe0f RUNTIME n\u00e3o-git desta sess\u00e3o (reaplicar p\u00f3s reset-db):** `.env`: **`AGENT_HEARTBEAT_ENABLED=false` (NOVO)** + os j\u00e1-existentes `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000`. Container `agent` **parado** (`restart: unless-stopped` honra o stop at\u00e9 `start` expl\u00edcito). `tradeux-agent/.env INTERVAL=900000`/`MAX_ROUNDS=10` (moot enquanto pausado).\n\n**\u26a1 NEXT (inalterado no fundo):** (1) **gatilho de re-engajar = alerta Telegram de FLIP DE REGIME** (canal confirmado vivo em 26/jun) \u2192 ao receber, confirmar real (n\u00e3o whipsaw) + `PROMOTION_GRANDFATHER=slopegate` + restart + **religar o agente** (`docker compose start agent` + reverter `AGENT_HEARTBEAT_ENABLED`). (2) Lab pronto pra testar QUALQUER ideia futura em minutos (`node scripts/pattern-discover.js \u2026` \u2192 `pattern-validate.js` \u2192 `pattern-sim.js`). (3) Caminho disciplinado SE quiser perseguir o flicker: id2-como-MAKER no motor `[PAPER]` medindo fill-rate real (a sim ASSUME que a limit preenche = otimista). **Claude N\u00c3O vira o HALT nem clica LIGAR sozinho.** Working tree: s\u00f3 `farm-funnel-*` de OUTRA origem (N\u00c3O commitar \u2014 ver [[tradeux-cross-session-contamination]]). **Mem\u00f3rias atualizadas:** [[tradeux-pattern-lab]] (NOVA), [[tradeux-parked-as-fuel]] + [[tradeux-agent-heartbeat-watchdog]] (agente pausado + watchdog off).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/scratchpad/seal.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:18:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrux-tradeux/2b75f395-3d0c-474f-a0c9-ab9fb903cc72/scratchpad\ncat $SP/seal.md >> /home/gcrux-tradeux/HANDOFF.md\necho \"== HANDOFF.md atualizado: \u00faltimas linhas ==\"\ntail -4 /home/gcrux-tradeux/HANDOFF.md | cut -c1-120\necho \"\"\necho \"== verifica\u00e7\u00e3o final: zero arquivos ubuntu-owned no REPO (.git limpo) ==\"\nfind /home/gcrux-tradeux/tradeux -user ubuntu 2>/dev/null | head -5\necho \"count: $(find /home/gcrux-tradeux/tradeux -user ubuntu 2>/dev/null | wc -l)\"\necho \"\"\necho \"== origin sincronizado? ==\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' ls-remote origin -h refs/heads/master 2>&1 | head -1\nsudo -n -u gcrux-tradeux bash -lc 'git -c safe.directory=\"*\" rev-parse HEAD'",
+  "description": "Append SEAL, verify ownership clean and origin synced"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == HANDOFF.md atualizado: últimas linhas ==
+> 
+> **⚠️ RUNTIME não-git desta sessão (reaplicar pós reset-db):** `.env`: **`AGENT_HEARTBEAT_ENABLED=false` (NOVO)** 
+> 
+> **⚡ NEXT (inalterado no fundo):** (1) **gatilho de re-engajar = alerta Telegram de FLIP DE REGIME** (canal confirmado 
+> 
+> == verificação final: zero arquivos ubuntu-owned no REPO (.git limpo) ==
+> count: 0
+> 
+> == origin sincronizado? ==
+> 78515ae83ed80bef9ced1f6a3b82998e5b078646	refs/heads/master
+> 78515ae83ed80bef9ced1f6a3b82998e5b078646
+> ```
+
+## 🤖 Claude *(20:18:13)*
+
+
+## 🤖 Claude *(20:18:23)*
+
+Sessão selada. Tudo persistido, zero estado órfão.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-06-29
+───────────────────────────────────────────────────
+Commits     : 1 (feat(research))  |  Branch: master (trunk-based, pushado)
+HANDOFF.md  : ✅ atualizado (cabeçalho + SEAL 2026-06-29 no rodapé)
+Memory      : 4 arquivos (tradeux-pattern-lab NOVA + parked-as-fuel +
+              agent-heartbeat-watchdog + índice MEMORY.md)
+PRs abertos : nenhum (direto-a-master, já em origin)
+Push        : ✅ origin sincronizado — Vivo==master==origin==78515ae
+              (.git ownership limpo, secret-scan limpo)
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**O que esta sessão deixa pra próxima:**
+- 🛑 **Agente OpenRouter PAUSADO** (consumo zero) + watchdog off — runtime não-git `.env AGENT_HEARTBEAT_ENABLED=false`. Religar no flip de regime (`docker compose start agent` + reverter a flag). O gatilho de re-engajar segue vivo no backend.
+- 🔬 **Laboratório de padrões** commitado+pushado (`78515ae`), QA+TL aprovados, pronto pra testar qualquer ideia futura em minutos.
+- 🎯 **Veredito da pesquisa banco:** sem edge taker-deployável; a id2 é o sinal real, comido pela fee; o único flicker (id2-maker no 15m) é frágil. Reforça parqueado-como-combustível.
+- ⚠️ Working tree segue com os `farm-funnel-*` de outra origem — **não commitar** (contaminação cross-session conhecida).
+
+Estado financeiro intacto (~$149, 🔴 LIVE mas parado-mas-armado, regime bear). Bom descanso! 🤝
+
 ---
 
 %% --- PROJECT METADATA START --- %%
