@@ -383,6 +383,6 @@ No permissive (`USING (true)`) policies, no `anon` grant. Posture is sound.
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-29 - Finalizar QA do Antigravity com validação senior]]
+> * **Sessão Anterior**: [[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]
 > * **Próxima Sessão**: [[2026-06-29 - agent-a1c1aafe02da6a857]]
 %% --- TIMELINE END --- %%
