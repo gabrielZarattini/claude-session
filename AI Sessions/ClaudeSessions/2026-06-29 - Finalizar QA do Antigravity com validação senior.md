@@ -4538,5 +4538,5 @@ Essa próxima fase envolve escolha de modelo + custo (sua alçada como Reviewer/
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-29 - Corrigir política de privacidade para requisitos Google]]
-> * **Próxima Sessão**: [[2026-06-29 - agent-a110ab9c73aebcdfe]]
+> * **Próxima Sessão**: [[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]
 %% --- TIMELINE END --- %%

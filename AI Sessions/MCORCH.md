@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 58
-> * **Total de Sessões**: 1564
+> * **Total de Sessões**: 1570
 
 ---
 
@@ -82,12 +82,18 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-06-29 - handson]]` (GeminiSessions) - *2026-06-29*
+*   `[[2026-06-29 - agent-afa77236707ecd6a8]]` (ClaudeSessions) - *2026-06-29*
+*   `[[2026-06-29 - agent-abcb9f74af3bc8f30]]` (ClaudeSessions) - *2026-06-29*
+*   `[[2026-06-29 - agent-ab1e5a3baaa958711]]` (ClaudeSessions) - *2026-06-29*
+*   `[[2026-06-29 - agent-a95dc8bc0a35e4b62]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` (ClaudeSessions) - *2026-06-29*
+*   `[[2026-06-29 - agent-a1f94632ca84a0b49]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-29 - Corrigir política de privacidade para requisitos Google]]` (ClaudeSessions) - *2026-06-29*
+*   `[[2026-06-29 - 2b75f395-3d0c-474f-a0c9-ab9fb903cc72]]` (ClaudeSessions) - *2026-06-29*
 *   `[[2026-06-28 - handson]]` (GeminiSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-af701086aecdaf67f]]` (ClaudeSessions) - *2026-06-28*
 *   `[[2026-06-28 - agent-af3193f113b71a308]]` (ClaudeSessions) - *2026-06-28*
