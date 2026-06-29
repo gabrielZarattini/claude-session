@@ -1,4 +1,4 @@
-# Session 20894beb-8faf-40d8-bce8-715b0c184c7f
+# Criar estratégia de conteúdo e avatar para Gabriel AI
 **Date:** 2026-06-29 | **Session ID:** `20894beb-8faf-40d8-bce8-715b0c184c7f`
 
 ---
@@ -856,15 +856,148 @@ Sessão anterior selou um reparo profundo de confiabilidade no Minerador de Prod
 
 Qual frente o senhor quer atacar, Maestro?
 
----
+## 👤 User *(23:26:28)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+ótimo começe com scratch limpando tudo e depois vamos para os próximos passos. Pois precisamos crair nossas estrategias de conteúdo e uma cadencia de 30 dias verificar a frequencia e formato, duração, thema, produtos tudo isso para testar e começar gerar conteúdo. Lembrando que vamos precisar fazer um deepresearch com força total para descobrir e aplicar as melhores estrategias de conteúdo viral, para nosso perfil que é Gabriel AI, vamos precisar tambem adicionar um avatar treinado e consistente fiel a minha pessoa e voz, o projeto é o Gabriel (eu) AI com toda minhas caracteristicas e personalidades usando o cerebro clonado. Então temos que criar todas as peças antes de juntaar tudo com o viral autopilot.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-28 - agent-af701086aecdaf67f]]
-> * **Próxima Sessão**: [[2026-06-29 - 2b75f395-3d0c-474f-a0c9-ab9fb903cc72]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(23:28:34)*
+
+
+## 🤖 Claude *(23:28:35)*
+
+Entendido, Maestro. Vou começar limpando o `scratch/` e em seguida aimar a artilharia da pesquisa força-total. Primeiro deixe-me **olhar** o que há no scratch antes de remover (Lei 1 — nunca deletar às cegas).
+
+## 🤖 Claude *(23:28:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== scratch/ contents ===\"; ls -la scratch/ 2>/dev/null; echo \"=== size ===\"; du -sh scratch/ 2>/dev/null; echo \"=== gitignored? ===\"; git check-ignore scratch/ && echo \"scratch/ IS gitignored\" || echo \"scratch/ NOT ignored\"; echo \"=== tracked files in scratch? ===\"; git ls-files scratch/ | head",
+  "description": "Inspect scratch/ contents, size, git status before cleaning"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch/ contents ===
+> total 8
+> drwxr-xr-x  2 ubuntu ubuntu 4096 Jun 29 18:49 .
+> drwx------ 31 ubuntu ubuntu 4096 Jun 29 18:48 ..
+> === size ===
+> 4.0K	scratch/
+> === gitignored? ===
+> scratch/
+> scratch/ IS gitignored
+> === tracked files in scratch? ===
+> ```
+
+## 🤖 Claude *(23:29:07)*
+
+
+## 🤖 Claude *(23:29:15)*
+
+Verifiquei materialmente: o `scratch/` **já está vazio** — só `.` e `..`, zero arquivos (4.0K = a entrada do diretório em si), gitignored, nenhum arquivo rastreado. O `/handson` reportou "scratch has files" por um falso-positivo do `ls` (exit 0 em dir vazio também). **Nada a limpar** — não vou fabricar uma limpeza que não existiu (Lei 1). ✅
+
+```
+**ORO triplet desta task (programa Gabriel AI Content Engine):**
+- Operator: MCORCH Master Execution Agent (eu) — pesquisa + blueprint + peças
+- Reviewer: Sovereign (Gabriel) — aprova blueprint/cadência/avatar antes de qualquer código
+- Owner: Sovereign — ROI de marca (alcance/autoridade/receita de afiliado de longo prazo)
+```
+
+Agora, antes de disparar a **deepsearch força-total** — porque é canhão caro e o alvo importa muito — preciso travar 4 eixos. Cada um muda o que pesquiso **e** como desenho a cadência de 30 dias. Isso respeita o **Closed-Loop Protocol** (pesquisa → blueprint-semente da BoK → sua revisão → BoK → código; nada de código antes disso).
+
+Contexto que já tenho da malha/memória e vou assumir (corrija se preciso): persona = **Gabriel AI / CCIO** evangelizando o MCORCH (marca primeiro, produto/afiliado como subproduto de longo prazo); motor de publicação = reusar o **Viral Autopilot** vivo; perfis sociais zerados (começam do zero).
+
+## 🤖 Claude *(23:29:31)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Para o avatar treinado fiel \u00e0 sua pessoa e voz (talking-head digital + clone de voz), qual caminho a pesquisa deve priorizar e recomendar?",
+      "header": "Avatar",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Pesquisa recomenda (comparar)",
+          "description": "A deepsearch avalia SaaS comercial vs. self-hosted soberano lado a lado \u2014 fidelidade, consist\u00eancia, clone de voz pt-BR, custo/m\u00eas, esfor\u00e7o de engenharia \u2014 e recomenda o melhor com prova. Voc\u00ea decide depois com os dados na m\u00e3o."
+        },
+        {
+          "label": "Self-hosted soberano (BYOK)",
+          "description": "Clone de voz (XTTS/F5-TTS-class) + talking-head em modelos open-source rodando na nossa Sovereign Mesh. Controle total, sem mensalidade, fiel ao ethos BYOK do MCORCH \u2014 mais engenharia."
+        },
+        {
+          "label": "SaaS comercial (r\u00e1pido)",
+          "description": "Avatar treinado tipo HeyGen/Synthesia/Argil/Captions. Fidelidade alta e r\u00e1pido pra ir ao ar; custo mensal recorrente; menos soberania."
+        }
+      ]
+    },
+    {
+      "question": "Quais canais entram na cad\u00eancia de 30 dias? (avatar \u00e9 v\u00eddeo-first \u2014 marque todos que quer ativar)",
+      "header": "Canais",
+      "multiSelect": true,
+      "options": [
+        {
+          "label": "YouTube (Shorts + longo)",
+          "description": "V\u00eddeo 9:16 (Shorts) + long-form. Autoridade dur\u00e1vel e SEO de v\u00eddeo. Branch publish-social net-new (gate audit YT \u2014 v\u00eddeo nasce private)."
+        },
+        {
+          "label": "TikTok",
+          "description": "V\u00eddeo 9:16 nativo, maior alcance viral org\u00e2nico. Branch net-new (gate SELF_ONLY at\u00e9 audit)."
+        },
+        {
+          "label": "Instagram Reels",
+          "description": "Reels 9:16 \u2014 j\u00e1 PROVADO E2E vivo (conex\u00e3o @magicorch publica). Caminho mais curto pra valor vis\u00edvel."
+        },
+        {
+          "label": "LinkedIn + X (texto/repurpose)",
+          "description": "Reaproveita o pilar de texto + clipe do v\u00eddeo. LinkedIn j\u00e1 publica; X precisa de tier Basic."
+        }
+      ]
+    },
+    {
+      "question": "Sobre o que a marca Gabriel AI fala? Isso define os temas e os produtos que entram na cad\u00eancia.",
+      "header": "Pilares",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Mix: autoridade + educa\u00e7\u00e3o + produtos",
+          "description": "Build-in-public do MCORCH/jornada AGI\u2192ASI + educa\u00e7\u00e3o pr\u00e1tica de IA/automa\u00e7\u00e3o + tie-ins de afiliado/produto. Equilibra alcance, autoridade e monetiza\u00e7\u00e3o."
+        },
+        {
+          "label": "Build-in-public MCORCH",
+          "description": "Foco em autoridade t\u00e9cnica: bastidores da malha, AGI\u2192ASI, CCIO thought-leadership. Nicho premium, audi\u00eancia tech."
+        },
+        {
+          "label": "Educa\u00e7\u00e3o de IA para empreendedores",
+          "description": "Conte\u00fado amplo de IA/automa\u00e7\u00e3o para crescer r\u00e1pido em volume. Alcance largo, monetiza\u00e7\u00e3o via produto depois."
+        }
+      ]
+    },
+    {
+      "question": "Em qual idioma a marca publica nos primeiros 30 dias? (muda as normas virais que pesquiso e o alcance)",
+      "header": "Idioma",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "PT-BR (Brasil primeiro)",
+          "description": "Foco no mercado brasileiro, voz nativa do clone. Normas virais e hor\u00e1rios otimizados pro BR."
+        },
+        {
+          "label": "PT-BR + EN (bil\u00edngue)",
+          "description": "Dobra o esfor\u00e7o de produ\u00e7\u00e3o mas abre o mercado global de IA. Clone de voz precisa de pt + en consistentes."
+        },
+        {
+          "label": "EN primeiro (global de IA)",
+          "description": "Mira o mercado global de tech/IA desde o dia 1. Maior teto de alcance, mais competi\u00e7\u00e3o."
+        }
+      ]
+    }
+  ]
+}
+```

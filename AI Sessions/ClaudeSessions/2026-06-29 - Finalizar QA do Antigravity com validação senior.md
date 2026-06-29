@@ -10326,6 +10326,6 @@ Sessão selada, Maestro. O minerador foi de "extração falhou" para **vídeo ri
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-29 - Corrigir política de privacidade para requisitos Google]]
+> * **Sessão Anterior**: [[2026-06-29 - Criar estratégia de conteúdo e avatar para Gabriel AI]]
 > * **Próxima Sessão**: [[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]
 %% --- TIMELINE END --- %%
