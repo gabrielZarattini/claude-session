@@ -8456,6 +8456,39 @@ e99004b stub guard · 36bf180 tenancy+SSRF · b13018b Files API
 
 **O frontend já está no ar** (`login.mcorch.com` → minerador) — você pode **abrir e testar agora**: selecione/cole um link, clique "Extrair", e veja a barra de progresso + o sino notificar quando voltar. Se quiser, eu faço a **verificação no browser logado** (agent-browser + sessão injetada) pra confirmar visualmente o progresso ao vivo antes de selar com `/handoff`. Como prefere?
 
+## 👤 User *(20:55:58)*
+
+ok agora o teste deu o seguinte [Metadados do Vídeo]
+Título/Legenda: Tech sales is where it’s at for me 🌟 #tech #techsales #careertiktok 
+
+[Análise (Vision MCP — Vídeo)]
+O vídeo apresenta uma mulher jovem, com cabelo longo e trançado, usando maquiagem e uma blusa preta e branca com estampa de ondas, sentada e falando diretamente para a câmera em um ambiente doméstico organizado. Ela utiliza gestos expressivos com as mãos para enfatizar seus pontos. 1. **Produtos físicos:** Não há produtos físicos sendo anunciados ou vendidos diretamente no vídeo. A criadora de conteúdo exibe acessórios pessoais, como um relógio de pulso dourado e anéis, além de brincos, mas estes não são o foco comercial. O conteúdo se concentra em 'produtos' intelectuais e de serviço, como consultoria de carreira e informações sobre tecnologias. 2. **Ação ocorrendo:** A mulher está fornecendo conselhos e informações sobre os benefícios e como iniciar uma carreira em vendas de tecnologia (Tech Sales). Ela lista uma série de 'benefícios insanos' de trabalhar na área (como abonos de carro, alimentação, telefone, academia, internet) e, em seguida, detalha as três principais tecnologias que ela recomendaria aprender: Cloud (mencionando provedores como AWS, Azure, GCP), Cibersegurança e Inteligência Artificial (AI, citando OpenAI e Anthropic). Textos sobrepostos na tela destacam valores monetários e nomes das tecnologias e empresas, reforçando sua narrativa. 3. **Gancho de áudio ou música de fundo:** Não há música de fundo. O áudio é composto unicamente pela voz clara e envolvente da criadora de conteúdo, que mantém um tom direto e informativo, atuando como o principal gancho de áudio através de sua comunicação expressiva e didática. 4. **Público-alvo que esse conteúdo atrai:** O público-alvo são indivíduos aspirantes ou profissionais da área de tecnologia e vendas que buscam transicionar para ou avançar em carreiras de Tech Sales. Inclui pessoas interessadas em alto potencial de ganhos, benefícios de carreira substanciais, e que precisam de orientação prática sobre quais conhecimentos tecnológicos (Cloud, Cibersegurança, IA) são mais valiosos para entrar e ter sucesso no setor.
+
+mas não entendi por que Analisar Contexto para Extrair Produto ainda esta sugerindo smartwatch por que ?
+
+## 🤖 Claude *(20:56:58)*
+
+
+## 🤖 Claude *(20:57:11)*
+
+Primeiro: a **extração assíncrona funcionou perfeitamente** — a análise veio rica e precisa (`source=Vídeo`, decodificou Cloud/Cibersegurança/IA, AWS/Azure/GCP, OpenAI/Anthropic, os benefícios de carreira). O job timeout-proof está redondo. ✅
+
+Sobre o **"smartwatch"** — não é bug, é o passo de **síntese** fazendo o melhor possível com uma restrição. Veja o que a própria análise disse:
+
+> *"**Não há produtos físicos** sendo anunciados ou vendidos diretamente no vídeo... A criadora exibe acessórios pessoais, como um **relógio de pulso dourado** e anéis... O conteúdo se concentra em produtos **intelectuais e de serviço** (consultoria de carreira)."*
+
+**O porquê, em uma frase:** esse vídeo vende um **serviço/carreira** (Tech Sales), não um produto físico. Mas o afiliado do Mercado Livre **exige um produto físico**, e o prompt de síntese **obriga** o modelo a escolher um. Sem produto óbvio, o Llama agarrou o único objeto físico visível (o **relógio dourado**) + o público **tech** → **"smartwatch"** (um eletrônico tech-adjacente que essa audiência compraria).
+
+Ou seja: é um **palpite forçado**. O modelo está tecnicamente certo (achou *algo* vendável pra audiência), mas o casamento é fraco porque o vídeo não tem produto.
+
+**Minha recomendação (custo zero, melhora a qualidade):** afiar o prompt de síntese pra ser mais inteligente nesses casos — em vez de catar o objeto mais visível, raciocinar **"qual produto físico essa AUDIÊNCIA mais desejaria, dado o objetivo dela"** (ex.: aspirante a Tech Sales → notebook/headset/mesa de home-office/livro de certificação), e **ser honesto** quando o fit é fraco (marcar `confidence: baixa`) em vez de fingir um match forte.
+
+Quer que eu aplique essa melhoria no prompt agora? Fica assim:
+- Produto **mostrado** no vídeo → usa ele (caso forte, como o seu `b082e9b1` dos microcontroladores).
+- **Sem produto** → recomenda o que a audiência compraria + sinaliza que é inferência da audiência, não do vídeo.
+
+Isso mantém o Llama (sem gasto novo) e só melhora o raciocínio. Aplico?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
