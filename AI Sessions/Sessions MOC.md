@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1576
-> * **Sessões do Claude**: 1532
+> * **Total de Sessões Registradas**: 1578
+> * **Sessões do Claude**: 1534
 > * **Sessões do Gemini**: 44
 
 ---
@@ -72,14 +72,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-29 - agent-abcb9f74af3bc8f30]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-ab1e5a3baaa958711]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a95dc8bc0a35e4b62]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-a79c0030c73d061d4]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a1f94632ca84a0b49]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-a17b63ea62d7b1ed8]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` - *2026-06-29*
-*   `[[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]` - *2026-06-29*
-*   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` - *2026-06-29*
-*   *... e mais 1532 sessões nessa categoria.*
+*   *... e mais 1534 sessões nessa categoria.*
 
 ---
 
@@ -275,10 +275,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-29 - agent-abcb9f74af3bc8f30]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-ab1e5a3baaa958711]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a95dc8bc0a35e4b62]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a79c0030c73d061d4]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a1f94632ca84a0b49]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a17b63ea62d7b1ed8]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` (ClaudeSessions)
 *   `[[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]` (ClaudeSessions)
 *   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` (ClaudeSessions)

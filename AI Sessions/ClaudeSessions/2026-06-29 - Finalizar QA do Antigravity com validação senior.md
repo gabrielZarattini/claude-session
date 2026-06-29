@@ -8221,6 +8221,241 @@ Revisão de segurança rodando. Em paralelo (não-sobreposto), vou confirmar uma
 > [{"total":2,"has_canvas":false,"has_notif":false}]
 > ```
 
+## 🤖 Claude *(19:00:08)*
+
+
+## 🤖 Claude *(19:00:11)*
+
+**Diagnóstico:** a publicação `supabase_realtime` é **seletiva** (`puballtables:false`, só 2 tabelas) e `vm_miner_jobs` não está nela → Realtime não entregaria. (A canvas também não está — provavelmente usa invalidação/polling.) Vou **(1)** adicionar a tabela à publicação + `REPLICA IDENTITY FULL`, e **(2)** adicionar um **polling fallback** no hook pra garantir que a UI atualize mesmo se o Realtime falhar. Primeiro a publicação:
+
+## 🤖 Claude *(19:00:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260629170000_vm_miner_jobs.sql",
+  "old_string": "CREATE INDEX IF NOT EXISTS vm_miner_jobs_user_created_idx\n  ON public.vm_miner_jobs (user_id, created_at DESC);",
+  "new_string": "CREATE INDEX IF NOT EXISTS vm_miner_jobs_user_created_idx\n  ON public.vm_miner_jobs (user_id, created_at DESC);\n\n-- Realtime: the UI watches job progress live. supabase_realtime here is a SELECTIVE publication\n-- (puballtables=false), so the table must be added explicitly. REPLICA IDENTITY FULL ensures the\n-- UPDATE payloads carry the full row. (The client also polls as a fallback, so this is best-effort.)\nALTER TABLE public.vm_miner_jobs REPLICA IDENTITY FULL;\nDO $$\nBEGIN\n  ALTER PUBLICATION supabase_realtime ADD TABLE public.vm_miner_jobs;\nEXCEPTION\n  WHEN duplicate_object THEN NULL;  -- already added\n  WHEN undefined_object THEN NULL;  -- publication absent in some envs\nEND $$;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260629170000_vm_miner_jobs.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:00:20)*
+
+
+## 🤖 Claude *(19:00:22)*
+
+Security review: **sem achados** (RLS owner-scoped, user_id server-trusted, self-fetch a host confiável, sem vazamento de segredo, waitUntil sound). Aplico a publicação realtime + adiciono o polling fallback no hook. Primeiro a publicação em prod:
+
+## 🤖 Claude *(19:00:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\necho \"=== apply REPLICA IDENTITY FULL + add to publication ===\"\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -A \"MCORCH-Deploy/1.0\" \\\n  --data '{\"query\":\"ALTER TABLE public.vm_miner_jobs REPLICA IDENTITY FULL; DO $$ BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE public.vm_miner_jobs; EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_object THEN NULL; END $$;\"}' -w \"\\n(HTTP %{http_code})\\n\"\necho \"=== verify it's now in the publication ===\"\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -A \"MCORCH-Deploy/1.0\" \\\n  --data '{\"query\":\"SELECT tablename FROM pg_publication_tables WHERE pubname='\"'\"'supabase_realtime'\"'\"' AND tablename='\"'\"'vm_miner_jobs'\"'\"';\"}'",
+  "description": "Apply realtime publication + replica identity to prod"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apply REPLICA IDENTITY FULL + add to publication ===
+> []
+> (HTTP 201)
+> === verify it's now in the publication ===
+> [{"tablename":"vm_miner_jobs"}]
+> ```
+
+## 🤖 Claude *(19:00:55)*
+
+
+## 🤖 Claude *(19:00:56)*
+
+✅ `vm_miner_jobs` agora na publicação realtime (verificado). Agora adiciono o **polling fallback** no hook (garante atualização da UI mesmo se o Realtime falhar) — reescrevo o hook com os dois mecanismos:
+
+## 🤖 Claude *(19:01:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMinerJob.ts",
+  "content": "import { useCallback, useEffect, useRef, useState } from 'react';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\n\nexport type MinerJobStatus = 'queued' | 'extracting' | 'analyzing' | 'synthesizing' | 'done' | 'error';\n\nexport interface MinerJobRow {\n  id: string;\n  status: MinerJobStatus;\n  stage: string | null;\n  progress: number;\n  eta_seconds: number | null;\n  title: string | null;\n  vision_source: 'video' | 'cover' | null;\n  vision_analysis: string | null;\n  context_text: string | null;\n  error: string | null;\n}\n\ninterface UseMinerJobOpts {\n  onDone?: (row: MinerJobRow) => void;\n  onError?: (row: MinerJobRow) => void;\n}\n\nconst EMPTY = (patch: Partial<MinerJobRow>): MinerJobRow => ({\n  id: '', status: 'queued', stage: 'Na fila', progress: 0, eta_seconds: null,\n  title: null, vision_source: null, vision_analysis: null, context_text: null, error: null, ...patch,\n});\n\n// vm_miner_jobs is a new table not yet in the generated Supabase types \u2014 narrow accessor avoids `any` spread.\nconst fetchJob = (id: string): Promise<MinerJobRow | null> =>\n  (supabase as unknown as {\n    from: (t: string) => { select: (c: string) => { eq: (k: string, v: string) => { maybeSingle: () => Promise<{ data: MinerJobRow | null }> } } };\n  }).from('vm_miner_jobs').select('*').eq('id', id).maybeSingle().then((r) => r.data);\n\n/**\n * Async Product Miner job. startMining() kicks the TIMEOUT-PROOF background pipeline\n * (Apify extract + Vision MCP analysis) on the discover-products edge fn and returns\n * immediately with a job id; this hook then watches the vm_miner_jobs row via Supabase\n * Realtime AND a 3s polling fallback, exposing live progress / stage / ETA and firing\n * onDone / onError. Any video length or size is absorbed by the background task, so the\n * client never hits a gateway timeout. Mirrors useCanvasJobsRealtime.ts.\n */\nexport function useMinerJob({ onDone, onError }: UseMinerJobOpts = {}) {\n  const { user } = useAuth();\n  const [job, setJob] = useState<MinerJobRow | null>(null);\n  const activeIdRef = useRef<string | null>(null);\n  const cbRef = useRef({ onDone, onError });\n  cbRef.current = { onDone, onError };\n\n  const apply = useCallback((row: MinerJobRow) => {\n    if (!row?.id || row.id !== activeIdRef.current) return;\n    if (row.status === 'done' || row.status === 'error') {\n      activeIdRef.current = null;          // first terminal event wins; later duplicates are ignored\n      setJob(row);\n      if (row.status === 'done') cbRef.current.onDone?.(row);\n      else cbRef.current.onError?.(row);\n    } else {\n      setJob(row);\n    }\n  }, []);\n\n  // Realtime \u2014 mounted before any kick, so it catches every UPDATE for this tenant.\n  useEffect(() => {\n    if (!user) return;\n    const channel = supabase\n      .channel(`miner_jobs_${user.id}`)\n      .on(\n        'postgres_changes',\n        { event: '*', schema: 'public', table: 'vm_miner_jobs', filter: `user_id=eq.${user.id}` },\n        (payload) => apply(payload.new as MinerJobRow),\n      )\n      .subscribe();\n    return () => { supabase.removeChannel(channel); };\n  }, [user?.id, apply]);\n\n  // Polling fallback \u2014 guarantees UI updates even if Realtime is unavailable. Runs only while active.\n  const activeJobId = job && job.status !== 'done' && job.status !== 'error' ? job.id : '';\n  useEffect(() => {\n    if (!activeJobId) return;\n    let cancelled = false;\n    const interval = setInterval(async () => {\n      if (cancelled || activeJobId !== activeIdRef.current) return;\n      const r = await fetchJob(activeJobId).catch(() => null);\n      if (!cancelled && r) apply(r);\n    }, 3000);\n    return () => { cancelled = true; clearInterval(interval); };\n  }, [activeJobId, apply]);\n\n  const startMining = useCallback(async (url: string, niche?: string, trendId?: string | null) => {\n    setJob(EMPTY({}));\n    const { data, error } = await supabase.functions.invoke('discover-products', {\n      body: { action: 'mine-async', url, niche: niche || 'geral', trend_id: trendId || undefined },\n    });\n    if (error || !data?.job_id) {\n      const msg = (data && (data.message || data.error)) || error?.message || 'N\u00e3o foi poss\u00edvel iniciar a minera\u00e7\u00e3o.';\n      activeIdRef.current = null;\n      setJob(EMPTY({ status: 'error', stage: 'Erro', error: msg }));\n      cbRef.current.onError?.(EMPTY({ status: 'error', stage: 'Erro', error: msg }));\n      throw new Error(msg);\n    }\n    const jobId = data.job_id as string;\n    activeIdRef.current = jobId;\n    setJob((prev) => ({ ...(prev as MinerJobRow), id: jobId }));\n    // Seed in case an early UPDATE landed before activeIdRef was set; Realtime + polling carry the rest.\n    void fetchJob(jobId).then((r) => { if (r) apply(r); });\n    return jobId;\n  }, [apply]);\n\n  const isMining = !!job && job.status !== 'done' && job.status !== 'error';\n  return { job, isMining, startMining };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMinerJob.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:23)*
+
+
+## 🤖 Claude *(19:01:23)*
+
+tsc + rebuild:
+
+## 🤖 Claude *(19:01:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc_exit: ${PIPESTATUS[0]}\"\necho \"\"\necho \"=== rebuild frontend ===\"; bun run build 2>&1 | tail -2; echo \"BUILD_EXIT: ${PIPESTATUS[0]}\"",
+  "description": "tsc + rebuild frontend with polling hook",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc_exit: 0
+> 
+> === rebuild frontend ===
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 27.08s
+> BUILD_EXIT: 0
+> ```
+
+## 🤖 Claude *(19:02:14)*
+
+
+## 🤖 Claude *(19:02:15)*
+
+tsc 0, build OK. Suíte (anti-regressão) antes de commitar:
+
+## 🤖 Claude *(19:02:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run test 2>&1 | tail -6",
+  "description": "Run test suite",
+  "timeout": 240000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Test Files  22 passed | 2 skipped (24)
+>       Tests  295 passed | 2 skipped (297)
+>    Start at  16:02:16
+>    Duration  17.27s (transform 1.90s, setup 3.60s, collect 6.69s, tests 2.92s, environment 20.91s, prepare 5.57s)
+> ```
+
+## 🤖 Claude *(19:02:41)*
+
+
+## 🤖 Claude *(19:02:41)*
+
+295/295. Commit + push da feature assíncrona:
+
+## 🤖 Claude *(19:02:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260629170000_vm_miner_jobs.sql supabase/functions/discover-products/index.ts src/hooks/useMinerJob.ts src/pages/AffiliateProductsPage.tsx\ngit commit -q -m \"feat(miner): async timeout-proof extraction \u2014 background job + Realtime progress + notification\n\nVariable video size/length must never block the Vision MCP. The Extrair step now kicks an\nasync background job instead of blocking the request, so any duration is absorbed.\n\n- migration 20260629170000: vm_miner_jobs (owner-scoped RLS \u2014 SELECT/DELETE own; INSERT/UPDATE\n  service-role-only = tamper-proof) + added to supabase_realtime publication + REPLICA IDENTITY FULL.\n- discover-products mine-async action: creates the job, returns its id immediately (202), and runs\n  extract -> vision in a background task (EdgeRuntime.waitUntil) that outlives the request budget,\n  advancing status/progress and firing an in-app notification on done/error.\n- useMinerJob hook: watches the row via Realtime + a 3s polling fallback (guaranteed delivery).\n- AffiliateProductsPage: progress bar (stage + % + ETA), kick-and-watch, fills the context on done.\n\nProven E2E: kick -> HTTP 202 in 2.4s -> background extracting->analyzing->done (source=video,\n2396-char analysis) -> notification. RLS owner-select 200 / cross-tenant []. /security-review NO\nfindings. tsc 0, suite 295.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"leaks|changed|insertion\" | tail -2\necho \"commit9: $(git log -1 --format=%h)\"\necho \"\"\ngit push origin main 2>&1 | tail -4; echo \"PUSH_EXIT: ${PIPESTATUS[0]}\"\ngit log --oneline -3 | cat",
+  "description": "Commit + push async miner feature",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m4:02PM[0m [32mINF[0m no leaks found
+> ✔️ gitleaks-staged (0.06 seconds)
+> commit9: f3515e8
+> 
+> summary: (done in 0.19 seconds)
+> ✔️ gitleaks-range (0.19 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    3827d37..f3515e8  main -> main
+> PUSH_EXIT: 0
+> f3515e8 feat(miner): async timeout-proof extraction — background job + Realtime progress + notification
+> 3827d37 fix(discover-products): retry video analysis once before any cover fallback (quality-first)
+> bde7b61 feat(discover-products): rich full-video analysis for every TikTok (shouldDownloadVideos:true)
+> ```
+
+## 🤖 Claude *(19:02:59)*
+
+
+## 🤖 Claude *(19:03:00)*
+
+✅ **Pushado** (`3827d37..f3515e8`). O **Minerador Assíncrono está vivo** — migration aplicada, edge deployado, frontend buildado+servido. Atualizo a memória com o padrão async:
+
+## 🤖 Claude *(19:03:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_product_miner_vision_reliability.md",
+  "old_string": "**S\u00edntese (\"Analisar Contexto\") endurecida (commits `80ca697`/`5713306`):**",
+  "new_string": "**Minerador ASS\u00cdNCRONO \u2014 timeout-proof (commit `f3515e8`, diretiva Sovereign \"tempo/tamanho nunca podem ser gargalo do Vision MCP\"):** o bot\u00e3o \"Extrair\" agora dispara um job em background em vez de bloquear. `discover-products` action **`mine-async`** cria linha em `vm_miner_jobs` (migration `20260629170000`: RLS owner SELECT/DELETE; INSERT/UPDATE **service-role-only** = tamper-proof; **na publica\u00e7\u00e3o `supabase_realtime`** [seletiva, puballtables=false \u2014 TEVE que ser adicionada explicitamente] + `REPLICA IDENTITY FULL`), retorna `job_id` **na hora (202, 2.4s)**, e roda extract\u2192vision num **`EdgeRuntime.waitUntil`** (background al\u00e9m do or\u00e7amento do request; self-fetch \u00e0s pr\u00f3prias actions com o authHeader do user \u2192 tenancy preservada). Grava status/progress/eta a cada est\u00e1gio + `notify()` no fim. Hook **`useMinerJob`** assina via Realtime **+ polling 3s de fallback** (garante entrega mesmo se Realtime falhar) \u2192 barra de progresso (est\u00e1gio+%+ETA) na UI, preenche o contexto no `done`. Provado E2E: kick 202/2.4s \u2192 extracting\u2192analyzing\u2192done source=video 2396 chars \u2192 notifica\u00e7\u00e3o. /security-review NO findings. **Padr\u00e3o p/ reusar:** `EdgeRuntime.waitUntil` (ref `campaign-run`) + Realtime (ref `useCanvasJobsRealtime`, mas a tabela PRECISA estar na publica\u00e7\u00e3o `supabase_realtime` \u2014 n\u00e3o \u00e9 autom\u00e1tico aqui) + polling fallback. \u26a0\ufe0f Management API bane UA python-urllib (1010)\u2192curl.\n\n**S\u00edntese (\"Analisar Contexto\") endurecida (commits `80ca697`/`5713306`):**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_product_miner_vision_reliability.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:03:24)*
+
+
+## 🤖 Claude *(19:03:38)*
+
+## 🏁 Vision MCP timeout-proof — o contrato end-to-end que você definiu, entregue
+
+Tempo e tamanho de vídeo **nunca mais** bloqueiam. Implementei exatamente as suas "definições claras de ponta a ponta":
+
+| Sua definição | Entregue |
+|---|---|
+| "Volta na hora com job_id" | `mine-async` → **HTTP 202 em 2.4s** (não espera os 80s) |
+| "Barra de loading na UI" | `<Progress>` com **estágio + % + ETA** ao vivo |
+| "Avisa que volta quando o trigger de segundo plano retorna" (CLI) | **Notificação no sino** ("Extração concluída") + texto "roda em segundo plano, pode fechar a aba" |
+| "Prever o tempo melhor ainda" | `eta_seconds` por estágio na barra |
+| "Nunca um problema pro Vision MCP" | Trabalho pesado vive no `EdgeRuntime.waitUntil` (background, fora do orçamento do request) — **qualquer duração é absorvida** |
+
+**Arquitetura (espelha os padrões do projeto):** `vm_miner_jobs` (RLS owner-scoped, writes service-role = tamper-proof, na publicação Realtime + replica identity) → edge `mine-async` (cria job → 202 → background extract→vision → notify) → hook `useMinerJob` (**Realtime + polling 3s de fallback**, entrega garantida) → barra de progresso.
+
+**Provado E2E (Lei 1):** kick 202/2.4s → `extracting → analyzing → done` → `source=video`, análise rica **2396 chars** → notificação criada. RLS: owner vê (200), cross-tenant não (`[]`). `/security-review`: **sem achados**. tsc 0 · suíte **295** · gitleaks limpo.
+
+## 📦 9 commits, tudo pushado + live
+
+```
+f3515e8 feat(miner): async timeout-proof + Realtime progress + notificação
+3827d37 retry de vídeo antes do fallback (quality-first)
+bde7b61 vídeo rico sempre (shouldDownloadVideos:true)
+5713306 síntese robusta · 80ca697 :free 429→pago · 08f1e47 cover fallback
+e99004b stub guard · 36bf180 tenancy+SSRF · b13018b Files API
+```
+`origin/main` em **`f3515e8`** (alinhado com prod).
+
+---
+
+**O frontend já está no ar** (`login.mcorch.com` → minerador) — você pode **abrir e testar agora**: selecione/cole um link, clique "Extrair", e veja a barra de progresso + o sino notificar quando voltar. Se quiser, eu faço a **verificação no browser logado** (agent-browser + sessão injetada) pra confirmar visualmente o progresso ao vivo antes de selar com `/handoff`. Como prefere?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
