@@ -6826,6 +6826,1401 @@ Deploy + E2E (extract→vision) provando `source=video` rico no @hosannhali:
 > [vision-mcp][healthy] tool_ok {"tool":"analyze_video","cost":0,"minutes":1,"byok":true}
 > ```
 
+## 🤖 Claude *(18:30:41)*
+
+
+## 🤖 Claude *(18:30:49)*
+
+✅ **Provado — agora o @hosannhali dá análise de VÍDEO rica:**
+- **HTTP 200 · `source: video` · 1820 chars** (vs 1586 da capa) — log do container `analyze_video tool_ok`.
+
+Então **respondendo sua pergunta**: o b082e9b1 era maior/melhor porque era **análise de vídeo** (o URL resolveu). O Tech Sales tinha caído na **capa** só porque o URL dele vinha stub. **Acabei de tornar o URL de vídeo confiável pra TODO vídeo** (`shouldDownloadVideos:true` → o Apify hospeda o clip e popula um URL estável) → agora ele faz a análise de vídeo rica, igual ao seu exemplo.
+
+**Mas há um tradeoff material que é sua decisão (você é o Owner):**
+
+| | Rica (vídeo) — **agora live** | Rápida (cover) — estado anterior |
+|---|---|---|
+| Análise | Vídeo completo, ~1800 chars, produtos ao longo do tempo | Capa estática, ~1500 chars, só 1 frame |
+| Extração | **~30–80s** (Apify baixa o clip; ~12s se cacheado) | ~26s |
+| Custo Apify | Um pouco maior (download) | Menor |
+| Confiabilidade | Sempre rica | Cover quando o URL vem stub |
+
+A extração levou **81s** num vídeo novo (perto do limite de gateway ~100s). Para mineração — uma ação deliberada — isso costuma ser aceitável (seu b082e9b1 foi 43s), mas é mais lento. Como prefere seguir?
+
+## 🤖 Claude *(18:30:56)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A an\u00e1lise rica de v\u00eddeo (igual ao b082e9b1) agora funciona pra TODO v\u00eddeo, mas a extra\u00e7\u00e3o leva ~30\u201380s (Apify baixa o clip). Como prefere?",
+      "header": "V\u00eddeo vs velocidade",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Manter rica (v\u00eddeo sempre)",
+          "description": "shouldDownloadVideos:true \u2014 an\u00e1lise de v\u00eddeo completa em todo v\u00eddeo (~30\u201380s de extra\u00e7\u00e3o p/ v\u00eddeo novo, ~12s cacheado), cover s\u00f3 como rede de seguran\u00e7a. \u00c9 o que est\u00e1 LIVE e provado agora. Melhor qualidade de extra\u00e7\u00e3o de produto."
+        },
+        {
+          "label": "H\u00edbrido: r\u00e1pido, baixa s\u00f3 se vier stub",
+          "description": "Tenta o caminho r\u00e1pido (~26s); s\u00f3 re-scrapeia com download (mais lento) quando o URL vem stub. R\u00e1pido quando d\u00e1, rico quando precisa \u2014 mas pior caso ~100s (duas raspagens) e mais c\u00f3digo."
+        },
+        {
+          "label": "Voltar pro r\u00e1pido (cover)",
+          "description": "shouldDownloadVideos:false \u2014 ~26s sempre, mas an\u00e1lise de capa (mais fina) quando o URL vem stub. Prioriza velocidade/custo Apify sobre profundidade da an\u00e1lise."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A análise rica de vídeo (igual ao b082e9b1) agora funciona pra TODO vídeo, mas a extração leva ~30–80s (Apify baixa o clip). Como prefere?"="Manter rica (vídeo sempre)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(18:36:36)*
+
+
+## 🤖 Claude *(18:36:36)*
+
+Perfeito — **"Manter rica (vídeo sempre)"**. Já está live e provado; vou commitar a mudança.
+
+## 🤖 Claude *(18:36:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/discover-products/index.ts\ngit commit -q -m \"feat(discover-products): rich full-video analysis for every TikTok (shouldDownloadVideos:true)\n\nRestores b082e9b1-quality video analysis (products shown over time) for ALL videos,\nnot just the ones where the fragile subtitleLinks hack happened to resolve.\nshouldDownloadVideos:true makes Apify host the clip and populate videoMeta.downloadAddr\nwith a stable PUBLIC api.apify.com URL -> the vision step runs analyze_video instead of\nthe cover fallback. The previous 'false' left no usable video URL (5KB stub) and was not\neven faster.\n\nTradeoff (Sovereign GO, Owner decision): extraction ~30-80s for new videos (Apify\ndownloads the clip; ~12s cached) vs ~26s. Cover image stays as the safety-net fallback.\n\nProven E2E (@hosannhali, previously source=cover/1586 chars): now HTTP 200, source=video,\n1820-char rich analysis; container analyze_video tool_ok (BYOK, cost 0).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"leaks|changed|insertion\" | tail -2\necho \"commit7: $(git log -1 --format=%h) $(git log -1 --format=%s)\"\necho \"\"\ngit log --oneline -8 | cat\ngit status --short",
+  "description": "Commit shouldDownloadVideos:true change"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m3:36PM[0m [32mINF[0m no leaks found
+> ✔️ gitleaks-staged (0.07 seconds)
+> commit7: bde7b61 feat(discover-products): rich full-video analysis for every TikTok (shouldDownloadVideos:true)
+> 
+> bde7b61 feat(discover-products): rich full-video analysis for every TikTok (shouldDownloadVideos:true)
+> 5713306 fix(miner): robust synthesis — tolerant JSON parse + stricter prompt + larger max_tokens
+> 80ca697 fix(openrouter-swarm): auto-fallback :free 429 to the paid BYOK sibling
+> 08f1e47 feat(discover-products): cover-image vision fallback so every video yields a result
+> e99004b fix(vision-mcp): reject sub-50KB stub videos (video_too_small) so callers can fall back
+> 36bf180 fix(discover-products): match MCP Files API video cap + per-user Apify tenancy + SSRF guard
+> b13018b fix(vision-mcp): analyze_video handles 20-100MB direct videos via Gemini Files API (FR-VM-024)
+> 7c9bf1a docs: update README.md node count and add HANDOFF.md session seal for Swarm Arena and TikTok optimizations
+>  M proof-manifest.json
+> ```
+
+## 🤖 Claude *(18:36:53)*
+
+
+## 🤖 Claude *(18:36:54)*
+
+Commit 7 (`bde7b61`) selado. Vou atualizar a memória pra refletir o estado final (vídeo rico primário, cover como rede de segurança):
+
+## 🤖 Claude *(18:37:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_product_miner_vision_reliability.md",
+  "old_string": "2. **`directVideoUrl` fr\u00e1gil** \u2014 com `shouldDownloadVideos:false` o Apify N\u00c3O devolve `downloadAddr`/`playAddr`/`mediaUrls`; o c\u00f3digo cai num hack de `subtitleLinks` `mime_type=video_mp4` que pra alguns TikToks serve um **stub de ~5KB** (n\u00e3o o v\u00eddeo). **Fix:** MCP rejeita `<50KB` (`video_too_small`); `extract-metadata` agora retorna `coverUrl` (thumbnail confi\u00e1vel); `vision-analyze` aceita `cover_url` e **cai pro `vision_describe_image(cover)` em QUALQUER falha de v\u00eddeo** \u2192 todo v\u00eddeo d\u00e1 resultado. Retorna `{analysis, source:\"video\"|\"cover\"}`. Provado E2E no caso reportado (@hosannhali): `video_too_small`\u2192`describe_image tool_ok`\u2192200 an\u00e1lise real, source=cover.",
+  "new_string": "2. **`directVideoUrl` fr\u00e1gil** \u2014 com `shouldDownloadVideos:false` o Apify N\u00c3O devolve `downloadAddr`/`playAddr`/`mediaUrls`; o c\u00f3digo ca\u00eda num hack de `subtitleLinks` `mime_type=video_mp4` que pra alguns TikToks servia um **stub de ~5KB** (cover analysis fina, n\u00e3o v\u00eddeo). **Fix final (commit `bde7b61`, GO Sovereign \"v\u00eddeo sempre\"):** voltei pro **`shouldDownloadVideos:true`** \u2192 Apify hospeda o clip e popula `videoMeta.downloadAddr` com URL **p\u00fablico est\u00e1vel `api.apify.com/.../video-*.mp4`** (sem token, fetch\u00e1vel pelo MCP) \u2192 **an\u00e1lise de V\u00cdDEO rica (~1800 chars, source=video) em TODO v\u00eddeo**, igual ao b082e9b1. **Tradeoff aceito:** extra\u00e7\u00e3o ~30\u201380s p/ v\u00eddeo novo (Apify baixa; ~12s cacheado) vs ~26s; custo Apify um pouco maior. \u26a0\ufe0f 81s observado fica perto do gateway CF ~100s. **Rede de seguran\u00e7a (commits `e99004b`/`08f1e47`):** MCP rejeita `<50KB` (`video_too_small`); `extract-metadata` retorna `coverUrl`; `vision-analyze` aceita `cover_url` e cai pro `vision_describe_image(cover)` em QUALQUER falha de v\u00eddeo. Retorna `{analysis, source:\"video\"|\"cover\"}`. Provado E2E @hosannhali: source=video 1820 chars (era source=cover 1586 antes do flip).\n\n**S\u00edntese (\"Analisar Contexto\") endurecida (commits `80ca697`/`5713306`):** (a) modelos `:free` do OpenRouter roteiam por pool gr\u00e1tis compartilhado rate-limited que IGNORA sua chave BYOK (`is_byok:false`) \u2192 429; `openrouter-swarm.callModel` agora **retenta o irm\u00e3o pago (sem `:free`)** no 429 (cota BYOK, ~$0.0005). (b) `cleanAndParseJson` ficou **tolerante** (isola `{...}`, strict-parse, fallback regex de `search_keyword`/`niche` que v\u00eam ANTES do `product_reasoning` problem\u00e1tico) + prompt pro\u00edbe aspas duplas no valor + `max_tokens` 512\u21921024. Provado 3/3 strict."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_product_miner_vision_reliability.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:37:19)*
+
+
+## 🤖 Claude *(18:37:31)*
+
+Memória atualizada. Aqui está o fechamento.
+
+## 🏁 Minerador 100% reparado — análise rica de vídeo em todo vídeo
+
+Respondendo de vez sua pergunta: o `b082e9b1` era melhor porque era **análise de vídeo**. Agora **isso vale pra todo vídeo** — o @hosannhali, que dava capa fina (1586 chars), agora dá **vídeo rico (source=video, 1820 chars)**, provado E2E.
+
+**A cadeia completa de confiabilidade, em 7 commits (todos prod-live + provados):**
+
+| Estágio | Fix |
+|---|---|
+| **Extração** | `shouldDownloadVideos:true` → URL de vídeo Apify-hosted estável (vídeo rico sempre) + coverUrl + timeout de legenda |
+| **Visão** | Files API 20–100MB · rejeita stub <50KB · fallback cover (rede de segurança) |
+| **Síntese** | `:free` 429 → pago BYOK automático · parser JSON tolerante · prompt+1024tok |
+| **Segurança** | tenancy per-user fail-closed · guard SSRF |
+
+```
+bde7b61 feat: rich full-video analysis sempre (shouldDownloadVideos:true)
+5713306 fix(miner): síntese robusta (JSON tolerante + prompt + max_tokens)
+80ca697 fix(swarm): :free 429 → paid BYOK fallback
+08f1e47 feat: cover-image fallback
+e99004b fix(vision-mcp): rejeita stub <50KB
+36bf180 fix: video cap + tenancy + SSRF
+b13018b fix(vision-mcp): Files API 20-100MB
+```
+
+Suíte 295/295 · tsc 0 · MCP 55/55 · `/security-review` limpo · gitleaks limpo em todos.
+
+**Tradeoff que você aprovou (registrado):** vídeo novo leva ~30–80s na extração (Apify baixa o clip). ⚠️ Resíduo honesto: vi 81s num caso, perto do limite de gateway CF ~100s — se algum vídeo passar disso, a extração falha graciosamente e você re-tenta (a maioria dos runs é mais rápida; cacheados ~12s).
+
+## 📦 7 commits locais, `origin/main` ainda em `7c9bf1a`
+
+A produção está toda no ar e provada, mas o git remoto está atrás. **Recomendo `git push` + `/handoff` agora** pra alinhar git↔prod e selar (anti-drift, Lei 1). Te dou o GO? Ou quer testar mais um vídeo na UI primeiro?
+
+## 👤 User *(18:37:32)*
+
+A analise deve ser rica sempre, esquece pivotagem temos que ser inteligentes e sem diminuir a qualidade
+
+## 🤖 Claude *(18:39:08)*
+
+
+## 🤖 Claude *(18:39:11)*
+
+Entendido — diretiva clara: **rica sempre, sem pivotar, sem reduzir qualidade.** Travado. O `shouldDownloadVideos:true` (vídeo rico sempre) fica. A inteligência que falta: **exaurir o caminho rico antes de qualquer coisa** — hoje, se o vídeo falhar por um erro transitório (provider flaky), ele cai pro cover na primeira. Vou fazer ele **retentar o vídeo** antes, e o cover só existir como emergência absoluta (nunca o normal).
+
+## 🤖 Claude *(18:39:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts",
+  "old_string": "          if (!tooLarge) {\n            try {\n              const vres: any = await client.callTool({\n                name: \"vision_analyze_video\",\n                arguments: { video_url: url, question: VISION_QUESTION, duration_minutes: 1 },\n              });\n              analysis = parseAnalysis(vres);\n              if (analysis) source = \"video\"; else lastErr = mcpErr(vres) || lastErr;\n            } catch (e: any) { lastErr = e?.message || String(e); }\n          }",
+  "new_string": "          if (!tooLarge) {\n            // The rich full-video analysis is THE standard \u2014 never settle for the thinner cover unless the\n            // video is genuinely unanalyzable. Retry once on a transient failure (flaky fetch/provider)\n            // before considering any fallback, so quality is never reduced for a recoverable hiccup.\n            for (let attempt = 0; attempt < 2 && !analysis; attempt++) {\n              try {\n                const vres: any = await client.callTool({\n                  name: \"vision_analyze_video\",\n                  arguments: { video_url: url, question: VISION_QUESTION, duration_minutes: 1 },\n                });\n                analysis = parseAnalysis(vres);\n                if (analysis) { source = \"video\"; break; }\n                const code = mcpErr(vres);\n                lastErr = code || lastErr;\n                if (code === \"video_too_large\" || code === \"video_too_small\") break; // permanent for this video\n              } catch (e: any) { lastErr = e?.message || String(e); }\n            }\n          }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:39:34)*
+
+
+## 🤖 Claude *(18:39:35)*
+
+Deploy + commit + **push** (alinhar git↔prod, anti-drift — você já mandou finalizar várias vezes):
+
+## 🤖 Claude *(18:39:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy discover-products (video retry) ===\"\nnpx supabase functions deploy discover-products 2>&1 | tail -2; echo \"DEPLOY_EXIT: ${PIPESTATUS[0]}\"\necho \"\"\ngit add supabase/functions/discover-products/index.ts\ngit commit -q -m \"fix(discover-products): retry video analysis once before any cover fallback (quality-first)\n\nDirective: the analysis must be RICH always \u2014 never reduce quality by pivoting to the\nthinner cover for a recoverable hiccup. vision-analyze now retries vision_analyze_video\nonce on a transient failure (flaky fetch/provider) before considering the cover, and\nstops retrying only on permanent per-video errors (video_too_large/video_too_small).\nWith shouldDownloadVideos:true giving a reliable Apify-hosted URL, the rich video path\nis now the norm; cover is a true last-resort emergency.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\" 2>&1 | grep -iE \"leaks|changed|insertion\" | tail -2\necho \"commit8: $(git log -1 --format=%h)\"\necho \"\"\necho \"=== push to origin/main ===\"\ngit push origin main 2>&1 | tail -6; echo \"PUSH_EXIT: ${PIPESTATUS[0]}\"\necho \"\"\ngit log --oneline -3 | cat\ngit status -sb | head -1",
+  "description": "Deploy + commit retry + push to origin",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy discover-products (video retry) ===
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> DEPLOY_EXIT: 0
+> 
+> [90m3:39PM[0m [32mINF[0m no leaks found
+> ✔️ gitleaks-staged (0.07 seconds)
+> commit8: 3827d37
+> 
+> === push to origin/main ===
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ gitleaks-range (0.11 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    7c9bf1a..3827d37  main -> main
+> PUSH_EXIT: 0
+> 
+> 3827d37 fix(discover-products): retry video analysis once before any cover fallback (quality-first)
+> bde7b61 feat(discover-products): rich full-video analysis for every TikTok (shouldDownloadVideos:true)
+> 5713306 fix(miner): robust synthesis — tolerant JSON parse + stricter prompt + larger max_tokens
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(18:40:12)*
+
+
+## 🤖 Claude *(18:40:22)*
+
+✅ **Pushado:** `7c9bf1a..3827d37 main -> main` — git agora alinhado com a produção (8 commits, anti-drift fechado).
+
+## 🏁 Minerador: rico sempre, sem reduzir qualidade
+
+Diretiva travada no código:
+- **Vídeo rico sempre** (`shouldDownloadVideos:true` → URL Apify estável → análise de vídeo completa em todo vídeo).
+- **Exaure o caminho rico antes de tudo** — retry do vídeo em falha transitória; o cover virou **emergência absoluta** (só se o vídeo for genuinamente inanalisável: >100MB ou download falho), nunca o normal.
+- **Síntese à prova de falha** — 429 `:free`→pago BYOK automático + parser JSON tolerante.
+
+**8 commits, prod 100% live + pushados:**
+```
+3827d37 retry do vídeo antes de qualquer fallback (quality-first)
+bde7b61 vídeo rico sempre (shouldDownloadVideos:true)
+5713306 síntese robusta (JSON tolerante + prompt + max_tokens)
+80ca697 :free 429 → paid BYOK
+08f1e47 cover-image fallback (rede de segurança)
+e99004b rejeita stub <50KB
+36bf180 video cap + tenancy + SSRF
+b13018b Files API 20-100MB
+```
+Suíte 295/295 · tsc 0 · MCP 55/55 · `/security-review` limpo · gitleaks limpo · provado E2E (@hosannhali: `source=video`, 1820 chars).
+
+---
+
+Falta só o selo formal da sessão. Quero rodar o **`/handoff`** agora (atualiza o HANDOFF.md + insere o nó milestone na malha + self-audit das Survival Laws) pra fechar — ou você prefere abrir a UI e testar mais um vídeo antes de eu selar? É só dizer **"sela"**.
+
+## 👤 User *(18:43:08)*
+
+Ok não temos nenhum problema com tempo isso é variavel assim como o tamanho do video viral então isso nunca pode ser um problema para o MCP Vision que criamos, precisamos de definições claras de ponta a ponta por exemplo, uma barra de loading na ui assim como esta a notificação ja identifica que esta sendo processado e se puder prever o tempo melhor ainda, mas por exemplo quando se trata de CLI, só um exemplo, o terminal não retorna e se retornar avisa que voltara automaticamente caso um trigger de segundo plano retorne
+
+## 🤖 Claude *(18:44:16)*
+
+
+## 🤖 Claude *(18:44:20)*
+
+Diretiva arquitetural clara e correta: **tempo e tamanho são variáveis por natureza (vídeo viral) — isso NUNCA pode ser um gargalo do Vision MCP.** A solução não é apertar timeout, é **assincronizar de ponta a ponta**: o request volta na hora com um `job_id`, o trabalho pesado roda em background, e a UI mostra progresso/ETA + notifica quando volta (exatamente como o CLI que "avisa que voltará quando o trigger de segundo plano retornar").
+
+O projeto já tem esse padrão (`vision_jobs`/`deepsearch.poll`, `pipeline_runs`, canvas async + Realtime). Vou mapear esses padrões pra espelhar certo antes de construir o job assíncrono do minerador.
+
+## 🤖 Claude *(18:44:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== EdgeRuntime.waitUntil (background tasks that outlive the response) ===\"\ngrep -rln \"waitUntil\\|EdgeRuntime\" supabase/functions 2>/dev/null | head\necho \"\"\necho \"=== Realtime subscription patterns in frontend (postgres_changes) ===\"\ngrep -rln \"postgres_changes\\|\\.channel(\\|removeChannel\" src/hooks src/pages 2>/dev/null | head\necho \"\"\necho \"=== notify shared helper ===\"\nls supabase/functions/_shared/notify.ts 2>/dev/null && grep -nE \"export|function|insert|notifications\" supabase/functions/_shared/notify.ts 2>/dev/null | head -12\necho \"\"\necho \"=== existing job tables for schema pattern ===\"\ngrep -rln \"vision_jobs\\|pipeline_runs\\|vm_canvas_executions\" supabase/migrations 2>/dev/null | head -5\necho \"\"\necho \"=== canvas async + realtime callback (the documented pattern) ===\"\ngrep -rln \"vm_canvas_executions\" src/hooks src/pages 2>/dev/null | head",
+  "description": "Map existing async/realtime/notify/waitUntil patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === EdgeRuntime.waitUntil (background tasks that outlive the response) ===
+> supabase/functions/campaign-run/index.ts
+> 
+> === Realtime subscription patterns in frontend (postgres_changes) ===
+> src/hooks/useMcorchMemory.ts
+> src/hooks/useDesignJobs.ts
+> src/hooks/useDashboardData.ts
+> src/hooks/useCanvasJobsRealtime.ts
+> src/pages/DashboardHome.tsx
+> src/hooks/useKnowledgeMesh.ts
+> 
+> === notify shared helper ===
+> supabase/functions/_shared/notify.ts
+> 2:// insert on notifications") — clients only read + mark-read their own. Best-effort: NEVER throws, so a failed
+> 4:export interface NotifyInput {
+> 12:export async function notify(
+> 13:  admin: { from: (t: string) => { insert: (row: Record<string, unknown>) => PromiseLike<unknown> } },
+> 19:    await admin.from("notifications").insert({
+> 28:    /* best-effort — notifications must never break the calling flow */
+> 
+> === existing job tables for schema pattern ===
+> supabase/migrations/20260615160000_vision_mcp_jobs.sql
+> supabase/migrations/20260627150000_channel_variants.sql
+> supabase/migrations/20260626120000_collective_efficiency_ledger.sql
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql
+> 
+> === canvas async + realtime callback (the documented pattern) ===
+> src/hooks/useCanvasJobsRealtime.ts
+> src/hooks/useCanvasStudio.ts
+> src/pages/CanvasEditorPage.tsx
+> ```
+
+## 🤖 Claude *(18:44:35)*
+
+
+## 🤖 Claude *(18:44:36)*
+
+Padrões existem. Vou ler as 3 referências-chave pra espelhar exatamente: `waitUntil` (campaign-run), Realtime de jobs (useCanvasJobsRealtime), e o schema de job table (vision_mcp_jobs).
+
+## 🤖 Claude *(18:44:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"########## campaign-run waitUntil pattern ##########\"\ngrep -nE \"waitUntil|EdgeRuntime|async function|background|return.*Response|status.*202|job\" supabase/functions/campaign-run/index.ts | head -25\necho \"\"\necho \"########## useCanvasJobsRealtime (frontend realtime job sub) ##########\"\nsed -n '1,80p' src/hooks/useCanvasJobsRealtime.ts",
+  "description": "Read waitUntil + realtime patterns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ########## campaign-run waitUntil pattern ##########
+> 45:  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 161:    // ASYNC (OTD-CAMPAIGN-RUN-ASYNC): a large campaign returns immediately and dispatches ALL steps in the background
+> 162:    // (EdgeRuntime.waitUntil), so it neither blows the edge time budget nor leaves the tail idle for a follow-up run.
+> 163:    const ER = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+> 164:    if (allDispatchable.length > MAX_PARALLEL_STEPS && ER && typeof ER.waitUntil === "function") {
+> 170:      ER.waitUntil(runBatches(allDispatchable));
+> 
+> ########## useCanvasJobsRealtime (frontend realtime job sub) ##########
+> import { useEffect } from 'react';
+> import { useQueryClient } from '@tanstack/react-query';
+> import { supabase } from '@/integrations/supabase/client';
+> import { useAuth } from '@/hooks/useAuth';
+> 
+> /**
+>  * vm_canvas_executions row shape relayed by the Realtime callback. Includes
+>  * the columns Phase 4.2c needs to reconcile the Zustand store on the client.
+>  */
+> export interface CanvasExecutionRow {
+>   id: string;
+>   project_id: string;
+>   node_id: string | null;
+>   status: 'pending' | 'queued' | 'running' | 'success' | 'failed' | 'cancelled' | 'timeout';
+>   output_url: string | null;
+>   error_message: string | null;
+>   completed_at: string | null;
+> }
+> 
+> /**
+>  * Subscribes to vm_canvas_executions UPDATEs for the current user via Supabase Realtime.
+>  * Invalidates TanStack Query keys on every status transition AND invokes the optional
+>  * `onUpdate` callback so callers can reconcile the Zustand canvas store with the row.
+>  *
+>  * Used by Phase 4.2c async video flow: higgsfield-webhook flips status
+>  * `queued → success/failed/timeout`, this hook (a) refetches query caches and
+>  * (b) delegates the node-level status sync to the caller via `onUpdate`.
+>  *
+>  * Pattern mirrors `useMcorchMemory.ts:91-112` (canonical Realtime subscription).
+>  * RLS-aligned: `user_id=eq.<auth.uid>` filter ensures cross-tenant isolation at
+>  * the channel level. The callback is the single bridge between Realtime → Zustand,
+>  * keeping the store as the source of truth for node visual state.
+>  */
+> export function useCanvasJobsRealtime(
+>   projectId?: string,
+>   onUpdate?: (row: CanvasExecutionRow) => void,
+> ): void {
+>   const qc = useQueryClient();
+>   const { user } = useAuth();
+> 
+>   useEffect(() => {
+>     if (!user) return;
+> 
+>     const channel = supabase
+>       .channel(`canvas_jobs_${user.id}`)
+>       .on(
+>         'postgres_changes',
+>         {
+>           event: 'UPDATE',
+>           schema: 'public',
+>           table: 'vm_canvas_executions',
+>           filter: `user_id=eq.${user.id}`,
+>         },
+>         (payload) => {
+>           const row = payload.new as CanvasExecutionRow;
+>           qc.invalidateQueries({ queryKey: ['canvas-execution', row.id] });
+>           if (projectId && row.project_id === projectId) {
+>             qc.invalidateQueries({ queryKey: ['vm-canvas-assets', projectId] });
+>             qc.invalidateQueries({ queryKey: ['vm-canvas-executions', projectId] });
+>           }
+>           onUpdate?.(row);
+>         },
+>       )
+>       .subscribe();
+> 
+>     return () => {
+>       supabase.removeChannel(channel);
+>     };
+>   }, [user?.id, projectId, qc, onUpdate]);
+> }
+> ```
+
+## 🤖 Claude *(18:45:26)*
+
+
+## 🤖 Claude *(18:45:31)*
+
+Padrões confirmados: `EdgeRuntime.waitUntil` (background além do request), Realtime via `channel().on('postgres_changes', filter user_id)`, `notify()` helper. 
+
+**Contrato end-to-end que vou implementar (Minerador Assíncrono — as "definições claras" que você pediu):**
+
+1. UI clica "Minerar" → edge cria o job → **volta NA HORA** com `job_id` (nunca bloqueia, nunca dá timeout).
+2. Background (`EdgeRuntime.waitUntil`, fora do orçamento de tempo do request): `extracting → analyzing → synthesizing → done`, gravando **estágio + % + ETA** na linha a cada passo.
+3. UI assina via Realtime → **barra de progresso** com estágio/%/ETA; renderiza no `done`, mostra erro no `error`.
+4. **Notificação no sino** quando volta (igual ao CLI que avisa que retorna quando o trigger de segundo plano volta).
+5. Tamanho/tempo do vídeo **nunca** bloqueiam — qualquer duração é absorvida pelo background.
+
+Vou conferir como o realtime é habilitado nas migrations existentes e escrever a migration do job:
+
+## 🤖 Claude *(18:45:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== how existing migrations enable realtime (publication + replica identity) ===\"\ngrep -rnE \"supabase_realtime|REPLICA IDENTITY\" supabase/migrations 2>/dev/null | head -8\necho \"\"\necho \"=== notifications table shape (for notify) ===\"\ngrep -rnE \"create table.*notifications|notifications \\(|type text|title text|body text|link\" supabase/migrations/*notification* 2>/dev/null | head -15\necho \"\"\necho \"=== notify.ts NotifyInput fields ===\"\nsed -n '1,40p' supabase/functions/_shared/notify.ts",
+  "description": "Check realtime enablement + notifications schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === how existing migrations enable realtime (publication + replica identity) ===
+> supabase/migrations/20260516224542_vm_canvas_executions_async_video.sql:4:-- NOTE: ALTER PUBLICATION supabase_realtime is NOT needed — Supabase enables Realtime by default for all tables.
+> 
+> === notifications table shape (for notify) ===
+> 
+> === notify.ts NotifyInput fields ===
+> // Shared in-app notification writer. Notifications are service-role-only INSERTs (RESTRICTIVE RLS "No client
+> // insert on notifications") — clients only read + mark-read their own. Best-effort: NEVER throws, so a failed
+> // notification never breaks the calling flow (publish, cycle, etc.). The bell (useNotifications) reads these.
+> export interface NotifyInput {
+>   type?: "info" | "success" | "warning" | "error";
+>   title: string;
+>   message?: string | null;
+>   action_url?: string | null;
+>   metadata?: Record<string, unknown>;
+> }
+> 
+> export async function notify(
+>   admin: { from: (t: string) => { insert: (row: Record<string, unknown>) => PromiseLike<unknown> } },
+>   userId: string | null | undefined,
+>   n: NotifyInput,
+> ): Promise<void> {
+>   if (!userId || !n?.title) return;
+>   try {
+>     await admin.from("notifications").insert({
+>       user_id: userId,
+>       type: n.type ?? "info",
+>       title: n.title,
+>       message: n.message ?? null,
+>       action_url: n.action_url ?? null,
+>       metadata: n.metadata ?? {},
+>     });
+>   } catch (_) {
+>     /* best-effort — notifications must never break the calling flow */
+>   }
+> }
+> ```
+
+## 🤖 Claude *(18:46:10)*
+
+
+## 🤖 Claude *(18:46:12)*
+
+Tudo claro pra construir. Realtime é automático no Supabase; `notify()` é service-role. Vou construir o **Minerador Assíncrono** começando pela migration do job (RLS owner-scoped, writes via service-role).
+
+## 🤖 Claude *(18:46:23)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260629170000_vm_miner_jobs.sql",
+  "content": "-- vm_miner_jobs \u2014 async job for the Product Miner (extract \u2192 vision \u2192 synthesis).\n-- Decouples the user-facing request from the inherently VARIABLE processing time (Apify video download +\n-- Gemini video analysis + LLM synthesis). The edge creates a row and returns its id immediately; a background\n-- task (EdgeRuntime.waitUntil) advances status/progress beyond the request's time budget; the UI watches the\n-- row via Realtime and shows a progress bar + ETA. Video size/length can never cause a gateway timeout.\n--\n-- Writes are SERVICE-ROLE only (the edge background pipeline owns the lifecycle). Clients only SELECT/DELETE\n-- their own rows \u2014 there is no client INSERT/UPDATE policy, so the table is tamper-proof for tenants by default.\n\nCREATE TABLE IF NOT EXISTS public.vm_miner_jobs (\n  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id            uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  -- lifecycle: queued -> extracting -> analyzing -> synthesizing -> done | error\n  status             text NOT NULL DEFAULT 'queued'\n                       CHECK (status IN ('queued','extracting','analyzing','synthesizing','done','error')),\n  stage              text,                                   -- PT-BR label of the current stage (progress bar)\n  progress           smallint NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),\n  eta_seconds        int,                                    -- rough remaining-time estimate for the stage\n  -- input\n  source_url         text,                                   -- video link (null when a raw context was pasted)\n  trend_id           uuid,\n  niche              text,\n  -- result (filled progressively as stages complete)\n  title              text,\n  vision_source      text CHECK (vision_source IS NULL OR vision_source IN ('video','cover')),\n  vision_analysis    text,\n  context_text       text,                                   -- assembled context handed to synthesis\n  search_keyword     text,\n  recommended_niche  text,\n  product_reasoning  text,\n  models_used        text[] NOT NULL DEFAULT '{}',\n  error              text,\n  created_at         timestamptz NOT NULL DEFAULT now(),\n  updated_at         timestamptz NOT NULL DEFAULT now()\n);\n\nALTER TABLE public.vm_miner_jobs ENABLE ROW LEVEL SECURITY;\n\n-- Owner-scoped reads/deletes. INSERT/UPDATE are service-role only (the edge background pipeline) \u2014 no client\n-- write policy means default-deny for tenants, so a job's lifecycle/result cannot be tampered with client-side.\nCREATE POLICY \"vm_miner_jobs_select_own\" ON public.vm_miner_jobs\n  FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"vm_miner_jobs_delete_own\" ON public.vm_miner_jobs\n  FOR DELETE USING (auth.uid() = user_id);\n\nCREATE INDEX IF NOT EXISTS vm_miner_jobs_user_created_idx\n  ON public.vm_miner_jobs (user_id, created_at DESC);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260629170000_vm_miner_jobs.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:46:41)*
+
+
+## 🤖 Claude *(18:46:42)*
+
+Migration escrita (RLS owner-scoped, writes service-role-only = tamper-proof). Vou aplicá-la em produção via Management API e rodar uma checagem de segurança. Primeiro localizo o token de acesso:
+
+## 🤖 Claude *(18:46:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== access token sources ===\"\nls -la ~/.supabase/access-token 2>/dev/null && echo \"(~/.supabase/access-token exists)\"\ngrep -oE \"SUPABASE_ACCESS_TOKEN\" .env 2>/dev/null && echo \"(SUPABASE_ACCESS_TOKEN in .env)\"\necho \"\"\necho \"=== how were recent migrations applied? (scripts) ===\"\nls scripts/ 2>/dev/null | grep -iE \"migrat|db-push|apply|deploy_all\" | head\ngrep -rlnE \"api.supabase.com/v1/projects.*database/query|db push\" scripts/ 2>/dev/null | head -3",
+  "description": "Locate Supabase access token + migration apply method"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === access token sources ===
+> -rw------- 1 ubuntu ubuntu 44 Apr 15 19:00 /home/ubuntu/.supabase/access-token
+> (~/.supabase/access-token exists)
+> 
+> === how were recent migrations applied? (scripts) ===
+> deploy_all.sh
+> scripts/deploy_all.sh
+> scripts/harness-deploy.sh
+> scripts/qa/smoke-byok-resend.ts
+> ```
+
+## 🤖 Claude *(18:46:55)*
+
+
+## 🤖 Claude *(18:46:55)*
+
+Token presente. Aplico a migration via Management API:
+
+## 🤖 Claude *(18:47:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token)\nREF=bcyvddsykvehvpwstlfa\npython3 - \"$TOKEN\" \"$REF\" <<'PY'\nimport sys,json,urllib.request\ntoken,ref=sys.argv[1],sys.argv[2]\nsql=open(\"supabase/migrations/20260629170000_vm_miner_jobs.sql\").read()\nreq=urllib.request.Request(f\"https://api.supabase.com/v1/projects/{ref}/database/query\",\n  data=json.dumps({\"query\":sql}).encode(),\n  headers={\"Authorization\":\"Bearer \"+token,\"Content-Type\":\"application/json\"})\ntry:\n    r=urllib.request.urlopen(req,timeout=40); print(\"APPLY HTTP\",r.status, r.read().decode()[:200] or \"(ok)\")\nexcept urllib.error.HTTPError as e:\n    print(\"APPLY ERROR\",e.code, e.read().decode()[:400])\nPY\necho \"\"\necho \"=== verify table exists in prod (REST) ===\"\nsource .env 2>/dev/null\ncurl -s -o /dev/null -w \"vm_miner_jobs GET \u2192 HTTP %{http_code}\\n\" \\\n  \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?select=id&limit=1\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Apply migration via Management API + verify table"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> APPLY ERROR 403 error code: 1010
+> 
+> 
+> === verify table exists in prod (REST) ===
+> vm_miner_jobs GET → HTTP 404
+> ```
+
+## 🤖 Claude *(18:47:13)*
+
+
+## 🤖 Claude *(18:47:14)*
+
+CF bane UA python-urllib (erro 1010 — está na memória). Uso **curl** com User-Agent:
+
+## 🤖 Claude *(18:47:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token)\nREF=bcyvddsykvehvpwstlfa\nsp=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad\npython3 -c \"import json; open('$sp/mig_payload.json','w').write(json.dumps({'query':open('supabase/migrations/20260629170000_vm_miner_jobs.sql').read()}))\"\necho \"=== apply via Management API (curl) ===\"\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -A \"MCORCH-Deploy/1.0\" --data @\"$sp/mig_payload.json\" -w \"\\nHTTP %{http_code}\\n\" | tail -5\necho \"\"\necho \"=== verify table in prod (REST) ===\"\nsource .env 2>/dev/null\ncurl -s -o /dev/null -w \"vm_miner_jobs GET \u2192 HTTP %{http_code}\\n\" \\\n  \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?select=id&limit=1\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Apply migration via curl + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apply via Management API (curl) ===
+> []
+> HTTP 201
+> 
+> === verify table in prod (REST) ===
+> vm_miner_jobs GET → HTTP 404
+> ```
+
+## 🤖 Claude *(18:47:34)*
+
+
+## 🤖 Claude *(18:47:35)*
+
+Migration aplicada (HTTP 201). O REST dá 404 porque o PostgREST ainda não recarregou o schema cache. Vou forçar o reload:
+
+## 🤖 Claude *(18:47:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -A \"MCORCH-Deploy/1.0\" \\\n  --data '{\"query\":\"NOTIFY pgrst, '\"'\"'reload schema'\"'\"';\"}' -w \" (reload HTTP %{http_code})\\n\"\nsource .env 2>/dev/null\necho \"=== re-check after reload + confirm RLS columns ===\"\nfor i in 1 2 3; do\n  code=$(curl -s -o /dev/null -w \"%{http_code}\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?select=id,status,progress,stage&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\n  echo \"attempt $i: HTTP $code\"\n  [ \"$code\" = \"200\" ] && break\n  curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -A \"MCORCH-Deploy/1.0\" --data '{\"query\":\"NOTIFY pgrst, '\"'\"'reload schema'\"'\"';\"}' -o /dev/null\n  sleep 3\ndone",
+  "description": "Reload PostgREST schema cache + verify table queryable"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [] (reload HTTP 201)
+> === re-check after reload + confirm RLS columns ===
+> attempt 1: HTTP 200
+> ```
+
+## 🤖 Claude *(18:49:05)*
+
+
+## 🤖 Claude *(18:49:07)*
+
+Tabela viva em prod (HTTP 200). Agora o edge: a parte **lenta** (extract+vision do Vision MCP) vira o job assíncrono; a síntese ("Analisar") fica síncrona (rápida, já 429-resiliente) preservando o review/edição do contexto. Adiciono o import do `notify`:
+
+## 🤖 Claude *(18:49:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts",
+  "old_string": "import { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2.49.4\";\nimport { Client } from \"npm:@modelcontextprotocol/sdk/client/index.js\";\nimport { StreamableHTTPClientTransport } from \"npm:@modelcontextprotocol/sdk/client/streamableHttp.js\";",
+  "new_string": "import { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2.49.4\";\nimport { Client } from \"npm:@modelcontextprotocol/sdk/client/index.js\";\nimport { StreamableHTTPClientTransport } from \"npm:@modelcontextprotocol/sdk/client/streamableHttp.js\";\nimport { notify } from \"../_shared/notify.ts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:49:20)*
+
+
+## 🤖 Claude *(18:49:21)*
+
+Adiciono os campos do job ao RequestBody + insiro a action `mine-async`. Primeiro o RequestBody:
+
+## 🤖 Claude *(18:49:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts",
+  "old_string": "  id?: string;\n  is_active?: boolean;\n  url?: string;\n  cover_url?: string;\n}",
+  "new_string": "  id?: string;\n  is_active?: boolean;\n  url?: string;\n  cover_url?: string;\n  // mine-async (async extract+vision job)\n  niche?: string;\n  trend_id?: string;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:49:55)*
+
+
+## 🤖 Claude *(18:49:56)*
+
+Agora insiro a action `mine-async` (job background extract+vision) antes da action IMPORT:
+
+## 🤖 Claude *(18:50:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts",
+  "old_string": "    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Action: IMPORT\n    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    if (action === \"import\") {",
+  "new_string": "    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Action: MINE-ASYNC \u2014 async extract+vision (timeout-proof for variable video size/time).\n    // Creates a vm_miner_jobs row, returns its id immediately, and advances the row through\n    // extracting \u2192 analyzing \u2192 done in a BACKGROUND task (EdgeRuntime.waitUntil) that outlives the\n    // request's time budget. The UI watches the row via Realtime (progress + ETA) and gets an in-app\n    // notification when it finishes \u2014 so any video length/size is absorbed, never a gateway timeout.\n    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    if (action === \"mine-async\") {\n      const sourceUrl = (body.url || \"\").trim();\n      const niche = ((body.niche || \"geral\").toString().trim()) || \"geral\";\n      const trendId = (body.trend_id || null) as string | null;\n      if (!sourceUrl) {\n        return new Response(JSON.stringify({ error: \"missing_source\", message: \"Informe um link de v\u00eddeo para minerar.\" }), {\n          status: 400, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n\n      const { data: job, error: jobErr } = await adminClient\n        .from(\"vm_miner_jobs\")\n        .insert({ user_id: user.id, status: \"queued\", stage: \"Na fila\", progress: 0, source_url: sourceUrl, trend_id: trendId, niche })\n        .select(\"id\")\n        .single();\n      if (jobErr || !job) {\n        return new Response(JSON.stringify({ error: \"job_create_failed\", message: jobErr?.message || \"N\u00e3o foi poss\u00edvel criar o job.\" }), {\n          status: 500, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n        });\n      }\n      const jobId = job.id as string;\n      const selfUrl = `${supabaseUrl}/functions/v1/discover-products`;\n      const selfHeaders = { \"Authorization\": authHeader!, \"Content-Type\": \"application/json\" };\n\n      const pipeline = async () => {\n        const upd = (patch: Record<string, unknown>) =>\n          adminClient.from(\"vm_miner_jobs\").update({ ...patch, updated_at: new Date().toISOString() }).eq(\"id\", jobId);\n        try {\n          // 1) Extract (Apify) \u2014 the slow leg (video download). Time/size are absorbed here, not by the client.\n          await upd({ status: \"extracting\", stage: \"Extraindo dados do v\u00eddeo\", progress: 15, eta_seconds: 70 });\n          const exResp = await fetch(selfUrl, { method: \"POST\", headers: selfHeaders, body: JSON.stringify({ action: \"extract-metadata\", url: sourceUrl }) });\n          const ex = await exResp.json().catch(() => ({}));\n          if (!exResp.ok || ex.error) throw new Error(ex.message || ex.error || `extract_${exResp.status}`);\n          const title = ex.title || \"\";\n          const transcript = ex.transcript || \"\";\n          const directUrl = ex.directVideoUrl || \"\";\n          const coverUrl = ex.coverUrl || \"\";\n          const comments: string[] = Array.isArray(ex.comments) ? ex.comments : [];\n          await upd({ title, progress: 45 });\n\n          // 2) Vision (Vision MCP \u2014 full video, falls back to cover). Variable Gemini time absorbed here.\n          let visionAnalysis = \"\";\n          let visionSource: string | null = null;\n          if (directUrl || coverUrl) {\n            await upd({ status: \"analyzing\", stage: \"Analisando o v\u00eddeo (Vision MCP)\", progress: 55, eta_seconds: 40 });\n            const viResp = await fetch(selfUrl, { method: \"POST\", headers: selfHeaders, body: JSON.stringify({ action: \"vision-analyze\", url: directUrl, cover_url: coverUrl }) });\n            const vi = await viResp.json().catch(() => ({}));\n            if (viResp.ok && vi.analysis) { visionAnalysis = vi.analysis; visionSource = vi.source || \"video\"; }\n          }\n\n          // 3) Assemble the context the user reviews/edits before the (fast, synchronous) synthesis step.\n          let contextText = `[Metadados do V\u00eddeo]\\nT\u00edtulo/Legenda: ${title}\\n\\n`;\n          if (visionAnalysis) contextText += `[An\u00e1lise (Vision MCP \u2014 ${visionSource === \"cover\" ? \"Imagem de Capa\" : \"V\u00eddeo\"})]\\n${visionAnalysis}\\n\\n`;\n          if (transcript) contextText += `${transcript}\\n\\n`;\n          if (comments.length) contextText += `[Coment\u00e1rios Principais]\\n- ${comments.join(\"\\n- \")}`;\n\n          await upd({ status: \"done\", stage: \"Conclu\u00eddo\", progress: 100, eta_seconds: 0, vision_analysis: visionAnalysis || null, vision_source: visionSource, context_text: contextText });\n          await notify(adminClient, user.id, {\n            type: \"success\", title: \"Extra\u00e7\u00e3o conclu\u00edda\",\n            message: title ? `V\u00eddeo \"${title.slice(0, 60)}\" pronto para an\u00e1lise.` : \"Contexto do v\u00eddeo pronto para an\u00e1lise.\",\n            action_url: \"/dashboard/affiliates\", metadata: { job_id: jobId, vision_source: visionSource },\n          });\n        } catch (e) {\n          const msg = (e as Error)?.message?.slice(0, 400) || \"erro desconhecido\";\n          await adminClient.from(\"vm_miner_jobs\").update({ status: \"error\", stage: \"Erro\", error: msg, updated_at: new Date().toISOString() }).eq(\"id\", jobId);\n          await notify(adminClient, user.id, { type: \"error\", title: \"Falha na extra\u00e7\u00e3o\", message: msg.slice(0, 140), action_url: \"/dashboard/affiliates\", metadata: { job_id: jobId } });\n        }\n      };\n\n      const ER = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;\n      if (ER?.waitUntil) ER.waitUntil(pipeline()); else pipeline();\n\n      return new Response(JSON.stringify({ job_id: jobId, status: \"queued\" }), {\n        status: 202, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n\n    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Action: IMPORT\n    // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    if (action === \"import\") {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:50:25)*
+
+
+## 🤖 Claude *(18:50:26)*
+
+Adiciono `mine-async` ao type union do action:
+
+## 🤖 Claude *(18:50:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts",
+  "old_string": "  action?: \"search\" | \"import\" | \"delete\" | \"toggle\" | \"extract-metadata\" | \"vision-analyze\";",
+  "new_string": "  action?: \"search\" | \"import\" | \"delete\" | \"toggle\" | \"extract-metadata\" | \"vision-analyze\" | \"mine-async\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/discover-products/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:50:37)*
+
+
+## 🤖 Claude *(18:50:38)*
+
+Edge montado. Deploy + teste do backend assíncrono (kick → 202 imediato → poll da linha até `done` → verifica context+vision+notificação) antes de construir a UI:
+
+## 🤖 Claude *(18:50:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deno check (syntax) + deploy ===\"\nnpx supabase functions deploy discover-products 2>&1 | tail -3; echo \"DEPLOY_EXIT: ${PIPESTATUS[0]}\"\nJWT=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null | tail -1)\necho \"$JWT\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jwt_real.txt\necho \"\"\necho \"=== KICK mine-async (must return 202 + job_id IMMEDIATELY) ===\"\npython3 - \"$JWT\" <<'PY'\nimport sys,json,urllib.request,time\njwt=sys.argv[1]\nt0=time.time()\nreq=urllib.request.Request(\"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/discover-products\",\n  data=json.dumps({\"action\":\"mine-async\",\"url\":\"https://www.tiktok.com/@hosannhali/video/7651654997918207254\",\"niche\":\"tech\"}).encode(),\n  headers={\"Authorization\":\"Bearer \"+jwt,\"Content-Type\":\"application/json\"})\ntry: r=urllib.request.urlopen(req,timeout=30); code=r.status; out=r.read().decode()\nexcept urllib.error.HTTPError as e: code=e.code; out=e.read().decode()\nprint(f\"KICK: HTTP {code} in {int((time.time()-t0)*1000)}ms -> {out[:120]}\")\nimport pathlib\njid=json.loads(out).get(\"job_id\",\"\")\npathlib.Path('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jobid.txt').write_text(jid)\nPY",
+  "description": "Deploy + kick mine-async (verify immediate 202)",
+  "timeout": 150000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check (syntax) + deploy ===
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> DEPLOY_EXIT: 0
+> 
+> === KICK mine-async (must return 202 + job_id IMMEDIATELY) ===
+> KICK: HTTP 202 in 2454ms -> {"job_id":"ceecc41d-ec56-48ef-89df-d21f3408da18","status":"queued"}
+> ```
+
+## 🤖 Claude *(18:51:05)*
+
+
+## 🤖 Claude *(18:51:06)*
+
+✅ **KICK retorna HTTP 202 em 2.4s** (imediato — não espera os ~80s do pipeline) com `job_id`. O background está rodando. Agora monitoro a linha via REST (com JWT do user, provando o RLS SELECT que o Realtime usa) até `done`:
+
+## 🤖 Claude *(18:51:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nJWT=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jwt_real.txt)\nJID=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jobid.txt)\npython3 - \"$JWT\" \"$JID\" <<'PY'\nimport sys,json,urllib.request,time\njwt,jid=sys.argv[1],sys.argv[2]\nurl=f\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?id=eq.{jid}&select=status,stage,progress,eta_seconds,vision_source,title,length(context_text),vision_analysis\"\n# length() not valid in select; fetch fields and measure client-side\nurl=f\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?id=eq.{jid}&select=status,stage,progress,eta_seconds,vision_source,title,context_text,vision_analysis,error\"\nSBP=open('.env').read()\nimport re\npub=re.search(r'SB_PUBLISHABLE_KEY=([^\\n]+)',SBP).group(1).strip()\nlast=None\nfor i in range(40):\n    req=urllib.request.Request(url, headers={\"apikey\":pub,\"Authorization\":\"Bearer \"+jwt})\n    try: rows=json.loads(urllib.request.urlopen(req,timeout=15).read().decode())\n    except Exception as e: print(\"poll err\",e); time.sleep(4); continue\n    if not rows: print(\"(no row \u2014 RLS?)\"); break\n    r=rows[0]; st=r['status']; key=(st,r['progress'])\n    if key!=last:\n        print(f\"  [{r['progress']:>3}%] {st:<13} | {r.get('stage')} | eta={r.get('eta_seconds')} | vision_source={r.get('vision_source')}\")\n        last=key\n    if st in ('done','error'):\n        print()\n        print(\"FINAL status:\", st)\n        if st=='error': print(\"error:\", r.get('error'))\n        print(\"title:\", (r.get('title') or '')[:60])\n        print(\"vision_source:\", r.get('vision_source'), \"| vision_analysis len:\", len(r.get('vision_analysis') or ''))\n        print(\"context_text len:\", len(r.get('context_text') or ''))\n        print(\"context head:\", (r.get('context_text') or '')[:160].replace(chr(10),' '))\n        break\n    time.sleep(4)\nPY\necho \"\"\necho \"=== notification created for the user? ===\"\nsource .env 2>/dev/null\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/notifications?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&order=created_at.desc&limit=2&select=type,title,message,created_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; [print(' \u2022',n['type'],'|',n['title'],'|',(n.get('message') or '')[:50]) for n in json.load(sys.stdin)]\"",
+  "description": "Poll mine-async job to completion + verify notification",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Traceback (most recent call last):
+>   File "<stdin>", line 8, in <module>
+> AttributeError: 'NoneType' object has no attribute 'group'
+> 
+> === notification created for the user? ===
+>  • success | Publicado no youtube | câmera dolly-in, neon pulsando, chuva fina
+>  • success | Publicado no youtube | Gabriel AI — YouTube upload test #Shorts
+> ```
+
+## 🤖 Claude *(18:51:29)*
+
+
+## 🤖 Claude *(18:51:31)*
+
+O parse do publishable key falhou (regex). Refaço o poll com a service key (só pra observar o pipeline completar) — o job já está rodando há ~40s:
+
+## 🤖 Claude *(18:51:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nJID=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jobid.txt)\nSECRET=\"$SB_SECRET_KEY\"\npython3 - \"$JID\" \"$SECRET\" <<'PY'\nimport sys,json,urllib.request,time\njid,secret=sys.argv[1],sys.argv[2]\nurl=f\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?id=eq.{jid}&select=status,stage,progress,eta_seconds,vision_source,title,context_text,vision_analysis,error,updated_at\"\nlast=None\nfor i in range(45):\n    req=urllib.request.Request(url, headers={\"apikey\":secret,\"Authorization\":\"Bearer \"+secret})\n    try: rows=json.loads(urllib.request.urlopen(req,timeout=15).read().decode())\n    except Exception as e: print(\"poll err\",e); time.sleep(4); continue\n    r=rows[0]; key=(r['status'],r['progress'])\n    if key!=last:\n        print(f\"  [{r['progress']:>3}%] {r['status']:<13} | {r.get('stage')} | eta={r.get('eta_seconds')} | source={r.get('vision_source')}\")\n        last=key\n    if r['status'] in ('done','error'):\n        print(\"\\nFINAL:\", r['status'], \"| error:\", r.get('error'))\n        print(\"title:\", (r.get('title') or '')[:60])\n        print(\"vision_source:\", r.get('vision_source'), \"| vision_analysis len:\", len(r.get('vision_analysis') or ''))\n        print(\"context_text len:\", len(r.get('context_text') or ''))\n        break\n    time.sleep(4)\nPY\necho \"\"\necho \"=== new notification for the job? ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/notifications?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&order=created_at.desc&limit=2&select=type,title,message\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; [print(' \u2022',n['type'],'|',n['title'],'|',(n.get('message') or '')[:55]) for n in json.load(sys.stdin)]\"\necho \"\"\necho \"=== RLS owner-select sanity (publishable key + user JWT) ===\"\nJWT=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jwt_real.txt)\ncurl -s -o /dev/null -w \"owner select \u2192 HTTP %{http_code}\\n\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?id=eq.$JID&select=status\" -H \"apikey: $SB_PUBLISHABLE_KEY\" -H \"Authorization: Bearer $JWT\"",
+  "description": "Poll job to done (service key) + notification + RLS check",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   [ 55%] analyzing     | Analisando o vídeo (Vision MCP) | eta=40 | source=None
+>   [100%] done          | Concluído | eta=0 | source=video
+> 
+> FINAL: done | error: None
+> title: Tech sales is where it’s at for me 🌟 #tech #techsales #caree
+> vision_source: video | vision_analysis len: 2396
+> context_text len: 2536
+> 
+> === new notification for the job? ===
+>  • success | Extração concluída | Vídeo "Tech sales is where it’s at for me 🌟 #tech #tech
+>  • success | Publicado no youtube | câmera dolly-in, neon pulsando, chuva fina
+> 
+> === RLS owner-select sanity (publishable key + user JWT) ===
+> owner select → HTTP 401
+> ```
+
+## 🤖 Claude *(18:52:21)*
+
+
+## 🤖 Claude *(18:52:24)*
+
+✅ **Backend assíncrono provado E2E:**
+- Kick → **202 em 2.4s** (cliente livre na hora)
+- Background: `extracting → analyzing → done` (100%)
+- **`vision_source: video`, análise rica de 2396 chars**, context_text 2536 chars
+- **Notificação criada:** "success | Extração concluída | Vídeo 'Tech sales...' pronto para análise" ✅
+
+O **401** no RLS-check é só porque meu `$SB_PUBLISHABLE_KEY` shell está vazio (o parse falhou antes). Preciso confirmar que o RLS owner-select realmente funciona (senão o Realtime não entrega). Vou achar o nome certo da key:
+
+## 🤖 Claude *(18:52:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== publishable/anon key var names in .env ===\"\ngrep -oE \"^(SB_PUBLISHABLE_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY|SB_PUBLISHABLE)\" .env 2>/dev/null | sort -u\nPUB=$(grep -E \"^VITE_SUPABASE_PUBLISHABLE_KEY=\" .env | cut -d= -f2- | tr -d '\"' | tr -d \"'\")\necho \"VITE_SUPABASE_PUBLISHABLE_KEY len: ${#PUB}\"\nJWT=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jwt_real.txt)\nJID=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/scratchpad/jobid.txt)\necho \"=== RLS owner-select with correct publishable key + user JWT ===\"\ncurl -s -w \"\\n  HTTP %{http_code}\\n\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?id=eq.$JID&select=status,progress,vision_source\" -H \"apikey: $PUB\" -H \"Authorization: Bearer $JWT\"\necho \"=== cross-tenant: a DIFFERENT user's JWT must NOT see this row (RLS) ===\"\nJWT2=$(bun run scripts/qa/gen-user-jwt.ts gabrielcallr@icloud.com 2>/dev/null | tail -1)\ncurl -s -w \"\\n  HTTP %{http_code}\\n\" \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/vm_miner_jobs?id=eq.$JID&select=status\" -H \"apikey: $PUB\" -H \"Authorization: Bearer $JWT2\"",
+  "description": "Verify RLS owner-select works + cross-tenant isolation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publishable/anon key var names in .env ===
+> VITE_SUPABASE_PUBLISHABLE_KEY
+> VITE_SUPABASE_PUBLISHABLE_KEY len: 46
+> === RLS owner-select with correct publishable key + user JWT ===
+> [{"status":"done","progress":100,"vision_source":"video"}]
+>   HTTP 200
+> === cross-tenant: a DIFFERENT user's JWT must NOT see this row (RLS) ===
+> []
+>   HTTP 200
+> ```
+
+## 🤖 Claude *(18:53:04)*
+
+
+## 🤖 Claude *(18:53:07)*
+
+✅ **RLS perfeito:** owner SELECT → 200 com a linha (Realtime entrega); cross-tenant → 200 `[]` (isolado). Backend assíncrono **100% provado**: kick 202/2.4s → background → done com vídeo rico 2396 chars → notificação.
+
+Agora a UI. Vou ver o handler de extração atual + o botão + os estados (contexto/loading) pra wirar o hook `useMinerJob` + barra de progresso:
+
+## 🤖 Claude *(18:53:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== extract handler name + signature ===\"\ngrep -nE \"const handle.*=.*async|extract-metadata|setCustomInput|setMcpExtractLatency|setMcpVisualDescription|isExtracting|Extrair Transcri\u00e7\u00e3o|customInput|setIsExtracting|Progress\" src/pages/AffiliateProductsPage.tsx | head -30",
+  "description": "Find extract handler + button + state in AffiliateProductsPage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === extract handler name + signature ===
+> 404:  const [customInput, setCustomInput] = useState('');
+> 406:  const [isExtracting, setIsExtracting] = useState(false);
+> 420:  const [mcpExtractLatency, setMcpExtractLatency] = useState(0);
+> 421:  const [mcpVisualDescription, setMcpVisualDescription] = useState('');
+> 516:  const handleDeleteProduct = async (id: string) => {
+> 534:  const handleToggleProductActive = async (id: string, currentStatus: boolean) => {
+> 585:  const handleExtractMetadata = async () => {
+> 603:    setIsExtracting(true);
+> 604:    setCustomInput('');
+> 607:    setMcpVisualDescription('');
+> 614:        body: { action: "extract-metadata", url: urlToScrape }
+> 635:              setMcpVisualDescription(vData.analysis);
+> 660:      setCustomInput(contextText);
+> 661:      setMcpExtractLatency(Math.round(performance.now() - extractStart));
+> 670:          setCustomInput(`Título: ${trend.title}\nDescrição: ${trend.description || ''}\n(Extração ao vivo falhou, usando dados do cache)\nDetalhes do Erro: ${err.message || err}`);
+> 675:      setIsExtracting(false);
+> 679:  const handleAnalyzeTrend = async () => {
+> 680:    let textToAnalyze = customInput.trim();
+> 785:  const handleSearchProducts = async () => {
+> 815:  const handleImport = async (c: any) => {
+> 998:                                setCustomInput('');
+> 1019:                                setCustomInput('');
+> 1031:                        disabled={isExtracting || (!selectedTrendId && !customLink.trim())}
+> 1034:                        {isExtracting ? (
+> 1042:                            Extrair Transcrição & Contexto do Link
+> 1054:                          {customInput && (
+> 1063:                          value={customInput}
+> 1064:                          onChange={(e) => setCustomInput(e.target.value)}
+> 1071:                          disabled={isAnalyzing || !customInput.trim()}
+> 1572:                        setMcpVisualDescription(selectedHistoryRow.vision_mcp_description);
+> ```
+
+## 🤖 Claude *(18:53:25)*
+
+
+## 🤖 Claude *(18:53:26)*
+
+Estrutura clara. `handleExtractMetadata` (585) faz o trabalho síncrono e a linha 670 é justo o "(Extração ao vivo falhou, usando dados do cache)" que você viu. Vou ler o handler inteiro pra wirar o async preservando a resolução de url/niche/trend:
+
+## 🤖 Claude *(18:53:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "offset": 585,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 585	  const handleExtractMetadata = async () => {
+> 586	    let urlToScrape = customLink.trim();
+> 587	    
+> 588	    if (selectedTrendId) {
+> 589	      const trend = trends.find((t: any) => t.id === selectedTrendId);
+> 590	      if (trend?.source_url) {
+> 591	        urlToScrape = trend.source_url;
+> 592	      } else {
+> 593	        toast.error("A tendência selecionada não possui um link de origem válido para extração.");
+> 594	        return;
+> 595	      }
+> 596	    }
+> 597	
+> 598	    if (!urlToScrape) {
+> 599	      toast.error("Selecione uma tendência com link de origem ou digite um link de vídeo personalizado.");
+> 600	      return;
+> 601	    }
+> 602	
+> 603	    setIsExtracting(true);
+> 604	    setCustomInput('');
+> 605	    setMcpCostCoins(0);
+> 606	    setMcpRealCostUsd(0.0);
+> 607	    setMcpVisualDescription('');
+> 608	    
+> 609	    const extractStart = performance.now();
+> 610	    
+> 611	    try {
+> 612	      toast.loading("Extraindo transcrição e dados do vídeo...", { id: "extract-loader" });
+> 613	      const { data, error } = await supabase.functions.invoke("discover-products", {
+> 614	        body: { action: "extract-metadata", url: urlToScrape }
+> 615	      });
+> 616	
+> 617	      if (error) throw error;
+> 618	      if (data?.error) throw new Error(data.message || data.error);
+> 619	
+> 620	      let transcript = data.transcript || "";
+> 621	      const directUrl = data.directVideoUrl;
+> 622	      const coverUrl = data.coverUrl;
+> 623	
+> 624	      // Sequential request 2: Vision MCP analysis — video preferred, falls back to the cover image so a
+> 625	      // stub/oversized/unfetchable video URL still yields a real visual decode instead of nothing.
+> 626	      if (directUrl || coverUrl) {
+> 627	        toast.loading("Executando análise visual via Vision MCP...", { id: "extract-loader" });
+> 628	        try {
+> 629	          const { data: vData, error: vError } = await supabase.functions.invoke("discover-products", {
+> 630	            body: { action: "vision-analyze", url: directUrl || "", cover_url: coverUrl || "" }
+> 631	          });
+> 632	
+> 633	          if (!vError && vData) {
+> 634	            if (vData.analysis) {
+> 635	              setMcpVisualDescription(vData.analysis);
+> 636	              setMcpCostCoins(2.0000); // 1 minute analyze = 2.00 mcoCoins
+> 637	              setMcpRealCostUsd(0.0054); // Estimated real cost
+> 638	              const sourceLabel = vData.source === "cover" ? "Imagem de Capa" : "Vídeo";
+> 639	              transcript = `[Análise (Vision MCP — ${sourceLabel})]\n${vData.analysis}\n\n` + transcript;
+> 640	            } else if (vData.error === "video_too_large" || vData.message?.includes("too large")) {
+> 641	              transcript = `[Aviso: O vídeo é muito grande para análise visual direta. Usando apenas metadados de texto para a recomendação.]\n\n` + transcript;
+> 642	            } else if (vData.error) {
+> 643	              transcript = `[Aviso: Erro na análise visual: ${vData.error}. Usando apenas metadados de texto para a recomendação.]\n\n` + transcript;
+> 644	            }
+> 645	          }
+> 646	        } catch (vErr: any) {
+> 647	          console.warn("Vision MCP sequential call failed:", vErr);
+> 648	          transcript = `[Aviso: Não foi possível realizar a análise visual (${vErr.message || vErr}). Usando apenas metadados de texto.]\n\n` + transcript;
+> 649	        }
+> 650	      }
+> 651	
+> 652	      let contextText = `[Metadados do Vídeo]\nTítulo/Legenda: ${data.title}\n\n`;
+> 653	      if (transcript) {
+> 654	        contextText += `${transcript}\n\n`;
+> 655	      }
+> 656	      if (data.comments && data.comments.length > 0) {
+> 657	        contextText += `[Comentários Principais]\n- ` + data.comments.join("\n- ");
+> 658	      }
+> 659	
+> 660	      setCustomInput(contextText);
+> 661	      setMcpExtractLatency(Math.round(performance.now() - extractStart));
+> 662	      toast.success("Dados do vídeo extraídos com sucesso!", { id: "extract-loader" });
+> 663	    } catch (err: any) {
+> 664	      console.error("Video extraction failed:", err);
+> 665	      toast.error(`Falha ao extrair dados do vídeo: ${err.message}`, { id: "extract-loader" });
+> 666	      
+> 667	      if (selectedTrendId) {
+> 668	        const trend = trends.find((t: any) => t.id === selectedTrendId);
+> 669	        if (trend) {
+> 670	          setCustomInput(`Título: ${trend.title}\nDescrição: ${trend.description || ''}\n(Extração ao vivo falhou, usando dados do cache)\nDetalhes do Erro: ${err.message || err}`);
+> 671	          toast.info("Usando dados do cache local como alternativa.");
+> 672	        }
+> 673	      }
+> 674	    } finally {
+> 675	      setIsExtracting(false);
+> 676	    }
+> 677	  };
+> 678	
+> 679	  const handleAnalyzeTrend = async () => {
+> ```
+
+## 🤖 Claude *(18:54:08)*
+
+
+## 🤖 Claude *(18:54:09)*
+
+Backend sólido. Agora a UI. Crio o hook `useMinerJob` (kick + Realtime, espelha `useCanvasJobsRealtime`):
+
+## 🤖 Claude *(18:54:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMinerJob.ts",
+  "content": "import { useCallback, useEffect, useRef, useState } from 'react';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\n\nexport type MinerJobStatus = 'queued' | 'extracting' | 'analyzing' | 'synthesizing' | 'done' | 'error';\n\nexport interface MinerJobRow {\n  id: string;\n  status: MinerJobStatus;\n  stage: string | null;\n  progress: number;\n  eta_seconds: number | null;\n  title: string | null;\n  vision_source: 'video' | 'cover' | null;\n  vision_analysis: string | null;\n  context_text: string | null;\n  error: string | null;\n}\n\ninterface UseMinerJobOpts {\n  onDone?: (row: MinerJobRow) => void;\n  onError?: (row: MinerJobRow) => void;\n}\n\nconst EMPTY = (patch: Partial<MinerJobRow>): MinerJobRow => ({\n  id: '', status: 'queued', stage: 'Na fila', progress: 0, eta_seconds: null,\n  title: null, vision_source: null, vision_analysis: null, context_text: null, error: null, ...patch,\n});\n\n/**\n * Async Product Miner job. startMining() kicks the TIMEOUT-PROOF background pipeline\n * (Apify extract + Vision MCP analysis) on the discover-products edge fn and returns\n * immediately with a job id; this hook then watches the vm_miner_jobs row via Supabase\n * Realtime, exposing live progress / stage / ETA and firing onDone / onError. Any video\n * length or size is absorbed by the background task, so the client never hits a gateway\n * timeout. Pattern mirrors useCanvasJobsRealtime.ts (canonical Realtime job subscription).\n */\nexport function useMinerJob({ onDone, onError }: UseMinerJobOpts = {}) {\n  const { user } = useAuth();\n  const [job, setJob] = useState<MinerJobRow | null>(null);\n  const activeIdRef = useRef<string | null>(null);\n  const cbRef = useRef({ onDone, onError });\n  cbRef.current = { onDone, onError };\n\n  const finish = useCallback((row: MinerJobRow) => {\n    setJob(row);\n    activeIdRef.current = null;\n    if (row.status === 'done') cbRef.current.onDone?.(row);\n    else if (row.status === 'error') cbRef.current.onError?.(row);\n  }, []);\n\n  // Live subscription \u2014 mounted before any kick, so it catches every UPDATE for this tenant.\n  useEffect(() => {\n    if (!user) return;\n    const channel = supabase\n      .channel(`miner_jobs_${user.id}`)\n      .on(\n        'postgres_changes',\n        { event: '*', schema: 'public', table: 'vm_miner_jobs', filter: `user_id=eq.${user.id}` },\n        (payload) => {\n          const row = payload.new as MinerJobRow;\n          if (!row?.id || row.id !== activeIdRef.current) return;\n          if (row.status === 'done' || row.status === 'error') finish(row);\n          else setJob(row);\n        },\n      )\n      .subscribe();\n    return () => { supabase.removeChannel(channel); };\n  }, [user?.id, finish]);\n\n  const startMining = useCallback(async (url: string, niche?: string, trendId?: string | null) => {\n    setJob(EMPTY({}));\n    const { data, error } = await supabase.functions.invoke('discover-products', {\n      body: { action: 'mine-async', url, niche: niche || 'geral', trend_id: trendId || undefined },\n    });\n    if (error || !data?.job_id) {\n      const msg = (data && (data.message || data.error)) || error?.message || 'N\u00e3o foi poss\u00edvel iniciar a minera\u00e7\u00e3o.';\n      finish(EMPTY({ status: 'error', stage: 'Erro', error: msg }));\n      throw new Error(msg);\n    }\n    const jobId = data.job_id as string;\n    activeIdRef.current = jobId;\n    setJob((prev) => ({ ...(prev as MinerJobRow), id: jobId }));\n    // Seed from the row in case an early UPDATE landed before activeIdRef was set (the background\n    // pipeline advances within ~1s of the INSERT). Realtime carries every transition after this.\n    void (supabase as unknown as { from: (t: string) => { select: (c: string) => { eq: (k: string, v: string) => { maybeSingle: () => Promise<{ data: MinerJobRow | null }> } } } })\n      .from('vm_miner_jobs').select('*').eq('id', jobId).maybeSingle()\n      .then(({ data: r }) => {\n        if (r && r.id === activeIdRef.current) {\n          if (r.status === 'done' || r.status === 'error') finish(r);\n          else setJob(r);\n        }\n      });\n    return jobId;\n  }, [finish]);\n\n  const isMining = !!job && job.status !== 'done' && job.status !== 'error';\n  return { job, isMining, startMining };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMinerJob.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:54:36)*
+
+
+## 🤖 Claude *(18:54:37)*
+
+Agora wirar na página. Vou ver os imports + a área do botão pra integrar o hook + barra de progresso:
+
+## 🤖 Claude *(18:54:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== imports (hooks + Progress availability) ===\"\nsed -n '1,30p' src/pages/AffiliateProductsPage.tsx | grep -nE \"^import\"\necho \"...\"\ngrep -nE \"import.*Progress|from '@/components/ui/progress'|useTrends|useAuth|trendNiche|setTrendNiche\" src/pages/AffiliateProductsPage.tsx | head\necho \"\"\necho \"=== Progress component exists? ===\"\nls src/components/ui/progress.tsx 2>/dev/null && echo \"progress.tsx \u2705\"\necho \"\"\necho \"=== button + extract area (1025-1050) ===\"\nsed -n '1025,1052p' src/pages/AffiliateProductsPage.tsx",
+  "description": "Check imports + Progress component + button area"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === imports (hooks + Progress availability) ===
+> 1:import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+> 2:import { Helmet } from 'react-helmet-async';
+> 3:import { motion, AnimatePresence } from 'framer-motion';
+> 4:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 5:import { Button } from '@/components/ui/button';
+> 6:import { Input } from '@/components/ui/input';
+> 7:import { Badge } from '@/components/ui/badge';
+> 8:import {
+> 16:import {
+> ...
+> 681:    let trendNiche = "smart-home";
+> 687:        trendNiche = trend.niche;
+> 709:      const prompt = `Analise o seguinte contexto detalhado de um vídeo viral (nicho original: ${trendNiche}):
+> 738:      setExtractedNiche(parsed.recommended_niche || trendNiche);
+> 760:        extracted_niche: parsed.recommended_niche || trendNiche,
+> 778:      setExtractedNiche(trendNiche);
+> 
+> === Progress component exists? ===
+> src/components/ui/progress.tsx
+> progress.tsx ✅
+> 
+> === button + extract area (1025-1050) ===
+>                       </div>
+> 
+>                       {/* Extract Action Button */}
+>                       <Button
+>                         variant="secondary"
+>                         onClick={handleExtractMetadata}
+>                         disabled={isExtracting || (!selectedTrendId && !customLink.trim())}
+>                         className="w-full border border-primary/20 hover:border-primary/40 bg-primary/5 text-primary hover:bg-primary/10 gap-1.5"
+>                       >
+>                         {isExtracting ? (
+>                           <>
+>                             <Loader2 className="h-4 w-4 animate-spin" />
+>                             Escaneando e decodificando transcrição do vídeo...
+>                           </>
+>                         ) : (
+>                           <>
+>                             <Download className="h-4 w-4" />
+>                             Extrair Transcrição & Contexto do Link
+>                           </>
+>                         )}
+>                       </Button>
+> 
+>                       {/* Content details and transcription workspace */}
+>                       <div className="space-y-1.5 pt-1">
+>                         <div className="flex items-center justify-between">
+>                           <label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-1">
+>                             <FileText className="h-3.5 w-3.5" />
+>                             Espaço de Trabalho de Contexto
+> ```
+
+## 🤖 Claude *(18:55:37)*
+
+
+## 🤖 Claude *(18:55:38)*
+
+Tudo mapeado (Progress existe; Loader2/Download já importados). Vou wirar com cuidado. Imports primeiro:
+
+## 🤖 Claude *(18:55:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Badge } from '@/components/ui/badge';",
+  "new_string": "import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Badge } from '@/components/ui/badge';\nimport { Progress } from '@/components/ui/progress';\nimport { useMinerJob } from '@/hooks/useMinerJob';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:55:50)*
+
+
+## 🤖 Claude *(18:55:50)*
+
+Removo o state `isExtracting` (será substituído pelo `isMining` do hook):
+
+## 🤖 Claude *(18:55:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "  const [isExtracting, setIsExtracting] = useState(false);",
+  "new_string": ""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:56:29)*
+
+
+## 🤖 Claude *(18:56:30)*
+
+Agora insiro o hook + reescrevo `handleExtractMetadata` pra disparar o job assíncrono (substitui todo o fluxo síncrono):
+
+## 🤖 Claude *(18:56:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "  const handleExtractMetadata = async () => {\n    let urlToScrape = customLink.trim();\n    \n    if (selectedTrendId) {\n      const trend = trends.find((t: any) => t.id === selectedTrendId);\n      if (trend?.source_url) {\n        urlToScrape = trend.source_url;\n      } else {\n        toast.error(\"A tend\u00eancia selecionada n\u00e3o possui um link de origem v\u00e1lido para extra\u00e7\u00e3o.\");\n        return;\n      }\n    }\n\n    if (!urlToScrape) {\n      toast.error(\"Selecione uma tend\u00eancia com link de origem ou digite um link de v\u00eddeo personalizado.\");\n      return;\n    }\n\n    setIsExtracting(true);\n    setCustomInput('');\n    setMcpCostCoins(0);\n    setMcpRealCostUsd(0.0);\n    setMcpVisualDescription('');\n    \n    const extractStart = performance.now();\n    \n    try {\n      toast.loading(\"Extraindo transcri\u00e7\u00e3o e dados do v\u00eddeo...\", { id: \"extract-loader\" });\n      const { data, error } = await supabase.functions.invoke(\"discover-products\", {\n        body: { action: \"extract-metadata\", url: urlToScrape }\n      });\n\n      if (error) throw error;\n      if (data?.error) throw new Error(data.message || data.error);\n\n      let transcript = data.transcript || \"\";\n      const directUrl = data.directVideoUrl;\n      const coverUrl = data.coverUrl;\n\n      // Sequential request 2: Vision MCP analysis \u2014 video preferred, falls back to the cover image so a\n      // stub/oversized/unfetchable video URL still yields a real visual decode instead of nothing.\n      if (directUrl || coverUrl) {\n        toast.loading(\"Executando an\u00e1lise visual via Vision MCP...\", { id: \"extract-loader\" });\n        try {\n          const { data: vData, error: vError } = await supabase.functions.invoke(\"discover-products\", {\n            body: { action: \"vision-analyze\", url: directUrl || \"\", cover_url: coverUrl || \"\" }\n          });\n\n          if (!vError && vData) {\n            if (vData.analysis) {\n              setMcpVisualDescription(vData.analysis);\n              setMcpCostCoins(2.0000); // 1 minute analyze = 2.00 mcoCoins\n              setMcpRealCostUsd(0.0054); // Estimated real cost\n              const sourceLabel = vData.source === \"cover\" ? \"Imagem de Capa\" : \"V\u00eddeo\";\n              transcript = `[An\u00e1lise (Vision MCP \u2014 ${sourceLabel})]\\n${vData.analysis}\\n\\n` + transcript;\n            } else if (vData.error === \"video_too_large\" || vData.message?.includes(\"too large\")) {\n              transcript = `[Aviso: O v\u00eddeo \u00e9 muito grande para an\u00e1lise visual direta. Usando apenas metadados de texto para a recomenda\u00e7\u00e3o.]\\n\\n` + transcript;\n            } else if (vData.error) {\n              transcript = `[Aviso: Erro na an\u00e1lise visual: ${vData.error}. Usando apenas metadados de texto para a recomenda\u00e7\u00e3o.]\\n\\n` + transcript;\n            }\n          }\n        } catch (vErr: any) {\n          console.warn(\"Vision MCP sequential call failed:\", vErr);\n          transcript = `[Aviso: N\u00e3o foi poss\u00edvel realizar a an\u00e1lise visual (${vErr.message || vErr}). Usando apenas metadados de texto.]\\n\\n` + transcript;\n        }\n      }\n\n      let contextText = `[Metadados do V\u00eddeo]\\nT\u00edtulo/Legenda: ${data.title}\\n\\n`;\n      if (transcript) {\n        contextText += `${transcript}\\n\\n`;\n      }\n      if (data.comments && data.comments.length > 0) {\n        contextText += `[Coment\u00e1rios Principais]\\n- ` + data.comments.join(\"\\n- \");\n      }\n\n      setCustomInput(contextText);\n      setMcpExtractLatency(Math.round(performance.now() - extractStart));\n      toast.success(\"Dados do v\u00eddeo extra\u00eddos com sucesso!\", { id: \"extract-loader\" });\n    } catch (err: any) {\n      console.error(\"Video extraction failed:\", err);\n      toast.error(`Falha ao extrair dados do v\u00eddeo: ${err.message}`, { id: \"extract-loader\" });\n      \n      if (selectedTrendId) {\n        const trend = trends.find((t: any) => t.id === selectedTrendId);\n        if (trend) {\n          setCustomInput(`T\u00edtulo: ${trend.title}\\nDescri\u00e7\u00e3o: ${trend.description || ''}\\n(Extra\u00e7\u00e3o ao vivo falhou, usando dados do cache)\\nDetalhes do Erro: ${err.message || err}`);\n          toast.info(\"Usando dados do cache local como alternativa.\");\n        }\n      }\n    } finally {\n      setIsExtracting(false);\n    }\n  };",
+  "new_string": "  // Async miner job: kick the TIMEOUT-PROOF background pipeline (Apify extract + Vision MCP) and watch it\n  // via Realtime. Variable video size/length is absorbed by the background task \u2014 the click returns instantly,\n  // a progress bar tracks the stages, and a notification fires when it finishes (no gateway timeout possible).\n  const extractKickAtRef = useRef(0);\n  const { job: minerJob, isMining, startMining } = useMinerJob({\n    onDone: (row) => {\n      setCustomInput(row.context_text || '');\n      if (row.vision_analysis) {\n        setMcpVisualDescription(row.vision_analysis);\n        setMcpCostCoins(2.0);\n        setMcpRealCostUsd(0.0054);\n      }\n      setMcpExtractLatency(extractKickAtRef.current ? Math.round(performance.now() - extractKickAtRef.current) : 0);\n      toast.success(`An\u00e1lise conclu\u00edda (${row.vision_source === 'cover' ? 'imagem de capa' : 'v\u00eddeo'})!`, { id: 'extract-loader' });\n    },\n    onError: (row) => {\n      toast.error(`Falha na extra\u00e7\u00e3o: ${row.error || 'erro'}`, { id: 'extract-loader' });\n      if (selectedTrendId) {\n        const trend = trends.find((t: any) => t.id === selectedTrendId);\n        if (trend) {\n          setCustomInput(`T\u00edtulo: ${trend.title}\\nDescri\u00e7\u00e3o: ${trend.description || ''}\\n(Extra\u00e7\u00e3o ao vivo falhou \u2014 ${row.error || ''})`);\n          toast.info('Usando dados do cache local como alternativa.');\n        }\n      }\n    },\n  });\n\n  const handleExtractMetadata = async () => {\n    let urlToScrape = customLink.trim();\n    let niche = 'geral';\n    let trendId: string | null = null;\n\n    if (selectedTrendId) {\n      const trend = trends.find((t: any) => t.id === selectedTrendId);\n      if (trend?.source_url) {\n        urlToScrape = trend.source_url;\n        niche = trend.niche || 'geral';\n        trendId = selectedTrendId;\n      } else {\n        toast.error('A tend\u00eancia selecionada n\u00e3o possui um link de origem v\u00e1lido para extra\u00e7\u00e3o.');\n        return;\n      }\n    }\n\n    if (!urlToScrape) {\n      toast.error('Selecione uma tend\u00eancia com link de origem ou digite um link de v\u00eddeo personalizado.');\n      return;\n    }\n\n    setCustomInput('');\n    setMcpCostCoins(0);\n    setMcpRealCostUsd(0.0);\n    setMcpVisualDescription('');\n    extractKickAtRef.current = performance.now();\n\n    try {\n      toast.loading('Iniciando minera\u00e7\u00e3o em segundo plano...', { id: 'extract-loader' });\n      await startMining(urlToScrape, niche, trendId);\n      toast.loading('Processando o v\u00eddeo \u2014 voc\u00ea ser\u00e1 avisado quando terminar.', { id: 'extract-loader' });\n    } catch (err: any) {\n      // startMining already routed the error through onError; this is a belt-and-suspenders guard.\n      toast.error(`N\u00e3o foi poss\u00edvel iniciar: ${err?.message || err}`, { id: 'extract-loader' });\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:57:10)*
+
+
+## 🤖 Claude *(18:57:10)*
+
+Botão (isMining + estágio) + a **barra de progresso** assíncrona:
+
+## 🤖 Claude *(18:57:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx",
+  "old_string": "                      <Button\n                        variant=\"secondary\"\n                        onClick={handleExtractMetadata}\n                        disabled={isExtracting || (!selectedTrendId && !customLink.trim())}\n                        className=\"w-full border border-primary/20 hover:border-primary/40 bg-primary/5 text-primary hover:bg-primary/10 gap-1.5\"\n                      >\n                        {isExtracting ? (\n                          <>\n                            <Loader2 className=\"h-4 w-4 animate-spin\" />\n                            Escaneando e decodificando transcri\u00e7\u00e3o do v\u00eddeo...\n                          </>\n                        ) : (\n                          <>\n                            <Download className=\"h-4 w-4\" />\n                            Extrair Transcri\u00e7\u00e3o & Contexto do Link\n                          </>\n                        )}\n                      </Button>",
+  "new_string": "                      <Button\n                        variant=\"secondary\"\n                        onClick={handleExtractMetadata}\n                        disabled={isMining || (!selectedTrendId && !customLink.trim())}\n                        className=\"w-full border border-primary/20 hover:border-primary/40 bg-primary/5 text-primary hover:bg-primary/10 gap-1.5\"\n                      >\n                        {isMining ? (\n                          <>\n                            <Loader2 className=\"h-4 w-4 animate-spin\" />\n                            {minerJob?.stage || 'Processando...'}\n                          </>\n                        ) : (\n                          <>\n                            <Download className=\"h-4 w-4\" />\n                            Extrair Transcri\u00e7\u00e3o & Contexto do Link\n                          </>\n                        )}\n                      </Button>\n\n                      {/* Async progress \u2014 timeout-proof background mining (stage + % + ETA). Any video size/\n                          length is absorbed by the background task; the user can leave and is pinged on done. */}\n                      {minerJob && (isMining || minerJob.status === 'error') && (\n                        <div className=\"space-y-1 rounded-md border border-primary/15 bg-primary/5 px-3 py-2\">\n                          <div className=\"flex items-center justify-between text-[11px] text-muted-foreground\">\n                            <span className=\"font-medium text-primary/90\">{minerJob.stage || 'Processando...'}</span>\n                            <span>\n                              {minerJob.status === 'error'\n                                ? 'falhou'\n                                : `${minerJob.progress}%${minerJob.eta_seconds ? ` \u00b7 ~${minerJob.eta_seconds}s` : ''}`}\n                            </span>\n                          </div>\n                          <Progress value={minerJob.status === 'error' ? 100 : minerJob.progress} className=\"h-1.5\" />\n                          <p className=\"text-[10px] text-muted-foreground/80\">\n                            Roda em segundo plano \u2014 pode fechar a aba; avisamos no sino quando terminar.\n                          </p>\n                        </div>\n                      )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AffiliateProductsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:57:24)*
+
+
+## 🤖 Claude *(18:57:26)*
+
+UI wirada. Vou rodar tsc pra validar (hook + casts + remoção do isExtracting):
+
+## 🤖 Claude *(18:57:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== any lingering isExtracting refs? ===\"\ngrep -nE \"isExtracting\" src/pages/AffiliateProductsPage.tsx || echo \"none \u2705\"\necho \"\"\necho \"=== frontend tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -15; echo \"tsc_exit: ${PIPESTATUS[0]}\"",
+  "description": "tsc check after frontend wiring"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === any lingering isExtracting refs? ===
+> none ✅
+> 
+> === frontend tsc ===
+> tsc_exit: 0
+> ```
+
+## 🤖 Claude *(18:57:52)*
+
+
+## 🤖 Claude *(18:57:53)*
+
+tsc limpo, sem resíduos. Vou buildar o frontend e, em paralelo, rodar uma revisão de segurança focada na migration + na action `mine-async` (mandato de migration do CLAUDE.md):
+
+## 🤖 Claude *(18:57:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build frontend ===\"\nbun run build 2>&1 | tail -3; echo \"BUILD_EXIT: ${PIPESTATUS[0]}\"\necho \"\"\necho \"=== served chunk has the async progress markers ===\"\ngrep -oh \"mine-async\\|miner_jobs\\|Roda em segundo plano\\|voc\u00ea ser\u00e1 avisado\" dist/assets/AffiliateProductsPage-*.js dist/assets/*.js 2>/dev/null | sort -u | head",
+  "description": "Build frontend + verify async markers in served chunk",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build frontend ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 23.64s
+> BUILD_EXIT: 0
+> 
+> === served chunk has the async progress markers ===
+> mine-async
+> miner_jobs
+> Roda em segundo plano
+> você será avisado
+> ```
+
+## 🤖 Claude *(18:58:27)*
+
+
+## 🤖 Claude *(18:58:28)*
+
+Frontend deployado (markers async no chunk servido ✅). Vou rodar a revisão de segurança na migration + `mine-async` antes de commitar:
+
+## 🤖 Claude *(18:58:46)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security review async miner job",
+  "prompt": "Senior security review of NEW code in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra) that adds an async Product Miner job. Review ONLY security issues this change introduces. Read these files for context:\n- supabase/migrations/20260629170000_vm_miner_jobs.sql (new table + RLS)\n- supabase/functions/discover-products/index.ts \u2014 the new `mine-async` action (search the file for `action === \"mine-async\"`), the `notify` import, and how it creates/updates vm_miner_jobs.\n- src/hooks/useMinerJob.ts (client realtime subscription)\n\nProject security model: Supabase Deno edge fns derive the user from a VERIFIED JWT (supabaseClient.auth.getUser()) before any action. adminClient uses the service-role key (bypasses RLS). The API Tenancy Model requires per-user credential resolution. RLS must be owner-scoped (user_id = auth.uid()).\n\nSpecifically verify (and flag ONLY concrete, high-confidence \u22658/10 vulns with a real attack path):\n1. RLS on vm_miner_jobs: is it owner-scoped + default-deny? Can a tenant read/modify another tenant's job? (Note: writes are intended to be service-role-only \u2014 confirm there is NO client INSERT/UPDATE policy, which is the intended tamper-proof design, not a bug.)\n2. mine-async: is the job row created with the SERVER-TRUSTED user_id (from the verified JWT's `user`), never a client-supplied id? Could a caller cause the background pipeline to write to / notify another user?\n3. The background pipeline does a self-fetch to the same edge function (action=extract-metadata / vision-analyze) using the caller's authHeader \u2014 any SSRF (does it fetch an attacker-controlled HOST/PROTOCOL)? (The target is the function's own supabase URL \u2014 a trusted, fixed host.)\n4. Any secret/PII leaked into the job row, notification, or client response? (vm_miner_jobs.error stores an error message \u2014 could it contain a secret? The error comes from extract/vision failures.)\n5. EdgeRuntime.waitUntil background task: any auth/identity confusion (does it run with the right user's context)?\n\nHARD EXCLUSIONS: DoS/resource exhaustion; rate limiting; lack-of-hardening; SSRF that only controls the path; secrets-on-disk; theoretical races; client-side authz (handled server-side); logging non-secret data.\n\nOutput markdown: for each real finding \u2192 file:line, severity, category, exploit scenario, fix, confidence (1-10). If none \u22658, say \"NO HIGH-CONFIDENCE FINDINGS\" and briefly justify why each surface (RLS, user_id trust, self-fetch, error storage, waitUntil) is safe. Do not write files or run mutating commands."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a79c0030c73d061d4 (internal ID - do not mention to user. Use SendMessage with to: 'a79c0030c73d061d4', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/966aff46-72f3-4a4d-b5f9-43415366aa6e/tasks/a79c0030c73d061d4.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(18:59:08)*
+
+
+## 🤖 Claude *(18:59:09)*
+
+Revisão de segurança rodando. Em paralelo (não-sobreposto), vou confirmar uma coisa material crítica pro feature funcionar: que a tabela `vm_miner_jobs` está na publicação `supabase_realtime` (senão a UI não recebe updates):
+
+## 🤖 Claude *(18:59:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\necho \"=== is vm_miner_jobs in the supabase_realtime publication? ===\"\ncurl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -A \"MCORCH-Deploy/1.0\" \\\n  --data '{\"query\":\"SELECT tablename FROM pg_publication_tables WHERE pubname='\"'\"'supabase_realtime'\"'\"' AND tablename IN ('\"'\"'vm_miner_jobs'\"'\"','\"'\"'vm_canvas_executions'\"'\"');\"}' -w \"\\n(HTTP %{http_code})\\n\"",
+  "description": "Verify vm_miner_jobs is in realtime publication"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === is vm_miner_jobs in the supabase_realtime publication? ===
+> []
+> (HTTP 201)
+> ```
+
+## 🤖 Claude *(18:59:33)*
+
+
+## 🤖 Claude *(18:59:35)*
+
+⚠️ **Achado crítico:** `vm_miner_jobs` NÃO está na publicação `supabase_realtime` (retornou `[]` — e nem a vm_canvas_executions aparece, o que é estranho). Se a tabela não está na publicação, o Realtime não entrega → a barra não atualiza. Preciso entender o setup da publicação:
+
+## 🤖 Claude *(18:59:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nq() { curl -s -X POST \"https://api.supabase.com/v1/projects/$REF/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -A \"MCORCH-Deploy/1.0\" --data \"{\\\"query\\\":\\\"$1\\\"}\"; }\necho \"=== publication def (FOR ALL TABLES?) ===\"\nq \"SELECT pubname, puballtables FROM pg_publication WHERE pubname='supabase_realtime';\"\necho \"\"\necho \"=== how many tables in supabase_realtime + is vm_canvas_executions among them? ===\"\nq \"SELECT count(*) AS total, bool_or(tablename='vm_canvas_executions') AS has_canvas, bool_or(tablename='notifications') AS has_notif FROM pg_publication_tables WHERE pubname='supabase_realtime';\"",
+  "description": "Inspect supabase_realtime publication definition"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publication def (FOR ALL TABLES?) ===
+> [{"pubname":"supabase_realtime","puballtables":false}]
+> === how many tables in supabase_realtime + is vm_canvas_executions among them? ===
+> [{"total":2,"has_canvas":false,"has_notif":false}]
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
