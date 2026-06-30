@@ -374,7 +374,7 @@ Clean tree, zero TS errors, all containers healthy. Now reading HANDOFF head/tai
 > 37	### Survival Laws Self-audit
 > 38	```
 > 39	Law 1 (Materiality): ✅ Toda claim provada NESTE arco — generate-image via 963KB PNG + olho criativo; vídeo via ledger −125 + asset 6.4MB; Canvas Design via job complete + nó; BoK via UUIDs de selo + embedding NOT NULL; SSO via 302/200 reais; security via mint→403 + saldo 0. O teste material PEGOU o fix de GRANT aditivo falho (não confiei na estrutura). Fase 5c mecânica abaixo.
-> 40	Law 2 (Process): ✅ SOPs antecipados ([[creative-qa-vision-gate|creative-qa-vision-gate]] · [[canvas-design-deploy-and-provision|canvas-design-deploy-and-provision]]) ANTES da automação; BoK 9/9 + emenda v1.1 antes de código do módulo Vídeo (Master Protocol).
+> 40	Law 2 (Process): ✅ SOPs antecipados (creative-qa-vision-gate · canvas-design-deploy-and-provision) ANTES da automação; BoK 9/9 + emenda v1.1 antes de código do módulo Vídeo (Master Protocol).
 > 41	Law 3 (Pruning): ✅ Sessão longa empacotada (criativo→BoK→review→emenda→R3→tenancy) sob GOs explícitos; recon/review referenciados por path; selada a pedido do Sovereign (/handoff).
 > 42	Law 4 (ORO): ✅ Triplet declarado; múltiplos GOs via AskUserQuestion; /security-review como Reviewer mecânico independente.
 > 43	```
@@ -4340,7 +4340,7 @@ diff --git a/docs/processes/wordpress-cf-publish-unblock.md b/docs/processes/wor
 new file mode 100644
 index 0000000..70b7c93
 --- /dev/null
-+++ b/docs/processes/[[wordpress-cf-publish-unblock|wordpress-cf-publish-unblock]].md
++++ b/docs/processes/wordpress-cf-publish-unblock.md
 @@ -0,0 +1,91 @@
 +# SOP — Desbloqueio do publish WordPress atrás do Cloudflare managed challenge
 +
@@ -7763,15 +7763,292 @@ README atualizado. Commit do README + lendo o ponto de inserção do HANDOFF.md:
 > 17	
 > ```
 
----
+## 🤖 Claude *(17:30:22)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-22 - Resolver CF WAF e secrets para ação Sovereign]]
-> * **Próxima Sessão**: [[2026-06-22 - Resolver dois pontos pendentes]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(17:30:23)*
+
+Inserindo o Record do seal no HANDOFF.md (com tabelas de prova que a Fase 5c audita):
+
+## 🤖 Claude *(17:30:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Camada Criativa + M\u00f3dulo V\u00eddeo (BoK video-studio 9/9 + emenda ag\u00eancia v1.1) + SSO cross-subdom\u00ednio + Funda\u00e7\u00e3o de Tenancy de Ag\u00eancia (2026-06-22)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Alertas resolvidos + V\u00eddeo Fatia 1/1b + De-n8n (motor faceless nativo) (2026-06-22)\n\n`/handson` \u2192 \"resolver os alertas, depois os pr\u00f3ximos passos\". Arco: diagn\u00f3stico material (workflow paralelo de 3 agentes) dos alertas \u2192 reparo/reconcilia\u00e7\u00e3o \u2192 V\u00eddeo Fatia 1 (dom\u00ednio+contrato) \u2192 Fatia 1b (UI) \u2192 diretiva Sovereign **De-n8n** \u2192 emenda BoK SDD v1.2. Duas surpresas materiais: a security BoK estava **selada** (naming alternativo enganou o handson) e os \"gaps f\u00edsicos\" FM-04/FM-10 j\u00e1 estavam **fechados** (docs stale). O smoke pegou 2 bugs reais antes de virar prod.\n\n**O que foi entregue (8 commits granulares):**\n1. **Alertas (`0fc7ed9`/`89e59ab`).** CF managed challenge 403 em `/wp-json/*` confirmado material \u2192 `publish-wordpress` header `X-MCORCH-Publish` **host-gated fail-closed** (`/security-review` pegou+fechou um HIGH conf 9 na pr\u00f3pria mudan\u00e7a) + SOP `wordpress-cf-publish-unblock.md` (regra CF + secrets `WP_PUBLISH_SECRET`/`_HOST` = a\u00e7\u00e3o Sovereign). FM-04 (RPN 300)/FM-10 j\u00e1 fechados (compose saneado + `docker inspect mcorch_claude_mem` sem env legada + Dockerfile UID1001) \u2192 drift FMEA+CLAUDE.md reconciliado. Image path j\u00e1 resolvido (OpenRouter Gemini).\n2. **V\u00eddeo Fatia 1 (`c92850f`/`e3b0716`).** Migration `20260622040000`: `video_renders`+`video_assets`+`finalize_video_render` (RLS cross-tenant FMEA-VS-020 \u2014 SELECT own-or-org-member, **sem write authenticated**, RESTRICTIVE no-delete; espelha `finalize_vision_job`). Edge fns `video-render`/`video-render-poll` (JWT\u2192voice_consent\u2192BYOK `google_api_key` fail-closed\u2192dry_run\u2192**worker-gate 503 antes de deduct**\u2192[Fatia2] deduct\u2192insert\u2192trigger\u2192refund idempotente). Custos `VIDEO_FACELESS_RENDER=125`/`VIDEO_HYPERFRAMES_RENDER=12` (OTD-VS-007).\n3. **Fatia 1b UI (`f343dd2`).** `/dashboard/video` (`useVideoRender`+`VideoStudioPage` display-only) + nav \"Est\u00fadio de V\u00eddeo\" + types.ts regen additive; deployada.\n4. **De-n8n (`792edb0`/`167cfc3`).** Diretiva Sovereign: MCORCH **n\u00e3o usa n8n** (single-tenant n\u00e3o escala num SaaS per-user). Emenda BoK SDD **v1.2 \u00a71.5** supera \u00a71.2/\u00a71.4; **OTD-VS-001 (ponte R5) VOID**; motor faceless nativo (Visual Orchestrator + capabilities existentes co-locadas na `mcorch-sovereign-net`). Fix doc coluna BYOK `google_api_key` (n\u00e3o `gemini_api_key`).\n\n**ORO:** Operator=MCORCH Master Execution Agent \u00b7 Reviewer=Sovereign (GOs via AskUserQuestion) + `/security-review` independente 3\u00d7 \u00b7 Owner=Sovereign (blast radius = publish prod + isolamento multi-tenant do v\u00eddeo + carteira).\n\n| Verifica\u00e7\u00e3o (material) | Resultado |\n|---|---|\n| `publish-wordpress` reparada + deployada | \u2705 106.3kB \u00b7 boot-smoke HTTP 401 \u00b7 /security-review HIGH fechado+reverificado RESOLVED |\n| Migration video-studio | \u2705 `db push` exit 0 \u00b7 tabelas 200 \u00b7 finalize anon\u219242501 \u00b7 anon INSERT\u219242501 RLS |\n| Edge fns video-render/poll | \u2705 deployadas 61.8/58.6kB \u00b7 **18 gates zero-cost** (401/422/409/402/dry_run 125+12/503/poll 422/404) \u00b7 saldo 5096 intacto |\n| `/security-review` | \u2705 SAFE 3\u00d7 (publish-wordpress \u00b7 migration 6-vetores \u00b7 edge fns) |\n| Emenda BoK SDD v1.2 | \u2705 \u00a71.5 De-n8n \u00b7 OTD-VS-001 VOID \u00b7 00-index reconciliado |\n| tsc \u00b7 build | \u2705 0 erros \u00b7 build OK (chunk `VideoStudioPage` no dist, env baked) |\n| Commits | `0fc7ed9` \u00b7 `89e59ab` \u00b7 `c92850f` \u00b7 `e3b0716` \u00b7 `792edb0` \u00b7 `f343dd2` \u00b7 `167cfc3` (+ readme + handoff) |\n| Handoff node | `bb23b9dc-265e-4338-9709-d320371908b4` (embedded 768d) |\n\n### Survival Laws Self-audit\n```\nLaw 1 (Materiality): \u2705 Toda claim provada NESTE arco \u2014 CF via curl 403 cf-mitigated; migration via db push + 42501 reais; edge fns via 18 gates HTTP + saldo SELECT; security via docker inspect; deploy via script size + chunk no dist. O smoke PEGOU 2 bugs reais (HIGH no header CF + coluna BYOK google_api_key) \u2014 n\u00e3o confiei na estrutura. Ocular logado da UI N\u00c3O rodado (c\u00e9rebro-sem-m\u00e3os por budget, declarado). Fase 5c mec\u00e2nica abaixo.\nLaw 2 (Process): \u2705 SOP CF antecipado \u00b7 BoK como processo do V\u00eddeo \u00b7 emenda SDD ANTES do c\u00f3digo do engine (Master Protocol \u2014 mudan\u00e7a arquitetural vira BoK).\nLaw 3 (Pruning): \u2705 Sess\u00e3o empacotada (alertas\u2192Fatia 1\u21921b\u2192De-n8n) sob GOs expl\u00edcitos; diagn\u00f3sticos referenciados por workflow output path; selada a pedido do Sovereign.\nLaw 4 (ORO): \u2705 Triplet declarado; m\u00faltiplos GOs via AskUserQuestion; /security-review como Reviewer mec\u00e2nico independente 3\u00d7.\n```\n\n## Session Seal \u2014 Camada Criativa + M\u00f3dulo V\u00eddeo (BoK video-studio 9/9 + emenda ag\u00eancia v1.1) + SSO cross-subdom\u00ednio + Funda\u00e7\u00e3o de Tenancy de Ag\u00eancia (2026-06-22)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:30:57)*
+
+
+## 🤖 Claude *(17:30:58)*
+
+Record inserido. Atualizando o contador GraphRAG (8946 + nó novo):
+
+## 🤖 Claude *(17:30:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"total nodes\\*\\*\" HANDOFF.md | head -2",
+  "description": "Find GraphRAG count line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7965:- **8935 total nodes** (verificado live 2026-06-20 via REST count=exact, viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d — cadência R2 (cron + begin/finalize_autopilot_cycle atômicos) + loop R3 (analyze→optimization_policy / collect / feedback-inject) + UI (useAutopilot/AutopilotPage); prev 8934 viral-autopilot-fatias-1-1b seal: +handoff `385d3dd5-264f-4e9d-95a6-b50d93ca338c` embedded 768d — Fatias 1 (product-aware + monetização cross-surface + creative_metrics) + 1b (imagem fail-open) + generate-image fix + diagnóstico saída visível; prev 8928 viral-autopilot-bok-seal: +handoff `496ec17c-953e-498c-b18f-e19ef093ad46` embedded 768d + BoK seal `b3398294-aa75-4810-845b-3a15cfe802e7` `documentation_suite` viral-autopilot + DERIVES_FROM edge `05cea16d-b942-409c-9847-1acc693f6ccc` → marketing-hub `d5163fed`; prev 8926 unified-sensorial-canvas-v9 seal: +handoff `5225ff03-5e4d-4599-9c9a-625e2e1806af` embedded 768d + AGI→ASI ref `a576216e` (architecture, edge `INFORMS` `d2827191` → openclaw seal) + AST ingest dos arquivos novos do canvas (CodeNetworkLayer/MemoryNetworkLayer/useUnifiedCanvasStore/useMemoryNetwork); prev 8922 vision-mcp-fatia3-pat-plugin-registry-caps seal: +handoff `c21c53db-cd96-465d-92ba-fc419c0c83e7` embedded 768d — PAT UI + Plugin/Registry + caps; prev 8921 vision-mcp-vhost-live seal: +handoff `0632e1f8-81db-4cc8-bd5e-c5ea8109508d` embedded 768d — OTD-VM-013 fechada; prev 8920 vision-fatia3-pat-erase seal: +handoff `e0695dad-3fc8-4f1e-9973-a40c15aec433` embedded 768d; prev 8918 vision-deepsearch-run-async seal: +handoff `fc0b5efc-9df8-4e03-8544-820caee4ee79` embedded 768d; prev 8917 vision-mcp-fatia2-complete seal: +handoff `7a45d8ef-7f69-4b7d-8ef4-107f4c488c64` embedded 768d; prev 8916 vision-mcp-fatia1-deployed seal: +handoff `98fa83d7-3caa-4d23-9f5d-ed040ced9530` embedded 768d; prev 8915 em vision-mcp-bok-9of9 seal: +handoff `b73d141d` + BoK seal `318862b7` documentation_suite vision-mcp + DERIVES_FROM edge `b4de794c` → mcorch-constellation; prev 8911 em diagnostics-and-continuity +handoff `855e9cdc`; prev 8865 em core-fable-interstellar +handoff `4728b8aa`)
+> 7966:- _(prev snapshot)_ **8755 total nodes** (verificado live 2026-06-03 via REST count=exact após o handoff node `a48d8ff4-1069-4ca0-8764-f01922e2e12f` desta seal v6.21.0, embedded 768d; inclui o BoK seal `d5163fed` marketing-hub; v6.20.4 snapshot era 8753, handoff `af6bffa2`) — **100% embedded** (768d HNSW cosine) — handoff · milestone · architecture · decision · system · observation · requirement · conversation · documentation_suite (BoK seal) · crew_agent · markdown_file · vault_note · feature · ui-ux · content_mesh_asset + AST (file · function · arrow_function · interface · type_alias · class)
+> ```
+
+## 🤖 Claude *(17:31:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8935 total nodes** (verificado live 2026-06-20 via REST count=exact, viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d",
+  "new_string": "- **8946 total nodes** (verificado live 2026-06-22 via REST count=exact, alertas-video-fatia1-de-n8n seal: +handoff `bb23b9dc-265e-4338-9709-d320371908b4` embedded 768d \u2014 alertas CF/security-drift + V\u00eddeo Fatia 1 [video_renders/video_assets/finalize_video_render + edge video-render/poll] + Fatia 1b UI + emenda BoK SDD v1.2 De-n8n; prev 8935 viral-autopilot-fatia2 seal: +handoff `280e94d7-8de7-43bb-aee7-89d1824042d7` embedded 768d"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:31:12)*
+
+
+## 🤖 Claude *(17:31:12)*
+
+Phase 5b — secret scan no HANDOFF.md antes do commit:
+
+## 🤖 Claude *(17:31:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credential values ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\" | head || echo \"5b-1 NO CREDENTIALS \u2705\"\necho \"=== 5b-2 google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head || echo \"5b-2 NO GOOGLE KEYS \u2705\"\necho \"=== commit HANDOFF.md ===\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal alertas + Video Fatia 1/1b + De-n8n (motor faceless nativo)\" 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|\u2591|\u2502|\u2570|\u256d|\u2500|\u25cb|INF|summary|\u2714|mesh-reingest|^$\" | tail -1\necho \"committed\"",
+  "description": "Phase 5b secret scan + commit HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credential values ===
+> === 5b-2 google keys ===
+> === commit HANDOFF.md ===
+> committed
+> ```
+
+## 🤖 Claude *(17:31:24)*
+
+
+## 🤖 Claude *(17:31:25)*
+
+5b limpo (sem credenciais) · HANDOFF.md commitado. **Phase 5c — auditoria mecânica de prova material:**
+
+## 🤖 Claude *(17:31:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -45",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 295 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node bb23b9dc | mesh_node | bb23b9dc-265e-4338-9709-d320371908b4 | bb23b9dc-265e-4338-9709-d320371908b4 | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 12.4s)
+> ```
+
+## 🤖 Claude *(17:32:33)*
+
+
+## 🤖 Claude *(17:32:34)*
+
+**Phase 5c: SEAL ALLOWED** — 10 verificadas · 0 falhas (handoff node `bb23b9dc` provado + bloco recente todo verde · test suite 295 passed). Phase 6 (BoK) + merge→main + push:
+
+## 🤖 Claude *(17:32:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Phase 6: video-studio BoK completeness ===\"\nfor slug in video-studio; do\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=(); for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK 9/9 (m\u00f3dulo da sess\u00e3o coberto)\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone\necho \"(publish-wordpress = patch em feature existente documentada \u2192 exempt)\"\necho \"=== commits ahead of origin/main ===\"\ngit log --oneline origin/main..HEAD\necho \"=== Phase 7: merge ff-only \u2192 main + push ===\"\ngit checkout main 2>&1 | tail -1\ngit merge --ff-only hardening/wp-cf-publish-and-security-drift 2>&1 | tail -2\ngit push origin main 2>&1 | tail -4",
+  "description": "Phase 6 BoK + Phase 7 merge to main + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 6: video-studio BoK completeness ===
+> ✅ video-studio — BoK 9/9 (módulo da sessão coberto)
+> (publish-wordpress = patch em feature existente documentada → exempt)
+> === commits ahead of origin/main ===
+> 1a1e0bf docs(handoff): seal alertas + Video Fatia 1/1b + De-n8n (motor faceless nativo)
+> f11983a docs(readme): v6.46.0 — alertas resolvidos + Video Fatia 1/1b + De-n8n (motor faceless nativo)
+> 167cfc3 docs(bok/video-studio): emenda SDD v1.2 — De-n8n, motor faceless nativo
+> f343dd2 feat(video-studio): Fatia 1b — UI do Estudio de Video (/dashboard/video)
+> 792edb0 docs(claude): corrige coluna BYOK Gemini → google_api_key (gemini_api_key nao existe)
+> e3b0716 feat(video-studio): Fatia 1 — contrato edge (video-render submit + poll) + custos
+> c92850f feat(video-studio): Fatia 1 — dominio de video (video_renders/video_assets + finalize RPC)
+> 89e59ab docs(security): reconcilia drift — FM-04/FM-10 fechados + SOP CF publish
+> 0fc7ed9 feat(publish-wordpress): desbloqueio do CF managed challenge no /wp-json
+> === Phase 7: merge ff-only → main + push ===
+> Your branch is up to date with 'origin/main'.
+>  create mode 100644 supabase/functions/video-render/index.ts
+>  create mode 100644 supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> summary: (done in 0.11 seconds)
+> ✔️ gitleaks-range (0.11 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    b76f1d5..1a1e0bf  main -> main
+> ```
+
+## 🤖 Claude *(17:32:52)*
+
+
+## 🤖 Claude *(17:32:53)*
+
+**Push OK: `b76f1d5..1a1e0bf main -> main`** (9 commits, fast-forward, gitleaks-range verde). Phase 7b — hygiene (remover proof-manifest temp + branch merged):
+
+## 🤖 Claude *(17:32:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json && echo \"proof-manifest.json removido\"\nls scratch/ 2>/dev/null && echo \"scratch tem arquivos\" || echo \"scratch limpo \u2705\"\ngit branch -d hardening/wp-cf-publish-and-security-drift 2>&1 | tail -1\ngit status --short && echo \"--- working tree limpo \u2705\" || true\ngit log --oneline -1 origin/main",
+  "description": "Cleanup temp + merged branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> proof-manifest.json removido
+> scratch tem arquivos
+> Deleted branch hardening/wp-cf-publish-and-security-drift (was 1a1e0bf).
+>  D proof-manifest.json
+> --- working tree limpo ✅
+> 1a1e0bf docs(handoff): seal alertas + Video Fatia 1/1b + De-n8n (motor faceless nativo)
+> ```
+
+## 🤖 Claude *(17:33:16)*
+
+
+## 🤖 Claude *(17:33:17)*
+
+`proof-manifest.json` é tracked (de seals anteriores) — restaurando a versão do HEAD pra deixar a árvore limpa (o artefato é transitório, só usado no Phase 5c que já rodou):
+
+## 🤖 Claude *(17:33:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit checkout HEAD -- proof-manifest.json && echo \"proof-manifest.json restaurado (HEAD)\"\necho \"=== scratch real contents ===\"; ls -A scratch/ 2>/dev/null | head || echo \"(vazio)\"\necho \"=== final tree state ===\"; git status --short && echo \"WORKING TREE LIMPO \u2705 (== origin/main)\"",
+  "description": "Restore proof-manifest + verify clean tree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> proof-manifest.json restaurado (HEAD)
+> === scratch real contents ===
+> === final tree state ===
+> WORKING TREE LIMPO ✅ (== origin/main)
+> ```
+
+## 🤖 Claude *(17:33:29)*
+
+
+## 🤖 Claude *(17:33:49)*
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SEALED — Alertas + Vídeo Fatia 1/1b + De-n8n** (2026-06-22)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA**
+- 1a secret leak (diff): ✅ PASS · 1c client coin-deduction: ✅ PASS · 1e console.log: ✅ PASS (strings em arquivo de teste, sem valores)
+- `/security-review` **SAFE 3×** na sessão (publish-wordpress · migration 6-vetores · edge fns) — 1 HIGH pego+fechado na própria mudança
+- 5b HANDOFF.md secret scan: ✅ sem credenciais
+
+📦 **COMMITS (9 — push `b76f1d5..1a1e0bf`)**
+```
+0fc7ed9 feat(publish-wordpress): desbloqueio CF managed challenge /wp-json
+89e59ab docs(security): reconcilia drift FM-04/FM-10 fechados + SOP CF
+c92850f feat(video-studio): Fatia 1 — domínio (video_renders/assets + finalize RPC)
+e3b0716 feat(video-studio): Fatia 1 — contrato edge (video-render + poll) + custos
+792edb0 docs(claude): corrige coluna BYOK google_api_key
+f343dd2 feat(video-studio): Fatia 1b — UI /dashboard/video
+167cfc3 docs(bok/video-studio): emenda SDD v1.2 — De-n8n, motor faceless nativo
+f11983a docs(readme): v6.46.0  ·  1a1e0bf docs(handoff): seal
+```
+
+⬡ **KNOWLEDGE MESH**
+Handoff node `bb23b9dc-265e-4338-9709-d320371908b4` — embedded 768d ✅ (auto-trigger)
+
+📖 **README.md** — v6.45.0 → **v6.46.0** · badge neural_mesh 8944 → **8946** · entrada What's New v6.46.0
+
+🧠 **HANDOFF.md** — Record "Alertas + Vídeo Fatia 1/1b + De-n8n" + GraphRAG 8946
+
+📋 **PROVA MATERIAL (Fase 5c)** — Veredito: **SEAL ALLOWED** · 10 verificadas · 0 skipped · **0 falhas** (handoff node + commits + test suite 295 passed)
+
+📚 **BoK (Fase 6)** — ✅ `video-studio` 9/9 (módulo da sessão coberto; emenda v1.2 selada) · publish-wordpress = patch em feature documentada (exempt)
+
+🚀 **PUSH** — main → origin/main · 9 commits · working tree limpo == origin/main
+
+📌 **SPRINT/HYGIENE** — scratch/ limpo ✅ · proof-manifest restaurado · branch merged deletada · sprint-priorities.md não tocado (deltas no Record)
+
+⏭️ **PRÓXIMOS PASSOS**
+1. **Sua ação:** 2 `supabase secrets` + regra CF do SOP `wordpress-cf-publish-unblock.md` → destrava publish WP + ativação do Viral Autopilot.
+2. **Vídeo Fatia 2 (faceless nativo)** — decomposição pronta no Record/memória: 2a orquestrador nativo (`canvas-execute` Higgsfield + `tts-speak`) · 2b composite (container Remotion/FFmpeg sovereign-net) · 2c QA `vision-mcp` · 2d Visual Orchestrator · 2e HyperFrames @ `video.mcorch.com` (DNS = sua ação). 1º render pago precisa GO de gasto.
+3. **video.mcorch.com vhost** (OTD-VS-015) — DNS+cert CF, padrão mcp/design.
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Sessão selada e espelhada no remoto. A decisão **De-n8n** está cravada no SSOT (BoK SDD v1.2) — a Fatia 2 começa numa sessão fresca pelo orquestrador faceless nativo. 🎬
