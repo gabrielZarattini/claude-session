@@ -679,3 +679,16 @@ Diffed `20260630000000_user_api_keys_avatar_byok.sql` against the in-production,
 The migration faithfully mirrors the vetted precedent with no security-relevant deviation. Tenant isolation, Vault encryption, `search_path` hardening, and the service-role-only decrypted view are all preserved identically for each of the three new columns. The seal script uses env-sourced credentials with no injection surface.
 
 **NO FINDINGS (confidence 9).**
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-30 - agent-a32b431d085d51223]]
+> * **Próxima Sessão**: [[2026-06-30 - agent-a45f824f5f129eddf]]
+%% --- TIMELINE END --- %%
