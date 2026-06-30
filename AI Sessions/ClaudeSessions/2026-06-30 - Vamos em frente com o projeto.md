@@ -7601,6 +7601,1424 @@ I have the spec + data model + erase pattern. Now the decisive part — **feasib
 > 25	    }
 > ```
 
+## 🤖 Claude *(18:59:58)*
+
+
+## 🤖 Claude *(19:00:09)*
+
+I have the full Fatia 3 spec + a decisive **feasibility verdict**. Let me synthesize the scope decision (Lei 1 honesty):
+
+**Feasibility (material):**
+- **ArcFace/InsightFace face-embedding: MISSING** in the codebase (zero wiring). The BoK FR-AC-013/014 specifies an *ArcFace cosine* Identity Gate **empirically calibrated on Gabriel's real frames** — that needs (a) a face-verification capability not yet wired, and (b) his biometric data. Not buildable/verifiable solo.
+- **Higgsfield Soul ID training: API exists at provider** (`createSoulId`, 5–20 fotos, paid plan) but **no edge-fn call path** yet, and needs his photos + a paid plan.
+- **Vision MCP face-compare (`vision_describe_image`): BUILDABLE NOW** (BYOK-free) — viable as a *soft VLM* gate.
+- **External hard-verify** (AWS Rekognition CompareFaces / Azure / Face++) — real contracts found, but each needs a new Sovereign-side credential.
+
+So Fatia 3 splits honestly:
+
+**Fatia 3a — Consent + Erasure compliance backbone (BUILD NOW, fully verifiable without your biometrics):** `avatar_identities` + `avatar_consents` tables (RLS own, immutable consent, HNSW) + `erase_avatar_artifacts` RPC + `erase-avatar-artifacts` edge fn (LGPD Art. 18 cascade + Storage API delete + Vault revoke) + consent wizard (3 checkboxes) + **retroactively closes the Fatia 2 consent deferral** (wires the per-render consent gate into `generate-voice`). This is the LGPD Art. 11 foundation required before *any* biometric persists.
+
+**Fatia 3b — avatarIdentity node + Identity Gate + Soul ID training (needs a decision + your data):** the BoK says *ArcFace* (not wired) calibrated on *your* frames. This requires a BoK amendment (ArcFace→VLM-soft MVP, or provision a face-verify credential) + your 20 photos + selfie + a paid Higgsfield plan. I'll present this crisply once 3a lands — not improvising a different gate than the BoK specifies (Closed-Loop Protocol).
+
+Building **3a** now. Starting with the Lei 2 SOP, then the migration (→ /security-review).
+
+## 🤖 Claude *(19:00:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/avatar-biometric-retention-erasure.md",
+  "content": "# SOP: Avatar Biometric Consent \u00b7 Retention \u00b7 Erasure (LGPD Art. 11/18)\n\n**Status:** ACTIVE \u00b7 v0.1 \u00b7 2026-06-30\n**Owner:** Sovereign (Gabriel Zarattini)\n**Survival Law 2 compliance:** Escrita **ANTES** do c\u00f3digo da Fatia 3a (consent + erasure) do m\u00f3dulo `avatar-clone-ai`. Cobre FR-AC-030 (consent wizard 3-checkbox), FR-AC-031 (per-render consent fail-closed), FR-AC-027/028 (erasure + retention). Fecha o **deferral de consent da Fatia 2** (a `generate-voice` passa a exigir consent ativo). Molde: `vision-mcp-pat-and-erasure.md`.\n**Canonical directive:** `CLAUDE.md > Security model` + `> API Tenancy Model` \u00b7 `.claude/rules/survival.md > Law 1 (Materiality) / Law 2 (Anticipated Process)`\n**BoK SSOT:** `docs/bok/avatar-clone-ai/{04-frd.md,05-sdd.md,06-data-model.md}` (FR-AC-027/028/030/031 \u00b7 NFR-AC-013/015/025)\n**Sibling SOPs:** `avatar-voice-credential-resolution.md` (Fatia 2 voz) \u00b7 `vision-mcp-pat-and-erasure.md` (molde erasure) \u00b7 `avatar-identity-verification-gate.md` (Fatia 3b, futura) \u00b7 `avatar-disclosure-c2pa-gate.md` (Fatia 6, futura)\n\n---\n\n## Context\n\nVoiceprint (Fatia 2) e, em breve, embedding facial / LoRA (Fatia 3b) s\u00e3o **dados biom\u00e9tricos = dados pessoais sens\u00edveis** (LGPD Art. 5 II + Art. 11). Persistir biometria exige **consentimento espec\u00edfico, destacado e por finalidade** (Art. 11 \u00a71; nunca leg\u00edtimo interesse/contrato), e o titular tem **direito de revogar + eliminar** (Art. 18). Esta SOP rege o ciclo: **consent grant \u2192 per-render fail-closed gate \u2192 revoke \u2192 erasure cascade (SQL + Storage + Vault + terceiros) \u2192 retention sweep**.\n\nTabelas: `avatar_consents` (imut\u00e1vel, por finalidade `train_lora`/`face_embedding`/`voice_clone`) + `avatar_identities`/`voice_profiles` (artefatos biom\u00e9tricos, RLS own). Erasure via RPC `erase_avatar_artifacts` (SECURITY DEFINER, tenant-guarded) + edge fn `erase-avatar-artifacts` (Storage API + Vault + Art. 18 best-effort). **Por que importa:** compliance LGPD per-tenant; revoga\u00e7\u00e3o materialmente efetiva (n\u00e3o cosm\u00e9tica); zero res\u00edduo biom\u00e9trico ap\u00f3s erase; isolamento cross-tenant (FM-AC-011).\n\n---\n\n## ORO triplet\n\n- **Operator:** MCORCH Master Execution Agent (edge fn `erase-avatar-artifacts` + gate in `generate-voice`/`avatar-identity-train`) + Tenant (concede/revoga consent na UI).\n- **Reviewer:** Sovereign (Gabriel) \u2014 aprova migration via `/security-review` + valida smoke de zero-residue.\n- **Owner:** Sovereign \u2014 blast radius = biometria facial/vocal per-tenant (PII sens\u00edvel) + obriga\u00e7\u00e3o legal de elimina\u00e7\u00e3o.\n\n---\n\n## Operator (quem executa manualmente hoje)\n\n- **Titular:** abre o wizard de consentimento (3 checkboxes separados), concede por finalidade; depois pode revogar + pedir elimina\u00e7\u00e3o na UI (Settings \u2192 Privacidade do Avatar).\n- **Edge fns:** `generate-voice`/`avatar-identity-train` checam consent ativo antes de criar/usar biometria; `erase-avatar-artifacts` executa a cascata de elimina\u00e7\u00e3o.\n\n---\n\n## Resolution order (consent gate \u2014 canonical)\n\n| # | Camada | Fonte | Resultado |\n|---|--------|-------|-----------|\n| 1 | **Consent ativo por finalidade** | `avatar_consents` WHERE `user_id=<owner>` AND `purpose=<p>` AND `consent_granted=true` AND `revoked_at IS NULL` | prossegue |\n| 2 | **Ausente** | sem linha de consent concedido | HTTP 403 `consent_required` + action \"Conceda consentimento biom\u00e9trico em /dashboard/settings\" |\n| 3 | **Revogado** | `revoked_at IS NOT NULL` | HTTP 403 `consent_revoked` (fail-closed, N\u00c3O gera m\u00eddia) |\n\n---\n\n## Sequence\n\n### Consent grant (wizard)\n1. Titular marca cada checkbox de finalidade desejada (separados: `train_lora` / `face_embedding` / `voice_clone`) \u2014 nunca \"aceito tudo\".\n2. `INSERT avatar_consents` (1 linha por finalidade concedida) com `term_version`, `ip_address`, `consent_granted=true`, `attestation_titular`, `attestation_commercial_tier`. **Imut\u00e1vel** (trigger bloqueia UPDATE de qualquer coluna \u2260 `revoked_at`).\n\n### Per-render fail-closed gate (FR-AC-031)\n3. `generate-voice` (clone) / `avatar-identity-train`: ANTES de persistir biometria, exigir consent ativo da finalidade (`voice_clone` / `train_lora`+`face_embedding`). Ausente/revogado \u2192 403 (resolution order acima). `generate-voice` (synthesize): consent `voice_clone` n\u00e3o-revogado, sen\u00e3o 403 `consent_revoked`.\n\n### Revoke + erasure (Art. 18)\n4. Titular revoga: `UPDATE avatar_consents SET revoked_at=now()` (\u00fanica coluna mut\u00e1vel).\n5. Titular pede elimina\u00e7\u00e3o: edge fn `erase-avatar-artifacts` \u2192 RPC `erase_avatar_artifacts(p_avatar_identity_id?, p_voice_profile_id?)` (SECURITY DEFINER, tenant-guard `user_id=auth.uid() OR service_role` em CADA delete) \u2192 retorna `storage_keys`.\n6. Edge fn (service-role): remove objetos de Storage via **Storage API** (n\u00e3o SQL \u2014 `storage.objects` \u00e9 storage-admin, OTD-VM-026) + **revoga segredos Vault** dos voiceprints + dispara delete nas APIs terceiras (Art. 18, best-effort) + **atestado** em `infra_health_logs` (`event='avatar_erase'`).\n\n### Retention sweep (di\u00e1rio)\n7. Job `scripts/avatar-retention-sweep.ts` (molde `retention-sweep.ts`): `SELECT avatar_identities/voice_profiles WHERE last_used_at < now() - <retention>` \u2192 `erase_avatar_artifacts` por linha (service-role) \u2192 Storage API delete. Best-effort, nunca lan\u00e7a; telemetria `avatar_retention_sweep`.\n\n---\n\n## Verification gates\n\n| Gate | Check | Pass criterion |\n|------|-------|----------------|\n| G1 | Clone/persist SEM consent | 403 `consent_required` \u00b7 ZERO linha biom\u00e9trica criada |\n| G2 | Clone COM consent `voice_clone` ativo | prossegue ao gate BYOK (n\u00e3o bloqueado por consent) |\n| G3 | Synth com consent REVOGADO | 403 `consent_revoked` \u00b7 ZERO m\u00eddia \u00b7 ZERO d\u00e9bito |\n| G4 | `avatar_consents` imut\u00e1vel | UPDATE de coluna \u2260 `revoked_at` \u2192 `42501` (trigger) |\n| G5 | Erase do dono | `{erased:true}` + `SELECT count` identities/voice_profiles/objetos = **0** (zero-residue) |\n| G6 | Erase tenant-guard | id de outro tenant \u2192 `*_not_found` (n\u00e3o apaga nada alheio) |\n| G7 | EXECUTE grant | `erase_avatar_artifacts` revogado de PUBLIC/anon; s\u00f3 authenticated(self)/service_role |\n| G8 | Telemetria | `infra_health_logs.service='avatar-clone-ai' event='avatar_erase'` atestado por erase |\n| G9 | Storage zero-residue | ap\u00f3s erase, `list` do prefixo `user_id/` do artefato = vazio |\n\n---\n\n## Recovery path\n\n| Cen\u00e1rio | Detec\u00e7\u00e3o | Recovery |\n|---------|----------|----------|\n| Erase falha no Storage API (objeto \u00f3rf\u00e3o) | edge log + atestado degraded | retry idempotente do prefixo; SQL j\u00e1 apagado, re-remo\u00e7\u00e3o \u00e9 no-op |\n| C\u00f3pias j\u00e1 transmitidas a providers terceiros | inerente (Hedra/fal.ai/ElevenLabs) | depende do DPA; `provider_copies`/dispatch torna a dele\u00e7\u00e3o **solicit\u00e1vel e audit\u00e1vel** (Art. 18 best-effort, reconcile \u226424h) |\n| Sweep falha numa linha | telemetria degraded | loga + continua o lote (uma erasure ruim n\u00e3o trava as demais) |\n| Consent ausente mas biometria legada existe | gate 403 no pr\u00f3ximo uso | titular concede consent OU pede erase; biometria sem consent n\u00e3o \u00e9 reutiliz\u00e1vel |\n\n---\n\n## Success signal (whole protocol)\n\n- G1\u2013G9 verdes no smoke `scripts/qa/smoke-avatar-consent-erase.ts` (zero-cost, sem biometria real).\n- `erase-avatar-artifacts` deployada (ACTIVE em `supabase functions list`).\n- `generate-voice` redeployada com o consent gate (smoke de voz atualizado verde).\n- Migration `/security-review` SAFE; objetos verificados materialmente (HTTP 201 + query).\n\n---\n\n## Anti-patterns prohibited\n\n- \u274c Persistir biometria (voiceprint/face embedding/LoRA) sem consent ativo da finalidade.\n- \u274c Consent \"aceito tudo\" \u00fanico / leg\u00edtimo interesse / contrato (LGPD Art. 11 exige espec\u00edfico+destacado).\n- \u274c UPDATE de `avatar_consents` em qualquer coluna \u2260 `revoked_at` (imutabilidade).\n- \u274c Revoga\u00e7\u00e3o cosm\u00e9tica (marcar revoked sem fail-closed efetivo no pr\u00f3ximo render).\n- \u274c Apagar `storage.objects` via SQL no RPC (storage-admin \u2192 42501); usar Storage API no caller.\n- \u274c Erase sem re-escopar `user_id` em CADA delete (id poisoned vira primitiva cross-tenant \u2014 FM-AC-011).\n- \u274c EXECUTE de `erase_avatar_artifacts` a anon/PUBLIC.\n\n---\n\n## Connection to Survival Laws\n\n- **Lei 1 (Materialidade):** cada gate = prova material (HTTP status + `count=0` p\u00f3s-erase + atestado pulse).\n- **Lei 2 (Anticipated Process):** esta SOP antes do c\u00f3digo (consent + erasure).\n- **Lei 3 (Pruning):** erase stateless por request; sweep batched.\n- **Lei 4 (ORO):** triplet declarado; Reviewer aprova migration + smoke antes do deploy.\n\n---\n\n## Sibling reference\n\n- **Molde erasure/retention:** `docs/processes/vision-mcp-pat-and-erasure.md` (erase_vision_artifacts + retention-sweep).\n- **Fatia 2 voz:** `docs/processes/avatar-voice-credential-resolution.md`.\n- **DB:** `supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql` (avatar_identities + avatar_consents + erase_avatar_artifacts).\n- **Sealed contract:** `docs/bok/avatar-clone-ai/{04-frd,05-sdd,06-data-model}.md` (FR-AC-027/028/030/031).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/avatar-biometric-retention-erasure.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:59)*
+
+
+## 🤖 Claude *(19:02:01)*
+
+SOP selada (Lei 2). Now the Fatia 3a migration — `avatar_identities` + `avatar_consents` (immutable) + `erase_avatar_artifacts` RPC. Note: `arcface_threshold`/`identity_storage_key` nullable (staged — populated in 3b; documented deviation from the data-model NOT NULL so 3b can insert a `training`-status row before weights/calibration exist).
+
+## 🤖 Claude *(19:02:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql",
+  "content": "-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- avatar-clone-ai \u00b7 Fatia 3a \u2014 Biometric consent + identity tables + erasure (LGPD Art. 11/18)\n-- BoK SSOT: docs/bok/avatar-clone-ai/{04-frd.md FR-AC-027/028/030/031, 06-data-model.md avatar_identities/avatar_consents}\n-- SOP (Lei 2): docs/processes/avatar-biometric-retention-erasure.md\n--\n-- /security-review OBRIGAT\u00d3RIO antes do commit (FMEA-011 \u2014 biometria facial/vocal per-tenant, PII sens\u00edvel).\n--\n-- Creates:\n--   1. avatar_identities  \u2014 face identity artefact (RLS own; weights/embedding; populated in Fatia 3b)\n--   2. avatar_consents    \u2014 IMMUTABLE consent ledger per finalidade (LGPD Art. 11); INSERT via service-role only\n--   3. erase_avatar_artifacts RPC \u2014 tenant-guarded cascade (identities + voice_profiles) \u2192 returns keys for the\n--      caller (edge fn / sweep) to delete Storage objects + revoke Vault secrets + dispatch 3rd-party deletes\n--\n-- Staged-nullable deviation (documented): the data model marks identity_storage_key + arcface_threshold NOT NULL,\n-- but Fatia 3b inserts a status='training' row BEFORE weights exist and BEFORE empirical FAR/FRR/EER calibration\n-- on real frames. They are NULLABLE here so the training row can exist first; 3b fills them. Honest, not invention.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n-- \u2500\u2500 1. avatar_identities (biometric face \u2014 RLS own default-deny) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.avatar_identities (\n  id                    uuid        DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id               uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  project_id            uuid,                                              -- no FK: `projects` table does not exist\n  persona_type          text        NOT NULL CHECK (persona_type IN ('self_clone','fictional')),\n  tier                  smallint    NOT NULL CHECK (tier IN (1,2,3)),\n  identity_storage_key  text,                                             -- staged: weights ref (prefixo user_id/), set in 3b\n  provider              text        NOT NULL DEFAULT 'higgsfield' CHECK (provider IN ('higgsfield','lora_flux')),\n  arcface_threshold     numeric,                                          -- staged: empirically calibrated in 3b (NEVER hardcode)\n  verification_passed   boolean     NOT NULL DEFAULT false,               -- true s\u00f3 ap\u00f3s identity-verification gate (3b)\n  commercial_license_ok boolean     NOT NULL DEFAULT false,               -- gate FM-AC-001 (bloqueia pesos non-commercial)\n  embedding             vector(768),                                      -- mesh embedding (trigger embed-mcorch-node)\n  status                text        NOT NULL DEFAULT 'training' CHECK (status IN ('training','active','revoked')),\n  last_used_at          timestamptz,                                      -- drives retention-sweep\n  created_at            timestamptz NOT NULL DEFAULT now(),\n  updated_at            timestamptz NOT NULL DEFAULT now()\n);\n\nCOMMENT ON TABLE public.avatar_identities IS\n  'avatar-clone-ai Fatia 3 \u2014 per-user face identity (Soul ID/LoRA ref + canonical embedding). RLS own; DELETE only via erase_avatar_artifacts. arcface_threshold calibrated empirically in 3b (never hardcode).';\n\nCREATE INDEX IF NOT EXISTS avatar_identities_user_idx        ON public.avatar_identities (user_id);\nCREATE INDEX IF NOT EXISTS avatar_identities_status_used_idx ON public.avatar_identities (status, last_used_at);\nCREATE INDEX IF NOT EXISTS avatar_identities_embedding_hnsw  ON public.avatar_identities\n  USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);\n\nALTER TABLE public.avatar_identities ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"avatar_identities_select_own\"\n  ON public.avatar_identities FOR SELECT USING (user_id = auth.uid());\n-- INSERT/UPDATE flow through service-role (avatar-identity-train, Fatia 3b) \u2014 service_role bypasses RLS.\n-- No DELETE policy (default-deny): erasure only via erase_avatar_artifacts RPC.\n\nDROP TRIGGER IF EXISTS trg_avatar_identities_updated_at ON public.avatar_identities;\nCREATE TRIGGER trg_avatar_identities_updated_at\n  BEFORE UPDATE ON public.avatar_identities\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\n-- Mesh embedding on insert (Knowledge Mesh node) \u2014 same trigger fn used across the schema.\nDROP TRIGGER IF EXISTS trg_avatar_identities_embed ON public.avatar_identities;\nCREATE TRIGGER trg_avatar_identities_embed\n  AFTER INSERT ON public.avatar_identities\n  FOR EACH ROW EXECUTE FUNCTION public.trigger_embed_mcorch_node();\n\n-- \u2500\u2500 2. avatar_consents (IMMUTABLE consent ledger \u2014 LGPD Art. 11) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.avatar_consents (\n  id                           uuid        DEFAULT gen_random_uuid() PRIMARY KEY,\n  user_id                      uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  purpose                      text        NOT NULL CHECK (purpose IN ('train_lora','face_embedding','voice_clone')),\n  term_version                 text        NOT NULL,\n  consent_granted              boolean     NOT NULL,                      -- true s\u00f3 com checkbox espec\u00edfico (nunca leg\u00edtimo interesse)\n  ip_address                   inet        NOT NULL,                      -- server-captured pela edge fn avatar-consent\n  attestation_titular          boolean     NOT NULL DEFAULT false,       -- atestado #1: user \u00e9 o titular\n  attestation_commercial_tier  boolean     NOT NULL DEFAULT false,       -- atestado #2: tier permite uso comercial\n  revoked_at                   timestamptz,                              -- null=ativo; preenchido=fail-closed (\u00daNICA coluna mut\u00e1vel)\n  created_at                   timestamptz NOT NULL DEFAULT now()\n);\n\nCOMMENT ON TABLE public.avatar_consents IS\n  'avatar-clone-ai Fatia 3 \u2014 IMMUTABLE biometric consent ledger (LGPD Art. 11). One row per granted purpose. INSERT via service-role (avatar-consent edge fn, server-captured IP). Only revoked_at is mutable.';\n\nCREATE INDEX IF NOT EXISTS avatar_consents_user_purpose_idx ON public.avatar_consents (user_id, purpose, revoked_at);\n\nALTER TABLE public.avatar_consents ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY \"avatar_consents_select_own\"\n  ON public.avatar_consents FOR SELECT USING (user_id = auth.uid());\n-- INSERT via service-role only (edge fn captures IP server-side) \u2192 no own INSERT policy (default-deny).\nCREATE POLICY \"avatar_consents_revoke_own\"\n  ON public.avatar_consents FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());\n-- No DELETE policy: consent ledger is a permanent audit record (CASCADE only on auth.users delete).\n\n-- Immutability trigger: only revoked_at may change.\nCREATE OR REPLACE FUNCTION public.enforce_avatar_consent_immutable() RETURNS trigger\n  LANGUAGE plpgsql SET search_path = '' AS $$\nBEGIN\n  IF (to_jsonb(NEW) - 'revoked_at') IS DISTINCT FROM (to_jsonb(OLD) - 'revoked_at') THEN\n    RAISE EXCEPTION 'avatar_consents \u00e9 imut\u00e1vel (s\u00f3 revoked_at pode mudar)' USING errcode = '42501';\n  END IF;\n  RETURN NEW;\nEND $$;\n\nDROP TRIGGER IF EXISTS trg_avatar_consent_immutable ON public.avatar_consents;\nCREATE TRIGGER trg_avatar_consent_immutable\n  BEFORE UPDATE ON public.avatar_consents\n  FOR EACH ROW EXECUTE FUNCTION public.enforce_avatar_consent_immutable();\n\n-- \u2500\u2500 3. erase_avatar_artifacts \u2014 tenant-guarded cascade (Art. 18) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- Mirrors erase_vision_artifacts (20260615200000): SECURITY DEFINER + tenant guard on EVERY delete + returns\n-- the storage/Vault refs for the caller to remove via Storage API + Vault (storage.objects is storage-admin \u2192\n-- SECURITY DEFINER gets 42501 on SQL delete; OTD-VM-026 lesson).\nCREATE OR REPLACE FUNCTION public.erase_avatar_artifacts(\n  p_avatar_identity_id uuid DEFAULT NULL,\n  p_voice_profile_id   uuid DEFAULT NULL\n)\nRETURNS jsonb\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_user_id        uuid := auth.uid();   -- null for service_role (sweep); guard falls back to auth.role()\n  v_storage_keys   text[] := '{}';\n  v_voice_refs     text[] := '{}';\n  v_key            text;\n  v_ref            text;\n  v_identities     int := 0;\n  v_voices         int := 0;\nBEGIN\n  IF p_avatar_identity_id IS NULL AND p_voice_profile_id IS NULL THEN\n    RAISE EXCEPTION 'erase_avatar_artifacts: at least one of avatar_identity_id / voice_profile_id required' USING errcode = '22023';\n  END IF;\n\n  IF p_avatar_identity_id IS NOT NULL THEN\n    SELECT identity_storage_key INTO v_key FROM public.avatar_identities\n      WHERE id = p_avatar_identity_id AND (user_id = v_user_id OR auth.role() = 'service_role');\n    IF NOT FOUND THEN RAISE EXCEPTION 'avatar_identity_not_found' USING errcode = 'P0002'; END IF;\n    IF v_key IS NOT NULL THEN v_storage_keys := array_append(v_storage_keys, v_key); END IF;\n    DELETE FROM public.avatar_identities WHERE id = p_avatar_identity_id\n      AND (user_id = v_user_id OR auth.role() = 'service_role');   -- embedding + mesh node delete together\n    GET DIAGNOSTICS v_identities = ROW_COUNT;\n  END IF;\n\n  IF p_voice_profile_id IS NOT NULL THEN\n    SELECT voiceprint_vault_ref INTO v_ref FROM public.voice_profiles\n      WHERE id = p_voice_profile_id AND (user_id = v_user_id OR auth.role() = 'service_role');\n    IF NOT FOUND THEN RAISE EXCEPTION 'voice_profile_not_found' USING errcode = 'P0002'; END IF;\n    IF v_ref IS NOT NULL THEN v_voice_refs := array_append(v_voice_refs, v_ref); END IF;\n    DELETE FROM public.voice_profiles WHERE id = p_voice_profile_id\n      AND (user_id = v_user_id OR auth.role() = 'service_role');\n    GET DIAGNOSTICS v_voices = ROW_COUNT;\n  END IF;\n\n  RETURN jsonb_build_object(\n    'erased', true,\n    'identities', v_identities,\n    'voices', v_voices,\n    'storage_keys', to_jsonb(v_storage_keys),   -- caller deletes via Storage API (storage-admin role)\n    'voice_vault_refs', to_jsonb(v_voice_refs)  -- caller revokes Vault secrets\n  );\nEND $$;\n\nREVOKE ALL ON FUNCTION public.erase_avatar_artifacts(uuid, uuid) FROM PUBLIC, anon;\nGRANT  EXECUTE ON FUNCTION public.erase_avatar_artifacts(uuid, uuid) TO authenticated, service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:51)*
+
+
+## 🤖 Claude *(19:02:52)*
+
+Let me verify the embed trigger function name exists before applying (avatar_identities uses it for the mesh embedding).
+
+## 🤖 Claude *(19:02:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; grep -rhoE \"EXECUTE (FUNCTION|PROCEDURE) public\\.(trigger_embed_mcorch_node|embed_mcorch_node|trg_embed[a-z_]*)\\(\" supabase/migrations/ | sort | uniq -c; echo \"=== fn def ===\"; grep -rlE \"FUNCTION public\\.trigger_embed_mcorch_node\" supabase/migrations/ | head",
+  "description": "Verify embed trigger function name"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       1 EXECUTE FUNCTION public.trigger_embed_mcorch_node(
+> === fn def ===
+> supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql
+> ```
+
+## 🤖 Claude *(19:03:09)*
+
+
+## 🤖 Claude *(19:03:11)*
+
+`trigger_embed_mcorch_node` only appears in my own file — it does **not** exist in the schema (the mesh embed pipeline is the `trg_mcorch_embed_on_insert` trigger on `mcorch_nodes`, not on domain tables). That CREATE TRIGGER would fail. The Mesh Mandate is satisfied by the observation node the 3b edge fn inserts into `mcorch_nodes`. Removing the bad trigger (keeping the `embedding` column + HNSW for future similarity).
+
+## 🤖 Claude *(19:03:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql",
+  "old_string": "DROP TRIGGER IF EXISTS trg_avatar_identities_updated_at ON public.avatar_identities;\nCREATE TRIGGER trg_avatar_identities_updated_at\n  BEFORE UPDATE ON public.avatar_identities\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\n-- Mesh embedding on insert (Knowledge Mesh node) \u2014 same trigger fn used across the schema.\nDROP TRIGGER IF EXISTS trg_avatar_identities_embed ON public.avatar_identities;\nCREATE TRIGGER trg_avatar_identities_embed\n  AFTER INSERT ON public.avatar_identities\n  FOR EACH ROW EXECUTE FUNCTION public.trigger_embed_mcorch_node();",
+  "new_string": "DROP TRIGGER IF EXISTS trg_avatar_identities_updated_at ON public.avatar_identities;\nCREATE TRIGGER trg_avatar_identities_updated_at\n  BEFORE UPDATE ON public.avatar_identities\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\n-- Mesh Connection Mandate: the avatar-identity-train edge fn (Fatia 3b) inserts an `observation` node into\n-- mcorch_nodes on first successful training (which the pg_net trg_mcorch_embed_on_insert trigger embeds).\n-- The `embedding` column + HNSW above are reserved for direct identity-similarity queries (populated in 3b);\n-- there is NO embed trigger on this domain table (embedding is a mcorch_nodes concern)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:03:22)*
+
+
+## 🤖 Claude *(19:03:22)*
+
+Now apply + verify the migration materially.
+
+## 🤖 Claude *(19:03:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; bun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/apply-migration.ts supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql",
+  "description": "Apply Fatia 3a migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HTTP 201
+> []
+> ```
+
+## 🤖 Claude *(19:03:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/verify3a.sql",
+  "content": "SELECT\n  (SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='avatar_identities') AS identities_tbl,\n  (SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='avatar_consents') AS consents_tbl,\n  (SELECT relrowsecurity FROM pg_class WHERE oid='public.avatar_identities'::regclass) AS identities_rls,\n  (SELECT relrowsecurity FROM pg_class WHERE oid='public.avatar_consents'::regclass) AS consents_rls,\n  (SELECT count(*) FROM pg_policies WHERE schemaname='public' AND tablename='avatar_consents') AS consent_policies,\n  (SELECT count(*) FROM pg_proc WHERE proname='erase_avatar_artifacts') AS erase_rpc,\n  (SELECT count(*) FROM pg_proc WHERE proname='enforce_avatar_consent_immutable') AS immut_fn,\n  (SELECT count(*) FROM pg_trigger WHERE tgrelid='public.avatar_consents'::regclass AND NOT tgisinternal) AS consent_triggers,\n  (SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND tablename='avatar_identities' AND indexname='avatar_identities_embedding_hnsw') AS hnsw_idx;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/verify3a.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:03:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; bun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/apply-migration.ts /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/verify3a.sql",
+  "description": "Verify Fatia 3a objects"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HTTP 201
+> [{"identities_tbl":1,"consents_tbl":1,"identities_rls":true,"consents_rls":true,"consent_policies":2,"erase_rpc":1,"immut_fn":1,"consent_triggers":1,"hnsw_idx":1}]
+> ```
+
+## 🤖 Claude *(19:04:51)*
+
+
+## 🤖 Claude *(19:04:53)*
+
+Migration 3a verified: both tables (RLS on), 2 consent policies, erase RPC, immutability trigger, HNSW index. Now the edge functions. First let me check the canonical Vault-secret revocation pattern (for erasing voiceprints) from the disconnect RPCs.
+
+## 🤖 Claude *(19:04:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vault delete/revoke pattern ===\"; grep -rnE \"vault\\.secrets|delete_secret|vault.*DELETE|FROM vault\" supabase/migrations/20260602120000*.sql supabase/migrations/*disconnect*.sql 2>/dev/null | head -15\necho \"=== any vault delete RPC ===\"; grep -rlnE \"DELETE FROM vault\\.secrets|vault\\.delete_secret|drop_secret|revoke.*vault\" supabase/migrations/ 2>/dev/null | head",
+  "description": "Find Vault secret revocation pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vault delete/revoke pattern ===
+> supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql:15:--   vault.secrets), is scoped strictly to auth.uid() (no spoofable parameter), nulls the
+> supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql:61:    DELETE FROM vault.secrets
+> supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql:15:--   vault.secrets), is scoped strictly to auth.uid() (no spoofable parameter), nulls the
+> supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql:61:    DELETE FROM vault.secrets
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:23:-- Tenant safety: both RPCs run as owner (postgres, bypasses RLS, holds DELETE on vault.secrets),
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:74:    DELETE FROM vault.secrets
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:80:    DELETE FROM vault.secrets
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:121:    DELETE FROM vault.secrets
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:127:    DELETE FROM vault.secrets
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:161:DELETE FROM vault.secrets s
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql:167:DELETE FROM vault.secrets s
+> === any vault delete RPC ===
+> supabase/migrations/20260602120000_wordpress_disconnect_rpc.sql
+> supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql
+> ```
+
+## 🤖 Claude *(19:05:08)*
+
+
+## 🤖 Claude *(19:05:09)*
+
+`DELETE FROM vault.secrets` works inside a postgres-owned SECURITY DEFINER RPC (the disconnect RPCs do exactly this). Cleaner to revoke the voiceprint Vault secret **inside** `erase_avatar_artifacts` than to hand refs to the edge fn. Let me update the RPC.
+
+## 🤖 Claude *(19:05:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql",
+  "old_string": "  IF p_voice_profile_id IS NOT NULL THEN\n    SELECT voiceprint_vault_ref INTO v_ref FROM public.voice_profiles\n      WHERE id = p_voice_profile_id AND (user_id = v_user_id OR auth.role() = 'service_role');\n    IF NOT FOUND THEN RAISE EXCEPTION 'voice_profile_not_found' USING errcode = 'P0002'; END IF;\n    IF v_ref IS NOT NULL THEN v_voice_refs := array_append(v_voice_refs, v_ref); END IF;\n    DELETE FROM public.voice_profiles WHERE id = p_voice_profile_id\n      AND (user_id = v_user_id OR auth.role() = 'service_role');\n    GET DIAGNOSTICS v_voices = ROW_COUNT;\n  END IF;\n\n  RETURN jsonb_build_object(\n    'erased', true,\n    'identities', v_identities,\n    'voices', v_voices,\n    'storage_keys', to_jsonb(v_storage_keys),   -- caller deletes via Storage API (storage-admin role)\n    'voice_vault_refs', to_jsonb(v_voice_refs)  -- caller revokes Vault secrets\n  );",
+  "new_string": "  IF p_voice_profile_id IS NOT NULL THEN\n    SELECT voiceprint_vault_ref INTO v_ref FROM public.voice_profiles\n      WHERE id = p_voice_profile_id AND (user_id = v_user_id OR auth.role() = 'service_role');\n    IF NOT FOUND THEN RAISE EXCEPTION 'voice_profile_not_found' USING errcode = 'P0002'; END IF;\n    DELETE FROM public.voice_profiles WHERE id = p_voice_profile_id\n      AND (user_id = v_user_id OR auth.role() = 'service_role');\n    GET DIAGNOSTICS v_voices = ROW_COUNT;\n    -- Revoke the voiceprint Vault secret in-place (postgres owner holds DELETE on vault.secrets \u2014 same as\n    -- disconnect_wordpress/disconnect_meta). Zero-residue: the encrypted voiceprint blob is destroyed, not orphaned.\n    IF v_ref ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN\n      DELETE FROM vault.secrets WHERE id = v_ref::uuid;\n      v_voice_refs := array_append(v_voice_refs, v_ref);\n    END IF;\n  END IF;\n\n  RETURN jsonb_build_object(\n    'erased', true,\n    'identities', v_identities,\n    'voices', v_voices,\n    'storage_keys', to_jsonb(v_storage_keys),   -- caller deletes Storage objects via Storage API (storage-admin role)\n    'voice_vault_refs_revoked', to_jsonb(v_voice_refs)  -- voiceprint Vault secrets destroyed in-RPC (zero-residue)\n  );"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:05:26)*
+
+
+## 🤖 Claude *(19:05:27)*
+
+Now apply just the updated RPC (CREATE OR REPLACE — idempotent, won't touch the existing policies).
+
+## 🤖 Claude *(19:05:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# Extract the erase RPC block (from CREATE OR REPLACE FUNCTION public.erase_avatar_artifacts to the final GRANT) and apply it.\nawk '/^CREATE OR REPLACE FUNCTION public.erase_avatar_artifacts/,/TO authenticated, service_role;/' supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/erase_rpc.sql\nwc -l /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/erase_rpc.sql\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/apply-migration.ts /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/erase_rpc.sql",
+  "description": "Apply updated erase RPC with Vault revocation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 58 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/erase_rpc.sql
+> HTTP 201
+> []
+> ```
+
+## 🤖 Claude *(19:05:54)*
+
+
+## 🤖 Claude *(19:05:55)*
+
+Edge functions now. First `avatar-consent` (server-captures IP, inserts the immutable consent ledger).
+
+## 🤖 Claude *(19:06:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/avatar-consent/index.ts",
+  "content": "import { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2.49.4\";\n\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// avatar-consent \u2014 avatar-clone-ai Fatia 3a (FR-AC-030)\n// Grants biometric consent per finalidade (LGPD Art. 11), server-capturing the client IP for the\n// immutable avatar_consents ledger. INSERT runs service-role (avatar_consents has no own-INSERT policy),\n// so the IP cannot be forged client-side. Idempotent: skips a purpose that already has an active consent.\n// SOP (Lei 2): docs/processes/avatar-biometric-retention-erasure.md\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\":\n    \"authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version\",\n};\n\nconst PURPOSES = new Set([\"train_lora\", \"face_embedding\", \"voice_clone\"]);\nconst IP_RE = /^(\\d{1,3}\\.){3}\\d{1,3}$|^[0-9a-fA-F:]+$/;\n\nfunction json(body: unknown, status = 200): Response {\n  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n}\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"unauthorized\" }, 401);\n\n    const supabaseUrl = Deno.env.get(\"SUPABASE_URL\")!;\n    const anonKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n    const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n\n    const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: authErr } = await userClient.auth.getUser();\n    if (authErr || !user) return json({ error: \"unauthorized\" }, 401);\n\n    const body = await req.json().catch(() => ({}));\n    const purposes: string[] = Array.isArray(body?.purposes) ? body.purposes : [];\n    const termVersion = typeof body?.term_version === \"string\" && body.term_version.trim() ? body.term_version.trim() : null;\n    const attestTitular = body?.attestation_titular === true;\n    const attestCommercial = body?.attestation_commercial_tier === true;\n\n    if (purposes.length === 0 || !purposes.every((p) => PURPOSES.has(p))) {\n      return json({ error: \"invalid_purposes\", detail: \"purposes \u2286 {train_lora, face_embedding, voice_clone}\" }, 422);\n    }\n    if (!termVersion) return json({ error: \"term_version_required\" }, 422);\n    // FR-AC-032 foundation: the user must attest they are the biometric titular (consent to clone SELF).\n    if (!attestTitular) return json({ error: \"attestation_titular_required\", detail: \"\u00c9 necess\u00e1rio declarar que voc\u00ea \u00e9 o titular da biometria.\" }, 422);\n\n    const ip = (req.headers.get(\"x-forwarded-for\") ?? req.headers.get(\"x-real-ip\") ?? \"\").split(\",\")[0].trim();\n    const ipAddress = IP_RE.test(ip) ? ip : \"0.0.0.0\";\n\n    const admin = createClient(supabaseUrl, serviceKey);\n\n    // Idempotent: only grant a purpose with no active (granted, non-revoked) consent.\n    const { data: existing } = await admin\n      .from(\"avatar_consents\")\n      .select(\"purpose\")\n      .eq(\"user_id\", user.id)\n      .eq(\"consent_granted\", true)\n      .is(\"revoked_at\", null)\n      .in(\"purpose\", purposes);\n    const active = new Set((existing ?? []).map((r: { purpose: string }) => r.purpose));\n\n    const toGrant = purposes.filter((p) => !active.has(p));\n    const granted: string[] = [];\n    if (toGrant.length > 0) {\n      const rows = toGrant.map((purpose) => ({\n        user_id: user.id,\n        purpose,\n        term_version: termVersion,\n        consent_granted: true,\n        ip_address: ipAddress,\n        attestation_titular: attestTitular,\n        attestation_commercial_tier: attestCommercial,\n      }));\n      const { error: insErr } = await admin.from(\"avatar_consents\").insert(rows);\n      if (insErr) {\n        console.error(\"[avatar-consent] insert error:\", insErr);\n        return json({ error: \"consent_store_failed\" }, 500);\n      }\n      granted.push(...toGrant);\n    }\n\n    admin.from(\"infra_health_logs\").insert({\n      service: \"avatar-clone-ai\", status: \"healthy\", event: \"avatar_consent_grant\",\n      metadata: { user_id: user.id, granted, term_version: termVersion },\n    }).then(() => {}, () => {});\n\n    return json({ granted, already_active: purposes.filter((p) => active.has(p)) });\n  } catch (e) {\n    console.error(\"[avatar-consent] error:\", e);\n    return json({ error: e instanceof Error ? e.message : \"Unknown error\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/avatar-consent/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:06:18)*
+
+Now `erase-avatar-artifacts` (LGPD Art. 18 — calls the tenant-guarded RPC as the user, then Storage cleanup via admin + attestation).
+
+## 🤖 Claude *(19:06:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/erase-avatar-artifacts/index.ts",
+  "content": "import { serve } from \"https://deno.land/std@0.168.0/http/server.ts\";\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2.49.4\";\n\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// erase-avatar-artifacts \u2014 avatar-clone-ai Fatia 3a (FR-AC-027, LGPD Art. 18)\n// Erases a biometric artifact (avatar_identity and/or voice_profile) of the OWNER:\n//   - user path: calls erase_avatar_artifacts WITH THE USER'S JWT \u2192 the RPC's auth.uid() tenant guard\n//     enforces ownership (a poisoned id of another tenant \u2192 *_not_found).\n//   - service-role path (retention sweep): admin client \u2192 RPC's auth.role()='service_role' bypasses the\n//     per-row guard for the swept id (trusted backend).\n// The RPC deletes the SQL rows + revokes the voiceprint Vault secret in-place; THIS fn then removes the\n// Storage objects (storage.objects is storage-admin \u2192 not deletable from the SECURITY DEFINER RPC; OTD-VM-026)\n// and writes the erasure attestation to infra_health_logs.\n// SOP (Lei 2): docs/processes/avatar-biometric-retention-erasure.md\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\":\n    \"authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version\",\n};\nconst SERVICE = \"avatar-clone-ai\";\nconst BUCKET = \"video-studio-assets\";\n\nfunction json(body: unknown, status = 200): Response {\n  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n}\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const supabaseUrl = Deno.env.get(\"SUPABASE_URL\")!;\n  const serviceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n  const admin = createClient(supabaseUrl, serviceKey);\n  const pulse = (status: string, metadata: Record<string, unknown> = {}) =>\n    admin.from(\"infra_health_logs\").insert({ service: SERVICE, status, event: \"avatar_erase\", metadata });\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"unauthorized\" }, 401);\n\n    const isServiceRole = authHeader === `Bearer ${serviceKey}`;\n    const body = await req.json().catch(() => ({}));\n    const avatarIdentityId: string | null = body?.avatar_identity_id ?? null;\n    const voiceProfileId: string | null = body?.voice_profile_id ?? null;\n    const reason = body?.reason === \"retention_sweep\" ? \"retention_sweep\" : \"revoke\";\n    if (!avatarIdentityId && !voiceProfileId) {\n      return json({ error: \"avatar_identity_id or voice_profile_id required\" }, 400);\n    }\n\n    // Resolve the RPC caller: user JWT (ownership enforced by auth.uid()) vs service-role sweep.\n    let rpcClient = admin;\n    if (!isServiceRole) {\n      const anonKey = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });\n      const { data: { user }, error: authErr } = await userClient.auth.getUser();\n      if (authErr || !user) return json({ error: \"unauthorized\" }, 401);\n      rpcClient = userClient; // RPC runs as the user \u2192 tenant guard enforces ownership\n    }\n\n    const { data: result, error: rpcErr } = await rpcClient.rpc(\"erase_avatar_artifacts\", {\n      p_avatar_identity_id: avatarIdentityId,\n      p_voice_profile_id: voiceProfileId,\n    });\n    if (rpcErr) {\n      const notFound = /not_found/.test(rpcErr.message ?? \"\");\n      await pulse(\"degraded\", { reason: \"rpc_error\", detail: (rpcErr.message ?? \"\").slice(0, 160) });\n      return json({ error: notFound ? \"artifact_not_found\" : \"erase_failed\", detail: rpcErr.message }, notFound ? 404 : 500);\n    }\n\n    // Remove Storage objects (the RPC returned the keys; storage delete needs the admin Storage API).\n    const storageKeys: string[] = (result?.storage_keys as string[] | undefined) ?? [];\n    let storageRemoved = 0;\n    if (storageKeys.length > 0) {\n      const { data: removed, error: rmErr } = await admin.storage.from(BUCKET).remove(storageKeys);\n      if (rmErr) {\n        await pulse(\"degraded\", { reason: \"storage_remove_failed\", keys: storageKeys.length });\n      } else {\n        storageRemoved = (removed ?? []).length;\n      }\n    }\n\n    const { data: log } = await admin.from(\"infra_health_logs\").insert({\n      service: SERVICE, status: \"healthy\", event: \"avatar_erase\",\n      metadata: {\n        reason,\n        identities: result?.identities ?? 0,\n        voices: result?.voices ?? 0,\n        voice_vault_refs_revoked: (result?.voice_vault_refs_revoked as string[] | undefined)?.length ?? 0,\n        storage_removed: storageRemoved,\n      },\n    }).select(\"id\").maybeSingle();\n\n    return json({\n      erased: true,\n      identities: result?.identities ?? 0,\n      voices: result?.voices ?? 0,\n      storage_removed: storageRemoved,\n      attestation_log_id: (log as { id?: string } | null)?.id ?? null,\n    });\n  } catch (e) {\n    console.error(\"[erase-avatar-artifacts] error:\", e);\n    await pulse(\"unhealthy\", { error: e instanceof Error ? e.message.slice(0, 160) : \"unknown\" });\n    return json({ error: e instanceof Error ? e.message : \"Unknown error\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/erase-avatar-artifacts/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:08:11)*
+
+
+## 🤖 Claude *(19:08:12)*
+
+Now wire the consent gate into `generate-voice` (FR-AC-030/031), positioned to **not** disturb the passing Fatia 2 smoke: clone requires active consent (after the BYOK 402), synth fail-closes only on explicit revocation (after BYOK, before deduct).
+
+## 🤖 Claude *(19:08:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts",
+  "old_string": "      const apiKey = keyFor(provider);\n      if (!apiKey) {\n        await pulse(\"degraded\", \"avatar_voice_clone\", { reason: \"no_config\", provider });\n        return json({ error: `${provider}_not_configured`, action: \"Configure suas credenciais de voz em /dashboard/settings\" }, 402);\n      }\n\n      // Fetch the reference sample (SSRF-safe: must be a Supabase Storage signed URL on this project).",
+  "new_string": "      const apiKey = keyFor(provider);\n      if (!apiKey) {\n        await pulse(\"degraded\", \"avatar_voice_clone\", { reason: \"no_config\", provider });\n        return json({ error: `${provider}_not_configured`, action: \"Configure suas credenciais de voz em /dashboard/settings\" }, 402);\n      }\n\n      // Consent gate (FR-AC-030, LGPD Art. 11): persisting a voiceprint requires an ACTIVE voice_clone consent.\n      const { data: activeConsent } = await admin.from(\"avatar_consents\").select(\"id\")\n        .eq(\"user_id\", userId).eq(\"purpose\", \"voice_clone\").eq(\"consent_granted\", true).is(\"revoked_at\", null).limit(1);\n      if (!activeConsent || activeConsent.length === 0) {\n        await pulse(\"degraded\", \"avatar_voice_clone\", { reason: \"consent_required\" });\n        return json({ error: \"consent_required\", action: \"Conceda consentimento biom\u00e9trico (clonar voz) em /dashboard/settings\" }, 403);\n      }\n\n      // Fetch the reference sample (SSRF-safe: must be a Supabase Storage signed URL on this project)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:08:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts",
+  "old_string": "      const apiKey = keyFor(profProvider);\n      if (!apiKey) {\n        await pulse(\"degraded\", \"avatar_voice\", { reason: \"no_config\", provider: profProvider });\n        return json({ error: `${profProvider}_not_configured`, action: \"Configure suas credenciais de voz em /dashboard/settings\" }, 402);\n      }\n\n      // Balance gate, then atomic debit (BEFORE any provider call \u2014 fail-closed).",
+  "new_string": "      const apiKey = keyFor(profProvider);\n      if (!apiKey) {\n        await pulse(\"degraded\", \"avatar_voice\", { reason: \"no_config\", provider: profProvider });\n        return json({ error: `${profProvider}_not_configured`, action: \"Configure suas credenciais de voz em /dashboard/settings\" }, 402);\n      }\n\n      // Consent fail-closed (FR-AC-031, LGPD Art. 18): if the user GRANTED voice_clone consent and then revoked\n      // ALL of it, block the render. Profiles created post-Fatia-3a always carry an active consent (clone requires\n      // it); legacy/pre-consent profiles (no consent rows) are not blocked here.\n      const { data: vcConsents } = await admin.from(\"avatar_consents\").select(\"revoked_at\")\n        .eq(\"user_id\", userId).eq(\"purpose\", \"voice_clone\").eq(\"consent_granted\", true);\n      if (vcConsents && vcConsents.length > 0 && !vcConsents.some((c: { revoked_at: string | null }) => c.revoked_at === null)) {\n        return json({ error: \"consent_revoked\", action: \"Consentimento de voz revogado \u2014 conceda novamente em /dashboard/settings\" }, 403);\n      }\n\n      // Balance gate, then atomic debit (BEFORE any provider call \u2014 fail-closed)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:08:37)*
+
+
+## 🤖 Claude *(19:08:38)*
+
+Now register the two new functions in `config.toml` and deploy all three.
+
+## 🤖 Claude *(19:08:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.generate-voice]\nverify_jwt = false\n[functions.analyze-seo]\nverify_jwt = false",
+  "new_string": "[functions.generate-voice]\nverify_jwt = false\n[functions.avatar-consent]\nverify_jwt = false\n[functions.erase-avatar-artifacts]\nverify_jwt = false\n[functions.analyze-seo]\nverify_jwt = false"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:08:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor fn in avatar-consent erase-avatar-artifacts generate-voice; do\n  echo \"=== deploy $fn ===\"\n  npx supabase functions deploy \"$fn\" --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E \"Deployed|script size|Error|error\" | head -3\ndone",
+  "description": "Deploy avatar-consent, erase-avatar-artifacts, generate-voice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy avatar-consent ===
+> Deploying Function: avatar-consent (script size: 125.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: avatar-consent
+> === deploy erase-avatar-artifacts ===
+> Deploying Function: erase-avatar-artifacts (script size: 125.7kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: erase-avatar-artifacts
+> === deploy generate-voice ===
+> Deploying Function: generate-voice (script size: 140kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-voice
+> ```
+
+## 🤖 Claude *(19:09:06)*
+
+
+## 🤖 Claude *(19:09:08)*
+
+All three deployed. First, a regression check — re-run the Fatia 2 smoke to confirm the new consent gate didn't disturb it (it shouldn't: clone-no-key 402 fires before consent; synth gates 422/404 fire before consent; G7 has no consent rows so it proceeds to the balance 402).
+
+## 🤖 Claude *(19:09:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; set -a; source .env 2>/dev/null; set +a; bun run scripts/qa/smoke-generate-voice.ts 2>&1 | tail -13",
+  "description": "Regression: Fatia 2 voice smoke after consent gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G9 no env provider fallback in user-facing path
+> ✅ throwaway users e8af472d-c735-490a-916a-cc9e17aaaf18 / 2d317a3e-bf09-4a66-be2a-22e7eb920118
+> ✅ G10 no-auth → 401  → status=401
+> ✅ G2 no-config clone → 402 elevenlabs_not_configured  → status=402 err=elevenlabs_not_configured
+> ✅ setup: voice_profile created via RPC  → 4d346ca1-80b8-4a2c-b42f-860b14c66afd
+> ✅ G3 language mismatch → 422 language_mismatch  → status=422 err=language_mismatch
+> ✅ G4 code-switch → 422 code_switch_detected  → status=422 err=code_switch_detected
+> ✅ G5 tenant guard → 404 voice_profile_not_found  → status=404 err=voice_profile_not_found
+> ✅ G6 masked column-grant (no plaintext leak)  → value="••••••••••••"
+> ✅ G7 insufficient balance → 402  → status=402 err=Saldo insuficiente de mcoCoins
+> ✅ G8 telemetry pulse (service=avatar-clone-ai)  → rows=1
+> 
+> ✅ ALL GATES PASS — generate-voice smoke (zero-cost)
+> ```
+
+## 🤖 Claude *(19:10:00)*
+
+
+## 🤖 Claude *(19:10:01)*
+
+No regression — Fatia 2 smoke still **10/10**. The consent-gate ordering worked exactly as designed. Now the new 3a smoke (consent grant/gate + immutability + erasure zero-residue + tenant-guard).
+
+## 🤖 Claude *(19:10:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-avatar-consent-erase.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 avatar-clone-ai Fatia 3a: consent (FR-AC-030/031) + erasure (FR-AC-027, LGPD Art. 11/18).\n * USER PATH (real JWT). ZERO cost \u2014 no provider is ever called, no mcoCoins spent.\n *\n *   G1  no-auth \u2192 401 (erase + consent)\n *   G2  grant without attestation_titular \u2192 422 attestation_titular_required\n *   G3  grant voice_clone \u2192 200 granted\n *   G4  grant again \u2192 200 idempotent (already_active)\n *   G5  clone with key but NO consent \u2192 403 consent_required (biometric creation blocked)\n *   G6  clone with key + consent + non-storage sample URL \u2192 422 invalid_sample_url (consent gate CLEARED)\n *   G7  avatar_consents immutability \u2192 UPDATE term_version \u2192 error 42501\n *   G8  synth after consent REVOKED \u2192 403 consent_revoked (fail-closed render)\n *   G9  erase own voice_profile \u2192 {erased:true, voices:1} + row count 0 (zero-residue)\n *   G10 erase tenant-guard \u2192 User B cannot erase User A's profile \u2192 404 artifact_not_found\n *   G11 erase attestation \u2192 infra_health_logs event='avatar_erase' exists\n *\n * Usage: bun run scripts/qa/smoke-avatar-consent-erase.ts\n */\nimport { createClient } from \"@supabase/supabase-js\";\nimport { createThrowawayUser, deleteThrowawayUser } from \"./lib/qa-throwaway\";\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;\nif (!URL || !SVC || !PUB) { console.error(\"Missing env (URL/SVC/PUB)\"); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nlet uidA: string | null = null;\nlet uidB: string | null = null;\nlet pass = true;\nfunction check(label: string, ok: boolean, detail = \"\") {\n  console.log(`${ok ? \"\u2705\" : \"\u274c\"} ${label}${detail ? `  \u2192 ${detail}` : \"\"}`);\n  if (!ok) pass = false;\n}\ninterface Body { error?: string; detail?: string; granted?: string[]; already_active?: string[]; erased?: boolean; voices?: number; }\nasync function call(fn: string, token: string | null, body: unknown): Promise<{ status: number; body: Body }> {\n  const headers: Record<string, string> = { \"Content-Type\": \"application/json\", apikey: PUB };\n  if (token) headers.Authorization = `Bearer ${token}`;\n  const r = await fetch(`${URL}/functions/v1/${fn}`, { method: \"POST\", headers, body: JSON.stringify(body) });\n  let j: Body; const t = await r.text();\n  try { j = JSON.parse(t) as Body; } catch { j = { error: t }; }\n  return { status: r.status, body: j };\n}\nasync function signIn(email: string, password: string): Promise<string> {\n  const c = createClient(URL, PUB, { auth: { persistSession: false } });\n  const { data, error } = await c.auth.signInWithPassword({ email, password });\n  if (error || !data?.session) throw new Error(`signIn: ${error?.message}`);\n  return data.session.access_token;\n}\nasync function mkProfile(uid: string): Promise<string> {\n  const { data, error } = await admin.rpc(\"store_voice_profile\", {\n    p_user_id: uid, p_provider: \"elevenlabs\", p_clone_method: \"ivc\", p_voice_id: `fake_${Date.now()}`, p_language: \"en\",\n  });\n  if (error || !data) throw new Error(`store_voice_profile: ${error?.message}`);\n  return data as string;\n}\n\ntry {\n  const a = await createThrowawayUser(admin, \"gv-ce-a\"); uidA = a.uid;\n  const b = await createThrowawayUser(admin, \"gv-ce-b\"); uidB = b.uid;\n  const tokenA = await signIn(a.email, a.password);\n  const tokenB = await signIn(b.email, b.password);\n  // Seed fake BYOK keys so clone/synth reach the consent gate (never used \u2014 fail-closed before any provider call).\n  await admin.from(\"user_api_keys\").insert({ user_id: uidA, elevenlabs_api_key: \"sk_fake_ce_a\" });\n  await admin.from(\"user_api_keys\").insert({ user_id: uidB, elevenlabs_api_key: \"sk_fake_ce_b\" });\n  console.log(`\u2705 throwaway users ${uidA} / ${uidB}`);\n\n  // G1 \u2014 no-auth\n  const g1a = await call(\"erase-avatar-artifacts\", null, { voice_profile_id: \"x\" });\n  const g1b = await call(\"avatar-consent\", null, { purposes: [\"voice_clone\"], term_version: \"v1\" });\n  check(\"G1 no-auth \u2192 401 (erase + consent)\", g1a.status === 401 && g1b.status === 401, `erase=${g1a.status} consent=${g1b.status}`);\n\n  // G2 \u2014 grant without attestation_titular\n  const g2 = await call(\"avatar-consent\", tokenA, { purposes: [\"voice_clone\"], term_version: \"v1\" });\n  check(\"G2 grant w/o attestation \u2192 422\", g2.status === 422 && g2.body.error === \"attestation_titular_required\", `status=${g2.status} err=${g2.body.error}`);\n\n  // G3 \u2014 grant voice_clone\n  const g3 = await call(\"avatar-consent\", tokenA, { purposes: [\"voice_clone\"], term_version: \"v1\", attestation_titular: true, attestation_commercial_tier: true });\n  check(\"G3 grant voice_clone \u2192 200 granted\", g3.status === 200 && (g3.body.granted ?? []).includes(\"voice_clone\"), `status=${g3.status} granted=${JSON.stringify(g3.body.granted)}`);\n\n  // G4 \u2014 idempotent grant\n  const g4 = await call(\"avatar-consent\", tokenA, { purposes: [\"voice_clone\"], term_version: \"v1\", attestation_titular: true });\n  check(\"G4 grant idempotent \u2192 already_active\", g4.status === 200 && (g4.body.already_active ?? []).includes(\"voice_clone\") && (g4.body.granted ?? []).length === 0, `granted=${JSON.stringify(g4.body.granted)} active=${JSON.stringify(g4.body.already_active)}`);\n\n  // G5 \u2014 clone with key but NO consent (user B)\n  const g5 = await call(\"generate-voice\", tokenB, { action: \"clone\", provider: \"elevenlabs\", language: \"en\", sample_audio_url: \"https://example.com/x.mp3\" });\n  check(\"G5 clone no-consent \u2192 403 consent_required\", g5.status === 403 && g5.body.error === \"consent_required\", `status=${g5.status} err=${g5.body.error}`);\n\n  // G6 \u2014 clone with key + consent + non-storage URL \u2192 consent CLEARED, SSRF blocks (422 invalid_sample_url)\n  const g6 = await call(\"generate-voice\", tokenA, { action: \"clone\", provider: \"elevenlabs\", language: \"en\", sample_audio_url: \"https://example.com/x.mp3\" });\n  check(\"G6 clone consent-cleared \u2192 422 invalid_sample_url\", g6.status === 422 && g6.body.error === \"invalid_sample_url\", `status=${g6.status} err=${g6.body.error}`);\n\n  // G7 \u2014 avatar_consents immutability (UPDATE non-revoked_at column)\n  const { error: immErr } = await admin.from(\"avatar_consents\").update({ term_version: \"v2\" }).eq(\"user_id\", uidA).eq(\"purpose\", \"voice_clone\");\n  check(\"G7 immutability \u2192 UPDATE term_version blocked\", Boolean(immErr) && /imut|42501/i.test(immErr?.message ?? immErr?.code ?? \"\"), immErr ? (immErr.code ?? immErr.message ?? \"\").slice(0, 60) : \"NO ERROR (bad)\");\n\n  // G8 \u2014 synth after consent revoked\n  const profA = await mkProfile(uidA);\n  await admin.from(\"avatar_consents\").update({ revoked_at: new Date().toISOString() }).eq(\"user_id\", uidA).eq(\"purpose\", \"voice_clone\");\n  const g8 = await call(\"generate-voice\", tokenA, { action: \"synthesize\", voice_profile_id: profA, script: \"Hello everyone this is a clean english test\", language: \"en\" });\n  check(\"G8 synth consent-revoked \u2192 403 consent_revoked\", g8.status === 403 && g8.body.error === \"consent_revoked\", `status=${g8.status} err=${g8.body.error}`);\n\n  // G9 \u2014 erase own voice_profile (zero-residue)\n  const profErase = await mkProfile(uidA);\n  const g9 = await call(\"erase-avatar-artifacts\", tokenA, { voice_profile_id: profErase, reason: \"revoke\" });\n  const { count: residue } = await admin.from(\"voice_profiles\").select(\"id\", { count: \"exact\", head: true }).eq(\"id\", profErase);\n  check(\"G9 erase own \u2192 erased + zero residue\", g9.status === 200 && g9.body.erased === true && g9.body.voices === 1 && (residue ?? 0) === 0, `status=${g9.status} voices=${g9.body.voices} residue=${residue}`);\n\n  // G10 \u2014 erase tenant-guard (B cannot erase A's profile)\n  const g10 = await call(\"erase-avatar-artifacts\", tokenB, { voice_profile_id: profA });\n  const { count: stillThere } = await admin.from(\"voice_profiles\").select(\"id\", { count: \"exact\", head: true }).eq(\"id\", profA);\n  check(\"G10 erase tenant-guard \u2192 404 + untouched\", g10.status === 404 && g10.body.error === \"artifact_not_found\" && (stillThere ?? 0) === 1, `status=${g10.status} err=${g10.body.error} stillThere=${stillThere}`);\n\n  // G11 \u2014 erase telemetry attestation\n  const { data: pulses } = await admin.from(\"infra_health_logs\").select(\"id\").eq(\"service\", \"avatar-clone-ai\").eq(\"event\", \"avatar_erase\").limit(1);\n  check(\"G11 erase attestation telemetry\", Array.isArray(pulses) && pulses.length > 0, `rows=${pulses?.length ?? 0}`);\n\n} catch (e) {\n  check(\"smoke setup\", false, e instanceof Error ? e.message : String(e));\n} finally {\n  for (const uid of [uidA, uidB]) {\n    if (uid) await admin.from(\"user_api_keys\").delete().eq(\"user_id\", uid).then(() => {}, () => {});\n  }\n  await deleteThrowawayUser(admin, uidA);\n  await deleteThrowawayUser(admin, uidB);\n  console.log(`\\n${pass ? \"\u2705 ALL GATES PASS\" : \"\u274c FAILURES\"} \u2014 avatar consent+erase smoke (zero-cost)`);\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-avatar-consent-erase.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:10:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; set -a; source .env 2>/dev/null; set +a; bun run scripts/qa/smoke-avatar-consent-erase.ts 2>&1 | tail -16",
+  "description": "Run Fatia 3a consent+erase smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ throwaway users f3b3bf08-1b9b-4612-aa3e-043c8604c8d7 / f5577c8c-164f-4774-8278-a228acc16b5f
+> ✅ G1 no-auth → 401 (erase + consent)  → erase=401 consent=401
+> ✅ G2 grant w/o attestation → 422  → status=422 err=attestation_titular_required
+> ✅ G3 grant voice_clone → 200 granted  → status=200 granted=["voice_clone"]
+> ✅ G4 grant idempotent → already_active  → granted=[] active=["voice_clone"]
+> ✅ G5 clone no-consent → 403 consent_required  → status=403 err=consent_required
+> ✅ G6 clone consent-cleared → 422 invalid_sample_url  → status=422 err=invalid_sample_url
+> ✅ G7 immutability → UPDATE term_version blocked  → 42501
+> ✅ G8 synth consent-revoked → 403 consent_revoked  → status=403 err=consent_revoked
+> ✅ G9 erase own → erased + zero residue  → status=200 voices=1 residue=0
+> ✅ G10 erase tenant-guard → 404 + untouched  → status=404 err=artifact_not_found stillThere=1
+> ✅ G11 erase attestation telemetry  → rows=1
+> 
+> ✅ ALL GATES PASS — avatar consent+erase smoke (zero-cost)
+> ```
+
+## 🤖 Claude *(19:11:16)*
+
+
+## 🤖 Claude *(19:11:17)*
+
+**Fatia 3a backend: all 11 gates pass** (consent grant/idempotent/gate · clone-no-consent 403 · consent-cleared · immutability 42501 · synth-revoked 403 · erase zero-residue · tenant-guard 404 · attestation telemetry). Now the client. First regen types so the new tables are typed (project convention).
+
+## 🤖 Claude *(19:11:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase gen types typescript --project-id bcyvddsykvehvpwstlfa > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts 2>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/gen.err\necho \"exit: $?\"; head -3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/gen.err\necho \"=== new types size vs current ===\"; wc -l /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts src/integrations/supabase/types.ts\necho \"=== new tables present in regen? ===\"; grep -cE \"avatar_identities:|avatar_consents:|voice_profiles:\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts",
+  "description": "Regenerate Supabase types (check additive)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit: 0
+> A new version of Supabase CLI is available: v2.108.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === new types size vs current ===
+>   5451 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts
+>   5285 src/integrations/supabase/types.ts
+>  10736 total
+> === new tables present in regen? ===
+> 3
+> ```
+
+## 🤖 Claude *(19:11:37)*
+
+
+## 🤖 Claude *(19:11:37)*
+
++166 lines, all 3 new tables present. Let me confirm the diff is purely additive (no removals/changes to existing types) before replacing.
+
+## 🤖 Claude *(19:11:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== diff summary (\u2212 = removed from current, + = added) ===\"\ndiff src/integrations/supabase/types.ts /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts | grep -E \"^[<>]\" | grep -cE \"^<\" \necho \"lines only-in-current (should be ~0 = additive):\"\ndiff src/integrations/supabase/types.ts /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts | grep -E \"^<\" | grep -vE \"^< *$\" | head -20",
+  "description": "Confirm types regen is additive"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === diff summary (− = removed from current, + = added) ===
+> 0
+> lines only-in-current (should be ~0 = additive):
+> ```
+
+## 🤖 Claude *(19:11:45)*
+
+
+## 🤖 Claude *(19:11:45)*
+
+Purely additive (0 removals). Replacing `types.ts` with the regen.
+
+## 🤖 Claude *(19:11:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; cp /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/scratchpad/types.new.ts src/integrations/supabase/types.ts; echo \"types.ts updated ($(wc -l < src/integrations/supabase/types.ts) lines)\"; grep -nE \"avatar_consents:|avatar_identities:|voice_profiles:\" src/integrations/supabase/types.ts | head",
+  "description": "Apply regenerated types"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> types.ts updated (5451 lines)
+> 907:      avatar_consents: {
+> 946:      avatar_identities: {
+> 4484:      voice_profiles: {
+> ```
+
+## 🤖 Claude *(19:11:56)*
+
+
+## 🤖 Claude *(19:11:56)*
+
+types updated. Now the consent + erasure hooks.
+
+## 🤖 Claude *(19:12:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarConsent.ts",
+  "content": "import { useQuery, useMutation, useQueryClient } from \"@tanstack/react-query\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { useAuth } from \"@/hooks/useAuth\";\n\n// avatar-clone-ai Fatia 3a \u2014 biometric consent (LGPD Art. 11). Harness hook; UI is display-only.\n\nexport type ConsentPurpose = \"train_lora\" | \"face_embedding\" | \"voice_clone\";\n\nexport interface AvatarConsentRow {\n  id: string;\n  purpose: ConsentPurpose;\n  term_version: string;\n  consent_granted: boolean;\n  revoked_at: string | null;\n  created_at: string;\n}\n\n/** Current consent ledger (RLS own) + the set of purposes with an ACTIVE (granted, non-revoked) consent. */\nexport function useAvatarConsents() {\n  const { user } = useAuth();\n  const query = useQuery({\n    queryKey: [\"avatar-consents\", user?.id],\n    enabled: Boolean(user?.id),\n    queryFn: async (): Promise<AvatarConsentRow[]> => {\n      const { data, error } = await supabase\n        .from(\"avatar_consents\")\n        .select(\"id, purpose, term_version, consent_granted, revoked_at, created_at\")\n        .order(\"created_at\", { ascending: false });\n      if (error) throw new Error(error.message);\n      return (data ?? []) as AvatarConsentRow[];\n    },\n  });\n  const activePurposes = new Set<ConsentPurpose>(\n    (query.data ?? []).filter((c) => c.consent_granted && c.revoked_at === null).map((c) => c.purpose),\n  );\n  return { ...query, activePurposes };\n}\n\nexport interface GrantConsentParams {\n  purposes: ConsentPurpose[];\n  term_version: string;\n  attestation_titular: boolean;\n  attestation_commercial_tier?: boolean;\n}\n\n/** Grant biometric consent per finalidade via the avatar-consent edge fn (server-captures IP). */\nexport function useGrantConsent() {\n  const qc = useQueryClient();\n  const { user } = useAuth();\n  return useMutation({\n    mutationFn: async (params: GrantConsentParams) => {\n      const { data, error } = await supabase.functions.invoke(\"avatar-consent\", { body: params });\n      if (error) {\n        let message = error.message;\n        try {\n          const ctx = (error as { context?: Response }).context;\n          const parsed = ctx ? await ctx.json() : null;\n          if (parsed?.error) message = parsed.detail ? `${parsed.error}: ${parsed.detail}` : (parsed.error as string);\n        } catch { /* keep */ }\n        throw new Error(message);\n      }\n      return data as { granted: ConsentPurpose[]; already_active: ConsentPurpose[] };\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: [\"avatar-consents\", user?.id] }),\n  });\n}\n\n/** Revoke consent for a purpose (direct UPDATE \u2014 RLS revoke_own + immutability trigger guards columns). */\nexport function useRevokeConsent() {\n  const qc = useQueryClient();\n  const { user } = useAuth();\n  return useMutation({\n    mutationFn: async (purpose: ConsentPurpose) => {\n      const { error } = await supabase\n        .from(\"avatar_consents\")\n        .update({ revoked_at: new Date().toISOString() })\n        .eq(\"purpose\", purpose)\n        .is(\"revoked_at\", null);\n      if (error) throw new Error(error.message);\n    },\n    onSuccess: () => qc.invalidateQueries({ queryKey: [\"avatar-consents\", user?.id] }),\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarConsent.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:12:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarErasure.ts",
+  "content": "import { useMutation } from \"@tanstack/react-query\";\nimport { supabase } from \"@/integrations/supabase/client\";\n\n// avatar-clone-ai Fatia 3a \u2014 LGPD Art. 18 erasure. Harness hook; UI is display-only.\n\nexport interface EraseAvatarParams {\n  avatar_identity_id?: string;\n  voice_profile_id?: string;\n  reason?: \"revoke\" | \"retention_sweep\";\n}\nexport interface EraseAvatarResult {\n  erased: boolean;\n  identities: number;\n  voices: number;\n  storage_removed: number;\n  attestation_log_id: string | null;\n}\n\n/** Erase a biometric artifact (own) via the erase-avatar-artifacts edge fn (tenant-guarded server-side). */\nexport function useEraseAvatarArtifact() {\n  return useMutation({\n    mutationFn: async (params: EraseAvatarParams): Promise<EraseAvatarResult> => {\n      const { data, error } = await supabase.functions.invoke(\"erase-avatar-artifacts\", { body: params });\n      if (error) {\n        let message = error.message;\n        try {\n          const ctx = (error as { context?: Response }).context;\n          const parsed = ctx ? await ctx.json() : null;\n          if (parsed?.error) message = (parsed.error as string);\n        } catch { /* keep */ }\n        throw new Error(message);\n      }\n      return data as EraseAvatarResult;\n    },\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarErasure.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:12:40)*
+
+
+## 🤖 Claude *(19:12:41)*
+
+Now the ConsentWizard component. Let me check available UI primitives (checkbox) first.
+
+## 🤖 Claude *(19:12:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; ls src/components/ui/checkbox.tsx src/components/ui/label.tsx 2>/dev/null; echo \"---\"; ls src/components/ui/ | grep -iE \"checkbox|switch|label\" ",
+  "description": "Check for checkbox/label UI primitives"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/components/ui/checkbox.tsx
+> src/components/ui/label.tsx
+> ---
+> checkbox.tsx
+> label.tsx
+> switch.tsx
+> ```
+
+## 🤖 Claude *(19:12:54)*
+
+
+## 🤖 Claude *(19:12:55)*
+
+`checkbox` + `label` available. Writing the FR-AC-030-faithful ConsentWizard (3 separate checkboxes + 2 attestations).
+
+## 🤖 Claude *(19:13:12)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/avatar/ConsentWizard.tsx",
+  "content": "import { useState } from \"react\";\nimport { ShieldCheck, Loader2 } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { Checkbox } from \"@/components/ui/checkbox\";\nimport { cn } from \"@/lib/utils\";\nimport { useGrantConsent, type ConsentPurpose } from \"@/hooks/useAvatarConsent\";\n\n// avatar-clone-ai Fatia 3a \u2014 biometric consent wizard (FR-AC-030, LGPD Art. 11).\n// THREE separate purpose checkboxes (never a single \"accept all\") + two explicit attestations.\nexport const CONSENT_TERM_VERSION = \"avatar-biometric-consent-v1\";\n\nconst PURPOSE_LABELS: Record<ConsentPurpose, string> = {\n  train_lora: \"Treinar modelo de identidade facial (LoRA / Soul ID)\",\n  face_embedding: \"Extrair embedding facial (verifica\u00e7\u00e3o de identidade)\",\n  voice_clone: \"Clonar minha voz\",\n};\n\ninterface Props {\n  /** Which finalidades to offer (default: all three). */\n  purposes?: ConsentPurpose[];\n  /** Pre-select these purposes. */\n  preselect?: ConsentPurpose[];\n  onComplete?: () => void;\n}\n\nexport function ConsentWizard({ purposes = [\"train_lora\", \"face_embedding\", \"voice_clone\"], preselect = [], onComplete }: Props) {\n  const grant = useGrantConsent();\n  const [checked, setChecked] = useState<Set<ConsentPurpose>>(new Set(preselect));\n  const [attestTitular, setAttestTitular] = useState(false);\n  const [attestCommercial, setAttestCommercial] = useState(false);\n\n  const toggle = (p: ConsentPurpose) =>\n    setChecked((prev) => {\n      const next = new Set(prev);\n      next.has(p) ? next.delete(p) : next.add(p);\n      return next;\n    });\n\n  const canGrant = checked.size > 0 && attestTitular && !grant.isPending;\n\n  const handleGrant = async () => {\n    try {\n      const res = await grant.mutateAsync({\n        purposes: Array.from(checked),\n        term_version: CONSENT_TERM_VERSION,\n        attestation_titular: attestTitular,\n        attestation_commercial_tier: attestCommercial,\n      });\n      toast.success(\n        res.granted.length > 0\n          ? `Consentimento concedido: ${res.granted.join(\", \")}`\n          : \"Consentimento j\u00e1 estava ativo.\",\n      );\n      onComplete?.();\n    } catch (e) {\n      toast.error(e instanceof Error ? e.message : \"Falha ao conceder consentimento\");\n    }\n  };\n\n  return (\n    <div className=\"space-y-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3\">\n      <div className=\"flex items-center gap-2 text-[12px] font-semibold text-amber-600 dark:text-amber-400\">\n        <ShieldCheck className=\"h-4 w-4\" />\n        Consentimento biom\u00e9trico (LGPD Art. 11)\n      </div>\n      <p className=\"text-[11px] leading-relaxed text-muted-foreground\">\n        Dado biom\u00e9trico \u00e9 sens\u00edvel. Voc\u00ea consente, por finalidade espec\u00edfica e separada, ao uso da sua pr\u00f3pria\n        biometria. Pode revogar e solicitar a exclus\u00e3o a qualquer momento.\n      </p>\n\n      <div className=\"space-y-2\">\n        {purposes.map((p) => (\n          <label key={p} className=\"flex cursor-pointer items-start gap-2 text-[12px]\">\n            <Checkbox checked={checked.has(p)} onCheckedChange={() => toggle(p)} className=\"mt-0.5\" />\n            <span>{PURPOSE_LABELS[p]}</span>\n          </label>\n        ))}\n      </div>\n\n      <div className=\"space-y-2 border-t border-border/60 pt-2\">\n        <label className=\"flex cursor-pointer items-start gap-2 text-[12px]\">\n          <Checkbox checked={attestTitular} onCheckedChange={(v) => setAttestTitular(v === true)} className=\"mt-0.5\" />\n          <span>Declaro que <strong>sou o titular</strong> da biometria (clone de mim mesmo, n\u00e3o de terceiros).</span>\n        </label>\n        <label className=\"flex cursor-pointer items-start gap-2 text-[12px]\">\n          <Checkbox checked={attestCommercial} onCheckedChange={(v) => setAttestCommercial(v === true)} className=\"mt-0.5\" />\n          <span className=\"text-muted-foreground\">Declaro que meu plano BYOK permite uso comercial (opcional).</span>\n        </label>\n      </div>\n\n      <Button\n        type=\"button\"\n        variant=\"accent\"\n        size=\"sm\"\n        className={cn(\"w-full gap-2\")}\n        disabled={!canGrant}\n        onClick={handleGrant}\n        title={!attestTitular ? \"Declare a titularidade\" : checked.size === 0 ? \"Selecione ao menos uma finalidade\" : undefined}\n      >\n        {grant.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <ShieldCheck className=\"h-3.5 w-3.5\" />}\n        Conceder consentimento\n      </Button>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/avatar/ConsentWizard.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:13:20)*
+
+
+## 🤖 Claude *(19:13:21)*
+
+Now wire consent + erasure into the VoiceClone inspector. Imports first:
+
+## 🤖 Claude *(19:13:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "import { useRef, useState } from \"react\";\nimport { Mic, Upload, Loader2, Sparkles } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { Textarea } from \"@/components/ui/textarea\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { useAvatarVoiceClone, useAvatarVoiceSynthesize } from \"@/hooks/useAvatarVoice\";\nimport { detectCodeSwitch, type VoiceLanguage, type VoiceProvider } from \"@/lib/avatar\";\nimport { type VoiceCloneData } from \"@/types/canvas\";\nimport { Section, InspectorHeader, CostPreview } from \"../shared\";",
+  "new_string": "import { useRef, useState } from \"react\";\nimport { Mic, Upload, Loader2, Sparkles, Trash2 } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { Textarea } from \"@/components/ui/textarea\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { useAvatarVoiceClone, useAvatarVoiceSynthesize } from \"@/hooks/useAvatarVoice\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";\nimport { useEraseAvatarArtifact } from \"@/hooks/useAvatarErasure\";\nimport { ConsentWizard } from \"@/components/avatar/ConsentWizard\";\nimport { detectCodeSwitch, type VoiceLanguage, type VoiceProvider } from \"@/lib/avatar\";\nimport { type VoiceCloneData } from \"@/types/canvas\";\nimport { Section, InspectorHeader, CostPreview } from \"../shared\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:13:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const cloneVoice = useAvatarVoiceClone();\n  const synthesize = useAvatarVoiceSynthesize();\n  const fileRef = useRef<HTMLInputElement | null>(null);\n  const [uploading, setUploading] = useState(false);\n\n  const d = node.data;\n  const cloned = Boolean(d.voiceProfileId);\n  const insufficient = VOICE_COST > creditsBalance;",
+  "new_string": "  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const cloneVoice = useAvatarVoiceClone();\n  const synthesize = useAvatarVoiceSynthesize();\n  const erase = useEraseAvatarArtifact();\n  const { activePurposes } = useAvatarConsents();\n  const fileRef = useRef<HTMLInputElement | null>(null);\n  const [uploading, setUploading] = useState(false);\n\n  const d = node.data;\n  const cloned = Boolean(d.voiceProfileId);\n  const hasVoiceConsent = activePurposes.has(\"voice_clone\");\n  const insufficient = VOICE_COST > creditsBalance;\n\n  const handleErase = async () => {\n    if (!d.voiceProfileId) return;\n    try {\n      await erase.mutateAsync({ voice_profile_id: d.voiceProfileId, reason: \"revoke\" });\n      updateNodeData(node.id, { voiceProfileId: undefined, output: undefined, status: \"idle\", error: undefined });\n      toast.success(\"Dados de voz apagados (voiceprint destru\u00eddo).\");\n    } catch (e) {\n      toast.error(e instanceof Error ? e.message : \"Falha ao apagar dados de voz\");\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:13:55)*
+
+
+## 🤖 Claude *(19:13:56)*
+
+Now the consent gate before the sample section + disable clone until consent + the erase button. Let me view the current sample section to edit precisely.
+
+## 🤖 Claude *(19:13:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "offset": 196,
+  "limit": 52
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 196	        </Section>
+> 197	
+> 198	        <Section title="Idioma (um por geração)">
+> 199	          <div className="grid grid-cols-2 gap-2">
+> 200	            {LANGUAGES.map((l) => (
+> 201	              <button
+> 202	                key={l.id}
+> 203	                type="button"
+> 204	                onClick={() => setLanguage(l.id)}
+> 205	                className={cn(
+> 206	                  "h-9 rounded-md border text-xs font-medium transition-colors",
+> 207	                  d.language === l.id
+> 208	                    ? "border-accent bg-accent/5 text-foreground ring-1 ring-accent/30"
+> 209	                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+> 210	                )}
+> 211	              >
+> 212	                {l.label}
+> 213	              </button>
+> 214	            ))}
+> 215	          </div>
+> 216	        </Section>
+> 217	
+> 218	        <Section title="Amostra de voz">
+> 219	          <div className="space-y-2">
+> 220	            {d.sampleAudioUrl ? (
+> 221	              <audio src={d.sampleAudioUrl} controls className="w-full" />
+> 222	            ) : (
+> 223	              <div className="flex h-12 w-full items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-[11px] text-muted-foreground">
+> 224	                Sem amostra ainda
+> 225	              </div>
+> 226	            )}
+> 227	            <input
+> 228	              ref={fileRef}
+> 229	              type="file"
+> 230	              accept="audio/*"
+> 231	              hidden
+> 232	              onChange={(e) => {
+> 233	                const f = e.target.files?.[0];
+> 234	                if (f) onFile(f);
+> 235	                e.currentTarget.value = "";
+> 236	              }}
+> 237	            />
+> 238	            <Button
+> 239	              type="button"
+> 240	              variant="outline"
+> 241	              size="sm"
+> 242	              className="w-full gap-2"
+> 243	              disabled={uploading || busy}
+> 244	              onClick={() => fileRef.current?.click()}
+> 245	            >
+> 246	              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+> 247	              {uploading ? "Enviando…" : d.sampleAudioUrl ? "Trocar amostra" : "Enviar amostra"}
+> ```
+
+## 🤖 Claude *(19:14:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "offset": 248,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 248	            </Button>
+> 249	            <Button
+> 250	              type="button"
+> 251	              variant={cloned ? "outline" : "accent"}
+> 252	              size="sm"
+> 253	              className="w-full gap-2"
+> 254	              disabled={!d.sampleAudioUrl || busy || cloned}
+> 255	              onClick={handleClone}
+> 256	            >
+> 257	              {cloneVoice.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
+> 258	              {cloned ? "✓ Voz clonada" : "Clonar voz · 0 💎"}
+> 259	            </Button>
+> 260	          </div>
+> 261	        </Section>
+> 262	
+> 263	        {d.output?.audioUrl && (
+> 264	          <Section title="Resultado">
+> 265	            <div className="space-y-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
+> 266	              <audio src={d.output.audioUrl} controls className="w-full" />
+> 267	              <div className="flex items-center justify-between gap-2">
+> 268	                <span className="font-mono text-[9px] text-muted-foreground">
+> 269	                  {new Date(d.output.generatedAt).toLocaleString("pt-BR")}
+> 270	                </span>
+> 271	                <Button
+> 272	                  type="button"
+> 273	                  variant="destructive"
+> 274	                  size="sm"
+> 275	                  className="h-7 px-2 text-[10px]"
+> 276	                  onClick={() => updateNodeData(node.id, { output: undefined, status: "idle" })}
+> 277	                >
+> ```
+
+## 🤖 Claude *(19:14:09)*
+
+
+## 🤖 Claude *(19:14:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "        <Section title=\"Amostra de voz\">\n          <div className=\"space-y-2\">\n            {d.sampleAudioUrl ? (",
+  "new_string": "        {!hasVoiceConsent && (\n          <Section title=\"Consentimento\">\n            <ConsentWizard purposes={[\"voice_clone\"]} preselect={[\"voice_clone\"]} />\n          </Section>\n        )}\n\n        <Section title=\"Amostra de voz\">\n          <div className=\"space-y-2\">\n            {d.sampleAudioUrl ? ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:14:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "            <Button\n              type=\"button\"\n              variant={cloned ? \"outline\" : \"accent\"}\n              size=\"sm\"\n              className=\"w-full gap-2\"\n              disabled={!d.sampleAudioUrl || busy || cloned}\n              onClick={handleClone}\n            >\n              {cloneVoice.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Mic className=\"h-3.5 w-3.5\" />}\n              {cloned ? \"\u2713 Voz clonada\" : \"Clonar voz \u00b7 0 \ud83d\udc8e\"}\n            </Button>\n          </div>\n        </Section>",
+  "new_string": "            <Button\n              type=\"button\"\n              variant={cloned ? \"outline\" : \"accent\"}\n              size=\"sm\"\n              className=\"w-full gap-2\"\n              disabled={!d.sampleAudioUrl || busy || cloned || !hasVoiceConsent}\n              onClick={handleClone}\n              title={!hasVoiceConsent ? \"Conceda o consentimento biom\u00e9trico primeiro\" : undefined}\n            >\n              {cloneVoice.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Mic className=\"h-3.5 w-3.5\" />}\n              {cloned ? \"\u2713 Voz clonada\" : \"Clonar voz \u00b7 0 \ud83d\udc8e\"}\n            </Button>\n            {cloned && (\n              <Button\n                type=\"button\"\n                variant=\"ghost\"\n                size=\"sm\"\n                className=\"w-full gap-2 text-destructive hover:text-destructive\"\n                disabled={erase.isPending || busy}\n                onClick={handleErase}\n                title=\"Apaga o voiceprint clonado (LGPD Art. 18)\"\n              >\n                {erase.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Trash2 className=\"h-3.5 w-3.5\" />}\n                Apagar dados de voz\n              </Button>\n            )}\n          </div>\n        </Section>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:14:27)*
+
+
+## 🤖 Claude *(19:14:28)*
+
+Client wired. Now verify: tsc + lint changed files + tests.
+
+## 🤖 Claude *(19:14:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; npx tsc --noEmit 2>&1 | tail -20; echo \"=== tsc exit: ${PIPESTATUS[0]} ===\"",
+  "description": "TypeScript strict check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc exit: 0 ===
+> ```
+
+## 🤖 Claude *(19:14:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; timeout 110 npx eslint src/hooks/useAvatarConsent.ts src/hooks/useAvatarErasure.ts src/components/avatar/ConsentWizard.tsx src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx 2>&1 | tail -20; echo \"=== eslint exit: ${PIPESTATUS[0]} ===\"",
+  "description": "Lint new/changed client files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/src/components/avatar/ConsentWizard.tsx
+>   36:7  error  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+> 
+> ✖ 1 problem (1 error, 0 warnings)
+> 
+> === eslint exit: 1 ===
+> ```
+
+## 🤖 Claude *(19:14:40)*
+
+
+## 🤖 Claude *(19:14:41)*
+
+Lint caught a ternary-as-statement in the toggle. Fixing to an explicit if/else.
+
+## 🤖 Claude *(19:14:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/avatar/ConsentWizard.tsx",
+  "old_string": "    setChecked((prev) => {\n      const next = new Set(prev);\n      next.has(p) ? next.delete(p) : next.add(p);\n      return next;\n    });",
+  "new_string": "    setChecked((prev) => {\n      const next = new Set(prev);\n      if (next.has(p)) next.delete(p); else next.add(p);\n      return next;\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/avatar/ConsentWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:14:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; timeout 110 npx eslint src/hooks/useAvatarConsent.ts src/hooks/useAvatarErasure.ts src/components/avatar/ConsentWizard.tsx src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx 2>&1 | tail -8; echo \"=== eslint exit: ${PIPESTATUS[0]} ===\"; echo \"=== full test ===\"; bun run test 2>&1 | tail -4",
+  "description": "Re-lint + full test suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === eslint exit: 0 ===
+> === full test ===
+>       Tests  303 passed | 2 skipped (305)
+>    Start at  16:14:50
+>    Duration  11.63s (transform 1.10s, setup 2.95s, collect 4.04s, tests 2.26s, environment 14.49s, prepare 3.79s)
+> ```
+
+## 🤖 Claude *(19:15:08)*
+
+
+## 🤖 Claude *(19:15:09)*
+
+Lint clean, **303 tests pass**. Now the mandatory `/security-review` on the 3a changes (biometric tables + erase RPC + consent gate) before commit.
+
+## 🤖 Claude *(19:15:09)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(19:15:09)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 5 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   docs/bok/avatar-clone-ai/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+	modified:   src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx
+	modified:   src/integrations/supabase/types.ts
+	modified:   supabase/config.toml
+	modified:   supabase/functions/generate-voice/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/avatar-biometric-retention-erasure.md
+	scripts/qa/smoke-avatar-consent-erase.ts
+	src/components/avatar/
+	src/hooks/useAvatarConsent.ts
+	src/hooks/useAvatarErasure.ts
+	supabase/functions/avatar-consent/
+	supabase/functions/erase-avatar-artifacts/
+	supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+docs/processes/[[avatar-voice-credential-resolution|avatar-voice-credential-resolution]].md
+scripts/qa/smoke-generate-voice.ts
+src/components/canvas/RightPanel/index.tsx
+src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx
+src/components/canvas/nodes/VoiceCloneNode.tsx
+src/hooks/useAvatarVoice.ts
+src/lib/avatar.ts
+src/lib/billing.ts
+src/lib/canvas-node-registry.ts
+src/pages/CanvasEditorPage.tsx
+src/test/avatar-voice.test.ts
+src/types/canvas.ts
+supabase/config.toml
+supabase/functions/generate-voice/index.ts
+supabase/migrations/20260630120000_avatar_clone_ai_voice_profiles.sql
+```
+
+COMMITS:
+
+```
+commit 984fb22387a6936131d63687526e592ffd9bc8a7
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jun 30 11:05:42 2026 -0300
+
+    test(avatar-clone-ai): code-switch unit test (8) + generate-voice zero-cost smoke (10 gates)
+    
+    Unit: detectCodeSwitch EN/pt-BR (FR-AC-010). Smoke: 401/402-no-config/422-mismatch/
+    422-code-switch/404-tenant/masked-grant/402-insufficient/telemetry/no-env — all
+    proven against the live edge fn at zero cost. 10/10 green.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit e9ebc1ebeae322be100ed75bbeadf8bf78636813
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jun 30 11:05:41 2026 -0300
+
+    feat(avatar-clone-ai): voiceClone Canvas node + inspector + useAvatarVoice hook (FR-AC-008)
+    
+    Reuse-first — adds a 6th typed node to the existing Canvas Studio: VoiceCloneData
+    type/factory/guard, registry entry (Mic), node + inspector (upload→clone→synthesize
+    + playback), useAvatarVoice hook, VOICE_GENERATION=36 cost, detectCodeSwitch (FM-AC-013).
+    tsc 0 errors; changed files lint clean.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 957dd972bf710402051c8cac5d71e10de8a1f045
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jun 30 11:05:23 2026 -0300
+
+    feat(avatar-clone-ai): generate-voice edge fn — BYOK clone+synthesize + code-switch guard (FR-AC-009/010)
+    
+    Dual-path auth, per-user ElevenLabs/Cartesia BYOK fail-closed (402), code-switch
+    guard (FM-AC-013, hard language gate + soft heuristic), sentinel, atomic
+    deduct_mco_coins (36) after gates + refund-on-failure, telemetry every path.
+    Deployed (139.4kB). verify_jwt=false (dual-path).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit e3fc4d6b2fc10ad280d220a7d18edd5bf60d717d
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jun 30 11:05:23 2026 -0300
+
+    feat(avatar-clone-ai): voice_profiles + store/resolve RPCs + creative_assets avatar-studio (Fatia 2 DB)
+    
+    voice_profiles (RLS own, voiceprint cifrado no Vault) + store_voice_profile/
+    resolve_voice_profile (SECURITY DEFINER, service-role-only, tenant-guarded) +
+    creative_assets.source_module += 'avatar-studio' (table CHECK + RPC guard).
+    /security-review: NO FINDINGS. Applied + verified materially (HTTP 201).
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit d6515e9e7e3168b754d9f2de28205175337d1ab3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jun 30 11:05:23 2026 -0300
+
+    docs(processes): avatar-voice credential resolution SOP (Lei 2)
+    
+    Per-user ElevenLabs/Cartesia BYOK fail-closed resolution order + 10 verification
+    gates + recovery for the avatar-clone-ai Fatia 2 voice slice. Written before code.
+    
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (86.5KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/tool-results/bjuljj6yt.txt
+
+Preview (first 2KB):
+diff --git a/docs/processes/[[avatar-voice-credential-resolution|avatar-voice-credential-resolution]].md b/docs/processes/[[avatar-voice-credential-resolution|avatar-voice-credential-resolution]].md
+new file mode 100644
+index 0000000..0e087c7
+--- /dev/null
++++ b/docs/processes/avatar-voice-credential-resolution.md
+@@ -0,0 +1,144 @@
++# SOP: Avatar Voice Credential Resolution (Per-User · ElevenLabs/Cartesia)
++
++**Status:** ACTIVE · v0.1 · 2026-06-30
++**Owner:** Sovereign (Gabriel Zarattini)
++**Survival Law 2 compliance:** Escrita **ANTES** de qualquer código da Fatia 2 (voice clone) do módulo `avatar-clone-ai`. Fecha o gate **OTD-AC-VOICE** (`docs/bok/avatar-clone-ai/05-sdd.md §9` — *"SOP `avatar-byok-credential-resolution.md` antes de codar"*, instanciado aqui para a fatia de voz) e cobre FR-AC-009 (edge fn `generate-voice`) + FR-AC-010 (code-switching guard) + FR-AC-011 (`voice_profiles`).
++**Canonical directive:** `CLAUDE.md > Architecture > "API Tenancy Model — Per-User Credentials"` · `.claude/rules/survival.md > Law 1 (Materiality) / Law 2 (Anticipated Process)`
++**BoK SSOT:** `docs/bok/avatar-clone-ai/{04-frd.md,05-sdd.md,06-data-model.md}` (FR-AC-008/009/010/011 · NFR-AC-002/017/019/020)
++**Sibling SOPs:** `trends-credential-resolution.md` (Apify/RapidAPI per-user blueprint) · `affiliate-credential-resolution.md` (mercadolivre per-user) · `meta-credential-resolution.md` (OAuth per-user base pattern)
++
++---
++
++## Context
++
++A síntese e a clonagem de voz para os avatares talking-head (programa "Gabriel AI") exigem credenciais de provider escopadas por tenant. A Fatia 2 integra voz via **ElevenLabs** (TTS Multilingual v2 + Instant Voice Cloning) e **Cartesia** (Sonic — TTS em tempo real, pt-BR nativo). Ambas as credenciais são **per-user (BYOK Modelo A puro)**: cada criador conecta a própria conta; cada tenant isolado; **nunca conta-mestra multiplexada** (service bureau proibido — invariante OTD-AC-011).
++
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(19:15:13)*
+
+I'll launch the identification sub-task focused on the Fatia 3a changes (biometric tables, erase RPC, consent gate, two new edge functions).
+
+## 🤖 Claude *(19:15:35)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify security vulns in Fatia 3a",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing avatar-clone-ai Fatia 3a (biometric consent + erasure) changes in the repo at /home/gcrUX/htdocs/constellation-orchestra. Identify ONLY HIGH-CONFIDENCE security vulnerabilities NEWLY INTRODUCED by these changes (>80% confident of real exploitability). Read the actual files.\n\nThe full diff is saved at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/tool-results/bjuljj6yt.txt \u2014 read it. Also read the actual source files for full context.\n\nNEW/CHANGED files in THIS slice (Fatia 3a \u2014 ignore the already-committed Fatia 2 voice files except generate-voice's new consent gate):\n- supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql (NEW \u2014 avatar_identities + avatar_consents tables + RLS + immutability trigger + erase_avatar_artifacts RPC)\n- supabase/functions/avatar-consent/index.ts (NEW \u2014 grant consent, server-captures IP, service-role INSERT)\n- supabase/functions/erase-avatar-artifacts/index.ts (NEW \u2014 LGPD erasure: calls RPC as user vs service-role, Storage delete)\n- supabase/functions/generate-voice/index.ts (CHANGED \u2014 added consent gate to clone + synth paths)\n- src/hooks/useAvatarConsent.ts, src/hooks/useAvatarErasure.ts, src/components/avatar/ConsentWizard.tsx, src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx (NEW/CHANGED \u2014 client)\n- src/integrations/supabase/types.ts (regenerated types \u2014 additive)\n\nCompare against established patterns: supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql (erase_vision_artifacts \u2014 the molde), supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql (vault.secrets delete pattern), supabase/functions/generate-image/index.ts (dual-path auth), the Fatia 2 migration 20260630120000.\n\nFocus especially on:\n1. **erase_avatar_artifacts RPC** \u2014 SECURITY DEFINER tenant guard. CRITICAL: it deletes via `user_id = v_user_id OR auth.role() = 'service_role'` where v_user_id := auth.uid(). When called from the erase-avatar-artifacts edge fn, is the tenant guard sound? Trace: user path calls the RPC with the USER's JWT client (auth.uid()=user \u2192 guard enforces); service-role path uses admin client (auth.role()=service_role \u2192 guard BYPASSED for any id). Is there any path where a user can erase ANOTHER tenant's avatar_identity/voice_profile or trigger a service-role-bypass? Check the edge fn's dual-path logic in erase-avatar-artifacts/index.ts very carefully (does a regular user ever reach the service-role/admin RPC client?).\n2. **The vault.secrets DELETE inside the RPC** \u2014 does it correctly scope to only the erased profile's voiceprint_vault_ref (UUID-validated)? Could a poisoned id delete an arbitrary Vault secret?\n3. **avatar-consent edge fn** \u2014 sets user_id from getUser() JWT (not body)? IP from x-forwarded-for. Any way to forge consent for another user, or SQLi via purposes/term_version? Inserts via service-role (bypasses RLS) \u2014 is user_id correctly the authenticated user?\n4. **avatar_consents immutability + RLS** \u2014 can a user UPDATE another user's consent, or mutate columns beyond revoked_at? The revoke_own policy + immutability trigger.\n5. **generate-voice consent gate** \u2014 does adding it open any bypass? (it reads avatar_consents by userId via admin \u2014 correct?)\n6. **Cross-tenant biometric leak** (FMEA-011) on avatar_identities RLS.\n\nCRITICAL: Only flag >80%-confidence exploitable issues. EXCLUDE: DOS, secrets-on-disk, rate-limiting, lack-of-hardening, path-only SSRF, regex injection, markdown docs, client-side authz (backend is responsible), log spoofing, env-var-dependent attacks, race conditions unless concretely exploitable.\n\nFor each finding: file:line, Severity (HIGH/MEDIUM), category, description, concrete exploit scenario, fix, confidence 1-10. If NO high-confidence vulns, say so explicitly. Do not fabricate."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: af85932c94234818a (internal ID - do not mention to user. Use SendMessage with to: 'af85932c94234818a', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/tasks/af85932c94234818a.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(19:15:39)*
+
+Security identification sub-task launched for Fatia 3a. I'll await its findings before committing — the migration cannot land until `/security-review` clears it (CLAUDE.md hard rule, doubly so for biometric tables). Awaiting completion.
+
+## 👤 User *(19:17:11)*
+
+<task-notification>
+<task-id>af85932c94234818a</task-id>
+<tool-use-id>toolu_01GQcUHuvFrn6ZfUCL1P4NNU</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/8774b91e-56ce-422f-aa7a-2a61eaf326df/tasks/af85932c94234818a.output</output-file>
+<status>completed</status>
+<summary>Agent "Identify security vulns in Fatia 3a" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I have full context now. Let me complete my analysis of all six focus areas and produce the verdict.
+
+I've traced every focus area thoroughly. Let me summarize my final analysis.
+
+## Security Review — avatar-clone-ai Fatia 3a
+
+I read the full diff plus the actual source for all NEW/CHANGED backend files (`avatar-consent`, `erase-avatar-artifacts`, `generate-voice`, migration `20260630130000`) and compared each against the established moldes (`erase_vision_artifacts`, `disconnect_meta`/`disconnect_social`, `store_voice_profile`/`resolve_voice_profile`, `generate-image` dual-path).
+
+### Verdict: NO high-confidence (&gt;80%) newly-introduced exploitable vulnerabilities found.
+
+Each focus area traced clean. Details below.
+
+---
+
+**1. `erase_avatar_artifacts` RPC tenant guard + edge fn dual-path — SOUND**
+- The guard `(user_id = v_user_id OR auth.role() = 'service_role')` is applied on the SELECT, the avatar_identities DELETE, and the voice_profiles DELETE (migration lines 133–147). `v_user_id := auth.uid()`.
+- The edge fn (`erase-avatar-artifacts/index.ts:43,54-60`) computes `isServiceRole = authHeader === \`Bearer ${serviceKey}\``. A regular user only possesses their own JWT, never the service key, so `isServiceRole` is always false for them → `rpcClient = userClient` → the RPC executes with `auth.uid()=user`, `auth.role()='authenticated'`, so the `OR auth.role()='service_role'` branch is unreachable and the per-row `user_id = v_user_id` guard is enforced. A poisoned id of another tenant returns `*_not_found` (P0002 → 404). There is no path where a regular user reaches the admin RPC client. Confirmed sound.
+
+**2. `vault.secrets` DELETE inside the RPC (poisoned-id → arbitrary Vault deletion) — NOT EXPLOITABLE**
+- `migration:151-154` deletes `vault.secrets WHERE id = v_ref::uuid` where `v_ref` is the erased profile's `voiceprint_vault_ref`, read only from a row that already passed the ownership guard (line 143-144).
+- A user cannot plant a foreign `voiceprint_vault_ref`: `voice_profiles` has **no client INSERT/UPDATE policy** (migration `20260630120000:44`); the only writer is `store_voice_profile` (service-role-only), which generates the Vault secret itself (`:87-91`). The user never controls that column. So `v_ref` is always a secret the caller genuinely owns.
+- Observation (not a vuln, defense-in-depth gap vs. the molde): the avatar RPC binds the Vault delete only by `id = v_ref::uuid`, whereas `disconnect_meta`/`disconnect_social` additionally bind by the deterministic secret `name`. Here the secret name is a random `voice_profile_&lt;gen_random_uuid()&gt;` (not derivable from the row), and — more importantly — the user has no write path to the ref, so the extra binding is unnecessary. UUID-regex-validated before cast (no injection). Not a finding.
+
+**3. `avatar-consent` edge fn — SOUND**
+- `user_id` is set exclusively from `getUser()` on the JWT-bound `userClient` (`:37-39`, `:73`), never from the body. No way to forge consent for another user. IP comes from `x-forwarded-for` (server-side) and is regex-validated (`:54-55`) before being inserted as `inet` — no SQLi (parameterized via supabase-js; `inet` column rejects malformed). `purposes` is allowlist-checked against `PURPOSES` (`:47`); `term_version` is type/trim-validated. INSERT runs service-role with `user_id: user.id`, correctly the authenticated user. Clean.
+
+**4. `avatar_consents` immutability + RLS — SOUND**
+- `revoke_own` policy: `USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())` — a user can only UPDATE their own rows, no cross-tenant mutation. The `enforce_avatar_consent_immutable` trigger (`migration:92-99`) raises 42501 if `to_jsonb(NEW) - 'revoked_at'` differs from `to_jsonb(OLD) - 'revoked_at'`, so only `revoked_at` is mutable — `consent_granted`, `purpose`, `ip_address`, `attestation_*` cannot be tampered. No INSERT/DELETE policies (default-deny). Sound.
+
+**5. `generate-voice` consent gate — NO BYPASS INTRODUCED**
+- Clone path (`:132-138`): requires an active `voice_clone` consent (read by `userId` via admin), 403 otherwise — additive, fail-closed. Synthesize path (`:236-243`): fail-closed only if consent was granted then fully revoked; correctly scoped by `userId`. `userId` is the JWT-resolved owner (or service-role `body.user_id`, matching the `generate-image` molde). The gate reads consents server-side via admin, correct. No new bypass; if anything it tightens the path.
+
+**6. Cross-tenant biometric leak (FMEA-011) on `avatar_identities` RLS — SOUND**
+- `avatar_identities_select_own`: `FOR SELECT USING (user_id = auth.uid())`. No client INSERT/UPDATE/DELETE policies (default-deny; writes via service-role in 3b, DELETE only via the erase RPC). `voice_profiles` mirrors this. No cross-tenant read/write surface.
+
+---
+
+### Non-security observations (out of scope, noted only)
+- `attestation_commercial_tier` is captured but not enforced as a hard gate in `avatar-consent` (only `attestation_titular` is required at `:52`) — a product/compliance policy choice, not an exploitable vuln.
+- The two code-switch detectors (`src/lib/avatar.ts` and the inline copy in `generate-voice`) are duplicated by design and must be kept in sync — a maintenance note, not a security issue.
+
+All claims above are grounded in the actual file contents read this session (file:line cited). I did not find any vulnerability meeting the &gt;80%-confidence exploitability bar.</result>
+<usage><subagent_tokens>135202</subagent_tokens><tool_uses>12</tool_uses><duration_ms>95890</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(19:17:17)*
+
+
+## 🤖 Claude *(19:17:28)*
+
+Security identification for Fatia 3a complete — **NO high-confidence vulnerabilities** found (no findings to filter). Final report:
+
+# Security Review — avatar-clone-ai Fatia 3a (biometric consent + erasure)
+
+**Result: NO high-confidence security vulnerabilities found.**
+
+Reviewed the full pending diff (migration `20260630130000`, edge fns `avatar-consent` + `erase-avatar-artifacts`, the `generate-voice` consent gate, client hooks/wizard, regenerated `types.ts`) against the established moldes (`erase_vision_artifacts`, `disconnect_meta/social` vault-delete, `store/resolve_voice_profile`, `generate-image` dual-path). All six focus areas traced clean:
+
+| Area | Verdict |
+|------|---------|
+| `erase_avatar_artifacts` RPC tenant guard + edge-fn dual-path | **SOUND** — user path calls the RPC with the **user's JWT** (`auth.uid()` enforces per-row `user_id`; the `OR service_role` branch is unreachable for a regular user, who never holds the service key). Poisoned cross-tenant id → `*_not_found` (404). |
+| `vault.secrets` DELETE in-RPC (poisoned-id → arbitrary Vault delete) | **NOT EXPLOITABLE** — `v_ref` comes only from a row that already passed the ownership guard; `voice_profiles` has no client write path (only `store_voice_profile` service-role writes it, generating the secret itself). UUID-regex-validated before cast. |
+| `avatar-consent` edge fn | **SOUND** — `user_id` from `getUser()` JWT (never body); IP server-captured + regex-validated `inet`; `purposes` allowlist-checked; parameterized inserts (no SQLi). |
+| `avatar_consents` immutability + RLS | **SOUND** — `revoke_own` scoped `user_id = auth.uid()`; immutability trigger raises `42501` for any column ≠ `revoked_at`; no INSERT/DELETE policies (default-deny). |
+| `generate-voice` consent gate | **NO BYPASS** — additive fail-closed gates (clone requires active consent; synth fail-closes on full revocation), scoped by JWT-resolved `userId`. Tightens, not loosens. |
+| Cross-tenant biometric leak (FMEA-011) on `avatar_identities` | **SOUND** — `select_own` only; no client write policies; DELETE only via the erase RPC. |
+
+**Non-security notes (out of scope):** `attestation_commercial_tier` is captured but not a hard gate (product policy, not a vuln); the code-switch detector is duplicated by design (client + edge mirror) and must stay in sync (maintenance note).
+
+Verdict grounded in file:line reads. No finding met the >80%-confidence exploitability bar.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -7611,5 +9029,5 @@ I have the spec + data model + erase pattern. Now the decisive part — **feasib
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-30 - Criar estratégia de conteúdo e avatar para Gabriel AI]]
-> * **Próxima Sessão**: [[2026-06-30 - agent-a0a1666272d6aaacf]]
+> * **Próxima Sessão**: [[2026-06-30 - agent-a014c7aed5a287404]]
 %% --- TIMELINE END --- %%
