@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 60
-> * **Total de Sessões**: 1666
+> * **Total de Processos**: 61
+> * **Total de Sessões**: 1667
 
 ---
 
@@ -24,6 +24,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[agent-browser-install]]` - *Processo*
 *   `[[autopilot-cron-identity]]` - *Processo*
 *   `[[autopilot-video-9x16]]` - *Processo*
+*   `[[avatar-biometric-retention-erasure]]` - *Processo*
 *   `[[avatar-voice-credential-resolution]]` - *Processo*
 *   `[[branded-affiliate-redirect]]` - *Processo*
 *   `[[build-deploy-materiality]]` - *Processo*
@@ -85,6 +86,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 *   `[[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]` (ClaudeSessions) - *2026-06-30*
 *   `[[2026-06-30 - agent-afe53acf872b6f4a1]]` (ClaudeSessions) - *2026-06-30*
+*   `[[2026-06-30 - agent-af85932c94234818a]]` (ClaudeSessions) - *2026-06-30*
 *   `[[2026-06-30 - agent-af59871059c45effc]]` (ClaudeSessions) - *2026-06-30*
 *   `[[2026-06-30 - agent-af3a423a7a3eea43a]]` (ClaudeSessions) - *2026-06-30*
 *   `[[2026-06-30 - agent-af2e7bb152e354702]]` (ClaudeSessions) - *2026-06-30*
