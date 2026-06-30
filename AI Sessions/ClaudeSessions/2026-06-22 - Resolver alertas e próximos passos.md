@@ -374,7 +374,7 @@ Clean tree, zero TS errors, all containers healthy. Now reading HANDOFF head/tai
 > 37	### Survival Laws Self-audit
 > 38	```
 > 39	Law 1 (Materiality): ✅ Toda claim provada NESTE arco — generate-image via 963KB PNG + olho criativo; vídeo via ledger −125 + asset 6.4MB; Canvas Design via job complete + nó; BoK via UUIDs de selo + embedding NOT NULL; SSO via 302/200 reais; security via mint→403 + saldo 0. O teste material PEGOU o fix de GRANT aditivo falho (não confiei na estrutura). Fase 5c mecânica abaixo.
-> 40	Law 2 (Process): ✅ SOPs antecipados (creative-qa-vision-gate · canvas-design-deploy-and-provision) ANTES da automação; BoK 9/9 + emenda v1.1 antes de código do módulo Vídeo (Master Protocol).
+> 40	Law 2 (Process): ✅ SOPs antecipados ([[creative-qa-vision-gate|creative-qa-vision-gate]] · [[canvas-design-deploy-and-provision|canvas-design-deploy-and-provision]]) ANTES da automação; BoK 9/9 + emenda v1.1 antes de código do módulo Vídeo (Master Protocol).
 > 41	Law 3 (Pruning): ✅ Sessão longa empacotada (criativo→BoK→review→emenda→R3→tenancy) sob GOs explícitos; recon/review referenciados por path; selada a pedido do Sovereign (/handoff).
 > 42	Law 4 (ORO): ✅ Triplet declarado; múltiplos GOs via AskUserQuestion; /security-review como Reviewer mecânico independente.
 > 43	```
@@ -4340,7 +4340,7 @@ diff --git a/docs/processes/wordpress-cf-publish-unblock.md b/docs/processes/wor
 new file mode 100644
 index 0000000..70b7c93
 --- /dev/null
-+++ b/docs/processes/wordpress-cf-publish-unblock.md
++++ b/docs/processes/[[wordpress-cf-publish-unblock|wordpress-cf-publish-unblock]].md
 @@ -0,0 +1,91 @@
 +# SOP — Desbloqueio do publish WordPress atrás do Cloudflare managed challenge
 +
@@ -8052,3 +8052,16 @@ Handoff node `bb23b9dc-265e-4338-9709-d320371908b4` — embedded 768d ✅ (auto-
 ═══════════════════════════════════════════════════════════
 
 Sessão selada e espelhada no remoto. A decisão **De-n8n** está cravada no SSOT (BoK SDD v1.2) — a Fatia 2 começa numa sessão fresca pelo orquestrador faceless nativo. 🎬
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-22 - Resolver CF WAF e secrets para ação Sovereign]]
+> * **Próxima Sessão**: [[2026-06-22 - Resolver dois pontos pendentes]]
+%% --- TIMELINE END --- %%
