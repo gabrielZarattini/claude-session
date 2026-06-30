@@ -383,6 +383,6 @@ No permissive (`USING (true)`) policies, no `anon` grant. Posture is sound.
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]
+> * **Sessão Anterior**: [[2026-06-29 - agent-a0a4cafc224bf6767]]
 > * **Próxima Sessão**: [[2026-06-29 - agent-a17b63ea62d7b1ed8]]
 %% --- TIMELINE END --- %%

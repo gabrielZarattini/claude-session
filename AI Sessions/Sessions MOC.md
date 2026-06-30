@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1582
-> * **Sessões do Claude**: 1538
+> * **Total de Sessões Registradas**: 1592
+> * **Sessões do Claude**: 1548
 > * **Sessões do Gemini**: 44
 
 ---
@@ -67,19 +67,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-30 - agent-aa56b9291233ba015]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-a0cd42d6ca09b7d58]]` - *2026-06-30*
 *   `[[2026-06-29 - handson]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-afa77236707ecd6a8]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-ada0c4af1e97dcf7b]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-ad8fe7998dcb7a998]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-ad6b6f623a8ef0e0f]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-abcb9f74af3bc8f30]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-ab6d27a4835d96412]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-ab1e5a3baaa958711]]` - *2026-06-29*
+*   `[[2026-06-29 - agent-aae382542d6a57b5a]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a95dc8bc0a35e4b62]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-a79c0030c73d061d4]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-a1f94632ca84a0b49]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` - *2026-06-29*
-*   *... e mais 1538 sessões nessa categoria.*
+*   *... e mais 1548 sessões nessa categoria.*
 
 ---
 
@@ -270,20 +270,30 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-30 - agent-aa56b9291233ba015]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a0cd42d6ca09b7d58]]` (ClaudeSessions)
 *   `[[2026-06-29 - handson]]` (GeminiSessions)
 *   `[[2026-06-29 - agent-afa77236707ecd6a8]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-ada0c4af1e97dcf7b]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-ad8fe7998dcb7a998]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-ad6b6f623a8ef0e0f]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-abcb9f74af3bc8f30]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-ab6d27a4835d96412]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-ab1e5a3baaa958711]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-aae382542d6a57b5a]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a95dc8bc0a35e4b62]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a7b838459fc0841f9]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a79c0030c73d061d4]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a75b28848fed8c7cd]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a5557a9d2638ea4b1]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a5131487a860fd22a]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a1f94632ca84a0b49]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a17b63ea62d7b1ed8]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a0a4cafc224bf6767]]` (ClaudeSessions)
+*   `[[2026-06-29 - agent-a02d266a2191d0afa]]` (ClaudeSessions)
 *   `[[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]` (ClaudeSessions)
 *   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` (ClaudeSessions)
 *   `[[2026-06-29 - Criar estratégia de conteúdo e avatar para Gabriel AI]]` (ClaudeSessions)

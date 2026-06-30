@@ -404,5 +404,5 @@ I'll retry with properly structured JSON (the harness wraps the fields itself).
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-29 - agent-a1f94632ca84a0b49]]
-> * **Próxima Sessão**: [[2026-06-29 - agent-a75b28848fed8c7cd]]
+> * **Próxima Sessão**: [[2026-06-29 - agent-a5131487a860fd22a]]
 %% --- TIMELINE END --- %%
