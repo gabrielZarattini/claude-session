@@ -5597,5 +5597,5 @@ Quer que eu rode o seal enxuto agora?
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-29 - 2b75f395-3d0c-474f-a0c9-ab9fb903cc72]]
-> * **Próxima Sessão**: [[2026-06-29 - Finalizar QA do Antigravity com validação senior]]
+> * **Próxima Sessão**: [[2026-06-29 - Criar estratégia de conteúdo e avatar para Gabriel AI]]
 %% --- TIMELINE END --- %%

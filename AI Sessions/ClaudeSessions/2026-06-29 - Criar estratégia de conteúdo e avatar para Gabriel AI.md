@@ -1001,3 +1001,16 @@ Contexto que já tenho da malha/memória e vou assumir (corrija se preciso): per
   ]
 }
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-29 - Corrigir política de privacidade para requisitos Google]]
+> * **Próxima Sessão**: [[2026-06-29 - Finalizar QA do Antigravity com validação senior]]
+%% --- TIMELINE END --- %%

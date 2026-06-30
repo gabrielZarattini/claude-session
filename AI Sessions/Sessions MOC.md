@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1581
-> * **Sessões do Claude**: 1537
+> * **Total de Sessões Registradas**: 1582
+> * **Sessões do Claude**: 1538
 > * **Sessões do Gemini**: 44
 
 ---
@@ -79,7 +79,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-29 - agent-a30f06faa1ddf1ecd]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a1f94632ca84a0b49]]` - *2026-06-29*
 *   `[[2026-06-29 - agent-a1c1aafe02da6a857]]` - *2026-06-29*
-*   *... e mais 1537 sessões nessa categoria.*
+*   *... e mais 1538 sessões nessa categoria.*
 
 ---
 
@@ -286,6 +286,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-29 - agent-a110ab9c73aebcdfe]]` (ClaudeSessions)
 *   `[[2026-06-29 - Reduzir consumo excessivo de tokens do OpenRouter]]` (ClaudeSessions)
 *   `[[2026-06-29 - Finalizar QA do Antigravity com validação senior]]` (ClaudeSessions)
+*   `[[2026-06-29 - Criar estratégia de conteúdo e avatar para Gabriel AI]]` (ClaudeSessions)
 *   `[[2026-06-29 - Corrigir política de privacidade para requisitos Google]]` (ClaudeSessions)
 *   `[[2026-06-29 - 2b75f395-3d0c-474f-a0c9-ab9fb903cc72]]` (ClaudeSessions)
 *   `[[2026-06-29 - 20894beb-8faf-40d8-bce8-715b0c184c7f]]` (ClaudeSessions)
