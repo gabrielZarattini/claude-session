@@ -2716,3 +2716,984 @@ Dois "gabriel": o de hoje (`gabrielcallr@icloud.com`, criado 16:23 hoje) e o est
 > content_library: content-range: 0-0/27
 > kanban boards: [{"id":"c3137237-9d1a-4ea1-b6fe-9b75c5ff5d91","title":"ShakeHands"}]
 > ```
+
+## 🤖 Claude *(01:30:22)*
+
+
+## 🤖 Claude *(01:30:26)*
+
+**Confirmado: Usuário Zero = `ada39fae…` (gabrielcall@gmail.com)** — tem 27 itens no content_library + **já tem um board Kanban ("ShakeHands")**. O `icloud` (criado hoje) está vazio. Vou criar um board **novo** ("Gabriel AI — Programa") nessa conta, sem tocar no ShakeHands.
+
+⚠️ Nota: o app reporta seu email como `gabrielcallr@icloud.com`, mas sua conta de trabalho (dados + Kanban) é a `gmail`. Se você costuma logar com a icloud, me avisa que eu espelho o board lá.
+
+Escrevendo o seed idempotente do roadmap:
+
+## 🤖 Claude *(01:30:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scratch/seed-kanban-roadmap.ts",
+  "content": "// One-off ops: surface the \"Gabriel AI \u2014 Programa (Avatar/Clone AI)\" roadmap into the\n// Usu\u00e1rio Zero Kanban (aios_kanban_*). Idempotent: re-seeding deletes the same-titled board first.\n// Run from repo root: bun run scratch/seed-kanban-roadmap.ts\nimport { createClient } from \"@supabase/supabase-js\";\n\nconst URL = process.env.VITE_SUPABASE_URL!;\nconst KEY = process.env.SB_SECRET_KEY!;\nif (!URL || !KEY) { console.error(\"Missing VITE_SUPABASE_URL / SB_SECRET_KEY\"); process.exit(1); }\n\nconst USER_ID = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"; // gabrielcall@gmail.com (User 0, verified footprint)\nconst BOARD_TITLE = \"\ud83c\udfad Gabriel AI \u2014 Programa (Avatar/Clone AI)\";\n\nconst sb = createClient(URL, KEY, { auth: { persistSession: false } });\n\ntype Card = { title: string; description: string; agent: string | null };\ntype Col = { name: string; status: \"todo\" | \"in_progress\" | \"gate\" | \"done\"; cards: Card[] };\n\nconst columns: Col[] = [\n  {\n    name: \"\ud83d\udccb Backlog / Fatias\", status: \"todo\", cards: [\n      { title: \"Fatia 1 \u2014 BYOK credenciais avatar\", agent: \"engineer\", description: \"Migration user_api_keys: hedra/omnihuman/higgsfield/elevenlabs/magnific (Vault cifrado) + UI Settings + lookup fail-closed. Gated em F1 (ToS pass-through por provider).\" },\n      { title: \"Fatia 2 \u2014 N\u00f3 voiceClone\", agent: \"engineer\", description: \"generate-voice edge fn (ElevenLabs/Cartesia) + n\u00f3 Canvas. \u00c2ncora = voz EN; PT-BR via auto-dub da plataforma. voice_profiles RLS biom\u00e9trico own-scoped.\" },\n      { title: \"Fatia 3 \u2014 N\u00f3 avatarIdentity + Identity Gate\", agent: \"engineer\", description: \"Soul ID / LoRA por-pessoa + ArcFace cosine gate (estende Vision QA, limiar calibrado FAR/FRR). avatar_identities RLS own + storage isolado per-tenant.\" },\n      { title: \"Fatia 4 \u2014 N\u00f3 avatarScript (c\u00e9rebro clonado)\", agent: \"scientist\", description: \"RAG sobre mcorch_nodes (memory mesh) + Brand Voice DNA quantificado. \u00c2ncora EN.\" },\n      { title: \"Fatia 5 \u2014 N\u00f3 talkingHead + avatarEnhance\", agent: \"engineer\", description: \"Motor por-v\u00eddeo-refer\u00eancia (Hedra/OmniHuman/Higgsfield BYOK) + Magnific Relight/upscale (identidade ANTES de enhance) \u2192 MP4 9:16.\" },\n      { title: \"Fatia 6 \u2014 C2PA + disclosure/consent gate\", agent: \"guardian\", description: \"Embed C2PA no render (REQUISITO LEGAL EU AI Act Art.50 + auto-label TikTok) + gate de publish n\u00e3o-pul\u00e1vel + identity-verification self-clone. Spike sha256 (OTD-AC-008).\" },\n      { title: \"Fatia 7 \u2014 Repurpose nativo + auto-dub multi-audio\", agent: \"artisan\", description: \"Estende reshape-pillar/channel_variants p/ avatar; branches v\u00eddeo LinkedIn/X; emite trilha EN-fonte + auto-dub PT (YouTube Multi-Language Audio / TikTok dubbing).\" },\n      { title: \"Fatia 8 \u2014 JUN\u00c7\u00c3O com Viral Autopilot\", agent: \"engineer\", description: \"Relaxar CHECK autopilot_plans.platforms (yt/tiktok/ig) + AVATAR_FLOW_PLATFORMS + step avatar_generation + billing/refund. Liga a cad\u00eancia de 30 dias.\" },\n      { title: \"Fatia 9 (core) \u2014 Reply engine do X\", agent: \"engineer\", description: \"Agent loop real-time: monitorar mentions \u2192 reply do c\u00e9rebro clonado \u2192 postar em minutos (multiplicador ~150x author-reply). OTD-AC-009 = escopo core.\" },\n      { title: \"\ud83d\udcc5 Cad\u00eancia 30 dias (S1 Aware \u2192 S4 Conv)\", agent: \"marketing-growth\", description: \"Grade Dia 1\u219230: YT 5 Shorts+1-2 longos/sem \u00b7 TikTok 3-5 \u00b7 IG 4-5+Stories \u00b7 LinkedIn 3-4 \u00b7 X 3-5/dia. Mix 40% educ / 40% autoridade / \u226420% produto (conta nova 70/20/10). 1 pilar \u2192 N nativas via Channel Reshaper.\" },\n      { title: \"\ud83c\udfa5 Footage real (h\u00edbrido) \u2014 lotes Ramonov\", agent: \"marketing-growth\", description: \"Voc\u00ea grava ~1 dia/semana: 1 longo + ~20 shorts, 1 nicho, hook <2s. O avatar escala/cobre os dias; o rosto real ancora confian\u00e7a (evita o crater uncanny-valley).\" },\n      { title: \"\ud83d\udcca Baseline honesto (atribui\u00e7\u00e3o)\", agent: \"marketing-growth\", description: \"YT @uxnai = 49 subs / 32 v\u00eddeos (sem upload desde dez/2024) \u00b7 TikTok @gabriel_mcorch = 0 v\u00eddeos p\u00fablico / 1 seguidor. Linha de partida real (curl Lei 1), n\u00e3o persona aspiracional.\" },\n    ],\n  },\n  {\n    name: \"\ud83d\udea7 Em Andamento\", status: \"in_progress\", cards: [\n      { title: \"\ud83d\udd0e Fechar frentes F1\u2013F7 (research for\u00e7a-total)\", agent: \"scientist\", description: \"ToS BYOK por provider \u00b7 fidelidade EN + qualidade auto-dub PT \u00b7 competidores \u00b7 economics datado (custo do ciclo) \u00b7 LGPD biom\u00e9trico \u00b7 onboarding 6 canais + tier X. \u2192 doc 00c. Rodando em background.\" },\n    ],\n  },\n  {\n    name: \"\ud83d\udeaa Gate / Decis\u00e3o\", status: \"gate\", cards: [\n      { title: \"\ud83d\udeaa BoK Gate \u2014 /bok-scribe avatar-clone-ai\", agent: \"scientist\", description: \"Sela MRD\u2192BRD\u2192PRD\u2192FRD\u2192SDD + Pattern Conformance Declaration (21 padr\u00f5es). Refusal Mode ativo at\u00e9 existir. Fonte da Verdade: docs 00 + 00b + 00c.\" },\n      { title: \"\u2699\ufe0f A\u00e7\u00f5es Sovereign \u2014 config de conta/canais\", agent: \"guardian\", description: \"YouTube: setar Country of residence + Preferred language (account_playback). Aguarda F7: audit YT (v\u00eddeo nasce private), TikTok SELF_ONLY, App Review IG, tier X p/ o reply engine.\" },\n    ],\n  },\n  {\n    name: \"\u2705 Conclu\u00eddo\", status: \"done\", cards: [\n      { title: \"\u2705 Deepsearch for\u00e7a-total \u2192 blueprint-semente\", agent: \"scientist\", description: \"14 frentes (10 web + 4 internas) + verifica\u00e7\u00e3o adversarial (6 claims refutadas). docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md (421 linhas).\" },\n      { title: \"\u2705 Gate Fatia 0 \u2014 GO-HYBRID\", agent: \"scientist\", description: \"Viabilidade fechada: N\u00c3O 100%-avatar (crater McCoy 30k\u21923k/m\u00eas, FM-AC-014) \u2192 h\u00edbrido rosto-real + avatar-backfill. doc 00b.\" },\n      { title: \"\u2705 Decis\u00f5es Sovereign travadas\", agent: null, description: \"H\u00edbrido + global-EN-first (\u00e1udio EN + auto-dub PT, n\u00e3o legenda) + reply X core + avatar BYOK per-user (Hedra/OmniHuman/Higgsfield) + idioma/freq opt-in.\" },\n    ],\n  },\n];\n\nconst { data: existing } = await sb.from(\"aios_kanban_boards\").select(\"id\").eq(\"user_id\", USER_ID).eq(\"title\", BOARD_TITLE);\nif (existing?.length) {\n  for (const b of existing) await sb.from(\"aios_kanban_boards\").delete().eq(\"id\", b.id);\n  console.log(`Idempotent: deleted ${existing.length} pre-existing board(s) with same title (cascade).`);\n}\n\nconst { data: board, error: bErr } = await sb.from(\"aios_kanban_boards\").insert({ user_id: USER_ID, title: BOARD_TITLE }).select(\"id\").single();\nif (bErr) throw bErr;\nconsole.log(\"Board created:\", board.id);\n\nlet total = 0, colPos = 1;\nfor (const col of columns) {\n  const { data: c, error: cErr } = await sb.from(\"aios_kanban_columns\").insert({ board_id: board.id, name: col.name, position: colPos++ }).select(\"id\").single();\n  if (cErr) throw cErr;\n  const rows = col.cards.map((card, i) => ({ column_id: c.id, user_id: USER_ID, title: card.title, description: card.description, assigned_agent_id: card.agent, status: col.status, position: i + 1 }));\n  const { error: tErr } = await sb.from(\"aios_kanban_tasks\").insert(rows);\n  if (tErr) throw tErr;\n  total += rows.length;\n  console.log(`  Column \"${col.name}\": ${rows.length} cards`);\n}\nconsole.log(`DONE: board ${board.id} \u00b7 ${columns.length} columns \u00b7 ${total} cards \u00b7 user ${USER_ID}`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scratch/seed-kanban-roadmap.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:30:59)*
+
+
+## 🤖 Claude *(01:31:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scratch/seed-kanban-roadmap.ts 2>&1",
+  "description": "Run Kanban roadmap seed script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Board created: c3be460d-b9cd-48ea-bf84-5df37545b51c
+>   Column "📋 Backlog / Fatias": 12 cards
+>   Column "🚧 Em Andamento": 1 cards
+>   Column "🚪 Gate / Decisão": 2 cards
+>   Column "✅ Concluído": 3 cards
+> DONE: board c3be460d-b9cd-48ea-bf84-5df37545b51c · 4 columns · 18 cards · user ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> ```
+
+## 🤖 Claude *(01:31:03)*
+
+
+## 🤖 Claude *(01:31:04)*
+
+Board criado: `c3be460d…` · 4 colunas · 18 cards. Verificando materialmente no DB (Lei 1 — confirmar que persistiu, não confiar só no log do script):
+
+## 🤖 Claude *(01:31:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSECRET=$(grep -E '^SB_SECRET_KEY=' .env | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\nURL=$(grep -E '^VITE_SUPABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\nBID=c3be460d-b9cd-48ea-bf84-5df37545b51c\necho -n \"tasks no board (count): \"\ncurl -s \"$URL/rest/v1/aios_kanban_tasks?column_id=in.($(curl -s \"$URL/rest/v1/aios_kanban_columns?board_id=eq.$BID&select=id\" -H \"apikey: $SECRET\" -H \"Authorization: Bearer $SECRET\" | python3 -c \"import json,sys;print(','.join(r['id'] for r in json.load(sys.stdin)))\"))&select=status\" -H \"apikey: $SECRET\" -H \"Authorization: Bearer $SECRET\" -H \"Prefer: count=exact\" -H \"Range: 0-0\" -D - -o /dev/null 2>/dev/null | grep -i content-range | tr -d '\\r'\necho \"=== boards do user (deve ter ShakeHands + o novo) ===\"\ncurl -s \"$URL/rest/v1/aios_kanban_boards?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=title,created_at&order=created_at.desc\" -H \"apikey: $SECRET\" -H \"Authorization: Bearer $SECRET\"\necho \"\"\necho \"=== distribui\u00e7\u00e3o por status ===\"\ncurl -s \"$URL/rest/v1/aios_kanban_columns?board_id=eq.$BID&select=name,position,aios_kanban_tasks(count)&order=position\" -H \"apikey: $SECRET\" -H \"Authorization: Bearer $SECRET\"",
+  "description": "Verify seeded board, columns and task counts in DB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tasks no board (count): content-range: 0-0/18
+> === boards do user (deve ter ShakeHands + o novo) ===
+> [{"title":"🎭 Gabriel AI — Programa (Avatar/Clone AI)","created_at":"2026-06-30T01:31:00.458508+00:00"}, 
+>  {"title":"ShakeHands","created_at":"2026-06-07T06:23:31.68038+00:00"}]
+> === distribuição por status ===
+> [{"name":"📋 Backlog / Fatias","position":1,"aios_kanban_tasks":[{"count": 12}]}, 
+>  {"name":"🚧 Em Andamento","position":2,"aios_kanban_tasks":[{"count": 1}]}, 
+>  {"name":"🚪 Gate / Decisão","position":3,"aios_kanban_tasks":[{"count": 2}]}, 
+>  {"name":"✅ Concluído","position":4,"aios_kanban_tasks":[{"count": 3}]}]
+> ```
+
+## 🤖 Claude *(01:32:09)*
+
+
+## 🤖 Claude *(01:32:22)*
+
+**✅ Roadmap no ar, Maestro.** Material confirmado no DB: board **"🎭 Gabriel AI — Programa (Avatar/Clone AI)"** na sua conta `gmail` · **18 cards** (`content-range: 0-0/18`) · seu **ShakeHands intacto**.
+
+Abra em **[login.mcorch.com/dashboard/kanban](https://login.mcorch.com/dashboard/kanban)** → board novo. Distribuição verificada:
+
+| Coluna | Cards | O que tem |
+|---|---|---|
+| ✅ **Concluído** (3) | done | Deepsearch→blueprint · **GO-HYBRID** · Decisões travadas |
+| 🚪 **Gate / Decisão** (2) | gate | **BoK Gate** (`/bok-scribe`) · **Ações Sovereign** (config YT + audits canais) |
+| 🚧 **Em Andamento** (1) | in_progress | Fechar frentes F1–F7 (rodando) |
+| 📋 **Backlog / Fatias** (12) | todo | **Fatias 1→9** (BYOK→voz→identidade→script-RAG→talkingHead→C2PA→repurpose→Autopilot→reply X) + **cadência 30d** + **footage real (híbrido)** + **baseline honesto** |
+
+Cada card tem dono do Pantheon (`engineer`/`scientist`/`artisan`/`marketing-growth`/`guardian`) — então no Chat você pode mencionar `@engineer revise a Fatia 5` e o gateway responde. O seed é **idempotente** (`scratch/seed-kanban-roadmap.ts`) — re-rodo pra sincronizar o board conforme o roadmap evolui.
+
+**Ainda em voo:** o Workflow **F1–F7** (`wgnyfdjaj`). Quando cair, eu: (1) movo o card de research pra ✅, (2) **abro os cards de ação Sovereign** com o detalhe real (tiers de API, audits, chaves BYOK) + **custo estimado do ciclo de 30 dias**, e (3) destravo o **`/bok-scribe avatar-clone-ai`**.
+
+Quer que eu **verifique o board renderizado** num browser real (receita do preview-local + sessão injetada, à prova de Cloudflare) pra você ver o print agora, ou prefere abrir você mesmo e eu sigo esperando o F1–F7? A prova material (18 linhas no DB + a página lê exatamente essas tabelas) já garante que vai aparecer ao abrir. 🛰️
+
+## 👤 User *(01:41:55)*
+
+<task-notification>
+<task-id>wgnyfdjaj</task-id>
+<tool-use-id>toolu_01KJc2zoyFjTFBuEWQ9ybu5E</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/tasks/wgnyfdjaj.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Fecha as frentes F1/F3/F4/F5/F6/F7 do blueprint avatar-clone-ai (ToS BYOK por provider, fidelidade EN+auto-dub, competidores, economics datado, LGPD biometrico, onboarding 6 canais+reply X) -&gt; 00c report, destrava /bok-scribe" completed</summary>
+<result>{"final":{"path":"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00c-fatia0-fronts-closure.md","executiveSummary":"Fatia 0 fechada como GO-HYBRID: o closure consolida F1-F7 + 3 verificacoes adversariais, com URL-fonte em cada claim e 3 claims REFUTADAS marcadas. F1 (BYOK legal): defensavel SOMENTE no Modelo A estrito (cada user com conta/chave propria; MCORCH executa cifrado no Vault) — a refutacao adversarial confirma o invariante anti-conta-mestra que ja e Lei (API Tenancy Model). Magnific=org-key e HeyGen=partnership ficam DE FORA do BYOK puro. F3: auto-dub PT-BR NAO dispensa trilha clonada (audio bom mas lip-sync nao-GA + voz generica) — REFUTADO; resolucao = auto-dub p/ alcance, voz clonada+re-lip-sync p/ premium. F4 build-vs-buy: construir orquestracao/reply-engine/monetizacao, integrar motores via BYOK; nenhum concorrente cobre o sistema todo. F5: 1 ciclo 30d hibrido ~$34.80 (Hedra) a ~$148.80 (OmniHuman 1.5); multi-idioma via auto-dub = $0 marginal; tabela mco 4x-floor datada. F6: biometrico = dado sensivel LGPD Art.11/16/18 + EU AI Act Art.50 (consent por-render fail-closed, erasure on-revoke+notificacao a terceiros, C2PA, disclosure deepfake) — sem prazo numerico ANPD vinculante (config parametrizavel). F7: X reply engine virou pay-per-use (\"tier acessivel\" REFUTADO); gating per-canal (YouTube/TikTok/IG/LinkedIn audit). Fecha 8 OTDs + 6 FMEAs do blueprint e lista 12 FRs first-class p/ o /bok-scribe. 3 gaps de Lei 1 (Magnific §3 API, ElevenLabs resale, OmniHuman titular) abertos p/ GA, nenhum bloqueia o piloto per-user.","byokVerdictPerProvider":"ElevenLabs=PERMITIDO em BYOK puro / PROIBIDO em conta-mestra (titular responsavel pela chave). Cartesia=CINZA (exige tier comercial do proprio user + licenca non-sublicensable). Hedra=CINZA-RESTRITIVO (§1.3c proibe 'service bureau...or otherwise'; BYOK puro escapa mas o 'otherwise' expoe). fal.ai/OmniHuman=CINZA (§4(b)(ii) nao-expor-APIs-a-End-Users; BYOK puro = user e o proprio Customer da fal; divergencia fal.ai vs BytePlus como titular contratual). Higgsfield=PERMITIDO-com-ressalva (§5.2(i) nao 'explorar o Service' mas §4.4 libera outputs comerciais; BYOK nao revende acesso). Magnific/Freepik=PROIBIDO-sem-consentimento (modelo nativo e chave ORGANIZACIONAL, nao per-user — FICA DE FORA do BYOK puro; usar conta-org Business interna). HeyGen=PARTNERSHIP-OBRIGATORIA (OAuth via Partnerships team ou MSA Enterprise — FICA DE FORA; ja decidido como futuro). INVARIANTE: nunca multiplexar conta-mestra (=service bureau proibido na maioria).","autoDubSufficient":"NAO (condicional por nivel de fidelidade) — REFUTADO adversarialmente. O auto-dub nativo da plataforma resolve o AUDIO PT-BR (YouTube Expressive Speech PT live 04/fev/2026, captura pitch/entonacao) MAS: (a) o lip-sync e PILOTO nao-GA (so 5 idiomas, 1080p, pequeno grupo selecionado) — no fluxo EN-&gt;PT-BR a boca articula ingles sobre audio portugues = descompasso visivel; (b) o auto-dub usa VOZ GENERICA da plataforma, NAO clona a voz do criador (caso PT real: voz feminina robotica sobre narrador masculino, view duration ~75% da lingua original) — onde a voz E o ativo de marca (persona CCIO), dub generico fere a consistencia. Resolucao de arquitetura: auto-dub = camada de ALCANCE/cauda-longa; trilha PT-BR CLONADA (ElevenLabs/Cartesia) + re-render/re-lip-sync no nosso motor (OmniHuman/Kling) = entrega PREMIUM. 1 trilha EN-fonte continua certa (custo marginal por idioma ~$0 via auto-dub ou ~$0.16 dub premium).","cyclesCostEstimate":"1 ciclo de 30 dias (1 short/dia = 30 shorts, hibrido ~50% footage real =&gt; ~15 renders avatar @60s): Hedra Character-3 ~$34.80/mes (cabe no plano Creator $30 + top-up, ou Professional $75 com folga); OmniHuman 1.5 (fal.ai pay-per-use) ~$148.80/mes. Se 100%-avatar (sem footage real): Hedra ~$64.80, OmniHuman 1.5 ~$292.80. Distribuir EN-&gt;PT-BR-&gt;+idiomas via YouTube auto-dub NAO multiplica esse custo (1 render-fonte EN, N idiomas a $0; ou ~$0.16/idioma dub premium ElevenLabs seletivo). Driver de custo = 100% o render do avatar (segundos x motor); voz/enhance sao ruido (~$0.16 cada). Mapeamento mco 4x-floor (60s): Hedra ~480 mco, OmniHuman 1.5 ~2169 mco, dia-footage-real ~36 mco (so voz) — recalibrar com precos ao vivo no SDD.","blockingActions":["YouTube: submeter compliance audit do projeto Google Cloud (caso de uso + demo do fluxo OAuth) — sem isso videos.insert nasce SEMPRE privado","TikTok: submeter audit application do client (formulario de estimativa) — sem isso so posta SELF_ONLY invisivel","Instagram: App Review de instagram_business_content_publish (~2-4 semanas) + garantir conta BUSINESS (Creator nao suportada)","LinkedIn: adicionar produto 'Share on LinkedIn' + scope w_member_social + descrever caso de uso","X: checar no Developer Portal se ha assinatura Basic/Pro legada ativa (muda economia do reply engine) + decidir pay-per-use vs legado","YouTube: setar Country of residence + Preferred languages em youtube.com/account_playback (decisao de formato)","YouTube: inscrever canal-ancora no Lip Sync pilot (PT na lista) — destrava lip-sync PT-BR sem re-render","Juridico BYOK: consulta formal nao-AI antes do GA + fechar 3 gaps Lei 1 (Magnific §3 API truncada, ElevenLabs resale-clause, OmniHuman titular contratual fal.ai vs BytePlus) — nenhum bloqueia o piloto per-user, todos bloqueiam o GA comercial"]},"verdicts":[{"claim":"A plataforma MCORCH pode legalmente armazenar e usar a chave de API do end-user (BYOK pass-through multi-tenant) para ElevenLabs, Hedra, OmniHuman e Higgsfield sem violar o ToS de cada um.","verdict":"refuted","evidence":"A claim é universal (\"os 4 provedores, sem violação\"); basta um conflito para refutá-la, e há conflito/incerteza material nos quatro. HEDRA (API Terms §1.3) proíbe verbatim \"provide access to the Solution to third parties on a service bureau basis or otherwise\" e §1.1 \"Customer is not authorized to integrate the Solution or the API into Customer's applications, products or services\" — um broker BYOK multi-tenant É exatamente acesso de terceiros/service-bureau → refuta diretamente. ELEVENLABS (Terms §3) \"You may not share or permit others to use your individual account credentials\" (API key = credencial de conta); embedding em outra plataforma é gated pelos service-specific/OEM terms; busca de provedor também indica vedação a pooling/aggregating de quotas e exigência de Authorized Reseller. HIGGSFIELD (§5.2(i)) proíbe \"license, sell, rent, lease, transfer, assign, reproduce, distribute, host or otherwise commercially exploit the Service\" e §2.3 \"You may not share your Account or password with anyone\"; API só no plano Studio, limites a \"sole discretion\". OMNIHUMAN: ByteDance NÃO tem API first-party geral — acesso via BytePlus/revendedores; BytePlus Customer Agreement concede licença \"non-transferable... non-sublicensable... solely for your internal business purposes\" e proíbe \"holding yourself out as an OEM, SaaS provider, service provider, reseller\" → a própria premissa de \"BYOK OmniHuman\" é incerta/inexistente como alvo limpo. Além disso, \"legalmente... sem violar o ToS\" confunde conformidade contratual com legalidade. Nenhuma fonte autoritativa sustenta a permissão universal afirmada; o peso das cláusulas (service-bureau, credential-sharing, no-sublicense) vai contra.","sourceUrl":"https://www.hedra.com/api-terms"},{"claim":"O auto-dub nativo das plataformas (YouTube Multi-Language Audio Expressive Speech PT + TikTok dubbing) é bom o suficiente em PT-BR para dispensar gerar nossa própria trilha de voz clonada PT-BR.","verdict":"refuted","evidence":"A metade verificável da claim confirma-se (PT é suportado): YouTube lançou Expressive Speech em 04-fev-2026 com Português entre as 8 línguas, e TikTok Symphony lista Português no AI Dubbing. MAS a metade operativa — \"bom o suficiente para DISPENSAR voz clonada própria\" — é REFUTADA por fontes independentes:\n\n(1) Review honesto independente (speeek.io/blog/youtube-autodub-review-202
+... (truncated 3856 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/tasks/wgnyfdjaj.output)</result>
+<usage><agent_count>10</agent_count><subagent_tokens>680211</subagent_tokens><tool_uses>128</tool_uses><duration_ms>1023341</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:44:22)*
+
+
+## 🤖 Claude *(01:44:23)*
+
+F1–F7 fechado. Verificando o `00c` no disco e enriquecendo o board com as descobertas (em paralelo):
+
+## 🤖 Claude *(01:44:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== ls ===\"; ls -la docs/bok/avatar-clone-ai/; echo \"=== wc 00c ===\"; wc -l docs/bok/avatar-clone-ai/00c-fatia0-fronts-closure.md; echo \"=== headers 00c ===\"; grep -nE '^#{1,3} ' docs/bok/avatar-clone-ai/00c-fatia0-fronts-closure.md | head -40",
+  "description": "Verify 00c closure report on disk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ls ===
+> total 132
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jun 29 22:41 .
+> drwxrwxr-x 27 gcrUX  gcrUX   4096 Jun 29 21:21 ..
+> -rw-rw-r--  1 ubuntu ubuntu 23856 Jun 29 22:08 00b-fatia0-viability-format-probe.md
+> -rw-rw-r--  1 ubuntu ubuntu 39367 Jun 29 22:41 00c-fatia0-fronts-closure.md
+> -rw-rw-r--  1 ubuntu ubuntu 58216 Jun 29 22:23 00-deepsearch-blueprint.md
+> === wc 00c ===
+> 287 docs/bok/avatar-clone-ai/00c-fatia0-fronts-closure.md
+> === headers 00c ===
+> 1:# Fatia 0 — Fechamento das Frentes F1–F7 (Closure) · módulo `avatar-clone-ai` (programa "Gabriel AI")
+> 16:## F1 — Legalidade BYOK pass-through por provider (fecha FM-AC-010 / OTD-AC-011)
+> 24:### Tabela de veredicto BYOK pass-through POR provider
+> 36:### Providers que FICAM DE FORA do BYOK puro per-user
+> 41:### ⛔ REFUTAÇÃO ADVERSARIAL relevante a F1
+> 47:### Onboarding BYOK — 2 atestados por provider (trilha de auditoria)
+> 54:### Gaps de Lei 1 abertos por F1 (entram como OTD com SLA antes do GA)
+> 63:## F3 — Fidelidade EN dos motores self-serve + auto-dub PT-BR dispensa nossa trilha clonada? (toca OTD-AC-001, FM-AC-012)
+> 65:### (a) Fidelidade talking-head EN — motores self-serve
+> 78:### (b) DECISÃO DE ARQUITETURA — auto-dub PT-BR dispensa nossa trilha de voz clonada? → **NÃO (condicional por nível de fidelidade)**
+> 97:## F4 — Build-vs-Buy (resumido)
+> 118:## F5 — Economics datado 2026 (preços oficiais) + 1 short + 1 ciclo 30d + mapeamento mcoCoins
+> 122:### Preços unitários (página oficial do fornecedor)
+> 135:### Custo de UM short (60s, 1 trilha EN)
+> 146:### Custo de UM CICLO 30 DIAS (1 short/dia = 30 shorts; híbrido ~50% footage real ⇒ ~15 renders avatar)
+> 157:### Mapeamento mcoCoins (modelo 4×-floor: `mco = ceil(usd / $0.018_floor × 4)`)
+> 173:## F6 — Política de retenção/consentimento biométrico (LGPD + EU AI Act) — fecha OTD-AC-010, FM-AC-004, FM-AC-011
+> 177:### Base legal & direitos
+> 192:### Política operacional do módulo (entra como FRs first-class de compliance)
+> 208:## F7 — Gating por canal + tier X p/ reply engine + Ações Sovereign — fecha OTD-AC-009, FM-AC-006
+> 210:### X Reply Engine (CORE) — economia mudou para pay-per-use
+> 227:### Gating por canal (publicação autônoma)
+> 238:### Lista do que é AÇÃO SOVEREIGN (Cérebro-sem-mãos — gated antes do lançamento público)
+> 254:## Fechamento — como isto fecha os OTDs/FMEA do blueprint
+> 272:### O que entra como FR first-class no `/bok-scribe avatar-clone-ai`
+> ```
+
+## 🤖 Claude *(01:45:05)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scratch/seed-kanban-roadmap.ts",
+  "content": "// One-off ops: surface the \"Gabriel AI \u2014 Programa (Avatar/Clone AI)\" roadmap into the\n// Usu\u00e1rio Zero Kanban (aios_kanban_*). Idempotent: re-seeding deletes the same-titled board first.\n// Run from repo root: bun run scratch/seed-kanban-roadmap.ts\nimport { createClient } from \"@supabase/supabase-js\";\n\nconst URL = process.env.VITE_SUPABASE_URL!;\nconst KEY = process.env.SB_SECRET_KEY!;\nif (!URL || !KEY) { console.error(\"Missing VITE_SUPABASE_URL / SB_SECRET_KEY\"); process.exit(1); }\n\nconst USER_ID = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"; // gabrielcall@gmail.com (User 0, verified footprint)\nconst BOARD_TITLE = \"\ud83c\udfad Gabriel AI \u2014 Programa (Avatar/Clone AI)\";\n\nconst sb = createClient(URL, KEY, { auth: { persistSession: false } });\n\ntype Card = { title: string; description: string; agent: string | null };\ntype Col = { name: string; status: \"todo\" | \"in_progress\" | \"gate\" | \"done\"; cards: Card[] };\n\nconst columns: Col[] = [\n  {\n    name: \"\ud83d\udccb Backlog / Fatias\", status: \"todo\", cards: [\n      { title: \"Fatia 1 \u2014 BYOK credenciais avatar\", agent: \"engineer\", description: \"Migration user_api_keys: hedra/elevenlabs/cartesia/higgsfield (Vault cifrado) + UI Settings + lookup fail-closed. BYOK puro Modelo A (cada user, sua chave). Magnific=conta-org / HeyGen=partnership FORA do BYOK puro.\" },\n      { title: \"Fatia 2 \u2014 N\u00f3 voiceClone\", agent: \"engineer\", description: \"generate-voice edge fn (ElevenLabs/Cartesia) + n\u00f3 Canvas. \u00c2ncora = voz EN clonada; PT-BR premium = trilha clonada pr\u00f3pria (auto-dub n\u00e3o dispensa \u2014 F3 refutado). voice_profiles RLS biom\u00e9trico.\" },\n      { title: \"Fatia 3 \u2014 N\u00f3 avatarIdentity + Identity Gate\", agent: \"engineer\", description: \"Soul ID / LoRA por-pessoa + ArcFace cosine gate (estende Vision QA, limiar calibrado FAR/FRR). avatar_identities RLS own + storage isolado per-tenant.\" },\n      { title: \"Fatia 4 \u2014 N\u00f3 avatarScript (c\u00e9rebro clonado)\", agent: \"scientist\", description: \"RAG sobre mcorch_nodes (memory mesh) + Brand Voice DNA quantificado. \u00c2ncora EN.\" },\n      { title: \"Fatia 5 \u2014 N\u00f3 talkingHead + avatarEnhance\", agent: \"engineer\", description: \"Motor por-v\u00eddeo-refer\u00eancia (Hedra Character-3 default custo-efetivo / OmniHuman) + Magnific Relight/upscale (identidade ANTES de enhance) \u2192 MP4 9:16.\" },\n      { title: \"Fatia 6 \u2014 C2PA + disclosure/consent gate\", agent: \"guardian\", description: \"Embed C2PA no render (REQUISITO LEGAL EU AI Act Art.50 + auto-label TikTok) + gate de publish n\u00e3o-pul\u00e1vel + consent biom\u00e9trico por-render fail-closed (LGPD Art.11). Spike sha256 (OTD-AC-008).\" },\n      { title: \"Fatia 7 \u2014 Repurpose nativo + auto-dub multi-audio\", agent: \"artisan\", description: \"Estende reshape-pillar/channel_variants p/ avatar; branches v\u00eddeo LinkedIn/X; trilha EN-fonte + auto-dub (alcance) + trilha PT clonada (premium).\" },\n      { title: \"Fatia 8 \u2014 JUN\u00c7\u00c3O com Viral Autopilot\", agent: \"engineer\", description: \"Relaxar CHECK autopilot_plans.platforms (yt/tiktok/ig) + AVATAR_FLOW_PLATFORMS + step avatar_generation + billing/refund. Liga a cad\u00eancia de 30 dias.\" },\n      { title: \"Fatia 9 (core) \u2014 Reply engine do X\", agent: \"engineer\", description: \"Agent loop real-time: mentions \u2192 reply do c\u00e9rebro clonado \u2192 postar em minutos (~150x author-reply). OTD-AC-009 = core. \u26a0\ufe0f X API virou pay-per-use (F7).\" },\n      { title: \"\ud83d\udcc5 Cad\u00eancia 30 dias (S1 Aware \u2192 S4 Conv)\", agent: \"marketing-growth\", description: \"Grade Dia 1\u219230: YT 5 Shorts+1-2 longos/sem \u00b7 TikTok 3-5 \u00b7 IG 4-5+Stories \u00b7 LinkedIn 3-4 \u00b7 X 3-5/dia. Mix 40% educ / 40% autoridade / \u226420% produto (conta nova 70/20/10). 1 pilar \u2192 N nativas via Channel Reshaper.\" },\n      { title: \"\ud83c\udfa5 Footage real (h\u00edbrido) \u2014 lotes Ramonov\", agent: \"marketing-growth\", description: \"Voc\u00ea grava ~1 dia/semana: 1 longo + ~20 shorts, 1 nicho, hook <2s. O avatar escala/cobre os dias; o rosto real ancora confian\u00e7a (evita o crater uncanny-valley).\" },\n      { title: \"\ud83d\udcca Baseline honesto (atribui\u00e7\u00e3o)\", agent: \"marketing-growth\", description: \"YT @uxnai = 49 subs / 32 v\u00eddeos (sem upload desde dez/2024) \u00b7 TikTok @gabriel_mcorch = 0 v\u00eddeos p\u00fablico / 1 seguidor. Linha de partida real (curl Lei 1), n\u00e3o persona aspiracional.\" },\n    ],\n  },\n  {\n    name: \"\ud83d\udea7 Em Andamento\", status: \"in_progress\", cards: [\n      { title: \"\ud83d\udea7 /bok-scribe avatar-clone-ai (selando a BoK)\", agent: \"scientist\", description: \"Gera MRD\u2192BRD\u2192PRD\u2192FRD\u2192SDD + Pattern Conformance (21 padr\u00f5es) a partir dos seeds 00 + 00b + 00c. Destrava o c\u00f3digo (Refusal Mode at\u00e9 selar).\" },\n    ],\n  },\n  {\n    name: \"\ud83d\udeaa A\u00e7\u00f5es Sovereign / Gates\", status: \"gate\", cards: [\n      { title: \"\u2699\ufe0f YouTube \u2014 compliance audit (Google Cloud)\", agent: \"guardian\", description: \"Submeter o audit do projeto (caso de uso + demo do fluxo OAuth). Sem isso videos.insert nasce SEMPRE privado.\" },\n      { title: \"\u2699\ufe0f YouTube \u2014 Country + Preferred language\", agent: \"guardian\", description: \"Setar Country of residence + Preferred languages em youtube.com/account_playback (decis\u00e3o de formato/seed).\" },\n      { title: \"\u2699\ufe0f YouTube \u2014 Lip Sync pilot (PT)\", agent: \"guardian\", description: \"Inscrever o canal-\u00e2ncora no piloto de Lip Sync (Portugu\u00eas na lista) \u2192 destrava lip-sync PT-BR sem re-render.\" },\n      { title: \"\u2699\ufe0f TikTok \u2014 audit application\", agent: \"guardian\", description: \"Submeter o audit do client (formul\u00e1rio de estimativa). Sem isso s\u00f3 posta SELF_ONLY (invis\u00edvel).\" },\n      { title: \"\u2699\ufe0f Instagram \u2014 App Review (~2-4 sem)\", agent: \"guardian\", description: \"App Review de instagram_business_content_publish + garantir conta BUSINESS (Creator n\u00e3o \u00e9 suportada).\" },\n      { title: \"\u2699\ufe0f LinkedIn \u2014 Share on LinkedIn\", agent: \"guardian\", description: \"Adicionar o produto 'Share on LinkedIn' + scope w_member_social + descrever o caso de uso.\" },\n      { title: \"\u2699\ufe0f X \u2014 tier do reply engine\", agent: \"guardian\", description: \"Reply engine virou pay-per-use ('tier acess\u00edvel' refutado, F7). Checar assinatura Basic/Pro legada ativa + decidir pay-per-use vs legado.\" },\n      { title: \"\u2696\ufe0f BYOK jur\u00eddico \u2014 Magnific/HeyGen fora do BYOK puro\", agent: \"guardian\", description: \"Magnific = chave organizacional (n\u00e3o per-user) \u2192 conta-org Business interna. HeyGen = partnership. Consulta legal antes do GA (piloto per-user n\u00e3o bloqueado). INVARIANTE: nunca conta-mestra multiplexada (=service bureau proibido).\" },\n    ],\n  },\n  {\n    name: \"\u2705 Conclu\u00eddo\", status: \"done\", cards: [\n      { title: \"\u2705 Deepsearch for\u00e7a-total \u2192 blueprint-semente\", agent: \"scientist\", description: \"14 frentes + verifica\u00e7\u00e3o adversarial (6 claims refutadas). docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md (421 linhas).\" },\n      { title: \"\u2705 Gate Fatia 0 \u2014 GO-HYBRID\", agent: \"scientist\", description: \"Viabilidade fechada: N\u00c3O 100%-avatar (crater McCoy 30k\u21923k/m\u00eas, FM-AC-014) \u2192 h\u00edbrido rosto-real + avatar-backfill. doc 00b.\" },\n      { title: \"\u2705 Decis\u00f5es Sovereign travadas\", agent: null, description: \"H\u00edbrido + global-EN-first (\u00e1udio EN + auto-dub PT alcance / clone PT premium) + reply X core + avatar BYOK per-user (Hedra/OmniHuman/Higgsfield) + idioma/freq opt-in.\" },\n      { title: \"\u2705 Frentes F1\u2013F7 fechadas (doc 00c)\", agent: \"scientist\", description: \"BYOK puro defens\u00e1vel (Modelo A); Magnific/HeyGen fora. Auto-dub = alcance, voz clonada PT = premium (F3 refutado). 8 OTDs + 6 FMEAs fechados, 12 FRs first-class p/ o Scribe.\" },\n      { title: \"\ud83d\udcb0 Economics fechado \u2014 Hedra ~$35/m\u00eas (default)\", agent: \"engineer\", description: \"Ciclo 30d h\u00edbrido: Hedra Character-3 ~$34.80 (custo-efetivo) vs OmniHuman ~$148.80. Driver = render do avatar. mco 4\u00d7-floor 60s: Hedra ~480, OmniHuman ~2169. Multi-idioma via auto-dub = $0 marginal.\" },\n    ],\n  },\n];\n\nconst { data: existing } = await sb.from(\"aios_kanban_boards\").select(\"id\").eq(\"user_id\", USER_ID).eq(\"title\", BOARD_TITLE);\nif (existing?.length) {\n  for (const b of existing) await sb.from(\"aios_kanban_boards\").delete().eq(\"id\", b.id);\n  console.log(`Idempotent: deleted ${existing.length} pre-existing board(s) with same title (cascade).`);\n}\n\nconst { data: board, error: bErr } = await sb.from(\"aios_kanban_boards\").insert({ user_id: USER_ID, title: BOARD_TITLE }).select(\"id\").single();\nif (bErr) throw bErr;\nconsole.log(\"Board created:\", board.id);\n\nlet total = 0, colPos = 1;\nfor (const col of columns) {\n  const { data: c, error: cErr } = await sb.from(\"aios_kanban_columns\").insert({ board_id: board.id, name: col.name, position: colPos++ }).select(\"id\").single();\n  if (cErr) throw cErr;\n  const rows = col.cards.map((card, i) => ({ column_id: c.id, user_id: USER_ID, title: card.title, description: card.description, assigned_agent_id: card.agent, status: col.status, position: i + 1 }));\n  const { error: tErr } = await sb.from(\"aios_kanban_tasks\").insert(rows);\n  if (tErr) throw tErr;\n  total += rows.length;\n  console.log(`  Column \"${col.name}\": ${rows.length} cards`);\n}\nconsole.log(`DONE: board ${board.id} \u00b7 ${columns.length} columns \u00b7 ${total} cards \u00b7 user ${USER_ID}`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scratch/seed-kanban-roadmap.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:45:10)*
+
+
+## 🤖 Claude *(01:45:11)*
+
+`00c` confirmado: 39KB, 287 linhas, F1–F7 + 12 FRs first-class. Re-seedando o board enriquecido (idempotente):
+
+## 🤖 Claude *(01:45:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; bun run scratch/seed-kanban-roadmap.ts 2>&1\necho \"=== verify ===\"\nSECRET=$(grep -E '^SB_SECRET_KEY=' .env | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\nURL=$(grep -E '^VITE_SUPABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\ncurl -s \"$URL/rest/v1/aios_kanban_boards?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=title,created_at&order=created_at.desc\" -H \"apikey: $SECRET\" -H \"Authorization: Bearer $SECRET\"",
+  "description": "Re-run enriched Kanban seed + verify boards"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Idempotent: deleted 1 pre-existing board(s) with same title (cascade).
+> Board created: e58c5ca2-d7a8-4c82-be3e-433e50c659aa
+>   Column "📋 Backlog / Fatias": 12 cards
+>   Column "🚧 Em Andamento": 1 cards
+>   Column "🚪 Ações Sovereign / Gates": 8 cards
+>   Column "✅ Concluído": 5 cards
+> DONE: board e58c5ca2-d7a8-4c82-be3e-433e50c659aa · 4 columns · 26 cards · user ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> === verify ===
+> [{"title":"🎭 Gabriel AI — Programa (Avatar/Clone AI)","created_at":"2026-06-30T01:45:14.905005+00:00"}, 
+>  {"title":"ShakeHands","created_at":"2026-06-07T06:23:31.68038+00:00"}]
+> ```
+
+## 🤖 Claude *(01:45:57)*
+
+
+## 🤖 Claude *(01:46:10)*
+
+**✅ Board enriquecido (26 cards)** + **F1–F7 fechado** (`00c`, 39KB/287 linhas, 12 FRs first-class). O board agora tem **sua lista de ações** na coluna 🚪. Re-seed idempotente, ShakeHands intacto.
+
+# 📋 Fatia 0 — FECHADA (F1–F7)
+
+**As 3 verdades que mudam o plano:**
+
+**1. BYOK puro (Modelo A) é o único caminho legal** — e já é a nossa Lei (API Tenancy Model). Veredicto por provider:
+
+| Provider | BYOK puro | Nota |
+|---|---|---|
+| ElevenLabs · Higgsfield | ✅ permitido | titular = o próprio user |
+| Hedra · Cartesia · OmniHuman(fal) | ⚠️ cinza | cláusula service-bureau; BYOK puro escapa, conta-mestra **proibida** |
+| **Magnific/Freepik** | ❌ **fora** | chave é **organizacional**, não per-user → usar **conta-org interna** |
+| **HeyGen** | ❌ **fora** | partnership obrigatória (já era futuro) |
+
+> **Invariante cravado:** nunca multiplexar conta-mestra (= *service bureau*, banido na maioria dos ToS).
+
+**2. Auto-dub NÃO substitui nossa voz clonada** (F3 refutado). O áudio PT é bom, mas o lip-sync é **piloto não-GA** (boca articula EN sobre áudio PT = descompasso) e a **voz é genérica**, não a sua. Resolução: **auto-dub = camada de alcance (grátis)** · **voz PT clonada + re-lip-sync = premium**. Como somos EN-first, PT entra via auto-dub agora; premium PT vira opt-in.
+
+**3. Custo é barato 🎉** — 1 ciclo de **30 dias híbrido ≈ US$ 34,80** (Hedra Character-3, cabe no plano Creator) vs ~US$ 148 (OmniHuman). Driver = segundos de render do avatar; voz/enhance são ruído. **→ Hedra = motor default.**
+
+**Sua lista de ações** (coluna 🚪, correm em paralelo — não bloqueiam a BoK nem o build, só o lançamento público): audits YouTube/TikTok · App Review IG (~2-4 sem) · Share-on-LinkedIn · tier do X (reply engine virou pay-per-use) · setar Country/idioma no YT · inscrever no Lip Sync pilot PT · consulta jurídica BYOK antes do GA.
+
+---
+
+**Fatia 0 está 100% fechada.** Os 3 docs-semente (`00` + `00b` + `00c`) são a Fonte da Verdade completa. O próximo é **o gate** — e por protocolo o `/bok-scribe` é acionado por você:
+
+## 🤖 Claude *(01:46:18)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Fatia 0 fechada (blueprint + viabilidade + F1-F7). Pr\u00f3ximo gate do Closed-Loop = selar a BoK com /bok-scribe avatar-clone-ai (gera MRD\u2192BRD\u2192PRD\u2192FRD\u2192SDD + Pattern Conformance dos 21 padr\u00f5es) a partir dos 3 docs-semente \u2014 isso destrava o c\u00f3digo. Rodar agora?",
+      "header": "BoK Gate",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Sim \u2014 rodar /bok-scribe agora",
+          "description": "Selo a su\u00edte BoK completa a partir de 00+00b+00c (for\u00e7a total, com verifica\u00e7\u00e3o). Destrava a constru\u00e7\u00e3o das Fatias 1\u20139. Suas a\u00e7\u00f5es de canal correm em paralelo (n\u00e3o bloqueiam). RECOMENDADO."
+        },
+        {
+          "label": "Primeiro eu reviso os 3 docs",
+          "description": "Voc\u00ea l\u00ea 00-deepsearch-blueprint / 00b-viability / 00c-fronts-closure antes de eu selar a BoK. Eu espero seu OK."
+        },
+        {
+          "label": "Primeiro as a\u00e7\u00f5es de canal",
+          "description": "Voc\u00ea faz os audits/configs (YouTube/TikTok/IG/X) antes de selar a BoK. Mais lento, mas chega ao c\u00f3digo j\u00e1 com os canais destravados."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Fatia 0 fechada (blueprint + viabilidade + F1-F7). Próximo gate do Closed-Loop = selar a BoK com /bok-scribe avatar-clone-ai (gera MRD→BRD→PRD→FRD→SDD + Pattern Conformance dos 21 padrões) a partir dos 3 docs-semente — isso destrava o código. Rodar agora?"="Sim — rodar /bok-scribe agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:47:09)*
+
+
+## 🤖 Claude *(01:47:10)*
+
+GO recebido. Acionando o **`/bok-scribe avatar-clone-ai`** — usando `00` + `00b` + `00c` como Fonte da Verdade única.
+
+## 🤖 Claude *(01:47:17)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "avatar-clone-ai \u2014 M\u00f3dulo per-user \"Avatar / Clone AI / Person AI\" no Canvas Studio (programa \"Gabriel AI\"). FONTE DA VERDADE J\u00c1 EXISTE e est\u00e1 consolidada: docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md (421 linhas) + 00b-fatia0-viability-format-probe.md (GO-HYBRID) + 00c-fatia0-fronts-closure.md (F1-F7 fechado, 12 FRs first-class). N\u00c3O reabrir pesquisa \u2014 selar a su\u00edte BoK (MRD\u2192BRD\u2192PRD\u2192FRD\u2192SDD + Data Model + Process Flow + Quality Metrics + Pattern Conformance Declaration dos 21 padr\u00f5es de docs/architecture/agentic-vision.md) a partir desses 3 seeds. Decis\u00f5es j\u00e1 travadas: postura h\u00edbrido rosto-real+avatar-backfill; posicionamento global-EN-first (auto-dub PT alcance / clone PT premium); avatar BYOK puro per-user (Hedra default / OmniHuman / Higgsfield; Magnific=conta-org / HeyGen=partnership FORA); reply engine do X = core; idioma/freq opt-in; Hedra ciclo 30d ~$35."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(01:47:17)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `avatar-clone-ai — Módulo per-user "Avatar / Clone AI / Person AI" no Canvas Studio (programa "Gabriel AI"). FONTE DA VERDADE JÁ EXISTE e está consolidada: docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md (421 linhas) + 00b-fatia0-viability-format-probe.md (GO-HYBRID) + 00c-fatia0-fronts-closure.md (F1-F7 fechado, 12 FRs first-class). NÃO reabrir pesquisa — selar a suíte BoK (MRD→BRD→PRD→FRD→SDD + Data Model + Process Flow + Quality Metrics + Pattern Conformance Declaration dos 21 padrões de docs/architecture/agentic-vision.md) a partir desses 3 seeds. Decisões já travadas: postura híbrido rosto-real+avatar-backfill; posicionamento global-EN-first (auto-dub PT alcance / clone PT premium); avatar BYOK puro per-user (Hedra default / OmniHuman / Higgsfield; Magnific=conta-org / HeyGen=partnership FORA); reply engine do X = core; idioma/freq opt-in; Hedra ciclo 30d ~$35.`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in avatar-clone-ai — Módulo per-user "Avatar / Clone AI / Person AI" no Canvas Studio (programa "Gabriel AI"). FONTE DA VERDADE JÁ EXISTE e está consolidada: docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md (421 linhas) + 00b-fatia0-viability-format-probe.md (GO-HYBRID) + 00c-fatia0-fronts-closure.md (F1-F7 fechado, 12 FRs first-class). NÃO reabrir pesquisa — selar a suíte BoK (MRD→BRD→PRD→FRD→SDD + Data Model + Process Flow + Quality Metrics + Pattern Conformance Declaration dos 21 padrões de docs/architecture/agentic-vision.md) a partir desses 3 seeds. Decisões já travadas: postura híbrido rosto-real+avatar-backfill; posicionamento global-EN-first (auto-dub PT alcance / clone PT premium); avatar BYOK puro per-user (Hedra default / OmniHuman / Higgsfield; Magnific=conta-org / HeyGen=partnership FORA); reply engine do X = core; idioma/freq opt-in; Hedra ciclo 30d ~$35.):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(01:47:33)*
+
+
+## 🤖 Claude *(01:47:36)*
+
+O Scribe carregou. Slug `avatar-clone-ai`, dir existe, Fonte da Verdade (00/00b/00c) consolidada. Inputs derivados dos seeds (sem reabrir): **B2B2C** · monetização **híbrida** (mcoCoins/render + planos) · **LGPD + EU AI Act** · **estende** Canvas Studio + Viral Autopilot. Carregando a metodologia + templates do Scribe:
+
+## 🤖 Claude *(01:47:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(01:47:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== templates ===\"; ls -la .claude/agents/bok-scribe/templates/ 2>&1; echo \"=== pattern-conformance master (agentic-governance) ===\"; ls -la docs/bok/agentic-governance/09-pattern-conformance.md 2>&1; echo \"=== agentic-vision exists? ===\"; wc -l docs/architecture/agentic-vision.md 2>&1; echo \"=== existing bok suite example (vision-mcp) docs ===\"; ls docs/bok/vision-mcp/ 2>&1",
+  "description": "List bok-scribe templates + pattern conformance master + example suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === templates ===
+> total 68
+> drwxrwxr-x 2 ubuntu ubuntu 4096 May  6 13:37 .
+> drwxrwxr-x 3 ubuntu ubuntu 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 ubuntu ubuntu 7550 May  6 13:37 08-quality-metrics.md
+> === pattern-conformance master (agentic-governance) ===
+> -rw-rw-r-- 1 ubuntu ubuntu 10666 Jun 26 19:57 docs/bok/agentic-governance/09-pattern-conformance.md
+> === agentic-vision exists? ===
+> 128 docs/architecture/agentic-vision.md
+> === existing bok suite example (vision-mcp) docs ===
+> 00-deepsearch-blueprint.md
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 09-agent-system.md
+> ```
+
+## 🤖 Claude *(01:48:49)*
+
+
+## 🤖 Claude *(01:48:51)*
+
+Metodologia carregada (7 fases · 9 docs + Pattern Conformance). Os 3 seeds são a Fonte da Verdade rica — vou orquestrar a geração da suíte BoK numa **pipeline dependente** (MR→BR→PR→FR→SDD→dados/processo→qualidade/conformance→índice→validação), cada doc fundamentado nos seeds + template + docs a montante. Disparando o Scribe orquestrado:
+
+## 🤖 Claude *(01:50:19)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'avatar-clone-ai-bok-scribe-suite',\n  description: 'Gera a suite BoK de avatar-clone-ai (01-mrd..08-quality + 09-pattern-conformance + 00-index) a partir dos seeds 00/00b/00c, em pipeline de dependencia, e valida traceability',\n  phases: [\n    { title: 'Mercado & Negocio', detail: '01-mrd (BABOK) -> 02-brd' },\n    { title: 'Produto', detail: '03-prd (ProdBOK + CXBOK)' },\n    { title: 'Tecnico', detail: '04-frd (SWEBOK) -> 05-sdd (SWEBOK + CISSP)' },\n    { title: 'Dados & Processo', detail: '06-data-model (DMBOK) + 07-process-flow (BPM) em paralelo' },\n    { title: 'Qualidade & Conformance', detail: '08-quality-metrics (CMQ/OE) + 09-pattern-conformance em paralelo' },\n    { title: 'Indice & Validacao', detail: '00-index + validacao de traceability' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra';\nconst SEEDS = `${REPO}/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md, ${REPO}/docs/bok/avatar-clone-ai/00b-fatia0-viability-format-probe.md, ${REPO}/docs/bok/avatar-clone-ai/00c-fatia0-fronts-closure.md`;\n\nconst CTX = `\nVoce gera UM documento da suite BoK do MCORCH para o modulo \\`avatar-clone-ai\\` (programa \"Gabriel AI\"). cwd = ${REPO}.\n\nFONTE DA VERDADE (LEIA estes arquivos com Read \u2014 NAO reabra pesquisa, NAO invente alem deles):\n- docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md (tese, estrategia viral por canal, cadencia 30d, modulo Avatar \u00a74, integracao \u00a76, compliance \u00a77, OTD-AC-001..014, FM-AC-001..014, roadmap de Fatias \u00a79, decisoes Sovereign \u00a70)\n- docs/bok/avatar-clone-ai/00b-fatia0-viability-format-probe.md (GO-HYBRID, baseline real das contas, formato, FM-AC-014)\n- docs/bok/avatar-clone-ai/00c-fatia0-fronts-closure.md (F1-F7: tabela BYOK por provider, auto-dub=alcance/clone=premium, economics datado + custo do ciclo, LGPD/EU biometrico, gating por canal + tier X, e os 12 FRs first-class na secao final)\n\nDECISOES TRAVADAS (nao reabrir): (1) postura HIBRIDO rosto-real + avatar-backfill declarado, NAO 100%-avatar (crater McCoy, FM-AC-014). (2) posicionamento GLOBAL ENGLISH-FIRST: audio EN-ancora + auto-dub nativo da plataforma p/ PT-BR (alcance) / voz PT clonada + re-lip-sync (premium). (3) avatar = modulo per-user BYOK PURO no Canvas Studio (Modelo A: cada user, sua chave, executada cifrada no Vault). Motores: Hedra Character-3 (default custo-efetivo ~$35/ciclo) / OmniHuman / Higgsfield. Magnific = conta-org INTERNA (chave organizacional, nao per-user) so como enhance final. HeyGen = partnership FUTURO. INVARIANTE: nunca multiplexar conta-mestra (=service bureau proibido). (4) reply engine do X = ESCOPO CORE (agent loop real-time mentions->reply). (5) idioma + frequencia = per-user opt-in (default = lingua das settings). (6) Gabriel AI = instancia-zero (mercado B2B2C). (7) monetizacao HIBRIDA: mcoCoins 4x-floor por render (Hedra 60s ~480 mco; dia footage-real ~36 mco so voz) via RPC deduct_mco_coins + planos. (8) LGPD (biometrico = dado sensivel Art.11) + EU AI Act Art.50 (C2PA machine-readable + disclosure deepfake).\n\nCONSTRAINTS HARNESS (nao-negociaveis): logica em hooks (hook-first); SDD nunca lista valor de secret, so NOME da vault key; billing SEMPRE via RPC deduct_mco_coins (nunca client-side); toda tabela nova nasce com RLS default-deny + trigger embed-mcorch-node + isolamento tenant user_id(+project_id). Edge Function com JWT validation. Artefatos biometricos (avatar_identities/voice_profiles) = RLS own + storage isolado per-tenant + erase RPC (molde erase_vision_artifacts).\n\nESTILO: PT-BR executivo, termos tecnicos em EN. Headings e IDs em EN. IDs prefixados zero-pad 3 digitos (MR-AC-001.., BR-AC-001.., PR-AC-001.., FR-AC-001.., NFR-AC-001..). REUSAR os ids OTD-AC-* e FM-AC-* que ja existem nos seeds. Markdown tables com header. Footer: _Generated by MCORCH BoK Scribe Agent v1.0.0_. Production-ready, ZERO placeholders, ZERO \"TBD\". Rode \\`mkdir -p docs/bok/avatar-clone-ai\\` se preciso (ja existe).\n`;\n\nconst DOC_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['file', 'summary', 'idSpace', 'lineCount'],\n  properties: {\n    file: { type: 'string' },\n    summary: { type: 'string' },\n    idSpace: { type: 'string' },\n    lineCount: { type: 'number' },\n  },\n};\n\nconst VALID_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['traceabilityOk', 'orphans', 'assertions', 'verdict'],\n  properties: {\n    traceabilityOk: { type: 'boolean' },\n    orphans: { type: 'array', items: { type: 'string' } },\n    assertions: { type: 'array', items: { type: 'string' } },\n    verdict: { type: 'string' },\n  },\n};\n\nfunction gen(num, name, lens, template, upstream, sections, extra) {\n  return CTX\n    + `\\n\\nTAREFA: gerar o documento **${num}-${name}** (lente ${lens}).`\n    + `\\nLEIA primeiro (Read): o template \\`.claude/agents/bok-scribe/templates/${template}\\` (estrutura de secoes) + os 3 seeds (${SEEDS})${upstream ? ' + os docs a montante ja escritos: ' + upstream : ''}.`\n    + `\\nSecoes obrigatorias: ${sections}`\n    + (extra ? `\\n${extra}` : '')\n    + `\\nESCREVA o arquivo completo em docs/bok/avatar-clone-ai/${num}-${name}.md (use Write). Production-grade, rastreavel, fundamentado nos seeds. Retorne {file, summary, idSpace, lineCount}.`;\n}\n\nphase('Mercado & Negocio')\nconst mrd = await agent(gen('01', 'mrd', 'BABOK v3', '01-mrd.md', null,\n  '1 Executive Summary; 2 Market Problem; 3 Target Segments + TAM/SAM/SOM; 4 Competitive Landscape (min 3 \u2014 usar F4 do 00c); 5 Market Opportunity & Timing; 6 Market Requirements MR-AC-001..NNN (prioridade Critical/High/Medium/Low); 7 Success Metrics; 8 Regulatory & Compliance Context (LGPD/EU AI Act); 9 Traceability stub MR->BR',\n  'A viabilidade GO-HYBRID e o baseline real das contas (00b) sao o nucleo do Market Problem + Success Metrics honestos.'),\n  { label: '01-mrd', phase: 'Mercado & Negocio', schema: DOC_SCHEMA, agentType: 'general-purpose' })\n\nconst brd = await agent(gen('02', 'brd', 'BABOK v3', '02-brd.md', '01-mrd.md',\n  '1 Executive Summary; 2 Business Objectives (SMART, min 3); 3 Stakeholder Register; 4 Business Requirements BR-AC-001..NNN (traced a MR-AC); 5 ROI Model (usar economics datado do 00c: Hedra ~$35/ciclo); 6 mcoCoins Economics (4x-floor por render); 7 Constraints & Assumptions; 8 Business Risks; 9 Acceptance Criteria; 10 Traceability MR->BR->PR',\n  'Cada BR rastreia >=1 MR. Custo mcoCoins definido (feature usa AI generation).'),\n  { label: '02-brd', phase: 'Mercado & Negocio', schema: DOC_SCHEMA, agentType: 'general-purpose' })\n\nphase('Produto')\nconst prd = await agent(gen('03', 'prd', 'ProdBOK + CXBOK', '03-prd.md', '01-mrd.md, 02-brd.md',\n  '1 Product Vision; 2 User Personas (min 2: Gabriel/User-Zero criador-fundador + tenant-criador generico); 3 User Journey Maps (happy + 2 edge); 4 Feature Inventory MoSCoW PR-AC-001..NNN (Persona, BR traced, Effort, mcoCoins); 5 Release Phasing (MVP/v1/futuro \u2014 mapear as Fatias 1-9 do blueprint \u00a79); 6 Luxury UX Specs (Canvas Studio dark mesh #0A0A0F neon #7C3AED, nos tipados avatarIdentity/voiceClone/avatarScript/talkingHead/avatarEnhance); 7 Acceptance Criteria Gherkin; 8 Traceability MR->BR->PR',\n  'Modos de persona: self-clone vs personagem ficticio (consequencia legal \u00a71/\u00a75.4 do blueprint). MVP = Fatias 1-5 (avatar gera 1 short EN hibrido).'),\n  { label: '03-prd', phase: 'Produto', schema: DOC_SCHEMA, agentType: 'general-purpose' })\n\nphase('Tecnico')\nconst frd = await agent(gen('04', 'frd', 'SWEBOK v4', '04-frd.md', '02-brd.md, 03-prd.md',\n  '1 Scope; 2 Functional Requirements FR-AC-001..NNN (ID, Title, Desc, Priority, PR traced, Acceptance Test ID, Category UI/Hook/EdgeFn/DB/Cron); 3 NFR-AC-001..NNN (perf/scal/avail/maint + NFR de fidelidade de identidade + determinismo render); 4 Interface Requirements (component->hook->edge fn; contratos de API externa BYOK por provider); 5 Data Requirements; 6 Test Strategy matrix; 7 Traceability PR->FR',\n  'INCORPORE os 12 FRs first-class listados na secao final do 00c (BYOK fail-closed, consent biometrico por-render, disclosure/C2PA gate nao-pulavel, reply engine X, auto-dub vs clone, identity-verification self-clone, etc). Cada FR rastreia >=1 PR.'),\n  { label: '04-frd', phase: 'Tecnico', schema: DOC_SCHEMA, agentType: 'general-purpose', effort: 'high' })\n\nconst sdd = await agent(gen('05', 'sdd', 'SWEBOK v4 + CISSP CBK 2024', '05-sdd.md', '03-prd.md, 04-frd.md',\n  '1 Architecture Overview (Harness layer map; pipeline avatarIdentity->voiceClone->avatarScript->talkingHead->avatarEnhance->Identity Gate->C2PA->creative_assets->Viral Autopilot); 2 Component Catalog (hooks, componentes display-only, edge fns generate-voice/avatar-render/reply-x-engine, store slices, tabelas novas); 3 Data Flow Diagrams; 4 API Contract Definitions (assinaturas edge fn + ponto de deduct_mco_coins); 5 Security Design (STRIDE por componente, RLS, JWT, secrets inventory = NOMES de vault key BYOK per-user); 6 Infrastructure Touchpoints (worker de render molde video-bridge, ChromaDB se preciso, telemetry infra_health_logs); 7 Migration Stubs (avatar_identities, voice_profiles, user_api_keys novas colunas, RLS+HNSW); 8 Open Technical Decisions \u2014 REUSAR OTD-AC-001..014 dos seeds com a recomendacao-semente ja resolvida',\n  'Toda edge fn com JWT stub. Toda tabela com RLS default-deny. Biometrico RLS own + storage isolado + erase RPC. BYOK secrets = so nomes de vault key.'),\n  { label: '05-sdd', phase: 'Tecnico', schema: DOC_SCHEMA, agentType: 'general-purpose', effort: 'high' })\n\nphase('Dados & Processo')\nconst [dataModel, processFlow] = await parallel([\n  () => agent(gen('06', 'data-model', 'DMBOK v2', '06-data-model.md', '05-sdd.md',\n    '1 Conceptual Data Model (ERD textual); 2 Logical Data Model (por tabela: colunas/tipos/constraints/FK); 3 Supabase Physical Schema Stubs (CREATE TABLE + RLS shells default-deny + indexes HNSW/B-tree); 4 GraphRAG Knowledge Nodes (node/edge types novos, campos embedded, stability + FSRS-6); 5 Tenant Isolation Map (user_id+project_id por tabela); 6 Data Quality Rules; 7 Retention & Archival (biometrico LGPD \u2014 consent por-render, erase on-revoke)',\n    'Tabelas: avatar_identities, voice_profiles (PII biometrica RLS own + storage isolado), avatar_renders OU reuso video_renders+composition, consent artifacts, colunas BYOK em user_api_keys.'),\n    { label: '06-data-model', phase: 'Dados & Processo', schema: DOC_SCHEMA, agentType: 'general-purpose' }),\n  () => agent(gen('07', 'process-flow', 'BPM CBOK v4', '07-process-flow.md', '05-sdd.md',\n    '1 Process Inventory; 2 BPMN-lite Process Maps (swimlanes User|Hook|EdgeFn|ExternalAPI|DB) p/ (a) treino de identidade/voz, (b) geracao de 1 short avatar, (c) reply engine do X real-time, (d) jun\u00e7\u00e3o na cadencia do Autopilot; 3 n8n/worker Blueprints + error branches; 4 Orchestration Integration Points (step avatar_generation no orchestrate-step, ponto de deduct_mco_coins); 5 Error Handling & Retry; 6 SLA por step; 7 Cron Jobs (idempotency key, alerting)',\n    'Inclua o gate de disclosure/C2PA nao-pulavel antes do publish e o consent biometrico fail-closed.'),\n    { label: '07-process-flow', phase: 'Dados & Processo', schema: DOC_SCHEMA, agentType: 'general-purpose' }),\n])\n\nphase('Qualidade & Conformance')\nconst [quality, pattern] = await parallel([\n  () => agent(gen('08', 'quality-metrics', 'CMQ/OE BOK', '08-quality-metrics.md', '02-brd.md, 04-frd.md, 05-sdd.md',\n    '1 Quality Objectives; 2 KPI Dashboard (KPI-AC-*, formula/target/threshold/data source \u2014 incl. North-Star de marca \u00a78.4 do blueprint: seguidores qualificados + hook_rate agregado + 1a conversao atribuida); 3 FMEA Table (REUSAR FM-AC-001..014 dos seeds + S/O/D + RPN + acao \u2014 FM-AC-014 rejeicao avatar puro = maior RPN); 4 Self-Optimization Loops; 5 Self-Healing (infra_health_logs event types novos, auto-recovery stubs); 6 SLA/SLO/SLI; 7 PDCA cadence; 8 Observability Checklist',\n    'Amarre ao creative_metrics + collective_efficiency_ledger existentes (anti-Goodhart). Todo FMEA RPN>100 com acao recomendada.'),\n    { label: '08-quality-metrics', phase: 'Qualidade & Conformance', schema: DOC_SCHEMA, agentType: 'general-purpose', effort: 'high' }),\n  () => agent(CTX + '\\n\\nTAREFA: gerar **09-pattern-conformance** \u2014 a Pattern Conformance Declaration (Gate Step 3.5 do CLAUDE.md \u00a71).'\n    + '\\nLEIA (Read): docs/architecture/agentic-vision.md (os 21 padroes agenticos \u2014 a SSOT) + o template mestre docs/bok/agentic-governance/09-pattern-conformance.md (copie a estrutura/tabela dos 21 padroes) + 05-sdd.md (o que o modulo implementa) + os 3 seeds.'\n    + '\\nProduza a TABELA dos 21 padroes: Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred. `deferred` exige justificativa material (id OTD/FR ou razao honesta). Marque como implementados (confirmar no SDD): Tool Use/Function Calling (nos chamam providers), Self-Correction/Reflection (Identity Gate fail-and-regenerate), RAG (cerebro clonado sobre mcorch_nodes), Multi-step Pipeline/Orchestration (pipeline avatar + juncao Autopilot), Guardrails/Safety (sentinel + disclosure/consent gates), Conversational/Reactive loop (reply engine do X = CORE). Os demais deferred/n-a com justificativa.'\n    + '\\nESCREVA docs/bok/avatar-clone-ai/09-pattern-conformance.md (Write). Retorne {file, summary, idSpace, lineCount}.',\n    { label: '09-pattern-conformance', phase: 'Qualidade & Conformance', schema: DOC_SCHEMA, agentType: 'general-purpose', effort: 'high' }),\n])\n\nphase('Indice & Validacao')\nconst index = await agent(CTX + '\\n\\nTAREFA: gerar **00-index** \u2014 manifesto da suite.'\n  + '\\nLEIA (Read): o template .claude/agents/bok-scribe/templates/00-index.md + TODOS os docs ja escritos (01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics, 09-pattern-conformance) + os 3 seeds.'\n  + '\\nProduza: metadata do projeto (slug avatar-clone-ai, B2B2C, hibrida, LGPD+EU AI Act, extends-mcorch, data 2026-06-30, v0.1), registro de TODOS os arquivos com status [x] complete + LOC, sumario do ID space (MR/BR/PR/FR/NFR/OTD-AC/FM-AC ranges), e nota de que os seeds 00/00b/00c sao a Fonte da Verdade.'\n  + '\\nESCREVA docs/bok/avatar-clone-ai/00-index.md (Write). Retorne {file, summary, idSpace, lineCount}.',\n  { label: '00-index', phase: 'Indice & Validacao', schema: DOC_SCHEMA, agentType: 'general-purpose' })\n\nconst validation = await agent(CTX + '\\n\\nTAREFA: VALIDACAO de traceability cross-document (Phase 6 do Scribe). NAO escreva nenhum arquivo.'\n  + '\\nLEIA (Read) todos os 9 docs da suite (00-index, 01-mrd..08-quality-metrics, 09-pattern-conformance).'\n  + '\\nConstrua a cadeia MR-AC -> BR-AC -> PR-AC -> FR-AC -> (tabela DB | Edge Function | Processo) e ASSERTE: (1) nenhum requisito orfao (todo id aparece em >=1 doc a jusante); (2) toda edge fn no SDD tem JWT + secrets listados; (3) toda tabela nova tem bloco RLS; (4) custo mcoCoins definido p/ todo FR com AI; (5) todo FMEA RPN>100 tem acao; (6) Pattern Conformance cobre os 21 padroes. Liste orfaos e falhas com doc+secao. Retorne {traceabilityOk, orphans, assertions, verdict}.',\n  { label: 'traceability-validate', phase: 'Indice & Validacao', schema: VALID_SCHEMA, agentType: 'general-purpose', effort: 'high' })\n\nreturn {\n  docs: [mrd, brd, prd, frd, sdd, dataModel, processFlow, quality, pattern, index].filter(Boolean),\n  validation,\n}",
+  "description": "Gera su\u00edte BoK avatar-clone-ai (Scribe orquestrado)"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wimmhc5q3
+> Summary: Gera a suite BoK de avatar-clone-ai (01-mrd..08-quality + 09-pattern-conformance + 00-index) a partir dos seeds 00/00b/00c, em pipeline de dependencia, e valida traceability
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/subagents/workflows/wf_b35d0e94-251
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/workflows/scripts/avatar-clone-ai-bok-scribe-suite-wf_b35d0e94-251.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/workflows/scripts/avatar-clone-ai-bok-scribe-suite-wf_b35d0e94-251.js"} to iterate without resending the script.)
+> Run ID: wf_b35d0e94-251
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/workflows/scripts/avatar-clone-ai-bok-scribe-suite-wf_b35d0e94-251.js", resumeFromRunId: "wf_b35d0e94-251"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:50:29)*
+
+
+## 🤖 Claude *(01:50:37)*
+
+**Scribe orquestrado rodando em background** (`wimmhc5q3`) — pipeline de 10 agentes em ordem de dependência:
+
+```
+01-mrd → 02-brd → 03-prd → 04-frd → 05-sdd
+                                       ├─ 06-data-model ┐
+                                       └─ 07-process-flow ┤ (paralelo)
+                          08-quality-metrics ┐
+                          09-pattern-conformance ┘ (paralelo · 21 padrões)
+                                    → 00-index → validação de traceability
+```
+
+Cada doc lê os 3 seeds + template + docs a montante; decisões travadas embutidas (híbrido · EN-first · BYOK puro · reply X core · LGPD/EU). É sequencial, então leva alguns minutos — te aviso quando fechar.
+
+**Quando completar, eu:**
+1. **Verifico os 10 docs no disco** (ls + wc) + leio o **veredicto de traceability** (órfãos/assertions).
+2. Se limpo → escrevo e rodo o **seed do nó de selo na malha** (`scripts/seed-avatar-clone-ai-bok-seal.ts`, padrão canônico) + confirmo embedding (Lei 1).
+3. Movo o card **🚧 /bok-scribe → ✅** no Kanban e marco **código destravado** (Refusal Mode levantado).
+4. Te apresento a suíte + o nó da malha, e aí **a Fatia 1 (BYOK credenciais)** fica pronta pra construir.
+
+O board já reflete o estado (`/dashboard/kanban` → coluna 🚧). Sigo no Refusal Mode até a BoK selar. 🛰️
