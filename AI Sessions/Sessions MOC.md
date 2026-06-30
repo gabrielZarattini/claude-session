@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1592
-> * **Sessões do Claude**: 1548
+> * **Total de Sessões Registradas**: 1612
+> * **Sessões do Claude**: 1568
 > * **Sessões do Gemini**: 44
 
 ---
@@ -67,19 +67,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-af3a423a7a3eea43a]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-af25704d25010f3c1]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-aca5eed8691b34327]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-ab5c6d7a5ed7a976f]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-aac6133bb1f543969]]` - *2026-06-30*
 *   `[[2026-06-30 - agent-aa56b9291233ba015]]` - *2026-06-30*
-*   `[[2026-06-30 - agent-a0cd42d6ca09b7d58]]` - *2026-06-30*
-*   `[[2026-06-29 - handson]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-afa77236707ecd6a8]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-ada0c4af1e97dcf7b]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-ad8fe7998dcb7a998]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-ad6b6f623a8ef0e0f]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-abcb9f74af3bc8f30]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-ab6d27a4835d96412]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-ab1e5a3baaa958711]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-aae382542d6a57b5a]]` - *2026-06-29*
-*   `[[2026-06-29 - agent-a95dc8bc0a35e4b62]]` - *2026-06-29*
-*   *... e mais 1548 sessões nessa categoria.*
+*   `[[2026-06-30 - agent-a9c1a5892c70d72af]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-a9981edef567c8c9e]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-a94e0959bf8938788]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-a8472193d79c68554]]` - *2026-06-30*
+*   `[[2026-06-30 - agent-a7d591a86f2ca7eb2]]` - *2026-06-30*
+*   *... e mais 1568 sessões nessa categoria.*
 
 ---
 
@@ -270,8 +270,28 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
+*   `[[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-af3a423a7a3eea43a]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-af25704d25010f3c1]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-aca5eed8691b34327]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-ab5c6d7a5ed7a976f]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-aac6133bb1f543969]]` (ClaudeSessions)
 *   `[[2026-06-30 - agent-aa56b9291233ba015]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a9c1a5892c70d72af]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a9981edef567c8c9e]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a94e0959bf8938788]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a8472193d79c68554]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a7d591a86f2ca7eb2]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a7cd132c88a4fcd6c]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a7ab9c908fb0f7836]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a62df6285be8564e3]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a5f32a713dabd03c6]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a5008446b67c1d5df]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a45f824f5f129eddf]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a1972e112a8b1aee1]]` (ClaudeSessions)
+*   `[[2026-06-30 - agent-a11e4cf68c348476f]]` (ClaudeSessions)
 *   `[[2026-06-30 - agent-a0cd42d6ca09b7d58]]` (ClaudeSessions)
+*   `[[2026-06-30 - Criar estratégia de conteúdo e avatar para Gabriel AI]]` (ClaudeSessions)
 *   `[[2026-06-29 - handson]]` (GeminiSessions)
 *   `[[2026-06-29 - agent-afa77236707ecd6a8]]` (ClaudeSessions)
 *   `[[2026-06-29 - agent-ada0c4af1e97dcf7b]]` (ClaudeSessions)

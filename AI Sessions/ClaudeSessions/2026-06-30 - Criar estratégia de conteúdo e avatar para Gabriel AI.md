@@ -1624,3 +1624,291 @@ Lendo o restante (FMEA, frentes-pendentes, economics, roadmap de fatias).
 > 421	> **Antes de qualquer linha de código:** rodar **`/bok-scribe avatar-clone-ai`** para selar a suíte BoK (MRD → BRD → PRD → FRD → SDD) **+ a Pattern Conformance Declaration** (os 21 padrões de `docs/architecture/agentic-vision.md`), usando este blueprint como Fonte da Verdade única. Os OTDs marcados "decidir com Sovereign" (esp. OTD-AC-001 motor, OTD-AC-009 reply engine, OTD-AC-012 duplicação bilíngue, OTD-AC-013 North-Star) e as Frentes F1-F7 devem ser fechados na Fatia 0 do Scribe. Refusal Mode permanece ativo até a suíte existir.
 > 422	
 > ```
+
+## 🤖 Claude *(00:30:36)*
+
+
+## 🤖 Claude *(00:30:54)*
+
+Blueprint inteiro lido e verificado. É um **seed forte e materialmente honesto** — a verificação adversarial pegou e corrigiu **6 claims falsas** antes de virarem premissa (isso é ouro, evita selar a BoK sobre dado furado):
+
+| Refutado | Verdade corrigida |
+|---|---|
+| HeyGen Avatar V = $3/min self-serve BYOK | ❌ **$4/min, API direta indisponível, BYOK partnership-gated** — não ancora self-serve |
+| Voz = "ElevenLabs PVC + v3" | PVC é sobre Multilingual-v2; **code-switching PT↔EN na mesma frase é falha conhecida** |
+| F5-TTS = self-host comercial limpo | ❌ pesos **CC-BY-NC** (não-comercial) — não shippar |
+| Identity Gate "~85% / cosine 0.7-0.8" | números sem fonte; **calibrar empiricamente (FAR/FRR/EER)**, não hardcodar |
+| Brasil/CONAR impõe "rótulo de IA" | ❌ CONAR = **responsabilidade solidária + identificar persona virtual**, não AI-label |
+| "reshaper não publica vídeo" | ❌ **caminho já existe wired** no código — gap real é o CHECK de plataformas + step avatar |
+
+**📦 O que está no disco:** `docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md` — 55KB, 421 linhas, 9 seções, untracked. Slug **`avatar-clone-ai`** (Gabriel AI = instância-zero de um módulo per-user generalizável).
+
+**🎯 A estratégia (resumo):**
+- **Moat ≠ volume.** O YouTube de 2026 não bane IA — **rebaixa output indiferenciado**. Por isso a persona PRECISA de rosto/voz/POV consistentes (= seu módulo Avatar). Mas há um **risco existencial** (abaixo).
+- **Cadência 30 dias = 1ª perna de 90d**, funil S1 Awareness → S2 Education → S3 Social-Proof → S4 Conversion. Steady-state: YT 5 Shorts+1-2 longos/sem · TikTok 3-5/sem · IG 4-5/sem+Stories · LinkedIn 3-4/sem · X 3-5/dia. Mix **40% educação / 40% autoridade / ≤20% produto** (conta nova começa 70/20/10). **1 pilar/dia → N variantes nativas** via o Channel Reshaper que já temos. Tabela Dia 1→30 completa no doc.
+- **Avatar (stack corrigido):** módulo próprio multi-provider BYOK no Canvas — `avatarIdentity → voiceClone → avatarScript(RAG da malha) → talkingHead → avatarEnhance(Magnific) → Identity Gate(ArcFace) → C2PA → Autopilot`. **Magnific ≡ Freepik** (mesma empresa; chave intercambiável) mas **só com plano PAGO per-tenant** e é **polish final, nunca autor de identidade**. **"Martini Art/Film" = web sem API** → servem de inspiração de UX dos nós, não alvo de integração.
+- **Compliance é requisito legal, não polish:** **C2PA machine-readable** (EU AI Act Art.50 a partir de 02/08/2026 + auto-label TikTok) + disclosure por jurisdição. Brasil tem regra própria (CONAR solidário + TSE eleitoral — escopar longe de política).
+
+## 🤖 Claude *(00:30:56)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Programa Gabriel AI \u2014 blueprint",
+  "summary": "Deepsearch for\u00e7a-total \u2192 blueprint-semente avatar-clone-ai (m\u00f3dulo per-user Avatar/Clone AI + estrat\u00e9gia viral + cad\u00eancia 30d); decis\u00f5es Sovereign antes do /bok-scribe"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Programa Gabriel AI — blueprint". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(00:30:58)*
+
+
+## 🤖 Claude *(00:31:00)*
+
+O Closed-Loop manda agora: **`/bok-scribe avatar-clone-ai`** para selar a BoK antes de qualquer código. Mas antes de eu disparar o Scribe, **4 decisões são suas** (Lei 4 — o blueprint as marcou explicitamente como "decidir com Sovereign"; elas mudam as premissas da BoK). Te dou minha recomendação em cada uma:
+
+## 🤖 Claude *(00:31:28)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A verifica\u00e7\u00e3o trouxe um risco que pode invalidar o programa inteiro: plataformas (esp. TikTok) d\u00e3o escrut\u00ednio MAIOR a avatares 100%-sint\u00e9ticos \u2014 detec\u00e7\u00e3o no upload + supress\u00e3o de padr\u00e3o 'templated' mesmo rotulado. Nenhum dado de crescimento que achamos \u00e9 avatar-espec\u00edfico. Como tratar?",
+      "header": "Viabilidade",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Probe de viabilidade (Fatia 0)",
+          "description": "Antes de selar a BoK, rodar pesquisa focada em case studies REAIS de canais 100%-avatar (reten\u00e7\u00e3o/crescimento/bans 2025-2026) \u2192 go/no-go com dado. Barato; evita construir o m\u00f3dulo inteiro sobre uma hip\u00f3tese furada."
+        },
+        {
+          "label": "H\u00edbrido: avatar + seu rosto real",
+          "description": "N\u00e3o 100% avatar. Alternar conte\u00fado com seu rosto real e o avatar \u2014 reduz risco de detec\u00e7\u00e3o/rebaixamento desde o dia 1 e ainda valida a persona. O avatar entra gradual."
+        },
+        {
+          "label": "Seguir na convic\u00e7\u00e3o",
+          "description": "Tratar como risco gerenci\u00e1vel (r\u00f3tulo honesto + qualidade autoral + POV consistente) e ir direto pro /bok-scribe sem o probe."
+        }
+      ]
+    },
+    {
+      "question": "HeyGen caiu na verifica\u00e7\u00e3o (sem API self-serve, partnership-gated, $4/min). Qual dire\u00e7\u00e3o pro motor de talking-head fiel? (muda economics + quem-paga)",
+      "header": "Motor avatar",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Self-serve per-user (Hedra/OmniHuman)",
+          "description": "BYOK puro: cada user traz a pr\u00f3pria chave (Hedra Character-3 ~$0.05/min). Fiel ao 'sempre per-user' do MCORCH; fidelidade por-imagem (um pouco menor que digital-twin). Soberano e multi-tenant limpo."
+        },
+        {
+          "label": "Conta-mestra MCORCH (partnership)",
+          "description": "MCORCH det\u00e9m a conta premium (HeyGen/parceria); maior fidelidade de talking-head; muda o modelo de tenancy + quem-paga (mcoCoins cobre o custo). Menos soberano, depende de aprova\u00e7\u00e3o de parceria."
+        },
+        {
+          "label": "BoK decide ap\u00f3s ler docs logadas",
+          "description": "Adiar a escolha do motor; o /bok-scribe l\u00ea ToS/docs logadas de cada provider (Hedra/OmniHuman/Higgsfield) e fecha OTD-AC-001 na Fatia 0 com prova."
+        }
+      ]
+    },
+    {
+      "question": "PT-BR + EN \u2014 como renderizar os v\u00eddeos? Isso define se o custo mensal do ciclo dobra (OTD-AC-012).",
+      "header": "Bil\u00edngue",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "1 render/dia, idioma alterna",
+          "description": "Cada pilar renderiza UMA vez; os dias alternam PT/EN; a trilha B reusa o mesmo mestre 9:16 re-locando a voz clonada cross-lingual. ~Metade do custo. Marca aparece nas duas l\u00ednguas sem dobrar render."
+        },
+        {
+          "label": "2 l\u00ednguas no mesmo dia",
+          "description": "Cada pilar sai em PT e EN no MESMO dia. Dobra o alcance e ~dobra o custo de render + voz + Identity Gate. Cobertura m\u00e1xima, custo m\u00e1ximo."
+        },
+        {
+          "label": "S\u00f3 PT-BR agora, EN depois",
+          "description": "Come\u00e7ar monol\u00edngue pra validar barato (mercado BR, voz nativa) e ligar a trilha EN s\u00f3 ap\u00f3s os primeiros resultados. De-risca custo e viabilidade primeiro."
+        }
+      ]
+    },
+    {
+      "question": "Crescer no X exige um motor de REPLY (a persona responde comentadores na 1\u00aa hora \u2192 multiplicador ~150x author-reply). \u00c9 um agent loop conversacional real-time NET-NEW que o Autopilot (broadcast-only) n\u00e3o tem. Entra no escopo?",
+      "header": "Reply X",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Fatia posterior (gated)",
+          "description": "Lan\u00e7ar X em modo broadcast agora (posta thread+v\u00eddeo); o reply engine vira fatia separada depois. X cresce capado at\u00e9 l\u00e1, mas mant\u00e9m o escopo inicial enxuto e entrega valor mais r\u00e1pido."
+        },
+        {
+          "label": "Escopo core agora",
+          "description": "Construir o reply engine j\u00e1: monitorar mentions \u2192 gerar reply do 'c\u00e9rebro clonado' \u2192 postar em minutos. X cresce de verdade, mas adiciona uma capacidade conversacional real-time ao programa (mais escopo)."
+        },
+        {
+          "label": "Suavizar promessa do X",
+          "description": "Aceitar que o X n\u00e3o ter\u00e1 paridade total de automa\u00e7\u00e3o; tratar como canal secund\u00e1rio e focar a for\u00e7a nos canais de v\u00eddeo (YT/TikTok/IG)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "A verificação trouxe um risco que pode invalidar o programa inteiro: plataformas (esp. TikTok) dão escrutínio MAIOR a avatares 100%-sintéticos — detecção no upload + supressão de padrão 'templated' mesmo rotulado. Nenhum dado de crescimento que achamos é avatar-específico. Como tratar?"="Probe de viabilidade (Fatia 0)", "HeyGen caiu na verificação (sem API self-serve, partnership-gated, $4/min). Qual direção pro motor de talking-head fiel? (muda economics + quem-paga)"="Sempre per-user, então usar hedra/omniHuman e higgsfield são obrigatórios para os usuários caso queiram ter maior fidelidade de talking-head, mas tambem podemos ter a opção hibrida onde depois podemos procurar alguma forma de criar nosso próprio motor de fidelidade clone ai ou avatar ai, e tentar no futuro programas de partnership", "PT-BR + EN — como renderizar os vídeos? Isso define se o custo mensal do ciclo dobra (OTD-AC-012)."="O idioma deve ser opt-in e conforme a liguagem padrão do usuário, se nas configurações de usuários é pt-br o padrão selecionado para ele vai ser pt-br com optin (opçõa) de alterar o idioma. E tambem a frequencia, além disso para o usuário 0 vamos fazer o padrão validado para quem esta produzindo do Brasil, apesar de que as contas tiktok e youtube que ja tem videos postados mesmo que sem muitos resultados mas que já dão um norte para continuar https://www.youtube.com/@uxnai/videos e https://www.tiktok.com/@gabriel_mcorch audios em ingles e legendas em portugues mas se necessário pesquise qual o melhor formato para nós e adicione isso em algum lugar do nosso ecossistema para ser revisitado no UI, não sei foi pensando nisso que eu pedi para criar o workspace kanban em https://login.mcorch.com/dashboard/kanban e tambem https://login.mcorch.com/dashboard/chat para ver o que esta rolando, qual os planos, pipelines e roadmaps em ação e definidos.", "Crescer no X exige um motor de REPLY (a persona responde comentadores na 1ª hora → multiplicador ~150x author-reply). É um agent loop conversacional real-time NET-NEW que o Autopilot (broadcast-only) não tem. Entra no escopo?"="Escopo core agora". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(00:50:46)*
+
+
+## 🤖 Claude *(00:50:51)*
+
+Decisões capturadas, Maestro — e elas são **mais ricas que as opções**. Deixa eu registrar no blueprint (Fonte da Verdade do Scribe) e então rodar **exatamente o probe de viabilidade que você pediu** como gate.
+
+Resumo do que você decidiu:
+1. **Viabilidade → probe primeiro** (gate antes da BoK) ✅
+2. **Motor avatar → self-serve per-user obrigatório** (Hedra/OmniHuman/Higgsfield BYOK); **híbrido futuro** = construir nosso próprio motor de fidelidade + buscar partnership (HeyGen) depois ✅
+3. **Idioma/frequência → per-user opt-in** (default = língua das settings do user; opção de trocar idioma E frequência; sem duplicação forçada 2×); **Usuário Zero = default BR validado**. Sinal first-party real: suas contas [@uxnai](https://www.youtube.com/@uxnai/videos) (YT) e [@gabriel_mcorch](https://www.tiktok.com/@gabriel_mcorch) (TikTok) usam **áudio EN + legenda PT** — a Fatia 0 vai analisar e recomendar o melhor formato ✅
+4. **Reply do X → escopo core agora** ✅
+
+Gravando no blueprint:
+
+## 🤖 Claude *(00:50:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md",
+  "old_string": "Re-avaliar: Hedra/OmniHuman (self-serve, por-imagem) OU modelar tenancy master-account/partnership. **Decidir ANTES do SDD.** Manter s\u00f3 o n\u00facleo: por-v\u00eddeo-refer\u00eancia > por-foto |",
+  "new_string": "**\u2705 RESOLVIDO (Sovereign 2026-06-29): SELF-SERVE PER-USER obrigat\u00f3rio** \u2014 Hedra/OmniHuman/Higgsfield BYOK (cada user traz a pr\u00f3pria chave p/ maior fidelidade). **H\u00edbrido FUTURO (deferido):** (a) construir motor PR\u00d3PRIO de fidelidade Clone/Avatar AI; (b) buscar partnership (HeyGen). N\u00facleo preservado: por-v\u00eddeo-refer\u00eancia > por-foto |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:50:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md",
+  "old_string": "| OTD-AC-009 | Motor de reply do X (real-time agent loop) | in-scope core OU suavizar promessa \"paridade em TODOS os canais\" \u2014 **decidir com Sovereign** |",
+  "new_string": "| OTD-AC-009 | Motor de reply do X (real-time agent loop) | **\u2705 RESOLVIDO (Sovereign 2026-06-29): ESCOPO CORE AGORA.** Agent loop conversacional real-time (monitorar mentions \u2192 reply do \"c\u00e9rebro clonado\" \u2192 postar em minutos) entra no core; sobe de Fatia 9-gated. Padr\u00e3o ag\u00eantico Conversational/Reactive loop = **implementado**, n\u00e3o candidato |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:51:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md",
+  "old_string": "| OTD-AC-012 | Modelo de duplica\u00e7\u00e3o bil\u00edngue (renderizar 2\u00d7 por idioma vs split por dia) | define se custo mensal dobra \u2014 **ratificar com Sovereign** |",
+  "new_string": "| OTD-AC-012 | Modelo de idioma + frequ\u00eancia (era \"duplica\u00e7\u00e3o bil\u00edngue\") | **\u2705 RESOLVIDO (Sovereign 2026-06-29): PER-USER OPT-IN.** Idioma default = l\u00edngua das settings do user (pt-BR nas settings \u2192 render pt-BR), com op\u00e7\u00e3o (opt-in) de trocar idioma E frequ\u00eancia. SEM duplica\u00e7\u00e3o for\u00e7ada 2\u00d7. Usu\u00e1rio Zero = default validado p/ produtor BR. Formato-\u00e2ncora a pesquisar na Fatia 0 (contas reais @uxnai/@gabriel_mcorch usam \u00e1udio EN + legenda PT) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:51:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md",
+  "old_string": "---\n\n## 1. Tese & posicionamento da marca \"Gabriel AI\"",
+  "new_string": "---\n\n## 0. Decis\u00f5es Sovereign (2026-06-29) \u2014 resolu\u00e7\u00e3o p\u00f3s-blueprint\n\nQuatro OTDs \"decidir com Sovereign\" foram resolvidos; registrados aqui como Fonte da Verdade para o `/bok-scribe`:\n\n1. **Viabilidade (gate) \u2192 PROBE PRIMEIRO (Fatia 0).** Antes de selar a BoK, rodar pesquisa de viabilidade com case studies REAIS de canais 100%-avatar / h\u00edbrido / faceless (reten\u00e7\u00e3o/crescimento/penalidades 2025-2026) \u2192 go/no-go material. Produz `00b-fatia0-viability-format-probe.md`. Refusal Mode da BoK permanece at\u00e9 este gate fechar.\n2. **OTD-AC-001 motor talking-head \u2192 SELF-SERVE PER-USER obrigat\u00f3rio** (Hedra/OmniHuman/Higgsfield BYOK; user traz a pr\u00f3pria chave). **H\u00edbrido FUTURO (deferido):** (a) motor PR\u00d3PRIO de fidelidade Clone/Avatar AI; (b) partnership (HeyGen). N\u00e3o bloqueia o lan\u00e7amento self-serve.\n3. **OTD-AC-009 reply engine do X \u2192 ESCOPO CORE AGORA.** Sobe de Fatia 9-gated para fatia core.\n4. **OTD-AC-012 idioma/frequ\u00eancia \u2192 PER-USER OPT-IN.** Default = l\u00edngua das settings do user; op\u00e7\u00e3o de trocar idioma E frequ\u00eancia; sem duplica\u00e7\u00e3o 2\u00d7 for\u00e7ada. Usu\u00e1rio Zero = default BR validado.\n\n**Formato-\u00e2ncora a pesquisar (sinal first-party do Sovereign):** as contas j\u00e1 no ar \u2014 YouTube `@uxnai` (https://www.youtube.com/@uxnai/videos) e TikTok `@gabriel_mcorch` (https://www.tiktok.com/@gabriel_mcorch) \u2014 usam hoje **\u00e1udio em ingl\u00eas + legenda em portugu\u00eas** (resultado modesto, mas d\u00e1 o \"norte\"). A Fatia 0 deve analisar essas contas + recomendar o MELHOR formato para um criador de IA bil\u00edngue de origem BR, e **expor a recomenda\u00e7\u00e3o no ecossistema (UI) para revisitar** \u2014 candidatos: os workspaces **Kanban** (`/dashboard/kanban`) e **Chat** (`/dashboard/chat`), onde o Sovereign quer ver planos/pipelines/roadmaps em a\u00e7\u00e3o.\n\n---\n\n## 1. Tese & posicionamento da marca \"Gabriel AI\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:51:13)*
+
+
+## 🤖 Claude *(00:51:15)*
+
+Blueprint atualizado com as 4 resoluções. Agora o **gate**: disparando o **probe de viabilidade + formato (Fatia 0)** — a pesquisa que decide se canal 100%-avatar cresce de verdade, analisa suas 2 contas reais, e crava o melhor formato pra nós. Roda em background.
+
+## 🤖 Claude *(00:52:11)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'avatar-clone-ai-fatia0-viability-format-probe',\n  description: 'Gate Fatia 0: viabilidade de canal 100%-avatar/hibrido/faceless (go-no-go) + analise das contas reais @uxnai/@gabriel_mcorch + melhor formato bilingue BR -> 00b-fatia0 report',\n  phases: [\n    { title: 'Probe', detail: 'Viabilidade (case studies + risco) + contas reais + formato + competidores' },\n    { title: 'Verify', detail: 'Refutar adversarialmente o veredicto central go/no-go + o formato' },\n    { title: 'Synthesize', detail: 'Escreve 00b-fatia0-viability-format-probe.md + go/no-go' },\n  ],\n}\n\nconst CTX = `\nGATE Fatia 0 do modulo MCORCH \"avatar-clone-ai\" (programa \"Gabriel AI\"). O Sovereign decidiu: avatar = modulo per-user BYOK no Canvas Studio (Hedra/OmniHuman/Higgsfield self-serve); idioma/frequencia per-user opt-in (default = lingua das settings; Usuario Zero = produtor BR). ANTES de selar a BoK, esta pesquisa-gate decide UMA pergunta de viabilidade que pode invalidar o programa inteiro: canais 100%-avatar (talking-head sintetico de pessoa real) realmente CRESCEM em 2025-2026, ou plataformas suprimem/penalizam sintetico a ponto de inviabilizar? E qual o MELHOR formato para nos.\n\nPersona \"Gabriel AI\" = fundador de IA/automacao bilingue (PT-BR + EN), video-first, build-in-public do MCORCH (jornada AGI->ASI) + educacao + tie-in afiliado. Contas reais ja no ar (sinal first-party, resultado modesto mas dao o norte): YouTube https://www.youtube.com/@uxnai/videos e TikTok https://www.tiktok.com/@gabriel_mcorch \u2014 formato atual = AUDIO EM INGLES + LEGENDA EM PORTUGUES.\n\nLAW 1 (Materiality): toda claim externa carrega a URL-fonte EXATA. NUNCA fabricar numero de views/inscritos/retencao nem URL. Se uma pagina (TikTok/YouTube) bloquear scraping/bot, DIGA isso honestamente e caia para web-search do handle + mencoes publicas \u2014 nao invente metricas. Prefira fontes 2025-2026.\n`;\n\nconst FRONTS = [\n  { key: 'viab-growth', prompt: 'FRENTE VIABILIDADE-CRESCIMENTO: ache CASE STUDIES REAIS de canais 100%-avatar / digital-twin / AI-presenter que CRESCERAM em 2025-2026 (YouTube/TikTok/IG/Reels). Numeros concretos: inscritos/views/retencao/monetizacao, nicho, e o que funcionou. Existe prova de que um canal de talking-head sintetico de IA atinge audiencia significativa hoje? Quais nichos toleram melhor? Cada numero com URL-fonte.' },\n  { key: 'viab-risk', prompt: 'FRENTE VIABILIDADE-RISCO: levante a EVIDENCIA NEGATIVA \u2014 penalidades, supressao, shadowban, desmonetizacao ou banimento de conteudo sintetico/avatar em TikTok/YouTube/IG em 2025-2026; deteccao no upload (artefatos GAN/lip-sync); supressao de padrao \"templated/spam\" mesmo quando rotulado. Compare: canais FACELESS (voz real + b-roll, sem rosto) e HIBRIDOS (rosto real + avatar) sofrem menos? Qual a trajetoria da postura das plataformas? Cada claim com URL-fonte.' },\n  { key: 'acct-youtube', prompt: 'FRENTE CONTA-REAL YT: analise o canal YouTube https://www.youtube.com/@uxnai/videos \u2014 que conteudo posta, formato (audio EN + legenda PT?), duracao, cadencia, e quaisquer sinais publicos de performance (views/inscritos). Use WebFetch/WebSearch; se o YouTube bloquear, busque \"uxnai youtube\" + use socialblade/mencoes publicas. Reporte HONESTAMENTE o que conseguiu e o que NAO conseguiu acessar (Lei 1). Diagnostico: o que esta funcionando/nao no formato atual?' },\n  { key: 'acct-tiktok', prompt: 'FRENTE CONTA-REAL TIKTOK: analise o perfil TikTok https://www.tiktok.com/@gabriel_mcorch \u2014 conteudo, formato (audio EN + legenda PT?), duracao, cadencia, sinais publicos (views/seguidores/likes). Use WebFetch/WebSearch; TikTok frequentemente bloqueia bot \u2014 se bloquear, busque \"@gabriel_mcorch tiktok\" + agregadores publicos e DIGA o que nao deu p/ acessar (Lei 1, nunca invente metrica). Diagnostico do formato atual.' },\n  { key: 'best-format', prompt: 'FRENTE FORMATO: qual o MELHOR formato para um criador de IA bilingue de ORIGEM BRASIL mirando BR + global? Compare com evidencia: (a) AUDIO EM INGLES + legenda PT (formato atual do Sovereign), (b) AUDIO PT + legenda EN, (c) duas trilhas nativas separadas por idioma, (d) audio nativo + auto-captions/dub. Cobertura: alcance/retencao de legendas vs dublagem, preferencia de audiencia BR por audio nativo vs EN, como YouTube/TikTok tratam multi-idioma (audio tracks, auto-dub, legendas), e o trade-off alcance-global vs conexao-local. Recomende UM formato-ancora + por que. Cada claim com URL-fonte.' },\n  { key: 'comp-playbook', prompt: 'FRENTE COMPETIDOR-PLAYBOOK: ache criadores/canais AI-persona ou faceless que ESCALARAM de verdade (com numeros) e destile o playbook replicavel \u2014 cadencia, formato, hooks, como lidam com disclosure de IA, monetizacao. O que copiar para o \"Gabriel AI\". Cada claim com URL-fonte.' },\n];\n\nconst FRONT_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['front', 'keyFindings', 'recommendations', 'openQuestions'],\n  properties: {\n    front: { type: 'string' },\n    keyFindings: { type: 'array', items: { type: 'object', additionalProperties: false,\n      required: ['claim', 'detail', 'sourceUrl', 'confidence'],\n      properties: { claim: { type: 'string' }, detail: { type: 'string' }, sourceUrl: { type: 'string' }, confidence: { enum: ['high', 'medium', 'low'] } } } },\n    recommendations: { type: 'array', items: { type: 'string' } },\n    openQuestions: { type: 'array', items: { type: 'string' } },\n  },\n};\n\nconst VERDICT_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['claim', 'verdict', 'evidence', 'sourceUrl'],\n  properties: {\n    claim: { type: 'string' }, verdict: { enum: ['confirmed', 'refuted', 'uncertain'] },\n    evidence: { type: 'string' }, sourceUrl: { type: 'string' },\n  },\n};\n\nconst SYNTH_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['path', 'verdict', 'recommendedPosture', 'bestFormat', 'executiveSummary', 'kanbanSurfacingNote'],\n  properties: {\n    path: { type: 'string' },\n    verdict: { enum: ['go', 'go-hybrid', 'no-go', 'uncertain'] },\n    recommendedPosture: { type: 'string' },\n    bestFormat: { type: 'string' },\n    executiveSummary: { type: 'string' },\n    kanbanSurfacingNote: { type: 'string' },\n  },\n};\n\nphase('Probe')\nlog('Disparando 6 frentes de viabilidade + contas reais + formato...')\nconst research = (await parallel(FRONTS.map(f => () => agent(CTX + '\\n\\n' + f.prompt + '\\n\\nRetorne findings estruturados; cada keyFinding com a URL-fonte exata.', { label: 'probe:' + f.key, phase: 'Probe', schema: FRONT_SCHEMA, agentType: 'deepsearch-blueprint' })))).filter(Boolean)\nlog('Frentes: ' + research.length + '/6. Verificando o veredicto central...')\n\nphase('Verify')\nconst claims = [\n  'Um canal 100%-avatar (talking-head sintetico de uma pessoa real) consegue crescer ate uma audiencia significativa e monetizavel em 2025-2026 sem ser suprimido/penalizado pelas plataformas.',\n  'Para um criador de IA bilingue de origem Brasil, audio em ingles + legenda em portugues maximiza alcance melhor do que audio nativo PT-BR.',\n  'Canais faceless ou hibridos (rosto real + avatar) crescem com MENOS risco de supressao do que canais 100%-avatar sintetico.',\n];\nconst verdicts = (await parallel(claims.map((c, i) => () => agent('Fact-check adversarial (tente REFUTAR; default \"uncertain\" se nao houver fonte autoritativa). Busque na web e cite a URL exata.\\n\\nCLAIM: ' + c, { label: 'verify:' + i, phase: 'Verify', schema: VERDICT_SCHEMA, agentType: 'deepsearch-blueprint' })))).filter(Boolean)\nlog('Veredictos: ' + JSON.stringify(verdicts.map(v => v.verdict)))\n\nphase('Synthesize')\nconst final = await agent(\n  CTX + '\\n\\nVoce e o SINTETIZADOR do gate Fatia 0. Escreva o relatorio em docs/bok/avatar-clone-ai/00b-fatia0-viability-format-probe.md (rode `mkdir -p docs/bok/avatar-clone-ai` antes; cwd = repo root /home/gcrUX/htdocs/constellation-orchestra). PT-BR, registro executivo, estilo MCORCH.\\n\\n'\n  + '=== RESEARCH JSON ===\\n' + JSON.stringify(research) + '\\n=== VERDICTS ===\\n' + JSON.stringify(verdicts) + '\\n=== END ===\\n\\n'\n  + 'O relatorio DEVE conter: (1) VEREDICTO go / go-hybrid / no-go / uncertain com justificativa material; (2) POSTURA recomendada (100%-avatar vs hibrido rosto-real+avatar vs faceless) ancorada nos case studies + verdicts; (3) diagnostico das 2 contas reais (@uxnai, @gabriel_mcorch) \u2014 o que conseguiu medir e o que ficou bloqueado (Lei 1); (4) FORMATO-ancora recomendado (audio EN+legenda PT vs alternativas) com fontes; (5) playbook competitivo a copiar; (6) como isto ATUALIZA o blueprint 00 (quais OTDs/FMEA/Fatias mudam); (7) nota de surfacing no UI (Kanban /dashboard/kanban + Chat /dashboard/chat) \u2014 o que expor do roadmap/cadencia. Toda claim com URL-fonte; refutadas marcadas. Termine com: se verdict=go ou go-hybrid -> proximo passo = fechar frentes F1/F3/F4/F5/F6/F7 e rodar /bok-scribe avatar-clone-ai; se no-go -> recomendar o pivot.\\n\\n'\n  + 'Retorne: path, verdict, recommendedPosture, bestFormat, executiveSummary (8-12 linhas), kanbanSurfacingNote.',\n  { label: 'synthesize-fatia0', phase: 'Synthesize', schema: SYNTH_SCHEMA, agentType: 'general-purpose', effort: 'high' })\n\nlog('Relatorio Fatia 0 escrito em ' + final.path + ' \u2014 verdict=' + final.verdict)\nreturn { final, verdicts, fronts: research.length }",
+  "description": "Probe de viabilidade + formato Fatia 0 (gate)"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w4vtwrye2
+> Summary: Gate Fatia 0: viabilidade de canal 100%-avatar/hibrido/faceless (go-no-go) + analise das contas reais @uxnai/@gabriel_mcorch + melhor formato bilingue BR -> 00b-fatia0 report
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/subagents/workflows/wf_b949ad64-396
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/workflows/scripts/avatar-clone-ai-fatia0-viability-format-probe-wf_b949ad64-396.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/workflows/scripts/avatar-clone-ai-fatia0-viability-format-probe-wf_b949ad64-396.js"} to iterate without resending the script.)
+> Run ID: wf_b949ad64-396
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/20894beb-8faf-40d8-bce8-715b0c184c7f/workflows/scripts/avatar-clone-ai-fatia0-viability-format-probe-wf_b949ad64-396.js", resumeFromRunId: "wf_b949ad64-396"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(00:52:19)*
+
+
+## 🤖 Claude *(00:52:31)*
+
+Probe **rodando em background** (run `wf_b949ad64-396`) — 6 frentes + verificação adversarial de 3 claims-chave + síntese. Eu sou notificado quando fechar.
+
+**Onde estamos no Closed-Loop:**
+
+| Etapa | Status |
+|---|---|
+| Deepsearch força-total → blueprint `00-deepsearch-blueprint.md` | ✅ no disco (421 linhas) |
+| 4 decisões Sovereign gravadas no blueprint (OTD-AC-001/009/012 + gate) | ✅ feito |
+| **Probe de viabilidade + formato (Fatia 0)** → `00b-fatia0-...md` + go/no-go | 🔄 rodando |
+| Fechar frentes F1/F3/F4/F5/F6/F7 (ToS BYOK, fonemas PT, competidor, economics, LGPD biométrico, account-warming) | ⏳ gated no go/no-go |
+| `/bok-scribe avatar-clone-ai` → sela MRD→SDD + Pattern Conformance | 🚪 BoK Gate |
+| Construir peças (voz → identidade → script-RAG → talking-head → C2PA → reply X) → juntar no Autopilot | ⏳ pós-BoK |
+
+**O que o probe me traz pra você decidir:** veredicto **go / go-híbrido / no-go**, a **postura** (100%-avatar vs híbrido rosto-real+avatar vs faceless), o diagnóstico honesto das suas contas [@uxnai](https://www.youtube.com/@uxnai/videos) e [@gabriel_mcorch](https://www.tiktok.com/@gabriel_mcorch), e o **formato-âncora** recomendado (seu EN-áudio+PT-legenda vs alternativas).
+
+**Anotado pro próximo passo:** você apontou o **[Kanban](https://login.mcorch.com/dashboard/kanban)** e o **[Chat](https://login.mcorch.com/dashboard/chat)** como onde quer ver planos/pipelines/roadmaps em ação. Depois do go/no-go, eu **trago o roadmap das fatias + a cadência de 30 dias pra dentro do Kanban** (valor visível, não plumbing) — mas primeiro deixo o gate decidir se construímos 100%-avatar ou pivotamos pra híbrido, pra não encher o board com um plano que a viabilidade pode mudar.
+
+Não toco em código enquanto o gate roda (Refusal Mode da BoK ativo). Te aviso assim que o relatório cair no disco. 🛰️

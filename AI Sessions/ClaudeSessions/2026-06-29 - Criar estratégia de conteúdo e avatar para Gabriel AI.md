@@ -1,4 +1,4 @@
-# Criar estratégia de conteúdo e avatar para Gabriel AI
+# [[2026-06-30 - Criar estratégia de conteúdo e avatar para Gabriel AI|Criar estratégia de conteúdo e avatar para Gabriel AI]]
 **Date:** 2026-06-29 | **Session ID:** `20894beb-8faf-40d8-bce8-715b0c184c7f`
 
 ---
