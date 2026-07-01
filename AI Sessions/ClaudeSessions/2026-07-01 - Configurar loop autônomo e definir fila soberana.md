@@ -1,4 +1,4 @@
-# Configurar loop autônomo e definir fila soberana
+# [[2026-06-30 - Configurar loop autônomo e definir fila soberana|Configurar loop autônomo e definir fila soberana]]
 **Date:** 2026-07-01 | **Session ID:** `473299a8-6c7d-4634-b97a-50a8fad59b11`
 
 ---
@@ -2961,3 +2961,16 @@ A tração do graphify (75k stars) seduz, mas tração ≠ fit. Nenhum toca no q
 **Caveat honesto (Lei 1):** forkar = você assume a manutenção/segurança total (some o "upstream conserta pra mim"), e Apache-2.0 obriga preservar o NOTICE + desbrandar. E não validei materialmente o LICENSE do pacote npm `hyperframes` nesta sessão — confirmar antes de forkar.
 
 Se topar, o passo certo é eu (ou o loop) **draftar a emenda BoK do fork nativo do HyperFrames** — o item de maior ROI, e que fecha o ciclo de "o vídeo autônomo é 100% seu, do render ao editor". Quer que eu comece por aí?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]
+> * **Próxima Sessão**: [[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]
+%% --- TIMELINE END --- %%
