@@ -1,5 +1,5 @@
 # Configurar loop autônomo e definir fila soberana
-**Date:** 2026-06-30 | **Session ID:** `473299a8-6c7d-4634-b97a-50a8fad59b11`
+**Date:** 2026-07-01 | **Session ID:** `473299a8-6c7d-4634-b97a-50a8fad59b11`
 
 ---
 
@@ -1639,15 +1639,414 @@ Quando voltar, te entrego um número fechado:
 
 Te aviso assim que concluir. O harness me reacorda.
 
----
+## 👤 User *(00:03:31)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+<task-notification>
+<task-id>w34v50410</task-id>
+<tool-use-id>toolu_01SDVq2NFd9EZsz4VUxcz5qJ</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/w34v50410.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Audita o custo USD externo real do ciclo de vídeo do autopilot (gate da doutrina open-source-first pro GO de gasto)" completed</summary>
+<result>{"traces":[{"step":"Geração de TEXTO/SCRIPT (article_generation) do ciclo de vídeo do Viral Autopilot para o Usuário Zero. Cadeia real: autopilot-run (fan-out prepaid) -&gt; orchestrate-content (resolve modelo + grava em pipeline_runs.metadata + kick async_orchestrate_step) -&gt; orchestrate-step (FAZ a chamada LLM). generate-content/index.ts NAO esta nesta cadeia: e funcao user-facing standalone (chat/single post), nao invocada pelo autopilot.","edge_fn":"orchestrate-step/index.ts:289 (step 'article_generation', via fetchLLMWithFallback) — tambem :625 (linkedin_post) e :698 (twitter_thread). Resolucao provider/modelo em orchestrate-step/index.ts:272-281. Wrapper cascata: _shared/llm-fallback.ts:48. autopilot-run/index.ts:233 so faz fan-out p/ orchestrate-content; orchestrate-content/index.ts:80-96 resolve o mesmo modelo e persiste em pipeline_runs.metadata.selectedModel.","provider_model":"OpenRouter google/gemini-2.5-pro-preview. Deterministico: pref_ai_model='google/gemini-2.5-pro-preview' contem '/' =&gt; prefRequiresOR=true =&gt; aiKey=openRouterKey, isGroq=false, endpoint=openrouter.ai/api/v1/chat/completions; orPrefModel nao comeca com 'gemini-' (comeca com 'google/') =&gt; selectedModel='google/gemini-2.5-pro-preview'. NOTA: a cascata de fallback (llm-fallback.ts) so dispara em 402/429/5xx; o caminho feliz NAO usa modelo :free.","key_source":"BYOK per-user via VIEW decrypted_user_api_keys (Vault), filtrada por user_id. Coluna efetiva: openrouter_api_key (pref_ai_model forca rota OpenRouter). Colunas lidas em orchestrate-step:272-275 = groq_api_key, openrouter_api_key, google_api_key, pref_ai_model. User 0 tem as 3 chaves reais e ativas: groq=gsk_YM...(56 chars), openrouter=sk-or-v1...(73 chars), google=AIzaSy...(39 chars).","is_free_tier":"no","usd_per_run":"~$0.02 a $0.04 por chamada de artigo (ESTIMADO, NAO medido). Base: google/gemini-2.5-pro-preview no OpenRouter e PAGO (~$1.25/M input, ~$10/M output); 1 tool-call de artigo SEO (min 500 chars; tipico ~800-1500 palavras =&gt; ~1.5-3K tokens output + prompt pequeno). Nao consegui medir tokens reais (sem campo de usage/word_count nos runs recentes do User 0, que erraram antes do done). Cada sub-run wordpress tambem dispara linkedin/twitter (calls menores), somando alguns centavos por sub-run.","self_hosted":"no","evidence":["orchestrate-step/index.ts:289 (fetchLLMWithFallback body model: selectedModel)","orchestrate-step/index.ts:276 prefRequiresOR = pref includes '/' || startsWith 'gemini-'","orchestrate-step/index.ts:280-281 orPrefModel/selectedModel resolution","_shared/llm-fallback.ts:84-101 fallback so em 402/429/&gt;=500 (happy path = primary pago)","DB live: decrypted_user_api_keys user_id=ada39fae... =&gt; pref_ai_model='google/gemini-2.5-pro-preview', openrouter=sk-or-v1...(73), google=AIzaSy...(39), groq=gsk_YM...(56)","DB live: pipeline_runs do User 0 (started_at 2026-06-26 e 2026-06-23) gravam metadata.selectedModel='google/gemini-2.5-pro-preview', isGroq=False, aiEndpoint=https://openrouter.ai/api/v1/chat/completions","OpenRouter pricing publico Gemini 2.5 Pro Preview ~$1.25/M in, ~$10/M out (base da estimativa; nao medido neste run)"],"_key":"content"},{"step":"ANALYZE (R3 loop) do ciclo de video do Viral Autopilot — ranqueia o ciclo anterior e escreve optimization_policy (FR-VA-010/011). ANALYZE_COST=2 mco.","edge_fn":"supabase/functions/autopilot-analyze/index.ts (chamada origina em supabase/functions/autopilot-run/index.ts:196 via svcCall). NAO chama analyze-node nem orchestrate-step de analise — grep confirmou 'NO reference to analyze-node in autopilot path'.","provider_model":"NENHUM. O passo analyze nao faz chamada LLM. E ranqueamento deterministico em TypeScript puro (reward multi-metrica FR-VA-029, autopilot-analyze/index.ts linhas ~100-140) sobre dados de creative_metrics + publication_metrics, escrevendo optimization_policy. Unico import externo: https://esm.sh/@supabase/supabase-js@2 (cliente DB), nenhum host de IA.","key_source":"N/A — nenhuma credencial de provider e resolvida. grep por user_api_keys/decrypted/api_key/openrouter/gemini/groq/openai em autopilot-analyze/index.ts = NONE FOUND. Unica credencial usada e SB_SECRET_KEY (service-role) para identidade + acesso ao DB; tenant derivado de autopilot_cycles.user_id (anti-IDOR), nunca do body.","is_free_tier":"depends","usd_per_run":"~$0.00 (zero USD externo). Nao ha chamada a API paga; so leituras/escritas no Postgres do proprio Supabase do MCORCH. O ANALYZE_COST=2 mco e um debito interno de mcoCoins (deduct_mco_coins RPC, cobrado so quando has_real_data &amp;&amp; !prepaid) — moeda interna, nao custo USD de provider. No ciclo de video o 2 e pre-reservado (prepaid=true) e consumido sem self-bill.","self_hosted":"yes","evidence":["supabase/functions/autopilot-analyze/index.ts:26 (const ANALYZE_COST = 2)","supabase/functions/autopilot-analyze/index.ts:100-140 (reward multi-metrica deterministico, sem LLM)","supabase/functions/autopilot-analyze/index.ts:~170-180 (deduct_mco_coins RPC so se !prepaid)","supabase/functions/autopilot-run/index.ts:196 (svcCall autopilot-analyze prepaid:true)","grep LLM/fetch/api_key em autopilot-analyze = 'NONE FOUND' (executado nesta sessao)","grep analyze-node no path autopilot = 'NO reference to analyze-node in autopilot path'","unico import externo linha 12 = esm.sh/@supabase/supabase-js@2","supabase functions list LIVE: autopilot-analyze ACTIVE v7 id 59796cb6-a57a-4b26-902b-4873c7f8d162","DB live REST: optimization_policy do User 0 cycle_id 947ef8b5-8d1e-4f54-bd40-a2e13b3ec802 reward 0.9/1.0 — prova que analyze rodou e o reward e calculo (0.9 = formula fallback clicks/max*0.9), nao texto de LLM"],"_key":"analyze"},{"step":"Ciclo de video do Viral Autopilot (User 0 ada39fae) - geracao de IMAGEM e custo USD","edge_fn":"Dois passos IRMAOS em supabase/functions/orchestrate-step/index.ts, ambos sob `if (hasProducts)` (linha 460): (A) image_generation chama generate-image em orchestrate-step/index.ts:464; (B) video_generation (linha 494, gated `if (videoEnabled)`) NAO chama generate-image - enfileira HyperFrames render via video_renders insert (linha 522). Motor scripts/hyperframes/render-core.ts = Playwright+FFmpeg puro (sem IA). Chamada de imagem entra em generate-image/index.ts:204 generateViaOpenRouter.","provider_model":"RESPOSTA (1): O FLUXO DE VIDEO em si NAO chama generate-image e NAO usa frame de IA - HyperFrames renderiza HTML para MP4 usando a foto publica do produto ML (composition.props.product_image_url, orchestrate-step:500-501,514), nao imagem gerada (orchestrate-step:494-526 + render-core.ts). POREM no MESMO ciclo de produto o passo irmao image_generation (orchestrate-step:464) chama generate-image porque o gate e hasProducts (linha 460), nao videoEnabled. (2) Para esse passo de imagem, User 0 resolve para OpenRouter google/gemini-2.5-flash-image (Nano Banana) - generate-image/index.ts:94 `else if (openRouterKey)` cai no branch e linha 214 usa model=google/gemini-2.5-flash-image. Nota: pref_image_provider=\"nanobana\" (!= \"replicate\") por isso cai no OpenRouter, nao Replicate FLUX.","key_source":"decrypted_user_api_keys.openrouter_api_key - coluna per-user BYOK (VIEW decifrada do Vault), lida em generate-image/index.ts:71-74 via adminClient (service-role). Roteamento em generate-image/index.ts:92-107. Live DB User 0 (HTTP 200): openrouter_api_key presente (sk-or-v1-d861...), replicate e openai tambem presentes, pref_image_provider=nanobana.","is_free_tier":"depends","usd_per_run":"VIDEO (HyperFrames, o fluxo perguntado): ~$0.00 de API de IA - render deterministico headless Chrome+FFmpeg, ZERO chamada a provider de imagem (render-core.ts). Cobranca VIDEO_HYPERFRAMES_RENDER=12 mco e marker de compute proprio (billing.ts:46), nao USD de API externa. IMAGEM (passo irmao image_generation, quando hasProducts): OpenRouter google/gemini-2.5-flash-image - preco OpenRouter tipico ~$0.03/imagem (NAO medido em log real nesta sessao; estimativa de tabela do provedor). NAO e :free
+... (truncated 14396 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/w34v50410.output)</result>
+<usage><agent_count>6</agent_count><subagent_tokens>540870</subagent_tokens><tool_uses>64</tool_uses><duration_ms>423665</duration_ms></usage>
+</task-notification>
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-29 - agent-afa77236707ecd6a8]]
-> * **Próxima Sessão**: [[2026-06-30 - Criar estratégia de conteúdo e avatar para Gabriel AI]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(00:03:43)*
+
+
+## 🤖 Claude *(00:03:44)*
+
+Audit voltou com achado importante — não é "zero" como esperávamos. Vou ler o veredito completo do auditor antes de te reportar:
+
+## 🤖 Claude *(00:03:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/w34v50410.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Audita o custo USD externo real do ciclo de vídeo do autopilot (gate da doutrina open-source-first pro GO de gasto)",
+> 3	  "agentCount": 6,
+> 4	  "logs": [],
+> 5	  "result": {
+> 6	    "traces": [
+> 7	      {
+> 8	        "step": "Geração de TEXTO/SCRIPT (article_generation) do ciclo de vídeo do Viral Autopilot para o Usuário Zero. Cadeia real: autopilot-run (fan-out prepaid) -> orchestrate-content (resolve modelo + grava em pipeline_runs.metadata + kick async_orchestrate_step) -> orchestrate-step (FAZ a chamada LLM). generate-content/index.ts NAO esta nesta cadeia: e funcao user-facing standalone (chat/single post), nao invocada pelo autopilot.",
+> 9	        "edge_fn": "orchestrate-step/index.ts:289 (step 'article_generation', via fetchLLMWithFallback) — tambem :625 (linkedin_post) e :698 (twitter_thread). Resolucao provider/modelo em orchestrate-step/index.ts:272-281. Wrapper cascata: _shared/llm-fallback.ts:48. autopilot-run/index.ts:233 so faz fan-out p/ orchestrate-content; orchestrate-content/index.ts:80-96 resolve o mesmo modelo e persiste em pipeline_runs.metadata.selectedModel.",
+> 10	        "provider_model": "OpenRouter google/gemini-2.5-pro-preview. Deterministico: pref_ai_model='google/gemini-2.5-pro-preview' contem '/' => prefRequiresOR=true => aiKey=openRouterKey, isGroq=false, endpoint=openrouter.ai/api/v1/chat/completions; orPrefModel nao comeca com 'gemini-' (comeca com 'google/') => selectedModel='google/gemini-2.5-pro-preview'. NOTA: a cascata de fallback (llm-fallback.ts) so dispara em 402/429/5xx; o caminho feliz NAO usa modelo :free.",
+> 11	        "key_source": "BYOK per-user via VIEW decrypted_user_api_keys (Vault), filtrada por user_id. Coluna efetiva: openrouter_api_key (pref_ai_model forca rota OpenRouter). Colunas lidas em orchestrate-step:272-275 = groq_api_key, openrouter_api_key, google_api_key, pref_ai_model. User 0 tem as 3 chaves reais e ativas: groq=gsk_YM...(56 chars), openrouter=sk-or-v1...(73 chars), google=AIzaSy...(39 chars).",
+> 12	        "is_free_tier": "no",
+> 13	        "usd_per_run": "~$0.02 a $0.04 por chamada de artigo (ESTIMADO, NAO medido). Base: google/gemini-2.5-pro-preview no OpenRouter e PAGO (~$1.25/M input, ~$10/M output); 1 tool-call de artigo SEO (min 500 chars; tipico ~800-1500 palavras => ~1.5-3K tokens output + prompt pequeno). Nao consegui medir tokens reais (sem campo de usage/word_count nos runs recentes do User 0, que erraram antes do done). Cada sub-run wordpress tambem dispara linkedin/twitter (calls menores), somando alguns centavos por sub-run.",
+> 14	        "self_hosted": "no",
+> 15	        "evidence": [
+> 16	          "orchestrate-step/index.ts:289 (fetchLLMWithFallback body model: selectedModel)",
+> 17	          "orchestrate-step/index.ts:276 prefRequiresOR = pref includes '/' || startsWith 'gemini-'",
+> 18	          "orchestrate-step/index.ts:280-281 orPrefModel/selectedModel resolution",
+> 19	          "_shared/llm-fallback.ts:84-101 fallback so em 402/429/>=500 (happy path = primary pago)",
+> 20	          "DB live: decrypted_user_api_keys user_id=ada39fae... => pref_ai_model='google/gemini-2.5-pro-preview', openrouter=sk-or-v1...(73), google=AIzaSy...(39), groq=gsk_YM...(56)",
+> 21	          "DB live: pipeline_runs do User 0 (started_at 2026-06-26 e 2026-06-23) gravam metadata.selectedModel='google/gemini-2.5-pro-preview', isGroq=False, aiEndpoint=https://openrouter.ai/api/v1/chat/completions",
+> 22	          "OpenRouter pricing publico Gemini 2.5 Pro Preview ~$1.25/M in, ~$10/M out (base da estimativa; nao medido neste run)"
+> 23	        ],
+> 24	        "_key": "content"
+> 25	      },
+> 26	      {
+> 27	        "step": "ANALYZE (R3 loop) do ciclo de video do Viral Autopilot — ranqueia o ciclo anterior e escreve optimization_policy (FR-VA-010/011). ANALYZE_COST=2 mco.",
+> 28	        "edge_fn": "supabase/functions/autopilot-analyze/index.ts (chamada origina em supabase/functions/autopilot-run/index.ts:196 via svcCall). NAO chama analyze-node nem orchestrate-step de analise — grep confirmou 'NO reference to analyze-node in autopilot path'.",
+> 29	        "provider_model": "NENHUM. O passo analyze nao faz chamada LLM. E ranqueamento deterministico em TypeScript puro (reward multi-metrica FR-VA-029, autopilot-analyze/index.ts linhas ~100-140) sobre dados de creative_metrics + publication_metrics, escrevendo optimization_policy. Unico import externo: https://esm.sh/@supabase/supabase-js@2 (cliente DB), nenhum host de IA.",
+> 30	        "key_source": "N/A — nenhuma credencial de provider e resolvida. grep por user_api_keys/decrypted/api_key/openrouter/gemini/groq/openai em autopilot-analyze/index.ts = NONE FOUND. Unica credencial usada e SB_SECRET_KEY (service-role) para identidade + acesso ao DB; tenant derivado de autopilot_cycles.user_id (anti-IDOR), nunca do body.",
+> 31	        "is_free_tier": "depends",
+> 32	        "usd_per_run": "~$0.00 (zero USD externo). Nao ha chamada a API paga; so leituras/escritas no Postgres do proprio Supabase do MCORCH. O ANALYZE_COST=2 mco e um debito interno de mcoCoins (deduct_mco_coins RPC, cobrado so quando has_real_data && !prepaid) — moeda interna, nao custo USD de provider. No ciclo de video o 2 e pre-reservado (prepaid=true) e consumido sem self-bill.",
+> 33	        "self_hosted": "yes",
+> 34	        "evidence": [
+> 35	          "supabase/functions/autopilot-analyze/index.ts:26 (const ANALYZE_COST = 2)",
+> 36	          "supabase/functions/autopilot-analyze/index.ts:100-140 (reward multi-metrica deterministico, sem LLM)",
+> 37	          "supabase/functions/autopilot-analyze/index.ts:~170-180 (deduct_mco_coins RPC so se !prepaid)",
+> 38	          "supabase/functions/autopilot-run/index.ts:196 (svcCall autopilot-analyze prepaid:true)",
+> 39	          "grep LLM/fetch/api_key em autopilot-analyze = 'NONE FOUND' (executado nesta sessao)",
+> 40	          "grep analyze-node no path autopilot = 'NO reference to analyze-node in autopilot path'",
+> 41	          "unico import externo linha 12 = esm.sh/@supabase/supabase-js@2",
+> 42	          "supabase functions list LIVE: autopilot-analyze ACTIVE v7 id 59796cb6-a57a-4b26-902b-4873c7f8d162",
+> 43	          "DB live REST: optimization_policy do User 0 cycle_id 947ef8b5-8d1e-4f54-bd40-a2e13b3ec802 reward 0.9/1.0 — prova que analyze rodou e o reward e calculo (0.9 = formula fallback clicks/max*0.9), nao texto de LLM"
+> 44	        ],
+> 45	        "_key": "analyze"
+> 46	      },
+> 47	      {
+> 48	        "step": "Ciclo de video do Viral Autopilot (User 0 ada39fae) - geracao de IMAGEM e custo USD",
+> 49	        "edge_fn": "Dois passos IRMAOS em supabase/functions/orchestrate-step/index.ts, ambos sob `if (hasProducts)` (linha 460): (A) image_generation chama generate-image em orchestrate-step/index.ts:464; (B) video_generation (linha 494, gated `if (videoEnabled)`) NAO chama generate-image - enfileira HyperFrames render via video_renders insert (linha 522). Motor scripts/hyperframes/render-core.ts = Playwright+FFmpeg puro (sem IA). Chamada de imagem entra em generate-image/index.ts:204 generateViaOpenRouter.",
+> 50	        "provider_model": "RESPOSTA (1): O FLUXO DE VIDEO em si NAO chama generate-image e NAO usa frame de IA - HyperFrames renderiza HTML para MP4 usando a foto publica do produto ML (composition.props.product_image_url, orchestrate-step:500-501,514), nao imagem gerada (orchestrate-step:494-526 + render-core.ts). POREM no MESMO ciclo de produto o passo irmao image_generation (orchestrate-step:464) chama generate-image porque o gate e hasProducts (linha 460), nao videoEnabled. (2) Para esse passo de imagem, User 0 resolve para OpenRouter google/gemini-2.5-flash-image (Nano Banana) - generate-image/index.ts:94 `else if (openRouterKey)` cai no branch e linha 214 usa model=google/gemini-2.5-flash-image. Nota: pref_image_provider=\"nanobana\" (!= \"replicate\") por isso cai no OpenRouter, nao Replicate FLUX.",
+> 51	        "key_source": "decrypted_user_api_keys.openrouter_api_key - coluna per-user BYOK (VIEW decifrada do Vault), lida em generate-image/index.ts:71-74 via adminClient (service-role). Roteamento em generate-image/index.ts:92-107. Live DB User 0 (HTTP 200): openrouter_api_key presente (sk-or-v1-d861...), replicate e openai tambem presentes, pref_image_provider=nanobana.",
+> 52	        "is_free_tier": "depends",
+> 53	        "usd_per_run": "VIDEO (HyperFrames, o fluxo perguntado): ~$0.00 de API de IA - render deterministico headless Chrome+FFmpeg, ZERO chamada a provider de imagem (render-core.ts). Cobranca VIDEO_HYPERFRAMES_RENDER=12 mco e marker de compute proprio (billing.ts:46), nao USD de API externa. IMAGEM (passo irmao image_generation, quando hasProducts): OpenRouter google/gemini-2.5-flash-image - preco OpenRouter tipico ~$0.03/imagem (NAO medido em log real nesta sessao; estimativa de tabela do provedor). NAO e :free (o modelo gemini-2.5-flash-image cobra USD real via OpenRouter). billing.ts cita DALL-E ref $0.04/img mas isso e fallback inalcancavel; rota viva e OpenRouter Gemini.",
+> 54	        "self_hosted": "partial",
+> 55	        "evidence": [
+> 56	          "orchestrate-step/index.ts:460 (if hasProducts) envolve AMBOS os blocos",
+> 57	          "orchestrate-step/index.ts:464 fetch /functions/v1/generate-image (passo image_generation)",
+> 58	          "orchestrate-step/index.ts:494 if(videoEnabled) - bloco de VIDEO separado, sem generate-image",
+> 59	          "orchestrate-step/index.ts:500-501,514 product_image_url = foto publica do produto ML usada pelo HyperFrames",
+> 60	          "orchestrate-step/index.ts:522-526 insert video_renders engine=hyperframes (enfileira, nao gera imagem)",
+> 61	          "scripts/hyperframes/render-core.ts:110-125 captura frame-by-frame via Playwright screenshot + FFmpeg (sem IA)",
+> 62	          "generate-image/index.ts:94 else if(openRouterKey) -> branch OpenRouter",
+> 63	          "generate-image/index.ts:214 model=google/gemini-2.5-flash-image",
+> 64	          "generate-image/index.ts:71-74 le decrypted_user_api_keys.openrouter_api_key/replicate/openai + pref_image_provider",
+> 65	          "Live DB HTTP 200: decrypted_user_api_keys User 0 ada39fae pref_image_provider=nanobana, openrouter_api_key presente",
+> 66	          "billing.ts:46 VIDEO_HYPERFRAMES_RENDER:12 (deterministic HTML->MP4, no AI legs)",
+> 67	          "orchestrate-step/index.ts:476/479/483 image_generation status 'done' ou 'skipped' fail-open (nunca 'error')",
+> 68	          "orchestrate-step/index.ts:529/532 video_generation 'done' ou 'skipped' fail-open; orchestrate-step nunca chama deduct_mco_coins (linha 453 comentario)",
+> 69	          "orchestrate-step/index.ts:540-543 quando !enqueued && cycleId -> refund_autopilot_video_enqueue (credito compensatorio do pre-debito do ciclo)"
+> 70	        ],
+> 71	        "_key": "image"
+> 72	      },
+> 73	      {
+> 74	        "step": "RENDER do ciclo de vídeo (HyperFrames) — composition spec → MP4 9:16 1080x1920",
+> 75	        "edge_fn": "scripts/hyperframes/render-core.ts:74-147 (renderComposition — núcleo puro); host worker scripts/video-bridge.ts:67-190 (processRender). Edge fn video-render é só transporte poll:// e NÃO roda o render.",
+> 76	        "provider_model": "Self-hosted: Playwright Chromium headless + FFmpeg libx264 locais. ZERO modelo/SaaS de geração de vídeo (não Veo, não Higgsfield, não Replicate, não fal.ai). Render determinístico HTML→MP4, sem leg de IA (NFR-VS-016).",
+> 77	        "key_source": "Nenhuma credencial de provider de vídeo é resolvida — não existe provider. video-bridge.ts:35-41 usa só SUPABASE_URL + SB_SECRET_KEY (service-role) para claim/upload/finalize na própria malha. Sem Deno.env.get de qualquer <VIDEO_SERVICE>_API_KEY.",
+> 78	        "is_free_tier": "yes",
+> 79	        "usd_per_run": "USD 0.00 — render real 536KB em 110633ms na CPU própria (log systemd: render 80368713 done 536KB 110633ms, refunded:0). Custo = só CPU/RAM da infra própria. Cobrança do passo no path prepaid = 0 (finalize_video_render p_refund:0; render-core não fatura).",
+> 80	        "self_hosted": "yes",
+> 81	        "evidence": [
+> 82	          "render-core.ts:22 import { chromium } from 'playwright' (Chromium headless local, launch :87-91 headless:true)",
+> 83	          "render-core.ts:60-68 + :122-136 — FFmpeg local via spawn('ffmpeg', args), PNG→H.264 yuv420p, binário /usr/bin/ffmpeg",
+> 84	          "render-core.ts:9 comentário 'no AI leg — fully deterministic'; render-core.ts:13 'no network beyond the product image'",
+> 85	          "render-core.ts:100-108 — único fetch externo POSSÍVEL é baixar product_image_url dentro do template file:// (imagem de produto, NÃO geração de vídeo paga); render é frame-by-frame por screenshot local (:111-118)",
+> 86	          "video-bridge.ts:166-170 fetch a $SUPABASE_URL/functions/v1/reshape-pillar — malha própria, PÓS-finalize, FORA do path de render; nenhum outro fetch externo no worker",
+> 87	          "bash: which ffmpeg → /usr/bin/ffmpeg ; ffmpeg version 6.1.1-3ubuntu5 (binário local)",
+> 88	          "bash: Chromium Playwright local em /home/ubuntu/.cache/ms-playwright/chromium-1226/ ; node_modules/playwright presente no repo",
+> 89	          "bash: systemctl --user status video-bridge.service → Active: active (running) since Sun 2026-06-28, Main PID 768276 bun, CGroup user-1001.slice (roda LOCAL na infra própria)",
+> 90	          "log video-bridge: '✅ render 80368713-... done → ...mp4 (536KB, 110633ms) refunded: 0' — execução real self-hosted, custo USD 0"
+> 91	        ],
+> 92	        "_key": "render"
+> 93	      },
+> 94	      {
+> 95	        "step": "Custo USD real + chaves BYOK do Usuario Zero (ada39fae) — autopilot de video (cycle 2403bfcb / render 8b0787e0) + geracao de texto do pipeline",
+> 96	        "edge_fn": "supabase/functions/orchestrate-step/index.ts:275-281 (resolve o modelo de texto); scripts/hyperframes/render-core.ts + scripts/video-bridge.ts (render do video — Playwright+FFmpeg deterministico, SEM LLM); vision-mcp container (analyze_video/describe_image do product-miner)",
+> 97	        "provider_model": "TEXTO do autopilot/pipeline: OpenRouter google/gemini-2.5-pro-preview — resolvido MATERIAL do DB: decrypted_user_api_keys.pref_ai_model=\"google/gemini-2.5-pro-preview\"; orchestrate-step:280-281 prefixa google/ e roteia p/ openrouter.ai (prefRequiresOR=true). VIDEO (HyperFrames render 8b0787e0, engine=hyperframes): deterministico Playwright+FFmpeg, SEM provider LLM no render. ANALISE de produto (vision-mcp): Gemini BYOK, cost=0.",
+> 98	        "key_source": "decrypted_user_api_keys (VIEW mascarada sobre Vault) filtrada por user_id=ada39fae. Colunas de provider PREENCHIDAS p/ User 0: openrouter_api_key(len73), google_api_key(len39 = Gemini BYOK, NAO gemini_api_key), openai_api_key(len164), groq_api_key(len56), elevenlabs_api_key(len51), replicate_api_key(len40), higgsfield_api_key+_secret, apify_token, rapidapi_key, wp_site_url/username/app_password. VAZIAS: nanobana, seedance, resend, firecrawl, hedra, cartesia, fal. Modelo de texto resolve via openrouter_api_key (BYOK do proprio User 0).",
+> 99	        "is_free_tier": "no",
+> 100	        "usd_per_run": "DESCONHECIDO — gap de observabilidade material: NAO existe NENHUM registro de USD nem de tokens em lugar algum do sistema. Unico custo gravado e mcoCoins: autopilot_cycles 2403bfcb spend_mco=46 (2 units, refunded 0); video_renders 8b0787e0 charged_mco=12 (state=done, refunded 0); pipeline_runs tipico mco_cost=10. Isso NAO e USD. O modelo do User 0 (google/gemini-2.5-pro-preview) e PAGO no OpenRouter (~$1.25/1M in, ~$10/1M out), logo cada run de texto tem USD real >0 — mas o valor exato NAO esta logado. Contraste com product-miner: la o vision-mcp loga cost=0/byok=true (Gemini gratis), aqui o texto usa gemini-2.5-PRO PAGO no OpenRouter, provider diferente do llama-3-8b:free+Gemini do miner.",
+> 101	        "self_hosted": "partial",
+> 102	        "evidence": [
+> 103	          "decrypted_user_api_keys?user_id=eq.ada39fae → openrouter_api_key/google_api_key/openai_api_key/groq_api_key/elevenlabs_api_key/replicate_api_key/higgsfield/apify_token/rapidapi_key PRESENT; nanobana/seedance/resend/firecrawl/hedra/cartesia/fal EMPTY",
+> 104	          "decrypted_user_api_keys.pref_ai_model = 'google/gemini-2.5-pro-preview' (pref_image=nanobana, pref_video=seedance, pref_audio=elevenlabs)",
+> 105	          "orchestrate-step/index.ts:275-281 (prefModel resolve → orPrefModel='google/'+pref → openrouter.ai/api/v1/chat/completions)",
+> 106	          "video_renders 8b0787e0-1442... state=done, engine=hyperframes, charged_mco=12, refunded_mco=0, storage_key presente; composition.autopilot.cycle_id=2403bfcb — SEM coluna usd/token/model",
+> 107	          "autopilot_cycles 2403bfcb... status=completed, spend_mco=46, refunded_mco=0, planned_units=2 — SEM coluna usd/token",
+> 108	          "pipeline_runs cols = [id,user_id,topic,platforms,status,steps,wordpress_url,error_message,mco_cost,started_at,completed_at,metadata] — SEM usd/token; run 93659c88 steps[].model=None (nem o nome do modelo persiste na linha)",
+> 109	          "infra_health_logs: eventos non-cron so vision-mcp (metadata cost=0/byok=true/tool=describe_image|analyze_video) e avatar-clone-ai; probe por keys usd/token/cost/model/prompt_tokens/completion_tokens em metadata = 0 linhas → NENHUM custo USD ou token e telemetrado"
+> 110	        ],
+> 111	        "_key": "telemetry"
+> 112	      }
+> 113	    ],
+> 114	    "verdict": {
+> 115	      "total_usd_per_video_cycle": "~US$0.05–0.07 por ciclo (ESTIMADO, nao medido) — soma de: TEXTO google/gemini-2.5-pro-preview (artigo + linkedin_post + twitter_thread, ~$0.02–0.04) + IMAGEM google/gemini-2.5-flash-image do passo irmao image_generation (~$0.03). RENDER HyperFrames e ANALYZE = US$0 medidos/self-hosted. ATENCAO Lei 1: os dois valores pagos NAO tem prova material de USD — sao estimativas de tabela de preco do OpenRouter, porque o sistema nao loga USD nem tokens em lugar algum (vide observability_gap). So o debito interno de mcoCoins e gravado (spend_mco=46 / charged_mco=12), o que NAO e USD.",
+> 116	      "itemized": [
+> 117	        {
+> 118	          "step": "TEXTO article_generation (+ linkedin_post :625 + twitter_thread :698) via fetchLLMWithFallback happy-path",
+> 119	          "usd": "~$0.02–0.04 ESTIMADO (google/gemini-2.5-pro-preview PAGO ~$1.25/M in, ~$10/M out; nao medido — sem log de tokens)",
+> 120	          "self_hosted": "no — OpenRouter, BYOK openrouter_api_key do User 0"
+> 121	        },
+> 122	        {
+> 123	          "step": "IMAGEM image_generation (passo irmao gated hasProducts, orchestrate-step:464 -> generate-image:214)",
+> 124	          "usd": "~$0.03 ESTIMADO (google/gemini-2.5-flash-image / Nano Banana PAGO no OpenRouter; nao :free; nao medido)",
+> 125	          "self_hosted": "no — OpenRouter, BYOK openrouter_api_key"
+> 126	        },
+> 127	        {
+> 128	          "step": "ANALYZE (R3 loop, autopilot-analyze)",
+> 129	          "usd": "$0.00 — ranqueamento deterministico TypeScript, zero chamada LLM (grep NONE FOUND); ANALYZE_COST=2 e mcoCoins interno",
+> 130	          "self_hosted": "yes"
+> 131	        },
+> 132	        {
+> 133	          "step": "RENDER HyperFrames (render-core.ts Playwright+FFmpeg local)",
+> 134	          "usd": "$0.00 MEDIDO — render real 536KB/110633ms na CPU propria, refunded:0; sem provider de video",
+> 135	          "self_hosted": "yes"
+> 136	        }
+> 137	      ],
+> 138	      "verdict": "has_cost",
+> 139	      "doctrine_status": "NAO cumpre a doutrina como esta hoje. A regra Sovereign 2026-06-30 exige custo USD externo ao Sovereign = 0 por ciclo e preferencia open-source/self-hosted. O render (HyperFrames) e o analyze ja estao 100% self-hosted a US$0 — a espinha do video esta correta. Mas DUAS pernas do MESMO ciclo vazam USD material para provider pago via OpenRouter BYOK do User 0: (1) o texto usa google/gemini-2.5-pro-preview (PAGO, ~$10/M out) e o caminho feliz NUNCA toca modelo :free — a cascata llm-fallback so cai em :free sob 402/429/5xx (verificado em llm-fallback.ts:96-99); (2) a imagem usa google/gemini-2.5-flash-image (PAGO, nao :free). Contraste honesto: o product-miner ja opera na doutrina (llama-3-8b:free + Gemini BYOK cost=0), mas o autopilot de video escolheu o Pro pago. Logo: doutrina violada por config de pref_ai_model/pref_image, nao por arquitetura — o codigo ja tem o trilho :free (llm-fallback.ts:155 lista gemma-2-9b-it:free e llama-3-8b-instruct:free).",
+> 140	      "observability_gap": "CRITICO e material (fere Lei 1): o custo USD real NAO e logado em lugar nenhum. Probe confirmou: pipeline_runs nao tem coluna usd/token (cols = id,user_id,topic,platforms,status,steps,wordpress_url,error_message,mco_cost,started_at,completed_at,metadata; ate steps[].model=None em runs recentes); autopilot_cycles so tem spend_mco/refunded_mco/planned_units; video_renders so charged_mco/refunded_mco. infra_health_logs so telemetra cost/byok/tokens para o vision-mcp (cost=0/byok=true) e avatar-clone-ai — a probe por keys usd/token/cost/model/prompt_tokens/completion_tokens no metadata das pernas pagas = 0 linhas. Ou seja: hoje o veredito 'has_cost' e ESTIMADO, nao medido — nao da para dar GO de gasto com prova material. FALTA PARA MEDIR DE VERDADE (Lei 1): (a) capturar o campo `usage` (prompt_tokens/completion_tokens) que OpenRouter ja devolve na resposta de chat/image e (b) emitir um evento infra_health_logs (event='llm_usage', metadata={run_id, step, model, prompt_tokens, completion_tokens, usd_estimate}) no chokepoint fetchLLMWithFallback (orchestrate-step) e em generate-image apos a resposta 200. Sem isso, o USD/ciclo continua invisivel e o gate de doutrina nao e auditavel materialmente.",
+> 141	      "swap_recommendation": "SIM, ha vazamento por provider pago — dois swaps doutrina-aligned, ambos para modelo OpenRouter :free (esforco quase-zero; o codigo ja conhece esses ids em llm-fallback.ts:155). SWAP 1 (TEXTO — a maior perna): NAO mexer no codigo de orchestrate-step:281 (ele resolve selectedModel a partir de userKeys.pref_ai_model, que contem '/' e roteia OpenRouter corretamente). Mudar o DADO: setar decrypted_user_api_keys.pref_ai_model do User 0 (ada39fae) de 'google/gemini-2.5-pro-preview' para 'google/gemma-2-9b-it:free' (ou 'meta-llama/llama-3-8b-instruct:free'). Ambos contem '/' -> prefRequiresOR=true -> continua OpenRouter, mas :free = USD 0. Ancora de codigo: orchestrate-step/index.ts:275-281 (nenhuma linha muda) + valor em user_api_keys.pref_ai_model. SWAP 2 (IMAGEM): generate-image/index.ts:214 hardcoda model:'google/gemini-2.5-flash-image' (PAGO) — nao ha :free equivalente de imagem no OpenRouter que sirva. Doutrina-aligned aqui = trocar a ROTA, nao o modelo: setar pref_image_provider='replicate' (coluna ja lida em generate-image; branch replicate existe :92) e usar FLUX self-hostavel, OU (mais simples no curto prazo) suprimir o passo image_generation no ciclo de video, ja que o HyperFrames usa a foto PUBLICA do produto ML (product_image_url), nao a imagem gerada — a imagem paga nao entra no MP4. Ou seja: image_generation e um custo pago que NAO agrega ao entregavel de video. Alternativa Ollama self-hosted (Mesh, ja integrado em agent-task-execute:182 OLLAMA_HOST + OpenClaw roda qwen3.5/llama3.1:8b): so vale para TEXTO e exige wiring net-new em orchestrate-step (adicionar branch provider==='ollama' -> ${OLLAMA_HOST}/api/chat, espelhando agent-task-execute:187/200/261). Para o GO imediato, o SWAP 1 via pref_ai_model=:free e o caminho mais curto e 100% USD 0; Ollama fica como hardening posterior.",
+> 142	      "go_recommendation": "NAO dar GO de gasto AGORA pela regua da doutrina — fazer o swap PRIMEIRO. O ciclo hoje vaza USD material em 2 pernas (texto Pro pago + imagem paga) e, pior, esse USD e INVISIVEL (nenhum log de USD/token — gate nao auditavel por Lei 1). Sequencia recomendada, minima e barata: (1) SWAP 1 — setar pref_ai_model do User 0 para 'google/gemma-2-9b-it:free' (texto vai a USD 0, zero mudanca de codigo); (2) IMAGEM — suprimir/desabilitar image_generation no ciclo de video (ela nao entra no MP4 do HyperFrames, entao e gasto puro sem valor de video) OU rotear para Replicate/FLUX self-host; (3) fechar o observability gap emitindo 'llm_usage' com usage tokens em infra_health_logs no chokepoint fetchLLMWithFallback + generate-image, para o proximo GO ter prova material de US$0 (verdict passa de has_cost ESTIMADO para zero MEDIDO). Feitos (1)+(2), o ciclo fica strict-zero USD externo (render+analyze ja sao self-hosted) e a doutrina e cumprida. So entao dar o GO — e idealmente ja com (3) para provar o zero, nao so afirma-lo."
+> 143	    }
+> 144	  },
+> 145	  "workflowProgress": [
+> 146	    {
+> 147	      "type": "workflow_phase",
+> 148	      "index": 1,
+> 149	      "title": "Trace"
+> 150	    },
+> 151	    {
+> 152	      "type": "workflow_phase",
+> 153	      "index": 2,
+> 154	      "title": "Verdict"
+> 155	    },
+> 156	    {
+> 157	      "type": "workflow_agent",
+> 158	      "index": 1,
+> 159	      "label": "trace:content",
+> 160	      "phaseIndex": 1,
+> 161	      "phaseTitle": "Trace",
+> 162	      "agentId": "a6cf1702e919ec341",
+> 163	      "model": "claude-opus-4-8",
+> 164	      "state": "done",
+> 165	      "startedAt": 1782863787464,
+> 166	      "queuedAt": 1782863787437,
+> 167	      "attempt": 1,
+> 168	      "lastToolName": "StructuredOutput",
+> 169	      "lastToolSummary": "Geração de TEXTO/SCRIPT (article_generation) do ciclo de ví…",
+> 170	      "promptPreview": "Trace o passo de GERAÇÃO DE TEXTO/SCRIPT do ciclo de vídeo do Viral Autopilot para o Usuário Zero (user_id=ada39fae-67e1-4e53-af1c-5a18e1c108e8).\nCaminho: autopilot-run → orchestrate-content → orchestrate-step → generate-content (ou equivalente). Leia supabase/functions/autopilot-run/index.ts, orchestrate-content/index.ts, orchestrate-step/index.ts, generate-content/index.ts.\nDetermine MATERIALMEN…",
+> 171	      "lastProgressAt": 1782863923096,
+> 172	      "tokens": 105855,
+> 173	      "toolCalls": 17,
+> 174	      "durationMs": 135631,
+> 175	      "resultPreview": "{\"step\":\"Geração de TEXTO/SCRIPT (article_generation) do ciclo de vídeo do Viral Autopilot para o Usuário Zero. Cadeia real: autopilot-run (fan-out prepaid) -> orchestrate-content (resolve modelo + grava em pipeline_runs.metadata + kick async_orchestrate_step) -> orchestrate-step (FAZ a chamada LLM). generate-content/index.ts NAO esta nesta cadeia: e funcao user-facing standalone (chat/single post…"
+> 176	    },
+> 177	    {
+> 178	      "type": "workflow_agent",
+> 179	      "index": 2,
+> 180	      "label": "trace:analyze",
+> 181	      "phaseIndex": 1,
+> 182	      "phaseTitle": "Trace",
+> 183	      "agentId": "a0cce3d272295d8b2",
+> 184	      "model": "claude-opus-4-8",
+> 185	      "state": "done",
+> 186	      "startedAt": 1782863787466,
+> 187	      "queuedAt": 1782863787438,
+> 188	      "attempt": 1,
+> 189	      "lastToolName": "StructuredOutput",
+> 190	      "lastToolSummary": "ANALYZE (R3 loop) do ciclo de video do Viral Autopilot — ra…",
+> 191	      "promptPreview": "Trace o passo de ANÁLISE (analyze) do ciclo de vídeo do Viral Autopilot para o Usuário Zero (user_id=ada39fae-67e1-4e53-af1c-5a18e1c108e8).\nO custo do ciclo é 10(orch)+12(render)+2(analyze) mco. Encontre o que é o passo 'analyze' (ANALYZE_COST=2) — procure em supabase/functions/autopilot-run/index.ts, autopilot-analyze/index.ts, orchestrate-step (passo de análise/ranking), e qualquer chamada a ana…",
+> 192	      "lastProgressAt": 1782863868758,
+> 193	      "tokens": 85190,
+> 194	      "toolCalls": 8,
+> 195	      "durationMs": 81292,
+> 196	      "resultPreview": "{\"step\":\"ANALYZE (R3 loop) do ciclo de video do Viral Autopilot — ranqueia o ciclo anterior e escreve optimization_policy (FR-VA-010/011). ANALYZE_COST=2 mco.\",\"edge_fn\":\"supabase/functions/autopilot-analyze/index.ts (chamada origina em supabase/functions/autopilot-run/index.ts:196 via svcCall). NAO chama analyze-node nem orchestrate-step de analise — grep confirmou 'NO reference to analyze-node i…"
+> 197	    },
+> 198	    {
+> 199	      "type": "workflow_agent",
+> 200	      "index": 3,
+> 201	      "label": "trace:image",
+> 202	      "phaseIndex": 1,
+> 203	      "phaseTitle": "Trace",
+> 204	      "agentId": "a3f741b18f105df5f",
+> 205	      "model": "claude-opus-4-8",
+> 206	      "state": "done",
+> 207	      "startedAt": 1782863868760,
+> 208	      "queuedAt": 1782863787438,
+> 209	      "attempt": 1,
+> 210	      "lastToolName": "StructuredOutput",
+> 211	      "lastToolSummary": "Ciclo de video do Viral Autopilot (User 0 ada39fae) - gerac…",
+> 212	      "promptPreview": "Determine se o ciclo de vídeo do Viral Autopilot (User 0 = ada39fae-67e1-4e53-af1c-5a18e1c108e8) gera IMAGEM e qual o custo USD dela.\nContexto da memória: generate-image roteia por OpenRouter Gemini (OpenAI virou fallback inalcançável); providers de imagem do User 0 estavam quebrados (nanobana mock). Leia supabase/functions/orchestrate-step/index.ts (bloco de imagem / fail-open) e generate-image/i…",
+> 213	      "lastProgressAt": 1782863985681,
+> 214	      "tokens": 95150,
+> 215	      "toolCalls": 13,
+> 216	      "durationMs": 116921,
+> 217	      "resultPreview": "{\"step\":\"Ciclo de video do Viral Autopilot (User 0 ada39fae) - geracao de IMAGEM e custo USD\",\"edge_fn\":\"Dois passos IRMAOS em supabase/functions/orchestrate-step/index.ts, ambos sob `if (hasProducts)` (linha 460): (A) image_generation chama generate-image em orchestrate-step/index.ts:464; (B) video_generation (linha 494, gated `if (videoEnabled)`) NAO chama generate-image - enfileira HyperFrames …"
+> 218	    },
+> 219	    {
+> 220	      "type": "workflow_agent",
+> 221	      "index": 4,
+> 222	      "label": "trace:render",
+> 223	      "phaseIndex": 1,
+> 224	      "phaseTitle": "Trace",
+> 225	      "agentId": "a2cbb4ef7c0f28b31",
+> 226	      "model": "claude-opus-4-8",
+> 227	      "state": "done",
+> 228	      "startedAt": 1782863923097,
+> 229	      "queuedAt": 1782863787438,
+> 230	      "attempt": 1,
+> 231	      "lastToolName": "StructuredOutput",
+> 232	      "lastToolSummary": "RENDER do ciclo de vídeo (HyperFrames) — composition spec →…",
+> 233	      "promptPreview": "Confirme MATERIALMENTE que o passo de RENDER do ciclo de vídeo (HyperFrames) roda 100% self-hosted, SEM chamada a API externa paga.\nLeia scripts/hyperframes/render-core.ts, scripts/video-bridge.ts. Verifique: (1) o render usa Playwright headless + FFmpeg locais (binários na infra própria), zero chamada a SaaS de geração de vídeo externo (não Veo/Higgsfield/Replicate)? Cite as linhas; (2) há QUALQU…",
+> 234	      "lastProgressAt": 1782863975373,
+> 235	      "tokens": 83805,
+> 236	      "toolCalls": 6,
+> 237	      "durationMs": 52276,
+> 238	      "resultPreview": "{\"step\":\"RENDER do ciclo de vídeo (HyperFrames) — composition spec → MP4 9:16 1080x1920\",\"edge_fn\":\"scripts/hyperframes/render-core.ts:74-147 (renderComposition — núcleo puro); host worker scripts/video-bridge.ts:67-190 (processRender). Edge fn video-render é só transporte poll:// e NÃO roda o render.\",\"provider_model\":\"Self-hosted: Playwright Chromium headless + FFmpeg libx264 locais. ZERO modelo…"
+> 239	    },
+> 240	    {
+> 241	      "type": "workflow_agent",
+> 242	      "index": 5,
+> 243	      "label": "trace:telemetry",
+> 244	      "phaseIndex": 1,
+> 245	      "phaseTitle": "Trace",
+> 246	      "agentId": "aa799e15f442d2a54",
+> 247	      "model": "claude-opus-4-8",
+> 248	      "state": "done",
+> 249	      "startedAt": 1782863975374,
+> 250	      "queuedAt": 1782863787438,
+> 251	      "attempt": 1,
+> 252	      "lastToolName": "StructuredOutput",
+> 253	      "lastToolSummary": "Custo USD real + chaves BYOK do Usuario Zero (ada39fae) — a…",
+> 254	      "promptPreview": "Encontre o custo USD REAL e as chaves BYOK do Usuário Zero (user_id=ada39fae-67e1-4e53-af1c-5a18e1c108e8) — prova material, não estimativa.\nUse o .env (SB_URL/SB_SECRET_KEY) e curl no Supabase REST (como o GO-gasto agent fez). (1) Liste as chaves ATIVAS do User 0 em decrypted_user_api_keys OU user_api_keys (quais colunas de provider estão preenchidas: openrouter_api_key, google_api_key, openai_api…",
+> 255	      "lastProgressAt": 1782864131244,
+> 256	      "tokens": 86650,
+> 257	      "toolCalls": 13,
+> 258	      "durationMs": 155869,
+> 259	      "resultPreview": "{\"step\":\"Custo USD real + chaves BYOK do Usuario Zero (ada39fae) — autopilot de video (cycle 2403bfcb / render 8b0787e0) + geracao de texto do pipeline\",\"edge_fn\":\"supabase/functions/orchestrate-step/index.ts:275-281 (resolve o modelo de texto); scripts/hyperframes/render-core.ts + scripts/video-bridge.ts (render do video — Playwright+FFmpeg deterministico, SEM LLM); vision-mcp container (analyze_…"
+> 260	    },
+> 261	    {
+> 262	      "type": "workflow_agent",
+> 263	      "index": 6,
+> 264	      "label": "auditor",
+> 265	      "phaseIndex": 2,
+> 266	      "phaseTitle": "Verdict",
+> 267	      "agentId": "a45290ba8c4aa6549",
+> 268	      "model": "claude-opus-4-8",
+> 269	      "state": "done",
+> 270	      "startedAt": 1782864131284,
+> 271	      "queuedAt": 1782864131247,
+> 272	      "attempt": 1,
+> 273	      "lastToolName": "StructuredOutput",
+> 274	      "lastToolSummary": "~US$0.05–0.07 por ciclo (ESTIMADO, nao medido) — soma de: T…",
+> 275	      "promptPreview": "Você é o auditor-chefe. A doutrina Sovereign (2026-06-30) exige CUSTO USD EXTERNO AO SOVEREIGN = 0 por ciclo, e preferência por open-source/self-hosted dentro do MCORCH. O GO de gasto do 1º ciclo pago de vídeo está GATED nessa régua. O render HyperFrames já é self-hosted (USD 0). Recebeu o trace material de cada passo externo do ciclo de vídeo do Usuário Zero. Produza o veredito: soma USD/ciclo, s…",
+> 276	      "lastProgressAt": 1782864211082,
+> 277	      "tokens": 84220,
+> 278	      "toolCalls": 7,
+> 279	      "durationMs": 79798,
+> 280	      "resultPreview": "{\"total_usd_per_video_cycle\":\"~US$0.05–0.07 por ciclo (ESTIMADO, nao medido) — soma de: TEXTO google/gemini-2.5-pro-preview (artigo + linkedin_post + twitter_thread, ~$0.02–0.04) + IMAGEM google/gemini-2.5-flash-image do passo irmao image_generation (~$0.03). RENDER HyperFrames e ANALYZE = US$0 medidos/self-hosted. ATENCAO Lei 1: os dois valores pagos NAO tem prova material de USD — sao estimativa…"
+> 281	    }
+> 282	  ],
+> 283	  "totalTokens": 540870,
+> 284	  "totalToolCalls": 64
+> 285	}
+> ```
+
+## 🤖 Claude *(00:05:37)*
+
+
+## 🤖 Claude *(00:05:38)*
+
+Audit fechado — e trouxe um achado que **muda o GO**. Vou persistir o resultado (o output estava só no scratch efêmero) e te dar o veredito com a decisão que é sua.
+
+## 🤖 Claude *(00:05:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/video-cycle-zero-usd-audit-2026-06-30.md",
+  "content": "# Zero-USD Audit \u2014 Ciclo de V\u00eddeo do Viral Autopilot (2026-06-30)\n\n> Gate da doutrina `feedback_opensource_first_zero_cost_equity` pro GO de gasto. Workflow `wf_6d3bdbd6-eb7` (5 traces + auditor, 540k tokens). User 0 = ada39fae.\n\n## Veredito: `has_cost` \u2014 N\u00c3O cumpre a doutrina estrita hoje\n\n**~US$0.05\u20130.07 por ciclo (ESTIMADO, n\u00e3o medido).** A espinha do v\u00eddeo est\u00e1 correta; o vazamento \u00e9 por **config, n\u00e3o arquitetura**.\n\n| Passo | USD/ciclo | Self-hosted? | Nota |\n|-------|-----------|--------------|------|\n| **RENDER** (HyperFrames Playwright+FFmpeg) | **$0 MEDIDO** | \u2705 sim | render real 536KB/110s na CPU pr\u00f3pria. \u00c9 a parte cara em pipelines normais (Veo ~$0.56) \u2014 e aqui \u00e9 $0. **Doutrina-perfeito.** |\n| **ANALYZE** (autopilot-analyze) | **$0** | \u2705 sim | ranqueamento TypeScript determin\u00edstico, zero LLM (grep NONE FOUND). |\n| **TEXTO** (article + linkedin + twitter) | ~$0.02\u20130.04 | \u274c n\u00e3o | `google/gemini-2.5-pro-preview` no OpenRouter = **PAGO** (~$10/M out). Happy-path nunca toca `:free`. `orchestrate-step:275-281`. |\n| **IMAGEM** (`image_generation`) | ~$0.03 | \u274c n\u00e3o | `google/gemini-2.5-flash-image` (Nano Banana) PAGO. **E n\u00e3o entra no MP4** (HyperFrames usa a foto p\u00fablica do produto ML) \u2192 custo pago SEM valor de v\u00eddeo. Gate \u00e9 `hasProducts`, n\u00e3o `videoEnabled` (`orchestrate-step:460/464`). \u26a0\ufe0f verificar se os posts de TEXTO anexam essa imagem antes de suprimir. |\n\n## Observability gap (CR\u00cdTICO \u2014 Lei 1)\n**Nenhum USD/token \u00e9 logado em lugar nenhum.** `pipeline_runs`/`autopilot_cycles`/`video_renders` s\u00f3 gravam mcoCoins (moeda interna, n\u00e3o USD). `infra_health_logs` s\u00f3 telemetra custo pro vision-mcp (cost=0/byok=true). Logo o \"has_cost\" \u00e9 **estimado, n\u00e3o medido** \u2014 n\u00e3o d\u00e1 pra dar GO com prova material de $0.\n**Fix:** capturar o campo `usage` (prompt/completion_tokens) que o OpenRouter j\u00e1 devolve + emitir `infra_health_logs event='llm_usage'` no chokepoint `fetchLLMWithFallback` (orchestrate-step) + generate-image. A\u00ed o veredito vira `zero` MEDIDO.\n\n## Swaps doutrina-aligned (o c\u00f3digo j\u00e1 tem os trilhos)\n- **TEXTO (maior perna):** o c\u00f3digo n\u00e3o muda \u2014 \u00e9 DADO. `pref_ai_model` do User 0 \u00e9 global (afeta chat/posts/autopilot). Op\u00e7\u00f5es: (A) **Ollama self-hosted** no Mesh (qwen/llama j\u00e1 rodam; `agent-task-execute:182` OLLAMA_HOST) = $0 + stack pr\u00f3pria, precisa branch net-new em orchestrate-step; (B) modelo OpenRouter `:free` (`gemma-2-9b-it:free`/`llama-3-8b-instruct:free`, `llm-fallback.ts:155`) = $0 imediato zero-c\u00f3digo MAS derruba qualidade de TODO o texto; (C) aceitar ~$0.05 na BYOK pr\u00f3pria; (D) override `:free`/Ollama S\u00d3 no autopilot, mantendo Pro no interativo.\n- **IMAGEM:** n\u00e3o h\u00e1 `:free` de imagem. Melhor = **suprimir `image_generation` no ciclo de v\u00eddeo** (n\u00e3o entra no MP4 = desperd\u00edcio puro) OU rotear `pref_image_provider='replicate'` FLUX self-host. \u26a0\ufe0f confirmar antes se os posts de texto usam a imagem.\n\n## Recomenda\u00e7\u00e3o de GO\n**N\u00c3O dar GO agora pela r\u00e9gua da doutrina.** Sequ\u00eancia m\u00ednima: (1) resolver TEXTO ($0), (2) suprimir/rotear IMAGEM, (3) fechar observability gap \u2192 GO com $0 **provado**, n\u00e3o afirmado. Feitos (1)+(2), o ciclo fica strict-zero (render+analyze j\u00e1 s\u00e3o $0).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/video-cycle-zero-usd-audit-2026-06-30.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:06:02)*
+
+
+## 🤖 Claude *(00:06:14)*
+
+Persistido em [video-cycle-zero-usd-audit-2026-06-30.md](.claude/context/video-cycle-zero-usd-audit-2026-06-30.md). O veredito:
+
+## 🔴 `has_cost` — o ciclo NÃO cumpre a doutrina estrita hoje (~US$0.05–0.07/ciclo)
+
+Mas o achado importa mais que o número. **A espinha está certa — o vazamento é config, não arquitetura:**
+
+| Passo | Custo | Doutrina |
+|-------|-------|----------|
+| **Render (HyperFrames)** | **$0 medido** ✅ | Self-hosted. É a parte cara em pipelines normais (Veo ~$0.56/vídeo) — e aqui é **zero**. Doutrina-perfeito. |
+| **Analyze** | **$0** ✅ | Ranking TypeScript determinístico, zero LLM. |
+| **Texto** (artigo+LinkedIn+X) | ~$0.02–0.04 ❌ | Gemini **2.5 Pro** (pago) na sua chave OpenRouter. O caminho feliz nunca usa `:free`. |
+| **Imagem** | ~$0.03 ❌ | Gemini Flash Image (pago) — **e nem entra no MP4** (o vídeo usa a foto pública do produto). Custo pago **sem valor de vídeo**. |
+
+**Dois pontos que pesam mais que o custo:**
+
+1. **Observability gap (Lei 1):** o sistema **não loga USD/token em lugar nenhum** — só mcoCoins (moeda interna). Então esse `has_cost` é **estimado, não medido**. Não dá pra dar o GO afirmando "$0" sem prova material. Dá pra fechar: capturar o `usage` que o OpenRouter já devolve + emitir um evento `llm_usage` no chokepoint. Aí o zero fica **provado**.
+
+2. **O passo de imagem é desperdício puro** — paga e nem aparece no vídeo. (Só preciso confirmar 1 coisa antes de matar: se os posts de texto anexam essa imagem.)
+
+**Minha recomendação:** não dar o GO ainda. São 3 ajustes baratos que deixam o ciclo *strict-zero provado*, e aí o GO sai limpo pela sua régua. O passo de render — que é onde mora o custo real de vídeo — já é $0 self-hosted, então você está a poucos ajustes de conteúdo autônomo genuinamente gratuito.
+
+A decisão que é sua (tem tradeoff real de qualidade) é como zerar o **texto**:
+
+## 🤖 Claude *(00:06:22)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como zerar o custo de TEXTO do ciclo (a maior perna paga), respeitando a doutrina? O texto hoje usa Gemini 2.5 Pro na sua chave OpenRouter (qualidade alta, mas pago).",
+      "header": "Modelo de texto",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Ollama self-hosted (Mesh)",
+          "description": "Roteia o texto do autopilot pro Ollama que j\u00e1 roda na sua infra (qwen/llama). Custo USD estrito = 0 + stack 100% pr\u00f3pria = equity m\u00e1ximo \u2014 o mais alinhado \u00e0 doutrina. Precisa de wiring net-new no orchestrate-step (~1 fatia do loop)."
+        },
+        {
+          "label": "Override s\u00f3 no autopilot",
+          "description": "Mant\u00e9m Gemini 2.5 Pro (qualidade) no trabalho interativo/manual, mas for\u00e7a modelo :free (ou Ollama) S\u00d3 no ciclo aut\u00f4nomo. Preserva qualidade onde voc\u00ea v\u00ea + zera o custo aut\u00f4nomo. C\u00f3digo pequeno."
+        },
+        {
+          "label": "Modelo :free global",
+          "description": "Troca o pref_ai_model do User 0 pra gemma-2-9b:free/llama-3-8b:free. Custo 0 imediato, zero c\u00f3digo. MAS derruba a qualidade de TODO o texto seu (chat/posts/autopilot), n\u00e3o s\u00f3 do autopilot \u2014 pref_ai_model \u00e9 global."
+        },
+        {
+          "label": "Aceitar ~$0.05/ciclo",
+          "description": "Mant\u00e9m Gemini 2.5 Pro na sua pr\u00f3pria BYOK; ~$0.05/ciclo \u00e9 custo marginal \u00ednfimo e \u00e9 sua chave. GO agora. Fere a doutrina estrita, mas o render (a parte cara) j\u00e1 \u00e9 $0."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como zerar o custo de TEXTO do ciclo (a maior perna paga), respeitando a doutrina? O texto hoje usa Gemini 2.5 Pro na sua chave OpenRouter (qualidade alta, mas pago)."="Vamos manter por enquanto esta barato, coloquei 10 dolares que deu mais ou menos 60 reais no brasil, durou o mes enteiro e ainda tem um pouco de credito, se você acha que vale apena manter essa qualidade seguimos assim". You can now continue with these answers in mind.
+> ```
