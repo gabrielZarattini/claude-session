@@ -10752,6 +10752,6 @@ O backlog autônomo-seguro de alto valor está esgotado nesta janela — o próx
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-01 - Configurar loop autônomo e definir fila soberana]]
+> * **Sessão Anterior**: [[2026-07-01 - Executar loop autônomo MCORCH com charter]]
 > * **Próxima Sessão**: [[2026-07-01 - Usar comando loop para continuar sequência lógica]]
 %% --- TIMELINE END --- %%
