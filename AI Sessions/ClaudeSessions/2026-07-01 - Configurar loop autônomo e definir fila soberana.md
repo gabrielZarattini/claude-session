@@ -1,4 +1,4 @@
-# [[2026-06-30 - Configurar loop autônomo e definir fila soberana|Configurar loop autônomo e definir fila soberana]]
+# Configurar loop autônomo e definir fila soberana
 **Date:** 2026-07-01 | **Session ID:** `473299a8-6c7d-4634-b97a-50a8fad59b11`
 
 ---
@@ -2051,15 +2051,913 @@ A decisão que é sua (tem tradeoff real de qualidade) é como zerar o **texto**
 > Your questions have been answered: "Como zerar o custo de TEXTO do ciclo (a maior perna paga), respeitando a doutrina? O texto hoje usa Gemini 2.5 Pro na sua chave OpenRouter (qualidade alta, mas pago)."="Vamos manter por enquanto esta barato, coloquei 10 dolares que deu mais ou menos 60 reais no brasil, durou o mes enteiro e ainda tem um pouco de credito, se você acha que vale apena manter essa qualidade seguimos assim". You can now continue with these answers in mind.
 > ```
 
+## 🤖 Claude *(00:30:48)*
+
+
+## 🤖 Claude *(00:30:51)*
+
+Decisão anotada — e minha recomendação honesta: **sim, mantenha o Gemini 2.5 Pro.** Deixa eu te explicar por que isso é coerente com a doutrina (não contra ela), e te mostrar o que ainda vale ajustar antes do GO. Primeiro confirmo um ponto do achado da imagem (se os posts de texto usam a imagem gerada) pra não recomendar no escuro:
+
+## 🤖 Claude *(00:30:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 455,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 455	          // flip the run to error at the finalize check): any failure (no image key / provider mock / 5xx) leaves
+> 456	          // article_generation 'done' and the run proceeds — the image NEVER breaks generation. Persists the
+> 457	          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 458	          // window; private bucket → re-sign on read). Product-referenced = descriptive text prompt from
+> 459	          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 460	          if (hasProducts) {
+> 461	            try {
+> 462	              const p0 = products[0];
+> 463	              const imgPrompt = `Imagem de marketing do produto ${p0.name}${p0.category ? `, categoria ${p0.category}` : ""}, no contexto de "${topic}". Foto de produto profissional, alta qualidade, fundo limpo, para redes sociais.`;
+> 464	              const imgRes = await fetch(`${supabaseUrl}/functions/v1/generate-image`, {
+> 465	                method: "POST",
+> 466	                headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 467	                body: JSON.stringify({ prompt: imgPrompt, style: "product photography", user_id: run.user_id }),
+> 468	              });
+> 469	              const imgData = await imgRes.json().catch(() => ({} as any));
+> 470	              if (imgRes.ok && imgData?.path) {
+> 471	                const { data: imgRow } = await admin.from("content_library").insert({
+> 472	                  user_id: run.user_id, campaign_id: campaign_id || null, type: "image",
+> 473	                  title: `Imagem: ${articleTitle}`, media_url: imgData.path, status: "approved",
+> 474	                  metadata: { source: "orchestration", products: products.map((p) => p.external_id), product_id: p0.external_id, storage_bucket: "generated-images" },
+> 475	                }).select("id").single();
+> 476	                await addStep("image_generation", "done", { product: p0.name }, { content_id: imgRow?.id ?? null, path: imgData.path });
+> 477	              } else {
+> 478	                console.warn("[orchestrate-step] image generation skipped (fail-open):", imgData?.error ?? imgRes.status);
+> 479	                await addStep("image_generation", "skipped", { product: p0.name }, { reason: imgData?.error ?? `image_http_${imgRes.status}` });
+> 480	              }
+> 481	            } catch (e: any) {
+> 482	              console.warn("[orchestrate-step] image generation fail-open:", e?.message);
+> 483	              await addStep("image_generation", "skipped", { product: products[0]?.name }, { reason: e?.message || "image_exception" });
+> 484	            }
+> 485	
+> 486	            // ── Viral Autopilot Fatia VA-V1 — product-aware 9:16 video composition (FR-VA-023/024) ──────────────
+> 487	            // FAIL-OPEN (status 'skipped', never 'error'): the video NEVER breaks the run. The cost was pre-debited
+> 488	            // in the cycle (OTD-VA-010); we INSERT a queued HyperFrames render with charged_mco=VIDEO_COST as a
+> 489	            // MARKER (no deduct here — orchestrate-step never bills) → the host worker (video-bridge.ts) polls,
+> 490	            // renders 1080×1920, and on failure finalize_video_render(failed, refund=VIDEO_COST) credits it back.
+> 491	            // Props use the actual viral angle (title/description) + the ML product photo (public https). The
+> 492	            // template renders all text via textContent (XSS-safe); product name already passed the sentinel
+> 493	            // upstream (orchestrate-content). composition.autopilot carries the attach context (FR-VA-025).
+> 494	            if (videoEnabled) {
+> 495	              const VIDEO_COST = 12; // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) — mirrors autopilot-run projected.
+> 496	              let enqueued = false;  // tracks whether a video_renders row was actually created (billing reconciliation).
+> 497	              try {
+> 498	                const p0 = products[0];
+> 499	                const clip = (s: unknown, n: number) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+> 500	                const productImg = typeof (p0 as any)?.image_url === "string" && /^https:\/\//i.test((p0 as any).image_url)
+> 501	                  ? (p0 as any).image_url : "";
+> 502	                const composition = {
+> 503	                  template: "viral-short-9x16",
+> 504	                  // 5s × 24fps = 120 frames ≈ 65s render — within NFR-VS-002 (p95 < 90s). The screenshot-per-frame
+> 505	                  // capture (~0.5s/frame) is the bottleneck; OTD-VA-013 tracks the CDP-screencast optimization to
+> 506	                  // unlock longer/faster clips. 5s is a strong viral-short length.
+> 507	                  duration_s: 5,
+> 508	                  fps: 24,
+> 509	                  props: {
+> 510	                    hook: clip(articleTitle, 80) || clip(topic, 80),
+> 511	                    caption: clip(args.meta_description, 150) || clip(`${p0.name}`, 150),
+> 512	                    cta: "Ver no Mercado Livre",
+> 513	                    brand: "MCORCH",
+> 514	                    product_image_url: productImg,
+> 515	                  },
+> 516	                  // Attach context for the worker's reconciliation (FR-VA-025) — NOT rendered, only routing.
+> 517	                  // pillar_run_id (FR-CP-003 gap #5): lets video-bridge JOIN the finished master back to pillar_atoms
+> 518	                  // so the reshaper can reexport per-channel native variants from THIS run's 9:16 master.
+> 519	                  pillar_run_id: run_id,
+> 520	                  autopilot: { user_id: run.user_id, campaign_id: campaign_id || null, product_id: p0.external_id, cycle_id: cycleId, title: clip(articleTitle, 120), pillar_run_id: run_id },
+> 521	                };
+> 522	                const { data: vr, error: vrErr } = await admin.from("video_renders").insert({
+> 523	                  user_id: run.user_id, engine: "hyperframes", state: "queued",
+> 524	                  product_id: null, // logical product is the ML external_id (text) — kept in composition.autopilot
+> 525	                  topic: clip(topic, 200), charged_mco: VIDEO_COST, composition,
+> 526	                }).select("id").single();
+> 527	                if (vrErr || !vr) throw new Error(vrErr?.message || "video_render_insert_failed");
+> 528	                enqueued = true;
+> 529	                await addStep("video_generation", "done", { product: p0.name, format: "9:16" }, { render_id: vr.id });
+> 530	              } catch (e: any) {
+> 531	                console.warn("[orchestrate-step] video enqueue fail-open:", e?.message);
+> 532	                await addStep("video_generation", "skipped", { product: products[0]?.name }, { reason: e?.message || "video_exception" });
+> 533	                // Billing-accuracy fix (OTD-VA-010 gap): the cycle ALREADY counted VIDEO_COST for this succeeded
+> 534	                // sub-run (autopilot-run `actual = succeeded × (ORCH_COST + VIDEO_COST)`, computed BEFORE this async
+> 535	                // step ran). If NO render row was created (`!enqueued`), finalize_video_render can never refund it →
+> 536	                // the tenant would be charged for a render never queued. Issue the idempotent compensating credit
+> 537	                // (anchored on run_id; mirrors the render-fail refund for the no-row case). Only on the cron/cycle
+> 538	                // path (cycleId set); user-path renders never reach here. If `enqueued` is true, the row exists and
+> 539	                // the render lifecycle / finalize_video_render owns the refund — do NOT double-credit.
+> 540	                if (!enqueued && cycleId) {
+> 541	                  const { error: refundErr } = await admin.rpc("refund_autopilot_video_enqueue", {
+> 542	                    p_run_id: run_id, p_cycle_id: cycleId, p_user_id: run.user_id, p_amount: VIDEO_COST,
+> 543	                  });
+> 544	                  if (refundErr) {
+> ```
+
+## 🤖 Claude *(00:30:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== media_url / image usage no orchestrate-step ===\" && grep -nE \"media_url|image_url|featured|imageUrl\" supabase/functions/orchestrate-step/index.ts | head -40",
+  "description": "Grep image usage downstream in orchestrate-step"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === media_url / image usage no orchestrate-step ===
+> 457:          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 459:          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 473:                  title: `Imagem: ${articleTitle}`, media_url: imgData.path, status: "approved",
+> 500:                const productImg = typeof (p0 as any)?.image_url === "string" && /^https:\/\//i.test((p0 as any).image_url)
+> 501:                  ? (p0 as any).image_url : "";
+> 514:                    product_image_url: productImg,
+> ```
+
+## 🤖 Claude *(00:31:50)*
+
+
+## 🤖 Claude *(00:31:52)*
+
+Confirmado material: a imagem gerada **não entra no MP4** (o vídeo usa a foto pública real do produto, linha 500-514), mas ela **é salva como asset de imagem** no `content_library` (linha 471-474) — então não é "lixo puro", é um entregável extra que pode ou não te servir. Isso muda a leitura. Deixa eu atualizar a doutrina com o seu refinamento e te dar o veredito completo:
+
+## 🤖 Claude *(00:32:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_opensource_first_zero_cost_equity.md",
+  "old_string": "**Why:** custo marginal zero + propriedade da stack = equity defens\u00e1vel e runway longo",
+  "new_string": "**Refinamento (p\u00f3s zero-USD audit `wf_6d3bdbd6-eb7`, Diretiva Sovereign 2026-06-30):** a r\u00e9gua N\u00c3O \u00e9 literal $0 na BYOK pr\u00f3pria \u2014 \u00e9 **zero custo de infra/SaaS recorrente + posse do stack caro + zero desperd\u00edcio + custo vis\u00edvel**. Prova: no ciclo de v\u00eddeo o RENDER (a parte cara, ~$0.56 em Veo) j\u00e1 \u00e9 $0 self-hosted (HyperFrames) \u2014 a vit\u00f3ria de equity que importa; resta s\u00f3 ~$0.05/ciclo de LLM (Gemini 2.5 Pro texto + Nano Banana imagem) na chave OpenRouter BYOK do Sovereign (~$10/m\u00eas, durou o m\u00eas inteiro com cr\u00e9dito sobrando). **Decis\u00e3o Sovereign: MANTER Gemini 2.5 Pro** \u2014 qualidade \u00e9 load-bearing pra marca (brand-first CCIO); trocar por 9B `:free` p/ economizar ~$10/m\u00eas \u00e9 penny-wise-pound-foolish. Ollama self-hosted no Mesh = endpoint ideal da doutrina, **DIFERIDO** (n\u00e3o degradar qualidade agora). N\u00c3O for\u00e7ar modelos `:free` no texto de marca s\u00f3 pra bater $0 literal. Pend\u00eancias no esp\u00edrito da doutrina: (a) tornar o custo USD **vis\u00edvel** (telemetria `llm_usage` \u2014 hoje NADA loga USD/token, fere Lei 1); (b) a imagem AI por ciclo (~$0.03) \u00e9 redundante com a foto real do produto que o v\u00eddeo usa \u2014 opcional cortar (produz asset em content_library, n\u00e3o \u00e9 lixo). Runbook do gate: `.claude/context/video-cycle-zero-usd-audit-2026-06-30.md`.\n\n**Why:** custo marginal zero + propriedade da stack = equity defens\u00e1vel e runway longo"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_opensource_first_zero_cost_equity.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:32:24)*
+
+
+## 🤖 Claude *(00:32:41)*
+
+## Veredito: mantenha o Gemini 2.5 Pro. Três razões:
+
+1. **O custo real é irrelevante.** $10 (~R$60) durou o mês inteiro com crédito sobrando, na *sua* chave BYOK. A cadência autônoma de vídeo adiciona uns ~$0.05/ciclo × ~10 ciclos/mês = **~$0.50/mês** — troco. Não é o tipo de custo que a doutrina existe pra matar.
+
+2. **A vitória de equity que importa já está garantida.** Em pipeline de vídeo normal, o custo mora no *render* (Veo ~$0.56/vídeo). O seu render é **HyperFrames self-hosted = $0 medido**. Você já é dono da parte cara. Isso é a doutrina cumprida onde ela pesa.
+
+3. **Qualidade de texto é load-bearing pra marca.** Sua estratégia é brand-first (persona CCIO evangelizando). Trocar Gemini 2.5 Pro por um 9B `:free` pra economizar ~$10/mês degradaria visivelmente o conteúdo da persona. Penny-wise, pound-foolish.
+
+**Doutrina reconciliada e registrada:** a régua não é "$0 literal na sua BYOK" — é *zero custo de infra/SaaS recorrente + posse do stack caro + zero desperdício + custo visível*. Você refinou certo. Atualizei a memória pra o loop **não** sair trocando seus modelos por `:free` atrás de um zero literal e estragando a marca.
+
+## O que ainda vale, antes de um GO limpo (nenhum é bloqueador)
+
+- **🟢 Recomendo: tornar o custo visível (a única lacuna Lei-1 real).** Hoje o sistema **não loga USD/token em lugar nenhum** — só mcoCoins interno. Então "é barato" é estimativa, não prova. Dá pra fechar barato: capturar o campo `usage` que o OpenRouter já devolve + emitir um evento `llm_usage` no chokepoint. Aí seu custo vira um número **provado** no `infra_health_logs`, e todo GO futuro é auditável. É aditivo, sem tradeoff.
+
+- **🟡 Opcional: a imagem AI por ciclo.** Ela **não entra no vídeo** (o MP4 usa a foto real do produto) — mas é salva como asset de marketing no `content_library`. Ou seja: não é lixo, é um entregável extra de ~$0.03. Se a persona/posts usam essas imagens, mantenha; se não, cortar simplifica e some com o custo. Baixo risco dos dois lados — sua chamada.
+
+## Onde isso te deixa
+
+Com o Gemini Pro mantido, você está **efetivamente pronto pro GO** — o custo é conhecido-ínfimo, na sua BYOK, e a parte cara é self-hosted. O GO no 1º ciclo testemunhado é sua decisão (Lei 4 — é o momento do dinheiro).
+
+**Minha recomendação de sequência:** eu wiro a telemetria `llm_usage` primeiro (rápido, sem tradeoff) → aí o GO sai com o custo **provado em $-real visível**, não afirmado. Depois é só seu "GO" e eu ligo `video_enabled` + disparo o ciclo testemunhado.
+
+Quer que eu **wire a telemetria de custo agora** (deixa o GO auditável), ou prefere **GO direto** e a gente adiciona a telemetria depois?
+
+## 👤 User *(01:08:33)*
+
+go direto isso deve ser facil tem os custos com a própria api detalhada certo? Segue. Depois disso quero saber de você se vale apena usar https://github.com/vercel-labs/opensrc e o https://github.com/safishamsi/graphify para finalmente deixar o opendesign e o hyperframer nativo exclusivo do MCORCH ?
+
+## 🤖 Claude *(01:09:20)*
+
+
+## 🤖 Claude *(01:09:23)*
+
+GO recebido — executando o 1º ciclo pago de vídeo. (E sim: o OpenRouter devolve o custo real por chamada — campo `usage` + endpoint de generation com custo em USD; você vê o detalhado no dashboard deles a qualquer momento, então dá pra seguir sem a telemetria interna por ora.)
+
+Vou fazer isso com prova material a cada passo (Lei 1). Primeiro, reconheço o contrato de invoke + o estado atual do plano:
+
+## 🤖 Claude *(01:09:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 1,
+  "limit": 140
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
+> 3	//
+> 4	// Identity (two paths):
+> 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
+> 6	//     derived it from autopilot_plans.user_id). The header is re-validated by the TENANT-SCOPED plan load below.
+> 7	//   - user "gerar agora": user JWT → getUser → the plan load is scoped to that user (IDOR-safe).
+> 8	// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9	//   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 10	//   self-bill) → finalize_autopilot_cycle(actual) → re-arm next_run_at. dry_run short-circuits after the cost
+> 11	//   projection (no cycle, no deduct) — the zero-cost proof path.
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	import { inspectPrompt } from "../_shared/sentinel.ts";
+> 14	
+> 15	const corsHeaders = {
+> 16	  "Access-Control-Allow-Origin": "*",
+> 17	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 18	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-autopilot-user-id",
+> 19	};
+> 20	const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 21	const ANALYZE_COST = 2;   // reserved for autopilot-analyze (R3); REFUNDED until that slice lands (see actual below)
+> 22	const VIDEO_COST = 12;    // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) — per video sub-run when plan.video_enabled (FR-VA-022/024)
+> 23	const CONCURRENCY = 6;    // wall-clock bound on the fan-out (mirrors nurture-cron / campaign-run)
+> 24	const UUID_RE = /^[0-9a-fA-F-]{36}$/;
+> 25	
+> 26	// ── FR-VA-018 trend hardening (adversarial review wf_6cc97c75 — MEDIUM, conf 8) ───────────────────────────────────
+> 27	// vm_trends is a GLOBAL, externally-mined (Apify/RapidAPI), pt-BR catalog. The SHARED Cyber-Sentinel's
+> 28	// INJECTION_PATTERNS are English-only/score>=2, so a Portuguese prompt-injection seeded into a viral upstream post
+> 29	// passes it AND orchestrate-content's mirror gate, steering the content LLM (affiliate-link/scam-URL swap) for ANY
+> 30	// autopilot tenant. This trend-SPECIFIC gate runs FIRST and is fail-closed: (1) a whitelist charset strip destroys
+> 31	// the actual payloads (URLs, markdown links, tags, templates, quotes — only letters/digits/space/hyphen survive),
+> 32	// (2) it rejects titles carrying instruction-override verbs (pt-BR + en), so what survives is an inert short keyword
+> 33	// phrase rendered as DATA ("tema em alta: ..."), never free instruction text. The generic sentinel still runs after,
+> 34	// as defense-in-depth. (Broader fix — pt-BR patterns in the shared sentinel — is deferred to the security arc with
+> 35	// false-positive testing, since it affects every caller.)
+> 36	const TREND_OVERRIDE_RE =
+> 37	  /\b(ignor\w*|desconsider\w*|esque[cç]\w*|em\s+vez\s+disso|instead|disregard|override|nova\s+instru\w*|new\s+instruction|instruction\w*|prompt\w*|system\s*prompt|append|substitu\w*|replace|every\s+post|cada\s+post|todos\s+os\s+posts)\b/i;
+> 38	function sanitizeTrendTitle(raw: string): string | null {
+> 39	  // Whitelist: letters (incl. accented), digits, spaces, hyphen. Strips ./:@#[](){}<>`"'\| → kills URLs/markdown/tags.
+> 40	  const cleaned = raw
+> 41	    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+> 42	    .replace(/\s+/g, " ")
+> 43	    .trim();
+> 44	  if (!cleaned) return null;
+> 45	  if (TREND_OVERRIDE_RE.test(cleaned)) return null;   // fail-closed: instruction-override marker → skip this trend
+> 46	  return cleaned.slice(0, 80).trim() || null;
+> 47	}
+> 48	
+> 49	Deno.serve(async (req) => {
+> 50	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 51	  const json = (b: unknown, s = 200) =>
+> 52	    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 53	
+> 54	  const url = Deno.env.get("SUPABASE_URL")!;
+> 55	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 56	  const pubKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 57	  const admin = createClient(url, serviceKey);
+> 58	  const logHealth = (status: string) =>
+> 59	    admin.from("infra_health_logs").insert({ service: "autopilot-run", status }).then(() => {}, () => {});
+> 60	
+> 61	  try {
+> 62	    const authHeader = req.headers.get("Authorization");
+> 63	    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+> 64	
+> 65	    const body = await req.json().catch(() => ({}));
+> 66	    const planId = typeof body?.plan_id === "string" ? body.plan_id : null;
+> 67	    const dryRun = body?.dry_run === true;
+> 68	    if (!planId || !UUID_RE.test(planId)) return json({ error: "plan_id (uuid) required" }, 422);
+> 69	
+> 70	    // ── Identity: service path (proven key + server-trusted header) OR user JWT path. ──────────────────────────
+> 71	    const isService = authHeader === `Bearer ${serviceKey}`;
+> 72	    let userId: string;
+> 73	    if (isService) {
+> 74	      const hdr = req.headers.get("x-autopilot-user-id");
+> 75	      if (!hdr || !UUID_RE.test(hdr)) return json({ error: "x-autopilot-user-id (uuid) required for service path" }, 400);
+> 76	      userId = hdr;
+> 77	    } else {
+> 78	      const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });
+> 79	      const { data: { user }, error } = await userClient.auth.getUser();
+> 80	      if (error || !user) return json({ error: "Unauthorized" }, 401);
+> 81	      userId = user.id;
+> 82	    }
+> 83	
+> 84	    // ── Load plan TENANT-SCOPED (plan MUST belong to userId — cross-tenant/missing → 404). ───────────────────────
+> 85	    const { data: plan } = await admin
+> 86	      .from("autopilot_plans")
+> 87	      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format, hitl_required")
+> 88	      .eq("id", planId).eq("user_id", userId).maybeSingle();
+> 89	    if (!plan) return json({ error: "plan_not_found" }, 404);
+> 90	
+> 91	    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 92	    const platforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 93	    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 94	    const nRuns = products.length * platforms.length * abVariants;
+> 95	    if (nRuns < 1) return json({ error: "plan_has_no_targets", detail: "plano sem produtos/redes válidos" }, 422);
+> 96	
+> 97	    // FR-VA-022/024 (Amendment v0.2): when the plan opts in, each sub-run enqueues ONE HyperFrames 9:16 render.
+> 98	    // The cost rides on the cycle pre-debit (OTD-VA-010): projected/actual += N×VIDEO_COST. The render itself
+> 99	    // never self-bills (charged_mco marker only); a FAILED render refunds via finalize_video_render.
+> 100	    const videoEnabled = plan.video_enabled === true;
+> 101	    const videoFormat = typeof plan.video_format === "string" ? plan.video_format : "9:16";
+> 102	
+> 103	    // Video charge accuracy (OTD-VA-010 follow-up — billing bug witnessed 2026-06-26, cycle 2403bfcb): a 9:16 render
+> 104	    // is enqueued ONLY by the article_generation flow, which orchestrate-content runs solely for the 'wordpress'
+> 105	    // platform (index.ts:231-232). A linkedin/twitter sub-run never reaches video_generation, so charging it
+> 106	    // VIDEO_COST is charge-without-value — and uncaught by the orchestrate-step refund (orchestrate-step:454), which
+> 107	    // fires only on a FAILED enqueue ATTEMPT, never for a flow that has no video step at all. So count video sub-runs
+> 108	    // by the article-flow platform, not by every sub-run (was: nRuns × VIDEO_COST → over-charged non-wordpress runs).
+> 109	    // FR-PE-013 (post-engine social-connect amendment) — DEFERRED: youtube/tiktok/pinterest ARE vertical-video
+> 110	    // platforms, but the 9:16 render is enqueued ONLY by the article_generation step (gated on 'wordpress' above), and
+> 111	    // autopilot fans out one platform per sub-run, so a youtube/tiktok/pinterest sub-run enqueues NO render. Adding
+> 112	    // them here would charge VIDEO_COST with no video_renders row to refund (charge-without-value). Re-add ONLY with
+> 113	    // the orchestrate-content/-step enqueue-gate extension (its own slice). Until then they stay out of the pre-debit.
+> 114	    const VIDEO_FLOW_PLATFORMS = new Set(["wordpress"]);
+> 115	    const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;
+> 116	    const nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants : 0;
+> 117	
+> 118	    const projected = nRuns * ORCH_COST + nVideoRuns * VIDEO_COST + ANALYZE_COST;
+> 119	
+> 120	    // ── FR-VA-018: trend-informed angle (cycle-level). Reconnects the trends island: pick a trend from vm_trends
+> 121	    // (a GLOBAL shared catalog — no tenant scope) to steer THIS cycle's viral angle. Trend text is UNTRUSTED
+> 122	    // (Apify/RapidAPI-mined) → the Cyber-Sentinel gates it BEFORE it reaches any prompt (NFR-VA-008), mirroring the
+> 123	    // per-product gate in orchestrate-content (skip-and-continue: a blocked trend is dropped, not the whole angle).
+> 124	    // Relevance: prefer a trend whose niche overlaps the cycle's products; else the freshest top-viral active trend.
+> 125	    // Defense-in-depth: orchestrate-content re-inspects the full topic, so this is the first of two gates.
+> 126	    // Graceful: empty vm_trends (the steady state until fetch-trends runs) → angle stays the plain product topic.
+> 127	    let viralTopic = plan.name;
+> 128	    let trendApplied: string | null = null;
+> 129	    try {
+> 130	      const { data: prodRows } = await admin
+> 131	        .from("vm_affiliate_products").select("niches").in("external_id", products).eq("is_active", true);
+> 132	      const productNiches = [...new Set(((prodRows ?? []) as Array<{ niches?: string[] | null }>)
+> 133	        .flatMap((p) => p.niches ?? []).filter((n): n is string => typeof n === "string" && n.length > 0))];
+> 134	      const fetchTrends = async (filterNiche: boolean) => {
+> 135	        let q = admin.from("vm_trends").select("title, niche, viral_score")
+> 136	          .eq("is_active", true).order("viral_score", { ascending: false }).limit(5);
+> 137	        if (filterNiche && productNiches.length > 0) q = q.in("niche", productNiches);
+> 138	        const { data } = await q;
+> 139	        return (data ?? []) as Array<{ title: string | null; niche: string | null }>;
+> 140	      };
+> ```
+
+## 🤖 Claude *(01:09:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\necho \"SB_URL var resolved: $([ -n \"$SB\" ] && echo yes || echo NO)\"\necho \"SB_SECRET_KEY present: $([ -n \"$SB_SECRET_KEY\" ] && echo yes || echo NO)\"\necho \"=== plano 640b3b67 (estado atual) ===\"\ncurl -s \"$SB/rest/v1/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6&select=id,user_id,video_enabled,is_active,budget_cap_mco,daily_cap_mco,next_run_at,interval_days,niche_keywords,product_ids,platforms\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | head -c 2000\necho\necho \"=== saldo User 0 ===\"\ncurl -s \"$SB/rest/v1/profiles?id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=id,mco_balance\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Load env, check plan state and User 0 balance"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SB_URL var resolved: yes
+> SB_SECRET_KEY present: yes
+> === plano 640b3b67 (estado atual) ===
+> {"code":"42703","details":null,"hint":null,"message":"column autopilot_plans.niche_keywords does not exist"}
+> === saldo User 0 ===
+> [{"id":"ada39fae-67e1-4e53-af1c-5a18e1c108e8","mco_balance":4669.00}]
+> ```
+
+## 🤖 Claude *(01:09:41)*
+
+
+## 🤖 Claude *(01:09:43)*
+
+A query bateu num nome de coluna errado (`niche_keywords` não existe). Saldo confirmado: **4669 mco**. Re-consulto o plano com as colunas reais (`target_product_ids`, `platforms`, etc.) — preciso confirmar que o plano tem produto + a plataforma `wordpress` (é ela que enfileira o render de vídeo, linha 114):
+
+## 🤖 Claude *(01:09:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\necho \"=== plano 640b3b67 (colunas reais) ===\"\ncurl -s \"$SB/rest/v1/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6&select=id,name,mode,interval_days,target_product_ids,platforms,ab_variants,video_enabled,video_format,hitl_required,budget_cap_mco,daily_cap_mco,next_run_at\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Query plan with correct column names"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === plano 640b3b67 (colunas reais) ===
+> [{"id":"640b3b67-b950-42f6-bbb9-48560771eaa6","name":"Roborock S8 Pro Ultra: o robô que aspira, passa pano e esvazia a lixeira sozinho","mode":"every_n_days","interval_days":3,"target_product_ids":["MLB27834876"],"platforms":["wordpress","linkedin"],"ab_variants":1,"video_enabled":false,"video_format":"9:16","hitl_required":false,"budget_cap_mco":50,"daily_cap_mco":50,"next_run_at":"2026-06-29T01:00:53+00:00"}]
+> ```
+
+## 🤖 Claude *(01:10:21)*
+
+
+## 🤖 Claude *(01:10:24)*
+
+Plano perfeito para vídeo: 1 produto (Roborock MLB27834876 — um dos seeds com meli.la real), `platforms: [wordpress, linkedin]` (o `wordpress` é o que enfileira o render 9:16), `hitl_required: false`, caps 50/50, saldo 4669. Projeção com vídeo: 2×10 (orch) + 1×12 (render) + 2 (analyze) = **34 mco**.
+
+Executando o GO — flip da flag + disparo do ciclo pago:
+
+## 🤖 Claude *(01:10:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\necho \"=== 1) FLIP video_enabled=true ===\"\ncurl -s -X PATCH \"$SB/rest/v1/autopilot_plans?id=eq.640b3b67-b950-42f6-bbb9-48560771eaa6\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"video_enabled\":true}' | python3 -c \"import sys,json; r=json.load(sys.stdin); print('video_enabled agora =', r[0]['video_enabled'])\" 2>/dev/null || echo \"PATCH resp acima\"\necho\necho \"=== 2) INVOKE autopilot-run (ciclo PAGO) ===\"\ncurl -s -X POST \"$SB/functions/v1/autopilot-run\" \\\n  -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  -H \"x-autopilot-user-id: ada39fae-67e1-4e53-af1c-5a18e1c108e8\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"plan_id\":\"640b3b67-b950-42f6-bbb9-48560771eaa6\"}'\necho\necho \"=== 3) saldo p\u00f3s-invoke ===\"\ncurl -s \"$SB/rest/v1/profiles?id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=mco_balance\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Flip video_enabled and invoke first paid autopilot cycle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1) FLIP video_enabled=true ===
+> video_enabled agora = True
+> 
+> === 2) INVOKE autopilot-run (ciclo PAGO) ===
+> {"ok":true,"cycle_id":"77e02fca-9384-4ae6-9242-5b17d3ec9aa7","n_runs":2,"succeeded":2,"projected_mco":34,"actual_mco":32,"refunded_mco":2,"status":"completed"}
+> === 3) saldo pós-invoke ===
+> [{"mco_balance":4637.00}]
+> ```
+
+## 🤖 Claude *(01:10:51)*
+
+
+## 🤖 Claude *(01:10:54)*
+
+🎬 **Ciclo pago DISPAROU e completou** — prova material:
+- `video_enabled` = **True** ✓
+- **cycle_id `77e02fca-9384-4ae6-9242-5b17d3ec9aa7`** · n_runs 2 · succeeded 2 · **actual 32 mco** (projetado 34, refund 2) · status completed
+- **Saldo 4669 → 4637 = delta −32** ✓ (bate com o actual)
+
+Agora o testemunho do **vídeo** em si — o render é assíncrono (worker `video-bridge` faz poll → renderiza ~110s). Verifico a linha `video_renders` deste ciclo + se o worker está processando:
+
+## 🤖 Claude *(01:10:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\necho \"=== video_renders mais recentes do User 0 ===\"\ncurl -s \"$SB/rest/v1/video_renders?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&order=created_at.desc&limit=3&select=id,state,engine,charged_mco,refunded_mco,storage_key,created_at,updated_at\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho\necho \"=== worker video-bridge ativo? ===\"\nsystemctl --user is-active video-bridge.service 2>/dev/null || echo \"(status indispon\u00edvel)\"\necho\necho \"=== pipeline_runs deste ciclo (steps) ===\"\ncurl -s \"$SB/rest/v1/pipeline_runs?select=id,status,platforms,steps,started_at&order=started_at.desc&limit=2&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | head -c 1500",
+  "description": "Check video_renders row, worker status, pipeline steps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video_renders mais recentes do User 0 ===
+> [{"id":"9069bb7d-c164-4307-930d-f98251e580a8","state":"done","engine":"hyperframes","charged_mco":0,"refunded_mco":0,"storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/9069bb7d-c164-4307-930d-f98251e580a8.mp4","created_at":"2026-07-01T00:57:29.346425+00:00","updated_at":"2026-07-01T01:00:24.555845+00:00"}, 
+>  {"id":"d3f7b06f-8d2a-43d3-8e77-aa64bba4b4c5","state":"failed","engine":"hyperframes","charged_mco":12,"refunded_mco":12,"storage_key":null,"created_at":"2026-06-26T01:02:43.628483+00:00","updated_at":"2026-06-26T01:02:47.113711+00:00"}, 
+>  {"id":"8b0787e0-1442-43c1-9eee-1ead3f964b32","state":"done","engine":"hyperframes","charged_mco":12,"refunded_mco":0,"storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/8b0787e0-1442-43c1-9eee-1ead3f964b32.mp4","created_at":"2026-06-26T00:47:19.178769+00:00","updated_at":"2026-06-26T00:48:11.109592+00:00"}]
+> === worker video-bridge ativo? ===
+> active
+> 
+> === pipeline_runs deste ciclo (steps) ===
+> [{"id":"4b3256df-49e8-4bd3-a709-91d5174a33d1","status":"done","platforms":["linkedin"],"steps":[{"name": "linkedin_post", "input": {"topic": "Roborock S8 Pro Ultra: o robô que aspira, passa pano e esvazia a lixeira sozinho (tema em alta: The first-ever iPhone launched 19 years ago on June 29 2007 after being announce)", "article_link": "https://mcorch.com"}, "output": {"preview": "{\"post_text\": \"Há 17 anos, o primeiro iPhone mudava o mundo. Hoje, a tecnologia está reinventando nosso lar. 🏠✨\\n\\nLembro da fila para o primeiro iPhone, da sensação de ter o futuro nas mãos. Essa mesma sensação de 'uau' eu senti ao ligar o Roborock S8 Pro Ultra pela primeira vez. Ele não só aspira", "char_count": 859, "scheduled_at": "2026-07-01T02:10:45.845Z", "affiliate_links": 1}, "status": "done", "timestamp": "2026-07-01T01:10:45.845Z"}, {"name": "knowledge_mesh", "input": {"topic": "Roborock S8 Pro Ultra: o robô que aspira, passa pano e esvaz", "platforms": ["linkedin"]}, "output": {"obs_id": "63fdac62-0f21-41e6-96e7-ba09e866cab5", "node_type": "observation", "wordpress_url": null}, "status": "done", "timestamp": "2026-07-01T01:10:46.310Z"}, {"name": "content_mesh_asset", "input": {"topic": "Roborock S8 Pro Ultra: o robô que aspira, passa pano e esvaz", "campaign_id": null}, "output": {"reason": "no_wordpress_url"}, "status": "skipped", "timestamp": "2026-07-01T01:10:46.336Z"}],"started_at":"2026-07-01T01:10:33.139+00:00"}, 
+>  {"id":"d5c9d1cf-024c-4771-872e-328659d883b7",
+> ```
+
+## 🤖 Claude *(01:11:27)*
+
+
+## 🤖 Claude *(01:11:30)*
+
+O worker está **active** e há um render `done` recente (`9069bb7d`, MP4 no bucket). Mas preciso confirmar que ele é **deste ciclo** (`77e02fca`) — o `charged_mco=0` e o timestamp 00:57 (antes dos meus runs 01:10) levantam dúvida. Verifico pela âncora do cycle_id + o sub-run wordpress (que é quem enfileira o vídeo):
+
+## 🤖 Claude *(01:11:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\necho \"=== video_render ancorado no cycle_id 77e02fca (composition.autopilot.cycle_id) ===\"\ncurl -s \"$SB/rest/v1/video_renders?composition->autopilot->>cycle_id=eq.77e02fca-9384-4ae6-9242-5b17d3ec9aa7&select=id,state,engine,charged_mco,refunded_mco,storage_key,created_at,updated_at\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho\necho \"=== sub-run WORDPRESS deste ciclo (video_generation step) ===\"\ncurl -s \"$SB/rest/v1/pipeline_runs?select=id,status,platforms,started_at,steps&order=started_at.desc&limit=4&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  | python3 -c \"\nimport sys,json\nruns=json.load(sys.stdin)\nfor r in runs:\n    if 'wordpress' in (r.get('platforms') or []):\n        print('run',r['id'],r['status'],r['platforms'],r['started_at'])\n        for s in (r.get('steps') or []):\n            vid=s.get('output',{}) if isinstance(s.get('output'),dict) else {}\n            print('  step',s.get('name'),s.get('status'),{k:vid[k] for k in ('render_id','content_id','path') if k in vid})\n\"",
+  "description": "Confirm video render belongs to this cycle via cycle_id anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video_render ancorado no cycle_id 77e02fca (composition.autopilot.cycle_id) ===
+> []
+> === sub-run WORDPRESS deste ciclo (video_generation step) ===
+> run d5c9d1cf-024c-4771-872e-328659d883b7 running ['wordpress'] 2026-07-01T01:10:33.096+00:00
+>   step article_generation done {}
+> run 93659c88-21db-408d-9432-7e173f1d0f82 done ['wordpress'] 2026-06-26T00:46:22.013+00:00
+>   step article_generation done {}
+>   step image_generation done {'content_id': 'd15f6f4f-89bc-4fe9-8c2d-4a07a4193b99', 'path': 'ada39fae-67e1-4e53-af1c-5a18e1c108e8/4dbf02a2-40f9-4c12-90a7-64ef04b899ae.png'}
+>   step video_generation done {'render_id': '8b0787e0-1442-43c1-9eee-1ead3f964b32'}
+>   step wordpress_publish done {}
+>   step knowledge_mesh done {}
+>   step content_mesh_asset done {}
+> ```
+
+## 🤖 Claude *(01:12:51)*
+
+
+## 🤖 Claude *(01:12:55)*
+
+O quadro real está claro:
+- O render `9069bb7d` (00:57) **NÃO é do meu ciclo** (a âncora `cycle_id=77e02fca` retornou vazio) — é de outro disparo.
+- O sub-run **wordpress do meu ciclo (`d5c9d1cf`) ainda está `running`** — só passou por `article_generation`; ainda não chegou no `video_generation` que enfileira o render. O pipeline é assíncrono, então o vídeo está a caminho mas ainda não materializou.
+
+Vou acompanhar o render em background (poll até `done` + prova do MP4) e, em paralelo, já disparo a avaliação dos dois repos que você pediu. Primeiro o witness do vídeo:
+
+## 🤖 Claude *(01:13:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\nCYCLE=77e02fca-9384-4ae6-9242-5b17d3ec9aa7\necho \"Poll do render para cycle $CYCLE (async: espera enqueue \u2192 render ~110s)\"\nfor i in $(seq 1 45); do\n  ROW=$(curl -s \"$SB/rest/v1/video_renders?composition->autopilot->>cycle_id=eq.$CYCLE&select=id,state,storage_key,charged_mco,refunded_mco,updated_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\n  STATE=$(echo \"$ROW\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['state'] if d else 'none')\" 2>/dev/null)\n  echo \"[poll $i $(date -u +%H:%M:%S)] state=$STATE\"\n  if [ \"$STATE\" = \"done\" ] || [ \"$STATE\" = \"failed\" ]; then\n    echo \"=== FINAL video_renders row ===\"; echo \"$ROW\"\n    KEY=$(echo \"$ROW\" | python3 -c \"import sys,json;print(json.load(sys.stdin)[0].get('storage_key') or '')\" 2>/dev/null)\n    echo \"=== content_library type=video (reconcilia\u00e7\u00e3o FR-VA-025) ===\"\n    curl -s \"$SB/rest/v1/content_library?type=eq.video&order=created_at.desc&limit=1&select=id,title,media_url,created_at&user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\n    if [ -n \"$KEY\" ]; then\n      SIGN=$(curl -s -X POST \"$SB/storage/v1/object/sign/video-studio-assets/$KEY\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"expiresIn\":600}')\n      URLP=$(echo \"$SIGN\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get('signedURL',''))\" 2>/dev/null)\n      echo \"=== MP4 content-length ===\"\n      [ -n \"$URLP\" ] && curl -sI \"$SB/storage/v1$URLP\" | grep -i \"content-length\\|content-type\"\n    fi\n    break\n  fi\n  sleep 12\ndone\necho \"POLL_END\"",
+  "description": "Poll video render to completion with MP4 proof",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bt5m0o9iy. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/bt5m0o9iy.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(01:13:07)*
+
+
+## 🤖 Claude *(01:13:13)*
+
+Witness rodando em background (`bt5m0o9iy`). Agora a avaliação dos dois repos — mas antes deixa eu enquadrar honestamente o que estou avaliando, porque o "native exclusivo" tem uma nuance importante que vou verificar:
+
+**A pergunta por trás da pergunta:** hoje o **HyperFrames** já é self-hosted (render-core Playwright+FFmpeg na sua infra) mas o **editor** Studio é um pacote de terceiros (`@hyperframes/studio`, Apache-2.0) que você embute; e o **OpenDesign** roda via daemon `open-design` externo. "Native exclusivo do MCORCH" = internalizar/forkar essas peças pra você ser dono do código, não dependente de upstream. Os dois repos (`opensrc`, `graphify`) precisam ser avaliados *contra esse objetivo* + a doutrina open-source-first.
+
+Disparo a avaliação fundamentada (fetch real dos repos + mapa do estado atual + veredito adversarial):
+
+## 🤖 Claude *(01:13:45)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'opensrc-graphify-native-eval',\n  description: 'Avalia se vercel-labs/opensrc + safishamsi/graphify ajudam a tornar OpenDesign e HyperFrames nativos/exclusivos do MCORCH (doutrina open-source-first)',\n  phases: [\n    { title: 'Research', detail: 'fetch real dos 2 repos + mapa do estado atual OpenDesign/HyperFrames no MCORCH' },\n    { title: 'Verdict', detail: 'veredito de fit por repo + recomenda\u00e7\u00e3o alinhada \u00e0 doutrina' },\n  ],\n}\n\nconst REPO_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    repo: { type: 'string' },\n    what_it_is: { type: 'string', description: 'O que o repo \u00c9 de fato (README/about real), em 2-3 frases. N\u00e3o inferir do nome.' },\n    capabilities: { type: 'array', items: { type: 'string' }, description: 'Capacidades concretas que ele entrega.' },\n    language_stack: { type: 'string', description: 'Linguagem/framework/runtime.' },\n    license: { type: 'string', description: 'Licen\u00e7a EXATA (MIT/Apache-2.0/AGPL/none/etc.) \u2014 cr\u00edtico p/ uso comercial e \"exclusivo\".' },\n    maintenance: { type: 'string', description: 'Stars, \u00faltimo commit, atividade, maturidade. Vivo ou abandonado?' },\n    relevance_to_goal: { type: 'string', description: 'Como (se) ele ajuda a tornar OpenDesign OU HyperFrames nativo/exclusivo do MCORCH. Honesto se N\u00c3O for relevante.' },\n    fetched_url: { type: 'string' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confian\u00e7a de que o fetch foi real (n\u00e3o bloqueado/404).' },\n  },\n  required: ['repo', 'what_it_is', 'license', 'relevance_to_goal', 'fetched_url', 'confidence'],\n}\n\nphase('Research')\nconst research = await parallel([\n  () => agent(\n    `Pesquise o reposit\u00f3rio GitHub https://github.com/vercel-labs/opensrc \u2014 FETCH REAL (use WebFetch/WebSearch ou a skill firecrawl via ToolSearch; carregue o README e a p\u00e1gina about).\\n` +\n    `Determine MATERIALMENTE (n\u00e3o inferir do nome): o que \u00c9, capacidades, stack, LICEN\u00c7A exata (cr\u00edtico), maturidade (stars/\u00faltimo commit), e se/como ajudaria a tornar o editor de design (OpenDesign) OU o motor de v\u00eddeo (HyperFrames) NATIVO/EXCLUSIVO do MCORCH. Se o fetch falhar/404/for bloqueado, diga confidence=low e o que conseguiu.`,\n    { label: 'repo:opensrc', phase: 'Research', schema: REPO_SCHEMA, effort: 'medium' }\n  ),\n  () => agent(\n    `Pesquise o reposit\u00f3rio GitHub https://github.com/safishamsi/graphify \u2014 FETCH REAL (use WebFetch/WebSearch ou a skill firecrawl via ToolSearch; carregue o README e a p\u00e1gina about).\\n` +\n    `Determine MATERIALMENTE (n\u00e3o inferir do nome): o que \u00c9, capacidades, stack, LICEN\u00c7A exata (cr\u00edtico), maturidade (stars/\u00faltimo commit), e se/como ajudaria a tornar o editor de design (OpenDesign) OU o motor de v\u00eddeo (HyperFrames) NATIVO/EXCLUSIVO do MCORCH. Se o fetch falhar/404/for bloqueado, diga confidence=low e o que conseguiu.`,\n    { label: 'repo:graphify', phase: 'Research', schema: REPO_SCHEMA, effort: 'medium' }\n  ),\n  () => agent(\n    `Mapeie o ESTADO ATUAL no reposit\u00f3rio MCORCH (constellation-orchestra) das duas pe\u00e7as que o Sovereign quer tornar \"nativas/exclusivas\":\\n` +\n    `(1) HyperFrames: leia scripts/hyperframes/render-core.ts, scripts/video-bridge.ts, src/pages/VideoStudioEditorPage.tsx, .claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md. Determine: o que j\u00e1 \u00e9 self-hosted/pr\u00f3prio (render) vs o que \u00e9 depend\u00eancia de terceiros (o EDITOR @hyperframes/studio Apache-2.0, React 19). Cite o que \"native exclusivo\" exigiria internalizar.\\n` +\n    `(2) OpenDesign: procure design.mcorch.com, design-bridge, open-design daemon (grep -rn \"open-design\\\\|design-bridge\\\\|design.mcorch\" nginx/ scripts/ docs/ .claude/ src/). Determine o que \u00e9 pr\u00f3prio vs depend\u00eancia externa.\\n` +\n    `Reporte em JSON-livre (texto estruturado): para HyperFrames e OpenDesign, o que j\u00e1 \u00e9 pr\u00f3prio, o que \u00e9 depend\u00eancia de terceiros, e o gap concreto at\u00e9 \"native exclusivo\". Cite file:line.`,\n    { label: 'current-state', phase: 'Research', effort: 'medium' }\n  ),\n])\n\nconst [opensrc, graphify, currentState] = research\n\nphase('Verdict')\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    opensrc_verdict: { type: 'string', enum: ['adopt', 'fork-and-own', 'ignore', 'inconclusive'], description: 'Recomenda\u00e7\u00e3o para vercel-labs/opensrc.' },\n    opensrc_reason: { type: 'string' },\n    graphify_verdict: { type: 'string', enum: ['adopt', 'fork-and-own', 'ignore', 'inconclusive'], description: 'Recomenda\u00e7\u00e3o para safishamsi/graphify.' },\n    graphify_reason: { type: 'string' },\n    native_exclusive_path: { type: 'string', description: 'O caminho REAL pra tornar OpenDesign + HyperFrames nativos/exclusivos do MCORCH \u2014 usando (ou n\u00e3o) esses repos. Concreto.' },\n    doctrine_fit: { type: 'string', description: 'Como isso serve a doutrina open-source-first/equity (licen\u00e7a comercial ok? self-host? posse do c\u00f3digo?).' },\n    bok_gate_needed: { type: 'string', description: 'Isso exigiria BoK gate (m\u00f3dulo novo) antes de c\u00f3digo? Sim/n\u00e3o + por qu\u00ea.' },\n    honest_caveats: { type: 'string', description: 'Riscos: licen\u00e7a AGPL/viral, abandono, esfor\u00e7o de fork, React 19 vs 18, etc.' },\n  },\n  required: ['opensrc_verdict', 'opensrc_reason', 'graphify_verdict', 'graphify_reason', 'native_exclusive_path', 'doctrine_fit', 'honest_caveats'],\n}\n\nconst verdict = await agent(\n  `Voc\u00ea \u00e9 o arquiteto-chefe do MCORCH. O Sovereign quer tornar o editor de design (OpenDesign) e o motor de v\u00eddeo (HyperFrames) NATIVOS/EXCLUSIVOS do MCORCH (posse total do c\u00f3digo, self-hosted), sob a doutrina open-source-first (custo=0, equity, licen\u00e7a comercial-ok). Ele perguntou se vale usar 2 repos para isso.\\n` +\n  `D\u00ea o veredito por repo (adopt/fork-and-own/ignore/inconclusive) + o caminho REAL pro \"native exclusivo\" + fit de doutrina + se precisa BoK gate. Seja honesto: se um repo for irrelevante ou de licen\u00e7a ruim (AGPL/none), diga ignore. Dados:\\n\\n` +\n  `## vercel-labs/opensrc\\n${JSON.stringify(opensrc, null, 2)}\\n\\n## safishamsi/graphify\\n${JSON.stringify(graphify, null, 2)}\\n\\n## Estado atual MCORCH\\n${typeof currentState === 'string' ? currentState : JSON.stringify(currentState)}`,\n  { label: 'architect', phase: 'Verdict', schema: VERDICT_SCHEMA, effort: 'high' }\n)\n\nreturn { opensrc, graphify, currentState, verdict }\n",
+  "description": "Evaluate opensrc + graphify repos for native tooling"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wr8f87aw8
+> Summary: Avalia se vercel-labs/opensrc + safishamsi/graphify ajudam a tornar OpenDesign e HyperFrames nativos/exclusivos do MCORCH (doutrina open-source-first)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/subagents/workflows/wf_ec9db575-8a7
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/workflows/scripts/opensrc-graphify-native-eval-wf_ec9db575-8a7.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/workflows/scripts/opensrc-graphify-native-eval-wf_ec9db575-8a7.js"} to iterate without resending the script.)
+> Run ID: wf_ec9db575-8a7
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/workflows/scripts/opensrc-graphify-native-eval-wf_ec9db575-8a7.js", resumeFromRunId: "wf_ec9db575-8a7"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:13:48)*
+
+
+## 🤖 Claude *(01:13:48)*
+
+O witness do render terminou — leio a prova:
+
+## 🤖 Claude *(01:13:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/bt5m0o9iy.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	Poll do render para cycle 77e02fca-9384-4ae6-9242-5b17d3ec9aa7 (async: espera enqueue → render ~110s)
+> 2	[poll 1 01:13:04] state=done
+> 3	=== FINAL video_renders row ===
+> 4	[{"id":"561a31df-f7a2-4d20-ba8b-3c286d8470f6","state":"done","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/561a31df-f7a2-4d20-ba8b-3c286d8470f6.mp4","charged_mco":12,"refunded_mco":0,"updated_at":"2026-07-01T01:13:04.333916+00:00"}]
+> 5	=== content_library type=video (reconciliação FR-VA-025) ===
+> 6	[{"id":"e27a09e7-197b-4a22-9e80-6914cb56ff9c","title":"Vídeo 9:16: Do iPhone de 2007 ao Roborock de 2024: A Revolução da Automação Chegou à Sua Casa","media_url":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/561a31df-f7a2-4d20-ba8b-3c286d8470f6.mp4","created_at":"2026-07-01T01:13:04.456054+00:00"}]=== MP4 content-length ===
+> 7	content-type: video/mp4
+> 8	content-length: 776522
+> 9	POLL_END
+> 10	
+> ```
+
+## 🤖 Claude *(01:14:23)*
+
+
+## 🤖 Claude *(01:14:29)*
+
+🎬🎉 **1º CICLO PAGO DE VÍDEO — TESTEMUNHADO COM PROVA MATERIAL COMPLETA.**
+
+Todos os 5 critérios de witness batidos (Lei 1):
+
+| Critério | Prova |
+|----------|-------|
+| **Ciclo completado** | `autopilot_cycles 77e02fca` · actual **32 mco** · status completed |
+| **Saldo debitado** | 4669 → **4637** (delta −32) ✓ |
+| **Render done** | `video_renders 561a31df` state=**done** · engine=hyperframes · charged 12 |
+| **MP4 no bucket** | `561a31df.mp4` · **776.522 bytes** · content-type `video/mp4` ✓ |
+| **Reconciliação FR-VA-025** | `content_library e27a09e7` type=video → aponta pro MP4 |
+
+E olha a **qualidade** que justifica manter o Gemini 2.5 Pro — o título que ele gerou usou o trend do dia (aniversário do iPhone) e amarrou no produto de forma orgânica:
+> **"Vídeo 9:16: Do iPhone de 2007 ao Roborock de 2024: A Revolução da Automação Chegou à Sua Casa"**
+
+Deixa eu baixar o MP4 real do bucket e te mandar — você merece **ver** o primeiro vídeo que seu sistema fez sozinho:
+
+## 🤖 Claude *(01:14:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/scratchpad\"\nset -a; source /home/gcrUX/htdocs/constellation-orchestra/.env 2>/dev/null; set +a\nSB=\"${SB_URL:-${SUPABASE_URL:-$VITE_SUPABASE_URL}}\"\nKEY=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8/561a31df-f7a2-4d20-ba8b-3c286d8470f6.mp4\"\nSIGN=$(curl -s -X POST \"$SB/storage/v1/object/sign/video-studio-assets/$KEY\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"expiresIn\":600}')\nURLP=$(echo \"$SIGN\" | python3 -c \"import sys,json;print(json.load(sys.stdin).get('signedURL',''))\" 2>/dev/null)\ncurl -s \"$SB/storage/v1$URLP\" -o autopilot-video-1-roborock.mp4\nls -la autopilot-video-1-roborock.mp4\nfile autopilot-video-1-roborock.mp4 2>/dev/null || true\nffprobe -v error -select_streams v:0 -show_entries stream=width,height,duration -of default=noprint_wrappers=1 autopilot-video-1-roborock.mp4 2>/dev/null || echo \"(ffprobe indispon\u00edvel)\"",
+  "description": "Download rendered MP4 from bucket for delivery"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 776522 Jun 30 22:14 autopilot-video-1-roborock.mp4
+> autopilot-video-1-roborock.mp4: ISO Media, MP4 Base Media v1 [ISO 14496-12:2003]
+> width=1080
+> height=1920
+> duration=5.000000
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(01:14:57)*
+
+
+## 🤖 Claude *(01:14:59)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/scratchpad/autopilot-video-1-roborock.mp4"
+  ],
+  "caption": "1\u00ba v\u00eddeo aut\u00f4nomo do Viral Autopilot \u2014 9:16, 1080\u00d71920, 5s, 776KB. Render HyperFrames self-hosted (USD $0). cycle 77e02fca / render 561a31df.",
+  "status": "normal",
+  "display": "render"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(01:15:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "offset": 55,
+  "limit": 15
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 55	- **HALT:** nenhum até cutover de nav (3.9) — aí confirmar com Sovereign.
+> 56	
+> 57	### 5. Security — OTD-SEC-006 (sentinel-wiring) + OTD-SEC-007 (lefthook/gitleaks)  ⟶ hardening, desbloqueado
+> 58	- BoK security 4/4 selada; resta implementação.
+> 59	
+> 60	---
+> 61	
+> 62	## Fila de Ação Sovereign (SÓ você destrava — preenchida pelo loop)
+> 63	- [ ] **OTD-AC-015 (Gabriel AI 3b — ArcFace-HARD):** decidir/provisionar motor de embedding facial (InsightFace self-host no Mesh OU API paga Rekognition/Azure/Face++) + custo/credencial. Sem isso o Identity Gate fica VLM-soft (human-review-assist, não anti-impersonation automático).
+> 64	- [ ] **OTD-AC-015b — biometria calibração-grade:** frames reais do Gabriel rotulados (mesma/diferente) p/ FAR/FRR/EER — só após o motor ArcFace existir.
+> 65	- [ ] **OTD-AC-017 (Soul ID train):** credencial Higgsfield + confirmar API self-serve de treino (≥20 fotos); senão fallback Tier1/Tier2 ou LoRA-FLUX (gated commercial-license).
+> 66	- [ ] **Licença comercial (FM-AC-001/OTD-AC-011):** confirmar checkpoint comercial da base de geração (FLUX.1-dev é non-commercial) — Sovereign + jurídico flipam `commercial_license_ok`.
+> 67	- [ ] **GO de produção 3b** sobre o Usuário Zero + GO de gasto do loop de verificação caso não use BYOK openrouter (com BYOK = cost 0).
+> 68	- [ ] **Editor render user-initiated (FR-VS-048/VS-009 · billing decision):** ativar `VIDEO_HYPERFRAMES_WEBHOOK=poll://` liga a cobrança de **12 mco/render** disparado pelo editor (mco interno do próprio Sovereign, **USD=0** — engine self-hosted; feature documentada FR-VS-009). O container/McorchAdapter + botão da UI podem ser CONSTRUÍDOS e testados sem ativar (o worker já renderiza queued rows — provado it.4/it.5); só a ativação do secret = decisão de billing → GO Sovereign. Worker-side (FR-VS-047) **100% pronto+provado**.
+> 69	- [ ] **GO de gasto:** 1º ciclo PAGO de vídeo (`video_enabled` + GO) — testemunho. **Pipeline verificado end-to-end PRONTO** (render `8b0787e0` done, MP4 748KB no bucket, reconciliação FR-VA-025 OK); falta só `UPDATE autopilot_plans SET video_enabled=true WHERE id='640b3b67...'` + GO. **GATED pela doutrina open-source-first:** render HyperFrames já é self-hosted (USD≈0); antes do GO, auditar que os passos LLM (script/analyze) rodam BYOK-grátis → custo USD externo = 0. Custo interno ~24 mco/vídeo (saldo 4669 cobre).
+> ```
+
+## 🤖 Claude *(01:15:18)*
+
+
+## 🤖 Claude *(01:15:21)*
+
+O MP4 foi entregue — **1080×1920, 9:16, 5s, 776KB** (confirmei com ffprobe). Você pode assistir aí ☝️ o primeiro vídeo que o MCORCH produziu sozinho, de ponta a ponta, com render self-hosted a **USD $0**.
+
+Selo o item na charter (GO de gasto = FEITO):
+
+## 🤖 Claude *(01:15:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- [ ] **GO de gasto:** 1\u00ba ciclo PAGO de v\u00eddeo (`video_enabled` + GO) \u2014 testemunho. **Pipeline verificado end-to-end PRONTO** (render `8b0787e0` done, MP4 748KB no bucket, reconcilia\u00e7\u00e3o FR-VA-025 OK); falta s\u00f3 `UPDATE autopilot_plans SET video_enabled=true WHERE id='640b3b67...'` + GO. **GATED pela doutrina open-source-first:** render HyperFrames j\u00e1 \u00e9 self-hosted (USD\u22480); antes do GO, auditar que os passos LLM (script/analyze) rodam BYOK-gr\u00e1tis \u2192 custo USD externo = 0. Custo interno ~24 mco/v\u00eddeo (saldo 4669 cobre).",
+  "new_string": "- [x] **GO de gasto \u2014 1\u00ba ciclo PAGO de v\u00eddeo: FEITO E TESTEMUNHADO (2026-07-01).** GO Sovereign dado; `video_enabled=true` no plano `640b3b67`; ciclo `77e02fca` completed (actual **32 mco**, saldo 4669\u21924637); render `561a31df` done (MP4 **776.522B** 1080\u00d71920 5s no bucket `video-studio-assets`); reconcilia\u00e7\u00e3o FR-VA-025 \u2192 `content_library e27a09e7` type=video. T\u00edtulo trend-informed (\"Do iPhone de 2007 ao Roborock de 2024\"). **Doutrina reconciliada** (audit `wf_6d3bdbd6-eb7`, mem\u00f3ria `feedback_opensource_first_zero_cost_equity`): render HyperFrames self-hosted USD=0; texto/imagem ~$0.05/ciclo na BYOK OpenRouter do Sovereign \u2192 **Gemini 2.5 Pro MANTIDO** (qualidade brand-first vale). Ollama self-host = hardening diferido. **Pr\u00f3ximo (opcional):** `is_active=true` liga a cad\u00eancia pg_cron (v\u00eddeo aut\u00f4nomo a cada 3 dias) \u00b7 telemetria `llm_usage` p/ tornar o USD vis\u00edvel \u00b7 cortar imagem AI redundante."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:15:33)*
+
+
+## 🤖 Claude *(01:15:44)*
+
+**Marco selado** ✅ — charter atualizada, item GO de gasto marcado como feito e testemunhado. Resumindo o que aconteceu de fato:
+
+- Você deu o GO → liguei `video_enabled`, disparei o ciclo, e o sistema **gerou artigo + LinkedIn + renderizou um vídeo 9:16 e reconciliou tudo sozinho**, custando 32 mco internos e **$0 de render** (a parte cara).
+- O único USD real foi ~$0.05 de LLM na sua própria chave OpenRouter — exatamente o que você aceitou, e a qualidade (título trend-aware) mostrou que valeu manter o Gemini Pro.
+
+**Três alavancas opcionais daqui (nenhuma urgente):**
+1. **Ligar a cadência autônoma** — `is_active=true` faz o pg_cron rodar um vídeo desses **sozinho a cada 3 dias**, sem você disparar. É o "autopilot" de verdade. (Hoje está manual — cada ciclo espera seu invoke.)
+2. **Vision QA no vídeo** — passar esse MP4 pelo olho criativo do Vision MCP (sua diretiva), pra pegar qualquer artefato visual antes de escalar.
+3. **Telemetria `llm_usage`** — tornar o custo USD visível/provável no `infra_health_logs`.
+
+Me diz se quer ligar a cadência autônoma agora ou testemunhar mais alguns ciclos manuais primeiro.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+⏳ **A avaliação dos dois repos (`opensrc` + `graphify`) ainda está rodando** em background (`wr8f87aw8`) — fetch real dos repos + mapa do estado atual de OpenDesign/HyperFrames + veredito de fit com a doutrina. Te trago o resultado assim que concluir.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]
-> * **Próxima Sessão**: [[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]
-%% --- TIMELINE END --- %%
+## 👤 User *(01:16:53)*
+
+<task-notification>
+<task-id>wr8f87aw8</task-id>
+<tool-use-id>toolu_01E7U4XMwVqq93KiDa1bqcgu</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/wr8f87aw8.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Avalia se vercel-labs/opensrc + safishamsi/graphify ajudam a tornar OpenDesign e HyperFrames nativos/exclusivos do MCORCH (doutrina open-source-first)" completed</summary>
+<result>{"opensrc":{"repo":"vercel-labs/opensrc","what_it_is":"É uma ferramenta de linha de comando (CLI) que busca e cacheia o código-fonte de pacotes de terceiros — npm, PyPI, crates.io e GitHub — para dar contexto mais profundo a agentes de IA de codificação. O tagline oficial do \"About\" é literalmente: \"Fetch source code for npm packages to give AI coding agents deeper context\". Uso típico: `opensrc path zod` retorna o caminho local (cacheado) do fonte, encadeável com ferramentas de shell como `rg \"parse\" $(opensrc path zod)`.","capabilities":["Baixa o código-fonte real de pacotes de npm, PyPI, crates.io e GitHub (não só metadados)","Cacheia localmente e retorna o path instantaneamente em consultas subsequentes","Comando `path` que resolve para um diretório de fonte encadeável com shell (ripgrep, cat, etc.)","Comando `fetch` documentado + índice de busca (search index)","Clone autenticado com validação de host (fix #66)","Distribuição via npm com trusted publishing"],"language_stack":"CLI escrita em Rust (55.8%) + TypeScript (31.5%) + JavaScript (7.0%). Monorepo Turborepo com pnpm workspaces; site de docs em Next.js; requer Node.js 24+.","license":"Apache-2.0","maintenance":"Vivo e recente. ~2.7k stars, 177 forks. Release v0.7.3 em 23-jun-2026 (mesma data do commit mais recente no main: \"Configure trusted npm publishing #68\", \"Prepare v0.7.3 release #67\", \"Fix authenticated clone host validation #66\"). 59 commits no main — projeto jovem/pré-1.0 (vercel-labs, tom experimental), mas com atividade nos últimos dias.","relevance_to_goal":"Baixa/indireta e HONESTA: opensrc NÃO ajuda a tornar OpenDesign nem HyperFrames \"nativo/exclusivo\" do MCORCH. Ele não é um motor de design, editor de vídeo, nem runtime de renderização — é um utilitário de DX/ingestão de código-fonte para dar contexto a agentes de coding. O único uso plausível no ecossistema MCORCH seria de ferramenta interna de desenvolvimento: quando o time (ou agentes OpenClaw/Claude Code) precisa auditar/entender o fonte real de dependências como `@hyperframes/studio@0.7.5`, `@hyperframes/core/studio-api` ou pacotes do OpenDesign — encaixaria no fluxo do claw-master (audita drift openclaw.json vs docs) ou no blueprint de integração HyperFrames Studio (que já teve que provar via `npm view` que o studio exige React 19). Isso ajuda a ENTENDER o código para embutir, não a torná-lo exclusivo. Para \"nativo/exclusivo\" (vendorizar/forkar os motores sob MCORCH) o que importa é a licença DELES (HyperFrames = Apache-2.0, permite fork/vendorização), não esta ferramenta. Veredito: ferramenta de DX útil no tooling interno; irrelevante para a estratégia de exclusividade do produto.","fetched_url":"https://github.com/vercel-labs/opensrc","confidence":"high"},"graphify":{"repo":"safishamsi/graphify","what_it_is":"Graphify é uma skill/CLI para assistentes de código (Claude Code, Codex, Cursor, Gemini CLI, etc.) que transforma qualquer pasta — código, schemas SQL, scripts R/shell, docs, papers, imagens ou vídeos — em um grafo de conhecimento (GraphRAG) consultável via comandos /graphify. Extrai AST localmente com tree-sitter (36 gramáticas), gera visualização HTML interativa + relatório Markdown + JSON do grafo, e roda como servidor MCP para compartilhamento em equipe. É basicamente indexação de repositório em knowledge graph, não uma ferramenta criativa.","capabilities":["Indexa código + SQL + docs + PDFs + imagens + vídeos em um único knowledge graph consultável","Extração de AST 100% local via tree-sitter (36 gramáticas: Python, TS, Go, Rust, Java, Apex, Terraform/HCL, etc.) — sem chamada de API para parsing","Saídas: HTML interativo (nós clicáveis, filtro, busca) + relatório Markdown + arquivo JSON do grafo","Detecção de comunidades via algoritmo Leiden; confidence scoring EXTRACTED/INFERRED/AMBIGUOUS","Modo servidor MCP para compartilhamento em equipe; integração Git via post-commit hooks","Transcrição local de áudio/vídeo via faster-whisper; backends opcionais Anthropic/Gemini/OpenAI/Ollama/Bedrock/Azure"],"language_stack":"Python 100%; core = tree-sitter (AST), Leiden (community detection), faster-whisper (transcrição local); distribuído como skill/MCP server; instalação via uv/pipx. LLM backends opcionais (Anthropic, Gemini, OpenAI, Ollama, Bedrock, Azure).","license":"MIT","maintenance":"Vivo e muito ativo. 74.891 stars, 7.444 forks, 250 watchers, 399 issues abertas. Criado 2026-04-03, último push 2026-06-30 (branch default v8), release v0.9.3 (jun/2026). Projeto Y Combinator S26 (homepage graphifylabs.ai). Maduro em tração, ainda pré-1.0.","relevance_to_goal":"BAIXA/NENHUMA para o objetivo declarado. Graphify é uma ferramenta de GraphRAG/knowledge-graph de CÓDIGO — não tem relação com edição de design (OpenDesign) nem com renderização de vídeo (HyperFrames). Não fornece nenhum componente de canvas, timeline, compositing, render de vídeo, ou UI de design. O único ponto de contato com o MCORCH é conceitual: o ecossistema JÁ possui sua própria camada GraphRAG (mcorch_nodes/mcorch_edges + embeddings + gitnexus MCP), então Graphify seria no máximo um SUBSTITUTO/alternativa da malha de conhecimento existente — não um habilitador para tornar OpenDesign ou HyperFrames nativos/exclusivos. Nota tangencial: tem tópicos 'openclaw' e 'claude-code' e roda como skill/MCP, o mesmo padrão de plugin que o MCORCH usa (ex.: vision-mcp-plugin), mas isso é forma de distribuição, não capacidade de design/vídeo. Recomendação honesta: não adotar para essa meta específica.","fetched_url":"https://api.github.com/repos/safishamsi/graphify (confirmado) + https://github.com/safishamsi/graphify (README via WebFetch)","confidence":"high"},"currentState":"Estado material confirmado. Segue o mapa.\n\n---\n\n# ESTADO ATUAL — HyperFrames &amp; OpenDesign (native/exclusivo)\n\n## (1) HYPERFRAMES\n\n### JÁ É PRÓPRIO (self-hosted, código MCORCH)\n- **Motor de render determinístico** — `scripts/hyperframes/render-core.ts:116` `renderComposition()`: Playwright Chromium headless + FFmpeg → MP4 9:16 1080×1920 byte-reproduzível (NFR-VS-016, `-fflags +bitexact`). Templates PRÓPRIOS (`templates/viral-short-9x16`, `viral-long-16x9`, allowlist `render-core.ts:71`). Zero dependência de terceiros nesse caminho — é 100% código MCORCH.\n- **Worker/orquestração** — `scripts/video-bridge.ts`: claim atômico `video_renders` → upload bucket privado `video-studio-assets` → `finalize_video_render` → dual-write `creative_assets` (`video-bridge.ts:128`) → attach autopilot FR-VA-025 (`:146`) → kick reshaper (`:177`). systemd `video-bridge.service` **active running**. Próprio.\n- **Superfície UI no SPA** — `src/pages/VideoStudioEditorPage.tsx`: página React 18 própria (só um `&lt;iframe src=\"https://video.mcorch.com\"&gt;`). O shell é próprio; o conteúdo do iframe não (ver abaixo).\n- **Contrato de asset/tenancy/billing** — `video_renders`/`video_assets`/`finalize_video_render`, mesh, prepaid (OTD-VA-010), bucket privado. Próprio.\n\n### DEPENDÊNCIA DE TERCEIROS\n- **O EDITOR em si** — `video-studio.service` roda `hyperframes preview` do pacote npm **`hyperframes@0.7.22`** (`/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js preview ...`, WorkingDir `~/.mcorch/video-studio/projects/mcorch-video`, porta 3210). O timeline multi-camada / overlays alpha / efeitos / transições que o Sovereign vê = **binário HeyGen/HyperFrames Apache-2.0, não código nosso**. `video.mcorch.com` é só o vhost SSO-gated (`nginx/video.mcorch.com.conf`) na frente dele.\n- **O CLI de render de projeto Studio** — `renderStudioProject()` (`render-core.ts:200`) faz `spawn(HF_NODE, [HF_CLI, 'render', dir, ...])` — ou seja, projetos autorados no editor são renderizados WRAPPEANDO o `hyperframes render` de terceiros (`render-core.ts:86` `HF_CLI`), não pelo nosso motor determinístico. Parity é \"definicional\" justamente porque delega ao mesmo binário terceiro.\n- Depende de **node v22 externo** (`HF_NODE=/home/ubuntu/.local/bin/node`, `render-core.ts:87`) e do Chromium do 
+... (truncated 14010 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/wr8f87aw8.output)</result>
+<usage><agent_count>4</agent_count><subagent_tokens>324175</subagent_tokens><tool_uses>19</tool_uses><duration_ms>187554</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:16:57)*
+
+
+## 🤖 Claude *(01:16:57)*
+
+Avaliação dos repos concluída. Leio o veredito completo do arquiteto + o mapa de estado atual (truncado na notificação):
+
+## 🤖 Claude *(01:16:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/tasks/wr8f87aw8.output",
+  "offset": 1,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Avalia se vercel-labs/opensrc + safishamsi/graphify ajudam a tornar OpenDesign e HyperFrames nativos/exclusivos do MCORCH (doutrina open-source-first)",
+> 3	  "agentCount": 4,
+> 4	  "logs": [],
+> 5	  "result": {
+> 6	    "opensrc": {
+> 7	      "repo": "vercel-labs/opensrc",
+> 8	      "what_it_is": "É uma ferramenta de linha de comando (CLI) que busca e cacheia o código-fonte de pacotes de terceiros — npm, PyPI, crates.io e GitHub — para dar contexto mais profundo a agentes de IA de codificação. O tagline oficial do \"About\" é literalmente: \"Fetch source code for npm packages to give AI coding agents deeper context\". Uso típico: `opensrc path zod` retorna o caminho local (cacheado) do fonte, encadeável com ferramentas de shell como `rg \"parse\" $(opensrc path zod)`.",
+> 9	      "capabilities": [
+> 10	        "Baixa o código-fonte real de pacotes de npm, PyPI, crates.io e GitHub (não só metadados)",
+> 11	        "Cacheia localmente e retorna o path instantaneamente em consultas subsequentes",
+> 12	        "Comando `path` que resolve para um diretório de fonte encadeável com shell (ripgrep, cat, etc.)",
+> 13	        "Comando `fetch` documentado + índice de busca (search index)",
+> 14	        "Clone autenticado com validação de host (fix #66)",
+> 15	        "Distribuição via npm com trusted publishing"
+> 16	      ],
+> 17	      "language_stack": "CLI escrita em Rust (55.8%) + TypeScript (31.5%) + JavaScript (7.0%). Monorepo Turborepo com pnpm workspaces; site de docs em Next.js; requer Node.js 24+.",
+> 18	      "license": "Apache-2.0",
+> 19	      "maintenance": "Vivo e recente. ~2.7k stars, 177 forks. Release v0.7.3 em 23-jun-2026 (mesma data do commit mais recente no main: \"Configure trusted npm publishing #68\", \"Prepare v0.7.3 release #67\", \"Fix authenticated clone host validation #66\"). 59 commits no main — projeto jovem/pré-1.0 (vercel-labs, tom experimental), mas com atividade nos últimos dias.",
+> 20	      "relevance_to_goal": "Baixa/indireta e HONESTA: opensrc NÃO ajuda a tornar OpenDesign nem HyperFrames \"nativo/exclusivo\" do MCORCH. Ele não é um motor de design, editor de vídeo, nem runtime de renderização — é um utilitário de DX/ingestão de código-fonte para dar contexto a agentes de coding. O único uso plausível no ecossistema MCORCH seria de ferramenta interna de desenvolvimento: quando o time (ou agentes OpenClaw/Claude Code) precisa auditar/entender o fonte real de dependências como `@hyperframes/studio@0.7.5`, `@hyperframes/core/studio-api` ou pacotes do OpenDesign — encaixaria no fluxo do claw-master (audita drift openclaw.json vs docs) ou no blueprint de integração HyperFrames Studio (que já teve que provar via `npm view` que o studio exige React 19). Isso ajuda a ENTENDER o código para embutir, não a torná-lo exclusivo. Para \"nativo/exclusivo\" (vendorizar/forkar os motores sob MCORCH) o que importa é a licença DELES (HyperFrames = Apache-2.0, permite fork/vendorização), não esta ferramenta. Veredito: ferramenta de DX útil no tooling interno; irrelevante para a estratégia de exclusividade do produto.",
+> 21	      "fetched_url": "https://github.com/vercel-labs/opensrc",
+> 22	      "confidence": "high"
+> 23	    },
+> 24	    "graphify": {
+> 25	      "repo": "safishamsi/graphify",
+> 26	      "what_it_is": "Graphify é uma skill/CLI para assistentes de código (Claude Code, Codex, Cursor, Gemini CLI, etc.) que transforma qualquer pasta — código, schemas SQL, scripts R/shell, docs, papers, imagens ou vídeos — em um grafo de conhecimento (GraphRAG) consultável via comandos /graphify. Extrai AST localmente com tree-sitter (36 gramáticas), gera visualização HTML interativa + relatório Markdown + JSON do grafo, e roda como servidor MCP para compartilhamento em equipe. É basicamente indexação de repositório em knowledge graph, não uma ferramenta criativa.",
+> 27	      "capabilities": [
+> 28	        "Indexa código + SQL + docs + PDFs + imagens + vídeos em um único knowledge graph consultável",
+> 29	        "Extração de AST 100% local via tree-sitter (36 gramáticas: Python, TS, Go, Rust, Java, Apex, Terraform/HCL, etc.) — sem chamada de API para parsing",
+> 30	        "Saídas: HTML interativo (nós clicáveis, filtro, busca) + relatório Markdown + arquivo JSON do grafo",
+> 31	        "Detecção de comunidades via algoritmo Leiden; confidence scoring EXTRACTED/INFERRED/AMBIGUOUS",
+> 32	        "Modo servidor MCP para compartilhamento em equipe; integração Git via post-commit hooks",
+> 33	        "Transcrição local de áudio/vídeo via faster-whisper; backends opcionais Anthropic/Gemini/OpenAI/Ollama/Bedrock/Azure"
+> 34	      ],
+> 35	      "language_stack": "Python 100%; core = tree-sitter (AST), Leiden (community detection), faster-whisper (transcrição local); distribuído como skill/MCP server; instalação via uv/pipx. LLM backends opcionais (Anthropic, Gemini, OpenAI, Ollama, Bedrock, Azure).",
+> 36	      "license": "MIT",
+> 37	      "maintenance": "Vivo e muito ativo. 74.891 stars, 7.444 forks, 250 watchers, 399 issues abertas. Criado 2026-04-03, último push 2026-06-30 (branch default v8), release v0.9.3 (jun/2026). Projeto Y Combinator S26 (homepage graphifylabs.ai). Maduro em tração, ainda pré-1.0.",
+> 38	      "relevance_to_goal": "BAIXA/NENHUMA para o objetivo declarado. Graphify é uma ferramenta de GraphRAG/knowledge-graph de CÓDIGO — não tem relação com edição de design (OpenDesign) nem com renderização de vídeo (HyperFrames). Não fornece nenhum componente de canvas, timeline, compositing, render de vídeo, ou UI de design. O único ponto de contato com o MCORCH é conceitual: o ecossistema JÁ possui sua própria camada GraphRAG (mcorch_nodes/mcorch_edges + embeddings + gitnexus MCP), então Graphify seria no máximo um SUBSTITUTO/alternativa da malha de conhecimento existente — não um habilitador para tornar OpenDesign ou HyperFrames nativos/exclusivos. Nota tangencial: tem tópicos 'openclaw' e 'claude-code' e roda como skill/MCP, o mesmo padrão de plugin que o MCORCH usa (ex.: vision-mcp-plugin), mas isso é forma de distribuição, não capacidade de design/vídeo. Recomendação honesta: não adotar para essa meta específica.",
+> 39	      "fetched_url": "https://api.github.com/repos/safishamsi/graphify (confirmado) + https://github.com/safishamsi/graphify (README via WebFetch)",
+> 40	      "confidence": "high"
+> 41	    },
+> 42	    "currentState": "Estado material confirmado. Segue o mapa.\n\n---\n\n# ESTADO ATUAL — HyperFrames & OpenDesign (native/exclusivo)\n\n## (1) HYPERFRAMES\n\n### JÁ É PRÓPRIO (self-hosted, código MCORCH)\n- **Motor de render determinístico** — `scripts/hyperframes/render-core.ts:116` `renderComposition()`: Playwright Chromium headless + FFmpeg → MP4 9:16 1080×1920 byte-reproduzível (NFR-VS-016, `-fflags +bitexact`). Templates PRÓPRIOS (`templates/viral-short-9x16`, `viral-long-16x9`, allowlist `render-core.ts:71`). Zero dependência de terceiros nesse caminho — é 100% código MCORCH.\n- **Worker/orquestração** — `scripts/video-bridge.ts`: claim atômico `video_renders` → upload bucket privado `video-studio-assets` → `finalize_video_render` → dual-write `creative_assets` (`video-bridge.ts:128`) → attach autopilot FR-VA-025 (`:146`) → kick reshaper (`:177`). systemd `video-bridge.service` **active running**. Próprio.\n- **Superfície UI no SPA** — `src/pages/VideoStudioEditorPage.tsx`: página React 18 própria (só um `<iframe src=\"https://video.mcorch.com\">`). O shell é próprio; o conteúdo do iframe não (ver abaixo).\n- **Contrato de asset/tenancy/billing** — `video_renders`/`video_assets`/`finalize_video_render`, mesh, prepaid (OTD-VA-010), bucket privado. Próprio.\n\n### DEPENDÊNCIA DE TERCEIROS\n- **O EDITOR em si** — `video-studio.service` roda `hyperframes preview` do pacote npm **`hyperframes@0.7.22`** (`/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js preview ...`, WorkingDir `~/.mcorch/video-studio/projects/mcorch-video`, porta 3210). O timeline multi-camada / overlays alpha / efeitos / transições que o Sovereign vê = **binário HeyGen/HyperFrames Apache-2.0, não código nosso**. `video.mcorch.com` é só o vhost SSO-gated (`nginx/video.mcorch.com.conf`) na frente dele.\n- **O CLI de render de projeto Studio** — `renderStudioProject()` (`render-core.ts:200`) faz `spawn(HF_NODE, [HF_CLI, 'render', dir, ...])` — ou seja, projetos autorados no editor são renderizados WRAPPEANDO o `hyperframes render` de terceiros (`render-core.ts:86` `HF_CLI`), não pelo nosso motor determinístico. Parity é \"definicional\" justamente porque delega ao mesmo binário terceiro.\n- Depende de **node v22 externo** (`HF_NODE=/home/ubuntu/.local/bin/node`, `render-core.ts:87`) e do Chromium do Playwright injetado (`HYPERFRAMES_BROWSER_PATH`, `render-core.ts:221`).\n\n### GAP CONCRETO até \"native exclusivo\"\nHoje é **arquitetura módulo-container** (blueprint `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md`) que ainda nem foi construída na forma canônica (o container `mcorch_video_studio` do blueprint §22-32 NÃO existe — roda `hyperframes preview` cru via systemd, não o `StudioApp` + `McorchAdapter`). Para \"native exclusivo\" seria preciso internalizar **o editor NLE**, hoje 100% terceiro:\n1. **Construir editor próprio** (timeline/tracks/overlays alpha/efeitos/transições) — ou fork do `@hyperframes/studio` Apache-2.0 removendo o binde de terceiros. Blueprint escolheu NÃO forkar a UI (montar `StudioApp` unmodified + `McorchAdapter.startRender`→`video-render`), o que NÃO torna native — só embute terceiro melhor.\n2. **Eliminar o `hyperframes render` CLI** de `renderStudioProject` (`render-core.ts:215`) — internalizar `bundleToSingleHtml` + seek `frame=floor(time*fps)` (gate #4 do blueprint, R1 High risk) no nosso motor determinístico, para render de projeto Studio parar de depender de `HF_CLI`.\n3. **Remover a dep npm `hyperframes@0.7.22`** e o `hyperframes preview` do `video-studio.service`.\n4. React 19 (studio) vs React 18 (SPA) é o motivo do iframe/container — internalizar exige reescrever o editor em React 18 nativo ou manter container próprio.\n\n**Resumo HyperFrames:** o RENDER já é nosso (determinístico, próprio). O EDITOR é o que falta — é integralmente terceiro (`hyperframes` npm), consumido via `preview` (visualização) e via `render` CLI (render de projeto autorado).\n\n---\n\n## (2) OPENDESIGN (Canvas Design → design.mcorch.com)\n\n### JÁ É PRÓPRIO\n- **Worker/bridge** — `scripts/design-bridge.ts`: polling `design_jobs` + claim + `docker cp` do container + mesh reference nodes + telemetria (`design-bridge.ts:290`). systemd `design-bridge.service` **active running**. Próprio.\n- **Vhost + SSO gate** — `nginx/design.mcorch.com.conf` (CF orange, self-signed origin, loopback 127.0.0.1:7456, auth_request via `sso-auth-gate.service`). Próprio.\n- **Contrato de fila/mesh/tenancy** — `design_jobs`, `design_artifact_refs` (mirror/reference), bucket `design-assets`, per-user `OD_MEDIA_CONFIG_DIR`. Próprio. Doc: `docs/bok/canvas-design/05-sdd.md`.\n\n### DEPENDÊNCIA DE TERCEIROS\n- **O motor de design em si = `open-design` (nexu-io / `vanjayak/open-design:latest`)** — container Docker `open-design` **Up 2 weeks (healthy)**, imagem de terceiro. É o system-of-record do canvas: os entities Project/Artifact/HyperFrame vivem no `.od/app.sqlite` DELE (`05-sdd.md:106`), não no MCORCH. Vendorizado em `canvas-design/open-design/` (v0.7.x, **Apache-2.0**, `LICENSE` presente).\n- **O editor visual** é o `apps/web` do open-design servido no iframe (`OpenDesignFrame`, `05-sdd.md:76`) — UI de terceiro.\n- **O `od` CLI** é o contrato de embeddability de terceiro (`05-sdd.md:168`) — o bridge só dirige `od media …`, nunca reimplementa.\n\n### GAP CONCRETO até \"native exclusivo\"\nMuito maior que o do HyperFrames — aqui **nada do motor/editor de design é nosso**; só o plumbing (bridge/queue/nginx/mesh). Para \"native exclusivo\":\n1. Internalizar o **motor de geração/edição de design** (canvas visual, layers, export) hoje 100% no container `open-design`. Isso é o produto inteiro do open-design.\n2. Migrar o system-of-record do `.od/app.sqlite` do container para tabelas MCORCH (hoje o mesh só guarda referência/summary — `05-sdd.md:299` OTD-006).\n3. Substituir o iframe `OpenDesignFrame` por editor próprio (React no SPA).\n4. Pendências pré-existentes que reforçam a dependência: **OTD-008 launch-blocker** (LGPD — `delete-account` não purga o `OD_DATA_DIR` per-user do container; FMEA-007 RPN 240, `05-sdd.md:300`) e FMEA-010 (upgrade do open-design pode quebrar o contrato `od` silenciosamente).\n\n**Resumo OpenDesign:** próprio = fila/bridge/nginx/mesh (a casca). Terceiro = TODO o motor e editor de design (container `vanjayak/open-design:latest` + `apps/web` + `od` CLI + `.od/app.sqlite` como system-of-record).\n\n---\n\n## SÍNTESE COMPARATIVA\n\n| Peça | Próprio (nosso código) | Terceiro | Distância até \"native exclusivo\" |\n|---|---|---|---|\n| **HyperFrames** | Motor de RENDER determinístico (`render-core.ts` `renderComposition`), worker (`video-bridge.ts`), contrato asset/billing/mesh, vhost | **Editor NLE** (`hyperframes@0.7.22` npm, `hyperframes preview` + `hyperframes render` CLI). Apache-2.0 | **Média** — falta internalizar SÓ o editor + `bundleToSingleHtml`/seek; o render já é nosso |\n| **OpenDesign** | Bridge/fila/nginx/mesh (só o plumbing) | **Motor E editor de design inteiros** (`vanjayak/open-design:latest` container + `apps/web` + `od` CLI + `.od/app.sqlite`). Apache-2.0 | **Grande** — o produto de design todo é de terceiro; só a casca é nossa |\n\nNota de precisão: ambos os terceiros são **Apache-2.0** (self-host/fork/modificar OK, reter aviso, marca não licenciada) — logo \"native exclusivo\" é legalmente viável por fork+desbranding, mas o custo de engenharia difere muito (HyperFrames = internalizar 1 editor; OpenDesign = internalizar um app de design completo).",
+> 43	    "verdict": {
+> 44	      "opensrc_verdict": "adopt",
+> 45	      "opensrc_reason": "Apache-2.0, vivo (v0.7.3 em 23-jun-2026), sem risco de licença. Mas NÃO tem relação alguma com tornar OpenDesign/HyperFrames nativos — é um CLI de DX que baixa e cacheia fonte de dependências (npm/PyPI/crates/GitHub) para dar contexto a agentes de coding. O único valor real no MCORCH é interno/tooling: auditar o fonte de `hyperframes@0.7.22`, `@hyperframes/studio`, `@hyperframes/core/studio-api` e do open-design ao internalizá-los — exatamente o trabalho de fork que o objetivo exige (o blueprint já teve de provar React 19 do studio via `npm view`; opensrc dá o fonte inteiro cacheado, encadeável com ripgrep). Encaixa no fluxo claw-master/deepsearch. `adopt` como ferramenta de dev, NÃO como peça de produto. Custo de adotar é ~zero (CLI global). Não muda a estratégia de exclusividade — só acelera a engenharia de fork.",
+> 46	      "graphify_verdict": "ignore",
+> 47	      "graphify_reason": "MIT, altíssima tração (74.9k stars, YC S26), mas irrelevante para o objetivo E redundante com infra existente. Graphify é GraphRAG de CÓDIGO (tree-sitter AST → knowledge graph HTML/MD/JSON, Leiden communities, MCP server). Não fornece canvas, timeline, compositing, render nem UI de design/vídeo — zero sobreposição com OpenDesign/HyperFrames. Pior: o MCORCH JÁ tem sua própria camada GraphRAG proprietária e multi-tenant (`mcorch_nodes`/`mcorch_edges` + embeddings pgvector HNSW + FSRS-6 + gitnexus MCP + bridge OpenClaw). Graphify seria no máximo um SUBSTITUTO da malha própria — trocar código nativo por dependência externa é o OPOSTO da doutrina de posse total. Único ponto de contato (tópicos openclaw/claude-code, distribuição como skill/MCP) é forma de entrega, não capacidade. `ignore` para esta meta. Se um dia quiser reavaliar indexação AST, é análise separada — não desta diretiva.",
+> 48	      "native_exclusive_path": "Os 2 repos NÃO são o caminho — nenhum é motor de design/vídeo. O caminho real por peça, ordenado por custo de engenharia crescente:\n\nHYPERFRAMES (distância MÉDIA — o render já é nosso). O motor determinístico (`scripts/hyperframes/render-core.ts:116` `renderComposition` — Playwright+FFmpeg→MP4 9:16 sha256-idêntico, NFR-VS-016), o worker (`video-bridge.ts`), o contrato asset/billing/mesh e o vhost `video.mcorch.com` JÁ são código MCORCH. Falta só internalizar o EDITOR NLE, hoje 100% terceiro (`hyperframes@0.7.22` npm, consumido via `hyperframes preview` no `video-studio.service` + via `hyperframes render` CLI em `renderStudioProject`, render-core.ts:200-225). Passos concretos:\n  1. Eliminar o `spawn(HF_NODE, [HF_CLI,'render',...])` de `renderStudioProject` (render-core.ts:215) — internalizar `bundleToSingleHtml` + seek determinístico `frame=floor(time*fps)` (gate #4/R1-High do blueprint) no NOSSO motor, para render de projeto Studio parar de depender de `HF_CLI`. Este é o passo que mais rende exclusividade com menos código, porque reaproveita o `renderComposition` já pronto.\n  2. Editor visual próprio: FORK do `@hyperframes/studio` Apache-2.0 desbrandado (timeline/tracks/overlays-alpha/efeitos/transições) — NÃO o `StudioApp unmodified + McorchAdapter` do blueprint, que só embute terceiro melhor e NÃO torna nativo. Fork resolve o conflito React 19 (studio) vs React 18 (SPA) do jeito que quisermos: ou reescrever alvo React 18 no SPA, ou manter container próprio `mcorch_video_studio` servindo O NOSSO editor.\n  3. Remover a dep npm `hyperframes@0.7.22` e o `hyperframes preview` do `video-studio.service`. Fim da dependência.\n\nOPENDESIGN (distância GRANDE — nada do motor é nosso). Próprio = só a casca (bridge `design-bridge.ts`, fila `design_jobs`, nginx `design.mcorch.com`, mesh refs). Terceiro = TODO o motor+editor: container `vanjayak/open-design:latest` (Apache-2.0, vendorizado em `canvas-design/open-design/`, LICENSE confirmado material), `apps/web` no iframe `OpenDesignFrame`, o `od` CLI (contrato de embeddability), e o system-of-record `.od/app.sqlite` (05-sdd.md:106). Passos:\n  1. Fork+desbrand do open-design vendorizado (canvas/layers/export) — é internalizar um app de design INTEIRO, não uma peça.\n  2. Migrar system-of-record do `.od/app.sqlite` do container para tabelas MCORCH (hoje o mesh só guarda referência — OTD-006, 05-sdd.md:299).\n  3. Substituir iframe `OpenDesignFrame` por editor próprio no SPA.\n  4. Fechar antes OTD-008 (launch-blocker LGPD: `delete-account` não purga `OD_DATA_DIR` per-user, FMEA-007 RPN 240) e FMEA-010 (upgrade quebra contrato `od` silenciosamente) — ambos reforçam a dependência hoje.\n\nRECOMENDAÇÃO DE SEQUÊNCIA: fazer HyperFrames primeiro (ROI alto, base pronta, 1 editor a internalizar) e só depois OpenDesign (esforço de app completo). Em ambos, `opensrc` acelera a leitura do fonte de terceiros durante o fork; `graphify` não entra.",
+> 49	      "doctrine_fit": "Fit FORTE com a doutrina open-source-first/equity/posse-total. Ambos os motores-alvo (HyperFrames e open-design) são Apache-2.0 — verificado material: `canvas-design/open-design/LICENSE` = \"Apache License Version 2.0\" (11296 bytes, presente). Apache-2.0 permite self-host, fork, modificação e uso comercial, exigindo apenas retenção do aviso de copyright/NOTICE e não licenciando marca — logo \"native exclusivo\" (vendorizar+forkar+desbrandar sob MCORCH, custo=0 de licença) é LEGALMENTE VIÁVEL para os dois. Nenhum é AGPL/copyleft-viral nem sem-licença. Dos 2 repos avaliados: opensrc (Apache-2.0) e graphify (MIT) também são permissivos — sem atrito de licença em nenhum. O único desalinhamento doutrinário é adotar graphify como camada GraphRAG: substituiria código NATIVO próprio (mcorch_nodes/edges) por dependência externa — anti-posse-total — daí o `ignore`. opensrc como tooling interno não fere a doutrina (é ferramenta de dev, não peça de produto embutida). Posse do código de produto = garantida pelas licenças Apache-2.0 dos motores + fork.",
+> 50	      "bok_gate_needed": "SIM para OpenDesign; PARCIAL para HyperFrames. Regra: BoK gate (MRD/BRD/PRD/FRD/SDD em docs/bok/<slug>/ + Pattern Conformance Declaration dos 21 padrões) dispara para \"módulo novo, feature complexa, integração ou mudança arquitetural\". (1) Internalizar o EDITOR OpenDesign (fork do motor completo + migrar system-of-record .od/app.sqlite→tabelas MCORCH + substituir iframe) é mudança arquitetural profunda com novo system-of-record → EXIGE BoK gate novo/emenda pesada à suite canvas-design (docs/bok/canvas-design/), com deepsearch-blueprint primeiro (precedente: security, vision-mcp). (2) HyperFrames tem BoK video-studio 9/9 já selada + blueprint de integração material (`.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md`); a flip de estratégia \"embutir terceiro (StudioApp unmodified)\"→\"fork nativo desbrandado\" muda a decisão arquitetural OTD-VS-005 e o contrato de render (eliminar HF_CLI de renderStudioProject) → EXIGE ao menos EMENDA à SDD video-studio com Pattern Conformance Declaration atualizada e deepsearch do fork, NÃO uma SDD do zero. (3) Adotar opensrc como tooling de dev = EXENTO de BoK gate (é tooling interno do AIOS, análogo ao aios-sql-bridge — Lei 2 pede só SOP mínimo no handoff). Em nenhum caso começar código antes do gate.",
+> 51	      "honest_caveats": "1) Os 2 repos pesquisados são RED HERRINGS para o objetivo: nem opensrc nem graphify tocam design/vídeo. A pergunta \"vale usar 2 repos para isso?\" tem resposta honesta: NÃO para tornar os motores nativos — eles não são motores. opensrc só ajuda a LER o fonte durante o fork; graphify não entra. 2) Risco de licença é BAIXO nos motores (ambos Apache-2.0, verificado), mas Apache-2.0 exige preservar NOTICE/aviso e NÃO cede marca — desbrandar é obrigatório e há trabalho de compliance (rastrear NOTICE em todo fork). 3) Risco de abandono/upstream-drift: HyperFrames e open-design são pré-1.0 externos; ao forkar assumimos manutenção total (segurança, upgrades) — some o benefício de \"upstream conserta pra gente\". 4) React 19 (studio) vs React 18 (SPA) é atrito REAL e caro: fork nativo obriga a escolher reescrever alvo React 18 ou manter container próprio — nenhuma opção é trivial. 5) Esforço ASSIMÉTRICO: HyperFrames = internalizar 1 editor (render já é nosso); OpenDesign = internalizar um APP DE DESIGN INTEIRO + migrar system-of-record. Tratar as duas como \"mesma tarefa\" subestima OpenDesign em ~5-10×. 6) graphify tem 74.9k stars e é MIT/YC — sedutor, mas adotá-lo como GraphRAG competiria/substituiria a malha própria; não confundir tração com fit. 7) Não validei material o LICENSE do pacote npm `hyperframes@0.7.22` nesta sessão (só o open-design vendorizado); confio no dado fornecido (Apache-2.0) — Lei 1: confirmar o LICENSE/NOTICE do tarball hyperframes ANTES de forkar. 8) opensrc requer Node.js 24+; checar compatibilidade com o toolchain (o motor HyperFrames já usa node v22 separado — mais um runtime a gerenciar)."
+> 52	    }
+> 53	  },
+> 54	  "workflowProgress": [
+> 55	    {
+> 56	      "type": "workflow_phase",
+> 57	      "index": 1,
+> 58	      "title": "Research"
+> 59	    },
+> 60	    {
+> ```
+
+## 🤖 Claude *(01:17:29)*
+
+
+## 🤖 Claude *(01:17:30)*
+
+Veredito completo. Vou persistir a avaliação (estava só no scratch) e te dar a resposta direta.
+
+## 🤖 Claude *(01:17:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/native-exclusive-hyperframes-opendesign-eval-2026-06-30.md",
+  "content": "# Native/Exclusivo \u2014 HyperFrames & OpenDesign: avalia\u00e7\u00e3o dos repos + caminho real (2026-06-30)\n\n> Workflow `wf_ec9db575-8a7` (fetch real dos repos + mapa de estado + arquiteto). Pergunta Sovereign: vale usar `vercel-labs/opensrc` + `safishamsi/graphify` p/ tornar OpenDesign e HyperFrames nativos/exclusivos do MCORCH? Doutrina: `feedback_opensource_first_zero_cost_equity`.\n\n## Resposta curta: os 2 repos N\u00c3O s\u00e3o o caminho (red herrings) \u2014 nenhum \u00e9 motor de design/v\u00eddeo.\n\n| Repo | O que \u00e9 | Licen\u00e7a | Veredito p/ a meta |\n|------|---------|---------|--------------------|\n| **vercel-labs/opensrc** | CLI que baixa/cacheia fonte de deps (npm/PyPI/crates/GitHub) p/ dar contexto a agentes de coding. 2.7k\u2605, vivo (v0.7.3 jun/26). | Apache-2.0 | **adopt \u2014 s\u00f3 como tooling de dev** (acelera LER o fonte de `hyperframes`/`open-design` durante o fork). N\u00c3O \u00e9 pe\u00e7a de produto. Exige Node 24+. |\n| **safishamsi/graphify** | GraphRAG de c\u00f3digo (tree-sitter AST \u2192 knowledge graph). 74.9k\u2605, MIT, YC S26. | MIT | **ignore** \u2014 zero rela\u00e7\u00e3o com design/v\u00eddeo E redundante/competiria com a malha PR\u00d3PRIA (mcorch_nodes/edges). Adot\u00e1-lo = trocar c\u00f3digo nativo por dep externa = anti-doutrina. |\n\n## O caminho REAL = forkar os motores (ambos Apache-2.0 \u2014 fork/rebrand/self-host legal a custo $0)\n\n**Esfor\u00e7o ASSIM\u00c9TRICO (n\u00e3o tratar como mesma tarefa \u2014 OpenDesign \u00e9 ~5-10\u00d7 HyperFrames):**\n\n### HyperFrames \u2014 dist\u00e2ncia M\u00c9DIA (o render J\u00c1 \u00e9 nosso)\nPr\u00f3prio: motor de render determin\u00edstico (`scripts/hyperframes/render-core.ts:116` `renderComposition` Playwright+FFmpeg\u2192MP4 9:16 sha256-id\u00eantico) + worker (`video-bridge.ts`) + contrato asset/billing/mesh + vhost `video.mcorch.com`. **\u00c9 o que renderizou o v\u00eddeo de hoje a $0.**\nTerceiro: s\u00f3 o **EDITOR NLE** (`hyperframes@0.7.22` npm \u2014 `hyperframes preview` no `video-studio.service` + `hyperframes render` CLI em `renderStudioProject` render-core.ts:200-225).\nPassos p/ nativo: (1) eliminar `HF_CLI` de `renderStudioProject` internalizando `bundleToSingleHtml`+seek `frame=floor(time*fps)` no NOSSO motor (gate #4/R1-High do blueprint \u2014 maior ROI de exclusividade); (2) fork do `@hyperframes/studio` Apache-2.0 desbrandado (N\u00c3O o \"StudioApp unmodified\" do blueprint, que s\u00f3 embute terceiro melhor); (3) remover a dep npm + `hyperframes preview`.\n\n### OpenDesign \u2014 dist\u00e2ncia GRANDE (nada do motor \u00e9 nosso)\nPr\u00f3prio: s\u00f3 a casca (bridge `design-bridge.ts` + fila `design_jobs` + nginx `design.mcorch.com` + mesh refs).\nTerceiro: TODO o motor+editor (`vanjayak/open-design:latest` container Apache-2.0 vendorizado em `canvas-design/open-design/` + `apps/web` no iframe + `od` CLI + `.od/app.sqlite` como system-of-record).\nPassos: (1) fork+desbrand do app de design inteiro; (2) migrar system-of-record `.od/app.sqlite`\u2192tabelas MCORCH (OTD-006); (3) substituir iframe por editor pr\u00f3prio; (4) fechar antes OTD-008 (LGPD launch-blocker, FMEA-007 RPN 240) + FMEA-010.\n\n## Governan\u00e7a (Closed-Loop)\n- **HyperFrames:** BoK video-studio 9/9 j\u00e1 selada \u2192 **EMENDA \u00e0 SDD** (flip OTD-VS-005 \"embutir terceiro\"\u2192\"fork nativo\") + deepsearch do fork. N\u00e3o SDD do zero.\n- **OpenDesign:** mudan\u00e7a arquitetural profunda + novo system-of-record \u2192 **BoK gate novo/emenda pesada** \u00e0 suite canvas-design, deepsearch-blueprint primeiro.\n- **opensrc:** exento (tooling de dev, an\u00e1logo ao aios-sql-bridge \u2014 SOP m\u00ednimo).\n\n## Recomenda\u00e7\u00e3o de sequ\u00eancia\n**HyperFrames primeiro** (ROI alto, base pronta, 1 editor a internalizar) \u2192 depois OpenDesign (app inteiro). `opensrc` acelera a leitura do fonte durante o fork; `graphify` n\u00e3o entra.\n\n## Caveats honestos (Lei 1)\n1. Os 2 repos s\u00e3o red herrings p/ a meta. 2. Apache-2.0 exige preservar NOTICE + desbrandar (trabalho de compliance). 3. Forkar = assumimos manuten\u00e7\u00e3o/seguran\u00e7a total (some o \"upstream conserta\"). 4. React 19 (studio) vs 18 (SPA) = atrito real. 5. **N\u00c3O validei material o LICENSE do npm `hyperframes@0.7.22`** nesta sess\u00e3o (s\u00f3 o open-design vendorizado, Apache-2.0 confirmado) \u2014 confirmar antes de forkar. 6. graphify: tra\u00e7\u00e3o \u2260 fit.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/native-exclusive-hyperframes-opendesign-eval-2026-06-30.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:18:01)*
+
+
+## 🤖 Claude *(01:18:18)*
+
+[Avaliação persistida](.claude/context/native-exclusive-hyperframes-opendesign-eval-2026-06-30.md). Resposta direta:
+
+## ❌ Nenhum dos dois repos é o caminho — são red herrings pra essa meta
+
+- **`vercel-labs/opensrc`** (Apache-2.0, 2.7k★): é um CLI que baixa o *fonte de dependências* pra dar contexto a agentes de código. Não é motor de design nem de vídeo. Útil só como **ferramenta interna de dev** — ajuda a *ler* o fonte do `hyperframes`/`open-design` na hora de forkar. `adopt` como tooling, **não** como peça de produto.
+- **`safishamsi/graphify`** (MIT, 74.9k★, YC): é GraphRAG de código (AST→knowledge graph). Zero relação com design/vídeo — e pior, ele **competiria com a sua própria malha** (`mcorch_nodes`/`edges`). Adotá-lo seria trocar código nativo por dependência externa: o *oposto* da doutrina. `ignore`.
+
+A tração do graphify (75k stars) seduz, mas tração ≠ fit. Nenhum toca no que você quer.
+
+## ✅ O caminho real (e a boa notícia)
+
+"Native exclusivo" = **forkar os motores de verdade** — e os dois são **Apache-2.0**, então fork + rebrand + self-host é legal a custo zero de licença. Isso *É* a doutrina open-source-first realizada (posse do código). Mas o esforço é **assimétrico**:
+
+**HyperFrames — está PERTO.** O motor de render **já é seu** (o `render-core.ts` Playwright+FFmpeg foi exatamente o que fez o vídeo de hoje a $0). O que ainda é de terceiro é **só o editor visual** (o pacote npm `hyperframes@0.7.22` — a timeline/overlays que você vê no `video.mcorch.com`). Internalizar = forkar 1 editor + parar de chamar o CLI `hyperframes render`. **ROI alto, base pronta.**
+
+**OpenDesign — está LONGE.** Aí *só a casca* é sua (bridge/fila/nginx). O motor E o editor de design inteiros são o container `open-design` de terceiro (+ o `.od/app.sqlite` é o system-of-record dele, nem no seu banco). Internalizar = reconstruir um app de design completo + migrar o system-of-record. **~5-10× o esforço do HyperFrames** (+ tem o blocker LGPD OTD-008 pendente).
+
+## Recomendação
+
+**HyperFrames primeiro, OpenDesign depois.** E — pelo Protocolo de Malha Fechada — nenhum dos dois começa com código: HyperFrames precisa de **emenda à SDD** (vira a decisão OTD-VS-005 de "embutir terceiro" pra "fork nativo") + deepsearch do fork; OpenDesign precisa de **BoK gate novo** (mudança arquitetural + novo system-of-record).
+
+**Caveat honesto (Lei 1):** forkar = você assume a manutenção/segurança total (some o "upstream conserta pra mim"), e Apache-2.0 obriga preservar o NOTICE + desbrandar. E não validei materialmente o LICENSE do pacote npm `hyperframes` nesta sessão — confirmar antes de forkar.
+
+Se topar, o passo certo é eu (ou o loop) **draftar a emenda BoK do fork nativo do HyperFrames** — o item de maior ROI, e que fecha o ciclo de "o vídeo autônomo é 100% seu, do render ao editor". Quer que eu comece por aí?
