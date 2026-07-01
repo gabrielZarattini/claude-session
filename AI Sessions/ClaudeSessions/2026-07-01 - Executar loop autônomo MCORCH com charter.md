@@ -7045,6 +7045,833 @@ Análise do sub-agente (verificada contra o código real):
 >  3 files changed, 7 insertions(+), 4 deletions(-)
 > ```
 
+## 🤖 Claude *(22:30:12)*
+
+
+## 🤖 Claude *(22:30:12)*
+
+**5c — Material Proof Audit** + push:
+
+## 🤖 Claude *(22:30:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -14\ngit push origin main 2>&1 | tail -2\ngit rev-list --left-right --count HEAD...origin/main",
+  "description": "Phase 5c audit + push",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 835c8a43 | mesh_node | 835c8a43-59dc-4de4-bd61-f6ed83681a18 | 835c8a43-59dc-4de4-bd61-f6ed83681a18 | ✅ |
+> | mesh node 03a26786 | mesh_node | 03a26786-4bb5-4b5a-b6e4-b68b1041ae91 | 03a26786-4bb5-4b5a-b6e4-b68b1041ae91 | ✅ |
+> | commit c422de7 | git_commit | c422de7 | c422de7 | ✅ |
+> | commit 2ce09b3 | git_commit | 2ce09b3 | 2ce09b3 | ✅ |
+> | commit 2123a79 | git_commit | 2123a79 | 2123a79 | ✅ |
+> | commit e8979e2 | git_commit | e8979e2 | e8979e2 | ✅ |
+> | commit 4fd9b89 | git_commit | 4fd9b89 | 4fd9b89 | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovere | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovere | ✅ |
+> 
+> QA VERDICT: 8 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.2s)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    1775ee8..6ba80e5  main -> main
+> 0	0
+> ```
+
+## 🤖 Claude *(22:30:37)*
+
+
+## 🤖 Claude *(22:30:37)*
+
+
+## 🤖 Claude *(22:30:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 5 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project-video-studio
+> 3	description: Módulo Vídeo (video-studio) — BoK 9/9 selada; Fatia 1 SHIPPED; Fatia VS-2 motor HyperFrames determinístico VIVO (2026-06-24); editor Studio = módulo-container (blueprint pronto)
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: f232593a-1ef8-4045-8b83-67389d10213f
+> 8	---
+> 9	
+> 10	Módulo **Vídeo** (`video-studio`): dois motores criativos isolados sob MCORCH — (A) **Faceless Studio** (estúdio E2E sobre o n8n `e7e3beeb58f7411a` em `/home/gcrUX/studio`, repo externo single-tenant) + (B) **HyperFrames editor** (NLE HTML→MP4, Apache-2.0). BoK **9/9 selada** (commit `f003e32`) + emenda v1.1 (camada de alavancagem de agência: org→clients, white-label, wholesale mcoCoins). Posicionamento: "AI content agency in a box".
+> 11	
+> 12	**Fundação já landada antes desta sessão:** SSO R3 (`sso-auth-gate.service` vivo, gate genérico serve `video.`) + tenancy de agência (`organizations`/`organization_members`/`clients` + RPC `create_organization` + helpers anti-recursão `is_org_member`/`org_role`) — migrations `20260622030000/030100`, **vivas no DB**.
+> 13	
+> 14	**Fatia VS-UI Fase A VIVA (2026-06-24, commits `bc5f0e5` + `94ae0db`):** editor HyperFrames NLE ENTREGUE — diretiva Sovereign "entregar valor visível, menos técnico" ([[feedback_deliver_user_value_not_plumbing]]). **Decisão-chave material:** o servidor oficial **`hyperframes preview`** (CLI unscoped `hyperframes@0.7.5`, NÃO `@hyperframes/cli` que não existe) É o editor completo (StudioApp React 19 + Hono `/api`) — roda como **processo node standalone** → o conflito React 19/18 some SEM Docker. Implantado como **serviço host systemd `video-studio.service`** (molde video-bridge): `node v22 EXPLÍCITO` (`/home/ubuntu/.local/bin/node …/hyperframes/dist/cli.js preview <projeto> --port 3210 --no-open`) — ⚠️ systemd pega `/usr/bin/node` **v18** que quebra com `styleText`/util; o `env node` do shebang NÃO resolve v22. Projeto 9:16 semeado: `hyperframes init mcorch-video --example warm-grain --resolution portrait --non-interactive` (live `/api/projects`→`mcorch-video`; re-semeado com o starter MCORCH 9:16 — o `mcorch-demo` do init original ficou stale). **PROVA:** `active`, `curl :3210/`→200 `HyperFrames Studio`, `/api/projects`→200 com o projeto. Frontend: `VideoStudioEditorPage` iframe `/dashboard/canvas/video` (rota ANTES de `canvas/:id`), nav "Vídeo" no Canvas Studio, build deployado (chunk `VideoStudioEditorPage-CCjrPhI0`). vhost `nginx/video.mcorch.com.conf` (SSO-gated, espelha design). **Contrato `/api` (Lei 2) selado dos `.d.ts` publicados** — `StudioApiAdapter` {listProjects,resolveProject,bundle→`bundleToSingleHtml`,lint,runtimeUrl,rendersDir,**startRender**}; `createStudioApi(adapter)` monta TODAS as rotas → host implementa SÓ o adapter. **Render-parity (R1) resolvido por construção:** `@hyperframes/core/runtime` IIFE = mesmo runtime no preview e (Fase B) no nosso motor. SDD §VS-UI Amendment v0.4 + SOP `video-studio-editor-deploy-and-provision.md`. **GOTCHAS:** `preview` é **single-project** (exige `index.html` no DIR, não aceita dir-pai → OTD-VS-016); `pkill -f hyperframes` **mata o próprio shell** (a linha de comando casa) — matar por pid da porta. **PENDENTE Sovereign (2 sudo):** cert self-signed `video.mcorch.com.{key,crt}` + `ln -s`+`nginx -t`+reload (DNS já feito). **Fase B (próxima):** `McorchAdapter.startRender`→`video-render` (motor MCORCH + mcoCoins prepaid) substitui o engine local do CLI + project store em Supabase Storage. ⚠️ `pré-VS-UI` o blueprint dizia `studio.mcorch.com`; nome adotado = **`video.mcorch.com`** (sso-gate já o lista).
+> 15	
+> 16	**Fatia 1 SHIPPED (2026-06-22, commits `c92850f` + `e3b0716`):** domínio + contrato edge, tenancy-aware desde o nascimento (org_id/client_id NULLABLE = solo backward-compat).
+> 17	- Migration `20260622040000`: `video_renders` (máquina de estados + ledger atômico charged/refunded) + `video_assets` (manifest de erasure) + `finalize_video_render` (terminal+refund service-role, espelha `finalize_vision_job`). RLS cross-tenant (FMEA-VS-020): SELECT own-or-org-member, **sem write p/ authenticated** (só service-role pós-deduct), RESTRICTIVE no-delete. `/security-review` SAFE. Provado: tabelas 200, finalize anon→42501, anon INSERT→42501.
+> 18	- Edge fns `video-render` (submit) + `video-render-poll` (tenant-bound). Contrato: JWT→engine→voice_consent(FR-VS-032 409)→BYOK `google_api_key` fail-closed(402)→[dry_run]→**worker-gate 503 ANTES de deduct**→[Fatia2] deduct→insert→trigger→refund idempotente. Custos provisórios `VIDEO_FACELESS_RENDER=125`/`VIDEO_HYPERFRAMES_RENDER=12` (OTD-VS-007). `/security-review` SAFE. Provado zero-cost (13 gates, saldo 5096 intacto). Smoke pegou o drift da coluna BYOK ([[reference_byok_gemini_column]]).
+> 19	
+> 20	**Fatia 1b SHIPPED (commit `f343dd2`):** UI `/dashboard/video` (`useVideoRender` + `VideoStudioPage` display-only + rota lazy + nav "Estúdio de Vídeo" ícone Film). tsc limpo + build OK (chunk no dist servido, env baked) — frontend **deployado**. Ocular logado NÃO rodado (cérebro-sem-mãos por budget).
+> 21	
+> 22	**DECISÃO ARQUITETURAL Sovereign 2026-06-22 — DE-n8n (emenda BoK SDD v1.2 §1.5, commit `167cfc3`):** o **MCORCH não usa n8n** (single-tenant não escala num SaaS per-user; era um stack paralelo cujo único elo era a ponte R5). **OTD-VS-001 (R5) VOID.** O motor **faceless** é re-implantado **NATIVO**: orquestrado no **Visual Orchestrator** (`/dashboard/orchestration` — já tem SceneNode/QualityGateNode/PublishNode) compondo capabilities que JÁ existem → roteiro=Gemini · imagem=`canvas-execute`/`generate-image` · voz=`tts-speak` · motion=`canvas-execute` Higgsfield DoP (provado) · QA=`vision-mcp` · overlay/composite=Remotion+FFmpeg em **container MCORCH-owned co-locado na `mcorch-sovereign-net`** (→ vision_mcp/chroma sem ponte). O `video-render` muda só o destino do trigger (n8n webhook → orquestração nativa); contrato idêntico. **HyperFrames editor** = app isolado em **`video.mcorch.com`** (igual open-design; SSO R3 pronto; DNS+cert = ação Sovereign). Novos: OTD-VS-014 (container Remotion+FFmpeg nativo) · OTD-VS-015 (vhost video.mcorch.com). OTD-VS-006 (sandbox HyperFrames) mantida.
+> 23	
+> 24	**Fatia VS-2 — Motor HyperFrames VIVO (2026-06-24, commit `39f8001`):** o motor de render determinístico está **de pé** (não mais "blocked"), single-tenant Usuário Zero (hardening multi-tenant FMEA-VS-001 diferido p/ User 1 — OTD-VA-011). `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920) + `scripts/video-bridge.ts` (worker host molde `design-bridge`: claim atômico `video_renders` engine=hyperframes → render → bucket privado `video-studio-assets` → `finalize_video_render`; systemd `video-bridge.service` active). Migration `20260624120000` (coluna `composition` jsonb + bucket). Edge `video-render` ganhou transporte `poll://` (Edge não alcança host). **Provado:** ffprobe 1080×1920, **sha256 byte-idêntico** 2 renders (NFR-VS-016), E2E via service. `/security-review` SAFE. Consumido pelo Viral Autopilot ([[project_viral_autopilot]] Fatia VA-V1 — vídeo 9:16 autônomo).
+> 25	
+> 26	**Faceless nativo (o OUTRO motor) — ainda a construir:** orquestrador nativo + legs compostas + container Remotion/FFmpeg (De-n8n). Separado do HyperFrames (este já vivo).
+> 27	
+> 28	**Editor HyperFrames Studio — Fatia VS-UI (próximo, blueprint pronto):** flip OTD-VS-005 A→C (embed in-SPA inviável — `@hyperframes/studio@0.7.5` exige React 19 vs SPA React 18; prova `npm view`). Vira **módulo-container** padrão open-design: container React 19 (StudioApp **zero-props** + Hono `createStudioApi(McorchAdapter)` mesma origem) atrás de `studio.mcorch.com` (vhost = ação Sovereign), iframe no SPA. Nosso `McorchAdapter.startRender()` faz bridge pro `video-render` já provado. Blueprint material-citado: `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md`. Gate #1 (maior risco): render-parity `frame=floor(time*fps)` entre core/runtime e nosso motor.
+> 29	
+> 30	**Pendências de doc (anticorpo):** BoK 06 §2.5 ainda diz `gemini_api_key` (canônico = `google_api_key`, [[reference_byok_gemini_column]]). Relacionado: [[project_viral_autopilot]] (mesmo padrão prepaid + finalize).
+> 31	
+> ```
+
+## 🤖 Claude *(22:30:44)*
+
+
+## 🤖 Claude *(22:30:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "old_string": "---\nname: project-video-studio\ndescription: M\u00f3dulo V\u00eddeo (video-studio) \u2014 BoK 9/9 selada; Fatia 1 SHIPPED; Fatia VS-2 motor HyperFrames determin\u00edstico VIVO (2026-06-24); editor Studio = m\u00f3dulo-container (blueprint pronto)\nmetadata: \n  node_type: memory\n  type: project\n  originSessionId: f232593a-1ef8-4045-8b83-67389d10213f\n---",
+  "new_string": "---\nname: project-video-studio\ndescription: M\u00f3dulo V\u00eddeo (video-studio) \u2014 BoK 9/9; motor HyperFrames NATIVO license-clean (FR-VS-050); Fase B COMPLETA \u2014 editor bill\u00e1vel vivo no 3210 (host pr\u00f3prio + McorchAdapter + durability)\nmetadata: \n  node_type: memory\n  type: project\n  originSessionId: f232593a-1ef8-4045-8b83-67389d10213f\n---"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:31:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md",
+  "old_string": "**Editor HyperFrames Studio \u2014 Fatia VS-UI (pr\u00f3ximo, blueprint pronto):** flip OTD-VS-005 A\u2192C (embed in-SPA invi\u00e1vel \u2014 `@hyperframes/studio@0.7.5` exige React 19 vs SPA React 18; prova `npm view`). Vira **m\u00f3dulo-container** padr\u00e3o open-design: container React 19 (StudioApp **zero-props** + Hono `createStudioApi(McorchAdapter)` mesma origem) atr\u00e1s de `studio.mcorch.com` (vhost = a\u00e7\u00e3o Sovereign), iframe no SPA. Nosso `McorchAdapter.startRender()` faz bridge pro `video-render` j\u00e1 provado. Blueprint material-citado: `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md`. Gate #1 (maior risco): render-parity `frame=floor(time*fps)` entre core/runtime e nosso motor.\n\n**Pend\u00eancias de doc (anticorpo):** BoK 06 \u00a72.5 ainda diz `gemini_api_key` (can\u00f4nico = `google_api_key`, [[reference_byok_gemini_column]]). Relacionado: [[project_viral_autopilot]] (mesmo padr\u00e3o prepaid + finalize).",
+  "new_string": "**FASE B COMPLETA (2026-07-01, loop aut\u00f4nomo \u2014 commits `c422de7`\u2192`4fd9b89`):** o editor \u00e9 m\u00f3dulo MCORCH bill\u00e1vel VIVO.\n- **FR-VS-050 render NATIVO license-clean (OTD-VS-020, SDD \u00a7VS-UI-C):** `renderStudioProject` reimplementado sobre `@hyperframes/core` (Apache-2.0, LICENSE **shipa** no tarball \u2014 o CLI npm `hyperframes` N\u00c3O shipa grant nenhum) \u2014 `bundleToSingleHtml` \u2192 Playwright dirige `__player.renderSeek(i/fps)` (seek S\u00cdNCRONO em SEGUNDOS; o `{frame,seekMode}` \u00e9 o bridge de preview, N\u00c3O o render) \u2192 FFmpeg bitexact. Provado: 4 renders **byte-id\u00eanticos** em 4 contextos (sha `c721f8f4`), SSIM 0.9934 vs ref CLI, Vision-QA high. Rollback: `STUDIO_RENDER_ENGINE=cli`.\n- **Host pr\u00f3prio (`scripts/video-studio-host/`):** Hono + `createStudioApi(mcorchAdapter)` (13 m\u00e9todos \u00a7B.2; a interface REAL vive em `@hyperframes/studio-server` \u2014 o `core/studio-api` \u00e9 re-export deprecado) + **SPA pr\u00e9-buildado** do `@hyperframes/studio` dist (React 19 bundlado; carrier isolado `packages/video-studio-host-ui/` \u2014 NUNCA instalar studio no root, react@19 hoisted quebraria o SPA React 18). `video-studio.service` swapado p/ nosso host na MESMA porta 3210 (rollback no unit). Hash do editor = **`#project/<id>`** (n\u00e3o `#project=`).\n- **FR-VS-048 (A) billing:** `startRender` minta JWT User 0 (generateLink\u2192verifyOtp) \u2192 `video-render` edge fn (chokepoint \u00fanico) \u2192 **E2E PAGO provado** (12 mco, row `b25838a0`). \u26a0\ufe0f `VIDEO_HYPERFRAMES_WEBHOOK=poll://` **j\u00e1 est\u00e1 ativo** \u2014 Export do editor COBRA de verdade.\n- **FR-VS-049 durability:** sweep write-back p/ bucket privado `video-studio-projects` + materializa\u00e7\u00e3o staging+rename no `resolveProject`. Smoke 7/7; /security-review NO FINDINGS.\n- **Restante:** deletar wrap CLI+`hyperframes` global (p\u00f3s uso real pelo Sovereign) \u00b7 vhost cert `video.mcorch.com` (Sovereign, 2 sudo) \u00b7 faceless nativo.\n\n**Pend\u00eancias de doc (anticorpo):** BoK 06 \u00a72.5 ainda diz `gemini_api_key` (can\u00f4nico = `google_api_key`, [[reference_byok_gemini_column]]). Relacionado: [[project_viral_autopilot]] (mesmo padr\u00e3o prepaid + finalize)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:31:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "M=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md\npython3 - <<'EOF'\np = '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md'\ns = open(p).read()\nimport re\n# Replace the long video-studio index line with a short one (index over budget \u2014 30.7KB > 24.4KB)\npat = re.compile(r'^- \\[M\u00f3dulo V\u00eddeo \\(video-studio\\).*$', re.M)\nnew_line = '- [M\u00f3dulo V\u00eddeo (video-studio) \u2014 Fase B COMPLETA: render nativo license-clean FR-VS-050 + editor bill\u00e1vel vivo no 3210](project_video_studio.md) \u2014 2026-07-01: host pr\u00f3prio createStudioApi(McorchAdapter) + SPA pr\u00e9-buildado; Export COBRA (12 mco, webhook poll:// ativo); hash #project/<id>; rollback STUDIO_RENDER_ENGINE=cli.'\ns2, n = pat.subn(new_line, s)\nassert n == 1, f\"expected 1 match, got {n}\"\nopen(p, 'w').write(s2)\nimport os\nprint(f\"MEMORY.md: {os.path.getsize(p)} bytes (era 31k+)\")\nEOF",
+  "description": "Shorten video-studio line in MEMORY.md index"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> MEMORY.md: 31082 bytes (era 31k+)
+> ```
+
+## 🤖 Claude *(22:31:28)*
+
+
+## 🤖 Claude *(22:31:28)*
+
+
+## 🤖 Claude *(22:31:28)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:PushNotification",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'PushNotification'}]
+> ```
+
+## 🤖 Claude *(22:31:46)*
+
+
+🛠️ **Tool Call**: `PushNotification`
+```json
+{
+  "message": "Loop encerrado: Fase B COMPLETA \u2014 editor de v\u00eddeo bill\u00e1vel vivo no 3210 (render nativo Apache-2.0, E2E pago provado, durability). 2 seals pushed, mesh 9017. Fila Sovereign: cert video.mcorch.com.",
+  "status": "proactive"
+}
+```
+
+> **Tool Result (PushNotification)** - ✅ Success
+>
+> ```
+> Mobile push not sent (Remote Control inactive).
+> ```
+
+## 🤖 Claude *(22:32:06)*
+
+═══════════════════════════════════════════════════════════
+  **LOOP AUTÔNOMO ENCERRADO — Selo final (2026-07-01)**
+═══════════════════════════════════════════════════════════
+
+🏁 **5 iterações nesta janela retomada, 2 seals /handoff pushed:**
+
+| It. | Fatia | Prova-âncora |
+|---|---|---|
+| 1 | **HyperFrames nativo** (FR-VS-050/OTD-VS-020) — render license-clean em `@hyperframes/core` Apache-2.0 | 4 renders byte-idênticos `c721f8f4` · SSIM 0.9934 · Vision-QA high |
+| 2 | **Fase B 2a** — Studio Host + McorchAdapter + FR-VS-048(A) | E2E **PAGO** row `b25838a0` (12 mco) · smoke 6/6 |
+| 3 | **Fase B 2c** — editor billável VIVO no 3210 (service swapado, rollback pronto) | browser-verify + Vision-QA high · 0 erros console |
+| 4 | **Fase B 2b** — FR-VS-049 durability Storage↔volume | smoke 7/7 sha-igual · /security-review NO FINDINGS |
+| 5 | Selo incremental + memória persistente atualizada | 5c **SEAL ALLOWED** 8/8 · mesh **9017** · push `6ba80e5` |
+
+📊 **Estado final:** Fase B **core COMPLETA** — o editor NLE de vídeo é agora módulo MCORCH próprio (equity), com render nativo, billing no chokepoint único e espelho durável. Worktree limpo, 0↔0 vs origin, tsc 0, todos os serviços healthy.
+
+⏭ **Fila de Ação Sovereign (destravadores):**
+1. **Cert `video.mcorch.com`** (OTD-VS-015, 2 sudo) → editor acessível de fora (hoje loopback/SSO)
+2. **Usar o editor** → depois disso deleto o wrap CLI + `hyperframes` global
+3. Witness destrutivo Smart-Delete · app-registration YT/TikTok (STEP 0 do #2)
+
+**Por que parei (Lei 3):** janela ~limite com selo garantido; backlog desbloqueado esgotado (resta filler #4 e itens gated). **Para religar:** cole o prompt canônico stateless da charter (`.claude/context/autonomous-loop-charter.md` §final) — o estado vive lá e no HANDOFF, nada apodrece.
+
+*Survival self-audit final: Lei 1 ✅ (toda claim com hash/UUID/HTTP) · Lei 2 ✅ (2 SOPs antes do código) · Lei 3 ✅ (3 podas explícitas; selo a ~limite) · Lei 4 ✅ (ORO em cada task).*
+
+**MATE A POESIA. ENTREGUE ENGENHARIA.** ✅
+
+## 👤 User *(22:47:51)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(22:47:51)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(22:48:10)*
+
+
+## 🤖 Claude *(22:48:10)*
+
+Loop religado pelo Sovereign — retomando em modo dinâmico. Ritual: fetch + charter + verificação oportunista da Fila (o cert do vhost pode ter saído):
+
+## 🤖 Claude *(22:48:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch origin 2>&1 | tail -1; git rev-list --left-right --count HEAD...origin/main; git status --short | head -3\necho \"=== charter mtime (mudou desde 19:4x?) ===\"; ls -la .claude/context/autonomous-loop-charter.md | awk '{print $6,$7,$8}'\necho \"=== Fila: cert video.mcorch.com saiu? ===\"\ncurl -sk -o /dev/null -w \"video.mcorch.com: HTTP %{http_code} (ssl verify: \" --max-time 8 https://video.mcorch.com/healthz 2>/dev/null && curl -s -o /dev/null -w \"%{http_code})\" --max-time 8 https://video.mcorch.com/healthz 2>/dev/null; echo \"\"\necho \"=== plano unified canvas existe? ===\"; ls -la .claude/context/unified-core-sensorial-canvas-plan.md 2>/dev/null | awk '{print $5, $9}'",
+  "description": "Ritual: fetch + charter + opportunistic vhost cert check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0	0
+> === charter mtime (mudou desde 19:4x?) ===
+> Jul 1 19:28
+> === Fila: cert video.mcorch.com saiu? ===
+> video.mcorch.com: HTTP 302 (ssl verify: 302)
+> === plano unified canvas existe? ===
+> 6658 .claude/context/unified-core-sensorial-canvas-plan.md
+> ```
+
+## 🤖 Claude *(22:48:32)*
+
+
+## 🤖 Claude *(22:48:32)*
+
+
+## 🤖 Claude *(22:48:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== Location do 302 + headers ===\"\ncurl -sI --max-time 8 https://video.mcorch.com/ | grep -iE \"HTTP|location|server|cf-\" | head -6\necho \"=== nginx: vhost habilitado? ===\"\nls -la /etc/nginx/sites-enabled/ 2>/dev/null | grep -i video || ls /etc/nginx/conf.d/ 2>/dev/null | grep -i video || echo \"(n\u00e3o achei em sites-enabled/conf.d \u2014 checando include dirs)\"\ngrep -rn \"video.mcorch.com\" /etc/nginx/ 2>/dev/null | grep -v \"#\" | head -5",
+  "description": "Inspect 302 target + nginx vhost enablement"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Location do 302 + headers ===
+> HTTP/2 302 
+> location: https://login.mcorch.com/auth?return_to=https://video.mcorch.com/
+> server: cloudflare
+> cf-cache-status: DYNAMIC
+> report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=ExgCuwYlR6rMSoKmmSLGlGAPYW%2Bh7%2FOTwpUgRhkLR1B4E%2Fny3r9s64sMhujYB4skEMMuKwhbq5wzC64HSWJIl7DRX9Vg78Ob9x%2B9CAyTQSHDg035B9XS%2BGF61ve3xUWcw%2BpI"}]}
+> nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+> === nginx: vhost habilitado? ===
+> (não achei em sites-enabled/conf.d — checando include dirs)
+> ```
+
+## 🤖 Claude *(22:49:10)*
+
+
+## 🤖 Claude *(22:49:10)*
+
+
+## 🤖 Claude *(22:49:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== nginx conf do repo (upstream do vhost) ===\"\ngrep -nE \"proxy_pass|server_name|listen|auth_request|8787|3210\" nginx/video.mcorch.com.conf | head -12\necho \"\"\necho \"=== sso-auth-gate: como valida/minta cookie (primeiras ~60 linhas relevantes) ===\"\ngrep -nE \"cookie|COOKIE|3210|video|verify|ES256|jwks|sign|mint\" scripts/sso-auth-gate.ts | head -20",
+  "description": "Read vhost proxy target + SSO gate cookie mechanics"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nginx conf do repo (upstream do vhost) ===
+> 3:# self-signed origin cert; the studio preview server (systemd video-studio.service) listens ONLY on host
+> 4:# loopback (127.0.0.1:3210) — this vhost is the single external path. The studio is a Vite SPA with
+> 24:# below (R3, sso-auth-gate :8787) is what restricts it to the logged-in MCORCH session. Multi-tenant
+> 28:  listen 80;
+> 29:  listen [::]:80;
+> 30:  listen 443 ssl;
+> 31:  listen [::]:443 ssl;
+> 37:  server_name video.mcorch.com;
+> 43:  # auth_request → local SSO gate (sso-auth-gate :8787) which verifies the Supabase ES256 JWT in the
+> 48:    proxy_pass http://127.0.0.1:8787/verify;
+> 49:    proxy_pass_request_body off;
+> 61:    auth_request /_mcorch_auth;
+> 
+> === sso-auth-gate: como valida/minta cookie (primeiras ~60 linhas relevantes) ===
+> 3: * MCORCH SSO Auth Gate — nginx `auth_request` backend for the isolated apps (design.mcorch.com / video.mcorch.com).
+> 5: * Pipeline: browser holds the `.mcorch.com` SSO cookie (sb-mcorch-session = Supabase access_token, set by the SPA
+> 6: * via src/lib/sso-cookie.ts). nginx on the subdomain runs `auth_request /_mcorch_auth` → proxies the Cookie here.
+> 7: * This gate extracts the token, verifies it via the Supabase ES256 JWKS (cached in-process — mirrors
+> 30:const COOKIE_NAME = 'sb-mcorch-session';
+> 33:// ES256 JWKS — createRemoteJWKSet caches keys in-process + refetches on unknown kid (no per-request network).
+> 34:const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
+> 56:    // /verify — nginx auth_request target. 200 = allow, 401 = redirect-to-login.
+> 57:    const token = readCookie(req.headers.get('cookie'), COOKIE_NAME);
+> 60:      const { payload } = await jwtVerify(token, JWKS, { algorithms: ['ES256'] });
+> 70:process.stderr.write(`[sso-auth-gate] listening on 127.0.0.1:${PORT} (JWKS ${SUPABASE_URL}/auth/v1/.well-known/jwks.json)\n`);
+> ```
+
+## 🤖 Claude *(22:49:26)*
+
+
+## 🤖 Claude *(22:49:26)*
+
+
+## 🤖 Claude *(22:49:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null)\necho \"token mintado: ${#TOKEN} chars\"\necho \"=== P\u00daBLICO via CF: /healthz com cookie SSO ===\"\ncurl -s --max-time 12 \"https://video.mcorch.com/healthz\" -H \"Cookie: sb-mcorch-session=$TOKEN\" | head -c 200\necho \"\"\necho \"=== P\u00daBLICO via CF: /api/projects ===\"\ncurl -s --max-time 12 \"https://video.mcorch.com/api/projects\" -H \"Cookie: sb-mcorch-session=$TOKEN\" | head -c 250\necho \"\"\necho \"=== P\u00daBLICO: SPA index (t\u00edtulo) ===\"\ncurl -s --max-time 12 \"https://video.mcorch.com/\" -H \"Cookie: sb-mcorch-session=$TOKEN\" | grep -oE \"<title>[^<]+</title>\"",
+  "description": "E2E: public vhost chain with minted User 0 SSO cookie",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> token mintado: 1404 chars
+> === PÚBLICO via CF: /healthz com cookie SSO ===
+> {"ok":true,"projects_root":"/home/ubuntu/.mcorch/video-studio/projects","ui":true}
+> === PÚBLICO via CF: /api/projects ===
+> {"projects":[{"id":"mcorch-demo","dir":"/home/ubuntu/.mcorch/video-studio/projects/mcorch-demo","title":"mcorch-demo"},{"id":"mcorch-video","dir":"/home/ubuntu/.mcorch/video-studio/projects/mcorch-video","title":"MCORCH — Vídeo 9:16"}]}
+> === PÚBLICO: SPA index (título) ===
+> <title>MCORCH Studio</title>
+> ```
+
+## 🤖 Claude *(22:49:43)*
+
+
+## 🤖 Claude *(22:49:43)*
+
+
+## 🤖 Claude *(22:49:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== t\u00edtulo no 3210 local ===\"\ncurl -s http://127.0.0.1:3210/ | grep -oE \"<title>[^<]+</title>\"\necho \"=== vhost conf completo (procurar sub_filter/root custom) ===\"\ngrep -nE \"sub_filter|root |index |location\" nginx/video.mcorch.com.conf | head -12\necho \"=== o conf DEPLOYADO difere do repo? ===\"\nsudo -n true 2>/dev/null && echo \"(sudo ok)\" || echo \"(sem sudo \u2014 comparando via curl origem)\"\ncurl -sk --resolve video.mcorch.com:443:127.0.0.1 https://video.mcorch.com/ -H \"Cookie: sb-mcorch-session=invalid\" -o /dev/null -w \"origem direta: HTTP %{http_code}\\n\" --max-time 8",
+  "description": "Investigate title discrepancy public vs local"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === título no 3210 local ===
+> <title>HyperFrames Studio</title>
+> === vhost conf completo (procurar sub_filter/root custom) ===
+> 46:  location = /_mcorch_auth {
+> 53:  location @mcorch_login {
+> 60:  location / {
+> 78:    #    sub_filter exige HTML do upstream NÃO-gzipado → zera Accept-Encoding pro proxy.
+> 80:    sub_filter         '</head>' '<style>.flex.flex-col.h-full > .flex.items-center.justify-between .flex.items-center.gap-3 > svg:first-child{display:none!important}</style></head>';
+> 81:    sub_filter         '<title>HyperFrames Studio</title>' '<title>MCORCH Studio</title>';
+> 82:    sub_filter_once    off;
+> === o conf DEPLOYADO difere do repo? ===
+> (sudo ok)
+> origem direta: HTTP 302
+> ```
+
+## 🤖 Claude *(22:50:14)*
+
+
+## 🤖 Claude *(22:50:14)*
+
+
+## 🤖 Claude *(22:50:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'EOF'\np = '.claude/context/autonomous-loop-charter.md'\ns = open(p).read()\nold = \"- [ ] **DNS/vhost:** `studio.mcorch.com` (editor) e pendente `design.mcorch.com`.\"\nnew = \"- [x] **DNS/vhost `video.mcorch.com`: VERIFICADO LIVE (loop 2026-07-01 it.5)** \u2014 cadeia p\u00fablica E2E provada: CF (SSL v\u00e1lido) \u2192 nginx origem (302 sem cookie) \u2192 sso-auth-gate ES256 (cookie=JWT User 0 mintado) \u2192 127.0.0.1:3210 nosso host (`/healthz {ok,ui:true}` + `/api/projects` + SPA **rebrandada 'MCORCH Studio'** via sub_filter do vhost, logo HeyGen oculto \u2014 Apache-2.0 \u00a76 ok). **Editor bill\u00e1vel acess\u00edvel ao Sovereign**: `video.mcorch.com` ou `/dashboard/canvas/video`. Pendente s\u00f3 `design.mcorch.com`.\"\nassert old in s\ns = s.replace(old, new)\n# Also update the Fase B item's Fila note\nold2 = \"- **Fila Sovereign (reduzida):** s\u00f3 `video.mcorch.com` cert self-signed + `ln -s`+reload (OTD-VS-015, 2 sudo) \u2014 o DNS novo saiu. Editor vanilla (Fase A) j\u00e1 VIVO; Fase B = torn\u00e1-lo m\u00f3dulo pr\u00f3prio bill\u00e1vel.\"\nnew2 = \"- \u2705 **OTD-VS-015 FECHADA (verificada it.5, 2026-07-01):** `video.mcorch.com` LIVE ponta-a-ponta (CF+cert+gate+proxy\u21923210). Fase B toda entregue e P\u00daBLICA (SSO-gated).\"\nif old2 in s: s = s.replace(old2, new2)\nopen(p, 'w').write(s)\nprint(\"charter ok\")\nEOF\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -m \"docs(loop): charter \u2014 OTD-VS-015 verificada LIVE (editor p\u00fablico SSO-gated E2E provado)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -1\ngit push origin main 2>&1 | tail -1",
+  "description": "Charter: mark vhost verified live + commit + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> charter ok
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>    6ba80e5..c849f41  main -> main
+> ```
+
+## 🤖 Claude *(22:50:42)*
+
+
+## 🤖 Claude *(22:50:42)*
+
+
+## 🤖 Claude *(22:50:47)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 75,
+  "reason": "Emendar itera\u00e7\u00e3o 6 (Unified Sensorial Canvas 3.5) com cache quente \u2014 trabalho ativo do loop, sem evento externo a esperar.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 19:53:00 (in 133s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(22:53:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(22:53:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(22:53:09)*
+
+
+## 🤖 Claude *(22:53:09)*
+
+
+## 🤖 Claude *(22:53:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch origin 2>&1 | tail -1; git rev-list --left-right --count HEAD...origin/main",
+  "description": "git fetch ritual"
+}
+```
+
+## 🤖 Claude *(22:53:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/unified-core-sensorial-canvas-plan.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0	0
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Plano — Unified Core Sensorial Canvas (Phase Epsilon V9 Consolidation)
+> 2	
+> 3	> Plano de trabalho para fundir **Core-Fable (CoreFablePage)** + **Matrix (ConstellationMatrix)** + **Memória (MemoryPage)** em um canvas 3D soberano único, herdando o *Unified Relativistic Black Hole & Cymatics Visualizer*.
+> 4	> Status: **PLANO** (Fase 1 auditoria fechada · implementação gated). Operator=MCORCH Agent · Reviewer/Owner=Sovereign.
+> 5	> Criado 2026-06-17. Fonte da auditoria: nó mesh `a576216e` não — ver auditoria de clusters desta sessão.
+> 6	
+> 7	---
+> 8	
+> 9	## 0. Veredito da Auditoria (Fase 1 — fechada, material)
+> 10	
+> 11	| Sistema | Status | Prova |
+> 12	|---|---|---|
+> 13	| **Louvain clustering** | ✅ REAL/VIVO | `useConstellationSigma.ts:227` `louvain(g,{resolution:1.0})`; deps `graphology-communities-louvain@2.0.2` + FA2 `0.10.1`; input **8560 nós / 8816 arestas** vivos |
+> 14	| **Squad-territory coloring** | ⚠️ MORTO + heurístico | `crew_module_ownership` = **0 linhas**; fallback sempre cai no Louvain (`:247`); atribuição = `inferSquad` keyword-match (`useCrewOverlay.ts:34`) |
+> 15	| **Mocks cosméticos** | fora do motor | `LandingConstellation:7` (decorativo) · `CrewGraph:11 SQUAD_META` (crew 3D, página diferente) |
+> 16	
+> 17	**Número canônico do grafo:** 8816 arestas (não "1801" — esse era endpoints de import não-sincronizados, `HANDOFF.md:7396`).
+> 18	
+> 19	## Decisão B (Sovereign delegou → Agent decidiu)
+> 20	**PODAR:** Louvain = esquema oficial de cor da Rede de Código. Squad-coloring dormante **não migra** pro canvas novo. Overlay de agente (`crew_agents`, vivo) sobrevive. `OTD-SQUAD-OWNERSHIP-REVIVAL` registra a futura posse a partir de sinal REAL (telemetria), não keyword.
+> 21	
+> 22	---
+> 23	
+> 24	## 1. Realidade dos motores (o eixo do refactor)
+> 25	
+> 26	| Página | Motor | Componente |
+> 27	|---|---|---|
+> 28	| Matrix | **Sigma.js 2D** (`sigma@3.0.2`) | `ConstellationMatrix.tsx` + `useConstellationSigma` (graphology+louvain) |
+> 29	| Core-Fable | **R3F/Three.js 3D** | `MegaBrainVisualizer.tsx` (Schwarzschild + cymatics raymarch) |
+> 30	| Memória | React/DOM + d3 widget | `MemoryPage.tsx` + `MemoryGraphWidget` |
+> 31	
+> 32	**Sigma 2D não compõe numa cena Three 3D.** Estratégia de reconciliação:
+> 33	- **graphology permanece o CÉREBRO** (modelo de grafo + `louvain` + `forceAtlas2` para seed de layout) — é renderer-agnóstico.
+> 34	- **O CORPO migra de Sigma → R3F** (rede de código renderizada nativamente em Three).
+> 35	- **Posições 3D:** FA2 é 2D → projetar no **plano equatorial** (x,z) ao redor do buraco negro com jitter-y por comunidade/stability (≈ "nós orbitando o disco de acreção"). Rede de Memória = nuvem 3D mais orgânica.
+> 36	
+> 37	**Realidade de performance (Lei 1):** 8560 nós + 8816 arestas em R3F **não** batem <50ms como meshes individuais. Obrigatório **InstancedMesh** (nós) + `LineSegments`/BufferGeometry batched (arestas). Sigma fazia esse batching nativo; em R3F é explícito. Gate de perf no passo 3.7.
+> 38	
+> 39	---
+> 40	
+> 41	## 2. Arquitetura de dados (contexto unificado do visualizador)
+> 42	
+> 43	Novo store/contexto global `useUnifiedCanvas` (Zustand — padrão do projeto) que hospeda:
+> 44	- `codeGraph` (graphology Graph — de `useConstellationSigma`, compute extraído p/ selector renderer-agnóstico)
+> 45	- `memoryNodes`/`memoryEdges` (`McorchNode[]`/`McorchEdge[]` — de `useMcorchMemory`)
+> 46	- `selection` + `cameraTarget` (fly-to) + `viewMode` (`matrix` | `memory` | `universe`)
+> 47	- `synapseEdges` (acoplamento inter-rede)
+> 48	
+> 49	Hooks a unificar: `useConstellationSigma` (código) + `useMcorchMemory` (pensamento) + `useNodeIntelligence` (análise on-select).
+> 50	
+> 51	**Sinapses inter-rede (Lei 1 — sem fabricar):** as arestas Memória→Código **devem** vir de relação REAL:
+> 52	- Fase A: arestas já existentes em `mcorch_edges` que cruzam a partição AST↔knowledge (`DERIVES_FROM`/`REQUIRES`/`observes`).
+> 53	- Fase B (OTD): similaridade por embedding (768d cosine) como enriquecimento. **Nunca** linha decorativa sem lastro.
+> 54	
+> 55	---
+> 56	
+> 57	## 3. Ordem de Trabalho (commits granulares, não-quebrante)
+> 58	
+> 59	### Fase 2 — Plano & Gate (agora)
+> 60	- **2.0** ✅ Auditoria de clusters (fechada, material).
+> 61	- **2.1** ✅ Decisão B (podar) registrada + `OTD-SQUAD-OWNERSHIP-REVIVAL`.
+> 62	- **2.2** 🚦 **GATE (decisão Sovereign):** emenda BoK em `docs/bok/mcorch-constellation/` (PRD/FRD/SDD: Unified Sensorial Canvas) **OU** override consciente (precedente viralmind, débito selado no `/handoff`).
+> 63	- **2.3** Este plano selado (nó mesh + commit).
+> 64	
+> 65	### Fase 3 — Implementação (pós-gate · 1 commit por passo · 3 páginas legadas PRESERVADAS)
+> 66	- **3.1 Scaffold não-quebrante:** nova rota `/dashboard/universe` → `UnifiedCanvasPage` (vazia + shell 72/28). KEEP `constellation/matrix`, `constellation/memory`, `core-fable`. Novo `useUnifiedCanvas`. Zero deleção.
+> 67	- **3.2 Rede de Código em R3F:** extrair o build graphology+louvain de `useConstellationSigma` p/ selector puro; renderizar InstancedMesh no plano equatorial; cor = Louvain (`COMMUNITY_PALETTE`).
+> 68	- **3.3 Rede de Memória em R3F:** nós de conhecimento como nuvem orgânica + anéis cymatics por node_type (Ciano/Alfa · Violeta/Gama · Ouro/Escalar); feed `useMcorchMemory`.
+> 69	- **3.4 Herdar o Black Hole:** montar `MegaBrainVisualizer` como fundo compartilhado; as 2 redes dividem a cena negra.
+> 70	- **3.5 Sinapses:** arestas cross-partition REAIS (`mcorch_edges`) como linhas baixa-opacidade; acendem só em `universe`.
+> 71	- **3.6 Unificar hooks/interação:** select → painel `useNodeIntelligence`; fly-to câmera; toggles `matrix`/`memory`/`universe` no Sidebar.
+> 72	- **3.7 Layout 72/28 + estabilização + perf:** árvore flex única, terminal tático flutuante; instancing; verificar <50ms; corrigir `absolute inset-0` escapando flex (padrão `DashboardLayout`).
+> 73	- **3.8 Executar a poda:** aposentar squad-coloring dormante no canvas novo; legado Matrix intacto como backup.
+> 74	- **3.9 Paridade + cutover:** ao atingir paridade, nav aponta pro `/universe`; rotas legadas acessíveis como backup. **Gate E2E Lei 1:** `bun run scripts/qa/audit-canvas-ui.ts` (screenshot 1920×1080) obrigatório p/ mudança de Canvas.
+> 75	- **3.10 Seal:** tsc 0 · testes · nó mesh · `/handoff` · resolução do débito BoK.
+> 76	
+> 77	---
+> 78	
+> 79	## 4. Riscos & Diretrizes
+> 80	- **Maior risco:** reescrita do renderer (Sigma→R3F) + perf em 8.5k nós → mitigado por InstancedMesh + extração do compute (graphology reusado, não reescrito).
+> 81	- **Não-quebrante:** cada passo compila (tsc 0) e as 3 páginas legadas seguem roteadas até a paridade (3.9).
+> 82	- **Idioma:** código/comentários EN · relatórios PT-BR.
+> 83	- **OTDs abertas:** `OTD-SQUAD-OWNERSHIP-REVIVAL` (posse por sinal real) · `OTD-SYNAPSE-EMBEDDING` (sinapses por similaridade 768d) · `OTD-UCANVAS-PERF` (orçamento <50ms em 8.5k nós).
+> 84	
+> ```
+
+## 🤖 Claude *(22:53:31)*
+
+
+## 🤖 Claude *(22:53:31)*
+
+
+## 🤖 Claude *(22:53:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== arquivos do unified canvas ===\"\nls src/components/universe/ 2>/dev/null; ls src/pages/ | grep -i \"univer\\|unified\"\necho \"=== store ===\"; ls src/store/ | grep -i unified\necho \"=== quem consome useUnifiedCanvas ===\"\ngrep -rln \"useUnifiedCanvas\" src/ | head -8\necho \"=== synapse refs existentes? ===\"\ngrep -rn \"synapse\" src/ --include=\"*.ts*\" -l | head -5",
+  "description": "Locate unified canvas surface files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos do unified canvas ===
+> CodeNetworkLayer.tsx
+> MemoryNetworkLayer.tsx
+> UnifiedCanvasPage.tsx
+> === store ===
+> useUnifiedCanvasStore.ts
+> === quem consome useUnifiedCanvas ===
+> src/pages/UnifiedCanvasPage.tsx
+> src/store/useUnifiedCanvasStore.ts
+> === synapse refs existentes? ===
+> src/pages/UnifiedCanvasPage.tsx
+> src/store/useUnifiedCanvasStore.ts
+> ```
+
+## 🤖 Claude *(22:54:07)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'synapse-35-understand',\n  description: 'Understand unified canvas position models + live cross-partition edge data for phase 3.5 synapses',\n  phases: [{ title: 'Understand', detail: '2 parallel readers: canvas code structure + live mesh edge reality' }],\n}\n\nphase('Understand')\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst CODE_SCHEMA = {\n  type: 'object',\n  properties: {\n    store_shape: { type: 'string', description: 'useUnifiedCanvasStore: full state shape, especially any synapseEdges field, viewMode values, selection/cameraTarget. Quote the interface.' },\n    code_positions: { type: 'string', description: 'CodeNetworkLayer: how node positions are computed (FA2 seed? deterministic from what?), WHERE the id\u2192position mapping lives (exported? in-component memo?), node id space (what identifies a code node \u2014 mesh UUID? file path?), InstancedMesh details.' },\n    memory_positions: { type: 'string', description: 'MemoryNetworkLayer: same questions \u2014 position computation, id\u2192position mapping accessibility, node id space (mcorch_nodes UUID?).' },\n    page_composition: { type: 'string', description: 'UnifiedCanvasPage: scene composition order, existing synapse placeholder/TODO code (quote it), viewMode toggle wiring, where a SynapseLayer component would mount.' },\n    edge_rendering_precedent: { type: 'string', description: 'How edges are currently rendered in either layer (LineSegments? BufferGeometry? drei Line?) \u2014 quote the pattern to reuse for synapse lines.' },\n    data_fetch: { type: 'string', description: 'How each layer fetches its data (hooks, queries, table/RPC names, filters \u2014 e.g. useMcorchMemory / useConstellationSigma extraction). What edge data is ALREADY fetched vs needs a new query.' },\n    perf_constraints: { type: 'string', description: 'Any existing perf notes/budgets in these files (OTD-UCANVAS-PERF ~30s query note, instancing patterns, memo boundaries).' },\n  },\n  required: ['store_shape', 'code_positions', 'memory_positions', 'page_composition', 'edge_rendering_precedent', 'data_fetch', 'perf_constraints'],\n}\n\nconst DATA_SCHEMA = {\n  type: 'object',\n  properties: {\n    node_type_partition: { type: 'string', description: 'From live DB: the distinct node_type values in mcorch_nodes with counts, and which types constitute the CODE/AST partition vs the KNOWLEDGE partition (check how the frontend layers filter \u2014 but report the DB reality).' },\n    cross_partition_edges: { type: 'string', description: 'LIVE COUNT: edges in mcorch_edges whose source and target land in DIFFERENT partitions (AST-side vs knowledge-side). Group by relation type. Give the exact SQL/REST you ran and the numbers. If you cannot join efficiently via REST, use the Management API database/query endpoint with SUPABASE_ACCESS_TOKEN from ~/.supabase/access-token (read that file) \u2014 repo .env has SB_SECRET_KEY for plain REST.' },\n    edge_row_shape: { type: 'string', description: 'mcorch_edges column shape (verbatim from a sample row): id, source/target column NAMES, relation column name, metadata.' },\n    id_overlap: { type: 'string', description: 'Do the cross-partition edge endpoints actually exist in mcorch_nodes on both sides (sample 5 edges, resolve both endpoints, show node_type of each side)? Any tenancy filter needed (user_id null vs set)?' },\n    volume_verdict: { type: 'string', description: 'Total cross-partition edge count \u2014 is it small enough to render as individual line segments (<5k)? Recommend a LIMIT/filter strategy if huge.' },\n  },\n  required: ['node_type_partition', 'cross_partition_edges', 'edge_row_shape', 'id_overlap', 'volume_verdict'],\n}\n\nconst results = await parallel([\n  () => agent(\n    `You are mapping the Unified Sensorial Canvas code in ${REPO} to prepare phase 3.5 (inter-network synapse edges). Read these files COMPLETELY:\n- src/store/useUnifiedCanvasStore.ts\n- src/pages/UnifiedCanvasPage.tsx\n- src/components/universe/CodeNetworkLayer.tsx\n- src/components/universe/MemoryNetworkLayer.tsx\nAlso skim src/hooks/useMcorchMemory.ts and (if referenced) the extracted graphology selector from useConstellationSigma for how data/positions flow.\nGoal: everything needed to render REAL cross-partition edges (mcorch_edges) as low-opacity 3D lines between a memory-node position and a code-node position, visible only in viewMode='universe'. Answer every schema field with verbatim code quotes + line numbers. Your final message is data for the orchestrator.`,\n    { label: 'canvas-code-structure', phase: 'Understand', schema: CODE_SCHEMA }\n  ),\n  () => agent(\n    `You are verifying LIVE data reality (Lei 1 \u2014 no fabrication) for phase 3.5 synapses in the MCORCH mesh. Work in ${REPO}. Env: source .env for SB_SECRET_KEY + VITE_SUPABASE_URL (https://bcyvddsykvehvpwstlfa.supabase.co); for SQL joins use the Management API: POST https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query with Authorization Bearer $(cat /home/ubuntu/.supabase/access-token) and JSON body {\"query\":\"...\"}.\nThe mesh: mcorch_nodes (~9k rows; AST/code nodes vs knowledge nodes by node_type) + mcorch_edges. First read how the frontend partitions types: grep node_type filters in src/components/universe/*.tsx + src/hooks/useMcorchMemory.ts. Then run live queries to answer every schema field with exact numbers + the queries you ran. Your final message is data for the orchestrator.`,\n    { label: 'live-edge-reality', phase: 'Understand', schema: DATA_SCHEMA }\n  ),\n])\n\nconst [code, data] = results\nreturn { code: code ?? 'AGENT_FAILED', data: data ?? 'AGENT_FAILED' }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wq387cdcm
+> Summary: Understand unified canvas position models + live cross-partition edge data for phase 3.5 synapses
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/subagents/workflows/wf_4674cd50-64c
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js"} to iterate without resending the script.)
+> Run ID: wf_4674cd50-64c
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js", resumeFromRunId: "wf_4674cd50-64c"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(22:54:16)*
+
+
+## 🤖 Claude *(22:54:20)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1500,
+  "reason": "Fallback \u2014 aguardando Workflow wf_4674cd50-64c (understand 3.5 synapses); task-notification \u00e9 o wake prim\u00e1rio.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 20:20:00 (in 1539s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(22:54:47)*
+
+<task-notification>
+<task-id>wq387cdcm</task-id>
+<tool-use-id>toolu_01YSvGYRemxcnrYzhFU7ASRr</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/tasks/wq387cdcm.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Understand unified canvas position models + live cross-partition edge data for phase 3.5 synapses" completed</summary>
+<result>{"code":"AGENT_FAILED","data":"AGENT_FAILED"}</result>
+<failures>[live-edge-reality] failed: You've hit your session limit · resets 11:10pm (America/Sao_Paulo)
+[canvas-code-structure] failed: You've hit your session limit · resets 11:10pm (America/Sao_Paulo)</failures>
+<usage><agent_count>2</agent_count><subagent_tokens>164915</subagent_tokens><tool_uses>17</tool_uses><duration_ms>38984</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(22:54:47)*
+
+You've hit your session limit · resets 11:10pm (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
