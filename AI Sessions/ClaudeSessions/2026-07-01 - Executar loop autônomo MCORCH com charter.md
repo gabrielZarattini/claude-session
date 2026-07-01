@@ -2240,6 +2240,1856 @@ Retomando o loop autônomo (gate temporal do Sovereign satisfeito). O snapshot d
 > Next wakeup scheduled for 18:46:00 (in 1548s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
 
+## 👤 User *(21:31:14)*
+
+<task-notification>
+<task-id>ws9217tti</task-id>
+<tool-use-id>toolu_013jdHqoeTK4SE11xAzzGq7z</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/tasks/ws9217tti.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Understand HyperFrames CLI render internals + core runtime seek API + project/bundler contract + BoK framing for the native render fork" completed</summary>
+<result>{"cli":{"load_strategy":"NOT bundleToSingleHtml→file:// (bundleToSingleHtml exists at cli.js:69906 but is only used by studio/screenshot/plan commands). `hyperframes render &lt;dir&gt;` → `renderLocal` (cli.js:113161) → `producer.executeRenderJob` (cli.js:104734). Pipeline: (1) `runCompileStage` calls `compileForRender(projectDir, htmlPath, join(workDir,\"downloads\"),…)` and `writeCompiledArtifacts(compiled, workDir)` → compiled HTML written under `&lt;workDir&gt;/compiled`. (2) A local Hono HTTP file server is started: `fileServer = await createFileServer2({ projectDir, compiledDir: join49(workDir, \"compiled\"), port: 0, preHeadScripts: [VIRTUAL_TIME_SHIM], fps: job.config.fps })` (cli.js:105016). Server (cli.js:98413) binds `serve2({ fetch: app.fetch, port, hostname: \"127.0.0.1\" })` → `url: `http://localhost:${info.port}``; resolves each request first in compiledDir then projectDir, supports HTTP Range (for media). For every `.html` it injects preHeadScripts `[HF_EARLY_STUB, VIRTUAL_TIME_SHIM]` at head-start; for `index.html` only it additionally injects headScripts `[getVerifiedHyperframeRuntimeSource()]` (the dist/hyperframe.runtime.iife.js, sha256-verified against hyperframe.manifest.json — mismatch throws) and bodyScripts `[buildRenderModeScript(options.fps), HF_BRIDGE_SCRIPT]`, and STRIPS any embedded runtime (`stripEmbeddedRuntimeScripts`). (3) The page then navigates: `const url = `${serverUrl}/index.html`; await page.goto(url, { waitUntil: \"domcontentloaded\", timeout: pageNavigationTimeout })` (cli.js:60871,60888). Docker mode (`--docker`) just re-runs the same CLI inside a container via `spawn14(\"docker\", dockerArgs)`.","browser_setup":"Puppeteer, not Playwright: `async function getPuppeteer() { … await import(\"puppeteer\") } catch { await import(\"puppeteer-core\") }` (cli.js:59604). Launch (cli.js:59836): `browser = await ppt.launch({ headless: true, args: chromeArgs, defaultViewport: null, executablePath, timeout: browserTimeout /*120000*/, protocolTimeout /*300000*/ })` — executablePath = PRODUCER_HEADLESS_SHELL_PATH (chrome-headless-shell) when resolved. Two capture modes: `captureMode = \"beginframe\"` iff `headlessShell &amp;&amp; isLinux &amp;&amp; !forceScreenshot &amp;&amp; !supersampling`, else `\"screenshot\"` (cli.js:60534). buildChromeArgs (cli.js:59960): `--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --enable-features=CanvasDrawElement --enable-webgl --ignore-gpu-blocklist` + GPU args (default browserGpuMode \"software\"/\"auto\" → `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`) + `--font-render-hinting=none --force-color-profile=srgb --window-size=W,H` + anti-throttling (`--disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-media-suspend`) + `--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process,Translate,BackForwardCache,IntensiveWakeUpThrottling` + `--autoplay-policy=no-user-gesture-required` + `--force-gpu-mem-available-mb=&lt;budget&gt;`. beginframe mode adds: `--deterministic-mode --enable-begin-frame-control --disable-new-content-rendering-timeout --run-all-compositor-stages-before-draw --disable-threaded-animation --disable-threaded-scrolling --disable-checker-imaging --disable-image-animation-resync --enable-surface-synchronization`. Viewport: `await page.setViewport({ width, height, deviceScaleFactor: sessionOptions.deviceScaleFactor || 1 })` where width/height are the COMPOSITION dims (data-width/data-height, e.g. 1080×1920). Resolution presets (`--resolution`): `CANVAS_DIMENSIONS = { landscape: {1920,1080}, portrait: {1080,1920}, \"landscape-4k\": {3840,2160}, \"portrait-4k\": {2160,3840}, square: {1080,1080}, \"square-4k\": {2160,2160} }` (cli.js:53945) → `resolveDeviceScaleFactor` computes integer `widthRatio = target.width / compositionWidth` (must be integer ≥1, errors otherwise) used as deviceScaleFactor supersampling; outputWidth = width*dsf. Pre-navigation: `page.evaluateOnNewDocument` installs `window.__name` stub and `window.__hfVariables = JSON.parse(json)` for `--variables`.","frame_loop":"Single-worker loop (runCaptureStage, cli.js:102014): `for (let i2 = 0; i2 &lt; rangeFrames; i2++) { const absoluteIdx = rangeStart + i2; const time = absoluteIdx * job.config.fps.den / job.config.fps.num; await captureFrame(session, i2, time); }`. Multi-worker (captureFrameRange cli.js:72183) is identical per contiguous range: `const time = i2 * captureOptions.fps.den / captureOptions.fps.num;`. Per frame (prepareFrameForCapture, cli.js:61084): `const quantizedTime = quantizeTimeToFrame(time, fpsToNumber(options.fps));` where `quantizeTimeToFrame = (t,fps) =&gt; Math.floor(t*fps + 1e-9)/fps` (cli.js:55552). Seek is TIME IN SECONDS via page.evaluate — verbatim: `const hasPendingComposite = await page.evaluate((t2) =&gt; { if (window.__hf &amp;&amp; typeof window.__hf.seek === \"function\") { window.__hf.seek(t2); } return !!window.__hf_page_composite_pending; }, quantizedTime);`. IMPORTANT: `{frame, seekMode:'commit'}` is NOT the render protocol — it is the preview iframe postMessage bridge (`seek:(t,e)=&gt;e.onSeek(Number(t.frame??0), t.seekMode??\"commit\")` in the runtime's message handler). The render-side `window.__hf.seek` is installed by HF_BRIDGE_SCRIPT (cli.js:98600): `hf.seek = function(t) { p.renderSeek(t); var nextTimeMs = (Math.max(0, Number(t) || 0)) * 1000; if (window.__HF_VIRTUAL_TIME__ &amp;&amp; typeof window.__HF_VIRTUAL_TIME__.seekToTime === \"function\") { window.__HF_VIRTUAL_TIME__.seekToTime(nextTimeMs); } seekSameOriginChildFrames(window, nextTimeMs); }` — `seekToTime` sets the virtual clock and SYNCHRONOUSLY flushes all queued requestAnimationFrame callbacks (`flushAnimationFrame()`); there is NO per-frame rAF wait, setTimeout, or readiness promise in the loop — determinism comes entirely from virtual time. After seek, optional `onBeforeCapture(page, quantizedTime)` = video-frame injector (swaps pre-extracted video frames in as data-URIs, then `window.__hfReseekGpu?.(t)`). Capture: screenshot mode → CDP raw: `client.send(\"Page.captureScreenshot\", { format: isPng?\"png\":\"jpeg\", quality: isPng?undefined:(options.quality ?? 80), fromSurface: true, captureBeyondViewport: options.captureBeyondViewport ?? false, optimizeForSpeed: !isPng, clip: { x:0, y:0, width: options.width, height: options.height, scale: dpr } })` (cli.js:60145). beginframe mode → `client.send(\"HeadlessExperimental.beginFrame\", { frameTimeTicks, interval, screenshot: { format, quality, optimizeForSpeed: true } })` with `frameTimeTicks = session.beginFrameTimeTicks + frameIndex * session.beginFrameIntervalMs`, `beginFrameIntervalMs = 1000 * fps.den / fps.num`; if `!result.screenshotData` (no damage) reuse `lastFrameCache` buffer, else retry once at `frameTimeTicks + 1e-3`; \"Another frame is pending\" retried with 50*2^n backoff. JPEG quality: draft=80, standard/high=95 (`quality: needsAlpha ? void 0 : job.config.quality === \"draft\" ? 80 : 95`). Frames written `frame_${String(frameIndex).padStart(6,\"0\")}.jpg|png` to framesDir (multi-worker dirs merged by rename). Static-frame dedup may skip capture and reuse `session.lastFrameBuffer` for byte-verified static frames.","duration_frames_derivation":"Two-tier. (1) Static: compile stage sets `composition.duration = compiled.staticDuration` from `data-duration` attributes. (2) If `composition.duration &lt;= 0` (or unresolved sub-compositions / auto-start videos / scripted audio volume), a browser probe session runs `getCompositionDuration` — verbatim (cli.js:61463): `return session.page.evaluate(() =&gt; { return window.__hf?.duration ?? 0; });`. The `__hf.duration` getter (HF_BRIDGE_SCRIPT) returns 0 until ready: `if (window.__hfTimelinesBuilding) return 0; if (!window.__renderReady) return 0; var d = p.getDuration(); return d &gt; 0 ? d : getDeclaredDuration();` (getDeclaredDuration = root `data-duration` or max start+duratio
+... (truncated 42492 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/tasks/ws9217tti.output)</result>
+<usage><agent_count>4</agent_count><subagent_tokens>543990</subagent_tokens><tool_uses>124</tool_uses><duration_ms>683837</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(21:31:22)*
+
+
+## 🤖 Claude *(21:31:22)*
+
+
+## 🤖 Claude *(21:31:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/tasks/ws9217tti.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>[Truncated: PARTIAL view — showing lines 1-83 of 145 total (25779 tokens, cap 25000). Call Read with offset=84 limit=83 for the next page, or Grep to find a specific section. Do NOT answer from this page alone if the answer may be further in the file.]</system-reminder>
+> 
+> 1	{
+> 2	  "summary": "Understand HyperFrames CLI render internals + core runtime seek API + project/bundler contract + BoK framing for the native render fork",
+> 3	  "agentCount": 4,
+> 4	  "logs": [],
+> 5	  "result": {
+> 6	    "cli": {
+> 7	      "load_strategy": "NOT bundleToSingleHtml→file:// (bundleToSingleHtml exists at cli.js:69906 but is only used by studio/screenshot/plan commands). `hyperframes render <dir>` → `renderLocal` (cli.js:113161) → `producer.executeRenderJob` (cli.js:104734). Pipeline: (1) `runCompileStage` calls `compileForRender(projectDir, htmlPath, join(workDir,\"downloads\"),…)` and `writeCompiledArtifacts(compiled, workDir)` → compiled HTML written under `<workDir>/compiled`. (2) A local Hono HTTP file server is started: `fileServer = await createFileServer2({ projectDir, compiledDir: join49(workDir, \"compiled\"), port: 0, preHeadScripts: [VIRTUAL_TIME_SHIM], fps: job.config.fps })` (cli.js:105016). Server (cli.js:98413) binds `serve2({ fetch: app.fetch, port, hostname: \"127.0.0.1\" })` → `url: `http://localhost:${info.port}``; resolves each request first in compiledDir then projectDir, supports HTTP Range (for media). For every `.html` it injects preHeadScripts `[HF_EARLY_STUB, VIRTUAL_TIME_SHIM]` at head-start; for `index.html` only it additionally injects headScripts `[getVerifiedHyperframeRuntimeSource()]` (the dist/hyperframe.runtime.iife.js, sha256-verified against hyperframe.manifest.json — mismatch throws) and bodyScripts `[buildRenderModeScript(options.fps), HF_BRIDGE_SCRIPT]`, and STRIPS any embedded runtime (`stripEmbeddedRuntimeScripts`). (3) The page then navigates: `const url = `${serverUrl}/index.html`; await page.goto(url, { waitUntil: \"domcontentloaded\", timeout: pageNavigationTimeout })` (cli.js:60871,60888). Docker mode (`--docker`) just re-runs the same CLI inside a container via `spawn14(\"docker\", dockerArgs)`.",
+> 8	      "browser_setup": "Puppeteer, not Playwright: `async function getPuppeteer() { … await import(\"puppeteer\") } catch { await import(\"puppeteer-core\") }` (cli.js:59604). Launch (cli.js:59836): `browser = await ppt.launch({ headless: true, args: chromeArgs, defaultViewport: null, executablePath, timeout: browserTimeout /*120000*/, protocolTimeout /*300000*/ })` — executablePath = PRODUCER_HEADLESS_SHELL_PATH (chrome-headless-shell) when resolved. Two capture modes: `captureMode = \"beginframe\"` iff `headlessShell && isLinux && !forceScreenshot && !supersampling`, else `\"screenshot\"` (cli.js:60534). buildChromeArgs (cli.js:59960): `--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --enable-features=CanvasDrawElement --enable-webgl --ignore-gpu-blocklist` + GPU args (default browserGpuMode \"software\"/\"auto\" → `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`) + `--font-render-hinting=none --force-color-profile=srgb --window-size=W,H` + anti-throttling (`--disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-media-suspend`) + `--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process,Translate,BackForwardCache,IntensiveWakeUpThrottling` + `--autoplay-policy=no-user-gesture-required` + `--force-gpu-mem-available-mb=<budget>`. beginframe mode adds: `--deterministic-mode --enable-begin-frame-control --disable-new-content-rendering-timeout --run-all-compositor-stages-before-draw --disable-threaded-animation --disable-threaded-scrolling --disable-checker-imaging --disable-image-animation-resync --enable-surface-synchronization`. Viewport: `await page.setViewport({ width, height, deviceScaleFactor: sessionOptions.deviceScaleFactor || 1 })` where width/height are the COMPOSITION dims (data-width/data-height, e.g. 1080×1920). Resolution presets (`--resolution`): `CANVAS_DIMENSIONS = { landscape: {1920,1080}, portrait: {1080,1920}, \"landscape-4k\": {3840,2160}, \"portrait-4k\": {2160,3840}, square: {1080,1080}, \"square-4k\": {2160,2160} }` (cli.js:53945) → `resolveDeviceScaleFactor` computes integer `widthRatio = target.width / compositionWidth` (must be integer ≥1, errors otherwise) used as deviceScaleFactor supersampling; outputWidth = width*dsf. Pre-navigation: `page.evaluateOnNewDocument` installs `window.__name` stub and `window.__hfVariables = JSON.parse(json)` for `--variables`.",
+> 9	      "frame_loop": "Single-worker loop (runCaptureStage, cli.js:102014): `for (let i2 = 0; i2 < rangeFrames; i2++) { const absoluteIdx = rangeStart + i2; const time = absoluteIdx * job.config.fps.den / job.config.fps.num; await captureFrame(session, i2, time); }`. Multi-worker (captureFrameRange cli.js:72183) is identical per contiguous range: `const time = i2 * captureOptions.fps.den / captureOptions.fps.num;`. Per frame (prepareFrameForCapture, cli.js:61084): `const quantizedTime = quantizeTimeToFrame(time, fpsToNumber(options.fps));` where `quantizeTimeToFrame = (t,fps) => Math.floor(t*fps + 1e-9)/fps` (cli.js:55552). Seek is TIME IN SECONDS via page.evaluate — verbatim: `const hasPendingComposite = await page.evaluate((t2) => { if (window.__hf && typeof window.__hf.seek === \"function\") { window.__hf.seek(t2); } return !!window.__hf_page_composite_pending; }, quantizedTime);`. IMPORTANT: `{frame, seekMode:'commit'}` is NOT the render protocol — it is the preview iframe postMessage bridge (`seek:(t,e)=>e.onSeek(Number(t.frame??0), t.seekMode??\"commit\")` in the runtime's message handler). The render-side `window.__hf.seek` is installed by HF_BRIDGE_SCRIPT (cli.js:98600): `hf.seek = function(t) { p.renderSeek(t); var nextTimeMs = (Math.max(0, Number(t) || 0)) * 1000; if (window.__HF_VIRTUAL_TIME__ && typeof window.__HF_VIRTUAL_TIME__.seekToTime === \"function\") { window.__HF_VIRTUAL_TIME__.seekToTime(nextTimeMs); } seekSameOriginChildFrames(window, nextTimeMs); }` — `seekToTime` sets the virtual clock and SYNCHRONOUSLY flushes all queued requestAnimationFrame callbacks (`flushAnimationFrame()`); there is NO per-frame rAF wait, setTimeout, or readiness promise in the loop — determinism comes entirely from virtual time. After seek, optional `onBeforeCapture(page, quantizedTime)` = video-frame injector (swaps pre-extracted video frames in as data-URIs, then `window.__hfReseekGpu?.(t)`). Capture: screenshot mode → CDP raw: `client.send(\"Page.captureScreenshot\", { format: isPng?\"png\":\"jpeg\", quality: isPng?undefined:(options.quality ?? 80), fromSurface: true, captureBeyondViewport: options.captureBeyondViewport ?? false, optimizeForSpeed: !isPng, clip: { x:0, y:0, width: options.width, height: options.height, scale: dpr } })` (cli.js:60145). beginframe mode → `client.send(\"HeadlessExperimental.beginFrame\", { frameTimeTicks, interval, screenshot: { format, quality, optimizeForSpeed: true } })` with `frameTimeTicks = session.beginFrameTimeTicks + frameIndex * session.beginFrameIntervalMs`, `beginFrameIntervalMs = 1000 * fps.den / fps.num`; if `!result.screenshotData` (no damage) reuse `lastFrameCache` buffer, else retry once at `frameTimeTicks + 1e-3`; \"Another frame is pending\" retried with 50*2^n backoff. JPEG quality: draft=80, standard/high=95 (`quality: needsAlpha ? void 0 : job.config.quality === \"draft\" ? 80 : 95`). Frames written `frame_${String(frameIndex).padStart(6,\"0\")}.jpg|png` to framesDir (multi-worker dirs merged by rename). Static-frame dedup may skip capture and reuse `session.lastFrameBuffer` for byte-verified static frames.",
+> 10	      "duration_frames_derivation": "Two-tier. (1) Static: compile stage sets `composition.duration = compiled.staticDuration` from `data-duration` attributes. (2) If `composition.duration <= 0` (or unresolved sub-compositions / auto-start videos / scripted audio volume), a browser probe session runs `getCompositionDuration` — verbatim (cli.js:61463): `return session.page.evaluate(() => { return window.__hf?.duration ?? 0; });`. The `__hf.duration` getter (HF_BRIDGE_SCRIPT) returns 0 until ready: `if (window.__hfTimelinesBuilding) return 0; if (!window.__renderReady) return 0; var d = p.getDuration(); return d > 0 ? d : getDeclaredDuration();` (getDeclaredDuration = root `data-duration` or max start+duration over `[data-composition-src]` hosts). Frame count (cli.js:101669): `const totalFrames = Math.ceil(duration * fpsToNumber(job.config.fps));` and `if (duration <= 0) { … throw new Error(\"Composition duration is 0 — this would produce a black video.\" + hint) }`. fps is rational `{num,den}` (`toFps`), default 30; NTSC accepted as \"30000/1001\".",
+> 11	      "readiness": "initializeSession (cli.js:60826), gates in order before any frame: (1) `page.goto(url, {waitUntil:\"domcontentloaded\"})` (pageNavigationTimeout=60000 default); (2) `await page.evaluate(`window.__hfFlushSync?.()`)` — drains the HF_EARLY_STUB GSAP tween-batching queue; (3) `pollHfReady(page, playerReadyTimeout /*45000 default*/)` polling every 100ms the expression ``!!(window.__hf && typeof window.__hf.seek === \"function\" && window.__hf.duration > 0)`` — with zero-duration fast-fail diagnostics after 10s; (4) `pollSubCompositionTimelines` — every `[data-composition-id]` host must have `window.__timelines[id]` registered, then calls `window.__hfForceTimelineRebind()`; (5) `applyVideoMetadataHints` (sets width/height/aspect-ratio attrs from ffprobe metadata); (6) in parallel: `pollVideosReady` (every non-skipped `<video>` readyState>=2 || .error || NETWORK_NO_SOURCE; warn-and-continue on timeout), `pollImagesReady` + `decodeAllImages` (`img.decode()`), `page.evaluate(`document.fonts?.ready`)`, `waitForOptionalTailwindReady` (`window.__tailwindReady` promise, throws on timeout); (7) if format png: `Emulation.setDefaultBackgroundColorOverride({color:{r:0,g:0,b:0,a:0}})` + injected transparent-background CSS; (8) `armStaticDedup` — computes static frame set from GSAP timeline children and byte-verifies sampled screenshots against an anchor before enabling reuse. beginframe mode additionally drives a warm-up `HeadlessExperimental.beginFrame({frameTimeTicks, interval, noDisplayUpdates:true})` tick loop (~33ms) during init, then `session.beginFrameTimeTicks = (baseTickCount + 10) * session.beginFrameIntervalMs`. Render-mode body script (`buildRenderModeScript`) sets `window.__playerReady` once `window.__player.renderSeek` exists, and installs a media-fallback player (video/audio-only pages, no composition) that sets `__renderReady = true` immediately.",
+> 12	      "encoding": "Two-pass: frames → `video-only.mp4` → assemble with audio. Default disk encode (encodeFramesFromDir, cli.js:62495): `ffmpeg -framerate <num|num/den> -i <framesDir>/frame_%06d.jpg` then buildEncoderArgs (cli.js:62317): `-r <fps> -c:v libx264 -preset <preset> -crf <quality> -x264-params aq-mode=3:aq-strength=0.8:deblock=1,1:colorprim=bt709:transfer=bt709:colormatrix=bt709 -colorspace:v bt709 -color_primaries:v bt709 -color_trc:v bt709 -color_range tv -vf \"scale=in_range=pc:out_range=tv\"(+even-dimension pad) -video_track_timescale 90000 -pix_fmt yuv420p -avoid_negative_ts make_zero -y <videoOnlyPath>`. NOT bitexact (no -bitexact flags). Presets: `ENCODER_PRESETS = { draft: {preset:\"ultrafast\", quality:28, codec:\"h264\"}, standard: {preset:\"medium\", quality:18}, high: {preset:\"slow\", quality:15} }`; `--crf`/`--video-bitrate` override (mutually exclusive, crf wins). Formats: webm→libvpx-vp9 `-b:v 0 -crf q -deadline good -row-mt 1 -pix_fmt yuva420p -metadata:s:v:0 alpha_mode=1`; mov→`prores_ks -profile:v 4444 -pix_fmt yuva444p10le`; HDR→libx265 yuv420p10le + bt2020/smpte2084 tags + `-tag:v hvc1`. Streaming encode path (default when 1 worker, mp4/mov, duration≤240s): pipes buffers to `ffmpeg -f image2pipe -vcodec mjpeg|png -framerate fps -i -` through an in-order frame reorder buffer. AUDIO IS NEVER CAPTURED FROM THE BROWSER: `runAudioStage` → `processCompositionAudio(audios, …)` mixes the composition's declared audio tracks with ffmpeg into `<workDir>/audio.aac`; assemble (muxVideoWithAudio, cli.js:62759): `ffmpeg -i video -i audio.aac -c:v copy [-c:a copy | -c:a aac -b:a 192k] -movflags +faststart -avoid_negative_ts make_zero -r <fps> -y out.mp4`; no audio → `applyFaststart`: `-c copy -movflags +faststart`. GIF via palette (`encodeGifFromDir`); png-sequence copies frames + `audio.aac` sidecar. GPU encode (--gpu) maps to nvenc/videotoolbox/vaapi/qsv/amf variants.",
+> 13	      "gotchas": [
+> 14	        "Virtual time is mandatory: VIRTUAL_TIME_SHIM (pre-head, cli.js:98135) replaces window.Date (VirtualDate.now = virtualNowMs), performance.now, and requestAnimationFrame with a queue flushed ONLY inside __HF_VIRTUAL_TIME__.seekToTime(ms). A page animated by native rAF/wall-clock will freeze at frame 0 under a naive Playwright port that just screenshots — the runtime must be driven exclusively by __hf.seek.",
+> 15	        "window.__hf.seek takes SECONDS (quantized Math.floor(t*fps+1e-9)/fps), not a frame object. The `{frame, seekMode:'commit'}` shape found in the bundle belongs to the preview-iframe postMessage bridge (hf-parent/hf-preview message handlers), not to the CLI render loop.",
+> 16	        "<video> elements are NOT decoded live during render: frames are pre-extracted with ffmpeg (runExtractVideosStage) and injected per-frame as data-URI <img id=\"__render_frame_<id>__\"> overlays via the onBeforeCapture hook (createVideoFrameInjector, cli.js:71144), followed by window.__hfReseekGpu?.(t). Relying on video.currentTime in a reimplementation yields black/non-deterministic video pixels.",
+> 17	        "The project's embedded runtime is STRIPPED and replaced by the server with the sha256-verified dist/hyperframe.runtime.iife.js (manifest check throws on mismatch), plus buildRenderModeScript (installs renderSeek/media-fallback player, RENDER_SEEK_MODE default 'preview-phase', PRODUCER_RENDER_SEEK_STEP default 1/120, offsetFraction 0.5) and HF_BRIDGE_SCRIPT (defines window.__hf.seek/duration). Loading the raw project HTML without these injections gives no __hf at all → pollHfReady timeout.",
+> 18	        "pollHfReady requires __hf.duration > 0, and the duration getter returns 0 while window.__hfTimelinesBuilding is true (HF_EARLY_STUB proxies gsap.timeline() and batches tween creation through rAF). You must call window.__hfFlushSync?.() after goto or readiness can deadlock/settle-late.",
+> 19	        "Default capture on Linux with chrome-headless-shell is CDP HeadlessExperimental.beginFrame (with --enable-begin-frame-control --deterministic-mode --run-all-compositor-stages-before-draw …), not Page.captureScreenshot; beginFrame with no damage returns no screenshotData → the code reuses the cached previous frame buffer (a naive port that treats missing data as an error, or that ignores damage semantics, produces gaps). Playwright cannot send HeadlessExperimental via its high-level API — use CDPSession, or force screenshot mode with the flags stripped (BEGINFRAME_ONLY_FLAGS set exists precisely to strip them).",
+> 20	        "Screenshot path is raw CDP Page.captureScreenshot with clip {0,0,width,height,scale:deviceScaleFactor}, fromSurface:true, captureBeyondViewport false by default but TRUE by default on macOS Chrome (shouldDefaultCaptureBeyondViewport) and when videos+hardware-GPU (tall-portrait compositor bug #1094); alpha PNG capture must use optimizeForSpeed:false — 'true uses a zero-alpha-aware fast path that crushes real alpha values' (verbatim comment, cli.js:60175).",
+> 21	        "Determinism/parity flags matter: --force-color-profile=srgb, --font-render-hinting=none, --autoplay-policy=no-user-gesture-required (without it an AudioContext stays suspended and the capture loop deadlocks — verbatim comment), anti-background-throttling flags, and software WebGL (SwiftShader) as default browserGpuMode.",
+> 22	        "fps is rational {num,den}: frame time = i*den/num, ffmpeg arg 'num/den' (NTSC 30000/1001 supported). Reimplementations using float fps=29.97 will drift on quantization.",
+> 23	        "Frame files are frame_%06d starting at index 0 with ABSOLUTE frame index even in multi-worker mode (fileFrameIdx = i - outputFrameOffset, offset 0 for disk path); worker dirs are merged by rename before encode; ffmpeg -framerate + pattern input assumes gapless sequence — a single missed frame shifts everything.",
+> 24	        "Static-frame dedup silently reuses the previous frame buffer for GSAP-verified static frames (disable via HF_STATIC_DEDUP_VERIFY=false semantics / config staticFrameDedup) — only armed in screenshot mode with no video injector.",
+> 25	        "Readiness failure modes are warn-and-continue for images/videos (blank early frames) but HARD FAIL for duration 0 ('would produce a black video'), Tailwind runtime timeout, and Chromium major mismatch (config.expectedChromiumMajor).",
+> 26	        "--variables are injected via evaluateOnNewDocument as window.__hfVariables BEFORE any page script runs; injecting after load is too late for composition scripts that read getVariables() at parse time.",
+> 27	        "The browser is pooled (enableBrowserPool) and a probe session (used for duration discovery) is REUSED as the capture session when workerCount===1 — page state (fonts, decoded media, dedup arming) carries over; the probe file server is also reused.",
+> 28	        "Audio: never from the browser — composition.audios are mixed by ffmpeg into audio.aac and muxed at assemble; GIF ignores audio; png-sequence writes an audio.aac sidecar."
+> 29	      ]
+> 30	    },
+> 31	    "runtime": {
+> 32	      "global_api": "The runtime IIFE itself exposes (runtimeContract.d.ts, verbatim): `HYPERFRAME_RUNTIME_GLOBALS = { player: \"__player\", playerReady: \"__playerReady\", renderReady: \"__renderReady\", timelines: \"__timelines\", clipManifest: \"__clipManifest\" }` and bridge sources `{ parent: \"hf-parent\", preview: \"hf-preview\" }`. It sets `window.__player=g(he), window.__playerReady=!0` and posts `Ee({source:\"hf-preview\",type:\"ready\"})` to `window.parent.postMessage(t,\"*\")` on init. Command intake is a postMessage listener (IIFE, verbatim): `...i.source!==\"hf-parent\"||i.type!==\"control\")return;let r=i.action;...let o=Ra[r];o&&o(i,t)}; window.addEventListener(\"message\",e)` with dispatch table `Ra={play,pause,\"stop-media\",seek:(t,e)=>e.onSeek(Number(t.frame??0),t.seekMode??\"commit\"),tick,\"set-muted\",\"set-volume\",\"set-media-output-muted\",...}` (d.ts also lists set-playback-rate, set-color-grading, enable/disable-pick-mode). Feedback messages: `{source:\"hf-preview\",type:\"state\",frame:p,isPlaying,muted,playbackRate}` (frame = `Math.round(currentTime*canonicalFps)`), plus types ready/timeline/analytics/diagnostic/stage-size/document. IMPORTANT: bare `window.__hf` is NEVER assigned by the runtime IIFE (grep for `window.__hf[^a-zA-Z_]` returns nothing; only prefixed `__hfLottie/__hfThreeTime/__hfTimelinesBuilding/__hfFlushSync/__hfForceTimelineRebind/__hfReseekGpu` etc.). The `window.__hf = { duration, seek }` facade an external driver uses is injected by the CLI render harness (cli.js:98570 HF_BRIDGE_SCRIPT, body script): `hf.seek=function(t){ p.renderSeek(t); var nextTimeMs=(Math.max(0,Number(t)||0))*1000; if(window.__HF_VIRTUAL_TIME__...) window.__HF_VIRTUAL_TIME__.seekToTime(nextTimeMs); seekSameOriginChildFrames(window,nextTimeMs); }` and `Object.defineProperty(hf,\"duration\",{get(){ if(window.__hfTimelinesBuilding) return 0; if(!window.__renderReady) return 0; var d=p.getDuration(); return d>0?d:getDeclaredDuration(); }})`. So an external Playwright driver has two options: (A) replicate the CLI: inject HF_EARLY_STUB (GSAP tween-batching stub, creates `window.__hf||={}` + `__hfFlushSync`) and VIRTUAL_TIME_SHIM as pre-head scripts, runtime IIFE in head, `buildRenderModeScript(fps)` (sets `window.__HF_EXPORT_RENDER_SEEK_CONFIG={mode,step,offsetFraction,fps,...}` and flips `__playerReady`) + HF_BRIDGE_SCRIPT in body, then per frame `page.evaluate(t=>{window.__hf.seek(t)}, seconds)` — this is exactly what the CLI does at cli.js:61091-61096; or (B) drive `window.__player.renderSeek(seconds)` directly (the IIFE always exposes it) plus manual `__HF_VIRTUAL_TIME__.seekToTime(ms)` if the shim was injected. The postMessage `seek` action is the studio/preview path, not the render path.",
+> 33	      "seek_semantics": "Two distinct seek surfaces. (1) postMessage `seek`: payload `{source:\"hf-parent\",type:\"control\",action:\"seek\",frame:<number>,seekMode:\"commit\"}` — units are FRAMES: dispatch is `seek:(t,e)=>e.onSeek(Number(t.frame??0),t.seekMode??\"commit\")` and the handler converts frame→seconds via canonicalFps (IIFE verbatim): `onSeek:(d,p)=>{let x=Math.max(0,d)/t.canonicalFps;he.seek(x),wt(\"composition_seeked\",{time:x})}` — note the seekMode param `p` is ACCEPTED BUT IGNORED in this build (\"commit\" is the only literal present; no \"preview\" branch exists). postMessage is fire-and-forget/async: no reply resolves when painted; the only feedback is the `type:\"state\"` post (frame,isPlaying,...) and analytics `composition_seeked`. (2) Render path `window.__hf.seek(t)` / `__player.renderSeek(t)`: units are SECONDS. `renderSeek:e=>{let n=t.getTimeline(),i=t.getCanonicalFps(),r=n?(ja(...),Lr(n,e,i)):lt(Math.max(0,Number(e)||0),i);t.onDeterministicSeek(r),t.setIsPlaying(!1),t.onSyncMedia(r,!1),t.onRenderFrameSeek(r),t.onStatePost(!0)}` where `lt(t,e)=Math.floor(t*fps+1e-9)/fps` (frame quantization — identical to exported `quantizeTimeToFrame(timeSeconds,fps)` in parityContract.d.ts: `frameIndex=Math.floor(safeTime*safeFps+1e-9); return frameIndex/safeFps`) and `Lr` pauses the GSAP timeline then `t.totalTime(i,!1)` / `t.seek(i,!1)` synchronously; `onDeterministicSeek` fans out to every deterministic adapter `p.seek({time})`; `onSyncMedia` sets media currentTime; `onRenderFrameSeek` triggers GPU/canvas redraw. This whole chain is SYNCHRONOUS JavaScript — `page.evaluate(t=>window.__hf.seek(t), quantizedTime)` returns with DOM/style state committed (the CLI relies on this: cli.js:61089-61096 `prepareFrameForCapture` quantizes with `quantizeTimeToFrame(time, fps)`, evaluates the seek, then screenshots). Actual pixel presentation is left to the compositor/CDP screenshot; async pieces (video frame decode, images, fonts) are handled by upfront readiness gates, not by seek. canonicalFps defaults to 30 and is set only from `window.__HF_EXPORT_RENDER_SEEK_CONFIG.fps` (`t.canonicalFps=e.fps??t.canonicalFps`), which `buildRenderModeScript(fps)` injects from render options. Env-tunable seek config exists driver-side: RENDER_SEEK_MODE = \"preview-phase\" | \"strict-boundary\" (PRODUCER_RUNTIME_RENDER_SEEK_MODE), RENDER_SEEK_STEP (default 1/120), RENDER_SEEK_OFFSET_FRACTION (default 0.5) — exported into `__HF_EXPORT_RENDER_SEEK_CONFIG` (cli.js:98555-98564), though this runtime build only consumes `.fps` from it.",
+> 34	      "readiness_api": "Layered. IN-PAGE (runtime IIFE): each deterministic adapter (registered set: css, waapi, gsap, animejs, d3, lottie, three, typegpu, mapbox, maplibre, leaflet, google-maps) exposes optional `getReadyPromise` — e.g. lottie/map adapters: `getReadyPromise:()=>{let i=t.getInstances();if(i.length===0)return null;...Promise.allSettled(r.map(o=>t.waitFor(o)...))}`. The runtime aggregates them: `ga=()=>{let d=[];for(let p of t.deterministicAdapters){let x=p.getReadyPromise;...S&&d.push(S)}return d}` and `ya()` gates `window.__renderReady`: `Ze=()=>{if(!Se||window.__hfTimelinesBuilding){window.__renderReady=!1;return}...if(!ya()){window.__renderReady=!1;return}ba()}` where `ba` ends `window.__renderReady=!0,st(),Te(!0)`. It also waits for the GSAP batching stub via the `hf-timelines-built` CustomEvent when `window.__hfTimelinesBuilding` is true. The aggregate signal an external driver should await is exactly what the CLI's `pollHfReady` polls (cli.js:60662-60663): `!!(window.__hf && typeof window.__hf.seek === \"function\" && window.__hf.duration > 0)` — the `__hf.duration` getter returns 0 until `__renderReady && !__hfTimelinesBuilding`, so duration>0 implies timelines bound + all adapter ready-promises resolved. DRIVER-SIDE (cli.js initializeSession, 60903-60948): after `page.goto(domcontentloaded)` → `page.evaluate(\"window.__hfFlushSync?.()\")` → `pollHfReady` → `pollSubCompositionTimelines` (every `[data-composition-id]` has `window.__timelines[id]`, then calls `window.__hfForceTimelineRebind()`) → Promise.all of: `pollVideosReady` (every video readyState>=2 or errored), `pollImagesReady` + `decodeAllImages` (`img.decode()`), `page.evaluate(\"document.fonts?.ready\")`, `waitForOptionalTailwindReady` (`window.__tailwindReady`). Fonts/images/videos readiness is NOT in the runtime — an external driver must reimplement those waits. Fallback: if no `[data-composition-id]` exists, buildRenderModeScript installs a media-fallback `__player` and sets `__playerReady`/`__renderReady` immediately (cli.js:98379-98382).",
+> 35	      "determinism": "Yes — but the stubbing lives in the CLI-injected VIRTUAL_TIME_SHIM (cli.js buildVirtualTimeShim, 98135-98277), not in the runtime IIFE. The shim (guarded by `if (window.__HF_VIRTUAL_TIME__) return;`) replaces `window.Date` with VirtualDate (`VirtualDate.now=function(){return virtualNowMs}`), `performance.now` (`value: function(){ return virtualNowMs; }`), and `requestAnimationFrame`/`cancelAnimationFrame` with a queue that only flushes inside `seekToTime`: `window.__HF_VIRTUAL_TIME__ = { originalSetTimeout/ClearTimeout/SetInterval/ClearInterval/RequestAnimationFrame/CancelAnimationFrame, seekToTime:function(nextTimeMs){ virtualNowMs=safeTimeMs; flushAnimationFrame(); return virtualNowMs; }, getTime:function(){return virtualNowMs;} }`. rAF callbacks receive `virtualNowMs` as timestamp. `window.__hf.seek(t)` calls `seekToTime(t*1000)` and recursively `seekSameOriginChildFrames` so same-origin iframes advance in lockstep. It is injected as a pre-head script by the render pipelines (`preHeadScripts:[VIRTUAL_TIME_SHIM]` at cli.js:101427 and 105020; a third path at 107424 uses `buildVirtualTimeShim({seedRandomFromFrame:true})` which ALSO seeds `Math.random` and `crypto.getRandomValues` with mulberry32 reseeded from virtual time per seek — the default shim does NOT seed RNG). setTimeout/setInterval are NOT virtualized (originals kept; harness scripts use `__HF_VIRTUAL_TIME__.originalSetTimeout` to keep polling alive). So a paused, seek-driven render is deterministic BY DESIGN: time only advances via explicit `seekToTime`, timelines are paused and seeked synchronously via `totalTime(t,false)`, seeks are frame-quantized (`floor(t*fps+1e-9)/fps`), adapters get explicit `seek({time})`, and docs/core.md:511-515 mandates \"All timelines start paused — the top-level timeline is controlled externally by the frontend player or renderer\". Residual nondeterminism sources: unseeded Math.random (unless the seeded shim variant is used), live media decode (mitigated by readiness gates + warmup `HeadlessExperimental.beginFrame` ticks in beginframe capture mode), and real setTimeout-driven page code.",
+> 36	      "core_vs_cli_runtime_diff": "IDENTICAL. sha256sum of both files: `1bc431f0e1d1877fd39fa6a633f18521ccfa7bf8548d637e8b897f7a4b46e782` for BOTH /tmp/.../scratchpad/hf-probe/core/package/dist/hyperframe.runtime.iife.js (core tarball) and /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/hyperframe.runtime.iife.js (CLI install); both 230005 bytes (the CLI copy even shows hardlink count 2 — bun content-addressed store). There is NO drift between the core-published runtime and the CLI-installed runtime; everything render-specific (`__hf` facade, `__HF_VIRTUAL_TIME__`, render-mode script, readiness polls) is layered on top by cli.js at serve time (createFileServer2, cli.js:98413-98417: preHead=[HF_EARLY_STUB,+VIRTUAL_TIME_SHIM], head=[verified runtime IIFE], body=[buildRenderModeScript(fps), HF_BRIDGE_SCRIPT], with `stripEmbeddedRuntime:true` replacing any runtime already embedded in the HTML)."
+> 37	    },
+> 38	    "bundler": {
+> 39	      "bundle_options": "From dist/compiler/htmlBundler.d.ts (verbatim):\n\n```ts\nimport { type MediaDurationProber } from \"./htmlCompiler\";\nexport interface BundleOptions {\n    /** Optional media duration prober (e.g., ffprobe). If omitted, media durations are not resolved. */\n    probeMediaDuration?: MediaDurationProber;\n    /** How to handle the HyperFrames runtime <script> tag. Default: `\"inline\"`. */\n    runtime?: \"inline\" | \"placeholder\";\n}\nexport declare function bundleToSingleHtml(projectDir: string, options?: BundleOptions): Promise<string>;\n```\nwhere `export type MediaDurationProber = (src: string) => Promise<number>;` (htmlCompiler.d.ts — \"Return duration in seconds, or 0 if unknown\").\n\nDefaults & behavior (htmlBundler.js):\n- `runtime` default = `\"inline\"` (`options?.runtime ?? \"inline\"`, line 633): embeds the runtime IIFE body directly into `<script data-hyperframes-preview-runtime=\"1\">…</script>` injected before `</head>` — \"genuinely self-contained HTML… Right for CLI render output\". `\"placeholder\"` emits `src=\"\"` for string-replace by dev servers. **Env var `HYPERFRAME_RUNTIME_URL`, when set, takes precedence over BOTH modes** and emits `src=\"<URL>\"`.\n- `probeMediaDuration` default = undefined → media durations not resolved (fine for this project: no <video>/<audio> clips). compileHtml pipeline: static pass adds `data-end` where `data-duration` exists; unresolved video/audio probed; pre-resolved validated/clamped.\n- Throws `\"index.html not found in project directory\"` if `join(projectDir,\"index.html\")` missing. Static-contract violations only `console.warn` (`[StaticGuard] Invalid HyperFrame contract: …`) — non-fatal.\n- Full pipeline: compileHtml → staticGuard → injectInterceptor (strips any pre-existing runtime scripts; idempotent on `data-hyperframes-preview-runtime`) → linkedom parse → inline local CSS (relative `link[rel=stylesheet]`, recursive @import, url() rebase) → inline local JS (relative `script[src]`, ASI-safe join) → inline sub-compositions (`data-composition-src`) + `<template id=\"X-template\">` compositions with per-composition CSS/JS scoping (duplicate hosts get `X__hf<N>` runtime ids + `data-hf-original-composition-id`) → enforceCompositionPixelSizing (100%→px for sized compositions) → autoHealMissingCompositionIds → coalesceHeadStylesAndBodyScripts (merges body inline scripts, strips comments via esbuild `transformSync`) → injectTextRenderingRule (`html,body,*{text-rendering:geometricPrecision}` prepended to head — explicitly for chrome-headless-shell text-layout parity with full Chrome) → inline textual assets as data URLs → `document.toString()`.\n- ⚠️ `htmlBundler.js` line 4 has a TOP-LEVEL `import { transformSync } from \"esbuild\"` while esbuild is only an optionalDependency of core — bundleToSingleHtml is unusable if optional deps were skipped at install.",
+> 40	      "output_shape": "The returned string is a single HTML document where:\n- **Runtime IS embedded** (default \"inline\"): the full HyperFrames runtime IIFE (~150 KB per source comment) inside `<script data-hyperframes-preview-runtime=\"1\">` in <head>. Unless `HYPERFRAME_RUNTIME_URL` env is set — then it's a src= reference instead (avoid setting it for a self-contained render bundle).\n- **Only TEXTUAL assets are inlined as data URLs.** `INLINE_MIME = { \".svg\": \"image/svg+xml\", \".json\": \"application/json\", \".txt\": \"text/plain\", \".cube\": \"text/plain\", \".xml\": \"application/xml\" }`. Inlining is applied to relative `src/href/poster/xlink:href`, `srcset` candidates, `url()` in <style> and style=\"\", and color-grading LUT JSON (`data-hf-color-grading` lut/src). **Binary media (png/jpg/mp4/mp3/woff/ttf) are NOT converted to data URLs** — relative paths remain relative, so the Playwright loader must either serve the bundle from the project root over HTTP or route-intercept relative fetches. All resolution is jailed via `resolveWithinProject`/`isSafePath` (no path/symlink escape outside projectDir).\n- **External (http(s)://, absolute) refs are left as-is.** Concretely: the mcorch-video project's `<script src=\"https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js\">` survives into the bundle → loading in Playwright needs network access to jsdelivr OR a `page.route` interception serving gsap locally. Local relative CSS/JS files, by contrast, are inlined into single <style>/<script> tags.\n- **Render/seek contract inside the loaded page** (runtime IIFE + CLI manifest globals): `window.__playerReady` (true when player constructed), `window.__renderReady` (true when all timelines registered & deterministic-ready; the readiness gate to wait on), `window.__player` exposing `[\"play\",\"pause\",\"seek\",\"renderSeek\",\"getTime\",\"getDuration\",\"isPlaying\"]`, `window.__timelines` (author-registered paused GSAP timelines keyed by composition id), `window.__clipManifest`. The renderer configures fps by setting `window.__HF_EXPORT_RENDER_SEEK_CONFIG = { fps: <number>, fpsSource: <string> }` (read at runtime init; invalid/missing → fallback default 30; logs `[hyperframes] render runtime fps {canonicalFps, source, …}`). `__player.renderSeek(seconds)` pauses and seeks deterministically, quantizing to the frame grid via `quantizeTimeToFrame(t, fps) = Math.floor(t*fps + 1e-9)/fps` (parityContract.js). GSAP frame adapter (dist/adapters/gsap.js): `getDurationFrames = Math.ceil(durationSeconds*fps)`, `seekFrame(frame)` → `timeline.seek(frame/fps, false)` — i.e., native render loop = set fps config in an init script → goto bundle → wait `__renderReady === true` → for each frame `__player.renderSeek(frame/fps)` → screenshot.\n- Also present in output: `html,body,*{text-rendering:geometricPrecision}` head style (headless-shell parity), merged/comment-stripped body script, `data-end` timing attrs added by compileHtml.",
+> 41	      "project_shape": "/home/ubuntu/.mcorch/video-studio/projects/mcorch-video/ (verbatim listing):\n```\nassets/                  (EMPTY)\ncompositions/            (EMPTY)\n.hyperframes/backup/     (5 timestamped index.html backups, Jun 25)\nhyperframes.json   277 B\nindex.html        5643 B\nmeta.json          112 B\npackage.json       370 B\nrenders/                 (EMPTY)\n```\n- `hyperframes.json`: `{ \"$schema\": \"https://hyperframes.heygen.com/schema/hyperframes.json\", \"registry\": \"https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry\", \"paths\": { \"blocks\": \"compositions\", \"components\": \"compositions/components\", \"assets\": \"assets\" } }` — paths/registry config only, no timing.\n- `meta.json`: `{ \"id\": \"mcorch-video\", \"name\": \"MCORCH — Vídeo 9:16\", \"createdAt\": \"2026-06-25T00:00:00.000Z\" }` — studio metadata only.\n- `package.json`: scripts only, pinning `npx --yes hyperframes@0.7.5 {preview,lint/validate/inspect,render,publish}`. ⚠️ Version skew: project pins CLI 0.7.5; probed core tarball is 0.7.22 (global CLI also 0.7.22).\n- **Duration lives in index.html**, twice-over: (a) root host `<div data-hf-id=\"hf-j832\" id=\"root\" data-composition-id=\"mcorch-viral\" data-width=\"1080\" data-height=\"1920\" data-start=\"0\" data-duration=\"8\">` and every clip child carries `data-start=\"0\" data-duration=\"8\"` (6 clips, `data-track-index` 0–5: #glow, #brand, #hook, #caption, #cta, #progress); (b) the GSAP timeline registered paused on `window.__timelines[\"mcorch-viral\"]` whose longest tween (`#progress` scaleX, `duration: 8`) makes `tl.duration() === 8`. Core docs (core.md §Compositions): \"A composition's length is determined by its GSAP timeline — there is no data-duration on compositions\" — so timeline duration (8 s) is the runtime source of truth; the attr matches it. **fps lives NOWHERE in the project** — it is renderer-supplied.\n- Scene structure: SINGLE root composition, no sub-compositions (compositions/ empty, no data-composition-src), no local assets. index.html references exactly ONE external resource: `<script src=\"https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js\">` (CDN — needs network or interception at render time). `<html lang=\"pt-BR\" data-resolution=\"portrait\">`; html/body/#root hard-sized 1080×1920; system fonts only; deterministic by construction (no Date.now/Math.random/network per its own header comment).",
+> 42	      "core_deps": "@hyperframes/core 0.7.22 package.json (extracted tarball), verbatim:\n```json\n\"dependencies\": {\n  \"@chenglou/pretext\": \"^0.0.5\",\n  \"bpm-detective\": \"^2.0.5\",\n  \"linkedom\": \"^0.18.12\",\n  \"postcss\": \"^8.5.8\",\n  \"@hyperframes/lint\": \"0.7.22\",\n  \"@hyperframes/studio-server\": \"0.7.22\",\n  \"@hyperframes/parsers\": \"0.7.22\"\n},\n\"optionalDependencies\": { \"esbuild\": \"^0.25.12\" }\n```\nTransitive (npm view @0.7.22): studio-server → { hono ^4, linkedom, postcss, postcss-selector-parser ^7.1.2, **@hyperframes/core 0.7.22 (circular, exact-pinned)**, @hyperframes/parsers }; parsers → { @babel/parser, acorn, acorn-walk, linkedom, magic-string, recast }; lint → { postcss, @hyperframes/parsers }.\n\n**The compiler does NOT need heavy deps.** The heavy stack — puppeteer-core ^24, @puppeteer/browsers, onnxruntime-node ^1.20, sharp ^0.34, fontkit, @hono/node-server — belongs to the `hyperframes` CLI package (/home/ubuntu/.bun/install/global/node_modules/hyperframes/package.json), NOT to core. Installing @hyperframes/core as a repo dependency pulls a light-to-moderate pure-JS set: linkedom (server DOM), postcss, acorn/babel/recast parsers, hono (dragged in by the studio-server dep even if unused), plus esbuild (~10 MB native binary) as optional. Two caveats: (1) dist/compiler/htmlBundler.js top-level-imports `transformSync` from esbuild despite it being optional — install must include optional deps or bundling breaks at import; (2) the core↔studio-server circular exact-pin means bun/npm will hoist both at 0.7.22. Relevant subpath export for us: `\"./compiler\": \"./dist/compiler/index.js\"` (ESM, \"type\": \"module\").",
+> 43	      "manifest": "There is **NO per-project manifest declaring duration/fps**. The file `hyperframe.manifest.json` in the CLI dist (/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/hyperframe.manifest.json) is a RUNTIME-ARTIFACT manifest, verbatim:\n```json\n{\n  \"version\": \"0.1.0\",\n  \"buildId\": \"dev\",\n  \"sha256\": \"1bc431f0e1d1877fd39fa6a633f18521ccfa7bf8548d637e8b897f7a4b46e782\",\n  \"artifacts\": { \"iife\": \"hyperframe.runtime.iife.js\", \"esm\": \"hyperframe.runtime.mjs\" },\n  \"contract\": {\n    \"globals\": { \"player\": \"__player\", \"playerReady\": \"__playerReady\", \"renderReady\": \"__renderReady\", \"timelines\": \"__timelines\", \"clipManifest\": \"__clipManifest\" },\n    \"messageSources\": { \"parent\": \"hf-parent\", \"preview\": \"hf-preview\" }\n  }\n}\n```\nIt pins the runtime build (sha256 + artifact filenames) and names the window globals of the page contract — nothing about a specific project. Per-project config is split across hyperframes.json (registry+paths), meta.json (id/name/createdAt), package.json (scripts); none carries duration or fps. **Duration** = the composition's GSAP timeline (`tl.duration()`, mirrored by `data-duration`/`data-end` attrs compiled into the HTML). **fps** = a render-time parameter chosen by the caller: core's `parseFpsWithDefault(undefined) → {num:30, den:1}` (default 30), integers or exact rationals \"30000/1001\" accepted, bounds [1,240], decimals like \"29.97\" rejected as ambiguous (dist/core.types.js); the runtime receives it via `window.__HF_EXPORT_RENDER_SEEK_CONFIG = {fps, fpsSource}` with a hard fallback to 30 (`quantizeTimeToFrame` safeFps=30). So for the native render: our worker owns fps (30 for 9:16 shorts), duration comes from the bundled page itself (`__player.getDuration()` after `__renderReady`), totalFrames = ceil(duration×fps)."
+> 44	    },
+> 45	    "bok": {
+> 46	      "existing_gates": "**§VS-UI (05-sdd.md:836-895, Amendment v0.4)** — realizes OTD-VS-005=C (editor as separate node process behind `video.mcorch.com`). A.3 (877-884) pre-frames render-parity: \"preview e render usam a mesma semântica de seek (`frame=floor(time*fps)`)\" and notes at 883-884: \"(Hoje `render-core.ts` dirige um template fixo via `applyProps/applyFrame`; a Fase B adiciona um path `composition_html` que carrega o bundle e dirige o runtime embutido.)\" — i.e., a NATIVE bundle-driving path was the ORIGINAL v0.4 plan.\n\n**§VS-UI-B (05-sdd.md:897-1039, Amendment v0.5 · FR-VS-047/048/049 · concretiza OTD-VS-017):**\n- B.1 fact table, line 914: the empirical seek spec any native impl must drive — \"o seek roda via `window.__timelines[…].seek(p)` (GSAP `.seek`/`totalTime`), frame→tempo por `Math.floor(i*n+1e-9)`\" (from grep of `dist/hyperframe.runtime.iife.js`). Line 912: core exports `./studio-api`, `./compiler` (`bundleToSingleHtml`), `./runtime` (IIFE 225KB) \"todos presentes no dist publicado\".\n- **The wrap decision (FR-VS-047, §B.3):** line 947-949 proves feeding `bundleToSingleHtml` output to the old applyFrame path = \"MP4 estático/branco SILENCIOSO... o renderer precisa **seekar ativamente cada frame**\". Line 951: \"**DECISÃO ATUALIZADA (it.3, PROVA MATERIAL Lei 1): ENVOLVER `hyperframes render`, NÃO reimplementar o seek.**\" Lines 953-955: wrapping the reference renderer makes parity \"**definitional** (zero reimplementação de seek → **zero risco de MP4-branco**), superando a proposta anterior de reimplementar o seek em `render-core.ts` (risco alto, agora desnecessário)\". ⇒ the native path is explicitly the REJECTED-in-v0.5 alternative; the new amendment must supersede this exact sentence with the license driver.\n- **Parity gates already defined (the amendment's inherited acceptance criteria), lines 976-989:** \"GATE FR-VS-047 TOTALMENTE VERDE — render-parity provado em 3 níveis\": (1) frame-diff — frames t=1s (195.693B)/t=6s (355.388B) sha256 distintos (`e4e0ba2c…`≠`a7af611e…`), lines 959-962; (2) byte-determinism — 2 renders args-idênticos sha256-IDÊNTICO (`1db99067…`, 465.054B) = NFR-VS-016 mantido, line 983; (3) semantic Vision-QA `vision_analyze_video` confidence high, lines 984-987. Plus line 974: \"`render-core.ts` `mode:'template'` (path `applyFrame`) fica **INTACTO** para o autopilot (FR-VS-024)\". ARM64 trap lines 964-967 (`HYPERFRAMES_BROWSER_PATH`→Playwright chromium — a workaround the native path DELETES). B.4: FR-VS-048 auth-bridge (OTD-VS-018=A) + FR-VS-049 FS sync — orthogonal, untouched by this slice. B.7 (1029-1035) gated build order with FR-VS-047 parity smoke as step 1.\n- **B.6 (1015-1027):** OTD-VS-017 CONCRETIZADA / OTD-VS-018=A / OTD-VS-019 multi-tenant DEFERIDO; plus the in-SDD Pattern Conformance amendment (line 1023).\n\n**Upstream FRs the native core still answers to:** FR-VS-024 deterministic MP4 (04-frd.md:90, AT-VS-024 \"2 renders byte-idênticos (`sha256sum`)\" 04-frd.md:288) · FR-VS-025 per-render sandbox (04-frd.md:91, single-tenant deferral via OTD-VS-006/019) · NFR-VS-016 (04-frd.md:136). Code being superseded: `renderStudioProject` (render-core.ts:200-235) spawns `HF_NODE HF_CLI render <dir>` (render-core.ts:86-87 pin `hyperframes/dist/cli.js` + node v22; :215-227 spawn with `HYPERFRAMES_BROWSER_PATH`); keeps path-safety `STUDIO_PROJECTS_ROOT` guard (:205-210, smoke-studio-project-guard.ts 4/4 per charter line 63), ≥100KB Lei 1 gate (:231), ffprobe result contract (:233-234).",
+> 47	      "amendment_scope": "**New SDD amendment = §VS-UI-C (Amendment v0.6) appended to 05-sdd.md** (superset rule §AG.7/832 + v1.1 precedent: APPEND only, never renumber; existing sections verbatim).\n\n**OTD:** do NOT re-flip OTD-VS-005 — it is \"C REALIZADA\" (05-sdd.md:890) and governs the EDITOR deployment, not the render substrate; the charter's \"flip OTD-VS-005 embed→fork\" (charter:43) is loose shorthand. The wrap-vs-native decision currently has no OTD id (it lives inside §B.3 prose, line 951). **Mint a NEW OTD-VS-020** (next free — OTD-VS-001..019 all used; 014 exists at 05-sdd.md:124): \"Studio-project render substrate\" — A) keep `hyperframes` CLI wrap (npm artifact `license:\"None\"`, no LICENSE file — REJECTED, anti-doutrina proprietary-risk dep in prod); B) **NATIVE on `@hyperframes/core` (Apache-2.0, LICENSE shipped in tarball)**: `bundleToSingleHtml(dir)` + Playwright drives the embedded runtime's `window.__timelines[…].seek()` with `Math.floor(i*n+1e-9)` frame→time (per B.1:914), inside the existing `renderComposition` capture+FFmpeg pipeline — eliminates `HF_CLI`/`HF_NODE`/node-v22/`HYPERFRAMES_BROWSER_PATH` (render-core.ts:86-87,221); C) vendor CLI source from the Apache-2.0 GitHub monorepo (fallback if B's parity gate fails). Decision = B. OTD-VS-020 explicitly **supersedes the §B.3 it.3 sentence** \"ENVOLVER, NÃO reimplementar\" (951-955), stating why the risk calculus changed: the blank-MP4 risk that justified the wrap is now bounded by the ALREADY-GREEN 3-level parity harness usable as regression oracle against the wrap's reference output (`ref-render.mp4`/`1db99067…`).\n\n**FR:** next free id = **FR-VS-050** (max used anywhere = FR-VS-049; grep confirms). Precedent honored: FR-VS-047/048/049 were minted in the SDD amendment header (05-sdd.md:897) and have **0 hits in 04-frd.md** — so FR-VS-050 is declared in §VS-UI-C without touching the FRD (note the 00-index.md:54 ID-space table still says \"FR-VS 001..046\" — pre-existing drift; the amendment should bump that table row to 001..050). FR-VS-050 = \"Native studio-project render (license-clean)\": `renderStudioProject` re-implemented on `@hyperframes/core` only; supersedes FR-VS-047's *implementation mechanism*, NOT its acceptance gates.\n\n**Inherited gates the amendment must carry as acceptance criteria (all pre-defined):** (1) 3-level FR-VS-047 parity re-run on the native path — frame-diff sha256-distinct at t=1s/t=6s + byte-determinism 2 identical renders (NFR-VS-016/AT-VS-024) + Vision-QA confidence≥high (05-sdd:976-989; diretiva vision-qa-always); ideally also native-vs-CLI-wrap A/B on the same `mcorch-video` project before deleting the wrap; (2) path-safety guard intact (`STUDIO_PROJECTS_ROOT`, smoke-studio-project-guard.ts 4/4); (3) ≥100KB Lei 1 gate; (4) `mode:'template'` applyFrame path INTACTO (05-sdd:974, autopilot FR-VS-024); (5) `video-bridge.ts` branch contract `composition.mode==='studio-project'` and billing unchanged (12 mco prepaid, OTD-VA-010 — FR-VS-048/049 untouched); (6) E2E `video_renders` row → done → bucket `video-studio-assets` → `video_assets`+`creative_assets` dual-write (it.4 wiring proof pattern). Plus a **License Compliance subsection**: record the material evidence (npm `hyperframes@0.7.22` `license:\"None\"` + no LICENSE in tarball vs `@hyperframes/core@0.7.5` Apache-2.0 + LICENSE shipped) and Apache-2.0 obligations (retain LICENSE/attribution notice in render-core.ts header or vendored NOTICE).",
+> 48	      "pattern_conformance": "No `09-pattern-conformance.md` exists in docs/bok/video-studio/ (ls: only 00-index..08-quality-metrics). The module's Pattern Conformance rides IN-SDD: §VS-UI-B B.6 (05-sdd.md:1015,1023-1027) — \"**Pattern Conformance (Closed-Loop Step 3.5):** amenda a declaração selada do módulo `video-studio` (BoK 9/9)\" declaring #Tool Use · #Human-in-the-Loop · #Determinism/Reproducibility · #Sandboxing as materially implemented, \"Demais padrões herdam a declaração do módulo (sem mudança material)\". (The 21-pattern master template lives at docs/bok/agentic-governance/09-pattern-conformance.md per CLAUDE.md Key Files.)\n\n**Verdict for this slice: rides the existing SDD declaration — no 09 sibling needed.** The native render core is a substrate swap (CLI spawn → in-process Apache-2.0 library) inside the SAME feature already declared in B.6; it does not newly implement ≥3 patterns. Materially touched: #Determinism/Reproducibility (new proof obligation — the sha256/NFR-VS-016 parity gate must be re-proven on the native engine) and arguably #Sandboxing (unchanged: Playwright headless single-tenant, OTD-VS-006/019 still deferred). #Tool Use / #HITL semantics are identical. So §VS-UI-C should carry a one-paragraph conformance note mirroring B.6's format (\"amenda a declaração selada; #Determinism re-proven on native substrate; demais padrões sem mudança material\") — a declaration, not a sign-off, per CLAUDE.md Step 3.5.",
+> 49	      "license_doctrine": "Rationale to encode in OTD-VS-020 / §VS-UI-C, from three sources:\n\n**1. Charter #0 (.claude/context/autonomous-loop-charter.md:43):** \"🏴 **HyperFrames nativo (exclusividade + remove dep license:None):** ACHADO it.8/9 — npm `hyperframes@0.7.22` = `license:\\\"None\\\"` (repo é Apache-2.0, mas o publish npm não). Meu wrap (it.3-8) usa esse CLI em prod = dep proprietária anti-doutrina. Caminho: internalizar `bundleToSingleHtml`+seek `frame=floor(time*fps)` do `@hyperframes/core` **Apache-2.0** no `render-core.ts` (elimina `HF_CLI`) = gate #4/R1-High, maior ROI de exclusividade. **Emenda à SDD** (flip OTD-VS-005 embed→fork).\"\n\n**2. Doctrine (charter:14 + memory feedback_opensource_first_zero_cost_equity):** \"tudo que dá pra construir open-source/self-hosted DENTRO do MCORCH vira microserviço/módulo... cada peça agrega **equity**. Default = open-source/self-hosted/BYOK-grátis; SaaS pago só com **OTD** justificando. **Custo USD real ao Sovereign = 0**\"; memory: \"Dependência paga externa dilui equity e cria custo invisível que mata agentes/projetos\"; \"ao escolher um componente novo, default = open-source/self-hosted dentro do MCORCH; só aceitar [dependência não-livre] com OTD explícita justificando.\"\n\n**3. Legal framing (the amendment's own words):** a npm artifact with NO `license` field and NO LICENSE file grants **no license by default** — the `hyperframes` CLI tarball we spawn in prod (render-core.ts:86 `hyperframes/dist/cli.js`) is proprietary-risk metadata even though the GitHub monorepo is Apache-2.0 (the repo license does not automatically attach to a differently-packaged npm publish). `@hyperframes/core@0.7.5` by contrast SHIPS Apache-2.0 (license field + LICENSE in the tarball) → building the render natively on core is a clean, explicit grant. Third option — vendoring the CLI source from the Apache-2.0 monorepo — is license-clean but buys a fork-maintenance burden and keeps the node-v22/HF_CLI surface; core-native is strictly better (equity: the render engine becomes OUR microservice; exclusividade; deletes HF_CLI/HF_NODE/HYPERFRAMES_BROWSER_PATH env couplings). Apache-2.0 compliance duties to encode: retain the core LICENSE/NOTICE attribution (header comment in render-core.ts + keep the tarball LICENSE in node_modules; add NOTICE if any core source is copied rather than imported). USD cost stays 0 (self-hosted Playwright+FFmpeg — same doctrine proof as the GO-witnessed cycle, charter:87)."
+> 50	    }
+> 51	  },
+> 52	  "workflowProgress": [
+> 53	    {
+> 54	      "type": "workflow_phase",
+> 55	      "index": 1,
+> 56	      "title": "Understand"
+> 57	    },
+> 58	    {
+> 59	      "type": "workflow_agent",
+> 60	      "index": 1,
+> 61	      "label": "cli-render-internals",
+> 62	      "phaseIndex": 1,
+> 63	      "phaseTitle": "Understand",
+> 64	      "agentId": "ab5ec0eeeb53adb97",
+> 65	      "model": "claude-fable-5",
+> 66	      "state": "done",
+> 67	      "startedAt": 1782940790307,
+> 68	      "queuedAt": 1782940790265,
+> 69	      "attempt": 1,
+> 70	      "lastToolName": "StructuredOutput",
+> 71	      "lastToolSummary": "NOT bundleToSingleHtml→file:// (bundleToSingleHtml exists a…",
+> 72	      "promptPreview": "You are reverse-engineering the reference render pipeline of the HyperFrames CLI (esbuild-bundled JS). Goal: extract the EXACT render algorithm of `hyperframes render <projectDir>` so we can reimplement it natively on Playwright without blank-MP4 risk.\n\nFiles:\n- CLI bundle: /home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js (~9MB, likely minified — use grep -oE with context wind…",
+> 73	      "lastProgressAt": 1782941287371,
+> 74	      "tokens": 181460,
+> 75	      "toolCalls": 58,
+> 76	      "durationMs": 497062,
+> 77	      "resultPreview": "{\"load_strategy\":\"NOT bundleToSingleHtml→file:// (bundleToSingleHtml exists at cli.js:69906 but is only used by studio/screenshot/plan commands). `hyperframes render <dir>` → `renderLocal` (cli.js:113161) → `producer.executeRenderJob` (cli.js:104734). Pipeline: (1) `runCompileStage` calls `compileForRender(projectDir, htmlPath, join(workDir,\\\"downloads\\\"),…)` and `writeCompiledArtifacts(compiled, …"
+> 78	    },
+> 79	    {
+> 80	      "type": "workflow_agent",
+> 81	      "index": 2,
+> 82	      "label": "runtime-seek-api",
+> 83	      "phaseIndex": 1,
+> ```
+
+## 🤖 Claude *(21:33:06)*
+
+
+## 🤖 Claude *(21:33:06)*
+
+
+## 🤖 Claude *(21:33:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "offset": 940,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 940	no restart do container. Isso torna a materialização/sync **mandatória**, não opcional (era hand-wave na v0.4).
+> 941	
+> 942	### B.3 FR-VS-047 — Render-parity `mode:'bundle'` (fecha blocking-gap #2 — HARD BLOCKER pré-container)
+> 943	
+> 944	**Problema material provado** (critic leu + confirmei): `scripts/hyperframes/render-core.ts:110-118` dirige **só**
+> 945	`window.applyFrame(idx,total)` sobre um allowlist de 2 templates MCORCH-bespoke (`VALID_TEMPLATES`) — **nunca** toca
+> 946	`window.__timelines`/`__hyperframes` nem faz `floor(time*fps)`. O output de `bundleToSingleHtml` (composição autorada
+> 947	no StudioApp) **não tem `applyFrame`** → alimentá-lo ao render-core hoje = **MP4 estático/branco SILENCIOSO** (preview
+> 948	do editor ≠ MP4 renderizado). A §VS-UI v0.4 dizia "resolvido por construção" — **falso**: o runtime embutido não
+> 949	auto-seeka frame-a-frame para captura headless; o renderer precisa **seekar ativamente cada frame**.
+> 950	
+> 951	**DECISÃO ATUALIZADA (it.3, PROVA MATERIAL Lei 1): ENVOLVER `hyperframes render`, NÃO reimplementar o seek.**
+> 952	O CLI monolito `hyperframes` (já instalado, v0.7.5) expõe **`hyperframes render <DIR>`** — o **renderer de
+> 953	referência** (mesmo engine que dirige o preview do editor). Envolvê-lo torna a paridade **definitional** (zero
+> 954	reimplementação de seek → **zero risco de MP4-branco**), superando a proposta anterior de reimplementar o seek em
+> 955	`render-core.ts` (risco alto, agora desnecessário).
+> 956	
+> 957	**Provado E2E (Lei 1)** sobre o projeto studio **REAL** (`~/.mcorch/video-studio/projects/mcorch-video`, o que o
+> 958	serviço vanilla serve): `hyperframes render … --resolution portrait --fps 24` →
+> 959	**`ref-render.mp4` = 505.761 B · 1080×1920 · 24fps · 192 frames · 8.0s** (`ffprobe`). **Não-branco + animado
+> 960	provado:** frames extraídos t=1s (**195.693 B**) e t=6s (**355.388 B**) têm **sha256 distintos**
+> 961	(`e4e0ba2c…` ≠ `a7af611e…`) → a composição GSAP é **seekada corretamente frame-a-frame** (um frame preto/estático
+> 962	comprimiria a poucos KB e teria sha256 idêntico entre tempos).
+> 963	
+> 964	**Trap ARM64 (Anticorpo · Lei 1):** o Chrome bundlado do hyperframes **NÃO roda em ARM64** (DGX Spark/GB10/Jetson →
+> 965	`✗ Chrome not found`). Fix: `export HYPERFRAMES_BROWSER_PATH=<chromium do Playwright>`
+> 966	(`~/.cache/ms-playwright/chromium-1226/chrome-linux/chrome`, v149 — o **mesmo** que o `render-core.ts` já usa via
+> 967	`playwright`). Sem isso o render falha em 0.5s.
+> 968	
+> 969	**Spec revisada:**
+> 970	1. `video-bridge.ts` (`processRender`): quando `engine=hyperframes` e `composition.mode==='studio-project'` →
+> 971	   materializar o dir (FR-VS-049; User 0 = já no host) + `spawn hyperframes render <dir> --resolution portrait
+> 972	   --fps <fps> -o <tmp>.mp4` **com `HYPERFRAMES_BROWSER_PATH` setado** → upload pro bucket `video-studio-assets` →
+> 973	   `finalize_video_render`.
+> 974	2. `render-core.ts` `mode:'template'` (path `applyFrame`) fica **INTACTO** para o autopilot (FR-VS-024) — os dois
+> 975	   caminhos coexistem por design (template bespoke MCORCH vs. composição GSAP autorada no studio).
+> 976	3. **Gate de aceite (Lei 1):** ✅ **render não-branco + animado PROVADO** + ✅ **WIRING E2E PROVADO (it.4)** —
+> 977	   `renderStudioProject` (render-core.ts, envolve `hyperframes render` + `HYPERFRAMES_BROWSER_PATH`→chromium Playwright
+> 978	   + path-safety sob `STUDIO_PROJECTS_ROOT`) + branch `composition.mode==='studio-project'` no `video-bridge.ts`.
+> 979	   Render real do projeto `mcorch-video` (`video_renders 9069bb7d` → state=**done**) → bucket `video-studio-assets`
+> 980	   (**720.678 B**, signed-URL HTTP 200) → `video_assets` + **`creative_assets`** (1080×1920 · 8s — **fix do TDZ**: o
+> 981	   `register_creative_asset` usava `ap` antes da declaração → TDZ engolido pelo catch fail-soft → dual-write de vídeo
+> 982	   SEMPRE pulava; corrigido = renders do editor agora entram na Biblioteca de Assets/spine) + mesh node observation.
+> 983	   `tsc` 0. ✅ **(a) determinismo (it.5):** 2 renders args-idênticos → **sha256-IDÊNTICO** (`1db99067…`, 465.054 B
+> 984	   ambos) — o engine vanilla É byte-determinístico → NFR-VS-016 mantido pelo wrap. ✅ **(b) Vision-QA (it.5, diretiva
+> 985	   Sovereign, cost 0 BYOK):** `vision_analyze_video` confidence **high** — "composição vertical 9:16 renderizada
+> 986	   corretamente": gradiente roxo + logo MCORCH + textos sequenciais (título "Crie vídeos virais 9:16…" / subtítulo /
+> 987	   CTA "Começar agora →") com fade-in, cores vibrantes, **não-branco**.
+> 988	   **⇒ GATE FR-VS-047 TOTALMENTE VERDE** — render-parity provado em 3 níveis: frame-diff (it.3) · byte-determinismo
+> 989	   (it.5a) · semântico (it.5b Vision-QA).
+> 990	
+> 991	### B.4 FR-VS-048 (auth-bridge) + FR-VS-049 (FS sync) — os outros 2 gates
+> 992	
+> 993	- **FR-VS-048 — Render-bridge auth (fecha blocking-gap #3):** `video-render/index.ts:39-46` exige **JWT de user
+> 994	  real** (`getUser` rejeita service-role/forjado → 401). O host do studio não tem esse token. **Decisão
+> 995	  (OTD-VS-018):** **(A) preferida** — o container mint+refresh um **JWT do Usuário Zero** server-side (Admin API
+> 996	  `generateLink`→`verifyOtp`, molde `scripts/qa/gen-user-jwt.ts`) e o usa no `Authorization: Bearer` do POST
+> 997	  `video-render` → **preserva o edge fn como chokepoint ÚNICO de cobrança** (`deduct_mco_coins`). **(B) fallback** —
+> 998	  container insere `video_renders` via service-key + transporte `poll://` (bypassa o gate de user-JWT; aceitável em
+> 999	  single-tenant User 0 pois o container é infra confiável) — mas duplica a lógica de cobrança fora do edge fn
+> 1000	  (rejeitada salvo se (A) provar-se inviável). **A** é o caminho; billing continua ÚNICO no nosso lado (studio nunca
+> 1001	  vê mcoCoins).
+> 1002	- **FR-VS-049 — FS Storage↔volume sync (risco R9):** `resolveProject` materializa Storage→volume no resolve; um
+> 1003	  **hook de write-back** sincroniza volume→Storage em cada mutação de arquivo (as rotas `files/*` escrevem direto no
+> 1004	  `dir`). v1 single-tenant: write-back best-effort pós-mutação + no shutdown; durabilidade forte (journal) = follow-up.
+> 1005	
+> 1006	### B.5 Deployment — reuso do `video.mcorch.com` (evita o portão DNS Sovereign)
+> 1007	
+> 1008	O vhost `nginx/video.mcorch.com.conf` **já existe** e já proxya `127.0.0.1:3210` (SSE-ready). Fase B **troca o
+> 1009	`ExecStart` do `video-studio.service`** de `hyperframes preview` (vanilla) para o nosso **host React 19 + Hono
+> 1010	`createStudioApi(McorchAdapter)` na MESMA porta 3210** → mesma origem (fetch/EventSource relativos OK) + mesmo vhost
+> 1011	→ **zero DNS novo** (supera a necessidade de `studio.mcorch.com`; OTD-VS-015 já cobre o cert). **Rollback:** reverter
+> 1012	o `ExecStart` para o binário vanilla (o editor volta a funcionar). **Regressão:** só promover o swap com o container
+> 1013	provado localmente em `127.0.0.1:3210` antes de apontar o service.
+> 1014	
+> 1015	### B.6 OTDs + Pattern Conformance
+> 1016	
+> 1017	| OTD | Tema | Decisão |
+> 1018	|---|---|---|
+> 1019	| **OTD-VS-017** | render bridge Fase B | **CONCRETIZADA** por FR-VS-047/048/049 (era genérica) |
+> 1020	| **OTD-VS-018** | auth do render-bridge | **(A)** JWT do Usuário Zero mintado no container (chokepoint de cobrança preservado); (B) service-key+poll:// como fallback |
+> 1021	| **OTD-VS-019** | multi-tenant do studio | **DEFERIDO** — single-tenant Usuário Zero na Fase B (espelha OTD-VA-011/OTD-VS-016); `resolveProject` valida prefixo==`auth.uid()` quando multi-tenant pousar |
+> 1022	
+> 1023	**Pattern Conformance (Closed-Loop Step 3.5):** amenda a declaração selada do módulo `video-studio` (BoK 9/9). Fase B
+> 1024	implementa materialmente: **#Tool Use** (o motor de render como ferramenta do editor via adapter) · **#Human-in-the-Loop**
+> 1025	(editor NLE = o humano compõe antes do render) · **#Determinism/Reproducibility** (render-parity sha256-idêntico,
+> 1026	NFR-VS-016) · **#Sandboxing** (registry externo desabilitado; render num container isolado). Demais padrões herdam a
+> 1027	declaração do módulo (sem mudança material).
+> 1028	
+> 1029	### B.7 Sequência de build gated (ordem obrigatória)
+> 1030	
+> 1031	1. **FR-VS-047 render-parity `mode:'bundle'` + smoke de paridade VERDE** (o hard blocker — antes de tudo; não depende de container/vhost).
+> 1032	2. `McorchAdapter` (§B.2): 7 mandatórios reais + FS materialização/sync (FR-VS-049) + `startRender`→`video-render` com auth (A) (FR-VS-048).
+> 1033	3. Container React 19 host (`<StudioApp/>`) + `createStudioApi(McorchAdapter)` + Dockerfile → roda `127.0.0.1:3210` (local).
+> 1034	4. Swap do `video-studio.service` (§B.5) + reload — com rollback pronto.
+> 1035	5. Gate E2E 1920×1080 (Lei 1 Canvas) + Vision-QA do editor renderizado.
+> 1036	
+> 1037	---
+> 1038	
+> 1039	_Generated by MCORCH BoK Scribe Agent v1.0.0 · §VS-UI-B (Amendment v0.5) autorada pelo loop autônomo (it.2, 2026-06-30) — verificação empírica Lei 1 + Workflow adversarial `wf_b0a6c005-8c2`_
+> ```
+
+## 🤖 Claude *(21:33:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '50,58p' docs/bok/video-studio/00-index.md\necho \"=== total lines 05-sdd ===\"; wc -l docs/bok/video-studio/05-sdd.md\necho \"=== esbuild resolvable p/ bun? ===\"; ls node_modules/esbuild/package.json >/dev/null 2>&1 && grep '\"version\"' node_modules/esbuild/package.json | head -1 || echo \"(esbuild n\u00e3o hoisted)\"",
+  "description": "Index ID-space row + SDD length + esbuild availability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> |--------|-------|-------|------|----------|
+> | MR-VS | 001..020 | 20 | 14 + 6 (015..020) | 01-mrd |
+> | BR-VS | 001..024 | 24 | 16 + 8 (017..024) · +BO-VS-006..008 | 02-brd |
+> | PR-VS | 001..031 | 31 | 21 + 10 (018,019,024..031) | 03-prd |
+> | FR-VS | 001..046 | 46 | 32 + 14 (033..046) | 04-frd |
+> | NFR-VS | 001..022 | 22 | 17 + 5 (018..022) | 04-frd |
+> | OTD-VS | 001..013 | 13 | 7 + 6 (008..013) | 05-sdd |
+> | FMEA-VS | 001..027 | 27 | 19 + 8 (020..027); FMEA-VS-020 cross-tenant = novo topo de RPN | 08-quality-metrics |
+> | KPI-VS | 001..024 | 24 | 18 + 6 (019..024 agência) | 08-quality-metrics |
+> === total lines 05-sdd ===
+> 1039 docs/bok/video-studio/05-sdd.md
+> === esbuild resolvable p/ bun? ===
+>   "version": "0.25.0",
+> ```
+
+## 🤖 Claude *(21:33:33)*
+
+
+## 🤖 Claude *(21:33:33)*
+
+
+## 🤖 Claude *(21:34:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "old_string": "---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0 \u00b7 \u00a7VS-UI-B (Amendment v0.5) autorada pelo loop aut\u00f4nomo (it.2, 2026-06-30) \u2014 verifica\u00e7\u00e3o emp\u00edrica Lei 1 + Workflow adversarial `wf_b0a6c005-8c2`_",
+  "new_string": "---\n\n## \u00a7VS-UI-C \u2014 Native studio-project render: substrato license-clean (Amendment v0.6 \u00b7 2026-07-01 \u00b7 FR-VS-050 \u00b7 OTD-VS-020)\n\n> **Supersede a decis\u00e3o de mecanismo da \u00a7B.3** (\"ENVOLVER `hyperframes render`, N\u00c3O reimplementar o seek\", linha ~951)\n> \u2014 mantendo **todos** os gates de aceite da FR-VS-047 como or\u00e1culo de regress\u00e3o. Driver: doutrina open-source-first\n> (Diretiva Sovereign 2026-06-30) + risco de licen\u00e7a do artefato npm do CLI. Fundamentado no Workflow de entendimento\n> 4-lentes `wf_bbc8402d-096` (CLI render internals \u00b7 runtime seek API \u00b7 bundler/projeto \u00b7 framing BoK).\n\n### C.1 Evid\u00eancia de licen\u00e7a (Lei 1, verificada 2026-07-01)\n\n| Artefato | Evid\u00eancia material | Licen\u00e7a efetiva |\n|---|---|---|\n| Repo `heygen-com/hyperframes` | GitHub API `/license` \u2192 `spdx_id: Apache-2.0`; `LICENSE` raiz = texto Apache 2.0 | **Apache-2.0** |\n| npm `@hyperframes/core@0.7.22` | tarball shipa `package/LICENSE` (Apache 2.0 verbatim) | **Apache-2.0 \u2014 grant expl\u00edcito** \u2705 |\n| npm `hyperframes@0.7.22` (CLI em prod via `HF_CLI`) | tarball **SEM** arquivo LICENSE + package.json **SEM** campo `license` | **Nenhum grant no artefato** \u26a0\ufe0f (s\u00f3 via repo-raiz \u2014 metadata propriet\u00e1ria-risco) |\n| Runtime IIFE (core vs CLI) | `sha256 1bc431f0e1d1877fd39fa6a633f18521ccfa7bf8548d637e8b897f7a4b46e782` **id\u00eantico** nos dois (230.005 B) | O runtime que renderiza \u00c9 o do core Apache-2.0 |\n\n### C.2 OTD-VS-020 \u2014 Substrato do render de studio-project\n\n| Op\u00e7\u00e3o | Descri\u00e7\u00e3o | Veredicto |\n|---|---|---|\n| A | Manter wrap do CLI `hyperframes` (npm sem LICENSE no artefato) | **REJEITADA** \u2014 dep propriet\u00e1ria-risco em pipeline bill\u00e1vel; anti-doutrina equity |\n| **B** | **NATIVO sobre `@hyperframes/core` (Apache-2.0):** `bundleToSingleHtml(dir)` + Playwright dirige `window.__player.renderSeek(t)` do runtime embutido, dentro do pipeline captura+FFmpeg j\u00e1 existente do `render-core.ts` | **ESCOLHIDA** |\n| C | Vendorizar source do monorepo Apache-2.0 (fork completo) | Fallback se B falhar no gate de paridade \u2014 carrega fardo de manuten\u00e7\u00e3o de fork |\n\n**Por que o c\u00e1lculo de risco da \u00a7B.3 mudou** (o \"zero risco de MP4-branco\" do wrap era correto na it.3): (1) o harness\nde paridade 3-n\u00edveis da FR-VS-047 **j\u00e1 est\u00e1 VERDE** e vira **or\u00e1culo de regress\u00e3o** (o `ref-render.mp4` do wrap \u00e9 o\nground-truth do A/B); (2) o contrato de seek foi mapeado **empiricamente** no bundle do CLI (n\u00e3o especulado):\n`window.__hf.seek(t)` do CLI = fa\u00e7ade injetada que chama `__player.renderSeek(t)` \u2014 **API que o runtime do core SEMPRE\nexp\u00f5e** \u2014 com quantiza\u00e7\u00e3o `Math.floor(t*fps+1e-9)/fps` (id\u00eantica ao `quantizeTimeToFrame` do parityContract do core);\n(3) o runtime \u00e9 byte-id\u00eantico ao do core (C.1) \u2014 n\u00e3o h\u00e1 \"engine do CLI\" separado, s\u00f3 harness de inje\u00e7\u00e3o.\n\n**O que B elimina:** `HF_CLI` + `HF_NODE` (node v22 externo) + `HYPERFRAMES_BROWSER_PATH` (trap ARM64 \u00a7B.3) + spawn de\nprocesso \u2014 o render vira in-process no motor Playwright+FFmpeg que j\u00e1 \u00e9 nosso (equity: o render engine completo passa a\nser microservi\u00e7o MCORCH).\n\n### C.3 FR-VS-050 \u2014 Native studio-project render (license-clean)\n\nReimplementa o **mecanismo** de `renderStudioProject` (render-core.ts) sobre `@hyperframes/core` apenas; **N\u00c3O** altera\nassinatura, path-safety, gates de bytes, contrato do worker (`video-bridge.ts` branch `studio-project`) nem billing.\n\nAlgoritmo (mapeado de `wf_bbc8402d-096`):\n1. **Path-safety inalterada** (dir sob `STUDIO_PROJECTS_ROOT`, `resolve`+`startsWith`) ANTES de qualquer FS/bundle.\n2. `bundleToSingleHtml(dir)` (`@hyperframes/core/compiler`, default `runtime:'inline'`) \u2192 HTML auto-contido com runtime\n   embutido; escrito em arquivo tempor\u00e1rio **dentro do dir** (refs relativas resolvem via `file://`; projeto atual n\u00e3o\n   tem assets locais) e removido no `finally`.\n3. `page.addInitScript`: `window.__HF_EXPORT_RENDER_SEEK_CONFIG = { fps, fpsSource: 'mcorch-native-render' }` \u2014 o\n   runtime l\u00ea no init (fps \u00e9 do renderer; default 30; dura\u00e7\u00e3o vem da composi\u00e7\u00e3o).\n4. `page.goto(file://bundle, waitUntil:'load')` \u2192 readiness: `waitForFunction(__renderReady === true && __player &&\n   __player.getDuration() > 0)` (45s, espelha `pollHfReady` do CLI) + `document.fonts.ready`.\n5. `duration = __player.getDuration()`; `totalFrames = Math.ceil(duration \u00d7 fps)`; loop `i\u2208[0,totalFrames)`:\n   `page.evaluate(t => __player.renderSeek(t), i/fps)` (s\u00edncrono \u2014 pausa timelines + seeka GSAP `totalTime` + fan-out\n   adapters determin\u00edsticos) \u2192 screenshot PNG (`animations:'allow'` \u2014 CSS animations s\u00e3o seekadas pelo adapter css;\n   `'disabled'` as for\u00e7aria ao estado final).\n6. FFmpeg PNG\u2192MP4 **bitexact** (mesmo encoder do `mode:'template'` \u2014 NFR-VS-016) \u2192 ffprobe \u2192 `RenderResult`.\n7. **Dispatch por env:** `STUDIO_RENDER_ENGINE` = `native` (default) | `cli` (rollback de emerg\u00eancia \u2192 wrap \u00a7B.3\n   preservado at\u00e9 o 1\u00ba render editor-initiated real passar; deletar o wrap = follow-up p\u00f3s-FR-VS-048).\n\n**Limita\u00e7\u00f5es declaradas (honestas):** (a) sem virtual-time shim \u2014 composi\u00e7\u00f5es dirigidas por GSAP/adapters\ndetermin\u00edsticos (css/waapi/gsap/anime/lottie/three via `renderSeek`) cobertas; p\u00e1gina com rAF/wall-clock fora dos\nadapters ficaria congelada \u2192 rollback `cli` dispon\u00edvel; (b) `<video>` embutido n\u00e3o \u00e9 pr\u00e9-extra\u00eddo (o CLI injeta frames\nvia ffmpeg; projeto atual n\u00e3o tem v\u00eddeo) \u2192 FMEA follow-up quando o editor ganhar clipes de v\u00eddeo; (c) refs externas\n(CDN gsap pinado) exigem rede no worker \u2014 determin\u00edstico por conte\u00fado pinado.\n\n### C.4 Gates de aceite (herdados da FR-VS-047 + 1 novo)\n\n1. **Frame-diff:** frames t=1s/t=6s sha256 **distintos** (animado, n\u00e3o-branco).\n2. **Byte-determinismo:** 2 renders args-id\u00eanticos \u2192 MP4 **sha256-id\u00eantico** (NFR-VS-016/AT-VS-024).\n3. **Vision-QA** (`vision_analyze_video`, BYOK cost 0): confidence **high**, composi\u00e7\u00e3o 9:16 correta.\n4. **NOVO \u2014 A/B vs refer\u00eancia:** SSIM (ffmpeg) native-vs-`ref` (wrap CLI) sobre o MESMO projeto \u2265 **0.95** m\u00e9dia.\n5. Guard smoke `smoke-studio-project-guard.ts` **4/4** (path-safety intacta, agora sem spawn).\n6. `tsc --noEmit` 0 \u00b7 worker E2E (`video_renders` row \u2192 done \u2192 bucket) antes de tornar `native` o default vivo.\n\n### C.5 Conformidade Apache-2.0 (obriga\u00e7\u00f5es)\n\nImport-only do pacote publicado (nenhum source do core copiado) \u2192 basta: (a) header de atribui\u00e7\u00e3o no\n`render-core.ts` (\"Studio render built on @hyperframes/core, Apache-2.0, \u00a9 HeyGen \u2014 LICENSE shipped in the package\");\n(b) LICENSE retido em `node_modules/@hyperframes/core/LICENSE` (shipa no tarball). Se a op\u00e7\u00e3o C (vendor) for acionada\nno futuro: carregar LICENSE + NOTICE junto do source copiado.\n\n### C.6 Pattern Conformance (Closed-Loop Step 3.5)\n\nAmenda a declara\u00e7\u00e3o da \u00a7B.6 (mesmo formato): **#Determinism/Reproducibility** re-provado no substrato nativo (gate\nC.4.2); **#Sandboxing** inalterado (Playwright headless single-tenant, OTD-VS-006/019 seguem deferidas); #Tool Use /\n#HITL sem\u00e2nticas id\u00eanticas. Demais padr\u00f5es herdam a declara\u00e7\u00e3o do m\u00f3dulo \u2014 sem mudan\u00e7a material.\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0 \u00b7 \u00a7VS-UI-B (Amendment v0.5) autorada pelo loop aut\u00f4nomo (it.2, 2026-06-30) \u2014 verifica\u00e7\u00e3o emp\u00edrica Lei 1 + Workflow adversarial `wf_b0a6c005-8c2` \u00b7 \u00a7VS-UI-C (Amendment v0.6) autorada pelo loop aut\u00f4nomo (2026-07-01) \u2014 evid\u00eancia de licen\u00e7a Lei 1 + Workflow 4-lentes `wf_bbc8402d-096`_"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:34:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -i 's/| FR-VS | 001\\.\\.046 | 46 | 32 + 14 (033\\.\\.046) | 04-frd |/| FR-VS | 001..050 | 50 | 32 + 14 (033..046) + 047..049 (SDD \u00a7VS-UI-B) + 050 (SDD \u00a7VS-UI-C) | 04-frd + 05-sdd |/' docs/bok/video-studio/00-index.md\nsed -i 's/| OTD-VS | 001\\.\\.013 | 13 | 7 + 6 (008\\.\\.013) | 05-sdd |/| OTD-VS | 001..020 | 20 | 7 + 6 (008..013) + 014..019 (amendments) + 020 (\u00a7VS-UI-C substrato nativo) | 05-sdd |/' docs/bok/video-studio/00-index.md\ngrep -n \"FR-VS | 001\\|OTD-VS | 001\" docs/bok/video-studio/00-index.md",
+  "description": "Bump ID-space rows in 00-index (FR-VS\u2192050, OTD-VS\u2192020)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 54:| FR-VS | 001..050 | 50 | 32 + 14 (033..046) + 047..049 (SDD §VS-UI-B) + 050 (SDD §VS-UI-C) | 04-frd + 05-sdd |
+> 55:| NFR-VS | 001..022 | 22 | 17 + 5 (018..022) | 04-frd |
+> 56:| OTD-VS | 001..020 | 20 | 7 + 6 (008..013) + 014..019 (amendments) + 020 (§VS-UI-C substrato nativo) | 05-sdd |
+> ```
+
+## 🤖 Claude *(21:34:34)*
+
+
+## 🤖 Claude *(21:34:34)*
+
+Emenda selada. Commit granular do BoK gate, depois instalar a dep e implementar:
+
+## 🤖 Claude *(21:34:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/video-studio/05-sdd.md docs/bok/video-studio/00-index.md\ngit commit -m \"docs(bok): \u00a7VS-UI-C Amendment v0.6 \u2014 OTD-VS-020 native render substrate + FR-VS-050 (license-clean)\n\nLicense evidence Lei 1: CLI npm artifact ships NO license grant; @hyperframes/core\nships Apache-2.0 LICENSE; runtime IIFE byte-identical (sha256 1bc431f0). Native\nrender on core supersedes the \u00a7B.3 CLI wrap mechanism, inheriting all FR-VS-047\nparity gates as regression oracle + new A/B SSIM gate. Grounded in 4-lens\nunderstand Workflow wf_bbc8402d-096.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -3\ngit log -1 --format=%H",
+  "description": "Commit BoK amendment (gate before code)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> [main c422de7] docs(bok): §VS-UI-C Amendment v0.6 — OTD-VS-020 native render substrate + FR-VS-050 (license-clean)
+>  2 files changed, 90 insertions(+), 3 deletions(-)
+> c422de76310b9262ff043872b22fe2ce7b7ea369
+> ```
+
+## 🤖 Claude *(21:34:44)*
+
+
+## 🤖 Claude *(21:34:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun add @hyperframes/core@0.7.22 2>&1 | tail -6\necho \"=== LICENSE shipped? ===\"; head -2 node_modules/@hyperframes/core/LICENSE\necho \"=== import smoke ===\"\nbun -e \"import('@hyperframes/core/compiler').then(m => console.log('bundleToSingleHtml:', typeof m.bundleToSingleHtml)).catch(e => { console.error('IMPORT FAIL:', e.message); process.exit(1); })\"",
+  "description": "Install @hyperframes/core + verify LICENSE + import smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Resolved, downloaded and extracted [76]
+> Saved lockfile
+> 
+> installed @hyperframes/core@0.7.22
+> 
+> 29 packages installed [2.58s]
+> === LICENSE shipped? ===
+>                                  Apache License
+>                            Version 2.0, January 2004
+> === import smoke ===
+> bundleToSingleHtml: function
+> ```
+
+## 🤖 Claude *(21:35:27)*
+
+
+## 🤖 Claude *(21:35:27)*
+
+
+## 🤖 Claude *(21:35:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "import { chromium } from 'playwright';\nimport { spawn } from 'child_process';\nimport { mkdtempSync, rmSync, existsSync, statSync } from 'fs';\nimport { join, dirname, resolve } from 'path';\nimport { tmpdir } from 'os';\nimport { fileURLToPath } from 'url';",
+  "new_string": "import { chromium } from 'playwright';\nimport { spawn } from 'child_process';\nimport { mkdtempSync, rmSync, existsSync, statSync, writeFileSync, unlinkSync } from 'fs';\nimport { join, dirname, resolve } from 'path';\nimport { tmpdir } from 'os';\nimport { fileURLToPath } from 'url';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:35:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "// \u2500\u2500 Studio-project render (FR-VS-047): wrap the reference engine `hyperframes render` \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Single-tenant Usu\u00e1rio Zero root (OTD-VS-019 multi-tenant deferred). Overridable by env for portability/tests.\nconst STUDIO_PROJECTS_ROOT = process.env.STUDIO_PROJECTS_ROOT ?? '/home/ubuntu/.mcorch/video-studio/projects';\nconst HF_CLI = process.env.HYPERFRAMES_CLI ?? '/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js';\nconst HF_NODE = process.env.HYPERFRAMES_NODE ?? '/home/ubuntu/.local/bin/node'; // node v22 (hyperframes needs >=22)\nconst VALID_RESOLUTIONS = new Set(['portrait', 'landscape', 'square', 'portrait-4k', 'landscape-4k', 'square-4k']);",
+  "new_string": "// \u2500\u2500 Studio-project render (FR-VS-047 \u2192 FR-VS-050 native, SDD \u00a7VS-UI-C) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Default engine = NATIVE on @hyperframes/core (Apache-2.0, LICENSE shipped in the npm tarball \u2014 attribution:\n// \u00a9 HeyGen, https://github.com/heygen-com/hyperframes). The CLI wrap is kept as emergency rollback only\n// (STUDIO_RENDER_ENGINE=cli) \u2014 its npm artifact ships no license grant (OTD-VS-020).\n// Single-tenant Usu\u00e1rio Zero root (OTD-VS-019 multi-tenant deferred). Overridable by env for portability/tests.\nconst STUDIO_PROJECTS_ROOT = process.env.STUDIO_PROJECTS_ROOT ?? '/home/ubuntu/.mcorch/video-studio/projects';\nconst HF_CLI = process.env.HYPERFRAMES_CLI ?? '/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js';\nconst HF_NODE = process.env.HYPERFRAMES_NODE ?? '/home/ubuntu/.local/bin/node'; // node v22 (hyperframes needs >=22)\n// Preset \u2192 output dimensions (mirrors the reference CLI's CANVAS_DIMENSIONS).\nconst RESOLUTION_DIMENSIONS: Record<string, { width: number; height: number }> = {\n  portrait: { width: 1080, height: 1920 },\n  landscape: { width: 1920, height: 1080 },\n  square: { width: 1080, height: 1080 },\n  'portrait-4k': { width: 2160, height: 3840 },\n  'landscape-4k': { width: 3840, height: 2160 },\n  'square-4k': { width: 2160, height: 2160 },\n};\nconst VALID_RESOLUTIONS = new Set(Object.keys(RESOLUTION_DIMENSIONS));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:35:47)*
+
+
+## 🤖 Claude *(21:35:47)*
+
+Agora o encoder compartilhado + o dispatcher com os dois engines:
+
+## 🤖 Claude *(21:35:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "function runFfmpeg(args: string[]): Promise<void> {\n  return new Promise((res, rej) => {\n    const p = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });\n    let err = '';\n    p.stderr.on('data', (d) => { err += d.toString(); });\n    p.on('error', rej);\n    p.on('close', (code) => (code === 0 ? res() : rej(new Error(`ffmpeg exit ${code}: ${err.slice(-800)}`))));\n  });\n}",
+  "new_string": "function runFfmpeg(args: string[]): Promise<void> {\n  return new Promise((res, rej) => {\n    const p = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });\n    let err = '';\n    p.stderr.on('data', (d) => { err += d.toString(); });\n    p.on('error', rej);\n    p.on('close', (code) => (code === 0 ? res() : rej(new Error(`ffmpeg exit ${code}: ${err.slice(-800)}`))));\n  });\n}\n\n/** PNG sequence \u2192 H.264 yuv420p MP4, bitexact + metadata-stripped \u2192 byte-reproducible (NFR-VS-016). */\nfunction encodePngFramesBitexact(frameDir: string, fps: number, outPath: string): Promise<void> {\n  return runFfmpeg([\n    '-y',\n    '-framerate', String(fps),\n    '-i', join(frameDir, 'f_%05d.png'),\n    '-c:v', 'libx264',\n    '-preset', 'medium',\n    '-crf', '20',\n    '-pix_fmt', 'yuv420p',\n    '-r', String(fps),\n    '-movflags', '+faststart',\n    '-fflags', '+bitexact',\n    '-flags:v', '+bitexact',\n    '-map_metadata', '-1',\n    outPath,\n  ]);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:35:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "    await browser.close();\n\n    // PNG sequence \u2192 MP4. -fflags/-flags +bitexact + no metadata \u2192 byte-reproducible (NFR-VS-016).\n    await runFfmpeg([\n      '-y',\n      '-framerate', String(fps),\n      '-i', join(frameDir, 'f_%05d.png'),\n      '-c:v', 'libx264',\n      '-preset', 'medium',\n      '-crf', '20',\n      '-pix_fmt', 'yuv420p',\n      '-r', String(fps),\n      '-movflags', '+faststart',\n      '-fflags', '+bitexact',\n      '-flags:v', '+bitexact',\n      '-map_metadata', '-1',\n      outPath,\n    ]);\n\n    if (!existsSync(outPath)) throw new Error('render_produced_no_file');",
+  "new_string": "    await browser.close();\n\n    await encodePngFramesBitexact(frameDir, fps, outPath);\n\n    if (!existsSync(outPath)) throw new Error('render_produced_no_file');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:36:04)*
+
+
+## 🤖 Claude *(21:36:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "/**\n * Render a Studio-authored project (FR-VS-047) by wrapping the reference engine `hyperframes render <dir>`.\n * Parity is definitional (same engine as the editor preview) \u2192 no bespoke seek, no silent-blank risk.\n * Throws on any failure (the worker translates that to finalize_video_render(failed, refund)).\n *\n * Security: `project_dir` MUST resolve strictly under STUDIO_PROJECTS_ROOT (no traversal / arbitrary path exec).\n * ARM64 trap: the hyperframes-bundled Chrome does not run on ARM64 \u2192 point it at Playwright's chromium (the same\n * browser this motor already uses), resolved via chromium.executablePath().\n */\nexport async function renderStudioProject(spec: StudioProjectSpec, outPath: string): Promise<RenderResult> {\n  const t0 = Date.now();\n  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));\n  const resolution = spec.resolution && VALID_RESOLUTIONS.has(spec.resolution) ? spec.resolution : 'portrait';\n\n  // Path-safety: dir must be the root or strictly inside it (blocks ../ traversal + absolute escapes).\n  const dir = resolve(spec.project_dir ?? '');\n  const root = resolve(STUDIO_PROJECTS_ROOT);\n  if (dir !== root && !dir.startsWith(root + '/')) throw new Error(`project_dir_outside_root: ${dir}`);\n  if (!existsSync(join(dir, 'index.html'))) throw new Error(`studio_project_not_found: ${join(dir, 'index.html')}`);\n  if (!existsSync(HF_CLI)) throw new Error(`hyperframes_cli_not_found: ${HF_CLI}`);\n\n  const browserPath = chromium.executablePath();\n\n  await new Promise<void>((res, rej) => {\n    const p = spawn(HF_NODE, [\n      HF_CLI, 'render', dir,\n      '--resolution', resolution, '--fps', String(fps),\n      '-o', outPath, '--quiet',\n    ], {\n      stdio: ['ignore', 'ignore', 'pipe'],\n      env: { ...process.env, HYPERFRAMES_BROWSER_PATH: browserPath, HOME: process.env.HOME ?? '/home/ubuntu' },\n    });\n    let err = '';\n    p.stderr.on('data', (d) => { err += d.toString(); });\n    p.on('error', rej);\n    p.on('close', (code) => (code === 0 ? res() : rej(new Error(`hyperframes_render_exit_${code}: ${err.slice(-800)}`))));\n  });\n\n  if (!existsSync(outPath)) throw new Error('studio_render_produced_no_file');\n  const bytes = statSync(outPath).size;\n  if (bytes < 100 * 1024) throw new Error(`studio_render_too_small: ${bytes} bytes (< 100KB, Lei 1 gate)`);\n\n  const probe = await ffprobeVideo(outPath);\n  return { outPath, bytes, width: probe.width, height: probe.height, frames: probe.frames, fps: probe.fps, durationMs: Date.now() - t0 };\n}",
+  "new_string": "/**\n * Render a Studio-authored project \u2014 FR-VS-050 (SDD \u00a7VS-UI-C): NATIVE engine on @hyperframes/core (Apache-2.0)\n * by default; the legacy CLI wrap (FR-VS-047 \u00a7B.3) remains available as emergency rollback via\n * STUDIO_RENDER_ENGINE=cli. Throws on any failure (worker \u2192 finalize_video_render(failed, refund)).\n *\n * Security: `project_dir` MUST resolve strictly under STUDIO_PROJECTS_ROOT (no traversal / arbitrary path exec).\n * The guard runs HERE, engine-independent, before any FS/bundle/spawn work.\n */\nexport async function renderStudioProject(spec: StudioProjectSpec, outPath: string): Promise<RenderResult> {\n  // Path-safety: dir must be the root or strictly inside it (blocks ../ traversal + absolute escapes).\n  const dir = resolve(spec.project_dir ?? '');\n  const root = resolve(STUDIO_PROJECTS_ROOT);\n  if (dir !== root && !dir.startsWith(root + '/')) throw new Error(`project_dir_outside_root: ${dir}`);\n  if (!existsSync(join(dir, 'index.html'))) throw new Error(`studio_project_not_found: ${join(dir, 'index.html')}`);\n\n  const engine = process.env.STUDIO_RENDER_ENGINE ?? 'native';\n  return engine === 'cli'\n    ? renderStudioProjectViaCli(dir, spec, outPath)\n    : renderStudioProjectNative(dir, spec, outPath);\n}\n\n/**\n * FR-VS-050 \u2014 native studio-project render. Algorithm (mapped empirically from the reference CLI,\n * Workflow wf_bbc8402d-096; SDD \u00a7VS-UI-C C.3):\n *   bundleToSingleHtml(dir) [runtime inline] \u2192 temp bundle INSIDE dir (file:// keeps relative refs working)\n *   \u2192 init-script window.__HF_EXPORT_RENDER_SEEK_CONFIG={fps} (runtime reads at init; fps is renderer-owned)\n *   \u2192 goto + wait (__renderReady && __player.getDuration()>0) + fonts\n *   \u2192 per frame: __player.renderSeek(i/fps) (synchronous deterministic seek, quantized floor(t*fps+1e-9)/fps\n *     runtime-side) \u2192 PNG screenshot \u2192 shared bitexact FFmpeg encode (NFR-VS-016).\n * Declared limits (\u00a7C.3): no virtual-time shim (adapter-driven compositions only \u2014 GSAP/css/waapi/anime/lottie/\n * three); embedded <video> not pre-extracted; external pinned CDN refs need network.\n */\nasync function renderStudioProjectNative(dir: string, spec: StudioProjectSpec, outPath: string): Promise<RenderResult> {\n  const t0 = Date.now();\n  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));\n  const resolution = spec.resolution && VALID_RESOLUTIONS.has(spec.resolution) ? spec.resolution : 'portrait';\n  const { width, height } = RESOLUTION_DIMENSIONS[resolution];\n\n  // Apache-2.0 import-only usage (\u00a9 HeyGen \u2014 LICENSE ships in node_modules/@hyperframes/core/LICENSE).\n  const { bundleToSingleHtml } = await import('@hyperframes/core/compiler');\n  const html: string = await bundleToSingleHtml(dir);\n\n  // Serve via file:// from INSIDE the project dir so relative asset refs keep resolving.\n  const bundlePath = join(dir, `.hf-native-bundle-${process.pid}-${Date.now().toString(36)}.html`);\n  writeFileSync(bundlePath, html, 'utf8');\n\n  const frameDir = mkdtempSync(join(tmpdir(), 'hf-native-frames-'));\n  const browser = await chromium.launch({\n    headless: true,\n    // Same determinism flags as the template path (single-tenant Usu\u00e1rio Zero, OTD-VA-011).\n    args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text'],\n  });\n  try {\n    const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });\n    // fps is renderer-owned; the embedded runtime reads this at init (fallback 30). Must precede goto.\n    await page.addInitScript((v) => { (window as any).__HF_EXPORT_RENDER_SEEK_CONFIG = { fps: v, fpsSource: 'mcorch-native-render' }; }, fps);\n    await page.goto(`file://${bundlePath}`, { waitUntil: 'load', timeout: 60_000 });\n\n    // Readiness (mirrors the reference pollHfReady): timelines bound + deterministic adapters ready + duration real.\n    await page.waitForFunction(\n      () => (window as any).__renderReady === true\n        && (window as any).__player\n        && typeof (window as any).__player.renderSeek === 'function'\n        && (window as any).__player.getDuration() > 0,\n      undefined,\n      { timeout: 45_000 },\n    ).catch(() => { throw new Error('studio_runtime_not_ready: __renderReady/__player.getDuration()>0 not reached in 45s'); });\n    await page.evaluate(() => (document as any).fonts?.ready);\n\n    const duration: number = await page.evaluate(() => (window as any).__player.getDuration());\n    if (!(duration > 0)) throw new Error('studio_composition_duration_zero'); // would produce a black video\n    const totalFrames = Math.ceil(duration * fps);\n\n    for (let i = 0; i < totalFrames; i++) {\n      // Synchronous deterministic seek: pauses timelines, seeks GSAP totalTime, fans out to adapters.\n      await page.evaluate((t) => (window as any).__player.renderSeek(t), i / fps);\n      await page.screenshot({\n        path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),\n        clip: { x: 0, y: 0, width, height },\n        animations: 'allow', // css adapter seeks CSS animations; 'disabled' would force them to final state\n      });\n    }\n    await browser.close();\n\n    await encodePngFramesBitexact(frameDir, fps, outPath);\n\n    if (!existsSync(outPath)) throw new Error('studio_render_produced_no_file');\n    const bytes = statSync(outPath).size;\n    if (bytes < 100 * 1024) throw new Error(`studio_render_too_small: ${bytes} bytes (< 100KB, Lei 1 gate)`);\n\n    const probe = await ffprobeVideo(outPath);\n    return { outPath, bytes, width: probe.width, height: probe.height, frames: probe.frames, fps: probe.fps, durationMs: Date.now() - t0 };\n  } finally {\n    await browser.close().catch(() => {});\n    rmSync(frameDir, { recursive: true, force: true });\n    try { unlinkSync(bundlePath); } catch { /* already gone */ }\n  }\n}\n\n/**\n * Legacy FR-VS-047 CLI wrap \u2014 emergency rollback only (STUDIO_RENDER_ENGINE=cli). The npm `hyperframes` artifact\n * ships no license grant (OTD-VS-020) \u2014 delete this path after the first editor-initiated native render passes.\n * ARM64 trap: the hyperframes-bundled Chrome does not run on ARM64 \u2192 point it at Playwright's chromium.\n */\nasync function renderStudioProjectViaCli(dir: string, spec: StudioProjectSpec, outPath: string): Promise<RenderResult> {\n  const t0 = Date.now();\n  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));\n  const resolution = spec.resolution && VALID_RESOLUTIONS.has(spec.resolution) ? spec.resolution : 'portrait';\n  if (!existsSync(HF_CLI)) throw new Error(`hyperframes_cli_not_found: ${HF_CLI}`);\n\n  const browserPath = chromium.executablePath();\n\n  await new Promise<void>((res, rej) => {\n    const p = spawn(HF_NODE, [\n      HF_CLI, 'render', dir,\n      '--resolution', resolution, '--fps', String(fps),\n      '-o', outPath, '--quiet',\n    ], {\n      stdio: ['ignore', 'ignore', 'pipe'],\n      env: { ...process.env, HYPERFRAMES_BROWSER_PATH: browserPath, HOME: process.env.HOME ?? '/home/ubuntu' },\n    });\n    let err = '';\n    p.stderr.on('data', (d) => { err += d.toString(); });\n    p.on('error', rej);\n    p.on('close', (code) => (code === 0 ? res() : rej(new Error(`hyperframes_render_exit_${code}: ${err.slice(-800)}`))));\n  });\n\n  if (!existsSync(outPath)) throw new Error('studio_render_produced_no_file');\n  const bytes = statSync(outPath).size;\n  if (bytes < 100 * 1024) throw new Error(`studio_render_too_small: ${bytes} bytes (< 100KB, Lei 1 gate)`);\n\n  const probe = await ffprobeVideo(outPath);\n  return { outPath, bytes, width: probe.width, height: probe.height, frames: probe.frames, fps: probe.fps, durationMs: Date.now() - t0 };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:36:53)*
+
+
+## 🤖 Claude *(21:36:53)*
+
+Provas agora. Gate 1: `tsc` + guard smoke (path-safety intacta, agora sem spawn):
+
+## 🤖 Claude *(21:36:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | head -10; echo \"tsc exit: $?\"\necho \"=== guard smoke ===\"\nbun run scripts/qa/smoke-studio-project-guard.ts 2>&1 | tail -10",
+  "description": "tsc + path-safety guard smoke"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc exit: 0
+> === guard smoke ===
+> ✅ G1 absolute-escape: threw 'project_dir_outside_root' (project_dir_outside_root: /etc)
+> ✅ G2 traversal-escape: threw 'project_dir_outside_root' (project_dir_outside_root: /etc)
+> ✅ G3 empty-dir: threw 'project_dir_outside_root' (project_dir_outside_root: /home/gcrUX/htdocs/constellation-orchestra)
+> ✅ G4 inside-but-missing: threw 'studio_project_not_found' (studio_project_not_found: /tmp/smoke-studio-root/ghost-project/index.html)
+> 
+> 🟢 studio-project guard smoke: 4/4 gates green (path-safety rejects arbitrary-dir execution)
+> ```
+
+## 🤖 Claude *(21:37:04)*
+
+
+## 🤖 Claude *(21:37:04)*
+
+
+## 🤖 Claude *(21:37:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad\ncd /home/gcrUX/htdocs/constellation-orchestra\nbun -e \"\nimport { renderStudioProject } from './scripts/hyperframes/render-core.ts';\nconst r1 = await renderStudioProject({ mode: 'studio-project', project_dir: '/home/ubuntu/.mcorch/video-studio/projects/mcorch-video', fps: 30, resolution: 'portrait' }, '$SCRATCH/native-1.mp4');\nconsole.log('RENDER1:', JSON.stringify(r1));\nconst r2 = await renderStudioProject({ mode: 'studio-project', project_dir: '/home/ubuntu/.mcorch/video-studio/projects/mcorch-video', fps: 30, resolution: 'portrait' }, '$SCRATCH/native-2.mp4');\nconsole.log('RENDER2:', JSON.stringify(r2));\n\" 2>&1 | tail -4\necho \"=== byte-determinism ===\"; sha256sum $SCRATCH/native-1.mp4 $SCRATCH/native-2.mp4",
+  "description": "Native render \u00d72 of real studio project + sha256 comparison",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> RENDER1: {"outPath":"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/native-1.mp4","bytes":386795,"width":1080,"height":1920,"frames":240,"fps":30,"durationMs":126460}
+> RENDER2: {"outPath":"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/native-2.mp4","bytes":386795,"width":1080,"height":1920,"frames":240,"fps":30,"durationMs":126892}
+> === byte-determinism ===
+> c721f8f4961903e709b7abda7ad484f28261de589a0641188605090516c89b20  /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/native-1.mp4
+> c721f8f4961903e709b7abda7ad484f28261de589a0641188605090516c89b20  /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/native-2.mp4
+> ```
+
+## 🤖 Claude *(21:41:31)*
+
+
+## 🤖 Claude *(21:41:31)*
+
+
+## 🤖 Claude *(21:41:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad\necho \"=== frame-diff nativo (t=1s vs t=6s) ===\"\nffmpeg -y -v error -ss 1 -i $SCRATCH/native-1.mp4 -frames:v 1 $SCRATCH/nat-t1.png\nffmpeg -y -v error -ss 6 -i $SCRATCH/native-1.mp4 -frames:v 1 $SCRATCH/nat-t6.png\nsha256sum $SCRATCH/nat-t1.png $SCRATCH/nat-t6.png | awk '{print $1}' | sort -u | wc -l | xargs -I{} echo \"sha256 \u00fanicos: {} (2 = animado \u2705)\"\nls -la $SCRATCH/nat-t1.png $SCRATCH/nat-t6.png | awk '{print $5, $9}'",
+  "description": "Frame-diff gate: extract t=1s + t=6s, compare sha256"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === frame-diff nativo (t=1s vs t=6s) ===
+> sha256 únicos: 2 (2 = animado ✅)
+> 433185 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/nat-t1.png
+> 598384 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/nat-t6.png
+> ```
+
+## 🤖 Claude *(21:41:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad\ncd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== render de refer\u00eancia (wrap CLI, mesmos args) p/ A/B ===\"\nSTUDIO_RENDER_ENGINE=cli bun -e \"\nimport { renderStudioProject } from './scripts/hyperframes/render-core.ts';\nconst r = await renderStudioProject({ mode: 'studio-project', project_dir: '/home/ubuntu/.mcorch/video-studio/projects/mcorch-video', fps: 30, resolution: 'portrait' }, '$SCRATCH/ref-cli.mp4');\nconsole.log('REF:', JSON.stringify(r));\n\" 2>&1 | tail -2",
+  "description": "Reference render via CLI wrap for A/B comparison",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === render de referência (wrap CLI, mesmos args) p/ A/B ===
+> REF: {"outPath":"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/ref-cli.mp4","bytes":773851,"width":1080,"height":1920,"frames":240,"fps":30,"durationMs":123019}
+> ```
+
+## 🤖 Claude *(21:43:48)*
+
+
+## 🤖 Claude *(21:43:48)*
+
+
+## 🤖 Claude *(21:43:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad\nffmpeg -i $SCRATCH/native-1.mp4 -i $SCRATCH/ref-cli.mp4 -lavfi \"ssim;[0:v][1:v]psnr\" -f null - 2>&1 | grep -E \"SSIM|PSNR\" | tail -2",
+  "description": "SSIM + PSNR A/B: native vs CLI reference render",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [Parsed_ssim_0 @ 0xaaac36345ee0] SSIM Y:0.991849 (20.887806) U:0.996114 (24.104593) V:0.996907 (25.096140) All:0.993403 (21.806313)
+> [Parsed_psnr_1 @ 0xaaac3630bfe0] PSNR y:45.643549 u:50.377603 v:50.835130 average:46.761025 min:46.097611 max:54.328278
+> ```
+
+## 🤖 Claude *(21:44:09)*
+
+
+## 🤖 Claude *(21:44:09)*
+
+
+## 🤖 Claude *(21:44:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== video-bridge: claim + studio-project branch ===\"\ngrep -n \"studio-project\\|claim\\|from(\\\"video_renders\\\")\\|from('video_renders')\" scripts/video-bridge.ts | head -15\necho \"=== service state ===\"\nsystemctl --user status video-bridge.service --no-pager 2>/dev/null | head -5",
+  "description": "video-bridge enqueue contract + service state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video-bridge: claim + studio-project branch ===
+> 6: * atomically claims each, renders the composition → 9:16 1080×1920 MP4 (render-core.ts), uploads to the private
+> 11: * Pattern: mirrors scripts/design-bridge.ts (poll + atomic claim) — the proven host↔cloud bridge (Edge fns can't
+> 45:const RUNNING_TIMEOUT_MS = 10 * 60 * 1000; // re-claim a render stuck in 'running' beyond this (dead worker)
+> 53:/** Atomic claim: queued→running for exactly one worker. Returns the claimed row or null. */
+> 54:async function claim(renderId: string) {
+> 56:    .from('video_renders')
+> 66:/** Render one claimed row end to end. Never throws — translates failure to finalize(failed, refund). */
+> 80:    // silently skipping every video creative_assets registration. Editor (studio-project) renders carry no autopilot.
+> 87:    if ((spec as StudioProjectSpec).mode === 'studio-project') {
+> 203:/** One drain pass: claim + render every queued hyperframes render. Returns count processed. */
+> 205:  // Reap renders stuck in 'running' past the timeout (dead worker) → back to queued for re-claim.
+> 207:  await supabase.from('video_renders')
+> 213:    .from('video_renders')
+> 222:    const row = await claim(q.id);
+> 223:    if (!row) continue; // already claimed by another worker
+> === service state ===
+> ● video-bridge.service - MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg)
+>      Loaded: loaded (/home/ubuntu/.config/systemd/user/video-bridge.service; enabled; preset: enabled)
+>      Active: active (running) since Tue 2026-06-30 22:01:13 -03; 20h ago
+>    Main PID: 1329269 (bun)
+>       Tasks: 10 (limit: 28691)
+> ```
+
+## 🤖 Claude *(21:44:19)*
+
+
+## 🤖 Claude *(21:44:19)*
+
+
+## 🤖 Claude *(21:44:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsystemctl --user restart video-bridge.service && sleep 2 && systemctl --user status video-bridge.service --no-pager | head -4\nset -a; source .env 2>/dev/null; set +a\necho \"=== linha it.4 (9069bb7d) p/ shape ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/video_renders?id=eq.9069bb7d-0000-0000-0000-000000000000&select=*\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | head -c 400\necho \"\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/video_renders?composition-%3E%3Emode=eq.studio-project&select=id,user_id,engine,state,composition,charged_mco&order=created_at.desc&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Restart worker + fetch prior studio-project row shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ● video-bridge.service - MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg)
+>      Loaded: loaded (/home/ubuntu/.config/systemd/user/video-bridge.service; enabled; preset: enabled)
+>      Active: active (running) since Wed 2026-07-01 18:44:23 -03; 2s ago
+>    Main PID: 3956182 (bun)
+> === linha it.4 (9069bb7d) p/ shape ===
+> []
+> [{"id":"9069bb7d-c164-4307-930d-f98251e580a8","user_id":"ada39fae-67e1-4e53-af1c-5a18e1c108e8","engine":"hyperframes","state":"done","composition":{"fps": 24, "mode": "studio-project", "resolution": "portrait", "project_dir": "/home/ubuntu/.mcorch/video-studio/projects/mcorch-video"},"charged_mco":0}]
+> ```
+
+## 🤖 Claude *(21:44:34)*
+
+
+## 🤖 Claude *(21:44:34)*
+
+
+## 🤖 Claude *(21:44:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nROW=$(curl -s -X POST \"$VITE_SUPABASE_URL/rest/v1/video_renders\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"engine\":\"hyperframes\",\"state\":\"queued\",\"charged_mco\":0,\"composition\":{\"mode\":\"studio-project\",\"project_dir\":\"/home/ubuntu/.mcorch/video-studio/projects/mcorch-video\",\"fps\":30,\"resolution\":\"portrait\"}}')\necho \"$ROW\" | head -c 300\nRID=$(echo \"$ROW\" | grep -oE '\"id\":\"[a-f0-9-]+\"' | head -1 | cut -d'\"' -f4)\necho \"\"; echo \"RENDER_ID=$RID\"\necho \"$RID\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/e2e-render-id.txt",
+  "description": "Insert queued studio-project render row (E2E, zero-cost)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"020e9bef-7f4a-48f1-8d3a-c5450ac019c0","user_id":"ada39fae-67e1-4e53-af1c-5a18e1c108e8","org_id":null,"client_id":null,"project_id":null,"engine":"hyperframes","state":"queued","product_id":null,"topic":null,"template_id":null,"legs":[],"qa":null,"charged_mco":0,"refunded_mco":0,"refunded_at"
+> RENDER_ID=020e9bef-7f4a-48f1-8d3a-c5450ac019c0
+> ```
+
+## 🤖 Claude *(21:44:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nRID=020e9bef-7f4a-48f1-8d3a-c5450ac019c0\nfor i in $(seq 1 30); do\n  STATE=$(curl -s \"$VITE_SUPABASE_URL/rest/v1/video_renders?id=eq.$RID&select=state,output_path,error\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\")\n  S=$(echo \"$STATE\" | grep -oE '\"state\":\"[a-z]+\"' | cut -d'\"' -f4)\n  echo \"[$i] $S\"\n  if [ \"$S\" = \"done\" ] || [ \"$S\" = \"failed\" ]; then echo \"$STATE\"; break; fi\n  sleep 12\ndone",
+  "description": "Poll E2E render row until done/failed",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [1] 
+> [2] 
+> [3] 
+> [4] 
+> [5] 
+> [6] 
+> [7] 
+> [8] 
+> [9] 
+> [10] 
+> [11] 
+> [12] 
+> [13] 
+> [14] 
+> [15] 
+> [16] 
+> [17] 
+> [18] 
+> [19] 
+> [20] 
+> [21] 
+> [22] 
+> [23] 
+> [24] 
+> [25] 
+> [26] 
+> [27] 
+> [28] 
+> [29] 
+> [30]
+> ```
+
+## 🤖 Claude *(21:50:59)*
+
+
+## 🤖 Claude *(21:50:59)*
+
+Polls vazios — debugando a resposta crua:
+
+## 🤖 Claude *(21:51:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nRID=020e9bef-7f4a-48f1-8d3a-c5450ac019c0\necho \"=== raw ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/video_renders?id=eq.$RID&select=state,error,output_path,started_at,finished_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"\"\necho \"=== journal do worker (\u00faltimas 15) ===\"\njournalctl --user -u video-bridge.service --since \"10 minutes ago\" --no-pager 2>/dev/null | tail -15",
+  "description": "Raw row state + worker journal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === raw ===
+> {"code":"42703","details":null,"hint":null,"message":"column video_renders.error does not exist"}
+> === journal do worker (últimas 15) ===
+> Jul 01 18:44:23 panel.gcrux.com systemd[1255]: Stopping video-bridge.service - MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg)...
+> Jul 01 18:44:23 panel.gcrux.com systemd[1255]: Stopped video-bridge.service - MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg).
+> Jul 01 18:44:23 panel.gcrux.com systemd[1255]: video-bridge.service: Consumed 5min 34.858s CPU time, 809.6M memory peak, 0B memory swap peak.
+> Jul 01 18:44:23 panel.gcrux.com systemd[1255]: Started video-bridge.service - MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg).
+> Jul 01 18:44:23 panel.gcrux.com bun[3956182]: 🎬 video-bridge running — polling video_renders (engine=hyperframes, queued)...
+> Jul 01 18:46:52 panel.gcrux.com bun[3956182]: ✅ render 020e9bef-7f4a-48f1-8d3a-c5450ac019c0 done → ada39fae-67e1-4e53-af1c-5a18e1c108e8/020e9bef-7f4a-48f1-8d3a-c5450ac019c0.mp4 (378KB, 127135ms) {
+> Jul 01 18:46:52 panel.gcrux.com bun[3956182]:   refunded: 0,
+> Jul 01 18:46:52 panel.gcrux.com bun[3956182]:   finalized: true,
+> Jul 01 18:46:52 panel.gcrux.com bun[3956182]: }
+> ```
+
+## 🤖 Claude *(21:51:12)*
+
+
+## 🤖 Claude *(21:51:12)*
+
+
+## 🤖 Claude *(21:51:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nRID=020e9bef-7f4a-48f1-8d3a-c5450ac019c0\necho \"=== row final ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/video_renders?id=eq.$RID&select=state,output_path,finished_at,refunded_mco\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"\"\necho \"=== signed URL do bucket ===\"\nSIGNED=$(curl -s -X POST \"$VITE_SUPABASE_URL/storage/v1/object/sign/video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/$RID.mp4\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"expiresIn\":3600}' | grep -oE '\"signedURL\":\"[^\"]+\"' | cut -d'\"' -f4)\necho \"signed path: ${SIGNED:0:80}...\"\ncurl -s -o /dev/null -w \"HTTP %{http_code} \u00b7 %{size_download} bytes\\n\" \"$VITE_SUPABASE_URL/storage/v1$SIGNED\"\necho \"$VITE_SUPABASE_URL/storage/v1$SIGNED\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/e2e-signed-url.txt",
+  "description": "Verify final row + bucket signed URL HTTP 200"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === row final ===
+> {"code":"42703","details":null,"hint":null,"message":"column video_renders.output_path does not exist"}
+> === signed URL do bucket ===
+> signed path: /object/sign/video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/020e9bef-7...
+> HTTP 200 · 386795 bytes
+> ```
+
+## 🤖 Claude *(21:51:29)*
+
+
+## 🤖 Claude *(21:51:29)*
+
+
+## 🤖 Claude *(21:51:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nRID=020e9bef-7f4a-48f1-8d3a-c5450ac019c0\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/video_renders?id=eq.$RID&select=*\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; r=json.load(sys.stdin)[0]; print({k:v for k,v in r.items() if k in ('state','storage_path','finished_at','refunded_mco','charged_mco') or 'path' in k or 'url' in k})\"",
+  "description": "Fetch final row state via select=*"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {'state': 'done', 'charged_mco': 0, 'refunded_mco': 0}
+> ```
+
+## 🤖 Claude *(21:51:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/e2e-signed-url.txt)\nbun run scripts/qa/vision-qa.ts --video \"$URL\" --context \"MP4 9:16 1080x1920 de 8s renderizado NATIVAMENTE (FR-VS-050, @hyperframes/core Apache-2.0) do projeto studio mcorch-video: gradiente roxo, logo MCORCH, t\u00edtulo/subt\u00edtulo/CTA com fade-in GSAP, barra de progresso. Verificar: composi\u00e7\u00e3o vertical correta, textos leg\u00edveis, anima\u00e7\u00e3o presente (n\u00e3o-est\u00e1tico), sem tela branca/preta ou artefatos.\" 2>&1 | tail -15",
+  "description": "Vision-QA semantic gate on the worker-produced MP4",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Uso: vision-qa.ts <image|video|compare> <url> [...]
+> ```
+
+## 🤖 Claude *(21:51:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nhead -40 scripts/qa/vision-qa.ts | grep -nE \"Uso|usage|argv|case|image\\||video\" | head -10",
+  "description": "Check vision-qa CLI signature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7: * calls the billable vision tools (BYOK-free for the Usuário Zero: openrouter for image, google for video).
+> 11: *   video   <video_url> ["question"] [duration_minutes]  → vision_analyze_video
+> 24:const mode = process.argv[2];
+> 25:if (!mode || !["image", "video", "compare"].includes(mode)) {
+> 26:  console.error("Uso: vision-qa.ts <image|video|compare> <url> [...]");
+> ```
+
+## 🤖 Claude *(21:51:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/e2e-signed-url.txt)\nbun run scripts/qa/vision-qa.ts video \"$URL\" \"Este MP4 9:16 (1080x1920, 8s) foi renderizado por um engine novo. Verifique: (1) composi\u00e7\u00e3o vertical correta com gradiente roxo, logo MCORCH, t\u00edtulo/subt\u00edtulo/CTA leg\u00edveis; (2) anima\u00e7\u00e3o presente \u2014 fade-ins/barra de progresso (N\u00c3O est\u00e1tico); (3) sem tela branca/preta, frames corrompidos ou artefatos. Veredito: aprovado/reprovado + confidence.\" 2>&1 | tail -20",
+  "description": "Vision-QA gate with correct CLI signature",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision_analyze_video
+>    confidence: high  cost_mco: 0  min: 1
+>    Aprovado. O vídeo cumpre todos os requisitos: (1) Composição vertical 9:16 (1080x1920) correta, com gradiente roxo de fundo, logo 'MCORCH' no canto superior esquerdo e todo o texto (título, subtítulo, CTA 'Começar agora →') perfeitamente legível. (2) Animação presente: o título, subtítulo e o botão CTA aparecem com fade-in. Há também uma barra de progresso preenchendo na parte inferior do vídeo, indicando que não é estático. (3) Não há telas brancas/pretas, frames corrompidos ou artefatos visuais.
+> ```
+
+## 🤖 Claude *(21:52:26)*
+
+
+## 🤖 Claude *(21:52:26)*
+
+
+## 🤖 Claude *(21:52:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short | head -8\necho \"---\"\ngit add scripts/hyperframes/render-core.ts package.json bun.lock 2>/dev/null || git add scripts/hyperframes/render-core.ts package.json bun.lockb\ngit commit -m \"feat(video-studio): FR-VS-050 \u2014 native studio-project render on @hyperframes/core (license-clean)\n\nReplaces the hyperframes CLI wrap (npm artifact ships no license grant) with an\nin-process engine: bundleToSingleHtml (Apache-2.0, LICENSE shipped) \u2192 Playwright\ndrives __player.renderSeek(i/fps) \u2192 shared bitexact FFmpeg. CLI wrap kept as\nemergency rollback (STUDIO_RENDER_ENGINE=cli). Kills HF_CLI/HF_NODE/ARM64 trap\non the default path.\n\nGates (SDD \u00a7VS-UI-C C.4, all green): frame-diff sha256-distinct t=1s/t=6s \u00b7\nbyte-determinism 2\u00d7  sha256 c721f8f4 (386.795B) \u00b7 Vision-QA confidence high \u00b7\nA/B SSIM 0.9934 vs CLI ref (PSNR 46.8dB) \u00b7 guard smoke 4/4 \u00b7 tsc 0 \u00b7 worker E2E\nvideo_renders 020e9bef done \u2192 bucket HTTP 200 byte-identical to local render.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -3\ngit log -1 --format=%H",
+  "description": "Commit native render engine (granular)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M bun.lock
+>  M package.json
+>  M scripts/hyperframes/render-core.ts
+> ---
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 2ce09b3] feat(video-studio): FR-VS-050 — native studio-project render on @hyperframes/core (license-clean)
+>  3 files changed, 251 insertions(+), 28 deletions(-)
+> 2ce09b34c26c0bff9597fde676e8ca8e5fc12c33
+> ```
+
+## 🤖 Claude *(21:53:09)*
+
+
+## 🤖 Claude *(21:53:09)*
+
+
+## 🤖 Claude *(21:53:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- \ud83c\udff4 **HyperFrames nativo (exclusividade + remove dep license:None):** **ACHADO it.8/9 \u2014 npm `hyperframes@0.7.22` = `license:\"None\"`** (repo \u00e9 Apache-2.0, mas o publish npm n\u00e3o). Meu wrap (it.3-8) usa esse CLI em prod = dep propriet\u00e1ria anti-doutrina. Caminho: internalizar `bundleToSingleHtml`+seek `frame=floor(time*fps)` do `@hyperframes/core` **Apache-2.0** no `render-core.ts` (elimina `HF_CLI`) = gate #4/R1-High, maior ROI de exclusividade. **Emenda \u00e0 SDD** (flip OTD-VS-005 embed\u2192fork). Bigger \u2014 p\u00f3s-observability.",
+  "new_string": "- \u2705 **HyperFrames nativo SHIPPED (loop 2026-07-01, commits `c422de7` docs + `2ce09b3` c\u00f3digo):** render de studio-project agora roda **NATIVO sobre `@hyperframes/core` (Apache-2.0, LICENSE shipado no tarball \u2014 verificado Lei 1)** \u2014 `bundleToSingleHtml` \u2192 Playwright dirige `__player.renderSeek(i/fps)` \u2192 FFmpeg bitexact compartilhado. **Elimina `HF_CLI`/`HF_NODE`/trap ARM64 do caminho default** (wrap CLI preservado s\u00f3 como rollback `STUDIO_RENDER_ENGINE=cli`; deletar ap\u00f3s 1\u00ba render editor-initiated). SDD **\u00a7VS-UI-C (Amendment v0.6)**: OTD-VS-020 (substrato B) + FR-VS-050; fundamentado no Workflow 4-lentes `wf_bbc8402d-096` (achado-chave: runtime core = CLI **byte-id\u00eantico** sha256 `1bc431f0\u2026`; o \"engine do CLI\" \u00e9 s\u00f3 harness de inje\u00e7\u00e3o). **Gates todos verdes:** frame-diff sha256-distinto t=1s/t=6s \u00b7 byte-determinismo 2\u00d7 `c721f8f4\u2026` (386.795B) \u00b7 Vision-QA confidence **high** \"Aprovado\" \u00b7 **A/B SSIM 0.9934** vs refer\u00eancia CLI (PSNR 46.8dB) \u00b7 guard smoke 4/4 \u00b7 tsc 0 \u00b7 **worker E2E** `video_renders 020e9bef` done \u2192 bucket HTTP 200 **byte-id\u00eantico ao render local** (determinismo cross-run). \u26a0\ufe0f Honesto: o CLI global segue instalado \u2014 o **editor vanilla (Fase A)** ainda roda `hyperframes preview`; sai s\u00f3 quando a Fase B swapar o service (container pr\u00f3prio)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:53:43)*
+
+
+## 🤖 Claude *(21:53:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -m \"docs(loop): charter \u2014 HyperFrames nativo SHIPPED (OTD-VS-020/FR-VS-050, gates verdes)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -2",
+  "description": "Commit charter update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main fea0e22] docs(loop): charter — HyperFrames nativo SHIPPED (OTD-VS-020/FR-VS-050, gates verdes)
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> ```
+
+## 🤖 Claude *(21:54:05)*
+
+
+## 🤖 Claude *(21:54:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/05-sdd.md",
+  "offset": 897,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 897	## §VS-UI-B — McorchAdapter contract: verificação empírica + gates pré-código (Amendment v0.5 · 2026-06-30 · FR-VS-047/048/049 · concretiza OTD-VS-017)
+> 898	
+> 899	> **Gate Lei 2 do build do container Fase B.** Autorada a partir de **verificação empírica material (Lei 1)** dos
+> 900	> pacotes npm **publicados** `@hyperframes/studio@0.7.5` + `@hyperframes/core@0.7.5` (pin exato) — `npm pack` +
+> 901	> inspeção do `dist/` + fonte das rotas — mais leitura do nosso `render-core.ts`. Supera a §VS-UI v0.4, que deixou
+> 902	> os 3 riscos duros (render-parity, auth, FS-sync) como hand-wave "por construção". **Nenhum código de container
+> 903	> começa antes destes gates verdes.** Verificação: Workflow adversarial `wf_b0a6c005-8c2` (APPROVE_WITH_FIXES, 3
+> 904	> blocking gaps) + gates empíricos re-executados no main-loop (2 subagentes do WF vieram stub — refeitos à mão).
+> 905	
+> 906	### B.1 Fatos empíricos (Lei 1 — dist publicado, não suposição)
+> 907	
+> 908	| Fato | Evidência (dist do tarball publicado) |
+> 909	|---|---|
+> 910	| `@hyperframes/studio@0.7.5` pina `@hyperframes/core@**0.7.5**` (exato) | `npm view @hyperframes/studio@0.7.5 dependencies` |
+> 911	| studio é **biblioteca sem `bin`**, pina `react:19`+`react-dom:19` (exato) + `zustand:^4\|\|^5` | `npm view … bin peerDependencies` → **hand-mount `<StudioApp/>` num host React 19; container separado obrigatório** |
+> 912	| core exporta `./studio-api` (`createStudioApi`), `./compiler` (`bundleToSingleHtml`), `./runtime` (IIFE 225KB) — **todos presentes no dist publicado** | `package.json` exports + arquivos físicos `dist/studio-api/index.js`, `dist/compiler/index.js`, `dist/hyperframe.runtime.iife.js` |
+> 913	| `hono` é **peer OPCIONAL** (só `createStudioApi` precisa) | `peerDependenciesMeta.hono.optional=true` |
+> 914	| runtime expõe `window.__hyperframes = { fitTextFontSize, getVariables }` — **seek NÃO é público aqui**; o seek roda via `window.__timelines[…].seek(p)` (GSAP `.seek`/`totalTime`), frame→tempo por `Math.floor(i*n+1e-9)` | grep do `dist/hyperframe.runtime.iife.js` (`.seek(` 20× · `totalTime` 13× · `window.__hyperframes` 2×) |
+> 915	
+> 916	### B.2 Contrato McorchAdapter — completeness PROVADA (fecha blocking-gap #1 do critic)
+> 917	
+> 918	Enumeração das **rotas reais** que `createStudioApi` monta (`dist/studio-api/routes/*.js`: `projects` · `files` ·
+> 919	`preview` · `lint` · `render` · `thumbnail` · `waveform` · `storyboard` · `fonts` · `registry`) cruzada com as
+> 920	**13 chamadas `adapter.X`** reais no dist. **Toda chamada mapeia a um método do contrato — zero rota órfã:**
+> 921	
+> 922	| adapter.X | call-sites | Mandatório? | McorchAdapter impl |
+> 923	|---|---|---|---|
+> 924	| `resolveProject(id)` | **15** (todo route project-scoped) | ✅ | materializa Storage→volume `/work/projects/<id>/` (download do prefixo `<user>/<id>/`), retorna `{id,dir,…}`; verifica ownership (User 0) |
+> 925	| `listProjects()` | 1 | ✅ | prefix-list do bucket `video-studio-projects` → `ResolvedProject[]` |
+> 926	| `bundle(dir)` | 1 | ✅ | `@hyperframes/core/compiler` `bundleToSingleHtml(dir)` → HTML único (runtime embutido); persiste cópia em `<id>/bundle.html` |
+> 927	| `lint(html)` | 1 | ✅ | linter do core (ou thin in-container); função pura, sem DB/billing |
+> 928	| `runtimeUrl` | 2 | ✅ | serve o `hyperframe.runtime.iife.js` estático same-origin `/__hf/runtime.js` (copiado do node_modules no build — não CDN) |
+> 929	| `rendersDir(project)` | 3 | ✅ | path builder `/work/renders/<id>` |
+> 930	| `startRender(opts)` | 1 | ✅ | **o seam** (§B.3) |
+> 931	| `getProjectSignature` | 1 | opcional → **implementar** (sha256 do dir; cache de re-bundle) |
+> 932	| `transformPreviewHtml` | 2 | opcional → **pass-through v1** (reescrita de media-URL depois) |
+> 933	| `generateThumbnail` | 2 | opcional → **stub null** Fase B (degrada gracioso) |
+> 934	| `resolveSession` | 2 | opcional → **stub null** (SSO ES256 `:8787` é a autoridade de sessão, não o modelo nativo do studio) |
+> 935	| `listRegistryCatalog` / `installRegistryBlock` | 2/2 | opcional → **stub `[]` / reject** (registry de blocos externos = risco supply-chain no sandbox de render; MCORCH usa allowlist própria) |
+> 936	
+> 937	**Achado crítico (não estava na v0.4):** as rotas `files/*`, `file-mutations/*`, `gsap-mutations/*`, `upload`,
+> 938	`duplicate-file` **NÃO chamam adapter** — leem/escrevem **direto no `dir`** (FS do volume). Logo o studio persiste
+> 939	edições escrevendo no `dir`, e o McorchAdapter **precisa** sincronizar volume→Storage (§B.4) — senão a edição some
+> 940	no restart do container. Isso torna a materialização/sync **mandatória**, não opcional (era hand-wave na v0.4).
+> 941	
+> ```
+
+## 🤖 Claude *(21:54:50)*
+
+
+## 🤖 Claude *(21:54:50)*
+
+
+## 🤖 Claude *(21:54:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/hf-probe\necho \"=== studio latest + peer deps ===\"\nnpm view @hyperframes/studio@latest version peerDependencies dependencies 2>&1 | head -12\necho \"=== adapter types no core 0.7.22 (studio-api) ===\"\nls $SCRATCH/core/package/dist/studio-api/\nhead -80 $SCRATCH/core/package/dist/studio-api/index.d.ts 2>/dev/null",
+  "description": "Studio version + StudioApiAdapter type surface"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === studio latest + peer deps ===
+> version = '0.7.23'
+> peerDependencies = { react: '19', 'react-dom': '19', zustand: '^4.0.0 || ^5.0.0' }
+> dependencies = {
+>   '@codemirror/autocomplete': '^6.20.1',
+>   '@codemirror/commands': '^6.10.3',
+>   '@codemirror/lang-css': '^6.3.1',
+>   '@codemirror/lang-html': '^6.4.9',
+>   '@codemirror/lang-javascript': '^6.2.2',
+>   '@codemirror/lang-markdown': '^6.3.4',
+>   '@codemirror/language': '^6.12.2',
+>   '@codemirror/search': '^6.6.0',
+>   '@codemirror/state': '^6.6.0',
+> === adapter types no core 0.7.22 (studio-api) ===
+> helpers
+> index.d.ts
+> index.d.ts.map
+> index.js
+> index.js.map
+> /** @deprecated Import from @hyperframes/studio-server */
+> export * from "@hyperframes/studio-server";
+> //# sourceMappingURL=index.d.ts.map
+> ```
+
+## 🤖 Claude *(21:55:02)*
+
+
+## 🤖 Claude *(21:55:02)*
+
+
+## 🤖 Claude *(21:55:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSS=node_modules/@hyperframes/studio-server\necho \"=== LICENSE shipped? ===\"; ls $SS/LICENSE 2>/dev/null && head -2 $SS/LICENSE || echo \"(SEM LICENSE)\"\necho \"=== exports ===\"; python3 -c \"import json; p=json.load(open('$SS/package.json')); print(json.dumps({k:p.get(k) for k in ('version','license','main','types')}, indent=1)); print(list(p.get('exports',{}).keys()))\"\necho \"=== dist tree ===\"; ls $SS/dist/ | head\necho \"=== adapter interface ===\"; grep -rn \"interface StudioApiAdapter\\|type StudioApiAdapter\" $SS/dist/*.d.ts | head -3",
+  "description": "studio-server license + adapter interface location"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === LICENSE shipped? ===
+> node_modules/@hyperframes/studio-server/LICENSE
+>                                  Apache License
+>                            Version 2.0, January 2004
+> === exports ===
+> {
+>  "version": "0.7.22",
+>  "license": null,
+>  "main": "./dist/index.js",
+>  "types": "./dist/index.d.ts"
+> }
+> ['.', './package.json', './screenshot-clip', './manual-edits-render-script', './studio-motion-render-script', './draft-markers', './finite-mutation']
+> === dist tree ===
+> helpers
+> index.d.ts
+> index.js
+> index.js.map
+> === adapter interface ===
+> node_modules/@hyperframes/studio-server/dist/index.d.ts:79:interface StudioApiAdapter {
+> node_modules/@hyperframes/studio-server/dist/index.d.ts:206:export { type LintResult, MIME_TYPES, type RenderJobState, type ResolvedProject, type StudioApiAdapter, type StudioSelectionResponse, type StudioSelectionSnapshot, type StudioSelectionTextField, buildSubCompositionHtml, createProjectSignature, createStudioApi, getMimeType, walkDir };
+> ```
+
+## 🤖 Claude *(21:55:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/node_modules/@hyperframes/studio-server/dist/index.d.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { Hono } from 'hono';
+> 2	import * as _hyperframes_core from '@hyperframes/core';
+> 3	import { RegistryItem } from '@hyperframes/core';
+> 4	export { isSafePath } from '@hyperframes/core';
+> 5	import { CanvasResolution } from '@hyperframes/parsers';
+> 6	export { ScreenshotClip, getElementScreenshotClip } from './helpers/screenshotClip.js';
+> 7	export { STUDIO_MANUAL_EDITS_PATH, StudioManualEditsRenderScriptOptions, createStudioManualEditsRenderBodyScript, createStudioPositionSeekReapplyScript } from './helpers/manualEditsRenderScript.js';
+> 8	export { STUDIO_MOTION_PATH, StudioMotionRenderScriptOptions, createStudioMotionRenderBodyScript } from './helpers/studioMotionRenderScript.js';
+> 9	
+> 10	/** Resolved info about a single project. */
+> 11	interface ResolvedProject {
+> 12	    id: string;
+> 13	    dir: string;
+> 14	    title?: string;
+> 15	    sessionId?: string;
+> 16	}
+> 17	/** Observable render job state, polled by the SSE progress handler. */
+> 18	interface RenderJobState {
+> 19	    id: string;
+> 20	    status: "rendering" | "complete" | "failed";
+> 21	    progress: number;
+> 22	    stage?: string;
+> 23	    outputPath: string;
+> 24	    error?: string;
+> 25	}
+> 26	/** Lint result from the core linter. */
+> 27	interface LintResult {
+> 28	    findings: Array<{
+> 29	        severity: string;
+> 30	        message: string;
+> 31	        file?: string;
+> 32	        fixHint?: string;
+> 33	    }>;
+> 34	}
+> 35	interface StudioSelectionTextField {
+> 36	    key: string;
+> 37	    label: string;
+> 38	    value: string;
+> 39	    tagName: string;
+> 40	    source: "self" | "child" | "text-node";
+> 41	}
+> 42	interface StudioSelectionSnapshot {
+> 43	    schemaVersion: 1;
+> 44	    projectId: string;
+> 45	    compositionPath: string;
+> 46	    sourceFile: string;
+> 47	    currentTime: number;
+> 48	    target: {
+> 49	        id?: string | null;
+> 50	        hfId?: string;
+> 51	        selector?: string;
+> 52	        selectorIndex?: number;
+> 53	    };
+> 54	    label: string;
+> 55	    tagName: string;
+> 56	    boundingBox: {
+> 57	        x: number;
+> 58	        y: number;
+> 59	        width: number;
+> 60	        height: number;
+> 61	    };
+> 62	    textContent: string | null;
+> 63	    dataAttributes: Record<string, string>;
+> 64	    inlineStyles: Record<string, string>;
+> 65	    computedStyles: Record<string, string>;
+> 66	    textFields: StudioSelectionTextField[];
+> 67	    capabilities: Record<string, boolean | string | undefined>;
+> 68	    thumbnailUrl: string;
+> 69	}
+> 70	interface StudioSelectionResponse {
+> 71	    selection: StudioSelectionSnapshot | null;
+> 72	    updatedAt: string | null;
+> 73	}
+> 74	/**
+> 75	 * Adapter interface — injected by each consumer to handle host-specific behavior.
+> 76	 * The shared API module calls these methods; each host (vite dev, CLI embedded)
+> 77	 * provides its own implementation.
+> 78	 */
+> 79	interface StudioApiAdapter {
+> 80	    /** List all available projects. */
+> 81	    listProjects(): Promise<ResolvedProject[]> | ResolvedProject[];
+> 82	    /** Resolve a project ID (or session ID) to its directory. Returns null if not found. */
+> 83	    resolveProject(id: string): Promise<ResolvedProject | null> | ResolvedProject | null;
+> 84	    /** Bundle a project directory into a single HTML string. Returns null if unavailable. */
+> 85	    bundle(projectDir: string): Promise<string | null>;
+> 86	    /** Optional: cached signature for project files that should invalidate preview frame caches. */
+> 87	    getProjectSignature?: (projectDir: string) => string;
+> 88	    /** Lint a single HTML string. */
+> 89	    lint(html: string, opts?: {
+> 90	        filePath?: string;
+> 91	    }): Promise<LintResult> | LintResult;
+> 92	    /** URL to the hyperframe runtime JS (injected into preview HTML). */
+> 93	    runtimeUrl: string;
+> 94	    /**
+> 95	     * Optional: post-process preview HTML before Studio augments it.
+> 96	     * Useful when preview must mirror render-time compilation steps.
+> 97	     */
+> 98	    transformPreviewHtml?: (opts: {
+> 99	        html: string;
+> 100	        project: ResolvedProject;
+> 101	        activeCompositionPath: string;
+> 102	    }) => Promise<string> | string;
+> 103	    /** Directory where render output files are stored. */
+> 104	    rendersDir(project: ResolvedProject): string;
+> 105	    /**
+> 106	     * Start a render job. The adapter owns the async execution and must
+> 107	     * update the returned RenderJobState object reactively.
+> 108	     */
+> 109	    startRender(opts: {
+> 110	        project: ResolvedProject;
+> 111	        outputPath: string;
+> 112	        format: "mp4" | "webm" | "mov";
+> 113	        /**
+> 114	         * Frame rate as an exact rational. The HTTP layer (POST
+> 115	         * `/projects/:id/render`) accepts either a JSON number (integer fps,
+> 116	         * `30`) or a JSON string (ffmpeg-style rational, `"30000/1001"`); the
+> 117	         * route normalizes both into `Fps` before invoking the adapter, so
+> 118	         * adapter implementations only ever see the rational form.
+> 119	         */
+> 120	        fps: _hyperframes_core.Fps;
+> 121	        quality: string;
+> 122	        jobId: string;
+> 123	        /**
+> 124	         * Optional output resolution preset. See `resolveDeviceScaleFactor` in
+> 125	         * the producer for the integer-scale + aspect + HDR constraints.
+> 126	         */
+> 127	        outputResolution?: CanvasResolution;
+> 128	        /** Entry file relative to projectDir (e.g. "compositions/intro.html"). Defaults to index.html. */
+> 129	        composition?: string;
+> 130	        /**
+> 131	         * Telemetry id of the browser user who triggered the render. Lets the
+> 132	         * adapter attribute the server-emitted render_complete/render_error to
+> 133	         * that user so the studio render funnel is joinable. Undefined for older
+> 134	         * clients → falls back to the install's anonymous id.
+> 135	         */
+> 136	        distinctId?: string;
+> 137	    }): RenderJobState;
+> 138	    /** Optional: generate a JPEG thumbnail via Puppeteer or similar. */
+> 139	    generateThumbnail?: (opts: {
+> 140	        project: ResolvedProject;
+> 141	        compPath: string;
+> 142	        seekTime: number;
+> 143	        width: number;
+> 144	        height: number;
+> 145	        previewUrl: string;
+> 146	        selector?: string;
+> 147	        format?: "jpeg" | "png";
+> 148	        selectorIndex?: number;
+> 149	    }) => Promise<Buffer | null>;
+> 150	    /** Optional: resolve session ID to project (multi-project mode). */
+> 151	    resolveSession?: (sessionId: string) => Promise<{
+> 152	        projectId: string;
+> 153	        title: string;
+> 154	    } | null>;
+> 155	    /** Optional: list all registry items (blocks + components) for the catalog. */
+> 156	    listRegistryCatalog?(): Promise<RegistryItem[]>;
+> 157	    /** Optional: install a registry item into a project directory. */
+> 158	    installRegistryBlock?(opts: {
+> 159	        project: ResolvedProject;
+> 160	        blockName: string;
+> 161	    }): Promise<{
+> 162	        written: string[];
+> 163	        block: RegistryItem;
+> 164	    }>;
+> 165	}
+> 166	
+> 167	/**
+> 168	 * Create a Hono sub-app with all studio API routes.
+> 169	 *
+> 170	 * Both the vite dev server and CLI embedded server mount this app
+> 171	 * under /api, each providing their own adapter for host-specific behavior.
+> 172	 */
+> 173	declare function createStudioApi(adapter: StudioApiAdapter): Hono;
+> 174	
+> 175	/**
+> 176	 * Creates a stable preview cache-busting signature for project source plus Studio manifests.
+> 177	 */
+> 178	declare function createProjectSignature(projectDir: string): string;
+> 179	
+> 180	/** Recursively walk a directory and return relative file paths. */
+> 181	declare function walkDir(dir: string, prefix?: string): string[];
+> 182	
+> 183	declare const MIME_TYPES: Record<string, string>;
+> 184	declare function getMimeType(path: string): string;
+> 185	
+> 186	/**
+> 187	 * Build a standalone HTML page for a sub-composition.
+> 188	 *
+> 189	 * Uses the project's own index.html `<head>` so all dependencies (GSAP, fonts,
+> 190	 * Lottie, reset styles, runtime) are preserved — instead of building a minimal
+> 191	 * page from scratch that would miss important scripts/styles.
+> 192	 *
+> 193	 * Three dispatch modes, tried in order:
+> 194	 *   1. `<template>` wrapper → extract template content (existing compositions)
+> 195	 *   2. Full HTML document → parse and extract head/body separately (registry blocks)
+> 196	 *   3. Raw fragment → wrap in a minimal document
+> 197	 *
+> 198	 * For full-doc mode, the composition's own `<head>` content (styles, scripts,
+> 199	 * links, meta) is appended AFTER the project's index.html head. When both
+> 200	 * declare the same dependency (e.g. GSAP CDN), the composition's copy wins
+> 201	 * by last-write-wins script execution order — this is intentional so the
+> 202	 * composition can pin a specific version.
+> 203	 */
+> 204	declare function buildSubCompositionHtml(projectDir: string, compPath: string, runtimeUrl: string, baseHref?: string): string | null;
+> 205	
+> 206	export { type LintResult, MIME_TYPES, type RenderJobState, type ResolvedProject, type StudioApiAdapter, type StudioSelectionResponse, type StudioSelectionSnapshot, type StudioSelectionTextField, buildSubCompositionHtml, createProjectSignature, createStudioApi, getMimeType, walkDir };
+> 207	
+> ```
+
+## 🤖 Claude *(21:55:42)*
+
+
+## 🤖 Claude *(21:55:42)*
+
+
+## 🤖 Claude *(21:55:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-render/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// video-render — video-studio render submit (FR-VS-001/005/009/014/032). verify_jwt=false (auth in-code).
+> 2	// BoK SSOT: docs/bok/video-studio/05-sdd.md §3.1 (UI→Hook→Edge contract) + 04-frd.md (FR-VS-009 charge-at-entry,
+> 3	//           FR-VS-011 refund, FR-VS-032 voice consent). SOP: 07-process-flow.md PROC-VS-001/004.
+> 4	//
+> 5	// CONTRACT (charge-at-entry + refund-on-failure): JWT verify → engine validate → voice-consent gate →
+> 6	//   BYOK resolve fail-closed → [dry_run short-circuit] → worker-availability gate → deduct_mco_coins →
+> 7	//   INSERT video_renders(queued) via service key → trigger worker → 202 {render_id}. 401/409/402/503 NEVER
+> 8	//   charge. A trigger failure AFTER deduct refunds idempotently via finalize_video_render.
+> 9	//
+> 10	// SLICE 1 (this): the render worker is NOT wired yet (faceless = n8n bridge OTD-VS-001 / hyperframes = sandbox
+> 11	//   OTD-VS-006), so the engine-availability gate returns 503 BEFORE any deduct — nobody pays for a render that
+> 12	//   cannot run. Everything up to that gate is provable zero-cost (401/422/409/402/dry_run). SLICE 2 sets the
+> 13	//   worker webhook env → the prepaid path below activates unchanged.
+> 14	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 15	
+> 16	const corsHeaders = {
+> 17	  "Access-Control-Allow-Origin": "*",
+> 18	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 19	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 20	};
+> 21	
+> 22	// Mirror of src/lib/billing.ts COIN_COSTS (Deno can't import src/lib — keep in sync; OTD-VS-007 provisional).
+> 23	const COST = { faceless: 125, hyperframes: 12 } as const;
+> 24	type Engine = keyof typeof COST;
+> 25	
+> 26	Deno.serve(async (req) => {
+> 27	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 28	  const json = (b: unknown, s = 200) =>
+> 29	    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 30	
+> 31	  const url = Deno.env.get("SUPABASE_URL")!;
+> 32	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 33	  const pubKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 34	  const admin = createClient(url, serviceKey);
+> 35	  const logHealth = (status: string, event?: string) =>
+> 36	    admin.from("infra_health_logs").insert({ service: "video-render", status, event }).then(() => {}, () => {});
+> 37	
+> 38	  try {
+> 39	    const authHeader = req.headers.get("Authorization");
+> 40	    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+> 41	
+> 42	    // Identity: user JWT (this is a user-initiated submit). getUser rejects an invalid/forged token.
+> 43	    const userClient = createClient(url, pubKey, { global: { headers: { Authorization: authHeader } } });
+> 44	    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+> 45	    if (authErr || !user) return json({ error: "Unauthorized" }, 401);
+> 46	    const userId = user.id;
+> 47	
+> 48	    const body = await req.json().catch(() => ({}));
+> 49	    const engine = body?.engine as Engine | undefined;
+> 50	    if (engine !== "faceless" && engine !== "hyperframes") {
+> 51	      return json({ error: "engine_invalid", detail: "engine deve ser 'faceless' ou 'hyperframes'" }, 422);
+> 52	    }
+> 53	    const dryRun = body?.dry_run === true;
+> 54	    const voiceConsent = body?.voice_consent === true;
+> 55	    const topic = typeof body?.topic === "string" ? body.topic.slice(0, 500) : null;
+> 56	    const productId = typeof body?.product_id === "string" ? body.product_id : null;
+> 57	    // HyperFrames render spec (FR-VS-024). The host worker (video-bridge.ts) consumes it. Untrusted props are
+> 58	    // sanitized/escaped UPSTREAM (FR-VA-023 / SOP autopilot-video-9x16 G1) and rendered via textContent (XSS-safe);
+> 59	    // here the spec is only transported into the queued row.
+> 60	    const composition = engine === "hyperframes" && body?.composition && typeof body.composition === "object"
+> 61	      ? body.composition : null;
+> 62	
+> 63	    // Voice-consent gate (FR-VS-032): faceless clones a voice (VoxCPM) → identifiable biometric (LGPD Art. 11).
+> 64	    if (engine === "faceless" && !voiceConsent) {
+> 65	      return json({ error: "voice_consent_required", action: "Confirme o consentimento de uso de voz para gerar o vídeo faceless." }, 409);
+> 66	    }
+> 67	
+> 68	    // BYOK fail-closed (FR-VS-005/006): faceless needs the tenant's Gemini/Google key (director + vision QA). Per-user
+> 69	    // first; NO silent global fallback in a user-facing path (API Tenancy Model). hyperframes is deterministic (no AI leg).
+> 70	    // The canonical Vault column is `google_api_key` (NOT `gemini_api_key` — the BoK 06 §2.5 / CLAUDE.md naming is
+> 71	    // stale; canvas-execute + the live decrypted view use google_api_key, verified 2026-06-22 via 42703 on gemini_api_key).
+> 72	    if (engine === "faceless") {
+> 73	      const { data: keys } = await admin
+> 74	        .from("decrypted_user_api_keys").select("google_api_key").eq("user_id", userId).maybeSingle();
+> 75	      if (!keys?.google_api_key) {
+> 76	        return json({ error: "gemini_not_configured", action: "Configure sua chave Gemini/Google em /dashboard/settings para gerar vídeo." }, 402);
+> 77	      }
+> 78	    }
+> 79	
+> 80	    const cost = COST[engine];
+> 81	
+> 82	    // dry_run: cost projection WITHOUT deduct or row (zero-cost proof path; mirrors autopilot-run).
+> 83	    if (dryRun) return json({ ok: true, dry_run: true, engine, cost_mco: cost });
+> 84	
+> 85	    // Engine-availability gate (SLICE 1): the worker webhook is unset until slice 2 wires the render engine.
+> 86	    // Returning 503 HERE — before any deduct — guarantees no tenant is charged for a render that cannot complete.
+> 87	    const workerWebhook = engine === "faceless"
+> 88	      ? Deno.env.get("VIDEO_FACELESS_WEBHOOK")
+> 89	      : Deno.env.get("VIDEO_HYPERFRAMES_WEBHOOK");
+> 90	    if (!workerWebhook) {
+> 91	      return json({
+> 92	        error: "render_engine_unavailable",
+> 93	        detail: `O motor de render '${engine}' entra na Fatia 2 (faceless: ponte de rede + n8n; hyperframes: sandbox). Nenhum mcoCoin foi debitado.`,
+> 94	      }, 503);
+> 95	    }
+> 96	
+> 97	    // ── SLICE 2 prepaid path (activates once the worker webhook env is set) ──────────────────────────────────────
+> 98	    // Charge-at-entry (FR-VS-009): atomic deduct BEFORE any leg. 402 if balance < cost (zero rows created).
+> 99	    const { error: deductErr } = await admin.rpc("deduct_mco_coins", { p_user_id: userId, p_amount: cost });
+> 100	    if (deductErr) {
+> 101	      logHealth("degraded", "insufficient_balance");
+> 102	      return json({ error: "insufficient_balance", detail: `Saldo insuficiente: render '${engine}' custa ${cost} mcoCoins.`, cost_mco: cost }, 402);
+> 103	    }
+> 104	
+> 105	    // INSERT the queued render (service key — RLS denies tenant writes; this is the only writer). org_id/client_id
+> 106	    // NULL = solo creator (§AG agency scoping wires in a later slice).
+> 107	    const { data: render, error: insErr } = await admin
+> 108	      .from("video_renders")
+> 109	      .insert({ user_id: userId, engine, topic, product_id: productId, composition, voice_consent: voiceConsent, charged_mco: cost, state: "queued" })
+> 110	      .select("id").single();
+> 111	    if (insErr || !render) {
+> 112	      // Could not even create the ledger row → refund the just-charged cost (no render_id yet → direct credit).
+> 113	      await admin.rpc("add_mco_coins", { p_user_id: userId, p_amount: cost }).then(() => {}, () => {});
+> 114	      logHealth("error", "insert_failed");
+> 115	      return json({ error: "render_create_failed", detail: insErr?.message }, 500);
+> 116	    }
+> 117	    const renderId = render.id as string;
+> 118	
+> 119	    // Trigger the worker. Two transports:
+> 120	    //   • poll://  → a HOST worker (video-bridge.ts for hyperframes) POLLS video_renders; the queued row IS the
+> 121	    //                trigger (Edge fns can't reach a host daemon — the design-bridge lesson). No kick → 202; the
+> 122	    //                poller atomically claims (queued→running) and finalizes via finalize_video_render.
+> 123	    //   • http(s)  → a reachable webhook (e.g. a faceless external studio); POST the kick, refund on failure.
+> 124	    if (!workerWebhook.startsWith("poll://")) {
+> 125	      try {
+> 126	        const r = await fetch(workerWebhook, {
+> 127	          method: "POST",
+> 128	          headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 129	          body: JSON.stringify({ render_id: renderId, user_id: userId, engine, topic, product_id: productId }),
+> 130	        });
+> 131	        if (!r.ok) throw new Error(`worker HTTP ${r.status}`);
+> 132	      } catch (e) {
+> 133	        await admin.rpc("finalize_video_render", {
+> 134	          p_render_id: renderId, p_state: "failed", p_storage_key: null, p_qa: null, p_node_id: null, p_refund: cost,
+> 135	        }).then(() => {}, () => {});
+> 136	        logHealth("error", "worker_trigger_failed");
+> 137	        return json({ error: "worker_unavailable", detail: e instanceof Error ? e.message : "trigger failed", render_id: renderId }, 502);
+> 138	      }
+> 139	    }
+> 140	
+> 141	    logHealth("healthy", "render_submitted");
+> 142	    return json({ ok: true, render_id: renderId, engine, charged_mco: cost, state: "queued" }, 202);
+> 143	  } catch (e) {
+> 144	    logHealth("error", "exception");
+> 145	    return json({ error: e instanceof Error ? e.message : "unknown" }, 500);
+> 146	  }
+> 147	});
+> 148	
+> ```
+
+## 🤖 Claude *(21:55:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+> 4	 * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+> 5	 * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+> 6	 *
+> 7	 * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+> 8	 *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+> 9	 *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+> 10	 */
+> 11	import { createClient } from '@supabase/supabase-js';
+> 12	
+> 13	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 14	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 15	const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> 16	const email = process.argv[2];
+> 17	if (!URL || !SVC || !ANON || !email) {
+> 18	  console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+> 19	  process.exit(1);
+> 20	}
+> 21	
+> 22	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 23	const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 24	
+> 25	const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> 26	if (error || !data.properties?.hashed_token) {
+> 27	  console.error('generateLink error:', error?.message ?? 'no hashed_token');
+> 28	  process.exit(1);
+> 29	}
+> 30	const tokenHash = data.properties.hashed_token;
+> 31	
+> 32	let accessToken: string | null = null;
+> 33	for (const type of ['magiclink', 'email'] as const) {
+> 34	  const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });
+> 35	  if (!vErr && sess?.session?.access_token) { accessToken = sess.session.access_token; break; }
+> 36	}
+> 37	if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
+> 38	console.log(accessToken);
+> 39	
+> ```
+
+## 🤖 Claude *(21:56:25)*
+
+
+## 🤖 Claude *(21:56:25)*
+
+
+## 🤖 Claude *(21:56:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSS=node_modules/@hyperframes/studio-server/dist/index.js\necho \"=== rotas montadas (app.get/post paths) ===\"\ngrep -oE '\\.(get|post|put|delete)\\(\"[^\"]+\"' $SS | sort -u | head -30\necho \"=== lint export do core ===\"\nhead -20 node_modules/@hyperframes/core/dist/lint/index.d.ts 2>/dev/null | grep -E \"declare|export\" | head -8",
+  "description": "Studio API route paths + core lint signature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas montadas (app.get/post paths) ===
+> .delete("/projects/:id/files/*"
+> .delete("/render/:jobId"
+> .get("/fonts"
+> .get("/fonts/file"
+> .get("/fonts/google"
+> .get("format"
+> .get("h"
+> .get("/projects"
+> .get("/projects/:id"
+> .get("/projects/:id/files/*"
+> .get("/projects/:id/gsap-animations/*"
+> .get("/projects/:id/lint"
+> .get("/projects/:id/preview"
+> .get("/projects/:id/preview/*"
+> .get("/projects/:id/preview/comp/*"
+> .get("/projects/:id/renders"
+> .get("/projects/:id/renders/file/*"
+> .get("/projects/:id/selection"
+> .get("/projects/:id/storyboard"
+> .get("/projects/:id/thumbnail/*"
+> .get("/projects/:id/waveform/*"
+> .get("/registry/blocks"
+> .get("/render/:jobId/download"
+> .get("/render/:jobId/progress"
+> .get("/render/:jobId/view"
+> .get("/resolve-session/:sessionId"
+> .get("selector"
+> .get("selectorIndex"
+> .get("t"
+> .get("v"
+> === lint export do core ===
+> export * from "@hyperframes/lint";
+> ```
+
+## 🤖 Claude *(21:56:35)*
+
+
+## 🤖 Claude *(21:56:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -E \"declare function|export \\{\" node_modules/@hyperframes/lint/dist/index.d.ts 2>/dev/null | head -6\necho \"=== POST render route shape ===\"\ngrep -oE '\\.post\\(\"[^\"]+\"' node_modules/@hyperframes/studio-server/dist/index.js | sort -u | head -12",
+  "description": "Lint fn name + POST routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> declare function lintHyperframeHtml(html: string, options?: HyperframeLinterOptions): Promise<HyperframeLintResult>;
+> declare function lintMediaUrls(html: string, options?: {
+> declare function shouldBlockRender(strictErrors: boolean, strictAll: boolean, totalErrors: number, totalWarnings: number): boolean;
+> declare function lintProject(projectDir: string): Promise<ProjectLintResult>;
+> export { type HyperframeLintFinding, type HyperframeLintResult, type HyperframeLintSeverity, type HyperframeLinterOptions, type ProjectLintResult, lintHyperframeHtml, lintMediaUrls, lintProject, shouldBlockRender };
+> === POST render route shape ===
+> .post("/projects/:id/duplicate-file"
+> .post("/projects/:id/file-mutations/patch-element/*"
+> .post("/projects/:id/file-mutations/probe-element/*"
+> .post("/projects/:id/file-mutations/remove-element/*"
+> .post("/projects/:id/file-mutations/split-element/*"
+> .post("/projects/:id/file-mutations/unwrap-elements/*"
+> .post("/projects/:id/file-mutations/wrap-elements/*"
+> .post("/projects/:id/files/*"
+> .post("/projects/:id/gsap-mutations/*"
+> .post("/projects/:id/registry/install"
+> .post("/projects/:id/render"
+> ```
+
+## 🤖 Claude *(21:57:07)*
+
+
+## 🤖 Claude *(21:57:07)*
+
+Tudo mapeado (`lintHyperframeHtml`, POST `/projects/:id/render`, SSE progress). **Lei 2 primeiro** — SOP antes do código:
+
+## 🤖 Claude *(21:57:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls node_modules/hono/package.json 2>/dev/null && grep '\"version\"' node_modules/hono/package.json | head -1 || echo \"hono ausente\"",
+  "description": "Check hono availability in repo deps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> node_modules/hono/package.json
+>   "version": "4.12.27",
+> ```
+
+## 🤖 Claude *(21:57:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/video-studio-host-fase-b.md",
+  "content": "# SOP \u2014 Video Studio Host (Fase B, sub-fatia 2a: servidor API + auth-bridge)\n\n> Lei 2 (Processo Antecipado) \u2014 escrito ANTES do c\u00f3digo. BoK SSOT: `docs/bok/video-studio/05-sdd.md`\n> \u00a7VS-UI-B (contrato McorchAdapter, FR-VS-048/049) + \u00a7VS-UI-C (render nativo FR-VS-050).\n> Escopo 2a: servidor `createStudioApi(McorchAdapter)` em loopback + seam `startRender`\u2192`video-render`\n> (FR-VS-048 op\u00e7\u00e3o A \u2014 JWT do Usu\u00e1rio Zero mintado server-side; edge fn = chokepoint \u00daNICO de billing).\n> FORA do escopo 2a: FS sync Storage\u2194volume (FR-VS-049, sub-fatia 2b) \u00b7 host React 19 + swap do\n> service (sub-fatia 2c) \u00b7 ativa\u00e7\u00e3o do billing (`VIDEO_HYPERFRAMES_WEBHOOK` \u2014 GO Sovereign, Fila).\n\n## Operator\n\nHoje: o Sovereign (ou o agente) opera o editor vanilla (`video-studio.service`, porta 3210) e dispara\nrenders manualmente (insert de `video_renders` via service key OU `hyperframes render` local).\nCom 2a: o mesmo operador sobe o host novo em **loopback 3211** (teste, sem tocar o 3210) e usa a API.\n\n## Sequence (com gate de verifica\u00e7\u00e3o por step)\n\n1. **Env**: `.env` do repo j\u00e1 carrega `VITE_SUPABASE_URL` + `SB_SECRET_KEY` + `SB_PUBLISHABLE_KEY`.\n   Extras do host: `STUDIO_PROJECTS_ROOT` (default `/home/ubuntu/.mcorch/video-studio/projects`),\n   `STUDIO_HOST_PORT` (default 3211), `USER_ZERO_EMAIL` (default gabrielcall@gmail.com).\n   *Gate:* `bun run scripts/video-studio-host/server.ts` imprime `listening on 127.0.0.1:<port>`.\n2. **Projects**: `curl 127.0.0.1:3211/api/projects` \u2192 JSON com `mcorch-video` (id+title do meta.json).\n   *Gate:* HTTP 200 + array n\u00e3o-vazio.\n3. **Runtime**: `curl -sI 127.0.0.1:3211/__hf/runtime.js` \u2192 200, `content-length: 230005`\n   (o IIFE Apache-2.0 do core, byte-id\u00eantico ao verificado na \u00a7VS-UI-C C.1).\n4. **Preview**: `curl 127.0.0.1:3211/api/projects/mcorch-video/preview` \u2192 200 HTML contendo\n   `data-composition-id=\"mcorch-viral\"`. *Gate:* HTML n\u00e3o-vazio, runtime referenciado.\n5. **Render (seam FR-VS-048)**: `curl -X POST 127.0.0.1:3211/api/projects/mcorch-video/render\n   -d '{\"format\":\"mp4\",\"fps\":30,\"quality\":\"standard\"}'` \u2192 o adapter minta JWT real do Usu\u00e1rio Zero\n   (generateLink\u2192verifyOtp, molde `scripts/qa/gen-user-jwt.ts`) e POSTa `video-render` (edge fn).\n   *Gate pr\u00e9-GO (billing inativo):* job vira `failed` com erro honesto `render_engine_unavailable`\n   (503 do edge fn ANTES de qualquer d\u00e9bito \u2014 saldo intacto). *Gate p\u00f3s-GO:* 202 `{render_id}` \u2192\n   worker `video-bridge` renderiza NATIVO (FR-VS-050) \u2192 job `complete` + MP4 baix\u00e1vel em\n   `/api/render/:jobId/download`.\n6. **Progress**: `curl 127.0.0.1:3211/api/render/<jobId>/progress` (SSE) reflete o estado do job.\n\n## Verification gates (mec\u00e2nicos)\n\n- `bun run scripts/qa/smoke-studio-host.ts` \u2192 todos os gates acima automatizados, zero-cost\n  (o smoke N\u00c3O exige o webhook ativo: prova a fronteira 503-sem-d\u00e9bito + auth 401-sem-JWT).\n- `npx tsc --noEmit` \u2192 0 erros.\n\n## Recovery path\n\n- **Step 1 falha (porta ocupada):** `STUDIO_HOST_PORT=3212 bun run \u2026` (loopback livre); NUNCA subir\n  no 3210 antes da sub-fatia 2c (swap gated com rollback).\n- **Step 5 falha com 401:** mint falhou (SB_SECRET_KEY/URL errados) OU JWT expirou entre mint e uso \u2014\n  o adapter re-minta 1\u00d7 automaticamente; persistindo, rodar `bun run scripts/qa/gen-user-jwt.ts\n  <email>` isolado para diagnosticar (generateLink vs verifyOtp).\n- **Step 5 falha com 503 `render_engine_unavailable`:** ESPERADO pr\u00e9-GO (billing inativo). Item da\n  Fila Sovereign: setar `VIDEO_HYPERFRAMES_WEBHOOK=poll://` (liga cobran\u00e7a 12 mco/render).\n- **Step 5 falha com 402:** saldo mcoCoins do Usu\u00e1rio Zero insuficiente (12 mco) \u2014 decis\u00e3o Sovereign.\n- **Render preso em `rendering` >15min:** o job local expira honesto (failed timeout); a linha\n  `video_renders` segue o reaper do worker (RUNNING_TIMEOUT_MS \u2192 re-claim). Nunca apagar a linha.\n\n## Success signal\n\nPr\u00e9-GO: smoke verde (projects+runtime+preview+503-sem-d\u00e9bito+401-sem-JWT). P\u00f3s-GO: POST render \u2192\n202 \u2192 `video_renders` done \u2192 MP4 no bucket \u2192 download local 200 \u2192 Vision-QA confidence high.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/video-studio-host-fase-b.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:57:49)*
+
+
+## 🤖 Claude *(21:57:49)*
+
+hono 4.12.27 já presente. SOP selado. Escrevendo o host (3 arquivos + smoke):
+
+## 🤖 Claude *(21:58:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-studio-host/auth.ts",
+  "content": "/**\n * scripts/video-studio-host/auth.ts \u2014 FR-VS-048 (OTD-VS-018 = A): server-side User Zero JWT mint.\n *\n * The studio host is trusted infra on our own machine, but the render submit MUST flow through the\n * `video-render` edge fn (the ONE billing chokepoint \u2014 deduct_mco_coins lives there, SDD \u00a7VS-UI-B B.4).\n * That fn requires a REAL user JWT (getUser rejects service-role/forged), so the host mints one for the\n * Usu\u00e1rio Zero via Admin generateLink \u2192 verifyOtp (mold: scripts/qa/gen-user-jwt.ts) and caches it until\n * shortly before expiry. Single-tenant by design (OTD-VS-019 multi-tenant deferred).\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '';\nconst SVC = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';\nconst ANON = process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? '';\nconst USER_ZERO_EMAIL = process.env.USER_ZERO_EMAIL ?? 'gabrielcall@gmail.com';\n\nlet cached: { token: string; expMs: number } | null = null;\n\n/** Best-effort exp read of a token WE just minted (not a trust decision \u2014 verification is the edge fn's job). */\nfunction readExpMs(jwt: string): number {\n  try {\n    const payload = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString('utf8'));\n    return typeof payload.exp === 'number' ? payload.exp * 1000 : Date.now() + 30 * 60_000;\n  } catch {\n    return Date.now() + 30 * 60_000; // conservative fallback: assume 30min left\n  }\n}\n\nexport async function mintUserZeroJwt(forceFresh = false): Promise<string> {\n  if (!URL || !SVC || !ANON) throw new Error('studio_host_env_missing: SUPABASE_URL/SB_SECRET_KEY/SB_PUBLISHABLE_KEY');\n  if (!forceFresh && cached && cached.expMs - Date.now() > 5 * 60_000) return cached.token;\n\n  const admin = createClient(URL, SVC, { auth: { persistSession: false } });\n  const anon = createClient(URL, ANON, { auth: { persistSession: false } });\n\n  const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email: USER_ZERO_EMAIL });\n  if (error || !data.properties?.hashed_token) throw new Error(`jwt_mint_generate_link_failed: ${error?.message ?? 'no hashed_token'}`);\n\n  for (const type of ['magiclink', 'email'] as const) {\n    const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: data.properties.hashed_token, type });\n    if (!vErr && sess?.session?.access_token) {\n      cached = { token: sess.session.access_token, expMs: readExpMs(sess.session.access_token) };\n      return cached.token;\n    }\n  }\n  throw new Error('jwt_mint_verify_otp_failed: both magiclink/email types rejected');\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/video-studio-host/auth.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:58:46)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-studio-host/adapter.ts",
+  "content": "/**\n * scripts/video-studio-host/adapter.ts \u2014 McorchAdapter (SDD \u00a7VS-UI-B B.2, contract-complete: 13 call-sites).\n *\n * v1 sub-fatia 2a (single-tenant Usu\u00e1rio Zero, OTD-VS-019): the local STUDIO_PROJECTS_ROOT dir is the canonical\n * project store (the vanilla Fase A editor already works on it); Storage\u2194volume sync = FR-VS-049 (sub-fatia 2b).\n * startRender is THE seam (FR-VS-048 option A): mint User Zero JWT \u2192 POST `video-render` edge fn (single billing\n * chokepoint) \u2192 poll video_renders \u2192 download the bucket MP4 to outputPath. The host NEVER touches mcoCoins.\n *\n * Built on @hyperframes/studio-server + @hyperframes/core \u2014 Apache-2.0, LICENSE shipped in both tarballs\n * (\u00a9 HeyGen, https://github.com/heygen-com/hyperframes; license evidence: SDD \u00a7VS-UI-C C.1).\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { readdirSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs';\nimport { join, resolve } from 'path';\nimport type { StudioApiAdapter, ResolvedProject, RenderJobState, LintResult } from '@hyperframes/studio-server';\nimport { createProjectSignature } from '@hyperframes/studio-server';\nimport { mintUserZeroJwt } from './auth';\n\nconst STUDIO_PROJECTS_ROOT = process.env.STUDIO_PROJECTS_ROOT ?? '/home/ubuntu/.mcorch/video-studio/projects';\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '';\nconst SVC = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';\nconst RENDER_POLL_MS = 5_000;\nconst RENDER_TIMEOUT_MS = 15 * 60_000;\nconst SAFE_ID = /^[a-zA-Z0-9_-]+$/; // project ids are dir names \u2014 never path fragments\n\nconst admin = createClient(SUPABASE_URL, SVC, { auth: { persistSession: false } });\n\nfunction projectTitle(dir: string, id: string): string {\n  try {\n    const meta = JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8'));\n    return typeof meta.name === 'string' && meta.name ? meta.name : id;\n  } catch {\n    return id;\n  }\n}\n\n/** Map studio fps input (number | {num,den} rational) \u2192 integer fps for our composition spec (1..60). */\nfunction fpsToInt(fps: unknown): number {\n  if (typeof fps === 'number' && Number.isFinite(fps)) return Math.max(1, Math.min(60, Math.round(fps)));\n  if (fps && typeof fps === 'object' && 'num' in (fps as Record<string, unknown>)) {\n    const { num, den } = fps as { num: number; den?: number };\n    return Math.max(1, Math.min(60, Math.round(num / (den || 1))));\n  }\n  return 30;\n}\n\nconst VALID_RESOLUTIONS = new Set(['portrait', 'landscape', 'square', 'portrait-4k', 'landscape-4k', 'square-4k']);\n\nexport const mcorchAdapter: StudioApiAdapter = {\n  listProjects(): ResolvedProject[] {\n    if (!existsSync(STUDIO_PROJECTS_ROOT)) return [];\n    return readdirSync(STUDIO_PROJECTS_ROOT, { withFileTypes: true })\n      .filter((e) => e.isDirectory() && SAFE_ID.test(e.name) && existsSync(join(STUDIO_PROJECTS_ROOT, e.name, 'index.html')))\n      .map((e) => {\n        const dir = join(STUDIO_PROJECTS_ROOT, e.name);\n        return { id: e.name, dir, title: projectTitle(dir, e.name) };\n      });\n  },\n\n  resolveProject(id: string): ResolvedProject | null {\n    if (!SAFE_ID.test(id)) return null; // blocks traversal \u2014 ids are never path fragments\n    const dir = resolve(STUDIO_PROJECTS_ROOT, id);\n    if (!dir.startsWith(resolve(STUDIO_PROJECTS_ROOT) + '/')) return null; // defense-in-depth\n    if (!existsSync(join(dir, 'index.html'))) return null;\n    return { id, dir, title: projectTitle(dir, id) };\n  },\n\n  async bundle(projectDir: string): Promise<string | null> {\n    try {\n      const { bundleToSingleHtml } = await import('@hyperframes/core/compiler');\n      return await bundleToSingleHtml(projectDir);\n    } catch (e) {\n      console.error(`[studio-host] bundle failed: ${e instanceof Error ? e.message : e}`);\n      return null;\n    }\n  },\n\n  getProjectSignature: (projectDir: string) => createProjectSignature(projectDir),\n\n  async lint(html: string): Promise<LintResult> {\n    try {\n      const { lintHyperframeHtml } = await import('@hyperframes/core/lint');\n      const r = await lintHyperframeHtml(html);\n      const findings = (r as { findings?: Array<{ severity?: string; message?: string; file?: string; fixHint?: string }> }).findings ?? [];\n      return { findings: findings.map((f) => ({ severity: String(f.severity ?? 'info'), message: String(f.message ?? ''), file: f.file, fixHint: f.fixHint })) };\n    } catch {\n      return { findings: [] }; // lint is advisory \u2014 never block the editor on a linter crash\n    }\n  },\n\n  // Same-origin static route (server.ts) \u2014 the Apache-2.0 runtime IIFE from the core package, never a CDN.\n  runtimeUrl: '/__hf/runtime.js',\n\n  rendersDir(project: ResolvedProject): string {\n    const dir = join(project.dir, 'renders');\n    mkdirSync(dir, { recursive: true });\n    return dir;\n  },\n\n  /**\n   * FR-VS-048 (A) \u2014 the render seam. Returns the job state synchronously and mutates it reactively\n   * (the SSE progress route polls it). The submit goes through `video-render` (charge-at-entry +\n   * refund-on-failure live THERE); the host only observes video_renders and materializes the output.\n   */\n  startRender(opts): RenderJobState {\n    const state: RenderJobState = { id: opts.jobId, status: 'rendering', progress: 0, outputPath: opts.outputPath };\n\n    (async () => {\n      const fps = fpsToInt(opts.fps);\n      const resolution = opts.outputResolution && VALID_RESOLUTIONS.has(String(opts.outputResolution))\n        ? String(opts.outputResolution) : 'portrait';\n\n      // 1) Submit through the billing chokepoint with a real minted User Zero JWT (re-mint once on 401).\n      let res: Response | null = null;\n      for (let attempt = 0; attempt < 2; attempt++) {\n        const jwt = await mintUserZeroJwt(attempt > 0);\n        res = await fetch(`${SUPABASE_URL}/functions/v1/video-render`, {\n          method: 'POST',\n          headers: { Authorization: `Bearer ${jwt}`, 'Content-Type': 'application/json' },\n          body: JSON.stringify({\n            engine: 'hyperframes',\n            topic: `studio:${opts.project.id}`,\n            composition: { mode: 'studio-project', project_dir: opts.project.dir, fps, resolution },\n          }),\n        });\n        if (res.status !== 401) break;\n      }\n      const body = await res!.json().catch(() => ({} as Record<string, unknown>));\n      if (res!.status !== 202) {\n        // Honest surface (PT-BR reaches the studio UI). 503 = billing gate OFF (Fila Sovereign) \u2014 no charge happened.\n        state.status = 'failed';\n        state.error = String((body as { detail?: string; error?: string }).detail ?? (body as { error?: string }).error ?? `video-render HTTP ${res!.status}`);\n        return;\n      }\n      const renderId = String((body as { render_id?: string }).render_id ?? '');\n      state.stage = `submetido (render ${renderId.slice(0, 8)})`;\n      state.progress = 0.1;\n\n      // 2) Observe the ledger row until the worker (video-bridge, native FR-VS-050 engine) finishes.\n      const t0 = Date.now();\n      while (Date.now() - t0 < RENDER_TIMEOUT_MS) {\n        await new Promise((r) => setTimeout(r, RENDER_POLL_MS));\n        const { data: row } = await admin.from('video_renders').select('state, user_id').eq('id', renderId).maybeSingle();\n        if (!row) continue;\n        if (row.state === 'running') { state.progress = Math.min(0.8, state.progress + 0.1); state.stage = 'renderizando (nativo)'; continue; }\n        if (row.state === 'failed') { state.status = 'failed'; state.error = 'Render falhou no worker \u2014 mcoCoins reembolsados (finalize_video_render).'; return; }\n        if (row.state === 'done') {\n          // 3) Materialize the bucket MP4 at the path the studio routes serve.\n          const key = `${row.user_id}/${renderId}.mp4`;\n          const { data: blob, error: dlErr } = await admin.storage.from('video-studio-assets').download(key);\n          if (dlErr || !blob) { state.status = 'failed'; state.error = `Render conclu\u00eddo mas o download do bucket falhou: ${dlErr?.message ?? 'vazio'}`; return; }\n          writeFileSync(opts.outputPath, Buffer.from(await blob.arrayBuffer()));\n          state.progress = 1;\n          state.status = 'complete';\n          state.stage = 'conclu\u00eddo';\n          return;\n        }\n      }\n      state.status = 'failed';\n      state.error = 'Timeout de 15min aguardando o worker \u2014 a linha video_renders segue viva (reaper re-claima).';\n    })().catch((e) => {\n      state.status = 'failed';\n      state.error = e instanceof Error ? e.message : String(e);\n    });\n\n    return state;\n  },\n\n  // Optional surface intentionally omitted in 2a (\u00a7B.2): generateThumbnail (degrades gracefully),\n  // resolveSession (SSO vhost is the session authority), registry catalog/install (supply-chain risk\n  // in the render sandbox \u2014 MCORCH uses its own allowlist).\n};\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/video-studio-host/adapter.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:59:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-studio-host/server.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * scripts/video-studio-host/server.ts \u2014 Video Studio Host (Fase B sub-fatia 2a, SDD \u00a7VS-UI-B/\u00a7VS-UI-C).\n *\n * Mounts @hyperframes/studio-server `createStudioApi(mcorchAdapter)` under /api (the exact API the\n * @hyperframes/studio React app consumes) + serves the Apache-2.0 runtime IIFE same-origin at\n * /__hf/runtime.js (never a CDN). Loopback-only by design: the SSO ES256 vhost is the auth boundary\n * (mirrors design.mcorch.com / video.mcorch.com pattern) \u2014 this process trusts its local caller.\n *\n * Run: bun run scripts/video-studio-host/server.ts   (defaults: 127.0.0.1:3211 \u2014 the vanilla Fase A\n * editor keeps owning 3210 until sub-fatia 2c swaps the systemd service with rollback.)\n * SOP: docs/processes/video-studio-host-fase-b.md\n */\nimport { Hono } from 'hono';\nimport { createStudioApi } from '@hyperframes/studio-server';\nimport { readFileSync } from 'fs';\nimport { fileURLToPath } from 'url';\nimport { mcorchAdapter } from './adapter';\n\nconst PORT = Number(process.env.STUDIO_HOST_PORT ?? 3211);\nconst HOSTNAME = process.env.STUDIO_HOST_BIND ?? '127.0.0.1';\n\n// The runtime the preview injects \u2014 resolved from the installed @hyperframes/core package (LICENSE ships there).\nconst runtimePath = fileURLToPath(import.meta.resolve('@hyperframes/core/runtime'));\nconst runtimeJs = readFileSync(runtimePath);\n\nconst app = new Hono();\napp.get('/healthz', (c) => c.json({ ok: true, projects_root: process.env.STUDIO_PROJECTS_ROOT ?? '/home/ubuntu/.mcorch/video-studio/projects' }));\napp.get('/__hf/runtime.js', (c) => c.body(runtimeJs, 200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=3600' }));\napp.route('/api', createStudioApi(mcorchAdapter));\n\nBun.serve({ hostname: HOSTNAME, port: PORT, fetch: app.fetch, idleTimeout: 120 });\nconsole.log(`\ud83c\udfac video-studio-host listening on ${HOSTNAME}:${PORT} (api=/api, runtime=/__hf/runtime.js)`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/video-studio-host/server.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:59:06)*
+
+
+## 🤖 Claude *(21:59:06)*
+
+
+## 🤖 Claude *(21:59:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | head -8; echo \"tsc exit: $?\"",
+  "description": "Type-check the new host files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc exit: 0
+> ```
+
+## 🤖 Claude *(21:59:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/video-studio-host/server.ts > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/studio-host.log 2>&1 &\nHOST_PID=$!\nsleep 3\necho \"=== boot log ===\"; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed/scratchpad/studio-host.log\necho \"=== healthz ===\"; curl -s http://127.0.0.1:3211/healthz\necho \"\"; echo \"=== projects ===\"; curl -s http://127.0.0.1:3211/api/projects\necho \"\"; echo \"=== runtime headers ===\"; curl -sI http://127.0.0.1:3211/__hf/runtime.js | grep -iE \"HTTP|content-length|content-type\"\necho \"HOST_PID=$HOST_PID\"",
+  "description": "Boot host + smoke projects/runtime routes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === boot log ===
+> 🎬 video-studio-host listening on 127.0.0.1:3211 (api=/api, runtime=/__hf/runtime.js)
+> === healthz ===
+> {"ok":true,"projects_root":"/home/ubuntu/.mcorch/video-studio/projects"}
+> === projects ===
+> {"projects":[{"id":"mcorch-demo","dir":"/home/ubuntu/.mcorch/video-studio/projects/mcorch-demo","title":"mcorch-demo"},{"id":"mcorch-video","dir":"/home/ubuntu/.mcorch/video-studio/projects/mcorch-video","title":"MCORCH — Vídeo 9:16"}]}
+> === runtime headers ===
+> HTTP/1.1 200 OK
+> Content-Type: application/javascript
+> content-length: 0
+> HOST_PID=3987567
+> ```
+
+## 🤖 Claude *(21:59:26)*
+
+
+## 🤖 Claude *(21:59:26)*
+
+
+## 🤖 Claude *(21:59:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== runtime GET bytes ===\"; curl -s http://127.0.0.1:3211/__hf/runtime.js | wc -c\necho \"=== preview cont\u00e9m composition? ===\"; curl -s \"http://127.0.0.1:3211/api/projects/mcorch-video/preview\" | grep -oE 'data-composition-id=\"[^\"]+\"' | head -2\necho \"=== saldo ANTES ===\"; curl -s \"$VITE_SUPABASE_URL/rest/v1/profiles?id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=mco_balance\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== POST render (seam FR-VS-048 \u2014 espera job failed honesto 503 pr\u00e9-GO) ===\"\nRENDER=$(curl -s -X POST \"http://127.0.0.1:3211/api/projects/mcorch-video/render\" -H \"Content-Type: application/json\" -d '{\"format\":\"mp4\",\"fps\":30,\"quality\":\"standard\"}')\necho \"$RENDER\" | head -c 300\nJOB=$(echo \"$RENDER\" | grep -oE '\"(id|jobId)\":\"[^\"]+\"' | head -1 | cut -d'\"' -f4)\necho \"\"; echo \"JOB=$JOB\"; sleep 6\necho \"=== estado do job p\u00f3s-seam ===\"\ncurl -s \"http://127.0.0.1:3211/api/render/$JOB/view\" 2>/dev/null | head -c 400\necho \"\"; echo \"=== saldo DEPOIS (deve ser id\u00eantico \u2014 503 antes do d\u00e9bito) ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/profiles?id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=mco_balance\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"",
+  "description": "Prove runtime bytes + preview + render seam 503-no-charge boundary",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === runtime GET bytes ===
+> 230005
+> === preview contém composition? ===
+> data-composition-id="${CSS.escape(M)}"
+> data-composition-id="${CSS.escape(u)}"
+> === saldo ANTES ===
+> [{"mco_balance":4636.00}]=== POST render (seam FR-VS-048 — espera job failed honesto 503 pré-GO) ===
+> {"jobId":"mcorch-video_2026-07-01_18-59-36","status":"rendering"}
+> 
+> JOB=mcorch-video_2026-07-01_18-59-36
+> === estado do job pós-seam ===
+> {"error":"not found"}
+> === saldo DEPOIS (deve ser idêntico — 503 antes do débito) ===
+> [{"mco_balance":4624.00}]
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
