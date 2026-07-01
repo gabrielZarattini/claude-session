@@ -1,4 +1,4 @@
-# Configurar loop autônomo e definir fila soberana
+# [[2026-06-30 - Configurar loop autônomo e definir fila soberana|Configurar loop autônomo e definir fila soberana]]
 **Date:** 2026-07-01 | **Session ID:** `473299a8-6c7d-4634-b97a-50a8fad59b11`
 
 ---
@@ -2050,3 +2050,16 @@ A decisão que é sua (tem tradeoff real de qualidade) é como zerar o **texto**
 > ```
 > Your questions have been answered: "Como zerar o custo de TEXTO do ciclo (a maior perna paga), respeitando a doutrina? O texto hoje usa Gemini 2.5 Pro na sua chave OpenRouter (qualidade alta, mas pago)."="Vamos manter por enquanto esta barato, coloquei 10 dolares que deu mais ou menos 60 reais no brasil, durou o mes enteiro e ainda tem um pouco de credito, se você acha que vale apena manter essa qualidade seguimos assim". You can now continue with these answers in mind.
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]
+> * **Próxima Sessão**: [[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]
+%% --- TIMELINE END --- %%

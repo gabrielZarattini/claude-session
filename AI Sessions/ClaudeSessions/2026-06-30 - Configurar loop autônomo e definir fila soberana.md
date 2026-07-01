@@ -1,4 +1,4 @@
-# Configurar loop autônomo e definir fila soberana
+# [[2026-07-01 - Configurar loop autônomo e definir fila soberana|Configurar loop autônomo e definir fila soberana]]
 **Date:** 2026-06-30 | **Session ID:** `473299a8-6c7d-4634-b97a-50a8fad59b11`
 
 ---
