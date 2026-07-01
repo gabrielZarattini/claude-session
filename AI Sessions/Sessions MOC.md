@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1722
-> * **Sessões do Claude**: 1678
+> * **Total de Sessões Registradas**: 1724
+> * **Sessões do Claude**: 1680
 > * **Sessões do Gemini**: 44
 
 ---
@@ -41,6 +41,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Orchestration & Agent System (MCORCH/Constellation)
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` - *2026-07-01*
+*   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` - *2026-07-01*
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` - *2026-06-27*
 *   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` - *2026-06-26*
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-25*
@@ -80,7 +81,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - agent-aa16853e28f04d9f4]]` - *2026-07-01*
 *   `[[2026-07-01 - agent-a9e7a0c236e06d889]]` - *2026-07-01*
 *   `[[2026-07-01 - agent-a8e3acf02207a3868]]` - *2026-07-01*
-*   *... e mais 1677 sessões nessa categoria.*
+*   *... e mais 1678 sessões nessa categoria.*
 
 ---
 
@@ -1761,11 +1762,13 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - agent-a4409e3c7cafdde1e]]` (ClaudeSessions)
 *   `[[2026-07-01 - agent-a4400c181b8164cde]]` (ClaudeSessions)
 *   `[[2026-07-01 - agent-a34d522f8a195fe34]]` (ClaudeSessions)
+*   `[[2026-07-01 - agent-a27d61af977f06f5f]]` (ClaudeSessions)
 *   `[[2026-07-01 - agent-a1a6a26a79110828a]]` (ClaudeSessions)
 *   `[[2026-07-01 - agent-a15ffc315de1449cb]]` (ClaudeSessions)
 *   `[[2026-07-01 - agent-a0a82ccaef97f3bff]]` (ClaudeSessions)
 *   `[[2026-07-01 - Usar comando loop para continuar sequência lógica]]` (ClaudeSessions)
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` (ClaudeSessions)
+*   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions)
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Abril 2026

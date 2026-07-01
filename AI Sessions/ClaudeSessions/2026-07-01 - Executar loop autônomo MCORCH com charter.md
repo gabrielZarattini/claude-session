@@ -1630,3 +1630,16 @@ continue
 ## 🤖 Claude *(03:20:09)*
 
 You've hit your session limit · resets 1:50am (America/Sao_Paulo)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-01 - Configurar loop autônomo e definir fila soberana]]
+> * **Próxima Sessão**: [[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]
+%% --- TIMELINE END --- %%

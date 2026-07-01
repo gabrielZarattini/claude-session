@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 62
-> * **Total de Sessões**: 1717
+> * **Total de Sessões**: 1719
 
 ---
 
@@ -110,11 +110,13 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-01 - agent-a4409e3c7cafdde1e]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - agent-a4400c181b8164cde]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - agent-a34d522f8a195fe34]]` (ClaudeSessions) - *2026-07-01*
+*   `[[2026-07-01 - agent-a27d61af977f06f5f]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - agent-a1a6a26a79110828a]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - agent-a15ffc315de1449cb]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - agent-a0a82ccaef97f3bff]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - Usar comando loop para continuar sequência lógica]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` (ClaudeSessions) - *2026-07-01*
+*   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions) - *2026-07-01*
 *   `[[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]` (ClaudeSessions) - *2026-06-30*
 *   `[[2026-06-30 - agent-afe53acf872b6f4a1]]` (ClaudeSessions) - *2026-06-30*
