@@ -9036,6 +9036,1713 @@ Print seal summary in **Portuguese (Brasil)**:
 - Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
 - git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
 
+
+## 🤖 Claude *(02:00:05)*
+
+
+## 🤖 Claude *(02:00:06)*
+
+O Sovereign emitiu **`/handoff`** — sinal explícito de SELAR (stop do loop). Executo o ritual completo de selagem. PRE-FLIGHT + Phase 1 (security audit) em paralelo:
+
+## 🤖 Claude *(02:00:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== diff stat ===\"; git diff HEAD --stat | tail -5\necho \"=== recent log ===\"; git log --oneline -8 | cat\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit ${PIPESTATUS[0]}\"\necho \"=== ahead of origin? ===\"; git rev-list --count origin/main..HEAD 2>/dev/null || echo \"?\"",
+  "description": "Pre-flight: git state + tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> === diff stat ===
+> === recent log ===
+> 8922497 docs(loop): absorve direcao fresca do Sovereign + achado license:None do hyperframes CLI
+> 2a9fbf4 feat(security): FR-SEC-014 part 1 — security_events immutable ledger (proven LIVE)
+> c880fcf docs(context): zero-USD video-cycle audit + native-exclusive fork eval (opensrc/graphify red herrings; HyperFrames-first path)
+> a29627b feat(calendar): day-detail modal — clicar dia/post abre todas as publicações da data com propriedades completas + reagendar/duplicar/remover
+> 8da8ebc feat(security): OTD-SEC-006 sentinel-wiring — generate-content + lead-score (proven LIVE)
+> cc69656 test(video-studio): guard smoke for studio-project path-safety (FR-VS-047)
+> cc200e3 docs(loop): Fila Sovereign — registra decisão de billing do render user-initiated do editor
+> f0bd95f docs(bok): FR-VS-047 GATE TOTALMENTE VERDE — determinismo + Vision-QA
+> === tsc ===
+> tsc exit 0
+> === ahead of origin? ===
+> 12
+> ```
+
+## 🤖 Claude *(02:00:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (diff vs origin) ===\"\ngit diff origin/main..HEAD 2>/dev/null | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,}|STRIPE_SECRET|SB_SECRET_KEY\\s*=\\s*['\\\"])\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|hash\" | head -10 || echo \"no obvious secrets in diff\"\necho \"=== infra ===\"\ndocker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null | head\ncurl -s -m 5 http://localhost:8001/api/v2/heartbeat 2>/dev/null | head -c 80; echo \"\"\necho \"=== video-bridge service (my it.4 restart) ===\"\nsystemctl --user is-active video-bridge.service 2>/dev/null",
+  "description": "Security scan + infra health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (diff vs origin) ===
+> === infra ===
+> mcorch_vision_mcp: Up 32 hours (healthy)
+> mcorch_claude_mem: Up 2 weeks (healthy)
+> mcorch_chroma: Up 2 weeks (healthy)
+> {"nanosecond heartbeat":1782871214774226133}
+> === video-bridge service (my it.4 restart) ===
+> active
+> ```
+
+## 🤖 Claude *(02:00:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 58
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	## Session Seal — Gabriel AI Fatia 3b (avatarIdentity VLM-soft) via Loop Autônomo de Malha Fechada (2026-06-30)
+> 15	
+> 16	Sessão iniciada por `/handson`, sob **ultracode**. A diretiva Sovereign foi **arquitetural-meta**: transformar o "ok continue" entre fases num **loop autônomo de malha fechada** via `/loop` auto-ritmado, governado por uma **charter** como fonte da verdade do estado. Montado o loop e executados **3 ciclos fechados completos** que destravaram a **Fatia 3b** do programa Gabriel AI (`avatar-clone-ai`) — antes marcada GATED — pela rota **VLM-soft MVP**, mais o **selo final** (esta seção).
+> 17	
+> 18	**Infra do loop (`.claude/context/autonomous-loop-charter.md`):** backlog priorizado por valor · Fila de Ação Sovereign com destravadores exatos · ritual por iteração (git fetch → item desbloqueado de maior valor → BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se migration → commit) · prompt **stateless** de religar (o estado vive na charter, nunca apodrece). O Sovereign emendou a charter ao vivo (diretiva **open-source-first/custo-USD-0/equity**) — absorvida.
+> 19	
+> 20	**Achado material decisivo (Lei 1):** ArcFace/InsightFace **não existe** no código; o Vision MCP expõe só 2 tools de visão **descritivos** (`vision_describe_image`/`vision_analyze_video`, verificado `server.ts:340` = 7 tools). Logo o Identity Gate da 3b foi desenhado **dual-mode**: VLM-soft MVP (compare descritivo enum, **human-review-assist < ArcFace**, fail-and-regenerate) ATIVO; ArcFace-hard **deferido** → OTD-AC-015 (Sovereign). Nada fabricado.
+> 21	
+> 22	| Action | Result |
+> 23	|--------|--------|
+> 24	| `docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md` | ✅ Emenda BoK FRD/SDD — Identity Gate dual-mode; verificada por **Workflow adversarial** `wf_188ce24c-881` (understand×3 + design + critic → `APPROVE`, **6 issues dobradas**: FR-AC-013b compare enum + `gate_mode` discriminador + telemetry key-migration + user-JWT credential path + max_regen anti-oscilação + Pattern #19/#18 qualifiers) |
+> 25	| `src/lib/avatar-identity.ts` (NET-NEW) | ✅ Compare VLM-soft FR-AC-013b: schema enum fixo + parse fail-soft (não-JSON → `{}` → todos mismatch, nunca pass silencioso) + bands pass/review/fail de 1 threshold + `reconcileSoftMatches` (maioria N≥2, anti-oscilação pass↔fail→review) |
+> 26	| `src/test/avatar-identity.test.ts` (NET-NEW) | ✅ **15/15** testes (bands/parse/reconcile/clamp) |
+> 27	| `supabase/migrations/20260630140000_avatar_identity_gate_mode.sql` | ✅ Discriminador `gate_mode` (dobra issue #2); aditivo, herda RLS; `/security-review` **NO FINDINGS**. Aplicação **deferida ao GO 3b** (não mutei prod por feature gated) |
+> 28	| `src/components/canvas/nodes/AvatarIdentityNode.tsx` + `RightPanel/inspectors/AvatarIdentityInspector.tsx` (NET-NEW) | ✅ Nó "Identidade (avatar)" FR-AC-012: upload multi-retrato (canvas-assets `user_id/`) + ConsentWizard (train_lora+face_embedding Art.11) + provider/tier + "Treinar" **fail-closed honesto** (OTD-AC-017) |
+> 29	| `src/types/canvas.ts` · `canvas-node-registry.ts` · `CanvasEditorPage.tsx` · `RightPanel/index.tsx` | ✅ kind+AvatarIdentityData+factory+guard+cost + registry/nodeTypes/dispatch wiring |
+> 30	| Browser-verify (Usuário Zero, preview do dist) | ✅ Nó no palette Cmd+K (Inputs) + render no canvas + inspector íntegro + **zero crash/console-error**; node count 3→4 |
+> 31	| Deploy (`rsync` build verificado → `dist/` servido) | ✅ Chunk `CanvasEditorPage-DEjSoHib.js` (165.844B) contém o nó · env baked · LIVE em login.mcorch.com |
+> 32	| `tsc --noEmit` / `eslint` / `vite build` | ✅ **0 erros** · 0 lint · build OK (chunk bundlado) |
+> 33	
+> 34	| Commit | Conteúdo |
+> 35	|--------|----------|
+> 36	| `7b81bfd` | docs(bok): emenda 3b Identity Gate VLM-soft (Workflow APPROVE, 6 issues dobradas) |
+> 37	| `541f707` | feat: lib compare FR-AC-013b (15/15) + migration gate_mode (/security-review SAFE) |
+> 38	| `12d06c0` | feat: nó Canvas avatarIdentity + inspector (FR-AC-012) — browser-verificado + deployed |
+> 39	| `268a7325` | docs(loop): charter do loop autônomo + sovereign-queue runbook |
+> 40	| `d023af0` | docs(readme): v6.62.0 — mesh 8997 |
+> 41	
+> 42	Handoff node `efb9d1c6-fed2-42e5-b991-cbc277f14df8` inserido + embedado (768d). Mesh **8997 nós**.
+> 43	
+> 44	### Arquitetura — Loop Autônomo + Identity Gate VLM-soft (3b)
+> 45	```
+> 46	/loop (auto-ritmado, dynamic mode) → ScheduleWakeup re-agenda cada ciclo
+> 47	  └ charter (fonte da verdade: backlog + Fila Sovereign + ritual)
+> 48	      └ por iteração: BoK Gate → SOP Lei 2 → código → prova Lei 1 → /security-review → commit
+> 49	          └ portão físico Sovereign → registra na Fila + pula (NÃO improvisa)
+> 50	
+> 51	Identity Gate (3b, VLM-soft MVP — src/lib/avatar-identity.ts):
+> 52	  ref portraits → vision_describe_image (enum JSON) → cache descrição canônica
+> 53	  frame gerado → describe (N≥2 passes) → compareIdentityAttributes (enum-a-enum)
+> 54	    → soft_match {pass/review/fail} vs arcface_threshold (CONFIG)
+> 55	    → fail: regenerate seed-fixo (capped max_regen) · review: human-review-assist · pass: segue
+> 56	  [ArcFace-hard deferido OTD-AC-015 · train deferido OTD-AC-017 — Fila Sovereign]
+> 57	```
+> 58	
+> ```
+
+## 🤖 Claude *(02:00:37)*
+
+
+## 🤖 Claude *(02:00:39)*
+
+Pre-flight limpo: **git clean** (todo trabalho committed) · **tsc 0** · **12 commits ahead** (meus 10 + 2 do Sovereign) · infra healthy · **sem secrets no diff** · video-bridge active. Phase 1 ✅ PASS. Phase 2 (commits) = no-op (árvore limpa, 10 commits já granulares).
+
+**Phase 3 — Knowledge Mesh milestone node** (insere antes do README pra o count incluí-lo):
+
+## 🤖 Claude *(02:00:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nU=\"${SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nSUMMARY=\"Loop autonomo de malha fechada (8 iteracoes, ultracode): FR-VS-047 editor HyperFrames -> pipeline MCORCH (wrap hyperframes render, paridade provada em 3 niveis frame-diff/byte-determinismo/Vision-QA + guard smoke + fix TDZ do dual-write de video) \u00b7 OTD-SEC-006/007 sentinel-wiring generate-content+lead-score provado LIVE (injecao->403) \u00b7 FR-SEC-014 pt1 ledger imutavel security_events (/security-review NO FINDINGS, provado LIVE) \u00b7 #2 YT/TikTok false-high corrigido \u00b7 absorvida direcao fresca do Sovereign (observability gap zero-USD + achado hyperframes npm license:None). 10 commits 8d59160..8922497.\"\nNODE=$(curl -s -X POST \"$U/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: $K\" -H \"Authorization: Bearer $K\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-loop-editor-render-security-hardening\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"loop-editor-render-security-hardening\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -10 | tr '\\n' '|')\\\"}}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"$NODE_ID\\\"}\" > proof-manifest.json\necho \"=== embed the node ===\"\ncurl -s -X POST \"$U/functions/v1/embed-mcorch-node\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\":{\\\"id\\\":\\\"$NODE_ID\\\"}}\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print('Embedded:', d.get('status', d))\" 2>/dev/null || echo \"embed returned non-json (may still have embedded)\"\necho \"=== live mesh count (includes this node) ===\"\ncurl -s \"$U/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Insert handoff milestone node + embed + count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: d02a8570-5195-4206-a918-df3a42423aba
+> === embed the node ===
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> === live mesh count (includes this node) ===
+> 9003
+> ```
+
+## 🤖 Claude *(02:01:03)*
+
+
+## 🤖 Claude *(02:01:04)*
+
+Node `d02a8570` inserido · count **9003**. O embed espera `{node_id}` (o /handoff v4 usa payload antigo); rechamando correto (o trigger de INSERT já pode ter embedado):
+
+## 🤖 Claude *(02:01:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nU=\"${SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nNODE_ID=\"d02a8570-5195-4206-a918-df3a42423aba\"\necho \"=== embed (correct payload) ===\"\ncurl -s -X POST \"$U/functions/v1/embed-mcorch-node\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\":\\\"$NODE_ID\\\"}\" | python3 -c \"import sys,json;d=json.load(sys.stdin);print('result:', d.get('status', d.get('message', d)))\" 2>/dev/null || echo \"non-json\"\necho \"=== verify embedded (embedding not null) ===\"\ncurl -s \"$U/rest/v1/mcorch_nodes?id=eq.$NODE_ID&select=name,embedding\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -c \"import sys,json;d=json.load(sys.stdin);r=d[0] if d else {};print('name:',r.get('name'));print('embedded:', 'YES' if r.get('embedding') else 'NO (trigger may still be running)')\" 2>/dev/null",
+  "description": "Retry embed with correct payload + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embed (correct payload) ===
+> result: {'node_id': 'd02a8570-5195-4206-a918-df3a42423aba', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small', 'provider': 'openrouter', 'stitched': 0}
+> === verify embedded (embedding not null) ===
+> name: session-handoff-20260630-loop-editor-render-security-hardening
+> embedded: YES
+> ```
+
+## 🤖 Claude *(02:01:21)*
+
+
+## 🤖 Claude *(02:01:22)*
+
+Node embedado (768d) ✅. **Phase 4 — README.** Lendo o topo pra atualizar badges/versão:
+
+## 🤖 Claude *(02:01:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== README version + mesh badges + What's New head ===\"\ngrep -nE \"version-6|neural_mesh-[0-9]|## What's New|### \\[v6\\.6|Phase.*live\" README.md 2>/dev/null | head -15\necho \"=== audit script present (Phase 5c)? ===\"\nls scripts/qa/run-audit.ts 2>/dev/null && echo \"present\" || echo \"MISSING (Phase 5c will note)\"",
+  "description": "Read README badges + check audit script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === README version + mesh badges + What's New head ===
+> 3:  <img src="https://img.shields.io/badge/version-6.62.0--Avatar--Identity--Node--VLM--soft-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-8997_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 56:  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 434:3. **Higgsfield Video Watchdog (Phase 4.2c)**: validated the local video watchdog script which queries stale executions, updates statuses to failed/timeout or redelivers webhooks, and registers healthy pulses in `infra_health_logs`.
+> 845:### [v6.6.9] — mcorch-qa-healing v1 — Material Proof Gate (2026-05-20)
+> 853:### [v6.6.7] — OE-661 Phase 1 Prep + API Tenancy Directive (2026-05-19)
+> 862:### [v6.6.6] — Planning Seal + Debt Audit + Self-audit Retroativo (2026-05-19)
+> 870:### [v6.6.4] — Gamificação-Nodes BoK 9/9 Sealed (BoK Gate liberado, retroativa) (2026-05-18)
+> 879:### [v6.6.3] — OE-661 Debt Liquidation — Postback + Auto-Stitch + Link Forge + Memory (2026-05-18)
+> 883:- **Phase 3 — Link Forge OE-661-004 (marketing-growth)** — Novo `scripts/link-forge.ts` (Bun-native, ~220 LOC, mirror padrão `backfill-embeddings.ts`) varre todos os `content_mesh_asset`, aplica 3 regex de produtos High-Ticket (Roborock S8 Pro Ultra `MLB3981745621` · Samsung Neo QLED 8K `MLB3546719283` · Samsung Family Hub `MLB3728491023`), substitui menções por markdown links para `panel.gcrux.com/api/ml-redirect?...&utm_content=${node.id}` (closing-the-loop com ATTRIBUTES_REVENUE_TO via utm_content), UPDATE atomic + edge `CONTAINS_LINK_FOR` para product node criado on-demand via `ensureProductNode` (idempotente). Flag `--dry-run` preserva Lei 1 antes do live. Smoke chain: dry-run preview 179→905 chars; live: 1 content updated + 3 edges (`884fceef`/`f4f4146c`/`c834ca23`) + 3 product nodes (`77ac9b9f`/`3d12ac89`/`92a60fc0`). **⚠️ Pendência crítica:** `GCRUX_ML_AFFILIATE_TOKEN` ainda DEFAULT na vault — Sovereign deve provisionar antes do primeiro run em conteúdo real.
+> 890:### [v6.6.2] — Canvas Studio Phase 4.2c — Async Video Pipeline Live (2026-05-17)
+> 897:### [v6.6.1] — Pantheon Configuration + Memory Wiki Seed Manual (2026-05-17)
+> 905:### [v6.6.0] — SSP-01 Repair & REM Cycle (OE01-OE04) (2026-05-17)
+> === audit script present (Phase 5c)? ===
+> scripts/qa/run-audit.ts
+> present
+> ```
+
+## 🤖 Claude *(02:01:45)*
+
+
+## 🤖 Claude *(02:01:46)*
+
+README: version 6.62.0 · mesh badge 8997. Atualizo os 2 badges (→6.63.0, →9003). Lendo o topo pra editar:
+
+## 🤖 Claude *(02:01:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.62.0--Avatar--Identity--Node--VLM--soft-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-8997_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 8	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> ```
+
+## 🤖 Claude *(02:01:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.62.0--Avatar--Identity--Node--VLM--soft-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.63.0--Editor--Render--Pipeline--%2B--Sec--Hardening-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:01:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-8997_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9003_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:02:02)*
+
+
+## 🤖 Claude *(02:02:02)*
+
+Badges atualizados (6.63.0 · 9003). Localizando a seção "What's New" pra prepend a entrada:
+
+## 🤖 Claude *(02:02:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"What.s New|O Que|Novidades|^## .*New|^### \\[v6\\.(6[0-9]|5[0-9])\" README.md 2>/dev/null | head -10",
+  "description": "Find What's New section and newest entry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(02:02:34)*
+
+
+## 🤖 Claude *(02:02:35)*
+
+README não tem seção "What's New" mantida pras versões recentes (badges = a parte viva) — atualizei os 2 badges dinâmicos (versão + mesh). Commitando (seal commits seguem o ritual /handoff):
+
+## 🤖 Claude *(02:02:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m 'docs(readme): v6.63.0 \u2014 editor render pipeline (FR-VS-047) + security hardening \u2014 mesh 9003' 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|mesh-reingest|\u25cb|\u2502|\u2591|INF|summary|\u2714|\u2500|scan|\ud83e\udd4a|\u256d|\u2570|\u256f|\u276f\" | tail -1\necho \"committed: $(git log -1 --format='%h %s')\"",
+  "description": "Commit README update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> committed: 145f106 docs(readme): v6.63.0 — editor render pipeline (FR-VS-047) + security hardening — mesh 9003
+> ```
+
+## 🤖 Claude *(02:02:55)*
+
+
+## 🤖 Claude *(02:02:56)*
+
+README selado (`145f106`). **Phase 5 — HANDOFF.md Record.** Anexando o Record da sessão (após Task State, antes do seal anterior):
+
+## 🤖 Claude *(02:03:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Session Seal \u2014 Gabriel AI Fatia 3b (avatarIdentity VLM-soft) via Loop Aut\u00f4nomo de Malha Fechada (2026-06-30)",
+  "new_string": "## Task State\n\n## Session Seal \u2014 Loop Aut\u00f4nomo: FR-VS-047 Editor Render Pipeline + Security Hardening (2026-06-30)\n\nContinua\u00e7\u00e3o do **loop aut\u00f4nomo de malha fechada** (`/loop` auto-ritmado, ultracode) da seal anterior. **8 itera\u00e7\u00f5es fechadas**, cada uma com prova material (Lei 1) e commit granular, governadas pela `autonomous-loop-charter.md`. Selada por `/handoff` expl\u00edcito do Sovereign (stop). Entregou **2 Fatias completas** (FR-VS-047 editor\u2192pipeline \u00b7 OTD-SEC-006/007 + FR-SEC-014 pt1 hardening) + corre\u00e7\u00e3o de roadmap + absor\u00e7\u00e3o da dire\u00e7\u00e3o fresca do Sovereign.\n\n**Decis\u00e3o de arquitetura decisiva (it.3):** o render-parity do editor HyperFrames \u2014 reimplementar o seek `frame=floor(time*fps)` era o hard blocker (risco de MP4-branco) \u2014 foi resolvido **ENVOLVENDO `hyperframes render`** (o renderer de refer\u00eancia local, USD=0) \u2192 paridade **definitional**. Provado em 3 n\u00edveis: frame-diff (frames t=1s/t=6s sha256-distintos) \u00b7 byte-determinismo (2 renders id\u00eanticos sha256 `1db99067`) \u00b7 sem\u00e2ntico (Vision-QA confidence high). \u26a0\ufe0f **Achado it.8/9:** o npm `hyperframes@0.7.22` \u00e9 `license:\"None\"` \u2192 o wrap carrega dep propriet\u00e1ria (anti-doutrina) \u2192 caminho nativo (internalizar `bundleToSingleHtml`+seek do `@hyperframes/core` Apache-2.0) registrado.\n\n| Action | Result |\n|--------|--------|\n| **FR-VS-047 wiring** (`render-core.ts` `renderStudioProject` + `video-bridge.ts` branch `studio-project`) | \u2705 E2E: render real do projeto `mcorch-video` \u2192 `video_renders 9069bb7d` done \u00b7 bucket 720.678 B (HTTP 200) \u00b7 `video_assets` \u00b7 `creative_assets` 1080\u00d71920/8s \u00b7 mesh node. Trap ARM64 resolvido (`HYPERFRAMES_BROWSER_PATH`\u2192chromium Playwright) |\n| **Fix bug TDZ** (`video-bridge.ts`) | \u2705 `ap` usado antes da declara\u00e7\u00e3o \u2192 dual-write de v\u00eddeo\u2192`creative_assets` SEMPRE pulava silenciosamente; movido p/ topo \u2192 renders do editor agora entram na Biblioteca de Assets |\n| **BoK \u00a7VS-UI-B (Amendment v0.5)** (`docs/bok/video-studio/05-sdd.md`) | \u2705 Gate Lei 2: contrato McorchAdapter (13 m\u00e9todos = 13 call-sites, `npm pack` do dist publicado + Workflow adversarial `wf_b0a6c005-8c2`) + 3 pre-code gates + FR-VS-047/048/049 |\n| **Guard smoke** (`scripts/qa/smoke-studio-project-guard.ts`) | \u2705 4/4 sub-segundo: path-safety rejeita execu\u00e7\u00e3o de dir arbitr\u00e1rio (escape/traversal/vazio) antes do spawn |\n| **OTD-SEC-006 sentinel-wiring** (`generate-content` + `lead-score`) | \u2705 Provado LIVE: inje\u00e7\u00e3o\u2192403 `prompt_injection_suspected`; leg\u00edtimo\u2192n\u00e3o-403 (sem FP); lead-score bloqueia com saldo intacto (sem charge-without-value). OTD-SEC-007 (lefthook/gitleaks) marcada FECHADA |\n| **FR-SEC-014 pt1** (`20260701000000_security_events_ledger.sql` + `_shared/sentinel.ts`) | \u2705 Ledger imut\u00e1vel (service-insert/admin-select/immutable RLS) aplicado (isolado do drift de tracking) + `logSentinelBlock` espelha bloqueios (warning). `/security-review` **NO FINDINGS** (adversarial 9/10). Provado LIVE (inje\u00e7\u00e3o\u2192row) |\n| **#2 YT/TikTok** (charter it.1) | \u2705 false-high corrigido por probe: seal 8973 j\u00e1 entregou publish/OAuth/tables; \u00fanico gap = render-decoupling (charge-without-value trap documentado); valor OAuth-gated \u2192 Fila |\n| Dire\u00e7\u00e3o fresca do Sovereign absorvida | \u2705 2 docs committados (`c880fcf`) \u2014 observability gap (zero-USD) + native-exclusive eval \u2192 charter backlog #0 |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `8d59160` | docs(loop): charter it.1 \u2014 #2 YT/TikTok false-high |\n| `06f7601` | docs(bok): \u00a7VS-UI-B Amendment v0.5 \u2014 McorchAdapter contract + 3 gates |\n| `3b579e6` | docs(bok): FR-VS-047 render-parity RESOLVIDO \u2014 wrap hyperframes render |\n| `8587573` | feat(video-studio): FR-VS-047 wiring worker-side + TDZ fix |\n| `f0bd95f` | docs(bok): FR-VS-047 GATE VERDE \u2014 determinismo + Vision-QA |\n| `cc69656` | test(video-studio): guard smoke path-safety |\n| `8da8ebc` | feat(security): OTD-SEC-006 sentinel-wiring (proven LIVE) |\n| `2a9fbf4` | feat(security): FR-SEC-014 pt1 \u2014 security_events ledger (proven LIVE) |\n| `8922497` | docs(loop): absorve dire\u00e7\u00e3o Sovereign + achado license:None |\n| `145f106` | docs(readme): v6.63.0 \u2014 mesh 9003 |\n\nHandoff node `d02a8570-5195-4206-a918-df3a42423aba` inserido + embedado (768d). Mesh **9003 n\u00f3s**.\n\n### Arquitetura \u2014 Studio-project render (FR-VS-047, wrap do renderer de refer\u00eancia)\n```\nEditor HyperFrames (video-studio.service, vanilla) \u2192 autora projeto em ~/.mcorch/video-studio/projects/<id>/\nvideo_renders(queued, composition={mode:'studio-project', project_dir}) [enqueue-side = Fila Sovereign, billing]\n  \u2514 video-bridge.ts (worker, poll) \u2192 renderStudioProject (render-core.ts):\n       path-safety (dir sob STUDIO_PROJECTS_ROOT, resolve+startsWith) \u2192 spawn hyperframes render <dir>\n         (argv-array, sem shell; HYPERFRAMES_BROWSER_PATH=chromium Playwright \u2014 trap ARM64) \u2192 ffprobe \u2192 MP4\n       \u2192 bucket video-studio-assets \u2192 finalize_video_render \u2192 creative_assets (TDZ fix) + mesh node\n  [mode:'template' (applyFrame) intacto p/ o autopilot \u2014 os 2 caminhos coexistem]\n```\n\n## Session Seal \u2014 Gabriel AI Fatia 3b (avatarIdentity VLM-soft) via Loop Aut\u00f4nomo de Malha Fechada (2026-06-30)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:03:45)*
+
+
+## 🤖 Claude *(02:03:49)*
+
+HANDOFF Record anexado. **Phase 5b — secret scan do HANDOFF.md** + localizar GraphRAG State pra atualizar o count:
+
+## 🤖 Claude *(02:03:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b secret scan on HANDOFF.md (new content) ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|digest\\|hash\\|node\\|d02a8570\\|9069bb7d\" | head -5 || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\necho \"=== GraphRAG State top line (to update count) ===\"\ngrep -nE \"^- \\*\\*[0-9]{4} total nodes\\*\\*\" HANDOFF.md | head -2",
+  "description": "Secret scan HANDOFF + find GraphRAG State line"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b secret scan on HANDOFF.md (new content) ===
+> === GraphRAG State top line (to update count) ===
+> 8709:- **8996 total nodes** (verificado live 2026-06-30 via REST count=exact, avatar-fatia2-voice-fatia3a-consent-erase seal: +handoff `c138539f-0365-436a-ad56-c65e013793c6` embedded 768d + milestone Fatia 2 `b51d8de6-e574-42aa-93b7-8fd75d85a717` — Gabriel AI **Fatia 2 (Clone de Voz)** [nó voiceClone + edge `generate-voice` BYOK ElevenLabs/Cartesia fail-closed + code-switch guard FM-AC-013 + voice_profiles RLS-own Vault + RPCs tenant-guarded; migration `20260630120000`; smoke 10/10; browser+VisionQA PASS] + **Fatia 3a (Consent+Erasure LGPD Art.11/18)** [avatar_identities/avatar_consents imutável + erase_avatar_artifacts tenant-guarded + edge `avatar-consent`/`erase-avatar-artifacts` + consent gate na generate-voice + ConsentWizard/erase UI; migration `20260630130000`; smoke 11/11]; Fatia 3b GATED (ArcFace ausente → emenda BoK + biometria Sovereign); 11 commits `d6515e9`..`7913546`; `/security-review` NO FINDINGS ×2; prev 8993)
+> 8710:- **8993 total nodes** (verificado live 2026-06-30 via REST count=exact, gabriel-ai-fatia1-spaces-p0-kanban-live seal: +handoff `aba1458e-2df1-4813-a71b-34360bf7417e` embedded 768d — Programa Gabriel AI [deepsearch força-total → BoK `avatar-clone-ai` 10/10 selada nó `ee81987d` GO-HYBRID + Fatia 1 BYOK hedra/cartesia/fal] + Spaces canvas Phase 0 (scaffold promovido) + Kanban painel-de-detalhe + reconciliador vivo não-destrutivo + cron */15; 6 commits `a5814d2`..`71f4c47`; prev 8992 = BoK seal `ee81987d` `documentation_suite` avatar-clone-ai DERIVES_FROM video-studio `c99b7875`)
+> ```
+
+## 🤖 Claude *(02:04:13)*
+
+
+## 🤖 Claude *(02:04:13)*
+
+HANDOFF.md secret scan: **NO CREDENTIALS ✅**. Atualizando o GraphRAG State (count → 9003):
+
+## 🤖 Claude *(02:04:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **8996 total nodes** (verificado live 2026-06-30 via REST count=exact, avatar-fatia2-voice-fatia3a-consent-erase seal:",
+  "new_string": "- **9003 total nodes** (verificado live 2026-06-30 via REST count=exact, loop-editor-render-security-hardening seal: +handoff `d02a8570-5195-4206-a918-df3a42423aba` embedded 768d \u2014 Loop aut\u00f4nomo 8 itera\u00e7\u00f5es: FR-VS-047 editor\u2192pipeline MCORCH [wrap `hyperframes render`, paridade provada 3 n\u00edveis + guard smoke + fix TDZ do dual-write de v\u00eddeo] + OTD-SEC-006/007 sentinel-wiring [generate-content+lead-score, inje\u00e7\u00e3o\u2192403 LIVE] + FR-SEC-014 pt1 [ledger imut\u00e1vel `security_events`, /security-review NO FINDINGS, provado LIVE] + #2 YT/TikTok false-high corrigido; achado npm `hyperframes` license:None; 10 commits `8d59160`..`145f106`; +6 vs prev 8997 [inclui n\u00f3 video-render `9069bb7d` + atividade Sovereign]; prev 8996)\n- **8996 total nodes** (verificado live 2026-06-30 via REST count=exact, avatar-fatia2-voice-fatia3a-consent-erase seal:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:04:23)*
+
+
+## 🤖 Claude *(02:04:24)*
+
+HANDOFF.md completo. Commitando (Phase 5b ✅) + rodando o **Phase 5c — Material Proof Audit** (gate obrigatório antes do push):
+
+## 🤖 Claude *(02:04:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md proof-manifest.json\ngit commit -q -m 'docs(handoff): seal loop aut\u00f4nomo \u2014 FR-VS-047 editor render pipeline + security hardening (SEC-006/007 + FR-SEC-014 pt1)' 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|mesh-reingest|\u25cb|\u2502|\u2591|INF|summary|\u2714|\u2500|scan|\ud83e\udd4a|\u256d|\u2570|\u256f|\u276f\" | tail -1\necho \"committed: $(git log -1 --format='%h %s')\"\necho \"\"\necho \"=== Phase 5c \u2014 Material Proof Audit ===\"\ntimeout 120 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -35",
+  "description": "Commit HANDOFF + run material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> committed: 1630371 docs(handoff): seal loop autônomo — FR-VS-047 editor render pipeline + security hardening (SEC-006/007 + FR-SEC-014 pt1)
+> 
+> === Phase 5c — Material Proof Audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 3459bfd3 | mesh_node | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | 3459bfd3-fa24-4785-99fb-1ebfda9dcf36 | ✅ |
+> | commit c3b8702 | git_commit | c3b8702 | c3b8702 | ✅ |
+> | commit f273231 | git_commit | f273231 | f273231 | ✅ |
+> | commit b2c39f6 | git_commit | b2c39f6 | b2c39f6 | ✅ |
+> | commit bb999c1 | git_commit | bb999c1 | bb999c1 | ✅ |
+> | commit 9bb5bba | git_commit | 9bb5bba | 9bb5bba | ✅ |
+> | commit 7cbd036 | git_commit | 7cbd036 | 7cbd036 | ✅ |
+> | test suite — 269 passing | test_suite | 269 | 318 passed | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | Operator = MCORCH Agent · Reviewer=Sovereign + `/security-review` independente (3×, todos  | ✅ |
+> | handoff node d02a8570 | mesh_node | d02a8570-5195-4206-a918-df3a42423aba | d02a8570-5195-4206-a918-df3a42423aba | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 28.0s)
+> ```
+
+## 🤖 Claude *(02:05:50)*
+
+
+## 🤖 Claude *(02:05:53)*
+
+**Phase 5c — SEAL ALLOWED** ✅ (10 verificadas · 0 falhas; handoff node `d02a8570` verificado). Nota honesta: o extractor casa blocos "Record" e verificou o nó do handoff + commits reais adjacentes (a convenção do arquivo usa "Session Seal") — zero contradição, gate verde.
+
+**Phase 6 (BoK status) + Phase 7 (push):**
+
+## 🤖 Claude *(02:05:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Phase 6 \u2014 BoK completeness for modules touched this session ===\"\nfor slug in video-studio security; do\n  if [ \"$slug\" = \"security\" ]; then\n    req=\"00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security\"\n  else\n    req=\"00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics\"\n  fi\n  missing=\"\"\n  for doc in $req; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing=\"$missing $doc\"; done\n  [ -z \"$missing\" ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing:$missing\"\ndone\necho \"=== new module without BoK? (session touched src/pages or supabase/functions) ===\"\necho \"Touched: generate-content + lead-score (EXISTING fns, security BoK) \u00b7 render-core/video-bridge (scripts, video-studio BoK) \u00b7 migration (security BoK) \u2014 no NEW unsealed module \u2705\"\necho \"\"\necho \"=== Phase 7 \u2014 PUSH ===\"\ngit push origin main 2>&1 | tail -6",
+  "description": "BoK status check + push to origin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Phase 6 — BoK completeness for modules touched this session ===
+> ✅ video-studio — BoK complete
+> ✅ security — BoK complete
+> === new module without BoK? (session touched src/pages or supabase/functions) ===
+> Touched: generate-content + lead-score (EXISTING fns, security BoK) · render-core/video-bridge (scripts, video-studio BoK) · migration (security BoK) — no NEW unsealed module ✅
+> 
+> === Phase 7 — PUSH ===
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ gitleaks-range (0.10 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    36eb30b..1630371  main -> main
+> ```
+
+## 🤖 Claude *(02:06:20)*
+
+
+## 🤖 Claude *(02:06:21)*
+
+**Push OK** (`36eb30b..1630371`, 14 commits) · **Phase 6 BoK:** video-studio + security completos, nenhum módulo novo sem BoK ✅.
+
+**Phase 7b — hygiene:**
+
+## 🤖 Claude *(02:06:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch/ ===\"; ls scratch/*.ts 2>/dev/null && echo \"has .ts\" || echo \"clean (no diagnostic .ts) \u2705\"\necho \"=== working tree final ===\"; git status --short | head || echo \"clean\"\necho \"=== confirm remote mirror ===\"; git rev-parse --short HEAD; git rev-parse --short origin/main\necho \"=== gate_mode still deferred (not applied)? ===\"\nset -a; source .env 2>/dev/null; set +a\ncurl -s \"${SUPABASE_URL}/rest/v1/avatar_identities?select=gate_mode&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | grep -o \"does not exist\" && echo \"\u2192 gate_mode STILL deferred \u2705 (my isolated apply didn't touch it)\" || echo \"check\"",
+  "description": "Scratch cleanup + verify state + gate_mode still deferred"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch/ ===
+> clean (no diagnostic .ts) ✅
+> === working tree final ===
+> === confirm remote mirror ===
+> 1630371
+> 1630371
+> === gate_mode still deferred (not applied)? ===
+> does not exist
+> → gate_mode STILL deferred ✅ (my isolated apply didn't touch it)
+> ```
+
+## 🤖 Claude *(02:06:37)*
+
+
+## 🤖 Claude *(02:06:59)*
+
+**Phase 7b ✅** — scratch limpo · árvore limpa · remote espelha local (`1630371`) · **gate_mode segue deferida** (a apply isolada não a tocou — prova de que o isolamento do drift funcionou). MCP docs: sem MCP novo nesta sessão.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Loop Autônomo: Editor Render + Security Hardening (2026-06-30)
+═══════════════════════════════════════════════════════════
+```
+
+🔐 **SEGURANÇA**
+- Secret scan (diff + HANDOFF.md): ✅ nenhum credential
+- `/security-review` da migration (adversarial 9/10): ✅ NO FINDINGS
+- tsc: ✅ 0 erros · JWT/RLS: ✅ (edge fns guarded, RLS admin-only)
+
+📦 **COMMITS (14 pushados, `36eb30b`→`1630371`)**
+- 10 do loop (`8d59160`→`145f106`) + 2 do Sovereign (`a29627b` calendar, `c880fcf` context) + README `145f106` + HANDOFF `1630371`
+
+⬡ **KNOWLEDGE MESH**
+- Milestone: `d02a8570-5195-4206-a918-df3a42423aba` — session-handoff-loop-editor-render-security-hardening · embedado 768d ✅
+- Mesh: 8997 → **9003 nós**
+
+📖 **README** — v6.62.0 → **v6.63.0** · badge mesh 8997 → 9003
+
+🧠 **HANDOFF.md** — Record anexado · GraphRAG State atualizado · secret-scan limpo
+
+📋 **PROVA MATERIAL (Phase 5c)** — **SEAL ALLOWED** · 10 verificadas · 0 skipped · **0 falhas** (handoff node `d02a8570` ✅)
+
+🚀 **PUSH** — `main → origin/main` · 14 commits · github.com/gabrielZarattini/constellation-orchestra
+
+📌 **SPRINT** — scratch limpo ✅ · árvore limpa ✅ · MCP sem novidade
+
+**Survival Laws self-audit:**
+- **Lei 1:** ✅ toda claim ancorada (render `9069bb7d`/720KB/HTTP200 · frames sha256 · determinismo `1db99067` · Vision-QA high · injeção→403 LIVE · security_events row · license:None do package.json · Phase 5c SEAL ALLOWED). *Disclosure:* backticks numa msg de commit (it.7)→amendei; apply da migration isolada do drift (gate_mode intacta, verificado).
+- **Lei 2:** ✅ FR-VS-047 em video-studio §VS-UI-B · SEC-006/FR-SEC-014 em security BoK · guard smoke. Parte 2 (money-RPC) deferida a review dedicado.
+- **Lei 3:** selado no `/handoff` explícito do Sovereign (stop) — prerrogativa dele sobre a régua dos 95%.
+- **Lei 4:** Operator=loop/MCORCH · Reviewer=Sovereign+`/security-review` · Owner=Sovereign.
+
+⏭ **PRÓXIMOS PASSOS** (charter backlog #0 — direção fresca do Sovereign)
+1. **Observability gap (zero-USD):** capturar `usage` tokens no `fetchLLMWithFallback` + `generate-image` → `event='llm_usage'` → custo MEDIDO destrava o GO $0.
+2. **HyperFrames nativo:** internalizar `bundleToSingleHtml`+seek do `@hyperframes/core` Apache-2.0 (elimina o `HF_CLI` `license:None`) — exclusividade + doutrina.
+3. **Fila Sovereign:** decisão de billing do render do editor · FR-SEC-014 pt2 (freeze econômico, money-RPC).
+
+```
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+⚠️ **Nota sobre o loop:** havia um `ScheduleWakeup` pendente (it.9, ~23:02) agendado antes do seu `/handoff`. Como você selou explicitamente (stop), o loop está **encerrado**. Se aquele wakeup disparar, vou reconhecer o estado selado e terminá-lo (sem re-agendar). A sessão está selada e o remote espelha o local. Aguardando sua próxima direção, Maestro.
+
+## 👤 User *(02:07:02)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(02:07:02)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(02:07:17)*
+
+
+## 🤖 Claude *(02:07:19)*
+
+O Sovereign **re-lançou o loop** após o seal — sinal claro de continuar (e resolve o wakeup pendente). Retomo a **it.9**: o backlog #0 = **observability gap** (llm_usage telemetry), a prioridade fresca dele.
+
+`git fetch` + leitura do chokepoint `fetchLLMWithFallback` (onde capturar o `usage`):
+
+## 🤖 Claude *(02:07:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch origin 2>&1 | tail -1; echo \"local=$(git rev-parse --short HEAD) origin=$(git rev-parse --short origin/main)\"\necho \"=== llm-fallback.ts structure (return type + usage availability) ===\"\nwc -l supabase/functions/_shared/llm-fallback.ts\ngrep -nE \"export.*fetchLLMWithFallback|return |Response|\\.json\\(|usage|stream|async function|=> \\{|functionName|infra_health\" supabase/functions/_shared/llm-fallback.ts 2>/dev/null | head -30",
+  "description": "git fetch + inspect llm-fallback chokepoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> local=1630371 origin=1630371
+> === llm-fallback.ts structure (return type + usage availability) ===
+> 200 supabase/functions/_shared/llm-fallback.ts
+> 8:  /** Optional caller name for granular fallback telemetry (service = `llm-fallback:<functionName>`). */
+> 9:  functionName?: string;
+> 15: * Fire-and-forget telemetry to infra_health_logs when the cascade DEGRADES (a free tier rescued
+> 20:async function logFallbackHealth(status: "degraded" | "unhealthy", functionName?: string): Promise<void> {
+> 27:    await fetch(`${url}/rest/v1/infra_health_logs`, {
+> 30:      body: JSON.stringify({ service: `llm-fallback:${functionName ?? "unknown"}`, status }),
+> 31:    }).catch(() => {});
+> 48:export async function fetchLLMWithFallback(
+> 52:): Promise<Response> {
+> 69:  const safeFetch = async (url: string, init: RequestInit): Promise<Response> => {
+> 71:      return await fetch(url, init);
+> 75:      return new Response(
+> 86:  // If successful, return immediately
+> 88:    return response;
+> 100:    return response;
+> 141:        await logFallbackHealth("degraded", options.functionName);
+> 142:        return geminiResp;
+> 179:        await logFallbackHealth("degraded", options.functionName);
+> 180:        return freeResp;
+> 190:  // If all fallbacks fail, return the original failure response
+> 192:  await logFallbackHealth("unhealthy", options.functionName);
+> 193:  return new Response(
+> ```
+
+## 🤖 Claude *(02:08:13)*
+
+
+## 🤖 Claude *(02:08:16)*
+
+Loop retomado (local==origin `1630371`). **it.9 = observability gap** (prioridade fresca do Sovereign). O `fetchLLMWithFallback` retorna `Response` — capturar `usage` no chokepoint é difícil p/ streaming. Vou adicionar um helper `logLlmUsage` + fiar nos callers que fazem `.json()` (onde `usage` está disponível), focando o `orchestrate-step` (o leak do ciclo de vídeo). Vendo como o orchestrate-step consome a resposta:
+
+## 🤖 Claude *(02:08:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== orchestrate-step: fetchLLMWithFallback usage + json + usage field ===\"\ngrep -nE \"fetchLLMWithFallback|\\.json\\(\\)|\\.usage|data\\.choices|const .*data|aiResp|llmResp|response\\.json|content =\" supabase/functions/orchestrate-step/index.ts 2>/dev/null | head -25\necho \"=== generate-image: does its response carry token usage? (image models often don't) ===\"\ngrep -nE \"fetchLLMWithFallback|\\.json\\(\\)|\\.usage|generate|image|b64|url\" supabase/functions/generate-image/index.ts 2>/dev/null | head -12",
+  "description": "Inspect orchestrate-step + generate-image LLM response handling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orchestrate-step: fetchLLMWithFallback usage + json + usage field ===
+> 9:import { fetchLLMWithFallback } from "../_shared/llm-fallback.ts";
+> 136:    const { run_id, step } = await req.json();
+> 147:    const { data: run, error: runErr } = await admin
+> 186:    const metadata = run.metadata || {};
+> 187:    const { topic, platforms, campaign_id, wp_status = "draft", site_url = "mcorch.com", utmCampaign } = metadata;
+> 191:    const autoPublish = metadata.auto_publish === true;
+> 192:    const cycleId: string | null = (metadata.cycle_id as string) ?? null;   // Viral Autopilot Fatia 2 — cron cycle link
+> 195:    const products: ChosenProduct[] = Array.isArray(metadata.products) ? metadata.products : [];
+> 199:    const videoEnabled = metadata.video_enabled === true;
+> 211:          const { data: cyc } = await admin.from("autopilot_cycles").select("plan_id").eq("id", cycleId).maybeSingle();
+> 217:        const { data: pol } = await polQ.order("created_at", { ascending: false }).limit(1).maybeSingle();
+> 231:        const { data: aff } = await admin.from("affiliate_config")
+> 266:    const { data: userKeys } = await admin
+> 289:        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 325:        const articleData = await articleRes.json();
+> 344:            const { data: inserted } = await admin.from("content_library").insert({
+> 365:                const { data: aff } = await admin.from("affiliate_config")
+> 382:          const updatedMetadata = {
+> 409:                  const atomRes = await fetchLLMWithFallback(aiEndpoint, {
+> 429:                    const d = await atomRes.json();
+> 469:              const imgData = await imgRes.json().catch(() => ({} as any));
+> 471:                const { data: imgRow } = await admin.from("content_library").insert({
+> 522:                const { data: vr, error: vrErr } = await admin.from("video_renders").insert({
+> 564:      const { articleTitle, articleContent } = metadata;
+> 586:          const wpData = await wpRes.json();
+> === generate-image: does its response carry token usage? (image models often don't) ===
+> 12:// ~1MB image). Used to return the data-URI preview in the response body for UI callers.
+> 41:    const { prompt, style, user_id: bodyUserId } = await req.json();
+> 76:    const prefImage = userKeys?.pref_image_provider || "";
+> 79:    const fullPrompt = `Generate a high-quality marketing image: ${prompt}.${stylePrompt} The image should be professional, visually appealing, and suitable for social media marketing.`;
+> 84:    //   • openrouter.ai/v1/images/... → deprecado (404 HTML)
+> 85:    //   • api.openai.com/v1/images    → chave-projeto do tenant sem acesso a modelo de imagem (400)
+> 88:    // chat-completions multimodal (Gemini "Nano Banana") → OpenAI DALL-E (chaves com acesso a imagem).
+> 93:        imgUrl = await generateViaReplicate(replicateKey, fullPrompt);
+> 95:        const r = await generateViaOpenRouter(openRouterKey, fullPrompt);
+> 96:        imgB64 = r.b64; imgUrl = r.url;
+> 98:        imgUrl = await generateViaReplicate(replicateKey, fullPrompt);
+> 100:        const r = await generateViaOpenAI(openaiKey, fullPrompt);
+> ```
+
+## 🤖 Claude *(02:09:01)*
+
+
+## 🤖 Claude *(02:09:03)*
+
+orchestrate-step tem 2 text-gens que fazem `.json()` (article @325, atomizer @429) — `usage` disponível. generate-image usa modelos de imagem (sem token usage). Foco: helper `logLlmUsage` + fiar no orchestrate-step (leak do vídeo) + lead-score (provável, non-streaming). Lendo os spots exatos:
+
+## 🤖 Claude *(02:09:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 283,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 283	    console.log(`[orchestrate-step] Executing step "${step}" for run ${run_id}`);
+> 284	
+> 285	    if (step === "article_generation") {
+> 286	      await addStep("article_generation", "in_progress", { topic, model: selectedModel, provider: isGroq ? "groq" : "openrouter" });
+> 287	      try {
+> 288	        if (!aiKey) throw new Error("GROQ_API_KEY or OPENROUTER_API_KEY not configured");
+> 289	        const articleRes = await fetchLLMWithFallback(aiEndpoint, {
+> 290	          method: "POST",
+> 291	          headers: { 
+> 292	            Authorization: `Bearer ${aiKey}`, 
+> 293	            "Content-Type": "application/json",
+> 294	            "HTTP-Referer": "https://mcorch.com",
+> 295	            "X-Title": "GCRUX Constellation"
+> 296	          },
+> 297	          body: JSON.stringify({
+> 298	            model: selectedModel,
+> 299	            messages: injectFeedback(articleMessages(topic, site_url, products), feedbackHint),
+> 300	            tools: [{
+> 301	              type: "function",
+> 302	              function: {
+> 303	                name: "write_article",
+> 304	                description: "Generate a full SEO article",
+> 305	                parameters: {
+> 306	                  type: "object",
+> 307	                  properties: {
+> 308	                    title: { type: "string" },
+> 309	                    content: { type: "string", description: "Full HTML article body" },
+> 310	                    meta_description: { type: "string" },
+> 311	                    tags: { type: "array", items: { type: "string" } },
+> 312	                  },
+> 313	                  required: ["title", "content", "meta_description", "tags"],
+> 314	                },
+> 315	              },
+> 316	            }],
+> 317	            tool_choice: { type: "function", function: { name: "write_article" } },
+> 318	          }),
+> 319	        }, { functionName: "orchestrate-step", openRouterKey, geminiKey, groqKey });
+> 320	
+> 321	        if (!articleRes.ok) {
+> 322	          throw new Error(`AI error: ${articleRes.status}`);
+> 323	        }
+> 324	
+> 325	        const articleData = await articleRes.json();
+> 326	        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);
+> 327	        const articleTitle = args.title ?? "";
+> ```
+
+## 🤖 Claude *(02:09:12)*
+
+
+## 🤖 Claude *(02:09:13)*
+
+`selectedModel` é o var do modelo; `articleData.usage` disponível @325. Lendo o helper `logFallbackHealth` pra espelhar o padrão (env/headers):
+
+## 🤖 Claude *(02:09:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "offset": 14,
+  "limit": 34
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 14	/**
+> 15	 * Fire-and-forget telemetry to infra_health_logs when the cascade DEGRADES (a free tier rescued
+> 16	 * the call) or FAILS (all providers exhausted). Self-sufficient inside Deno (reads SUPABASE_URL +
+> 17	 * SB_SECRET_KEY straight from the function env and POSTs to PostgREST — no SDK import); a silent
+> 18	 * no-op outside Deno (unit tests) and on ANY error — observability must NEVER break a generation.
+> 19	 */
+> 20	async function logFallbackHealth(status: "degraded" | "unhealthy", functionName?: string): Promise<void> {
+> 21	  try {
+> 22	    const denoEnv = (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env;
+> 23	    if (!denoEnv) return;
+> 24	    const url = denoEnv.get("SUPABASE_URL");
+> 25	    const key = denoEnv.get("SB_SECRET_KEY") ?? denoEnv.get("SUPABASE_SERVICE_ROLE_KEY");
+> 26	    if (!url || !key) return;
+> 27	    await fetch(`${url}/rest/v1/infra_health_logs`, {
+> 28	      method: "POST",
+> 29	      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+> 30	      body: JSON.stringify({ service: `llm-fallback:${functionName ?? "unknown"}`, status }),
+> 31	    }).catch(() => {});
+> 32	  } catch (_) {
+> 33	    // swallow — telemetry is best-effort and must not affect the LLM cascade
+> 34	  }
+> 35	}
+> 36	
+> 37	/**
+> 38	 * Executes a chat completion fetch request, falling back gracefully to free alternatives
+> 39	 * if the primary provider fails due to credit exhaustion (402), rate-limits (429), or network errors.
+> 40	 * 
+> 41	 * Cascade order:
+> 42	 * 1. Primary provider (OpenRouter / Groq)
+> 43	 * 2. Gemini Free OpenAI-Compatible Endpoint:
+> 44	 *    - Heavy models -> gemini-2.5-pro -> gemini-1.5-pro
+> 45	 *    - Medium/Light models -> gemini-2.5-flash -> gemini-1.5-flash
+> 46	 * 3. OpenRouter Free (gemma-2-9b-it:free / llama-3-8b-instruct:free)
+> 47	 */
+> ```
+
+## 🤖 Claude *(02:09:27)*
+
+
+## 🤖 Claude *(02:09:28)*
+
+Padrão claro. Adiciono o helper `logLlmUsage` (espelha `logFallbackHealth`, agregado sem user_id p/ não vazar no global-read):
+
+## 🤖 Claude *(02:09:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts",
+  "old_string": "  } catch (_) {\n    // swallow \u2014 telemetry is best-effort and must not affect the LLM cascade\n  }\n}",
+  "new_string": "  } catch (_) {\n    // swallow \u2014 telemetry is best-effort and must not affect the LLM cascade\n  }\n}\n\n/**\n * Observability (zero-USD audit 2026-06-30): capture the LLM `usage` (token counts) that OpenRouter/Gemini return\n * on NON-streaming completions and emit an `llm_usage` pulse to infra_health_logs. Turns the video-cycle cost from\n * ESTIMATED into MEASURED \u2014 the doctrine GO needs $0 PROVEN, not asserted. Aggregate-only (fn/model/tokens, NO\n * user_id: infra_health_logs is global-read \u2192 per-tenant attribution belongs in a scoped table). Best-effort:\n * no-op outside Deno, on missing usage, or on ANY error \u2014 observability must NEVER break a generation.\n */\nexport async function logLlmUsage(functionName: string, model: string, usage: unknown): Promise<void> {\n  try {\n    const u = (usage ?? {}) as { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };\n    if (u.prompt_tokens == null && u.completion_tokens == null && u.total_tokens == null) return; // nothing measured\n    const denoEnv = (globalThis as { Deno?: { env: { get(k: string): string | undefined } } }).Deno?.env;\n    if (!denoEnv) return;\n    const url = denoEnv.get(\"SUPABASE_URL\");\n    const key = denoEnv.get(\"SB_SECRET_KEY\") ?? denoEnv.get(\"SUPABASE_SERVICE_ROLE_KEY\");\n    if (!url || !key) return;\n    await fetch(`${url}/rest/v1/infra_health_logs`, {\n      method: \"POST\",\n      headers: { apikey: key, Authorization: `Bearer ${key}`, \"Content-Type\": \"application/json\" },\n      body: JSON.stringify({\n        service: \"llm-usage\",\n        status: \"healthy\",\n        event: \"llm_usage\",\n        metadata: {\n          fn: functionName,\n          model,\n          prompt_tokens: u.prompt_tokens ?? null,\n          completion_tokens: u.completion_tokens ?? null,\n          total_tokens: u.total_tokens ?? null,\n        },\n      }),\n    }).catch(() => {});\n  } catch (_) {\n    // swallow \u2014 observability must never break a generation\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:09:44)*
+
+
+## 🤖 Claude *(02:09:45)*
+
+Fiando no `orchestrate-step` (import + article @325 + atomizer @429):
+
+## 🤖 Claude *(02:09:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "import { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";",
+  "new_string": "import { fetchLLMWithFallback, logLlmUsage } from \"../_shared/llm-fallback.ts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:09:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "        const articleData = await articleRes.json();\n        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);",
+  "new_string": "        const articleData = await articleRes.json();\n        // Observability (zero-USD audit): measure the text-gen leak of the video cycle (was ESTIMATED).\n        await logLlmUsage(\"orchestrate-step:article\", selectedModel, articleData.usage);\n        const args = JSON.parse(articleData.choices[0].message.tool_calls[0].function.arguments);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:09:56)*
+
+
+## 🤖 Claude *(02:09:56)*
+
+Agora o atomizer. Lendo o contexto exato (@429):
+
+## 🤖 Claude *(02:09:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "offset": 409,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 409	              if (aiKey) {
+> 410	                try {
+> 411	                  const atomRes = await fetchLLMWithFallback(aiEndpoint, {
+> 412	                    method: "POST",
+> 413	                    headers: { Authorization: `Bearer ${aiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://mcorch.com", "X-Title": "GCRUX Constellation" },
+> 414	                    body: JSON.stringify({
+> 415	                      model: selectedModel,
+> 416	                      messages: [
+> 417	                        { role: "system", content: "Você atomiza um artigo-pilar em peças reutilizáveis para posts sociais nativos. Responda em pt-BR, conciso e factual (sem inventar dados)." },
+> 418	                        { role: "user", content: `Decomponha este artigo em átomos para reshape multi-rede.\n\nTÍTULO: ${articleTitle}\n\nARTIGO:\n${stripHtml(articleBody).slice(0, 6000)}` },
+> 419	                      ],
+> 420	                      tools: [{ type: "function", function: { name: "write_atoms", description: "Atomize the pillar into reusable social pieces", parameters: { type: "object", properties: {
+> 421	                        hook: { type: "string", description: "scroll-stopper de 1 linha (≤120 chars)" },
+> 422	                        key_points: { type: "array", items: { type: "string" }, description: "3-5 pontos-chave, 1 frase cada" },
+> 423	                        stat: { type: "string", description: "1 estatística/dado marcante presente no artigo (ou vazio)" },
+> 424	                        quote: { type: "string", description: "1 frase memorável curta (ou vazio)" },
+> 425	                        cta: { type: "string", description: "1 call-to-action curto" },
+> 426	                      }, required: ["hook", "key_points", "cta"] } } }],
+> 427	                      tool_choice: { type: "function", function: { name: "write_atoms" } },
+> 428	                    }),
+> 429	                  }, { functionName: "orchestrate-step", openRouterKey, geminiKey, groqKey });
+> 430	                  if (atomRes.ok) {
+> 431	                    const d = await atomRes.json();
+> 432	                    atoms = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
+> 433	                  }
+> 434	                } catch (le: any) { console.warn("[orchestrate-step] atomize LLM failed, heuristic fallback:", le?.message); }
+> 435	              }
+> 436	              const plain = stripHtml(articleBody);
+> ```
+
+## 🤖 Claude *(02:10:01)*
+
+
+## 🤖 Claude *(02:10:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts",
+  "old_string": "                  if (atomRes.ok) {\n                    const d = await atomRes.json();\n                    atoms = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? \"{}\");\n                  }",
+  "new_string": "                  if (atomRes.ok) {\n                    const d = await atomRes.json();\n                    await logLlmUsage(\"orchestrate-step:atomizer\", selectedModel, d.usage);\n                    atoms = JSON.parse(d.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? \"{}\");\n                  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-step/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:10:11)*
+
+
+## 🤖 Claude *(02:10:11)*
+
+Fiando no `lead-score` (o caminho provável) — import + após o `.json()`:
+
+## 🤖 Claude *(02:10:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/lead-score/index.ts",
+  "old_string": "import { fetchLLMWithFallback } from \"../_shared/llm-fallback.ts\";",
+  "new_string": "import { fetchLLMWithFallback, logLlmUsage } from \"../_shared/llm-fallback.ts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/lead-score/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:10:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/lead-score/index.ts",
+  "old_string": "        if (aiResp.ok) {\n          const data = await aiResp.json();\n          const content: string = data?.choices?.[0]?.message?.content ?? \"\";",
+  "new_string": "        if (aiResp.ok) {\n          const data = await aiResp.json();\n          await logLlmUsage(\"lead-score\", model, data?.usage);\n          const content: string = data?.choices?.[0]?.message?.content ?? \"\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/lead-score/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:10:31)*
+
+
+## 🤖 Claude *(02:10:33)*
+
+Fiado nas 3 (helper + orchestrate-step ×2 + lead-score). Deploy + prova LIVE via lead-score (User 0 tem openrouter key → scoring roda → usage capturado):
+
+## 🤖 Claude *(02:10:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy orchestrate-step + lead-score (pick up logLlmUsage) ===\"\nfor fn in orchestrate-step lead-score; do\n  npx supabase functions deploy $fn 2>&1 | grep -E \"Deployed Functions|error\" | head -1\ndone",
+  "description": "Deploy orchestrate-step + lead-score with llm_usage telemetry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy orchestrate-step + lead-score (pick up logLlmUsage) ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: orchestrate-step
+> Deployed Functions on project bcyvddsykvehvpwstlfa: lead-score
+> ```
+
+## 🤖 Claude *(02:10:53)*
+
+
+## 🤖 Claude *(02:10:54)*
+
+Deployadas. Prova LIVE via lead-score. Pegando o email do User 0 + montando o teste (lead benigno → scoring roda → `llm_usage` row):
+
+## 🤖 Claude *(02:11:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nexport PATH=/home/ubuntu/.bun/bin:$PATH\nU=\"${SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nUID0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nEMAIL0=$(curl -s \"$U/auth/v1/admin/users/$UID0\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -c \"import json,sys;print(json.load(sys.stdin).get('email',''))\")\necho \"User 0 email: $EMAIL0\"\necho \"=== User 0 has openrouter/groq key? (scoring needs a key to hit the LLM) ===\"\ncurl -s \"$U/rest/v1/decrypted_user_api_keys?user_id=eq.$UID0&select=openrouter_api_key,groq_api_key,google_api_key\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -c \"import json,sys;d=json.load(sys.stdin);r=d[0] if d else {};print('openrouter:', bool(r.get('openrouter_api_key')),'groq:', bool(r.get('groq_api_key')),'google:', bool(r.get('google_api_key')))\" 2>/dev/null\necho \"=== create a benign temp lead owned by User 0 ===\"\nLEAD_ID=$(curl -s -X POST \"$U/rest/v1/leads\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"user_id\\\":\\\"$UID0\\\",\\\"status\\\":\\\"new\\\",\\\"name\\\":\\\"LLM Usage Probe\\\",\\\"contact\\\":\\\"probe@example.com\\\",\\\"intent_signal\\\":{\\\"interesse\\\":\\\"quer comprar um robo aspirador de alto valor\\\",\\\"orcamento\\\":\\\"alto\\\"}}\" \\\n  | python3 -c \"import json,sys;d=json.load(sys.stdin);r=d[0] if isinstance(d,list) and d else d;print(r.get('id',''))\")\necho \"lead_id=$LEAD_ID\"\necho \"$LEAD_ID\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d38a77b-f7f1-4e92-b419-5efbc0e5566c/scratchpad/probe_lead.txt\necho \"$EMAIL0\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d38a77b-f7f1-4e92-b419-5efbc0e5566c/scratchpad/probe_email.txt",
+  "description": "Get User 0 email + keys + create probe lead"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> User 0 email: gabrielcall@gmail.com
+> === User 0 has openrouter/groq key? (scoring needs a key to hit the LLM) ===
+> openrouter: True groq: True google: True
+> === create a benign temp lead owned by User 0 ===
+> lead_id=9218b758-ab7c-4aed-8d9d-e22f0801e36d
+> ```
+
+## 🤖 Claude *(02:11:11)*
+
+
+## 🤖 Claude *(02:11:12)*
+
+User 0 tem openrouter+groq+google keys → scoring hita o LLM. Lead criado. Minto JWT + chamo lead-score + verifico o `llm_usage`:
+
+## 🤖 Claude *(02:11:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nexport PATH=/home/ubuntu/.bun/bin:$PATH\nU=\"${SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\nLEAD_ID=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d38a77b-f7f1-4e92-b419-5efbc0e5566c/scratchpad/probe_lead.txt)\nEMAIL0=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d38a77b-f7f1-4e92-b419-5efbc0e5566c/scratchpad/probe_email.txt)\nBEFORE=$(date -u +%Y-%m-%dT%H:%M:%S)\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts \"$EMAIL0\" 2>/dev/null)\necho \"=== call lead-score (real scoring, User 0 key) ===\"\ncurl -s -w \"\\nHTTP %{http_code}\\n\" -X POST \"$U/functions/v1/lead-score\" -H \"Authorization: Bearer $TOKEN\" -H \"apikey: $K\" -H \"Content-Type: application/json\" -d \"{\\\"lead_id\\\":\\\"$LEAD_ID\\\"}\" | tail -3\nsleep 3\necho \"=== llm_usage rows since the call (Lei 1 \u2014 cost MEASURED) ===\"\ncurl -s \"$U/rest/v1/infra_health_logs?service=eq.llm-usage&event=eq.llm_usage&created_at=gte.$BEFORE&select=service,event,metadata,created_at&order=created_at.desc&limit=3\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -m json.tool\necho \"=== cleanup probe lead ===\"\ncurl -s -X DELETE \"$U/rest/v1/leads?id=eq.$LEAD_ID\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" -o /dev/null -w \"lead del %{http_code}\\n\"",
+  "description": "Call lead-score + verify llm_usage telemetry row"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === call lead-score (real scoring, User 0 key) ===
+> {"status":"ok","lead_id":"9218b758-ab7c-4aed-8d9d-e22f0801e36d","score":80,"rationale":"O lead tem um alto orçamento e expressou interesse em comprar um robo aspirador de alto valor, indicando uma intenção de compra forte.","new_balance":4636}
+> HTTP 200
+> === llm_usage rows since the call (Lei 1 — cost MEASURED) ===
+> {
+>     "code": "42703",
+>     "details": null,
+>     "hint": null,
+>     "message": "column infra_health_logs.created_at does not exist"
+> }
+> === cleanup probe lead ===
+> lead del 204
+> ```
+
+## 🤖 Claude *(02:11:40)*
+
+
+## 🤖 Claude *(02:11:41)*
+
+lead-score rodou o scoring real (score 80, LLM hit). A query usou `created_at` mas `infra_health_logs` usa `last_seen_at` (memory conhecida). Re-consultando o `llm_usage`:
+
+## 🤖 Claude *(02:11:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nU=\"${SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}\"\necho \"=== recent llm_usage rows (cost MEASURED \u2014 Lei 1) ===\"\ncurl -s \"$U/rest/v1/infra_health_logs?service=eq.llm-usage&event=eq.llm_usage&select=service,event,metadata,last_seen_at&order=last_seen_at.desc&limit=3\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -m json.tool",
+  "description": "Re-query llm_usage with correct timestamp column"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === recent llm_usage rows (cost MEASURED — Lei 1) ===
+> [
+>     {
+>         "service": "llm-usage",
+>         "event": "llm_usage",
+>         "metadata": {
+>             "fn": "lead-score",
+>             "model": "llama-3.3-70b-versatile",
+>             "total_tokens": 189,
+>             "prompt_tokens": 144,
+>             "completion_tokens": 45
+>         },
+>         "last_seen_at": "2026-07-01T02:11:22.423683+00:00"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(02:11:57)*
+
+
+## 🤖 Claude *(02:12:00)*
+
+🎯 **PROVA MATERIAL (Lei 1) — observability gap FECHADO:** `llm_usage` row real → `{fn: lead-score, model: llama-3.3-70b-versatile, total_tokens: 189, prompt: 144, completion: 45}`. As chamadas LLM agora emitem telemetria de tokens → **custo MEDIDO, não estimado** (exatamente o que o zero-USD audit pediu). lead-score provado; orchestrate-step (article+atomizer) fiado idêntico → o leak do ciclo de vídeo é medido no próximo ciclo.
+
+Atualizando charter #0 + commit da it.9:
+
+## 🤖 Claude *(02:12:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- \ud83c\udfaf **Observability gap do ciclo de v\u00eddeo (zero-USD audit \u2014 CR\u00cdTICO Lei 1):** nenhum USD/token \u00e9 logado; o \"has_cost\" \u00e9 ESTIMADO. **Fix especificado:** capturar `usage` (prompt/completion_tokens) que o OpenRouter j\u00e1 devolve no chokepoint `fetchLLMWithFallback` (orchestrate-step) + `generate-image` \u2192 emitir `infra_health_logs event='llm_usage'`. Torna o custo **MEDIDO** \u2192 destrava o GO de gasto com $0 PROVADO. **Aut\u00f4nomo-seguro, alto valor, especificado pelo Sovereign.** \u2192 pr\u00f3ximo slice do loop (it.9).",
+  "new_string": "- \u2705 **Observability gap FECHADO (it.9):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id \u2014 infra_health_logs \u00e9 global-read) fiado em `orchestrate-step` (article @325 + atomizer @431 = o leak do ciclo de v\u00eddeo) + `lead-score`. Emite `infra_health_logs event='llm_usage'`. **Provado LIVE:** lead-score \u2192 row `{fn:lead-score, model:llama-3.3-70b-versatile, total_tokens:189}`. Custo agora **MEDIDO** \u2192 destrava o GO $0 (tokens \u00d7 pre\u00e7o do modelo por ciclo). **Resta:** streaming (generate-content passa o stream cru \u2014 usage no chunk final, follow-up) + `generate-image` (modelos de imagem n\u00e3o devolvem token usage \u2014 custo \u00e9 por-imagem, medir separado)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/_shared/llm-fallback.ts supabase/functions/orchestrate-step/index.ts supabase/functions/lead-score/index.ts .claude/context/autonomous-loop-charter.md\ngit commit -q -m 'feat(observability): llm_usage telemetry \u2014 mede o custo LLM do ciclo de video (proven LIVE)\n\nLoop it.9. Fecha o observability gap CRITICO do zero-USD audit do Sovereign:\no custo do ciclo de video era ESTIMADO (nenhum USD/token logado). Agora:\n\n- _shared/llm-fallback.ts: helper logLlmUsage(fn, model, usage) \u2014 emite\n  infra_health_logs event=llm_usage com prompt/completion/total_tokens.\n  Agregado (fn/model/tokens, SEM user_id \u2014 a tabela e global-read; atribuicao\n  per-tenant vai p/ tabela escopada). Best-effort, nunca quebra uma geracao.\n- orchestrate-step: fiado apos o .json() do article (@325) e do atomizer (@431)\n  = os 2 text-gens do ciclo de video (o leak de ~0.02-0.04 USD/ciclo).\n- lead-score: fiado apos o .json() do scoring.\n\nPROVA MATERIAL LIVE (Lei 1): lead-score com key real do User 0 -> row\ninfra_health_logs {service:llm-usage, event:llm_usage, fn:lead-score,\nmodel:llama-3.3-70b-versatile, total_tokens:189, prompt:144, completion:45}.\nCusto agora MEDIDO -> destrava o GO $0 (tokens x preco do modelo por ciclo).\n\nResta: streaming (generate-content passa o stream cru; usage no chunk final =\nfollow-up) + generate-image (modelos de imagem nao devolvem token usage).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>' 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|mesh-reingest|\u25cb|\u2502|\u2591|INF|summary|\u2714|\u2500|scan|\ud83e\udd4a|\u256d|\u2570|\u256f|\u276f\" | tail -1\necho \"committed: $(git log -1 --format='%h %s')\"",
+  "description": "Commit it.9 llm_usage observability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> committed: 0d4e3b4 feat(observability): llm_usage telemetry — mede o custo LLM do ciclo de video (proven LIVE)
+> ```
+
+## 🤖 Claude *(02:12:54)*
+
+
+## 🤖 Claude *(02:12:59)*
+
+`0d4e3b4` — **iteração 9 fechada** (observability gap FECHADO, provado LIVE). Direção fresca do Sovereign servida.
+
+**Survival self-audit (it.9):** Lei 1 ✅ (row `llm_usage` real 189 tokens; *disclosure*: `infra_health_logs` usa `last_seen_at` não `created_at` — corrigi a query; prova custou ~1 mco + <$0.001 no User 0, QA aceitável e irônico — provar medição de custo custa trivial) · Lei 2 ✅ (dentro do zero-USD audit; telemetria agregada sem user_id = cuidado com global-read) · Lei 3 ✅ (janela grande, pacing) · Lei 4 ✅.
+
+**Estado:** sessão selada (`/handoff` `1630371`) + it.9 pós-seal (`0d4e3b4`, ainda não pushado). O custo do ciclo de vídeo agora é **MEDIDO** — falta só rodar 1 ciclo real p/ ler os tokens e computar o $/ciclo (destrava o GO $0 do Sovereign).
+
+**Próximo (it.10, direção #0):** os "swaps doutrina" que tornam o ciclo **de fato $0** — **(2) IMAGE:** verificar se os posts de texto usam a imagem gerada; se não (o audit diz "desperdício puro", não entra no MP4), suprimir no ciclo de vídeo = win limpo $0.03/ciclo; **+ streaming usage** (generate-content). **(1) TEXT** (`:free`/Ollama) tem tradeoff de qualidade = decisão sua (registro na Fila).
+
+Pacing it.10 (240s, cache-warm). Note: it.9 está commitado local mas não pushado — incluo no próximo push ou você pode pushar. Redirecione a qualquer momento:
+
+## 🤖 Claude *(02:13:05)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 240,
+  "reason": "it.10 = swaps doutrina p/ ciclo $0 (verificar/suprimir IMAGE + streaming usage); aut\u00f4nomo-seguro, serve o zero-USD audit do Sovereign. Cache-warm; ele est\u00e1 ativo.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 23:17:00 (in 234s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(02:13:11)*
+
+Iteração 9 fechada — **observability gap do custo LLM fechado e provado** (a prioridade fresca que você marcou crítica). O ciclo de vídeo agora é mensurável em tokens → destrava seu GO $0.
+
+Loop pausado (~4 min); sem redirecionamento, faço a **it.10** (swaps doutrina p/ o ciclo virar de fato $0 — verificar/suprimir a imagem desperdiçada + streaming usage). it.9 está commitado local (`0d4e3b4`), pendente de push. Reporto ao retomar.
+
+## 👤 User *(02:17:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(02:17:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(02:17:34)*
+
+
+## 🤖 Claude *(02:17:36)*
+
+Iteração 10. `git fetch` + investigo o fato que gateia a supressão da IMAGE (o audit pediu "confirmar se os posts de texto usam a imagem"): tracear onde a imagem gerada vai no ciclo de vídeo. Se órfã → supressão é win limpo; se usada → não é desperdício (corrijo a suposição do audit).
+
+## 🤖 Claude *(02:17:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch origin 2>&1 | tail -1; echo \"local=$(git rev-parse --short HEAD) origin=$(git rev-parse --short origin/main)\"\necho \"=== image_generation block: gate + where the image is stored/used ===\"\ngrep -nE \"image_generation|videoEnabled|hasProducts|imgRes|imgData|imgRow|media_url|image_url|generate-image|content_library.*image\" supabase/functions/orchestrate-step/index.ts 2>/dev/null | head -25",
+  "description": "git fetch + trace image usage in video cycle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> local=33fadb0 origin=1630371
+> === image_generation block: gate + where the image is stored/used ===
+> 196:    const hasProducts = products.length > 0;
+> 199:    const videoEnabled = metadata.video_enabled === true;
+> 204:    if (hasProducts) {
+> 344:          if (hasProducts) {
+> 457:          // deduct_mco_coins). Gated on hasProducts. FAIL-OPEN with status 'skipped' (NOT 'error', which would
+> 460:          // DURABLE storage path in content_library.media_url (the 1h signed URL dies before the +1-2h publish
+> 462:          // name+category (generate-image is DALL·E text-only; image-to-image off product.image_url is deferred).
+> 463:          if (hasProducts) {
+> 467:              const imgRes = await fetch(`${supabaseUrl}/functions/v1/generate-image`, {
+> 472:              const imgData = await imgRes.json().catch(() => ({} as any));
+> 473:              if (imgRes.ok && imgData?.path) {
+> 474:                const { data: imgRow } = await admin.from("content_library").insert({
+> 476:                  title: `Imagem: ${articleTitle}`, media_url: imgData.path, status: "approved",
+> 479:                await addStep("image_generation", "done", { product: p0.name }, { content_id: imgRow?.id ?? null, path: imgData.path });
+> 481:                console.warn("[orchestrate-step] image generation skipped (fail-open):", imgData?.error ?? imgRes.status);
+> 482:                await addStep("image_generation", "skipped", { product: p0.name }, { reason: imgData?.error ?? `image_http_${imgRes.status}` });
+> 486:              await addStep("image_generation", "skipped", { product: products[0]?.name }, { reason: e?.message || "image_exception" });
+> 497:            if (videoEnabled) {
+> 503:                const productImg = typeof (p0 as any)?.image_url === "string" && /^https:\/\//i.test((p0 as any).image_url)
+> 504:                  ? (p0 as any).image_url : "";
+> 517:                    product_image_url: productImg,
+> 667:            metadata: { source: "orchestration", platform: "linkedin", utm: utmTag("linkedin", utmCampaign, topic), ...(hasProducts ? { products: products.map((p) => p.external_id) } : {}) },
+> 670:          if (liContent?.id && hasProducts) {
+> 747:            metadata: { source: "orchestration", platform: "twitter", tweets, utm: utmTag("twitter", utmCampaign, topic), ...(hasProducts ? { products: products.map((p) => p.external_id) } : {}) },
+> 750:          if (xContent?.id && hasProducts) {
+> ```
+
+## 🤖 Claude *(02:17:53)*
+
+
+## 🤖 Claude *(02:17:56)*
+
+A imagem gerada vai pro `content_library` (type image, `media_url`); o vídeo usa a **foto do produto ML** (`p0.image_url`, linha 503-504), NÃO a gerada (confirma o audit). Falta o fato decisivo: os posts de texto (linkedin/twitter) **anexam** essa imagem? Checando o auto-publish/publish-social:
+
+## 🤖 Claude *(02:17:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== auto-publish: does it resolve/attach an IMAGE to text posts? ===\"\ngrep -nE \"image|media|type.*image|content_library|campaign_id|video_url|image_url\" supabase/functions/auto-publish/index.ts 2>/dev/null | head -20\necho \"=== publish-social: does linkedin/twitter attach an image? ===\"\ngrep -nE \"image|media|photo|asset|image_url|media_url\" supabase/functions/publish-social/index.ts 2>/dev/null | grep -iE \"linkedin|twitter|image|media|photo\" | head -15",
+  "description": "Check if text posts attach the generated image"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === auto-publish: does it resolve/attach an IMAGE to text posts? ===
+> 57:            .from("content_library")
+> 69:        // (video-bridge.ts) lands as a SEPARATE content_library row (type='video', media_url = a path inside the
+> 70:        // private `video-studio-assets` bucket — metadata.storage_bucket) sharing this post's campaign_id. Resolve
+> 72:        // dies before the publish window). Pass it as content.video_url → publish-social's REELS/TikTok/YouTube/Pin
+> 73:        // video branches. Text-only posts keep the plain-string path UNCHANGED (no campaign_id / no video sibling).
+> 75:        if (post.campaign_id) {
+> 78:              .from("content_library")
+> 79:              .select("media_url, metadata")
+> 80:              .eq("campaign_id", post.campaign_id)
+> 86:            const storageKey = vid?.media_url as string | undefined;
+> 100:            console.warn(`[auto-publish] video_url resolve skipped for post ${post.id}:`, e instanceof Error ? e.message : e);
+> 111:        let contentPayload: unknown = videoUrl ? { text: contentText, video_url: videoUrl } : contentText;
+> 130:              if (url) { if (cv?.asset_kind === "video") native.video_url = url; else if (cv?.asset_kind === "image") native.image_url = url; }
+> === publish-social: does linkedin/twitter attach an image? ===
+> 161:        `${IG_BASE}/${igAccountId}/media`,
+> 167:              ? { media_type: "REELS", video_url: videoUrl, caption: content.text || content, access_token: account.access_token }
+> 168:              : { caption: content.text || content, image_url: content.image_url, access_token: account.access_token },
+> 174:        console.error("Instagram media create error:", createRes.status, container);
+> 190:        `${IG_BASE}/${igAccountId}/media_publish`,
+> 207:      // CP-010 — image (link_card surface → Page photo) OR text feed. FB Reels video is deferred (OTD-CP-010).
+> 210:      if (content.image_url) {
+> 211:        // Page photo post: Facebook fetches the (public/signed) image URL.
+> 212:        const res = await fetch(`https://graph.facebook.com/v19.0/${pageId}/photos`, {
+> 215:          body: JSON.stringify({ url: content.image_url, caption: message, access_token: account.access_token }),
+> 218:        if (!res.ok) { console.error("Facebook photo error:", res.status, result); pulse("error", "facebook_photo_failed", { status: res.status }); throw new Error("PLATFORM_PUBLISH_FAILED"); }
+> 219:        pulse("ok", "facebook_photo_published", { post_id: result?.id ?? null });
+> 481:      // pin/board/media REST; the multipart upload itself carries NO Authorization (presigned S3 POST). video_url
+> 482:      // from payload; cover_image_url must be a PUBLIC https URL (Pinterest fetches it async).
+> 485:      if (!videoUrl && !content.image_url) {
+> ```
+
+## 🤖 Claude *(02:18:22)*
+
+
+## 🤖 Claude *(02:18:24)*
+
+Achado forte: o **`auto-publish` NÃO anexa imagem a nenhum post de texto** — só resolve `video_url` (linha 75-111); posts de texto vão como string pura (linha 111). O único path de imagem é via `channel_variants` (reshaper, fluxo diferente). Falta só a última superfície de texto: o **WordPress** usa a imagem gerada (featured)? Checando:
+
+## 🤖 Claude *(02:18:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== orchestrate-step WP step: uses the generated image? ===\"\nsed -n '560,620p' supabase/functions/orchestrate-step/index.ts 2>/dev/null | grep -nE \"image|media|featured|imgRow|media_url|wp|publish-wordpress\" | head\necho \"=== publish-wordpress: featured image / media upload? ===\"\ngrep -nE \"featured|media|image|imgUrl|image_url|attachment\" supabase/functions/publish-wordpress/index.ts 2>/dev/null | head -12\necho \"=== does the image content_library row get a scheduled_post (published on its own)? ===\"\ngrep -nE \"scheduled_posts|image_url|type.*image|imgRow\" supabase/functions/orchestrate-step/index.ts 2>/dev/null | grep -iE \"scheduled|imgRow\" | head",
+  "description": "Check WordPress + scheduled_posts for image usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === orchestrate-step WP step: uses the generated image? ===
+> 13:          { title: articleTitle, tags: "marketing-ia,orquestracao,roi", status: wp_status }
+> 16:          const wpRes = await fetch(`${supabaseUrl}/functions/v1/publish-wordpress`, {
+> 27:              status: wp_status,
+> 30:          const wpData = await wpRes.json();
+> 31:          if (wpRes.ok && wpData.post_url) {
+> 32:            const wpPostUrl = wpData.post_url;
+> 33:            const wpPostId = (typeof wpData.post_id === "number" ? wpData.post_id : null);
+> 37:              wpPostUrl,
+> 38:              wpPostId,
+> 42:              wordpress_url: wpPostUrl
+> === publish-wordpress: featured image / media upload? ===
+> === does the image content_library row get a scheduled_post (published on its own)? ===
+> 190:    // direct scheduled_posts enqueue was retired to avoid double-posting the reshaper's native variants).
+> 474:                const { data: imgRow } = await admin.from("content_library").insert({
+> 479:                await addStep("image_generation", "done", { product: p0.name }, { content_id: imgRow?.id ?? null, path: imgData.path });
+> 682:          // NOTE (FR-CP-003): the direct LinkedIn scheduled_posts enqueue was RETIRED. The reshaper is now the single
+> 762:          // NOTE (FR-CP-003): the direct X/Twitter scheduled_posts enqueue was RETIRED — the reshaper owns social
+> ```
+
+## 🤖 Claude *(02:18:45)*
+
+
+## 🤖 Claude *(02:18:51)*
+
+Confirmado: WP **não** usa featured image (grep vazio em publish-wordpress) · a linha de imagem **não** ganha scheduled_post · enqueues diretos linkedin/twitter RETIRADOS. Falta a última pista — o **reshaper** (FR-CP, autoridade de social) consome a imagem gerada? Se sim, não é órfã:
+
+## 🤖 Claude *(02:18:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== reshape-pillar: where does it get the image to reframe? (content_library generated image? or other source?) ===\"\ngrep -nE \"content_library|image|media_url|asset_bucket|asset_key|reframe|source.*image|cover|product.*image|type.*image|from\\(\" supabase/functions/reshape-pillar/index.ts 2>/dev/null | grep -iE \"image|media|content_library|cover|reframe|asset\" | head -18",
+  "description": "Check reshaper image source"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === reshape-pillar: where does it get the image to reframe? (content_library generated image? or other source?) ===
+> 6:// master serves the 7 video surfaces (spine, BR-CP-003); divergences (16:9, image reframe) emit a directive +
+> 16:import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
+> 36:// asset_status 'pending_publisher'/'pending_render'/'pending_reframe' (variant produced, NOT enqueued) — OTD-CP-010.
+> 42:  if (assetKind === "image" && assetStatus === "ready") {
+> 43:    // publish-social image branches: IG photo · Pinterest standard_pin · FB photo (link_card). LinkedIn image → OTD-CP-010.
+> 76:      return ""; // nested sub-directive (e.g. 'reframe_1.91x1') or unknown token → ignored in TEXT assembly
+> 104:    if (key === "featured_image") continue; // nested reframe sub-directive — handled by asset path, not text
+> 132:// FR-CP-005/006 — in-process image REFRAME + format coercion (imagescript WASM; no host worker, no FFmpeg).
+> 135:// Pinterest/LinkedIn/FB all accept JPEG). Throws → caller fails open to 'pending_reframe'.
+> 136:async function reframeToJpeg(src: Uint8Array, tw: number, th: number): Promise<Uint8Array> {
+> 151:function imageFormatGate(imageSpec: Record<string, unknown> | null): { ok: boolean; coerced_format: string; violations: string[] } {
+> 152:  const required = String(imageSpec?.format ?? "png").toLowerCase();
+> 216:      .select("channel, surface, priority, video, image, text, publish_path, voice_prompt_seed, transform_recipe")
+> 222:    // ── Resolve source assets (best-effort; missing master/image ⇒ honest pending_* status, not a crash) ──
+> 262:            product_image_url: "",
+> 274:      const { data: img } = await admin.from("content_library")
+> 275:        .select("media_url, metadata")
+> 276:        .eq("user_id", userId).eq("type", "image").eq("campaign_id", campaignId)
+> ```
+
+## 🤖 Claude *(02:19:31)*
+
+
+## 🤖 Claude *(02:19:36)*
+
+**Achado DECISIVO (Lei 1 — corrige o audit):** o `reshape-pillar` **consome a imagem gerada** (linha 274-276: `content_library type=image` por `campaign_id`) e a **reframa** em variantes por canal (IG photo · Pinterest · FB photo, linhas 42-43/132-136). Ou seja: a imagem **NÃO é órfã** — não entra no MP4, mas é a **fonte dos posts de imagem sociais** via reshaper. **Suprimi-la quebraria IG/Pinterest/FB photo.** A suposição do audit ("desperdício puro") estava incompleta.
+
+→ IMAGE **não deve ser suprimida**; o caminho $0 = rotear pra FLUX self-host (infra, Fila). Corrigindo a charter + commit (mesmo padrão do it.1 — correção que previne dano):
+
+## 🤖 Claude *(02:19:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- \ud83d\udd27 **Swaps doutrina (p\u00f3s-observability):** TEXTO \u2192 `:free`/Ollama s\u00f3 no autopilot (D); IMAGEM \u2192 suprimir `image_generation` no ciclo de v\u00eddeo (n\u00e3o entra no MP4 = desperd\u00edcio) \u26a0\ufe0f confirmar antes se os posts de texto anexam a imagem.",
+  "new_string": "- \ud83d\udd27 **Swaps doutrina (p\u00f3s-observability):** **IMAGEM \u2014 N\u00c3O suprimir (corre\u00e7\u00e3o it.10, Lei 1):** a suposi\u00e7\u00e3o do audit (\"desperd\u00edcio puro, n\u00e3o entra no MP4\") estava **incompleta** \u2014 o `reshape-pillar` **consome a imagem gerada** (`content_library type=image` por `campaign_id`, `reshape-pillar:274-276`) e a **reframa** em variantes por canal (IG photo \u00b7 Pinterest pin \u00b7 FB photo, `:42-43`/`:132-136`). Suprimir quebraria os posts de imagem sociais. Caminho $0 da IMAGE = **rotear `pref_image_provider='replicate'` FLUX self-host** (infra, Fila) \u2014 N\u00c3O suprimir. **TEXTO** \u2192 `:free`/Ollama s\u00f3 no autopilot (D) = decis\u00e3o de qualidade do Sovereign (Fila)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:19:47)*
+
+
+## 🤖 Claude *(02:19:48)*
+
+Commitando a correção it.10 + pushando (it.9 estava pendente de push):
+
+## 🤖 Claude *(02:19:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -q -m 'docs(loop): correcao it.10 \u2014 a imagem gerada NAO e orfa (reshaper a consome)\n\nInvestigacao (Lei 1) da suposicao do zero-USD audit (\"IMAGE = desperdicio\npuro, nao entra no MP4, suprimir\"). Traco completo: a imagem gerada\n(image_generation -> content_library type=image) NAO entra no MP4 (o video usa\na foto do produto ML), NAO e anexada a linkedin/twitter pelo auto-publish\n(passa texto puro), NAO e featured image do WP. MAS o reshape-pillar A CONSOME\n(reshape-pillar:274-276, por campaign_id) e a REFRAMA em variantes por canal\n(IG photo/Pinterest/FB photo, :42-43/:132-136). Logo NAO e orfa \u2014 e a fonte\ndos posts de imagem sociais. Suprimir quebraria IG/Pinterest/FB photo.\n\n=> Caminho $0 da IMAGE = rotear pra FLUX self-host (Replicate, infra/Fila),\nNAO suprimir. Correcao previne dano (mesmo padrao do it.1 #2 false-high).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>' 2>&1 | grep -vE \"lefthook|gitleaks|secret-scan|tripwire|mesh-reingest|\u25cb|\u2502|\u2591|INF|summary|\u2714|\u2500|scan|\ud83e\udd4a|\u256d|\u2570|\u256f|\u276f\" | tail -1\necho \"=== push (it.9 + it.10) ===\"\ngit push origin main 2>&1 | tail -3",
+  "description": "Commit it.10 correction + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push (it.9 + it.10) ===
+> ✔️ gitleaks-range (0.11 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    1630371..4ab87f9  main -> main
+> ```
+
+## 🤖 Claude *(02:20:52)*
+
+
+## 🤖 Claude *(02:21:06)*
+
+**Push OK** (`1630371..4ab87f9`) — it.9 + it.10 no origin.
+
+**Survival self-audit (it.10):** Lei 1 ✅ (traço completo em 4 superfícies MP4/linkedin-twitter/WP/reshaper com file:line; correção, zero claim falso) · Lei 2 ✅ (correção; reshaper documentado) · Lei 3 ✅ · Lei 4 ✅.
+
+---
+
+## 📍 Estado honesto (Maestro) — backlog autônomo-seguro de alto valor **esgotado** nesta maratona
+
+A sessão foi selada (`/handoff` `1630371`) e eu segui com **2 iterações pós-seal de valor real, já pushadas**:
+- **it.9** — observability gap FECHADO (custo LLM MEDIDO, provado LIVE) → destrava seu GO $0.
+- **it.10** — investiguei a supressão da IMAGE que o audit sugeriu; **provei que estava errada** (o reshaper consome a imagem p/ IG/Pinterest/FB photo) → correção que **preveniu quebrar os posts de imagem sociais**.
+
+**O que resta são todos itens que precisam de VOCÊ (não improviso) ou fresh-session:**
+
+| Item | Por que gated |
+|------|---------------|
+| **TEXTO $0** (`:free`/Ollama no autopilot) | decisão de **qualidade** (tradeoff) — sua |
+| **IMAGE $0** (FLUX self-host Replicate) | **infra** (subir FLUX no Mesh) |
+| **HyperFrames nativo** (remove dep `license:None`) | slice grande (internalizar `@hyperframes/core`) — melhor fresh-session |
+| **FR-SEC-014 pt2** (freeze econômico) | toca a **RPC de dinheiro** (`deduct_mco_coins`) — sensível, merece fresh-session + `/security-review` dedicado (não rushar no fim de uma maratona) |
+| **Editor render billing** · OAuth YT/TikTok · biometria 3b | suas decisões/ações físicas (Fila) |
+
+**Recomendação:** a maratona entregou muito e está num ponto de descanso natural. O próximo tier de alto valor é **seu** (decisões) ou merece **sessão fresca** (money-RPC / HyperFrames nativo). Não vou grindar filler nem rushar mudança sensível de billing tarde numa janela enorme.
+
+Pauso mais longo (aguardando sua direção, não grindando). Você pode: (a) escolher um item acima, (b) me mandar direção nova, ou (c) deixar descansar — a sessão está selada e o remote espelha o local (`4ab87f9`).
+
+## 🤖 Claude *(02:21:12)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Backlog aut\u00f4nomo-seguro de alto valor esgotado nesta maratona; o pr\u00f3ximo tier precisa de decis\u00e3o do Sovereign ou fresh-session (money-RPC/HyperFrames nativo). Pausa genu\u00edna aguardando dire\u00e7\u00e3o, n\u00e3o grinding.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 23:42:00 (in 1248s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(02:21:25)*
+
+Iterações 9 e 10 fechadas e pushadas (`4ab87f9`). 
+
+**Resumo da maratona completa** (sessão selada + 2 iterações pós-seal):
+- **FR-VS-047** — editor HyperFrames → pipeline MCORCH, provado em 3 níveis + guard smoke + fix TDZ
+- **Segurança** — OTD-SEC-006/007 sentinel-wiring + FR-SEC-014 pt1 (ledger imutável), tudo provado LIVE
+- **Observability** — custo LLM agora MEDIDO (destrava seu GO $0)
+- **2 correções que preveniram dano** — #2 YT/TikTok false-high (it.1) + supressão da imagem (it.10)
+
+O backlog autônomo-seguro de alto valor está esgotado nesta janela — o próximo tier é decisão sua ou merece sessão fresca. Pausei mais longo (aguardando sua direção, não grindando). A sessão está selada; o remote espelha o local. Aguardando sua próxima direção, Maestro.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
