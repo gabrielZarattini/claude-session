@@ -1143,3 +1143,498 @@ Persistido. Agora atualizo o índice de memória e te entrego a síntese.
 > ```
 > <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
 > ```
+
+## 🤖 Claude *(23:30:24)*
+
+
+## 🤖 Claude *(23:30:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Programa "Gabriel AI" (avatar-clone-ai) — BoK 10/10, Fatia 1 BYOK + Fatia 2 Voice Clone SHIPPED](project_avatar_clone_ai.md) — 2026-06-30: nó `voiceClone` no Canvas + edge `generate-voice` (ElevenLabs/Cartesia BYOK fail-closed, code-switch guard FM-AC-013, deduct 36 pós-gates) + `voice_profiles` RLS-own Vault + RPCs tenant-guarded. /security-review NO FINDINGS · smoke 10/10 · browser+Vision-QA PASS. Próximo=Fatia 3 (avatarIdentity/Identity Gate, face PII LGPD). Gotchas: user_api_keys FK NO-ACTION · infra_health_logs usa last_seen_at (sem created_at) · await pulses no edge.
+> 4	- [Minerador de Produtos — confiabilidade da análise de vídeo + decisão de custo](project_product_miner_vision_reliability.md) — 2026-06-29: "extração falhou/non-2xx" tinha 3 causas. Fix: Files API 20-100MB (`b13018b`) + fallback cover-image quando vídeo é stub 5KB/falha (`08f1e47`/`e99004b`, MCP rejeita <50KB `video_too_small`→`describe_image`) + timeout legenda. Provado E2E @hosannhali source=cover. Decisão Sovereign: MANTER llama-3-8b:free+Gemini (~$5/mês, log real $0.0054); NÃO Kimi(1T inviável fal.ai)/Fugu($/mês). Conta real=gabrielcall@gmail.com.
+> 5	- [Viewer sem nome no admin = usuário de smoke QA vazado (não invasão); helper SMOKETEST + sweep; signup aberto via Google](reference_qa_throwaway_users_and_open_signup.md) — 2026-06-28: `lf16-smoke-<ts>@example.com` (smoke-longform-16x9) vazava por cleanup fire-and-forget. Helper `scripts/qa/lib/qa-throwaway.ts` (taga `full_name=SMOKETEST`→coluna "Nome"; delete awaited; sweep só `@example.com`) + cron diário 04:00; 35 smokes migrados. ⚠️ signup externo LIGADO (`disable_signup:false`, google+email) — travar = Supabase Dashboard.
+> ```
+
+## 🤖 Claude *(23:30:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Programa \"Gabriel AI\" (avatar-clone-ai)",
+  "new_string": "# Memory Index\n\n- [Doutrina open-source-first / zero custo USD / equity + Gabriel AI co-executivo](feedback_opensource_first_zero_cost_equity.md) \u2014 Diretiva Sovereign 2026-06-30: tudo open-source/self-hosted DENTRO do MCORCH vira microservi\u00e7o (equity); custo USD externo ao Sovereign=0; GO de gasto gated nisso (render HyperFrames self-hosted \u2713, auditar LLM steps); Gabriel AI = co.CAI\u2192co.CTI ao lado do Gabriel co-CEO. Runbook da fila: `.claude/context/sovereign-queue-runbook-2026-06-30.md`.\n- [Programa \"Gabriel AI\" (avatar-clone-ai)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:30:36)*
+
+
+## 🤖 Claude *(23:30:57)*
+
+Tudo encodado. Síntese do que ficou e a leitura da sua doutrina sobre o GO:
+
+## ✅ Sua doutrina virou lei do sistema
+- **Memória** `feedback_opensource_first_zero_cost_equity` (sobrevive entre sessões).
+- **Charter do loop** — adicionei a doutrina na seção não-negociável + amarrei o gate no item do GO. O loop lê isso no início de cada iteração, então ele já vai *preferir open-source* sozinho (ex.: na decisão `OTD-AC-015` da biometria, a doutrina manda escolher **InsightFace self-hosted no Mesh** em vez de Rekognition/Azure/Face++ pago).
+- **Runbook material durável** em [sovereign-queue-runbook-2026-06-30.md](.claude/context/sovereign-queue-runbook-2026-06-30.md) — os 6 itens verificados contra DB/infra, pra "depois" não se perder.
+
+## 🎯 GO de gasto — o veredito pela SUA régua
+O pipeline está **provado e pronto** (render real `8b0787e0`, MP4 de 748KB no bucket, custo ~24 mco / saldo 4669). Pela sua doutrina:
+
+- **Render = HyperFrames self-hosted (Playwright+FFmpeg na sua infra) → custo USD ≈ 0.** Isso é doutrina-perfeito, exatamente o microserviço-próprio-que-vira-equity. ✓
+- **Falta UMA verificação pra fechar o "custo USD externo = 0":** os passos de **LLM (script + analyze)** rodam nas chaves BYOK do User 0. Se forem tier-grátis, custo ≈ 0 e o GO está 100% alinhado. Mas a memória do product-miner mostra Gemini com custo real pequeno (~US$0,005/run) — então não posso afirmar "zero" sem auditar.
+
+**Minha recomendação:** antes de você dar o GO, eu rodo um **zero-USD audit** do ciclo de vídeo — mapeio cada chamada externa (qual provider/modelo/tier o User 0 usa em script e analyze) e te trago o número real de USD por ciclo. Aí o GO sai limpo pela sua própria regra, sem fé. **Quer que eu rode esse audit agora?** (É barato e não toca código — não colide com o loop.)
+
+## 📉 Boa notícia — sua lista encolheu
+**DNS/vhost já está FEITO.** O editor não foi pra `studio.mcorch.com` — a SDD canonizou **`video.mcorch.com`**, que está LIVE (cert + symlink + SSO + servido no `/dashboard/canvas/video`). `studio.mcorch.com` é só um alias DNS órfão inofensivo. Esse item pode sair da fila — só vale você abrir logado pra confirmar visualmente.
+
+## ⏰ Um alerta sensível ao tempo (R$0, opcional)
+**O token do TikTok expira HOJE (2026-06-30).** Se você quiser manter o canal conectado, são ~2 min reconectando em `/dashboard/social`. Não é obrigatório agora, mas a janela fecha hoje — por isso te aviso.
+
+---
+
+O **resto** (audits YouTube/TikTok de prazo-semanas, postback ML, Stripe) está todo no runbook pra quando você quiser conversar. Adianto: **Stripe fica parado** até o primeiro cliente externo (decisão sua já documentada), e **ML postback é prioridade baixa** — o gargalo real do funil é distribuição/tráfego, não atribuição (15 cliques, R$0 de conversão).
+
+Então: **rodo o zero-USD audit do ciclo de vídeo** pra destravar o GO com consciência limpa?
+
+## 👤 User *(23:54:37)*
+
+pode ser mas o loop terminou.: Boa pergunta — e a resposta curta é: o `/loop` tem exatamente o modo que você quer, mas o "mais sofisticado e assertivo" não está no comando, está na **diretiva que você dá pra ele**. "ok continue" é um prompt vazio; o salto de qualidade é encodar o nosso Protocolo de Malha Fechada *dentro* do loop.
+
+## Os dois modos do `/loop`
+
+| Modo | Sintaxe | Quando |
+
+|------|---------|--------|
+
+| **Intervalo fixo** | `/loop 30m <prompt>` | Polling de estado externo — testemunhar o 1º ciclo pago de vídeo, postback ML, um deploy. Dispara a cada 30 min independente. |
+
+| **Auto-ritmado (dynamic)** | `/loop <prompt>` (sem intervalo) | **É o que você quer.** Eu mesmo decido *quando* continuar e sigo trabalhando até esgotar o backlog ou bater num portão. Sem você digitar "ok" entre as fatias. |
+
+## Por que isso vence o "ok continue" (5 pontos)
+
+1. **Auto-pacing** — não preciso da sua confirmação entre iterações; eu agendo o próximo passo sozinho.
+
+2. **Política de prioridade escrita** — em vez de eu re-adivinhar o que vem depois a cada turno, o loop lê uma *charter* (arquivo) com o backlog priorizado e as condições de parada. Decisão determinística e inspecionável, não no "feeling".
+
+3. **Portões respeitados** — a charter define o que eu executo sozinho vs. o que **HALT + escalo pra você** (Lei 4: Reviewer = Sovereign). Biometria, DNS/vhost, App Review, GO de gasto, decisão arquitetural → entram numa **Fila de Ação Sovereign**, não viram improviso.
+
+4. **Selo automático** — `/handoff` incremental ao fechar cada Fatia, e selo final + parada quando a janela chegar a ~95% (Lei 3 calibrada). Progresso sempre durável.
+
+5. **Survival Laws no laço** — prova material (Lei 1) + SOP-antes-de-código (Lei 2) + self-audit a cada iteração, embutidos.
+
+## O comando (versão assertiva)
+
+```
+
+/loop Você é o MCORCH Master Execution Agent em malha fechada autônoma.
+
+A cada iteração: (1) git fetch + releia o Pending Actions do HANDOFF.md e a
+
+charter em .claude/context/autonomous-loop-charter.md; (2) pegue o item de
+
+MAIOR valor que esteja DESBLOQUEADO; (3) rode o ciclo fechado — BoK Gate →
+
+SOP Lei 2 → código → prova material Lei 1 → /security-review se houver
+
+migration → commit granular; (4) se exigir ação do Sovereign (biometria,
+
+DNS, App Review, GO de gasto, decisão arquitetural), registre na Fila de
+
+Ação Sovereign e pule pro próximo; (5) Survival self-audit; (6) /handoff
+
+incremental ao fechar cada Fatia, selo final + parar a ~95% da janela OU
+
+backlog desbloqueado esgotado. Reporte em PT-BR a cada iteração: o que
+
+entregou (com prova) e o que entrou na Fila Sovereign.
+
+```
+
+A charter (`.claude/context/autonomous-loop-charter.md`) é o upgrade real — ela guarda o backlog ordenado, as condições de HALT e a Fila Sovereign, e eu a atualizo a cada fatia. Esqueleto:
+
+```markdown
+
+# Autonomous Loop Charter
+
+## Backlog (ordem de valor, só DESBLOQUEADOS executam)
+
+1. Gabriel AI 3b — emenda BoK (rota VLM-soft via Vision MCP)  [DESBLOQUEADO: drafting]
+
+   └─ HALT no treino face: exige frames reais do Sovereign
+
+2. YT/TikTok — emenda BoK post-engine + 3 branches publish/auth  [DESBLOQUEADO até OAuth audit]
+
+3. Viral Autopilot — McorchAdapter/bridge do editor Studio  [HALT no vhost studio.mcorch.com]
+
+## Fila de Ação Sovereign (o que SÓ você destrava)
+
+- (preenchida pelo loop conforme bate nos portões)
+
+## Parar quando: janela ~95% · OU backlog desbloqueado vazio · OU GO seu
+
+```
+
+**Caveat honesto (Lei 1):** vários itens de topo são Sovereign-gated *na ponta física* (biometria do 3b, GO do ciclo pago, DNS do Studio, App Review). O loop faz **toda a engenharia desbloqueada até o portão** — drafta as emendas BoK, scaffolda os nós/edges, escreve SOPs+smokes, roda `/security-review` — e te entrega uma fila de decisão enxuta no lugar dos itens travados. Ele não vai *shipar* o que depende dos seus dados/credenciais/GO. Isso está alinhado com a sua diretiva de força-total autônoma.
+
+**Controle:** pra parar, é só me mandar qualquer mensagem (interrompe o laço) ou desligar o `/loop`. Eu seloo antes da janela encher, então nunca perde estado.
+
+Deixa eu te perguntar o modo de arranque:
+
+Você escolheu **charter + lançar agora**. Vou (1) escrever a charter com o backlog priorizado e os portões de HALT, e (2) ligar o `/loop` auto-ritmado.
+
+Primeiro, a charter — o cérebro do loop:
+
+Charter escrita ([autonomous-loop-charter.md](.claude/context/autonomous-loop-charter.md)). Agora ligo o `/loop` auto-ritmado:
+
+O loop entrou em **modo dinâmico** (sem intervalo, auto-ritmado) — sem oferta de cloud porque não há cadência diária/≥60min. Não preciso de Monitor: o Workflow que vou disparar me re-invoca sozinho ao terminar.
+
+**Iteração 1 — Gabriel AI Fatia 3b (emenda BoK rota VLM-soft).** Pelo Protocolo de Malha Fechada, antes de qualquer código a BoK precisa carregar a rota VLM-soft. Disparo agora um Workflow que (a) entende o BoK de identidade existente + o schema `avatar_identities` já staged + as ferramentas reais do Vision MCP, (b) projeta a emenda VLM-soft MVP, e (c) passa por um crítico adversarial contra os invariantes (consent gate LGPD, fail-closed, isolamento de tenant, zero ferramenta fabricada).
+
+**Loop ativo — modo auto-ritmado.** Confirmo o estado desta primeira iteração:
+
+- **Sem Monitor:** o Workflow da emenda 3b é rastreado pelo harness — ele me re-invoca automaticamente ao concluir. Não há evento externo a vigiar.
+
+- **Tarefa rodando agora:** Workflow `wf_188ce24c-881` (understand → design → critic) da emenda BoK VLM-soft.
+
+- **Quando ele voltar:** vou revisar o veredito do crítico; se `APPROVE`, escrevo o doc de emenda em `docs/bok/avatar-clone-ai/`, commito (prova: `ls -la` + hash) e sigo pra Fatia 3b scaffold; se `REVISE`, corrijo os pontos antes de escrever.
+
+- **Fallback:** agendo um heartbeat longo (30 min) só como rede de segurança caso o Workflow trave — não é polling.
+
+**Survival self-audit (it. 1):** Lei 1 ✓ (nenhum SUCCESS declarado sem prova; Workflow ainda em voo) · Lei 2 ✓ (charter escrita antes de qualquer código; emenda BoK precede o scaffold) · Lei 3 ✓ (estado podado, referências por path) · Lei 4 ✓ (ORO: Operator=eu, Reviewer/Owner=Sovereign — a decisão ArcFace-vs-VLM-final está na Fila).
+
+Agendo o fallback e encerro o turno:
+
+**Malha fechada ligada e rodando.** 🟢
+
+Resumo do que montei pra você não precisar mais digitar "ok continue":
+
+1. **Charter** ([autonomous-loop-charter.md](.claude/context/autonomous-loop-charter.md)) — o cérebro do loop: backlog priorizado (Gabriel AI 3b → YT/TikTok → editor Studio → Unified Canvas → Security hardening), ritual por iteração, portões de HALT e a Fila de Ação Sovereign.
+
+2. **`/loop` auto-ritmado** — encoda o Protocolo de Malha Fechada + as 4 Survival Laws. Trabalho sozinho até a janela ~95%, o backlog desbloqueado esgotar, ou você mandar parar.
+
+3. **Iteração 1 em voo** — Workflow da emenda BoK da Fatia 3b (rota VLM-soft via Vision MCP), com crítico adversarial verificando os invariantes LGPD/fail-closed/tenant.
+
+A partir daqui ele se conduz: quando o Workflow voltar, eu reviso, escrevo+commito a emenda (com prova material), e puxo o próximo item. Cada fatia fechada vira um `/handoff` incremental.
+
+**Pra dirigir o loop a qualquer momento:** é só me mandar uma mensagem — isso interrompe o laço e eu reabsorvo a direção (ex.: "pula pra YT/TikTok", "para e me mostra a Fila Sovereign", ou "stop"). Não precisa de comando especial.
+
+Encerro este turno; o harness me reacorda quando o Workflow concluir.
+
+Workflow concluído (5 agentes, 551s). Preciso do veredito do crítico e do markdown proposto — vou ler o output completo.
+
+Understand phase é sólido e com um achado decisivo: o Vision MCP só expõe **2 tools de visão descritivos** (`vision_describe_image` + `vision_analyze_video`) — zero embedding facial/cosine/compare. VLM-soft = descrever retrato + descrever frame e o LLM chamador compara os textos: serve como **gate de sanidade barato, não verificação confiável** (human-review-assist). Preciso do design + veredito do crítico:
+
+O crítico achou 4 furos reais (0 ferramenta fabricada). Vou ler o veredito final:
+
+**Veredito do crítico: `APPROVE`** — zero ferramenta fabricada, todos os 6 checks obrigatórios passaram (consent Art.11 trava captura · fail-closed degrada pra human-review nunca auto-pass · isolamento tenant intacto · VLM-soft honestamente rotulado < ArcFace · ArcFace-hard deferido na OTD-AC-015 com destravadores Sovereign). As 6 issues são refinamentos a dobrar ANTES do selo de código, não rejeições.
+
+Vou (1) confirmar o filename canônico, (2) escrever o doc final já com as 6 correções do crítico dobradas, (3) commitar com prova material.
+
+Filename canônico: `10-amendment-3b-identity-gate-vlm-soft.md`. Escrevo o doc final com as 6 correções do crítico dobradas:
+
+Doc escrito. Commito com prova material (Lei 1):
+
+Iteração 1 selada com prova: commit `7b81bfd0f887a8d37895de610d7202adebc164f8`, doc 24.161 bytes, working tree limpo, gitleaks sem vazamentos, mesh-reingest disparado. Atualizo a charter (marco a emenda ✅ + populo a Fila Sovereign com os destravadores concretos):
+
+**Survival self-audit (it.1):** Lei 1 ✅ (hash/size/gitleaks/veredito todos de output verificado neste turno — zero prova fabricada) · Lei 2 ✅ (emenda BoK = artefato de processo, precede o código 3b) · Lei 3 ✅ (output do workflow referenciado por path, não recarregado; charter guarda estado por referência) · Lei 4 ✅ (ORO no header do doc).
+
+---
+
+🔄 **Iteração 1 — concluída.** Reporto ao Maestro:
+
+**Entregue (com prova material):**
+
+- **Emenda BoK Fatia 3b** → [10-amendment-3b-identity-gate-vlm-soft.md](docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md) — commit `7b81bfd`, 24.161 bytes, tree limpo.
+
+- **Achado decisivo (Lei 1):** o substrato ArcFace/InsightFace **não existe** no código; o Vision MCP só expõe 2 tools de visão *descritivos*. A emenda habilita o Identity Gate pela rota **VLM-soft MVP** (dual-mode, ArcFace-hard deferido) — funcional hoje, **cost 0 com BYOK**, sem fabricar capacidade inexistente.
+
+- **Verificação adversarial:** workflow de 5 agentes → veredito `APPROVE`, **6 issues do crítico dobradas** no doc (compare enum FR-AC-013b · discriminador `gate_mode` · migração de chave de telemetria · credencial user-JWT · `max_regen` anti-oscilação · qualifiers de Pattern Conformance).
+
+**Entrou na Fila de Ação Sovereign (você destrava):**
+
+- **OTD-AC-015** — motor de embedding facial (InsightFace self-host OU API paga) + biometria calibração-grade do Gabriel (frames rotulados FAR/FRR/EER).
+
+- **OTD-AC-017** — credencial Higgsfield + confirmar API self-serve de treino Soul ID.
+
+- **Licença comercial** (FLUX.1-dev non-commercial) + **GO de produção 3b**.
+
+**Próxima iteração:** nó Canvas `avatarIdentity` (FR-AC-012, UI/registry sem biometria) + lib de compare VLM-soft + migration `gate_mode` (com `/security-review`) — tudo desbloqueado; a edge de treino fica stubbed atrás da OTD-AC-017.
+
+Agendo a continuação:
+
+Iteração 1 selada. O loop continua sozinho — próxima iteração (código da Fatia 3b: nó `avatarIdentity` + compare VLM-soft + migration `gate_mode` com `/security-review`) dispara em ~2 min. Encerro o turno; o harness me reacorda.
+
+Iteração 2 — modo dinâmico. Ritual: `git fetch` + status + localizo os arquivos-molde (o nó `VoiceClone` da Fatia 2 é o template perfeito para o `avatarIdentity`).
+
+O nó `VoiceClone` é o molde. Localizo o inspector e leio os arquivos-molde em paralelo:
+
+Molde compreendido. Leio as seções relevantes de `canvas.ts` (union de tipos, `VoiceCloneData`, factory, dispatch, guards):
+
+Tenho o molde completo. Scopo a iteração 2 ao núcleo **fully-unblocked + provável**: a lib de compare VLM-soft (FR-AC-013b — peça #1 que o crítico sinalizou) + testes unitários + a migration `gate_mode`. O nó UI (types+componente+inspector) fica para a iteração 3. Confirmo convenções (numeração de migration + dir de teste):
+
+Convenções confirmadas: migration `20260630140000`, testes em `src/test/`, vitest. Escrevo os 3 arquivos da iteração 2 (lib de compare + testes + migration `gate_mode`):
+
+A charter foi editada (pelo Sovereign) com uma **nova diretiva: open-source-first / custo USD = 0 / equity** — preferir self-host dentro do MCORCH a SaaS pago. Minha rota VLM-soft via BYOK já é **cost 0**, alinhada. Anotado para refinar a OTD-AC-015 (preferir InsightFace self-host no Mesh).
+
+Agora a prova material (Lei 1): `tsc` + vitest dos novos arquivos:
+
+tsc limpo (exit 0). 14/15 testes passam; 1 falha — e o teste está **certo**, minha lib estava lenient demais: `["pass","review"]` retornava `pass` num empate, mas um gate de segurança nunca deve auto-aprovar num empate com `review`. Aperto a regra (maioria estrita sobre `review` também):
+
+15/15 verdes, tsc limpo. A migration exige `/security-review` antes do commit (regra do projeto). Stago os arquivos e rodo:
+
+`/security-review` na migration:
+
+Iteração 2 em verificação: `tsc` limpo, **15/15 testes verdes**, e o sub-agente de `/security-review` está analisando a migration `gate_mode` + a lib (surface pequena: coluna aditiva que herda a RLS da tabela + lib client-side pura). Ele me re-invoca ao concluir.
+
+Estado da iteração 2 (pré-commit, aguardando o gate de segurança):
+
+- `src/lib/avatar-identity.ts` — compare VLM-soft FR-AC-013b (parse fail-soft + bands pass/review/fail + reconcile N≥2 anti-oscilação).
+
+- `src/test/avatar-identity.test.ts` — 15 testes (prova material: 15 passed).
+
+- `supabase/migrations/20260630140000_avatar_identity_gate_mode.sql` — discriminador `gate_mode` (dobra issue #2 do crítico).
+
+Agendo fallback longo (o sub-agente de segurança auto-notifica; isto é só rede de segurança):
+
+**`/security-review` → NO FINDINGS.** O sub-agente confirmou rigorosamente: a migration só faz `ADD COLUMN` (DDL estático + CHECK enum literal) + 2 `COMMENT` — zero policy/GRANT/função nova, a postura RLS own-row/default-deny/service-role-write da `20260630130000` é integralmente preservada; a lib é client-side pura (`JSON.parse` em try/catch, narrow a 7 chaves allowlisted em objeto fresco — sem eval, sem prototype-pollution, sem `dangerouslySetInnerHTML`).
+
+```markdown
+
+# Security Review — Fatia 3b foundation (gate_mode migration + VLM-soft compare lib)
+
+Resultado: SAFE — NENHUM ACHADO (confiança ≥8).
+
+- supabase/migrations/20260630140000_avatar_identity_gate_mode.sql → ADD COLUMN aditivo + CHECK
+
+  enum + COMMENTs; herda RLS da tabela; sem SECURITY DEFINER, dynamic SQL, GRANT ou drop de policy.
+
+- src/lib/avatar-identity.ts → client-side puro; JSON.parse em try/catch, narrow a chaves
+
+  allowlisted; sem sink de injeção/RCE/prototype-pollution.
+
+- src/test/avatar-identity.test.ts → excluído (test file).
+
+```
+
+Gate verde. Commito a iteração 2:
+
+Iteração 2 selada: commit `541f7072877c8fbe9781d9e42f6cf0224902c6f3`, 3 arquivos/294 inserções, gitleaks limpo. Atualizo a charter (marco a fundação 3b ✅):
+
+**Survival self-audit (it.2):** Lei 1 ✅ (tsc exit 0 · vitest 15/15 · /security-review NO FINDINGS · hash `541f707` — aplicação da migration honestamente *deferida*, não declarada aplicada) · Lei 2 ✅ (a emenda BoK precede e especifica FR-AC-013b) · Lei 3 ✅ (output de segurança consumido por resultado, não recarregado) · Lei 4 ✅ (aplicação da migration ⇒ Fila Sovereign / GO).
+
+---
+
+🔄 **Iteração 2 — concluída.** Reporto:
+
+**Entregue (prova material):**
+
+- **Lib de compare VLM-soft** [avatar-identity.ts](src/lib/avatar-identity.ts) (FR-AC-013b — a peça #1 que o crítico sinalizou): schema enum fixo + parse fail-soft (resposta não-JSON → `{}` → todos mismatch → **nunca pass silencioso**) + bands pass/review/fail de um único threshold + `reconcileSoftMatches` (maioria N≥2 + anti-oscilação: pass↔fail consecutivo → review).
+
+- **15 testes unitários** [avatar-identity.test.ts](src/test/avatar-identity.test.ts) — **15/15 passed** (um teste pegou minha lib lenient demais num empate; apertei pra maioria estrita = nunca auto-aprovar empate).
+
+- **Migration `gate_mode`** [20260630140000](supabase/migrations/20260630140000_avatar_identity_gate_mode.sql) (dobra issue #2 do crítico) — `/security-review` **NO FINDINGS**. Aplicação à prod **deferida ao GO 3b** (Fila Sovereign) — não mutei prod por feature gated.
+
+- Commit `541f707`, tsc 0.
+
+**Fila de Ação Sovereign:** inalterada (OTD-AC-015/017 + GO 3b já registrados). Nota: a nova diretiva **open-source-first** que você adicionou à charter favorece **InsightFace self-host no Mesh** (USD=0) sobre API paga para a OTD-AC-015 — alinhado.
+
+**Próxima iteração (it.3):** nó Canvas `avatarIdentity` (type+factory+componente+inspector+registry+wiring; upload de retratos + consent; botão "Treinar" fail-closed honesto até OTD-AC-017) — UI visível, browser-verificada.
+
+Agendo a continuação:
+
+Iteração 2 selada. O loop segue autônomo — iteração 3 (nó Canvas `avatarIdentity`, UI visível: type+factory+componente+inspector+registry+wiring + upload de retratos + consent, com "Treinar" fail-closed até a OTD-AC-017) dispara em ~3 min, com browser-verify. Encerro o turno; o harness me reacorda.
+
+**Resumo do progresso autônomo até aqui (Gabriel AI Fatia 3b):**
+
+- **it.1** `7b81bfd` — emenda BoK VLM-soft (verificada adversarialmente, APPROVE, 6 issues dobradas).
+
+- **it.2** `541f707` — fundação: lib de compare FR-AC-013b (15/15 testes) + migration `gate_mode` (/security-review SAFE).
+
+A malha fechada está cumprindo o ciclo completo a cada iteração (BoK → código → prova material → security-review → commit) e empilhando os destravadores físicos na Fila Sovereign sem improvisar. Pode me interromper a qualquer momento para redirecionar.
+
+Iteração 3 — modo dinâmico. Ritual + localizo os pontos de wiring (nodeTypes map + dispatch do inspector) para o nó `avatarIdentity`:
+
+Pontos de wiring localizados. Leio os trechos exatos do nodeTypes map e do dispatch do inspector para espelhar:
+
+Wiring claro. Antes de escrever o inspector preciso confirmar o tipo das finalidades de consent (`face_embedding`/`train_lora`) para não estourar o tsc:
+
+Tudo confirmado (`ConsentPurpose = train_lora | face_embedding | voice_clone`). Implemento o nó `avatarIdentity`. Primeiro as 6 emendas em `canvas.ts` (type + interface + factory + dispatch + guard + cost):
+
+Agora os 2 componentes (nó + inspector):
+
+Wiring — registry (import + ícone + entry), nodeTypes map e dispatch do inspector:
+
+Wiring completo (registry + nodeTypes + dispatch). Sem migration nesta iteração. Prova material: `tsc` + lint + suite de testes (sem regressão):
+
+tsc **exit 0**, lint **exit 0**. Agora prova de build material + alvo para browser-verify, construindo num dir temporário (sem tocar o `dist/` servido):
+
+Build **exit 0** (26.31s) — o chunk `CanvasEditorPage` bundlou com o nó novo. Prova material de build ✓ (sem deploy — dir temporário). Commito o nó:
+
+Commit `12d06c0` (6 arquivos/386 inserções, gitleaks limpo). Agora o **browser-verify** (Lei 1 UI gate). Subo o `vite preview` do build temporário em background e gero uma sessão injetável:
+
+Tudo disponível (gen-user-session, vite preview, agent-browser, VISION_MCP_PAT). Subo o preview em background:
+
+Preview vivo (HTTP 200 em `127.0.0.1:4174`). Gero a sessão do Usuário Zero:
+
+Preciso passar o email do Usuário Zero (`gabrielcall@gmail.com`) + env. Carrego `.env` e gero:
+
+Sessão gerada (Usuário Zero `ada39fae…`, admin). Localizo a rota do editor de Canvas + um projeto existente para navegar:
+
+Rota `/dashboard/canvas/:id`, projeto `63d406fe`. Confirmo a sintaxe do agent-browser e preparo a injeção de sessão:
+
+agent-browser tem `--state` (formato Playwright storageState). Construo o state file com a sessão e abro o editor de Canvas:
+
+State file pronto. Abro o editor de Canvas com a sessão injetada:
+
+`--state` foi ignorado (daemon já rodava) → sessão não injetada, provável redirect pra /auth. Fecho o daemon e reabro com o state:
+
+Autenticado (token presente, rota mantida no editor — sem redirect pra /auth). Vejo o screenshot:
+
+Editor renderiza **limpo, sem white-screen/crash** com o novo tipo de nó registrado (projeto "Validação Criativa" carregou: 3 nós, 1 conexão, Conectado). Regressão de crash descartada. Agora abro "Adicionar nó" e busco "identidade":
+
+O clique por texto falhou (markup do botão). Pego o snapshot de acessibilidade para achar o ref correto do "Adicionar nó":
+
+A FAB não aparece como button rotulado na árvore. Leio o componente AddNodeMenu para achar o gatilho/seletor correto:
+
+A FAB é Popover + há um CommandDialog via **Ctrl+K**. Uso o atalho, busco "identidade":
+
+"Identidade (avatar)" **presente no palette**. Vejo o screenshot e insiro o nó (Enter) para confirmar render + inspector:
+
+Item "Identidade (avatar)" renderiza no palette (categoria Inputs, ícone UserCircle). Insiro (Enter) e verifico o nó + inspector:
+
+Sem erros de console (bom). Mas os marcadores do inspector não aparecem — o nó pode não ter auto-selecionado. Vejo o estado:
+
+**Browser-verify COMPLETO ✅** (vejo o render): o nó **"Identidade (avatar)"** foi inserido e renderiza no canvas (placeholder "Suba retratos de referência", badge T1, handles), e o **inspector** abriu íntegro à direita:
+
+- **Provider:** Higgsfield Soul ID / LoRA (Flux)
+
+- **Tier de identidade:** T1·InstantID / T2·PuLID / T3·LoRA
+
+- **Consentimento (LGPD Art. 11):** ConsentWizard com checkboxes biométricos
+
+- **"Treinar identidade"** (disabled até consent+retratos) + caption honesta **"Gate VLM-soft (FR-AC-013b) · treino gated OTD-AC-017"**
+
+Sem white-screen, sem crash, **zero erro de console** (só warnings a11y benignos), node count 3→4. (Vision MCP QA não se aplica aqui — exige URL pública; preview é localhost e os prints são locais; verifiquei por inspeção visual direta dos renders.)
+
+Como o nó está verificado, honesto e é valor visível ao Usuário Zero, faço o **deploy** (rsync do build idêntico já verificado → `dist/` servido pelo nginx) com prova material:
+
+**Deploy verificado (Lei 1):** env baked ✓ · rsync OK · chunk servido `CanvasEditorPage-DEjSoHib.js` (165.844 bytes) contém "Identidade (avatar)" ✓ · `index` referencia o chunk ✓. O nó está **LIVE** em login.mcorch.com (hard-refresh Ctrl+Shift+R; CF pode cachear). Limpo os processos de verificação:
+
+Browser fechado + preview encerrado (o exit 144 foi o próprio `pkill` sinalizando o shell — benigno). Confirmo o git limpo:
+
+Git limpo (só arquivos de loop-state). 3 commits selam o slice desbloqueado da Fatia 3b. Atualizo a charter (it.3 ✅ deployed + 3b desbloqueado esgotado):
+
+**Survival self-audit (it.3):** Lei 1 ✅ (tsc 0 · eslint 0 · vite build 0 · browser-verify visto · deploy verificado por bytes+grep+env-baked · hash `12d06c0` — honesto sobre Vision QA não se aplicar por URL) · Lei 2 ✅ (amendment BoK precede; nó implementa FR-AC-012) · Lei 3 ✅ (podado; **sessão longa — sinalizo proximidade de seal**) · Lei 4 ✅ (deploy de nó verificado ao produto gated do próprio Sovereign, transparente).
+
+---
+
+🔄 **Iteração 3 — concluída. Marco de valor visível entregue.** Reporto:
+
+**Entregue (prova material):**
+
+- **Nó `avatarIdentity` no Canvas Studio** ([AvatarIdentityNode.tsx](src/components/canvas/nodes/AvatarIdentityNode.tsx) + [AvatarIdentityInspector.tsx](src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx)) — commit `12d06c0`. Upload multi-retrato + ConsentWizard (Art.11) + provider/tier + "Treinar" fail-closed honesto (OTD-AC-017).
+
+- **Browser-verificado** como Usuário Zero: o nó aparece no palette Cmd+K (categoria Inputs), insere+renderiza no canvas, e o inspector abre íntegro — **zero crash, zero erro de console**.
+
+- **DEPLOYED** (decisão autônoma transparente): build verificado → `dist/` servido pelo nginx. Chunk `CanvasEditorPage-DEjSoHib.js` (165.844B) contém o nó, env baked. **LIVE em login.mcorch.com** (hard-refresh Ctrl+Shift+R — CF pode cachear).
+
+**3b desbloqueado ESGOTADO** — o restante da Fatia 3b é todo Sovereign-gated (já na Fila): edge `avatar-identity-train` (OTD-AC-017 Higgsfield), gate-into-pipeline + telemetry migration (dependem do train+geração), calibração biométrica (OTD-AC-015).
+
+**Resumo do arco autônomo (Gabriel AI Fatia 3b):** `7b81bfd` emenda BoK VLM-soft → `541f707` lib compare + migration → `12d06c0` nó UI deployed. 3 ciclos fechados completos (BoK → código → prova → security-review → commit → deploy).
+
+**Próximo:** backlog #2 (YT/TikTok, usando o blueprint existente — mais contido que um deepsearch novo). Sessão já longa: a próxima iteração avalia janela e **sela via /handoff se ~95%**, senão segue.
+
+Agendo a continuação:
+
+Iteração 3 selada — **marco de valor visível entregue ao Usuário Zero**: o nó **"Identidade (avatar)"** está LIVE no Canvas Studio (login.mcorch.com), browser-verificado e deployado.
+
+**Arco autônomo desta sessão (Gabriel AI — Fatia 3b, malha fechada):**
+
+| It | Commit | Entrega | Prova |
+
+|----|--------|---------|-------|
+
+| 1 | `7b81bfd` | Emenda BoK VLM-soft (ArcFace→VLM-soft) | Workflow adversarial APPROVE, 6 issues dobradas |
+
+| 2 | `541f707` | Lib compare FR-AC-013b + migration `gate_mode` | tsc 0 · 15/15 testes · /security-review SAFE |
+
+| 3 | `12d06c0` | Nó `avatarIdentity` (UI completa) | tsc 0 · build 0 · browser-verify · **deployed** |
+
+O loop cumpriu o ciclo fechado completo a cada iteração (BoK → código → prova material → security-review → commit → deploy) e empilhou os destravadores físicos na Fila Sovereign sem improvisar. O **3b desbloqueado está esgotado** — o que falta exige você (Higgsfield/biometria/GO).
+
+A próxima iteração (~4 min) **avalia a janela**: se perto de ~95%, faz o `/handoff` seal final; senão inicia o **backlog #2 (YT/TikTok)** a partir do blueprint existente. Pode me interromper a qualquer momento para redirecionar ou mandar selar. Encerro o turno.
+
+## 🤖 Claude *(23:55:33)*
+
+
+## 🤖 Claude *(23:55:38)*
+
+O loop fez exatamente o que a malha fechada prometeu — **3 iterações fechadas** (`7b81bfd` emenda BoK → `541f707` lib compare + migration → `12d06c0` nó `avatarIdentity` deployado LIVE), cada uma com prova material e `/security-review`, esgotando o **3b desbloqueado**. O que resta da biometria agora é 100% sua (OTD-AC-015/017 + GO). Trabalho limpo.
+
+E você deu o "pode ser" — então **rodo agora o zero-USD audit** do ciclo de vídeo, que é o gate da sua doutrina pro GO de gasto. Ele responde com número real: cada chamada externa do ciclo, qual provider/modelo o User 0 usa, e se custa USD de verdade. Se algum passo vazar custo, ele já propõe o swap doutrina-aligned (modelo `:free` ou Ollama self-hosted).
+
+Como o loop terminou, não há colisão — e o audit é read-only de qualquer forma. Disparo:
+
+## 🤖 Claude *(23:56:27)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'video-cycle-zero-usd-audit',\n  description: 'Audita o custo USD externo real do ciclo de v\u00eddeo do autopilot (gate da doutrina open-source-first pro GO de gasto)',\n  phases: [\n    { title: 'Trace', detail: 'um agente por passo externo + telemetria real do ciclo j\u00e1 rodado' },\n    { title: 'Verdict', detail: 'soma USD/ciclo + veredito doutrina + swap se vazar custo' },\n  ],\n}\n\nconst USER0 = 'ada39fae-67e1-4e53-af1c-5a18e1c108e8'\n\nconst STEP_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    step: { type: 'string' },\n    edge_fn: { type: 'string', description: 'edge function(s)/arquivo que faz a chamada externa, com file:line' },\n    provider_model: { type: 'string', description: 'provider + modelo exato resolvido para o User 0 (ex: OpenRouter google/gemini-2.0-flash-001, ou llama-3-8b:free, ou self-hosted)' },\n    key_source: { type: 'string', description: 'como a credencial \u00e9 resolvida p/ User 0 (user_api_keys coluna X / env / BYOK). Cite a coluna real.' },\n    is_free_tier: { type: 'string', enum: ['yes', 'no', 'depends', 'unknown'], description: 'o modelo/tier resolvido custa USD real? :free do OpenRouter e self-host=yes(gr\u00e1tis); Gemini paid/OpenAI=no.' },\n    usd_per_run: { type: 'string', description: 'custo USD estimado OU medido por execu\u00e7\u00e3o deste passo. Se medido em log real, dizer.' },\n    self_hosted: { type: 'string', enum: ['yes', 'no', 'partial'], description: 'o passo roda em infra pr\u00f3pria do MCORCH (self-hosted) ou em SaaS externo?' },\n    evidence: { type: 'array', items: { type: 'string' }, description: 'file:line + queries DB/log reais (Lei 1)' },\n  },\n  required: ['step', 'edge_fn', 'provider_model', 'key_source', 'is_free_tier', 'usd_per_run', 'self_hosted', 'evidence'],\n}\n\nconst STEPS = [\n  {\n    key: 'content',\n    prompt: `Trace o passo de GERA\u00c7\u00c3O DE TEXTO/SCRIPT do ciclo de v\u00eddeo do Viral Autopilot para o Usu\u00e1rio Zero (user_id=${USER0}).\nCaminho: autopilot-run \u2192 orchestrate-content \u2192 orchestrate-step \u2192 generate-content (ou equivalente). Leia supabase/functions/autopilot-run/index.ts, orchestrate-content/index.ts, orchestrate-step/index.ts, generate-content/index.ts.\nDetermine MATERIALMENTE: (1) qual edge fn faz a chamada LLM de texto e em qual linha; (2) qual PROVIDER + MODELO EXATO \u00e9 resolvido para o User 0 (resolva a credencial BYOK: leia de qual coluna de user_api_keys/decrypted_user_api_keys \u2014 ex openrouter_api_key/google_api_key \u2014 e qual model string \u00e9 usada); (3) esse modelo \u00e9 tier-GR\u00c1TIS (OpenRouter ':free', self-host) ou PAGO (Gemini paid, OpenAI)? (4) custo USD por run.\nSe tiver acesso, confirme via DB live (curl ${'`'}$SB_URL/rest/v1/...${'`'} com Bearer $SB_SECRET_KEY do .env) quais chaves o User 0 tem ativas. N\u00c3O fabrique \u2014 se n\u00e3o der pra resolver o modelo exato, diga 'unknown' com o motivo.`,\n  },\n  {\n    key: 'analyze',\n    prompt: `Trace o passo de AN\u00c1LISE (analyze) do ciclo de v\u00eddeo do Viral Autopilot para o Usu\u00e1rio Zero (user_id=${USER0}).\nO custo do ciclo \u00e9 10(orch)+12(render)+2(analyze) mco. Encontre o que \u00e9 o passo 'analyze' (ANALYZE_COST=2) \u2014 procure em supabase/functions/autopilot-run/index.ts, autopilot-analyze/index.ts, orchestrate-step (passo de an\u00e1lise/ranking), e qualquer chamada a analyze-node ou similar.\nDetermine MATERIALMENTE: (1) qual edge fn + linha faz a chamada LLM de an\u00e1lise; (2) provider+modelo exato resolvido p/ User 0 + de qual coluna BYOK; (3) free-tier vs pago; (4) USD por run. Confirme via DB live se poss\u00edvel. N\u00c3O fabrique \u2014 'unknown' com motivo se n\u00e3o resolver.`,\n  },\n  {\n    key: 'image',\n    prompt: `Determine se o ciclo de v\u00eddeo do Viral Autopilot (User 0 = ${USER0}) gera IMAGEM e qual o custo USD dela.\nContexto da mem\u00f3ria: generate-image roteia por OpenRouter Gemini (OpenAI virou fallback inalcan\u00e7\u00e1vel); providers de imagem do User 0 estavam quebrados (nanobana mock). Leia supabase/functions/orchestrate-step/index.ts (bloco de imagem / fail-open) e generate-image/index.ts.\nDetermine MATERIALMENTE: (1) o FLUXO DE V\u00cdDEO chama generate-image, ou pula/usa frame do HyperFrames? Cite a linha; (2) se chama, qual provider+modelo+coluna BYOK p/ User 0; (3) free vs pago + USD/run; (4) se o passo \u00e9 fail-open 'skipped' (n\u00e3o cobra/n\u00e3o chama quando falha). N\u00c3O fabrique.`,\n  },\n  {\n    key: 'render',\n    prompt: `Confirme MATERIALMENTE que o passo de RENDER do ciclo de v\u00eddeo (HyperFrames) roda 100% self-hosted, SEM chamada a API externa paga.\nLeia scripts/hyperframes/render-core.ts, scripts/video-bridge.ts. Verifique: (1) o render usa Playwright headless + FFmpeg locais (bin\u00e1rios na infra pr\u00f3pria), zero chamada a SaaS de gera\u00e7\u00e3o de v\u00eddeo externo (n\u00e3o Veo/Higgsfield/Replicate)? Cite as linhas; (2) h\u00e1 QUALQUER fetch a endpoint externo pago no caminho de render? (3) confirme o worker systemd video-bridge.service roda local. Conclua: render = USD 0 self-hosted (sim/n\u00e3o, com evid\u00eancia).`,\n  },\n  {\n    key: 'telemetry',\n    prompt: `Encontre o custo USD REAL e as chaves BYOK do Usu\u00e1rio Zero (user_id=${USER0}) \u2014 prova material, n\u00e3o estimativa.\nUse o .env (SB_URL/SB_SECRET_KEY) e curl no Supabase REST (como o GO-gasto agent fez). (1) Liste as chaves ATIVAS do User 0 em decrypted_user_api_keys OU user_api_keys (quais colunas de provider est\u00e3o preenchidas: openrouter_api_key, google_api_key, openai_api_key, etc. \u2014 N\u00c3O imprima o valor da chave, s\u00f3 QUAIS existem). (2) Procure em infra_health_logs (event/metadata) qualquer log de custo/token/modelo dos ciclos de v\u00eddeo j\u00e1 rodados (cycle 2403bfcb, render 8b0787e0 de 06-26) \u2014 algum USD/token real registrado? (3) Cruze com a mem\u00f3ria project_product_miner (llama-3-8b:free + Gemini ~$5/m\u00eas, log real $0.0054/run) \u2014 o autopilot usa o mesmo provider? Reporte os n\u00fameros REAIS achados e diga explicitamente o que N\u00c3O est\u00e1 logado (gap de observabilidade).`,\n  },\n]\n\nphase('Trace')\nconst traces = await parallel(STEPS.map(s => () =>\n  agent(s.prompt, { label: `trace:${s.key}`, phase: 'Trace', schema: STEP_SCHEMA, effort: 'medium' })\n    .then(r => r ? { ...r, _key: s.key } : null)\n))\nconst valid = traces.filter(Boolean)\n\nphase('Verdict')\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    total_usd_per_video_cycle: { type: 'string', description: 'soma USD externo real por ciclo de v\u00eddeo do User 0 (itemizado). Distinga medido vs estimado.' },\n    itemized: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { step: { type: 'string' }, usd: { type: 'string' }, self_hosted: { type: 'string' } }, required: ['step', 'usd'] } },\n    verdict: { type: 'string', enum: ['zero', 'near_zero', 'has_cost'], description: 'zero=US$0 estrito; near_zero=<US$0.02 (free-tier dominante, vazamento desprez\u00edvel); has_cost=USD material por ciclo.' },\n    doctrine_status: { type: 'string', description: 'O ciclo cumpre a doutrina open-source-first / custo USD ao Sovereign = 0? Honesto.' },\n    swap_recommendation: { type: 'string', description: 'SE has_cost/near_zero por causa de um provider pago: o swap doutrina-aligned (modelo OpenRouter :free OU Ollama self-hosted no Mesh) com o arquivo:linha exato a mudar. Sen\u00e3o \"nenhum swap necess\u00e1rio\".' },\n    go_recommendation: { type: 'string', description: 'Veredito final pro Sovereign: pode dar o GO de gasto AGORA pela r\u00e9gua da doutrina, ou fazer o swap primeiro? Uma recomenda\u00e7\u00e3o clara.' },\n    observability_gap: { type: 'string', description: 'O custo USD real \u00e9 LOGADO em algum lugar? Se n\u00e3o, o que falta pra medir de verdade (Lei 1).' },\n  },\n  required: ['total_usd_per_video_cycle', 'itemized', 'verdict', 'doctrine_status', 'swap_recommendation', 'go_recommendation'],\n}\n\nconst verdict = await agent(\n  `Voc\u00ea \u00e9 o auditor-chefe. A doutrina Sovereign (2026-06-30) exige CUSTO USD EXTERNO AO SOVEREIGN = 0 por ciclo, e prefer\u00eancia por open-source/self-hosted dentro do MCORCH. ` +\n  `O GO de gasto do 1\u00ba ciclo pago de v\u00eddeo est\u00e1 GATED nessa r\u00e9gua. O render HyperFrames j\u00e1 \u00e9 self-hosted (USD 0). ` +\n  `Recebeu o trace material de cada passo externo do ciclo de v\u00eddeo do Usu\u00e1rio Zero. Produza o veredito: soma USD/ciclo, se cumpre a doutrina, e SE vazar custo, o swap exato (modelo :free OpenRouter ou Ollama self-hosted \u2014 o projeto j\u00e1 tem integra\u00e7\u00e3o Ollama) com arquivo:linha. ` +\n  `Seja honesto sobre o gap de observabilidade (se o USD real n\u00e3o \u00e9 logado, diga). Dados:\\n\\n` +\n  JSON.stringify(valid, null, 2),\n  { label: 'auditor', phase: 'Verdict', schema: VERDICT_SCHEMA, effort: 'high' }\n)\n\nreturn { traces: valid, verdict }\n",
+  "description": "Audit video cycle external USD cost"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w34v50410
+> Summary: Audita o custo USD externo real do ciclo de vídeo do autopilot (gate da doutrina open-source-first pro GO de gasto)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/subagents/workflows/wf_6d3bdbd6-eb7
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/workflows/scripts/video-cycle-zero-usd-audit-wf_6d3bdbd6-eb7.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/workflows/scripts/video-cycle-zero-usd-audit-wf_6d3bdbd6-eb7.js"} to iterate without resending the script.)
+> Run ID: wf_6d3bdbd6-eb7
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11/workflows/scripts/video-cycle-zero-usd-audit-wf_6d3bdbd6-eb7.js", resumeFromRunId: "wf_6d3bdbd6-eb7"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(23:56:33)*
+
+
+## 🤖 Claude *(23:56:38)*
+
+Audit em voo (`wf_6d3bdbd6-eb7`) — 5 traces paralelos (texto · análise · imagem · render · telemetria real do ciclo já rodado) + auditor-chefe somando o USD/ciclo e dando o veredito da doutrina.
+
+Quando voltar, te entrego um número fechado:
+- **USD real por ciclo de vídeo** do User 0, itemizado por passo (com o que é *medido* vs *estimado*).
+- **Veredito da doutrina:** `zero` / `near_zero` / `has_cost`.
+- **Se vazar custo:** o swap exato pra zerar — modelo OpenRouter `:free` ou **Ollama self-hosted no Mesh** (o projeto já tem integração) — com `arquivo:linha`.
+- **Recomendação de GO:** se você já pode dar o GO de gasto pela sua régua, ou se vale fazer o swap antes.
+- **Gap de observabilidade:** se o USD real não está sendo logado em lugar nenhum (Lei 1 — honesto sobre o que dá ou não pra medir).
+
+Te aviso assim que concluir. O harness me reacorda.

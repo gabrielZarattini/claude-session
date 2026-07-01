@@ -690,5 +690,5 @@ The migration faithfully mirrors the vetted precedent with no security-relevant 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-06-30 - agent-a32b431d085d51223]]
-> * **Próxima Sessão**: [[2026-06-30 - agent-a45f824f5f129eddf]]
+> * **Próxima Sessão**: [[2026-06-30 - agent-a3cf38ec496c851ff]]
 %% --- TIMELINE END --- %%
