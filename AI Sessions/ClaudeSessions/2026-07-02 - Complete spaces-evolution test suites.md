@@ -1961,6 +1961,4107 @@ Carregando a definição do agente BoK Scribe e os templates dos 3 documentos fa
 
 You've hit your session limit · resets 4:20am (America/Sao_Paulo)
 
+## 👤 User *(13:15:42)*
+
+<task-notification>
+<task-id>waia63hru</task-id>
+<tool-use-id>toolu_01WPR3cJPPhPtKw4AMSCaXpM</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/tasks/waia63hru.output</output-file>
+<status>failed</status>
+<summary>Dynamic workflow "Ground spaces-evolution BoK completion in live docs/code, then author 06/07/08 + Pattern Conformance" failed: Error: critical reader failed: {"core":false,"code":false,"patterns":false}
+    at &lt;anonymous&gt; (workflow.js:92:42)
+    at processTicksAndRejections (native)</summary>
+<recovery>To resume after editing the script, call: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/workflows/scripts/spaces-bok-ground-author-wf_c934539e-10d.js', resumeFromRunId: 'wf_c934539e-10d'})
+Agent transcripts: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/subagents/workflows/wf_c934539e-10d</recovery>
+<failures>[read:core-docs-01-05] failed: You've hit your session limit · resets 4:20am (America/Sao_Paulo)
+[read:recon-docs-09-12] failed: You've hit your session limit · resets 4:20am (America/Sao_Paulo)
+[read:templates-exemplar] failed: You've hit your session limit · resets 4:20am (America/Sao_Paulo)
+[read:agentic-patterns] failed: You've hit your session limit · resets 4:20am (America/Sao_Paulo)
+[read:promoted-code] failed: You've hit your session limit · resets 4:20am (America/Sao_Paulo)</failures>
+<usage><agent_count>5</agent_count><agents_done>0</agents_done><agents_error>5</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>49710</subagent_tokens><tool_uses>6</tool_uses><duration_ms>9802</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(13:15:57)*
+
+
+## 🤖 Claude *(13:15:57)*
+
+
+## 🤖 Claude *(13:15:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TZ=America/Sao_Paulo date '+%H:%M %Z (%Y-%m-%d)'",
+  "description": "Show current time in S\u00e3o Paulo timezone"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 10:15 -03 (2026-07-02)
+> ```
+
+## 🤖 Claude *(13:16:12)*
+
+
+## 🤖 Claude *(13:16:12)*
+
+
+## 🤖 Claude *(13:16:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/01-mrd-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 01 · MRD — Market Requirements · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Market Requirements Document
+> 4	> **Escopo:** Por que o MCORCH precisa de um canvas infinito de nós ("Spaces") como camada Core, e não mais formulários lineares.
+> 5	> **Trace prefix:** `MR-SPACES-###`
+> 6	> **Anchored to:** `docs/bok/spaces-evolution/` · ref. Magnific Spaces
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Problem Statement (PT-BR)
+> 11	
+> 12	O MCORCH já tem geração de imagem, vídeo, áudio e conteúdo (rotas `video`, `autopilot`, `content`, `campaigns`, `canvas/*` em `src/App.tsx`), porém a interação acontece em **páginas-formulário isoladas**: o usuário preenche campos, clica "gerar", espera, e o resultado morre numa biblioteca. Cada passo é um silo. Não há **composição visual** entre passos, nem **reuso** de um pipeline, nem **leitura espacial** do histórico.
+> 13	
+> 14	Magnific Spaces resolve exatamente isto: transforma "ferramenta → ferramenta → ferramenta" em **um grafo onde o output de um nó é o input do próximo**, num canvas infinito, colaborativo e re-executável. É a diferença entre *operar ferramentas* e *dirigir um workflow*.
+> 15	
+> 16	> **Tese central:** o público high-ticket do MCORCH (criadores e afiliados que rodam dezenas de variantes/dia) não compra "uma geração"; compra **repetibilidade, controle e segmentação de trabalho**. Formulário linear não vende isso. Canvas segmentável vende.
+> 17	
+> 18	---
+> 19	
+> 20	## 2. Competitive Taxonomy — Infinite Canvas vs. Linear Forms
+> 21	
+> 22	### 2.1 Eixos de comparação
+> 23	
+> 24	| Eixo | Formulário Linear (estado atual MCORCH) | Canvas Infinito de Nós (Spaces) |
+> 25	|---|---|---|
+> 26	| Unidade de trabalho | 1 request → 1 output | Grafo de N nós encadeados |
+> 27	| Reuso | Copiar/colar prompt | Salvar workflow como **app reutilizável** |
+> 28	| Composição multi-modal | Trocar de página/ferramenta | Wire `text → image → upscale → video` no mesmo plano |
+> 29	| Leitura do histórico | Lista cronológica plana | **Clusters espaciais** por projeto/branch |
+> 30	| Colaboração | Compartilhar link de output | Co-edição em tempo real, cursores, comentários |
+> 31	| Batch | Repetição manual | **List node** alimenta 1 gerador → N saídas |
+> 32	| Mental model | "Opero ferramentas" | "Dirijo um pipeline" |
+> 33	| Custo cognitivo p/ pipeline complexo | Alto (estado na cabeça do usuário) | Baixo (estado é o próprio grafo) |
+> 34	
+> 35	### 2.2 Landscape (referência de mercado, 2026)
+> 36	
+> 37	Categoria **canvas-de-IA por nós** consolidou-se como padrão para criação profissional:
+> 38	
+> 39	- **Magnific Spaces** (ref. deste BoK) — canvas infinito; nós tipados (Image/Text/Video/Audio/SVG); 7 categorias (Media, Text, Image, Video, Audio, Utilities, Designer); Spotlight (`Space`/`/`); minimapa; co-edição; templates; **Workflow Apps**.
+> 40	- **ComfyUI** — node-graph desktop para difusão; poderoso, porém dev-cêntrico, sem ledger/colab nativos.
+> 41	- **n8n / Flowise** — automação por nós; foco em integração, não em mídia.
+> 42	- **Figma / FigJam, tldraw** — canvas infinito de design/whiteboard; sem execução de IA encadeada.
+> 43	- **Lovart, gsworkspace** — canvas-de-IA emergentes para design.
+> 44	
+> 45	> **Leitura estratégica:** o diferencial defensável **não** é "ter nós" (commodity via `@xyflow/react`). É a **fusão canvas + ledger de `mcoCoins` + governança per-tenant (`auth.uid()`)** que o MCORCH já possui. Spaces é onde a constelação de agentes vira **superfície de produto monetizável**, não só infra.
+> 46	
+> 47	---
+> 48	
+> 49	## 3. Por que high-ticket exige *segmentação de workspace*
+> 50	
+> 51	`MR-SPACES-001` — **Segmentação espacial = valor percebido.**
+> 52	Usuários high-ticket trabalham múltiplos clientes/nichos simultaneamente. Um workspace por contexto (um Space por campanha, cliente ou linha de produto) reduz contaminação de estado e materializa "eu tenho uma operação", não "eu usei um app". Espelha a rota real `spaces/:spaceId` (ver `04-frd`).
+> 53	
+> 54	`MR-SPACES-002` — **Repetibilidade é o produto.**
+> 55	O ROI do high-ticket vem de rodar o *mesmo* pipeline com inputs trocados. O **Workflow App** (salvar grafo como bloco com inputs/outputs) converte trabalho artesanal em ativo reutilizável — e cria lock-in saudável.
+> 56	
+> 57	`MR-SPACES-003` — **Composição multi-modal sem troca de contexto.**
+> 58	`text → image → upscale → image-to-video → voiceover` num só plano elimina o custo de pular entre `video`, `content` e `canvas`. Cada salto evitado é retenção.
+> 59	
+> 60	`MR-SPACES-004` — **Branching e exploração paralela.**
+> 61	High-ticket compara variantes lado a lado. O canvas permite ramificar de um nó e manter **clusters de histórico** visíveis simultaneamente — impossível numa lista linear.
+> 62	
+> 63	`MR-SPACES-005` — **Colaboração como vetor B2B2C.**
+> 64	Co-edição, papéis Viewer/Editor e comentários abrem o caminho agência→cliente (o modelo B2B2C do MCORCH), elevando ticket de "assento individual" para "workspace de equipe".
+> 65	
+> 66	`MR-SPACES-006` — **Legibilidade do custo no ponto de ação.**
+> 67	No formulário, o custo em `mcoCoins` é abstrato. No nó, cada bloco mostra seu `coinCost` (campo já existente em `OrchestrationNodeData`) **antes** de rodar — transparência que sustenta planos premium (`BillingPage` já lista 500/2.000/10.000 mcoCoins).
+> 68	
+> 69	---
+> 70	
+> 71	## 4. Target Segments & JTBD
+> 72	
+> 73	| Segmento | Job-to-be-Done | Sinal de demanda no repo |
+> 74	|---|---|---|
+> 75	| **Power creator / art director** | "Montar um pipeline preciso e repetível e variar só o input" | nós `StyleTransferNode`, `SceneComposeNode`, `CharacterReferenceNode` |
+> 76	| **Afiliado em escala** | "Gerar N criativos/dia gateados por custo e teto" | `AutopilotPage` (teto diário de mcoCoins, projeção por ciclo) |
+> 77	| **Operador de vídeo** | "Encadear imagem→vídeo→upscale sem sair do plano" | `ImageToVideoNode`, `VideoStudioPage` (`charged_mco`/`refunded_mco`) |
+> 78	| **Equipe/agência (B2B2C)** | "Co-editar e revisar com cliente" | `create_organization` RPC; papéis |
+> 79	
+> 80	---
+> 81	
+> 82	## 5. Market Requirements (rastreáveis)
+> 83	
+> 84	| Trace | Requisito de mercado | Prioridade | Vira (downstream) |
+> 85	|---|---|---|---|
+> 86	| `MR-SPACES-001` | Workspaces segmentáveis por contexto (`spaces/:id`) | P0 | `PR-SPACES-002`, `FR-SPACES-001` |
+> 87	| `MR-SPACES-002` | Salvar pipeline como Workflow App reutilizável | P1 | `PR-SPACES-007` |
+> 88	| `MR-SPACES-003` | Composição multi-modal num único canvas | P0 | `PR-SPACES-004`, `FR-SPACES-003` |
+> 89	| `MR-SPACES-004` | Branching + clusters de histórico espacial | P0 | `PR-SPACES-005`, `FR-SPACES-002` |
+> 90	| `MR-SPACES-005` | Colaboração tempo-real + papéis | P2 | `04-frd` (fase 2) |
+> 91	| `MR-SPACES-006` | Custo por nó visível no ponto de ação | P0 | `BR-SPACES-002`, `PR-SPACES-006` |
+> 92	
+> 93	---
+> 94	
+> 95	## 6. Out of Scope (MRD)
+> 96	
+> 97	- Clonar a identidade visual/branding da Magnific — **proibido**. Reusar apenas **mecânica de UX**; estética segue tokens próprios (`tailwind.config.ts`, `brand` cyan).
+> 98	- Marketplace público de templates de terceiros (fase futura).
+> 99	- Renderização 3D pesada como produto — R3F entra apenas como **trigger de efeito/mesh** (ver `05-sdd`), não como editor 3D.
+> 100	
+> 101	---
+> 102	
+> 103	## 7. Success Signals (entram no `08-quality-metrics` futuro)
+> 104	
+> 105	- ↑ nº médio de nós por Space ativo (profundidade de pipeline).
+> 106	- ↑ taxa de "Workflow App salvo / Spaces criados" (repetibilidade).
+> 107	- ↑ `mcoCoins` debitados via `canvas-execute` vs. via páginas-formulário (migração de superfície).
+> 108	- ↓ saltos de rota por sessão (menos troca de contexto).
+> 109	
+> 110	---
+> 111	
+> 112	## 8. Counter-perspective (evenhandedness)
+> 113	
+> 114	Nem todo usuário quer um grafo. Usuários casual-tier podem achar o canvas intimidante vs. um formulário de 1 campo. **Mitigação (já mandatada pela Magnific e adotada aqui):** **Templates** que abrem como Space pronto + Spotlight para descoberta progressiva. O canvas escala para cima (power users) sem punir quem entra por baixo. A régua 72/28 (ver `03-prd`) também garante que o canvas nunca seja "parede em branco" sem HUD orientadora.
+> 115	
+> 116	---
+> 117	
+> 118	*Próximo: `02-brd-spaces.md` — onde cada execução de nó vira lançamento no ledger de `mcoCoins`.*
+> 119	
+> ```
+
+## 🤖 Claude *(13:16:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/02-brd-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 02 · BRD — Business Requirements · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Business Requirements Document
+> 4	> **Escopo:** Regras de monetização que ligam cada chamada de geração no canvas ao **ledger de `mcoCoins`** via RPC, com ROI rastreável por token gasto.
+> 5	> **Trace prefix:** `BR-SPACES-###`
+> 6	> **Anchored to:** `supabase/functions/canvas-execute/` · RPCs `deduct_mco_coins` / `award_mco_coins` / `calc_agent_cost_mcoin`
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Business Thesis (PT-BR)
+> 11	
+> 12	A camada Spaces só é viável se **cada nó executável for um lançamento contábil**. O canvas não pode ser um "playground grátis": ele é a superfície onde o `mcoCoins` é queimado e onde o ROI por token fica visível. O repo já tem toda a tubulação — `canvas-execute` traz a tabela `CREDIT_COSTS` (model → mcoCoins), e o ledger expõe `deduct_mco_coins`, `award_mco_coins`, `add_mco_coins` e `calc_agent_cost_mcoin`. A BRD apenas **formaliza as regras** sobre essa tubulação.
+> 13	
+> 14	> Regra-mãe: **estimar antes de debitar, debitar antes de executar, reconciliar (ou estornar) depois de executar.** Nenhuma exceção.
+> 15	
+> 16	---
+> 17	
+> 18	## 2. Ledger primitives (já existentes — não recriar)
+> 19	
+> 20	Assinaturas reais (de `src/integrations/supabase/types.ts`):
+> 21	
+> 22	| RPC | Assinatura | Papel no Spaces |
+> 23	|---|---|---|
+> 24	| `deduct_mco_coins` | `(p_amount, p_user_id, p_action?, p_context?) → void` | Débito do custo do nó no run |
+> 25	| `award_mco_coins` | `(p_action, p_amount, p_user_id, p_context?) → void` | Crédito/bônus (ex.: template publicado) |
+> 26	| `add_mco_coins` | `(p_amount, p_user_id) → number` | Top-up pós-checkout (`create-checkout`) |
+> 27	| `calc_agent_cost_mcoin` | `(p_model, p_provider, p_tokens_in, p_tokens_out, p_margin?) → Json` | Custo dinâmico p/ nós de LLM |
+> 28	| `finalize_video_render` | `(…, p_refund, …) → Json` | **Padrão de estorno** a replicar p/ nós |
+> 29	
+> 30	**Fonte de verdade de preço (server-side):** `supabase/functions/canvas-execute/index.ts → CREDIT_COSTS`. Exemplos já tabelados (em mcoCoins):
+> 31	
+> 32	```
+> 33	openai/dall-e-3 .................. 15      replicate/flux-1.1-pro ..... 12
+> 34	openai/gpt-image-1 ............... 18      replicate/sdxl ............. 4
+> 35	openrouter/gemini-2.5-flash-image  10      replicate/flux-schnell ..... 3
+> 36	higgsfield/soul-720p-1 ........... 20      higgsfield/soul-1080p-4 .... 65
+> 37	higgsfield/dop-standard-5s ....... 125     kling-2.1-pro-5s ........... 160
+> 38	upscale-2x ....................... 8       upscale-4x ................. 20
+> 39	scene-compose .................... 18      style-transfer ............. 14
+> 40	inpaint .......................... 6       remove-background .......... 3
+> 41	```
+> 42	> Markup ~13× sobre custo USD (documentado no próprio arquivo, alinhado à validação Higgsfield 2026-05-15). **O cliente nunca define preço; o servidor é autoridade.**
+> 43	
+> 44	---
+> 45	
+> 46	## 3. Business Requirements (rastreáveis)
+> 47	
+> 48	### 3.1 Cobrança & gating
+> 49	
+> 50	`BR-SPACES-001` — **Débito por execução de nó.**
+> 51	Toda execução de nó gerador chama `canvas-execute`, que resolve `CREDIT_COSTS[modelKey]` e invoca `deduct_mco_coins(p_amount, p_user_id, p_action='spaces.node.run', p_context={spaceId,nodeId,model})`. **Débito é server-side**; o cliente só exibe a estimativa.
+> 52	→ Âncora: `canvas-execute`, `deduct_mco_coins`. QA: `BR-SPACES-001.test`.
+> 53	
+> 54	`BR-SPACES-002` — **Estimativa pré-execução visível no nó.**
+> 55	Antes do run, o nó mostra `coinCost` (campo já em `OrchestrationNodeData`). Para nós de LLM, a estimativa usa `calc_agent_cost_mcoin`. Toast pt-BR: *"Custo estimado: {n} mcoCoins"* (padrão já visto em `VideoStudioPage`/`AutopilotPage`).
+> 56	→ Vira `PR-SPACES-006`.
+> 57	
+> 58	`BR-SPACES-003` — **Gate de saldo e teto diário.**
+> 59	Run bloqueia se saldo < custo, ou se teto diário do plano foi atingido. Mensagens pt-BR canônicas já existem em `AutopilotPage`: `insufficient_balance` → *"Saldo de mcoCoins insuficiente."*; `aborted_daily_cap` → *"Teto diário de mcoCoins do dia já atingido."* Reutilizar **verbatim** (no context rot).
+> 60	
+> 61	`BR-SPACES-004` — **Estorno em falha (refund-on-failure).**
+> 62	Se o provider falhar após o débito, estornar seguindo o padrão `finalize_video_render(p_refund, …)`. O run grava `charged_mco` e, em falha, `refunded_mco` (campos já usados na UI de vídeo). Invariante: **usuário nunca paga por nó que não entregou**.
+> 63	
+> 64	`BR-SPACES-005` — **Modo simulação (dry-run) sem débito.**
+> 65	Espelha o "Simulação (sem gasto)" do `AutopilotPage` (`projected_mco`). O canvas roda o DAG calculando o custo projetado total **sem** chamar `deduct_mco_coins`. Toast pt-BR: *"Simulação — {n} mcoCoins projetados (sem débito)."*
+> 66	
+> 67	`BR-SPACES-006` — **BYOK isenta débito de geração.**
+> 68	Onde o usuário traz a própria chave (padrão "geração real não debita mcoCoins" citado em `VideoStudioPage`), o nó marca `byok=true` e o `canvas-execute` pula `deduct_mco_coins`, cobrando no máximo a taxa de orquestração/análise.
+> 69	
+> 70	### 3.2 ROI & contabilidade
+> 71	
+> 72	`BR-SPACES-007` — **ROI por token rastreável.**
+> 73	Cada run persiste `{ usd_cost, mco_charged, model, provider, tokens_in?, tokens_out?, latency_ms }` — exatamente as colunas que `AgentEconomicsPage` já exibe ("Tokens consumidos · custo real USD · mcoCoins cobrados · latency"). Margem por run = `mco_charged × valor_unitário_mco − usd_cost`. Dashboard reusa `AgentEconomicsPage`.
+> 74	
+> 75	`BR-SPACES-008` — **Custo projetado de pipeline (pré-run do grafo).**
+> 76	Antes de rodar um Space inteiro, somar `coinCost` de todos os nós alcançáveis no DAG (`getTopologicalLayers` define a ordem) e exibir total. Fórmula análoga à do Autopilot: `Σ(nós) coinCost (+ análise)`.
+> 77	
+> 78	`BR-SPACES-009` — **Workflow App como ativo monetizável.**
+> 79	Salvar um grafo como Workflow App (ver `MR-SPACES-002`) pode conceder `award_mco_coins(p_action='spaces.app.published')` e, em fase futura, gerar receita de uso por terceiros (rev-share). Lock-in saudável.
+> 80	
+> 81	### 3.3 Planos & limites
+> 82	
+> 83	`BR-SPACES-010` — **Aderência aos planos existentes.**
+> 84	Tetos e saldos vêm de `BillingPage` (500 / 2.000 / 10.000 mcoCoins/mês) e `check-subscription`. Spaces **não** cria um sistema de cobrança paralelo; consome o vigente. Top-ups via `create-checkout` → `add_mco_coins`.
+> 85	
+> 86	---
+> 87	
+> 88	## 4. Pricing Rules (determinísticas)
+> 89	
+> 90	1. **Autoridade de preço = servidor.** `CREDIT_COSTS` em `canvas-execute` é a única fonte; cliente exibe cópia somente-leitura.
+> 91	2. **Resolução de chave de modelo:** `provider/model[-variant]` (ex.: `higgsfield/soul-1080p-4`). Aliases legados resolvem para a variante canônica (ex.: `higgsfield/generate → soul-1080p-1`).
+> 92	3. **Nós não-geradores = custo 0** (Text estático, Sticky, Group, Upload). `coinCost=0` (precedente: `trigger-campaign` tem `coinCost: 0`).
+> 93	4. **LLM = custo dinâmico** via `calc_agent_cost_mcoin(tokens_in, tokens_out, margin)`, não tabela fixa.
+> 94	5. **Guards de prompt** (de `canvas-execute`): rejeitar prompt de imagem > `1800` chars e prompts estilo-instrução (`INSTRUCTION_SIGNAL_RE`) **antes** de debitar — evita cobrar por falha previsível.
+> 95	
+> 96	---
+> 97	
+> 98	## 5. Transaction Lifecycle (máquina de estados do débito)
+> 99	
+> 100	```
+> 101	estimate ──> reserve(check saldo+teto) ──> debit(deduct_mco_coins)
+> 102	                                               │
+> 103	                                     execute(provider)
+> 104	                                       success │ failure
+> 105	                                          │        │
+> 106	                                  reconcile     refund(finalize_*_render style)
+> 107	                                          │        │
+> 108	                                       settled   reversed
+> 109	```
+> 110	Mapeado aos `NodeStatus` reais (`useOrchestrationStore`): `idle → pending → running → done | error`. `error` dispara o ramo de refund.
+> 111	
+> 112	> Invariantes (entram no QA `BR-SPACES-001..004`):
+> 113	> - Soma dos débitos de um run = soma de `CREDIT_COSTS` dos nós executados (menos BYOK).
+> 114	> - `error` ⇒ existe estorno correspondente (`refunded_mco > 0`) **ou** o débito nunca ocorreu.
+> 115	> - Nenhuma mutação de saldo no cliente; toda escrita passa por RPC `SECURITY DEFINER` escopada por `auth.uid()`.
+> 116	
+> 117	---
+> 118	
+> 119	## 6. Risks & Controls
+> 120	
+> 121	| Risco | Controle | Âncora |
+> 122	|---|---|---|
+> 123	| Cobrança dupla (retry/duplo-clique) | Idempotência por `run_id`/`node_run_id` | precedente `finalize_video_render(p_render_id)` |
+> 124	| Preço manipulado no cliente | Preço só server-side | `CREDIT_COSTS` em edge fn |
+> 125	| Falha do provider após débito | Refund automático | `BR-SPACES-004` |
+> 126	| Abuso de dry-run | Dry-run não toca provider nem ledger | `BR-SPACES-005` |
+> 127	| Vazamento entre tenants | RPC escopada por `auth.uid()` | `04-frd §4` |
+> 128	
+> 129	---
+> 130	
+> 131	## 7. Out of Scope (BRD)
+> 132	
+> 133	- Novos gateways de pagamento (usa `create-checkout`/`create-portal` vigentes).
+> 134	- Preço dinâmico por leilão/demanda (fase futura).
+> 135	- Conversão fiduciária de `mcoCoins` (não há saque; é crédito interno).
+> 136	
+> 137	> **Disclaimer:** este documento define regras de produto/contabilidade interna de créditos, não aconselhamento financeiro nem contábil-fiscal. Tratamento tributário de receita segue `docs/.../tax` e o jurídico do MCORCH.
+> 138	
+> 139	---
+> 140	
+> 141	*Próximo: `03-prd-spaces.md` — a régua 72/28 e a HUD de parâmetros.*
+> 142	
+> ```
+
+## 🤖 Claude *(13:16:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/03-prd-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 03 · PRD — Product Requirements · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Product Requirements Document
+> 4	> **Escopo:** Regras de layout visual, a **lei 72/28** (canvas vs. HUD de parâmetros), enhancements de imagem e filas de geração.
+> 5	> **Trace prefix:** `PR-SPACES-###`
+> 6	> **Anchored to:** `react-resizable-panels` · `cmdk` · `tailwind.config.ts` (tokens `status.*`, `sidebar.*`) · `useOrchestrationStore`
+> 7	> 
+> 8	> 🛰️ **LIVE-RECON (ver `09-live-recon-spaces.md`):** o Magnific posiciona parâmetros **inline na face do nó** (sem HUD lateral persistente). A **lei 72/28** deste PRD é decisão de design MCORCH (mandada na diretiva), **não** paridade. Taxonomia real verificada = **8 grupos** (inclui REFERENCES; Designer ⊂ IMAGE). Custo por nó = **enhancement MCORCH** (o Magnific não mostra crédito na face do nó).
+> 9	
+> 10	---
+> 11	
+> 12	## 1. Product Vision (PT-BR)
+> 13	
+> 14	Spaces é a **superfície Core** do MCORCH: um canvas infinito onde nós tipados se conectam num grafo executável, com um HUD de parâmetros deslizante à direita. Visualmente, é "70% palco, 30% mesa de controle" — formalizado abaixo como a **lei 72/28**. Estética segue tokens próprios (cyan `brand`), **nunca** o branding da Magnific.
+> 15	
+> 16	---
+> 17	
+> 18	## 2. A Lei 72/28 (regra dura de layout)
+> 19	
+> 20	`PR-SPACES-001` — **Split 72/28.**
+> 21	A viewport de um Space divide-se em **72% canvas interativo** (esquerda) e **28% HUD de parâmetros deslizante** (direita).
+> 22	
+> 23	- Implementação: `react-resizable-panels` (`^2.1.9`, já instalado), `PanelGroup direction="horizontal"`, `defaultSize={72}` / `defaultSize={28}`.
+> 24	- O HUD usa a paleta `sidebar.*` do `tailwind.config.ts`; o canvas usa `background`.
+> 25	- **Persistência:** o tamanho ajustado salva por Space (chave `localStorage` `spaces:{id}:hud`), espelhando o padrão `orchestration_positions_v1` já existente.
+> 26	
+> 27	`PR-SPACES-002` — **Estados do HUD (3 modos).**
+> 28	
+> 29	| Modo | Largura | Quando | Conteúdo |
+> 30	|---|---|---|---|
+> 31	| **Collapsed** | 0% (canvas 100%) | nenhum nó selecionado / foco no grafo | dica fantasma pt-BR: *"Selecione um nó para editar parâmetros"* |
+> 32	| **Default** | 28% | um nó selecionado | painel de parâmetros do nó |
+> 33	| **Expanded** | 40% | nó complexo (Designer, Video) ou usuário arrasta | editor avançado |
+> 34	
+> 35	> Regra anti-claustrofobia: em telas < `lg` (1024px), o HUD vira **drawer** (`vaul`, já instalado), sobrepondo o canvas em vez de comprimir. O canvas nunca cai abaixo de 60% em desktop.
+> 36	
+> 37	`PR-SPACES-003` — **Spotlight (command palette).**
+> 38	`Space` ou `/` em qualquer ponto do canvas abre o Spotlight (`cmdk`, já instalado) para inserir nós por busca. Backend visual reusa `src/components/canvas/AddNodeMenu.tsx`. Busca cruza as 8 categorias (Media, Text, Image, Video, Audio, Utilities, Designer, References). Placeholder pt-BR: *"Buscar nó… (imagem, vídeo, voz, upscale)"*.
+> 39	
+> 40	`PR-SPACES-004` — **Minimapa + controles de canvas.**
+> 41	Minimapa no canto inferior-direito (`<MiniMap/>` do `@xyflow/react`), `<Controls/>` (zoom/fit/lock) e `<Background variant="dots"/>`. Pan/zoom infinito sem limites de artboard.
+> 42	
+> 43	---
+> 44	
+> 45	## 3. Anatomia da tela (wireframe textual)
+> 46	
+> 47	```
+> 48	┌──────────────────────────────────────────────┬───────────────────────┐
+> 49	│  TOPBAR: nome do Space · Run ▶ · Dry-run · ⧉ co-edit · saldo mcoCoins │
+> 50	├──────────────────────────────────────────────┼───────────────────────┤
+> 51	│                                               │  HUD 28% (sidebar.*)  │
+> 52	│            CANVAS 72%  (@xyflow/react)         │  ── Parâmetros do nó   │
+> 53	│                                               │  ▸ modelo (select)     │
+> 54	│     [Text]──▶[Image Gen]──▶[Upscale]──▶[I2V]  │  ▸ prompt (textarea)   │
+> 55	│                  │                            │  ▸ sliders (steps,cfg) │
+> 56	│                  └─▶[Variations cluster]      │  ▸ custo: 15 mcoCoins  │
+> 57	│                                               │  ▸ [Gerar ▶]           │
+> 58	│   ◳ minimap                      ⊕ controls   │                       │
+> 59	└──────────────────────────────────────────────┴───────────────────────┘
+> 60	```
+> 61	
+> 62	---
+> 63	
+> 64	## 4. Node model (produto)
+> 65	
+> 66	`PR-SPACES-005` — **Categorias de nó (espelham Magnific, mapeadas ao repo).**
+> 67	
+> 68	| Categoria | Nós (MCORCH) | Âncora existente |
+> 69	|---|---|---|
+> 70	| **Media** | Upload, Asset Library, Stock | `@dnd-kit` + storage Supabase |
+> 71	| **Text** | Prompt, AI Assistant | `aios-chat` / `generate-content` |
+> 72	| **Image** | Generate, Upscale, Variations, Edit, Style Transfer, Scene Compose | `GenerateImageNode`, `StyleTransferNode`, `SceneComposeNode` |
+> 73	| **Video** | Generate, Image-to-Video, Upscale, Combine | `ImageToVideoNode`, `generate-video` |
+> 74	| **Audio** | Voiceover, SFX, Music | `generate-audio-script` |
+> 75	| **Utilities** | List (batch), Sticky, Group, Note | `LanesOverlay.tsx` (precedente de agrupamento) |
+> 76	| **Designer** | Editor gráfico embutido | `CanvasDesignPage` / `canvas-design` BoK |
+> 77	| **References** | Add Reference (character/style refs) | `CharacterReferenceNode` (já existe no repo) |
+> 78	
+> 79	`PR-SPACES-006` — **Anatomia de um nó.**
+> 80	Header (ícone + label pt-BR) · portas tipadas (entrada esq., saída dir.) · corpo (preview do output) · rodapé com **badge de custo** (`coinCost` mcoCoins) e **status pill** (token `status.{active,waiting,error,idle}`). Nó ativo pulsa com keyframe `glow-pulse` (cyan brand).
+> 81	
+> 82	`PR-SPACES-007` — **Workflow App.**
+> 83	Botão *"Salvar como App"* serializa o grafo selecionado num bloco reutilizável com inputs/outputs declarados. Aparece no Spotlight como nó único. (Liga `MR-SPACES-002`, `BR-SPACES-009`.)
+> 84	
+> 85	---
+> 86	
+> 87	## 5. Image enhancements (HUD)
+> 88	
+> 89	`PR-SPACES-008` — **Controles de enhancement nativos**, expostos como parâmetros do nó (não páginas separadas):
+> 90	
+> 91	- **Upscale** 2× / 4× (`upscale-2x`=8, `upscale-4x`=20 mcoCoins).
+> 92	- **Skin Enhancer / Relight / Remove BG** (`remove-background`=3) como toggles no HUD.
+> 93	- **Variations** → emite cluster de N saídas (liga fila, §6).
+> 94	- **Inpaint** (`inpaint`=6) com máscara no preview do nó.
+> 95	
+> 96	Cada toggle mostra seu delta de custo em tempo real (`BR-SPACES-002`). Sliders usam `@radix-ui/react-slider` (já instalado), labels pt-BR (*"Nitidez", "Intensidade", "Passos"*).
+> 97	
+> 98	---
+> 99	
+> 100	## 6. Generation queue (filas)
+> 101	
+> 102	`PR-SPACES-009` — **Fila de geração visível.**
+> 103	Runs são assíncronos; a topbar mostra um indicador de fila (n jobs `pending`/`running`). Estados por nó vêm do `NodeStatus` real (`idle|pending|running|done|error|blocked`). Concurrency: respeitar limite do plano (priority usage; precedente `check-subscription`).
+> 104	
+> 105	`PR-SPACES-010` — **Clusters de histórico de geração.**
+> 106	Cada nó gerador acumula suas saídas num **cluster espacial** ancorado a ele (não numa lista global). Re-rodar com input trocado **adiciona** ao cluster, preservando a anterior — habilita comparação lado a lado (`MR-SPACES-004`). Cards do cluster fazem lazy-load (`FR-SPACES-002`).
+> 107	
+> 108	`PR-SPACES-011` — **Batch via List node.**
+> 109	Um List node alimenta 1 gerador → N saídas coletadas no cluster. Custo projetado = `N × coinCost` (mostrado antes; liga `BR-SPACES-008`).
+> 110	
+> 111	---
+> 112	
+> 113	## 7. Interaction & a11y
+> 114	
+> 115	`PR-SPACES-012` — **Atalhos** (espelham Magnific): `Space`/`/` Spotlight · `Del` remove nó · `Cmd/Ctrl+Z` undo (via `zundo`) · `Cmd/Ctrl+D` duplica · arrastar de porta→porta cria edge. Documentar em `keyboard-shortcuts` interno.
+> 116	
+> 117	`PR-SPACES-013` — **Feedback sempre em pt-BR** via `sonner` (toasts): início, conclusão, erro, estorno, teto. Mensagens reutilizam strings canônicas do `AutopilotPage`/`VideoStudioPage`.
+> 118	
+> 119	`PR-SPACES-014` — **A11y mínimo:** foco visível em nós/portas, navegação por teclado no Spotlight, contraste AA usando tokens (`foreground`/`muted-foreground`), `aria-label` pt-BR nos controles. (Gate: skill `design:accessibility-review` na QA.)
+> 120	
+> 121	---
+> 122	
+> 123	## 8. Non-Functional (produto)
+> 124	
+> 125	| Trace | NFR | Alvo |
+> 126	|---|---|---|
+> 127	| `PR-SPACES-NFR-01` | Pan/zoom fluido | 60 fps até ~150 nós; degradar p/ canvas estático acima |
+> 128	| `PR-SPACES-NFR-02` | Abertura de Space | < 1,5 s p/ p95 (lazy-load de clusters) |
+> 129	| `PR-SPACES-NFR-03` | Custo sempre visível antes do débito | 100% dos nós geradores |
+> 130	| `PR-SPACES-NFR-04` | i18n | UI/toasts/placeholders 100% pt-BR; código 100% inglês |
+> 131	
+> 132	---
+> 133	
+> 134	## 9. Out of Scope (PRD)
+> 135	
+> 136	- Edição 3D como produto (R3F só como camada de efeito; `05-sdd §6`).
+> 137	- Marketplace público de Workflow Apps (fase futura).
+> 138	- Editor de vídeo timeline completo dentro do nó (usa `VideoStudioEditorPage` existente via deep-link).
+> 139	
+> 140	---
+> 141	
+> 142	*Próximo: `04-frd-spaces.md` — lazy-load, verificação de sessão Supabase e sync de estado.*
+> 143	
+> ```
+
+## 🤖 Claude *(13:16:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/04-frd-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 04 · FRD — Functional Requirements · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Functional Requirements Document
+> 4	> **Escopo:** Comportamento funcional — lazy-load de cards de workspace/histórico, verificação de sessão ativa contra Supabase Auth, e sincronização de estado cross-file.
+> 5	> **Trace prefix:** `FR-SPACES-###`
+> 6	> **Anchored to:** `@tanstack/react-query` · `@supabase/supabase-js` · `useOrchestrationStore` · `zundo` · `canvas-dag.ts`
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Convenções
+> 11	
+> 12	- **Hooks governam estado/dados; componentes só renderizam** (harness mandatório). Nenhum `supabase.*`/`fetch` dentro de `.tsx` de nó.
+> 13	- Hooks canônicos introduzidos nesta camada: `useSpacesCanvas`, `useParamRegistry`, `useGenerationLedger`, `useSpaceSession`. Definições de tipo vivem no `05-sdd` (no context rot).
+> 14	- Cada FR é testável (precedente: `src/test/canvas-dag.test.ts`).
+> 15	
+> 16	---
+> 17	
+> 18	## 2. Workspace listing & lazy-load
+> 19	
+> 20	`FR-SPACES-001` — **Home de Spaces (lista de workspaces).**
+> 21	Rota `/dashboard/spaces` lista os Spaces do usuário (recentes + templates), espelhando a home da Magnific. Dados via `react-query` `useQuery(['spaces', userId])`. Cada card: thumbnail, nome, nº de nós, updated_at, custo acumulado (mcoCoins). Empty state pt-BR: *"Nenhum Space ainda. Crie o primeiro ou comece por um template."*
+> 22	
+> 23	`FR-SPACES-002` — **Lazy-load de cards históricos (infinite scroll).**
+> 24	Cards de workspace e cards de cluster de geração carregam sob demanda:
+> 25	- Paginação por cursor com `useInfiniteQuery` (`react-query`), `pageParam = updated_at`.
+> 26	- Disparo via `IntersectionObserver` num sentinela no fim da grade.
+> 27	- Placeholders **skeleton** (keyframe `appear`) enquanto carrega; nunca layout-shift.
+> 28	- Thumbnails: `loading="lazy"` + `IntersectionObserver` para hidratar previews pesados do cluster só quando entram na viewport.
+> 29	- Aceite: nunca buscar todas as gerações de uma vez; cada página ≤ 24 cards; `staleTime` 60 s.
+> 30	
+> 31	`FR-SPACES-003` — **Abertura de um Space (hidratação do grafo).**
+> 32	`GET space → { nodes, edges, viewport }` (via `react-query`), hidrata `useSpacesCanvas` (Zustand). Posições respeitam o padrão `loadPositions()` já existente (`orchestration_positions_v1` → generalizado p/ `spaces:{id}:positions`). Render só após `status==='success'`; durante `loading`, skeleton do canvas.
+> 33	
+> 34	---
+> 35	
+> 36	## 3. Canvas behavior
+> 37	
+> 38	`FR-SPACES-004` — **CRUD de nós e edges com portas tipadas.**
+> 39	- Adicionar nó: Spotlight (`cmdk`) ou `AddNodeMenu` → `useSpacesCanvas.addNode(type, position)`.
+> 40	- Conectar: arrastar porta→porta. `onConnect` **valida tipo** (`image|text|video|audio|svg`) via `useParamRegistry.canConnect(source, target)`; conexão inválida é rejeitada com toast pt-BR *"Tipos incompatíveis: {a} → {b}"*.
+> 41	- Remover: `Del`/`Backspace` → remove nó + edges órfãs.
+> 42	- Undo/redo: `zundo` envolve o store (`temporal`), `Cmd/Ctrl+Z` / `Shift+Cmd/Ctrl+Z`.
+> 43	- Persistência: debounce 800 ms → `upsert` do grafo (otimista; ver `FR-SPACES-008`).
+> 44	
+> 45	`FR-SPACES-005` — **Execução do workflow (run).**
+> 46	- `Run ▶` calcula ordem com `getTopologicalLayers()` (de `canvas-dag.ts`) e executa camada a camada.
+> 47	- Cada nó gerador → `invoke('canvas-execute', { spaceId, nodeId, model, inputs })`.
+> 48	- Estado do nó transita `pending → running → done|error` (`updateNodeStatus` já existe no store).
+> 49	- Falha de um nó **não** derruba o run inteiro: nós dependentes ficam `blocked`; independentes continuam.
+> 50	- Output de cada nó vira input dos filhos via portas (data types §2 do `00-index`).
+> 51	
+> 52	---
+> 53	
+> 54	## 4. Active-state verification (Supabase Auth)
+> 55	
+> 56	`FR-SPACES-006` — **Verificação de sessão ativa antes de qualquer ação custosa.**
+> 57	Hook `useSpaceSession`:
+> 58	- Na montagem: `supabase.auth.getSession()`; assina `supabase.auth.onAuthStateChange`.
+> 59	- **Gate de execução:** todo `Run`/`deduct` exige sessão válida e não expirada. Se `expires_at` < agora → tentar `refreshSession()`; se falhar → bloquear e toast pt-BR *"Sessão expirada. Faça login novamente."* + redirect `/auth` (rota `Auth` já existe em `App.tsx`).
+> 60	- **Autoridade real é server-side:** `canvas-execute` revalida o JWT (`Authorization: Bearer`) e resolve `auth.uid()`; o cliente nunca é fonte de verdade de identidade. Débito ocorre apenas server-side sob `auth.uid()`.
+> 61	
+> 62	`FR-SPACES-007` — **Isolamento por tenant (RLS).**
+> 63	Toda leitura/escrita de Space é escopada por `user_id = auth.uid()` (RLS) — alinhado ao NFR de segurança dura do MCORCH (agentes/dados de produto são disjuntos do Pantheon OpenClaw; nenhuma capability cruza tenant). Tentativa de abrir Space de outro `uid` → 404 (não 403, para não vazar existência).
+> 64	
+> 65	---
+> 66	
+> 67	## 5. Cross-file state sync
+> 68	
+> 69	`FR-SPACES-008` — **Sincronização otimista grafo ↔ servidor.**
+> 70	- Mutações locais aplicam no Zustand **imediatamente** (otimista) e enfileiram `upsert` debounced.
+> 71	- Em sucesso, `react-query` invalida `['space', id]`; em erro, **rollback** do store ao último snapshot confirmado + toast pt-BR *"Falha ao salvar. Alterações revertidas."*
+> 72	- Snapshots aproveitam o histórico do `zundo` (time-travel) como buffer de rollback.
+> 73	
+> 74	`FR-SPACES-009` — **Cross-file: output de um Space alimentando outro.**
+> 75	Um Asset gerado num Space (imagem/vídeo) pode ser referenciado como `Upload/Asset` node em outro Space (por `asset_id`, não cópia). Mudança no asset-fonte propaga via invalidação de query (`['asset', id]`). Habilita pipelines compostos sem duplicar binários.
+> 76	
+> 77	`FR-SPACES-010` — **Sync de colaboração (fase 2).**
+> 78	Co-edição em tempo real via Supabase Realtime (broadcast de patches de nó/edge) + presença (cursores). Resolução de conflito **last-write-wins por nó** (granularidade de nó, não de grafo). Papéis Viewer/Editor controlam escrita. *Fase 2 — especificada, não obrigatória no MVP.*
+> 79	
+> 80	`FR-SPACES-011` — **Recuperação de sessão de canvas (crash-safe).**
+> 81	Rascunho local em `localStorage` (`spaces:{id}:draft`) a cada mutação; na reabertura, se draft local > versão servidor, oferecer *"Recuperar alterações não salvas?"* (pt-BR). Espelha a robustez do `savePositions()` atual.
+> 82	
+> 83	---
+> 84	
+> 85	## 6. Generation history & queue (funcional)
+> 86	
+> 87	`FR-SPACES-012` — **Cluster de geração por nó.**
+> 88	Cada run de nó gerador faz `insert` em `generation` (FK `node_id`, `space_id`). O cluster do nó é `useInfiniteQuery(['generations', nodeId])`. Re-run **adiciona** (não sobrescreve). Card mostra: preview, modelo, `mco_charged`, status, timestamp.
+> 89	
+> 90	`FR-SPACES-013` — **Fila assíncrona + polling/webhook.**
+> 91	Jobs longos (vídeo) seguem o padrão `check-video-status` (polling) ou webhook (precedente Higgsfield DoP em `canvas-execute`). UI reflete `pending|running` na topbar; ao concluir, `react-query` invalida o cluster e o card aparece com `appear` keyframe.
+> 92	
+> 93	`FR-SPACES-014` — **Reconciliação de custo no card.**
+> 94	Ao finalizar, card exibe `mco_charged` e, se houve falha+estorno, `refunded_mco` (espelha `VideoStudioPage`). Liga `BR-SPACES-004`/`BR-SPACES-007`.
+> 95	
+> 96	---
+> 97	
+> 98	## 7. Error handling (canônico, pt-BR)
+> 99	
+> 100	| Situação | Status nó | Toast (sonner) | Trace |
+> 101	|---|---|---|---|
+> 102	| Saldo insuficiente | `blocked` | *"Saldo de mcoCoins insuficiente."* | `BR-SPACES-003` |
+> 103	| Teto diário | `blocked` | *"Teto diário de mcoCoins do dia já atingido."* | `BR-SPACES-003` |
+> 104	| Tipos incompatíveis | — | *"Tipos incompatíveis: {a} → {b}"* | `FR-SPACES-004` |
+> 105	| Provider falhou | `error` | *"Falha na geração. {n} mcoCoins estornados."* | `BR-SPACES-004` |
+> 106	| Sessão expirada | — | *"Sessão expirada. Faça login novamente."* | `FR-SPACES-006` |
+> 107	| Prompt longo/instrução | `error` | *"Prompt inválido para imagem (muito longo ou em formato de instrução)."* | `BR §4` |
+> 108	
+> 109	---
+> 110	
+> 111	## 8. Acceptance traceability
+> 112	
+> 113	| FR | Verificação automatizável |
+> 114	|---|---|
+> 115	| `FR-SPACES-002` | Mock de 100 gerações ⇒ ≤ 24 buscadas no 1º paint |
+> 116	| `FR-SPACES-004` | Conexão `image→text` rejeitada; `image→image` aceita |
+> 117	| `FR-SPACES-005` | DAG com diamante ⇒ ordem topológica correta (reusa `canvas-dag.test.ts`) |
+> 118	| `FR-SPACES-006` | Sessão expirada ⇒ run bloqueado, sem `deduct` |
+> 119	| `FR-SPACES-008` | Erro de upsert ⇒ store volta ao snapshot anterior |
+> 120	
+> 121	---
+> 122	
+> 123	*Próximo: `05-sdd-spaces.md` — data models, hooks tipados e gatilhos WebGL.*
+> 124	
+> ```
+
+## 🤖 Claude *(13:16:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/05-sdd-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 05 · SDD — Software Design Document · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Software Design Document
+> 4	> **Escopo:** Modelos de dados, interfaces estritamente tipadas, hooks de estado, árvore de componentes, lógica de execução do grafo e gatilhos WebGL/R3F.
+> 5	> **Trace prefix:** `SD-SPACES-###` (mapeia para `FR-`/`BR-`/`PR-`)
+> 6	> **Anchored to:** `useOrchestrationStore.ts` · `canvas-dag.ts` · `@xyflow/react` · `zustand`+`zundo` · `zod` · `@supabase/supabase-js`
+> 7	> 
+> 8	> 🛰️ **LIVE-RECON (ver `09-live-recon-spaces.md`):** Magnific Spaces roda em **Vue 3 + Vue Flow** + canvas WebGL de helper-lines (não React Flow). A escolha MCORCH de `@xyflow/react` é o **equivalente React 1:1** do Vue Flow — paridade conceitual confirmada por inspeção de DOM. Portas reais do Image Generator: `reference`/`prompt` (in), `output` (out).
+> 9	
+> 10	---
+> 11	
+> 12	## 1. Design tenets (harness)
+> 13	
+> 14	1. **Hooks = estado + dados; componentes = pixels.** Toda I/O (Supabase, edge fns, RPC) vive em hooks/services. `.tsx` de nó é puro (props in, JSX out).
+> 15	2. **Tipos canônicos aqui.** Outros artefatos referenciam; este define. (No context rot.)
+> 16	3. **Generalizar, não duplicar.** `useSpacesCanvas` **estende** o contrato de `useOrchestrationStore`; não cria um segundo store.
+> 17	4. **Código inglês; copy pt-BR** isolada em `i18n/pt-BR/spaces.ts`.
+> 18	
+> 19	---
+> 20	
+> 21	## 2. Module topology (onde cada peça mora)
+> 22	
+> 23	```
+> 24	src/
+> 25	├── pages/
+> 26	│   ├── SpacesHomePage.tsx        # FR-SPACES-001 (lista + templates)
+> 27	│   └── SpaceCanvasPage.tsx       # casca; ancora em UnifiedCanvasPage
+> 28	├── components/spaces/
+> 29	│   ├── SpaceCanvas.tsx           # <ReactFlow/> wrapper (72%)
+> 30	│   ├── ParamHUD.tsx              # painel 28% (sidebar.*)
+> 31	│   ├── Spotlight.tsx            # cmdk; reusa AddNodeMenu
+> 32	│   ├── GenerationCluster.tsx    # PR-SPACES-010 (lazy cards)
+> 33	│   ├── QueueIndicator.tsx       # topbar fila
+> 34	│   ├── nodes/                   # 1 arquivo por tipo (puros)
+> 35	│   │   ├── ImageGenNode.tsx     #   reusa GenerateImageNode
+> 36	│   │   ├── UpscaleNode.tsx
+> 37	│   │   ├── ImageToVideoNode.tsx #   reusa canvas/nodes/*
+> 38	│   │   └── ListNode.tsx
+> 39	│   ├── ports/PortHandle.tsx     # porta tipada
+> 40	│   └── fx/CanvasFXLayer.tsx     # R3F overlay (SD-SPACES-009)
+> 41	├── hooks/
+> 42	│   ├── useSpacesCanvas.ts        # SD-SPACES-001
+> 43	│   ├── useParamRegistry.ts       # SD-SPACES-002
+> 44	│   ├── useGenerationLedger.ts    # SD-SPACES-003 (mcoCoins)
+> 45	│   └── useSpaceSession.ts        # FR-SPACES-006 (auth)
+> 46	├── lib/
+> 47	│   ├── spaces-dag.ts             # reexporta getTopologicalLayers
+> 48	│   ├── spaces-schema.ts          # zod (SD-SPACES-006)
+> 49	│   └── port-compat.ts            # matriz de compatibilidade
+> 50	├── store/
+> 51	│   └── useSpacesStore.ts         # zustand + zundo (generaliza orchestration)
+> 52	└── i18n/pt-BR/spaces.ts          # toasts/labels/placeholders
+> 53	```
+> 54	
+> 55	Servidor (já existe): `supabase/functions/canvas-execute/` · `analyze-node/` · RPCs ledger.
+> 56	
+> 57	---
+> 58	
+> 59	## 3. Domain entities (strictly typed)
+> 60	
+> 61	`SD-SPACES-006` — Tipos canônicos. Fonte única; espelham colunas Supabase e estendem `OrchestrationNodeData` (campos `coinCost`, `stabilityScore`, `status`, `config` mantidos).
+> 62	
+> 63	```ts
+> 64	// lib/spaces-schema.ts  — code in English (mandatory)
+> 65	export type PortDataType = 'image' | 'text' | 'video' | 'audio' | 'svg';
+> 66	
+> 67	export type NodeStatus =          // reused verbatim from useOrchestrationStore
+> 68	  | 'idle' | 'pending' | 'running' | 'done' | 'error' | 'blocked';
+> 69	
+> 70	export type SpaceNodeCategory =
+> 71	  | 'media' | 'text' | 'image' | 'video' | 'audio' | 'utility' | 'designer';
+> 72	
+> 73	export interface Port {
+> 74	  id: string;
+> 75	  direction: 'in' | 'out';
+> 76	  dataType: PortDataType;
+> 77	  label: string;                  // pt-BR (UI)
+> 78	  required?: boolean;
+> 79	}
+> 80	
+> 81	export interface SpaceNodeData extends Record<string, unknown> {
+> 82	  label: string;                  // pt-BR
+> 83	  category: SpaceNodeCategory;
+> 84	  modelKey?: string;              // e.g. 'higgsfield/soul-1080p-4' → CREDIT_COSTS
+> 85	  coinCost: number;               // mcoCoins (server is source of truth)
+> 86	  status: NodeStatus;
+> 87	  stabilityScore: number;         // carried from orchestration model
+> 88	  ports: Port[];
+> 89	  params: Record<string, unknown>;// HUD-driven (useParamRegistry)
+> 90	  byok?: boolean;                 // BR-SPACES-006
+> 91	  icon: string;
+> 92	}
+> 93	
+> 94	// @xyflow/react generics
+> 95	import type { Node, Edge, Viewport } from '@xyflow/react';
+> 96	export type SpaceNode = Node<SpaceNodeData>;
+> 97	export interface SpaceEdgeData extends Record<string, unknown> {
+> 98	  dataType: PortDataType;         // typed connection (FR-SPACES-004)
+> 99	}
+> 100	export type SpaceEdge = Edge<SpaceEdgeData>;
+> 101	
+> 102	export interface SpaceEntity {
+> 103	  id: string;
+> 104	  ownerId: string;                // = auth.uid() (RLS, FR-SPACES-007)
+> 105	  title: string;
+> 106	  nodes: SpaceNode[];
+> 107	  edges: SpaceEdge[];
+> 108	  viewport: Viewport;
+> 109	  isTemplate: boolean;
+> 110	  workflowApp?: WorkflowAppMeta;  // PR-SPACES-007
+> 111	  createdAt: string;
+> 112	  updatedAt: string;
+> 113	}
+> 114	
+> 115	export interface Generation {     // cluster card (FR-SPACES-012)
+> 116	  id: string;
+> 117	  spaceId: string;
+> 118	  nodeId: string;
+> 119	  outputType: PortDataType;
+> 120	  assetId?: string;               // cross-space ref (FR-SPACES-009)
+> 121	  modelKey: string;
+> 122	  mcoCharged: number;             // BR-SPACES-007
+> 123	  mcoRefunded?: number;           // BR-SPACES-004
+> 124	  usdCost?: number;
+> 125	  latencyMs?: number;
+> 126	  status: NodeStatus;
+> 127	  createdAt: string;
+> 128	}
+> 129	
+> 130	export interface WorkflowAppMeta {
+> 131	  inputs: Port[];
+> 132	  outputs: Port[];
+> 133	  publishedAt?: string;
+> 134	}
+> 135	```
+> 136	
+> 137	> **Zod runtime guards:** cada interface tem um `z.object` correspondente em `spaces-schema.ts`; o grafo é validado antes de `upsert` e ao hidratar (defende contra dados corrompidos / drift de versão).
+> 138	
+> 139	---
+> 140	
+> 141	## 4. State hooks (contracts)
+> 142	
+> 143	`SD-SPACES-001` — **`useSpacesStore` / `useSpacesCanvas`.** Zustand + `zundo` (temporal/undo). Generaliza `useOrchestrationStore` (mesmos métodos `setNodes/setEdges/updateNodeStatus/updateNodeData/setSelectedNode/setViewport` + novos).
+> 144	
+> 145	```ts
+> 146	// store/useSpacesStore.ts — English
+> 147	interface SpacesState {
+> 148	  spaceId: string | null;
+> 149	  nodes: SpaceNode[];
+> 150	  edges: SpaceEdge[];
+> 151	  viewport: Viewport;
+> 152	  selectedNodeId: string | null;
+> 153	  runState: 'idle' | 'running' | 'partial' | 'done';
+> 154	
+> 155	  // mutations (optimistic; FR-SPACES-008)
+> 156	  addNode(type: string, position: XYPosition): void;
+> 157	  connect(conn: Connection): boolean;     // false if incompatible (FR-SPACES-004)
+> 158	  updateNodeParams(id: string, patch: Record<string, unknown>): void;
+> 159	  updateNodeStatus(id: string, s: NodeStatus): void;
+> 160	  removeNode(id: string): void;
+> 161	  hydrate(space: SpaceEntity): void;       // FR-SPACES-003
+> 162	  snapshot(): SpaceEntity;                 // for debounced upsert / rollback
+> 163	}
+> 164	// temporal(set, get) via zundo → undo/redo (PR-SPACES-012)
+> 165	```
+> 166	
+> 167	`useSpacesCanvas()` = selector facade sobre o store (evita re-render global; expõe só o que o componente precisa).
+> 168	
+> 169	`SD-SPACES-002` — **`useParamRegistry`.** Define, por `category`/`modelKey`, o **esquema de parâmetros** do HUD e a **compatibilidade de portas**. Separa "o que o nó aceita" (dados) de "como o HUD desenha" (visual).
+> 170	
+> 171	```ts
+> 172	// hooks/useParamRegistry.ts — English
+> 173	interface ParamField {
+> 174	  key: string;
+> 175	  kind: 'text' | 'textarea' | 'select' | 'slider' | 'toggle' | 'mask';
+> 176	  labelPt: string;                 // pt-BR label
+> 177	  min?: number; max?: number; step?: number;
+> 178	  options?: { value: string; labelPt: string }[];
+> 179	  costDelta?: number;              // mcoCoins delta (BR-SPACES-002)
+> 180	}
+> 181	interface ParamRegistry {
+> 182	  getSchema(node: SpaceNode): ParamField[];
+> 183	  canConnect(source: SpaceNode, sPort: Port, target: SpaceNode, tPort: Port): boolean;
+> 184	  estimateCost(node: SpaceNode): number;   // reads CREDIT_COSTS mirror / calc_agent_cost_mcoin
+> 185	}
+> 186	```
+> 187	
+> 188	`SD-SPACES-003` — **`useGenerationLedger`.** Única superfície cliente que fala com o ledger (sempre via edge fn; nunca RPC direto de mutação no cliente).
+> 189	
+> 190	```ts
+> 191	// hooks/useGenerationLedger.ts — English
+> 192	function useGenerationLedger(spaceId: string) {
+> 193	  const estimate = (nodeIds: string[]) => number;          // BR-SPACES-008 (dry projection)
+> 194	  const run = (nodeId: string) => Promise<Generation>;     // invokes 'canvas-execute'
+> 195	  const runGraph = (opts?: { dryRun?: boolean }) => ...;   // BR-SPACES-005
+> 196	  const clusters = (nodeId: string) => UseInfiniteQueryResult<Generation>; // FR-SPACES-012
+> 197	  return { estimate, run, runGraph, clusters };
+> 198	}
+> 199	```
+> 200	
+> 201	`SD-SPACES-004` — **`useSpaceSession`.** Encapsula `supabase.auth` (FR-SPACES-006): `getSession`, `onAuthStateChange`, `ensureFresh()` (refresh proativo antes de run). Retorna `{ session, isValid, ensureFresh }`. Componentes **nunca** chamam `supabase.auth` direto.
+> 202	
+> 203	---
+> 204	
+> 205	## 5. Execution pipeline (server + client)
+> 206	
+> 207	`SD-SPACES-005` — Sequência de um `runGraph`:
+> 208	
+> 209	```
+> 210	client                                   server (canvas-execute)
+> 211	──────                                    ───────────────────────
+> 212	spaces-dag.getTopologicalLayers(nodes,edges)
+> 213	  └─ layers[]
+> 214	for layer in layers:                      verify JWT → auth.uid()
+> 215	  for node in layer (parallel):           resolve CREDIT_COSTS[modelKey]
+> 216	    updateNodeStatus(running)  ───run──▶  check balance + daily cap (RPC)
+> 217	                                          deduct_mco_coins(amount, uid, ctx)
+> 218	                                          call provider (LLM/image/video)
+> 219	                              ◀──result── on ok:  insert generation(mcoCharged)
+> 220	    updateNodeStatus(done|error)          on err: refund (finalize_*-style), mcoRefunded
+> 221	    invalidate(['generations', nodeId])
+> 222	```
+> 223	
+> 224	- **Ordenação:** reusa `getTopologicalLayers()` de `src/lib/canvas-dag.ts` (já testado). `spaces-dag.ts` apenas reexporta + tipa para `SpaceNode`.
+> 225	- **Falha isolada:** nó `error` ⇒ descendentes `blocked` (BFS sobre arestas de saída); ramos independentes prosseguem (FR-SPACES-005).
+> 226	- **Idempotência:** `node_run_id` (uuid) por tentativa; servidor descarta duplicatas (anti duplo-débito, `BR §6`).
+> 227	
+> 228	---
+> 229	
+> 230	## 6. Layout mesh & WebGL trigger decision
+> 231	
+> 232	`SD-SPACES-007` — **Decisão de arquitetura (ADR resumido): o canvas é DOM/SVG (`@xyflow/react`), não WebGL.**
+> 233	
+> 234	- **Contexto:** o repo tem R3F (`@react-three/fiber` 8.18) + `three`. Tentação de renderizar o grafo em WebGL.
+> 235	- **Decisão:** **manter o grafo em `@xyflow/react` (DOM)**. Nós são cards interativos com inputs/preview de mídia — DOM/CSS é o substrato correto (acessibilidade, seleção de texto, `react` puro, já testado em produção).
+> 236	- **R3F entra só como camada de efeito** (`fx/CanvasFXLayer.tsx`), um overlay opcional **atrás/sobre** o canvas para: pulso de "constelação" no fundo, partículas em nó ativo (sincronizadas ao keyframe `glow-pulse`), e transições de "mesh" ao agrupar nós. **Trigger‑based**, nunca no caminho crítico de interação.
+> 237	- **Gatilhos WebGL (lazy):** `CanvasFXLayer` só monta se `prefers-reduced-motion: no-preference` **e** `nodeCount < 150` (`PR-SPACES-NFR-01`); acima disso, degrada para fundo estático. Import dinâmico (`React.lazy`) para não pesar o bundle do canvas.
+> 238	- **Consequência:** zero acoplamento entre física de efeito e lógica de grafo; remover o FX não quebra nada.
+> 239	
+> 240	`SD-SPACES-008` — **Layout assist (opcional).** Para auto-organizar grafos densos, reusar `d3-force`/`graphology-layout-forceatlas2` (já instalados, usados na `ConstellationPage`) como passe de layout one-shot — **não** como simulação contínua.
+> 241	
+> 242	`SD-SPACES-009` — **FX layer contract.**
+> 243	```ts
+> 244	// components/spaces/fx/CanvasFXLayer.tsx — mounts <Canvas> (R3F) only when enabled
+> 245	interface CanvasFXProps { activeNodeIds: string[]; nodeCount: number; enabled: boolean; }
+> 246	// reads brand cyan hsl(185 80% 55%) from CSS var for particle color
+> 247	```
+> 248	
+> 249	---
+> 250	
+> 251	## 7. Persistence & data model (Supabase)
+> 252	
+> 253	`SD-SPACES-010` — Tabelas (RLS por `owner_id = auth.uid()`):
+> 254	
+> 255	| Tabela | Colunas-chave | Liga |
+> 256	|---|---|---|
+> 257	| `spaces` | `id, owner_id, title, viewport jsonb, is_template, workflow_app jsonb, updated_at` | `FR-SPACES-001/003` |
+> 258	| `space_nodes` | `id, space_id, type, position jsonb, data jsonb` | `FR-SPACES-004` |
+> 259	| `space_edges` | `id, space_id, source, target, source_port, target_port, data_type` | `FR-SPACES-004` |
+> 260	| `generations` | `id, space_id, node_id, output_type, asset_id, model_key, mco_charged, mco_refunded, usd_cost, latency_ms, status, created_at` | `FR-SPACES-012`, `BR-SPACES-007` |
+> 261	
+> 262	- Índices: `generations(node_id, created_at desc)` para o lazy cluster; `spaces(owner_id, updated_at desc)` para a home.
+> 263	- `space_nodes`/`space_edges` podem ser desnormalizados em `spaces.graph jsonb` no MVP (1 fetch hidrata o canvas); normalização entra quando colab realtime (FR-SPACES-010) exigir patches granulares.
+> 264	
+> 265	---
+> 266	
+> 267	## 8. Trace matrix (SDD → upstream)
+> 268	
+> 269	| Módulo | Implementa |
+> 270	|---|---|
+> 271	| `useSpacesStore` / `useSpacesCanvas` | `FR-SPACES-003/004/008`, `PR-SPACES-012` |
+> 272	| `useParamRegistry` | `FR-SPACES-004`, `PR-SPACES-006/008`, `BR-SPACES-002` |
+> 273	| `useGenerationLedger` | `BR-SPACES-001/004/005/007/008`, `FR-SPACES-005/012` |
+> 274	| `useSpaceSession` | `FR-SPACES-006`, `BR §5` |
+> 275	| `SpaceCanvas` + `ParamHUD` | `PR-SPACES-001/002` |
+> 276	| `Spotlight` | `PR-SPACES-003` |
+> 277	| `GenerationCluster` | `PR-SPACES-010`, `FR-SPACES-002` |
+> 278	| `spaces-dag.ts` | `FR-SPACES-005` (reusa `canvas-dag.ts`) |
+> 279	| `CanvasFXLayer` | `SD-SPACES-007..009` (R3F trigger) |
+> 280	| `canvas-execute` (server) | `BR-SPACES-001/003/004`, `FR-SPACES-005/006` |
+> 281	
+> 282	---
+> 283	
+> 284	## 9. Testing strategy (semente p/ `08-quality-metrics`)
+> 285	
+> 286	- **Unit:** `port-compat` (matriz de tipos), `useParamRegistry.estimateCost`, `spaces-dag` (reusa `canvas-dag.test.ts`).
+> 287	- **Integration:** mock de `canvas-execute` → assert débito/refund/idempotência (`BR-SPACES-001..006`).
+> 288	- **Component:** `SpaceCanvas` connect inválido rejeitado; `GenerationCluster` lazy (≤24 no 1º paint).
+> 289	- **E2E (Playwright, já no repo):** criar Space → adicionar nós → conectar → dry-run → run → ver cluster + custo. Gate a11y via `design:accessibility-review`.
+> 290	
+> 291	---
+> 292	
+> 293	## 10. Rollout (sem drift)
+> 294	
+> 295	1. **Fase 0** — introduzir tipos `spaces-schema.ts` + `useSpacesStore` generalizando `useOrchestrationStore` (sem remover o legado).
+> 296	2. **Fase 1 (MVP)** — `/dashboard/spaces`, canvas 72/28, Spotlight, nós Image/Text/Upscale, ledger via `canvas-execute`, clusters lazy.
+> 297	3. **Fase 2** — vídeo/áudio/Designer nodes, Workflow Apps, FX layer R3F.
+> 298	4. **Fase 3** — colaboração realtime (FR-SPACES-010), marketplace de apps.
+> 299	
+> 300	> **Migração do legado:** `OrchestrationPage`/`UnifiedCanvasPage` tornam-se *presets* (templates) dentro de Spaces; nenhum arquivo é deletado no MVP — apenas reembrulhado pelo novo store. Anti-drift garantido.
+> 301	
+> 302	---
+> 303	
+> 304	*Fim da suíte mandatada (01–05). Índice e mesh em `00-index.md`.*
+> 305	
+> ```
+
+## 🤖 Claude *(13:16:24)*
+
+
+## 🤖 Claude *(13:16:24)*
+
+
+## 🤖 Claude *(13:16:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/09-live-recon-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 09 · Live Recon — Verified Observations · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Reconhecimento ao vivo (ground-truth) do workspace Magnific Spaces.
+> 4	> **Método:** navegação autenticada via Claude in Chrome no workspace `a2247da8-6acf-4e99-ad8d-1e032bb58d9e` (conta do Sovereign), 2026-06-29. Observações extraídas por screenshot + inspeção de DOM (`vue-flow__*`) + execução de JS no contexto da página.
+> 5	> **Função:** corrigir/confirmar os artefatos `01–05` com evidência direta. **Este documento é a fonte de verdade** onde diverge da suposição anterior.
+> 6	> **Trace prefix:** `LR-SPACES-###` → patches em `MR/BR/PR/FR/SD`.
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Sumário executivo (PT-BR)
+> 11	
+> 12	Entrei no workspace real. A maior parte da modelagem anterior **confirmou-se**, mas o recon revelou **4 correções materiais** que tornam o material mais acertivo:
+> 13	
+> 14	1. **Stack do Magnific = Vue 3 + Vue Flow** (não React Flow). Evidência: `canvas.vue-flow__helperlines-canvas`, `react=false`, nós `.vue-flow__node`. → Para o MCORCH, `@xyflow/react` continua sendo a escolha correta (equivalente React 1:1 do Vue Flow). É **paridade conceitual**, não de biblioteca.
+> 15	2. **Parâmetros vivem na FACE do nó**, não num HUD lateral de 28%. O nó Image Generator traz prompt, aspect ratio (`1:1`), batch (`x1`) e modo (`Auto`) embutidos. A "lei 72/28" é **decisão de design MCORCH** (mandada na diretiva), **não** paridade com o Magnific.
+> 16	3. **Sem custo/crédito estático na face do nó** (`hasCreditOnFace=false`). O badge de `mcoCoins` por nó é **enhancement MCORCH** (vantagem competitiva), não cópia.
+> 17	4. **Taxonomia real = 8 grupos** (não 7): adiciona **REFERENCES**; **Designer** é nó dentro de **IMAGE**, não categoria.
+> 18	
+> 19	Novidades não mapeadas antes: **páginas dentro de um Space** ("Page 1"), **Flows (Beta)** como recurso separado, **References** como cidadão de primeira classe, e **helper-lines de alinhamento** (snapping) em canvas WebGL.
+> 20	
+> 21	---
+> 22	
+> 23	## 2. Chrome inventory (verificado)
+> 24	
+> 25	### 2.1 Top bar
+> 26	`< voltar` · breadcrumb **`Personal project › Untitled space`** (ícone de space) · `Pricing` · avatar de presença · **`Flows` (Beta)** · **`Share`** (colaboração) · botão de painel/preview · avatar do usuário.
+> 27	
+> 28	### 2.2 Left tool rail (vertical, cima→baixo) — `LR-SPACES-001`
+> 29	| Ícone | Ferramenta | Mapeia p/ MCORCH |
+> 30	|---|---|---|
+> 31	| `+` | **Add node** (abre Spotlight) | `PR-SPACES-003` |
+> 32	| cursor | **Select / pointer** (default) | — |
+> 33	| ✋ | **Pan** (hand) | `PR-SPACES-004` |
+> 34	| ✂ | **Cut** (corta conexões) | novo — ferramenta de slice de edges |
+> 35	| ▭ | **Frame / section** | relaciona Utilities→Group |
+> 36	| 💬 | **Comment** | `MR-SPACES-005`, colab |
+> 37	| ↶ | **Undo** | `PR-SPACES-012` (`zundo`) |
+> 38	| ↷ | **Redo** (disabled quando vazio) | `PR-SPACES-012` |
+> 39	| ⚙ | **Settings** | — |
+> 40	
+> 41	### 2.3 Bottom bar
+> 42	- Esquerda: **`Page 1`** — *múltiplas páginas por Space* (`LR-SPACES-002`, novo).
+> 43	- Direita: **auto-arrange/tidy**, **toggle de minimapa** (🗺), **zoom `100% ▾`**. Confirma `PR-SPACES-004`.
+> 44	
+> 45	### 2.4 Canvas
+> 46	Fundo de **pontos** (dot-grid), pan/zoom infinito, **helper-lines de alinhamento** em `<canvas webgl>` (`vue-flow__helperlines-canvas`) para snapping. → `LR-SPACES-003`.
+> 47	
+> 48	---
+> 49	
+> 50	## 3. Spotlight / Add-node menu (verificado) — `LR-SPACES-004`
+> 51	
+> 52	Aberto pelo `+`. Estrutura: campo **Search** no topo, **fileira de 8 ícones de categoria**, lista agrupada e rolável, rodapé com atalhos **`N` Open · `↑↓` Navigate · `⏎` Insert**.
+> 53	
+> 54	**Taxonomia COMPLETA (extraída do DOM):**
+> 55	
+> 56	| Grupo | Nós |
+> 57	|---|---|
+> 58	| **BASICS** (atalho) | Text · Image Generator · Video Generator · Assistant · Image Upscaler · List |
+> 59	| **MEDIA** | Upload · Assets · Stock |
+> 60	| **REFERENCES** | Add Reference |
+> 61	| **IMAGE** | Image Generator · Image Upscaler · Image Editor · Variations · **Designer** (New) · Sketch · Image to SVG · SVG Generator |
+> 62	| **VIDEO** | Video Generator · Speak · Video Combiner · Video Upscaler · Media Extractor (New) |
+> 63	| **AUDIO** | Voiceover · Sound Effects · Music Generator |
+> 64	| **TEXT** | Text · Assistant |
+> 65	| **UTILITIES** | List · Sticky note · Stickers · Group |
+> 66	
+> 67	> Tipos de dado nas portas (confirmados pelo doc oficial + handles reais): `image · text · video · audio · svg`. **SVG** é cidadão de primeira classe (nós `Image to SVG`, `SVG Generator`).
+> 68	
+> 69	---
+> 70	
+> 71	## 4. Node anatomy — Image Generator (verificado) — `LR-SPACES-005`
+> 72	
+> 73	Inserido um nó real. ID `c5fd1199-…`, título auto-numerado **"Image Generator #1"**.
+> 74	
+> 75	**Portas (handles `.vue-flow__handle`):**
+> 76	| handleId | lado | tipo |
+> 77	|---|---|---|
+> 78	| `reference` | esquerda | target (in) |
+> 79	| `prompt` | esquerda | target (in) |
+> 80	| `output` | direita | source (out) |
+> 81	
+> 82	→ **Confirma o modelo de portas tipadas e nomeadas por papel** (`SD-SPACES-006`): inputs à esquerda, output à direita. Use estes IDs canônicos (`reference`/`prompt`/`output`) no `useParamRegistry`.
+> 83	
+> 84	**Controles embutidos na face do nó:**
+> 85	- Textarea de prompt — placeholder pt-BR equivalente: *"Describe the image you want to generate…"* → no MCORCH: *"Descreva a imagem que deseja gerar…"*.
+> 86	- **Batch stepper** `x1 / x2 …` (aria "Decrease/Increase value to N") → `PR-SPACES-011`.
+> 87	- **Aspect ratio** `1:1` (seletor) → enhancement de imagem inline.
+> 88	- **Mode** `Auto` (seleção de modelo/qualidade automática).
+> 89	- Botão **add reference image** (canto superior-direito do nó).
+> 90	- Área de **preview do output** (grande, central) — onde a imagem gerada aparece.
+> 91	
+> 92	**Sem custo/crédito na face** (`hasCreditOnFace=false`).
+> 93	
+> 94	---
+> 95	
+> 96	## 5. Divergence Ledger (paridade vs correção vs enhancement)
+> 97	
+> 98	| ID | Achado ao vivo | Classe | Ação no material |
+> 99	|---|---|---|---|
+> 100	| `LR-SPACES-006` | Vue 3 + **Vue Flow**, não React Flow | **Correção** | `05-sdd §6`: declarar paridade Vue Flow↔React Flow; manter `@xyflow/react` (equivalente React, já instalado) |
+> 101	| `LR-SPACES-007` | Parâmetros **inline no nó**; sem HUD lateral persistente | **Correção** | `03-prd`: marcar a lei 72/28 como *decisão MCORCH* (diretiva), não paridade; recomendar híbrido (quick-params inline + HUD opcional p/ avançado) |
+> 102	| `LR-SPACES-008` | **Sem custo estático** na face do nó | **Enhancement MCORCH** | `BR-SPACES-002`/`PR-SPACES-006`: reclassificar badge de `mcoCoins` como *vantagem competitiva* (transparência que o Magnific não tem) |
+> 103	| `LR-SPACES-009` | **8 categorias** (+REFERENCES; Designer⊂Image) | **Correção** | `PR-SPACES-005`: atualizar tabela de categorias |
+> 104	| `LR-SPACES-010` | **Páginas por Space** (Page 1) | **Novo** | adicionar entidade `SpacePage`; `SpaceEntity` ganha `pages[]` |
+> 105	| `LR-SPACES-011` | **Flows (Beta)** separado de Spaces | **Novo** | nota de roadmap; Flows = automação/execução agendada de um Space |
+> 106	| `LR-SPACES-012` | **References** (character/style) first-class | **Novo** | nó `Add Reference`; liga ao `CharacterReferenceNode` já existente no repo |
+> 107	| `LR-SPACES-013` | **Helper-lines** WebGL (snapping) | **Confirma+** | `SD-SPACES-007`: o uso de canvas/WebGL é *funcional* (alinhamento), não só FX |
+> 108	| `LR-SPACES-014` | Run scope **"This node only"** | **Confirma+** | `FR-SPACES-005`: run granular (só o nó vs. downstream) |
+> 109	| `LR-SPACES-015` | Presença ("… is idle"), Share, avatars | **Confirma** | `MR-SPACES-005`, `FR-SPACES-010` |
+> 110	| `LR-SPACES-016` | Spotlight com busca + `↑↓`/`⏎`/`N` | **Confirma** | `PR-SPACES-003` (atalho real inclui `N`/search, além de Space//) |
+> 111	| `LR-SPACES-017` | Empty-state: Start from scratch · Getting started · Templates · Flows | **Confirma** | `PR` templates |
+> 112	| `LR-SPACES-018` | Título de nó **auto-numerado** (#1) | **Novo** | regra de naming em `useSpacesCanvas.addNode` |
+> 113	
+> 114	---
+> 115	
+> 116	## 6. Patches aplicados nesta volta
+> 117	
+> 118	- `00-index.md` — nota de paridade Vue Flow↔React Flow + ponteiro para este doc.
+> 119	- `03-prd-spaces.md` — `PR-SPACES-005` taxonomia 8 grupos; `PR-SPACES-001` anotada como divergência consciente (inline-params no Magnific vs HUD 72/28 MCORCH).
+> 120	- `05-sdd-spaces.md` — `SD-SPACES-007` esclarece Magnific=Vue Flow; ADR React Flow reforçado.
+> 121	
+> 122	---
+> 123	
+> 124	## 7. Novas entidades/relações → Memory Mesh
+> 125	
+> 126	- Entidades: `SpacePage` (Space 1—N páginas), `ReferenceNode` (character/style ref), `Flow` (automação de um Space).
+> 127	- Portas canônicas reais: `reference`, `prompt`, `output` (Image Generator) — base do `port-compat`.
+> 128	- Relação: `Flow —runs→ Space`; `SpaceEntity —has→ SpacePage[]`; `ImageGeneratorNode —in:reference|prompt, out:output`.
+> 129	- Stack-fact: Magnific Spaces = **Vue 3 + Vue Flow + WebGL helperlines**; MCORCH replica em **React 18 + @xyflow/react** (equivalência verificada).
+> 130	
+> 131	---
+> 132	
+> 133	## 8. Evidência (artefatos de sessão)
+> 134	
+> 135	- Empty-state launcher (Stock/Media/Image Generator/Video Generator/Assistant + tabs).
+> 136	- Spotlight aberto com as 8 categorias.
+> 137	- Nó Image Generator selecionado (prompt + preview + ports `reference/prompt/output`).
+> 138	- DOM: `vue-flow__node` (1), `vue-flow__handle` (3), `vue-flow__helperlines-canvas` (WebGL).
+> 139	
+> 140	> *Screenshots capturados na sessão Claude-in-Chrome; podem ser anexados ao PR de documentação se desejado.*
+> 141	
+> 142	---
+> 143	
+> 144	*Fonte de verdade ao vivo. Onde `01–05` divergirem deste doc, este prevalece até o próximo recon.*
+> 145	
+> ```
+
+## 🤖 Claude *(13:16:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/10-ui-inventory-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 10 · UI Inventory — Toolbar, Nodes & Options (ground-truth) · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Inventário exaustivo da interface Magnific Spaces, verificado ao vivo (Claude in Chrome, workspace `a2247da8-…`, 2026-06-29).
+> 4	> **Função:** evidência durável + especificação de paridade para o canvas MCORCH. Onde houver conflito com `01–05`, este doc + `09` prevalecem.
+> 5	> **Trace prefix:** `UI-SPACES-###`.
+> 6	> **Nota de evidência:** screenshots foram capturados na sessão Claude-in-Chrome (lado navegador do Sovereign). O conteúdo visual está codificado integralmente abaixo em forma estruturada; para anexar os PNGs ao repo, soltar os arquivos em `docs/bok/spaces-evolution/evidence/`.
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Top bar — `UI-SPACES-001`
+> 11	`‹ voltar` · breadcrumb **`Personal project › Untitled space`** (cada um com ícone) · **`Pricing`** · **avatar de presença** (colaborador) · **`Flows` (Beta)** · **`Share`** · botão de preview/apresentação · **avatar da conta**.
+> 12	
+> 13	## 2. Left tool rail — `UI-SPACES-002`
+> 14	Vertical, com tooltips verificados:
+> 15	
+> 16	| Ordem | Ícone | Nome (tooltip) | Atalho | MCORCH |
+> 17	|---|---|---|---|---|
+> 18	| 1 | `+` | **Add node** | `N` | abre Spotlight → `PR-SPACES-003` |
+> 19	| 2 | cursor | **Select** (default) | — | seleção/move |
+> 20	| 3 | ✋ | **Pan / hand** | (segurar Space) | `PR-SPACES-004` |
+> 21	| 4 | ✂ | **Cut** (corta conexões) | — | slice de edges |
+> 22	| 5 | ▭ | **Frame / section** | — | agrupamento visual |
+> 23	| 6 | 💬 | **Comment** | — | colaboração |
+> 24	| 7 | ↶ | **Undo** | `⌘Z` | `zundo` |
+> 25	| 8 | ↷ | **Redo** | `⌘⇧Z` | `zundo` |
+> 26	| 9 | ⚙ | **Settings** | — | preferências do canvas |
+> 27	
+> 28	## 3. Bottom bar — `UI-SPACES-003`
+> 29	- Esquerda: **`Page 1`** — múltiplas páginas por Space (`LR-SPACES-010`).
+> 30	- Direita: **auto-arrange/tidy**, **toggle de minimapa**, **zoom `163% ▾`**.
+> 31	- **Menu de zoom** (verificado): Zoom in `⌘+` · Zoom out `⌘-` · Zoom 100% `⌘0` · **Zoom to fit `D`** · **Zoom to selection `F`**.
+> 32	
+> 33	## 4. Spotlight / Add-node — `UI-SPACES-004`
+> 34	Campo Search · fileira de 8 ícones de categoria · lista agrupada rolável · rodapé `N Open · ↑↓ Navigate · ⏎ Insert`. Taxonomia completa de nós em `09-live-recon-spaces.md §3` (BASICS, MEDIA, REFERENCES, IMAGE, VIDEO, AUDIO, TEXT, UTILITIES).
+> 35	
+> 36	---
+> 37	
+> 38	## 5. Anatomia do nó — Image Generator (canônico) — `UI-SPACES-005`
+> 39	
+> 40	### 5.1 Estrutura visual
+> 41	- **Header** flutuante: ícone + título auto-numerado **"Image Generator #1"**.
+> 42	- **Corpo**: área grande de **preview do output** (onde a imagem aparece).
+> 43	- **Prompt** embutido: placeholder *"Describe the image you want to generate…"* → pt-BR: *"Descreva a imagem que deseja gerar…"*.
+> 44	- **Chips de input (borda esquerda)**: **Text** (porta `prompt`) e **Image** (porta `reference`).
+> 45	- **Porta de output (borda direita)**: **Generated image** (`output`).
+> 46	
+> 47	### 5.2 Barra de controle (face do nó, embutida) — `UI-SPACES-006`
+> 48	`−  x1  +` (batch stepper) · **`Auto ▾`** (modelo) · **`▢ 1:1 ▾`** (aspect ratio) · **`⚙`** (settings → abre painel direito) · **`▶`** (Run).
+> 49	
+> 50	### 5.3 Barra de ação do nó (flutuante, ao selecionar) — `UI-SPACES-007`
+> 51	`▶ Run ▾` · `⌥ branch/connect ▾` · `⧉ Duplicate` · `🗑 Delete` · `••• More`.
+> 52	
+> 53	### 5.4 Menu "•••" More — `UI-SPACES-008`
+> 54	**Run** · **Add creation** · **Options ›** · **Duplicate `⌘D`** · **Delete `⌫`**.
+> 55	Submenu **Options ›**: **Focus `F`** · **Copy link to node** · **Lock** · **Hide header**.
+> 56	
+> 57	### 5.5 Painel direito (HUD via Settings ⚙) — `UI-SPACES-009`  ⚑ correção do `09`
+> 58	Abrir o ⚙ revela um **painel de parâmetros à direita** (≈coluna direita) — ou seja, **o Magnific TEM um HUD lateral on-demand**, o que **valida parcialmente a lei 72/28** como *modelo híbrido*: quick-params inline no nó **+** HUD direito para avançado.
+> 59	Conteúdo do painel: **MODEL** (`Auto ▾` + link *Upgrade*) · **REFERENCES `0/8`** (`Style` · `Character` · `+ Add`) · **Prompt** (textarea) · chip de **aspect** (`1:1`) · botão **Run** (full-width).
+> 60	
+> 61	---
+> 62	
+> 63	## 6. Catálogo de MODELOS de imagem (verificado, 38) — `UI-SPACES-010`
+> 64	
+> 65	**FEATURED:** Auto · GPT 2 *(New)* · Seedream 5 Lite *(New)*
+> 66	
+> 67	**ALL MODELS:** Flux.2 Max · Flux.2 Pro · Flux.2 Flex · Flux.1 Kontext Max · Flux.2 Klein · Flux.1 Kontext Pro · Mystic 2.5 Fluid · Flux.1 · Flux.1.1 · Flux.1 Realism · Google Imagen 3 · Google Imagen 4 Fast · Google Imagen 4 · Google Imagen 4 Ultra · Flux.1 Fast · Luma Uni-1.1 *(New)* · GPT · GPT 1 - HQ · GPT 1.5 · GPT 1.5 - High · Seedream 4 · Seedream 4 4K · Seedream 4.5 · Runway · Classic Fast · Classic · Z-Image · Qwen · Grok · Recraft V4 *(New)* · Recraft V4 Pro *(New)* · Recraft V4.1 *(New)* · Krea 2 *(New)* · MAI Image 2.5 *(New)*
+> 68	
+> 69	> **Implicação MCORCH (BRD):** o `CREDIT_COSTS` de `canvas-execute` deve cobrir famílias por provider — Flux (2.x/1.x), Google Imagen 3/4, GPT-image, Seedream 4/4.5/5, Luma, Runway, Recraft V4.x, Qwen, Grok, Krea 2, Mystic 2.5, Z-Image, MAI. `Auto` = roteamento server-side por custo/qualidade (espelha `calc_agent_cost_mcoin`).
+> 70	
+> 71	## 7. Aspect ratios (verificado, 10) — `UI-SPACES-011`
+> 72	`1:1` · `16:9` · `9:16` · `2:3` · `3:4` · `1:2` · `2:1` · `4:5` · `3:2` · `4:3`.
+> 73	
+> 74	## 8. Taxonomia de REFERENCES (verificado, 9 + fontes) — `UI-SPACES-012`
+> 75	Picker com sidebar: **History**, **Uploads**, e **All references**: **Stock · Style · Character · Element · Location · Color · Effects · Camera · Sketch**.
+> 76	- **Character** (e Style) têm abas **Library** / **By Magnific** (presets: @Kat, @Helena, @Mei, @Camile, @Rafael, @rohan, @aanya, @noa, @lucia, @sophia, @sia, @samuel, @alvaro, @aideen, @larissa, @gabby, @kenji, @marcia…).
+> 77	- Painel de entrada: **Drop an image** · **Upload media** · **Take photo**. Filtro por projeto (ex.: "Personal project").
+> 78	- Limite: **até 8 referências** por nó (`0/8`).
+> 79	
+> 80	> **Impacto MCORCH:** o modelo de `Port`/reference do `05-sdd` deve suportar **subtipos de referência** (style/character/element/location/color/effects/camera/sketch), não só "image". Avatar/clone = **Character reference** + prompt.
+> 81	
+> 82	---
+> 83	
+> 84	## 9. Reconciliação com `01–05` (deltas finos)
+> 85	
+> 86	| ID | Achado | Patch |
+> 87	|---|---|---|
+> 88	| `UI-SPACES-009` | HUD direito existe (via ⚙) | `03-prd` PR-SPACES-001: 72/28 = **híbrido válido** (inline + painel direito on-demand), não pura invenção |
+> 89	| `UI-SPACES-010` | 38 modelos de imagem | `02-brd`/`05-sdd`: expandir tabela de modelos/custos |
+> 90	| `UI-SPACES-012` | 9 tipos de referência | `05-sdd` SD-SPACES-006: `ReferenceKind` enum |
+> 91	| `UI-SPACES-008` | Lock / Hide header / Focus / Copy link | `04-frd`: adicionar ações de nó (lock, focus, deep-link) |
+> 92	| `UI-SPACES-003` | Páginas + zoom-to-fit/selection | `03-prd`: atalhos `D`/`F`, entidade `SpacePage` |
+> 93	
+> 94	---
+> 95	
+> 96	## 10. Novas entidades/relações → Memory Mesh
+> 97	- `ReferenceKind` = {stock, style, character, element, location, color, effects, camera, sketch}.
+> 98	- `ImageModel` (38 entradas) — vocabulário para `CREDIT_COSTS`/`useParamRegistry`.
+> 99	- `AspectRatio` = {1:1,16:9,9:16,2:3,3:4,1:2,2:1,4:5,3:2,4:3}.
+> 100	- Node actions: `focus`, `lock`, `copyLink`, `hideHeader`, `duplicate`, `delete`, `addCreation`.
+> 101	- Relação: `ImageGeneratorNode —refs(0..8)→ Reference{kind}`; `Reference(character) —enables→ Avatar/Clone`.
+> 102	
+> 103	---
+> 104	
+> 105	*Fim do inventário. Avatar/clone: requer foto-fonte do usuário (Character reference) — ver pendência no handoff.*
+> 106	
+> 107	---
+> 108	
+> 109	## 11. Correção — 9 abas + Apps (ver `11-node-registry-spaces.md`)
+> 110	
+> 111	O Spotlight tem **9 abas** (não 8): `all, media, reference, image, video, audio, text, utilities, **apps**`. A aba **Apps** lista **41 Workflow Apps** prontos (Headshot generator, Character Sheet, VFX Studio, …). Mapa completo com IDs internos (`data-cy`) em `11-node-registry-spaces.md` + `scaffold/node-registry.ts`.
+> 112	
+> ```
+
+## 🤖 Claude *(13:16:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/11-node-registry-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 11 · Node Registry — Definitive Map (exact internal IDs) · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Registro canônico de **todos** os tipos de node do Magnific Spaces, extraído do DOM ao vivo (`data-cy`) — fonte de verdade para o registry do MCORCH.
+> 4	> **Método:** inspeção direta do `[data-cy="spotlight-v2-container"]` (Spotlight v2), 2026-06-29, enumerando as 9 abas via JS.
+> 5	> **Trace prefix:** `NR-SPACES-###`. Substitui/expande a taxonomia de `09 §3` e `10 §4` com os **IDs internos reais**.
+> 6	
+> 7	---
+> 8	
+> 9	## 1. Correção honesta (o que faltava)
+> 10	
+> 11	Eu havia mapeado os **nomes de exibição** das 8 seções visíveis. Faltavam duas coisas, agora corrigidas:
+> 12	1. **IDs internos** (`data-cy`) de cada node — capturados abaixo (ex.: "Assistant" = `prompt-generator`, "Stock" = `find-inspiration`, "Designer" = `composer`, "Media Extractor" = `video-frame-splitter`).
+> 13	2. A **9ª aba "Apps"** (thunderbolt) — **41 Workflow Apps** prontos, não enumerados antes.
+> 14	
+> 15	---
+> 16	
+> 17	## 2. Abas do Spotlight (9) — `NR-SPACES-001`
+> 18	`all` · `media` · `reference` · `image` · `video` · `audio` · `text` · `utilities` · **`apps`**
+> 19	
+> 20	(`data-cy="spotlight-v2-tab-<id>"`). Rodapé: `N` open · `↑↓` navigate · `⏎` insert. Itens são **drag-and-drop** (`draggable="true"`) exceto fontes de mídia (Upload/Assets/Stock = `draggable="false"`).
+> 21	
+> 22	---
+> 23	
+> 24	## 3. Registro de nodes (32 itens · ID interno → label → ícone) — `NR-SPACES-002`
+> 25	
+> 26	> `data-cy="spotlight-v2-item-<id>"`. "Basics" é atalho — aponta para os tipos canônicos das seções dedicadas.
+> 27	
+> 28	### Basics (quick-access)
+> 29	| ID interno | Label | Ícone (sprite) |
+> 30	|---|---|---|
+> 31	| `basics-text` | Text | `cdn-text` |
+> 32	| `basics-image-generator` | Image Generator | `cdn-image-generator` |
+> 33	| `basics-video-generator` | Video Generator | `cdn-video` |
+> 34	| `basics-prompt-generator` | Assistant | `cdn-ai-stars` |
+> 35	| `basics-image-upscaler` | Image Upscaler | `cdn-upscale` |
+> 36	| `basics-list` | List | `cdn-bullet-list` |
+> 37	
+> 38	### Media (inputs · draggable=false)
+> 39	| ID | Label | Ícone |
+> 40	|---|---|---|
+> 41	| `upload` | Upload | `cdn-upload` |
+> 42	| `assets` | Assets | `cdn-projects` |
+> 43	| `find-inspiration` | **Stock** | `cdn-search` |
+> 44	
+> 45	### References
+> 46	| ID | Label | Ícone |
+> 47	|---|---|---|
+> 48	| `references` | Add Reference | `cdn-upload-reference` |
+> 49	
+> 50	### Image (8)
+> 51	| ID | Label | Ícone | Nota |
+> 52	|---|---|---|---|
+> 53	| `image-generator` | Image Generator | `cdn-image-generator` | ports `reference`/`prompt`→`output` |
+> 54	| `image-upscaler` | Image Upscaler | `cdn-upscale` | |
+> 55	| `editing` | **Image Editor** | `cdn-edit-image` | |
+> 56	| `variations` | Variations | `cdn-variations` | |
+> 57	| `composer` | **Designer** | `cdn-design-standalone-v2` | `New` · editor embutido |
+> 58	| `sketch` | Sketch | `cdn-sketch` | |
+> 59	| `image-to-svg` | Image to SVG | `cdn-vector` | dataType `svg` |
+> 60	| `svg-generator` | SVG Generator | `cdn-vector` | dataType `svg` |
+> 61	
+> 62	### Video (5)
+> 63	| ID | Label | Ícone | Nota |
+> 64	|---|---|---|---|
+> 65	| `video-generator` | Video Generator | `cdn-video` | |
+> 66	| `speak` | Speak | `cdn-lip-sync` | lip-sync |
+> 67	| `video-combiner` | Video Combiner | `cdn-rectangle-merge` | |
+> 68	| `video-upscaler` | Video Upscaler | `cdn-enhance` | |
+> 69	| `video-frame-splitter` | **Media Extractor** | `cdn-split` | `New` |
+> 70	
+> 71	### Audio (3)
+> 72	| ID | Label | Ícone |
+> 73	|---|---|---|
+> 74	| `voice-over` | **Voiceover** | `cdn-ai-voice` |
+> 75	| `sfx-generator` | **Sound Effects** | `cdn-sound-effects` |
+> 76	| `music-generator` | Music Generator | `cdn-music` |
+> 77	
+> 78	### Text (2)
+> 79	| ID | Label | Ícone |
+> 80	|---|---|---|
+> 81	| `text` | Text | `cdn-text` |
+> 82	| `prompt-generator` | **Assistant** | `cdn-ai-stars` |
+> 83	
+> 84	### Utilities (4)
+> 85	| ID | Label | Ícone |
+> 86	|---|---|---|
+> 87	| `list` | List | `cdn-bullet-list` |
+> 88	| `sticky-note` | Sticky note | `cdn-sticky-note` |
+> 89	| `stickers` | Stickers | `cdn-smile` |
+> 90	| `group` | Group | `cdn-group-element` |
+> 91	
+> 92	> **Tipos canônicos distintos (~26):** text, image-generator, video-generator, prompt-generator, image-upscaler, list, upload, assets, find-inspiration, references, editing, variations, composer, sketch, image-to-svg, svg-generator, speak, video-combiner, video-upscaler, video-frame-splitter, voice-over, sfx-generator, music-generator, sticky-note, stickers, group.
+> 93	
+> 94	---
+> 95	
+> 96	## 4. Aba "Apps" — 41 Workflow Apps prontos — `NR-SPACES-003`
+> 97	
+> 98	`data-cy="spotlight-v2-item-workflow-app-tool-<hash>"`. São **grafos reutilizáveis empacotados** (= o conceito `Workflow App`, `PR-SPACES-007`). Catálogo completo verificado:
+> 99	
+> 100	Costume fitting · Video translator · VFX Studio · Create your camera path · Icon generator · Room decorator · Looped motion · Frame to frame · Photo to motion · Brand merch shots · Product color variants · Audience-driven ads · UGC livestream demo · Wear any outfit · Render to photoreal · UGC scripted video · Mockup realizer · Detailed storyboard · Marketplace listing visuals · Script to film · Product ad spot · Portfolio builder: Logo · Group photo to individuals · Portfolio builder: Visual works · Shot reference generator · Cinematic preproduction pipeline · Video lip sync · Multi-angle coverage · Cinematic locations · Scout view · Multilingual voiceover · Bulk color grading · Cast variation · Localize ads and images · Multi-format resizer · Character Sheet · UGC unboxing video · UGC tutorial video · Visual campaign location · UGC try-on video · **Headshot generator**
+> 101	
+> 102	> **Relevância direta MCORCH:**
+> 103	> - **`Headshot generator`** e **`Character Sheet`** = caminhos turnkey para **avatar/clone** (a partir de foto). Ver pendência de avatar.
+> 104	> - Apps como `Brand merch shots`, `Product color variants`, `Audience-driven ads`, `Marketplace listing visuals`, `Localize ads and images`, `Multi-format resizer` mapeiam 1:1 ao núcleo afiliado/autopilot do MCORCH (`AutopilotPage`, `CampaignWizard`, `discover-products`). São os "templates monetizáveis" do `BR-SPACES-009`.
+> 105	
+> 106	---
+> 107	
+> 108	## 5. Implicações para o MCORCH
+> 109	
+> 110	`NR-SPACES-004` — **Node registry tipado.** O `useParamRegistry`/store deve indexar por **ID interno canônico** (não label), espelhando o `data-cy`. Scaffold: `scaffold/node-registry.ts`.
+> 111	
+> 112	`NR-SPACES-005` — **9ª categoria = Apps/Workflow Apps.** `NodeCategory` ganha `'app'`; um `WorkflowApp` é um node-fachada que encapsula um subgrafo (inputs/outputs declarados).
+> 113	
+> 114	`NR-SPACES-006` — **Basics = projeção de favoritos**, não categoria real; resolver para o tipo canônico ao inserir.
+> 115	
+> 116	`NR-SPACES-007` — **i18n:** label (pt-BR) desacoplado do ID interno (inglês) — exatamente o que o Magnific faz (ID `find-inspiration` / label "Stock").
+> 117	
+> 118	---
+> 119	
+> 120	## 6. Memory Mesh
+> 121	- `SpaceNodeType` enum = os ~26 IDs canônicos do §3.
+> 122	- `WorkflowApp` (41 instâncias verificadas) — entidade separada de `SpaceNode`.
+> 123	- Relação: `WorkflowApp —encapsulates→ Subgraph(SpaceNode[])`; `Basics —alias→ canonicalType`.
+> 124	- Avatar: `Headshot generator` / `Character Sheet` apps + Character reference = rota de clone.
+> 125	
+> 126	---
+> 127	
+> 128	*Mapa definitivo. Atualiza `09`/`10` com os IDs internos e a aba Apps.*
+> 129	
+> ```
+
+## 🤖 Claude *(13:16:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/12-node-anatomy-spaces.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 12 · Node Anatomy — Insertion & Creation Options (live test) · Spaces Evolution
+> 2	
+> 3	> **Artefato:** Teste prático de instanciação. Adicionei nós reais ao canvas e inspecionei portas (`data-handleid`), controles e opções de criação via DOM. 2026-06-29, Claude in Chrome.
+> 4	> **Trace prefix:** `NA-SPACES-###`. Complementa `11` (registry) com a **anatomia real** de cada nó.
+> 5	
+> 6	---
+> 7	
+> 8	## 1. Como um nó é adicionado (verificado) — `NA-SPACES-001`
+> 9	
+> 10	Três formas, todas testadas:
+> 11	1. **Spotlight (clique):** `+` (ou `N`) → clicar item → insere.
+> 12	2. **Spotlight (busca + teclado):** `+` → digitar nome → `⏎` insere o 1º match. *(método mais robusto p/ automação)*
+> 13	3. **Drag-and-drop:** itens `draggable="true"` arrastados para o canvas.
+> 14	
+> 15	**Comportamento de inserção:** o nó nasce no **centro da viewport atual**, **auto-selecionado** (borda azul + toolbar flutuante), com **título auto-numerado** (`Tipo #1`, `#2`…). Nós existentes não se movem (o viewport é que recentraliza). Nós de input (References, Upload) e anotações (Sticky) **não têm botão Run**.
+> 16	
+> 17	---
+> 18	
+> 19	## 2. Anatomia por nó (portas reais · `data-handleid`) — `NA-SPACES-002`
+> 20	
+> 21	> Convenção verificada: inputs à esquerda, outputs à direita; IDs em inglês, por papel.
+> 22	
+> 23	| Nó | Inputs | Outputs | Controles / opções de criação |
+> 24	|---|---|---|---|
+> 25	| **Image Generator** | `reference`, `prompt` | `output` | modelo `Auto` (**38 modelos**), aspect `1:1` (**10 ratios**), batch `x1..x8`, **References 0/8** (9 tipos), ⚙ painel direito |
+> 26	| **Video Generator** | `references`, `audio`, `video-reference`, `last-frame`, `first-frame`, `prompt` | `start-frame`, `end-frame`, `output`, `audio-output` | modelo `Auto` (**modal c/ filtros**: provider/features/resolution/best-for), aspect `16:9`, **duração `5-8'`**, **toggle Sound**, batch. Tags por modelo: Refs·Multi·Start/End·1080p·Audio · **faixa de crédito ex. `100-2800`** |
+> 27	| **Voiceover** | `text` | `output` | **Add Voice**, **Add Speaker** (multi-locutor), prompt com **audio tags** (`[laughs]`, `[pause 0.0s]`), batch |
+> 28	| **Assistant** | `attachments`, `prompt` | `generated_prompt` | modelo **`GPT-5 Mini`**, **Export as text** (LLM que gera/refina prompts) |
+> 29	| **Image Upscaler** | `input-image` | `output` | fator de upscale (no ⚙), entrada só de imagem |
+> 30	| **Music Generator** | `prompt` | `output` | **duração `30''`**, batch |
+> 31	| **List** | `texts`, `images`, `videos`, `audios`, `svgs`, **`models-3d`** | `output-texts`, `output-images`, `output-videos`, `output-audios`, `output-svgs`, `output-models-3d` | **coletor multi-tipo** (fan-in/fan-out) p/ batch — `Add text` / `Add media` |
+> 32	| **Add Reference** | — | `output` | **Select Reference** (9 tipos: style/character/element/location/color/effects/camera/sketch/stock) |
+> 33	| **Sticky / Stickers / Group** | — | — | anotações/organização (sem portas, sem Run) |
+> 34	
+> 35	---
+> 36	
+> 37	## 3. Descobertas que ajustam o material
+> 38	
+> 39	`NA-SPACES-003` — **6º tipo de dado: `3d` (model-3d).** O List expõe portas `models-3d` / `output-models-3d`. Logo `PortDataType` = `image | text | video | audio | svg | **3d**` (antes eram 5). Consistente com os tools 3D do Magnific.
+> 40	
+> 41	`NA-SPACES-004` — **Video Generator é o nó mais rico:** condicionamento por **first-frame/last-frame**, **video-reference**, **audio** de entrada, e saídas separadas **start-frame/end-frame/audio-output** (dá pra extrair frames e áudio do vídeo gerado). O modelo MCORCH de portas precisa suportar **múltiplas portas tipadas nomeadas por papel** (não 1 input/1 output).
+> 42	
+> 43	`NA-SPACES-005` — **Assistant = nó-LLM** (`GPT-5 Mini`), saída `generated_prompt` (text) → alimenta o `prompt` de outros nós. Mapeia ao `aios-chat`/`generate-content` do MCORCH. Custo dinâmico via `calc_agent_cost_mcoin`.
+> 44	
+> 45	`NA-SPACES-006` — **List = primitiva de batch.** Coletor multi-tipo: habilita "N variações" e pipelines em lote (`PR-SPACES-011`) nativamente, com portas por tipo.
+> 46	
+> 47	`NA-SPACES-007` — **Custo aparece no model picker** (faixa ex. `100-2800` mcoCoins) + **tags de capacidade** por modelo. Reforça `BR-SPACES-002` (custo visível) e que o **modelo carrega o custo**, não o nó em repouso.
+> 48	
+> 49	`NA-SPACES-008` — **Nós sem Run** (References, Upload, Sticky) = inputs/anotações; o executor (`getTopologicalLayers`) deve tratá-los como fontes/no-ops, não como steps cobráveis.
+> 50	
+> 51	---
+> 52	
+> 53	## 4. Patches para o scaffold/SDD
+> 54	- `spaces-schema.ts`: `PORT_DATA_TYPES` += `'3d'`.
+> 55	- `node-registry.ts`: adicionar `NODE_PORTS` (mapa tipo→portas reais) com os IDs deste doc; `Assistant.model='gpt-5-mini'`; `List` multi-tipo.
+> 56	- `05-sdd` SD-SPACES-006: `Port[]` por nó vem do registry (não factory única).
+> 57	
+> 58	---
+> 59	
+> 60	## 5. Memory Mesh
+> 61	- `PortDataType` agora 6: image/text/video/audio/svg/**3d**.
+> 62	- Port schemas reais por nó (tabela §2) — base do `port-compat` e dos testes de QA.
+> 63	- `List` = coletor batch multi-tipo; `Assistant` = LLM (GPT-5 Mini) → generated_prompt; `Video Generator` = frame/audio conditioning.
+> 64	- Inserção: viewport-center, auto-select, título auto-numerado.
+> 65	
+> 66	> **Nota:** os nós de teste ficaram no Space "Untitled space" (scratch). Posso limpá-los a pedido.
+> 67	
+> 68	---
+> 69	
+> 70	*Anatomia verificada em produção. Atualiza `11` com as portas reais por tipo.*
+> 71	
+> ```
+
+## 🤖 Claude *(13:16:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/IMPLEMENTATION-PROMPT.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🛰️ Claude Code — Implementation Prompt · Spaces Canvas (Core Layer)
+> 2	
+> 3	> Cole este bloco no Claude Code (já no repo `constellation-orchestra`). Ele é auto-suficiente: aponta para os specs, dá o plano em fases, trava as regras e define o DoD. **Mate a poesia, entregue engenharia.**
+> 4	
+> 5	---
+> 6	
+> 7	## ROLE & MISSION
+> 8	You are the MCORCH Spaces engineer working inside `/home/gcrUX/htdocs/constellation-orchestra`. Implement the **Spaces canvas** — an infinite, node-graph creative workspace reverse-engineered from Magnific Spaces — as our unified **Core** canvas, **generalizing** the existing orchestrator/canvas without breaking the build.
+> 9	
+> 10	The full, verified spec already lives in the repo. **Read it before writing code** (in this order), treating it as the source of truth:
+> 11	
+> 12	1. `docs/bok/spaces-evolution/00-index.md` (map + harness rules + repo anchors)
+> 13	2. `09-live-recon-spaces.md` · `10-ui-inventory-spaces.md` · `11-node-registry-spaces.md` · `12-node-anatomy-spaces.md` (verified ground-truth UI/nodes)
+> 14	3. `03-prd-spaces.md` · `04-frd-spaces.md` · `05-sdd-spaces.md` · `02-brd-spaces.md` (requirements + design + monetization)
+> 15	4. `docs/bok/spaces-evolution/scaffold/*` (typed reference impl — already `tsc`-clean) + `scaffold/README.md`
+> 16	
+> 17	Every requirement is traceable (`PR-/FR-/SD-/BR-/NR-/NA-SPACES-###`). Keep those trace IDs in code comments and test names so QA can map them.
+> 18	
+> 19	## HARD RULES (non-negotiable — from the directive)
+> 20	- **Separation of concerns (harness):** hooks own state + data + I/O (`useSpacesCanvas`, `useParamRegistry`, `useGenerationLedger`, `useSpaceSession`); `.tsx` node/UI components **only render**. No `supabase.*`/`fetch`/RPC inside a node component.
+> 21	- **i18n split:** code, identifiers, architecture in **English**; UI labels, placeholders, toasts in **pt-BR** (isolate in `src/i18n/pt-BR/spaces.ts`). Reuse canonical pt-BR strings already in `AutopilotPage`/`VideoStudioPage` (e.g. *"Saldo de mcoCoins insuficiente."*, *"Teto diário de mcoCoins do dia já atingido."*).
+> 22	- **Anti-drift:** **generalize, do not duplicate or delete.** `useSpacesStore` extends the contract of `src/store/useOrchestrationStore.ts`; the orchestrator/`UnifiedCanvasPage` become Spaces presets later. Reuse `src/lib/canvas-dag.ts → getTopologicalLayers()`. Do **not** rewrite the legacy canvas in this pass.
+> 23	- **Type-safe ports:** connections only between compatible typed ports (`image|text|video|audio|svg|3d`). Validate with `port-compat.ts` before an edge enters the store.
+> 24	- **Ledger-first:** no executable node runs without the gate **estimate → reserve(balance+cap) → debit → execute → reconcile/refund**. Price authority is **server-side** (`supabase/functions/canvas-execute/index.ts → CREDIT_COSTS`); client shows a read-only estimate. Refund on failure (pattern of `finalize_video_render(p_refund)`); never charge for a node that didn't deliver. RPCs: `deduct_mco_coins`, `award_mco_coins`, `calc_agent_cost_mcoin`.
+> 25	- **No build breakage:** the app must keep building/linting/testing green at every commit.
+> 26	
+> 27	## STACK (already installed — use it, add nothing heavy)
+> 28	`@xyflow/react` (canvas) · `zustand`+`zundo` (state+undo) · `cmdk` (Spotlight) · `react-resizable-panels` (72/28) · `@react-three/fiber`+`three` (FX only) · `@tanstack/react-query` · `@supabase/supabase-js` · `sonner` (toasts) · `zod` · `react-router-dom` · `@dnd-kit/*` · `framer-motion`. Design tokens in `tailwind.config.ts`: fonts `Space Grotesk`/`Inter`; `status.{active,waiting,error,idle}` for node states; `sidebar.*` for the HUD; brand cyan `hsl(185 80% 55%)`; keyframe `glow-pulse`.
+> 29	
+> 30	## EXECUTION PLAN (phased — commit per phase, small PRs)
+> 31	
+> 32	### Phase 0 — Promote scaffold (foundation)
+> 33	Copy `docs/bok/spaces-evolution/scaffold/` → repo, then wire types only (no UI yet):
+> 34	- `spaces-schema.ts → src/lib/spaces-schema.ts` (keep `PortDataType` incl. `3d`; add the matching `z.object` runtime guards for every interface).
+> 35	- `port-compat.ts → src/lib/port-compat.ts`
+> 36	- `node-registry.ts → src/lib/node-registry.ts` (use `NODE_PORTS` as the per-node port source of truth; `NODE_TYPES`, `BASICS_ALIASES`, `WORKFLOW_APPS`).
+> 37	- `useSpacesStore.ts → src/store/useSpacesStore.ts` (zustand + zundo; extends `useOrchestrationStore` surface; build `Port[]` from `NODE_PORTS[type]`).
+> 38	- `useParamRegistry.ts → src/hooks/useParamRegistry.ts`.
+> 39	Gate: `bun run lint && bun run test && bunx tsc --noEmit` all green.
+> 40	
+> 41	### Phase 1 — MVP canvas (the visible product)
+> 42	- **Routes (`src/App.tsx`, lazy):** `/dashboard/spaces` (home: recent + templates, `useInfiniteQuery`, empty-state pt-BR) and `/dashboard/spaces/:spaceId` (canvas). Reuse `UnifiedCanvasPage` as the shell; do not fork a parallel canvas.
+> 43	- **`src/components/spaces/` (render-only):**
+> 44	  - `SpaceCanvas.tsx` — `<ReactFlow>` with `<MiniMap/>`, `<Controls/>`, `<Background variant="dots"/>`, pan/zoom infinito; `onConnect` → `useSpacesCanvas.connect()` (rejects incompatible types with pt-BR toast *"Tipos incompatíveis: {a} → {b}"*). Keyboard: `N` Spotlight, `Del`, `⌘Z/⌘⇧Z` (zundo), `D` zoom-to-fit, `F` zoom-to-selection.
+> 45	  - `ParamHUD.tsx` — **72/28 hybrid** via `react-resizable-panels`: quick-params inline on the node face **+** an on-demand right Settings panel (`sidebar.*` tokens), collapsible; `vaul` drawer below `lg`. Schema from `useParamRegistry.getSchema(node)`.
+> 46	  - `Spotlight.tsx` — `cmdk`; 9 tabs (all/media/reference/image/video/audio/text/utilities/apps); search + `↑↓` + `⏎` insert; resolve `BASICS_ALIASES`; reuse `src/components/canvas/AddNodeMenu.tsx` logic.
+> 47	  - `nodes/*` — one render-only component per type, ports from `NODE_PORTS`; **reuse existing** `src/components/canvas/nodes/*` (GenerateImageNode, ImageToVideoNode, StyleTransferNode, SceneComposeNode, CharacterReferenceNode). Node footer = `status` pill (`status.*` token) + cost badge (mcoCoins estimate); active node uses `glow-pulse`.
+> 48	  - `GenerationCluster.tsx` — per-node output cluster, lazy via `useInfiniteQuery` + `IntersectionObserver` (≤24 cards/page, skeletons, no layout shift).
+> 49	  - `QueueIndicator.tsx` — topbar async run state.
+> 50	- **Run:** `useGenerationLedger.runGraph()` orders with `getTopologicalLayers()`, calls `canvas-execute` per node; status `pending→running→done|error`; failed node ⇒ descendants `blocked`, independent branches continue; reconcile/refund. Dry-run = projected cost, no debit (toast *"Simulação — {n} mcoCoins projetados (sem débito)."*).
+> 51	- **Auth gate:** `useSpaceSession` (`supabase.auth.getSession`/`onAuthStateChange`/`refreshSession`) blocks runs on expired session; server revalidates JWT → `auth.uid()`.
+> 52	
+> 53	### Phase 2 — Breadth
+> 54	Video/audio/designer nodes; References picker (9 kinds: stock/style/character/element/location/color/effects/camera/sketch, up to 8); Workflow Apps facade (41 prebuilt — node that encapsulates a subgraph); multi-page Spaces; FX layer `CanvasFXLayer.tsx` (R3F, **trigger-only**, mounts only if `nodeCount<150` and `prefers-reduced-motion: no-preference`).
+> 55	
+> 56	### Phase 3 — Collab
+> 57	Supabase Realtime (node/edge patch broadcast + presence cursors), Viewer/Editor roles, comments. Conflict = last-write-wins per node.
+> 58	
+> 59	## DATA / SUPABASE
+> 60	Create migrations (RLS by `owner_id = auth.uid()`): `spaces`, `space_nodes`, `space_edges`, `generations` (cols per `05-sdd §7`/`scaffold`). Index `generations(node_id, created_at desc)` and `spaces(owner_id, updated_at desc)`. Extend `canvas-execute → CREDIT_COSTS` to cover the verified 38 image-model families (`11`/`10`). MVP may store the graph denormalized in `spaces.graph jsonb` (1 fetch hydrates).
+> 61	
+> 62	## DEFINITION OF DONE
+> 63	- [ ] `bun run build`, `bun run lint`, `bun run test` (vitest) all green; `bunx tsc --noEmit` clean.
+> 64	- [ ] New unit tests: `port-compat` (type matrix incl. `svg→image`, reject `image→text`), `useParamRegistry.estimateCost`, store `connect()`; extend `src/test/canvas-dag.test.ts`.
+> 65	- [ ] Playwright e2e: create Space → add nodes (Spotlight + search+Enter) → connect typed ports → dry-run → run → cluster appears with cost; expired-session blocks run with no debit.
+> 66	- [ ] a11y pass (focus rings on nodes/ports, keyboard Spotlight, AA contrast via tokens, `aria-label` pt-BR).
+> 67	- [ ] Ledger invariants hold: sum of debits == sum of `CREDIT_COSTS` of executed nodes (minus BYOK); every `error` has a refund or no debit; no balance mutation client-side.
+> 68	- [ ] Legacy `OrchestrationPage`/`UnifiedCanvasPage` still build and render.
+> 69	
+> 70	## WORKFLOW CONSTRAINTS
+> 71	- Work in a feature branch; commit per phase with messages referencing trace IDs. Keep diffs surgical — don't touch unrelated files.
+> 72	- **Ask before** destructive ops, schema drops, or deleting legacy. Don't run generations that spend real mcoCoins in tests — mock `canvas-execute`.
+> 73	- After each phase: report files changed, tests run, and the trace IDs covered.
+> 74	
+> 75	**Start now: read the docs in the order above, then execute Phase 0.**
+> 76	
+> ```
+
+## 🤖 Claude *(13:16:37)*
+
+
+## 🤖 Claude *(13:16:37)*
+
+Ground-truth dos docs completo. Agora o código promovido + diff contra o scaffold:
+
+## 🤖 Claude *(13:16:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-schema.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * spaces-schema.ts — Canonical domain types & runtime guards for the Spaces layer.
+> 3	 *
+> 4	 * Reverse-engineered from Magnific Spaces (live recon 2026-06-29) and anchored to the
+> 5	 * existing MCORCH canvas (`useOrchestrationStore.ts`, `canvas-dag.ts`, `@xyflow/react`).
+> 6	 *
+> 7	 * Trace: SD-SPACES-006, UI-SPACES-010/011/012, LR-SPACES-005.
+> 8	 * Rule (Sovereign): code in English; UI strings (pt-BR) live in i18n, never here.
+> 9	 *
+> 10	 * Promotion target: src/lib/spaces-schema.ts
+> 11	 */
+> 12	import { z } from 'zod';
+> 13	import type { Node, Edge, Viewport } from '@xyflow/react';
+> 14	
+> 15	/* ── Port data types (type-safe connections; verified in Magnific) ─────────── */
+> 16	export const PORT_DATA_TYPES = ['image', 'text', 'video', 'audio', 'svg', '3d'] as const;
+> 17	export type PortDataType = (typeof PORT_DATA_TYPES)[number];
+> 18	
+> 19	/* ── Node run status — reused VERBATIM from useOrchestrationStore (no drift) ── */
+> 20	export const NODE_STATUSES = ['idle', 'pending', 'running', 'done', 'error', 'blocked'] as const;
+> 21	export type NodeStatus = (typeof NODE_STATUSES)[number];
+> 22	
+> 23	/* ── Node categories — 8 groups verified live (UI-SPACES-004) ──────────────── */
+> 24	export const NODE_CATEGORIES = [
+> 25	  'media', 'references', 'image', 'video', 'audio', 'text', 'utility', 'designer',
+> 26	] as const;
+> 27	export type NodeCategory = (typeof NODE_CATEGORIES)[number];
+> 28	
+> 29	/* ── Reference kinds — 9 verified in the References picker (UI-SPACES-012) ──── */
+> 30	export const REFERENCE_KINDS = [
+> 31	  'stock', 'style', 'character', 'element', 'location', 'color', 'effects', 'camera', 'sketch',
+> 32	] as const;
+> 33	export type ReferenceKind = (typeof REFERENCE_KINDS)[number];
+> 34	
+> 35	/* ── Aspect ratios — 10 verified (UI-SPACES-011) ───────────────────────────── */
+> 36	export const ASPECT_RATIOS = [
+> 37	  '1:1', '16:9', '9:16', '2:3', '3:4', '1:2', '2:1', '4:5', '3:2', '4:3',
+> 38	] as const;
+> 39	export type AspectRatio = (typeof ASPECT_RATIOS)[number];
+> 40	
+> 41	/* ── Image models — 38 verified in the model selector (UI-SPACES-010) ──────── *
+> 42	 * `Auto` routes server-side by cost/quality (mirrors calc_agent_cost_mcoin).   */
+> 43	export const IMAGE_MODELS = [
+> 44	  'auto',
+> 45	  'gpt-2', 'seedream-5-lite',
+> 46	  'flux.2-max', 'flux.2-pro', 'flux.2-flex', 'flux.1-kontext-max', 'flux.2-klein',
+> 47	  'flux.1-kontext-pro', 'mystic-2.5-fluid', 'flux.1', 'flux.1.1', 'flux.1-realism',
+> 48	  'google-imagen-3', 'google-imagen-4-fast', 'google-imagen-4', 'google-imagen-4-ultra',
+> 49	  'flux.1-fast', 'luma-uni-1.1', 'gpt', 'gpt-1-hq', 'gpt-1.5', 'gpt-1.5-high',
+> 50	  'seedream-4', 'seedream-4-4k', 'seedream-4.5', 'runway', 'classic-fast', 'classic',
+> 51	  'z-image', 'qwen', 'grok', 'recraft-v4', 'recraft-v4-pro', 'recraft-v4.1', 'krea-2',
+> 52	  'mai-image-2.5',
+> 53	] as const;
+> 54	export type ImageModel = (typeof IMAGE_MODELS)[number];
+> 55	
+> 56	/* ── Port (verified handle ids: reference | prompt | output) ────────────────── */
+> 57	export const PortSchema = z.object({
+> 58	  /** stable handle id (e.g. 'reference', 'prompt', 'output') */
+> 59	  id: z.string().min(1),
+> 60	  direction: z.enum(['in', 'out']),
+> 61	  dataType: z.enum(PORT_DATA_TYPES),
+> 62	  /** pt-BR label rendered on the node edge */
+> 63	  label: z.string(),
+> 64	  /** for 'in' reference ports, the accepted reference kind */
+> 65	  referenceKind: z.enum(REFERENCE_KINDS).optional(),
+> 66	  required: z.boolean().optional(),
+> 67	});
+> 68	export type Port = z.infer<typeof PortSchema>;
+> 69	
+> 70	/* ── Reference attached to a generator node (0..8 — verified limit) ─────────── */
+> 71	export const ReferenceSchema = z.object({
+> 72	  kind: z.enum(REFERENCE_KINDS),
+> 73	  assetId: z.string().uuid().optional(),
+> 74	  /** external/library source id (e.g. '@kat' for a Magnific preset character) */
+> 75	  presetId: z.string().optional(),
+> 76	  url: z.string().url().optional(),
+> 77	});
+> 78	export type SpaceReference = z.infer<typeof ReferenceSchema>;
+> 79	export const MAX_REFERENCES = 8;
+> 80	
+> 81	/* ── Node data — extends OrchestrationNodeData (coinCost/status/config kept) ── */
+> 82	export const SpaceNodeDataSchema = z.object({
+> 83	  label: z.string(),                                   // pt-BR
+> 84	  category: z.enum(NODE_CATEGORIES),
+> 85	  modelKey: z.string().optional(),                     // e.g. 'flux.2-pro' → CREDIT_COSTS
+> 86	  aspectRatio: z.enum(ASPECT_RATIOS).default('1:1'),
+> 87	  batch: z.number().int().min(1).max(8).default(1),    // 'x1..x8' stepper
+> 88	  references: z.array(ReferenceSchema).max(MAX_REFERENCES).default([]),
+> 89	  coinCost: z.number().min(0).default(0),              // mcoCoins (server is source of truth)
+> 90	  stabilityScore: z.number().min(0).max(1).default(1), // carried from orchestration model
+> 91	  status: z.enum(NODE_STATUSES).default('idle'),
+> 92	  ports: z.array(PortSchema),
+> 93	  params: z.record(z.string(), z.unknown()).default({}),
+> 94	  byok: z.boolean().optional(),                        // BR-SPACES-006
+> 95	  locked: z.boolean().optional(),                      // node "Lock" action (UI-SPACES-008)
+> 96	  headerHidden: z.boolean().optional(),                // "Hide header" action
+> 97	  icon: z.string().default('✨'),
+> 98	});
+> 99	export type SpaceNodeData = z.infer<typeof SpaceNodeDataSchema>;
+> 100	
+> 101	/* ── @xyflow/react bindings ────────────────────────────────────────────────── */
+> 102	export type SpaceNode = Node<SpaceNodeData>;
+> 103	export interface SpaceEdgeData extends Record<string, unknown> {
+> 104	  dataType: PortDataType; // typed connection (FR-SPACES-004)
+> 105	}
+> 106	export type SpaceEdge = Edge<SpaceEdgeData>;
+> 107	
+> 108	/* ── Space + pages (pages verified live — UI-SPACES-003) ───────────────────── */
+> 109	export const SpacePageSchema = z.object({
+> 110	  id: z.string().uuid(),
+> 111	  index: z.number().int().min(0),
+> 112	  title: z.string(),                                   // e.g. 'Page 1' / pt-BR
+> 113	});
+> 114	export type SpacePage = z.infer<typeof SpacePageSchema>;
+> 115	
+> 116	export interface SpaceEntity {
+> 117	  id: string;
+> 118	  ownerId: string;          // = auth.uid() (RLS, FR-SPACES-007)
+> 119	  title: string;
+> 120	  pages: SpacePage[];
+> 121	  nodes: SpaceNode[];
+> 122	  edges: SpaceEdge[];
+> 123	  viewport: Viewport;
+> 124	  isTemplate: boolean;
+> 125	  createdAt: string;
+> 126	  updatedAt: string;
+> 127	}
+> 128	
+> 129	/* ── Generation (cluster card — FR-SPACES-012) ─────────────────────────────── */
+> 130	export const GenerationSchema = z.object({
+> 131	  id: z.string().uuid(),
+> 132	  spaceId: z.string().uuid(),
+> 133	  nodeId: z.string(),
+> 134	  outputType: z.enum(PORT_DATA_TYPES),
+> 135	  assetId: z.string().uuid().optional(),               // cross-space ref (FR-SPACES-009)
+> 136	  modelKey: z.string(),
+> 137	  mcoCharged: z.number().min(0),                       // BR-SPACES-007
+> 138	  mcoRefunded: z.number().min(0).optional(),           // BR-SPACES-004
+> 139	  usdCost: z.number().min(0).optional(),
+> 140	  latencyMs: z.number().int().min(0).optional(),
+> 141	  status: z.enum(NODE_STATUSES),
+> 142	  createdAt: z.string(),
+> 143	});
+> 144	export type Generation = z.infer<typeof GenerationSchema>;
+> 145	
+> 146	/* ── Canonical Image Generator factory (verified ports) ────────────────────── */
+> 147	export function imageGeneratorPorts(): Port[] {
+> 148	  return [
+> 149	    { id: 'reference', direction: 'in', dataType: 'image', label: 'Referência', referenceKind: 'character' },
+> 150	    { id: 'prompt', direction: 'in', dataType: 'text', label: 'Texto' },
+> 151	    { id: 'output', direction: 'out', dataType: 'image', label: 'Imagem gerada' },
+> 152	  ];
+> 153	}
+> 154	
+> 155	/* ── Runtime guards for the remaining interfaces (Phase 0: z.object for every interface) ───── *
+> 156	 * Trace: SD-SPACES-006. The full @xyflow Node/Edge shape is library-owned; we guard OUR data
+> 157	 * and use passthrough() so xyflow-internal fields survive validation.                          */
+> 158	export const SpaceEdgeDataSchema = z.object({
+> 159	  dataType: z.enum(PORT_DATA_TYPES),
+> 160	});
+> 161	
+> 162	export const ViewportSchema = z.object({ x: z.number(), y: z.number(), zoom: z.number() });
+> 163	
+> 164	export const SpaceNodeGuard = z.object({
+> 165	  id: z.string().min(1),
+> 166	  type: z.string().optional(),
+> 167	  position: z.object({ x: z.number(), y: z.number() }),
+> 168	  data: SpaceNodeDataSchema,
+> 169	}).passthrough();
+> 170	
+> 171	export const SpaceEdgeGuard = z.object({
+> 172	  id: z.string().min(1),
+> 173	  source: z.string(),
+> 174	  target: z.string(),
+> 175	  sourceHandle: z.string().nullish(),
+> 176	  targetHandle: z.string().nullish(),
+> 177	  data: SpaceEdgeDataSchema.optional(),
+> 178	}).passthrough();
+> 179	
+> 180	export const SpaceEntitySchema = z.object({
+> 181	  id: z.string().uuid(),
+> 182	  ownerId: z.string().uuid(),
+> 183	  title: z.string(),
+> 184	  pages: z.array(SpacePageSchema),
+> 185	  nodes: z.array(SpaceNodeGuard),
+> 186	  edges: z.array(SpaceEdgeGuard),
+> 187	  viewport: ViewportSchema,
+> 188	  isTemplate: z.boolean(),
+> 189	  createdAt: z.string(),
+> 190	  updatedAt: z.string(),
+> 191	});
+> 192	
+> ```
+
+## 🤖 Claude *(13:16:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/port-compat.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * port-compat.ts — Type-safe connection rules for Spaces edges.
+> 3	 * Trace: FR-SPACES-004, SD-SPACES-002. Promotion target: src/lib/port-compat.ts
+> 4	 *
+> 5	 * Magnific only lets you connect compatible, typed ports. We mirror that: an edge is
+> 6	 * valid iff source.out.dataType === target.in.dataType (with a few coercions).
+> 7	 */
+> 8	import type { Port, PortDataType, SpaceNode } from './spaces-schema';
+> 9	
+> 10	/** Allowed coercions: a source type that a target type can also accept. */
+> 11	const COERCIONS: Partial<Record<PortDataType, PortDataType[]>> = {
+> 12	  // an SVG output can feed an image input (rasterized); not the reverse.
+> 13	  svg: ['image'],
+> 14	};
+> 15	
+> 16	export function typesCompatible(source: PortDataType, target: PortDataType): boolean {
+> 17	  if (source === target) return true;
+> 18	  return (COERCIONS[source] ?? []).includes(target);
+> 19	}
+> 20	
+> 21	/** Find a port on a node by handle id. */
+> 22	export function getPort(node: SpaceNode, handleId: string): Port | undefined {
+> 23	  return node.data.ports.find((p) => p.id === handleId);
+> 24	}
+> 25	
+> 26	/**
+> 27	 * canConnect — the single source of truth used by useSpacesStore.connect()
+> 28	 * and by <SpaceCanvas onConnect>. Returns a discriminated result so the UI can
+> 29	 * surface a precise pt-BR toast (handled in the component, not here).
+> 30	 */
+> 31	export interface ConnectCheck {
+> 32	  ok: boolean;
+> 33	  reason?: 'same-node' | 'wrong-direction' | 'type-mismatch' | 'missing-port' | 'locked';
+> 34	  sourceType?: PortDataType;
+> 35	  targetType?: PortDataType;
+> 36	}
+> 37	
+> 38	export function canConnect(
+> 39	  source: SpaceNode,
+> 40	  sourceHandle: string,
+> 41	  target: SpaceNode,
+> 42	  targetHandle: string,
+> 43	): ConnectCheck {
+> 44	  if (source.id === target.id) return { ok: false, reason: 'same-node' };
+> 45	  if (source.data.locked || target.data.locked) return { ok: false, reason: 'locked' };
+> 46	
+> 47	  const s = getPort(source, sourceHandle);
+> 48	  const t = getPort(target, targetHandle);
+> 49	  if (!s || !t) return { ok: false, reason: 'missing-port' };
+> 50	  if (s.direction !== 'out' || t.direction !== 'in') return { ok: false, reason: 'wrong-direction' };
+> 51	
+> 52	  if (!typesCompatible(s.dataType, t.dataType)) {
+> 53	    return { ok: false, reason: 'type-mismatch', sourceType: s.dataType, targetType: t.dataType };
+> 54	  }
+> 55	  return { ok: true, sourceType: s.dataType, targetType: t.dataType };
+> 56	}
+> 57	
+> ```
+
+## 🤖 Claude *(13:16:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/node-registry.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * node-registry.ts — Canonical node-type registry for the Spaces layer.
+> 3	 *
+> 4	 * IDs are the REAL Magnific internal identifiers (data-cy="spotlight-v2-item-<id>"),
+> 5	 * captured live 2026-06-29. Labels are pt-BR (UI); ids stay English (Sovereign rule).
+> 6	 * Trace: NR-SPACES-002/004/006. Promotion target: src/lib/node-registry.ts
+> 7	 */
+> 8	import type { NodeCategory, PortDataType, Port } from './spaces-schema';
+> 9	
+> 10	export interface NodeTypeDef {
+> 11	  /** canonical internal id (matches Magnific data-cy) */
+> 12	  id: string;
+> 13	  labelPt: string;            // pt-BR display name
+> 14	  category: NodeCategory | 'app';
+> 15	  icon: string;               // sprite ref (Magnific) / lucide equivalent in MCORCH
+> 16	  inputs: PortDataType[];     // accepted input data types (best-effort; verify per node)
+> 17	  output?: PortDataType;      // produced output (undefined for pure inputs/utilities)
+> 18	  badge?: 'New';
+> 19	  draggable?: boolean;        // false for media sources (Upload/Assets/Stock)
+> 20	}
+> 21	
+> 22	/** ~26 distinct canonical node types (Basics is an alias projection — see ALIASES). */
+> 23	export const NODE_TYPES: NodeTypeDef[] = [
+> 24	  // Media inputs
+> 25	  { id: 'upload', labelPt: 'Upload', category: 'media', icon: 'upload', inputs: [], output: 'image', draggable: false },
+> 26	  { id: 'assets', labelPt: 'Ativos', category: 'media', icon: 'projects', inputs: [], output: 'image', draggable: false },
+> 27	  { id: 'find-inspiration', labelPt: 'Stock', category: 'media', icon: 'search', inputs: [], output: 'image', draggable: false },
+> 28	  // References
+> 29	  { id: 'references', labelPt: 'Adicionar referência', category: 'references', icon: 'upload-reference', inputs: ['image'], output: 'image' },
+> 30	  // Image
+> 31	  { id: 'image-generator', labelPt: 'Gerador de imagem', category: 'image', icon: 'image-generator', inputs: ['text', 'image'], output: 'image' },
+> 32	  { id: 'image-upscaler', labelPt: 'Upscaler de imagem', category: 'image', icon: 'upscale', inputs: ['image'], output: 'image' },
+> 33	  { id: 'editing', labelPt: 'Editor de imagem', category: 'image', icon: 'edit-image', inputs: ['image', 'text'], output: 'image' },
+> 34	  { id: 'variations', labelPt: 'Variações', category: 'image', icon: 'variations', inputs: ['image'], output: 'image' },
+> 35	  { id: 'composer', labelPt: 'Designer', category: 'designer', icon: 'design-standalone-v2', inputs: ['image', 'text'], output: 'image', badge: 'New' },
+> 36	  { id: 'sketch', labelPt: 'Sketch', category: 'image', icon: 'sketch', inputs: ['image'], output: 'image' },
+> 37	  { id: 'image-to-svg', labelPt: 'Imagem para SVG', category: 'image', icon: 'vector', inputs: ['image'], output: 'svg' },
+> 38	  { id: 'svg-generator', labelPt: 'Gerador de SVG', category: 'image', icon: 'vector', inputs: ['text'], output: 'svg' },
+> 39	  // Video
+> 40	  { id: 'video-generator', labelPt: 'Gerador de vídeo', category: 'video', icon: 'video', inputs: ['text', 'image'], output: 'video' },
+> 41	  { id: 'speak', labelPt: 'Speak (lip-sync)', category: 'video', icon: 'lip-sync', inputs: ['video', 'audio'], output: 'video' },
+> 42	  { id: 'video-combiner', labelPt: 'Combinador de vídeo', category: 'video', icon: 'rectangle-merge', inputs: ['video'], output: 'video' },
+> 43	  { id: 'video-upscaler', labelPt: 'Upscaler de vídeo', category: 'video', icon: 'enhance', inputs: ['video'], output: 'video' },
+> 44	  { id: 'video-frame-splitter', labelPt: 'Extrator de mídia', category: 'video', icon: 'split', inputs: ['video'], output: 'image', badge: 'New' },
+> 45	  // Audio
+> 46	  { id: 'voice-over', labelPt: 'Voiceover', category: 'audio', icon: 'ai-voice', inputs: ['text'], output: 'audio' },
+> 47	  { id: 'sfx-generator', labelPt: 'Efeitos sonoros', category: 'audio', icon: 'sound-effects', inputs: ['text'], output: 'audio' },
+> 48	  { id: 'music-generator', labelPt: 'Gerador de música', category: 'audio', icon: 'music', inputs: ['text'], output: 'audio' },
+> 49	  // Text
+> 50	  { id: 'text', labelPt: 'Texto', category: 'text', icon: 'text', inputs: [], output: 'text' },
+> 51	  { id: 'prompt-generator', labelPt: 'Assistant', category: 'text', icon: 'ai-stars', inputs: ['text', 'image'], output: 'text' },
+> 52	  // Utilities
+> 53	  { id: 'list', labelPt: 'Lista', category: 'utility', icon: 'bullet-list', inputs: ['text'], output: 'text' },
+> 54	  { id: 'sticky-note', labelPt: 'Nota', category: 'utility', icon: 'sticky-note', inputs: [] },
+> 55	  { id: 'stickers', labelPt: 'Adesivos', category: 'utility', icon: 'smile', inputs: [] },
+> 56	  { id: 'group', labelPt: 'Grupo', category: 'utility', icon: 'group-element', inputs: [] },
+> 57	];
+> 58	
+> 59	/** Basics quick-access tab → resolves to canonical types (NR-SPACES-006). */
+> 60	export const BASICS_ALIASES: Record<string, string> = {
+> 61	  'basics-text': 'text',
+> 62	  'basics-image-generator': 'image-generator',
+> 63	  'basics-video-generator': 'video-generator',
+> 64	  'basics-prompt-generator': 'prompt-generator',
+> 65	  'basics-image-upscaler': 'image-upscaler',
+> 66	  'basics-list': 'list',
+> 67	};
+> 68	
+> 69	export function resolveNodeType(id: string): string {
+> 70	  return BASICS_ALIASES[id] ?? id;
+> 71	}
+> 72	
+> 73	export function getNodeType(id: string): NodeTypeDef | undefined {
+> 74	  return NODE_TYPES.find((t) => t.id === resolveNodeType(id));
+> 75	}
+> 76	
+> 77	export const NODE_TYPE_IDS = NODE_TYPES.map((t) => t.id);
+> 78	
+> 79	/**
+> 80	 * Workflow Apps (Apps tab) — 41 verified prebuilt graphs (NR-SPACES-003/005).
+> 81	 * Modeled as facade nodes that encapsulate a subgraph. Two are avatar/clone paths.
+> 82	 */
+> 83	export const WORKFLOW_APPS = [
+> 84	  'Costume fitting', 'Video translator', 'VFX Studio', 'Create your camera path',
+> 85	  'Icon generator', 'Room decorator', 'Looped motion', 'Frame to frame', 'Photo to motion',
+> 86	  'Brand merch shots', 'Product color variants', 'Audience-driven ads', 'UGC livestream demo',
+> 87	  'Wear any outfit', 'Render to photoreal', 'UGC scripted video', 'Mockup realizer',
+> 88	  'Detailed storyboard', 'Marketplace listing visuals', 'Script to film', 'Product ad spot',
+> 89	  'Portfolio builder: Logo', 'Group photo to individuals', 'Portfolio builder: Visual works',
+> 90	  'Shot reference generator', 'Cinematic preproduction pipeline', 'Video lip sync',
+> 91	  'Multi-angle coverage', 'Cinematic locations', 'Scout view', 'Multilingual voiceover',
+> 92	  'Bulk color grading', 'Cast variation', 'Localize ads and images', 'Multi-format resizer',
+> 93	  'Character Sheet', 'UGC unboxing video', 'UGC tutorial video', 'Visual campaign location',
+> 94	  'UGC try-on video', 'Headshot generator',
+> 95	] as const;
+> 96	export type WorkflowAppName = (typeof WORKFLOW_APPS)[number];
+> 97	
+> 98	/** Avatar/clone-relevant apps (start here once a source photo exists). */
+> 99	export const AVATAR_APPS: WorkflowAppName[] = ['Headshot generator', 'Character Sheet'];
+> 100	
+> 101	
+> 102	/**
+> 103	 * NODE_PORTS — real per-node handle ids (data-handleid), verified live 2026-06-29.
+> 104	 * Source of truth for building Port[] in the store/registry (NA-SPACES-002).
+> 105	 */
+> 106	export const NODE_PORTS: Record<string, { in: string[]; out: string[] }> = {
+> 107	  'image-generator': { in: ['reference', 'prompt'], out: ['output'] },
+> 108	  'video-generator': {
+> 109	    in: ['references', 'audio', 'video-reference', 'last-frame', 'first-frame', 'prompt'],
+> 110	    out: ['start-frame', 'end-frame', 'output', 'audio-output'],
+> 111	  },
+> 112	  'voice-over': { in: ['text'], out: ['output'] },
+> 113	  'prompt-generator': { in: ['attachments', 'prompt'], out: ['generated_prompt'] },
+> 114	  'image-upscaler': { in: ['input-image'], out: ['output'] },
+> 115	  'music-generator': { in: ['prompt'], out: ['output'] },
+> 116	  'list': {
+> 117	    in: ['texts', 'images', 'videos', 'audios', 'svgs', 'models-3d'],
+> 118	    out: ['output-texts', 'output-images', 'output-videos', 'output-audios', 'output-svgs', 'output-models-3d'],
+> 119	  },
+> 120	  'references': { in: [], out: ['output'] },
+> 121	  'sticky-note': { in: [], out: [] },
+> 122	  'stickers': { in: [], out: [] },
+> 123	  'group': { in: [], out: [] },
+> 124	};
+> 125	
+> 126	/**
+> 127	 * HANDLE_DATA_TYPE — best-effort handle-id → PortDataType inference (Phase 0).
+> 128	 * Phase 1 refines per-node; output/main handles fall back to the NodeTypeDef types.
+> 129	 */
+> 130	const HANDLE_DATA_TYPE: Record<string, PortDataType> = {
+> 131	  prompt: 'text', text: 'text', texts: 'text', generated_prompt: 'text', 'output-texts': 'text',
+> 132	  audio: 'audio', audios: 'audio', 'audio-output': 'audio', 'output-audios': 'audio',
+> 133	  video: 'video', videos: 'video', 'video-reference': 'video', 'output-videos': 'video',
+> 134	  svgs: 'svg', 'output-svgs': 'svg',
+> 135	  'models-3d': '3d', 'output-models-3d': '3d',
+> 136	};
+> 137	
+> 138	/**
+> 139	 * buildPorts — construct typed Port[] for a node type from NODE_PORTS (source of truth).
+> 140	 * Labels default to the handle id (Phase 0, types-only); Phase 1 sources pt-BR labels from i18n.
+> 141	 * Trace: NA-SPACES-002, SD-SPACES-006.
+> 142	 */
+> 143	export function buildPorts(typeId: string): Port[] {
+> 144	  const def = getNodeType(typeId);
+> 145	  const spec = NODE_PORTS[resolveNodeType(typeId)];
+> 146	  if (!spec) return [];
+> 147	  const ports: Port[] = [];
+> 148	  for (const id of spec.in) {
+> 149	    ports.push({ id, direction: 'in', dataType: HANDLE_DATA_TYPE[id] ?? def?.inputs?.[0] ?? 'image', label: id });
+> 150	  }
+> 151	  for (const id of spec.out) {
+> 152	    ports.push({ id, direction: 'out', dataType: HANDLE_DATA_TYPE[id] ?? def?.output ?? 'image', label: id });
+> 153	  }
+> 154	  return ports;
+> 155	}
+> 156	
+> ```
+
+## 🤖 Claude *(13:16:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useSpacesStore.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * useSpacesStore.ts — Zustand store (with zundo time-travel) for the Spaces canvas.
+> 3	 *
+> 4	 * Generalizes the existing `useOrchestrationStore` (same method surface +
+> 5	 * typed ports, references, pages). DOES NOT replace it — the orchestrator can be
+> 6	 * re-expressed as a Spaces preset later (anti-drift, SD-SPACES-001, rollout §10).
+> 7	 *
+> 8	 * Stack (already installed): zustand ^5, zundo ^2.3, @xyflow/react ^12.
+> 9	 * Promotion target: src/store/useSpacesStore.ts
+> 10	 */
+> 11	import { create } from 'zustand';
+> 12	import { temporal } from 'zundo';
+> 13	import {
+> 14	  applyNodeChanges, applyEdgeChanges, addEdge,
+> 15	  type NodeChange, type EdgeChange, type Connection, type Viewport, type XYPosition,
+> 16	} from '@xyflow/react';
+> 17	import {
+> 18	  SpaceNodeDataSchema, imageGeneratorPorts,
+> 19	  type SpaceNode, type SpaceEdge, type SpaceEntity, type SpacePage, type NodeStatus,
+> 20	} from '@/lib/spaces-schema';
+> 21	import { canConnect } from '@/lib/port-compat';
+> 22	import { buildPorts, getNodeType } from '@/lib/node-registry';
+> 23	
+> 24	const POSITIONS_KEY = 'spaces_positions_v1'; // mirrors orchestration_positions_v1
+> 25	
+> 26	type RunState = 'idle' | 'running' | 'partial' | 'done';
+> 27	
+> 28	interface SpacesState {
+> 29	  spaceId: string | null;
+> 30	  title: string;
+> 31	  pages: SpacePage[];
+> 32	  activePageId: string | null;
+> 33	  nodes: SpaceNode[];
+> 34	  edges: SpaceEdge[];
+> 35	  viewport: Viewport;
+> 36	  selectedNodeId: string | null;
+> 37	  runState: RunState;
+> 38	
+> 39	  // @xyflow/react change handlers
+> 40	  onNodesChange: (changes: NodeChange<SpaceNode>[]) => void;
+> 41	  onEdgesChange: (changes: EdgeChange<SpaceEdge>[]) => void;
+> 42	
+> 43	  // graph mutations (optimistic — FR-SPACES-008)
+> 44	  addNode: (type: string, position: XYPosition, partial?: Partial<SpaceNode['data']>) => string;
+> 45	  connect: (conn: Connection) => boolean;          // false if incompatible (FR-SPACES-004)
+> 46	  updateNodeParams: (id: string, patch: Record<string, unknown>) => void;
+> 47	  updateNodeStatus: (id: string, status: NodeStatus) => void;
+> 48	  removeNode: (id: string) => void;
+> 49	  setSelectedNode: (id: string | null) => void;
+> 50	  setViewport: (vp: Viewport) => void;
+> 51	  setRunState: (s: RunState) => void;
+> 52	
+> 53	  // lifecycle
+> 54	  hydrate: (space: SpaceEntity) => void;           // FR-SPACES-003
+> 55	  snapshot: () => Pick<SpaceEntity, 'nodes' | 'edges' | 'viewport'>; // for upsert/rollback
+> 56	  resetStatuses: () => void;
+> 57	}
+> 58	
+> 59	let nodeSeq = 0;
+> 60	function nextTitle(type: string, nodes: SpaceNode[]): string {
+> 61	  // auto-numbered titles, verified live ("Image Generator #1")
+> 62	  const n = nodes.filter((x) => (x.data.label || '').startsWith(type)).length + 1;
+> 63	  return `${type} #${n}`;
+> 64	}
+> 65	
+> 66	export const useSpacesStore = create<SpacesState>()(
+> 67	  temporal(
+> 68	    (set, get) => ({
+> 69	      spaceId: null,
+> 70	      title: 'Untitled space',
+> 71	      pages: [],
+> 72	      activePageId: null,
+> 73	      nodes: [],
+> 74	      edges: [],
+> 75	      viewport: { x: 0, y: 0, zoom: 1 },
+> 76	      selectedNodeId: null,
+> 77	      runState: 'idle',
+> 78	
+> 79	      onNodesChange: (changes) =>
+> 80	        set({ nodes: applyNodeChanges(changes, get().nodes) as SpaceNode[] }),
+> 81	      onEdgesChange: (changes) =>
+> 82	        set({ edges: applyEdgeChanges(changes, get().edges) as SpaceEdge[] }),
+> 83	
+> 84	      addNode: (type, position, partial) => {
+> 85	        const id = `n_${Date.now()}_${nodeSeq++}`;
+> 86	        const def = getNodeType(type);
+> 87	        const ports = buildPorts(type); // real per-node ports from NODE_PORTS (NA-SPACES-002)
+> 88	        const data = SpaceNodeDataSchema.parse({
+> 89	          label: nextTitle(type, get().nodes),
+> 90	          category: def && def.category !== 'app' ? def.category : 'image',
+> 91	          ports: ports.length ? ports : imageGeneratorPorts(),
+> 92	          icon: '🖼️',
+> 93	          ...partial,
+> 94	        });
+> 95	        const node: SpaceNode = { id, type: 'spaceNode', position, data };
+> 96	        set({ nodes: [...get().nodes, node], selectedNodeId: id });
+> 97	        return id;
+> 98	      },
+> 99	
+> 100	      connect: (conn) => {
+> 101	        const { nodes, edges } = get();
+> 102	        const src = nodes.find((n) => n.id === conn.source);
+> 103	        const tgt = nodes.find((n) => n.id === conn.target);
+> 104	        if (!src || !tgt || !conn.sourceHandle || !conn.targetHandle) return false;
+> 105	        const check = canConnect(src, conn.sourceHandle, tgt, conn.targetHandle);
+> 106	        if (!check.ok) return false; // component shows pt-BR toast from check.reason
+> 107	        set({
+> 108	          edges: addEdge(
+> 109	            { ...conn, data: { dataType: check.sourceType! } },
+> 110	            edges,
+> 111	          ) as SpaceEdge[],
+> 112	        });
+> 113	        return true;
+> 114	      },
+> 115	
+> 116	      updateNodeParams: (id, patch) =>
+> 117	        set({
+> 118	          nodes: get().nodes.map((n) =>
+> 119	            n.id === id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...patch } } } : n,
+> 120	          ),
+> 121	        }),
+> 122	
+> 123	      updateNodeStatus: (id, status) =>
+> 124	        set({
+> 125	          nodes: get().nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, status } } : n)),
+> 126	        }),
+> 127	
+> 128	      removeNode: (id) =>
+> 129	        set({
+> 130	          nodes: get().nodes.filter((n) => n.id !== id),
+> 131	          edges: get().edges.filter((e) => e.source !== id && e.target !== id),
+> 132	          selectedNodeId: get().selectedNodeId === id ? null : get().selectedNodeId,
+> 133	        }),
+> 134	
+> 135	      setSelectedNode: (id) => set({ selectedNodeId: id }),
+> 136	      setViewport: (vp) => set({ viewport: vp }),
+> 137	      setRunState: (s) => set({ runState: s }),
+> 138	
+> 139	      hydrate: (space) =>
+> 140	        set({
+> 141	          spaceId: space.id,
+> 142	          title: space.title,
+> 143	          pages: space.pages,
+> 144	          activePageId: space.pages[0]?.id ?? null,
+> 145	          nodes: space.nodes,
+> 146	          edges: space.edges,
+> 147	          viewport: space.viewport,
+> 148	        }),
+> 149	
+> 150	      snapshot: () => {
+> 151	        const { nodes, edges, viewport } = get();
+> 152	        return { nodes, edges, viewport };
+> 153	      },
+> 154	
+> 155	      resetStatuses: () =>
+> 156	        set({ nodes: get().nodes.map((n) => ({ ...n, data: { ...n.data, status: 'idle' } })) }),
+> 157	    }),
+> 158	    {
+> 159	      // zundo: only track graph topology for undo/redo (PR-SPACES-012)
+> 160	      partialize: (s) => ({ nodes: s.nodes, edges: s.edges }),
+> 161	      limit: 100,
+> 162	    },
+> 163	  ),
+> 164	);
+> 165	
+> 166	/** Persist node positions to localStorage (mirrors savePositions in the legacy store). */
+> 167	export function savePositions(nodes: SpaceNode[]) {
+> 168	  const map: Record<string, XYPosition> = {};
+> 169	  for (const n of nodes) map[n.id] = n.position;
+> 170	  try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(map)); } catch { /* noop */ }
+> 171	}
+> 172	
+> ```
+
+## 🤖 Claude *(13:16:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * useParamRegistry.ts — Declarative parameter schema + cost estimation for nodes.
+> 3	 *
+> 4	 * Separates "what params a node exposes" (data) from "how the HUD draws them" (UI).
+> 5	 * Drives both the inline node controls AND the right-side Settings panel (the
+> 6	 * verified hybrid HUD — UI-SPACES-009). Trace: SD-SPACES-002, BR-SPACES-002.
+> 7	 *
+> 8	 * Promotion target: src/hooks/useParamRegistry.ts
+> 9	 */
+> 10	import {
+> 11	  ASPECT_RATIOS, IMAGE_MODELS,
+> 12	  type SpaceNode, type AspectRatio, type ImageModel,
+> 13	} from '@/lib/spaces-schema';
+> 14	
+> 15	export interface ParamField {
+> 16	  key: string;
+> 17	  kind: 'text' | 'textarea' | 'select' | 'slider' | 'stepper' | 'toggle' | 'mask' | 'references';
+> 18	  labelPt: string;                                   // pt-BR label
+> 19	  options?: { value: string; labelPt: string }[];
+> 20	  min?: number; max?: number; step?: number;
+> 21	  /** mcoCoins delta when this option is enabled (shown inline — BR-SPACES-002) */
+> 22	  costDelta?: number;
+> 23	}
+> 24	
+> 25	/**
+> 26	 * Verified server-side cost authority lives in `supabase/functions/canvas-execute`
+> 27	 * (CREDIT_COSTS). The client mirror below is display-only — NEVER the source of truth.
+> 28	 * Keys are a representative subset; keep in sync with the edge function.
+> 29	 */
+> 30	export const CLIENT_COST_MIRROR: Record<string, number> = {
+> 31	  'auto': 15,                 // routed server-side; estimate only
+> 32	  'flux.2-pro': 12, 'flux.2-max': 18, 'flux.1.1': 12, 'flux.1-fast': 6,
+> 33	  'google-imagen-4': 18, 'google-imagen-4-ultra': 28, 'google-imagen-4-fast': 8,
+> 34	  'seedream-4': 10, 'seedream-4-4k': 20, 'gpt-1.5': 18,
+> 35	  'recraft-v4': 14, 'krea-2': 16, 'mystic-2.5-fluid': 14,
+> 36	  // editing/utility ops (verified families)
+> 37	  'upscale-2x': 8, 'upscale-4x': 20, 'inpaint': 6, 'remove-background': 3,
+> 38	  'scene-compose': 18, 'style-transfer': 14,
+> 39	};
+> 40	
+> 41	const IMAGE_MODEL_OPTIONS = IMAGE_MODELS.map((m) => ({
+> 42	  value: m,
+> 43	  labelPt: m === 'auto' ? 'Automático' : m.replace(/-/g, ' '),
+> 44	}));
+> 45	
+> 46	const ASPECT_OPTIONS = ASPECT_RATIOS.map((r) => ({ value: r, labelPt: r }));
+> 47	
+> 48	/** Param schema per node category (extend as nodes are added). */
+> 49	export function getSchema(node: SpaceNode): ParamField[] {
+> 50	  switch (node.data.category) {
+> 51	    case 'image':
+> 52	      return [
+> 53	        { key: 'modelKey', kind: 'select', labelPt: 'Modelo', options: IMAGE_MODEL_OPTIONS },
+> 54	        { key: 'references', kind: 'references', labelPt: 'Referências (0/8)' },
+> 55	        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva a imagem que deseja gerar…' },
+> 56	        { key: 'aspectRatio', kind: 'select', labelPt: 'Proporção', options: ASPECT_OPTIONS },
+> 57	        { key: 'batch', kind: 'stepper', labelPt: 'Quantidade', min: 1, max: 8, step: 1 },
+> 58	      ];
+> 59	    case 'video':
+> 60	      return [
+> 61	        { key: 'modelKey', kind: 'select', labelPt: 'Modelo de vídeo' },
+> 62	        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o vídeo…' },
+> 63	        { key: 'aspectRatio', kind: 'select', labelPt: 'Proporção', options: ASPECT_OPTIONS },
+> 64	      ];
+> 65	    case 'audio':
+> 66	      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Texto / roteiro…' }];
+> 67	    case 'text':
+> 68	      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Escreva o texto…' }];
+> 69	    default:
+> 70	      return [];
+> 71	  }
+> 72	}
+> 73	
+> 74	/** Estimate mcoCoins for a single node run (display only; server reconciles). */
+> 75	export function estimateCost(node: SpaceNode): number {
+> 76	  if (node.data.byok) return 0; // BR-SPACES-006
+> 77	  const base = CLIENT_COST_MIRROR[node.data.modelKey ?? 'auto'] ?? 0;
+> 78	  return base * Math.max(1, node.data.batch ?? 1);
+> 79	}
+> 80	
+> 81	/** Project total cost for a set of nodes (pre-run — BR-SPACES-008). */
+> 82	export function projectGraphCost(nodes: SpaceNode[]): number {
+> 83	  return nodes.reduce((sum, n) => sum + estimateCost(n), 0);
+> 84	}
+> 85	
+> 86	export type { AspectRatio, ImageModel };
+> 87	
+> ```
+
+## 🤖 Claude *(13:16:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for f in spaces-schema port-compat node-registry; do echo \"=== $f ===\"; diff -q docs/bok/spaces-evolution/scaffold/$f.ts src/lib/$f.ts && echo identical || diff docs/bok/spaces-evolution/scaffold/$f.ts src/lib/$f.ts | head -20; done; echo \"=== useSpacesStore ===\"; diff -q docs/bok/spaces-evolution/scaffold/useSpacesStore.ts src/store/useSpacesStore.ts && echo identical || diff docs/bok/spaces-evolution/scaffold/useSpacesStore.ts src/store/useSpacesStore.ts | head -30; echo \"=== useParamRegistry ===\"; diff -q docs/bok/spaces-evolution/scaffold/useParamRegistry.ts src/hooks/useParamRegistry.ts && echo identical || diff docs/bok/spaces-evolution/scaffold/useParamRegistry.ts src/hooks/useParamRegistry.ts | head -30; echo \"=== scaffold README ===\"; cat docs/bok/spaces-evolution/scaffold/README.md; echo \"=== consumers ===\"; grep -rln \"useSpacesStore\\|spaces-schema\\|port-compat\" src/ --include=\"*.tsx\" --include=\"*.ts\" | grep -v \"src/lib/spaces-schema.ts\\|src/lib/port-compat.ts\\|src/store/useSpacesStore.ts\\|src/hooks/useParamRegistry.ts\\|src/lib/node-registry.ts\"",
+  "description": "Diff scaffold vs promoted files, show scaffold README, find consumers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === spaces-schema ===
+> Files docs/bok/spaces-evolution/scaffold/spaces-schema.ts and src/lib/spaces-schema.ts differ
+> 153a154,191
+> > 
+> > /* ── Runtime guards for the remaining interfaces (Phase 0: z.object for every interface) ───── *
+> >  * Trace: SD-SPACES-006. The full @xyflow Node/Edge shape is library-owned; we guard OUR data
+> >  * and use passthrough() so xyflow-internal fields survive validation.                          */
+> > export const SpaceEdgeDataSchema = z.object({
+> >   dataType: z.enum(PORT_DATA_TYPES),
+> > });
+> > 
+> > export const ViewportSchema = z.object({ x: z.number(), y: z.number(), zoom: z.number() });
+> > 
+> > export const SpaceNodeGuard = z.object({
+> >   id: z.string().min(1),
+> >   type: z.string().optional(),
+> >   position: z.object({ x: z.number(), y: z.number() }),
+> >   data: SpaceNodeDataSchema,
+> > }).passthrough();
+> > 
+> > export const SpaceEdgeGuard = z.object({
+> >   id: z.string().min(1),
+> === port-compat ===
+> identical
+> === node-registry ===
+> Files docs/bok/spaces-evolution/scaffold/node-registry.ts and src/lib/node-registry.ts differ
+> 8c8
+> < import type { NodeCategory, PortDataType } from './spaces-schema';
+> ---
+> > import type { NodeCategory, PortDataType, Port } from './spaces-schema';
+> 124a125,155
+> > 
+> > /**
+> >  * HANDLE_DATA_TYPE — best-effort handle-id → PortDataType inference (Phase 0).
+> >  * Phase 1 refines per-node; output/main handles fall back to the NodeTypeDef types.
+> >  */
+> > const HANDLE_DATA_TYPE: Record<string, PortDataType> = {
+> >   prompt: 'text', text: 'text', texts: 'text', generated_prompt: 'text', 'output-texts': 'text',
+> >   audio: 'audio', audios: 'audio', 'audio-output': 'audio', 'output-audios': 'audio',
+> >   video: 'video', videos: 'video', 'video-reference': 'video', 'output-videos': 'video',
+> >   svgs: 'svg', 'output-svgs': 'svg',
+> >   'models-3d': '3d', 'output-models-3d': '3d',
+> > };
+> > 
+> > /**
+> >  * buildPorts — construct typed Port[] for a node type from NODE_PORTS (source of truth).
+> === useSpacesStore ===
+> Files docs/bok/spaces-evolution/scaffold/useSpacesStore.ts and src/store/useSpacesStore.ts differ
+> 20,21c20,22
+> < } from './spaces-schema';
+> < import { canConnect } from './port-compat';
+> ---
+> > } from '@/lib/spaces-schema';
+> > import { canConnect } from '@/lib/port-compat';
+> > import { buildPorts, getNodeType } from '@/lib/node-registry';
+> 84a86,87
+> >         const def = getNodeType(type);
+> >         const ports = buildPorts(type); // real per-node ports from NODE_PORTS (NA-SPACES-002)
+> 87,88c90,91
+> <           category: 'image',
+> <           ports: imageGeneratorPorts(), // default; real ports come from node registry
+> ---
+> >           category: def && def.category !== 'app' ? def.category : 'image',
+> >           ports: ports.length ? ports : imageGeneratorPorts(),
+> === useParamRegistry ===
+> Files docs/bok/spaces-evolution/scaffold/useParamRegistry.ts and src/hooks/useParamRegistry.ts differ
+> 13c13
+> < } from './spaces-schema';
+> ---
+> > } from '@/lib/spaces-schema';
+> === scaffold README ===
+> # Spaces — Reference Scaffold
+> 
+> Reference TypeScript for the **Spaces** layer, derived from the live recon (`../09`, `../10`)
+> and anchored to existing repo symbols. **Not wired into the build** — it lives under `docs/`
+> on purpose (anti-drift). Promote deliberately when ready.
+> 
+> ## Files
+> | File | Promotion target | Purpose |
+> |---|---|---|
+> | `spaces-schema.ts` | `src/lib/spaces-schema.ts` | Canonical types + zod; verified ports/models/ratios/refs |
+> | `port-compat.ts` | `src/lib/port-compat.ts` | Type-safe connection rules (`canConnect`) |
+> | `useSpacesStore.ts` | `src/store/useSpacesStore.ts` | Zustand + zundo store (generalizes `useOrchestrationStore`) |
+> | `useParamRegistry.ts` | `src/hooks/useParamRegistry.ts` | HUD param schema + cost estimation |
+> 
+> ## Grounded in verified facts
+> - Ports use real handle ids: `reference`, `prompt`, `output` (in/in/out).
+> - 38 image models, 10 aspect ratios, 9 reference kinds (see `../10`).
+> - `NodeStatus` reused verbatim from `useOrchestrationStore` (`idle|pending|running|done|error|blocked`).
+> - Cost authority is server-side (`supabase/functions/canvas-execute → CREDIT_COSTS`); the client
+>   mirror in `useParamRegistry.ts` is display-only.
+> 
+> ## Promotion checklist (no drift)
+> 1. Copy files to their targets above; keep `useOrchestrationStore` until the orchestrator is
+>    re-expressed as a Spaces preset.
+> 2. Add route `/dashboard/spaces` + `/dashboard/spaces/:spaceId` in `src/App.tsx` (lazy), reusing
+>    `UnifiedCanvasPage` as the shell.
+> 3. Build UI components under `src/components/spaces/` (canvas, ParamHUD, Spotlight, nodes/*) —
+>    components render only; hooks own state/IO.
+> 4. Wire `canvas-execute` for runs; reconcile/refund per `02-brd`.
+> 5. Tests: extend `src/test/canvas-dag.test.ts`; add `port-compat` + `estimateCost` unit tests.
+> 
+> ## Pending — Avatar / clone (Character reference)
+> Mechanism verified: Image Generator → right panel → **References (0/8) → Character** → upload a
+> source photo → prompt → Run. **Blocker:** no source photo of the user is available (project
+> Uploads empty; workspace folder empty). To proceed, drop a clear face photo into
+> `MCORCH CoWork/` (or the Spaces project Uploads) and it will be used as the Character reference.
+> === consumers ===
+> ```
+
+## 🤖 Claude *(13:17:05)*
+
+
+## 🤖 Claude *(13:17:05)*
+
+
+## 🤖 Claude *(13:17:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/06-data-model.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Data & Knowledge Model
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Conceptual Data Model
+> 11	
+> 12	```
+> 13	[{{ENTITY_1}}] ──(1:N)──▶ [{{ENTITY_2}}]
+> 14	      │
+> 15	      └──(N:M)──▶ [{{ENTITY_3}}]
+> 16	                         │
+> 17	                         └──(1:1)──▶ [mcorch_nodes]
+> 18	```
+> 19	
+> 20	**Entities:**
+> 21	- **{{ENTITY_1}}:** {{ENTITY_1_DESC}}
+> 22	- **{{ENTITY_2}}:** {{ENTITY_2_DESC}}
+> 23	- **{{ENTITY_3}}:** {{ENTITY_3_DESC}}
+> 24	
+> 25	---
+> 26	
+> 27	## 2. Logical Data Model
+> 28	
+> 29	### Table: `{{TABLE_1}}`
+> 30	
+> 31	| Column | Type | Nullable | Default | FK | Description |
+> 32	|--------|------|----------|---------|-----|------------|
+> 33	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 34	| `user_id` | `uuid` | NOT NULL | — | `auth.users.id` | Tenant isolation |
+> 35	| `project_id` | `uuid` | NULL | — | `projects.id` | Project scope |
+> 36	| `{{COL_1}}` | `{{TYPE_1}}` | {{NULL_1}} | {{DEFAULT_1}} | {{FK_1}} | {{DESC_1}} |
+> 37	| `{{COL_2}}` | `{{TYPE_2}}` | {{NULL_2}} | {{DEFAULT_2}} | {{FK_2}} | {{DESC_2}} |
+> 38	| `embedding` | `vector(768)` | NULL | — | — | Neural embedding (OpenRouter text-embedding-3-small) |
+> 39	| `stability_score` | `float4` | NOT NULL | `0.5` | — | FSRS-6 memory stability |
+> 40	| `created_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 41	| `updated_at` | `timestamptz` | NOT NULL | `now()` | — | Audit |
+> 42	
+> 43	### Table: `{{TABLE_2}}`
+> 44	
+> 45	| Column | Type | Nullable | Default | FK | Description |
+> 46	|--------|------|----------|---------|-----|------------|
+> 47	| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | — | Primary key |
+> 48	| `{{TABLE_1}}_id` | `uuid` | NOT NULL | — | `{{TABLE_1}}.id` | Parent reference |
+> 49	| `{{COL_3}}` | `{{TYPE_3}}` | {{NULL_3}} | {{DEFAULT_3}} | {{FK_3}} | {{DESC_3}} |
+> 50	
+> 51	---
+> 52	
+> 53	## 3. Supabase Physical Schema Stubs
+> 54	
+> 55	```sql
+> 56	-- ============================================================
+> 57	-- MIGRATION: {{MIGRATION_TIMESTAMP}}_{{PROJECT_SLUG}}_schema.sql
+> 58	-- ============================================================
+> 59	
+> 60	-- {{TABLE_1}}
+> 61	CREATE TABLE public.{{TABLE_1}} (
+> 62	  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+> 63	  user_id        uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+> 64	  project_id     uuid REFERENCES public.projects(id) ON DELETE CASCADE,
+> 65	  {{COL_1}}      {{TYPE_1}} {{CONSTRAINTS_1}},
+> 66	  {{COL_2}}      {{TYPE_2}} {{CONSTRAINTS_2}},
+> 67	  embedding      vector(768),
+> 68	  stability_score float4 NOT NULL DEFAULT 0.5,
+> 69	  created_at     timestamptz NOT NULL DEFAULT now(),
+> 70	  updated_at     timestamptz NOT NULL DEFAULT now()
+> 71	);
+> 72	
+> 73	ALTER TABLE public.{{TABLE_1}} ENABLE ROW LEVEL SECURITY;
+> 74	
+> 75	-- RLS Policies
+> 76	CREATE POLICY "{{TABLE_1}}: users read own rows"
+> 77	  ON public.{{TABLE_1}} FOR SELECT
+> 78	  USING (user_id = auth.uid());
+> 79	
+> 80	CREATE POLICY "{{TABLE_1}}: users insert own rows"
+> 81	  ON public.{{TABLE_1}} FOR INSERT
+> 82	  WITH CHECK (user_id = auth.uid());
+> 83	
+> 84	CREATE POLICY "{{TABLE_1}}: users update own rows"
+> 85	  ON public.{{TABLE_1}} FOR UPDATE
+> 86	  USING (user_id = auth.uid())
+> 87	  WITH CHECK (user_id = auth.uid());
+> 88	
+> 89	-- Indexes
+> 90	CREATE INDEX {{TABLE_1}}_user_idx ON public.{{TABLE_1}} (user_id);
+> 91	CREATE INDEX {{TABLE_1}}_project_idx ON public.{{TABLE_1}} (project_id);
+> 92	
+> 93	-- HNSW (embeddings)
+> 94	CREATE INDEX {{TABLE_1}}_embedding_hnsw
+> 95	  ON public.{{TABLE_1}} USING hnsw (embedding vector_cosine_ops)
+> 96	  WITH (m = 16, ef_construction = 64);
+> 97	
+> 98	-- Updated-at trigger
+> 99	CREATE TRIGGER set_{{TABLE_1}}_updated_at
+> 100	  BEFORE UPDATE ON public.{{TABLE_1}}
+> 101	  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+> 102	```
+> 103	
+> 104	---
+> 105	
+> 106	## 4. GraphRAG Knowledge Nodes
+> 107	
+> 108	### Node Types Introduced
+> 109	
+> 110	| node_type | Title Pattern | Content Fields | Embedding Source |
+> 111	|-----------|--------------|----------------|-----------------|
+> 112	| `{{NODE_TYPE_1}}` | `{{TITLE_PATTERN_1}}` | `{{CONTENT_FIELDS_1}}` | `{{EMBED_SOURCE_1}}` |
+> 113	| `{{NODE_TYPE_2}}` | `{{TITLE_PATTERN_2}}` | `{{CONTENT_FIELDS_2}}` | `{{EMBED_SOURCE_2}}` |
+> 114	
+> 115	### Edge Types Introduced
+> 116	
+> 117	| Edge relationship | Source node_type | Target node_type | Metadata |
+> 118	|-------------------|-----------------|-----------------|----------|
+> 119	| `{{EDGE_REL_1}}` | `{{EDGE_SRC_1}}` | `{{EDGE_TGT_1}}` | `{{EDGE_META_1}}` |
+> 120	
+> 121	### Embedding Trigger
+> 122	
+> 123	Every insert into `{{TABLE_1}}` must call `embed-mcorch-node`:
+> 124	```typescript
+> 125	// In the Edge Function, after successful insert:
+> 126	await supabase.functions.invoke('embed-mcorch-node', {
+> 127	  body: { node_id: insertedNode.id, content: `${title} ${content}` }
+> 128	})
+> 129	```
+> 130	
+> 131	### FSRS-6 Parameters
+> 132	
+> 133	| Field | Initial Value | Decay Rule |
+> 134	|-------|--------------|------------|
+> 135	| `stability_score` | `0.5` | Decays per migration `20260425190000` formula |
+> 136	| `revenue_impact` | {{REVENUE_IMPACT_CALC}} | Updated on each successful orchestration run |
+> 137	
+> 138	---
+> 139	
+> 140	## 5. Tenant Isolation Map
+> 141	
+> 142	| Table | `user_id` scope | `project_id` scope | System rows (user_id IS NULL) |
+> 143	|-------|----------------|-------------------|-------------------------------|
+> 144	| `{{TABLE_1}}` | ✅ Required | Optional | No |
+> 145	| `{{TABLE_2}}` | ✅ Required | ✅ Required | No |
+> 146	| `mcorch_nodes` | Optional | Optional | Yes (system nodes) |
+> 147	
+> 148	---
+> 149	
+> 150	## 6. Data Quality Rules
+> 151	
+> 152	| Table | Column | Rule | Violation Message (PT-BR) |
+> 153	|-------|--------|------|--------------------------|
+> 154	| `{{TABLE_1}}` | `{{COL_1}}` | {{QUALITY_RULE_1}} | {{QUALITY_MSG_1}} |
+> 155	| `{{TABLE_1}}` | `{{COL_2}}` | {{QUALITY_RULE_2}} | {{QUALITY_MSG_2}} |
+> 156	
+> 157	---
+> 158	
+> 159	## 7. Retention & Archival Policy
+> 160	
+> 161	| Data | Retention Period | Archival Strategy | Deletion Trigger |
+> 162	|------|-----------------|-------------------|-----------------|
+> 163	| `{{TABLE_1}}` rows | {{RETENTION_1}} | {{ARCHIVAL_1}} | {{DELETE_TRIGGER_1}} |
+> 164	| Embeddings (`vector` column) | Indefinite | Backfill via `scripts/backfill-embeddings.ts` | With parent row |
+> 165	| `infra_health_logs` entries | 90 days | No archival | Cron purge |
+> 166	
+> 167	---
+> 168	
+> 169	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 170	
+> ```
+
+## 🤖 Claude *(13:17:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/07-process-flow.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Process & Automation Blueprint
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Process Inventory
+> 11	
+> 12	| Process ID | Name | Type | Trigger | Owner | SLA |
+> 13	|------------|------|------|---------|-------|-----|
+> 14	| PROC-001 | {{PROC_001_NAME}} | {{PROC_001_TYPE}} | {{PROC_001_TRIGGER}} | System | {{PROC_001_SLA}} |
+> 15	| PROC-002 | {{PROC_002_NAME}} | {{PROC_002_TYPE}} | {{PROC_002_TRIGGER}} | User | {{PROC_002_SLA}} |
+> 16	
+> 17	> Types: `automated` | `human-in-loop` | `cron` | `event-driven`
+> 18	
+> 19	---
+> 20	
+> 21	## 2. BPMN-lite Process Maps
+> 22	
+> 23	### PROC-001: {{PROC_001_NAME}}
+> 24	
+> 25	```
+> 26	START ──▶ [{{TASK_1}}] ──▶ <Gateway: {{GATEWAY_1_NAME}}>
+> 27	                                  │ YES                    │ NO
+> 28	                            [{{TASK_2}}]              [{{ERROR_PATH_1}}]
+> 29	                                  │                         │
+> 30	                            [{{TASK_3}}]              [Notify: {{ERROR_NOTIF}}]
+> 31	                                  │                         │
+> 32	                               ◀──┴─────────────────────────┘
+> 33	                                  │
+> 34	                               [Insert mcorch_node]
+> 35	                                  │
+> 36	                                END
+> 37	```
+> 38	
+> 39	**Swimlanes:**
+> 40	
+> 41	| Swimlane | Participant | Tasks |
+> 42	|----------|-------------|-------|
+> 43	| User | Browser / Frontend | {{USER_TASKS}} |
+> 44	| Frontend Hook | `use{{HookName}}.ts` | {{HOOK_TASKS}} |
+> 45	| Edge Function | `{{EdgeFunctionName}}` | {{EDGE_TASKS}} |
+> 46	| External API | `{{ExternalAPI}}` | {{EXT_TASKS}} |
+> 47	| DB | Supabase / PostgreSQL | {{DB_TASKS}} |
+> 48	
+> 49	---
+> 50	
+> 51	### PROC-002: {{PROC_002_NAME}}
+> 52	
+> 53	```
+> 54	[User Action: {{USER_ACTION}}]
+> 55	  │
+> 56	  ▼
+> 57	[Hook: use{{HookName}} → mutation trigger]
+> 58	  │
+> 59	  ▼
+> 60	[Edge Fn: {{EdgeFunctionName}}]
+> 61	  ├── Validate JWT ──(fail)──▶ HTTP 401
+> 62	  ├── Check mcoCoins ──(low)──▶ HTTP 402 → Toast: "Saldo insuficiente"
+> 63	  ├── {{BUSINESS_LOGIC_STEP}}
+> 64	  ├── Persist to {{TABLE_1}}
+> 65	  ├── Embed node via embed-mcorch-node
+> 66	  └── HTTP 200 → React Query invalidation → UI refresh
+> 67	```
+> 68	
+> 69	---
+> 70	
+> 71	## 3. n8n Workflow Blueprints
+> 72	
+> 73	### Workflow: {{N8N_WORKFLOW_1_NAME}}
+> 74	
+> 75	**Trigger:** {{N8N_TRIGGER_1}}  
+> 76	**Idempotency key:** `{{N8N_IDEMPOTENCY_KEY}}`
+> 77	
+> 78	```
+> 79	[Trigger: {{N8N_TRIGGER_1}}]
+> 80	  │
+> 81	  ▼
+> 82	[Node: HTTP Request → /functions/v1/{{EdgeFunctionName}}]
+> 83	  ├── Headers: Authorization: Bearer {{SERVICE_ROLE_OR_USER_JWT}}
+> 84	  ├── Body: { {{N8N_REQUEST_BODY}} }
+> 85	  │
+> 86	  ├── (success) ──▶ [Node: Update Supabase row status = 'complete']
+> 87	  │                         │
+> 88	  │                         ▼
+> 89	  │                [Node: Send notification (optional)]
+> 90	  │
+> 91	  └── (error) ──▶ [Node: Set retry count + 1]
+> 92	                         │
+> 93	                   (count ≤ 3) ──▶ [Wait: exponential backoff]──▶ retry
+> 94	                         │
+> 95	                   (count > 3) ──▶ [Node: Insert infra_health_logs {event: 'n8n_failure'}]
+> 96	                                         │
+> 97	                                   [Node: Alert Sovereign]
+> 98	```
+> 99	
+> 100	**Data Mapping:**
+> 101	
+> 102	| Input Field | Source | → | Output Field | Destination |
+> 103	|-------------|--------|---|--------------|-------------|
+> 104	| `{{IN_FIELD_1}}` | Trigger body | → | `{{OUT_FIELD_1}}` | Edge Function body |
+> 105	| `{{IN_FIELD_2}}` | Env var | → | `Authorization` | Header |
+> 106	
+> 107	---
+> 108	
+> 109	## 4. Orchestration Integration Points
+> 110	
+> 111	> Applies only if this feature integrates with `orchestrate-content` pipeline.
+> 112	
+> 113	| Pipeline Step | Step ID | Position | Description | mcoCoins Trigger |
+> 114	|---------------|---------|----------|-------------|-----------------|
+> 115	| {{PIPELINE_STEP_1}} | step_{{STEP_ID_1}} | After step {{PREV_STEP}} | {{STEP_DESC_1}} | {{STEP_COINS_1}} coins at entry |
+> 116	
+> 117	**Integration code stub (inside `orchestrate-content/index.ts`):**
+> 118	```typescript
+> 119	// Step {{STEP_ID_1}}: {{PIPELINE_STEP_1}}
+> 120	await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'running')
+> 121	const {{STEP_RESULT}} = await {{STEP_ACTION}}(payload)
+> 122	if (!{{STEP_RESULT}}.ok) {
+> 123	  await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'error')
+> 124	  throw new Error('{{PIPELINE_STEP_1}} failed')
+> 125	}
+> 126	await updateNodeStatus(nodes, '{{STEP_ID_1}}', 'complete')
+> 127	```
+> 128	
+> 129	---
+> 130	
+> 131	## 5. Error Handling & Retry Strategy
+> 132	
+> 133	| Process | Step | Error Type | Max Retries | Backoff | Failure Action |
+> 134	|---------|------|-----------|-------------|---------|----------------|
+> 135	| PROC-001 | {{TASK_1}} | Network timeout | 3 | Exponential (2s, 4s, 8s) | Insert `infra_health_logs` |
+> 136	| PROC-001 | {{TASK_2}} | External API 5xx | 2 | Fixed 5s | Alert + mark failed |
+> 137	| PROC-002 | mcoCoins check | Insufficient balance | 0 | — | HTTP 402 to user |
+> 138	| Any | JWT validation | Invalid token | 0 | — | HTTP 401 immediately |
+> 139	
+> 140	---
+> 141	
+> 142	## 6. SLA Definitions
+> 143	
+> 144	| Process | Step | Expected Duration | Timeout Threshold | Alert if exceeded |
+> 145	|---------|------|------------------|-------------------|-------------------|
+> 146	| PROC-001 | End-to-end | {{E2E_DURATION}} | {{E2E_TIMEOUT}} | Yes → infra_health_logs |
+> 147	| PROC-001 | {{TASK_1}} alone | {{TASK_1_DURATION}} | {{TASK_1_TIMEOUT}} | No |
+> 148	| PROC-002 | Edge Fn response | < 800ms p95 | 5s | Yes |
+> 149	
+> 150	---
+> 151	
+> 152	## 7. Cron Jobs
+> 153	
+> 154	| Job Name | Schedule (cron) | Function | Idempotency | Failure Alerting |
+> 155	|----------|----------------|----------|-------------|-----------------|
+> 156	| `{{CRON_1_NAME}}` | `{{CRON_1_SCHEDULE}}` | `{{CRON_1_FN}}` | `{{CRON_1_KEY}}` | `infra_health_logs` |
+> 157	
+> 158	> All cron jobs must be idempotent — re-running on the same data must produce the same result.
+> 159	
+> 160	---
+> 161	
+> 162	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 163	
+> ```
+
+## 🤖 Claude *(13:17:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/08-quality-metrics.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Quality & Self-Optimization Specification
+> 2	
+> 3	**Project:** {{PROJECT_SLUG}}  
+> 4	**Version:** v0.1 | **Date:** {{DATE}}  
+> 5	**BoK Applied:** CMQ/OE BOK (Process Management + Organizational Excellence)  
+> 6	**Status:** Draft
+> 7	
+> 8	---
+> 9	
+> 10	## 1. Quality Objectives
+> 11	
+> 12	| QO ID | Objective | Linked Business Objective | Target | Review Cadence |
+> 13	|-------|-----------|--------------------------|--------|---------------|
+> 14	| QO-001 | {{QO_001}} | BO-001 | {{QO_001_TARGET}} | Weekly |
+> 15	| QO-002 | {{QO_002}} | BO-002 | {{QO_002_TARGET}} | Monthly |
+> 16	| QO-003 | {{QO_003}} | BO-003 | {{QO_003_TARGET}} | Quarterly |
+> 17	
+> 18	---
+> 19	
+> 20	## 2. KPI Dashboard Definition
+> 21	
+> 22	> Data source: Supabase tables/views listed per KPI.
+> 23	
+> 24	| KPI ID | Name | Formula | Target | Warn Threshold | Critical Threshold | Data Source |
+> 25	|--------|------|---------|--------|---------------|-------------------|-------------|
+> 26	| KPI-001 | {{KPI_001_NAME}} | {{KPI_001_FORMULA}} | {{KPI_001_TARGET}} | {{KPI_001_WARN}} | {{KPI_001_CRIT}} | `{{KPI_001_TABLE}}` |
+> 27	| KPI-002 | {{KPI_002_NAME}} | {{KPI_002_FORMULA}} | {{KPI_002_TARGET}} | {{KPI_002_WARN}} | {{KPI_002_CRIT}} | `{{KPI_002_TABLE}}` |
+> 28	| KPI-003 | mcoCoins Burn Rate | `SUM(deductions) / active_users` | < {{BURN_TARGET}}/user | {{BURN_WARN}} | {{BURN_CRIT}} | `profiles` + `mco_transactions` |
+> 29	| KPI-004 | Edge Fn p95 Latency | `PERCENTILE_CONT(0.95) OVER latency` | < 800ms | 1000ms | 2000ms | Supabase logs |
+> 30	| KPI-005 | Knowledge Mesh Growth | `COUNT(mcorch_nodes) per week` | > {{MESH_GROWTH_TARGET}} | < {{MESH_GROWTH_WARN}} | 0 | `mcorch_nodes` |
+> 31	
+> 32	---
+> 33	
+> 34	## 3. FMEA Table
+> 35	
+> 36	> Severity, Occurrence, Detection: 1 (best) → 10 (worst). RPN = S × O × D. RPN > 100 requires action.
+> 37	
+> 38	| ID | Function | Failure Mode | Effect | S | O | D | RPN | Recommended Action |
+> 39	|----|---------|--------------|--------|---|---|---|-----|--------------------|
+> 40	| FMEA-001 | {{FR_001_TITLE}} | {{FAILURE_001}} | {{EFFECT_001}} | {{S_001}} | {{O_001}} | {{D_001}} | {{RPN_001}} | {{ACTION_001}} |
+> 41	| FMEA-002 | mcoCoins deduction | RPC timeout → double charge | User overcharged | 9 | 2 | 3 | 54 | Idempotency key on every RPC call |
+> 42	| FMEA-003 | JWT validation | Missing header | Unauthenticated access | 10 | 2 | 1 | 20 | Hard fail at entry; logged to infra_health_logs |
+> 43	| FMEA-004 | embed-mcorch-node | Embedding API timeout | Node stored without vector | 6 | 3 | 4 | 72 | Async retry queue; backfill via `scripts/backfill-embeddings.ts` |
+> 44	| FMEA-005 | {{CRITICAL_FR}} | {{FAILURE_005}} | {{EFFECT_005}} | {{S_005}} | {{O_005}} | {{D_005}} | {{RPN_005}} | {{ACTION_005}} |
+> 45	
+> 46	---
+> 47	
+> 48	## 4. Self-Optimization Loops
+> 49	
+> 50	| Loop ID | Trigger Condition | KPI Source | Autonomous Response | Escalation (human) |
+> 51	|---------|------------------|------------|--------------------|--------------------|
+> 52	| SOL-001 | KPI-004 latency > 1000ms for 5 consecutive calls | infra_health_logs | `mega-brain-daemon`: restart Edge Fn container | Alert Sovereign if > 2s |
+> 53	| SOL-002 | KPI-005 mesh growth = 0 for 7 days | mcorch_nodes | Trigger backfill job via cron | Alert if backfill fails |
+> 54	| SOL-003 | {{TRIGGER_003}} | {{KPI_SOURCE_003}} | {{RESPONSE_003}} | {{ESCALATION_003}} |
+> 55	| SOL-004 | mcoCoins balance < 10% of plan quota | profiles | Send in-app notification (PT-BR) | — (no auto-action) |
+> 56	
+> 57	---
+> 58	
+> 59	## 5. Self-Healing Specifications
+> 60	
+> 61	### 5.1 Watchdog Telemetry Events
+> 62	
+> 63	New event types to be written to `infra_health_logs` by this feature:
+> 64	
+> 65	| Event Type | Trigger | Severity | Payload |
+> 66	|------------|---------|----------|---------|
+> 67	| `{{PROJECT_SLUG}}_fn_failure` | Edge Fn 5xx after retry exhaustion | error | `{fn_name, error_message, user_id}` |
+> 68	| `{{PROJECT_SLUG}}_embed_failure` | embed-mcorch-node timeout | warn | `{node_id, retry_count}` |
+> 69	| `{{PROJECT_SLUG}}_sla_breach` | Process SLA exceeded | warn | `{process_id, elapsed_ms, threshold_ms}` |
+> 70	
+> 71	### 5.2 Auto-Recovery Script Stubs
+> 72	
+> 73	```bash
+> 74	#!/bin/bash
+> 75	# scripts/self-heal-{{PROJECT_SLUG}}.sh
+> 76	# Triggered by mega-brain-daemon when {{PROJECT_SLUG}}_fn_failure detected
+> 77	
+> 78	FUNCTION_NAME="{{EDGE_FUNCTION_NAME}}"
+> 79	LOG_TABLE="infra_health_logs"
+> 80	
+> 81	echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Self-heal triggered for $FUNCTION_NAME"
+> 82	
+> 83	# Step 1: Check function status
+> 84	STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+> 85	  "$SUPABASE_URL/functions/v1/$FUNCTION_NAME/health" \
+> 86	  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+> 87	
+> 88	if [ "$STATUS" != "200" ]; then
+> 89	  echo "[WARN] Function unhealthy (status: $STATUS). Re-deploying..."
+> 90	  npx supabase functions deploy "$FUNCTION_NAME"
+> 91	fi
+> 92	
+> 93	# Step 2: Log recovery attempt
+> 94	# (insert into infra_health_logs via Supabase REST API)
+> 95	echo "[OK] Self-heal complete for $FUNCTION_NAME"
+> 96	```
+> 97	
+> 98	### 5.3 mega-brain-daemon Integration Points
+> 99	
+> 100	| Daemon Event | Condition | Action |
+> 101	|-------------|-----------|--------|
+> 102	| `health_check` | Every 5 min (watchdog cron) | Check `{{TABLE_1}}` row count vs. expected baseline |
+> 103	| `anomaly_detected` | `infra_health_logs` error rate > 5/hour | Execute `self-heal-{{PROJECT_SLUG}}.sh` |
+> 104	| `recovery_confirmed` | Health check passes after self-heal | Insert `recovery_ok` event to `infra_health_logs` |
+> 105	
+> 106	---
+> 107	
+> 108	## 6. SLA / SLO / SLI Definitions
+> 109	
+> 110	| Service | SLI (what we measure) | SLO (our target) | SLA (contractual consequence) |
+> 111	|---------|----------------------|------------------|-------------------------------|
+> 112	| `{{EdgeFunctionName}}` API | p95 response latency | ≤ 800ms | Credits issued if > 2s for > 1% of calls in a month |
+> 113	| Data ingestion pipeline | % records processed within SLA | ≥ 99% | Incident report required |
+> 114	| Knowledge Mesh embedding | % nodes with embedding within 5m of insert | ≥ 95% | Auto-backfill triggered |
+> 115	| Platform uptime | % minutes available per month | ≥ 99.5% | Per enterprise contract |
+> 116	
+> 117	---
+> 118	
+> 119	## 7. PDCA Improvement Cadence
+> 120	
+> 121	| Cycle | Phase | Activity | Owner | Frequency |
+> 122	|-------|-------|----------|-------|-----------|
+> 123	| {{PROJECT_SLUG}} Quality | Plan | Review FMEA + KPI targets | Sovereign | Quarterly |
+> 124	| {{PROJECT_SLUG}} Quality | Do | Implement top improvement action | Engineering | Per sprint |
+> 125	| {{PROJECT_SLUG}} Quality | Check | Compare KPIs vs. targets; update FMEA RPNs | AIOS | Monthly |
+> 126	| {{PROJECT_SLUG}} Quality | Act | Close loop; update this document | Sovereign | Monthly |
+> 127	
+> 128	**Improvement backlog location:** `.claude/context/sprint-priorities.md`
+> 129	
+> 130	---
+> 131	
+> 132	## 8. Observability Checklist
+> 133	
+> 134	### 8.1 Logging Events
+> 135	
+> 136	| Event | Location | Level | Fields logged |
+> 137	|-------|----------|-------|--------------|
+> 138	| Function entry | `{{EdgeFunctionName}}/index.ts` line ~10 | INFO | `{user_id, timestamp, request_id}` |
+> 139	| mcoCoins deduction | After RPC call | INFO | `{user_id, amount, new_balance}` |
+> 140	| Business logic error | Catch block | ERROR | `{user_id, error_message, stack}` |
+> 141	| SLA breach | Timeout guard | WARN | `{process_id, elapsed_ms}` |
+> 142	
+> 143	### 8.2 Alerting Rules
+> 144	
+> 145	| Condition | Channel | Escalation |
+> 146	|-----------|---------|------------|
+> 147	| Error rate > 1% in 5 min | `infra_health_logs` insert | mega-brain-daemon auto-heal |
+> 148	| p95 latency > 2s | `infra_health_logs` insert | Sovereign notification |
+> 149	| Zero KPI-005 growth > 7 days | Scheduled check | AIOS agent alert |
+> 150	
+> 151	### 8.3 Distributed Tracing Touchpoints
+> 152	
+> 153	| Span | Start | End | Tags |
+> 154	|------|-------|-----|------|
+> 155	| `{{EdgeFunctionName}}.total` | Request received | Response sent | `user_id`, `status_code` |
+> 156	| `{{EdgeFunctionName}}.mco_check` | Before RPC | After RPC | `amount`, `balance_after` |
+> 157	| `{{EdgeFunctionName}}.embed` | Before embed-mcorch-node call | After call | `node_id`, `success` |
+> 158	
+> 159	---
+> 160	
+> 161	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 162	
+> ```
+
+## 🤖 Claude *(13:17:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/agentic-governance/09-pattern-conformance.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# agentic-governance — Pattern Conformance (09)
+> 2	
+> 3	> **Lente BoK:** 21 Agentic Patterns (Gulli, *Agentic Design Patterns* — 482 pg) · doutrina viva em `docs/architecture/agentic-vision.md` §2.
+> 4	>
+> 5	> Este documento tem **dois blocos**: **(A)** o *Master Template* reutilizável — a tabela em branco dos 21 padrões que **toda SDD nova copia** para declarar conformidade (gate vinculante CLAUDE.md §1 Step 3.5 · FR-AG-006); e **(B)** a *Conformance Declaration deste módulo* (`agentic-governance`), preenchida com `yes` / `deferred` / `n-a` e a razão honesta de cada marca.
+> 6	
+> 7	| Campo | Valor |
+> 8	|---|---|
+> 9	| **Módulo** | `agentic-governance` — "Governança Agêntica AGI→ASI" |
+> 10	| **Lineage** | `docs/architecture/agentic-vision.md` §2 + `.claude/context/agi-asi-via4-design-checklist.md` (nó malha `a576216e`) → DERIVES_FROM → `bok-scribe-seal-mcorch-constellation-v1` |
+> 11	| **ORO** | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign · Owner = Sovereign |
+> 12	| **Traça** | PR-AG-002 (Conformance Declaration) · FR-AG-006 (gate de processo) |
+> 13	
+> 14	---
+> 15	
+> 16	## Bloco A — Master Template (copiar verbatim em toda SDD nova)
+> 17	
+> 18	**Regra de uso (FR-AG-006 · DD-AG-005):** todo módulo novo embute esta tabela na sua SDD (`05-sdd.md`). Se o módulo encarna **≥3 padrões de forma não-trivial**, promove a um `09-pattern-conformance.md` dedicado (como este). A coluna `Implemented?` admite **exatamente** três valores:
+> 19	
+> 20	- **`yes`** — o módulo encarna o padrão com artefato em produção (cita o artefato + ID de FR).
+> 21	- **`deferred`** — o padrão é relevante mas adiado; **obrigatório** referenciar a OTD que o rastreia (`OTD-AG-00X` da doutrina, ou nova OTD do módulo). Nunca `deferred` sem dívida nomeada.
+> 22	- **`n-a`** — o padrão não se aplica à natureza do módulo; a coluna *How / Why-deferred* explica **por que** não se aplica (não basta deixar em branco).
+> 23	
+> 24	> **Anti-fricção (NFR-AG-005 · FM-AG-004):** o gate adiciona **≤1 tabela** à SDD e herda **verbatim** as exenções de CLAUDE.md §1 (typo fix, dependency bump, lint refactor, single-file patch, `/handoff`/`/handson`). Tarefa trivial não carrega tabela.
+> 25	
+> 26	### Tabela mestre (em branco — para copiar)
+> 27	
+> 28	| # | Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred |
+> 29	|---|---------|:------------------------------:|---|
+> 30	| 1 | Prompt Chaining | | |
+> 31	| 2 | Routing | | |
+> 32	| 3 | Parallelization | | |
+> 33	| 4 | Reflection | | |
+> 34	| 5 | Tool Use | | |
+> 35	| 6 | Planning | | |
+> 36	| 7 | Multi-Agent | | |
+> 37	| 8 | Memory Management | | |
+> 38	| 9 | Learning & Adaptation | | |
+> 39	| 10 | Model Context Protocol | | |
+> 40	| 11 | Goal Setting & Monitoring | | |
+> 41	| 12 | Exception Handling & Recovery | | |
+> 42	| 13 | Human-in-the-Loop | | |
+> 43	| 14 | Knowledge Retrieval (RAG) | | |
+> 44	| 15 | Inter-Agent Communication (A2A) | | |
+> 45	| 16 | Resource-Aware Optimization | | |
+> 46	| 17 | Reasoning Techniques | | |
+> 47	| 18 | Guardrails / Safety | | |
+> 48	| 19 | Evaluation & Monitoring | | |
+> 49	| 20 | Prioritization | | |
+> 50	| 21 | Exploration & Discovery | | |
+> 51	
+> 52	> Os nomes acima são **canônicos** — copiados verbatim de `agentic-vision.md` §2. Não renomear, não reordenar, não numerar diferente. A numeração é a chave de cross-reference do Pattern Maturity Ledger e das OTDs de canonização (§3 da doutrina).
+> 53	
+> 54	---
+> 55	
+> 56	## Bloco B — Conformance Declaration: `agentic-governance`
+> 57	
+> 58	**Natureza do módulo (Lei 1 — fundamentação honesta):** `agentic-governance` é um **meta-módulo de medição**. Ele não executa o coletivo — ele **mede** o coletivo. Concretamente é (a) um *gate de processo* (Pattern Conformance, já vivo), (b) um *Evaluation & Monitoring layer* (o Collective Efficiency Ledger — FR-AG-001..005), (c) *Resource-Aware* por construção (a métrica primária é mco/resultado — FR-AG-004), e (d) *Guardrails* (o gate vinculante que bloqueia SDD não-conforme). Por isso os padrões abaixo marcados `yes` são exatamente aqueles que **a própria função do módulo encarna** — não há inflação: padrões de *execução* (chaining, planning, parallelization) são `n-a` porque o módulo deriva VIEWs e não orquestra trabalho.
+> 59	
+> 60	| # | Pattern | Implemented? | How / Why-deferred |
+> 61	|---|---------|:------------:|---|
+> 62	| 1 | Prompt Chaining | n-a | Módulo de medição, não de execução. Não encadeia steps de LLM — deriva VIEWs (`collective_efficiency_ledger`) sobre as bases que *outros* módulos já escreveram (`pipeline_runs`/`autopilot_cycles`). |
+> 63	| 2 | Routing | n-a | Não despacha trabalho a providers/agentes; apenas lê e agrega. |
+> 64	| 3 | Parallelization | n-a | Sem fan-out próprio. O paralelismo que ele *mede* pertence aos módulos medidos (orchestrate-content, autopilot). |
+> 65	| 4 | Reflection | n-a | Não há laço Generator-Critic neste módulo. A "reflexão" do ecossistema (Vision-QA, `mcorch-qa-healing`) vive nos módulos avaliados, não aqui. |
+> 66	| 5 | Tool Use | n-a | Não invoca ferramentas externas; o ledger é puro SQL (VIEW + RPC `collective_efficiency_rollup`). |
+> 67	| 6 | Planning | n-a | Sem geração de plano. O backlog de canonização (PR-AG-008 / OTD-AG-001..010) é roadmap humano-curado, não plano agêntico. |
+> 68	| 7 | Multi-Agent | n-a | Mede o coletivo Pantheon mas não *é* um coletivo; é uma camada de instrumentação single-purpose. |
+> 69	| 8 | Memory Management | **yes** | Toda decisão de escala derivada do ledger e o seal desta BoK selam **nós na Knowledge Mesh** (`mcorch_nodes`, GraphRAG HNSW 768d) — DERIVES_FROM → `bok-scribe-seal-mcorch-constellation-v1`. A doutrina é load-bearing e é *puxada da malha* por toda SDD nova (BR-AG-004, anti-staleness MR-AG-005). |
+> 70	| 9 | Learning & Adaptation | deferred | O ledger **fornece o sinal** para fechar o loop de aprendizado, mas o loop em si (reward multi-métrica autopilot→policy) é **OTD-AG-002 (P0)**. Marcar `yes` aqui seria fabricar o elo recursivo que ainda é manual. |
+> 71	| 10 | Model Context Protocol | n-a | Não expõe nem consome MCP. |
+> 72	| 11 | Goal Setting & Monitoring | **yes** | O Collective Efficiency Ledger é literalmente a camada de *monitoring* das metas da Via 4: KPI-AG-001 (mco_per_result por `collective_type`), KPI-AG-002 (coordination_overhead médio), KPI-AG-003 (% runs com retry). Goals SMART em QO-AG-001..003. Telemetria de overhead via `infra_health_logs` (FR-AG-003). |
+> 73	| 12 | Exception Handling & Recovery | n-a | VIEW read-only sem write-path (NFR-AG-001); não há fluxo a recuperar. A coluna derivada `succeeded` (DD-AG / FM-AG-008) reconcilia status divergentes (`done` vs `completed`), mas isso é normalização de leitura, não recovery. |
+> 74	| 13 | Human-in-the-Loop | **yes** | O consumidor final do ledger é o **Sovereign**: o rollup cross-tenant (`collective_efficiency_rollup`, service-role-only · DD-AG-006) existe para que a **decisão de escala** ("mais agentes" vs "modelo maior") seja humana, não automática (PROC-AG-002). HITL ancorado no ORO triplet. |
+> 75	| 14 | Knowledge Retrieval (RAG) | n-a | Não faz retrieval semântico; agrega métricas estruturadas via SQL. (O seal *escreve* na malha — padrão #8 — mas não *recupera* dela em runtime.) |
+> 76	| 15 | Inter-Agent Communication (A2A) | n-a | Não há troca de mensagens entre agentes neste módulo. |
+> 77	| 16 | Resource-Aware Optimization | **yes** | A métrica **primária** do módulo é recurso: `mco_per_result` (V4-4 · FR-AG-004 = `spend_mco − refunded_mco` ÷ criativos do ciclo) e `coordination_overhead` (V4-5 · FR-AG-005). É a instrumentação que falta para otimizar consumo de mcoCoins por resultado do coletivo (BR-AG-002/003). |
+> 78	| 17 | Reasoning Techniques | n-a | Sem raciocínio LLM próprio; agregação determinística. |
+> 79	| 18 | Guardrails / Safety | **yes** | O **Pattern Conformance gate** (FR-AG-006) é em si um guardrail de processo: bloqueia SDD nova sem declaração de conformidade. Defesas técnicas: `security_invoker=on` (FM-AG-001, zero vazamento cross-tenant), `metadata` allowlist sem PII (FM-AG-003 · NFR-AG-003), rollup `SECURITY DEFINER` + `search_path=''` + REVOKE PUBLIC/anon/authenticated + GRANT service_role (FM-AG-007), `/security-review` SAFE pré-commit (NFR-AG-004 · FMEA-011). |
+> 80	| 19 | Evaluation & Monitoring | **yes** | **É a essência do módulo** — o ledger É medição. Avalia eficiência do coletivo (orchestrate-content + autopilot-cycle = 100% dos coletivos pagos · QO-AG-002), integridade material zero-estimativa (QO-AG-003 · BR-AG-007), tudo derivado de verdade financeira para resistir a Goodhart (BR-AG-006 · DD-AG-001/004 · FM-AG-002). |
+> 81	| 20 | Prioritization | deferred | O módulo *informa* priorização (o backlog OTD-AG-001..010 é ordenado por "o que destrava medir o coletivo primeiro"), mas a álgebra/scheduler formal de priorização é **OTD-AG-020** (gap #20 da doutrina, sem scheduler anti-starvation). Curadoria humana hoje, não automatizada. |
+> 82	| 21 | Exploration & Discovery | n-a | Módulo de medição confirmatória, não de exploração generativa. A descoberta de novos coletivos a medir é reativa (segue o que o produto constrói), não um torneio de ranking. |
+> 83	
+> 84	**Placar deste módulo:** `yes` × 6 (#8 Memory · #11 Goal Monitoring · #13 HITL · #16 Resource-Aware · #18 Guardrails · #19 Evaluation) · `deferred` × 2 (#9 Learning→OTD-AG-002 · #20 Prioritization→OTD-AG-020) · `n-a` × 13. A concentração em **Evaluation + Resource-Aware + Goal Monitoring + Guardrails** confirma materialmente a natureza declarada: este é o módulo que **mede e governa** o coletivo, com o **humano lendo o rollup** (#13) e a **malha selando a doutrina** (#8).
+> 85	
+> 86	---
+> 87	
+> 88	## Verificação (gate de conformidade — PROC-AG-001)
+> 89	
+> 90	| Gate | Critério material | Verificação |
+> 91	|---|---|---|
+> 92	| AT-AG-006 (review) | Toda SDD nova carrega o Bloco A (ou promove a `09-pattern-conformance.md` se ≥3 padrões). | Checklist de review do `/bok-scribe`; QO-AG-001 = 100% das SDDs conformes (KPI-AG-005). |
+> 93	| Declaração honesta | Nenhum `yes` sem artefato/FR citado; nenhum `deferred` sem OTD; nenhum `n-a` sem razão. | Bloco B acima cita FR/OTD em cada linha não-`n-a`. |
+> 94	| Anti-inflação | Padrões de execução marcados `n-a` com razão (módulo de medição, não de execução). | Linhas #1-#7, #10, #12, #14-#15, #17, #21 = `n-a` justificado. |
+> 95	
+> 96	**Razão (BR-AG-001 · MR-AG-006):** declarar conformidade contra os 21 padrões torna a arquitetura **coerente e antecipável a escala** — e conformidade declarada é, ela própria, o diferencial de maturidade que o mercado já reconhece (21 padrões viraram vocabulário). O gate é **declaração** (1 tabela · DD-AG-005), não sign-off com reviewer — fricção mínima por design.
+> 97	
+> 98	---
+> 99	
+> 100	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 101	
+> ```
+
+## 🤖 Claude *(13:17:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== viral-autopilot 06/07/08 headings ===\"; for n in 06-data-model 07-process-flow 08-quality-metrics; do echo \"--- $n ---\"; grep -E \"^#{1,3} \" docs/bok/viral-autopilot/$n.md 2>/dev/null | head -15; done; echo \"=== IDs usados ===\"; grep -ohE \"(DM|PROC|KPI|FMEA)-VA-[0-9]+\" docs/bok/viral-autopilot/0[678]*.md 2>/dev/null | sort -u | head -8; echo \"=== post-engine SDD pattern conformance ===\"; grep -n \"Pattern Conformance\" docs/bok/post-engine/13-sdd-reshaper-atomizer.md | head -3; echo \"=== agentic-vision size ===\"; wc -l docs/architecture/agentic-vision.md",
+  "description": "Check exemplar suite headings/ID conventions and pattern conformance precedent"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === viral-autopilot 06/07/08 headings ===
+> --- 06-data-model ---
+> # Data & Knowledge Model
+> ## 1. Conceptual Data Model
+> ## 2. Logical Data Model
+> ### Table: `autopilot_plans`
+> ### Table: `autopilot_cycles`
+> ### Table: `creative_metrics`
+> ## 3. Supabase Physical Schema Stubs
+> ## 4. GraphRAG Knowledge Nodes
+> ### Node Types Introduced
+> ### Edge Types Introduced
+> ### Embedding Trigger
+> ### FSRS-6 Parameters
+> ## 5. Tenant Isolation Map
+> ## 6. Data Quality Rules
+> ## 7. Retention & Archival Policy
+> --- 07-process-flow ---
+> # Process & Automation Blueprint
+> ## 1. Process Inventory
+> ## 2. BPMN-lite Process Maps
+> ### PROC-VA-001: Ciclo autônomo de cadência
+> ### PROC-VA-002: Disparo "tudo de uma vez" (HITL)
+> ### PROC-VA-003: Coleta de desempenho
+> ## 3. n8n Workflow Blueprints
+> ### Workflow: Autopilot Cycle Alert (opcional)
+> ## 4. Orchestration Integration Points
+> ## 5. Error Handling & Retry Strategy
+> ## 6. SLA Definitions
+> ## 7. Cron Jobs
+> --- 08-quality-metrics ---
+> # Quality & Self-Optimization Specification
+> ## 1. Quality Objectives
+> ## 2. KPI Dashboard Definition
+> ## 3. FMEA Table
+> ## 4. Self-Optimization Loops
+> ## 5. Self-Healing Specifications
+> ### 5.1 Watchdog Telemetry Events
+> ### 5.2 Auto-Recovery Script Stubs
+> # scripts/self-heal-viral-autopilot.sh
+> # Triggered by mega-brain-daemon when viral_autopilot_cycle_failed/analyze_empty detected
+> # 1. Reconcile stuck cycles: cycles 'running' > 30min → mark 'failed', NÃO re-cobrar
+> # 2. Re-arm planos com next_run_at no passado mas is_active (janela perdida)
+> # 3. Re-disparar autopilot-collect para posts published sem creative_metrics há > 24h
+> # (todas as ações idempotentes; service-role; logam recovery_ok em infra_health_logs)
+> ### 5.3 mega-brain-daemon Integration Points
+> === IDs usados ===
+> FMEA-VA-001
+> FMEA-VA-002
+> FMEA-VA-003
+> FMEA-VA-004
+> FMEA-VA-005
+> FMEA-VA-006
+> FMEA-VA-007
+> FMEA-VA-008
+> === post-engine SDD pattern conformance ===
+> 11:> Pattern Conformance Declaration: já selada na emenda 12 §10 (12 yes · 5 deferred · 4 n-a). Este doc não a re-declara; herda-a.
+> === agentic-vision size ===
+> 128 docs/architecture/agentic-vision.md
+> ```
+
+## 🤖 Claude *(13:17:28)*
+
+
+## 🤖 Claude *(13:17:28)*
+
+
+## 🤖 Claude *(13:17:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/architecture/agentic-vision.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH — Agentic Vision (Doutrina AGI→ASI · lente vinculante de desenvolvimento)
+> 2	
+> 3	> **Documento canônico load-bearing.** Toda SDD de módulo novo declara conformidade contra os **21 padrões agênticos** desta doutrina (ver CLAUDE.md §1 — *Pattern Conformance Declaration*). Este documento **substitui** `docs/architecture/system_architecture.md` como referência arquitetural viva.
+> 4	
+> 5	| Campo | Valor |
+> 6	|---|---|
+> 7	| **Status** | Vivo (v1) · selado na malha como `documentation_suite` |
+> 8	| **Fontes** | `docs/Agentic-Design-Patterns.pdf` (Gulli, 482 pg — 21 padrões) · `docs/From AGI to ASI - 2606.12683.pdf` (DeepMind arXiv:2606.12683, 57 pg — 4 vias) |
+> 9	| **Síntese pai** | `.claude/context/agi-asi-via4-design-checklist.md` (nó malha `a576216e`) |
+> 10	| **ORO** | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign · Owner = Sovereign |
+> 11	| **Criado** | 2026-06-26 |
+> 12	
+> 13	---
+> 14	
+> 15	## 1. Tese — onde estamos e para onde encaminhamos
+> 16	
+> 17	O paper *From AGI to ASI* mapeia o avanço **pós-AGI** por **quatro vias não-exclusivas** (compõem, não só somam):
+> 18	
+> 19	1. **Via 1 — Escala** (compute + modelos + dados).
+> 20	2. **Via 2 — Saltos de paradigma** (quebra algorítmica/arquitetural).
+> 21	3. **Via 3 — Auto-aperfeiçoamento recursivo** (IA melhorando IA — o caminho "Singularidade").
+> 22	4. **Via 4 — Formação de coletivo de agentes** (coordenação de muitos agentes especializados, governança central ou de mercado).
+> 23	
+> 24	**O MCORCH é a Via 4 instanciada na camada de produto** — um coletivo de agentes especializados (Pantheon/Departmental Army + Knowledge Mesh + orquestração) **com o humano no comando** (ORO/HITL) — **e roda a Via 3 no micro**: o mandato **Obstáculo→Síntese** (CLAUDE.md §5) é *auto-aperfeiçoamento recursivo aplicado ao próprio processo de desenvolvimento* — todo obstáculo resolvido vira SOP+skill+agent, e o sistema melhora o próprio tooling.
+> 25	
+> 26	**Calibração honesta (Lei 1):** o paper opera em escopo de **laboratório de fronteira** (treinar modelos, compute, energia). O MCORCH não é isso — é uma instanciação **fiel, em camada de produto**, dos padrões de desenho da Via 4 + Via 3-micro. Força declarada, não pretensão.
+> 27	
+> 28	### O gap estrutural (o que "antecipar o mercado" realmente significa)
+> 29	
+> 30	O paper aponta como **aberto** justamente o que o MCORCH ainda não faz: respondemos as perguntas de coletivo de agentes **por doutrina, mas não *medimos* nenhuma** —
+> 31	
+> 32	- valor marginal por agente adicionado ao fan-out (multi-agent scaling, V4-2);
+> 33	- custo (mco) por resultado, atribuído a "mais agentes" vs "modelo maior" (V4-4);
+> 34	- overhead de coordenação — hops/handoffs/retries por resultado (V4-5).
+> 35	
+> 36	**Crescemos o coletivo no escuro.** Instrumentar isso é o fosso. A iniciativa flagship desta doutrina é o **Collective Efficiency Ledger** (§4 abaixo).
+> 37	
+> 38	---
+> 39	
+> 40	## 2. Pattern Maturity Ledger (21 padrões canônicos × MCORCH)
+> 41	
+> 42	Maturidade: ✅ **Forte/Excelente** (doutrina sólida + artefato em produção) · 🟡 **Moderado/Parcial** (existe mas não-canônico/ad-hoc) · 🔴 **Fraco** (gap real).
+> 43	
+> 44	| # | Padrão | Maturidade | Artefato MCORCH que o encarna | Gap aberto (→ OTD §3) |
+> 45	|---|--------|:--:|---|---|
+> 46	| 1 | **Prompt Chaining** | ✅ | `orchestrate-content`/`orchestrate-step` (pg_net), Workflow `pipeline()` | Sem validação JSON Schema entre steps (coerção manual de tipo) |
+> 47	| 2 | **Routing** | 🟡 | `llm-cascading-fallback` (provider Claude→GPT→Gemini), Vision-QA gate | Sem routing semântico por embedding para dispatch de agente |
+> 48	| 3 | **Parallelization** | ✅ | Workflow `parallel()` fan-out concorrente; `openrouter-swarm` | Sem timeout/circuit-break em straggler; sem backpressure |
+> 49	| 4 | **Reflection** | 🟡 | Vision-QA (`vision-qa.ts`), `mcorch-qa-healing` (verify adversarial) | Hard-coded por caso; sem framework Generator-Critic genérico |
+> 50	| 5 | **Tool Use** | ✅ | Vision MCP (`packages/vision-mcp-core/`), edge functions tipadas | Schemas autorados à mão; sem telemetria de tool (sucesso/latência) |
+> 51	| 6 | **Planning** | 🟡 | BoK suite (MRD→SDD), `deepsearch-blueprint`, `intent-plan-execution` | Plano pré-gerado; sem re-planejamento dinâmico na divergência |
+> 52	| 7 | **Multi-Agent** | ✅ | **Pantheon** (L1 Heads + L2 + main + guardian), OpenClaw squad | Sem protocolo inter-agente formal; sem debate de consenso |
+> 53	| 8 | **Memory Management** | ✅ | **Knowledge Mesh GraphRAG** (`mcorch_nodes/edges`, HNSW 768d, FSRS-6) | Short-term (janela) e long-term (grafo) sem estratégia de recall unificada |
+> 54	| 9 | **Learning & Adaptation** | 🔴 | Obstáculo→Síntese (manual), autopilot `optimization_policy` | **Sem loop de feedback fechado/RL formal; risco de reward de métrica única** |
+> 55	| 10 | **Model Context Protocol** | ✅ | Vision MCP (spec Anthropic, Streamable HTTP), `McpConnectorsCard` | Sem middleware de normalização de output; sem auto-schema de REST |
+> 56	| 11 | **Goal Setting & Monitoring** | 🟡 | `infra_health_logs` + watchdog, `sprint-priorities` (SMART) | Sem camada formal de spec de goal; loop monitor→feedback→replan ad-hoc |
+> 57	| 12 | **Exception Handling & Recovery** | ✅ | `infra_health_logs`, `rescue-video`, refund RPCs, watchdog, retry idempotente | Sem máquinas de estado de recovery explícitas (rollback DAGs) |
+> 58	| 13 | **Human-in-the-Loop** | ✅ | **ORO triplet** (`survival.md`), AskUserQuestion, GO Sovereign | Sem tracking de SLA de escalação; sem tag de expertise do reviewer |
+> 59	| 14 | **Knowledge Retrieval (RAG)** | ✅ | Knowledge Mesh (`match_mcorch_nodes`, `search-constellation`), MCP `mesh.search` | Resolução de contradição/reconciliação de fonte não-automatizada |
+> 60	| 15 | **Inter-Agent Comm. (A2A)** | 🟡 | Mesh bridge (`bridge-mesh-to-openclaw`/`distribute-mesh-to-agents`), Telegram, edges | Sem schema de Agent Card / protocolo de discovery formal |
+> 61	| 16 | **Resource-Aware Optimization** | ✅ | **mcoCoins** (`deduct_mco_coins` atômico), calibração 4×-floor, caps Vision MCP | Sem reserva preditiva de recurso / gestão proativa de quota |
+> 62	| 17 | **Reasoning Techniques** | 🟡 | deepsearch (Gemini grounding), `analyze-node`, Workflow judge-panel/loop-until-dry | Sem Graph-of-Thought formal / framework de agente de reflexão |
+> 63	| 18 | **Guardrails / Safety** | ✅ | **Survival Laws**, **Cyber-Sentinel** (`_shared/sentinel.ts` pt-BR+EN), RLS default-deny, BoK Gate, ES256 JWT | Sem suíte de eval adversarial / regressão de jailbreak no CI |
+> 64	| 19 | **Evaluation & Monitoring** | 🟡 | `mcorch-qa-healing` (Fase 5c), Vision QA, `audit-schema-drift`, e2e-user-zero | Sem rubricas de avaliação padronizadas / dashboard contínuo de métricas |
+> 65	| 20 | **Prioritization** | 🟡 | `sprint-priorities`, ledger OTD/RPN (FMEA), gates de recusa Survival | Sem álgebra de priorização formal / scheduler (risco de starvation) |
+> 66	| 21 | **Exploration & Discovery** | 🟡 | `fetch-trends`/`vm_trends` (autopilot angle), `deepsearch-blueprint`, OpenClaw Dreaming | Sem torneio de ranking (Elo) / loop de debate multi-agente; exploração reativa, não generativa |
+> 67	
+> 68	> **Apêndice F (Reasoning Engines)** — presente (Vision MCP multimodal, streaming Workflow); gap: SLA de latência + semântica de rollback de output streamado não formalizados. Não conta como padrão numerado.
+> 69	
+> 70	**Placar:** ✅ **11 fortes** · 🟡 **9 moderados** · 🔴 **1 fraco**. A fundação (Guardrails + Memory + Multi-Agent + Resource-Aware + Tool/MCP + HITL) é robusta; os gaps são majoritariamente de **canonização** (formalizar o que já fazemos ad-hoc) e **instrumentação** (medir), não de arquitetura ausente. A exceção real é **Learning & Adaptation** — o elo recursivo (Via 3) ainda é manual.
+> 71	
+> 72	---
+> 73	
+> 74	## 3. Backlog priorizado de canonização (gaps → OTDs nomeados)
+> 75	
+> 76	Os gaps **não viram código já** — viram dívida técnica rastreável (OTD). Prioridade pela tese: o que destrava medir o coletivo primeiro.
+> 77	
+> 78	| OTD | Padrão | Iniciativa | Prioridade |
+> 79	|---|---|---|---|
+> 80	| **OTD-AG-001** | 9·11·16 | **Collective Efficiency Ledger** — instrumentar valor marginal/agente, mco/resultado, overhead de coordenação (V4-2/4/5). **Flagship desta doutrina** (§4). | 🔴 P0 |
+> 81	| OTD-AG-002 | 9 | Fechar o loop **Learning & Adaptation** — feedback estruturado autopilot→policy com reward **multi-métrica** (anti-Goodhart) | 🔴 P0 |
+> 82	| OTD-AG-003 | 4 | Framework **Generator-Critic** genérico (reflexão reutilizável, crítico de persona distinta) | 🟡 P1 |
+> 83	| OTD-AG-004 | 19 | **Rubricas de avaliação** padronizadas + dashboard contínuo (LLM-judge + amostra humana) | 🟡 P1 |
+> 84	| OTD-AG-005 | 6·11 | **Re-planejamento dinâmico** — plano revisado na divergência de execução (monitor→replan) | 🟡 P1 |
+> 85	| OTD-AG-006 | 15 | **Agent Card** formal + protocolo de discovery (A2A schema-ado) | 🟡 P2 |
+> 86	| OTD-AG-007 | 2 | **Routing semântico** por embedding para dispatch de agente/modelo | 🟡 P2 |
+> 87	| OTD-AG-008 | 21 | **Torneio de exploração** (Elo) — hipótese→crítico→ranqueador→evolução | 🟢 P3 |
+> 88	| OTD-AG-009 | 18 | Regressão de **jailbreak adversarial** no CI (Cyber-Sentinel) | 🟢 P3 |
+> 89	| OTD-AG-010 | 12 | Máquinas de estado de **recovery** explícitas (rollback DAG) | 🟢 P3 |
+> 90	
+> 91	---
+> 92	
+> 93	## 4. Iniciativa flagship — Collective Efficiency Ledger (OTD-AG-001)
+> 94	
+> 95	A resposta material ao gap estrutural. **Design VIEW-sobre-verdade-financeira** (resiste a Goodhart — ninguém escreve *para* o ledger; é derivado do que já é cobrado/refundado). Mede o **coletivo in-system** (pipelines edge + ciclos autopilot + crons Pantheon) onde mco-cost e nós da malha já existem.
+> 96	
+> 97	- **Primeira métrica computável já (V4-4):** mco actual ÷ criativos entregues (`autopilot_cycles.spend_mco − refunded_mco`).
+> 98	- **Parcial (V4-5):** overhead via `pipeline_runs.steps` + emits `collective_retry`/`collective_hop` em `infra_health_logs`.
+> 99	- **Deferido a experimento real (V4-2):** valor marginal/agente — **não fabricar proxy gameável** (alerta do próprio paper). Só mede quando houver A/B real de largura de fan-out.
+> 100	
+> 101	Detalhe de implementação em `docs/bok/agentic-governance/` (SSOT) + SOP `docs/processes/collective-efficiency-ledger.md`.
+> 102	
+> 103	---
+> 104	
+> 105	## 5. Princípios de design (todo módulo novo segue)
+> 106	
+> 107	1. **Material-proof na avaliação** — sucesso ancorado em artefato físico (Lei 1); avaliação não-declarada (Vision QA / mcorch-qa-healing).
+> 108	2. **Defense-in-depth de guardrails** — Survival Laws + Sentinel + RLS default-deny + BoK Gate; nunca camada única.
+> 109	3. **Loop de feedback fechado** — toda automação que produz resultado deve poder medir se o resultado melhorou (anti-Via-3-cega).
+> 110	4. **Reuso do chokepoint de telemetria** — emitir em `infra_health_logs` (sem PII/segredos), não criar write-sites paralelos.
+> 111	5. **Multi-tenant-correto desde o dia 1** — `security_invoker` VIEW sobre bases SELECT-own; agregado cross-tenant = service-role-only.
+> 112	6. **Anti-Goodhart** — métrica derivada de verdade financeira, não auto-reportada; deferir o que só medível por experimento.
+> 113	7. **Humano no comando em velocidade supra-humana** — quando o coletivo produz mais artefatos do que o Sovereign consome, exigir digest em camadas (Guardian briefing) + bounded autonomy por domínio (Pantheon decision scope).
+> 114	
+> 115	---
+> 116	
+> 117	## 6. Conexão com a governança existente
+> 118	
+> 119	| Protocolo | Papel na visão |
+> 120	|---|---|
+> 121	| **MCORCH Master Execution Protocol** (CLAUDE.md) | BoK Gate + Obstáculo→Síntese = Via 3-micro (recursão do processo). Agora carrega o **Pattern Conformance Gate**. |
+> 122	| **Survival Laws** (`survival.md`) | Materialidade + ORO = a oversight scalable que o paper aponta como faltante. Anti-alucinação universal (humano e agente). |
+> 123	| **Pantheon Role Matrix** | Via 4 instanciada — escopo bounded por BoK lens; escalação explícita a main/Sovereign. |
+> 124	| **API Tenancy (per-user)** | Segregação de credencial/quota = segurança governance-grade para coletivo multi-tenant. |
+> 125	
+> 126	---
+> 127	
+> 128	*"MATE A POESIA. ENTREGUE ENGENHARIA." — a doutrina existe para que o coletivo cresça medido, não no escuro.*
+> 129	
+> ```
+
+## 🤖 Claude *(13:17:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== CREDIT_COSTS ===\"; grep -n \"CREDIT_COSTS\" supabase/functions/canvas-execute/index.ts | head -3\necho \"=== getTopologicalLayers ===\"; grep -n \"export function getTopologicalLayers\" src/lib/canvas-dag.ts\necho \"=== vm_canvas_projects.graph ===\"; grep -rn \"vm_canvas_projects\" supabase/migrations/*.sql | grep -iE \"graph|create table\" | head -3\necho \"=== ledger RPCs em types.ts ===\"; grep -oE \"deduct_mco_coins|award_mco_coins|add_mco_coins|calc_agent_cost_mcoin|finalize_video_render\" src/integrations/supabase/types.ts | sort -u\necho \"=== infra_health_logs event/metadata ===\"; grep -n \"event\\|metadata\" supabase/migrations/20260615170000_infra_health_logs_metadata.sql | head -5\necho \"=== update_updated_at_column ===\"; grep -rln \"update_updated_at_column\" supabase/migrations/ | head -2\necho \"=== exemplar KPI/QO/SOL prefixes ===\"; grep -ohE \"(KPI|QO|SOL|DM)-VA-[0-9]+\" docs/bok/viral-autopilot/0[678]*.md | sort -u | head -12\necho \"=== canvas-execute daily cap / check-subscription ===\"; grep -nE \"daily|cap\" supabase/functions/canvas-execute/index.ts | head -5\necho \"=== creative_assets RPC ===\"; grep -oE \"register_creative_asset\" src/integrations/supabase/types.ts | head -1\necho \"=== canvas positions key legado ===\"; grep -rn \"orchestration_positions_v1\" src/store/useOrchestrationStore.ts | head -2",
+  "description": "Verify code anchors the new docs will cite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CREDIT_COSTS ===
+> 15:const CREDIT_COSTS: Record<string, number> = {
+> 161:      creditCost = CREDIT_COSTS[costKey] || 10;
+> === getTopologicalLayers ===
+> 12:export function getTopologicalLayers(
+> === vm_canvas_projects.graph ===
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:3:CREATE TABLE IF NOT EXISTS public.vm_canvas_projects (
+> === ledger RPCs em types.ts ===
+> add_mco_coins
+> award_mco_coins
+> calc_agent_cost_mcoin
+> deduct_mco_coins
+> finalize_video_render
+> === infra_health_logs event/metadata ===
+> 1:-- Migration: infra_health_logs rich telemetry — add `event text` + `metadata jsonb` (NFR-VM-010 / SDD §6).
+> 4:-- {service,status} pulse — the event/metadata detail (tool, cost, sentinel code, deepsearch job state, refund)
+> 5:-- went to stderr only (docker logs). These two columns let logHealth persist the full event so per-tool /
+> 10:-- change. CONTRACT: metadata must carry NO PII and NO secrets (logHealth only emits {tool,cost,byok,code,state}).
+> 13:ALTER TABLE public.infra_health_logs ADD COLUMN IF NOT EXISTS event    text;
+> === update_updated_at_column ===
+> supabase/migrations/20260625120000_creative_assets_registry.sql
+> supabase/migrations/20260531210000_meta_ads_metrics.sql
+> === exemplar KPI/QO/SOL prefixes ===
+> KPI-VA-001
+> KPI-VA-002
+> KPI-VA-003
+> KPI-VA-004
+> KPI-VA-005
+> KPI-VA-006
+> KPI-VA-007
+> KPI-VA-008
+> SOL-VA-001
+> SOL-VA-002
+> SOL-VA-003
+> SOL-VA-004
+> === canvas-execute daily cap / check-subscription ===
+> 176:    // ── SSP-01 OE04 — Daily cap enforcement (dinâmico com base na role) ──
+> 179:    let dailyCap = 100;
+> 187:      console.error("[canvas-execute] failed to fetch user role for daily cap:", roleErr);
+> 189:      dailyCap = 10000;
+> 191:      dailyCap = 1000;
+> === creative_assets RPC ===
+> register_creative_asset
+> === canvas positions key legado ===
+> src/store/useOrchestrationStore.ts:39:const POSITIONS_KEY = 'orchestration_positions_v1';
+> ```
+
+## 🤖 Claude *(13:19:55)*
+
+
+## 🤖 Claude *(13:19:55)*
+
+
+## 🤖 Claude *(13:21:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/06-data-model.md",
+  "content": "# 06 \u00b7 Data & Knowledge Model \u00b7 Spaces Evolution\n\n> **Artefato:** Data & Knowledge Model\n> **BoK Applied:** DMBOK v2 (Data Modeling & Design + Data Quality)\n> **Trace prefix:** `DM-SPACES-###`\n> **Version:** v1.0 | **Date:** 2026-07-02 | **Status:** Sealed\n> **Anchored to:** `src/lib/spaces-schema.ts` \u00b7 `src/lib/node-registry.ts` \u00b7 `src/store/useSpacesStore.ts` (c\u00f3digo Phase 0 **promovido e vivo**) \u00b7 `05-sdd.md \u00a77` (persist\u00eancia **planejada**)\n\n---\n\n## 0. Duas realidades (regra de leitura \u2014 Lei 1)\n\n`DM-SPACES-001` \u2014 Este modelo distingue **EXISTENTE** de **PLANEJADO**, sem mistura:\n\n| Camada | Estado | Fonte de verdade |\n|---|---|---|\n| **Dom\u00ednio client-side** (tipos, zod, vocabul\u00e1rios, registry) | \u2705 **EXISTE** \u2014 promovido em Phase 0 | `src/lib/spaces-schema.ts` \u00b7 `src/lib/port-compat.ts` \u00b7 `src/lib/node-registry.ts` \u00b7 `src/store/useSpacesStore.ts` \u00b7 `src/hooks/useParamRegistry.ts` |\n| **Persist\u00eancia local** (posi\u00e7\u00f5es) | \u2705 **EXISTE** | `localStorage` key `spaces_positions_v1` (`useSpacesStore.ts:24`, espelha `orchestration_positions_v1`) |\n| **Persist\u00eancia Supabase** (`spaces`, `generations`, \u2026) | \ud83d\udccb **PLANEJADA** (Fase 1) | Stubs em \u00a73 \u2014 **nenhuma migration existe ainda**; toda migration nova passa `/security-review` antes de commit (regra FMEA-011) |\n\n---\n\n## 1. Conceptual Data Model\n\n```\n[SpaceEntity] \u2500\u2500(1:N)\u2500\u2500\u25b6 [SpacePage]\n      \u2502 \u2500\u2500(1:N)\u2500\u2500\u25b6 [SpaceNode] \u2500\u2500(0..8)\u2500\u2500\u25b6 [SpaceReference{kind}]\n      \u2502 \u2500\u2500(1:N)\u2500\u2500\u25b6 [SpaceEdge]  (typed: image|text|video|audio|svg|3d)\n      \u2502\n      \u2514\u2500\u2500(1:N via node)\u2500\u2500\u25b6 [Generation] \u2500\u2500(0..1)\u2500\u2500\u25b6 [creative_assets]  (spine cross-m\u00f3dulo)\n                                 \u2502\n                                 \u2514\u2500\u2500(observa)\u2500\u2500\u25b6 [mcorch_nodes]  (observation \u00b7 Mesh Mandate)\n\n[WorkflowApp] \u2500\u2500(encapsulates)\u2500\u2500\u25b6 Subgraph(SpaceNode[])   (41 verificados \u2014 NR-SPACES-003)\n```\n\n**Entities:**\n- **SpaceEntity** \u2014 o workspace (canvas infinito). Dono \u00fanico (`ownerId = auth.uid()`), p\u00e1ginas, grafo, viewport (`FR-SPACES-001/003`).\n- **SpacePage** \u2014 p\u00e1gina dentro de um Space (verificado ao vivo, `LR-SPACES-010`).\n- **SpaceNode / SpaceEdge** \u2014 n\u00f3s tipados + conex\u00f5es tipadas por porta (`FR-SPACES-004`); 26 tipos can\u00f4nicos (`NR-SPACES-002`).\n- **SpaceReference** \u2014 refer\u00eancia anexada a n\u00f3 gerador, 9 kinds, m\u00e1x. 8 (`UI-SPACES-012`).\n- **Generation** \u2014 1 execu\u00e7\u00e3o de n\u00f3 gerador = 1 lan\u00e7amento cont\u00e1bil espelhado (`BR-SPACES-001/007`, `FR-SPACES-012`).\n- **WorkflowApp** \u2014 grafo empacotado reutiliz\u00e1vel (`PR-SPACES-007`, `MR-SPACES-002`).\n\n---\n\n## 2. Logical Data Model\n\n### 2.1 Vocabul\u00e1rios can\u00f4nicos (EXISTENTES \u2014 zod, `src/lib/spaces-schema.ts`)\n\n| Vocabul\u00e1rio | Cardinalidade | S\u00edmbolo | Verifica\u00e7\u00e3o |\n|---|---|---|---|\n| `PORT_DATA_TYPES` | 6 \u2014 `image\u00b7text\u00b7video\u00b7audio\u00b7svg\u00b73d` | `spaces-schema.ts:16` | `NA-SPACES-003` |\n| `NODE_STATUSES` | 6 \u2014 `idle\u00b7pending\u00b7running\u00b7done\u00b7error\u00b7blocked` | `spaces-schema.ts:20` | verbatim de `useOrchestrationStore` |\n| `NODE_CATEGORIES` | 8 (+`'app'` no registry) | `spaces-schema.ts:24` \u00b7 `node-registry.ts:14` | `LR-SPACES-009` |\n| `REFERENCE_KINDS` | 9 | `spaces-schema.ts:30` | `UI-SPACES-012` |\n| `ASPECT_RATIOS` | 10 | `spaces-schema.ts:36` | `UI-SPACES-011` |\n| `IMAGE_MODELS` | 38 | `spaces-schema.ts:43` | `UI-SPACES-010` |\n| `NODE_TYPES` | 26 tipos (IDs `data-cy` reais) | `node-registry.ts:23` | `NR-SPACES-002` |\n| `NODE_PORTS` | handles reais por tipo | `node-registry.ts:106` | `NA-SPACES-002` |\n| `WORKFLOW_APPS` | 41 | `node-registry.ts:83` | `NR-SPACES-003` |\n\n### 2.2 Entidades client-side (EXISTENTES \u2014 schemas zod com guard de hidrata\u00e7\u00e3o)\n\n- `PortSchema` \u00b7 `ReferenceSchema` (`MAX_REFERENCES = 8`) \u00b7 `SpaceNodeDataSchema` (batch `1..8`, `coinCost \u2265 0`, `references \u2264 8`) \u00b7 `SpacePageSchema` \u00b7 `GenerationSchema` (`mcoCharged \u2265 0`, `mcoRefunded \u2265 0`) \u00b7 `SpaceEntitySchema` + guards `SpaceNodeGuard`/`SpaceEdgeGuard` (`.passthrough()` preserva campos internos do xyflow) \u2014 todos em `spaces-schema.ts`.\n\n### 2.3 Tabelas Supabase (PLANEJADAS \u2014 `SD-SPACES-010`)\n\n**Table: `spaces`**\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `owner_id` | `uuid` | NOT NULL | \u2014 | `auth.users.id` | Tenant isolation (`FR-SPACES-007`) |\n| `title` | `text` | NOT NULL | `'Untitled space'` | \u2014 | Nome do Space |\n| `pages` | `jsonb` | NOT NULL | `'[]'` | \u2014 | `SpacePage[]` (`LR-SPACES-010`) |\n| `graph` | `jsonb` | NOT NULL | `'{}'` | \u2014 | `{nodes, edges, viewport}` desnormalizado (`DM-SPACES-002`) |\n| `is_template` | `boolean` | NOT NULL | `false` | \u2014 | Templates (`PR` \u00a7empty-state) |\n| `workflow_app` | `jsonb` | NULL | \u2014 | \u2014 | `WorkflowAppMeta` quando publicado (`PR-SPACES-007`) |\n| `created_at` / `updated_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | Audit |\n\n`DM-SPACES-002` \u2014 **MVP desnormalizado:** o grafo persiste em `spaces.graph jsonb` (1 fetch hidrata o canvas \u2014 precedente material: `vm_canvas_projects.graph`, migration `20260514040200_viralmind_canvas_studio.sql`). `space_nodes`/`space_edges` normalizadas s\u00f3 entram quando a colabora\u00e7\u00e3o realtime (`FR-SPACES-010`, Fase 3) exigir patches granulares \u2014 **n\u00e3o criar antes** (anti-YAGNI).\n\n**Table: `generations`** (`DM-SPACES-003` \u2014 espelho cont\u00e1bil por execu\u00e7\u00e3o)\n\n| Column | Type | Nullable | Default | FK | Description |\n|--------|------|----------|---------|-----|------------|\n| `id` | `uuid` | NOT NULL | `gen_random_uuid()` | \u2014 | PK |\n| `owner_id` | `uuid` | NOT NULL | \u2014 | `auth.users.id` | Tenant isolation |\n| `space_id` | `uuid` | NOT NULL | \u2014 | `spaces.id ON DELETE CASCADE` | Parent |\n| `node_id` | `text` | NOT NULL | \u2014 | \u2014 | ID do n\u00f3 no grafo (client-side) |\n| `node_run_id` | `uuid` | NOT NULL | \u2014 | \u2014 | **UNIQUE** \u2014 idempot\u00eancia anti-duplo-d\u00e9bito (`BR \u00a76`) |\n| `output_type` | `text` | NOT NULL | \u2014 | \u2014 | CHECK \u2208 6 `PORT_DATA_TYPES` |\n| `asset_id` | `uuid` | NULL | \u2014 | `creative_assets.id` | Spine cross-m\u00f3dulo (`FR-SPACES-009`) |\n| `model_key` | `text` | NOT NULL | \u2014 | \u2014 | e.g. `flux.2-pro` \u2192 `CREDIT_COSTS` |\n| `mco_charged` | `numeric` | NOT NULL | `0` | \u2014 | `BR-SPACES-007` |\n| `mco_refunded` | `numeric` | NOT NULL | `0` | \u2014 | CHECK `mco_refunded <= mco_charged` (precedente `vision_jobs`) |\n| `usd_cost` / `latency_ms` | `numeric` / `integer` | NULL | \u2014 | \u2014 | ROI por token (`BR-SPACES-007`) |\n| `status` | `text` | NOT NULL | `'pending'` | \u2014 | CHECK \u2208 6 `NODE_STATUSES` |\n| `created_at` | `timestamptz` | NOT NULL | `now()` | \u2014 | Ordena o cluster lazy |\n\n---\n\n## 3. Supabase Physical Schema Stubs (PLANEJADOS \u2014 copiar na migration da Fase 1)\n\n```sql\n-- MIGRATION: <timestamp>_spaces_evolution_schema.sql  (PLANEJADA \u2014 /security-review obrigat\u00f3rio)\nCREATE TABLE public.spaces (\n  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  owner_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  title        text NOT NULL DEFAULT 'Untitled space',\n  pages        jsonb NOT NULL DEFAULT '[]',\n  graph        jsonb NOT NULL DEFAULT '{}',\n  is_template  boolean NOT NULL DEFAULT false,\n  workflow_app jsonb,\n  created_at   timestamptz NOT NULL DEFAULT now(),\n  updated_at   timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.spaces ENABLE ROW LEVEL SECURITY;   -- default deny\nCREATE POLICY \"spaces: select own\" ON public.spaces FOR SELECT USING (owner_id = auth.uid());\nCREATE POLICY \"spaces: insert own\" ON public.spaces FOR INSERT WITH CHECK (owner_id = auth.uid());\nCREATE POLICY \"spaces: update own\" ON public.spaces FOR UPDATE\n  USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid());\nCREATE POLICY \"spaces: delete own\" ON public.spaces FOR DELETE USING (owner_id = auth.uid());\nCREATE INDEX spaces_owner_updated_idx ON public.spaces (owner_id, updated_at DESC); -- home lazy\nCREATE TRIGGER set_spaces_updated_at BEFORE UPDATE ON public.spaces\n  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();\n\nCREATE TABLE public.generations (\n  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  owner_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  space_id     uuid NOT NULL REFERENCES public.spaces(id) ON DELETE CASCADE,\n  node_id      text NOT NULL,\n  node_run_id  uuid NOT NULL UNIQUE,                    -- idempot\u00eancia (BR \u00a76)\n  output_type  text NOT NULL CHECK (output_type IN ('image','text','video','audio','svg','3d')),\n  asset_id     uuid REFERENCES public.creative_assets(id) ON DELETE SET NULL,\n  model_key    text NOT NULL,\n  mco_charged  numeric NOT NULL DEFAULT 0 CHECK (mco_charged >= 0),\n  mco_refunded numeric NOT NULL DEFAULT 0 CHECK (mco_refunded >= 0 AND mco_refunded <= mco_charged),\n  usd_cost     numeric,\n  latency_ms   integer,\n  status       text NOT NULL DEFAULT 'pending'\n               CHECK (status IN ('idle','pending','running','done','error','blocked')),\n  created_at   timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.generations ENABLE ROW LEVEL SECURITY;  -- default deny\nCREATE POLICY \"generations: select own\" ON public.generations FOR SELECT USING (owner_id = auth.uid());\n-- INSERT/UPDATE: SOMENTE service-role (canvas-execute escreve; cliente nunca muta o ledger \u2014 BR \u00a75)\nCREATE INDEX generations_node_created_idx ON public.generations (node_id, created_at DESC); -- cluster lazy\nCREATE INDEX generations_space_idx ON public.generations (space_id);\n```\n\n> **Sem coluna `embedding` nestas tabelas** (n\u00e3o s\u00e3o n\u00f3s de conhecimento \u2014 o conhecimento vai \u00e0 malha via \u00a74). Escrita de `generations` \u00e9 **server-side only** (`canvas-execute`), espelhando o padr\u00e3o de `video_renders`/`vision_jobs`.\n\n---\n\n## 4. GraphRAG Knowledge Nodes\n\n### Node types introduzidos (em `mcorch_nodes`)\n\n| node_type | Title pattern | Quando | Embedding |\n|-----------|--------------|--------|-----------|\n| `documentation_suite` | `bok-scribe-seal-spaces-evolution-v1` | Seal desta su\u00edte (Phase 7) | autom\u00e1tico \u2014 trigger `trg_mcorch_embed_on_insert` (pg_net \u2192 `embed-mcorch-node`) |\n| `observation` | `spaces-first-run-<spaceId>` | 1\u00ba run bem-sucedido de um Space (Mesh Connection Mandate; `PROC-SPACES-008`) | idem |\n| `milestone` | `session-handoff-*` | Seal de cada Fase (0/1/2/3) via `/handoff` | idem |\n\n### Edge types\n\n| Relationship | Source | Target | Metadata |\n|--------------|--------|--------|----------|\n| `DERIVES_FROM` | seal `spaces-evolution` | seal pai da fam\u00edlia canvas (`bok-scribe-seal-viralmind-v1`) | `{reason: 'canvas core layer evolution'}` |\n| `OBSERVES` | `observation` (first-run) | seal `spaces-evolution` | `{space_id, run_id}` |\n\n### FSRS-6\n\n| Field | Initial | Decay |\n|-------|---------|-------|\n| `stability_score` | `0.85` (seal) \u00b7 `0.85` (observation) | `decay_mcorch_stability()` (migration `20260425190000`) |\n| `revenue_impact` | `0` no seal (enabler interno; receita direta ainda n\u00e3o documentada) | atualiza quando `generations` produzir receita atribu\u00edda |\n\n---\n\n## 5. Tenant Isolation Map\n\n| Superf\u00edcie | `user_id`/`owner_id` scope | System rows | Nota |\n|-------|----------------|-------------|------|\n| `spaces` (planejada) | \u2705 obrigat\u00f3rio (`owner_id = auth.uid()`) | N\u00e3o | Space de outro tenant \u2192 **404, n\u00e3o 403** (`FR-SPACES-007` \u2014 n\u00e3o vazar exist\u00eancia) |\n| `generations` (planejada) | \u2705 obrigat\u00f3rio | N\u00e3o | INSERT/UPDATE service-role-only |\n| `localStorage` (existente) | por-browser (n\u00e3o cruza tenant por constru\u00e7\u00e3o) | \u2014 | `spaces_positions_v1` \u00b7 planejadas: `spaces:{id}:hud`, `spaces:{id}:draft` |\n| `mcorch_nodes` (seal/observation) | `user_id IS NULL` (system) ou own | Sim | padr\u00e3o vigente da malha |\n\n---\n\n## 6. Data Quality Rules\n\n| Superf\u00edcie | Campo | Regra | Gate | Mensagem (pt-BR) |\n|-------|--------|------|------|--------------------------|\n| client | `batch` | int `1..8` | zod `SpaceNodeDataSchema` | *\"Quantidade deve ser entre 1 e 8.\"* |\n| client | `references` | m\u00e1x. 8, kind \u2208 9 | zod `ReferenceSchema`/`MAX_REFERENCES` | *\"Limite de 8 refer\u00eancias por n\u00f3.\"* |\n| client | `aspectRatio` | \u2208 10 ratios | zod enum | \u2014 (select fechado) |\n| client | edge | portas compat\u00edveis (6 tipos + coer\u00e7\u00e3o `svg\u2192image`) | `port-compat.canConnect` \u2014 \u00fanica fonte de verdade | *\"Tipos incompat\u00edveis: {a} \u2192 {b}\"* |\n| client | grafo hidratado | shape v\u00e1lido | `SpaceEntitySchema`/guards antes de entrar no store (`FR-SPACES-003/008`) | *\"Falha ao carregar o Space.\"* |\n| server (planejado) | `mco_refunded` | `<= mco_charged` | CHECK (anti-mint \u2014 precedente `vision_jobs`) | \u2014 |\n| server (planejado) | `node_run_id` | UNIQUE | idempot\u00eancia anti-duplo-d\u00e9bito | \u2014 |\n| server (existente) | pre\u00e7o | `CREDIT_COSTS[modelKey]` \u2014 autoridade servidor | `canvas-execute:15`; `CLIENT_COST_MIRROR` \u00e9 display-only (`useParamRegistry.ts:30`) | \u2014 |\n\n---\n\n## 7. Retention & Archival Policy\n\n| Data | Reten\u00e7\u00e3o | Estrat\u00e9gia | Trigger de dele\u00e7\u00e3o |\n|------|----------|-----------|-------------------|\n| `spaces` | indefinida (ativo do usu\u00e1rio) | \u2014 | delete expl\u00edcito do dono (CASCADE \u2192 `generations`) |\n| `generations` | ciclo de vida do Space pai | asset bin\u00e1rio vive em `creative_assets`/Storage, n\u00e3o aqui | CASCADE com o Space; LGPD erase \u2192 **`OTD-SPACES-001`** (RPC `erase_space_artifacts` espelhando `erase_vision_artifacts`/`erase_avatar_artifacts` \u2014 d\u00edvida nomeada, Fase 1) |\n| `localStorage` drafts | ef\u00eamero | superseded a cada save confirmado (`FR-SPACES-011`) | limpo ao confirmar recupera\u00e7\u00e3o/descartar |\n| N\u00f3s da malha (seal/observation) | indefinida com decay FSRS-6 | `decay_mcorch_stability()` | \u2014 |\n| `infra_health_logs` (eventos `spaces_*`) | pol\u00edtica global vigente da tabela | \u2014 | \u2014 |\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0 \u2014 spaces-evolution suite completion, 2026-07-02_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/06-data-model.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:22:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/07-process-flow.md",
+  "content": "# 07 \u00b7 Process & Automation Blueprint \u00b7 Spaces Evolution\n\n> **Artefato:** Process & Automation Blueprint\n> **BoK Applied:** BPM CBOK v4 (Process Modeling + Process Design)\n> **Trace prefix:** `PROC-SPACES-###`\n> **Version:** v1.0 | **Date:** 2026-07-02 | **Status:** Sealed\n> **Anchored to:** `src/store/useSpacesStore.ts` (vivo) \u00b7 `src/lib/canvas-dag.ts \u2192 getTopologicalLayers()` (vivo, testado) \u00b7 `supabase/functions/canvas-execute/` (vivo) \u00b7 `05-sdd.md \u00a75`\n>\n> \u2699\ufe0f **De-n8n:** o MCORCH descontinuou n8n como camada de automa\u00e7\u00e3o (SDD De-n8n v1.2, seal 2026-06-23). Onde o template BoK pede \"n8n workflow blueprint\", este documento entrega o equivalente **Edge Function + pg_cron/pg_net** \u2014 nenhum processo novo depende de n8n.\n\n---\n\n## 1. Process Inventory\n\n| Process ID | Nome | Tipo | Trigger | Owner | Estado | SLA |\n|------------|------|------|---------|-------|--------|-----|\n| `PROC-SPACES-001` | Inser\u00e7\u00e3o de n\u00f3 (Spotlight/drag) | event-driven | usu\u00e1rio (`N`, `/`, drag) | User | \u2705 store vivo (UI Fase 1) | < 100 ms |\n| `PROC-SPACES-002` | Valida\u00e7\u00e3o de conex\u00e3o tipada | event-driven | `onConnect` | System (client) | \u2705 vivo (`connect()`) | < 16 ms (1 frame) |\n| `PROC-SPACES-003` | Execu\u00e7\u00e3o de n\u00f3/grafo com gate de ledger | human-in-loop \u2192 automated | `Run \u25b6` / `runGraph` | System (server) | \ud83d\udccb Fase 1 | p95 < 30 s/n\u00f3 imagem |\n| `PROC-SPACES-004` | Cluster de hist\u00f3rico (lazy-load) | event-driven | scroll/viewport | System (client) | \ud83d\udccb Fase 1 | \u2264 24 cards/p\u00e1gina |\n| `PROC-SPACES-005` | Undo/redo time-travel | event-driven | `\u2318Z`/`\u2318\u21e7Z` | User | \u2705 vivo (`zundo`, limit 100) | < 16 ms |\n| `PROC-SPACES-006` | Save/load do grafo | automated (debounced) | muta\u00e7\u00e3o do grafo | System | \u2705 posi\u00e7\u00f5es local \u00b7 \ud83d\udccb upsert Fase 1 | debounce 800 ms |\n| `PROC-SPACES-007` | Gate de sess\u00e3o ativa | automated | pr\u00e9-run / auth change | System | \ud83d\udccb Fase 1 (`useSpaceSession`) | < 300 ms |\n| `PROC-SPACES-008` | Observation node na malha (1\u00ba run) | automated | 1\u00ba run `done` de um Space | System (server) | \ud83d\udccb Fase 1 | fail-open (nunca bloqueia o run) |\n\n---\n\n## 2. BPMN-lite Process Maps\n\n### PROC-SPACES-003: Execu\u00e7\u00e3o com gate de ledger (o processo-m\u00e3e)\n\nRegra-m\u00e3e da BRD: **estimar \u2192 reservar \u2192 debitar \u2192 executar \u2192 reconciliar/estornar** (`BR \u00a75`). Ordena\u00e7\u00e3o por `getTopologicalLayers()` (`src/lib/canvas-dag.ts:12`, j\u00e1 testado em `src/test/canvas-dag.test.ts`).\n\n```\nSTART (Run \u25b6 | Dry-run)\n  \u2502\n  \u25bc\n[client: projectGraphCost(nodes)]  \u2500\u2500 dry-run? \u2500\u2500\u25b6 [Toast: \"Simula\u00e7\u00e3o \u2014 {n} mcoCoins projetados (sem d\u00e9bito).\"] \u2500\u2500\u25b6 END\n  \u2502 run real\n  \u25bc\n[client: useSpaceSession.ensureFresh()] \u2500\u2500(expirada)\u2500\u2500\u25b6 [Toast: \"Sess\u00e3o expirada. Fa\u00e7a login novamente.\" + redirect /auth] \u2500\u2500\u25b6 END\n  \u2502 v\u00e1lida\n  \u25bc\nfor layer in getTopologicalLayers(nodes, edges):        \u2190 camadas em paralelo (FR-SPACES-005)\n  for node in layer:\n    [client: updateNodeStatus(pending\u2192running)]\n      \u2502  invoke('canvas-execute', {spaceId, nodeId, node_run_id, model, inputs})\n      \u25bc\n    [server: verify JWT \u2192 auth.uid()]  \u2500\u2500(inv\u00e1lido)\u2500\u2500\u25b6 HTTP 401 \u2500\u2500\u25b6 node error\n    [server: guards de prompt (len/instru\u00e7\u00e3o) ANTES do d\u00e9bito]  \u2500\u2500(reprovado)\u2500\u2500\u25b6 HTTP 422, zero d\u00e9bito\n    [server: resolve CREDIT_COSTS[modelKey] + daily cap]  \u2500\u2500(saldo/teto)\u2500\u2500\u25b6 HTTP 402 \u2500\u2500\u25b6 node blocked\n    [server: deduct_mco_coins(amount, uid, 'spaces.node.run', ctx)]     \u2190 d\u00e9bito at\u00f4mico, idempotente por node_run_id\n    [server: call provider]\n      \u251c\u2500 ok  \u2192 [insert generations{mco_charged} + registra asset] \u2192 HTTP 200\n      \u2514\u2500 err \u2192 [refund padr\u00e3o finalize_*_render \u2192 generations{mco_refunded}] \u2192 HTTP 5xx estruturado\n      \u25bc\n    [client: updateNodeStatus(done | error)]\n      \u2514\u2500 error \u21d2 descendentes ficam `blocked` (BFS); ramos independentes continuam\n    [client: invalidate(['generations', nodeId])]\n  \u25bc\n<1\u00ba run `done` deste Space?> \u2500\u2500sim\u2500\u2500\u25b6 [PROC-SPACES-008: insert observation node (fail-open)]\n  \u2502\n[client: runState partial|done]\nEND\n```\n\n**Swimlanes:**\n\n| Swimlane | Participante | Tarefas |\n|----------|-------------|--------|\n| User | Browser | dispara Run/Dry-run; l\u00ea custo antes (`BR-SPACES-002`) |\n| Frontend Hook | `useGenerationLedger` + `useSpaceSession` | estimate/proje\u00e7\u00e3o \u00b7 gate de sess\u00e3o \u00b7 orquestra camadas \u00b7 invalida\u00e7\u00f5es |\n| Store | `useSpacesStore` | transi\u00e7\u00f5es `NodeStatus` \u00b7 `blocked` em cascata |\n| Edge Function | `canvas-execute` | JWT \u2192 guards \u2192 pre\u00e7o \u2192 d\u00e9bito \u2192 provider \u2192 reconcile/refund |\n| DB | Supabase | `deduct_mco_coins` (RPC at\u00f4mica) \u00b7 `generations` \u00b7 `infra_health_logs` |\n\n### PROC-SPACES-001/002: Inser\u00e7\u00e3o + conex\u00e3o (client, custo zero)\n\n```\n[Spotlight (cmdk): busca \u2192 \u23ce]  ou  [drag do item]\n  \u2502\n  \u25bc\n[useSpacesStore.addNode(type, position)]\n  \u251c\u2500 resolveNodeType (BASICS_ALIASES \u2192 can\u00f4nico, NR-SPACES-006)\n  \u251c\u2500 buildPorts(type) \u2190 NODE_PORTS (handles reais, NA-SPACES-002)\n  \u251c\u2500 SpaceNodeDataSchema.parse(...)   \u2190 dado inv\u00e1lido NUNCA entra no store\n  \u2514\u2500 t\u00edtulo auto-numerado (\"Tipo #N\", LR-SPACES-018) + auto-select\n  \u2502\n[onConnect] \u2500\u2500\u25b6 [canConnect(src, sHandle, tgt, tHandle)]  (port-compat.ts \u2014 \u00fanica fonte de verdade)\n  \u251c\u2500 ok  \u2192 addEdge com data.dataType\n  \u2514\u2500 nok \u2192 toast pt-BR \"Tipos incompat\u00edveis: {a} \u2192 {b}\" (raz\u00f5es: same-node \u00b7 wrong-direction \u00b7 type-mismatch \u00b7 missing-port \u00b7 locked)\n```\n\n### PROC-SPACES-006: Save/load (estado atual honesto)\n\n```\nHOJE (Phase 0):  muta\u00e7\u00e3o \u2192 zundo history (undo buffer) \u00b7 posi\u00e7\u00f5es \u2192 savePositions() \u2192 localStorage spaces_positions_v1\nFASE 1:          muta\u00e7\u00e3o \u2192 otimista no store \u2192 debounce 800 ms \u2192 upsert spaces.graph (jsonb)\n                  \u251c\u2500 sucesso \u2192 invalidate(['space', id])\n                  \u2514\u2500 erro    \u2192 rollback ao \u00faltimo snapshot confirmado (zundo) + toast \"Falha ao salvar. Altera\u00e7\u00f5es revertidas.\"\n                 draft local spaces:{id}:draft \u2192 reabertura oferece \"Recuperar altera\u00e7\u00f5es n\u00e3o salvas?\" (FR-SPACES-011)\n```\n\n---\n\n## 3. Automation Blueprints (Edge Function + pg_cron \u2014 **n\u00e3o** n8n)\n\n### Blueprint: `canvas-execute` (reuso \u2014 fun\u00e7\u00e3o J\u00c1 deployada)\n\n**Trigger:** `invoke` autenticado do client (JWT do usu\u00e1rio).\n**Idempotency key:** `node_run_id` (uuid por tentativa \u2014 anti duplo-d\u00e9bito, `BR \u00a76`).\n\n```\n[invoke canvas-execute]\n  \u251c\u2500\u2500 Validate JWT \u2500\u2500(fail)\u2500\u2500\u25b6 HTTP 401\n  \u251c\u2500\u2500 Prompt guards (ANTES do d\u00e9bito) \u2500\u2500(fail)\u2500\u2500\u25b6 HTTP 422 \u2192 zero cobran\u00e7a por falha previs\u00edvel\n  \u251c\u2500\u2500 CREDIT_COSTS[modelKey] + daily cap por role \u2500\u2500(low)\u2500\u2500\u25b6 HTTP 402 \u2192 \"Saldo de mcoCoins insuficiente.\" / \"Teto di\u00e1rio\u2026\"\n  \u251c\u2500\u2500 deduct_mco_coins (RPC SECURITY DEFINER, at\u00f4mica)\n  \u251c\u2500\u2500 Provider call\n  \u2502     \u251c\u2500(ok)\u2500\u2500\u25b6 insert generations + creative_assets spine \u2192 HTTP 200\n  \u2502     \u2514\u2500(err)\u2500\u25b6 refund (padr\u00e3o finalize_video_render) + infra_health_logs{event:'spaces_refund_issued'} \u2192 erro estruturado\n  \u2514\u2500\u2500 (1\u00ba run do Space) insert mcorch_nodes{observation} \u2014 fail-open, nunca bloqueia o run\n```\n\n**Data mapping:**\n\n| Input | Origem | \u2192 | Output | Destino |\n|-------|--------|---|--------|---------|\n| `spaceId, nodeId, node_run_id, model, inputs` | hook client | \u2192 | linha `generations` | DB |\n| JWT | sess\u00e3o Supabase | \u2192 | `auth.uid()` | d\u00e9bito/RLS |\n| resultado do provider | API externa (per-user BYOK\u2192plataforma, API Tenancy Model) | \u2192 | `asset_id` | `creative_assets` |\n\n> **Cad\u00eancia/cron:** o MVP **n\u00e3o introduz cron novo** (nenhum job ass\u00edncrono pr\u00f3prio \u2014 jobs longos de v\u00eddeo reusam o padr\u00e3o polling `check-video-status`/webhook j\u00e1 existente, `FR-SPACES-013`). O watchdog global `*/5` (`scripts/watchdog-mcorch.sh`) j\u00e1 cobre a telemetria `spaces_*` em `infra_health_logs`. Se a Fase 2 trouxer \"Flows\" (execu\u00e7\u00e3o agendada de um Space, `LR-SPACES-011`), nasce SOP pr\u00f3prio antes do c\u00f3digo (Lei 2).\n\n---\n\n## 4. Orchestration Integration Points\n\n| Ponto | Rela\u00e7\u00e3o | Estado |\n|-------|---------|--------|\n| `useOrchestrationStore` | Spaces **generaliza** (mesma superf\u00edcie de m\u00e9todos + portas/p\u00e1ginas); orquestrador vira *preset* na Fase 2+ \u2014 nada \u00e9 deletado no MVP (`SD-SPACES-001`, rollout \u00a710) | contrato promovido |\n| `canvas-execute` | executor \u00fanico de n\u00f3 gerador; **nenhum step novo** em `orchestrate-content` no MVP (Spaces n\u00e3o entra no pipeline de campanha \u2014 superf\u00edcies distintas) | vivo |\n| `creative_assets` | toda `generation` com asset registra no spine (RPC `register_creative_asset`, service-role, idempotente) \u2014 sa\u00eddas do Spaces ficam vis\u00edveis na Biblioteca | vivo (RPC) |\n| Knowledge Mesh | observation node no 1\u00ba run (`PROC-SPACES-008`) + seal desta su\u00edte | mandato |\n\n---\n\n## 5. Error Handling & Retry Strategy\n\n| Processo | Step | Erro | Retries | Backoff | A\u00e7\u00e3o em falha |\n|---------|------|-----------|---------|---------|----------------|\n| 003 | JWT | inv\u00e1lido/expirado | 0 | \u2014 | HTTP 401 \u00b7 client tenta `refreshSession()` 1\u00d7 e re-oferece |\n| 003 | prompt guards | prompt longo/instru\u00e7\u00e3o | 0 | \u2014 | HTTP 422 **antes do d\u00e9bito** \u2014 *\"Prompt inv\u00e1lido para imagem (muito longo ou em formato de instru\u00e7\u00e3o).\"* |\n| 003 | saldo/teto | insuficiente | 0 | \u2014 | HTTP 402 \u2192 node `blocked` (strings can\u00f4nicas `BR-SPACES-003`) |\n| 003 | provider | timeout/5xx | 1 (server-side) | fixo 5 s | refund + node `error` + `infra_health_logs{spaces_run_failure}` |\n| 003 | d\u00e9bito duplicado | retry/duplo-clique | \u2014 | \u2014 | `node_run_id` UNIQUE descarta duplicata (zero segundo d\u00e9bito) |\n| 006 | upsert | rede/5xx | 3 | exponencial 2/4/8 s | rollback do store + toast + draft local preservado |\n| 008 | mesh insert | qualquer | 0 | \u2014 | **fail-open** (log apenas) \u2014 observabilidade nunca bloqueia produto |\n\n---\n\n## 6. SLA Definitions\n\n| Processo | Step | Dura\u00e7\u00e3o esperada | Timeout | Alerta |\n|---------|------|------------------|---------|--------|\n| 003 | n\u00f3 imagem E2E | p95 < 30 s | 120 s | `infra_health_logs{spaces_sla_breach}` |\n| 003 | n\u00f3 v\u00eddeo E2E (async) | minutos (polling) | 15 min \u2192 rescue path | idem |\n| 003 | resposta `canvas-execute` (sem provider) | < 800 ms p95 | 5 s | sim |\n| 001/002/005 | intera\u00e7\u00e3o de canvas | < 16 ms (60 fps at\u00e9 ~150 n\u00f3s, `PR-SPACES-NFR-01`) | \u2014 | n\u00e3o |\n| 004 | p\u00e1gina do cluster | < 1 s | 5 s | n\u00e3o |\n| 006 | upsert debounced | < 500 ms | 5 s | n\u00e3o |\n\n---\n\n## 7. Cron Jobs\n\n| Job | Schedule | Fun\u00e7\u00e3o | Idempot\u00eancia | Alerta |\n|-----|----------|--------|--------------|--------|\n| \u2014 (nenhum novo no MVP) | \u2014 | \u2014 | \u2014 | \u2014 |\n| `watchdog-mcorch.sh` (existente, reuso) | `*/5 * * * *` | telemetria infra \u2192 `infra_health_logs` | por natureza (leitura) | vigente |\n\n> Todo cron futuro do m\u00f3dulo (ex.: Flows da Fase 2, reconcilia\u00e7\u00e3o de runs `running` > 30 min) exige SOP em `docs/processes/` antes do c\u00f3digo (Lei 2) e prova de identidade service-role in-function (precedente `autopilot-cron-identity.md`).\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0 \u2014 spaces-evolution suite completion, 2026-07-02_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/07-process-flow.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:23:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/08-quality-metrics.md",
+  "content": "# 08 \u00b7 Quality & Self-Optimization Specification \u00b7 Spaces Evolution\n\n> **Artefato:** Quality & Self-Optimization Specification\n> **BoK Applied:** CMQ/OE BOK (Process Management + Quality Tools + Organizational Excellence)\n> **Trace prefix:** `QO/KPI/FMEA/SOL-SPACES-###`\n> **Version:** v1.0 | **Date:** 2026-07-02 | **Status:** Sealed\n> **Anchored to:** `02-brd.md` (invariantes de ledger) \u00b7 `07-process-flow.md` (processos) \u00b7 MRD \u00a77 (success signals) \u00b7 live-recon `09\u201312` (paridade)\n\n---\n\n## 1. Quality Objectives\n\n| QO ID | Objetivo | Liga (upstream) | Target | Cad\u00eancia |\n|-------|-----------|--------------------------|--------|---------------|\n| `QO-SPACES-001` | **Integridade cont\u00e1bil absoluta** \u2014 nenhum usu\u00e1rio paga por n\u00f3 que n\u00e3o entregou; nenhum d\u00e9bito duplicado | `BR-SPACES-001/004`, invariantes `BR \u00a75` | 0 viola\u00e7\u00f5es | cont\u00ednua (invariantes testadas) |\n| `QO-SPACES-002` | **Migra\u00e7\u00e3o de superf\u00edcie** \u2014 o trabalho criativo migra das p\u00e1ginas-formul\u00e1rio para o canvas | `MR-SPACES-003`, MRD \u00a77 | \u2191 % d\u00e9bitos via `canvas-execute` trimestre a trimestre | mensal |\n| `QO-SPACES-003` | **Profundidade de pipeline** \u2014 usu\u00e1rios comp\u00f5em (n\u00e3o s\u00f3 geram) | `MR-SPACES-002/004` | n\u00ba m\u00e9dio de n\u00f3s/Space ativo \u2265 4 | mensal |\n| `QO-SPACES-004` | **Custo sempre vis\u00edvel antes do d\u00e9bito** | `MR-SPACES-006`, `PR-SPACES-NFR-03` | 100% dos n\u00f3s geradores | por release (E2E) |\n| `QO-SPACES-005` | **Paridade mec\u00e2nica com a refer\u00eancia** (Magnific) nas dimens\u00f5es verificadas | live-recon `09\u201312` | ver KPI-SPACES-008 | por release |\n\n---\n\n## 2. KPI Dashboard Definition\n\n> Fontes honestas: `generations`/`spaces` s\u00e3o **planejadas** (Fase 1) \u2014 KPIs marcados \ud83d\udccb s\u00f3 computam ap\u00f3s a migration. Os demais t\u00eam fonte viva hoje.\n\n| KPI ID | Nome | F\u00f3rmula | Target | Warn | Critical | Fonte |\n|--------|------|---------|--------|------|----------|-------------|\n| `KPI-SPACES-001` \ud83d\udccb | N\u00f3s por Space ativo | `AVG(jsonb_array_length(graph->'nodes'))` em spaces com run em 30d | \u2265 4 | < 3 | < 2 | `spaces` |\n| `KPI-SPACES-002` \ud83d\udccb | Migra\u00e7\u00e3o de superf\u00edcie | `\u03a3 mco via canvas-execute \u00f7 \u03a3 mco total` (janela 30d) | crescente | estagnado 2 meses | queda | `mcoin_transactions` (`action='spaces.node.run'`) |\n| `KPI-SPACES-003` \ud83d\udccb | Taxa de refund | `\u03a3 mco_refunded \u00f7 \u03a3 mco_charged` | < 5% | \u2265 10% | \u2265 20% | `generations` |\n| `KPI-SPACES-004` \ud83d\udccb | Viola\u00e7\u00f5es de invariante de ledger | d\u00e9bitos sem `generations` correspondente **ou** `error` sem refund | **0** | 1 | > 1 | `mcoin_transactions` \u00d7 `generations` (query de reconcilia\u00e7\u00e3o) |\n| `KPI-SPACES-005` | Abertura de Space (p95) | tempo at\u00e9 canvas interativo | < 1,5 s (`PR-SPACES-NFR-02`) | 2 s | 4 s | E2E harness (`e2e-user-zero`) |\n| `KPI-SPACES-006` | Fluidez do canvas | fps em pan/zoom com 150 n\u00f3s | 60 fps (`PR-SPACES-NFR-01`) | 45 | 30 | E2E/manual (gate 1920\u00d71080) |\n| `KPI-SPACES-007` \ud83d\udccb | Workflow Apps salvos / Spaces criados | `COUNT(workflow_app IS NOT NULL) \u00f7 COUNT(*)` | \u2265 10% | < 5% | 0 | `spaces` |\n| `KPI-SPACES-008` | Cobertura de paridade verificada | itens implementados \u00f7 itens do registry verificado (26 node types \u00b7 6 port types \u00b7 10 ratios \u00b7 9 ref kinds \u00b7 atalhos) por fase | 100% do escopo da fase | \u22121 item | \u22123 itens | checklist vs `node-registry.ts` |\n\n---\n\n## 3. FMEA Table\n\n> S/O/D: 1 (melhor) \u2192 10 (pior). RPN = S\u00d7O\u00d7D. **RPN > 100 exige a\u00e7\u00e3o nomeada.** Classes de falha herdam os incidentes hist\u00f3ricos reais do MCORCH (billing charge-without-value, white-screen do Canvas, RLS cross-tenant FMEA-011).\n\n| ID | Fun\u00e7\u00e3o | Failure Mode | Efeito | S | O | D | RPN | A\u00e7\u00e3o recomendada |\n|----|---------|--------------|--------|---|---|---|-----|--------------------|\n| `FMEA-SPACES-001` | D\u00e9bito (`PROC-SPACES-003`) | provider falha **ap\u00f3s** `deduct_mco_coins` e refund n\u00e3o executa | cobran\u00e7a sem valor (classe n\u00ba 1 hist\u00f3rica de billing) | 9 | 4 | 4 | **144** | refund no MESMO fluxo do erro (padr\u00e3o `finalize_video_render`); reconcilia\u00e7\u00e3o `KPI-SPACES-004`; smoke zero-cost do ramo de falha antes de ativar |\n| `FMEA-SPACES-002` | D\u00e9bito | retry/duplo-clique gera segundo d\u00e9bito | usu\u00e1rio cobrado 2\u00d7 | 9 | 3 | 3 | 81 | `node_run_id` UNIQUE no insert + idempot\u00eancia na RPC (j\u00e1 especificado `BR \u00a76`) |\n| `FMEA-SPACES-003` | RLS (`spaces`/`generations`) | policy permissiva vaza Space cross-tenant | vazamento de dado (FMEA-011 global) | 10 | 2 | 6 | **120** | RLS default-deny + `/security-review` obrigat\u00f3rio na migration; teste 404-n\u00e3o-403 (`FR-SPACES-007`); INSERT/UPDATE de `generations` service-role-only |\n| `FMEA-SPACES-004` | Espelho de pre\u00e7o | `CLIENT_COST_MIRROR` drifta de `CREDIT_COSTS` | estimativa mente para o usu\u00e1rio (confian\u00e7a/402 surpresa) | 6 | 6 | 4 | **144** | teste de paridade mirror\u00d7servidor no CI (`SOL-SPACES-001`); estimativa sempre rotulada \"estimado\"; servidor \u00e9 autoridade (`BR \u00a74`) |\n| `FMEA-SPACES-005` | Render do canvas | `modelKey` fora do cat\u00e1logo \u2192 lookup undefined \u2192 white-screen | canvas branco (incidente real 2026-06-25, `coinCost` fix `46f18ca`) | 8 | 3 | 5 | **120** | lookups SEMPRE com fallback (li\u00e7\u00e3o dur\u00e1vel: *fallback nunca white-screena*); zod default; error boundary no canvas |\n| `FMEA-SPACES-006` | Persist\u00eancia | race load/save grava grafo vazio sobre grafo cheio | perda de trabalho (incidente real Canvas 2026-06-25, guard `useSaveCanvasGraph`) | 9 | 3 | 4 | **108** | guard empty-over-nonempty no upsert (precedente vivo); draft local `FR-SPACES-011`; zundo como buffer |\n| `FMEA-SPACES-007` | Conex\u00e3o tipada | edge inv\u00e1lida entra por fora do `connect()` (hidrata\u00e7\u00e3o/import) | run com input de tipo errado \u2192 falha paga | 6 | 3 | 4 | 72 | valida\u00e7\u00e3o **tamb\u00e9m na hidrata\u00e7\u00e3o** (`SpaceEdgeGuard` + re-check `canConnect` no load) |\n| `FMEA-SPACES-008` | Sess\u00e3o | run com JWT expirado passa no client | 401 tardio, UX quebrada (nunca d\u00e9bito \u2014 servidor revalida) | 4 | 4 | 3 | 48 | `ensureFresh()` pr\u00e9-run; servidor \u00e9 a autoridade (`FR-SPACES-006`) |\n| `FMEA-SPACES-009` | Run ass\u00edncrono | job de v\u00eddeo `running` \u00f3rf\u00e3o > 30 min | n\u00f3 preso, custo retido | 6 | 4 | 5 | **120** | reconcilia\u00e7\u00e3o stuck-run (`SOL-SPACES-002`): marcar `error` + refund, NUNCA re-cobrar (precedente self-heal viral-autopilot) |\n| `FMEA-SPACES-010` | Observabilidade | mesh/telemetria falha e bloqueia o produto | run travado por observabilidade | 7 | 2 | 2 | 28 | `PROC-SPACES-008` \u00e9 **fail-open** por contrato |\n\n---\n\n## 4. Self-Optimization Loops\n\n| Loop ID | Trigger | Fonte | Resposta aut\u00f4noma | Escala\u00e7\u00e3o (humano) |\n|---------|------------------|------------|--------------------|--------------------|\n| `SOL-SPACES-001` | teste de paridade mirror\u00d7`CREDIT_COSTS` falha no CI | CI (vitest) | build falha (gate) \u2014 drift nunca chega a prod | Sovereign revisa pre\u00e7o novo |\n| `SOL-SPACES-002` | `generations.status='running'` > 30 min | query de reconcilia\u00e7\u00e3o | marcar `error` + refund idempotente + `infra_health_logs{spaces_run_failure}` | alerta se > 3/dia |\n| `SOL-SPACES-003` | `KPI-SPACES-003` (refund) \u2265 10% em 7d | `generations` | desabilitar o `modelKey` ofensor no registry client (flag) | Sovereign decide troca de provider |\n| `SOL-SPACES-004` | `nodeCount > 150` ou `prefers-reduced-motion` | client | FX layer R3F **n\u00e3o monta**; canvas degrada para fundo est\u00e1tico (`SD-SPACES-007`) | \u2014 (por design) |\n| `SOL-SPACES-005` | saldo < custo projetado do grafo | client (pr\u00e9-run) | bloquear Run com toast can\u00f4nico + CTA top-up (`create-checkout`) | \u2014 |\n\n---\n\n## 5. Self-Healing Specifications\n\n### 5.1 Watchdog Telemetry Events (novos, em `infra_health_logs` \u2014 `service='spaces'`)\n\n| Event | Trigger | Severity | Payload (allowlist \u2014 sem PII/segredo) |\n|------------|---------|----------|---------|\n| `spaces_run_failure` | provider err ap\u00f3s retry | error | `{node_type, model_key, refunded}` |\n| `spaces_refund_issued` | refund executado | warn | `{model_key, mco}` |\n| `spaces_sla_breach` | E2E de n\u00f3 > timeout | warn | `{process_id, elapsed_ms}` |\n| `spaces_mesh_insert_failed` | `PROC-SPACES-008` falhou (fail-open) | warn | `{space_id}` |\n\n> Contrato herdado da migration `20260615170000_infra_health_logs_metadata.sql`: `metadata` **nunca** carrega PII/segredos.\n\n### 5.2 Auto-Recovery (stub \u2014 nasce com a Fase 1)\n\n```bash\n#!/bin/bash\n# scripts/self-heal-spaces.sh \u2014 disparado pelo mega-brain-daemon em spaces_run_failure recorrente\n# 1. Reconciliar runs presos: generations 'running' > 30min \u2192 status 'error' + refund idempotente (NUNCA re-cobrar)\n# 2. Verificar paridade CLIENT_COST_MIRROR \u00d7 CREDIT_COSTS (drift \u2192 infra_health_logs{spaces_mirror_drift})\n# 3. Logar recovery_ok em infra_health_logs\n# (todas as a\u00e7\u00f5es idempotentes; service-role; espelha scripts/self-heal-viral-autopilot.sh)\n```\n\n### 5.3 mega-brain-daemon Integration Points\n\n| Evento | Condi\u00e7\u00e3o | A\u00e7\u00e3o |\n|-------------|-----------|--------|\n| `health_check` | watchdog `*/5` (existente) | contagem de `spaces_run_failure` na \u00faltima hora vs baseline |\n| `anomaly_detected` | error rate `spaces_*` > 5/h | executa `self-heal-spaces.sh` |\n| `recovery_confirmed` | health check passa p\u00f3s-heal | insere `recovery_ok` |\n\n---\n\n## 6. SLA / SLO / SLI Definitions\n\n| Servi\u00e7o | SLI | SLO | Consequ\u00eancia |\n|---------|----------------------|------------------|-------------------------------|\n| `canvas-execute` (runs Spaces) | p95 lat\u00eancia (sem provider) | \u2264 800 ms | investiga\u00e7\u00e3o obrigat\u00f3ria |\n| Run de n\u00f3 imagem E2E | p95 | \u2264 30 s | `spaces_sla_breach` |\n| Integridade de ledger | viola\u00e7\u00f5es de invariante (`KPI-SPACES-004`) | **0/m\u00eas** | incidente P0 \u2014 congela ativa\u00e7\u00e3o at\u00e9 reconciliar |\n| Abertura de Space | p95 | \u2264 1,5 s | item de sprint |\n| Refund em falha | % de `error` com refund ou zero-d\u00e9bito | 100% | incidente P0 (classe charge-without-value) |\n\n---\n\n## 7. PDCA Improvement Cadence\n\n| Fase | Atividade | Owner | Frequ\u00eancia |\n|-------|----------|-------|-----------|\n| Plan | revisar FMEA + targets de KPI (este doc) | Sovereign | trimestral |\n| Do | implementar a a\u00e7\u00e3o de maior RPN aberto | Engineering (MCORCH Agent) | por sprint |\n| Check | KPIs vs targets; recalcular RPNs | AIOS | mensal |\n| Act | fechar loop; emendar este doc + `sprint-priorities.md` | Sovereign | mensal |\n\n**Backlog:** `.claude/context/sprint-priorities.md` \u00b7 d\u00edvidas nomeadas: `OTD-SPACES-001` (LGPD erase RPC, `06-data-model \u00a77`).\n\n---\n\n## 8. Observability Checklist\n\n### 8.1 Logging\n\n| Evento | Local | Level | Campos |\n|-------|----------|-------|--------------|\n| entrada de run | `canvas-execute` | INFO | `{request_id, model_key}` |\n| d\u00e9bito | p\u00f3s-RPC | INFO | `{amount, action:'spaces.node.run'}` |\n| refund | ramo de erro | WARN | `{mco, model_key}` |\n| SLA breach | guard de timeout | WARN | `{process_id, elapsed_ms}` |\n\n### 8.2 Alerting\n\n| Condi\u00e7\u00e3o | Canal | Escala\u00e7\u00e3o |\n|-----------|---------|------------|\n| `spaces_run_failure` > 5/h | `infra_health_logs` | mega-brain-daemon self-heal |\n| viola\u00e7\u00e3o de invariante (KPI-004) | reconcilia\u00e7\u00e3o | Sovereign imediato (P0) |\n| mirror drift | CI + `spaces_mirror_drift` | bloqueia merge |\n\n### 8.3 Gates de release (herdados, obrigat\u00f3rios)\n\n- **E2E ocular 1920\u00d71080** de qualquer mudan\u00e7a de Canvas (Lei 1 \u2014 `audit-canvas-ui.ts` com veredito Vision-QA \"APROVADO\" obrigat\u00f3rio, fail-closed).\n- **`/security-review`** em toda migration nova (FMEA-011).\n- **Smoke zero-cost** dos ramos 401/402/422/refund antes de qualquer run pago (precedente `smoke-campaign-run`).\n\n---\n\n_Generated by MCORCH BoK Scribe Agent v1.0.0 \u2014 spaces-evolution suite completion, 2026-07-02_\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/08-quality-metrics.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:23:47)*
+
+
+## 🤖 Claude *(13:23:47)*
+
+
+## 🤖 Claude *(13:24:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/05-sdd-spaces.md",
+  "old_string": "---\n\n*Fim da su\u00edte mandatada (01\u201305). \u00cdndice e mesh em `00-index.md`.*",
+  "new_string": "---\n\n## 11. Pattern Conformance Declaration (Step 3.5 \u2014 Agentic Vision)\n\n> Declara\u00e7\u00e3o vinculante contra os **21 padr\u00f5es ag\u00eanticos can\u00f4nicos** de [`docs/architecture/agentic-vision.md`](../../architecture/agentic-vision.md) \u00a72, no formato do master template `docs/bok/agentic-governance/09-pattern-conformance.md` (Bloco A). **Declara\u00e7\u00e3o, n\u00e3o sign-off** \u2014 cada `yes` cita artefato + trace; cada `deferred` cita FR/OTD nomeado; cada `n-a` explica por qu\u00ea. Embutida na SDD (op\u00e7\u00e3o prim\u00e1ria de CLAUDE.md \u00a71 Step 3.5; o slot `09-*` desta su\u00edte \u00e9 ocupado pelo live-recon).\n>\n> **Natureza do m\u00f3dulo (Lei 1 \u2014 fundamenta\u00e7\u00e3o honesta):** Spaces \u00e9 uma **superf\u00edcie de produto** (canvas infinito de n\u00f3s tipados) em **Phase 0** \u2014 o dom\u00ednio client-side est\u00e1 promovido e vivo (`spaces-schema`/`port-compat`/`node-registry`/`useSpacesStore`/`useParamRegistry`), mas execu\u00e7\u00e3o, persist\u00eancia e UI s\u00e3o Fase 1. Por isso os padr\u00f5es de *execu\u00e7\u00e3o* aparecem majoritariamente `deferred` **com FR nomeado** \u2014 declarar `yes` neles seria fabricar artefato que ainda n\u00e3o roda.\n\n| # | Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred |\n|---|---------|:------------------------------:|---|\n| 1 | Prompt Chaining | deferred | O grafo \u00c9 a cadeia (output de n\u00f3 \u2192 input do filho via portas tipadas), mas o executor \u00e9 Fase 1 \u2192 `FR-SPACES-005`. Primitivas vivas: `getTopologicalLayers` (`src/lib/canvas-dag.ts`, testada) + `port-compat.ts` promovido. |\n| 2 | Routing | deferred | `modelKey='auto'` = roteamento server-side por custo/qualidade (`UI-SPACES-010`, espelha `calc_agent_cost_mcoin`) \u2014 Fase 1, junto do executor. |\n| 3 | Parallelization | deferred | Execu\u00e7\u00e3o camada-a-camada com n\u00f3s da mesma layer em paralelo \u2192 `FR-SPACES-005` (Fase 1). |\n| 4 | Reflection | n-a | Sem la\u00e7o Generator-Critic no m\u00f3dulo; a reflex\u00e3o visual (Vision-QA gate) vive no harness de QA do ecossistema (`audit-canvas-ui.ts`), n\u00e3o no produto. |\n| 5 | Tool Use | yes | Execu\u00e7\u00e3o de n\u00f3 = invoca\u00e7\u00e3o de edge function tipada; `canvas-execute` (com `CREDIT_COSTS`, `index.ts:15`) **j\u00e1 vive em produ\u00e7\u00e3o** servindo o Canvas Studio \u2014 Spaces o reusa por contrato `BR-SPACES-001` (zero tool novo, anti-drift). |\n| 6 | Planning | n-a | O \"plano\" (DAG) \u00e9 autorado pelo **humano** no canvas; n\u00e3o h\u00e1 gera\u00e7\u00e3o ag\u00eantica de plano neste m\u00f3dulo. |\n| 7 | Multi-Agent | n-a | Superf\u00edcie single-user; Workflow App encapsula **subgrafo** (`PR-SPACES-007`), n\u00e3o coletivo de agentes. |\n| 8 | Memory Management | yes | Malha: seal `documentation_suite` desta su\u00edte + observation node por 1\u00ba run (`PROC-SPACES-008`, Mesh Connection Mandate). Sess\u00e3o: time-travel `zundo` (limit 100) promovido (`src/store/useSpacesStore.ts:158-162`). |\n| 9 | Learning & Adaptation | deferred | Clusters de gera\u00e7\u00e3o (`FR-SPACES-012`) s\u00e3o o futuro sinal de reward, mas o loop fechado \u00e9 d\u00edvida de ecossistema \u2192 `OTD-AG-002` (doutrina \u00a73). |\n| 10 | Model Context Protocol | n-a | N\u00e3o exp\u00f5e nem consome MCP em runtime (Vision MCP \u00e9 m\u00f3dulo irm\u00e3o). |\n| 11 | Goal Setting & Monitoring | deferred | Metas e KPIs definidos (`QO/KPI-SPACES-###` em `08-quality-metrics.md`); a emiss\u00e3o de telemetria (`infra_health_logs` events `spaces_*`) nasce na Fase 1. |\n| 12 | Exception Handling & Recovery | deferred | Especificado por inteiro \u2014 refund-on-failure `BR-SPACES-004` (espelha `finalize_video_render` vivo), descendentes `blocked`, rollback otimista `FR-SPACES-008`, draft recovery `FR-SPACES-011` \u2014 implementa\u00e7\u00e3o Fase 1. |\n| 13 | Human-in-the-Loop | yes | Custo vis\u00edvel **antes** do d\u00e9bito \u00e9 contrato do produto (`MR-SPACES-006`/`BR-SPACES-002`) com artefato promovido: `estimateCost`/`projectGraphCost` (`src/hooks/useParamRegistry.ts:75-84`). Dry-run sem d\u00e9bito (`BR-SPACES-005`); todo Run \u00e9 decis\u00e3o humana. |\n| 14 | Knowledge Retrieval (RAG) | n-a | O canvas n\u00e3o recupera da malha em runtime (MVP); refer\u00eancia cross-space \u00e9 por FK de asset (`FR-SPACES-009`), n\u00e3o sem\u00e2ntica. |\n| 15 | Inter-Agent Communication (A2A) | n-a | Sem troca de mensagens entre agentes. |\n| 16 | Resource-Aware Optimization | yes | Ledger-first \u00e9 a regra-m\u00e3e da BRD (estimar\u2192reservar\u2192debitar\u2192reconciliar, `BR \u00a75`); autoridade de pre\u00e7o server-side viva (`CREDIT_COSTS`); espelho client display-only promovido (`CLIENT_COST_MIRROR`, `useParamRegistry.ts:30`) com gate anti-drift (`FMEA-SPACES-004`/`SOL-SPACES-001`). |\n| 17 | Reasoning Techniques | n-a | Sem racioc\u00ednio LLM pr\u00f3prio; o n\u00f3 Assistant delega ao `aios-chat`/`generate-content` (m\u00f3dulos existentes). |\n| 18 | Guardrails / Safety | yes | Gates promovidos e vivos no c\u00f3digo: `canConnect` (`port-compat.ts` \u2014 \u00fanica fonte de verdade de conex\u00e3o), `SpaceNodeDataSchema.parse` no `addNode` (dado inv\u00e1lido nunca entra no store), guard `locked`. Planejados na Fase 1: RLS default-deny 404-n\u00e3o-403 (`FR-SPACES-007`) + guards de prompt pr\u00e9-d\u00e9bito j\u00e1 vivos no `canvas-execute` (`BR \u00a74`). |\n| 19 | Evaluation & Monitoring | deferred | FMEA + KPIs selados (`08-quality-metrics.md`) e gate E2E 1920\u00d71080/Vision-QA j\u00e1 mandat\u00f3rio para Canvas; instrumenta\u00e7\u00e3o do m\u00f3dulo (eventos `spaces_*`) \u00e9 Fase 1 \u2192 `KPI-SPACES-004` como invariante-m\u00e3e. |\n| 20 | Prioritization | n-a | Sem scheduler/\u00e1lgebra de prioriza\u00e7\u00e3o pr\u00f3pria; a fila respeita limite do plano (`PR-SPACES-009`) \u2014 pol\u00edtica de recurso, n\u00e3o prioriza\u00e7\u00e3o ag\u00eantica (gap de ecossistema \u2192 OTD-AG-020, n\u00e3o deste m\u00f3dulo). |\n| 21 | Exploration & Discovery | deferred | Branching + clusters lado-a-lado (`MR-SPACES-004`/`PR-SPACES-010`) = explora\u00e7\u00e3o **humana assistida** pelo canvas; torneio generativo \u00e9 d\u00edvida de ecossistema \u2192 `OTD-AG-008`. |\n\n**Placar:** `yes` \u00d7 4 (#5 Tool Use \u00b7 #8 Memory \u00b7 #13 HITL \u00b7 #16 Resource-Aware) \u00b7 `deferred` \u00d7 8 (#1, #2, #3, #9, #11, #12, #19, #21 \u2014 todos com FR/OTD nomeado) \u00b7 `n-a` \u00d7 9. A concentra\u00e7\u00e3o de `yes` em **Tool Use + Memory + HITL + Resource-Aware** reflete a natureza declarada: uma superf\u00edcie de produto ledger-gated com humano no comando, cuja camada de execu\u00e7\u00e3o chega na Fase 1 \u2014 quando os 8 `deferred` devem flipar (gate de re-declara\u00e7\u00e3o no seal da Fase 1).\n\n---\n\n*Fim da su\u00edte mandatada (01\u201308 + addenda 09\u201312). \u00cdndice e mesh em `00-index.md`.*"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/05-sdd-spaces.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:24:39)*
+
+
+## 🤖 Claude *(13:24:39)*
+
+
+## 🤖 Claude *(13:24:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution\ngit mv 01-mrd-spaces.md 01-mrd.md && git mv 02-brd-spaces.md 02-brd.md && git mv 03-prd-spaces.md 03-prd.md && git mv 04-frd-spaces.md 04-frd.md && git mv 05-sdd-spaces.md 05-sdd.md\nsed -i 's/01-mrd-spaces\\.md/01-mrd.md/g; s/02-brd-spaces\\.md/02-brd.md/g; s/03-prd-spaces\\.md/03-prd.md/g; s/04-frd-spaces\\.md/04-frd.md/g; s/05-sdd-spaces\\.md/05-sdd.md/g' 00-index.md 01-mrd.md 02-brd.md 03-prd.md 04-frd.md 05-sdd.md 06-data-model.md 07-process-flow.md 08-quality-metrics.md 09-live-recon-spaces.md 10-ui-inventory-spaces.md 11-node-registry-spaces.md 12-node-anatomy-spaces.md IMPLEMENTATION-PROMPT.md scaffold/README.md\necho \"--- refs antigas remanescentes no repo (fora de .git) ---\"\ngrep -rn --include=\"*.md\" --include=\"*.ts\" --include=\"*.tsx\" -E \"0[1-5]-(mrd|brd|prd|frd|sdd)-spaces\\.md\" . 2>/dev/null | grep -v \"^\\.git\" | head -10; echo \"(fim)\"",
+  "description": "Rename suite files to canonical names and fix cross-references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- refs antigas remanescentes no repo (fora de .git) ---
+> (fim)
+> ```
+
+## 🤖 Claude *(13:24:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -rn -E \"0[1-5]-(mrd|brd|prd|frd|sdd)-spaces\" --include=\"*.md\" --include=\"*.ts\" --include=\"*.tsx\" . 2>/dev/null | grep -vE \"^\\./\\.git|^\\./node_modules\" | head; echo \"=== repo limpo ===\"; ls docs/bok/spaces-evolution/",
+  "description": "Verify no stale references repo-wide and list final suite files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === repo limpo ===
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 09-live-recon-spaces.md
+> 10-ui-inventory-spaces.md
+> 11-node-registry-spaces.md
+> 12-node-anatomy-spaces.md
+> IMPLEMENTATION-PROMPT.md
+> scaffold
+> ```
+
+## 🤖 Claude *(13:25:14)*
+
+
+## 🤖 Claude *(13:25:14)*
+
+
+## 🤖 Claude *(13:25:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/00-index.md",
+  "old_string": "| 05 | `05-sdd.md` | **Com o qu\u00ea** construir (data models, hooks, WebGL)? | `SD-SPACES-###` |\n\n> Conven\u00e7\u00e3o de pastas BoK confirmada no repo (`canvas-design/`, `constellation-v2/`, `gamificacao-nodes/`): `00-index` \u2192 `08-quality-metrics`. Esta su\u00edte entrega os 5 artefatos mandatados + \u00edndice. Os artefatos `06/07/08` ficam reservados para a pr\u00f3xima volta de SDLC.",
+  "new_string": "| 05 | `05-sdd.md` | **Com o qu\u00ea** construir (data models, hooks, WebGL)? + **Pattern Conformance Declaration** (\u00a711 \u2014 21 padr\u00f5es, Step 3.5) | `SD-SPACES-###` |\n| 06 | `06-data-model.md` | **Onde** o dado vive (zod vivo \u00b7 tabelas planejadas \u00b7 malha)? | `DM-SPACES-###` |\n| 07 | `07-process-flow.md` | **Em que ordem** cada processo roda (ledger gate, De-n8n)? | `PROC-SPACES-###` |\n| 08 | `08-quality-metrics.md` | **Como saber** que funciona (KPIs, FMEA, self-heal)? | `QO/KPI/FMEA/SOL-SPACES-###` |\n\n> Conven\u00e7\u00e3o de pastas BoK confirmada no repo (`canvas-design/`, `constellation-v2/`, `gamificacao-nodes/`): `00-index` \u2192 `08-quality-metrics`. **Su\u00edte 9/9 completa** (selada 2026-07-02): os artefatos `06/07/08` foram entregues na volta de completude, grounded no scaffold Phase 0 j\u00e1 promovido a `src/` \u2014 e a `05-sdd.md \u00a711` carrega a **Pattern Conformance Declaration** exigida pelo gate CLAUDE.md \u00a71 Step 3.5."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(13:25:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/00-index.md",
+  "offset": 17,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 17	| # | Artefato | Pergunta que responde | Índices de rastreio |
+> 18	|---|----------|-----------------------|---------------------|
+> 19	| 00 | `00-index.md` | Como a suíte se conecta? (este arquivo) | — |
+> 20	| 01 | `01-mrd.md` | **Por quê** o mercado exige canvas vs. formulário linear? | `MR-SPACES-###` |
+> 21	| 02 | `02-brd.md` | **Quanto/como** monetizar via `mcoCoins` ledger? | `BR-SPACES-###` |
+> 22	| 03 | `03-prd.md` | **O quê** entregar (regra 72/28, filas, enhancements)? | `PR-SPACES-###` |
+> 23	| 04 | `04-frd.md` | **Como** funciona (lazy-load, Supabase Auth, sync)? | `FR-SPACES-###` |
+> 24	| 05 | `05-sdd.md` | **Com o quê** construir (data models, hooks, WebGL)? | `SD-SPACES-###` |
+> 25	
+> 26	> Convenção de pastas BoK confirmada no repo (`canvas-design/`, `constellation-v2/`, `gamificacao-nodes/`): `00-index` → `08-quality-metrics`. Esta suíte entrega os 5 artefatos mandatados + índice. Os artefatos `06/07/08` ficam reservados para a próxima volta de SDLC.
+> 27	
+> 28	---
+> 29	
+> 30	## 🛰️ Discovery — território atual (anti-drift)
+> ```
+
+## 🤖 Claude *(13:25:40)*
+
+
+## 🤖 Claude *(13:25:40)*
+
+(O "modificado" era o meu próprio sed.) Aplicando a edição:
+
+## 🤖 Claude *(13:25:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/00-index.md",
+  "old_string": "| 05 | `05-sdd.md` | **Com o qu\u00ea** construir (data models, hooks, WebGL)? | `SD-SPACES-###` |\n\n> Conven\u00e7\u00e3o de pastas BoK confirmada no repo (`canvas-design/`, `constellation-v2/`, `gamificacao-nodes/`): `00-index` \u2192 `08-quality-metrics`. Esta su\u00edte entrega os 5 artefatos mandatados + \u00edndice. Os artefatos `06/07/08` ficam reservados para a pr\u00f3xima volta de SDLC.",
+  "new_string": "| 05 | `05-sdd.md` | **Com o qu\u00ea** construir (data models, hooks, WebGL)? + **Pattern Conformance Declaration** (\u00a711 \u2014 21 padr\u00f5es, Step 3.5) | `SD-SPACES-###` |\n| 06 | `06-data-model.md` | **Onde** o dado vive (zod vivo \u00b7 tabelas planejadas \u00b7 malha)? | `DM-SPACES-###` |\n| 07 | `07-process-flow.md` | **Em que ordem** cada processo roda (ledger gate, De-n8n)? | `PROC-SPACES-###` |\n| 08 | `08-quality-metrics.md` | **Como saber** que funciona (KPIs, FMEA, self-heal)? | `QO/KPI/FMEA/SOL-SPACES-###` |\n\n> Conven\u00e7\u00e3o de pastas BoK confirmada no repo (`canvas-design/`, `constellation-v2/`, `gamificacao-nodes/`): `00-index` \u2192 `08-quality-metrics`. **Su\u00edte 9/9 completa** (selada 2026-07-02): os artefatos `06/07/08` foram entregues na volta de completude, grounded no scaffold Phase 0 j\u00e1 promovido a `src/` \u2014 e a `05-sdd.md \u00a711` carrega a **Pattern Conformance Declaration** exigida pelo gate CLAUDE.md \u00a71 Step 3.5."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/00-index.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:26:17)*
+
+
+## 🤖 Claude *(13:26:17)*
+
+
+## 🤖 Claude *(13:26:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== GATE BoK spaces-evolution ===\"\nrequired=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\nmissing=(); for doc in \"${required[@]}\"; do [ -f \"docs/bok/spaces-evolution/$doc.md\" ] || missing+=(\"$doc\"); done\n[ ${#missing[@]} -eq 0 ] && echo \"\u2705 spaces-evolution \u2014 BoK complete\" || echo \"\u26a0\ufe0f missing: ${missing[*]}\"\necho \"=== INSTRUCTION_SIGNAL_RE em canvas-execute ===\"; grep -n \"INSTRUCTION_SIGNAL_RE\\|1800\" supabase/functions/canvas-execute/index.ts | head -3\necho \"=== vision_jobs CHECK refund ===\"; grep -n \"refunded_mco\" supabase/migrations/20260615160000_vision_mcp_jobs.sql | head -3\necho \"=== De-n8n na BoK ===\"; grep -rln \"De-n8n\\|de-n8n\" docs/bok/ | head -3\necho \"=== self-heal-viral-autopilot.sh existe? ===\"; ls scripts/self-heal-viral-autopilot.sh 2>/dev/null || echo \"N\u00c3O existe (\u00e9 stub no doc 08 do VA)\"\necho \"=== useSaveCanvasGraph guard ===\"; grep -rn \"useSaveCanvasGraph\" src/hooks/ | head -2\necho \"=== check-video-status ===\"; ls supabase/functions/ | grep -i \"check-video\"\necho \"=== audit-canvas-ui ===\"; ls scripts/qa/audit-canvas-ui.ts 2>/dev/null\necho \"=== erase RPCs ===\"; grep -rln \"erase_vision_artifacts\\|erase_avatar_artifacts\" supabase/migrations/ | head -2\necho \"=== decay + trigger embed ===\"; grep -rln \"decay_mcorch_stability\" supabase/migrations/ | head -1; grep -rln \"trg_mcorch_embed_on_insert\" supabase/migrations/ | head -1\necho \"=== zundo lines 158-162 ===\"; sed -n '158,162p' src/store/useSpacesStore.ts\necho \"=== node-registry line 14 ===\"; sed -n '14p' src/lib/node-registry.ts",
+  "description": "Run BoK gate and verify every material claim cited in new docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GATE BoK spaces-evolution ===
+> ✅ spaces-evolution — BoK complete
+> === INSTRUCTION_SIGNAL_RE em canvas-execute ===
+> 49:// 600-word protocol template. 1800 chars ≈ 280 words ≈ Midjourney guidance.
+> 50:const MAX_IMAGE_PROMPT_CHARS = 1800;
+> 55:const INSTRUCTION_SIGNAL_RE =
+> === vision_jobs CHECK refund ===
+> 8:-- The worker computes the partial-delivery refund (§4.5: floor in the tenant's favor) and writes refunded_mco
+> 26:  refunded_mco    int         CHECK (refunded_mco IS NULL OR (refunded_mco >= 0 AND refunded_mco <= charged_mco)),
+> 51:  'partial-delivery refund §4.5 (refunded_mco/refunded_at). SELECT-own RLS; container writes via service key.';
+> === De-n8n na BoK ===
+> docs/bok/spaces-evolution/00-index.md
+> docs/bok/spaces-evolution/07-process-flow.md
+> docs/bok/video-studio/05-sdd.md
+> === self-heal-viral-autopilot.sh existe? ===
+> NÃO existe (é stub no doc 08 do VA)
+> === useSaveCanvasGraph guard ===
+> src/hooks/useAutoSave.ts:3:import { useSaveCanvasGraph } from "@/hooks/useCanvasStudio";
+> src/hooks/useAutoSave.ts:23:  const saveGraph = useSaveCanvasGraph();
+> === check-video-status ===
+> check-video-status
+> === audit-canvas-ui ===
+> scripts/qa/audit-canvas-ui.ts
+> === erase RPCs ===
+> supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql
+> supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql
+> === decay + trigger embed ===
+> supabase/migrations/20260426120000_delta_graph_positioning.sql
+> supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql
+> === zundo lines 158-162 ===
+>     {
+>       // zundo: only track graph topology for undo/redo (PR-SPACES-012)
+>       partialize: (s) => ({ nodes: s.nodes, edges: s.edges }),
+>       limit: 100,
+>     },
+> === node-registry line 14 ===
+>   category: NodeCategory | 'app';
+> ```
+
+## 🤖 Claude *(13:26:50)*
+
+
+## 🤖 Claude *(13:26:50)*
+
+
+## 🤖 Claude *(13:26:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -i \"de-n8n\" docs/bok/video-studio/05-sdd.md | head -5",
+  "description": "Find exact De-n8n amendment wording in video-studio SDD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 165:> **🔧 Reconciliação de drift (2026-06-24 · cross-ref Amendment v0.2 do `viral-autopilot`):** a tabela acima reflete o design **pré-De-n8n** (SDD §8-A v1.2). A implementação da **Fatia 1 (shipped)** consolidou `video-faceless-render` + `video-hyperframes-render` numa **única** edge fn `video-render` (branching por `engine`) + `video-render-poll`, e os secrets `N8N_WEBHOOK_URL`/`HYPERFRAMES_RENDER_DISPATCH` foram substituídos pelos **gates de env `VIDEO_FACELESS_WEBHOOK`/`VIDEO_HYPERFRAMES_WEBHOOK`** (worker-gate 503 ANTES do deduct → zero-cost na Fatia 1; `video-render/index.ts:84`). Os contratos FR-VS-010/024/025 permanecem válidos — realizados pela fn unificada. A **Fatia VS-2** (motor) acende esse gate via um **worker host no molde de `scripts/design-bridge.ts`** (claim atômico de `video_renders` → render no container → `finalize_video_render`), single-tenant Usuário Zero primeiro (OTD-VA-011 do `viral-autopilot`).
+> ```
+
+## 🤖 Claude *(13:27:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/07-process-flow.md",
+  "old_string": "> \u2699\ufe0f **De-n8n:** o MCORCH descontinuou n8n como camada de automa\u00e7\u00e3o (SDD De-n8n v1.2, seal 2026-06-23). Onde o template BoK pede \"n8n workflow blueprint\", este documento entrega o equivalente **Edge Function + pg_cron/pg_net** \u2014 nenhum processo novo depende de n8n.",
+  "new_string": "> \u2699\ufe0f **De-n8n:** o MCORCH descontinuou n8n como camada de automa\u00e7\u00e3o (precedente: emenda De-n8n SDD \u00a78-A v1.2 do `video-studio` \u2014 `docs/bok/video-studio/05-sdd.md:165`). Onde o template BoK pede \"n8n workflow blueprint\", este documento entrega o equivalente **Edge Function + pg_cron/pg_net** \u2014 nenhum processo novo depende de n8n."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/07-process-flow.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:27:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/08-quality-metrics.md",
+  "old_string": "# (todas as a\u00e7\u00f5es idempotentes; service-role; espelha scripts/self-heal-viral-autopilot.sh)",
+  "new_string": "# (todas as a\u00e7\u00f5es idempotentes; service-role; espelha o stub self-heal do viral-autopilot \u2014 docs/bok/viral-autopilot/08-quality-metrics.md \u00a75.2)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/08-quality-metrics.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:27:17)*
+
+
+## 🤖 Claude *(13:27:17)*
+
+Docs verificados e corrigidos. Fase 7 (seal na malha) — lendo o precedente mais recente de seed script:
+
+## 🤖 Claude *(13:27:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-agentic-governance-bok-seal.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals the agentic-governance BoK suite + the Agentic Vision doctrine in the Knowledge Mesh.
+> 4	 * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the parent
+> 5	 * mcorch-constellation BoK seal. Embedding fires automatically via trg_mcorch_embed_on_insert.
+> 6	 *
+> 7	 * Usage: bun run scripts/seed-agentic-governance-bok-seal.ts
+> 8	 */
+> 9	import { createClient } from '@supabase/supabase-js';
+> 10	
+> 11	const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 12	const SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> 13	
+> 14	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 15	  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');
+> 16	  process.exit(1);
+> 17	}
+> 18	
+> 19	const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+> 20	
+> 21	const PARENT_SEAL = 'bok-scribe-seal-mcorch-constellation-v1'; // 78cb74e6-538c-4c9e-80a2-50268947dfca
+> 22	
+> 23	const sealNode = {
+> 24	  name: 'bok-scribe-seal-agentic-governance-v1',
+> 25	  node_type: 'documentation_suite',
+> 26	  project_id: 'agentic-governance',
+> 27	  stability_score: 0.85,
+> 28	  revenue_impact: 0, // governance enabler — habilita decisão de escala correta (fosso), não receita direta
+> 29	  content: `agentic-governance — Governança Agêntica AGI→ASI: a doutrina que torna TODO o desenvolvimento do MCORCH conformante aos 21 padrões agênticos + instrumenta a eficiência do coletivo de agentes (BoK suite 10/10 + doutrina load-bearing + Collective Efficiency Ledger VIVO).
+> 30	
+> 31	DIRETIVA: Sovereign 2026-06-26 — "que todos os nossos próximos protocolos de desenvolvimento sigam essa visão clara de futuro para antecipar o mercado e a tecnologia". Ancorada em 2 documentos de fronteira: docs/Agentic-Design-Patterns.pdf (Gulli, 21 padrões canônicos) + docs/From AGI to ASI - 2606.12683.pdf (DeepMind, 4 vias para a ASI).
+> 32	
+> 33	TESE: O MCORCH É a Via 4 (formação de coletivo de agentes) instanciada na camada de PRODUTO — coletivo Pantheon + Knowledge Mesh + orquestração, com humano no comando via ORO/HITL — RODANDO a Via 3 (auto-aperfeiçoamento recursivo) no micro: o mandato Obstáculo→Síntese é recursão aplicada ao próprio processo de desenvolvimento. Pattern Maturity Ledger: 11 padrões FORTES (Prompt Chaining, Parallelization, Tool Use/MCP, Multi-Agent/Pantheon, Memory/GraphRAG, MCP, Exception Handling, HITL/ORO, RAG, Resource-Aware/mcoCoins, Guardrails/Survival+Sentinel), 9 MODERADOS, 1 FRACO (Learning&Adaptation — o elo recursivo ainda manual).
+> 34	
+> 35	O GAP ESTRUTURAL (= o que "antecipar o mercado" significa): o paper aponta as perguntas de coletivo como ABERTAS (V4-2 valor marginal/agente · V4-4 mco/resultado · V4-5 overhead). O MCORCH respondia por DOUTRINA mas NÃO MEDIA nenhuma — crescia no escuro. ENTREGUE: Collective Efficiency Ledger (VIEW collective_efficiency_ledger security_invoker per-tenant + RPC collective_efficiency_rollup SECURITY DEFINER service-role-only) DERIVA a métrica da verdade financeira (pipeline_runs + autopilot_cycles), anti-Goodhart. Prova material LIVE: VIEW 16 linhas reais; isolamento G6 provado (tenant throwaway vê 0, service-role vê 16); RPC negado a authenticated (403 42501); rollup real = orchestrate-content avg_wall_clock 334.6s vs autopilot-cycle 2.4s. V4-2 DEFERIDO a experimento A/B real (DD-AG-004 — não fabricar proxy gameável, alerta do próprio paper).
+> 36	
+> 37	GATE VINCULANTE: CLAUDE.md §1 Step 3.5 — toda SDD nova carrega a Pattern Conformance Declaration (tabela dos 21 padrões; deferido exige justificativa material). Declaração, não sign-off; herda exenções do BoK Gate. A doutrina docs/architecture/agentic-vision.md é load-bearing (Key Files Reference) e SUBSTITUI o system_architecture.md stale (que + docs/agents.md descreviam a plataforma AdSense pré-virada — DEPRECADOS).
+> 38	
+> 39	ID SPACE: MR-AG-001..006 → BR-AG-001..007 → PR-AG-001..008 → FR-AG-001..008 + NFR-AG-001..006 → DD-AG-001..006 + OTD-AG-001..010 (backlog de canonização) + FM-AG-001..008/FMEA-AG-001..008 (3 RPN≥100) + KPI-AG-001..005 + QO-AG-001..003 + PROC-AG-001..004. ZERO tabela nova (1 VIEW + 1 RPC derivados) + 2 emits aditivos (orchestrate-content/-step). Memória: project. SOP Lei 2: docs/processes/collective-efficiency-ledger.md.`,
+> 40	  metadata: {
+> 41	    bok_version: '1.0.0',
+> 42	    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics', '09-pattern-conformance'],
+> 43	    document_lines: {
+> 44	      '00-index': 110, '01-mrd': 141, '02-brd': 182, '03-prd': 269, '04-frd': 194,
+> 45	      '05-sdd': 318, '06-data-model': 196, '07-process-flow': 170, '08-quality-metrics': 147,
+> 46	      '09-pattern-conformance': 100, total_suite_10docs: 1827, // verificado por wc -l 2026-06-26
+> 47	    },
+> 48	    phase_completed: 'Phase 5 (seal)',
+> 49	    doctrine_doc: 'docs/architecture/agentic-vision.md (load-bearing — Pattern Conformance gate)',
+> 50	    binding_gate: 'CLAUDE.md §1 Step 3.5 — Pattern Conformance Declaration (21 padrões) em toda SDD nova',
+> 51	    ledger_live: true,
+> 52	    ledger_material_proof: 'VIEW 16 rows; G6 isolation proven (throwaway tenant=0, service-role=16); RPC denied to authenticated (403/42501); rollup live (orchestrate-content avg 334.6s vs autopilot-cycle 2.4s)',
+> 53	    stale_docs_deprecated: ['docs/architecture/system_architecture.md', 'docs/agents.md'],
+> 54	    market_segment: 'B2B',
+> 55	    monetization_model: 'governance-enabler', // mede o coletivo → decisão de escala fundada (fosso)
+> 56	    regulatory_profile: 'oversight-embedded',
+> 57	    integration_surface: 'extends-mcorch',
+> 58	    project_slug: 'agentic-governance',
+> 59	    new_tables: 0, // 1 VIEW + 1 RPC derivados de bases existentes
+> 60	    new_views: 1, // collective_efficiency_ledger (security_invoker)
+> 61	    new_rpcs: 1, // collective_efficiency_rollup (SECURITY DEFINER service-role-only)
+> 62	    new_edge_functions: 0, // 2 emits aditivos em orchestrate-content/-step (sem fn nova)
+> 63	    id_ranges: { MR: '001..006', BR: '001..007', PR: '001..008', FR: '001..008', NFR: '001..006', DD: '001..006', OTD_AG: '001..010', FM_AG: '01..08', FMEA: '001..008', KPI: '001..005', QO: '001..003', PROC: '001..004' },
+> 64	    fmea_high_rpn_count: 3,
+> 65	    fmea_high_rpn_items: ['FMEA-AG-002 (112)', 'FMEA-AG-001 (108)', 'FMEA-AG-008 (100)'],
+> 66	    open_otds: 10, // OTD-AG-001..010 — backlog de canonização (001 Ledger=ENTREGUE; 002 Learning loop P0; 003-010 P1-P3)
+> 67	    derives_from: PARENT_SEAL,
+> 68	    informs_node: 'a576216e-81b6-49d7-8211-1eab6320f353', // AGI→ASI Via-4 design checklist ref
+> 69	    depends_on_sop: 'docs/processes/collective-efficiency-ledger.md',
+> 70	    source_documents: ['docs/Agentic-Design-Patterns.pdf (Gulli, 21 padrões)', 'docs/From AGI to ASI - 2606.12683.pdf (DeepMind, 4 vias)'],
+> 71	    motivating_directive: 'Sovereign 2026-06-26: que todos os próximos protocolos sigam a visão AGI→ASI + agentic patterns para antecipar mercado e tecnologia',
+> 72	    tags: ['bok-scribe', 'agentic-governance', 'agentic-design-patterns', 'agi-to-asi', 'via-4', 'collective-efficiency-ledger', 'pattern-conformance-gate', 'governance', 'B2B', 'sovereign-mesh'],
+> 73	  },
+> 74	};
+> 75	
+> 76	console.log(`📝 Sealing BoK suite "agentic-governance"...`);
+> 77	console.log(`   Project: ${sealNode.project_id} · Stability: ${sealNode.stability_score} · Revenue: ${sealNode.revenue_impact} (governance enabler)`);
+> 78	
+> 79	const { data: node, error } = await supabase
+> 80	  .from('mcorch_nodes')
+> 81	  .insert(sealNode)
+> 82	  .select('id, name, node_type, stability_score, created_at')
+> 83	  .single();
+> 84	
+> 85	if (error) {
+> 86	  if (String(error.message || '').match(/duplicate|unique/i)) {
+> 87	    console.log(`ℹ️  Seal already exists (idempotent exit 0): ${sealNode.name}`);
+> 88	    process.exit(0);
+> 89	  }
+> 90	  console.error('❌ Seal failed:', error);
+> 91	  process.exit(1);
+> 92	}
+> 93	
+> 94	console.log(`\n✅ Seal node inserted:`);
+> 95	console.log(`   ID: ${node.id} · Name: ${node.name} · Created: ${node.created_at}`);
+> 96	
+> 97	// DERIVES_FROM edge → parent mcorch-constellation seal
+> 98	const { data: parent } = await supabase
+> 99	  .from('mcorch_nodes')
+> 100	  .select('id')
+> 101	  .eq('name', PARENT_SEAL)
+> 102	  .single();
+> 103	
+> 104	if (parent?.id) {
+> 105	  const { data: edge, error: edgeErr } = await supabase
+> 106	    .from('mcorch_edges')
+> 107	    .insert({ source_id: node.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })
+> 108	    .select('id')
+> 109	    .single();
+> 110	  if (edgeErr) {
+> 111	    console.log(`⚠️  DERIVES_FROM edge insert failed (non-fatal): ${edgeErr.message}`);
+> 112	  } else {
+> 113	    console.log(`🔗 DERIVES_FROM edge: ${edge.id} → ${PARENT_SEAL} (${parent.id})`);
+> 114	  }
+> 115	} else {
+> 116	  console.log(`⚠️  Parent seal ${PARENT_SEAL} not found — edge skipped.`);
+> 117	}
+> 118	
+> 119	console.log(`\n🧠 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).`);
+> 120	console.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${node.id}';`);
+> 121	
+> ```
+
+## 🤖 Claude *(13:27:35)*
+
+
+## 🤖 Claude *(13:27:35)*
+
+Precedente espelhado 1:1. Coletando os LOC reais e escrevendo o seed script:
+
+## 🤖 Claude *(13:27:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution && wc -l 00-index.md 01-mrd.md 02-brd.md 03-prd.md 04-frd.md 05-sdd.md 06-data-model.md 07-process-flow.md 08-quality-metrics.md 09-live-recon-spaces.md 10-ui-inventory-spaces.md 11-node-registry-spaces.md 12-node-anatomy-spaces.md IMPLEMENTATION-PROMPT.md",
+  "description": "Count lines of all suite documents"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    106 00-index.md
+>    118 01-mrd.md
+>    141 02-brd.md
+>    142 03-prd.md
+>    123 04-frd.md
+>    338 05-sdd.md
+>    221 06-data-model.md
+>    186 07-process-flow.md
+>    157 08-quality-metrics.md
+>    144 09-live-recon-spaces.md
+>    111 10-ui-inventory-spaces.md
+>    128 11-node-registry-spaces.md
+>     70 12-node-anatomy-spaces.md
+>     75 IMPLEMENTATION-PROMPT.md
+>   2060 total
+> ```
+
+## 🤖 Claude *(13:28:29)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-spaces-evolution-bok-seal.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seals the spaces-evolution BoK suite in the Knowledge Mesh.\n * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the parent\n * viralmind BoK seal (Canvas Studio family \u2014 Spaces generalizes the orchestrator/canvas graphs).\n * Embedding fires automatically via trg_mcorch_embed_on_insert.\n *\n * Usage: bun run scripts/seed-spaces-evolution-bok-seal.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);\n\nif (!SUPABASE_URL || !SERVICE_KEY) {\n  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');\n  process.exit(1);\n}\n\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\nconst PARENT_SEAL = 'bok-scribe-seal-viralmind-v1'; // Canvas Studio family (5c4bf1e9-b7cb-4896-a3b8-038f64f56ecf)\n\nconst sealNode = {\n  name: 'bok-scribe-seal-spaces-evolution-v1',\n  node_type: 'documentation_suite',\n  project_id: 'spaces-evolution',\n  stability_score: 0.85,\n  revenue_impact: 0, // camada Core de produto \u2014 monetiza VIA ledger mcoCoins existente, sem stream novo documentado\n  content: `spaces-evolution \u2014 Infinite Canvas Core Layer: canvas infinito de n\u00f3s tipados que unifica os dois grafos existentes do MCORCH (orchestrator/ + canvas/) sob um \u00fanico Core de workflow visual, engenharia-reversa VERIFICADA AO VIVO do Magnific Spaces (workspace real, Claude-in-Chrome 2026-06-29) \u2014 sem clonar branding, internalizando a mec\u00e2nica de UX sobre o stack j\u00e1 instalado (@xyflow/react, zustand+zundo, cmdk, TanStack Query, ledger mcoCoins).\n\nSUITE 9/9 COMPLETA (2026-07-02): a volta de completude entregou 06-data-model (duas realidades: dom\u00ednio client-side zod VIVO promovido a src/ vs persist\u00eancia Supabase PLANEJADA \u2014 spaces.graph jsonb desnormalizado, precedente vm_canvas_projects; generations com node_run_id UNIQUE anti-duplo-d\u00e9bito e CHECK mco_refunded<=mco_charged), 07-process-flow (8 processos PROC-SPACES-001..008; regra-m\u00e3e estimar\u2192reservar\u2192debitar\u2192executar\u2192reconciliar/estornar; De-n8n: automa\u00e7\u00e3o = Edge Function + pg_cron; zero cron novo no MVP; observation node fail-open no 1\u00ba run) e 08-quality-metrics (QO-SPACES-001..005, KPI-SPACES-001..008 com fontes honestas, FMEA-SPACES-001..010 com 6 RPN>100 herdando as classes de incidente reais do MCORCH: charge-without-value, white-screen coinCost 46f18ca, race load/save, FMEA-011 cross-tenant; SOL-SPACES-001..005) + Pattern Conformance Declaration (Step 3.5) embutida na 05-sdd \u00a711 (4 yes: Tool Use/Memory/HITL/Resource-Aware \u00b7 8 deferred com FR/OTD nomeado \u00b7 9 n-a \u2014 re-declara\u00e7\u00e3o gated no seal da Fase 1) + renames can\u00f4nicos 01-mrd..05-sdd (gate mec\u00e2nico verde).\n\nGROUND TRUTH ao vivo (docs 09-12): taxonomia 8 grupos + 9\u00aa aba Apps (41 Workflow Apps); 26 node types com IDs data-cy reais; 6 port data types (image/text/video/audio/svg/3d); NODE_PORTS por handle real (video-generator com 6 in/4 out); 38 image models; 10 aspect ratios; 9 reference kinds (m\u00e1x 8/n\u00f3); params inline na face do n\u00f3 (72/28 = decis\u00e3o MCORCH h\u00edbrida validada pelo painel Settings); custo na face do n\u00f3 = enhancement MCORCH (Magnific n\u00e3o mostra).\n\nPHASE 0 PROMOVIDA (c\u00f3digo vivo, zero consumers ainda \u2014 types-only por design): src/lib/spaces-schema.ts (zod + guards passthrough), src/lib/port-compat.ts (canConnect \u00fanica fonte de verdade), src/lib/node-registry.ts (NODE_TYPES/NODE_PORTS/buildPorts/41 apps), src/store/useSpacesStore.ts (zustand+zundo temporal limit 100, generaliza useOrchestrationStore sem substitu\u00ed-lo), src/hooks/useParamRegistry.ts (CLIENT_COST_MIRROR display-only; autoridade = CREDIT_COSTS server-side canvas-execute:15).\n\nID SPACE: MR-SPACES-001..006 \u2192 BR-SPACES-001..010 \u2192 PR-SPACES-001..014 + 4 NFR \u2192 FR-SPACES-001..014 \u2192 SD-SPACES-001..010 + DM-SPACES-001..003 + PROC-SPACES-001..008 + QO/KPI/FMEA/SOL-SPACES + LR/UI/NR/NA-SPACES (live-recon). D\u00edvida nomeada: OTD-SPACES-001 (LGPD erase RPC erase_space_artifacts, Fase 1). Rollout: Fase 0 types (DONE) \u2192 Fase 1 MVP (rota /dashboard/spaces + canvas 72/28 + ledger) \u2192 Fase 2 breadth \u2192 Fase 3 collab realtime. BoK Gate ABERTO para a Fase 1.`,\n  metadata: {\n    bok_version: '1.0.0',\n    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics'],\n    addenda: ['09-live-recon-spaces', '10-ui-inventory-spaces', '11-node-registry-spaces', '12-node-anatomy-spaces', 'IMPLEMENTATION-PROMPT', 'scaffold/'],\n    document_lines: {\n      '00-index': 106, '01-mrd': 118, '02-brd': 141, '03-prd': 142, '04-frd': 123,\n      '05-sdd': 338, '06-data-model': 221, '07-process-flow': 186, '08-quality-metrics': 157,\n      '09-live-recon': 144, '10-ui-inventory': 111, '11-node-registry': 128, '12-node-anatomy': 70,\n      'IMPLEMENTATION-PROMPT': 75, total_suite: 2060, // verificado por wc -l 2026-07-02\n    },\n    phase_completed: 'Phase 7 (mesh seal \u2014 suite completion)',\n    completion_scope: '06/07/08 authored grounded in promoted Phase 0 code + Pattern Conformance Declaration (05-sdd \u00a711) + canonical renames (01-mrd-spaces.md \u2192 01-mrd.md etc., zero stale refs repo-wide)',\n    pattern_conformance: { location: '05-sdd.md \u00a711', yes: 4, deferred: 8, n_a: 9, redeclaration_gate: 'Fase 1 seal' },\n    reference_product: 'Magnific Spaces (live recon 2026-06-29, workspace a2247da8-6acf-4e99-ad8d-1e032bb58d9e)',\n    market_segment: 'B2B2C',\n    monetization_model: 'transaction', // mcoCoins por execu\u00e7\u00e3o de n\u00f3 \u2014 ledger vigente, zero sistema paralelo (BR-SPACES-010)\n    regulatory_profile: 'LGPD', // conte\u00fado do usu\u00e1rio + OTD-SPACES-001 (erase RPC)\n    integration_surface: 'extends-mcorch',\n    project_slug: 'spaces-evolution',\n    promoted_code: ['src/lib/spaces-schema.ts', 'src/lib/port-compat.ts', 'src/lib/node-registry.ts', 'src/store/useSpacesStore.ts', 'src/hooks/useParamRegistry.ts'],\n    new_tables: 0, // spaces + generations PLANEJADAS (stubs em 06 \u00a73; migration Fase 1 com /security-review)\n    new_edge_functions: 0, // reusa canvas-execute (CREDIT_COSTS vivo)\n    id_ranges: { MR: '001..006', BR: '001..010', PR: '001..014+4NFR', FR: '001..014', SD: '001..010', DM: '001..003', PROC: '001..008', QO: '001..005', KPI: '001..008', FMEA: '001..010', SOL: '001..005' },\n    fmea_high_rpn_count: 6,\n    fmea_high_rpn_items: ['FMEA-SPACES-001 (144 charge-without-value)', 'FMEA-SPACES-004 (144 mirror drift)', 'FMEA-SPACES-003 (120 RLS cross-tenant)', 'FMEA-SPACES-005 (120 white-screen)', 'FMEA-SPACES-009 (120 stuck run)', 'FMEA-SPACES-006 (108 race load/save)'],\n    open_otds: 1, // OTD-SPACES-001 \u2014 LGPD erase RPC (Fase 1)\n    derives_from: PARENT_SEAL,\n    tags: ['bok-scribe', 'spaces-evolution', 'infinite-canvas', 'magnific-spaces', 'live-recon', 'xyflow', 'mcoCoins-ledger', 'pattern-conformance', 'B2B2C', 'canvas-core'],\n  },\n};\n\nconsole.log(`\ud83d\udcdd Sealing BoK suite \"spaces-evolution\"...`);\nconsole.log(`   Project: ${sealNode.project_id} \u00b7 Stability: ${sealNode.stability_score} \u00b7 Revenue: ${sealNode.revenue_impact} (monetiza via ledger vigente)`);\n\nconst { data: node, error } = await supabase\n  .from('mcorch_nodes')\n  .insert(sealNode)\n  .select('id, name, node_type, stability_score, created_at')\n  .single();\n\nif (error) {\n  if (String(error.message || '').match(/duplicate|unique/i)) {\n    console.log(`\u2139\ufe0f  Seal already exists (idempotent exit 0): ${sealNode.name}`);\n    process.exit(0);\n  }\n  console.error('\u274c Seal failed:', error);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 Seal node inserted:`);\nconsole.log(`   ID: ${node.id} \u00b7 Name: ${node.name} \u00b7 Created: ${node.created_at}`);\n\n// DERIVES_FROM edge \u2192 parent viralmind (Canvas Studio) seal\nconst { data: parent } = await supabase\n  .from('mcorch_nodes')\n  .select('id')\n  .eq('name', PARENT_SEAL)\n  .single();\n\nif (parent?.id) {\n  const { data: edge, error: edgeErr } = await supabase\n    .from('mcorch_edges')\n    .insert({ source_id: node.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })\n    .select('id')\n    .single();\n  if (edgeErr) {\n    console.log(`\u26a0\ufe0f  DERIVES_FROM edge insert failed (non-fatal): ${edgeErr.message}`);\n  } else {\n    console.log(`\ud83d\udd17 DERIVES_FROM edge: ${edge.id} \u2192 ${PARENT_SEAL} (${parent.id})`);\n  }\n} else {\n  console.log(`\u26a0\ufe0f  Parent seal ${PARENT_SEAL} not found \u2014 edge skipped.`);\n}\n\nconsole.log(`\\n\ud83e\udde0 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).`);\nconsole.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${node.id}';`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-spaces-evolution-bok-seal.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:28:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && bun run scripts/seed-spaces-evolution-bok-seal.ts",
+  "description": "Execute mesh seal seed script for spaces-evolution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 📝 Sealing BoK suite "spaces-evolution"...
+>    Project: spaces-evolution · Stability: 0.85 · Revenue: 0 (monetiza via ledger vigente)
+> 
+> ✅ Seal node inserted:
+>    ID: 8f5fd3fd-5bfb-40e6-8868-f80379469b2e · Name: bok-scribe-seal-spaces-evolution-v1 · Created: 2026-07-02T13:28:39.283672+00:00
+> 🔗 DERIVES_FROM edge: c4247ef6-b0da-4a61-8098-468e62008a6f → bok-scribe-seal-viralmind-v1 (5c4bf1e9-b7cb-4896-a3b8-038f64f56ecf)
+> 
+> 🧠 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).
+>    Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '8f5fd3fd-5bfb-40e6-8868-f80379469b2e';
+> ```
+
+## 🤖 Claude *(13:28:48)*
+
+
+## 🤖 Claude *(13:28:48)*
+
+
+## 🤖 Claude *(13:28:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 8 && set -a && source .env 2>/dev/null; set +a\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.8f5fd3fd-5bfb-40e6-8868-f80379469b2e&select=id,name\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | head -c 300; echo\necho \"--- embedding n\u00e3o-nulo? ---\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.8f5fd3fd-5bfb-40e6-8868-f80379469b2e&embedding=not.is.null&select=id\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\"; echo\necho \"--- total de n\u00f3s (count=exact) ---\"\ncurl -s -I \"$VITE_SUPABASE_URL/rest/v1/mcorch_nodes?select=id\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Prefer: count=exact\" -H \"Range: 0-0\" | grep -i content-range",
+  "description": "Verify seal node embedding fired and get exact mesh node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"8f5fd3fd-5bfb-40e6-8868-f80379469b2e","name":"bok-scribe-seal-spaces-evolution-v1"}]
+> --- embedding não-nulo? ---
+> [{"id":"8f5fd3fd-5bfb-40e6-8868-f80379469b2e"}]
+> --- total de nós (count=exact) ---
+> content-range: 0-999/9031
+> ```
+
+## 🤖 Claude *(13:29:22)*
+
+
+## 🤖 Claude *(13:29:22)*
+
+
+## 🤖 Claude *(13:29:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: $?\"; git status --short",
+  "description": "TypeScript check and working tree status before commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc exit: 0
+>  M docs/bok/spaces-evolution/00-index.md
+> RM docs/bok/spaces-evolution/01-mrd-spaces.md -> docs/bok/spaces-evolution/01-mrd.md
+> RM docs/bok/spaces-evolution/02-brd-spaces.md -> docs/bok/spaces-evolution/02-brd.md
+> RM docs/bok/spaces-evolution/03-prd-spaces.md -> docs/bok/spaces-evolution/03-prd.md
+> RM docs/bok/spaces-evolution/04-frd-spaces.md -> docs/bok/spaces-evolution/04-frd.md
+> RM docs/bok/spaces-evolution/05-sdd-spaces.md -> docs/bok/spaces-evolution/05-sdd.md
+>  M docs/bok/spaces-evolution/09-live-recon-spaces.md
+>  M docs/bok/spaces-evolution/IMPLEMENTATION-PROMPT.md
+> ?? docs/bok/spaces-evolution/06-data-model.md
+> ?? docs/bok/spaces-evolution/07-process-flow.md
+> ?? docs/bok/spaces-evolution/08-quality-metrics.md
+> ?? scripts/seed-spaces-evolution-bok-seal.ts
+> ```
+
+## 🤖 Claude *(13:29:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/bok/spaces-evolution/ scripts/seed-spaces-evolution-bok-seal.ts && git commit -m \"docs(bok): spaces-evolution 9/9 selada \u2014 06/07/08 + Pattern Conformance \u00a711 + renames can\u00f4nicos\n\nFecha a \u00fanica su\u00edte BoK incompleta do ecossistema (gate mec\u00e2nico 25/25 verde).\n- 06-data-model: duas realidades (dom\u00ednio zod VIVO promovido a src/ vs persist\u00eancia\n  Supabase PLANEJADA \u2014 spaces.graph jsonb precedente vm_canvas_projects; generations\n  com node_run_id UNIQUE anti-duplo-d\u00e9bito + CHECK refund<=charged)\n- 07-process-flow: 8 processos PROC-SPACES-001..008, regra-m\u00e3e estimar\u2192debitar\u2192\n  reconciliar/estornar, De-n8n (Edge Fn + pg_cron), zero cron novo no MVP\n- 08-quality-metrics: KPI-SPACES-001..008 fontes honestas + FMEA 6 RPN>100 herdando\n  as classes de incidente reais (charge-without-value, white-screen 46f18ca,\n  race load/save, FMEA-011 cross-tenant) + SOL loops + gates de release\n- Pattern Conformance Declaration (CLAUDE.md \u00a71 Step 3.5) embutida na 05-sdd \u00a711:\n  4 yes \u00b7 8 deferred com FR/OTD nomeado \u00b7 9 n-a; re-declara\u00e7\u00e3o gated no seal da Fase 1\n- Renames can\u00f4nicos 01-mrd..05-sdd (zero refs velhas repo-wide)\n- Mesh seal: documentation_suite 8f5fd3fd-5bfb-40e6-8868-f80379469b2e + DERIVES_FROM\n  c4247ef6 \u2192 bok-scribe-seal-viralmind-v1 (fam\u00edlia Canvas); embedding 768d confirmado\n- BoK Gate ABERTO para a Fase 1 do Spaces (MVP canvas 72/28 + ledger)\" && git log -1 --format=%H",
+  "description": "Commit spaces-evolution BoK suite completion"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:29AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:29AM[0m [32mINF[0m scan completed in 27.3ms
+> [90m10:29AM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.18 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> ✔️ secret-scan (0.16 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 4a8fee0] docs(bok): spaces-evolution 9/9 selada — 06/07/08 + Pattern Conformance §11 + renames canônicos
+>  12 files changed, 730 insertions(+), 15 deletions(-)
+>  rename docs/bok/spaces-evolution/{01-mrd-spaces.md => 01-mrd.md} (98%)
+>  rename docs/bok/spaces-evolution/{02-brd-spaces.md => 02-brd.md} (99%)
+>  rename docs/bok/spaces-evolution/{03-prd-spaces.md => 03-prd.md} (98%)
+>  rename docs/bok/spaces-evolution/{04-frd-spaces.md => 04-frd.md} (99%)
+>  rename docs/bok/spaces-evolution/{05-sdd-spaces.md => 05-sdd.md} (70%)
+>  create mode 100644 docs/bok/spaces-evolution/06-data-model.md
+>  create mode 100644 docs/bok/spaces-evolution/07-process-flow.md
+>  create mode 100644 docs/bok/spaces-evolution/08-quality-metrics.md
+>  create mode 100644 scripts/seed-spaces-evolution-bok-seal.ts
+> 4a8fee091d0d45e7756fc60bc50f79a48ecdfd96
+> ```
+
+## 🤖 Claude *(13:29:58)*
+
+
+## 🤖 Claude *(13:29:58)*
+
+Commit `4a8fee0` selado (gitleaks limpo, 12 arquivos, +730). Sincronizando com origin:
+
+## 🤖 Claude *(13:30:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -3 && git rev-list --left-right --count HEAD...origin/main",
+  "description": "Push commit to origin main and verify sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-range (0.13 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    b777794..4a8fee0  main -> main
+> 0	0
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
