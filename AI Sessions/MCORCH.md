@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 65
-> * **Total de Sessões**: 1763
+> * **Total de Processos**: 66
+> * **Total de Sessões**: 1770
 
 ---
 
@@ -65,6 +65,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[smart-delete-remote]]` - *Processo*
 *   `[[spaces-canvas-persistence]]` - *Processo*
+*   `[[spaces-graph-execution]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
 *   `[[tiktok-publish-credential-resolution]]` - *Processo*
@@ -90,17 +91,24 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 *   `[[2026-07-02 - fc54f2bd-db07-4bb1-86c9-4f15891e35e3]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-afe5d1b400cb2c0fd]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-afbb23f03ff6f7394]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-af71e40efac436406]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-af1210adb0c8d34e2]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-adcb74fe1b760698b]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-acabfbbcaade8b047]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-abc659588442801a3]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-ab83a40bce8f8071c]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-aa812e550a55201b9]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a8e709bf7da2870c3]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a7a96f051aba9807c]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-a72e4f93ff3f5b5af]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a6ad657d09bc1cfff]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a5fc2379c033db856]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a5a79c320e0997619]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-a53edeeded7f8a8e0]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a4b225217e4334389]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-a4aa4854923e3eff7]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-a46a7c560f8e28edc]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a21242cc7e950270e]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions) - *2026-07-02*

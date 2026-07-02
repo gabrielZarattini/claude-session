@@ -70,7 +70,11 @@ custo (dry-run), roda (▶) e colhe as gerações no cluster do nó, com débito
 - **Provider falhou (após retry)**: finalize `error` + refund total automático (S6) — nunca "tente de novo" sem estorno.
 - **Run travado** (`running` > 30 min — crash do edge fn entre begin e finalize):
   `scripts/self-heal-spaces.sh` (on-demand, SEM cron novo — 07:182) marca `error` + refund
-  idempotente via `finalize_space_generation`. NUNCA re-cobrar.
+  idempotente via `finalize_space_generation`. NUNCA re-cobrar. **Guard do sweep
+  (/security-review 2026-07-02):** só estorna rows SEM valor entregue (`result IS NULL AND
+  asset_id IS NULL`) — row entregue-mas-finalize-falhou é materializada pelo done-fallback do
+  edge fn e nunca é estornada. O edge fn reporta `refund_pending:true` (não `refunded`) quando
+  o estorno não confirmou commit — a resposta nunca mente sobre o ledger (Lei 1).
 - **Duplicidade suspeita**: reconciliar `mcoin_transactions` (actions `spaces.node.run`/`spaces.node.refund`,
   join por `context->>'node_run_id'`) × `generations` — invariante KPI-SPACES-004: Σ débitos = Σ `mco_charged`
   de rows não-estornadas; violação = P0 freeze.
@@ -82,3 +86,10 @@ custo (dry-run), roda (▶) e colhe as gerações no cluster do nó, com débito
 Sovereign roda ▶ num grafo `prompt-generator → image-generator`; débito visível no HUD de mcoCoins;
 cluster do nó mostra o card com a imagem + `mco_charged`; row em `generations` (UUID citável) com
 `status='done'` e `mcoin_transactions` batendo; Vision-QA APROVADO no print 1920×1080.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

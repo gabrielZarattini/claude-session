@@ -4531,3 +4531,16 @@ Now the Spaces registry and billing constants.
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - agent-a4b225217e4334389]]
+> * **Próxima Sessão**: [[2026-07-02 - agent-a5a79c320e0997619]]
+%% --- TIMELINE END --- %%
