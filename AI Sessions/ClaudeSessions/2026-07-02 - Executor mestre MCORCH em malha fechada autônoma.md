@@ -1566,6 +1566,521 @@ Modo dinâmico do /loop — auto-ritmado. Iniciando a iteração agora: lendo a 
 > 72	
 > ```
 
+## 🤖 Claude *(03:00:03)*
+
+
+## 🤖 Claude *(03:00:03)*
+
+
+## 🤖 Claude *(03:00:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/scratchpad/archive_memory_index.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"Archive long MEMORY.md index lines into their topic files before compaction.\nFor every index entry longer than 300 chars, append the full original line to the\nreferenced topic file under a dated archive heading (idempotent: skips if the\narchive marker for today already exists in the file).\"\"\"\nimport re, os, sys\n\nMEM_DIR = \"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory\"\nINDEX = os.path.join(MEM_DIR, \"MEMORY.md\")\nMARKER = \"### Snapshot do \u00edndice (arquivado na compacta\u00e7\u00e3o de 2026-07-01)\"\n\nwith open(INDEX, encoding=\"utf-8\") as f:\n    lines = f.read().splitlines()\n\narchived, skipped, missing = [], [], []\nfor line in lines:\n    if not line.startswith(\"- [\"):\n        continue\n    m = re.match(r\"- \\[[^\\]]+\\]\\(([^)]+\\.md)\\)\", line)\n    if not m:\n        continue\n    target = os.path.join(MEM_DIR, m.group(1))\n    if len(line) <= 300:\n        skipped.append(m.group(1))\n        continue\n    if not os.path.isfile(target):\n        missing.append(m.group(1))\n        continue\n    with open(target, encoding=\"utf-8\") as tf:\n        content = tf.read()\n    if MARKER in content:\n        skipped.append(m.group(1) + \" (already archived)\")\n        continue\n    with open(target, \"a\", encoding=\"utf-8\") as tf:\n        tf.write(f\"\\n\\n---\\n{MARKER}\\n\\n{line}\\n\")\n    archived.append(m.group(1))\n\nprint(f\"archived: {len(archived)}\")\nfor a in archived:\n    print(f\"  + {a}\")\nprint(f\"short/skipped: {len(skipped)}\")\nif missing:\n    print(f\"MISSING FILES (index line kept, NOT archived): {missing}\")\n    sys.exit(1)\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/scratchpad/archive_memory_index.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:00:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/scratchpad/archive_memory_index.py\"",
+  "description": "Archive long index entries into topic files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> archived: 40
+>   + feedback_opensource_first_zero_cost_equity.md
+>   + project_smart_delete.md
+>   + project_avatar_clone_ai.md
+>   + project_product_miner_vision_reliability.md
+>   + reference_qa_throwaway_users_and_open_signup.md
+>   + project_video_studio.md
+>   + reference_byok_gemini_column.md
+>   + reference_shared_sentinel_english_only.md
+>   + feedback_deliver_user_value_not_plumbing.md
+>   + project_creative_ecosystem_program.md
+>   + project_channel_reshaper.md
+>   + project_brand_persona_ccio.md
+>   + feedback_vision_qa_always.md
+>   + feedback_full_force_revenue_autonomy.md
+>   + project_revenue_funnel_repair.md
+>   + reference_ig_reels_publish_path.md
+>   + feedback_browser_verify_deliverables.md
+>   + project_creative_layer_validation.md
+>   + project_viral_autopilot.md
+>   + project_unified_sensorial_canvas.md
+>   + project_vision_mcp.md
+>   + reference_loggedin_e2e_local_preview.md
+>   + project_schema_drift_audit.md
+>   + reference_ledger_rpc_security.md
+>   + project_marketing_hub_v2.md
+>   + feedback_context_budget_calibration.md
+>   + project_orchestrate_pipeline_repair.md
+>   + project_mcoin_calibration.md
+>   + project_constellation_v2.md
+>   + feedback_materiality_buffered_output.md
+>   + reference_supabase_keys_migrated.md
+>   + reference_user_api_keys_encrypted.md
+>   + project_authenticated_browser_operator.md
+>   + reference_encrypted_views_write_pattern.md
+>   + reference_grep_is_ugrep_shim_in_tool.md
+>   + feedback_openclaw_delegation_pattern.md
+>   + project_openclaw_ollama_integration.md
+>   + reference_tiktok_unaudited_private_account.md
+>   + project_channel_format_intelligence.md
+>   + reference_profiles_column_guard_mint_hole.md
+> short/skipped: 27
+> ```
+
+## 🤖 Claude *(03:00:22)*
+
+
+## 🤖 Claude *(03:00:22)*
+
+
+## 🤖 Claude *(03:01:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "content": "# Memory Index\n\n- [Doutrina open-source-first / USD=0 / equity + Gabriel AI co-executivo](feedback_opensource_first_zero_cost_equity.md) \u2014 2026-06-30: tudo self-host\u00e1vel vira microservi\u00e7o pr\u00f3prio (equity); custo USD externo=0 \u00e9 gate de GO; Gabriel AI = co-CAI\u2192co-CTI.\n- [Smart-delete \u2014 verificar exist\u00eancia online + delete remoto opcional](project_smart_delete.md) \u2014 2026-06-30: MVP shipped (check-post-existence + delete-remote-post + UI 3-ramos). WP/X/Pinterest ok; TikTok/IG sem API = transpar\u00eancia. E2E destrutivo = Fila Sovereign.\n- [Gabriel AI (avatar-clone-ai) \u2014 BoK 10/10, Fatias 1-2 + 3a shipped](project_avatar_clone_ai.md) \u2014 2026-06-30: voiceClone BYOK fail-closed + consent/erase LGPD; Fatia 3b VLM-soft at\u00e9 motor ArcFace (OTD-AC-015). Gotchas de FK/telemetria no arquivo.\n- [Minerador de Produtos \u2014 confiabilidade da an\u00e1lise de v\u00eddeo + custo](project_product_miner_vision_reliability.md) \u2014 2026-06-29: Files API 20-100MB + fallback cover-image (stub <50KB) + async timeout-proof. Decis\u00e3o: manter llama:free+Gemini ~$5/m\u00eas. Conta real gabrielcall@gmail.com.\n- [Viewer sem nome = user de smoke QA vazado; helper SMOKETEST + sweep](reference_qa_throwaway_users_and_open_signup.md) \u2014 2026-06-28: qa-throwaway.ts (full_name=SMOKETEST, delete awaited) + sweep 04:00. \u26a0\ufe0f signup externo LIGADO \u2014 travar = Supabase Dashboard.\n\n- [M\u00f3dulo V\u00eddeo (video-studio) \u2014 Fase B completa: render nativo + editor bill\u00e1vel](project_video_studio.md) \u2014 2026-07-01: host createStudioApi(McorchAdapter) + SPA pr\u00e9-buildado no 3210; Export cobra 12 mco; hash #project/<id>; rollback STUDIO_RENDER_ENGINE=cli.\n- [BYOK Gemini = coluna `google_api_key` (gemini_api_key N\u00c3O existe)](reference_byok_gemini_column.md) \u2014 2026-06-22: `select=gemini_api_key`\u219242703; toda integra\u00e7\u00e3o Gemini per-user l\u00ea `decrypted_user_api_keys.google_api_key`. Confie no DB live, n\u00e3o no doc.\n- [Cyber-Sentinel \u2014 paridade pt-BR (OTD-VA-018 fechada)](reference_shared_sentinel_english_only.md) \u2014 2026-06-23: 7 fam\u00edlias pt-BR, 0 FP em 58 amostras. \u00c9 TRIAGE score\u22652 \u2014 fonte n\u00e3o-confi\u00e1vel exige gate pr\u00f3prio. Cuidado ao tunar: tropes leg\u00edtimas listadas no arquivo.\n- [Entregar valor vis\u00edvel ao Usu\u00e1rio Zero, menos plumbing](feedback_deliver_user_value_not_plumbing.md) \u2014 Diretiva 2026-06-24: priorizar caminho curto at\u00e9 algo que o Sovereign ABRE e TOCA; Lei 2 como meio, lean.\n- [Ecossistema criativo bidirecional (Canvas+HyperFrames+OpenDesign\u2192social)](project_creative_ecosystem_program.md) \u2014 Diretiva 2026-06-25: h\u00edbrido bidirecional + creative_assets spine + faceless nativo; 4 fatias. \u26a0\ufe0f rotacionar chave Gemini + token Telegram do n8n.\n- [Channel Reshaper + Atomizer \u2014 1 pilar \u2192 posts nativos por canal](project_channel_reshaper.md) \u2014 2026-06-28: reshape-pillar data-driven (transform_recipe+pillar_atoms, zero branch); channel_variants ledger. Li\u00e7\u00e3o: /security-review pegou HIGH FMEA-011 meu \u2192 owner-scoped.\n- [Virada brand-first \u2014 persona Gabriel AI/CCIO evangeliza o MCORCH](project_brand_persona_ccio.md) \u2014 Diretiva 2026-06-26: marca via persona \u00fanica (rosto de todos os canais); +YT+TikTok reusando motor autopilot; produto=subproduto. Gates de audit = Sovereign.\n- [Sempre rodar Vision QA sobre prints de inspe\u00e7\u00e3o + criativos](feedback_vision_qa_always.md) \u2014 Diretiva 2026-06-26: scripts/qa/vision-qa.ts (custo 0, VISION_MCP_PAT no .env, exige URL) antes de declarar pronto. SOP [[creative-qa-vision-gate|creative-qa-vision-gate]].md.\n- [For\u00e7a total aut\u00f4noma para o primeiro R$ real](feedback_full_force_revenue_autonomy.md) \u2014 Diretiva 2026-06-25: operar como Usu\u00e1rio 00 sem esperar resposta; gargalo real = distribui\u00e7\u00e3o+atribui\u00e7\u00e3o; surfacing honesto do Sovereign-gated.\n- [Reparo do loop de receita \u2014 distribui\u00e7\u00e3o destravada + meli.la publicado](project_revenue_funnel_repair.md) \u2014 2026-06-25 `1ad04c5`: cron auto-publish morto reparado; link assinado publicado; CTA leak fechado. Trilha Sovereign no arquivo.\n- [IG Reels publica via graph.instagram.com + id do /me](reference_ig_reels_publish_path.md) \u2014 2026-06-25 provado E2E (Reel DaBtVAQkiuz): n\u00e3o usar meta_config nem o platform_user_id guardado (app-scoped rejeita 100/33); video_url p\u00fablica.\n- [Verificar todo entreg\u00e1vel de UI em browser real (Lei 1)](feedback_browser_verify_deliverables.md) \u2014 Diretiva 2026-06-25: vite preview do dist + sess\u00e3o injetada + agent-browser antes de declarar pronto. Pegou canvas branco (coinCost) \u2192 fallback nunca white-screena.\n\n- [Camada criativa validada E2E + reparada (Vision MCP como olho de QA)](project_creative_layer_validation.md) \u2014 2026-06-21: generate-image consertado; v\u00eddeo DoP provado; Canvas Design headless ok (od = daemon global single-tenant). M\u00fasica/landing = BoK Gate.\n- [Viral Autopilot \u2014 motor R1-R4 completo, ATIVADO 2026-06-23](project_viral_autopilot.md) \u2014 BoK 9/9; Fatias 1/1b/2; 1\u00ba ciclo pago `947ef8b5`; pg_cron jobid 3; FR-VA-018 trend angle hardened; v\u00eddeo 9:16 integrado. Constraints e hist\u00f3rico no arquivo.\n- [Unified Sensorial Canvas \u2014 Phase Epsilon V9 (/dashboard/universe)](project_unified_sensorial_canvas.md) \u2014 Funde Core-Fable+Matrix+Mem\u00f3ria (Via 4). 3.1-3.6 LIVE (sinapses reais + fly-to 2026-07-01); restam 3.7 perf \u00b7 3.8 poda \u00b7 3.9 paridade/cutover \u00b7 3.10 seal.\n- [Vision MCP \u2014 container 3200 atr\u00e1s de mcp.mcorch.com](project_vision_mcp.md) \u2014 BoK 9/9; Fatias 1-3 (PAT, LGPD erase, caps, Plugin/Registry). CF laranja exige WAF Skip p/ clientes n\u00e3o-browser. Li\u00e7\u00f5es e gated items no arquivo.\n- [Core-Fable \u2014 rota, Fable 5 flagship, seletor desacoplado, shader Interstellar](project_core_fable.md) \u2014 ex-Core-v2; regras do shader (capturado=preto, sem glow artificial) e do billing (chat localStorage \u2260 pref pipeline)\n- [E2E de UI logada \u00e0 prova de Cloudflare](reference_loggedin_e2e_local_preview.md) \u2014 2026-06-09: CF Turnstile barra agent-browser do datacenter; receita = vite preview do dist + gen-user-session.ts injetado; provar persist\u00eancia pelo DB, NUNCA pelo DOM.\n- [Auditoria de drift deployado\u2194migrations + tool reexecut\u00e1vel](project_schema_drift_audit.md) \u2014 2026-06-03: anticorpo audit-schema-drift.sh (exit 1=drift). Regra: hotfix de prod vira migration na MESMA sess\u00e3o.\n- [RPCs do ledger mcoCoins endurecidos \u2014 P0 de cunhagem fechado](reference_ledger_rpc_security.md) \u2014 2026-06-03: award/add_user_score s\u00f3 service_role; deduct self-only. REGRA: novo SECURITY DEFINER com p_user_id \u2192 edge-only OU guarda auth.uid().\n- [Marketing Hub v2 \u2014 m\u00f3dulo agentic COMPLETO (FR-MH-001..012)](project_marketing_hub_v2.md) \u2014 intent-execute fail-closed; AEO; 1\u00ba E2E pago agentic. Resta: dom\u00ednio Resend + OTD-CAMPAIGN-RUN-ASYNC + atribui\u00e7\u00e3o ML. \u26a0\ufe0f campaigns J\u00c1 EXISTE (absorver).\n- [Calibra\u00e7\u00e3o de contexto \u2014 usar a janela INTEIRA, selar s\u00f3 a ~95%](feedback_context_budget_calibration.md) \u2014 Diretiva 2026-06-03: janela 1M; seal custa ~5%; poda\u2260selar; puxar pr\u00f3ximo pendente em vez de selar cedo.\n- [Flywheel de conte\u00fado quebrado em 3 lugares pelo cutover de chaves (REPARADO)](project_orchestrate_pipeline_repair.md) \u2014 2026-06-03: verify_jwt faltando + RPC param drift + WP 301. Regra: pg_net\u2192verify_jwt=false sempre; SOP [[orchestrate-async-pipeline|orchestrate-async-pipeline]].md.\n- [Calibra\u00e7\u00e3o mcoCoins \u2014 modelo 4\u00d7-floor (OTD fechada)](project_mcoin_calibration.md) \u2014 2026-06-03: mco=ceil(usd/$0.018\u00d74); \u00fanico furo era IMAGE 3\u21929; SOP [[mcoin-cost-calibration|mcoin-cost-calibration]].md.\n- [Constellation v2 \u2014 cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) \u2014 Todas as fases seladas v6.18.0; BoK 38d7e7a4. Gotchas: has_role(app_role) single-arg, admin-path key mismatch, 1 perfil real.\n- [Stale worktree \u2014 checar contra origin/main](feedback_stale_worktree_check_origin.md) \u2014 \"X n\u00e3o existe/est\u00e1 quebrado\" tirado s\u00f3 do worktree \u00e9 falso negativo; cheque `git show origin/main:<path>` antes de concluir.\n- [Materialidade sob output bufferizado \u2014 n\u00e3o fabricar](feedback_materiality_buffered_output.md) \u2014 2026-05-31: todo hash/UUID/contador vem de output verificado NESTE turno; halt e re-query, nunca preencha. /handson faz git fetch primeiro.\n- [Supabase keys migradas \u2014 use SB_SECRET_KEY (legadas REVOGADAS)](reference_supabase_keys_migrated.md) \u2014 2026-06-01: SUPABASE_SERVICE_ROLE_KEY/ANON_KEY mortas (PGRST301); use SB_SECRET_KEY/SB_PUBLISHABLE_KEY, inclusive nos protocolos handson/handoff.\n- [user_api_keys \u00e9 VIEW mascarada \u2014 chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) \u2014 SELECT mostra \u2022\u2022\u2022\u2022; edge fns leem decrypted_user_api_keys; teste de chave DEVE ser server-side (\"Falhou\" no cliente \u2260 chave inv\u00e1lida).\n- [Operador de Browser Autenticado \u2014 s\u00f3 p/ atribui\u00e7\u00e3o definitiva ML](project_authenticated_browser_operator.md) \u2014 Datacenter bloqueado (runtime = IP residencial); click ledger in-system fechado v6.28.0; prioridade menor (matt_tool/meli.la). T\u00e9cnica magiclink reutiliz\u00e1vel.\n- [Encrypted views \u2014 .insert() (n\u00e3o .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) \u2014 Views Vault: null n\u00e3o limpa (use RPC disconnect_*); double-fire 23505 corrigido UPDATE-first; guard de tenant nas 3 triggers (migrations 20260602*).\n- [grep \u00e9 ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) \u2014 grep = fun\u00e7\u00e3o\u2192ugrep -G; BRE estoura e no-opa silenciosamente sob `|| true`; use -E.\n- [OpenClaw delegation \u2014 paralelizar seals via @claw_gcrux](feedback_openclaw_delegation_pattern.md) \u2014 Diretiva 2026-05-28: delegar tarefas low-risk pro OpenClaw via Telegram em paralelo; ~50% menos tempo de seal.\n- [OpenClaw \u00d7 Ollama \u2014 Gateway](project_openclaw_ollama_integration.md) \u2014 Supervisor \u00daNICO = systemd openclaw-gateway.service (NUNCA pm2); reload = systemctl --user restart. SOP [[openclaw-gateway-supervisor|openclaw-gateway-supervisor]].md.\n- [API Tenancy Model \u2014 credenciais sempre per-user](feedback_api_tenancy_per_user.md) \u2014 Diretiva 2026-05-19: toda integra\u00e7\u00e3o externa resolve credencial per-user (auth.uid()) antes de env global. Bloqueante multi-tenant.\n- [Paz e Vitalidade \u2014 m\u00e9trica de sucesso da Constela\u00e7\u00e3o](feedback_paz_e_vitalidade.md) \u2014 Diretiva 2026-05-17: vitalidade do Sovereign + paz humana como m\u00e9tricas, n\u00e3o s\u00f3 ARR. Bullets \ud83e\uddd8 no briefing.\n- [OpenClaw Neural Bridge + Departmental Army Seal (v6.3.1)](project_v631_openclaw_neural_bridge_seal.md) \u2014 Two-tier bridge (375+2527), cron triplo 02:30/03:00/03:30; `pnpm` no repo \u00e9 destrutivo.\n- [AIOS Dev Workflow 4Cs Seal (v5.3.0)](project_aios_devkit_seal.md) \u2014 Context+Connections+Capabilities+Cadence layers, 6 skills, GitHub MCP, Stop hook, sprint-aware handson/handoff\n- [Phase Zeta Social Consciousness + Core v3 Seal](project_phase_zeta_seal.md) \u2014 aios_conversations cursor timeline, DERIVES_FROM edges, Gemini Live WebSocket, 83 n\u00f3s embedded, 14 testes\n- [Phase Epsilon V8 + Delta V4 Seal](project_epsilon_v8_delta_v4_seal.md) \u2014 CALLS counter tooltip (\u2192N/\u2190M), two-pass cross-file ingestion +259 edges, Usu\u00e1rio Zero 5003 coins\n- [Phase Epsilon V7 Seal](project_epsilon_v7_seal.md) \u2014 ownership tooltip badge, territory legend pills, CALLS edge glow, Delta v3b +110 edges\n- [Phase Epsilon V6 Seal](project_epsilon_v6_seal.md) \u2014 inferSquad export, ownership coloring (v6c), Delta v3 call-graph CALLS edges\n- [Phase Epsilon V5 Seal](project_epsilon_v5_seal.md) \u2014 MatrixPage full-screen, sidebar sub-menu, Edge Creator, Assign Agent, crew_module_ownership\n- [Phase Epsilon V4 Seal](project_epsilon_v4_seal.md) \u2014 Crew Overlay + Memory Mesh full-screen: useCrewOverlay, pulse animation, INHABITS edges, MemoryPage\n- [Phase Epsilon V3 Seal](project_epsilon_v3_seal.md) \u2014 Semantic Probe shipped: match_mcorch_nodes + search-constellation + useConstellationSearch\n- [Phase Beta Seal](project_phase_beta_seal.md) \u2014 What shipped in Phase Beta, deploy checklist, pending Commercial phase work\n- [Gabriel Zarattini \u2014 Lead Architect](user_profile.md) \u2014 User profile, technical depth, pt-BR UI preference, autonomous execution style\n- [Stripe & Monetiza\u00e7\u00e3o \u2014 Estrat\u00e9gia Usu\u00e1rio Zero](project_stripe_strategy.md) \u2014 Sandbox intencional; live keys somente ap\u00f3s valida\u00e7\u00e3o como piloto enterprise\n- [autonomic-action n8n \u2014 resolvido](project_autonomic_action.md) \u2014 +10pts por run via n8n \u00e9 correto; pr\u00f3ximo: campo manual de mcoCoins no painel de configura\u00e7\u00f5es\n- [Commit style](feedback_commits.md) \u2014 Nunca Co-Authored-By, corpo orientado a milestone n\u00e3o a diff t\u00e9cnico\n- [Deploy Frontend](reference_deploy_frontend.md) \u2014 nginx serve dist/ direto; `bun run build` = deploy completo para login.mcorch.com\n- [Usu\u00e1rio Zero \u2014 Estrat\u00e9gia e Produ\u00e7\u00e3o](project_usuario_zero_strategy.md) \u2014 Usu\u00e1rio Zero = conta Gmail de Gabriel em produ\u00e7\u00e3o real; escalar para m\u00faltiplas contas monetizando conte\u00fado quando Usu\u00e1rio 1 chegar\n- [Instagram App Review \u2014 Deferido para Usu\u00e1rio 1](project_instagram_appreviw_deferred.md) \u2014 N\u00e3o executar at\u00e9 sair da fase Usu\u00e1rio Zero; junto com Twitter Basic tier e Stripe live keys\n- [Test Coverage \u2014 Estado e Prioridades](project_test_coverage.md) \u2014 66 testes (billing+store+phase-zeta), coverage v8, pr\u00f3ximas: useOrchestrationGraph, useKnowledgeMesh, useSubscription\n- [Mobile Branch Protocol \u2014 /sync-mobile-branch](project_mobile_branch_protocol.md) \u2014 Protocolo para integrar branches claude/* criados no celular; cherry-pick seletivo, seguran\u00e7a primeiro\n- [Twitter API \u2014 Cota Mensal de Escrita](project_twitter_api_quota.md) \u2014 1.500 tweets/m\u00eas Free tier; CreditsDepleted = cota mensal (renova autom\u00e1tico), n\u00e3o bloqueio permanente\n- [BoK Gate Override \u2014 viralmind Sprint 4](project_bok_gate_override_viralmind.md) \u2014 Sovereign autorizou override consciente do BoK Gate p/ Sprint 4 Canvas UX; d\u00e9bito BoK selado no /handoff\n- [Canvas Studio Architecture \u2014 useCanvasStore](project_canvas_studio_architecture.md) \u2014 Sprint 4.1: 3\u00ba Zustand store (zundo temporal) p/ Canvas; pipelineMode/lanes/styleSettings dentro do graph jsonb (sem migration)\n- [Canvas Design \u2014 open-design sidecar](project_canvas_design_initiative.md) \u2014 7\u00ba m\u00f3dulo; integra nexu-io/open-design (Apache-2.0) via CLI od; BoK 9/9 selada 2026-05-20; pnpm nunca na raiz\n- [TikTok+YouTube publish \u2014 gotchas de audit/OAuth (provados E2E)](reference_tiktok_unaudited_private_account.md) \u2014 TikTok exige conta privada pr\u00e9-audit; YouTube scope youtube.upload sem CASA (doc\u2260realidade); state TTL 10min; service-role edge = SB_SECRET_KEY em apikey+Authorization.\n- [Channel Format Intelligence \u2014 engenharia reversa de formato](project_channel_format_intelligence.md) \u2014 channel_profiles/pillar_atoms data-driven; master 9:16 serve 7 canais; reshaper FR-CP-003 shipped (ver project_channel_reshaper).\n- [profiles mint-hole P0 FECHADO \u2014 guard de coluna por trigger, n\u00e3o REVOKE](reference_profiles_column_guard_mint_hole.md) \u2014 2026-07-01: REVOKE(col) \u00e9 no-op sob table-grant; coluna sens\u00edvel exige trigger-guard BEFORE UPDATE por current_user. Migration 20260701010000.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:01:40)*
+
+
+## 🤖 Claude *(03:01:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -c /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md && grep -c '^- \\[' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md && echo \"---REPO---\" && git status --short && stat -c '%y %n' src/hooks/useConstellationSigma.ts src/components/orchestrator/ConstellationMatrix.tsx 2>/dev/null; git log --oneline -2",
+  "description": "Verify compacted index size and re-check concurrent session activity"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 14953 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md
+> 67
+> ---REPO---
+>  M src/components/orchestrator/ConstellationMatrix.tsx
+>  M src/hooks/useConstellationSigma.ts
+>  M src/pages/UnifiedCanvasPage.tsx
+> 2026-07-01 23:58:34.997285075 -0300 src/hooks/useConstellationSigma.ts
+> 2026-07-01 23:55:24.689558444 -0300 src/components/orchestrator/ConstellationMatrix.tsx
+> e7d987d docs(handoff): fix path claim — src/lib/universe-layout.ts (5c audit caught the imprecision)
+> 067cd02 docs(handoff): seal loop it.5-6 — editor público LIVE + universe sinapses/fly-to
+> ```
+
+## 🤖 Claude *(03:02:17)*
+
+
+## 🤖 Claude *(03:02:17)*
+
+
+## 🤖 Claude *(03:02:22)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Standby: sess\u00e3o prim\u00e1ria do loop est\u00e1 viva editando 3.7/3.8; re-checar em 30min se ela morreu \u00f3rf\u00e3 para assumir o backlog.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 00:33:00 (in 1837s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(03:05:17)*
+
+Não é legal ter que esperar um valor definido de tempo, isso deveria ser trigger e se não é possivel diminuir para 3 ou 4 minutos maximo. Me diz tem algo funcionando de algum loop anterior? Temos algo em segundo plano?
+
+## 🤖 Claude *(03:06:13)*
+
+
+## 🤖 Claude *(03:06:13)*
+
+
+## 🤖 Claude *(03:06:13)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:Monitor,TaskList,TaskStop",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'Monitor'}, {'type': 'tool_reference', 'tool_name': 'TaskList'}, {'type': 'tool_reference', 'tool_name': 'TaskStop'}]
+> ```
+
+## 🤖 Claude *(03:06:14)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session_mgmt__list_sessions`
+```json
+{
+  "limit": 5
+}
+```
+
+> **Tool Result (mcp__ccd_session_mgmt__list_sessions)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '[\n  {\n    "sessionId": "local_77b1644a-2887-4ef5-9750-39dcbe7a1052",\n    "title": "[handoff] v6.71.1 → v6.72.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-02T03:05:31.439Z"\n  },\n  {\n    "sessionId": "local_b6f56e08-1d96-4851-b33f-f399bdce5810",\n    "title": "[Handoff] v6.65.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T18:23:37.751Z"\n  },\n  {\n    "sessionId": "local_4e321024-f42a-4978-9ed8-932a83054e0a",\n    "title": "[Handoff] v6.64.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T02:22:05.378Z"\n  },\n  {\n    "sessionId": "local_febb03e5-915e-46f8-ba07-4ba517a27405",\n    "title": "[Handoff] v6.63.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T02:16:43.712Z"\n  },\n  {\n    "sessionId": "local_040c2478-9f77-41f7-ba38-798aa3dc6239",\n    "title": "[Handoff] v6.62.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T00:02:10.305Z"\n  }\n]'}]
+> ```
+
+## 🤖 Claude *(03:06:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"---GIT---\"; git status --short; git log --oneline -3; echo \"---MTIMES---\"; stat -c '%y %n' src/hooks/useConstellationSigma.ts src/components/orchestrator/ConstellationMatrix.tsx src/pages/UnifiedCanvasPage.tsx 2>/dev/null; date; echo \"---TRANSCRIPTS---\"; ls -lat /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/*.jsonl 2>/dev/null | head -5; echo \"---PROCS---\"; ps aux | grep -E 'ccd-cli' | grep -v grep | awk '{print $2, $9}'",
+  "description": "Fresh evidence: repo state, transcript activity, ccd processes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---GIT---
+> 91ec54f docs(loop): charter — 3.7 perf (21-25s→2.5s) + 3.8 poda shipped
+> 5cc1022 perf(universe): 3.7 — 21-25s → 2.5s load (parallel pages + single Louvain + deferred backdrop) + 3.8 prune
+> e7d987d docs(handoff): fix path claim — src/lib/universe-layout.ts (5c audit caught the imprecision)
+> ---MTIMES---
+> 2026-07-01 23:58:34.997285075 -0300 src/hooks/useConstellationSigma.ts
+> 2026-07-01 23:55:24.689558444 -0300 src/components/orchestrator/ConstellationMatrix.tsx
+> 2026-07-02 00:04:00.805529074 -0300 src/pages/UnifiedCanvasPage.tsx
+> Thu Jul  2 12:06:17 AM -03 2026
+> ---TRANSCRIPTS---
+> -rw------- 1 ubuntu ubuntu 6673023 Jul  2 00:05 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed.jsonl
+> -rw------- 1 ubuntu ubuntu  699935 Jul  2 00:05 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91.jsonl
+> -rw------- 1 ubuntu ubuntu  335235 Jul  1 23:55 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0c1ad55a-1aef-4790-9a42-92684bcd77d2.jsonl
+> -rw------- 1 ubuntu ubuntu 4926705 Jul  1 16:27 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f51b7a04-6530-4582-8b21-d9ba14caedee.jsonl
+> -rw------- 1 ubuntu ubuntu 2778722 Jun 30 23:22 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/473299a8-6c7d-4634-b97a-50a8fad59b11.jsonl
+> ---PROCS---
+> 347894 Jul01
+> 421995 Jul01
+> ```
+
+## 🤖 Claude *(03:07:24)*
+
+
+## 🤖 Claude *(03:07:31)*
+
+
+🛠️ **Tool Call**: `Monitor`
+```json
+{
+  "command": "REPO=/home/gcrUX/htdocs/constellation-orchestra\nTXDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra\nMYTX=982f623b-f751-491b-9120-ec63e49acb91\nBASE_HEAD=$(git -C \"$REPO\" log -1 --format=%h)\ndirty_since=0\norphan_alerted=0\nwhile true; do\n  head=$(git -C \"$REPO\" log -1 --format=%h 2>/dev/null || echo \"$BASE_HEAD\")\n  if [ \"$head\" != \"$BASE_HEAD\" ]; then\n    echo \"COMMIT: $(git -C \"$REPO\" log -1 --oneline 2>/dev/null)\"\n    BASE_HEAD=$head\n    orphan_alerted=0\n  fi\n  now=$(date +%s)\n  latest_tx=$(ls -t \"$TXDIR\"/*.jsonl 2>/dev/null | grep -v \"$MYTX\" | head -1)\n  tx_age=$(( now - $(stat -c %Y \"$latest_tx\" 2>/dev/null || echo \"$now\") ))\n  dirty=$(git -C \"$REPO\" status --porcelain 2>/dev/null | head -1)\n  if [ -n \"$dirty\" ]; then\n    [ \"$dirty_since\" -eq 0 ] && dirty_since=$now\n    if [ $((now - dirty_since)) -gt 240 ] && [ \"$tx_age\" -gt 300 ]; then\n      echo \"MORTE-MID-EDIT?: primaria sem atividade ha ${tx_age}s com working tree sujo ha $((now-dirty_since))s\"\n      dirty_since=$now\n    fi\n  else\n    dirty_since=0\n  fi\n  if [ \"$tx_age\" -gt 2700 ] && [ \"$orphan_alerted\" -eq 0 ]; then\n    echo \"ORFAO?: nenhuma outra sessao ativa ha ${tx_age}s (>45min) \u2014 loop primario provavelmente morto\"\n    orphan_alerted=1\n  fi\n  sleep 30\ndone",
+  "description": "Standby do loop: novos commits da sess\u00e3o prim\u00e1ria + detec\u00e7\u00e3o de morte (tree sujo parado / 45min sem atividade)",
+  "persistent": true,
+  "timeout_ms": 3600000
+}
+```
+
+## 🤖 Claude *(03:07:31)*
+
+
+🛠️ **Tool Call**: `TaskList`
+```json
+{}
+```
+
+> **Tool Result (TaskList)** - ✅ Success
+>
+> ```
+> No tasks found
+> ```
+
+> **Tool Result (Monitor)** - ✅ Success
+>
+> ```
+> Monitor started (task b1ehhjdfp, persistent — runs until TaskStop or session end). You will be notified on each event. Keep working — do not poll or sleep. Events may arrive while you are waiting for the user — an event is not their reply.
+> ```
+
+## 🤖 Claude *(03:08:03)*
+
+
+## 🤖 Claude *(03:08:03)*
+
+
+## 🤖 Claude *(03:08:08)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Fallback de seguran\u00e7a apenas \u2014 o Monitor b1ehhjdfp (poll 30s) \u00e9 o gatilho prim\u00e1rio para commits/morte da sess\u00e3o prim\u00e1ria.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 00:39:00 (in 1851s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(03:18:52)*
+
+o que esta acontecendo?
+
+## 🤖 Claude *(03:18:59)*
+
+
+## 🤖 Claude *(03:19:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -5; echo \"---STATUS---\"; git status --short; date; echo \"---LATEST-TX---\"; ls -lat /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/*.jsonl 2>/dev/null | head -3",
+  "description": "Quick status: commits, tree, other-session activity"
+}
+```
+
+## 🤖 Claude *(03:19:02)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session_mgmt__list_sessions`
+```json
+{
+  "limit": 3
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 91ec54f docs(loop): charter — 3.7 perf (21-25s→2.5s) + 3.8 poda shipped
+> 5cc1022 perf(universe): 3.7 — 21-25s → 2.5s load (parallel pages + single Louvain + deferred backdrop) + 3.8 prune
+> e7d987d docs(handoff): fix path claim — src/lib/universe-layout.ts (5c audit caught the imprecision)
+> 067cd02 docs(handoff): seal loop it.5-6 — editor público LIVE + universe sinapses/fly-to
+> 75c6963 docs(readme): v6.72.0 — Universe 3.5+3.6 (sinapses reais + fly-to) + video.mcorch.com LIVE — mesh 9018
+> ---STATUS---
+>  M src/pages/UnifiedCanvasPage.tsx
+> Thu Jul  2 12:19:02 AM -03 2026
+> ---LATEST-TX---
+> -rw------- 1 ubuntu ubuntu  768617 Jul  2 00:19 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91.jsonl
+> -rw------- 1 ubuntu ubuntu 8122410 Jul  2 00:18 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed.jsonl
+> -rw------- 1 ubuntu ubuntu  335235 Jul  1 23:55 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0c1ad55a-1aef-4790-9a42-92684bcd77d2.jsonl
+> ```
+
+> **Tool Result (mcp__ccd_session_mgmt__list_sessions)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '[\n  {\n    "sessionId": "local_77b1644a-2887-4ef5-9750-39dcbe7a1052",\n    "title": "[handoff] v6.71.1 → v6.72.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": true,\n    "lastActivityAt": "2026-07-02T03:18:12.710Z"\n  },\n  {\n    "sessionId": "local_b6f56e08-1d96-4851-b33f-f399bdce5810",\n    "title": "[Handoff] v6.65.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T18:23:37.751Z"\n  },\n  {\n    "sessionId": "local_4e321024-f42a-4978-9ed8-932a83054e0a",\n    "title": "[Handoff] v6.64.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T02:22:05.378Z"\n  }\n]'}]
+> ```
+
+## 🤖 Claude *(03:19:20)*
+
+
+## 🤖 Claude *(03:19:20)*
+
+Tudo sob controle — panorama ao vivo (00:19):
+
+**O loop primário está trabalhando NESTE momento.** A sessão `[handoff] v6.72.0` re-acordou e está ativa (`isRunning: true`, última atividade 00:18; o transcript dela cresceu de 6,6MB → 8,1MB desde o último commit). Ela está editando `src/pages/UnifiedCanvasPage.tsx` agora — coerente com o próximo item do backlog: **fase 3.9 do Unified Canvas** (paridade + gate E2E 1920×1080), já que a 3.7+3.8 ela commitou às 00:04 (`5cc1022` — load do Universe caiu de 21-25s para **2.5s**).
+
+**Eu (esta sessão) estou em standby vigiando ela:** o monitor de 30s está armado e ainda não disparou nenhum evento — o que é o esperado (nenhum commit novo desde `91ec54f`, nenhum sinal de morte). Quando ela commitar a próxima entrega, eu sou acordado na hora e te reporto; se ela travar/morrer no meio da edição, eu detecto em ~4-5 min e assumo o backlog.
+
+Resumo da divisão: **ela executa, eu vigio** — zero risco de conflito entre as duas. Se quiser inverter (parar ela e deixar esta executar), ou quiser que eu peça a ela um item específico, é só dizer.
+
+## 👤 User *(03:25:14)*
+
+<task-notification>
+<task-id>b1ehhjdfp</task-id>
+<summary>Monitor event: "Standby do loop: novos commits da sessão primária + detecção de morte (tree sujo parado / 45min sem atividade)"</summary>
+<event>COMMIT: 135d67c docs(loop): charter — 3.9 paridade shipped; cutover → Fila Sovereign</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+## 🤖 Claude *(03:25:25)*
+
+
+## 🤖 Claude *(03:25:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -4; echo \"---STATUS---\"; git status --short; date; echo \"---CHARTER-DELTA---\"; git show 135d67c --stat | head -15",
+  "description": "Inspect what the primary just shipped in 3.9"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 135d67c docs(loop): charter — 3.9 paridade shipped; cutover → Fila Sovereign
+> fc8cae0 feat(universe): 3.9 parity — selection intelligence panel in the tactical terminal
+> 91ec54f docs(loop): charter — 3.7 perf (21-25s→2.5s) + 3.8 poda shipped
+> 5cc1022 perf(universe): 3.7 — 21-25s → 2.5s load (parallel pages + single Louvain + deferred backdrop) + 3.8 prune
+> ---STATUS---
+> Thu Jul  2 12:25:26 AM -03 2026
+> ---CHARTER-DELTA---
+> commit 135d67cd7d204f17f5edf9495a3bff5fc51eee1b
+> Author: Gabriel Zarattini <gabrielcall@gmail.com>
+> Date:   Thu Jul 2 00:24:58 2026 -0300
+> 
+>     docs(loop): charter — 3.9 paridade shipped; cutover → Fila Sovereign
+>     
+>     Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+> 
+>  .claude/context/autonomous-loop-charter.md | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> ```
+
+## 🤖 Claude *(03:25:40)*
+
+
+## 🤖 Claude *(03:25:40)*
+
+
+## 🤖 Claude *(03:25:45)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Fallback apenas \u2014 Monitor b1ehhjdfp segue como gatilho prim\u00e1rio (commits/morte da prim\u00e1ria).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 00:56:00 (in 1815s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(03:26:15)*
+
+<task-notification>
+<task-id>b1ehhjdfp</task-id>
+<summary>Monitor event: "Standby do loop: novos commits da sessão primária + detecção de morte (tree sujo parado / 45min sem atividade)"</summary>
+<event>COMMIT: b12c2fc docs(handoff+readme): v6.73.0 — seal it.7-8 Universe perf 10× + paridade — mesh 9019</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+## 🤖 Claude *(03:26:28)*
+
+
+## 🤖 Claude *(03:26:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -5; echo \"---STATUS---\"; git status --short; date; echo \"---CHARTER-BACKLOG---\"; sed -n '30,50p' .claude/context/autonomous-loop-charter.md | grep -E '^###|^- (\u2705|\ud83d\udd12|\u26a0\ufe0f|\ud83e\udea4)' | head -20",
+  "description": "Check seal commit and remaining unblocked backlog"
+}
+```
+
+## 🤖 Claude *(03:26:30)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session_mgmt__list_sessions`
+```json
+{
+  "limit": 2
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> b12c2fc docs(handoff+readme): v6.73.0 — seal it.7-8 Universe perf 10× + paridade — mesh 9019
+> 135d67c docs(loop): charter — 3.9 paridade shipped; cutover → Fila Sovereign
+> fc8cae0 feat(universe): 3.9 parity — selection intelligence panel in the tactical terminal
+> 91ec54f docs(loop): charter — 3.7 perf (21-25s→2.5s) + 3.8 poda shipped
+> 5cc1022 perf(universe): 3.7 — 21-25s → 2.5s load (parallel pages + single Louvain + deferred backdrop) + 3.8 prune
+> ---STATUS---
+> Thu Jul  2 12:26:30 AM -03 2026
+> ---CHARTER-BACKLOG---
+> ### ✅ Smart-Delete MVP — SHIPPED (loop it.1-3, 2026-07-01) — gate BoK selado `33fadb0`
+> - ✅ **FR-SD-001 `check-post-existence`** (commit `174d30c`): edge fn read-only, resolve id das 2 fontes, `deletable_via_api` derivado no SERVIDOR (Matriz), sinal correto por API (X data-vs-errors, YT items=[], WP/Pin 200/404, FB/IG code 100). Per-user fail-closed (501 deletáveis) / honestidade non-deletable. WP per-user PURO (o smoke pegou o probe cross-tenant do fallback global → corrigido). deno check · deployed 63.65kB · smoke **9/9** zero-cost · /security-review **NO FINDINGS**.
+> - ✅ **FR-SD-002 `delete-remote-post`** (commit `358d825`): destrutivo, golden-rule (zero flag do cliente), DELETE idempotente WP(force=false Trash)/X/Pinterest, nó Mesh no 1º delete, NÃO apaga local (502 mantém âncora). **Workflow adversarial 4-lentes `wf_ad2b6722` pegou HIGH false-success** (X devolve errors[] p/ 401/403/429 → reportava deleted com tweet no ar) → classificadores puros `_shared/smart-delete-classify.ts` **deno test 15/15** (inclui a regressão 403). deployed 64.57kB · smoke **8/8** zero-cost NÃO-destrutivo.
+> - ✅ **FR-SD-003 UI 3-ramos** (commit `edc27df`): `useSmartDelete` (hook) + `SmartDeleteDialog` (display) + `smart-delete.ts` (branchFor/labels). Fiado nos 2 call-sites do calendário. tsc 0 · eslint 0 novo · build ok · branchFor **7/7** · **browser-verified** (dist servido, sessão User 0 injetada — ramo transparência LinkedIn correto) · **Vision QA confidence high** (sem tela branca/quebra).
+> - 🔒 **Fila Sovereign:** E2E destrutivo REAL (deletar post vivo WP/X/Pinterest + re-verify `exists=false`) — irreversível, Owner=Sovereign, precisa post descartável real + GO. · OTD-SD-001/002 (re-OAuth FB/YT p/ delete) · OTD-SD-006 (WP force=true permanente).
+> ### 0. Direção fresca do Sovereign (docs committados `c880fcf`/`a29627b`, 2026-06-30) — PRIORIDADE
+> - ✅ **Observability gap FECHADO (it.9 + loop 2026-07-01 it.4):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id — infra_health_logs é global-read) fiado em `orchestrate-step` (article @325 + atomizer @431) + `lead-score`. Emite `event='llm_usage'`. **Provado LIVE** (lead-score → row). **+ `logImageUsage(fn,model,count)` (commit `282edf3`):** imagens não têm token usage (custo por-imagem) → `generate-image` emite `event='image_usage'` {fn/model/image_count} pós-sucesso, taggeando o modelo por branch (flux-1.1-pro/gemini-2.5-flash-image/dall-e-3). **Provado LIVE** (helper real → row `{model:black-forest-labs/flux-1.1-pro, image_count:1}`). Custo texto+imagem agora **MEDIDO** → destrava o GO $0. **✅ STREAMING FECHADO (commit `c5614f7`):** `generate-content` pede `stream_options.include_usage` + tee TransformStream passthrough fareja o `usage` do chunk final → `logLlmUsage` no flush (bytes ao cliente inalterados). E2E provado (HTTP 200, 12720 chars, row `{fn:generate-content, total_tokens:208}`). **Arco de observability zero-USD 100% COMPLETO** (texto não-streaming + imagem + texto streaming).
+> - ✅ **HyperFrames nativo SHIPPED (loop 2026-07-01, commits `c422de7` docs + `2ce09b3` código):** render de studio-project agora roda **NATIVO sobre `@hyperframes/core` (Apache-2.0, LICENSE shipado no tarball — verificado Lei 1)** — `bundleToSingleHtml` → Playwright dirige `__player.renderSeek(i/fps)` → FFmpeg bitexact compartilhado. **Elimina `HF_CLI`/`HF_NODE`/trap ARM64 do caminho default** (wrap CLI preservado só como rollback `STUDIO_RENDER_ENGINE=cli`; deletar após 1º render editor-initiated). SDD **§VS-UI-C (Amendment v0.6)**: OTD-VS-020 (substrato B) + FR-VS-050; fundamentado no Workflow 4-lentes `wf_bbc8402d-096` (achado-chave: runtime core = CLI **byte-idêntico** sha256 `1bc431f0…`; o "engine do CLI" é só harness de injeção). **Gates todos verdes:** frame-diff sha256-distinto t=1s/t=6s · byte-determinismo 2× `c721f8f4…` (386.795B) · Vision-QA confidence **high** "Aprovado" · **A/B SSIM 0.9934** vs referência CLI (PSNR 46.8dB) · guard smoke 4/4 · tsc 0 · **worker E2E** `video_renders 020e9bef` done → bucket HTTP 200 **byte-idêntico ao render local** (determinismo cross-run). ⚠️ Honesto: o CLI global segue instalado — o **editor vanilla (Fase A)** ainda roda `hyperframes preview`; sai só quando a Fase B swapar o service (container próprio).
+> ### 1. Gabriel AI — Fatia 3b (avatarIdentity + Identity Gate)  ⟶ programa-topo, estende a seal de hoje
+> - ✅ **Emenda BoK VLM-soft SHIPPED (it.1, commit `7b81bfd`):** `10-amendment-3b-identity-gate-vlm-soft.md` — Identity Gate dual-mode (VLM-soft MVP / ArcFace-hard deferido), verificado adversarialmente (wf_188ce24c-881 APPROVE, 6 issues dobradas). FR-AC-013b compare enum + gate_mode discriminador + telemetry key-migration definidos.
+> - ✅ **Fundação 3b SHIPPED (it.2, commit `541f707`):** lib de compare VLM-soft `src/lib/avatar-identity.ts` (FR-AC-013b — parse fail-soft + bands + reconcile N≥2 anti-oscilação, 15/15 testes) + migration `gate_mode` `20260630140000` (§4b, /security-review NO FINDINGS, aplicação deferida ao GO 3b). tsc 0.
+> - ✅ **Nó avatarIdentity SHIPPED + DEPLOYED (it.3, commit `12d06c0`):** FR-AC-012 — type+factory+componente+inspector+registry+nodeTypes+dispatch; upload multi-retrato (canvas-assets `user_id/`), ConsentWizard (train_lora+face_embedding Art.11), provider/tier, botão "Treinar" fail-closed honesto (OTD-AC-017). tsc 0 · eslint 0 · vite build 0. **Browser-verificado** (Usuário Zero, preview): nó no palette Cmd+K + render no canvas + inspector íntegro + zero crash/console-error. **Deployed** ao `dist/` servido (chunk `CanvasEditorPage-DEjSoHib.js` 165.844B contém o nó; env baked). Valor visível ao Sovereign LIVE.
+> ```
+
+> **Tool Result (mcp__ccd_session_mgmt__list_sessions)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '[\n  {\n    "sessionId": "local_77b1644a-2887-4ef5-9750-39dcbe7a1052",\n    "title": "[handoff] v6.71.1 → v6.72.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": true,\n    "lastActivityAt": "2026-07-02T03:26:09.412Z"\n  },\n  {\n    "sessionId": "local_b6f56e08-1d96-4851-b33f-f399bdce5810",\n    "title": "[Handoff] v6.65.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T18:23:37.751Z"\n  }\n]'}]
+> ```
+
+## 🤖 Claude *(03:26:43)*
+
+
+## 🤖 Claude *(03:26:43)*
+
+
+## 🤖 Claude *(03:26:49)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Fallback apenas \u2014 Monitor b1ehhjdfp segue como gatilho (commits/morte da prim\u00e1ria).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 00:57:00 (in 1811s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

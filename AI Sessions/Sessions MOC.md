@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1750
-> * **Sessões do Claude**: 1706
+> * **Total de Sessões Registradas**: 1751
+> * **Sessões do Claude**: 1707
 > * **Sessões do Gemini**: 44
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-02*
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` - *2026-07-02*
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` - *2026-07-01*
 *   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` - *2026-07-01*
@@ -51,8 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]` - *2026-06-23*
 *   `[[2026-05-27 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-27*
 *   `[[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-26*
-*   `[[2026-05-26 - Analise o nosso readme principal @[ssh-remote+7b22686f73744e616d65223a223133372e3133312e3234332e313739227dhomegcrUXhtdocsconstellation-orchestraREADME.md]....]]` - *2026-05-26*
-*   *... e mais 1 sessões nessa categoria.*
+*   *... e mais 2 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
@@ -1738,6 +1738,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions)
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions)
 *   `[[2026-07-01 - f51b7a04-6530-4582-8b21-d9ba14caedee]]` (ClaudeSessions)
 *   `[[2026-07-01 - agent-afecd1db24524d5d9]]` (ClaudeSessions)
