@@ -188,7 +188,17 @@ G1/G3/G4/G5 são **zero-cost** (usam `dry_run`/usuários descartáveis/RPC isola
 
 ## Amendment 2026-07-02 (b) — B4 EWMA multi-ciclo no analyze
 
-`autopilot-analyze` agora agrega o reward sobre a janela dos **últimos M=5 ciclos do plano** (ancorada no ciclo analisado), peso `0.5^idade` — FRD v0.3 "fixes embarcados" (FR-VA-010/011) + SDD §fluxo ("EWMA M ciclos"). **Semântica documentada:** ciclo zerado sob plano COM histórico ainda emite policy (a janela lembra — anti-thrash); só plano com janela toda vazia retorna `has_real_data=false` (nunca inventa do nada). Auditoria em `reward_vector.ewma {m, decay, cycles_used}`. M/decay = constantes de código até a coluna config-as-data `reward_weights` existir (NFR-VA-010, deferida junto com os pesos do reward). Gate: smoke `smoke-autopilot-loop.ts` L7 (evidência acumulada vence vencedor fraco recente).
+`autopilot-analyze` agora agrega o reward sobre a janela dos **últimos M=5 ciclos do plano** (ancorada no ciclo analisado), peso `0.5^idade` — FRD v0.3 "fixes embarcados" (FR-VA-010/011) + SDD §fluxo ("EWMA M ciclos"). **Semântica documentada:** ciclo zerado sob plano COM histórico ainda emite policy (a janela lembra — anti-thrash); só plano com janela toda vazia retorna `has_real_data=false` (nunca inventa do nada). Auditoria em `reward_vector.ewma {m, decay, cycles_used}`. ~~M/decay = constantes de código até a coluna config-as-data `reward_weights` existir (NFR-VA-010, deferida junto com os pesos do reward).~~ ✅ Fechada pelo Amendment (c). Gate: smoke `smoke-autopilot-loop.ts` L7 (evidência acumulada vence vencedor fraco recente).
+
+## Amendment 2026-07-02 (c) — `reward_weights` config-as-data (NFR-VA-010)
+
+Os pesos do reward multi-métrica (FR-VA-029) e os knobs da janela EWMA (B4) deixam de ser constantes de código: a coluna **`autopilot_plans.reward_weights jsonb`** (migration `20260702150000`) carrega `{reach, eng, brand, rev, ewma_m?, ewma_decay?}` por plano. Contrato:
+
+- **NULL = defaults do engine** (`0.40/0.30/0.20/0.10` brand-first + EWMA `m=5, decay=0.5`) — backward-compat total; nenhum plano existente muda de comportamento.
+- **Validação server-side no `autopilot-analyze`** (`resolveRewardConfig`): os 4 pesos exigem número finito ≥ 0 com soma > 0 → **normalizados para somar 1** (o usuário escreve proporções, não precisa somar 1); `ewma_m` int `1..12`; `ewma_decay` ∈ (0,1). Qualquer shape inválido → **defaults + `weights_source='default_invalid'`** (fail-safe, nunca 500 por dado do usuário; a coluna é RLS-own e o valor é só insumo numérico de ranking — zero superfície de prompt/HTML).
+- **Versionamento (NFR-VA-010 "versionados"):** todo policy row grava os pesos EFETIVOS usados em `reward_vector.weights` + `reward_vector.weights_source` (`plan`/`default`/`default_invalid`) — trilha auditável por ciclo, como os pesos do Dreaming.
+- **Escopo honesto:** os pesos governam o caminho **multimétrico** (`socialLive`); o fallback afiliado (sem dado social) segue `clicks·0.9 + rev·0.1` fixo — documentado, não configurável (mudar o fallback = FR novo).
+- Gates: smoke L8 (pesos rev-heavy flipam o vencedor vs default) + L9 (shape inválido → default + `weights_source='default_invalid'`).
 
 ---
 
